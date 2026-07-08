@@ -1,0 +1,25 @@
+<div class="screen mis-partes">
+  <header class="mis-partes__header">
+    <button type="button" class="mis-partes__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mis-partes__icon">📋</span>
+    <h1 class="mis-partes__title">Mis partes</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="mis-partes__muted">Cargando…</p>
+    } @else {
+      @for (p of partes(); track p.id) {
+        <div class="parte-row">
+          <div class="parte-row__info">
+            <span class="parte-row__tipo">{{ p.tipo }}</span>
+            <span class="parte-row__fecha">{{ p.capturado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <app-sync-badge [state]="p.estado" />
+        </div>
+      } @empty {
+        <p class="mis-partes__muted">Todavía no has enviado partes.</p>
+      }
+    }
+  </div>
+</div>

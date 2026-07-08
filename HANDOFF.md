@@ -44,7 +44,14 @@ Added in `dev/SGC` (builds clean): route `/flota/responsabilidad`, shell nav ent
 1. Live walk-throughs (need a real user password): vehicle checklist + conduce delivery, offline→reconnect→verify in Supabase. For conduces, first link a conductor to a user in SGC and dispatch a salida.
 2. Real notifications on `requiere_revision` (no `sgc.notificaciones` table found — locate SGC's mechanism).
 
-## Next: M3 — Bitácora (parte diario wizard + incidentes), reusing SGC's crear_entrada_bitacora RPC.
+## M3 — Bitácora DONE
+- Migration `2026-07-08f`: idempotent `sgc.crear_bitacora_app(p_id, …)` (module gate, actividades/restricciones/fotos, usuario_id = auth.uid()). Verified non-destructively (parte_diario inserts header + child rows; module gate rejects non-bitacora users). Photos reuse the existing `sgc-bitacora` bucket. Catalog enums pulled from the real CHECK constraints (estructuras/actividades/restricciones).
+- App: `BitacoraService` (+ `bitacora` sync handler at bootstrap); Bitácora hub → parte-diario wizard (obra → personal counters → actividades → problemas → fotos → resumen), incidente short flow (tipo → gravedad → heridos → fotos → nota), and offline "Mis partes" list.
+
+## Milestone status
+M1 ✅ · M2 ✅ (checklist + conduces + SGC Flota view) · M3 ✅ (bitácora). Next: **M4 — Inventario + Solicitudes**.
+
+## Next: M4 — Inventario (existencias, salida, recibir conduce) + Solicitudes (crear + seguimiento), reusing SGC's registrar_salida_inventario / adjust-stock / crear_solicitud_material RPCs.
 
 ## How to run
 ```

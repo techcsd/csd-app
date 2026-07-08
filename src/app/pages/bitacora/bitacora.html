@@ -1,1 +1,24 @@
-<app-module-placeholder icon="📓" title="Bitácora" [actions]="actions" />
+<div class="screen bitacora">
+  <header class="bitacora__header">
+    <button type="button" class="bitacora__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="bitacora__icon">📓</span>
+    <h1 class="bitacora__title">Bitácora</h1>
+  </header>
+
+  <div class="screen__body">
+    <button type="button" class="bit-action bit-action--primary" (click)="go('/bitacora/parte')">
+      <span class="bit-action__icon">📝</span>
+      <span class="bit-action__label">Nuevo parte diario</span>
+    </button>
+    <button type="button" class="bit-action bit-action--danger" (click)="go('/bitacora/incidente')">
+      <span class="bit-action__icon">🚨</span>
+      <span class="bit-action__label">Reportar incidente</span>
+    </button>
+    <button type="button" class="bit-action" (click)="go('/bitacora/mis-partes')">
+      <span class="bit-action__icon">📋</span>
+      <span class="bit-action__label">Mis partes</span>
+    </button>
+  </div>
+
+  <app-sync-bar />
+</div>

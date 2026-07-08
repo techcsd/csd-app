@@ -1,0 +1,60 @@
+.mis-partes {
+  background: var(--color-bg);
+}
+
+.mis-partes__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.mis-partes__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.mis-partes__icon {
+  font-size: 28px;
+}
+.mis-partes__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.mis-partes__muted {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 32px;
+}
+
+.parte-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 10px;
+}
+.parte-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.parte-row__tipo {
+  font-weight: 700;
+  font-size: var(--fs-option);
+}
+.parte-row__fecha {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}

@@ -45,6 +45,22 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/bitacora/bitacora').then((m) => m.BitacoraPage),
   },
   {
+    path: 'bitacora/parte',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/bitacora/parte/parte').then((m) => m.PartePage),
+  },
+  {
+    path: 'bitacora/incidente',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/bitacora/incidente/incidente').then((m) => m.IncidentePage),
+  },
+  {
+    path: 'bitacora/mis-partes',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () =>
+      import('./pages/bitacora/mis-partes/mis-partes').then((m) => m.MisPartesPage),
+  },
+  {
     path: 'transporte',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/transporte').then((m) => m.TransportePage),

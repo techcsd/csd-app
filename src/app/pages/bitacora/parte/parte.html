@@ -1,0 +1,120 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Parte enviado' : 'Guardado'"
+    [note]="online ? 'Tu parte diario quedó registrado.' : 'Sin señal. Se enviará solo.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen parte">
+    <app-step-bar [current]="step()" [total]="total" />
+    <div class="screen__body">
+      <!-- 1. Obra -->
+      @if (step() === 1) {
+        <h1 class="screen__title">¿En qué obra estás?</h1>
+        <div class="parte__obras">
+          @for (p of proyectos(); track p.id) {
+            <app-option-button
+              [label]="p.nombre"
+              icon="🏗️"
+              [selected]="proyectoId() === p.id"
+              (pressed)="proyectoId.set(p.id)"
+            />
+          } @empty {
+            <p class="parte__muted">No hay obras disponibles.</p>
+          }
+        </div>
+      }
+
+      <!-- 2. Personal -->
+      @if (step() === 2) {
+        <h1 class="screen__title">¿Cuánta gente hay hoy?</h1>
+        <app-counter label="Carpintería" icon="🔨" [(value)]="carpinteria" />
+        <app-counter label="Acero" icon="🔩" [(value)]="acero" />
+        <app-counter label="Trabajadores de la casa" icon="👷" [(value)]="casa" />
+        <label class="field-label">Otro personal (opcional)</label>
+        <input class="field" type="text" [ngModel]="otroPersonal()" (ngModelChange)="otroPersonal.set($event)" placeholder="Ej: 2 ayudantes" />
+      }
+
+      <!-- 3. Actividades -->
+      @if (step() === 3) {
+        <h1 class="screen__title">¿Qué se hizo hoy?</h1>
+        @for (a of actividades(); track $index) {
+          <div class="parte__act">
+            <span>{{ a.estructura }} · {{ a.actividad }}</span>
+            <button type="button" class="parte__act-x" (click)="removeActividad($index)">Quitar</button>
+          </div>
+        }
+        <label class="field-label">Estructura</label>
+        <div class="parte__chips">
+          @for (e of estructuras; track e) {
+            <button type="button" class="chip" [class.chip--on]="nuevaEstructura() === e" (click)="nuevaEstructura.set(e)">{{ e }}</button>
+          }
+        </div>
+        <label class="field-label">Actividad</label>
+        <div class="parte__chips">
+          @for (ac of actividadesCat; track ac) {
+            <button type="button" class="chip" [class.chip--on]="nuevaActividad() === ac" (click)="nuevaActividad.set(ac)">{{ ac }}</button>
+          }
+        </div>
+        <button type="button" class="btn-ghost" (click)="addActividad()">+ Agregar actividad</button>
+      }
+
+      <!-- 4. Restricciones -->
+      @if (step() === 4) {
+        <h1 class="screen__title">¿Hubo algún problema?</h1>
+        <p class="screen__subtitle">Marca lo que aplique. Si no hubo, deja "Ninguna".</p>
+        <div class="parte__restr">
+          @for (r of restriccionesCat; track r) {
+            <app-option-button [label]="r" [selected]="restricciones().includes(r)" (pressed)="toggleRestriccion(r)" />
+          }
+        </div>
+      }
+
+      <!-- 5. Fotos -->
+      @if (step() === 5) {
+        <h1 class="screen__title">Fotos de la obra</h1>
+        <p class="screen__subtitle">Opcional, pero ayudan mucho.</p>
+        <div class="parte__fotos">
+          @for (f of fotos(); track f.previewUrl) {
+            <div class="parte__foto">
+              <img [src]="f.previewUrl" alt="foto" />
+              <button type="button" class="parte__foto-x" (click)="removeFoto($index)">✕</button>
+            </div>
+          }
+        </div>
+        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
+          {{ capturing() ? '⏳ Tomando…' : '📷 Agregar foto' }}
+        </button>
+      }
+
+      <!-- 6. Resumen -->
+      @if (step() === 6) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>Personal</span><b>{{ carpinteria() + acero() + casa() }}</b></li>
+          <li><span>Actividades</span><b>{{ actividades().length }}</b></li>
+          <li><span>Problemas</span><b>{{ restricciones().length ? restricciones().length : 'Ninguno' }}</b></li>
+          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
+        </ul>
+        <label class="field-label">Comentario (opcional)</label>
+        <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
+      }
+    </div>
+
+    <footer class="parte__nav">
+      @if (step() > 1) {
+        <button type="button" class="btn-ghost parte__back" (click)="prev()">Atrás</button>
+      }
+      @if (step() < total) {
+        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+      } @else {
+        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+          {{ submitting() ? 'Guardando…' : 'Enviar parte' }}
+        </button>
+      }
+    </footer>
+  </div>
+}

@@ -1,0 +1,120 @@
+.parte {
+  background: var(--color-bg);
+}
+
+.parte__muted {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 24px;
+}
+
+.parte__obras app-option-button,
+.parte__restr app-option-button {
+  display: block;
+  margin-bottom: 10px;
+}
+
+app-counter {
+  display: block;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.parte__act {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.parte__act-x {
+  color: var(--color-error);
+  font-weight: 700;
+}
+
+.parte__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.chip {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.chip--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+
+.parte__fotos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.parte__foto {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.parte__foto img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  display: block;
+}
+.parte__foto-x {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+}
+
+.resumen {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.resumen li {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.resumen li:last-child {
+  border-bottom: none;
+}
+.resumen span {
+  color: var(--color-text-secondary);
+}
+
+.parte__nav {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.parte__back {
+  max-width: 120px;
+}

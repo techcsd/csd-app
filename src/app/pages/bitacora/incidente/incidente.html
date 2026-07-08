@@ -1,0 +1,77 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Incidente reportado' : 'Guardado'"
+    [note]="online ? 'Se registró en la bitácora.' : 'Sin señal. Se enviará solo.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen incidente">
+    <header class="incidente__header">
+      <button type="button" class="incidente__back" (click)="back()" aria-label="Atrás">←</button>
+      <span class="incidente__icon">🚨</span>
+      <h1 class="incidente__title">Reportar incidente</h1>
+    </header>
+
+    <div class="screen__body">
+      @if (proyectos().length > 1) {
+        <label class="field-label">Obra</label>
+        <select class="field" [ngModel]="proyectoId()" (ngModelChange)="proyectoId.set($event)">
+          <option value="">Elige la obra…</option>
+          @for (p of proyectos(); track p.id) {
+            <option [value]="p.id">{{ p.nombre }}</option>
+          }
+        </select>
+      }
+
+      <h2 class="incidente__q">¿Qué pasó?</h2>
+      @for (t of tipos; track t.value) {
+        <app-option-button
+          [icon]="t.icon"
+          [label]="t.label"
+          tone="error"
+          [selected]="tipo() === t.value"
+          (pressed)="tipo.set(t.value)"
+        />
+      }
+
+      <h2 class="incidente__q">¿Qué tan grave?</h2>
+      <div class="incidente__grav">
+        @for (g of gravedades; track g.value) {
+          <button type="button" class="chip" [class.chip--on]="gravedad() === g.value" (click)="gravedad.set(g.value)">
+            {{ g.label }}
+          </button>
+        }
+      </div>
+
+      <h2 class="incidente__q">¿Hay heridos?</h2>
+      <app-counter label="Personas heridas" icon="🩹" [(value)]="lesionados" />
+      @if (hayHeridos()) {
+        <p class="incidente__alert">⚠️ Hay heridos. Avisa al supervisor cuanto antes.</p>
+      }
+
+      <h2 class="incidente__q">Fotos</h2>
+      <div class="incidente__fotos">
+        @for (f of fotos(); track f.previewUrl) {
+          <div class="incidente__foto">
+            <img [src]="f.previewUrl" alt="foto" />
+            <button type="button" class="incidente__foto-x" (click)="removeFoto($index)">✕</button>
+          </div>
+        }
+      </div>
+      <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
+        {{ capturing() ? '⏳ Tomando…' : '📷 Agregar foto' }}
+      </button>
+
+      <h2 class="incidente__q">¿Qué pasó? (opcional)</h2>
+      <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe brevemente" />
+    </div>
+
+    <footer class="incidente__nav">
+      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        {{ submitting() ? 'Guardando…' : 'Enviar reporte' }}
+      </button>
+    </footer>
+  </div>
+}

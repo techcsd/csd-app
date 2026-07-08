@@ -1,17 +1,26 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { ModulePlaceholder } from '../../shared/components/module-placeholder/module-placeholder';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Location } from '@angular/common';
+import { Router } from '@angular/router';
+import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 
+/** Bitácora hub: parte diario, incidente, mis partes. */
 @Component({
   selector: 'app-bitacora',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ModulePlaceholder],
+  imports: [SyncBar],
   templateUrl: './bitacora.html',
+  styleUrl: './bitacora.scss',
 })
 export class BitacoraPage {
-  actions = [
-    'Hacer el parte diario paso a paso, con fotos',
-    'Reportar un incidente o accidente',
-    'Ver tus partes enviados',
-  ];
+  private router = inject(Router);
+  private location = inject(Location);
+
+  go(path: string): void {
+    void this.router.navigate([path]);
+  }
+
+  back(): void {
+    this.location.back();
+  }
 }

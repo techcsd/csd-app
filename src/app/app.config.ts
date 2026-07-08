@@ -11,6 +11,7 @@ import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 import { VehiculosService } from './core/services/vehiculos.service';
 import { ConducesService } from './core/services/conduces.service';
+import { BitacoraService } from './core/services/bitacora.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -25,6 +26,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(VehiculosService);
       inject(ConducesService);
+      inject(BitacoraService);
     }),
   ],
 };

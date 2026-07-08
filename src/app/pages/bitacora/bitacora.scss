@@ -1,0 +1,59 @@
+.bitacora {
+  background: var(--color-bg);
+}
+
+.bitacora__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.bitacora__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.bitacora__icon {
+  font-size: 28px;
+}
+.bitacora__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.bit-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 18px;
+  margin-bottom: 14px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+.bit-action:active {
+  transform: scale(0.98);
+}
+.bit-action__icon {
+  font-size: 34px;
+}
+.bit-action--primary {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+}
+.bit-action--danger {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+}
