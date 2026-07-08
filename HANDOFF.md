@@ -55,11 +55,14 @@ Added in `dev/SGC` (builds clean): route `/flota/responsabilidad`, shell nav ent
 ## Milestone status — all feature milestones built
 M1 ✅ · M2 ✅ · M3 ✅ · M4 ✅. M5 is piloto/rollout (no app code). The 4 Home modules are all functional end-to-end offline.
 
+## PWA — DEPLOYED ✅
+Live at **https://app.sgcconstructorasd.com** (Vercel project `csd-app`, team CSD; GitHub repo connected → push to `main` auto-deploys). `vercel.json` = SPA rewrites + `no-cache` on ngsw-worker.js/ngsw.json/index.html. Verified live: deep-link routes 200, SW no-cache. PWA auto-update wired (UpdateService: VERSION_READY → activate + reload). Perfil screen shows app version (1.0.0) + manual "Buscar actualización" + logout.
+
 ## Remaining polish / follow-ups (not blocking)
 - Recepción de conduce en bodega (overlaps chofer conduce flow + SGC confirmar_recepcion_salida).
 - Voice notes, offline drafts (borradores) for wizards, conteo rápido de inventario.
 - Real push/email notifications (no `sgc.notificaciones` table found — locate SGC's mechanism).
-- Live device walk-throughs + first signed APK (needs JDK/Android Studio) + PWA deploy to app.sgcconstructorasd.com (Vercel).
+- Live device walk-throughs + first signed APK (needs JDK/Android Studio) + internal APK download page in SGC web.
 
 ## SGC web pending YOUR commit/push (deploys to Vercel prod)
 `dev/SGC` has uncommitted changes: Flota "Responsabilidad" view (M2) + Conductores user-link (conduces).
