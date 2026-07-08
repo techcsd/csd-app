@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { BorradorService } from '../../../core/services/borrador.service';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { Counter } from '../../../shared/ui/counter/counter';
@@ -37,6 +38,10 @@ export class PartePage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private ctx = inject(UserContextService);
+  private borrador = inject(BorradorService);
+
+  private readonly DRAFT = 'parte_diario';
+  private hydrated = false;
 
   readonly total = TOTAL;
   readonly estructuras = ESTRUCTURAS;
@@ -71,14 +76,80 @@ export class PartePage {
 
   constructor() {
     void this.load();
+    // Autosave the (non-photo) draft on every change so a killed app recovers.
+    effect(() => {
+      const snap = {
+        proyectoId: this.proyectoId(),
+        carpinteria: this.carpinteria(),
+        acero: this.acero(),
+        casa: this.casa(),
+        otroPersonal: this.otroPersonal(),
+        actividades: this.actividades(),
+        restricciones: this.restricciones(),
+        comentarios: this.comentarios(),
+        step: this.step(),
+      };
+      if (!this.hydrated || this.done()) return;
+      if (!this.hasContent(snap)) return;
+      void this.borrador.save(this.DRAFT, snap);
+    });
+  }
+
+  private hasContent(s: {
+    step: number;
+    carpinteria: number;
+    acero: number;
+    casa: number;
+    otroPersonal: string;
+    actividades: ActividadEntry[];
+    restricciones: string[];
+    comentarios: string;
+  }): boolean {
+    return (
+      s.step > 1 ||
+      s.carpinteria > 0 ||
+      s.acero > 0 ||
+      s.casa > 0 ||
+      !!s.otroPersonal ||
+      s.actividades.length > 0 ||
+      s.restricciones.length > 0 ||
+      !!s.comentarios
+    );
   }
 
   private async load(): Promise<void> {
     const list = await this.bitacora.getProyectos();
     this.proyectos.set(list);
-    const obra = this.ctx.obraActiva();
-    if (obra) this.proyectoId.set(obra.id);
-    else if (list.length === 1) this.proyectoId.set(list[0].id);
+
+    const draft = await this.borrador.load<{
+      proyectoId: string;
+      carpinteria: number;
+      acero: number;
+      casa: number;
+      otroPersonal: string;
+      actividades: ActividadEntry[];
+      restricciones: string[];
+      comentarios: string;
+      step: number;
+    }>(this.DRAFT);
+
+    if (draft) {
+      this.proyectoId.set(draft.proyectoId);
+      this.carpinteria.set(draft.carpinteria);
+      this.acero.set(draft.acero);
+      this.casa.set(draft.casa);
+      this.otroPersonal.set(draft.otroPersonal);
+      this.actividades.set(draft.actividades ?? []);
+      this.restricciones.set(draft.restricciones ?? []);
+      this.comentarios.set(draft.comentarios ?? '');
+      this.step.set(draft.step ?? 1);
+      this.toast.show('Recuperamos tu parte a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
+    } else {
+      const obra = this.ctx.obraActiva();
+      if (obra) this.proyectoId.set(obra.id);
+      else if (list.length === 1) this.proyectoId.set(list[0].id);
+    }
+    this.hydrated = true;
   }
 
   addActividad(): void {
@@ -156,6 +227,8 @@ export class PartePage {
         comentarios: this.comentarios().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
       });
+      this.hydrated = false; // stop autosave; discard the draft
+      await this.borrador.clear(this.DRAFT);
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
