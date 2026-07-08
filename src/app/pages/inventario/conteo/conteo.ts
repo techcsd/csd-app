@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -13,7 +14,7 @@ import { Bodega, Existencia } from '../../../core/models/inventario.model';
   selector: 'app-conteo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BigConfirm],
+  imports: [FormsModule, BigConfirm, SelectList],
   templateUrl: './conteo.html',
   styleUrl: './conteo.scss',
 })
@@ -26,6 +27,7 @@ export class ConteoPage {
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
+  bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   existencias = signal<Existencia[]>([]);
   contado = signal<Record<string, number>>({});
   motivo = signal('');

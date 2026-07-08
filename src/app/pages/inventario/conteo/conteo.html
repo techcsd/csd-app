@@ -14,13 +14,7 @@
     </header>
 
     <div class="screen__body">
-      <label class="field-label">Bodega</label>
-      <select class="field" [ngModel]="bodegaId()" (ngModelChange)="onBodega($event)">
-        <option value="">Elige la bodega…</option>
-        @for (b of bodegas(); track b.id) {
-          <option [value]="b.id">{{ b.nombre }}</option>
-        }
-      </select>
+      <app-select-list label="Bodega" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="onBodega($event)" />
 
       @if (bodegaId()) {
         <p class="conteo__hint">Escribe la cantidad que contaste. Solo se ajusta lo que cambie.</p>

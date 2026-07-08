@@ -14,13 +14,7 @@
     </header>
 
     <div class="screen__body">
-      <label class="field-label">Obra</label>
-      <select class="field" [ngModel]="proyectoId()" (ngModelChange)="proyectoId.set($event)">
-        <option value="">Elige la obra…</option>
-        @for (p of proyectos(); track p.id) {
-          <option [value]="p.id">{{ p.nombre }}</option>
-        }
-      </select>
+      <app-select-list label="Obra" icon="🏗️" [options]="obraOptions()" [selectedId]="proyectoId()" (picked)="proyectoId.set($event)" />
 
       <label class="field-label pedir__mt">Elige los materiales</label>
       <app-articulo-picker [articulos]="articulos()" [exclude]="cartIds()" (picked)="add($event)" />

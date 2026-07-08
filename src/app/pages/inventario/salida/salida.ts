@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
+import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -15,7 +16,7 @@ import { ArticuloCat, Bodega, MovItem } from '../../../core/models/inventario.mo
   selector: 'app-salida',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BigConfirm, ArticuloPicker],
+  imports: [FormsModule, BigConfirm, ArticuloPicker, SelectList],
   templateUrl: './salida.html',
   styleUrl: './salida.scss',
 })
@@ -37,6 +38,7 @@ export class SalidaPage {
   done = signal(false);
 
   cartIds = computed(() => this.cart().map((c) => c.articulo_id));
+  bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
 
   constructor() {
     void this.init();

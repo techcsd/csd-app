@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { Bodega, Existencia } from '../../../core/models/inventario.model';
 
@@ -9,7 +10,7 @@ import { Bodega, Existencia } from '../../../core/models/inventario.model';
   selector: 'app-existencias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, SelectList],
   templateUrl: './existencias.html',
   styleUrl: './existencias.scss',
 })
@@ -19,6 +20,7 @@ export class ExistenciasPage {
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
+  bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   existencias = signal<Existencia[]>([]);
   query = signal('');
   loading = signal(false);

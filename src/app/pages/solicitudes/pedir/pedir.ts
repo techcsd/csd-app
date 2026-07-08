@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
+import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -17,7 +18,7 @@ import { ArticuloCat, MovItem, Urgencia } from '../../../core/models/inventario.
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BigConfirm, ArticuloPicker],
+  imports: [FormsModule, BigConfirm, ArticuloPicker, SelectList],
   templateUrl: './pedir.html',
   styleUrl: './pedir.scss',
 })
@@ -39,6 +40,7 @@ export class PedirPage {
   done = signal(false);
 
   cartIds = computed(() => this.cart().map((c) => c.articulo_id));
+  obraOptions = computed(() => this.proyectos().map((p) => ({ id: p.id, label: p.nombre })));
 
   constructor() {
     void this.init();

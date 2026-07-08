@@ -47,6 +47,23 @@ export class UserContextService {
     this._profile.set(data as unknown as Usuario);
   }
 
+  /**
+   * Server check of whether this user is still active. Returns null when it
+   * can't tell (offline / error) so callers keep the session rather than
+   * locking a field user out over a dropped connection.
+   */
+  async checkActivo(): Promise<boolean | null> {
+    const id = this._profile()?.id;
+    if (!id) return null;
+    const { data, error } = await this.supabase.client
+      .from('usuarios')
+      .select('activo')
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return null;
+    return (data as { activo: boolean }).activo !== false;
+  }
+
   setObraActiva(obra: { id: string; nombre: string } | null): void {
     this._obraActiva.set(obra);
   }

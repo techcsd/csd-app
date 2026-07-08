@@ -1,0 +1,21 @@
+@if (label()) {
+  <label class="field-label">{{ label() }}</label>
+}
+<div class="select-list">
+  @for (o of options(); track o.id) {
+    <button
+      type="button"
+      class="select-list__opt"
+      [class.select-list__opt--on]="selectedId() === o.id"
+      (click)="picked.emit(o.id)"
+    >
+      <span class="select-list__icon">{{ icon() }}</span>
+      <span class="select-list__label">{{ o.label }}</span>
+      @if (selectedId() === o.id) {
+        <span class="select-list__check">✓</span>
+      }
+    </button>
+  } @empty {
+    <p class="select-list__muted">No hay opciones.</p>
+  }
+</div>

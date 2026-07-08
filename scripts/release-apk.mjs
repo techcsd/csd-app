@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.0.3';
-const VERSION_CODE = 4;
-const CHANGELOG = 'Recibir conduce, conteo rápido de inventario y alertas de incidentes.';
+const VERSION = '1.0.4';
+const VERSION_CODE = 5;
+const CHANGELOG = 'Listas para elegir obra/bodega (más fácil), seguridad al reabrir y mejoras.';
 const RELEASED_AT = '2026-07-08';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
