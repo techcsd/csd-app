@@ -58,11 +58,32 @@ M1 ✅ · M2 ✅ · M3 ✅ · M4 ✅. M5 is piloto/rollout (no app code). The 4 
 ## PWA — DEPLOYED ✅
 Live at **https://app.sgcconstructorasd.com** (Vercel project `csd-app`, team CSD; GitHub repo connected → push to `main` auto-deploys). `vercel.json` = SPA rewrites + `no-cache` on ngsw-worker.js/ngsw.json/index.html. Verified live: deep-link routes 200, SW no-cache. PWA auto-update wired (UpdateService: VERSION_READY → activate + reload). Perfil screen shows app version (1.0.0) + manual "Buscar actualización" + logout.
 
-## Remaining polish / follow-ups (not blocking)
-- Recepción de conduce en bodega (overlaps chofer conduce flow + SGC confirmar_recepcion_salida).
-- Voice notes, offline drafts (borradores) for wizards, conteo rápido de inventario.
-- Real push/email notifications (no `sgc.notificaciones` table found — locate SGC's mechanism).
-- Live device walk-throughs + first signed APK (needs JDK/Android Studio) + internal APK download page in SGC web.
+## Signed APK — BUILT & PUBLISHED ✅
+Android Studio (JDK 21 + SDK) is installed, so the APK builds locally. Release
+keystore `android/csd-release.keystore` + `android/keystore.properties`
+(gitignored — **BACK THESE UP**; losing them = users reinstall). Signed
+`app-release.apk` (7.4 MB, V2-signed) published to the public `app-releases`
+bucket + `version.json`. Build/release steps: `scripts/build-apk.md`,
+`scripts/release-apk.mjs`. SGC page **CSD App (móvil)** shows APK link + QR + PWA
+install. Rebuild: `npx cap sync android && cd android && ./gradlew assembleRelease`
+(set JAVA_HOME + ANDROID_HOME per build-apk.md).
+
+## Authenticated E2E — VERIFIED ✅
+Real anon-key sign-in → JWT → v_app_mi_contexto (módulos) + mis_pendientes_transporte
++ stock reads all work under RLS (throwaway user, deleted after). Only the on-device
+camera/airplane-mode UI walkthrough still needs a physical phone.
+
+## Done this round
+Recepción de conduce en bodega (recibir_conduce_app), voice notes (incidente),
+offline drafts (parte), solicitud email notification (badge interconnection is
+automatic). SGC Flota view + conductor link + APK download page pushed to prod.
+
+## Remaining (deferred / needs you)
+- Incident immediate email: needs a new edge function + recipient list (no
+  `sgc.notificaciones` table — badges/visibility already work).
+- Conteo rápido de inventario (nice-to-have).
+- Rotate Supabase service_role/secret keys (dashboard — passed through chat).
+- On-device walkthrough (camera, airplane-mode capture → reconnect → verify).
 
 ## SGC web pending YOUR commit/push (deploys to Vercel prod)
 `dev/SGC` has uncommitted changes: Flota "Responsabilidad" view (M2) + Conductores user-link (conduces).
