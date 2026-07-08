@@ -85,12 +85,19 @@ Custom CSD icon (adaptive), redesigned PIN pad (device screenshot confirms), "pa
 
 **On-device deep test blocked on the local PIN** — give me the 4-digit PIN (or a test user's password) and I can drive the full flow via adb + screenshots to hunt bugs. Role gating is verified: Home tiles + routes are filtered by roles.modulos (a chofer sees only Transporte; an all-módulos user sees all — that's correct).
 
-## Remaining (deferred / needs you)
-- Incident immediate email: needs a new edge function + recipient list (no
-  `sgc.notificaciones` table — badges/visibility already work).
-- Conteo rápido de inventario (nice-to-have).
-- Rotate Supabase service_role/secret keys (dashboard — passed through chat).
-- On-device walkthrough (camera, airplane-mode capture → reconnect → verify).
+## Done (v1.0.3)
+- **Conteo rápido**: `conteos_inventario`/`conteo_items` audit tables + idempotent
+  `registrar_conteo_app` (adjusts stock to counted value via adjust_stock). Inventario flow.
+- **Incident email alerts**: `notificar-incidente` edge function (deployed) → admin + proyectos
+  module holders; app invokes it on incident sync. No-ops if Resend key unset.
+- On-device walkthrough done (see v1.0.1/1.0.2 notes); PIN re-lock on resume fixed.
+
+## Remaining (needs you / optional)
+- **Rotate Supabase service_role/secret keys** (dashboard — they passed through chat).
+- **Back up the keystore** (`android/csd-release.keystore` + `keystore.properties`).
+- Airplane-mode capture→reconnect→sync test on a real device (camera + offline queue).
+- Optional: notificar-incidente recipients (currently admin+proyectos) — tune if you want
+  project-specific supervisors; set NOTIFICATIONS_FROM_EMAIL + Resend key in Vault to enable email.
 
 ## SGC web pending YOUR commit/push (deploys to Vercel prod)
 `dev/SGC` has uncommitted changes: Flota "Responsabilidad" view (M2) + Conductores user-link (conduces).
