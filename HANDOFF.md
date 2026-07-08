@@ -31,12 +31,20 @@ DDL works via the Management API using the system env var `SUPABASE_ACCESS_TOKEN
 ## SGC web — Flota "Responsabilidad" view DONE (needs your commit/push)
 Added in `dev/SGC` (builds clean): route `/flota/responsabilidad`, shell nav entry, `VehiculosService.getResponsabilidad()` + `getEntregaFotoUrl()`, and the `Responsabilidad` component (history list, "requieren revisión" filter, expandable photos/signature via signed URLs, damage highlighting). **Not committed** — SGC pushes deploy to Vercel prod, so left for you to review + push.
 
-## Next (rest of M2)
-1. **Rutas + conduces del día** — DECIDED: add `sgc.conductores.usuario_id` FK. Steps: migration (add column) → small SGC admin UI to link a user to each conductor → app flow "mis conduces del día" (deliver with photo + receiver + signature, reuse SGC salidas RPC + idempotency).
-2. Live login walk-through of the full offline checklist (needs a real flota user's password): capture in airplane mode → reconnect → confirm row + photos in Supabase.
-3. Real notifications on `requiere_revision` once SGC's notification mechanism is located (no `sgc.notificaciones` table found).
+## M2 conduces — DONE
+- Migration `2026-07-08e-conduces.sql` applied: `conductores.usuario_id` FK; delivery-evidence columns on `salidas_inventario`; RPCs `entregar_conduce` (idempotent, reuses despachado→entregado/incompleto), `mis_conduces_hoy`, `mis_rutas_hoy`, `marcar_ruta_estado`. Guard paths verified.
+- App: `ConducesService` (+ `conduce_entrega` sync handler, registered at bootstrap); Transporte hub → "Mis conduces y rutas" → conduces list (routes with iniciar/completar + conduces) → delivery flow (photo → ¿llegó todo? → partial qty → receiver + signature), offline-first.
+- SGC web (`dev/SGC`, uncommitted): Conductores form now links a driver to an app user (`usuario_id`) so `mis_conduces_hoy`/`mis_rutas_hoy` resolve. Builds clean.
 
-## Then M3 — Bitácora (parte diario wizard + incidentes), reusing SGC's crear_entrada_bitacora RPC.
+## SGC web pending YOUR commit/push (deploys to Vercel prod)
+`dev/SGC` has uncommitted changes for both M2 features (Flota "Responsabilidad" view + Conductores user-link):
+`git -C "C:/Users/xavie/Desktop/X Dev/dev/SGC" status`
+
+## Still needs Xavier
+1. Live walk-throughs (need a real user password): vehicle checklist + conduce delivery, offline→reconnect→verify in Supabase. For conduces, first link a conductor to a user in SGC and dispatch a salida.
+2. Real notifications on `requiere_revision` (no `sgc.notificaciones` table found — locate SGC's mechanism).
+
+## Next: M3 — Bitácora (parte diario wizard + incidentes), reusing SGC's crear_entrada_bitacora RPC.
 
 ## How to run
 ```

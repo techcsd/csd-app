@@ -1,0 +1,114 @@
+.conduces {
+  background: var(--color-bg);
+}
+
+.conduces__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.conduces__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.conduces__icon {
+  font-size: 28px;
+}
+.conduces__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.conduces__section {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 20px 0 10px;
+}
+.conduces__muted {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 24px;
+}
+
+.ruta-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.ruta-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ruta-card__ruta {
+  font-weight: 700;
+  font-size: var(--fs-option);
+}
+.ruta-card__estado {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.ruta-card__estado[data-estado='en_curso'] {
+  color: var(--color-info);
+  font-weight: 700;
+}
+.ruta-card__actions .btn-ghost,
+.ruta-card__actions .btn-cta {
+  width: auto;
+  padding: 0 18px;
+  min-height: 48px;
+}
+
+.conduce-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.conduce-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.conduce-card__destino {
+  font-size: var(--fs-option);
+  font-weight: 700;
+}
+.conduce-card__bodega {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.conduce-card__items {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 15px;
+}
+.conduce-card__items li {
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}

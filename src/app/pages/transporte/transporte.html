@@ -6,6 +6,10 @@
   </header>
 
   <div class="screen__body">
+    <button type="button" class="btn-ghost transporte__conduces" (click)="conduces()">
+      🧾 Mis conduces y rutas
+    </button>
+
     @if (loading()) {
       <p class="transporte__muted">Cargando…</p>
     } @else {

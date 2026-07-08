@@ -1,0 +1,52 @@
+<div class="screen conduces">
+  <header class="conduces__header">
+    <button type="button" class="conduces__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="conduces__icon">🧾</span>
+    <h1 class="conduces__title">Conduces y rutas</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="conduces__muted">Cargando…</p>
+    } @else {
+      @if (rutas().length) {
+        <h2 class="conduces__section">Rutas de hoy</h2>
+        @for (r of rutas(); track r.id) {
+          <div class="ruta-card">
+            <div class="ruta-card__info">
+              <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}</span>
+              <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ r.estado }}</span>
+            </div>
+            <div class="ruta-card__actions">
+              @if (r.estado === 'planificada') {
+                <button type="button" class="btn-ghost" (click)="ruta(r.id, 'en_curso')">Iniciar</button>
+              } @else if (r.estado === 'en_curso') {
+                <button type="button" class="btn-cta" (click)="ruta(r.id, 'completada')">Completar</button>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <h2 class="conduces__section">Conduces por entregar</h2>
+      @for (c of conduces(); track c.id) {
+        <div class="conduce-card">
+          <div class="conduce-card__head">
+            <span class="conduce-card__destino">📍 {{ c.destino ?? 'Destino' }}</span>
+            <span class="conduce-card__bodega">Desde: {{ c.bodega ?? '—' }}</span>
+          </div>
+          <ul class="conduce-card__items">
+            @for (it of c.items; track it.detalle_id) {
+              <li>{{ it.cantidad | number: '1.0-2' }} {{ it.unidad }} · {{ it.articulo }}</li>
+            }
+          </ul>
+          <button type="button" class="btn-cta" (click)="entregar(c)">Marcar entrega</button>
+        </div>
+      } @empty {
+        <p class="conduces__muted">No tienes conduces por entregar.</p>
+      }
+    }
+  </div>
+
+  <app-sync-bar />
+</div>

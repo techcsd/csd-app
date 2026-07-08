@@ -1,0 +1,83 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Entrega registrada' : 'Guardado'"
+    [note]="online
+      ? (incompleto() ? 'Se marcó como entrega incompleta.' : 'Conduce entregado completo.')
+      : 'Sin señal. Se enviará solo.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else if (conduce(); as c) {
+  <div class="screen entrega">
+    <header class="entrega__header">
+      <h1 class="entrega__title">Entregar conduce</h1>
+      <span class="entrega__destino">📍 {{ c.destino ?? 'Destino' }}</span>
+    </header>
+
+    <div class="screen__body">
+      <h2 class="entrega__step">1. Foto de la entrega</h2>
+      <app-photo-slot label="Foto en el destino" hint="📸" (captured)="onFoto($event)" />
+
+      <h2 class="entrega__step">2. ¿Llegó todo el material?</h2>
+      <app-option-button
+        icon="✅"
+        label="Sí, llegó todo"
+        tone="success"
+        [selected]="llegoTodo() === true"
+        (pressed)="setLlegoTodo(true)"
+      />
+      <app-option-button
+        icon="⚠️"
+        label="No, faltó algo"
+        tone="warning"
+        [selected]="llegoTodo() === false"
+        (pressed)="setLlegoTodo(false)"
+      />
+
+      @if (llegoTodo() === false) {
+        <h2 class="entrega__step">Cantidad recibida</h2>
+        @for (it of c.items; track it.detalle_id) {
+          <div class="entrega__item">
+            <span class="entrega__item-name">{{ it.articulo }}</span>
+            <div class="entrega__item-qty">
+              <input
+                class="field"
+                type="number"
+                inputmode="decimal"
+                [ngModel]="cantidades()[it.detalle_id]"
+                (ngModelChange)="setCantidad(it.detalle_id, $event)"
+              />
+              <span class="entrega__item-unit">/ {{ it.cantidad }} {{ it.unidad }}</span>
+            </div>
+          </div>
+        }
+      }
+
+      <h2 class="entrega__step">3. ¿Quién recibe?</h2>
+      <input
+        class="field"
+        type="text"
+        [ngModel]="receptor()"
+        (ngModelChange)="receptor.set($event)"
+        placeholder="Nombre de quien recibe"
+      />
+
+      <h2 class="entrega__step">4. Firma de quien recibe</h2>
+      <app-signature-pad />
+    </div>
+
+    <footer class="entrega__nav">
+      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        {{ submitting() ? 'Guardando…' : 'Confirmar entrega' }}
+      </button>
+    </footer>
+  </div>
+} @else {
+  <div class="screen entrega">
+    <div class="screen__body">
+      <p>No se encontró el conduce. Vuelve e intenta de nuevo.</p>
+      <button type="button" class="btn-ghost" (click)="finish()">Volver</button>
+    </div>
+  </div>
+}

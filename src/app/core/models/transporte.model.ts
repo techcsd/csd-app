@@ -53,3 +53,27 @@ export interface DanoCaptura {
   zona: string;
   descripcion: string;
 }
+
+export interface ConduceItem {
+  detalle_id: string;
+  articulo: string;
+  unidad: string;
+  cantidad: number;
+}
+
+export interface Conduce {
+  id: string;
+  fecha: string;
+  estado: string;
+  destino: string | null;
+  bodega: string | null;
+  items: ConduceItem[];
+}
+
+export interface RutaHoy {
+  id: string;
+  origen: string;
+  destino: string;
+  estado: string;
+  fecha: string;
+}

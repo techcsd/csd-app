@@ -43,6 +43,10 @@ export class TransportePage {
     void this.router.navigate(['/transporte/devolver', vehiculoId]);
   }
 
+  conduces(): void {
+    void this.router.navigate(['/transporte/conduces']);
+  }
+
   back(): void {
     this.location.back();
   }

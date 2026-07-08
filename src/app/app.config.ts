@@ -10,6 +10,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 import { VehiculosService } from './core/services/vehiculos.service';
+import { ConducesService } from './core/services/conduces.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,6 +24,7 @@ export const appConfig: ApplicationConfig = {
     // captures sync even before the user opens that module.
     provideAppInitializer(() => {
       inject(VehiculosService);
+      inject(ConducesService);
     }),
   ],
 };
