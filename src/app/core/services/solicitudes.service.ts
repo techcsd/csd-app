@@ -85,6 +85,15 @@ export class SolicitudesService {
         p_items: payload['items'],
       });
       if (error) throw new PermanentSyncError(error.message);
+
+      // Same email notification the web fires (notificar-solicitud edge fn).
+      // Fire-and-forget: a notification failure must not fail the sync — the
+      // solicitud already lands in SGC and shows on the approver's badge.
+      this.supabase.client.functions
+        .invoke('notificar-solicitud', {
+          body: { tipo: 'material', solicitudId: payload['id'], evento: 'creada' },
+        })
+        .catch(() => {});
     });
   }
 }

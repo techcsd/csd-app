@@ -96,6 +96,13 @@ app-option-button {
   color: #fff;
 }
 
+.incidente__or {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 12px 0;
+}
+
 .incidente__nav {
   padding: 16px;
   padding-bottom: calc(16px + var(--safe-bottom));

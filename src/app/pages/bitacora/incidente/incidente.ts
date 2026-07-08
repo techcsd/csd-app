@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -22,7 +23,7 @@ import {
   selector: 'app-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, Counter, BigConfirm],
+  imports: [FormsModule, OptionButton, Counter, BigConfirm, VoiceRecorder],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })
@@ -44,6 +45,7 @@ export class IncidentePage {
   gravedad = signal<string>('');
   lesionados = signal(0);
   descripcion = signal('');
+  voz = signal<Blob | null>(null);
   fotos = signal<CapturedPhoto[]>([]);
   capturing = signal(false);
   submitting = signal(false);
@@ -107,6 +109,7 @@ export class IncidentePage {
         lesionados: this.lesionados(),
         descripcion: this.descripcion().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
+        voz: this.voz(),
       });
       this.done.set(true);
     } catch (e) {

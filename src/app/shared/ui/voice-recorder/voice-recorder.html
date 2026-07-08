@@ -1,0 +1,18 @@
+<div class="voice">
+  @if (previewUrl(); as url) {
+    <audio class="voice__audio" [src]="url" controls></audio>
+    <button type="button" class="btn-ghost voice__clear" (click)="clear()">Repetir nota</button>
+  } @else {
+    <button
+      type="button"
+      class="voice__btn"
+      [class.voice__btn--rec]="recording()"
+      (click)="toggle()"
+    >
+      {{ recording() ? '⏹️ Detener grabación' : '🎤 Grabar nota de voz' }}
+    </button>
+    @if (recording()) {
+      <span class="voice__pulse">Grabando…</span>
+    }
+  }
+</div>

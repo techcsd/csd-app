@@ -1,0 +1,32 @@
+.voice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.voice__btn {
+  width: 100%;
+  min-height: 64px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  font-size: var(--fs-option);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.voice__btn--rec {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+.voice__pulse {
+  color: var(--color-error);
+  font-weight: 700;
+}
+.voice__audio {
+  width: 100%;
+}
+.voice__clear {
+  width: auto;
+  padding: 0 20px;
+}

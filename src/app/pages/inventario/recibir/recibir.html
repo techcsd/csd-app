@@ -1,0 +1,50 @@
+<div class="screen recibir">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Recibir conduce</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="recibir__muted">Cargando…</p>
+    } @else {
+      @for (c of conduces(); track c.id) {
+        <div class="rec-card">
+          <button type="button" class="rec-card__row" (click)="toggle(c)">
+            <div>
+              <span class="rec-card__destino">📍 {{ c.destino ?? 'Destino' }}</span>
+              <span class="rec-card__bodega">Desde: {{ c.bodega ?? '—' }}</span>
+            </div>
+            <span class="rec-card__chev">{{ expandedId() === c.id ? '▲' : '▼' }}</span>
+          </button>
+
+          @if (expandedId() === c.id) {
+            <div class="rec-card__body">
+              @for (it of c.items; track it.detalle_id) {
+                <div class="rec-item">
+                  <span class="rec-item__name">{{ it.articulo }}</span>
+                  <div class="rec-item__qty">
+                    <input class="field" type="number" inputmode="decimal"
+                      [ngModel]="cantidades()[it.detalle_id]"
+                      (ngModelChange)="setCantidad(it.detalle_id, $event)" />
+                    <span class="rec-item__unit">/ {{ it.cantidad }} {{ it.unidad }}</span>
+                  </div>
+                </div>
+              }
+              <button type="button" class="btn-ghost rec-card__foto" [disabled]="capturing()" (click)="addFoto()">
+                {{ foto() ? '✅ Foto agregada' : (capturing() ? '⏳ Tomando…' : '📷 Foto (opcional)') }}
+              </button>
+              <button type="button" class="btn-cta" [disabled]="submitting()" (click)="confirm(c)">
+                {{ submitting() ? 'Guardando…' : 'Confirmar recepción' }}
+              </button>
+            </div>
+          }
+        </div>
+      } @empty {
+        <p class="recibir__muted">No hay conduces por recibir.</p>
+      }
+    }
+  </div>
+
+  <app-sync-bar />
+</div>

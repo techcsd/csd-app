@@ -27,6 +27,7 @@ export interface IncidenteCaptura {
   lesionados: number;
   descripcion: string | null;
   fotos: Blob[];
+  voz: Blob | null;
 }
 
 /**
@@ -100,7 +101,12 @@ export class BitacoraService {
         incidente_descripcion: input.descripcion,
         capturado_en,
       },
-      fotos: this.buildFotos(id, input.fotos),
+      fotos: [
+        ...this.buildFotos(id, input.fotos),
+        ...(input.voz
+          ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/voz.webm`, slot: 'voz', blob: input.voz }]
+          : []),
+      ],
       resumen: { tipo: 'incidente', proyecto_id: input.proyectoId, capturado_en },
     });
   }
@@ -123,11 +129,15 @@ export class BitacoraService {
 
   private registerHandler(): void {
     this.sync.register('bitacora', async (payload, photoPaths) => {
-      const fotos = Object.keys(photoPaths).map((slot) => ({
-        path: photoPaths[slot],
-        nombre: `${slot}.jpg`,
-        tipo_mime: 'image/jpeg',
-      }));
+      const fotos = Object.keys(photoPaths).map((slot) => {
+        const path = photoPaths[slot];
+        const isAudio = path.endsWith('.webm');
+        return {
+          path,
+          nombre: path.split('/').pop() ?? `${slot}.jpg`,
+          tipo_mime: isAudio ? 'audio/webm' : 'image/jpeg',
+        };
+      });
       const { error } = await this.supabase.client.rpc('crear_bitacora_app', {
         p_id: payload['id'],
         p_proyecto_id: payload['proyecto_id'],
