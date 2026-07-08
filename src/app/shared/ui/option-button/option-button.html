@@ -1,0 +1,16 @@
+<button
+  type="button"
+  class="option-button"
+  [class.option-button--selected]="selected()"
+  [attr.data-tone]="tone()"
+  [attr.aria-pressed]="selected()"
+  (click)="pressed.emit()"
+>
+  @if (icon()) {
+    <span class="option-button__icon">{{ icon() }}</span>
+  }
+  <span class="option-button__label">{{ label() }}</span>
+  @if (selected()) {
+    <span class="option-button__check">✓</span>
+  }
+</button>

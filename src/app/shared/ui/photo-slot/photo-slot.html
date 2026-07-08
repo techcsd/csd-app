@@ -1,0 +1,16 @@
+@if (preview(); as src) {
+  <div class="photo-slot photo-slot--done">
+    <img class="photo-slot__thumb" [src]="src" alt="{{ label() }}" />
+    <div class="photo-slot__overlay">
+      <span class="photo-slot__check">✓</span>
+      <span class="photo-slot__label">{{ label() }}</span>
+    </div>
+    <button type="button" class="photo-slot__retake" (click)="clear()">Repetir foto</button>
+  </div>
+} @else {
+  <button type="button" class="photo-slot" (click)="capture()" [disabled]="busy()">
+    <span class="photo-slot__hint">{{ busy() ? '⏳' : hint() }}</span>
+    <span class="photo-slot__label">{{ label() }}</span>
+    <span class="photo-slot__cta">Tomar foto</span>
+  </button>
+}

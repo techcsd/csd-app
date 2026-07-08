@@ -1,0 +1,183 @@
+/* ============================================================
+   CSD App — Global styles & design tokens
+   Field app for Constructora SD. Designed for low digital
+   literacy, gloves, direct sunlight, low-end Android.
+   (See UI/UX doc: icon+text, huge targets, contrast >= 7:1.)
+   ============================================================ */
+
+:root {
+  /* Brand */
+  --color-primary: #f97316; /* naranja construcción — CTAs */
+  --color-primary-dark: #c2570c; /* pressed */
+  --color-secondary: #1e3a5f; /* azul CSD — headers/marca */
+  --color-accent: #facc15; /* badges de pendientes */
+
+  /* Surfaces (max luminance for sunlight) */
+  --color-bg: #ffffff;
+  --color-surface: #f4f4f5;
+  --color-surface-2: #e9e9ec;
+  --color-border: #d4d4d8;
+
+  /* Text (>= 7:1 contrast, never light grey on white) */
+  --color-text-primary: #18181b;
+  --color-text-secondary: #3f3f46;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-secondary: #ffffff;
+
+  /* Semantic — color always paired with an icon (colorblind-safe) */
+  --color-success: #16a34a; /* guardado / sincronizado / entregado */
+  --color-warning: #d97706; /* pendiente de envío */
+  --color-error: #dc2626; /* error / daño / incidente */
+  --color-info: #2563eb;
+  --color-success-bg: #dcfce7;
+  --color-warning-bg: #fef3c7;
+  --color-error-bg: #fee2e2;
+
+  /* Typography */
+  --font-body: system-ui, 'Roboto', 'Segoe UI', sans-serif;
+  --fs-home-btn: 22px;
+  --fs-title: 24px;
+  --fs-option: 18px;
+  --fs-body: 16px; /* absolute minimum */
+
+  /* Touch & spacing — gloves-friendly */
+  --touch-min: 56px;
+  --gap: 12px;
+  --radius: 16px;
+  --radius-sm: 10px;
+
+  /* Safe areas (notches / gesture bars) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --transition: 0.15s ease;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  /* Prevent iOS auto-zoom on inputs (< 16px triggers it). */
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Do not animate for users who ask for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* App-wide layout helpers ---------------------------------- */
+
+.screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+.screen__body {
+  flex: 1;
+  padding: 20px 16px;
+  overflow-y: auto;
+}
+
+.screen__title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+}
+
+.screen__subtitle {
+  font-size: var(--fs-body);
+  color: var(--color-text-secondary);
+  margin: 0 0 20px;
+}
+
+/* Primary CTA button used across flows. */
+.btn-cta {
+  width: 100%;
+  min-height: 64px;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: 20px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background var(--transition);
+}
+.btn-cta:active {
+  background: var(--color-primary-dark);
+}
+.btn-cta:disabled {
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+}
+
+.btn-ghost {
+  width: 100%;
+  min-height: var(--touch-min);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--fs-option);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.field-label {
+  display: block;
+  font-size: var(--fs-option);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+input.field {
+  width: 100%;
+  min-height: var(--touch-min);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  font-size: var(--fs-option);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+input.field:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}

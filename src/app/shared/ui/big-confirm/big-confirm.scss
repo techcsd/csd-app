@@ -1,0 +1,53 @@
+.big-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 32px;
+  text-align: center;
+  color: #fff;
+  background: var(--color-success);
+}
+
+.big-confirm[data-tone='pending'] {
+  background: var(--color-warning);
+}
+
+.big-confirm__icon {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+  line-height: 1;
+}
+
+.big-confirm__title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.big-confirm__note {
+  font-size: 18px;
+  margin: 0;
+  max-width: 30ch;
+  opacity: 0.95;
+}
+
+.big-confirm__btn {
+  margin-top: 12px;
+  max-width: 320px;
+  background: #fff;
+  color: var(--color-text-primary);
+}
+.big-confirm__btn:active {
+  background: var(--color-surface);
+}

@@ -1,0 +1,29 @@
+<div class="screen login">
+  <div class="login__brand">
+    <h1 class="login__title">Recuperar contraseña</h1>
+    <p class="login__tagline">Te enviaremos un enlace a tu correo.</p>
+  </div>
+
+  <form class="login__form" (ngSubmit)="submit()">
+    @if (!sent()) {
+      <label class="field-label" for="email">Correo</label>
+      <input
+        id="email"
+        class="field"
+        type="email"
+        inputmode="email"
+        autocomplete="username"
+        [ngModel]="email()"
+        (ngModelChange)="email.set($event)"
+        name="email"
+        placeholder="tucorreo@constructorasd.com"
+      />
+      <button type="submit" class="btn-cta login__submit" [disabled]="loading()">
+        {{ loading() ? 'Enviando…' : 'Enviar enlace' }}
+      </button>
+    } @else {
+      <p>Revisa tu correo y abre el enlace para crear una nueva contraseña.</p>
+    }
+    <a class="login__forgot" routerLink="/auth/login">Volver a entrar</a>
+  </form>
+</div>

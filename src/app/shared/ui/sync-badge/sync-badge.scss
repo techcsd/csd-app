@@ -1,0 +1,30 @@
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sync-badge__icon {
+  font-size: 15px;
+}
+
+.sync-badge[data-state='pending'] {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.sync-badge[data-state='syncing'] {
+  background: #dbeafe;
+  color: var(--color-info);
+}
+.sync-badge[data-state='done'] {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.sync-badge[data-state='error'] {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}

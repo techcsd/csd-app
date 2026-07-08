@@ -1,0 +1,11 @@
+<div class="signature-pad">
+  <div class="signature-pad__frame">
+    <canvas #canvas class="signature-pad__canvas"></canvas>
+    @if (empty()) {
+      <span class="signature-pad__placeholder">Firme aquí</span>
+    }
+  </div>
+  <button type="button" class="btn-ghost signature-pad__clear" (click)="clear()">
+    Repetir firma
+  </button>
+</div>

@@ -1,0 +1,28 @@
+<div class="screen home">
+  <header class="home__header">
+    <div>
+      <p class="home__greeting">Hola, {{ nombre() }} 👷</p>
+      @if (obra(); as o) {
+        <p class="home__obra">Obra: {{ o.nombre }}</p>
+      }
+    </div>
+    <button type="button" class="home__logout" (click)="logout()" aria-label="Salir">Salir</button>
+  </header>
+
+  <main class="home__grid">
+    @for (tile of tiles(); track tile.modulo) {
+      <app-big-button
+        [icon]="tile.icon"
+        [label]="tile.label"
+        [tint]="tile.tint"
+        (pressed)="open(tile)"
+      />
+    } @empty {
+      <p class="home__empty">
+        Tu usuario no tiene módulos de la app todavía. Habla con administración.
+      </p>
+    }
+  </main>
+
+  <app-sync-bar />
+</div>

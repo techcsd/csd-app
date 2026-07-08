@@ -1,0 +1,56 @@
+.home {
+  background: var(--color-bg);
+}
+
+.home__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 16px 8px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.home__greeting {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+.home__obra {
+  margin: 4px 0 0;
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+.home__logout {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.home__grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap);
+  padding: 16px;
+  align-content: start;
+}
+
+/* A single visible tile spans the full width so it reads as "your job". */
+.home__grid:has(app-big-button:only-child) {
+  grid-template-columns: 1fr;
+}
+
+.home__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-option);
+  padding: 40px 20px;
+}

@@ -1,0 +1,15 @@
+<div class="pin-pad">
+  <div class="pin-pad__dots">
+    @for (filled of dots(); track $index) {
+      <span class="pin-pad__dot" [class.pin-pad__dot--on]="filled"></span>
+    }
+  </div>
+  <div class="pin-pad__keys">
+    @for (k of keys; track k) {
+      <button type="button" class="pin-pad__key" (click)="press(k)">{{ k }}</button>
+    }
+    <span class="pin-pad__key pin-pad__key--empty"></span>
+    <button type="button" class="pin-pad__key" (click)="press('0')">0</button>
+    <button type="button" class="pin-pad__key pin-pad__key--back" (click)="back()">⌫</button>
+  </div>
+</div>

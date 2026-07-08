@@ -1,0 +1,15 @@
+<div class="counter">
+  @if (label()) {
+    <span class="counter__label">
+      @if (icon()) {
+        <span class="counter__icon">{{ icon() }}</span>
+      }
+      {{ label() }}
+    </span>
+  }
+  <div class="counter__controls">
+    <button type="button" class="counter__btn" aria-label="Quitar uno" (click)="dec()">−</button>
+    <span class="counter__value">{{ value() }}</span>
+    <button type="button" class="counter__btn" aria-label="Agregar uno" (click)="inc()">+</button>
+  </div>
+</div>

@@ -1,0 +1,30 @@
+.sync-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px;
+  padding-bottom: calc(14px + var(--safe-bottom));
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-success);
+}
+
+.sync-bar__icon {
+  font-size: 18px;
+}
+
+.sync-bar[data-state='offline'] {
+  background: var(--color-text-secondary);
+}
+.sync-bar[data-state='syncing'] {
+  background: var(--color-info);
+}
+.sync-bar[data-state='pending'] {
+  background: var(--color-warning);
+}
+.sync-bar[data-state='error'] {
+  background: var(--color-error);
+}

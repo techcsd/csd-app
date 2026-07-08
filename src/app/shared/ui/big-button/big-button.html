@@ -1,0 +1,7 @@
+<button type="button" class="big-button" (click)="pressed.emit()">
+  @if (badge() && badge()! > 0) {
+    <span class="big-button__badge">{{ badge() }}</span>
+  }
+  <span class="big-button__icon" [style.background]="tint()">{{ icon() }}</span>
+  <span class="big-button__label">{{ label() }}</span>
+</button>

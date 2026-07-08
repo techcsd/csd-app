@@ -1,0 +1,7 @@
+<div class="toast-host">
+  @for (t of toasts(); track t.id) {
+    <button type="button" class="toast" [attr.data-tone]="t.tone" (click)="dismiss(t.id)">
+      {{ t.text }}
+    </button>
+  }
+</div>

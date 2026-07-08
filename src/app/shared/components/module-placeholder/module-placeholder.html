@@ -1,0 +1,19 @@
+<div class="screen module">
+  <header class="module__header">
+    <button type="button" class="module__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="module__icon">{{ icon() }}</span>
+    <h1 class="module__title">{{ title() }}</h1>
+  </header>
+
+  <div class="screen__body">
+    <div class="module__soon">🚧 En construcción</div>
+    <p class="module__lead">Aquí vas a poder:</p>
+    <ul class="module__actions">
+      @for (a of actions(); track a) {
+        <li class="module__action">{{ a }}</li>
+      }
+    </ul>
+  </div>
+
+  <app-sync-bar />
+</div>

@@ -1,0 +1,13 @@
+<div class="screen pin-screen">
+  <div class="pin-screen__body">
+    <h1 class="pin-screen__title">
+      {{ step() === 'crear' ? 'Crea tu PIN' : 'Repite tu PIN' }}
+    </h1>
+    <p class="pin-screen__hint">
+      {{ step() === 'crear'
+        ? 'Elige 4 números para entrar rápido la próxima vez.'
+        : 'Escríbelo otra vez para confirmar.' }}
+    </p>
+    <app-pin-pad [(value)]="value" (completed)="onCompleted($event)" />
+  </div>
+</div>

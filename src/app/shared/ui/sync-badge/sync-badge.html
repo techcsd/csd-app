@@ -1,0 +1,10 @@
+<button
+  type="button"
+  class="sync-badge"
+  [attr.data-state]="state()"
+  [disabled]="state() !== 'error'"
+  (click)="retry.emit()"
+>
+  <span class="sync-badge__icon">{{ meta().icon }}</span>
+  <span class="sync-badge__text">{{ meta().text }}</span>
+</button>

@@ -1,0 +1,12 @@
+<div class="big-confirm" [attr.data-tone]="tone()" role="alertdialog" aria-live="assertive">
+  <div class="big-confirm__icon">
+    {{ tone() === 'done' ? '✓' : '⏳' }}
+  </div>
+  <h2 class="big-confirm__title">{{ title() }}</h2>
+  @if (note()) {
+    <p class="big-confirm__note">{{ note() }}</p>
+  }
+  <button type="button" class="btn-cta big-confirm__btn" (click)="dismissed.emit()">
+    {{ buttonLabel() }}
+  </button>
+</div>
