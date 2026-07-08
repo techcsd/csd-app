@@ -31,6 +31,12 @@ export interface RecepcionCaptura {
   foto: Blob | null;
 }
 
+export interface ConteoCaptura {
+  bodegaId: string;
+  motivo: string | null;
+  items: { articulo_id: string; cantidad_contada: number }[];
+}
+
 /**
  * Bodega stock reads (offline-cached) + salida/entrada writes through the
  * outbox. Commits via sgc.registrar_salida_app / registrar_entrada_app, which
@@ -179,6 +185,18 @@ export class InventarioService {
     void this.conducesPorRecibir();
   }
 
+  async enqueueConteo(input: ConteoCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'inv_conteo',
+      capturado_en,
+      payload: { id, bodega_id: input.bodegaId, motivo: input.motivo, items: input.items },
+      resumen: { tipo: 'conteo', capturado_en, items: input.items.length },
+    });
+  }
+
   private fotoOf(id: string, foto: Blob | null) {
     return foto
       ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/evidencia.jpg`, slot: 'evidencia', blob: foto }]
@@ -217,6 +235,16 @@ export class InventarioService {
         p_items: payload['items'],
         p_notas: payload['notas'] ?? null,
         p_foto_path: photoPaths['recepcion'] ?? null,
+      });
+      if (error) throw new PermanentSyncError(error.message);
+    });
+
+    this.sync.register('inv_conteo', async (payload) => {
+      const { error } = await this.supabase.client.rpc('registrar_conteo_app', {
+        p_id: payload['id'],
+        p_bodega_id: payload['bodega_id'],
+        p_motivo: payload['motivo'] ?? null,
+        p_items: payload['items'],
       });
       if (error) throw new PermanentSyncError(error.message);
     });

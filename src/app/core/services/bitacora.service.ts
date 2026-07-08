@@ -178,6 +178,14 @@ export class BitacoraService {
         p_capturado_en: payload['capturado_en'],
       });
       if (error) throw new PermanentSyncError(error.message);
+
+      // Alert management by email on incidents (fire-and-forget; the incident
+      // is already in SGC + on the dashboard regardless).
+      if (payload['tipo'] === 'incidente') {
+        this.supabase.client.functions
+          .invoke('notificar-incidente', { body: { bitacoraId: payload['id'] } })
+          .catch(() => {});
+      }
     });
   }
 }

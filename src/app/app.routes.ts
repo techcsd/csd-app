@@ -124,6 +124,11 @@ export const routes: Routes = [
       import('./pages/inventario/recibir/recibir').then((m) => m.RecibirConducePage),
   },
   {
+    path: 'inventario/conteo',
+    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    loadComponent: () => import('./pages/inventario/conteo/conteo').then((m) => m.ConteoPage),
+  },
+  {
     path: 'solicitudes',
     canActivate: [authGuard, pinGuard, moduleGuard('compras')],
     loadComponent: () => import('./pages/solicitudes/solicitudes').then((m) => m.SolicitudesPage),

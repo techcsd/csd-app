@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.0.2';
-const VERSION_CODE = 3;
-const CHANGELOG = 'PIN al reabrir la app (seguridad), orden de bitácoras y mejoras menores.';
+const VERSION = '1.0.3';
+const VERSION_CODE = 4;
+const CHANGELOG = 'Recibir conduce, conteo rápido de inventario y alertas de incidentes.';
 const RELEASED_AT = '2026-07-08';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
