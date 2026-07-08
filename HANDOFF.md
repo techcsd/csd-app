@@ -92,6 +92,15 @@ Custom CSD icon (adaptive), redesigned PIN pad (device screenshot confirms), "pa
   module holders; app invokes it on incident sync. No-ops if Resend key unset.
 - On-device walkthrough done (see v1.0.1/1.0.2 notes); PIN re-lock on resume fixed.
 
+## v1.0.4 (this round)
+- **Keystore backed up** to `Projects documentations/CSD App Documentation/KEYSTORE-BACKUP/` (+ LEEME.txt). ⚠️ Still copy it OFF this machine (password manager / cloud / USB).
+- **Incident emails enabled/confirmed**: Vault Resend key present, function deployed, recipients = 1 admin + 5 proyectos. Fires on the first real field incident (didn't send a fake test blast).
+- **UX**: native obra/bodega dropdowns → tappable `SelectList` (glove-friendly) across pedir/salida/entrada/conteo/existencias.
+- **Security**: deactivated-user lockout (cold start + resume). FLAG_SECURE deliberately skipped (would block WhatsApp screenshot-sharing).
+
+## Airplane-mode test — PENDING (device was unplugged)
+Reconnect the phone (USB, debugging on) and tell me — I'll: unlock → turn off wifi/data via adb → create a capture offline (shows ⏳ pending) → reconnect → confirm it syncs (✅) + lands in Supabase. Also I'll reinstall v1.0.4 (currently only published to the download page, not yet on the device).
+
 ## Remaining (needs you / optional)
 - **Rotate Supabase service_role/secret keys** (dashboard — they passed through chat).
 - **Back up the keystore** (`android/csd-release.keystore` + `keystore.properties`).
