@@ -1,0 +1,47 @@
+export interface Bodega {
+  id: string;
+  nombre: string;
+}
+
+export interface ArticuloCat {
+  id: string;
+  nombre: string;
+  codigo: string;
+  unidad: string;
+}
+
+export interface Existencia {
+  articulo_id: string;
+  nombre: string;
+  codigo: string;
+  unidad: string;
+  cantidad: number;
+}
+
+/** A line in a salida/entrada/solicitud cart. */
+export interface MovItem {
+  articulo_id: string;
+  nombre: string;
+  unidad: string;
+  cantidad: number;
+}
+
+export type Urgencia = 'normal' | 'urgente';
+
+export interface SolicitudItem {
+  descripcion: string | null;
+  cantidad: number;
+  unidad: string | null;
+}
+
+export interface Solicitud {
+  id: string;
+  estado: string;
+  urgencia: string;
+  notas: string | null;
+  created_at: string;
+  proyecto?: { nombre: string } | null;
+  items?: SolicitudItem[];
+}
+
+export const SOLICITUD_PASOS = ['pendiente', 'aprobada', 'entregada'] as const;

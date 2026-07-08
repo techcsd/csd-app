@@ -1,1 +1,24 @@
-<app-module-placeholder icon="📦" title="Inventario" [actions]="actions" />
+<div class="screen inventario">
+  <header class="inv-header">
+    <button type="button" class="inv-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="inv-header__icon">📦</span>
+    <h1 class="inv-header__title">Inventario</h1>
+  </header>
+
+  <div class="screen__body">
+    <button type="button" class="inv-action" (click)="go('/inventario/existencias')">
+      <span class="inv-action__icon">🔎</span>
+      <span class="inv-action__label">Ver existencias</span>
+    </button>
+    <button type="button" class="inv-action inv-action--out" (click)="go('/inventario/salida')">
+      <span class="inv-action__icon">➖</span>
+      <span class="inv-action__label">Registrar salida</span>
+    </button>
+    <button type="button" class="inv-action inv-action--in" (click)="go('/inventario/entrada')">
+      <span class="inv-action__icon">➕</span>
+      <span class="inv-action__label">Registrar entrada</span>
+    </button>
+  </div>
+
+  <app-sync-bar />
+</div>

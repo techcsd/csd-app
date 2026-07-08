@@ -1,0 +1,63 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Solicitud enviada' : 'Guardado'"
+    [note]="online ? 'Compras la recibió. Sigue su estado en Mis solicitudes.' : 'Sin señal. Se enviará solo.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen pedir">
+    <header class="pedir__header">
+      <button type="button" class="pedir__back" (click)="back()" aria-label="Atrás">←</button>
+      <h1 class="pedir__title">Pedir materiales</h1>
+    </header>
+
+    <div class="screen__body">
+      <label class="field-label">Obra</label>
+      <select class="field" [ngModel]="proyectoId()" (ngModelChange)="proyectoId.set($event)">
+        <option value="">Elige la obra…</option>
+        @for (p of proyectos(); track p.id) {
+          <option [value]="p.id">{{ p.nombre }}</option>
+        }
+      </select>
+
+      <label class="field-label pedir__mt">Agregar material</label>
+      <input class="field" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Buscar material…" />
+      @if (matches().length) {
+        <div class="pedir__matches">
+          @for (a of matches(); track a.id) {
+            <button type="button" class="pedir__match" (click)="add(a)">
+              {{ a.nombre }} <span>{{ a.codigo }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      @for (it of cart(); track it.articulo_id) {
+        <div class="pedir__item">
+          <span class="pedir__item-name">{{ it.nombre }}</span>
+          <div class="pedir__item-qty">
+            <input class="field" type="number" inputmode="decimal" [ngModel]="it.cantidad" (ngModelChange)="setCantidad($index, $event)" />
+            <span class="pedir__item-unit">{{ it.unidad }}</span>
+            <button type="button" class="pedir__item-x" (click)="remove($index)">✕</button>
+          </div>
+        </div>
+      } @empty {
+        <p class="pedir__muted">Agrega los materiales que necesitas.</p>
+      }
+
+      <label class="field-label pedir__mt">¿Urgencia?</label>
+      <div class="pedir__urg">
+        <button type="button" class="urg-btn" [class.urg-btn--on]="urgencia() === 'normal'" (click)="urgencia.set('normal')">Normal</button>
+        <button type="button" class="urg-btn urg-btn--danger" [class.urg-btn--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 Urgente</button>
+      </div>
+    </div>
+
+    <footer class="pedir__nav">
+      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        {{ submitting() ? 'Enviando…' : 'Enviar solicitud' }}
+      </button>
+    </footer>
+  </div>
+}

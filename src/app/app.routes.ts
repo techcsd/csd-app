@@ -96,9 +96,35 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/inventario/inventario').then((m) => m.InventarioPage),
   },
   {
+    path: 'inventario/existencias',
+    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    loadComponent: () =>
+      import('./pages/inventario/existencias/existencias').then((m) => m.ExistenciasPage),
+  },
+  {
+    path: 'inventario/salida',
+    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    loadComponent: () => import('./pages/inventario/salida/salida').then((m) => m.SalidaPage),
+  },
+  {
+    path: 'inventario/entrada',
+    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    loadComponent: () => import('./pages/inventario/entrada/entrada').then((m) => m.EntradaPage),
+  },
+  {
     path: 'solicitudes',
     canActivate: [authGuard, pinGuard, moduleGuard('compras')],
     loadComponent: () => import('./pages/solicitudes/solicitudes').then((m) => m.SolicitudesPage),
+  },
+  {
+    path: 'solicitudes/pedir',
+    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    loadComponent: () => import('./pages/solicitudes/pedir/pedir').then((m) => m.PedirPage),
+  },
+  {
+    path: 'solicitudes/mis',
+    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    loadComponent: () => import('./pages/solicitudes/mis/mis').then((m) => m.MisSolicitudesPage),
   },
 
   {

@@ -1,0 +1,42 @@
+<div class="screen existencias">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Existencias</h1>
+  </header>
+
+  <div class="screen__body">
+    <label class="field-label">Bodega</label>
+    <select class="field" [ngModel]="bodegaId()" (ngModelChange)="onBodega($event)">
+      <option value="">Elige la bodega…</option>
+      @for (b of bodegas(); track b.id) {
+        <option [value]="b.id">{{ b.nombre }}</option>
+      }
+    </select>
+
+    @if (bodegaId()) {
+      <input
+        class="field existencias__search"
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        placeholder="Buscar material…"
+      />
+
+      @if (loading()) {
+        <p class="existencias__muted">Cargando…</p>
+      } @else {
+        @for (e of filtered(); track e.articulo_id) {
+          <div class="stock-row">
+            <div class="stock-row__info">
+              <span class="stock-row__name">{{ e.nombre }}</span>
+              <span class="stock-row__code">{{ e.codigo }}</span>
+            </div>
+            <span class="stock-row__qty">{{ e.cantidad | number: '1.0-2' }} {{ e.unidad }}</span>
+          </div>
+        } @empty {
+          <p class="existencias__muted">No hay materiales en esta bodega.</p>
+        }
+      }
+    }
+  </div>
+</div>

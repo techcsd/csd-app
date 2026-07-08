@@ -12,6 +12,8 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { VehiculosService } from './core/services/vehiculos.service';
 import { ConducesService } from './core/services/conduces.service';
 import { BitacoraService } from './core/services/bitacora.service';
+import { InventarioService } from './core/services/inventario.service';
+import { SolicitudesService } from './core/services/solicitudes.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,6 +29,8 @@ export const appConfig: ApplicationConfig = {
       inject(VehiculosService);
       inject(ConducesService);
       inject(BitacoraService);
+      inject(InventarioService);
+      inject(SolicitudesService);
     }),
   ],
 };

@@ -1,0 +1,112 @@
+.pedir {
+  background: var(--color-bg);
+}
+.pedir__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.pedir__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.pedir__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.pedir__mt {
+  margin-top: 20px;
+}
+.pedir__muted {
+  color: var(--color-text-secondary);
+  padding: 16px 0;
+  text-align: center;
+}
+.pedir__matches {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 16px;
+}
+.pedir__match {
+  text-align: left;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-weight: 600;
+  font-size: var(--fs-option);
+}
+.pedir__match span {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.pedir__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.pedir__item-name {
+  font-weight: 600;
+  flex: 1;
+}
+.pedir__item-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pedir__item-qty .field {
+  width: 80px;
+  text-align: center;
+}
+.pedir__item-unit {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.pedir__item-x {
+  color: var(--color-error);
+  font-size: 18px;
+  font-weight: 700;
+  width: 32px;
+}
+.pedir__urg {
+  display: flex;
+  gap: 10px;
+}
+.urg-btn {
+  flex: 1;
+  min-height: 60px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--fs-option);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.urg-btn--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+}
+.urg-btn--danger.urg-btn--on {
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+.pedir__nav {
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}

@@ -1,0 +1,32 @@
+<div class="screen mis-sol">
+  <header class="mis-sol__header">
+    <button type="button" class="mis-sol__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="mis-sol__title">Mis solicitudes</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="mis-sol__muted">Cargando…</p>
+    } @else {
+      @for (s of solicitudes(); track s.id) {
+        <div class="sol-card" [attr.data-estado]="s.estado">
+          <div class="sol-card__top">
+            <span class="sol-card__proyecto">{{ s.proyecto?.nombre ?? 'Obra' }}</span>
+            <span class="sol-card__estado">{{ estadoLabel(s.estado) }}</span>
+          </div>
+          <div class="sol-card__meta">
+            <span>{{ s.created_at | date: 'dd/MM/yyyy' }}</span>
+            @if (s.urgencia === 'urgente') { <span class="sol-card__urg">🔴 Urgente</span> }
+          </div>
+          <ul class="sol-card__items">
+            @for (it of s.items ?? []; track $index) {
+              <li>{{ it.cantidad }} {{ it.unidad }} · {{ it.descripcion }}</li>
+            }
+          </ul>
+        </div>
+      } @empty {
+        <p class="mis-sol__muted">Todavía no has hecho solicitudes.</p>
+      }
+    }
+  </div>
+</div>

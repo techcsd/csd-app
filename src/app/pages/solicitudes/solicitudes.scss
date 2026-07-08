@@ -1,0 +1,53 @@
+.solicitudes {
+  background: var(--color-bg);
+}
+.sol-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.sol-header__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.sol-header__icon {
+  font-size: 28px;
+}
+.sol-header__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.sol-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 18px;
+  margin-bottom: 14px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+.sol-action:active {
+  transform: scale(0.98);
+}
+.sol-action__icon {
+  font-size: 32px;
+}
+.sol-action--primary {
+  border-color: var(--color-info);
+  background: #eff6ff;
+}

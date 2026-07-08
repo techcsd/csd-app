@@ -1,0 +1,64 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Entrada registrada' : 'Guardado'"
+    [note]="online ? 'El stock se sumó.' : 'Sin señal. Se enviará solo.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen mov">
+    <header class="mov__header mov__header--in">
+      <button type="button" class="mov__back" (click)="back()" aria-label="Atrás">←</button>
+      <h1 class="mov__title">➕ Entrada de material</h1>
+    </header>
+
+    <div class="screen__body">
+      <label class="field-label">Bodega</label>
+      <select class="field" [ngModel]="bodegaId()" (ngModelChange)="bodegaId.set($event)">
+        <option value="">Elige la bodega…</option>
+        @for (b of bodegas(); track b.id) {
+          <option [value]="b.id">{{ b.nombre }}</option>
+        }
+      </select>
+
+      <label class="field-label mov__mt">Referencia (opcional)</label>
+      <input class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" placeholder="Ej: compra local, devolución" />
+
+      <label class="field-label mov__mt">Agregar material</label>
+      <input class="field" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Buscar material…" />
+      @if (matches().length) {
+        <div class="mov__matches">
+          @for (a of matches(); track a.id) {
+            <button type="button" class="mov__match" (click)="add(a)">
+              {{ a.nombre }} <span>{{ a.codigo }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      @for (it of cart(); track it.articulo_id) {
+        <div class="mov__item">
+          <span class="mov__item-name">{{ it.nombre }}</span>
+          <div class="mov__item-qty">
+            <input class="field" type="number" inputmode="decimal" [ngModel]="it.cantidad" (ngModelChange)="setCantidad($index, $event)" />
+            <span class="mov__item-unit">{{ it.unidad }}</span>
+            <button type="button" class="mov__item-x" (click)="remove($index)">✕</button>
+          </div>
+        </div>
+      } @empty {
+        <p class="mov__muted">Aún no has agregado materiales.</p>
+      }
+
+      <button type="button" class="btn-ghost mov__mt" [disabled]="capturing()" (click)="addFoto()">
+        {{ foto() ? '✅ Foto agregada' : (capturing() ? '⏳ Tomando…' : '📷 Foto (opcional)') }}
+      </button>
+    </div>
+
+    <footer class="mov__nav">
+      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        {{ submitting() ? 'Guardando…' : 'Confirmar entrada' }}
+      </button>
+    </footer>
+  </div>
+}

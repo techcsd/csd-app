@@ -48,10 +48,22 @@ Added in `dev/SGC` (builds clean): route `/flota/responsabilidad`, shell nav ent
 - Migration `2026-07-08f`: idempotent `sgc.crear_bitacora_app(p_id, …)` (module gate, actividades/restricciones/fotos, usuario_id = auth.uid()). Verified non-destructively (parte_diario inserts header + child rows; module gate rejects non-bitacora users). Photos reuse the existing `sgc-bitacora` bucket. Catalog enums pulled from the real CHECK constraints (estructuras/actividades/restricciones).
 - App: `BitacoraService` (+ `bitacora` sync handler at bootstrap); Bitácora hub → parte-diario wizard (obra → personal counters → actividades → problemas → fotos → resumen), incidente short flow (tipo → gravedad → heridos → fotos → nota), and offline "Mis partes" list.
 
-## Milestone status
-M1 ✅ · M2 ✅ (checklist + conduces + SGC Flota view) · M3 ✅ (bitácora). Next: **M4 — Inventario + Solicitudes**.
+## M4 — Inventario + Solicitudes DONE
+- Migration `2026-07-08g`: idempotent app RPCs `registrar_salida_app` (validates stock, fires trg_detalle_salidas_stock), `registrar_entrada_app` (fires detalle_entradas_stock_trigger), `crear_solicitud_app`; `foto_path` columns + `inventario` bucket. Verified non-destructively (entrada bumps stock, solicitud creates pendiente/urgente, salida guard rejects over-stock, 0 rows left).
+- App: `InventarioService` + `SolicitudesService` (handlers at bootstrap). Inventario hub → existencias (bodega + search), salida (cart + optional photo), entrada (cart + referencia + photo). Solicitudes hub → pedir (cart + urgencia) + mis solicitudes (status list).
 
-## Next: M4 — Inventario (existencias, salida, recibir conduce) + Solicitudes (crear + seguimiento), reusing SGC's registrar_salida_inventario / adjust-stock / crear_solicitud_material RPCs.
+## Milestone status — all feature milestones built
+M1 ✅ · M2 ✅ · M3 ✅ · M4 ✅. M5 is piloto/rollout (no app code). The 4 Home modules are all functional end-to-end offline.
+
+## Remaining polish / follow-ups (not blocking)
+- Recepción de conduce en bodega (overlaps chofer conduce flow + SGC confirmar_recepcion_salida).
+- Voice notes, offline drafts (borradores) for wizards, conteo rápido de inventario.
+- Real push/email notifications (no `sgc.notificaciones` table found — locate SGC's mechanism).
+- Live device walk-throughs + first signed APK (needs JDK/Android Studio) + PWA deploy to app.sgcconstructorasd.com (Vercel).
+
+## SGC web pending YOUR commit/push (deploys to Vercel prod)
+`dev/SGC` has uncommitted changes: Flota "Responsabilidad" view (M2) + Conductores user-link (conduces).
+`git -C "C:/Users/xavie/Desktop/X Dev/dev/SGC" status`
 
 ## How to run
 ```
