@@ -3,7 +3,13 @@
 _Last updated: 2026-07-08_
 
 ## Where we are
-**Milestone M1 (Fundaciones) — DONE and building.** `npm run build` passes (149 kB initial transfer, well under the 1MB budget). Dev server serves HTTP 200 and every route compiles. Supabase data layer verified against production (`sgc` schema, roles/módulos shape correct).
+**M1 (Fundaciones) DONE. M2 (Transporte) — vehicle-responsibility checklist DONE.** Build passes (156 kB initial transfer). Pushed to `origin/main`.
+
+M2 backend applied to prod + verified non-destructively (RPC enforces auth, `flota` module, the 6 required photos, and the "one responsible" rule; happy path inserts custody + updates vehicle; rolled-back test left 0 rows):
+- `sgc.vehiculo_entregas` / `_fotos` / `_danos` (append-only, RLS read-only, unique-partial index)
+- RPCs `crear_entrega_vehiculo` (idempotent), `vehiculo_estado_actual`, `mis_pendientes_transporte`
+- Storage buckets `vehiculos`, `conduces`
+Frontend: Transporte hub (a cargo / por recibir) + 6-step checklist wizard (6 guided photos → km+combustible → daños → firma → resumen), enqueued offline via the `vehiculo_entrega` sync handler (registered at bootstrap).
 
 ## Done
 - **Scaffold**: Angular 21 (standalone, zoneless) + Capacitor 8 + Angular PWA (service worker + manifest). Android platform added under `android/`.
@@ -22,13 +28,11 @@ DDL works via the Management API using the system env var `SUPABASE_ACCESS_TOKEN
 2. **Android APK** — no JDK/Android SDK on this machine. `android/` project is ready; installing JDK 21 + Android Studio lets us build/sign the first APK + keystore.
 3. **Rotate keys** — service_role/secret + other keys passed through chat; rotate after the milestone.
 
-## Next (M2 — Transporte, the biggest pain point)
-1. SQL migration: `sgc.vehiculo_entregas` + `_fotos` + `_danos` (RLS, unique-partial "one responsible", grants). Draft to `sql/`.
-2. RPCs `crear_entrega_vehiculo`, `vehiculo_estado_actual`, `mis_pendientes_transporte` (idempotent by `p_id`).
-3. Vehicle receive/return checklist flow (6 guided photos + km + fuel + damages + signature) using PhotoSlot/SignaturePad, enqueued offline.
-4. Register the `vehiculo_entrega` handler with SyncService (upload photos → call RPC).
-5. Rutas + conduces del día with delivery confirmation (reuse SGC salidas RPC + p_id).
-6. SGC web: vehicle-responsibility history view in Flota (rule #5).
+## Next (rest of M2)
+1. **Rutas + conduces del día** (delivery confirmation) — BLOCKED on a modeling decision: `rutas.conductor_id` and `salidas` point at `sgc.conductores` (a catalog with no `usuario_id`), but app users are `sgc.usuarios`. Need: is there a usuario↔conductor link, or should the app match by cédula/name, or should conduces be assignable to usuarios? Ask Xavier before building.
+2. **SGC web** (`dev/SGC`): vehicle-responsibility history in the Flota module reading `vehiculo_entregas` (+ highlight `requiere_revision`). Doable solo — keeps both apps in sync (rule #5).
+3. Live login walk-through of the full offline checklist (needs a real flota user's password): capture in airplane mode → reconnect → confirm row + photos in Supabase.
+4. Real notifications on `requiere_revision` once SGC's notification mechanism is located (no `sgc.notificaciones` table found).
 
 ## How to run
 ```

@@ -1,0 +1,84 @@
+.transporte {
+  background: var(--color-bg);
+}
+
+.transporte__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.transporte__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.transporte__icon {
+  font-size: 28px;
+}
+
+.transporte__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.transporte__section {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 20px 0 10px;
+}
+
+.transporte__muted {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-option);
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.veh-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.veh-card--activo {
+  border-color: var(--color-primary);
+  border-width: 2px;
+  background: #fff7ed;
+}
+
+.veh-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+
+.veh-card__placa {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.veh-card__modelo {
+  font-size: var(--fs-option);
+  color: var(--color-text-primary);
+}
+
+.veh-card__km {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}

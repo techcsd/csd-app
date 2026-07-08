@@ -1,0 +1,162 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Listo, quedó registrado' : 'Guardado'"
+    [note]="tipo === 'recepcion'
+      ? (online ? 'El vehículo quedó a tu cargo.' : 'Sin señal. Se enviará solo y el vehículo queda a tu cargo.')
+      : (online ? 'Entrega cerrada.' : 'Sin señal. Se enviará solo.')"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen checklist">
+    <app-step-bar [current]="step()" [total]="total" />
+
+    <div class="screen__body">
+      <!-- Step 1: confirm vehicle -->
+      @if (step() === 1) {
+        <h1 class="screen__title">{{ titulo() }}</h1>
+        <div class="checklist__veh">
+          <span class="checklist__placa">{{ placa() || '—' }}</span>
+          <span class="checklist__modelo">{{ modelo() }}</span>
+        </div>
+        <p class="screen__subtitle">
+          Vas a {{ tipo === 'recepcion' ? 'recibir' : 'devolver' }} este vehículo. Toma las fotos y
+          firma para dejar constancia del estado.
+        </p>
+      }
+
+      <!-- Step 2: 6 guided photos -->
+      @if (step() === 2) {
+        <h1 class="screen__title">Toma las fotos</h1>
+        <p class="screen__subtitle">Las 6 fotos son obligatorias.</p>
+        <div class="checklist__fotos">
+          @for (f of fotosReq; track f.slot) {
+            <app-photo-slot
+              [label]="f.label"
+              [hint]="f.hint"
+              (captured)="onFoto(f.slot, $event)"
+              (cleared)="onFotoCleared(f.slot)"
+            />
+          }
+        </div>
+      }
+
+      <!-- Step 3: km + fuel -->
+      @if (step() === 3) {
+        <h1 class="screen__title">Kilometraje y combustible</h1>
+        <label class="field-label" for="km">Kilometraje (km)</label>
+        <input
+          id="km"
+          class="field checklist__km"
+          type="number"
+          inputmode="numeric"
+          [ngModel]="km()"
+          (ngModelChange)="km.set($event)"
+          placeholder="0"
+        />
+        <label class="field-label">Nivel de combustible</label>
+        <div class="checklist__fuel">
+          @for (n of niveles; track n) {
+            <button
+              type="button"
+              class="fuel-btn"
+              [class.fuel-btn--on]="combustible() === n"
+              (click)="combustible.set(n)"
+            >
+              {{ n }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Step 4: damages -->
+      @if (step() === 4) {
+        <h1 class="screen__title">¿Ves algún daño?</h1>
+        <div class="checklist__yesno">
+          <app-option-button
+            icon="✅"
+            label="No, todo bien"
+            tone="success"
+            [selected]="tieneDanos() === false"
+            (pressed)="setDanos(false)"
+          />
+          <app-option-button
+            icon="⚠️"
+            label="Sí, hay daños"
+            tone="error"
+            [selected]="tieneDanos() === true"
+            (pressed)="setDanos(true)"
+          />
+        </div>
+
+        @if (tieneDanos()) {
+          @for (d of danos(); track $index) {
+            <div class="dano">
+              <div class="dano__head">
+                <span class="dano__num">Daño {{ $index + 1 }}</span>
+                <button type="button" class="dano__remove" (click)="removeDano($index)">Quitar</button>
+              </div>
+              <label class="field-label">Zona</label>
+              <div class="dano__zonas">
+                @for (z of zonas; track z.zona) {
+                  <button
+                    type="button"
+                    class="chip"
+                    [class.chip--on]="d.zona === z.zona"
+                    (click)="setDanoZona($index, z.zona)"
+                  >
+                    {{ z.label }}
+                  </button>
+                }
+              </div>
+              <app-photo-slot label="Foto del daño" hint="📸" (captured)="onDanoFoto($index, $event)" />
+              <input
+                class="field dano__desc"
+                type="text"
+                [ngModel]="d.descripcion"
+                (ngModelChange)="setDanoDesc($index, $event)"
+                placeholder="Nota (opcional)"
+              />
+            </div>
+          }
+          <button type="button" class="btn-ghost" (click)="addDano()">+ Agregar otro daño</button>
+        }
+      }
+
+      <!-- Step 5: signature -->
+      @if (step() === 5) {
+        <h1 class="screen__title">Tu firma</h1>
+        <p class="screen__subtitle">Firma para confirmar el estado del vehículo.</p>
+        <app-signature-pad (changed)="firmaLista.set($event)" />
+      }
+
+      <!-- Step 6: summary -->
+      @if (step() === 6) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Vehículo</span><b>{{ placa() }}</b></li>
+          <li><span>Acción</span><b>{{ tipo === 'recepcion' ? 'Recepción' : 'Devolución' }}</b></li>
+          <li><span>Kilometraje</span><b>{{ km() }} km</b></li>
+          <li><span>Combustible</span><b>{{ combustible() }}</b></li>
+          <li><span>Fotos</span><b>6 ✓</b></li>
+          <li><span>Daños</span><b>{{ tieneDanos() ? danos().length : 'Ninguno' }}</b></li>
+        </ul>
+      }
+    </div>
+
+    <!-- Nav -->
+    <footer class="checklist__nav">
+      @if (step() > 1) {
+        <button type="button" class="btn-ghost checklist__back" (click)="prev()">Atrás</button>
+      }
+      @if (step() < total) {
+        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+      } @else {
+        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+          {{ submitting() ? 'Guardando…' : 'Confirmar' }}
+        </button>
+      }
+    </footer>
+  </div>
+}

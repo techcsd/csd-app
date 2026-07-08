@@ -50,6 +50,20 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/transporte').then((m) => m.TransportePage),
   },
   {
+    path: 'transporte/recibir/:vehiculoId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    data: { tipo: 'recepcion' },
+    loadComponent: () =>
+      import('./pages/transporte/checklist/checklist').then((m) => m.ChecklistPage),
+  },
+  {
+    path: 'transporte/devolver/:vehiculoId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    data: { tipo: 'devolucion' },
+    loadComponent: () =>
+      import('./pages/transporte/checklist/checklist').then((m) => m.ChecklistPage),
+  },
+  {
     path: 'inventario',
     canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
     loadComponent: () => import('./pages/inventario/inventario').then((m) => m.InventarioPage),

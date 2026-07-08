@@ -1,1 +1,53 @@
-<app-module-placeholder icon="🚚" title="Transporte" [actions]="actions" />
+<div class="screen transporte">
+  <header class="transporte__header">
+    <button type="button" class="transporte__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="transporte__icon">🚚</span>
+    <h1 class="transporte__title">Transporte</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="transporte__muted">Cargando…</p>
+    } @else {
+      @if (pendientes().a_cargo.length) {
+        <h2 class="transporte__section">Tu vehículo</h2>
+        @for (v of pendientes().a_cargo; track v.vehiculo_id) {
+          <div class="veh-card veh-card--activo">
+            <div class="veh-card__info">
+              <span class="veh-card__placa">{{ v.placa }}</span>
+              <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
+              <span class="veh-card__km">A tu cargo · {{ v.km | number: '1.0-0' }} km</span>
+            </div>
+            <button type="button" class="btn-cta veh-card__cta" (click)="devolver(v.vehiculo_id)">
+              Devolver vehículo
+            </button>
+          </div>
+        }
+      }
+
+      @if (pendientes().por_recibir.length) {
+        <h2 class="transporte__section">Por recibir</h2>
+        @for (v of pendientes().por_recibir; track v.vehiculo_id) {
+          <div class="veh-card">
+            <div class="veh-card__info">
+              <span class="veh-card__placa">{{ v.placa }}</span>
+              <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
+              <span class="veh-card__km">{{ v.km | number: '1.0-0' }} km</span>
+            </div>
+            <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
+              Recibir vehículo
+            </button>
+          </div>
+        }
+      }
+
+      @if (!pendientes().a_cargo.length && !pendientes().por_recibir.length) {
+        <p class="transporte__muted">
+          No tienes vehículos asignados por ahora. Cuando Flota te asigne uno, aparecerá aquí.
+        </p>
+      }
+    }
+  </div>
+
+  <app-sync-bar />
+</div>
