@@ -105,6 +105,12 @@ created a solicitud offline (amber "Guardado · Se enviará solo") → outbox tr
 in sgc.solicitudes_material (BRISAS CITY CENTER, Xaviel Terrero, pendiente). Interconnection
 confirmed (shows in SGC Solicitudes + badge). Offline-first promise proven on a real phone.
 
+## v1.0.5 round (units, incidents, feedback)
+- **Units are now admin-managed** (SGC): `sgc.unidades` catalog (seeded from the old hardcoded list) + **Administración → Unidades** (create/rename/activate). The artículo form reads units from the DB. App shows units from the artículo (no app change needed).
+- **Incident emails retargeted**: now go to the incident PROJECT's team (proyecto_empleados→empleados→usuarios) + admins, not all PMs company-wide. Redeployed.
+- **In-app "Reportar un problema"** (Perfil → SGC reportes_usuario → Administración → Comentarios y Reportes). RLS insert verified.
+- v1.0.5 built + published to the download page. ⚠️ Device was unplugged at the end — reinstall to the phone via the download page (or `adb install -r` when reconnected). App was fully on-device tested in prior rounds; this round verified via RLS tests + builds.
+
 ## Remaining (needs you / optional)
 - **Rotate Supabase service_role/secret keys** (dashboard — they passed through chat).
 - **Back up the keystore** (`android/csd-release.keystore` + `keystore.properties`).
