@@ -32,8 +32,8 @@ Every capture: save to Dexie + enqueue in outbox with a **client UUID** (idempot
 5. **Keep SGC in sync**: if a feature here implies a web view (e.g. vehicle-responsibility history in Flota), build it there too.
 6. **Migrations**: the DB is shared with SGC production — coordinate; never break the web.
 
-## Backend access note
-The Data API keys in `.env.local` (service_role / sb_secret) bypass RLS for rows but **cannot run DDL**. To create tables/views/RPCs (M2 `vehiculo_entregas` etc.) I need one of: Supabase SQL editor (paste from `sql/`), the `SUPABASE_ACCESS_TOKEN` for the CLI, or the Postgres connection string.
+## Backend / migrations
+Apply SQL with `node scripts/apply-migration.mjs sql/<file>.sql` — it POSTs to the Supabase Management API using the system env var `SUPABASE_ACCESS_TOKEN` (sbp_…, runs as postgres → DDL works). Data API keys in `.env.local` (anon / service_role) are for row access from the app, NOT DDL. Every migration: RLS + schema grants + sequence grants; keep RPCs backward-compatible ≥2 versions.
 
 ## Status
 M1 (Foundations) complete: scaffold, auth+PIN, offline engine, design system, Home gating, PWA. See HANDOFF.md.

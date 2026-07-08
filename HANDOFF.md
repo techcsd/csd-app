@@ -14,11 +14,13 @@ _Last updated: 2026-07-08_
 - **Guards**: authGuard → pinGuard → moduleGuard.
 - **Pages**: login, reset, set-password, pin-setup, pin-unlock, home (4 tiles gated by módulos, single-módulo auto-enter), module placeholders (bitácora/transporte/inventario/solicitudes), 403. Global SyncBar + ToastHost.
 
+## Migrations — SOLVED
+DDL works via the Management API using the system env var `SUPABASE_ACCESS_TOKEN` (sbp_…, already set on this machine). Use `node scripts/apply-migration.mjs sql/<file>.sql` — runs as postgres. `v_app_mi_contexto` view applied + verified on 2026-07-08. This is the path for M2's `vehiculo_entregas` tables + RPCs.
+
 ## Blockers / needs Xavier
-1. **DDL access** — the Data API keys can't create tables/views/RPCs. To apply `sql/2026-07-08-v_app_mi_contexto.sql` (and M2's `vehiculo_entregas`), I need ONE of: paste into Supabase SQL editor / `SUPABASE_ACCESS_TOKEN` / Postgres connection string. App works without the view for now (falls back to direct queries).
-2. **Live login walk-through** — needs a real SGC user's password to test login→PIN→home end-to-end. Build/serve/data-shape all verified; the interactive auth path is the one thing I can't self-test.
-3. **Android APK** — no JDK/Android SDK on this machine. `android/` project is ready; installing JDK 21 + Android Studio lets us build/sign the first APK + keystore.
-4. **Rotate keys** — service_role/secret keys passed through chat; rotate after the milestone.
+1. **Live login walk-through** — needs a real SGC user's password to test login→PIN→home end-to-end. Build/serve/data-shape all verified; the interactive auth path is the one thing I can't self-test.
+2. **Android APK** — no JDK/Android SDK on this machine. `android/` project is ready; installing JDK 21 + Android Studio lets us build/sign the first APK + keystore.
+3. **Rotate keys** — service_role/secret + other keys passed through chat; rotate after the milestone.
 
 ## Next (M2 — Transporte, the biggest pain point)
 1. SQL migration: `sgc.vehiculo_entregas` + `_fotos` + `_danos` (RLS, unique-partial "one responsible", grants). Draft to `sql/`.
