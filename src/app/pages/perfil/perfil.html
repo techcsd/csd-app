@@ -1,0 +1,32 @@
+<div class="screen perfil">
+  <header class="perfil__header">
+    <button type="button" class="perfil__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="perfil__title">Mi perfil</h1>
+  </header>
+
+  <div class="screen__body">
+    <div class="perfil__card">
+      <div class="perfil__avatar">{{ (nombre() || '?').charAt(0) }}</div>
+      <div>
+        <p class="perfil__nombre">{{ nombre() || 'Usuario' }}</p>
+        @if (roles().length) {
+          <p class="perfil__roles">{{ roles().join(', ') }}</p>
+        }
+      </div>
+    </div>
+
+    <ul class="perfil__info">
+      @if (obra(); as o) {
+        <li><span>Obra activa</span><b>{{ o.nombre }}</b></li>
+      }
+      <li><span>Conexión</span><b>{{ online() ? 'En línea' : 'Sin señal' }}</b></li>
+      <li><span>Versión</span><b>{{ version }}</b></li>
+    </ul>
+
+    <button type="button" class="btn-ghost perfil__btn" [disabled]="checking()" (click)="buscarActualizacion()">
+      {{ checking() ? 'Buscando…' : '🔄 Buscar actualización' }}
+    </button>
+
+    <button type="button" class="btn-cta perfil__logout" (click)="logout()">Cerrar sesión</button>
+  </div>
+</div>

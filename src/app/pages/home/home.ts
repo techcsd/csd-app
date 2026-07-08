@@ -51,8 +51,7 @@ export class HomePage {
     void this.router.navigate([tile.route]);
   }
 
-  async logout(): Promise<void> {
-    await this.session.logout();
-    await this.router.navigate(['/auth/login']);
+  perfil(): void {
+    void this.router.navigate(['/perfil']);
   }
 }

@@ -128,6 +128,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'perfil',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilPage),
+  },
+  {
     path: '403',
     loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage),
   },

@@ -1,0 +1,88 @@
+.perfil {
+  background: var(--color-bg);
+}
+.perfil__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.perfil__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.perfil__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.perfil__card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 20px;
+}
+.perfil__avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.perfil__nombre {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.perfil__roles {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  text-transform: capitalize;
+}
+.perfil__info {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.perfil__info li {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.perfil__info li:last-child {
+  border-bottom: none;
+}
+.perfil__info span {
+  color: var(--color-text-secondary);
+}
+.perfil__btn {
+  margin-bottom: 14px;
+}
+.perfil__logout {
+  background: var(--color-error);
+}
+.perfil__logout:active {
+  background: #b91c1c;
+}
