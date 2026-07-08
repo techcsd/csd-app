@@ -98,8 +98,12 @@ Custom CSD icon (adaptive), redesigned PIN pad (device screenshot confirms), "pa
 - **UX**: native obra/bodega dropdowns → tappable `SelectList` (glove-friendly) across pedir/salida/entrada/conteo/existencias.
 - **Security**: deactivated-user lockout (cold start + resume). FLAG_SECURE deliberately skipped (would block WhatsApp screenshot-sharing).
 
-## Airplane-mode test — PENDING (device was unplugged)
-Reconnect the phone (USB, debugging on) and tell me — I'll: unlock → turn off wifi/data via adb → create a capture offline (shows ⏳ pending) → reconnect → confirm it syncs (✅) + lands in Supabase. Also I'll reinstall v1.0.4 (currently only published to the download page, not yet on the device).
+## Airplane-mode test — PASSED ✅ (on device 6dbf1af4, v1.0.4)
+Offline→reconnect→sync verified end-to-end: cut wifi/data → app showed "Sin señal" →
+created a solicitud offline (amber "Guardado · Se enviará solo") → outbox tracked
+"1 se enviarán solos" → reconnected → auto-synced ("Todo enviado") → real row landed
+in sgc.solicitudes_material (BRISAS CITY CENTER, Xaviel Terrero, pendiente). Interconnection
+confirmed (shows in SGC Solicitudes + badge). Offline-first promise proven on a real phone.
 
 ## Remaining (needs you / optional)
 - **Rotate Supabase service_role/secret keys** (dashboard — they passed through chat).
