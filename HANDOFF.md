@@ -78,6 +78,13 @@ Recepción de conduce en bodega (recibir_conduce_app), voice notes (incidente),
 offline drafts (parte), solicitud email notification (badge interconnection is
 automatic). SGC Flota view + conductor link + APK download page pushed to prod.
 
+## v1.0.1 UX round (device-verified) ✅
+Custom CSD icon (adaptive), redesigned PIN pad (device screenshot confirms), "parte"→"bitácora" copy, Mis bitácoras server list + detail (fotos/audio signed URLs), actividades multi-select (estructura×actividad), incidente obra selector fixed + voice note, browsable **ArticuloPicker** (select instead of search) in pedir/salida/entrada, entrada "Referencia"→"¿De dónde viene?" chips, `replaceUrl` on finish (back no longer re-enters filled wizard). v1.0.1/code 2 built, published, installed on device 6dbf1af4.
+
+**Play Protect:** the "unknown developer" prompt is inherent to sideloading (targetSdk 36, signed, minimal perms — already optimal). "Install anyway" is expected/safe; only Play/Managed Google Play removes it.
+
+**On-device deep test blocked on the local PIN** — give me the 4-digit PIN (or a test user's password) and I can drive the full flow via adb + screenshots to hunt bugs. Role gating is verified: Home tiles + routes are filtered by roles.modulos (a chofer sees only Transporte; an all-módulos user sees all — that's correct).
+
 ## Remaining (deferred / needs you)
 - Incident immediate email: needs a new edge function + recipient list (no
   `sgc.notificaciones` table — badges/visibility already work).
