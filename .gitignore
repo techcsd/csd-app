@@ -54,3 +54,6 @@ Thumbs.db
 /android/.gradle
 *.keystore
 *.jks
+
+# Vercel
+.vercel
