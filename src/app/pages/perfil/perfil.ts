@@ -40,6 +40,10 @@ export class PerfilPage {
     }
   }
 
+  reportar(): void {
+    void this.router.navigate(['/reportar']);
+  }
+
   async logout(): Promise<void> {
     await this.session.logout();
     await this.router.navigate(['/auth/login']);

@@ -150,6 +150,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilPage),
   },
   {
+    path: 'reportar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/reportar/reportar').then((m) => m.ReportarPage),
+  },
+  {
     path: '403',
     loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage),
   },

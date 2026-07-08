@@ -1,0 +1,40 @@
+@if (done()) {
+  <app-big-confirm
+    title="¡Gracias!"
+    note="Tu reporte llegó a administración."
+    tone="done"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen reportar">
+    <header class="reportar__header">
+      <button type="button" class="reportar__back" (click)="back()" aria-label="Atrás">←</button>
+      <h1 class="reportar__title">Reportar</h1>
+    </header>
+
+    <div class="screen__body">
+      <h2 class="reportar__q">¿Qué quieres reportar?</h2>
+      @for (t of tipos; track t.value) {
+        <app-option-button
+          [icon]="t.icon"
+          [label]="t.label"
+          [selected]="tipo() === t.value"
+          (pressed)="tipo.set(t.value)"
+        />
+      }
+
+      <label class="field-label reportar__mt">Título</label>
+      <input class="field" type="text" [ngModel]="asunto()" (ngModelChange)="asunto.set($event)" placeholder="En pocas palabras" />
+
+      <label class="field-label reportar__mt">Cuéntanos</label>
+      <textarea class="field reportar__area" rows="5" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="¿Qué pasó? ¿Qué esperabas?"></textarea>
+    </div>
+
+    <footer class="reportar__nav">
+      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        {{ submitting() ? 'Enviando…' : 'Enviar reporte' }}
+      </button>
+    </footer>
+  </div>
+}

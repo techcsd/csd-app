@@ -27,6 +27,10 @@
       {{ checking() ? 'Buscando…' : '🔄 Buscar actualización' }}
     </button>
 
+    <button type="button" class="btn-ghost perfil__btn" (click)="reportar()">
+      🛟 Reportar un problema
+    </button>
+
     <button type="button" class="btn-cta perfil__logout" (click)="logout()">Cerrar sesión</button>
   </div>
 </div>
