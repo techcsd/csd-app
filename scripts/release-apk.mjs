@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.0.1';
-const VERSION_CODE = 2;
-const CHANGELOG = 'Ícono nuevo, PIN mejorado, listas para elegir materiales, bitácoras con detalle y varias mejoras.';
+const VERSION = '1.0.2';
+const VERSION_CODE = 3;
+const CHANGELOG = 'PIN al reabrir la app (seguridad), orden de bitácoras y mejoras menores.';
 const RELEASED_AT = '2026-07-08';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';

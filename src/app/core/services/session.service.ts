@@ -41,6 +41,11 @@ export class SessionService {
     this._unlocked.set(true);
   }
 
+  /** Re-lock (require PIN again), e.g. after the app was in the background. */
+  lock(): void {
+    this._unlocked.set(false);
+  }
+
   async logout(): Promise<void> {
     await this.auth.signOut();
     await this.pin.clear();

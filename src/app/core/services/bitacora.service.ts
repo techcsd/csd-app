@@ -119,6 +119,7 @@ export class BitacoraService {
           'id, fecha, tipo, comentarios, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_lesionados, incidente_descripcion, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw new Error(error.message);
       return (data as unknown as BitacoraFull[]) ?? [];
