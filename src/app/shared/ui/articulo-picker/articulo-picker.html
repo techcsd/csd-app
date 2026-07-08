@@ -1,0 +1,20 @@
+<div class="picker">
+  <input
+    class="field picker__filter"
+    type="search"
+    [ngModel]="query()"
+    (ngModelChange)="query.set($event)"
+    placeholder="🔎 Filtrar (opcional)"
+  />
+  <div class="picker__list">
+    @for (a of visible(); track a.id) {
+      <button type="button" class="picker__item" (click)="picked.emit(a)">
+        <span class="picker__name">{{ a.nombre }}</span>
+        <span class="picker__meta">{{ a.unidad }}</span>
+        <span class="picker__add">+</span>
+      </button>
+    } @empty {
+      <p class="picker__muted">No hay materiales.</p>
+    }
+  </div>
+</div>

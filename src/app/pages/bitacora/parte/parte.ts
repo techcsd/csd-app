@@ -58,8 +58,8 @@ export class PartePage {
   otroPersonal = signal('');
 
   actividades = signal<ActividadEntry[]>([]);
-  nuevaEstructura = signal<string>('');
-  nuevaActividad = signal<string>('');
+  selEstructuras = signal<string[]>([]);
+  selActividades = signal<string[]>([]);
 
   restricciones = signal<string[]>([]);
   comentarios = signal('');
@@ -143,7 +143,7 @@ export class PartePage {
       this.restricciones.set(draft.restricciones ?? []);
       this.comentarios.set(draft.comentarios ?? '');
       this.step.set(draft.step ?? 1);
-      this.toast.show('Recuperamos tu parte a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
+      this.toast.show('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
     } else {
       const obra = this.ctx.obraActiva();
       if (obra) this.proyectoId.set(obra.id);
@@ -152,17 +152,33 @@ export class PartePage {
     this.hydrated = true;
   }
 
+  toggleEstructura(e: string): void {
+    this.selEstructuras.update((l) => (l.includes(e) ? l.filter((x) => x !== e) : [...l, e]));
+  }
+
+  toggleActividad(a: string): void {
+    this.selActividades.update((l) => (l.includes(a) ? l.filter((x) => x !== a) : [...l, a]));
+  }
+
+  /** Adds every selected estructura × actividad combination (deduped). */
   addActividad(): void {
-    if (!this.nuevaEstructura() || !this.nuevaActividad()) {
-      this.toast.error('Elige estructura y actividad.');
+    if (!this.selEstructuras().length || !this.selActividades().length) {
+      this.toast.error('Elige al menos una estructura y una actividad.');
       return;
     }
-    this.actividades.update((a) => [
-      ...a,
-      { estructura: this.nuevaEstructura(), actividad: this.nuevaActividad() },
-    ]);
-    this.nuevaEstructura.set('');
-    this.nuevaActividad.set('');
+    this.actividades.update((current) => {
+      const next = [...current];
+      for (const est of this.selEstructuras()) {
+        for (const act of this.selActividades()) {
+          if (!next.some((x) => x.estructura === est && x.actividad === act)) {
+            next.push({ estructura: est, actividad: act });
+          }
+        }
+      }
+      return next;
+    });
+    this.selEstructuras.set([]);
+    this.selActividades.set([]);
   }
 
   removeActividad(i: number): void {
@@ -238,6 +254,6 @@ export class PartePage {
   }
 
   finish(): void {
-    void this.router.navigate(['/bitacora']);
+    void this.router.navigate(['/bitacora'], { replaceUrl: true });
   }
 }

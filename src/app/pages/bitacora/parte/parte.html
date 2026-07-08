@@ -1,7 +1,7 @@
 @if (done()) {
   <app-big-confirm
-    [title]="online ? 'Parte enviado' : 'Guardado'"
-    [note]="online ? 'Tu parte diario quedó registrado.' : 'Sin señal. Se enviará solo.'"
+    [title]="online ? 'Bitácora enviada' : 'Guardado'"
+    [note]="online ? 'Tu bitácora del día quedó registrada.' : 'Sin señal. Se enviará sola.'"
     [tone]="online ? 'done' : 'pending'"
     buttonLabel="Listo"
     (dismissed)="finish()"
@@ -46,19 +46,19 @@
             <button type="button" class="parte__act-x" (click)="removeActividad($index)">Quitar</button>
           </div>
         }
-        <label class="field-label">Estructura</label>
+        <label class="field-label">¿En qué parte? (puedes elegir varias)</label>
         <div class="parte__chips">
           @for (e of estructuras; track e) {
-            <button type="button" class="chip" [class.chip--on]="nuevaEstructura() === e" (click)="nuevaEstructura.set(e)">{{ e }}</button>
+            <button type="button" class="chip" [class.chip--on]="selEstructuras().includes(e)" (click)="toggleEstructura(e)">{{ e }}</button>
           }
         </div>
-        <label class="field-label">Actividad</label>
+        <label class="field-label">¿Qué se hizo? (puedes elegir varias)</label>
         <div class="parte__chips">
           @for (ac of actividadesCat; track ac) {
-            <button type="button" class="chip" [class.chip--on]="nuevaActividad() === ac" (click)="nuevaActividad.set(ac)">{{ ac }}</button>
+            <button type="button" class="chip" [class.chip--on]="selActividades().includes(ac)" (click)="toggleActividad(ac)">{{ ac }}</button>
           }
         </div>
-        <button type="button" class="btn-ghost" (click)="addActividad()">+ Agregar actividad</button>
+        <button type="button" class="btn-ghost" (click)="addActividad()">+ Agregar a la lista</button>
       }
 
       <!-- 4. Restricciones -->
@@ -112,7 +112,7 @@
         <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
       } @else {
         <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-          {{ submitting() ? 'Guardando…' : 'Enviar parte' }}
+          {{ submitting() ? 'Guardando…' : 'Enviar bitácora' }}
         </button>
       }
     </footer>

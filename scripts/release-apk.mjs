@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.0.0';
-const VERSION_CODE = 1;
-const CHANGELOG = 'Primera versión: Bitácora, Transporte, Inventario y Solicitudes. Funciona sin señal.';
+const VERSION = '1.0.1';
+const VERSION_CODE = 2;
+const CHANGELOG = 'Ícono nuevo, PIN mejorado, listas para elegir materiales, bitácoras con detalle y varias mejoras.';
 const RELEASED_AT = '2026-07-08';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';

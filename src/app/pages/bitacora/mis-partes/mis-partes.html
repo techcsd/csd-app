@@ -2,23 +2,24 @@
   <header class="mis-partes__header">
     <button type="button" class="mis-partes__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="mis-partes__icon">📋</span>
-    <h1 class="mis-partes__title">Mis partes</h1>
+    <h1 class="mis-partes__title">Mis bitácoras</h1>
   </header>
 
   <div class="screen__body">
     @if (loading()) {
       <p class="mis-partes__muted">Cargando…</p>
     } @else {
-      @for (p of partes(); track p.id) {
-        <div class="parte-row">
-          <div class="parte-row__info">
-            <span class="parte-row__tipo">{{ p.tipo }}</span>
-            <span class="parte-row__fecha">{{ p.capturado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
+      @for (b of bitacoras(); track b.id) {
+        <button type="button" class="bit-row" [attr.data-tipo]="b.tipo" (click)="open(b)">
+          <div class="bit-row__info">
+            <span class="bit-row__tipo">{{ titulo(b) }}</span>
+            <span class="bit-row__obra">{{ b.proyecto?.nombre ?? '—' }}</span>
+            <span class="bit-row__fecha">{{ b.fecha | date: 'dd/MM/yyyy' }}</span>
           </div>
-          <app-sync-badge [state]="p.estado" />
-        </div>
+          <span class="bit-row__chev">›</span>
+        </button>
       } @empty {
-        <p class="mis-partes__muted">Todavía no has enviado partes.</p>
+        <p class="mis-partes__muted">Todavía no tienes bitácoras.</p>
       }
     }
   </div>

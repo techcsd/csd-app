@@ -220,7 +220,7 @@ export class ChecklistPage {
   }
 
   finish(): void {
-    void this.router.navigate(['/transporte']);
+    void this.router.navigate(['/transporte'], { replaceUrl: true });
   }
 
   get online(): boolean {

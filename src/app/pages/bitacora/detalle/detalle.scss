@@ -1,0 +1,107 @@
+.det {
+  background: var(--color-bg);
+}
+.det__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.det__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.det__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.det__muted {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 32px;
+}
+.det__info {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.det__info li {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.det__info li:last-child {
+  border-bottom: none;
+}
+.det__info span {
+  color: var(--color-text-secondary);
+}
+.det__personal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.det__personal span {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+.det__section {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 20px 0 10px;
+}
+.det__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.det__list li {
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.det__desc {
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin: 0;
+}
+.det__media {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.det__foto img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+.det__audio {
+  grid-column: 1 / -1;
+  width: 100%;
+}

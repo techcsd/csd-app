@@ -130,6 +130,6 @@ export class ConduceEntregaPage {
   }
 
   finish(): void {
-    void this.router.navigate(['/transporte/conduces']);
+    void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
   }
 }

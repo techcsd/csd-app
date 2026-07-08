@@ -124,6 +124,6 @@ export class IncidentePage {
   }
 
   finish(): void {
-    void this.router.navigate(['/bitacora']);
+    void this.router.navigate(['/bitacora'], { replaceUrl: true });
   }
 }

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -16,7 +17,7 @@ import { ArticuloCat, MovItem, Urgencia } from '../../../core/models/inventario.
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BigConfirm],
+  imports: [FormsModule, BigConfirm, ArticuloPicker],
   templateUrl: './pedir.html',
   styleUrl: './pedir.scss',
 })
@@ -32,21 +33,12 @@ export class PedirPage {
   proyectos = signal<Proyecto[]>([]);
   proyectoId = signal('');
   articulos = signal<ArticuloCat[]>([]);
-  query = signal('');
   cart = signal<MovItem[]>([]);
   urgencia = signal<Urgencia>('normal');
   submitting = signal(false);
   done = signal(false);
 
-  matches = computed(() => {
-    const q = this.query().toLowerCase().trim();
-    if (!q) return [];
-    const inCart = new Set(this.cart().map((c) => c.articulo_id));
-    return this.articulos()
-      .filter((a) => !inCart.has(a.id))
-      .filter((a) => a.nombre.toLowerCase().includes(q) || a.codigo.toLowerCase().includes(q))
-      .slice(0, 8);
-  });
+  cartIds = computed(() => this.cart().map((c) => c.articulo_id));
 
   constructor() {
     void this.init();
@@ -66,7 +58,6 @@ export class PedirPage {
 
   add(a: ArticuloCat): void {
     this.cart.update((c) => [...c, { articulo_id: a.id, nombre: a.nombre, unidad: a.unidad, cantidad: 1 }]);
-    this.query.set('');
   }
   setCantidad(i: number, v: number): void {
     this.cart.update((c) => c.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, v || 0) } : x)));
@@ -115,6 +106,6 @@ export class PedirPage {
     this.location.back();
   }
   finish(): void {
-    void this.router.navigate(['/solicitudes']);
+    void this.router.navigate(['/solicitudes'], { replaceUrl: true });
   }
 }

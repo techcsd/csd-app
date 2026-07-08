@@ -54,11 +54,22 @@ export interface Proyecto {
   nombre: string;
 }
 
-/** A parte captured for the local "Mis partes" list. */
-export interface ParteResumen {
+/** A bitácora with its children, for the "Mis bitácoras" list + detail. */
+export interface BitacoraFull {
   id: string;
-  tipo: string;
-  proyecto: string;
   fecha: string;
-  capturado_en: string;
+  tipo: string;
+  comentarios: string | null;
+  personal_carpinteria: number;
+  personal_acero: number;
+  trabajadores_casa: number;
+  otro_personal: string | null;
+  incidente_tipo: string | null;
+  incidente_gravedad: string | null;
+  incidente_lesionados: number | null;
+  incidente_descripcion: string | null;
+  proyecto?: { nombre: string } | null;
+  actividades?: { estructura: string; actividad: string }[];
+  restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
+  archivos?: { nombre: string; url: string; tipo_mime: string | null }[];
 }

@@ -1,29 +1,24 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { DatePipe, Location } from '@angular/common';
-import { SyncBadge, SyncState } from '../../../shared/ui/sync-badge/sync-badge';
+import { Router } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
+import { BitacoraFull } from '../../../core/models/bitacora.model';
 
-interface ParteRow {
-  id: string;
-  tipo: string;
-  capturado_en: string;
-  estado: SyncState;
-}
-
-/** Offline list of parts/incidents I've captured, with their sync state. */
+/** My bitácoras (server, offline-cached). Tap one to see its details. */
 @Component({
-  selector: 'app-mis-partes',
+  selector: 'app-mis-bitacoras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, SyncBadge],
+  imports: [DatePipe],
   templateUrl: './mis-partes.html',
   styleUrl: './mis-partes.scss',
 })
 export class MisPartesPage {
   private bitacora = inject(BitacoraService);
+  private router = inject(Router);
   private location = inject(Location);
 
-  partes = signal<ParteRow[]>([]);
+  bitacoras = signal<BitacoraFull[]>([]);
   loading = signal(true);
 
   constructor() {
@@ -31,19 +26,19 @@ export class MisPartesPage {
   }
 
   private async load(): Promise<void> {
-    const rows = await this.bitacora.misPartesLocales();
-    this.partes.set(
-      rows.map((r) => {
-        const resumen = (r.resumen ?? {}) as { tipo?: string; capturado_en?: string };
-        return {
-          id: r.id,
-          tipo: resumen.tipo === 'incidente' ? 'Incidente' : 'Parte diario',
-          capturado_en: resumen.capturado_en ?? new Date(r.created_local).toISOString(),
-          estado: r.estado,
-        };
-      }),
-    );
-    this.loading.set(false);
+    try {
+      this.bitacoras.set(await this.bitacora.misBitacoras());
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  titulo(b: BitacoraFull): string {
+    return b.tipo === 'incidente' ? 'Incidente' : b.tipo === 'visita' ? 'Visita' : 'Bitácora del día';
+  }
+
+  open(b: BitacoraFull): void {
+    void this.router.navigate(['/bitacora/detalle', b.id]);
   }
 
   back(): void {

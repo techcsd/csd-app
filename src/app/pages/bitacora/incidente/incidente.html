@@ -15,14 +15,16 @@
     </header>
 
     <div class="screen__body">
-      @if (proyectos().length > 1) {
-        <label class="field-label">Obra</label>
-        <select class="field" [ngModel]="proyectoId()" (ngModelChange)="proyectoId.set($event)">
-          <option value="">Elige la obra…</option>
-          @for (p of proyectos(); track p.id) {
-            <option [value]="p.id">{{ p.nombre }}</option>
-          }
-        </select>
+      <h2 class="incidente__q">¿En qué obra?</h2>
+      @for (p of proyectos(); track p.id) {
+        <app-option-button
+          icon="🏗️"
+          [label]="p.nombre"
+          [selected]="proyectoId() === p.id"
+          (pressed)="proyectoId.set(p.id)"
+        />
+      } @empty {
+        <p class="incidente__or">No hay obras disponibles.</p>
       }
 
       <h2 class="incidente__q">¿Qué pasó?</h2>

@@ -61,6 +61,12 @@ export const routes: Routes = [
       import('./pages/bitacora/mis-partes/mis-partes').then((m) => m.MisPartesPage),
   },
   {
+    path: 'bitacora/detalle/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () =>
+      import('./pages/bitacora/detalle/detalle').then((m) => m.BitacoraDetallePage),
+  },
+  {
     path: 'transporte',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/transporte').then((m) => m.TransportePage),

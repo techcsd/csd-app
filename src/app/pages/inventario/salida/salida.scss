@@ -87,6 +87,26 @@
   font-weight: 700;
   width: 32px;
 }
+.mov__motivos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.chip--on {
+  border-color: var(--color-success);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
 .mov__nav {
   padding: 16px;
   padding-bottom: calc(16px + var(--safe-bottom));

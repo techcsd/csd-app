@@ -1,0 +1,78 @@
+<div class="screen det">
+  <header class="det__header">
+    <button type="button" class="det__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="det__title">{{ titulo() }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="det__muted">Cargando…</p>
+    } @else if (b(); as bit) {
+      <ul class="det__info">
+        <li><span>Obra</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>
+        <li><span>Fecha</span><b>{{ bit.fecha | date: 'dd/MM/yyyy' }}</b></li>
+        @if (bit.tipo === 'parte_diario') {
+          <li><span>Personal</span><b>{{ totalPersonal() }}</b></li>
+        }
+        @if (bit.tipo === 'incidente') {
+          <li><span>Tipo</span><b>{{ bit.incidente_tipo }}</b></li>
+          <li><span>Gravedad</span><b>{{ bit.incidente_gravedad }}</b></li>
+          <li><span>Heridos</span><b>{{ bit.incidente_lesionados }}</b></li>
+        }
+      </ul>
+
+      @if (bit.tipo === 'parte_diario') {
+        <div class="det__personal">
+          <span>🔨 Carpintería: {{ bit.personal_carpinteria }}</span>
+          <span>🔩 Acero: {{ bit.personal_acero }}</span>
+          <span>👷 Casa: {{ bit.trabajadores_casa }}</span>
+          @if (bit.otro_personal) { <span>Otro: {{ bit.otro_personal }}</span> }
+        </div>
+      }
+
+      @if (bit.actividades?.length) {
+        <h2 class="det__section">Actividades</h2>
+        <ul class="det__list">
+          @for (a of bit.actividades; track $index) {
+            <li>{{ a.estructura }} · {{ a.actividad }}</li>
+          }
+        </ul>
+      }
+
+      @if (bit.restricciones?.length) {
+        <h2 class="det__section">Problemas / restricciones</h2>
+        <ul class="det__list">
+          @for (r of bit.restricciones; track $index) {
+            <li>{{ r.tipo_restriccion }}{{ r.descripcion_otro ? ' — ' + r.descripcion_otro : '' }}</li>
+          }
+        </ul>
+      }
+
+      @if (bit.incidente_descripcion) {
+        <h2 class="det__section">Descripción</h2>
+        <p class="det__desc">{{ bit.incidente_descripcion }}</p>
+      }
+      @if (bit.comentarios) {
+        <h2 class="det__section">Comentario</h2>
+        <p class="det__desc">{{ bit.comentarios }}</p>
+      }
+
+      @if (media().length) {
+        <h2 class="det__section">Fotos y notas</h2>
+        <div class="det__media">
+          @for (m of media(); track m.url) {
+            @if (m.audio) {
+              <audio class="det__audio" [src]="m.url" controls></audio>
+            } @else {
+              <a class="det__foto" [href]="m.url" target="_blank" rel="noopener">
+                <img [src]="m.url" alt="foto" loading="lazy" />
+              </a>
+            }
+          }
+        </div>
+      }
+    } @else {
+      <p class="det__muted">No se encontró la bitácora.</p>
+    }
+  </div>
+</div>

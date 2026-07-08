@@ -22,18 +22,12 @@
         }
       </select>
 
-      <label class="field-label mov__mt">Agregar material</label>
-      <input class="field" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Buscar material…" />
-      @if (matches().length) {
-        <div class="mov__matches">
-          @for (a of matches(); track a.id) {
-            <button type="button" class="mov__match" (click)="add(a)">
-              {{ a.nombre }} <span>{{ a.codigo }}</span>
-            </button>
-          }
-        </div>
-      }
+      <label class="field-label mov__mt">Elige el material</label>
+      <app-articulo-picker [articulos]="articulos()" [exclude]="cartIds()" (picked)="add($event)" />
 
+      @if (cart().length) {
+        <label class="field-label mov__mt">Cantidades</label>
+      }
       @for (it of cart(); track it.articulo_id) {
         <div class="mov__item">
           <span class="mov__item-name">{{ it.nombre }}</span>

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -14,7 +15,7 @@ import { ArticuloCat, Bodega, MovItem } from '../../../core/models/inventario.mo
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BigConfirm],
+  imports: [FormsModule, BigConfirm, ArticuloPicker],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })
@@ -26,26 +27,18 @@ export class EntradaPage {
   private router = inject(Router);
   private location = inject(Location);
 
+  readonly motivos = ['Compra local', 'Devolución de obra', 'Sobrante', 'Otro'];
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
-  referencia = signal('');
+  motivo = signal('');
   articulos = signal<ArticuloCat[]>([]);
-  query = signal('');
   cart = signal<MovItem[]>([]);
   foto = signal<CapturedPhoto | null>(null);
   capturing = signal(false);
   submitting = signal(false);
   done = signal(false);
 
-  matches = computed(() => {
-    const q = this.query().toLowerCase().trim();
-    if (!q) return [];
-    const inCart = new Set(this.cart().map((c) => c.articulo_id));
-    return this.articulos()
-      .filter((a) => !inCart.has(a.id))
-      .filter((a) => a.nombre.toLowerCase().includes(q) || a.codigo.toLowerCase().includes(q))
-      .slice(0, 8);
-  });
+  cartIds = computed(() => this.cart().map((c) => c.articulo_id));
 
   constructor() {
     void this.init();
@@ -63,7 +56,6 @@ export class EntradaPage {
 
   add(a: ArticuloCat): void {
     this.cart.update((c) => [...c, { articulo_id: a.id, nombre: a.nombre, unidad: a.unidad, cantidad: 1 }]);
-    this.query.set('');
   }
   setCantidad(i: number, v: number): void {
     this.cart.update((c) => c.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, v || 0) } : x)));
@@ -106,7 +98,7 @@ export class EntradaPage {
     try {
       await this.inventario.enqueueEntrada({
         bodegaId: this.bodegaId(),
-        referencia: this.referencia().trim() || null,
+        referencia: this.motivo() || null,
         items: items.map((c) => ({ articulo_id: c.articulo_id, cantidad: c.cantidad })),
         foto: this.foto()?.blob ?? null,
       });
@@ -122,6 +114,6 @@ export class EntradaPage {
     this.location.back();
   }
   finish(): void {
-    void this.router.navigate(['/inventario']);
+    void this.router.navigate(['/inventario'], { replaceUrl: true });
   }
 }

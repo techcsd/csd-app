@@ -2,8 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { PermanentSyncError, SyncService } from '../sync/sync.service';
-import { ActividadEntry, Proyecto } from '../models/bitacora.model';
-import { db, RegistroLocal } from '../db/app-db';
+import { ActividadEntry, BitacoraFull, Proyecto } from '../models/bitacora.model';
 
 const CATALOG_PROYECTOS = 'proyectos';
 const BUCKET = 'sgc-bitacora';
@@ -111,10 +110,29 @@ export class BitacoraService {
     });
   }
 
-  /** Local list of parts I've captured (offline-friendly "Mis partes"). */
-  async misPartesLocales(): Promise<RegistroLocal[]> {
-    const rows = await db.mis_registros.where('tipo_op').equals('bitacora').toArray();
-    return rows.sort((a, b) => b.created_local - a.created_local);
+  /** My bitácoras (server, RLS-scoped to own), cached for offline viewing. */
+  async misBitacoras(): Promise<BitacoraFull[]> {
+    const data = await this.catalog.refresh<BitacoraFull[]>('mis_bitacoras', async () => {
+      const { data, error } = await this.supabase.client
+        .from('bitacoras')
+        .select(
+          'id, fecha, tipo, comentarios, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_lesionados, incidente_descripcion, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+        )
+        .order('fecha', { ascending: false })
+        .limit(50);
+      if (error) throw new Error(error.message);
+      return (data as unknown as BitacoraFull[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** Signed URL for a bitácora photo/audio (private sgc-bitacora bucket). */
+  async getArchivoSignedUrl(path: string): Promise<string> {
+    const { data, error } = await this.supabase.client.storage
+      .from(BUCKET)
+      .createSignedUrl(path, 3600);
+    if (error) throw new Error(error.message);
+    return data.signedUrl;
   }
 
   private buildFotos(id: string, blobs: Blob[]) {
