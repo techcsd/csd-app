@@ -28,11 +28,15 @@ DDL works via the Management API using the system env var `SUPABASE_ACCESS_TOKEN
 2. **Android APK** — no JDK/Android SDK on this machine. `android/` project is ready; installing JDK 21 + Android Studio lets us build/sign the first APK + keystore.
 3. **Rotate keys** — service_role/secret + other keys passed through chat; rotate after the milestone.
 
+## SGC web — Flota "Responsabilidad" view DONE (needs your commit/push)
+Added in `dev/SGC` (builds clean): route `/flota/responsabilidad`, shell nav entry, `VehiculosService.getResponsabilidad()` + `getEntregaFotoUrl()`, and the `Responsabilidad` component (history list, "requieren revisión" filter, expandable photos/signature via signed URLs, damage highlighting). **Not committed** — SGC pushes deploy to Vercel prod, so left for you to review + push.
+
 ## Next (rest of M2)
-1. **Rutas + conduces del día** (delivery confirmation) — BLOCKED on a modeling decision: `rutas.conductor_id` and `salidas` point at `sgc.conductores` (a catalog with no `usuario_id`), but app users are `sgc.usuarios`. Need: is there a usuario↔conductor link, or should the app match by cédula/name, or should conduces be assignable to usuarios? Ask Xavier before building.
-2. **SGC web** (`dev/SGC`): vehicle-responsibility history in the Flota module reading `vehiculo_entregas` (+ highlight `requiere_revision`). Doable solo — keeps both apps in sync (rule #5).
-3. Live login walk-through of the full offline checklist (needs a real flota user's password): capture in airplane mode → reconnect → confirm row + photos in Supabase.
-4. Real notifications on `requiere_revision` once SGC's notification mechanism is located (no `sgc.notificaciones` table found).
+1. **Rutas + conduces del día** — DECIDED: add `sgc.conductores.usuario_id` FK. Steps: migration (add column) → small SGC admin UI to link a user to each conductor → app flow "mis conduces del día" (deliver with photo + receiver + signature, reuse SGC salidas RPC + idempotency).
+2. Live login walk-through of the full offline checklist (needs a real flota user's password): capture in airplane mode → reconnect → confirm row + photos in Supabase.
+3. Real notifications on `requiere_revision` once SGC's notification mechanism is located (no `sgc.notificaciones` table found).
+
+## Then M3 — Bitácora (parte diario wizard + incidentes), reusing SGC's crear_entrada_bitacora RPC.
 
 ## How to run
 ```
