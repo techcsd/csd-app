@@ -37,6 +37,17 @@
       </button>
     }
 
-    <button type="button" class="btn-cta perfil__logout" (click)="logout()">Cerrar sesión</button>
+    <button type="button" class="btn-cta perfil__logout" (click)="pedirCerrarSesion()">Cerrar sesión</button>
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmLogout()"
+    title="Cerrar sesión"
+    message="¿Seguro que quieres cerrar sesión? Tendrás que volver a entrar con tu contraseña."
+    confirmLabel="Sí, cerrar sesión"
+    cancelLabel="Cancelar"
+    tone="danger"
+    (confirmed)="logout()"
+    (cancelled)="cancelarCerrarSesion()"
+  />
 </div>

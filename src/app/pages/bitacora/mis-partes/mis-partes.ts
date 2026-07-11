@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DatePipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
@@ -9,7 +10,7 @@ import { BitacoraFull } from '../../../core/models/bitacora.model';
   selector: 'app-mis-bitacoras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [Skeleton, DatePipe],
   templateUrl: './mis-partes.html',
   styleUrl: './mis-partes.scss',
 })

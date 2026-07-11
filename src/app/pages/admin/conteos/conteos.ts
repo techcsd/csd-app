@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DatePipe, Location } from '@angular/common';
 import { AdminService, ConteoRow } from '../../../core/services/admin.service';
 
@@ -7,7 +8,7 @@ import { AdminService, ConteoRow } from '../../../core/services/admin.service';
   selector: 'app-admin-conteos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [Skeleton, DatePipe],
   templateUrl: './conteos.html',
   styleUrl: '../unidades/unidades.scss',
 })

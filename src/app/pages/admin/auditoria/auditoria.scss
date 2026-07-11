@@ -1,0 +1,118 @@
+.aud__chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+.aud__chip {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 700;
+}
+.aud__chip--on {
+  background: var(--color-secondary);
+  color: #fff;
+  border-color: var(--color-secondary);
+}
+
+.aud__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.aud__item-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.aud__area {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.aud__item-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.aud__badge {
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+.aud__badge[data-accion='INSERT'] {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.aud__badge[data-accion='UPDATE'] {
+  background: var(--color-info);
+  color: #fff;
+}
+.aud__badge[data-accion='DELETE'] {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.aud__detail {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.aud__change {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.aud__change-campo {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-transform: capitalize;
+}
+.aud__change-vals {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 15px;
+}
+.aud__antes {
+  color: var(--color-error);
+  text-decoration: line-through;
+}
+.aud__arrow {
+  color: var(--color-text-secondary);
+}
+.aud__despues {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.aud__more {
+  width: 100%;
+  min-height: var(--touch-min);
+  margin-top: 4px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 700;
+}

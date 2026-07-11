@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, BCatalogo } from '../../../core/services/admin.service';
@@ -11,7 +12,7 @@ type Tipo = 'estructura' | 'actividad' | 'restriccion';
   selector: 'app-admin-catalogos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [Skeleton, FormsModule],
   templateUrl: './catalogos.html',
   styleUrl: '../unidades/unidades.scss',
 })

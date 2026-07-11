@@ -6,7 +6,7 @@
 
   <div class="screen__body">
     @if (loading()) {
-      <p class="det__muted">Cargando…</p>
+      <app-skeleton [rows]="5" />
     } @else if (b(); as bit) {
       <ul class="det__info">
         <li><span>Obra</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>

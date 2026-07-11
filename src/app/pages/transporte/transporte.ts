@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
@@ -10,7 +11,7 @@ import { PendientesTransporte } from '../../core/models/transporte.model';
   selector: 'app-transporte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SyncBar, DecimalPipe],
+  imports: [Skeleton, SyncBar, DecimalPipe],
   templateUrl: './transporte.html',
   styleUrl: './transporte.scss',
 })

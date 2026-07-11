@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
@@ -12,7 +13,7 @@ import { Conduce } from '../../../core/models/transporte.model';
   selector: 'app-recibir-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SyncBar],
+  imports: [Skeleton, FormsModule, SyncBar],
   templateUrl: './recibir.html',
   styleUrl: './recibir.scss',
 })

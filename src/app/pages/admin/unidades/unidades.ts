@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, Unidad } from '../../../core/services/admin.service';
@@ -9,7 +10,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-admin-unidades',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [Skeleton, FormsModule],
   templateUrl: './unidades.html',
   styleUrl: './unidades.scss',
 })

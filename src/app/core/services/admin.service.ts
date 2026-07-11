@@ -36,6 +36,19 @@ export interface ConteoRow {
   items?: { cantidad_antes: number; cantidad_contada: number; articulo?: { nombre: string } | null }[];
 }
 
+export interface AuditoriaRow {
+  id: number;
+  tabla: string;
+  registro_id: string;
+  accion: 'INSERT' | 'UPDATE' | 'DELETE';
+  actor_id: string | null;
+  actor?: { nombre: string } | null;
+  cambios: Record<string, { antes: unknown; despues: unknown }> | null;
+  datos_despues: Record<string, unknown> | null;
+  datos_antes: Record<string, unknown> | null;
+  creado_en: string;
+}
+
 /**
  * Admin operations for the in-app Administración section. All writes are gated
  * server-side by RLS (sgc.is_admin()); the UI is additionally gated by the
@@ -128,6 +141,22 @@ export class AdminService {
       .limit(50);
     if (error) throw new Error(error.message);
     return (data as unknown as ConteoRow[]) ?? [];
+  }
+
+  // ── Auditoría (traceability) ──────────────────────────────
+  /** Recent change trail (who created/modified/deleted what) from both web and
+   *  app. Paginated by page (0-based); accion optionally filters. */
+  async getAuditoria(page = 0, accion?: string): Promise<AuditoriaRow[]> {
+    const size = 30;
+    let q = this.supabase.client
+      .from('auditoria')
+      .select('*, actor:usuarios!auditoria_actor_id_fkey(nombre)')
+      .order('creado_en', { ascending: false })
+      .range(page * size, page * size + size - 1);
+    if (accion) q = q.eq('accion', accion);
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    return (data as unknown as AuditoriaRow[]) ?? [];
   }
 
   private slug(nombre: string): string {

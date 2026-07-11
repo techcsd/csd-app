@@ -6,7 +6,7 @@
 
   <div class="screen__body">
     @if (loading()) {
-      <p class="adm-sub__muted">Cargando…</p>
+      <app-skeleton [rows]="5" />
     } @else {
       @for (r of reportes(); track r.id) {
         <div class="rep-card" [attr.data-estado]="r.estado">

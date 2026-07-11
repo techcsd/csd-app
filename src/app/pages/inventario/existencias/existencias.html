@@ -17,7 +17,7 @@
       />
 
       @if (loading()) {
-        <p class="existencias__muted">Cargando…</p>
+        <app-skeleton [rows]="5" />
       } @else {
         @for (e of filtered(); track e.articulo_id) {
           <div class="stock-row">

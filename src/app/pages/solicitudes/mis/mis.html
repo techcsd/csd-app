@@ -6,7 +6,7 @@
 
   <div class="screen__body">
     @if (loading()) {
-      <p class="mis-sol__muted">Cargando…</p>
+      <app-skeleton [rows]="5" />
     } @else {
       @for (s of solicitudes(); track s.id) {
         <div class="sol-card" [attr.data-estado]="s.estado">

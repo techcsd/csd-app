@@ -6,7 +6,7 @@
 
   <div class="screen__body">
     @if (loading()) {
-      <p class="adm-sub__muted">Cargando…</p>
+      <app-skeleton [rows]="5" />
     } @else {
       @for (c of conteos(); track c.id) {
         <div class="cat-row cat-row--block">

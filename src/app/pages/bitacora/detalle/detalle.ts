@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DatePipe, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
@@ -14,7 +15,7 @@ interface Media {
   selector: 'app-bitacora-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [Skeleton, DatePipe],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })

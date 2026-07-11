@@ -32,10 +32,10 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.1.1';
-const VERSION_CODE = 8;
-const CHANGELOG = 'Sección de Administración y Soporte en la app, catálogos gestionables.';
-const RELEASED_AT = '2026-07-08';
+const VERSION = '1.1.2';
+const VERSION_CODE = 9;
+const CHANGELOG = 'Carga con esqueleto (skeleton), confirmación al cerrar sesión y Auditoría en Administración.';
+const RELEASED_AT = '2026-07-11';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const bucket = 'app-releases';

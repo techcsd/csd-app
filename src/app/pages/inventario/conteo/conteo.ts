@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -14,7 +15,7 @@ import { Bodega, Existencia } from '../../../core/models/inventario.model';
   selector: 'app-conteo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BigConfirm, SelectList],
+  imports: [Skeleton, FormsModule, BigConfirm, SelectList],
   templateUrl: './conteo.html',
   styleUrl: './conteo.scss',
 })

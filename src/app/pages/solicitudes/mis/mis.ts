@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DatePipe, Location } from '@angular/common';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { Solicitud } from '../../../core/models/inventario.model';
@@ -8,7 +9,7 @@ import { Solicitud } from '../../../core/models/inventario.model';
   selector: 'app-mis-solicitudes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe],
+  imports: [Skeleton, DatePipe],
   templateUrl: './mis.html',
   styleUrl: './mis.scss',
 })

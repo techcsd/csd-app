@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DatePipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, Reporte } from '../../../core/services/admin.service';
@@ -9,7 +10,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-admin-reportes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, FormsModule],
+  imports: [Skeleton, DatePipe, FormsModule],
   templateUrl: './reportes.html',
   styleUrl: './reportes.scss',
 })

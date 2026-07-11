@@ -1,0 +1,70 @@
+<div class="screen adm-sub">
+  <header class="adm-sub__header">
+    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="adm-sub__title">Auditoría</h1>
+  </header>
+
+  <div class="screen__body">
+    <div class="aud__chips">
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === ''" (click)="setAccion('')">Todo</button>
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'INSERT'" (click)="setAccion('INSERT')">Creó</button>
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'UPDATE'" (click)="setAccion('UPDATE')">Modificó</button>
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'DELETE'" (click)="setAccion('DELETE')">Eliminó</button>
+    </div>
+
+    @if (error()) {
+      <p class="adm-sub__muted">{{ error() }}</p>
+    }
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      @for (r of rows(); track r.id) {
+        <button type="button" class="aud__item" (click)="toggle(r.id)">
+          <div class="aud__item-top">
+            <span class="aud__badge" [attr.data-accion]="r.accion">{{ accionLabel(r.accion) }}</span>
+            <span class="aud__area">{{ tablaLabel(r.tabla) }}</span>
+          </div>
+          <div class="aud__item-meta">
+            <span class="aud__actor">{{ r.actor?.nombre ?? 'Sistema' }}</span>
+            <span class="aud__fecha">{{ r.creado_en | date: 'dd/MM/yy HH:mm' }}</span>
+          </div>
+
+          @if (expandedId() === r.id) {
+            <div class="aud__detail" (click)="$event.stopPropagation()">
+              @if (r.accion === 'UPDATE') {
+                @for (c of cambiosList(r); track c.campo) {
+                  <div class="aud__change">
+                    <span class="aud__change-campo">{{ c.campo }}</span>
+                    <span class="aud__change-vals">
+                      <span class="aud__antes">{{ c.antes }}</span>
+                      <span class="aud__arrow">→</span>
+                      <span class="aud__despues">{{ c.despues }}</span>
+                    </span>
+                  </div>
+                }
+              } @else {
+                @for (d of datosList(r); track d.campo) {
+                  <div class="aud__change">
+                    <span class="aud__change-campo">{{ d.campo }}</span>
+                    <span class="aud__despues">{{ d.valor }}</span>
+                  </div>
+                } @empty {
+                  <p class="adm-sub__muted">Sin detalles.</p>
+                }
+              }
+            </div>
+          }
+        </button>
+      } @empty {
+        <p class="adm-sub__muted">No hay movimientos registrados.</p>
+      }
+
+      @if (canLoadMore()) {
+        <button type="button" class="aud__more" [disabled]="loadingMore()" (click)="loadMore()">
+          {{ loadingMore() ? 'Cargando…' : 'Cargar más' }}
+        </button>
+      }
+    }
+  </div>
+</div>

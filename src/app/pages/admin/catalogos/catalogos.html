@@ -17,7 +17,7 @@
     </div>
 
     @if (loading()) {
-      <p class="adm-sub__muted">Cargando…</p>
+      <app-skeleton [rows]="5" />
     } @else {
       @for (g of grupos; track g.tipo) {
         <h2 class="cat-section">{{ g.label }}</h2>

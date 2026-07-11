@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SelectList } from '../../../shared/ui/select-list/select-list';
@@ -10,7 +11,7 @@ import { Bodega, Existencia } from '../../../core/models/inventario.model';
   selector: 'app-existencias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectList],
+  imports: [Skeleton, FormsModule, DecimalPipe, SelectList],
   templateUrl: './existencias.html',
   styleUrl: './existencias.scss',
 })
