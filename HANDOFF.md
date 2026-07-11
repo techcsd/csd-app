@@ -2,6 +2,16 @@
 
 _Last updated: 2026-07-11_
 
+## v1.1.2 round — skeletons, sign-out confirm, full audit trail (both systems) ✅
+- **Audit trail (traceability)** — `sql/2026-07-11-auditoria.sql`: `sgc.auditoria` + a generic `fn_auditoria()` AFTER trigger attached to **55 business tables**. Captures every INSERT/UPDATE/DELETE with the real actor (`auth.uid()`), a before→after diff (UPDATE), and the row (INSERT/DELETE). DB-level ⇒ catches **web AND app** writes automatically (app RPCs are SECURITY DEFINER but keep the caller's JWT). RLS: readable by `is_admin() or tiene_modulo('auditoria')`. `auditoria_actores()` RPC feeds the user filter. Verified non-destructively (trigger logs exact diff + actor, rolls back).
+  - **Web viewer**: SGC Admin → Auditoría (`pages/admin/auditoria`, `auditoria.service`) — filter by usuario/área/acción/fecha + search, server-side `.range()` pagination, expandable diffs. Device/browser-verified.
+  - **App viewer**: CSD Admin → Auditoría (`pages/admin/auditoria`, `AdminService.getAuditoria`) — filter chips + load-more + expandable diffs. Device-verified (caught a real "Modificó Catálogo · Activo Sí→No" by Xaviel).
+- **Skeleton loaders** — SGC `shared/components/skeleton` (table/list/cards) on 8 main list pages; CSD `shared/ui/skeleton` on all data screens (transporte, conduces, existencias, conteo, recibir, mis-solicitudes, mis-partes, detalle, admin/*). Replaces blank pages / bare "Cargando…".
+- **Sign-out confirmation** — SGC `shared/components/confirm-dialog` on the header logout; CSD `shared/ui/confirm-dialog` on Perfil → Cerrar sesión. Both device/browser-verified.
+- **Published**: versionCode 9 / **v1.1.2**. Both repos pushed; SGC → Vercel.
+- Note: audit `sgc.auditoria` starts empty and fills with real activity going forward (synthetic demo rows were purged).
+
+
 ## Web parity round — conduce evidence tested + all app media now visible in web ✅
 Rule reinforced: the app is a **child of the web** — anything captured on the app must be viewable in SGC. Audited every app write; closed the media gaps. All verified in a real browser (Edge headless, session minted via admin magic-link OTP + localStorage injection against the SGC dev server):
 - **Conduce delivery evidence** — seeded real photo+firma into the `conduces` bucket, confirmed the SGC conduce view renders "Recibido en obra por / Entrega registrada por {chofer}" + the delivery photo & signature. Test data reverted.
