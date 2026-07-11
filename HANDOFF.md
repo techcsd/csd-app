@@ -1,6 +1,14 @@
 # HANDOFF — CSD App
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-11_
+
+## v1.1.1 round — portrait lock, onboarding, conduce evidence in web (device-verified) ✅
+- **Portrait lock**: `MainActivity android:screenOrientation="portrait"` — fixes the landscape PIN-pad overflow (keys 7/8/9/0 off-screen). Verified on device.
+- **First-run onboarding**: `shared/components/onboarding` — 4 skippable full-screen slides (sin señal / fotos+firma / barra de estado) shown once on Home; flag `csd_onboarding_v1_done` in LocalStore. "Ver tutorial de nuevo" button in Soporte replays it. Device-verified end-to-end (slides → Empezar → dismiss → stays dismissed).
+- **On-device smoke test** (v1.1.x, device 6dbf1af4): Admin hub (4 tiles) ✓, Catálogos add+desactivar against live DB ✓, Perfil (Admin badge) ✓, Soporte FAQ ✓.
+- **SGC web gap closed** (keep-both-in-sync): the app closes conduces with a delivery photo + receiver + signature via `sgc.entregar_conduce`. The web conduce view (`pages/inventario/conduce`) now shows *Recibido en obra por*, *Entrega registrada … por {chofer}*, and renders the delivery photo + signature via signed URLs from the private `conduces` bucket. Model + `salidas.service` SELECT extended with `entregado:usuarios!..entregado_por_fkey(nombre)`. Committed+pushed to SGC `main` (Vercel auto-deploy).
+- **Published**: versionCode 8 / **v1.1.1** built, signed, uploaded to `app-releases` (apk + latest + version.json). csd-app `main` pushed.
+
 
 ## Where we are
 **M1 (Fundaciones) DONE. M2 (Transporte) — vehicle-responsibility checklist DONE.** Build passes (156 kB initial transfer). Pushed to `origin/main`.
