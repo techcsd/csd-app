@@ -2,6 +2,16 @@
 
 _Last updated: 2026-07-11_
 
+## Web parity round — conduce evidence tested + all app media now visible in web ✅
+Rule reinforced: the app is a **child of the web** — anything captured on the app must be viewable in SGC. Audited every app write; closed the media gaps. All verified in a real browser (Edge headless, session minted via admin magic-link OTP + localStorage injection against the SGC dev server):
+- **Conduce delivery evidence** — seeded real photo+firma into the `conduces` bucket, confirmed the SGC conduce view renders "Recibido en obra por / Entrega registrada por {chofer}" + the delivery photo & signature. Test data reverted.
+- **Web first-run guide** — `SGC/src/shared/components/onboarding-web` (5 slides, skippable "Saltar guía"). Shows once for **non-admin** users on first shell load; **admins skipped** (marked done silently). Flag `sgc_onboarding_v1_done` in localStorage. Verified showing+dismissing for non-admin "Test User 3".
+- **Vehicle signature** (`vehiculo_entregas.firma_url`, bucket `vehiculos`) — now signed+rendered in Flota → Responsabilidad. (No prod rows yet to screenshot; compiled + same pattern as the 6 photos already shown.)
+- **Bitácora media** — historial detail now renders field photos inline (thumbnails) and incident voice notes with an `<audio>` player (were text links). Verified: 2 inline photos + audio player.
+- **Inventario salida/entrada photo** (`foto_path`, bucket `inventario`) — salida capture photo added to the conduce view; entradas list gains a Foto column with a 📷 button (signed URL). Verified entrada foto button.
+- Testing note: `msedge` + `playwright-core` + `admin.generateLink({type:'magiclink'})`→`verifyOtp`→inject `sb-<ref>-auth-token` is a repeatable way to screenshot authed SGC pages headlessly. Installed/removed per-test; not committed.
+
+
 ## v1.1.1 round — portrait lock, onboarding, conduce evidence in web (device-verified) ✅
 - **Portrait lock**: `MainActivity android:screenOrientation="portrait"` — fixes the landscape PIN-pad overflow (keys 7/8/9/0 off-screen). Verified on device.
 - **First-run onboarding**: `shared/components/onboarding` — 4 skippable full-screen slides (sin señal / fotos+firma / barra de estado) shown once on Home; flag `csd_onboarding_v1_done` in LocalStore. "Ver tutorial de nuevo" button in Soporte replays it. Device-verified end-to-end (slides → Empezar → dismiss → stays dismissed).
