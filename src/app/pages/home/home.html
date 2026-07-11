@@ -6,10 +6,10 @@
         <p class="home__obra">Obra: {{ o.nombre }}</p>
       }
     </div>
-    <button type="button" class="home__logout" (click)="perfil()" aria-label="Mi perfil">⚙️ Perfil</button>
+    <button type="button" class="home__logout" (click)="perfil()" aria-label="Mi perfil" data-tour="perfil">⚙️ Perfil</button>
   </header>
 
-  <main class="home__grid">
+  <main class="home__grid" data-tour="tiles">
     @for (tile of tiles(); track tile.modulo) {
       <app-big-button
         [icon]="tile.icon"
@@ -24,7 +24,7 @@
     }
   </main>
 
-  <app-sync-bar />
+  <app-sync-bar data-tour="sync" />
 
   <app-onboarding />
 </div>

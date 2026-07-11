@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.1.2';
-const VERSION_CODE = 9;
-const CHANGELOG = 'Carga con esqueleto (skeleton), confirmación al cerrar sesión y Auditoría en Administración.';
+const VERSION = '1.1.3';
+const VERSION_CODE = 10;
+const CHANGELOG = 'Guía de bienvenida interactiva que resalta cada parte de la pantalla.';
 const RELEASED_AT = '2026-07-11';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';

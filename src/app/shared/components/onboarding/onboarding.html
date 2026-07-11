@@ -1,23 +1,32 @@
 @if (visible()) {
-  <div class="onb" role="dialog" aria-modal="true">
-    <button type="button" class="onb__skip" (click)="skip()">Saltar</button>
-
-    @if (slides[index()]; as s) {
-      <div class="onb__body">
-        <div class="onb__icon">{{ s.icon }}</div>
-        <h2 class="onb__title">{{ s.title }}</h2>
-        <p class="onb__text">{{ s.text }}</p>
-      </div>
+  <div class="tour" role="dialog" aria-modal="true">
+    @if (rect(); as r) {
+      <div class="tour__spot" [style]="spotStyle()"></div>
+    } @else {
+      <div class="tour__dim"></div>
     }
 
-    <div class="onb__dots">
-      @for (s of slides; track $index) {
-        <span class="onb__dot" [class.onb__dot--on]="$index === index()"></span>
+    <div class="tour__pop" [class.tour__pop--center]="!rect()" [style]="rect() ? popStyle() : null">
+      <button type="button" class="tour__skip" (click)="skip()">Saltar</button>
+
+      @if (current().icon; as ic) {
+        <div class="tour__icon">{{ ic }}</div>
+      }
+      <h2 class="tour__title">{{ current().title }}</h2>
+      <p class="tour__text">{{ current().text }}</p>
+
+      <div class="tour__dots">
+        @for (s of steps; track $index) {
+          <span class="tour__dot" [class.tour__dot--on]="$index === index()"></span>
+        }
+      </div>
+
+      <button type="button" class="tour__next" (click)="next()">
+        {{ isLast() ? 'Empezar' : 'Siguiente' }}
+      </button>
+      @if (index() > 0 && !isLast()) {
+        <button type="button" class="tour__back" (click)="prev()">Atrás</button>
       }
     </div>
-
-    <button type="button" class="onb__next" (click)="next()">
-      {{ isLast() ? 'Empezar' : 'Siguiente' }}
-    </button>
   </div>
 }

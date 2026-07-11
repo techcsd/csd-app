@@ -1,92 +1,121 @@
-.onb {
+.tour {
   position: fixed;
   inset: 0;
   z-index: 200;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  padding: calc(24px + var(--safe-top)) 28px calc(24px + var(--safe-bottom));
-  text-align: center;
-  color: #fff;
-  background: var(--color-secondary);
 }
 
-.onb__skip {
+.tour__dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 18, 18, 0.7);
+}
+
+/* Spotlight: transparent box, huge box-shadow dims the rest. */
+.tour__spot {
+  position: fixed;
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 9999px rgba(18, 18, 18, 0.7);
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+  pointer-events: none;
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+}
+
+.tour__pop {
+  position: fixed;
+  width: min(340px, calc(100vw - 24px));
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  padding: 22px 20px 18px;
+  animation: tour-pop 0.2s ease;
+}
+.tour__pop--center {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+@keyframes tour-pop {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; }
+}
+
+.tour__skip {
   position: absolute;
-  top: calc(16px + var(--safe-top));
-  right: 16px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-size: 16px;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 15px;
   font-weight: 700;
 }
 
-.onb__body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.onb__icon {
-  width: 140px;
-  height: 140px;
+.tour__icon {
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 14px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--color-surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 84px;
+  font-size: 44px;
   line-height: 1;
 }
 
-.onb__title {
-  margin: 0;
-  font-size: 28px;
+.tour__title {
+  margin: 0 0 8px;
+  font-size: 21px;
   font-weight: 800;
-  max-width: 20ch;
+  color: var(--color-text-primary);
 }
-
-.onb__text {
+.tour__text {
   margin: 0;
-  font-size: 19px;
+  font-size: 16px;
   line-height: 1.5;
-  max-width: 28ch;
-  opacity: 0.95;
+  color: var(--color-text-secondary);
 }
 
-.onb__dots {
+.tour__dots {
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  margin: 18px 0;
 }
-
-.onb__dot {
-  width: 10px;
-  height: 10px;
+.tour__pop--center .tour__dots {
+  justify-content: center;
+}
+.tour__dot {
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--color-surface-2);
   transition: var(--transition);
 }
-.onb__dot--on {
+.tour__dot--on {
   background: var(--color-primary);
   transform: scale(1.3);
 }
 
-.onb__next {
+.tour__next {
   width: 100%;
-  max-width: 340px;
   min-height: var(--touch-min);
-  padding: 16px;
+  padding: 14px;
   border-radius: var(--radius);
   background: var(--color-primary);
   color: var(--color-text-on-primary);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
 }
-.onb__next:active {
-  background: var(--color-primary-dark);
+.tour__back {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  font-weight: 700;
 }
