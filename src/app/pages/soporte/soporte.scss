@@ -15,6 +15,21 @@
   color: var(--color-text-secondary);
   line-height: 1.45;
 }
-.soporte__report {
+.soporte__tutorial {
+  width: 100%;
+  min-height: var(--touch-min);
   margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--fs-option);
+  font-weight: 700;
+}
+.soporte__tutorial:active {
+  background: var(--color-surface-2);
+}
+.soporte__report {
+  margin-top: 12px;
 }

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
+import { LocalStore } from '../../core/services/local-store.service';
 
 /** Help / support: how the app works + how to get help (mirror of SGC Soporte). */
 @Component({
@@ -13,6 +14,7 @@ import { Router } from '@angular/router';
 export class SoportePage {
   private router = inject(Router);
   private location = inject(Location);
+  private store = inject(LocalStore);
 
   readonly faqs = [
     {
@@ -35,6 +37,11 @@ export class SoportePage {
 
   reportar(): void {
     void this.router.navigate(['/reportar']);
+  }
+  verTutorial(): void {
+    void this.store.remove('csd_onboarding_v1_done').then(() => {
+      void this.router.navigate(['/home']);
+    });
   }
   back(): void {
     this.location.back();

@@ -32,8 +32,8 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.1.0';
-const VERSION_CODE = 7;
+const VERSION = '1.1.1';
+const VERSION_CODE = 8;
 const CHANGELOG = 'Sección de Administración y Soporte en la app, catálogos gestionables.';
 const RELEASED_AT = '2026-07-08';
 

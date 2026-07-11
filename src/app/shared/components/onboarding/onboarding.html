@@ -1,0 +1,23 @@
+@if (visible()) {
+  <div class="onb" role="dialog" aria-modal="true">
+    <button type="button" class="onb__skip" (click)="skip()">Saltar</button>
+
+    @if (slides[index()]; as s) {
+      <div class="onb__body">
+        <div class="onb__icon">{{ s.icon }}</div>
+        <h2 class="onb__title">{{ s.title }}</h2>
+        <p class="onb__text">{{ s.text }}</p>
+      </div>
+    }
+
+    <div class="onb__dots">
+      @for (s of slides; track $index) {
+        <span class="onb__dot" [class.onb__dot--on]="$index === index()"></span>
+      }
+    </div>
+
+    <button type="button" class="onb__next" (click)="next()">
+      {{ isLast() ? 'Empezar' : 'Siguiente' }}
+    </button>
+  </div>
+}

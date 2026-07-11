@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { Router } from '@angular/router';
 import { BigButton } from '../../shared/ui/big-button/big-button';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
+import { Onboarding } from '../../shared/components/onboarding/onboarding';
 import { UserContextService } from '../../core/services/user-context.service';
 import { SessionService } from '../../core/services/session.service';
 
@@ -26,7 +27,7 @@ const TILES: HomeTile[] = [
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, SyncBar],
+  imports: [BigButton, SyncBar, Onboarding],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
