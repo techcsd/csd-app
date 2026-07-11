@@ -2,6 +2,13 @@
 
 _Last updated: 2026-07-11_
 
+## v1.1.3 — interactive spotlight tour (both systems), device-verified + published ✅
+The first-run guide now **shows** instead of only telling: it dims the screen and spotlights each real UI element as it explains it.
+- **Web (SGC)**: `onboarding-web` rewritten as a tour — welcome → sidebar → pending badges → CSD App link → Soporte → profile → done. Anchored via `data-tour` attrs + `tourKey()` in the shell. Replayable from Soporte ("Ver la guía de bienvenida"). Browser-verified (rings the real sidebar / each nav item; centered fallback when a target is absent).
+- **App (CSD)**: `shared/components/onboarding` rewritten as a spotlight tour on Home — welcome → tiles → sync bar (verde/amarillo) → profile → done. Anchored via `data-tour` on the grid, `<app-sync-bar>`, and the Perfil button. Replay from "Soporte y ayuda". **Device-verified** end-to-end (v1.1.3): each element ringed in orange, callout positioned above/below, dismisses clean.
+- Same spotlight technique both sides (box-shadow dim + measured getBoundingClientRect + on-resize re-measure). **Published v1.1.3** (code 10).
+
+
 ## v1.1.2 round — skeletons, sign-out confirm, full audit trail (both systems) ✅
 - **Audit trail (traceability)** — `sql/2026-07-11-auditoria.sql`: `sgc.auditoria` + a generic `fn_auditoria()` AFTER trigger attached to **55 business tables**. Captures every INSERT/UPDATE/DELETE with the real actor (`auth.uid()`), a before→after diff (UPDATE), and the row (INSERT/DELETE). DB-level ⇒ catches **web AND app** writes automatically (app RPCs are SECURITY DEFINER but keep the caller's JWT). RLS: readable by `is_admin() or tiene_modulo('auditoria')`. `auditoria_actores()` RPC feeds the user filter. Verified non-destructively (trigger logs exact diff + actor, rolls back).
   - **Web viewer**: SGC Admin → Auditoría (`pages/admin/auditoria`, `auditoria.service`) — filter by usuario/área/acción/fecha + search, server-side `.range()` pagination, expandable diffs. Device/browser-verified.
