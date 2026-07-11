@@ -111,6 +111,16 @@ confirmed (shows in SGC Solicitudes + badge). Offline-first promise proven on a 
 - **In-app "Reportar un problema"** (Perfil → SGC reportes_usuario → Administración → Comentarios y Reportes). RLS insert verified.
 - v1.0.5 built + published to the download page. ⚠️ Device was unplugged at the end — reinstall to the phone via the download page (or `adb install -r` when reconnected). App was fully on-device tested in prior rounds; this round verified via RLS tests + builds.
 
+## v1.1.0 round — app is a fuller "child of the web"
+- **App Admin section** (gated by `admin` module, Home tile + Perfil): Reportes (view/resolve),
+  Catálogos de bitácora, Unidades, Historial de conteos. RLS-gated server-side (is_admin).
+- **App Soporte/Ayuda** page (FAQ + reportar), linked from Perfil.
+- **Bitácora catalogs now admin-managed** (`sgc.bitacora_catalogos`; CHECKs dropped). Both the app
+  wizard and the SGC nueva-bitácora form load them from the DB (built-in lists = offline fallback).
+  Manage in: app Admin → Catálogos, or SGC Administración → Catálogos de bitácora.
+- **Conteo/ajuste history**: app Admin → Historial de conteos, and SGC Inventario → Conteos y ajustes.
+- v1.1.0 built + published. ⚠️ Device was offline — reinstall via the download page or adb when reconnected.
+
 ## Remaining (needs you / optional)
 - **Rotate Supabase service_role/secret keys** (dashboard — they passed through chat).
 - **Back up the keystore** (`android/csd-release.keystore` + `keystore.properties`).
