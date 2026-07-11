@@ -1,0 +1,36 @@
+<div class="screen adm-sub">
+  <header class="adm-sub__header">
+    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="adm-sub__title">Historial de conteos</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="adm-sub__muted">Cargando…</p>
+    } @else {
+      @for (c of conteos(); track c.id) {
+        <div class="cat-row cat-row--block">
+          <button type="button" class="cnt-row" (click)="toggle(c.id)">
+            <div class="cat-row__info">
+              <span class="cat-row__name">{{ c.bodega?.nombre ?? 'Bodega' }}</span>
+              <span class="cat-row__code">{{ c.creado?.nombre ?? '—' }} · {{ c.created_at | date: 'dd/MM/yyyy HH:mm' }}{{ c.motivo ? ' · ' + c.motivo : '' }}</span>
+            </div>
+            <span class="cnt-row__chev">{{ expandedId() === c.id ? '▲' : '▼' }}</span>
+          </button>
+          @if (expandedId() === c.id) {
+            <ul class="cnt-items">
+              @for (it of c.items ?? []; track $index) {
+                <li>
+                  {{ it.articulo?.nombre ?? '—' }}:
+                  <b>{{ it.cantidad_antes }} → {{ it.cantidad_contada }}</b>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      } @empty {
+        <p class="adm-sub__muted">No hay conteos registrados.</p>
+      }
+    }
+  </div>
+</div>

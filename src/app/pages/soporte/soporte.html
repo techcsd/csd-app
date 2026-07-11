@@ -1,0 +1,19 @@
+<div class="screen adm-sub">
+  <header class="adm-sub__header">
+    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="adm-sub__title">Soporte y ayuda</h1>
+  </header>
+
+  <div class="screen__body">
+    @for (f of faqs; track f.q) {
+      <div class="faq">
+        <p class="faq__q">{{ f.q }}</p>
+        <p class="faq__a">{{ f.a }}</p>
+      </div>
+    }
+
+    <button type="button" class="btn-cta soporte__report" (click)="reportar()">
+      🛟 Reportar un problema
+    </button>
+  </div>
+</div>

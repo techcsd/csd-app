@@ -1,0 +1,35 @@
+<div class="screen adm-sub">
+  <header class="adm-sub__header">
+    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="adm-sub__title">Catálogos de bitácora</h1>
+  </header>
+
+  <div class="screen__body">
+    <label class="field-label">Agregar a…</label>
+    <div class="cat-tipos">
+      @for (g of grupos; track g.tipo) {
+        <button type="button" class="chip" [class.chip--on]="nuevoTipo() === g.tipo" (click)="nuevoTipo.set(g.tipo)">{{ g.label }}</button>
+      }
+    </div>
+    <div class="adm-add">
+      <input class="field" type="text" [ngModel]="nuevoValor()" (ngModelChange)="nuevoValor.set($event)" (keyup.enter)="agregar()" placeholder="Nuevo valor (ej: ESCALERAS)" />
+      <button type="button" class="btn-cta" [disabled]="saving()" (click)="agregar()">Agregar</button>
+    </div>
+
+    @if (loading()) {
+      <p class="adm-sub__muted">Cargando…</p>
+    } @else {
+      @for (g of grupos; track g.tipo) {
+        <h2 class="cat-section">{{ g.label }}</h2>
+        @for (c of porTipo()[g.tipo]; track c.id) {
+          <div class="cat-row" [class.cat-row--off]="!c.activo">
+            <span class="cat-row__name">{{ c.valor }}</span>
+            <button type="button" class="cat-row__btn" (click)="toggle(c)">
+              {{ c.activo ? 'Desactivar' : 'Activar' }}
+            </button>
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

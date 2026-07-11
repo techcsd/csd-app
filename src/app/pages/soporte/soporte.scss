@@ -1,0 +1,20 @@
+.faq {
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 10px;
+}
+.faq__q {
+  font-weight: 700;
+  font-size: var(--fs-option);
+  margin: 0 0 6px;
+}
+.faq__a {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+.soporte__report {
+  margin-top: 16px;
+}

@@ -1,0 +1,26 @@
+<div class="screen admin">
+  <header class="admin__header">
+    <button type="button" class="admin__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="admin__icon">⚙️</span>
+    <h1 class="admin__title">Administración</h1>
+  </header>
+
+  <div class="screen__body">
+    <button type="button" class="adm-action" (click)="go('/admin/reportes')">
+      <span class="adm-action__icon">📨</span>
+      <span class="adm-action__label">Reportes y comentarios</span>
+    </button>
+    <button type="button" class="adm-action" (click)="go('/admin/catalogos')">
+      <span class="adm-action__icon">🏗️</span>
+      <span class="adm-action__label">Catálogos de bitácora</span>
+    </button>
+    <button type="button" class="adm-action" (click)="go('/admin/unidades')">
+      <span class="adm-action__icon">📏</span>
+      <span class="adm-action__label">Unidades de medida</span>
+    </button>
+    <button type="button" class="adm-action" (click)="go('/admin/conteos')">
+      <span class="adm-action__icon">🔢</span>
+      <span class="adm-action__label">Historial de conteos</span>
+    </button>
+  </div>
+</div>

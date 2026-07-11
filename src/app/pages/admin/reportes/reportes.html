@@ -1,0 +1,40 @@
+<div class="screen adm-sub">
+  <header class="adm-sub__header">
+    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="adm-sub__title">Reportes</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <p class="adm-sub__muted">Cargando…</p>
+    } @else {
+      @for (r of reportes(); track r.id) {
+        <div class="rep-card" [attr.data-estado]="r.estado">
+          <button type="button" class="rep-card__row" (click)="toggle(r)">
+            <div class="rep-card__info">
+              <span class="rep-card__asunto">{{ r.asunto }}</span>
+              <span class="rep-card__meta">{{ tipoLabel(r.tipo) }} · {{ r.usuario?.nombre ?? '—' }} · {{ r.created_at | date: 'dd/MM' }}</span>
+            </div>
+            <span class="rep-card__estado">{{ r.estado === 'resuelto' ? '✅' : r.estado === 'descartado' ? '🚫' : '🕓' }}</span>
+          </button>
+          @if (expandedId() === r.id) {
+            <div class="rep-card__detail">
+              <p class="rep-card__desc">{{ r.descripcion }}</p>
+              @if (r.respuesta_admin) {
+                <p class="rep-card__resp">Respuesta: {{ r.respuesta_admin }}</p>
+              }
+              @if (r.estado !== 'resuelto') {
+                <textarea class="rep-card__area" rows="2" [ngModel]="respuesta()" (ngModelChange)="respuesta.set($event)" placeholder="Respuesta (opcional)"></textarea>
+                <button type="button" class="btn-cta" [disabled]="saving()" (click)="resolver(r)">
+                  {{ saving() ? 'Guardando…' : 'Marcar resuelto' }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      } @empty {
+        <p class="adm-sub__muted">No hay reportes.</p>
+      }
+    }
+  </div>
+</div>

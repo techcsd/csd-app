@@ -44,6 +44,25 @@ export class BitacoraService {
     this.registerHandler();
   }
 
+  /** Admin-managed bitácora catalogs (estructuras/actividades/restricciones). */
+  async getCatalogos(): Promise<{ estructuras: string[]; actividades: string[]; restricciones: string[] }> {
+    const rows = await this.catalog.refresh<{ tipo: string; valor: string }[]>(
+      'bitacora_catalogos',
+      async () => {
+        const { data, error } = await this.supabase.client
+          .from('bitacora_catalogos')
+          .select('tipo, valor')
+          .eq('activo', true)
+          .order('valor');
+        if (error) throw new Error(error.message);
+        return (data as { tipo: string; valor: string }[]) ?? [];
+      },
+    );
+    const list = rows ?? [];
+    const by = (t: string) => list.filter((r) => r.tipo === t).map((r) => r.valor);
+    return { estructuras: by('estructura'), actividades: by('actividad'), restricciones: by('restriccion') };
+  }
+
   async getProyectos(): Promise<Proyecto[]> {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
       const { data, error } = await this.supabase.client

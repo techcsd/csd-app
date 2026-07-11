@@ -1,0 +1,29 @@
+<div class="screen adm-sub">
+  <header class="adm-sub__header">
+    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="adm-sub__title">Unidades</h1>
+  </header>
+
+  <div class="screen__body">
+    <div class="adm-add">
+      <input class="field" type="text" [ngModel]="nuevo()" (ngModelChange)="nuevo.set($event)" (keyup.enter)="agregar()" placeholder="Nueva unidad (ej: Cubeta)" />
+      <button type="button" class="btn-cta" [disabled]="saving()" (click)="agregar()">Agregar</button>
+    </div>
+
+    @if (loading()) {
+      <p class="adm-sub__muted">Cargando…</p>
+    } @else {
+      @for (u of unidades(); track u.id) {
+        <div class="cat-row" [class.cat-row--off]="!u.activo">
+          <div class="cat-row__info">
+            <span class="cat-row__name">{{ u.nombre }}</span>
+            <span class="cat-row__code">{{ u.codigo }}</span>
+          </div>
+          <button type="button" class="cat-row__btn" (click)="toggle(u)">
+            {{ u.activo ? 'Desactivar' : 'Activar' }}
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

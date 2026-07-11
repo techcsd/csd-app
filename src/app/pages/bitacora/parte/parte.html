@@ -48,13 +48,13 @@
         }
         <label class="field-label">¿En qué parte? (puedes elegir varias)</label>
         <div class="parte__chips">
-          @for (e of estructuras; track e) {
+          @for (e of estructuras(); track e) {
             <button type="button" class="chip" [class.chip--on]="selEstructuras().includes(e)" (click)="toggleEstructura(e)">{{ e }}</button>
           }
         </div>
         <label class="field-label">¿Qué se hizo? (puedes elegir varias)</label>
         <div class="parte__chips">
-          @for (ac of actividadesCat; track ac) {
+          @for (ac of actividadesCat(); track ac) {
             <button type="button" class="chip" [class.chip--on]="selActividades().includes(ac)" (click)="toggleActividad(ac)">{{ ac }}</button>
           }
         </div>
@@ -66,7 +66,7 @@
         <h1 class="screen__title">¿Hubo algún problema?</h1>
         <p class="screen__subtitle">Marca lo que aplique. Si no hubo, deja "Ninguna".</p>
         <div class="parte__restr">
-          @for (r of restriccionesCat; track r) {
+          @for (r of restriccionesCat(); track r) {
             <app-option-button [label]="r" [selected]="restricciones().includes(r)" (pressed)="toggleRestriccion(r)" />
           }
         </div>

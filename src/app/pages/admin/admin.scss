@@ -1,0 +1,49 @@
+.admin {
+  background: var(--color-bg);
+}
+.admin__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.admin__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.admin__icon {
+  font-size: 28px;
+}
+.admin__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.adm-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 18px;
+  margin-bottom: 14px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+.adm-action:active {
+  transform: scale(0.98);
+}
+.adm-action__icon {
+  font-size: 30px;
+}

@@ -26,6 +26,7 @@ export class PerfilPage {
   nombre = this.ctx.nombre;
   roles = this.ctx.roles;
   obra = this.ctx.obraActiva;
+  isAdmin = () => this.ctx.hasModulo('admin');
   online = this.network.online;
   version = environment.version;
   checking = signal(false);
@@ -42,6 +43,14 @@ export class PerfilPage {
 
   reportar(): void {
     void this.router.navigate(['/reportar']);
+  }
+
+  soporte(): void {
+    void this.router.navigate(['/soporte']);
+  }
+
+  admin(): void {
+    void this.router.navigate(['/admin']);
   }
 
   async logout(): Promise<void> {

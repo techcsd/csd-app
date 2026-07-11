@@ -155,6 +155,36 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/reportar/reportar').then((m) => m.ReportarPage),
   },
   {
+    path: 'soporte',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/soporte/soporte').then((m) => m.SoportePage),
+  },
+  {
+    path: 'admin',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/admin').then((m) => m.AdminPage),
+  },
+  {
+    path: 'admin/reportes',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/reportes/reportes').then((m) => m.AdminReportesPage),
+  },
+  {
+    path: 'admin/unidades',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/unidades/unidades').then((m) => m.AdminUnidadesPage),
+  },
+  {
+    path: 'admin/catalogos',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/catalogos/catalogos').then((m) => m.AdminCatalogosPage),
+  },
+  {
+    path: 'admin/conteos',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/conteos/conteos').then((m) => m.AdminConteosPage),
+  },
+  {
     path: '403',
     loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage),
   },

@@ -44,9 +44,11 @@ export class PartePage {
   private hydrated = false;
 
   readonly total = TOTAL;
-  readonly estructuras = ESTRUCTURAS;
-  readonly actividadesCat = ACTIVIDADES;
-  readonly restriccionesCat = RESTRICCIONES;
+  // Default to the built-in lists (works offline/instantly), then override with
+  // the admin-managed catalog from the DB.
+  estructuras = signal<readonly string[]>(ESTRUCTURAS);
+  actividadesCat = signal<readonly string[]>(ACTIVIDADES);
+  restriccionesCat = signal<readonly string[]>(RESTRICCIONES);
 
   step = signal(1);
   proyectos = signal<Proyecto[]>([]);
@@ -120,6 +122,11 @@ export class PartePage {
   private async load(): Promise<void> {
     const list = await this.bitacora.getProyectos();
     this.proyectos.set(list);
+
+    const cat = await this.bitacora.getCatalogos();
+    if (cat.estructuras.length) this.estructuras.set(cat.estructuras);
+    if (cat.actividades.length) this.actividadesCat.set(cat.actividades);
+    if (cat.restricciones.length) this.restriccionesCat.set(cat.restricciones);
 
     const draft = await this.borrador.load<{
       proyectoId: string;

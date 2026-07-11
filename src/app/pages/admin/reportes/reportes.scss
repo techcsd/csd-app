@@ -1,0 +1,65 @@
+.rep-card {
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-text-secondary);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.rep-card[data-estado='abierto'] {
+  border-left-color: var(--color-warning);
+}
+.rep-card[data-estado='resuelto'] {
+  border-left-color: var(--color-success);
+}
+.rep-card__row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  background: none;
+}
+.rep-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rep-card__asunto {
+  font-weight: 700;
+  font-size: var(--fs-option);
+}
+.rep-card__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.rep-card__estado {
+  font-size: 20px;
+}
+.rep-card__detail {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--color-border);
+}
+.rep-card__desc {
+  margin: 12px 0;
+  color: var(--color-text-primary);
+}
+.rep-card__resp {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  margin: 0 0 12px;
+}
+.rep-card__area {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: var(--fs-body);
+  margin-bottom: 12px;
+  resize: vertical;
+}
