@@ -32,10 +32,10 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.2.0';
-const VERSION_CODE = 11;
-const CHANGELOG = 'Checklist de pre-uso vehicular, reportar mantenimiento con fotos, Cómo llegar en rutas, y Requisición/Almacén.';
-const RELEASED_AT = '2026-07-12';
+const VERSION = '1.2.1';
+const VERSION_CODE = 12;
+const CHANGELOG = 'Reportar problema/mejora desde la app (offline), y mejoras varias.';
+const RELEASED_AT = '2026-07-13';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const bucket = 'app-releases';

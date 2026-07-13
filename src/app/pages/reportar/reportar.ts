@@ -8,7 +8,11 @@ import { ReportesService, ReporteTipo } from '../../core/services/reportes.servi
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
 
-/** Report an app problem / suggestion / comment to admin (SGC reportes). */
+/**
+ * Reportar problema/mejora: any authenticated pilot user (driver/engineer) sends
+ * feedback from the phone. Works offline via the outbox — queued and sent by
+ * itself when signal returns. Dead-simple, glove-friendly single-screen form.
+ */
 @Component({
   selector: 'app-reportar',
   standalone: true,
@@ -25,12 +29,12 @@ export class ReportarPage {
   private location = inject(Location);
 
   readonly tipos = [
-    { value: 'bug' as ReporteTipo, label: 'Un problema / error', icon: '🐞' },
-    { value: 'sugerencia' as ReporteTipo, label: 'Una sugerencia', icon: '💡' },
-    { value: 'comentario' as ReporteTipo, label: 'Un comentario', icon: '💬' },
+    { value: 'error' as ReporteTipo, label: 'Un problema / error', icon: '🐞' },
+    { value: 'mejora' as ReporteTipo, label: 'Una mejora / sugerencia', icon: '💡' },
+    { value: 'duda' as ReporteTipo, label: 'Una duda', icon: '❓' },
   ];
 
-  tipo = signal<ReporteTipo>('bug');
+  tipo = signal<ReporteTipo>('error');
   asunto = signal('');
   descripcion = signal('');
   submitting = signal(false);
@@ -46,13 +50,13 @@ export class ReportarPage {
       this.toast.error('Cuéntanos qué pasó.');
       return;
     }
-    if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para enviar tu reporte.');
-      return;
-    }
     this.submitting.set(true);
     try {
-      await this.reportes.crear(this.tipo(), this.asunto(), this.descripcion());
+      await this.reportes.enqueueReporte({
+        tipo: this.tipo(),
+        asunto: this.asunto(),
+        descripcion: this.descripcion(),
+      });
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar.');
@@ -65,6 +69,10 @@ export class ReportarPage {
     this.location.back();
   }
   finish(): void {
-    void this.router.navigate(['/perfil'], { replaceUrl: true });
+    void this.router.navigate(['/home'], { replaceUrl: true });
+  }
+
+  get online(): boolean {
+    return this.network.online();
   }
 }

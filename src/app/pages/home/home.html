@@ -24,6 +24,13 @@
     }
   </main>
 
+  <!-- Non-gated: everyone can report a problem or improvement. -->
+  <footer class="home__footer">
+    <button type="button" class="home__report" (click)="reportar()" data-tour="reportar">
+      🛟 Reportar un problema o mejora
+    </button>
+  </footer>
+
   <app-sync-bar data-tour="sync" />
 
   <app-onboarding />

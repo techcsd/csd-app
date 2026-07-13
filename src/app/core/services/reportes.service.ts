@@ -1,24 +1,56 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { UserContextService } from './user-context.service';
+import { PermanentSyncError, SyncService } from '../sync/sync.service';
 
-export type ReporteTipo = 'bug' | 'sugerencia' | 'comentario';
+/** Matches the crear_reporte_app RPC domain (tipo ∈ 'duda'|'error'|'mejora'). */
+export type ReporteTipo = 'error' | 'mejora' | 'duda';
+
+/** Input the "Reportar problema/mejora" form hands to enqueueReporte(). */
+export interface ReporteCaptura {
+  tipo: ReporteTipo;
+  asunto: string;
+  descripcion: string;
+}
 
 /**
- * Field feedback → SGC's reportes_usuario (Deployment §6). Lands in
- * Administración → Comentarios y Reportes so admin sees app issues.
+ * App feedback write path (pilot users report a problem / suggestion / question).
+ * Mirrors MantenimientosService: the report is enqueued in the offline outbox and
+ * committed by the registered handler (crear_reporte_app, idempotent by p_id) as
+ * soon as there's connectivity. Photo-less op — no fotos on the enqueue.
  */
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
   private supabase = inject(SupabaseService);
-  private ctx = inject(UserContextService);
+  private sync = inject(SyncService);
 
-  async crear(tipo: ReporteTipo, asunto: string, descripcion: string): Promise<void> {
-    const usuario_id = this.ctx.profile()?.id;
-    if (!usuario_id) throw new Error('Sesión inválida.');
-    const { error } = await this.supabase.client
-      .from('reportes_usuario')
-      .insert({ usuario_id, tipo, asunto: asunto.trim(), descripcion: descripcion.trim() });
-    if (error) throw new Error(error.message);
+  constructor() {
+    this.registerHandler();
+  }
+
+  /** Queue an app report. Works fully offline; syncs when there's signal. */
+  async enqueueReporte(input: ReporteCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const asunto = input.asunto.trim();
+    const descripcion = input.descripcion.trim();
+
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'reporte',
+      payload: { id, tipo: input.tipo, asunto, descripcion },
+      resumen: { tipo: input.tipo, asunto },
+    });
+  }
+
+  private registerHandler(): void {
+    this.sync.register('reporte', async (payload) => {
+      const { error } = await this.supabase.client.rpc('crear_reporte_app', {
+        p_id: payload['id'],
+        p_tipo: payload['tipo'],
+        p_asunto: payload['asunto'],
+        p_descripcion: payload['descripcion'],
+      });
+      // A returned error is a server rejection (validation) → don't retry forever.
+      if (error) throw new PermanentSyncError(error.message);
+    });
   }
 }

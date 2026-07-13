@@ -16,6 +16,7 @@ import { ConducesService } from './core/services/conduces.service';
 import { BitacoraService } from './core/services/bitacora.service';
 import { InventarioService } from './core/services/inventario.service';
 import { SolicitudesService } from './core/services/solicitudes.service';
+import { ReportesService } from './core/services/reportes.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -35,6 +36,7 @@ export const appConfig: ApplicationConfig = {
       inject(BitacoraService);
       inject(InventarioService);
       inject(SolicitudesService);
+      inject(ReportesService);
     }),
   ],
 };
