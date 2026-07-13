@@ -18,6 +18,7 @@
               <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ r.estado }}</span>
             </div>
             <div class="ruta-card__actions">
+              <button type="button" class="btn-ghost" (click)="comoLlegar(r)">🧭 Cómo llegar</button>
               @if (r.estado === 'planificada') {
                 <button type="button" class="btn-ghost" (click)="ruta(r.id, 'en_curso')">Iniciar</button>
               } @else if (r.estado === 'en_curso') {

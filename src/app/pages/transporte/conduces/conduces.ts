@@ -56,6 +56,15 @@ export class ConducesPage {
     }
   }
 
+  /** Open the phone's maps app with directions to the route's destination. */
+  comoLlegar(r: RutaHoy): void {
+    if (!r.destino) return;
+    window.open(
+      'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(r.destino),
+      '_system',
+    );
+  }
+
   back(): void {
     this.location.back();
   }
