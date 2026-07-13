@@ -1,6 +1,13 @@
 # HANDOFF — CSD App
 
-_Last updated: 2026-07-12_
+_Last updated: 2026-07-12 (v1.2.0)_
+
+## v1.2.0 — mantenimiento + rutas "cómo llegar" (para el piloto)
+- **Reportar mantenimiento** (Transporte → por vehículo): tipo/descr/km/fotos, offline-outbox → RPC `crear_mantenimiento_app` (idempotente). Servicio `core/services/mantenimientos.service.ts` (registrado en app.config), página `pages/transporte/mantenimiento/:vehiculoId`.
+- **Rutas de hoy → "Cómo llegar"**: abre la app de mapas del teléfono al destino.
+- (Parte B previa: renames Requisición/Almacén + checklist pre-uso, ya en prod.)
+- Bump **v1.2.0 / versionCode 11**. APK firmado se construye con `scripts/build-apk.md` (JAVA_HOME=Android Studio jbr, `./gradlew.bat assembleRelease`), `adb install -r`, y `node scripts/release-apk.mjs` publica APK+version.json al bucket app-releases.
+
 
 ## Reunión 07/07/2026 — Parte B (branch `feat/meet-07072026`, build green) 🚧 pendiente device-QA + publish
 Mobile side of the 07/07 meeting. DB is shared with SGC web; RPCs already exist there.
