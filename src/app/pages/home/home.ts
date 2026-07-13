@@ -56,4 +56,8 @@ export class HomePage {
   perfil(): void {
     void this.router.navigate(['/perfil']);
   }
+
+  reportar(): void {
+    void this.router.navigate(['/reportar']);
+  }
 }

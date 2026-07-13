@@ -54,3 +54,18 @@
   font-size: var(--fs-option);
   padding: 40px 20px;
 }
+
+.home__footer {
+  padding: 0 16px 8px;
+}
+.home__report {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: var(--fs-option);
+  font-weight: 700;
+}

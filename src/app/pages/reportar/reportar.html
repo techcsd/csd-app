@@ -1,8 +1,10 @@
 @if (done()) {
   <app-big-confirm
-    title="¡Gracias!"
-    note="Tu reporte llegó a administración."
-    tone="done"
+    [title]="online ? '¡Gracias!' : 'Guardado'"
+    [note]="online
+      ? 'Tu reporte llegó a administración.'
+      : 'Sin señal. Se enviará solo cuando haya conexión.'"
+    [tone]="online ? 'done' : 'pending'"
     buttonLabel="Listo"
     (dismissed)="finish()"
   />
