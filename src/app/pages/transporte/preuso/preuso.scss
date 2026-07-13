@@ -1,0 +1,117 @@
+.preuso {
+  background: var(--color-bg);
+}
+
+.preuso__veh {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: #fff7ed;
+  margin-bottom: 16px;
+}
+.preuso__placa {
+  font-size: 30px;
+  font-weight: 800;
+}
+.preuso__modelo {
+  font-size: var(--fs-option);
+  color: var(--color-text-secondary);
+}
+
+.preuso__muted {
+  color: var(--color-text-secondary);
+}
+
+.preuso__section {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 20px 0 10px;
+}
+
+.preuso__item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  background: var(--color-surface);
+}
+.preuso__item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.preuso__item-label {
+  font-weight: 700;
+  font-size: var(--fs-option);
+}
+.preuso__critico {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-error);
+}
+
+.preuso__opts {
+  display: flex;
+  gap: 8px;
+}
+.preuso__opts app-option-button {
+  flex: 1;
+}
+
+.preuso__comment {
+  margin-top: 12px;
+}
+
+.preuso__km {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.preuso__obs {
+  resize: vertical;
+}
+
+.resumen {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.resumen li {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--fs-option);
+}
+.resumen li:last-child {
+  border-bottom: none;
+}
+.resumen span {
+  color: var(--color-text-secondary);
+}
+
+.preuso__nav {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.preuso__back {
+  max-width: 120px;
+}

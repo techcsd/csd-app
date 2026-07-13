@@ -1,6 +1,15 @@
 # HANDOFF — CSD App
 
-_Last updated: 2026-07-11_
+_Last updated: 2026-07-12_
+
+## Reunión 07/07/2026 — Parte B (branch `feat/meet-07072026`, build green) 🚧 pendiente device-QA + publish
+Mobile side of the 07/07 meeting. DB is shared with SGC web; RPCs already exist there.
+- **Renombres UI** (solo labels): "Solicitudes/Pedir materiales" → **Requisición/Nueva requisición** (home tile, hub, pedir, mis); "Bodega" → **Almacén** (existencias/salida/entrada/conteo). Estados de requisición SIN cambio (la app ya conoce pendiente/aprobada/entregada/rechazada; NO exponer compras/montos al chofer).
+- **Checklist de pre-uso vehicular** (nuevo): `pages/transporte/preuso/:vehiculoId` — wizard plantilla → ítems OK/Falla/N-A por sección (marca crítico + foto en NO) → km/obs → firma → resumen. Servicio `checklist-preuso.service` mirror de `vehiculos.service` (outbox offline, idempotente por UUID) → RPC `registrar_checklist_vehiculo` (ya existe en `sgc`). Handler registrado en `app.config`. Botón en el hub de Transporte.
+- **NO** se agregó nada de cuadres/límites/alertas/montos ni Tecnología/Expediente (prohibido para campo).
+- **Pendiente:** device-QA (offline + online), y **bump de versión + build/publish del APK** (paso de Xaviel — requiere dispositivo). No se subió versión aún.
+
+_Last updated: 2026-07-11 (below)_
 
 ## v1.1.3 — interactive spotlight tour (both systems), device-verified + published ✅
 The first-run guide now **shows** instead of only telling: it dims the screen and spotlights each real UI element as it explains it.

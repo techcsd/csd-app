@@ -10,6 +10,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 import { VehiculosService } from './core/services/vehiculos.service';
+import { ChecklistPreusoService } from './core/services/checklist-preuso.service';
 import { ConducesService } from './core/services/conduces.service';
 import { BitacoraService } from './core/services/bitacora.service';
 import { InventarioService } from './core/services/inventario.service';
@@ -27,6 +28,7 @@ export const appConfig: ApplicationConfig = {
     // captures sync even before the user opens that module.
     provideAppInitializer(() => {
       inject(VehiculosService);
+      inject(ChecklistPreusoService);
       inject(ConducesService);
       inject(BitacoraService);
       inject(InventarioService);

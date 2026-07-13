@@ -1,7 +1,7 @@
 @if (done()) {
   <app-big-confirm
-    [title]="online ? 'Solicitud enviada' : 'Guardado'"
-    [note]="online ? 'Compras la recibió. Sigue su estado en Mis solicitudes.' : 'Sin señal. Se enviará solo.'"
+    [title]="online ? 'Requisición enviada' : 'Guardado'"
+    [note]="online ? 'Almacén la recibió. Sigue su estado en Mis requisiciones.' : 'Sin señal. Se enviará solo.'"
     [tone]="online ? 'done' : 'pending'"
     buttonLabel="Listo"
     (dismissed)="finish()"
@@ -10,7 +10,7 @@
   <div class="screen pedir">
     <header class="pedir__header">
       <button type="button" class="pedir__back" (click)="back()" aria-label="Atrás">←</button>
-      <h1 class="pedir__title">Pedir materiales</h1>
+      <h1 class="pedir__title">Nueva requisición</h1>
     </header>
 
     <div class="screen__body">
@@ -44,7 +44,7 @@
 
     <footer class="pedir__nav">
       <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-        {{ submitting() ? 'Enviando…' : 'Enviar solicitud' }}
+        {{ submitting() ? 'Enviando…' : 'Enviar requisición' }}
       </button>
     </footer>
   </div>

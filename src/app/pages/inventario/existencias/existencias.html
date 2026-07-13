@@ -5,7 +5,7 @@
   </header>
 
   <div class="screen__body">
-    <app-select-list label="Bodega" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="onBodega($event)" />
+    <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="onBodega($event)" />
 
     @if (bodegaId()) {
       <input
@@ -28,7 +28,7 @@
             <span class="stock-row__qty">{{ e.cantidad | number: '1.0-2' }} {{ e.unidad }}</span>
           </div>
         } @empty {
-          <p class="existencias__muted">No hay materiales en esta bodega.</p>
+          <p class="existencias__muted">No hay materiales en este almacén.</p>
         }
       }
     }

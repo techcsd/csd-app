@@ -91,7 +91,7 @@ export class SalidaPage {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
-      this.toast.error('Elige la bodega.');
+      this.toast.error('Elige el almacén.');
       return;
     }
     const items = this.cart().filter((c) => c.cantidad > 0);

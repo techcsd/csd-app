@@ -86,6 +86,11 @@ export const routes: Routes = [
       import('./pages/transporte/checklist/checklist').then((m) => m.ChecklistPage),
   },
   {
+    path: 'transporte/preuso/:vehiculoId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () => import('./pages/transporte/preuso/preuso').then((m) => m.PreusoPage),
+  },
+  {
     path: 'transporte/conduces',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),
