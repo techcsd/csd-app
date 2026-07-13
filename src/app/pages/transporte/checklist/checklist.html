@@ -128,7 +128,7 @@
       @if (step() === 5) {
         <h1 class="screen__title">Tu firma</h1>
         <p class="screen__subtitle">Firma para confirmar el estado del vehículo.</p>
-        <app-signature-pad (changed)="firmaLista.set($event)" />
+        <app-signature-pad (changed)="onFirmaChanged($event)" />
       }
 
       <!-- Step 6: summary -->

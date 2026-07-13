@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { PermanentSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Conduce, RutaHoy } from '../models/transporte.model';
 
 const CATALOG_CONDUCES = 'mis_conduces';
@@ -106,7 +106,7 @@ export class ConducesService {
         p_foto_url: photoPaths['entrega'],
         p_notas: payload['notas'] ?? null,
       });
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
   }
 }

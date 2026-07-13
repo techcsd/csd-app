@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { PermanentSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, SyncService } from '../sync/sync.service';
 
 /** Matches the crear_reporte_app RPC domain (tipo ∈ 'duda'|'error'|'mejora'). */
 export type ReporteTipo = 'error' | 'mejora' | 'duda';
@@ -50,7 +50,7 @@ export class ReportesService {
         p_descripcion: payload['descripcion'],
       });
       // A returned error is a server rejection (validation) → don't retry forever.
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
   }
 }

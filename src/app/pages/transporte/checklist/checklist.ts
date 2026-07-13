@@ -67,6 +67,8 @@ export class ChecklistPage {
   tieneDanos = signal<boolean | null>(null);
   danos = signal<DanoDraft[]>([]);
   firmaLista = signal(false);
+  // Capturamos la firma al dibujarla; el pad vive en un paso anterior al de envío.
+  firmaBlob = signal<Blob | null>(null);
   private gps: { lat: number; lng: number } | null = null;
 
   submitting = signal(false);
@@ -183,9 +185,15 @@ export class ChecklistPage {
     }
   }
 
+  /** Store the signature blob while the pad is still mounted (its step is live). */
+  async onFirmaChanged(hasSignature: boolean): Promise<void> {
+    this.firmaLista.set(hasSignature);
+    this.firmaBlob.set(hasSignature ? ((await this.sig()?.toBlob()) ?? null) : null);
+  }
+
   async submit(): Promise<void> {
     if (this.submitting()) return;
-    const firmaBlob = await this.sig()?.toBlob();
+    const firmaBlob = this.firmaBlob();
     if (!firmaBlob) {
       this.toast.error('Falta la firma.');
       return;

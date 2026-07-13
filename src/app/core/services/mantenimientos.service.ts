@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { PermanentSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, SyncService } from '../sync/sync.service';
 
 export type MantenimientoTipo = 'preventivo' | 'correctivo' | 'emergencia';
 
@@ -78,7 +78,7 @@ export class MantenimientosService {
         p_capturado_en: payload['capturado_en'],
       });
       // A returned error is a server rejection (validation) → don't retry forever.
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
   }
 }

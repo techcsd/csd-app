@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { PermanentSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Proyecto } from '../models/bitacora.model';
 import { Solicitud, Urgencia } from '../models/inventario.model';
 
@@ -84,7 +84,7 @@ export class SolicitudesService {
         p_notas: payload['notas'] ?? null,
         p_items: payload['items'],
       });
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
 
       // Same email notification the web fires (notificar-solicitud edge fn).
       // Fire-and-forget: a notification failure must not fail the sync — the

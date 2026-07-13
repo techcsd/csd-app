@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { PermanentSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, SyncService } from '../sync/sync.service';
 import { ChecklistCaptura, ChecklistPlantilla } from '../models/checklist-preuso.model';
 
 const CATALOG_PLANTILLAS = 'checklist_plantillas';
@@ -139,7 +139,7 @@ export class ChecklistPreusoService {
         p_capturado_en: payload['capturado_en'],
       });
       // A returned error is a server rejection (validation) → don't retry forever.
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
   }
 }

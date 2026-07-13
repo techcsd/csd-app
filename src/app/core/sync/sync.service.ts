@@ -18,6 +18,26 @@ export type OpHandler = (
 /** A server-side rejection that retrying won't fix (e.g. validation). */
 export class PermanentSyncError extends Error {}
 
+/**
+ * Classifies a Supabase/PostgREST error from an RPC and throws the right kind:
+ * - PermanentSyncError → the request itself is bad; retrying can't help
+ *   (our RPC validation `raise exception` = SQLSTATE P0001, integrity/data/
+ *   undefined errors, or client 4xx like 400/409/422).
+ * - plain Error → transient (network, 401 expired JWT, 408/429, 5xx): must fall
+ *   through to backoff retry so the capture syncs itself once signal/token is back.
+ * Handlers call this instead of blindly throwing PermanentSyncError on any error.
+ */
+export function throwSyncError(error: unknown): never {
+  const e = error as { message?: string; code?: string; status?: number; statusCode?: number };
+  const message = e?.message ?? String(error);
+  const code = String(e?.code ?? '');
+  const status = Number(e?.status ?? e?.statusCode ?? 0);
+  const transient = status === 401 || status === 408 || status === 429 || status >= 500;
+  const permanent = /^(P0001|22|23|42)/.test(code) || [400, 403, 404, 409, 422].includes(status);
+  if (permanent && !transient) throw new PermanentSyncError(message);
+  throw new Error(message); // default: retryable with backoff
+}
+
 export interface EnqueueInput {
   id: string; // client UUID
   tipo_op: string;

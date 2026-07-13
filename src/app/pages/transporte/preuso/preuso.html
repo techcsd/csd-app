@@ -110,7 +110,7 @@
       @if (step() === 4) {
         <h1 class="screen__title">Tu firma</h1>
         <p class="screen__subtitle">Firma para confirmar la revisión de pre-uso.</p>
-        <app-signature-pad (changed)="firmaLista.set($event)" />
+        <app-signature-pad (changed)="onFirmaChanged($event)" />
       }
 
       <!-- Step 5: summary -->

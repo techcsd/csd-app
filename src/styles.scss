@@ -103,6 +103,10 @@ button {
   display: flex;
   flex-direction: column;
   padding-top: var(--safe-top);
+  // Pages WITH a __body let it own the scroll (this stays inert — the body
+  // absorbs the space and the footer pins). Pages WITHOUT a __body (home, auth,
+  // forbidden) scroll here instead of clipping their bottom content.
+  overflow-y: auto;
   // Bottom inset is handled by each __nav footer / sync-bar (avoids doubling).
 }
 

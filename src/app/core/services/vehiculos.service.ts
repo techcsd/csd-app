@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { PermanentSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, SyncService } from '../sync/sync.service';
 import {
   CombustibleNivel,
   DanoCaptura,
@@ -156,7 +156,7 @@ export class VehiculosService {
         p_observacion: payload['observacion'] ?? null,
       });
       // A returned error is a server rejection (validation) → don't retry forever.
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
   }
 }

@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { PermanentSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, SyncService } from '../sync/sync.service';
 import { ArticuloCat, Bodega, Existencia } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
@@ -214,7 +214,7 @@ export class InventarioService {
         p_foto_path: photoPaths['evidencia'] ?? null,
         p_capturado_en: payload['capturado_en'],
       });
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
 
     this.sync.register('inv_entrada', async (payload, photoPaths) => {
@@ -226,7 +226,7 @@ export class InventarioService {
         p_foto_path: photoPaths['evidencia'] ?? null,
         p_capturado_en: payload['capturado_en'],
       });
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
 
     this.sync.register('conduce_recepcion', async (payload, photoPaths) => {
@@ -236,7 +236,7 @@ export class InventarioService {
         p_notas: payload['notas'] ?? null,
         p_foto_path: photoPaths['recepcion'] ?? null,
       });
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
 
     this.sync.register('inv_conteo', async (payload) => {
@@ -246,7 +246,7 @@ export class InventarioService {
         p_motivo: payload['motivo'] ?? null,
         p_items: payload['items'],
       });
-      if (error) throw new PermanentSyncError(error.message);
+      if (error) throwSyncError(error);
     });
   }
 }
