@@ -42,7 +42,8 @@
 .sol-card[data-estado='aprobada'] {
   border-left-color: var(--color-info);
 }
-.sol-card[data-estado='entregada'] {
+.sol-card[data-estado='entregada'],
+.sol-card[data-estado='cerrada'] {
   border-left-color: var(--color-success);
 }
 .sol-card[data-estado='rechazada'] {
@@ -73,7 +74,8 @@
   background: #dbeafe;
   color: var(--color-info);
 }
-.sol-card[data-estado='entregada'] .sol-card__estado {
+.sol-card[data-estado='entregada'] .sol-card__estado,
+.sol-card[data-estado='cerrada'] .sol-card__estado {
   background: var(--color-success-bg);
   color: var(--color-success);
 }

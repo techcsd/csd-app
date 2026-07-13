@@ -41,6 +41,8 @@ export class MisSolicitudesPage {
         return 'Aprobada';
       case 'entregada':
         return 'Recibida';
+      case 'cerrada':
+        return 'Completada';
       case 'rechazada':
         return 'Rechazada';
       default:
