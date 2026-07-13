@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: center;
   gap: 18px;
-  padding: 32px;
+  padding: calc(32px + var(--safe-top)) 32px calc(32px + var(--safe-bottom));
   text-align: center;
   color: #fff;
   background: var(--color-success);

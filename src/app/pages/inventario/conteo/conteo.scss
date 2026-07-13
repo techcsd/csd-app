@@ -48,6 +48,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0; // allow shrink so a long name doesn't push the qty off-screen
 }
 .conteo__name {
   font-weight: 600;

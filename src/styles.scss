@@ -97,16 +97,19 @@ button {
 /* App-wide layout helpers ---------------------------------- */
 
 .screen {
-  min-height: 100%;
+  // A definite height (not min-height:%) so __body can own the scroll and the
+  // __nav footer stays pinned. box-sizing:border-box keeps the top inset inside.
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bottom);
+  // Bottom inset is handled by each __nav footer / sync-bar (avoids doubling).
 }
 
 .screen__body {
   flex: 1;
-  padding: 20px 16px;
+  min-height: 0; // allow the flex child to shrink so overflow-y actually scrolls
+  padding: 20px 16px calc(20px + var(--safe-bottom));
   overflow-y: auto;
 }
 
@@ -195,13 +198,41 @@ input.field:focus {
   color: #fff;
 }
 .adm-sub__back {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   font-size: 24px;
   font-weight: 700;
+}
+
+/* ── Notch bleed for colored top headers ─────────────────────────────
+   `.screen` pads its top by var(--safe-top) so plain/step-bar pages clear the
+   notch. Colored headers instead paint INTO the notch: pull up by the inset and
+   pad their content back down, so the brand color fills the status-bar strip
+   (fixes the white gap above every header on notched phones). !important beats
+   Angular's component-scoped specificity. */
+.home__header,
+.admin__header,
+.adm-sub__header,
+.bitacora__header,
+.mis-partes__header,
+.mis-sol__header,
+.pedir__header,
+.sol-header,
+.inv-header,
+.inv-sub-header,
+.mov__header,
+.perfil__header,
+.reportar__header,
+.transporte__header,
+.conduces__header,
+.entrega__header,
+.det__header,
+.module__header {
+  margin-top: calc(-1 * var(--safe-top)) !important;
+  padding-top: calc(16px + var(--safe-top)) !important;
 }
 .adm-sub__title {
   margin: 0;
