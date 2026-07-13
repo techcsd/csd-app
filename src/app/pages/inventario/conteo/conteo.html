@@ -14,7 +14,7 @@
     </header>
 
     <div class="screen__body">
-      <app-select-list label="Bodega" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="onBodega($event)" />
+      <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="onBodega($event)" />
 
       @if (bodegaId()) {
         <p class="conteo__hint">Escribe la cantidad que contaste. Solo se ajusta lo que cambie.</p>
@@ -36,7 +36,7 @@
               />
             </div>
           } @empty {
-            <p class="conteo__muted">Esta bodega no tiene materiales.</p>
+            <p class="conteo__muted">Este almacén no tiene materiales.</p>
           }
 
           <label class="field-label conteo__mt">Motivo (opcional)</label>

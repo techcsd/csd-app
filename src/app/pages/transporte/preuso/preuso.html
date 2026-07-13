@@ -1,0 +1,145 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Listo, quedó registrado' : 'Guardado'"
+    [note]="online
+      ? 'El checklist de pre-uso quedó guardado.'
+      : 'Sin señal. Se enviará solo cuando haya conexión.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen preuso">
+    <app-step-bar [current]="step()" [total]="total" />
+
+    <div class="screen__body">
+      <!-- Step 1: pick template -->
+      @if (step() === 1) {
+        <h1 class="screen__title">Checklist de pre-uso</h1>
+        <div class="preuso__veh">
+          <span class="preuso__placa">{{ placa() || '—' }}</span>
+          <span class="preuso__modelo">{{ modelo() }}</span>
+        </div>
+        <p class="screen__subtitle">
+          Antes de usar el vehículo, revisa cada punto y deja constancia del estado.
+        </p>
+        @if (loadingPlantillas()) {
+          <p class="preuso__muted">Cargando checklists…</p>
+        } @else {
+          <app-select-list
+            label="¿Qué checklist vas a usar?"
+            icon="📋"
+            [options]="plantillaOpciones()"
+            [selectedId]="plantillaId()"
+            (picked)="pickPlantilla($event)"
+          />
+        }
+      }
+
+      <!-- Step 2: answer each item -->
+      @if (step() === 2) {
+        <h1 class="screen__title">Revisa cada punto</h1>
+        <p class="screen__subtitle">{{ respondidos() }} de {{ totalItems() }} respondidos.</p>
+
+        @for (g of grupos(); track g.seccion) {
+          <h2 class="preuso__section">{{ g.seccion }}</h2>
+          @for (it of g.items; track it.id) {
+            <div class="preuso__item">
+              <div class="preuso__item-head">
+                <span class="preuso__item-label">{{ it.etiqueta }}</span>
+                @if (it.es_critico) {
+                  <span class="preuso__critico" title="Punto crítico">● Crítico</span>
+                }
+              </div>
+              <div class="preuso__opts">
+                @for (o of opciones; track o.valor) {
+                  <app-option-button
+                    [icon]="o.icon"
+                    [label]="o.label"
+                    [tone]="o.tone"
+                    [selected]="draft(it.id).respuesta === o.valor"
+                    (pressed)="setRespuesta(it.id, o.valor)"
+                  />
+                }
+              </div>
+              <input
+                class="field preuso__comment"
+                type="text"
+                [ngModel]="draft(it.id).comentario"
+                (ngModelChange)="setComentario(it.id, $event)"
+                placeholder="Comentario (opcional)"
+              />
+              @if (draft(it.id).respuesta === 'no') {
+                <app-photo-slot
+                  label="Foto de la falla (opcional)"
+                  hint="📸"
+                  (captured)="onItemFoto(it.id, $event)"
+                  (cleared)="onItemFotoCleared(it.id)"
+                />
+              }
+            </div>
+          }
+        }
+      }
+
+      <!-- Step 3: km + observations -->
+      @if (step() === 3) {
+        <h1 class="screen__title">Kilometraje y notas</h1>
+        <label class="field-label" for="km">Kilometraje (km) — opcional</label>
+        <input
+          id="km"
+          class="field preuso__km"
+          type="number"
+          inputmode="numeric"
+          [ngModel]="km()"
+          (ngModelChange)="km.set($event)"
+          placeholder="0"
+        />
+        <label class="field-label" for="obs">Observaciones (opcional)</label>
+        <textarea
+          id="obs"
+          class="field preuso__obs"
+          rows="4"
+          [ngModel]="observacion()"
+          (ngModelChange)="observacion.set($event)"
+          placeholder="Escribe cualquier detalle relevante…"
+        ></textarea>
+      }
+
+      <!-- Step 4: signature -->
+      @if (step() === 4) {
+        <h1 class="screen__title">Tu firma</h1>
+        <p class="screen__subtitle">Firma para confirmar la revisión de pre-uso.</p>
+        <app-signature-pad (changed)="firmaLista.set($event)" />
+      }
+
+      <!-- Step 5: summary -->
+      @if (step() === 5) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Vehículo</span><b>{{ placa() }}</b></li>
+          <li><span>Checklist</span><b>{{ plantillaSel()?.nombre }}</b></li>
+          <li><span>Puntos</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
+          @if (km() !== null) {
+            <li><span>Kilometraje</span><b>{{ km() }} km</b></li>
+          }
+          <li><span>Firma</span><b>{{ firmaLista() ? '✓' : 'Pendiente' }}</b></li>
+        </ul>
+      }
+    </div>
+
+    <!-- Nav -->
+    <footer class="preuso__nav">
+      @if (step() > 1) {
+        <button type="button" class="btn-ghost preuso__back" (click)="prev()">Atrás</button>
+      }
+      @if (step() < total) {
+        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+      } @else {
+        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+          {{ submitting() ? 'Guardando…' : 'Confirmar' }}
+        </button>
+      }
+    </footer>
+  </div>
+}

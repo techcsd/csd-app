@@ -88,3 +88,7 @@
   font-size: 14px;
   color: var(--color-text-secondary);
 }
+
+.veh-card__cta + .veh-card__cta {
+  margin-top: 8px;
+}

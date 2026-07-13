@@ -25,6 +25,9 @@
             <button type="button" class="btn-cta veh-card__cta" (click)="devolver(v.vehiculo_id)">
               Devolver vehículo
             </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
+              📋 Checklist de pre-uso
+            </button>
           </div>
         }
       }
@@ -40,6 +43,9 @@
             </div>
             <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
               Recibir vehículo
+            </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
+              📋 Checklist de pre-uso
             </button>
           </div>
         }
