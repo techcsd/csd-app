@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.2.1';
-const VERSION_CODE = 12;
-const CHANGELOG = 'Reportar problema/mejora desde la app (offline), y mejoras varias.';
+const VERSION = '1.2.2';
+const VERSION_CODE = 13;
+const CHANGELOG = 'Arreglado el envío de checklists de pre-uso e inspección de vehículo (la firma no se guardaba), sincronización más confiable sin señal, y mejoras de vista en el teléfono.';
 const RELEASED_AT = '2026-07-13';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
