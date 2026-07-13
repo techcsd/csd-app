@@ -1,0 +1,109 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Listo, quedó registrado' : 'Guardado'"
+    [note]="online
+      ? 'El mantenimiento quedó registrado.'
+      : 'Sin señal. Se enviará solo cuando haya conexión.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen mantenimiento">
+    <app-step-bar [current]="step()" [total]="total" />
+
+    <div class="screen__body">
+      <!-- Vehicle header -->
+      <div class="mantenimiento__veh">
+        <span class="mantenimiento__placa">{{ placa() || '—' }}</span>
+        <span class="mantenimiento__modelo">{{ modelo() }}</span>
+      </div>
+
+      <!-- Step 1: type -->
+      @if (step() === 1) {
+        <h1 class="screen__title">Reportar mantenimiento</h1>
+        <p class="screen__subtitle">¿Qué tipo de mantenimiento es?</p>
+        <div class="mantenimiento__tipos">
+          @for (t of tipos; track t.valor) {
+            <app-option-button
+              [icon]="t.icon"
+              [label]="t.label"
+              [tone]="t.tone"
+              [selected]="tipo() === t.valor"
+              (pressed)="tipo.set(t.valor)"
+            />
+          }
+        </div>
+      }
+
+      <!-- Step 2: description + km -->
+      @if (step() === 2) {
+        <h1 class="screen__title">Describe el trabajo</h1>
+        <label class="field-label" for="desc">¿Qué se hizo o se necesita?</label>
+        <textarea
+          id="desc"
+          class="field mantenimiento__desc"
+          rows="5"
+          [ngModel]="descripcion()"
+          (ngModelChange)="descripcion.set($event)"
+          placeholder="Ej. Cambio de aceite y filtros, revisión de frenos…"
+        ></textarea>
+
+        <label class="field-label" for="km">Kilometraje actual (km) — opcional</label>
+        <input
+          id="km"
+          class="field mantenimiento__km"
+          type="number"
+          inputmode="numeric"
+          [ngModel]="km()"
+          (ngModelChange)="km.set($event)"
+          placeholder="0"
+        />
+      }
+
+      <!-- Step 3: photos -->
+      @if (step() === 3) {
+        <h1 class="screen__title">Fotos (opcional)</h1>
+        <p class="screen__subtitle">Puedes adjuntar hasta {{ maxFotos }} fotos como evidencia.</p>
+        <div class="mantenimiento__fotos">
+          @for (i of slots; track i) {
+            <app-photo-slot
+              [label]="'Foto ' + (i + 1)"
+              hint="📸"
+              (captured)="onFoto(i, $event)"
+              (cleared)="onFotoCleared(i)"
+            />
+          }
+        </div>
+      }
+
+      <!-- Step 4: summary -->
+      @if (step() === 4) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Vehículo</span><b>{{ placa() }}</b></li>
+          <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>
+          @if (km() !== null) {
+            <li><span>Kilometraje</span><b>{{ km() }} km</b></li>
+          }
+          <li><span>Fotos</span><b>{{ fotosCount() }}</b></li>
+        </ul>
+        <p class="mantenimiento__desc-preview">{{ descripcion() }}</p>
+      }
+    </div>
+
+    <!-- Nav -->
+    <footer class="mantenimiento__nav">
+      @if (step() > 1) {
+        <button type="button" class="btn-ghost mantenimiento__back" (click)="prev()">Atrás</button>
+      }
+      @if (step() < total) {
+        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+      } @else {
+        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+          {{ submitting() ? 'Guardando…' : 'Confirmar' }}
+        </button>
+      }
+    </footer>
+  </div>
+}

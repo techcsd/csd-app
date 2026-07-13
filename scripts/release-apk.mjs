@@ -32,10 +32,10 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.1.3';
-const VERSION_CODE = 10;
-const CHANGELOG = 'Guía de bienvenida interactiva que resalta cada parte de la pantalla.';
-const RELEASED_AT = '2026-07-11';
+const VERSION = '1.2.0';
+const VERSION_CODE = 11;
+const CHANGELOG = 'Checklist de pre-uso vehicular, reportar mantenimiento con fotos, Cómo llegar en rutas, y Requisición/Almacén.';
+const RELEASED_AT = '2026-07-12';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const bucket = 'app-releases';
