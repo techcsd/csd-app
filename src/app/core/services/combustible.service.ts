@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { CombustibleCaptura, UltimaEchada } from '../models/combustible.model';
+import { db } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
 
@@ -53,7 +54,33 @@ export class CombustibleService {
         n_echadas: rends.length,
       };
     });
-    return data ?? { km: null, fecha: null, promedio_rendimiento: null, n_echadas: 0 };
+    const base = data ?? { km: null, fecha: null, promedio_rendimiento: null, n_echadas: 0 };
+
+    // Considera echadas ya capturadas pero aún en la cola offline (sin sincronizar):
+    // sin esto, una 2ª echada offline usa el km del servidor como base y la RPC la
+    // rechaza al sincronizar (km <= km_anterior) dejándola en error permanente.
+    const pendKm = await this.maxKmPendiente(vehiculoId);
+    if (pendKm != null && (base.km == null || pendKm > base.km)) {
+      return { ...base, km: pendKm };
+    }
+    return base;
+  }
+
+  /** Mayor kilometraje de echadas de este vehículo aún pendientes en el outbox. */
+  private async maxKmPendiente(vehiculoId: string): Promise<number | null> {
+    try {
+      const ops = await db.outbox.where('tipo_op').equals('combustible').toArray();
+      let max: number | null = null;
+      for (const op of ops) {
+        const p = op.payload as { vehiculo_id?: string; kilometraje?: number };
+        if (p?.vehiculo_id === vehiculoId && typeof p.kilometraje === 'number') {
+          if (max == null || p.kilometraje > max) max = p.kilometraje;
+        }
+      }
+      return max;
+    } catch {
+      return null;
+    }
   }
 
   /** Queue a fuel record. Works fully offline; syncs when there's signal. */

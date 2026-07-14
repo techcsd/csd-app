@@ -336,6 +336,12 @@ export class PreusoPage {
           return false;
         }
         return true;
+      case 4:
+        if (!this.firmaLista()) {
+          this.toast.error('Firma antes de continuar.');
+          return false;
+        }
+        return true;
       default:
         return true;
     }

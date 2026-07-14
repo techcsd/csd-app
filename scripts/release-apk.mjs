@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.3.0';
-const VERSION_CODE = 14;
-const CHANGELOG = 'Checklist de liberación (CL) desde la app, pre-uso v2 con reporte PDF, registro de combustible v2, y las correcciones de envío de firma y sincronización.';
+const VERSION = '1.3.1';
+const VERSION_CODE = 15;
+const CHANGELOG = 'Correcciones de Flota v2: base de kilometraje al registrar combustible sin señal, y validaciones del pre-uso.';
 const RELEASED_AT = '2026-07-14';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
