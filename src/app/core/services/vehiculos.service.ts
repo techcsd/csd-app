@@ -8,10 +8,12 @@ import {
   EntregaTipo,
   FOTOS_REQUERIDAS,
   PendientesTransporte,
+  VehiculoDetalle,
 } from '../models/transporte.model';
 
 const REQUIRED_SLOTS = FOTOS_REQUERIDAS.map((f) => f.slot);
 const CATALOG_PENDIENTES = 'pendientes_transporte';
+const CATALOG_VEH_DETALLE = 'veh_detalle'; // + `:${vehiculoId}`
 
 /** Input the checklist wizard hands to enqueueEntrega(). */
 export interface EntregaCaptura {
@@ -69,6 +71,29 @@ export class VehiculosService {
       modelo: string;
       kilometraje: number;
     };
+  }
+
+  /**
+   * Extended vehicle header for pre-use: expiry dates + maintenance interval,
+   * cached per vehicle so licence/registration blocks and the maintenance line
+   * keep working offline after the first online load.
+   */
+  async getVehiculoDetalle(id: string): Promise<VehiculoDetalle | null> {
+    const data = await this.catalog.refresh<VehiculoDetalle>(
+      `${CATALOG_VEH_DETALLE}:${id}`,
+      async () => {
+        const { data, error } = await this.supabase.client
+          .from('vehiculos')
+          .select(
+            'id, placa, marca, modelo, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km',
+          )
+          .eq('id', id)
+          .single();
+        if (error) throw new Error(error.message);
+        return data as unknown as VehiculoDetalle;
+      },
+    );
+    return data ?? null;
   }
 
   /** Vehicles to receive / already in charge, cached for offline. */

@@ -97,6 +97,12 @@ export const routes: Routes = [
       import('./pages/transporte/mantenimiento/mantenimiento').then((m) => m.MantenimientoPage),
   },
   {
+    path: 'transporte/combustible/:vehiculoId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/combustible/combustible').then((m) => m.CombustiblePage),
+  },
+  {
     path: 'transporte/conduces',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),

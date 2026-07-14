@@ -1,54 +1,192 @@
-@if (done()) {
-  <app-big-confirm
-    [title]="online ? 'Listo, quedó registrado' : 'Guardado'"
-    [note]="online
-      ? 'El checklist de pre-uso quedó guardado.'
-      : 'Sin señal. Se enviará solo cuando haya conexión.'"
-    [tone]="online ? 'done' : 'pending'"
-    buttonLabel="Listo"
-    (dismissed)="finish()"
-  />
+@if (loadingCtx()) {
+  <div class="screen preuso">
+    <div class="screen__body"><p class="preuso__muted">Cargando…</p></div>
+  </div>
+} @else if (bloqueoPrevio(); as b) {
+  <!-- Hard block: cannot open the checklist -->
+  <div class="screen preuso preuso__block">
+    <div class="screen__body preuso__block-body">
+      <span class="preuso__block-icon">🚫</span>
+      <h1 class="preuso__block-title">{{ b.titulo }}</h1>
+      <p class="preuso__block-motivo">{{ b.motivo }}</p>
+    </div>
+    <footer class="preuso__nav">
+      <button type="button" class="btn-cta" (click)="finish()">Entendido</button>
+    </footer>
+  </div>
+} @else if (done()) {
+  <!-- Final verdict + report actions -->
+  <div class="screen preuso">
+    <div class="screen__body">
+      @if (veredicto() === 'aprobado') {
+        <div class="veredicto veredicto--ok">
+          <span class="veredicto__icon">✓</span>
+          <span class="veredicto__label">APROBADO</span>
+          <span class="veredicto__sub">Puedes salir. Quedó registrado.</span>
+        </div>
+      } @else if (veredicto() === 'con_hallazgos') {
+        <div class="veredicto veredicto--warn">
+          <span class="veredicto__icon">!</span>
+          <span class="veredicto__label">APROBADO CON HALLAZGOS</span>
+          <span class="veredicto__sub">Puedes salir. Se generó un aviso a mantenimiento.</span>
+        </div>
+      } @else {
+        <div class="veredicto veredicto--block">
+          <span class="veredicto__icon">✕</span>
+          <span class="veredicto__label">VEHÍCULO BLOQUEADO</span>
+          <span class="veredicto__sub">No puedes salir. Se notificó a mantenimiento y al supervisor.</span>
+        </div>
+      }
+
+      @if (!online) {
+        <p class="preuso__note">Sin señal. Se enviará solo cuando haya conexión.</p>
+      }
+
+      <!-- Registro -->
+      <ul class="resumen">
+        <li><span>Vehículo</span><b>{{ placa() }} · {{ modelo() }}</b></li>
+        <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+        <li><span>Combustible</span><b>{{ nivelCombustible() }}</b></li>
+        <li><span>Fotos</span><b>7 ✓</b></li>
+        <li><span>Puntos</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
+      </ul>
+
+      <!-- Mantenimiento -->
+      @if (mantenimiento(); as m) {
+        <div class="mant-box mant-box--{{ m.estado }}">
+          @if (m.estado === 'vencido') {
+            ⚠ Mantenimiento VENCIDO por {{ -m.faltan | number: '1.0-0' }} km.
+          } @else if (m.estado === 'pre_cita') {
+            ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km — se envió aviso para la PRE-CITA.
+          } @else {
+            Faltan {{ m.faltan | number: '1.0-0' }} km para el mantenimiento (próximo: {{ m.proximo | number: '1.0-0' }} km).
+          }
+        </div>
+      }
+
+      <!-- Hallazgos -->
+      @if (hallazgos().length) {
+        <h2 class="preuso__section">Hallazgos ({{ hallazgos().length }})</h2>
+        @for (h of hallazgos(); track $index) {
+          <div class="hallazgo" [class.hallazgo--critico]="h.es_critico">
+            <div class="hallazgo__head">
+              <span class="hallazgo__num">{{ h.numero || '•' }}</span>
+              <span class="hallazgo__label">{{ h.etiqueta }}</span>
+              @if (h.es_critico) { <span class="hallazgo__critico">CRÍTICO</span> }
+            </div>
+            @if (h.comentario) { <p class="hallazgo__com">{{ h.comentario }}</p> }
+          </div>
+        }
+      }
+    </div>
+
+    <footer class="preuso__nav preuso__nav--report">
+      <button type="button" class="btn-cta" [disabled]="sharing()" (click)="compartir()">
+        📤 {{ sharing() ? 'Generando…' : 'Compartir reporte (WhatsApp)' }}
+      </button>
+      <button type="button" class="btn-ghost" [disabled]="sharing()" (click)="descargar()">
+        ⬇ Descargar PDF
+      </button>
+      <button type="button" class="btn-ghost" (click)="finish()">Listo</button>
+    </footer>
+  </div>
 } @else {
   <div class="screen preuso">
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
-      <!-- Step 1: pick template -->
-      @if (step() === 1) {
-        <h1 class="screen__title">Checklist de pre-uso</h1>
-        <div class="preuso__veh">
-          <span class="preuso__placa">{{ placa() || '—' }}</span>
-          <span class="preuso__modelo">{{ modelo() }}</span>
+      <div class="preuso__veh">
+        <span class="preuso__placa">{{ placa() || '—' }}</span>
+        <span class="preuso__modelo">{{ modelo() }}</span>
+      </div>
+
+      @if (licenciaEstado() === 'por_vencer') {
+        <div class="preuso__lic-warn">
+          ⚠ Tu licencia vence en {{ licenciaDias() }} día(s). Renuévala pronto.
         </div>
-        <p class="screen__subtitle">
-          Antes de usar el vehículo, revisa cada punto y deja constancia del estado.
-        </p>
-        @if (loadingPlantillas()) {
-          <p class="preuso__muted">Cargando checklists…</p>
-        } @else {
-          <app-select-list
-            label="¿Qué checklist vas a usar?"
-            icon="📋"
-            [options]="plantillaOpciones()"
-            [selectedId]="plantillaId()"
-            (picked)="pickPlantilla($event)"
-          />
-        }
       }
 
-      <!-- Step 2: answer each item -->
+      <!-- Step 1: datos de salida -->
+      @if (step() === 1) {
+        <h1 class="screen__title">Datos de salida</h1>
+
+        <label class="field-label" for="km">Kilometraje actual (km)</label>
+        <input
+          id="km"
+          class="field preuso__km"
+          type="number"
+          inputmode="numeric"
+          [class.preuso__km--error]="kmInvalido()"
+          [ngModel]="km()"
+          (ngModelChange)="km.set($event)"
+          placeholder="0"
+        />
+        @if (kmInvalido()) {
+          <p class="preuso__warn">
+            No puede ser menor al último registrado ({{ vehiculo()?.kilometraje | number: '1.0-0' }} km).
+          </p>
+        }
+
+        <label class="field-label">Nivel de combustible</label>
+        <div class="preuso__fuel">
+          @for (n of niveles; track n) {
+            <button
+              type="button"
+              class="fuel-btn"
+              [class.fuel-btn--on]="nivelCombustible() === n"
+              (click)="nivelCombustible.set(n)"
+            >
+              {{ n }}
+            </button>
+          }
+        </div>
+
+        @if (mantenimiento(); as m) {
+          <div class="mant-box mant-box--{{ m.estado }}">
+            @if (m.estado === 'vencido') {
+              ⚠ Mantenimiento VENCIDO por {{ -m.faltan | number: '1.0-0' }} km.
+            } @else if (m.estado === 'pre_cita') {
+              ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km — se enviará aviso para agendar la PRE-CITA.
+            } @else {
+              Faltan {{ m.faltan | number: '1.0-0' }} km para el mantenimiento ({{ m.proximo | number: '1.0-0' }} km).
+            }
+          </div>
+        }
+
+        <label class="field-label" for="obs">Observación general (opcional)</label>
+        <textarea
+          id="obs"
+          class="field preuso__obs"
+          rows="3"
+          [ngModel]="observacion()"
+          (ngModelChange)="observacion.set($event)"
+          placeholder="Cualquier detalle relevante…"
+        ></textarea>
+      }
+
+      <!-- Step 2: checklist -->
       @if (step() === 2) {
         <h1 class="screen__title">Revisa cada punto</h1>
-        <p class="screen__subtitle">{{ respondidos() }} de {{ totalItems() }} respondidos.</p>
+        <div class="preuso__status preuso__status--{{ semaforo() }}">
+          <span class="preuso__status-count">{{ respondidos() }} / {{ totalItems() }}</span>
+          <span class="preuso__status-txt">
+            @if (semaforo() === 'critico') { ✕ Falla crítica — bloquea }
+            @else if (semaforo() === 'hallazgos') { ! Con hallazgos }
+            @else { ✓ Sin hallazgos }
+          </span>
+        </div>
 
         @for (g of grupos(); track g.seccion) {
           <h2 class="preuso__section">{{ g.seccion }}</h2>
           @for (it of g.items; track it.id) {
-            <div class="preuso__item">
+            <div class="preuso__item" [class.preuso__item--critico]="it.es_critico">
               <div class="preuso__item-head">
-                <span class="preuso__item-label">{{ it.etiqueta }}</span>
+                <span class="preuso__item-label">
+                  @if (it.numero) { <b class="preuso__item-num">{{ it.numero }}</b> }
+                  {{ it.etiqueta }}
+                </span>
                 @if (it.es_critico) {
-                  <span class="preuso__critico" title="Punto crítico">● Crítico</span>
+                  <span class="preuso__critico" title="Punto crítico">CRÍTICO · BLOQUEA</span>
                 }
               </div>
               <div class="preuso__opts">
@@ -82,28 +220,20 @@
         }
       }
 
-      <!-- Step 3: km + observations -->
+      <!-- Step 3: 7 guided photos -->
       @if (step() === 3) {
-        <h1 class="screen__title">Kilometraje y notas</h1>
-        <label class="field-label" for="km">Kilometraje (km) — opcional</label>
-        <input
-          id="km"
-          class="field preuso__km"
-          type="number"
-          inputmode="numeric"
-          [ngModel]="km()"
-          (ngModelChange)="km.set($event)"
-          placeholder="0"
-        />
-        <label class="field-label" for="obs">Observaciones (opcional)</label>
-        <textarea
-          id="obs"
-          class="field preuso__obs"
-          rows="4"
-          [ngModel]="observacion()"
-          (ngModelChange)="observacion.set($event)"
-          placeholder="Escribe cualquier detalle relevante…"
-        ></textarea>
+        <h1 class="screen__title">Toma las 7 fotos</h1>
+        <p class="screen__subtitle">Las 7 fotos son obligatorias.</p>
+        <div class="preuso__fotos">
+          @for (f of fotosReq; track f.slot) {
+            <app-photo-slot
+              [label]="f.label"
+              [hint]="f.hint"
+              (captured)="onFoto(f.slot, $event)"
+              (cleared)="onFotoCleared(f.slot)"
+            />
+          }
+        </div>
       }
 
       <!-- Step 4: signature -->
@@ -113,18 +243,50 @@
         <app-signature-pad (changed)="onFirmaChanged($event)" />
       }
 
-      <!-- Step 5: summary -->
+      <!-- Step 5: verdict preview + confirm -->
       @if (step() === 5) {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">Resultado</h1>
+        @if (veredicto() === 'aprobado') {
+          <div class="veredicto veredicto--ok">
+            <span class="veredicto__icon">✓</span>
+            <span class="veredicto__label">APROBADO</span>
+            <span class="veredicto__sub">Puedes salir.</span>
+          </div>
+        } @else if (veredicto() === 'con_hallazgos') {
+          <div class="veredicto veredicto--warn">
+            <span class="veredicto__icon">!</span>
+            <span class="veredicto__label">APROBADO CON HALLAZGOS</span>
+            <span class="veredicto__sub">Puedes salir. Se generará un aviso a mantenimiento.</span>
+          </div>
+        } @else {
+          <div class="veredicto veredicto--block">
+            <span class="veredicto__icon">✕</span>
+            <span class="veredicto__label">VEHÍCULO BLOQUEADO</span>
+            <span class="veredicto__sub">No puedes salir. Se notificará a mantenimiento y al supervisor.</span>
+          </div>
+        }
+
         <ul class="resumen">
           <li><span>Vehículo</span><b>{{ placa() }}</b></li>
-          <li><span>Checklist</span><b>{{ plantillaSel()?.nombre }}</b></li>
-          <li><span>Puntos</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
-          @if (km() !== null) {
-            <li><span>Kilometraje</span><b>{{ km() }} km</b></li>
-          }
+          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          <li><span>Combustible</span><b>{{ nivelCombustible() }}</b></li>
+          <li><span>Fotos</span><b>7 ✓</b></li>
           <li><span>Firma</span><b>{{ firmaLista() ? '✓' : 'Pendiente' }}</b></li>
         </ul>
+
+        @if (hallazgos().length) {
+          <h2 class="preuso__section">Hallazgos ({{ hallazgos().length }})</h2>
+          @for (h of hallazgos(); track $index) {
+            <div class="hallazgo" [class.hallazgo--critico]="h.es_critico">
+              <div class="hallazgo__head">
+                <span class="hallazgo__num">{{ h.numero || '•' }}</span>
+                <span class="hallazgo__label">{{ h.etiqueta }}</span>
+                @if (h.es_critico) { <span class="hallazgo__critico">CRÍTICO</span> }
+              </div>
+              @if (h.comentario) { <p class="hallazgo__com">{{ h.comentario }}</p> }
+            </div>
+          }
+        }
       }
     </div>
 
@@ -137,7 +299,7 @@
         <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
       } @else {
         <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-          {{ submitting() ? 'Guardando…' : 'Confirmar' }}
+          {{ submitting() ? 'Guardando…' : 'Confirmar y guardar' }}
         </button>
       }
     </footer>

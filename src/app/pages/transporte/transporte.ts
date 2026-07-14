@@ -52,6 +52,10 @@ export class TransportePage {
     void this.router.navigate(['/transporte/mantenimiento', vehiculoId]);
   }
 
+  combustible(vehiculoId: string): void {
+    void this.router.navigate(['/transporte/combustible', vehiculoId]);
+  }
+
   conduces(): void {
     void this.router.navigate(['/transporte/conduces']);
   }

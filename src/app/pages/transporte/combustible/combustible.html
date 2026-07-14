@@ -1,0 +1,214 @@
+@if (done()) {
+  <!-- Confirmation: "Combustible registrado" -->
+  <div class="screen comb">
+    <div class="screen__body">
+      <div class="comb__ok">
+        <span class="comb__ok-check">✓</span>
+        <h1 class="comb__ok-title">Combustible registrado</h1>
+        <div class="comb__veh">
+          <span class="comb__placa">{{ placa() }}</span>
+          <span class="comb__modelo">{{ modelo() }}</span>
+        </div>
+      </div>
+
+      <div class="comb__cards">
+        <div class="comb__card">
+          <span class="comb__card-label">Kilometraje</span>
+          <span class="comb__card-value">{{ km() | number: '1.0-0' }} km</span>
+        </div>
+        <div class="comb__card">
+          <span class="comb__card-label">Echados</span>
+          <span class="comb__card-value">{{ galones() | number: '1.0-2' }} gal</span>
+          <span class="comb__card-sub">RD$ {{ monto() | number: '1.2-2' }}</span>
+        </div>
+        <div class="comb__card">
+          <span class="comb__card-label">Precio por galón</span>
+          <span class="comb__card-value">RD$ {{ resultado()?.precioPorGalon | number: '1.2-2' }}</span>
+        </div>
+        <div class="comb__card">
+          <span class="comb__card-label">Rendimiento</span>
+          @if (resultado()?.rendimiento != null) {
+            <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} km/gal</span>
+            @if (ultima().promedio_rendimiento != null) {
+              <span class="comb__card-sub">Promedio: {{ ultima().promedio_rendimiento | number: '1.2-2' }} km/gal</span>
+            }
+          } @else {
+            <span class="comb__card-value comb__card-value--muted">Primera echada</span>
+          }
+        </div>
+        <div class="comb__card">
+          <span class="comb__card-label">Recorrido</span>
+          @if (resultado()?.kmRecorridos != null) {
+            <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} km</span>
+          } @else {
+            <span class="comb__card-value comb__card-value--muted">—</span>
+          }
+        </div>
+        <div class="comb__card">
+          <span class="comb__card-label">Costo por km</span>
+          @if (resultado()?.costoPorKm != null) {
+            <span class="comb__card-value">RD$ {{ resultado()?.costoPorKm | number: '1.2-2' }}</span>
+          } @else {
+            <span class="comb__card-value comb__card-value--muted">—</span>
+          }
+        </div>
+      </div>
+
+      <!-- Consumption band -->
+      @if (resultado()?.rendimiento == null) {
+        <div class="comb__band comb__band--info">
+          Primera echada del vehículo. El rendimiento se calculará desde la próxima.
+        </div>
+      } @else if (resultado()?.alertaConsumo) {
+        <div class="comb__band comb__band--warn">
+          ⚠ Consumo anormal. Se envía un aviso a mantenimiento para revisar el vehículo.
+        </div>
+      } @else {
+        <div class="comb__band comb__band--ok">✓ Consumo dentro de lo normal.</div>
+      }
+
+      @if (!online) {
+        <p class="comb__note">Sin señal. Se enviará solo y se validará al sincronizar.</p>
+      }
+    </div>
+
+    <footer class="comb__nav">
+      <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+    </footer>
+  </div>
+} @else {
+  <div class="screen comb">
+    <app-step-bar [current]="step()" [total]="total" />
+
+    <div class="screen__body">
+      <div class="comb__veh">
+        <span class="comb__placa">{{ placa() || '—' }}</span>
+        <span class="comb__modelo">{{ modelo() }}</span>
+      </div>
+
+      <!-- Step 1: the 3 numbers + live calc -->
+      @if (step() === 1) {
+        <h1 class="screen__title">Registrar combustible</h1>
+        <p class="screen__subtitle">Escribe 3 datos y el sistema calcula el resto.</p>
+
+        <label class="field-label" for="km">Kilometraje actual (km)</label>
+        <input
+          id="km"
+          class="field comb__num"
+          type="number"
+          inputmode="numeric"
+          [class.comb__num--error]="kmInvalido()"
+          [ngModel]="km()"
+          (ngModelChange)="km.set($event)"
+          placeholder="0"
+        />
+        @if (kmInvalido()) {
+          <p class="comb__warn">
+            Debe ser mayor al de la última echada ({{ ultima().km | number: '1.0-0' }} km).
+          </p>
+        } @else if (ultima().km != null) {
+          <p class="comb__hint">Última echada: {{ ultima().km | number: '1.0-0' }} km</p>
+        }
+
+        <label class="field-label" for="gal">Galones echados</label>
+        <input
+          id="gal"
+          class="field comb__num"
+          type="number"
+          inputmode="decimal"
+          [ngModel]="galones()"
+          (ngModelChange)="galones.set($event)"
+          placeholder="0"
+        />
+
+        <label class="field-label" for="monto">Monto pagado (RD$)</label>
+        <input
+          id="monto"
+          class="field comb__num"
+          type="number"
+          inputmode="decimal"
+          [ngModel]="monto()"
+          (ngModelChange)="monto.set($event)"
+          placeholder="0"
+        />
+
+        <label class="field-label" for="est">Estación (opcional)</label>
+        <input
+          id="est"
+          class="field"
+          type="text"
+          [ngModel]="estacion()"
+          (ngModelChange)="estacion.set($event)"
+          placeholder="Nombre de la bomba"
+        />
+
+        <!-- Live calc box -->
+        <div class="comb__calc">
+          <span class="comb__calc-title">Cálculo automático</span>
+          <div class="comb__calc-row">
+            <span>Precio por galón</span>
+            <b>@if (calc().precioPorGalon != null) { RD$ {{ calc().precioPorGalon | number: '1.2-2' }} } @else { — }</b>
+          </div>
+          <div class="comb__calc-row">
+            <span>Km recorridos</span>
+            <b>
+              @if (primeraEchada()) { Primera echada }
+              @else if (calc().kmRecorridos != null) { {{ calc().kmRecorridos | number: '1.0-0' }} km }
+              @else { — }
+            </b>
+          </div>
+          <div class="comb__calc-row">
+            <span>Rendimiento</span>
+            <b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { — }</b>
+          </div>
+          <div class="comb__calc-row">
+            <span>Costo por km</span>
+            <b>@if (calc().costoPorKm != null) { RD$ {{ calc().costoPorKm | number: '1.2-2' }} } @else { — }</b>
+          </div>
+          @if (calc().alertaConsumo) {
+            <div class="comb__calc-alert">⚠ Rendimiento bajo el promedio del vehículo.</div>
+          }
+        </div>
+      }
+
+      <!-- Step 2: two mandatory photos -->
+      @if (step() === 2) {
+        <h1 class="screen__title">Toma las 2 fotos</h1>
+        <p class="screen__subtitle">Las dos fotos son obligatorias para guardar.</p>
+        <div class="comb__fotos">
+          <app-photo-slot
+            label="Recibo de la bomba"
+            hint="🧾"
+            (captured)="onFotoRecibo($event)"
+            (cleared)="onFotoReciboCleared()"
+          />
+          <app-photo-slot
+            label="Tablero (km visible)"
+            hint="🎛️"
+            (captured)="onFotoTablero($event)"
+            (cleared)="onFotoTableroCleared()"
+          />
+        </div>
+      }
+    </div>
+
+    <!-- Nav -->
+    <footer class="comb__nav">
+      @if (step() > 1) {
+        <button type="button" class="btn-ghost comb__back" (click)="prev()">Atrás</button>
+      }
+      @if (step() < total) {
+        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+      } @else {
+        <button
+          type="button"
+          class="btn-cta"
+          [disabled]="submitting() || !fotosCompletas()"
+          (click)="submit()"
+        >
+          {{ submitting() ? 'Guardando…' : fotosCompletas() ? 'Guardar registro' : 'Faltan fotos para guardar' }}
+        </button>
+      }
+    </footer>
+  </div>
+}

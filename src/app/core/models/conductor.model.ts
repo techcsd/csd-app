@@ -1,0 +1,38 @@
+/** Days before expiry within which a licence counts as "por vencer". */
+export const LICENCIA_POR_VENCER_DIAS = 30; // sgc.flota_config → umbral_licencia_dias
+
+export type LicenciaEstado = 'vigente' | 'por_vencer' | 'vencida' | 'desconocido';
+
+/** The signed-in user's driver profile (sgc.conductores). */
+export interface Conductor {
+  id: string;
+  nombre: string;
+  cedula: string;
+  licencia_tipo: string;
+  licencia_numero: string | null;
+  licencia_vencimiento: string | null; // YYYY-MM-DD
+  tipo_vehiculo_autorizado: string; // 'Liviano' | 'Pesado' | 'Ambos'
+  vehiculo_id: string | null;
+  usuario_id: string | null;
+}
+
+/** Derive licence status from its expiry date (Vigente / Por vencer / Vencida). */
+export function estadoLicencia(vencimiento: string | null): LicenciaEstado {
+  if (!vencimiento) return 'desconocido';
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const venc = new Date(vencimiento + 'T00:00:00');
+  const dias = Math.floor((venc.getTime() - hoy.getTime()) / 86_400_000);
+  if (dias < 0) return 'vencida';
+  if (dias <= LICENCIA_POR_VENCER_DIAS) return 'por_vencer';
+  return 'vigente';
+}
+
+/** Whole days until a date (negative if already past); null when no date. */
+export function diasHasta(fecha: string | null): number | null {
+  if (!fecha) return null;
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const d = new Date(fecha + 'T00:00:00');
+  return Math.floor((d.getTime() - hoy.getTime()) / 86_400_000);
+}

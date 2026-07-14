@@ -54,6 +54,14 @@ export class ChecklistPreusoService {
         slot: 'firma',
         blob: input.firma,
       },
+      // The 7 mandatory guided shots, fixed slot names (see FOTOS_PREUSO).
+      ...Object.entries(input.fotos).map(([slot, blob]) => ({
+        id: crypto.randomUUID(),
+        bucket: 'vehiculos',
+        path: `checklist/${id}/${slot}.jpg`,
+        slot,
+        blob,
+      })),
     ];
 
     const respuestas = input.respuestas.map((r, idx) => {
@@ -87,15 +95,22 @@ export class ChecklistPreusoService {
         id,
         vehiculo_id: input.vehiculoId,
         plantilla_id: input.plantillaId,
+        conductor_id: input.conductorId,
         tipo: 'pre_uso',
         fecha: input.fecha,
         kilometraje: input.kilometraje,
+        nivel_combustible: input.nivelCombustible,
         datos: {},
         observacion: input.observacion,
         respuestas,
       },
       fotos,
-      resumen: { placa: input.placa, plantilla: input.plantilla, capturado_en },
+      resumen: {
+        placa: input.placa,
+        plantilla: input.plantilla,
+        resultado: input.resultado,
+        capturado_en,
+      },
     });
   }
 
@@ -127,7 +142,7 @@ export class ChecklistPreusoService {
         p_id: payload['id'],
         p_plantilla_id: payload['plantilla_id'],
         p_vehiculo_id: payload['vehiculo_id'],
-        p_conductor_id: null,
+        p_conductor_id: payload['conductor_id'] ?? null,
         p_tipo: 'pre_uso',
         p_fecha: payload['fecha'],
         p_datos: payload['datos'] ?? {},
@@ -137,6 +152,7 @@ export class ChecklistPreusoService {
         p_firma_path: photoPaths['firma'] ?? null,
         p_observaciones: payload['observacion'] ?? null,
         p_capturado_en: payload['capturado_en'],
+        p_nivel_combustible: payload['nivel_combustible'] ?? null,
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);

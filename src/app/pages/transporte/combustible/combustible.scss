@@ -1,0 +1,189 @@
+.comb {
+  background: var(--color-bg);
+}
+
+.comb__veh {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 20px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius);
+  background: #fff7ed;
+  margin-bottom: 16px;
+}
+.comb__placa {
+  font-size: 28px;
+  font-weight: 800;
+}
+.comb__modelo {
+  font-size: var(--fs-option);
+  color: var(--color-text-secondary);
+}
+
+.comb__num {
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+.comb__num--error {
+  border-color: var(--color-error) !important;
+}
+
+.comb__hint {
+  margin: 6px 0 4px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.comb__warn {
+  margin: 6px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-error);
+}
+
+// Live calc — dark box like the prototype
+.comb__calc {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--color-secondary);
+  color: var(--color-text-on-secondary);
+}
+.comb__calc-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+  margin-bottom: 12px;
+}
+.comb__calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: var(--fs-option);
+}
+.comb__calc-row:last-of-type {
+  border-bottom: none;
+}
+.comb__calc-row b {
+  font-weight: 800;
+}
+.comb__calc-alert {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+// Two mandatory photos
+.comb__fotos {
+  display: grid;
+  gap: 16px;
+}
+
+// Confirmation
+.comb__ok {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.comb__ok-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--color-success);
+  color: #fff;
+  font-size: 44px;
+  font-weight: 800;
+}
+.comb__ok-title {
+  font-size: var(--fs-title);
+  font-weight: 800;
+  text-align: center;
+  margin: 0;
+}
+
+.comb__cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.comb__card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.comb__card-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.comb__card-value {
+  font-size: 20px;
+  font-weight: 800;
+}
+.comb__card-value--muted {
+  font-size: var(--fs-option);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.comb__card-sub {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.comb__band {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: var(--radius);
+  font-size: var(--fs-option);
+  font-weight: 700;
+  text-align: center;
+}
+.comb__band--ok {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.comb__band--warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.comb__band--info {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.comb__note {
+  margin-top: 12px;
+  text-align: center;
+  color: var(--color-warning);
+  font-weight: 600;
+}
+
+.comb__nav {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  padding-bottom: calc(16px + var(--safe-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.comb__back {
+  max-width: 120px;
+}

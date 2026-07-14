@@ -1,5 +1,32 @@
 # HANDOFF — CSD App
 
+_Last updated: 2026-07-13 (Flota v2 — Combustible + Pre-uso v2)_
+
+## Flota v2 — Combustible (nuevo) + Pre-uso v2 (branch `fix/mobile-responsive`) — build green, APK on device 🚧 falta walk-through con login
+Backend Fase 0 ya estaba aplicado en `sgc` (verificado contra la BD, no re-hecho): RPC `registrar_combustible_app` (jsonb con derivados), `registrar_checklist_vehiculo` extendido con `p_nivel_combustible` (calcula `resultado`/`alerta_mantenimiento`/bloqueos server-side), columnas nuevas en `vehiculos`/`conductores`/`registros_combustible`/`checklists_vehiculo`, tabla `avisos_flota`, catálogo v2 (plantilla `PRE-USO-V2`, 33 ítems, `numero`/`aplica_a`/`es_critico`), `flota_config` (umbral_consumo_pct=20, umbral_precita_km=500, umbral_licencia_dias=30).
+
+**FASE 1 — Combustible** (`pages/transporte/combustible/:vehiculoId`, botón ⛽ en el hub):
+- `core/models/combustible.model.ts` (`calcularCombustible()` — espejo exacto del RPC), `core/services/combustible.service.ts` (`getUltimaEchada()` cacheado por vehículo + `registrar()` → outbox `tipo_op:'combustible'` → handler sube 2 fotos a `vehiculos` en `combustible/{uuid}/{recibo|tablero}.jpg`, upsert idempotente, RPC con paths).
+- Wizard 3 pantallas: datos (km valida >última echada, galones, monto, estación) + caja oscura de cálculo en vivo → 2 fotos obligatorias ("Faltan fotos para guardar") → confirmación "Combustible registrado" con tarjetas + banda verde/ámbar (offline: cálculo local + "se validará al sincronizar").
+
+**FASE 2 — Pre-uso v2** (reescrito `pages/transporte/preuso/`):
+- `ConductoresService` nuevo (`getMiConductor()` por `usuario_id=auth.uid()`, cacheado) + `conductor.model.ts` (`estadoLicencia`). `VehiculosService.getVehiculoDetalle()` (vencimientos + km mantenimiento, cacheado).
+- Bloqueos previos: licencia vencida / matrícula / seguro vencidos → pantalla de bloqueo; licencia ≤30 días → banner. **Ahora envía `p_conductor_id` real** (antes null).
+- Pasos: datos de salida (km valida ≥ odómetro + nivel combustible + línea de mantenimiento en vivo ok/pre-cita/vencido) → checklist v2 (ítems por `aplica_a`, "Herramienta Pesado" solo si `tipo` es pesado — pickup=liviano, oculta; críticos "CRÍTICO · BLOQUEA"; barra semáforo n/total) → 7 fotos guiadas (slots `delantera,lateral_izq,lateral_der,trasera,tablero,interior_del,parte_trasera`) → firma → veredicto tri-estado.
+- **PDF + compartir**: `PreusoReportService` (jsPDF — header oscuro, datos, banda de resultado, hallazgos, página de evidencia) → `@capacitor/share` nativo (Filesystem cache) / Web Share API en PWA / fallback descarga.
+- Deps nuevas: `jspdf@4`, `@capacitor/share@8` (`npx cap sync android` hecho — Share registrado). `angular.json`: `allowedCommonJsDependencies` (jspdf/canvg/core-js/raf/rgbcolor).
+
+**Verificación:**
+- `npm run build` limpio (0 errores/0 warnings). 17 tests verdes (`core/models/flota-calculos.spec.ts`: cálculo combustible, licencia, pesado/aplicabilidad).
+- Web SGC (`dev/SGC`) **ya tiene** todo el lado de visualización y **lee exactamente lo que la app escribe** (verificado column/path/slot): `/flota/combustible` (echadas), `/flota/combustible-dashboard` (acumulado + panel flotilla), `/flota/checklists` (inspecciones con resultado/7 fotos/hallazgos), `/flota/panel-dia`, `/flota/avisos` (gestión avisos_flota). Nada que construir en web.
+- **APK debug instalado en device `6dbf1af4` (Redmi Note 10)** y arranca OK (login renderiza, sin crash). ⚠️ Se desinstaló la app de producción (firma release ≠ debug keystore; autorizado por Xaviel) — la sesión/PIN/cola offline previas se perdieron. Para volver a producción: reinstalar desde la página de descarga.
+
+**Datos de prueba configurados (BD prod compartida):** `TEST-0000` → `responsable_id`=Xaviel (aparece en "Por recibir"), matrícula/seguro=2026-12-31 (vigentes), `km_ultimo_mantenimiento`=6000, intervalo=5000, odómetro=10000 (a 10.000 faltan 1.000=normal; teclear ~10.600→pre-cita, ~11.200→vencido). Conductor "TEST Conductor Prueba" ligado a `tecnologia@` (licencia vigente 2027-09-16, Ambos). El vehículo real `AB2890340` NO se tocó.
+
+**Pendiente (necesita Xaviel — no automatizable):** walk-through en el teléfono con tu contraseña + PIN + cámara: combustible (primera echada / normal / km inválido), pre-uso (aprobado/hallazgos/bloqueado, pre-cita), PDF compartir, offline→reconnect. Luego confirmar en la web (`/flota/*`). Para probar bloqueo por licencia/matrícula: poner una fecha pasada en el conductor/vehículo de prueba. **No se hizo commit/push** (a la espera de tu OK).
+
+---
+
 _Last updated: 2026-07-12 (v1.2.0)_
 
 ## v1.2.0 — mantenimiento + rutas "cómo llegar" (para el piloto)

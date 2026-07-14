@@ -25,6 +25,20 @@ export const ZONAS_DANO = [
   { zona: 'gomas', label: 'Gomas' },
 ] as const;
 
+/** Extended vehicle header for pre-use (blocks + maintenance line). */
+export interface VehiculoDetalle {
+  id: string;
+  placa: string;
+  marca: string;
+  modelo: string;
+  tipo: string;
+  kilometraje: number;
+  vencimiento_matricula: string | null;
+  vencimiento_seguro: string | null;
+  km_ultimo_mantenimiento: number | null;
+  intervalo_mantenimiento_km: number | null;
+}
+
 export interface VehiculoACargo {
   entrega_id: string;
   vehiculo_id: string;

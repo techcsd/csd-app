@@ -21,6 +21,63 @@ export interface ChecklistPlantillaItem {
   etiqueta: string;
   es_critico: boolean;
   orden: number;
+  /** Display number from the catalog (e.g. "1.1", "P2"). */
+  numero: string | null;
+  /** Which vehicle class the item applies to: 'Ambos' | 'Liviano' | 'Pesado'. */
+  aplica_a: string;
+}
+
+/** Fuel levels offered in the pre-use "datos de salida" step. */
+export const NIVELES_COMBUSTIBLE_PREUSO = ['1/4', '1/2', '3/4', 'Lleno'] as const;
+
+/**
+ * The 7 mandatory guided shots for a pre-use inspection (fixed slot names the
+ * server + PDF rely on). Exterior (4) + Interior (3).
+ */
+export const FOTOS_PREUSO = [
+  { slot: 'delantera', label: 'Exterior — delantera', hint: '🚙' },
+  { slot: 'lateral_izq', label: 'Exterior — lateral izquierda', hint: '🚙' },
+  { slot: 'lateral_der', label: 'Exterior — lateral derecha', hint: '🚙' },
+  { slot: 'trasera', label: 'Exterior — trasera', hint: '🚙' },
+  { slot: 'tablero', label: 'Interior — tablero (km)', hint: '🎛️' },
+  { slot: 'interior_del', label: 'Interior — delantero', hint: '💺' },
+  { slot: 'parte_trasera', label: 'Interior — parte trasera', hint: '🪑' },
+] as const;
+
+/** Pre-use verdict, mirrors sgc.checklists_vehiculo.resultado. */
+export type ChecklistResultado = 'aprobado' | 'con_hallazgos' | 'bloqueado';
+
+/**
+ * Vehicle types treated as "Pesado" for the Herramienta Pesado section.
+ * TODO: confirm the real list with Flota; keep it centralized here.
+ */
+const TIPOS_PESADO = [
+  'camion',
+  'camión',
+  'pesado',
+  'volteo',
+  'grua',
+  'grúa',
+  'cabezote',
+  'furgon',
+  'furgón',
+  'montacargas',
+  'retroexcavadora',
+];
+
+/** Whether a vehicle counts as heavy (shows the Herramienta Pesado section). */
+export function esVehiculoPesado(tipo: string | null | undefined): boolean {
+  return !!tipo && TIPOS_PESADO.includes(tipo.trim().toLowerCase());
+}
+
+/** The vehicle class label used to filter checklist items by `aplica_a`. */
+export function claseVehiculo(tipo: string | null | undefined): 'Pesado' | 'Liviano' {
+  return esVehiculoPesado(tipo) ? 'Pesado' : 'Liviano';
+}
+
+/** Whether an item applies to the given vehicle class. */
+export function itemAplica(item: ChecklistPlantillaItem, clase: 'Pesado' | 'Liviano'): boolean {
+  return item.aplica_a === 'Ambos' || item.aplica_a === clase;
 }
 
 /** A checklist template (grouped set of items) — e.g. liviano / camion / general. */
@@ -54,8 +111,14 @@ export interface ChecklistCaptura {
   plantilla: string;
   placa: string;
   fecha: string;
+  conductorId: string | null;
   kilometraje: number | null;
+  nivelCombustible: string | null;
   observacion: string | null;
   respuestas: RespuestaCaptura[];
+  /** The 7 mandatory guided shots (slot → compressed blob). */
+  fotos: Record<string, Blob>;
   firma: Blob;
+  /** Locally-computed verdict, kept for the offline "mis registros" summary. */
+  resultado: ChecklistResultado;
 }

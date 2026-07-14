@@ -25,6 +25,132 @@
   color: var(--color-text-secondary);
 }
 
+// ── Hard block screen ──────────────────────────────────────────────────────
+.preuso__block-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+}
+.preuso__block-icon {
+  font-size: 64px;
+}
+.preuso__block-title {
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: var(--color-error);
+  margin: 0;
+}
+.preuso__block-motivo {
+  font-size: var(--fs-option);
+  color: var(--color-text-secondary);
+  max-width: 420px;
+}
+
+// ── Licence warning banner ─────────────────────────────────────────────────
+.preuso__lic-warn {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.preuso__km {
+  font-size: 28px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.preuso__km--error {
+  border-color: var(--color-error) !important;
+}
+.preuso__warn {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-error);
+}
+
+.preuso__fuel {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.fuel-btn {
+  flex: 1;
+  min-height: 56px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  font-size: var(--fs-option);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.fuel-btn--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+
+// ── Maintenance line box ───────────────────────────────────────────────────
+.mant-box {
+  margin: 8px 0 16px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 15px;
+}
+.mant-box--ok {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+.mant-box--pre_cita {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.mant-box--vencido {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.preuso__obs {
+  resize: vertical;
+}
+
+// ── Checklist status bar ───────────────────────────────────────────────────
+.preuso__status {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+.preuso__status-count {
+  font-size: 20px;
+}
+.preuso__status--ok {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.preuso__status--hallazgos {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.preuso__status--critico {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
 .preuso__section {
   font-size: 15px;
   font-weight: 800;
@@ -41,10 +167,13 @@
   margin-bottom: 12px;
   background: var(--color-surface);
 }
+.preuso__item--critico {
+  border-left: 4px solid var(--color-error);
+}
 .preuso__item-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -52,11 +181,19 @@
   font-weight: 700;
   font-size: var(--fs-option);
 }
+.preuso__item-num {
+  color: var(--color-text-secondary);
+  margin-right: 4px;
+}
 .preuso__critico {
   flex-shrink: 0;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--color-error);
+  border: 1px solid var(--color-error);
+  border-radius: 6px;
+  padding: 2px 6px;
+  white-space: nowrap;
 }
 
 .preuso__opts {
@@ -66,25 +203,67 @@
 .preuso__opts app-option-button {
   flex: 1;
 }
-
 .preuso__comment {
   margin-top: 12px;
 }
 
-.preuso__km {
-  font-size: 28px;
-  font-weight: 700;
-  text-align: center;
-  margin-bottom: 20px;
+// ── 7 guided photos ────────────────────────────────────────────────────────
+.preuso__fotos {
+  display: grid;
+  gap: 16px;
 }
 
-.preuso__obs {
-  resize: vertical;
+// ── Verdict ────────────────────────────────────────────────────────────────
+.veredicto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  border-radius: var(--radius);
+  text-align: center;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.veredicto__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 34px;
+  font-weight: 800;
+}
+.veredicto__label {
+  font-size: 22px;
+  font-weight: 800;
+}
+.veredicto__sub {
+  font-size: 15px;
+  opacity: 0.95;
+}
+.veredicto--ok {
+  background: var(--color-success);
+}
+.veredicto--warn {
+  background: var(--color-warning);
+}
+.veredicto--block {
+  background: var(--color-error);
+}
+
+.preuso__note {
+  text-align: center;
+  color: var(--color-warning);
+  font-weight: 600;
+  margin: 0 0 12px;
 }
 
 .resumen {
   list-style: none;
-  margin: 0;
+  margin: 0 0 16px;
   padding: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -104,6 +283,42 @@
   color: var(--color-text-secondary);
 }
 
+// ── Findings ───────────────────────────────────────────────────────────────
+.hallazgo {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+}
+.hallazgo--critico {
+  border-left: 4px solid var(--color-error);
+}
+.hallazgo__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.hallazgo__num {
+  font-weight: 800;
+  color: var(--color-text-secondary);
+}
+.hallazgo__label {
+  flex: 1;
+  font-weight: 700;
+}
+.hallazgo__critico {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-error);
+}
+.hallazgo__com {
+  margin: 6px 0 0;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+// ── Nav ────────────────────────────────────────────────────────────────────
 .preuso__nav {
   display: flex;
   gap: 12px;
@@ -111,6 +326,9 @@
   padding-bottom: calc(16px + var(--safe-bottom));
   border-top: 1px solid var(--color-border);
   background: var(--color-bg);
+}
+.preuso__nav--report {
+  flex-direction: column;
 }
 .preuso__back {
   max-width: 120px;
