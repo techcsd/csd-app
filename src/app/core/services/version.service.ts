@@ -14,6 +14,19 @@ export interface VersionPublicada {
 
 export type Plataforma = 'web' | 'movil';
 
+/** Cambio etiquetado (estilo "Keep a Changelog"). */
+export interface CambioItem {
+  t: 'nuevo' | 'mejora' | 'arreglo' | 'seguridad' | string;
+  d: string;
+}
+
+export const CAMBIO_LABEL: Record<string, string> = {
+  nuevo: 'Nuevo',
+  mejora: 'Mejora',
+  arreglo: 'Arreglo',
+  seguridad: 'Seguridad',
+};
+
 /** Fila del historial de versiones (timeline admin). */
 export interface VersionHistorial {
   id: string;
@@ -21,7 +34,9 @@ export interface VersionHistorial {
   plataforma: Plataforma;
   fecha: string | null;
   titulo: string | null;
-  cambios: string[];
+  cambios: CambioItem[];
+  url: string | null;
+  apk_url: string | null;
 }
 
 /**
@@ -77,7 +92,7 @@ export class VersionService {
   async historial(): Promise<VersionHistorial[]> {
     const { data, error } = await this.supabase.client
       .from('app_versiones')
-      .select('id, version, plataforma, fecha, titulo, cambios')
+      .select('id, version, plataforma, fecha, titulo, cambios, url, apk_url')
       .order('fecha', { ascending: false, nullsFirst: false })
       .order('version', { ascending: false });
     if (error) throw new Error(error.message);

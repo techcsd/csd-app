@@ -135,14 +135,51 @@
 
 .hv-cambios {
   margin: 0;
-  padding-left: 18px;
+  padding: 0;
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+}
 
-  li {
-    font-size: 15px;
-    line-height: 1.4;
-    color: var(--color-text-secondary);
-  }
+.hv-cambio {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 8px;
+  align-items: start;
+
+  &__txt { font-size: 15px; line-height: 1.4; color: var(--color-text-primary); }
+}
+
+.hv-tag {
+  justify-self: start;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #fff;
+
+  &--nuevo { background: #16a34a; }
+  &--mejora { background: #2563eb; }
+  &--arreglo { background: #d97706; }
+  &--seguridad { background: #7c3aed; }
+}
+
+.hv-action {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 8px 14px;
+  min-height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-secondary);
+  color: var(--color-text-on-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 380px) {
+  .hv-cambio { grid-template-columns: 1fr; gap: 3px; }
 }
