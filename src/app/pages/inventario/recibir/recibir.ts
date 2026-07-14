@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
@@ -13,7 +14,7 @@ import { Conduce } from '../../../core/models/transporte.model';
   selector: 'app-recibir-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, SyncBar],
+  imports: [Skeleton, EmptyState, FormsModule, SyncBar],
   templateUrl: './recibir.html',
   styleUrl: './recibir.scss',
 })
@@ -35,7 +36,7 @@ export class RecibirConducePage {
     void this.load();
   }
 
-  private async load(): Promise<void> {
+  async load(): Promise<void> {
     this.loading.set(true);
     try {
       this.conduces.set(await this.inventario.conducesPorRecibir());

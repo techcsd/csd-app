@@ -100,6 +100,10 @@ export class IncidentePage {
       this.toast.error('Elige la gravedad.');
       return;
     }
+    if (!this.descripcion().trim()) {
+      this.toast.error('Describe qué pasó. Sin descripción no se puede resolver.');
+      return;
+    }
     this.submitting.set(true);
     try {
       await this.bitacora.enqueueIncidente({

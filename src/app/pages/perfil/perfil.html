@@ -20,12 +20,21 @@
         <li><span>Obra activa</span><b>{{ o.nombre }}</b></li>
       }
       <li><span>Conexión</span><b>{{ online() ? 'En línea' : 'Sin señal' }}</b></li>
-      <li><span>Versión</span><b>{{ version }}</b></li>
+      <li><span>Versión</span><b>{{ versionPublicada() }}</b></li>
+      @if (hayNueva()) {
+        <li><span>Actualización</span><b class="perfil__nueva">Hay una versión nueva</b></li>
+      }
     </ul>
 
     <button type="button" class="btn-ghost perfil__btn" [disabled]="checking()" (click)="buscarActualizacion()">
       {{ checking() ? 'Buscando…' : '🔄 Buscar actualización' }}
     </button>
+
+    @if (biometriaSoportada()) {
+      <button type="button" class="btn-ghost perfil__btn" [disabled]="biometriaBusy()" (click)="toggleBiometria()">
+        {{ biometriaOn() ? '✅ Huella / Face ID activado' : '👆 Usar huella / Face ID' }}
+      </button>
+    }
 
     <button type="button" class="btn-ghost perfil__btn" (click)="soporte()">
       🛟 Soporte y ayuda

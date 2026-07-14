@@ -1,0 +1,17 @@
+<div class="empty-state">
+  <span class="empty-state__icon" aria-hidden="true">{{ icon() }}</span>
+  <h3 class="empty-state__title">{{ title() }}</h3>
+  @if (message()) {
+    <p class="empty-state__message">{{ message() }}</p>
+  }
+  @if (ctaLabel()) {
+    <button type="button" class="btn-cta empty-state__cta" (click)="action.emit()">
+      {{ ctaLabel() }}
+    </button>
+  }
+  @if (secondaryLabel()) {
+    <button type="button" class="btn-ghost empty-state__secondary" (click)="secondaryAction.emit()">
+      {{ secondaryLabel() }}
+    </button>
+  }
+</div>

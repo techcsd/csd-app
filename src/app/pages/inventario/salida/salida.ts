@@ -9,7 +9,7 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ArticuloCat, Bodega, MovItem } from '../../../core/models/inventario.model';
+import { ArticuloCat, Bodega, CategoriaInv, MovItem } from '../../../core/models/inventario.model';
 
 /** Register a material consumption (salida) from a bodega. Offline-first. */
 @Component({
@@ -31,6 +31,7 @@ export class SalidaPage {
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
   articulos = signal<ArticuloCat[]>([]);
+  categorias = signal<CategoriaInv[]>([]);
   cart = signal<MovItem[]>([]);
   foto = signal<CapturedPhoto | null>(null);
   capturing = signal(false);
@@ -45,13 +46,22 @@ export class SalidaPage {
   }
 
   private async init(): Promise<void> {
-    const [b, a] = await Promise.all([
+    const [b, a, cat] = await Promise.all([
       this.inventario.getBodegas(),
       this.inventario.getArticulos(),
+      this.inventario.getCategorias(),
     ]);
     this.bodegas.set(b);
     this.articulos.set(a);
+    this.categorias.set(cat);
     if (b.length === 1) this.bodegaId.set(b[0].id);
+  }
+
+  /** Stepper − / + on a cart line (R17). */
+  ajustar(i: number, delta: number): void {
+    this.cart.update((c) =>
+      c.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, (x.cantidad || 0) + delta) } : x)),
+    );
   }
 
   add(a: ArticuloCat): void {

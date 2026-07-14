@@ -16,6 +16,21 @@ export interface Conductor {
   usuario_id: string | null;
 }
 
+/** Aggregated driver stats for the read-only profile (v_conductor_stats, R5). */
+export interface ConductorStats {
+  conductor_id: string;
+  nombre: string;
+  licencia_vencimiento: string | null;
+  estado_licencia: string | null;
+  checklists_total: number;
+  checklists_bloqueos: number;
+  ultimo_checklist: string | null;
+  combustible_echadas: number;
+  ultima_echada: string | null;
+  vehiculos_usados: number;
+  ultima_actividad: string | null;
+}
+
 /** Derive licence status from its expiry date (Vigente / Por vencer / Vencida). */
 export function estadoLicencia(vencimiento: string | null): LicenciaEstado {
   if (!vencimiento) return 'desconocido';

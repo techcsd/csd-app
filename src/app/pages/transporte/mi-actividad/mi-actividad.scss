@@ -1,0 +1,83 @@
+.mact {
+  background: var(--color-bg);
+}
+
+.mact__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.mact__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.mact__icon {
+  font-size: 26px;
+}
+
+.mact__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.mact__nombre {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 14px;
+}
+
+.mact__cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.mact__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mact__card--wide {
+  grid-column: 1 / -1;
+}
+
+.mact__label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.mact__value {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.mact__value--sm {
+  font-size: 16px;
+  text-transform: capitalize;
+}
+
+.mact__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.mact__sub--warn {
+  color: var(--color-error);
+  font-weight: 700;
+}

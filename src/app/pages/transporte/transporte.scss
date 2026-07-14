@@ -37,6 +37,21 @@
   font-size: var(--fs-option);
 }
 
+.transporte__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  margin-left: 8px;
+  padding: 0 7px;
+  border-radius: 12px;
+  background: var(--color-accent);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 .transporte__section {
   font-size: 15px;
   font-weight: 700;

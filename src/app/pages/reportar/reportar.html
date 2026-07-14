@@ -31,6 +31,20 @@
 
       <label class="field-label reportar__mt">Cuéntanos</label>
       <textarea class="field reportar__area" rows="5" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="¿Qué pasó? ¿Qué esperabas?"></textarea>
+
+      <label class="field-label reportar__mt">Fotos (opcional)</label>
+      <p class="reportar__hint">Una imagen ayuda a entender el problema.</p>
+      <div class="reportar__fotos">
+        @for (f of fotos(); track f.previewUrl) {
+          <div class="reportar__foto">
+            <img [src]="f.previewUrl" alt="foto" />
+            <button type="button" class="reportar__foto-x" (click)="removeFoto($index)">✕</button>
+          </div>
+        }
+      </div>
+      <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
+        {{ capturing() ? '⏳ Tomando…' : '📷 Agregar foto' }}
+      </button>
     </div>
 
     <footer class="reportar__nav">

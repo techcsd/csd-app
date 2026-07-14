@@ -41,7 +41,13 @@
           }
         </div>
       } @empty {
-        <p class="recibir__muted">No hay conduces por recibir.</p>
+        <app-empty-state
+          icon="📦"
+          title="No hay conduces por recibir"
+          message="Cuando otra bodega u obra despache material hacia este almacén, el conduce aparecerá aquí para que confirmes lo que llegó."
+          secondaryLabel="Actualizar"
+          (secondaryAction)="load()"
+        />
       }
     }
   </div>

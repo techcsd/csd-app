@@ -6,6 +6,9 @@ import { UserContextService } from '../../core/services/user-context.service';
 import { SessionService } from '../../core/services/session.service';
 import { UpdateService } from '../../core/services/update.service';
 import { NetworkService } from '../../core/services/network.service';
+import { BiometricService } from '../../core/services/biometric.service';
+import { VersionService } from '../../core/services/version.service';
+import { ToastService } from '../../core/services/toast.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 
 /** Profile / settings: identity, app version, update check, logout. */
@@ -22,6 +25,9 @@ export class PerfilPage {
   private session = inject(SessionService);
   private updates = inject(UpdateService);
   private network = inject(NetworkService);
+  private biometric = inject(BiometricService);
+  private versionSvc = inject(VersionService);
+  private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
 
@@ -31,8 +37,41 @@ export class PerfilPage {
   isAdmin = () => this.ctx.hasModulo('admin');
   online = this.network.online;
   version = environment.version;
+  versionPublicada = () => this.versionSvc.etiquetaVersion;
+  hayNueva = () => this.versionSvc.hayNueva();
   checking = signal(false);
   confirmLogout = signal(false);
+  biometriaSoportada = signal(false);
+  biometriaOn = signal(false);
+  biometriaBusy = signal(false);
+
+  constructor() {
+    void this.loadBiometria();
+  }
+
+  private async loadBiometria(): Promise<void> {
+    this.biometriaSoportada.set(await this.biometric.isSupported());
+    this.biometriaOn.set(await this.biometric.isEnabled());
+  }
+
+  async toggleBiometria(): Promise<void> {
+    if (this.biometriaBusy()) return;
+    this.biometriaBusy.set(true);
+    try {
+      const next = !this.biometriaOn();
+      const result = await this.biometric.setEnabled(next);
+      this.biometriaOn.set(result);
+      if (next && !result) {
+        this.toast.error('No se pudo activar la biometría. Usa tu huella o rostro registrados.');
+      } else if (result) {
+        this.toast.success('Desbloqueo por huella / rostro activado.');
+      } else {
+        this.toast.success('Desbloqueo biométrico desactivado.');
+      }
+    } finally {
+      this.biometriaBusy.set(false);
+    }
+  }
 
   async buscarActualizacion(): Promise<void> {
     if (this.checking()) return;

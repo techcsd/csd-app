@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { OptionButton } from '../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../shared/ui/big-confirm/big-confirm';
 import { ReportesService, ReporteTipo } from '../../core/services/reportes.service';
+import { CameraService, CapturedPhoto } from '../../core/services/camera.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
 
@@ -23,6 +24,7 @@ import { ToastService } from '../../core/services/toast.service';
 })
 export class ReportarPage {
   private reportes = inject(ReportesService);
+  private camera = inject(CameraService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -37,8 +39,27 @@ export class ReportarPage {
   tipo = signal<ReporteTipo>('error');
   asunto = signal('');
   descripcion = signal('');
+  fotos = signal<CapturedPhoto[]>([]);
+  capturing = signal(false);
   submitting = signal(false);
   done = signal(false);
+
+  async addFoto(): Promise<void> {
+    if (this.capturing()) return;
+    this.capturing.set(true);
+    try {
+      const photo = await this.camera.takePhoto();
+      if (photo) this.fotos.update((f) => [...f, photo]);
+    } finally {
+      this.capturing.set(false);
+    }
+  }
+
+  removeFoto(i: number): void {
+    const f = this.fotos()[i];
+    if (f) URL.revokeObjectURL(f.previewUrl);
+    this.fotos.update((list) => list.filter((_, idx) => idx !== i));
+  }
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
@@ -56,6 +77,7 @@ export class ReportarPage {
         tipo: this.tipo(),
         asunto: this.asunto(),
         descripcion: this.descripcion(),
+        fotos: this.fotos().map((f) => f.blob),
       });
       this.done.set(true);
     } catch (e) {

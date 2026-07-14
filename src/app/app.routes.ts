@@ -78,6 +78,35 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/transporte').then((m) => m.TransportePage),
   },
   {
+    path: 'transporte/vehiculo/:vehiculoId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/perfil-vehiculo/perfil-vehiculo').then((m) => m.PerfilVehiculoPage),
+  },
+  {
+    path: 'transporte/mi-actividad',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mi-actividad/mi-actividad').then((m) => m.MiActividadPage),
+  },
+  {
+    path: 'transporte/rutas/crear',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () => import('./pages/transporte/rutas/crear-ruta').then((m) => m.CrearRutaPage),
+  },
+  {
+    path: 'transporte/reporte-semanal',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/reporte-semanal/reporte-semanal').then((m) => m.ReporteSemanalPage),
+  },
+  {
+    path: 'transporte/asignar',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/asignar/asignar').then((m) => m.AsignarVehiculoPage),
+  },
+  {
     path: 'transporte/recibir/:vehiculoId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     data: { tipo: 'recepcion' },
@@ -150,6 +179,11 @@ export const routes: Routes = [
     path: 'inventario/conteo',
     canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
     loadComponent: () => import('./pages/inventario/conteo/conteo').then((m) => m.ConteoPage),
+  },
+  {
+    path: 'inventario/almacenes',
+    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    loadComponent: () => import('./pages/inventario/almacenes/almacenes').then((m) => m.AlmacenesPage),
   },
   {
     path: 'solicitudes',

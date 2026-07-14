@@ -1,0 +1,59 @@
+<div class="screen mact">
+  <header class="mact__header">
+    <button type="button" class="mact__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mact__icon">📈</span>
+    <h1 class="mact__title">Mi actividad</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!esConductor()) {
+      <app-empty-state
+        icon="🪪"
+        title="Aún no eres conductor"
+        message="Cuando uses un vehículo por primera vez te registras como conductor y aquí verás tu historial de checklists, echadas y vehículos usados."
+        ctaLabel="Asignarme un vehículo"
+        (action)="irAsignar()"
+      />
+    } @else if (!stats()) {
+      <app-empty-state
+        icon="📈"
+        title="Sin actividad todavía"
+        message="Aquí aparecerán tus checklists, combustible y vehículos usados a medida que trabajes."
+      />
+    } @else {
+      <p class="mact__nombre">{{ stats()!.nombre }}</p>
+      <div class="mact__cards">
+        <div class="mact__card">
+          <span class="mact__label">Checklists</span>
+          <span class="mact__value">{{ stats()!.checklists_total }}</span>
+          @if (stats()!.checklists_bloqueos > 0) {
+            <span class="mact__sub mact__sub--warn">{{ stats()!.checklists_bloqueos }} bloqueo(s)</span>
+          }
+        </div>
+        <div class="mact__card">
+          <span class="mact__label">Echadas</span>
+          <span class="mact__value">{{ stats()!.combustible_echadas }}</span>
+        </div>
+        <div class="mact__card">
+          <span class="mact__label">Vehículos usados</span>
+          <span class="mact__value">{{ stats()!.vehiculos_usados }}</span>
+        </div>
+        <div class="mact__card">
+          <span class="mact__label">Licencia</span>
+          <span class="mact__value mact__value--sm">{{ stats()!.estado_licencia || '—' }}</span>
+          @if (stats()!.licencia_vencimiento) {
+            <span class="mact__sub">Vence {{ stats()!.licencia_vencimiento | date: 'dd/MM/yyyy' }}</span>
+          }
+        </div>
+        @if (stats()!.ultima_actividad) {
+          <div class="mact__card mact__card--wide">
+            <span class="mact__label">Última actividad</span>
+            <span class="mact__value mact__value--sm">{{ stats()!.ultima_actividad | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

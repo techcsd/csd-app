@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ActividadEntry, BitacoraFull, Proyecto } from '../models/bitacora.model';
+import { ActividadEntry, BitacoraFull, Proyecto, ProyectoPartida } from '../models/bitacora.model';
 
 const CATALOG_PROYECTOS = 'proyectos';
 const BUCKET = 'sgc-bitacora';
@@ -17,6 +17,11 @@ export interface ParteDiarioCaptura {
   restricciones: string[];
   comentarios: string | null;
   fotos: Blob[];
+  // R21/R22 — clima y migración (el clima NO es incidente).
+  llovio: boolean | null;
+  lluviaDetalle: string | null;
+  huboMigracion: boolean | null;
+  migracionObreros: string[] | null;
 }
 
 export interface IncidenteCaptura {
@@ -92,13 +97,37 @@ export class BitacoraService {
         personal_acero: input.personalAcero,
         trabajadores_casa: input.trabajadoresCasa,
         otro_personal: input.otroPersonal,
-        actividades: input.actividades,
+        actividades: input.actividades.map((a) => ({
+          estructura: a.estructura,
+          actividad: a.actividad,
+          cantidad: a.cantidad ?? null,
+        })),
         restricciones: input.restricciones.map((r) => ({ tipo_restriccion: r, descripcion_otro: null })),
+        llovio: input.llovio,
+        lluvia_detalle: input.lluviaDetalle,
+        hubo_migracion: input.huboMigracion,
+        migracion_obreros: input.migracionObreros,
         capturado_en,
       },
       fotos: this.buildFotos(id, input.fotos),
       resumen: { tipo: 'parte_diario', proyecto_id: input.proyectoId, capturado_en },
     });
+  }
+
+  /** Planned line items for a project (R24), for the actividad quantity reference. */
+  async getPartidas(proyectoId: string): Promise<ProyectoPartida[]> {
+    const key = `partidas_${proyectoId}`;
+    const data = await this.catalog.refresh<ProyectoPartida[]>(key, async () => {
+      const { data, error } = await this.supabase.client
+        .from('proyecto_partidas')
+        .select('id, nombre, unidad, cantidad_planeada, cantidad_ejecutada')
+        .eq('proyecto_id', proyectoId)
+        .eq('activa', true)
+        .order('orden', { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data as ProyectoPartida[]) ?? [];
+    });
+    return data ?? [];
   }
 
   async enqueueIncidente(input: IncidenteCaptura): Promise<void> {
@@ -195,6 +224,10 @@ export class BitacoraService {
         p_incidente_acciones: payload['incidente_acciones'] ?? null,
         p_fotos: fotos,
         p_capturado_en: payload['capturado_en'],
+        p_llovio: payload['llovio'] ?? null,
+        p_lluvia_detalle: payload['lluvia_detalle'] ?? null,
+        p_hubo_migracion: payload['hubo_migracion'] ?? null,
+        p_migracion_obreros: payload['migracion_obreros'] ?? null,
       });
       if (error) throwSyncError(error);
 

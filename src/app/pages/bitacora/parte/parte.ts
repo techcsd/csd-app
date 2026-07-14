@@ -7,6 +7,7 @@ import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -17,17 +18,18 @@ import {
   ActividadEntry,
   ESTRUCTURAS,
   Proyecto,
+  ProyectoPartida,
   RESTRICCIONES,
 } from '../../../core/models/bitacora.model';
 
-const TOTAL = 6;
+const TOTAL = 8;
 
 /** Parte diario wizard — one section per screen, photo-first (User Flow §4). */
 @Component({
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm],
+  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -54,6 +56,15 @@ export class PartePage {
   proyectos = signal<Proyecto[]>([]);
   proyectoId = signal<string>('');
 
+  // R21/R22 — clima y migración (primeras preguntas tras la obra).
+  llovio = signal<boolean | null>(null);
+  lluviaDetalle = signal('');
+  huboMigracion = signal<boolean | null>(null);
+  migracionObreros = signal('');
+
+  // R24 — partidas planeadas del proyecto (referencia de cantidades).
+  partidas = signal<ProyectoPartida[]>([]);
+
   carpinteria = signal(0);
   acero = signal(0);
   casa = signal(0);
@@ -71,6 +82,7 @@ export class PartePage {
 
   submitting = signal(false);
   done = signal(false);
+  confirmSalir = signal(false);
 
   proyectoNombre = computed(
     () => this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? '',
@@ -82,6 +94,10 @@ export class PartePage {
     effect(() => {
       const snap = {
         proyectoId: this.proyectoId(),
+        llovio: this.llovio(),
+        lluviaDetalle: this.lluviaDetalle(),
+        huboMigracion: this.huboMigracion(),
+        migracionObreros: this.migracionObreros(),
         carpinteria: this.carpinteria(),
         acero: this.acero(),
         casa: this.casa(),
@@ -99,6 +115,8 @@ export class PartePage {
 
   private hasContent(s: {
     step: number;
+    llovio?: boolean | null;
+    huboMigracion?: boolean | null;
     carpinteria: number;
     acero: number;
     casa: number;
@@ -109,6 +127,8 @@ export class PartePage {
   }): boolean {
     return (
       s.step > 1 ||
+      s.llovio != null ||
+      s.huboMigracion != null ||
       s.carpinteria > 0 ||
       s.acero > 0 ||
       s.casa > 0 ||
@@ -130,6 +150,10 @@ export class PartePage {
 
     const draft = await this.borrador.load<{
       proyectoId: string;
+      llovio: boolean | null;
+      lluviaDetalle: string;
+      huboMigracion: boolean | null;
+      migracionObreros: string;
       carpinteria: number;
       acero: number;
       casa: number;
@@ -142,6 +166,10 @@ export class PartePage {
 
     if (draft) {
       this.proyectoId.set(draft.proyectoId);
+      this.llovio.set(draft.llovio ?? null);
+      this.lluviaDetalle.set(draft.lluviaDetalle ?? '');
+      this.huboMigracion.set(draft.huboMigracion ?? null);
+      this.migracionObreros.set(draft.migracionObreros ?? '');
       this.carpinteria.set(draft.carpinteria);
       this.acero.set(draft.acero);
       this.casa.set(draft.casa);
@@ -156,7 +184,18 @@ export class PartePage {
       if (obra) this.proyectoId.set(obra.id);
       else if (list.length === 1) this.proyectoId.set(list[0].id);
     }
+    if (this.proyectoId()) void this.loadPartidas(this.proyectoId());
     this.hydrated = true;
+  }
+
+  private async loadPartidas(proyectoId: string): Promise<void> {
+    this.partidas.set(await this.bitacora.getPartidas(proyectoId));
+  }
+
+  /** Planned quantity for an activity's structure, if the project defines it. */
+  partidaDe(estructura: string): ProyectoPartida | undefined {
+    const key = estructura.toLowerCase();
+    return this.partidas().find((p) => p.nombre.toLowerCase() === key);
   }
 
   toggleEstructura(e: string): void {
@@ -178,7 +217,7 @@ export class PartePage {
       for (const est of this.selEstructuras()) {
         for (const act of this.selActividades()) {
           if (!next.some((x) => x.estructura === est && x.actividad === act)) {
-            next.push({ estructura: est, actividad: act });
+            next.push({ estructura: est, actividad: act, cantidad: 1 });
           }
         }
       }
@@ -190,6 +229,19 @@ export class PartePage {
 
   removeActividad(i: number): void {
     this.actividades.update((a) => a.filter((_, idx) => idx !== i));
+  }
+
+  /** Set/adjust the quantity done for an activity row (R24). */
+  setCantidadAct(i: number, v: number): void {
+    this.actividades.update((a) =>
+      a.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, v || 0) } : x)),
+    );
+  }
+
+  ajustarCantidadAct(i: number, delta: number): void {
+    this.actividades.update((a) =>
+      a.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, (x.cantidad ?? 0) + delta) } : x)),
+    );
   }
 
   toggleRestriccion(r: string): void {
@@ -216,8 +268,19 @@ export class PartePage {
   }
 
   next(): void {
-    if (this.step() === 1 && !this.proyectoId()) {
-      this.toast.error('Elige la obra.');
+    if (this.step() === 1) {
+      if (!this.proyectoId()) {
+        this.toast.error('Elige la obra.');
+        return;
+      }
+      void this.loadPartidas(this.proyectoId());
+    }
+    if (this.step() === 2 && this.llovio() === null) {
+      this.toast.error('Dinos si llovió o está lloviendo.');
+      return;
+    }
+    if (this.step() === 3 && this.huboMigracion() === null) {
+      this.toast.error('Dinos si hubo problemas de migración.');
       return;
     }
     this.step.update((s) => Math.min(this.total, s + 1));
@@ -225,6 +288,39 @@ export class PartePage {
 
   prev(): void {
     this.step.update((s) => Math.max(1, s - 1));
+  }
+
+  /** True when the wizard holds any half-filled data worth confirming before exit. */
+  private tieneDatos(): boolean {
+    return this.hasContent({
+      step: this.step(),
+      carpinteria: this.carpinteria(),
+      acero: this.acero(),
+      casa: this.casa(),
+      otroPersonal: this.otroPersonal(),
+      actividades: this.actividades(),
+      restricciones: this.restricciones(),
+      comentarios: this.comentarios(),
+    });
+  }
+
+  /** Back/cancel from any step — the user must never have to close the app (R13). */
+  salir(): void {
+    if (this.tieneDatos()) {
+      this.confirmSalir.set(true);
+    } else {
+      this.finish();
+    }
+  }
+
+  confirmarSalir(): void {
+    // The draft is autosaved, so leaving keeps it for later recovery.
+    this.confirmSalir.set(false);
+    this.finish();
+  }
+
+  cancelarSalir(): void {
+    this.confirmSalir.set(false);
   }
 
   get online(): boolean {
@@ -239,6 +335,10 @@ export class PartePage {
     }
     this.submitting.set(true);
     try {
+      const obreros = this.migracionObreros()
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
       await this.bitacora.enqueueParteDiario({
         proyectoId: this.proyectoId(),
         personalCarpinteria: this.carpinteria(),
@@ -249,6 +349,10 @@ export class PartePage {
         restricciones: this.restricciones().length ? this.restricciones() : ['NINGUNA'],
         comentarios: this.comentarios().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
+        llovio: this.llovio(),
+        lluviaDetalle: this.llovio() ? this.lluviaDetalle().trim() || null : null,
+        huboMigracion: this.huboMigracion(),
+        migracionObreros: this.huboMigracion() && obreros.length ? obreros : null,
       });
       this.hydrated = false; // stop autosave; discard the draft
       await this.borrador.clear(this.DRAFT);

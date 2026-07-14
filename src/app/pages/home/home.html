@@ -18,9 +18,13 @@
         (pressed)="open(tile)"
       />
     } @empty {
-      <p class="home__empty">
-        Tu usuario no tiene módulos de la app todavía. Habla con administración.
-      </p>
+      <app-empty-state
+        icon="🔑"
+        title="Sin módulos asignados"
+        message="Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso."
+        ctaLabel="Reportar / pedir acceso"
+        (action)="reportar()"
+      />
     }
   </main>
 

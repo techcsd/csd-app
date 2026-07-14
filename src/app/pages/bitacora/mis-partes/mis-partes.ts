@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DatePipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
@@ -10,7 +11,7 @@ import { BitacoraFull } from '../../../core/models/bitacora.model';
   selector: 'app-mis-bitacoras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DatePipe],
+  imports: [Skeleton, EmptyState, DatePipe],
   templateUrl: './mis-partes.html',
   styleUrl: './mis-partes.scss',
 })
@@ -40,6 +41,10 @@ export class MisPartesPage {
 
   open(b: BitacoraFull): void {
     void this.router.navigate(['/bitacora/detalle', b.id]);
+  }
+
+  nueva(): void {
+    void this.router.navigate(['/bitacora/parte']);
   }
 
   back(): void {

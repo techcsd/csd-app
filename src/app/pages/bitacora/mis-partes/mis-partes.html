@@ -19,7 +19,13 @@
           <span class="bit-row__chev">›</span>
         </button>
       } @empty {
-        <p class="mis-partes__muted">Todavía no tienes bitácoras.</p>
+        <app-empty-state
+          icon="📋"
+          title="Todavía no tienes bitácoras"
+          message="Cada día registras una bitácora de tu obra (personal, actividades, problemas y fotos). Aquí verás el historial de las que envíes."
+          ctaLabel="Nueva bitácora"
+          (action)="nueva()"
+        />
       }
     }
   </div>

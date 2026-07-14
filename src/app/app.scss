@@ -2,3 +2,43 @@
   display: block;
   height: 100dvh;
 }
+
+.version-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--color-secondary);
+}
+.version-gate__card {
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 360px;
+}
+.version-gate__icon {
+  font-size: 56px;
+}
+.version-gate__title {
+  margin: 12px 0 8px;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.version-gate__msg {
+  margin: 0 0 20px;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-option);
+}
+.version-gate__btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--fs-option);
+  font-weight: 700;
+}
