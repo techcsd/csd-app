@@ -1,22 +1,28 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
-import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
-import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
+import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selector-categorias';
 import { SelectList } from '../../../shared/ui/select-list/select-list';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ArticuloCat, Bodega, CategoriaInv, MovItem } from '../../../core/models/inventario.model';
+import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
+import { compartirTexto } from '../../../core/util/share';
 
-/** Register a direct material entry (entrada) into a bodega. Offline-first. */
+interface GrupoResumen {
+  categoria: string;
+  lineas: CartLinea[];
+}
+
+/** Entrada de material por el patrón de HOJAS: selección → resumen → éxito. */
 @Component({
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BigConfirm, ArticuloPicker, SelectList],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })
@@ -29,19 +35,36 @@ export class EntradaPage {
   private location = inject(Location);
 
   readonly motivos = ['Compra local', 'Devolución de obra', 'Sobrante', 'Otro'];
+
+  hoja = signal<'seleccion' | 'resumen' | 'exito'>('seleccion');
+
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
   motivo = signal('');
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
-  cart = signal<MovItem[]>([]);
+  cart = signal<CartLinea[]>([]);
   foto = signal<CapturedPhoto | null>(null);
   capturing = signal(false);
   submitting = signal(false);
-  done = signal(false);
+  confirmSalir = signal(false);
+  sharing = signal(false);
 
-  cartIds = computed(() => this.cart().map((c) => c.articulo_id));
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
+
+  grupos = computed<GrupoResumen[]>(() => {
+    const nombre = new Map(this.categorias().map((c) => [c.id, c.nombre]));
+    const byCat = new Map<string, CartLinea[]>();
+    for (const l of this.cart()) {
+      const key = l.categoria_id != null ? nombre.get(l.categoria_id) ?? 'Otros' : 'Sin categoría';
+      const arr = byCat.get(key) ?? [];
+      arr.push(l);
+      byCat.set(key, arr);
+    }
+    return [...byCat.entries()].map(([categoria, lineas]) => ({ categoria, lineas }));
+  });
+
+  totalItems = computed(() => this.cart().length);
 
   constructor() {
     void this.init();
@@ -59,19 +82,48 @@ export class EntradaPage {
     if (b.length === 1) this.bodegaId.set(b[0].id);
   }
 
-  add(a: ArticuloCat): void {
-    this.cart.update((c) => [...c, { articulo_id: a.id, nombre: a.nombre, unidad: a.unidad, cantidad: 1 }]);
+  irResumen(): void {
+    this.hoja.set('resumen');
   }
-  setCantidad(i: number, v: number): void {
-    this.cart.update((c) => c.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, v || 0) } : x)));
+
+  volverSeleccion(): void {
+    this.hoja.set('seleccion');
   }
-  ajustar(i: number, delta: number): void {
-    this.cart.update((c) =>
-      c.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, (x.cantidad || 0) + delta) } : x)),
+
+  intentarSalir(): void {
+    if (this.cart().length > 0) this.confirmSalir.set(true);
+    else this.finish();
+  }
+
+  confirmarSalir(): void {
+    this.confirmSalir.set(false);
+    this.finish();
+  }
+
+  cancelarSalir(): void {
+    this.confirmSalir.set(false);
+  }
+
+  ajustar(articuloId: string, delta: number): void {
+    this.cart.update((list) =>
+      list
+        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.max(0, l.cantidad + delta) } : l))
+        .filter((l) => l.cantidad > 0),
     );
   }
-  remove(i: number): void {
-    this.cart.update((c) => c.filter((_, idx) => idx !== i));
+
+  setCantidad(articuloId: string, v: number): void {
+    const cant = Math.max(0, v || 0);
+    this.cart.update((list) =>
+      list
+        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l))
+        .filter((l) => l.cantidad > 0),
+    );
+  }
+
+  quitar(articuloId: string): void {
+    this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
+    if (!this.cart().length) this.hoja.set('seleccion');
   }
 
   async addFoto(): Promise<void> {
@@ -89,17 +141,13 @@ export class EntradaPage {
     }
   }
 
-  get online(): boolean {
-    return this.network.online();
-  }
-
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
       this.toast.error('Elige el almacén.');
       return;
     }
-    const items = this.cart().filter((c) => c.cantidad > 0);
+    const items = this.cart().filter((l) => l.cantidad > 0);
     if (!items.length) {
       this.toast.error('Agrega al menos un material.');
       return;
@@ -109,10 +157,10 @@ export class EntradaPage {
       await this.inventario.enqueueEntrada({
         bodegaId: this.bodegaId(),
         referencia: this.motivo() || null,
-        items: items.map((c) => ({ articulo_id: c.articulo_id, cantidad: c.cantidad })),
+        items: items.map((l) => ({ articulo_id: l.articulo_id, cantidad: l.cantidad })),
         foto: this.foto()?.blob ?? null,
       });
-      this.done.set(true);
+      this.hoja.set('exito');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
     } finally {
@@ -120,10 +168,50 @@ export class EntradaPage {
     }
   }
 
+  private resumenTexto(): string {
+    const alm = this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? '—';
+    const fecha = new Date().toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' });
+    const lineas = this.grupos()
+      .map(
+        (g) =>
+          `*${g.categoria}*\n` +
+          g.lineas.map((l) => `  • ${l.nombre}: ${l.cantidad} ${l.unidad}`).join('\n'),
+      )
+      .join('\n');
+    const ref = this.motivo() ? `\n¿De dónde viene?: ${this.motivo()}` : '';
+    return `📦 *Entrada de material — CSD*\nAlmacén: ${alm}\nFecha: ${fecha}${ref}\n\n${lineas}\n\nTotal: ${this.totalItems()} artículo(s)`;
+  }
+
+  async compartir(): Promise<void> {
+    if (this.sharing()) return;
+    this.sharing.set(true);
+    try {
+      const res = await compartirTexto('Entrada de material', this.resumenTexto());
+      if (res.fallback) this.toast.success('Resumen copiado. Pégalo en WhatsApp.');
+    } catch {
+      this.toast.error('No se pudo compartir.');
+    } finally {
+      this.sharing.set(false);
+    }
+  }
+
+  nuevoRegistro(): void {
+    const old = this.foto();
+    if (old) URL.revokeObjectURL(old.previewUrl);
+    this.cart.set([]);
+    this.motivo.set('');
+    this.foto.set(null);
+    this.hoja.set('seleccion');
+  }
+
   back(): void {
     this.location.back();
   }
   finish(): void {
     void this.router.navigate(['/inventario'], { replaceUrl: true });
+  }
+
+  get online(): boolean {
+    return this.network.online();
   }
 }

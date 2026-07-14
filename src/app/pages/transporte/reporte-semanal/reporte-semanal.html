@@ -7,6 +7,13 @@
         <h1 class="rsem__ok-title">Reporte semanal enviado</h1>
         <p class="rsem__ok-sub">{{ vehiculo()?.placa }}</p>
       </div>
+      @if (resultadoEnviado() !== 'aprobado') {
+        <div class="rsem__band rsem__band--warn">
+          ⚠ Marcaste hallazgos. Se envió un aviso a mantenimiento para revisar el vehículo.
+        </div>
+      } @else {
+        <div class="rsem__band rsem__band--ok">✓ Todo en orden.</div>
+      }
       @if (!online) {
         <p class="rsem__note">Sin señal. Se enviará solo al reconectar.</p>
       }
@@ -71,19 +78,7 @@
           <p class="rsem__hint">Último registrado: {{ odometro() | number: '1.0-0' }} km</p>
         }
 
-        <label class="field-label">Nivel de combustible</label>
-        <div class="rsem__niveles">
-          @for (n of niveles; track n) {
-            <app-option-button
-              icon="⛽"
-              [label]="n"
-              [selected]="nivel() === n"
-              (pressed)="nivel.set(n)"
-            />
-          }
-        </div>
-
-        <label class="field-label" for="obs">Observación (opcional)</label>
+        <label class="field-label" for="obs">Algún comentario (opcional)</label>
         <textarea
           id="obs"
           class="field rsem__obs"

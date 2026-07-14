@@ -182,3 +182,20 @@
   flex: 0 0 auto;
   min-width: 110px;
 }
+
+.rsem__band {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-align: center;
+}
+.rsem__band--ok {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+.rsem__band--warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}

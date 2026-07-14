@@ -46,6 +46,15 @@ export interface MovItem {
   cantidad: number;
 }
 
+/** A cart line for the category-sheet selector (keeps categoria for grouping). */
+export interface CartLinea {
+  articulo_id: string;
+  nombre: string;
+  unidad: string;
+  categoria_id: number | null;
+  cantidad: number;
+}
+
 export type Urgencia = 'normal' | 'urgente';
 
 export interface SolicitudItem {

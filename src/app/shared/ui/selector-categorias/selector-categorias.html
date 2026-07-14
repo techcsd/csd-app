@@ -1,0 +1,80 @@
+<!-- Hoja 1: categorías -->
+@if (hoja() === 'categorias') {
+  <div class="selcat">
+    <div class="selcat__grid">
+      @for (c of chips(); track c.id) {
+        <button
+          type="button"
+          class="selcat__cat"
+          [class.selcat__cat--destacada]="c.destacada"
+          (click)="abrirCategoria(c.id)"
+        >
+          @if (c.seleccionados > 0) {
+            <span class="selcat__badge">{{ c.seleccionados }}</span>
+          }
+          <span class="selcat__cat-name">{{ c.nombre }}</span>
+          <span class="selcat__cat-count">{{ c.disponibles }} artículos</span>
+        </button>
+      } @empty {
+        <p class="selcat__muted">No hay materiales para elegir.</p>
+      }
+    </div>
+
+    <footer class="selcat__bar">
+      <button type="button" class="btn-ghost selcat__bar-cancel" (click)="onCancelar()">Cancelar</button>
+      <div class="selcat__bar-total">
+        🛒 {{ totalCarrito() }} {{ totalCarrito() === 1 ? 'artículo' : 'artículos' }}
+      </div>
+      <button type="button" class="btn-cta selcat__bar-next" [disabled]="totalCarrito() === 0" (click)="onSiguiente()">
+        Siguiente
+      </button>
+    </footer>
+  </div>
+}
+
+<!-- Hoja 2: una categoría -->
+@if (hoja() === 'categoria') {
+  <div class="selcat">
+    <header class="selcat__subhead">
+      <button type="button" class="selcat__subback" (click)="volverCategorias()" aria-label="Volver">←</button>
+      <h2 class="selcat__subtitle">{{ nombreCategoria() }}</h2>
+    </header>
+
+    <input
+      class="field selcat__search"
+      type="search"
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event)"
+      placeholder="🔎 Buscar en esta categoría"
+    />
+
+    <div class="selcat__list">
+      @for (a of articulosVisibles(); track a.id) {
+        <div class="selcat__item" [class.selcat__item--on]="cantidadDe(a.id) > 0">
+          <div class="selcat__item-info">
+            <span class="selcat__item-name">{{ a.nombre }}</span>
+            <span class="selcat__item-unit">{{ a.unidad }}</span>
+          </div>
+          <div class="selcat__item-qty">
+            <button type="button" class="selcat__step" (click)="ajustar(a, -1)" aria-label="Menos">−</button>
+            <input
+              class="field selcat__qty"
+              type="number"
+              inputmode="decimal"
+              [ngModel]="cantidadDe(a.id)"
+              (ngModelChange)="setCantidad(a, $event)"
+            />
+            <button type="button" class="selcat__step selcat__step--add" (click)="ajustar(a, 1)" aria-label="Más">+</button>
+          </div>
+        </div>
+      } @empty {
+        <p class="selcat__muted">No se encontró ese material.</p>
+      }
+    </div>
+
+    <footer class="selcat__bar">
+      <div class="selcat__bar-total">🛒 {{ totalCarrito() }}</div>
+      <button type="button" class="btn-cta selcat__bar-next" (click)="volverCategorias()">Listo</button>
+    </footer>
+  </div>
+}
