@@ -35,24 +35,27 @@
       @if (step() === 1) {
         <h1 class="screen__title">Revisión rápida</h1>
         <p class="screen__subtitle">Toca OK, Falla o N/A en cada punto.</p>
-        @for (it of items(); track it.id) {
-          <div class="rsem__item">
-            <span class="rsem__item-label">
-              {{ it.etiqueta }}
-              @if (it.es_critico) { <b class="rsem__crit">· CRÍTICO</b> }
-            </span>
-            <div class="rsem__opts">
-              @for (o of opciones; track o.valor) {
-                <app-option-button
-                  [icon]="o.icon"
-                  [label]="o.label"
-                  [tone]="o.tone"
-                  [selected]="respuestas()[it.id] === o.valor"
-                  (pressed)="setRespuesta(it.id, o.valor)"
-                />
-              }
+        @for (g of seccionGrupos(); track g.seccion) {
+          <h2 class="rsem__section">{{ g.seccion }}</h2>
+          @for (it of g.items; track it.id) {
+            <div class="rsem__item">
+              <span class="rsem__item-label">
+                {{ it.etiqueta }}
+                @if (it.es_critico) { <b class="rsem__crit">· CRÍTICO</b> }
+              </span>
+              <div class="rsem__opts">
+                @for (o of opciones; track o.valor) {
+                  <app-option-button
+                    [icon]="o.icon"
+                    [label]="o.label"
+                    [tone]="o.tone"
+                    [selected]="respuestas()[it.id] === o.valor"
+                    (pressed)="setRespuesta(it.id, o.valor)"
+                  />
+                }
+              </div>
             </div>
-          </div>
+          }
         }
       }
 

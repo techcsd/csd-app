@@ -67,6 +67,23 @@ export class ReporteSemanalPage {
 
   items = computed<ChecklistPlantillaItem[]>(() => this.plantilla()?.items ?? []);
 
+  /**
+   * Ítems agrupados por sección, para mostrar los encabezados oficiales del papel
+   * del jefe (§B: cada pregunta va bajo su sección). Preserva el orden de la plantilla.
+   */
+  seccionGrupos = computed<{ seccion: string; items: ChecklistPlantillaItem[] }[]>(() => {
+    const grupos: { seccion: string; items: ChecklistPlantillaItem[] }[] = [];
+    for (const it of this.items()) {
+      let g = grupos.find((x) => x.seccion === it.seccion);
+      if (!g) {
+        g = { seccion: it.seccion, items: [] };
+        grupos.push(g);
+      }
+      g.items.push(it);
+    }
+    return grupos;
+  });
+
   pendientes = computed(() => this.semana().filter((v) => !v.tiene_reporte));
 
   todasContestadas = computed(() => {

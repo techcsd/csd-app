@@ -1,7 +1,8 @@
 # HANDOFF — CSD App
 
-## Actualización 1 (14/07 tarde) — Inventario por HOJAS + Reporte semanal v2 — build green, 17/17 tests 🚧 sin commit
-Sobre PROMPT-2 ya en main. `npm run build` limpio, `ng test` 17/17. **No se hizo commit/push** (a la espera de tu OK).
+## Actualización 1 (14/07 tarde) — Inventario por HOJAS + Reporte semanal v2 — ✅ en producción
+`npm run build` limpio. **Commiteado y pusheado a `main`** (merge `97a72f3` `feat/inventario-hojas`) → PWA desplegado a prod (Vercel `csd-app`, deploy `dpl_9JtVX4…` READY). El APK aún requiere bump/firma/publicación manual (no automatizable aquí).
+**Refinamiento (esta sesión):** el wizard del reporte semanal ahora **agrupa las preguntas por sección** (encabezados oficiales del papel §B) — antes era lista plana. Cambio solo de UI (`reporte-semanal` .ts/.html/.scss), build verde.
 
 **Fase 1 — Inventario navegación por "HOJAS" (rediseño UX de salida/entrada):**
 - Nuevo componente reutilizable `shared/ui/selector-categorias` (patrón hojas): hoja de categorías (destacadas primero, badge con # seleccionados por categoría, barra fija con total del carrito + Siguiente) → hoja de una categoría (solo sus artículos, buscador interno, stepper −/+, "Listo" vuelve conservando el carrito). Cart como `model()` de dos vías (lo posee la página, sobrevive a la navegación).
