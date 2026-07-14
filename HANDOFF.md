@@ -1,5 +1,21 @@
 # HANDOFF — CSD App
 
+## Actualización 1 (14/07 tarde) — Inventario por HOJAS + Reporte semanal v2 — build green, 17/17 tests 🚧 sin commit
+Sobre PROMPT-2 ya en main. `npm run build` limpio, `ng test` 17/17. **No se hizo commit/push** (a la espera de tu OK).
+
+**Fase 1 — Inventario navegación por "HOJAS" (rediseño UX de salida/entrada):**
+- Nuevo componente reutilizable `shared/ui/selector-categorias` (patrón hojas): hoja de categorías (destacadas primero, badge con # seleccionados por categoría, barra fija con total del carrito + Siguiente) → hoja de una categoría (solo sus artículos, buscador interno, stepper −/+, "Listo" vuelve conservando el carrito). Cart como `model()` de dos vías (lo posee la página, sobrevive a la navegación).
+- `salida` y `entrada` reescritas como máquina de hojas: selección → **resumen** (agrupado por categoría, editar stepper/quitar, almacén + nota/motivo, foto opcional) → **éxito** ("Completado con éxito" + **Compartir por WhatsApp** el resumen + "Nuevo registro"). Atrás/cancelar en cada hoja con confirmación si hay carrito.
+- `core/util/share.ts` (`compartirTexto` — @capacitor/share nativo / Web Share PWA / fallback a portapapeles). Sin cambios de BD (items multi-categoría ya iban en un jsonb; la categoría es solo agrupación UI).
+- `ArticuloPicker` sigue existiendo para pedir/conteo (no tocados).
+
+**Fase 2 — Reporte semanal plantilla v2 (PROMPT-3):** backend ya tiene `REPORTE-SEMANAL-V2` activa (9 ítems oficiales del papel) y V1 desactivada; el wizard la consume dinámicamente. Se **quitó el selector de combustible** (no estaba en prod; §B lo pide); km se mantiene; ítem 10 = comentario opcional (campo observación). La confirmación refleja hallazgos si hubo algún "NO".
+
+**Pendiente:** device-QA del flujo de hojas (multi-categoría, editar en resumen, compartir con/sin share nativo, offline) + reporte semanal v2. Bump/APK. Commit/push cuando lo apruebes.
+
+---
+
+
 ## Mejoras 14/07/2026 (reunión jefe — R1–R29) — build green, 17/17 tests, backend aplicado 🚧 falta device-QA
 Implementadas 8 fases sobre Flota v2. `npm run build` limpio y `ng test` 17/17. Migraciones aplicadas a la BD prod compartida (`node scripts/apply-migration.mjs`).
 

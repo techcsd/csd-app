@@ -16,7 +16,6 @@ import { ToastService } from '../../../core/services/toast.service';
 import {
   ChecklistPlantilla,
   ChecklistPlantillaItem,
-  NIVELES_COMBUSTIBLE_PREUSO,
   RespuestaValor,
   RESPUESTA_OPCIONES,
 } from '../../../core/models/checklist-preuso.model';
@@ -47,7 +46,6 @@ export class ReporteSemanalPage {
   private location = inject(Location);
 
   readonly total = TOTAL_STEPS;
-  readonly niveles = NIVELES_COMBUSTIBLE_PREUSO;
   readonly opciones = RESPUESTA_OPCIONES;
 
   loading = signal(true);
@@ -61,10 +59,11 @@ export class ReporteSemanalPage {
   step = signal(1);
   respuestas = signal<Record<string, RespuestaValor>>({});
   km = signal<number | null>(null);
-  nivel = signal<string | null>(null);
   observacion = signal('');
   submitting = signal(false);
   done = signal(false);
+  /** Verdict of the submitted report, for the confirmation screen (R: NO → hallazgo). */
+  resultadoEnviado = signal<'aprobado' | 'con_hallazgos' | 'bloqueado'>('aprobado');
 
   items = computed<ChecklistPlantillaItem[]>(() => this.plantilla()?.items ?? []);
 
@@ -106,7 +105,6 @@ export class ReporteSemanalPage {
     this.step.set(1);
     this.respuestas.set({});
     this.km.set(null);
-    this.nivel.set(null);
     this.observacion.set('');
     // Baseline km for coherence: the vehicle's current odometer.
     const veh = await this.vehiculos.getVehiculo(v.vehiculo_id);
@@ -155,10 +153,6 @@ export class ReporteSemanalPage {
       this.toast.error('Escribe el kilometraje actual.');
       return;
     }
-    if (!this.nivel()) {
-      this.toast.error('Elige el nivel de combustible.');
-      return;
-    }
     this.submitting.set(true);
     try {
       const r = this.respuestas();
@@ -170,6 +164,7 @@ export class ReporteSemanalPage {
         comentario: null,
         orden: it.orden,
       }));
+      const resultado = this.resultadoLocal();
       await this.reportes.enqueue({
         vehiculoId: veh.vehiculo_id,
         placa: veh.placa,
@@ -177,11 +172,12 @@ export class ReporteSemanalPage {
         conductorId: this.conductorId,
         fecha: new Date().toISOString().slice(0, 10),
         kilometraje: this.km(),
-        nivelCombustible: this.nivel(),
+        nivelCombustible: null,
         observacion: this.observacion().trim() || null,
         respuestas,
-        resultado: this.resultadoLocal(),
+        resultado,
       });
+      this.resultadoEnviado.set(resultado);
       this.done.set(true);
       // Refresh the compliance list for when the user goes back.
       this.semana.set(await this.reportes.getSemana());
