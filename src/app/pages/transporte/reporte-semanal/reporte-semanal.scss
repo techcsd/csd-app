@@ -54,6 +54,19 @@
   color: var(--color-text-secondary);
 }
 
+.rsem__section {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+  margin: 18px 0 8px;
+}
+
+.rsem__section:first-of-type {
+  margin-top: 6px;
+}
+
 .rsem__item {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
