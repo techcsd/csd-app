@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.3.2';
-const VERSION_CODE = 16;
-const CHANGELOG = 'Pre-uso: bloqueo si no estás autorizado para la clase del vehículo, y umbrales de Flota configurables.';
+const VERSION = '1.4.0';
+const VERSION_CODE = 17;
+const CHANGELOG = 'Inventario más fácil: entrada/salida por categorías (Clavos, Madera, Acero primero) con pasos hoja-por-hoja, resumen editable antes de confirmar y compartir por WhatsApp. Reporte semanal con las preguntas oficiales agrupadas por sección.';
 const RELEASED_AT = '2026-07-14';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
