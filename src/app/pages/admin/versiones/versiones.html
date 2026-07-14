@@ -51,8 +51,18 @@
               @if (v.titulo) { <p class="hv-item__title">{{ v.titulo }}</p> }
               @if (v.cambios.length) {
                 <ul class="hv-cambios">
-                  @for (c of v.cambios; track c) { <li>{{ c }}</li> }
+                  @for (c of v.cambios; track c.d) {
+                    <li class="hv-cambio">
+                      <span class="hv-tag hv-tag--{{ c.t }}">{{ tagLabel(c.t) }}</span>
+                      <span class="hv-cambio__txt">{{ c.d }}</span>
+                    </li>
+                  }
                 </ul>
+              }
+              @if (v.plataforma === 'movil' && v.apk_url) {
+                <a class="hv-action" [href]="v.apk_url" target="_blank" rel="noopener">⬇️ Descargar APK v{{ v.version }}</a>
+              } @else if (v.plataforma === 'web' && v.url) {
+                <a class="hv-action" [href]="v.url" target="_blank" rel="noopener">🔗 Abrir esta versión</a>
               }
             </div>
           </li>

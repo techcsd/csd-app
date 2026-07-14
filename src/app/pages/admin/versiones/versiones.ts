@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
-import { VersionService, VersionHistorial, Plataforma } from '../../../core/services/version.service';
+import { VersionService, VersionHistorial, Plataforma, CAMBIO_LABEL } from '../../../core/services/version.service';
 
 /**
  * Historial de versiones (línea de tiempo). Solo admin (ruta gated por
@@ -47,6 +47,10 @@ export class AdminVersionesPage {
 
   setPlataforma(p: Plataforma): void {
     this.plataforma.set(p);
+  }
+
+  tagLabel(t: string): string {
+    return CAMBIO_LABEL[t] ?? t;
   }
 
   /** dd/MM/yyyy sin pasar por new Date() (evita corrimientos de zona horaria). */
