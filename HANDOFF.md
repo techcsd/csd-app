@@ -1,5 +1,12 @@
 # HANDOFF — CSD App
 
+## Historial de versiones (timeline admin) — ✅ en prod
+Página **solo admin** `admin/versiones` (`moduleGuard('admin')`): línea de tiempo con tabs
+App móvil / Web, cada versión con fecha + cambios. Lee `sgc.app_versiones` (extendida en SGC:
+`plataforma`/`fecha`/`titulo`/`cambios`; seed histórico curado). `VersionService.historial()` +
+tile en el hub admin + ruta. Espeja la web SGC (`admin/historial-versiones`). Build verde.
+La 1.4.0 móvil ya está en la tabla (preparada, sin publicar — publícala desde SGC → app-versiones).
+
 ## Actualización 1 (14/07 tarde) — Inventario por HOJAS + Reporte semanal v2 — ✅ en producción
 `npm run build` limpio. **Commiteado y pusheado a `main`** (merge `97a72f3` `feat/inventario-hojas`) → PWA desplegado a prod (Vercel `csd-app`, deploy `dpl_9JtVX4…` READY). El APK aún requiere bump/firma/publicación manual (no automatizable aquí).
 **Refinamiento (esta sesión):** el wizard del reporte semanal ahora **agrupa las preguntas por sección** (encabezados oficiales del papel §B) — antes era lista plana. Cambio solo de UI (`reporte-semanal` .ts/.html/.scss), build verde.

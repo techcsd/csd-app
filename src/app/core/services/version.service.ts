@@ -12,6 +12,18 @@ export interface VersionPublicada {
   version_minima: string | null;
 }
 
+export type Plataforma = 'web' | 'movil';
+
+/** Fila del historial de versiones (timeline admin). */
+export interface VersionHistorial {
+  id: string;
+  version: string;
+  plataforma: Plataforma;
+  fecha: string | null;
+  titulo: string | null;
+  cambios: string[];
+}
+
 /**
  * Staged rollout (R15). The "published" version is decided by admins in SGC and
  * is independent from the internal build. On startup we read version_publicada()
@@ -59,6 +71,17 @@ export class VersionService {
 
   get notas(): string | null {
     return this.info()?.notas ?? null;
+  }
+
+  /** Historial de versiones (ambas plataformas), más reciente primero. Solo admin. */
+  async historial(): Promise<VersionHistorial[]> {
+    const { data, error } = await this.supabase.client
+      .from('app_versiones')
+      .select('id, version, plataforma, fecha, titulo, cambios')
+      .order('fecha', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data as unknown as VersionHistorial[]) ?? [];
   }
 }
 
