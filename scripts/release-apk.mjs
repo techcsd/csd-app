@@ -32,10 +32,10 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.2.2';
-const VERSION_CODE = 13;
-const CHANGELOG = 'Arreglado el envío de checklists de pre-uso e inspección de vehículo (la firma no se guardaba), sincronización más confiable sin señal, y mejoras de vista en el teléfono.';
-const RELEASED_AT = '2026-07-13';
+const VERSION = '1.3.0';
+const VERSION_CODE = 14;
+const CHANGELOG = 'Checklist de liberación (CL) desde la app, pre-uso v2 con reporte PDF, registro de combustible v2, y las correcciones de envío de firma y sincronización.';
+const RELEASED_AT = '2026-07-14';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const bucket = 'app-releases';
