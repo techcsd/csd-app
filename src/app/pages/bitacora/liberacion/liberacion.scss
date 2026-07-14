@@ -1,0 +1,136 @@
+.liber {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+
+  &__muted {
+    color: var(--muted, #71717a);
+    font-size: 0.95rem;
+  }
+
+  &__section {
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--muted, #71717a);
+    margin: 18px 0 8px;
+  }
+
+  &__item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border, #e4e4e7);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__item-label {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  &__opts {
+    display: flex;
+    gap: 10px;
+  }
+
+  &__comment {
+    margin-top: 2px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  &__obs {
+    margin-bottom: 8px;
+  }
+
+  &__foto-list,
+  &__firma-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--surface-2, #f4f4f5);
+      border-radius: 10px;
+      font-size: 0.92rem;
+
+      em {
+        color: var(--muted, #71717a);
+        font-style: normal;
+        flex: 1;
+      }
+    }
+  }
+
+  &__foto-list--no {
+    background: #fdeaea;
+  }
+
+  &__foto-del {
+    margin-left: auto;
+    border: none;
+    background: none;
+    color: var(--muted, #71717a);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 2px 6px;
+  }
+
+  &__foto-add {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    background: var(--surface-2, #f4f4f5);
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  &__add-btn {
+    align-self: flex-start;
+  }
+
+  &__warn {
+    color: #b45309;
+    font-size: 0.9rem;
+    background: #fef3c7;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  &__nav {
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border, #e4e4e7);
+
+    .btn-cta {
+      flex: 1;
+    }
+  }
+
+  &__back {
+    flex: 0 0 auto;
+  }
+}
