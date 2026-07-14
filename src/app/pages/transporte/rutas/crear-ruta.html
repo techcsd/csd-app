@@ -1,0 +1,121 @@
+@if (done()) {
+  <div class="screen cruta">
+    <div class="screen__body">
+      <div class="cruta__ok">
+        <span class="cruta__ok-check">✓</span>
+        <h1 class="cruta__ok-title">Ruta creada</h1>
+        <p class="cruta__ok-sub">{{ origen() }} → {{ destinoModo() === 'obra' ? '' : destinoLibre() }}</p>
+      </div>
+      @if (!online) {
+        <p class="cruta__note">Sin señal. Se creará al reconectar.</p>
+      }
+    </div>
+    <footer class="cruta__nav">
+      <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+    </footer>
+  </div>
+} @else {
+  <div class="screen cruta">
+    <header class="cruta__header">
+      <button type="button" class="cruta__hback" (click)="back()" aria-label="Atrás">←</button>
+      <span class="cruta__hicon">🧭</span>
+      <h1 class="cruta__htitle">Crear ruta</h1>
+    </header>
+
+    <div class="screen__body">
+      @if (loading()) {
+        <app-skeleton [rows]="4" />
+      } @else if (!vehiculoOpts().length) {
+        <app-empty-state
+          icon="🚚"
+          title="No tienes vehículos"
+          message="Para crear una ruta primero necesitas un vehículo asignado."
+          ctaLabel="Asignarme un vehículo"
+          (action)="irAsignar()"
+        />
+      } @else {
+        <app-select-list
+          label="Vehículo"
+          icon="🚙"
+          [options]="vehiculoOpts()"
+          [selectedId]="vehiculoId()"
+          (picked)="vehiculoId.set($event)"
+        />
+
+        <label class="field-label" for="origen">Origen</label>
+        <input
+          id="origen"
+          class="field"
+          type="text"
+          [ngModel]="origen()"
+          (ngModelChange)="origen.set($event)"
+          placeholder="¿Desde dónde sales?"
+        />
+
+        <label class="field-label">Destino</label>
+        <div class="cruta__modo">
+          <app-option-button
+            icon="🏗️"
+            label="Una obra"
+            [selected]="destinoModo() === 'obra'"
+            (pressed)="destinoModo.set('obra')"
+          />
+          <app-option-button
+            icon="📍"
+            label="Otro lugar"
+            [selected]="destinoModo() === 'libre'"
+            (pressed)="destinoModo.set('libre')"
+          />
+        </div>
+
+        @if (destinoModo() === 'obra') {
+          <app-select-list
+            label="Obra de destino"
+            icon="🏗️"
+            [options]="proyectoOpts()"
+            [selectedId]="destinoProyectoId()"
+            (picked)="destinoProyectoId.set($event)"
+          />
+        } @else {
+          <input
+            class="field"
+            type="text"
+            [ngModel]="destinoLibre()"
+            (ngModelChange)="destinoLibre.set($event)"
+            placeholder="¿A dónde vas?"
+          />
+        }
+
+        <label class="field-label" for="km">Kilómetros estimados (opcional)</label>
+        <input
+          id="km"
+          class="field"
+          type="number"
+          inputmode="numeric"
+          [ngModel]="km()"
+          (ngModelChange)="km.set($event)"
+          placeholder="0"
+        />
+
+        <label class="field-label" for="notas">Notas (opcional)</label>
+        <textarea
+          id="notas"
+          class="field cruta__notas"
+          rows="3"
+          [ngModel]="notas()"
+          (ngModelChange)="notas.set($event)"
+          placeholder="Algo que recordar de la ruta…"
+        ></textarea>
+      }
+    </div>
+
+    @if (vehiculoOpts().length) {
+      <footer class="cruta__nav">
+        <button type="button" class="btn-ghost cruta__back" (click)="back()">Cancelar</button>
+        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="guardar()">
+          {{ submitting() ? 'Guardando…' : 'Crear ruta' }}
+        </button>
+      </footer>
+    }
+  </div>
+}

@@ -2,6 +2,12 @@
   background: var(--color-bg);
 }
 
+.conduces__crear {
+  margin-bottom: 8px;
+  justify-content: flex-start;
+  font-size: var(--fs-option);
+}
+
 .conduces__header {
   display: flex;
   align-items: center;

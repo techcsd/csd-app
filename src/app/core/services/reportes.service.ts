@@ -10,6 +10,8 @@ export interface ReporteCaptura {
   tipo: ReporteTipo;
   asunto: string;
   descripcion: string;
+  /** Optional evidence photos (compressed blobs), uploaded to the `reportes` bucket. */
+  fotos?: Blob[];
 }
 
 /**
@@ -33,21 +35,32 @@ export class ReportesService {
     const asunto = input.asunto.trim();
     const descripcion = input.descripcion.trim();
 
+    const fotos = (input.fotos ?? []).map((blob, i) => ({
+      id: crypto.randomUUID(),
+      bucket: 'reportes',
+      path: `${id}/foto_${i}.jpg`,
+      slot: `foto_${i}`,
+      blob,
+    }));
+
     await this.sync.enqueue({
       id,
       tipo_op: 'reporte',
       payload: { id, tipo: input.tipo, asunto, descripcion },
+      fotos,
       resumen: { tipo: input.tipo, asunto },
     });
   }
 
   private registerHandler(): void {
-    this.sync.register('reporte', async (payload) => {
+    this.sync.register('reporte', async (payload, photoPaths) => {
+      const fotos = Object.values(photoPaths).map((path) => ({ storage_path: path }));
       const { error } = await this.supabase.client.rpc('crear_reporte_app', {
         p_id: payload['id'],
         p_tipo: payload['tipo'],
         p_asunto: payload['asunto'],
         p_descripcion: payload['descripcion'],
+        p_fotos: fotos,
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);

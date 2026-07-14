@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
@@ -12,7 +13,7 @@ import { Conduce, RutaHoy } from '../../../core/models/transporte.model';
   selector: 'app-conduces',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, SyncBar, DecimalPipe],
+  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe],
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
@@ -43,6 +44,10 @@ export class ConducesPage {
 
   entregar(conduce: Conduce): void {
     void this.router.navigate(['/transporte/conduces', conduce.id]);
+  }
+
+  crearRuta(): void {
+    void this.router.navigate(['/transporte/rutas/crear']);
   }
 
   async ruta(rutaId: string, estado: 'en_curso' | 'completada'): Promise<void> {

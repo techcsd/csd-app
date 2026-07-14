@@ -1,0 +1,71 @@
+<div class="screen pveh">
+  <header class="pveh__header">
+    <button type="button" class="pveh__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="pveh__icon">🚙</span>
+    <h1 class="pveh__title">Perfil del vehículo</h1>
+  </header>
+
+  <div class="screen__body">
+    <div class="pveh__veh">
+      <span class="pveh__placa">{{ placa() || '—' }}</span>
+      <span class="pveh__modelo">{{ modelo() }}</span>
+    </div>
+
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (!stats()) {
+      <app-empty-state
+        icon="📊"
+        title="Sin datos todavía"
+        message="Cuando se registren checklists, combustible o mantenimientos de este vehículo, verás aquí sus estadísticas."
+      />
+    } @else {
+      <div class="pveh__cards">
+        <div class="pveh__card">
+          <span class="pveh__label">Kilometraje</span>
+          <span class="pveh__value">{{ stats()!.km_actual | number: '1.0-0' }} km</span>
+        </div>
+        <div class="pveh__card">
+          <span class="pveh__label">Echadas</span>
+          <span class="pveh__value">{{ stats()!.combustible_echadas }}</span>
+          @if (stats()!.combustible_galones != null) {
+            <span class="pveh__sub">{{ stats()!.combustible_galones | number: '1.0-1' }} gal</span>
+          }
+        </div>
+        <div class="pveh__card">
+          <span class="pveh__label">Rendimiento</span>
+          @if (stats()!.rendimiento_promedio != null) {
+            <span class="pveh__value">{{ stats()!.rendimiento_promedio | number: '1.1-2' }} km/gal</span>
+          } @else { <span class="pveh__value pveh__value--muted">—</span> }
+        </div>
+        <div class="pveh__card">
+          <span class="pveh__label">Costo por km</span>
+          @if (stats()!.costo_por_km_promedio != null) {
+            <span class="pveh__value">RD$ {{ stats()!.costo_por_km_promedio | number: '1.2-2' }}</span>
+          } @else { <span class="pveh__value pveh__value--muted">—</span> }
+        </div>
+        <div class="pveh__card">
+          <span class="pveh__label">Checklists</span>
+          <span class="pveh__value">{{ stats()!.checklists_total }}</span>
+          @if (stats()!.checklists_bloqueos > 0) {
+            <span class="pveh__sub pveh__sub--warn">{{ stats()!.checklists_bloqueos }} bloqueo(s)</span>
+          }
+        </div>
+        <div class="pveh__card">
+          <span class="pveh__label">Mantenimientos</span>
+          <span class="pveh__value">{{ stats()!.mantenimientos_total }}</span>
+        </div>
+        <div class="pveh__card">
+          <span class="pveh__label">Próx. mantenimiento</span>
+          @if (stats()!.proximo_mantenimiento_km != null) {
+            <span class="pveh__value">{{ stats()!.proximo_mantenimiento_km | number: '1.0-0' }} km</span>
+          } @else { <span class="pveh__value pveh__value--muted">—</span> }
+        </div>
+        <div class="pveh__card">
+          <span class="pveh__label">Asignados</span>
+          <span class="pveh__value">{{ stats()!.asignaciones_activas }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

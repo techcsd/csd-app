@@ -3,10 +3,12 @@ import { Router } from '@angular/router';
 import { PinPad } from '../../../shared/ui/pin-pad/pin-pad';
 import { PinService, MAX_PIN_ATTEMPTS } from '../../../core/services/pin.service';
 import { SessionService } from '../../../core/services/session.service';
+import { BiometricService } from '../../../core/services/biometric.service';
 import { ToastService } from '../../../core/services/toast.service';
 
 /**
- * Daily re-entry. PIN only — no password, no network required. After
+ * Daily re-entry. PIN, plus optional biometric unlock (R10) that only confirms
+ * the device owner — the PIN is always available as the fallback. After
  * MAX_PIN_ATTEMPTS failures we wipe the session and force a full login.
  */
 @Component({
@@ -20,11 +22,32 @@ import { ToastService } from '../../../core/services/toast.service';
 export class PinUnlockPage {
   private pin = inject(PinService);
   private session = inject(SessionService);
+  private biometric = inject(BiometricService);
   private router = inject(Router);
   private toast = inject(ToastService);
 
   value = signal('');
   attemptsLeft = signal(MAX_PIN_ATTEMPTS);
+  biometriaDisponible = signal(false);
+
+  constructor() {
+    void this.tryBiometric();
+  }
+
+  /** Offer biometric unlock on entry when the user enabled it. PIN stays available. */
+  private async tryBiometric(): Promise<void> {
+    if (!(await this.biometric.isActive())) return;
+    this.biometriaDisponible.set(true);
+    await this.unlockConHuella();
+  }
+
+  async unlockConHuella(): Promise<void> {
+    const ok = await this.biometric.authenticate('Desbloquea CSD con tu huella o rostro');
+    if (ok) {
+      this.session.markUnlocked();
+      await this.router.navigate(['/home']);
+    }
+  }
 
   async onCompleted(entered: string): Promise<void> {
     const ok = await this.pin.verify(entered);

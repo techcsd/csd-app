@@ -1,0 +1,80 @@
+<div class="screen almacenes">
+  <header class="almacenes__header">
+    <button type="button" class="almacenes__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="almacenes__icon">🏬</span>
+    <h1 class="almacenes__title">Almacenes</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (formOpen()) {
+      <div class="almacenes__form">
+        <h2 class="almacenes__form-title">{{ editId() ? 'Editar almacén' : 'Nuevo almacén' }}</h2>
+
+        <label class="field-label" for="nom">Nombre</label>
+        <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="onNombre($event)" placeholder="Ej. Almacén central" />
+        @if (nombrePreview && nombrePreview !== nombre()) {
+          <p class="almacenes__hint">Se guardará como: <b>{{ nombrePreview }}</b></p>
+        }
+
+        <label class="field-label" for="ubi">Ubicación (opcional)</label>
+        <input id="ubi" class="field" type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)" placeholder="¿Dónde está?" />
+
+        <label class="field-label" for="desc">Descripción (opcional)</label>
+        <textarea id="desc" class="field almacenes__area" rows="2" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"></textarea>
+
+        <div class="almacenes__form-nav">
+          <button type="button" class="btn-ghost" (click)="cancelar()">Cancelar</button>
+          <button type="button" class="btn-cta" [disabled]="saving()" (click)="guardar()">
+            {{ saving() ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    } @else {
+      <button type="button" class="btn-cta almacenes__new" (click)="nuevo()">➕ Nuevo almacén</button>
+
+      @if (loading()) {
+        <app-skeleton [rows]="4" />
+      } @else if (!bodegas().length) {
+        <app-empty-state
+          icon="🏬"
+          title="No hay almacenes"
+          message="Crea el primer almacén para poder registrar entradas, salidas y existencias de materiales."
+          ctaLabel="Nuevo almacén"
+          (action)="nuevo()"
+        />
+      } @else {
+        @for (b of bodegas(); track b.id) {
+          <div class="almacenes__row" [class.almacenes__row--off]="!b.activo">
+            <div class="almacenes__info">
+              <span class="almacenes__nombre">
+                {{ b.nombre }}
+                @if (b.es_principal) { <span class="almacenes__tag">Principal</span> }
+                @if (!b.activo) { <span class="almacenes__tag almacenes__tag--off">Inactivo</span> }
+              </span>
+              @if (b.ubicacion) { <span class="almacenes__ubi">📍 {{ b.ubicacion }}</span> }
+            </div>
+            <div class="almacenes__actions">
+              <button type="button" class="btn-ghost" (click)="editar(b)">Editar</button>
+              <button type="button" class="btn-ghost" (click)="b.activo ? pedirDesactivar(b) : toggleActivo(b)">
+                {{ b.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+            </div>
+          </div>
+        }
+      }
+    }
+  </div>
+
+  @for (b of bodegas(); track b.id) {
+    <app-confirm-dialog
+      [open]="confirmId() === b.id"
+      title="Desactivar almacén"
+      [message]="'¿Desactivar ' + b.nombre + '? No aparecerá para registrar movimientos, pero su historial se conserva.'"
+      confirmLabel="Sí, desactivar"
+      cancelLabel="Cancelar"
+      tone="danger"
+      (confirmed)="toggleActivo(b)"
+      (cancelled)="cancelarConfirm()"
+    />
+  }
+</div>

@@ -62,6 +62,66 @@ export interface PendientesTransporte {
   por_recibir: VehiculoPorRecibir[];
 }
 
+/** A vehicle available for self-assignment (estado disponible). */
+export interface VehiculoDisponible {
+  vehiculo_id: string;
+  placa: string;
+  marca: string;
+  modelo: string;
+  tipo: string;
+  km: number;
+}
+
+/** An active self/admin assignment from sgc.vehiculo_asignaciones. */
+export interface MiAsignacion {
+  asignacion_id: string;
+  vehiculo_id: string;
+  placa: string;
+  marca: string;
+  modelo: string;
+  tipo: string;
+  km: number;
+  desde: string;
+  origen: string;
+}
+
+/** Result of asignarme_vehiculo() — enough to chain into the recepción flow. */
+export interface AsignacionResultado {
+  asignacion_id: string;
+  vehiculo_id: string;
+  conductor_id: string | null;
+  placa: string;
+  marca: string;
+  modelo: string;
+  tipo: string;
+  kilometraje: number;
+  vencimiento_matricula: string | null;
+  vencimiento_seguro: string | null;
+  proximo_mantenimiento_km: number | null;
+}
+
+/** Aggregated vehicle stats for the read-only profile (v_vehiculo_stats, R4). */
+export interface VehiculoStats {
+  vehiculo_id: string;
+  placa: string;
+  km_actual: number | null;
+  combustible_echadas: number;
+  combustible_galones: number | null;
+  combustible_monto: number | null;
+  rendimiento_promedio: number | null;
+  costo_por_km_promedio: number | null;
+  ultima_echada: string | null;
+  checklists_total: number;
+  checklists_bloqueos: number;
+  ultimo_checklist: string | null;
+  mantenimientos_total: number;
+  ultimo_mantenimiento: string | null;
+  km_ultimo_mantenimiento: number | null;
+  proximo_mantenimiento_km: number | null;
+  asignaciones_activas: number;
+  ultima_actividad: string | null;
+}
+
 /** A damage entry captured in the checklist (photo blob held until sync). */
 export interface DanoCaptura {
   zona: string;

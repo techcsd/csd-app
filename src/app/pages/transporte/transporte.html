@@ -9,6 +9,18 @@
     <button type="button" class="btn-ghost transporte__conduces" (click)="conduces()">
       🧾 Mis conduces y rutas
     </button>
+    <button type="button" class="btn-ghost transporte__conduces" (click)="asignar()">
+      ➕ Asignarme un vehículo
+    </button>
+    <button type="button" class="btn-ghost transporte__conduces" (click)="reporteSemanal()">
+      📋 Reporte semanal
+      @if (reporteSemanalPend()) {
+        <span class="transporte__badge">{{ reporteSemanalPend() }}</span>
+      }
+    </button>
+    <button type="button" class="btn-ghost transporte__conduces" (click)="miActividad()">
+      📈 Mi actividad
+    </button>
 
     @if (loading()) {
       <app-skeleton [rows]="5" />
@@ -33,6 +45,9 @@
             </button>
             <button type="button" class="btn-ghost veh-card__cta" (click)="mantenimiento(v.vehiculo_id)">
               🔧 Reportar mantenimiento
+            </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
+              📊 Ver perfil
             </button>
           </div>
         }
@@ -59,14 +74,49 @@
             <button type="button" class="btn-ghost veh-card__cta" (click)="mantenimiento(v.vehiculo_id)">
               🔧 Reportar mantenimiento
             </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
+              📊 Ver perfil
+            </button>
           </div>
         }
       }
 
-      @if (!pendientes().a_cargo.length && !pendientes().por_recibir.length) {
-        <p class="transporte__muted">
-          No tienes vehículos asignados por ahora. Cuando Flota te asigne uno, aparecerá aquí.
-        </p>
+      @if (otrasAsignaciones().length) {
+        <h2 class="transporte__section">Asignados a mí</h2>
+        @for (v of otrasAsignaciones(); track v.vehiculo_id) {
+          <div class="veh-card">
+            <div class="veh-card__info">
+              <span class="veh-card__placa">{{ v.placa }}</span>
+              <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
+              <span class="veh-card__km">{{ v.tipo || 'Vehículo' }} · {{ v.km | number: '1.0-0' }} km</span>
+            </div>
+            <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
+              Recibir vehículo
+            </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
+              📋 Checklist de pre-uso
+            </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="combustible(v.vehiculo_id)">
+              ⛽ Registrar combustible
+            </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="mantenimiento(v.vehiculo_id)">
+              🔧 Reportar mantenimiento
+            </button>
+            <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
+              📊 Ver perfil
+            </button>
+          </div>
+        }
+      }
+
+      @if (vacio()) {
+        <app-empty-state
+          icon="🚚"
+          title="Aún no tienes vehículos"
+          message="Aquí aparecen los vehículos que recibes y los que tienes a tu cargo. Asígnate uno para empezar a usarlo y registrar su recibimiento."
+          ctaLabel="Asignarme un vehículo"
+          (action)="asignar()"
+        />
       }
     }
   </div>

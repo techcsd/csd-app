@@ -17,7 +17,7 @@
       <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="bodegaId.set($event)" />
 
       <label class="field-label mov__mt">Elige el material</label>
-      <app-articulo-picker [articulos]="articulos()" [exclude]="cartIds()" (picked)="add($event)" />
+      <app-articulo-picker [articulos]="articulos()" [categorias]="categorias()" [exclude]="cartIds()" (picked)="add($event)" />
 
       @if (cart().length) {
         <label class="field-label mov__mt">Cantidades</label>
@@ -26,7 +26,9 @@
         <div class="mov__item">
           <span class="mov__item-name">{{ it.nombre }}</span>
           <div class="mov__item-qty">
-            <input class="field" type="number" inputmode="decimal" [ngModel]="it.cantidad" (ngModelChange)="setCantidad($index, $event)" />
+            <button type="button" class="mov__step" (click)="ajustar($index, -1)" aria-label="Menos">−</button>
+            <input class="field mov__qty-input" type="number" inputmode="decimal" [ngModel]="it.cantidad" (ngModelChange)="setCantidad($index, $event)" />
+            <button type="button" class="mov__step" (click)="ajustar($index, 1)" aria-label="Más">+</button>
             <span class="mov__item-unit">{{ it.unidad }}</span>
             <button type="button" class="mov__item-x" (click)="remove($index)">✕</button>
           </div>

@@ -1,0 +1,121 @@
+<div class="screen asignar">
+  <app-step-bar [current]="step()" [total]="total()" />
+
+  <div class="screen__body">
+    <!-- Step 1: pick an available vehicle -->
+    @if (step() === 1) {
+      <h1 class="screen__title">Asignarme un vehículo</h1>
+      <p class="screen__subtitle">Elige un vehículo disponible para usarlo hoy.</p>
+
+      @if (loading()) {
+        <app-skeleton [rows]="4" />
+      } @else if (!disponibles().length) {
+        <app-empty-state
+          icon="🚗"
+          title="No hay vehículos disponibles"
+          message="Todos los vehículos están asignados o fuera de servicio ahora mismo. Vuelve más tarde o consulta con Flota."
+          secondaryLabel="Volver"
+          (secondaryAction)="back()"
+        />
+      } @else {
+        @for (v of disponibles(); track v.vehiculo_id) {
+          <app-option-button
+            [icon]="'🚙'"
+            [label]="v.placa + ' · ' + v.marca + ' ' + v.modelo"
+            [selected]="seleccionado()?.vehiculo_id === v.vehiculo_id"
+            (pressed)="seleccionar(v)"
+          />
+          @if (seleccionado()?.vehiculo_id === v.vehiculo_id) {
+            <p class="asignar__veh-detail">
+              {{ v.tipo || 'Vehículo' }} · {{ v.km | number: '1.0-0' }} km
+            </p>
+          }
+        }
+        @if (!online) {
+          <p class="asignar__note">Sin señal. Necesitas conexión para asignarte un vehículo.</p>
+        }
+      }
+    }
+
+    <!-- Step 2: quick driver self-registration (only if not yet a driver) -->
+    @if (step() === 2) {
+      <h1 class="screen__title">Regístrate como conductor</h1>
+      <p class="screen__subtitle">Solo esta vez. Con estos datos podrás usar vehículos.</p>
+
+      <label class="field-label" for="ced">Cédula</label>
+      <input
+        id="ced"
+        class="field"
+        type="text"
+        inputmode="numeric"
+        [ngModel]="cedula()"
+        (ngModelChange)="cedula.set($event)"
+        placeholder="000-0000000-0"
+      />
+
+      <label class="field-label" for="lic-tipo">Tipo / categoría de licencia</label>
+      <input
+        id="lic-tipo"
+        class="field"
+        type="text"
+        [ngModel]="licenciaTipo()"
+        (ngModelChange)="licenciaTipo.set($event)"
+        placeholder="Ej. Categoría 2"
+      />
+
+      <label class="field-label" for="lic-num">Número de licencia (opcional)</label>
+      <input
+        id="lic-num"
+        class="field"
+        type="text"
+        [ngModel]="licenciaNumero()"
+        (ngModelChange)="licenciaNumero.set($event)"
+        placeholder="Número"
+      />
+
+      <label class="field-label" for="lic-venc">Vencimiento de licencia (opcional)</label>
+      <input
+        id="lic-venc"
+        class="field"
+        type="date"
+        [ngModel]="licenciaVencimiento()"
+        (ngModelChange)="licenciaVencimiento.set($event)"
+      />
+
+      <label class="field-label">¿Qué vehículos manejas?</label>
+      @for (t of tiposAutorizado; track t) {
+        <app-option-button
+          [label]="t"
+          [selected]="tipoAutorizado() === t"
+          (pressed)="tipoAutorizado.set(t)"
+        />
+      }
+    }
+  </div>
+
+  <footer class="asignar__nav">
+    @if (step() === 1) {
+      <button type="button" class="btn-ghost asignar__back" (click)="back()">Cancelar</button>
+      @if (disponibles().length) {
+        <button
+          type="button"
+          class="btn-cta"
+          [disabled]="submitting() || !seleccionado()"
+          (click)="continuar()"
+        >
+          {{ submitting() ? 'Asignando…' : necesitaConductor() ? 'Continuar' : 'Asignarme y recibir' }}
+        </button>
+      }
+    } @else {
+      <button type="button" class="btn-ghost asignar__back" (click)="prev()">Atrás</button>
+      <button
+        type="button"
+        class="btn-cta"
+        [disabled]="submitting()"
+        (click)="registrarYAsignar()"
+      >
+        {{ submitting() ? 'Guardando…' : 'Registrarme y recibir' }}
+      </button>
+    }
+  </footer>
+</div>

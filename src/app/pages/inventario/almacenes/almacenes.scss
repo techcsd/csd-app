@@ -1,0 +1,128 @@
+.almacenes {
+  background: var(--color-bg);
+}
+
+.almacenes__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.almacenes__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.almacenes__icon {
+  font-size: 26px;
+}
+
+.almacenes__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.almacenes__new {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.almacenes__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.almacenes__row--off {
+  opacity: 0.6;
+}
+
+.almacenes__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.almacenes__nombre {
+  font-size: var(--fs-option);
+  font-weight: 700;
+}
+
+.almacenes__ubi {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.almacenes__tag {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.almacenes__tag--off {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.almacenes__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.almacenes__actions .btn-ghost {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.almacenes__form {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--color-surface);
+}
+
+.almacenes__form-title {
+  margin: 0 0 12px;
+  font-size: var(--fs-option);
+  font-weight: 800;
+}
+
+.almacenes__hint {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.almacenes__area {
+  resize: none;
+}
+
+.almacenes__form-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.almacenes__form-nav .btn-cta {
+  flex: 1;
+}

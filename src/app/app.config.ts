@@ -12,6 +12,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { VehiculosService } from './core/services/vehiculos.service';
 import { MantenimientosService } from './core/services/mantenimientos.service';
 import { ChecklistPreusoService } from './core/services/checklist-preuso.service';
+import { ReporteSemanalService } from './core/services/reporte-semanal.service';
 import { ConducesService } from './core/services/conduces.service';
 import { BitacoraService } from './core/services/bitacora.service';
 import { InventarioService } from './core/services/inventario.service';
@@ -33,6 +34,7 @@ export const appConfig: ApplicationConfig = {
       inject(VehiculosService);
       inject(MantenimientosService);
       inject(ChecklistPreusoService);
+      inject(ReporteSemanalService);
       inject(ConducesService);
       inject(BitacoraService);
       inject(InventarioService);

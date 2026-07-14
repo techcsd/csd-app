@@ -25,7 +25,13 @@
           </ul>
         </div>
       } @empty {
-        <p class="mis-sol__muted">Todavía no has hecho requisiciones.</p>
+        <app-empty-state
+          icon="📝"
+          title="Todavía no has hecho requisiciones"
+          message="Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición: enviada, aprobada y recibida."
+          ctaLabel="Nueva requisición"
+          (action)="nueva()"
+        />
       }
     }
   </div>

@@ -1,0 +1,90 @@
+.pveh {
+  background: var(--color-bg);
+}
+
+.pveh__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.pveh__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.pveh__icon {
+  font-size: 26px;
+}
+
+.pveh__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.pveh__veh {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+
+.pveh__placa {
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.pveh__modelo {
+  font-size: var(--fs-option);
+  color: var(--color-text-secondary);
+}
+
+.pveh__cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.pveh__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pveh__label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.pveh__value {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.pveh__value--muted {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.pveh__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.pveh__sub--warn {
+  color: var(--color-error);
+  font-weight: 700;
+}

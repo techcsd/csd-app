@@ -66,8 +66,8 @@
         {{ capturing() ? '⏳ Tomando…' : '📷 Agregar foto' }}
       </button>
 
-      <h2 class="incidente__q">¿Qué pasó? (opcional)</h2>
-      <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe brevemente" />
+      <h2 class="incidente__q">¿Qué pasó?</h2>
+      <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe qué pasó (obligatorio)" />
       <p class="incidente__or">o graba una nota de voz</p>
       <app-voice-recorder (recorded)="voz.set($event)" />
     </div>

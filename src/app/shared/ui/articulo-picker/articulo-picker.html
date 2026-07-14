@@ -4,17 +4,65 @@
     type="search"
     [ngModel]="query()"
     (ngModelChange)="query.set($event)"
-    placeholder="🔎 Filtrar (opcional)"
+    placeholder="🔎 Buscar material (opcional)"
   />
-  <div class="picker__list">
-    @for (a of visible(); track a.id) {
-      <button type="button" class="picker__item" (click)="picked.emit(a)">
-        <span class="picker__name">{{ a.nombre }}</span>
-        <span class="picker__meta">{{ a.unidad }}</span>
-        <span class="picker__add">+</span>
-      </button>
-    } @empty {
-      <p class="picker__muted">No hay materiales.</p>
-    }
-  </div>
+
+  <!-- Search results (span all categories) -->
+  @if (query().trim()) {
+    <div class="picker__list">
+      @for (a of visible(); track a.id) {
+        <button type="button" class="picker__item" (click)="picked.emit(a)">
+          <span class="picker__name">{{ a.nombre }}</span>
+          <span class="picker__meta">{{ a.unidad }}</span>
+          <span class="picker__add">+</span>
+        </button>
+      } @empty {
+        <p class="picker__muted">No se encontró ese material.</p>
+      }
+    </div>
+  } @else if (!hasCategorias()) {
+    <!-- Flat list (conteo/pedir) -->
+    <div class="picker__list">
+      @for (a of visible(); track a.id) {
+        <button type="button" class="picker__item" (click)="picked.emit(a)">
+          <span class="picker__name">{{ a.nombre }}</span>
+          <span class="picker__meta">{{ a.unidad }}</span>
+          <span class="picker__add">+</span>
+        </button>
+      } @empty {
+        <p class="picker__muted">No hay materiales.</p>
+      }
+    </div>
+  } @else if (categoriaSel() === null) {
+    <!-- Category grid: daily/destacadas first -->
+    <div class="picker__cats">
+      @for (c of categoriaChips(); track c.id) {
+        @if (conteoCategoria(c.id) > 0) {
+          <button
+            type="button"
+            class="picker__cat"
+            [class.picker__cat--destacada]="c.destacada"
+            (click)="seleccionarCategoria(c.id)"
+          >
+            <span class="picker__cat-name">{{ c.nombre }}</span>
+            <span class="picker__cat-count">{{ conteoCategoria(c.id) }}</span>
+          </button>
+        }
+      }
+    </div>
+  } @else {
+    <!-- Articles of the selected category -->
+    <button type="button" class="picker__crumb" (click)="volverCategorias()">← Categorías · {{ nombreCategoria() }}</button>
+    <div class="picker__list">
+      @for (a of visible(); track a.id) {
+        <button type="button" class="picker__item" (click)="picked.emit(a)">
+          <span class="picker__name">{{ a.nombre }}</span>
+          <span class="picker__meta">{{ a.unidad }}</span>
+          <span class="picker__add">+</span>
+        </button>
+      } @empty {
+        <p class="picker__muted">No hay materiales en esta categoría.</p>
+      }
+    </div>
+  }
 </div>

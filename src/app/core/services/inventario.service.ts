@@ -2,11 +2,12 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ArticuloCat, Bodega, Existencia } from '../models/inventario.model';
+import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, Existencia } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
 const CAT_ARTICULOS = 'articulos';
+const CAT_CATEGORIAS = 'categorias_inventario';
 const BUCKET = 'inventario';
 
 export interface SalidaCaptura {
@@ -69,13 +70,81 @@ export class InventarioService {
     const data = await this.catalog.refresh<ArticuloCat[]>(CAT_ARTICULOS, async () => {
       const { data, error } = await this.supabase.client
         .from('articulos')
-        .select('id, nombre, codigo, unidad')
+        .select('id, nombre, codigo, unidad, categoria_id')
         .eq('activo', true)
         .order('nombre');
       if (error) throw new Error(error.message);
       return (data as ArticuloCat[]) ?? [];
     });
     return data ?? [];
+  }
+
+  /** Active article categories (R16), destacadas first, cached offline. */
+  async getCategorias(): Promise<CategoriaInv[]> {
+    const data = await this.catalog.refresh<CategoriaInv[]>(CAT_CATEGORIAS, async () => {
+      const { data, error } = await this.supabase.client
+        .from('categorias_inventario')
+        .select('id, nombre, padre_id, orden, destacada')
+        .eq('activo', true)
+        .order('orden', { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data as CategoriaInv[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  // ---- Gestión de almacenes (R12) — paridad con la web, gate por RLS (inventario) ----
+
+  /** All warehouses incl. inactive, for the management screen. */
+  async getBodegasAdmin(): Promise<BodegaAdmin[]> {
+    const { data, error } = await this.supabase.client
+      .from('bodegas')
+      .select('id, nombre, descripcion, ubicacion, activo, es_principal')
+      .order('nombre');
+    if (error) throw new Error(error.message);
+    return (data as BodegaAdmin[]) ?? [];
+  }
+
+  /** Create a warehouse. Server trigger homologates the name (R18). */
+  async crearBodega(input: { nombre: string; descripcion: string | null; ubicacion: string | null }): Promise<void> {
+    const { error } = await this.supabase.client.from('bodegas').insert({
+      nombre: input.nombre,
+      descripcion: input.descripcion,
+      ubicacion: input.ubicacion,
+    });
+    if (error) throw new Error(error.message);
+    await this.refreshBodegas();
+  }
+
+  async actualizarBodega(
+    id: string,
+    input: { nombre: string; descripcion: string | null; ubicacion: string | null },
+  ): Promise<void> {
+    const { error } = await this.supabase.client
+      .from('bodegas')
+      .update({ nombre: input.nombre, descripcion: input.descripcion, ubicacion: input.ubicacion })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.refreshBodegas();
+  }
+
+  async setBodegaActivo(id: string, activo: boolean): Promise<void> {
+    const { error } = await this.supabase.client.from('bodegas').update({ activo }).eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.refreshBodegas();
+  }
+
+  /** Re-warm the active-bodega cache used by salida/entrada pickers. */
+  private async refreshBodegas(): Promise<void> {
+    await this.catalog.refresh<Bodega[]>(CAT_BODEGAS, async () => {
+      const { data, error } = await this.supabase.client
+        .from('bodegas')
+        .select('id, nombre')
+        .eq('activo', true)
+        .order('nombre');
+      if (error) throw new Error(error.message);
+      return (data as Bodega[]) ?? [];
+    });
   }
 
   async getExistencias(bodegaId: string): Promise<Existencia[]> {

@@ -77,6 +77,23 @@
   width: 80px;
   text-align: center;
 }
+.mov__qty-input {
+  width: 64px !important;
+}
+.mov__step {
+  width: 40px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  font-size: 24px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.mov__step:active {
+  background: var(--color-primary);
+  color: #fff;
+}
 .mov__item-unit {
   font-size: 14px;
   color: var(--color-text-secondary);

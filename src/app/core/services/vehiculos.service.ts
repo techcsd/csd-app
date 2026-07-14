@@ -3,17 +3,23 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import {
+  AsignacionResultado,
   CombustibleNivel,
   DanoCaptura,
   EntregaTipo,
   FOTOS_REQUERIDAS,
+  MiAsignacion,
   PendientesTransporte,
   VehiculoDetalle,
+  VehiculoDisponible,
+  VehiculoStats,
 } from '../models/transporte.model';
 
 const REQUIRED_SLOTS = FOTOS_REQUERIDAS.map((f) => f.slot);
 const CATALOG_PENDIENTES = 'pendientes_transporte';
 const CATALOG_VEH_DETALLE = 'veh_detalle'; // + `:${vehiculoId}`
+const CATALOG_DISPONIBLES = 'vehiculos_disponibles';
+const CATALOG_MIS_ASIGNACIONES = 'mis_asignaciones';
 
 /** Input the checklist wizard hands to enqueueEntrega(). */
 export interface EntregaCaptura {
@@ -104,6 +110,93 @@ export class VehiculosService {
       return (data as PendientesTransporte) ?? { a_cargo: [], por_recibir: [] };
     });
     return data ?? { a_cargo: [], por_recibir: [] };
+  }
+
+  /** Vehicles available to self-assign (activo + estado disponible), cached. */
+  async getVehiculosDisponibles(): Promise<VehiculoDisponible[]> {
+    const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
+      const { data, error } = await this.supabase.client
+        .from('vehiculos')
+        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo')
+        .eq('activo', true)
+        .not('estado', 'in', '(baja,no_disponible)')
+        .order('placa', { ascending: true });
+      if (error) throw new Error(error.message);
+      return ((data as Array<Record<string, unknown>>) ?? []).map((v) => ({
+        vehiculo_id: v['id'] as string,
+        placa: v['placa'] as string,
+        marca: (v['marca'] as string) ?? '',
+        modelo: (v['modelo'] as string) ?? '',
+        tipo: (v['tipo'] as string) ?? '',
+        km: (v['kilometraje'] as number) ?? 0,
+      }));
+    });
+    return data ?? [];
+  }
+
+  /** The user's active assignments (vehiculo_asignaciones), cached for offline. */
+  async getMisAsignaciones(): Promise<MiAsignacion[]> {
+    const data = await this.catalog.refresh<MiAsignacion[]>(CATALOG_MIS_ASIGNACIONES, async () => {
+      const { data: userData } = await this.supabase.client.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return [];
+      const { data, error } = await this.supabase.client
+        .from('vehiculo_asignaciones')
+        .select(
+          'id, desde, origen, vehiculo:vehiculos(id, placa, marca, modelo, tipo, kilometraje)',
+        )
+        .eq('usuario_id', uid)
+        .eq('activa', true)
+        .order('desde', { ascending: false });
+      if (error) throw new Error(error.message);
+      return ((data as Array<Record<string, unknown>>) ?? [])
+        .filter((r) => r['vehiculo'])
+        .map((r) => {
+          const v = r['vehiculo'] as Record<string, unknown>;
+          return {
+            asignacion_id: r['id'] as string,
+            vehiculo_id: v['id'] as string,
+            placa: v['placa'] as string,
+            marca: (v['marca'] as string) ?? '',
+            modelo: (v['modelo'] as string) ?? '',
+            tipo: (v['tipo'] as string) ?? '',
+            km: (v['kilometraje'] as number) ?? 0,
+            desde: r['desde'] as string,
+            origen: (r['origen'] as string) ?? 'auto',
+          };
+        });
+    });
+    return data ?? [];
+  }
+
+  /**
+   * Self-assign a vehicle (online). Returns the data needed to chain straight
+   * into the recepción checklist. Idempotent server-side via the client UUID.
+   */
+  async asignarme(vehiculoId: string, clientUuid?: string): Promise<AsignacionResultado> {
+    const { data, error } = await this.supabase.client.rpc('asignarme_vehiculo', {
+      p_vehiculo_id: vehiculoId,
+      p_client_uuid: clientUuid ?? crypto.randomUUID(),
+    });
+    if (error) throw new Error(error.message);
+    // The pending/assignment lists changed; refresh best-effort.
+    void this.misPendientes();
+    void this.getMisAsignaciones();
+    return data as AsignacionResultado;
+  }
+
+  /** Aggregated vehicle stats for the read-only profile (R4), cached offline. */
+  async getVehiculoStats(id: string): Promise<VehiculoStats | null> {
+    const data = await this.catalog.refresh<VehiculoStats | null>(`veh_stats:${id}`, async () => {
+      const { data, error } = await this.supabase.client
+        .from('v_vehiculo_stats')
+        .select('*')
+        .eq('vehiculo_id', id)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return (data as VehiculoStats) ?? null;
+    });
+    return data ?? null;
   }
 
   /** Queue a checklist. Works fully offline; syncs when there's signal. */

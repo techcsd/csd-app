@@ -8,6 +8,10 @@
   />
 } @else {
   <div class="screen parte">
+    <header class="parte__topbar">
+      <button type="button" class="parte__topback" (click)="salir()" aria-label="Salir">←</button>
+      <span class="parte__topttl">Bitácora del día</span>
+    </header>
     <app-step-bar [current]="step()" [total]="total" />
     <div class="screen__body">
       <!-- 1. Obra -->
@@ -27,8 +31,32 @@
         </div>
       }
 
-      <!-- 2. Personal -->
+      <!-- 2. Clima (lluvia) -->
       @if (step() === 2) {
+        <h1 class="screen__title">¿Está lloviendo o llovió?</h1>
+        <p class="screen__subtitle">Es normal, no es un incidente. Solo lo registramos.</p>
+        <app-option-button icon="🌧️" label="Sí" tone="warning" [selected]="llovio() === true" (pressed)="llovio.set(true)" />
+        <app-option-button icon="☀️" label="No" tone="success" [selected]="llovio() === false" (pressed)="llovio.set(false)" />
+        @if (llovio()) {
+          <label class="field-label">¿Cómo afectó? (opcional)</label>
+          <input class="field" type="text" [ngModel]="lluviaDetalle()" (ngModelChange)="lluviaDetalle.set($event)" placeholder="Ej: paró el vaciado 2 horas" />
+        }
+      }
+
+      <!-- 3. Migración -->
+      @if (step() === 3) {
+        <h1 class="screen__title">¿Hubo problemas de migración?</h1>
+        <app-option-button icon="⚠️" label="Sí" tone="warning" [selected]="huboMigracion() === true" (pressed)="huboMigracion.set(true)" />
+        <app-option-button icon="✅" label="No" tone="success" [selected]="huboMigracion() === false" (pressed)="huboMigracion.set(false)" />
+        @if (huboMigracion()) {
+          <label class="field-label">Obreros afectados (opcional)</label>
+          <p class="screen__subtitle">Escribe los nombres separados por coma.</p>
+          <input class="field" type="text" [ngModel]="migracionObreros()" (ngModelChange)="migracionObreros.set($event)" placeholder="Ej: Juan, Pedro" />
+        }
+      }
+
+      <!-- 4. Personal -->
+      @if (step() === 4) {
         <h1 class="screen__title">¿Cuánta gente hay hoy?</h1>
         <app-counter label="Carpintería" icon="🔨" [(value)]="carpinteria" />
         <app-counter label="Acero" icon="🔩" [(value)]="acero" />
@@ -37,13 +65,23 @@
         <input class="field" type="text" [ngModel]="otroPersonal()" (ngModelChange)="otroPersonal.set($event)" placeholder="Ej: 2 ayudantes" />
       }
 
-      <!-- 3. Actividades -->
-      @if (step() === 3) {
+      <!-- 5. Actividades (con cantidad) -->
+      @if (step() === 5) {
         <h1 class="screen__title">¿Qué se hizo hoy?</h1>
         @for (a of actividades(); track $index) {
-          <div class="parte__act">
-            <span>{{ a.estructura }} · {{ a.actividad }}</span>
-            <button type="button" class="parte__act-x" (click)="removeActividad($index)">Quitar</button>
+          <div class="parte__actrow">
+            <div class="parte__actrow-top">
+              <span class="parte__actrow-name">{{ a.estructura }} · {{ a.actividad }}</span>
+              <button type="button" class="parte__act-x" (click)="removeActividad($index)">Quitar</button>
+            </div>
+            <div class="parte__actrow-qty">
+              <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, -1)" aria-label="Menos">−</button>
+              <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="a.cantidad" (ngModelChange)="setCantidadAct($index, $event)" />
+              <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, 1)" aria-label="Más">+</button>
+              @if (partidaDe(a.estructura); as p) {
+                <span class="parte__plan">{{ p.unidad || '' }} · plan {{ p.cantidad_planeada }}</span>
+              }
+            </div>
           </div>
         }
         <label class="field-label">¿En qué parte? (puedes elegir varias)</label>
@@ -61,8 +99,8 @@
         <button type="button" class="btn-ghost" (click)="addActividad()">+ Agregar a la lista</button>
       }
 
-      <!-- 4. Restricciones -->
-      @if (step() === 4) {
+      <!-- 6. Restricciones -->
+      @if (step() === 6) {
         <h1 class="screen__title">¿Hubo algún problema?</h1>
         <p class="screen__subtitle">Marca lo que aplique. Si no hubo, deja "Ninguna".</p>
         <div class="parte__restr">
@@ -72,8 +110,8 @@
         </div>
       }
 
-      <!-- 5. Fotos -->
-      @if (step() === 5) {
+      <!-- 7. Fotos -->
+      @if (step() === 7) {
         <h1 class="screen__title">Fotos de la obra</h1>
         <p class="screen__subtitle">Opcional, pero ayudan mucho.</p>
         <div class="parte__fotos">
@@ -89,11 +127,13 @@
         </button>
       }
 
-      <!-- 6. Resumen -->
-      @if (step() === 6) {
+      <!-- 8. Resumen -->
+      @if (step() === 8) {
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
           <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>Lluvia</span><b>{{ llovio() ? 'Sí' : 'No' }}</b></li>
+          <li><span>Migración</span><b>{{ huboMigracion() ? 'Sí' : 'No' }}</b></li>
           <li><span>Personal</span><b>{{ carpinteria() + acero() + casa() }}</b></li>
           <li><span>Actividades</span><b>{{ actividades().length }}</b></li>
           <li><span>Problemas</span><b>{{ restricciones().length ? restricciones().length : 'Ninguno' }}</b></li>
@@ -107,6 +147,8 @@
     <footer class="parte__nav">
       @if (step() > 1) {
         <button type="button" class="btn-ghost parte__back" (click)="prev()">Atrás</button>
+      } @else {
+        <button type="button" class="btn-ghost parte__back" (click)="salir()">Cancelar</button>
       }
       @if (step() < total) {
         <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
@@ -117,4 +159,14 @@
       }
     </footer>
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir de la bitácora?"
+    message="Guardamos lo que llevas para que puedas continuar más tarde."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
 }

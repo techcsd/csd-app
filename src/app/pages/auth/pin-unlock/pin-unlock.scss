@@ -22,3 +22,13 @@
   text-align: center;
   color: var(--color-text-secondary);
 }
+
+.pin-screen__bio {
+  margin-top: 16px;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--fs-option);
+  font-weight: 600;
+}

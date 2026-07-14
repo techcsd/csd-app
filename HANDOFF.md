@@ -1,5 +1,32 @@
 # HANDOFF — CSD App
 
+## Mejoras 14/07/2026 (reunión jefe — R1–R29) — build green, 17/17 tests, backend aplicado 🚧 falta device-QA
+Implementadas 8 fases sobre Flota v2. `npm run build` limpio y `ng test` 17/17. Migraciones aplicadas a la BD prod compartida (`node scripts/apply-migration.mjs`).
+
+**Backend nuevo aplicado desde este repo (`sql/`):**
+- `2026-07-14-crear-ruta-app.sql` — RPC `crear_ruta_app` (idempotente, gate flota, homologa origen/destino).
+- `2026-07-14-reportes-fotos.sql` — bucket `reportes` (+RLS), tabla `reportes_usuario_fotos`, `crear_reporte_app` extendido con `p_fotos` (se dropeó la sobrecarga vieja de 4 args para evitar ambigüedad PostgREST).
+- `2026-07-14-bitacora-clima-migracion.sql` — `crear_bitacora_app` extendido con `p_llovio/p_lluvia_detalle/p_hubo_migracion/p_migracion_obreros` + inserta `cantidad` de actividades. Retrocompatible (params con default).
+- (PROMPT-1 ya estaba: `vehiculo_asignaciones`, `asignarme_vehiculo`, `auto_registrar_conductor`, plantilla `REPORTE-SEMANAL-V1`, vistas `v_vehiculo_stats`/`v_conductor_stats`/`v_reporte_semanal_cumplimiento`, `categorias_inventario.destacada`, `articulos.categoria_id`, `proyecto_partidas`, `app_versiones`+`version_publicada()`, triggers de homologación.)
+
+**App (por fase):**
+- **F1 (R1/R2/R11):** Transporte con `EmptyState` + CTA "Asignarme un vehículo"; wizard `transporte/asignar` (lista disponibles → auto-registro conductor si falta → `asignarme_vehiculo` → encadena a recibimiento). "Asignados a mí" lee `vehiculo_asignaciones`. Nuevo `shared/ui/empty-state`.
+- **F2 (R3):** `transporte/reporte-semanal` (plantilla semanal, OK/NO/NA + combustible + km + obs; badge de pendientes; "ya enviaste esta semana"). `ReporteSemanalService` → `registrar_checklist_vehiculo` (tipo `inspeccion`, la vista detecta por `frecuencia='semanal'`).
+- **F3 (R7):** `transporte/rutas/crear` (espeja creación web de rutas; offline outbox `crear_ruta`). Combustible v2 verificado operativo.
+- **F4 (R10):** `@aparajita/capacitor-biometric-auth@10` (Cap 8). `BiometricService`, toggle en Perfil (solo si soporta, oculto en PWA), botón "Usar huella" en pin-unlock; PIN sigue siendo fallback. `npx cap sync android` hecho.
+- **F5 (R11/R13/R14):** `EmptyState` en Mis conduces/Mis bitácoras/Mis requisiciones/Recibir/Home-sin-módulos. Bitácora parte: topbar ← + Cancelar + confirmación de salida. Reportar: fotos (`PhotoSlot`→bucket `reportes`). ⚠️ **falta que la web SGC muestre las fotos de reportes** (rule #5).
+- **F6 (R12/R16/R17/R18):** `ArticuloPicker` por categorías (destacadas primero, fallback plano en pedir/conteo); stepper −/+ en salida/entrada; `inventario/almacenes` (CRUD, gate inventario); homologación front (`core/util/texto.ts`) + trigger BD.
+- **F7 (R21–R24):** wizard bitácora reordenado a 8 pasos (obra→lluvia→migración→personal→actividades c/cantidad+plan→problemas→fotos→resumen); incidente descripción obligatoria.
+- **F8 (R4/R5/R15/R26):** `transporte/vehiculo/:id` (v_vehiculo_stats) y `transporte/mi-actividad` (v_conductor_stats); `VersionService` + gate bloqueante si local<mínima + aviso versión nueva + Perfil muestra versión publicada; home ya gatea tiles por módulo (R26).
+
+**Pendiente (necesita Xaviel / no automatizable):**
+- Device-QA: auto-asignación→auto-registro→recibimiento, reporte semanal, crear ruta, biometría+fallback PIN, bitácora atrás+lluvia/migración/cantidades, reporte con fotos, inventario por categorías+stepper, gestión almacenes, gate de versión. Offline→reconnect en los flujos nuevos.
+- **SGC web:** mostrar fotos de reportes de usuario (R14) y verificar que renderiza lluvia/migración/cantidades/incidente_descripcion (R21–R24). Marcar `categorias_inventario.destacada` para Clavos/Madera (hoy solo Acero) — §5 pendiente de confirmar.
+- Bump de versión + build/firmar APK + publicar (`scripts/build-apk.md`, `release-apk.mjs`); `npx cap sync android` antes de compilar. No se hizo commit/push.
+
+---
+
+
 _Last updated: 2026-07-13 (Flota v2 — Combustible + Pre-uso v2)_
 
 ## Flota v2 — Combustible (nuevo) + Pre-uso v2 (branch `fix/mobile-responsive`) — build green, APK on device 🚧 falta walk-through con login

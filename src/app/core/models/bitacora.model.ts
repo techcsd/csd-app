@@ -47,6 +47,17 @@ export const INCIDENTE_GRAVEDADES = [
 export interface ActividadEntry {
   estructura: string;
   actividad: string;
+  /** How many were done (R24). Optional; unit comes from proyecto_partidas. */
+  cantidad?: number | null;
+}
+
+/** A planned line item for a project (R24), shown as reference in the wizard. */
+export interface ProyectoPartida {
+  id: string;
+  nombre: string;
+  unidad: string | null;
+  cantidad_planeada: number;
+  cantidad_ejecutada: number;
 }
 
 export interface Proyecto {
