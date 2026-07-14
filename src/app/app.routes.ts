@@ -247,6 +247,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/auditoria/auditoria').then((m) => m.AdminAuditoriaPage),
   },
   {
+    path: 'admin/versiones',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/versiones/versiones').then((m) => m.AdminVersionesPage),
+  },
+  {
     path: '403',
     loadComponent: () => import('./pages/forbidden/forbidden').then((m) => m.ForbiddenPage),
   },

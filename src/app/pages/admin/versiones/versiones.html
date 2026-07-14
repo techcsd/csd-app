@@ -1,0 +1,63 @@
+<div class="screen adm-sub">
+  <header class="adm-sub__header">
+    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="adm-sub__title">Historial de versiones</h1>
+  </header>
+
+  <div class="screen__body">
+    <!-- Selector de plataforma -->
+    <div class="hv-tabs" role="tablist" aria-label="Plataforma">
+      <button
+        type="button"
+        role="tab"
+        class="hv-tab"
+        [class.hv-tab--active]="plataforma() === 'movil'"
+        [attr.aria-selected]="plataforma() === 'movil'"
+        (click)="setPlataforma('movil')"
+      >
+        📱 App móvil <span class="hv-tab__count">{{ totalMovil() }}</span>
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="hv-tab"
+        [class.hv-tab--active]="plataforma() === 'web'"
+        [attr.aria-selected]="plataforma() === 'web'"
+        (click)="setPlataforma('web')"
+      >
+        🖥️ Web <span class="hv-tab__count">{{ totalWeb() }}</span>
+      </button>
+    </div>
+
+    @if (error()) {
+      <p class="adm-sub__muted">{{ error() }}</p>
+    } @else if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (versiones().length === 0) {
+      <p class="adm-sub__muted">Aún no hay versiones para esta plataforma.</p>
+    } @else {
+      <ol class="hv-timeline">
+        @for (v of versiones(); track v.id; let first = $first) {
+          <li class="hv-item">
+            <div class="hv-item__rail" aria-hidden="true">
+              <span class="hv-item__dot" [class.hv-item__dot--latest]="first"></span>
+            </div>
+            <div class="hv-item__card">
+              <div class="hv-item__head">
+                <span class="hv-ver">v{{ v.version }}</span>
+                @if (first) { <span class="hv-badge">Actual</span> }
+                @if (v.fecha) { <span class="hv-item__fecha">{{ fmt(v.fecha) }}</span> }
+              </div>
+              @if (v.titulo) { <p class="hv-item__title">{{ v.titulo }}</p> }
+              @if (v.cambios.length) {
+                <ul class="hv-cambios">
+                  @for (c of v.cambios; track c) { <li>{{ c }}</li> }
+                </ul>
+              }
+            </div>
+          </li>
+        }
+      </ol>
+    }
+  </div>
+</div>
