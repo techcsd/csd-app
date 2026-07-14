@@ -32,9 +32,9 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.3.1';
-const VERSION_CODE = 15;
-const CHANGELOG = 'Correcciones de Flota v2: base de kilometraje al registrar combustible sin señal, y validaciones del pre-uso.';
+const VERSION = '1.3.2';
+const VERSION_CODE = 16;
+const CHANGELOG = 'Pre-uso: bloqueo si no estás autorizado para la clase del vehículo, y umbrales de Flota configurables.';
 const RELEASED_AT = '2026-07-14';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';

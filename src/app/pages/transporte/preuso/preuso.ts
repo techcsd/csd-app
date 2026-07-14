@@ -115,6 +115,7 @@ export class PreusoPage {
   fotos = signal<Record<string, CapturedPhoto>>({});
   firmaLista = signal(false);
   firmaBlob = signal<Blob | null>(null);
+  precitaKm = signal(PRECITA_KM); // sgc.flota_config.umbral_precita_km (cargado en loadContext)
 
   submitting = signal(false);
   done = signal(false);
@@ -128,6 +129,12 @@ export class PreusoPage {
   });
   esPesado = computed(() => esVehiculoPesado(this.vehiculo()?.tipo));
   private clase = computed(() => claseVehiculo(this.vehiculo()?.tipo));
+  /** #2 seguridad: el chofer debe estar autorizado para la clase del vehículo. */
+  autorizadoParaVehiculo = computed(() => {
+    const auth = this.conductor()?.tipo_vehiculo_autorizado;
+    if (!auth || auth === 'Ambos') return true;
+    return auth === this.clase();
+  });
 
   licenciaEstado = computed(() => estadoLicencia(this.conductor()?.licencia_vencimiento ?? null));
   licenciaDias = computed(() => diasHasta(this.conductor()?.licencia_vencimiento ?? null));
@@ -228,7 +235,7 @@ export class PreusoPage {
     if (!v || v.km_ultimo_mantenimiento == null || km == null || km <= 0) return null;
     const proximo = v.km_ultimo_mantenimiento + (v.intervalo_mantenimiento_km ?? 5000);
     const faltan = proximo - km;
-    const estado = faltan <= 0 ? 'vencido' : faltan <= PRECITA_KM ? 'pre_cita' : 'ok';
+    const estado = faltan <= 0 ? 'vencido' : faltan <= this.precitaKm() ? 'pre_cita' : 'ok';
     return { estado, faltan, proximo };
   });
 
@@ -248,14 +255,16 @@ export class PreusoPage {
   private async loadContext(): Promise<void> {
     this.loadingCtx.set(true);
     try {
-      const [v, c, list] = await Promise.all([
+      const [v, c, list, cfg] = await Promise.all([
         this.vehiculos.getVehiculoDetalle(this.vehiculoId),
         this.conductores.getMiConductor(),
         this.checklist.getPlantillas(),
+        this.conductores.getFlotaConfig(),
       ]);
       this.vehiculo.set(v);
       this.conductor.set(c);
       this.plantillas.set(list);
+      this.precitaKm.set(cfg.precitaKm);
       if (list.length) this.pickPlantilla(list[0].id);
       if (v && this.km() === null) this.km.set(v.kilometraje || null);
     } finally {
@@ -311,6 +320,12 @@ export class PreusoPage {
   private canAdvance(): boolean {
     switch (this.step()) {
       case 1:
+        if (!this.autorizadoParaVehiculo()) {
+          this.toast.error(
+            `No estás autorizado para vehículos ${this.clase()}. Contacta a Flota.`,
+          );
+          return false;
+        }
         if (this.km() === null || this.km()! <= 0) {
           this.toast.error('Escribe el kilometraje de salida.');
           return false;
