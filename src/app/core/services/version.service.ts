@@ -79,7 +79,7 @@ export class VersionService {
       .from('app_versiones')
       .select('id, version, plataforma, fecha, titulo, cambios')
       .order('fecha', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false });
+      .order('version', { ascending: false });
     if (error) throw new Error(error.message);
     return (data as unknown as VersionHistorial[]) ?? [];
   }
