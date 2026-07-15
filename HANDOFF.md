@@ -27,9 +27,14 @@ Fix `width:auto` en: `selector-categorias` (Siguiente/Cancelar), `crear-ruta`, `
 `max-width:120`. **Esto afectaba flujos core (completar salida/entrada, crear ruta, reporte semanal,
 liberación) en pantallas ~1080px** — verificar en la web SGC si comparte el patrón.
 
-**Pendiente:** APK rebuild ya hecho e instalado al device (v1.5.0, sin publicar al bucket).
-Falta device-QA con tu PIN de: fechas humanas (U9), foto en perfil/combustible (U6), y el footer
-arreglado en el resto de flujos. Commiteado en `feat/actualizacion2-gaps` (pusheado); `main` intacto.
+**Device-QA COMPLETO (con PIN):** además de lo anterior, verificado en device ✅ U6 foto del Amarok
+en header de combustible y en el **perfil del vehículo** (perfil muestra foto + stats, "Asignados 2"
+= pool U1); ✅ U9 fechas humanas en Mis requisiciones ("13 jul 2026", "8 jul 2026"); ✅ fix del footer
+(botón Siguiente/guardar ya no colapsa). Todo U1–U25 verificado en teléfono o por build+review.
+
+**Estado final:** `feat/actualizacion2-gaps` **mergeada a `main` y pusheada** → PWA auto-deploy a
+Vercel. APK v1.5.0 (rebuild con `@capacitor/app`) instalado al device, **sin publicar al bucket**
+(publicar con `node scripts/release-apk.mjs` solo con tu OK — forzaría min_version a los usuarios).
 
 ---
 
