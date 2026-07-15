@@ -9,7 +9,11 @@
       [class.select-list__opt--on]="selectedId() === o.id"
       (click)="picked.emit(o.id)"
     >
-      <span class="select-list__icon">{{ icon() }}</span>
+      @if (o.image) {
+        <img class="select-list__thumb" [src]="o.image" alt="" />
+      } @else {
+        <span class="select-list__icon">{{ icon() }}</span>
+      }
       <span class="select-list__label">{{ o.label }}</span>
       @if (selectedId() === o.id) {
         <span class="select-list__check">✓</span>

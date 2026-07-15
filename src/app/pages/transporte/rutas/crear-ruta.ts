@@ -120,9 +120,22 @@ export class CrearRutaPage implements OnDestroy {
       this.vehiculoOpts.set([...opts.values()]);
       this.lugares.set(lugares);
       if (this.vehiculoOpts().length === 1) this.vehiculoId.set(this.vehiculoOpts()[0].id);
+      void this.loadFotosVehiculos([...opts.keys()]); // U6 — thumbnails en el selector
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** U6 — resuelve fotos de los vehículos y las pega al selector (mejor esfuerzo). */
+  private async loadFotosVehiculos(ids: string[]): Promise<void> {
+    const paths = await this.vehiculos.getFotosPaths(ids);
+    const urls: Record<string, string | null> = {};
+    await Promise.all(
+      Object.entries(paths).map(async ([id, p]) => {
+        urls[id] = p ? await this.vehiculos.getFotoUrl(p) : null;
+      }),
+    );
+    this.vehiculoOpts.update((opts) => opts.map((o) => ({ ...o, image: urls[o.id] ?? null })));
   }
 
   private async captureGps(): Promise<void> {

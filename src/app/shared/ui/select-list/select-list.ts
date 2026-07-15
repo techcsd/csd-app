@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 export interface SelectOption {
   id: string;
   label: string;
+  /** U6 — thumbnail opcional (URL firmada); si viene, reemplaza el ícono. */
+  image?: string | null;
 }
 
 /**
