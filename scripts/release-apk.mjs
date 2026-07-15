@@ -101,6 +101,22 @@ async function registrarEnHistorial() {
   });
   if (!res.ok) throw new Error(`registrar_version: ${res.status} ${await res.text()}`);
   console.log(`✓ historial registrado vía RPC (v${VERSION})`);
+
+  // registrar_version() no maneja apk_url; cuando subimos el APK, dejamos la URL
+  // en la fila para que version_publicada().apk_url alimente la actualización
+  // in-app (V3). No toca publicada/minima (eso lo controla el admin en SGC).
+  if (!registerOnly) {
+    const patch = await fetch(
+      `${base}/rest/v1/app_versiones?plataforma=eq.movil&version=eq.${encodeURIComponent(VERSION)}`,
+      {
+        method: 'PATCH',
+        headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc', Prefer: 'return=minimal' },
+        body: JSON.stringify({ apk_url: publicUrl }),
+      },
+    );
+    if (!patch.ok) throw new Error(`set apk_url: ${patch.status} ${await patch.text()}`);
+    console.log(`✓ apk_url actualizado (v${VERSION})`);
+  }
 }
 
 if (!registerOnly) {
