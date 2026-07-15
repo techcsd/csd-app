@@ -5,6 +5,9 @@
         <span class="cruta__ok-check">✓</span>
         <h1 class="cruta__ok-title">Ruta creada</h1>
         <p class="cruta__ok-sub">{{ origen() }} → {{ destinoModo() === 'lugar' ? (selectedLugar()?.nombre ?? '') : destinoMapaTexto() }}</p>
+        @if (duracionMin() != null) {
+          <p class="cruta__ok-eta">🕒 {{ fmtDur(duracionMin()) }} aprox.</p>
+        }
       </div>
       @if (!online) {
         <p class="cruta__note">Sin señal. Se creará al reconectar.</p>
