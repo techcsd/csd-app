@@ -117,7 +117,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo')
+        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos')
         .eq('activo', true)
         .not('estado', 'in', '(baja,no_disponible)')
         .order('placa', { ascending: true });
@@ -129,9 +129,20 @@ export class VehiculosService {
         modelo: (v['modelo'] as string) ?? '',
         tipo: (v['tipo'] as string) ?? '',
         km: (v['kilometraje'] as number) ?? 0,
+        foto_path: ((v['fotos'] as string[] | null) ?? [])[0] ?? null,
       }));
     });
     return data ?? [];
+  }
+
+  /** U6 — signed URL for a vehicle photo in the `vehiculos` bucket (or null). */
+  async getFotoUrl(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
+    const { data, error } = await this.supabase.client.storage
+      .from('vehiculos')
+      .createSignedUrl(path, 3600);
+    if (error) return null;
+    return data?.signedUrl ?? null;
   }
 
   /** The user's active assignments (vehiculo_asignaciones), cached for offline. */

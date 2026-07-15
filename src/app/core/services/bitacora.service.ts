@@ -14,7 +14,8 @@ export interface ParteDiarioCaptura {
   trabajadoresCasa: number;
   otroPersonal: string | null;
   actividades: ActividadEntry[];
-  restricciones: string[];
+  // U12 — cada restricción lleva su descripción breve (obligatoria).
+  restricciones: { tipo_restriccion: string; descripcion_otro: string | null }[];
   comentarios: string | null;
   fotos: Blob[];
   // R21/R22 — clima y migración (el clima NO es incidente).
@@ -102,7 +103,10 @@ export class BitacoraService {
           actividad: a.actividad,
           cantidad: a.cantidad ?? null,
         })),
-        restricciones: input.restricciones.map((r) => ({ tipo_restriccion: r, descripcion_otro: null })),
+        restricciones: input.restricciones.map((r) => ({
+          tipo_restriccion: r.tipo_restriccion,
+          descripcion_otro: r.descripcion_otro,
+        })),
         llovio: input.llovio,
         lluvia_detalle: input.lluviaDetalle,
         hubo_migracion: input.huboMigracion,
@@ -164,7 +168,7 @@ export class BitacoraService {
       const { data, error } = await this.supabase.client
         .from('bitacoras')
         .select(
-          'id, fecha, tipo, comentarios, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_lesionados, incidente_descripcion, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+          'id, fecha, tipo, comentarios, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_lesionados, incidente_descripcion, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })

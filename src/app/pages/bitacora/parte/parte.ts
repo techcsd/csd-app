@@ -75,6 +75,8 @@ export class PartePage {
   selActividades = signal<string[]>([]);
 
   restricciones = signal<string[]>([]);
+  // U12 — descripción breve obligatoria por restricción seleccionada (tipo → texto).
+  restriccionDesc = signal<Record<string, string>>({});
   comentarios = signal('');
 
   fotos = signal<CapturedPhoto[]>([]);
@@ -104,6 +106,7 @@ export class PartePage {
         otroPersonal: this.otroPersonal(),
         actividades: this.actividades(),
         restricciones: this.restricciones(),
+        restriccionDesc: this.restriccionDesc(),
         comentarios: this.comentarios(),
         step: this.step(),
       };
@@ -160,6 +163,7 @@ export class PartePage {
       otroPersonal: string;
       actividades: ActividadEntry[];
       restricciones: string[];
+      restriccionDesc?: Record<string, string>;
       comentarios: string;
       step: number;
     }>(this.DRAFT);
@@ -176,6 +180,7 @@ export class PartePage {
       this.otroPersonal.set(draft.otroPersonal);
       this.actividades.set(draft.actividades ?? []);
       this.restricciones.set(draft.restricciones ?? []);
+      this.restriccionDesc.set(draft.restriccionDesc ?? {});
       this.comentarios.set(draft.comentarios ?? '');
       this.step.set(draft.step ?? 1);
       this.toast.show('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
@@ -245,9 +250,31 @@ export class PartePage {
   }
 
   toggleRestriccion(r: string): void {
+    const willRemove = this.restricciones().includes(r);
     this.restricciones.update((list) =>
-      list.includes(r) ? list.filter((x) => x !== r) : [...list, r],
+      willRemove ? list.filter((x) => x !== r) : [...list, r],
     );
+    // U12 — al quitar una restricción, descarta su descripción.
+    if (willRemove) {
+      this.restriccionDesc.update((m) => {
+        const next = { ...m };
+        delete next[r];
+        return next;
+      });
+    }
+  }
+
+  /** U12 — ¿esta restricción exige "Describa…"? Todas menos NINGUNA. */
+  requiereDescripcion(r: string): boolean {
+    return this.restricciones().includes(r) && r !== 'NINGUNA';
+  }
+
+  getRestriccionDesc(r: string): string {
+    return this.restriccionDesc()[r] ?? '';
+  }
+
+  setRestriccionDesc(r: string, v: string): void {
+    this.restriccionDesc.update((m) => ({ ...m, [r]: v }));
   }
 
   async addFoto(): Promise<void> {
@@ -282,6 +309,16 @@ export class PartePage {
     if (this.step() === 3 && this.huboMigracion() === null) {
       this.toast.error('Dinos si hubo problemas de migración.');
       return;
+    }
+    // U12 — al salir del paso de restricciones, cada una (menos NINGUNA) exige descripción.
+    if (this.step() === 6) {
+      const faltante = this.restricciones().find(
+        (r) => r !== 'NINGUNA' && !this.getRestriccionDesc(r).trim(),
+      );
+      if (faltante) {
+        this.toast.error('Describe brevemente cada restricción seleccionada.');
+        return;
+      }
     }
     this.step.update((s) => Math.min(this.total, s + 1));
   }
@@ -346,7 +383,11 @@ export class PartePage {
         trabajadoresCasa: this.casa(),
         otroPersonal: this.otroPersonal().trim() || null,
         actividades: this.actividades(),
-        restricciones: this.restricciones().length ? this.restricciones() : ['NINGUNA'],
+        // U12 — cada restricción con su descripción (NINGUNA sin descripción).
+        restricciones: (this.restricciones().length ? this.restricciones() : ['NINGUNA']).map((r) => ({
+          tipo_restriccion: r,
+          descripcion_otro: r === 'NINGUNA' ? null : this.getRestriccionDesc(r).trim() || null,
+        })),
         comentarios: this.comentarios().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
         llovio: this.llovio(),

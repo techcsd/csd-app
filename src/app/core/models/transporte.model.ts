@@ -70,6 +70,8 @@ export interface VehiculoDisponible {
   modelo: string;
   tipo: string;
   km: number;
+  /** U6 — path de la 1ª foto en el bucket `vehiculos` (o null). */
+  foto_path?: string | null;
 }
 
 /** An active self/admin assignment from sgc.vehiculo_asignaciones. */

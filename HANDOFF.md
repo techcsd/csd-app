@@ -1,5 +1,51 @@
 # HANDOFF — CSD App
 
+## Actualización 2 móvil (PROMPT-6) — build verde, SQL aplicado, NADA pusheado
+Branch **`feat/actualizacion2-movil`** (commit local `fb15068`, no pusheado). Delta de
+actualización 2 sobre la app de campo. `npm run build` verde. Falta device-QA + (si se aprueba)
+push PWA + bump/APK.
+
+**F1 flota:** U10 pre-uso ahora filtra `frecuencia='preuso'` (nunca la de 33 ítems ni la semanal)
++ clave de caché nueva (`checklist_plantillas_preuso`) que invalida cachés viejos; U8 texto que
+explica reporte-semanal vs pre-uso en el hub; U6 foto del vehículo en el selector del pool
+(`asignar`, URL firmada bucket `vehiculos`); U1 el pool ya era accesible vía "Asignarme un vehículo".
+
+**F3 bitácora:** U11 quitado 'CLIMA' del catálogo de restricciones; U12 "Describa…" obligatorio por
+restricción (envía `descripcion_otro`; RPC ya lo aceptaba); U13 el detalle muestra clima, migración
+(obreros) y cantidad por actividad (modelo + select extendidos).
+
+**F2 rutas (sin mapa embebido):** **bug corregido** — las coords de origen se perdían;
+`crear_ruta_app` extendido aditivo con `p_origen_lat/lng` (`sql/2026-07-15-crear-ruta-origen-coords.sql`,
+aplicado a prod) y el handler las envía; U22 destino por **obra o almacén con sus coordenadas**
+(`getLugaresDestino`); U21 botón "usar mi ubicación actual" con permiso nativo + error visible.
+
+**Utilidades (paridad):** `core/util/fecha.ts` (U9 — las fechas ya no eran ISO cruda, usan DatePipe),
+`duracion.ts` (U23 — sin fuente de duración aún), `telefono.ts` (U5 — la app no tiene inputs de teléfono).
+**U25:** la restricción "OTRO" ahora manda `descripcion_otro` → el trigger de BD la registra en
+`otros_valores` (web y móvil), sin cambio de app extra. **U17** (inventario/compras tec) = solo web
+(la app no tiene módulo Tecnología).
+
+**F2 mapa interactivo (U18/U19/U20) — HECHO, pendiente walk-through en teléfono:** nuevo
+`shared/ui/location-picker` (Leaflet 1.9.4 + OSM): pin por toque, búsqueda RD (Nominatim
+`countrycodes=do`, es), "usar mi ubicación actual" (Geolocation nativo + permiso + error visible),
+`invalidateSize` para el WebView. `GeocodingService`. Rutas: origen con mapa (toggle) y destino "En
+el mapa" además de obra/almacén; coords guardadas. U4 confirmación de descarte en crear-ruta.
+Leaflet CSS en angular.json; pin del marcador en styles.scss.
+
+**APK v1.5.0 / versionCode 18:** bump en build.gradle + environments + release-apk.mjs; `npx cap sync`
+hecho; **APK release firmado construido e instalado al device 6dbf1af4** (arranca OK, sin crash en
+logcat). **NO publicado al bucket** (release-apk.mjs pone `min_version=VERSION` → forzaría a los
+usuarios de campo; publicar solo con tu OK).
+
+**Pendiente:** walk-through en el teléfono (mapa: pin/búsqueda/ubicación/obra-almacén; pre-uso 10
+tópicos; reporte semanal; bitácora describa+detalle; offline→reconnect). U4 "descartar" en el resto
+de wizards (preuso/combustible usan pasos con "Atrás"; falta interceptar el botón físico — es
+transversal). U24 fino: los perfiles/dashboards/gestión de avisos quedan solo-web (admin), lo
+operativo del chofer está en la app. **Nada pusheado** (branch local `feat/actualizacion2-movil`).
+
+---
+
+
 ## Historial de versiones (timeline admin) — ✅ en prod
 Página **solo admin** `admin/versiones` (`moduleGuard('admin')`): línea de tiempo con tabs
 App móvil / Web, cada versión con fecha + cambios. Lee `sgc.app_versiones` (extendida en SGC:

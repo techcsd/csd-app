@@ -38,6 +38,13 @@ export class BitacoraDetallePage {
     return t === 'incidente' ? 'Incidente' : t === 'visita' ? 'Visita' : 'Bitácora del día';
   });
 
+  /** U13 — obreros afectados por migración (jsonb → lista de strings). */
+  obrerosMigracion = computed<string[]>(() => {
+    const m = this.b()?.migracion_obreros;
+    if (Array.isArray(m)) return m.map((x) => String(x));
+    return [];
+  });
+
   constructor() {
     void this.load();
   }

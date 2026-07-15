@@ -2,6 +2,21 @@
   background: var(--color-bg);
 }
 
+// U21/U22 — ubicación actual + avisos de coordenadas
+.cruta__gps {
+  margin: 8px 0 4px;
+}
+.cruta__gps-ok {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--color-success, #16a34a);
+}
+.cruta__gps-warn {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--color-warning, #d97706);
+}
+
 .cruta__header {
   display: flex;
   align-items: center;

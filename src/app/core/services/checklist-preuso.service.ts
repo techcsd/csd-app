@@ -4,7 +4,9 @@ import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { ChecklistCaptura, ChecklistPlantilla } from '../models/checklist-preuso.model';
 
-const CATALOG_PLANTILLAS = 'checklist_plantillas';
+// U10 — clave nueva ('_preuso') para invalidar cualquier caché viejo con la
+// plantilla de 33 ítems (PRE-USO-V2). Ahora solo trae plantillas de pre-uso.
+const CATALOG_PLANTILLAS = 'checklist_plantillas_preuso';
 
 /**
  * Pre-use vehicle checklist data + write path. Template reads go through the
@@ -28,9 +30,12 @@ export class ChecklistPreusoService {
       const { data, error } = await this.supabase.client
         .from('checklist_plantillas')
         .select(
-          'id, codigo, nombre, categoria, descripcion, activo, orden, items:checklist_plantilla_items(*)',
+          'id, codigo, nombre, categoria, descripcion, activo, orden, frecuencia, items:checklist_plantilla_items(*)',
         )
         .eq('activo', true)
+        // U10 — solo plantillas de pre-uso (nunca la semanal ni una legacy):
+        // hoy la activa es PRE-USO-V3 (10 tópicos). Evita mostrar 33 preguntas.
+        .eq('frecuencia', 'preuso')
         .order('orden', { ascending: true });
       if (error) throw new Error(error.message);
       return ((data as ChecklistPlantilla[]) ?? []).map((p) => ({

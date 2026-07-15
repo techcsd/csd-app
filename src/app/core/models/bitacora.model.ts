@@ -21,6 +21,9 @@ export const ACTIVIDADES = [
   'DESENCOFRADO',
 ] as const;
 
+// U11 — 'CLIMA' se quitó: el clima ya se pregunta al inicio del wizard (lluvia).
+// (En la BD el catálogo 'restriccion'='CLIMA' quedó desactivado; las bitácoras
+// viejas que lo tengan se siguen visualizando.)
 export const RESTRICCIONES = [
   'NINGUNA',
   'FALTA DE MATERIALES',
@@ -28,7 +31,6 @@ export const RESTRICCIONES = [
   'INTERFERENCIA DE OTRAS BRIGADAS',
   'FALTA DE LIBERACION PARA INICIO DE TRABAJOS',
   'FALTA DEL CLIENTE',
-  'CLIMA',
   'OTRO',
 ] as const;
 
@@ -63,6 +65,9 @@ export interface ProyectoPartida {
 export interface Proyecto {
   id: string;
   nombre: string;
+  /** U22 — coordenadas de la obra (para destino de rutas), si están cargadas. */
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 /** A bitácora with its children, for the "Mis bitácoras" list + detail. */
@@ -79,8 +84,13 @@ export interface BitacoraFull {
   incidente_gravedad: string | null;
   incidente_lesionados: number | null;
   incidente_descripcion: string | null;
+  // U13 — clima + migración (datos, no incidente).
+  llovio?: boolean | null;
+  lluvia_detalle?: string | null;
+  hubo_migracion?: boolean | null;
+  migracion_obreros?: unknown;
   proyecto?: { nombre: string } | null;
-  actividades?: { estructura: string; actividad: string }[];
+  actividades?: { estructura: string; actividad: string; cantidad?: number | null }[];
   restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
   archivos?: { nombre: string; url: string; tipo_mime: string | null }[];
 }

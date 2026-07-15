@@ -42,6 +42,8 @@ export class AsignarVehiculoPage {
   loading = signal(true);
   disponibles = signal<VehiculoDisponible[]>([]);
   seleccionado = signal<VehiculoDisponible | null>(null);
+  /** U6 — vehiculo_id → URL firmada de su foto (thumbnail del pool). */
+  fotoUrls = signal<Record<string, string>>({});
 
   /** Whether the user still needs a driver profile (resolved on load). */
   necesitaConductor = signal(false);
@@ -71,9 +73,22 @@ export class AsignarVehiculoPage {
       ]);
       this.disponibles.set(disp);
       this.necesitaConductor.set(!cond);
+      void this.resolveFotos(disp);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** U6 — resuelve las fotos del pool a URLs firmadas (mejor esfuerzo, online). */
+  private async resolveFotos(disp: VehiculoDisponible[]): Promise<void> {
+    await Promise.all(
+      disp
+        .filter((v) => v.foto_path)
+        .map(async (v) => {
+          const url = await this.vehiculos.getFotoUrl(v.foto_path);
+          if (url) this.fotoUrls.update((m) => ({ ...m, [v.vehiculo_id]: url }));
+        }),
+    );
   }
 
   seleccionar(v: VehiculoDisponible): void {

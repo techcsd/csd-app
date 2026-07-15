@@ -30,6 +30,17 @@ export interface RutaCaptura {
   notas: string | null;
   origen_lat: number | null;
   origen_lng: number | null;
+  destino_lat: number | null;
+  destino_lng: number | null;
+}
+
+/** Obra o almacén como destino, con sus coordenadas (U22). */
+export interface LugarDestino {
+  id: string;
+  nombre: string;
+  tipo: 'obra' | 'almacen';
+  latitud: number | null;
+  longitud: number | null;
 }
 
 /**
@@ -70,10 +81,37 @@ export class ConducesService {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
       const { data, error } = await this.supabase.client
         .from('proyectos')
-        .select('id, nombre')
+        .select('id, nombre, latitud, longitud')
         .order('nombre');
       if (error) throw new Error(error.message);
       return (data as Proyecto[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** U22 — obras + almacenes con coordenadas, para elegir destino de la ruta. */
+  async getLugaresDestino(): Promise<LugarDestino[]> {
+    const data = await this.catalog.refresh<LugarDestino[]>('lugares_destino', async () => {
+      const [obras, almacenes] = await Promise.all([
+        this.supabase.client.from('proyectos').select('id, nombre, latitud, longitud').order('nombre'),
+        this.supabase.client.from('bodegas').select('id, nombre, latitud, longitud').eq('activo', true).order('nombre'),
+      ]);
+      if (obras.error) throw new Error(obras.error.message);
+      const lugares: LugarDestino[] = [];
+      for (const o of (obras.data as Array<Record<string, unknown>>) ?? []) {
+        lugares.push({
+          id: o['id'] as string, nombre: o['nombre'] as string, tipo: 'obra',
+          latitud: (o['latitud'] as number) ?? null, longitud: (o['longitud'] as number) ?? null,
+        });
+      }
+      // bodegas puede no tener columnas geo en un entorno viejo → tolerante.
+      for (const b of (almacenes.data as Array<Record<string, unknown>> | null) ?? []) {
+        lugares.push({
+          id: b['id'] as string, nombre: b['nombre'] as string, tipo: 'almacen',
+          latitud: (b['latitud'] as number) ?? null, longitud: (b['longitud'] as number) ?? null,
+        });
+      }
+      return lugares;
     });
     return data ?? [];
   }
@@ -97,6 +135,8 @@ export class ConducesService {
         notas: input.notas,
         origen_lat: input.origen_lat,
         origen_lng: input.origen_lng,
+        destino_lat: input.destino_lat,
+        destino_lng: input.destino_lng,
         capturado_en,
       },
       resumen: { origen: input.origen, destino: input.destino, fecha: input.fecha, capturado_en },
@@ -162,9 +202,11 @@ export class ConducesService {
         p_km_estimado: payload['km_estimado'] ?? null,
         p_notas: payload['notas'] ?? null,
         p_destino_proyecto_id: payload['destino_proyecto_id'] ?? null,
-        p_destino_lat: null,
-        p_destino_lng: null,
+        p_destino_lat: payload['destino_lat'] ?? null,
+        p_destino_lng: payload['destino_lng'] ?? null,
         p_capturado_en: payload['capturado_en'],
+        p_origen_lat: payload['origen_lat'] ?? null,
+        p_origen_lng: payload['origen_lng'] ?? null,
       });
       if (error) throwSyncError(error);
     });
