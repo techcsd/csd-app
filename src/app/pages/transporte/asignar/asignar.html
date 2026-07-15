@@ -19,12 +19,19 @@
         />
       } @else {
         @for (v of disponibles(); track v.vehiculo_id) {
-          <app-option-button
-            [icon]="'🚙'"
-            [label]="v.placa + ' · ' + v.marca + ' ' + v.modelo"
-            [selected]="seleccionado()?.vehiculo_id === v.vehiculo_id"
-            (pressed)="seleccionar(v)"
-          />
+          <div class="asignar__veh">
+            @if (fotoUrls()[v.vehiculo_id]; as url) {
+              <img class="asignar__veh-foto" [src]="url" [alt]="'Foto de ' + v.placa" />
+            } @else {
+              <span class="asignar__veh-foto asignar__veh-foto--ph" aria-hidden="true">🚙</span>
+            }
+            <app-option-button
+              class="asignar__veh-btn"
+              [label]="v.placa + ' · ' + v.marca + ' ' + v.modelo"
+              [selected]="seleccionado()?.vehiculo_id === v.vehiculo_id"
+              (pressed)="seleccionar(v)"
+            />
+          </div>
           @if (seleccionado()?.vehiculo_id === v.vehiculo_id) {
             <p class="asignar__veh-detail">
               {{ v.tipo || 'Vehículo' }} · {{ v.km | number: '1.0-0' }} km

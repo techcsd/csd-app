@@ -2,6 +2,30 @@
   background: var(--color-bg);
 }
 
+// U6 — fila de vehículo con foto en el pool
+.asignar__veh {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.asignar__veh-btn {
+  flex: 1;
+  min-width: 0;
+}
+.asignar__veh-foto {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--color-surface, #f1f2f4);
+  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
 .asignar__veh-detail {
   margin: -6px 0 12px;
   padding-left: 4px;

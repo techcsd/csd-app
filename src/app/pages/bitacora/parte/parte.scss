@@ -38,6 +38,11 @@
   margin-bottom: 10px;
 }
 
+// U12 — campo "Describa…" bajo la restricción seleccionada
+.parte__restr-desc {
+  margin: -4px 0 14px;
+}
+
 app-counter {
   display: block;
   border-bottom: 1px solid var(--color-border);

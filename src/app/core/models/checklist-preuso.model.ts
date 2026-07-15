@@ -89,6 +89,8 @@ export interface ChecklistPlantilla {
   descripcion: string | null;
   activo: boolean;
   orden: number;
+  /** 'preuso' (inspección diaria) | 'semanal' (reporte semanal). */
+  frecuencia?: string;
   items: ChecklistPlantillaItem[];
 }
 

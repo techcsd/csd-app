@@ -106,6 +106,17 @@
         <div class="parte__restr">
           @for (r of restriccionesCat(); track r) {
             <app-option-button [label]="r" [selected]="restricciones().includes(r)" (pressed)="toggleRestriccion(r)" />
+            <!-- U12 — describa cada restricción seleccionada (obligatorio, menos NINGUNA) -->
+            @if (requiereDescripcion(r)) {
+              <input
+                class="field parte__restr-desc"
+                type="text"
+                [ngModel]="getRestriccionDesc(r)"
+                (ngModelChange)="setRestriccionDesc(r, $event)"
+                [placeholder]="'Describa: ' + r.toLowerCase() + '…'"
+                aria-label="Describa la restricción"
+              />
+            }
           }
         </div>
       }

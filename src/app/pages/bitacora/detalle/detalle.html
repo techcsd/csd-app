@@ -28,13 +28,29 @@
           <span>👷 Casa: {{ bit.trabajadores_casa }}</span>
           @if (bit.otro_personal) { <span>Otro: {{ bit.otro_personal }}</span> }
         </div>
+
+        <!-- U13 — clima y migración (datos, no incidente) -->
+        @if (bit.llovio != null) {
+          <h2 class="det__section">Clima</h2>
+          <p class="det__desc">
+            {{ bit.llovio ? '🌧 Llovió' : '☀ Sin lluvia' }}
+            @if (bit.llovio && bit.lluvia_detalle) { — {{ bit.lluvia_detalle }} }
+          </p>
+        }
+        @if (bit.hubo_migracion) {
+          <h2 class="det__section">Migración</h2>
+          <p class="det__desc">
+            Hubo problemas de migración
+            @if (obrerosMigracion().length) { · {{ obrerosMigracion().join(', ') }} }
+          </p>
+        }
       }
 
       @if (bit.actividades?.length) {
         <h2 class="det__section">Actividades</h2>
         <ul class="det__list">
           @for (a of bit.actividades; track $index) {
-            <li>{{ a.estructura }} · {{ a.actividad }}</li>
+            <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · {{ a.cantidad }}</b> }</li>
           }
         </ul>
       }
