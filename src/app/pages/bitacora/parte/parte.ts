@@ -9,6 +9,7 @@ import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -23,14 +24,14 @@ import {
   RESTRICCIONES,
 } from '../../../core/models/bitacora.model';
 
-const TOTAL = 8;
+const TOTAL = 9;
 
 /** Parte diario wizard — one section per screen, photo-first (User Flow §4). */
 @Component({
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog],
+  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -67,6 +68,11 @@ export class PartePage implements OnDestroy {
   // R24 — partidas planeadas del proyecto (referencia de cantidades).
   partidas = signal<ProyectoPartida[]>([]);
 
+  // W3 — paridad con la web (opcionales en campo).
+  bloqueEntrepiso = signal('');
+  ingenieroResponsable = signal('');
+  horaFinTrabajo = signal('');
+
   carpinteria = signal(0);
   acero = signal(0);
   casa = signal(0);
@@ -79,10 +85,19 @@ export class PartePage implements OnDestroy {
   restricciones = signal<string[]>([]);
   // U12 — descripción breve obligatoria por restricción seleccionada (tipo → texto).
   restriccionDesc = signal<Record<string, string>>({});
+
+  // W2 — equipos alquilados en uso hoy (Sí/No + lista dinámica).
+  huboEquipos = signal(false);
+  equiposAlquilados = signal<{ equipo: string; uso: string; proveedor: string }[]>([]);
+  equiposSugeridos = signal<string[]>([]);
+
   comentarios = signal('');
 
   fotos = signal<CapturedPhoto[]>([]);
   capturing = signal(false);
+
+  // W5 — spinner de carga de obras en el paso 1.
+  loadingObras = signal(true);
 
   submitting = signal(false);
   done = signal(false);
@@ -115,9 +130,14 @@ export class PartePage implements OnDestroy {
         acero: this.acero(),
         casa: this.casa(),
         otroPersonal: this.otroPersonal(),
+        bloqueEntrepiso: this.bloqueEntrepiso(),
+        ingenieroResponsable: this.ingenieroResponsable(),
+        horaFinTrabajo: this.horaFinTrabajo(),
         actividades: this.actividades(),
         restricciones: this.restricciones(),
         restriccionDesc: this.restriccionDesc(),
+        huboEquipos: this.huboEquipos(),
+        equiposAlquilados: this.equiposAlquilados(),
         comentarios: this.comentarios(),
         step: this.step(),
       };
@@ -154,8 +174,13 @@ export class PartePage implements OnDestroy {
   }
 
   private async load(): Promise<void> {
+    this.loadingObras.set(true);
     const list = await this.bitacora.getProyectos();
     this.proyectos.set(list);
+    this.loadingObras.set(false);
+
+    // W2 — sugerencias de equipos (best-effort, no bloquea el wizard).
+    void this.bitacora.getEquiposSugeridos().then((s) => this.equiposSugeridos.set(s));
 
     const cat = await this.bitacora.getCatalogos();
     if (cat.estructuras.length) this.estructuras.set(cat.estructuras);
@@ -172,9 +197,14 @@ export class PartePage implements OnDestroy {
       acero: number;
       casa: number;
       otroPersonal: string;
+      bloqueEntrepiso?: string;
+      ingenieroResponsable?: string;
+      horaFinTrabajo?: string;
       actividades: ActividadEntry[];
       restricciones: string[];
       restriccionDesc?: Record<string, string>;
+      huboEquipos?: boolean;
+      equiposAlquilados?: { equipo: string; uso: string; proveedor: string }[];
       comentarios: string;
       step: number;
     }>(this.DRAFT);
@@ -189,9 +219,14 @@ export class PartePage implements OnDestroy {
       this.acero.set(draft.acero);
       this.casa.set(draft.casa);
       this.otroPersonal.set(draft.otroPersonal);
+      this.bloqueEntrepiso.set(draft.bloqueEntrepiso ?? '');
+      this.ingenieroResponsable.set(draft.ingenieroResponsable ?? '');
+      this.horaFinTrabajo.set(draft.horaFinTrabajo ?? '');
       this.actividades.set(draft.actividades ?? []);
       this.restricciones.set(draft.restricciones ?? []);
       this.restriccionDesc.set(draft.restriccionDesc ?? {});
+      this.huboEquipos.set(draft.huboEquipos ?? false);
+      this.equiposAlquilados.set(draft.equiposAlquilados ?? []);
       this.comentarios.set(draft.comentarios ?? '');
       this.step.set(draft.step ?? 1);
       this.toast.show('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
@@ -288,12 +323,45 @@ export class PartePage implements OnDestroy {
     this.restriccionDesc.update((m) => ({ ...m, [r]: v }));
   }
 
+  // W2 — equipos alquilados.
+  onHuboEquiposChange(v: boolean): void {
+    this.huboEquipos.set(v);
+    // Al decir "Sí" y no haber filas, arranca con una vacía para llenar.
+    if (v && this.equiposAlquilados().length === 0) this.addEquipo();
+  }
+
+  addEquipo(): void {
+    this.equiposAlquilados.update((l) => [...l, { equipo: '', uso: '', proveedor: '' }]);
+  }
+
+  removeEquipo(i: number): void {
+    this.equiposAlquilados.update((l) => l.filter((_, idx) => idx !== i));
+  }
+
+  updateEquipo(i: number, field: 'equipo' | 'uso' | 'proveedor', value: string): void {
+    this.equiposAlquilados.update((l) =>
+      l.map((e, idx) => (idx === i ? { ...e, [field]: value } : e)),
+    );
+  }
+
   async addFoto(): Promise<void> {
     if (this.capturing()) return;
     this.capturing.set(true);
     try {
       const photo = await this.camera.takePhoto();
       if (photo) this.fotos.update((f) => [...f, photo]);
+    } finally {
+      this.capturing.set(false);
+    }
+  }
+
+  /** W1 — agregar varias fotos de la galería de una sola vez (sin límite práctico). */
+  async addFromGallery(): Promise<void> {
+    if (this.capturing()) return;
+    this.capturing.set(true);
+    try {
+      const photos = await this.camera.pickFromGallery();
+      if (photos.length) this.fotos.update((f) => [...f, ...photos]);
     } finally {
       this.capturing.set(false);
     }
@@ -328,6 +396,18 @@ export class PartePage implements OnDestroy {
       );
       if (faltante) {
         this.toast.error('Describe brevemente cada restricción seleccionada.');
+        return;
+      }
+    }
+    // W2 — al salir del paso de equipos, si hay equipos exige al menos uno con nombre y su uso.
+    if (this.step() === 8 && this.huboEquipos()) {
+      const conNombre = this.equiposAlquilados().filter((e) => e.equipo.trim());
+      if (!conNombre.length) {
+        this.toast.error('Escribe al menos un equipo o cambia a "No".');
+        return;
+      }
+      if (conNombre.some((e) => !e.uso.trim())) {
+        this.toast.error('Dinos en qué se usó cada equipo.');
         return;
       }
     }
@@ -397,6 +477,9 @@ export class PartePage implements OnDestroy {
         personalAcero: this.acero(),
         trabajadoresCasa: this.casa(),
         otroPersonal: this.otroPersonal().trim() || null,
+        bloqueEntrepiso: this.bloqueEntrepiso().trim() || null,
+        ingenieroResponsable: this.ingenieroResponsable().trim() || null,
+        horaFinTrabajo: this.horaFinTrabajo() || null,
         actividades: this.actividades(),
         // U12 — cada restricción con su descripción (NINGUNA sin descripción).
         restricciones: (this.restricciones().length ? this.restricciones() : ['NINGUNA']).map((r) => ({
@@ -409,6 +492,16 @@ export class PartePage implements OnDestroy {
         lluviaDetalle: this.llovio() ? this.lluviaDetalle().trim() || null : null,
         huboMigracion: this.huboMigracion(),
         migracionObreros: this.huboMigracion() && obreros.length ? obreros : null,
+        huboEquipos: this.huboEquipos(),
+        equiposAlquilados: this.huboEquipos()
+          ? this.equiposAlquilados()
+              .filter((e) => e.equipo.trim())
+              .map((e) => ({
+                equipo: e.equipo.trim(),
+                uso: e.uso.trim() || null,
+                proveedor: e.proveedor.trim() || null,
+              }))
+          : [],
       });
       this.hydrated = false; // stop autosave; discard the draft
       await this.borrador.clear(this.DRAFT);

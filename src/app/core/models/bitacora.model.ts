@@ -53,6 +53,13 @@ export interface ActividadEntry {
   cantidad?: number | null;
 }
 
+/** W2 — un equipo alquilado en uso en la obra hoy. */
+export interface EquipoAlquilado {
+  equipo: string;
+  uso: string | null;
+  proveedor: string | null;
+}
+
 /** A planned line item for a project (R24), shown as reference in the wizard. */
 export interface ProyectoPartida {
   id: string;
@@ -74,23 +81,33 @@ export interface Proyecto {
 export interface BitacoraFull {
   id: string;
   fecha: string;
+  created_at?: string | null;
   tipo: string;
   comentarios: string | null;
+  // W3 — paridad con la web (parte diario).
+  bloque_entrepiso?: string | null;
+  ingeniero_responsable?: string | null;
+  hora_fin_trabajo?: string | null;
   personal_carpinteria: number;
   personal_acero: number;
   trabajadores_casa: number;
   otro_personal: string | null;
   incidente_tipo: string | null;
   incidente_gravedad: string | null;
+  incidente_subcontratista?: string | null;
   incidente_lesionados: number | null;
   incidente_descripcion: string | null;
+  incidente_acciones?: string | null;
   // U13 — clima + migración (datos, no incidente).
   llovio?: boolean | null;
   lluvia_detalle?: string | null;
   hubo_migracion?: boolean | null;
   migracion_obreros?: unknown;
+  // W2 — equipos alquilados en uso.
+  hubo_equipos_alquilados?: boolean | null;
   proyecto?: { nombre: string } | null;
   actividades?: { estructura: string; actividad: string; cantidad?: number | null }[];
   restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
+  equipos?: EquipoAlquilado[];
   archivos?: { nombre: string; url: string; tipo_mime: string | null }[];
 }

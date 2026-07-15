@@ -72,6 +72,12 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+.ruta-card__notas {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
 .ruta-card__estado[data-estado='en_curso'] {
   color: var(--color-info);
   font-weight: 700;

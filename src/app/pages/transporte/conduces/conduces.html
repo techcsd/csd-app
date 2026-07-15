@@ -20,6 +20,7 @@
             <div class="ruta-card__info">
               <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}</span>
               <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ r.estado }}</span>
+              @if (r.notas) { <span class="ruta-card__notas">📝 {{ r.notas }}</span> }
             </div>
             <div class="ruta-card__actions">
               <button type="button" class="btn-ghost" (click)="comoLlegar(r)">🧭 Cómo llegar</button>

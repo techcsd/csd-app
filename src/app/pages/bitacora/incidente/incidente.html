@@ -74,6 +74,12 @@
       <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe qué pasó (obligatorio)" />
       <p class="incidente__or">o graba una nota de voz</p>
       <app-voice-recorder (recorded)="voz.set($event)" />
+
+      <h2 class="incidente__q">¿Qué se hizo? (acciones tomadas)</h2>
+      <input class="field" type="text" [ngModel]="acciones()" (ngModelChange)="acciones.set($event)" placeholder="Medidas inmediatas o correctivas (opcional)" />
+
+      <h2 class="incidente__q">¿Involucra a un subcontratista? (opcional)</h2>
+      <input class="field" type="text" [ngModel]="subcontratista()" (ngModelChange)="subcontratista.set($event)" placeholder="Nombre del subcontratista" />
     </div>
 
     <footer class="incidente__nav">

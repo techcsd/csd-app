@@ -152,4 +152,6 @@ export interface RutaHoy {
   destino: string;
   estado: string;
   fecha: string;
+  /** W4 — notas de la ruta (se capturaban pero no se mostraban). */
+  notas?: string | null;
 }

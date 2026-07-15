@@ -47,6 +47,9 @@ export class IncidentePage {
   gravedad = signal<string>('');
   lesionados = signal(0);
   descripcion = signal('');
+  // W3 — acciones/medidas tomadas + subcontratista (paridad con la web).
+  acciones = signal('');
+  subcontratista = signal('');
   voz = signal<Blob | null>(null);
   fotos = signal<CapturedPhoto[]>([]);
   capturing = signal(false);
@@ -119,6 +122,8 @@ export class IncidentePage {
         gravedad: this.gravedad(),
         lesionados: this.lesionados(),
         descripcion: this.descripcion().trim() || null,
+        acciones: this.acciones().trim() || null,
+        subcontratista: this.subcontratista().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
         voz: this.voz(),
       });

@@ -18,15 +18,19 @@
       @if (step() === 1) {
         <h1 class="screen__title">¿En qué obra estás?</h1>
         <div class="parte__obras">
-          @for (p of proyectos(); track p.id) {
-            <app-option-button
-              [label]="p.nombre"
-              icon="🏗️"
-              [selected]="proyectoId() === p.id"
-              (pressed)="proyectoId.set(p.id)"
-            />
-          } @empty {
-            <p class="parte__muted">No hay obras disponibles.</p>
+          @if (loadingObras()) {
+            <app-skeleton [rows]="4" />
+          } @else {
+            @for (p of proyectos(); track p.id) {
+              <app-option-button
+                [label]="p.nombre"
+                icon="🏗️"
+                [selected]="proyectoId() === p.id"
+                (pressed)="proyectoId.set(p.id)"
+              />
+            } @empty {
+              <p class="parte__muted">No hay obras disponibles.</p>
+            }
           }
         </div>
       }
@@ -121,10 +125,13 @@
         </div>
       }
 
-      <!-- 7. Fotos -->
+      <!-- 7. Fotos (sin límite — cámara o galería en lote) -->
       @if (step() === 7) {
         <h1 class="screen__title">Fotos de la obra</h1>
-        <p class="screen__subtitle">Opcional, pero ayudan mucho.</p>
+        <p class="screen__subtitle">
+          Agrega las que quieras, de la cámara o de la galería.
+          @if (fotos().length) { <b>{{ fotos().length }} agregada(s).</b> }
+        </p>
         <div class="parte__fotos">
           @for (f of fotos(); track f.previewUrl) {
             <div class="parte__foto">
@@ -133,13 +140,68 @@
             </div>
           }
         </div>
-        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
-          {{ capturing() ? '⏳ Tomando…' : '📷 Agregar foto' }}
-        </button>
+        <div class="parte__foto-actions">
+          <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
+            {{ capturing() ? '⏳…' : '📷 Cámara' }}
+          </button>
+          <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFromGallery()">
+            {{ capturing() ? '⏳…' : '🖼️ Galería' }}
+          </button>
+        </div>
       }
 
-      <!-- 8. Resumen -->
+      <!-- 8. Equipos alquilados (W2) -->
       @if (step() === 8) {
+        <h1 class="screen__title">¿Hay equipos alquilados en uso hoy?</h1>
+        <p class="screen__subtitle">Grúas, retroexcavadoras, plantas eléctricas… lo que esté rentado.</p>
+        <app-option-button icon="🚜" label="Sí" tone="warning" [selected]="huboEquipos() === true" (pressed)="onHuboEquiposChange(true)" />
+        <app-option-button icon="🚫" label="No" tone="success" [selected]="huboEquipos() === false" (pressed)="onHuboEquiposChange(false)" />
+
+        @if (huboEquipos()) {
+          <datalist id="equipos-sugeridos">
+            @for (s of equiposSugeridos(); track s) {
+              <option [value]="s"></option>
+            }
+          </datalist>
+          @for (e of equiposAlquilados(); track $index) {
+            <div class="parte__equipo">
+              <div class="parte__equipo-top">
+                <span class="parte__equipo-num">Equipo {{ $index + 1 }}</span>
+                <button type="button" class="parte__act-x" (click)="removeEquipo($index)">Quitar</button>
+              </div>
+              <input
+                class="field"
+                type="text"
+                list="equipos-sugeridos"
+                [ngModel]="e.equipo"
+                (ngModelChange)="updateEquipo($index, 'equipo', $event)"
+                placeholder="Equipo (ej: Retroexcavadora)"
+                aria-label="Equipo"
+              />
+              <input
+                class="field"
+                type="text"
+                [ngModel]="e.uso"
+                (ngModelChange)="updateEquipo($index, 'uso', $event)"
+                placeholder="¿En qué se usó? (obligatorio)"
+                aria-label="Uso del equipo"
+              />
+              <input
+                class="field"
+                type="text"
+                [ngModel]="e.proveedor"
+                (ngModelChange)="updateEquipo($index, 'proveedor', $event)"
+                placeholder="Proveedor (opcional)"
+                aria-label="Proveedor del equipo"
+              />
+            </div>
+          }
+          <button type="button" class="btn-ghost" (click)="addEquipo()">+ Agregar otro equipo</button>
+        }
+      }
+
+      <!-- 9. Resumen -->
+      @if (step() === 9) {
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
           <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
@@ -148,9 +210,20 @@
           <li><span>Personal</span><b>{{ carpinteria() + acero() + casa() }}</b></li>
           <li><span>Actividades</span><b>{{ actividades().length }}</b></li>
           <li><span>Problemas</span><b>{{ restricciones().length ? restricciones().length : 'Ninguno' }}</b></li>
+          <li><span>Equipos alquilados</span><b>{{ huboEquipos() ? equiposAlquilados().length : 'No' }}</b></li>
           <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
         </ul>
-        <label class="field-label">Comentario (opcional)</label>
+        <!-- W3 — datos del parte (paridad web, opcionales en campo) -->
+        <label class="field-label parte__mt">Bloque / entrepiso (opcional)</label>
+        <input class="field" type="text" [ngModel]="bloqueEntrepiso()" (ngModelChange)="bloqueEntrepiso.set($event)" placeholder="Ej: Bloque B, 3er nivel" />
+
+        <label class="field-label">Ingeniero responsable (opcional)</label>
+        <input class="field" type="text" [ngModel]="ingenieroResponsable()" (ngModelChange)="ingenieroResponsable.set($event)" placeholder="Nombre del ingeniero" />
+
+        <label class="field-label">Hora de fin de trabajo (opcional)</label>
+        <input class="field" type="time" [ngModel]="horaFinTrabajo()" (ngModelChange)="horaFinTrabajo.set($event)" />
+
+        <label class="field-label parte__mt">Comentario (opcional)</label>
         <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
       }
     </div>

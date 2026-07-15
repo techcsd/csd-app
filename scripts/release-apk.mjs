@@ -37,7 +37,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.6.0';
+const VERSION = '1.7.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -50,19 +50,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.6.0 quedó como mínimo forzado (2026-07-15). Mantener este
 // valor alineado con esa fila para que version.json (aviso) no contradiga el gate.
 const MIN_VERSION = '1.6.0';
-const TITULO = 'Actualización desde la app, catálogo oficial y requisición por hojas';
+const TITULO = 'Bitácora: fotos ilimitadas, equipos alquilados y paridad con la web';
 // Cambios etiquetados (nuevo|mejora|arreglo|seguridad) — alimentan el timeline
 // del historial (cambios) y, unidos, las notas / el changelog de version.json.
 const CAMBIOS = [
-  { t: 'nuevo', d: 'Actualízate desde la misma app: cuando hay una versión nueva, un botón la descarga e instala sin ir a la página web.' },
-  { t: 'nuevo', d: 'Catálogo oficial de materiales (8 categorías). Al pedir EPP se indica la talla; "Otros" permite describir lo que no está en la lista.' },
-  { t: 'nuevo', d: 'Requisición rediseñada por hojas, igual que salida/entrada, con resumen y compartir por WhatsApp.' },
-  { t: 'mejora', d: 'Reporte semanal para cualquier conductor: elige un vehículo del pool aunque no tengas uno asignado.' },
-  { t: 'mejora', d: 'Tarjetas de vehículos con foto, tipo y kilometraje en todos los listados.' },
-  { t: 'mejora', d: 'Conteo: si todo está conforme, puedes guardar sin diferencias.' },
-  { t: 'mejora', d: 'Pantallas de carga (skeletons) en toda la app — nunca una pantalla en blanco.' },
-  { t: 'arreglo', d: 'El botón "Siguiente" siempre visible en salida de material y al asignarte un vehículo.' },
-  { t: 'arreglo', d: '"Verificar versión" ahora detecta correctamente cuando hay una nueva publicada.' },
+  { t: 'nuevo', d: 'Bitácora: agrega todas las fotos que quieras, de la cámara o de la galería (en lote).' },
+  { t: 'nuevo', d: 'Bitácora: registra los equipos alquilados en uso hoy (equipo, en qué se usó, proveedor) — queda respaldado y visible en el detalle.' },
+  { t: 'mejora', d: 'Bitácora al día con la web: bloque/entrepiso, ingeniero responsable, hora de fin de trabajo, subcontratista y acciones del incidente.' },
+  { t: 'mejora', d: 'Las notas de la ruta ahora se ven en la tarjeta de la ruta.' },
 ];
 const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
 const RELEASED_AT = '2026-07-15';
@@ -90,46 +85,22 @@ async function upload(objectName, body, contentType) {
 }
 
 /**
- * Registra (o actualiza) la versión en sgc.app_versiones para que el historial
- * y la página de versiones de SGC estén siempre al día sin captura manual.
- * Idempotente: si la fila ya existe, actualiza fecha/título/cambios/notas/apk_url
- * pero NO toca publicada/minima (esas las controla el admin en SGC).
+ * Registra (o actualiza) la versión en sgc.app_versiones vía el RPC idempotente
+ * sgc.registrar_version(plataforma, version, notas) para que el historial y la
+ * página de versiones de SGC estén al día sin captura manual. El RPC hace UPSERT
+ * por (plataforma, version) y NO toca publicada/minima (las controla el admin).
  */
 async function registrarEnHistorial() {
   const base = URL.replace(/\/$/, '');
   const auth = { apikey: KEY, Authorization: `Bearer ${KEY}` };
-  const datos = {
-    fecha: RELEASED_AT,
-    titulo: TITULO,
-    cambios: CAMBIOS,
-    notas: CHANGELOG,
-    apk_url: publicUrl,
-  };
 
-  const getRes = await fetch(
-    `${base}/rest/v1/app_versiones?plataforma=eq.movil&version=eq.${encodeURIComponent(VERSION)}&select=id`,
-    { headers: { ...auth, 'Accept-Profile': 'sgc' } },
-  );
-  if (!getRes.ok) throw new Error(`historial lookup: ${getRes.status} ${await getRes.text()}`);
-  const rows = await getRes.json();
-
-  if (Array.isArray(rows) && rows.length) {
-    const res = await fetch(`${base}/rest/v1/app_versiones?id=eq.${rows[0].id}`, {
-      method: 'PATCH',
-      headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc', Prefer: 'return=minimal' },
-      body: JSON.stringify(datos),
-    });
-    if (!res.ok) throw new Error(`historial update: ${res.status} ${await res.text()}`);
-    console.log(`✓ historial actualizado (v${VERSION})`);
-  } else {
-    const res = await fetch(`${base}/rest/v1/app_versiones`, {
-      method: 'POST',
-      headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc', Prefer: 'return=minimal' },
-      body: JSON.stringify({ version: VERSION, plataforma: 'movil', publicada: false, minima: false, ...datos }),
-    });
-    if (!res.ok) throw new Error(`historial insert: ${res.status} ${await res.text()}`);
-    console.log(`✓ registrado en el historial (v${VERSION}, borrador — no publicado)`);
-  }
+  const res = await fetch(`${base}/rest/v1/rpc/registrar_version`, {
+    method: 'POST',
+    headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc' },
+    body: JSON.stringify({ p_plataforma: 'movil', p_version: VERSION, p_notas: CHANGELOG }),
+  });
+  if (!res.ok) throw new Error(`registrar_version: ${res.status} ${await res.text()}`);
+  console.log(`✓ historial registrado vía RPC (v${VERSION})`);
 }
 
 if (!registerOnly) {

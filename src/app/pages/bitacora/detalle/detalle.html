@@ -12,13 +12,18 @@
         <li><span>Obra</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>
         <li><span>Fecha</span><b>{{ fmtFecha(bit.fecha) }}</b></li>
         @if (bit.tipo === 'parte_diario') {
+          @if (bit.bloque_entrepiso) { <li><span>Bloque / entrepiso</span><b>{{ bit.bloque_entrepiso }}</b></li> }
+          @if (bit.ingeniero_responsable) { <li><span>Ing. responsable</span><b>{{ bit.ingeniero_responsable }}</b></li> }
+          @if (bit.hora_fin_trabajo) { <li><span>Fin de trabajo</span><b>{{ bit.hora_fin_trabajo }}</b></li> }
           <li><span>Personal</span><b>{{ totalPersonal() }}</b></li>
         }
         @if (bit.tipo === 'incidente') {
           <li><span>Tipo</span><b>{{ bit.incidente_tipo }}</b></li>
           <li><span>Gravedad</span><b>{{ bit.incidente_gravedad }}</b></li>
           <li><span>Heridos</span><b>{{ bit.incidente_lesionados }}</b></li>
+          @if (bit.incidente_subcontratista) { <li><span>Subcontratista</span><b>{{ bit.incidente_subcontratista }}</b></li> }
         }
+        @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFecha(bit.created_at) }}</b></li> }
       </ul>
 
       @if (bit.tipo === 'parte_diario') {
@@ -64,9 +69,24 @@
         </ul>
       }
 
+      @if (bit.equipos?.length) {
+        <h2 class="det__section">Equipos alquilados</h2>
+        <ul class="det__list">
+          @for (e of bit.equipos; track $index) {
+            <li>
+              {{ e.equipo }}@if (e.uso) { — {{ e.uso }} }@if (e.proveedor) { · {{ e.proveedor }} }
+            </li>
+          }
+        </ul>
+      }
+
       @if (bit.incidente_descripcion) {
         <h2 class="det__section">Descripción</h2>
         <p class="det__desc">{{ bit.incidente_descripcion }}</p>
+      }
+      @if (bit.incidente_acciones) {
+        <h2 class="det__section">Acciones tomadas</h2>
+        <p class="det__desc">{{ bit.incidente_acciones }}</p>
       }
       @if (bit.comentarios) {
         <h2 class="det__section">Comentario</h2>

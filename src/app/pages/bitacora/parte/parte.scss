@@ -92,6 +92,16 @@ app-counter {
   gap: 8px;
   margin-bottom: 14px;
 }
+.parte__foto-actions {
+  display: flex;
+  gap: 10px;
+}
+.parte__foto-actions .btn-ghost {
+  flex: 1;
+}
+.parte__mt {
+  margin-top: 18px;
+}
 .parte__foto {
   position: relative;
   border-radius: var(--radius-sm);
@@ -190,5 +200,33 @@ app-counter {
 }
 .parte__plan {
   font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// W2 — fila de equipo alquilado
+.parte__equipo {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+
+  .field {
+    margin-bottom: 8px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+.parte__equipo-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.parte__equipo-num {
+  font-weight: 700;
   color: var(--color-text-secondary);
 }

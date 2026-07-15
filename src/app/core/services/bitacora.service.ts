@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ActividadEntry, BitacoraFull, Proyecto, ProyectoPartida } from '../models/bitacora.model';
+import { ActividadEntry, BitacoraFull, EquipoAlquilado, Proyecto, ProyectoPartida } from '../models/bitacora.model';
 
 const CATALOG_PROYECTOS = 'proyectos';
 const BUCKET = 'sgc-bitacora';
@@ -13,6 +13,10 @@ export interface ParteDiarioCaptura {
   personalAcero: number;
   trabajadoresCasa: number;
   otroPersonal: string | null;
+  // W3 — paridad con la web (opcionales).
+  bloqueEntrepiso: string | null;
+  ingenieroResponsable: string | null;
+  horaFinTrabajo: string | null;
   actividades: ActividadEntry[];
   // U12 — cada restricción lleva su descripción breve (obligatoria).
   restricciones: { tipo_restriccion: string; descripcion_otro: string | null }[];
@@ -23,6 +27,9 @@ export interface ParteDiarioCaptura {
   lluviaDetalle: string | null;
   huboMigracion: boolean | null;
   migracionObreros: string[] | null;
+  // W2 — equipos alquilados en uso hoy.
+  huboEquipos: boolean | null;
+  equiposAlquilados: EquipoAlquilado[];
 }
 
 export interface IncidenteCaptura {
@@ -31,6 +38,9 @@ export interface IncidenteCaptura {
   gravedad: string;
   lesionados: number;
   descripcion: string | null;
+  // W3 — acciones/medidas tomadas + subcontratista (paridad con la web).
+  acciones: string | null;
+  subcontratista: string | null;
   fotos: Blob[];
   voz: Blob | null;
 }
@@ -98,6 +108,9 @@ export class BitacoraService {
         personal_acero: input.personalAcero,
         trabajadores_casa: input.trabajadoresCasa,
         otro_personal: input.otroPersonal,
+        bloque_entrepiso: input.bloqueEntrepiso,
+        ingeniero_responsable: input.ingenieroResponsable,
+        hora_fin_trabajo: input.horaFinTrabajo,
         actividades: input.actividades.map((a) => ({
           estructura: a.estructura,
           actividad: a.actividad,
@@ -111,6 +124,12 @@ export class BitacoraService {
         lluvia_detalle: input.lluviaDetalle,
         hubo_migracion: input.huboMigracion,
         migracion_obreros: input.migracionObreros,
+        hubo_equipos: input.huboEquipos,
+        equipos_alquilados: input.equiposAlquilados.map((e) => ({
+          equipo: e.equipo,
+          uso: e.uso,
+          proveedor: e.proveedor,
+        })),
         capturado_en,
       },
       fotos: this.buildFotos(id, input.fotos),
@@ -150,6 +169,8 @@ export class BitacoraService {
         incidente_gravedad: input.gravedad,
         incidente_lesionados: input.lesionados,
         incidente_descripcion: input.descripcion,
+        incidente_acciones: input.acciones,
+        incidente_subcontratista: input.subcontratista,
         capturado_en,
       },
       fotos: [
@@ -168,7 +189,7 @@ export class BitacoraService {
       const { data, error } = await this.supabase.client
         .from('bitacoras')
         .select(
-          'id, fecha, tipo, comentarios, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_lesionados, incidente_descripcion, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })
@@ -177,6 +198,27 @@ export class BitacoraService {
       return (data as unknown as BitacoraFull[]) ?? [];
     });
     return data ?? [];
+  }
+
+  /**
+   * W2 — nombres de equipos alquilados usados recientemente, para el <datalist>
+   * de sugerencias. Best-effort online; devuelve [] si falla o sin señal.
+   */
+  async getEquiposSugeridos(): Promise<string[]> {
+    try {
+      const { data, error } = await this.supabase.client
+        .from('bitacora_equipos_alquilados')
+        .select('equipo')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) return [];
+      const nombres = ((data as { equipo: string }[]) ?? [])
+        .map((r) => (r.equipo ?? '').trim())
+        .filter(Boolean);
+      return [...new Set(nombres)].slice(0, 50);
+    } catch {
+      return [];
+    }
   }
 
   /** Signed URL for a bitácora photo/audio (private sgc-bitacora bucket). */
@@ -232,6 +274,13 @@ export class BitacoraService {
         p_lluvia_detalle: payload['lluvia_detalle'] ?? null,
         p_hubo_migracion: payload['hubo_migracion'] ?? null,
         p_migracion_obreros: payload['migracion_obreros'] ?? null,
+        p_hubo_equipos: payload['hubo_equipos'] ?? null,
+        p_equipos_alquilados: payload['equipos_alquilados'] ?? [],
+        // W3 — paridad con la web
+        p_bloque_entrepiso: payload['bloque_entrepiso'] ?? null,
+        p_ingeniero_responsable: payload['ingeniero_responsable'] ?? null,
+        p_hora_fin_trabajo: payload['hora_fin_trabajo'] ?? null,
+        p_incidente_subcontratista: payload['incidente_subcontratista'] ?? null,
       });
       if (error) throwSyncError(error);
 

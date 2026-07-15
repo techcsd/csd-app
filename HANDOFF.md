@@ -1,5 +1,45 @@
 # HANDOFF — CSD App
 
+## Actualización 4 (W1–W7) — build verde, NADA commiteado/pusheado
+Bitácora: fotos ilimitadas + equipos alquilados + paridad con la web. `npm run build` limpio.
+Backend: 2 migraciones aditivas aplicadas (crear_bitacora_app canónico + mis_rutas_hoy.notas).
+
+- **W1 fotos sin límite:** `camera.service.pickFromGallery()` (multi-pick nativo `Camera.pickImages` /
+  input múltiple PWA, comprimido). Paso de fotos de la bitácora: botones **📷 Cámara** + **🖼️ Galería**,
+  contador de agregadas, sin tope duro (batch hasta 40 configurable). Sube por outbox (cada foto es un
+  `fotos_pendientes` slot `foto_i` → el handler arma `p_fotos`) sin bloquear el envío. El detalle ya
+  las muestra todas.
+- **W2 equipos alquilados:** paso "¿Hay equipos alquilados en uso hoy?" (Sí/No + lista dinámica:
+  equipo con `<datalist>` de sugerencias `getEquiposSugeridos()`, uso obligatorio, proveedor opcional).
+  Viaja en `crear_bitacora_app` (`p_hubo_equipos`/`p_equipos_alquilados`) → `bitacora_equipos_alquilados`
+  + alimenta `otros_valores` (U25). Visible en el detalle. **Nota:** PROMPT-9 ya había extendido el RPC;
+  quité una sobrecarga redundante que dejé y unifiqué en UNA función canónica.
+- **W3 paridad bitácora:** auditoría campo-por-campo (tabla abajo). Cerrado en la app: **bloque_entrepiso,
+  ingeniero_responsable, hora_fin_trabajo** (parte, opcionales en el resumen), **incidente_subcontratista**
+  + **incidente_acciones** (incidente), y render de todo + `created_at` en el detalle. RPC extendido
+  aditivamente con esos params (los escribía el form web por insert directo; ahora la app también).
+  **Deferido con razón:** tipo `visita` (flujo nuevo completo, bajo uso en campo) y `weather_snapshot`
+  auto (contradice R21 — la fuente de verdad del clima es la respuesta del usuario, no el weather API);
+  y export Excel/print (app de campo/offline). Flagueados para tu decisión.
+- **W4 barrido visualización:** corregido lado app → **ruta.notas** (se capturaba, no se veía;
+  `mis_rutas_hoy` ahora devuelve `notas`, se muestra en la tarjeta de ruta). **Lado web (SGC) — para el
+  próximo prompt:** (1) GPS de entrega/recepción de vehículo (se manda `p_gps`, la web no lo modela ni
+  muestra en flota/responsabilidad); (2) fotos por-ítem del checklist pre-uso (`item_N` en
+  `checklist_vehiculo_fotos`, la web solo pinta los slots fijos); (3) foto de salida no-conduce
+  (inventario/salidas no tiene botón 📷 como entradas).
+- **W5 skeletons:** barrido app OK — toda pantalla que carga datos tiene skeleton (directo o vía
+  `selector-categorias [loading]`). El "Cargando…" que queda es el botón "Cargar más" de auditoría (ok).
+  **W5-web (skeletons en TODOS los módulos de SGC) = lado web, para el próximo prompt.**
+- **W6 (auditoría → dashboard analítico) = lado web (SGC)**, fuera de este repo. Para el próximo prompt.
+- **W7 versiones auto:** `scripts/release-apk.mjs` registra la versión vía RPC idempotente
+  `registrar_version('movil', VERSION, notas)` (notas = changelog curado, editable). La publicación a
+  usuarios sigue siendo manual del admin (R15). El auto-registro web es lado SGC.
+
+**Pendiente:** device-QA del nuevo flujo (20+ fotos offline, equipos en el detalle, campos de paridad) —
+requiere rebuild del APK (el device tiene 1.6.0 sin este código) o correr la PWA. Commit/push a tu OK.
+
+---
+
 ## Actualización 3 (V1–V15) — build verde, APK 1.6.0 firmado local, NADA pusheado/publicado
 Ronda de bugs de versionado/instalación, rediseño de inventario/requisición por el catálogo
 oficial, skeletons, tarjetas de vehículos, reporte semanal por pool y verificación V15.

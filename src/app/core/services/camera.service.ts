@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
+/** W1 — practical cap for a single multi-pick batch (configurable, kept high). */
+const GALLERY_LIMIT = 40;
+
 export interface CapturedPhoto {
   /** Compressed JPEG blob, ready to upload to Storage. */
   blob: Blob;
@@ -29,6 +32,46 @@ export class CameraService {
     if (!raw) return null;
     const blob = await this.compress(raw);
     return { blob, previewUrl: URL.createObjectURL(blob) };
+  }
+
+  /**
+   * W1 — pick MANY photos at once from the gallery (native multi-select /
+   * PWA multi-file input). Each is compressed like a camera shot. Used by the
+   * bitácora photo step so the user can attach 20+ photos in one go.
+   */
+  async pickFromGallery(limit = GALLERY_LIMIT): Promise<CapturedPhoto[]> {
+    const blobs = this.isNative ? await this.pickNativeMulti(limit) : await this.pickWebMulti();
+    const out: CapturedPhoto[] = [];
+    for (const raw of blobs) {
+      const blob = await this.compress(raw);
+      out.push({ blob, previewUrl: URL.createObjectURL(blob) });
+    }
+    return out;
+  }
+
+  private async pickNativeMulti(limit: number): Promise<Blob[]> {
+    const res = await Camera.pickImages({ quality: 80, limit });
+    const blobs: Blob[] = [];
+    for (const p of res.photos) {
+      if (!p.webPath) continue;
+      try {
+        blobs.push(await (await fetch(p.webPath)).blob());
+      } catch {
+        /* skip a photo we can't read rather than fail the whole batch */
+      }
+    }
+    return blobs;
+  }
+
+  private pickWebMulti(): Promise<Blob[]> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.multiple = true;
+      input.onchange = () => resolve(input.files ? Array.from(input.files) : []);
+      input.click();
+    });
   }
 
   private async takeNative(): Promise<Blob | null> {
