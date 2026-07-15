@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
-import { DatePipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, Reporte } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { formatFechaHumana } from '../../../core/util/fecha';
 
 /** Admin view of field reports/comments, with resolve. */
 @Component({
   selector: 'app-admin-reportes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DatePipe, FormsModule],
+  imports: [Skeleton, FormsModule],
   templateUrl: './reportes.html',
   styleUrl: './reportes.scss',
 })
@@ -21,6 +22,7 @@ export class AdminReportesPage {
 
   reportes = signal<Reporte[]>([]);
   loading = signal(true);
+  fmtFecha = formatFechaHumana; // U9
   expandedId = signal<string | null>(null);
   respuesta = signal('');
   saving = signal(false);

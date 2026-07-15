@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import { ToastHost } from './shared/components/toast-host/toast-host';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
@@ -8,6 +10,7 @@ import { UpdateService } from './core/services/update.service';
 import { AutoLockService } from './core/services/auto-lock.service';
 import { VersionService } from './core/services/version.service';
 import { ToastService } from './core/services/toast.service';
+import { NavGuardService } from './core/services/nav-guard.service';
 
 @Component({
   selector: 'app-root',
@@ -25,12 +28,28 @@ export class App {
   private autoLock = inject(AutoLockService);
   version = inject(VersionService);
   private toast = inject(ToastService);
+  private navGuard = inject(NavGuardService);
 
   constructor() {
     void this.catalog.persistStorage();
     this.updates.init();
     this.autoLock.init();
     void this.checkVersion();
+    this.initBackButton();
+  }
+
+  /**
+   * U4 — Botón físico "Atrás" de Android. Si la página activa registró una
+   * guarda de datos sin guardar y la maneja (abre "¿Descartar cambios?"), no
+   * navegamos; si no, navegación normal o salir de la app en la raíz.
+   */
+  private initBackButton(): void {
+    if (!Capacitor.isNativePlatform()) return;
+    void CapApp.addListener('backButton', ({ canGoBack }) => {
+      if (this.navGuard.handleBack()) return;
+      if (canGoBack) window.history.back();
+      else void CapApp.exitApp();
+    });
   }
 
   private async checkVersion(): Promise<void> {

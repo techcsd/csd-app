@@ -32,6 +32,16 @@
           <button type="button" class="chip" [class.chip--on]="motivo() === m" (click)="motivo.set(m)">{{ m }}</button>
         }
       </div>
+      <!-- U25 — "Otro": captura del valor libre (no se pierde; llega al backend) -->
+      @if (motivo() === 'Otro') {
+        <input
+          class="field mov__mt"
+          type="text"
+          [ngModel]="motivoOtro()"
+          (ngModelChange)="motivoOtro.set($event)"
+          placeholder="Especifica de dónde viene…"
+        />
+      }
 
       @for (g of grupos(); track g.categoria) {
         <h3 class="mov__grupo">{{ g.categoria }}</h3>

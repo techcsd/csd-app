@@ -13,7 +13,7 @@
           <button type="button" class="cnt-row" (click)="toggle(c.id)">
             <div class="cat-row__info">
               <span class="cat-row__name">{{ c.bodega?.nombre ?? 'Bodega' }}</span>
-              <span class="cat-row__code">{{ c.creado?.nombre ?? '—' }} · {{ c.created_at | date: 'dd/MM/yyyy HH:mm' }}{{ c.motivo ? ' · ' + c.motivo : '' }}</span>
+              <span class="cat-row__code">{{ c.creado?.nombre ?? '—' }} · {{ fmtFecha(c.created_at) }}{{ c.motivo ? ' · ' + c.motivo : '' }}</span>
             </div>
             <span class="cnt-row__chev">{{ expandedId() === c.id ? '▲' : '▼' }}</span>
           </button>

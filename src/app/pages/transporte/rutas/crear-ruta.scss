@@ -16,6 +16,21 @@
   font-size: 13px;
   color: var(--color-warning, #d97706);
 }
+.cruta__eta {
+  margin: 4px 0 12px;
+  font-size: 15px;
+  color: var(--text, #e5e5e5);
+
+  strong {
+    color: var(--Hub, #ffb300);
+  }
+}
+.cruta__ok-eta {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--Hub, #ffb300);
+  font-weight: 600;
+}
 
 .cruta__header {
   display: flex;
@@ -111,5 +126,6 @@
 
 .cruta__back {
   flex: 0 0 auto;
+  width: auto; // anula width:100% de btn-ghost; si no, colapsa el botón "Crear ruta"
   min-width: 110px;
 }

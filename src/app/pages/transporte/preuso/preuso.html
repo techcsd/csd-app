@@ -294,6 +294,8 @@
     <footer class="preuso__nav">
       @if (step() > 1) {
         <button type="button" class="btn-ghost preuso__back" (click)="prev()">Atrás</button>
+      } @else {
+        <button type="button" class="btn-ghost preuso__back" (click)="intentarSalir()">Cancelar</button>
       }
       @if (step() < total) {
         <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
@@ -303,5 +305,17 @@
         </button>
       }
     </footer>
+
+    <!-- U4 — descartar cambios sin guardar -->
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Descartar la inspección?"
+      message="Perderás las respuestas y fotos del pre-uso."
+      confirmLabel="Sí, descartar"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
+    />
   </div>
 }

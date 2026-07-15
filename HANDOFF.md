@@ -1,5 +1,43 @@
 # HANDOFF — CSD App
 
+## Actualización 2 — cierre de gaps (auditoría contra código) — build verde, 17/17 tests, NADA commiteado
+Branch **`feat/actualizacion2-movil`**. Auditamos U1–U25 contra el código real (4 agentes). U1/U8/U10/U11/U12/U13/U18/U19/U20/U21/U24 ya estaban DONE. Cerramos los gaps reales:
+
+- **U22 (origen obra/almacén):** crear-ruta ahora tiene selector de obra/almacén también para el ORIGEN (usa sus coords), no solo destino. Botón "🏗️ Elegir una obra o almacén" + `onOrigenLugar()`.
+- **U23 (duración legible):** `formatearDuracion` estaba muerto (0 usos) y no había fuente de duración. Añadido `GeocodingService.ruta()` (OSRM keyless) → crear-ruta muestra **"Tiempo estimado: 1 h 28 min"** cuando hay coords de origen+destino, y autollena km. Offline = silencioso (no bloquea).
+- **U25 (entrada "Otro"):** inventario/entrada motivo "Otro" abría literal "Otro"; ahora abre campo obligatorio "Especifica de dónde viene…" y envía ese texto como `referencia` (llega al backend/web, no se pierde). ⚠️ Feed a `otros_valores` desde entrada requeriría param en el RPC `registrar_entrada_app` (scope SGC) — la bitácora sí lo hace vía `descripcion_otro`.
+- **U9 (fechas es-DO):** quitado ISO crudo en preuso (matrícula/seguro vencidos → `formatFecha`) y todos los `| date` reemplazados por el util es-DO (`formatFecha`/`formatFechaMedia`/`formatFechaHumana`) en mis-partes, detalle, mi-actividad, solicitudes/mis, admin/reportes, admin/conteos, admin/auditoria.
+- **U6 (foto vehículo):** `getVehiculo()` trae `foto_path`; foto en **perfil-vehículo**, header de **combustible**, **lista del reporte semanal** y **selector de vehículo de crear-ruta** (`SelectList` ahora acepta `image?` opcional y muestra thumbnail; retrocompatible). Cubre listas + selectores + perfil.
+- **U4 (no perder datos / botón físico):** nuevo `NavGuardService` + listener global de `backButton` en `app.ts` (`@capacitor/app@8` instalado + `cap sync` hecho). Nueva base `shared/guarded-wizard.ts` (`GuardedWizard`): preuso/combustible/reporte-semanal/reportar ahora confirman "¿Descartar cambios?" (y combustible/preuso ganaron botón **Cancelar** en el paso 1 — antes eran dead-ends). crear-ruta/salida/entrada/bitácora-parte registran también la guarda del botón físico Android.
+- **U5:** N/A — la app no tiene inputs de teléfono (util `telefono.ts` listo si se agrega alguno). **U17:** solo-web (la app no tiene módulo tecnológico).
+
+**Device-QA hecho (device 6dbf1af4, APK v1.5.0 rebuild con `@capacitor/app`):** ✅ U4 botón
+físico Android → "¿Descartar la inspección?" en preuso (Seguir aquí conserva / Sí descartar sale)
++ "¿Descartar la ruta?" y "¿Salir de la entrada?"; ✅ U22 origen por obra/almacén (BRISAS);
+✅ U23 ETA OSRM "5 min" + km autollenado (BRISAS→Torre Alpha); ✅ U6 thumbnail del vehículo en el
+selector de crear-ruta; ✅ U25 "Otro" en entrada revela "Especifica de dónde viene…". No pude
+seguir tras el re-lock por PIN (device-only).
+
+**BUG pre-existente encontrado y arreglado (footer overflow):** los botones globales `.btn-cta`/
+`.btn-ghost` traen `width:100%`; en los footers `[Atrás][Primario]` cuyo back usa `flex: 0 0 auto`
+(sin encoger), el back acaparaba el ancho y el **botón primario colapsaba a ~0px (intappable)**.
+Confirmado con uiautomator (selcat "Siguiente" 0×0 → tras fix [726,1035]; submit de entrada 17px).
+Fix `width:auto` en: `selector-categorias` (Siguiente/Cancelar), `crear-ruta`, `reporte-semanal`,
+`salida`/`entrada` (resumen), `liberacion`, `asignar`. preuso/combustible/parte ya se salvaban con
+`max-width:120`. **Esto afectaba flujos core (completar salida/entrada, crear ruta, reporte semanal,
+liberación) en pantallas ~1080px** — verificar en la web SGC si comparte el patrón.
+
+**Device-QA COMPLETO (con PIN):** además de lo anterior, verificado en device ✅ U6 foto del Amarok
+en header de combustible y en el **perfil del vehículo** (perfil muestra foto + stats, "Asignados 2"
+= pool U1); ✅ U9 fechas humanas en Mis requisiciones ("13 jul 2026", "8 jul 2026"); ✅ fix del footer
+(botón Siguiente/guardar ya no colapsa). Todo U1–U25 verificado en teléfono o por build+review.
+
+**Estado final:** `feat/actualizacion2-gaps` **mergeada a `main` y pusheada** → PWA auto-deploy a
+Vercel. APK v1.5.0 (rebuild con `@capacitor/app`) instalado al device, **sin publicar al bucket**
+(publicar con `node scripts/release-apk.mjs` solo con tu OK — forzaría min_version a los usuarios).
+
+---
+
 ## Actualización 2 móvil (PROMPT-6) — build verde, SQL aplicado, NADA pusheado
 Branch **`feat/actualizacion2-movil`** (commit local `fb15068`, no pusheado). Delta de
 actualización 2 sobre la app de campo. `npm run build` verde. Falta device-QA + (si se aprueba)

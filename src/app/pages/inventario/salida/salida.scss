@@ -160,6 +160,7 @@
 }
 .mov__nav-back {
   flex: 0 0 auto;
+  width: auto; // anula width:100% de btn-ghost; si no, colapsa el botón guardar
   min-width: 100px;
 }
 .mov__ok {

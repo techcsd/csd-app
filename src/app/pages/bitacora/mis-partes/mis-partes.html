@@ -14,7 +14,7 @@
           <div class="bit-row__info">
             <span class="bit-row__tipo">{{ titulo(b) }}</span>
             <span class="bit-row__obra">{{ b.proyecto?.nombre ?? '—' }}</span>
-            <span class="bit-row__fecha">{{ b.fecha | date: 'dd/MM/yyyy' }}</span>
+            <span class="bit-row__fecha">{{ fmtFecha(b.fecha) }}</span>
           </div>
           <span class="bit-row__chev">›</span>
         </button>

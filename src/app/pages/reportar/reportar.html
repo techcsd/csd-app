@@ -11,7 +11,7 @@
 } @else {
   <div class="screen reportar">
     <header class="reportar__header">
-      <button type="button" class="reportar__back" (click)="back()" aria-label="Atrás">←</button>
+      <button type="button" class="reportar__back" (click)="intentarSalir()" aria-label="Atrás">←</button>
       <h1 class="reportar__title">Reportar</h1>
     </header>
 
@@ -52,5 +52,17 @@
         {{ submitting() ? 'Enviando…' : 'Enviar reporte' }}
       </button>
     </footer>
+
+    <!-- U4 — descartar cambios sin guardar -->
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Descartar el reporte?"
+      message="Perderás lo que llevas escrito."
+      confirmLabel="Sí, descartar"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
+    />
   </div>
 }

@@ -137,6 +137,14 @@
   opacity: 0.75;
 }
 
+.veh-card__foto {
+  width: 100%;
+  max-height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
 .rsem__note {
   margin-top: 14px;
   text-align: center;
@@ -193,6 +201,7 @@
 
 .rsem__back {
   flex: 0 0 auto;
+  width: auto; // anula width:100% de btn-ghost; si no, colapsa el botón primario
   min-width: 110px;
 }
 

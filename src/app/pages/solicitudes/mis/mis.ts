@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
-import { DatePipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { Solicitud } from '../../../core/models/inventario.model';
+import { formatFechaMedia } from '../../../core/util/fecha';
 
 /** Track my material requests: Enviada → Aprobada → Entregada. */
 @Component({
   selector: 'app-mis-solicitudes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DatePipe],
+  imports: [Skeleton, EmptyState],
   templateUrl: './mis.html',
   styleUrl: './mis.scss',
 })
@@ -26,6 +27,7 @@ export class MisSolicitudesPage {
 
   solicitudes = signal<Solicitud[]>([]);
   loading = signal(true);
+  fmtFecha = formatFechaMedia; // U9
 
   constructor() {
     void this.load();

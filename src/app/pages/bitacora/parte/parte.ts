@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { Counter } from '../../../shared/ui/counter/counter';
@@ -33,7 +34,7 @@ const TOTAL = 8;
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
-export class PartePage {
+export class PartePage implements OnDestroy {
   private router = inject(Router);
   private camera = inject(CameraService);
   private bitacora = inject(BitacoraService);
@@ -41,6 +42,7 @@ export class PartePage {
   private toast = inject(ToastService);
   private ctx = inject(UserContextService);
   private borrador = inject(BorradorService);
+  private navGuard = inject(NavGuardService);
 
   private readonly DRAFT = 'parte_diario';
   private hydrated = false;
@@ -90,8 +92,17 @@ export class PartePage {
     () => this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? '',
   );
 
+  private readonly backHandler = (): boolean => {
+    if (this.tieneDatos()) {
+      this.confirmSalir.set(true);
+      return true;
+    }
+    return false;
+  };
+
   constructor() {
     void this.load();
+    this.navGuard.register(this.backHandler); // U4 — botón físico Android
     // Autosave the (non-photo) draft on every change so a killed app recovers.
     effect(() => {
       const snap = {
@@ -358,6 +369,10 @@ export class PartePage {
 
   cancelarSalir(): void {
     this.confirmSalir.set(false);
+  }
+
+  ngOnDestroy(): void {
+    this.navGuard.clear(this.backHandler);
   }
 
   get online(): boolean {

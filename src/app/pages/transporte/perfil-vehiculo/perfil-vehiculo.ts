@@ -23,6 +23,7 @@ export class PerfilVehiculoPage {
   loading = signal(true);
   placa = signal('');
   modelo = signal('');
+  fotoUrl = signal<string | null>(null); // U6
   stats = signal<VehiculoStats | null>(null);
 
   constructor() {
@@ -40,6 +41,7 @@ export class PerfilVehiculoPage {
       if (veh) {
         this.placa.set(veh.placa);
         this.modelo.set(`${veh.marca} ${veh.modelo}`);
+        if (veh.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(veh.foto_path));
       }
       this.stats.set(stats);
     } finally {

@@ -97,7 +97,7 @@
       @if (step() > 1) {
         <button type="button" class="btn-ghost rsem__back" (click)="prev()">Atrás</button>
       } @else {
-        <button type="button" class="btn-ghost rsem__back" (click)="cancelar()">Cancelar</button>
+        <button type="button" class="btn-ghost rsem__back" (click)="intentarSalir()">Cancelar</button>
       }
       @if (step() < total) {
         <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
@@ -107,12 +107,24 @@
         </button>
       }
     </footer>
+
+    <!-- U4 — descartar cambios sin guardar -->
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Descartar el reporte?"
+      message="Perderás las respuestas de este vehículo."
+      confirmLabel="Sí, descartar"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
+    />
   </div>
 } @else {
   <!-- Picker -->
   <div class="screen rsem">
     <header class="rsem__header">
-      <button type="button" class="rsem__hback" (click)="back()" aria-label="Atrás">←</button>
+      <button type="button" class="rsem__hback" (click)="intentarSalir()" aria-label="Atrás">←</button>
       <span class="rsem__hicon">📋</span>
       <h1 class="rsem__htitle">Reporte semanal</h1>
     </header>
@@ -132,6 +144,9 @@
         <p class="rsem__intro">Envía un reporte por cada vehículo esta semana.</p>
         @for (v of semana(); track v.vehiculo_id) {
           <div class="veh-card" [class.veh-card--done]="v.tiene_reporte">
+            @if (fotoUrls()[v.vehiculo_id]; as foto) {
+              <img class="veh-card__foto" [src]="foto" alt="Foto del vehículo" />
+            }
             <div class="veh-card__info">
               <span class="veh-card__placa">{{ v.placa }}</span>
               @if (v.tiene_reporte) {
