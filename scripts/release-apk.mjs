@@ -45,10 +45,11 @@ const codeFromVersion = (v) => {
   return maj * 1000000 + min * 1000 + pat;
 };
 const VERSION_CODE = codeFromVersion(VERSION);
-// Rollout escalonado (R15): 1.5.0 queda DISPONIBLE para descargar, pero NO se
-// fuerza. El mínimo se mantiene en 1.4.0 (no forzamos a los de campo); subir el
-// forzado se hace conscientemente desde SGC → app-versiones o cambiando esto.
-const MIN_VERSION = '1.4.0';
+// Rollout escalonado (R15): el mínimo forzado se controla en SGC → app-versiones
+// (sgc.app_versiones.minima → version_publicada().version_minima, que alimenta el
+// gate bloqueante). 1.6.0 quedó como mínimo forzado (2026-07-15). Mantener este
+// valor alineado con esa fila para que version.json (aviso) no contradiga el gate.
+const MIN_VERSION = '1.6.0';
 const TITULO = 'Actualización desde la app, catálogo oficial y requisición por hojas';
 // Cambios etiquetados (nuevo|mejora|arreglo|seguridad) — alimentan el timeline
 // del historial (cambios) y, unidos, las notas / el changelog de version.json.
