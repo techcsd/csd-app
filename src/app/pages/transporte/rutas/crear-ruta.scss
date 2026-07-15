@@ -126,5 +126,6 @@
 
 .cruta__back {
   flex: 0 0 auto;
+  width: auto; // anula width:100% de btn-ghost; si no, colapsa el botón "Crear ruta"
   min-width: 110px;
 }

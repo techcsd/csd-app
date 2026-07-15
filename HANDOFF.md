@@ -11,7 +11,25 @@ Branch **`feat/actualizacion2-movil`**. Auditamos U1–U25 contra el código rea
 - **U4 (no perder datos / botón físico):** nuevo `NavGuardService` + listener global de `backButton` en `app.ts` (`@capacitor/app@8` instalado + `cap sync` hecho). Nueva base `shared/guarded-wizard.ts` (`GuardedWizard`): preuso/combustible/reporte-semanal/reportar ahora confirman "¿Descartar cambios?" (y combustible/preuso ganaron botón **Cancelar** en el paso 1 — antes eran dead-ends). crear-ruta/salida/entrada/bitácora-parte registran también la guarda del botón físico Android.
 - **U5:** N/A — la app no tiene inputs de teléfono (util `telefono.ts` listo si se agrega alguno). **U17:** solo-web (la app no tiene módulo tecnológico).
 
-**Pendiente:** device-QA (mapa: origen por obra/almacén + ETA OSRM; botón físico Android → "¿Descartar?" en cada wizard; fechas humanas; foto en perfil/combustible; entrada "Otro"). Requiere **rebuild APK** (nuevo plugin nativo `@capacitor/app`). Nada commiteado/pusheado.
+**Device-QA hecho (device 6dbf1af4, APK v1.5.0 rebuild con `@capacitor/app`):** ✅ U4 botón
+físico Android → "¿Descartar la inspección?" en preuso (Seguir aquí conserva / Sí descartar sale)
++ "¿Descartar la ruta?" y "¿Salir de la entrada?"; ✅ U22 origen por obra/almacén (BRISAS);
+✅ U23 ETA OSRM "5 min" + km autollenado (BRISAS→Torre Alpha); ✅ U6 thumbnail del vehículo en el
+selector de crear-ruta; ✅ U25 "Otro" en entrada revela "Especifica de dónde viene…". No pude
+seguir tras el re-lock por PIN (device-only).
+
+**BUG pre-existente encontrado y arreglado (footer overflow):** los botones globales `.btn-cta`/
+`.btn-ghost` traen `width:100%`; en los footers `[Atrás][Primario]` cuyo back usa `flex: 0 0 auto`
+(sin encoger), el back acaparaba el ancho y el **botón primario colapsaba a ~0px (intappable)**.
+Confirmado con uiautomator (selcat "Siguiente" 0×0 → tras fix [726,1035]; submit de entrada 17px).
+Fix `width:auto` en: `selector-categorias` (Siguiente/Cancelar), `crear-ruta`, `reporte-semanal`,
+`salida`/`entrada` (resumen), `liberacion`, `asignar`. preuso/combustible/parte ya se salvaban con
+`max-width:120`. **Esto afectaba flujos core (completar salida/entrada, crear ruta, reporte semanal,
+liberación) en pantallas ~1080px** — verificar en la web SGC si comparte el patrón.
+
+**Pendiente:** APK rebuild ya hecho e instalado al device (v1.5.0, sin publicar al bucket).
+Falta device-QA con tu PIN de: fechas humanas (U9), foto en perfil/combustible (U6), y el footer
+arreglado en el resto de flujos. Commiteado en `feat/actualizacion2-gaps` (pusheado); `main` intacto.
 
 ---
 
