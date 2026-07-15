@@ -4,7 +4,7 @@
       <div class="cruta__ok">
         <span class="cruta__ok-check">✓</span>
         <h1 class="cruta__ok-title">Ruta creada</h1>
-        <p class="cruta__ok-sub">{{ origen() }} → {{ destinoModo() === 'lugar' ? (selectedLugar()?.nombre ?? '') : destinoLibre() }}</p>
+        <p class="cruta__ok-sub">{{ origen() }} → {{ destinoModo() === 'lugar' ? (selectedLugar()?.nombre ?? '') : destinoMapaTexto() }}</p>
       </div>
       @if (!online) {
         <p class="cruta__note">Sin señal. Se creará al reconectar.</p>
@@ -55,8 +55,15 @@
         <button type="button" class="btn-ghost cruta__gps" (click)="usarMiUbicacion()">
           📍 Usar mi ubicación actual
         </button>
+        <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">
+          🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}
+        </button>
         @if (usandoGps()) {
-          <p class="cruta__gps-ok">✓ Origen fijado con tu ubicación (GPS).</p>
+          <p class="cruta__gps-ok">✓ Origen fijado: {{ origen() }}</p>
+        }
+        @if (origenMapa()) {
+          <!-- U18/U19/U20 — mapa: pin, búsqueda RD, ubicación actual -->
+          <app-location-picker (ubicacionChange)="onOrigenUbicacion($event)" />
         }
 
         <label class="field-label">Destino</label>
@@ -68,10 +75,10 @@
             (pressed)="destinoModo.set('lugar')"
           />
           <app-option-button
-            icon="📍"
-            label="Otro lugar"
-            [selected]="destinoModo() === 'libre'"
-            (pressed)="destinoModo.set('libre')"
+            icon="🗺️"
+            label="En el mapa"
+            [selected]="destinoModo() === 'mapa'"
+            (pressed)="destinoModo.set('mapa')"
           />
         </div>
 
@@ -88,13 +95,11 @@
             <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
           }
         } @else {
-          <input
-            class="field"
-            type="text"
-            [ngModel]="destinoLibre()"
-            (ngModelChange)="destinoLibre.set($event)"
-            placeholder="¿A dónde vas?"
-          />
+          <!-- U18/U19/U20 — mapa: pin, búsqueda RD, ubicación actual -->
+          <app-location-picker (ubicacionChange)="onDestinoUbicacion($event)" />
+          @if (destinoMapaTexto()) {
+            <p class="cruta__gps-ok">✓ Destino: {{ destinoMapaTexto() }}</p>
+          }
         }
 
         <label class="field-label" for="km">Kilómetros estimados (opcional)</label>
@@ -128,5 +133,17 @@
         </button>
       </footer>
     }
+
+    <!-- U4 — descartar cambios sin guardar -->
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Descartar la ruta?"
+      message="Perderás lo que llevas escrito de esta ruta."
+      confirmLabel="Sí, descartar"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
+    />
   </div>
 }

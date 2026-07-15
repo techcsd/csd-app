@@ -355,3 +355,14 @@ input.field:focus {
 .cnt-items li {
   padding: 6px 0;
 }
+
+/* U20 — pin del selector de ubicación (Leaflet DivIcon, fuera de encapsulación) */
+.lp-marker__pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: #e11d48;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}

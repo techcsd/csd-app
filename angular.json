@@ -23,14 +23,14 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
-            "allowedCommonJsDependencies": ["jspdf", "canvg", "core-js", "raf", "rgbcolor"],
+            "allowedCommonJsDependencies": ["jspdf", "canvg", "core-js", "raf", "rgbcolor", "leaflet"],
             "assets": [
               {
                 "glob": "**/*",
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.scss"]
+            "styles": ["src/styles.scss", "node_modules/leaflet/dist/leaflet.css"]
           },
           "configurations": {
             "production": {

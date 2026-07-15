@@ -8,12 +8,14 @@ import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/location-picker/location-picker';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { ConducesService, LugarDestino } from '../../../core/services/conduces.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 
-type DestinoModo = 'lugar' | 'libre';
+type DestinoModo = 'lugar' | 'mapa';
 
 /**
  * Crear ruta desde el móvil (R7). Espeja la creación de rutas de la web SGC
@@ -24,7 +26,7 @@ type DestinoModo = 'lugar' | 'libre';
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, EmptyState, Skeleton],
+  imports: [FormsModule, SelectList, OptionButton, EmptyState, Skeleton, LocationPicker, ConfirmDialog],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
@@ -39,16 +41,19 @@ export class CrearRutaPage {
   loading = signal(true);
   submitting = signal(false);
   done = signal(false);
+  confirmSalir = signal(false); // U4 — confirmar descarte si hay datos
 
   vehiculoOpts = signal<SelectOption[]>([]);
   lugares = signal<LugarDestino[]>([]);
 
   vehiculoId = signal('');
   origen = signal('');
-  usandoGps = signal(false); // U21 — origen fijado por ubicación actual
+  usandoGps = signal(false); // U21 — origen fijado por ubicación/mapa
+  origenMapa = signal(false); // muestra el picker de origen
   destinoModo = signal<DestinoModo>('lugar');
   destinoLugarId = signal('');
-  destinoLibre = signal('');
+  destinoMapaTexto = signal('');
+  destinoMapaCoords = signal<{ lat: number; lng: number } | null>(null);
   km = signal<number | null>(null);
   notas = signal('');
 
@@ -123,15 +128,31 @@ export class CrearRutaPage {
 
   onOrigenInput(v: string): void {
     this.origen.set(v);
-    // Si el usuario escribe manualmente, deja de usar las coords del GPS.
-    if (this.usandoGps()) this.usandoGps.set(false);
+    // Si el usuario escribe manualmente, deja de usar las coords del GPS/mapa.
+    if (this.usandoGps()) {
+      this.usandoGps.set(false);
+      this.gps = null;
+    }
+  }
+
+  /** U20 — origen marcado en el mapa (pin/búsqueda/ubicación dentro del picker). */
+  onOrigenUbicacion(u: UbicacionSeleccionada): void {
+    this.gps = { lat: u.latitud, lng: u.longitud };
+    this.origen.set(u.direccion || 'Punto en el mapa');
+    this.usandoGps.set(true);
+  }
+
+  /** U20/U22 — destino marcado en el mapa. */
+  onDestinoUbicacion(u: UbicacionSeleccionada): void {
+    this.destinoMapaCoords.set({ lat: u.latitud, lng: u.longitud });
+    this.destinoMapaTexto.set(u.direccion || 'Punto en el mapa');
   }
 
   private destinoTexto(): string {
     if (this.destinoModo() === 'lugar') {
       return this.selectedLugar()?.nombre ?? '';
     }
-    return this.destinoLibre().trim();
+    return this.destinoMapaTexto().trim();
   }
 
   async guardar(): Promise<void> {
@@ -145,10 +166,11 @@ export class CrearRutaPage {
       return;
     }
     if (!this.destinoTexto()) {
-      this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra o almacén de destino.' : 'Escribe el destino.');
+      this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra o almacén de destino.' : 'Marca el destino en el mapa.');
       return;
     }
     const lugar = this.destinoModo() === 'lugar' ? this.selectedLugar() : null;
+    const mapaCoords = this.destinoModo() === 'mapa' ? this.destinoMapaCoords() : null;
     this.submitting.set(true);
     try {
       await this.conduces.crearRuta({
@@ -161,8 +183,8 @@ export class CrearRutaPage {
         notas: this.notas().trim() || null,
         origen_lat: this.gps?.lat ?? null,
         origen_lng: this.gps?.lng ?? null,
-        destino_lat: lugar?.latitud ?? null,
-        destino_lng: lugar?.longitud ?? null,
+        destino_lat: lugar?.latitud ?? mapaCoords?.lat ?? null,
+        destino_lng: lugar?.longitud ?? mapaCoords?.lng ?? null,
       });
       this.done.set(true);
     } catch (e) {
@@ -180,8 +202,33 @@ export class CrearRutaPage {
     void this.router.navigate(['/transporte/asignar']);
   }
 
+  /** U4 — ¿hay datos que se perderían al salir? */
+  private tieneDatos(): boolean {
+    return !!(
+      this.origen().trim() ||
+      this.destinoLugarId() ||
+      this.destinoMapaTexto().trim() ||
+      this.km() != null ||
+      this.notas().trim()
+    );
+  }
+
   back(): void {
+    if (this.done()) {
+      this.location.back();
+      return;
+    }
+    if (this.tieneDatos()) this.confirmSalir.set(true);
+    else this.location.back();
+  }
+
+  confirmarSalir(): void {
+    this.confirmSalir.set(false);
     this.location.back();
+  }
+
+  cancelarSalir(): void {
+    this.confirmSalir.set(false);
   }
 
   get online(): boolean {

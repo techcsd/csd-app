@@ -1,0 +1,35 @@
+<div class="lp">
+  <div class="lp__search">
+    <input
+      type="search"
+      class="field"
+      placeholder="Buscar dirección o lugar…"
+      (input)="onBuscar($any($event.target).value)"
+      aria-label="Buscar ubicación"
+    />
+    @if (resultados().length > 0) {
+      <ul class="lp__results">
+        @for (r of resultados(); track r.nombre) {
+          <li><button type="button" (click)="seleccionarResultado(r)">{{ r.nombre }}</button></li>
+        }
+      </ul>
+    }
+  </div>
+
+  <button type="button" class="btn-ghost lp__gps" (click)="usarMiUbicacion()" [disabled]="ubicando()">
+    {{ ubicando() ? 'Ubicando…' : '📍 Usar mi ubicación actual' }}
+  </button>
+
+  @if (buscando()) {
+    <p class="lp__msg">Buscando…</p>
+  } @else if (busquedaError()) {
+    <p class="lp__msg lp__msg--error">{{ busquedaError() }}</p>
+  }
+
+  <div #map class="lp__map"></div>
+
+  <p class="lp__hint">
+    Toca el mapa para fijar el punto.
+    @if (direccion()) { <br /><strong>{{ direccion() }}</strong> }
+  </p>
+</div>

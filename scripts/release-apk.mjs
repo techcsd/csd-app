@@ -32,10 +32,10 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.4.0';
-const VERSION_CODE = 17;
-const CHANGELOG = 'Inventario más fácil: entrada/salida por categorías (Clavos, Madera, Acero primero) con pasos hoja-por-hoja, resumen editable antes de confirmar y compartir por WhatsApp. Reporte semanal con las preguntas oficiales agrupadas por sección.';
-const RELEASED_AT = '2026-07-14';
+const VERSION = '1.5.0';
+const VERSION_CODE = 18;
+const CHANGELOG = 'Inspección de pre-uso de 10 tópicos oficiales; foto del vehículo al elegirlo; reporte semanal más claro. Bitácora: describa cada restricción, y el detalle muestra clima, migración y cantidades. Rutas: elige origen y destino en un mapa (buscar dirección, tu ubicación actual, o una obra/almacén del sistema).';
+const RELEASED_AT = '2026-07-15';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const bucket = 'app-releases';
