@@ -25,9 +25,23 @@ aplicado a prod) y el handler las envía; U22 destino por **obra o almacén con 
 `otros_valores` (web y móvil), sin cambio de app extra. **U17** (inventario/compras tec) = solo web
 (la app no tiene módulo Tecnología).
 
-**Pendiente / device-QA:** mapa interactivo + pin (U18/U20a) y geocoding-en-mapa (U19) — requieren
-prueba en dispositivo (tiles en WebView, `invalidateSize`, permisos); U4 "descartar cambios" en los
-wizards que aún no lo tienen (preuso/crear-ruta/reporte-semanal); U24 auditoría fina de paridad.
+**F2 mapa interactivo (U18/U19/U20) — HECHO, pendiente walk-through en teléfono:** nuevo
+`shared/ui/location-picker` (Leaflet 1.9.4 + OSM): pin por toque, búsqueda RD (Nominatim
+`countrycodes=do`, es), "usar mi ubicación actual" (Geolocation nativo + permiso + error visible),
+`invalidateSize` para el WebView. `GeocodingService`. Rutas: origen con mapa (toggle) y destino "En
+el mapa" además de obra/almacén; coords guardadas. U4 confirmación de descarte en crear-ruta.
+Leaflet CSS en angular.json; pin del marcador en styles.scss.
+
+**APK v1.5.0 / versionCode 18:** bump en build.gradle + environments + release-apk.mjs; `npx cap sync`
+hecho; **APK release firmado construido e instalado al device 6dbf1af4** (arranca OK, sin crash en
+logcat). **NO publicado al bucket** (release-apk.mjs pone `min_version=VERSION` → forzaría a los
+usuarios de campo; publicar solo con tu OK).
+
+**Pendiente:** walk-through en el teléfono (mapa: pin/búsqueda/ubicación/obra-almacén; pre-uso 10
+tópicos; reporte semanal; bitácora describa+detalle; offline→reconnect). U4 "descartar" en el resto
+de wizards (preuso/combustible usan pasos con "Atrás"; falta interceptar el botón físico — es
+transversal). U24 fino: los perfiles/dashboards/gestión de avisos quedan solo-web (admin), lo
+operativo del chofer está en la app. **Nada pusheado** (branch local `feat/actualizacion2-movil`).
 
 ---
 
