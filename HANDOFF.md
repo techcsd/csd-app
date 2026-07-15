@@ -1,5 +1,37 @@
 # HANDOFF — CSD App
 
+## Actualización 2 móvil (PROMPT-6) — build verde, SQL aplicado, NADA pusheado
+Branch **`feat/actualizacion2-movil`** (commit local `fb15068`, no pusheado). Delta de
+actualización 2 sobre la app de campo. `npm run build` verde. Falta device-QA + (si se aprueba)
+push PWA + bump/APK.
+
+**F1 flota:** U10 pre-uso ahora filtra `frecuencia='preuso'` (nunca la de 33 ítems ni la semanal)
++ clave de caché nueva (`checklist_plantillas_preuso`) que invalida cachés viejos; U8 texto que
+explica reporte-semanal vs pre-uso en el hub; U6 foto del vehículo en el selector del pool
+(`asignar`, URL firmada bucket `vehiculos`); U1 el pool ya era accesible vía "Asignarme un vehículo".
+
+**F3 bitácora:** U11 quitado 'CLIMA' del catálogo de restricciones; U12 "Describa…" obligatorio por
+restricción (envía `descripcion_otro`; RPC ya lo aceptaba); U13 el detalle muestra clima, migración
+(obreros) y cantidad por actividad (modelo + select extendidos).
+
+**F2 rutas (sin mapa embebido):** **bug corregido** — las coords de origen se perdían;
+`crear_ruta_app` extendido aditivo con `p_origen_lat/lng` (`sql/2026-07-15-crear-ruta-origen-coords.sql`,
+aplicado a prod) y el handler las envía; U22 destino por **obra o almacén con sus coordenadas**
+(`getLugaresDestino`); U21 botón "usar mi ubicación actual" con permiso nativo + error visible.
+
+**Utilidades (paridad):** `core/util/fecha.ts` (U9 — las fechas ya no eran ISO cruda, usan DatePipe),
+`duracion.ts` (U23 — sin fuente de duración aún), `telefono.ts` (U5 — la app no tiene inputs de teléfono).
+**U25:** la restricción "OTRO" ahora manda `descripcion_otro` → el trigger de BD la registra en
+`otros_valores` (web y móvil), sin cambio de app extra. **U17** (inventario/compras tec) = solo web
+(la app no tiene módulo Tecnología).
+
+**Pendiente / device-QA:** mapa interactivo + pin (U18/U20a) y geocoding-en-mapa (U19) — requieren
+prueba en dispositivo (tiles en WebView, `invalidateSize`, permisos); U4 "descartar cambios" en los
+wizards que aún no lo tienen (preuso/crear-ruta/reporte-semanal); U24 auditoría fina de paridad.
+
+---
+
+
 ## Historial de versiones (timeline admin) — ✅ en prod
 Página **solo admin** `admin/versiones` (`moduleGuard('admin')`): línea de tiempo con tabs
 App móvil / Web, cada versión con fecha + cambios. Lee `sgc.app_versiones` (extendida en SGC:
