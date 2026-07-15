@@ -2,35 +2,19 @@
   background: var(--color-bg);
 }
 
-// U6 — fila de vehículo con foto en el pool
-.asignar__veh {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+// V11/U6 — tarjeta de vehículo del pool (foto + tipo·km) seleccionable
+.asignar__vehbtn {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  background: transparent;
+  padding: 0;
+  text-align: left;
 }
-.asignar__veh-btn {
-  flex: 1;
-  min-width: 0;
-}
-.asignar__veh-foto {
-  flex: 0 0 auto;
-  width: 52px;
-  height: 52px;
-  border-radius: 10px;
-  object-fit: cover;
-  background: var(--color-surface, #f1f2f4);
-  border: 1px solid var(--color-border);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-}
-
-.asignar__veh-detail {
-  margin: -6px 0 12px;
-  padding-left: 4px;
-  font-size: 14px;
-  color: var(--color-text-secondary);
+.asignar__check {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-primary);
 }
 
 .asignar__note {
@@ -41,6 +25,10 @@
 }
 
 .asignar__nav {
+  flex: 0 0 auto; // V11: la barra nunca se encoge → el botón de avance siempre visible
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   gap: 10px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));

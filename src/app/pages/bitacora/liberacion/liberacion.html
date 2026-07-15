@@ -20,7 +20,7 @@
           Ningún vaciado se libera sin este checklist firmado. Elige la obra y el tipo de CL.
         </p>
         @if (loading()) {
-          <p class="liber__muted">Cargando…</p>
+          <app-skeleton [rows]="4" />
         } @else {
           <app-select-list
             label="Obra"

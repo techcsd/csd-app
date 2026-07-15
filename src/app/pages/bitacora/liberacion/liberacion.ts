@@ -8,6 +8,7 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ClLiberacionService } from '../../../core/services/cl-liberacion.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -45,7 +46,7 @@ const TOTAL_STEPS = 5;
   selector: 'app-liberacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, BigConfirm],
+  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, BigConfirm, Skeleton],
   templateUrl: './liberacion.html',
   styleUrl: './liberacion.scss',
 })

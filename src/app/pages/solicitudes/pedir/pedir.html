@@ -1,51 +1,108 @@
-@if (done()) {
-  <app-big-confirm
-    [title]="online ? 'Requisición enviada' : 'Guardado'"
-    [note]="online ? 'Almacén la recibió. Sigue su estado en Mis requisiciones.' : 'Sin señal. Se enviará solo.'"
-    [tone]="online ? 'done' : 'pending'"
-    buttonLabel="Listo"
-    (dismissed)="finish()"
-  />
-} @else {
-  <div class="screen pedir">
-    <header class="pedir__header">
-      <button type="button" class="pedir__back" (click)="back()" aria-label="Atrás">←</button>
-      <h1 class="pedir__title">Nueva requisición</h1>
+<div class="screen mov">
+  @if (hoja() !== 'exito') {
+    <header class="mov__header">
+      <button type="button" class="mov__back" (click)="hoja() === 'resumen' ? volverSeleccion() : intentarSalir()" aria-label="Atrás">←</button>
+      <h1 class="mov__title">📝 Nueva requisición</h1>
     </header>
+  }
 
+  <!-- Hoja 1+2: selección por categorías (con "Otros" libre) -->
+  @if (hoja() === 'seleccion') {
+    <div class="screen__body mov__sheet">
+      <app-selector-categorias
+        [articulos]="articulos()"
+        [categorias]="categorias()"
+        [loading]="loadingCat()"
+        modo="requisicion"
+        [(cart)]="cart"
+        (siguiente)="irResumen()"
+        (cancelar)="intentarSalir()"
+      />
+    </div>
+  }
+
+  <!-- Hoja 3: resumen / review -->
+  @if (hoja() === 'resumen') {
     <div class="screen__body">
+      <h2 class="mov__h2">Revisa tu requisición</h2>
+
       <app-select-list label="Obra" icon="🏗️" [options]="obraOptions()" [selectedId]="proyectoId()" (picked)="proyectoId.set($event)" />
 
-      <label class="field-label pedir__mt">Elige los materiales</label>
-      <app-articulo-picker [articulos]="articulos()" [exclude]="cartIds()" (picked)="add($event)" />
-
-      @if (cart().length) {
-        <label class="field-label pedir__mt">Cantidades</label>
-      }
-      @for (it of cart(); track it.articulo_id) {
-        <div class="pedir__item">
-          <span class="pedir__item-name">{{ it.nombre }}</span>
-          <div class="pedir__item-qty">
-            <input class="field" type="number" inputmode="decimal" [ngModel]="it.cantidad" (ngModelChange)="setCantidad($index, $event)" />
-            <span class="pedir__item-unit">{{ it.unidad }}</span>
-            <button type="button" class="pedir__item-x" (click)="remove($index)">✕</button>
-          </div>
-        </div>
-      } @empty {
-        <p class="pedir__muted">Agrega los materiales que necesitas.</p>
-      }
-
-      <label class="field-label pedir__mt">¿Urgencia?</label>
-      <div class="pedir__urg">
-        <button type="button" class="urg-btn" [class.urg-btn--on]="urgencia() === 'normal'" (click)="urgencia.set('normal')">Normal</button>
-        <button type="button" class="urg-btn urg-btn--danger" [class.urg-btn--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 Urgente</button>
+      <label class="field-label mov__mt">Urgencia</label>
+      <div class="mov__motivos">
+        <button type="button" class="chip" [class.chip--on]="urgencia() === 'normal'" (click)="urgencia.set('normal')">Normal</button>
+        <button type="button" class="chip" [class.chip--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 Urgente</button>
       </div>
+
+      @for (g of grupos(); track g.categoria) {
+        <h3 class="mov__grupo">{{ g.categoria }}</h3>
+        @for (l of g.lineas; track l.articulo_id) {
+          <div class="mov__item">
+            <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· Talla {{ l.talla }}</small> }</span>
+            <div class="mov__item-qty">
+              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
+              <input class="field mov__qty-input" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
+              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
+              <span class="mov__item-unit">{{ l.unidad }}</span>
+              <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
+            </div>
+          </div>
+        }
+      }
+
+      <label class="field-label mov__mt">Nota (opcional)</label>
+      <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Ej: Para el vaciado del lunes" />
     </div>
 
-    <footer class="pedir__nav">
+    <footer class="mov__nav mov__nav--row">
+      <button type="button" class="btn-ghost mov__nav-back" (click)="volverSeleccion()">Atrás</button>
       <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
         {{ submitting() ? 'Enviando…' : 'Enviar requisición' }}
       </button>
     </footer>
-  </div>
-}
+  }
+
+  <!-- Hoja 4: éxito -->
+  @if (hoja() === 'exito') {
+    <div class="screen__body">
+      <div class="mov__ok">
+        <span class="mov__ok-check">✓</span>
+        <h1 class="mov__ok-title">Requisición enviada</h1>
+        <p class="mov__ok-sub">
+          {{ online ? 'Llegó al módulo de Solicitudes.' : 'Sin señal. Se enviará sola al reconectar.' }}
+        </p>
+      </div>
+
+      <div class="mov__resumen">
+        @for (g of grupos(); track g.categoria) {
+          <h3 class="mov__grupo">{{ g.categoria }}</h3>
+          @for (l of g.lineas; track l.articulo_id) {
+            <div class="mov__resumen-row">
+              <span>{{ l.nombre }}@if (l.talla) { <small>· Talla {{ l.talla }}</small> }</span>
+              <b>{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</b>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <footer class="mov__nav">
+      <button type="button" class="btn-cta mov__wa" [disabled]="sharing()" (click)="compartir()">
+        {{ sharing() ? 'Compartiendo…' : '📲 Compartir por WhatsApp' }}
+      </button>
+      <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">Nueva requisición</button>
+      <button type="button" class="btn-ghost" (click)="finish()">Volver a Requisición</button>
+    </footer>
+  }
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir de la requisición?"
+    message="Perderás los materiales que llevas seleccionados."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
+</div>

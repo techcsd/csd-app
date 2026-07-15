@@ -7,6 +7,7 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -23,7 +24,7 @@ import {
   selector: 'app-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, Counter, BigConfirm, VoiceRecorder],
+  imports: [FormsModule, OptionButton, Counter, BigConfirm, VoiceRecorder, Skeleton],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })
@@ -40,6 +41,7 @@ export class IncidentePage {
   readonly gravedades = INCIDENTE_GRAVEDADES;
 
   proyectos = signal<Proyecto[]>([]);
+  loading = signal(true);
   proyectoId = signal('');
   tipo = signal<'incidente' | 'accidente' | null>(null);
   gravedad = signal<string>('');
@@ -58,11 +60,16 @@ export class IncidentePage {
   }
 
   private async load(): Promise<void> {
-    const list = await this.bitacora.getProyectos();
-    this.proyectos.set(list);
-    const obra = this.ctx.obraActiva();
-    if (obra) this.proyectoId.set(obra.id);
-    else if (list.length === 1) this.proyectoId.set(list[0].id);
+    this.loading.set(true);
+    try {
+      const list = await this.bitacora.getProyectos();
+      this.proyectos.set(list);
+      const obra = this.ctx.obraActiva();
+      if (obra) this.proyectoId.set(obra.id);
+      else if (list.length === 1) this.proyectoId.set(list[0].id);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   async addFoto(): Promise<void> {

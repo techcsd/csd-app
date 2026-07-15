@@ -42,3 +42,53 @@
   font-size: var(--fs-option);
   font-weight: 700;
 }
+.version-gate__btn:disabled {
+  opacity: 0.6;
+}
+.version-gate__progress {
+  height: 12px;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+.version-gate__progress-bar {
+  height: 100%;
+  background: var(--color-primary);
+  transition: width 0.2s ease;
+}
+.version-gate__progress-txt {
+  margin: 0 0 16px;
+  font-weight: 700;
+}
+
+/* V4 — non-blocking tappable "new version" banner. */
+.version-banner {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px calc(10px);
+  padding-top: calc(10px + var(--safe-top));
+  border: none;
+  background: var(--color-primary);
+  color: #fff;
+  text-align: left;
+  font-weight: 700;
+}
+.version-banner__icon {
+  font-size: 20px;
+  flex: 0 0 auto;
+}
+.version-banner__txt {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+.version-banner__chev {
+  flex: 0 0 auto;
+  font-size: 22px;
+}

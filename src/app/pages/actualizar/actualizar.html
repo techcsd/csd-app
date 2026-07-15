@@ -1,0 +1,65 @@
+<div class="screen actu">
+  <div class="screen__body actu__body">
+    <span class="actu__icon">⬆️</span>
+
+    @if (hayNueva()) {
+      <h1 class="actu__title">Nueva versión {{ nueva() }} disponible</h1>
+      <p class="actu__sub">Tienes la {{ local }}. Actualiza para tener las últimas mejoras y arreglos.</p>
+    } @else {
+      <h1 class="actu__title">Ya tienes la última versión</h1>
+      <p class="actu__sub">Estás en la {{ local }}.</p>
+    }
+
+    @if (notas(); as n) {
+      <div class="actu__notas">
+        <h2 class="actu__notas-title">Qué trae esta versión</h2>
+        <p class="actu__notas-body">{{ n }}</p>
+      </div>
+    }
+
+    @if (estado() === 'descargando') {
+      <div class="actu__progress">
+        <div class="actu__progress-bar" [style.width.%]="progreso()"></div>
+      </div>
+      <p class="actu__progress-txt">Descargando… {{ progreso() }}%</p>
+    }
+
+    @if (estado() === 'instalando') {
+      <p class="actu__progress-txt">Abriendo el instalador de Android…</p>
+    }
+
+    @if (estado() === 'permiso') {
+      <div class="actu__perm">
+        <p>
+          Android necesita tu permiso para instalar apps fuera de la tienda. Actívalo para
+          <b>CSD App</b> y vuelve a tocar Actualizar.
+        </p>
+        <button type="button" class="btn-ghost" (click)="abrirAjustes()">Abrir ajustes de permiso</button>
+      </div>
+    }
+
+    @if (estado() === 'error') {
+      <p class="actu__error">No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.</p>
+    }
+  </div>
+
+  <footer class="actu__nav">
+    <button type="button" class="btn-ghost actu__back" (click)="volver()">Ahora no</button>
+    @if (hayNueva() || apkUrl()) {
+      <button
+        type="button"
+        class="btn-cta"
+        [disabled]="estado() === 'descargando' || estado() === 'instalando'"
+        (click)="actualizar()"
+      >
+        @switch (estado()) {
+          @case ('descargando') { Descargando… }
+          @case ('instalando') { Instalando… }
+          @case ('error') { Reintentar }
+          @case ('permiso') { Actualizar }
+          @default { {{ esNativo ? '⬇️ Actualizar ahora' : '⬇️ Descargar' }} }
+        }
+      </button>
+    }
+  </footer>
+</div>

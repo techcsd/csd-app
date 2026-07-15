@@ -6,22 +6,24 @@ import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, Existencia } from '../m
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
-const CAT_ARTICULOS = 'articulos';
-const CAT_CATEGORIAS = 'categorias_inventario';
+// V14: bumped to _v2 to invalidate the pre-official-catalog offline cache
+// (articles now carry requiere_talla/nota; categories are the official 8).
+const CAT_ARTICULOS = 'articulos_v2';
+const CAT_CATEGORIAS = 'categorias_inventario_v2';
 const BUCKET = 'inventario';
 
 export interface SalidaCaptura {
   bodegaId: string;
   proyectoId: string | null;
   motivo: string | null;
-  items: { articulo_id: string; cantidad: number }[];
+  items: { articulo_id: string; cantidad: number; talla?: string | null }[];
   foto: Blob | null;
 }
 
 export interface EntradaCaptura {
   bodegaId: string;
   referencia: string | null;
-  items: { articulo_id: string; cantidad: number }[];
+  items: { articulo_id: string; cantidad: number; talla?: string | null }[];
   foto: Blob | null;
 }
 
@@ -70,7 +72,7 @@ export class InventarioService {
     const data = await this.catalog.refresh<ArticuloCat[]>(CAT_ARTICULOS, async () => {
       const { data, error } = await this.supabase.client
         .from('articulos')
-        .select('id, nombre, codigo, unidad, categoria_id')
+        .select('id, nombre, codigo, unidad, categoria_id, requiere_talla, nota')
         .eq('activo', true)
         .order('nombre');
       if (error) throw new Error(error.message);

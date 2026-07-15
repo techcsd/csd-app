@@ -77,6 +77,22 @@ export class PerfilPage {
     if (this.checking()) return;
     this.checking.set(true);
     try {
+      // V2: the honest source of truth for "is there a newer version" is the
+      // published record in SGC — read it FRESH (never the cached value that
+      // made this button lie on the APK). Only then fall back to the PWA SW.
+      const online = await this.versionSvc.checkFresh();
+      if (!online) {
+        this.toast.error('Sin señal. No pude verificar si hay una versión nueva.');
+        return;
+      }
+      if (this.versionSvc.hayNueva()) {
+        const pub = this.versionSvc.etiquetaVersion;
+        this.toast.show(`Hay una versión nueva (${pub}) disponible.`, 'info', 4000);
+        void this.router.navigate(['/actualizar']);
+        return;
+      }
+      // No newer published build. On the PWA, still let the service worker pull
+      // fresh web assets; on native this just confirms "up to date".
       await this.updates.check();
     } finally {
       this.checking.set(false);

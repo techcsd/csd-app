@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "apk": "node scripts/build-apk.mjs",
+    "apk:publish": "node scripts/release-apk.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.8",

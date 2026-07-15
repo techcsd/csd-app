@@ -28,6 +28,10 @@ export interface ArticuloCat {
   codigo: string;
   unidad: string;
   categoria_id: number | null;
+  /** EPP: the size must be entered when this article is added (V14). */
+  requiere_talla: boolean;
+  /** Packing/brand help ("ATADO 120 PZA", "REF. TOTAL / HILTI") shown as a hint. */
+  nota: string | null;
 }
 
 export interface Existencia {
@@ -46,13 +50,17 @@ export interface MovItem {
   cantidad: number;
 }
 
-/** A cart line for the category-sheet selector (keeps categoria for grouping). */
+/** A cart line for the category-sheet selector (keeps categoria for grouping).
+ *  `articulo_id` is null for a free-text "Otros" line (V14/08). `talla` is set
+ *  for EPP that requires a size. `descripcion` holds the free-text for Otros. */
 export interface CartLinea {
-  articulo_id: string;
+  articulo_id: string | null;
   nombre: string;
   unidad: string;
   categoria_id: number | null;
   cantidad: number;
+  talla?: string | null;
+  descripcion?: string | null;
 }
 
 export type Urgencia = 'normal' | 'urgente';

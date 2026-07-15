@@ -35,13 +35,13 @@ export const NIVELES_COMBUSTIBLE_PREUSO = ['1/4', '1/2', '3/4', 'Lleno'] as cons
  * server + PDF rely on). Exterior (4) + Interior (3).
  */
 export const FOTOS_PREUSO = [
-  { slot: 'delantera', label: 'Exterior — delantera', hint: '🚙' },
-  { slot: 'lateral_izq', label: 'Exterior — lateral izquierda', hint: '🚙' },
-  { slot: 'lateral_der', label: 'Exterior — lateral derecha', hint: '🚙' },
-  { slot: 'trasera', label: 'Exterior — trasera', hint: '🚙' },
-  { slot: 'tablero', label: 'Interior — tablero (km)', hint: '🎛️' },
-  { slot: 'interior_del', label: 'Interior — delantero', hint: '💺' },
-  { slot: 'parte_trasera', label: 'Interior — parte trasera', hint: '🪑' },
+  { slot: 'delantera', label: 'Delantera', hint: '🚙', grupo: 'EXTERIOR' },
+  { slot: 'lateral_izq', label: 'Lateral izquierda', hint: '🚙', grupo: 'EXTERIOR' },
+  { slot: 'lateral_der', label: 'Lateral derecha', hint: '🚙', grupo: 'EXTERIOR' },
+  { slot: 'trasera', label: 'Trasera', hint: '🚙', grupo: 'EXTERIOR' },
+  { slot: 'tablero', label: 'Tablero', hint: '🎛️', grupo: 'INTERIOR' },
+  { slot: 'interior_del', label: 'Interior delantero', hint: '💺', grupo: 'INTERIOR' },
+  { slot: 'parte_trasera', label: 'Parte trasera', hint: '🪑', grupo: 'INTERIOR' },
 ] as const;
 
 /** Pre-use verdict, mirrors sgc.checklists_vehiculo.resultado. */

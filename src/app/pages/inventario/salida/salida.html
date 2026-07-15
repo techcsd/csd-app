@@ -13,6 +13,7 @@
       <app-selector-categorias
         [articulos]="articulos()"
         [categorias]="categorias()"
+        [loading]="loadingCat()"
         [(cart)]="cart"
         (siguiente)="irResumen()"
         (cancelar)="intentarSalir()"
@@ -31,13 +32,13 @@
         <h3 class="mov__grupo">{{ g.categoria }}</h3>
         @for (l of g.lineas; track l.articulo_id) {
           <div class="mov__item">
-            <span class="mov__item-name">{{ l.nombre }}</span>
+            <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· Talla {{ l.talla }}</small> }</span>
             <div class="mov__item-qty">
-              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id, -1)" aria-label="Menos">−</button>
-              <input class="field mov__qty-input" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id, $event)" />
-              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id, 1)" aria-label="Más">+</button>
+              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
+              <input class="field mov__qty-input" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
+              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
               <span class="mov__item-unit">{{ l.unidad }}</span>
-              <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id)" aria-label="Quitar">✕</button>
+              <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
             </div>
           </div>
         }
@@ -75,7 +76,7 @@
           <h3 class="mov__grupo">{{ g.categoria }}</h3>
           @for (l of g.lineas; track l.articulo_id) {
             <div class="mov__resumen-row">
-              <span>{{ l.nombre }}</span>
+              <span>{{ l.nombre }}@if (l.talla) { <small>· Talla {{ l.talla }}</small> }</span>
               <b>{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</b>
             </div>
           }

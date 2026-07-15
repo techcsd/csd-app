@@ -6,6 +6,7 @@ import { PhotoSlot } from '../../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../../shared/ui/signature-pad/signature-pad';
 import { BigConfirm } from '../../../../shared/ui/big-confirm/big-confirm';
+import { Skeleton } from '../../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../../core/services/camera.service';
 import { ConducesService } from '../../../../core/services/conduces.service';
 import { NetworkService } from '../../../../core/services/network.service';
@@ -21,7 +22,7 @@ import { Conduce } from '../../../../core/models/transporte.model';
   selector: 'app-conduce-entrega',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, BigConfirm],
+  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton],
   templateUrl: './entrega.html',
   styleUrl: './entrega.scss',
 })
@@ -35,6 +36,7 @@ export class ConduceEntregaPage {
   private sig = viewChild(SignaturePad);
 
   conduce = signal<Conduce | null>(null);
+  loading = signal(true);
   foto = signal<CapturedPhoto | null>(null);
   llegoTodo = signal<boolean | null>(null);
   cantidades = signal<Record<string, number>>({});
@@ -53,14 +55,19 @@ export class ConduceEntregaPage {
   }
 
   private async load(): Promise<void> {
-    const id = this.route.snapshot.paramMap.get('salidaId');
-    const list = await this.service.misConduces();
-    const c = list.find((x) => x.id === id) ?? null;
-    this.conduce.set(c);
-    if (c) {
-      const init: Record<string, number> = {};
-      for (const it of c.items) init[it.detalle_id] = it.cantidad;
-      this.cantidades.set(init);
+    this.loading.set(true);
+    try {
+      const id = this.route.snapshot.paramMap.get('salidaId');
+      const list = await this.service.misConduces();
+      const c = list.find((x) => x.id === id) ?? null;
+      this.conduce.set(c);
+      if (c) {
+        const init: Record<string, number> = {};
+        for (const it of c.items) init[it.detalle_id] = it.cantidad;
+        this.cantidades.set(init);
+      }
+    } finally {
+      this.loading.set(false);
     }
   }
 

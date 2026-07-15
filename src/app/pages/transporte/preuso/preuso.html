@@ -1,6 +1,6 @@
 @if (loadingCtx()) {
   <div class="screen preuso">
-    <div class="screen__body"><p class="preuso__muted">Cargando…</p></div>
+    <div class="screen__body"><app-skeleton [rows]="5" /></div>
   </div>
 } @else if (bloqueoPrevio(); as b) {
   <!-- Hard block: cannot open the checklist -->
@@ -98,6 +98,12 @@
       <div class="preuso__veh">
         <span class="preuso__placa">{{ placa() || '—' }}</span>
         <span class="preuso__modelo">{{ modelo() }}</span>
+        @if (mantResumen(); as mr) {
+          <span class="preuso__veh-km">Último registro: {{ mr.ultimoKm | number: '1.0-0' }} km</span>
+          <span class="preuso__veh-mant">
+            Mantenimiento cada {{ mr.intervalo | number: '1.0-0' }} km · próx. {{ mr.proximo | number: '1.0-0' }} km
+          </span>
+        }
       </div>
 
       @if (licenciaEstado() === 'por_vencer') {
@@ -110,7 +116,7 @@
       @if (step() === 1) {
         <h1 class="screen__title">Datos de salida</h1>
 
-        <label class="field-label" for="km">Kilometraje actual (km)</label>
+        <label class="field-label" for="km">Kilometraje actual</label>
         <input
           id="km"
           class="field preuso__km"
@@ -146,7 +152,7 @@
             @if (m.estado === 'vencido') {
               ⚠ Mantenimiento VENCIDO por {{ -m.faltan | number: '1.0-0' }} km.
             } @else if (m.estado === 'pre_cita') {
-              ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km — se enviará aviso para agendar la PRE-CITA.
+              ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km para el mantenimiento ({{ m.proximo | number: '1.0-0' }} km). Se enviará aviso para agendar la PRE-CITA.
             } @else {
               Faltan {{ m.faltan | number: '1.0-0' }} km para el mantenimiento ({{ m.proximo | number: '1.0-0' }} km).
             }
@@ -220,12 +226,28 @@
         }
       }
 
-      <!-- Step 3: 7 guided photos -->
+      <!-- Step 3: 7 guided photos (EXTERIOR 4 / INTERIOR 3) -->
       @if (step() === 3) {
-        <h1 class="screen__title">Toma las 7 fotos</h1>
-        <p class="screen__subtitle">Las 7 fotos son obligatorias.</p>
+        <h1 class="screen__title">Fotos del vehículo</h1>
+        <p class="screen__subtitle">
+          Toca cada recuadro para tomar la foto con la cámara. Las 7 son obligatorias.
+        </p>
+
+        <h2 class="preuso__fsection">EXTERIOR — 4 FOTOS</h2>
         <div class="preuso__fotos">
-          @for (f of fotosReq; track f.slot) {
+          @for (f of fotosExterior; track f.slot) {
+            <app-photo-slot
+              [label]="f.label"
+              [hint]="f.hint"
+              (captured)="onFoto(f.slot, $event)"
+              (cleared)="onFotoCleared(f.slot)"
+            />
+          }
+        </div>
+
+        <h2 class="preuso__fsection">INTERIOR — 3 FOTOS</h2>
+        <div class="preuso__fotos">
+          @for (f of fotosInterior; track f.slot) {
             <app-photo-slot
               [label]="f.label"
               [hint]="f.hint"
@@ -298,7 +320,21 @@
         <button type="button" class="btn-ghost preuso__back" (click)="intentarSalir()">Cancelar</button>
       }
       @if (step() < total) {
-        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+        @switch (step()) {
+          @case (1) {
+            <button type="button" class="btn-cta" [disabled]="!datosSalidaCompletos()" (click)="next()">
+              Continuar al checklist
+            </button>
+          }
+          @case (3) {
+            <button type="button" class="btn-cta" [disabled]="!fotosCompletas()" (click)="next()">
+              {{ fotosCompletas() ? 'Siguiente' : 'Faltan ' + fotosFaltan() + (fotosFaltan() === 1 ? ' foto' : ' fotos') }}
+            </button>
+          }
+          @default {
+            <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+          }
+        }
       } @else {
         <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
           {{ submitting() ? 'Guardando…' : 'Confirmar y guardar' }}

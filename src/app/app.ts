@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { ToastHost } from './shared/components/toast-host/toast-host';
@@ -7,6 +7,7 @@ import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
 import { CatalogService } from './core/sync/catalog.service';
 import { UpdateService } from './core/services/update.service';
+import { UpdaterService } from './core/services/updater.service';
 import { AutoLockService } from './core/services/auto-lock.service';
 import { VersionService } from './core/services/version.service';
 import { ToastService } from './core/services/toast.service';
@@ -25,10 +26,12 @@ export class App {
   private network = inject(NetworkService);
   private catalog = inject(CatalogService);
   private updates = inject(UpdateService);
+  updater = inject(UpdaterService);
   private autoLock = inject(AutoLockService);
   version = inject(VersionService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private router = inject(Router);
 
   constructor() {
     void this.catalog.persistStorage();
@@ -63,8 +66,13 @@ export class App {
     }
   }
 
-  abrirDescarga(): void {
-    const url = this.version.apkUrl;
-    if (url) window.open(url, '_system');
+  /** Blocking gate (below-minimum): download + install in-app (V3). */
+  async actualizarAhora(): Promise<void> {
+    await this.updater.actualizar();
+  }
+
+  /** Non-blocking banner (V4): go to the full update flow. */
+  irActualizar(): void {
+    void this.router.navigate(['/actualizar']);
   }
 }

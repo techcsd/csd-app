@@ -8,6 +8,10 @@
     buttonLabel="Listo"
     (dismissed)="finish()"
   />
+} @else if (loading()) {
+  <div class="screen entrega">
+    <div class="screen__body"><app-skeleton [rows]="5" /></div>
+  </div>
 } @else if (conduce(); as c) {
   <div class="screen entrega">
     <header class="entrega__header">

@@ -202,6 +202,11 @@ export const routes: Routes = [
   },
 
   {
+    path: 'actualizar',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/actualizar/actualizar').then((m) => m.ActualizarPage),
+  },
+  {
     path: 'perfil',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilPage),

@@ -20,6 +20,22 @@
   font-size: var(--fs-option);
   color: var(--color-text-secondary);
 }
+.preuso__veh-km {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.preuso__veh-mant {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.preuso__fsection {
+  margin: 18px 0 10px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
 
 .preuso__muted {
   color: var(--color-text-secondary);

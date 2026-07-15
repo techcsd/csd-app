@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DecimalPipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -25,7 +26,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-asignar-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton],
+  imports: [FormsModule, StepBar, OptionButton, EmptyState, Skeleton, VehiculoCard],
   templateUrl: './asignar.html',
   styleUrl: './asignar.scss',
 })

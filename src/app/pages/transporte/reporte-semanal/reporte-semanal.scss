@@ -120,9 +120,29 @@
   resize: none;
 }
 
-.rsem__estado {
+.rsem__card {
+  display: block;
+  margin-bottom: 10px;
+}
+.rsem__docard {
+  width: auto;
+  min-width: 104px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 15px;
+}
+.rsem__recard {
+  width: auto;
+  min-width: 84px;
+  min-height: 38px;
+  padding: 0 12px;
   font-size: 14px;
-  font-weight: 600;
+}
+
+.rsem__estado {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .rsem__estado--ok {

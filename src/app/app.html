@@ -10,11 +10,38 @@
         Esta versión ({{ version.local }}) ya no está disponible. Descarga la versión
         {{ version.info()?.version_minima }} o superior para seguir trabajando.
       </p>
+      @if (updater.estado() === 'descargando') {
+        <div class="version-gate__progress">
+          <div class="version-gate__progress-bar" [style.width.%]="updater.progreso()"></div>
+        </div>
+        <p class="version-gate__progress-txt">Descargando… {{ updater.progreso() }}%</p>
+      } @else if (updater.estado() === 'permiso') {
+        <p class="version-gate__msg">
+          Activa "Instalar apps desconocidas" para CSD App y vuelve a tocar Actualizar.
+        </p>
+      }
       @if (version.apkUrl) {
-        <button type="button" class="version-gate__btn" (click)="abrirDescarga()">Descargar actualización</button>
+        <button
+          type="button"
+          class="version-gate__btn"
+          [disabled]="updater.estado() === 'descargando' || updater.estado() === 'instalando'"
+          (click)="actualizarAhora()"
+        >
+          {{ updater.estado() === 'descargando' ? 'Descargando…' : (updater.esNativo ? 'Actualizar ahora' : 'Descargar actualización') }}
+        </button>
       }
     </div>
   </div>
 } @else {
+  @if (version.hayNueva()) {
+    <!-- V4: non-blocking, tappable "new version" notice → full update flow -->
+    <button type="button" class="version-banner" (click)="irActualizar()">
+      <span class="version-banner__icon">⬆️</span>
+      <span class="version-banner__txt">
+        Nueva versión {{ version.info()?.version_publicada }} disponible — toca para actualizar
+      </span>
+      <span class="version-banner__chev">›</span>
+    </button>
+  }
   <router-outlet />
 }

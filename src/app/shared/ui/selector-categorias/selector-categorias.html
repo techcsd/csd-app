@@ -2,6 +2,9 @@
 @if (hoja() === 'categorias') {
   <div class="selcat">
     <div class="selcat__grid">
+      @if (loading()) {
+        <div class="selcat__loading"><app-skeleton [rows]="6" /></div>
+      } @else {
       @for (c of chips(); track c.id) {
         <button
           type="button"
@@ -17,6 +20,7 @@
         </button>
       } @empty {
         <p class="selcat__muted">No hay materiales para elegir.</p>
+      }
       }
     </div>
 
@@ -40,41 +44,118 @@
       <h2 class="selcat__subtitle">{{ nombreCategoria() }}</h2>
     </header>
 
-    <input
-      class="field selcat__search"
-      type="search"
-      [ngModel]="query()"
-      (ngModelChange)="query.set($event)"
-      placeholder="🔎 Buscar en esta categoría"
-    />
-
-    <div class="selcat__list">
-      @for (a of articulosVisibles(); track a.id) {
-        <div class="selcat__item" [class.selcat__item--on]="cantidadDe(a.id) > 0">
-          <div class="selcat__item-info">
-            <span class="selcat__item-name">{{ a.nombre }}</span>
-            <span class="selcat__item-unit">{{ a.unidad }}</span>
+    @if (esOtrosAbierta()) {
+      <!-- V14/08 — "Otros": describe un material que no está en el catálogo -->
+      <div class="selcat__list">
+        <p class="selcat__hint">Escribe lo que necesitas. Se enviará como material a revisar.</p>
+        <label class="field-label">¿Qué material?</label>
+        <input
+          class="field"
+          type="text"
+          [ngModel]="otroDesc()"
+          (ngModelChange)="otroDesc.set($event)"
+          placeholder="Ej: Cinta de peligro amarilla"
+        />
+        <div class="selcat__otro-row">
+          <div>
+            <label class="field-label">Unidad</label>
+            <input class="field" type="text" [ngModel]="otroUnidad()" (ngModelChange)="otroUnidad.set($event)" placeholder="UND" />
           </div>
-          <div class="selcat__item-qty">
-            <button type="button" class="selcat__step" (click)="ajustar(a, -1)" aria-label="Menos">−</button>
-            <input
-              class="field selcat__qty"
-              type="number"
-              inputmode="decimal"
-              [ngModel]="cantidadDe(a.id)"
-              (ngModelChange)="setCantidad(a, $event)"
-            />
-            <button type="button" class="selcat__step selcat__step--add" (click)="ajustar(a, 1)" aria-label="Más">+</button>
+          <div>
+            <label class="field-label">Cantidad</label>
+            <input class="field" type="number" inputmode="decimal" [ngModel]="otroCant()" (ngModelChange)="otroCant.set($event)" />
           </div>
         </div>
-      } @empty {
-        <p class="selcat__muted">No se encontró ese material.</p>
-      }
-    </div>
+        <button type="button" class="btn-ghost selcat__otro-add" [disabled]="!otroDesc().trim()" (click)="agregarOtro()">
+          ➕ Agregar
+        </button>
+
+        @for (l of otrosLineas(); track l.articulo_id) {
+          <div class="selcat__item selcat__item--on">
+            <div class="selcat__item-info">
+              <span class="selcat__item-name">{{ l.nombre }}</span>
+              <span class="selcat__item-unit">{{ l.cantidad }} {{ l.unidad }}</span>
+            </div>
+            <button type="button" class="selcat__item-x" (click)="quitarOtro(l.articulo_id!)" aria-label="Quitar">✕</button>
+          </div>
+        }
+      </div>
+    } @else {
+      <input
+        class="field selcat__search"
+        type="search"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        placeholder="🔎 Buscar en esta categoría"
+      />
+
+      <div class="selcat__list">
+        @for (a of articulosVisibles(); track a.id) {
+          <div class="selcat__item" [class.selcat__item--on]="cantidadDe(a.id) > 0">
+            <div class="selcat__item-info">
+              <span class="selcat__item-name">{{ a.nombre }}</span>
+              <span class="selcat__item-unit">{{ a.unidad }}</span>
+              @if (a.nota) {
+                <span class="selcat__item-nota">💡 {{ a.nota }}</span>
+              }
+              @if (tallaDe(a.id); as t) {
+                <button type="button" class="selcat__talla" (click)="abrirTalla(a)">Talla: {{ t }} ✎</button>
+              } @else if (a.requiere_talla) {
+                <span class="selcat__talla selcat__talla--req">Pide talla</span>
+              }
+            </div>
+            <div class="selcat__item-qty">
+              <button type="button" class="selcat__step" (click)="ajustar(a, -1)" aria-label="Menos">−</button>
+              <input
+                class="field selcat__qty"
+                type="number"
+                inputmode="decimal"
+                [ngModel]="cantidadDe(a.id)"
+                (ngModelChange)="setCantidad(a, $event)"
+              />
+              <button type="button" class="selcat__step selcat__step--add" (click)="ajustar(a, 1)" aria-label="Más">+</button>
+            </div>
+          </div>
+        } @empty {
+          <p class="selcat__muted">No se encontró ese material.</p>
+        }
+      </div>
+    }
 
     <footer class="selcat__bar">
       <div class="selcat__bar-total">🛒 {{ totalCarrito() }}</div>
       <button type="button" class="btn-cta selcat__bar-next" (click)="volverCategorias()">Listo</button>
     </footer>
+  </div>
+}
+
+<!-- Talla dialog (EPP) -->
+@if (tallaFor(); as a) {
+  <div class="selcat__modal" (click)="cancelarTalla()">
+    <div class="selcat__modal-card" (click)="$event.stopPropagation()">
+      <h3 class="selcat__modal-title">Talla de {{ a.nombre }}</h3>
+      <p class="selcat__modal-sub">Indica la talla (obligatoria para este artículo).</p>
+      <div class="selcat__tallas">
+        @for (t of tallasComunes; track t) {
+          <button
+            type="button"
+            class="selcat__talla-chip"
+            [class.selcat__talla-chip--on]="tallaValor() === t"
+            (click)="tallaValor.set(t)"
+          >{{ t }}</button>
+        }
+      </div>
+      <input
+        class="field"
+        type="text"
+        [ngModel]="tallaValor()"
+        (ngModelChange)="tallaValor.set($event)"
+        placeholder="Otra talla (ej: 42)"
+      />
+      <div class="selcat__modal-nav">
+        <button type="button" class="btn-ghost selcat__modal-cancel" (click)="cancelarTalla()">Cancelar</button>
+        <button type="button" class="btn-cta" [disabled]="!tallaValor().trim()" (click)="confirmarTalla()">Guardar talla</button>
+      </div>
+    </div>
   </div>
 }

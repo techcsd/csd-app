@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -15,7 +16,7 @@ import { Bodega, Existencia } from '../../../core/models/inventario.model';
   selector: 'app-conteo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, BigConfirm, SelectList],
+  imports: [Skeleton, FormsModule, BigConfirm, ConfirmDialog, SelectList],
   templateUrl: './conteo.html',
   styleUrl: './conteo.scss',
 })
@@ -35,6 +36,18 @@ export class ConteoPage {
   loading = signal(false);
   submitting = signal(false);
   done = signal(false);
+  confirmarConforme = signal(false);
+
+  /** Items whose counted value differs from the system stock. */
+  private cambios = computed(() =>
+    this.existencias()
+      .map((e) => ({ articulo_id: e.articulo_id, cantidad_contada: this.contado()[e.articulo_id] ?? e.cantidad }))
+      .filter((it, i) => it.cantidad_contada !== this.existencias()[i].cantidad),
+  );
+
+  /** V8: with a bodega loaded but no edits, the user can still save "todo conforme". */
+  hayCambios = computed(() => this.cambios().length > 0);
+  puedeGuardar = computed(() => !!this.bodegaId() && this.existencias().length > 0);
 
   constructor() {
     void this.init();
@@ -75,14 +88,30 @@ export class ConteoPage {
       this.toast.error('Elige la bodega.');
       return;
     }
-    // Only send items whose count changed.
-    const items = this.existencias()
-      .map((e) => ({ articulo_id: e.articulo_id, cantidad_contada: this.contado()[e.articulo_id] ?? e.cantidad }))
-      .filter((it, i) => it.cantidad_contada !== this.existencias()[i].cantidad);
-    if (!items.length) {
-      this.toast.error('No cambiaste ninguna cantidad.');
+    // V8: no changes → confirm "todo conforme" instead of blocking the save.
+    if (!this.hayCambios()) {
+      this.confirmarConforme.set(true);
       return;
     }
+    await this.guardar(this.cambios());
+  }
+
+  /** V8: user confirmed saving with no differences (todo conforme). We send all
+   *  existencias as verified items so the record shows what was checked. */
+  async confirmarSinDiferencias(): Promise<void> {
+    this.confirmarConforme.set(false);
+    const todos = this.existencias().map((e) => ({
+      articulo_id: e.articulo_id,
+      cantidad_contada: this.contado()[e.articulo_id] ?? e.cantidad,
+    }));
+    await this.guardar(todos);
+  }
+
+  cancelarConforme(): void {
+    this.confirmarConforme.set(false);
+  }
+
+  private async guardar(items: { articulo_id: string; cantidad_contada: number }[]): Promise<void> {
     this.submitting.set(true);
     try {
       await this.inventario.enqueueConteo({

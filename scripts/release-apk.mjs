@@ -37,23 +37,31 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.5.0';
-const VERSION_CODE = 18;
+const VERSION = '1.6.0';
+// V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
+// matching android/app/build.gradle and the backend version_code scheme.
+const codeFromVersion = (v) => {
+  const [maj = 0, min = 0, pat = 0] = v.split('.').map((n) => Number(n) || 0);
+  return maj * 1000000 + min * 1000 + pat;
+};
+const VERSION_CODE = codeFromVersion(VERSION);
 // Rollout escalonado (R15): 1.5.0 queda DISPONIBLE para descargar, pero NO se
 // fuerza. El mínimo se mantiene en 1.4.0 (no forzamos a los de campo); subir el
 // forzado se hace conscientemente desde SGC → app-versiones o cambiando esto.
 const MIN_VERSION = '1.4.0';
-const TITULO = 'Rutas con mapa y pre-uso de 10 tópicos';
+const TITULO = 'Actualización desde la app, catálogo oficial y requisición por hojas';
 // Cambios etiquetados (nuevo|mejora|arreglo|seguridad) — alimentan el timeline
 // del historial (cambios) y, unidos, las notas / el changelog de version.json.
 const CAMBIOS = [
-  { t: 'nuevo', d: 'Rutas: elige origen y destino en un mapa — buscar una dirección (RD), usar tu ubicación actual, o escoger una obra/almacén del sistema. Muestra el tiempo estimado del viaje.' },
-  { t: 'mejora', d: 'Pre-uso: ahora son los 10 tópicos oficiales (antes 29 preguntas).' },
-  { t: 'mejora', d: 'Al elegir un vehículo se muestra su foto (en el selector, el perfil y combustible).' },
-  { t: 'mejora', d: 'Reporte semanal más claro, con recordatorio de lo pendiente de la semana.' },
-  { t: 'mejora', d: 'Bitácora: describe cada restricción y el detalle muestra clima, migración y cantidades.' },
-  { t: 'arreglo', d: 'No se pierden datos si sales sin querer de un formulario (pregunta antes de descartar, también con el botón atrás del teléfono).' },
-  { t: 'arreglo', d: 'Fechas legibles en toda la app y botón de guardar siempre visible en los formularios.' },
+  { t: 'nuevo', d: 'Actualízate desde la misma app: cuando hay una versión nueva, un botón la descarga e instala sin ir a la página web.' },
+  { t: 'nuevo', d: 'Catálogo oficial de materiales (8 categorías). Al pedir EPP se indica la talla; "Otros" permite describir lo que no está en la lista.' },
+  { t: 'nuevo', d: 'Requisición rediseñada por hojas, igual que salida/entrada, con resumen y compartir por WhatsApp.' },
+  { t: 'mejora', d: 'Reporte semanal para cualquier conductor: elige un vehículo del pool aunque no tengas uno asignado.' },
+  { t: 'mejora', d: 'Tarjetas de vehículos con foto, tipo y kilometraje en todos los listados.' },
+  { t: 'mejora', d: 'Conteo: si todo está conforme, puedes guardar sin diferencias.' },
+  { t: 'mejora', d: 'Pantallas de carga (skeletons) en toda la app — nunca una pantalla en blanco.' },
+  { t: 'arreglo', d: 'El botón "Siguiente" siempre visible en salida de material y al asignarte un vehículo.' },
+  { t: 'arreglo', d: '"Verificar versión" ahora detecta correctamente cuando hay una nueva publicada.' },
 ];
 const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
 const RELEASED_AT = '2026-07-15';

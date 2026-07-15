@@ -10,6 +10,8 @@ export interface VersionPublicada {
   notas: string | null;
   apk_url: string | null;
   version_minima: string | null;
+  version_code?: number | null;
+  version_minima_code?: number | null;
 }
 
 export type Plataforma = 'web' | 'movil';
@@ -55,12 +57,42 @@ export class VersionService {
 
   /** Refresh from the server (cached). Safe to call at startup. */
   async check(): Promise<void> {
-    const data = await this.catalog.refresh<VersionPublicada>(CATALOG_KEY, async () => {
-      const { data, error } = await this.supabase.client.rpc('version_publicada');
-      if (error) throw new Error(error.message);
-      return (data as VersionPublicada) ?? { version_publicada: null, notas: null, apk_url: null, version_minima: null };
-    });
+    const data = await this.catalog.refresh<VersionPublicada>(CATALOG_KEY, () => this.fetchRpc());
     if (data) this.info.set(data);
+  }
+
+  /**
+   * Force a FRESH read of version_publicada() bypassing the read-through cache
+   * (V2). The cached path is fine for the startup nudge, but the explicit
+   * "Buscar actualización" tap must never report an old cached answer — it hits
+   * the RPC directly and only falls back to cache when genuinely offline.
+   * Returns true on a successful server read, false if we had to use the cache.
+   */
+  async checkFresh(): Promise<boolean> {
+    try {
+      const data = await this.fetchRpc();
+      this.info.set(data);
+      await this.catalog.refresh<VersionPublicada>(CATALOG_KEY, async () => data);
+      return true;
+    } catch (e) {
+      console.warn('VersionService.checkFresh failed, using cache:', e);
+      const cached = await this.catalog.read<VersionPublicada>(CATALOG_KEY);
+      if (cached) this.info.set(cached);
+      return false;
+    }
+  }
+
+  private async fetchRpc(): Promise<VersionPublicada> {
+    const { data, error } = await this.supabase.client.rpc('version_publicada');
+    if (error) throw new Error(error.message);
+    return (
+      (data as VersionPublicada) ?? {
+        version_publicada: null,
+        notas: null,
+        apk_url: null,
+        version_minima: null,
+      }
+    );
   }
 
   /** The label to show in About/Perfil — the published version, or the build. */

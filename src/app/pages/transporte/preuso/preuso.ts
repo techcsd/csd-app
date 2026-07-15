@@ -15,6 +15,7 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -82,7 +83,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -102,6 +103,9 @@ export class PreusoPage extends GuardedWizard {
   readonly opciones = RESPUESTA_OPCIONES;
   readonly niveles = NIVELES_COMBUSTIBLE_PREUSO;
   readonly fotosReq = FOTOS_PREUSO;
+  // V15 — fotos agrupadas EXTERIOR (4) / INTERIOR (3) para los encabezados.
+  readonly fotosExterior = FOTOS_PREUSO.filter((f) => f.grupo === 'EXTERIOR');
+  readonly fotosInterior = FOTOS_PREUSO.filter((f) => f.grupo === 'INTERIOR');
 
   vehiculoId = '';
   vehiculo = signal<VehiculoDetalle | null>(null);
@@ -243,6 +247,19 @@ export class PreusoPage extends GuardedWizard {
   });
 
   fotosCompletas = computed(() => this.fotosReq.every((f) => !!this.fotos()[f.slot]));
+  /** V15 — how many of the 7 guided photos are still missing (for the button). */
+  fotosFaltan = computed(() => this.fotosReq.filter((f) => !this.fotos()[f.slot]).length);
+
+  /** V15 — "Continuar al checklist" enabled only with km + fuel level. */
+  datosSalidaCompletos = computed(() => this.km() != null && this.km()! > 0 && !!this.nivelCombustible());
+
+  /** V15 — card line: "Mantenimiento cada N km · próx. X". */
+  mantResumen = computed(() => {
+    const v = this.vehiculo();
+    if (!v || v.km_ultimo_mantenimiento == null) return null;
+    const intervalo = v.intervalo_mantenimiento_km ?? 5000;
+    return { intervalo, proximo: v.km_ultimo_mantenimiento + intervalo, ultimoKm: v.kilometraje };
+  });
 
   kmInvalido = computed(() => {
     const km = this.km();

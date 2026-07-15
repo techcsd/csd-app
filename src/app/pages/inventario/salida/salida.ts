@@ -43,6 +43,7 @@ export class SalidaPage implements OnDestroy {
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
+  loadingCat = signal(true); // V7 — shimmer while el catálogo carga
   notas = signal('');
   foto = signal<CapturedPhoto | null>(null);
   capturing = signal(false);
@@ -84,15 +85,20 @@ export class SalidaPage implements OnDestroy {
   }
 
   private async init(): Promise<void> {
-    const [b, a, cat] = await Promise.all([
-      this.inventario.getBodegas(),
-      this.inventario.getArticulos(),
-      this.inventario.getCategorias(),
-    ]);
-    this.bodegas.set(b);
-    this.articulos.set(a);
-    this.categorias.set(cat);
-    if (b.length === 1) this.bodegaId.set(b[0].id);
+    this.loadingCat.set(true);
+    try {
+      const [b, a, cat] = await Promise.all([
+        this.inventario.getBodegas(),
+        this.inventario.getArticulos(),
+        this.inventario.getCategorias(),
+      ]);
+      this.bodegas.set(b);
+      this.articulos.set(a);
+      this.categorias.set(cat);
+      if (b.length === 1) this.bodegaId.set(b[0].id);
+    } finally {
+      this.loadingCat.set(false);
+    }
   }
 
   // ── Navegación entre hojas ──
@@ -174,7 +180,7 @@ export class SalidaPage implements OnDestroy {
         bodegaId: this.bodegaId(),
         proyectoId: null,
         motivo: this.notas().trim() || 'Consumo en obra',
-        items: items.map((l) => ({ articulo_id: l.articulo_id, cantidad: l.cantidad })),
+        items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
         foto: this.foto()?.blob ?? null,
       });
       this.hoja.set('exito');
@@ -193,7 +199,7 @@ export class SalidaPage implements OnDestroy {
       .map(
         (g) =>
           `*${g.categoria}*\n` +
-          g.lineas.map((l) => `  • ${l.nombre}: ${l.cantidad} ${l.unidad}`).join('\n'),
+          g.lineas.map((l) => `  • ${l.nombre}${l.talla ? ` (Talla ${l.talla})` : ''}: ${l.cantidad} ${l.unidad}`).join('\n'),
       )
       .join('\n');
     const notas = this.notas().trim() ? `\nNota: ${this.notas().trim()}` : '';

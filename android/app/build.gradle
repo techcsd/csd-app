@@ -9,6 +9,19 @@ if (hasKeystore) {
     keystoreProps.load(new FileInputStream(keystorePropsFile))
 }
 
+// V5: single source of truth for the version. versionCode is DERIVED from the
+// name (major*1_000_000 + minor*1_000 + patch) so it always increments with the
+// version and matches the backend's version_code scheme (e.g. 1.5.0 -> 1005000).
+// Keep appVersionName in sync with src/environments/* and scripts/release-apk.mjs.
+def appVersionName = "1.6.0"
+def computeVersionCode = { String name ->
+    def p = name.tokenize('.')
+    def major = (p.size() > 0 ? p[0] : "0").toInteger()
+    def minor = (p.size() > 1 ? p[1] : "0").toInteger()
+    def patch = (p.size() > 2 ? p[2] : "0").toInteger()
+    return major * 1000000 + minor * 1000 + patch
+}
+
 android {
     namespace = "com.constructorasd.csdapp"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -26,8 +39,8 @@ android {
         applicationId "com.constructorasd.csdapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 18
-        versionName "1.5.0"
+        versionCode computeVersionCode(appVersionName)
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

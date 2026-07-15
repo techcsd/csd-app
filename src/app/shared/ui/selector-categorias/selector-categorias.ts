@@ -1,8 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ArticuloCat, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
+import { Skeleton } from '../skeleton/skeleton';
 
 const SIN_CATEGORIA = -1;
+/** Custom "Otros" lines get a synthetic id so the cart keys stay unique; the
+ *  consuming page maps `otro:*` back to a null articulo_id for the RPC. */
+const OTRO_PREFIX = 'otro:';
 
 interface CategoriaChip {
   id: number;
@@ -10,27 +14,33 @@ interface CategoriaChip {
   destacada: boolean;
   disponibles: number;
   seleccionados: number;
+  esOtros: boolean;
 }
 
 /**
  * Reusable category-sheet selector (patrón "HOJAS" del jefe). Two full-screen
  * sheets: (1) categories — destacadas first, each with a badge of items already
  * picked; (2) the tapped category's articles with a − / + stepper. The cart is a
- * two-way `model` so the parent owns it (survives navigating between sheets and
- * can edit it in a later review sheet). Emits `siguiente` / `cancelar`.
- * Generic on purpose: any future multi-select-by-category flow can embed it.
+ * two-way `model` so the parent owns it. Emits `siguiente` / `cancelar`.
+ *
+ * V14: EPP articles flagged `requiere_talla` ask for a size before they enter
+ * the cart; packing/brand notes show as a hint. In `requisicion` mode the "Otros"
+ * category (08) lets the user describe a material that isn't in the catalog.
  */
 @Component({
   selector: 'app-selector-categorias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, Skeleton],
   templateUrl: './selector-categorias.html',
   styleUrl: './selector-categorias.scss',
 })
 export class SelectorCategorias {
   articulos = input<ArticuloCat[]>([]);
   categorias = input<CategoriaInv[]>([]);
+  loading = input(false); // V7: shimmer while the catalog loads (no blank grid)
+  /** 'requisicion' unlocks the free-text "Otros" flow (V14/08). */
+  modo = input<'stock' | 'requisicion'>('stock');
   cart = model<CartLinea[]>([]);
 
   siguiente = output<void>();
@@ -39,6 +49,16 @@ export class SelectorCategorias {
   hoja = signal<'categorias' | 'categoria'>('categorias');
   catSelId = signal<number | null>(null);
   query = signal('');
+
+  // Talla dialog (EPP)
+  tallaFor = signal<ArticuloCat | null>(null);
+  tallaValor = signal('');
+  readonly tallasComunes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+  // "Otros" describe form
+  otroDesc = signal('');
+  otroUnidad = signal('UND');
+  otroCant = signal(1);
 
   totalCarrito = computed(() => this.cart().length);
 
@@ -52,13 +72,21 @@ export class SelectorCategorias {
     return articulo.categoria_id != null && this.childrenOf(catId).has(articulo.categoria_id);
   }
 
-  /** Category chips: destacadas first, then by orden; only non-empty ones. */
+  private esOtros(c: { nombre: string }): boolean {
+    return /^otros$/i.test(c.nombre.trim());
+  }
+
+  /** Id of the official "Otros" (08) category, if present. */
+  otrosCatId = computed(() => this.categorias().find((c) => this.esOtros(c))?.id ?? null);
+
+  /** Custom lines already added under "Otros". */
+  otrosLineas = computed(() =>
+    this.cart().filter((l) => typeof l.articulo_id === 'string' && l.articulo_id.startsWith(OTRO_PREFIX)),
+  );
+
+  /** Category chips: official order (orden), destacadas first; only non-empty —
+   *  except "Otros" in requisición mode, which is always offered. */
   chips = computed<CategoriaChip[]>(() => {
-    const seleccionadosPorCat = new Map<number, number>();
-    for (const l of this.cart()) {
-      const cid = l.categoria_id ?? SIN_CATEGORIA;
-      seleccionadosPorCat.set(cid, (seleccionadosPorCat.get(cid) ?? 0) + 1);
-    }
     const cats = [...this.categorias()].sort(
       (a, b) => Number(b.destacada) - Number(a.destacada) || a.orden - b.orden,
     );
@@ -67,8 +95,8 @@ export class SelectorCategorias {
       nombre: c.nombre,
       destacada: c.destacada,
       disponibles: this.articulos().filter((a) => this.perteneceA(a, c.id)).length,
-      // Selected count must include child categories rolled up under this chip.
       seleccionados: this.contarSeleccionados(c.id),
+      esOtros: this.esOtros(c),
     }));
     if (this.articulos().some((a) => a.categoria_id == null)) {
       out.push({
@@ -76,18 +104,31 @@ export class SelectorCategorias {
         nombre: 'Sin categoría',
         destacada: false,
         disponibles: this.articulos().filter((a) => a.categoria_id == null).length,
-        seleccionados: seleccionadosPorCat.get(SIN_CATEGORIA) ?? 0,
+        seleccionados: this.cart().filter((l) => l.categoria_id == null && !this.esCustom(l)).length,
+        esOtros: false,
       });
     }
-    return out.filter((c) => c.disponibles > 0);
+    // Show categories with articles; keep "Otros" visible in requisición mode.
+    return out.filter((c) => c.disponibles > 0 || (c.esOtros && this.modo() === 'requisicion'));
   });
+
+  private esCustom(l: CartLinea): boolean {
+    return typeof l.articulo_id === 'string' && l.articulo_id.startsWith(OTRO_PREFIX);
+  }
 
   private contarSeleccionados(catId: number): number {
     return this.cart().filter((l) => {
+      if (this.esCustom(l)) return l.categoria_id === catId;
       const art = this.articulos().find((a) => a.id === l.articulo_id);
       return art ? this.perteneceA(art, catId) : false;
     }).length;
   }
+
+  categoriaAbierta = computed(() => this.categorias().find((c) => c.id === this.catSelId()) ?? null);
+  esOtrosAbierta = computed(() => {
+    const c = this.categoriaAbierta();
+    return !!c && this.esOtros(c);
+  });
 
   nombreCategoria = computed(() => {
     const id = this.catSelId();
@@ -109,9 +150,14 @@ export class SelectorCategorias {
     return this.cart().find((l) => l.articulo_id === articuloId)?.cantidad ?? 0;
   }
 
+  tallaDe(articuloId: string): string | null {
+    return this.cart().find((l) => l.articulo_id === articuloId)?.talla ?? null;
+  }
+
   abrirCategoria(catId: number): void {
     this.catSelId.set(catId);
     this.query.set('');
+    this.resetOtroForm();
     this.hoja.set('categoria');
   }
 
@@ -120,20 +166,30 @@ export class SelectorCategorias {
     this.catSelId.set(null);
   }
 
+  // ── Stepper (con talla para EPP) ──
   setCantidad(a: ArticuloCat, valor: number): void {
     const cant = Math.max(0, Math.floor((valor || 0) * 100) / 100);
-    this.aplicar(a, cant);
+    if (a.requiere_talla && cant > 0 && !this.tallaDe(a.id)) {
+      this.abrirTalla(a);
+      return;
+    }
+    this.aplicar(a, cant, this.tallaDe(a.id));
   }
 
   ajustar(a: ArticuloCat, delta: number): void {
-    this.aplicar(a, Math.max(0, this.cantidadDe(a.id) + delta));
+    const next = Math.max(0, this.cantidadDe(a.id) + delta);
+    if (a.requiere_talla && next > 0 && !this.tallaDe(a.id)) {
+      this.abrirTalla(a);
+      return;
+    }
+    this.aplicar(a, next, this.tallaDe(a.id));
   }
 
-  private aplicar(a: ArticuloCat, cantidad: number): void {
+  private aplicar(a: ArticuloCat, cantidad: number, talla: string | null): void {
     this.cart.update((list) => {
       const idx = list.findIndex((l) => l.articulo_id === a.id);
       if (cantidad <= 0) return idx >= 0 ? list.filter((_, i) => i !== idx) : list;
-      if (idx >= 0) return list.map((l, i) => (i === idx ? { ...l, cantidad } : l));
+      if (idx >= 0) return list.map((l, i) => (i === idx ? { ...l, cantidad, talla } : l));
       return [
         ...list,
         {
@@ -142,9 +198,61 @@ export class SelectorCategorias {
           unidad: a.unidad,
           categoria_id: a.categoria_id,
           cantidad,
+          talla,
         },
       ];
     });
+  }
+
+  // ── Talla dialog ──
+  abrirTalla(a: ArticuloCat): void {
+    this.tallaFor.set(a);
+    this.tallaValor.set(this.tallaDe(a.id) ?? '');
+  }
+
+  confirmarTalla(): void {
+    const a = this.tallaFor();
+    const talla = this.tallaValor().trim();
+    if (!a || !talla) return;
+    const cant = Math.max(1, this.cantidadDe(a.id));
+    this.aplicar(a, cant, talla);
+    this.tallaFor.set(null);
+    this.tallaValor.set('');
+  }
+
+  cancelarTalla(): void {
+    this.tallaFor.set(null);
+    this.tallaValor.set('');
+  }
+
+  // ── Otros (free-text) ──
+  private resetOtroForm(): void {
+    this.otroDesc.set('');
+    this.otroUnidad.set('UND');
+    this.otroCant.set(1);
+  }
+
+  agregarOtro(): void {
+    const desc = this.otroDesc().trim();
+    const cant = Math.max(1, Math.floor((this.otroCant() || 0) * 100) / 100);
+    const catId = this.otrosCatId();
+    if (!desc) return;
+    this.cart.update((list) => [
+      ...list,
+      {
+        articulo_id: OTRO_PREFIX + crypto.randomUUID(),
+        nombre: desc,
+        unidad: this.otroUnidad().trim() || 'UND',
+        categoria_id: catId,
+        cantidad: cant,
+        descripcion: desc,
+      },
+    ]);
+    this.resetOtroForm();
+  }
+
+  quitarOtro(articuloId: string): void {
+    this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
   }
 
   onSiguiente(): void {

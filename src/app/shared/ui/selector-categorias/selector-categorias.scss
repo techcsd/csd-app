@@ -1,12 +1,26 @@
+// V6: the host must establish a bounded flex column, otherwise the default
+// inline host has no height → `.selcat` grows to content, the grid never scrolls
+// and the sticky footer (Siguiente) overflows below the fold / gets clipped by
+// the parent's `overflow:hidden`. With this, the grid owns the scroll and the
+// footer bar stays pinned and visible with ≥1 item in the cart.
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .selcat {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 // ── Hoja de categorías ──
 .selcat__grid {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
@@ -14,6 +28,10 @@
   align-content: start;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.selcat__loading {
+  grid-column: 1 / -1;
 }
 
 .selcat__cat {
@@ -92,7 +110,8 @@
 }
 
 .selcat__list {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -135,6 +154,114 @@
   color: var(--color-text-secondary);
 }
 
+.selcat__item-nota {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.selcat__talla {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.selcat__talla--req {
+  border-color: var(--color-warning);
+  background: transparent;
+  color: var(--color-warning);
+}
+
+.selcat__hint {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.selcat__otro-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.selcat__otro-row > div {
+  flex: 1;
+  min-width: 0;
+}
+.selcat__otro-add {
+  width: auto;
+  min-width: 140px;
+  margin: 12px 0 4px;
+}
+
+// ── Talla modal ──
+.selcat__modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.selcat__modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 20px 18px calc(18px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.selcat__modal-title {
+  margin: 0;
+  font-size: var(--fs-option);
+  font-weight: 800;
+}
+.selcat__modal-sub {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.selcat__tallas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.selcat__talla-chip {
+  min-width: 52px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 16px;
+  font-weight: 800;
+}
+.selcat__talla-chip--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary);
+}
+.selcat__modal-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.selcat__modal-nav .btn-cta {
+  flex: 1;
+}
+.selcat__modal-cancel {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 110px;
+}
+
 .selcat__item-qty {
   display: flex;
   align-items: center;
@@ -163,8 +290,12 @@
   padding: 10px 4px;
 }
 
-// ── Barra fija ──
+// ── Barra fija (sticky bottom, siempre visible con ≥1 artículo) ──
 .selcat__bar {
+  flex: 0 0 auto; // nunca se encoge → el CTA de avance no puede desaparecer
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 10px;

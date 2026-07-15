@@ -19,24 +19,21 @@
         />
       } @else {
         @for (v of disponibles(); track v.vehiculo_id) {
-          <div class="asignar__veh">
-            @if (fotoUrls()[v.vehiculo_id]; as url) {
-              <img class="asignar__veh-foto" [src]="url" [alt]="'Foto de ' + v.placa" />
-            } @else {
-              <span class="asignar__veh-foto asignar__veh-foto--ph" aria-hidden="true">🚙</span>
-            }
-            <app-option-button
-              class="asignar__veh-btn"
-              [label]="v.placa + ' · ' + v.marca + ' ' + v.modelo"
+          <button type="button" class="asignar__vehbtn" (click)="seleccionar(v)">
+            <app-vehiculo-card
+              [fotoUrl]="fotoUrls()[v.vehiculo_id]"
+              [placa]="v.placa"
+              [tipo]="v.tipo"
+              [km]="v.km"
+              [marca]="v.marca"
+              [modelo]="v.modelo"
               [selected]="seleccionado()?.vehiculo_id === v.vehiculo_id"
-              (pressed)="seleccionar(v)"
-            />
-          </div>
-          @if (seleccionado()?.vehiculo_id === v.vehiculo_id) {
-            <p class="asignar__veh-detail">
-              {{ v.tipo || 'Vehículo' }} · {{ v.km | number: '1.0-0' }} km
-            </p>
-          }
+            >
+              @if (seleccionado()?.vehiculo_id === v.vehiculo_id) {
+                <span class="asignar__check">✓</span>
+              }
+            </app-vehiculo-card>
+          </button>
         }
         @if (!online) {
           <p class="asignar__note">Sin señal. Necesitas conexión para asignarte un vehículo.</p>

@@ -46,9 +46,19 @@
     </div>
 
     <footer class="conteo__nav">
-      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-        {{ submitting() ? 'Guardando…' : 'Guardar conteo' }}
+      <button type="button" class="btn-cta" [disabled]="submitting() || !puedeGuardar()" (click)="submit()">
+        {{ submitting() ? 'Guardando…' : (hayCambios() ? 'Guardar conteo' : 'Guardar (sin diferencias)') }}
       </button>
     </footer>
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmarConforme()"
+    title="Guardar sin diferencias"
+    message="No cambiaste ninguna cantidad. Se registrará que todo está conforme (conteo confirmado, sin diferencias)."
+    confirmLabel="Sí, todo conforme"
+    cancelLabel="Cancelar"
+    (confirmed)="confirmarSinDiferencias()"
+    (cancelled)="cancelarConforme()"
+  />
 }

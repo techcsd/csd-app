@@ -47,6 +47,7 @@ export class EntradaPage implements OnDestroy {
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
+  loadingCat = signal(true); // V7 — shimmer while el catálogo carga
   foto = signal<CapturedPhoto | null>(null);
   capturing = signal(false);
   submitting = signal(false);
@@ -87,15 +88,20 @@ export class EntradaPage implements OnDestroy {
   }
 
   private async init(): Promise<void> {
-    const [b, a, cat] = await Promise.all([
-      this.inventario.getBodegas(),
-      this.inventario.getArticulos(),
-      this.inventario.getCategorias(),
-    ]);
-    this.bodegas.set(b);
-    this.articulos.set(a);
-    this.categorias.set(cat);
-    if (b.length === 1) this.bodegaId.set(b[0].id);
+    this.loadingCat.set(true);
+    try {
+      const [b, a, cat] = await Promise.all([
+        this.inventario.getBodegas(),
+        this.inventario.getArticulos(),
+        this.inventario.getCategorias(),
+      ]);
+      this.bodegas.set(b);
+      this.articulos.set(a);
+      this.categorias.set(cat);
+      if (b.length === 1) this.bodegaId.set(b[0].id);
+    } finally {
+      this.loadingCat.set(false);
+    }
   }
 
   irResumen(): void {
@@ -178,7 +184,7 @@ export class EntradaPage implements OnDestroy {
       await this.inventario.enqueueEntrada({
         bodegaId: this.bodegaId(),
         referencia: this.referenciaEfectiva(),
-        items: items.map((l) => ({ articulo_id: l.articulo_id, cantidad: l.cantidad })),
+        items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
         foto: this.foto()?.blob ?? null,
       });
       this.hoja.set('exito');

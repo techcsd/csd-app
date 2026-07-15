@@ -87,6 +87,9 @@
         }
         <span class="comb__placa">{{ placa() || '—' }}</span>
         <span class="comb__modelo">{{ modelo() }}</span>
+        @if (ultima().km != null) {
+          <span class="comb__veh-km">Km última echada: {{ ultima().km | number: '1.0-0' }} km</span>
+        }
       </div>
 
       <!-- Step 1: the 3 numbers + live calc -->
@@ -94,7 +97,7 @@
         <h1 class="screen__title">Registrar combustible</h1>
         <p class="screen__subtitle">Escribe 3 datos y el sistema calcula el resto.</p>
 
-        <label class="field-label" for="km">Kilometraje actual (km)</label>
+        <label class="field-label" for="km">Kilometraje actual</label>
         <input
           id="km"
           class="field comb__num"
@@ -176,17 +179,19 @@
 
       <!-- Step 2: two mandatory photos -->
       @if (step() === 2) {
-        <h1 class="screen__title">Toma las 2 fotos</h1>
-        <p class="screen__subtitle">Las dos fotos son obligatorias para guardar.</p>
+        <h1 class="screen__title">Fotos obligatorias</h1>
+        <p class="screen__subtitle">
+          La foto del tablero respalda el kilometraje digitado; la del recibo respalda el monto.
+        </p>
         <div class="comb__fotos">
           <app-photo-slot
-            label="Recibo de la bomba"
+            label="Recibo"
             hint="🧾"
             (captured)="onFotoRecibo($event)"
             (cleared)="onFotoReciboCleared()"
           />
           <app-photo-slot
-            label="Tablero (km visible)"
+            label="Tablero (km)"
             hint="🎛️"
             (captured)="onFotoTablero($event)"
             (cleared)="onFotoTableroCleared()"

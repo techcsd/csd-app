@@ -9,6 +9,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
+import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
@@ -22,8 +23,21 @@ import {
   RESPUESTA_OPCIONES,
 } from '../../../core/models/checklist-preuso.model';
 import { ReporteSemanalVeh } from '../../../core/models/reporte-semanal.model';
+import { VehiculoDisponible } from '../../../core/models/transporte.model';
 
 const TOTAL_STEPS = 2;
+
+/** A pool vehicle plus this week's report status (V10). */
+interface VehSemanal {
+  vehiculo_id: string;
+  placa: string;
+  marca: string;
+  modelo: string;
+  tipo: string;
+  km: number;
+  foto_path: string | null;
+  tiene_reporte: boolean;
+}
 
 /**
  * Weekly vehicle report (R3). Fast form: OK/NO/NA on the template's few items,
@@ -34,7 +48,7 @@ const TOTAL_STEPS = 2;
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton, SyncBar, ConfirmDialog],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })
@@ -51,12 +65,13 @@ export class ReporteSemanalPage extends GuardedWizard {
 
   loading = signal(true);
   semana = signal<ReporteSemanalVeh[]>([]);
+  pool = signal<VehiculoDisponible[]>([]); // V10 — todos los vehículos del pool
   fotoUrls = signal<Record<string, string | null>>({}); // U6 — foto por vehículo en la lista
   plantilla = signal<ChecklistPlantilla | null>(null);
   private conductorId: string | null = null;
 
   // Wizard state (null = showing the vehicle picker).
-  vehiculo = signal<ReporteSemanalVeh | null>(null);
+  vehiculo = signal<VehSemanal | null>(null);
   odometro = signal<number | null>(null);
   step = signal(1);
   respuestas = signal<Record<string, RespuestaValor>>({});
@@ -86,7 +101,23 @@ export class ReporteSemanalPage extends GuardedWizard {
     return grupos;
   });
 
-  pendientes = computed(() => this.semana().filter((v) => !v.tiene_reporte));
+  /** V10 — the whole pool with this week's report status merged in, so any
+   *  driver can report any vehicle even without an assignment. */
+  lista = computed<VehSemanal[]>(() => {
+    const status = new Map(this.semana().map((s) => [s.vehiculo_id, s]));
+    return this.pool().map((v) => ({
+      vehiculo_id: v.vehiculo_id,
+      placa: v.placa,
+      marca: v.marca,
+      modelo: v.modelo,
+      tipo: v.tipo,
+      km: v.km,
+      foto_path: v.foto_path ?? null,
+      tiene_reporte: status.get(v.vehiculo_id)?.tiene_reporte ?? false,
+    }));
+  });
+
+  pendientes = computed(() => this.lista().filter((v) => !v.tiene_reporte));
 
   todasContestadas = computed(() => {
     const r = this.respuestas();
@@ -124,15 +155,17 @@ export class ReporteSemanalPage extends GuardedWizard {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [semana, plantilla, cond] = await Promise.all([
+      const [semana, plantilla, cond, pool] = await Promise.all([
         this.reportes.getSemana(),
         this.reportes.getPlantilla(),
         this.conductores.getMiConductor(),
+        this.vehiculos.getVehiculosDisponibles(),
       ]);
       this.semana.set(semana);
       this.plantilla.set(plantilla);
       this.conductorId = cond?.id ?? null;
-      void this.loadFotos(semana.map((v) => v.vehiculo_id));
+      this.pool.set(pool);
+      void this.loadFotos(pool.map((v) => v.vehiculo_id));
     } finally {
       this.loading.set(false);
     }
@@ -150,15 +183,14 @@ export class ReporteSemanalPage extends GuardedWizard {
     this.fotoUrls.set(urls);
   }
 
-  async elegir(v: ReporteSemanalVeh): Promise<void> {
+  elegir(v: VehSemanal): void {
     this.vehiculo.set(v);
     this.step.set(1);
     this.respuestas.set({});
     this.km.set(null);
     this.observacion.set('');
-    // Baseline km for coherence: the vehicle's current odometer.
-    const veh = await this.vehiculos.getVehiculo(v.vehiculo_id);
-    this.odometro.set(veh?.kilometraje ?? null);
+    // Baseline km for coherence: the pool vehicle's current odometer.
+    this.odometro.set(v.km ?? null);
   }
 
   setRespuesta(itemId: string, valor: RespuestaValor): void {

@@ -16,15 +16,19 @@
 
     <div class="screen__body">
       <h2 class="incidente__q">¿En qué obra?</h2>
-      @for (p of proyectos(); track p.id) {
-        <app-option-button
-          icon="🏗️"
-          [label]="p.nombre"
-          [selected]="proyectoId() === p.id"
-          (pressed)="proyectoId.set(p.id)"
-        />
-      } @empty {
-        <p class="incidente__or">No hay obras disponibles.</p>
+      @if (loading()) {
+        <app-skeleton [rows]="3" />
+      } @else {
+        @for (p of proyectos(); track p.id) {
+          <app-option-button
+            icon="🏗️"
+            [label]="p.nombre"
+            [selected]="proyectoId() === p.id"
+            (pressed)="proyectoId.set(p.id)"
+          />
+        } @empty {
+          <p class="incidente__or">No hay obras disponibles.</p>
+        }
       }
 
       <h2 class="incidente__q">¿Qué pasó?</h2>

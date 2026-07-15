@@ -1,5 +1,87 @@
 # HANDOFF — CSD App
 
+## Actualización 3 (V1–V15) — build verde, APK 1.6.0 firmado local, NADA pusheado/publicado
+Ronda de bugs de versionado/instalación, rediseño de inventario/requisición por el catálogo
+oficial, skeletons, tarjetas de vehículos, reporte semanal por pool y verificación V15.
+`npm run build` limpio. Bump **1.5.0 → 1.6.0** (versionCode ahora se DERIVA del nombre en Gradle:
+1.6.0 → 1006000). **No commit / no push / no publicar** hasta tu OK.
+
+**FASE 0 — bugs visibles**
+- **V6/V11 (CTA invisible):** el host `<app-selector-categorias>` no tenía layout flex → el footer
+  "Siguiente" se desbordaba/recortaba. Fix `:host{display:flex;flex:1;min-height:0}` + grid/list
+  `min-height:0` + barra `flex:0 0 auto; position:sticky; bottom:0`. Mismo endurecido en `asignar`
+  y `salida/entrada` (`.mov__nav`). El CTA de avance ya no puede quedar invisible.
+- **V2 (verificar versión mentía):** en el APK el botón sólo miraba el service worker (deshabilitado
+  en nativo) → siempre "ya tienes la última". Ahora `VersionService.checkFresh()` consulta
+  `version_publicada()` **sin caché** y compara semver; si hay nueva → va a `/actualizar`.
+
+**FASE 1 — rolling update + firma (V3/V4/V5)**
+- **V3:** plugin nativo `ApkInstaller` (android/.../ApkInstallerPlugin.java, registrado en
+  MainActivity) + `UpdaterService` (descarga el APK de `apk_url` a caché con progreso vía
+  Filesystem.downloadFile, luego intent de instalación con FileProvider). Manifest:
+  `REQUEST_INSTALL_PACKAGES`. Página `/actualizar` (barra de progreso, permiso "apps desconocidas",
+  errores visibles). PWA: enlace de descarga directa.
+- **V4:** banner tappable global "Nueva versión X.Y disponible" (`app.html`) → `/actualizar`. El gate
+  bloqueante también usa el updater in-app. ⚠️ **Push OS real NO** (no hay FCM/plugin push) — la
+  "notificación in-app" es el banner. Push requiere Firebase + tu config (pendiente, avísame si lo quieres).
+- **V5:** keystore estable **`C:/Users/xavie/keystores/constructorasd.keystore`** (alias
+  `constructorasd`), **FUERA del repo**. Es el **MISMO certificado** que produccón (era
+  `csd-release.keystore` alias `csd`; sólo cambió el nombre y el alias vía `keytool -changealias`,
+  cert SHA-256 idéntico `3C:53:16:D8:…:65`) → los APK nuevos instalan ENCIMA sin conflicto de firma.
+  `keystore.properties` apunta ahí. versionCode auto-derivado. Script `npm run apk` (build+sync+
+  gradle+verifica cert) y `npm run apk:publish`. **⚠️ RESPALDA** `constructorasd.keystore` +
+  `keystore.properties` fuera de esta máquina. **Play Protect:** con firma estable + targetSdk 36 +
+  manifest limpio baja el warning en updates; eliminarlo 100% sólo por Play Store (documentado).
+
+**FASE 2 — skeletons + conteo (V7/V8)**
+- **V7:** auditoría completa (agente). Arreglados los 3 huecos duros (liberacion, preuso,
+  conduces/entrega mostraban "Cargando…"/no-encontrado durante la carga) + `selector-categorias`
+  gana input `loading` (shimmer) usado por salida/entrada/requisición + incidente. El resto de la
+  app ya tenía skeleton.
+- **V8:** conteo permite guardar sin cambios → confirma "todo conforme" (el RPC ya lo soporta,
+  registra "Todo conforme — sin diferencias"). Botón pasa a "Guardar (sin diferencias)".
+
+**FASE 3 — catálogo oficial + requisición por hojas (V14/V13)**
+- **V14:** artículos ahora traen `requiere_talla` + `nota`; cache offline invalidada (keys `_v2`).
+  EPP con `requiere_talla` pide talla obligatoria (modal S/M/L/XL + libre) al agregar; `nota` de
+  atado/paquete visible como ayuda. La talla viaja en `detalle_salidas.talla` (salida) y como
+  "(Talla X)" en la descripción (requisición). Categorías en orden oficial 01→08.
+- **V13:** requisición (`pedir`) reescrita con el patrón de hojas (reusa `SelectorCategorias` en
+  modo `requisicion`): categorías → categoría/stepper → resumen editable (obra + urgencia) → éxito
+  con **compartir por WhatsApp**. "Otros" (08) permite describir material libre (articulo_id null +
+  descripción → `crear_solicitud_app`). Offline vía outbox.
+
+**FASE 4 — vehículos + reporte semanal (V11/V10/V15)**
+- **V11:** nuevo `shared/ui/vehiculo-card` (foto/placeholder + tipo·km legibles) usado en el pool de
+  `asignar` (tarjeta seleccionable) y en el picker del reporte semanal.
+- **V10:** reporte semanal ahora lista **todo el pool** (`getVehiculosDisponibles`), no sólo los
+  asignados; cualquier conductor elige y reporta. Sin guard de asignación (el RPC tampoco lo exige).
+- **V15:** corregidas las desviaciones vs las pantallas del jefe — combustible (card "km última
+  echada", "Fotos obligatorias", labels "Recibo"/"Tablero (km)", texto de respaldo, "Kilometraje
+  actual"); datos de salida (card con último km + "Mantenimiento cada N km · próx. X", línea PRE-CITA
+  con próximo km, botón "Continuar al checklist" deshabilitado hasta km+combustible); fotos (secciones
+  EXTERIOR—4 / INTERIOR—3, "Toca cada recuadro…", botón "Faltan N foto(s)").
+
+**FASE 5 — bitácora (V12a-d): YA estaban implementados en 1.5.0**
+- Verificado: **V12a** cantidad por actividad (stepper + input + plan de partida, viaja al RPC
+  `crear_bitacora_app.cantidad` y se ve en el detalle), **V12b** CLIMA quitado (activo=false en DB +
+  fuera del const; `getCatalogos` filtra activo), **V12c** "Describa…" obligatorio por restricción
+  (guard en paso 6), **V12d** el detalle muestra fotos (galería con signed URLs) + cantidad +
+  descripción. El tester los vio "sin implementar" porque **producción sigue en 1.4.0** (1.5.0 se
+  compiló pero nunca se publicó). Se resuelven al publicar 1.6.0.
+- ⚠️ **SGC web (regla #5):** confirmar que la web muestra cantidad por actividad + descripción de
+  restricción + fotos de bitácora (las fotos ya; cantidades/descr pendiente de verificar — avísame).
+
+**Pendiente / tu decisión:**
+- Publicar 1.6.0 (`npm run apk` ya deja el APK firmado; luego `npm run apk:publish` sube al bucket y
+  registra en historial — **NO lo corrí**; publicar sube `min`/oferta a los de campo).
+- Device-QA: instalar 1.6.0 ENCIMA de una versión anterior (valida V5 sin desinstalar), actualizar
+  desde la app (V3), salida/requisición por hojas + talla EPP + Otros, conteo conforme, reporte
+  semanal desde el pool, V15, bitácora completa. Offline→reconnect en los flujos tocados.
+- Respaldar el keystore. (Opcional) push OS real vía FCM para V4.
+
+---
+
 ## Actualización 2 — cierre de gaps (auditoría contra código) — build verde, 17/17 tests, NADA commiteado
 Branch **`feat/actualizacion2-movil`**. Auditamos U1–U25 contra el código real (4 agentes). U1/U8/U10/U11/U12/U13/U18/U19/U20/U21/U24 ya estaban DONE. Cerramos los gaps reales:
 
