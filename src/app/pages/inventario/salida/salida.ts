@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -9,6 +9,7 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
 import { compartirTexto } from '../../../core/util/share';
 
@@ -26,13 +27,14 @@ interface GrupoResumen {
   templateUrl: './salida.html',
   styleUrl: './salida.scss',
 })
-export class SalidaPage {
+export class SalidaPage implements OnDestroy {
   private inventario = inject(InventarioService);
   private camera = inject(CameraService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private navGuard = inject(NavGuardService);
 
   hoja = signal<'seleccion' | 'resumen' | 'exito'>('seleccion');
 
@@ -64,8 +66,21 @@ export class SalidaPage {
 
   totalItems = computed(() => this.cart().length);
 
+  private readonly backHandler = (): boolean => {
+    if (this.cart().length > 0) {
+      this.confirmSalir.set(true);
+      return true;
+    }
+    return false;
+  };
+
   constructor() {
     void this.init();
+    this.navGuard.register(this.backHandler); // U4 — botón físico Android
+  }
+
+  ngOnDestroy(): void {
+    this.navGuard.clear(this.backHandler);
   }
 
   private async init(): Promise<void> {

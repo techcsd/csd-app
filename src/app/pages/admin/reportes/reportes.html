@@ -13,7 +13,7 @@
           <button type="button" class="rep-card__row" (click)="toggle(r)">
             <div class="rep-card__info">
               <span class="rep-card__asunto">{{ r.asunto }}</span>
-              <span class="rep-card__meta">{{ tipoLabel(r.tipo) }} · {{ r.usuario?.nombre ?? '—' }} · {{ r.created_at | date: 'dd/MM' }}</span>
+              <span class="rep-card__meta">{{ tipoLabel(r.tipo) }} · {{ r.usuario?.nombre ?? '—' }} · {{ fmtFecha(r.created_at) }}</span>
             </div>
             <span class="rep-card__estado">{{ r.estado === 'resuelto' ? '✅' : r.estado === 'descartado' ? '🚫' : '🕓' }}</span>
           </button>

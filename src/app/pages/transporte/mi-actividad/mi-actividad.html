@@ -44,13 +44,13 @@
           <span class="mact__label">Licencia</span>
           <span class="mact__value mact__value--sm">{{ stats()!.estado_licencia || '—' }}</span>
           @if (stats()!.licencia_vencimiento) {
-            <span class="mact__sub">Vence {{ stats()!.licencia_vencimiento | date: 'dd/MM/yyyy' }}</span>
+            <span class="mact__sub">Vence {{ fmtFecha(stats()!.licencia_vencimiento) }}</span>
           }
         </div>
         @if (stats()!.ultima_actividad) {
           <div class="mact__card mact__card--wide">
             <span class="mact__label">Última actividad</span>
-            <span class="mact__value mact__value--sm">{{ stats()!.ultima_actividad | date: 'dd/MM/yyyy' }}</span>
+            <span class="mact__value mact__value--sm">{{ fmtFechaMedia(stats()!.ultima_actividad) }}</span>
           </div>
         }
       </div>

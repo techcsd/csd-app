@@ -82,6 +82,9 @@
 
     <div class="screen__body">
       <div class="comb__veh">
+        @if (fotoUrl()) {
+          <img class="comb__foto" [src]="fotoUrl()" alt="Foto del vehículo" />
+        }
         <span class="comb__placa">{{ placa() || '—' }}</span>
         <span class="comb__modelo">{{ modelo() }}</span>
       </div>
@@ -196,6 +199,8 @@
     <footer class="comb__nav">
       @if (step() > 1) {
         <button type="button" class="btn-ghost comb__back" (click)="prev()">Atrás</button>
+      } @else {
+        <button type="button" class="btn-ghost comb__back" (click)="intentarSalir()">Cancelar</button>
       }
       @if (step() < total) {
         <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
@@ -210,5 +215,17 @@
         </button>
       }
     </footer>
+
+    <!-- U4 — descartar cambios sin guardar -->
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Descartar el registro?"
+      message="Perderás los datos y fotos de este combustible."
+      confirmLabel="Sí, descartar"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
+    />
   </div>
 }

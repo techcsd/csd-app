@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Location, DatePipe } from '@angular/common';
+import { Location } from '@angular/common';
 import { AdminService, AuditoriaRow } from '../../../core/services/admin.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { formatFechaHumana } from '../../../core/util/fecha';
 
 const TABLA_LABELS: Record<string, string> = {
   salidas_inventario: 'Salida de inventario',
@@ -39,7 +40,7 @@ const ACCION_LABELS: Record<string, string> = {
   selector: 'app-admin-auditoria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DatePipe],
+  imports: [Skeleton],
   templateUrl: './auditoria.html',
   styleUrl: './auditoria.scss',
 })
@@ -49,6 +50,7 @@ export class AdminAuditoriaPage {
 
   rows = signal<AuditoriaRow[]>([]);
   loading = signal(true);
+  fmtFecha = formatFechaHumana; // U9
   loadingMore = signal(false);
   error = signal('');
   page = signal(0);

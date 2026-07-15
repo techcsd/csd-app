@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
-import { DatePipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { BitacoraFull } from '../../../core/models/bitacora.model';
+import { formatFecha } from '../../../core/util/fecha';
 
 interface Media {
   url: string;
@@ -15,7 +16,7 @@ interface Media {
   selector: 'app-bitacora-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DatePipe],
+  imports: [Skeleton],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
@@ -27,6 +28,7 @@ export class BitacoraDetallePage {
   b = signal<BitacoraFull | null>(null);
   media = signal<Media[]>([]);
   loading = signal(true);
+  fmtFecha = formatFecha; // U9
 
   totalPersonal = computed(() => {
     const b = this.b();

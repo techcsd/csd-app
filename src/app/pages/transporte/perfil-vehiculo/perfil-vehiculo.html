@@ -7,6 +7,9 @@
 
   <div class="screen__body">
     <div class="pveh__veh">
+      @if (fotoUrl()) {
+        <img class="pveh__foto" [src]="fotoUrl()" alt="Foto del vehículo" />
+      }
       <span class="pveh__placa">{{ placa() || '—' }}</span>
       <span class="pveh__modelo">{{ modelo() }}</span>
     </div>

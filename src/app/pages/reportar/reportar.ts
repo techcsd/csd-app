@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { OptionButton } from '../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../shared/ui/big-confirm/big-confirm';
+import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { ReportesService, ReporteTipo } from '../../core/services/reportes.service';
 import { CameraService, CapturedPhoto } from '../../core/services/camera.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
+import { GuardedWizard } from '../../shared/guarded-wizard';
 
 /**
  * Reportar problema/mejora: any authenticated pilot user (driver/engineer) sends
@@ -18,17 +19,21 @@ import { ToastService } from '../../core/services/toast.service';
   selector: 'app-reportar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, BigConfirm],
+  imports: [FormsModule, OptionButton, BigConfirm, ConfirmDialog],
   templateUrl: './reportar.html',
   styleUrl: './reportar.scss',
 })
-export class ReportarPage {
+export class ReportarPage extends GuardedWizard {
   private reportes = inject(ReportesService);
   private camera = inject(CameraService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
-  private location = inject(Location);
+
+  constructor() {
+    super();
+    this.registerBackGuard();
+  }
 
   readonly tipos = [
     { value: 'error' as ReporteTipo, label: 'Un problema / error', icon: '🐞' },
@@ -87,9 +92,11 @@ export class ReportarPage {
     }
   }
 
-  back(): void {
-    this.location.back();
+  /** U4 — datos sin guardar (tras enviar ya no hay nada que perder). */
+  tieneDatos(): boolean {
+    return !this.done() && !!(this.asunto().trim() || this.descripcion().trim() || this.fotos().length);
   }
+
   finish(): void {
     void this.router.navigate(['/home'], { replaceUrl: true });
   }

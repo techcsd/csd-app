@@ -6,12 +6,18 @@ export interface LugarBusqueda {
   longitud: number;
 }
 
+export interface RutaEstimada {
+  distanciaM: number;
+  duracionSeg: number;
+}
+
 /**
  * U19 — Geocoding keyless (OpenStreetMap Nominatim), sesgado a República
  * Dominicana (countrycodes=do, idioma es). Espeja el servicio de SGC web.
  * Forma independiente del proveedor por si luego se cambia a uno pago.
  */
 const NOMINATIM = 'https://nominatim.openstreetmap.org';
+const OSRM = 'https://router.project-osrm.org';
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
@@ -52,5 +58,27 @@ export class GeocodingService {
     if (!res.ok) throw new Error(`El buscador de mapas respondió ${res.status}`);
     const data = (await res.json()) as { display_name: string; lat: string; lon: string }[];
     return data.map((d) => ({ nombre: d.display_name, latitud: Number(d.lat), longitud: Number(d.lon) }));
+  }
+
+  /**
+   * U23 — Ruta en carro entre dos puntos (OSRM keyless): distancia + duración
+   * estimadas para mostrar el tiempo con `formatearDuracion`. Devuelve null si
+   * falla (offline o sin ruta) — la duración es una estimación, no bloquea.
+   */
+  async ruta(
+    origen: { lat: number; lng: number },
+    destino: { lat: number; lng: number },
+  ): Promise<RutaEstimada | null> {
+    const coords = `${origen.lng},${origen.lat};${destino.lng},${destino.lat}`;
+    try {
+      const res = await fetch(`${OSRM}/route/v1/driving/${coords}?overview=false`);
+      if (!res.ok) return null;
+      const data = (await res.json()) as { routes?: { distance: number; duration: number }[] };
+      const r = data.routes?.[0];
+      if (!r) return null;
+      return { distanciaM: r.distance, duracionSeg: r.duration };
+    } catch {
+      return null;
+    }
   }
 }

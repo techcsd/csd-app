@@ -55,9 +55,25 @@
         <button type="button" class="btn-ghost cruta__gps" (click)="usarMiUbicacion()">
           📍 Usar mi ubicación actual
         </button>
+        <!-- U22 — origen por obra o almacén (usa sus coordenadas) -->
+        <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">
+          🏗️ {{ origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén' }}
+        </button>
         <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">
           🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}
         </button>
+        @if (origenLugar()) {
+          <app-select-list
+            label="Obra o almacén de origen"
+            icon="🏗️"
+            [options]="lugarOpts()"
+            [selectedId]="origenLugarId()"
+            (picked)="onOrigenLugar($event)"
+          />
+          @if (selectedOrigenLugar() && selectedOrigenLugar()!.latitud == null) {
+            <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
+          }
+        }
         @if (usandoGps()) {
           <p class="cruta__gps-ok">✓ Origen fijado: {{ origen() }}</p>
         }
@@ -89,7 +105,7 @@
             icon="🏗️"
             [options]="lugarOpts()"
             [selectedId]="destinoLugarId()"
-            (picked)="destinoLugarId.set($event)"
+            (picked)="onDestinoLugar($event)"
           />
           @if (selectedLugar() && selectedLugar()!.latitud == null) {
             <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
@@ -100,6 +116,13 @@
           @if (destinoMapaTexto()) {
             <p class="cruta__gps-ok">✓ Destino: {{ destinoMapaTexto() }}</p>
           }
+        }
+
+        <!-- U23 — tiempo estimado legible ("1 h 28 min") -->
+        @if (calculandoRuta()) {
+          <p class="cruta__eta">🕒 Calculando tiempo estimado…</p>
+        } @else if (duracionMin() != null) {
+          <p class="cruta__eta">🕒 Tiempo estimado: <strong>{{ fmtDur(duracionMin()) }}</strong></p>
         }
 
         <label class="field-label" for="km">Kilómetros estimados (opcional)</label>

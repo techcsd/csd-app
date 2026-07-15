@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -9,6 +9,7 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
 import { compartirTexto } from '../../../core/util/share';
 
@@ -26,13 +27,14 @@ interface GrupoResumen {
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })
-export class EntradaPage {
+export class EntradaPage implements OnDestroy {
   private inventario = inject(InventarioService);
   private camera = inject(CameraService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private navGuard = inject(NavGuardService);
 
   readonly motivos = ['Compra local', 'Devolución de obra', 'Sobrante', 'Otro'];
 
@@ -41,6 +43,7 @@ export class EntradaPage {
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
   motivo = signal('');
+  motivoOtro = signal(''); // U25 — detalle cuando el motivo es "Otro"
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
@@ -66,8 +69,21 @@ export class EntradaPage {
 
   totalItems = computed(() => this.cart().length);
 
+  private readonly backHandler = (): boolean => {
+    if (this.cart().length > 0) {
+      this.confirmSalir.set(true);
+      return true;
+    }
+    return false;
+  };
+
   constructor() {
     void this.init();
+    this.navGuard.register(this.backHandler); // U4 — botón físico Android
+  }
+
+  ngOnDestroy(): void {
+    this.navGuard.clear(this.backHandler);
   }
 
   private async init(): Promise<void> {
@@ -152,11 +168,16 @@ export class EntradaPage {
       this.toast.error('Agrega al menos un material.');
       return;
     }
+    // U25 — si el motivo es "Otro", el detalle es obligatorio y es lo que se envía.
+    if (this.motivo() === 'Otro' && !this.motivoOtro().trim()) {
+      this.toast.error('Especifica de dónde viene el material.');
+      return;
+    }
     this.submitting.set(true);
     try {
       await this.inventario.enqueueEntrada({
         bodegaId: this.bodegaId(),
-        referencia: this.motivo() || null,
+        referencia: this.referenciaEfectiva(),
         items: items.map((l) => ({ articulo_id: l.articulo_id, cantidad: l.cantidad })),
         foto: this.foto()?.blob ?? null,
       });
@@ -166,6 +187,12 @@ export class EntradaPage {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  /** U25 — "Otro" envía el detalle escrito; los demás motivos, su etiqueta. */
+  private referenciaEfectiva(): string | null {
+    if (this.motivo() === 'Otro') return this.motivoOtro().trim() || null;
+    return this.motivo() || null;
   }
 
   private resumenTexto(): string {
@@ -178,7 +205,8 @@ export class EntradaPage {
           g.lineas.map((l) => `  • ${l.nombre}: ${l.cantidad} ${l.unidad}`).join('\n'),
       )
       .join('\n');
-    const ref = this.motivo() ? `\n¿De dónde viene?: ${this.motivo()}` : '';
+    const refEfectiva = this.referenciaEfectiva();
+    const ref = refEfectiva ? `\n¿De dónde viene?: ${refEfectiva}` : '';
     return `📦 *Entrada de material — CSD*\nAlmacén: ${alm}\nFecha: ${fecha}${ref}\n\n${lineas}\n\nTotal: ${this.totalItems()} artículo(s)`;
   }
 
@@ -200,6 +228,7 @@ export class EntradaPage {
     if (old) URL.revokeObjectURL(old.previewUrl);
     this.cart.set([]);
     this.motivo.set('');
+    this.motivoOtro.set('');
     this.foto.set(null);
     this.hoja.set('seleccion');
   }

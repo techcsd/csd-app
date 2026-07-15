@@ -27,7 +27,7 @@
           </div>
           <div class="aud__item-meta">
             <span class="aud__actor">{{ r.actor?.nombre ?? 'Sistema' }}</span>
-            <span class="aud__fecha">{{ r.creado_en | date: 'dd/MM/yy HH:mm' }}</span>
+            <span class="aud__fecha">{{ fmtFecha(r.creado_en) }}</span>
           </div>
 
           @if (expandedId() === r.id) {

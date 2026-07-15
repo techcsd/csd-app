@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { DatePipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ConductorStats } from '../../../core/models/conductor.model';
+import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
 
 /** Read-only driver profile: my flota activity/telemetry (R5). */
 @Component({
   selector: 'app-mi-actividad',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState],
   templateUrl: './mi-actividad.html',
   styleUrl: './mi-actividad.scss',
 })
@@ -23,6 +24,8 @@ export class MiActividadPage {
   loading = signal(true);
   stats = signal<ConductorStats | null>(null);
   esConductor = signal(true);
+  fmtFecha = formatFecha; // U9 — fecha date-only
+  fmtFechaMedia = formatFechaMedia; // U9 — timestamp
 
   constructor() {
     void this.load();

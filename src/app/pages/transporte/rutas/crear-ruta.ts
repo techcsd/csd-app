@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -12,8 +12,11 @@ import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/locati
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { ConducesService, LugarDestino } from '../../../core/services/conduces.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { GeocodingService } from '../../../core/services/geocoding.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { formatearDuracion } from '../../../core/util/duracion';
 
 type DestinoModo = 'lugar' | 'mapa';
 
@@ -30,13 +33,17 @@ type DestinoModo = 'lugar' | 'mapa';
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
-export class CrearRutaPage {
+export class CrearRutaPage implements OnDestroy {
   private conduces = inject(ConducesService);
   private vehiculos = inject(VehiculosService);
+  private geo = inject(GeocodingService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private navGuard = inject(NavGuardService);
+
+  fmtDur = formatearDuracion; // U23 — para el template
 
   loading = signal(true);
   submitting = signal(false);
@@ -50,6 +57,8 @@ export class CrearRutaPage {
   origen = signal('');
   usandoGps = signal(false); // U21 — origen fijado por ubicación/mapa
   origenMapa = signal(false); // muestra el picker de origen
+  origenLugarId = signal(''); // U22 — origen por obra/almacén
+  origenLugar = signal(false); // muestra el selector de obra/almacén de origen
   destinoModo = signal<DestinoModo>('lugar');
   destinoLugarId = signal('');
   destinoMapaTexto = signal('');
@@ -57,9 +66,13 @@ export class CrearRutaPage {
   km = signal<number | null>(null);
   notas = signal('');
 
+  // U23 — duración estimada (min) calculada por OSRM cuando hay coords de ambos extremos.
+  duracionMin = signal<number | null>(null);
+  calculandoRuta = signal(false);
+
   private gps: { lat: number; lng: number } | null = null;
 
-  // U22 — obras + almacenes (con ícono por tipo) para el selector de destino.
+  // U22 — obras + almacenes (con ícono por tipo) para los selectores de origen/destino.
   lugarOpts = computed<SelectOption[]>(() =>
     this.lugares().map((l) => ({
       id: l.id,
@@ -71,9 +84,26 @@ export class CrearRutaPage {
     () => this.lugares().find((l) => l.id === this.destinoLugarId()) ?? null,
   );
 
+  selectedOrigenLugar = computed<LugarDestino | null>(
+    () => this.lugares().find((l) => l.id === this.origenLugarId()) ?? null,
+  );
+
+  private readonly backHandler = (): boolean => {
+    if (!this.done() && this.tieneDatos()) {
+      this.confirmSalir.set(true);
+      return true;
+    }
+    return false;
+  };
+
   constructor() {
     void this.load();
     void this.captureGps();
+    this.navGuard.register(this.backHandler); // U4 — botón físico Android
+  }
+
+  ngOnDestroy(): void {
+    this.navGuard.clear(this.backHandler);
   }
 
   private async load(): Promise<void> {
@@ -120,7 +150,9 @@ export class CrearRutaPage {
       this.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       this.origen.set('Mi ubicación actual');
       this.usandoGps.set(true);
+      this.origenLugarId.set('');
       this.toast.success('Ubicación actual fijada como origen.');
+      void this.recalcularRuta();
     } catch {
       this.toast.error('No se pudo obtener tu ubicación. Revisa el GPS y los permisos.');
     }
@@ -128,10 +160,12 @@ export class CrearRutaPage {
 
   onOrigenInput(v: string): void {
     this.origen.set(v);
-    // Si el usuario escribe manualmente, deja de usar las coords del GPS/mapa.
+    // Si el usuario escribe manualmente, deja de usar las coords del GPS/mapa/lugar.
     if (this.usandoGps()) {
       this.usandoGps.set(false);
       this.gps = null;
+      this.origenLugarId.set('');
+      void this.recalcularRuta();
     }
   }
 
@@ -140,12 +174,70 @@ export class CrearRutaPage {
     this.gps = { lat: u.latitud, lng: u.longitud };
     this.origen.set(u.direccion || 'Punto en el mapa');
     this.usandoGps.set(true);
+    this.origenLugarId.set('');
+    void this.recalcularRuta();
+  }
+
+  /** U22 — origen por obra o almacén (usa sus coordenadas guardadas). */
+  onOrigenLugar(id: string): void {
+    this.origenLugarId.set(id);
+    const lugar = this.selectedOrigenLugar();
+    if (!lugar) return;
+    this.origen.set(lugar.nombre);
+    if (lugar.latitud != null && lugar.longitud != null) {
+      this.gps = { lat: lugar.latitud, lng: lugar.longitud };
+      this.usandoGps.set(true);
+    } else {
+      this.gps = null;
+      this.usandoGps.set(false);
+    }
+    void this.recalcularRuta();
   }
 
   /** U20/U22 — destino marcado en el mapa. */
   onDestinoUbicacion(u: UbicacionSeleccionada): void {
     this.destinoMapaCoords.set({ lat: u.latitud, lng: u.longitud });
     this.destinoMapaTexto.set(u.direccion || 'Punto en el mapa');
+    void this.recalcularRuta();
+  }
+
+  /** U22 — destino por obra o almacén. */
+  onDestinoLugar(id: string): void {
+    this.destinoLugarId.set(id);
+    void this.recalcularRuta();
+  }
+
+  private destinoCoords(): { lat: number; lng: number } | null {
+    if (this.destinoModo() === 'lugar') {
+      const l = this.selectedLugar();
+      return l?.latitud != null && l?.longitud != null ? { lat: l.latitud, lng: l.longitud } : null;
+    }
+    return this.destinoMapaCoords();
+  }
+
+  /**
+   * U23 — recalcula distancia + duración estimadas (OSRM) cuando hay coords de
+   * origen y destino. Autollena km si está vacío. Silencioso si falla (offline).
+   */
+  private async recalcularRuta(): Promise<void> {
+    const o = this.gps;
+    const d = this.destinoCoords();
+    if (!o || !d) {
+      this.duracionMin.set(null);
+      return;
+    }
+    this.calculandoRuta.set(true);
+    try {
+      const r = await this.geo.ruta(o, d);
+      if (r) {
+        this.duracionMin.set(Math.round(r.duracionSeg / 60));
+        if (this.km() == null) this.km.set(Math.round(r.distanciaM / 1000));
+      } else {
+        this.duracionMin.set(null);
+      }
+    } finally {
+      this.calculandoRuta.set(false);
+    }
   }
 
   private destinoTexto(): string {
@@ -206,6 +298,7 @@ export class CrearRutaPage {
   private tieneDatos(): boolean {
     return !!(
       this.origen().trim() ||
+      this.origenLugarId() ||
       this.destinoLugarId() ||
       this.destinoMapaTexto().trim() ||
       this.km() != null ||

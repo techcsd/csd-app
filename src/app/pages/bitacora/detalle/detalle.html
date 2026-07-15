@@ -10,7 +10,7 @@
     } @else if (b(); as bit) {
       <ul class="det__info">
         <li><span>Obra</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>
-        <li><span>Fecha</span><b>{{ bit.fecha | date: 'dd/MM/yyyy' }}</b></li>
+        <li><span>Fecha</span><b>{{ fmtFecha(bit.fecha) }}</b></li>
         @if (bit.tipo === 'parte_diario') {
           <li><span>Personal</span><b>{{ totalPersonal() }}</b></li>
         }

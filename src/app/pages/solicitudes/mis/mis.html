@@ -15,7 +15,7 @@
             <span class="sol-card__estado">{{ estadoLabel(s.estado) }}</span>
           </div>
           <div class="sol-card__meta">
-            <span>{{ s.created_at | date: 'dd/MM/yyyy' }}</span>
+            <span>{{ fmtFecha(s.created_at) }}</span>
             @if (s.urgencia === 'urgente') { <span class="sol-card__urg">🔴 Urgente</span> }
           </div>
           <ul class="sol-card__items">

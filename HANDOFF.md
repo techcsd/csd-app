@@ -1,5 +1,20 @@
 # HANDOFF — CSD App
 
+## Actualización 2 — cierre de gaps (auditoría contra código) — build verde, 17/17 tests, NADA commiteado
+Branch **`feat/actualizacion2-movil`**. Auditamos U1–U25 contra el código real (4 agentes). U1/U8/U10/U11/U12/U13/U18/U19/U20/U21/U24 ya estaban DONE. Cerramos los gaps reales:
+
+- **U22 (origen obra/almacén):** crear-ruta ahora tiene selector de obra/almacén también para el ORIGEN (usa sus coords), no solo destino. Botón "🏗️ Elegir una obra o almacén" + `onOrigenLugar()`.
+- **U23 (duración legible):** `formatearDuracion` estaba muerto (0 usos) y no había fuente de duración. Añadido `GeocodingService.ruta()` (OSRM keyless) → crear-ruta muestra **"Tiempo estimado: 1 h 28 min"** cuando hay coords de origen+destino, y autollena km. Offline = silencioso (no bloquea).
+- **U25 (entrada "Otro"):** inventario/entrada motivo "Otro" abría literal "Otro"; ahora abre campo obligatorio "Especifica de dónde viene…" y envía ese texto como `referencia` (llega al backend/web, no se pierde). ⚠️ Feed a `otros_valores` desde entrada requeriría param en el RPC `registrar_entrada_app` (scope SGC) — la bitácora sí lo hace vía `descripcion_otro`.
+- **U9 (fechas es-DO):** quitado ISO crudo en preuso (matrícula/seguro vencidos → `formatFecha`) y todos los `| date` reemplazados por el util es-DO (`formatFecha`/`formatFechaMedia`/`formatFechaHumana`) en mis-partes, detalle, mi-actividad, solicitudes/mis, admin/reportes, admin/conteos, admin/auditoria.
+- **U6 (foto vehículo):** `getVehiculo()` ahora trae `foto_path`; foto mostrada en **perfil-vehículo**, header de **combustible** y la **lista del reporte semanal** (`getFotosPaths()` + thumbnails), además del selector `asignar` que ya la tenía. Solo queda texto (placa+marca+modelo) el picker de rutas (usa el `SelectList` genérico).
+- **U4 (no perder datos / botón físico):** nuevo `NavGuardService` + listener global de `backButton` en `app.ts` (`@capacitor/app@8` instalado + `cap sync` hecho). Nueva base `shared/guarded-wizard.ts` (`GuardedWizard`): preuso/combustible/reporte-semanal/reportar ahora confirman "¿Descartar cambios?" (y combustible/preuso ganaron botón **Cancelar** en el paso 1 — antes eran dead-ends). crear-ruta/salida/entrada/bitácora-parte registran también la guarda del botón físico Android.
+- **U5:** N/A — la app no tiene inputs de teléfono (util `telefono.ts` listo si se agrega alguno). **U17:** solo-web (la app no tiene módulo tecnológico).
+
+**Pendiente:** device-QA (mapa: origen por obra/almacén + ETA OSRM; botón físico Android → "¿Descartar?" en cada wizard; fechas humanas; foto en perfil/combustible; entrada "Otro"). Requiere **rebuild APK** (nuevo plugin nativo `@capacitor/app`). Nada commiteado/pusheado.
+
+---
+
 ## Actualización 2 móvil (PROMPT-6) — build verde, SQL aplicado, NADA pusheado
 Branch **`feat/actualizacion2-movil`** (commit local `fb15068`, no pusheado). Delta de
 actualización 2 sobre la app de campo. `npm run build` verde. Falta device-QA + (si se aprueba)

@@ -1,13 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DecimalPipe, Location } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
+import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ReporteSemanalService } from '../../../core/services/reporte-semanal.service';
@@ -32,24 +34,24 @@ const TOTAL_STEPS = 2;
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton, SyncBar],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton, SyncBar, ConfirmDialog],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })
-export class ReporteSemanalPage {
+export class ReporteSemanalPage extends GuardedWizard {
   private vehiculos = inject(VehiculosService);
   private conductores = inject(ConductoresService);
   private reportes = inject(ReporteSemanalService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
-  private location = inject(Location);
 
   readonly total = TOTAL_STEPS;
   readonly opciones = RESPUESTA_OPCIONES;
 
   loading = signal(true);
   semana = signal<ReporteSemanalVeh[]>([]);
+  fotoUrls = signal<Record<string, string | null>>({}); // U6 — foto por vehículo en la lista
   plantilla = signal<ChecklistPlantilla | null>(null);
   private conductorId: string | null = null;
 
@@ -98,7 +100,25 @@ export class ReporteSemanalPage {
   });
 
   constructor() {
+    super();
+    this.registerBackGuard();
     void this.load();
+  }
+
+  /** U4 — en el wizard con respuestas/datos sin enviar. */
+  tieneDatos(): boolean {
+    if (this.done() || !this.vehiculo()) return false;
+    return (
+      Object.keys(this.respuestas()).length > 0 ||
+      this.km() != null ||
+      !!this.observacion().trim()
+    );
+  }
+
+  /** Descartar = volver al selector si hay vehículo en curso; si no, salir. */
+  protected override salir(): void {
+    if (this.vehiculo()) this.vehiculo.set(null);
+    else this.location.back();
   }
 
   private async load(): Promise<void> {
@@ -112,9 +132,22 @@ export class ReporteSemanalPage {
       this.semana.set(semana);
       this.plantilla.set(plantilla);
       this.conductorId = cond?.id ?? null;
+      void this.loadFotos(semana.map((v) => v.vehiculo_id));
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** U6 — resuelve las fotos de los vehículos de la lista (mejor esfuerzo). */
+  private async loadFotos(ids: string[]): Promise<void> {
+    const paths = await this.vehiculos.getFotosPaths(ids);
+    const urls: Record<string, string | null> = {};
+    await Promise.all(
+      Object.entries(paths).map(async ([id, p]) => {
+        urls[id] = p ? await this.vehiculos.getFotoUrl(p) : null;
+      }),
+    );
+    this.fotoUrls.set(urls);
   }
 
   async elegir(v: ReporteSemanalVeh): Promise<void> {
@@ -142,14 +175,6 @@ export class ReporteSemanalPage {
 
   prev(): void {
     this.step.update((s) => Math.max(1, s - 1));
-  }
-
-  cancelar(): void {
-    this.vehiculo.set(null);
-  }
-
-  back(): void {
-    this.location.back();
   }
 
   private resultadoLocal(): 'aprobado' | 'con_hallazgos' | 'bloqueado' {

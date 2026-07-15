@@ -1,17 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
-import { DatePipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { BitacoraFull } from '../../../core/models/bitacora.model';
+import { formatFecha } from '../../../core/util/fecha';
 
 /** My bitácoras (server, offline-cached). Tap one to see its details. */
 @Component({
   selector: 'app-mis-bitacoras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DatePipe],
+  imports: [Skeleton, EmptyState],
   templateUrl: './mis-partes.html',
   styleUrl: './mis-partes.scss',
 })
@@ -22,6 +23,7 @@ export class MisPartesPage {
 
   bitacoras = signal<BitacoraFull[]>([]);
   loading = signal(true);
+  fmtFecha = formatFecha; // U9
 
   constructor() {
     void this.load();

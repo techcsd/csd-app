@@ -11,6 +11,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { CombustibleService } from '../../../core/services/combustible.service';
@@ -36,11 +38,11 @@ const TOTAL_STEPS = 2;
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
-export class CombustiblePage {
+export class CombustiblePage extends GuardedWizard {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private vehiculos = inject(VehiculosService);
@@ -54,6 +56,7 @@ export class CombustiblePage {
   vehiculoId = '';
   placa = signal('');
   modelo = signal('');
+  fotoUrl = signal<string | null>(null); // U6
   private conductorId: string | null = null;
 
   ultima = signal<UltimaEchada>({
@@ -93,10 +96,25 @@ export class CombustiblePage {
   fotosCompletas = computed(() => !!this.fotoRecibo() && !!this.fotoTablero());
 
   constructor() {
+    super();
+    this.registerBackGuard();
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     void this.loadVehiculo();
     void this.loadUltima();
     void this.loadConductor();
+  }
+
+  /** U4 — datos capturados sin guardar (tras registrar ya no hay nada que perder). */
+  tieneDatos(): boolean {
+    return (
+      !this.done() &&
+      (this.km() != null ||
+        this.galones() != null ||
+        this.monto() != null ||
+        !!this.estacion().trim() ||
+        !!this.fotoRecibo() ||
+        !!this.fotoTablero())
+    );
   }
 
   private async loadVehiculo(): Promise<void> {
@@ -104,6 +122,7 @@ export class CombustiblePage {
     if (v) {
       this.placa.set(v.placa);
       this.modelo.set(`${v.marca} ${v.modelo}`);
+      if (v.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(v.foto_path));
     }
   }
 

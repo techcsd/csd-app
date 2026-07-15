@@ -16,6 +16,15 @@
   font-size: 13px;
   color: var(--color-warning, #d97706);
 }
+.cruta__eta {
+  margin: 4px 0 12px;
+  font-size: 15px;
+  color: var(--text, #e5e5e5);
+
+  strong {
+    color: var(--Hub, #ffb300);
+  }
+}
 
 .cruta__header {
   display: flex;

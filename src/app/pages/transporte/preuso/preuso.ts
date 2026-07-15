@@ -14,12 +14,15 @@ import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ChecklistPreusoService } from '../../../core/services/checklist-preuso.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { formatFecha } from '../../../core/util/fecha';
 import {
   PreusoReportService,
   PreusoReportData,
@@ -79,11 +82,11 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
-export class PreusoPage {
+export class PreusoPage extends GuardedWizard {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private vehiculos = inject(VehiculosService);
@@ -151,13 +154,13 @@ export class PreusoPage {
     if (v?.vencimiento_matricula && new Date(v.vencimiento_matricula + 'T00:00:00') < this.hoy()) {
       return {
         titulo: 'Matrícula vencida',
-        motivo: `La matrícula del vehículo ${v.placa} está vencida (venció ${v.vencimiento_matricula}). No puede salir.`,
+        motivo: `La matrícula del vehículo ${v.placa} está vencida (venció ${formatFecha(v.vencimiento_matricula)}). No puede salir.`,
       };
     }
     if (v?.vencimiento_seguro && new Date(v.vencimiento_seguro + 'T00:00:00') < this.hoy()) {
       return {
         titulo: 'Seguro vencido',
-        motivo: `El seguro del vehículo ${v!.placa} está vencido (venció ${v!.vencimiento_seguro}). No puede salir.`,
+        motivo: `El seguro del vehículo ${v!.placa} está vencido (venció ${formatFecha(v!.vencimiento_seguro)}). No puede salir.`,
       };
     }
     return null;
@@ -248,8 +251,25 @@ export class PreusoPage {
   });
 
   constructor() {
+    super();
+    this.registerBackGuard();
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     void this.loadContext();
+  }
+
+  /** U4 — inspección iniciada con respuestas/fotos/firma sin guardar. */
+  tieneDatos(): boolean {
+    if (this.done()) return false;
+    const answered = Object.values(this.respuestas()).some(
+      (d) => d.respuesta != null || d.comentario.trim() || d.photo,
+    );
+    return (
+      answered ||
+      Object.keys(this.fotos()).length > 0 ||
+      !!this.firmaBlob() ||
+      !!this.observacion().trim() ||
+      !!this.nivelCombustible()
+    );
   }
 
   private async loadContext(): Promise<void> {

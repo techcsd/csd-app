@@ -51,13 +51,18 @@ export class VehiculosService {
     this.registerHandler();
   }
 
-  /** Minimal vehicle header for the checklist (placa/modelo/km). */
-  async getVehiculo(
-    id: string,
-  ): Promise<{ id: string; placa: string; marca: string; modelo: string; kilometraje: number } | null> {
+  /** Minimal vehicle header for the checklist (placa/modelo/km + foto U6). */
+  async getVehiculo(id: string): Promise<{
+    id: string;
+    placa: string;
+    marca: string;
+    modelo: string;
+    kilometraje: number;
+    foto_path: string | null;
+  } | null> {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
-      .select('id, placa, marca, modelo, kilometraje')
+      .select('id, placa, marca, modelo, kilometraje, fotos')
       .eq('id', id)
       .single();
     if (error) {
@@ -67,15 +72,24 @@ export class VehiculosService {
         (v) => v.vehiculo_id === id,
       );
       return hit
-        ? { id, placa: hit.placa, marca: hit.marca, modelo: hit.modelo, kilometraje: hit.km }
+        ? { id, placa: hit.placa, marca: hit.marca, modelo: hit.modelo, kilometraje: hit.km, foto_path: null }
         : null;
     }
-    return data as unknown as {
+    const v = data as unknown as {
       id: string;
       placa: string;
       marca: string;
       modelo: string;
       kilometraje: number;
+      fotos: string[] | null;
+    };
+    return {
+      id: v.id,
+      placa: v.placa,
+      marca: v.marca,
+      modelo: v.modelo,
+      kilometraje: v.kilometraje,
+      foto_path: (v.fotos ?? [])[0] ?? null,
     };
   }
 
@@ -133,6 +147,21 @@ export class VehiculosService {
       }));
     });
     return data ?? [];
+  }
+
+  /** U6 — foto_path (primera) por vehículo, para pintar fotos en listas. */
+  async getFotosPaths(ids: string[]): Promise<Record<string, string | null>> {
+    const map: Record<string, string | null> = {};
+    if (!ids.length) return map;
+    const { data, error } = await this.supabase.client
+      .from('vehiculos')
+      .select('id, fotos')
+      .in('id', ids);
+    if (error) return map;
+    for (const v of (data as Array<{ id: string; fotos: string[] | null }>) ?? []) {
+      map[v.id] = (v.fotos ?? [])[0] ?? null;
+    }
+    return map;
   }
 
   /** U6 — signed URL for a vehicle photo in the `vehiculos` bucket (or null). */
