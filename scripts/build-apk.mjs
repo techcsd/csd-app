@@ -74,4 +74,11 @@ if (apksigner) {
   console.log('(apksigner not auto-found; verify manually per scripts/build-apk.md)');
 }
 
-console.log('\nNext: node scripts/release-apk.mjs   # publish to the app-releases bucket');
+// Y1 (REGLA — historial confiable): registrar SIEMPRE la versión al generar el
+// APK, con notas estructuradas, para que NINGUNA versión se escape del historial
+// (web + app) aunque no se publique al bucket todavía. `--register-only` no sube
+// nada ni toca publicada/minima; solo hace el UPSERT idempotente en app_versiones.
+// Si el registro falla, este comando falla (exit 1) — igual que apk:publish.
+run('node', ['scripts/release-apk.mjs', '--register-only']);
+
+console.log('\nNext (opcional): node scripts/release-apk.mjs   # sube el APK al bucket para descarga/rolling update');

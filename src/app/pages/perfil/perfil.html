@@ -20,9 +20,9 @@
         <li><span>Obra activa</span><b>{{ o.nombre }}</b></li>
       }
       <li><span>Conexión</span><b>{{ online() ? 'En línea' : 'Sin señal' }}</b></li>
-      <li><span>Versión</span><b>{{ versionPublicada() }}</b></li>
+      <li><span>Versión de la app</span><b>{{ version }}</b></li>
       @if (hayNueva()) {
-        <li><span>Actualización</span><b class="perfil__nueva">Hay una versión nueva</b></li>
+        <li><span>Actualización</span><b class="perfil__nueva">Hay una versión nueva ({{ versionPublicada() }})</b></li>
       }
     </ul>
 

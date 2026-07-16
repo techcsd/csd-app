@@ -59,6 +59,9 @@ export class App {
 
   private async checkVersion(): Promise<void> {
     await this.version.check();
+    // Y1 — red de seguridad: registra la versión instalada en el historial
+    // (best-effort; solo admin/service_role la escriben, no molesta al campo).
+    void this.version.autoRegistrar();
     if (!this.version.debeActualizar() && this.version.hayNueva()) {
       this.toast.show(
         `Hay una versión nueva disponible (${this.version.info()?.version_publicada}).`,

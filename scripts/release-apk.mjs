@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.9.0';
+const VERSION = '1.9.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -61,15 +61,12 @@ const MIN_VERSION = '1.6.0';
 const RELEASED_AT = '2026-07-16';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Pool en todos los flujos y documentos del vehículo';
+const TITULO = 'Historial de versiones automático';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Pre-uso, combustible y rutas te dejan elegir el vehículo del pool disponible, sin necesidad de tenerlo asignado.' },
-  { t: 'nuevo', d: 'Sube y reemplaza los documentos del vehículo (seguro, matrícula) desde la app si tu rol lo permite.' },
-  { t: 'mejora', d: 'Lo que escribes en "Otro" (materiales, origen) se recuerda para sugerírtelo la próxima vez.' },
-  { t: 'mejora', d: 'La foto opcional de salida usa el mismo componente de foto guiada que el resto de la app.' },
-  { t: 'mejora', d: 'El botón de acción ya no queda tapado por el teclado.' },
+  { t: 'arreglo', d: 'Cada versión de la app queda registrada sola en el historial de versiones (web y app).' },
+  { t: 'mejora', d: 'Ajustes muestra la versión de la app que tienes instalada.' },
 ];
 
 const TIPO_POR_COMMIT = {

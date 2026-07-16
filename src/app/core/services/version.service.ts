@@ -82,6 +82,25 @@ export class VersionService {
     }
   }
 
+  /**
+   * Y1 (historial confiable) — auto-reporta la versión instalada al historial
+   * (`registrar_version`, idempotente). Es una RED DE SEGURIDAD además del script
+   * de release: si un admin abre un build nuevo, la versión queda registrada sola
+   * (sin correr ningún comando). El RPC es admin/service_role, así que para los
+   * usuarios de campo hace no-op silencioso. Solo en builds de producción.
+   */
+  async autoRegistrar(): Promise<void> {
+    if (!environment.production) return;
+    try {
+      await this.supabase.client.rpc('registrar_version', {
+        p_plataforma: 'movil',
+        p_version: this.local,
+      });
+    } catch {
+      /* admin/service_role only — silencioso para el resto (no molesta al campo) */
+    }
+  }
+
   private async fetchRpc(): Promise<VersionPublicada> {
     const { data, error } = await this.supabase.client.rpc('version_publicada');
     if (error) throw new Error(error.message);
