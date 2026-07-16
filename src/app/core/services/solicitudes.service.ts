@@ -86,6 +86,25 @@ export class SolicitudesService {
       });
       if (error) throwSyncError(error);
 
+      // B3/U25 — inteligencia de "Otro/s": los materiales del "08 Otros" (sin
+      // articulo_id, texto libre) se registran estructurados en otros_valores
+      // (contexto 'material'). Best-effort: no falla el sync de la solicitud.
+      const items = (payload['items'] as Array<{ articulo_id: string | null; descripcion?: string }>) ?? [];
+      for (const it of items) {
+        const desc = it.descripcion?.trim();
+        if (!it.articulo_id && desc) {
+          try {
+            await this.supabase.client.rpc('registrar_otro_valor', {
+              p_contexto: 'material',
+              p_valor: desc,
+              p_referencia_id: payload['id'],
+            });
+          } catch {
+            /* intelligence-only: never block the solicitud sync */
+          }
+        }
+      }
+
       // Same email notification the web fires (notificar-solicitud edge fn).
       // Fire-and-forget: a notification failure must not fail the sync — the
       // solicitud already lands in SGC and shows on the approver's badge.

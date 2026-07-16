@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selector-categorias';
 import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -29,7 +30,7 @@ interface GrupoResumen {
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, WizardFooter],
   templateUrl: './pedir.html',
   styleUrl: '../../inventario/salida/salida.scss',
 })

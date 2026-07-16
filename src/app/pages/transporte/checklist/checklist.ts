@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Geolocation } from '@capacitor/geolocation';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
@@ -39,7 +40,7 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })

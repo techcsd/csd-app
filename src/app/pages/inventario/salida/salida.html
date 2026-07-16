@@ -47,17 +47,17 @@
       <label class="field-label mov__mt">Nota / motivo (opcional)</label>
       <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Ej: Consumo en obra" />
 
-      <button type="button" class="btn-ghost mov__mt" [disabled]="capturing()" (click)="addFoto()">
-        {{ foto() ? '✅ Foto agregada' : (capturing() ? '⏳ Tomando…' : '📷 Foto (opcional)') }}
-      </button>
+      <label class="field-label mov__mt">Foto (opcional)</label>
+      <app-photo-slot label="Evidencia (opcional)" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
     </div>
 
-    <footer class="mov__nav mov__nav--row">
-      <button type="button" class="btn-ghost mov__nav-back" (click)="volverSeleccion()">Atrás</button>
-      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-        {{ submitting() ? 'Guardando…' : 'Confirmar salida' }}
-      </button>
-    </footer>
+    <app-wizard-footer
+      backLabel="Atrás"
+      [primaryLabel]="submitting() ? 'Guardando…' : 'Confirmar salida'"
+      [primaryDisabled]="submitting()"
+      (back)="volverSeleccion()"
+      (primary)="submit()"
+    />
   }
 
   <!-- Hoja 4: éxito -->

@@ -16,6 +16,7 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -41,7 +42,7 @@ import {
   RESPUESTA_OPCIONES,
   RespuestaValor,
 } from '../../../core/models/checklist-preuso.model';
-import { VehiculoDetalle } from '../../../core/models/transporte.model';
+import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
 import { Conductor, diasHasta, estadoLicencia } from '../../../core/models/conductor.model';
 
 interface RespuestaDraft {
@@ -83,7 +84,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -108,6 +109,7 @@ export class PreusoPage extends GuardedWizard {
   readonly fotosInterior = FOTOS_PREUSO.filter((f) => f.grupo === 'INTERIOR');
 
   vehiculoId = '';
+  necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
   vehiculo = signal<VehiculoDetalle | null>(null);
   conductor = signal<Conductor | null>(null);
   loadingCtx = signal(true);
@@ -274,6 +276,19 @@ export class PreusoPage extends GuardedWizard {
     super();
     this.registerBackGuard();
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
+    // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
+    if (this.vehiculoId) {
+      void this.loadContext();
+    } else {
+      this.necesitaVehiculo.set(true);
+      this.loadingCtx.set(false);
+    }
+  }
+
+  /** B1 — vehículo elegido del pool: continúa el pre-uso con ese vehículo. */
+  onVehiculoElegido(v: VehiculoDisponible): void {
+    this.vehiculoId = v.vehiculo_id;
+    this.necesitaVehiculo.set(false);
     void this.loadContext();
   }
 

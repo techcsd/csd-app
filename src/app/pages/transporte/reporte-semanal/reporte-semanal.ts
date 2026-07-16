@@ -4,6 +4,7 @@ import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -48,7 +49,7 @@ interface VehSemanal {
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })

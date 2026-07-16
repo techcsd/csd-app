@@ -35,5 +35,11 @@ Every capture: save to Dexie + enqueue in outbox with a **client UUID** (idempot
 ## Backend / migrations
 Apply SQL with `node scripts/apply-migration.mjs sql/<file>.sql` — it POSTs to the Supabase Management API using the system env var `SUPABASE_ACCESS_TOKEN` (sbp_…, runs as postgres → DDL works). Data API keys in `.env.local` (anon / service_role) are for row access from the app, NOT DDL. Every migration: RLS + schema grants + sequence grants; keep RPCs backward-compatible ≥2 versions.
 
+## Versionado / historial (REGLA Y1 — no negociable)
+**Cada actualización enviada (web o app móvil) DEBE registrarse en el historial de versiones (`sgc.app_versiones`), automáticamente y SIEMPRE con el mismo formato estructurado.** Formato estándar de una entrada: `version` (semver), `plataforma` (web|movil), `fecha`, `titulo` (corto, opcional) y `cambios[]` donde cada cambio = `{ t: nuevo|mejora|arreglo|seguridad, d: texto }`. La UI del historial pinta chips por tipo para ambas plataformas.
+- **App**: `npm run apk:publish` (`scripts/release-apk.mjs`) registra SIEMPRE la versión vía `registrar_version(p_plataforma, p_version, p_notas, p_titulo, p_cambios)` con `cambios[]` estructurados (curados en `CAMBIOS_CURADOS`, o generados de los commits: feat→nuevo, fix→arreglo, perf/refactor→mejora, sec→seguridad). **El release FALLA (exit 1) si no pudo registrar** — así ninguna versión se escapa sin quedar en el historial. Mantener `VERSION` alineado con `src/environments/*` y `android/app/build.gradle`.
+- **Web**: el registro corre en cada deploy a `main` (hook de build/CI); el auto-registro al arrancar la app queda como red de seguridad (idempotente).
+- Publicar/forzar mínima al usuario es un paso aparte del admin en SGC (flags `publicada`/`minima`); registrar en el historial NO publica.
+
 ## Status
 M1 (Foundations) complete: scaffold, auth+PIN, offline engine, design system, Home gating, PWA. See HANDOFF.md.

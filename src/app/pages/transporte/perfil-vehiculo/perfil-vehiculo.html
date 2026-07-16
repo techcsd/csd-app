@@ -71,21 +71,29 @@
       </div>
     }
 
-    <!-- X1 — documentos del vehículo (solo lectura; se suben desde la web) -->
+    <!-- X1/B2 — documentos del vehículo. Seguro/matrícula: subir si el rol lo
+         permite (flota/admin), si no solo-lectura. Otros: solo-lectura. -->
     @if (!loading()) {
       <section class="pveh__docs">
         <h2 class="pveh__docs-title">Documentos</h2>
+        @if (!puedeSubir()) {
+          <p class="pveh__docs-hint">Estos documentos se gestionan desde la web.</p>
+        }
         <app-doc-slot
           label="Seguro"
-          [soloLectura]="true"
+          [soloLectura]="!puedeSubir()"
           [urlExistente]="seguro()?.url ?? null"
           [esPdfExistente]="seguro()?.esPdf ?? false"
+          [enCola]="seguroEnCola()"
+          (captured)="onDoc('seguro', $event)"
         />
         <app-doc-slot
           label="Matrícula"
-          [soloLectura]="true"
+          [soloLectura]="!puedeSubir()"
           [urlExistente]="matricula()?.url ?? null"
           [esPdfExistente]="matricula()?.esPdf ?? false"
+          [enCola]="matriculaEnCola()"
+          (captured)="onDoc('matricula', $event)"
         />
         @for (d of otros(); track d.label + $index) {
           <app-doc-slot

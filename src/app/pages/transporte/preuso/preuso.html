@@ -1,4 +1,14 @@
-@if (loadingCtx()) {
+@if (necesitaVehiculo()) {
+  <!-- B1 — elegir vehículo del pool cuando no llega por deep-link -->
+  <div class="screen preuso">
+    <div class="screen__body">
+      <app-vehiculo-picker
+        subtitulo="Selecciona el vehículo para hacer el pre-uso."
+        (elegido)="onVehiculoElegido($event)"
+      />
+    </div>
+  </div>
+} @else if (loadingCtx()) {
   <div class="screen preuso">
     <div class="screen__body"><app-skeleton [rows]="5" /></div>
   </div>

@@ -97,17 +97,12 @@
     </div>
 
     <!-- Nav -->
-    <footer class="mantenimiento__nav">
-      @if (step() > 1) {
-        <button type="button" class="btn-ghost mantenimiento__back" (click)="prev()">Atrás</button>
-      }
-      @if (step() < total) {
-        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
-      } @else {
-        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-          {{ submitting() ? 'Guardando…' : 'Confirmar' }}
-        </button>
-      }
-    </footer>
+    <app-wizard-footer
+      [backLabel]="step() > 1 ? 'Atrás' : ''"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Confirmar')"
+      [primaryDisabled]="step() >= total && submitting()"
+      (back)="prev()"
+      (primary)="step() < total ? next() : submit()"
+    />
   </div>
 }

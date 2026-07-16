@@ -228,20 +228,13 @@
       }
     </div>
 
-    <footer class="parte__nav">
-      @if (step() > 1) {
-        <button type="button" class="btn-ghost parte__back" (click)="prev()">Atrás</button>
-      } @else {
-        <button type="button" class="btn-ghost parte__back" (click)="salir()">Cancelar</button>
-      }
-      @if (step() < total) {
-        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
-      } @else {
-        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-          {{ submitting() ? 'Guardando…' : 'Enviar bitácora' }}
-        </button>
-      }
-    </footer>
+    <app-wizard-footer
+      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Enviar bitácora')"
+      [primaryDisabled]="step() >= total && submitting()"
+      (back)="step() > 1 ? prev() : salir()"
+      (primary)="step() < total ? next() : submit()"
+    />
   </div>
 
   <app-confirm-dialog

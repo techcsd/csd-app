@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
@@ -42,7 +43,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })

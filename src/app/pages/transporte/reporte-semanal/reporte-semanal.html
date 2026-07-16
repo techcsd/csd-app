@@ -93,20 +93,13 @@
       }
     </div>
 
-    <footer class="rsem__nav">
-      @if (step() > 1) {
-        <button type="button" class="btn-ghost rsem__back" (click)="prev()">Atrás</button>
-      } @else {
-        <button type="button" class="btn-ghost rsem__back" (click)="intentarSalir()">Cancelar</button>
-      }
-      @if (step() < total) {
-        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
-      } @else {
-        <button type="button" class="btn-cta" [disabled]="submitting() || kmInvalido()" (click)="submit()">
-          {{ submitting() ? 'Enviando…' : 'Enviar reporte' }}
-        </button>
-      }
-    </footer>
+    <app-wizard-footer
+      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Enviando…' : 'Enviar reporte')"
+      [primaryDisabled]="step() >= total && (submitting() || kmInvalido())"
+      (back)="step() > 1 ? prev() : intentarSalir()"
+      (primary)="step() < total ? next() : submit()"
+    />
 
     <!-- U4 — descartar cambios sin guardar -->
     <app-confirm-dialog

@@ -129,3 +129,29 @@
   width: auto; // anula width:100% de btn-ghost; si no, colapsa el botón "Crear ruta"
   min-width: 110px;
 }
+
+// B1 — cabecera del vehículo elegido del pool + "Cambiar"
+.cruta__veh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.cruta__veh-label {
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.cruta__veh-change {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+}

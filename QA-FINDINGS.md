@@ -6,6 +6,13 @@ _Actualizado: 2026-07-16 · FASE 2 (corrección) completa · sin commit/push (pe
 
 _FASE 3: pendientes cerrados, decisiones tomadas, bump a **1.7.1**, APK firmado + re-test en device. `npm run build` OK._
 
+> **Nota de reconciliación (B7 — Actualización 7, app en v1.9.0):** este documento quedó etiquetado
+> "Actualización 5 / v1.7.1". La app ya va por **v1.9.0** (Act. 6 documentos + Act. 7 cierre de brechas).
+> Todos los ítems que abajo aparecen con "⏳" **ya están cerrados** según el encabezado de FASE 3 y el
+> resumen ejecutivo (APP-022/034/036/038/039/041/047/062/063 = ✅; APP-016/033/049 = decisión "no cambiar";
+> APP-013 cerrado por X3 en Act. 6; APP-021 = SGC). No quedan pendientes app-side. Las marcas "⏳" de las
+> filas siguientes son históricas — el estado real es el del resumen ejecutivo (0 pendientes).
+
 ## Resumen ejecutivo por severidad (final)
 | Sev | Encontrados | Resueltos | Decisión "no cambiar" | Corresponde a SGC | Pendiente |
 |-----|-------------|-----------|-----------------------|-------------------|-----------|

@@ -1,0 +1,23 @@
+.wizard-footer {
+  flex: 0 0 auto; // la barra nunca se encoge → el CTA siempre visible
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.wizard-footer__primary {
+  flex: 1;
+}
+
+// footer-btn-width gotcha: el .btn-ghost global trae width:100% y colapsaría el
+// CTA en un footer flex; el botón "Atrás" va a width:auto.
+.wizard-footer__back {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 110px;
+}

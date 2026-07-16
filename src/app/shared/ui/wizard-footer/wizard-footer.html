@@ -1,0 +1,20 @@
+<footer class="wizard-footer">
+  @if (backLabel()) {
+    <button
+      type="button"
+      class="btn-ghost wizard-footer__back"
+      [disabled]="backDisabled()"
+      (click)="back.emit()"
+    >
+      {{ backLabel() }}
+    </button>
+  }
+  <button
+    type="button"
+    class="btn-cta wizard-footer__primary"
+    [disabled]="primaryDisabled()"
+    (click)="primary.emit()"
+  >
+    {{ primaryLabel() }}
+  </button>
+</footer>

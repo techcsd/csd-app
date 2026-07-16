@@ -5,6 +5,7 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
@@ -31,7 +32,7 @@ const TOTAL = 9;
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton],
+  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton, WizardFooter],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })

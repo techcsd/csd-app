@@ -10,12 +10,15 @@ import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { CombustibleService } from '../../../core/services/combustible.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -39,7 +42,7 @@ const TOTAL_STEPS = 2;
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -55,6 +58,7 @@ export class CombustiblePage extends GuardedWizard {
   readonly total = TOTAL_STEPS;
 
   vehiculoId = '';
+  necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
   placa = signal('');
   modelo = signal('');
   fotoUrl = signal<string | null>(null); // U6
@@ -101,6 +105,24 @@ export class CombustiblePage extends GuardedWizard {
     super();
     this.registerBackGuard();
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
+    // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
+    if (this.vehiculoId) {
+      this.cargarVehiculo();
+    } else {
+      this.necesitaVehiculo.set(true);
+      this.loading.set(false);
+    }
+  }
+
+  /** B1 — vehículo elegido del pool: continúa el registro con ese vehículo. */
+  onVehiculoElegido(v: VehiculoDisponible): void {
+    this.vehiculoId = v.vehiculo_id;
+    this.necesitaVehiculo.set(false);
+    this.loading.set(true);
+    this.cargarVehiculo();
+  }
+
+  private cargarVehiculo(): void {
     void this.loadVehiculo();
     void this.loadUltima();
     void this.loadConductor();

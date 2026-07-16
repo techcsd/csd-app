@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
@@ -48,7 +49,7 @@ const TOTAL_STEPS = 5;
   selector: 'app-liberacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, BigConfirm, ConfirmDialog, Skeleton],
+  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, BigConfirm, ConfirmDialog, Skeleton, WizardFooter],
   templateUrl: './liberacion.html',
   styleUrl: './liberacion.scss',
 })

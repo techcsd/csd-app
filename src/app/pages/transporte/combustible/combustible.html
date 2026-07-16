@@ -1,4 +1,14 @@
-@if (done()) {
+@if (necesitaVehiculo()) {
+  <!-- B1 — elegir vehículo del pool cuando no llega por deep-link -->
+  <div class="screen comb">
+    <div class="screen__body">
+      <app-vehiculo-picker
+        subtitulo="Selecciona el vehículo para registrar el combustible."
+        (elegido)="onVehiculoElegido($event)"
+      />
+    </div>
+  </div>
+} @else if (done()) {
   <!-- Confirmation: "Combustible registrado" -->
   <div class="screen comb">
     <div class="screen__body">
@@ -205,25 +215,13 @@
     </div>
 
     <!-- Nav -->
-    <footer class="comb__nav">
-      @if (step() > 1) {
-        <button type="button" class="btn-ghost comb__back" (click)="prev()">Atrás</button>
-      } @else {
-        <button type="button" class="btn-ghost comb__back" (click)="intentarSalir()">Cancelar</button>
-      }
-      @if (step() < total) {
-        <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
-      } @else {
-        <button
-          type="button"
-          class="btn-cta"
-          [disabled]="submitting() || !fotosCompletas()"
-          (click)="submit()"
-        >
-          {{ submitting() ? 'Guardando…' : fotosCompletas() ? 'Guardar registro' : 'Faltan fotos para guardar' }}
-        </button>
-      }
-    </footer>
+    <app-wizard-footer
+      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : (fotosCompletas() ? 'Guardar registro' : 'Faltan fotos para guardar'))"
+      [primaryDisabled]="step() >= total && (submitting() || !fotosCompletas())"
+      (back)="step() > 1 ? prev() : intentarSalir()"
+      (primary)="step() < total ? next() : submit()"
+    />
 
     <!-- U4 — descartar cambios sin guardar -->
     <app-confirm-dialog

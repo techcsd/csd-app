@@ -5,7 +5,9 @@ import { Router } from '@angular/router';
 import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selector-categorias';
 import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
-import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
+import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
+import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -23,13 +25,12 @@ interface GrupoResumen {
   selector: 'app-salida',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, PhotoSlot, WizardFooter],
   templateUrl: './salida.html',
   styleUrl: './salida.scss',
 })
 export class SalidaPage implements OnDestroy {
   private inventario = inject(InventarioService);
-  private camera = inject(CameraService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -46,7 +47,6 @@ export class SalidaPage implements OnDestroy {
   loadingCat = signal(true); // V7 — shimmer while el catálogo carga
   notas = signal('');
   foto = signal<CapturedPhoto | null>(null);
-  capturing = signal(false);
   submitting = signal(false);
   confirmSalir = signal(false);
   sharing = signal(false);
@@ -147,19 +147,12 @@ export class SalidaPage implements OnDestroy {
     if (!this.cart().length) this.hoja.set('seleccion');
   }
 
-  async addFoto(): Promise<void> {
-    if (this.capturing()) return;
-    this.capturing.set(true);
-    try {
-      const photo = await this.camera.takePhoto();
-      if (photo) {
-        const old = this.foto();
-        if (old) URL.revokeObjectURL(old.previewUrl);
-        this.foto.set(photo);
-      }
-    } finally {
-      this.capturing.set(false);
-    }
+  // B5 — foto opcional con el componente PhotoSlot compartido (no botón plano).
+  onFoto(photo: CapturedPhoto): void {
+    this.foto.set(photo);
+  }
+  onFotoCleared(): void {
+    this.foto.set(null);
   }
 
   // ── Confirmar ──

@@ -5,6 +5,13 @@
  * own (no manual entry). The register step is idempotent and never touches the
  * publicada/minima flags of an existing row (the admin controls those in SGC).
  *
+ * Y1 (REGLA — historial confiable): cada release registra la versión SIEMPRE con
+ * notas ESTRUCTURADAS (titulo + cambios[] tipados: nuevo|mejora|arreglo|seguridad),
+ * el MISMO formato que la web, y **el release FALLA (exit 1) si no se pudo
+ * registrar** — así ninguna versión se escapa sin quedar en el historial. Los
+ * cambios se toman de CAMBIOS_CURADOS; si está vacío, se generan de los commits
+ * (feat→nuevo, fix→arreglo, perf/refactor→mejora, sec→seguridad). Ver CLAUDE.md.
+ *
  * Prereq: android/app/build/outputs/apk/release/app-release.apk exists
  * (see scripts/build-apk.md). Reads SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
  * from .env.local.
@@ -14,6 +21,7 @@
  *   node scripts/release-apk.mjs --register-only # SOLO registra en el historial (no sube nada, no publica)
  */
 import { readFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 
 function loadEnvLocal() {
   const env = {};
@@ -37,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.8.0';
+const VERSION = '1.9.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -50,17 +58,69 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.6.0 quedó como mínimo forzado (2026-07-15). Mantener este
 // valor alineado con esa fila para que version.json (aviso) no contradiga el gate.
 const MIN_VERSION = '1.6.0';
-const TITULO = 'Documentos de conductor y vehículo';
-// Cambios etiquetados (nuevo|mejora|arreglo|seguridad) — alimentan el timeline
-// del historial (cambios) y, unidos, las notas / el changelog de version.json.
-const CAMBIOS = [
-  { t: 'nuevo', d: 'Sube tus documentos (cédula y licencia) desde la app, con foto o archivo/PDF; al registrarte como conductor o después desde "Mi actividad".' },
-  { t: 'nuevo', d: 'Aviso de "Documentos pendientes" mientras falte tu cédula o licencia (no bloquea).' },
-  { t: 'nuevo', d: 'Documentos del vehículo (seguro, matrícula) visibles en el perfil del vehículo.' },
-  { t: 'mejora', d: 'Al recibir o devolver un vehículo se avisa si no se pudo tomar la ubicación (GPS) y puedes reintentar; el registro nunca se bloquea.' },
-];
-const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
 const RELEASED_AT = '2026-07-16';
+
+// Título corto de la entrada del historial (opcional pero recomendado).
+const TITULO = 'Pool en todos los flujos y documentos del vehículo';
+// Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
+// Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
+const CAMBIOS_CURADOS = [
+  { t: 'nuevo', d: 'Pre-uso, combustible y rutas te dejan elegir el vehículo del pool disponible, sin necesidad de tenerlo asignado.' },
+  { t: 'nuevo', d: 'Sube y reemplaza los documentos del vehículo (seguro, matrícula) desde la app si tu rol lo permite.' },
+  { t: 'mejora', d: 'Lo que escribes en "Otro" (materiales, origen) se recuerda para sugerírtelo la próxima vez.' },
+  { t: 'mejora', d: 'La foto opcional de salida usa el mismo componente de foto guiada que el resto de la app.' },
+  { t: 'mejora', d: 'El botón de acción ya no queda tapado por el teclado.' },
+];
+
+const TIPO_POR_COMMIT = {
+  feat: 'nuevo',
+  fix: 'arreglo',
+  perf: 'mejora',
+  refactor: 'mejora',
+  style: 'mejora',
+  sec: 'seguridad',
+  security: 'seguridad',
+};
+
+/**
+ * Y1 — genera cambios[] tipados desde los commits (convención feat/fix/…) del
+ * rango desde el último tag hasta HEAD. Se usa como respaldo cuando CAMBIOS_CURADOS
+ * está vacío para que NUNCA se registre una versión sin notas estructuradas.
+ */
+function cambiosDesdeCommits() {
+  let range;
+  try {
+    const tag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
+    range = `${tag}..HEAD`;
+  } catch {
+    range = '-30'; // sin tags: últimos 30 commits
+  }
+  let log = '';
+  try {
+    log = execSync(`git log ${range} --pretty=format:%s`, { encoding: 'utf8' });
+  } catch {
+    return [];
+  }
+  const out = [];
+  for (const line of log.split('\n')) {
+    const m = line.match(/^(\w+)(?:\(.+?\))?!?:\s*(.+)$/);
+    if (!m) continue;
+    const t = TIPO_POR_COMMIT[m[1].toLowerCase()];
+    if (!t) continue;
+    out.push({ t, d: m[2].trim() });
+  }
+  return out;
+}
+
+const CAMBIOS = CAMBIOS_CURADOS.length ? CAMBIOS_CURADOS : cambiosDesdeCommits();
+if (!CAMBIOS.length) {
+  console.error(
+    '✗ Y1: no hay cambios tipados. El historial exige notas estructuradas.\n' +
+      '  Edita CAMBIOS_CURADOS en este script o usa commits convencionales (feat/fix/perf/…).',
+  );
+  process.exit(1);
+}
+const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const bucket = 'app-releases';
@@ -86,9 +146,11 @@ async function upload(objectName, body, contentType) {
 
 /**
  * Registra (o actualiza) la versión en sgc.app_versiones vía el RPC idempotente
- * sgc.registrar_version(plataforma, version, notas) para que el historial y la
- * página de versiones de SGC estén al día sin captura manual. El RPC hace UPSERT
- * por (plataforma, version) y NO toca publicada/minima (las controla el admin).
+ * sgc.registrar_version(plataforma, version, notas, titulo, cambios) — con las
+ * notas ESTRUCTURADAS (titulo + cambios[]), mismo formato que la web (Y1). El RPC
+ * hace UPSERT por (plataforma, version), solo rellena lo vacío y NO toca
+ * publicada/minima (las controla el admin). Lanza si el registro falla → el
+ * caller aborta el release con exit 1.
  */
 async function registrarEnHistorial() {
   const base = URL.replace(/\/$/, '');
@@ -97,10 +159,16 @@ async function registrarEnHistorial() {
   const res = await fetch(`${base}/rest/v1/rpc/registrar_version`, {
     method: 'POST',
     headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc' },
-    body: JSON.stringify({ p_plataforma: 'movil', p_version: VERSION, p_notas: CHANGELOG }),
+    body: JSON.stringify({
+      p_plataforma: 'movil',
+      p_version: VERSION,
+      p_notas: CHANGELOG,
+      p_titulo: TITULO,
+      p_cambios: CAMBIOS, // jsonb [{ t, d }] — mismo shape que pinta la web
+    }),
   });
   if (!res.ok) throw new Error(`registrar_version: ${res.status} ${await res.text()}`);
-  console.log(`✓ historial registrado vía RPC (v${VERSION})`);
+  console.log(`✓ historial registrado (estructurado) vía RPC (v${VERSION})`);
 
   // registrar_version() no maneja apk_url; cuando subimos el APK, dejamos la URL
   // en la fila para que version_publicada().apk_url alimente la actualización
@@ -141,5 +209,15 @@ if (!registerOnly) {
   console.log('Modo --register-only: no se sube nada al bucket (no se publica).');
 }
 
-// Mantener el historial de SGC al día siempre (ambos modos).
-await registrarEnHistorial();
+// Y1 — el historial DEBE quedar registrado; si falla, el release falla (exit 1)
+// para que ninguna versión se escape sin registrar.
+try {
+  await registrarEnHistorial();
+} catch (e) {
+  console.error(
+    `\n✗ RELEASE FALLÓ: no se pudo registrar la versión en el historial.\n` +
+      `  ${e instanceof Error ? e.message : e}\n` +
+      `  Regla Y1: ninguna versión debe quedar sin registrar. Corrige y reintenta.`,
+  );
+  process.exit(1);
+}

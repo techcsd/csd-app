@@ -23,6 +23,8 @@ export interface SalidaCaptura {
 export interface EntradaCaptura {
   bodegaId: string;
   referencia: string | null;
+  /** B3/U25 — texto libre cuando el origen es "Otro" (se guarda en otros_valores). */
+  otroReferencia?: string | null;
   items: { articulo_id: string; cantidad: number; talla?: string | null }[];
   foto: Blob | null;
 }
@@ -200,6 +202,7 @@ export class InventarioService {
         id,
         bodega_id: input.bodegaId,
         referencia: input.referencia,
+        otro_referencia: input.otroReferencia ?? null,
         items: input.items,
         capturado_en,
       },
@@ -274,6 +277,29 @@ export class InventarioService {
       : [];
   }
 
+  /**
+   * B3/U25 — registra un valor de "Otro/s" en sgc.otros_valores con su contexto
+   * (envoltura estructurada) para alimentar la inteligencia/autocompletado. Es
+   * best-effort: cualquier error se ignora para no romper el sync del movimiento.
+   */
+  private async registrarOtroValor(
+    contexto: string,
+    valor: unknown,
+    referenciaId: unknown,
+  ): Promise<void> {
+    const v = typeof valor === 'string' ? valor.trim() : '';
+    if (!v) return;
+    try {
+      await this.supabase.client.rpc('registrar_otro_valor', {
+        p_contexto: contexto,
+        p_valor: v,
+        p_referencia_id: (referenciaId as string) ?? null,
+      });
+    } catch {
+      /* intelligence-only: never block the movement sync */
+    }
+  }
+
   private registerHandlers(): void {
     this.sync.register('inv_salida', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('registrar_salida_app', {
@@ -298,6 +324,10 @@ export class InventarioService {
         p_capturado_en: payload['capturado_en'],
       });
       if (error) throwSyncError(error);
+      // B3/U25 — inteligencia de "Otro/s": registra el origen escrito a mano en
+      // otros_valores (estructurado {contexto,valor}) para autocompletado futuro.
+      // Best-effort: nunca falla el sync (la entrada ya quedó registrada).
+      await this.registrarOtroValor('entrada_referencia', payload['otro_referencia'], payload['id']);
     });
 
     this.sync.register('conduce_recepcion', async (payload, photoPaths) => {

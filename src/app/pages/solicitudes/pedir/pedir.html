@@ -54,12 +54,13 @@
       <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Ej: Para el vaciado del lunes" />
     </div>
 
-    <footer class="mov__nav mov__nav--row">
-      <button type="button" class="btn-ghost mov__nav-back" (click)="volverSeleccion()">Atrás</button>
-      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-        {{ submitting() ? 'Enviando…' : 'Enviar requisición' }}
-      </button>
-    </footer>
+    <app-wizard-footer
+      backLabel="Atrás"
+      [primaryLabel]="submitting() ? 'Enviando…' : 'Enviar requisición'"
+      [primaryDisabled]="submitting()"
+      (back)="volverSeleccion()"
+      (primary)="submit()"
+    />
   }
 
   <!-- Hoja 4: éxito -->

@@ -6,12 +6,12 @@ import { Geolocation } from '@capacitor/geolocation';
 
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
-import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/location-picker/location-picker';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { ConducesService, LugarDestino } from '../../../core/services/conduces.service';
-import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -29,13 +29,12 @@ type DestinoModo = 'lugar' | 'mapa';
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, EmptyState, Skeleton, LocationPicker, ConfirmDialog],
+  imports: [FormsModule, SelectList, OptionButton, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
 export class CrearRutaPage implements OnDestroy {
   private conduces = inject(ConducesService);
-  private vehiculos = inject(VehiculosService);
   private geo = inject(GeocodingService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
@@ -50,10 +49,10 @@ export class CrearRutaPage implements OnDestroy {
   done = signal(false);
   confirmSalir = signal(false); // U4 — confirmar descarte si hay datos
 
-  vehiculoOpts = signal<SelectOption[]>([]);
   lugares = signal<LugarDestino[]>([]);
 
   vehiculoId = signal('');
+  vehiculoLabel = signal(''); // B1 — placa/modelo del vehículo elegido del pool
   origen = signal('');
   usandoGps = signal(false); // U21 — origen fijado por ubicación/mapa
   origenMapa = signal(false); // muestra el picker de origen
@@ -109,33 +108,24 @@ export class CrearRutaPage implements OnDestroy {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [pend, asig, lugares] = await Promise.all([
-        this.vehiculos.misPendientes(),
-        this.vehiculos.getMisAsignaciones(),
-        this.conduces.getLugaresDestino(),
-      ]);
-      const opts = new Map<string, SelectOption>();
-      for (const v of pend.a_cargo) opts.set(v.vehiculo_id, { id: v.vehiculo_id, label: `${v.placa} · ${v.marca} ${v.modelo}` });
-      for (const v of asig) opts.set(v.vehiculo_id, { id: v.vehiculo_id, label: `${v.placa} · ${v.marca} ${v.modelo}` });
-      this.vehiculoOpts.set([...opts.values()]);
-      this.lugares.set(lugares);
-      if (this.vehiculoOpts().length === 1) this.vehiculoId.set(this.vehiculoOpts()[0].id);
-      void this.loadFotosVehiculos([...opts.keys()]); // U6 — thumbnails en el selector
+      // B1 — el vehículo se elige del pool (VehiculoPicker); aquí solo cargamos
+      // los lugares (obras/almacenes) para origen/destino.
+      this.lugares.set(await this.conduces.getLugaresDestino());
     } finally {
       this.loading.set(false);
     }
   }
 
-  /** U6 — resuelve fotos de los vehículos y las pega al selector (mejor esfuerzo). */
-  private async loadFotosVehiculos(ids: string[]): Promise<void> {
-    const paths = await this.vehiculos.getFotosPaths(ids);
-    const urls: Record<string, string | null> = {};
-    await Promise.all(
-      Object.entries(paths).map(async ([id, p]) => {
-        urls[id] = p ? await this.vehiculos.getFotoUrl(p) : null;
-      }),
-    );
-    this.vehiculoOpts.update((opts) => opts.map((o) => ({ ...o, image: urls[o.id] ?? null })));
+  /** B1 — vehículo elegido del pool: continúa creando la ruta con ese vehículo. */
+  onVehiculoElegido(v: VehiculoDisponible): void {
+    this.vehiculoId.set(v.vehiculo_id);
+    this.vehiculoLabel.set(`${v.placa} · ${v.marca} ${v.modelo}`.trim());
+  }
+
+  /** B1 — volver a elegir otro vehículo del pool. */
+  cambiarVehiculo(): void {
+    this.vehiculoId.set('');
+    this.vehiculoLabel.set('');
   }
 
   private async captureGps(): Promise<void> {
