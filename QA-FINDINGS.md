@@ -6,14 +6,16 @@ _Actualizado: 2026-07-16 · FASE 2 (corrección) completa · sin commit/push (pe
 
 _FASE 3: pendientes cerrados, decisiones tomadas, bump a **1.7.1**, APK firmado + re-test en device. `npm run build` OK._
 
-## Resumen ejecutivo por severidad (tras FASE 3)
-| Sev | Encontrados | Resueltos | Decisión "no cambiar" | Corresponde a SGC | Pendiente (trivial) |
-|-----|-------------|-----------|-----------------------|-------------------|---------------------|
+## Resumen ejecutivo por severidad (final)
+| Sev | Encontrados | Resueltos | Decisión "no cambiar" | Corresponde a SGC | Pendiente |
+|-----|-------------|-----------|-----------------------|-------------------|-----------|
 | Crítico | 0 | 0 | 0 | 0 | 0 |
 | Alto | 5 | 5 | 0 | 0 | 0 |
 | Medio | 13 | 10 | 1 (APP-016) | 2 | 0 |
-| Bajo | 21 | 18 | 2 (APP-033/049) | 0 | 1 (APP-038) |
-| Mejora | 4 | 3 | 0 | 0 | 1 (APP-063) |
+| Bajo | 21 | 19 | 2 (APP-033/049) | 0 | 0 |
+| Mejora | 4 | 4 | 0 | 0 | 0 |
+
+**Cierre total: 0 pendientes app-side.** Últimos cerrados: **APP-038** (skeleton en combustible/checklist/mantenimiento mientras carga el vehículo — ya no muestran "—") y **APP-063** (`ngOnDestroy` en photo-slot/voice-recorder revoca la object-URL). Solo quedan los 2 items de **SGC** (APP-013, APP-021) para el próximo prompt web.
 
 **Decisiones de producto tomadas:** APP-016 (accidente NO exige heridos>0 — accidentes materiales/casi-accidentes válidos), APP-033 (parte NO exige ≥1 actividad — días de lluvia/restricción son válidos), APP-049 (dos "atrás" en selector = jerárquico, por diseño). Sin cambio de código, documentadas.
 

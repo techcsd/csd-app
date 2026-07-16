@@ -10,6 +10,7 @@ import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
@@ -38,7 +39,7 @@ const TOTAL_STEPS = 2;
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -94,6 +95,7 @@ export class CombustiblePage extends GuardedWizard {
   primeraEchada = computed(() => this.ultima().km == null);
 
   fotosCompletas = computed(() => !!this.fotoRecibo() && !!this.fotoTablero());
+  loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
 
   constructor() {
     super();
@@ -118,11 +120,15 @@ export class CombustiblePage extends GuardedWizard {
   }
 
   private async loadVehiculo(): Promise<void> {
-    const v = await this.vehiculos.getVehiculo(this.vehiculoId);
-    if (v) {
-      this.placa.set(v.placa);
-      this.modelo.set(`${v.marca} ${v.modelo}`);
-      if (v.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(v.foto_path));
+    try {
+      const v = await this.vehiculos.getVehiculo(this.vehiculoId);
+      if (v) {
+        this.placa.set(v.placa);
+        this.modelo.set(`${v.marca} ${v.modelo}`);
+        if (v.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(v.foto_path));
+      }
+    } finally {
+      this.loading.set(false);
     }
   }
 

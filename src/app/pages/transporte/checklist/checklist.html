@@ -16,10 +16,14 @@
       <!-- Step 1: confirm vehicle -->
       @if (step() === 1) {
         <h1 class="screen__title">{{ titulo() }}</h1>
-        <div class="checklist__veh">
-          <span class="checklist__placa">{{ placa() || '—' }}</span>
-          <span class="checklist__modelo">{{ modelo() }}</span>
-        </div>
+        @if (loading()) {
+          <app-skeleton [rows]="2" />
+        } @else {
+          <div class="checklist__veh">
+            <span class="checklist__placa">{{ placa() || '—' }}</span>
+            <span class="checklist__modelo">{{ modelo() }}</span>
+          </div>
+        }
         <p class="screen__subtitle">
           Vas a {{ tipo === 'recepcion' ? 'recibir' : 'devolver' }} este vehículo. Toma las fotos y
           firma para dejar constancia del estado.

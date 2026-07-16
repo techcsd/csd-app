@@ -7,6 +7,7 @@ import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import {
@@ -41,7 +42,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })
@@ -61,6 +62,7 @@ export class MantenimientoPage {
   vehiculoId = '';
   placa = signal('');
   modelo = signal('');
+  loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
 
   step = signal(1);
   tipo = signal<MantenimientoTipo | null>(null);
@@ -77,10 +79,14 @@ export class MantenimientoPage {
   }
 
   private async loadVehiculo(): Promise<void> {
-    const v = await this.vehiculos.getVehiculo(this.vehiculoId);
-    if (v) {
-      this.placa.set(v.placa);
-      this.modelo.set(`${v.marca} ${v.modelo}`);
+    try {
+      const v = await this.vehiculos.getVehiculo(this.vehiculoId);
+      if (v) {
+        this.placa.set(v.placa);
+        this.modelo.set(`${v.marca} ${v.modelo}`);
+      }
+    } finally {
+      this.loading.set(false);
     }
   }
 

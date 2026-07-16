@@ -81,16 +81,20 @@
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
-      <div class="comb__veh">
-        @if (fotoUrl()) {
-          <img class="comb__foto" [src]="fotoUrl()" alt="Foto del vehículo" />
-        }
-        <span class="comb__placa">{{ placa() || '—' }}</span>
-        <span class="comb__modelo">{{ modelo() }}</span>
-        @if (ultima().km != null) {
-          <span class="comb__veh-km">Km última echada: {{ ultima().km | number: '1.0-0' }} km</span>
-        }
-      </div>
+      @if (loading()) {
+        <app-skeleton [rows]="2" />
+      } @else {
+        <div class="comb__veh">
+          @if (fotoUrl()) {
+            <img class="comb__foto" [src]="fotoUrl()" alt="Foto del vehículo" />
+          }
+          <span class="comb__placa">{{ placa() || '—' }}</span>
+          <span class="comb__modelo">{{ modelo() }}</span>
+          @if (ultima().km != null) {
+            <span class="comb__veh-km">Km última echada: {{ ultima().km | number: '1.0-0' }} km</span>
+          }
+        </div>
+      }
 
       <!-- Step 1: the 3 numbers + live calc -->
       @if (step() === 1) {

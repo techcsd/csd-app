@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, output, signal } from '@angular/core';
 import { ToastService } from '../../../core/services/toast.service';
 
 /**
@@ -13,7 +13,7 @@ import { ToastService } from '../../../core/services/toast.service';
   templateUrl: './voice-recorder.html',
   styleUrl: './voice-recorder.scss',
 })
-export class VoiceRecorder {
+export class VoiceRecorder implements OnDestroy {
   private toast = inject(ToastService);
 
   recording = signal(false);
@@ -54,5 +54,12 @@ export class VoiceRecorder {
     if (old) URL.revokeObjectURL(old);
     this.previewUrl.set(null);
     this.recorded.emit(null);
+  }
+
+  ngOnDestroy(): void {
+    // APP-063 — liberar la object-URL de audio si el componente se destruye.
+    const old = this.previewUrl();
+    if (old) URL.revokeObjectURL(old);
+    if (this.recording()) this.recorder?.stop();
   }
 }

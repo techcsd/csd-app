@@ -9,6 +9,7 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -38,7 +39,7 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })
@@ -63,6 +64,7 @@ export class ChecklistPage {
 
   step = signal(1);
   fotos = signal<Record<string, CapturedPhoto>>({});
+  loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
   km = signal<number | null>(null);
   odometro = signal<number | null>(null);
   kmInvalido = computed(() => {
@@ -95,11 +97,15 @@ export class ChecklistPage {
   }
 
   private async loadVehiculo(): Promise<void> {
-    const v = await this.vehiculos.getVehiculo(this.vehiculoId);
-    if (v) {
-      this.placa.set(v.placa);
-      this.modelo.set(`${v.marca} ${v.modelo}`);
-      this.odometro.set(v.kilometraje ?? null); // APP-011 — base de coherencia de km
+    try {
+      const v = await this.vehiculos.getVehiculo(this.vehiculoId);
+      if (v) {
+        this.placa.set(v.placa);
+        this.modelo.set(`${v.marca} ${v.modelo}`);
+        this.odometro.set(v.kilometraje ?? null); // APP-011 — base de coherencia de km
+      }
+    } finally {
+      this.loading.set(false); // APP-038
     }
   }
 

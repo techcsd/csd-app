@@ -14,10 +14,14 @@
 
     <div class="screen__body">
       <!-- Vehicle header -->
-      <div class="mantenimiento__veh">
-        <span class="mantenimiento__placa">{{ placa() || '—' }}</span>
-        <span class="mantenimiento__modelo">{{ modelo() }}</span>
-      </div>
+      @if (loading()) {
+        <app-skeleton [rows]="2" />
+      } @else {
+        <div class="mantenimiento__veh">
+          <span class="mantenimiento__placa">{{ placa() || '—' }}</span>
+          <span class="mantenimiento__modelo">{{ modelo() }}</span>
+        </div>
+      }
 
       <!-- Step 1: type -->
       @if (step() === 1) {

@@ -37,7 +37,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.7.1';
+const VERSION = '1.7.2';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -60,6 +60,7 @@ const CAMBIOS = [
   { t: 'arreglo', d: 'Compartir por WhatsApp ya no muestra error si cancelas.' },
   { t: 'mejora', d: 'Checklist de liberación e incidente: preguntan antes de salir para no perder lo escrito.' },
   { t: 'mejora', d: 'Más detalles legibles: fechas con hora, km con separador, estado de ruta, intentos de PIN.' },
+  { t: 'mejora', d: 'Pantallas de combustible, checklist y mantenimiento muestran carga (skeleton) en vez de datos vacíos.' },
 ];
 const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
 const RELEASED_AT = '2026-07-16';

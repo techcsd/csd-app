@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, input, output, signal } from '@angular/core';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 
 /**
@@ -14,7 +14,7 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
   templateUrl: './photo-slot.html',
   styleUrl: './photo-slot.scss',
 })
-export class PhotoSlot {
+export class PhotoSlot implements OnDestroy {
   /** Short label of the shot, e.g. "Frente" or "Tablero (km visible)". */
   label = input.required<string>();
   /** Example glyph shown before capture. */
@@ -48,5 +48,11 @@ export class PhotoSlot {
     if (old) URL.revokeObjectURL(old);
     this.preview.set(null);
     this.cleared.emit();
+  }
+
+  ngOnDestroy(): void {
+    // APP-063 — liberar la última object-URL si el wizard se destruye con foto.
+    const old = this.preview();
+    if (old) URL.revokeObjectURL(old);
   }
 }
