@@ -8,6 +8,14 @@
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="5" />
+    } @else if (error()) {
+      <app-empty-state
+        icon="⚠️"
+        title="No se pudieron cargar tus bitácoras"
+        message="Revisa tu conexión e inténtalo de nuevo."
+        ctaLabel="Reintentar"
+        (action)="load()"
+      />
     } @else {
       @for (b of bitacoras(); track b.id) {
         <button type="button" class="bit-row" [attr.data-tipo]="b.tipo" (click)="open(b)">

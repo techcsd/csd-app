@@ -31,15 +31,17 @@ export class UpdaterService {
 
   /** Kick off the update. Returns false when there's nothing to install. */
   async actualizar(): Promise<boolean> {
+    // APP-022: en la PWA/web NO se descarga un APK (inservible en web). La versión
+    // nueva del bundle se toma al recargar (el service worker activa el build nuevo).
+    if (!this.esNativo) {
+      this.toast.show('Actualizando la app web…', 'info', 2000);
+      setTimeout(() => document.location.reload(), 800);
+      return true;
+    }
     const url = this.version.apkUrl;
     if (!url) {
       this.toast.error('Aún no hay un archivo de instalación disponible. Inténtalo más tarde.');
       return false;
-    }
-    if (!this.esNativo) {
-      // PWA / desktop: hand off to the browser's downloader.
-      window.open(url, '_blank');
-      return true;
     }
     return this.descargarEInstalar(url);
   }

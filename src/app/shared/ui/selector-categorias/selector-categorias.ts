@@ -53,6 +53,7 @@ export class SelectorCategorias {
   // Talla dialog (EPP)
   tallaFor = signal<ArticuloCat | null>(null);
   tallaValor = signal('');
+  private tallaPendiente = 1; // APP-003: cantidad tecleada/steppeada al abrir el modal
   readonly tallasComunes = ['S', 'M', 'L', 'XL', 'XXL'];
 
   // "Otros" describe form
@@ -127,7 +128,9 @@ export class SelectorCategorias {
   categoriaAbierta = computed(() => this.categorias().find((c) => c.id === this.catSelId()) ?? null);
   esOtrosAbierta = computed(() => {
     const c = this.categoriaAbierta();
-    return !!c && this.esOtros(c);
+    // APP-019: el formulario de texto libre "Otros" solo en modo requisición;
+    // en salida/entrada (stock) siempre se muestran los artículos de la categoría.
+    return !!c && this.esOtros(c) && this.modo() === 'requisicion';
   });
 
   nombreCategoria = computed(() => {
@@ -170,7 +173,7 @@ export class SelectorCategorias {
   setCantidad(a: ArticuloCat, valor: number): void {
     const cant = Math.max(0, Math.floor((valor || 0) * 100) / 100);
     if (a.requiere_talla && cant > 0 && !this.tallaDe(a.id)) {
-      this.abrirTalla(a);
+      this.abrirTalla(a, cant); // APP-003: conserva la cantidad tecleada
       return;
     }
     this.aplicar(a, cant, this.tallaDe(a.id));
@@ -179,7 +182,7 @@ export class SelectorCategorias {
   ajustar(a: ArticuloCat, delta: number): void {
     const next = Math.max(0, this.cantidadDe(a.id) + delta);
     if (a.requiere_talla && next > 0 && !this.tallaDe(a.id)) {
-      this.abrirTalla(a);
+      this.abrirTalla(a, next);
       return;
     }
     this.aplicar(a, next, this.tallaDe(a.id));
@@ -205,16 +208,18 @@ export class SelectorCategorias {
   }
 
   // ── Talla dialog ──
-  abrirTalla(a: ArticuloCat): void {
+  abrirTalla(a: ArticuloCat, cant?: number): void {
     this.tallaFor.set(a);
     this.tallaValor.set(this.tallaDe(a.id) ?? '');
+    // APP-003: recuerda la cantidad en curso (tecleada/stepper o la actual del carrito).
+    this.tallaPendiente = Math.max(1, cant ?? (this.cantidadDe(a.id) || 1));
   }
 
   confirmarTalla(): void {
     const a = this.tallaFor();
     const talla = this.tallaValor().trim();
     if (!a || !talla) return;
-    const cant = Math.max(1, this.cantidadDe(a.id));
+    const cant = Math.max(1, this.cantidadDe(a.id) || this.tallaPendiente);
     this.aplicar(a, cant, talla);
     this.tallaFor.set(null);
     this.tallaValor.set('');

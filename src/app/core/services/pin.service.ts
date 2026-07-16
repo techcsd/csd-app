@@ -38,7 +38,7 @@ export class PinService {
     if (!saltHex || !expected) return false;
 
     const hash = await this.derive(pin, this.fromHex(saltHex));
-    const ok = hash === expected;
+    const ok = timingSafeEqual(hash, expected); // APP-062 — comparación de tiempo constante
     if (ok) {
       await this.store.remove(KEY_ATTEMPTS);
     } else {
@@ -95,4 +95,12 @@ export class PinService {
     }
     return out;
   }
+}
+
+/** Constant-time string compare (APP-062): no early-exit por longitud/carácter. */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }

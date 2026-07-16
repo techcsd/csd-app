@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { jsPDF } from 'jspdf';
+import { formatFecha, formatFechaMedia } from '../util/fecha';
 import { ChecklistResultado } from '../models/checklist-preuso.model';
 
 export interface ReportHallazgo {
@@ -283,18 +284,17 @@ export class PreusoReportService {
 function pad(n: number): string {
   return String(n).padStart(2, '0');
 }
+// APP-012 (U9): sin Intl es-DO — en el WebView de Android pueden faltar los
+// datos de locale y saldría formato en-US. Se usan los util es-DO hechos a mano
+// (fecha.ts) para fechas y un separador de miles manual para números.
 function fmtNum(n: number): string {
-  return new Intl.NumberFormat('es-DO', { maximumFractionDigits: 0 }).format(n);
+  return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 function fmtFecha(iso: string): string {
-  const d = new Date(iso.length <= 10 ? iso + 'T00:00:00' : iso);
-  return d.toLocaleDateString('es-DO');
+  return formatFecha(iso);
 }
 function fmtFechaHora(iso: string): string {
-  return new Date(iso).toLocaleString('es-DO', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
+  return formatFechaMedia(iso);
 }
 function mantLinea(data: PreusoReportData): string {
   if (data.proximoMantenimientoKm == null) return '—';

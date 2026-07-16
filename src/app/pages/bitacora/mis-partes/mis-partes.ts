@@ -23,15 +23,20 @@ export class MisPartesPage {
 
   bitacoras = signal<BitacoraFull[]>([]);
   loading = signal(true);
+  error = signal(false); // APP-035 — distinguir error de carga de "sin bitácoras"
   fmtFecha = formatFecha; // U9
 
   constructor() {
     void this.load();
   }
 
-  private async load(): Promise<void> {
+  async load(): Promise<void> {
+    this.loading.set(true);
+    this.error.set(false);
     try {
       this.bitacoras.set(await this.bitacora.misBitacoras());
+    } catch {
+      this.error.set(true);
     } finally {
       this.loading.set(false);
     }

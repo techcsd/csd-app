@@ -4,7 +4,7 @@ import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { BitacoraFull } from '../../../core/models/bitacora.model';
-import { formatFecha } from '../../../core/util/fecha';
+import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
 
 interface Media {
   url: string;
@@ -29,6 +29,7 @@ export class BitacoraDetallePage {
   media = signal<Media[]>([]);
   loading = signal(true);
   fmtFecha = formatFecha; // U9
+  fmtFechaHora = formatFechaMedia; // APP-030 — created_at con hora local (sin corrimiento TZ)
 
   totalPersonal = computed(() => {
     const b = this.b();

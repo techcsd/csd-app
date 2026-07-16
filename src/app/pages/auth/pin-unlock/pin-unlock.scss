@@ -32,3 +32,11 @@
   font-size: var(--fs-option);
   font-weight: 600;
 }
+
+.pin-screen__attempts {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-warning);
+  text-align: center;
+}

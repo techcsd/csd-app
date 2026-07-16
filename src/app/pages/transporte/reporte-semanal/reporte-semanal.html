@@ -102,7 +102,7 @@
       @if (step() < total) {
         <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
       } @else {
-        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        <button type="button" class="btn-cta" [disabled]="submitting() || kmInvalido()" (click)="submit()">
           {{ submitting() ? 'Enviando…' : 'Enviar reporte' }}
         </button>
       }

@@ -29,11 +29,17 @@
         >
           {{ updater.estado() === 'descargando' ? 'Descargando…' : (updater.esNativo ? 'Actualizar ahora' : 'Descargar actualización') }}
         </button>
+      } @else {
+        <p class="version-gate__msg">
+          Descarga la nueva versión desde la página <b>CSD App</b> del sistema, o contacta a Tecnología.
+        </p>
       }
+      <!-- APP-002: escape siempre disponible para no atascar al usuario -->
+      <button type="button" class="version-gate__escape" (click)="cerrarSesionGate()">Cerrar sesión</button>
     </div>
   </div>
 } @else {
-  @if (version.hayNueva()) {
+  @if (version.hayNueva() && !enAuth()) {
     <!-- V4: non-blocking, tappable "new version" notice → full update flow -->
     <button type="button" class="version-banner" (click)="irActualizar()">
       <span class="version-banner__icon">⬆️</span>

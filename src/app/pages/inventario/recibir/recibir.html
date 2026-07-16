@@ -31,6 +31,7 @@
                   </div>
                 </div>
               }
+              <input class="field rec-card__notas" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Nota / discrepancia (opcional)" />
               <button type="button" class="btn-ghost rec-card__foto" [disabled]="capturing()" (click)="addFoto()">
                 {{ foto() ? '✅ Foto agregada' : (capturing() ? '⏳ Tomando…' : '📷 Foto (opcional)') }}
               </button>

@@ -74,6 +74,13 @@ app-option-button {
   gap: 8px;
   margin-bottom: 12px;
 }
+.incidente__foto-actions {
+  display: flex;
+  gap: 10px;
+}
+.incidente__foto-actions .btn-ghost {
+  flex: 1;
+}
 .incidente__foto {
   position: relative;
   border-radius: var(--radius-sm);

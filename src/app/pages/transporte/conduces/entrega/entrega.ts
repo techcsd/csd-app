@@ -86,7 +86,9 @@ export class ConduceEntregaPage {
   }
 
   setCantidad(detalleId: string, value: number): void {
-    this.cantidades.update((m) => ({ ...m, [detalleId]: Math.max(0, value || 0) }));
+    // APP-032: la cantidad recibida no puede superar lo despachado.
+    const max = this.conduce()?.items.find((it) => it.detalle_id === detalleId)?.cantidad ?? Infinity;
+    this.cantidades.update((m) => ({ ...m, [detalleId]: Math.min(max, Math.max(0, value || 0)) }));
   }
 
   get online(): boolean {

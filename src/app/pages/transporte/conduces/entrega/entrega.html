@@ -15,13 +15,14 @@
 } @else if (conduce(); as c) {
   <div class="screen entrega">
     <header class="entrega__header">
+      <button type="button" class="entrega__back" (click)="finish()" aria-label="Atrás">←</button>
       <h1 class="entrega__title">Entregar conduce</h1>
       <span class="entrega__destino">📍 {{ c.destino ?? 'Destino' }}</span>
     </header>
 
     <div class="screen__body">
       <h2 class="entrega__step">1. Foto de la entrega</h2>
-      <app-photo-slot label="Foto en el destino" hint="📸" (captured)="onFoto($event)" />
+      <app-photo-slot label="Foto en el destino" hint="📸" (captured)="onFoto($event)" (cleared)="foto.set(null)" />
 
       <h2 class="entrega__step">2. ¿Llegó todo el material?</h2>
       <app-option-button

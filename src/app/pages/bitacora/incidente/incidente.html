@@ -66,13 +66,18 @@
           </div>
         }
       </div>
-      <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
-        {{ capturing() ? '⏳ Tomando…' : '📷 Agregar foto' }}
-      </button>
+      <div class="incidente__foto-actions">
+        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
+          {{ capturing() ? '⏳…' : '📷 Cámara' }}
+        </button>
+        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFromGallery()">
+          {{ capturing() ? '⏳…' : '🖼️ Galería' }}
+        </button>
+      </div>
 
       <h2 class="incidente__q">¿Qué pasó?</h2>
       <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe qué pasó (obligatorio)" />
-      <p class="incidente__or">o graba una nota de voz</p>
+      <p class="incidente__or">Y si quieres, graba una nota de voz además de la descripción:</p>
       <app-voice-recorder (recorded)="voz.set($event)" />
 
       <h2 class="incidente__q">¿Qué se hizo? (acciones tomadas)</h2>
@@ -87,5 +92,16 @@
         {{ submitting() ? 'Guardando…' : 'Enviar reporte' }}
       </button>
     </footer>
+
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Salir del reporte?"
+      message="Perderás lo que llevas del incidente (descripción, fotos y nota de voz)."
+      confirmLabel="Sí, salir"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
+    />
   </div>
 }

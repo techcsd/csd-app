@@ -2,6 +2,9 @@
   <div class="pin-screen__body">
     <h1 class="pin-screen__title">Escribe tu PIN</h1>
     <p class="pin-screen__hint">Para entrar a la app.</p>
+    @if (attemptsLeft() < 5) {
+      <p class="pin-screen__attempts">Te quedan {{ attemptsLeft() }} intento(s).</p>
+    }
     <app-pin-pad [(value)]="value" (completed)="onCompleted($event)" />
     @if (biometriaDisponible()) {
       <button type="button" class="pin-screen__bio" (click)="unlockConHuella()">

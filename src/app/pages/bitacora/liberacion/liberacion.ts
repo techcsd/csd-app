@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -8,11 +8,13 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ClLiberacionService } from '../../../core/services/cl-liberacion.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import {
   ClFirmaCaptura,
   ClFirmaRol,
@@ -46,15 +48,16 @@ const TOTAL_STEPS = 5;
   selector: 'app-liberacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, BigConfirm, Skeleton],
+  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, BigConfirm, ConfirmDialog, Skeleton],
   templateUrl: './liberacion.html',
   styleUrl: './liberacion.scss',
 })
-export class LiberacionPage {
+export class LiberacionPage implements OnDestroy {
   private router = inject(Router);
   private service = inject(ClLiberacionService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private navGuard = inject(NavGuardService);
 
   private sig = viewChild(SignaturePad);
 
@@ -91,6 +94,15 @@ export class LiberacionPage {
 
   submitting = signal(false);
   done = signal(false);
+  confirmSalir = signal(false);
+
+  private readonly backHandler = (): boolean => {
+    if (this.tieneDatos()) {
+      this.confirmSalir.set(true);
+      return true;
+    }
+    return false;
+  };
 
   proyectoOpciones = computed<SelectOption[]>(() =>
     this.proyectos().map((p) => ({ id: p.id, label: p.nombre })),
@@ -132,6 +144,37 @@ export class LiberacionPage {
 
   constructor() {
     void this.load();
+    this.navGuard.register(this.backHandler); // U4 — botón físico Android
+  }
+
+  ngOnDestroy(): void {
+    this.navGuard.clear(this.backHandler);
+  }
+
+  /** ¿Hay algo capturado que se perdería al salir? */
+  private tieneDatos(): boolean {
+    return (
+      this.done() === false &&
+      (!!this.proyectoId() ||
+        !!this.plantillaId() ||
+        this.respondidos() > 0 ||
+        this.fotos().length > 0 ||
+        this.firmas().length > 0 ||
+        !!this.plano())
+    );
+  }
+
+  /** Salir con confirmación si hay datos (no callejón sin salida — APP-004/005). */
+  intentarSalir(): void {
+    if (this.tieneDatos()) this.confirmSalir.set(true);
+    else this.back();
+  }
+  confirmarSalir(): void {
+    this.confirmSalir.set(false);
+    this.back();
+  }
+  cancelarSalir(): void {
+    this.confirmSalir.set(false);
   }
 
   private async load(): Promise<void> {

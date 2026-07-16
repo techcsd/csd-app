@@ -84,7 +84,7 @@
           <li><span>Vehículo</span><b>{{ placa() }}</b></li>
           <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>
           @if (km() !== null) {
-            <li><span>Kilometraje</span><b>{{ km() }} km</b></li>
+            <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           }
           <li><span>Fotos</span><b>{{ fotosCount() }}</b></li>
         </ul>

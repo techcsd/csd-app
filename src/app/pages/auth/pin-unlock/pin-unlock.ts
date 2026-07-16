@@ -32,6 +32,8 @@ export class PinUnlockPage {
 
   constructor() {
     void this.tryBiometric();
+    // APP-045: hidratar los intentos restantes (persisten entre reinicios).
+    void this.pin.attemptsLeft().then((n) => this.attemptsLeft.set(n));
   }
 
   /** Offer biometric unlock on entry when the user enabled it. PIN stays available. */

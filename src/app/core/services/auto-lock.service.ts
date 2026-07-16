@@ -40,6 +40,11 @@ export class AutoLockService {
     this.hiddenAt = null;
     if (!this.session.unlocked()) return;
 
+    // APP-047: un background breve (ej. tomar una foto backgroundea el WebView
+    // unos segundos) no debe bloquear NI disparar un round-trip de red en cada
+    // resume. Solo en resumes "reales" (≥ LOCK_AFTER_MS) revalidamos y bloqueamos.
+    if (away < LOCK_AFTER_MS) return;
+
     // A user deactivated in SGC while away is logged out on return (PERM-02).
     if ((await this.ctx.checkActivo()) === false) {
       await this.session.logout();
@@ -48,7 +53,6 @@ export class AutoLockService {
       return;
     }
 
-    if (away < LOCK_AFTER_MS) return;
     if (!(await this.pin.isSet())) return;
     this.session.lock();
     await this.router.navigate(['/auth/pin']);

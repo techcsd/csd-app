@@ -32,14 +32,17 @@ export interface ConductorStats {
 }
 
 /** Derive licence status from its expiry date (Vigente / Por vencer / Vencida). */
-export function estadoLicencia(vencimiento: string | null): LicenciaEstado {
+export function estadoLicencia(
+  vencimiento: string | null,
+  diasUmbral = LICENCIA_POR_VENCER_DIAS, // APP-039 — configurable vía flota_config
+): LicenciaEstado {
   if (!vencimiento) return 'desconocido';
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
   const venc = new Date(vencimiento + 'T00:00:00');
   const dias = Math.floor((venc.getTime() - hoy.getTime()) / 86_400_000);
   if (dias < 0) return 'vencida';
-  if (dias <= LICENCIA_POR_VENCER_DIAS) return 'por_vencer';
+  if (dias <= diasUmbral) return 'por_vencer';
   return 'vigente';
 }
 

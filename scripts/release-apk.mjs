@@ -37,7 +37,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.7.0';
+const VERSION = '1.7.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -50,17 +50,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.6.0 quedó como mínimo forzado (2026-07-15). Mantener este
 // valor alineado con esa fila para que version.json (aviso) no contradiga el gate.
 const MIN_VERSION = '1.6.0';
-const TITULO = 'Bitácora: fotos ilimitadas, equipos alquilados y paridad con la web';
+const TITULO = 'Correcciones de QA (estabilidad y detalles)';
 // Cambios etiquetados (nuevo|mejora|arreglo|seguridad) — alimentan el timeline
 // del historial (cambios) y, unidos, las notas / el changelog de version.json.
 const CAMBIOS = [
-  { t: 'nuevo', d: 'Bitácora: agrega todas las fotos que quieras, de la cámara o de la galería (en lote).' },
-  { t: 'nuevo', d: 'Bitácora: registra los equipos alquilados en uso hoy (equipo, en qué se usó, proveedor) — queda respaldado y visible en el detalle.' },
-  { t: 'mejora', d: 'Bitácora al día con la web: bloque/entrepiso, ingeniero responsable, hora de fin de trabajo, subcontratista y acciones del incidente.' },
-  { t: 'mejora', d: 'Las notas de la ruta ahora se ven en la tarjeta de la ruta.' },
+  { t: 'arreglo', d: 'La cantidad ya no se pierde al pedir EPP con talla.' },
+  { t: 'arreglo', d: 'La barra "toca para reintentar" ahora reintenta de verdad los envíos con problema.' },
+  { t: 'arreglo', d: 'Kilometraje incoherente bloqueado en reporte semanal y checklist (evita envíos atascados).' },
+  { t: 'arreglo', d: 'Compartir por WhatsApp ya no muestra error si cancelas.' },
+  { t: 'mejora', d: 'Checklist de liberación e incidente: preguntan antes de salir para no perder lo escrito.' },
+  { t: 'mejora', d: 'Más detalles legibles: fechas con hora, km con separador, estado de ruta, intentos de PIN.' },
 ];
 const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
-const RELEASED_AT = '2026-07-15';
+const RELEASED_AT = '2026-07-16';
 
 const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
 const bucket = 'app-releases';

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Geolocation } from '@capacitor/geolocation';
@@ -37,7 +38,7 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })
@@ -63,6 +64,12 @@ export class ChecklistPage {
   step = signal(1);
   fotos = signal<Record<string, CapturedPhoto>>({});
   km = signal<number | null>(null);
+  odometro = signal<number | null>(null);
+  kmInvalido = computed(() => {
+    const km = this.km();
+    const odo = this.odometro();
+    return km != null && odo != null && km < odo;
+  });
   combustible = signal<CombustibleNivel | null>(null);
   tieneDanos = signal<boolean | null>(null);
   danos = signal<DanoDraft[]>([]);
@@ -92,6 +99,7 @@ export class ChecklistPage {
     if (v) {
       this.placa.set(v.placa);
       this.modelo.set(`${v.marca} ${v.modelo}`);
+      this.odometro.set(v.kilometraje ?? null); // APP-011 — base de coherencia de km
     }
   }
 
@@ -163,6 +171,10 @@ export class ChecklistPage {
       case 3:
         if (this.km() === null || this.km()! < 0) {
           this.toast.error('Escribe el kilometraje.');
+          return false;
+        }
+        if (this.kmInvalido()) {
+          this.toast.error(`El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`);
           return false;
         }
         if (!this.combustible()) {

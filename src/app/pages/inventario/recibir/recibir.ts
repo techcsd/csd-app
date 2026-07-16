@@ -29,6 +29,7 @@ export class RecibirConducePage {
   expandedId = signal<string | null>(null);
   cantidades = signal<Record<string, number>>({});
   foto = signal<CapturedPhoto | null>(null);
+  notas = signal(''); // APP-041 — discrepancias de recepción
   capturing = signal(false);
   submitting = signal(false);
 
@@ -82,7 +83,7 @@ export class RecibirConducePage {
           detalle_id: it.detalle_id,
           cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad,
         })),
-        notas: null,
+        notas: this.notas().trim() || null,
         foto: this.foto()?.blob ?? null,
       });
       this.conduces.update((list) => list.filter((x) => x.id !== c.id));

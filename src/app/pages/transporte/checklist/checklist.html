@@ -137,7 +137,7 @@
         <ul class="resumen">
           <li><span>Vehículo</span><b>{{ placa() }}</b></li>
           <li><span>Acción</span><b>{{ tipo === 'recepcion' ? 'Recepción' : 'Devolución' }}</b></li>
-          <li><span>Kilometraje</span><b>{{ km() }} km</b></li>
+          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           <li><span>Combustible</span><b>{{ combustible() }}</b></li>
           <li><span>Fotos</span><b>6 ✓</b></li>
           <li><span>Daños</span><b>{{ tieneDanos() ? danos().length : 'Ninguno' }}</b></li>

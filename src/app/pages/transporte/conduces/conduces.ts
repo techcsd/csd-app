@@ -6,7 +6,15 @@ import { Router } from '@angular/router';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { NetworkService } from '../../../core/services/network.service';
 import { Conduce, RutaHoy } from '../../../core/models/transporte.model';
+
+const ESTADO_RUTA_LABEL: Record<string, string> = {
+  planificada: 'Planificada',
+  en_curso: 'En curso',
+  completada: 'Completada',
+  cancelada: 'Cancelada',
+};
 
 /** Driver's routes + dispatched conduces for the day. */
 @Component({
@@ -22,6 +30,11 @@ export class ConducesPage {
   private router = inject(Router);
   private location = inject(Location);
   private toast = inject(ToastService);
+  private network = inject(NetworkService);
+
+  estadoLabel(estado: string): string {
+    return ESTADO_RUTA_LABEL[estado] ?? estado;
+  }
 
   conduces = signal<Conduce[]>([]);
   rutas = signal<RutaHoy[]>([]);
@@ -56,8 +69,14 @@ export class ConducesPage {
       this.rutas.update((list) =>
         list.map((r) => (r.id === rutaId ? { ...r, estado } : r)),
       );
-    } catch {
-      this.toast.error('Sin señal. Vuelve a intentar la ruta cuando tengas conexión.');
+    } catch (e) {
+      this.toast.error(
+        !this.network.online()
+          ? 'Sin señal. Vuelve a intentar la ruta cuando tengas conexión.'
+          : e instanceof Error
+            ? e.message
+            : 'No se pudo actualizar la ruta.',
+      );
     }
   }
 

@@ -297,9 +297,16 @@ export class PartePage implements OnDestroy {
 
   toggleRestriccion(r: string): void {
     const willRemove = this.restricciones().includes(r);
-    this.restricciones.update((list) =>
-      willRemove ? list.filter((x) => x !== r) : [...list, r],
-    );
+    // APP-014: "NINGUNA" es mutuamente excluyente con los problemas reales.
+    if (!willRemove && r === 'NINGUNA') {
+      this.restricciones.set(['NINGUNA']);
+      this.restriccionDesc.set({});
+      return;
+    }
+    this.restricciones.update((list) => {
+      const base = willRemove ? list.filter((x) => x !== r) : [...list.filter((x) => x !== 'NINGUNA'), r];
+      return base;
+    });
     // U12 — al quitar una restricción, descarta su descripción.
     if (willRemove) {
       this.restriccionDesc.update((m) => {

@@ -143,7 +143,10 @@ export class PreusoPage extends GuardedWizard {
     return auth === this.clase();
   });
 
-  licenciaEstado = computed(() => estadoLicencia(this.conductor()?.licencia_vencimiento ?? null));
+  licenciaUmbral = signal(30); // APP-039 — umbral "por vencer" configurable (flota_config)
+  licenciaEstado = computed(() =>
+    estadoLicencia(this.conductor()?.licencia_vencimiento ?? null, this.licenciaUmbral()),
+  );
   licenciaDias = computed(() => diasHasta(this.conductor()?.licencia_vencimiento ?? null));
 
   /** Hard block that prevents opening the checklist at all. */
@@ -302,6 +305,7 @@ export class PreusoPage extends GuardedWizard {
       this.conductor.set(c);
       this.plantillas.set(list);
       this.precitaKm.set(cfg.precitaKm);
+      this.licenciaUmbral.set(cfg.licenciaDias);
       if (list.length) this.pickPlantilla(list[0].id);
       if (v && this.km() === null) this.km.set(v.kilometraje || null);
     } finally {

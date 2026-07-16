@@ -208,7 +208,7 @@ export class EntradaPage implements OnDestroy {
       .map(
         (g) =>
           `*${g.categoria}*\n` +
-          g.lineas.map((l) => `  • ${l.nombre}: ${l.cantidad} ${l.unidad}`).join('\n'),
+          g.lineas.map((l) => `  • ${l.nombre}${l.talla ? ` (Talla ${l.talla})` : ''}: ${l.cantidad} ${l.unidad}`).join('\n'),
       )
       .join('\n');
     const refEfectiva = this.referenciaEfectiva();

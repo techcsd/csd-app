@@ -23,7 +23,7 @@
           <li><span>Heridos</span><b>{{ bit.incidente_lesionados }}</b></li>
           @if (bit.incidente_subcontratista) { <li><span>Subcontratista</span><b>{{ bit.incidente_subcontratista }}</b></li> }
         }
-        @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFecha(bit.created_at) }}</b></li> }
+        @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
       </ul>
 
       @if (bit.tipo === 'parte_diario') {
@@ -42,11 +42,11 @@
             @if (bit.llovio && bit.lluvia_detalle) { — {{ bit.lluvia_detalle }} }
           </p>
         }
-        @if (bit.hubo_migracion) {
+        @if (bit.hubo_migracion != null) {
           <h2 class="det__section">Migración</h2>
           <p class="det__desc">
-            Hubo problemas de migración
-            @if (obrerosMigracion().length) { · {{ obrerosMigracion().join(', ') }} }
+            {{ bit.hubo_migracion ? 'Hubo problemas de migración' : 'Sin problemas de migración' }}
+            @if (bit.hubo_migracion && obrerosMigracion().length) { · {{ obrerosMigracion().join(', ') }} }
           </p>
         }
       }

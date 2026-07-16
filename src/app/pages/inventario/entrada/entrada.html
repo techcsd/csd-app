@@ -89,7 +89,7 @@
           <h3 class="mov__grupo">{{ g.categoria }}</h3>
           @for (l of g.lineas; track l.articulo_id) {
             <div class="mov__resumen-row">
-              <span>{{ l.nombre }}</span>
+              <span>{{ l.nombre }}@if (l.talla) { <small>· Talla {{ l.talla }}</small> }</span>
               <b>{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</b>
             </div>
           }

@@ -127,11 +127,19 @@ export class AlmacenesPage {
   }
 
   pedirDesactivar(b: BodegaAdmin): void {
+    if (!this.online) {
+      this.toast.error('Necesitas conexión para gestionar almacenes.');
+      return;
+    }
     this.confirmId.set(b.id);
   }
 
   async toggleActivo(b: BodegaAdmin): Promise<void> {
     this.confirmId.set(null);
+    if (!this.online) {
+      this.toast.error('Necesitas conexión para gestionar almacenes.');
+      return;
+    }
     try {
       await this.inventario.setBodegaActivo(b.id, !b.activo);
       await this.load();

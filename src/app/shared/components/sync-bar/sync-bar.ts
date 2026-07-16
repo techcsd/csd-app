@@ -63,6 +63,8 @@ export class SyncBar {
   });
 
   retryAll(): void {
-    void this.sync.drain();
+    // APP-001: si hay ⚠️ en error, drain() no los toca — hay que resetearlos.
+    if (this.sync.errorCount() > 0) void this.sync.retryErrored();
+    else void this.sync.drain();
   }
 }

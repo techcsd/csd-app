@@ -19,7 +19,7 @@
           <div class="ruta-card">
             <div class="ruta-card__info">
               <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}</span>
-              <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ r.estado }}</span>
+              <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
               @if (r.notas) { <span class="ruta-card__notas">📝 {{ r.notas }}</span> }
             </div>
             <div class="ruta-card__actions">
@@ -62,7 +62,13 @@
             (secondaryAction)="load()"
           />
         } @else {
-          <p class="conduces__muted">No tienes conduces por entregar.</p>
+          <app-empty-state
+            icon="🧾"
+            title="No tienes conduces por entregar"
+            message="Los conduces aparecen aquí cuando el almacén despacha materiales para que los lleves a una obra."
+            secondaryLabel="Actualizar"
+            (secondaryAction)="load()"
+          />
         }
       }
     }

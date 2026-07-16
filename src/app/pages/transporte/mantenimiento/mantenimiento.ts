@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -40,7 +41,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, BigConfirm],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })

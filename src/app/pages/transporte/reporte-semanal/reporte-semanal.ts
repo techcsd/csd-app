@@ -227,6 +227,11 @@ export class ReporteSemanalPage extends GuardedWizard {
       this.toast.error('Escribe el kilometraje actual.');
       return;
     }
+    // APP-010: no enviar km incoherente (el server lo rechaza → error permanente en outbox).
+    if (this.kmInvalido()) {
+      this.toast.error(`El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`);
+      return;
+    }
     this.submitting.set(true);
     try {
       const r = this.respuestas();

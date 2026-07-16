@@ -8,6 +8,7 @@ import { NetworkService } from './core/services/network.service';
 import { CatalogService } from './core/sync/catalog.service';
 import { UpdateService } from './core/services/update.service';
 import { UpdaterService } from './core/services/updater.service';
+import { SessionService } from './core/services/session.service';
 import { AutoLockService } from './core/services/auto-lock.service';
 import { VersionService } from './core/services/version.service';
 import { ToastService } from './core/services/toast.service';
@@ -31,6 +32,7 @@ export class App {
   version = inject(VersionService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private session = inject(SessionService);
   private router = inject(Router);
 
   constructor() {
@@ -72,6 +74,18 @@ export class App {
   }
 
   /** Non-blocking banner (V4): go to the full update flow. */
+  /** APP-002 — escape del gate bloqueante (para no atascar al usuario si aún
+   *  no hay apk_url o la descarga falla). Cierra sesión y vuelve al login. */
+  async cerrarSesionGate(): Promise<void> {
+    await this.session.logout();
+    await this.router.navigate(['/auth/login']);
+  }
+
+  /** APP-046 — no mostrar el banner de versión sobre login/PIN. */
+  enAuth(): boolean {
+    return this.router.url.startsWith('/auth');
+  }
+
   irActualizar(): void {
     void this.router.navigate(['/actualizar']);
   }

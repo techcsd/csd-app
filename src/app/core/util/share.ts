@@ -12,8 +12,14 @@ export async function compartirTexto(
   text: string,
 ): Promise<{ ok: boolean; fallback: boolean }> {
   if (Capacitor.isNativePlatform()) {
-    await Share.share({ title, text });
-    return { ok: true, fallback: false };
+    try {
+      await Share.share({ title, text });
+      return { ok: true, fallback: false };
+    } catch {
+      // APP-050: cancelar la hoja de compartir de Android rechaza la promesa;
+      // es un no-op benigno, no un error para el usuario.
+      return { ok: false, fallback: false };
+    }
   }
 
   const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string }) => Promise<void> };

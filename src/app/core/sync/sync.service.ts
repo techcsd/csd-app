@@ -47,9 +47,11 @@ export interface EnqueueInput {
   resumen?: unknown; // for the local "mis registros" list
 }
 
-// Backoff schedule (ms): 30s → 1m → 2m → 5m → 5m → 5m, then give up (⚠️).
-const BACKOFF = [30_000, 60_000, 120_000, 300_000, 300_000, 300_000];
-const MAX_INTENTOS = BACKOFF.length;
+// Backoff schedule (ms) between retries: 30s → 1m → 2m → 5m → 5m; after
+// MAX_INTENTOS failed attempts the op goes to `error` (⚠️). Every BACKOFF entry
+// is used (failures 1..5 wait BACKOFF[0..4]; the 6th failure gives up).
+const BACKOFF = [30_000, 60_000, 120_000, 300_000, 300_000];
+const MAX_INTENTOS = BACKOFF.length + 1;
 const TICK_MS = 60_000;
 
 /**
@@ -123,11 +125,29 @@ export class SyncService {
     void this.drain();
   }
 
-  /** User-triggered retry of an errored op (⚠️ badge tap). */
+  /** User-triggered retry of an errored op (⚠️ badge tap). Resets intentos so
+   *  the backoff schedule re-engages instead of failing on the first try. */
   async retry(id: string): Promise<void> {
     const op = await db.outbox.get(id);
     if (!op) return;
-    await db.outbox.update(id, { estado: 'pending', proximo_intento: 0, error_msg: undefined });
+    await db.outbox.update(id, { estado: 'pending', intentos: 0, proximo_intento: 0, error_msg: undefined });
+    await db.mis_registros.update(id, { estado: 'pending' });
+    await this.refreshCounts();
+    void this.drain();
+  }
+
+  /** Retry ALL errored ops (global ⚠️ "toca para reintentar" bar). `drain()`
+   *  skips errored ops, so we must reset them to pending first (APP-001). */
+  async retryErrored(): Promise<void> {
+    const errored = await db.outbox.where('estado').equals('error').toArray();
+    if (errored.length) {
+      await db.transaction('rw', db.outbox, db.mis_registros, async () => {
+        for (const op of errored) {
+          await db.outbox.update(op.id, { estado: 'pending', intentos: 0, proximo_intento: 0, error_msg: undefined });
+          await db.mis_registros.update(op.id, { estado: 'pending' });
+        }
+      });
+    }
     await this.refreshCounts();
     void this.drain();
   }

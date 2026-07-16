@@ -10,6 +10,17 @@
   background: var(--color-secondary);
   color: #fff;
 }
+.entrega__back {
+  align-self: flex-start;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
 .entrega__title {
   margin: 0;
   font-size: var(--fs-title);
