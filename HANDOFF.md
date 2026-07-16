@@ -1,5 +1,13 @@
 # HANDOFF — CSD App
 
+## Estado de release (2026-07-16) — v1.9.2 PUBLICADA
+- **Publicada a usuarios: 1.9.2** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
+- Historial `sgc.app_versiones` (movil) al día y estructurado: 1.9.2 (fix cantidades bitácora) · 1.9.1 (registro auto + versión en Ajustes) · 1.9.0 (B1–B5) · 1.8.0 (docs) · …
+- **Automatización Y1**: `npm run apk` (build) ya registra la versión estructurada solo (falla si no puede). `apk:publish` además sube el APK. La app también auto-reporta su versión al arrancar (admin, red de seguridad).
+- **Fix bitácora (1.9.2)**: en "¿Qué se hizo hoy?" eliges la parte y al tocar cada actividad aparece al instante su selector de cantidad (se quitó el botón "+ Agregar a la lista" escondido).
+- **Corrección de estado**: 1.9.0 había quedado "publicada" SIN apk en el bucket (in-app update roto); se corrigió publicando 1.9.2 (que sí tiene apk). El toggle publicada/mínima sigue siendo control del admin en SGC.
+- **Pendiente**: device-QA en 1.9.2 (el teléfono no conecta hoy — USB intermitente). APK en `android/app/build/outputs/apk/release/app-release.apk` y descargable del bucket (`csd-app-1.9.2.apk` / `csd-app-latest.apk`).
+
 ## Actualización 7 (B1–B5, B7, Y1-app) — build verde, NADA commiteado/pusheado (2026-07-16)
 Cierre de las brechas móviles del CUMPLIMIENTO + regla de historial de versiones. `npm run build` OK (exit 0). Bump **1.8.0 → 1.9.0**. APK 1.9.0 firmado (cert prod 3c5316d8…). **Nota:** B4 (U3 autollenado), Y2 (dashboard auditoría) y B6 (QA-057 destacada) son **web/SGC**, fuera de esta ronda app.
 
