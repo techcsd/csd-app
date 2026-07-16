@@ -96,3 +96,18 @@
   color: var(--color-error);
   font-weight: 700;
 }
+
+// X1 — documentos del vehículo (solo lectura)
+.pveh__docs {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pveh__docs-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}

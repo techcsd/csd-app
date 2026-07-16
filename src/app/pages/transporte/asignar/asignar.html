@@ -94,6 +94,27 @@
           (pressed)="tipoAutorizado.set(t)"
         />
       }
+
+      <!-- X1 — documentos del conductor (solicitados, no bloqueantes) -->
+      <label class="field-label">Documentos (opcional, puedes subirlos luego)</label>
+      <p class="asignar__note asignar__note--doc">
+        Toma una foto o adjunta el archivo de tu cédula y licencia. Si no los tienes ahora,
+        podrás subirlos después desde <strong>Mi actividad</strong>.
+      </p>
+      <div class="asignar__docs">
+        <app-doc-slot
+          label="Cédula"
+          [requerido]="true"
+          (captured)="docCedula.set($event)"
+          (cleared)="docCedula.set(null)"
+        />
+        <app-doc-slot
+          label="Licencia de conducir"
+          [requerido]="true"
+          (captured)="docLicencia.set($event)"
+          (cleared)="docLicencia.set(null)"
+        />
+      </div>
     }
   </div>
 

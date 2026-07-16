@@ -12,6 +12,17 @@ export interface CapturedPhoto {
   previewUrl: string;
 }
 
+/** A picked document — an image (compressed) or a PDF kept as-is (X1). */
+export interface CapturedDoc {
+  blob: Blob;
+  nombre: string;
+  esImagen: boolean;
+  /** File extension for the storage path (`jpg` | `pdf`). */
+  ext: string;
+  /** Object URL for image preview (null for PDF); revoke when done. */
+  previewUrl: string | null;
+}
+
 const MAX_EDGE = 1280;
 const JPEG_QUALITY = 0.7;
 
@@ -47,6 +58,48 @@ export class CameraService {
       out.push({ blob, previewUrl: URL.createObjectURL(blob) });
     }
     return out;
+  }
+
+  /**
+   * X1 — pick a single document from the device: image OR PDF. Images are
+   * compressed like a photo; PDFs are kept as-is. Uses a plain file input so it
+   * works on both the PWA and the Android WebView (Camera.pickImages can't take
+   * PDFs). Returns null if the user cancels.
+   */
+  pickDocument(): Promise<CapturedDoc | null> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*,application/pdf';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          resolve(null);
+          return;
+        }
+        const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+        if (isPdf) {
+          resolve({ blob: file, nombre: file.name, esImagen: false, ext: 'pdf', previewUrl: null });
+          return;
+        }
+        const blob = await this.compress(file);
+        resolve({
+          blob,
+          nombre: file.name || 'documento.jpg',
+          esImagen: true,
+          ext: 'jpg',
+          previewUrl: URL.createObjectURL(blob),
+        });
+      };
+      input.click();
+    });
+  }
+
+  /** Take a document photo with the camera (wraps takePhoto → CapturedDoc). */
+  async takeDocumentPhoto(): Promise<CapturedDoc | null> {
+    const photo = await this.takePhoto();
+    if (!photo) return null;
+    return { blob: photo.blob, nombre: 'foto.jpg', esImagen: true, ext: 'jpg', previewUrl: photo.previewUrl };
   }
 
   private async pickNativeMulti(limit: number): Promise<Blob[]> {

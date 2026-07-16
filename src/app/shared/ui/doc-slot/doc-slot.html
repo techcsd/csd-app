@@ -1,0 +1,53 @@
+<div class="doc-slot" [class.doc-slot--req]="requerido() && !local() && !urlExistente() && !enCola()">
+  <div class="doc-slot__head">
+    <span class="doc-slot__label">{{ label() }}</span>
+
+    @if (local()) {
+      <span class="doc-slot__badge doc-slot__badge--ok">✓ Listo para subir</span>
+    } @else if (urlExistente()) {
+      <span class="doc-slot__badge doc-slot__badge--ok">✓ Cargado</span>
+    } @else if (enCola()) {
+      <span class="doc-slot__badge doc-slot__badge--wait">⏳ Pendiente de subir</span>
+    } @else if (requerido()) {
+      <span class="doc-slot__badge doc-slot__badge--falta">Falta</span>
+    }
+  </div>
+
+  <!-- A just-captured local doc (image preview or PDF filename) -->
+  @if (local(); as d) {
+    <div class="doc-slot__body">
+      @if (d.esImagen && d.previewUrl) {
+        <img class="doc-slot__thumb" [src]="d.previewUrl" [alt]="label()" />
+      } @else {
+        <span class="doc-slot__file">📄 {{ d.nombre }}</span>
+      }
+      @if (!soloLectura()) {
+        <button type="button" class="doc-slot__link" (click)="clear()">Cambiar</button>
+      }
+    </div>
+  } @else {
+    @if (urlExistente(); as url) {
+      <div class="doc-slot__body">
+        <a class="doc-slot__view" [href]="url" target="_blank" rel="noopener">
+          {{ esPdfExistente() ? '📄 Ver documento' : '🖼️ Ver documento' }}
+        </a>
+      </div>
+    } @else if (enCola()) {
+      <p class="doc-slot__hint">Se subirá cuando haya conexión.</p>
+    } @else if (soloLectura()) {
+      <p class="doc-slot__hint">Sin documento. Se sube desde la web.</p>
+    }
+
+    <!-- Editable: capture buttons (upload or replace) -->
+    @if (!soloLectura()) {
+      <div class="doc-slot__actions">
+        <button type="button" class="doc-slot__btn" (click)="tomarFoto()" [disabled]="busy()">
+          {{ busy() ? '⏳' : '📷' }} {{ urlExistente() ? 'Reemplazar (foto)' : 'Tomar foto' }}
+        </button>
+        <button type="button" class="doc-slot__btn" (click)="elegirArchivo()" [disabled]="busy()">
+          📎 {{ urlExistente() ? 'Reemplazar (archivo)' : 'Elegir archivo' }}
+        </button>
+      </div>
+    }
+  }
+</div>

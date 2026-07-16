@@ -1,0 +1,115 @@
+.doc-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+// Required + still empty → stands out.
+.doc-slot--req {
+  border: 2px solid var(--color-warning);
+  background: var(--color-warning-bg);
+}
+
+.doc-slot__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.doc-slot__label {
+  font-size: var(--fs-option);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.doc-slot__badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &--ok {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+  }
+  &--wait {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+  }
+  &--falta {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+  }
+}
+
+.doc-slot__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.doc-slot__thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.doc-slot__file {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  word-break: break-word;
+}
+
+.doc-slot__view {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.doc-slot__link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: underline;
+  background: none;
+  padding: 4px 0;
+}
+
+.doc-slot__hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.doc-slot__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.doc-slot__btn {
+  flex: 1 1 0;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}

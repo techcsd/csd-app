@@ -16,44 +16,73 @@
         ctaLabel="Asignarme un vehículo"
         (action)="irAsignar()"
       />
-    } @else if (!stats()) {
-      <app-empty-state
-        icon="📈"
-        title="Sin actividad todavía"
-        message="Aquí aparecerán tus checklists, combustible y vehículos usados a medida que trabajes."
-      />
     } @else {
-      <p class="mact__nombre">{{ stats()!.nombre }}</p>
-      <div class="mact__cards">
-        <div class="mact__card">
-          <span class="mact__label">Checklists</span>
-          <span class="mact__value">{{ stats()!.checklists_total }}</span>
-          @if (stats()!.checklists_bloqueos > 0) {
-            <span class="mact__sub mact__sub--warn">{{ stats()!.checklists_bloqueos }} bloqueo(s)</span>
-          }
+      <!-- X1 — banner de documentos pendientes (no bloqueante) -->
+      @if (pendientes().length) {
+        <div class="mact__banner">
+          <span class="mact__banner-icon">📄</span>
+          <span class="mact__banner-txt">
+            Documentos pendientes: {{ pendientes().join(' · ') }}. Súbelos abajo cuando puedas.
+          </span>
         </div>
-        <div class="mact__card">
-          <span class="mact__label">Echadas</span>
-          <span class="mact__value">{{ stats()!.combustible_echadas }}</span>
-        </div>
-        <div class="mact__card">
-          <span class="mact__label">Vehículos usados</span>
-          <span class="mact__value">{{ stats()!.vehiculos_usados }}</span>
-        </div>
-        <div class="mact__card">
-          <span class="mact__label">Licencia</span>
-          <span class="mact__value mact__value--sm">{{ stats()!.estado_licencia || '—' }}</span>
-          @if (stats()!.licencia_vencimiento) {
-            <span class="mact__sub">Vence {{ fmtFecha(stats()!.licencia_vencimiento) }}</span>
-          }
-        </div>
-        @if (stats()!.ultima_actividad) {
-          <div class="mact__card mact__card--wide">
-            <span class="mact__label">Última actividad</span>
-            <span class="mact__value mact__value--sm">{{ fmtFechaMedia(stats()!.ultima_actividad) }}</span>
+      }
+
+      @if (stats(); as s) {
+        <p class="mact__nombre">{{ s.nombre }}</p>
+        <div class="mact__cards">
+          <div class="mact__card">
+            <span class="mact__label">Checklists</span>
+            <span class="mact__value">{{ s.checklists_total }}</span>
+            @if (s.checklists_bloqueos > 0) {
+              <span class="mact__sub mact__sub--warn">{{ s.checklists_bloqueos }} bloqueo(s)</span>
+            }
           </div>
-        }
-      </div>
+          <div class="mact__card">
+            <span class="mact__label">Echadas</span>
+            <span class="mact__value">{{ s.combustible_echadas }}</span>
+          </div>
+          <div class="mact__card">
+            <span class="mact__label">Vehículos usados</span>
+            <span class="mact__value">{{ s.vehiculos_usados }}</span>
+          </div>
+          <div class="mact__card">
+            <span class="mact__label">Licencia</span>
+            <span class="mact__value mact__value--sm">{{ s.estado_licencia || '—' }}</span>
+            @if (s.licencia_vencimiento) {
+              <span class="mact__sub">Vence {{ fmtFecha(s.licencia_vencimiento) }}</span>
+            }
+          </div>
+          @if (s.ultima_actividad) {
+            <div class="mact__card mact__card--wide">
+              <span class="mact__label">Última actividad</span>
+              <span class="mact__value mact__value--sm">{{ fmtFechaMedia(s.ultima_actividad) }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="mact__vacio">Sin actividad todavía. Aquí aparecerán tus checklists, combustible y vehículos usados.</p>
+      }
+
+      <!-- X1 — documentos del conductor -->
+      <section class="mact__docs">
+        <h2 class="mact__docs-title">Mis documentos</h2>
+        <app-doc-slot
+          label="Cédula"
+          [requerido]="true"
+          [urlExistente]="cedulaUrl()"
+          [esPdfExistente]="esPdf(cedulaDoc())"
+          [enCola]="cedulaEnCola()"
+          (captured)="onDoc('cedula', $event)"
+        />
+        <app-doc-slot
+          label="Licencia de conducir"
+          [requerido]="true"
+          [urlExistente]="licenciaUrl()"
+          [esPdfExistente]="esPdf(licenciaDoc())"
+          [enCola]="licenciaEnCola()"
+          (captured)="onDoc('licencia', $event)"
+        />
+      </section>
     }
   </div>
 </div>

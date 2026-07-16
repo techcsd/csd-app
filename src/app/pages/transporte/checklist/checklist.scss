@@ -141,3 +141,34 @@
 .checklist__back {
   max-width: 120px;
 }
+
+// X2 — estado de ubicación en el resumen (no bloquea el envío)
+.checklist__gps--ok {
+  color: var(--color-success);
+}
+.checklist__gps--wait {
+  color: var(--color-text-secondary);
+}
+.checklist__gps--off {
+  color: var(--color-warning);
+}
+
+.checklist__gps-note {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.checklist__gps-retry {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+}

@@ -24,6 +24,20 @@
   text-align: center;
 }
 
+// X1 — nota de documentos (no de alerta; texto informativo, alineado a la izq.)
+.asignar__note--doc {
+  color: var(--color-text-secondary);
+  text-align: left;
+  margin-top: 6px;
+}
+
+.asignar__docs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
 .asignar__nav {
   flex: 0 0 auto; // V11: la barra nunca se encoge → el botón de avance siempre visible
   position: sticky;

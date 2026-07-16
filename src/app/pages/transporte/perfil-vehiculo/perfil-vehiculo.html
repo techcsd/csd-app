@@ -70,5 +70,32 @@
         </div>
       </div>
     }
+
+    <!-- X1 — documentos del vehículo (solo lectura; se suben desde la web) -->
+    @if (!loading()) {
+      <section class="pveh__docs">
+        <h2 class="pveh__docs-title">Documentos</h2>
+        <app-doc-slot
+          label="Seguro"
+          [soloLectura]="true"
+          [urlExistente]="seguro()?.url ?? null"
+          [esPdfExistente]="seguro()?.esPdf ?? false"
+        />
+        <app-doc-slot
+          label="Matrícula"
+          [soloLectura]="true"
+          [urlExistente]="matricula()?.url ?? null"
+          [esPdfExistente]="matricula()?.esPdf ?? false"
+        />
+        @for (d of otros(); track d.label + $index) {
+          <app-doc-slot
+            [label]="d.label"
+            [soloLectura]="true"
+            [urlExistente]="d.url"
+            [esPdfExistente]="d.esPdf"
+          />
+        }
+      </section>
+    }
   </div>
 </div>

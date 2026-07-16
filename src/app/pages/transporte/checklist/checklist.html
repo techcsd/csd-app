@@ -145,7 +145,23 @@
           <li><span>Combustible</span><b>{{ combustible() }}</b></li>
           <li><span>Fotos</span><b>6 ✓</b></li>
           <li><span>Daños</span><b>{{ tieneDanos() ? danos().length : 'Ninguno' }}</b></li>
+          <!-- X2 — prueba de ubicación (best-effort, no bloquea) -->
+          <li>
+            <span>Ubicación</span>
+            @switch (gpsEstado()) {
+              @case ('ok') { <b class="checklist__gps--ok">📍 Capturada</b> }
+              @case ('capturando') { <b class="checklist__gps--wait">📍 Obteniendo…</b> }
+              @case ('sin-ubicacion') { <b class="checklist__gps--off">Sin ubicación</b> }
+            }
+          </li>
         </ul>
+        @if (gpsEstado() === 'sin-ubicacion') {
+          <p class="checklist__gps-note">
+            No pudimos obtener el GPS (permiso denegado o sin señal). Puedes enviar igual: se
+            registrará <strong>sin ubicación</strong>.
+            <button type="button" class="checklist__gps-retry" (click)="reintentarGps()">Reintentar ubicación</button>
+          </p>
+        }
       }
     </div>
 

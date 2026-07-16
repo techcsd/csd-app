@@ -1,5 +1,45 @@
 # HANDOFF — CSD App
 
+## Actualización 6 (X1–X4) — build verde, NADA commiteado/pusheado (2026-07-16)
+Documentos de conductor/vehículo + aviso de GPS + confirmación de foto en salidas. `npm run build` OK (exit 0).
+
+**⚠️ Contradicción con el prompt (el código manda):** el prompt decía bucket `documentos/{entidad}/{id}/…`.
+En la BD real **no existe** un bucket `documentos`; el que creó PROMPT-13 se llama **`flota-documentos`**
+(privado). Se usó ese. La tabla `sgc.documentos` (id/entidad/entidad_id/tipo/nombre/path/subido_por/created_at)
+**sí existe**; RLS de tabla y de storage: `is_admin() OR tiene_modulo('flota')` para INSERT/SELECT/DELETE
+(sin RPC → el app inserta directo por PostgREST). No hizo falta migración.
+
+- **X1 documentos — nuevo:** `core/models/documento.model.ts`, `core/services/documentos.service.ts`
+  (getDocumentos cacheado offline, getSignedUrl, tiposEnCola desde el outbox, `enqueueDocumento` → outbox
+  `documento_upload`: sube el blob a `flota-documentos/{entidad}/{id}/{tipo}_{uuid}.{ext}` y hace UPSERT
+  en `sgc.documentos` con id=UUID cliente = idempotente). Nuevo `shared/ui/doc-slot` (foto con cámara O
+  archivo/PDF; modo `soloLectura` para vehículos). `camera.service`: `pickDocument()` (input file
+  image/*,pdf; comprime imagen, PDF tal cual) + `takeDocumentPhoto()`.
+  - **Conductor (auto-registro, `asignar`):** sección "Documentos" con slots **Cédula** y **Licencia**
+    (requeridos pero NO bloqueantes). Se encolan tras `auto_registrar_conductor` con el `conductor_id`.
+  - **Conductor (perfil, `mi-actividad`):** banner "Documentos pendientes: cédula · licencia" (no bloquea),
+    slots para ver (signed URL) / subir / reemplazar. Funciona offline (encola + sube al reconectar).
+  - **Vehículo (`perfil-vehiculo`):** sección "Documentos" **solo lectura** (Seguro, Matrícula, otros N).
+    Se suben desde la web; el app solo los ve.
+- **X2 GPS entrega/recepción — ya se mandaba** (`checklist.captureGps` → `enqueueEntrega` `p_gps` →
+  `crear_entrega_vehiculo(p_gps jsonb)` persiste). **Añadido:** estado visible en el resumen
+  (📍 Capturada / Obteniendo… / Sin ubicación) + mensaje claro y botón "Reintentar ubicación" cuando el
+  permiso está denegado o no hay señal. **Nunca bloquea** (se registra "sin ubicación"). El mostrarlo en
+  la web (mini-mapa/coords) es **lado SGC**.
+- **X3 fotos por-ítem del pre-uso = lado SGC** (la app ya sube `item_N`; la web debe pintarlas). Fuera de scope app.
+- **X4 foto en salidas — ya estaba en el app** (`salida.foto` + `enqueueSalida` → `fotoOf` sube a
+  `{id}/evidencia.jpg` → `registrar_salida_app(p_foto_path)`). Mostrarla en el detalle web es **lado SGC**.
+
+**APK QA:** bump **1.7.2 → 1.8.0** (versionCode 1008000) en `build.gradle` + `environment(.prod).ts` +
+`release-apk.mjs` (VERSION + changelog/TITULO de Actualización 6 ya redactados). `npm run apk` → APK
+firmado (cert prod SHA-256 3c5316d8…df5065) **instalado** en device 6dbf1af4 (`adb install -r` → Success).
+**NO publicado** (no se corrió `release-apk.mjs`; bucket/mínima intactos).
+
+**Pendiente:** device-QA en 1.8.0. Probar: auto-registro con docs (online/offline), banner pendientes,
+ver docs de vehículo, entrega/recepción con y sin permiso de GPS, salida con foto — y verificar en SGC web.
+**Ojo:** el auto-registro/subida escribe en producción (conductor ligado a tu usuario real / vehículos
+reales) → usar registros QA-TEST. **Publicar 1.8.0 (`npm run apk:publish`) + commit/push: a tu OK.**
+
 ## Actualización 4 (W1–W7) — build verde, NADA commiteado/pusheado
 Bitácora: fotos ilimitadas + equipos alquilados + paridad con la web. `npm run build` limpio.
 Backend: 2 migraciones aditivas aplicadas (crear_bitacora_app canónico + mis_rutas_hoy.notas).

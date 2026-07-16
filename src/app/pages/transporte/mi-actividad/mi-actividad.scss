@@ -81,3 +81,46 @@
   color: var(--color-error);
   font-weight: 700;
 }
+
+// X1 — banner de documentos pendientes
+.mact__banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
+}
+
+.mact__banner-icon {
+  font-size: 22px;
+}
+
+.mact__banner-txt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.mact__vacio {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  margin: 0 0 14px;
+}
+
+// X1 — documentos del conductor
+.mact__docs {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mact__docs-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}

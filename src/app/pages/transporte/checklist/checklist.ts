@@ -79,6 +79,8 @@ export class ChecklistPage {
   // Capturamos la firma al dibujarla; el pad vive en un paso anterior al de envío.
   firmaBlob = signal<Blob | null>(null);
   private gps: { lat: number; lng: number } | null = null;
+  /** X2 — estado de la captura de GPS para avisar al usuario (no bloquea). */
+  gpsEstado = signal<'capturando' | 'ok' | 'sin-ubicacion'>('capturando');
 
   submitting = signal(false);
   done = signal(false);
@@ -110,12 +112,22 @@ export class ChecklistPage {
   }
 
   private async captureGps(): Promise<void> {
+    this.gpsEstado.set('capturando');
     try {
       const pos = await Geolocation.getCurrentPosition({ timeout: 8000 });
       this.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      this.gpsEstado.set('ok');
     } catch {
-      this.gps = null; // GPS is best-effort (VEH-06).
+      // GPS is best-effort (VEH-06 / X2): sin permiso o sin señal, se registra
+      // igual "sin ubicación" — nunca bloquea el flujo. Avisamos en el resumen.
+      this.gps = null;
+      this.gpsEstado.set('sin-ubicacion');
     }
+  }
+
+  /** X2 — permite reintentar la ubicación desde el resumen (permiso/señal). */
+  reintentarGps(): void {
+    void this.captureGps();
   }
 
   onFoto(slot: string, photo: CapturedPhoto): void {

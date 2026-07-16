@@ -8,10 +8,13 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
+import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
+import { DocumentosService } from '../../../core/services/documentos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { CapturedDoc } from '../../../core/services/camera.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 
 type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
@@ -26,13 +29,14 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-asignar-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, OptionButton, EmptyState, Skeleton, VehiculoCard],
+  imports: [FormsModule, StepBar, OptionButton, EmptyState, Skeleton, VehiculoCard, DocSlot],
   templateUrl: './asignar.html',
   styleUrl: './asignar.scss',
 })
 export class AsignarVehiculoPage {
   private vehiculos = inject(VehiculosService);
   private conductores = inject(ConductoresService);
+  private documentos = inject(DocumentosService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -58,6 +62,10 @@ export class AsignarVehiculoPage {
   licenciaNumero = signal('');
   licenciaVencimiento = signal('');
   tipoAutorizado = signal<TipoAutorizado>('Ambos');
+
+  // X1 — documentos del conductor (solicitados, NO bloqueantes).
+  docCedula = signal<CapturedDoc | null>(null);
+  docLicencia = signal<CapturedDoc | null>(null);
 
   readonly total = computed(() => (this.necesitaConductor() ? 2 : 1));
 
@@ -148,6 +156,9 @@ export class AsignarVehiculoPage {
         licenciaVencimiento: this.licenciaVencimiento(),
         tipoVehiculoAutorizado: this.tipoAutorizado(),
       });
+      // X1 — encola los documentos capturados (offline-safe) al conductor recién
+      // creado. No bloquea: si faltan, el perfil mostrará "documentos pendientes".
+      await this.encolarDocumentos(res.conductor_id);
       if (res.licencia_vencida) {
         this.toast.error('Tu licencia está vencida: podrás recibir el vehículo, pero el pre-uso quedará bloqueado hasta renovarla.');
       }
@@ -155,6 +166,18 @@ export class AsignarVehiculoPage {
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar. Intenta de nuevo.');
       this.submitting.set(false);
+    }
+  }
+
+  /** X1 — encola cédula/licencia si el conductor las capturó (best-effort). */
+  private async encolarDocumentos(conductorId: string): Promise<void> {
+    const ced = this.docCedula();
+    const lic = this.docLicencia();
+    if (ced) {
+      await this.documentos.enqueueDocumento({ entidad: 'conductor', entidadId: conductorId, tipo: 'cedula', doc: ced });
+    }
+    if (lic) {
+      await this.documentos.enqueueDocumento({ entidad: 'conductor', entidadId: conductorId, tipo: 'licencia', doc: lic });
     }
   }
 
