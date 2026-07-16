@@ -72,35 +72,44 @@
       <!-- 5. Actividades (con cantidad) -->
       @if (step() === 5) {
         <h1 class="screen__title">¿Qué se hizo hoy?</h1>
-        @for (a of actividades(); track $index) {
-          <div class="parte__actrow">
-            <div class="parte__actrow-top">
-              <span class="parte__actrow-name">{{ a.estructura }} · {{ a.actividad }}</span>
-              <button type="button" class="parte__act-x" (click)="removeActividad($index)">Quitar</button>
-            </div>
-            <div class="parte__actrow-qty">
-              <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, -1)" aria-label="Menos">−</button>
-              <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="a.cantidad" (ngModelChange)="setCantidadAct($index, $event)" />
-              <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, 1)" aria-label="Más">+</button>
-              @if (partidaDe(a.estructura); as p) {
-                <span class="parte__plan">{{ p.unidad || '' }} · plan {{ p.cantidad_planeada }}</span>
-              }
-            </div>
-          </div>
-        }
-        <label class="field-label">¿En qué parte? (puedes elegir varias)</label>
+        <p class="screen__subtitle">Elige la parte, toca lo que se hizo y abajo pones la cantidad.</p>
+
+        <label class="field-label">¿En qué parte?</label>
         <div class="parte__chips">
           @for (e of estructuras(); track e) {
-            <button type="button" class="chip" [class.chip--on]="selEstructuras().includes(e)" (click)="toggleEstructura(e)">{{ e }}</button>
+            <button type="button" class="chip" [class.chip--on]="parteActual() === e" (click)="toggleEstructura(e)">{{ e }}</button>
           }
         </div>
-        <label class="field-label">¿Qué se hizo? (puedes elegir varias)</label>
-        <div class="parte__chips">
-          @for (ac of actividadesCat(); track ac) {
-            <button type="button" class="chip" [class.chip--on]="selActividades().includes(ac)" (click)="toggleActividad(ac)">{{ ac }}</button>
+
+        @if (parteActual()) {
+          <label class="field-label">¿Qué se hizo en {{ parteActual() }}? (toca para agregar)</label>
+          <div class="parte__chips">
+            @for (ac of actividadesCat(); track ac) {
+              <button type="button" class="chip" [class.chip--on]="actividadOn(ac)" (click)="toggleActividad(ac)">{{ ac }}</button>
+            }
+          </div>
+        }
+
+        <!-- Lista de lo agregado, cada uno con su cantidad (aparece al tocar) -->
+        @if (actividades().length) {
+          <label class="field-label">Cantidad de cada trabajo</label>
+          @for (a of actividades(); track $index) {
+            <div class="parte__actrow">
+              <div class="parte__actrow-top">
+                <span class="parte__actrow-name">{{ a.estructura }} · {{ a.actividad }}</span>
+                <button type="button" class="parte__act-x" (click)="removeActividad($index)">Quitar</button>
+              </div>
+              <div class="parte__actrow-qty">
+                <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, -1)" aria-label="Menos">−</button>
+                <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="a.cantidad" (ngModelChange)="setCantidadAct($index, $event)" />
+                <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, 1)" aria-label="Más">+</button>
+                @if (partidaDe(a.estructura); as p) {
+                  <span class="parte__plan">{{ p.unidad || '' }} · plan {{ p.cantidad_planeada }}</span>
+                }
+              </div>
+            </div>
           }
-        </div>
-        <button type="button" class="btn-ghost" (click)="addActividad()">+ Agregar a la lista</button>
+        }
       }
 
       <!-- 6. Restricciones -->

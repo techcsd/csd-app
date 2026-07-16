@@ -80,8 +80,9 @@ export class PartePage implements OnDestroy {
   otroPersonal = signal('');
 
   actividades = signal<ActividadEntry[]>([]);
-  selEstructuras = signal<string[]>([]);
-  selActividades = signal<string[]>([]);
+  // "Parte" actualmente elegida (¿en qué parte?). Al tocar una actividad se
+  // agrega de una a la lista con su cantidad — sin botón aparte (feedback inmediato).
+  parteActual = signal<string>('');
 
   restricciones = signal<string[]>([]);
   // U12 — descripción breve obligatoria por restricción seleccionada (tipo → texto).
@@ -250,33 +251,32 @@ export class PartePage implements OnDestroy {
     return this.partidas().find((p) => p.nombre.toLowerCase() === key);
   }
 
+  /** Elige/cambia la parte actual (¿en qué parte?). Vuelve a tocarla para cerrar. */
   toggleEstructura(e: string): void {
-    this.selEstructuras.update((l) => (l.includes(e) ? l.filter((x) => x !== e) : [...l, e]));
+    this.parteActual.update((cur) => (cur === e ? '' : e));
   }
 
+  /** ¿La actividad ya está agregada para la parte actual? (estado del chip). */
+  actividadOn(a: string): boolean {
+    const parte = this.parteActual();
+    return !!parte && this.actividades().some((x) => x.estructura === parte && x.actividad === a);
+  }
+
+  /**
+   * Toca una actividad → agrega (o quita) la fila {parte, actividad} con cantidad
+   * 1 al instante, para que su selector de cantidad aparezca de una en la lista.
+   */
   toggleActividad(a: string): void {
-    this.selActividades.update((l) => (l.includes(a) ? l.filter((x) => x !== a) : [...l, a]));
-  }
-
-  /** Adds every selected estructura × actividad combination (deduped). */
-  addActividad(): void {
-    if (!this.selEstructuras().length || !this.selActividades().length) {
-      this.toast.error('Elige al menos una estructura y una actividad.');
+    const parte = this.parteActual();
+    if (!parte) {
+      this.toast.error('Primero elige en qué parte se trabajó (arriba).');
       return;
     }
-    this.actividades.update((current) => {
-      const next = [...current];
-      for (const est of this.selEstructuras()) {
-        for (const act of this.selActividades()) {
-          if (!next.some((x) => x.estructura === est && x.actividad === act)) {
-            next.push({ estructura: est, actividad: act, cantidad: 1 });
-          }
-        }
-      }
-      return next;
+    this.actividades.update((list) => {
+      const idx = list.findIndex((x) => x.estructura === parte && x.actividad === a);
+      if (idx >= 0) return list.filter((_, i) => i !== idx); // toca de nuevo = quitar
+      return [...list, { estructura: parte, actividad: a, cantidad: 1 }];
     });
-    this.selEstructuras.set([]);
-    this.selActividades.set([]);
   }
 
   removeActividad(i: number): void {
