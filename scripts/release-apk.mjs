@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.13.2';
+const VERSION = '1.14.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -61,11 +61,11 @@ const MIN_VERSION = '1.6.0';
 const RELEASED_AT = '2026-07-16';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Estabilidad de la cámara (memoria)';
+const TITULO = 'Cámara dentro de la app (no más cierres)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Más estabilidad al tomar fotos en teléfonos con poca memoria (Xiaomi/MIUI): la app aguanta mejor la cámara y, si el teléfono la cierra, al volver recuperas lo que estabas llenando.' },
+  { t: 'arreglo', d: 'Las fotos ahora se toman DENTRO de la app (ya no abre la cámara del teléfono): así la app no se cierra al tomar fotos en teléfonos Xiaomi/MIUI. Toca el botón redondo para capturar.' },
 ];
 
 const TIPO_POR_COMMIT = {

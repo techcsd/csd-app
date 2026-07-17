@@ -3,6 +3,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { ToastHost } from './shared/components/toast-host/toast-host';
+import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
 import { CatalogService } from './core/sync/catalog.service';
@@ -17,7 +18,7 @@ import { NavGuardService } from './core/services/nav-guard.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost],
+  imports: [RouterOutlet, ToastHost, InAppCamera],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

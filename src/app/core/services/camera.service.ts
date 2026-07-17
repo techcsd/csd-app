@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { InAppCameraService } from './in-app-camera.service';
 
 /** W1 — practical cap for a single multi-pick batch (configurable, kept high). */
 const GALLERY_LIMIT = 40;
@@ -37,15 +38,42 @@ const NATIVE_QUALITY = 72;
  */
 @Injectable({ providedIn: 'root' })
 export class CameraService {
+  private inApp = inject(InAppCameraService);
+
   get isNative(): boolean {
     return Capacitor.isNativePlatform();
   }
 
   async takePhoto(): Promise<CapturedPhoto | null> {
+    // Cámara EMBEBIDA primero: captura dentro de la app (no sale a la cámara del
+    // sistema), lo que evita que MIUI/low-mem maten la app durante la foto. Si el
+    // dispositivo no soporta getUserMedia, cae a la cámara del sistema.
+    if (this.inApp.supported) {
+      // En nativo, asegura el permiso de cámara del SO para que getUserMedia del
+      // WebView funcione (si no, el overlay muestra el fallback a cámara del sistema).
+      if (this.isNative) {
+        try {
+          const p = await Camera.checkPermissions();
+          if (p.camera !== 'granted') await Camera.requestPermissions({ permissions: ['camera'] });
+        } catch {
+          /* seguimos: si falla, el overlay caerá a 'fallback' */
+        }
+      }
+      const res = await this.inApp.open();
+      if (res === 'fallback') return this.takeConSistema();
+      if (!res) return null;
+      // El overlay ya entrega un JPEG comprimido (≤1280, 0.7).
+      return { blob: res, previewUrl: URL.createObjectURL(res) };
+    }
+    return this.takeConSistema();
+  }
+
+  /** Cámara del sistema (Capacitor nativo / input web) — fallback. */
+  private async takeConSistema(): Promise<CapturedPhoto | null> {
     const raw = this.isNative ? await this.takeNative() : await this.takeWeb();
     if (!raw) return null;
     // Nativo: Capacitor ya redimensionó/comprimió en el dispositivo → no hace
-    // falta el canvas JS (era el paso lento). Web/PWA: sí comprimimos en JS.
+    // falta el canvas JS. Web/PWA: sí comprimimos en JS.
     const blob = this.isNative ? raw : await this.compress(raw);
     return { blob, previewUrl: URL.createObjectURL(blob) };
   }

@@ -1,0 +1,19 @@
+@if (cam.active()) {
+  <div class="iac">
+    @if (error()) {
+      <div class="iac__error">
+        <span class="iac__error-icon">📷</span>
+        <p class="iac__error-txt">No se pudo abrir la cámara dentro de la app.</p>
+        <button type="button" class="btn-cta" (click)="usarSistema()">Usar la cámara del teléfono</button>
+        <button type="button" class="btn-ghost iac__error-cancel" (click)="cancelar()">Cancelar</button>
+      </div>
+    } @else {
+      <video #video class="iac__video" autoplay muted playsinline></video>
+      <div class="iac__bar">
+        <button type="button" class="iac__cancel" (click)="cancelar()" aria-label="Cancelar">✕</button>
+        <button type="button" class="iac__shutter" [disabled]="busy()" (click)="capturar()" aria-label="Tomar foto"></button>
+        <span class="iac__spacer"></span>
+      </div>
+    }
+  </div>
+}
