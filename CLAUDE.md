@@ -7,7 +7,7 @@ Angular 21 (standalone + signals, zoneless) · Capacitor 8 (Android + camera/fil
 
 ## Commands
 - Dev/PWA: `npm start` · Build: `npm run build` (must pass before "done" — SGC rule #4)
-- Android: `npx cap sync android` → `npx cap open android` (needs JDK 21 + Android Studio, not yet installed on this machine)
+- Android: `npm run apk` (build APK firmado + registra versión) → `npm run apk:publish` (sube al bucket). Toolchain instalado: Android Studio JBR (JDK 21) en `C:\Program Files\Android\Android Studio\jbr` + SDK en `%LOCALAPPDATA%\Android\Sdk` (autodetectados por `scripts/build-apk.mjs`). Para abrir en el IDE: `npx cap sync android` → `npx cap open android`.
 - Secrets in `.env.local` (gitignored): Supabase URL, anon key, and admin keys.
 
 ## The one rule that shapes everything
