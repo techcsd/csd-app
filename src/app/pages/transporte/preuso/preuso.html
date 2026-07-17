@@ -127,6 +127,9 @@
         <h1 class="screen__title">Datos de salida</h1>
 
         <label class="field-label" for="km">Kilometraje actual</label>
+        @if (vehiculo()?.kilometraje != null) {
+          <p class="preuso__km-ref">Último registrado: {{ vehiculo()?.kilometraje | number: '1.0-0' }} km</p>
+        }
         <input
           id="km"
           class="field preuso__km"
@@ -135,7 +138,7 @@
           [class.preuso__km--error]="kmInvalido()"
           [ngModel]="km()"
           (ngModelChange)="km.set($event)"
-          placeholder="0"
+          placeholder="Escribe el km de hoy"
         />
         @if (kmInvalido()) {
           <p class="preuso__warn">

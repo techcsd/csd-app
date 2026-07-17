@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,10 +11,14 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import {
   CombustibleNivel,
   EntregaTipo,
@@ -29,6 +33,15 @@ interface DanoDraft {
   photo: CapturedPhoto | null;
 }
 
+/** Estado autoguardable del checklist (sin fotos: se re-toman al continuar). */
+interface ChecklistDraft {
+  step: number;
+  km: number | null;
+  combustible: CombustibleNivel | null;
+  tieneDanos: boolean | null;
+  danos: { zona: string; descripcion: string }[];
+}
+
 const TOTAL_STEPS = 6;
 
 /**
@@ -40,7 +53,7 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })
@@ -50,8 +63,14 @@ export class ChecklistPage {
   private vehiculos = inject(VehiculosService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private autosave = inject(AutosaveService);
+  private borradorSvc = inject(BorradorService);
+  private ctx = inject(UserContextService);
 
   private sig = viewChild(SignaturePad);
+
+  borradorPrevio = signal<number | null>(null);
+  private hydrated = false;
 
   readonly total = TOTAL_STEPS;
   readonly fotosReq = FOTOS_REQUERIDAS;
@@ -95,8 +114,55 @@ export class ChecklistPage {
   constructor() {
     this.tipo = (this.route.snapshot.data['tipo'] as EntregaTipo) ?? 'recepcion';
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
-    void this.loadVehiculo();
+    void this.loadVehiculo().then(() => this.checkDraft());
     void this.captureGps();
+    // Autosave del estado (sin fotos) con debounce + flush al ocultar (Fase 2).
+    effect(() => {
+      const snap: ChecklistDraft = {
+        step: this.step(),
+        km: this.km(),
+        combustible: this.combustible(),
+        tieneDanos: this.tieneDanos(),
+        danos: this.danos().map((d) => ({ zona: d.zona, descripcion: d.descripcion })),
+      };
+      if (!this.hydrated || this.done() || this.submitting()) return;
+      const hayAlgo =
+        snap.km != null || !!snap.combustible || snap.tieneDanos != null || snap.step > 1 || snap.danos.length > 0;
+      if (!hayAlgo) return;
+      this.autosave.queue(this.clave(), snap, {
+        tipo: 'checklist',
+        etiqueta: `${this.tipo === 'recepcion' ? 'Recibir' : 'Devolver'} · ${this.placa() || 'vehículo'}`,
+        ruta: `/transporte/${this.tipo === 'recepcion' ? 'recibir' : 'devolver'}/${this.vehiculoId}`,
+      });
+    });
+  }
+
+  private clave(): string {
+    const uid = this.ctx.profile()?.id ?? 'anon';
+    return `checklist-${this.tipo}:${this.vehiculoId}:${uid}`;
+  }
+
+  private async checkDraft(): Promise<void> {
+    const b = await this.borradorSvc.get(this.clave());
+    if (b) this.borradorPrevio.set(b.updated_at);
+    this.hydrated = true;
+  }
+
+  continuarBorrador(): void {
+    void this.borradorSvc.load<ChecklistDraft>(this.clave()).then((d) => {
+      if (d) {
+        this.step.set(d.step ?? 1);
+        this.km.set(d.km ?? null);
+        this.combustible.set(d.combustible ?? null);
+        this.tieneDanos.set(d.tieneDanos ?? null);
+        this.danos.set((d.danos ?? []).map((x) => ({ zona: x.zona, descripcion: x.descripcion, photo: null })));
+      }
+      this.borradorPrevio.set(null);
+    });
+  }
+  descartarBorrador(): void {
+    void this.autosave.discard(this.clave());
+    this.borradorPrevio.set(null);
   }
 
   private async loadVehiculo(): Promise<void> {
@@ -250,6 +316,7 @@ export class ChecklistPage {
         })),
         placa: this.placa(),
       });
+      void this.autosave.discard(this.clave());
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');

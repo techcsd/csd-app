@@ -9,6 +9,14 @@
     @if (loading()) {
       <app-skeleton [rows]="3" />
     } @else {
+      @if (borradorPrevio()) {
+        <app-draft-banner
+          [fecha]="borradorPrevio()"
+          (continuar)="continuarBorrador()"
+          (descartar)="descartarBorrador()"
+        />
+      }
+
       <label class="field-label">Vincular a un usuario del sistema (opcional)</label>
       <p class="cform__hint">Si lo eliges, se autollenan sus datos. Déjalo vacío si el conductor no tiene usuario.</p>
       <app-select-list

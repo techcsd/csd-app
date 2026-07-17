@@ -259,6 +259,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilPage),
   },
   {
+    path: 'en-proceso',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/en-proceso/en-proceso').then((m) => m.EnProcesoPage),
+  },
+  {
     path: 'reportar',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/reportar/reportar').then((m) => m.ReportarPage),

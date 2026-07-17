@@ -99,6 +99,10 @@ export class PerfilPage {
     }
   }
 
+  enProceso(): void {
+    void this.router.navigate(['/en-proceso']);
+  }
+
   reportar(): void {
     void this.router.navigate(['/reportar']);
   }

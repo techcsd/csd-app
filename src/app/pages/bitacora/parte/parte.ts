@@ -145,7 +145,11 @@ export class PartePage implements OnDestroy {
       };
       if (!this.hydrated || this.done()) return;
       if (!this.hasContent(snap)) return;
-      void this.borrador.save(this.DRAFT, snap);
+      void this.borrador.save(this.DRAFT, snap, {
+        tipo: 'parte',
+        etiqueta: 'Parte diario' + (this.proyectoNombre() ? ' · ' + this.proyectoNombre() : ''),
+        ruta: '/bitacora/parte',
+      });
     });
   }
 

@@ -9,6 +9,14 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
+      @if (borradorPrevio()) {
+        <app-draft-banner
+          [fecha]="borradorPrevio()"
+          (continuar)="continuarBorrador()"
+          (descartar)="descartarBorrador()"
+        />
+      }
+
       <label class="field-label" for="placa">Placa</label>
       <input id="placa" class="field" type="text" [ngModel]="placa()" (ngModelChange)="placa.set($event)" placeholder="A123456" />
 

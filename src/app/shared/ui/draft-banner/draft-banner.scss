@@ -1,0 +1,29 @@
+.draft-banner {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg);
+}
+
+.draft-banner__txt {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.draft-banner__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.draft-banner__cont {
+  flex: 1;
+}
+
+.draft-banner__desc {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 110px;
+}

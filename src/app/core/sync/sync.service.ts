@@ -98,14 +98,20 @@ export class SyncService {
       capturado_en: input.capturado_en ?? new Date().toISOString(),
       created_local: Date.now(),
     };
-    const fotos: FotoPendiente[] = (input.fotos ?? []).map((f) => ({
-      id: f.id,
-      op_id: input.id,
-      bucket: f.bucket,
-      path: f.path,
-      slot: f.slot,
-      blob: f.blob,
-    }));
+    // WebKit/iOS falla al guardar Blob/File en IndexedDB → persistimos los bytes
+    // como ArrayBuffer (+ type) y reconstruimos el Blob al subir. La conversión va
+    // ANTES de la transacción (Dexie no permite await arbitrario dentro de ella).
+    const fotos: FotoPendiente[] = await Promise.all(
+      (input.fotos ?? []).map(async (f) => ({
+        id: f.id,
+        op_id: input.id,
+        bucket: f.bucket,
+        path: f.path,
+        slot: f.slot,
+        data: await f.blob.arrayBuffer(),
+        type: f.blob.type || 'application/octet-stream',
+      })),
+    );
 
     await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {
       await db.outbox.put(op);
@@ -212,9 +218,13 @@ export class SyncService {
     const fotos = await db.fotos_pendientes.where('op_id').equals(opId).toArray();
     const paths: Record<string, string> = {};
     for (const foto of fotos) {
+      const type = foto.type || foto.blob?.type || 'application/octet-stream';
+      // Reconstruye el Blob desde los bytes (o usa el legacy Blob si existiera).
+      const body = foto.data ? new Blob([foto.data], { type }) : foto.blob;
+      if (!body) continue; // sin datos utilizables → nada que subir
       const { error } = await this.supabase.client.storage
         .from(foto.bucket)
-        .upload(foto.path, foto.blob, { upsert: true, contentType: foto.blob.type });
+        .upload(foto.path, body, { upsert: true, contentType: type });
       // upsert makes re-sends idempotent; a duplicate is not an error.
       if (error && !/exists/i.test(error.message)) throw error;
       paths[foto.slot] = foto.path;

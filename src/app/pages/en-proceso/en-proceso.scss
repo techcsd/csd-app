@@ -1,0 +1,73 @@
+.enp {
+  background: var(--color-bg);
+}
+
+.enp__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.enp__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.enp__icon {
+  font-size: 26px;
+}
+
+.enp__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.enp__card {
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.enp__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.enp__label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.enp__fecha {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.enp__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.enp__retomar {
+  flex: 1;
+}
+
+.enp__desc {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 110px;
+}

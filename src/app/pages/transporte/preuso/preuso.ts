@@ -322,7 +322,8 @@ export class PreusoPage extends GuardedWizard {
       this.precitaKm.set(cfg.precitaKm);
       this.licenciaUmbral.set(cfg.licenciaDias);
       if (list.length) this.pickPlantilla(list[0].id);
-      if (v && this.km() === null) this.km.set(v.kilometraje || null);
+      // El km de salida arranca VACÍO (el usuario escribe el actual). El último
+      // registrado queda solo como referencia (vehiculo.kilometraje / kmInvalido).
     } finally {
       this.loadingCtx.set(false);
     }

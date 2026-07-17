@@ -1,0 +1,9 @@
+<div class="draft-banner">
+  <p class="draft-banner__txt">
+    📝 Tienes un borrador sin enviar{{ fecha() ? ' de ' + fmt(fecha()) : '' }}.
+  </p>
+  <div class="draft-banner__actions">
+    <button type="button" class="btn-cta draft-banner__cont" (click)="continuar.emit()">Continuar</button>
+    <button type="button" class="btn-ghost draft-banner__desc" (click)="descartar.emit()">Descartar</button>
+  </div>
+</div>

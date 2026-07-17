@@ -349,3 +349,10 @@
 .preuso__back {
   max-width: 120px;
 }
+
+// Fase 5 — referencia del último km (el campo arranca vacío)
+.preuso__km-ref {
+  margin: 0 0 6px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}

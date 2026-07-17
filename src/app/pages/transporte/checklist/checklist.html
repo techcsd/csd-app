@@ -13,6 +13,14 @@
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
+      @if (borradorPrevio()) {
+        <app-draft-banner
+          [fecha]="borradorPrevio()"
+          (continuar)="continuarBorrador()"
+          (descartar)="descartarBorrador()"
+        />
+      }
+
       <!-- Step 1: confirm vehicle -->
       @if (step() === 1) {
         <h1 class="screen__title">{{ titulo() }}</h1>

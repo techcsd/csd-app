@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,9 +6,13 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { VehiculosService, VehiculoEditable } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 
 const ESTADOS = [
@@ -17,12 +21,27 @@ const ESTADOS = [
   { v: 'baja', label: 'Baja' },
 ];
 
+interface VehiculoDraft {
+  placa: string;
+  marca: string;
+  modelo: string;
+  anio: number | null;
+  tipo: string;
+  estado: string;
+  kilometraje: number | null;
+  vencMatricula: string;
+  vencSeguro: string;
+  kmUltMant: number | null;
+  intervaloMant: number | null;
+  notas: string;
+}
+
 /** Alta/edición de vehículo (admin; RLS vehiculos:write = is_admin). */
 @Component({
   selector: 'app-vehiculo-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton],
+  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton, DraftBanner],
   templateUrl: './vehiculo-form.html',
   styleUrl: './vehiculo-form.scss',
 })
@@ -33,6 +52,9 @@ export class VehiculoFormPage {
   private location = inject(Location);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
+  private autosave = inject(AutosaveService);
+  private borradorSvc = inject(BorradorService);
+  private ctx = inject(UserContextService);
 
   readonly estados = ESTADOS;
 
@@ -40,6 +62,8 @@ export class VehiculoFormPage {
   esEdicion = computed(() => !!this.vehiculoId());
   loading = signal(false);
   submitting = signal(false);
+  borradorPrevio = signal<number | null>(null);
+  private hydrated = false;
 
   placa = signal('');
   marca = signal('');
@@ -58,7 +82,75 @@ export class VehiculoFormPage {
   constructor() {
     const id = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     this.vehiculoId.set(id);
-    if (id) void this.load(id);
+    void this.init(id);
+    // Autosave con debounce + flush al ocultar/descargar (Fase 2).
+    effect(() => {
+      const snap = this.snapshot();
+      if (!this.hydrated || this.submitting()) return;
+      if (!snap.placa && !snap.marca && !snap.modelo && !snap.tipo) return;
+      this.autosave.queue(this.clave(), snap, {
+        tipo: 'vehiculo',
+        etiqueta: (this.esEdicion() ? 'Editar vehículo' : 'Nuevo vehículo') + (snap.placa ? ' · ' + snap.placa : ''),
+        ruta: this.ruta(),
+      });
+    });
+  }
+
+  private async init(id: string): Promise<void> {
+    if (id) await this.load(id);
+    const b = await this.borradorSvc.get(this.clave());
+    if (b) this.borradorPrevio.set(b.updated_at);
+    this.hydrated = true;
+  }
+
+  private snapshot(): VehiculoDraft {
+    return {
+      placa: this.placa(),
+      marca: this.marca(),
+      modelo: this.modelo(),
+      anio: this.anio(),
+      tipo: this.tipo(),
+      estado: this.estado(),
+      kilometraje: this.kilometraje(),
+      vencMatricula: this.vencMatricula(),
+      vencSeguro: this.vencSeguro(),
+      kmUltMant: this.kmUltMant(),
+      intervaloMant: this.intervaloMant(),
+      notas: this.notas(),
+    };
+  }
+  private clave(): string {
+    const uid = this.ctx.profile()?.id ?? 'anon';
+    return `vehiculo:${this.vehiculoId() || 'nuevo'}:${uid}`;
+  }
+  private ruta(): string {
+    return this.esEdicion()
+      ? `/transporte/vehiculos/${this.vehiculoId()}/editar`
+      : '/transporte/vehiculos/nuevo';
+  }
+
+  continuarBorrador(): void {
+    void this.borradorSvc.load<VehiculoDraft>(this.clave()).then((d) => {
+      if (d) {
+        this.placa.set(d.placa ?? '');
+        this.marca.set(d.marca ?? '');
+        this.modelo.set(d.modelo ?? '');
+        this.anio.set(d.anio ?? null);
+        this.tipo.set(d.tipo ?? '');
+        this.estado.set(d.estado ?? 'activo');
+        this.kilometraje.set(d.kilometraje ?? null);
+        this.vencMatricula.set(d.vencMatricula ?? '');
+        this.vencSeguro.set(d.vencSeguro ?? '');
+        this.kmUltMant.set(d.kmUltMant ?? null);
+        this.intervaloMant.set(d.intervaloMant ?? 5000);
+        this.notas.set(d.notas ?? '');
+      }
+      this.borradorPrevio.set(null);
+    });
+  }
+  descartarBorrador(): void {
+    void this.autosave.discard(this.clave());
+    this.borradorPrevio.set(null);
   }
 
   private async load(id: string): Promise<void> {
@@ -132,6 +224,7 @@ export class VehiculoFormPage {
         : await this.vehiculos.crearVehiculo(data);
       const foto = this.foto();
       if (foto) await this.vehiculos.subirFotoVehiculo(id, foto.blob);
+      void this.autosave.discard(this.clave());
       this.toast.success(this.esEdicion() ? 'Vehículo actualizado.' : 'Vehículo creado.');
       void this.router.navigate(['/transporte/vehiculo', id], { replaceUrl: true });
     } catch (e) {

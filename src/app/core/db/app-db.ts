@@ -8,7 +8,15 @@ export interface CatalogoEntry {
   fetched_at: number;
 }
 
-/** A photo blob waiting to be uploaded, tied to an outbox op + target slot. */
+/**
+ * A photo waiting to be uploaded, tied to an outbox op + target slot.
+ *
+ * iOS/WebKit corrupts/fails on `Blob`/`File` stored directly in IndexedDB
+ * ("Error preparing Blob/File data to be stored in object store"), so we
+ * persist the raw bytes as `ArrayBuffer` + the MIME `type` and rebuild the
+ * Blob on read. `blob` is kept optional only for legacy rows written before
+ * this fix (read path falls back to it).
+ */
 export interface FotoPendiente {
   id: string;
   op_id: string;
@@ -17,7 +25,12 @@ export interface FotoPendiente {
   path: string;
   /** Which payload field the resulting path should be injected into. */
   slot: string;
-  blob: Blob;
+  /** Raw bytes (WebKit-safe). */
+  data?: ArrayBuffer;
+  /** MIME type to rebuild the Blob (e.g. image/jpeg). */
+  type?: string;
+  /** Legacy: some old rows may still hold a Blob directly. */
+  blob?: Blob;
 }
 
 /**
@@ -37,11 +50,18 @@ export interface OutboxOp {
   created_local: number;
 }
 
-/** A half-filled wizard (bitácora, checklist) recoverable after a crash. */
+/** A half-filled wizard (bitácora, checklist…) recoverable after a crash/leave.
+ *  `tipo`/`etiqueta`/`ruta` power the "Documentación en proceso" list + resume. */
 export interface Borrador {
   clave: string;
   data: unknown;
   updated_at: number;
+  /** Short kind, e.g. 'checklist', 'conductor', 'vehiculo', 'parte'. */
+  tipo?: string;
+  /** Human label for the list, e.g. "Pre-uso · ABC-123". */
+  etiqueta?: string;
+  /** Route to resume the draft. */
+  ruta?: string;
 }
 
 /** Local copy of what was sent, for offline "Mis partes / Mis solicitudes". */

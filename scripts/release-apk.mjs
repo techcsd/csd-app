@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.12.0';
+const VERSION = '1.13.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -61,13 +61,14 @@ const MIN_VERSION = '1.6.0';
 const RELEASED_AT = '2026-07-16';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Gestión de flota en la app';
+const TITULO = 'No se pierde lo que llenas + fotos más confiables';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Admin: crear y editar vehículos desde la app (datos, foto, vencimientos de matrícula y seguro, mantenimiento).' },
-  { t: 'nuevo', d: 'Admin: editar conductores y asignar un vehículo a otro conductor.' },
-  { t: 'nuevo', d: 'Avisos de flota en la app: pre-cita, vencimientos y hallazgos; reactivar vehículo o marcar atendido.' },
+  { t: 'arreglo', d: 'Arreglado el error al guardar fotos (combustible/checklist) que a veces obligaba a "repetir foto"; ahora guardan más rápido y confiable.' },
+  { t: 'nuevo', d: 'La app guarda sola lo que estás llenando: si sales a otra app o se cierra, al volver puedes continuar el borrador.' },
+  { t: 'nuevo', d: 'Nueva sección "Documentación en proceso" (en Ajustes) con tus formularios a medio llenar para retomarlos.' },
+  { t: 'mejora', d: 'El kilometraje del pre-uso ahora empieza vacío (el último queda como referencia).' },
 ];
 
 const TIPO_POR_COMMIT = {
