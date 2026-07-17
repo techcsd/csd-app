@@ -85,6 +85,40 @@ export class ConductoresService {
     return data ?? null;
   }
 
+  /** All active drivers for the browse/profile list (flota-gated), cached. */
+  async getConductores(): Promise<Conductor[]> {
+    const data = await this.catalog.refresh<Conductor[]>('conductores_lista', async () => {
+      const { data, error } = await this.supabase.client
+        .from('conductores')
+        .select(
+          'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id',
+        )
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data as Conductor[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** Aggregated stats for ANY driver (v_conductor_stats), cached per id. */
+  async getStatsDe(conductorId: string): Promise<ConductorStats | null> {
+    if (!conductorId) return null;
+    const data = await this.catalog.refresh<ConductorStats | null>(
+      `conductor_stats:${conductorId}`,
+      async () => {
+        const { data, error } = await this.supabase.client
+          .from('v_conductor_stats')
+          .select('*')
+          .eq('conductor_id', conductorId)
+          .maybeSingle();
+        if (error) throw new Error(error.message);
+        return (data as ConductorStats) ?? null;
+      },
+    );
+    return data ?? null;
+  }
+
   /** Umbrales configurables de Flota (sgc.flota_config), cacheados offline. */
   async getFlotaConfig(): Promise<FlotaConfig> {
     const data = await this.catalog.refresh<FlotaConfig>(CATALOG_FLOTA_CONFIG, async () => {

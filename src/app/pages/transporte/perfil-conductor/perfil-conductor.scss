@@ -1,0 +1,101 @@
+.pcon {
+  background: var(--color-bg);
+}
+
+.pcon__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.pcon__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.pcon__icon {
+  font-size: 26px;
+}
+
+.pcon__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.pcon__nombre {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 12px;
+}
+
+.pcon__mio {
+  margin-bottom: 14px;
+}
+
+.pcon__cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.pcon__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pcon__card--wide {
+  grid-column: 1 / -1;
+}
+
+.pcon__label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.pcon__value {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.pcon__value--sm {
+  font-size: 16px;
+  text-transform: capitalize;
+}
+
+.pcon__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.pcon__sub--warn {
+  color: var(--color-error);
+  font-weight: 700;
+}
+
+.pcon__docs {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pcon__docs-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}

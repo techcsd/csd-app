@@ -26,6 +26,12 @@
     <button type="button" class="btn-ghost transporte__conduces" (click)="miActividad()">
       📈 Mi actividad
     </button>
+    <button type="button" class="btn-ghost transporte__conduces" (click)="vehiculosLista()">
+      🚙 Vehículos
+    </button>
+    <button type="button" class="btn-ghost transporte__conduces" (click)="conductoresLista()">
+      🪪 Conductores
+    </button>
 
     @if (loading()) {
       <app-skeleton [rows]="5" />

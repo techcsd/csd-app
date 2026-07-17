@@ -80,6 +80,14 @@ export class TransportePage {
     void this.router.navigate(['/transporte/mi-actividad']);
   }
 
+  vehiculosLista(): void {
+    void this.router.navigate(['/transporte/vehiculos']);
+  }
+
+  conductoresLista(): void {
+    void this.router.navigate(['/transporte/conductores']);
+  }
+
   recibir(vehiculoId: string): void {
     void this.router.navigate(['/transporte/recibir', vehiculoId]);
   }

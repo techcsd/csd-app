@@ -1,0 +1,46 @@
+.vlist {
+  background: var(--color-bg);
+}
+
+.vlist__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.vlist__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.vlist__icon {
+  font-size: 26px;
+}
+
+.vlist__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.vlist__search {
+  margin-bottom: 14px;
+}
+
+// Selectable vehicle card button (mirror of asignar__vehbtn / vpick__btn).
+.vlist__btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}

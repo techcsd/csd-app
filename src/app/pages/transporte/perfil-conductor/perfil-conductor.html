@@ -1,0 +1,78 @@
+<div class="screen pcon">
+  <header class="pcon__header">
+    <button type="button" class="pcon__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="pcon__icon">🪪</span>
+    <h1 class="pcon__title">Perfil del conductor</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (!stats()) {
+      <app-empty-state
+        icon="🪪"
+        title="Conductor no encontrado"
+        message="No pudimos cargar los datos de este conductor. Revisa tu conexión e intenta de nuevo."
+      />
+    } @else {
+      <p class="pcon__nombre">{{ stats()!.nombre }}</p>
+
+      @if (esMiPerfil()) {
+        <button type="button" class="btn-ghost pcon__mio" (click)="irMiActividad()">
+          Este es tu perfil — súbelos/edítalos desde “Mi actividad”
+        </button>
+      }
+
+      <div class="pcon__cards">
+        <div class="pcon__card">
+          <span class="pcon__label">Checklists</span>
+          <span class="pcon__value">{{ stats()!.checklists_total }}</span>
+          @if (stats()!.checklists_bloqueos > 0) {
+            <span class="pcon__sub pcon__sub--warn">{{ stats()!.checklists_bloqueos }} bloqueo(s)</span>
+          }
+        </div>
+        <div class="pcon__card">
+          <span class="pcon__label">Echadas</span>
+          <span class="pcon__value">{{ stats()!.combustible_echadas }}</span>
+        </div>
+        <div class="pcon__card">
+          <span class="pcon__label">Vehículos usados</span>
+          <span class="pcon__value">{{ stats()!.vehiculos_usados }}</span>
+        </div>
+        <div class="pcon__card">
+          <span class="pcon__label">Licencia</span>
+          <span class="pcon__value pcon__value--sm">{{ stats()!.estado_licencia || '—' }}</span>
+          @if (stats()!.licencia_vencimiento) {
+            <span class="pcon__sub">Vence {{ fmtFecha(stats()!.licencia_vencimiento) }}</span>
+          }
+        </div>
+        @if (stats()!.ultima_actividad) {
+          <div class="pcon__card pcon__card--wide">
+            <span class="pcon__label">Última actividad</span>
+            <span class="pcon__value pcon__value--sm">{{ fmtFechaMedia(stats()!.ultima_actividad) }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Documentos (solo lectura; el conductor los sube desde "Mi actividad") -->
+      <section class="pcon__docs">
+        <h2 class="pcon__docs-title">Documentos</h2>
+        <app-doc-slot
+          label="Cédula"
+          [soloLectura]="true"
+          [urlExistente]="cedula()?.url ?? null"
+          [esPdfExistente]="cedula()?.esPdf ?? false"
+        />
+        <app-doc-slot
+          label="Licencia de conducir"
+          [soloLectura]="true"
+          [urlExistente]="licencia()?.url ?? null"
+          [esPdfExistente]="licencia()?.esPdf ?? false"
+        />
+        @for (d of otros(); track d.label + $index) {
+          <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
+        }
+      </section>
+    }
+  </div>
+</div>

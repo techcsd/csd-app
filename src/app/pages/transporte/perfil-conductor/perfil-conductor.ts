@@ -1,0 +1,99 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Location } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { ConductoresService } from '../../../core/services/conductores.service';
+import { DocumentosService } from '../../../core/services/documentos.service';
+import { UserContextService } from '../../../core/services/user-context.service';
+import { ConductorStats } from '../../../core/models/conductor.model';
+import { Documento } from '../../../core/models/documento.model';
+import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
+
+interface DocView {
+  label: string;
+  url: string | null;
+  esPdf: boolean;
+}
+
+const TIPO_LABEL: Record<string, string> = {
+  cedula: 'Cédula',
+  licencia: 'Licencia de conducir',
+  otro: 'Otro documento',
+};
+
+/**
+ * Read-only driver profile for browsing ANY conductor (R5): stats + documents
+ * (view via signed URLs). Uploading/replacing is done by the driver from "Mi
+ * actividad" (own profile); here documents are view-only.
+ */
+@Component({
+  selector: 'app-perfil-conductor',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [Skeleton, EmptyState, DocSlot],
+  templateUrl: './perfil-conductor.html',
+  styleUrl: './perfil-conductor.scss',
+})
+export class PerfilConductorPage {
+  private route = inject(ActivatedRoute);
+  private conductores = inject(ConductoresService);
+  private documentos = inject(DocumentosService);
+  private ctx = inject(UserContextService);
+  private router = inject(Router);
+  private location = inject(Location);
+
+  fmtFecha = formatFecha;
+  fmtFechaMedia = formatFechaMedia;
+
+  loading = signal(true);
+  private condId = signal('');
+  stats = signal<ConductorStats | null>(null);
+  cedula = signal<DocView | null>(null);
+  licencia = signal<DocView | null>(null);
+  otros = signal<DocView[]>([]);
+  esMiPerfil = signal(false);
+
+  constructor() {
+    void this.load();
+  }
+
+  private async load(): Promise<void> {
+    const id = this.route.snapshot.paramMap.get('conductorId') ?? '';
+    this.condId.set(id);
+    this.loading.set(true);
+    try {
+      this.stats.set(await this.conductores.getStatsDe(id));
+      const mio = await this.conductores.getMiConductor();
+      this.esMiPerfil.set(!!mio && mio.id === id);
+      await this.loadDocs(id);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  private async loadDocs(id: string): Promise<void> {
+    if (!id) return;
+    const docs = await this.documentos.getDocumentos('conductor', id); // ordenado desc
+    const toView = async (d: Documento): Promise<DocView> => ({
+      label: TIPO_LABEL[d.tipo] ?? d.nombre ?? d.tipo,
+      url: await this.documentos.getSignedUrl(d.path),
+      esPdf: /\.pdf$/i.test(d.path),
+    });
+    const ced = docs.find((d) => d.tipo === 'cedula') ?? null;
+    const lic = docs.find((d) => d.tipo === 'licencia') ?? null;
+    this.cedula.set(ced ? await toView(ced) : null);
+    this.licencia.set(lic ? await toView(lic) : null);
+    const otros = docs.filter((d) => d.tipo !== 'cedula' && d.tipo !== 'licencia');
+    this.otros.set(await Promise.all(otros.map(toView)));
+  }
+
+  irMiActividad(): void {
+    void this.router.navigate(['/transporte/mi-actividad']);
+  }
+
+  back(): void {
+    this.location.back();
+  }
+}

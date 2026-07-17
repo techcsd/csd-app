@@ -126,6 +126,28 @@ export class VehiculosService {
     return data ?? { a_cargo: [], por_recibir: [] };
   }
 
+  /** Whole active fleet (any estado) for the browse/profile list, cached. */
+  async getFlota(): Promise<VehiculoDisponible[]> {
+    const data = await this.catalog.refresh<VehiculoDisponible[]>('flota_vehiculos', async () => {
+      const { data, error } = await this.supabase.client
+        .from('vehiculos')
+        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos')
+        .eq('activo', true)
+        .order('placa', { ascending: true });
+      if (error) throw new Error(error.message);
+      return ((data as Array<Record<string, unknown>>) ?? []).map((v) => ({
+        vehiculo_id: v['id'] as string,
+        placa: v['placa'] as string,
+        marca: (v['marca'] as string) ?? '',
+        modelo: (v['modelo'] as string) ?? '',
+        tipo: (v['tipo'] as string) ?? '',
+        km: (v['kilometraje'] as number) ?? 0,
+        foto_path: ((v['fotos'] as string[] | null) ?? [])[0] ?? null,
+      }));
+    });
+    return data ?? [];
+  }
+
   /** Vehicles available to self-assign (activo + estado disponible), cached. */
   async getVehiculosDisponibles(): Promise<VehiculoDisponible[]> {
     const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {

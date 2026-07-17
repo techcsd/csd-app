@@ -78,10 +78,28 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/transporte').then((m) => m.TransportePage),
   },
   {
+    path: 'transporte/vehiculos',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/vehiculos/vehiculos').then((m) => m.VehiculosListaPage),
+  },
+  {
     path: 'transporte/vehiculo/:vehiculoId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
       import('./pages/transporte/perfil-vehiculo/perfil-vehiculo').then((m) => m.PerfilVehiculoPage),
+  },
+  {
+    path: 'transporte/conductores',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/conductores/conductores').then((m) => m.ConductoresListaPage),
+  },
+  {
+    path: 'transporte/conductor/:conductorId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/perfil-conductor/perfil-conductor').then((m) => m.PerfilConductorPage),
   },
   {
     path: 'transporte/mi-actividad',

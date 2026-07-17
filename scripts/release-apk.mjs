@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.9.2';
+const VERSION = '1.10.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -61,11 +61,12 @@ const MIN_VERSION = '1.6.0';
 const RELEASED_AT = '2026-07-16';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Cantidad de actividades en la bitácora';
+const TITULO = 'Perfiles de vehículos y conductores';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'En la bitácora, al elegir la parte y tocar lo que se hizo, aparece al instante el selector de cantidad de cada trabajo.' },
+  { t: 'nuevo', d: 'Nueva sección Vehículos: busca y abre el perfil de cualquier vehículo de la flota.' },
+  { t: 'nuevo', d: 'Nueva sección Conductores: busca y abre el perfil de cualquier conductor, con sus documentos.' },
 ];
 
 const TIPO_POR_COMMIT = {
