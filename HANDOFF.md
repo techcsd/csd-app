@@ -1,7 +1,14 @@
 # HANDOFF — CSD App
 
-## Estado de release (2026-07-17) — v1.12.0 PUBLICADA
-- **Publicada a usuarios: 1.12.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
+## Estado de release (2026-07-17) — v1.13.0 PUBLICADA
+- **Publicada a usuarios: 1.13.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
+- **1.13.0 — persistencia de borradores + fix de fotos (PWA iOS/WebKit):**
+  - **Fase 1 (causa raíz):** `fotos_pendientes` guardaba `Blob`/`File` directo → error WebKit "Error preparing Blob/File data…" (foto de combustible obligaba a "repetir foto"). Ahora persiste **ArrayBuffer + type** y reconstruye el `Blob` al subir (`SyncService.enqueue`/`uploadPhotos`). Central: cubre todos los flujos de fotos. Compresión ya existía en `CameraService`.
+  - **Fase 2 (autosave):** `core/services/autosave.service.ts` — debounce 600ms + flush en `visibilitychange`(hidden)/`pagehide` (no `beforeunload`). Aplicado a checklist, alta/edición de conductor y vehículo; `parte` ya autoguardaba (+meta).
+  - **Fase 3 (recuperación):** `shared/ui/draft-banner` "Tienes un borrador… Continuar/Descartar" en esos formularios (rehidrata estado; fotos se re-toman).
+  - **Fase 4:** `pages/en-proceso` "Documentación en proceso" (link en Ajustes) lista borradores sin enviar (`BorradorService.list` + meta tipo/etiqueta/ruta) para retomar/descartar.
+  - **Fase 5:** km del pre-uso arranca vacío (último km como referencia); checklist/combustible ya arrancaban vacíos.
+  - **IndexedDB:** solo cambian shapes de valor (no stores/índices) → sin bump de versión Dexie; filas viejas siguen leyéndose (fallback a `blob`).
 - **1.12.0 — gestión de flota en la app (paridad web, todo gated por rol):**
   - **Vehículos (admin):** crear/editar (`transporte/vehiculos/nuevo`, `/:id/editar`) — placa/marca/modelo/año/tipo/estado/km/vencimientos matrícula-seguro/mantenimiento/notas + subir foto (bucket vehiculos). Botón "Agregar vehículo" (lista) + "Editar vehículo" (perfil). RLS `vehiculos:write=is_admin`. Shape validado contra la BD.
   - **Conductores:** editar (relinkear usuario, licencia, tipo) + desactivar (`transporte/conductores/:id/editar`); "Editar" en el perfil (admin).
