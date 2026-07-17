@@ -1,0 +1,80 @@
+.avisos {
+  background: var(--color-bg);
+}
+
+.avisos__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.avisos__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.avisos__icon {
+  font-size: 26px;
+}
+
+.avisos__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.avisos__card {
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-warning);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.avisos__card--alta {
+  border-left-color: var(--color-error);
+}
+
+.avisos__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.avisos__tipo {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.avisos__placa {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.avisos__msg {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.avisos__fecha {
+  margin: 4px 0 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.avisos__cta {
+  width: 100%;
+}

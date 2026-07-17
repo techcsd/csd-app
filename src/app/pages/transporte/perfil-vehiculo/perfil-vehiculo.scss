@@ -117,3 +117,17 @@
   font-size: 14px;
   color: var(--color-text-secondary);
 }
+
+// Gestión (admin)
+.pveh__editar {
+  margin-bottom: 12px;
+}
+.pveh__asignar {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pveh__asignar-cta {
+  width: 100%;
+}

@@ -84,6 +84,23 @@ export const routes: Routes = [
       import('./pages/transporte/vehiculos/vehiculos').then((m) => m.VehiculosListaPage),
   },
   {
+    path: 'transporte/vehiculos/nuevo',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/vehiculos/vehiculo-form').then((m) => m.VehiculoFormPage),
+  },
+  {
+    path: 'transporte/vehiculos/:vehiculoId/editar',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/vehiculos/vehiculo-form').then((m) => m.VehiculoFormPage),
+  },
+  {
+    path: 'transporte/avisos',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () => import('./pages/transporte/avisos/avisos').then((m) => m.AvisosFlotaPage),
+  },
+  {
     path: 'transporte/vehiculo/:vehiculoId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
@@ -97,6 +114,12 @@ export const routes: Routes = [
   },
   {
     path: 'transporte/conductores/nuevo',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/conductores/conductor-form').then((m) => m.ConductorFormPage),
+  },
+  {
+    path: 'transporte/conductores/:conductorId/editar',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
       import('./pages/transporte/conductores/conductor-form').then((m) => m.ConductorFormPage),

@@ -88,6 +88,10 @@ export class TransportePage {
     void this.router.navigate(['/transporte/conductores']);
   }
 
+  avisos(): void {
+    void this.router.navigate(['/transporte/avisos']);
+  }
+
   recibir(vehiculoId: string): void {
     void this.router.navigate(['/transporte/recibir', vehiculoId]);
   }

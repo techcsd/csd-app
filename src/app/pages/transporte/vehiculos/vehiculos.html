@@ -6,6 +6,10 @@
   </header>
 
   <div class="screen__body">
+    @if (esAdmin()) {
+      <button type="button" class="btn-cta vlist__add" (click)="nuevo()">➕ Agregar vehículo</button>
+    }
+
     <input
       class="field vlist__search"
       type="text"

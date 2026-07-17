@@ -1,8 +1,8 @@
-.cform {
+.vform {
   background: var(--color-bg);
 }
 
-.cform__header {
+.vform__header {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -11,7 +11,7 @@
   color: #fff;
 }
 
-.cform__back {
+.vform__back {
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -21,27 +21,16 @@
   font-weight: 700;
 }
 
-.cform__icon {
+.vform__icon {
   font-size: 26px;
 }
 
-.cform__title {
+.vform__title {
   margin: 0;
   font-size: var(--fs-title);
   font-weight: 800;
 }
 
-.cform__hint {
-  margin: 0 0 8px;
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.cform__unlink {
-  margin-bottom: 8px;
-}
-
-.cform__desactivar {
-  margin-top: 18px;
-  color: var(--color-error);
+.vform__notas {
+  resize: vertical;
 }

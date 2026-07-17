@@ -1,15 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe, Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
+import { ConductoresService } from '../../../core/services/conductores.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { VehiculoStats } from '../../../core/models/transporte.model';
 import { Documento } from '../../../core/models/documento.model';
+import { Conductor } from '../../../core/models/conductor.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
 
 /** A document ready to render (label + signed URL). */
@@ -35,7 +39,7 @@ const TIPO_LABEL: Record<string, string> = {
   selector: 'app-perfil-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot],
+  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot, SelectList],
   templateUrl: './perfil-vehiculo.html',
   styleUrl: './perfil-vehiculo.scss',
 })
@@ -43,8 +47,11 @@ export class PerfilVehiculoPage {
   private route = inject(ActivatedRoute);
   private vehiculos = inject(VehiculosService);
   private documentos = inject(DocumentosService);
+  private conductores = inject(ConductoresService);
   private ctx = inject(UserContextService);
+  private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private router = inject(Router);
   private location = inject(Location);
 
   loading = signal(true);
@@ -64,6 +71,15 @@ export class PerfilVehiculoPage {
   puedeSubir = computed(() => this.ctx.hasModulo('flota'));
   seguroEnCola = computed(() => this.colaTipos().includes('seguro'));
   matriculaEnCola = computed(() => this.colaTipos().includes('matricula'));
+
+  // Gestión (admin): editar vehículo + asignar a un conductor.
+  esAdmin = () => this.ctx.hasModulo('admin');
+  private conductores_ = signal<Conductor[]>([]);
+  conductorSel = signal('');
+  asignando = signal(false);
+  conductorOpts = computed<SelectOption[]>(() =>
+    this.conductores_().map((c) => ({ id: c.id, label: c.cedula ? `${c.nombre} · ${c.cedula}` : c.nombre })),
+  );
 
   constructor() {
     void this.load();
@@ -85,8 +101,43 @@ export class PerfilVehiculoPage {
       }
       this.stats.set(stats);
       await this.loadDocs(id);
+      if (this.esAdmin()) {
+        try {
+          this.conductores_.set(await this.conductores.getConductores());
+        } catch {
+          /* best-effort: sin lista igual se puede ver el perfil */
+        }
+      }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  editar(): void {
+    void this.router.navigate(['/transporte/vehiculos', this.vehiculoId(), 'editar']);
+  }
+
+  /** Asignar este vehículo a un conductor (admin). */
+  async asignar(): Promise<void> {
+    if (this.asignando()) return;
+    const conductor = this.conductores_().find((c) => c.id === this.conductorSel());
+    if (!conductor) {
+      this.toast.error('Elige un conductor.');
+      return;
+    }
+    if (!this.network.online()) {
+      this.toast.error('Necesitas conexión para asignar.');
+      return;
+    }
+    this.asignando.set(true);
+    try {
+      await this.vehiculos.asignarAConductor(this.vehiculoId(), conductor.id, conductor.usuario_id);
+      this.toast.success(`Vehículo asignado a ${conductor.nombre}.`);
+      this.conductorSel.set('');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo asignar.');
+    } finally {
+      this.asignando.set(false);
     }
   }
 

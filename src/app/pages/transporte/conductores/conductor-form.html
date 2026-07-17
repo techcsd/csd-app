@@ -2,7 +2,7 @@
   <header class="cform__header">
     <button type="button" class="cform__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="cform__icon">🪪</span>
-    <h1 class="cform__title">Nuevo conductor</h1>
+    <h1 class="cform__title">{{ esEdicion() ? 'Editar conductor' : 'Nuevo conductor' }}</h1>
   </header>
 
   <div class="screen__body">
@@ -41,12 +41,18 @@
       @for (t of tiposAutorizado; track t) {
         <app-option-button [label]="t" [selected]="tipoAutorizado() === t" (pressed)="tipoAutorizado.set(t)" />
       }
+
+      @if (esEdicion()) {
+        <button type="button" class="btn-ghost cform__desactivar" [disabled]="submitting()" (click)="desactivar()">
+          Desactivar conductor
+        </button>
+      }
     }
   </div>
 
   <app-wizard-footer
     backLabel="Cancelar"
-    [primaryLabel]="submitting() ? 'Guardando…' : 'Crear conductor'"
+    [primaryLabel]="submitting() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear conductor')"
     [primaryDisabled]="submitting()"
     (back)="back()"
     (primary)="guardar()"

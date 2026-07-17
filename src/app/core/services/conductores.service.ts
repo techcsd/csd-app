@@ -140,6 +140,57 @@ export class ConductoresService {
     await this.getConductores(); // re-warm the cached list
   }
 
+  /** A single driver row by id (for the edit form prefill). */
+  async getConductor(id: string): Promise<Conductor | null> {
+    if (!id) return null;
+    const { data, error } = await this.supabase.client
+      .from('conductores')
+      .select(
+        'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as Conductor) ?? null;
+  }
+
+  /** Update an existing driver (gestión, gated is_admin OR flota). */
+  async actualizarConductor(
+    id: string,
+    input: {
+      nombre: string;
+      cedula: string;
+      licenciaTipo: string;
+      licenciaNumero: string | null;
+      licenciaVencimiento: string | null;
+      tipoVehiculoAutorizado: string;
+      usuarioId: string | null;
+    },
+  ): Promise<void> {
+    const { error } = await this.supabase.client
+      .from('conductores')
+      .update({
+        nombre: input.nombre.trim(),
+        cedula: input.cedula.trim(),
+        licencia_tipo: input.licenciaTipo.trim(),
+        licencia_numero: input.licenciaNumero?.trim() || null,
+        licencia_vencimiento: input.licenciaVencimiento || null,
+        tipo_vehiculo_autorizado: input.tipoVehiculoAutorizado || 'Ambos',
+        usuario_id: input.usuarioId || null,
+      })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.getConductores();
+    await this.getMiConductor();
+  }
+
+  /** Activate/deactivate a driver (gestión). */
+  async setConductorActivo(id: string, activo: boolean): Promise<void> {
+    const { error } = await this.supabase.client.from('conductores').update({ activo }).eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.getConductores();
+  }
+
   /** Aggregated stats for ANY driver (v_conductor_stats), cached per id. */
   async getStatsDe(conductorId: string): Promise<ConductorStats | null> {
     if (!conductorId) return null;

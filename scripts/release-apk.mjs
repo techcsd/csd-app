@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.11.0';
+const VERSION = '1.12.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -61,12 +61,13 @@ const MIN_VERSION = '1.6.0';
 const RELEASED_AT = '2026-07-16';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Arreglo de conductor + alta de conductores';
+const TITULO = 'Gestión de flota en la app';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Al recibir un vehículo ya te reconoce como conductor (fallaba si tu usuario tenía un perfil de conductor duplicado).' },
-  { t: 'nuevo', d: 'Admin: agregar un conductor y vincularlo a un usuario del sistema desde la app (autollena su cédula).' },
+  { t: 'nuevo', d: 'Admin: crear y editar vehículos desde la app (datos, foto, vencimientos de matrícula y seguro, mantenimiento).' },
+  { t: 'nuevo', d: 'Admin: editar conductores y asignar un vehículo a otro conductor.' },
+  { t: 'nuevo', d: 'Avisos de flota en la app: pre-cita, vencimientos y hallazgos; reactivar vehículo o marcar atendido.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
@@ -30,11 +30,14 @@ export class ConductorFormPage {
   private conductores = inject(ConductoresService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
 
   readonly tiposAutorizado: TipoAutorizado[] = ['Liviano', 'Pesado', 'Ambos'];
 
+  conductorId = signal<string>('');
+  esEdicion = computed(() => !!this.conductorId());
   loading = signal(true);
   private usuarios = signal<UsuarioVinculable[]>([]);
   usuarioOpts = computed<SelectOption[]>(() =>
@@ -51,6 +54,7 @@ export class ConductorFormPage {
   submitting = signal(false);
 
   constructor() {
+    this.conductorId.set(this.route.snapshot.paramMap.get('conductorId') ?? '');
     void this.load();
   }
 
@@ -60,8 +64,40 @@ export class ConductorFormPage {
       this.usuarios.set(await this.conductores.getUsuariosVinculables());
     } catch {
       /* offline / sin permiso: se puede crear sin vincular usuario */
-    } finally {
-      this.loading.set(false);
+    }
+    if (this.esEdicion()) {
+      try {
+        const c = await this.conductores.getConductor(this.conductorId());
+        if (c) {
+          this.nombre.set(c.nombre ?? '');
+          this.cedula.set(c.cedula ?? '');
+          this.licenciaTipo.set(c.licencia_tipo ?? '');
+          this.licenciaNumero.set(c.licencia_numero ?? '');
+          this.licenciaVencimiento.set(c.licencia_vencimiento ?? '');
+          this.tipoAutorizado.set((c.tipo_vehiculo_autorizado as TipoAutorizado) || 'Ambos');
+          this.usuarioId.set(c.usuario_id ?? '');
+        }
+      } catch (e) {
+        this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el conductor.');
+      }
+    }
+    this.loading.set(false);
+  }
+
+  async desactivar(): Promise<void> {
+    if (this.submitting() || !this.esEdicion()) return;
+    if (!this.network.online()) {
+      this.toast.error('Necesitas conexión para esto.');
+      return;
+    }
+    this.submitting.set(true);
+    try {
+      await this.conductores.setConductorActivo(this.conductorId(), false);
+      this.toast.success('Conductor desactivado.');
+      void this.router.navigate(['/transporte/conductores'], { replaceUrl: true });
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo desactivar.');
+      this.submitting.set(false);
     }
   }
 
@@ -97,20 +133,27 @@ export class ConductorFormPage {
       return;
     }
     this.submitting.set(true);
+    const input = {
+      nombre: this.nombre(),
+      cedula: this.cedula(),
+      licenciaTipo: this.licenciaTipo(),
+      licenciaNumero: this.licenciaNumero() || null,
+      licenciaVencimiento: this.licenciaVencimiento() || null,
+      tipoVehiculoAutorizado: this.tipoAutorizado(),
+      usuarioId: this.usuarioId() || null,
+    };
     try {
-      await this.conductores.crearConductor({
-        nombre: this.nombre(),
-        cedula: this.cedula(),
-        licenciaTipo: this.licenciaTipo(),
-        licenciaNumero: this.licenciaNumero() || null,
-        licenciaVencimiento: this.licenciaVencimiento() || null,
-        tipoVehiculoAutorizado: this.tipoAutorizado(),
-        usuarioId: this.usuarioId() || null,
-      });
-      this.toast.success('Conductor creado.');
-      void this.router.navigate(['/transporte/conductores'], { replaceUrl: true });
+      if (this.esEdicion()) {
+        await this.conductores.actualizarConductor(this.conductorId(), input);
+        this.toast.success('Conductor actualizado.');
+        void this.router.navigate(['/transporte/conductor', this.conductorId()], { replaceUrl: true });
+      } else {
+        await this.conductores.crearConductor(input);
+        this.toast.success('Conductor creado.');
+        void this.router.navigate(['/transporte/conductores'], { replaceUrl: true });
+      }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el conductor.');
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el conductor.');
       this.submitting.set(false);
     }
   }

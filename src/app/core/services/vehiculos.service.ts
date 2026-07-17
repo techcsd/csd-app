@@ -21,6 +21,35 @@ const CATALOG_VEH_DETALLE = 'veh_detalle'; // + `:${vehiculoId}`
 const CATALOG_DISPONIBLES = 'vehiculos_disponibles';
 const CATALOG_MIS_ASIGNACIONES = 'mis_asignaciones';
 
+/** Editable vehicle fields for the admin create/edit form. */
+export interface VehiculoEditable {
+  placa: string;
+  marca: string;
+  modelo: string;
+  anio: number;
+  tipo: string;
+  estado: string;
+  kilometraje: number;
+  vencimientoMatricula: string | null;
+  vencimientoSeguro: string | null;
+  kmUltimoMantenimiento: number | null;
+  intervaloMantenimientoKm: number;
+  notas: string | null;
+}
+
+/** A flota alert (avisos_flota) for the app's avisos screen. */
+export interface FlotaAviso {
+  id: string;
+  tipo: string;
+  vehiculo_id: string | null;
+  conductor_id: string | null;
+  mensaje: string | null;
+  severidad: string | null;
+  estado: string;
+  created_at: string;
+  vehiculo?: { placa: string; estado: string } | null;
+}
+
 /** Input the checklist wizard hands to enqueueEntrega(). */
 export interface EntregaCaptura {
   vehiculoId: string;
@@ -259,6 +288,157 @@ export class VehiculosService {
       return (data as VehiculoStats) ?? null;
     });
     return data ?? null;
+  }
+
+  // ---- Gestión de vehículos (admin, RLS vehiculos:write = is_admin) ----
+
+  /** Full editable vehicle row for the admin form (online). */
+  async getVehiculoFull(id: string): Promise<(VehiculoEditable & { id: string; fotos: string[] }) | null> {
+    const { data, error } = await this.supabase.client
+      .from('vehiculos')
+      .select(
+        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, notas, fotos',
+      )
+      .eq('id', id)
+      .single();
+    if (error) throw new Error(error.message);
+    const v = data as unknown as Record<string, unknown>;
+    return {
+      id: v['id'] as string,
+      placa: (v['placa'] as string) ?? '',
+      marca: (v['marca'] as string) ?? '',
+      modelo: (v['modelo'] as string) ?? '',
+      anio: (v['anio'] as number) ?? new Date().getFullYear(),
+      tipo: (v['tipo'] as string) ?? '',
+      estado: (v['estado'] as string) ?? 'activo',
+      kilometraje: (v['kilometraje'] as number) ?? 0,
+      vencimientoMatricula: (v['vencimiento_matricula'] as string) ?? null,
+      vencimientoSeguro: (v['vencimiento_seguro'] as string) ?? null,
+      kmUltimoMantenimiento: (v['km_ultimo_mantenimiento'] as number) ?? null,
+      intervaloMantenimientoKm: (v['intervalo_mantenimiento_km'] as number) ?? 5000,
+      notas: (v['notas'] as string) ?? null,
+      fotos: (v['fotos'] as string[]) ?? [],
+    };
+  }
+
+  private toRow(input: VehiculoEditable): Record<string, unknown> {
+    return {
+      placa: input.placa.trim(),
+      marca: input.marca.trim(),
+      modelo: input.modelo.trim(),
+      anio: input.anio,
+      tipo: input.tipo.trim(),
+      estado: input.estado,
+      kilometraje: input.kilometraje,
+      vencimiento_matricula: input.vencimientoMatricula || null,
+      vencimiento_seguro: input.vencimientoSeguro || null,
+      km_ultimo_mantenimiento: input.kmUltimoMantenimiento,
+      intervalo_mantenimiento_km: input.intervaloMantenimientoKm,
+      notas: input.notas?.trim() || null,
+    };
+  }
+
+  /** Create a vehicle (admin). Returns the new id. */
+  async crearVehiculo(input: VehiculoEditable): Promise<string> {
+    const { data, error } = await this.supabase.client
+      .from('vehiculos')
+      .insert({ ...this.toRow(input), activo: true })
+      .select('id')
+      .single();
+    if (error) throw new Error(error.message);
+    await this.getFlota();
+    return (data as { id: string }).id;
+  }
+
+  /** Update a vehicle (admin). */
+  async actualizarVehiculo(id: string, input: VehiculoEditable): Promise<void> {
+    const { error } = await this.supabase.client
+      .from('vehiculos')
+      .update({ ...this.toRow(input), updated_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.getFlota();
+  }
+
+  /** Upload a vehicle photo to the `vehiculos` bucket and make it the primary. */
+  async subirFotoVehiculo(id: string, blob: Blob): Promise<void> {
+    const path = `${id}/perfil_${crypto.randomUUID()}.jpg`;
+    const { error: upErr } = await this.supabase.client.storage
+      .from('vehiculos')
+      .upload(path, blob, { upsert: true, contentType: blob.type || 'image/jpeg' });
+    if (upErr) throw new Error(upErr.message);
+    // Prepend the new photo as the primary (keep existing ones).
+    const { data } = await this.supabase.client.from('vehiculos').select('fotos').eq('id', id).single();
+    const fotos = ((data as { fotos: string[] } | null)?.fotos ?? []).filter((p) => p !== path);
+    const { error } = await this.supabase.client
+      .from('vehiculos')
+      .update({ fotos: [path, ...fotos] })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.getFlota();
+  }
+
+  /**
+   * Assign a vehicle to another driver (admin/flota). Deactivates other active
+   * assignments for that vehicle and inserts a new active one (clean handoff).
+   */
+  async asignarAConductor(vehiculoId: string, conductorId: string, usuarioId: string | null): Promise<void> {
+    await this.supabase.client
+      .from('vehiculo_asignaciones')
+      .update({ activa: false, hasta: new Date().toISOString() })
+      .eq('vehiculo_id', vehiculoId)
+      .eq('activa', true);
+    const { error } = await this.supabase.client.from('vehiculo_asignaciones').insert({
+      vehiculo_id: vehiculoId,
+      conductor_id: conductorId,
+      usuario_id: usuarioId,
+      activa: true,
+      origen: 'admin',
+    });
+    if (error) throw new Error(error.message);
+    void this.misPendientes();
+    void this.getMisAsignaciones();
+  }
+
+  // ---- Avisos de flota (R6/R9) ----
+
+  /** Pending flota alerts (pre-cita, seguro/matrícula, hallazgos…), cached. */
+  async getAvisosFlota(): Promise<FlotaAviso[]> {
+    const data = await this.catalog.refresh<FlotaAviso[]>('avisos_flota', async () => {
+      const { data, error } = await this.supabase.client
+        .from('avisos_flota')
+        .select('id, tipo, vehiculo_id, conductor_id, mensaje, severidad, estado, created_at, vehiculo:vehiculos(placa, estado)')
+        .eq('estado', 'pendiente')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw new Error(error.message);
+      return (data as unknown as FlotaAviso[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** Reactivate a vehicle marked no_disponible + close its blocking alert (R6). */
+  async reactivarVehiculo(id: string, nota: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('reactivar_vehiculo', { p_id: id, p_nota: nota ?? null });
+    if (error) throw new Error(error.message);
+    await this.getFlota();
+    await this.getAvisosFlota();
+  }
+
+  /** Mark any flota alert as attended (admin/flota). */
+  async atenderAviso(id: string, nota: string | null): Promise<void> {
+    const { data: userData } = await this.supabase.client.auth.getUser();
+    const { error } = await this.supabase.client
+      .from('avisos_flota')
+      .update({
+        estado: 'atendido',
+        atendido_por: userData.user?.id ?? null,
+        atendido_at: new Date().toISOString(),
+        nota_atencion: nota?.trim() || 'Atendido desde la app',
+      })
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.getAvisosFlota();
   }
 
   /** Queue a checklist. Works fully offline; syncs when there's signal. */

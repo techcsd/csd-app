@@ -17,6 +17,10 @@
     } @else {
       <p class="pcon__nombre">{{ stats()!.nombre }}</p>
 
+      @if (esAdmin()) {
+        <button type="button" class="btn-ghost pcon__editar" (click)="editar()">✏️ Editar conductor</button>
+      }
+
       @if (esMiPerfil()) {
         <button type="button" class="btn-ghost pcon__mio" (click)="irMiActividad()">
           Este es tu perfil — súbelos/edítalos desde “Mi actividad”

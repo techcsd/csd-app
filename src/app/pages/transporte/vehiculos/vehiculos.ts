@@ -6,6 +6,7 @@ import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 
 /** Browse the whole fleet → tap a vehicle to open its profile (R4). */
@@ -19,8 +20,11 @@ import { VehiculoDisponible } from '../../../core/models/transporte.model';
 })
 export class VehiculosListaPage {
   private vehiculos = inject(VehiculosService);
+  private ctx = inject(UserContextService);
   private router = inject(Router);
   private location = inject(Location);
+
+  esAdmin = () => this.ctx.hasModulo('admin');
 
   loading = signal(true);
   private todos = signal<VehiculoDisponible[]>([]);
@@ -67,6 +71,10 @@ export class VehiculosListaPage {
 
   ver(v: VehiculoDisponible): void {
     void this.router.navigate(['/transporte/vehiculo', v.vehiculo_id]);
+  }
+
+  nuevo(): void {
+    void this.router.navigate(['/transporte/vehiculos/nuevo']);
   }
 
   back(): void {

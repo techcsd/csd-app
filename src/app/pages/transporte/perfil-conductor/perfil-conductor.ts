@@ -54,6 +54,7 @@ export class PerfilConductorPage {
   licencia = signal<DocView | null>(null);
   otros = signal<DocView[]>([]);
   esMiPerfil = signal(false);
+  esAdmin = () => this.ctx.hasModulo('admin');
 
   constructor() {
     void this.load();
@@ -91,6 +92,10 @@ export class PerfilConductorPage {
 
   irMiActividad(): void {
     void this.router.navigate(['/transporte/mi-actividad']);
+  }
+
+  editar(): void {
+    void this.router.navigate(['/transporte/conductores', this.condId(), 'editar']);
   }
 
   back(): void {

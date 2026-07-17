@@ -1,0 +1,62 @@
+<div class="screen vform">
+  <header class="vform__header">
+    <button type="button" class="vform__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="vform__icon">🚙</span>
+    <h1 class="vform__title">{{ esEdicion() ? 'Editar vehículo' : 'Nuevo vehículo' }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      <label class="field-label" for="placa">Placa</label>
+      <input id="placa" class="field" type="text" [ngModel]="placa()" (ngModelChange)="placa.set($event)" placeholder="A123456" />
+
+      <label class="field-label" for="marca">Marca</label>
+      <input id="marca" class="field" type="text" [ngModel]="marca()" (ngModelChange)="marca.set($event)" placeholder="Toyota" />
+
+      <label class="field-label" for="modelo">Modelo</label>
+      <input id="modelo" class="field" type="text" [ngModel]="modelo()" (ngModelChange)="modelo.set($event)" placeholder="Hilux" />
+
+      <label class="field-label" for="anio">Año</label>
+      <input id="anio" class="field" type="number" inputmode="numeric" [ngModel]="anio()" (ngModelChange)="anio.set($event)" placeholder="2022" />
+
+      <label class="field-label" for="tipo">Tipo</label>
+      <input id="tipo" class="field" type="text" [ngModel]="tipo()" (ngModelChange)="tipo.set($event)" placeholder="pickup, camión, cabezote…" />
+
+      <label class="field-label">Estado</label>
+      @for (e of estados; track e.v) {
+        <app-option-button [label]="e.label" [selected]="estado() === e.v" (pressed)="estado.set(e.v)" />
+      }
+
+      <label class="field-label" for="km">Kilometraje</label>
+      <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="kilometraje()" (ngModelChange)="kilometraje.set($event)" placeholder="0" />
+
+      <label class="field-label" for="vm">Vencimiento matrícula (opcional)</label>
+      <input id="vm" class="field" type="date" [ngModel]="vencMatricula()" (ngModelChange)="vencMatricula.set($event)" />
+
+      <label class="field-label" for="vs">Vencimiento seguro (opcional)</label>
+      <input id="vs" class="field" type="date" [ngModel]="vencSeguro()" (ngModelChange)="vencSeguro.set($event)" />
+
+      <label class="field-label" for="kum">Km del último mantenimiento (opcional)</label>
+      <input id="kum" class="field" type="number" inputmode="numeric" [ngModel]="kmUltMant()" (ngModelChange)="kmUltMant.set($event)" placeholder="0" />
+
+      <label class="field-label" for="im">Mantenimiento cada (km)</label>
+      <input id="im" class="field" type="number" inputmode="numeric" [ngModel]="intervaloMant()" (ngModelChange)="intervaloMant.set($event)" placeholder="5000" />
+
+      <label class="field-label" for="notas">Notas (opcional)</label>
+      <textarea id="notas" class="field vform__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
+
+      <label class="field-label">Foto (opcional)</label>
+      <app-photo-slot label="Foto del vehículo" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+    }
+  </div>
+
+  <app-wizard-footer
+    backLabel="Cancelar"
+    [primaryLabel]="submitting() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear vehículo')"
+    [primaryDisabled]="submitting()"
+    (back)="back()"
+    (primary)="guardar()"
+  />
+</div>
