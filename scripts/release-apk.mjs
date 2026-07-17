@@ -55,9 +55,10 @@ const codeFromVersion = (v) => {
 const VERSION_CODE = codeFromVersion(VERSION);
 // Rollout escalonado (R15): el mínimo forzado se controla en SGC → app-versiones
 // (sgc.app_versiones.minima → version_publicada().version_minima, que alimenta el
-// gate bloqueante). 1.6.0 quedó como mínimo forzado (2026-07-15). Mantener este
-// valor alineado con esa fila para que version.json (aviso) no contradiga el gate.
-const MIN_VERSION = '1.6.0';
+// gate bloqueante). 1.15.0 quedó como mínimo forzado (2026-07-17, fix del crash de
+// foto en Android). Mantener este valor alineado con la fila `minima=true` para que
+// version.json (aviso) no contradiga el gate.
+const MIN_VERSION = '1.15.0';
 const RELEASED_AT = '2026-07-17';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
