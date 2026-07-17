@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConductoresService } from '../../../core/services/conductores.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { Conductor, estadoLicencia, LicenciaEstado } from '../../../core/models/conductor.model';
 
 const LIC_LABEL: Record<LicenciaEstado, string> = {
@@ -25,8 +26,11 @@ const LIC_LABEL: Record<LicenciaEstado, string> = {
 })
 export class ConductoresListaPage {
   private conductores = inject(ConductoresService);
+  private ctx = inject(UserContextService);
   private router = inject(Router);
   private location = inject(Location);
+
+  esAdmin = () => this.ctx.hasModulo('admin');
 
   loading = signal(true);
   private todos = signal<Conductor[]>([]);
@@ -63,6 +67,10 @@ export class ConductoresListaPage {
 
   ver(c: Conductor): void {
     void this.router.navigate(['/transporte/conductor', c.id]);
+  }
+
+  nuevo(): void {
+    void this.router.navigate(['/transporte/conductores/nuevo']);
   }
 
   back(): void {

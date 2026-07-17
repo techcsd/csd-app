@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { Conductor, ConductorStats } from '../models/conductor.model';
+import { Conductor, ConductorStats, UsuarioVinculable } from '../models/conductor.model';
 
 const CATALOG_MI_CONDUCTOR = 'mi_conductor';
 const CATALOG_MI_STATS = 'mi_conductor_stats';
@@ -30,6 +30,9 @@ export class ConductoresService {
       const { data: userData } = await this.supabase.client.auth.getUser();
       const uid = userData.user?.id;
       if (!uid) return null;
+      // Robusto ante duplicados: si por datos hay >1 conductor activo ligado al
+      // mismo usuario, tomamos el más reciente (antes .maybeSingle() reventaba
+      // con "multiple rows" y la app decía "no eres conductor").
       const { data, error } = await this.supabase.client
         .from('conductores')
         .select(
@@ -37,9 +40,10 @@ export class ConductoresService {
         )
         .eq('usuario_id', uid)
         .eq('activo', true)
-        .maybeSingle();
+        .order('created_at', { ascending: false })
+        .limit(1);
       if (error) throw new Error(error.message);
-      return (data as Conductor) ?? null;
+      return ((data as Conductor[]) ?? [])[0] ?? null;
     });
     return data ?? null;
   }
@@ -99,6 +103,41 @@ export class ConductoresService {
       return (data as Conductor[]) ?? [];
     });
     return data ?? [];
+  }
+
+  /** System users that can be linked to a driver (usuarios_vinculables RPC). */
+  async getUsuariosVinculables(): Promise<UsuarioVinculable[]> {
+    const { data, error } = await this.supabase.client.rpc('usuarios_vinculables');
+    if (error) throw new Error(error.message);
+    return (data as UsuarioVinculable[]) ?? [];
+  }
+
+  /**
+   * Alta de conductor (gestión, gated por RLS is_admin OR flota). Puede quedar
+   * ligado a un usuario del sistema (usuario_id) — paridad con la web. Requiere
+   * conexión (escritura directa, no outbox). Refresca la lista cacheada.
+   */
+  async crearConductor(input: {
+    nombre: string;
+    cedula: string;
+    licenciaTipo: string;
+    licenciaNumero: string | null;
+    licenciaVencimiento: string | null; // YYYY-MM-DD
+    tipoVehiculoAutorizado: string;
+    usuarioId: string | null;
+  }): Promise<void> {
+    const { error } = await this.supabase.client.from('conductores').insert({
+      nombre: input.nombre.trim(),
+      cedula: input.cedula.trim(),
+      licencia_tipo: input.licenciaTipo.trim(),
+      licencia_numero: input.licenciaNumero?.trim() || null,
+      licencia_vencimiento: input.licenciaVencimiento || null,
+      tipo_vehiculo_autorizado: input.tipoVehiculoAutorizado || 'Ambos',
+      usuario_id: input.usuarioId || null,
+      activo: true,
+    });
+    if (error) throw new Error(error.message);
+    await this.getConductores(); // re-warm the cached list
   }
 
   /** Aggregated stats for ANY driver (v_conductor_stats), cached per id. */

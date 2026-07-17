@@ -16,6 +16,15 @@ export interface Conductor {
   usuario_id: string | null;
 }
 
+/** A system user that can be linked to a driver profile (usuarios_vinculables). */
+export interface UsuarioVinculable {
+  id: string;
+  nombre: string;
+  cedula: string | null;
+  telefono: string | null;
+  email: string | null;
+}
+
 /** Aggregated driver stats for the read-only profile (v_conductor_stats, R5). */
 export interface ConductorStats {
   conductor_id: string;

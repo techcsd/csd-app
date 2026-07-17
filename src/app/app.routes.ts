@@ -96,6 +96,12 @@ export const routes: Routes = [
       import('./pages/transporte/conductores/conductores').then((m) => m.ConductoresListaPage),
   },
   {
+    path: 'transporte/conductores/nuevo',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/conductores/conductor-form').then((m) => m.ConductorFormPage),
+  },
+  {
     path: 'transporte/conductor/:conductorId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>

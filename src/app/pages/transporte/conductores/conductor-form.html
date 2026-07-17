@@ -1,0 +1,54 @@
+<div class="screen cform">
+  <header class="cform__header">
+    <button type="button" class="cform__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="cform__icon">🪪</span>
+    <h1 class="cform__title">Nuevo conductor</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="3" />
+    } @else {
+      <label class="field-label">Vincular a un usuario del sistema (opcional)</label>
+      <p class="cform__hint">Si lo eliges, se autollenan sus datos. Déjalo vacío si el conductor no tiene usuario.</p>
+      <app-select-list
+        label="Usuario"
+        icon="👤"
+        [options]="usuarioOpts()"
+        [selectedId]="usuarioId()"
+        (picked)="onUsuario($event)"
+      />
+      @if (usuarioId()) {
+        <button type="button" class="btn-ghost cform__unlink" (click)="quitarUsuario()">Quitar vínculo</button>
+      }
+
+      <label class="field-label" for="nom">Nombre</label>
+      <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Nombre y apellido" />
+
+      <label class="field-label" for="ced">Cédula</label>
+      <input id="ced" class="field" type="text" inputmode="numeric" [ngModel]="cedula()" (ngModelChange)="cedula.set($event)" placeholder="000-0000000-0" />
+
+      <label class="field-label" for="lt">Tipo / categoría de licencia</label>
+      <input id="lt" class="field" type="text" [ngModel]="licenciaTipo()" (ngModelChange)="licenciaTipo.set($event)" placeholder="Ej. Categoría 2" />
+
+      <label class="field-label" for="ln">Número de licencia (opcional)</label>
+      <input id="ln" class="field" type="text" [ngModel]="licenciaNumero()" (ngModelChange)="licenciaNumero.set($event)" placeholder="Número" />
+
+      <label class="field-label" for="lv">Vencimiento de licencia (opcional)</label>
+      <input id="lv" class="field" type="date" [ngModel]="licenciaVencimiento()" (ngModelChange)="licenciaVencimiento.set($event)" />
+
+      <label class="field-label">¿Qué vehículos maneja?</label>
+      @for (t of tiposAutorizado; track t) {
+        <app-option-button [label]="t" [selected]="tipoAutorizado() === t" (pressed)="tipoAutorizado.set(t)" />
+      }
+    }
+  </div>
+
+  <app-wizard-footer
+    backLabel="Cancelar"
+    [primaryLabel]="submitting() ? 'Guardando…' : 'Crear conductor'"
+    [primaryDisabled]="submitting()"
+    (back)="back()"
+    (primary)="guardar()"
+  />
+</div>

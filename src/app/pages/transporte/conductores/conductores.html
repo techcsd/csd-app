@@ -6,6 +6,10 @@
   </header>
 
   <div class="screen__body">
+    @if (esAdmin()) {
+      <button type="button" class="btn-cta clist__add" (click)="nuevo()">➕ Agregar conductor</button>
+    }
+
     <input
       class="field clist__search"
       type="text"

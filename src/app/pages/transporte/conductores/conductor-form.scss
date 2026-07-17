@@ -1,0 +1,42 @@
+.cform {
+  background: var(--color-bg);
+}
+
+.cform__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.cform__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.cform__icon {
+  font-size: 26px;
+}
+
+.cform__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.cform__hint {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.cform__unlink {
+  margin-bottom: 8px;
+}
