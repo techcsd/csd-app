@@ -1,8 +1,20 @@
 # HANDOFF — CSD App
 
-## Estado de release (2026-07-17) — v1.10.0 PUBLICADA
-- **Publicada a usuarios: 1.10.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
-- **1.10.0 — perfiles de flota navegables (app):** nuevas pantallas **Vehículos** (`transporte/vehiculos`, busca la flota → perfil) y **Conductores** (`transporte/conductores` → `transporte/conductor/:id`, perfil solo lectura con stats + documentos). Enlaces en el home de Transporte. Servicios: `VehiculosService.getFlota()`, `ConductoresService.getConductores()/getStatsDe()`. Sin cambios de BD/SGC (RLS flota ya lo permitía; la web ya tenía las listas).
+## Estado de release (2026-07-17) — v1.11.0 PUBLICADA
+- **Publicada a usuarios: 1.11.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
+- **1.11.0 — arreglo relaciones conductor + alta de conductor:**
+  - **Bug corregido:** `getMiConductor` usaba `.maybeSingle()` → reventaba con "multiple rows" cuando un usuario tenía >1 conductor activo (había un duplicado **QA-TEST** ligado al usuario de Tecnología) → decía "no eres conductor". **Datos:** desactivada la fila QA-TEST duplicada (queda solo el conductor real). **Código:** `getMiConductor` ahora `order(created_at desc).limit(1)`. El fix de datos ya aplica en la app instalada al re-sincronizar.
+  - **Alta de conductor (admin):** `transporte/conductores/nuevo` — vincular a un usuario del sistema (`usuarios_vinculables()`, autollena nombre/cédula) o sin usuario; licencia + tipo. `ConductoresService.crearConductor()` (insert directo, RLS is_admin OR flota). Botón "Agregar conductor" en la lista, gated a admin.
+- **1.10.0 — perfiles de flota navegables:** pantallas **Vehículos** (`transporte/vehiculos` → perfil) y **Conductores** (`transporte/conductores` → `transporte/conductor/:id`, solo lectura con stats + docs). Enlaces en el home.
+
+### Paridad flota web↔app — estado y pendientes
+- ✅ Listas + perfiles de vehículos y conductores (navegar/elegir).
+- ✅ Alta de conductor + vincular usuario (admin).
+- ⏳ **Gestión de vehículos (crear/editar/fotos/vencimientos)** — RLS `vehiculos: write = is_admin()` → sería feature **admin** en la app. No hecho aún (form grande + subida de fotos).
+- ⏳ **Editar conductor** existente (relinkear usuario, actualizar licencia) — pequeño, no hecho aún.
+- ⏳ **Avisos de flota / reactivar vehículo** (RPC `reactivar_vehiculo` existe) — no hecho aún.
+- ⏳ **Asignar vehículo a otro conductor** (hoy la app solo auto-asigna al propio usuario) — no hecho aún.
+- Dashboards analíticos (combustible, cumplimiento) — se quedan en web por diseño.
 - Historial `sgc.app_versiones` (movil) al día y estructurado: 1.10.0 (perfiles flota) · 1.9.2 (fix cantidades bitácora) · 1.9.1 (registro auto + versión en Ajustes) · 1.9.0 (B1–B5) · 1.8.0 (docs) · …
 - **Automatización Y1**: `npm run apk` (build) ya registra la versión estructurada solo (falla si no puede). `apk:publish` además sube el APK. La app también auto-reporta su versión al arrancar (admin, red de seguridad).
 - **Fix bitácora (1.9.2)**: en "¿Qué se hizo hoy?" eliges la parte y al tocar cada actividad aparece al instante su selector de cantidad (se quitó el botón "+ Agregar a la lista" escondido).
