@@ -1,6 +1,20 @@
 # HANDOFF — CSD App
 
-## Estado de release (2026-07-17) — v1.13.0 PUBLICADA
+## Estado de release (2026-07-17) — v1.15.0 PUBLICADA
+- **Publicada a usuarios: 1.15.0** (rollout NO bloqueante) · **mínima forzada: 1.6.0** (sin cambio) · APK firmado (cert prod `3c5316d8…df5065`) en el bucket, `apk_url` OK, historial `app_versiones` (movil) al día con 8 cambios estructurados. Commit `4ce35b9` pusheado a `main` (dispara deploy PWA para iOS). 1.14.0 quedó despublicada.
+- **M1 — CRASH DE FOTO EN ANDROID (causa raíz + fix):** el APK **nunca tenía `android.permission.CAMERA`** (ni el manifest ni `@capacitor/camera` lo declaran) → `getUserMedia` denegado en el WebView → la cámara embebida de v1.14.0 nunca funcionó en Android → toda captura caía al fallback de cámara del **sistema** → MIUI mataba el proceso (bloqueo/menú). **Fix:** `+CAMERA` + `uses-feature` en el manifest (verificado en el manifest mergeado del release); `in-app-camera`/`camera.service` endurecidos (try/catch, libera canvas + `MediaStream`, reintento sin cerrar el overlay si falla la compresión). **Red de recuperación:** Dexie `borrador_fotos` (v2, ArrayBuffer WebKit-safe) + autosave del pre-uso → banner "Continuar borrador" (respuestas/km/combustible/fotos/firma) si el SO mata el proceso; se limpia al enviar.
+- **Conductores/Vehículos (consumen el SGC ya aplicado, verificado contra la BD):**
+  - **C1** categorías de licencia RD (01–06) vía `licencia_categorias` (`LicenciaCategoriasService`, cacheado) en el select del alta + etiqueta en el reporte de pre-uso.
+  - **C3** `nota` + `tags` del conductor (form con chips + sugerencias; chips/nota en el perfil).
+  - **C4/C5** cédula + **licencia (frente y dorso)** opcionales en el alta/edición (se encolan con el id, offline-safe), **preview** al capturar y **thumbnail** de los ya cargados; el perfil muestra **todas** las fotos por tipo. `doc-slot` ahora pinta thumbnail de imágenes existentes.
+  - **C6** badge licencia **Por vencer/Vencida** en listado (umbral `flota_config.umbral_licencia_dias`) y perfil.
+  - **C7** badge **"Documentos incompletos"** + filtro en el listado (vista `v_conductor_documentos`; `getDocumentosResumen`).
+  - **V1/V2** **VIN**, número de matrícula, número de seguro y **aseguradora** en el alta y el perfil del vehículo (foto por los slots existentes).
+- **Contrato SGC consumido (verificado en la BD compartida):** `conductores.nota/tags`, `vehiculos.vin/numero_matricula/numero_seguro/aseguradora`, tabla `sgc.licencia_categorias` (codigo/nombre/clase/orden), vistas `v_conductor_documentos` (conductor_id/tiene_cedula/tiene_licencia/total) y `v_conductor_stats`.
+- **PENDIENTE (device-QA — no pude, no tengo el equipo):** probar en **APK real (MIUI del reporte)** el flujo pre-uso capturar→confirmar→subir sin crash + recuperar borrador tras matar la app; y en **iOS PWA** el mismo flujo de foto. Todo lo demás verificado con `npm run build` verde en cada fase.
+- **Pendientes de confirmar con el jefe (§E, no bloquean):** seed de categorías 01–06 (ajustable en SGC si el mapeo real difiere); `umbral_licencia_dias` = 90 para "3 meses"; datos extra del seguro si los quiere.
+
+## Estado de release (2026-07-17) — v1.13.0 PUBLICADA (histórico, superado por 1.15.0)
 - **Publicada a usuarios: 1.13.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
 - **1.13.0 — persistencia de borradores + fix de fotos (PWA iOS/WebKit):**
   - **Fase 1 (causa raíz):** `fotos_pendientes` guardaba `Blob`/`File` directo → error WebKit "Error preparing Blob/File data…" (foto de combustible obligaba a "repetir foto"). Ahora persiste **ArrayBuffer + type** y reconstruye el `Blob` al subir (`SyncService.enqueue`/`uploadPhotos`). Central: cubre todos los flujos de fotos. Compresión ya existía en `CameraService`.
