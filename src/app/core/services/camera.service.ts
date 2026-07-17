@@ -25,6 +25,9 @@ export interface CapturedDoc {
 
 const MAX_EDGE = 1280;
 const JPEG_QUALITY = 0.7;
+/** Native camera/gallery quality (0-100) — Capacitor resizes + compresses on
+ *  device, which is far faster than decoding a full-res photo in JS canvas. */
+const NATIVE_QUALITY = 72;
 
 /**
  * Single entry point for taking photos. Uses the native camera on Android
@@ -41,7 +44,9 @@ export class CameraService {
   async takePhoto(): Promise<CapturedPhoto | null> {
     const raw = this.isNative ? await this.takeNative() : await this.takeWeb();
     if (!raw) return null;
-    const blob = await this.compress(raw);
+    // Nativo: Capacitor ya redimensionó/comprimió en el dispositivo → no hace
+    // falta el canvas JS (era el paso lento). Web/PWA: sí comprimimos en JS.
+    const blob = this.isNative ? raw : await this.compress(raw);
     return { blob, previewUrl: URL.createObjectURL(blob) };
   }
 
@@ -54,7 +59,7 @@ export class CameraService {
     const blobs = this.isNative ? await this.pickNativeMulti(limit) : await this.pickWebMulti();
     const out: CapturedPhoto[] = [];
     for (const raw of blobs) {
-      const blob = await this.compress(raw);
+      const blob = this.isNative ? raw : await this.compress(raw);
       out.push({ blob, previewUrl: URL.createObjectURL(blob) });
     }
     return out;
@@ -103,7 +108,8 @@ export class CameraService {
   }
 
   private async pickNativeMulti(limit: number): Promise<Blob[]> {
-    const res = await Camera.pickImages({ quality: 80, limit });
+    // width → Capacitor baja la resolución en el dispositivo (rápido).
+    const res = await Camera.pickImages({ quality: NATIVE_QUALITY, limit, width: MAX_EDGE });
     const blobs: Blob[] = [];
     for (const p of res.photos) {
       if (!p.webPath) continue;
@@ -129,7 +135,10 @@ export class CameraService {
 
   private async takeNative(): Promise<Blob | null> {
     const photo = await Camera.getPhoto({
-      quality: 80,
+      quality: NATIVE_QUALITY,
+      // width → Capacitor redimensiona en el dispositivo (mucho más rápido que
+      // decodificar la foto a resolución completa en JS). Mantiene el aspecto.
+      width: MAX_EDGE,
       allowEditing: false,
       resultType: CameraResultType.Uri,
       source: CameraSource.Camera,
