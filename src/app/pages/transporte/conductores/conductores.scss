@@ -36,7 +36,26 @@
 }
 
 .clist__search {
+  margin-bottom: 10px;
+}
+
+// C7 — filtro "solo incompletos"
+.clist__filter {
+  width: 100%;
   margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+.clist__filter--on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
 }
 
 .clist__row {
@@ -96,6 +115,17 @@
 }
 .clist__lic--bad {
   color: var(--color-error);
+}
+
+.clist__docbadge {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .clist__chev {

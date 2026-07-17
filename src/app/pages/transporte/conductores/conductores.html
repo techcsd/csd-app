@@ -18,6 +18,16 @@
       placeholder="Buscar por nombre o cédula…"
     />
 
+    <!-- C7 — filtro rápido: solo conductores con documentos incompletos -->
+    <button
+      type="button"
+      class="clist__filter"
+      [class.clist__filter--on]="soloIncompletos()"
+      (click)="soloIncompletos.set(!soloIncompletos())"
+    >
+      📄 Solo documentos incompletos
+    </button>
+
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else if (!lista().length) {
@@ -38,6 +48,9 @@
               [class.clist__lic--warn]="licEstado(c) === 'por_vencer'"
               [class.clist__lic--bad]="licEstado(c) === 'vencida'"
             >{{ licLabel(c) }}</span>
+            @if (docsIncompletos(c)) {
+              <span class="clist__docbadge">📄 Documentos incompletos</span>
+            }
           </span>
           <span class="clist__chev">›</span>
         </button>

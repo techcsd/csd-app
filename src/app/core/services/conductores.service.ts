@@ -36,7 +36,7 @@ export class ConductoresService {
       const { data, error } = await this.supabase.client
         .from('conductores')
         .select(
-          'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id',
+          'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id, nota, tags',
         )
         .eq('usuario_id', uid)
         .eq('activo', true)
@@ -95,7 +95,7 @@ export class ConductoresService {
       const { data, error } = await this.supabase.client
         .from('conductores')
         .select(
-          'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id',
+          'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id, nota, tags',
         )
         .eq('activo', true)
         .order('nombre', { ascending: true });
@@ -125,19 +125,28 @@ export class ConductoresService {
     licenciaVencimiento: string | null; // YYYY-MM-DD
     tipoVehiculoAutorizado: string;
     usuarioId: string | null;
-  }): Promise<void> {
-    const { error } = await this.supabase.client.from('conductores').insert({
-      nombre: input.nombre.trim(),
-      cedula: input.cedula.trim(),
-      licencia_tipo: input.licenciaTipo.trim(),
-      licencia_numero: input.licenciaNumero?.trim() || null,
-      licencia_vencimiento: input.licenciaVencimiento || null,
-      tipo_vehiculo_autorizado: input.tipoVehiculoAutorizado || 'Ambos',
-      usuario_id: input.usuarioId || null,
-      activo: true,
-    });
+    nota?: string | null;
+    tags?: string[] | null;
+  }): Promise<string> {
+    const { data, error } = await this.supabase.client
+      .from('conductores')
+      .insert({
+        nombre: input.nombre.trim(),
+        cedula: input.cedula.trim(),
+        licencia_tipo: input.licenciaTipo.trim(),
+        licencia_numero: input.licenciaNumero?.trim() || null,
+        licencia_vencimiento: input.licenciaVencimiento || null,
+        tipo_vehiculo_autorizado: input.tipoVehiculoAutorizado || 'Ambos',
+        usuario_id: input.usuarioId || null,
+        nota: input.nota?.trim() || null,
+        tags: input.tags && input.tags.length ? input.tags : null,
+        activo: true,
+      })
+      .select('id')
+      .single();
     if (error) throw new Error(error.message);
     await this.getConductores(); // re-warm the cached list
+    return (data as { id: string }).id;
   }
 
   /** A single driver row by id (for the edit form prefill). */
@@ -146,7 +155,7 @@ export class ConductoresService {
     const { data, error } = await this.supabase.client
       .from('conductores')
       .select(
-        'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id',
+        'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id, nota, tags',
       )
       .eq('id', id)
       .maybeSingle();
@@ -165,6 +174,8 @@ export class ConductoresService {
       licenciaVencimiento: string | null;
       tipoVehiculoAutorizado: string;
       usuarioId: string | null;
+      nota?: string | null;
+      tags?: string[] | null;
     },
   ): Promise<void> {
     const { error } = await this.supabase.client
@@ -177,6 +188,8 @@ export class ConductoresService {
         licencia_vencimiento: input.licenciaVencimiento || null,
         tipo_vehiculo_autorizado: input.tipoVehiculoAutorizado || 'Ambos',
         usuario_id: input.usuarioId || null,
+        nota: input.nota?.trim() || null,
+        tags: input.tags && input.tags.length ? input.tags : null,
       })
       .eq('id', id);
     if (error) throw new Error(error.message);
@@ -207,6 +220,29 @@ export class ConductoresService {
       },
     );
     return data ?? null;
+  }
+
+  /**
+   * C7 — resumen de documentos por conductor (v_conductor_documentos): qué
+   * conductores tienen cédula/licencia, para pintar el badge "Documentos
+   * incompletos" en el listado sin abrir cada perfil. Cacheado offline.
+   */
+  async getDocumentosResumen(): Promise<Record<string, { tiene_cedula: boolean; tiene_licencia: boolean }>> {
+    const data = await this.catalog.refresh<
+      Record<string, { tiene_cedula: boolean; tiene_licencia: boolean }>
+    >('conductor_documentos_resumen', async () => {
+      const { data, error } = await this.supabase.client
+        .from('v_conductor_documentos')
+        .select('conductor_id, tiene_cedula, tiene_licencia');
+      if (error) throw new Error(error.message);
+      const map: Record<string, { tiene_cedula: boolean; tiene_licencia: boolean }> = {};
+      for (const r of (data as Array<{ conductor_id: string; tiene_cedula: boolean; tiene_licencia: boolean }>) ??
+        []) {
+        map[r.conductor_id] = { tiene_cedula: !!r.tiene_cedula, tiene_licencia: !!r.tiene_licencia };
+      }
+      return map;
+    });
+    return data ?? {};
   }
 
   /** Umbrales configurables de Flota (sgc.flota_config), cacheados offline. */

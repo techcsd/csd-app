@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { InAppCameraService } from '../../../core/services/in-app-camera.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 const MAX_EDGE = 1280;
 const JPEG_QUALITY = 0.7;
@@ -27,6 +28,7 @@ const JPEG_QUALITY = 0.7;
 })
 export class InAppCamera {
   cam = inject(InAppCameraService);
+  private toast = inject(ToastService);
   private videoRef = viewChild<ElementRef<HTMLVideoElement>>('video');
 
   busy = signal(false);
@@ -62,7 +64,11 @@ export class InAppCamera {
   }
 
   private stop(): void {
-    this.stream?.getTracks().forEach((t) => t.stop());
+    try {
+      this.stream?.getTracks().forEach((t) => t.stop());
+    } catch {
+      /* liberar la cámara nunca debe lanzar */
+    }
     this.stream = null;
     const v = this.videoRef()?.nativeElement;
     if (v) v.srcObject = null;
@@ -75,24 +81,44 @@ export class InAppCamera {
     const vh = v.videoHeight;
     if (!vw || !vh) return;
     this.busy.set(true);
+    // M1 — todo el pipeline de captura es a prueba de excepciones/OOM: si algo
+    // falla NO cerramos el overlay ni tumbamos la vista; avisamos y el usuario
+    // reintenta. Liberamos el canvas siempre (móviles low-mem MIUI).
+    let canvas: HTMLCanvasElement | null = null;
     try {
       const scale = Math.min(1, MAX_EDGE / Math.max(vw, vh));
       const w = Math.round(vw * scale);
       const h = Math.round(vh * scale);
-      const canvas = document.createElement('canvas');
+      canvas = document.createElement('canvas');
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        this.busy.set(false);
+        this.toast.error('No se pudo procesar la foto. Intenta de nuevo.');
         return;
       }
       ctx.drawImage(v, 0, 0, w, h);
-      const blob = await new Promise<Blob | null>((res) =>
-        canvas.toBlob((b) => res(b), 'image/jpeg', JPEG_QUALITY),
-      );
+      const blob = await new Promise<Blob | null>((res) => {
+        try {
+          canvas!.toBlob((b) => res(b), 'image/jpeg', JPEG_QUALITY);
+        } catch {
+          res(null);
+        }
+      });
+      if (!blob) {
+        // Compresión fallida (raro): no cerramos, dejamos reintentar.
+        this.toast.error('No se pudo guardar la foto. Intenta de nuevo.');
+        return;
+      }
       this.cam.finish(blob);
+    } catch {
+      this.toast.error('No se pudo tomar la foto. Intenta de nuevo.');
     } finally {
+      // Liberar el canvas explícitamente para no acumular memoria entre disparos.
+      if (canvas) {
+        canvas.width = 0;
+        canvas.height = 0;
+      }
       this.busy.set(false);
     }
   }

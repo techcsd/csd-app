@@ -34,6 +34,10 @@ interface VehiculoDraft {
   kmUltMant: number | null;
   intervaloMant: number | null;
   notas: string;
+  vin: string;
+  numeroMatricula: string;
+  numeroSeguro: string;
+  aseguradora: string;
 }
 
 /** Alta/edición de vehículo (admin; RLS vehiculos:write = is_admin). */
@@ -77,6 +81,10 @@ export class VehiculoFormPage {
   kmUltMant = signal<number | null>(null);
   intervaloMant = signal<number | null>(5000);
   notas = signal('');
+  vin = signal('');
+  numeroMatricula = signal('');
+  numeroSeguro = signal('');
+  aseguradora = signal('');
   foto = signal<CapturedPhoto | null>(null);
 
   constructor() {
@@ -117,6 +125,10 @@ export class VehiculoFormPage {
       kmUltMant: this.kmUltMant(),
       intervaloMant: this.intervaloMant(),
       notas: this.notas(),
+      vin: this.vin(),
+      numeroMatricula: this.numeroMatricula(),
+      numeroSeguro: this.numeroSeguro(),
+      aseguradora: this.aseguradora(),
     };
   }
   private clave(): string {
@@ -144,6 +156,10 @@ export class VehiculoFormPage {
         this.kmUltMant.set(d.kmUltMant ?? null);
         this.intervaloMant.set(d.intervaloMant ?? 5000);
         this.notas.set(d.notas ?? '');
+        this.vin.set(d.vin ?? '');
+        this.numeroMatricula.set(d.numeroMatricula ?? '');
+        this.numeroSeguro.set(d.numeroSeguro ?? '');
+        this.aseguradora.set(d.aseguradora ?? '');
       }
       this.borradorPrevio.set(null);
     });
@@ -170,6 +186,10 @@ export class VehiculoFormPage {
         this.kmUltMant.set(v.kmUltimoMantenimiento);
         this.intervaloMant.set(v.intervaloMantenimientoKm);
         this.notas.set(v.notas ?? '');
+        this.vin.set(v.vin ?? '');
+        this.numeroMatricula.set(v.numeroMatricula ?? '');
+        this.numeroSeguro.set(v.numeroSeguro ?? '');
+        this.aseguradora.set(v.aseguradora ?? '');
       }
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el vehículo.');
@@ -199,6 +219,10 @@ export class VehiculoFormPage {
       kmUltimoMantenimiento: this.kmUltMant(),
       intervaloMantenimientoKm: this.intervaloMant() ?? 5000,
       notas: this.notas() || null,
+      vin: this.vin() || null,
+      numeroMatricula: this.numeroMatricula() || null,
+      numeroSeguro: this.numeroSeguro() || null,
+      aseguradora: this.aseguradora() || null,
     };
   }
 

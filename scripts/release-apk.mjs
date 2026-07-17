@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.14.0';
+const VERSION = '1.15.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,14 +58,21 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.6.0 quedó como mínimo forzado (2026-07-15). Mantener este
 // valor alineado con esa fila para que version.json (aviso) no contradiga el gate.
 const MIN_VERSION = '1.6.0';
-const RELEASED_AT = '2026-07-16';
+const RELEASED_AT = '2026-07-17';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Cámara dentro de la app (no más cierres)';
+const TITULO = 'Fix de cámara + conductores y vehículos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Las fotos ahora se toman DENTRO de la app (ya no abre la cámara del teléfono): así la app no se cierra al tomar fotos en teléfonos Xiaomi/MIUI. Toca el botón redondo para capturar.' },
+  { t: 'arreglo', d: 'Se resolvió el cierre de la app al tomar fotos en el pre-uso (teléfonos Xiaomi/MIUI): la cámara ahora funciona DENTRO de la app y ya no salta a la cámara del teléfono. Toca el botón redondo para capturar.' },
+  { t: 'mejora', d: 'Si la app se cierra a mitad de un pre-uso, al reabrir puedes recuperar el borrador con sus fotos.' },
+  { t: 'nuevo', d: 'Categorías de licencia dominicanas (01, 02, 03…) al crear/editar conductores.' },
+  { t: 'nuevo', d: 'Notas y etiquetas del conductor (ej. Chofer, Encargado de Logística), visibles en su perfil.' },
+  { t: 'nuevo', d: 'Sube la cédula y la licencia (frente y dorso) al registrar el conductor, con vista previa; se ven en el perfil.' },
+  { t: 'nuevo', d: 'Aviso de licencia por vencer o vencida en el listado y el perfil de conductores.' },
+  { t: 'nuevo', d: 'Aviso de “documentos incompletos” en el listado de conductores, con filtro para verlos rápido.' },
+  { t: 'nuevo', d: 'VIN, número de matrícula, número de seguro y aseguradora del vehículo al registrarlo y en su perfil.' },
 ];
 
 const TIPO_POR_COMMIT = {

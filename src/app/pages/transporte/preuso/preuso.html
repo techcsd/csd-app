@@ -105,6 +105,15 @@
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
+      @if (borradorPrevio()) {
+        <!-- M1 — recuperar el pre-uso tras un cierre inesperado de la app -->
+        <app-draft-banner
+          [fecha]="borradorPrevio()"
+          (continuar)="continuarBorrador()"
+          (descartar)="descartarBorrador()"
+        />
+      }
+
       <div class="preuso__veh">
         <span class="preuso__placa">{{ placa() || '—' }}</span>
         <span class="preuso__modelo">{{ modelo() }}</span>

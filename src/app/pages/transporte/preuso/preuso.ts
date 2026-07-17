@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -17,13 +18,18 @@ import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
+import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ChecklistPreusoService } from '../../../core/services/checklist-preuso.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
+import { LicenciaCategoriasService, LicenciaCategoria } from '../../../core/services/licencia-categorias.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { formatFecha } from '../../../core/util/fecha';
 import {
   PreusoReportService,
@@ -49,6 +55,18 @@ interface RespuestaDraft {
   respuesta: RespuestaValor | null;
   comentario: string;
   photo: CapturedPhoto | null;
+}
+
+/** M1 — typed slice of the pre-uso wizard persisted for crash recovery. Photos
+ *  live in the borrador_fotos store; here we only keep the light state. */
+interface PreusoDraft {
+  step: number;
+  plantillaId: string;
+  km: number | null;
+  nivelCombustible: string | null;
+  observacion: string;
+  firmaLista: boolean;
+  respuestas: Record<string, { respuesta: RespuestaValor | null; comentario: string }>;
 }
 
 interface SeccionGrupo {
@@ -84,7 +102,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -94,11 +112,17 @@ export class PreusoPage extends GuardedWizard {
   private vehiculos = inject(VehiculosService);
   private checklist = inject(ChecklistPreusoService);
   private conductores = inject(ConductoresService);
+  private licCategorias = inject(LicenciaCategoriasService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private report = inject(PreusoReportService);
+  private autosave = inject(AutosaveService);
+  private borradorSvc = inject(BorradorService);
+  private userCtx = inject(UserContextService);
 
   private sig = viewChild(SignaturePad);
+  borradorPrevio = signal<number | null>(null); // M1 — banner de recuperación
+  private hydrated = false;
 
   readonly total = TOTAL_STEPS;
   readonly opciones = RESPUESTA_OPCIONES;
@@ -116,6 +140,7 @@ export class PreusoPage extends GuardedWizard {
 
   step = signal(1);
   plantillas = signal<ChecklistPlantilla[]>([]);
+  categorias = signal<LicenciaCategoria[]>([]); // C1 — para etiquetar la licencia en el reporte
   plantillaId = signal('');
   respuestas = signal<Record<string, RespuestaDraft>>({});
   km = signal<number | null>(null);
@@ -283,6 +308,98 @@ export class PreusoPage extends GuardedWizard {
       this.necesitaVehiculo.set(true);
       this.loadingCtx.set(false);
     }
+    // M1 — autosave del estado (con debounce + flush al ocultar/descargar) para
+    // recuperar el pre-uso si el SO mata el proceso. Las fotos se persisten
+    // aparte en el momento de capturarlas (persistFoto).
+    effect(() => {
+      const snap: PreusoDraft = {
+        step: this.step(),
+        plantillaId: this.plantillaId(),
+        km: this.km(),
+        nivelCombustible: this.nivelCombustible(),
+        observacion: this.observacion(),
+        firmaLista: this.firmaLista(),
+        respuestas: Object.fromEntries(
+          Object.entries(this.respuestas()).map(([id, d]) => [
+            id,
+            { respuesta: d.respuesta, comentario: d.comentario },
+          ]),
+        ),
+      };
+      if (!this.hydrated || this.submitting() || this.done() || !this.vehiculoId) return;
+      if (!this.tieneDatos()) return;
+      this.autosave.queue(this.claveBorrador(), snap, {
+        tipo: 'checklist',
+        etiqueta: 'Pre-uso' + (this.placa() ? ' · ' + this.placa() : ''),
+        ruta: `/transporte/preuso/${this.vehiculoId}`,
+      });
+    });
+  }
+
+  private claveBorrador(): string {
+    const uid = this.userCtx.profile()?.id ?? 'anon';
+    return `preuso:${this.vehiculoId || 'nuevo'}:${uid}`;
+  }
+
+  /** M1 — persiste una foto del borrador (no debe romper nunca la captura). */
+  private persistFoto(slot: string, blob: Blob): void {
+    if (!this.vehiculoId) return;
+    void this.borradorSvc.saveFoto(this.claveBorrador(), slot, blob);
+  }
+  private dropFoto(slot: string): void {
+    if (!this.vehiculoId) return;
+    void this.borradorSvc.removeFoto(this.claveBorrador(), slot);
+  }
+
+  /** Rehidrata el borrador (estado + fotos) tras un kill del proceso. */
+  async continuarBorrador(): Promise<void> {
+    const clave = this.claveBorrador();
+    try {
+      const d = await this.borradorSvc.load<PreusoDraft>(clave);
+      if (d) {
+        if (d.plantillaId && d.plantillaId !== this.plantillaId()) this.pickPlantilla(d.plantillaId);
+        this.km.set(d.km ?? null);
+        this.nivelCombustible.set(d.nivelCombustible ?? null);
+        this.observacion.set(d.observacion ?? '');
+        this.respuestas.update((cur) => {
+          const next = { ...cur };
+          for (const [id, r] of Object.entries(d.respuestas ?? {})) {
+            const base = next[id] ?? { respuesta: null, comentario: '', photo: null };
+            next[id] = { ...base, respuesta: r.respuesta, comentario: r.comentario };
+          }
+          return next;
+        });
+      }
+      // Fotos: reconstruye Blobs + object URLs desde IndexedDB.
+      const fotos = await this.borradorSvc.loadFotos(clave);
+      const guided = { ...this.fotos() };
+      for (const f of fotos) {
+        const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+        if (f.slot === 'firma') {
+          this.firmaBlob.set(f.blob);
+          this.firmaLista.set(true);
+        } else if (f.slot.startsWith('item:')) {
+          const id = f.slot.slice('item:'.length);
+          this.respuestas.update((cur) => {
+            const base = cur[id] ?? { respuesta: null, comentario: '', photo: null };
+            return { ...cur, [id]: { ...base, photo } };
+          });
+        } else {
+          guided[f.slot] = photo;
+        }
+      }
+      this.fotos.set(guided);
+      const step = d?.step ?? 1;
+      this.step.set(step >= 1 && step <= this.total ? step : 1);
+    } catch {
+      this.toast.error('No se pudo recuperar todo el borrador, pero puedes continuar.');
+    }
+    this.borradorPrevio.set(null);
+  }
+
+  descartarBorrador(): void {
+    void this.autosave.discard(this.claveBorrador());
+    this.borradorPrevio.set(null);
   }
 
   /** B1 — vehículo elegido del pool: continúa el pre-uso con ese vehículo. */
@@ -310,21 +427,27 @@ export class PreusoPage extends GuardedWizard {
   private async loadContext(): Promise<void> {
     this.loadingCtx.set(true);
     try {
-      const [v, c, list, cfg] = await Promise.all([
+      const [v, c, list, cfg, cats] = await Promise.all([
         this.vehiculos.getVehiculoDetalle(this.vehiculoId),
         this.conductores.getMiConductor(),
         this.checklist.getPlantillas(),
         this.conductores.getFlotaConfig(),
+        this.licCategorias.getCategorias().catch(() => [] as LicenciaCategoria[]),
       ]);
       this.vehiculo.set(v);
       this.conductor.set(c);
       this.plantillas.set(list);
+      this.categorias.set(cats);
       this.precitaKm.set(cfg.precitaKm);
       this.licenciaUmbral.set(cfg.licenciaDias);
       if (list.length) this.pickPlantilla(list[0].id);
       // El km de salida arranca VACÍO (el usuario escribe el actual). El último
       // registrado queda solo como referencia (vehiculo.kilometraje / kmInvalido).
+      // M1 — ¿hay un borrador sin enviar de este vehículo? → ofrecer recuperar.
+      const b = await this.borradorSvc.get(this.claveBorrador());
+      if (b) this.borradorPrevio.set(b.updated_at);
     } finally {
+      this.hydrated = true;
       this.loadingCtx.set(false);
     }
   }
@@ -350,13 +473,16 @@ export class PreusoPage extends GuardedWizard {
   }
   onItemFoto(itemId: string, photo: CapturedPhoto): void {
     this.respuestas.update((r) => ({ ...r, [itemId]: { ...this.draft(itemId), photo } }));
+    this.persistFoto('item:' + itemId, photo.blob);
   }
   onItemFotoCleared(itemId: string): void {
     this.respuestas.update((r) => ({ ...r, [itemId]: { ...this.draft(itemId), photo: null } }));
+    this.dropFoto('item:' + itemId);
   }
 
   onFoto(slot: string, photo: CapturedPhoto): void {
     this.fotos.update((f) => ({ ...f, [slot]: photo }));
+    this.persistFoto(slot, photo.blob);
   }
   onFotoCleared(slot: string): void {
     this.fotos.update((f) => {
@@ -364,6 +490,7 @@ export class PreusoPage extends GuardedWizard {
       delete next[slot];
       return next;
     });
+    this.dropFoto(slot);
   }
 
   next(): void {
@@ -421,7 +548,11 @@ export class PreusoPage extends GuardedWizard {
 
   async onFirmaChanged(hasSignature: boolean): Promise<void> {
     this.firmaLista.set(hasSignature);
-    this.firmaBlob.set(hasSignature ? ((await this.sig()?.toBlob()) ?? null) : null);
+    const blob = hasSignature ? ((await this.sig()?.toBlob()) ?? null) : null;
+    this.firmaBlob.set(blob);
+    // M1 — persistir/limpiar la firma en el borrador.
+    if (blob) this.persistFoto('firma', blob);
+    else this.dropFoto('firma');
   }
 
   async submit(): Promise<void> {
@@ -467,6 +598,8 @@ export class PreusoPage extends GuardedWizard {
         firma: firmaBlob,
         resultado: this.veredicto(),
       });
+      // M1 — enviado: limpia el borrador (estado + fotos) para no reofrecerlo.
+      void this.autosave.discard(this.claveBorrador());
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
@@ -515,7 +648,7 @@ export class PreusoPage extends GuardedWizard {
       vehiculo: this.modelo(),
       tipoVehiculo: v?.tipo ?? '—',
       conductor: c?.nombre ?? '—',
-      licenciaTipo: c?.licencia_tipo ?? null,
+      licenciaTipo: this.licenciaTipoLabel(c?.licencia_tipo ?? null),
       licenciaNumero: c?.licencia_numero ?? null,
       licenciaVencimiento: c?.licencia_vencimiento ?? null,
       fecha: new Date().toISOString(),
@@ -530,6 +663,13 @@ export class PreusoPage extends GuardedWizard {
       hallazgos: this.hallazgos(),
       fotos,
     };
+  }
+
+  /** C1 — "01 · Motocicletas" para el código guardado, o el código tal cual. */
+  private licenciaTipoLabel(codigo: string | null): string | null {
+    if (!codigo) return null;
+    const cat = this.categorias().find((c) => c.codigo === codigo);
+    return cat ? LicenciaCategoriasService.label(cat) : codigo;
   }
 
   private blobToDataUrl(blob: Blob): Promise<string> {

@@ -45,27 +45,35 @@ export class CameraService {
   }
 
   async takePhoto(): Promise<CapturedPhoto | null> {
-    // Cámara EMBEBIDA primero: captura dentro de la app (no sale a la cámara del
-    // sistema), lo que evita que MIUI/low-mem maten la app durante la foto. Si el
-    // dispositivo no soporta getUserMedia, cae a la cámara del sistema.
-    if (this.inApp.supported) {
-      // En nativo, asegura el permiso de cámara del SO para que getUserMedia del
-      // WebView funcione (si no, el overlay muestra el fallback a cámara del sistema).
-      if (this.isNative) {
-        try {
-          const p = await Camera.checkPermissions();
-          if (p.camera !== 'granted') await Camera.requestPermissions({ permissions: ['camera'] });
-        } catch {
-          /* seguimos: si falla, el overlay caerá a 'fallback' */
+    // M1 — blindaje total: una excepción aquí (permiso, plugin, WebView) jamás
+    // debe tumbar el wizard de pre-uso. Ante cualquier fallo devolvemos null.
+    try {
+      // Cámara EMBEBIDA primero: captura dentro de la app (no sale a la cámara del
+      // sistema), lo que evita que MIUI/low-mem maten la app durante la foto. Si el
+      // dispositivo no soporta getUserMedia, cae a la cámara del sistema.
+      if (this.inApp.supported) {
+        // En nativo, asegura el permiso de cámara del SO para que getUserMedia del
+        // WebView funcione. REQUIERE `android.permission.CAMERA` en el manifest
+        // (M1): sin él, el WebView deniega getUserMedia y el overlay cae al
+        // fallback de sistema, que es lo que MIUI mataba.
+        if (this.isNative) {
+          try {
+            const p = await Camera.checkPermissions();
+            if (p.camera !== 'granted') await Camera.requestPermissions({ permissions: ['camera'] });
+          } catch {
+            /* seguimos: si falla, el overlay caerá a 'fallback' */
+          }
         }
+        const res = await this.inApp.open();
+        if (res === 'fallback') return this.takeConSistema();
+        if (!res) return null;
+        // El overlay ya entrega un JPEG comprimido (≤1280, 0.7).
+        return { blob: res, previewUrl: URL.createObjectURL(res) };
       }
-      const res = await this.inApp.open();
-      if (res === 'fallback') return this.takeConSistema();
-      if (!res) return null;
-      // El overlay ya entrega un JPEG comprimido (≤1280, 0.7).
-      return { blob: res, previewUrl: URL.createObjectURL(res) };
+      return await this.takeConSistema();
+    } catch {
+      return null;
     }
-    return this.takeConSistema();
   }
 
   /** Cámara del sistema (Capacitor nativo / input web) — fallback. */

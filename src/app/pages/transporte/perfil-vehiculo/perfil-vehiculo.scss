@@ -46,6 +46,33 @@
   margin-bottom: 12px;
 }
 
+// V1/V2 — identificadores (VIN / matrícula / seguro)
+.pveh__ids {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 14px;
+
+    span {
+      color: var(--color-text-secondary);
+    }
+    b {
+      color: var(--color-text-primary);
+      text-align: right;
+      word-break: break-all;
+    }
+  }
+}
+
 .pveh__placa {
   font-size: 26px;
   font-weight: 800;

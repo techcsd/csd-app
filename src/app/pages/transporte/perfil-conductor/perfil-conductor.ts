@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -7,7 +7,7 @@ import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
-import { ConductorStats } from '../../../core/models/conductor.model';
+import { Conductor, ConductorStats, LicenciaEstado, estadoLicencia, diasHasta } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
 
@@ -50,11 +50,20 @@ export class PerfilConductorPage {
   loading = signal(true);
   private condId = signal('');
   stats = signal<ConductorStats | null>(null);
-  cedula = signal<DocView | null>(null);
-  licencia = signal<DocView | null>(null);
+  conductor = signal<Conductor | null>(null); // C3 — nota/tags
+  // C5 — TODAS las fotos por tipo (licencia: frente y dorso), no solo la última.
+  cedulas = signal<DocView[]>([]);
+  licencias = signal<DocView[]>([]);
   otros = signal<DocView[]>([]);
   esMiPerfil = signal(false);
   esAdmin = () => this.ctx.hasModulo('admin');
+
+  // C6 — badge de licencia (mismo umbral configurable que la web/listado).
+  umbral = signal(90);
+  licEstado = computed<LicenciaEstado>(() =>
+    estadoLicencia(this.conductor()?.licencia_vencimiento ?? null, this.umbral()),
+  );
+  licDias = computed(() => diasHasta(this.conductor()?.licencia_vencimiento ?? null));
 
   constructor() {
     void this.load();
@@ -66,6 +75,17 @@ export class PerfilConductorPage {
     this.loading.set(true);
     try {
       this.stats.set(await this.conductores.getStatsDe(id));
+      try {
+        this.conductor.set(await this.conductores.getConductor(id));
+      } catch {
+        /* nota/tags son secundarios: el perfil se ve igual sin ellos */
+      }
+      try {
+        const cfg = await this.conductores.getFlotaConfig();
+        this.umbral.set(cfg.licenciaDias);
+      } catch {
+        /* umbral por defecto (90) si no hay config cacheada */
+      }
       const mio = await this.conductores.getMiConductor();
       this.esMiPerfil.set(!!mio && mio.id === id);
       await this.loadDocs(id);
@@ -77,17 +97,20 @@ export class PerfilConductorPage {
   private async loadDocs(id: string): Promise<void> {
     if (!id) return;
     const docs = await this.documentos.getDocumentos('conductor', id); // ordenado desc
-    const toView = async (d: Documento): Promise<DocView> => ({
-      label: TIPO_LABEL[d.tipo] ?? d.nombre ?? d.tipo,
+    const toView = async (d: Documento, label: string): Promise<DocView> => ({
+      label,
       url: await this.documentos.getSignedUrl(d.path),
       esPdf: /\.pdf$/i.test(d.path),
     });
-    const ced = docs.find((d) => d.tipo === 'cedula') ?? null;
-    const lic = docs.find((d) => d.tipo === 'licencia') ?? null;
-    this.cedula.set(ced ? await toView(ced) : null);
-    this.licencia.set(lic ? await toView(lic) : null);
+    // C5 — todas las fotos por tipo, numeradas cuando hay más de una.
+    const porTipo = (tipo: string, base: string): Promise<DocView[]> => {
+      const list = docs.filter((d) => d.tipo === tipo);
+      return Promise.all(list.map((d, i) => toView(d, list.length > 1 ? `${base} (${i + 1})` : base)));
+    };
+    this.cedulas.set(await porTipo('cedula', 'Cédula'));
+    this.licencias.set(await porTipo('licencia', 'Licencia de conducir'));
     const otros = docs.filter((d) => d.tipo !== 'cedula' && d.tipo !== 'licencia');
-    this.otros.set(await Promise.all(otros.map(toView)));
+    this.otros.set(await Promise.all(otros.map((d) => toView(d, TIPO_LABEL[d.tipo] ?? d.nombre ?? d.tipo))));
   }
 
   irMiActividad(): void {

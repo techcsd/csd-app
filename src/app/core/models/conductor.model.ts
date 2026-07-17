@@ -14,7 +14,20 @@ export interface Conductor {
   tipo_vehiculo_autorizado: string; // 'Liviano' | 'Pesado' | 'Ambos'
   vehiculo_id: string | null;
   usuario_id: string | null;
+  /** C3 — nota libre del conductor (rol descriptivo, observación…). */
+  nota: string | null;
+  /** C3 — etiquetas (Chofer, Encargado de Logística, Chofer Telehandler…). */
+  tags: string[] | null;
 }
+
+/** C3 — sugerencias de tags para el chip-input (texto libre permitido). */
+export const CONDUCTOR_TAGS_SUGERIDOS = [
+  'Chofer',
+  'Encargado de Logística',
+  'Chofer Telehandler',
+  'Operador',
+  'Mensajero',
+];
 
 /** A system user that can be linked to a driver profile (usuarios_vinculables). */
 export interface UsuarioVinculable {

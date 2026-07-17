@@ -37,4 +37,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- V3: install a downloaded APK from within the app (rolling update). -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- M1: la cámara EMBEBIDA (getUserMedia) del pre-uso necesita que la app
+         tenga el permiso CAMERA del SO; sin él el WebView deniega getUserMedia,
+         el overlay cae al fallback de cámara del sistema y MIUI mata el proceso.
+         La cámara del teléfono no está disponible sin cámara física. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>

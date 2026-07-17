@@ -32,6 +32,9 @@
       <label class="field-label" for="tipo">Tipo</label>
       <input id="tipo" class="field" type="text" [ngModel]="tipo()" (ngModelChange)="tipo.set($event)" placeholder="pickup, camión, cabezote…" />
 
+      <label class="field-label" for="vin">VIN / número de chasis (opcional)</label>
+      <input id="vin" class="field" type="text" autocapitalize="characters" [ngModel]="vin()" (ngModelChange)="vin.set($event)" placeholder="17 caracteres — identifica el vehículo" />
+
       <label class="field-label">Estado</label>
       @for (e of estados; track e.v) {
         <app-option-button [label]="e.label" [selected]="estado() === e.v" (pressed)="estado.set(e.v)" />
@@ -40,11 +43,22 @@
       <label class="field-label" for="km">Kilometraje</label>
       <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="kilometraje()" (ngModelChange)="kilometraje.set($event)" placeholder="0" />
 
+      <label class="field-label" for="nm">Número de matrícula (opcional)</label>
+      <input id="nm" class="field" type="text" [ngModel]="numeroMatricula()" (ngModelChange)="numeroMatricula.set($event)" placeholder="Número de la matrícula" />
+
       <label class="field-label" for="vm">Vencimiento matrícula (opcional)</label>
       <input id="vm" class="field" type="date" [ngModel]="vencMatricula()" (ngModelChange)="vencMatricula.set($event)" />
 
+      <label class="field-label" for="ns">Número de seguro / póliza (opcional)</label>
+      <input id="ns" class="field" type="text" [ngModel]="numeroSeguro()" (ngModelChange)="numeroSeguro.set($event)" placeholder="Número de póliza" />
+
+      <label class="field-label" for="aseg">Aseguradora (opcional)</label>
+      <input id="aseg" class="field" type="text" [ngModel]="aseguradora()" (ngModelChange)="aseguradora.set($event)" placeholder="Compañía de seguro" />
+
       <label class="field-label" for="vs">Vencimiento seguro (opcional)</label>
       <input id="vs" class="field" type="date" [ngModel]="vencSeguro()" (ngModelChange)="vencSeguro.set($event)" />
+
+      <p class="vform__doc-hint">La foto de la matrícula y del seguro se sube desde el perfil del vehículo.</p>
 
       <label class="field-label" for="kum">Km del último mantenimiento (opcional)</label>
       <input id="kum" class="field" type="number" inputmode="numeric" [ngModel]="kmUltMant()" (ngModelChange)="kmUltMant.set($event)" placeholder="0" />

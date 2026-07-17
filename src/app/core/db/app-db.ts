@@ -73,12 +73,34 @@ export interface RegistroLocal {
   created_local: number;
 }
 
+/**
+ * M1 — a photo belonging to an in-progress draft (e.g. the pre-uso wizard),
+ * persisted so it survives an OS process kill (MIUI/low-mem) and can be
+ * rehydrated when the user reopens the app. Same WebKit-safe rule as
+ * `fotos_pendientes`: store raw bytes as `ArrayBuffer` + MIME, rebuild the Blob
+ * on read. Keyed by `${clave}::${slot}`; `clave` matches the borrador row so
+ * both are cleared together on submit/discard.
+ */
+export interface BorradorFoto {
+  /** `${clave}::${slot}` — unique per draft+slot. */
+  id: string;
+  /** Draft key (matches the borradores row). Indexed for bulk clear. */
+  clave: string;
+  /** Slot within the draft, e.g. 'frente', 'item:<id>', 'firma'. */
+  slot: string;
+  /** Raw bytes (WebKit-safe). */
+  data: ArrayBuffer;
+  /** MIME type to rebuild the Blob (e.g. image/jpeg). */
+  type: string;
+}
+
 export class AppDb extends Dexie {
   catalogos!: Table<CatalogoEntry, string>;
   outbox!: Table<OutboxOp, string>;
   fotos_pendientes!: Table<FotoPendiente, string>;
   borradores!: Table<Borrador, string>;
   mis_registros!: Table<RegistroLocal, string>;
+  borrador_fotos!: Table<BorradorFoto, string>;
 
   constructor() {
     super('csd-app');
@@ -88,6 +110,10 @@ export class AppDb extends Dexie {
       fotos_pendientes: 'id, op_id',
       borradores: 'clave, updated_at',
       mis_registros: 'id, tipo_op, created_local',
+    });
+    // v2 (M1) — fotos de borrador para recuperar el pre-uso tras un kill del SO.
+    this.version(2).stores({
+      borrador_fotos: 'id, clave',
     });
   }
 }

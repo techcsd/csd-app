@@ -35,6 +35,11 @@ export interface VehiculoEditable {
   kmUltimoMantenimiento: number | null;
   intervaloMantenimientoKm: number;
   notas: string | null;
+  // V1/V2 — identificadores y pólizas del vehículo.
+  vin: string | null;
+  numeroMatricula: string | null;
+  numeroSeguro: string | null;
+  aseguradora: string | null;
 }
 
 /** A flota alert (avisos_flota) for the app's avisos screen. */
@@ -80,7 +85,8 @@ export class VehiculosService {
     this.registerHandler();
   }
 
-  /** Minimal vehicle header for the checklist (placa/modelo/km + foto U6). */
+  /** Minimal vehicle header for the checklist/profile (placa/modelo/km + foto U6
+   *  + V1/V2 VIN/números). */
   async getVehiculo(id: string): Promise<{
     id: string;
     placa: string;
@@ -88,10 +94,14 @@ export class VehiculosService {
     modelo: string;
     kilometraje: number;
     foto_path: string | null;
+    vin: string | null;
+    numero_matricula: string | null;
+    numero_seguro: string | null;
+    aseguradora: string | null;
   } | null> {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
-      .select('id, placa, marca, modelo, kilometraje, fotos')
+      .select('id, placa, marca, modelo, kilometraje, fotos, vin, numero_matricula, numero_seguro, aseguradora')
       .eq('id', id)
       .single();
     if (error) {
@@ -101,7 +111,18 @@ export class VehiculosService {
         (v) => v.vehiculo_id === id,
       );
       return hit
-        ? { id, placa: hit.placa, marca: hit.marca, modelo: hit.modelo, kilometraje: hit.km, foto_path: null }
+        ? {
+            id,
+            placa: hit.placa,
+            marca: hit.marca,
+            modelo: hit.modelo,
+            kilometraje: hit.km,
+            foto_path: null,
+            vin: null,
+            numero_matricula: null,
+            numero_seguro: null,
+            aseguradora: null,
+          }
         : null;
     }
     const v = data as unknown as {
@@ -111,6 +132,10 @@ export class VehiculosService {
       modelo: string;
       kilometraje: number;
       fotos: string[] | null;
+      vin: string | null;
+      numero_matricula: string | null;
+      numero_seguro: string | null;
+      aseguradora: string | null;
     };
     return {
       id: v.id,
@@ -119,6 +144,10 @@ export class VehiculosService {
       modelo: v.modelo,
       kilometraje: v.kilometraje,
       foto_path: (v.fotos ?? [])[0] ?? null,
+      vin: v.vin ?? null,
+      numero_matricula: v.numero_matricula ?? null,
+      numero_seguro: v.numero_seguro ?? null,
+      aseguradora: v.aseguradora ?? null,
     };
   }
 
@@ -297,7 +326,7 @@ export class VehiculosService {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
       .select(
-        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, notas, fotos',
+        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, notas, fotos, vin, numero_matricula, numero_seguro, aseguradora',
       )
       .eq('id', id)
       .single();
@@ -318,6 +347,10 @@ export class VehiculosService {
       intervaloMantenimientoKm: (v['intervalo_mantenimiento_km'] as number) ?? 5000,
       notas: (v['notas'] as string) ?? null,
       fotos: (v['fotos'] as string[]) ?? [],
+      vin: (v['vin'] as string) ?? null,
+      numeroMatricula: (v['numero_matricula'] as string) ?? null,
+      numeroSeguro: (v['numero_seguro'] as string) ?? null,
+      aseguradora: (v['aseguradora'] as string) ?? null,
     };
   }
 
@@ -335,6 +368,10 @@ export class VehiculosService {
       km_ultimo_mantenimiento: input.kmUltimoMantenimiento,
       intervalo_mantenimiento_km: input.intervaloMantenimientoKm,
       notas: input.notas?.trim() || null,
+      vin: input.vin?.trim() || null,
+      numero_matricula: input.numeroMatricula?.trim() || null,
+      numero_seguro: input.numeroSeguro?.trim() || null,
+      aseguradora: input.aseguradora?.trim() || null,
     };
   }
 

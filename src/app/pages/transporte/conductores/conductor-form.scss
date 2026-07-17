@@ -45,3 +45,51 @@
   margin-top: 18px;
   color: var(--color-error);
 }
+
+// C3 — nota + tags (chips)
+.cform__nota {
+  resize: vertical;
+}
+
+.cform__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cform__chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cform__chip--on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.cform__chip-x {
+  margin-left: 4px;
+  opacity: 0.8;
+}
+
+.cform__tag-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  .field {
+    flex: 1;
+  }
+}
+
+.cform__tag-btn {
+  width: auto;
+  white-space: nowrap;
+}

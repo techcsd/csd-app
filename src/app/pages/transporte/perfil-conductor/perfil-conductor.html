@@ -17,6 +17,18 @@
     } @else {
       <p class="pcon__nombre">{{ stats()!.nombre }}</p>
 
+      <!-- C3 — etiquetas + nota del conductor -->
+      @if (conductor()?.tags?.length) {
+        <div class="pcon__tags">
+          @for (t of conductor()!.tags!; track t) {
+            <span class="pcon__tag">{{ t }}</span>
+          }
+        </div>
+      }
+      @if (conductor()?.nota) {
+        <p class="pcon__nota">{{ conductor()!.nota }}</p>
+      }
+
       @if (esAdmin()) {
         <button type="button" class="btn-ghost pcon__editar" (click)="editar()">✏️ Editar conductor</button>
       }
@@ -45,9 +57,20 @@
         </div>
         <div class="pcon__card">
           <span class="pcon__label">Licencia</span>
-          <span class="pcon__value pcon__value--sm">{{ stats()!.estado_licencia || '—' }}</span>
+          @if (licEstado() === 'vencida') {
+            <span class="pcon__badge pcon__badge--bad">Vencida</span>
+          } @else if (licEstado() === 'por_vencer') {
+            <span class="pcon__badge pcon__badge--warn">Por vencer</span>
+          } @else if (licEstado() === 'vigente') {
+            <span class="pcon__badge pcon__badge--ok">Vigente</span>
+          } @else {
+            <span class="pcon__value pcon__value--sm">{{ stats()!.estado_licencia || '—' }}</span>
+          }
           @if (stats()!.licencia_vencimiento) {
-            <span class="pcon__sub">Vence {{ fmtFecha(stats()!.licencia_vencimiento) }}</span>
+            <span class="pcon__sub">
+              Vence {{ fmtFecha(stats()!.licencia_vencimiento) }}
+              @if (licDias() !== null && licEstado() === 'por_vencer') { · en {{ licDias() }} día(s) }
+            </span>
           }
         </div>
         @if (stats()!.ultima_actividad) {
@@ -58,21 +81,23 @@
         }
       </div>
 
-      <!-- Documentos (solo lectura; el conductor los sube desde "Mi actividad") -->
+      <!-- Documentos (solo lectura; se suben en el alta/edición o desde "Mi actividad") -->
       <section class="pcon__docs">
         <h2 class="pcon__docs-title">Documentos</h2>
-        <app-doc-slot
-          label="Cédula"
-          [soloLectura]="true"
-          [urlExistente]="cedula()?.url ?? null"
-          [esPdfExistente]="cedula()?.esPdf ?? false"
-        />
-        <app-doc-slot
-          label="Licencia de conducir"
-          [soloLectura]="true"
-          [urlExistente]="licencia()?.url ?? null"
-          [esPdfExistente]="licencia()?.esPdf ?? false"
-        />
+        @if (cedulas().length) {
+          @for (d of cedulas(); track d.label + $index) {
+            <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
+          }
+        } @else {
+          <app-doc-slot label="Cédula" [soloLectura]="true" [urlExistente]="null" />
+        }
+        @if (licencias().length) {
+          @for (d of licencias(); track d.label + $index) {
+            <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
+          }
+        } @else {
+          <app-doc-slot label="Licencia de conducir" [soloLectura]="true" [urlExistente]="null" />
+        }
         @for (d of otros(); track d.label + $index) {
           <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
         }

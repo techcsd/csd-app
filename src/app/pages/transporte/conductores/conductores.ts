@@ -35,14 +35,22 @@ export class ConductoresListaPage {
   loading = signal(true);
   private todos = signal<Conductor[]>([]);
   query = signal('');
+  // C6 — umbral "por vencer" configurable (flota_config, alineado con la web).
+  umbral = signal(90);
+  // C7 — resumen de documentos por conductor + filtro "solo incompletos".
+  private docsResumen = signal<Record<string, { tiene_cedula: boolean; tiene_licencia: boolean }>>({});
+  soloIncompletos = signal(false);
 
   lista = computed(() => {
     const q = this.query().toLowerCase().trim();
-    const base = this.todos();
-    if (!q) return base;
-    return base.filter(
-      (c) => c.nombre.toLowerCase().includes(q) || (c.cedula ?? '').toLowerCase().includes(q),
-    );
+    let base = this.todos();
+    if (q) {
+      base = base.filter(
+        (c) => c.nombre.toLowerCase().includes(q) || (c.cedula ?? '').toLowerCase().includes(q),
+      );
+    }
+    if (this.soloIncompletos()) base = base.filter((c) => this.docsIncompletos(c));
+    return base;
   });
 
   constructor() {
@@ -52,17 +60,31 @@ export class ConductoresListaPage {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      this.todos.set(await this.conductores.getConductores());
+      const [lista, cfg, docs] = await Promise.all([
+        this.conductores.getConductores(),
+        this.conductores.getFlotaConfig().catch(() => null),
+        this.conductores.getDocumentosResumen().catch(() => ({})),
+      ]);
+      this.todos.set(lista);
+      if (cfg) this.umbral.set(cfg.licenciaDias);
+      this.docsResumen.set(docs);
     } finally {
       this.loading.set(false);
     }
   }
 
   licEstado(c: Conductor): LicenciaEstado {
-    return estadoLicencia(c.licencia_vencimiento);
+    return estadoLicencia(c.licencia_vencimiento, this.umbral());
   }
   licLabel(c: Conductor): string {
     return LIC_LABEL[this.licEstado(c)];
+  }
+
+  /** C7 — ¿le falta cédula o licencia? (por defecto ambos obligatorios). */
+  docsIncompletos(c: Conductor): boolean {
+    const r = this.docsResumen()[c.id];
+    if (!r) return true; // sin registro en la vista → nada subido
+    return !r.tiene_cedula || !r.tiene_licencia;
   }
 
   ver(c: Conductor): void {

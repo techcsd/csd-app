@@ -60,6 +60,11 @@ export class PerfilVehiculoPage {
   modelo = signal('');
   fotoUrl = signal<string | null>(null); // U6
   stats = signal<VehiculoStats | null>(null);
+  // V1/V2 — identificadores + pólizas del vehículo.
+  vin = signal<string | null>(null);
+  numeroMatricula = signal<string | null>(null);
+  numeroSeguro = signal<string | null>(null);
+  aseguradora = signal<string | null>(null);
 
   // X1/B2 — documentos del vehículo. Subida gated por rol (flota/admin) igual
   // que la web; los demás roles ven en solo-lectura.
@@ -97,6 +102,10 @@ export class PerfilVehiculoPage {
       if (veh) {
         this.placa.set(veh.placa);
         this.modelo.set(`${veh.marca} ${veh.modelo}`);
+        this.vin.set(veh.vin);
+        this.numeroMatricula.set(veh.numero_matricula);
+        this.numeroSeguro.set(veh.numero_seguro);
+        this.aseguradora.set(veh.aseguradora);
         if (veh.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(veh.foto_path));
       }
       this.stats.set(stats);

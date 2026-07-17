@@ -36,8 +36,14 @@
       <label class="field-label" for="ced">Cédula</label>
       <input id="ced" class="field" type="text" inputmode="numeric" [ngModel]="cedula()" (ngModelChange)="cedula.set($event)" placeholder="000-0000000-0" />
 
-      <label class="field-label" for="lt">Tipo / categoría de licencia</label>
-      <input id="lt" class="field" type="text" [ngModel]="licenciaTipo()" (ngModelChange)="licenciaTipo.set($event)" placeholder="Ej. Categoría 2" />
+      <label class="field-label">Categoría de licencia</label>
+      <app-select-list
+        label="Categoría"
+        icon="🪪"
+        [options]="categoriaOpts()"
+        [selectedId]="licenciaTipo()"
+        (picked)="licenciaTipo.set($event)"
+      />
 
       <label class="field-label" for="ln">Número de licencia (opcional)</label>
       <input id="ln" class="field" type="text" [ngModel]="licenciaNumero()" (ngModelChange)="licenciaNumero.set($event)" placeholder="Número" />
@@ -49,6 +55,68 @@
       @for (t of tiposAutorizado; track t) {
         <app-option-button [label]="t" [selected]="tipoAutorizado() === t" (pressed)="tipoAutorizado.set(t)" />
       }
+
+      <!-- C3 — nota + tags del conductor -->
+      <label class="field-label" for="nota">Nota / rol (opcional)</label>
+      <textarea
+        id="nota"
+        class="field cform__nota"
+        rows="2"
+        [ngModel]="nota()"
+        (ngModelChange)="nota.set($event)"
+        placeholder="Ej. Chofer de logística, maneja el telehandler…"
+      ></textarea>
+
+      <label class="field-label">Etiquetas (opcional)</label>
+      @if (tags().length) {
+        <div class="cform__chips">
+          @for (t of tags(); track t) {
+            <button type="button" class="cform__chip cform__chip--on" (click)="quitarTag(t)">
+              {{ t }} <span class="cform__chip-x">✕</span>
+            </button>
+          }
+        </div>
+      }
+      <div class="cform__chips">
+        @for (s of tagsSugeridos; track s) {
+          <button
+            type="button"
+            class="cform__chip"
+            [class.cform__chip--on]="tags().includes(s)"
+            (click)="toggleSugerencia(s)"
+          >{{ s }}</button>
+        }
+      </div>
+      <div class="cform__tag-add">
+        <input
+          class="field"
+          type="text"
+          [ngModel]="tagInput()"
+          (ngModelChange)="tagInput.set($event)"
+          (keydown.enter)="$event.preventDefault(); agregarTag(tagInput())"
+          placeholder="Otra etiqueta…"
+        />
+        <button type="button" class="btn-ghost cform__tag-btn" (click)="agregarTag(tagInput())">Agregar</button>
+      </div>
+
+      <!-- C4/C5 — documentos opcionales (cédula + licencia frente/dorso) -->
+      <label class="field-label">Documentos (opcional)</label>
+      <p class="cform__hint">Puedes subir la cédula y la licencia ahora. La licencia lleva ambos lados.</p>
+      <app-doc-slot
+        label="Cédula"
+        (captured)="docCedula.set($event)"
+        (cleared)="docCedula.set(null)"
+      />
+      <app-doc-slot
+        label="Licencia (frente)"
+        (captured)="docLicFrente.set($event)"
+        (cleared)="docLicFrente.set(null)"
+      />
+      <app-doc-slot
+        label="Licencia (dorso)"
+        (captured)="docLicDorso.set($event)"
+        (cleared)="docLicDorso.set(null)"
+      />
 
       @if (esEdicion()) {
         <button type="button" class="btn-ghost cform__desactivar" [disabled]="submitting()" (click)="desactivar()">

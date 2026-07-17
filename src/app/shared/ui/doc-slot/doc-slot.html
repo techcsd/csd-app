@@ -28,8 +28,14 @@
   } @else {
     @if (urlExistente(); as url) {
       <div class="doc-slot__body">
+        @if (!esPdfExistente()) {
+          <!-- Preview del documento-imagen ya cargado (C5) -->
+          <a [href]="url" target="_blank" rel="noopener">
+            <img class="doc-slot__thumb" [src]="url" [alt]="label()" />
+          </a>
+        }
         <a class="doc-slot__view" [href]="url" target="_blank" rel="noopener">
-          {{ esPdfExistente() ? '📄 Ver documento' : '🖼️ Ver documento' }}
+          {{ esPdfExistente() ? '📄 Ver documento' : '🖼️ Ver en grande' }}
         </a>
       </div>
     } @else if (enCola()) {

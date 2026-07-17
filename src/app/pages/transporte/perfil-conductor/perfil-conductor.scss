@@ -2,6 +2,58 @@
   background: var(--color-bg);
 }
 
+// C3 — etiquetas + nota del conductor
+.pcon__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.pcon__tag {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pcon__nota {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  white-space: pre-wrap;
+}
+
+// C6 — badge de estado de licencia
+.pcon__badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pcon__badge--ok {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.pcon__badge--warn {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.pcon__badge--bad {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
 .pcon__header {
   display: flex;
   align-items: center;
