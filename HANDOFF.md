@@ -1,8 +1,9 @@
 # HANDOFF — CSD App
 
-## Estado de release (2026-07-16) — v1.9.2 PUBLICADA
-- **Publicada a usuarios: 1.9.2** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
-- Historial `sgc.app_versiones` (movil) al día y estructurado: 1.9.2 (fix cantidades bitácora) · 1.9.1 (registro auto + versión en Ajustes) · 1.9.0 (B1–B5) · 1.8.0 (docs) · …
+## Estado de release (2026-07-17) — v1.10.0 PUBLICADA
+- **Publicada a usuarios: 1.10.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
+- **1.10.0 — perfiles de flota navegables (app):** nuevas pantallas **Vehículos** (`transporte/vehiculos`, busca la flota → perfil) y **Conductores** (`transporte/conductores` → `transporte/conductor/:id`, perfil solo lectura con stats + documentos). Enlaces en el home de Transporte. Servicios: `VehiculosService.getFlota()`, `ConductoresService.getConductores()/getStatsDe()`. Sin cambios de BD/SGC (RLS flota ya lo permitía; la web ya tenía las listas).
+- Historial `sgc.app_versiones` (movil) al día y estructurado: 1.10.0 (perfiles flota) · 1.9.2 (fix cantidades bitácora) · 1.9.1 (registro auto + versión en Ajustes) · 1.9.0 (B1–B5) · 1.8.0 (docs) · …
 - **Automatización Y1**: `npm run apk` (build) ya registra la versión estructurada solo (falla si no puede). `apk:publish` además sube el APK. La app también auto-reporta su versión al arrancar (admin, red de seguridad).
 - **Fix bitácora (1.9.2)**: en "¿Qué se hizo hoy?" eliges la parte y al tocar cada actividad aparece al instante su selector de cantidad (se quitó el botón "+ Agregar a la lista" escondido).
 - **Corrección de estado**: 1.9.0 había quedado "publicada" SIN apk en el bucket (in-app update roto); se corrigió publicando 1.9.2 (que sí tiene apk). El toggle publicada/mínima sigue siendo control del admin en SGC.
