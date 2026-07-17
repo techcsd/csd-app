@@ -1,7 +1,14 @@
 # HANDOFF — CSD App
 
-## Estado de release (2026-07-17) — v1.11.0 PUBLICADA
-- **Publicada a usuarios: 1.11.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
+## Estado de release (2026-07-17) — v1.12.0 PUBLICADA
+- **Publicada a usuarios: 1.12.0** (rollout no bloqueante) · **mínima forzada: 1.6.0** · APK en el bucket con `apk_url` OK.
+- **1.12.0 — gestión de flota en la app (paridad web, todo gated por rol):**
+  - **Vehículos (admin):** crear/editar (`transporte/vehiculos/nuevo`, `/:id/editar`) — placa/marca/modelo/año/tipo/estado/km/vencimientos matrícula-seguro/mantenimiento/notas + subir foto (bucket vehiculos). Botón "Agregar vehículo" (lista) + "Editar vehículo" (perfil). RLS `vehiculos:write=is_admin`. Shape validado contra la BD.
+  - **Conductores:** editar (relinkear usuario, licencia, tipo) + desactivar (`transporte/conductores/:id/editar`); "Editar" en el perfil (admin).
+  - **Asignar vehículo a otro conductor** (admin) desde el perfil del vehículo (cierra la activa e inserta la nueva).
+  - **Avisos de flota** (`transporte/avisos`): pendientes (pre-cita, seguro/matrícula, hallazgos) + `reactivar_vehiculo` o marcar atendido. Enlace en el home.
+  - Servicios: `VehiculosService.getVehiculoFull/crearVehiculo/actualizarVehiculo/subirFotoVehiculo/asignarAConductor/getAvisosFlota/reactivarVehiculo/atenderAviso`; `ConductoresService.getConductor/actualizarConductor/setConductorActivo/getUsuariosVinculables/crearConductor`.
+- **1.11.0 — arreglo relaciones conductor + alta de conductor** (bug `.maybeSingle()` con conductor duplicado; datos QA-TEST limpiados; alta con vínculo a usuario).
 - **1.11.0 — arreglo relaciones conductor + alta de conductor:**
   - **Bug corregido:** `getMiConductor` usaba `.maybeSingle()` → reventaba con "multiple rows" cuando un usuario tenía >1 conductor activo (había un duplicado **QA-TEST** ligado al usuario de Tecnología) → decía "no eres conductor". **Datos:** desactivada la fila QA-TEST duplicada (queda solo el conductor real). **Código:** `getMiConductor` ahora `order(created_at desc).limit(1)`. El fix de datos ya aplica en la app instalada al re-sincronizar.
   - **Alta de conductor (admin):** `transporte/conductores/nuevo` — vincular a un usuario del sistema (`usuarios_vinculables()`, autollena nombre/cédula) o sin usuario; licencia + tipo. `ConductoresService.crearConductor()` (insert directo, RLS is_admin OR flota). Botón "Agregar conductor" en la lista, gated a admin.
@@ -10,10 +17,10 @@
 ### Paridad flota web↔app — estado y pendientes
 - ✅ Listas + perfiles de vehículos y conductores (navegar/elegir).
 - ✅ Alta de conductor + vincular usuario (admin).
-- ⏳ **Gestión de vehículos (crear/editar/fotos/vencimientos)** — RLS `vehiculos: write = is_admin()` → sería feature **admin** en la app. No hecho aún (form grande + subida de fotos).
-- ⏳ **Editar conductor** existente (relinkear usuario, actualizar licencia) — pequeño, no hecho aún.
-- ⏳ **Avisos de flota / reactivar vehículo** (RPC `reactivar_vehiculo` existe) — no hecho aún.
-- ⏳ **Asignar vehículo a otro conductor** (hoy la app solo auto-asigna al propio usuario) — no hecho aún.
+- ✅ **Gestión de vehículos (crear/editar/fotos/vencimientos)** — admin (v1.12.0).
+- ✅ **Editar conductor** + desactivar (v1.12.0).
+- ✅ **Avisos de flota / reactivar vehículo** (v1.12.0).
+- ✅ **Asignar vehículo a otro conductor** (admin, v1.12.0).
 - Dashboards analíticos (combustible, cumplimiento) — se quedan en web por diseño.
 - Historial `sgc.app_versiones` (movil) al día y estructurado: 1.10.0 (perfiles flota) · 1.9.2 (fix cantidades bitácora) · 1.9.1 (registro auto + versión en Ajustes) · 1.9.0 (B1–B5) · 1.8.0 (docs) · …
 - **Automatización Y1**: `npm run apk` (build) ya registra la versión estructurada solo (falla si no puede). `apk:publish` además sube el APK. La app también auto-reporta su versión al arrancar (admin, red de seguridad).
