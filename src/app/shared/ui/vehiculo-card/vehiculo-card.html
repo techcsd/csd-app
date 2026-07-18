@@ -1,12 +1,10 @@
 <div class="vcard" [class.vcard--on]="selected()" [class.vcard--done]="done()">
-  @if (fotoUrl()) {
-    <img class="vcard__foto" [src]="fotoUrl()" [alt]="'Foto de ' + placa()" />
-  } @else {
-    <span class="vcard__foto vcard__foto--ph" aria-hidden="true">🚙</span>
-  }
+  <div class="vcard__foto">
+    <app-img [src]="fotoUrl()" [alt]="'Foto de ' + placa()" fallback="🚙" />
+  </div>
   <div class="vcard__info">
     <span class="vcard__placa">{{ placa() }}</span>
-    <span class="vcard__meta">{{ tipo() || 'Vehículo' }} · {{ km() ?? 0 | number: '1.0-0' }} km</span>
+    <span class="vcard__meta">{{ tipoLabel() || 'Vehículo' }} · {{ km() ?? 0 | number: '1.0-0' }} km</span>
     @if (marca() || modelo()) {
       <span class="vcard__sub">{{ marca() }} {{ modelo() }}</span>
     }

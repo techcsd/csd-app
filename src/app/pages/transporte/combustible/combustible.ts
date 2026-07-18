@@ -15,6 +15,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
+import { Img } from '../../../shared/ui/img/img';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -42,7 +43,7 @@ const TOTAL_STEPS = 2;
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })

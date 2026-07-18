@@ -29,8 +29,14 @@
       <label class="field-label" for="anio">Año</label>
       <input id="anio" class="field" type="number" inputmode="numeric" [ngModel]="anio()" (ngModelChange)="anio.set($event)" placeholder="2022" />
 
-      <label class="field-label" for="tipo">Tipo</label>
-      <input id="tipo" class="field" type="text" [ngModel]="tipo()" (ngModelChange)="tipo.set($event)" placeholder="pickup, camión, cabezote…" />
+      <label class="field-label">Tipo</label>
+      <app-select-list
+        label="Tipo de vehículo"
+        icon="🚙"
+        [options]="tipoOpts()"
+        [selectedId]="tipo()"
+        (picked)="tipo.set($event)"
+      />
 
       <label class="field-label" for="vin">VIN / número de chasis (opcional)</label>
       <input id="vin" class="field" type="text" autocapitalize="characters" [ngModel]="vin()" (ngModelChange)="vin.set($event)" placeholder="17 caracteres — identifica el vehículo" />

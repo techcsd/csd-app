@@ -17,7 +17,7 @@
   @if (local(); as d) {
     <div class="doc-slot__body">
       @if (d.esImagen && d.previewUrl) {
-        <img class="doc-slot__thumb" [src]="d.previewUrl" [alt]="label()" />
+        <span class="doc-slot__thumb"><app-img [src]="d.previewUrl" [alt]="label()" /></span>
       } @else {
         <span class="doc-slot__file">📄 {{ d.nombre }}</span>
       }
@@ -29,9 +29,9 @@
     @if (urlExistente(); as url) {
       <div class="doc-slot__body">
         @if (!esPdfExistente()) {
-          <!-- Preview del documento-imagen ya cargado (C5) -->
-          <a [href]="url" target="_blank" rel="noopener">
-            <img class="doc-slot__thumb" [src]="url" [alt]="label()" />
+          <!-- Preview del documento-imagen ya cargado (C5 + P3 fade-in) -->
+          <a class="doc-slot__thumb" [href]="url" target="_blank" rel="noopener">
+            <app-img [src]="url" [alt]="label()" />
           </a>
         }
         <a class="doc-slot__view" [href]="url" target="_blank" rel="noopener">

@@ -1,0 +1,21 @@
+<div class="app-img" [style.aspect-ratio]="ratio() || null">
+  @if (mostrarImg() && !loaded()) {
+    <span class="app-img__ph" aria-hidden="true"></span>
+  }
+  @if (mostrarImg()) {
+    <img
+      class="app-img__el"
+      [class.app-img__el--in]="loaded()"
+      [style.object-fit]="fit()"
+      [src]="src()"
+      [alt]="alt()"
+      loading="lazy"
+      decoding="async"
+      (load)="loaded.set(true)"
+      (error)="errored.set(true)"
+    />
+  }
+  @if (mostrarFallback()) {
+    <span class="app-img__fallback" aria-hidden="true">{{ fallback() }}</span>
+  }
+</div>

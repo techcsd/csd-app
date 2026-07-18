@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { labelTipoVehiculo } from '../../../core/models/vehiculo-tipos.model';
+import { Img } from '../img/img';
 
 /**
  * V11 — consistent vehicle card for every selector/list. Photo (or 🚙
@@ -10,7 +12,7 @@ import { DecimalPipe } from '@angular/common';
   selector: 'app-vehiculo-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, Img],
   templateUrl: './vehiculo-card.html',
   styleUrl: './vehiculo-card.scss',
 })
@@ -23,4 +25,7 @@ export class VehiculoCard {
   modelo = input('');
   selected = input(false);
   done = input(false);
+
+  /** P4 — etiqueta RD del tipo (automovil → "Automóvil / Sedán"). */
+  tipoLabel = computed(() => (this.tipo() ? labelTipoVehiculo(this.tipo()) : ''));
 }

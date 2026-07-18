@@ -7,6 +7,8 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
+import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
+import { VEHICULO_TIPOS } from '../../../core/models/vehiculo-tipos.model';
 import { VehiculosService, VehiculoEditable } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -45,7 +47,7 @@ interface VehiculoDraft {
   selector: 'app-vehiculo-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton, DraftBanner],
+  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton, DraftBanner, SelectList],
   templateUrl: './vehiculo-form.html',
   styleUrl: './vehiculo-form.scss',
 })
@@ -61,6 +63,15 @@ export class VehiculoFormPage {
   private ctx = inject(UserContextService);
 
   readonly estados = ESTADOS;
+
+  // P4 — tipos de vehículo (paridad SGC). Si el vehículo trae un tipo legacy no
+  // presente en el catálogo, se añade como opción para no perderlo al editar.
+  tipoOpts = computed<SelectOption[]>(() => {
+    const opts: SelectOption[] = VEHICULO_TIPOS.map((t) => ({ id: t.value, label: t.label }));
+    const actual = this.tipo();
+    if (actual && !opts.some((o) => o.id === actual)) opts.push({ id: actual, label: actual });
+    return opts;
+  });
 
   vehiculoId = signal<string>('');
   esEdicion = computed(() => !!this.vehiculoId());

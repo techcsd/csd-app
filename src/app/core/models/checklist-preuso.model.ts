@@ -47,33 +47,10 @@ export const FOTOS_PREUSO = [
 /** Pre-use verdict, mirrors sgc.checklists_vehiculo.resultado. */
 export type ChecklistResultado = 'aprobado' | 'con_hallazgos' | 'bloqueado';
 
-/**
- * Vehicle types treated as "Pesado" for the Herramienta Pesado section.
- * TODO: confirm the real list with Flota; keep it centralized here.
- */
-const TIPOS_PESADO = [
-  'camion',
-  'camión',
-  'pesado',
-  'volteo',
-  'grua',
-  'grúa',
-  'cabezote',
-  'furgon',
-  'furgón',
-  'montacargas',
-  'retroexcavadora',
-];
-
-/** Whether a vehicle counts as heavy (shows the Herramienta Pesado section). */
-export function esVehiculoPesado(tipo: string | null | undefined): boolean {
-  return !!tipo && TIPOS_PESADO.includes(tipo.trim().toLowerCase());
-}
-
-/** The vehicle class label used to filter checklist items by `aplica_a`. */
-export function claseVehiculo(tipo: string | null | undefined): 'Pesado' | 'Liviano' {
-  return esVehiculoPesado(tipo) ? 'Pesado' : 'Liviano';
-}
+// P4 — la clasificación Liviano/Pesado vive en `vehiculo-tipos.model` (paridad
+// con el SGC: livianos = moto/auto/suv/pickup/otro). Se re-exporta aquí para no
+// romper los imports existentes (preuso, specs).
+export { claseVehiculo, esVehiculoPesado } from './vehiculo-tipos.model';
 
 /** Whether an item applies to the given vehicle class. */
 export function itemAplica(item: ChecklistPlantillaItem, clase: 'Pesado' | 'Liviano'): boolean {

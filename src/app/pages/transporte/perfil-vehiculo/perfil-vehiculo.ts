@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { Img } from '../../../shared/ui/img/img';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
@@ -39,7 +40,7 @@ const TIPO_LABEL: Record<string, string> = {
   selector: 'app-perfil-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot, SelectList],
+  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot, SelectList, Img],
   templateUrl: './perfil-vehiculo.html',
   styleUrl: './perfil-vehiculo.scss',
 })

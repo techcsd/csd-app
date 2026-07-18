@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.15.0';
+const VERSION = '1.16.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,21 +59,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // foto en Android). Mantener este valor alineado con la fila `minima=true` para que
 // version.json (aviso) no contradiga el gate.
 const MIN_VERSION = '1.15.0';
-const RELEASED_AT = '2026-07-17';
+const RELEASED_AT = '2026-07-18';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Fix de cámara + conductores y vehículos';
+const TITULO = 'Acceso de conductores + tipos de vehículo';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Se resolvió el cierre de la app al tomar fotos en el pre-uso (teléfonos Xiaomi/MIUI): la cámara ahora funciona DENTRO de la app y ya no salta a la cámara del teléfono. Toca el botón redondo para capturar.' },
-  { t: 'mejora', d: 'Si la app se cierra a mitad de un pre-uso, al reabrir puedes recuperar el borrador con sus fotos.' },
-  { t: 'nuevo', d: 'Categorías de licencia dominicanas (01, 02, 03…) al crear/editar conductores.' },
-  { t: 'nuevo', d: 'Notas y etiquetas del conductor (ej. Chofer, Encargado de Logística), visibles en su perfil.' },
-  { t: 'nuevo', d: 'Sube la cédula y la licencia (frente y dorso) al registrar el conductor, con vista previa; se ven en el perfil.' },
-  { t: 'nuevo', d: 'Aviso de licencia por vencer o vencida en el listado y el perfil de conductores.' },
-  { t: 'nuevo', d: 'Aviso de “documentos incompletos” en el listado de conductores, con filtro para verlos rápido.' },
-  { t: 'nuevo', d: 'VIN, número de matrícula, número de seguro y aseguradora del vehículo al registrarlo y en su perfil.' },
+  { t: 'nuevo', d: 'Los conductores ya pueden entrar con su cédula y un PIN, sin necesidad de correo. Pídele a administración que te genere el acceso desde tu perfil.' },
+  { t: 'nuevo', d: 'Más tipos de vehículo: motocicleta, automóvil/sedán y SUV/jeepeta. El checklist de pre-uso se ajusta al tipo (una moto o un auto ya no trae puntos de camión).' },
+  { t: 'mejora', d: 'Los vehículos desactivados ya no aparecen en las listas para elegir vehículo.' },
+  { t: 'mejora', d: 'Las fotos (vehículos, documentos) ahora cargan más elegante: espacio reservado y aparecen con un suave difuminado en vez de “pintarse” de arriba a abajo.' },
 ];
 
 const TIPO_POR_COMMIT = {

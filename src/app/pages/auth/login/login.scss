@@ -36,6 +36,28 @@
   font-size: 15px;
 }
 
+// P5 — selector de vía de acceso (correo / conductor)
+.login__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.login__tab {
+  flex: 1;
+  min-height: 48px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+}
+.login__tab--on {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
 .login__form {
   background: var(--color-bg);
   border-radius: var(--radius);
@@ -43,6 +65,19 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.login__pin {
+  letter-spacing: 0.4em;
+  font-size: 20px;
+  text-align: center;
+}
+
+.login__hint {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-secondary);
 }
 .login__form .field {
   margin-bottom: 10px;

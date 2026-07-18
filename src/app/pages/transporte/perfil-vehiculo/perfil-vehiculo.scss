@@ -39,10 +39,10 @@
 }
 
 .pveh__foto {
+  display: block;
   width: 100%;
-  max-height: 220px;
-  object-fit: cover;
   border-radius: 14px;
+  overflow: hidden;
   margin-bottom: 12px;
 }
 
