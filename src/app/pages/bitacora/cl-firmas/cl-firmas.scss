@@ -1,0 +1,74 @@
+.clf {
+  background: var(--color-bg);
+}
+.clf__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.clf__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.clf__icon {
+  font-size: 26px;
+}
+.clf__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.clf-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--Hub, #ffb300);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+}
+.clf-row__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.clf-row__obra {
+  font-weight: 700;
+  font-size: var(--fs-option);
+}
+.clf-row__pl {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+.clf-row__fecha {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.clf-row__faltan {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-warning, #b45309);
+}
+.clf-row__ok {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-success, #16a34a);
+}
+.clf-row__chev {
+  font-size: 28px;
+  color: var(--color-text-secondary);
+}

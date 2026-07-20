@@ -59,6 +59,33 @@ export interface ClFirmaCaptura {
   metodo?: 'pad' | 'foto';
 }
 
+// Q5 (3b) — firmar un CL existente desde el aviso / la bandeja.
+export interface ClFirmaExistente {
+  rol: string;
+  nombre: string | null;
+  metodo: string | null;
+  firmado_en: string | null;
+}
+export interface ClRegistroDetalle {
+  id: string;
+  estado: string; // 'borrador' | 'firmado'
+  bloque: string | null;
+  eje: string | null;
+  observaciones: string | null;
+  created_at: string;
+  proyecto: string;
+  plantilla: string;
+  plantillaCodigo: string;
+  firmas: ClFirmaExistente[];
+}
+export interface ClPendiente {
+  id: string;
+  proyecto: string;
+  plantilla: string;
+  created_at: string;
+  faltantes: string[];
+}
+
 export interface ClCaptura {
   proyectoId: string;
   proyecto: string;

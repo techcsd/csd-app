@@ -73,6 +73,18 @@ export const routes: Routes = [
       import('./pages/bitacora/detalle/detalle').then((m) => m.BitacoraDetallePage),
   },
   {
+    // Q5 (3b) — bandeja de liberaciones por firmar.
+    path: 'bitacora/cl',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/bitacora/cl-firmas/cl-firmas').then((m) => m.ClFirmasPage),
+  },
+  {
+    // Q5 (3b) — detalle de un CL para revisarlo y firmar (deep-link del aviso).
+    path: 'bitacora/cl/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/bitacora/cl-detalle/cl-detalle').then((m) => m.ClDetallePage),
+  },
+  {
     path: 'transporte',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/transporte').then((m) => m.TransportePage),

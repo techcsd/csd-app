@@ -1,0 +1,107 @@
+.cld {
+  background: var(--color-bg);
+}
+.cld__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.cld__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.cld__icon {
+  font-size: 26px;
+}
+.cld__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.cld__banner {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  margin-bottom: 14px;
+  background: var(--color-surface-2, #212121);
+  color: var(--color-text-primary);
+}
+.cld__banner--ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--color-success, #16a34a);
+}
+
+.cld__section {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+  margin: 20px 0 8px;
+}
+
+.cld__firma-check {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cld__firma-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-surface, #212121);
+  border-left: 3px solid var(--color-border);
+}
+.cld__firma-row--ok {
+  border-left-color: var(--color-success, #16a34a);
+  background: rgba(22, 163, 74, 0.08);
+}
+.cld__firma-icon {
+  font-size: 18px;
+}
+.cld__firma-name {
+  flex: 1;
+  font-weight: 600;
+}
+.cld__firma-state {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.cld__roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.cld__foto-actions {
+  display: flex;
+  gap: 10px;
+
+  .btn-ghost {
+    flex: 1;
+    width: auto;
+  }
+}
+.cld__foto-preview {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #000;
+  margin-bottom: 10px;
+}
+.cld__firmar {
+  margin-top: 14px;
+}

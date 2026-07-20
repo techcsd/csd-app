@@ -2,7 +2,28 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { PermanentSyncError, SyncService } from '../sync/sync.service';
-import { ClCaptura, ClPlantilla, ClProyecto } from '../models/cl-liberacion.model';
+import {
+  ClCaptura,
+  ClFirmaRol,
+  ClPendiente,
+  ClPlantilla,
+  ClProyecto,
+  ClRegistroDetalle,
+  CL_FIRMA_ROLES,
+} from '../models/cl-liberacion.model';
+
+/** Forma cruda de la fila de cl_registros con sus joins (Q5 3b). */
+interface ClRow {
+  id: string;
+  estado?: string;
+  bloque?: string | null;
+  eje?: string | null;
+  observaciones?: string | null;
+  created_at: string;
+  proyecto?: { nombre: string } | null;
+  plantilla?: { codigo: string; nombre: string } | null;
+  firmas?: { rol: string; nombre?: string | null; metodo?: string | null; firmado_en?: string | null }[];
+}
 
 const CATALOG_PLANTILLAS = 'cl_plantillas';
 const CATALOG_PROYECTOS = 'proyectos';
@@ -128,6 +149,84 @@ export class ClLiberacionService {
       p_titulo: 'Firma de liberación pendiente',
       p_mensaje: msg,
       p_ruta: `/bitacora/cl/${clId}`,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  // ── Q5 (3b) — firmar un CL existente desde el aviso / bandeja ──────────────
+
+  /** CLs en borrador pendientes de firma (para la bandeja "por firmar"). Online. */
+  async getClsPendientes(): Promise<ClPendiente[]> {
+    const { data, error } = await this.supabase.client
+      .from('cl_registros')
+      .select('id, created_at, proyecto:proyectos(nombre), plantilla:cl_plantillas(codigo, nombre), firmas:cl_registro_firmas(rol)')
+      .eq('estado', 'borrador')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return ((data as unknown as ClRow[]) ?? []).map((d) => {
+      const roles = new Set((d.firmas ?? []).map((f) => f.rol));
+      const faltantes = CL_FIRMA_ROLES.filter((r) => r.obligatoria && !roles.has(r.value)).map((r) => r.label);
+      return {
+        id: d.id,
+        proyecto: d.proyecto?.nombre ?? '—',
+        plantilla: d.plantilla?.nombre ?? '—',
+        created_at: d.created_at,
+        faltantes,
+      };
+    });
+  }
+
+  /** Un CL con sus firmas actuales, para revisarlo y firmar. Online. */
+  async getCl(id: string): Promise<ClRegistroDetalle | null> {
+    const { data, error } = await this.supabase.client
+      .from('cl_registros')
+      .select(
+        'id, estado, bloque, eje, observaciones, created_at, proyecto:proyectos(nombre), plantilla:cl_plantillas(codigo, nombre), firmas:cl_registro_firmas(rol, nombre, metodo, firmado_en)',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    const d = data as unknown as ClRow;
+    return {
+      id: d.id,
+      estado: d.estado ?? 'borrador',
+      bloque: d.bloque ?? null,
+      eje: d.eje ?? null,
+      observaciones: d.observaciones ?? null,
+      created_at: d.created_at,
+      proyecto: d.proyecto?.nombre ?? '—',
+      plantilla: d.plantilla?.nombre ?? '—',
+      plantillaCodigo: d.plantilla?.codigo ?? '',
+      firmas: (d.firmas ?? []).map((f) => ({ rol: f.rol, nombre: f.nombre ?? null, metodo: f.metodo ?? null, firmado_en: f.firmado_en ?? null })),
+    };
+  }
+
+  /**
+   * Firma un CL existente: sube la firma (trazo o foto) al bucket `obra` y la
+   * inserta en `cl_registro_firmas` (reemplaza la del mismo rol). El trigger
+   * `trg_cl_firmado` pasa el CL a 'firmado' al tener Residente + Responsable.
+   * Online-only (no outbox: la firma se hace sobre un CL ya en el servidor).
+   */
+  async firmarCl(input: { clId: string; rol: ClFirmaRol; nombre: string | null; blob: Blob; metodo: 'pad' | 'foto' }): Promise<void> {
+    const ext = input.metodo === 'foto' ? 'jpg' : 'png';
+    const contentType = input.metodo === 'foto' ? 'image/jpeg' : 'image/png';
+    const path = `cl/${input.clId}/firma_${input.rol}.${ext}`;
+    const up = await this.supabase.client.storage.from(BUCKET).upload(path, input.blob, { upsert: true, contentType });
+    if (up.error && !/exists/i.test(up.error.message)) throw new Error(up.error.message);
+    const { data: userData } = await this.supabase.client.auth.getUser();
+    const uid = userData.user?.id ?? null;
+    // Reemplaza la firma previa del mismo rol (evita duplicados).
+    await this.supabase.client.from('cl_registro_firmas').delete().eq('registro_id', input.clId).eq('rol', input.rol);
+    const { error } = await this.supabase.client.from('cl_registro_firmas').insert({
+      registro_id: input.clId,
+      rol: input.rol,
+      usuario_id: uid,
+      nombre: input.nombre,
+      firma_path: path,
+      metodo: input.metodo,
+      orden: 0,
     });
     if (error) throw new Error(error.message);
   }
