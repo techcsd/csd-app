@@ -37,6 +37,21 @@ export class CatalogService {
   }
 
   /**
+   * P7 — invalida una entrada de caché (borra su copia local) para que la
+   * próxima lectura re-consulte el servidor. Se usa tras sincronizar un registro
+   * que cambia datos derivados (p. ej. el kilometraje del vehículo), así la app
+   * no muestra el valor viejo cacheado. Acepta un prefijo con `like` opcional.
+   */
+  async invalidate(tipo: string): Promise<void> {
+    await db.catalogos.delete(tipo);
+  }
+
+  /** Invalida todas las entradas cuyo `tipo` empieza por el prefijo dado. */
+  async invalidatePrefix(prefijo: string): Promise<void> {
+    await db.catalogos.where('tipo').startsWith(prefijo).delete();
+  }
+
+  /**
    * Refresh a catalogue via its loader when online. On failure (offline or
    * error) returns the last cached value so the UI degrades gracefully.
    */

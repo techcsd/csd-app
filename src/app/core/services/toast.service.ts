@@ -1,9 +1,15 @@
 import { Injectable, signal } from '@angular/core';
 
+export interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 export interface Toast {
   id: number;
   text: string;
   tone: 'info' | 'success' | 'error';
+  action?: ToastAction;
 }
 
 /**
@@ -28,6 +34,16 @@ export class ToastService {
 
   error(text: string): void {
     this.show(text, 'error', 5000);
+  }
+
+  /**
+   * Toast con acción (p. ej. "Abrir ajustes" cuando falta un permiso).
+   * Dura más y la acción cierra el toast al ejecutarse.
+   */
+  withAction(text: string, action: ToastAction, tone: Toast['tone'] = 'error', ms = 8000): void {
+    const id = ++this.seq;
+    this._toasts.update((t) => [...t, { id, text, tone, action }]);
+    setTimeout(() => this.dismiss(id), ms);
   }
 
   dismiss(id: number): void {

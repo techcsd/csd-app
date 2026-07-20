@@ -1,0 +1,47 @@
+@if (open()) {
+  <div class="gacc" role="alertdialog" aria-modal="true" (click)="cerrar()">
+    <div class="gacc__card" (click)="$event.stopPropagation()">
+      @if (exito()) {
+        <span class="gacc__icon">✅</span>
+        <h2 class="gacc__title">Listo</h2>
+        <p class="gacc__msg">{{ exito() }}</p>
+        <button type="button" class="gacc__btn gacc__btn--primary" (click)="cerrar()">Cerrar</button>
+      } @else {
+        <span class="gacc__icon">🔐</span>
+        <h2 class="gacc__title">{{ tieneAcceso() ? 'Restablecer PIN' : 'Generar acceso a la app' }}</h2>
+        <p class="gacc__msg">
+          El conductor entra con su <strong>cédula{{ cedula() ? ' (' + cedula() + ')' : '' }}</strong>
+          y este PIN de 6 dígitos. Anótalo: no se vuelve a mostrar.
+        </p>
+
+        <input
+          class="field gacc__pin"
+          type="tel"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="off"
+          [ngModel]="pin()"
+          (ngModelChange)="onPin($event)"
+          placeholder="••••••"
+        />
+
+        @if (!online()) {
+          <p class="gacc__hint">Necesitas conexión para generar el acceso. Puedes hacerlo luego desde el perfil.</p>
+        }
+        @if (error()) {
+          <p class="gacc__error">{{ error() }}</p>
+        }
+
+        <button
+          type="button"
+          class="gacc__btn gacc__btn--primary"
+          [disabled]="submitting() || !online() || pin().length !== 6"
+          (click)="generar()"
+        >
+          {{ submitting() ? 'Generando…' : (tieneAcceso() ? 'Restablecer PIN' : 'Generar acceso') }}
+        </button>
+        <button type="button" class="gacc__btn gacc__btn--ghost" (click)="cerrar()">Cancelar</button>
+      }
+    </div>
+  </div>
+}

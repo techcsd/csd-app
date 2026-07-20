@@ -21,11 +21,18 @@
         }
       </div>
 
-      <button type="button" class="tour__next" (click)="next()">
-        {{ isLast() ? 'Empezar' : 'Siguiente' }}
-      </button>
-      @if (index() > 0 && !isLast()) {
-        <button type="button" class="tour__back" (click)="prev()">Atrás</button>
+      @if (current().permission === 'location') {
+        <button type="button" class="tour__next" [disabled]="pidiendoPermiso()" (click)="permitirUbicacion()">
+          {{ pidiendoPermiso() ? 'Pidiendo…' : 'Permitir ubicación' }}
+        </button>
+        <button type="button" class="tour__back" (click)="next()">Ahora no</button>
+      } @else {
+        <button type="button" class="tour__next" (click)="next()">
+          {{ isLast() ? 'Empezar' : 'Siguiente' }}
+        </button>
+        @if (index() > 0 && !isLast()) {
+          <button type="button" class="tour__back" (click)="prev()">Atrás</button>
+        }
       }
     </div>
   </div>

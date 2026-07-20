@@ -225,7 +225,15 @@ export class PreusoReportService {
         const head = doc.splitTextToSize(`${num}${h.etiqueta}${critico}`, W - 2 * M);
         doc.text(head, M, y);
         y += head.length * 5;
-        if (h.comentario) {
+        if (h.es_critico) {
+          // P6 — la explicación del crítico se ve prominente ("Qué pasó"), no
+          // solo la categoría. En rojo y con etiqueta, no en gris tenue.
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...CRIT);
+          const c = doc.splitTextToSize(`Qué pasó: ${h.comentario || '—'}`, W - 2 * M - 4);
+          doc.text(c, M + 4, y);
+          y += c.length * 5;
+        } else if (h.comentario) {
           doc.setFont('helvetica', 'italic');
           doc.setTextColor(...MUTED);
           const c = doc.splitTextToSize(`“${h.comentario}”`, W - 2 * M - 4);

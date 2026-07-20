@@ -5,7 +5,7 @@ import {
   isDevMode,
   inject,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -23,7 +23,10 @@ import { ClLiberacionService } from './core/services/cl-liberacion.service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes),
+    // P9 — toda pantalla abre arriba (y respeta anclas). Además, en app.ts se
+    // resetea el scroll de los contenedores internos (.screen/.screen__body),
+    // que Angular no restaura por sí solo.
+    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

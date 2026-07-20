@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.16.0';
+const VERSION = '1.17.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,17 +59,25 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // foto en Android). Mantener este valor alineado con la fila `minima=true` para que
 // version.json (aviso) no contradiga el gate.
 const MIN_VERSION = '1.15.0';
-const RELEASED_AT = '2026-07-18';
+const RELEASED_AT = '2026-07-20';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Acceso de conductores + tipos de vehículo';
+const TITULO = 'Micrófono y GPS, pendientes de envío, y más';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Los conductores ya pueden entrar con su cédula y un PIN, sin necesidad de correo. Pídele a administración que te genere el acceso desde tu perfil.' },
-  { t: 'nuevo', d: 'Más tipos de vehículo: motocicleta, automóvil/sedán y SUV/jeepeta. El checklist de pre-uso se ajusta al tipo (una moto o un auto ya no trae puntos de camión).' },
-  { t: 'mejora', d: 'Los vehículos desactivados ya no aparecen en las listas para elegir vehículo.' },
-  { t: 'mejora', d: 'Las fotos (vehículos, documentos) ahora cargan más elegante: espacio reservado y aparecen con un suave difuminado en vez de “pintarse” de arriba a abajo.' },
+  { t: 'arreglo', d: 'Ya puedes grabar la nota de voz al reportar un incidente (antes decía que no podía usar el micrófono). Se escucha desde el detalle del parte.' },
+  { t: 'arreglo', d: 'El GPS vuelve a funcionar para crear rutas y para recibir vehículos. La app te pide el permiso de ubicación al entrar y cuando lo necesita.' },
+  { t: 'nuevo', d: 'Nueva pantalla “Pendientes de envío”: toca la barra de estado para ver qué falta por enviar, con el motivo en claro, y reintentar o descartar cada cosa.' },
+  { t: 'arreglo', d: 'Al recibir un vehículo, deja de aparecer de inmediato como “por recibir”.' },
+  { t: 'arreglo', d: 'Las fotos ya no desaparecen al pasar de un paso a otro en los formularios; se quedan hasta que envías.' },
+  { t: 'nuevo', d: 'Puedes subir o reemplazar la cédula y la licencia de un conductor desde su perfil, con aviso de “subiendo”.' },
+  { t: 'nuevo', d: 'Puedes generar el acceso (cédula + PIN de 6 dígitos) de un conductor desde el alta o desde su perfil.' },
+  { t: 'nuevo', d: 'Entrada por “Devolución de obra”: eliges de qué obra viene el material y, si esa obra tiene almacén, lo descuentas de él.' },
+  { t: 'nuevo', d: 'La auditoría ahora tiene un panel con métricas y gráficos, igual que la página web.' },
+  { t: 'mejora', d: 'Cuando registras kilometraje (pre-uso, combustible, entrega o mantenimiento) se actualiza el del vehículo.' },
+  { t: 'mejora', d: 'En el pre-uso, un hallazgo crítico ahora exige explicar qué pasó con el vehículo.' },
+  { t: 'mejora', d: 'Las pantallas abren siempre desde arriba y los cuadros de texto se ven más consistentes.' },
 ];
 
 const TIPO_POR_COMMIT = {

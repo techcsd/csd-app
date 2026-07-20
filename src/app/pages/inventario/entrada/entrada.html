@@ -44,6 +44,29 @@
         />
       }
 
+      <!-- P12 — devolución de obra: elegir la obra y (si tiene almacén) descontar -->
+      @if (esDevolucion()) {
+        <div class="mov__mt">
+          <app-select-list
+            label="¿De cuál obra viene?"
+            icon="🏗"
+            [options]="obraOpts()"
+            [selectedId]="obraOrigenId()"
+            (picked)="obraOrigenId.set($event); descontarObra.set(false)"
+          />
+        </div>
+        @if (obraSel()) {
+          @if (obraSel()!.tieneBodega) {
+            <label class="mov__check mov__mt">
+              <input type="checkbox" [ngModel]="descontarObra()" (ngModelChange)="descontarObra.set($event)" />
+              <span>Registrar también la salida del almacén de <b>{{ obraSel()!.nombre }}</b></span>
+            </label>
+          } @else {
+            <p class="mov__hint mov__mt">Esta obra no tiene almacén propio: se registra solo la entrada aquí.</p>
+          }
+        }
+      }
+
       @for (g of grupos(); track g.categoria) {
         <h3 class="mov__grupo">{{ g.categoria }}</h3>
         @for (l of g.lineas; track l.articulo_id) {
@@ -60,8 +83,10 @@
         }
       }
 
-      <label class="field-label mov__mt">Foto (opcional)</label>
-      <app-photo-slot label="Evidencia (opcional)" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+      @if (!esDevolucion()) {
+        <label class="field-label mov__mt">Foto (opcional)</label>
+        <app-photo-slot label="Evidencia (opcional)" [foto]="foto()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+      }
     </div>
 
     <app-wizard-footer

@@ -5,6 +5,103 @@
   </header>
 
   <div class="screen__body">
+    <!-- P13 — toggle Panel / Filas (paridad con la web) -->
+    <div class="aud__toggle">
+      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'panel'" (click)="cambiarVista('panel')">📊 Panel</button>
+      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'filas'" (click)="cambiarVista('filas')">📋 Filas</button>
+    </div>
+
+    <!-- ══════════ PANEL analítico ══════════ -->
+    @if (vista() === 'panel') {
+      @if (!online() && !resumen()) {
+        <p class="adm-sub__muted">El panel necesita conexión. Conéctate para ver las métricas.</p>
+      }
+
+      <div class="aud__periodos">
+        @for (p of periodos; track p.dias) {
+          <button type="button" class="aud__chip" [class.aud__chip--on]="periodoDias() === p.dias" (click)="setPeriodo(p.dias)">
+            {{ p.label }}
+          </button>
+        }
+      </div>
+
+      @if (resumenError()) {
+        <p class="adm-sub__muted">{{ resumenError() }}</p>
+      }
+
+      @if (loadingResumen()) {
+        <app-skeleton [rows]="6" />
+      } @else if (resumen(); as r) {
+        <div class="aud__kpis">
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.total | number }}</span><span class="aud__kpi-lbl">Acciones</span></div>
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.usuarios_activos | number }}</span><span class="aud__kpi-lbl">Usuarios</span></div>
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.modulos_activos | number }}</span><span class="aud__kpi-lbl">Áreas</span></div>
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.por_dia.length | number }}</span><span class="aud__kpi-lbl">Días activos</span></div>
+        </div>
+
+        @if (r.total === 0) {
+          <p class="adm-sub__muted">Sin actividad en este período.</p>
+        } @else {
+          <h2 class="aud__chart-title">Usuarios más activos</h2>
+          <div class="aud__chart">
+            @for (b of usuariosTop(); track b.label) {
+              <div class="aud__bar-row">
+                <span class="aud__bar-lbl">{{ b.label }}</span>
+                <span class="aud__bar-track"><span class="aud__bar-fill" [style.width.%]="b.pct"></span></span>
+                <span class="aud__bar-val">{{ b.value | number }}</span>
+              </div>
+            }
+          </div>
+
+          <h2 class="aud__chart-title">Por acción</h2>
+          <div class="aud__chart">
+            @for (b of porAccion(); track b.label) {
+              <div class="aud__bar-row">
+                <span class="aud__bar-lbl">{{ b.label }}</span>
+                <span class="aud__bar-track"><span class="aud__bar-fill aud__bar-fill--acc" [style.width.%]="b.pct"></span></span>
+                <span class="aud__bar-val">{{ b.value | number }}</span>
+              </div>
+            }
+          </div>
+
+          <h2 class="aud__chart-title">Por área</h2>
+          <div class="aud__chart">
+            @for (b of porModulo(); track b.label) {
+              <div class="aud__bar-row">
+                <span class="aud__bar-lbl">{{ b.label }}</span>
+                <span class="aud__bar-track"><span class="aud__bar-fill aud__bar-fill--area" [style.width.%]="b.pct"></span></span>
+                <span class="aud__bar-val">{{ b.value | number }}</span>
+              </div>
+            }
+          </div>
+
+          <h2 class="aud__chart-title">Por día</h2>
+          <div class="aud__chart">
+            @for (b of porDia(); track b.label) {
+              <div class="aud__bar-row">
+                <span class="aud__bar-lbl aud__bar-lbl--sm">{{ b.label }}</span>
+                <span class="aud__bar-track"><span class="aud__bar-fill aud__bar-fill--dia" [style.width.%]="b.pct"></span></span>
+                <span class="aud__bar-val">{{ b.value | number }}</span>
+              </div>
+            }
+          </div>
+
+          <h2 class="aud__chart-title">Por hora</h2>
+          <div class="aud__chart">
+            @for (b of porHora(); track b.label) {
+              <div class="aud__bar-row">
+                <span class="aud__bar-lbl aud__bar-lbl--sm">{{ b.label }}</span>
+                <span class="aud__bar-track"><span class="aud__bar-fill aud__bar-fill--hora" [style.width.%]="b.pct"></span></span>
+                <span class="aud__bar-val">{{ b.value | number }}</span>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+
+    <!-- ══════════ FILAS (tabla de cambios) ══════════ -->
+    @if (vista() === 'filas') {
     <div class="aud__chips">
       <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === ''" (click)="setAccion('')">Todo</button>
       <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'INSERT'" (click)="setAccion('INSERT')">Creó</button>
@@ -65,6 +162,7 @@
           {{ loadingMore() ? 'Cargando…' : 'Cargar más' }}
         </button>
       }
+    }
     }
   </div>
 </div>

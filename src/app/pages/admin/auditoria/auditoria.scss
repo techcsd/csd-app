@@ -1,3 +1,120 @@
+// P13 — toggle Panel / Filas.
+.aud__toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.aud__tab {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 16px;
+  font-weight: 700;
+}
+.aud__tab--on {
+  background: var(--color-secondary);
+  color: #fff;
+  border-color: var(--color-secondary);
+}
+
+.aud__periodos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+// P13 — KPI cards.
+.aud__kpis {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.aud__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: #161616;
+  border: 1px solid #2d2d2d;
+  border-radius: 14px;
+}
+.aud__kpi-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--Hub, #ffb300);
+}
+.aud__kpi-lbl {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// P13 — gráficos de barras CSS (sin librería).
+.aud__chart-title {
+  margin: 20px 0 10px;
+  font-size: var(--fs-option);
+  font-weight: 700;
+}
+.aud__chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.aud__bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.aud__bar-lbl {
+  flex: 0 0 34%;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aud__bar-lbl--sm {
+  flex-basis: 44px;
+}
+.aud__bar-track {
+  flex: 1;
+  height: 18px;
+  border-radius: 6px;
+  background: var(--color-surface-2, #212121);
+  overflow: hidden;
+}
+.aud__bar-fill {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: 6px;
+  background: var(--color-secondary);
+}
+.aud__bar-fill--acc {
+  background: #2563eb;
+}
+.aud__bar-fill--area {
+  background: #16a34a;
+}
+.aud__bar-fill--dia {
+  background: var(--Hub, #ffb300);
+}
+.aud__bar-fill--hora {
+  background: #0e7490;
+}
+.aud__bar-val {
+  flex: 0 0 auto;
+  min-width: 28px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
 .aud__chips {
   display: flex;
   gap: 8px;

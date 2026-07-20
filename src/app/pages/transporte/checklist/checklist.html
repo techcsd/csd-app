@@ -47,6 +47,7 @@
             <app-photo-slot
               [label]="f.label"
               [hint]="f.hint"
+              [foto]="fotos()[f.slot] ?? null"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
             />
@@ -122,7 +123,7 @@
                   </button>
                 }
               </div>
-              <app-photo-slot label="Foto del daño" hint="📸" (captured)="onDanoFoto($index, $event)" />
+              <app-photo-slot label="Foto del daño" hint="📸" [foto]="d.photo" (captured)="onDanoFoto($index, $event)" />
               <input
                 class="field dano__desc"
                 type="text"

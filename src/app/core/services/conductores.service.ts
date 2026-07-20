@@ -24,6 +24,36 @@ export class ConductoresService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
 
+  /**
+   * P8 — genera el acceso a la app (usuario cédula + PIN de 6 dígitos) o lo
+   * restablece si ya existe (idempotente). Llama la MISMA edge que la web
+   * (`conductor-crear-acceso`, gated a admin/flota). Online-only.
+   */
+  async generarAccesoConductor(
+    conductorId: string,
+    pin: string,
+  ): Promise<{ email: string; usuarioId: string; created?: boolean; rotated?: boolean }> {
+    const { data, error } = await this.supabase.client.functions.invoke('conductor-crear-acceso', {
+      body: { conductorId, pin },
+    });
+    if (error) {
+      // La edge devuelve el detalle en el body aunque el status sea 4xx.
+      let msg = error.message ?? 'No se pudo generar el acceso.';
+      const ctx = (error as { context?: Response }).context;
+      if (ctx && typeof ctx.json === 'function') {
+        try {
+          const body = await ctx.json();
+          if (body?.error) msg = body.error;
+        } catch {
+          /* sin cuerpo JSON útil */
+        }
+      }
+      throw new Error(msg);
+    }
+    if (data?.error) throw new Error(data.error);
+    return data as { email: string; usuarioId: string; created?: boolean; rotated?: boolean };
+  }
+
   /** The current user's conductor row, or null if they aren't a registered driver. */
   async getMiConductor(): Promise<Conductor | null> {
     const data = await this.catalog.refresh<Conductor | null>(CATALOG_MI_CONDUCTOR, async () => {

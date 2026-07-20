@@ -1,12 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { GenerarAcceso } from '../../../shared/components/generar-acceso/generar-acceso';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { SyncService } from '../../../core/sync/sync.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { CapturedDoc } from '../../../core/services/camera.service';
 import { Conductor, ConductorStats, LicenciaEstado, estadoLicencia, diasHasta } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
@@ -24,15 +28,17 @@ const TIPO_LABEL: Record<string, string> = {
 };
 
 /**
- * Read-only driver profile for browsing ANY conductor (R5): stats + documents
- * (view via signed URLs). Uploading/replacing is done by the driver from "Mi
- * actividad" (own profile); here documents are view-only.
+ * Driver profile for browsing ANY conductor (R5): stats + documents (view via
+ * signed URLs). P3 — desde aquí también se pueden SUBIR/REEMPLAZAR los
+ * documentos (cédula/licencia) desde el teléfono, encolados por outbox, con
+ * badge "Subiendo…" mientras sincronizan. Gated a admin/flota o el propio
+ * conductor (mismo criterio que la web).
  */
 @Component({
   selector: 'app-perfil-conductor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DocSlot],
+  imports: [Skeleton, EmptyState, DocSlot, GenerarAcceso],
   templateUrl: './perfil-conductor.html',
   styleUrl: './perfil-conductor.scss',
 })
@@ -41,6 +47,8 @@ export class PerfilConductorPage {
   private conductores = inject(ConductoresService);
   private documentos = inject(DocumentosService);
   private ctx = inject(UserContextService);
+  private sync = inject(SyncService);
+  private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
 
@@ -48,7 +56,7 @@ export class PerfilConductorPage {
   fmtFechaMedia = formatFechaMedia;
 
   loading = signal(true);
-  private condId = signal('');
+  condId = signal('');
   stats = signal<ConductorStats | null>(null);
   conductor = signal<Conductor | null>(null); // C3 — nota/tags
   // C5 — TODAS las fotos por tipo (licencia: frente y dorso), no solo la última.
@@ -57,6 +65,20 @@ export class PerfilConductorPage {
   otros = signal<DocView[]>([]);
   esMiPerfil = signal(false);
   esAdmin = () => this.ctx.hasModulo('admin');
+
+  // P3 — permiso para subir/reemplazar documentos: admin, flota, o el propio
+  // conductor (mismo criterio que la web). La ruta ya está gated a flota.
+  puedeEditar = computed(() => this.esAdmin() || this.ctx.hasModulo('flota') || this.esMiPerfil());
+  // P3 — tipos de documento encolados (pendientes de sincronizar) para el badge.
+  private enColaTipos = signal<string[]>([]);
+  cedulaEnCola = computed(() => this.enColaTipos().includes('cedula'));
+  licenciaEnCola = computed(() => this.enColaTipos().includes('licencia'));
+  subiendo = signal(false);
+
+  // P8 — generar/restablecer el PIN de acceso (admin/flota). El route ya está
+  // gated a flota, así que quien llega puede gestionarlo.
+  puedeGestionarAcceso = computed(() => this.esAdmin() || this.ctx.hasModulo('flota'));
+  mostrarAcceso = signal(false);
 
   // C6 — badge de licencia (mismo umbral configurable que la web/listado).
   umbral = signal(90);
@@ -67,6 +89,16 @@ export class PerfilConductorPage {
 
   constructor() {
     void this.load();
+    // P3 — al drenar el outbox (o cualquier cambio), refrescar docs + cola: el
+    // "Subiendo…" desaparece y aparece el documento ya cargado del servidor.
+    effect(() => {
+      this.sync.changed();
+      const id = this.condId();
+      if (id) {
+        void this.loadEnCola(id);
+        void this.loadDocs(id);
+      }
+    });
   }
 
   private async load(): Promise<void> {
@@ -89,8 +121,33 @@ export class PerfilConductorPage {
       const mio = await this.conductores.getMiConductor();
       this.esMiPerfil.set(!!mio && mio.id === id);
       await this.loadDocs(id);
+      await this.loadEnCola(id);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  private async loadEnCola(id: string): Promise<void> {
+    if (!id) return;
+    try {
+      this.enColaTipos.set(await this.documentos.tiposEnCola('conductor', id));
+    } catch {
+      /* la cola es secundaria; el perfil se ve igual sin ella */
+    }
+  }
+
+  /** P3 — sube/reemplaza un documento desde el perfil (encolado por outbox). */
+  async onDoc(tipo: 'cedula' | 'licencia', doc: CapturedDoc): Promise<void> {
+    if (this.subiendo()) return;
+    this.subiendo.set(true);
+    try {
+      await this.documentos.enqueueDocumento({ entidad: 'conductor', entidadId: this.condId(), tipo, doc });
+      await this.loadEnCola(this.condId());
+      this.toast.success('Documento en cola. Se subirá cuando haya conexión.');
+    } catch {
+      this.toast.error('No se pudo poner el documento en cola. Intenta de nuevo.');
+    } finally {
+      this.subiendo.set(false);
     }
   }
 
@@ -111,6 +168,18 @@ export class PerfilConductorPage {
     this.licencias.set(await porTipo('licencia', 'Licencia de conducir'));
     const otros = docs.filter((d) => d.tipo !== 'cedula' && d.tipo !== 'licencia');
     this.otros.set(await Promise.all(otros.map((d) => toView(d, TIPO_LABEL[d.tipo] ?? d.nombre ?? d.tipo))));
+  }
+
+  abrirAcceso(): void {
+    this.mostrarAcceso.set(true);
+  }
+  cerrarAcceso(): void {
+    this.mostrarAcceso.set(false);
+  }
+  onAccesoGenerado(res: { usuarioId: string }): void {
+    // Reflejar el enlace usuario_id sin recargar todo.
+    const c = this.conductor();
+    if (c && res.usuarioId) this.conductor.set({ ...c, usuario_id: res.usuarioId });
   }
 
   irMiActividad(): void {

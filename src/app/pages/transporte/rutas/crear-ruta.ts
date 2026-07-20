@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
-import { Geolocation } from '@capacitor/geolocation';
 
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -15,6 +14,7 @@ import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { formatearDuracion } from '../../../core/util/duracion';
 
@@ -38,6 +38,7 @@ export class CrearRutaPage implements OnDestroy {
   private geo = inject(GeocodingService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private permissions = inject(PermissionsService);
   private router = inject(Router);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
@@ -129,35 +130,45 @@ export class CrearRutaPage implements OnDestroy {
   }
 
   private async captureGps(): Promise<void> {
-    try {
-      const pos = await Geolocation.getCurrentPosition({ timeout: 8000 });
-      this.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    } catch {
-      this.gps = null;
-    }
+    // Best-effort al abrir: solo pre-carga si el permiso YA está concedido (no
+    // abre diálogos aquí; eso pasa cuando el usuario toca "usar mi ubicación").
+    if ((await this.permissions.checkLocation()) !== 'granted') return;
+    const r = await this.permissions.getPosition({ timeout: 8000 });
+    this.gps = r.ok ? { lat: r.lat, lng: r.lng } : null;
   }
 
   /**
    * U21 — "usar mi ubicación actual" como origen, con permiso nativo y error
-   * visible. Pide permiso de geolocalización de Capacitor y, si lo concede,
-   * fija el origen con las coordenadas del GPS.
+   * visible. Pide permiso de geolocalización y, si lo concede, fija el origen
+   * con las coordenadas del GPS.
    */
   async usarMiUbicacion(): Promise<void> {
-    try {
-      const perm = await Geolocation.requestPermissions();
-      if (perm.location === 'denied') {
-        this.toast.error('Permiso de ubicación denegado. Actívalo en los ajustes del teléfono.');
-        return;
-      }
-      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
-      this.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 10000 });
+    if (r.ok) {
+      this.gps = { lat: r.lat, lng: r.lng };
       this.origen.set('Mi ubicación actual');
       this.usandoGps.set(true);
       this.origenLugarId.set('');
       this.toast.success('Ubicación actual fijada como origen.');
       void this.recalcularRuta();
-    } catch {
-      this.toast.error('No se pudo obtener tu ubicación. Revisa el GPS y los permisos.');
+      return;
+    }
+    // P2 — mensajes claros por causa; ofrecer ajustes si es denegado permanente.
+    if (r.reason === 'denied-permanent') {
+      if (this.permissions.isNative) {
+        this.toast.withAction('Ubicación bloqueada para esta app.', {
+          label: 'Abrir ajustes',
+          run: () => void this.permissions.openAppSettings(),
+        });
+      } else {
+        this.toast.error('Ubicación bloqueada. Actívala en los ajustes del navegador.');
+      }
+    } else if (r.reason === 'denied') {
+      this.toast.error('Necesito tu permiso de ubicación para fijar el origen.');
+    } else if (r.reason === 'timeout') {
+      this.toast.error('No se pudo obtener la señal GPS. Ve a un lugar despejado y reintenta.');
+    } else {
+      this.toast.error('No se pudo obtener tu ubicación. Escribe el origen o márcalo en el mapa.');
     }
   }
 

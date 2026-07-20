@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { CatalogService } from '../sync/catalog.service';
 
 export type MantenimientoTipo = 'preventivo' | 'correctivo' | 'emergencia';
 
@@ -25,6 +26,7 @@ export interface MantenimientoCaptura {
 export class MantenimientosService {
   private supabase = inject(SupabaseService);
   private sync = inject(SyncService);
+  private catalog = inject(CatalogService);
 
   constructor() {
     this.registerHandler();
@@ -79,6 +81,12 @@ export class MantenimientosService {
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // P7 — el RPC avanza vehiculos.kilometraje; invalidar caches con km.
+      const vehId = payload['vehiculo_id'] as string;
+      await this.catalog.invalidate(`veh_detalle:${vehId}`);
+      await this.catalog.invalidate('pendientes_transporte');
+      await this.catalog.invalidate('flota_vehiculos');
     });
   }
 }

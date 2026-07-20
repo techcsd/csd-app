@@ -84,7 +84,11 @@
               <span class="hallazgo__label">{{ h.etiqueta }}</span>
               @if (h.es_critico) { <span class="hallazgo__critico">CRÍTICO</span> }
             </div>
-            @if (h.comentario) { <p class="hallazgo__com">{{ h.comentario }}</p> }
+            @if (h.es_critico) {
+              <p class="hallazgo__que-paso"><strong>Qué pasó:</strong> {{ h.comentario || '—' }}</p>
+            } @else if (h.comentario) {
+              <p class="hallazgo__com">{{ h.comentario }}</p>
+            }
           </div>
         }
       }
@@ -228,17 +232,22 @@
                   />
                 }
               </div>
+              @if (it.es_critico && draft(it.id).respuesta === 'no') {
+                <p class="preuso__comment-req">Explica qué pasó (obligatorio)</p>
+              }
               <input
                 class="field preuso__comment"
+                [class.preuso__comment--req]="it.es_critico && draft(it.id).respuesta === 'no' && !draft(it.id).comentario.trim()"
                 type="text"
                 [ngModel]="draft(it.id).comentario"
                 (ngModelChange)="setComentario(it.id, $event)"
-                placeholder="Comentario (opcional)"
+                [placeholder]="it.es_critico && draft(it.id).respuesta === 'no' ? '¿Qué pasó con el vehículo?' : 'Comentario (opcional)'"
               />
               @if (draft(it.id).respuesta === 'no') {
                 <app-photo-slot
                   label="Foto de la falla (opcional)"
                   hint="📸"
+                  [foto]="draft(it.id).photo"
                   (captured)="onItemFoto(it.id, $event)"
                   (cleared)="onItemFotoCleared(it.id)"
                 />
@@ -261,6 +270,7 @@
             <app-photo-slot
               [label]="f.label"
               [hint]="f.hint"
+              [foto]="fotos()[f.slot] ?? null"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
             />
@@ -273,6 +283,7 @@
             <app-photo-slot
               [label]="f.label"
               [hint]="f.hint"
+              [foto]="fotos()[f.slot] ?? null"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
             />
@@ -327,7 +338,11 @@
                 <span class="hallazgo__label">{{ h.etiqueta }}</span>
                 @if (h.es_critico) { <span class="hallazgo__critico">CRÍTICO</span> }
               </div>
-              @if (h.comentario) { <p class="hallazgo__com">{{ h.comentario }}</p> }
+              @if (h.es_critico) {
+                <p class="hallazgo__que-paso"><strong>Qué pasó:</strong> {{ h.comentario || '—' }}</p>
+              } @else if (h.comentario) {
+                <p class="hallazgo__com">{{ h.comentario }}</p>
+              }
             </div>
           }
         }

@@ -222,6 +222,16 @@
 .preuso__comment {
   margin-top: 12px;
 }
+// P6 — comentario obligatorio en hallazgo crítico.
+.preuso__comment-req {
+  margin: 12px 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-error);
+}
+.preuso__comment--req {
+  border-color: var(--color-error);
+}
 
 // ── 7 guided photos ────────────────────────────────────────────────────────
 .preuso__fotos {
@@ -332,6 +342,16 @@
   margin: 6px 0 0;
   font-style: italic;
   color: var(--color-text-secondary);
+}
+// P6 — "Qué pasó" del hallazgo crítico, prominente (no solo la categoría).
+.hallazgo__que-paso {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  line-height: 1.35;
 }
 
 // ── Nav ────────────────────────────────────────────────────────────────────

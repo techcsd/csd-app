@@ -42,6 +42,24 @@ export interface ConteoCaptura {
   items: { articulo_id: string; cantidad_contada: number }[];
 }
 
+/** P12 — obra de origen para una entrada por devolución de obra. */
+export interface ObraOrigen {
+  id: string;
+  nombre: string;
+  /** true si la obra tiene almacén propio (se puede descontar de él). */
+  tieneBodega: boolean;
+}
+
+/** P12 — entrada por devolución de obra (con traspaso opcional del almacén). */
+export interface DevolucionObraCaptura {
+  bodegaDestinoId: string;
+  origenProyectoId: string;
+  /** Registrar también la SALIDA del almacén de la obra de origen. */
+  descontar: boolean;
+  referencia: string | null;
+  items: { articulo_id: string; cantidad: number }[];
+}
+
 /**
  * Bodega stock reads (offline-cached) + salida/entrada writes through the
  * outbox. Commits via sgc.registrar_salida_app / registrar_entrada_app, which
@@ -66,6 +84,29 @@ export class InventarioService {
         .order('nombre');
       if (error) throw new Error(error.message);
       return (data as Bodega[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /**
+   * P12 — obras (proyectos) para el selector de "Devolución de obra", con un
+   * flag `tieneBodega` (almacén de obra) para habilitar el traspaso. Cacheado
+   * offline como los demás catálogos.
+   */
+  async getObrasConBodega(): Promise<ObraOrigen[]> {
+    const data = await this.catalog.refresh<ObraOrigen[]>('obras_con_bodega', async () => {
+      const [proys, bods] = await Promise.all([
+        this.supabase.client.from('proyectos').select('id, nombre').order('nombre'),
+        this.supabase.client.from('bodegas').select('proyecto_id').eq('activo', true).not('proyecto_id', 'is', null),
+      ]);
+      if (proys.error) throw new Error(proys.error.message);
+      if (bods.error) throw new Error(bods.error.message);
+      const conBodega = new Set(((bods.data as { proyecto_id: string }[]) ?? []).map((b) => b.proyecto_id));
+      return ((proys.data as { id: string; nombre: string }[]) ?? []).map((p) => ({
+        id: p.id,
+        nombre: p.nombre,
+        tieneBodega: conBodega.has(p.id),
+      }));
     });
     return data ?? [];
   }
@@ -211,6 +252,35 @@ export class InventarioService {
     });
   }
 
+  /**
+   * P12 — entrada por devolución de obra. Encola por outbox y, al sincronizar,
+   * llama el RPC atómico `registrar_devolucion_obra`: si `descontar` y la obra
+   * tiene almacén, registra en una transacción la SALIDA del almacén de la obra
+   * + la ENTRADA en el almacén destino (enlazadas); si no, entrada simple con la
+   * obra como referencia. El rechazo por stock insuficiente llega como error
+   * permanente legible (FASE 1).
+   */
+  async enqueueDevolucionObra(input: DevolucionObraCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'inv_devolucion_obra',
+      capturado_en,
+      payload: {
+        id,
+        fecha: capturado_en.slice(0, 10),
+        bodega_destino_id: input.bodegaDestinoId,
+        origen_proyecto_id: input.origenProyectoId,
+        descontar: input.descontar,
+        referencia: input.referencia,
+        items: input.items,
+        capturado_en,
+      },
+      resumen: { tipo: 'entrada', capturado_en, items: input.items.length },
+    });
+  }
+
   /** Dispatched conduces the user can receive (RLS scopes visibility). */
   async conducesPorRecibir(): Promise<Conduce[]> {
     const data = await this.catalog.refresh<Conduce[]>('conduces_recibir', async () => {
@@ -328,6 +398,24 @@ export class InventarioService {
       // otros_valores (estructurado {contexto,valor}) para autocompletado futuro.
       // Best-effort: nunca falla el sync (la entrada ya quedó registrada).
       await this.registrarOtroValor('entrada_referencia', payload['otro_referencia'], payload['id']);
+    });
+
+    this.sync.register('inv_devolucion_obra', async (payload) => {
+      const { error } = await this.supabase.client.rpc('registrar_devolucion_obra', {
+        p_fecha: payload['fecha'],
+        p_bodega_destino_id: payload['bodega_destino_id'],
+        p_origen_proyecto_id: payload['origen_proyecto_id'],
+        p_descontar: payload['descontar'] ?? false,
+        p_referencia: payload['referencia'] ?? null,
+        p_observaciones: null,
+        p_creado_por: null, // el RPC usa auth.uid() por defecto
+        p_items: payload['items'],
+      });
+      // Rechazo por stock insuficiente / obra sin almacén → P0001 permanente,
+      // legible en "Pendientes de envío" (FASE 1).
+      if (error) throwSyncError(error);
+      // El stock cambió en ambas bodegas: invalida las existencias cacheadas.
+      await this.catalog.invalidatePrefix('existencias_');
     });
 
     this.sync.register('conduce_recepcion', async (payload, photoPaths) => {

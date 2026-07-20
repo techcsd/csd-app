@@ -32,6 +32,26 @@
 .mov__mt {
   margin-top: 20px;
 }
+// P12 — checkbox "descontar del almacén de la obra" + nota cuando no aplica.
+.mov__check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: var(--fs-body);
+  line-height: 1.35;
+
+  input[type='checkbox'] {
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    accent-color: var(--color-primary);
+  }
+}
+.mov__hint {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
 .mov__muted {
   color: var(--color-text-secondary);
   padding: 16px 0;

@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+} from '@angular/core';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 
 /**
@@ -6,6 +15,13 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
  * once captured it shows the thumbnail + ✓. Emits the compressed photo so
  * the wizard can enforce "all required shots taken" before letting the user
  * confirm (VEH-01).
+ *
+ * P10 — rehidratación. Los wizards renderizan pasos con `@if (step()===N)`, lo
+ * que DESTRUYE y RECREA el slot al ir/volver → la miniatura se perdía. Con el
+ * input `[foto]` el padre (dueño del estado) le devuelve la foto ya capturada y
+ * el slot la vuelve a mostrar. Regla de object-URLs: si el padre pasa `[foto]`,
+ * él es el DUEÑO del blob/URL y lo libera al enviar/limpiar; el slot NO revoca
+ * en destroy (si no, mataría la URL que el padre sigue usando).
  */
 @Component({
   selector: 'app-photo-slot',
@@ -19,6 +35,8 @@ export class PhotoSlot implements OnDestroy {
   label = input.required<string>();
   /** Example glyph shown before capture. */
   hint = input<string>('📷');
+  /** P10 — foto ya capturada en el estado del padre, para rehidratar la miniatura. */
+  foto = input<CapturedPhoto | null>(null);
 
   captured = output<CapturedPhoto>();
   cleared = output<void>();
@@ -27,14 +45,20 @@ export class PhotoSlot implements OnDestroy {
   preview = signal<string | null>(null);
   busy = signal(false);
 
+  /** URL a mostrar: la recién capturada localmente o la rehidratada del padre. */
+  displayUrl = computed(() => this.preview() ?? this.foto()?.previewUrl ?? null);
+
   async capture(): Promise<void> {
     if (this.busy()) return;
     this.busy.set(true);
     try {
       const photo = await this.camera.takePhoto();
       if (photo) {
-        const old = this.preview();
-        if (old) URL.revokeObjectURL(old);
+        // Solo revocar la anterior si era local (uso legacy sin [foto]).
+        if (!this.foto()) {
+          const old = this.preview();
+          if (old) URL.revokeObjectURL(old);
+        }
         this.preview.set(photo.previewUrl);
         this.captured.emit(photo);
       }
@@ -44,14 +68,21 @@ export class PhotoSlot implements OnDestroy {
   }
 
   clear(): void {
-    const old = this.preview();
-    if (old) URL.revokeObjectURL(old);
+    // Si el padre es dueño de la foto ([foto]), él libera la URL al recibir
+    // `cleared`; aquí no revocamos para no cortarla antes de tiempo.
+    if (!this.foto()) {
+      const old = this.preview();
+      if (old) URL.revokeObjectURL(old);
+    }
     this.preview.set(null);
     this.cleared.emit();
   }
 
   ngOnDestroy(): void {
-    // APP-063 — liberar la última object-URL si el wizard se destruye con foto.
+    // APP-063 — liberar la última object-URL SOLO en uso legacy (sin [foto]).
+    // Con [foto], el padre conserva y libera la URL; revocarla aquí rompería la
+    // rehidratación al volver al paso (P10).
+    if (this.foto()) return;
     const old = this.preview();
     if (old) URL.revokeObjectURL(old);
   }

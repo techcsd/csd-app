@@ -32,12 +32,12 @@
       @if (esAdmin()) {
         <button type="button" class="btn-ghost pcon__editar" (click)="editar()">✏️ Editar conductor</button>
       }
-
-      @if (esMiPerfil()) {
-        <button type="button" class="btn-ghost pcon__mio" (click)="irMiActividad()">
-          Este es tu perfil — súbelos/edítalos desde “Mi actividad”
+      @if (puedeGestionarAcceso()) {
+        <button type="button" class="btn-ghost pcon__editar" (click)="abrirAcceso()">
+          🔐 {{ conductor()?.usuario_id ? 'Restablecer PIN de acceso' : 'Generar acceso a la app' }}
         </button>
       }
+
 
       <div class="pcon__cards">
         <div class="pcon__card">
@@ -81,27 +81,71 @@
         }
       </div>
 
-      <!-- Documentos (solo lectura; se suben en el alta/edición o desde "Mi actividad") -->
+      <!-- P3 — Documentos: editables (subir/reemplazar por outbox) si tienes
+           permiso; solo lectura si no. -->
       <section class="pcon__docs">
         <h2 class="pcon__docs-title">Documentos</h2>
-        @if (cedulas().length) {
-          @for (d of cedulas(); track d.label + $index) {
+
+        @if (puedeEditar()) {
+          <app-doc-slot
+            label="Cédula"
+            [urlExistente]="cedulas()[0]?.url ?? null"
+            [esPdfExistente]="cedulas()[0]?.esPdf ?? false"
+            [enCola]="cedulaEnCola()"
+            (captured)="onDoc('cedula', $event)"
+          />
+          <app-doc-slot
+            label="Licencia (frente)"
+            [urlExistente]="licencias()[0]?.url ?? null"
+            [esPdfExistente]="licencias()[0]?.esPdf ?? false"
+            [enCola]="licenciaEnCola()"
+            (captured)="onDoc('licencia', $event)"
+          />
+          <app-doc-slot
+            label="Licencia (dorso)"
+            [urlExistente]="licencias()[1]?.url ?? null"
+            [esPdfExistente]="licencias()[1]?.esPdf ?? false"
+            (captured)="onDoc('licencia', $event)"
+          />
+          <!-- Fotos extra ya cargadas (más de una por tipo) + otros docs -->
+          @for (d of cedulas().slice(1); track d.label + $index) {
+            <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
+          }
+          @for (d of licencias().slice(2); track d.label + $index) {
+            <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
+          }
+          @for (d of otros(); track d.label + $index) {
             <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
           }
         } @else {
-          <app-doc-slot label="Cédula" [soloLectura]="true" [urlExistente]="null" />
-        }
-        @if (licencias().length) {
-          @for (d of licencias(); track d.label + $index) {
+          @if (cedulas().length) {
+            @for (d of cedulas(); track d.label + $index) {
+              <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
+            }
+          } @else {
+            <app-doc-slot label="Cédula" [soloLectura]="true" [urlExistente]="null" />
+          }
+          @if (licencias().length) {
+            @for (d of licencias(); track d.label + $index) {
+              <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
+            }
+          } @else {
+            <app-doc-slot label="Licencia de conducir" [soloLectura]="true" [urlExistente]="null" />
+          }
+          @for (d of otros(); track d.label + $index) {
             <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
           }
-        } @else {
-          <app-doc-slot label="Licencia de conducir" [soloLectura]="true" [urlExistente]="null" />
-        }
-        @for (d of otros(); track d.label + $index) {
-          <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
         }
       </section>
     }
   </div>
+
+  <app-generar-acceso
+    [open]="mostrarAcceso()"
+    [conductorId]="condId()"
+    [cedula]="conductor()?.cedula ?? ''"
+    [tieneAcceso]="!!conductor()?.usuario_id"
+    (cerrado)="cerrarAcceso()"
+    (generado)="onAccesoGenerado($event)"
+  />
 </div>

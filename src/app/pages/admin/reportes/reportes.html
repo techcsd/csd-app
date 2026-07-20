@@ -24,7 +24,7 @@
                 <p class="rep-card__resp">Respuesta: {{ r.respuesta_admin }}</p>
               }
               @if (r.estado !== 'resuelto') {
-                <textarea class="rep-card__area" rows="2" [ngModel]="respuesta()" (ngModelChange)="respuesta.set($event)" placeholder="Respuesta (opcional)"></textarea>
+                <textarea class="field rep-card__area" rows="2" [ngModel]="respuesta()" (ngModelChange)="respuesta.set($event)" placeholder="Respuesta (opcional)"></textarea>
                 <button type="button" class="btn-cta" [disabled]="saving()" (click)="resolver(r)">
                   {{ saving() ? 'Guardando…' : 'Marcar resuelto' }}
                 </button>

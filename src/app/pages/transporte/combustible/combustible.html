@@ -201,12 +201,14 @@
           <app-photo-slot
             label="Recibo"
             hint="🧾"
+            [foto]="fotoRecibo()"
             (captured)="onFotoRecibo($event)"
             (cleared)="onFotoReciboCleared()"
           />
           <app-photo-slot
             label="Tablero (km)"
             hint="🎛️"
+            [foto]="fotoTablero()"
             (captured)="onFotoTablero($event)"
             (cleared)="onFotoTableroCleared()"
           />

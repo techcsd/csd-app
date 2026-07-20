@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { DecimalPipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -7,6 +7,7 @@ import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { Img } from '../../../shared/ui/img/img';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { SyncService } from '../../../core/sync/sync.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -47,6 +48,7 @@ const TIPO_LABEL: Record<string, string> = {
 export class PerfilVehiculoPage {
   private route = inject(ActivatedRoute);
   private vehiculos = inject(VehiculosService);
+  private sync = inject(SyncService);
   private documentos = inject(DocumentosService);
   private conductores = inject(ConductoresService);
   private ctx = inject(UserContextService);
@@ -87,8 +89,30 @@ export class PerfilVehiculoPage {
     this.conductores_().map((c) => ({ id: c.id, label: c.cedula ? `${c.nombre} · ${c.cedula}` : c.nombre })),
   );
 
+  private primerCambio = true;
+
   constructor() {
     void this.load();
+    // P7 — tras drenar el outbox (pre-uso/entrega/combustible/mantenimiento con
+    // km), refrescar en silencio las stats para mostrar el km nuevo sin flicker.
+    effect(() => {
+      this.sync.changed();
+      if (this.primerCambio) {
+        this.primerCambio = false;
+        return;
+      }
+      void this.refrescarStats();
+    });
+  }
+
+  private async refrescarStats(): Promise<void> {
+    const id = this.vehiculoId();
+    if (!id) return;
+    try {
+      this.stats.set(await this.vehiculos.getVehiculoStats(id));
+    } catch {
+      /* best-effort: si falla, se mantiene el valor actual */
+    }
   }
 
   private async load(): Promise<void> {

@@ -13,14 +13,35 @@
 .toast {
   pointer-events: auto;
   width: 100%;
-  text-align: left;
-  padding: 14px 16px;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
   border-radius: var(--radius-sm);
-  font-size: var(--fs-body);
-  font-weight: 600;
   color: #fff;
   background: var(--color-text-primary);
   box-shadow: var(--shadow-lift);
+  overflow: hidden;
+}
+
+.toast__body {
+  flex: 1;
+  text-align: left;
+  padding: 14px 16px;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: inherit;
+  background: transparent;
+}
+
+.toast__action {
+  flex: 0 0 auto;
+  padding: 14px 16px;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.18);
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  white-space: nowrap;
 }
 
 .toast[data-tone='success'] {

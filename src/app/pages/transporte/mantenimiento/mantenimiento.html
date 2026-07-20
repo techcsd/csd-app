@@ -74,6 +74,7 @@
             <app-photo-slot
               [label]="'Foto ' + (i + 1)"
               hint="📸"
+              [foto]="fotos()[i] ?? null"
               (captured)="onFoto(i, $event)"
               (cleared)="onFotoCleared(i)"
             />

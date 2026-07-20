@@ -76,9 +76,13 @@
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
               <span class="veh-card__km">{{ v.km | number: '1.0-0' }} km</span>
             </div>
-            <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
-              Recibir vehículo
-            </button>
+            @if (estaEnviando(v.vehiculo_id)) {
+              <span class="veh-card__enviando">🔄 Enviando recepción…</span>
+            } @else {
+              <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
+                Recibir vehículo
+              </button>
+            }
             <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
               📋 Checklist de pre-uso
             </button>
@@ -104,9 +108,13 @@
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
               <span class="veh-card__km">{{ v.tipo || 'Vehículo' }} · {{ v.km | number: '1.0-0' }} km</span>
             </div>
-            <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
-              Recibir vehículo
-            </button>
+            @if (estaEnviando(v.vehiculo_id)) {
+              <span class="veh-card__enviando">🔄 Enviando recepción…</span>
+            } @else {
+              <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
+                Recibir vehículo
+              </button>
+            }
             <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
               📋 Checklist de pre-uso
             </button>

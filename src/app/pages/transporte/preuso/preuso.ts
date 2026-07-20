@@ -528,6 +528,19 @@ export class PreusoPage extends GuardedWizard {
           this.toast.error('Responde todos los puntos del checklist.');
           return false;
         }
+        // P6 — un hallazgo CRÍTICO (bloquea el vehículo) exige explicar qué pasó.
+        {
+          const falta = this.itemsAplicables().find(
+            (it) =>
+              it.es_critico &&
+              this.draft(it.id).respuesta === 'no' &&
+              !this.draft(it.id).comentario.trim(),
+          );
+          if (falta) {
+            this.toast.error(`Explica qué pasó en el punto crítico: "${falta.etiqueta}".`);
+            return false;
+          }
+        }
         return true;
       case 3:
         if (!this.fotosCompletas()) {

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { SyncService } from '../../../core/sync/sync.service';
 import { NetworkService } from '../../../core/services/network.service';
 
@@ -16,6 +17,7 @@ import { NetworkService } from '../../../core/services/network.service';
 export class SyncBar {
   private sync = inject(SyncService);
   private network = inject(NetworkService);
+  private router = inject(Router);
 
   online = this.network.online;
   pending = this.sync.pendingCount;
@@ -33,7 +35,7 @@ export class SyncBar {
   text = computed(() => {
     switch (this.state()) {
       case 'error':
-        return `${this.errors()} con problema · toca para reintentar`;
+        return `${this.errors()} con problema · toca para revisar`;
       case 'offline':
         return this.pending() > 0
           ? `Sin señal · ${this.pending()} se enviarán solos`
@@ -62,9 +64,11 @@ export class SyncBar {
     }
   });
 
-  retryAll(): void {
-    // APP-001: si hay ⚠️ en error, drain() no los toca — hay que resetearlos.
-    if (this.sync.errorCount() > 0) void this.sync.retryErrored();
-    else void this.sync.drain();
+  /** P5 — tocar la barra abre "Pendientes de envío" (diagnóstico + acciones por
+   *  item), en vez de reintentar a ciegas. Si no hay nada pendiente ni en error,
+   *  no hace falta abrir la pantalla. */
+  abrir(): void {
+    if (this.pending() === 0 && this.errors() === 0) return;
+    void this.router.navigate(['/pendientes']);
   }
 }

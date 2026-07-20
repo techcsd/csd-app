@@ -49,6 +49,19 @@ export interface AuditoriaRow {
   creado_en: string;
 }
 
+/** P13 — agregados del RPC `auditoria_resumen` (mismo shape que la web). */
+export interface AuditoriaResumen {
+  total: number;
+  usuarios_activos: number;
+  modulos_activos: number;
+  por_usuario: { actor_id: string | null; nombre: string; n: number }[];
+  por_modulo: { tabla: string; n: number }[];
+  por_accion: { accion: string; n: number }[];
+  por_dia: { dia: string; n: number }[];
+  por_hora: { hora: number; n: number }[];
+  acciones_comunes: { tabla: string; accion: string; n: number }[];
+}
+
 /**
  * Admin operations for the in-app Administración section. All writes are gated
  * server-side by RLS (sgc.is_admin()); the UI is additionally gated by the
@@ -157,6 +170,27 @@ export class AdminService {
     const { data, error } = await q;
     if (error) throw new Error(error.message);
     return (data as unknown as AuditoriaRow[]) ?? [];
+  }
+
+  /**
+   * P13 — agregados analíticos del módulo de auditoría (mismo RPC que la web:
+   * `auditoria_resumen`). Una sola llamada devuelve KPIs + series para los
+   * gráficos. Solo online (es admin).
+   */
+  async getAuditoriaResumen(filtro: {
+    desde?: string | null;
+    hasta?: string | null;
+    actor?: string | null;
+    tabla?: string | null;
+  }): Promise<AuditoriaResumen> {
+    const { data, error } = await this.supabase.client.rpc('auditoria_resumen', {
+      p_desde: filtro.desde ?? null,
+      p_hasta: filtro.hasta ?? null,
+      p_actor: filtro.actor ?? null,
+      p_tabla: filtro.tabla ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return (data ?? {}) as AuditoriaResumen;
   }
 
   private slug(nombre: string): string {

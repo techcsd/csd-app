@@ -15,8 +15,29 @@ export type OpHandler = (
   photoPaths: Record<string, string>,
 ) => Promise<void>;
 
+/**
+ * P5 — familia de la causa de un fallo permanente, para traducir el error a un
+ * mensaje entendible en la pantalla "Pendientes de envío".
+ */
+export type SyncErrorKind =
+  | 'validacion' // P0001 / 400 / 422 — el RPC rechazó los datos (mensaje propio)
+  | 'permiso' // 403 / 42501 (RLS) — sin permiso
+  | 'referencia' // 23xxx — FK/único: referencia inexistente o duplicada
+  | 'no-encontrado' // 404
+  | 'conflicto' // 409 — ya registrado
+  | 'datos' // 22xxx — formato de dato inválido
+  | 'foto' // la foto ya no está en el teléfono
+  | 'red' // transitorio agotado (sin señal estable)
+  | 'desconocido';
+
 /** A server-side rejection that retrying won't fix (e.g. validation). */
-export class PermanentSyncError extends Error {}
+export class PermanentSyncError extends Error {
+  kind: SyncErrorKind;
+  constructor(message: string, kind: SyncErrorKind = 'validacion') {
+    super(message);
+    this.kind = kind;
+  }
+}
 
 /**
  * Classifies a Supabase/PostgREST error from an RPC and throws the right kind:
@@ -34,8 +55,17 @@ export function throwSyncError(error: unknown): never {
   const status = Number(e?.status ?? e?.statusCode ?? 0);
   const transient = status === 401 || status === 408 || status === 429 || status >= 500;
   const permanent = /^(P0001|22|23|42)/.test(code) || [400, 403, 404, 409, 422].includes(status);
-  if (permanent && !transient) throw new PermanentSyncError(message);
+  if (permanent && !transient) throw new PermanentSyncError(message, classifyKind(code, status));
   throw new Error(message); // default: retryable with backoff
+}
+
+function classifyKind(code: string, status: number): SyncErrorKind {
+  if (/^42501/.test(code) || status === 403) return 'permiso';
+  if (/^23/.test(code)) return 'referencia';
+  if (status === 404) return 'no-encontrado';
+  if (status === 409) return 'conflicto';
+  if (/^22/.test(code)) return 'datos';
+  return 'validacion'; // P0001 / 400 / 422 y demás 42xxx → mensaje del RPC
 }
 
 export interface EnqueueInput {
@@ -70,6 +100,9 @@ export class SyncService {
   pendingCount = signal(0);
   errorCount = signal(0);
   syncing = signal(false);
+  /** P5 — se incrementa en cada cambio del outbox para que la pantalla
+   *  "Pendientes de envío" se refresque sola. */
+  changed = signal(0);
 
   constructor() {
     void this.refreshCounts();
@@ -143,12 +176,16 @@ export class SyncService {
   }
 
   /** Retry ALL errored ops (global ⚠️ "toca para reintentar" bar). `drain()`
-   *  skips errored ops, so we must reset them to pending first (APP-001). */
+   *  skips errored ops, so we must reset them to pending first (APP-001).
+   *  P5 — solo reencola los TRANSITORIOS (agotados por red/servidor); los
+   *  permanentes (validación, permiso, foto perdida…) requieren acción
+   *  explícita del usuario (reintentar/descartar) desde /pendientes. */
   async retryErrored(): Promise<void> {
     const errored = await db.outbox.where('estado').equals('error').toArray();
-    if (errored.length) {
+    const reintentar = errored.filter((op) => !op.permanente);
+    if (reintentar.length) {
       await db.transaction('rw', db.outbox, db.mis_registros, async () => {
-        for (const op of errored) {
+        for (const op of reintentar) {
           await db.outbox.update(op.id, { estado: 'pending', intentos: 0, proximo_intento: 0, error_msg: undefined });
           await db.mis_registros.update(op.id, { estado: 'pending' });
         }
@@ -158,6 +195,29 @@ export class SyncService {
     void this.drain();
   }
 
+  /** P5 — descarta un envío atascado (con confirmación en la UI). Borra la op y
+   *  sus fotos; conserva el registro local marcado "error" para no perderlo en
+   *  silencio (queda visible en "Mis registros"). */
+  async discard(id: string): Promise<void> {
+    await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {
+      await db.fotos_pendientes.where('op_id').equals(id).delete();
+      await db.outbox.delete(id);
+      await db.mis_registros.update(id, { estado: 'error' });
+    });
+    await this.refreshCounts();
+  }
+
+  /** P5 — items del outbox para la pantalla de diagnóstico (FIFO, con nº fotos). */
+  async listOutbox(): Promise<Array<OutboxOp & { fotos: number }>> {
+    const ops = await db.outbox.orderBy('created_local').toArray();
+    const out: Array<OutboxOp & { fotos: number }> = [];
+    for (const op of ops) {
+      const fotos = await db.fotos_pendientes.where('op_id').equals(op.id).count();
+      out.push({ ...op, fotos });
+    }
+    return out;
+  }
+
   private async refreshCounts(): Promise<void> {
     const [pending, errored] = await Promise.all([
       db.outbox.where('estado').anyOf('pending', 'syncing').count(),
@@ -165,6 +225,7 @@ export class SyncService {
     ]);
     this.pendingCount.set(pending);
     this.errorCount.set(errored);
+    this.changed.update((n) => n + 1);
   }
 
   /** Process the queue FIFO. Safe to call repeatedly; re-entrancy guarded. */
@@ -221,7 +282,14 @@ export class SyncService {
       const type = foto.type || foto.blob?.type || 'application/octet-stream';
       // Reconstruye el Blob desde los bytes (o usa el legacy Blob si existiera).
       const body = foto.data ? new Blob([foto.data], { type }) : foto.blob;
-      if (!body) continue; // sin datos utilizables → nada que subir
+      if (!body) {
+        // P5 — bytes no persistidos (fila legacy / kill del SO): NO seguir en
+        // silencio (subiría incompleto y fallaría en bucle). Marcar error claro.
+        throw new PermanentSyncError(
+          'La foto ya no está disponible en el teléfono.',
+          'foto',
+        );
+      }
       const { error } = await this.supabase.client.storage
         .from(foto.bucket)
         .upload(foto.path, body, { upsert: true, contentType: type });
@@ -234,12 +302,21 @@ export class SyncService {
 
   private async handleFailure(op: OutboxOp, err: unknown): Promise<void> {
     const permanent = err instanceof PermanentSyncError;
+    const kind: SyncErrorKind = err instanceof PermanentSyncError ? err.kind : 'red';
     const intentos = op.intentos + 1;
     const msg = err instanceof Error ? err.message : String(err);
 
     if (permanent || intentos >= MAX_INTENTOS) {
+      // Transitorio agotado tras MAX_INTENTOS → casi seguro red/servidor: se puede
+      // reintentar en bloque. Permanente → requiere acción explícita del usuario.
       await db.transaction('rw', db.outbox, db.mis_registros, async () => {
-        await db.outbox.update(op.id, { estado: 'error', intentos, error_msg: msg });
+        await db.outbox.update(op.id, {
+          estado: 'error',
+          intentos,
+          error_msg: msg,
+          error_kind: kind,
+          permanente: permanent,
+        });
         await db.mis_registros.update(op.id, { estado: 'error' });
       });
     } else {
@@ -248,6 +325,7 @@ export class SyncService {
         intentos,
         proximo_intento: Date.now() + BACKOFF[intentos - 1],
         error_msg: msg,
+        error_kind: kind,
       });
     }
   }

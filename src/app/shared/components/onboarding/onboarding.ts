@@ -6,6 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { LocalStore } from '../../../core/services/local-store.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
 
 interface Step {
   icon?: string;
@@ -13,6 +14,8 @@ interface Step {
   text: string;
   /** CSS selector of the real element to spotlight. Omit for a centered card. */
   target?: string;
+  /** P2 — paso que pide un permiso del dispositivo (muestra botón "Permitir"). */
+  permission?: 'location';
 }
 
 interface Rect {
@@ -46,6 +49,12 @@ const STEPS: Step[] = [
     target: '[data-tour="perfil"]',
   },
   {
+    icon: '📍',
+    title: 'Permite tu ubicación',
+    text: 'La usamos para registrar dónde recibes un vehículo o de dónde sale una ruta. Puedes cambiarlo luego en los ajustes del teléfono.',
+    permission: 'location',
+  },
+  {
     icon: '✅',
     title: '¡Listo!',
     text: 'Eso es todo. Puedes volver a ver esta guía desde “Soporte y ayuda”.',
@@ -68,12 +77,14 @@ const DONE_KEY = 'csd_onboarding_v1_done';
 })
 export class Onboarding {
   private store = inject(LocalStore);
+  private permissions = inject(PermissionsService);
 
   readonly steps = STEPS;
   visible = signal(false);
   index = signal(0);
   rect = signal<Rect | null>(null);
   pop = signal<{ top: number; left: number } | null>(null);
+  pidiendoPermiso = signal(false);
 
   constructor() {
     void this.store.get(DONE_KEY).then((v) => {
@@ -118,6 +129,18 @@ export class Onboarding {
   }
   skip(): void {
     void this.finish();
+  }
+
+  /** P2 — pide el permiso de ubicación desde el onboarding y avanza. */
+  async permitirUbicacion(): Promise<void> {
+    if (this.pidiendoPermiso()) return;
+    this.pidiendoPermiso.set(true);
+    try {
+      await this.permissions.requestLocation();
+    } finally {
+      this.pidiendoPermiso.set(false);
+      this.next();
+    }
   }
 
   private measure(el: HTMLElement): void {

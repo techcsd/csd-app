@@ -114,3 +114,11 @@
 .veh-card__cta + .veh-card__cta {
   margin-top: 8px;
 }
+
+// P4 — marca "Enviando recepción…" mientras el outbox drena la entrega.
+.veh-card__enviando {
+  display: block;
+  padding: 12px 0;
+  font-weight: 700;
+  color: var(--Hub, #ffb300);
+}

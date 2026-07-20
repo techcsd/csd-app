@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { ToastHost } from './shared/components/toast-host/toast-host';
@@ -42,6 +43,26 @@ export class App {
     this.autoLock.init();
     void this.checkVersion();
     this.initBackButton();
+    this.initScrollReset();
+  }
+
+  /**
+   * P9 — al cambiar de ruta, toda pantalla debe abrir ARRIBA. El scroll vive en
+   * los contenedores internos (.screen / .screen__body), que Angular no
+   * restaura; los reseteamos a 0 tras pintar la vista nueva.
+   */
+  private initScrollReset(): void {
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
+      // Doble rAF: esperar a que el router-outlet monte la pantalla nueva.
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+          document
+            .querySelectorAll<HTMLElement>('.screen, .screen__body')
+            .forEach((el) => (el.scrollTop = 0));
+        }),
+      );
+    });
   }
 
   /**

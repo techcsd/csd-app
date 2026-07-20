@@ -1,0 +1,83 @@
+.gacc {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(18, 18, 18, 0.55);
+}
+
+.gacc__card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 24px 20px 20px;
+  text-align: center;
+  box-shadow: var(--shadow-lift);
+  animation: gacc-pop 0.18s ease;
+}
+@keyframes gacc-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.gacc__icon {
+  font-size: 34px;
+}
+.gacc__title {
+  margin: 6px 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.gacc__msg {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.gacc__pin {
+  text-align: center;
+  letter-spacing: 8px;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.gacc__hint {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.gacc__error {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-error);
+}
+
+.gacc__btn {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 14px;
+  border-radius: var(--radius);
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 10px;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+.gacc__btn--primary {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+.gacc__btn--ghost {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}

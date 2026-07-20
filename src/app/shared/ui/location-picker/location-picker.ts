@@ -12,8 +12,9 @@ import {
   OnDestroy,
 } from '@angular/core';
 import * as L from 'leaflet';
-import { Geolocation } from '@capacitor/geolocation';
 import { GeocodingService, LugarBusqueda } from '../../../core/services/geocoding.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 export interface UbicacionSeleccionada {
   latitud: number;
@@ -37,6 +38,8 @@ export interface UbicacionSeleccionada {
 })
 export class LocationPicker implements AfterViewInit, OnDestroy {
   private geocoding = inject(GeocodingService);
+  private permissions = inject(PermissionsService);
+  private toast = inject(ToastService);
 
   latitud = input<number | null>(null);
   longitud = input<number | null>(null);
@@ -132,18 +135,29 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     if (this.ubicando()) return;
     this.ubicando.set(true);
     try {
-      const perm = await Geolocation.requestPermissions();
-      if (perm.location === 'denied') {
-        this.busquedaError.set('Permiso de ubicación denegado. Actívalo en los ajustes del teléfono.');
+      const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 10000 });
+      if (r.ok) {
+        this.map?.setView([r.lat, r.lng], 16);
+        await this.setMarker(r.lat, r.lng, true);
+        this.busquedaError.set('');
         return;
       }
-      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
-      const { latitude, longitude } = pos.coords;
-      this.map?.setView([latitude, longitude], 16);
-      await this.setMarker(latitude, longitude, true);
-      this.busquedaError.set('');
-    } catch {
-      this.busquedaError.set('No se pudo obtener tu ubicación. Revisa el GPS y los permisos.');
+      // P2 — mensajes claros por causa; ofrecer ajustes si es denegado permanente.
+      if (r.reason === 'denied-permanent') {
+        this.busquedaError.set('Ubicación bloqueada. Actívala en los ajustes de la app.');
+        if (this.permissions.isNative) {
+          this.toast.withAction('Ubicación bloqueada para esta app.', {
+            label: 'Abrir ajustes',
+            run: () => void this.permissions.openAppSettings(),
+          });
+        }
+      } else if (r.reason === 'denied') {
+        this.busquedaError.set('Necesito tu permiso de ubicación para usar tu posición.');
+      } else if (r.reason === 'timeout') {
+        this.busquedaError.set('No se pudo obtener la señal GPS. Ve a un lugar despejado y reintenta.');
+      } else {
+        this.busquedaError.set('No se pudo obtener tu ubicación. Marca el punto en el mapa.');
+      }
     } finally {
       this.ubicando.set(false);
     }

@@ -96,6 +96,7 @@
         <app-photo-slot
           label="Plano mapeado (opcional)"
           hint="🗺️"
+          [foto]="plano()"
           (captured)="onPlano($event)"
           (cleared)="onPlanoCleared()"
         />
@@ -118,7 +119,7 @@
             <app-option-button icon="✗" label="Incorrecto" tone="error" [selected]="!fotoCorrecto()" (pressed)="fotoCorrecto.set(false)" />
           </div>
           <input class="field" type="text" [ngModel]="fotoDesc()" (ngModelChange)="fotoDesc.set($event)" placeholder="Descripción (opcional)" />
-          <app-photo-slot label="Tomar foto" hint="📸" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+          <app-photo-slot label="Tomar foto" hint="📸" [foto]="fotoActual()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
           <button type="button" class="btn-ghost liber__add-btn" (click)="agregarFoto()">+ Agregar foto</button>
         </div>
 

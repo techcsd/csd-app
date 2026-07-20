@@ -1,7 +1,14 @@
 <div class="toast-host">
   @for (t of toasts(); track t.id) {
-    <button type="button" class="toast" [attr.data-tone]="t.tone" (click)="dismiss(t.id)">
-      {{ t.text }}
-    </button>
+    <div class="toast" [attr.data-tone]="t.tone">
+      <button type="button" class="toast__body" (click)="dismiss(t.id)">
+        {{ t.text }}
+      </button>
+      @if (t.action; as a) {
+        <button type="button" class="toast__action" (click)="runAction(t)">
+          {{ a.label }}
+        </button>
+      }
+    </div>
   }
 </div>

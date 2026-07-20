@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, v
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Geolocation } from '@capacitor/geolocation';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
@@ -16,6 +15,7 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -63,6 +63,7 @@ export class ChecklistPage {
   private vehiculos = inject(VehiculosService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private permissions = inject(PermissionsService);
   private autosave = inject(AutosaveService);
   private borradorSvc = inject(BorradorService);
   private ctx = inject(UserContextService);
@@ -101,6 +102,8 @@ export class ChecklistPage {
   private gps: { lat: number; lng: number } | null = null;
   /** X2 — estado de la captura de GPS para avisar al usuario (no bloquea). */
   gpsEstado = signal<'capturando' | 'ok' | 'sin-ubicacion'>('capturando');
+  /** P2 — el permiso quedó denegado permanente: reintentar no reabre el diálogo. */
+  gpsBloqueado = signal(false);
 
   submitting = signal(false);
   done = signal(false);
@@ -180,20 +183,33 @@ export class ChecklistPage {
 
   private async captureGps(): Promise<void> {
     this.gpsEstado.set('capturando');
-    try {
-      const pos = await Geolocation.getCurrentPosition({ timeout: 8000 });
-      this.gps = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+    // P2 — recibir vehículo toma la ubicación automáticamente: pedimos el
+    // permiso on-demand (getPosition abre el diálogo si hace falta). GPS es
+    // best-effort (VEH-06 / X2): si falla, se registra "sin ubicación" y nunca
+    // bloquea el flujo; avisamos en el resumen y ofrecemos reintentar/ajustes.
+    const r = await this.permissions.getPosition({ timeout: 8000 });
+    if (r.ok) {
+      this.gps = { lat: r.lat, lng: r.lng };
       this.gpsEstado.set('ok');
-    } catch {
-      // GPS is best-effort (VEH-06 / X2): sin permiso o sin señal, se registra
-      // igual "sin ubicación" — nunca bloquea el flujo. Avisamos en el resumen.
+      this.gpsBloqueado.set(false);
+    } else {
       this.gps = null;
       this.gpsEstado.set('sin-ubicacion');
+      this.gpsBloqueado.set(r.reason === 'denied-permanent');
     }
   }
 
   /** X2 — permite reintentar la ubicación desde el resumen (permiso/señal). */
   reintentarGps(): void {
+    // Si el permiso quedó bloqueado, reintentar no reabre el diálogo del SO:
+    // hay que ir a ajustes. Ofrecemos el atajo.
+    if (this.gpsBloqueado() && this.permissions.isNative) {
+      this.toast.withAction('Ubicación bloqueada para esta app.', {
+        label: 'Abrir ajustes',
+        run: () => void this.permissions.openAppSettings(),
+      });
+      return;
+    }
     void this.captureGps();
   }
 

@@ -174,19 +174,41 @@ button {
   margin-bottom: 8px;
 }
 
-input.field {
+// P11 — un solo estilo para todos los campos: input, textarea y select. Antes
+// solo cubría input.field; los textareas/selects se estilizaban ad-hoc por
+// página (inconsistente). Usar la clase `.field` en todos.
+input.field,
+textarea.field,
+select.field {
   width: 100%;
   min-height: var(--touch-min);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 0 16px;
   font-size: var(--fs-option);
+  font-family: inherit;
   background: var(--color-bg);
   color: var(--color-text-primary);
 }
-input.field:focus {
+textarea.field {
+  // El textarea necesita padding vertical y una altura mínima cómoda.
+  padding: 12px 16px;
+  min-height: 96px;
+  line-height: 1.4;
+  resize: vertical;
+}
+select.field {
+  padding: 0 12px;
+}
+input.field:focus,
+textarea.field:focus,
+select.field:focus {
   outline: none;
   border-color: var(--color-primary);
+}
+input.field::placeholder,
+textarea.field::placeholder {
+  color: var(--color-text-secondary);
 }
 
 /* Shared header for admin sub-pages. */

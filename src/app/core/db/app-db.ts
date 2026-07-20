@@ -46,6 +46,10 @@ export interface OutboxOp {
   intentos: number;
   proximo_intento: number;
   error_msg?: string;
+  /** P5 — familia de la causa del último fallo (para traducir a español). */
+  error_kind?: string;
+  /** P5 — true si el error es permanente (no se reencola en "reintentar todo"). */
+  permanente?: boolean;
   capturado_en: string;
   created_local: number;
 }

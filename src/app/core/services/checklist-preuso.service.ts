@@ -161,6 +161,13 @@ export class ChecklistPreusoService {
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // P7 — el RPC avanza vehiculos.kilometraje (regla no-retroceso, SGC). Al
+      // sincronizar, invalidar las caches con km para que la app muestre el nuevo.
+      const vehId = payload['vehiculo_id'] as string;
+      await this.catalog.invalidate(`veh_detalle:${vehId}`);
+      await this.catalog.invalidate('pendientes_transporte');
+      await this.catalog.invalidate('flota_vehiculos');
     });
   }
 }

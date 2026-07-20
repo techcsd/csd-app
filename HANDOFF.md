@@ -1,5 +1,52 @@
 # HANDOFF — CSD App
 
+## Ronda QA app (2026-07-20) — P1–P13 (permisos, outbox, UX, flota, inventario, auditoría) — SIN publicar
+Source: `C:\developer\improvements\imp 20072026\CONTEXTO.md` (P1–P13) + `apuntes de reunion.md`. PROMPT-2 (app). **`npm run build` verde en cada fase.** APK compilado en debug para validar (`compileDebugJavaWithJavac` OK; manifest mergeado con los permisos nuevos verificado). **NO se hizo commit/push ni APK firmado ni bump de versión** (pendiente de tu OK). No se tocó el número de versión (sigue 1.16.0).
+
+**FASE 0 — Permisos Android (P1 mic + P2 GPS) [CRÍTICO, causa raíz corregida]**
+- `android/app/src/main/AndroidManifest.xml`: **+RECORD_AUDIO, +MODIFY_AUDIO_SETTINGS, +ACCESS_FINE_LOCATION, +ACCESS_COARSE_LOCATION** (+ uses-feature mic/gps required=false). Verificado en el **manifest mergeado** del build debug. Esto destraba la nota de voz del incidente y el GPS (crear ruta / recibir vehículo). El WebView de Capacitor concede mic/cámara vía `onPermissionRequest` una vez declarado el permiso del SO — no hizo falta código nativo extra para el mic.
+- Nuevo plugin nativo `AppSettingsPlugin.java` (registrado en `MainActivity`) → método `open()` deep-link a Ajustes de la app (para permiso "denegado permanente"). Espeja `ApkInstallerPlugin`.
+- Nuevo `core/services/permissions.service.ts`: punto único de permisos (ubicación check/request/getPosition con errores clasificados: denied / denied-permanent / timeout / unavailable; micrófono vía getUserMedia; `openAppSettings()`). Usa @capacitor/geolocation nativo o la Geolocation API en PWA.
+- Onboarding: se añadió un paso "Permite tu ubicación" al tour existente (`shared/components/onboarding`) — se pide al primer arranque tras login. El mic se pide on-demand al grabar.
+- On-demand con mensaje claro + botón "Abrir ajustes" (toast con acción, nuevo `ToastService.withAction`) en: `location-picker`, `crear-ruta` (`usarMiUbicacion`+`captureGps`), `checklist` (`captureGps`/`reintentarGps`, GPS best-effort), `voice-recorder` (clasifica NotAllowed/NotFound/Security).
+- **PENDIENTE device-QA (tu hardware):** grabar+ESCUCHAR nota de voz en incidente (reproducción ya existía en `bitacora/detalle`); "Usar mi ubicación actual" en crear ruta; GPS automático en recibir vehículo; que iOS PWA no se rompa.
+
+**FASE 1 — Outbox con diagnóstico (P5) [CRÍTICO]**
+- Nueva pantalla **`/pendientes`** ("Pendientes de envío") — se abre al tocar la `sync-bar` (ya no reintenta a ciegas; texto de error ahora "toca para revisar"). Lista cada item: tipo de op en español + ícono, fecha relativa, estado (badge), nº fotos, intentos, y **error traducido** por familia (permiso/referencia/no-encontrado/conflicto/datos/foto/red/validación→mensaje del RPC). Acciones por item: **Reintentar**, **Ver detalle** (error crudo), y **Descartar** (con confirmación) solo en errores permanentes.
+- `sync.service.ts`: `PermanentSyncError` ahora lleva `kind`; `throwSyncError` clasifica por SQLSTATE/HTTP. `handleFailure` guarda `error_kind`+`permanente`. **`uploadPhotos` ya NO hace `continue` silencioso** si faltan los bytes de una foto → lanza error permanente "foto perdida" (rompe el bucle infinito). `retryErrored()` reencola **solo transitorios**; permanentes requieren acción del usuario. Nuevos: `discard(id)` (borra op+fotos, conserva registro local en 'error'), `listOutbox()`, señal `changed` para refresco reactivo.
+- **PENDIENTE:** diagnosticar los **4 items atascados** del teléfono de Xaviel — ahora se leen abriendo `/pendientes` (dime el error de cada uno).
+
+**FASE 2 — UX (P9 scroll · P10 fotos wizard · P11 inputs)**
+- P9: `withInMemoryScrolling({scrollPositionRestoration:'top', anchorScrolling})` en `app.config` + reset de `.screen`/`.screen__body` en cada `NavigationEnd` (doble rAF) en `app.ts` (Angular no restaura divs internos). Toda pantalla abre arriba.
+- P10: `photo-slot` gana input `[foto]` para **rehidratar** la miniatura (los wizards con `@if(step===N)` recreaban el slot y la perdían). Regla de object-URL: con `[foto]` el padre es dueño y el slot NO revoca en destroy. Pasado en TODOS los wizards: pre-uso (fotos guiadas + foto de falla por ítem), checklist recibir/devolver (fotos + daños), mantenimiento, combustible, liberación, entrada.
+- P11: regla global `.field` extendida a `input/textarea/select` (textarea con padding vertical + min-height); migrado el textarea de admin/reportes y limpiados los estilos duplicados de `reportar__area` y `rep-card__area`.
+
+**FASE 3 — Documentos de conductor subibles desde el perfil (P3)**
+- `perfil-conductor` ahora permite **subir/reemplazar** cédula/licencia (DocSlot editable + outbox existente `documento_upload`), gated a admin/flota o el propio conductor. Badge "⏳ Pendiente de subir" para encolados (vía `documentos.tiposEnCola`); refresco reactivo al drenar (`sync.changed`). Texto vacío de `doc-slot.html` corregido ("Se sube desde la web" → "Sin documento.").
+
+**FASE 4 — Recibir vehículo sale del listado (P4)**
+- `transporte.ts`: reconciliación local — `vehiculos.entregasRecepcionPendientes()` lee el outbox y los vehículos con recepción encolada se marcan **"🔄 Enviando recepción…"** (botón Recibir oculto). Recarga en cada `NavigationEnd`/entrada Y tras cada drain (`effect` sobre `sync.changed`), así desaparece cuando el servidor confirma.
+
+**FASE 5 — Comentario obligatorio en crítico del pre-uso (P6)**
+- `preuso.canAdvance()` bloquea avanzar si un ítem con hallazgo **crítico** (respuesta "no") no tiene comentario (señala cuál). Campo marcado obligatorio en la UI. Resumen y **PDF** muestran "Qué pasó:" prominente (rojo) en críticos, no solo la categoría. (Paridad web ya aplicada por PROMPT-1.)
+
+**FASE 6 — Generar PIN de conductor desde la app (P8)**
+- Nuevo modal `shared/components/generar-acceso` (PIN 6 dígitos, valida `/^\d{6}$/`, online-only con mensaje offline) → llama la MISMA edge `conductor-crear-acceso` (nuevo `ConductoresService.generarAccesoConductor`). En el **alta** (`conductor-form`): paso opcional tras crear. En el **perfil**: botón "Generar acceso / Restablecer PIN" (según `usuario_id`). Muestra la cédula como usuario.
+
+**FASE 7 — Reflejar km actualizado (P7 app) [depende de PROMPT-1 SGC]**
+- `CatalogService.invalidate`/`invalidatePrefix` nuevos. Los handlers de `checklist_preuso`, `combustible`, `mantenimiento`, `vehiculo_entrega` invalidan `veh_detalle:{id}`, `pendientes_transporte`, `flota_vehiculos` tras sincronizar. `perfil-vehiculo` refresca stats en silencio al drenar. **Requiere que los RPCs del SGC ya empujen `vehiculos.kilometraje` (PROMPT-1 FASE 1).**
+
+**FASE 8 — Devolución de obra con traspaso (P12 app) [depende de PROMPT-1 SGC]**
+- `entrada.ts`: motivo "Devolución de obra" → selector de **obra** (`getObrasConBodega`, offline) + checkbox "Registrar salida del almacén de la obra" (solo si la obra tiene bodega). Nueva op outbox `inv_devolucion_obra` → llama el RPC `registrar_devolucion_obra` (existe en `sql/2026-07-20-p12-devolucion-obra.sql`). Rechazo por stock insuficiente = error permanente legible (FASE 1). Invalida caches de existencias al sincronizar.
+- **⚠️ OJO idempotencia:** `registrar_devolucion_obra` NO recibe client-uuid, así que un reintento del outbox tras un ack perdido podría duplicar el movimiento. Recomiendo añadirle un `p_client_uuid` (aditivo) en SGC para cerrar ese hueco. Marcado para confirmar.
+
+**FASE 9 — Dashboards de auditoría en la app (P13)**
+- `admin/auditoria`: toggle **Panel / Filas**. Panel = KPI cards (acciones/usuarios/áreas/días) + gráficos de **barras CSS** (usuarios top, por acción, por área, por día, por hora) con selector de período (7/30/90/todo), consumiendo el MISMO RPC `auditoria_resumen` (nuevo `AdminService.getAuditoriaResumen`). Solo online (mensaje claro offline). Filas = la tabla existente.
+
+**Dependencias SGC (PROMPT-1) que deben estar desplegadas para que P7 y P12 funcionen de punta a punta:** RPCs de odómetro (no-retroceso) en checklist/entrega/mantenimiento y `registrar_devolucion_obra`. La migración P12 ya está en `SGC/sql/2026-07-20-p12-devolucion-obra.sql`.
+
+**Próximos pasos:** (1) device-QA en APK real + iOS PWA de FASE 0/1; (2) leer los 4 atascados en `/pendientes`; (3) tu OK para commit + build/publish del APK (bump de versión); (4) decidir idempotencia de `registrar_devolucion_obra`.
+
 ## Estado de release (2026-07-18) — v1.16.0 PUBLICADA (Actualización 1: login conductor, tipos, visibilidad, imágenes)
 Source: `C:\developer\improvements\imp 17072026\CONTEXTO-ACTUALIZACION-1.md` (P3–P6, parte app) + SGC HANDOFF (PROMPT-3). Consume lo que dejó el SGC (edge `conductor-login`, RLS de flota, tipos). `npm run build` verde.
 - **PUBLICADA a usuarios: 1.16.0** (rollout NO bloqueante — banner "nueva versión") · **mínima forzada: 1.15.0** (piso = fix del crash de foto; quien esté por debajo sí queda bloqueado). 1.15.0 quedó despublicada. APK firmado (cert prod `3c5316d8…df5065`, permiso CAMERA presente, 8.0 MB) en el bucket, `apk_url` OK, historial `app_versiones` (movil) con 4 cambios estructurados. Commit `6575f05` en `main` (dispara deploy PWA para iOS). `version_publicada()` → publicada 1.16.0 / minima 1.15.0.

@@ -8,6 +8,7 @@ import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { GenerarAcceso } from '../../../shared/components/generar-acceso/generar-acceso';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { LicenciaCategoriasService, LicenciaCategoria } from '../../../core/services/licencia-categorias.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
@@ -42,7 +43,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-conductor-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot],
+  imports: [FormsModule, SelectList, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, GenerarAcceso],
   templateUrl: './conductor-form.html',
   styleUrl: './conductor-form.scss',
 })
@@ -100,6 +101,11 @@ export class ConductorFormPage {
   docCedula = signal<CapturedDoc | null>(null);
   docLicFrente = signal<CapturedDoc | null>(null);
   docLicDorso = signal<CapturedDoc | null>(null);
+
+  // P8 — paso opcional "Generar acceso" tras crear un conductor nuevo.
+  mostrarAcceso = signal(false);
+  nuevoConductorId = signal('');
+  private destinoTrasAlta: string[] = ['/transporte/conductores'];
 
   constructor() {
     this.conductorId.set(this.route.snapshot.paramMap.get('conductorId') ?? '');
@@ -271,15 +277,27 @@ export class ConductorFormPage {
       void this.autosave.discard(this.clave());
       this.toast.success(this.esEdicion() ? 'Conductor actualizado.' : 'Conductor creado.');
       // Si hubo documentos, abre el perfil para verlos; si no, la lista.
-      if (subioDocs || this.esEdicion()) {
-        void this.router.navigate(['/transporte/conductor', id], { replaceUrl: true });
+      const destino = subioDocs || this.esEdicion() ? ['/transporte/conductor', id] : ['/transporte/conductores'];
+      if (this.esEdicion()) {
+        void this.router.navigate(destino, { replaceUrl: true });
       } else {
-        void this.router.navigate(['/transporte/conductores'], { replaceUrl: true });
+        // P8 — conductor NUEVO: ofrecer generar el acceso (PIN 6 dígitos) antes
+        // de salir. El modal ya maneja el caso offline (se puede hacer luego).
+        this.destinoTrasAlta = destino;
+        this.nuevoConductorId.set(id);
+        this.mostrarAcceso.set(true);
+        this.submitting.set(false);
       }
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el conductor.');
       this.submitting.set(false);
     }
+  }
+
+  /** P8 — cerrar el paso de acceso (generado o saltado) → salir del alta. */
+  finalizarAlta(): void {
+    this.mostrarAcceso.set(false);
+    void this.router.navigate(this.destinoTrasAlta, { replaceUrl: true });
   }
 
   /** C4/C5 — encola las fotos de documento capturadas (cédula + licencia

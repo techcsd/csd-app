@@ -43,4 +43,17 @@
          La cámara del teléfono no está disponible sin cámara física. -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <!-- P1: nota de voz del incidente (getUserMedia({audio:true}) en el WebView).
+         Sin RECORD_AUDIO el WebChromeClient de Capacitor deniega el micrófono. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+    <!-- P2: GPS de crear-ruta / recibir vehículo (@capacitor/geolocation). El
+         manifest del plugin en node_modules va vacío y no aporta estos permisos
+         en el merge, así que hay que declararlos aquí. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 </manifest>

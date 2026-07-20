@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ToastService } from '../../../core/services/toast.service';
+import { ToastService, Toast } from '../../../core/services/toast.service';
 
 /** Renders transient toasts at the top of the screen. */
 @Component({
@@ -15,5 +15,10 @@ export class ToastHost {
 
   dismiss(id: number): void {
     this.toastService.dismiss(id);
+  }
+
+  runAction(t: Toast): void {
+    t.action?.run();
+    this.toastService.dismiss(t.id);
   }
 }

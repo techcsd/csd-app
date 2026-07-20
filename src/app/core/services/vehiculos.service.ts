@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { db } from '../db/app-db';
 import {
   AsignacionResultado,
   CombustibleNivel,
@@ -182,6 +183,21 @@ export class VehiculosService {
       return (data as PendientesTransporte) ?? { a_cargo: [], por_recibir: [] };
     });
     return data ?? { a_cargo: [], por_recibir: [] };
+  }
+
+  /**
+   * P4 — vehículos con una RECEPCIÓN de entrega encolada (pending/syncing/error)
+   * en el outbox. Sirve para reconciliar el listado "por recibir" localmente
+   * mientras el servidor aún no confirma: el vehículo se marca "Enviando…" y no
+   * vuelve a aparecer como pendiente antes de que drene la cola.
+   */
+  async entregasRecepcionPendientes(): Promise<Set<string>> {
+    const ops = await db.outbox.where('estado').anyOf('pending', 'syncing', 'error').toArray();
+    const ids = ops
+      .filter((o) => o.tipo_op === 'vehiculo_entrega' && o.payload['tipo'] === 'recepcion')
+      .map((o) => o.payload['vehiculo_id'] as string)
+      .filter(Boolean);
+    return new Set(ids);
   }
 
   /** Whole active fleet (any estado) for the browse/profile list, cached. */
@@ -554,6 +570,13 @@ export class VehiculosService {
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // P7 — la entrega/recepción avanza vehiculos.kilometraje (regla no-retroceso,
+      // SGC). Al sincronizar, invalidar las caches con km para reflejar el nuevo.
+      const vehId = payload['vehiculo_id'] as string;
+      await this.catalog.invalidate(`veh_detalle:${vehId}`);
+      await this.catalog.invalidate('pendientes_transporte');
+      await this.catalog.invalidate('flota_vehiculos');
     });
   }
 }

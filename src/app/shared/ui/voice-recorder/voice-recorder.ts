@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, inject, output, signal } from '@angular/core';
 import { ToastService } from '../../../core/services/toast.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
 
 /**
  * Voice-note recorder — alternative to typing (UI/UX principle #3, incidente
@@ -15,6 +16,7 @@ import { ToastService } from '../../../core/services/toast.service';
 })
 export class VoiceRecorder implements OnDestroy {
   private toast = inject(ToastService);
+  private permissions = inject(PermissionsService);
 
   recording = signal(false);
   previewUrl = signal<string | null>(null);
@@ -44,9 +46,30 @@ export class VoiceRecorder implements OnDestroy {
       };
       this.recorder.start();
       this.recording.set(true);
-    } catch {
-      this.toast.error('No pudimos usar el micrófono. Puedes escribir la nota.');
+    } catch (e) {
+      this.onMicError(e);
     }
+  }
+
+  /** P1 — mensaje claro según la causa; ofrecer ajustes si quedó bloqueado. */
+  private onMicError(e: unknown): void {
+    const name = (e as DOMException)?.name ?? '';
+    if (name === 'NotFoundError') {
+      this.toast.error('No hay micrófono disponible en el dispositivo. Puedes escribir la nota.');
+      return;
+    }
+    if (name === 'NotAllowedError' || name === 'SecurityError') {
+      if (this.permissions.isNative) {
+        this.toast.withAction('El micrófono está bloqueado. Actívalo para grabar la nota.', {
+          label: 'Abrir ajustes',
+          run: () => void this.permissions.openAppSettings(),
+        });
+      } else {
+        this.toast.error('El micrófono está bloqueado. Actívalo en los ajustes del navegador.');
+      }
+      return;
+    }
+    this.toast.error('No pudimos usar el micrófono. Puedes escribir la nota.');
   }
 
   clear(): void {

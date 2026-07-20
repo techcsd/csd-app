@@ -1,0 +1,85 @@
+<div class="screen pendientes">
+  <header class="pendientes__header">
+    <button type="button" class="pendientes__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="pendientes__icon">📤</span>
+    <h1 class="pendientes__title">Pendientes de envío</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (items().length === 0) {
+      <app-empty-state
+        icon="✅"
+        title="Todo enviado"
+        message="No tienes nada esperando. Cuando captures algo sin señal, aparecerá aquí hasta que se envíe."
+      />
+    } @else {
+      @if (hayReintentables()) {
+        <button type="button" class="pendientes__retry-all" [disabled]="!online()" (click)="reintentarTodo()">
+          🔄 Reintentar los que fallaron por conexión
+        </button>
+        @if (!online()) {
+          <p class="pendientes__hint">Sin señal ahora mismo. Se reintentará solo cuando vuelva.</p>
+        }
+      }
+
+      @for (item of items(); track item.id) {
+        <div class="ob-row" [attr.data-estado]="item.estado">
+          <div class="ob-row__top">
+            <span class="ob-row__icon">{{ tipoIcon(item.tipo_op) }}</span>
+            <div class="ob-row__info">
+              <span class="ob-row__tipo">{{ tipoLabel(item.tipo_op) }}</span>
+              <span class="ob-row__fecha">{{ fmt(item.capturado_en) }}</span>
+            </div>
+            <app-sync-badge [state]="item.estado" />
+          </div>
+
+          <div class="ob-row__meta">
+            @if (item.fotos > 0) {
+              <span class="ob-row__chip">📷 {{ item.fotos }} foto{{ item.fotos === 1 ? '' : 's' }}</span>
+            }
+            @if (item.intentos > 0) {
+              <span class="ob-row__chip">Intentos: {{ item.intentos }}</span>
+            }
+          </div>
+
+          @if (item.estado === 'error') {
+            <p class="ob-row__error">{{ mensajeError(item) }}</p>
+
+            @if (expandido() === item.id) {
+              <p class="ob-row__detalle">{{ item.error_msg || 'Sin detalle técnico.' }}</p>
+            }
+
+            <div class="ob-row__actions">
+              <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
+                Reintentar
+              </button>
+              <button type="button" class="ob-btn ob-btn--ghost" (click)="toggleDetalle(item.id)">
+                {{ expandido() === item.id ? 'Ocultar' : 'Ver detalle' }}
+              </button>
+              @if (item.permanente) {
+                <button type="button" class="ob-btn ob-btn--danger" (click)="pedirDescartar(item)">
+                  Descartar
+                </button>
+              }
+            </div>
+          } @else {
+            <p class="ob-row__waiting">{{ esperandoTexto(item) }}</p>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <app-confirm-dialog
+    [open]="confirmarDescartarId() !== null"
+    title="¿Descartar este envío?"
+    message="No se enviará al sistema y se borrará de la cola. Quedará marcado como no enviado en tus registros. Esta acción no se puede deshacer."
+    confirmLabel="Descartar"
+    cancelLabel="Conservar"
+    tone="danger"
+    (confirmed)="confirmarDescartar()"
+    (cancelled)="cancelarDescartar()"
+  />
+</div>

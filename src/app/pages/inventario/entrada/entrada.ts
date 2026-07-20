@@ -8,7 +8,7 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { CapturedPhoto } from '../../../core/services/camera.service';
-import { InventarioService } from '../../../core/services/inventario.service';
+import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
@@ -45,6 +45,14 @@ export class EntradaPage implements OnDestroy {
   bodegaId = signal('');
   motivo = signal('');
   motivoOtro = signal(''); // U25 — detalle cuando el motivo es "Otro"
+
+  // P12 — devolución de obra: obra de origen + descontar de su almacén.
+  obras = signal<ObraOrigen[]>([]);
+  obraOrigenId = signal('');
+  descontarObra = signal(false);
+  esDevolucion = computed(() => this.motivo() === 'Devolución de obra');
+  obraOpts = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
+  obraSel = computed<ObraOrigen | null>(() => this.obras().find((o) => o.id === this.obraOrigenId()) ?? null);
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
@@ -90,14 +98,16 @@ export class EntradaPage implements OnDestroy {
   private async init(): Promise<void> {
     this.loadingCat.set(true);
     try {
-      const [b, a, cat] = await Promise.all([
+      const [b, a, cat, obras] = await Promise.all([
         this.inventario.getBodegas(),
         this.inventario.getArticulos(),
         this.inventario.getCategorias(),
+        this.inventario.getObrasConBodega(),
       ]);
       this.bodegas.set(b);
       this.articulos.set(a);
       this.categorias.set(cat);
+      this.obras.set(obras);
       if (b.length === 1) this.bodegaId.set(b[0].id);
     } finally {
       this.loadingCat.set(false);
@@ -172,16 +182,33 @@ export class EntradaPage implements OnDestroy {
       this.toast.error('Especifica de dónde viene el material.');
       return;
     }
+    // P12 — devolución de obra: la obra de origen es obligatoria.
+    if (this.esDevolucion() && !this.obraOrigenId()) {
+      this.toast.error('Elige la obra de la que viene el material.');
+      return;
+    }
     this.submitting.set(true);
     try {
-      await this.inventario.enqueueEntrada({
-        bodegaId: this.bodegaId(),
-        referencia: this.referenciaEfectiva(),
-        // B3/U25 — cuando el origen es "Otro", ese texto libre alimenta otros_valores.
-        otroReferencia: this.motivo() === 'Otro' ? this.motivoOtro().trim() || null : null,
-        items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
-        foto: this.foto()?.blob ?? null,
-      });
+      if (this.esDevolucion()) {
+        // P12 — traspaso atómico (salida del almacén de la obra + entrada aquí)
+        // vía RPC, encolado por outbox. Solo descuenta si la obra tiene almacén.
+        await this.inventario.enqueueDevolucionObra({
+          bodegaDestinoId: this.bodegaId(),
+          origenProyectoId: this.obraOrigenId(),
+          descontar: this.descontarObra() && !!this.obraSel()?.tieneBodega,
+          referencia: null,
+          items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad })),
+        });
+      } else {
+        await this.inventario.enqueueEntrada({
+          bodegaId: this.bodegaId(),
+          referencia: this.referenciaEfectiva(),
+          // B3/U25 — cuando el origen es "Otro", ese texto libre alimenta otros_valores.
+          otroReferencia: this.motivo() === 'Otro' ? this.motivoOtro().trim() || null : null,
+          items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
+          foto: this.foto()?.blob ?? null,
+        });
+      }
       this.hoja.set('exito');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
@@ -230,6 +257,8 @@ export class EntradaPage implements OnDestroy {
     this.cart.set([]);
     this.motivo.set('');
     this.motivoOtro.set('');
+    this.obraOrigenId.set('');
+    this.descontarObra.set(false);
     this.foto.set(null);
     this.hoja.set('seleccion');
   }

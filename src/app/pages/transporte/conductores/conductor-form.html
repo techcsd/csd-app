@@ -133,4 +133,13 @@
     (back)="back()"
     (primary)="guardar()"
   />
+
+  <!-- P8 — paso opcional: generar el acceso a la app tras crear el conductor -->
+  <app-generar-acceso
+    [open]="mostrarAcceso()"
+    [conductorId]="nuevoConductorId()"
+    [cedula]="cedula()"
+    [tieneAcceso]="false"
+    (cerrado)="finalizarAlta()"
+  />
 </div>
