@@ -1,5 +1,12 @@
 # HANDOFF — CSD App
 
+## v1.20.0 PUBLICADA + MÍNIMA (2026-07-20) — fix de envíos atascados + firmar CL desde aviso
+- **PUBLICADA + MÍNIMA FORZADA: 1.20.0** (`version_publicada(movil)` → 1.20.0/1.20.0). 1.19.0 despublicada. APK firmado en bucket, `apk_url` OK, historial registrado. Commits `8e71f60` (firmar CL) + `79f29cf` (fix sync) en `main`.
+- **FIX raíz de "reintentar y no se envían":** ítems encolados por versiones previas (liberación, checklist/reporte, recepción de vehículo) no traían `capturado_en` en el payload y varios RPC lo EXIGEN → fallaban con "function not found" y el reintento repetía el fallo. `SyncService.process()` ahora **rellena `capturado_en` desde la fila del outbox** (que siempre lo tiene) antes de llamar al handler → esos envíos por fin se mandan. `retry()`/`retryErrored()` limpian `permanente`/`error_kind` (reintento explícito re-evalúa; sin bucle automático porque `drain()` no reintenta ops en error). Botón "Reintentar todos" en `/pendientes`. **Los realmente irreparables** (p. ej. vehículo borrado → "Vehículo no encontrado") vuelven a error en 1 intento y se **Descartan**.
+- **Firmar CL desde el aviso (Q5 3b):** bandeja `/bitacora/cl` + detalle/firma `/bitacora/cl/:id` (ver detalle abajo). Ya en el APK.
+- **Instrucción para el usuario en el teléfono:** actualizar a 1.20.0 (gate) → abrir la barra de estado → "Pendientes de envío" → "Reintentar todos". Lo que quede en error es porque su vehículo/referencia fue borrado → "Descartar".
+- **PENDIENTE device-QA:** confirmar que los atascados se envían tras 1.20.0.
+
 ## Ronda 2 app (2026-07-20) — v1.19.0 PUBLICADA + MÍNIMA FORZADA (Q2, Q4–Q9)
 Source: `C:\developer\improvements\imp 20072026\CONTEXTO-ACTUALIZACION-1.md` (Q1–Q9) — PROMPT-4 (app). SGC (PROMPT-3) ya desplegado: trigger `trg_cl_firmado` solo exige residente+responsable, columnas `cl_registro_firmas.metodo` y `bitacora_actividades.unidad`, RPCs `notificar`/`notificar_modulo`. `npm run build` verde por fase.
 - **PUBLICADA + MÍNIMA FORZADA: 1.19.0** (`version_publicada(movil)` → 1.19.0/1.19.0, code 1019000). 1.18.0 despublicada. APK firmado (cert prod `3c5316d8…df5065`) en bucket, `apk_url` OK, historial registrado. Commit `c3d43e6` (feat) en `main` (deploy PWA). ⚠️ **Fix de release:** `registrar_version` ahora tiene 2 overloads en la BD (5 y 6 args con `p_url`) → PGRST203 ambiguo; `release-apk.mjs` ahora manda `p_url` para desambiguar a la de 6 args.
