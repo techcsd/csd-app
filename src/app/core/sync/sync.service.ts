@@ -27,6 +27,7 @@ export type SyncErrorKind =
   | 'conflicto' // 409 — ya registrado
   | 'datos' // 22xxx — formato de dato inválido
   | 'foto' // la foto ya no está en el teléfono
+  | 'incompatible' // firma de RPC / schema desajustado (app o servidor desactualizado)
   | 'red' // transitorio agotado (sin señal estable)
   | 'desconocido';
 
@@ -53,13 +54,29 @@ export function throwSyncError(error: unknown): never {
   const message = e?.message ?? String(error);
   const code = String(e?.code ?? '');
   const status = Number(e?.status ?? e?.statusCode ?? 0);
-  const transient = status === 401 || status === 408 || status === 429 || status >= 500;
-  const permanent = /^(P0001|22|23|42)/.test(code) || [400, 403, 404, 409, 422].includes(status);
-  if (permanent && !transient) throw new PermanentSyncError(message, classifyKind(code, status));
+  // Permanente por CÓDIGO (SQLSTATE del RPC/tabla o error de PostgREST): reintentar
+  // NO ayuda. OJO: 42501 "permission denied" (falta un GRANT) llega como HTTP 401,
+  // así que el código debe MANDAR sobre la heurística de 401=transitorio; si no,
+  // los fallos de permiso se reintentaban en bucle para siempre (bug P5 real).
+  const codePermanente =
+    /^(P0001|22|23|42)/.test(code) || // validación RPC / datos / FK-único / permiso-privilegio
+    /^PGRST(202|203|204|205)/.test(code) || // función/columna/tabla no encontrada (firma o schema)
+    /schema cache|could not find the function/i.test(message);
+  const statusPermanente = [400, 403, 404, 409, 422].includes(status);
+  // 401/408/429/5xx son transitorios SOLO si no hay un código permanente detrás.
+  const transient = (status === 401 || status === 408 || status === 429 || status >= 500) && !codePermanente;
+  if (codePermanente || (statusPermanente && !transient)) {
+    throw new PermanentSyncError(message, classifyKind(code, status, message));
+  }
   throw new Error(message); // default: retryable with backoff
 }
 
-function classifyKind(code: string, status: number): SyncErrorKind {
+function classifyKind(code: string, status: number, message = ''): SyncErrorKind {
+  // Desajuste de firma/esquema (PostgREST no encuentra la función) → app/servidor
+  // desactualizado; no se arregla reintentando.
+  if (/^PGRST(202|203|204|205)/.test(code) || /schema cache|could not find the function/i.test(message)) {
+    return 'incompatible';
+  }
   if (/^42501/.test(code) || status === 403) return 'permiso';
   if (/^23/.test(code)) return 'referencia';
   if (status === 404) return 'no-encontrado';
@@ -294,7 +311,9 @@ export class SyncService {
         .from(foto.bucket)
         .upload(foto.path, body, { upsert: true, contentType: type });
       // upsert makes re-sends idempotent; a duplicate is not an error.
-      if (error && !/exists/i.test(error.message)) throw error;
+      // P5 — clasificar el error de Storage (403/400 = permanente y legible) en vez
+      // de lanzarlo crudo (que caía a transitorio y reintentaba en bucle).
+      if (error && !/exists/i.test(error.message)) throwSyncError(error);
       paths[foto.slot] = foto.path;
     }
     return paths;

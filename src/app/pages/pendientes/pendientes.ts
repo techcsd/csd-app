@@ -122,6 +122,8 @@ export class PendientesPage {
         return 'Hay un dato con formato inválido en el registro.';
       case 'foto':
         return 'La foto ya no está disponible en el teléfono. Descártalo y vuelve a capturarlo.';
+      case 'incompatible':
+        return 'No se pudo procesar (posible desajuste de versión con el servidor). Descártalo; si vuelve a pasar, actualiza la app.';
       case 'red':
         return 'Sin conexión estable. Se reintentará solo cuando vuelva la señal.';
       case 'validacion':

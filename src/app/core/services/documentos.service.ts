@@ -106,6 +106,12 @@ export class DocumentosService {
       const path = photoPaths['documento'];
       const { data: userData } = await this.supabase.client.auth.getUser();
       const uid = userData.user?.id ?? null;
+      // P3 — usar ON CONFLICT DO NOTHING (ignoreDuplicates), NO DO UPDATE: el rol
+      // `authenticated` tiene INSERT en sgc.documentos pero NO UPDATE, y un upsert
+      // con DO UPDATE exige UPDATE → fallaba con 42501 "permission denied" y la
+      // subida nunca aterrizaba (los archivos sí subían a Storage, pero la fila de
+      // sgc.documentos nunca se creaba → "sin documentos"). Como el `id` es un UUID
+      // de cliente único, DO NOTHING es idempotente en los reenvíos.
       const { error } = await this.supabase.client.from('documentos').upsert(
         {
           id: payload['id'],
@@ -116,7 +122,7 @@ export class DocumentosService {
           path,
           subido_por: uid,
         },
-        { onConflict: 'id' },
+        { onConflict: 'id', ignoreDuplicates: true },
       );
       if (error) throwSyncError(error);
     });

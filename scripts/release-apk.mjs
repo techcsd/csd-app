@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.17.0';
+const VERSION = '1.18.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -55,29 +55,21 @@ const codeFromVersion = (v) => {
 const VERSION_CODE = codeFromVersion(VERSION);
 // Rollout escalonado (R15): el mínimo forzado se controla en SGC → app-versiones
 // (sgc.app_versiones.minima → version_publicada().version_minima, que alimenta el
-// gate bloqueante). 1.17.0 quedó como mínimo forzado (2026-07-20: fixes de mic/GPS
-// + outbox — todos deben actualizar). Mantener este valor alineado con la fila
-// `minima=true` para que version.json (aviso) no contradiga el gate.
-const MIN_VERSION = '1.17.0';
+// gate bloqueante). 1.18.0 quedó como mínimo forzado (2026-07-20: fixes de mic/GPS
+// + outbox + subida de documentos — todos deben actualizar). Mantener este valor
+// alineado con la fila `minima=true` para que version.json (aviso) no contradiga el gate.
+const MIN_VERSION = '1.18.0';
 const RELEASED_AT = '2026-07-20';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Micrófono y GPS, pendientes de envío, y más';
+const TITULO = 'Subida de documentos + diagnóstico de envíos (QA en equipo real)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Ya puedes grabar la nota de voz al reportar un incidente (antes decía que no podía usar el micrófono). Se escucha desde el detalle del parte.' },
-  { t: 'arreglo', d: 'El GPS vuelve a funcionar para crear rutas y para recibir vehículos. La app te pide el permiso de ubicación al entrar y cuando lo necesita.' },
-  { t: 'nuevo', d: 'Nueva pantalla “Pendientes de envío”: toca la barra de estado para ver qué falta por enviar, con el motivo en claro, y reintentar o descartar cada cosa.' },
-  { t: 'arreglo', d: 'Al recibir un vehículo, deja de aparecer de inmediato como “por recibir”.' },
-  { t: 'arreglo', d: 'Las fotos ya no desaparecen al pasar de un paso a otro en los formularios; se quedan hasta que envías.' },
-  { t: 'nuevo', d: 'Puedes subir o reemplazar la cédula y la licencia de un conductor desde su perfil, con aviso de “subiendo”.' },
-  { t: 'nuevo', d: 'Puedes generar el acceso (cédula + PIN de 6 dígitos) de un conductor desde el alta o desde su perfil.' },
-  { t: 'nuevo', d: 'Entrada por “Devolución de obra”: eliges de qué obra viene el material y, si esa obra tiene almacén, lo descuentas de él.' },
-  { t: 'nuevo', d: 'La auditoría ahora tiene un panel con métricas y gráficos, igual que la página web.' },
-  { t: 'mejora', d: 'Cuando registras kilometraje (pre-uso, combustible, entrega o mantenimiento) se actualiza el del vehículo.' },
-  { t: 'mejora', d: 'En el pre-uso, un hallazgo crítico ahora exige explicar qué pasó con el vehículo.' },
-  { t: 'mejora', d: 'Las pantallas abren siempre desde arriba y los cuadros de texto se ven más consistentes.' },
+  { t: 'arreglo', d: 'Los documentos de conductor (cédula/licencia) ahora sí se guardan: antes la foto subía pero el documento no quedaba registrado (parecía “sin documentos”).' },
+  { t: 'arreglo', d: '“Pendientes de envío”: los envíos que fallan por permiso o por una operación no reconocida ya no se reintentan en bucle sin fin; se marcan claro y puedes descartarlos.' },
+  { t: 'mejora', d: 'En “Pendientes de envío”, aun cuando algo sigue reintentando, se muestra el motivo del último fallo para que sepas qué pasa.' },
+  { t: 'mejora', d: 'Incluye todo lo de la actualización anterior: micrófono y GPS, fotos que no se pierden, PIN de conductor, devolución de obra, panel de auditoría y más.' },
 ];
 
 const TIPO_POR_COMMIT = {

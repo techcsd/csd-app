@@ -127,6 +127,13 @@
   font-size: 14px;
   color: var(--color-text-secondary);
 }
+// P5 — motivo del último fallo en items que aún reintentan (tono suave).
+.ob-row__error--soft {
+  margin-top: 8px;
+  background: rgba(120, 120, 120, 0.1);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
 
 .ob-row__actions {
   display: flex;
