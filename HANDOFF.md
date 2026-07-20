@@ -1,5 +1,18 @@
 # HANDOFF — CSD App
 
+## Ronda 2 app (2026-07-20) — v1.19.0 PUBLICADA + MÍNIMA FORZADA (Q2, Q4–Q9)
+Source: `C:\developer\improvements\imp 20072026\CONTEXTO-ACTUALIZACION-1.md` (Q1–Q9) — PROMPT-4 (app). SGC (PROMPT-3) ya desplegado: trigger `trg_cl_firmado` solo exige residente+responsable, columnas `cl_registro_firmas.metodo` y `bitacora_actividades.unidad`, RPCs `notificar`/`notificar_modulo`. `npm run build` verde por fase.
+- **PUBLICADA + MÍNIMA FORZADA: 1.19.0** (`version_publicada(movil)` → 1.19.0/1.19.0, code 1019000). 1.18.0 despublicada. APK firmado (cert prod `3c5316d8…df5065`) en bucket, `apk_url` OK, historial registrado. Commit `c3d43e6` (feat) en `main` (deploy PWA). ⚠️ **Fix de release:** `registrar_version` ahora tiene 2 overloads en la BD (5 y 6 args con `p_url`) → PGRST203 ambiguo; `release-apk.mjs` ahora manda `p_url` para desambiguar a la de 6 args.
+- **Q4** liberación: cámara directa + grid de miniaturas (✓/✗+desc+quitar), multi-foto, "Repetir" junto a "Agregar" (reusa `[foto]` de P10).
+- **Q7** `wizard-exit` (← Salir) en liberación/pre-uso/checklist/mantenimiento/combustible (las que faltaban); confirm con borrador (autosave) o "sin guardar"; back físico intacto. entrada/salida/conductor-form/crear-ruta ya tenían.
+- **Q8** labels "Parte diario" → "Bitácora del día" (en-proceso + etiqueta borrador). Sin tocar BD/rutas.
+- **Q6** selector de unidad en "¿Qué se hizo hoy?" (catálogo `unidades` offline), preselección desde la partida, viaja en `p_actividades`, visible en detalle.
+- **Q9** filtro por obra + conteo en "Mis bitácoras".
+- **Q5** cliente/MIVHED opcionales, checklist visual verde, guardar incompleto, "Solicitar firma" (`notificar_modulo`, online), firma del cliente por foto (`metodo='foto'`).
+- **Q2** avisos de flota → botón "Ver vehículo/reporte" (navega al ítem, `?item=`); badges de pendientes por módulo en home (`avisos_flota` pendiente, `salidas_inventario` despachado) — nuevo `BadgesService`, `big-button` ya tenía input `[badge]`.
+- **PENDIENTE (sub-ítem Q5 punto 3b):** pantalla de detalle del CL para que el ingeniero lo abra desde el aviso y firme su rol. La BD lo soporta (INSERT directo en `cl_registro_firmas` con módulo bitacora + trigger). Falta esa pantalla + una **bandeja de avisos de bitácora in-app** (hoy solo hay avisos de flota) para alcanzarla. Recomendado como pieza siguiente.
+- **PENDIENTE device-QA:** liberación 3+ fotos/grid, salir de cualquier wizard, firmas verde + foto del cliente + solicitar, unidad en trabajo, filtro por obra, avisos→ítem, badges home.
+
 ## Ronda QA app (2026-07-20) — v1.18.0 PUBLICADA + MÍNIMA FORZADA (P1–P13 + fixes de QA en equipo real)
 Source: `C:\developer\improvements\imp 20072026\CONTEXTO.md` (P1–P13) + `apuntes de reunion.md`. PROMPT-2 (app). **`npm run build` verde en cada fase.**
 - **PUBLICADA + MÍNIMA FORZADA: 1.18.0** (gate BLOQUEANTE — todos deben actualizar). `version_publicada(movil)` → publicada 1.18.0 / minima 1.18.0 (code 1018000). 1.16.0 y 1.17.0 despublicadas y `minima=false`. APK firmado (cert prod `3c5316d8…df5065`) en el bucket (`csd-app-1.18.0.apk` + latest + version.json), `apk_url` OK, historial `app_versiones` (movil) registrado. `MIN_VERSION` de `release-apk.mjs` = 1.18.0. Commits en `main`: `d725b9e` (P1–P13) · `66a26f5` · `bd60a2a` (1.17 min) · `6c64914` (fixes QA 1.18). Push a `main` dispara deploy PWA (iOS).

@@ -167,6 +167,10 @@ async function registrarEnHistorial() {
       p_notas: CHANGELOG,
       p_titulo: TITULO,
       p_cambios: CAMBIOS, // jsonb [{ t, d }] — mismo shape que pinta la web
+      // Incluir p_url SIEMPRE: la BD tiene dos overloads de registrar_version
+      // (5 y 6 args); mandar p_url desambigua a la de 6 args (PGRST203 si no) y
+      // además deja la URL del APK en la fila cuando publicamos al bucket.
+      p_url: registerOnly ? null : publicUrl,
     }),
   });
   if (!res.ok) throw new Error(`registrar_version: ${res.status} ${await res.text()}`);
