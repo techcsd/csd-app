@@ -186,24 +186,42 @@ export class SyncService {
   async retry(id: string): Promise<void> {
     const op = await db.outbox.get(id);
     if (!op) return;
-    await db.outbox.update(id, { estado: 'pending', intentos: 0, proximo_intento: 0, error_msg: undefined });
+    // Limpiar también `permanente`/`error_kind`: un reintento explícito re-evalúa
+    // el resultado desde cero (con el fix de `capturado_en` muchos "permanentes"
+    // viejos ahora sí se envían).
+    await db.outbox.update(id, {
+      estado: 'pending',
+      intentos: 0,
+      proximo_intento: 0,
+      error_msg: undefined,
+      error_kind: undefined,
+      permanente: false,
+    });
     await db.mis_registros.update(id, { estado: 'pending' });
     await this.refreshCounts();
     void this.drain();
   }
 
-  /** Retry ALL errored ops (global ⚠️ "toca para reintentar" bar). `drain()`
-   *  skips errored ops, so we must reset them to pending first (APP-001).
-   *  P5 — solo reencola los TRANSITORIOS (agotados por red/servidor); los
-   *  permanentes (validación, permiso, foto perdida…) requieren acción
-   *  explícita del usuario (reintentar/descartar) desde /pendientes. */
+  /** Retry ALL errored ops (botón "Reintentar" de /pendientes). `drain()` salta
+   *  los ops en error, así que hay que resetearlos a pending primero (APP-001).
+   *  Es una acción EXPLÍCITA del usuario, así que reintenta TODOS los que están
+   *  en error (incluidos los que quedaron "permanentes" con builds viejos): con
+   *  el fix de `capturado_en` muchos ya se envían; los realmente irreparables
+   *  (p. ej. vehículo borrado) vuelven a error en 1 intento y muestran Descartar
+   *  (no hay bucle automático: drain() no reintenta ops en error por su cuenta). */
   async retryErrored(): Promise<void> {
     const errored = await db.outbox.where('estado').equals('error').toArray();
-    const reintentar = errored.filter((op) => !op.permanente);
-    if (reintentar.length) {
+    if (errored.length) {
       await db.transaction('rw', db.outbox, db.mis_registros, async () => {
-        for (const op of reintentar) {
-          await db.outbox.update(op.id, { estado: 'pending', intentos: 0, proximo_intento: 0, error_msg: undefined });
+        for (const op of errored) {
+          await db.outbox.update(op.id, {
+            estado: 'pending',
+            intentos: 0,
+            proximo_intento: 0,
+            error_msg: undefined,
+            error_kind: undefined,
+            permanente: false,
+          });
           await db.mis_registros.update(op.id, { estado: 'pending' });
         }
       });
@@ -278,7 +296,15 @@ export class SyncService {
     await db.outbox.update(op.id, { estado: 'syncing' });
     try {
       const photoPaths = await this.uploadPhotos(op.id);
-      await handler(op.payload, photoPaths);
+      // Compatibilidad con items encolados por versiones viejas: si el payload no
+      // trae `capturado_en` (varios RPC lo EXIGEN → fallaban con "function not
+      // found" y reintentar no ayudaba), lo rellenamos desde la fila del outbox,
+      // que SIEMPRE lo tiene. Así los envíos atascados por esto se envían al fin.
+      const payload =
+        op.payload['capturado_en'] == null
+          ? { ...op.payload, capturado_en: op.capturado_en }
+          : op.payload;
+      await handler(payload, photoPaths);
 
       // Success: clear photos, mark the local record sent, drop the op.
       await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {

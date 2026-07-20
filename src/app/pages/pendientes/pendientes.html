@@ -17,7 +17,7 @@
     } @else {
       @if (hayReintentables()) {
         <button type="button" class="pendientes__retry-all" [disabled]="!online()" (click)="reintentarTodo()">
-          🔄 Reintentar los que fallaron por conexión
+          🔄 Reintentar todos
         </button>
         @if (!online()) {
           <p class="pendientes__hint">Sin señal ahora mismo. Se reintentará solo cuando vuelva.</p>

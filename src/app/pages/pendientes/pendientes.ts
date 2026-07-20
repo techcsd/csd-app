@@ -96,7 +96,7 @@ export class PendientesPage {
   }
 
   hayReintentables(): boolean {
-    return this.items().some((i) => i.estado === 'error' && !i.permanente);
+    return this.items().some((i) => i.estado === 'error');
   }
 
   tipoLabel(t: string): string {
