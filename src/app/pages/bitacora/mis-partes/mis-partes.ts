@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Location } from '@angular/common';
@@ -26,8 +26,28 @@ export class MisPartesPage {
   error = signal(false); // APP-035 — distinguir error de carga de "sin bitácoras"
   fmtFecha = formatFecha; // U9
 
+  // Q9 — segmentar por obra: filtro + conteo por proyecto.
+  filtroObra = signal(''); // '' = todas
+  obras = computed(() => {
+    const m = new Map<string, number>();
+    for (const b of this.bitacoras()) {
+      const nombre = b.proyecto?.nombre ?? '—';
+      m.set(nombre, (m.get(nombre) ?? 0) + 1);
+    }
+    return [...m.entries()].map(([nombre, count]) => ({ nombre, count })).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
+  filtradas = computed(() => {
+    const f = this.filtroObra();
+    if (!f) return this.bitacoras();
+    return this.bitacoras().filter((b) => (b.proyecto?.nombre ?? '—') === f);
+  });
+
   constructor() {
     void this.load();
+  }
+
+  setFiltroObra(nombre: string): void {
+    this.filtroObra.update((cur) => (cur === nombre ? '' : nombre));
   }
 
   async load(): Promise<void> {

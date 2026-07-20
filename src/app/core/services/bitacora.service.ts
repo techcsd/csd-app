@@ -115,6 +115,7 @@ export class BitacoraService {
           estructura: a.estructura,
           actividad: a.actividad,
           cantidad: a.cantidad ?? null,
+          unidad: a.unidad ?? null, // Q6 — unidad del trabajo realizado
         })),
         restricciones: input.restricciones.map((r) => ({
           tipo_restriccion: r.tipo_restriccion,
@@ -135,6 +136,21 @@ export class BitacoraService {
       fotos: this.buildFotos(id, input.fotos),
       resumen: { tipo: 'parte_diario', proyecto_id: input.proyectoId, capturado_en },
     });
+  }
+
+  /** Q6 — unidades de medida (catálogo sgc.unidades), cacheadas offline como los
+   *  demás catálogos, para el selector del trabajo realizado en el parte. */
+  async getUnidades(): Promise<string[]> {
+    const data = await this.catalog.refresh<string[]>('unidades', async () => {
+      const { data, error } = await this.supabase.client
+        .from('unidades')
+        .select('nombre')
+        .eq('activo', true)
+        .order('nombre');
+      if (error) throw new Error(error.message);
+      return ((data as { nombre: string }[]) ?? []).map((u) => u.nombre);
+    });
+    return data ?? [];
   }
 
   /** Planned line items for a project (R24), for the actividad quantity reference. */
@@ -189,7 +205,7 @@ export class BitacoraService {
       const { data, error } = await this.supabase.client
         .from('bitacoras')
         .select(
-          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })

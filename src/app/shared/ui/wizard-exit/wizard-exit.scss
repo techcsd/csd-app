@@ -1,0 +1,22 @@
+.wex {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px calc(8px + var(--safe-top));
+  padding-top: max(8px, var(--safe-top));
+}
+.wex__back {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: var(--color-surface, #212121);
+  color: var(--color-text-primary, #fff);
+  font-size: 24px;
+  font-weight: 700;
+}
+.wex__title {
+  font-size: var(--fs-option, 18px);
+  font-weight: 700;
+  color: var(--color-text-primary, #fff);
+}

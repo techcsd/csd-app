@@ -100,11 +100,151 @@
     margin-bottom: 16px;
   }
 
+  // Q4 — grid de miniaturas de las fotos ya tomadas.
+  &__foto-count {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--muted, #71717a);
+    margin: 4px 0 8px;
+  }
+  &__foto-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  &__foto-cell {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid var(--color-success, #16a34a);
+    background: #000;
+  }
+  &__foto-cell--no {
+    border-color: var(--color-error, #dc2626);
+  }
+  &__foto-thumb {
+    width: 100%;
+    height: 92px;
+    object-fit: cover;
+    display: block;
+  }
+  &__foto-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--color-success, #16a34a);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  &__foto-cell--no &__foto-badge {
+    background: var(--color-error, #dc2626);
+  }
+  &__foto-cell &__foto-del {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    margin: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+  }
+  &__foto-desc {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 3px 6px;
+    font-size: 11px;
+    line-height: 1.2;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Q4 — foto en curso + acciones (Repetir junto a Agregar).
+  &__foto-preview {
+    width: 100%;
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: #000;
+  }
+  &__foto-actions {
+    display: flex;
+    gap: 10px;
+
+    .btn-cta,
+    .btn-ghost {
+      flex: 1;
+      width: auto; // evita el colapso por width:100% global en fila flex
+    }
+  }
+
   &__roles {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
+  }
+
+  // Q5 — checklist visual de firmas (verde al firmar).
+  &__firma-check {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 8px 0 14px;
+  }
+  &__firma-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--surface-2, #f4f4f5);
+    border-left: 3px solid var(--border, #e4e4e7);
+  }
+  &__firma-row--ok {
+    border-left-color: var(--color-success, #16a34a);
+    background: rgba(22, 163, 74, 0.08);
+  }
+  &__firma-icon {
+    font-size: 18px;
+  }
+  &__firma-name {
+    flex: 1;
+    font-weight: 600;
+  }
+  &__firma-state {
+    font-size: 12px;
+    color: var(--muted, #71717a);
+  }
+
+  // Q5 — pantalla de confirmación con solicitar firma.
+  &__done-check {
+    display: block;
+    font-size: 44px;
+    text-align: center;
+    color: var(--color-success, #16a34a);
+    margin: 8px 0;
+  }
+  &__done-listo {
+    margin-top: 16px;
+  }
+  &__ok-note {
+    color: var(--color-success, #16a34a);
+    font-weight: 600;
   }
 
   &__add-btn {

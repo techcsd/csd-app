@@ -51,6 +51,8 @@ export interface ActividadEntry {
   actividad: string;
   /** How many were done (R24). Optional; unit comes from proyecto_partidas. */
   cantidad?: number | null;
+  /** Q6 — unidad de medida del trabajo realizado (catálogo sgc.unidades). */
+  unidad?: string | null;
 }
 
 /** W2 — un equipo alquilado en uso en la obra hoy. */
@@ -106,7 +108,7 @@ export interface BitacoraFull {
   // W2 — equipos alquilados en uso.
   hubo_equipos_alquilados?: boolean | null;
   proyecto?: { nombre: string } | null;
-  actividades?: { estructura: string; actividad: string; cantidad?: number | null }[];
+  actividades?: { estructura: string; actividad: string; cantidad?: number | null; unidad?: string | null }[];
   restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
   equipos?: EquipoAlquilado[];
   archivos?: { nombre: string; url: string; tipo_mime: string | null }[];

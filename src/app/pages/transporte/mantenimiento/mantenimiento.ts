@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,6 +9,9 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import {
@@ -43,17 +46,18 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })
-export class MantenimientoPage {
+export class MantenimientoPage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private vehiculos = inject(VehiculosService);
   private mantenimientos = inject(MantenimientosService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private navGuard = inject(NavGuardService);
 
   readonly total = TOTAL_STEPS;
   readonly maxFotos = MAX_FOTOS;
@@ -73,10 +77,49 @@ export class MantenimientoPage {
 
   submitting = signal(false);
   done = signal(false);
+  confirmSalir = signal(false); // Q7
+
+  private readonly backHandler = (): boolean => {
+    if (!this.done() && this.tieneDatos()) {
+      this.confirmSalir.set(true);
+      return true;
+    }
+    return false;
+  };
 
   constructor() {
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     void this.loadVehiculo();
+    this.navGuard.register(this.backHandler); // Q7 — botón físico Android
+  }
+
+  ngOnDestroy(): void {
+    this.navGuard.clear(this.backHandler);
+  }
+
+  /** Q7 — ¿hay datos sin guardar? (mantenimiento no tiene autosave). */
+  private tieneDatos(): boolean {
+    return (
+      !!this.tipo() ||
+      !!this.descripcion().trim() ||
+      this.km() != null ||
+      Object.keys(this.fotos()).length > 0
+    );
+  }
+
+  intentarSalir(): void {
+    if (!this.done() && this.tieneDatos()) this.confirmSalir.set(true);
+    else this.salir();
+  }
+  confirmarSalir(): void {
+    this.confirmSalir.set(false);
+    this.salir();
+  }
+  cancelarSalir(): void {
+    this.confirmSalir.set(false);
+  }
+  private salir(): void {
+    void this.router.navigate(['/transporte']);
   }
 
   private async loadVehiculo(): Promise<void> {

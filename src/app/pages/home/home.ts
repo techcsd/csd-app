@@ -6,6 +6,7 @@ import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { Onboarding } from '../../shared/components/onboarding/onboarding';
 import { UserContextService } from '../../core/services/user-context.service';
 import { SessionService } from '../../core/services/session.service';
+import { BadgesService } from '../../core/services/badges.service';
 
 interface HomeTile {
   modulo: string;
@@ -36,9 +37,11 @@ export class HomePage {
   private ctx = inject(UserContextService);
   private session = inject(SessionService);
   private router = inject(Router);
+  private badges = inject(BadgesService);
 
   nombre = this.ctx.nombre;
   obra = this.ctx.obraActiva;
+  badgeCounts = this.badges.counts; // Q2 — pendientes por módulo
 
   tiles = computed(() => TILES.filter((t) => this.ctx.hasModulo(t.modulo)));
 
@@ -48,6 +51,13 @@ export class HomePage {
     if (only.length === 1 && this.session.consumeAutoEnter()) {
       void this.router.navigate([only[0].route]);
     }
+    // Q2 — badges de pendientes por módulo (best-effort, online).
+    void this.badges.load();
+  }
+
+  /** Q2 — conteo de pendientes para el badge del tile (null si 0/sin dato). */
+  badgeFor(modulo: string): number | null {
+    return this.badgeCounts()[modulo] || null;
   }
 
   open(tile: HomeTile): void {

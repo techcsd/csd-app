@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VehiculosService, FlotaAviso } from '../../../core/services/vehiculos.service';
@@ -31,6 +32,7 @@ export class AvisosFlotaPage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private router = inject(Router);
 
   fmtFecha = formatFechaMedia;
 
@@ -57,6 +59,23 @@ export class AvisosFlotaPage {
 
   esBloqueo(a: FlotaAviso): boolean {
     return a.vehiculo?.estado === 'no_disponible';
+  }
+
+  /** Q2 — navegar al ÍTEM del aviso (no solo la acción inline). */
+  puedeVer(a: FlotaAviso): boolean {
+    return a.tipo === 'reporte_semanal' || !!a.vehiculo_id;
+  }
+  irAlItem(a: FlotaAviso): void {
+    if (a.tipo === 'reporte_semanal') {
+      // El destino resalta el vehículo señalado con ?item= (patrón Q2).
+      void this.router.navigate(['/transporte/reporte-semanal'], {
+        queryParams: a.vehiculo_id ? { item: a.vehiculo_id } : {},
+      });
+      return;
+    }
+    if (a.vehiculo_id) {
+      void this.router.navigate(['/transporte/vehiculo', a.vehiculo_id]);
+    }
   }
 
   async accion(a: FlotaAviso): Promise<void> {

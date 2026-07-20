@@ -1,0 +1,6 @@
+<header class="wex">
+  <button type="button" class="wex__back" (click)="exit.emit()" aria-label="Salir">←</button>
+  @if (title()) {
+    <span class="wex__title">{{ title() }}</span>
+  }
+</header>

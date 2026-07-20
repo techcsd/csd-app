@@ -88,6 +88,7 @@
   </div>
 } @else {
   <div class="screen comb">
+    <app-wizard-exit title="Registrar combustible" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">

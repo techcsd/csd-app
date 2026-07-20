@@ -13,7 +13,7 @@ const TIPO_LABEL: Record<string, string> = {
   checklist: 'Checklist de vehículo',
   conductor: 'Conductor',
   vehiculo: 'Vehículo',
-  parte: 'Parte diario',
+  parte: 'Bitácora del día',
 };
 
 /** Fase 4 — "Documentación en proceso": borradores sin enviar para retomar. */

@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.18.0';
+const VERSION = '1.19.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -55,21 +55,23 @@ const codeFromVersion = (v) => {
 const VERSION_CODE = codeFromVersion(VERSION);
 // Rollout escalonado (R15): el mínimo forzado se controla en SGC → app-versiones
 // (sgc.app_versiones.minima → version_publicada().version_minima, que alimenta el
-// gate bloqueante). 1.18.0 quedó como mínimo forzado (2026-07-20: fixes de mic/GPS
-// + outbox + subida de documentos — todos deben actualizar). Mantener este valor
-// alineado con la fila `minima=true` para que version.json (aviso) no contradiga el gate.
-const MIN_VERSION = '1.18.0';
+// gate bloqueante). 1.19.0 quedó como mínimo forzado (2026-07-20, ronda 2: liberación
+// multi-foto, salir de wizards, firmas opcionales + solicitar, unidad de medida, filtro
+// por obra, avisos→ítem y badges). Mantener alineado con la fila `minima=true`.
+const MIN_VERSION = '1.19.0';
 const RELEASED_AT = '2026-07-20';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Subida de documentos + diagnóstico de envíos (QA en equipo real)';
+const TITULO = 'Liberación, firmas, unidades de medida y avisos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Los documentos de conductor (cédula/licencia) ahora sí se guardan: antes la foto subía pero el documento no quedaba registrado (parecía “sin documentos”).' },
-  { t: 'arreglo', d: '“Pendientes de envío”: los envíos que fallan por permiso o por una operación no reconocida ya no se reintentan en bucle sin fin; se marcan claro y puedes descartarlos.' },
-  { t: 'mejora', d: 'En “Pendientes de envío”, aun cuando algo sigue reintentando, se muestra el motivo del último fallo para que sepas qué pasa.' },
-  { t: 'mejora', d: 'Incluye todo lo de la actualización anterior: micrófono y GPS, fotos que no se pierden, PIN de conductor, devolución de obra, panel de auditoría y más.' },
+  { t: 'arreglo', d: 'Checklist de liberación: ahora puedes agregar varias fotos seguidas y verlas en miniaturas; “Repetir” y “Agregar” quedaron juntos.' },
+  { t: 'mejora', d: 'Puedes salir de cualquier formulario (liberación, pre-uso, recibir/devolver, mantenimiento, combustible) con el botón ← sin cerrar la app.' },
+  { t: 'nuevo', d: 'Liberación: Cliente y MIVHED ahora son opcionales; cada firma se marca en verde; puedes guardar aunque falten firmas y solicitarlas; el Cliente puede firmar con una foto de su firma.' },
+  { t: 'nuevo', d: 'En la bitácora del día eliges la unidad de medida del trabajo realizado (m², ml, unidades…).' },
+  { t: 'mejora', d: 'En “Mis bitácoras” puedes filtrar por obra y ver cuántas hay de cada una.' },
+  { t: 'mejora', d: 'Los avisos de flota te llevan directo al vehículo o reporte, y el inicio muestra un contador de pendientes por módulo.' },
 ];
 
 const TIPO_POR_COMMIT = {

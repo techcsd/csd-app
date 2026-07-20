@@ -10,6 +10,7 @@ import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
@@ -43,7 +44,7 @@ const TOTAL_STEPS = 2;
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })

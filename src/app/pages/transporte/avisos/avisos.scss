@@ -78,3 +78,16 @@
 .avisos__cta {
   width: 100%;
 }
+// Q2 — fila de acciones (Ver ítem + acción). Evita el colapso por width:100%.
+.avisos__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+
+  .btn-cta,
+  .btn-ghost {
+    flex: 1;
+    width: auto;
+    margin-top: 0;
+  }
+}

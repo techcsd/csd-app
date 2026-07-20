@@ -10,6 +10,7 @@
   />
 } @else {
   <div class="screen checklist">
+    <app-wizard-exit [title]="titulo()" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
@@ -181,6 +182,16 @@
       [primaryDisabled]="step() >= total && submitting()"
       (back)="prev()"
       (primary)="step() < total ? next() : submit()"
+    />
+
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Salir del checklist?"
+      message="Lo que llevas se guarda como borrador y puedes retomarlo después."
+      confirmLabel="Salir"
+      cancelLabel="Seguir aquí"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
     />
   </div>
 }

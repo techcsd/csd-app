@@ -31,6 +31,28 @@
   text-align: center;
   padding: 32px;
 }
+// Q9 — chips de filtro por obra.
+.mis-partes__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.mis-partes__chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.mis-partes__chip--on {
+  background: var(--color-secondary);
+  color: #fff;
+  border-color: var(--color-secondary);
+}
+
 .bit-row {
   width: 100%;
   display: flex;

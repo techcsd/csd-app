@@ -10,6 +10,7 @@
   />
 } @else {
   <div class="screen mantenimiento">
+    <app-wizard-exit title="Reportar mantenimiento" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
@@ -104,6 +105,17 @@
       [primaryDisabled]="step() >= total && submitting()"
       (back)="prev()"
       (primary)="step() < total ? next() : submit()"
+    />
+
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Salir sin guardar?"
+      message="Perderás lo que llevas de este reporte de mantenimiento."
+      confirmLabel="Sí, salir"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
     />
   </div>
 }

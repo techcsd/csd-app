@@ -68,6 +68,8 @@ export class PartePage implements OnDestroy {
 
   // R24 — partidas planeadas del proyecto (referencia de cantidades).
   partidas = signal<ProyectoPartida[]>([]);
+  // Q6 — catálogo de unidades de medida (offline) para el trabajo realizado.
+  unidades = signal<string[]>([]);
 
   // W3 — paridad con la web (opcionales en campo).
   bloqueEntrepiso = signal('');
@@ -147,7 +149,7 @@ export class PartePage implements OnDestroy {
       if (!this.hasContent(snap)) return;
       void this.borrador.save(this.DRAFT, snap, {
         tipo: 'parte',
-        etiqueta: 'Parte diario' + (this.proyectoNombre() ? ' · ' + this.proyectoNombre() : ''),
+        etiqueta: 'Bitácora del día' + (this.proyectoNombre() ? ' · ' + this.proyectoNombre() : ''),
         ruta: '/bitacora/parte',
       });
     });
@@ -192,6 +194,9 @@ export class PartePage implements OnDestroy {
     if (cat.estructuras.length) this.estructuras.set(cat.estructuras);
     if (cat.actividades.length) this.actividadesCat.set(cat.actividades);
     if (cat.restricciones.length) this.restriccionesCat.set(cat.restricciones);
+
+    // Q6 — catálogo de unidades (offline) para el selector del trabajo realizado.
+    void this.bitacora.getUnidades().then((u) => this.unidades.set(u));
 
     const draft = await this.borrador.load<{
       proyectoId: string;
@@ -279,7 +284,9 @@ export class PartePage implements OnDestroy {
     this.actividades.update((list) => {
       const idx = list.findIndex((x) => x.estructura === parte && x.actividad === a);
       if (idx >= 0) return list.filter((_, i) => i !== idx); // toca de nuevo = quitar
-      return [...list, { estructura: parte, actividad: a, cantidad: 1 }];
+      // Q6 — preseleccionar la unidad de la partida planeada si la parte hace match.
+      const unidad = this.partidaDe(parte)?.unidad ?? null;
+      return [...list, { estructura: parte, actividad: a, cantidad: 1, unidad }];
     });
   }
 
@@ -297,6 +304,13 @@ export class PartePage implements OnDestroy {
   ajustarCantidadAct(i: number, delta: number): void {
     this.actividades.update((a) =>
       a.map((x, idx) => (idx === i ? { ...x, cantidad: Math.max(0, (x.cantidad ?? 0) + delta) } : x)),
+    );
+  }
+
+  /** Q6 — unidad de medida del trabajo realizado para esta fila. */
+  setUnidadAct(i: number, unidad: string): void {
+    this.actividades.update((a) =>
+      a.map((x, idx) => (idx === i ? { ...x, unidad: unidad || null } : x)),
     );
   }
 

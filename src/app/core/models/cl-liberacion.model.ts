@@ -25,12 +25,14 @@ export interface ClProyecto {
 // Ciclo de firmas del procedimiento (los 3 obligatorios habilitan el vaciado).
 export type ClFirmaRol = 'maestro' | 'residente' | 'responsable' | 'cliente' | 'mivhed';
 
+// Q5 — solo Residente + Responsable son OBLIGATORIAS (el trigger sgc.trg_cl_firmado
+// pasa a 'firmado' con esas dos). Cliente y MIVHED quedan OPCIONALES.
 export const CL_FIRMA_ROLES: { value: ClFirmaRol; label: string; obligatoria: boolean }[] = [
-  { value: 'maestro', label: 'Maestro (ejecutor)', obligatoria: false },
+  { value: 'maestro', label: 'Maestro (ejecutor) (opcional)', obligatoria: false },
   { value: 'residente', label: 'Ing. Residente', obligatoria: true },
   { value: 'responsable', label: 'Ing. Responsable', obligatoria: true },
-  { value: 'cliente', label: 'Cliente', obligatoria: true },
-  { value: 'mivhed', label: 'MIVHED', obligatoria: false },
+  { value: 'cliente', label: 'Cliente (opcional)', obligatoria: false },
+  { value: 'mivhed', label: 'MIVHED (opcional)', obligatoria: false },
 ];
 
 export interface ClItemRespuesta {
@@ -45,12 +47,16 @@ export interface ClFotoCaptura {
   blob: Blob;
   correcto: boolean;
   descripcion: string | null;
+  /** Q4 — URL local para la miniatura en el grid (el servicio la ignora). */
+  previewUrl?: string;
 }
 
 export interface ClFirmaCaptura {
   rol: ClFirmaRol;
   nombre: string | null;
   blob: Blob;
+  /** Q5 — 'pad' = trazo en pantalla; 'foto' = foto de la firma en papel. */
+  metodo?: 'pad' | 'foto';
 }
 
 export interface ClCaptura {

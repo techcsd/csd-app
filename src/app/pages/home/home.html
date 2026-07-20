@@ -15,6 +15,7 @@
         [icon]="tile.icon"
         [label]="tile.label"
         [tint]="tile.tint"
+        [badge]="badgeFor(tile.modulo)"
         (pressed)="open(tile)"
       />
     } @empty {

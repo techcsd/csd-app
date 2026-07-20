@@ -12,6 +12,7 @@ import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
@@ -102,7 +103,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })

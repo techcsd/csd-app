@@ -1,15 +1,42 @@
 @if (done()) {
-  <app-big-confirm
-    [title]="online ? 'Listo, quedó registrado' : 'Guardado'"
-    [note]="online
-      ? 'El checklist de liberación quedó guardado.'
-      : 'Sin señal. Se enviará solo cuando haya conexión.'"
-    [tone]="online ? 'done' : 'pending'"
-    buttonLabel="Listo"
-    (dismissed)="finish()"
-  />
+  <div class="screen liber liber__done">
+    <div class="screen__body">
+      <span class="liber__done-check">✓</span>
+      <h1 class="screen__title">{{ online ? 'Listo, quedó registrado' : 'Guardado' }}</h1>
+      <p class="screen__subtitle">
+        {{ online ? 'El checklist de liberación quedó guardado.' : 'Sin señal. Se enviará solo cuando haya conexión.' }}
+      </p>
+
+      <!-- Q5 — checklist visual de firmas -->
+      <div class="liber__firma-check">
+        @for (r of firmaEstados(); track r.value) {
+          <div class="liber__firma-row" [class.liber__firma-row--ok]="r.firmada">
+            <span class="liber__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
+            <span class="liber__firma-name">{{ r.label }}</span>
+            <span class="liber__firma-state">{{ r.firmada ? 'Firmada' : (r.obligatoria ? 'Pendiente' : 'Opcional') }}</span>
+          </div>
+        }
+      </div>
+
+      @if (faltanObligatorias().length) {
+        <p class="liber__warn">Faltan firmas obligatorias: {{ faltanObligatorias().join(', ') }}.</p>
+        @if (solicitado()) {
+          <p class="liber__ok-note">✓ Aviso de firma enviado a los ingenieros.</p>
+        } @else if (online) {
+          <button type="button" class="btn-cta" [disabled]="solicitando()" (click)="solicitarFirmaCl()">
+            {{ solicitando() ? 'Enviando…' : '✍️ Solicitar firma' }}
+          </button>
+        } @else {
+          <p class="liber__muted">Conéctate para solicitar la firma a los ingenieros.</p>
+        }
+      }
+
+      <button type="button" class="btn-ghost liber__done-listo" (click)="finish()">Listo</button>
+    </div>
+  </div>
 } @else {
   <div class="screen liber">
+    <app-wizard-exit title="Checklist de liberación" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
@@ -102,25 +129,42 @@
         />
 
         <h2 class="liber__section">Fotos del elemento</h2>
+
+        <!-- Q4 — fotos ya tomadas, en grid de miniaturas -->
         @if (fotos().length > 0) {
-          <ul class="liber__foto-list">
+          <p class="liber__foto-count">{{ fotos().length }} foto{{ fotos().length === 1 ? '' : 's' }} agregada{{ fotos().length === 1 ? '' : 's' }}</p>
+          <div class="liber__foto-grid">
             @for (f of fotos(); track $index) {
-              <li [class.liber__foto-list--no]="!f.correcto">
-                <span>{{ f.correcto ? '✓ correcto' : '✗ incorrecto' }}</span>
-                @if (f.descripcion) { <em>— {{ f.descripcion }}</em> }
+              <div class="liber__foto-cell" [class.liber__foto-cell--no]="!f.correcto">
+                <img class="liber__foto-thumb" [src]="f.previewUrl" alt="Foto del elemento" />
+                <span class="liber__foto-badge">{{ f.correcto ? '✓' : '✗' }}</span>
                 <button type="button" class="liber__foto-del" (click)="quitarFoto($index)" aria-label="Quitar">✕</button>
-              </li>
+                @if (f.descripcion) { <span class="liber__foto-desc">{{ f.descripcion }}</span> }
+              </div>
             }
-          </ul>
+          </div>
         }
+
+        <!-- Q4 — captura de la siguiente foto: marca correcto/incorrecto + descripción -->
         <div class="liber__foto-add">
           <div class="liber__opts">
             <app-option-button icon="✓" label="Correcto" tone="success" [selected]="fotoCorrecto()" (pressed)="fotoCorrecto.set(true)" />
             <app-option-button icon="✗" label="Incorrecto" tone="error" [selected]="!fotoCorrecto()" (pressed)="fotoCorrecto.set(false)" />
           </div>
           <input class="field" type="text" [ngModel]="fotoDesc()" (ngModelChange)="fotoDesc.set($event)" placeholder="Descripción (opcional)" />
-          <app-photo-slot label="Tomar foto" hint="📸" [foto]="fotoActual()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
-          <button type="button" class="btn-ghost liber__add-btn" (click)="agregarFoto()">+ Agregar foto</button>
+
+          @if (fotoActual(); as fa) {
+            <img class="liber__foto-preview" [src]="fa.previewUrl" alt="Foto recién tomada" />
+            <!-- "Repetir foto" JUNTO a "Agregar foto" (misma fila), fuera de la miniatura -->
+            <div class="liber__foto-actions">
+              <button type="button" class="btn-ghost" [disabled]="capturando()" (click)="tomarFoto()">🔁 Repetir foto</button>
+              <button type="button" class="btn-cta" (click)="agregarFoto()">+ Agregar foto</button>
+            </div>
+          } @else {
+            <button type="button" class="btn-cta liber__add-btn" [disabled]="capturando()" (click)="tomarFoto()">
+              {{ capturando() ? '⏳ Abriendo cámara…' : (fotos().length ? '📸 Tomar otra foto' : '📸 Tomar foto') }}
+            </button>
+          }
         </div>
 
         <label class="field-label" for="obs">Observaciones (opcional)</label>
@@ -131,23 +175,26 @@
       @if (step() === 4) {
         <h1 class="screen__title">Ciclo de firmas</h1>
         <p class="screen__subtitle">
-          Captura las firmas disponibles. Faltan obligatorias:
-          <b>{{ faltanObligatorias().length ? faltanObligatorias().join(', ') : 'ninguna ✓' }}</b>
+          Solo <b>Residente</b> y <b>Responsable</b> son obligatorias; Cliente y MIVHED son opcionales.
+          Puedes guardar y <b>solicitar</b> las firmas que falten.
         </p>
 
-        @if (firmas().length > 0) {
-          <ul class="liber__firma-list">
-            @for (f of firmas(); track f.rol) {
-              <li>
-                <span>{{ rolLabel(f.rol) }}</span>
-                @if (f.nombre) { <em>— {{ f.nombre }}</em> }
-                <button type="button" class="liber__foto-del" (click)="quitarFirma(f.rol)" aria-label="Quitar">✕</button>
-              </li>
-            }
-          </ul>
-        }
+        <!-- Q5 — checklist visual: verde al firmar -->
+        <div class="liber__firma-check">
+          @for (r of firmaEstados(); track r.value) {
+            <div class="liber__firma-row" [class.liber__firma-row--ok]="r.firmada">
+              <span class="liber__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
+              <span class="liber__firma-name">{{ r.label }}</span>
+              @if (r.firmada) {
+                <button type="button" class="liber__foto-del" (click)="quitarFirma(r.value)" aria-label="Quitar">✕</button>
+              } @else {
+                <span class="liber__firma-state">{{ r.obligatoria ? 'Pendiente' : 'Opcional' }}</span>
+              }
+            </div>
+          }
+        </div>
 
-        <label class="field-label">Rol que firma</label>
+        <label class="field-label">Rol que firma ahora</label>
         <div class="liber__roles">
           @for (r of roles; track r.value) {
             <app-option-button
@@ -161,8 +208,26 @@
         <label class="field-label" for="fnom">Nombre de quien firma</label>
         <input id="fnom" class="field" type="text" [ngModel]="firmaNombre()" (ngModelChange)="firmaNombre.set($event)" placeholder="Nombre y apellido" />
 
-        <app-signature-pad (changed)="firmaLista.set($event)" />
-        <button type="button" class="btn-ghost liber__add-btn" (click)="agregarFirma()">+ Agregar firma</button>
+        <!-- Q5 — el CLIENTE puede firmar subiendo una foto de la firma en papel -->
+        @if (firmaRol() === 'cliente') {
+          @if (firmaFoto(); as ff) {
+            <img class="liber__foto-preview" [src]="ff.previewUrl" alt="Foto de la firma" />
+            <div class="liber__foto-actions">
+              <button type="button" class="btn-ghost" (click)="quitarFirmaFoto()">Quitar foto</button>
+            </div>
+          } @else {
+            <div class="liber__foto-actions">
+              <button type="button" class="btn-ghost" (click)="subirFirmaFoto(false)">📷 Foto de la firma</button>
+              <button type="button" class="btn-ghost" (click)="subirFirmaFoto(true)">🖼️ Galería</button>
+            </div>
+          }
+        }
+
+        <!-- Pad (se ignora si el cliente subió una foto de la firma) -->
+        @if (!(firmaRol() === 'cliente' && firmaFoto())) {
+          <app-signature-pad (changed)="firmaLista.set($event)" />
+        }
+        <button type="button" class="btn-cta liber__add-btn" (click)="agregarFirma()">+ Agregar firma</button>
       }
 
       <!-- Step 5: resumen -->
@@ -175,13 +240,24 @@
           @if (bloque()) { <li><span>Bloque</span><b>{{ bloque() }}</b></li> }
           @if (eje()) { <li><span>Eje</span><b>{{ eje() }}</b></li> }
           <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
-          <li><span>Firmas</span><b>{{ firmas().length }}</b></li>
-          <li><span>Obligatorias</span><b>{{ faltanObligatorias().length ? 'faltan ' + faltanObligatorias().length : 'completas ✓' }}</b></li>
         </ul>
+
+        <!-- Q5 — estado de firmas (verde al firmar) -->
+        <h2 class="liber__section">Firmas</h2>
+        <div class="liber__firma-check">
+          @for (r of firmaEstados(); track r.value) {
+            <div class="liber__firma-row" [class.liber__firma-row--ok]="r.firmada">
+              <span class="liber__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
+              <span class="liber__firma-name">{{ r.label }}</span>
+              <span class="liber__firma-state">{{ r.firmada ? 'Firmada' : (r.obligatoria ? 'Pendiente' : 'Opcional') }}</span>
+            </div>
+          }
+        </div>
+
         @if (faltanObligatorias().length) {
           <p class="liber__warn">
             Puedes guardarlo como borrador; el vaciado no se liberará hasta que firmen
-            Residente, Responsable y Cliente.
+            <b>Residente</b> y <b>Responsable</b>. Podrás solicitar las firmas faltantes al guardar.
           </p>
         }
       }

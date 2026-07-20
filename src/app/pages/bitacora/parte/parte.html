@@ -103,10 +103,20 @@
                 <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, -1)" aria-label="Menos">−</button>
                 <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="a.cantidad" (ngModelChange)="setCantidadAct($index, $event)" />
                 <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, 1)" aria-label="Más">+</button>
-                @if (partidaDe(a.estructura); as p) {
-                  <span class="parte__plan">{{ p.unidad || '' }} · plan {{ p.cantidad_planeada }}</span>
-                }
+                <!-- Q6 — unidad de medida del trabajo realizado -->
+                <select class="field parte__unidad" [ngModel]="a.unidad ?? ''" (ngModelChange)="setUnidadAct($index, $event)">
+                  <option value="">Unidad…</option>
+                  @if (a.unidad && !unidades().includes(a.unidad)) {
+                    <option [value]="a.unidad">{{ a.unidad }}</option>
+                  }
+                  @for (u of unidades(); track u) {
+                    <option [value]="u">{{ u }}</option>
+                  }
+                </select>
               </div>
+              @if (partidaDe(a.estructura); as p) {
+                <span class="parte__plan">Plan: {{ p.cantidad_planeada }} {{ p.unidad || '' }}</span>
+              }
             </div>
           }
         }

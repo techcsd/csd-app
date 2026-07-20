@@ -106,6 +106,7 @@
   </div>
 } @else {
   <div class="screen preuso">
+    <app-wizard-exit title="Pre-uso del vehículo" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">

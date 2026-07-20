@@ -17,7 +17,20 @@
         (action)="load()"
       />
     } @else {
-      @for (b of bitacoras(); track b.id) {
+      <!-- Q9 — filtro por obra (segmentar) con conteo -->
+      @if (obras().length > 1) {
+        <div class="mis-partes__filtros">
+          <button type="button" class="mis-partes__chip" [class.mis-partes__chip--on]="filtroObra() === ''" (click)="setFiltroObra('')">
+            Todas ({{ bitacoras().length }})
+          </button>
+          @for (o of obras(); track o.nombre) {
+            <button type="button" class="mis-partes__chip" [class.mis-partes__chip--on]="filtroObra() === o.nombre" (click)="setFiltroObra(o.nombre)">
+              {{ o.nombre }} ({{ o.count }})
+            </button>
+          }
+        </div>
+      }
+      @for (b of filtradas(); track b.id) {
         <button type="button" class="bit-row" [attr.data-tipo]="b.tipo" (click)="open(b)">
           <div class="bit-row__info">
             <span class="bit-row__tipo">{{ titulo(b) }}</span>

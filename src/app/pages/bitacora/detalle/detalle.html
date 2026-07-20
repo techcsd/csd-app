@@ -55,7 +55,7 @@
         <h2 class="det__section">Actividades</h2>
         <ul class="det__list">
           @for (a of bit.actividades; track $index) {
-            <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · {{ a.cantidad }}</b> }</li>
+            <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · {{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</b> }</li>
           }
         </ul>
       }

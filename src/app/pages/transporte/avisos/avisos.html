@@ -19,14 +19,21 @@
           </div>
           @if (a.mensaje) { <p class="avisos__msg">{{ a.mensaje }}</p> }
           <p class="avisos__fecha">{{ fmtFecha(a.created_at) }}</p>
-          <button
-            type="button"
-            class="btn-cta avisos__cta"
-            [disabled]="busyId() === a.id"
-            (click)="accion(a)"
-          >
-            {{ busyId() === a.id ? 'Procesando…' : (esBloqueo(a) ? 'Reactivar vehículo' : 'Marcar atendido') }}
-          </button>
+          <div class="avisos__actions">
+            @if (puedeVer(a)) {
+              <button type="button" class="btn-ghost avisos__ver" (click)="irAlItem(a)">
+                {{ a.tipo === 'reporte_semanal' ? '📋 Ver reporte' : '🚚 Ver vehículo' }}
+              </button>
+            }
+            <button
+              type="button"
+              class="btn-cta avisos__cta"
+              [disabled]="busyId() === a.id"
+              (click)="accion(a)"
+            >
+              {{ busyId() === a.id ? 'Procesando…' : (esBloqueo(a) ? 'Reactivar vehículo' : 'Marcar atendido') }}
+            </button>
+          </div>
         </div>
       }
     }

@@ -55,8 +55,9 @@ export class ClLiberacionService {
     return data ?? [];
   }
 
-  /** Queue a liberación checklist. Works fully offline; syncs when there's signal. */
-  async enqueueCl(input: ClCaptura): Promise<void> {
+  /** Queue a liberación checklist. Works fully offline; syncs when there's signal.
+   *  Q5 — devuelve el id (client uuid) para poder "solicitar firma" del CL. */
+  async enqueueCl(input: ClCaptura): Promise<string> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
 
@@ -79,9 +80,11 @@ export class ClLiberacionService {
     });
 
     const firmasMeta = input.firmas.map((s, idx) => {
+      const metodo = s.metodo ?? 'pad';
+      const ext = metodo === 'foto' ? 'jpg' : 'png';
       const slot = `firma_${idx}`;
-      fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `cl/${id}/${slot}.png`, slot, blob: s.blob });
-      return { slot, rol: s.rol, nombre: s.nombre, orden: idx };
+      fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `cl/${id}/${slot}.${ext}`, slot, blob: s.blob });
+      return { slot, rol: s.rol, nombre: s.nombre, orden: idx, metodo };
     });
 
     await this.sync.enqueue({
@@ -108,6 +111,25 @@ export class ClLiberacionService {
       fotos,
       resumen: { proyecto: input.proyecto, plantilla: input.plantilla, capturado_en },
     });
+    return id;
+  }
+
+  /**
+   * Q5 — solicita las firmas faltantes creando una notificación del SGC (misma
+   * vía que la web) para el módulo de bitácora, con ruta al CL. Online-only.
+   */
+  async solicitarFirma(clId: string, obra: string, faltantes: string[]): Promise<void> {
+    const msg = faltantes.length
+      ? `Faltan firmas (${faltantes.join(', ')}) del checklist de liberación de ${obra}.`
+      : `Revisa y firma el checklist de liberación de ${obra}.`;
+    const { error } = await this.supabase.client.rpc('notificar_modulo', {
+      p_modulo: 'bitacora',
+      p_tipo: 'cl_firma',
+      p_titulo: 'Firma de liberación pendiente',
+      p_mensaje: msg,
+      p_ruta: `/bitacora/cl/${clId}`,
+    });
+    if (error) throw new Error(error.message);
   }
 
   private registerHandler(): void {
@@ -134,10 +156,11 @@ export class ClLiberacionService {
         rol: string;
         nombre: string | null;
         orden: number;
+        metodo?: string;
       }>;
       const firmas = firmasMeta
         .filter((s) => photoPaths[s.slot])
-        .map((s) => ({ rol: s.rol, usuario_id: null, nombre: s.nombre, firma_path: photoPaths[s.slot], orden: s.orden }));
+        .map((s) => ({ rol: s.rol, usuario_id: null, nombre: s.nombre, firma_path: photoPaths[s.slot], orden: s.orden, metodo: s.metodo ?? 'pad' }));
 
       const { error } = await this.supabase.client.rpc('registrar_cl_app', {
         p_id: payload['id'],

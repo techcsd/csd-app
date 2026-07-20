@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,6 +11,9 @@ import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -53,11 +56,11 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner, ConfirmDialog, WizardExit],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })
-export class ChecklistPage {
+export class ChecklistPage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private vehiculos = inject(VehiculosService);
@@ -65,6 +68,7 @@ export class ChecklistPage {
   private toast = inject(ToastService);
   private permissions = inject(PermissionsService);
   private autosave = inject(AutosaveService);
+  private navGuard = inject(NavGuardService);
   private borradorSvc = inject(BorradorService);
   private ctx = inject(UserContextService);
 
@@ -107,8 +111,17 @@ export class ChecklistPage {
 
   submitting = signal(false);
   done = signal(false);
+  confirmSalir = signal(false); // Q7 — salir con confirmación
 
   titulo = computed(() => (this.tipo === 'recepcion' ? 'Recibir vehículo' : 'Devolver vehículo'));
+
+  private readonly backHandler = (): boolean => {
+    if (!this.done() && this.tieneDatos()) {
+      this.confirmSalir.set(true);
+      return true;
+    }
+    return false;
+  };
 
   fotosCompletas = computed(() =>
     this.fotosReq.every((f) => !!this.fotos()[f.slot]),
@@ -138,6 +151,40 @@ export class ChecklistPage {
         ruta: `/transporte/${this.tipo === 'recepcion' ? 'recibir' : 'devolver'}/${this.vehiculoId}`,
       });
     });
+    this.navGuard.register(this.backHandler); // Q7 — botón físico Android
+  }
+
+  ngOnDestroy(): void {
+    this.navGuard.clear(this.backHandler);
+  }
+
+  /** Q7 — ¿hay algo capturado? (el estado se autoguarda como borrador). */
+  private tieneDatos(): boolean {
+    return (
+      this.km() != null ||
+      !!this.combustible() ||
+      this.tieneDanos() != null ||
+      this.danos().length > 0 ||
+      Object.keys(this.fotos()).length > 0 ||
+      !!this.firmaBlob()
+    );
+  }
+
+  /** Q7 — salir del wizard (con confirmación si hay datos). El estado ya queda
+   *  guardado como borrador vía autosave, así que se puede retomar luego. */
+  intentarSalir(): void {
+    if (!this.done() && this.tieneDatos()) this.confirmSalir.set(true);
+    else this.salir();
+  }
+  confirmarSalir(): void {
+    this.confirmSalir.set(false);
+    this.salir();
+  }
+  cancelarSalir(): void {
+    this.confirmSalir.set(false);
+  }
+  private salir(): void {
+    void this.router.navigate(['/transporte']);
   }
 
   private clave(): string {
