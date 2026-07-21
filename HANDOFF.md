@@ -1,6 +1,8 @@
 # HANDOFF — CSD App
 
-## Ronda 4 app — PROMPT-10 flota (2026-07-21) — v1.22.0 PUBLICADA + MÍNIMA
+## Ronda 4 app — PROMPT-10 flota (2026-07-21) — v1.22.1 PUBLICADA + MÍNIMA
+- **1.22.1 (cierre de sub-puntos):** S20 (perfil del vehículo compara rendimiento real vs esperado km/gal, columna `rendimiento_esperado_km_gal`), S24(c) (el chofer registra desde "Mi actividad" una multa que le pusieron), S32 completo (entregas/recepciones + desglose pre-usos vs semanales, en "Mi actividad" y perfil del conductor). Nuevos reads en `FlotaReportesService`: getEntregasConductor, getChecklistsBreakdown.
+
 Source: `CONTEXTO-ACTUALIZACION-3.md` (S15-S20, S26-S33 + §E S27-S31). Backend **PROMPT-9 verificado APLICADO en prod** (mis_rutas_hoy, crear_ruta_app c/ conductor+notificación, registrar_accidente/dano/multa_app, tablas vehiculo_accidentes/vehiculo_danos/conductor_multas, REPORTE-SEMANAL-V2 etiquetas cortas + copias físicas, registrar_checklist_vehiculo con fotos/firma/combustible, rendimiento_esperado_km_gal, v_conductor_stats, buckets vehiculos+flota-documentos upsert-safe) → **todo esto fue solo app**. `npm run build` VERDE. **NADA commiteado/publicado** (el prompt pidió no commit/push sin avisar).
 
 - **FASE 0 bugs — VERIFICADO en equipo real (los grandes):**
@@ -14,8 +16,8 @@ Source: `CONTEXTO-ACTUALIZACION-3.md` (S15-S20, S26-S33 + §E S27-S31). Backend 
 - **FASE 3 (S16):** `crearRuta` ahora manda `conductor_id` (el jefe asigna → dispara la notificación del trigger). `crear-ruta` gated a elevados (chofer redirigido a Conduces). Chofer ve rutas asignadas vía `mis_rutas_hoy` (ya existía en Conduces). **crear-ruta convertido a wizard tipo hoja de 6 pantallas** (vehículo → conductor → origen → destino → detalles → resumen).
 - **FASE 4 (S22/S24):** `FlotaReportesService` (accidente/daño/multa por outbox, handlers eager). Página `reportar-vehiculo` (wizard: accidente [fase→qué pasó→lesionados/tercero→acta AMET→resumen] o daño [zona chips→foto→resumen]) desde el perfil del vehículo. Página `reportar-multa` desde el perfil del conductor (elevados). Nota: el accidente guarda el acta AMET (el RPC no tiene array de fotos generales).
 - **FASE 5 (S32/S33):** S33 avisos de flota rediseñados (críticos arriba, iconos por tipo, filtro Todos/Críticos/Míos, marca CRÍTICO; mantiene Ver/Atender). S32: perfil del conductor Y **"Mi actividad"** (chofer) muestran **rutas asignadas, accidentes y multas** (drill-down a Conduces) además de los checklists/echadas existentes.
-- **RELEASE:** commiteado + pusheado a `main`; APK 1.22.0 firmado en bucket, historial registrado (Y1), **PUBLICADA + MÍNIMA** (1.21.1 despublicada).
-- **PENDIENTE:** device-QA de las features de flota (hub, semanal, rutas, accidente/daño/multa, avisos, actividad) + el visto de GPS ("📍 Capturada" ya con permiso concedido).
+- **RELEASE:** commiteado + pusheado a `main`; APK 1.22.1 firmado en bucket, historial registrado (Y1), **PUBLICADA + MÍNIMA** (1.22.0/1.21.1 despublicadas). Todos los S15-S20, S22, S24, S26-S33 del prompt están cubiertos en el app.
+- **PENDIENTE (único):** device-QA de las features de flota (hub, semanal, rutas, accidente/daño/multa, avisos, actividad) + el visto de GPS ("📍 Capturada" ya con permiso concedido). Las vistas WEB de SGC para accidentes/multas/dashboards (S20 web, S23, S25) son de PROMPT-9-SGC (otro repo), fuera del app.
 
 
 ## v1.21.1 PUBLICADA + MÍNIMA (2026-07-21) — arreglo arranque OFFLINE en frío

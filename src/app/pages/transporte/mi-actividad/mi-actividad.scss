@@ -148,3 +148,16 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+
+// S32/S24c — desglose + botón de multa.
+.mact__breakdown {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 14px;
+}
+.mact__multa {
+  width: 100%;
+  margin-bottom: 12px;
+}

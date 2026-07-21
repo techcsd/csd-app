@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.22.0';
+const VERSION = '1.22.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,25 +58,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.22.0';
+const MIN_VERSION = '1.22.1';
 const RELEASED_AT = '2026-07-21';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Transporte renovado: hub por cuadros, reporte semanal completo, rutas asignadas, accidentes/daños/multas y avisos';
+const TITULO = 'Actividad del conductor completa + rendimiento esperado vs real';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'Transporte rediseñado con cuadros grandes (como el menú principal) y “Registrar combustible” a un toque.' },
-  { t: 'nuevo', d: 'Reporte semanal rediseñado paso a paso, ahora con fotos, nivel de combustible y firma (igual que el pre-uso).' },
-  { t: 'mejora', d: 'El kilometraje te avisa en vivo si es menor al último registrado y cuánto falta para el mantenimiento, en pre-uso, reporte semanal y al recibir/devolver.' },
-  { t: 'nuevo', d: 'Crear ruta paso a paso: el jefe de flota se la asigna a un conductor, que recibe el aviso; el chofer solo ve las rutas que le asignaron.' },
-  { t: 'nuevo', d: 'Puedes reportar accidentes y daños de un vehículo, y registrarle multas a un conductor.' },
-  { t: 'mejora', d: 'Avisos de flota más claros: los críticos salen primero, con iconos por tipo y filtro (Todos / Críticos / Míos).' },
-  { t: 'mejora', d: 'El perfil del conductor y “Mi actividad” ahora muestran accidentes, multas y rutas.' },
-  { t: 'arreglo', d: 'Los envíos de combustible que se quedaban “en cola” para siempre ahora se envían; y lo que quede atascado se puede descartar.' },
-  { t: 'arreglo', d: 'Al reportar daños del vehículo ya puedes elegir libremente la zona (antes solo dejaba la primera).' },
-  { t: 'arreglo', d: 'El botón atrás ya no se queda en bucle entre pantallas de transporte y bitácora.' },
-  { t: 'arreglo', d: 'GPS de “recibir vehículo” más robusto: intenta más tiempo, acepta una ubicación reciente y avisa claro si la ubicación del teléfono está apagada o sin permiso.' },
+  { t: 'nuevo', d: 'La actividad del conductor ahora también muestra entregas/recepciones y separa los pre-usos de los reportes semanales.' },
+  { t: 'nuevo', d: 'El chofer puede registrar desde su actividad una multa que le pusieron.' },
+  { t: 'mejora', d: 'El perfil del vehículo compara el rendimiento real de combustible con el esperado (km/gal) y avisa si está por debajo.' },
 ];
 
 const TIPO_POR_COMMIT = {

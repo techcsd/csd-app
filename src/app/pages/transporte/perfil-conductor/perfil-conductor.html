@@ -114,6 +114,24 @@
         </section>
       }
 
+      <!-- S32 — Entregas/recepciones -->
+      @if (entregas().length) {
+        <section class="pcon__docs">
+          <h2 class="pcon__docs-title">Entregas y recepciones ({{ entregas().length }})</h2>
+          @for (e of entregas(); track e.id) {
+            <div class="pcon__act-row">
+              <span class="pcon__act-main">{{ e.tipo === 'recepcion' ? '📥 Recepción' : '📤 Devolución' }} · {{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
+              <span class="pcon__act-sub">{{ e.created_at ? fmtFecha(e.created_at) : '—' }}@if (e.km != null) { · {{ e.km }} km }</span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- S32 — desglose de checklists -->
+      @if (breakdown().preuso || breakdown().semanal) {
+        <p class="pcon__breakdown">📋 Pre-usos: <b>{{ breakdown().preuso }}</b> · Reportes semanales: <b>{{ breakdown().semanal }}</b></p>
+      }
+
       <!-- P3 — Documentos: editables (subir/reemplazar por outbox) si tienes
            permiso; solo lectura si no. -->
       <section class="pcon__docs">

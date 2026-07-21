@@ -37,6 +37,8 @@ export interface VehiculoDetalle {
   vencimiento_seguro: string | null;
   km_ultimo_mantenimiento: number | null;
   intervalo_mantenimiento_km: number | null;
+  /** S20 — rendimiento de referencia definido por el usuario (esperado). */
+  rendimiento_esperado_km_gal?: number | null;
 }
 
 export interface VehiculoACargo {

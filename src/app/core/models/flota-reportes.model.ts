@@ -53,6 +53,21 @@ export interface FlotaAccidente {
   vehiculo?: { placa: string } | null;
 }
 
+/** S32 — entrega/recepción en el perfil de actividad. */
+export interface FlotaEntrega {
+  id: string;
+  tipo: string; // recepcion | devolucion
+  km: number | null;
+  created_at: string | null;
+  vehiculo?: { placa: string } | null;
+}
+
+/** S32 — desglose de checklists por tipo (pre-uso vs semanal). */
+export interface ChecklistBreakdown {
+  preuso: number;
+  semanal: number;
+}
+
 /** Captura de "Me pusieron una multa" (S24). */
 export interface MultaCaptura {
   conductorId: string;

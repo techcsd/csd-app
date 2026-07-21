@@ -54,10 +54,21 @@
           }
         </div>
         <div class="pveh__card">
-          <span class="pveh__label">Rendimiento</span>
+          <span class="pveh__label">Rendimiento real</span>
           @if (stats()!.rendimiento_promedio != null) {
             <span class="pveh__value">{{ stats()!.rendimiento_promedio | number: '1.1-2' }} km/gal</span>
           } @else { <span class="pveh__value pveh__value--muted">—</span> }
+          <!-- S20 — esperado (manual) vs real -->
+          @if (rendimientoEsperado() != null) {
+            <span class="pveh__sub">Esperado: {{ rendimientoEsperado() | number: '1.1-2' }} km/gal</span>
+            @if (stats()!.rendimiento_promedio != null) {
+              @if (stats()!.rendimiento_promedio! >= rendimientoEsperado()!) {
+                <span class="pveh__sub">✅ En meta</span>
+              } @else {
+                <span class="pveh__sub pveh__sub--warn">⚠ Por debajo de lo esperado</span>
+              }
+            }
+          }
         </div>
         <div class="pveh__card">
           <span class="pveh__label">Costo por km</span>

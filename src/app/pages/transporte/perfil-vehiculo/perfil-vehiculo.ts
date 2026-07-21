@@ -10,6 +10,7 @@ import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
+import { CombustibleService } from '../../../core/services/combustible.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -52,6 +53,7 @@ export class PerfilVehiculoPage {
   private documentos = inject(DocumentosService);
   private conductores = inject(ConductoresService);
   private ctx = inject(UserContextService);
+  private combustible = inject(CombustibleService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -59,6 +61,9 @@ export class PerfilVehiculoPage {
 
   loading = signal(true);
   vehiculoId = signal('');
+  // S20 — rendimiento esperado (manual, del vehículo) vs real (promedio de echadas).
+  rendimientoEsperado = signal<number | null>(null);
+  rendimientoReal = signal<number | null>(null);
   placa = signal('');
   modelo = signal('');
   fotoUrl = signal<string | null>(null); // U6
@@ -134,6 +139,9 @@ export class PerfilVehiculoPage {
         if (veh.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(veh.foto_path));
       }
       this.stats.set(stats);
+      // S20 — rendimiento esperado (del detalle) vs promedio real (de echadas).
+      void this.vehiculos.getVehiculoDetalle(id).then((d) => this.rendimientoEsperado.set(d?.rendimiento_esperado_km_gal ?? null));
+      void this.combustible.getUltimaEchada(id).then((e) => this.rendimientoReal.set(e.promedio_rendimiento));
       await this.loadDocs(id);
       if (this.esAdmin()) {
         try {

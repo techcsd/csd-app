@@ -177,3 +177,12 @@
 .pcon__pagada {
   color: var(--color-success, #16a34a);
 }
+
+// S32 — desglose de checklists.
+.pcon__breakdown {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 14px;
+}

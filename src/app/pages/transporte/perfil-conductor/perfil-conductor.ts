@@ -8,7 +8,7 @@ import { GenerarAcceso } from '../../../shared/components/generar-acceso/generar
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
-import { FlotaAccidente, FlotaMulta } from '../../../core/models/flota-reportes.model';
+import { ChecklistBreakdown, FlotaAccidente, FlotaEntrega, FlotaMulta } from '../../../core/models/flota-reportes.model';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -68,9 +68,11 @@ export class PerfilConductorPage {
   otros = signal<DocView[]>([]);
   esMiPerfil = signal(false);
   esAdmin = () => this.ctx.hasModulo('admin');
-  // S32 — actividad: accidentes y multas del conductor.
+  // S32 — actividad: accidentes, multas, entregas y desglose de checklists.
   multas = signal<FlotaMulta[]>([]);
   accidentes = signal<FlotaAccidente[]>([]);
+  entregas = signal<FlotaEntrega[]>([]);
+  breakdown = signal<ChecklistBreakdown>({ preuso: 0, semanal: 0 });
 
   // P3 — permiso para subir/reemplazar documentos: admin, flota, o el propio
   // conductor (mismo criterio que la web). La ruta ya está gated a flota.
@@ -128,9 +130,12 @@ export class PerfilConductorPage {
       this.esMiPerfil.set(!!mio && mio.id === id);
       await this.loadDocs(id);
       await this.loadEnCola(id);
-      // S32 — accidentes + multas (best-effort, online).
+      // S32 — accidentes + multas + entregas + desglose (best-effort, online).
       void this.flotaReportes.getMultasConductor(id).then((m) => this.multas.set(m));
       void this.flotaReportes.getAccidentesConductor(id).then((a) => this.accidentes.set(a));
+      void this.flotaReportes.getChecklistsBreakdown(id).then((b) => this.breakdown.set(b));
+      const uid = this.conductor()?.usuario_id;
+      if (uid) void this.flotaReportes.getEntregasConductor(uid).then((e) => this.entregas.set(e));
     } finally {
       this.loading.set(false);
     }

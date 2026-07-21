@@ -3,8 +3,10 @@ import { SupabaseService } from './supabase.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import {
   AccidenteCaptura,
+  ChecklistBreakdown,
   DanoCaptura,
   FlotaAccidente,
+  FlotaEntrega,
   FlotaMulta,
   MultaCaptura,
 } from '../models/flota-reportes.model';
@@ -37,6 +39,35 @@ export class FlotaReportesService {
       .limit(50);
     if (error) return [];
     return (data as FlotaMulta[]) ?? [];
+  }
+
+  /** S32 — entregas/recepciones del conductor (por su usuario). Online. */
+  async getEntregasConductor(usuarioId: string): Promise<FlotaEntrega[]> {
+    if (!usuarioId) return [];
+    const { data, error } = await this.supabase.client
+      .from('vehiculo_entregas')
+      .select('id, tipo, km, created_at, vehiculo:vehiculos(placa)')
+      .eq('conductor_usuario_id', usuarioId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) return [];
+    return ((data as unknown as FlotaEntrega[]) ?? []);
+  }
+
+  /** S32 — desglose de checklists del conductor: pre-usos vs semanales. Online. */
+  async getChecklistsBreakdown(conductorId: string): Promise<ChecklistBreakdown> {
+    if (!conductorId) return { preuso: 0, semanal: 0 };
+    const { data, error } = await this.supabase.client
+      .from('checklists_vehiculo')
+      .select('tipo')
+      .eq('conductor_id', conductorId)
+      .limit(500);
+    if (error) return { preuso: 0, semanal: 0 };
+    const rows = (data as { tipo: string }[]) ?? [];
+    return {
+      preuso: rows.filter((r) => r.tipo === 'pre_uso').length,
+      semanal: rows.filter((r) => r.tipo === 'inspeccion').length,
+    };
   }
 
   /** S32 — accidentes del conductor (para su perfil de actividad). Online. */

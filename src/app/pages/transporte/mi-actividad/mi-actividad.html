@@ -102,6 +102,29 @@
         </section>
       }
 
+      <!-- S32 — entregas / recepciones -->
+      @if (entregas().length) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Entregas y recepciones ({{ entregas().length }})</h2>
+          @for (e of entregas(); track e.id) {
+            <div class="mact__act-row">
+              <span class="mact__act-main">{{ e.tipo === 'recepcion' ? '📥 Recepción' : '📤 Devolución' }} · {{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
+              <span class="mact__act-sub">{{ e.created_at ? fmtFecha(e.created_at) : '—' }}@if (e.km != null) { · {{ e.km }} km }</span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- S32 — desglose de checklists (pre-uso vs semanal) -->
+      @if (breakdown().preuso || breakdown().semanal) {
+        <p class="mact__breakdown">📋 Pre-usos: <b>{{ breakdown().preuso }}</b> · Reportes semanales: <b>{{ breakdown().semanal }}</b></p>
+      }
+
+      <!-- S24(c) — el chofer registra una multa que le pusieron -->
+      @if (esConductor()) {
+        <button type="button" class="btn-ghost mact__multa" (click)="miMulta()">🚦 Me pusieron una multa</button>
+      }
+
       <!-- X1 — documentos del conductor -->
       <section class="mact__docs">
         <h2 class="mact__docs-title">Mis documentos</h2>

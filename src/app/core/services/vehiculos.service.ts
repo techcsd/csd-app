@@ -164,7 +164,7 @@ export class VehiculosService {
         const { data, error } = await this.supabase.client
           .from('vehiculos')
           .select(
-            'id, placa, marca, modelo, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km',
+            'id, placa, marca, modelo, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
           )
           .eq('id', id)
           .single();

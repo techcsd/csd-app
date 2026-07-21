@@ -8,7 +8,7 @@ import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
-import { FlotaAccidente, FlotaMulta } from '../../../core/models/flota-reportes.model';
+import { ChecklistBreakdown, FlotaAccidente, FlotaEntrega, FlotaMulta } from '../../../core/models/flota-reportes.model';
 import { RutaHoy } from '../../../core/models/transporte.model';
 import { ConductorStats } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
@@ -41,6 +41,8 @@ export class MiActividadPage {
   rutas = signal<RutaHoy[]>([]);
   accidentes = signal<FlotaAccidente[]>([]);
   multas = signal<FlotaMulta[]>([]);
+  entregas = signal<FlotaEntrega[]>([]);
+  breakdown = signal<ChecklistBreakdown>({ preuso: 0, semanal: 0 });
   fmtFecha = formatFecha; // U9 — fecha date-only
   fmtFechaMedia = formatFechaMedia; // U9 — timestamp
 
@@ -76,10 +78,12 @@ export class MiActividadPage {
         this.condId.set(cond.id);
         this.stats.set(await this.conductores.getMiStats());
         await this.loadDocs();
-        // S32 — rutas asignadas + accidentes + multas (best-effort, online).
+        // S32 — rutas asignadas + accidentes + multas + entregas + desglose (best-effort, online).
         void this.conduces.misRutas().then((r) => this.rutas.set(r));
         void this.flotaReportes.getAccidentesConductor(cond.id).then((a) => this.accidentes.set(a));
         void this.flotaReportes.getMultasConductor(cond.id).then((m) => this.multas.set(m));
+        void this.flotaReportes.getChecklistsBreakdown(cond.id).then((b) => this.breakdown.set(b));
+        if (cond.usuario_id) void this.flotaReportes.getEntregasConductor(cond.usuario_id).then((e) => this.entregas.set(e));
       }
     } finally {
       this.loading.set(false);
@@ -126,6 +130,12 @@ export class MiActividadPage {
   /** S32 — drill-down a "Conduces y rutas". */
   verRutas(): void {
     void this.router.navigate(['/transporte/conduces']);
+  }
+
+  /** S24(c) — el chofer registra una multa que le pusieron (ligada a él). */
+  miMulta(): void {
+    const id = this.condId();
+    if (id) void this.router.navigate(['/transporte/conductor', id, 'multa']);
   }
 
   back(): void {
