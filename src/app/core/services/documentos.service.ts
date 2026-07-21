@@ -104,26 +104,20 @@ export class DocumentosService {
   private registerHandler(): void {
     this.sync.register(TIPO_OP, async (payload, photoPaths) => {
       const path = photoPaths['documento'];
-      const { data: userData } = await this.supabase.client.auth.getUser();
-      const uid = userData.user?.id ?? null;
-      // P3 — usar ON CONFLICT DO NOTHING (ignoreDuplicates), NO DO UPDATE: el rol
-      // `authenticated` tiene INSERT en sgc.documentos pero NO UPDATE, y un upsert
-      // con DO UPDATE exige UPDATE → fallaba con 42501 "permission denied" y la
-      // subida nunca aterrizaba (los archivos sí subían a Storage, pero la fila de
-      // sgc.documentos nunca se creaba → "sin documentos"). Como el `id` es un UUID
-      // de cliente único, DO NOTHING es idempotente en los reenvíos.
-      const { error } = await this.supabase.client.from('documentos').upsert(
-        {
-          id: payload['id'],
-          entidad: payload['entidad'],
-          entidad_id: payload['entidad_id'],
-          tipo: payload['tipo'],
-          nombre: (payload['nombre'] as string) ?? null,
-          path,
-          subido_por: uid,
-        },
-        { onConflict: 'id', ignoreDuplicates: true },
-      );
+      // La fila de sgc.documentos se crea vía RPC `security definer`
+      // (registrar_documento_app), como TODOS los demás writes de la app. Corre
+      // como owner (bypassa la RLS de la tabla) e inserta idempotente por el UUID
+      // de cliente. Antes se insertaba DIRECTO en la tabla → fallaba por RLS/permiso
+      // y la subida nunca aterrizaba ("sin documentos"). La foto ya subió a Storage
+      // en uploadPhotos (bucket flota-documentos).
+      const { error } = await this.supabase.client.rpc('registrar_documento_app', {
+        p_id: payload['id'],
+        p_entidad: payload['entidad'],
+        p_entidad_id: payload['entidad_id'],
+        p_tipo: payload['tipo'],
+        p_nombre: (payload['nombre'] as string) ?? null,
+        p_path: path,
+      });
       if (error) throwSyncError(error);
     });
   }
