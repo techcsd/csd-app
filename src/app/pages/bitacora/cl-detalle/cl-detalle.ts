@@ -10,7 +10,7 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
 import { ClLiberacionService } from '../../../core/services/cl-liberacion.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { ClFirmaRol, ClRegistroDetalle, CL_FIRMA_ROLES } from '../../../core/models/cl-liberacion.model';
+import { ClFirmaRol, ClItemRevision, ClRegistroDetalle, CL_FIRMA_ROLES } from '../../../core/models/cl-liberacion.model';
 import { formatFechaHumana } from '../../../core/util/fecha';
 
 /**
@@ -58,6 +58,22 @@ export class ClDetallePage {
     return CL_FIRMA_ROLES.map((r) => ({ ...r, firmada: puestas.has(r.value) }));
   });
 
+  // S14 — ítems del review agrupados por sección.
+  gruposItems = computed(() => {
+    const items = this.cl()?.items ?? [];
+    const grupos = new Map<string, ClItemRevision[]>();
+    for (const it of items) {
+      const s = it.seccion?.trim() || 'General';
+      if (!grupos.has(s)) grupos.set(s, []);
+      grupos.get(s)!.push(it);
+    }
+    return [...grupos.entries()].map(([seccion, items]) => ({ seccion, items }));
+  });
+  // Etiqueta de la firma existente por rol (para mostrar quién firmó).
+  firmaDe(rol: string): { nombre: string | null; firma_url?: string | null } | undefined {
+    return (this.cl()?.firmas ?? []).find((f) => f.rol === rol);
+  }
+
   constructor() {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
     void this.load();
@@ -79,6 +95,10 @@ export class ClDetallePage {
 
   pickRol(rol: ClFirmaRol): void {
     this.firmaRol.set(rol);
+  }
+
+  rolLabel(rol: ClFirmaRol): string {
+    return CL_FIRMA_ROLES.find((r) => r.value === rol)?.label ?? rol;
   }
 
   async subirFirmaFoto(desdeGaleria: boolean): Promise<void> {

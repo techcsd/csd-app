@@ -53,6 +53,24 @@ export class BorradorService {
     await this.clearFotos(clave);
   }
 
+  /**
+   * S5 — migra el borrador de parte con la clave fija legacy `'parte_diario'` a
+   * una clave por instancia (`parte_diario:{uuid}`), para que conviva con otros
+   * borradores sin sobreescribirse. Idempotente: no hace nada si no existe.
+   */
+  async migrateLegacyParte(): Promise<void> {
+    try {
+      const legacy = await db.borradores.get('parte_diario');
+      if (!legacy) return;
+      const nueva = `parte_diario:${crypto.randomUUID()}`;
+      await db.borradores.put({ ...legacy, clave: nueva });
+      await db.borradores.delete('parte_diario');
+      // Los borradores de parte nunca persistieron fotos, no hay nada más que mover.
+    } catch {
+      /* la migración nunca debe romper la apertura del wizard */
+    }
+  }
+
   // ── M1 — fotos de borrador (recuperación tras kill del SO) ────────────────
 
   /** Persist (or replace) one draft photo. WebKit-safe: stores ArrayBuffer. */

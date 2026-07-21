@@ -2,36 +2,38 @@
   background: var(--color-bg);
 }
 
-.incidente__header {
+.incidente__topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 12px 16px;
   background: var(--color-error);
   color: #fff;
 }
-.incidente__back {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+.incidente__topback {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
 }
 .incidente__icon {
-  font-size: 28px;
+  font-size: 24px;
 }
-.incidente__title {
-  margin: 0;
-  font-size: var(--fs-title);
-  font-weight: 800;
-}
-
-.incidente__q {
+.incidente__topttl {
   font-size: var(--fs-option);
   font-weight: 700;
-  margin: 22px 0 10px;
+}
+
+.incidente__textarea {
+  width: 100%;
+  resize: vertical;
+}
+.incidente__warn {
+  color: var(--color-error);
+  font-weight: 700;
 }
 
 app-option-button {

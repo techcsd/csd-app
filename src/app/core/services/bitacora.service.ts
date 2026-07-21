@@ -2,7 +2,16 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ActividadEntry, BitacoraFull, EquipoAlquilado, Proyecto, ProyectoPartida } from '../models/bitacora.model';
+import {
+  ActividadEntry,
+  BitacoraFull,
+  CatOrdenado,
+  EquipoAlquilado,
+  IncidenteTipo,
+  Proyecto,
+  ProyectoPartida,
+  SUCESO_TIPO_POR_INCIDENTE,
+} from '../models/bitacora.model';
 
 const CATALOG_PROYECTOS = 'proyectos';
 const BUCKET = 'sgc-bitacora';
@@ -34,13 +43,19 @@ export interface ParteDiarioCaptura {
 
 export interface IncidenteCaptura {
   proyectoId: string;
-  tipo: 'incidente' | 'accidente';
+  tipo: IncidenteTipo;
   gravedad: string;
   lesionados: number;
   descripcion: string | null;
   // W3 — acciones/medidas tomadas + subcontratista (paridad con la web).
   acciones: string | null;
   subcontratista: string | null;
+  // S13 — suceso elegido del catálogo ("¿qué pasó?").
+  suceso: string | null;
+  // S12 — campos del "incidente de equipo".
+  equipoNombre: string | null;
+  equipoAlquilado: boolean | null;
+  equipoOperativo: boolean | null;
   fotos: Blob[];
   voz: Blob | null;
 }
@@ -79,6 +94,62 @@ export class BitacoraService {
     return { estructuras: by('estructura'), actividades: by('actividad'), restricciones: by('restriccion') };
   }
 
+  /**
+   * S2 — estructuras y actividades ya ordenadas por el servidor para esta obra:
+   * orden de ejecución + las ~3 más usadas de la obra primero (`destacado`).
+   * Cacheado por proyecto (offline). Si el RPC falla/no hay señal, degrada al
+   * catálogo plano (getCatalogos) manteniendo el orden que traiga.
+   */
+  async getCatalogoOrdenado(
+    proyectoId: string,
+  ): Promise<{ estructuras: CatOrdenado[]; actividades: CatOrdenado[] }> {
+    const key = `catalogo_ordenado_${proyectoId}`;
+    const rows = await this.catalog.refresh<{ tipo: string; valor: string; destacado: boolean }[]>(
+      key,
+      async () => {
+        const { data, error } = await this.supabase.client.rpc('catalogo_ordenado', {
+          p_proyecto_id: proyectoId,
+        });
+        if (error) throw new Error(error.message);
+        // El RPC ya devuelve las filas ordenadas (destacadas primero, luego orden).
+        return ((data as { tipo: string; valor: string; activo: boolean; destacado: boolean }[]) ?? [])
+          .filter((r) => r.activo !== false)
+          .map((r) => ({ tipo: r.tipo, valor: r.valor, destacado: !!r.destacado }));
+      },
+    );
+    const list = rows ?? [];
+    if (list.length) {
+      const by = (t: string): CatOrdenado[] =>
+        list.filter((r) => r.tipo === t).map((r) => ({ valor: r.valor, destacado: r.destacado }));
+      return { estructuras: by('estructura'), actividades: by('actividad') };
+    }
+    // Fallback: catálogo plano (sin ranking) → ninguno destacado.
+    const plano = await this.getCatalogos();
+    const wrap = (vals: string[]): CatOrdenado[] => vals.map((v) => ({ valor: v, destacado: false }));
+    return { estructuras: wrap(plano.estructuras), actividades: wrap(plano.actividades) };
+  }
+
+  /**
+   * S13 — sucesos probables ("¿qué pasó?") del catálogo, por tipo de incidente.
+   * `tipo` es 'incidente'|'accidente'|'incidente_equipo'; lee las filas
+   * suceso_* de bitacora_catalogos, cacheadas offline.
+   */
+  async getSucesos(tipo: IncidenteTipo): Promise<string[]> {
+    const catTipo = SUCESO_TIPO_POR_INCIDENTE[tipo];
+    const data = await this.catalog.refresh<string[]>(`sucesos_${catTipo}`, async () => {
+      const { data, error } = await this.supabase.client
+        .from('bitacora_catalogos')
+        .select('valor, orden')
+        .eq('tipo', catTipo)
+        .eq('activo', true)
+        .order('orden', { ascending: true })
+        .order('valor', { ascending: true });
+      if (error) throw new Error(error.message);
+      return ((data as { valor: string }[]) ?? []).map((r) => r.valor);
+    });
+    return data ?? [];
+  }
+
   async getProyectos(): Promise<Proyecto[]> {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
       const { data, error } = await this.supabase.client
@@ -94,6 +165,15 @@ export class BitacoraService {
   async enqueueParteDiario(input: ParteDiarioCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    // S3/S4 — el "sujeto" ahora vive por actividad (bloque). Para paridad con la
+    // web/BD (columna de cabecera bitacoras.bloque_entrepiso) mandamos el resumen
+    // de bloques distintos, o el campo suelto si aún no hay actividades con bloque.
+    const bloquesDistintos = [
+      ...new Set(input.actividades.map((a) => (a.bloque ?? '').trim()).filter(Boolean)),
+    ];
+    const bloqueEntrepiso = bloquesDistintos.length
+      ? bloquesDistintos.join(', ')
+      : input.bloqueEntrepiso;
     await this.sync.enqueue({
       id,
       tipo_op: 'bitacora',
@@ -108,7 +188,7 @@ export class BitacoraService {
         personal_acero: input.personalAcero,
         trabajadores_casa: input.trabajadoresCasa,
         otro_personal: input.otroPersonal,
-        bloque_entrepiso: input.bloqueEntrepiso,
+        bloque_entrepiso: bloqueEntrepiso,
         ingeniero_responsable: input.ingenieroResponsable,
         hora_fin_trabajo: input.horaFinTrabajo,
         actividades: input.actividades.map((a) => ({
@@ -116,6 +196,7 @@ export class BitacoraService {
           actividad: a.actividad,
           cantidad: a.cantidad ?? null,
           unidad: a.unidad ?? null, // Q6 — unidad del trabajo realizado
+          bloque: a.bloque?.trim() || null, // S4 — sujeto de esta actividad
         })),
         restricciones: input.restricciones.map((r) => ({
           tipo_restriccion: r.tipo_restriccion,
@@ -125,11 +206,15 @@ export class BitacoraService {
         lluvia_detalle: input.lluviaDetalle,
         hubo_migracion: input.huboMigracion,
         migracion_obreros: input.migracionObreros,
-        hubo_equipos: input.huboEquipos,
+        // S7 — hay equipos si hay alguno en uso, para retirar o dañado.
+        hubo_equipos: input.huboEquipos || input.equiposAlquilados.length > 0,
         equipos_alquilados: input.equiposAlquilados.map((e) => ({
           equipo: e.equipo,
           uso: e.uso,
           proveedor: e.proveedor,
+          para_retirar: !!e.para_retirar, // S7
+          danado: !!e.danado, // S7
+          dano_detalle: e.dano_detalle ?? null, // S7
         })),
         capturado_en,
       },
@@ -187,6 +272,11 @@ export class BitacoraService {
         incidente_descripcion: input.descripcion,
         incidente_acciones: input.acciones,
         incidente_subcontratista: input.subcontratista,
+        // S13 — suceso elegido + S12 — campos de equipo.
+        incidente_suceso: input.suceso,
+        incidente_equipo_nombre: input.equipoNombre,
+        incidente_equipo_alquilado: input.equipoAlquilado,
+        incidente_equipo_operativo: input.equipoOperativo,
         capturado_en,
       },
       fotos: [
@@ -205,7 +295,7 @@ export class BitacoraService {
       const { data, error } = await this.supabase.client
         .from('bitacoras')
         .select(
-          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })
@@ -284,6 +374,11 @@ export class BitacoraService {
         p_incidente_lesionados: payload['incidente_lesionados'] ?? 0,
         p_incidente_descripcion: payload['incidente_descripcion'] ?? null,
         p_incidente_acciones: payload['incidente_acciones'] ?? null,
+        // S13/S12 — suceso + campos del incidente de equipo.
+        p_incidente_suceso: payload['incidente_suceso'] ?? null,
+        p_incidente_equipo_nombre: payload['incidente_equipo_nombre'] ?? null,
+        p_incidente_equipo_alquilado: payload['incidente_equipo_alquilado'] ?? null,
+        p_incidente_equipo_operativo: payload['incidente_equipo_operativo'] ?? null,
         p_fotos: fotos,
         p_capturado_en: payload['capturado_en'],
         p_llovio: payload['llovio'] ?? null,

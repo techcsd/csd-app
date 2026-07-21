@@ -69,56 +69,107 @@
         <input class="field" type="text" [ngModel]="otroPersonal()" (ngModelChange)="otroPersonal.set($event)" placeholder="Ej: 2 ayudantes" />
       }
 
-      <!-- 5. Actividades (con cantidad) -->
+      <!-- 5. ¿Qué se hizo hoy? — sujeto → actividades → ¿otro bloque? (S3/S4) -->
       @if (step() === 5) {
-        <h1 class="screen__title">¿Qué se hizo hoy?</h1>
-        <p class="screen__subtitle">Elige la parte, toca lo que se hizo y abajo pones la cantidad.</p>
+        <!-- 5a — sujeto (piso/bloque/edificio) ARRIBA -->
+        @if (paso5() === 'sujeto') {
+          <h1 class="screen__title">¿En qué bloque, piso o edificio?</h1>
+          <p class="screen__subtitle">Primero dinos de qué parte de la obra vas a hablar.</p>
+          <input
+            class="field"
+            type="text"
+            list="bloques-sugeridos"
+            [ngModel]="sujetoActual()"
+            (ngModelChange)="sujetoActual.set($event)"
+            placeholder="Ej: Bloque B · 3er nivel"
+            aria-label="Bloque, piso o edificio"
+          />
+          <datalist id="bloques-sugeridos">
+            @for (b of bloques(); track b) { <option [value]="b"></option> }
+          </datalist>
 
-        <label class="field-label">¿En qué parte?</label>
-        <div class="parte__chips">
-          @for (e of estructuras(); track e) {
-            <button type="button" class="chip" [class.chip--on]="parteActual() === e" (click)="toggleEstructura(e)">{{ e }}</button>
-          }
-        </div>
-
-        @if (parteActual()) {
-          <label class="field-label">¿Qué se hizo en {{ parteActual() }}? (toca para agregar)</label>
-          <div class="parte__chips">
-            @for (ac of actividadesCat(); track ac) {
-              <button type="button" class="chip" [class.chip--on]="actividadOn(ac)" (click)="toggleActividad(ac)">{{ ac }}</button>
-            }
-          </div>
-        }
-
-        <!-- Lista de lo agregado, cada uno con su cantidad (aparece al tocar) -->
-        @if (actividades().length) {
-          <label class="field-label">Cantidad de cada trabajo</label>
-          @for (a of actividades(); track $index) {
-            <div class="parte__actrow">
-              <div class="parte__actrow-top">
-                <span class="parte__actrow-name">{{ a.estructura }} · {{ a.actividad }}</span>
-                <button type="button" class="parte__act-x" (click)="removeActividad($index)">Quitar</button>
-              </div>
-              <div class="parte__actrow-qty">
-                <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, -1)" aria-label="Menos">−</button>
-                <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="a.cantidad" (ngModelChange)="setCantidadAct($index, $event)" />
-                <button type="button" class="parte__step" (click)="ajustarCantidadAct($index, 1)" aria-label="Más">+</button>
-                <!-- Q6 — unidad de medida del trabajo realizado -->
-                <select class="field parte__unidad" [ngModel]="a.unidad ?? ''" (ngModelChange)="setUnidadAct($index, $event)">
-                  <option value="">Unidad…</option>
-                  @if (a.unidad && !unidades().includes(a.unidad)) {
-                    <option [value]="a.unidad">{{ a.unidad }}</option>
-                  }
-                  @for (u of unidades(); track u) {
-                    <option [value]="u">{{ u }}</option>
-                  }
-                </select>
-              </div>
-              @if (partidaDe(a.estructura); as p) {
-                <span class="parte__plan">Plan: {{ p.cantidad_planeada }} {{ p.unidad || '' }}</span>
+          @if (bloques().length) {
+            <label class="field-label">Ya registraste (toca para agregarle más)</label>
+            <div class="parte__chips">
+              @for (b of bloques(); track b) {
+                <button type="button" class="chip" (click)="editarBloque(b)">📍 {{ b }}</button>
               }
             </div>
           }
+        }
+
+        <!-- 5b — estructuras + actividades del sujeto (ordenadas, más usadas primero) -->
+        @if (paso5() === 'actividades') {
+          <h1 class="screen__title">¿Qué se hizo en {{ sujetoActual() }}?</h1>
+          <p class="screen__subtitle">Elige la parte, toca lo que se hizo y abajo la cantidad. ★ = más usadas aquí.</p>
+
+          <label class="field-label">¿En qué parte?</label>
+          <div class="parte__chips">
+            @for (e of estructuras(); track e.valor) {
+              <button type="button" class="chip" [class.chip--on]="parteActual() === e.valor" (click)="toggleEstructura(e.valor)">
+                @if (e.destacado) { <span class="chip__star">★</span> }{{ e.valor }}
+              </button>
+            }
+          </div>
+
+          @if (parteActual()) {
+            <label class="field-label">¿Qué se hizo en {{ parteActual() }}? (toca para agregar)</label>
+            <div class="parte__chips">
+              @for (ac of actividadesCat(); track ac.valor) {
+                <button type="button" class="chip" [class.chip--on]="actividadOn(ac.valor)" (click)="toggleActividad(ac.valor)">
+                  @if (ac.destacado) { <span class="chip__star">★</span> }{{ ac.valor }}
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Lista de lo agregado en este bloque, cada uno con su cantidad -->
+          @if (actividadesDelSujeto().length) {
+            <label class="field-label">Cantidad de cada trabajo</label>
+            @for (row of actividadesDelSujeto(); track row.i) {
+              <div class="parte__actrow">
+                <div class="parte__actrow-top">
+                  <span class="parte__actrow-name">{{ row.a.estructura }} · {{ row.a.actividad }}</span>
+                  <button type="button" class="parte__act-x" (click)="removeActividad(row.i)">Quitar</button>
+                </div>
+                <div class="parte__actrow-qty">
+                  <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, -1)" aria-label="Menos">−</button>
+                  <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="row.a.cantidad" (ngModelChange)="setCantidadAct(row.i, $event)" />
+                  <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, 1)" aria-label="Más">+</button>
+                  <select class="field parte__unidad" [ngModel]="row.a.unidad ?? ''" (ngModelChange)="setUnidadAct(row.i, $event)">
+                    <option value="">Unidad…</option>
+                    @if (row.a.unidad && !unidades().includes(row.a.unidad)) {
+                      <option [value]="row.a.unidad">{{ row.a.unidad }}</option>
+                    }
+                    @for (u of unidades(); track u) {
+                      <option [value]="u">{{ u }}</option>
+                    }
+                  </select>
+                </div>
+                @if (partidaDe(row.a.estructura); as p) {
+                  <span class="parte__plan">Plan: {{ p.cantidad_planeada }} {{ p.unidad || '' }}</span>
+                }
+              </div>
+            }
+          }
+        }
+
+        <!-- 5c — ¿otro bloque? (multi-bloque) -->
+        @if (paso5() === 'otro') {
+          <h1 class="screen__title">¿Trabajaste en otro bloque, piso o edificio?</h1>
+          <p class="screen__subtitle">Lo que llevas queda guardado. Puedes agregar otro o continuar.</p>
+
+          <label class="field-label">Lo registrado hasta ahora</label>
+          <div class="parte__bloques-resumen">
+            @for (g of resumenPorBloque(); track g.bloque) {
+              <div class="parte__bloque-card">
+                <span class="parte__bloque-name">📍 {{ g.bloque }}</span>
+                <span class="parte__bloque-count">{{ g.items.length }} trabajo(s)</span>
+              </div>
+            }
+          </div>
+
+          <app-option-button icon="➕" label="Sí, trabajé en otro bloque" (pressed)="otroBloque()" />
         }
       }
 
@@ -129,7 +180,6 @@
         <div class="parte__restr">
           @for (r of restriccionesCat(); track r) {
             <app-option-button [label]="r" [selected]="restricciones().includes(r)" (pressed)="toggleRestriccion(r)" />
-            <!-- U12 — describa cada restricción seleccionada (obligatorio, menos NINGUNA) -->
             @if (requiereDescripcion(r)) {
               <input
                 class="field parte__restr-desc"
@@ -144,12 +194,12 @@
         </div>
       }
 
-      <!-- 7. Fotos (sin límite — cámara o galería en lote) -->
+      <!-- 7. Fotos (mínimo 2 — S6) -->
       @if (step() === 7) {
         <h1 class="screen__title">Fotos de la obra</h1>
         <p class="screen__subtitle">
-          Agrega las que quieras, de la cámara o de la galería.
-          @if (fotos().length) { <b>{{ fotos().length }} agregada(s).</b> }
+          Mínimo {{ minFotos }}. Llevas <b>{{ fotos().length }}</b>.
+          @if (fotos().length < minFotos) { <span class="parte__warn">Faltan {{ minFotos - fotos().length }}.</span> }
         </p>
         <div class="parte__fotos">
           @for (f of fotos(); track f.previewUrl) {
@@ -169,90 +219,150 @@
         </div>
       }
 
-      <!-- 8. Equipos alquilados (W2) -->
+      <!-- 8. Equipos alquilados — uso → retirar → dañados (S7) -->
       @if (step() === 8) {
-        <h1 class="screen__title">¿Hay equipos alquilados en uso hoy?</h1>
-        <p class="screen__subtitle">Grúas, retroexcavadoras, plantas eléctricas… lo que esté rentado.</p>
-        <app-option-button icon="🚜" label="Sí" tone="warning" [selected]="huboEquipos() === true" (pressed)="onHuboEquiposChange(true)" />
-        <app-option-button icon="🚫" label="No" tone="success" [selected]="huboEquipos() === false" (pressed)="onHuboEquiposChange(false)" />
+        <datalist id="equipos-sugeridos">
+          @for (s of equiposSugeridos(); track s) { <option [value]="s"></option> }
+        </datalist>
 
-        @if (huboEquipos()) {
-          <datalist id="equipos-sugeridos">
-            @for (s of equiposSugeridos(); track s) {
-              <option [value]="s"></option>
+        <!-- 8a — en uso -->
+        @if (paso8() === 'uso') {
+          <h1 class="screen__title">¿Hay equipos alquilados en uso hoy?</h1>
+          <p class="screen__subtitle">Grúas, retroexcavadoras, plantas eléctricas… lo que esté rentado.</p>
+          <app-option-button icon="🚜" label="Sí" tone="warning" [selected]="huboEquipos() === true" (pressed)="onHuboEquiposChange(true)" />
+          <app-option-button icon="🚫" label="No" tone="success" [selected]="huboEquipos() === false" (pressed)="onHuboEquiposChange(false)" />
+
+          @if (huboEquipos()) {
+            @for (e of equiposAlquilados(); track $index) {
+              @if (!e.soloRetiroDano) {
+                <div class="parte__equipo">
+                  <div class="parte__equipo-top">
+                    <span class="parte__equipo-num">Equipo</span>
+                    <button type="button" class="parte__act-x" (click)="removeEquipo(e)">Quitar</button>
+                  </div>
+                  <input class="field" type="text" list="equipos-sugeridos" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" placeholder="Equipo (ej: Retroexcavadora)" aria-label="Equipo" />
+                  <input class="field" type="text" [ngModel]="e.uso" (ngModelChange)="updateEquipo(e, 'uso', $event)" placeholder="¿En qué se usó? (obligatorio)" aria-label="Uso del equipo" />
+                  <input class="field" type="text" [ngModel]="e.proveedor" (ngModelChange)="updateEquipo(e, 'proveedor', $event)" placeholder="Proveedor (opcional)" aria-label="Proveedor del equipo" />
+                </div>
+              }
             }
-          </datalist>
-          @for (e of equiposAlquilados(); track $index) {
-            <div class="parte__equipo">
-              <div class="parte__equipo-top">
-                <span class="parte__equipo-num">Equipo {{ $index + 1 }}</span>
-                <button type="button" class="parte__act-x" (click)="removeEquipo($index)">Quitar</button>
-              </div>
-              <input
-                class="field"
-                type="text"
-                list="equipos-sugeridos"
-                [ngModel]="e.equipo"
-                (ngModelChange)="updateEquipo($index, 'equipo', $event)"
-                placeholder="Equipo (ej: Retroexcavadora)"
-                aria-label="Equipo"
-              />
-              <input
-                class="field"
-                type="text"
-                [ngModel]="e.uso"
-                (ngModelChange)="updateEquipo($index, 'uso', $event)"
-                placeholder="¿En qué se usó? (obligatorio)"
-                aria-label="Uso del equipo"
-              />
-              <input
-                class="field"
-                type="text"
-                [ngModel]="e.proveedor"
-                (ngModelChange)="updateEquipo($index, 'proveedor', $event)"
-                placeholder="Proveedor (opcional)"
-                aria-label="Proveedor del equipo"
-              />
+            <button type="button" class="btn-ghost" (click)="addEquipo()">+ Agregar otro equipo</button>
+          }
+        }
+
+        <!-- 8b — para retirar -->
+        @if (paso8() === 'retirar') {
+          <h1 class="screen__title">¿Hay equipos alquilados para retirar?</h1>
+          <p class="screen__subtitle">Se avisará al transportista para que lo pase a buscar.</p>
+          <app-option-button icon="📦" label="Sí" tone="warning" [selected]="hayRetirar() === true" (pressed)="onHayRetirarChange(true)" />
+          <app-option-button icon="🚫" label="No" tone="success" [selected]="hayRetirar() === false" (pressed)="onHayRetirarChange(false)" />
+
+          @if (hayRetirar()) {
+            <label class="field-label">Toca el equipo a retirar</label>
+            @for (e of equiposAlquilados(); track $index) {
+              @if (e.equipo.trim()) {
+                <app-option-button [label]="e.equipo" icon="📦" [selected]="e.para_retirar" (pressed)="toggleRetirar(e)" />
+              }
+            }
+            <label class="field-label">¿No está en la lista? Escríbelo</label>
+            <div class="parte__addrow">
+              <input class="field" type="text" list="equipos-sugeridos" [ngModel]="retiroNombre()" (ngModelChange)="retiroNombre.set($event)" placeholder="Equipo a retirar" aria-label="Otro equipo a retirar" />
+              <button type="button" class="btn-ghost" (click)="addEquipoRetirar()">Agregar</button>
             </div>
           }
-          <button type="button" class="btn-ghost" (click)="addEquipo()">+ Agregar otro equipo</button>
+        }
+
+        <!-- 8c — dañados -->
+        @if (paso8() === 'danado') {
+          <h1 class="screen__title">¿Hay equipos dañados?</h1>
+          <app-option-button icon="🛠️" label="Sí" tone="warning" [selected]="hayDanados() === true" (pressed)="onHayDanadosChange(true)" />
+          <app-option-button icon="🚫" label="No" tone="success" [selected]="hayDanados() === false" (pressed)="onHayDanadosChange(false)" />
+
+          @if (hayDanados()) {
+            <label class="field-label">Toca el equipo dañado y di qué le pasó</label>
+            @for (e of equiposAlquilados(); track $index) {
+              @if (e.equipo.trim()) {
+                <app-option-button [label]="e.equipo" icon="🛠️" [selected]="e.danado" (pressed)="toggleDanado(e)" />
+                @if (e.danado) {
+                  <input class="field parte__restr-desc" type="text" [ngModel]="e.dano_detalle" (ngModelChange)="setDanoDetalle(e, $event)" placeholder="¿Qué le pasó?" aria-label="Detalle del daño" />
+                }
+              }
+            }
+            <label class="field-label">¿No está en la lista? Escríbelo</label>
+            <div class="parte__addrow">
+              <input class="field" type="text" list="equipos-sugeridos" [ngModel]="danoNombre()" (ngModelChange)="danoNombre.set($event)" placeholder="Equipo dañado" aria-label="Otro equipo dañado" />
+              <button type="button" class="btn-ghost" (click)="addEquipoDanado()">Agregar</button>
+            </div>
+          }
         }
       }
 
-      <!-- 9. Resumen -->
+      <!-- 9. Datos finales (S8) -->
       @if (step() === 9) {
-        <h1 class="screen__title">Revisa y envía</h1>
-        <ul class="resumen">
-          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
-          <li><span>Lluvia</span><b>{{ llovio() ? 'Sí' : 'No' }}</b></li>
-          <li><span>Migración</span><b>{{ huboMigracion() ? 'Sí' : 'No' }}</b></li>
-          <li><span>Personal</span><b>{{ carpinteria() + acero() + casa() }}</b></li>
-          <li><span>Actividades</span><b>{{ actividades().length }}</b></li>
-          <li><span>Problemas</span><b>{{ restricciones().length ? restricciones().length : 'Ninguno' }}</b></li>
-          <li><span>Equipos alquilados</span><b>{{ huboEquipos() ? equiposAlquilados().length : 'No' }}</b></li>
-          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
-        </ul>
-        <!-- W3 — datos del parte (paridad web, opcionales en campo) -->
-        <label class="field-label parte__mt">Bloque / entrepiso (opcional)</label>
-        <input class="field" type="text" [ngModel]="bloqueEntrepiso()" (ngModelChange)="bloqueEntrepiso.set($event)" placeholder="Ej: Bloque B, 3er nivel" />
-
+        <h1 class="screen__title">Datos finales</h1>
         <label class="field-label">Ingeniero responsable (opcional)</label>
         <input class="field" type="text" [ngModel]="ingenieroResponsable()" (ngModelChange)="ingenieroResponsable.set($event)" placeholder="Nombre del ingeniero" />
 
         <label class="field-label">Hora de fin de trabajo (opcional)</label>
         <input class="field" type="time" [ngModel]="horaFinTrabajo()" (ngModelChange)="horaFinTrabajo.set($event)" />
 
-        <label class="field-label parte__mt">Comentario (opcional)</label>
+        <label class="field-label">Comentario (opcional)</label>
         <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
+      }
+
+      <!-- 10. Resumen (no editable) -->
+      @if (step() === 10) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>Lluvia</span><b>{{ llovio() ? 'Sí' : 'No' }}</b></li>
+          <li><span>Migración</span><b>{{ huboMigracion() ? 'Sí' : 'No' }}</b></li>
+          <li><span>Personal</span><b>{{ carpinteria() + acero() + casa() }}</b></li>
+          <li><span>Problemas</span><b>{{ problemasResumen() }}</b></li>
+          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
+          @if (ingenieroResponsable()) { <li><span>Ing. responsable</span><b>{{ ingenieroResponsable() }}</b></li> }
+          @if (horaFinTrabajo()) { <li><span>Hora fin</span><b>{{ horaFinTrabajo() }}</b></li> }
+        </ul>
+
+        <!-- Actividades agrupadas por bloque (S4) -->
+        <h2 class="parte__resumen-h">Trabajo por bloque</h2>
+        @for (g of resumenPorBloque(); track g.bloque) {
+          <div class="parte__bloque-card parte__bloque-card--resumen">
+            <span class="parte__bloque-name">📍 {{ g.bloque }}</span>
+            <ul class="parte__bloque-acts">
+              @for (a of g.items; track $index) {
+                <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { — {{ a.cantidad }} {{ a.unidad || '' }} }</li>
+              }
+            </ul>
+          </div>
+        } @empty {
+          <p class="parte__muted">No registraste trabajos.</p>
+        }
+
+        <!-- Equipos (S7) -->
+        @if (equiposAlquilados().length) {
+          <h2 class="parte__resumen-h">Equipos alquilados</h2>
+          <ul class="parte__bloque-acts">
+            @for (e of equiposAlquilados(); track $index) {
+              @if (e.equipo.trim()) {
+                <li>
+                  {{ e.equipo }}
+                  @if (e.para_retirar) { <span class="parte__tag parte__tag--retiro">Retirar</span> }
+                  @if (e.danado) { <span class="parte__tag parte__tag--dano">Dañado: {{ e.dano_detalle }}</span> }
+                </li>
+              }
+            }
+          </ul>
+        }
       }
     </div>
 
     <app-wizard-footer
-      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Enviar bitácora')"
-      [primaryDisabled]="step() >= total && submitting()"
-      (back)="step() > 1 ? prev() : salir()"
-      (primary)="step() < total ? next() : submit()"
+      [backLabel]="backLabel()"
+      [primaryLabel]="primaryLabel()"
+      [primaryDisabled]="primaryDisabled()"
+      (back)="onBack()"
+      (primary)="onPrimary()"
     />
   </div>
 

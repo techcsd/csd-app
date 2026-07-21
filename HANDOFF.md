@@ -1,5 +1,19 @@
 # HANDOFF — CSD App
 
+## Ronda 4 app (2026-07-21) — PROMPT-10 FASES 1–5 (bitácora + incidente + review CL) — build verde, PENDIENTE device-QA + release
+Source: `C:\developer\improvements\imp 20072026\CONTEXTO-ACTUALIZACION-3.md` (S1–S14). **Backend PROMPT-7/Act.3 verificado APLICADO en prod** (RPC `crear_bitacora_app` con `bloque`/equipos-flags/incidente-suceso-equipo, `catalogo_ordenado`, sucesos en `bitacora_catalogos`, min-fotos server-side, `incidente_equipo` en el CHECK). Todo esto fue **solo trabajo de app**. `npm run build` VERDE. **NO commiteado, NO release aún** (esperando OK de Xavier).
+- **S2** (`bitacora.service.getCatalogoOrdenado`): consume `catalogo_ordenado(proyectoId)` → estructuras/actividades ordenadas por ejecución con las ~3 más usadas de la obra primero (★). Cacheado offline por obra; fallback a `getCatalogos()` plano.
+- **S3/S4** (parte wizard, ahora **10 pasos**): paso 5 "¿qué se hizo hoy?" es sub-máquina `sujeto → actividades → ¿otro bloque?`. El bloque/piso/edificio se elige ARRIBA; cada actividad lleva su `bloque`; multi-bloque sin rehacer; resumen agrupa por bloque. Campo de bloque del viejo paso 9 eliminado (se manda `bloque_entrepiso` = resumen de bloques por retrocompat).
+- **S8**: paso 9 = ingeniero + hora fin + comentario; paso 10 = resumen NO editable agrupado.
+- **S5** (`borrador.service.migrateLegacyParte` + clave por instancia `parte_diario:{uuid}`): multi-borrador; `en-proceso` lista todos y retoma por `?borrador=<clave>`; migra el borrador legacy sin perderlo.
+- **S6**: min 2 fotos en el parte (gate en app + espejo en RPC). Incidente min 1.
+- **S7** (paso 8, sub-máquina `uso → retirar → dañados`): flags `para_retirar`/`danado`/`dano_detalle` por equipo; el server avisa al transportista.
+- **S11/S12/S13** (`incidente` reescrito a wizard tipo hoja, 7 pasos): obra → tipo (incidente/accidente/**incidente_equipo**) → preguntas del tipo → ¿qué pasó? (sucesos del catálogo `suceso_*` + Otro) → fotos(≥1)+voz → acciones → resumen. Autosave + salir del header + step-bar/wizard-footer. Nuevos campos incidente en payload/RPC.
+- **S14** (`cl-detalle`): antes de firmar se muestra **revisión read-only completa** (ítems cumple/no cumple + comentarios agrupados por sección, fotos+plano con URLs firmadas, observaciones, firmas puestas con imagen + checks verdes) y el botón "Firmar como {rol}". `getCl()` ampliado (items/fotos/plano/firma_path + signed URLs); modelo `ClRegistroDetalle` extendido.
+- **App detalle de bitácora** (`bitacora/detalle`): actividades agrupadas por bloque + flags de equipo retirar/dañado + campos de incidente (suceso/equipo).
+- **PENDIENTE:** device-QA (APK + PWA, online + modo avión), verificar detalle **web** SGC agrupa por bloque (hard rule #5), y `npm run apk` + publicar cuando Xavier dé OK (registrará versión, regla Y1).
+
+
 ## ✅ RESUELTO Y VERIFICADO — subida de documentos cédula/licencia (2026-07-21, v1.20.3)
 - **CAUSA RAÍZ (confirmada):** la app sube las fotos con `upsert: true` (`sync.service.ts` `uploadPhotos`). Al **reintentar** un envío cuyo objeto **ya existía** en Storage (la foto se subió en la captura original y el envío quedó atascado), Storage ejecuta un **UPDATE** sobre `storage.objects`. TODOS los buckets de campo (`vehiculos`, `conduces`, `inventario`, `obra`, `reportes`) tienen su policy UPDATE por esto — pero `flota-documentos` (creado por SGC web) tenía solo INSERT/SELECT/DELETE. **Sin policy UPDATE → "new row violates row-level security policy"** en el re-upload (NO era la tabla ni el INSERT de storage).
 - **FIX (server-side, no requiere nueva versión de app):** 3 migraciones aplicadas a prod + commiteadas en repo SGC (commit `cdfbb96`):

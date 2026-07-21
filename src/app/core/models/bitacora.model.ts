@@ -1,13 +1,15 @@
 // Catalog values mirror the CHECK constraints on sgc.bitacora_* — the app must
 // send exactly these strings.
 
+// S2 — orden de ejecución (fallback offline; el orden real + "más usadas primero"
+// viene del RPC catalogo_ordenado). Coincide con los seeds de bitacora_catalogos.
 export const ESTRUCTURAS = [
   'COLUMNAS',
   'MUROS',
   'VIGAS',
   'LOSAS',
-  'ZAPATAS/PLATEA',
   'VIGAS RIOSTRAS',
+  'ZAPATAS/PLATEA',
 ] as const;
 
 export const ACTIVIDADES = [
@@ -34,10 +36,22 @@ export const RESTRICCIONES = [
   'OTRO',
 ] as const;
 
+// S12 — tres tipos; las preguntas cambian según el tipo elegido.
 export const INCIDENTE_TIPOS = [
   { value: 'incidente', label: 'Incidente', icon: '⚠️' },
   { value: 'accidente', label: 'Accidente', icon: '🚑' },
+  { value: 'incidente_equipo', label: 'Incidente de equipo', icon: '🔧' },
 ] as const;
+
+// S12 — tipo de un incidente (unión usada por la captura y el wizard).
+export type IncidenteTipo = 'incidente' | 'accidente' | 'incidente_equipo';
+
+// S13 — a qué `tipo` de bitacora_catalogos leer los sucesos probables por tipo.
+export const SUCESO_TIPO_POR_INCIDENTE: Record<IncidenteTipo, string> = {
+  incidente: 'suceso_incidente',
+  accidente: 'suceso_accidente',
+  incidente_equipo: 'suceso_equipo',
+};
 
 export const INCIDENTE_GRAVEDADES = [
   { value: 'leve', label: 'Leve' },
@@ -53,6 +67,8 @@ export interface ActividadEntry {
   cantidad?: number | null;
   /** Q6 — unidad de medida del trabajo realizado (catálogo sgc.unidades). */
   unidad?: string | null;
+  /** S4 — bloque/piso/edificio (sujeto) al que pertenece esta actividad. */
+  bloque?: string | null;
 }
 
 /** W2 — un equipo alquilado en uso en la obra hoy. */
@@ -60,6 +76,19 @@ export interface EquipoAlquilado {
   equipo: string;
   uso: string | null;
   proveedor: string | null;
+  /** S7 — el equipo debe retirarse (dispara aviso al transportista). */
+  para_retirar?: boolean;
+  /** S7 — el equipo está dañado. */
+  danado?: boolean;
+  /** S7 — qué le pasó al equipo dañado. */
+  dano_detalle?: string | null;
+}
+
+/** S2 — un valor de catálogo ya ordenado por catalogo_ordenado (destacado = de
+ *  los ~3 más usados en esa obra, va primero). */
+export interface CatOrdenado {
+  valor: string;
+  destacado: boolean;
 }
 
 /** A planned line item for a project (R24), shown as reference in the wizard. */
@@ -100,6 +129,11 @@ export interface BitacoraFull {
   incidente_lesionados: number | null;
   incidente_descripcion: string | null;
   incidente_acciones?: string | null;
+  // S12/S13 — suceso elegido + campos del "incidente de equipo".
+  incidente_suceso?: string | null;
+  incidente_equipo_nombre?: string | null;
+  incidente_equipo_alquilado?: boolean | null;
+  incidente_equipo_operativo?: boolean | null;
   // U13 — clima + migración (datos, no incidente).
   llovio?: boolean | null;
   lluvia_detalle?: string | null;
@@ -108,7 +142,7 @@ export interface BitacoraFull {
   // W2 — equipos alquilados en uso.
   hubo_equipos_alquilados?: boolean | null;
   proyecto?: { nombre: string } | null;
-  actividades?: { estructura: string; actividad: string; cantidad?: number | null; unidad?: string | null }[];
+  actividades?: { estructura: string; actividad: string; cantidad?: number | null; unidad?: string | null; bloque?: string | null }[];
   restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
   equipos?: EquipoAlquilado[];
   archivos?: { nombre: string; url: string; tipo_mime: string | null }[];

@@ -32,13 +32,68 @@
           <li><span>Creado</span><b>{{ fmt(c.created_at) }}</b></li>
         </ul>
 
-        <!-- Estado de firmas (verde al firmar) -->
+        <!-- S14 — Revisión read-only del formulario ANTES de firmar -->
+        <p class="cld__review-note">📋 Revisa todo el checklist antes de firmar.</p>
+
+        <!-- Ítems verificados (cumple / no cumple + comentarios) -->
+        @if (c.items.length) {
+          <h2 class="cld__section">Puntos verificados</h2>
+          @for (g of gruposItems(); track g.seccion) {
+            <p class="cld__grupo">{{ g.seccion }}</p>
+            <ul class="cld__items">
+              @for (it of g.items; track $index) {
+                <li class="cld__item" [class.cld__item--no]="it.cumple === false">
+                  <span class="cld__item-icon">{{ it.cumple === true ? '✅' : it.cumple === false ? '❌' : '⬜' }}</span>
+                  <div class="cld__item-body">
+                    <span class="cld__item-label">{{ it.etiqueta }}</span>
+                    @if (it.comentario) { <span class="cld__item-com">{{ it.comentario }}</span> }
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        }
+
+        <!-- Contexto / observaciones -->
+        @if (c.observaciones) {
+          <h2 class="cld__section">Observaciones</h2>
+          <p class="cld__obs">{{ c.observaciones }}</p>
+        }
+
+        <!-- Plano + fotos -->
+        @if (c.planoUrl || c.fotos.length) {
+          <h2 class="cld__section">Fotos</h2>
+          <div class="cld__fotos">
+            @if (c.planoUrl) {
+              <a class="cld__foto" [href]="c.planoUrl" target="_blank" rel="noopener">
+                <img [src]="c.planoUrl" alt="Plano" loading="lazy" />
+                <span class="cld__foto-cap">Plano</span>
+              </a>
+            }
+            @for (f of c.fotos; track f.url) {
+              <a class="cld__foto" [href]="f.url" target="_blank" rel="noopener">
+                <img [src]="f.url" alt="foto" loading="lazy" />
+                <span class="cld__foto-cap" [class.cld__foto-cap--no]="f.correcto === false">
+                  {{ f.correcto === false ? '❌' : '✅' }} {{ f.descripcion || '' }}
+                </span>
+              </a>
+            }
+          </div>
+        }
+
+        <!-- Estado de firmas (verde al firmar) + imagen de la firma puesta -->
         <h2 class="cld__section">Firmas</h2>
         <div class="cld__firma-check">
           @for (r of firmaEstados(); track r.value) {
             <div class="cld__firma-row" [class.cld__firma-row--ok]="r.firmada">
               <span class="cld__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
-              <span class="cld__firma-name">{{ r.label }}</span>
+              <div class="cld__firma-body">
+                <span class="cld__firma-name">{{ r.label }}</span>
+                @if (firmaDe(r.value); as fr) {
+                  @if (fr.nombre) { <span class="cld__firma-sub">{{ fr.nombre }}</span> }
+                  @if (fr.firma_url) { <img class="cld__firma-img" [src]="fr.firma_url" alt="firma" loading="lazy" /> }
+                }
+              </div>
               <span class="cld__firma-state">{{ r.firmada ? 'Firmada' : (r.obligatoria ? 'Pendiente' : 'Opcional') }}</span>
             </div>
           }
@@ -46,7 +101,7 @@
 
         <!-- Firmar mi rol (solo si aún es borrador) -->
         @if (!firmado()) {
-          <h2 class="cld__section">Agregar mi firma</h2>
+          <h2 class="cld__section">Firmar como {{ firmaRol() ? rolLabel(firmaRol()!) : '…' }}</h2>
           @if (!online()) {
             <p class="cld__muted">Necesitas conexión para firmar.</p>
           }

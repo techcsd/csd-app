@@ -65,6 +65,22 @@ export interface ClFirmaExistente {
   nombre: string | null;
   metodo: string | null;
   firmado_en: string | null;
+  /** S14 — URL firmada de la imagen de la firma (para el review). */
+  firma_url?: string | null;
+}
+
+// S14 — ítem del CL para la revisión read-only antes de firmar.
+export interface ClItemRevision {
+  etiqueta: string;
+  seccion: string | null;
+  cumple: boolean | null;
+  comentario: string | null;
+}
+// S14 — foto del CL (URL firmada) para la revisión.
+export interface ClFotoRevision {
+  url: string;
+  correcto: boolean | null;
+  descripcion: string | null;
 }
 export interface ClRegistroDetalle {
   id: string;
@@ -77,6 +93,10 @@ export interface ClRegistroDetalle {
   plantilla: string;
   plantillaCodigo: string;
   firmas: ClFirmaExistente[];
+  // S14 — revisión completa read-only.
+  items: ClItemRevision[];
+  fotos: ClFotoRevision[];
+  planoUrl: string | null;
 }
 export interface ClPendiente {
   id: string;

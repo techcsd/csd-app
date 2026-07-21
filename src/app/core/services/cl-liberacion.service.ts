@@ -19,10 +19,13 @@ interface ClRow {
   bloque?: string | null;
   eje?: string | null;
   observaciones?: string | null;
+  plano_path?: string | null;
   created_at: string;
   proyecto?: { nombre: string } | null;
   plantilla?: { codigo: string; nombre: string } | null;
-  firmas?: { rol: string; nombre?: string | null; metodo?: string | null; firmado_en?: string | null }[];
+  firmas?: { rol: string; nombre?: string | null; metodo?: string | null; firmado_en?: string | null; firma_path?: string | null }[];
+  items?: { etiqueta: string; seccion?: string | null; cumple?: boolean | null; comentario?: string | null; orden?: number | null }[];
+  fotos?: { storage_path: string; correcto?: boolean | null; descripcion?: string | null }[];
 }
 
 const CATALOG_PLANTILLAS = 'cl_plantillas';
@@ -177,18 +180,42 @@ export class ClLiberacionService {
     });
   }
 
-  /** Un CL con sus firmas actuales, para revisarlo y firmar. Online. */
+  /**
+   * S14 — un CL COMPLETO para revisarlo read-only antes de firmar: cabecera,
+   * ítems (cumple/no cumple + comentarios), fotos, plano, observaciones y firmas
+   * ya puestas (con la imagen de la firma). Online.
+   */
   async getCl(id: string): Promise<ClRegistroDetalle | null> {
     const { data, error } = await this.supabase.client
       .from('cl_registros')
       .select(
-        'id, estado, bloque, eje, observaciones, created_at, proyecto:proyectos(nombre), plantilla:cl_plantillas(codigo, nombre), firmas:cl_registro_firmas(rol, nombre, metodo, firmado_en)',
+        'id, estado, bloque, eje, observaciones, plano_path, created_at, proyecto:proyectos(nombre), plantilla:cl_plantillas(codigo, nombre), firmas:cl_registro_firmas(rol, nombre, metodo, firmado_en, firma_path), items:cl_registro_items(etiqueta, seccion, cumple, comentario, orden), fotos:cl_registro_fotos(storage_path, correcto, descripcion)',
       )
       .eq('id', id)
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!data) return null;
     const d = data as unknown as ClRow;
+
+    // URLs firmadas del bucket privado `obra` para plano/fotos/firmas.
+    const planoUrl = d.plano_path ? await this.signObra(d.plano_path) : null;
+    const fotos = await Promise.all(
+      (d.fotos ?? []).map(async (f) => ({
+        url: (await this.signObra(f.storage_path)) ?? '',
+        correcto: f.correcto ?? null,
+        descripcion: f.descripcion ?? null,
+      })),
+    );
+    const firmas = await Promise.all(
+      (d.firmas ?? []).map(async (f) => ({
+        rol: f.rol,
+        nombre: f.nombre ?? null,
+        metodo: f.metodo ?? null,
+        firmado_en: f.firmado_en ?? null,
+        firma_url: f.firma_path ? await this.signObra(f.firma_path) : null,
+      })),
+    );
+
     return {
       id: d.id,
       estado: d.estado ?? 'borrador',
@@ -199,8 +226,29 @@ export class ClLiberacionService {
       proyecto: d.proyecto?.nombre ?? '—',
       plantilla: d.plantilla?.nombre ?? '—',
       plantillaCodigo: d.plantilla?.codigo ?? '',
-      firmas: (d.firmas ?? []).map((f) => ({ rol: f.rol, nombre: f.nombre ?? null, metodo: f.metodo ?? null, firmado_en: f.firmado_en ?? null })),
+      firmas,
+      items: [...(d.items ?? [])]
+        .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+        .map((i) => ({
+          etiqueta: i.etiqueta,
+          seccion: i.seccion ?? null,
+          cumple: i.cumple ?? null,
+          comentario: i.comentario ?? null,
+        })),
+      fotos: fotos.filter((f) => f.url),
+      planoUrl,
     };
+  }
+
+  /** URL firmada de un objeto del bucket privado `obra` (1h). Null si falla. */
+  private async signObra(path: string): Promise<string | null> {
+    try {
+      const { data, error } = await this.supabase.client.storage.from(BUCKET).createSignedUrl(path, 3600);
+      if (error) return null;
+      return data.signedUrl;
+    } catch {
+      return null;
+    }
   }
 
   /**

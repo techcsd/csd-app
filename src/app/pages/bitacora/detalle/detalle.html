@@ -21,7 +21,11 @@
           <li><span>Tipo</span><b>{{ bit.incidente_tipo }}</b></li>
           <li><span>Gravedad</span><b>{{ bit.incidente_gravedad }}</b></li>
           <li><span>Heridos</span><b>{{ bit.incidente_lesionados }}</b></li>
+          @if (bit.incidente_suceso) { <li><span>¿Qué pasó?</span><b>{{ bit.incidente_suceso }}</b></li> }
           @if (bit.incidente_subcontratista) { <li><span>Subcontratista</span><b>{{ bit.incidente_subcontratista }}</b></li> }
+          @if (bit.incidente_equipo_nombre) { <li><span>Equipo</span><b>{{ bit.incidente_equipo_nombre }}</b></li> }
+          @if (bit.incidente_equipo_alquilado != null) { <li><span>Propiedad</span><b>{{ bit.incidente_equipo_alquilado ? 'Alquilado' : 'Propio' }}</b></li> }
+          @if (bit.incidente_equipo_operativo != null) { <li><span>¿Operativo?</span><b>{{ bit.incidente_equipo_operativo ? 'Sí' : 'No' }}</b></li> }
         }
         @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
       </ul>
@@ -53,11 +57,15 @@
 
       @if (bit.actividades?.length) {
         <h2 class="det__section">Actividades</h2>
-        <ul class="det__list">
-          @for (a of bit.actividades; track $index) {
-            <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · {{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</b> }</li>
-          }
-        </ul>
+        <!-- S4 — agrupadas por bloque -->
+        @for (g of actividadesPorBloque(); track g.bloque) {
+          <p class="det__bloque">📍 {{ g.bloque }}</p>
+          <ul class="det__list">
+            @for (a of g.items; track $index) {
+              <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · {{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</b> }</li>
+            }
+          </ul>
+        }
       }
 
       @if (bit.restricciones?.length) {
@@ -75,6 +83,8 @@
           @for (e of bit.equipos; track $index) {
             <li>
               {{ e.equipo }}@if (e.uso) { — {{ e.uso }} }@if (e.proveedor) { · {{ e.proveedor }} }
+              @if (e.para_retirar) { <b class="det__flag det__flag--retiro">Retirar</b> }
+              @if (e.danado) { <b class="det__flag det__flag--dano">Dañado{{ e.dano_detalle ? ': ' + e.dano_detalle : '' }}</b> }
             </li>
           }
         </ul>

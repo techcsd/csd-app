@@ -239,3 +239,100 @@ app-counter {
   font-weight: 700;
   color: var(--color-text-secondary);
 }
+
+// S2 — marca "★ más usadas" en los chips de estructura/actividad.
+.chip__star {
+  color: var(--color-primary);
+  margin-right: 3px;
+}
+
+// S6 — aviso de fotos faltantes.
+.parte__warn {
+  color: var(--color-error);
+  font-weight: 700;
+}
+
+// Botones "Sí/No" (equipos, otro bloque…) apilados como en obras/restr.
+.screen__body app-option-button {
+  display: block;
+  margin-bottom: 10px;
+}
+
+// S4 — resumen de bloques ya registrados.
+.parte__bloques-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.parte__bloque-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.parte__bloque-card--resumen {
+  flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+.parte__bloque-name {
+  font-weight: 700;
+}
+.parte__bloque-count {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.parte__bloque-acts {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.parte__bloque-acts li {
+  padding: 4px 0;
+  font-size: 15px;
+}
+.parte__resumen-h {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 18px 0 10px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.parte__tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.parte__tag--retiro {
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.parte__tag--dano {
+  background: #fef2f2;
+  color: var(--color-error);
+}
+
+// S7 — fila "agregar equipo" (input + botón).
+.parte__addrow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+
+  .field {
+    flex: 1;
+    margin-bottom: 0;
+  }
+  .btn-ghost {
+    flex: 0 0 auto;
+  }
+}

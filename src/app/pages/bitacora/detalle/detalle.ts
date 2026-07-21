@@ -48,6 +48,18 @@ export class BitacoraDetallePage {
     return [];
   });
 
+  /** S4 — actividades agrupadas por bloque para el detalle. */
+  actividadesPorBloque = computed(() => {
+    const acts = this.b()?.actividades ?? [];
+    const grupos = new Map<string, typeof acts>();
+    for (const a of acts) {
+      const b = (a.bloque ?? '').trim() || 'Sin bloque';
+      if (!grupos.has(b)) grupos.set(b, []);
+      grupos.get(b)!.push(a);
+    }
+    return [...grupos.entries()].map(([bloque, items]) => ({ bloque, items }));
+  });
+
   constructor() {
     void this.load();
   }

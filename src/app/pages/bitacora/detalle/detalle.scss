@@ -105,3 +105,27 @@
   grid-column: 1 / -1;
   width: 100%;
 }
+
+// S4 — encabezado de bloque en actividades agrupadas.
+.det__bloque {
+  font-weight: 800;
+  margin: 12px 0 4px;
+  color: var(--color-text-primary);
+}
+
+// S7 — banderas de equipo (retirar / dañado).
+.det__flag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.det__flag--retiro {
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.det__flag--dano {
+  background: #fef2f2;
+  color: var(--color-error);
+}

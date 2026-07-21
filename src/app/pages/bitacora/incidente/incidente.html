@@ -1,107 +1,162 @@
 @if (done()) {
   <app-big-confirm
-    [title]="online ? 'Incidente reportado' : 'Guardado'"
-    [note]="online ? 'Se registró en la bitácora.' : 'Sin señal. Se enviará solo.'"
+    [title]="online ? 'Reporte enviado' : 'Guardado'"
+    [note]="online ? 'El incidente quedó registrado y notificado.' : 'Sin señal. Se enviará solo.'"
     [tone]="online ? 'done' : 'pending'"
     buttonLabel="Listo"
     (dismissed)="finish()"
   />
 } @else {
   <div class="screen incidente">
-    <header class="incidente__header">
-      <button type="button" class="incidente__back" (click)="back()" aria-label="Atrás">←</button>
+    <header class="incidente__topbar">
+      <button type="button" class="incidente__topback" (click)="salir()" aria-label="Salir">←</button>
       <span class="incidente__icon">🚨</span>
-      <h1 class="incidente__title">Reportar incidente</h1>
+      <span class="incidente__topttl">Reportar incidente</span>
     </header>
+    <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
-      <h2 class="incidente__q">¿En qué obra?</h2>
-      @if (loading()) {
-        <app-skeleton [rows]="3" />
-      } @else {
-        @for (p of proyectos(); track p.id) {
-          <app-option-button
-            icon="🏗️"
-            [label]="p.nombre"
-            [selected]="proyectoId() === p.id"
-            (pressed)="proyectoId.set(p.id)"
-          />
-        } @empty {
-          <p class="incidente__or">No hay obras disponibles.</p>
+      <!-- 1. Obra -->
+      @if (step() === 1) {
+        <h1 class="screen__title">¿En qué obra?</h1>
+        @if (loading()) {
+          <app-skeleton [rows]="4" />
+        } @else {
+          @for (p of proyectos(); track p.id) {
+            <app-option-button [label]="p.nombre" icon="🏗️" [selected]="proyectoId() === p.id" (pressed)="proyectoId.set(p.id)" />
+          } @empty {
+            <p class="incidente__or">No hay obras disponibles.</p>
+          }
         }
       }
 
-      <h2 class="incidente__q">¿Qué pasó?</h2>
-      @for (t of tipos; track t.value) {
-        <app-option-button
-          [icon]="t.icon"
-          [label]="t.label"
-          tone="error"
-          [selected]="tipo() === t.value"
-          (pressed)="tipo.set(t.value)"
-        />
-      }
-
-      <h2 class="incidente__q">¿Qué tan grave?</h2>
-      <div class="incidente__grav">
-        @for (g of gravedades; track g.value) {
-          <button type="button" class="chip" [class.chip--on]="gravedad() === g.value" (click)="gravedad.set(g.value)">
-            {{ g.label }}
-          </button>
+      <!-- 2. Tipo -->
+      @if (step() === 2) {
+        <h1 class="screen__title">¿Qué tipo de reporte es?</h1>
+        @for (t of tipos; track t.value) {
+          <app-option-button [label]="t.label" [icon]="t.icon" tone="error" [selected]="tipo() === t.value" (pressed)="pickTipo(t.value)" />
         }
-      </div>
-
-      <h2 class="incidente__q">¿Hay heridos?</h2>
-      <app-counter label="Personas heridas" icon="🩹" [(value)]="lesionados" />
-      @if (hayHeridos()) {
-        <p class="incidente__alert">⚠️ Hay heridos. Avisa al supervisor cuanto antes.</p>
       }
 
-      <h2 class="incidente__q">Fotos</h2>
-      <div class="incidente__fotos">
-        @for (f of fotos(); track f.previewUrl) {
-          <div class="incidente__foto">
-            <img [src]="f.previewUrl" alt="foto" />
-            <button type="button" class="incidente__foto-x" (click)="removeFoto($index)">✕</button>
+      <!-- 3. Preguntas del tipo -->
+      @if (step() === 3) {
+        @if (esEquipo()) {
+          <h1 class="screen__title">Cuéntanos del equipo</h1>
+          <label class="field-label">¿Cuál equipo?</label>
+          <input class="field" type="text" [ngModel]="equipoNombre()" (ngModelChange)="equipoNombre.set($event)" placeholder="Ej: Retroexcavadora CAT 320" />
+
+          <label class="field-label">¿El equipo es alquilado o propio?</label>
+          <app-option-button icon="📦" label="Alquilado" [selected]="equipoAlquilado() === true" (pressed)="equipoAlquilado.set(true)" />
+          <app-option-button icon="🏢" label="Propio" [selected]="equipoAlquilado() === false" (pressed)="equipoAlquilado.set(false)" />
+
+          <label class="field-label">¿Queda operativo?</label>
+          <app-option-button icon="✅" label="Sí, sigue funcionando" tone="success" [selected]="equipoOperativo() === true" (pressed)="equipoOperativo.set(true)" />
+          <app-option-button icon="🛑" label="No, quedó fuera de servicio" tone="warning" [selected]="equipoOperativo() === false" (pressed)="equipoOperativo.set(false)" />
+        } @else {
+          <h1 class="screen__title">¿Qué tan grave?</h1>
+          <div class="incidente__grav">
+            @for (g of gravedades; track g.value) {
+              <button type="button" class="chip" [class.chip--on]="gravedad() === g.value" (click)="gravedad.set(g.value)">{{ g.label }}</button>
+            }
           </div>
+
+          @if (esAccidente()) {
+            <label class="field-label">¿Hay heridos?</label>
+            <app-counter label="Personas heridas" icon="🩹" [(value)]="lesionados" />
+            @if (hayHeridos()) {
+              <p class="incidente__alert">⚠️ Se avisará de inmediato. Toma fotos y da los detalles.</p>
+            }
+            <label class="field-label">¿Involucra a un subcontratista? (opcional)</label>
+            <input class="field" type="text" [ngModel]="subcontratista()" (ngModelChange)="subcontratista.set($event)" placeholder="Nombre del subcontratista" />
+          }
         }
-      </div>
-      <div class="incidente__foto-actions">
-        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
-          {{ capturing() ? '⏳…' : '📷 Cámara' }}
-        </button>
-        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFromGallery()">
-          {{ capturing() ? '⏳…' : '🖼️ Galería' }}
-        </button>
-      </div>
+      }
 
-      <h2 class="incidente__q">¿Qué pasó?</h2>
-      <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe qué pasó (obligatorio)" />
-      <p class="incidente__or">Y si quieres, graba una nota de voz además de la descripción:</p>
-      <app-voice-recorder (recorded)="voz.set($event)" />
+      <!-- 4. ¿Qué pasó? — sucesos + Otro (S13) -->
+      @if (step() === 4) {
+        <h1 class="screen__title">¿Qué pasó?</h1>
+        <p class="screen__subtitle">Elige lo más parecido. Si no está, toca "Otro".</p>
+        @for (s of sucesos(); track s) {
+          <app-option-button [label]="s" [selected]="suceso() === s" (pressed)="pickSuceso(s)" />
+        }
+        <app-option-button icon="✏️" label="Otro" [selected]="otroActivo()" (pressed)="pickOtro()" />
+        @if (otroActivo()) {
+          <label class="field-label">Cuéntanos qué pasó</label>
+          <textarea class="field incidente__textarea" rows="3" [ngModel]="sucesoOtro()" (ngModelChange)="sucesoOtro.set($event)" placeholder="Describe lo que pasó"></textarea>
+        }
+      }
 
-      <h2 class="incidente__q">¿Qué se hizo? (acciones tomadas)</h2>
-      <input class="field" type="text" [ngModel]="acciones()" (ngModelChange)="acciones.set($event)" placeholder="Medidas inmediatas o correctivas (opcional)" />
+      <!-- 5. Fotos + nota de voz (mínimo 1 foto) -->
+      @if (step() === 5) {
+        <h1 class="screen__title">Fotos y nota de voz</h1>
+        <p class="screen__subtitle">
+          Mínimo {{ minFotos }} foto. Llevas <b>{{ fotos().length }}</b>.
+          @if (fotos().length < minFotos) { <span class="incidente__warn">Falta {{ minFotos - fotos().length }}.</span> }
+        </p>
+        <div class="incidente__fotos">
+          @for (f of fotos(); track f.previewUrl) {
+            <div class="incidente__foto">
+              <img [src]="f.previewUrl" alt="foto" />
+              <button type="button" class="incidente__foto-x" (click)="removeFoto($index)">✕</button>
+            </div>
+          }
+        </div>
+        <div class="incidente__foto-actions">
+          <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">{{ capturing() ? '⏳…' : '📷 Cámara' }}</button>
+          <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFromGallery()">{{ capturing() ? '⏳…' : '🖼️ Galería' }}</button>
+        </div>
+        <label class="field-label">Nota de voz (opcional)</label>
+        <app-voice-recorder (recorded)="voz.set($event)" />
+      }
 
-      <h2 class="incidente__q">¿Involucra a un subcontratista? (opcional)</h2>
-      <input class="field" type="text" [ngModel]="subcontratista()" (ngModelChange)="subcontratista.set($event)" placeholder="Nombre del subcontratista" />
+      <!-- 6. Acciones tomadas -->
+      @if (step() === 6) {
+        <h1 class="screen__title">¿Qué se hizo?</h1>
+        <p class="screen__subtitle">Acciones o medidas que se tomaron (opcional).</p>
+        <textarea class="field incidente__textarea" rows="4" [ngModel]="acciones()" (ngModelChange)="acciones.set($event)" placeholder="Ej: se detuvo el trabajo, se atendió al herido…"></textarea>
+      }
+
+      <!-- 7. Resumen -->
+      @if (step() === 7) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>
+          @if (!esEquipo()) { <li><span>Gravedad</span><b>{{ gravedad() || '—' }}</b></li> }
+          @if (esAccidente()) {
+            <li><span>Heridos</span><b>{{ lesionados() }}</b></li>
+            @if (subcontratista()) { <li><span>Subcontratista</span><b>{{ subcontratista() }}</b></li> }
+          }
+          @if (esEquipo()) {
+            <li><span>Equipo</span><b>{{ equipoNombre() }}</b></li>
+            <li><span>Propiedad</span><b>{{ equipoAlquilado() ? 'Alquilado' : 'Propio' }}</b></li>
+            <li><span>¿Operativo?</span><b>{{ equipoOperativo() ? 'Sí' : 'No' }}</b></li>
+          }
+          <li><span>¿Qué pasó?</span><b>{{ otroActivo() ? sucesoOtro() : suceso() }}</b></li>
+          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
+          <li><span>Nota de voz</span><b>{{ voz() ? 'Sí' : 'No' }}</b></li>
+          @if (acciones()) { <li><span>Acciones</span><b>{{ acciones() }}</b></li> }
+        </ul>
+      }
     </div>
 
-    <footer class="incidente__nav">
-      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-        {{ submitting() ? 'Guardando…' : 'Enviar reporte' }}
-      </button>
-    </footer>
-
-    <app-confirm-dialog
-      [open]="confirmSalir()"
-      title="¿Salir del reporte?"
-      message="Perderás lo que llevas del incidente (descripción, fotos y nota de voz)."
-      confirmLabel="Sí, salir"
-      cancelLabel="Seguir aquí"
-      tone="danger"
-      (confirmed)="confirmarSalir()"
-      (cancelled)="cancelarSalir()"
+    <app-wizard-footer
+      [backLabel]="backLabel()"
+      [primaryLabel]="primaryLabel()"
+      [primaryDisabled]="primaryDisabled()"
+      (back)="onBack()"
+      (primary)="onPrimary()"
     />
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir del reporte?"
+    message="Guardamos lo que llevas para continuar más tarde."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
 }
