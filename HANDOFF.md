@@ -1,5 +1,13 @@
 # HANDOFF — CSD App
 
+## v1.21.1 PUBLICADA + MÍNIMA (2026-07-21) — arreglo arranque OFFLINE en frío
+- **Problema (hallazgo de la ronda 4):** abrir la app SIN internet en frío mostraba **"Sin módulos asignados"** (y sin nombre). Causa doble: (1) `session.ensureProfile()` usaba `supabase.auth.getUser()` que SIEMPRE hace red → null offline; (2) `UserContextService.loadProfile()` no cacheaba el perfil en disco y ponía `null` al fallar.
+- **Fix (cache-then-network / stale-while-revalidate — el patrón que ya usa `CatalogService`, confirmado con research: Supabase `getSession` lee storage local y funciona offline, `getUser` siempre hace red):**
+  - `ensureProfile()` toma el `userId` de `getSession()` (offline-safe) en vez de `getUser()`. Datos siguen bajo RLS con el token real.
+  - `loadProfile()` hidrata al instante el perfil cacheado y revalida vía `CatalogService.refresh` (escribe caché con señal, conserva la copia si falla). Solo `null` si nunca hubo caché. `clear()` borra la caché del perfil al cerrar sesión (clave `perfil_{userId}`).
+- **VERIFICADO en equipo real:** arranque OFFLINE en frío (force-stop + modo avión, `ping` inalcanzable, wifi/data off) ahora muestra **nombre + los 5 módulos**; al reconectar revalida solo. Commit `938e14d`. APK 1.21.1 en bucket, **PUBLICADA + MÍNIMA** (1.21.0 despublicada), historial registrado (Y1).
+- Nota: los badges (p. ej. Transporte 42) siguen siendo online-only (se ocultan offline, esperado).
+
 ## Ronda 4 app (2026-07-21) — PROMPT-10 FASES 1–5 — v1.21.0 PUBLICADA + MÍNIMA, verificado en equipo real
 - **PUBLICADA + MÍNIMA: 1.21.0** (`app_versiones` movil → publicada/minima true; 1.20.3 despublicada). APK firmado (cert prod `3c5316d8…df5065`) en bucket + `apk_url` + `version.json`. Commit `a26df2d` en `main` (push hecho → deploy PWA). Historial registrado (Y1) con 7 cambios estructurados.
 - **VERIFICADO EN EQUIPO REAL (Xiaomi/MIUI vía adb) + BD:**
@@ -7,7 +15,7 @@
   - Bitácora OFFLINE (modo avión mid-wizard): "Guardado · Sin señal", encolada en outbox, y al reconectar **drenó sola** al servidor (BD confirmó bloque). Offline-first ✓.
   - Incidente tipo hoja (7 pasos): tipo **incidente_equipo**, preguntas de equipo, sucesos del catálogo por tipo → enviado. BD confirmó `incidente_tipo=incidente_equipo`, `incidente_suceso`, `incidente_equipo_nombre/alquilado/operativo`.
   - S14: cl-detalle muestra review read-only completa (puntos por sección con checks, plano+fotos, firmas con imagen + verdes) y "Firmar como {rol}" al final.
-- **Observación (pre-existente, fuera de S1–S14):** en arranque **offline en frío** el home muestra "Sin módulos asignados" (la lista de módulos NO se cachea en disco, requiere fetch vivo). Al reconectar vuelve normal. No lo toqué (es del user-context/gating, no de esta ronda) — candidato a cachear módulos offline en una próxima ronda.
+- **Observación (arranque offline en frío "Sin módulos asignados"):** ✅ **RESUELTO en v1.21.1** (perfil/módulos cacheados en disco — ver entrada de 1.21.1 arriba).
 - **PENDIENTE (no bloquea):** detalle **web** SGC agrupado por bloque + flags de equipo (hard rule #5, otro repo).
 Source: `C:\developer\improvements\imp 20072026\CONTEXTO-ACTUALIZACION-3.md` (S1–S14). **Backend PROMPT-7/Act.3 verificado APLICADO en prod** (RPC `crear_bitacora_app` con `bloque`/equipos-flags/incidente-suceso-equipo, `catalogo_ordenado`, sucesos en `bitacora_catalogos`, min-fotos server-side, `incidente_equipo` en el CHECK). Todo esto fue **solo trabajo de app**. `npm run build` VERDE. **NO commiteado, NO release aún** (esperando OK de Xavier).
 - **S2** (`bitacora.service.getCatalogoOrdenado`): consume `catalogo_ordenado(proyectoId)` → estructuras/actividades ordenadas por ejecución con las ~3 más usadas de la obra primero (★). Cacheado offline por obra; fallback a `getCatalogos()` plano.
