@@ -1,5 +1,15 @@
 # HANDOFF — CSD App
 
+## ✅ RESUELTO Y VERIFICADO — subida de documentos cédula/licencia (2026-07-21, v1.20.3)
+- **CAUSA RAÍZ (confirmada):** la app sube las fotos con `upsert: true` (`sync.service.ts` `uploadPhotos`). Al **reintentar** un envío cuyo objeto **ya existía** en Storage (la foto se subió en la captura original y el envío quedó atascado), Storage ejecuta un **UPDATE** sobre `storage.objects`. TODOS los buckets de campo (`vehiculos`, `conduces`, `inventario`, `obra`, `reportes`) tienen su policy UPDATE por esto — pero `flota-documentos` (creado por SGC web) tenía solo INSERT/SELECT/DELETE. **Sin policy UPDATE → "new row violates row-level security policy"** en el re-upload (NO era la tabla ni el INSERT de storage).
+- **FIX (server-side, no requiere nueva versión de app):** 3 migraciones aplicadas a prod + commiteadas en repo SGC (commit `cdfbb96`):
+  1. `2026-07-21-registrar-documento-app.sql` — RPC `security definer` `sgc.registrar_documento_app` (insert idempotente en `sgc.documentos` como owner, exige auth + flota/admin). Alinea el write con la regla madre.
+  2. `2026-07-21-flota-documentos-rls-align.sql` — INSERT de storage/tabla por `bucket_id` para `authenticated`.
+  3. `2026-07-21-flota-documentos-storage-update-policy.sql` — **la que cerró el bug**: policy UPDATE en `flota-documentos` por `bucket_id`.
+- **App (v1.20.3, PUBLICADA + MÍNIMA):** `documentos.service.ts` inserta vía el RPC (antes insertaba directo en la tabla); `DocumentosService` en `provideAppInitializer` (handler registrado al boot). Commit `20a0700`.
+- **VERIFICADO EN EQUIPO REAL:** tras "Reintentar todos" en 1.20.3 con las policies aplicadas, un doc `cedula` se insertó en `sgc.documentos` (`created_at` en el instante del reintento) y las 3 tarjetas de "Documento (cédula/licencia)" **desaparecieron** de Pendientes. ✅
+- **Lo que queda en rojo en Pendientes son datos QA irreparables** (Entrega/recepción + Pre-uso → "Vehículo no encontrado o inactivo": el vehículo de esas capturas de prueba fue borrado/desactivado) → **Descartar**.
+
 ## SEGUIMIENTO subida de documentos (2026-07-21) — opción A aplicada, pero NO resuelve
 - **Opción A APLICADA** (SGC): `sql/2026-07-21-flota-documentos-rls-align.sql` — `documentos_ins` → `with check(true)` y `flota_docs_ins` (storage) → solo `bucket_id`, ambas `to authenticated`, igual que los otros buckets de campo. Verificado en la BD.
 - **Pero la subida de documentos SIGUE fallando "new row violates row-level security policy"** aun con la RLS abierta → la petición NO entra como `authenticated`. Contradicción clave: las LECTURAS que requieren sesión SÍ funcionan (badge de `avisos_flota`=41 con `es_flota_elevado()`, y lectura de `documentos` con is_admin/flota) → la sesión está VIVA para lecturas. Y las subidas de foto de otros features (pre-uso/checklist/vehículo) llegan al RPC (uploadPhotos OK vía upsert). Solo la subida de DOCUMENTO (path nuevo → INSERT en storage.objects del bucket flota-documentos + insert directo en tabla) falla. Es el ÚNICO write que NO usa un RPC `security definer` (viola la regla madre del proyecto).
