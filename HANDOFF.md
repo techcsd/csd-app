@@ -1,5 +1,11 @@
 # HANDOFF — CSD App
 
+## SEGUIMIENTO subida de documentos (2026-07-21) — opción A aplicada, pero NO resuelve
+- **Opción A APLICADA** (SGC): `sql/2026-07-21-flota-documentos-rls-align.sql` — `documentos_ins` → `with check(true)` y `flota_docs_ins` (storage) → solo `bucket_id`, ambas `to authenticated`, igual que los otros buckets de campo. Verificado en la BD.
+- **Pero la subida de documentos SIGUE fallando "new row violates row-level security policy"** aun con la RLS abierta → la petición NO entra como `authenticated`. Contradicción clave: las LECTURAS que requieren sesión SÍ funcionan (badge de `avisos_flota`=41 con `es_flota_elevado()`, y lectura de `documentos` con is_admin/flota) → la sesión está VIVA para lecturas. Y las subidas de foto de otros features (pre-uso/checklist/vehículo) llegan al RPC (uploadPhotos OK vía upsert). Solo la subida de DOCUMENTO (path nuevo → INSERT en storage.objects del bucket flota-documentos + insert directo en tabla) falla. Es el ÚNICO write que NO usa un RPC `security definer` (viola la regla madre del proyecto).
+- **CAUSA probable:** la petición de subida a Storage (o el insert directo) del path de documentos sale sin el JWT de usuario (rol `anon`) pese a que el cliente tiene sesión — posible issue del storage-client de supabase-js con el storage adapter async, o timing. Necesita **build de debug + chrome://inspect / logs de red** para verlo (imposible con el APK release + USB que se cae + biometría en cada relaunch).
+- **FIX arquitectónico recomendado (próxima ronda):** enrutar la subida de documento por un RPC `security definer` `sgc.registrar_documento_app(...)` (como TODOS los demás writes) para el insert en `documentos`, y confirmar/ajustar la subida a Storage. Eso lo hace robusto sin depender de la RLS/adjunto-de-sesión. Mientras: **Descartar** los documentos viejos atascados (los archivos ya están en Storage) y probar una subida NUEVA tras **cerrar sesión y volver a entrar** (sesión fresca).
+
 ## v1.20.2 PUBLICADA + MÍNIMA (2026-07-21) — envíos atascados, verificado en equipo real
 - **PUBLICADA + MÍNIMA: 1.20.2** (`version_publicada(movil)` → 1.20.2/1.20.2). APK firmado en bucket. Commits `77168bd` + release.
 - **RESUELTO Y VERIFICADO en APK real:**
