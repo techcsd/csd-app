@@ -210,10 +210,13 @@ export class SyncService {
    *  (p. ej. vehículo borrado) vuelven a error en 1 intento y muestran Descartar
    *  (no hay bucle automático: drain() no reintenta ops en error por su cuenta). */
   async retryErrored(): Promise<void> {
-    const errored = await db.outbox.where('estado').equals('error').toArray();
-    if (errored.length) {
+    // Incluye también los 'pending' atascados en backoff largo (p. ej. subidas
+    // que fallan por permiso/sesión): "Reintentar todos" debe forzar CADA envío
+    // no completado a intentar YA (resetea intentos y proximo_intento).
+    const items = await db.outbox.where('estado').anyOf('error', 'pending', 'syncing').toArray();
+    if (items.length) {
       await db.transaction('rw', db.outbox, db.mis_registros, async () => {
-        for (const op of errored) {
+        for (const op of items) {
           await db.outbox.update(op.id, {
             estado: 'pending',
             intentos: 0,
@@ -286,6 +289,26 @@ export class SyncService {
     }
   }
 
+  /** Falla una promesa si tarda demasiado, para que un envío colgado (subida/RPC
+   *  que nunca resuelve) NO congele toda la cola (el guard `draining` quedaría en
+   *  true para siempre y nada más se enviaría). El timeout cuenta como transitorio
+   *  → se reintenta luego; la cola sigue con el resto. */
+  private withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error(`Tiempo de espera agotado (${label}). Se reintentará.`)), ms);
+      p.then(
+        (v) => {
+          clearTimeout(t);
+          resolve(v);
+        },
+        (e) => {
+          clearTimeout(t);
+          reject(e);
+        },
+      );
+    });
+  }
+
   private async process(op: OutboxOp): Promise<void> {
     const handler = this.handlers.get(op.tipo_op);
     if (!handler) {
@@ -295,7 +318,7 @@ export class SyncService {
 
     await db.outbox.update(op.id, { estado: 'syncing' });
     try {
-      const photoPaths = await this.uploadPhotos(op.id);
+      const photoPaths = await this.withTimeout(this.uploadPhotos(op.id), 90_000, 'subida de fotos');
       // Compatibilidad con items encolados por versiones viejas: si el payload no
       // trae `capturado_en` (varios RPC lo EXIGEN → fallaban con "function not
       // found" y reintentar no ayudaba), lo rellenamos desde la fila del outbox,
@@ -304,7 +327,7 @@ export class SyncService {
         op.payload['capturado_en'] == null
           ? { ...op.payload, capturado_en: op.capturado_en }
           : op.payload;
-      await handler(payload, photoPaths);
+      await this.withTimeout(handler(payload, photoPaths), 90_000, 'guardar en el servidor');
 
       // Success: clear photos, mark the local record sent, drop the op.
       await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {
