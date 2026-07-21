@@ -1,6 +1,14 @@
 # HANDOFF — CSD App
 
-## Ronda 4 app (2026-07-21) — PROMPT-10 FASES 1–5 (bitácora + incidente + review CL) — build verde, PENDIENTE device-QA + release
+## Ronda 4 app (2026-07-21) — PROMPT-10 FASES 1–5 — v1.21.0 PUBLICADA + MÍNIMA, verificado en equipo real
+- **PUBLICADA + MÍNIMA: 1.21.0** (`app_versiones` movil → publicada/minima true; 1.20.3 despublicada). APK firmado (cert prod `3c5316d8…df5065`) en bucket + `apk_url` + `version.json`. Commit `a26df2d` en `main` (push hecho → deploy PWA). Historial registrado (Y1) con 7 cambios estructurados.
+- **VERIFICADO EN EQUIPO REAL (Xiaomi/MIUI vía adb) + BD:**
+  - Bitácora nueva ONLINE: 10 pasos, sujeto arriba, actividades ordenadas, multi-bloque, ≥2 fotos, equipos retirar/dañado, resumen por bloque → enviada. BD confirmó `bloque_entrepiso` + `bitacora_actividades.bloque` por línea.
+  - Bitácora OFFLINE (modo avión mid-wizard): "Guardado · Sin señal", encolada en outbox, y al reconectar **drenó sola** al servidor (BD confirmó bloque). Offline-first ✓.
+  - Incidente tipo hoja (7 pasos): tipo **incidente_equipo**, preguntas de equipo, sucesos del catálogo por tipo → enviado. BD confirmó `incidente_tipo=incidente_equipo`, `incidente_suceso`, `incidente_equipo_nombre/alquilado/operativo`.
+  - S14: cl-detalle muestra review read-only completa (puntos por sección con checks, plano+fotos, firmas con imagen + verdes) y "Firmar como {rol}" al final.
+- **Observación (pre-existente, fuera de S1–S14):** en arranque **offline en frío** el home muestra "Sin módulos asignados" (la lista de módulos NO se cachea en disco, requiere fetch vivo). Al reconectar vuelve normal. No lo toqué (es del user-context/gating, no de esta ronda) — candidato a cachear módulos offline en una próxima ronda.
+- **PENDIENTE (no bloquea):** detalle **web** SGC agrupado por bloque + flags de equipo (hard rule #5, otro repo).
 Source: `C:\developer\improvements\imp 20072026\CONTEXTO-ACTUALIZACION-3.md` (S1–S14). **Backend PROMPT-7/Act.3 verificado APLICADO en prod** (RPC `crear_bitacora_app` con `bloque`/equipos-flags/incidente-suceso-equipo, `catalogo_ordenado`, sucesos en `bitacora_catalogos`, min-fotos server-side, `incidente_equipo` en el CHECK). Todo esto fue **solo trabajo de app**. `npm run build` VERDE. **NO commiteado, NO release aún** (esperando OK de Xavier).
 - **S2** (`bitacora.service.getCatalogoOrdenado`): consume `catalogo_ordenado(proyectoId)` → estructuras/actividades ordenadas por ejecución con las ~3 más usadas de la obra primero (★). Cacheado offline por obra; fallback a `getCatalogos()` plano.
 - **S3/S4** (parte wizard, ahora **10 pasos**): paso 5 "¿qué se hizo hoy?" es sub-máquina `sujeto → actividades → ¿otro bloque?`. El bloque/piso/edificio se elige ARRIBA; cada actividad lleva su `bloque`; multi-bloque sin rehacer; resumen agrupa por bloque. Campo de bloque del viejo paso 9 eliminado (se manda `bloque_entrepiso` = resumen de bloques por retrocompat).
@@ -11,7 +19,7 @@ Source: `C:\developer\improvements\imp 20072026\CONTEXTO-ACTUALIZACION-3.md` (S1
 - **S11/S12/S13** (`incidente` reescrito a wizard tipo hoja, 7 pasos): obra → tipo (incidente/accidente/**incidente_equipo**) → preguntas del tipo → ¿qué pasó? (sucesos del catálogo `suceso_*` + Otro) → fotos(≥1)+voz → acciones → resumen. Autosave + salir del header + step-bar/wizard-footer. Nuevos campos incidente en payload/RPC.
 - **S14** (`cl-detalle`): antes de firmar se muestra **revisión read-only completa** (ítems cumple/no cumple + comentarios agrupados por sección, fotos+plano con URLs firmadas, observaciones, firmas puestas con imagen + checks verdes) y el botón "Firmar como {rol}". `getCl()` ampliado (items/fotos/plano/firma_path + signed URLs); modelo `ClRegistroDetalle` extendido.
 - **App detalle de bitácora** (`bitacora/detalle`): actividades agrupadas por bloque + flags de equipo retirar/dañado + campos de incidente (suceso/equipo).
-- **PENDIENTE:** device-QA (APK + PWA, online + modo avión), verificar detalle **web** SGC agrupa por bloque (hard rule #5), y `npm run apk` + publicar cuando Xavier dé OK (registrará versión, regla Y1).
+- (Detalle por-S de la implementación; el estado/QA/release está resumido arriba.)
 
 
 ## ✅ RESUELTO Y VERIFICADO — subida de documentos cédula/licencia (2026-07-21, v1.20.3)
