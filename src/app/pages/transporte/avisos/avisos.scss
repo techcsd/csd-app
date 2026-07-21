@@ -91,3 +91,38 @@
     margin-top: 0;
   }
 }
+
+// S33 — filtro + icono por tipo + marca de crítico.
+.avisos__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.avisos__filtros .chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.avisos__filtros .chip--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.avisos__ticon {
+  font-size: 18px;
+  margin-right: 6px;
+}
+.avisos__crit {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #fef2f2;
+  color: var(--color-error);
+}

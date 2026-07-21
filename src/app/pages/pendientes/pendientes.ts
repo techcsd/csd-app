@@ -99,6 +99,16 @@ export class PendientesPage {
     return this.items().some((i) => i.estado === 'error');
   }
 
+  /** S30 — un pending/syncing lleva demasiado tiempo atascado (>24h). */
+  private readonly VIEJO_MS = 24 * 60 * 60 * 1000;
+  esViejo(item: OutboxItem): boolean {
+    return item.estado !== 'error' && Date.now() - item.created_local > this.VIEJO_MS;
+  }
+  /** S30 — se puede descartar: error permanente, o pending atascado >24h. */
+  puedeDescartar(item: OutboxItem): boolean {
+    return item.permanente === true || this.esViejo(item);
+  }
+
   tipoLabel(t: string): string {
     return TIPO_LABEL[t] ?? t;
   }

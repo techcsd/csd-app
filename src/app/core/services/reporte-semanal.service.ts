@@ -87,6 +87,15 @@ export class ReporteSemanalService {
       orden: r.orden,
     }));
 
+    // S26a — sube firma + fotos guiadas al bucket `vehiculos` (igual que pre-uso).
+    const fotos: Array<{ id: string; bucket: string; path: string; slot: string; blob: Blob }> = [];
+    if (input.firma) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `checklist/${id}/firma.png`, slot: 'firma', blob: input.firma });
+    }
+    for (const [slot, blob] of Object.entries(input.fotos)) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `checklist/${id}/${slot}.jpg`, slot, blob });
+    }
+
     await this.sync.enqueue({
       id,
       tipo_op: 'reporte_semanal',
@@ -102,6 +111,7 @@ export class ReporteSemanalService {
         observacion: input.observacion,
         respuestas,
       },
+      fotos,
       resumen: {
         placa: input.placa,
         plantilla: 'Reporte semanal',
@@ -115,7 +125,7 @@ export class ReporteSemanalService {
   }
 
   private registerHandler(): void {
-    this.sync.register('reporte_semanal', async (payload) => {
+    this.sync.register('reporte_semanal', async (payload, photoPaths) => {
       const respuestas = (
         payload['respuestas'] as Array<{
           etiqueta: string;
@@ -134,6 +144,11 @@ export class ReporteSemanalService {
         orden: r.orden,
       }));
 
+      // S26a — fotos guiadas (todo menos la firma) + firma aparte.
+      const fotos = Object.entries(photoPaths)
+        .filter(([slot]) => slot !== 'firma')
+        .map(([slot, path]) => ({ storage_path: path, slot }));
+
       const { error } = await this.supabase.client.rpc('registrar_checklist_vehiculo', {
         p_id: payload['id'],
         p_plantilla_id: payload['plantilla_id'],
@@ -146,13 +161,20 @@ export class ReporteSemanalService {
         p_datos: {},
         p_kilometraje: payload['kilometraje'] ?? null,
         p_respuestas: respuestas,
-        p_fotos: [],
-        p_firma_path: null,
+        p_fotos: fotos,
+        p_firma_path: photoPaths['firma'] ?? null,
         p_observaciones: payload['observacion'] ?? null,
         p_capturado_en: payload['capturado_en'],
         p_nivel_combustible: payload['nivel_combustible'] ?? null,
       });
       if (error) throwSyncError(error);
+
+      // P7 — el RPC avanza vehiculos.kilometraje (regla no-retroceso). Invalidar
+      // las caches con km para que la app muestre el nuevo valor.
+      const vehId = payload['vehiculo_id'] as string;
+      await this.catalog.invalidate(`veh_detalle:${vehId}`);
+      await this.catalog.invalidate('pendientes_transporte');
+      await this.catalog.invalidate('flota_vehiculos');
     });
   }
 }

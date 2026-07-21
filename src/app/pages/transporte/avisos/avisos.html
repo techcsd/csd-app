@@ -11,10 +11,19 @@
     } @else if (!avisos().length) {
       <app-empty-state icon="✅" title="Sin avisos pendientes" message="No hay avisos de flota por atender ahora mismo." />
     } @else {
-      @for (a of avisos(); track a.id) {
-        <div class="avisos__card" [class.avisos__card--alta]="a.severidad === 'alta'">
+      <!-- S33 — filtro simple -->
+      <div class="avisos__filtros">
+        <button type="button" class="chip" [class.chip--on]="filtro() === 'todos'" (click)="setFiltro('todos')">Todos ({{ avisos().length }})</button>
+        <button type="button" class="chip" [class.chip--on]="filtro() === 'criticos'" (click)="setFiltro('criticos')">🔴 Críticos ({{ criticosCount() }})</button>
+        <button type="button" class="chip" [class.chip--on]="filtro() === 'mios'" (click)="setFiltro('mios')">Míos ({{ miosCount() }})</button>
+      </div>
+
+      @for (a of avisosFiltrados(); track a.id) {
+        <div class="avisos__card" [class.avisos__card--alta]="esCritico(a)">
           <div class="avisos__top">
+            <span class="avisos__ticon">{{ tipoIcon(a.tipo) }}</span>
             <span class="avisos__tipo">{{ tipoLabel(a.tipo) }}</span>
+            @if (esCritico(a)) { <span class="avisos__crit">CRÍTICO</span> }
             @if (a.vehiculo?.placa) { <span class="avisos__placa">{{ a.vehiculo?.placa }}</span> }
           </div>
           @if (a.mensaje) { <p class="avisos__msg">{{ a.mensaje }}</p> }

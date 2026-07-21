@@ -59,15 +59,13 @@
       <!-- Step 3: km + fuel -->
       @if (step() === 3) {
         <h1 class="screen__title">Kilometraje y combustible</h1>
-        <label class="field-label" for="km">Kilometraje (km)</label>
-        <input
-          id="km"
-          class="field checklist__km"
-          type="number"
-          inputmode="numeric"
-          [ngModel]="km()"
-          (ngModelChange)="km.set($event)"
-          placeholder="0"
+        <!-- S19 — km inteligente compartido: último registrado + menor en vivo + mantenimiento -->
+        <app-km-input
+          label="Kilometraje (km)"
+          [(value)]="km"
+          [ultimo]="odometro()"
+          [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
+          [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
         <label class="field-label">Nivel de combustible</label>
         <div class="checklist__fuel">
@@ -105,11 +103,14 @@
         </div>
 
         @if (tieneDanos()) {
-          @for (d of danos(); track $index) {
+          <!-- S27 — aliasamos el índice del daño (di); dentro del @for de zonas,
+               $index apunta a la ZONA y eclipsaba al del daño (los chips no
+               respondían). Usamos `di` en todos los handlers del daño. -->
+          @for (d of danos(); track $index; let di = $index) {
             <div class="dano">
               <div class="dano__head">
-                <span class="dano__num">Daño {{ $index + 1 }}</span>
-                <button type="button" class="dano__remove" (click)="removeDano($index)">Quitar</button>
+                <span class="dano__num">Daño {{ di + 1 }}</span>
+                <button type="button" class="dano__remove" (click)="removeDano(di)">Quitar</button>
               </div>
               <label class="field-label">Zona</label>
               <div class="dano__zonas">
@@ -118,18 +119,18 @@
                     type="button"
                     class="chip"
                     [class.chip--on]="d.zona === z.zona"
-                    (click)="setDanoZona($index, z.zona)"
+                    (click)="setDanoZona(di, z.zona)"
                   >
                     {{ z.label }}
                   </button>
                 }
               </div>
-              <app-photo-slot label="Foto del daño" hint="📸" [foto]="d.photo" (captured)="onDanoFoto($index, $event)" />
+              <app-photo-slot label="Foto del daño" hint="📸" [foto]="d.photo" (captured)="onDanoFoto(di, $event)" />
               <input
                 class="field dano__desc"
                 type="text"
                 [ngModel]="d.descripcion"
-                (ngModelChange)="setDanoDesc($index, $event)"
+                (ngModelChange)="setDanoDesc(di, $event)"
                 placeholder="Nota (opcional)"
               />
             </div>
@@ -165,10 +166,18 @@
             }
           </li>
         </ul>
+        <!-- S19 — aviso de mantenimiento en el resumen -->
+        @if (mantenimiento(); as m) {
+          @if (m.estado !== 'ok') {
+            <p class="checklist__mant" [class.checklist__mant--venc]="m.estado === 'vencido'">
+              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO — pasó {{ -m.faltan | number: '1.0-0' }} km. }
+              @else { 🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km. }
+            </p>
+          }
+        }
         @if (gpsEstado() === 'sin-ubicacion') {
           <p class="checklist__gps-note">
-            No pudimos obtener el GPS (permiso denegado o sin señal). Puedes enviar igual: se
-            registrará <strong>sin ubicación</strong>.
+            {{ gpsMensaje() }}
             <button type="button" class="checklist__gps-retry" (click)="reintentarGps()">Reintentar ubicación</button>
           </p>
         }

@@ -78,9 +78,10 @@ export class PermissionsService {
   async getPosition(opts?: {
     highAccuracy?: boolean;
     timeout?: number;
+    maximumAge?: number;
   }): Promise<
     | { ok: true; lat: number; lng: number }
-    | { ok: false; reason: 'denied' | 'denied-permanent' | 'timeout' | 'unavailable' }
+    | { ok: false; reason: 'denied' | 'denied-permanent' | 'timeout' | 'gps-off' | 'unavailable' }
   > {
     let state = await this.checkLocation();
     if (state === 'prompt') state = await this.requestLocation();
@@ -92,22 +93,81 @@ export class PermissionsService {
     }
     if (state === 'unavailable') return { ok: false, reason: 'unavailable' };
 
+    // S28 — en Android/MIUI `getCurrentPosition` a veces NO resuelve nunca o
+    // devuelve "location unavailable" aunque el permiso esté dado (issues
+    // ionic-team/capacitor #683, #4962). Estrategia robusta:
+    //  1) aceptar un fix reciente (maximumAge) → instantáneo si ya hay uno;
+    //  2) correr getCurrentPosition Y watchPosition en paralelo y quedarnos con
+    //     el primero (watchPosition suele entregar el primer fix cuando
+    //     getCurrentPosition se cuelga);
+    //  3) timeout amplio (25s) para la adquisición en frío.
+    const enableHighAccuracy = opts?.highAccuracy ?? true;
+    const timeout = opts?.timeout ?? 25000;
+    const maximumAge = opts?.maximumAge ?? 60000;
     try {
-      const pos: Position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: opts?.highAccuracy ?? true,
-        timeout: opts?.timeout ?? 10000,
-      });
+      const pos = await this.acquireFirstFix({ enableHighAccuracy, timeout, maximumAge });
       return { ok: true, lat: pos.coords.latitude, lng: pos.coords.longitude };
     } catch (e) {
-      const msg = (e as Error)?.message?.toLowerCase() ?? '';
-      if (msg.includes('denied') || msg.includes('permission')) {
-        return { ok: false, reason: 'denied-permanent' };
-      }
-      if (msg.includes('timeout') || msg.includes('time out')) {
-        return { ok: false, reason: 'timeout' };
-      }
-      return { ok: false, reason: 'unavailable' };
+      return { ok: false, reason: this.classifyPosError(e) };
     }
+  }
+
+  /**
+   * S28 — obtiene el primer fix disponible corriendo getCurrentPosition +
+   * watchPosition en paralelo; resuelve con el que llegue primero y limpia el
+   * watch. Rechaza al agotar el timeout global (con la última causa vista).
+   */
+  private acquireFirstFix(o: { enableHighAccuracy: boolean; timeout: number; maximumAge: number }): Promise<Position> {
+    return new Promise<Position>((resolve, reject) => {
+      let settled = false;
+      let watchId: string | null = null;
+      let lastErr: unknown = new Error('timeout');
+      const cleanup = () => {
+        clearTimeout(timer);
+        if (watchId != null) {
+          void Geolocation.clearWatch({ id: watchId });
+          watchId = null;
+        }
+      };
+      const done = (fn: () => void) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        fn();
+      };
+      const timer = setTimeout(() => done(() => reject(lastErr)), o.timeout);
+
+      // 1) getCurrentPosition (rápido si hay un fix reciente vía maximumAge).
+      Geolocation.getCurrentPosition(o)
+        .then((pos) => done(() => resolve(pos)))
+        .catch((e) => (lastErr = e)); // no rechazamos: dejamos que watchPosition intente
+
+      // 2) watchPosition — más fiable en Android cuando getCurrentPosition se cuelga.
+      Geolocation.watchPosition(o, (pos, err) => {
+        if (err) {
+          lastErr = err;
+          return;
+        }
+        if (pos) done(() => resolve(pos));
+      })
+        .then((id) => {
+          if (settled) void Geolocation.clearWatch({ id });
+          else watchId = id;
+        })
+        .catch((e) => (lastErr = e));
+    });
+  }
+
+  /** S28 — clasifica el error de posición para el mensaje de la UI. */
+  private classifyPosError(e: unknown): 'denied-permanent' | 'timeout' | 'gps-off' | 'unavailable' {
+    const msg = ((e as Error)?.message ?? '').toLowerCase();
+    if (msg.includes('denied') || msg.includes('permission')) return 'denied-permanent';
+    // GPS del sistema apagado (distinto de "sin señal"): el usuario debe activarlo.
+    if (msg.includes('disabled') || msg.includes('location services') || msg.includes('location unavailable')) {
+      return 'gps-off';
+    }
+    if (msg.includes('timeout') || msg.includes('time out')) return 'timeout';
+    return 'unavailable';
   }
 
   // ---- Micrófono --------------------------------------------------------

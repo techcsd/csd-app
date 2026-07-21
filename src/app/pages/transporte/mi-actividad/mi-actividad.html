@@ -63,6 +63,45 @@
         <p class="mact__vacio">Sin actividad todavía. Aquí aparecerán tus checklists, combustible y vehículos usados.</p>
       }
 
+      <!-- S32 — rutas asignadas (drill-down a Conduces y rutas) -->
+      @if (rutas().length) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Mis rutas de hoy ({{ rutas().length }})</h2>
+          @for (r of rutas(); track r.id) {
+            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verRutas()">
+              <span class="mact__act-main">🗺️ {{ r.origen }} → {{ r.destino }}</span>
+              <span class="mact__act-sub">{{ r.estado }}</span>
+            </button>
+          }
+        </section>
+      }
+
+      <!-- S32 — accidentes -->
+      @if (accidentes().length) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Accidentes ({{ accidentes().length }})</h2>
+          @for (a of accidentes(); track a.id) {
+            <div class="mact__act-row">
+              <span class="mact__act-main">🚨 {{ a.vehiculo?.placa ?? 'Vehículo' }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
+              <span class="mact__act-sub">{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}@if (a.lesionados) { · {{ a.lesionados }} lesionado(s) }</span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- S32 — multas -->
+      @if (multas().length) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Multas ({{ multas().length }})</h2>
+          @for (m of multas(); track m.id) {
+            <div class="mact__act-row">
+              <span class="mact__act-main">🚦 {{ m.motivo ?? 'Multa' }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
+              <span class="mact__act-sub">@if (m.monto != null) { RD$ {{ m.monto }} · }{{ m.estado === 'pagada' ? 'Pagada' : 'Pendiente' }}</span>
+            </div>
+          }
+        </section>
+      }
+
       <!-- X1 — documentos del conductor -->
       <section class="mact__docs">
         <h2 class="mact__docs-title">Mis documentos</h2>

@@ -1,0 +1,117 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Reporte enviado' : 'Guardado'"
+    [note]="online ? 'Quedó registrado en flota.' : 'Sin señal. Se enviará solo.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen repv">
+    <header class="repv__topbar">
+      <button type="button" class="repv__topback" (click)="salir()" aria-label="Salir">←</button>
+      <span class="repv__icon">🚧</span>
+      <span class="repv__topttl">Reportar · {{ placa() }}</span>
+    </header>
+    <app-step-bar [current]="step()" [total]="total()" />
+
+    <div class="screen__body">
+      <!-- 1. Tipo -->
+      @if (step() === 1) {
+        <h1 class="screen__title">¿Qué vas a reportar?</h1>
+        <app-option-button icon="🚨" label="Accidente" tone="error" [selected]="tipo() === 'accidente'" (pressed)="pickTipo('accidente')" />
+        <app-option-button icon="🔧" label="Daño del vehículo" tone="warning" [selected]="tipo() === 'dano'" (pressed)="pickTipo('dano')" />
+      }
+
+      <!-- ACCIDENTE -->
+      @if (esAccidente()) {
+        @if (step() === 2) {
+          <h1 class="screen__title">¿Cuándo pasó?</h1>
+          @for (f of fases; track f.value) {
+            <app-option-button [icon]="f.icon" [label]="f.label" [selected]="fase() === f.value" (pressed)="fase.set(f.value)" />
+          }
+        }
+        @if (step() === 3) {
+          <h1 class="screen__title">¿Qué pasó?</h1>
+          <textarea class="field repv__ta" rows="4" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe el accidente"></textarea>
+          <label class="field-label">¿Hay lesionados?</label>
+          <app-counter label="Personas lesionadas" icon="🚑" [(value)]="lesionados" />
+          <label class="field-label">¿Involucra a un tercero? (opcional)</label>
+          <input class="field" type="text" [ngModel]="tercero()" (ngModelChange)="tercero.set($event)" placeholder="Nombre / vehículo del tercero" />
+        }
+        @if (step() === 4) {
+          <h1 class="screen__title">Acta de la AMET (opcional)</h1>
+          <p class="screen__subtitle">Si tienes el acta/reporte de la AMET, adjúntala (foto o PDF).</p>
+          @if (amet(); as d) {
+            <div class="repv__doc">📎 {{ d.esImagen ? 'Foto adjunta' : d.nombre }} <button type="button" class="btn-ghost" (click)="quitarAmet()">Quitar</button></div>
+          } @else {
+            <div class="repv__doc-actions">
+              <button type="button" class="btn-ghost" (click)="subirAmet(false)">📷 Foto del acta</button>
+              <button type="button" class="btn-ghost" (click)="subirAmet(true)">📄 Archivo (PDF)</button>
+            </div>
+          }
+        }
+        @if (step() === 5) {
+          <h1 class="screen__title">Revisa y envía</h1>
+          <ul class="resumen">
+            <li><span>Vehículo</span><b>{{ placa() }}</b></li>
+            <li><span>Cuándo</span><b>{{ fase() === 'en_el_momento' ? 'En el momento' : 'Después' }}</b></li>
+            <li><span>Lesionados</span><b>{{ lesionados() }}</b></li>
+            @if (tercero()) { <li><span>Tercero</span><b>{{ tercero() }}</b></li> }
+            <li><span>Acta AMET</span><b>{{ amet() ? 'Sí' : 'No' }}</b></li>
+          </ul>
+        }
+      }
+
+      <!-- DAÑO -->
+      @if (tipo() === 'dano') {
+        @if (step() === 2) {
+          <h1 class="screen__title">¿En qué zona?</h1>
+          <div class="repv__chips">
+            @for (z of zonas; track z.zona) {
+              <button type="button" class="chip" [class.chip--on]="zona() === z.zona" (click)="zona.set(z.zona)">{{ z.label }}</button>
+            }
+          </div>
+          <label class="field-label">¿Cómo pasó?</label>
+          <app-option-button label="En un accidente" [selected]="danoOrigen() === 'accidente'" (pressed)="danoOrigen.set('accidente')" />
+          <app-option-button label="Por el uso" [selected]="danoOrigen() === 'uso'" (pressed)="danoOrigen.set('uso')" />
+          <app-option-button label="No sé" [selected]="danoOrigen() === 'desconocido'" (pressed)="danoOrigen.set('desconocido')" />
+        }
+        @if (step() === 3) {
+          <h1 class="screen__title">Foto y detalle del daño</h1>
+          <app-photo-slot label="Foto del daño" hint="📸" [foto]="danoFoto()" (captured)="onDanoFoto($event)" (cleared)="onDanoFotoCleared()" />
+          <label class="field-label">Detalle (opcional)</label>
+          <textarea class="field repv__ta" rows="3" [ngModel]="danoDescripcion()" (ngModelChange)="danoDescripcion.set($event)" placeholder="¿Qué tiene?"></textarea>
+        }
+        @if (step() === 4) {
+          <h1 class="screen__title">Revisa y envía</h1>
+          <ul class="resumen">
+            <li><span>Vehículo</span><b>{{ placa() }}</b></li>
+            <li><span>Zona</span><b>{{ zona() }}</b></li>
+            <li><span>Origen</span><b>{{ danoOrigen() }}</b></li>
+            <li><span>Foto</span><b>{{ danoFoto() ? 'Sí' : 'No' }}</b></li>
+          </ul>
+        }
+      }
+    </div>
+
+    <app-wizard-footer
+      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
+      [primaryLabel]="step() < total() ? 'Siguiente' : (submitting() ? 'Enviando…' : 'Enviar')"
+      [primaryDisabled]="step() >= total() && submitting()"
+      (back)="prev()"
+      (primary)="step() < total() ? next() : submit()"
+    />
+  </div>
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir del reporte?"
+    message="Perderás lo que llevas."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
+}

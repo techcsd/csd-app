@@ -312,7 +312,28 @@ export class SyncService {
   private async process(op: OutboxOp): Promise<void> {
     const handler = this.handlers.get(op.tipo_op);
     if (!handler) {
-      // No handler registered (feature not loaded) — leave pending, try later.
+      // S30 — con el bootstrap eager (app.config) esto no debería pasar. Red de
+      // seguridad: NO dejar el item pending para siempre en silencio; contar
+      // intentos con backoff y, tras MAX_INTENTOS, marcarlo error visible para
+      // que se pueda Descartar (antes se saltaba y quedaba eterno).
+      const intentos = op.intentos + 1;
+      if (intentos >= MAX_INTENTOS) {
+        await db.transaction('rw', db.outbox, db.mis_registros, async () => {
+          await db.outbox.update(op.id, {
+            estado: 'error',
+            intentos,
+            error_msg: `No se pudo procesar "${op.tipo_op}" (sin handler; posible desajuste de versión).`,
+            error_kind: 'incompatible',
+            permanente: true,
+          });
+          await db.mis_registros.update(op.id, { estado: 'error' });
+        });
+      } else {
+        await db.outbox.update(op.id, {
+          intentos,
+          proximo_intento: Date.now() + BACKOFF[Math.min(intentos - 1, BACKOFF.length - 1)],
+        });
+      }
       return;
     }
 

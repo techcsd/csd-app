@@ -40,8 +40,19 @@ export class UserContextService {
 
   nombre = computed(() => this._profile()?.nombre ?? '');
 
+  // R14/S15 — roles de flota ELEVADOS (mismo criterio que sgc.es_flota_elevado()).
+  // El chofer (chofer_transportista) NO es elevado: ve solo sus cuadros.
+  private static readonly FLOTA_ELEVADO = ['admin', 'direccion', 'gerencia', 'jefe_flota'];
+  esFlotaElevado = computed(() =>
+    this.roles().some((r) => UserContextService.FLOTA_ELEVADO.includes(r)),
+  );
+
   hasModulo(modulo: string): boolean {
     return this.modulos().includes(modulo);
+  }
+
+  hasRol(codigo: string): boolean {
+    return this.roles().includes(codigo);
   }
 
   /**

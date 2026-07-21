@@ -1,0 +1,45 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Multa registrada' : 'Guardado'"
+    [note]="online ? 'Quedó en la actividad del conductor.' : 'Sin señal. Se enviará sola.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen rmul">
+    <header class="rmul__topbar">
+      <button type="button" class="rmul__topback" (click)="back()" aria-label="Atrás">←</button>
+      <span class="rmul__icon">🚦</span>
+      <span class="rmul__topttl">Registrar multa</span>
+    </header>
+
+    <div class="screen__body">
+      <label class="field-label">Motivo de la multa</label>
+      <input class="field" type="text" [ngModel]="motivo()" (ngModelChange)="motivo.set($event)" placeholder="Ej: exceso de velocidad" />
+
+      <label class="field-label">Monto (opcional)</label>
+      <input class="field" type="number" inputmode="decimal" [ngModel]="monto()" (ngModelChange)="monto.set($event)" placeholder="RD$" />
+
+      <label class="field-label">Estado</label>
+      <app-option-button icon="⏳" label="Pendiente de pago" [selected]="estado() === 'pendiente'" (pressed)="estado.set('pendiente')" />
+      <app-option-button icon="✅" label="Pagada" tone="success" [selected]="estado() === 'pagada'" (pressed)="estado.set('pagada')" />
+
+      <label class="field-label">Documento (opcional)</label>
+      @if (documento(); as d) {
+        <div class="rmul__doc">📎 {{ d.esImagen ? 'Foto adjunta' : d.nombre }} <button type="button" class="btn-ghost" (click)="quitarDoc()">Quitar</button></div>
+      } @else {
+        <div class="rmul__doc-actions">
+          <button type="button" class="btn-ghost" (click)="subirDoc(false)">📷 Foto</button>
+          <button type="button" class="btn-ghost" (click)="subirDoc(true)">📄 Archivo</button>
+        </div>
+      }
+    </div>
+
+    <footer class="rmul__nav">
+      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        {{ submitting() ? 'Guardando…' : 'Registrar multa' }}
+      </button>
+    </footer>
+  </div>
+}

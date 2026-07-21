@@ -14,12 +14,14 @@ import { MantenimientosService } from './core/services/mantenimientos.service';
 import { ChecklistPreusoService } from './core/services/checklist-preuso.service';
 import { ReporteSemanalService } from './core/services/reporte-semanal.service';
 import { ConducesService } from './core/services/conduces.service';
+import { CombustibleService } from './core/services/combustible.service';
 import { BitacoraService } from './core/services/bitacora.service';
 import { InventarioService } from './core/services/inventario.service';
 import { SolicitudesService } from './core/services/solicitudes.service';
 import { ReportesService } from './core/services/reportes.service';
 import { ClLiberacionService } from './core/services/cl-liberacion.service';
 import { DocumentosService } from './core/services/documentos.service';
+import { FlotaReportesService } from './core/services/flota-reportes.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -40,6 +42,9 @@ export const appConfig: ApplicationConfig = {
       inject(ChecklistPreusoService);
       inject(ReporteSemanalService);
       inject(ConducesService);
+      // S30 — faltaba: sin bootearlo, el handler 'combustible' no se registraba y
+      // las echadas quedaban "En cola" para siempre (el caso real atascado 23h).
+      inject(CombustibleService);
       inject(BitacoraService);
       inject(InventarioService);
       inject(SolicitudesService);
@@ -50,6 +55,8 @@ export const appConfig: ApplicationConfig = {
       // (el drain las saltaba por falta de handler). Booteando el servicio aquí,
       // su handler queda registrado y esos envíos se procesan.
       inject(DocumentosService);
+      // S22/S24 — handlers de accidente/daño/multa registrados al boot.
+      inject(FlotaReportesService);
     }),
   ],
 };

@@ -6,35 +6,18 @@
   </header>
 
   <div class="screen__body">
-    <button type="button" class="btn-ghost transporte__conduces" (click)="conduces()">
-      🧾 Mis conduces y rutas
-    </button>
-    <button type="button" class="btn-ghost transporte__conduces" (click)="asignar()">
-      ➕ Asignarme un vehículo
-    </button>
-    <button type="button" class="btn-ghost transporte__conduces" (click)="reporteSemanal()">
-      📋 Reporte semanal
-      @if (reporteSemanalPend()) {
-        <span class="transporte__badge">{{ reporteSemanalPend() }}</span>
+    <!-- S15 — hub como grid de cuadros grandes (patrón del home), gated por rol -->
+    <div class="hub-grid">
+      @for (t of tiles(); track t.key) {
+        <app-big-button
+          [icon]="t.icon"
+          [label]="t.label"
+          [tint]="t.tint"
+          [badge]="badgeFor(t.key)"
+          (pressed)="openTile(t)"
+        />
       }
-    </button>
-    <!-- U8 — explica la diferencia con el pre-uso -->
-    <p class="transporte__hint">
-      Una vez por semana por cada vehículo. Es distinto del <strong>pre-uso</strong>, que se
-      llena antes de cada salida. Solo el reporte semanal cuenta para el cumplimiento.
-    </p>
-    <button type="button" class="btn-ghost transporte__conduces" (click)="miActividad()">
-      📈 Mi actividad
-    </button>
-    <button type="button" class="btn-ghost transporte__conduces" (click)="vehiculosLista()">
-      🚙 Vehículos
-    </button>
-    <button type="button" class="btn-ghost transporte__conduces" (click)="conductoresLista()">
-      🪪 Conductores
-    </button>
-    <button type="button" class="btn-ghost transporte__conduces" (click)="avisos()">
-      🔔 Avisos de flota
-    </button>
+    </div>
 
     @if (loading()) {
       <app-skeleton [rows]="5" />

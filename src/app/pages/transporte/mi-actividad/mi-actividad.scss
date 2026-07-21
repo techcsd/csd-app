@@ -124,3 +124,27 @@
   font-weight: 800;
   color: var(--color-text-primary);
 }
+
+// S32 — filas de rutas/accidentes/multas en la actividad.
+.mact__act-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  margin-bottom: 8px;
+}
+.mact__act-row--tap:active {
+  background: var(--color-surface-2, #212121);
+}
+.mact__act-main {
+  font-weight: 600;
+}
+.mact__act-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

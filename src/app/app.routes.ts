@@ -119,6 +119,20 @@ export const routes: Routes = [
       import('./pages/transporte/perfil-vehiculo/perfil-vehiculo').then((m) => m.PerfilVehiculoPage),
   },
   {
+    // S22 — reportar accidente o daño de un vehículo.
+    path: 'transporte/vehiculo/:vehiculoId/reportar',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/reportar-vehiculo/reportar-vehiculo').then((m) => m.ReportarVehiculoPage),
+  },
+  {
+    // S24 — registrar una multa de un conductor.
+    path: 'transporte/conductor/:conductorId/multa',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/reportar-multa/reportar-multa').then((m) => m.ReportarMultaPage),
+  },
+  {
     path: 'transporte/conductores',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
@@ -189,6 +203,14 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
       import('./pages/transporte/mantenimiento/mantenimiento').then((m) => m.MantenimientoPage),
+  },
+  {
+    // S26b — acceso directo "Registrar combustible" sin vehículo en contexto:
+    // la pantalla muestra el selector del pool.
+    path: 'transporte/combustible',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/combustible/combustible').then((m) => m.CombustiblePage),
   },
   {
     path: 'transporte/combustible/:vehiculoId',

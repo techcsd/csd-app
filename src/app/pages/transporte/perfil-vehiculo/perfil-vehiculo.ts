@@ -151,6 +151,11 @@ export class PerfilVehiculoPage {
     void this.router.navigate(['/transporte/vehiculos', this.vehiculoId(), 'editar']);
   }
 
+  /** S22 — reportar accidente o daño de este vehículo. */
+  reportar(): void {
+    void this.router.navigate(['/transporte/vehiculo', this.vehiculoId(), 'reportar']);
+  }
+
   /** Asignar este vehículo a un conductor (admin). */
   async asignar(): Promise<void> {
     if (this.asignando()) return;

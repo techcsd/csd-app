@@ -22,6 +22,8 @@ export interface ConduceEntregaCaptura {
 /** New-route capture the crear-ruta wizard hands to crearRuta(). */
 export interface RutaCaptura {
   vehiculoId: string;
+  /** S16 — conductor asignado (el jefe de flota lo elige; dispara la notificación). */
+  conductorId: string | null;
   origen: string;
   destino: string;
   fecha: string;
@@ -127,6 +129,7 @@ export class ConducesService {
       payload: {
         id,
         vehiculo_id: input.vehiculoId,
+        conductor_id: input.conductorId,
         origen: input.origen,
         destino: input.destino,
         fecha: input.fecha,
@@ -195,7 +198,7 @@ export class ConducesService {
       const { error } = await this.supabase.client.rpc('crear_ruta_app', {
         p_id: payload['id'],
         p_vehiculo_id: payload['vehiculo_id'],
-        p_conductor_id: null,
+        p_conductor_id: payload['conductor_id'] ?? null, // S16 — conductor asignado
         p_origen: payload['origen'],
         p_destino: payload['destino'],
         p_fecha: payload['fecha'],

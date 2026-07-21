@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
@@ -56,6 +57,7 @@ const TOTAL_STEPS = 5;
 })
 export class LiberacionPage implements OnDestroy {
   private router = inject(Router);
+  private location = inject(Location);
   private service = inject(ClLiberacionService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
@@ -447,7 +449,10 @@ export class LiberacionPage implements OnDestroy {
     void this.router.navigate(['/bitacora'], { replaceUrl: true });
   }
   back(): void {
-    void this.router.navigate(['/bitacora']);
+    // S31 — location.back() vuelve al hub que ya está en la pila SIN duplicarlo
+    // (navigate a /bitacora, aun con replaceUrl, dejaba dos entradas y "atrás"
+    // se quedaba en el hub en vez de llegar a home). Mismo criterio que incidente.
+    this.location.back();
   }
 
   get online(): boolean {

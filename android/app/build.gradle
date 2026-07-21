@@ -13,7 +13,7 @@ if (hasKeystore) {
 // name (major*1_000_000 + minor*1_000 + patch) so it always increments with the
 // version and matches the backend's version_code scheme (e.g. 1.5.0 -> 1005000).
 // Keep appVersionName in sync with src/environments/* and scripts/release-apk.mjs.
-def appVersionName = "1.21.1"
+def appVersionName = "1.22.0"
 def computeVersionCode = { String name ->
     def p = name.tokenize('.')
     def major = (p.size() > 0 ? p[0] : "0").toInteger()

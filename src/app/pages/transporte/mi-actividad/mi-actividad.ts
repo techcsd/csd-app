@@ -6,6 +6,10 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
+import { ConducesService } from '../../../core/services/conduces.service';
+import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
+import { FlotaAccidente, FlotaMulta } from '../../../core/models/flota-reportes.model';
+import { RutaHoy } from '../../../core/models/transporte.model';
 import { ConductorStats } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
@@ -24,6 +28,8 @@ import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
 export class MiActividadPage {
   private conductores = inject(ConductoresService);
   private documentos = inject(DocumentosService);
+  private conduces = inject(ConducesService);
+  private flotaReportes = inject(FlotaReportesService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
@@ -31,6 +37,10 @@ export class MiActividadPage {
   loading = signal(true);
   stats = signal<ConductorStats | null>(null);
   esConductor = signal(true);
+  // S32 — actividad consolidada del chofer.
+  rutas = signal<RutaHoy[]>([]);
+  accidentes = signal<FlotaAccidente[]>([]);
+  multas = signal<FlotaMulta[]>([]);
   fmtFecha = formatFecha; // U9 — fecha date-only
   fmtFechaMedia = formatFechaMedia; // U9 — timestamp
 
@@ -66,6 +76,10 @@ export class MiActividadPage {
         this.condId.set(cond.id);
         this.stats.set(await this.conductores.getMiStats());
         await this.loadDocs();
+        // S32 — rutas asignadas + accidentes + multas (best-effort, online).
+        void this.conduces.misRutas().then((r) => this.rutas.set(r));
+        void this.flotaReportes.getAccidentesConductor(cond.id).then((a) => this.accidentes.set(a));
+        void this.flotaReportes.getMultasConductor(cond.id).then((m) => this.multas.set(m));
       }
     } finally {
       this.loading.set(false);
@@ -107,6 +121,11 @@ export class MiActividadPage {
 
   irAsignar(): void {
     void this.router.navigate(['/transporte/asignar']);
+  }
+
+  /** S32 — drill-down a "Conduces y rutas". */
+  verRutas(): void {
+    void this.router.navigate(['/transporte/conduces']);
   }
 
   back(): void {

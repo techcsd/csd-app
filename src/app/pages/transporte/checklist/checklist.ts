@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -13,7 +13,9 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
+import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { VehiculoDetalle } from '../../../core/models/transporte.model';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -56,7 +58,7 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner, ConfirmDialog, WizardExit],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner, ConfirmDialog, WizardExit, KmInput],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })
@@ -71,6 +73,7 @@ export class ChecklistPage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private borradorSvc = inject(BorradorService);
   private ctx = inject(UserContextService);
+  private location = inject(Location);
 
   private sig = viewChild(SignaturePad);
 
@@ -92,10 +95,21 @@ export class ChecklistPage implements OnDestroy {
   loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
   km = signal<number | null>(null);
   odometro = signal<number | null>(null);
+  vehDetalle = signal<VehiculoDetalle | null>(null); // S19 — km_ultimo + intervalo
   kmInvalido = computed(() => {
     const km = this.km();
     const odo = this.odometro();
     return km != null && odo != null && km < odo;
+  });
+  /** S19 — estado de mantenimiento EN VIVO (para el aviso del resumen, paso 6). */
+  mantenimiento = computed(() => {
+    const v = this.vehDetalle();
+    const km = this.km();
+    if (!v || v.km_ultimo_mantenimiento == null || km == null || km <= 0) return null;
+    const proximo = v.km_ultimo_mantenimiento + (v.intervalo_mantenimiento_km ?? 5000);
+    const faltan = proximo - km;
+    const estado: 'ok' | 'pre_cita' | 'vencido' = faltan <= 0 ? 'vencido' : faltan <= 500 ? 'pre_cita' : 'ok';
+    return { estado, faltan, proximo };
   });
   combustible = signal<CombustibleNivel | null>(null);
   tieneDanos = signal<boolean | null>(null);
@@ -108,6 +122,22 @@ export class ChecklistPage implements OnDestroy {
   gpsEstado = signal<'capturando' | 'ok' | 'sin-ubicacion'>('capturando');
   /** P2 — el permiso quedó denegado permanente: reintentar no reabre el diálogo. */
   gpsBloqueado = signal(false);
+  /** S28 — motivo del fallo de GPS, para un mensaje específico. */
+  gpsRazon = signal<'denied' | 'denied-permanent' | 'timeout' | 'gps-off' | 'unavailable' | null>(null);
+  gpsMensaje = computed(() => {
+    switch (this.gpsRazon()) {
+      case 'gps-off':
+        return 'La ubicación del teléfono está apagada. Actívala (desliza desde arriba → Ubicación) y reintenta.';
+      case 'denied-permanent':
+        return 'La app no tiene permiso de ubicación. Ábrelo en ajustes y reintenta.';
+      case 'denied':
+        return 'Necesitamos permiso de ubicación. Reintenta y acéptalo.';
+      case 'timeout':
+        return 'No se pudo fijar el GPS a tiempo. Sal a cielo abierto y reintenta. Puedes enviar sin ubicación.';
+      default:
+        return 'No pudimos obtener el GPS (sin señal). Puedes enviar igual: se registrará sin ubicación.';
+    }
+  });
 
   submitting = signal(false);
   done = signal(false);
@@ -184,7 +214,10 @@ export class ChecklistPage implements OnDestroy {
     this.confirmSalir.set(false);
   }
   private salir(): void {
-    void this.router.navigate(['/transporte']);
+    // S31 — location.back() vuelve al hub existente SIN duplicarlo (así
+    // transporte → recibir → atrás → atrás = HOME). navigate dejaba una entrada
+    // extra de transporte y "atrás" se quedaba en el hub.
+    this.location.back();
   }
 
   private clave(): string {
@@ -217,12 +250,25 @@ export class ChecklistPage implements OnDestroy {
 
   private async loadVehiculo(): Promise<void> {
     try {
+      // S29 — pre-check: si estamos online y el vehículo ya no existe/está
+      // inactivo, no dejar llenar 6 pasos para nada; avisar y refrescar el pool.
+      if (this.network.online()) {
+        const activo = await this.vehiculos.estaActivo(this.vehiculoId);
+        if (activo === false) {
+          this.toast.error('Este vehículo ya no está disponible. Actualizamos tu lista.');
+          await this.vehiculos.invalidatePendientes();
+          void this.router.navigate(['/transporte'], { replaceUrl: true });
+          return;
+        }
+      }
       const v = await this.vehiculos.getVehiculo(this.vehiculoId);
       if (v) {
         this.placa.set(v.placa);
         this.modelo.set(`${v.marca} ${v.modelo}`);
         this.odometro.set(v.kilometraje ?? null); // APP-011 — base de coherencia de km
       }
+      // S19 — detalle (km_ultimo_mantenimiento + intervalo) para el aviso en vivo.
+      void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => this.vehDetalle.set(d));
     } finally {
       this.loading.set(false); // APP-038
     }
@@ -234,15 +280,18 @@ export class ChecklistPage implements OnDestroy {
     // permiso on-demand (getPosition abre el diálogo si hace falta). GPS es
     // best-effort (VEH-06 / X2): si falla, se registra "sin ubicación" y nunca
     // bloquea el flujo; avisamos en el resumen y ofrecemos reintentar/ajustes.
-    const r = await this.permissions.getPosition({ timeout: 8000 });
+    // S28 — timeout amplio + fix reciente aceptado + watchPosition (en el service).
+    const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 25000, maximumAge: 60000 });
     if (r.ok) {
       this.gps = { lat: r.lat, lng: r.lng };
       this.gpsEstado.set('ok');
       this.gpsBloqueado.set(false);
+      this.gpsRazon.set(null);
     } else {
       this.gps = null;
       this.gpsEstado.set('sin-ubicacion');
       this.gpsBloqueado.set(r.reason === 'denied-permanent');
+      this.gpsRazon.set(r.reason);
     }
   }
 
@@ -360,6 +409,18 @@ export class ChecklistPage implements OnDestroy {
     }
     this.submitting.set(true);
     try {
+      // S29 — re-verificar antes de encolar (online): si el vehículo se desactivó
+      // mientras se llenaba, evitar un envío que fallará y refrescar el pool.
+      if (this.network.online()) {
+        const activo = await this.vehiculos.estaActivo(this.vehiculoId);
+        if (activo === false) {
+          this.toast.error('Este vehículo ya no está disponible. No se pudo enviar.');
+          await this.vehiculos.invalidatePendientes();
+          this.submitting.set(false);
+          void this.router.navigate(['/transporte'], { replaceUrl: true });
+          return;
+        }
+      }
       const fotos: Record<string, Blob> = {};
       for (const f of this.fotosReq) fotos[f.slot] = this.fotos()[f.slot].blob;
 
@@ -380,6 +441,8 @@ export class ChecklistPage implements OnDestroy {
         placa: this.placa(),
       });
       void this.autosave.discard(this.clave());
+      // S29 — refrescar el pool para que el vehículo recibido salga de "por recibir".
+      void this.vehiculos.invalidatePendientes();
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');

@@ -24,137 +24,110 @@
       <span class="cruta__hicon">🧭</span>
       <h1 class="cruta__htitle">Crear ruta</h1>
     </header>
+    <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
       @if (loading()) {
         <app-skeleton [rows]="4" />
-      } @else if (!vehiculoId()) {
-        <!-- B1 — elegir vehículo del pool (sin exigir asignación previa) -->
-        <app-vehiculo-picker
-          subtitulo="Selecciona el vehículo para la ruta."
-          (elegido)="onVehiculoElegido($event)"
-        />
       } @else {
-        <!-- Vehículo elegido del pool -->
-        <div class="cruta__veh">
-          <span class="cruta__veh-label">🚙 Vehículo: <strong>{{ vehiculoLabel() }}</strong></span>
-          <button type="button" class="cruta__veh-change" (click)="cambiarVehiculo()">Cambiar</button>
-        </div>
+        <!-- 1. Vehículo -->
+        @if (step() === 1) {
+          <h1 class="screen__title">¿Qué vehículo?</h1>
+          @if (!vehiculoId()) {
+            <app-vehiculo-picker subtitulo="Selecciona el vehículo para la ruta." (elegido)="onVehiculoElegido($event)" />
+          } @else {
+            <div class="cruta__veh">
+              <span class="cruta__veh-label">🚙 <strong>{{ vehiculoLabel() }}</strong></span>
+              <button type="button" class="cruta__veh-change" (click)="cambiarVehiculo()">Cambiar</button>
+            </div>
+          }
+        }
 
-        <label class="field-label" for="origen">Origen</label>
-        <input
-          id="origen"
-          class="field"
-          type="text"
-          [ngModel]="origen()"
-          (ngModelChange)="onOrigenInput($event)"
-          placeholder="¿Desde dónde sales?"
-        />
-        <!-- U21 — usar mi ubicación actual como origen -->
-        <button type="button" class="btn-ghost cruta__gps" (click)="usarMiUbicacion()">
-          📍 Usar mi ubicación actual
-        </button>
-        <!-- U22 — origen por obra o almacén (usa sus coordenadas) -->
-        <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">
-          🏗️ {{ origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén' }}
-        </button>
-        <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">
-          🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}
-        </button>
-        @if (origenLugar()) {
+        <!-- 2. Conductor asignado (S16) -->
+        @if (step() === 2) {
+          <h1 class="screen__title">¿A quién se la asignas?</h1>
+          <p class="screen__subtitle">El conductor recibirá un aviso con la ruta.</p>
           <app-select-list
-            label="Obra o almacén de origen"
-            icon="🏗️"
-            [options]="lugarOpts()"
-            [selectedId]="origenLugarId()"
-            (picked)="onOrigenLugar($event)"
+            label="Conductor asignado"
+            icon="🪪"
+            [options]="conductorOpts()"
+            [selectedId]="conductorId()"
+            (picked)="conductorId.set($event)"
           />
-          @if (selectedOrigenLugar() && selectedOrigenLugar()!.latitud == null) {
-            <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
-          }
-        }
-        @if (usandoGps()) {
-          <p class="cruta__gps-ok">✓ Origen fijado: {{ origen() }}</p>
-        }
-        @if (origenMapa()) {
-          <!-- U18/U19/U20 — mapa: pin, búsqueda RD, ubicación actual -->
-          <app-location-picker (ubicacionChange)="onOrigenUbicacion($event)" />
         }
 
-        <label class="field-label">Destino</label>
-        <div class="cruta__modo">
-          <app-option-button
-            icon="🏗️"
-            label="Obra o almacén"
-            [selected]="destinoModo() === 'lugar'"
-            (pressed)="destinoModo.set('lugar')"
-          />
-          <app-option-button
-            icon="🗺️"
-            label="En el mapa"
-            [selected]="destinoModo() === 'mapa'"
-            (pressed)="destinoModo.set('mapa')"
-          />
-        </div>
-
-        @if (destinoModo() === 'lugar') {
-          <!-- U22 — obras + almacenes con sus coordenadas -->
-          <app-select-list
-            label="Obra o almacén de destino"
-            icon="🏗️"
-            [options]="lugarOpts()"
-            [selectedId]="destinoLugarId()"
-            (picked)="onDestinoLugar($event)"
-          />
-          @if (selectedLugar() && selectedLugar()!.latitud == null) {
-            <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
+        <!-- 3. Origen -->
+        @if (step() === 3) {
+          <h1 class="screen__title">¿Desde dónde sale?</h1>
+          <label class="field-label" for="origen">Origen</label>
+          <input id="origen" class="field" type="text" [ngModel]="origen()" (ngModelChange)="onOrigenInput($event)" placeholder="¿Desde dónde sales?" />
+          <button type="button" class="btn-ghost cruta__gps" (click)="usarMiUbicacion()">📍 Usar mi ubicación actual</button>
+          <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">🏗️ {{ origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén' }}</button>
+          <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}</button>
+          @if (origenLugar()) {
+            <app-select-list label="Obra o almacén de origen" icon="🏗️" [options]="lugarOpts()" [selectedId]="origenLugarId()" (picked)="onOrigenLugar($event)" />
+            @if (selectedOrigenLugar() && selectedOrigenLugar()!.latitud == null) {
+              <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
+            }
           }
-        } @else {
-          <!-- U18/U19/U20 — mapa: pin, búsqueda RD, ubicación actual -->
-          <app-location-picker (ubicacionChange)="onDestinoUbicacion($event)" />
-          @if (destinoMapaTexto()) {
-            <p class="cruta__gps-ok">✓ Destino: {{ destinoMapaTexto() }}</p>
+          @if (usandoGps()) { <p class="cruta__gps-ok">✓ Origen fijado: {{ origen() }}</p> }
+          @if (origenMapa()) { <app-location-picker (ubicacionChange)="onOrigenUbicacion($event)" /> }
+        }
+
+        <!-- 4. Destino -->
+        @if (step() === 4) {
+          <h1 class="screen__title">¿A dónde va?</h1>
+          <div class="cruta__modo">
+            <app-option-button icon="🏗️" label="Obra o almacén" [selected]="destinoModo() === 'lugar'" (pressed)="destinoModo.set('lugar')" />
+            <app-option-button icon="🗺️" label="En el mapa" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
+          </div>
+          @if (destinoModo() === 'lugar') {
+            <app-select-list label="Obra o almacén de destino" icon="🏗️" [options]="lugarOpts()" [selectedId]="destinoLugarId()" (picked)="onDestinoLugar($event)" />
+            @if (selectedLugar() && selectedLugar()!.latitud == null) {
+              <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
+            }
+          } @else {
+            <app-location-picker (ubicacionChange)="onDestinoUbicacion($event)" />
+            @if (destinoMapaTexto()) { <p class="cruta__gps-ok">✓ Destino: {{ destinoMapaTexto() }}</p> }
+          }
+          @if (calculandoRuta()) {
+            <p class="cruta__eta">🕒 Calculando tiempo estimado…</p>
+          } @else if (duracionMin() != null) {
+            <p class="cruta__eta">🕒 Tiempo estimado: <strong>{{ fmtDur(duracionMin()) }}</strong></p>
           }
         }
 
-        <!-- U23 — tiempo estimado legible ("1 h 28 min") -->
-        @if (calculandoRuta()) {
-          <p class="cruta__eta">🕒 Calculando tiempo estimado…</p>
-        } @else if (duracionMin() != null) {
-          <p class="cruta__eta">🕒 Tiempo estimado: <strong>{{ fmtDur(duracionMin()) }}</strong></p>
+        <!-- 5. Detalles -->
+        @if (step() === 5) {
+          <h1 class="screen__title">Detalles</h1>
+          <label class="field-label" for="km">Kilómetros estimados (opcional)</label>
+          <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="0" />
+          <label class="field-label" for="notas">Notas (opcional)</label>
+          <textarea id="notas" class="field cruta__notas" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Algo que recordar de la ruta…"></textarea>
         }
 
-        <label class="field-label" for="km">Kilómetros estimados (opcional)</label>
-        <input
-          id="km"
-          class="field"
-          type="number"
-          inputmode="numeric"
-          [ngModel]="km()"
-          (ngModelChange)="km.set($event)"
-          placeholder="0"
-        />
-
-        <label class="field-label" for="notas">Notas (opcional)</label>
-        <textarea
-          id="notas"
-          class="field cruta__notas"
-          rows="3"
-          [ngModel]="notas()"
-          (ngModelChange)="notas.set($event)"
-          placeholder="Algo que recordar de la ruta…"
-        ></textarea>
+        <!-- 6. Resumen -->
+        @if (step() === 6) {
+          <h1 class="screen__title">Revisa y crea</h1>
+          <ul class="resumen">
+            <li><span>Vehículo</span><b>{{ vehiculoLabel() }}</b></li>
+            <li><span>Conductor</span><b>{{ conductorNombre() }}</b></li>
+            <li><span>Origen</span><b>{{ origen() }}</b></li>
+            <li><span>Destino</span><b>{{ destinoResumen() }}</b></li>
+            @if (km() != null) { <li><span>Km estimados</span><b>{{ km() }}</b></li> }
+            @if (duracionMin() != null) { <li><span>Tiempo</span><b>{{ fmtDur(duracionMin()) }}</b></li> }
+          </ul>
+        }
       }
     </div>
 
-    @if (vehiculoId()) {
-      <footer class="cruta__nav">
-        <button type="button" class="btn-ghost cruta__back" (click)="back()">Cancelar</button>
-        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="guardar()">
-          {{ submitting() ? 'Guardando…' : 'Crear ruta' }}
-        </button>
-      </footer>
-    }
+    <app-wizard-footer
+      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Crear ruta')"
+      [primaryDisabled]="step() >= total && submitting()"
+      (back)="prev()"
+      (primary)="step() < total ? next() : guardar()"
+    />
 
     <!-- U4 — descartar cambios sin guardar -->
     <app-confirm-dialog

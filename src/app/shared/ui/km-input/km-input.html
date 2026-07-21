@@ -1,0 +1,36 @@
+<label class="field-label">{{ label() }}</label>
+<input
+  class="field kmin__input"
+  type="number"
+  inputmode="numeric"
+  [ngModel]="value()"
+  (ngModelChange)="onInput($event)"
+  [class.kmin__input--err]="invalido()"
+  placeholder="0"
+  aria-label="Kilometraje"
+/>
+@if (ultimo() != null) {
+  <p class="kmin__ref">Último registrado: <b>{{ ultimo() | number: '1.0-0' }} km</b></p>
+}
+@if (invalido()) {
+  <p class="kmin__err">⚠️ No puede ser menor al último registrado ({{ ultimo() | number: '1.0-0' }} km).</p>
+}
+@if (mant(); as m) {
+  <p
+    class="kmin__mant"
+    [class.kmin__mant--pre]="m.estado === 'pre_cita'"
+    [class.kmin__mant--venc]="m.estado === 'vencido'"
+  >
+    @switch (m.estado) {
+      @case ('vencido') {
+        🔴 Mantenimiento VENCIDO — pasó {{ -m.faltan | number: '1.0-0' }} km del próximo ({{ m.proximo | number: '1.0-0' }} km).
+      }
+      @case ('pre_cita') {
+        🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
+      }
+      @default {
+        🟢 Faltan {{ m.faltan | number: '1.0-0' }} km para el mantenimiento.
+      }
+    }
+  </p>
+}

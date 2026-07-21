@@ -172,3 +172,17 @@
   font-size: 14px;
   font-weight: 700;
 }
+
+// S19 — aviso de mantenimiento en el resumen.
+.checklist__mant {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.checklist__mant--venc {
+  background: #fef2f2;
+  color: var(--color-error);
+}

@@ -1,20 +1,45 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
+import { BigButton } from '../../shared/ui/big-button/big-button';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { VehiculosService } from '../../core/services/vehiculos.service';
 import { ReporteSemanalService } from '../../core/services/reporte-semanal.service';
 import { SyncService } from '../../core/sync/sync.service';
+import { UserContextService } from '../../core/services/user-context.service';
+import { BadgesService } from '../../core/services/badges.service';
 import { MiAsignacion, PendientesTransporte } from '../../core/models/transporte.model';
+
+/** S15 — un cuadro del hub de transporte (patrón big-button del home). */
+interface HubTile {
+  key: string;
+  icon: string;
+  label: string;
+  tint: string;
+  /** true = solo roles elevados (R14); false/omitido = también el chofer. */
+  elevado?: boolean;
+}
+
+const TILES: HubTile[] = [
+  { key: 'conduces', icon: '🧾', label: 'Conduces y rutas', tint: '#1e3a5f' },
+  { key: 'combustible', icon: '⛽', label: 'Registrar combustible', tint: '#dc2626' },
+  { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
+  { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
+  { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
+  { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
+  { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
+  { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488', elevado: true },
+  { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
+];
 
 /** Transporte hub: vehicles to receive / already in charge / self-assigned. */
 @Component({
   selector: 'app-transporte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe],
+  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe, BigButton],
   templateUrl: './transporte.html',
   styleUrl: './transporte.scss',
 })
@@ -24,6 +49,11 @@ export class TransportePage {
   private sync = inject(SyncService);
   private router = inject(Router);
   private location = inject(Location);
+  private ctx = inject(UserContextService);
+  private badges = inject(BadgesService);
+
+  // S15 — cuadros del hub gated por rol (R14): el chofer ve solo los suyos.
+  tiles = computed(() => TILES.filter((t) => !t.elevado || this.ctx.esFlotaElevado()));
 
   pendientes = signal<PendientesTransporte>({ a_cargo: [], por_recibir: [] });
   asignaciones = signal<MiAsignacion[]>([]);
@@ -56,6 +86,39 @@ export class TransportePage {
       this.sync.changed();
       void this.load();
     });
+    void this.badges.load(); // S15 — badge de avisos en el cuadro
+  }
+
+  /** S15 — badge del cuadro (reporte semanal pendiente / avisos de flota). */
+  badgeFor(key: string): number | null {
+    if (key === 'semanal') return this.reporteSemanalPend() || null;
+    if (key === 'avisos') return this.badges.counts()['flota'] || null;
+    return null;
+  }
+
+  /** S15 — despacha el cuadro tocado a su pantalla. */
+  openTile(t: HubTile): void {
+    switch (t.key) {
+      case 'conduces': return this.conduces();
+      case 'combustible': return this.combustibleTop();
+      case 'semanal': return this.reporteSemanal();
+      case 'actividad': return this.miActividad();
+      case 'asignar': return this.asignar();
+      case 'vehiculos': return this.vehiculosLista();
+      case 'conductores': return this.conductoresLista();
+      case 'crearRuta': return this.crearRuta();
+      case 'avisos': return this.avisos();
+    }
+  }
+
+  /** S26b — combustible sin vehículo en contexto (la pantalla elige del pool). */
+  combustibleTop(): void {
+    void this.router.navigate(['/transporte/combustible']);
+  }
+
+  /** S16 — crear ruta (solo elevados; el wizard tipo hoja llega en FASE 3). */
+  crearRuta(): void {
+    void this.router.navigate(['/transporte/rutas/crear']);
   }
 
   async load(): Promise<void> {

@@ -241,3 +241,33 @@
   background: var(--color-warning-bg);
   color: var(--color-warning);
 }
+
+// S26a — nivel de combustible (chips) + fotos guiadas + aviso de mantenimiento.
+.rsem__niveles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.rsem__niveles .chip {
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.rsem__niveles .chip--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.rsem__fotos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rsem__band--danger {
+  background: #fef2f2;
+  color: var(--color-error);
+}

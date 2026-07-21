@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -58,6 +58,7 @@ export class MantenimientoPage implements OnDestroy {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private location = inject(Location);
 
   readonly total = TOTAL_STEPS;
   readonly maxFotos = MAX_FOTOS;
@@ -119,7 +120,8 @@ export class MantenimientoPage implements OnDestroy {
     this.confirmSalir.set(false);
   }
   private salir(): void {
-    void this.router.navigate(['/transporte']);
+    // S31 — location.back() vuelve al hub sin duplicarlo (atrás llega a home).
+    this.location.back();
   }
 
   private async loadVehiculo(): Promise<void> {

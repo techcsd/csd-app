@@ -7,6 +7,8 @@ import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { GenerarAcceso } from '../../../shared/components/generar-acceso/generar-acceso';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
+import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
+import { FlotaAccidente, FlotaMulta } from '../../../core/models/flota-reportes.model';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -46,6 +48,7 @@ export class PerfilConductorPage {
   private route = inject(ActivatedRoute);
   private conductores = inject(ConductoresService);
   private documentos = inject(DocumentosService);
+  private flotaReportes = inject(FlotaReportesService);
   private ctx = inject(UserContextService);
   private sync = inject(SyncService);
   private toast = inject(ToastService);
@@ -65,6 +68,9 @@ export class PerfilConductorPage {
   otros = signal<DocView[]>([]);
   esMiPerfil = signal(false);
   esAdmin = () => this.ctx.hasModulo('admin');
+  // S32 — actividad: accidentes y multas del conductor.
+  multas = signal<FlotaMulta[]>([]);
+  accidentes = signal<FlotaAccidente[]>([]);
 
   // P3 — permiso para subir/reemplazar documentos: admin, flota, o el propio
   // conductor (mismo criterio que la web). La ruta ya está gated a flota.
@@ -122,6 +128,9 @@ export class PerfilConductorPage {
       this.esMiPerfil.set(!!mio && mio.id === id);
       await this.loadDocs(id);
       await this.loadEnCola(id);
+      // S32 — accidentes + multas (best-effort, online).
+      void this.flotaReportes.getMultasConductor(id).then((m) => this.multas.set(m));
+      void this.flotaReportes.getAccidentesConductor(id).then((a) => this.accidentes.set(a));
     } finally {
       this.loading.set(false);
     }
@@ -188,6 +197,11 @@ export class PerfilConductorPage {
 
   editar(): void {
     void this.router.navigate(['/transporte/conductores', this.condId(), 'editar']);
+  }
+
+  /** S24 — registrarle una multa a este conductor (roles elevados). */
+  multar(): void {
+    void this.router.navigate(['/transporte/conductor', this.condId(), 'multa']);
   }
 
   back(): void {

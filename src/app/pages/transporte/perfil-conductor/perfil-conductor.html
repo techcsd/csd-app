@@ -37,6 +37,10 @@
           🔐 {{ conductor()?.usuario_id ? 'Restablecer PIN de acceso' : 'Generar acceso a la app' }}
         </button>
       }
+      @if (puedeGestionarAcceso() && !esMiPerfil()) {
+        <!-- S24 — registrarle una multa a este conductor -->
+        <button type="button" class="btn-ghost pcon__editar" (click)="multar()">🚦 Registrar multa</button>
+      }
 
 
       <div class="pcon__cards">
@@ -80,6 +84,35 @@
           </div>
         }
       </div>
+
+      <!-- S32 — Accidentes del conductor -->
+      @if (accidentes().length) {
+        <section class="pcon__docs">
+          <h2 class="pcon__docs-title">Accidentes ({{ accidentes().length }})</h2>
+          @for (a of accidentes(); track a.id) {
+            <div class="pcon__act-row">
+              <span class="pcon__act-main">🚨 {{ a.vehiculo?.placa ?? 'Vehículo' }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
+              <span class="pcon__act-sub">{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}@if (a.lesionados) { · {{ a.lesionados }} lesionado(s) }@if (a.descripcion) { · {{ a.descripcion }} }</span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- S32 — Multas del conductor -->
+      @if (multas().length) {
+        <section class="pcon__docs">
+          <h2 class="pcon__docs-title">Multas ({{ multas().length }})</h2>
+          @for (m of multas(); track m.id) {
+            <div class="pcon__act-row">
+              <span class="pcon__act-main">🚦 {{ m.motivo ?? 'Multa' }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
+              <span class="pcon__act-sub">
+                @if (m.monto != null) { RD$ {{ m.monto }} · }
+                <b [class.pcon__pagada]="m.estado === 'pagada'">{{ m.estado === 'pagada' ? 'Pagada' : 'Pendiente' }}</b>
+              </span>
+            </div>
+          }
+        </section>
+      }
 
       <!-- P3 — Documentos: editables (subir/reemplazar por outbox) si tienes
            permiso; solo lectura si no. -->

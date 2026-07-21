@@ -27,6 +27,10 @@
     @if (esAdmin() && !loading()) {
       <button type="button" class="btn-ghost pveh__editar" (click)="editar()">✏️ Editar vehículo</button>
     }
+    @if (!loading()) {
+      <!-- S22 — reportar accidente o daño de este vehículo -->
+      <button type="button" class="btn-ghost pveh__editar" (click)="reportar()">🚧 Reportar accidente o daño</button>
+    }
 
     @if (loading()) {
       <app-skeleton [rows]="5" />

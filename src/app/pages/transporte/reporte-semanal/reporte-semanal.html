@@ -23,82 +23,111 @@
     </footer>
   </div>
 } @else if (vehiculo(); as veh) {
-  <!-- Wizard -->
+  <!-- Wizard tipo hoja (S17): una sección por pantalla + fotos + km + firma + resumen -->
   <div class="screen rsem">
-    <app-step-bar [current]="step()" [total]="total" />
+    <app-step-bar [current]="step()" [total]="total()" />
     <div class="screen__body">
       <div class="rsem__veh">
         <span class="rsem__placa">{{ veh.placa }}</span>
         <span class="rsem__modelo">Reporte de esta semana</span>
       </div>
 
-      @if (step() === 1) {
-        <h1 class="screen__title">Revisión rápida</h1>
+      <!-- Una sección del checklist por pantalla -->
+      @if (seccionActual(); as g) {
+        <h1 class="screen__title">{{ g.seccion }}</h1>
         <p class="screen__subtitle">Toca OK, Falla o N/A en cada punto.</p>
-        @for (g of seccionGrupos(); track g.seccion) {
-          <h2 class="rsem__section">{{ g.seccion }}</h2>
-          @for (it of g.items; track it.id) {
-            <div class="rsem__item">
-              <span class="rsem__item-label">
-                {{ it.etiqueta }}
-                @if (it.es_critico) { <b class="rsem__crit">· CRÍTICO</b> }
-              </span>
-              <div class="rsem__opts">
-                @for (o of opciones; track o.valor) {
-                  <app-option-button
-                    [icon]="o.icon"
-                    [label]="o.label"
-                    [tone]="o.tone"
-                    [selected]="respuestas()[it.id] === o.valor"
-                    (pressed)="setRespuesta(it.id, o.valor)"
-                  />
-                }
-              </div>
+        @for (it of g.items; track it.id) {
+          <div class="rsem__item">
+            <span class="rsem__item-label">
+              {{ it.etiqueta }}
+              @if (it.es_critico) { <b class="rsem__crit">· CRÍTICO</b> }
+            </span>
+            <div class="rsem__opts">
+              @for (o of opciones; track o.valor) {
+                <app-option-button
+                  [icon]="o.icon"
+                  [label]="o.label"
+                  [tone]="o.tone"
+                  [selected]="respuestas()[it.id] === o.valor"
+                  (pressed)="setRespuesta(it.id, o.valor)"
+                />
+              }
             </div>
-          }
+          </div>
         }
       }
 
-      @if (step() === 2) {
-        <h1 class="screen__title">Datos finales</h1>
+      <!-- S26a — fotos guiadas -->
+      @if (esFotos()) {
+        <h1 class="screen__title">Fotos del vehículo</h1>
+        <p class="screen__subtitle">
+          @if (fotosFaltan()) { Faltan {{ fotosFaltan() }}. } @else { ✅ Completas. }
+        </p>
+        <div class="rsem__fotos">
+          @for (f of fotosReq; track f.slot) {
+            <app-photo-slot
+              [label]="f.label"
+              [foto]="fotos()[f.slot] ?? null"
+              (captured)="onFoto(f.slot, $event)"
+              (cleared)="onFotoCleared(f.slot)"
+            />
+          }
+        </div>
+      }
 
-        <label class="field-label" for="km">Kilometraje actual (km)</label>
-        <input
-          id="km"
-          class="field rsem__num"
-          type="number"
-          inputmode="numeric"
-          [class.rsem__num--error]="kmInvalido()"
-          [ngModel]="km()"
-          (ngModelChange)="km.set($event)"
-          placeholder="0"
+      <!-- S19/S26a — km inteligente + nivel de combustible -->
+      @if (esKm()) {
+        <h1 class="screen__title">Kilometraje y combustible</h1>
+        <app-km-input
+          [(value)]="km"
+          [ultimo]="odometro()"
+          [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
+          [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
-        @if (kmInvalido()) {
-          <p class="rsem__warn">
-            Menor al último registrado ({{ odometro() | number: '1.0-0' }} km). Verifica.
-          </p>
-        } @else if (odometro() != null) {
-          <p class="rsem__hint">Último registrado: {{ odometro() | number: '1.0-0' }} km</p>
-        }
-
+        <label class="field-label">Nivel de combustible</label>
+        <div class="rsem__niveles">
+          @for (n of niveles; track n) {
+            <button type="button" class="chip" [class.chip--on]="nivelCombustible() === n" (click)="nivelCombustible.set(n)">{{ n }}</button>
+          }
+        </div>
         <label class="field-label" for="obs">Algún comentario (opcional)</label>
-        <textarea
-          id="obs"
-          class="field rsem__obs"
-          rows="3"
-          [ngModel]="observacion()"
-          (ngModelChange)="observacion.set($event)"
-          placeholder="Algo que reportar del vehículo…"
-        ></textarea>
+        <textarea id="obs" class="field rsem__obs" rows="3" [ngModel]="observacion()" (ngModelChange)="observacion.set($event)" placeholder="Algo que reportar del vehículo…"></textarea>
+      }
+
+      <!-- Firma -->
+      @if (esFirma()) {
+        <h1 class="screen__title">Tu firma</h1>
+        <p class="screen__subtitle">Firma para confirmar el reporte.</p>
+        <app-signature-pad (changed)="onFirmaChanged($event)" />
+      }
+
+      <!-- Resumen + aviso de mantenimiento (S19) -->
+      @if (esResumen()) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Vehículo</span><b>{{ veh.placa }}</b></li>
+          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          <li><span>Combustible</span><b>{{ nivelCombustible() }}</b></li>
+          <li><span>Fotos</span><b>{{ fotosReq.length }} ✓</b></li>
+          <li><span>Resultado</span><b>{{ resultadoLocal() === 'aprobado' ? 'Todo bien' : resultadoLocal() === 'con_hallazgos' ? 'Con hallazgos' : 'Bloqueado' }}</b></li>
+        </ul>
+        @if (mantenimiento(); as m) {
+          @if (m.estado !== 'ok') {
+            <p class="rsem__band" [class.rsem__band--warn]="m.estado === 'pre_cita'" [class.rsem__band--danger]="m.estado === 'vencido'">
+              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO (pasó {{ -m.faltan | number: '1.0-0' }} km). }
+              @else { 🟠 Cerca del mantenimiento: faltan {{ m.faltan | number: '1.0-0' }} km. }
+            </p>
+          }
+        }
       }
     </div>
 
     <app-wizard-footer
       [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Enviando…' : 'Enviar reporte')"
-      [primaryDisabled]="step() >= total && (submitting() || kmInvalido())"
+      [primaryLabel]="!esResumen() ? 'Siguiente' : (submitting() ? 'Enviando…' : 'Enviar reporte')"
+      [primaryDisabled]="esResumen() && (submitting() || kmInvalido())"
       (back)="step() > 1 ? prev() : intentarSalir()"
-      (primary)="step() < total ? next() : submit()"
+      (primary)="!esResumen() ? next() : submit()"
     />
 
     <!-- U4 — descartar cambios sin guardar -->

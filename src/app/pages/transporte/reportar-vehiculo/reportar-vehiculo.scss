@@ -1,0 +1,71 @@
+.repv {
+  background: var(--color-bg);
+}
+.repv__topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.repv__topback {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+.repv__icon {
+  font-size: 22px;
+}
+.repv__topttl {
+  font-size: var(--fs-option);
+  font-weight: 700;
+}
+.screen__body app-option-button {
+  display: block;
+  margin-bottom: 10px;
+}
+.repv__ta {
+  width: 100%;
+  resize: vertical;
+}
+.repv__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.repv__chips .chip {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.repv__chips .chip--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.repv__doc-actions {
+  display: flex;
+  gap: 10px;
+}
+.repv__doc-actions .btn-ghost {
+  flex: 1;
+}
+.repv__doc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}

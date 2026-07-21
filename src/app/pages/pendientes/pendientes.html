@@ -70,6 +70,14 @@
               <!-- P5 — aunque siga reintentando, mostramos el motivo del último fallo -->
               <p class="ob-row__error ob-row__error--soft">Último aviso: {{ mensajeError(item) }}</p>
             }
+            <!-- S30 — un pending atascado >24h se puede descartar a mano -->
+            @if (esViejo(item)) {
+              <div class="ob-row__actions">
+                <button type="button" class="ob-btn ob-btn--danger" (click)="pedirDescartar(item)">
+                  Descartar (atascado)
+                </button>
+              </div>
+            }
           }
         </div>
       }

@@ -1,0 +1,34 @@
+.kmin__input {
+  width: 100%;
+}
+.kmin__input--err {
+  border-color: var(--color-error);
+}
+.kmin__ref {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.kmin__err {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-error);
+}
+.kmin__mant {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--color-success, #16a34a);
+}
+.kmin__mant--pre {
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.kmin__mant--venc {
+  background: #fef2f2;
+  color: var(--color-error);
+}

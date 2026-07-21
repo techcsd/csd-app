@@ -175,6 +175,34 @@ export class VehiculosService {
     return data ?? null;
   }
 
+  /**
+   * S29 — pre-check ONLINE de que el vehículo existe y sigue activo, antes de
+   * dejar llenar/enviar "Recibir vehículo" (el RPC crear_entrega_vehiculo lanza
+   * "Vehículo no encontrado o inactivo" si no). Devuelve:
+   *  - true  → existe y activo (ok)
+   *  - false → no existe o activo=false (bloquear + avisar)
+   *  - null  → no se pudo verificar (offline/error) → NO bloquear el trabajo de campo
+   */
+  async estaActivo(id: string): Promise<boolean | null> {
+    try {
+      const { data, error } = await this.supabase.client
+        .from('vehiculos')
+        .select('activo')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) return null; // offline / error → no podemos saber, no bloquear
+      if (!data) return false; // ya no existe
+      return (data as { activo: boolean }).activo !== false;
+    } catch {
+      return null;
+    }
+  }
+
+  /** S29 — fuerza que el pool "por recibir / a cargo" se recargue del servidor. */
+  async invalidatePendientes(): Promise<void> {
+    await this.catalog.invalidate(CATALOG_PENDIENTES);
+  }
+
   /** Vehicles to receive / already in charge, cached for offline. */
   async misPendientes(): Promise<PendientesTransporte> {
     const data = await this.catalog.refresh<PendientesTransporte>(CATALOG_PENDIENTES, async () => {

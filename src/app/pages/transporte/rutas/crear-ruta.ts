@@ -5,11 +5,15 @@ import { Router } from '@angular/router';
 
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
+import { StepBar } from '../../../shared/ui/step-bar/step-bar';
+import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/location-picker/location-picker';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { ConducesService, LugarDestino } from '../../../core/services/conduces.service';
+import { ConductoresService } from '../../../core/services/conductores.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -29,12 +33,14 @@ type DestinoModo = 'lugar' | 'mapa';
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker],
+  imports: [FormsModule, SelectList, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
 export class CrearRutaPage implements OnDestroy {
   private conduces = inject(ConducesService);
+  private conductores = inject(ConductoresService);
+  private ctx = inject(UserContextService);
   private geo = inject(GeocodingService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
@@ -45,12 +51,20 @@ export class CrearRutaPage implements OnDestroy {
 
   fmtDur = formatearDuracion; // U23 — para el template
 
+  // S16 — wizard tipo hoja: 1 vehículo → 2 conductor → 3 origen → 4 destino → 5 detalles → 6 resumen.
+  readonly total = 6;
+  step = signal(1);
+
   loading = signal(true);
   submitting = signal(false);
   done = signal(false);
   confirmSalir = signal(false); // U4 — confirmar descarte si hay datos
 
   lugares = signal<LugarDestino[]>([]);
+
+  // S16 — el jefe de flota asigna la ruta a un conductor (dispara la notificación).
+  conductorId = signal('');
+  conductorOpts = signal<SelectOption[]>([]);
 
   vehiculoId = signal('');
   vehiculoLabel = signal(''); // B1 — placa/modelo del vehículo elegido del pool
@@ -97,6 +111,13 @@ export class CrearRutaPage implements OnDestroy {
   };
 
   constructor() {
+    // S16 — crear ruta es SOLO para roles elevados (jefe de flota/admin…). El
+    // chofer solo VE sus rutas asignadas (en "Conduces y rutas"). Redirige.
+    if (!this.ctx.esFlotaElevado()) {
+      this.toast.error('Las rutas las asigna el jefe de flota. Aquí ves las tuyas asignadas.');
+      void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
+      return;
+    }
     void this.load();
     void this.captureGps();
     this.navGuard.register(this.backHandler); // U4 — botón físico Android
@@ -110,8 +131,13 @@ export class CrearRutaPage implements OnDestroy {
     this.loading.set(true);
     try {
       // B1 — el vehículo se elige del pool (VehiculoPicker); aquí solo cargamos
-      // los lugares (obras/almacenes) para origen/destino.
-      this.lugares.set(await this.conduces.getLugaresDestino());
+      // los lugares (obras/almacenes) para origen/destino + S16 los conductores.
+      const [lugares, conductores] = await Promise.all([
+        this.conduces.getLugaresDestino(),
+        this.conductores.getConductores().catch(() => []),
+      ]);
+      this.lugares.set(lugares);
+      this.conductorOpts.set(conductores.map((c) => ({ id: c.id, label: c.nombre })));
     } finally {
       this.loading.set(false);
     }
@@ -261,10 +287,53 @@ export class CrearRutaPage implements OnDestroy {
     return this.destinoMapaTexto().trim();
   }
 
+  // S16 — nombre del conductor + destino para el resumen (paso 6).
+  conductorNombre = computed(
+    () => this.conductorOpts().find((o) => o.id === this.conductorId())?.label ?? '',
+  );
+  destinoResumen = computed(() =>
+    this.destinoModo() === 'lugar' ? (this.selectedLugar()?.nombre ?? '') : this.destinoMapaTexto().trim(),
+  );
+
+  /** S16 — avanza validando el paso actual. */
+  next(): void {
+    const s = this.step();
+    if (s === 1 && !this.vehiculoId()) {
+      this.toast.error('Elige el vehículo.');
+      return;
+    }
+    if (s === 2 && !this.conductorId()) {
+      this.toast.error('Elige el conductor al que le asignas la ruta.');
+      return;
+    }
+    if (s === 3 && !this.origen().trim()) {
+      this.toast.error('Indica el origen.');
+      return;
+    }
+    if (s === 4 && !this.destinoResumen()) {
+      this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra o almacén de destino.' : 'Marca el destino en el mapa.');
+      return;
+    }
+    this.step.update((x) => Math.min(this.total, x + 1));
+  }
+
+  /** S16 — retrocede; en el paso 1 intenta salir (con confirmación si hay datos). */
+  prev(): void {
+    if (this.step() === 1) {
+      this.back();
+      return;
+    }
+    this.step.update((x) => Math.max(1, x - 1));
+  }
+
   async guardar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.vehiculoId()) {
       this.toast.error('Elige el vehículo.');
+      return;
+    }
+    if (!this.conductorId()) {
+      this.toast.error('Elige el conductor al que le asignas la ruta.');
       return;
     }
     if (!this.origen().trim()) {
@@ -281,6 +350,7 @@ export class CrearRutaPage implements OnDestroy {
     try {
       await this.conduces.crearRuta({
         vehiculoId: this.vehiculoId(),
+        conductorId: this.conductorId() || null,
         origen: this.origen().trim(),
         destino: this.destinoTexto(),
         fecha: new Date().toISOString().slice(0, 10),

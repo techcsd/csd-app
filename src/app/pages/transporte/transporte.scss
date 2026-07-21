@@ -122,3 +122,11 @@
   font-weight: 700;
   color: var(--Hub, #ffb300);
 }
+
+// S15 — hub como grid de cuadros grandes (mismo patrón que el home).
+.hub-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}

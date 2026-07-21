@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
@@ -6,12 +6,16 @@ import { Router } from '@angular/router';
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
+import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
+import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ReporteSemanalService } from '../../../core/services/reporte-semanal.service';
@@ -20,13 +24,13 @@ import { ToastService } from '../../../core/services/toast.service';
 import {
   ChecklistPlantilla,
   ChecklistPlantillaItem,
+  FOTOS_PREUSO,
+  NIVELES_COMBUSTIBLE_PREUSO,
   RespuestaValor,
   RESPUESTA_OPCIONES,
 } from '../../../core/models/checklist-preuso.model';
 import { ReporteSemanalVeh } from '../../../core/models/reporte-semanal.model';
-import { VehiculoDisponible } from '../../../core/models/transporte.model';
-
-const TOTAL_STEPS = 2;
+import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
 
 /** A pool vehicle plus this week's report status (V10). */
 interface VehSemanal {
@@ -41,15 +45,15 @@ interface VehSemanal {
 }
 
 /**
- * Weekly vehicle report (R3). Fast form: OK/NO/NA on the template's few items,
- * fuel level, current km (coherence-checked), optional note. No signature, no
- * photos. One vehicle picker up front when the user has more than one.
+ * Weekly vehicle report — S17/S26a: ahora tipo hoja (una SECCIÓN por pantalla)
+ * y pide lo mismo que el pre-uso (fotos guiadas, km con estado de mantenimiento
+ * EN VIVO, nivel de combustible y firma). Un selector de vehículo al inicio.
  */
 @Component({
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })
@@ -61,34 +65,38 @@ export class ReporteSemanalPage extends GuardedWizard {
   private toast = inject(ToastService);
   private router = inject(Router);
 
-  readonly total = TOTAL_STEPS;
+  private sig = viewChild(SignaturePad);
+
   readonly opciones = RESPUESTA_OPCIONES;
+  readonly niveles = NIVELES_COMBUSTIBLE_PREUSO;
+  readonly fotosReq = FOTOS_PREUSO;
 
   loading = signal(true);
   semana = signal<ReporteSemanalVeh[]>([]);
-  pool = signal<VehiculoDisponible[]>([]); // V10 — todos los vehículos del pool
-  fotoUrls = signal<Record<string, string | null>>({}); // U6 — foto por vehículo en la lista
+  pool = signal<VehiculoDisponible[]>([]);
+  fotoUrls = signal<Record<string, string | null>>({});
   plantilla = signal<ChecklistPlantilla | null>(null);
   private conductorId: string | null = null;
 
   // Wizard state (null = showing the vehicle picker).
   vehiculo = signal<VehSemanal | null>(null);
+  vehDetalle = signal<VehiculoDetalle | null>(null); // S19 — km_ultimo + intervalo
   odometro = signal<number | null>(null);
   step = signal(1);
   respuestas = signal<Record<string, RespuestaValor>>({});
   km = signal<number | null>(null);
+  nivelCombustible = signal<string | null>(null);
+  fotos = signal<Record<string, CapturedPhoto>>({});
+  firmaLista = signal(false);
+  firmaBlob = signal<Blob | null>(null);
   observacion = signal('');
   submitting = signal(false);
   done = signal(false);
-  /** Verdict of the submitted report, for the confirmation screen (R: NO → hallazgo). */
   resultadoEnviado = signal<'aprobado' | 'con_hallazgos' | 'bloqueado'>('aprobado');
 
   items = computed<ChecklistPlantillaItem[]>(() => this.plantilla()?.items ?? []);
 
-  /**
-   * Ítems agrupados por sección, para mostrar los encabezados oficiales del papel
-   * del jefe (§B: cada pregunta va bajo su sección). Preserva el orden de la plantilla.
-   */
+  /** Ítems agrupados por sección (una sección por pantalla — S17). */
   seccionGrupos = computed<{ seccion: string; items: ChecklistPlantillaItem[] }[]>(() => {
     const grupos: { seccion: string; items: ChecklistPlantillaItem[] }[] = [];
     for (const it of this.items()) {
@@ -102,8 +110,18 @@ export class ReporteSemanalPage extends GuardedWizard {
     return grupos;
   });
 
-  /** V10 — the whole pool with this week's report status merged in, so any
-   *  driver can report any vehicle even without an assignment. */
+  // Layout de pasos: N secciones → fotos → km+combustible → firma → resumen.
+  nSecciones = computed(() => this.seccionGrupos().length);
+  total = computed(() => this.nSecciones() + 4);
+  seccionActual = computed(() => {
+    const s = this.step();
+    return s >= 1 && s <= this.nSecciones() ? this.seccionGrupos()[s - 1] : null;
+  });
+  esFotos = computed(() => this.step() === this.nSecciones() + 1);
+  esKm = computed(() => this.step() === this.nSecciones() + 2);
+  esFirma = computed(() => this.step() === this.nSecciones() + 3);
+  esResumen = computed(() => this.step() === this.nSecciones() + 4);
+
   lista = computed<VehSemanal[]>(() => {
     const status = new Map(this.semana().map((s) => [s.vehiculo_id, s]));
     return this.pool().map((v) => ({
@@ -120,15 +138,31 @@ export class ReporteSemanalPage extends GuardedWizard {
 
   pendientes = computed(() => this.lista().filter((v) => !v.tiene_reporte));
 
-  todasContestadas = computed(() => {
-    const r = this.respuestas();
-    return this.items().every((it) => !!r[it.id]);
-  });
+  fotosCompletas = computed(() => this.fotosReq.every((f) => !!this.fotos()[f.slot]));
+  fotosFaltan = computed(() => this.fotosReq.filter((f) => !this.fotos()[f.slot]).length);
 
   kmInvalido = computed(() => {
     const km = this.km();
     const odo = this.odometro();
     return km != null && odo != null && km < odo;
+  });
+
+  /** S19 — estado de mantenimiento EN VIVO (para el aviso del resumen). */
+  mantenimiento = computed(() => {
+    const v = this.vehDetalle();
+    const km = this.km();
+    if (!v || v.km_ultimo_mantenimiento == null || km == null || km <= 0) return null;
+    const proximo = v.km_ultimo_mantenimiento + (v.intervalo_mantenimiento_km ?? 5000);
+    const faltan = proximo - km;
+    const estado: 'ok' | 'pre_cita' | 'vencido' = faltan <= 0 ? 'vencido' : faltan <= 500 ? 'pre_cita' : 'ok';
+    return { estado, faltan, proximo };
+  });
+
+  resultadoLocal = computed<'aprobado' | 'con_hallazgos' | 'bloqueado'>(() => {
+    const r = this.respuestas();
+    const items = this.items();
+    if (items.some((it) => it.es_critico && r[it.id] === 'no')) return 'bloqueado';
+    return items.some((it) => r[it.id] === 'no') ? 'con_hallazgos' : 'aprobado';
   });
 
   constructor() {
@@ -137,17 +171,18 @@ export class ReporteSemanalPage extends GuardedWizard {
     void this.load();
   }
 
-  /** U4 — en el wizard con respuestas/datos sin enviar. */
   tieneDatos(): boolean {
     if (this.done() || !this.vehiculo()) return false;
     return (
       Object.keys(this.respuestas()).length > 0 ||
       this.km() != null ||
+      !!this.nivelCombustible() ||
+      Object.keys(this.fotos()).length > 0 ||
+      !!this.firmaBlob() ||
       !!this.observacion().trim()
     );
   }
 
-  /** Descartar = volver al selector si hay vehículo en curso; si no, salir. */
   protected override salir(): void {
     if (this.vehiculo()) this.vehiculo.set(null);
     else this.location.back();
@@ -172,7 +207,6 @@ export class ReporteSemanalPage extends GuardedWizard {
     }
   }
 
-  /** U6 — resuelve las fotos de los vehículos de la lista (mejor esfuerzo). */
   private async loadFotos(ids: string[]): Promise<void> {
     const paths = await this.vehiculos.getFotosPaths(ids);
     const urls: Record<string, string | null> = {};
@@ -189,34 +223,79 @@ export class ReporteSemanalPage extends GuardedWizard {
     this.step.set(1);
     this.respuestas.set({});
     this.km.set(null);
+    this.nivelCombustible.set(null);
+    this.fotos.set({});
+    this.firmaBlob.set(null);
+    this.firmaLista.set(false);
     this.observacion.set('');
-    // Baseline km for coherence: the pool vehicle's current odometer.
     this.odometro.set(v.km ?? null);
+    this.vehDetalle.set(null);
+    // S19 — datos de mantenimiento para el km-input (mejor esfuerzo).
+    void this.vehiculos.getVehiculoDetalle(v.vehiculo_id).then((d) => this.vehDetalle.set(d));
   }
 
   setRespuesta(itemId: string, valor: RespuestaValor): void {
     this.respuestas.update((r) => ({ ...r, [itemId]: valor }));
   }
 
-  next(): void {
-    if (this.step() === 1 && !this.todasContestadas()) {
-      this.toast.error('Responde todas las preguntas.');
-      return;
-    }
-    this.step.update((s) => Math.min(this.total, s + 1));
+  onFoto(slot: string, photo: CapturedPhoto): void {
+    this.fotos.update((f) => ({ ...f, [slot]: photo }));
+  }
+  onFotoCleared(slot: string): void {
+    this.fotos.update((f) => {
+      const next = { ...f };
+      delete next[slot];
+      return next;
+    });
   }
 
+  async onFirmaChanged(hasSignature: boolean): Promise<void> {
+    this.firmaLista.set(hasSignature);
+    this.firmaBlob.set(hasSignature ? ((await this.sig()?.toBlob()) ?? null) : null);
+  }
+
+  next(): void {
+    if (!this.canAdvance()) return;
+    this.step.update((s) => Math.min(this.total(), s + 1));
+  }
   prev(): void {
     this.step.update((s) => Math.max(1, s - 1));
   }
 
-  private resultadoLocal(): 'aprobado' | 'con_hallazgos' | 'bloqueado' {
-    const r = this.respuestas();
-    const items = this.items();
-    const hayCriticoNo = items.some((it) => it.es_critico && r[it.id] === 'no');
-    if (hayCriticoNo) return 'bloqueado';
-    const hayNo = items.some((it) => r[it.id] === 'no');
-    return hayNo ? 'con_hallazgos' : 'aprobado';
+  private canAdvance(): boolean {
+    const sec = this.seccionActual();
+    if (sec) {
+      const r = this.respuestas();
+      if (!sec.items.every((it) => !!r[it.id])) {
+        this.toast.error('Responde todas las preguntas de esta sección.');
+        return false;
+      }
+      return true;
+    }
+    if (this.esFotos() && !this.fotosCompletas()) {
+      this.toast.error(`Faltan ${this.fotosFaltan()} foto(s).`);
+      return false;
+    }
+    if (this.esKm()) {
+      if (this.km() == null || this.km()! <= 0) {
+        this.toast.error('Escribe el kilometraje actual.');
+        return false;
+      }
+      if (this.kmInvalido()) {
+        this.toast.error(`El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`);
+        return false;
+      }
+      if (!this.nivelCombustible()) {
+        this.toast.error('Elige el nivel de combustible.');
+        return false;
+      }
+      return true;
+    }
+    if (this.esFirma() && !this.firmaLista()) {
+      this.toast.error('Firma antes de continuar.');
+      return false;
+    }
+    return true;
   }
 
   async submit(): Promise<void> {
@@ -224,13 +303,12 @@ export class ReporteSemanalPage extends GuardedWizard {
     const veh = this.vehiculo();
     const plantilla = this.plantilla();
     if (!veh || !plantilla) return;
-    if (this.km() == null || this.km()! <= 0) {
-      this.toast.error('Escribe el kilometraje actual.');
+    if (this.km() == null || this.km()! <= 0 || this.kmInvalido()) {
+      this.toast.error('Revisa el kilometraje.');
       return;
     }
-    // APP-010: no enviar km incoherente (el server lo rechaza → error permanente en outbox).
-    if (this.kmInvalido()) {
-      this.toast.error(`El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`);
+    if (!this.firmaBlob()) {
+      this.toast.error('Falta la firma.');
       return;
     }
     this.submitting.set(true);
@@ -244,6 +322,8 @@ export class ReporteSemanalPage extends GuardedWizard {
         comentario: null,
         orden: it.orden,
       }));
+      const fotos: Record<string, Blob> = {};
+      for (const f of this.fotosReq) fotos[f.slot] = this.fotos()[f.slot].blob;
       const resultado = this.resultadoLocal();
       await this.reportes.enqueue({
         vehiculoId: veh.vehiculo_id,
@@ -252,14 +332,15 @@ export class ReporteSemanalPage extends GuardedWizard {
         conductorId: this.conductorId,
         fecha: new Date().toISOString().slice(0, 10),
         kilometraje: this.km(),
-        nivelCombustible: null,
+        nivelCombustible: this.nivelCombustible(),
         observacion: this.observacion().trim() || null,
         respuestas,
+        fotos,
+        firma: this.firmaBlob(),
         resultado,
       });
       this.resultadoEnviado.set(resultado);
       this.done.set(true);
-      // Refresh the compliance list for when the user goes back.
       this.semana.set(await this.reportes.getSemana());
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar. Intenta de nuevo.');

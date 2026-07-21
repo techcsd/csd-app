@@ -22,6 +22,9 @@ export interface ReporteSemanalCaptura {
   nivelCombustible: string | null;
   observacion: string | null;
   respuestas: RespuestaCaptura[];
+  // S26a — el semanal ahora pide lo mismo que el pre-uso: fotos guiadas + firma.
+  fotos: Record<string, Blob>;
+  firma: Blob | null;
   /** Locally-computed verdict for the offline "mis registros" summary. */
   resultado: 'aprobado' | 'con_hallazgos' | 'bloqueado';
 }
