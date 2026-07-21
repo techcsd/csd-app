@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.20.1';
+const VERSION = '1.20.2';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,7 +58,7 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.20.1';
+const MIN_VERSION = '1.20.2';
 const RELEASED_AT = '2026-07-20';
 
 // Título corto de la entrada del historial (opcional pero recomendado).

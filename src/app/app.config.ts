@@ -19,6 +19,7 @@ import { InventarioService } from './core/services/inventario.service';
 import { SolicitudesService } from './core/services/solicitudes.service';
 import { ReportesService } from './core/services/reportes.service';
 import { ClLiberacionService } from './core/services/cl-liberacion.service';
+import { DocumentosService } from './core/services/documentos.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -44,6 +45,11 @@ export const appConfig: ApplicationConfig = {
       inject(SolicitudesService);
       inject(ReportesService);
       inject(ClLiberacionService);
+      // Q3-fix — sin esto, el handler 'documento_upload' no se registraba al
+      // arrancar y las subidas de cédula/licencia quedaban "En cola" para siempre
+      // (el drain las saltaba por falta de handler). Booteando el servicio aquí,
+      // su handler queda registrado y esos envíos se procesan.
+      inject(DocumentosService);
     }),
   ],
 };
