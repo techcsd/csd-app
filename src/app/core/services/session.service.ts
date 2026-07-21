@@ -30,11 +30,19 @@ export class SessionService {
     return (await this.auth.getSession()) !== null;
   }
 
-  /** Loads the profile once per session if we don't have it yet. */
+  /**
+   * Loads the profile once per session if we don't have it yet. Usa la sesión
+   * PERSISTIDA (getSession lee del storage local, funciona offline) en vez de
+   * getUser() —que SIEMPRE hace una llamada de red y devuelve null sin señal—,
+   * así en un arranque offline en frío sí obtenemos el userId y cargamos el
+   * perfil cacheado (módulos disponibles offline). Los datos siguen protegidos
+   * por RLS con el token real; el gate de "usuario activo" usa el perfil.
+   */
   async ensureProfile(): Promise<void> {
     if (this.ctx.profile()) return;
-    const user = await this.auth.getUser();
-    if (user) await this.ctx.loadProfile(user.id);
+    const session = await this.auth.getSession();
+    const userId = session?.user?.id;
+    if (userId) await this.ctx.loadProfile(userId);
   }
 
   markUnlocked(): void {

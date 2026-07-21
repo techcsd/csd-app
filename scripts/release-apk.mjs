@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.21.0';
+const VERSION = '1.21.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,21 +58,15 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.21.0';
+const MIN_VERSION = '1.21.1';
 const RELEASED_AT = '2026-07-21';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Bitácora e incidentes paso a paso, multi-bloque y revisión de liberación antes de firmar';
+const TITULO = 'La app abre bien sin internet (recuerda tus módulos)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Bitácora del día rediseñada paso a paso: primero eliges el bloque, piso o edificio y luego registras el trabajo. Puedes registrar varios bloques sin repetir el formulario.' },
-  { t: 'mejora', d: 'En “¿Qué se hizo hoy?” las estructuras y actividades salen en orden de trabajo y las más usadas de esa obra aparecen de primero (★).' },
-  { t: 'nuevo', d: 'Ahora puedes tener varias bitácoras a medio llenar a la vez (por ejemplo una por obra) y retomar cualquiera desde “Documentación en proceso”.' },
-  { t: 'mejora', d: 'Se piden mínimo 2 fotos por bitácora para que quede mejor documentada.' },
-  { t: 'nuevo', d: 'En equipos alquilados puedes marcar los que hay que retirar (se avisa al transportista) y los que están dañados, diciendo qué les pasó.' },
-  { t: 'nuevo', d: 'Reporte de incidente rediseñado paso a paso, con el nuevo tipo “Incidente de equipo” y una lista de “¿qué pasó?” para elegir rápido.' },
-  { t: 'mejora', d: 'Antes de firmar una liberación ahora ves el checklist completo (puntos, fotos, observaciones y firmas) para revisarlo sin firmar a ciegas.' },
+  { t: 'arreglo', d: 'Si abres la app sin internet, ya no aparece “Sin módulos asignados”: ahora recuerda tus módulos del último inicio de sesión y puedes seguir trabajando offline. Cuando vuelva la señal, se actualiza solo.' },
 ];
 
 const TIPO_POR_COMMIT = {
