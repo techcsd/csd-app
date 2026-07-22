@@ -27,12 +27,17 @@ import {
   ChecklistPlantilla,
   ChecklistPlantillaItem,
   FOTOS_PREUSO,
-  NIVELES_COMBUSTIBLE_PREUSO,
   RespuestaValor,
   RESPUESTA_OPCIONES,
 } from '../../../core/models/checklist-preuso.model';
 import { ReporteSemanalVeh } from '../../../core/models/reporte-semanal.model';
-import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
+import {
+  VehiculoDetalle,
+  VehiculoDisponible,
+  NIVELES_COMBUSTIBLE,
+  NIVEL_COMBUSTIBLE_AYUDA,
+  nivelCombustibleLabel,
+} from '../../../core/models/transporte.model';
 
 /** A pool vehicle plus this week's report status (V10). */
 interface VehSemanal {
@@ -73,7 +78,9 @@ export class ReporteSemanalPage extends GuardedWizard {
   private sig = viewChild(SignaturePad);
 
   readonly opciones = RESPUESTA_OPCIONES;
-  readonly niveles = NIVELES_COMBUSTIBLE_PREUSO;
+  readonly niveles = NIVELES_COMBUSTIBLE;
+  readonly nivelAyuda = NIVEL_COMBUSTIBLE_AYUDA;
+  readonly nivelLabel = nivelCombustibleLabel;
   readonly fotosReq = FOTOS_PREUSO;
 
   loading = signal(true);

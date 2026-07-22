@@ -6,6 +6,35 @@
   </header>
 
   <div class="screen__body">
+    <!-- V1 — En proceso / Pendientes de envío (borradores + envíos en cola) -->
+    @if (proceso().length) {
+      <section class="mis-partes__proceso">
+        <h2 class="mis-partes__proceso-title">En proceso / Pendientes de envío ({{ proceso().length }})</h2>
+        @for (p of proceso(); track p.id) {
+          <div class="proc-row" [attr.data-kind]="p.kind">
+            <div class="proc-row__info">
+              <span class="proc-row__label">{{ p.etiqueta }}</span>
+              @if (p.kind === 'borrador') {
+                <span class="proc-row__meta">Sin enviar · guardado {{ fmtProceso(p.updated_at) }}</span>
+              } @else if (p.estado === 'error') {
+                <span class="proc-row__meta proc-row__meta--error">⚠ Con problema al enviar</span>
+              } @else {
+                <span class="proc-row__meta proc-row__meta--sending">🔄 Enviando…</span>
+              }
+            </div>
+            <div class="proc-row__actions">
+              @if (p.kind === 'borrador') {
+                <button type="button" class="btn-cta proc-row__btn" (click)="retomar(p)">Retomar</button>
+                <button type="button" class="btn-ghost proc-row__btn" (click)="pedirDescartar(p)">Descartar</button>
+              } @else {
+                <button type="button" class="btn-ghost proc-row__btn" (click)="irPendientes()">Ver envío</button>
+              }
+            </div>
+          </div>
+        }
+      </section>
+    }
+
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else if (error()) {
@@ -50,4 +79,15 @@
       }
     }
   </div>
+
+  <app-confirm-dialog
+    [open]="!!confirmar()"
+    title="¿Descartar el borrador?"
+    message="Perderás lo que llevas llenado en ese documento."
+    confirmLabel="Sí, descartar"
+    cancelLabel="Cancelar"
+    tone="danger"
+    (confirmed)="descartar()"
+    (cancelled)="confirmar.set(null)"
+  />
 </div>

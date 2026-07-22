@@ -101,6 +101,7 @@
             <button type="button" class="chip" [class.chip--on]="nivelCombustible() === n" (click)="nivelCombustible.set(n)">{{ n }}</button>
           }
         </div>
+        <p class="field-hint">{{ nivelAyuda }}</p>
         <label class="field-label" for="obs">Algún comentario (opcional)</label>
         <textarea id="obs" class="field rsem__obs" rows="3" [ngModel]="observacion()" (ngModelChange)="observacion.set($event)" placeholder="Algo que reportar del vehículo…"></textarea>
       }
@@ -118,7 +119,7 @@
         <ul class="resumen">
           <li><span>Vehículo</span><b>{{ veh.placa }}</b></li>
           <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
-          <li><span>Combustible</span><b>{{ nivelCombustible() }}</b></li>
+          <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
           <li><span>Fotos</span><b>{{ fotosReq.length }} ✓</b></li>
           <li><span>Resultado</span><b>{{ resultadoLocal() === 'aprobado' ? 'Todo bien' : resultadoLocal() === 'con_hallazgos' ? 'Con hallazgos' : 'Bloqueado' }}</b></li>
         </ul>

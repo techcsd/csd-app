@@ -1,5 +1,18 @@
 export type CombustibleNivel = 'E' | '1/4' | '1/2' | '3/4' | 'F';
+/**
+ * V5 — ÚNICA lista de niveles de combustible de la app (pre-uso, reporte
+ * semanal, recibir/devolver y combustible). Incluye "E" (reserva) y usa "F"
+ * (lleno). El histórico guardado como 'Lleno' se sigue leyendo bien (ver
+ * `nivelCombustibleLabel`).
+ */
 export const NIVELES_COMBUSTIBLE: CombustibleNivel[] = ['E', '1/4', '1/2', '3/4', 'F'];
+/** V5 — leyenda única del selector de nivel. */
+export const NIVEL_COMBUSTIBLE_AYUDA = 'E = reserva · F = lleno';
+/** V5 — normaliza un nivel guardado para mostrarlo (histórico 'Lleno' → 'F'). */
+export function nivelCombustibleLabel(v: string | null | undefined): string {
+  if (!v) return '—';
+  return v === 'Lleno' ? 'F' : v;
+}
 
 export type EntregaTipo = 'recepcion' | 'devolucion';
 

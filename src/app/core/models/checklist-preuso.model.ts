@@ -27,8 +27,8 @@ export interface ChecklistPlantillaItem {
   aplica_a: string;
 }
 
-/** Fuel levels offered in the pre-use "datos de salida" step. */
-export const NIVELES_COMBUSTIBLE_PREUSO = ['1/4', '1/2', '3/4', 'Lleno'] as const;
+// V5 — los niveles de combustible se unificaron en `NIVELES_COMBUSTIBLE`
+// (transporte.model, con "E"/"F"). El pre-uso y el reporte semanal usan esa.
 
 /**
  * The 7 mandatory guided shots for a pre-use inspection (fixed slot names the

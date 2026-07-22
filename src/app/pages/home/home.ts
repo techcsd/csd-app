@@ -7,6 +7,7 @@ import { Onboarding } from '../../shared/components/onboarding/onboarding';
 import { UserContextService } from '../../core/services/user-context.service';
 import { SessionService } from '../../core/services/session.service';
 import { BadgesService } from '../../core/services/badges.service';
+import { EnProcesoService } from '../../core/services/en-proceso.service';
 
 interface HomeTile {
   modulo: string;
@@ -38,10 +39,12 @@ export class HomePage {
   private session = inject(SessionService);
   private router = inject(Router);
   private badges = inject(BadgesService);
+  private enProceso = inject(EnProcesoService);
 
   nombre = this.ctx.nombre;
   obra = this.ctx.obraActiva;
   badgeCounts = this.badges.counts; // Q2 — pendientes por módulo
+  enProcesoCounts = this.enProceso.counts; // V1 — borradores/envíos por módulo
 
   tiles = computed(() => TILES.filter((t) => this.ctx.hasModulo(t.modulo)));
 
@@ -53,11 +56,14 @@ export class HomePage {
     }
     // Q2 — badges de pendientes por módulo (best-effort, online).
     void this.badges.load();
+    // V1 — contador de documentación en proceso (local, offline).
+    void this.enProceso.refresh();
   }
 
-  /** Q2 — conteo de pendientes para el badge del tile (null si 0/sin dato). */
+  /** Q2+V1 — badge del tile = pendientes de aprobación + documentación en proceso. */
   badgeFor(modulo: string): number | null {
-    return this.badgeCounts()[modulo] || null;
+    const total = (this.badgeCounts()[modulo] ?? 0) + (this.enProcesoCounts()[modulo] ?? 0);
+    return total || null;
   }
 
   open(tile: HomeTile): void {

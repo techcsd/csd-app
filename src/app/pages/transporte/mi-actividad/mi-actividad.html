@@ -76,6 +76,28 @@
         </section>
       }
 
+      <!-- V3 — rutas que yo creé/asigné (roles elevados) -->
+      @if (esElevado()) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Rutas que creé ({{ rutasCreadas().length }})</h2>
+          @if (!rutasCreadas().length) {
+            <p class="mact__vacio">Aún no has creado rutas en este período.</p>
+          } @else {
+            @for (r of rutasCreadas(); track r.id) {
+              <button type="button" class="mact__act-row mact__act-row--tap" (click)="verRutas()">
+                <span class="mact__act-main">🗺️ {{ r.origen || '—' }} → {{ r.destino || '—' }}</span>
+                <span class="mact__act-sub">
+                  {{ r.fecha ? fmtFecha(r.fecha) : '—' }}
+                  @if (r.vehiculo?.placa) { · {{ r.vehiculo?.placa }} }
+                  @if (r.conductor?.nombre) { · {{ r.conductor?.nombre }} }
+                  · {{ r.estado || '—' }}
+                </span>
+              </button>
+            }
+          }
+        </section>
+      }
+
       <!-- S32 — accidentes -->
       @if (accidentes().length) {
         <section class="mact__docs">
@@ -118,6 +140,61 @@
       <!-- S32 — desglose de checklists (pre-uso vs semanal) -->
       @if (breakdown().preuso || breakdown().semanal) {
         <p class="mact__breakdown">📋 Pre-usos: <b>{{ breakdown().preuso }}</b> · Reportes semanales: <b>{{ breakdown().semanal }}</b></p>
+      }
+
+      <!-- V2 — historial navegable: reportes semanales -->
+      @if (semanales().length) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Mis reportes semanales ({{ semanales().length }})</h2>
+          @for (c of semanales(); track c.id) {
+            <div class="mact__act-row">
+              <span class="mact__act-main">📋 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
+              <span class="mact__act-sub">
+                {{ resultadoLabel(c.resultado) }}
+                @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
+              </span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- V2 — historial navegable: pre-usos -->
+      @if (preusos().length) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Mis pre-usos ({{ preusos().length }})</h2>
+          @for (c of preusos(); track c.id) {
+            <div class="mact__act-row">
+              <span class="mact__act-main">🚙 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
+              <span class="mact__act-sub">
+                {{ resultadoLabel(c.resultado) }}
+                @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
+              </span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- V2 — historial navegable: echadas de combustible -->
+      @if (echadas().length) {
+        <section class="mact__docs">
+          <h2 class="mact__docs-title">Mis echadas de combustible ({{ echadas().length }})</h2>
+          @for (e of echadas(); track e.id) {
+            <div class="mact__act-row">
+              <span class="mact__act-main">⛽ {{ e.vehiculo?.placa ?? 'Vehículo' }} · {{ e.fecha ? fmtFecha(e.fecha) : '—' }}</span>
+              <span class="mact__act-sub">
+                @if (e.galones != null) { {{ e.galones }} gal }
+                @if (e.monto != null) { · RD$ {{ e.monto }} }
+                @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal }} km/gal }
+                @if (e.alerta_consumo) { · <span class="mact__alerta">⚠ anormal</span> }
+              </span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- V2/V3 — ver todo el historial (por defecto últimos 90 días) -->
+      @if (!historialExpandido() && (semanales().length || preusos().length || echadas().length || rutasCreadas().length)) {
+        <button type="button" class="btn-ghost mact__vermas" (click)="verMas()">Ver más (todo el historial)</button>
       }
 
       <!-- S24(c) — el chofer registra una multa que le pusieron -->

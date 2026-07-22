@@ -46,11 +46,16 @@ import {
   esVehiculoPesado,
   FOTOS_PREUSO,
   itemAplica,
-  NIVELES_COMBUSTIBLE_PREUSO,
   RESPUESTA_OPCIONES,
   RespuestaValor,
 } from '../../../core/models/checklist-preuso.model';
-import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
+import {
+  VehiculoDetalle,
+  VehiculoDisponible,
+  NIVELES_COMBUSTIBLE,
+  NIVEL_COMBUSTIBLE_AYUDA,
+  nivelCombustibleLabel,
+} from '../../../core/models/transporte.model';
 import { Conductor, diasHasta, estadoLicencia } from '../../../core/models/conductor.model';
 
 interface RespuestaDraft {
@@ -128,7 +133,9 @@ export class PreusoPage extends GuardedWizard {
 
   readonly total = TOTAL_STEPS;
   readonly opciones = RESPUESTA_OPCIONES;
-  readonly niveles = NIVELES_COMBUSTIBLE_PREUSO;
+  readonly niveles = NIVELES_COMBUSTIBLE;
+  readonly nivelAyuda = NIVEL_COMBUSTIBLE_AYUDA;
+  readonly nivelLabel = nivelCombustibleLabel;
   readonly fotosReq = FOTOS_PREUSO;
   // V15 — fotos agrupadas EXTERIOR (4) / INTERIOR (3) para los encabezados.
   readonly fotosExterior = FOTOS_PREUSO.filter((f) => f.grupo === 'EXTERIOR');

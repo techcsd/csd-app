@@ -8,7 +8,10 @@ import {
   FlotaAccidente,
   FlotaEntrega,
   FlotaMulta,
+  HistorialChecklist,
+  HistorialEchada,
   MultaCaptura,
+  RutaCreada,
 } from '../models/flota-reportes.model';
 
 const BUCKET_FOTOS = 'vehiculos'; // fotos de daño (upsert-safe)
@@ -108,6 +111,68 @@ export class FlotaReportesService {
       .limit(50);
     if (error) return [];
     return ((data as unknown as FlotaAccidente[]) ?? []);
+  }
+
+  /** V2 — fecha ISO (YYYY-MM-DD) de hace `dias` días, para acotar el historial. */
+  private desdeISO(dias: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() - dias);
+    return d.toISOString().slice(0, 10);
+  }
+
+  /**
+   * V2 — historial navegable de MIS checklists por tipo (pre_uso | inspeccion),
+   * últimos `dias` días. RLS ya scopea al conductor (o elevado). Online.
+   */
+  async getMisChecklists(
+    conductorId: string,
+    tipo: 'pre_uso' | 'inspeccion',
+    dias = 90,
+  ): Promise<HistorialChecklist[]> {
+    if (!conductorId) return [];
+    const { data, error } = await this.supabase.client
+      .from('checklists_vehiculo')
+      .select('id, fecha, tipo, resultado, kilometraje, nivel_combustible, vehiculo:vehiculos(placa)')
+      .eq('conductor_id', conductorId)
+      .eq('tipo', tipo)
+      .gte('fecha', this.desdeISO(dias))
+      .order('fecha', { ascending: false })
+      .limit(200);
+    if (error) return [];
+    return (data as unknown as HistorialChecklist[]) ?? [];
+  }
+
+  /** V2 — historial navegable de MIS echadas de combustible, últimos `dias` días. */
+  async getMisEchadas(conductorId: string, dias = 90): Promise<HistorialEchada[]> {
+    if (!conductorId) return [];
+    const { data, error } = await this.supabase.client
+      .from('registros_combustible')
+      .select('id, fecha, kilometraje, galones, monto, rendimiento_km_gal, alerta_consumo, vehiculo:vehiculos(placa)')
+      .eq('conductor_id', conductorId)
+      .gte('fecha', this.desdeISO(dias))
+      .order('fecha', { ascending: false })
+      .limit(200);
+    if (error) return [];
+    return (data as unknown as HistorialEchada[]) ?? [];
+  }
+
+  /**
+   * V3 — rutas creadas por el usuario actual (roles elevados). La RLS de `rutas`
+   * permite ver las propias por `creado_por`; se filtra por el uid del usuario.
+   */
+  async getMisRutasCreadas(dias = 90): Promise<RutaCreada[]> {
+    const { data: auth } = await this.supabase.client.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) return [];
+    const { data, error } = await this.supabase.client
+      .from('rutas')
+      .select('id, fecha, origen, destino, estado, vehiculo:vehiculos(placa), conductor:conductores(nombre)')
+      .eq('creado_por', uid)
+      .gte('fecha', this.desdeISO(dias))
+      .order('fecha', { ascending: false })
+      .limit(200);
+    if (error) return [];
+    return (data as unknown as RutaCreada[]) ?? [];
   }
 
   /** S22 — reporta un accidente del vehículo (con acta AMET opcional). */

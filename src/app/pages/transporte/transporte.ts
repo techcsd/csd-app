@@ -10,6 +10,7 @@ import { ReporteSemanalService } from '../../core/services/reporte-semanal.servi
 import { SyncService } from '../../core/sync/sync.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { BadgesService } from '../../core/services/badges.service';
+import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { MiAsignacion, PendientesTransporte } from '../../core/models/transporte.model';
 
 /** S15 — un cuadro del hub de transporte (patrón big-button del home). */
@@ -51,9 +52,20 @@ export class TransportePage {
   private location = inject(Location);
   private ctx = inject(UserContextService);
   private badges = inject(BadgesService);
+  private enProceso = inject(EnProcesoService);
+
+  // V1 — documentación en proceso del módulo transporte/flota.
+  private enProcesoCount = this.enProceso.counts;
 
   // S15 — cuadros del hub gated por rol (R14): el chofer ve solo los suyos.
-  tiles = computed(() => TILES.filter((t) => !t.elevado || this.ctx.esFlotaElevado()));
+  // V1 — añade "Documentación en proceso" cuando hay borradores/envíos pendientes.
+  tiles = computed(() => {
+    const base = TILES.filter((t) => !t.elevado || this.ctx.esFlotaElevado());
+    if ((this.enProcesoCount()['flota'] ?? 0) > 0) {
+      base.push({ key: 'enProceso', icon: '📥', label: 'Documentación en proceso', tint: '#78716c' });
+    }
+    return base;
+  });
 
   pendientes = signal<PendientesTransporte>({ a_cargo: [], por_recibir: [] });
   asignaciones = signal<MiAsignacion[]>([]);
@@ -87,12 +99,14 @@ export class TransportePage {
       void this.load();
     });
     void this.badges.load(); // S15 — badge de avisos en el cuadro
+    void this.enProceso.refresh(); // V1 — contador de documentación en proceso
   }
 
   /** S15 — badge del cuadro (reporte semanal pendiente / avisos de flota). */
   badgeFor(key: string): number | null {
     if (key === 'semanal') return this.reporteSemanalPend() || null;
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
+    if (key === 'enProceso') return this.enProcesoCount()['flota'] || null;
     return null;
   }
 
@@ -108,7 +122,13 @@ export class TransportePage {
       case 'conductores': return this.conductoresLista();
       case 'crearRuta': return this.crearRuta();
       case 'avisos': return this.avisos();
+      case 'enProceso': return this.enProcesoAbrir();
     }
+  }
+
+  /** V1 — documentación en proceso (borradores + envíos pendientes). */
+  enProcesoAbrir(): void {
+    void this.router.navigate(['/en-proceso']);
   }
 
   /** S26b — combustible sin vehículo en contexto (la pantalla elige del pool). */

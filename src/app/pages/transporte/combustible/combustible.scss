@@ -2,6 +2,33 @@
   background: var(--color-bg);
 }
 
+// V4 — header del estado "Elige un vehículo" (coherente con transporte).
+.comb__pick-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.comb__pick-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.comb__pick-icon {
+  font-size: 28px;
+}
+.comb__pick-title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
 .comb__foto {
   display: block;
   width: 100%;

@@ -34,7 +34,7 @@ import {
   UltimaEchada,
 } from '../../../core/models/combustible.model';
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 4;
 
 /**
  * Fuel-log wizard (registro de combustible). The chofer digits only 3 numbers
@@ -237,6 +237,7 @@ export class CombustiblePage extends GuardedWizard {
 
   private canAdvance(): boolean {
     const s = this.step();
+    // V6 — paso 1: km + galones + monto juntos (tipo hoja, sin scroll largo).
     if (s === 1) {
       const km = this.km();
       if (km == null || km <= 0) {
@@ -251,8 +252,6 @@ export class CombustiblePage extends GuardedWizard {
         this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
         return false;
       }
-    }
-    if (s === 2) {
       if (!this.galones() || this.galones()! <= 0) {
         this.toast.error('Escribe los galones echados.');
         return false;
@@ -262,13 +261,15 @@ export class CombustiblePage extends GuardedWizard {
         return false;
       }
     }
-    if (s === 3) {
+    // V6 — paso 2: estación (con el cálculo automático debajo).
+    if (s === 2) {
       if (this.estacionOtro() && !this.estacionOtroTexto().trim()) {
         this.toast.error('Escribe el nombre de la estación.');
         return false;
       }
     }
-    if (s === 4 && !this.fotosCompletas()) {
+    // V6 — paso 3: fotos obligatorias.
+    if (s === 3 && !this.fotosCompletas()) {
       this.toast.error('Faltan fotos para continuar.');
       return false;
     }
@@ -307,6 +308,11 @@ export class CombustiblePage extends GuardedWizard {
 
   finish(): void {
     void this.router.navigate(['/transporte'], { replaceUrl: true });
+  }
+
+  /** V4 — salir del estado "Elige un vehículo" volviendo al hub de transporte. */
+  salirPicker(): void {
+    void this.router.navigate(['/transporte']);
   }
 
   get online(): boolean {

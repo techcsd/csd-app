@@ -56,7 +56,7 @@
       <ul class="resumen">
         <li><span>Vehículo</span><b>{{ placa() }} · {{ modelo() }}</b></li>
         <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
-        <li><span>Combustible</span><b>{{ nivelCombustible() }}</b></li>
+        <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
         <li><span>Fotos</span><b>7 ✓</b></li>
         <li><span>Puntos</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
       </ul>
@@ -173,6 +173,7 @@
             </button>
           }
         </div>
+        <p class="field-hint">{{ nivelAyuda }}</p>
 
         @if (mantenimiento(); as m) {
           <div class="mant-box mant-box--{{ m.estado }}">
@@ -326,7 +327,7 @@
         <ul class="resumen">
           <li><span>Vehículo</span><b>{{ placa() }}</b></li>
           <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
-          <li><span>Combustible</span><b>{{ nivelCombustible() }}</b></li>
+          <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
           <li><span>Fotos</span><b>7 ✓</b></li>
           <li><span>Firma</span><b>{{ firmaLista() ? '✓' : 'Pendiente' }}</b></li>
         </ul>

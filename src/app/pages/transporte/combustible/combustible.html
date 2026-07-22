@@ -1,6 +1,12 @@
 @if (necesitaVehiculo()) {
   <!-- B1 — elegir vehículo del pool cuando no llega por deep-link -->
   <div class="screen comb">
+    <!-- V4 — header con back coherente con los demás de transporte -->
+    <header class="comb__pick-header">
+      <button type="button" class="comb__pick-back" (click)="salirPicker()" aria-label="Atrás">←</button>
+      <span class="comb__pick-icon">⛽</span>
+      <h1 class="comb__pick-title">Registrar combustible</h1>
+    </header>
     <div class="screen__body">
       <app-vehiculo-picker
         subtitulo="Selecciona el vehículo para registrar el combustible."
@@ -107,9 +113,9 @@
         </div>
       }
 
-      <!-- Paso 1: kilometraje (KmInput con odómetro + mantenimiento en vivo) -->
+      <!-- V6 · Paso 1: km + galones + monto (todo lo que se digita, una hoja) -->
       @if (step() === 1) {
-        <h1 class="screen__title">Kilometraje actual</h1>
+        <h1 class="screen__title">Kilometraje y monto</h1>
         <app-km-input
           label="Kilometraje actual"
           [(value)]="km"
@@ -122,11 +128,6 @@
         } @else if (ultima().km != null) {
           <p class="comb__hint">Última echada: {{ ultima().km | number: '1.0-0' }} km</p>
         }
-      }
-
-      <!-- Paso 2: galones + monto + cálculo en vivo -->
-      @if (step() === 2) {
-        <h1 class="screen__title">Galones y monto</h1>
 
         <label class="field-label" for="gal">Galones echados</label>
         <input
@@ -149,8 +150,26 @@
           (ngModelChange)="monto.set($event)"
           placeholder="0"
         />
+      }
 
-        <!-- Live calc box -->
+      <!-- V6 · Paso 2: estación + cálculo automático debajo -->
+      @if (step() === 2) {
+        <h1 class="screen__title">¿En qué estación?</h1>
+        @for (e of estacionesVisibles(); track e) {
+          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
+        }
+        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
+        @if (estacionOtro()) {
+          <input
+            class="field comb__estacion-otro"
+            type="text"
+            [ngModel]="estacionOtroTexto()"
+            (ngModelChange)="estacionOtroTexto.set($event)"
+            placeholder="Nombre de la estación"
+          />
+        }
+
+        <!-- Cálculo automático (en vivo) -->
         <div class="comb__calc">
           <span class="comb__calc-title">Cálculo automático</span>
           <div class="comb__calc-row">
@@ -179,26 +198,8 @@
         </div>
       }
 
-      <!-- Paso 3: estación -->
+      <!-- V6 · Paso 3: fotos obligatorias -->
       @if (step() === 3) {
-        <h1 class="screen__title">¿En qué estación?</h1>
-        @for (e of estacionesVisibles(); track e) {
-          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
-        }
-        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
-        @if (estacionOtro()) {
-          <input
-            class="field comb__estacion-otro"
-            type="text"
-            [ngModel]="estacionOtroTexto()"
-            (ngModelChange)="estacionOtroTexto.set($event)"
-            placeholder="Nombre de la estación"
-          />
-        }
-      }
-
-      <!-- Paso 4: fotos obligatorias -->
-      @if (step() === 4) {
         <h1 class="screen__title">Fotos obligatorias</h1>
         <p class="screen__subtitle">
           La foto del tablero respalda el kilometraje digitado; la del recibo respalda el monto.
@@ -221,8 +222,8 @@
         </div>
       }
 
-      <!-- Paso 5: revisa y envía -->
-      @if (step() === 5) {
+      <!-- V6 · Paso 4: revisa y envía (no editable) -->
+      @if (step() === 4) {
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
           <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>

@@ -26,6 +26,12 @@
       <span class="bit-action__icon">📋</span>
       <span class="bit-action__label">Mis bitácoras</span>
     </button>
+    @if (enProcesoCount()['bitacora']; as n) {
+      <button type="button" class="bit-action" (click)="go('/en-proceso')">
+        <span class="bit-action__icon">📥</span>
+        <span class="bit-action__label">Documentación en proceso ({{ n }})</span>
+      </button>
+    }
   </div>
 
   <app-sync-bar />

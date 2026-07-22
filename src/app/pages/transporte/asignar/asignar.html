@@ -32,10 +32,12 @@
             >
               <span class="asignar__ya">✓ Ya asignado</span>
               <div class="asignar__acciones">
-                <button type="button" class="btn-ghost" (click)="irSemanal()">
-                  {{ yaReportado(v.vehiculo_id) ? 'Rehacer semanal' : 'Reporte semanal' }}
+                <button type="button" class="btn-ghost asignar__accion" (click)="irSemanal()">
+                  {{ yaReportado(v.vehiculo_id) ? '🔄 Rehacer reporte semanal' : '📋 Reporte semanal' }}
                 </button>
-                <button type="button" class="btn-ghost" (click)="irPreuso(v.vehiculo_id)">Pre-uso</button>
+                <button type="button" class="btn-ghost asignar__accion" (click)="irPreuso(v.vehiculo_id)">
+                  🚙 Checklist de pre-uso
+                </button>
               </div>
             </app-vehiculo-card>
           } @else {

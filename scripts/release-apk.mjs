@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.24.0';
+const VERSION = '1.25.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,22 +62,18 @@ const MIN_VERSION = '1.22.1';
 const RELEASED_AT = '2026-07-22';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Kilometraje al instante, semanal marcado al enviar, multa a prueba de crash y wizards paso a paso';
+const TITULO = 'Borradores y pendientes a la mano, nivel de combustible con "E", combustible en 4 pasos e historial en Mi actividad';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'El kilometraje que registras (recibir, combustible, pre-uso, semanal, mantenimiento) ahora se refleja al instante en el vehículo, aunque todavía no se haya enviado.' },
-  { t: 'arreglo', d: 'El reporte semanal enviado se marca al momento como "Ya reportado" (antes seguía diciendo "Reportar"); muestra "Enviando…" mientras está en cola y opción de "Rehacer".' },
-  { t: 'arreglo', d: 'Cada paso de los formularios ahora empieza desde arriba (ya no aparece a mitad de pantalla).' },
-  { t: 'mejora', d: 'Al terminar un pre-uso pasas a una pantalla clara con el resultado: APROBADO, CON HALLAZGOS o VEHÍCULO BLOQUEADO.' },
-  { t: 'arreglo', d: 'Registrar multa: ya no se pierde lo que llenaste al adjuntar un archivo, muestra vista previa de la foto o PDF y puedes elegir el vehículo.' },
-  { t: 'mejora', d: 'Registrar combustible y mantenimiento van paso a paso, con el kilometraje del vehículo como referencia y aviso al instante si escribes uno menor.' },
-  { t: 'nuevo', d: 'Mantenimiento ahora pide al menos 1 foto y muestra las miniaturas en el resumen.' },
-  { t: 'mejora', d: 'Pre-uso: una pregunta por pantalla con textos más cortos y fáciles de leer.' },
-  { t: 'nuevo', d: 'Reporte semanal: si marcas una falla, ahora pides describir qué pasó (obligatorio).' },
-  { t: 'nuevo', d: 'Perfil del vehículo: aviso de mantenimiento atrasado, último nivel de combustible y las multas del vehículo.' },
-  { t: 'mejora', d: 'Al asignarte un vehículo, si ya lo tienes aparece como "Ya asignado" con accesos directos al reporte semanal y al pre-uso.' },
-  { t: 'mejora', d: 'Al recibir o devolver un vehículo, la ubicación se muestra legible (Proyecto o Almacén cercano, o la dirección) en vez de solo "Capturada".' },
+  { t: 'nuevo', d: 'En "Mis bitácoras" ahora ves arriba tus borradores y envíos pendientes (En proceso), con opción de retomar o descartar — sin tener que ir al perfil.' },
+  { t: 'mejora', d: 'Acceso directo a "Documentación en proceso" desde Bitácora y Transporte (con contador) y en los cuadros del inicio.' },
+  { t: 'arreglo', d: 'La pantalla "Elige un vehículo" al registrar combustible ahora tiene un botón claro para volver atrás.' },
+  { t: 'mejora', d: 'Nivel de combustible unificado en toda la app, ahora con "E" (reserva): E · 1/4 · 1/2 · 3/4 · F.' },
+  { t: 'mejora', d: 'Registrar combustible en pasos más cortos: kilometraje, galones y monto juntos; luego la estación con el cálculo automático; después las fotos; y por último la revisión.' },
+  { t: 'mejora', d: 'Al asignarte un vehículo que ya tienes, los accesos a Reporte semanal y Pre-uso quedan claros y separados.' },
+  { t: 'nuevo', d: 'En "Mi actividad" ahora ves el historial de tus reportes semanales, pre-usos y echadas de combustible (últimos 90 días, con "ver más").' },
+  { t: 'nuevo', d: 'Los encargados de flota pueden ver "Rutas que creé" con su estado y detalle.' },
 ];
 
 const TIPO_POR_COMMIT = {

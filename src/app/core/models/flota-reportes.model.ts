@@ -68,6 +68,40 @@ export interface ChecklistBreakdown {
   semanal: number;
 }
 
+/** V2 — un checklist (pre-uso o semanal) en el historial de "Mi actividad". */
+export interface HistorialChecklist {
+  id: string;
+  fecha: string | null;
+  tipo: string; // pre_uso | inspeccion
+  resultado: string | null; // aprobado | con_hallazgos | bloqueado
+  kilometraje: number | null;
+  nivel_combustible: string | null;
+  vehiculo?: { placa: string } | null;
+}
+
+/** V2 — una echada de combustible en el historial de "Mi actividad". */
+export interface HistorialEchada {
+  id: string;
+  fecha: string | null;
+  kilometraje: number | null;
+  galones: number | null;
+  monto: number | null;
+  rendimiento_km_gal: number | null;
+  alerta_consumo: boolean | null;
+  vehiculo?: { placa: string } | null;
+}
+
+/** V3 — una ruta creada/asignada por el usuario (roles elevados). */
+export interface RutaCreada {
+  id: string;
+  fecha: string | null;
+  origen: string | null;
+  destino: string | null;
+  estado: string | null;
+  vehiculo?: { placa: string } | null;
+  conductor?: { nombre: string } | null;
+}
+
 /** Captura de "Me pusieron una multa" (S24). */
 export interface MultaCaptura {
   conductorId: string;

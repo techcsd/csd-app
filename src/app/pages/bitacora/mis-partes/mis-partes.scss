@@ -53,6 +53,66 @@
   border-color: var(--color-secondary);
 }
 
+// V1 — sección "En proceso / Pendientes de envío".
+.mis-partes__proceso {
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px dashed var(--color-warning, #d97706);
+  border-radius: var(--radius);
+  background: var(--color-warning-bg, #fef3c7);
+}
+.mis-partes__proceso-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.proc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-warning, #f59e0b);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 8px;
+  &:last-child { margin-bottom: 0; }
+}
+.proc-row[data-kind='envio'] {
+  border-left-color: var(--color-warning, #d97706);
+}
+.proc-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.proc-row__label {
+  font-weight: 700;
+  font-size: var(--fs-option);
+}
+.proc-row__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.proc-row__meta--error { color: var(--color-error); font-weight: 600; }
+.proc-row__meta--sending { color: var(--color-secondary); font-weight: 600; }
+.proc-row__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.proc-row__btn {
+  min-width: 108px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
 .bit-row {
   width: 100%;
   display: flex;
