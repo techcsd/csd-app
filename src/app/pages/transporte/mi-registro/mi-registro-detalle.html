@@ -1,0 +1,126 @@
+<div class="screen mrd">
+  <header class="mrd__header">
+    <button type="button" class="mrd__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mrd__icon">{{ esChecklist() ? '📋' : '⛽' }}</span>
+    <h1 class="mrd__title">{{ titulo() }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (esChecklist()) {
+      @if (checklist(); as c) {
+        <!-- Cabecera del checklist -->
+        <div class="mrd__head">
+          <div class="mrd__head-top">
+            <span class="mrd__placa">{{ c.vehiculo?.placa ?? 'Vehículo' }}</span>
+            <span class="mrd__badge mrd__badge--{{ resultadoBadge(c.resultado) }}">{{ resultadoLabel(c.resultado) }}</span>
+          </div>
+          <span class="mrd__sub">{{ c.vehiculo?.marca }} {{ c.vehiculo?.modelo }}</span>
+          <ul class="resumen">
+            <li><span>Fecha</span><b>{{ c.fecha ? fmtFecha(c.fecha) : '—' }}</b></li>
+            @if (c.conductor?.nombre) { <li><span>Conductor</span><b>{{ c.conductor?.nombre }}</b></li> }
+            <li><span>Kilometraje</span><b>{{ c.kilometraje != null ? (c.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>
+            <li><span>Combustible</span><b>{{ nivelLabel(c.nivel_combustible) }}</b></li>
+          </ul>
+        </div>
+
+        <!-- Respuestas -->
+        <h2 class="mrd__section">Inspección ({{ c.respuestas.length }})</h2>
+        @for (r of c.respuestas; track $index) {
+          <div class="mrd__resp" [attr.data-r]="r.respuesta">
+            <div class="mrd__resp-main">
+              <span class="mrd__resp-label">{{ r.etiqueta }}</span>
+              @if (r.comentario) { <span class="mrd__resp-com">“{{ r.comentario }}”</span> }
+            </div>
+            <span class="mrd__resp-val mrd__resp-val--{{ r.respuesta }}">{{ respLabel(r.respuesta) }}</span>
+          </div>
+        } @empty {
+          <p class="mrd__muted">Sin respuestas registradas.</p>
+        }
+
+        @if (c.observaciones) {
+          <h2 class="mrd__section">Comentario</h2>
+          <p class="mrd__obs">{{ c.observaciones }}</p>
+        }
+
+        <!-- Fotos -->
+        @if (c.fotos.length) {
+          <h2 class="mrd__section">Fotos ({{ c.fotos.length }})</h2>
+          <div class="mrd__fotos">
+            @for (f of c.fotos; track f.slot) {
+              <a class="mrd__foto" [href]="f.url" target="_blank" rel="noopener">
+                <app-img [src]="f.url" [alt]="f.slot" ratio="1 / 1" fallback="🖼️" />
+                <span class="mrd__foto-cap">{{ f.slot }}</span>
+              </a>
+            }
+          </div>
+        }
+
+        @if (c.firmaUrl) {
+          <h2 class="mrd__section">Firma</h2>
+          <a class="mrd__firma" [href]="c.firmaUrl" target="_blank" rel="noopener">
+            <app-img [src]="c.firmaUrl" alt="Firma" ratio="3 / 1" fallback="✍️" />
+          </a>
+        }
+      } @else {
+        <app-empty-state icon="🔍" title="No se encontró el registro" message="Puede que ya no esté disponible o no tengas acceso." />
+      }
+    } @else {
+      @if (echada(); as e) {
+        <!-- Cabecera de la echada -->
+        <div class="mrd__head">
+          <div class="mrd__head-top">
+            <span class="mrd__placa">{{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
+            @if (e.alerta_consumo) {
+              <span class="mrd__badge mrd__badge--error">⚠ Consumo anormal</span>
+            } @else if (e.rendimiento_km_gal != null) {
+              <span class="mrd__badge mrd__badge--ok">✓ Normal</span>
+            }
+          </div>
+          <span class="mrd__sub">{{ e.vehiculo?.marca }} · {{ e.fecha ? fmtFecha(e.fecha) : '—' }}</span>
+        </div>
+
+        <ul class="resumen">
+          <li><span>Kilometraje</span><b>{{ e.kilometraje != null ? (e.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>
+          <li><span>Km recorridos</span><b>{{ e.km_recorridos != null ? (e.km_recorridos | number: '1.0-0') + ' km' : '—' }}</b></li>
+          <li><span>Galones</span><b>{{ e.galones != null ? (e.galones | number: '1.0-2') + ' gal' : '—' }}</b></li>
+          <li><span>Monto</span><b>{{ e.monto != null ? 'RD$ ' + (e.monto | number: '1.2-2') : '—' }}</b></li>
+          <li><span>Precio / galón</span><b>{{ e.precio_por_galon != null ? 'RD$ ' + (e.precio_por_galon | number: '1.2-2') : '—' }}</b></li>
+          <li><span>Costo / km</span><b>{{ e.costo_por_km != null ? 'RD$ ' + (e.costo_por_km | number: '1.2-2') : '—' }}</b></li>
+          <li><span>Rendimiento</span><b>{{ e.rendimiento_km_gal != null ? (e.rendimiento_km_gal | number: '1.1-2') + ' km/gal' : 'Primera echada' }}</b></li>
+          <li><span>Estación</span><b>{{ e.estacion ?? '—' }}</b></li>
+        </ul>
+
+        @if (e.alerta_consumo && e.motivo_alerta) {
+          <div class="mrd__band mrd__band--warn">⚠ {{ e.motivo_alerta }}</div>
+        }
+        @if (e.notas) {
+          <h2 class="mrd__section">Notas</h2>
+          <p class="mrd__obs">{{ e.notas }}</p>
+        }
+
+        <!-- Fotos -->
+        @if (e.reciboUrl || e.tableroUrl) {
+          <h2 class="mrd__section">Evidencia</h2>
+          <div class="mrd__fotos">
+            @if (e.reciboUrl) {
+              <a class="mrd__foto" [href]="e.reciboUrl" target="_blank" rel="noopener">
+                <app-img [src]="e.reciboUrl" alt="Recibo" ratio="1 / 1" fallback="🧾" />
+                <span class="mrd__foto-cap">Recibo</span>
+              </a>
+            }
+            @if (e.tableroUrl) {
+              <a class="mrd__foto" [href]="e.tableroUrl" target="_blank" rel="noopener">
+                <app-img [src]="e.tableroUrl" alt="Tablero" ratio="1 / 1" fallback="🎛️" />
+                <span class="mrd__foto-cap">Tablero</span>
+              </a>
+            }
+          </div>
+        }
+      } @else {
+        <app-empty-state icon="🔍" title="No se encontró la echada" message="Puede que ya no esté disponible o no tengas acceso." />
+      }
+    }
+  </div>
+</div>

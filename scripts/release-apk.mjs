@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.25.0';
+const VERSION = '1.25.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -73,6 +73,7 @@ const CAMBIOS_CURADOS = [
   { t: 'mejora', d: 'Registrar combustible en pasos más cortos: kilometraje, galones y monto juntos; luego la estación con el cálculo automático; después las fotos; y por último la revisión.' },
   { t: 'mejora', d: 'Al asignarte un vehículo que ya tienes, los accesos a Reporte semanal y Pre-uso quedan claros y separados.' },
   { t: 'nuevo', d: 'En "Mi actividad" ahora ves el historial de tus reportes semanales, pre-usos y echadas de combustible (últimos 90 días, con "ver más").' },
+  { t: 'nuevo', d: 'Toca cualquier reporte semanal, pre-uso o echada del historial para ver su detalle completo: respuestas y comentarios, fotos y firma, o el cálculo y la evidencia de la echada.' },
   { t: 'nuevo', d: 'Los encargados de flota pueden ver "Rutas que creé" con su estado y detalle.' },
 ];
 

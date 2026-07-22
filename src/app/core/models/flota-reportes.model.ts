@@ -102,6 +102,51 @@ export interface RutaCreada {
   conductor?: { nombre: string } | null;
 }
 
+/** V2 (follow-up) — detalle de un checklist (pre-uso o semanal) para "Mi actividad". */
+export interface ChecklistRespuestaDetalle {
+  etiqueta: string;
+  seccion: string | null;
+  es_critico: boolean;
+  respuesta: string; // ok | no | na
+  comentario: string | null;
+  orden: number;
+}
+export interface ChecklistDetalle {
+  id: string;
+  tipo: string; // pre_uso | inspeccion
+  fecha: string | null;
+  resultado: string | null;
+  kilometraje: number | null;
+  nivel_combustible: string | null;
+  observaciones: string | null;
+  vehiculo?: { placa: string; marca?: string; modelo?: string } | null;
+  conductor?: { nombre: string } | null;
+  respuestas: ChecklistRespuestaDetalle[];
+  fotos: { slot: string; url: string }[];
+  firmaUrl: string | null;
+}
+
+/** V2 (follow-up) — detalle de una echada de combustible para "Mi actividad". */
+export interface EchadaDetalle {
+  id: string;
+  fecha: string | null;
+  kilometraje: number | null;
+  km_anterior: number | null;
+  km_recorridos: number | null;
+  galones: number | null;
+  monto: number | null;
+  precio_por_galon: number | null;
+  costo_por_km: number | null;
+  rendimiento_km_gal: number | null;
+  alerta_consumo: boolean | null;
+  motivo_alerta: string | null;
+  estacion: string | null;
+  notas: string | null;
+  vehiculo?: { placa: string; marca?: string } | null;
+  reciboUrl: string | null;
+  tableroUrl: string | null;
+}
+
 /** Captura de "Me pusieron una multa" (S24). */
 export interface MultaCaptura {
   conductorId: string;

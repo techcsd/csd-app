@@ -4,7 +4,10 @@ import { throwSyncError, SyncService } from '../sync/sync.service';
 import {
   AccidenteCaptura,
   ChecklistBreakdown,
+  ChecklistDetalle,
+  ChecklistRespuestaDetalle,
   DanoCaptura,
+  EchadaDetalle,
   FlotaAccidente,
   FlotaEntrega,
   FlotaMulta,
@@ -173,6 +176,79 @@ export class FlotaReportesService {
       .limit(200);
     if (error) return [];
     return (data as unknown as RutaCreada[]) ?? [];
+  }
+
+  /** Firma un path del bucket `vehiculos` (fotos/firma). null si falla. */
+  private async signedVehiculos(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
+    const { data, error } = await this.supabase.client.storage
+      .from('vehiculos')
+      .createSignedUrl(path, 3600);
+    if (error) return null;
+    return data?.signedUrl ?? null;
+  }
+
+  /**
+   * V2 (follow-up) — detalle completo de un checklist (pre-uso o semanal):
+   * cabecera + respuestas + fotos + firma (URLs firmadas). RLS ya scopea al dueño.
+   */
+  async getMiChecklistDetalle(id: string): Promise<ChecklistDetalle | null> {
+    if (!id) return null;
+    const { data, error } = await this.supabase.client
+      .from('checklists_vehiculo')
+      .select(
+        'id, tipo, fecha, resultado, kilometraje, nivel_combustible, observaciones, firma_path, ' +
+          'vehiculo:vehiculos(placa, marca, modelo), conductor:conductores(nombre), ' +
+          'respuestas:checklist_vehiculo_respuestas(etiqueta, seccion, es_critico, respuesta, comentario, orden), ' +
+          'fotos:checklist_vehiculo_fotos(slot, storage_path)',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return null;
+    const row = data as unknown as {
+      id: string; tipo: string; fecha: string | null; resultado: string | null;
+      kilometraje: number | null; nivel_combustible: string | null; observaciones: string | null;
+      firma_path: string | null;
+      vehiculo?: { placa: string; marca?: string; modelo?: string } | null;
+      conductor?: { nombre: string } | null;
+      respuestas?: ChecklistRespuestaDetalle[];
+      fotos?: { slot: string; storage_path: string }[];
+    };
+    const respuestas = (row.respuestas ?? []).slice().sort((a, b) => a.orden - b.orden);
+    const fotosRows = (row.fotos ?? []).filter((f) => !!f.storage_path);
+    const fotos = (
+      await Promise.all(
+        fotosRows.map(async (f) => ({ slot: f.slot, url: await this.signedVehiculos(f.storage_path) })),
+      )
+    ).filter((f): f is { slot: string; url: string } => !!f.url);
+    const firmaUrl = await this.signedVehiculos(row.firma_path);
+    return {
+      id: row.id, tipo: row.tipo, fecha: row.fecha, resultado: row.resultado,
+      kilometraje: row.kilometraje, nivel_combustible: row.nivel_combustible,
+      observaciones: row.observaciones, vehiculo: row.vehiculo ?? null, conductor: row.conductor ?? null,
+      respuestas, fotos, firmaUrl,
+    };
+  }
+
+  /** V2 (follow-up) — detalle de una echada + URLs firmadas de recibo/tablero. */
+  async getMiEchadaDetalle(id: string): Promise<EchadaDetalle | null> {
+    if (!id) return null;
+    const { data, error } = await this.supabase.client
+      .from('registros_combustible')
+      .select(
+        'id, fecha, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, ' +
+          'costo_por_km, rendimiento_km_gal, alerta_consumo, motivo_alerta, estacion, notas, ' +
+          'foto_recibo_path, foto_tablero_path, vehiculo:vehiculos(placa, marca)',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return null;
+    const row = data as unknown as EchadaDetalle & { foto_recibo_path: string | null; foto_tablero_path: string | null };
+    const [reciboUrl, tableroUrl] = await Promise.all([
+      this.signedVehiculos(row.foto_recibo_path),
+      this.signedVehiculos(row.foto_tablero_path),
+    ]);
+    return { ...row, reciboUrl, tableroUrl };
   }
 
   /** S22 — reporta un accidente del vehículo (con acta AMET opcional). */

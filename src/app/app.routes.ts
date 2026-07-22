@@ -163,6 +163,13 @@ export const routes: Routes = [
       import('./pages/transporte/mi-actividad/mi-actividad').then((m) => m.MiActividadPage),
   },
   {
+    // V2 (follow-up) — detalle de un registro del historial (checklist | echada).
+    path: 'transporte/mi-registro/:tipo/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mi-registro/mi-registro-detalle').then((m) => m.MiRegistroDetallePage),
+  },
+  {
     path: 'transporte/rutas/crear',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/rutas/crear-ruta').then((m) => m.CrearRutaPage),

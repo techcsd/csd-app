@@ -147,13 +147,13 @@
         <section class="mact__docs">
           <h2 class="mact__docs-title">Mis reportes semanales ({{ semanales().length }})</h2>
           @for (c of semanales(); track c.id) {
-            <div class="mact__act-row">
+            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verChecklist(c.id)">
               <span class="mact__act-main">📋 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 {{ resultadoLabel(c.resultado) }}
                 @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
               </span>
-            </div>
+            </button>
           }
         </section>
       }
@@ -163,13 +163,13 @@
         <section class="mact__docs">
           <h2 class="mact__docs-title">Mis pre-usos ({{ preusos().length }})</h2>
           @for (c of preusos(); track c.id) {
-            <div class="mact__act-row">
+            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verChecklist(c.id)">
               <span class="mact__act-main">🚙 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 {{ resultadoLabel(c.resultado) }}
                 @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
               </span>
-            </div>
+            </button>
           }
         </section>
       }
@@ -179,7 +179,7 @@
         <section class="mact__docs">
           <h2 class="mact__docs-title">Mis echadas de combustible ({{ echadas().length }})</h2>
           @for (e of echadas(); track e.id) {
-            <div class="mact__act-row">
+            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verEchada(e.id)">
               <span class="mact__act-main">⛽ {{ e.vehiculo?.placa ?? 'Vehículo' }} · {{ e.fecha ? fmtFecha(e.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 @if (e.galones != null) { {{ e.galones }} gal }
@@ -187,7 +187,7 @@
                 @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal }} km/gal }
                 @if (e.alerta_consumo) { · <span class="mact__alerta">⚠ anormal</span> }
               </span>
-            </div>
+            </button>
           }
         </section>
       }

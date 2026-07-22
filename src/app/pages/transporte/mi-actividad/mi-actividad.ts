@@ -145,6 +145,14 @@ export class MiActividadPage {
     return r === 'bloqueado' ? '⛔ Bloqueado' : r === 'con_hallazgos' ? '⚠ Con hallazgos' : '✓ Aprobado';
   }
 
+  /** V2 (follow-up) — abrir el detalle de un checklist / echada. */
+  verChecklist(id: string): void {
+    void this.router.navigate(['/transporte/mi-registro', 'checklist', id]);
+  }
+  verEchada(id: string): void {
+    void this.router.navigate(['/transporte/mi-registro', 'echada', id]);
+  }
+
   private async loadDocs(): Promise<void> {
     const id = this.condId();
     if (!id) return;
