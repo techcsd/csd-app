@@ -83,6 +83,25 @@ export class CombustibleService {
     }
   }
 
+  /**
+   * T4 — catálogo de estaciones (sgc.estaciones_combustible), cacheado offline.
+   * Total Energies viene primero (orden). "Otro" queda fuera de la lista (la UI
+   * ofrece su propia opción de texto libre). El payload sigue enviando texto.
+   */
+  async getEstaciones(): Promise<string[]> {
+    const data = await this.catalog.refresh<string[]>('estaciones_combustible', async () => {
+      const { data, error } = await this.supabase.client
+        .from('estaciones_combustible')
+        .select('nombre, orden')
+        .eq('activo', true)
+        .order('orden', { ascending: true })
+        .order('nombre', { ascending: true });
+      if (error) throw new Error(error.message);
+      return ((data as { nombre: string }[]) ?? []).map((r) => r.nombre);
+    });
+    return data ?? [];
+  }
+
   /** Queue a fuel record. Works fully offline; syncs when there's signal. */
   async registrar(input: CombustibleCaptura): Promise<void> {
     const id = crypto.randomUUID();

@@ -14,6 +14,7 @@ import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { Img } from '../../../shared/ui/img/img';
@@ -44,7 +45,7 @@ const TOTAL_STEPS = 2;
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -77,7 +78,15 @@ export class CombustiblePage extends GuardedWizard {
   km = signal<number | null>(null);
   galones = signal<number | null>(null);
   monto = signal<number | null>(null);
-  estacion = signal('');
+  // T4 — estación por catálogo (Total Energies preseleccionada) + "Otro" libre.
+  private static readonly ESTACIONES_FALLBACK = ['Total Energies', 'Shell', 'Esso', 'Sunix', 'United', 'Texaco'];
+  estaciones = signal<string[]>(CombustiblePage.ESTACIONES_FALLBACK);
+  estacion = signal('Total Energies');
+  estacionOtro = signal(false);
+  estacionOtroTexto = signal('');
+  estacionesVisibles = computed(() =>
+    this.estaciones().filter((e) => e.trim().toLowerCase() !== 'otro'),
+  );
   fotoRecibo = signal<CapturedPhoto | null>(null);
   fotoTablero = signal<CapturedPhoto | null>(null);
 
@@ -106,6 +115,7 @@ export class CombustiblePage extends GuardedWizard {
   constructor() {
     super();
     this.registerBackGuard();
+    void this.loadEstaciones();
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
     if (this.vehiculoId) {
@@ -130,14 +140,36 @@ export class CombustiblePage extends GuardedWizard {
     void this.loadConductor();
   }
 
-  /** U4 — datos capturados sin guardar (tras registrar ya no hay nada que perder). */
+  /** T4 — carga el catálogo de estaciones (offline-friendly; fallback local). */
+  private async loadEstaciones(): Promise<void> {
+    const list = await this.combustible.getEstaciones();
+    if (list.length) this.estaciones.set(list);
+  }
+
+  /** T4 — elegir una estación del catálogo (nombre canónico). */
+  pickEstacion(nombre: string): void {
+    this.estacion.set(nombre);
+    this.estacionOtro.set(false);
+  }
+  /** T4 — "Otro": escribir una estación fuera del catálogo. */
+  pickEstacionOtro(): void {
+    this.estacionOtro.set(true);
+    this.estacion.set('');
+  }
+  /** Estación final que viaja en el payload (texto, retrocompatible). */
+  private estacionFinal(): string {
+    return (this.estacionOtro() ? this.estacionOtroTexto() : this.estacion()).trim();
+  }
+
+  /** U4 — datos capturados sin guardar (tras registrar ya no hay nada que perder).
+   *  La estación preseleccionada (Total Energies) NO cuenta como dato del usuario. */
   tieneDatos(): boolean {
     return (
       !this.done() &&
       (this.km() != null ||
         this.galones() != null ||
         this.monto() != null ||
-        !!this.estacion().trim() ||
+        !!this.estacionOtroTexto().trim() ||
         !!this.fotoRecibo() ||
         !!this.fotoTablero())
     );
@@ -218,7 +250,7 @@ export class CombustiblePage extends GuardedWizard {
     }
     this.submitting.set(true);
     try {
-      const estacion = this.estacion().trim();
+      const estacion = this.estacionFinal();
       await this.combustible.registrar({
         vehiculoId: this.vehiculoId,
         conductorId: this.conductorId,

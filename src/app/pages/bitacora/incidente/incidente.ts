@@ -72,6 +72,9 @@ export class IncidentePage implements OnDestroy {
   equipoNombre = signal('');
   equipoAlquilado = signal<boolean | null>(null);
   equipoOperativo = signal<boolean | null>(null);
+  // T19 — equipos ya vistos en la obra (selector) + comentario de operatividad.
+  equiposObra = signal<string[]>([]);
+  equipoOperativoComentario = signal('');
   // S13 — sucesos probables ("¿qué pasó?") del catálogo + "Otro".
   sucesos = signal<string[]>([]);
   suceso = signal<string>('');
@@ -117,6 +120,7 @@ export class IncidentePage implements OnDestroy {
         equipoNombre: this.equipoNombre(),
         equipoAlquilado: this.equipoAlquilado(),
         equipoOperativo: this.equipoOperativo(),
+        equipoOperativoComentario: this.equipoOperativoComentario(),
         suceso: this.suceso(),
         otroActivo: this.otroActivo(),
         sucesoOtro: this.sucesoOtro(),
@@ -152,12 +156,14 @@ export class IncidentePage implements OnDestroy {
         this.equipoNombre.set(draft.equipoNombre ?? '');
         this.equipoAlquilado.set(draft.equipoAlquilado ?? null);
         this.equipoOperativo.set(draft.equipoOperativo ?? null);
+        this.equipoOperativoComentario.set(draft.equipoOperativoComentario ?? '');
         this.suceso.set(draft.suceso ?? '');
         this.otroActivo.set(draft.otroActivo ?? false);
         this.sucesoOtro.set(draft.sucesoOtro ?? '');
         this.acciones.set(draft.acciones ?? '');
         this.step.set(draft.step ?? 1);
         if (draft.tipo) void this.loadSucesos(draft.tipo);
+        if (draft.tipo === 'incidente_equipo') void this.loadEquiposObra();
         this.toast.show('Recuperamos tu reporte a medio llenar. Las fotos y la nota de voz hay que tomarlas de nuevo.', 'info', 4500);
       } else {
         const obra = this.ctx.obraActiva();
@@ -175,6 +181,11 @@ export class IncidentePage implements OnDestroy {
     this.sucesos.set(await this.bitacora.getSucesos(tipo));
   }
 
+  /** T19 — equipos ya vistos en la obra activa (cacheado offline por obra). */
+  private async loadEquiposObra(): Promise<void> {
+    this.equiposObra.set(await this.bitacora.getEquiposDeObra(this.proyectoId()));
+  }
+
   pickTipo(t: IncidenteTipo): void {
     if (this.tipo() === t) return;
     this.tipo.set(t);
@@ -183,6 +194,12 @@ export class IncidentePage implements OnDestroy {
     this.otroActivo.set(false);
     this.sucesoOtro.set('');
     void this.loadSucesos(t);
+    if (t === 'incidente_equipo') void this.loadEquiposObra();
+  }
+
+  /** T19 — elegir un equipo de la lista de la obra (nombre canónico). */
+  pickEquipo(nombre: string): void {
+    this.equipoNombre.set(nombre);
   }
 
   pickSuceso(s: string): void {
@@ -272,6 +289,11 @@ export class IncidentePage implements OnDestroy {
           this.toast.error('Dinos si el equipo queda operativo.');
           return;
         }
+        // T19 — comentario obligatorio si quedó fuera de servicio.
+        if (this.equipoOperativo() === false && !this.equipoOperativoComentario().trim()) {
+          this.toast.error('Explica qué pasó: el equipo quedó fuera de servicio.');
+          return;
+        }
       } else if (!this.gravedad()) {
         this.toast.error('Elige la gravedad.');
         return;
@@ -314,6 +336,9 @@ export class IncidentePage implements OnDestroy {
         equipoNombre: this.esEquipo() ? this.equipoNombre().trim() || null : null,
         equipoAlquilado: this.esEquipo() ? this.equipoAlquilado() : null,
         equipoOperativo: this.esEquipo() ? this.equipoOperativo() : null,
+        equipoOperativoComentario: this.esEquipo()
+          ? this.equipoOperativoComentario().trim() || null
+          : null,
         fotos: this.fotos().map((f) => f.blob),
         voz: this.voz(),
       });
@@ -341,6 +366,7 @@ export class IncidentePage implements OnDestroy {
         this.lesionados() > 0 ||
         !!this.subcontratista().trim() ||
         !!this.equipoNombre().trim() ||
+        !!this.equipoOperativoComentario().trim() ||
         !!this.suceso() ||
         !!this.sucesoOtro().trim() ||
         !!this.acciones().trim() ||
@@ -376,6 +402,7 @@ interface IncidenteDraft {
   equipoNombre: string;
   equipoAlquilado: boolean | null;
   equipoOperativo: boolean | null;
+  equipoOperativoComentario: string;
   suceso: string;
   otroActivo: boolean;
   sucesoOtro: string;

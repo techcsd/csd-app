@@ -279,8 +279,15 @@ export class PartePage implements OnDestroy {
     if (this.proyectoId()) {
       void this.loadPartidas(this.proyectoId());
       void this.loadCatalogo(this.proyectoId());
+      void this.loadEquiposObra(this.proyectoId());
     }
     this.hydrated = true;
+  }
+
+  /** T19 — sugerencias de equipos de ESTA obra (fallback al listado global). */
+  private async loadEquiposObra(proyectoId: string): Promise<void> {
+    const deObra = await this.bitacora.getEquiposDeObra(proyectoId);
+    if (deObra.length) this.equiposSugeridos.set(deObra);
   }
 
   private async loadPartidas(proyectoId: string): Promise<void> {
@@ -595,6 +602,7 @@ export class PartePage implements OnDestroy {
       }
       void this.loadPartidas(this.proyectoId());
       void this.loadCatalogo(this.proyectoId());
+      void this.loadEquiposObra(this.proyectoId());
     }
     if (s === 2 && this.llovio() === null) {
       this.toast.error('Dinos si llovió o está lloviendo.');

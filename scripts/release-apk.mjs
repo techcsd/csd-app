@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.22.1';
+const VERSION = '1.23.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,16 +59,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.22.1';
-const RELEASED_AT = '2026-07-21';
+const RELEASED_AT = '2026-07-22';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Actividad del conductor completa + rendimiento esperado vs real';
+const TITULO = 'Incidente de equipo con selector + estación de combustible + resúmenes legibles';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'La actividad del conductor ahora también muestra entregas/recepciones y separa los pre-usos de los reportes semanales.' },
-  { t: 'nuevo', d: 'El chofer puede registrar desde su actividad una multa que le pusieron.' },
-  { t: 'mejora', d: 'El perfil del vehículo compara el rendimiento real de combustible con el esperado (km/gal) y avisa si está por debajo.' },
+  { t: 'nuevo', d: 'Al reportar un incidente de equipo puedes elegir el equipo de una lista de la obra (evita nombres distintos para lo mismo) o escribir uno nuevo.' },
+  { t: 'nuevo', d: 'Al decir si un equipo queda operativo puedes dejar un comentario; si quedó fuera de servicio es obligatorio explicar qué pasó.' },
+  { t: 'nuevo', d: 'Al registrar combustible eliges la estación de una lista (Total Energies por defecto) en lugar de escribirla; "Otro" permite escribir.' },
+  { t: 'arreglo', d: 'La pantalla de "Revisa y envía" de todos los reportes ya se ve bien: cada dato con su etiqueta y su valor separados (antes salían pegados).' },
 ];
 
 const TIPO_POR_COMMIT = {

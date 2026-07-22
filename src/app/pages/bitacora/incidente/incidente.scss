@@ -112,6 +112,12 @@ app-option-button {
   margin: 12px 0;
 }
 
+.incidente__hint {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
 .incidente__nav {
   padding: 16px;
   padding-bottom: calc(16px + var(--safe-bottom));

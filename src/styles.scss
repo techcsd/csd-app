@@ -211,6 +211,44 @@ textarea.field::placeholder {
   color: var(--color-text-secondary);
 }
 
+/* ── Wizard review summary (T19c) ─────────────────────────────────────────────
+   Label/value rows shared by EVERY wizard's "Revisa y envía" step (incidente,
+   parte, checklist, preuso, mantenimiento, reporte-semanal, crear-ruta,
+   reportar-vehiculo, liberación, cl-detalle). One source of truth so labels and
+   values never render glued together ("Obraaasasa"). Gray label left, bold value
+   right; long values wrap without shoving the label. */
+.resumen {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.resumen li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 16px;
+  font-size: var(--fs-option);
+  border-bottom: 1px solid var(--color-border);
+}
+.resumen li:last-child {
+  border-bottom: none;
+}
+.resumen span {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.resumen b {
+  color: var(--color-text-primary);
+  font-weight: 700;
+  text-align: right;
+  word-break: break-word;
+  min-width: 0;
+}
+
 /* Shared header for admin sub-pages. */
 .adm-sub {
   background: var(--color-bg);

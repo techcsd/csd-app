@@ -25,7 +25,8 @@
           @if (bit.incidente_subcontratista) { <li><span>Subcontratista</span><b>{{ bit.incidente_subcontratista }}</b></li> }
           @if (bit.incidente_equipo_nombre) { <li><span>Equipo</span><b>{{ bit.incidente_equipo_nombre }}</b></li> }
           @if (bit.incidente_equipo_alquilado != null) { <li><span>Propiedad</span><b>{{ bit.incidente_equipo_alquilado ? 'Alquilado' : 'Propio' }}</b></li> }
-          @if (bit.incidente_equipo_operativo != null) { <li><span>¿Operativo?</span><b>{{ bit.incidente_equipo_operativo ? 'Sí' : 'No' }}</b></li> }
+          @if (bit.incidente_equipo_operativo != null) { <li><span>¿Operativo?</span><b>{{ bit.incidente_equipo_operativo ? 'Sí' : 'No, fuera de servicio' }}</b></li> }
+          @if (bit.incidente_equipo_operativo_comentario) { <li><span>Comentario</span><b>{{ bit.incidente_equipo_operativo_comentario }}</b></li> }
         }
         @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
       </ul>

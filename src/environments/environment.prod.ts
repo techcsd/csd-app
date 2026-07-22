@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: '1.22.1',
+  version: '1.23.0',
   appUrl: 'https://app.sgcconstructorasd.com',
   // Same Supabase project as SGC web (schema `sgc`, same users/roles/RLS).
   supabaseUrl: 'https://jeeqhgccqefbqilntcpu.supabase.co',

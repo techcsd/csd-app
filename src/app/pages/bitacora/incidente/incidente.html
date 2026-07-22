@@ -43,6 +43,12 @@
         @if (esEquipo()) {
           <h1 class="screen__title">Cuéntanos del equipo</h1>
           <label class="field-label">¿Cuál equipo?</label>
+          @if (equiposObra().length) {
+            <p class="incidente__hint">Toca uno de la obra o escribe otro abajo.</p>
+            @for (e of equiposObra(); track e) {
+              <app-option-button icon="🔧" [label]="e" [selected]="equipoNombre() === e" (pressed)="pickEquipo(e)" />
+            }
+          }
           <input class="field" type="text" [ngModel]="equipoNombre()" (ngModelChange)="equipoNombre.set($event)" placeholder="Ej: Retroexcavadora CAT 320" />
 
           <label class="field-label">¿El equipo es alquilado o propio?</label>
@@ -52,6 +58,15 @@
           <label class="field-label">¿Queda operativo?</label>
           <app-option-button icon="✅" label="Sí, sigue funcionando" tone="success" [selected]="equipoOperativo() === true" (pressed)="equipoOperativo.set(true)" />
           <app-option-button icon="🛑" label="No, quedó fuera de servicio" tone="warning" [selected]="equipoOperativo() === false" (pressed)="equipoOperativo.set(false)" />
+
+          @if (equipoOperativo() !== null) {
+            <label class="field-label">
+              {{ equipoOperativo() === false ? 'Explica qué pasó (obligatorio)' : 'Comentario (opcional)' }}
+            </label>
+            <textarea class="field incidente__textarea" rows="3"
+              [ngModel]="equipoOperativoComentario()" (ngModelChange)="equipoOperativoComentario.set($event)"
+              [placeholder]="equipoOperativo() === false ? 'Ej: se fundió el motor, no arranca…' : 'Detalle opcional del estado del equipo'"></textarea>
+          }
         } @else {
           <h1 class="screen__title">¿Qué tan grave?</h1>
           <div class="incidente__grav">
@@ -130,7 +145,10 @@
           @if (esEquipo()) {
             <li><span>Equipo</span><b>{{ equipoNombre() }}</b></li>
             <li><span>Propiedad</span><b>{{ equipoAlquilado() ? 'Alquilado' : 'Propio' }}</b></li>
-            <li><span>¿Operativo?</span><b>{{ equipoOperativo() ? 'Sí' : 'No' }}</b></li>
+            <li><span>¿Operativo?</span><b>{{ equipoOperativo() ? 'Sí' : 'No, fuera de servicio' }}</b></li>
+            @if (equipoOperativoComentario().trim()) {
+              <li><span>Comentario</span><b>{{ equipoOperativoComentario() }}</b></li>
+            }
           }
           <li><span>¿Qué pasó?</span><b>{{ otroActivo() ? sucesoOtro() : suceso() }}</b></li>
           <li><span>Fotos</span><b>{{ fotos().length }}</b></li>

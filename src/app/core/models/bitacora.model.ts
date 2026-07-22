@@ -134,6 +134,7 @@ export interface BitacoraFull {
   incidente_equipo_nombre?: string | null;
   incidente_equipo_alquilado?: boolean | null;
   incidente_equipo_operativo?: boolean | null;
+  incidente_equipo_operativo_comentario?: string | null;
   // U13 — clima + migración (datos, no incidente).
   llovio?: boolean | null;
   lluvia_detalle?: string | null;

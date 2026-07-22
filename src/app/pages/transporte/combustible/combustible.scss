@@ -43,6 +43,15 @@
   border-color: var(--color-error) !important;
 }
 
+// T4 — selector de estación
+app-option-button {
+  display: block;
+  margin-bottom: 10px;
+}
+.comb__estacion-otro {
+  margin-top: 4px;
+}
+
 .comb__hint {
   margin: 6px 0 4px;
   font-size: 14px;

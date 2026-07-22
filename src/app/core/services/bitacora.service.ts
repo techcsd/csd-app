@@ -56,6 +56,8 @@ export interface IncidenteCaptura {
   equipoNombre: string | null;
   equipoAlquilado: boolean | null;
   equipoOperativo: boolean | null;
+  // T19 — comentario de operatividad (obligatorio si quedó fuera de servicio).
+  equipoOperativoComentario: string | null;
   fotos: Blob[];
   voz: Blob | null;
 }
@@ -277,6 +279,7 @@ export class BitacoraService {
         incidente_equipo_nombre: input.equipoNombre,
         incidente_equipo_alquilado: input.equipoAlquilado,
         incidente_equipo_operativo: input.equipoOperativo,
+        incidente_equipo_operativo_comentario: input.equipoOperativoComentario,
         capturado_en,
       },
       fotos: [
@@ -295,13 +298,33 @@ export class BitacoraService {
       const { data, error } = await this.supabase.client
         .from('bitacoras')
         .select(
-          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw new Error(error.message);
       return (data as unknown as BitacoraFull[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /**
+   * T19 — equipos ya vistos en ESTA obra (equipos alquilados + incidentes de
+   * equipo + valores "Otro"), vía RPC security-definer, cacheado offline por
+   * obra. Alimenta el selector del incidente de equipo y el paso 8 del parte
+   * para evitar nombres inconsistentes (camión/patana/guagua…).
+   */
+  async getEquiposDeObra(proyectoId: string): Promise<string[]> {
+    if (!proyectoId) return [];
+    const data = await this.catalog.refresh<string[]>(`equipos_obra_${proyectoId}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('equipos_de_obra', {
+        p_proyecto_id: proyectoId,
+      });
+      if (error) throw new Error(error.message);
+      return ((data as { nombre: string }[]) ?? [])
+        .map((r) => (r.nombre ?? '').trim())
+        .filter(Boolean);
     });
     return data ?? [];
   }
@@ -379,6 +402,7 @@ export class BitacoraService {
         p_incidente_equipo_nombre: payload['incidente_equipo_nombre'] ?? null,
         p_incidente_equipo_alquilado: payload['incidente_equipo_alquilado'] ?? null,
         p_incidente_equipo_operativo: payload['incidente_equipo_operativo'] ?? null,
+        p_incidente_equipo_operativo_comentario: payload['incidente_equipo_operativo_comentario'] ?? null,
         p_fotos: fotos,
         p_capturado_en: payload['capturado_en'],
         p_llovio: payload['llovio'] ?? null,

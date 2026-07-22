@@ -54,27 +54,7 @@
   white-space: pre-wrap;
 }
 
-.resumen {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.resumen li {
-  display: flex;
-  justify-content: space-between;
-  padding: 16px;
-  border-bottom: 1px solid var(--color-border);
-  font-size: var(--fs-option);
-}
-.resumen li:last-child {
-  border-bottom: none;
-}
-.resumen span {
-  color: var(--color-text-secondary);
-}
+// .resumen — regla unificada global en styles.scss (T19c).
 
 .mantenimiento__nav {
   display: flex;

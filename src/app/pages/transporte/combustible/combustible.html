@@ -153,15 +153,20 @@
           placeholder="0"
         />
 
-        <label class="field-label" for="est">Estación (opcional)</label>
-        <input
-          id="est"
-          class="field"
-          type="text"
-          [ngModel]="estacion()"
-          (ngModelChange)="estacion.set($event)"
-          placeholder="Nombre de la bomba"
-        />
+        <label class="field-label">Estación</label>
+        @for (e of estacionesVisibles(); track e) {
+          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
+        }
+        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
+        @if (estacionOtro()) {
+          <input
+            class="field comb__estacion-otro"
+            type="text"
+            [ngModel]="estacionOtroTexto()"
+            (ngModelChange)="estacionOtroTexto.set($event)"
+            placeholder="Nombre de la estación"
+          />
+        }
 
         <!-- Live calc box -->
         <div class="comb__calc">
