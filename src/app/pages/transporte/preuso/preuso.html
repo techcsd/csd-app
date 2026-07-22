@@ -65,7 +65,7 @@
       @if (mantenimiento(); as m) {
         <div class="mant-box mant-box--{{ m.estado }}">
           @if (m.estado === 'vencido') {
-            ⚠ Mantenimiento VENCIDO por {{ -m.faltan | number: '1.0-0' }} km.
+            ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km.
           } @else if (m.estado === 'pre_cita') {
             ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km — se envió aviso para la PRE-CITA.
           } @else {
@@ -177,7 +177,7 @@
         @if (mantenimiento(); as m) {
           <div class="mant-box mant-box--{{ m.estado }}">
             @if (m.estado === 'vencido') {
-              ⚠ Mantenimiento VENCIDO por {{ -m.faltan | number: '1.0-0' }} km.
+              ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km.
             } @else if (m.estado === 'pre_cita') {
               ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km para el mantenimiento ({{ m.proximo | number: '1.0-0' }} km). Se enviará aviso para agendar la PRE-CITA.
             } @else {
@@ -209,8 +209,9 @@
           </span>
         </div>
 
-        @for (g of grupos(); track g.seccion) {
+        @if (seccionActual2(); as g) {
           <h2 class="preuso__section">{{ g.seccion }}</h2>
+          <p class="preuso__section-prog">Sección {{ secPaso2() + 1 }} de {{ grupos().length }}</p>
           @for (it of g.items; track it.id) {
             <div class="preuso__item" [class.preuso__item--critico]="it.es_critico">
               <div class="preuso__item-head">

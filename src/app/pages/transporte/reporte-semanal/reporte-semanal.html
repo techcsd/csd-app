@@ -53,6 +53,17 @@
                 />
               }
             </div>
+            @if (respuestas()[it.id] === 'no') {
+              <!-- U7 — comentario obligatorio describiendo la falla -->
+              <textarea
+                class="field rsem__falla-com"
+                rows="2"
+                [ngModel]="comentarios()[it.id] ?? ''"
+                (ngModelChange)="setComentario(it.id, $event)"
+                placeholder="¿Qué falla tiene? (obligatorio)"
+                aria-label="Describe la falla"
+              ></textarea>
+            }
           </div>
         }
       }
@@ -174,10 +185,13 @@
             [km]="v.km"
             [marca]="v.marca"
             [modelo]="v.modelo"
-            [done]="v.tiene_reporte"
+            [done]="v.tiene_reporte || v.enviando"
           >
-            @if (v.tiene_reporte) {
-              <span class="rsem__estado rsem__estado--ok">✓ Ya esta semana</span>
+            @if (v.enviando && !v.tiene_reporte) {
+              <span class="rsem__estado rsem__estado--enviando">⏳ Enviando…</span>
+              <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+            } @else if (v.tiene_reporte) {
+              <span class="rsem__estado rsem__estado--ok">✓ Ya reportado</span>
               <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
             } @else {
               <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">Reportar</button>

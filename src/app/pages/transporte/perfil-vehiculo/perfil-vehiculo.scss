@@ -158,3 +158,61 @@
 .pveh__asignar-cta {
   width: 100%;
 }
+
+// U11 — alerta de mantenimiento, nivel de combustible y multas
+.pveh__alerta {
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 14px;
+}
+.pveh__alerta--venc {
+  background: var(--color-error-bg, var(--color-warning-bg));
+  color: var(--color-error, var(--color-warning));
+}
+.pveh__alerta--pre {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.pveh__nivel {
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+}
+.pveh__multas {
+  margin-top: 20px;
+}
+.pveh__multa {
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.pveh__multa-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.pveh__multa-motivo {
+  font-weight: 700;
+}
+.pveh__multa-estado {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-warning);
+  white-space: nowrap;
+}
+.pveh__multa-estado--pag {
+  color: var(--color-success);
+}
+.pveh__multa-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}

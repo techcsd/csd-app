@@ -153,6 +153,10 @@
   color: var(--color-warning);
 }
 
+.rsem__estado--enviando {
+  color: var(--color-warning);
+}
+
 .veh-card--done {
   opacity: 0.75;
 }
@@ -270,4 +274,9 @@
 .rsem__band--danger {
   background: #fef2f2;
   color: var(--color-error);
+}
+
+// U7 — comentario obligatorio de la falla
+.rsem__falla-com {
+  margin-top: 8px;
 }

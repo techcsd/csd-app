@@ -172,7 +172,17 @@ export class VehiculosService {
         return data as unknown as VehiculoDetalle;
       },
     );
-    return data ?? null;
+    if (!data) return null;
+    // U1 — reconciliación optimista: si hay ops en el outbox (recibir, combustible,
+    // pre-uso, semanal, mantenimiento) con un km MAYOR aún sin confirmar, mostramos
+    // ese km efectivo. El servidor lo alcanzará al drenar (regla no-retroceso).
+    const kmEfectivo = await this.sync.kmEfectivo(id, data.kilometraje ?? null);
+    return { ...data, kilometraje: kmEfectivo ?? data.kilometraje };
+  }
+
+  /** U1 — km efectivo (servidor + outbox pendiente) para KmInput/perfil directos. */
+  async kmEfectivo(id: string, kmServidor: number | null | undefined): Promise<number | null> {
+    return this.sync.kmEfectivo(id, kmServidor);
   }
 
   /**

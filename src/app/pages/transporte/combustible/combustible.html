@@ -107,29 +107,26 @@
         </div>
       }
 
-      <!-- Step 1: the 3 numbers + live calc -->
+      <!-- Paso 1: kilometraje (KmInput con odómetro + mantenimiento en vivo) -->
       @if (step() === 1) {
-        <h1 class="screen__title">Registrar combustible</h1>
-        <p class="screen__subtitle">Escribe 3 datos y el sistema calcula el resto.</p>
-
-        <label class="field-label" for="km">Kilometraje actual</label>
-        <input
-          id="km"
-          class="field comb__num"
-          type="number"
-          inputmode="numeric"
-          [class.comb__num--error]="kmInvalido()"
-          [ngModel]="km()"
-          (ngModelChange)="km.set($event)"
-          placeholder="0"
+        <h1 class="screen__title">Kilometraje actual</h1>
+        <app-km-input
+          label="Kilometraje actual"
+          [(value)]="km"
+          [ultimo]="odometro()"
+          [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
+          [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
-        @if (kmInvalido()) {
-          <p class="comb__warn">
-            Debe ser mayor al de la última echada ({{ ultima().km | number: '1.0-0' }} km).
-          </p>
+        @if (!kmMenorOdometro() && kmInvalido()) {
+          <p class="comb__warn">Debe ser mayor a la última echada ({{ ultima().km | number: '1.0-0' }} km).</p>
         } @else if (ultima().km != null) {
           <p class="comb__hint">Última echada: {{ ultima().km | number: '1.0-0' }} km</p>
         }
+      }
+
+      <!-- Paso 2: galones + monto + cálculo en vivo -->
+      @if (step() === 2) {
+        <h1 class="screen__title">Galones y monto</h1>
 
         <label class="field-label" for="gal">Galones echados</label>
         <input
@@ -152,21 +149,6 @@
           (ngModelChange)="monto.set($event)"
           placeholder="0"
         />
-
-        <label class="field-label">Estación</label>
-        @for (e of estacionesVisibles(); track e) {
-          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
-        }
-        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
-        @if (estacionOtro()) {
-          <input
-            class="field comb__estacion-otro"
-            type="text"
-            [ngModel]="estacionOtroTexto()"
-            (ngModelChange)="estacionOtroTexto.set($event)"
-            placeholder="Nombre de la estación"
-          />
-        }
 
         <!-- Live calc box -->
         <div class="comb__calc">
@@ -197,8 +179,26 @@
         </div>
       }
 
-      <!-- Step 2: two mandatory photos -->
-      @if (step() === 2) {
+      <!-- Paso 3: estación -->
+      @if (step() === 3) {
+        <h1 class="screen__title">¿En qué estación?</h1>
+        @for (e of estacionesVisibles(); track e) {
+          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
+        }
+        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
+        @if (estacionOtro()) {
+          <input
+            class="field comb__estacion-otro"
+            type="text"
+            [ngModel]="estacionOtroTexto()"
+            (ngModelChange)="estacionOtroTexto.set($event)"
+            placeholder="Nombre de la estación"
+          />
+        }
+      }
+
+      <!-- Paso 4: fotos obligatorias -->
+      @if (step() === 4) {
         <h1 class="screen__title">Fotos obligatorias</h1>
         <p class="screen__subtitle">
           La foto del tablero respalda el kilometraje digitado; la del recibo respalda el monto.
@@ -219,6 +219,19 @@
             (cleared)="onFotoTableroCleared()"
           />
         </div>
+      }
+
+      <!-- Paso 5: revisa y envía -->
+      @if (step() === 5) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          <li><span>Galones</span><b>{{ galones() | number: '1.0-2' }} gal</b></li>
+          <li><span>Monto</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
+          <li><span>Estación</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
+          <li><span>Fotos</span><b>{{ fotosCompletas() ? '2 ✓' : 'Faltan' }}</b></li>
+          <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
+        </ul>
       }
     </div>
 

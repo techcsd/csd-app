@@ -15,11 +15,23 @@
     </header>
 
     <div class="screen__body">
+      @if (borradorPrevio()) {
+        <div class="rmul__recovery">↩️ Recuperamos lo que habías llenado.</div>
+      }
+
       <label class="field-label">Motivo de la multa</label>
       <input class="field" type="text" [ngModel]="motivo()" (ngModelChange)="motivo.set($event)" placeholder="Ej: exceso de velocidad" />
 
       <label class="field-label">Monto (opcional)</label>
       <input class="field" type="number" inputmode="decimal" [ngModel]="monto()" (ngModelChange)="monto.set($event)" placeholder="RD$" />
+
+      <label class="field-label">Vehículo (opcional)</label>
+      <select class="field" [ngModel]="vehiculoId()" (ngModelChange)="vehiculoId.set($event)" aria-label="Vehículo de la multa">
+        <option [ngValue]="null">Sin vehículo</option>
+        @for (v of flota(); track v.vehiculo_id) {
+          <option [ngValue]="v.vehiculo_id">{{ v.placa }} · {{ v.marca }} {{ v.modelo }}</option>
+        }
+      </select>
 
       <label class="field-label">Estado</label>
       <app-option-button icon="⏳" label="Pendiente de pago" [selected]="estado() === 'pendiente'" (pressed)="estado.set('pendiente')" />
@@ -27,7 +39,15 @@
 
       <label class="field-label">Documento (opcional)</label>
       @if (documento(); as d) {
-        <div class="rmul__doc">📎 {{ d.esImagen ? 'Foto adjunta' : d.nombre }} <button type="button" class="btn-ghost" (click)="quitarDoc()">Quitar</button></div>
+        <div class="rmul__doc">
+          @if (d.esImagen && d.previewUrl) {
+            <img class="rmul__doc-thumb" [src]="d.previewUrl" alt="Documento de la multa" />
+          } @else {
+            <span class="rmul__doc-pdf">📄</span>
+          }
+          <span class="rmul__doc-name">{{ d.esImagen ? 'Foto adjunta' : d.nombre }}</span>
+          <button type="button" class="btn-ghost rmul__doc-quitar" (click)="quitarDoc()">Quitar</button>
+        </div>
       } @else {
         <div class="rmul__doc-actions">
           <button type="button" class="btn-ghost" (click)="subirDoc(false)">📷 Foto</button>

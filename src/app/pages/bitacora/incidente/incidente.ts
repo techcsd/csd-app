@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
@@ -107,6 +108,7 @@ export class IncidentePage implements OnDestroy {
   };
 
   constructor() {
+    resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     void this.load();
     this.navGuard.register(this.backHandler); // botón físico Android
     // Q7 — autosave del borrador (recupera tras kill/salida).

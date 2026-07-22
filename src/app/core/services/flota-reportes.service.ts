@@ -41,6 +41,34 @@ export class FlotaReportesService {
     return (data as FlotaMulta[]) ?? [];
   }
 
+  /** U11 — multas asociadas a un vehículo (para su perfil). Online. */
+  async getMultasVehiculo(vehiculoId: string): Promise<FlotaMulta[]> {
+    if (!vehiculoId) return [];
+    const { data, error } = await this.supabase.client
+      .from('conductor_multas')
+      .select('id, fecha, motivo, monto, estado, created_at')
+      .eq('vehiculo_id', vehiculoId)
+      .order('fecha', { ascending: false })
+      .limit(50);
+    if (error) return [];
+    return (data as FlotaMulta[]) ?? [];
+  }
+
+  /** U11 — último nivel de combustible registrado (cabecera de checklist/pre-uso). */
+  async getUltimoNivelCombustible(vehiculoId: string): Promise<string | null> {
+    if (!vehiculoId) return null;
+    const { data, error } = await this.supabase.client
+      .from('checklists_vehiculo')
+      .select('nivel_combustible, fecha, created_at')
+      .eq('vehiculo_id', vehiculoId)
+      .not('nivel_combustible', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    return (data as { nivel_combustible: string | null }).nivel_combustible ?? null;
+  }
+
   /** S32 — entregas/recepciones del conductor (por su usuario). Online. */
   async getEntregasConductor(usuarioId: string): Promise<FlotaEntrega[]> {
     if (!usuarioId) return [];

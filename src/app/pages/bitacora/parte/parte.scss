@@ -306,14 +306,18 @@ app-counter {
 .parte__addrow {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: stretch; // U5 — input y botón a la misma altura
   margin-bottom: 12px;
 
   .field {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0; // U5 — permite que el input encoja en vez de quedar diminuto
     margin-bottom: 0;
   }
   .btn-ghost {
     flex: 0 0 auto;
+    width: auto; // U5 — anula el width:100% global que hacía dominar al botón
+    white-space: nowrap;
+    padding-inline: 16px;
   }
 }

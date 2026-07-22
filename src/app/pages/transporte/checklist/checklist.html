@@ -160,7 +160,7 @@
           <li>
             <span>Ubicación</span>
             @switch (gpsEstado()) {
-              @case ('ok') { <b class="checklist__gps--ok">📍 Capturada</b> }
+              @case ('ok') { <b class="checklist__gps--ok">{{ ubicacionTexto() ?? '📍 Capturada' }}</b> }
               @case ('capturando') { <b class="checklist__gps--wait">📍 Obteniendo…</b> }
               @case ('sin-ubicacion') { <b class="checklist__gps--off">Sin ubicación</b> }
             }
@@ -170,7 +170,7 @@
         @if (mantenimiento(); as m) {
           @if (m.estado !== 'ok') {
             <p class="checklist__mant" [class.checklist__mant--venc]="m.estado === 'vencido'">
-              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO — pasó {{ -m.faltan | number: '1.0-0' }} km. }
+              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km. }
               @else { 🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km. }
             </p>
           }

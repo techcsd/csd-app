@@ -12,6 +12,8 @@ import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
+import { ReporteSemanalService } from '../../../core/services/reporte-semanal.service';
+import { SyncService } from '../../../core/sync/sync.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CapturedDoc } from '../../../core/services/camera.service';
@@ -37,6 +39,8 @@ export class AsignarVehiculoPage {
   private vehiculos = inject(VehiculosService);
   private conductores = inject(ConductoresService);
   private documentos = inject(DocumentosService);
+  private reportes = inject(ReporteSemanalService);
+  private sync = inject(SyncService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -47,6 +51,9 @@ export class AsignarVehiculoPage {
   loading = signal(true);
   disponibles = signal<VehiculoDisponible[]>([]);
   seleccionado = signal<VehiculoDisponible | null>(null);
+  // U12 — vehículos ya asignados a mí + su estado de reporte semanal.
+  misAsignados = signal<Set<string>>(new Set());
+  reportados = signal<Set<string>>(new Set());
   /** U6 — vehiculo_id → URL firmada de su foto (thumbnail del pool). */
   fotoUrls = signal<Record<string, string>>({});
 
@@ -76,16 +83,41 @@ export class AsignarVehiculoPage {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [disp, cond] = await Promise.all([
+      const [disp, cond, asignaciones, semana, pendReportes] = await Promise.all([
         this.vehiculos.getVehiculosDisponibles(),
         this.conductores.getMiConductor(),
+        this.vehiculos.getMisAsignaciones().catch(() => []),
+        this.reportes.getSemana().catch(() => []),
+        this.sync.reportesSemanalesPendientes().catch(() => new Map<string, string>()),
       ]);
       this.disponibles.set(disp);
       this.necesitaConductor.set(!cond);
+      // U12 — set de vehículos ya asignados a mí.
+      this.misAsignados.set(new Set(asignaciones.map((a) => a.vehiculo_id)));
+      // U12 — reportados esta semana (servidor + ops en cola).
+      const rep = new Set<string>();
+      for (const s of semana) if (s.tiene_reporte) rep.add(s.vehiculo_id);
+      for (const id of pendReportes.keys()) rep.add(id);
+      this.reportados.set(rep);
       void this.resolveFotos(disp);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** U12 — ¿este vehículo ya está asignado a mí? */
+  yaAsignado(id: string): boolean {
+    return this.misAsignados().has(id);
+  }
+  /** U12 — ¿ya tiene el reporte semanal de esta semana (o en cola)? */
+  yaReportado(id: string): boolean {
+    return this.reportados().has(id);
+  }
+  irSemanal(): void {
+    void this.router.navigate(['/transporte/reporte-semanal']);
+  }
+  irPreuso(id: string): void {
+    void this.router.navigate(['/transporte/preuso', id]);
   }
 
   /** U6 — resuelve las fotos del pool a URLs firmadas (mejor esfuerzo, online). */
@@ -101,6 +133,7 @@ export class AsignarVehiculoPage {
   }
 
   seleccionar(v: VehiculoDisponible): void {
+    if (this.yaAsignado(v.vehiculo_id)) return; // U12 — no re-asignar el propio
     this.seleccionado.set(v);
   }
 

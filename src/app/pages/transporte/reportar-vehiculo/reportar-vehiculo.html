@@ -16,6 +16,9 @@
     <app-step-bar [current]="step()" [total]="total()" />
 
     <div class="screen__body">
+      @if (borradorPrevio()) {
+        <div class="repv__recovery">↩️ Recuperamos lo que habías llenado.</div>
+      }
       <!-- 1. Tipo -->
       @if (step() === 1) {
         <h1 class="screen__title">¿Qué vas a reportar?</h1>

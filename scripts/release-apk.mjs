@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.23.0';
+const VERSION = '1.24.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,14 +62,22 @@ const MIN_VERSION = '1.22.1';
 const RELEASED_AT = '2026-07-22';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Incidente de equipo con selector + estación de combustible + resúmenes legibles';
+const TITULO = 'Kilometraje al instante, semanal marcado al enviar, multa a prueba de crash y wizards paso a paso';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Al reportar un incidente de equipo puedes elegir el equipo de una lista de la obra (evita nombres distintos para lo mismo) o escribir uno nuevo.' },
-  { t: 'nuevo', d: 'Al decir si un equipo queda operativo puedes dejar un comentario; si quedó fuera de servicio es obligatorio explicar qué pasó.' },
-  { t: 'nuevo', d: 'Al registrar combustible eliges la estación de una lista (Total Energies por defecto) en lugar de escribirla; "Otro" permite escribir.' },
-  { t: 'arreglo', d: 'La pantalla de "Revisa y envía" de todos los reportes ya se ve bien: cada dato con su etiqueta y su valor separados (antes salían pegados).' },
+  { t: 'arreglo', d: 'El kilometraje que registras (recibir, combustible, pre-uso, semanal, mantenimiento) ahora se refleja al instante en el vehículo, aunque todavía no se haya enviado.' },
+  { t: 'arreglo', d: 'El reporte semanal enviado se marca al momento como "Ya reportado" (antes seguía diciendo "Reportar"); muestra "Enviando…" mientras está en cola y opción de "Rehacer".' },
+  { t: 'arreglo', d: 'Cada paso de los formularios ahora empieza desde arriba (ya no aparece a mitad de pantalla).' },
+  { t: 'mejora', d: 'Al terminar un pre-uso pasas a una pantalla clara con el resultado: APROBADO, CON HALLAZGOS o VEHÍCULO BLOQUEADO.' },
+  { t: 'arreglo', d: 'Registrar multa: ya no se pierde lo que llenaste al adjuntar un archivo, muestra vista previa de la foto o PDF y puedes elegir el vehículo.' },
+  { t: 'mejora', d: 'Registrar combustible y mantenimiento van paso a paso, con el kilometraje del vehículo como referencia y aviso al instante si escribes uno menor.' },
+  { t: 'nuevo', d: 'Mantenimiento ahora pide al menos 1 foto y muestra las miniaturas en el resumen.' },
+  { t: 'mejora', d: 'Pre-uso: una pregunta por pantalla con textos más cortos y fáciles de leer.' },
+  { t: 'nuevo', d: 'Reporte semanal: si marcas una falla, ahora pides describir qué pasó (obligatorio).' },
+  { t: 'nuevo', d: 'Perfil del vehículo: aviso de mantenimiento atrasado, último nivel de combustible y las multas del vehículo.' },
+  { t: 'mejora', d: 'Al asignarte un vehículo, si ya lo tienes aparece como "Ya asignado" con accesos directos al reporte semanal y al pre-uso.' },
+  { t: 'mejora', d: 'Al recibir o devolver un vehículo, la ubicación se muestra legible (Proyecto o Almacén cercano, o la dirección) en vez de solo "Capturada".' },
 ];
 
 const TIPO_POR_COMMIT = {

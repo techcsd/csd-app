@@ -14,6 +14,8 @@ import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
+import { UbicacionLabelService } from '../../../core/services/ubicacion-label.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { VehiculoDetalle } from '../../../core/models/transporte.model';
 import { CapturedPhoto } from '../../../core/services/camera.service';
@@ -69,6 +71,7 @@ export class ChecklistPage implements OnDestroy {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private permissions = inject(PermissionsService);
+  private ubicacionLabel = inject(UbicacionLabelService);
   private autosave = inject(AutosaveService);
   private navGuard = inject(NavGuardService);
   private borradorSvc = inject(BorradorService);
@@ -120,6 +123,8 @@ export class ChecklistPage implements OnDestroy {
   private gps: { lat: number; lng: number } | null = null;
   /** X2 — estado de la captura de GPS para avisar al usuario (no bloquea). */
   gpsEstado = signal<'capturando' | 'ok' | 'sin-ubicacion'>('capturando');
+  /** U13 — etiqueta legible de la ubicación (Proyecto/Almacén/dirección corta). */
+  ubicacionTexto = signal<string | null>(null);
   /** P2 — el permiso quedó denegado permanente: reintentar no reabre el diálogo. */
   gpsBloqueado = signal(false);
   /** S28 — motivo del fallo de GPS, para un mensaje específico. */
@@ -158,6 +163,7 @@ export class ChecklistPage implements OnDestroy {
   );
 
   constructor() {
+    resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     this.tipo = (this.route.snapshot.data['tipo'] as EntregaTipo) ?? 'recepcion';
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     void this.loadVehiculo().then(() => this.checkDraft());
@@ -268,7 +274,12 @@ export class ChecklistPage implements OnDestroy {
         this.odometro.set(v.kilometraje ?? null); // APP-011 — base de coherencia de km
       }
       // S19 — detalle (km_ultimo_mantenimiento + intervalo) para el aviso en vivo.
-      void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => this.vehDetalle.set(d));
+      // U1 — getVehiculoDetalle devuelve el km EFECTIVO (servidor + outbox); usarlo
+      // como base de coherencia para no mostrar un km viejo tras recibir/echar.
+      void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => {
+        this.vehDetalle.set(d);
+        if (d?.kilometraje != null) this.odometro.set(d.kilometraje);
+      });
     } finally {
       this.loading.set(false); // APP-038
     }
@@ -287,9 +298,13 @@ export class ChecklistPage implements OnDestroy {
       this.gpsEstado.set('ok');
       this.gpsBloqueado.set(false);
       this.gpsRazon.set(null);
+      // U13 — resolver una etiqueta legible (Proyecto/Almacén/dirección corta).
+      this.ubicacionTexto.set(null);
+      void this.ubicacionLabel.describir(r.lat, r.lng).then((t) => this.ubicacionTexto.set(t));
     } else {
       this.gps = null;
       this.gpsEstado.set('sin-ubicacion');
+      this.ubicacionTexto.set(null);
       this.gpsBloqueado.set(r.reason === 'denied-permanent');
       this.gpsRazon.set(r.reason);
     }

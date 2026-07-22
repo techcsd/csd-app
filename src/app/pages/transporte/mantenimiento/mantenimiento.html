@@ -14,6 +14,9 @@
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
+      @if (borradorPrevio()) {
+        <div class="mantenimiento__recovery">↩️ Recuperamos lo que habías llenado.</div>
+      }
       <!-- Vehicle header -->
       @if (loading()) {
         <app-skeleton [rows]="2" />
@@ -54,22 +57,19 @@
           placeholder="Ej. Cambio de aceite y filtros, revisión de frenos…"
         ></textarea>
 
-        <label class="field-label" for="km">Kilometraje actual (km) — opcional</label>
-        <input
-          id="km"
-          class="field mantenimiento__km"
-          type="number"
-          inputmode="numeric"
-          [ngModel]="km()"
-          (ngModelChange)="km.set($event)"
-          placeholder="0"
+        <app-km-input
+          label="Kilometraje actual (km) — opcional"
+          [(value)]="km"
+          [ultimo]="odometro()"
+          [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
+          [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
       }
 
-      <!-- Step 3: photos -->
+      <!-- Step 3: photos (mínimo 1) -->
       @if (step() === 3) {
-        <h1 class="screen__title">Fotos (opcional)</h1>
-        <p class="screen__subtitle">Puedes adjuntar hasta {{ maxFotos }} fotos como evidencia.</p>
+        <h1 class="screen__title">Fotos del mantenimiento</h1>
+        <p class="screen__subtitle">Adjunta al menos 1 foto como evidencia (hasta {{ maxFotos }}).</p>
         <div class="mantenimiento__fotos">
           @for (i of slots; track i) {
             <app-photo-slot
@@ -94,6 +94,14 @@
           }
           <li><span>Fotos</span><b>{{ fotosCount() }}</b></li>
         </ul>
+        <!-- U15 — miniaturas de las fotos adjuntas -->
+        <div class="mantenimiento__thumbs">
+          @for (i of slots; track i) {
+            @if (fotos()[i]; as f) {
+              <img class="mantenimiento__thumb" [src]="f.previewUrl" [alt]="'Foto ' + (i + 1)" />
+            }
+          }
+        </div>
         <p class="mantenimiento__desc-preview">{{ descripcion() }}</p>
       }
     </div>

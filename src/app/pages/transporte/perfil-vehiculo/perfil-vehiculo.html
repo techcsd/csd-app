@@ -14,6 +14,24 @@
       <span class="pveh__modelo">{{ modelo() }}</span>
     </div>
 
+    <!-- U11 — alerta de mantenimiento (km efectivo vs próximo) -->
+    @if (mantAlerta(); as m) {
+      @if (m.estado === 'vencido') {
+        <div class="pveh__alerta pveh__alerta--venc">
+          🔴 Mantenimiento atrasado por {{ -m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
+        </div>
+      } @else if (m.estado === 'pre_cita') {
+        <div class="pveh__alerta pveh__alerta--pre">
+          🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
+        </div>
+      }
+    }
+
+    <!-- U11 — último nivel de combustible registrado -->
+    @if (nivelCombustible()) {
+      <div class="pveh__nivel">⛽ Último nivel de combustible: <b>{{ nivelCombustible() }}</b></div>
+    }
+
     <!-- V1/V2 — identificadores del vehículo -->
     @if (vin() || numeroMatricula() || numeroSeguro() || aseguradora()) {
       <ul class="pveh__ids">
@@ -44,7 +62,7 @@
       <div class="pveh__cards">
         <div class="pveh__card">
           <span class="pveh__label">Kilometraje</span>
-          <span class="pveh__value">{{ stats()!.km_actual | number: '1.0-0' }} km</span>
+          <span class="pveh__value">{{ (vehDetalle()?.kilometraje ?? stats()!.km_actual) | number: '1.0-0' }} km</span>
         </div>
         <div class="pveh__card">
           <span class="pveh__label">Echadas</span>
@@ -131,6 +149,29 @@
             [urlExistente]="d.url"
             [esPdfExistente]="d.esPdf"
           />
+        }
+      </section>
+
+      <!-- U11 — multas del vehículo -->
+      <section class="pveh__multas">
+        <h2 class="pveh__docs-title">Multas del vehículo</h2>
+        @if (!multas().length) {
+          <p class="pveh__docs-hint">Sin multas registradas.</p>
+        } @else {
+          @for (mu of multas(); track mu.id) {
+            <div class="pveh__multa">
+              <div class="pveh__multa-top">
+                <span class="pveh__multa-motivo">{{ mu.motivo || 'Multa' }}</span>
+                <span class="pveh__multa-estado" [class.pveh__multa-estado--pag]="mu.estado === 'pagada'">
+                  {{ mu.estado === 'pagada' ? '✅ Pagada' : '⏳ Pendiente' }}
+                </span>
+              </div>
+              <div class="pveh__multa-sub">
+                @if (mu.monto != null) { <b>RD$ {{ mu.monto | number: '1.2-2' }}</b> · }
+                {{ mu.fecha }}
+              </div>
+            </div>
+          }
         }
       </section>
 

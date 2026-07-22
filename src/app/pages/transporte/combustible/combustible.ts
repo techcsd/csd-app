@@ -17,11 +17,13 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
+import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { Img } from '../../../shared/ui/img/img';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
-import { VehiculoDisponible } from '../../../core/models/transporte.model';
+import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
 import { CombustibleService } from '../../../core/services/combustible.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -32,7 +34,7 @@ import {
   UltimaEchada,
 } from '../../../core/models/combustible.model';
 
-const TOTAL_STEPS = 2;
+const TOTAL_STEPS = 5;
 
 /**
  * Fuel-log wizard (registro de combustible). The chofer digits only 3 numbers
@@ -45,7 +47,7 @@ const TOTAL_STEPS = 2;
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -65,6 +67,9 @@ export class CombustiblePage extends GuardedWizard {
   placa = signal('');
   modelo = signal('');
   fotoUrl = signal<string | null>(null); // U6
+  vehDetalle = signal<VehiculoDetalle | null>(null); // U6 — odómetro + mantenimiento
+  /** U6 — odómetro efectivo (servidor + outbox) como referencia del KmInput. */
+  odometro = computed(() => this.vehDetalle()?.kilometraje ?? null);
   private conductorId: string | null = null;
 
   ultima = signal<UltimaEchada>({
@@ -115,6 +120,7 @@ export class CombustiblePage extends GuardedWizard {
   constructor() {
     super();
     this.registerBackGuard();
+    resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     void this.loadEstaciones();
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
@@ -183,6 +189,9 @@ export class CombustiblePage extends GuardedWizard {
         this.modelo.set(`${v.marca} ${v.modelo}`);
         if (v.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(v.foto_path));
       }
+      // U6 — detalle con km EFECTIVO (servidor + outbox) + datos de mantenimiento
+      // para que el KmInput muestre el odómetro real y el estado en vivo.
+      void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => this.vehDetalle.set(d));
     } finally {
       this.loading.set(false);
     }
@@ -219,17 +228,31 @@ export class CombustiblePage extends GuardedWizard {
     this.step.update((s) => Math.max(1, s - 1));
   }
 
+  /** U6 — el km escrito es menor al odómetro registrado (regla no-retroceso). */
+  kmMenorOdometro = computed(() => {
+    const km = this.km();
+    const odo = this.odometro();
+    return km != null && odo != null && km < odo;
+  });
+
   private canAdvance(): boolean {
-    if (this.step() === 1) {
+    const s = this.step();
+    if (s === 1) {
       const km = this.km();
       if (km == null || km <= 0) {
         this.toast.error('Escribe el kilometraje actual.');
         return false;
       }
-      if (this.kmInvalido()) {
-        this.toast.error(`El kilometraje debe ser mayor a ${this.ultima().km} km.`);
+      if (this.kmMenorOdometro()) {
+        this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
         return false;
       }
+      if (this.kmInvalido()) {
+        this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
+        return false;
+      }
+    }
+    if (s === 2) {
       if (!this.galones() || this.galones()! <= 0) {
         this.toast.error('Escribe los galones echados.');
         return false;
@@ -238,6 +261,16 @@ export class CombustiblePage extends GuardedWizard {
         this.toast.error('Escribe el monto pagado.');
         return false;
       }
+    }
+    if (s === 3) {
+      if (this.estacionOtro() && !this.estacionOtroTexto().trim()) {
+        this.toast.error('Escribe el nombre de la estación.');
+        return false;
+      }
+    }
+    if (s === 4 && !this.fotosCompletas()) {
+      this.toast.error('Faltan fotos para continuar.');
+      return false;
     }
     return true;
   }

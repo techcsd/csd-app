@@ -59,3 +59,21 @@
   width: auto; // anula width:100% de btn-ghost; si no, colapsa el botón primario
   min-width: 110px;
 }
+
+// U12 — vehículo ya asignado a mí: badge + acciones directas
+.asignar__ya {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-success);
+}
+.asignar__acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.asignar__acciones .btn-ghost {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}

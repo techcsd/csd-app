@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
@@ -19,6 +19,8 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ReporteSemanalService } from '../../../core/services/reporte-semanal.service';
+import { SyncService } from '../../../core/sync/sync.service';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
@@ -42,6 +44,8 @@ interface VehSemanal {
   km: number;
   foto_path: string | null;
   tiene_reporte: boolean;
+  /** U8 — hay un reporte semanal de esta semana aún en la cola (sin confirmar). */
+  enviando: boolean;
 }
 
 /**
@@ -61,6 +65,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   private vehiculos = inject(VehiculosService);
   private conductores = inject(ConductoresService);
   private reportes = inject(ReporteSemanalService);
+  private sync = inject(SyncService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -73,6 +78,8 @@ export class ReporteSemanalPage extends GuardedWizard {
 
   loading = signal(true);
   semana = signal<ReporteSemanalVeh[]>([]);
+  /** U8 — reporte_semanal pendientes en el outbox: vehiculoId → fecha. */
+  reportesPendientes = signal<Map<string, string>>(new Map());
   pool = signal<VehiculoDisponible[]>([]);
   fotoUrls = signal<Record<string, string | null>>({});
   plantilla = signal<ChecklistPlantilla | null>(null);
@@ -84,6 +91,8 @@ export class ReporteSemanalPage extends GuardedWizard {
   odometro = signal<number | null>(null);
   step = signal(1);
   respuestas = signal<Record<string, RespuestaValor>>({});
+  /** U7 — comentario por ítem (obligatorio cuando la respuesta es "Falla"). */
+  comentarios = signal<Record<string, string>>({});
   km = signal<number | null>(null);
   nivelCombustible = signal<string | null>(null);
   fotos = signal<Record<string, CapturedPhoto>>({});
@@ -122,21 +131,37 @@ export class ReporteSemanalPage extends GuardedWizard {
   esFirma = computed(() => this.step() === this.nSecciones() + 3);
   esResumen = computed(() => this.step() === this.nSecciones() + 4);
 
-  lista = computed<VehSemanal[]>(() => {
-    const status = new Map(this.semana().map((s) => [s.vehiculo_id, s]));
-    return this.pool().map((v) => ({
-      vehiculo_id: v.vehiculo_id,
-      placa: v.placa,
-      marca: v.marca,
-      modelo: v.modelo,
-      tipo: v.tipo,
-      km: v.km,
-      foto_path: v.foto_path ?? null,
-      tiene_reporte: status.get(v.vehiculo_id)?.tiene_reporte ?? false,
-    }));
+  /** Límites de la semana en curso (de la vista del servidor) para saber si una
+   *  op pendiente pertenece a esta semana. Null si aún no hay datos del servidor. */
+  private weekBounds = computed<{ inicio: string; fin: string } | null>(() => {
+    const s = this.semana();
+    return s.length ? { inicio: s[0].semana_inicio, fin: s[0].semana_fin } : null;
   });
 
-  pendientes = computed(() => this.lista().filter((v) => !v.tiene_reporte));
+  lista = computed<VehSemanal[]>(() => {
+    const status = new Map(this.semana().map((s) => [s.vehiculo_id, s]));
+    const pend = this.reportesPendientes();
+    const wb = this.weekBounds();
+    return this.pool().map((v) => {
+      const fechaPend = pend.get(v.vehiculo_id);
+      // U8 — "enviando" solo si la op pendiente cae en la semana en curso.
+      const enviando = !!fechaPend && (!wb || (fechaPend >= wb.inicio && fechaPend <= wb.fin));
+      return {
+        vehiculo_id: v.vehiculo_id,
+        placa: v.placa,
+        marca: v.marca,
+        modelo: v.modelo,
+        tipo: v.tipo,
+        km: v.km,
+        foto_path: v.foto_path ?? null,
+        tiene_reporte: status.get(v.vehiculo_id)?.tiene_reporte ?? false,
+        enviando,
+      };
+    });
+  });
+
+  // Un vehículo "enviando" ya no cuenta como pendiente (está resuelto en la cola).
+  pendientes = computed(() => this.lista().filter((v) => !v.tiene_reporte && !v.enviando));
 
   fotosCompletas = computed(() => this.fotosReq.every((f) => !!this.fotos()[f.slot]));
   fotosFaltan = computed(() => this.fotosReq.filter((f) => !this.fotos()[f.slot]).length);
@@ -168,7 +193,24 @@ export class ReporteSemanalPage extends GuardedWizard {
   constructor() {
     super();
     this.registerBackGuard();
+    resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     void this.load();
+    // U8 — refrescar estado del listado tras cada cambio del outbox (envío/drain),
+    // como en /pendientes (P4/P5). Reconciliar servidor + ops en cola.
+    effect(() => {
+      this.sync.changed();
+      void this.refreshEstados();
+    });
+  }
+
+  /** U8 — recomputa cumplimiento del servidor + reportes en cola. */
+  private async refreshEstados(): Promise<void> {
+    const [semana, pend] = await Promise.all([
+      this.reportes.getSemana(),
+      this.sync.reportesSemanalesPendientes(),
+    ]);
+    this.semana.set(semana);
+    this.reportesPendientes.set(pend);
   }
 
   tieneDatos(): boolean {
@@ -231,11 +273,29 @@ export class ReporteSemanalPage extends GuardedWizard {
     this.odometro.set(v.km ?? null);
     this.vehDetalle.set(null);
     // S19 — datos de mantenimiento para el km-input (mejor esfuerzo).
-    void this.vehiculos.getVehiculoDetalle(v.vehiculo_id).then((d) => this.vehDetalle.set(d));
+    // U1 — getVehiculoDetalle ya devuelve el km EFECTIVO (servidor + outbox); usarlo
+    // como referencia del odómetro para que el semanal no muestre un km viejo.
+    void this.vehiculos.getVehiculoDetalle(v.vehiculo_id).then((d) => {
+      this.vehDetalle.set(d);
+      if (d?.kilometraje != null) this.odometro.set(d.kilometraje);
+    });
   }
 
   setRespuesta(itemId: string, valor: RespuestaValor): void {
     this.respuestas.update((r) => ({ ...r, [itemId]: valor }));
+    // U7 — si deja de ser "Falla", limpiar el comentario asociado.
+    if (valor !== 'no') {
+      this.comentarios.update((c) => {
+        if (!(itemId in c)) return c;
+        const next = { ...c };
+        delete next[itemId];
+        return next;
+      });
+    }
+  }
+
+  setComentario(itemId: string, texto: string): void {
+    this.comentarios.update((c) => ({ ...c, [itemId]: texto }));
   }
 
   onFoto(slot: string, photo: CapturedPhoto): void {
@@ -268,6 +328,12 @@ export class ReporteSemanalPage extends GuardedWizard {
       const r = this.respuestas();
       if (!sec.items.every((it) => !!r[it.id])) {
         this.toast.error('Responde todas las preguntas de esta sección.');
+        return false;
+      }
+      // U7 — toda "Falla" exige un comentario que describa la falla.
+      const c = this.comentarios();
+      if (!sec.items.every((it) => r[it.id] !== 'no' || !!c[it.id]?.trim())) {
+        this.toast.error('Describe la falla en el comentario.');
         return false;
       }
       return true;
@@ -314,12 +380,14 @@ export class ReporteSemanalPage extends GuardedWizard {
     this.submitting.set(true);
     try {
       const r = this.respuestas();
+      const c = this.comentarios();
       const respuestas = this.items().map((it) => ({
         etiqueta: it.etiqueta,
         seccion: it.seccion,
         es_critico: it.es_critico,
         respuesta: r[it.id],
-        comentario: null,
+        // U7 — comentario de la falla (el RPC ya lo acepta por ítem).
+        comentario: c[it.id]?.trim() || null,
         orden: it.orden,
       }));
       const fotos: Record<string, Blob> = {};

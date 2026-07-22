@@ -256,6 +256,71 @@ export class SyncService {
     return out;
   }
 
+  // ─── U1/U8 — Reconciliación optimista con el outbox ─────────────────────────
+  // Los datos server-first no reflejan las ops que aún están en la cola. Estos
+  // helpers calculan el "estado efectivo" = servidor + outbox pendiente para que
+  // la app muestre el km recién capturado (aunque no haya drenado) y marque el
+  // semanal enviado al instante. Generaliza el patrón de combustible.maxKmPendiente.
+
+  /** Tipos de op que AVANZAN el odómetro del vehículo al drenar (regla no-retroceso). */
+  private static readonly KM_TIPOS = [
+    'vehiculo_entrega',
+    'combustible',
+    'checklist_preuso',
+    'reporte_semanal',
+    'mantenimiento',
+  ];
+
+  /** Ops del outbox aún sin confirmar (pending/syncing/error). */
+  private async opsPendientes(): Promise<OutboxOp[]> {
+    return db.outbox.where('estado').anyOf('pending', 'syncing', 'error').toArray();
+  }
+
+  /**
+   * Máximo km que un vehículo tiene "en vuelo" en el outbox (0 si ninguno).
+   * `vehiculo_entrega` guarda el km en `payload.km`; el resto en `payload.kilometraje`.
+   */
+  async kmPendiente(vehiculoId: string): Promise<number> {
+    if (!vehiculoId) return 0;
+    const ops = await this.opsPendientes();
+    let max = 0;
+    for (const op of ops) {
+      if (!SyncService.KM_TIPOS.includes(op.tipo_op)) continue;
+      const p = op.payload as Record<string, unknown>;
+      if (p['vehiculo_id'] !== vehiculoId) continue;
+      const km = Number(p['kilometraje'] ?? p['km']);
+      if (Number.isFinite(km) && km > max) max = km;
+    }
+    return max;
+  }
+
+  /** km efectivo = max(km del servidor, km pendiente en el outbox). */
+  async kmEfectivo(vehiculoId: string, kmServidor: number | null | undefined): Promise<number | null> {
+    const base = kmServidor ?? null;
+    const pend = await this.kmPendiente(vehiculoId);
+    if (base == null) return pend > 0 ? pend : null;
+    return Math.max(base, pend);
+  }
+
+  /**
+   * Reportes semanales aún sin confirmar en el outbox: vehiculoId → fecha.
+   * La UI del listado decide si la fecha cae en la semana de esa fila.
+   */
+  async reportesSemanalesPendientes(): Promise<Map<string, string>> {
+    const ops = await this.opsPendientes();
+    const out = new Map<string, string>();
+    for (const op of ops) {
+      if (op.tipo_op !== 'reporte_semanal') continue;
+      const p = op.payload as Record<string, unknown>;
+      const vid = p['vehiculo_id'];
+      if (typeof vid !== 'string') continue;
+      const fecha = String(p['fecha'] ?? op.capturado_en?.slice(0, 10) ?? '');
+      const prev = out.get(vid);
+      if (!prev || fecha > prev) out.set(vid, fecha);
+    }
+    return out;
+  }
+
   private async refreshCounts(): Promise<void> {
     const [pending, errored] = await Promise.all([
       db.outbox.where('estado').anyOf('pending', 'syncing').count(),

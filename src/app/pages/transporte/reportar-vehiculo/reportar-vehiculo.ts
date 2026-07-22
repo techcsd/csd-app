@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -17,10 +17,27 @@ import { PermissionsService } from '../../../core/services/permissions.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
 import { ZONAS_DANO } from '../../../core/models/transporte.model';
 import { ACCIDENTE_FASES, AccidenteFase, DanoOrigen } from '../../../core/models/flota-reportes.model';
 
 type Tipo = 'accidente' | 'dano';
+
+/** Estado del formulario persistido (los blobs de fotos van aparte). */
+interface ReporteVehDraft {
+  tipo: Tipo | null;
+  step: number;
+  fase: AccidenteFase | null;
+  descripcion: string;
+  lesionados: number;
+  tercero: string;
+  ametMeta: { ext: string; nombre: string; esImagen: boolean } | null;
+  zona: string;
+  danoDescripcion: string;
+  danoOrigen: DanoOrigen;
+  tieneDanoFoto: boolean;
+}
 
 /**
  * S22 — reportar accidente o daño de un vehículo, tipo hoja. Un asunto por
@@ -45,6 +62,8 @@ export class ReportarVehiculoPage implements OnDestroy {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
   private location = inject(Location);
 
   readonly fases = ACCIDENTE_FASES;
@@ -72,6 +91,12 @@ export class ReportarVehiculoPage implements OnDestroy {
   submitting = signal(false);
   done = signal(false);
   confirmSalir = signal(false);
+  borradorPrevio = signal(false);
+  private hydrated = false;
+
+  private get clave(): string {
+    return `reporte_vehiculo:${this.vehiculoId}`;
+  }
 
   total = computed(() => (this.tipo() === 'accidente' ? 5 : this.tipo() === 'dano' ? 4 : 1));
   esAccidente = computed(() => this.tipo() === 'accidente');
@@ -87,8 +112,61 @@ export class ReportarVehiculoPage implements OnDestroy {
   constructor() {
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     void this.load();
+    void this.restoreDraft();
     void this.captureGps(); // S28 — ubicación en paralelo desde el inicio
     this.navGuard.register(this.backHandler);
+    // U9 — autosave del formulario (regla: todo formulario lo tiene).
+    effect(() => {
+      const snap: ReporteVehDraft = {
+        tipo: this.tipo(),
+        step: this.step(),
+        fase: this.fase(),
+        descripcion: this.descripcion(),
+        lesionados: this.lesionados(),
+        tercero: this.tercero(),
+        ametMeta: this.amet() ? { ext: this.amet()!.ext, nombre: this.amet()!.nombre, esImagen: this.amet()!.esImagen } : null,
+        zona: this.zona(),
+        danoDescripcion: this.danoDescripcion(),
+        danoOrigen: this.danoOrigen(),
+        tieneDanoFoto: !!this.danoFoto(),
+      };
+      if (!this.hydrated || this.submitting() || this.done()) return;
+      this.autosave.queue(this.clave, snap, { tipo: 'reporte_vehiculo', etiqueta: 'Accidente o daño', ruta: this.location.path() });
+    });
+  }
+
+  private async restoreDraft(): Promise<void> {
+    const draft = await this.borrador.load<ReporteVehDraft>(this.clave);
+    if (draft) {
+      this.tipo.set(draft.tipo);
+      this.step.set(draft.step || 1);
+      this.fase.set(draft.fase);
+      this.descripcion.set(draft.descripcion ?? '');
+      this.lesionados.set(draft.lesionados ?? 0);
+      this.tercero.set(draft.tercero ?? '');
+      this.zona.set(draft.zona ?? 'frente');
+      this.danoDescripcion.set(draft.danoDescripcion ?? '');
+      this.danoOrigen.set(draft.danoOrigen ?? 'desconocido');
+      const fotos = await this.borrador.loadFotos(this.clave);
+      if (draft.ametMeta) {
+        const f = fotos.find((x) => x.slot === 'amet');
+        if (f) {
+          this.amet.set({
+            blob: f.blob,
+            nombre: draft.ametMeta.nombre,
+            esImagen: draft.ametMeta.esImagen,
+            ext: draft.ametMeta.ext,
+            previewUrl: draft.ametMeta.esImagen ? URL.createObjectURL(f.blob) : null,
+          });
+        }
+      }
+      if (draft.tieneDanoFoto) {
+        const f = fotos.find((x) => x.slot === 'dano');
+        if (f) this.danoFoto.set({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) });
+      }
+      this.borradorPrevio.set(true);
+    }
+    this.hydrated = true;
   }
 
   ngOnDestroy(): void {
@@ -110,18 +188,28 @@ export class ReportarVehiculoPage implements OnDestroy {
   }
 
   async subirAmet(desdeArchivo: boolean): Promise<void> {
+    // U9 — persistir el borrador ANTES de abrir el picker (MIUI recrea la Activity).
+    await this.autosave.flushAll();
     const doc = desdeArchivo ? await this.camera.pickDocument() : await this.camera.takeDocumentPhoto();
-    if (doc) this.amet.set(doc);
+    if (doc) {
+      this.amet.set(doc);
+      await this.borrador.saveFoto(this.clave, 'amet', doc.blob);
+    }
   }
-  quitarAmet(): void {
+  async quitarAmet(): Promise<void> {
+    const prev = this.amet();
+    if (prev?.previewUrl) URL.revokeObjectURL(prev.previewUrl);
     this.amet.set(null);
+    await this.borrador.removeFoto(this.clave, 'amet');
   }
 
   onDanoFoto(photo: CapturedPhoto): void {
     this.danoFoto.set(photo);
+    void this.borrador.saveFoto(this.clave, 'dano', photo.blob);
   }
   onDanoFotoCleared(): void {
     this.danoFoto.set(null);
+    void this.borrador.removeFoto(this.clave, 'dano');
   }
 
   next(): void {
@@ -181,6 +269,7 @@ export class ReportarVehiculoPage implements OnDestroy {
           foto: this.danoFoto()?.blob ?? null,
         });
       }
+      await this.autosave.discard(this.clave); // limpia borrador + fotos
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar.');

@@ -7,6 +7,7 @@ import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/location-picker/location-picker';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -118,6 +119,7 @@ export class CrearRutaPage implements OnDestroy {
       void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
       return;
     }
+    resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     void this.load();
     void this.captureGps();
     this.navGuard.register(this.backHandler); // U4 — botón físico Android

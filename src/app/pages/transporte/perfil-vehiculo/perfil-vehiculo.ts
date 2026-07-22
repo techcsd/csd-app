@@ -11,10 +11,12 @@ import { SyncService } from '../../../core/sync/sync.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { CombustibleService } from '../../../core/services/combustible.service';
+import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { VehiculoStats } from '../../../core/models/transporte.model';
+import { VehiculoDetalle, VehiculoStats } from '../../../core/models/transporte.model';
+import { FlotaMulta } from '../../../core/models/flota-reportes.model';
 import { Documento } from '../../../core/models/documento.model';
 import { Conductor } from '../../../core/models/conductor.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
@@ -54,6 +56,7 @@ export class PerfilVehiculoPage {
   private conductores = inject(ConductoresService);
   private ctx = inject(UserContextService);
   private combustible = inject(CombustibleService);
+  private flotaReportes = inject(FlotaReportesService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -68,6 +71,21 @@ export class PerfilVehiculoPage {
   modelo = signal('');
   fotoUrl = signal<string | null>(null); // U6
   stats = signal<VehiculoStats | null>(null);
+  // U11 — detalle (km efectivo + mantenimiento), último nivel de combustible y multas.
+  vehDetalle = signal<VehiculoDetalle | null>(null);
+  nivelCombustible = signal<string | null>(null);
+  multas = signal<FlotaMulta[]>([]);
+
+  /** U11 — alerta de mantenimiento comparando km efectivo vs próximo. */
+  mantAlerta = computed<{ estado: 'ok' | 'pre_cita' | 'vencido'; faltan: number; proximo: number } | null>(() => {
+    const d = this.vehDetalle();
+    if (!d || d.km_ultimo_mantenimiento == null) return null;
+    const proximo = d.km_ultimo_mantenimiento + (d.intervalo_mantenimiento_km ?? 5000);
+    const km = d.kilometraje ?? 0;
+    const faltan = proximo - km;
+    const estado: 'ok' | 'pre_cita' | 'vencido' = faltan <= 0 ? 'vencido' : faltan <= 500 ? 'pre_cita' : 'ok';
+    return { estado, faltan, proximo };
+  });
   // V1/V2 — identificadores + pólizas del vehículo.
   vin = signal<string | null>(null);
   numeroMatricula = signal<string | null>(null);
@@ -140,8 +158,15 @@ export class PerfilVehiculoPage {
       }
       this.stats.set(stats);
       // S20 — rendimiento esperado (del detalle) vs promedio real (de echadas).
-      void this.vehiculos.getVehiculoDetalle(id).then((d) => this.rendimientoEsperado.set(d?.rendimiento_esperado_km_gal ?? null));
+      // U11 — guardar el detalle completo (km EFECTIVO + mantenimiento) para la alerta.
+      void this.vehiculos.getVehiculoDetalle(id).then((d) => {
+        this.vehDetalle.set(d);
+        this.rendimientoEsperado.set(d?.rendimiento_esperado_km_gal ?? null);
+      });
       void this.combustible.getUltimaEchada(id).then((e) => this.rendimientoReal.set(e.promedio_rendimiento));
+      // U11 — último nivel de combustible + multas del vehículo (mejor esfuerzo).
+      void this.flotaReportes.getUltimoNivelCombustible(id).then((n) => this.nivelCombustible.set(n));
+      void this.flotaReportes.getMultasVehiculo(id).then((m) => this.multas.set(m));
       await this.loadDocs(id);
       if (this.esAdmin()) {
         try {

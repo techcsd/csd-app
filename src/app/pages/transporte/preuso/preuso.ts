@@ -21,6 +21,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ChecklistPreusoService } from '../../../core/services/checklist-preuso.service';
@@ -229,6 +230,11 @@ export class PreusoPage extends GuardedWizard {
     return grupos;
   });
 
+  // U2 — el paso 2 (checklist) se sub-pagina: una SECCIÓN por pantalla (patrón S17).
+  secPaso2 = signal(0);
+  seccionActual2 = computed<SeccionGrupo | null>(() => this.grupos()[this.secPaso2()] ?? null);
+  esUltimaSeccion = computed(() => this.secPaso2() >= this.grupos().length - 1);
+
   totalItems = computed(() => this.itemsAplicables().length);
   respondidos = computed(
     () =>
@@ -301,6 +307,7 @@ export class PreusoPage extends GuardedWizard {
   constructor() {
     super();
     this.registerBackGuard();
+    resetScrollOnStep(() => this.step(), () => this.secPaso2(), () => this.done()); // U3/U4/U2
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
     if (this.vehiculoId) {
@@ -496,10 +503,34 @@ export class PreusoPage extends GuardedWizard {
 
   next(): void {
     if (!this.canAdvance()) return;
-    this.step.update((s) => Math.min(this.total, s + 1));
+    const s = this.step();
+    // U2 — al entrar al checklist arranca en la primera sección.
+    if (s === 1) {
+      this.step.set(2);
+      this.secPaso2.set(0);
+      return;
+    }
+    // U2 — dentro del paso 2 avanza sección por sección antes de pasar a fotos.
+    if (s === 2 && !this.esUltimaSeccion()) {
+      this.secPaso2.update((i) => i + 1);
+      return;
+    }
+    this.step.update((x) => Math.min(this.total, x + 1));
   }
   prev(): void {
-    this.step.update((s) => Math.max(1, s - 1));
+    const s = this.step();
+    // U2 — retrocede sección por sección dentro del checklist.
+    if (s === 2 && this.secPaso2() > 0) {
+      this.secPaso2.update((i) => i - 1);
+      return;
+    }
+    // Al volver de fotos (3) al checklist (2), reentrar en la última sección.
+    if (s === 3) {
+      this.step.set(2);
+      this.secPaso2.set(Math.max(0, this.grupos().length - 1));
+      return;
+    }
+    this.step.update((x) => Math.max(1, x - 1));
   }
 
   private canAdvance(): boolean {
@@ -524,25 +555,27 @@ export class PreusoPage extends GuardedWizard {
           return false;
         }
         return true;
-      case 2:
-        if (this.respondidos() < this.totalItems()) {
-          this.toast.error('Responde todos los puntos del checklist.');
+      case 2: {
+        // U2 — validar solo la SECCIÓN visible (una por pantalla).
+        const sec = this.seccionActual2();
+        if (!sec) return true;
+        if (!sec.items.every((it) => this.draft(it.id).respuesta !== null)) {
+          this.toast.error('Responde todos los puntos de esta sección.');
           return false;
         }
         // P6 — un hallazgo CRÍTICO (bloquea el vehículo) exige explicar qué pasó.
-        {
-          const falta = this.itemsAplicables().find(
-            (it) =>
-              it.es_critico &&
-              this.draft(it.id).respuesta === 'no' &&
-              !this.draft(it.id).comentario.trim(),
-          );
-          if (falta) {
-            this.toast.error(`Explica qué pasó en el punto crítico: "${falta.etiqueta}".`);
-            return false;
-          }
+        const falta = sec.items.find(
+          (it) =>
+            it.es_critico &&
+            this.draft(it.id).respuesta === 'no' &&
+            !this.draft(it.id).comentario.trim(),
+        );
+        if (falta) {
+          this.toast.error(`Explica qué pasó en el punto crítico: "${falta.etiqueta}".`);
+          return false;
         }
         return true;
+      }
       case 3:
         if (!this.fotosCompletas()) {
           this.toast.error('Faltan fotos. Toma las 7 fotos guiadas.');

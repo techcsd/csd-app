@@ -308,7 +308,7 @@ function mantLinea(data: PreusoReportData): string {
   if (data.proximoMantenimientoKm == null) return '—';
   const prox = `${fmtNum(data.proximoMantenimientoKm)} km`;
   if (data.estadoMantenimiento === 'vencido') {
-    return `VENCIDO (${fmtNum(Math.abs(data.faltanMantenimientoKm ?? 0))} km pasados) — próx. ${prox}`;
+    return `VENCIDO (pasado con ${fmtNum(Math.abs(data.faltanMantenimientoKm ?? 0))} km) — próx. ${prox}`;
   }
   if (data.estadoMantenimiento === 'pre_cita') {
     return `Pre-cita: faltan ${fmtNum(data.faltanMantenimientoKm ?? 0)} km — próx. ${prox}`;

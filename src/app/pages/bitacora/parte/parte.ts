@@ -6,6 +6,7 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
@@ -165,6 +166,8 @@ export class PartePage implements OnDestroy {
   };
 
   constructor() {
+    // U3/U4 — resetear scroll en cada paso y sub-paso (paso5/paso8) y en el resultado.
+    resetScrollOnStep(() => this.step(), () => this.paso5(), () => this.paso8(), () => this.done());
     void this.load();
     this.navGuard.register(this.backHandler); // U4 — botón físico Android
     // Autosave the (non-photo) draft on every change so a killed app recovers.

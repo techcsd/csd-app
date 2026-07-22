@@ -356,3 +356,10 @@
   font-size: 14px;
   color: var(--color-text-secondary);
 }
+
+// U2 — indicador de progreso del checklist sub-paginado (una sección por pantalla)
+.preuso__section-prog {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: -4px 0 12px;
+}
