@@ -138,6 +138,7 @@ export class FlotaReportesService {
       .select('id, fecha, tipo, resultado, kilometraje, nivel_combustible, vehiculo:vehiculos(placa)')
       .eq('conductor_id', conductorId)
       .eq('tipo', tipo)
+      .not('es_prueba', 'is', true) // V2 — ocultar registros de prueba (incluye NULL)
       .gte('fecha', this.desdeISO(dias))
       .order('fecha', { ascending: false })
       .limit(200);
@@ -152,6 +153,7 @@ export class FlotaReportesService {
       .from('registros_combustible')
       .select('id, fecha, kilometraje, galones, monto, rendimiento_km_gal, alerta_consumo, vehiculo:vehiculos(placa)')
       .eq('conductor_id', conductorId)
+      .not('es_prueba', 'is', true) // V2 — ocultar echadas de prueba (incluye NULL)
       .gte('fecha', this.desdeISO(dias))
       .order('fecha', { ascending: false })
       .limit(200);
@@ -171,6 +173,7 @@ export class FlotaReportesService {
       .from('rutas')
       .select('id, fecha, origen, destino, estado, vehiculo:vehiculos(placa), conductor:conductores(nombre)')
       .eq('creado_por', uid)
+      .not('es_prueba', 'is', true) // V3 — ocultar rutas de prueba (incluye NULL)
       .gte('fecha', this.desdeISO(dias))
       .order('fecha', { ascending: false })
       .limit(200);

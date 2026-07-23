@@ -84,15 +84,15 @@
             <p class="mact__vacio">Aún no has creado rutas en este período.</p>
           } @else {
             @for (r of rutasCreadas(); track r.id) {
-              <button type="button" class="mact__act-row mact__act-row--tap" (click)="verRutas()">
+              <div class="mact__act-row">
                 <span class="mact__act-main">🗺️ {{ r.origen || '—' }} → {{ r.destino || '—' }}</span>
                 <span class="mact__act-sub">
                   {{ r.fecha ? fmtFecha(r.fecha) : '—' }}
                   @if (r.vehiculo?.placa) { · {{ r.vehiculo?.placa }} }
-                  @if (r.conductor?.nombre) { · {{ r.conductor?.nombre }} }
+                  @if (r.conductor?.nombre) { · 🪪 {{ r.conductor?.nombre }} }
                   · {{ r.estado || '—' }}
                 </span>
-              </button>
+              </div>
             }
           }
         </section>
