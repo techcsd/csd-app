@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
@@ -74,6 +74,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   private sig = viewChild(SignaturePad);
 
@@ -84,6 +85,8 @@ export class ReporteSemanalPage extends GuardedWizard {
   readonly fotosReq = FOTOS_PREUSO;
 
   loading = signal(true);
+  /** Q2 — deep-link ?item=<vehiculo_id>: resalta y hace scroll a esa tarjeta. */
+  highlightedId = signal<string | null>(null);
   semana = signal<ReporteSemanalVeh[]>([]);
   /** U8 — reporte_semanal pendientes en el outbox: vehiculoId → fecha. */
   reportesPendientes = signal<Map<string, string>>(new Map());
@@ -201,6 +204,9 @@ export class ReporteSemanalPage extends GuardedWizard {
     super();
     this.registerBackGuard();
     resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
+    // Q2 — destino de deep-link: ?item=<vehiculo_id> resalta esa tarjeta del pool.
+    const item = this.route.snapshot.queryParamMap.get('item');
+    if (item) this.highlightedId.set(item);
     void this.load();
     // U8 — refrescar estado del listado tras cada cambio del outbox (envío/drain),
     // como en /pendientes (P4/P5). Reconciliar servidor + ops en cola.
@@ -253,7 +259,18 @@ export class ReporteSemanalPage extends GuardedWizard {
       void this.loadFotos(pool.map((v) => v.vehiculo_id));
     } finally {
       this.loading.set(false);
+      this.scrollToHighlighted(); // Q2 — tras pintar el listado
     }
+  }
+
+  /** Q2 — hace scroll a la tarjeta del deep-link y quita el resaltado tras unos segundos. */
+  private scrollToHighlighted(): void {
+    const id = this.highlightedId();
+    if (!id) return;
+    setTimeout(() => {
+      document.getElementById('rsem-veh-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => this.highlightedId.set(null), 3000);
+    }, 150);
   }
 
   private async loadFotos(ids: string[]): Promise<void> {

@@ -21,6 +21,7 @@ import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { ZONAS_DANO } from '../../../core/models/transporte.model';
 import { ACCIDENTE_FASES, AccidenteFase, DanoOrigen } from '../../../core/models/flota-reportes.model';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 
 type Tipo = 'accidente' | 'dano';
 
@@ -111,6 +112,7 @@ export class ReportarVehiculoPage implements OnDestroy {
 
   constructor() {
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
+    resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     void this.load();
     void this.restoreDraft();
     void this.captureGps(); // S28 — ubicación en paralelo desde el inicio

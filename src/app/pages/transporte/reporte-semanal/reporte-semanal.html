@@ -126,7 +126,7 @@
         @if (mantenimiento(); as m) {
           @if (m.estado !== 'ok') {
             <p class="rsem__band" [class.rsem__band--warn]="m.estado === 'pre_cita'" [class.rsem__band--danger]="m.estado === 'vencido'">
-              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO (pasó {{ -m.faltan | number: '1.0-0' }} km). }
+              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO (pasado con {{ -m.faltan | number: '1.0-0' }} km). }
               @else { 🟠 Cerca del mantenimiento: faltan {{ m.faltan | number: '1.0-0' }} km. }
             </p>
           }
@@ -180,6 +180,11 @@
         @for (v of lista(); track v.vehiculo_id) {
           <app-vehiculo-card
             class="rsem__card"
+            [id]="'rsem-veh-' + v.vehiculo_id"
+            [style.outline]="highlightedId() === v.vehiculo_id ? '3px solid var(--color-accent)' : null"
+            [style.outline-offset]="highlightedId() === v.vehiculo_id ? '2px' : null"
+            [style.border-radius]="highlightedId() === v.vehiculo_id ? '14px' : null"
+            [style.transition]="'outline 0.3s ease'"
             [fotoUrl]="fotoUrls()[v.vehiculo_id] ?? null"
             [placa]="v.placa"
             [tipo]="v.tipo"

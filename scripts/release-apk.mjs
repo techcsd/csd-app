@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.25.2';
+const VERSION = '1.26.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,12 +62,16 @@ const MIN_VERSION = '1.24.0';
 const RELEASED_AT = '2026-07-23';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Historial sin registros de prueba y "Rutas que creé" más claro';
+const TITULO = 'Login de conductor con tiempo límite, autosave en inventario y más pulido';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'En "Mi actividad", el historial (reportes semanales, pre-usos, echadas y rutas creadas) ya no muestra los registros marcados como prueba.' },
-  { t: 'mejora', d: '"Rutas que creé" muestra cada ruta con su detalle a la vista: origen, destino, vehículo, conductor y estado.' },
+  { t: 'arreglo', d: 'El inicio de sesión del conductor ya no se queda cargando para siempre: si la conexión tarda demasiado (12s) avisa y puedes reintentar.' },
+  { t: 'mejora', d: 'Entrada, Salida y Recepción de inventario ahora guardan borrador automáticamente: si el teléfono cierra la app (p. ej. al abrir la cámara), no pierdes lo capturado.' },
+  { t: 'nuevo', d: 'Al crear o editar un vehículo puedes definir su rendimiento esperado (km/gal), que se usa como referencia para las alertas de consumo.' },
+  { t: 'mejora', d: 'Los avisos que llevan al reporte semanal ahora resaltan el vehículo exacto; y hay más badges de pendientes por módulo.' },
+  { t: 'arreglo', d: 'Al cambiar de paso en el reporte de vehículo/accidente, la pantalla vuelve arriba (ya no queda a media altura).' },
+  { t: 'mejora', d: 'Se homologó el texto de mantenimiento vencido a "pasado con X km" en todas las pantallas.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -72,6 +72,9 @@
       <label class="field-label" for="im">Mantenimiento cada (km)</label>
       <input id="im" class="field" type="number" inputmode="numeric" [ngModel]="intervaloMant()" (ngModelChange)="intervaloMant.set($event)" placeholder="5000" />
 
+      <label class="field-label" for="rend">Rendimiento esperado (km/gal) (opcional)</label>
+      <input id="rend" class="field" type="number" inputmode="decimal" [ngModel]="rendimientoEsperado()" (ngModelChange)="rendimientoEsperado.set($event)" placeholder="Ej. 30 — para las alertas de consumo" />
+
       <label class="field-label" for="notas">Notas (opcional)</label>
       <textarea id="notas" class="field vform__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
 

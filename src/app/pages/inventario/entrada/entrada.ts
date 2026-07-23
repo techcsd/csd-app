@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -12,12 +12,24 @@ import { InventarioService, ObraOrigen } from '../../../core/services/inventario
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
 import { compartirTexto } from '../../../core/util/share';
 
 interface GrupoResumen {
   categoria: string;
   lineas: CartLinea[];
+}
+
+/** Estado serializable del formulario (regla 4 — autosave/borrador). */
+interface EntradaDraft {
+  bodegaId: string;
+  motivo: string;
+  motivoOtro: string;
+  obraOrigenId: string;
+  descontarObra: boolean;
+  cart: CartLinea[];
 }
 
 /** Entrada de material por el patrón de HOJAS: selección → resumen → éxito. */
@@ -36,6 +48,11 @@ export class EntradaPage implements OnDestroy {
   private router = inject(Router);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
+
+  private readonly clave = 'inventario:entrada';
+  private hydrated = false;
 
   readonly motivos = ['Compra local', 'Devolución de obra', 'Sobrante', 'Otro'];
 
@@ -89,6 +106,25 @@ export class EntradaPage implements OnDestroy {
   constructor() {
     void this.init();
     this.navGuard.register(this.backHandler); // U4 — botón físico Android
+    // Regla 4 — autosave: si el SO mata la app (picker de cámara MIUI, etc.) el
+    // material capturado no se pierde. Persiste el estado serializable (no la foto).
+    effect(() => {
+      const snap: EntradaDraft = {
+        bodegaId: this.bodegaId(),
+        motivo: this.motivo(),
+        motivoOtro: this.motivoOtro(),
+        obraOrigenId: this.obraOrigenId(),
+        descontarObra: this.descontarObra(),
+        cart: this.cart(),
+      };
+      if (!this.hydrated || this.submitting() || this.hoja() === 'exito') return;
+      if (!snap.cart.length) return;
+      this.autosave.queue(this.clave, snap, {
+        tipo: 'entrada',
+        etiqueta: 'Entrada de material',
+        ruta: this.location.path(),
+      });
+    });
   }
 
   ngOnDestroy(): void {
@@ -112,6 +148,20 @@ export class EntradaPage implements OnDestroy {
     } finally {
       this.loadingCat.set(false);
     }
+    await this.restoreDraft();
+  }
+
+  private async restoreDraft(): Promise<void> {
+    const d = await this.borrador.load<EntradaDraft>(this.clave);
+    if (d) {
+      if (d.bodegaId) this.bodegaId.set(d.bodegaId);
+      this.motivo.set(d.motivo ?? '');
+      this.motivoOtro.set(d.motivoOtro ?? '');
+      this.obraOrigenId.set(d.obraOrigenId ?? '');
+      this.descontarObra.set(d.descontarObra ?? false);
+      this.cart.set(d.cart ?? []);
+    }
+    this.hydrated = true;
   }
 
   irResumen(): void {
@@ -209,6 +259,7 @@ export class EntradaPage implements OnDestroy {
           foto: this.foto()?.blob ?? null,
         });
       }
+      void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.hoja.set('exito');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');

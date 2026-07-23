@@ -43,6 +43,12 @@ export class AuthService {
    * (bloqueado, con `retryInSeconds`).
    */
   async signInConductor(cedula: string, pin: string): Promise<ConductorLoginResult> {
+    // R13 — timeout de 12s: un cold-start/red colgada dejaba el spinner para
+    // siempre. AbortController corta el fetch y devolvemos un mensaje claro que
+    // permite reintentar (el flag de carga vive en el caller y siempre se resetea
+    // porque este método SIEMPRE retorna). Paridad con la web (Promise.race 12s).
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
     let res: Response;
     try {
       res = await fetch(`${environment.supabaseUrl}/functions/v1/conductor-login`, {
@@ -53,9 +59,15 @@ export class AuthService {
           Authorization: `Bearer ${environment.supabaseAnonKey}`,
         },
         body: JSON.stringify({ cedula: cedula.trim(), pin: pin.trim() }),
+        signal: controller.signal,
       });
-    } catch {
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        return { ok: false, status: 0, error: 'La conexión tardó demasiado. Revisa tu internet e inténtalo de nuevo.' };
+      }
       return { ok: false, status: 0, error: 'No hay conexión. El acceso de conductor necesita internet.' };
+    } finally {
+      clearTimeout(timeout);
     }
     const body = (await res.json().catch(() => ({}))) as {
       access_token?: string;

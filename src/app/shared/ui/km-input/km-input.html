@@ -23,7 +23,7 @@
   >
     @switch (m.estado) {
       @case ('vencido') {
-        🔴 Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km del próximo ({{ m.proximo | number: '1.0-0' }} km).
+        🔴 Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
       }
       @case ('pre_cita') {
         🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).

@@ -35,6 +35,8 @@ export interface VehiculoEditable {
   vencimientoSeguro: string | null;
   kmUltimoMantenimiento: number | null;
   intervaloMantenimientoKm: number;
+  // S20 — rendimiento esperado (km/gal) para las alertas de consumo (paridad web).
+  rendimientoEsperadoKmGal: number | null;
   notas: string | null;
   // V1/V2 — identificadores y pólizas del vehículo.
   vin: string | null;
@@ -380,7 +382,7 @@ export class VehiculosService {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
       .select(
-        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, notas, fotos, vin, numero_matricula, numero_seguro, aseguradora',
+        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal, notas, fotos, vin, numero_matricula, numero_seguro, aseguradora',
       )
       .eq('id', id)
       .single();
@@ -399,6 +401,7 @@ export class VehiculosService {
       vencimientoSeguro: (v['vencimiento_seguro'] as string) ?? null,
       kmUltimoMantenimiento: (v['km_ultimo_mantenimiento'] as number) ?? null,
       intervaloMantenimientoKm: (v['intervalo_mantenimiento_km'] as number) ?? 5000,
+      rendimientoEsperadoKmGal: (v['rendimiento_esperado_km_gal'] as number) ?? null,
       notas: (v['notas'] as string) ?? null,
       fotos: (v['fotos'] as string[]) ?? [],
       vin: (v['vin'] as string) ?? null,
@@ -421,6 +424,7 @@ export class VehiculosService {
       vencimiento_seguro: input.vencimientoSeguro || null,
       km_ultimo_mantenimiento: input.kmUltimoMantenimiento,
       intervalo_mantenimiento_km: input.intervaloMantenimientoKm,
+      rendimiento_esperado_km_gal: input.rendimientoEsperadoKmGal,
       notas: input.notas?.trim() || null,
       vin: input.vin?.trim() || null,
       numero_matricula: input.numeroMatricula?.trim() || null,

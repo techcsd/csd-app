@@ -35,6 +35,7 @@ interface VehiculoDraft {
   vencSeguro: string;
   kmUltMant: number | null;
   intervaloMant: number | null;
+  rendimientoEsperado: number | null;
   notas: string;
   vin: string;
   numeroMatricula: string;
@@ -91,6 +92,7 @@ export class VehiculoFormPage {
   vencSeguro = signal('');
   kmUltMant = signal<number | null>(null);
   intervaloMant = signal<number | null>(5000);
+  rendimientoEsperado = signal<number | null>(null); // S20 — km/gal esperado (paridad web)
   notas = signal('');
   vin = signal('');
   numeroMatricula = signal('');
@@ -135,6 +137,7 @@ export class VehiculoFormPage {
       vencSeguro: this.vencSeguro(),
       kmUltMant: this.kmUltMant(),
       intervaloMant: this.intervaloMant(),
+      rendimientoEsperado: this.rendimientoEsperado(),
       notas: this.notas(),
       vin: this.vin(),
       numeroMatricula: this.numeroMatricula(),
@@ -166,6 +169,7 @@ export class VehiculoFormPage {
         this.vencSeguro.set(d.vencSeguro ?? '');
         this.kmUltMant.set(d.kmUltMant ?? null);
         this.intervaloMant.set(d.intervaloMant ?? 5000);
+        this.rendimientoEsperado.set(d.rendimientoEsperado ?? null);
         this.notas.set(d.notas ?? '');
         this.vin.set(d.vin ?? '');
         this.numeroMatricula.set(d.numeroMatricula ?? '');
@@ -196,6 +200,7 @@ export class VehiculoFormPage {
         this.vencSeguro.set(v.vencimientoSeguro ?? '');
         this.kmUltMant.set(v.kmUltimoMantenimiento);
         this.intervaloMant.set(v.intervaloMantenimientoKm);
+        this.rendimientoEsperado.set(v.rendimientoEsperadoKmGal);
         this.notas.set(v.notas ?? '');
         this.vin.set(v.vin ?? '');
         this.numeroMatricula.set(v.numeroMatricula ?? '');
@@ -229,6 +234,7 @@ export class VehiculoFormPage {
       vencimientoSeguro: this.vencSeguro() || null,
       kmUltimoMantenimiento: this.kmUltMant(),
       intervaloMantenimientoKm: this.intervaloMant() ?? 5000,
+      rendimientoEsperadoKmGal: this.rendimientoEsperado(),
       notas: this.notas() || null,
       vin: this.vin() || null,
       numeroMatricula: this.numeroMatricula() || null,

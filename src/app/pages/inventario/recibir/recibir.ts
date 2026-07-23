@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +7,16 @@ import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
 import { Conduce } from '../../../core/models/transporte.model';
+
+/** Estado serializable de la recepción abierta (regla 4 — autosave/borrador). */
+interface RecibirDraft {
+  expandedId: string;
+  cantidades: Record<string, number>;
+  notas: string;
+}
 
 /** Bodeguero confirms receipt of a dispatched conduce (offline-first). */
 @Component({
@@ -23,6 +32,11 @@ export class RecibirConducePage {
   private camera = inject(CameraService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
+
+  private readonly clave = 'inventario:recibir';
+  private hydrated = false;
 
   conduces = signal<Conduce[]>([]);
   loading = signal(true);
@@ -35,15 +49,44 @@ export class RecibirConducePage {
 
   constructor() {
     void this.load();
+    // Regla 4 — autosave: no perder las cantidades recibidas / notas de discrepancia
+    // si el SO mata la app al abrir la cámara (foto de recepción).
+    effect(() => {
+      const snap: RecibirDraft = {
+        expandedId: this.expandedId() ?? '',
+        cantidades: this.cantidades(),
+        notas: this.notas(),
+      };
+      if (!this.hydrated || this.submitting() || !snap.expandedId) return;
+      this.autosave.queue(this.clave, snap, {
+        tipo: 'recibir',
+        etiqueta: 'Recepción de conduce',
+        ruta: this.location.path(),
+      });
+    });
   }
 
   async load(): Promise<void> {
     this.loading.set(true);
     try {
       this.conduces.set(await this.inventario.conducesPorRecibir());
+      await this.restoreDraft();
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private async restoreDraft(): Promise<void> {
+    const d = await this.borrador.load<RecibirDraft>(this.clave);
+    // Solo se retoma si el conduce sigue pendiente de recibir.
+    if (d?.expandedId && this.conduces().some((c) => c.id === d.expandedId)) {
+      this.cantidades.set(d.cantidades ?? {});
+      this.notas.set(d.notas ?? '');
+      this.expandedId.set(d.expandedId);
+    } else if (d) {
+      void this.autosave.discard(this.clave); // borrador huérfano
+    }
+    this.hydrated = true;
   }
 
   toggle(c: Conduce): void {
@@ -86,6 +129,7 @@ export class RecibirConducePage {
         notas: this.notas().trim() || null,
         foto: this.foto()?.blob ?? null,
       });
+      void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.conduces.update((list) => list.filter((x) => x.id !== c.id));
       this.expandedId.set(null);
       this.toast.success('Recepción guardada.');
