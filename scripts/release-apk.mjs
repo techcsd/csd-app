@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.25.1';
+const VERSION = '1.25.2';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,23 +58,16 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.22.1';
-const RELEASED_AT = '2026-07-22';
+const MIN_VERSION = '1.24.0';
+const RELEASED_AT = '2026-07-23';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Borradores y pendientes a la mano, nivel de combustible con "E", combustible en 4 pasos e historial en Mi actividad';
+const TITULO = 'Historial sin registros de prueba y "Rutas que creé" más claro';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'En "Mis bitácoras" ahora ves arriba tus borradores y envíos pendientes (En proceso), con opción de retomar o descartar — sin tener que ir al perfil.' },
-  { t: 'mejora', d: 'Acceso directo a "Documentación en proceso" desde Bitácora y Transporte (con contador) y en los cuadros del inicio.' },
-  { t: 'arreglo', d: 'La pantalla "Elige un vehículo" al registrar combustible ahora tiene un botón claro para volver atrás.' },
-  { t: 'mejora', d: 'Nivel de combustible unificado en toda la app, ahora con "E" (reserva): E · 1/4 · 1/2 · 3/4 · F.' },
-  { t: 'mejora', d: 'Registrar combustible en pasos más cortos: kilometraje, galones y monto juntos; luego la estación con el cálculo automático; después las fotos; y por último la revisión.' },
-  { t: 'mejora', d: 'Al asignarte un vehículo que ya tienes, los accesos a Reporte semanal y Pre-uso quedan claros y separados.' },
-  { t: 'nuevo', d: 'En "Mi actividad" ahora ves el historial de tus reportes semanales, pre-usos y echadas de combustible (últimos 90 días, con "ver más").' },
-  { t: 'nuevo', d: 'Toca cualquier reporte semanal, pre-uso o echada del historial para ver su detalle completo: respuestas y comentarios, fotos y firma, o el cálculo y la evidencia de la echada.' },
-  { t: 'nuevo', d: 'Los encargados de flota pueden ver "Rutas que creé" con su estado y detalle.' },
+  { t: 'arreglo', d: 'En "Mi actividad", el historial (reportes semanales, pre-usos, echadas y rutas creadas) ya no muestra los registros marcados como prueba.' },
+  { t: 'mejora', d: '"Rutas que creé" muestra cada ruta con su detalle a la vista: origen, destino, vehículo, conductor y estado.' },
 ];
 
 const TIPO_POR_COMMIT = {
