@@ -25,7 +25,7 @@
     <div class="screen__body">
       <h2 class="mov__h2">Revisa la entrada</h2>
 
-      <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="bodegaId.set($event)" />
+      <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
 
       <label class="field-label mov__mt">¿De dónde viene el material?</label>
       <div class="mov__motivos">
@@ -79,6 +79,14 @@
               <span class="mov__item-unit">{{ l.unidad }}</span>
               <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
             </div>
+            <!-- W8 — stock actual (informativo; la entrada lo aumentará) -->
+            @if (stockDe(l.articulo_id); as s) {
+              <p class="mov__stock">Hay {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || l.unidad }} en {{ bodegaNombre() }}.</p>
+            } @else if (online && stockLoading()) {
+              <p class="mov__stock mov__stock--muted">Consultando stock…</p>
+            } @else if (!online) {
+              <p class="mov__stock mov__stock--muted">Stock sin verificar (sin señal).</p>
+            }
           </div>
         }
       }

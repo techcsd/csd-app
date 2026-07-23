@@ -167,6 +167,15 @@
   background: var(--color-surface);
   margin-bottom: 8px;
 }
+// W5 — fila tocable que abre el detalle de la multa.
+.pcon__act-row--link {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.pcon__act-row--link:active {
+  background: var(--color-surface-2, #212121);
+}
 .pcon__act-main {
   font-weight: 600;
 }

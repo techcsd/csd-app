@@ -5,14 +5,15 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Img } from '../../../shared/ui/img/img';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
-import { ChecklistDetalle, EchadaDetalle } from '../../../core/models/flota-reportes.model';
+import { ChecklistDetalle, EchadaDetalle, MultaDetalle } from '../../../core/models/flota-reportes.model';
 import { nivelCombustibleLabel } from '../../../core/models/transporte.model';
 import { formatFecha } from '../../../core/util/fecha';
 
 /**
  * V2 (follow-up) — detalle de solo lectura de un registro del historial de "Mi
- * actividad": un checklist (pre-uso o semanal) o una echada de combustible.
- * Ruta: /transporte/mi-registro/:tipo/:id (tipo = 'checklist' | 'echada').
+ * actividad": un checklist (pre-uso o semanal), una echada de combustible o una
+ * multa (W5). Ruta: /transporte/mi-registro/:tipo/:id
+ * (tipo = 'checklist' | 'echada' | 'multa').
  */
 @Component({
   selector: 'app-mi-registro-detalle',
@@ -34,16 +35,17 @@ export class MiRegistroDetallePage {
   loading = signal(true);
   checklist = signal<ChecklistDetalle | null>(null);
   echada = signal<EchadaDetalle | null>(null);
+  multa = signal<MultaDetalle | null>(null);
   fmtFecha = formatFecha;
 
   esChecklist = computed(() => this.tipo === 'checklist');
-  titulo = computed(() =>
-    this.esChecklist()
-      ? this.checklist()?.tipo === 'inspeccion'
-        ? 'Reporte semanal'
-        : 'Pre-uso'
-      : 'Echada de combustible',
-  );
+  esMulta = computed(() => this.tipo === 'multa');
+  icono = computed(() => (this.esChecklist() ? '📋' : this.esMulta() ? '🚦' : '⛽'));
+  titulo = computed(() => {
+    if (this.esMulta()) return 'Multa';
+    if (this.esChecklist()) return this.checklist()?.tipo === 'inspeccion' ? 'Reporte semanal' : 'Pre-uso';
+    return 'Echada de combustible';
+  });
 
   constructor() {
     void this.load();
@@ -52,7 +54,9 @@ export class MiRegistroDetallePage {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      if (this.esChecklist()) {
+      if (this.esMulta()) {
+        this.multa.set(await this.flota.getMiMultaDetalle(this.id));
+      } else if (this.esChecklist()) {
         this.checklist.set(await this.flota.getMiChecklistDetalle(this.id));
       } else {
         this.echada.set(await this.flota.getMiEchadaDetalle(this.id));
@@ -60,6 +64,11 @@ export class MiRegistroDetallePage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** W5 — etiqueta legible del estado de la multa. */
+  estadoMultaLabel(e: string | null): string {
+    return e === 'pagada' ? '✓ Pagada' : '⏳ Pendiente de pago';
   }
 
   resultadoLabel(r: string | null): string {

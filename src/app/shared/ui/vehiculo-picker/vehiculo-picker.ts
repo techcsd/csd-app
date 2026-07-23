@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { VehiculoCard } from '../vehiculo-card/vehiculo-card';
 import { EmptyState } from '../empty-state/empty-state';
 import { Skeleton } from '../skeleton/skeleton';
@@ -31,6 +31,13 @@ export class VehiculoPicker {
   loading = signal(true);
   disponibles = signal<VehiculoDisponible[]>([]);
   fotoUrls = signal<Record<string, string>>({});
+  /** W4 — ids de vehículos asignados a mí (asignaciones + recepciones en cola). */
+  misIds = signal<Set<string>>(new Set());
+
+  /** W4 — "Tus vehículos" primero. */
+  mios = computed(() => this.disponibles().filter((v) => this.misIds().has(v.vehiculo_id)));
+  /** W4 — el resto de la flota disponible. */
+  resto = computed(() => this.disponibles().filter((v) => !this.misIds().has(v.vehiculo_id)));
 
   constructor() {
     void this.load();
@@ -39,8 +46,14 @@ export class VehiculoPicker {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const disp = await this.vehiculos.getVehiculosDisponibles();
+      // W4 — cargar disponibles + mis asignaciones/recepciones en paralelo.
+      const [disp, asignaciones, recepcionesEnCola] = await Promise.all([
+        this.vehiculos.getVehiculosDisponibles(),
+        this.vehiculos.getMisAsignaciones().catch(() => []),
+        this.vehiculos.entregasRecepcionPendientes().catch(() => new Set<string>()),
+      ]);
       this.disponibles.set(disp);
+      this.misIds.set(new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola]));
       void this.resolveFotos(disp);
     } finally {
       this.loading.set(false);

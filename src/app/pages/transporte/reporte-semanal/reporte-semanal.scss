@@ -120,6 +120,16 @@
   resize: none;
 }
 
+// W4 — encabezado de grupo del listado ("Tus vehículos" / "Resto de la flota").
+.rsem__group {
+  margin: 16px 0 8px;
+  font-size: var(--fs-option);
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .rsem__card {
   display: block;
   margin-bottom: 10px;

@@ -147,6 +147,8 @@ export class ChecklistPage implements OnDestroy {
   submitting = signal(false);
   done = signal(false);
   confirmSalir = signal(false); // Q7 — salir con confirmación
+  /** W3 — recepción abierta detectada: bloquea el llenado con un aviso claro. */
+  bloqueoRecepcion = signal<{ mia: boolean; conductor: string } | null>(null);
 
   titulo = computed(() => (this.tipo === 'recepcion' ? 'Recibir vehículo' : 'Devolver vehículo'));
 
@@ -265,6 +267,17 @@ export class ChecklistPage implements OnDestroy {
           await this.vehiculos.invalidatePendientes();
           void this.router.navigate(['/transporte'], { replaceUrl: true });
           return;
+        }
+        // W3 — pre-check de recepción abierta: no dejar recibir "a ciegas" un
+        // vehículo que ya figura recibido (mío → ir a devolución; de otro →
+        // bloqueo informado con el nombre). Idempotencia del RPC hace el resto.
+        if (this.tipo === 'recepcion') {
+          const abierta = await this.vehiculos.entregaAbiertaDe(this.vehiculoId);
+          if (abierta) {
+            this.bloqueoRecepcion.set({ mia: abierta.es_mia, conductor: abierta.conductor });
+            this.loading.set(false);
+            return;
+          }
         }
       }
       const v = await this.vehiculos.getVehiculo(this.vehiculoId);
@@ -468,6 +481,11 @@ export class ChecklistPage implements OnDestroy {
 
   finish(): void {
     void this.router.navigate(['/transporte'], { replaceUrl: true });
+  }
+
+  /** W3 — desde el bloqueo de "ya recibido por mí": ir a devolver ese vehículo. */
+  irADevolucion(): void {
+    void this.router.navigate(['/transporte/devolver', this.vehiculoId], { replaceUrl: true });
   }
 
   get online(): boolean {

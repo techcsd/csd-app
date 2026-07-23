@@ -80,6 +80,18 @@
 
       <label class="field-label">Foto (opcional)</label>
       <app-photo-slot label="Foto del vehículo" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+
+      <!-- W7 — dato de prueba (solo admin): no cuenta como flota real -->
+      @if (esAdmin()) {
+        <div class="vform__prueba">
+          <app-toggle-switch
+            label="Dato de prueba"
+            hint="No cuenta como flota real. Solo lo ven los administradores."
+            [checked]="esPrueba()"
+            (checkedChange)="esPrueba.set($event)"
+          />
+        </div>
+      }
     }
   </div>
 

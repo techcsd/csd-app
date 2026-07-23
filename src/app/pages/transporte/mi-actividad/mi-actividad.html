@@ -116,10 +116,11 @@
         <section class="mact__docs">
           <h2 class="mact__docs-title">Multas ({{ multas().length }})</h2>
           @for (m of multas(); track m.id) {
-            <div class="mact__act-row">
+            <!-- W5 — tap abre el detalle de la multa -->
+            <button type="button" class="mact__act-row mact__act-row--link" (click)="verMulta(m.id)">
               <span class="mact__act-main">🚦 {{ m.motivo ?? 'Multa' }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
-              <span class="mact__act-sub">@if (m.monto != null) { RD$ {{ m.monto }} · }{{ m.estado === 'pagada' ? 'Pagada' : 'Pendiente' }}</span>
-            </div>
+              <span class="mact__act-sub">@if (m.monto != null) { RD$ {{ m.monto }} · }{{ m.estado === 'pagada' ? 'Pagada' : 'Pendiente' }} ›</span>
+            </button>
           }
         </section>
       }

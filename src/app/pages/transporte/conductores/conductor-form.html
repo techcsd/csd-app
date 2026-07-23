@@ -118,6 +118,18 @@
         (cleared)="docLicDorso.set(null)"
       />
 
+      <!-- W7 — dato de prueba (solo admin) -->
+      @if (esAdmin()) {
+        <div class="cform__prueba">
+          <app-toggle-switch
+            label="Dato de prueba"
+            hint="No cuenta como conductor real. Solo lo ven los administradores."
+            [checked]="esPrueba()"
+            (checkedChange)="esPrueba.set($event)"
+          />
+        </div>
+      }
+
       @if (esEdicion()) {
         <button type="button" class="btn-ghost cform__desactivar" [disabled]="submitting()" (click)="desactivar()">
           Desactivar conductor

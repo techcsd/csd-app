@@ -8,6 +8,7 @@ import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
+import { ToggleSwitch } from '../../../shared/ui/toggle-switch/toggle-switch';
 import { VEHICULO_TIPOS } from '../../../core/models/vehiculo-tipos.model';
 import { VehiculosService, VehiculoEditable } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -41,6 +42,7 @@ interface VehiculoDraft {
   numeroMatricula: string;
   numeroSeguro: string;
   aseguradora: string;
+  esPrueba: boolean;
 }
 
 /** Alta/edición de vehículo (admin; RLS vehiculos:write = is_admin). */
@@ -48,7 +50,7 @@ interface VehiculoDraft {
   selector: 'app-vehiculo-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton, DraftBanner, SelectList],
+  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton, DraftBanner, SelectList, ToggleSwitch],
   templateUrl: './vehiculo-form.html',
   styleUrl: './vehiculo-form.scss',
 })
@@ -98,7 +100,11 @@ export class VehiculoFormPage {
   numeroMatricula = signal('');
   numeroSeguro = signal('');
   aseguradora = signal('');
+  esPrueba = signal(false); // W7 — dato de prueba (solo admin)
   foto = signal<CapturedPhoto | null>(null);
+
+  /** W7 — solo un admin marca/ve el switch de "Dato de prueba". */
+  esAdmin = computed(() => this.ctx.hasRol('admin'));
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
@@ -143,6 +149,7 @@ export class VehiculoFormPage {
       numeroMatricula: this.numeroMatricula(),
       numeroSeguro: this.numeroSeguro(),
       aseguradora: this.aseguradora(),
+      esPrueba: this.esPrueba(),
     };
   }
   private clave(): string {
@@ -175,6 +182,7 @@ export class VehiculoFormPage {
         this.numeroMatricula.set(d.numeroMatricula ?? '');
         this.numeroSeguro.set(d.numeroSeguro ?? '');
         this.aseguradora.set(d.aseguradora ?? '');
+        this.esPrueba.set(d.esPrueba ?? false);
       }
       this.borradorPrevio.set(null);
     });
@@ -206,6 +214,7 @@ export class VehiculoFormPage {
         this.numeroMatricula.set(v.numeroMatricula ?? '');
         this.numeroSeguro.set(v.numeroSeguro ?? '');
         this.aseguradora.set(v.aseguradora ?? '');
+        this.esPrueba.set(v.esPrueba ?? false);
       }
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el vehículo.');
@@ -240,6 +249,7 @@ export class VehiculoFormPage {
       numeroMatricula: this.numeroMatricula() || null,
       numeroSeguro: this.numeroSeguro() || null,
       aseguradora: this.aseguradora() || null,
+      esPrueba: this.esPrueba(), // W7
     };
   }
 

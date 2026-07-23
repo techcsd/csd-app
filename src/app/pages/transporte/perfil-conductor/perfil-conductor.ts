@@ -208,6 +208,10 @@ export class PerfilConductorPage {
   multar(): void {
     void this.router.navigate(['/transporte/conductor', this.condId(), 'multa']);
   }
+  /** W5 — abrir el detalle de una multa del conductor. */
+  verMulta(id: string): void {
+    void this.router.navigate(['/transporte/mi-registro', 'multa', id]);
+  }
 
   back(): void {
     this.location.back();

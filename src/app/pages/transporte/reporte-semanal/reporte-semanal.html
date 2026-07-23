@@ -177,32 +177,39 @@
       } @else {
         <!-- V10 — cualquier conductor elige un vehículo del pool y lo reporta -->
         <p class="rsem__intro">Elige el vehículo y envía su reporte de esta semana.</p>
-        @for (v of lista(); track v.vehiculo_id) {
-          <app-vehiculo-card
-            class="rsem__card"
-            [id]="'rsem-veh-' + v.vehiculo_id"
-            [style.outline]="highlightedId() === v.vehiculo_id ? '3px solid var(--color-accent)' : null"
-            [style.outline-offset]="highlightedId() === v.vehiculo_id ? '2px' : null"
-            [style.border-radius]="highlightedId() === v.vehiculo_id ? '14px' : null"
-            [style.transition]="'outline 0.3s ease'"
-            [fotoUrl]="fotoUrls()[v.vehiculo_id] ?? null"
-            [placa]="v.placa"
-            [tipo]="v.tipo"
-            [km]="v.km"
-            [marca]="v.marca"
-            [modelo]="v.modelo"
-            [done]="v.tiene_reporte || v.enviando"
-          >
-            @if (v.enviando && !v.tiene_reporte) {
-              <span class="rsem__estado rsem__estado--enviando">⏳ Enviando…</span>
-              <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
-            } @else if (v.tiene_reporte) {
-              <span class="rsem__estado rsem__estado--ok">✓ Ya reportado</span>
-              <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
-            } @else {
-              <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">Reportar</button>
-            }
-          </app-vehiculo-card>
+        <!-- W4 — "Tus vehículos" arriba, "Resto de la flota" debajo -->
+        @for (g of grupos(); track g.titulo) {
+          @if (g.titulo) {
+            <h2 class="rsem__group">{{ g.titulo }}</h2>
+          }
+          @for (v of g.items; track v.vehiculo_id) {
+            <app-vehiculo-card
+              class="rsem__card"
+              [id]="'rsem-veh-' + v.vehiculo_id"
+              [style.outline]="highlightedId() === v.vehiculo_id ? '3px solid var(--color-accent)' : null"
+              [style.outline-offset]="highlightedId() === v.vehiculo_id ? '2px' : null"
+              [style.border-radius]="highlightedId() === v.vehiculo_id ? '14px' : null"
+              [style.transition]="'outline 0.3s ease'"
+              [fotoUrl]="fotoUrls()[v.vehiculo_id] ?? null"
+              [placa]="v.placa"
+              [tipo]="v.tipo"
+              [km]="v.km"
+              [marca]="v.marca"
+              [modelo]="v.modelo"
+              [esPrueba]="v.es_prueba"
+              [done]="v.tiene_reporte || v.enviando"
+            >
+              @if (v.enviando && !v.tiene_reporte) {
+                <span class="rsem__estado rsem__estado--enviando">⏳ Enviando…</span>
+                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+              } @else if (v.tiene_reporte) {
+                <span class="rsem__estado rsem__estado--ok">✓ Ya reportado</span>
+                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+              } @else {
+                <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">Reportar</button>
+              }
+            </app-vehiculo-card>
+          }
         }
       }
     </div>

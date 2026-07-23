@@ -138,8 +138,13 @@
   background: var(--color-surface);
   margin-bottom: 8px;
 }
-.mact__act-row--tap:active {
+.mact__act-row--tap:active,
+.mact__act-row--link:active {
   background: var(--color-surface-2, #212121);
+}
+// W5 — fila tocable (abre detalle); el <button> hereda .mact__act-row.
+.mact__act-row--link {
+  cursor: pointer;
 }
 .mact__act-main {
   font-weight: 600;

@@ -87,6 +87,8 @@ export interface VehiculoDisponible {
   km: number;
   /** U6 — path de la 1ª foto en el bucket `vehiculos` (o null). */
   foto_path?: string | null;
+  /** W7 — dato de prueba (solo visible para admins; RLS lo oculta a los demás). */
+  es_prueba?: boolean;
 }
 
 /** An active self/admin assignment from sgc.vehiculo_asignaciones. */
@@ -159,6 +161,17 @@ export interface Conduce {
   destino: string | null;
   bodega: string | null;
   items: ConduceItem[];
+}
+
+/** W3 — recepción de vehículo aún abierta (entrega_abierta_de). */
+export interface EntregaAbierta {
+  entrega_id: string;
+  conductor_usuario_id: string | null;
+  conductor: string;
+  desde: string;
+  km: number | null;
+  /** true si la recepción abierta es del usuario actual. */
+  es_mia: boolean;
 }
 
 export interface RutaHoy {

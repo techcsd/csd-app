@@ -80,6 +80,11 @@ export class EntradaPage implements OnDestroy {
   sharing = signal(false);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
+  bodegaNombre = computed(() => this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? 'el almacén');
+
+  // W8 — stock en vivo (informativo: la entrada suma al stock actual).
+  stockMap = signal<Record<string, { cantidad: number; unidad: string } | null>>({});
+  stockLoading = signal(false);
 
   grupos = computed<GrupoResumen[]>(() => {
     const nombre = new Map(this.categorias().map((c) => [c.id, c.nombre]));
@@ -166,10 +171,38 @@ export class EntradaPage implements OnDestroy {
 
   irResumen(): void {
     this.hoja.set('resumen');
+    void this.refreshStocks(); // W8
   }
 
   volverSeleccion(): void {
     this.hoja.set('seleccion');
+  }
+
+  // W8 — stock en vivo (informativo).
+  setBodega(id: string): void {
+    this.bodegaId.set(id);
+    void this.refreshStocks();
+  }
+  async refreshStocks(): Promise<void> {
+    const bodega = this.bodegaId();
+    const items = this.cart();
+    if (!bodega || !items.length || !this.network.online()) {
+      this.stockMap.set({});
+      return;
+    }
+    this.stockLoading.set(true);
+    try {
+      const entries = await Promise.all(
+        items.map(async (l) => [l.articulo_id!, await this.inventario.stockArticuloBodega(l.articulo_id!, bodega)] as const),
+      );
+      this.stockMap.set(Object.fromEntries(entries));
+    } finally {
+      this.stockLoading.set(false);
+    }
+  }
+  stockDe(articuloId: string | null | undefined): { cantidad: number; unidad: string } | null | undefined {
+    if (!articuloId) return undefined;
+    return this.stockMap()[articuloId];
   }
 
   intentarSalir(): void {

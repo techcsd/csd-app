@@ -47,16 +47,24 @@
           @if (item.estado === 'error') {
             <p class="ob-row__error">{{ mensajeError(item) }}</p>
 
+            <!-- W1 — detalle legible derivado del error crudo (si se reconoce) -->
+            @if (detalleLegible(item); as det) {
+              <p class="ob-row__detalle-legible">🔎 {{ det }}</p>
+            }
+
             @if (expandido() === item.id) {
               <p class="ob-row__detalle">{{ item.error_msg || 'Sin detalle técnico.' }}</p>
             }
 
             <div class="ob-row__actions">
-              <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
-                Reintentar
-              </button>
+              <!-- W1 — reintentar solo tiene sentido en errores transitorios -->
+              @if (!item.permanente) {
+                <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
+                  Reintentar
+                </button>
+              }
               <button type="button" class="ob-btn ob-btn--ghost" (click)="toggleDetalle(item.id)">
-                {{ expandido() === item.id ? 'Ocultar' : 'Ver detalle' }}
+                {{ expandido() === item.id ? 'Ocultar detalle técnico' : 'Ver detalle técnico' }}
               </button>
               @if (item.permanente) {
                 <button type="button" class="ob-btn ob-btn--danger" (click)="pedirDescartar(item)">

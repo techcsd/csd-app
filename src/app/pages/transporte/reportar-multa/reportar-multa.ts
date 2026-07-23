@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
+import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
+import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { CameraService, CapturedDoc } from '../../../core/services/camera.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -13,13 +15,23 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
+import { MotivoMulta } from '../../../core/models/flota-reportes.model';
+
+/** Vehículo elegido, lo mínimo para pintarlo en el botón (W5). */
+interface VehSel {
+  vehiculo_id: string;
+  placa: string;
+  marca: string;
+  modelo: string;
+}
 
 /** Estado del formulario persistido (sin el blob del documento, que va aparte). */
 interface MultaDraft {
-  motivo: string;
+  motivoSel: string;
+  motivoOtro: string;
   monto: number | null;
   estado: 'pendiente' | 'pagada';
-  vehiculoId: string | null;
+  vehiculo: VehSel | null;
   doc: { nombre: string; esImagen: boolean; ext: string } | null;
 }
 
@@ -27,15 +39,15 @@ interface MultaDraft {
  * S24 — registrar una multa de un conductor (motivo, monto opcional, documento).
  * Por outbox (registrar_multa_app). Alcanzable desde el perfil del conductor.
  *
- * U9 — autosave del formulario (recupera todo si el picker de archivo mata el
- * proceso en MIUI), preview del documento, y selector de vehículo (default: tu
- * vehículo asignado actual) para relacionar la multa al vehículo.
+ * W5 — motivo del catálogo `motivos_multa` (T9) con opción "Otro (escribir)…",
+ * selector de vehículo con el picker de tarjetas de la app (hoja inferior, tus
+ * vehículos primero) y autosave/preview del documento (fix MIUI U9).
  */
 @Component({
   selector: 'app-reportar-multa',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, BigConfirm],
+  imports: [FormsModule, OptionButton, BigConfirm, BottomSheet, VehiculoPicker],
   templateUrl: './reportar-multa.html',
   styleUrl: './reportar-multa.scss',
 })
@@ -51,12 +63,16 @@ export class ReportarMultaPage {
   private location = inject(Location);
 
   conductorId = '';
-  motivo = signal('');
+  // W5 — motivo: catálogo + "Otro (escribir)". Default = placeholder (no "Otro").
+  motivos = signal<MotivoMulta[]>([]);
+  motivoSel = signal<string>('');
+  motivoOtro = signal<string>('');
+  esOtro = computed(() => this.motivoSel() === 'Otro');
   monto = signal<number | null>(null);
   estado = signal<'pendiente' | 'pagada'>('pendiente');
   documento = signal<CapturedDoc | null>(null);
-  vehiculoId = signal<string | null>(null);
-  flota = signal<VehiculoDisponible[]>([]);
+  vehiculo = signal<VehSel | null>(null);
+  sheetAbierto = signal(false);
   submitting = signal(false);
   done = signal(false);
   borradorPrevio = signal(false); // banner "recuperamos lo que llenaste"
@@ -74,10 +90,11 @@ export class ReportarMultaPage {
     // guardamos para no pisar el borrador con el estado vacío inicial.
     effect(() => {
       const snap: MultaDraft = {
-        motivo: this.motivo(),
+        motivoSel: this.motivoSel(),
+        motivoOtro: this.motivoOtro(),
         monto: this.monto(),
         estado: this.estado(),
-        vehiculoId: this.vehiculoId(),
+        vehiculo: this.vehiculo(),
         doc: this.documento()
           ? { nombre: this.documento()!.nombre, esImagen: this.documento()!.esImagen, ext: this.documento()!.ext }
           : null,
@@ -88,20 +105,21 @@ export class ReportarMultaPage {
   }
 
   private async init(): Promise<void> {
-    // Flota para el selector + default = mi vehículo asignado actual.
-    const [flota, asignaciones, draft] = await Promise.all([
-      this.vehiculos.getFlota().catch(() => [] as VehiculoDisponible[]),
+    // Catálogo de motivos + asignaciones (default = mi vehículo) + borrador.
+    const [motivos, asignaciones, draft] = await Promise.all([
+      this.reportes.getMotivosMulta().catch(() => [] as MotivoMulta[]),
       this.vehiculos.getMisAsignaciones().catch(() => []),
       this.borrador.load<MultaDraft>(this.clave),
     ]);
-    this.flota.set(flota);
+    this.motivos.set(motivos);
 
     if (draft) {
       // Restaurar lo que el usuario llenó antes de que el proceso muriera.
-      this.motivo.set(draft.motivo ?? '');
+      this.motivoSel.set(draft.motivoSel ?? '');
+      this.motivoOtro.set(draft.motivoOtro ?? '');
       this.monto.set(draft.monto ?? null);
       this.estado.set(draft.estado ?? 'pendiente');
-      this.vehiculoId.set(draft.vehiculoId ?? null);
+      this.vehiculo.set(draft.vehiculo ?? null);
       if (draft.doc) {
         const fotos = await this.borrador.loadFotos(this.clave);
         const f = fotos.find((x) => x.slot === 'doc');
@@ -117,9 +135,36 @@ export class ReportarMultaPage {
       }
       this.borradorPrevio.set(true);
     } else if (asignaciones.length) {
-      this.vehiculoId.set(asignaciones[0].vehiculo_id);
+      const a = asignaciones[0];
+      this.vehiculo.set({ vehiculo_id: a.vehiculo_id, placa: a.placa, marca: a.marca, modelo: a.modelo });
     }
     this.hydrated = true;
+  }
+
+  // ---- Motivo ----
+  setMotivo(nombre: string): void {
+    this.motivoSel.set(nombre);
+    if (nombre !== 'Otro') this.motivoOtro.set('');
+  }
+
+  /** Texto final del motivo para el payload. */
+  private motivoFinal(): string {
+    return this.esOtro() ? this.motivoOtro().trim() : this.motivoSel().trim();
+  }
+
+  // ---- Vehículo (picker en hoja inferior) ----
+  abrirPicker(): void {
+    this.sheetAbierto.set(true);
+  }
+  cerrarPicker(): void {
+    this.sheetAbierto.set(false);
+  }
+  elegirVehiculo(v: VehiculoDisponible): void {
+    this.vehiculo.set({ vehiculo_id: v.vehiculo_id, placa: v.placa, marca: v.marca, modelo: v.modelo });
+    this.sheetAbierto.set(false);
+  }
+  quitarVehiculo(): void {
+    this.vehiculo.set(null);
   }
 
   async subirDoc(desdeArchivo: boolean): Promise<void> {
@@ -147,16 +192,17 @@ export class ReportarMultaPage {
       this.toast.error('Falta el conductor.');
       return;
     }
-    if (!this.motivo().trim()) {
-      this.toast.error('Escribe el motivo de la multa.');
+    const motivo = this.motivoFinal();
+    if (!motivo) {
+      this.toast.error(this.esOtro() ? 'Escribe el motivo de la multa.' : 'Elige un motivo.');
       return;
     }
     this.submitting.set(true);
     try {
       await this.reportes.enqueueMulta({
         conductorId: this.conductorId,
-        vehiculoId: this.vehiculoId(),
-        motivo: this.motivo().trim(),
+        vehiculoId: this.vehiculo()?.vehiculo_id ?? null,
+        motivo,
         monto: this.monto(),
         estado: this.estado(),
         documento: this.documento() ? { blob: this.documento()!.blob, ext: this.documento()!.ext } : null,

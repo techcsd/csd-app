@@ -157,6 +157,7 @@ export class ConductoresService {
     usuarioId: string | null;
     nota?: string | null;
     tags?: string[] | null;
+    esPrueba?: boolean;
   }): Promise<string> {
     const { data, error } = await this.supabase.client
       .from('conductores')
@@ -170,6 +171,7 @@ export class ConductoresService {
         usuario_id: input.usuarioId || null,
         nota: input.nota?.trim() || null,
         tags: input.tags && input.tags.length ? input.tags : null,
+        es_prueba: input.esPrueba ?? false, // W7
         activo: true,
       })
       .select('id')
@@ -185,7 +187,7 @@ export class ConductoresService {
     const { data, error } = await this.supabase.client
       .from('conductores')
       .select(
-        'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id, nota, tags',
+        'id, nombre, cedula, licencia_tipo, licencia_numero, licencia_vencimiento, tipo_vehiculo_autorizado, vehiculo_id, usuario_id, nota, tags, es_prueba',
       )
       .eq('id', id)
       .maybeSingle();
@@ -206,6 +208,7 @@ export class ConductoresService {
       usuarioId: string | null;
       nota?: string | null;
       tags?: string[] | null;
+      esPrueba?: boolean;
     },
   ): Promise<void> {
     const { error } = await this.supabase.client
@@ -220,6 +223,7 @@ export class ConductoresService {
         usuario_id: input.usuarioId || null,
         nota: input.nota?.trim() || null,
         tags: input.tags && input.tags.length ? input.tags : null,
+        es_prueba: input.esPrueba ?? false, // W7
       })
       .eq('id', id);
     if (error) throw new Error(error.message);

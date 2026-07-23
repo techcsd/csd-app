@@ -9,6 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
 
 /**
  * A guided photo slot. Shows the example/silhouette of the required shot;
@@ -37,22 +38,43 @@ export class PhotoSlot implements OnDestroy {
   hint = input<string>('📷');
   /** P10 — foto ya capturada en el estado del padre, para rehidratar la miniatura. */
   foto = input<CapturedPhoto | null>(null);
+  /** W6 — ofrecer también "Galería" además de la cámara (activo por defecto). */
+  gallery = input<boolean>(true);
 
   captured = output<CapturedPhoto>();
   cleared = output<void>();
 
   private camera = inject(CameraService);
+  private autosave = inject(AutosaveService);
   preview = signal<string | null>(null);
   busy = signal(false);
 
   /** URL a mostrar: la recién capturada localmente o la rehidratada del padre. */
   displayUrl = computed(() => this.preview() ?? this.foto()?.previewUrl ?? null);
 
-  async capture(): Promise<void> {
+  /** W6 — tomar con la cámara. */
+  capture(): Promise<void> {
+    return this.run(() => this.camera.takePhoto());
+  }
+
+  /**
+   * W6 — elegir UNA foto de la galería. El picker nativo/archivo saca la app a
+   * primer plano y en MIUI puede recrear la Activity: hacemos FLUSH del autosave
+   * ANTES de abrirlo (fix U9) para no perder lo capturado si el proceso muere.
+   */
+  pickFromGallery(): Promise<void> {
+    return this.run(async () => {
+      await this.autosave.flushAll();
+      const [photo] = await this.camera.pickFromGallery(1);
+      return photo ?? null;
+    });
+  }
+
+  private async run(source: () => Promise<CapturedPhoto | null>): Promise<void> {
     if (this.busy()) return;
     this.busy.set(true);
     try {
-      const photo = await this.camera.takePhoto();
+      const photo = await source();
       if (photo) {
         // Solo revocar la anterior si era local (uso legacy sin [foto]).
         if (!this.foto()) {

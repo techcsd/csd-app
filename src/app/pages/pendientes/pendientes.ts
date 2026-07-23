@@ -96,7 +96,8 @@ export class PendientesPage {
   }
 
   hayReintentables(): boolean {
-    return this.items().some((i) => i.estado === 'error');
+    // W1 — solo los errores transitorios (no permanentes) se pueden reintentar.
+    return this.items().some((i) => i.estado === 'error' && !i.permanente);
   }
 
   /** S30 — un pending/syncing lleva demasiado tiempo atascado (>24h). */
@@ -142,6 +143,52 @@ export class PendientesPage {
       default:
         return item.error_msg || 'No se pudo enviar. Intenta de nuevo o descártalo.';
     }
+  }
+
+  /**
+   * W1 — detalle LEGIBLE derivado del `error_msg` crudo: mapea nombres de
+   * constraint/tabla/RPC conocidos a una frase entendible ("El vehículo ya no
+   * existe", "Este reporte ya fue registrado"). Devuelve '' si no reconoce nada
+   * (entonces solo se muestra el mensaje genérico por familia). El crudo sigue
+   * disponible en "Ver detalle técnico".
+   */
+  detalleLegible(item: OutboxItem): string {
+    const raw = (item.error_msg ?? '').toLowerCase();
+    if (!raw) return '';
+
+    // Duplicado / ya registrado (idempotencia o unique constraint).
+    if (
+      raw.includes('duplicate key') ||
+      raw.includes('ya fue registrad') ||
+      raw.includes('ya existe un') ||
+      raw.includes('already exists') ||
+      (raw.includes('unique') && raw.includes('constraint'))
+    ) {
+      return 'Este registro ya había sido enviado antes. Puedes descartarlo.';
+    }
+
+    // Referencia rota (foreign key) → según la entidad mencionada.
+    const rotaFk = raw.includes('foreign key') || raw.includes('fkey') || raw.includes('no encontrad');
+    if (rotaFk || raw.includes('violates')) {
+      if (raw.includes('vehiculo')) return 'El vehículo seleccionado ya no existe en el sistema.';
+      if (raw.includes('conductor')) return 'El conductor seleccionado ya no existe en el sistema.';
+      if (raw.includes('articulo')) return 'El artículo seleccionado ya no existe en el sistema.';
+      if (raw.includes('bodega') || raw.includes('almacen')) return 'La bodega seleccionada ya no existe.';
+      if (raw.includes('obra') || raw.includes('proyecto')) return 'La obra/proyecto seleccionado ya no existe.';
+      if (raw.includes('material')) return 'El material seleccionado ya no existe.';
+      if (rotaFk) return 'Hace referencia a algo que ya no existe en el sistema.';
+    }
+
+    // Permiso / RLS.
+    if (raw.includes('row-level security') || raw.includes('permission denied') || raw.includes('not authorized')) {
+      return 'No tienes permiso para enviar esto. Contacta a un administrador.';
+    }
+
+    // Existencias insuficientes (salida de inventario, carrera).
+    if (raw.includes('existencia') || raw.includes('stock') || raw.includes('cantidad disponible')) {
+      return 'No hay suficiente existencia para completar esta salida.';
+    }
+    return '';
   }
 
   esperandoTexto(item: OutboxItem): string {

@@ -51,6 +51,8 @@ interface VehSemanal {
   tiene_reporte: boolean;
   /** U8 — hay un reporte semanal de esta semana aún en la cola (sin confirmar). */
   enviando: boolean;
+  /** W7 — dato de prueba (solo visible a admins). */
+  es_prueba: boolean;
 }
 
 /**
@@ -166,12 +168,29 @@ export class ReporteSemanalPage extends GuardedWizard {
         foto_path: v.foto_path ?? null,
         tiene_reporte: status.get(v.vehiculo_id)?.tiene_reporte ?? false,
         enviando,
+        es_prueba: v.es_prueba ?? false,
       };
     });
   });
 
   // Un vehículo "enviando" ya no cuenta como pendiente (está resuelto en la cola).
   pendientes = computed(() => this.lista().filter((v) => !v.tiene_reporte && !v.enviando));
+
+  /** W4 — ids de vehículos asignados a mí (asignaciones + recepciones en cola). */
+  misIds = signal<Set<string>>(new Set());
+
+  /** W4 — listado en grupos: "Tus vehículos" arriba, "Resto de la flota" debajo. */
+  grupos = computed<{ titulo: string; items: VehSemanal[] }[]>(() => {
+    const mine = this.misIds();
+    const lista = this.lista();
+    const mios = lista.filter((v) => mine.has(v.vehiculo_id));
+    const resto = lista.filter((v) => !mine.has(v.vehiculo_id));
+    const out: { titulo: string; items: VehSemanal[] }[] = [];
+    if (mios.length) out.push({ titulo: 'Tus vehículos', items: mios });
+    // Si no hay "míos" no ponemos encabezado al resto (lista simple, como antes).
+    if (resto.length) out.push({ titulo: mios.length ? 'Resto de la flota' : '', items: resto });
+    return out;
+  });
 
   fotosCompletas = computed(() => this.fotosReq.every((f) => !!this.fotos()[f.slot]));
   fotosFaltan = computed(() => this.fotosReq.filter((f) => !this.fotos()[f.slot]).length);
@@ -246,16 +265,20 @@ export class ReporteSemanalPage extends GuardedWizard {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [semana, plantilla, cond, pool] = await Promise.all([
+      const [semana, plantilla, cond, pool, asignaciones, recepcionesEnCola] = await Promise.all([
         this.reportes.getSemana(),
         this.reportes.getPlantilla(),
         this.conductores.getMiConductor(),
         this.vehiculos.getVehiculosDisponibles(),
+        this.vehiculos.getMisAsignaciones().catch(() => []),
+        this.vehiculos.entregasRecepcionPendientes().catch(() => new Set<string>()),
       ]);
       this.semana.set(semana);
       this.plantilla.set(plantilla);
       this.conductorId = cond?.id ?? null;
       this.pool.set(pool);
+      // W4 — "Tus vehículos" = asignados a mí + recepciones aún en la cola (U12).
+      this.misIds.set(new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola]));
       void this.loadFotos(pool.map((v) => v.vehiculo_id));
     } finally {
       this.loading.set(false);

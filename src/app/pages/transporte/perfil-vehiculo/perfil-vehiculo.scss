@@ -193,6 +193,16 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
 }
+// W5 — multa tocable (abre el detalle).
+.pveh__multa--link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.pveh__multa--link:active {
+  background: var(--color-surface-2, #212121);
+}
 .pveh__multa-top {
   display: flex;
   justify-content: space-between;

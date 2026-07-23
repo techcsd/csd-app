@@ -1,13 +1,47 @@
 <div class="screen mrd">
   <header class="mrd__header">
     <button type="button" class="mrd__back" (click)="back()" aria-label="Atrás">←</button>
-    <span class="mrd__icon">{{ esChecklist() ? '📋' : '⛽' }}</span>
+    <span class="mrd__icon">{{ icono() }}</span>
     <h1 class="mrd__title">{{ titulo() }}</h1>
   </header>
 
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="5" />
+    } @else if (esMulta()) {
+      @if (multa(); as m) {
+        <!-- W5 — detalle de la multa -->
+        <div class="mrd__head">
+          <div class="mrd__head-top">
+            <span class="mrd__placa">{{ m.motivo ?? 'Multa' }}</span>
+            <span class="mrd__badge mrd__badge--{{ m.estado === 'pagada' ? 'ok' : 'warn' }}">{{ estadoMultaLabel(m.estado) }}</span>
+          </div>
+          @if (m.vehiculo?.placa) {
+            <span class="mrd__sub">{{ m.vehiculo?.placa }} · {{ m.vehiculo?.marca }} {{ m.vehiculo?.modelo }}</span>
+          }
+        </div>
+
+        <ul class="resumen">
+          <li><span>Motivo</span><b>{{ m.motivo ?? '—' }}</b></li>
+          <li><span>Monto</span><b>{{ m.monto != null ? 'RD$ ' + (m.monto | number: '1.2-2') : '—' }}</b></li>
+          <li><span>Estado</span><b>{{ estadoMultaLabel(m.estado) }}</b></li>
+          <li><span>Fecha</span><b>{{ m.fecha ? fmtFecha(m.fecha) : '—' }}</b></li>
+          <li><span>Vehículo</span><b>{{ m.vehiculo?.placa ?? 'Sin vehículo' }}</b></li>
+        </ul>
+
+        @if (m.documentoUrl) {
+          <h2 class="mrd__section">Documento</h2>
+          <a class="mrd__firma" [href]="m.documentoUrl" target="_blank" rel="noopener">
+            @if (m.esImagen) {
+              <app-img [src]="m.documentoUrl" alt="Documento de la multa" ratio="3 / 2" fallback="📄" />
+            } @else {
+              <span class="mrd__pdf">📄 Ver documento (PDF)</span>
+            }
+          </a>
+        }
+      } @else {
+        <app-empty-state icon="🔍" title="No se encontró la multa" message="Puede que ya no esté disponible o no tengas acceso." />
+      }
     } @else if (esChecklist()) {
       @if (checklist(); as c) {
         <!-- Cabecera del checklist -->

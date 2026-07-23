@@ -7,6 +7,7 @@ import {
   AsignacionResultado,
   CombustibleNivel,
   DanoCaptura,
+  EntregaAbierta,
   EntregaTipo,
   FOTOS_REQUERIDAS,
   MiAsignacion,
@@ -43,6 +44,8 @@ export interface VehiculoEditable {
   numeroMatricula: string | null;
   numeroSeguro: string | null;
   aseguradora: string | null;
+  // W7 — dato de prueba (solo lo marca un admin; RLS lo oculta a no-admins).
+  esPrueba: boolean;
 }
 
 /** A flota alert (avisos_flota) for the app's avisos screen. */
@@ -215,6 +218,25 @@ export class VehiculosService {
     await this.catalog.invalidate(CATALOG_PENDIENTES);
   }
 
+  /**
+   * W3 — recepción de entrega ABIERTA del vehículo (si la hay). Devuelve el
+   * conductor que lo tiene y `es_mia` (si es del usuario actual), o null si no
+   * hay ninguna abierta / offline / error. Se usa como pre-check al recibir para
+   * no dejar un bloqueante ciego (el RPC crear_entrega ya es idempotente).
+   */
+  async entregaAbiertaDe(vehiculoId: string): Promise<EntregaAbierta | null> {
+    if (!vehiculoId) return null;
+    try {
+      const { data, error } = await this.supabase.client.rpc('entrega_abierta_de', {
+        p_vehiculo_id: vehiculoId,
+      });
+      if (error) return null;
+      return (data as EntregaAbierta | null) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   /** Vehicles to receive / already in charge, cached for offline. */
   async misPendientes(): Promise<PendientesTransporte> {
     const data = await this.catalog.refresh<PendientesTransporte>(CATALOG_PENDIENTES, async () => {
@@ -245,7 +267,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<VehiculoDisponible[]>('flota_vehiculos', async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos')
+        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .order('placa', { ascending: true });
       if (error) throw new Error(error.message);
@@ -257,6 +279,7 @@ export class VehiculosService {
         tipo: (v['tipo'] as string) ?? '',
         km: (v['kilometraje'] as number) ?? 0,
         foto_path: ((v['fotos'] as string[] | null) ?? [])[0] ?? null,
+        es_prueba: (v['es_prueba'] as boolean) ?? false,
       }));
     });
     return data ?? [];
@@ -267,7 +290,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos')
+        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .not('estado', 'in', '(baja,no_disponible)')
         .order('placa', { ascending: true });
@@ -280,6 +303,7 @@ export class VehiculosService {
         tipo: (v['tipo'] as string) ?? '',
         km: (v['kilometraje'] as number) ?? 0,
         foto_path: ((v['fotos'] as string[] | null) ?? [])[0] ?? null,
+        es_prueba: (v['es_prueba'] as boolean) ?? false,
       }));
     });
     return data ?? [];
@@ -382,7 +406,7 @@ export class VehiculosService {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
       .select(
-        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal, notas, fotos, vin, numero_matricula, numero_seguro, aseguradora',
+        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal, notas, fotos, vin, numero_matricula, numero_seguro, aseguradora, es_prueba',
       )
       .eq('id', id)
       .single();
@@ -408,6 +432,7 @@ export class VehiculosService {
       numeroMatricula: (v['numero_matricula'] as string) ?? null,
       numeroSeguro: (v['numero_seguro'] as string) ?? null,
       aseguradora: (v['aseguradora'] as string) ?? null,
+      esPrueba: (v['es_prueba'] as boolean) ?? false,
     };
   }
 
@@ -430,6 +455,7 @@ export class VehiculosService {
       numero_matricula: input.numeroMatricula?.trim() || null,
       numero_seguro: input.numeroSeguro?.trim() || null,
       aseguradora: input.aseguradora?.trim() || null,
+      es_prueba: input.esPrueba, // W7
     };
   }
 

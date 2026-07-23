@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
+import { AppLauncher } from '@capacitor/app-launcher';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DecimalPipe, Location } from '@angular/common';
@@ -80,13 +82,37 @@ export class ConducesPage {
     }
   }
 
-  /** Open the phone's maps app with directions to the route's destination. */
-  comoLlegar(r: RutaHoy): void {
+  /**
+   * W2 — abre la NAVEGACIÓN de Google Maps hacia el destino de la ruta.
+   * En nativo intenta el intent `google.navigation:` (abre la app de Maps con la
+   * ruta trazada); si Maps no está instalado o el intent falla, cae a la URL
+   * https. En web/PWA siempre usa la URL https.
+   */
+  async comoLlegar(r: RutaHoy): Promise<void> {
     if (!r.destino) return;
-    window.open(
-      'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(r.destino),
-      '_system',
-    );
+    const httpsUrl =
+      'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(r.destino);
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        // Sin coords disponibles en la ruta → navegación por texto del destino.
+        const navUrl = 'google.navigation:q=' + encodeURIComponent(r.destino);
+        const { value } = await AppLauncher.canOpenUrl({ url: navUrl });
+        if (value) {
+          await AppLauncher.openUrl({ url: navUrl });
+          return;
+        }
+      } catch {
+        /* cae al fallback https */
+      }
+      try {
+        await AppLauncher.openUrl({ url: httpsUrl });
+        return;
+      } catch {
+        /* último recurso: window.open */
+      }
+    }
+    window.open(httpsUrl, '_system');
   }
 
   back(): void {

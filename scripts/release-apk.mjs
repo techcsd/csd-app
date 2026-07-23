@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.26.0';
+const VERSION = '1.27.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,16 +62,18 @@ const MIN_VERSION = '1.24.0';
 const RELEASED_AT = '2026-07-23';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Login de conductor con tiempo límite, autosave en inventario y más pulido';
+const TITULO = 'Navegación a Maps, multas con catálogo, fotos desde galería y stock en salidas';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'El inicio de sesión del conductor ya no se queda cargando para siempre: si la conexión tarda demasiado (12s) avisa y puedes reintentar.' },
-  { t: 'mejora', d: 'Entrada, Salida y Recepción de inventario ahora guardan borrador automáticamente: si el teléfono cierra la app (p. ej. al abrir la cámara), no pierdes lo capturado.' },
-  { t: 'nuevo', d: 'Al crear o editar un vehículo puedes definir su rendimiento esperado (km/gal), que se usa como referencia para las alertas de consumo.' },
-  { t: 'mejora', d: 'Los avisos que llevan al reporte semanal ahora resaltan el vehículo exacto; y hay más badges de pendientes por módulo.' },
-  { t: 'arreglo', d: 'Al cambiar de paso en el reporte de vehículo/accidente, la pantalla vuelve arriba (ya no queda a media altura).' },
-  { t: 'mejora', d: 'Se homologó el texto de mantenimiento vencido a "pasado con X km" en todas las pantallas.' },
+  { t: 'nuevo', d: 'En "Cómo llegar" de tus rutas ahora se abre Google Maps con la navegación directa al destino.' },
+  { t: 'nuevo', d: 'Registrar multa: eliges el motivo de una lista (o "Otro" para escribirlo), seleccionas el vehículo con tarjetas y foto, y puedes abrir el detalle de cualquier multa desde tu actividad.' },
+  { t: 'nuevo', d: 'En los reportes ahora puedes adjuntar fotos desde la Galería, no solo con la cámara.' },
+  { t: 'mejora', d: 'En reporte semanal, pre-uso y combustible tus vehículos asignados aparecen primero ("Tus vehículos").' },
+  { t: 'mejora', d: 'Salida de inventario muestra cuánto hay en el almacén, no te deja sacar más de lo disponible y puedes indicar hacia qué obra va (con recepción en su almacén).' },
+  { t: 'mejora', d: 'Al recibir un vehículo, si ya lo tienes o lo tiene otra persona, te avisamos claro en vez de dejarte llenar todo para fallar al final.' },
+  { t: 'mejora', d: 'Pendientes de envío: mensajes de error más entendibles y opción de descartar lo que no se puede reenviar.' },
+  { t: 'nuevo', d: 'Los administradores pueden marcar vehículos y conductores como "Dato de prueba" (con distintivo PRUEBA) sin afectar la flota real.' },
 ];
 
 const TIPO_POR_COMMIT = {

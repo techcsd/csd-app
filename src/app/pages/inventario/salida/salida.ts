@@ -27,7 +27,11 @@ interface SalidaDraft {
   bodegaId: string;
   notas: string;
   cart: CartLinea[];
+  destinoId: string;
 }
+
+/** W8 — stock en vivo por artículo. null = no verificado (offline/error). */
+type StockInfo = { cantidad: number; unidad: string } | null;
 
 /** Salida de material por el patrón de HOJAS: selección → resumen → éxito. */
 @Component({
@@ -64,8 +68,19 @@ export class SalidaPage implements OnDestroy {
   submitting = signal(false);
   confirmSalir = signal(false);
   sharing = signal(false);
+  // W8 — destino (obra) opcional: "¿Hacia dónde va?".
+  obras = signal<{ id: string; nombre: string }[]>([]);
+  destinoId = signal('');
+  // W8 — stock en vivo por artículo (mapa articulo_id → info) + estado de carga.
+  stockMap = signal<Record<string, StockInfo>>({});
+  stockLoading = signal(false);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
+  obraOptions = computed(() => [
+    { id: '', label: 'Consumo en obra (sin destino)' },
+    ...this.obras().map((o) => ({ id: o.id, label: o.nombre })),
+  ]);
+  bodegaNombre = computed(() => this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? 'el almacén');
 
   grupos = computed<GrupoResumen[]>(() => {
     const nombre = new Map(this.categorias().map((c) => [c.id, c.nombre]));
@@ -98,6 +113,7 @@ export class SalidaPage implements OnDestroy {
         bodegaId: this.bodegaId(),
         notas: this.notas(),
         cart: this.cart(),
+        destinoId: this.destinoId(),
       };
       if (!this.hydrated || this.submitting() || this.hoja() === 'exito') return;
       if (!snap.cart.length) return;
@@ -116,14 +132,16 @@ export class SalidaPage implements OnDestroy {
   private async init(): Promise<void> {
     this.loadingCat.set(true);
     try {
-      const [b, a, cat] = await Promise.all([
+      const [b, a, cat, obras] = await Promise.all([
         this.inventario.getBodegas(),
         this.inventario.getArticulos(),
         this.inventario.getCategorias(),
+        this.inventario.getObrasConBodega().catch(() => []),
       ]);
       this.bodegas.set(b);
       this.articulos.set(a);
       this.categorias.set(cat);
+      this.obras.set(obras.map((o) => ({ id: o.id, nombre: o.nombre })));
       if (b.length === 1) this.bodegaId.set(b[0].id);
     } finally {
       this.loadingCat.set(false);
@@ -137,13 +155,53 @@ export class SalidaPage implements OnDestroy {
       if (d.bodegaId) this.bodegaId.set(d.bodegaId);
       this.notas.set(d.notas ?? '');
       this.cart.set(d.cart ?? []);
+      this.destinoId.set(d.destinoId ?? '');
     }
     this.hydrated = true;
   }
 
+  // ── W8 — stock en vivo ──
+  /** Refresca el stock de cada artículo del carrito en la bodega elegida. */
+  async refreshStocks(): Promise<void> {
+    const bodega = this.bodegaId();
+    const items = this.cart();
+    if (!bodega || !items.length || !this.network.online()) {
+      this.stockMap.set({}); // offline / sin bodega → "sin verificar"
+      return;
+    }
+    this.stockLoading.set(true);
+    try {
+      const entries = await Promise.all(
+        items.map(async (l) => [l.articulo_id!, await this.inventario.stockArticuloBodega(l.articulo_id!, bodega)] as const),
+      );
+      this.stockMap.set(Object.fromEntries(entries));
+    } finally {
+      this.stockLoading.set(false);
+    }
+  }
+
+  /** Info de stock de una línea (undefined si aún no se consultó). */
+  stockDe(articuloId: string | null | undefined): StockInfo | undefined {
+    if (!articuloId) return undefined;
+    return this.stockMap()[articuloId];
+  }
+  /** true si la cantidad pedida supera el stock verificado. */
+  excede(l: CartLinea): boolean {
+    const s = this.stockDe(l.articulo_id);
+    return !!s && l.cantidad > s.cantidad;
+  }
+  /** Ajusta la línea al stock disponible (cap sugerido). */
+  ajustarAlStock(l: CartLinea): void {
+    const s = this.stockDe(l.articulo_id);
+    if (s) this.setCantidad(l.articulo_id!, s.cantidad);
+  }
+  /** ¿Hay alguna línea que exceda el stock verificado? */
+  hayExceso = computed(() => this.cart().some((l) => this.excede(l)));
+
   // ── Navegación entre hojas ──
   irResumen(): void {
     this.hoja.set('resumen');
+    void this.refreshStocks(); // W8 — cargar stock al revisar
   }
 
   volverSeleccion(): void {
@@ -196,6 +254,12 @@ export class SalidaPage implements OnDestroy {
   }
 
   // ── Confirmar ──
+  /** W8 — al cambiar de almacén en el resumen, re-consultar el stock. */
+  setBodega(id: string): void {
+    this.bodegaId.set(id);
+    void this.refreshStocks();
+  }
+
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
@@ -209,9 +273,22 @@ export class SalidaPage implements OnDestroy {
     }
     this.submitting.set(true);
     try {
+      // W8 — validación previa al éxito (online): confirmar existencias antes de
+      // encolar. Si el server rechaza igual (carrera), el pendiente mostrará el
+      // error estructurado (FASE 1). Offline → no bloquear (se valida al drenar).
+      if (this.network.online()) {
+        await this.refreshStocks();
+        const excedido = this.cart().find((l) => this.excede(l));
+        if (excedido) {
+          const s = this.stockDe(excedido.articulo_id);
+          this.toast.error(`No hay suficiente "${excedido.nombre}": solo hay ${s?.cantidad ?? 0} ${s?.unidad ?? ''}.`);
+          this.submitting.set(false);
+          return;
+        }
+      }
       await this.inventario.enqueueSalida({
         bodegaId: this.bodegaId(),
-        proyectoId: null,
+        proyectoId: this.destinoId() || null, // W8 — destino (obra) si se eligió
         motivo: this.notas().trim() || 'Consumo en obra',
         items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
         foto: this.foto()?.blob ?? null,
@@ -259,6 +336,8 @@ export class SalidaPage implements OnDestroy {
     this.cart.set([]);
     this.notas.set('');
     this.foto.set(null);
+    this.destinoId.set('');
+    this.stockMap.set({});
     this.hoja.set('seleccion');
   }
 

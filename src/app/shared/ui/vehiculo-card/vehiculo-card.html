@@ -3,7 +3,10 @@
     <app-img [src]="fotoUrl()" [alt]="'Foto de ' + placa()" fallback="🚙" />
   </div>
   <div class="vcard__info">
-    <span class="vcard__placa">{{ placa() }}</span>
+    <span class="vcard__placa">
+      {{ placa() }}
+      @if (esPrueba()) { <span class="vcard__prueba">PRUEBA</span> }
+    </span>
     <span class="vcard__meta">{{ tipoLabel() || 'Vehículo' }} · {{ km() ?? 0 | number: '1.0-0' }} km</span>
     @if (marca() || modelo()) {
       <span class="vcard__sub">{{ marca() }} {{ modelo() }}</span>

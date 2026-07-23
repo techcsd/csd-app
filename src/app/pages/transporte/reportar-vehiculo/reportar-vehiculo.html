@@ -16,6 +16,9 @@
     <app-step-bar [current]="step()" [total]="total()" />
 
     <div class="screen__body">
+      @if (refInvalida()) {
+        <div class="repv__recovery repv__recovery--warn">⚠️ Este vehículo ya no está disponible en el sistema. No podrás enviar el reporte.</div>
+      }
       @if (borradorPrevio()) {
         <div class="repv__recovery">↩️ Recuperamos lo que habías llenado.</div>
       }

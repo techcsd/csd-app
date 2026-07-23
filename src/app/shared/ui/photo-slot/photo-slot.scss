@@ -26,10 +26,34 @@
   font-weight: 700;
 }
 
+// W6 — fila de acciones (Cámara / Galería) del slot vacío.
+.photo-slot__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
 .photo-slot__cta {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-primary);
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+}
+
+.photo-slot__cta--primary {
+  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.photo-slot__cta:disabled {
+  opacity: 0.5;
 }
 
 .photo-slot--done {

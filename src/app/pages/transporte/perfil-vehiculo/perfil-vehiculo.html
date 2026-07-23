@@ -159,7 +159,8 @@
           <p class="pveh__docs-hint">Sin multas registradas.</p>
         } @else {
           @for (mu of multas(); track mu.id) {
-            <div class="pveh__multa">
+            <!-- W5 — tap abre el detalle de la multa -->
+            <button type="button" class="pveh__multa pveh__multa--link" (click)="verMulta(mu.id)">
               <div class="pveh__multa-top">
                 <span class="pveh__multa-motivo">{{ mu.motivo || 'Multa' }}</span>
                 <span class="pveh__multa-estado" [class.pveh__multa-estado--pag]="mu.estado === 'pagada'">
@@ -168,9 +169,9 @@
               </div>
               <div class="pveh__multa-sub">
                 @if (mu.monto != null) { <b>RD$ {{ mu.monto | number: '1.2-2' }}</b> · }
-                {{ mu.fecha }}
+                {{ mu.fecha }} ›
               </div>
-            </div>
+            </button>
           }
         }
       </section>

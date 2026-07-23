@@ -93,6 +93,8 @@ export class ReportarVehiculoPage implements OnDestroy {
   done = signal(false);
   confirmSalir = signal(false);
   borradorPrevio = signal(false);
+  /** W1 — pre-check S29: el vehículo referenciado ya no existe/está inactivo. */
+  refInvalida = signal(false);
   private hydrated = false;
 
   private get clave(): string {
@@ -178,6 +180,14 @@ export class ReportarVehiculoPage implements OnDestroy {
   private async load(): Promise<void> {
     const v = await this.vehiculos.getVehiculo(this.vehiculoId);
     if (v) this.placa.set(v.placa);
+    // W1 — pre-check online (patrón S29 estaActivo): si el vehículo ya no existe
+    // o está inactivo, avisamos antes de que el usuario llene todo el reporte.
+    // null (offline/error) → NO bloquear el trabajo de campo.
+    const activo = await this.vehiculos.estaActivo(this.vehiculoId);
+    if (activo === false) {
+      this.refInvalida.set(true);
+      this.toast.error('Este vehículo ya no está disponible en el sistema.');
+    }
   }
 
   private async captureGps(): Promise<void> {
@@ -250,6 +260,10 @@ export class ReportarVehiculoPage implements OnDestroy {
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
+    if (this.refInvalida()) {
+      this.toast.error('Este vehículo ya no está disponible. No se puede reportar.');
+      return;
+    }
     this.submitting.set(true);
     try {
       if (this.esAccidente()) {

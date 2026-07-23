@@ -54,3 +54,17 @@
   align-items: flex-end;
   gap: 6px;
 }
+
+// W7 — badge "PRUEBA" (solo lo ven los admins; RLS filtra a los demás).
+.vcard__prueba {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--Hub, #ffb300);
+  color: #121212;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}

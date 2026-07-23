@@ -18,6 +18,8 @@ export interface Conductor {
   nota: string | null;
   /** C3 — etiquetas (Chofer, Encargado de Logística, Chofer Telehandler…). */
   tags: string[] | null;
+  /** W7 — dato de prueba (solo visible a admins; RLS lo oculta a los demás). */
+  es_prueba?: boolean;
 }
 
 /** C3 — sugerencias de tags para el chip-input (texto libre permitido). */

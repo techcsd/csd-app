@@ -1,0 +1,16 @@
+@if (open()) {
+  <div class="sheet__overlay" (click)="cerrar()">
+    <div class="sheet__panel" (click)="$event.stopPropagation()">
+      <header class="sheet__header">
+        <span class="sheet__handle" aria-hidden="true"></span>
+        @if (titulo()) {
+          <h2 class="sheet__title">{{ titulo() }}</h2>
+        }
+        <button type="button" class="sheet__close" (click)="cerrar()" aria-label="Cerrar">✕</button>
+      </header>
+      <div class="sheet__body">
+        <ng-content />
+      </div>
+    </div>
+  </div>
+}

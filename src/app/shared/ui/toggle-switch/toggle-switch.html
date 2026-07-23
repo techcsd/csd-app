@@ -1,0 +1,14 @@
+<button
+  type="button"
+  class="tsw"
+  role="switch"
+  [attr.aria-checked]="checked()"
+  [class.tsw--on]="checked()"
+  (click)="toggle()"
+>
+  <span class="tsw__text">
+    @if (label()) { <span class="tsw__label">{{ label() }}</span> }
+    @if (hint()) { <span class="tsw__hint">{{ hint() }}</span> }
+  </span>
+  <span class="tsw__track"><span class="tsw__thumb"></span></span>
+</button>

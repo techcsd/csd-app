@@ -192,6 +192,30 @@ export class InventarioService {
     });
   }
 
+  /**
+   * W8 — stock EN VIVO de un artículo en una bodega (RPC stock_articulo_bodega).
+   * Devuelve { cantidad, unidad } o null si no se pudo consultar (offline/error)
+   * → la UI muestra "stock sin verificar" y NO bloquea el trabajo de campo.
+   */
+  async stockArticuloBodega(
+    articuloId: string,
+    bodegaId: string,
+  ): Promise<{ cantidad: number; unidad: string } | null> {
+    if (!articuloId || !bodegaId) return null;
+    try {
+      const { data, error } = await this.supabase.client.rpc('stock_articulo_bodega', {
+        p_articulo_id: articuloId,
+        p_bodega_id: bodegaId,
+      });
+      if (error) return null;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return { cantidad: 0, unidad: '' };
+      return { cantidad: Number((row as { cantidad: number }).cantidad ?? 0), unidad: (row as { unidad: string }).unidad ?? '' };
+    } catch {
+      return null;
+    }
+  }
+
   async getExistencias(bodegaId: string): Promise<Existencia[]> {
     const key = `existencias_${bodegaId}`;
     const data = await this.catalog.refresh<Existencia[]>(key, async () => {

@@ -8,6 +8,31 @@
     buttonLabel="Listo"
     (dismissed)="finish()"
   />
+} @else if (bloqueoRecepcion(); as b) {
+  <!-- W3 — recepción abierta: no dejar recibir a ciegas -->
+  <div class="screen checklist">
+    <app-wizard-exit [title]="titulo()" (exit)="finish()" />
+    <div class="screen__body">
+      <div class="checklist__bloqueo">
+        <span class="checklist__bloqueo-icon">{{ b.mia ? '✅' : '🚫' }}</span>
+        @if (b.mia) {
+          <h1 class="checklist__bloqueo-title">Ya tienes este vehículo</h1>
+          <p class="checklist__bloqueo-text">
+            {{ placa() || 'Este vehículo' }} ya figura recibido a tu nombre. No hace falta recibirlo de nuevo.
+          </p>
+          <button type="button" class="btn-cta" (click)="irADevolucion()">Ir a devolución</button>
+          <button type="button" class="btn-ghost" (click)="finish()">Volver</button>
+        } @else {
+          <h1 class="checklist__bloqueo-title">Vehículo entregado a otra persona</h1>
+          <p class="checklist__bloqueo-text">
+            {{ placa() || 'Este vehículo' }} figura entregado a <b>{{ b.conductor }}</b>. No puedes recibirlo
+            hasta que esa persona lo devuelva. Avisa a Flota si crees que es un error.
+          </p>
+          <button type="button" class="btn-cta" (click)="finish()">Entendido</button>
+        }
+      </div>
+    </div>
+  </div>
 } @else {
   <div class="screen checklist">
     <app-wizard-exit [title]="titulo()" (exit)="intentarSalir()" />

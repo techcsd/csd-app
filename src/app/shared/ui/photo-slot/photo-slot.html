@@ -8,9 +8,18 @@
     <button type="button" class="photo-slot__retake" (click)="clear()">Repetir foto</button>
   </div>
 } @else {
-  <button type="button" class="photo-slot" (click)="capture()" [disabled]="busy()">
+  <div class="photo-slot">
     <span class="photo-slot__hint">{{ busy() ? '⏳' : hint() }}</span>
     <span class="photo-slot__label">{{ label() }}</span>
-    <span class="photo-slot__cta">Tomar foto</span>
-  </button>
+    <div class="photo-slot__actions">
+      <button type="button" class="photo-slot__cta photo-slot__cta--primary" (click)="capture()" [disabled]="busy()">
+        📷 Tomar foto
+      </button>
+      @if (gallery()) {
+        <button type="button" class="photo-slot__cta" (click)="pickFromGallery()" [disabled]="busy()">
+          🖼️ Galería
+        </button>
+      }
+    </div>
+  </div>
 }

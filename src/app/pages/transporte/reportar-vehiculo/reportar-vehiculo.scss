@@ -79,3 +79,9 @@
   font-weight: 600;
   font-size: 14px;
 }
+
+// W1 — banner de referencia inválida (vehículo eliminado/inactivo).
+.repv__recovery--warn {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--color-error);
+}

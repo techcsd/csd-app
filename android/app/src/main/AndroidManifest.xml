@@ -56,4 +56,23 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <!-- W2: "Cómo llegar" abre Google Maps con @capacitor/app-launcher. En
+         Android 11+ (package visibility) `canOpenUrl` devuelve false a menos que
+         declaremos los esquemas/intents que vamos a consultar. Sin esto el
+         intent de navegación nunca se detecta y siempre cae al fallback https. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="geo" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="google.navigation" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
 </manifest>

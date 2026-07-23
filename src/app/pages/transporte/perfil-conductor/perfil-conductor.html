@@ -103,13 +103,14 @@
         <section class="pcon__docs">
           <h2 class="pcon__docs-title">Multas ({{ multas().length }})</h2>
           @for (m of multas(); track m.id) {
-            <div class="pcon__act-row">
+            <button type="button" class="pcon__act-row pcon__act-row--link" (click)="verMulta(m.id)">
               <span class="pcon__act-main">🚦 {{ m.motivo ?? 'Multa' }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
               <span class="pcon__act-sub">
                 @if (m.monto != null) { RD$ {{ m.monto }} · }
                 <b [class.pcon__pagada]="m.estado === 'pagada'">{{ m.estado === 'pagada' ? 'Pagada' : 'Pendiente' }}</b>
+                ›
               </span>
-            </div>
+            </button>
           }
         </section>
       }

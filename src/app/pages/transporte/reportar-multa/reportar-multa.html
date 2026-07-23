@@ -20,18 +20,36 @@
       }
 
       <label class="field-label">Motivo de la multa</label>
-      <input class="field" type="text" [ngModel]="motivo()" (ngModelChange)="motivo.set($event)" placeholder="Ej: exceso de velocidad" />
+      <!-- W5 — motivo del catálogo (T9) + "Otro (escribir)". Default = placeholder (T14) -->
+      <select class="field" [ngModel]="motivoSel()" (ngModelChange)="setMotivo($event)" aria-label="Motivo de la multa">
+        <option value="" disabled>Elige un motivo</option>
+        @for (m of motivos(); track m.id) {
+          <option [value]="m.nombre">{{ m.nombre }}</option>
+        }
+      </select>
+      @if (esOtro()) {
+        <input class="field rmul__otro" type="text" [ngModel]="motivoOtro()" (ngModelChange)="motivoOtro.set($event)" placeholder="Escribe el motivo" aria-label="Otro motivo" />
+      }
 
       <label class="field-label">Monto (opcional)</label>
       <input class="field" type="number" inputmode="decimal" [ngModel]="monto()" (ngModelChange)="monto.set($event)" placeholder="RD$" />
 
       <label class="field-label">Vehículo (opcional)</label>
-      <select class="field" [ngModel]="vehiculoId()" (ngModelChange)="vehiculoId.set($event)" aria-label="Vehículo de la multa">
-        <option [ngValue]="null">Sin vehículo</option>
-        @for (v of flota(); track v.vehiculo_id) {
-          <option [ngValue]="v.vehiculo_id">{{ v.placa }} · {{ v.marca }} {{ v.modelo }}</option>
-        }
-      </select>
+      <!-- W5 — selector de vehículo con el picker de tarjetas de la app (hoja inferior) -->
+      @if (vehiculo(); as v) {
+        <div class="rmul__veh">
+          <div class="rmul__veh-info">
+            <span class="rmul__veh-placa">{{ v.placa }}</span>
+            <span class="rmul__veh-modelo">{{ v.marca }} {{ v.modelo }}</span>
+          </div>
+          <div class="rmul__veh-actions">
+            <button type="button" class="btn-ghost" (click)="abrirPicker()">Cambiar</button>
+            <button type="button" class="btn-ghost" (click)="quitarVehiculo()">Quitar</button>
+          </div>
+        </div>
+      } @else {
+        <button type="button" class="rmul__veh-pick" (click)="abrirPicker()">🚗 Elegir vehículo</button>
+      }
 
       <label class="field-label">Estado</label>
       <app-option-button icon="⏳" label="Pendiente de pago" [selected]="estado() === 'pendiente'" (pressed)="estado.set('pendiente')" />
@@ -62,4 +80,15 @@
       </button>
     </footer>
   </div>
+
+  <!-- W5 — hoja inferior con el picker de vehículos (tus vehículos primero) -->
+  <app-bottom-sheet [open]="sheetAbierto()" titulo="Elige un vehículo" (closed)="cerrarPicker()">
+    @if (sheetAbierto()) {
+      <app-vehiculo-picker
+        titulo=""
+        subtitulo="Toca el vehículo de la multa."
+        (elegido)="elegirVehiculo($event)"
+      />
+    }
+  </app-bottom-sheet>
 }

@@ -1,3 +1,16 @@
+// W4 — encabezado de grupo ("Tus vehículos" / "Resto de la flota").
+.vpick__group {
+  margin: 14px 0 8px;
+  font-size: var(--fs-option, 16px);
+  font-weight: 800;
+  color: var(--color-text-secondary, var(--main-ultra-light));
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.vpick__group:first-child {
+  margin-top: 0;
+}
+
 // B1 — selectable vehicle card button (mirror of asignar__vehbtn).
 .vpick__btn {
   display: block;

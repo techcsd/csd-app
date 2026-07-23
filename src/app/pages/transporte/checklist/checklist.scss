@@ -166,3 +166,32 @@
   background: #fef2f2;
   color: var(--color-error);
 }
+
+// W3 — pantalla de bloqueo cuando el vehículo ya tiene recepción abierta.
+.checklist__bloqueo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 24px 8px;
+}
+.checklist__bloqueo-icon {
+  font-size: 56px;
+  line-height: 1;
+}
+.checklist__bloqueo-title {
+  margin: 0;
+  font-size: var(--fs-title, 22px);
+  font-weight: 800;
+}
+.checklist__bloqueo-text {
+  margin: 0 0 6px;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-option);
+  line-height: 1.4;
+}
+.checklist__bloqueo .btn-cta,
+.checklist__bloqueo .btn-ghost {
+  width: 100%;
+}

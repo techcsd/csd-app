@@ -189,6 +189,11 @@ export class PerfilVehiculoPage {
     void this.router.navigate(['/transporte/vehiculo', this.vehiculoId(), 'reportar']);
   }
 
+  /** W5 — abrir el detalle de una multa del vehículo. */
+  verMulta(id: string): void {
+    void this.router.navigate(['/transporte/mi-registro', 'multa', id]);
+  }
+
   /** Asignar este vehículo a un conductor (admin). */
   async asignar(): Promise<void> {
     if (this.asignando()) return;

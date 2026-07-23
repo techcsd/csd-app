@@ -25,6 +25,8 @@ export class VehiculoCard {
   modelo = input('');
   selected = input(false);
   done = input(false);
+  /** W7 — vehículo marcado como dato de prueba (solo lo reciben los admins). */
+  esPrueba = input(false);
 
   /** P4 — etiqueta RD del tipo (automovil → "Automóvil / Sedán"). */
   tipoLabel = computed(() => (this.tipo() ? labelTipoVehiculo(this.tipo()) : ''));

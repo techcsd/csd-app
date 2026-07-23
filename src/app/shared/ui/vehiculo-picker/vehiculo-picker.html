@@ -14,16 +14,39 @@
     message="Todos los vehículos están asignados o fuera de servicio ahora mismo. Vuelve más tarde o consulta con Flota."
   />
 } @else {
-  @for (v of disponibles(); track v.vehiculo_id) {
-    <button type="button" class="vpick__btn" (click)="elegir(v)">
-      <app-vehiculo-card
-        [fotoUrl]="fotoUrls()[v.vehiculo_id]"
-        [placa]="v.placa"
-        [tipo]="v.tipo"
-        [km]="v.km"
-        [marca]="v.marca"
-        [modelo]="v.modelo"
-      />
-    </button>
+  <!-- W4 — "Tus vehículos" primero, luego el resto de la flota. -->
+  @if (mios().length) {
+    <h2 class="vpick__group">Tus vehículos</h2>
+    @for (v of mios(); track v.vehiculo_id) {
+      <button type="button" class="vpick__btn" (click)="elegir(v)">
+        <app-vehiculo-card
+          [fotoUrl]="fotoUrls()[v.vehiculo_id]"
+          [placa]="v.placa"
+          [tipo]="v.tipo"
+          [km]="v.km"
+          [marca]="v.marca"
+          [modelo]="v.modelo"
+          [esPrueba]="v.es_prueba ?? false"
+        />
+      </button>
+    }
+  }
+  @if (resto().length) {
+    @if (mios().length) {
+      <h2 class="vpick__group">Resto de la flota</h2>
+    }
+    @for (v of resto(); track v.vehiculo_id) {
+      <button type="button" class="vpick__btn" (click)="elegir(v)">
+        <app-vehiculo-card
+          [fotoUrl]="fotoUrls()[v.vehiculo_id]"
+          [placa]="v.placa"
+          [tipo]="v.tipo"
+          [km]="v.km"
+          [marca]="v.marca"
+          [modelo]="v.modelo"
+          [esPrueba]="v.es_prueba ?? false"
+        />
+      </button>
+    }
   }
 }

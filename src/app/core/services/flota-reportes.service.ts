@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import {
   AccidenteCaptura,
@@ -13,7 +14,9 @@ import {
   FlotaMulta,
   HistorialChecklist,
   HistorialEchada,
+  MotivoMulta,
   MultaCaptura,
+  MultaDetalle,
   RutaCreada,
 } from '../models/flota-reportes.model';
 
@@ -29,10 +32,64 @@ const BUCKET_DOCS = 'flota-documentos'; // acta AMET + documento de multa
 @Injectable({ providedIn: 'root' })
 export class FlotaReportesService {
   private supabase = inject(SupabaseService);
+  private catalog = inject(CatalogService);
   private sync = inject(SyncService);
 
   constructor() {
     this.registerHandlers();
+  }
+
+  /**
+   * W5 — catálogo de motivos de multa (T9), cacheado offline como el resto de
+   * catálogos. Se lee del cache si no hay señal. Incluye "Otro" (el form lo trata
+   * como opción especial que abre el input libre).
+   */
+  async getMotivosMulta(): Promise<MotivoMulta[]> {
+    const data = await this.catalog.refresh<MotivoMulta[]>('motivos_multa', async () => {
+      const { data, error } = await this.supabase.client
+        .from('motivos_multa')
+        .select('id, nombre')
+        .eq('activo', true)
+        .order('orden', { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data as MotivoMulta[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** Firma un path del bucket privado `flota-documentos` (acta AMET / doc multa). */
+  private async signedDocs(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
+    const { data, error } = await this.supabase.client.storage
+      .from('flota-documentos')
+      .createSignedUrl(path, 3600);
+    if (error) return null;
+    return data?.signedUrl ?? null;
+  }
+
+  /**
+   * W5 — detalle de solo lectura de una multa (motivo, monto, estado, vehículo,
+   * documento con preview, fecha). RLS ya scopea al conductor/elevado. Online.
+   */
+  async getMiMultaDetalle(id: string): Promise<MultaDetalle | null> {
+    if (!id) return null;
+    const { data, error } = await this.supabase.client
+      .from('conductor_multas')
+      .select('id, fecha, motivo, monto, estado, documento_path, vehiculo:vehiculos(placa, marca, modelo)')
+      .eq('id', id)
+      .maybeSingle();
+    if (error || !data) return null;
+    const row = data as unknown as {
+      id: string; fecha: string | null; motivo: string | null; monto: number | null;
+      estado: string | null; documento_path: string | null;
+      vehiculo?: { placa: string; marca?: string; modelo?: string } | null;
+    };
+    const documentoUrl = await this.signedDocs(row.documento_path);
+    const esImagen = !!row.documento_path && !/\.pdf$/i.test(row.documento_path);
+    return {
+      id: row.id, fecha: row.fecha, motivo: row.motivo, monto: row.monto,
+      estado: row.estado, vehiculo: row.vehiculo ?? null, documentoUrl, esImagen,
+    };
   }
 
   /** S32 — multas del conductor (para su perfil de actividad). Online. */

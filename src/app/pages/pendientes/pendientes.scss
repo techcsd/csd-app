@@ -112,6 +112,17 @@
   font-weight: 600;
   line-height: 1.35;
 }
+// W1 — detalle legible (interpretación amable del error crudo).
+.ob-row__detalle-legible {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 179, 0, 0.1);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .ob-row__detalle {
   margin: 8px 0 0;
   padding: 10px 12px;

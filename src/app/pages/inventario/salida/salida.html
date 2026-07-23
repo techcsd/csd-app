@@ -26,12 +26,19 @@
     <div class="screen__body">
       <h2 class="mov__h2">Revisa el retiro</h2>
 
-      <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="bodegaId.set($event)" />
+      <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
+
+      <!-- W8 — destino: ¿hacia dónde va? -->
+      <app-select-list label="¿Hacia dónde va?" icon="📍" [options]="obraOptions()" [selectedId]="destinoId()" (picked)="destinoId.set($event)" />
+
+      @if (!online) {
+        <p class="mov__stock-hint">📴 Sin señal: el stock no se puede verificar ahora. Se validará al enviarse.</p>
+      }
 
       @for (g of grupos(); track g.categoria) {
         <h3 class="mov__grupo">{{ g.categoria }}</h3>
         @for (l of g.lineas; track l.articulo_id) {
-          <div class="mov__item">
+          <div class="mov__item" [class.mov__item--exceso]="excede(l)">
             <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· Talla {{ l.talla }}</small> }</span>
             <div class="mov__item-qty">
               <button type="button" class="mov__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
@@ -40,6 +47,21 @@
               <span class="mov__item-unit">{{ l.unidad }}</span>
               <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
             </div>
+            <!-- W8 — stock en vivo por línea -->
+            @if (stockDe(l.articulo_id); as s) {
+              @if (excede(l)) {
+                <p class="mov__stock mov__stock--bad">
+                  ⚠️ Solo hay {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || l.unidad }} en {{ bodegaNombre() }}.
+                  <button type="button" class="mov__stock-cap" (click)="ajustarAlStock(l)">Ajustar a {{ s.cantidad | number: '1.0-2' }}</button>
+                </p>
+              } @else {
+                <p class="mov__stock">Hay {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || l.unidad }} en {{ bodegaNombre() }}.</p>
+              }
+            } @else if (online && stockLoading()) {
+              <p class="mov__stock mov__stock--muted">Consultando stock…</p>
+            } @else if (!online) {
+              <p class="mov__stock mov__stock--muted">Stock sin verificar (sin señal).</p>
+            }
           </div>
         }
       }
@@ -49,12 +71,16 @@
 
       <label class="field-label mov__mt">Foto (opcional)</label>
       <app-photo-slot label="Evidencia (opcional)" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+
+      @if (hayExceso()) {
+        <div class="mov__band-exceso">⚠️ Hay materiales que superan el stock del almacén. Ajústalos antes de confirmar.</div>
+      }
     </div>
 
     <app-wizard-footer
       backLabel="Atrás"
       [primaryLabel]="submitting() ? 'Guardando…' : 'Confirmar salida'"
-      [primaryDisabled]="submitting()"
+      [primaryDisabled]="submitting() || hayExceso()"
       (back)="volverSeleccion()"
       (primary)="submit()"
     />

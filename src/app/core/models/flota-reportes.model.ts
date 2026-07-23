@@ -147,6 +147,25 @@ export interface EchadaDetalle {
   tableroUrl: string | null;
 }
 
+/** W5 — un motivo del catálogo `motivos_multa` (T9). */
+export interface MotivoMulta {
+  id: number;
+  nombre: string;
+}
+
+/** W5 — detalle de solo lectura de una multa (para "Mi actividad"). */
+export interface MultaDetalle {
+  id: string;
+  fecha: string | null;
+  motivo: string | null;
+  monto: number | null;
+  estado: string | null;
+  vehiculo?: { placa: string; marca?: string; modelo?: string } | null;
+  /** URL firmada del documento (o null); esImagen para elegir preview vs PDF. */
+  documentoUrl: string | null;
+  esImagen: boolean;
+}
+
 /** Captura de "Me pusieron una multa" (S24). */
 export interface MultaCaptura {
   conductorId: string;

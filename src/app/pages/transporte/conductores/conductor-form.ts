@@ -8,6 +8,7 @@ import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { ToggleSwitch } from '../../../shared/ui/toggle-switch/toggle-switch';
 import { GenerarAcceso } from '../../../shared/components/generar-acceso/generar-acceso';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { LicenciaCategoriasService, LicenciaCategoria } from '../../../core/services/licencia-categorias.service';
@@ -30,6 +31,7 @@ interface ConductorDraft {
   tipoAutorizado: TipoAutorizado;
   nota: string;
   tags: string[];
+  esPrueba: boolean;
 }
 
 type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
@@ -43,7 +45,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-conductor-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, GenerarAcceso],
+  imports: [FormsModule, SelectList, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, ToggleSwitch, GenerarAcceso],
   templateUrl: './conductor-form.html',
   styleUrl: './conductor-form.scss',
 })
@@ -93,8 +95,12 @@ export class ConductorFormPage {
   nota = signal('');
   tags = signal<string[]>([]);
   tagInput = signal('');
+  esPrueba = signal(false); // W7 — dato de prueba (solo admin)
   readonly tagsSugeridos = CONDUCTOR_TAGS_SUGERIDOS;
   submitting = signal(false);
+
+  /** W7 — solo un admin marca/ve el switch de "Dato de prueba". */
+  esAdmin = computed(() => this.ctx.hasRol('admin'));
 
   // C4/C5 — documentos opcionales capturados en el alta (se suben tras crear,
   // con el id devuelto). La licencia admite frente y dorso (backend: N por tipo).
@@ -122,6 +128,7 @@ export class ConductorFormPage {
         tipoAutorizado: this.tipoAutorizado(),
         nota: this.nota(),
         tags: this.tags(),
+        esPrueba: this.esPrueba(),
       };
       if (!this.hydrated || this.submitting()) return;
       if (!snap.nombre && !snap.cedula && !snap.licenciaTipo && !snap.usuarioId) return;
@@ -155,6 +162,7 @@ export class ConductorFormPage {
         this.tipoAutorizado.set(d.tipoAutorizado ?? 'Ambos');
         this.nota.set(d.nota ?? '');
         this.tags.set(d.tags ?? []);
+        this.esPrueba.set(d.esPrueba ?? false);
       }
       this.borradorPrevio.set(null);
     });
@@ -189,6 +197,7 @@ export class ConductorFormPage {
           this.usuarioId.set(c.usuario_id ?? '');
           this.nota.set(c.nota ?? '');
           this.tags.set(c.tags ?? []);
+          this.esPrueba.set(c.es_prueba ?? false);
         }
       } catch (e) {
         this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el conductor.');
@@ -261,6 +270,7 @@ export class ConductorFormPage {
       usuarioId: this.usuarioId() || null,
       nota: this.nota() || null,
       tags: this.tags(),
+      esPrueba: this.esPrueba(), // W7
     };
     try {
       const id = this.esEdicion()

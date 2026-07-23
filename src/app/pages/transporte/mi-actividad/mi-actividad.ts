@@ -152,6 +152,10 @@ export class MiActividadPage {
   verEchada(id: string): void {
     void this.router.navigate(['/transporte/mi-registro', 'echada', id]);
   }
+  /** W5 — abrir el detalle de una multa. */
+  verMulta(id: string): void {
+    void this.router.navigate(['/transporte/mi-registro', 'multa', id]);
+  }
 
   private async loadDocs(): Promise<void> {
     const id = this.condId();
