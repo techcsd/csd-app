@@ -1,6 +1,8 @@
 # HANDOFF — CSD App
 
-## Ronda 10 app — PROMPT-22 (2026-07-24) — Y1/Y2/Y7/Y8/Y9c/Y10/Y3/Y11 + Y5 verif · Y4 BLOQUEADA — v1.29.0
+## Ronda 10 app — PROMPT-22 (2026-07-24) — Y1/Y2/Y7/Y8/Y9c/Y10/Y3/Y11 + Y5 verif · Y4 BLOQUEADA — v1.29.0 PUBLICADA + MÍNIMA (FORZADA)
+**Release:** commit `bc9f266` (push → PWA). APK 1.29.0 firmado (cert prod `3c5316d8…df5065`) + bucket (`csd-app-1.29.0.apk`+`latest`+`version.json`) + historial Y1 (7 cambios) + `apk_url`. **1.29.0 PUBLICADA + MÍNIMA** (`publicada=true, minima=true`, única fila con flags; 1.28.0 despublicada y ya no mínima) → todos por debajo de 1.29.0 forzados a actualizar. `MIN_VERSION` (release-apk.mjs) + `version.json` alineados a 1.29.0. **Rollback:** `update sgc.app_versiones set publicada=true, minima=true where plataforma='movil' and version='1.28.0'` + `publicada=false, minima=false where version='1.29.0'`.
+
 Source: PROMPT-22 inline (IDs Y). `CONTEXTO-ACTUALIZACION-9.md` NO está en el repo; se trabajó con el detalle del prompt. `npm run build` VERDE por corte. **PROMPT-21 verificado por query:** FASE 1 (server combustible) APLICADA (`registrar_combustible_app` valida contra `vehiculos.kilometraje` con comentarios "Y5"); FASE 2 (rutas) **a medias** — existen `marcar_ruta_estado(p_at)` + columnas `rutas.iniciada_at/finalizada_at/tiempo_estimado_min/tiempo_real_min`, PERO `mis_rutas_hoy` **NO** devuelve esos campos (read path incompleto).
 - **FASE 1 quick fixes:**
   - **Y1** — nuevo `formatFechaCortaHora` (`core/util/fecha.ts`, "23/07 · 6:41 pm") en `/en-proceso` y `mis-partes`.
