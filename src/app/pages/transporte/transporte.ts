@@ -11,6 +11,7 @@ import { SyncService } from '../../core/sync/sync.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
+import { ConducesService } from '../../core/services/conduces.service';
 import { MiAsignacion, PendientesTransporte } from '../../core/models/transporte.model';
 
 /** S15 — un cuadro del hub de transporte (patrón big-button del home). */
@@ -32,6 +33,7 @@ const TILES: HubTile[] = [
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488', elevado: true },
+  { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c', elevado: true },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
 ];
 
@@ -53,6 +55,7 @@ export class TransportePage {
   private ctx = inject(UserContextService);
   private badges = inject(BadgesService);
   private enProceso = inject(EnProcesoService);
+  private conducesSvc = inject(ConducesService);
 
   // V1 — documentación en proceso del módulo transporte/flota.
   private enProcesoCount = this.enProceso.counts;
@@ -70,6 +73,7 @@ export class TransportePage {
   pendientes = signal<PendientesTransporte>({ a_cargo: [], por_recibir: [] });
   asignaciones = signal<MiAsignacion[]>([]);
   reporteSemanalPend = signal(0);
+  conducesNuevas = signal(0); // Y3 — rutas planificadas asignadas no vistas
   loading = signal(true);
   /** P4 — vehículos con una recepción encolada (se marcan "Enviando…"). */
   enviandoIds = signal<Set<string>>(new Set());
@@ -105,6 +109,7 @@ export class TransportePage {
   /** S15 — badge del cuadro (reporte semanal pendiente / avisos de flota). */
   badgeFor(key: string): number | null {
     if (key === 'semanal') return this.reporteSemanalPend() || null;
+    if (key === 'conduces') return this.conducesNuevas() || null; // Y3
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
     if (key === 'enProceso') return this.enProcesoCount()['flota'] || null;
     return null;
@@ -121,14 +126,17 @@ export class TransportePage {
       case 'vehiculos': return this.vehiculosLista();
       case 'conductores': return this.conductoresLista();
       case 'crearRuta': return this.crearRuta();
+      case 'multas': return this.multas();
       case 'avisos': return this.avisos();
       case 'enProceso': return this.enProcesoAbrir();
     }
   }
 
-  /** V1 — documentación en proceso (borradores + envíos pendientes). */
+  /** V1 — documentación en proceso (borradores + envíos pendientes). Y10 — el
+   *  cuadro cuenta solo flota, así que la vista se filtra a flota para casar el
+   *  badge con lo mostrado. */
   enProcesoAbrir(): void {
-    void this.router.navigate(['/en-proceso']);
+    void this.router.navigate(['/en-proceso'], { queryParams: { modulo: 'flota' } });
   }
 
   /** S26b — combustible sin vehículo en contexto (la pantalla elige del pool). */
@@ -141,19 +149,26 @@ export class TransportePage {
     void this.router.navigate(['/transporte/rutas/crear']);
   }
 
+  /** Y7 — registrar multa desde el hub (la pantalla pide el conductor). */
+  multas(): void {
+    void this.router.navigate(['/transporte/multa']);
+  }
+
   async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [pend, asig, semanalPend, enviando] = await Promise.all([
+      const [pend, asig, semanalPend, enviando, conducesNuevas] = await Promise.all([
         this.vehiculos.misPendientes(),
         this.vehiculos.getMisAsignaciones(),
         this.reportes.pendientesCount(),
         this.vehiculos.entregasRecepcionPendientes(),
+        this.conducesSvc.rutasPlanificadasNuevas().catch(() => 0), // Y3
       ]);
       this.pendientes.set(pend);
       this.asignaciones.set(asig);
       this.reporteSemanalPend.set(semanalPend);
       this.enviandoIds.set(enviando);
+      this.conducesNuevas.set(conducesNuevas);
     } finally {
       this.loading.set(false);
     }

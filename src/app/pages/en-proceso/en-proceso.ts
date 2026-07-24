@@ -1,26 +1,26 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { BorradorService } from '../../core/services/borrador.service';
 import { AutosaveService } from '../../core/services/autosave.service';
-import { Borrador } from '../../core/db/app-db';
-import { formatFechaMedia } from '../../core/util/fecha';
+import { SyncService } from '../../core/sync/sync.service';
+import {
+  EnProcesoService,
+  EnProcesoItem,
+  EnProcesoModulo,
+} from '../../core/services/en-proceso.service';
+import { formatFechaCortaHora } from '../../core/util/fecha';
 
-const TIPO_LABEL: Record<string, string> = {
-  checklist: 'Checklist de vehículo',
-  conductor: 'Conductor',
-  vehiculo: 'Vehículo',
-  parte: 'Bitácora del día',
-  incidente: 'Reporte de incidente',
-};
-
-/** Borradores que se retoman por su clave (multi-borrador, ?borrador=). */
-const RESUME_POR_CLAVE = new Set(['parte', 'incidente']);
-
-/** Fase 4 — "Documentación en proceso": borradores sin enviar para retomar. */
+/**
+ * Y10 — "Documentación en proceso" coherente: dos grupos etiquetados —
+ * "A medio llenar" (borradores Dexie, con Retomar/Descartar) y "Pendientes de
+ * envío" (items del outbox con su estado; las acciones de reintentar/descartar
+ * viven en /pendientes, que reutilizamos). El contenido = exactamente lo que
+ * cuentan los badges (EnProcesoService), así el badge nunca miente.
+ */
 @Component({
   selector: 'app-en-proceso',
   standalone: true,
@@ -30,54 +30,73 @@ const RESUME_POR_CLAVE = new Set(['parte', 'incidente']);
   styleUrl: './en-proceso.scss',
 })
 export class EnProcesoPage {
+  private enProceso = inject(EnProcesoService);
   private borrador = inject(BorradorService);
   private autosave = inject(AutosaveService);
+  private sync = inject(SyncService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private location = inject(Location);
 
+  /** Filtro opcional por módulo (?modulo=flota|bitacora) para casar con el badge del cuadro. */
+  private modulo: EnProcesoModulo | null = null;
+
   loading = signal(true);
-  borradores = signal<Borrador[]>([]);
-  confirmar = signal<Borrador | null>(null);
+  items = signal<EnProcesoItem[]>([]);
+  confirmar = signal<EnProcesoItem | null>(null);
+
+  borradores = computed(() => this.items().filter((i) => i.kind === 'borrador'));
+  envios = computed(() => this.items().filter((i) => i.kind === 'envio'));
 
   constructor() {
-    void this.load();
+    const m = this.route.snapshot.queryParamMap.get('modulo');
+    this.modulo = m === 'flota' || m === 'bitacora' ? m : null;
+    // Refresca al entrar y con cada cambio del outbox (drena/encola/error) para
+    // que la vista siga cuadrando con el badge en vivo.
+    effect(() => {
+      this.sync.changed();
+      void this.load();
+    });
   }
 
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      // S5 — sube el borrador legacy 'parte_diario' a una clave por instancia
-      // antes de listar, para que aparezca como un borrador más.
+      // S5 — migra el borrador legacy 'parte_diario' a clave por instancia.
       await this.borrador.migrateLegacyParte();
-      this.borradores.set(await this.borrador.list());
+      const list = this.modulo
+        ? await this.enProceso.list(this.modulo)
+        : await this.enProceso.listAll();
+      this.items.set(list);
     } finally {
       this.loading.set(false);
     }
   }
 
+  /** Y1 — fecha + hora del último guardado ("23/07 · 6:41 pm"). */
   fmt(ms: number): string {
-    return formatFechaMedia(new Date(ms).toISOString());
+    return formatFechaCortaHora(ms);
   }
 
-  etiqueta(b: Borrador): string {
-    return b.etiqueta || TIPO_LABEL[b.tipo ?? ''] || 'Documento sin enviar';
-  }
-
-  retomar(b: Borrador): void {
+  retomar(b: EnProcesoItem): void {
     if (!b.ruta) {
       this.location.back();
       return;
     }
-    // S5 — parte/incidente se retoman por su clave (multi-borrador).
     const [path] = b.ruta.split('?');
-    if (b.tipo && RESUME_POR_CLAVE.has(b.tipo)) {
-      void this.router.navigate([path], { queryParams: { borrador: b.clave } });
+    if (b.resumePorClave) {
+      void this.router.navigate([path], { queryParams: { borrador: b.id } });
     } else {
       void this.router.navigateByUrl(b.ruta);
     }
   }
 
-  pedirDescartar(b: Borrador): void {
+  /** Los envíos (outbox) se reintentan/descartan en la pantalla de Pendientes. */
+  verPendientes(): void {
+    void this.router.navigate(['/pendientes']);
+  }
+
+  pedirDescartar(b: EnProcesoItem): void {
     this.confirmar.set(b);
   }
 
@@ -85,8 +104,8 @@ export class EnProcesoPage {
     const b = this.confirmar();
     this.confirmar.set(null);
     if (!b) return;
-    await this.autosave.discard(b.clave);
-    this.borradores.update((list) => list.filter((x) => x.clave !== b.clave));
+    await this.autosave.discard(b.id); // b.id = clave del borrador
+    this.items.update((list) => list.filter((x) => !(x.kind === 'borrador' && x.id === b.id)));
   }
 
   back(): void {

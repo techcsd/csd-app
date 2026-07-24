@@ -57,6 +57,31 @@
   color: var(--color-text-secondary);
 }
 
+// Y10 — encabezado de grupo ("A medio llenar" / "Pendientes de envío").
+.enp__group {
+  margin: 20px 0 10px;
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+.enp__group:first-child {
+  margin-top: 4px;
+}
+
+// Y10 — estado del envío.
+.enp__estado {
+  font-size: 13px;
+  font-weight: 700;
+}
+.enp__estado--error {
+  color: var(--color-error);
+}
+.enp__estado--cola {
+  color: var(--color-text-secondary);
+}
+
 .enp__actions {
   display: flex;
   gap: 10px;

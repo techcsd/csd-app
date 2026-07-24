@@ -35,6 +35,25 @@ export function formatFechaHumana(ts: string | null | undefined): string {
   return `${dt.getDate()} ${MESES[dt.getMonth()]} ${dt.getFullYear()}, ${h}:${min} ${period}`;
 }
 
+/**
+ * Y1 — compacta con hora: `23/07 · 6:41 pm`. Para listas de borradores/envíos
+ * ("Guardado …") donde importa el día Y la hora del último guardado. Acepta ms
+ * (epoch) o un timestamp ISO.
+ */
+export function formatFechaCortaHora(ts: string | number | null | undefined): string {
+  if (ts == null) return '—';
+  const dt = new Date(ts);
+  if (isNaN(dt.getTime())) return '—';
+  const d = String(dt.getDate()).padStart(2, '0');
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  let h = dt.getHours();
+  const min = String(dt.getMinutes()).padStart(2, '0');
+  const period = h >= 12 ? 'pm' : 'am';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${d}/${m} · ${h}:${min} ${period}`;
+}
+
 /** Relativa corta ("hace 5 min", "ayer"); >~2 días cae a `formatFechaHumana`. */
 export function formatFechaRelativa(ts: string | null | undefined): string {
   if (!ts) return '—';

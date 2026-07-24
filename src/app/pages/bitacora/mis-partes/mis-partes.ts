@@ -9,7 +9,7 @@ import { BitacoraFull } from '../../../core/models/bitacora.model';
 import { EnProcesoService, EnProcesoItem } from '../../../core/services/en-proceso.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { SyncService } from '../../../core/sync/sync.service';
-import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
+import { formatFecha, formatFechaCortaHora } from '../../../core/util/fecha';
 
 /** My bitácoras (server, offline-cached). Tap one to see its details. */
 @Component({
@@ -83,7 +83,7 @@ export class MisPartesPage {
   }
 
   fmtProceso(ms: number): string {
-    return formatFechaMedia(new Date(ms).toISOString());
+    return formatFechaCortaHora(ms); // Y1 — fecha + hora del último guardado
   }
 
   titulo(b: BitacoraFull): string {

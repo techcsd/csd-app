@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
+import { LocalStore } from './local-store.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Conduce, RutaHoy } from '../models/transporte.model';
 import { Proyecto } from '../models/bitacora.model';
@@ -8,6 +9,8 @@ import { Proyecto } from '../models/bitacora.model';
 const CATALOG_CONDUCES = 'mis_conduces';
 const CATALOG_RUTAS = 'mis_rutas';
 const CATALOG_PROYECTOS = 'proyectos';
+/** Y3 — ids de rutas planificadas ya vistas (para el badge de "rutas nuevas"). */
+const VISTAS_KEY = 'conduces_rutas_vistas';
 
 /** Delivery capture the conduce screen hands to entregarConduce(). */
 export interface ConduceEntregaCaptura {
@@ -55,9 +58,43 @@ export class ConducesService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
+  private store = inject(LocalStore);
 
   constructor() {
     this.registerHandler();
+  }
+
+  // ---- Y3 — badge de rutas asignadas nuevas -----------------------------
+
+  /**
+   * Nº de rutas asignadas a mí en estado `planificada` que aún NO he visto.
+   * Fuente: `mis_rutas_hoy` (cacheada, offline-friendly). Se limpia al entrar a
+   * "Conduces y rutas" (marcarRutasVistas). Las rutas ya asignadas por el servidor
+   * son la fuente de verdad; un cambio de estado propio encolado en el outbox no
+   * reintroduce el badge (solo cuentan las que siguen planificadas).
+   */
+  async rutasPlanificadasNuevas(): Promise<number> {
+    const rutas = await this.misRutas();
+    const vistas = new Set(await this.getVistas());
+    return rutas.filter((r) => r.estado === 'planificada' && !vistas.has(r.id)).length;
+  }
+
+  /** Marca como vistas todas las rutas planificadas actuales (limpia el badge). */
+  async marcarRutasVistas(): Promise<void> {
+    const rutas = await this.misRutas();
+    const ids = rutas.filter((r) => r.estado === 'planificada').map((r) => r.id);
+    await this.store.set(VISTAS_KEY, JSON.stringify(ids));
+  }
+
+  private async getVistas(): Promise<string[]> {
+    const raw = await this.store.get(VISTAS_KEY);
+    if (!raw) return [];
+    try {
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? (arr as string[]) : [];
+    } catch {
+      return [];
+    }
   }
 
   async misConduces(): Promise<Conduce[]> {

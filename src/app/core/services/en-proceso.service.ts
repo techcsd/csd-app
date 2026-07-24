@@ -99,6 +99,23 @@ export class EnProcesoService {
     return (await this.list(modulo)).length;
   }
 
+  /**
+   * Y10 — lista global (todos los módulos con "documentación en proceso"), sin
+   * duplicados. Para la pantalla /en-proceso cuando no se filtra por módulo.
+   */
+  async listAll(): Promise<EnProcesoItem[]> {
+    const [bitacora, flota] = await Promise.all([this.list('bitacora'), this.list('flota')]);
+    const seen = new Set<string>();
+    const merged: EnProcesoItem[] = [];
+    for (const it of [...bitacora, ...flota]) {
+      const key = `${it.kind}:${it.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(it);
+    }
+    return merged.sort((a, b) => b.updated_at - a.updated_at);
+  }
+
   /** Borradores + envíos pendientes del módulo, más recientes primero. */
   async list(modulo: EnProcesoModulo): Promise<EnProcesoItem[]> {
     const borradorTipos = new Set(BORRADOR_TIPOS[modulo]);

@@ -25,6 +25,8 @@
 } @else if (vehiculo(); as veh) {
   <!-- Wizard tipo hoja (S17): una sección por pantalla + fotos + km + firma + resumen -->
   <div class="screen rsem">
+    <!-- Y9c — título persistente del formulario junto al progreso -->
+    <h1 class="rsem__wiztitle">Reporte semanal</h1>
     <app-step-bar [current]="step()" [total]="total()" />
     <div class="screen__body">
       <div class="rsem__veh">

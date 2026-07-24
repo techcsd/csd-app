@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.28.0';
+const VERSION = '1.29.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,16 +62,17 @@ const MIN_VERSION = '1.28.0';
 const RELEASED_AT = '2026-07-24';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Permisos con explicación, Face ID en iPhone, PIN olvidado y fotos de accidentes';
+const TITULO = 'Cuadro de multas, grabación de voz con nivel y "en proceso" más claro';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Cuando una función necesita un permiso (ubicación, cámara o micrófono) te explicamos por qué y te ayudamos a activarlo; si estaba bloqueado, un botón te lleva directo a los ajustes.' },
-  { t: 'nuevo', d: 'En iPhone ahora puedes desbloquear la app con Face ID. El PIN sigue disponible como respaldo.' },
-  { t: 'nuevo', d: '¿Olvidaste tu PIN? Ahora puedes restablecerlo tú mismo: entras de nuevo con tu clave (o cédula y PIN de acceso) y creas un PIN nuevo.' },
-  { t: 'nuevo', d: 'Puedes cambiar tu PIN cuando quieras desde tu perfil.' },
-  { t: 'mejora', d: 'Al reportar una visita al taller eliges el tipo (preventivo, falla, accidente/daño o cambio de pieza) y marcas si de paso se hizo mantenimiento preventivo.' },
-  { t: 'nuevo', d: 'Al reportar un accidente puedes adjuntar varias fotos del hecho (cámara o galería) y verlas en grande dentro de la app.' },
+  { t: 'nuevo', d: 'Nuevo cuadro "Multas" en Transporte: registra una multa eligiendo el conductor ahí mismo.' },
+  { t: 'nuevo', d: 'Al grabar una nota de voz ahora ves barras que se mueven con tu voz y el tiempo transcurrido.' },
+  { t: 'mejora', d: '"Documentación en proceso" separa lo que dejaste a medio llenar de lo que está en cola por enviar, y muestra la fecha y hora de cada uno.' },
+  { t: 'mejora', d: 'En "Conduces y rutas" aparece un aviso cuando te asignan una ruta nueva, y desaparece al verla.' },
+  { t: 'mejora', d: 'Todos los formularios muestran su título en cada paso, para que siempre sepas qué estás llenando.' },
+  { t: 'arreglo', d: 'Al salir de "Registrar combustible" el botón de atrás ya no se queda en bucle.' },
+  { t: 'arreglo', d: 'En "Crear ruta" cada obra o bodega muestra su ícono correcto, sin emoji duplicado.' },
 ];
 
 const TIPO_POR_COMMIT = {

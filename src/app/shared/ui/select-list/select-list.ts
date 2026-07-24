@@ -5,6 +5,8 @@ export interface SelectOption {
   label: string;
   /** U6 — thumbnail opcional (URL firmada); si viene, reemplaza el ícono. */
   image?: string | null;
+  /** Y2 — ícono por ítem (p. ej. 🏗️ obra / 🏢 bodega); si no, cae al `icon()` de la lista. */
+  icon?: string;
 }
 
 /**

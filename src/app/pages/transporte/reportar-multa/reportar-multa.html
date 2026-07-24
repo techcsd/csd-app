@@ -19,6 +19,23 @@
         <div class="rmul__recovery">↩️ Recuperamos lo que habías llenado.</div>
       }
 
+      <!-- Y7 — elegir el conductor cuando se abre desde el cuadro "Multas" del hub -->
+      @if (necesitaConductor()) {
+        <label class="field-label">¿A qué conductor?</label>
+        @if (conductorNombre()) {
+          <div class="rmul__veh">
+            <div class="rmul__veh-info">
+              <span class="rmul__veh-placa">{{ conductorNombre() }}</span>
+            </div>
+            <div class="rmul__veh-actions">
+              <button type="button" class="btn-ghost" (click)="abrirConductorPicker()">Cambiar</button>
+            </div>
+          </div>
+        } @else {
+          <button type="button" class="rmul__veh-pick" (click)="abrirConductorPicker()">🪪 Elegir conductor</button>
+        }
+      }
+
       <label class="field-label">Motivo de la multa</label>
       <!-- W5 — motivo del catálogo (T9) + "Otro (escribir)". Default = placeholder (T14) -->
       <select class="field" [ngModel]="motivoSel()" (ngModelChange)="setMotivo($event)" aria-label="Motivo de la multa">
@@ -89,6 +106,22 @@
         subtitulo="Toca el vehículo de la multa."
         (elegido)="elegirVehiculo($event)"
       />
+    }
+  </app-bottom-sheet>
+
+  <!-- Y7 — hoja inferior para elegir el conductor (abierto desde el hub) -->
+  <app-bottom-sheet [open]="sheetConductor()" titulo="Elige un conductor" (closed)="cerrarConductorPicker()">
+    @if (sheetConductor()) {
+      <div class="rmul__clist">
+        @for (c of conductoresLista(); track c.id) {
+          <button type="button" class="rmul__citem" (click)="elegirConductor(c)">
+            <span class="rmul__citem-nombre">{{ c.nombre }}</span>
+            <span class="rmul__citem-ced">{{ c.cedula }}</span>
+          </button>
+        } @empty {
+          <p class="rmul__cempty">No hay conductores.</p>
+        }
+      </div>
     }
   </app-bottom-sheet>
 }

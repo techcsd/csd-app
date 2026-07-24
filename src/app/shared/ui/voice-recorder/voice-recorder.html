@@ -12,7 +12,15 @@
       {{ recording() ? '⏹️ Detener grabación' : '🎤 Grabar nota de voz' }}
     </button>
     @if (recording()) {
-      <span class="voice__pulse">Grabando…</span>
+      <div class="voice__meter" [class.voice__meter--pulse]="sinNivel()" role="status" aria-label="Grabando nota de voz">
+        <span class="voice__dot"></span>
+        <div class="voice__bars">
+          @for (b of bars; track b) {
+            <span class="voice__bar" [style.transform]="'scaleY(' + (sinNivel() ? 0.4 : (0.08 + niveles()[b])) + ')'"></span>
+          }
+        </div>
+        <span class="voice__time">{{ tiempo() }}</span>
+      </div>
     }
   }
 </div>

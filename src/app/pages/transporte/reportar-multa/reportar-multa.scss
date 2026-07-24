@@ -132,3 +132,35 @@
   border-top: 1px solid var(--color-border);
   background: var(--color-bg);
 }
+
+// Y7 — lista de conductores en la hoja inferior.
+.rmul__clist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rmul__citem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px 16px;
+  min-height: var(--touch-min);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  text-align: left;
+}
+.rmul__citem-nombre {
+  font-weight: 700;
+  font-size: var(--fs-option);
+  color: var(--color-text-primary);
+}
+.rmul__citem-ced {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.rmul__cempty {
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 20px;
+}

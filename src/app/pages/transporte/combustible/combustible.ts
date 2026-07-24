@@ -310,9 +310,14 @@ export class CombustiblePage extends GuardedWizard {
     void this.router.navigate(['/transporte'], { replaceUrl: true });
   }
 
-  /** V4 — salir del estado "Elige un vehículo" volviendo al hub de transporte. */
+  /**
+   * V4 — salir del estado "Elige un vehículo" volviendo al hub de transporte.
+   * Y8 — usar location.back() (NO router.navigate a /transporte): navegar empujaba
+   * un hub DUPLICADO sobre el actual, y el "atrás" siguiente re-entraba a
+   * combustible (loop, regresión S31). back() hace pop → hub → home limpio.
+   */
   salirPicker(): void {
-    void this.router.navigate(['/transporte']);
+    this.location.back();
   }
 
   get online(): boolean {

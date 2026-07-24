@@ -90,10 +90,13 @@ export class CrearRutaPage implements OnDestroy {
   private gps: { lat: number; lng: number } | null = null;
 
   // U22 — obras + almacenes (con ícono por tipo) para los selectores de origen/destino.
+  // Y2 — el ícono va por ítem (🏗️ obra / 🏢 bodega); NO se hornea en el label ni
+  // se repite con el icon de la lista (eso causaba el doble emoji).
   lugarOpts = computed<SelectOption[]>(() =>
     this.lugares().map((l) => ({
       id: l.id,
-      label: `${l.tipo === 'obra' ? '🏗' : '🏬'} ${l.nombre}`,
+      label: l.nombre,
+      icon: l.tipo === 'obra' ? '🏗️' : '🏢',
     })),
   );
 

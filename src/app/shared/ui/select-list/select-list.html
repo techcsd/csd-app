@@ -12,7 +12,7 @@
       @if (o.image) {
         <img class="select-list__thumb" [src]="o.image" alt="" />
       } @else {
-        <span class="select-list__icon">{{ icon() }}</span>
+        <span class="select-list__icon">{{ o.icon ?? icon() }}</span>
       }
       <span class="select-list__label">{{ o.label }}</span>
       @if (selectedId() === o.id) {

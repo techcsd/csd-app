@@ -52,6 +52,8 @@ export class ConducesPage {
       const [c, r] = await Promise.all([this.service.misConduces(), this.service.misRutas()]);
       this.conduces.set(c);
       this.rutas.set(r);
+      // Y3 — al ver la lista, las rutas planificadas dejan de ser "nuevas" (limpia el badge).
+      void this.service.marcarRutasVistas();
     } finally {
       this.loading.set(false);
     }

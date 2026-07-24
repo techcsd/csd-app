@@ -10,11 +10,13 @@ import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-pick
 import { CameraService, CapturedDoc } from '../../../core/services/camera.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { ConductoresService } from '../../../core/services/conductores.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
+import { Conductor } from '../../../core/models/conductor.model';
 import { MotivoMulta } from '../../../core/models/flota-reportes.model';
 
 /** Vehículo elegido, lo mínimo para pintarlo en el botón (W5). */
@@ -55,6 +57,7 @@ export class ReportarMultaPage {
   private route = inject(ActivatedRoute);
   private reportes = inject(FlotaReportesService);
   private vehiculos = inject(VehiculosService);
+  private conductores = inject(ConductoresService);
   private camera = inject(CameraService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
@@ -63,6 +66,12 @@ export class ReportarMultaPage {
   private location = inject(Location);
 
   conductorId = '';
+  // Y7 — cuando se abre desde el cuadro "Multas" del hub (sin conductor en la
+  // ruta) hay que elegir el conductor aquí; desde el perfil ya viene fijado.
+  necesitaConductor = signal(false);
+  conductoresLista = signal<Conductor[]>([]);
+  conductorNombre = signal('');
+  sheetConductor = signal(false);
   // W5 — motivo: catálogo + "Otro (escribir)". Default = placeholder (no "Otro").
   motivos = signal<MotivoMulta[]>([]);
   motivoSel = signal<string>('');
@@ -80,11 +89,12 @@ export class ReportarMultaPage {
   private hydrated = false;
 
   private get clave(): string {
-    return `multa:${this.conductorId}`;
+    return `multa:${this.conductorId || 'nuevo'}`;
   }
 
   constructor() {
     this.conductorId = this.route.snapshot.paramMap.get('conductorId') ?? '';
+    this.necesitaConductor.set(!this.conductorId); // Y7 — abierto desde el hub
     void this.init();
     // Autosave del formulario (debounce + flush al ocultar). Antes de hidratar no
     // guardamos para no pisar el borrador con el estado vacío inicial.
@@ -99,7 +109,8 @@ export class ReportarMultaPage {
           ? { nombre: this.documento()!.nombre, esImagen: this.documento()!.esImagen, ext: this.documento()!.ext }
           : null,
       };
-      if (!this.hydrated || this.submitting() || this.done()) return;
+      // Y7 — no autosave hasta que haya un conductor (clave estable multa:<id>).
+      if (!this.hydrated || this.submitting() || this.done() || !this.conductorId) return;
       this.autosave.queue(this.clave, snap, { tipo: 'multa', etiqueta: 'Multa de conductor', ruta: this.location.path() });
     });
   }
@@ -112,6 +123,11 @@ export class ReportarMultaPage {
       this.borrador.load<MultaDraft>(this.clave),
     ]);
     this.motivos.set(motivos);
+
+    // Y7 — abierto desde el hub: cargar conductores para el selector en hoja.
+    if (this.necesitaConductor()) {
+      void this.conductores.getConductores().then((cs) => this.conductoresLista.set(cs)).catch(() => {});
+    }
 
     if (draft) {
       // Restaurar lo que el usuario llenó antes de que el proceso muriera.
@@ -165,6 +181,19 @@ export class ReportarMultaPage {
   }
   quitarVehiculo(): void {
     this.vehiculo.set(null);
+  }
+
+  // ---- Conductor (Y7 — solo cuando se abre desde el hub) ----
+  abrirConductorPicker(): void {
+    this.sheetConductor.set(true);
+  }
+  cerrarConductorPicker(): void {
+    this.sheetConductor.set(false);
+  }
+  elegirConductor(c: Conductor): void {
+    this.conductorId = c.id;
+    this.conductorNombre.set(c.nombre);
+    this.sheetConductor.set(false);
   }
 
   async subirDoc(desdeArchivo: boolean): Promise<void> {

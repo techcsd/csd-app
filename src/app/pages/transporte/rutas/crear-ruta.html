@@ -65,7 +65,7 @@
           <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">🏗️ {{ origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén' }}</button>
           <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}</button>
           @if (origenLugar()) {
-            <app-select-list label="Obra o almacén de origen" icon="🏗️" [options]="lugarOpts()" [selectedId]="origenLugarId()" (picked)="onOrigenLugar($event)" />
+            <app-select-list label="Obra o almacén de origen" [options]="lugarOpts()" [selectedId]="origenLugarId()" (picked)="onOrigenLugar($event)" />
             @if (selectedOrigenLugar() && selectedOrigenLugar()!.latitud == null) {
               <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
             }
@@ -82,7 +82,7 @@
             <app-option-button icon="🗺️" label="En el mapa" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
           </div>
           @if (destinoModo() === 'lugar') {
-            <app-select-list label="Obra o almacén de destino" icon="🏗️" [options]="lugarOpts()" [selectedId]="destinoLugarId()" (picked)="onDestinoLugar($event)" />
+            <app-select-list label="Obra o almacén de destino" [options]="lugarOpts()" [selectedId]="destinoLugarId()" (picked)="onDestinoLugar($event)" />
             @if (selectedLugar() && selectedLugar()!.latitud == null) {
               <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
             }

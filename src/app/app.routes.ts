@@ -139,6 +139,13 @@ export const routes: Routes = [
       import('./pages/transporte/reportar-multa/reportar-multa').then((m) => m.ReportarMultaPage),
   },
   {
+    // Y7 — cuadro "Multas" del hub: registrar una multa eligiendo el conductor aquí.
+    path: 'transporte/multa',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/reportar-multa/reportar-multa').then((m) => m.ReportarMultaPage),
+  },
+  {
     path: 'transporte/conductores',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
