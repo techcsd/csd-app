@@ -58,7 +58,7 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.24.0';
+const MIN_VERSION = '1.28.0';
 const RELEASED_AT = '2026-07-24';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
