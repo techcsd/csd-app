@@ -40,3 +40,13 @@
   color: var(--color-warning);
   text-align: center;
 }
+
+.pin-screen__forgot {
+  margin-top: 20px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-option);
+  font-weight: 600;
+  text-decoration: underline;
+}

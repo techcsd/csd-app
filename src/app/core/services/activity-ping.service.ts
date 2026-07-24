@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { SupabaseService } from './supabase.service';
 import { NetworkService } from './network.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * W12 — "ping" de actividad: marca al usuario como activo en el canal 'app' al
@@ -44,9 +45,20 @@ export class ActivityPingService {
       const { data } = await this.supabase.client.auth.getSession();
       if (!data.session) return; // sin sesión no hay a quién marcar activo
       this.last = now;
-      await this.supabase.client.rpc('ping_actividad', { p_canal: 'app' });
-    } catch {
-      /* best-effort: nunca estorbar */
+      // X9-app — el RPC devuelve el error en el resultado (no lanza). Lo
+      // inspeccionamos para diagnosticar (dev) por qué "Última vez en app" no
+      // se actualizaba, sin dejar de ser best-effort en prod.
+      const { error } = await this.supabase.client.rpc('ping_actividad', { p_canal: 'app' });
+      if (error && !environment.production) {
+        // eslint-disable-next-line no-console
+        console.warn('[ActivityPing] ping_actividad falló:', error.code, error.message);
+      }
+    } catch (e) {
+      // best-effort: nunca estorbar; solo diagnosticamos en dev.
+      if (!environment.production) {
+        // eslint-disable-next-line no-console
+        console.warn('[ActivityPing] excepción al hacer ping:', e);
+      }
     }
   }
 }

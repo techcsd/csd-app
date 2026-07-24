@@ -33,10 +33,12 @@ interface TipoOpcion {
   tone: 'default' | 'success' | 'warning' | 'error';
 }
 
+// X6-app — 4 tipos de visita, alineados con el servidor (crear_mantenimiento_app).
 const TIPOS: TipoOpcion[] = [
   { valor: 'preventivo', label: 'Preventivo', icon: '🛠️', tone: 'success' },
-  { valor: 'correctivo', label: 'Correctivo', icon: '🔧', tone: 'warning' },
-  { valor: 'emergencia', label: 'Emergencia', icon: '🚨', tone: 'error' },
+  { valor: 'falla', label: 'Falla / avería', icon: '⚠️', tone: 'warning' },
+  { valor: 'accidente_dano', label: 'Accidente o daño', icon: '🚨', tone: 'error' },
+  { valor: 'cambio_pieza', label: 'Cambio de pieza', icon: '🔧', tone: 'default' },
 ];
 
 const TOTAL_STEPS = 4;
@@ -81,9 +83,16 @@ export class MantenimientoPage implements OnDestroy {
 
   step = signal(1);
   tipo = signal<MantenimientoTipo | null>(null);
+  incluyePreventivo = signal(false); // X6-app — solo en visitas no preventivas
   descripcion = signal('');
   km = signal<number | null>(null);
   fotos = signal<Record<number, CapturedPhoto>>({});
+
+  /** X6-app — el checkbox "incluyó preventivo" solo aplica si NO es preventivo. */
+  mostrarIncluyePreventivo = computed(() => {
+    const t = this.tipo();
+    return !!t && t !== 'preventivo';
+  });
 
   submitting = signal(false);
   done = signal(false);
@@ -118,7 +127,7 @@ export class MantenimientoPage implements OnDestroy {
     this.navGuard.register(this.backHandler); // Q7 — botón físico Android
     // U15 — autosave (regla: todo formulario lo tiene).
     effect(() => {
-      const snap = { tipo: this.tipo(), descripcion: this.descripcion(), km: this.km(), step: this.step() };
+      const snap = { tipo: this.tipo(), incluyePreventivo: this.incluyePreventivo(), descripcion: this.descripcion(), km: this.km(), step: this.step() };
       if (!this.hydrated || this.submitting() || this.done()) return;
       this.autosave.queue(this.clave, snap, { tipo: 'mantenimiento', etiqueta: 'Mantenimiento', ruta: this.location.path() });
     });
@@ -129,9 +138,10 @@ export class MantenimientoPage implements OnDestroy {
   }
 
   private async restoreDraft(): Promise<void> {
-    const draft = await this.borrador.load<{ tipo: MantenimientoTipo | null; descripcion: string; km: number | null; step: number }>(this.clave);
+    const draft = await this.borrador.load<{ tipo: MantenimientoTipo | null; incluyePreventivo?: boolean; descripcion: string; km: number | null; step: number }>(this.clave);
     if (draft) {
       this.tipo.set(draft.tipo ?? null);
+      this.incluyePreventivo.set(draft.incluyePreventivo ?? false);
       this.descripcion.set(draft.descripcion ?? '');
       this.km.set(draft.km ?? null);
       const fotos = await this.borrador.loadFotos(this.clave);
@@ -278,6 +288,8 @@ export class MantenimientoPage implements OnDestroy {
       await this.mantenimientos.enqueueMantenimiento({
         vehiculoId: this.vehiculoId,
         tipo: this.tipo()!,
+        // Solo tiene sentido en visitas no preventivas (guarda anti-inconsistencia).
+        incluyePreventivo: this.mostrarIncluyePreventivo() && this.incluyePreventivo(),
         descripcion,
         fecha: new Date().toISOString().slice(0, 10),
         km: this.km(),

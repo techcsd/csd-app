@@ -1,0 +1,17 @@
+@if (card(); as c) {
+  <div class="permiso" role="alertdialog" aria-modal="true">
+    <div class="permiso__card">
+      <span class="permiso__icon" aria-hidden="true">{{ c.icono }}</span>
+      <h2 class="permiso__title">{{ c.titulo }}</h2>
+      <p class="permiso__msg">{{ c.texto }}</p>
+      <button type="button" class="permiso__btn permiso__btn--primary" (click)="primary()">
+        {{ c.primaryLabel }}
+      </button>
+      @if (c.secondaryLabel) {
+        <button type="button" class="permiso__btn permiso__btn--ghost" (click)="secondary()">
+          {{ c.secondaryLabel }}
+        </button>
+      }
+    </div>
+  </div>
+}

@@ -32,6 +32,12 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/auth/pin-unlock/pin-unlock').then((m) => m.PinUnlockPage),
   },
+  {
+    // X10 — cambiar el PIN estando ya dentro (Ajustes). Requiere sesión + desbloqueado.
+    path: 'auth/pin-change',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/auth/pin-change/pin-change').then((m) => m.PinChangePage),
+  },
 
   // App (session + PIN unlocked)
   {

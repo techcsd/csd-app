@@ -45,11 +45,34 @@
           <label class="field-label">¿Involucra a un tercero? (opcional)</label>
           <input class="field" type="text" [ngModel]="tercero()" (ngModelChange)="tercero.set($event)" placeholder="Nombre / vehículo del tercero" />
         }
+        <!-- X3-app — fotos del hecho (múltiples, cámara o galería) -->
         @if (step() === 4) {
+          <h1 class="screen__title">Fotos del hecho (opcional)</h1>
+          <p class="screen__subtitle">Toma o elige fotos del accidente (hasta {{ slotsHecho.length }}).</p>
+          <div class="repv__fotos">
+            @for (i of slotsHecho; track i) {
+              <app-photo-slot
+                [label]="'Foto ' + (i + 1)"
+                hint="📸"
+                [foto]="fotosHecho()[i] ?? null"
+                (captured)="onFotoHecho(i, $event)"
+                (cleared)="onFotoHechoCleared(i)"
+              />
+            }
+          </div>
+        }
+        @if (step() === 5) {
           <h1 class="screen__title">Acta de la AMET (opcional)</h1>
           <p class="screen__subtitle">Si tienes el acta/reporte de la AMET, adjúntala (foto o PDF).</p>
           @if (amet(); as d) {
-            <div class="repv__doc">📎 {{ d.esImagen ? 'Foto adjunta' : d.nombre }} <button type="button" class="btn-ghost" (click)="quitarAmet()">Quitar</button></div>
+            <div class="repv__doc">
+              @if (d.esImagen && d.previewUrl) {
+                <img class="repv__thumb" [src]="d.previewUrl" alt="Acta AMET" (click)="verGrande(d.previewUrl)" />
+              } @else {
+                <span>📎 {{ d.nombre }}</span>
+              }
+              <button type="button" class="btn-ghost" (click)="quitarAmet()">Quitar</button>
+            </div>
           } @else {
             <div class="repv__doc-actions">
               <button type="button" class="btn-ghost" (click)="subirAmet(false)">📷 Foto del acta</button>
@@ -57,15 +80,29 @@
             </div>
           }
         }
-        @if (step() === 5) {
+        @if (step() === 6) {
           <h1 class="screen__title">Revisa y envía</h1>
           <ul class="resumen">
             <li><span>Vehículo</span><b>{{ placa() }}</b></li>
             <li><span>Cuándo</span><b>{{ fase() === 'en_el_momento' ? 'En el momento' : 'Después' }}</b></li>
             <li><span>Lesionados</span><b>{{ lesionados() }}</b></li>
             @if (tercero()) { <li><span>Tercero</span><b>{{ tercero() }}</b></li> }
+            <li><span>Fotos del hecho</span><b>{{ fotosHechoCount() }}</b></li>
             <li><span>Acta AMET</span><b>{{ amet() ? 'Sí' : 'No' }}</b></li>
           </ul>
+          <!-- X3-app — miniaturas (tap para ver en grande dentro de la app) -->
+          <div class="repv__thumbs">
+            @for (i of slotsHecho; track i) {
+              @if (fotosHecho()[i]; as f) {
+                <img class="repv__thumb" [src]="f.previewUrl" [alt]="'Foto ' + (i + 1)" (click)="verGrande(f.previewUrl)" />
+              }
+            }
+            @if (amet(); as d) {
+              @if (d.esImagen && d.previewUrl) {
+                <img class="repv__thumb" [src]="d.previewUrl" alt="Acta AMET" (click)="verGrande(d.previewUrl)" />
+              }
+            }
+          </div>
         }
       }
 
@@ -109,6 +146,14 @@
       (primary)="step() < total() ? next() : submit()"
     />
   </div>
+
+  <!-- X3-app — ver foto/acta en grande sin salir de la app -->
+  @if (lightboxUrl(); as url) {
+    <div class="repv__lightbox" (click)="cerrarLightbox()">
+      <img class="repv__lightbox-img" [src]="url" alt="Vista ampliada" />
+      <button type="button" class="repv__lightbox-close" (click)="cerrarLightbox()" aria-label="Cerrar">✕</button>
+    </div>
+  }
 
   <app-confirm-dialog
     [open]="confirmSalir()"

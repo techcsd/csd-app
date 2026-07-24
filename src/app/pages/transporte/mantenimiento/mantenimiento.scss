@@ -91,3 +91,24 @@
   font-weight: 600;
   font-size: 14px;
 }
+
+// X6-app — checkbox "también se hizo preventivo".
+.mantenimiento__check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--fs-option);
+  font-weight: 600;
+  min-height: var(--touch-min);
+
+  input {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    accent-color: var(--color-primary);
+  }
+}

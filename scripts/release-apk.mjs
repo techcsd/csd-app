@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.27.0';
+const VERSION = '1.28.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,21 +59,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.24.0';
-const RELEASED_AT = '2026-07-23';
+const RELEASED_AT = '2026-07-24';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Navegación a Maps, multas con catálogo, fotos desde galería y stock en salidas';
+const TITULO = 'Permisos con explicación, Face ID en iPhone, PIN olvidado y fotos de accidentes';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'En "Cómo llegar" de tus rutas ahora se abre Google Maps con la navegación directa al destino.' },
-  { t: 'nuevo', d: 'Registrar multa: eliges el motivo de una lista (o "Otro" para escribirlo), seleccionas el vehículo con tarjetas y foto, y puedes abrir el detalle de cualquier multa desde tu actividad.' },
-  { t: 'nuevo', d: 'En los reportes ahora puedes adjuntar fotos desde la Galería, no solo con la cámara.' },
-  { t: 'mejora', d: 'En reporte semanal, pre-uso y combustible tus vehículos asignados aparecen primero ("Tus vehículos").' },
-  { t: 'mejora', d: 'Salida de inventario muestra cuánto hay en el almacén, no te deja sacar más de lo disponible y puedes indicar hacia qué obra va (con recepción en su almacén).' },
-  { t: 'mejora', d: 'Al recibir un vehículo, si ya lo tienes o lo tiene otra persona, te avisamos claro en vez de dejarte llenar todo para fallar al final.' },
-  { t: 'mejora', d: 'Pendientes de envío: mensajes de error más entendibles y opción de descartar lo que no se puede reenviar.' },
-  { t: 'nuevo', d: 'Los administradores pueden marcar vehículos y conductores como "Dato de prueba" (con distintivo PRUEBA) sin afectar la flota real.' },
+  { t: 'nuevo', d: 'Cuando una función necesita un permiso (ubicación, cámara o micrófono) te explicamos por qué y te ayudamos a activarlo; si estaba bloqueado, un botón te lleva directo a los ajustes.' },
+  { t: 'nuevo', d: 'En iPhone ahora puedes desbloquear la app con Face ID. El PIN sigue disponible como respaldo.' },
+  { t: 'nuevo', d: '¿Olvidaste tu PIN? Ahora puedes restablecerlo tú mismo: entras de nuevo con tu clave (o cédula y PIN de acceso) y creas un PIN nuevo.' },
+  { t: 'nuevo', d: 'Puedes cambiar tu PIN cuando quieras desde tu perfil.' },
+  { t: 'mejora', d: 'Al reportar una visita al taller eliges el tipo (preventivo, falla, accidente/daño o cambio de pieza) y marcas si de paso se hizo mantenimiento preventivo.' },
+  { t: 'nuevo', d: 'Al reportar un accidente puedes adjuntar varias fotos del hecho (cámara o galería) y verlas en grande dentro de la app.' },
 ];
 
 const TIPO_POR_COMMIT = {

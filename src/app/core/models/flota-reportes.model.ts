@@ -22,6 +22,8 @@ export interface AccidenteCaptura {
   gps: { lat: number; lng: number } | null;
   /** Acta AMET (foto o PDF), opcional. */
   amet: { blob: Blob; ext: string } | null;
+  /** X3-app — fotos del hecho (además del acta), en orden de captura. */
+  fotosHecho: Blob[];
 }
 
 /** Captura de "Reportar daño" (S22). */

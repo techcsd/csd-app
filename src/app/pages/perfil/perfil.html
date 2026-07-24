@@ -36,6 +36,16 @@
       </button>
     }
 
+    @if (faceIdSoportado()) {
+      <button type="button" class="btn-ghost perfil__btn" [disabled]="faceIdBusy()" (click)="toggleFaceId()">
+        {{ faceIdOn() ? '✅ Face ID activado' : '🙂 Usar Face ID' }}
+      </button>
+    }
+
+    <button type="button" class="btn-ghost perfil__btn" (click)="cambiarPin()">
+      🔑 Cambiar PIN
+    </button>
+
     <button type="button" class="btn-ghost perfil__btn" (click)="enProceso()">
       📝 Documentación en proceso
     </button>

@@ -20,6 +20,7 @@ import { GeocodingService } from '../../../core/services/geocoding.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
+import { PermisoGateService } from '../../../core/services/permiso-gate.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { formatearDuracion } from '../../../core/util/duracion';
 
@@ -46,6 +47,7 @@ export class CrearRutaPage implements OnDestroy {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private permissions = inject(PermissionsService);
+  private gate = inject(PermisoGateService);
   private router = inject(Router);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
@@ -171,6 +173,9 @@ export class CrearRutaPage implements OnDestroy {
    * con las coordenadas del GPS.
    */
   async usarMiUbicacion(): Promise<void> {
+    // X4 — primero aseguramos el permiso con su explicación; si el usuario no lo
+    // concede, la tarjeta ya le mostró cómo activarlo → no seguimos en silencio.
+    if (!(await this.gate.asegurar('location'))) return;
     const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 10000 });
     if (r.ok) {
       this.gps = { lat: r.lat, lng: r.lng };

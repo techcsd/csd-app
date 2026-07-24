@@ -4,6 +4,7 @@ import { filter } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { ToastHost } from './shared/components/toast-host/toast-host';
+import { PermisoHost } from './shared/components/permiso-host/permiso-host';
 import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
@@ -20,7 +21,7 @@ import { ActivityPingService } from './core/services/activity-ping.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, InAppCamera],
+  imports: [RouterOutlet, ToastHost, PermisoHost, InAppCamera],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

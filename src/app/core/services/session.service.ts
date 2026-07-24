@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { AuthService } from './auth.service';
 import { PinService } from './pin.service';
+import { WebauthnService } from './webauthn.service';
 import { UserContextService } from './user-context.service';
 
 /**
@@ -12,6 +13,7 @@ import { UserContextService } from './user-context.service';
 export class SessionService {
   private auth = inject(AuthService);
   private pin = inject(PinService);
+  private webauthn = inject(WebauthnService);
   private ctx = inject(UserContextService);
 
   private _unlocked = signal(false);
@@ -57,6 +59,10 @@ export class SessionService {
   async logout(): Promise<void> {
     await this.auth.signOut();
     await this.pin.clear();
+    // X8 — la credencial de Face ID (PWA) es local a este usuario/dispositivo;
+    // el próximo usuario la vuelve a registrar. La nativa (BiometricService) es
+    // solo un flag y el diálogo del SO confirma al dueño real del teléfono.
+    await this.webauthn.clear();
     this.ctx.clear();
     this._unlocked.set(false);
     this.autoEntered = false;

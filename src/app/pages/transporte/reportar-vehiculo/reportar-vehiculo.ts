@@ -25,6 +25,9 @@ import { resetScrollOnStep } from '../../../shared/util/scroll';
 
 type Tipo = 'accidente' | 'dano';
 
+/** X3-app — tope de fotos del hecho por accidente. */
+const MAX_FOTOS_HECHO = 6;
+
 /** Estado del formulario persistido (los blobs de fotos van aparte). */
 interface ReporteVehDraft {
   tipo: Tipo | null;
@@ -81,6 +84,9 @@ export class ReportarVehiculoPage implements OnDestroy {
   lesionados = signal(0);
   tercero = signal('');
   amet = signal<CapturedDoc | null>(null);
+  fotosHecho = signal<Record<number, CapturedPhoto>>({}); // X3-app — fotos del hecho
+  readonly slotsHecho = Array.from({ length: MAX_FOTOS_HECHO }, (_, i) => i);
+  lightboxUrl = signal<string | null>(null); // X3-app — ver en grande dentro de la app
   private gps: { lat: number; lng: number } | null = null;
 
   // Daño
@@ -101,8 +107,10 @@ export class ReportarVehiculoPage implements OnDestroy {
     return `reporte_vehiculo:${this.vehiculoId}`;
   }
 
-  total = computed(() => (this.tipo() === 'accidente' ? 5 : this.tipo() === 'dano' ? 4 : 1));
+  // X3-app — accidente ahora tiene un paso extra (fotos del hecho): 6 pasos.
+  total = computed(() => (this.tipo() === 'accidente' ? 6 : this.tipo() === 'dano' ? 4 : 1));
   esAccidente = computed(() => this.tipo() === 'accidente');
+  fotosHechoCount = computed(() => Object.keys(this.fotosHecho()).length);
 
   private readonly backHandler = (): boolean => {
     if (!this.done() && this.tieneDatos()) {
@@ -168,6 +176,14 @@ export class ReportarVehiculoPage implements OnDestroy {
         const f = fotos.find((x) => x.slot === 'dano');
         if (f) this.danoFoto.set({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) });
       }
+      // X3-app — rehidratar las fotos del hecho por su slot (hecho_N).
+      const hecho: Record<number, CapturedPhoto> = {};
+      for (const f of fotos) {
+        if (!f.slot.startsWith('hecho_')) continue;
+        const idx = Number(f.slot.slice('hecho_'.length));
+        if (Number.isFinite(idx)) hecho[idx] = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+      }
+      if (Object.keys(hecho).length) this.fotosHecho.set(hecho);
       this.borradorPrevio.set(true);
     }
     this.hydrated = true;
@@ -224,6 +240,28 @@ export class ReportarVehiculoPage implements OnDestroy {
     void this.borrador.removeFoto(this.clave, 'dano');
   }
 
+  // X3-app — fotos del hecho (por slot, cámara o galería vía photo-slot).
+  onFotoHecho(idx: number, photo: CapturedPhoto): void {
+    this.fotosHecho.update((f) => ({ ...f, [idx]: photo }));
+    void this.borrador.saveFoto(this.clave, `hecho_${idx}`, photo.blob);
+  }
+  onFotoHechoCleared(idx: number): void {
+    this.fotosHecho.update((f) => {
+      const next = { ...f };
+      delete next[idx];
+      return next;
+    });
+    void this.borrador.removeFoto(this.clave, `hecho_${idx}`);
+  }
+
+  /** X3-app — ver una foto/acta en grande dentro de la app (overlay propio). */
+  verGrande(url: string | null): void {
+    if (url) this.lightboxUrl.set(url);
+  }
+  cerrarLightbox(): void {
+    this.lightboxUrl.set(null);
+  }
+
   next(): void {
     const s = this.step();
     if (s === 1 && !this.tipo()) {
@@ -275,6 +313,9 @@ export class ReportarVehiculoPage implements OnDestroy {
           tercero: this.tercero().trim() || null,
           gps: this.gps,
           amet: this.amet() ? { blob: this.amet()!.blob, ext: this.amet()!.ext } : null,
+          fotosHecho: this.slotsHecho
+            .map((i) => this.fotosHecho()[i]?.blob)
+            .filter((b): b is Blob => !!b),
         });
       } else {
         await this.reportes.enqueueDano({
@@ -301,6 +342,7 @@ export class ReportarVehiculoPage implements OnDestroy {
         !!this.descripcion().trim() ||
         this.lesionados() > 0 ||
         !!this.amet() ||
+        this.fotosHechoCount() > 0 ||
         !!this.danoFoto() ||
         !!this.danoDescripcion().trim())
     );

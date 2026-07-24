@@ -42,6 +42,17 @@
             />
           }
         </div>
+        <!-- X6-app — en visitas no preventivas, ¿de paso se hizo preventivo? -->
+        @if (mostrarIncluyePreventivo()) {
+          <label class="mantenimiento__check">
+            <input
+              type="checkbox"
+              [checked]="incluyePreventivo()"
+              (change)="incluyePreventivo.set($any($event.target).checked)"
+            />
+            <span>También se hizo mantenimiento preventivo</span>
+          </label>
+        }
       }
 
       <!-- Step 2: description + km -->
@@ -89,6 +100,9 @@
         <ul class="resumen">
           <li><span>Vehículo</span><b>{{ placa() }}</b></li>
           <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>
+          @if (mostrarIncluyePreventivo() && incluyePreventivo()) {
+            <li><span>Incluyó preventivo</span><b>Sí</b></li>
+          }
           @if (km() !== null) {
             <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           }

@@ -85,3 +85,55 @@
   background: rgba(220, 38, 38, 0.1);
   color: var(--color-error);
 }
+
+// X3-app — fotos del hecho: grid de slots + miniaturas + lightbox.
+.repv__fotos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.repv__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.repv__thumb {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.repv__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 340;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.9);
+}
+.repv__lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.repv__lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+}

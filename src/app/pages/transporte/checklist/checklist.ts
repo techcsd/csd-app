@@ -23,6 +23,7 @@ import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
+import { PermisoGateService } from '../../../core/services/permiso-gate.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -71,6 +72,7 @@ export class ChecklistPage implements OnDestroy {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private permissions = inject(PermissionsService);
+  private gate = inject(PermisoGateService);
   private ubicacionLabel = inject(UbicacionLabelService);
   private autosave = inject(AutosaveService);
   private navGuard = inject(NavGuardService);
@@ -300,6 +302,18 @@ export class ChecklistPage implements OnDestroy {
 
   private async captureGps(): Promise<void> {
     this.gpsEstado.set('capturando');
+    // X4 — antes de capturar aseguramos el permiso con su explicación. Si el
+    // usuario no lo concede, la tarjeta ya le indicó cómo activarlo y marcamos
+    // "sin ubicación" (best-effort, no bloquea; el resumen ofrece reintentar).
+    if (!(await this.gate.asegurar('location'))) {
+      this.gps = null;
+      this.gpsEstado.set('sin-ubicacion');
+      this.ubicacionTexto.set(null);
+      const st = await this.permissions.checkLocation();
+      this.gpsBloqueado.set(st === 'denied');
+      this.gpsRazon.set(st === 'denied' ? 'denied-permanent' : 'denied');
+      return;
+    }
     // P2 — recibir vehículo toma la ubicación automáticamente: pedimos el
     // permiso on-demand (getPosition abre el diálogo si hace falta). GPS es
     // best-effort (VEH-06 / X2): si falla, se registra "sin ubicación" y nunca

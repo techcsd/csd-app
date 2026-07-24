@@ -3,7 +3,13 @@ import { SupabaseService } from './supabase.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { CatalogService } from '../sync/catalog.service';
 
-export type MantenimientoTipo = 'preventivo' | 'correctivo' | 'emergencia';
+/**
+ * X6-app — tipos de visita/mantenimiento tipificados, EXACTAMENTE los 4 que
+ * acepta el servidor (`crear_mantenimiento_app`). Cualquier otro valor el RPC lo
+ * coerce a 'preventivo', así que los valores viejos ('correctivo'/'emergencia')
+ * se registraban mal → ahora usamos los canónicos.
+ */
+export type MantenimientoTipo = 'preventivo' | 'falla' | 'accidente_dano' | 'cambio_pieza';
 
 /** Input the maintenance wizard hands to enqueueMantenimiento(). */
 export interface MantenimientoCaptura {
@@ -12,6 +18,8 @@ export interface MantenimientoCaptura {
   descripcion: string;
   fecha: string; // YYYY-MM-DD
   km: number | null;
+  /** X6-app — en visitas NO preventivas, si de paso se hizo preventivo. */
+  incluyePreventivo: boolean;
   /** Up to 3 optional evidence photos, in capture order. */
   fotos: Blob[];
   placa: string;
@@ -56,6 +64,7 @@ export class MantenimientosService {
         descripcion: input.descripcion,
         fecha: input.fecha,
         km: input.km,
+        incluye_preventivo: input.incluyePreventivo,
       },
       fotos,
       resumen: { placa: input.placa, tipo: input.tipo, capturado_en },
@@ -78,6 +87,7 @@ export class MantenimientosService {
         p_km: payload['km'] ?? null,
         p_fotos: fotos,
         p_capturado_en: payload['capturado_en'],
+        p_incluye_preventivo: payload['incluye_preventivo'] ?? false,
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);

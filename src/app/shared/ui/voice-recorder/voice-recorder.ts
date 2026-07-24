@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, inject, output, signal } from '@angular/core';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
+import { PermisoGateService } from '../../../core/services/permiso-gate.service';
 
 /**
  * Voice-note recorder — alternative to typing (UI/UX principle #3, incidente
@@ -17,6 +18,7 @@ import { PermissionsService } from '../../../core/services/permissions.service';
 export class VoiceRecorder implements OnDestroy {
   private toast = inject(ToastService);
   private permissions = inject(PermissionsService);
+  private gate = inject(PermisoGateService);
 
   recording = signal(false);
   previewUrl = signal<string | null>(null);
@@ -30,6 +32,9 @@ export class VoiceRecorder implements OnDestroy {
       this.recorder?.stop();
       return;
     }
+    // X4 — asegurar el micrófono con su explicación antes de grabar; si el
+    // usuario no lo concede, la tarjeta ya le indicó cómo activarlo.
+    if (!(await this.gate.asegurar('mic'))) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.chunks = [];

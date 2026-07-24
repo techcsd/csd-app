@@ -11,5 +11,23 @@
         👆 Usar huella / rostro
       </button>
     }
+    @if (faceIdDisponible()) {
+      <button type="button" class="pin-screen__bio" (click)="unlockConFaceId()">
+        🙂 Desbloquear con Face ID
+      </button>
+    }
+    <button type="button" class="pin-screen__forgot" (click)="olvidePin()">
+      ¿Olvidaste tu PIN?
+    </button>
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmReset()"
+    title="Restablecer tu PIN"
+    message="Cerraremos tu sesión y entrarás de nuevo con tu contraseña (o cédula + PIN de acceso). Luego crearás un PIN nuevo. Necesitas internet."
+    confirmLabel="Entrar de nuevo"
+    cancelLabel="Cancelar"
+    (confirmed)="confirmarReset()"
+    (cancelled)="cancelarReset()"
+  />
 </div>

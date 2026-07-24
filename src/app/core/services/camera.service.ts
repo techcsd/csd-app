@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { InAppCameraService } from './in-app-camera.service';
+import { PermisoGateService } from './permiso-gate.service';
 
 /** W1 — practical cap for a single multi-pick batch (configurable, kept high). */
 const GALLERY_LIMIT = 40;
@@ -39,12 +40,18 @@ const NATIVE_QUALITY = 72;
 @Injectable({ providedIn: 'root' })
 export class CameraService {
   private inApp = inject(InAppCameraService);
+  private gate = inject(PermisoGateService);
 
   get isNative(): boolean {
     return Capacitor.isNativePlatform();
   }
 
   async takePhoto(): Promise<CapturedPhoto | null> {
+    // X4 — punto único para TODAS las capturas de cámara (photo-slot, doc-slot,
+    // foto de documento). Antes de abrir la cámara aseguramos el permiso con su
+    // explicación; si falta y el usuario no lo concede, degradamos a null (sin
+    // crash ni spinner colgado) y la tarjeta ya le indicó cómo activarlo.
+    if (!(await this.gate.asegurar('camera'))) return null;
     // M1 — blindaje total: una excepción aquí (permiso, plugin, WebView) jamás
     // debe tumbar el wizard de pre-uso. Ante cualquier fallo devolvemos null.
     try {

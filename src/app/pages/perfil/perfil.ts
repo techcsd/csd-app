@@ -7,6 +7,7 @@ import { SessionService } from '../../core/services/session.service';
 import { UpdateService } from '../../core/services/update.service';
 import { NetworkService } from '../../core/services/network.service';
 import { BiometricService } from '../../core/services/biometric.service';
+import { WebauthnService } from '../../core/services/webauthn.service';
 import { VersionService } from '../../core/services/version.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
@@ -26,6 +27,7 @@ export class PerfilPage {
   private updates = inject(UpdateService);
   private network = inject(NetworkService);
   private biometric = inject(BiometricService);
+  private webauthn = inject(WebauthnService);
   private versionSvc = inject(VersionService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -44,6 +46,9 @@ export class PerfilPage {
   biometriaSoportada = signal(false);
   biometriaOn = signal(false);
   biometriaBusy = signal(false);
+  faceIdSoportado = signal(false); // X8 — PWA (Face ID/Touch ID vía WebAuthn)
+  faceIdOn = signal(false);
+  faceIdBusy = signal(false);
 
   constructor() {
     void this.loadBiometria();
@@ -52,6 +57,33 @@ export class PerfilPage {
   private async loadBiometria(): Promise<void> {
     this.biometriaSoportada.set(await this.biometric.isSupported());
     this.biometriaOn.set(await this.biometric.isEnabled());
+    // X8 — en el PWA (iPhone) el desbloqueo biométrico va por WebAuthn.
+    this.faceIdSoportado.set(await this.webauthn.isSupported());
+    this.faceIdOn.set(await this.webauthn.isEnabled());
+  }
+
+  async toggleFaceId(): Promise<void> {
+    if (this.faceIdBusy()) return;
+    this.faceIdBusy.set(true);
+    try {
+      const next = !this.faceIdOn();
+      const result = await this.webauthn.setEnabled(next);
+      this.faceIdOn.set(result);
+      if (next && !result) {
+        this.toast.error('No se pudo activar Face ID. Inténtalo de nuevo.');
+      } else if (result) {
+        this.toast.success('Desbloqueo con Face ID activado.');
+      } else {
+        this.toast.success('Face ID desactivado.');
+      }
+    } finally {
+      this.faceIdBusy.set(false);
+    }
+  }
+
+  /** X10 — cambiar el PIN estando desbloqueado (pide el PIN actual). */
+  cambiarPin(): void {
+    void this.router.navigate(['/auth/pin-change']);
   }
 
   async toggleBiometria(): Promise<void> {

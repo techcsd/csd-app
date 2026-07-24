@@ -315,9 +315,19 @@ export class FlotaReportesService {
   async enqueueAccidente(input: AccidenteCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
-    const fotos = input.amet
-      ? [{ id: crypto.randomUUID(), bucket: BUCKET_DOCS, path: `accidentes/${id}/amet.${input.amet.ext}`, slot: 'amet', blob: input.amet.blob }]
-      : [];
+    const fotos = [
+      ...(input.amet
+        ? [{ id: crypto.randomUUID(), bucket: BUCKET_DOCS, path: `accidentes/${id}/amet.${input.amet.ext}`, slot: 'amet', blob: input.amet.blob }]
+        : []),
+      // X3-app — fotos del hecho al bucket `vehiculos` (upsert-safe), slots hecho_N.
+      ...input.fotosHecho.map((blob, i) => ({
+        id: crypto.randomUUID(),
+        bucket: BUCKET_FOTOS,
+        path: `accidentes/${id}/hecho_${i}.jpg`,
+        slot: `hecho_${i}`,
+        blob,
+      })),
+    ];
     await this.sync.enqueue({
       id,
       tipo_op: 'accidente_vehiculo',
@@ -389,6 +399,11 @@ export class FlotaReportesService {
   private registerHandlers(): void {
     this.sync.register('accidente_vehiculo', async (payload, photoPaths) => {
       const gps = payload['gps'] as { lat: number; lng: number } | null;
+      // X3-app — fotos del hecho (slots hecho_N) → array {storage_path} para p_fotos.
+      const fotosHecho = Object.entries(photoPaths)
+        .filter(([slot]) => slot.startsWith('hecho_'))
+        .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+        .map(([, path]) => ({ storage_path: path }));
       const { error } = await this.supabase.client.rpc('registrar_accidente_app', {
         p_id: payload['id'],
         p_vehiculo_id: payload['vehiculo_id'],
@@ -401,6 +416,7 @@ export class FlotaReportesService {
         p_gps: gps ?? null,
         p_reporte_amet_path: photoPaths['amet'] ?? null,
         p_capturado_en: payload['capturado_en'],
+        p_fotos: fotosHecho,
       });
       if (error) throwSyncError(error);
     });
