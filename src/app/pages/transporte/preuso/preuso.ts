@@ -457,7 +457,11 @@ export class PreusoPage extends GuardedWizard {
       this.categorias.set(cats);
       this.precitaKm.set(cfg.precitaKm);
       this.licenciaUmbral.set(cfg.licenciaDias);
-      if (list.length) this.pickPlantilla(list[0].id);
+      // Z15 — elegir la plantilla vigente según el USO del vehículo: los
+      // administrativos usan el pre-uso reducido (PRE-USO-ADMIN-V1); el resto,
+      // la general ('ambos'/'obra'). Fallback a la primera activa por orden.
+      const elegida = this.plantillaParaUso(list, v?.uso ?? null);
+      if (elegida) this.pickPlantilla(elegida.id);
       // El km de salida arranca VACÍO (el usuario escribe el actual). El último
       // registrado queda solo como referencia (vehiculo.kilometraje / kmInvalido).
       // M1 — ¿hay un borrador sin enviar de este vehículo? → ofrecer recuperar.
@@ -467,6 +471,20 @@ export class PreusoPage extends GuardedWizard {
       this.hydrated = true;
       this.loadingCtx.set(false);
     }
+  }
+
+  /** Z15 — plantilla de pre-uso vigente según el uso del vehículo. */
+  private plantillaParaUso(list: ChecklistPlantilla[], uso: string | null): ChecklistPlantilla | null {
+    if (!list.length) return null;
+    const admin = uso === 'administrativo';
+    // ordenadas ya vienen por `orden`; preferir la que aplica al uso del vehículo.
+    if (admin) {
+      const propia = list.find((p) => p.uso_aplica === 'administrativo');
+      if (propia) return propia;
+    }
+    // No-admin (o sin plantilla admin): usar una que NO sea exclusiva de admin.
+    const general = list.find((p) => p.uso_aplica !== 'administrativo');
+    return general ?? list[0];
   }
 
   private pickPlantilla(id: string): void {

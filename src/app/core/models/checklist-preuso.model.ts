@@ -68,6 +68,8 @@ export interface ChecklistPlantilla {
   orden: number;
   /** 'preuso' (inspección diaria) | 'semanal' (reporte semanal). */
   frecuencia?: string;
+  /** Z15 — uso al que aplica: 'ambos' | 'obra' | 'administrativo'. */
+  uso_aplica?: string | null;
   items: ChecklistPlantillaItem[];
 }
 

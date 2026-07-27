@@ -15,6 +15,7 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
+import { formatFechaMedia } from '../../../core/util/fecha';
 import { UbicacionLabelService } from '../../../core/services/ubicacion-label.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { VehiculoDetalle } from '../../../core/models/transporte.model';
@@ -149,8 +150,13 @@ export class ChecklistPage implements OnDestroy {
   submitting = signal(false);
   done = signal(false);
   confirmSalir = signal(false); // Q7 — salir con confirmación
-  /** W3 — recepción abierta detectada: bloquea el llenado con un aviso claro. */
-  bloqueoRecepcion = signal<{ mia: boolean; conductor: string } | null>(null);
+  /** W3/Z14 — recepción abierta detectada. Si es MÍA → redirige a devolución;
+   *  si es de OTRO → aviso confirmable de traspaso (handover), no un muro. */
+  bloqueoRecepcion = signal<{ mia: boolean; conductor: string; desde: string } | null>(null);
+  /** Z14 — el usuario confirmó recibir un vehículo que tenía otro (traspaso). */
+  forzarHandover = signal(false);
+  /** Z14 — fecha legible del "desde" del handover. */
+  readonly fechaCorta = formatFechaMedia;
 
   titulo = computed(() => (this.tipo === 'recepcion' ? 'Recibir vehículo' : 'Devolver vehículo'));
 
@@ -276,27 +282,51 @@ export class ChecklistPage implements OnDestroy {
         if (this.tipo === 'recepcion') {
           const abierta = await this.vehiculos.entregaAbiertaDe(this.vehiculoId);
           if (abierta) {
-            this.bloqueoRecepcion.set({ mia: abierta.es_mia, conductor: abierta.conductor });
+            // Z14 — mía → devolución; de otro → aviso confirmable (handover),
+            // NO un muro: el usuario puede recibirlo de todas formas (traspaso).
+            this.bloqueoRecepcion.set({ mia: abierta.es_mia, conductor: abierta.conductor, desde: abierta.desde });
             this.loading.set(false);
             return;
           }
         }
       }
-      const v = await this.vehiculos.getVehiculo(this.vehiculoId);
-      if (v) {
-        this.placa.set(v.placa);
-        this.modelo.set(`${v.marca} ${v.modelo}`);
-        this.odometro.set(v.kilometraje ?? null); // APP-011 — base de coherencia de km
-      }
-      // S19 — detalle (km_ultimo_mantenimiento + intervalo) para el aviso en vivo.
-      // U1 — getVehiculoDetalle devuelve el km EFECTIVO (servidor + outbox); usarlo
-      // como base de coherencia para no mostrar un km viejo tras recibir/echar.
-      void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => {
-        this.vehDetalle.set(d);
-        if (d?.kilometraje != null) this.odometro.set(d.kilometraje);
-      });
+      await this.cargarDatosVehiculo();
     } finally {
       this.loading.set(false); // APP-038
+    }
+  }
+
+  /** Carga el encabezado del vehículo + su detalle (km efectivo + mantenimiento). */
+  private async cargarDatosVehiculo(): Promise<void> {
+    const v = await this.vehiculos.getVehiculo(this.vehiculoId);
+    if (v) {
+      this.placa.set(v.placa);
+      // Z10 — "Marca Modelo Año"
+      this.modelo.set(`${v.marca} ${v.modelo}${v.anio ? ' ' + v.anio : ''}`);
+      this.odometro.set(v.kilometraje ?? null); // APP-011 — base de coherencia de km
+    }
+    // S19 — detalle (km_ultimo_mantenimiento + intervalo) para el aviso en vivo.
+    // U1 — getVehiculoDetalle devuelve el km EFECTIVO (servidor + outbox); usarlo
+    // como base de coherencia para no mostrar un km viejo tras recibir/echar.
+    void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => {
+      this.vehDetalle.set(d);
+      if (d?.kilometraje != null) this.odometro.set(d.kilometraje);
+    });
+  }
+
+  /** Z14 — el usuario confirma recibir un vehículo que tenía otro conductor. Se
+   *  marca el traspaso (forzarHandover) y se carga el wizard normalmente; al
+   *  enviar, el RPC hace el handover (cierra la entrega anterior y abre la nueva). */
+  async confirmarHandover(): Promise<void> {
+    const b = this.bloqueoRecepcion();
+    if (!b || b.mia) return;
+    this.forzarHandover.set(true);
+    this.bloqueoRecepcion.set(null);
+    this.loading.set(true);
+    try {
+      await this.cargarDatosVehiculo();
+    } finally {
+      this.loading.set(false);
     }
   }
 
@@ -481,6 +511,7 @@ export class ChecklistPage implements OnDestroy {
           blob: d.photo!.blob,
         })),
         placa: this.placa(),
+        forzarHandover: this.forzarHandover(), // Z14
       });
       void this.autosave.discard(this.clave());
       // S29 — refrescar el pool para que el vehículo recibido salga de "por recibir".

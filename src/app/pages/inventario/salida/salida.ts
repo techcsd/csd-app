@@ -197,6 +197,8 @@ export class SalidaPage implements OnDestroy {
   }
   /** ¿Hay alguna línea que exceda el stock verificado? */
   hayExceso = computed(() => this.cart().some((l) => this.excede(l)));
+  /** Z19b — la foto de evidencia es OBLIGATORIA (mínimo 1). */
+  faltaFoto = computed(() => !this.foto());
 
   // ── Navegación entre hojas ──
   irResumen(): void {
@@ -269,6 +271,11 @@ export class SalidaPage implements OnDestroy {
     const items = this.cart().filter((l) => l.cantidad > 0);
     if (!items.length) {
       this.toast.error('Agrega al menos un material.');
+      return;
+    }
+    // Z19b — evidencia obligatoria (el server la exige; validamos antes de enviar).
+    if (this.faltaFoto()) {
+      this.toast.error('Agrega una foto de evidencia antes de confirmar.');
       return;
     }
     this.submitting.set(true);

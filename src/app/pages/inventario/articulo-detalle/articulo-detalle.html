@@ -1,0 +1,52 @@
+<div class="screen art">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Artículo</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (articulo(); as a) {
+      <!-- Foto grande -->
+      <div class="art__foto">
+        @if (a.imagen_url) {
+          <button type="button" class="art__foto-btn" (click)="lightbox.set(true)">
+            <img [src]="a.imagen_url" [alt]="a.nombre" />
+          </button>
+        } @else {
+          <div class="art__foto-ph">📦</div>
+        }
+      </div>
+
+      <h2 class="art__nombre">{{ a.nombre }}</h2>
+      <span class="art__badge" [class.art__badge--ext]="esExterno()">{{ propiedadLabel(a.propiedad) }}</span>
+
+      <dl class="art__facts">
+        <div><dt>Código</dt><dd>{{ a.codigo || '—' }}</dd></div>
+        <div><dt>Categoría</dt><dd>{{ categoriaNombre() }}</dd></div>
+        <div><dt>Unidad</dt><dd>{{ a.unidad || '—' }}</dd></div>
+        <div><dt>Propiedad</dt><dd>{{ esExterno() ? 'Alquilado (externo)' : 'CSD (propio)' }}</dd></div>
+        @if (a.nota) { <div><dt>Nota</dt><dd>{{ a.nota }}</dd></div> }
+        @if (bodega(); as b) {
+          <div>
+            <dt>Stock en {{ b.nombre }}</dt>
+            <dd>
+              @if (stock(); as s) { {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || a.unidad }} }
+              @else { — }
+            </dd>
+          </div>
+        }
+      </dl>
+    } @else {
+      <p class="art__muted">No se encontró el artículo.</p>
+    }
+  </div>
+
+  @if (lightbox() && articulo()?.imagen_url; as url) {
+    <div class="art__lightbox" (click)="lightbox.set(false)">
+      <img [src]="url" alt="Foto del artículo" />
+      <button type="button" class="art__lightbox-x" aria-label="Cerrar">✕</button>
+    </div>
+  }
+</div>

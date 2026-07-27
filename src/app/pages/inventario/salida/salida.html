@@ -69,18 +69,22 @@
       <label class="field-label mov__mt">Nota / motivo (opcional)</label>
       <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Ej: Consumo en obra" />
 
-      <label class="field-label mov__mt">Foto (opcional)</label>
-      <app-photo-slot label="Evidencia (opcional)" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+      <!-- Z19b — evidencia OBLIGATORIA -->
+      <label class="field-label mov__mt">Foto de evidencia <span class="mov__req">*</span></label>
+      <app-photo-slot label="Evidencia (obligatoria)" [foto]="foto()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
 
       @if (hayExceso()) {
         <div class="mov__band-exceso">⚠️ Hay materiales que superan el stock del almacén. Ajústalos antes de confirmar.</div>
+      }
+      @if (faltaFoto()) {
+        <div class="mov__band-exceso">📷 Agrega una foto de evidencia para poder confirmar la salida.</div>
       }
     </div>
 
     <app-wizard-footer
       backLabel="Atrás"
       [primaryLabel]="submitting() ? 'Guardando…' : 'Confirmar salida'"
-      [primaryDisabled]="submitting() || hayExceso()"
+      [primaryDisabled]="submitting() || hayExceso() || faltaFoto()"
       (back)="volverSeleccion()"
       (primary)="submit()"
     />

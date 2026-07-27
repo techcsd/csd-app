@@ -261,6 +261,13 @@ export const routes: Routes = [
       import('./pages/inventario/existencias/existencias').then((m) => m.ExistenciasPage),
   },
   {
+    // Z17 — detalle de artículo (foto, código, categoría, propiedad, stock)
+    path: 'inventario/articulo/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    loadComponent: () =>
+      import('./pages/inventario/articulo-detalle/articulo-detalle').then((m) => m.ArticuloDetallePage),
+  },
+  {
     path: 'inventario/salida',
     canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
     loadComponent: () => import('./pages/inventario/salida/salida').then((m) => m.SalidaPage),

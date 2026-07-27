@@ -8,7 +8,8 @@ import { Conduce } from '../models/transporte.model';
 const CAT_BODEGAS = 'bodegas';
 // V14: bumped to _v2 to invalidate the pre-official-catalog offline cache
 // (articles now carry requiere_talla/nota; categories are the official 8).
-const CAT_ARTICULOS = 'articulos_v2';
+// Z16/Z17: bump a _v3 para traer propiedad + imagen_url.
+const CAT_ARTICULOS = 'articulos_v3';
 const CAT_CATEGORIAS = 'categorias_inventario_v2';
 const BUCKET = 'inventario';
 
@@ -115,13 +116,19 @@ export class InventarioService {
     const data = await this.catalog.refresh<ArticuloCat[]>(CAT_ARTICULOS, async () => {
       const { data, error } = await this.supabase.client
         .from('articulos')
-        .select('id, nombre, codigo, unidad, categoria_id, requiere_talla, nota')
+        .select('id, nombre, codigo, unidad, categoria_id, requiere_talla, nota, propiedad, imagen_url')
         .eq('activo', true)
         .order('nombre');
       if (error) throw new Error(error.message);
       return (data as ArticuloCat[]) ?? [];
     });
     return data ?? [];
+  }
+
+  /** Z17 — un artículo por id (desde la caché de artículos), o null. */
+  async getArticulo(id: string): Promise<ArticuloCat | null> {
+    const list = await this.getArticulos();
+    return list.find((a) => a.id === id) ?? null;
   }
 
   /** Active article categories (R16), destacadas first, cached offline. */
@@ -217,20 +224,31 @@ export class InventarioService {
   }
 
   async getExistencias(bodegaId: string): Promise<Existencia[]> {
-    const key = `existencias_${bodegaId}`;
+    // Z18/Z16/Z17: bumped key a _v3 para traer categoria_id + propiedad + imagen_url.
+    const key = `existencias_v3_${bodegaId}`;
     const data = await this.catalog.refresh<Existencia[]>(key, async () => {
       const { data, error } = await this.supabase.client
         .from('stock_por_bodega')
-        .select('articulo_id, cantidad, articulo:articulos(nombre, codigo, unidad)')
+        .select('articulo_id, cantidad, articulo:articulos(nombre, codigo, unidad, categoria_id, propiedad, imagen_url)')
         .eq('bodega_id', bodegaId);
       if (error) throw new Error(error.message);
-      type Row = { articulo_id: string; cantidad: number; articulo: { nombre: string; codigo: string; unidad: string } | null };
+      type Row = {
+        articulo_id: string;
+        cantidad: number;
+        articulo: {
+          nombre: string; codigo: string; unidad: string; categoria_id: number | null;
+          propiedad: string | null; imagen_url: string | null;
+        } | null;
+      };
       return ((data as unknown as Row[]) ?? []).map((r) => ({
         articulo_id: r.articulo_id,
         cantidad: Number(r.cantidad),
         nombre: r.articulo?.nombre ?? '—',
         codigo: r.articulo?.codigo ?? '',
         unidad: r.articulo?.unidad ?? '',
+        categoria_id: r.articulo?.categoria_id ?? null, // Z18
+        propiedad: r.articulo?.propiedad ?? null, // Z16
+        imagen_url: r.articulo?.imagen_url ?? null, // Z17
       }));
     });
     return data ?? [];
@@ -305,27 +323,41 @@ export class InventarioService {
     });
   }
 
-  /** Dispatched conduces the user can receive (RLS scopes visibility). */
+  /** Dispatched conduces the user can receive (RLS scopes visibility).
+   *  Z20: enriquecido con hora de creación, quién lo creó, observaciones y foto
+   *  de despacho para la presentación clara del conduce. Cache bumped a _v2. */
   async conducesPorRecibir(): Promise<Conduce[]> {
-    const data = await this.catalog.refresh<Conduce[]>('conduces_recibir', async () => {
+    const data = await this.catalog.refresh<Conduce[]>('conduces_recibir_v2', async () => {
       const { data, error } = await this.supabase.client
         .from('salidas_inventario')
-        .select('id, fecha, estado, proyecto:proyectos(nombre), bodega:bodegas(nombre), detalle_salidas(id, cantidad, articulo:articulos(nombre, unidad))')
+        .select(
+          'id, fecha, created_at, estado, motivo, observaciones, foto_path, ' +
+            'proyecto:proyectos(nombre), bodega:bodegas(nombre), ' +
+            'creador:usuarios!salidas_inventario_creado_por_fkey(nombre), ' +
+            'detalle_salidas(id, cantidad, articulo:articulos(nombre, unidad))',
+        )
         .eq('estado', 'despachado')
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw new Error(error.message);
       type Row = {
-        id: string; fecha: string; estado: string;
+        id: string; fecha: string; created_at: string | null; estado: string;
+        motivo: string | null; observaciones: string | null; foto_path: string | null;
         proyecto: { nombre: string } | null; bodega: { nombre: string } | null;
+        creador: { nombre: string } | null;
         detalle_salidas: { id: string; cantidad: number; articulo: { nombre: string; unidad: string } | null }[];
       };
       return ((data as unknown as Row[]) ?? []).map((r) => ({
         id: r.id,
+        codigo: '#' + r.id.slice(0, 6).toUpperCase(), // Z20 — ref corta legible
         fecha: r.fecha,
+        creado_en: r.created_at ?? null,
+        creador: r.creador?.nombre ?? null,
         estado: r.estado,
         destino: r.proyecto?.nombre ?? null,
         bodega: r.bodega?.nombre ?? null,
+        observaciones: r.observaciones ?? r.motivo ?? null,
+        foto_path: r.foto_path ?? null,
         items: (r.detalle_salidas ?? []).map((d) => ({
           detalle_id: d.id,
           articulo: d.articulo?.nombre ?? '—',
@@ -335,6 +367,16 @@ export class InventarioService {
       }));
     });
     return data ?? [];
+  }
+
+  /** Z20 — URL firmada de una foto del bucket `inventario` (o null). */
+  async getFotoUrl(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
+    const { data, error } = await this.supabase.client.storage
+      .from(BUCKET)
+      .createSignedUrl(path, 3600);
+    if (error) return null;
+    return data?.signedUrl ?? null;
   }
 
   async enqueueRecepcion(input: RecepcionCaptura): Promise<void> {

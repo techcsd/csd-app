@@ -81,6 +81,9 @@ export class EntradaPage implements OnDestroy {
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   bodegaNombre = computed(() => this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? 'el almacén');
+  /** Z19b — evidencia OBLIGATORIA en la entrada normal (la devolución de obra es
+   *  un traspaso atómico por RPC sin foto, así que ahí no aplica). */
+  faltaFoto = computed(() => !this.esDevolucion() && !this.foto());
 
   // W8 — stock en vivo (informativo: la entrada suma al stock actual).
   stockMap = signal<Record<string, { cantidad: number; unidad: string } | null>>({});
@@ -268,6 +271,11 @@ export class EntradaPage implements OnDestroy {
     // P12 — devolución de obra: la obra de origen es obligatoria.
     if (this.esDevolucion() && !this.obraOrigenId()) {
       this.toast.error('Elige la obra de la que viene el material.');
+      return;
+    }
+    // Z19b — evidencia obligatoria en la entrada normal (no en devolución de obra).
+    if (this.faltaFoto()) {
+      this.toast.error('Agrega una foto de evidencia antes de confirmar.');
       return;
     }
     this.submitting.set(true);

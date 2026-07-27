@@ -32,6 +32,19 @@ export interface ArticuloCat {
   requiere_talla: boolean;
   /** Packing/brand help ("ATADO 120 PZA", "REF. TOTAL / HILTI") shown as a hint. */
   nota: string | null;
+  /** Z16 — 'propio_csd' | 'alquilado' | externo: para agrupar CSD/Alquilados + badge. */
+  propiedad: string | null;
+  /** Z17 — URL de la foto del artículo (thumbnail + detalle), o null. */
+  imagen_url: string | null;
+}
+
+/** Z16 — ¿el artículo es alquilado/externo (no propio de CSD)? */
+export function esArticuloExterno(propiedad: string | null | undefined): boolean {
+  return !!propiedad && propiedad !== 'propio_csd';
+}
+/** Z16 — etiqueta corta de propiedad para el badge. */
+export function propiedadLabel(propiedad: string | null | undefined): string {
+  return esArticuloExterno(propiedad) ? 'Alquilado' : 'CSD';
 }
 
 export interface Existencia {
@@ -40,6 +53,11 @@ export interface Existencia {
   codigo: string;
   unidad: string;
   cantidad: number;
+  // Z18 — categoría del artículo, para agrupar existencias por categoría.
+  categoria_id: number | null;
+  // Z16/Z17 — propiedad (CSD/alquilado) + foto para badge y thumbnail.
+  propiedad: string | null;
+  imagen_url: string | null;
 }
 
 /** A line in a salida/entrada/solicitud cart. */

@@ -175,6 +175,24 @@
   color: var(--color-warning);
 }
 
+// Z13 — "ya reportado por otra persona": texto puede envolver (nombre largo).
+.rsem__estado--otro {
+  color: var(--color-text-secondary);
+  white-space: normal;
+  text-align: right;
+  max-width: 180px;
+}
+
+// Z11 — encabezado de grupo de fotos (Exterior / Interior).
+.rsem__foto-grupo {
+  margin: 16px 0 8px;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-secondary);
+}
+
 .veh-card--done {
   opacity: 0.75;
 }

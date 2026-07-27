@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.30.0';
+const VERSION = '1.31.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,18 +62,22 @@ const MIN_VERSION = '1.29.0';
 const RELEASED_AT = '2026-07-27';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'No se trabajó, lluvia/obreros con contador, notas de voz múltiples y liberación por secciones';
+const TITULO = 'Recibir vehículo de otro, semanal con fotos y estado compartido, existencias por categoría y conduces claros';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'En la bitácora puedes marcar "No se trabajó en obra" y registrar el motivo en pocos toques, sin llenar todo el parte.' },
-  { t: 'nuevo', d: 'Ahora puedes grabar VARIAS notas de voz en un mismo formulario (bitácora, incidentes, reporte semanal, pre-uso, rutas y mantenimiento).' },
-  { t: 'nuevo', d: 'El checklist de liberación se llena por secciones, una pantalla a la vez, y guarda un borrador si sales sin terminar.' },
-  { t: 'nuevo', d: 'Al firmar la liberación eliges al responsable o residente del proyecto, y puedes firmar en sustitución de otro. Con una de esas dos firmas ya se libera.' },
-  { t: 'nuevo', d: 'Tu perfil ahora abre tu detalle (rol, licencia, documentos) y tiene acceso directo a la página web del sistema.' },
-  { t: 'mejora', d: 'Cuando llueve registras las horas que afectó y la cantidad de obreros con un contador, sin escribir.' },
-  { t: 'mejora', d: '"Mi actividad" quedó más ordenada: los contadores abren su listado y cada registro abre su detalle.' },
-  { t: 'mejora', d: 'En "¿Qué se hizo hoy?" lo que eliges sube a una lista de "Seleccionadas" para verlo y quitarlo fácil.' },
+  { t: 'nuevo', d: 'Si un vehículo lo tiene otra persona, ahora puedes recibirlo de todas formas: te avisa quién lo tenía y desde cuándo, y al confirmar pasa a tu cargo.' },
+  { t: 'nuevo', d: 'El reporte semanal ahora pide fotos guiadas agrupadas en Exterior e Interior, y cada foto dice exactamente cuál tomar.' },
+  { t: 'nuevo', d: 'En el reporte semanal ves si un vehículo ya lo reportó otra persona esta semana ("Ya reportado por…") y puedes rehacerlo.' },
+  { t: 'nuevo', d: 'Las existencias se ven agrupadas por categoría, con secciones que se abren y cierran y un buscador que filtra en todas.' },
+  { t: 'nuevo', d: 'Cada artículo muestra si es de CSD o alquilado, su foto, y al tocarlo abres su detalle (código, categoría, unidad y stock del almacén).' },
+  { t: 'nuevo', d: 'Los vehículos administrativos usan un pre-uso más corto, automáticamente.' },
+  { t: 'mejora', d: 'Recibir un conduce es más claro: ves origen→destino, quién lo despachó, fecha y hora, y ajustas lo recibido vs lo esperado con foto de evidencia.' },
+  { t: 'mejora', d: 'El año del vehículo aparece en las tarjetas, selectores y perfiles ("Isuzu D-Max 2023").' },
+  { t: 'mejora', d: 'Al registrar combustible, la estación es Total Energies por defecto (u "Otro" si aplica).' },
+  { t: 'mejora', d: 'La salida y la entrada de material ahora piden una foto de evidencia antes de confirmar.' },
+  { t: 'arreglo', d: 'Un vehículo cuya asignación fue rechazada ya no queda pegado en "Asignados a mí".' },
+  { t: 'arreglo', d: 'Se corrigió el nombre del artículo que se veía cortado en la salida de material.' },
 ];
 
 const TIPO_POR_COMMIT = {

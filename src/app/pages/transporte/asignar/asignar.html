@@ -28,6 +28,7 @@
               [km]="v.km"
               [marca]="v.marca"
               [modelo]="v.modelo"
+              [anio]="v.anio"
               [done]="true"
             >
               <span class="asignar__ya">✓ Ya asignado</span>
@@ -49,6 +50,7 @@
                 [km]="v.km"
                 [marca]="v.marca"
                 [modelo]="v.modelo"
+                [anio]="v.anio"
                 [selected]="seleccionado()?.vehiculo_id === v.vehiculo_id"
               >
                 @if (seleccionado()?.vehiculo_id === v.vehiculo_id) {

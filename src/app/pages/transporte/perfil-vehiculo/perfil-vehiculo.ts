@@ -149,7 +149,8 @@ export class PerfilVehiculoPage {
       ]);
       if (veh) {
         this.placa.set(veh.placa);
-        this.modelo.set(`${veh.marca} ${veh.modelo}`);
+        // Z10 — "Marca Modelo Año"
+        this.modelo.set(`${veh.marca} ${veh.modelo}${veh.anio ? ' ' + veh.anio : ''}`);
         this.vin.set(veh.vin);
         this.numeroMatricula.set(veh.numero_matricula);
         this.numeroSeguro.set(veh.numero_seguro);

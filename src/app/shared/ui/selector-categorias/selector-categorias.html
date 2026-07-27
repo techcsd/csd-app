@@ -90,11 +90,22 @@
       />
 
       <div class="selcat__list">
-        @for (a of articulosVisibles(); track a.id) {
+        @for (g of articulosGrupos(); track g.label) {
+          @if (g.label) {
+            <!-- Z16 — subgrupo por propiedad (CSD / Alquilados) -->
+            <h3 class="selcat__grupo-prop">{{ g.label }}</h3>
+          }
+          @for (a of g.items; track a.id) {
           <div class="selcat__item" [class.selcat__item--on]="cantidadDe(a.id) > 0">
+            <!-- Z17 — thumbnail del artículo (si tiene foto) -->
+            @if (a.imagen_url) {
+              <img class="selcat__item-thumb" [src]="a.imagen_url" [alt]="a.nombre" loading="lazy" />
+            }
             <div class="selcat__item-info">
               <span class="selcat__item-name">{{ a.nombre }}</span>
               <span class="selcat__item-unit">{{ a.unidad }}</span>
+              <!-- Z16 — badge persistente de propiedad -->
+              <span class="selcat__badge" [class.selcat__badge--ext]="esExterno(a)">{{ propiedadLabel(a.propiedad) }}</span>
               @if (a.nota) {
                 <span class="selcat__item-nota">💡 {{ a.nota }}</span>
               }
@@ -116,7 +127,9 @@
               <button type="button" class="selcat__step selcat__step--add" (click)="ajustar(a, 1)" aria-label="Más">+</button>
             </div>
           </div>
-        } @empty {
+          }
+        }
+        @if (!articulosVisibles().length) {
           <p class="selcat__muted">No se encontró ese material.</p>
         }
       </div>

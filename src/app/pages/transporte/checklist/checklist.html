@@ -23,12 +23,16 @@
           <button type="button" class="btn-cta" (click)="irADevolucion()">Ir a devolución</button>
           <button type="button" class="btn-ghost" (click)="finish()">Volver</button>
         } @else {
-          <h1 class="checklist__bloqueo-title">Vehículo entregado a otra persona</h1>
+          <!-- Z14 — aviso confirmable de traspaso (handover), no un muro -->
+          <span class="checklist__bloqueo-icon">🔁</span>
+          <h1 class="checklist__bloqueo-title">Lo tiene otra persona</h1>
           <p class="checklist__bloqueo-text">
-            {{ placa() || 'Este vehículo' }} figura entregado a <b>{{ b.conductor }}</b>. No puedes recibirlo
-            hasta que esa persona lo devuelva. Avisa a Flota si crees que es un error.
+            {{ placa() || 'Este vehículo' }} lo tiene <b>{{ b.conductor }}</b> desde
+            <b>{{ fechaCorta(b.desde) }}</b>. Si lo recibes, pasará a tu cargo y se cerrará su entrega.
+            ¿Recibirlo de todas formas?
           </p>
-          <button type="button" class="btn-cta" (click)="finish()">Entendido</button>
+          <button type="button" class="btn-cta" (click)="confirmarHandover()">Sí, recibirlo</button>
+          <button type="button" class="btn-ghost" (click)="finish()">No, volver</button>
         }
       </div>
     </div>

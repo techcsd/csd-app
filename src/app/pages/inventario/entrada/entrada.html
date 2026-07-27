@@ -92,15 +92,19 @@
       }
 
       @if (!esDevolucion()) {
-        <label class="field-label mov__mt">Foto (opcional)</label>
-        <app-photo-slot label="Evidencia (opcional)" [foto]="foto()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+        <!-- Z19b — evidencia OBLIGATORIA -->
+        <label class="field-label mov__mt">Foto de evidencia <span class="mov__req">*</span></label>
+        <app-photo-slot label="Evidencia (obligatoria)" [foto]="foto()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+        @if (faltaFoto()) {
+          <div class="mov__band-exceso">📷 Agrega una foto de evidencia para poder confirmar la entrada.</div>
+        }
       }
     </div>
 
     <app-wizard-footer
       backLabel="Atrás"
       [primaryLabel]="submitting() ? 'Guardando…' : 'Confirmar entrada'"
-      [primaryDisabled]="submitting()"
+      [primaryDisabled]="submitting() || faltaFoto()"
       (back)="volverSeleccion()"
       (primary)="submit()"
     />

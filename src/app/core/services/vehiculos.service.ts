@@ -74,6 +74,8 @@ export interface EntregaCaptura {
   firma: Blob;
   danos: Array<DanoCaptura & { blob: Blob }>;
   placa: string;
+  /** Z14 — recibir un vehículo que figura entregado a otro (traspaso confirmado). */
+  forzarHandover?: boolean;
 }
 
 /**
@@ -98,6 +100,7 @@ export class VehiculosService {
     placa: string;
     marca: string;
     modelo: string;
+    anio: number | null; // Z10
     kilometraje: number;
     foto_path: string | null;
     vin: string | null;
@@ -107,7 +110,7 @@ export class VehiculosService {
   } | null> {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
-      .select('id, placa, marca, modelo, kilometraje, fotos, vin, numero_matricula, numero_seguro, aseguradora')
+      .select('id, placa, marca, modelo, anio, kilometraje, fotos, vin, numero_matricula, numero_seguro, aseguradora')
       .eq('id', id)
       .single();
     if (error) {
@@ -122,6 +125,7 @@ export class VehiculosService {
             placa: hit.placa,
             marca: hit.marca,
             modelo: hit.modelo,
+            anio: hit.anio ?? null, // Z10
             kilometraje: hit.km,
             foto_path: null,
             vin: null,
@@ -136,6 +140,7 @@ export class VehiculosService {
       placa: string;
       marca: string;
       modelo: string;
+      anio: number | null;
       kilometraje: number;
       fotos: string[] | null;
       vin: string | null;
@@ -148,6 +153,7 @@ export class VehiculosService {
       placa: v.placa,
       marca: v.marca,
       modelo: v.modelo,
+      anio: v.anio ?? null, // Z10
       kilometraje: v.kilometraje,
       foto_path: (v.fotos ?? [])[0] ?? null,
       vin: v.vin ?? null,
@@ -169,7 +175,7 @@ export class VehiculosService {
         const { data, error } = await this.supabase.client
           .from('vehiculos')
           .select(
-            'id, placa, marca, modelo, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
+            'id, placa, marca, modelo, anio, uso, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
           )
           .eq('id', id)
           .single();
@@ -257,6 +263,13 @@ export class VehiculosService {
     const ops = await db.outbox.where('estado').anyOf('pending', 'syncing', 'error').toArray();
     const ids = ops
       .filter((o) => o.tipo_op === 'vehiculo_entrega' && o.payload['tipo'] === 'recepcion')
+      // Z14c — una recepción RECHAZADA por el servidor (error permanente, p. ej.
+      // "Vehículo entregado a otra persona") NO es una asignación: no debe dejar
+      // rastro en "Asignados a mí" / "Tus vehículos" ni marcarse "Enviando…".
+      // Solo reconciliamos las que siguen en vuelo (pending/syncing) o en reintento
+      // transitorio (error de red, permanente=false, aún recuperable). El estado
+      // se confirma con la aceptación del servidor; si rechaza → rollback limpio.
+      .filter((o) => !(o.estado === 'error' && o.permanente === true))
       .map((o) => o.payload['vehiculo_id'] as string)
       .filter(Boolean);
     return new Set(ids);
@@ -267,7 +280,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<VehiculoDisponible[]>('flota_vehiculos', async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos, es_prueba')
+        .select('id, placa, marca, modelo, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .order('placa', { ascending: true });
       if (error) throw new Error(error.message);
@@ -276,6 +289,7 @@ export class VehiculosService {
         placa: v['placa'] as string,
         marca: (v['marca'] as string) ?? '',
         modelo: (v['modelo'] as string) ?? '',
+        anio: (v['anio'] as number) ?? null, // Z10
         tipo: (v['tipo'] as string) ?? '',
         km: (v['kilometraje'] as number) ?? 0,
         foto_path: ((v['fotos'] as string[] | null) ?? [])[0] ?? null,
@@ -290,7 +304,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, tipo, kilometraje, estado, activo, fotos, es_prueba')
+        .select('id, placa, marca, modelo, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .not('estado', 'in', '(baja,no_disponible)')
         .order('placa', { ascending: true });
@@ -300,6 +314,7 @@ export class VehiculosService {
         placa: v['placa'] as string,
         marca: (v['marca'] as string) ?? '',
         modelo: (v['modelo'] as string) ?? '',
+        anio: (v['anio'] as number) ?? null, // Z10
         tipo: (v['tipo'] as string) ?? '',
         km: (v['kilometraje'] as number) ?? 0,
         foto_path: ((v['fotos'] as string[] | null) ?? [])[0] ?? null,
@@ -343,7 +358,7 @@ export class VehiculosService {
       const { data, error } = await this.supabase.client
         .from('vehiculo_asignaciones')
         .select(
-          'id, desde, origen, vehiculo:vehiculos(id, placa, marca, modelo, tipo, kilometraje)',
+          'id, desde, origen, vehiculo:vehiculos(id, placa, marca, modelo, anio, tipo, kilometraje)',
         )
         .eq('usuario_id', uid)
         .eq('activa', true)
@@ -359,6 +374,7 @@ export class VehiculosService {
             placa: v['placa'] as string,
             marca: (v['marca'] as string) ?? '',
             modelo: (v['modelo'] as string) ?? '',
+            anio: (v['anio'] as number) ?? null, // Z10
             tipo: (v['tipo'] as string) ?? '',
             km: (v['kilometraje'] as number) ?? 0,
             desde: r['desde'] as string,
@@ -605,6 +621,7 @@ export class VehiculosService {
         observacion: input.observacion,
         gps: input.gps,
         capturado_en,
+        forzar_handover: input.forzarHandover ?? false, // Z14
         danos: input.danos.map((d) => ({ zona: d.zona, descripcion: d.descripcion })),
       },
       fotos,
@@ -635,6 +652,7 @@ export class VehiculosService {
         p_gps: payload['gps'] ?? null,
         p_capturado_en: payload['capturado_en'],
         p_observacion: payload['observacion'] ?? null,
+        p_forzar_handover: payload['forzar_handover'] ?? false, // Z14
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);

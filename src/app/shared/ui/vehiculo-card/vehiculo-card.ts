@@ -23,6 +23,7 @@ export class VehiculoCard {
   km = input<number | null>(null);
   marca = input('');
   modelo = input('');
+  anio = input<number | null | undefined>(null); // Z10
   selected = input(false);
   done = input(false);
   /** W7 — vehículo marcado como dato de prueba (solo lo reciben los admins). */

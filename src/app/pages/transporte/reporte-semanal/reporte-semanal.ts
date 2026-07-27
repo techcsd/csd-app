@@ -21,17 +21,18 @@ import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ReporteSemanalService } from '../../../core/services/reporte-semanal.service';
 import { SyncService } from '../../../core/sync/sync.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
   ChecklistPlantilla,
   ChecklistPlantillaItem,
-  FOTOS_PREUSO,
   RespuestaValor,
   RESPUESTA_OPCIONES,
 } from '../../../core/models/checklist-preuso.model';
-import { ReporteSemanalVeh } from '../../../core/models/reporte-semanal.model';
+import { FOTOS_SEMANAL_FALLBACK, FotoSlotSemanal, ReporteSemanalVeh } from '../../../core/models/reporte-semanal.model';
 import {
   VehiculoDetalle,
   VehiculoDisponible,
@@ -46,12 +47,19 @@ interface VehSemanal {
   placa: string;
   marca: string;
   modelo: string;
+  anio: number | null; // Z10
   tipo: string;
   km: number;
   foto_path: string | null;
   tiene_reporte: boolean;
   /** U8 — hay un reporte semanal de esta semana aún en la cola (sin confirmar). */
   enviando: boolean;
+  /** Z13 — estado global: quién lo reportó y cuándo (aunque sea otro conductor). */
+  reportado_por: string | null;
+  reportado_por_id: string | null;
+  reportado_at: string | null;
+  /** Z13 — true si el reporte de esta semana lo hizo OTRA persona (no yo). */
+  reportado_por_otro: boolean;
   /** W7 — dato de prueba (solo visible a admins). */
   es_prueba: boolean;
 }
@@ -78,6 +86,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private ctx = inject(UserContextService);
 
   private sig = viewChild(SignaturePad);
 
@@ -85,7 +94,21 @@ export class ReporteSemanalPage extends GuardedWizard {
   readonly niveles = NIVELES_COMBUSTIBLE;
   readonly nivelAyuda = NIVEL_COMBUSTIBLE_AYUDA;
   readonly nivelLabel = nivelCombustibleLabel;
-  readonly fotosReq = FOTOS_PREUSO;
+  readonly fechaHora = formatFechaCortaHora; // Z13
+  /** Z11 — fotos guiadas del semanal (checklist_foto_slots), agrupadas Exterior/Interior. */
+  fotoSlots = signal<FotoSlotSemanal[]>(FOTOS_SEMANAL_FALLBACK);
+  fotoGrupos = computed<{ seccion: string; slots: FotoSlotSemanal[] }[]>(() => {
+    const grupos: { seccion: string; slots: FotoSlotSemanal[] }[] = [];
+    for (const f of this.fotoSlots()) {
+      let g = grupos.find((x) => x.seccion === f.seccion);
+      if (!g) {
+        g = { seccion: f.seccion, slots: [] };
+        grupos.push(g);
+      }
+      g.slots.push(f);
+    }
+    return grupos;
+  });
 
   loading = signal(true);
   /** Q2 — deep-link ?item=<vehiculo_id>: resalta y hace scroll a esa tarjeta. */
@@ -152,24 +175,36 @@ export class ReporteSemanalPage extends GuardedWizard {
     return s.length ? { inicio: s[0].semana_inicio, fin: s[0].semana_fin } : null;
   });
 
+  /** Z13 — mi usuario id (para distinguir "reportado por mí" vs "por otro"). */
+  private miUid = computed(() => this.ctx.profile()?.id ?? null);
+
   lista = computed<VehSemanal[]>(() => {
     const status = new Map(this.semana().map((s) => [s.vehiculo_id, s]));
     const pend = this.reportesPendientes();
     const wb = this.weekBounds();
+    const uid = this.miUid();
     return this.pool().map((v) => {
       const fechaPend = pend.get(v.vehiculo_id);
       // U8 — "enviando" solo si la op pendiente cae en la semana en curso.
       const enviando = !!fechaPend && (!wb || (fechaPend >= wb.inicio && fechaPend <= wb.fin));
+      const s = status.get(v.vehiculo_id);
+      const reportadoPorId = s?.reportado_por_id ?? null;
       return {
         vehiculo_id: v.vehiculo_id,
         placa: v.placa,
         marca: v.marca,
         modelo: v.modelo,
+        anio: v.anio ?? null, // Z10
         tipo: v.tipo,
         km: v.km,
         foto_path: v.foto_path ?? null,
-        tiene_reporte: status.get(v.vehiculo_id)?.tiene_reporte ?? false,
+        tiene_reporte: s?.tiene_reporte ?? false,
         enviando,
+        // Z13 — estado global del reporte de la semana.
+        reportado_por: s?.reportado_por ?? null,
+        reportado_por_id: reportadoPorId,
+        reportado_at: s?.reportado_at ?? null,
+        reportado_por_otro: !!s?.tiene_reporte && !!reportadoPorId && reportadoPorId !== uid,
         es_prueba: v.es_prueba ?? false,
       };
     });
@@ -194,8 +229,8 @@ export class ReporteSemanalPage extends GuardedWizard {
     return out;
   });
 
-  fotosCompletas = computed(() => this.fotosReq.every((f) => !!this.fotos()[f.slot]));
-  fotosFaltan = computed(() => this.fotosReq.filter((f) => !this.fotos()[f.slot]).length);
+  fotosCompletas = computed(() => this.fotoSlots().every((f) => !!this.fotos()[f.slot]));
+  fotosFaltan = computed(() => this.fotoSlots().filter((f) => !this.fotos()[f.slot]).length);
 
   kmInvalido = computed(() => {
     const km = this.km();
@@ -267,9 +302,10 @@ export class ReporteSemanalPage extends GuardedWizard {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [semana, plantilla, cond, pool, asignaciones, recepcionesEnCola] = await Promise.all([
+      const [semana, plantilla, fotoSlots, cond, pool, asignaciones, recepcionesEnCola] = await Promise.all([
         this.reportes.getSemana(),
         this.reportes.getPlantilla(),
+        this.reportes.getFotoSlotsSemanal(), // Z11
         this.conductores.getMiConductor(),
         this.vehiculos.getVehiculosDisponibles(),
         this.vehiculos.getMisAsignaciones().catch(() => []),
@@ -277,6 +313,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       ]);
       this.semana.set(semana);
       this.plantilla.set(plantilla);
+      this.fotoSlots.set(fotoSlots); // Z11
       this.conductorId = cond?.id ?? null;
       this.pool.set(pool);
       // W4 — "Tus vehículos" = asignados a mí + recepciones aún en la cola (U12).
@@ -440,7 +477,7 @@ export class ReporteSemanalPage extends GuardedWizard {
         orden: it.orden,
       }));
       const fotos: Record<string, Blob> = {};
-      for (const f of this.fotosReq) fotos[f.slot] = this.fotos()[f.slot].blob;
+      for (const f of this.fotoSlots()) fotos[f.slot] = this.fotos()[f.slot].blob;
       const resultado = this.resultadoLocal();
       await this.reportes.enqueue({
         vehiculoId: veh.vehiculo_id,

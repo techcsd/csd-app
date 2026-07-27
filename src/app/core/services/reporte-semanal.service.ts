@@ -4,10 +4,16 @@ import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 import { ChecklistPlantilla } from '../models/checklist-preuso.model';
-import { ReporteSemanalCaptura, ReporteSemanalVeh } from '../models/reporte-semanal.model';
+import {
+  FOTOS_SEMANAL_FALLBACK,
+  FotoSlotSemanal,
+  ReporteSemanalCaptura,
+  ReporteSemanalVeh,
+} from '../models/reporte-semanal.model';
 
 const CATALOG_PLANTILLA = 'reporte_semanal_plantilla';
-const CATALOG_SEMANA = 'reporte_semanal_semana';
+// Z13: bumped a _v2 para traer el estado global (reportado_por/at).
+const CATALOG_SEMANA = 'reporte_semanal_semana_v2';
 
 /**
  * Weekly vehicle report (R3). Reuses the checklist engine with the `semanal`
@@ -47,6 +53,32 @@ export class ReporteSemanalService {
   }
 
   /**
+   * Z11 — fotos guiadas del reporte semanal desde `checklist_foto_slots`
+   * (frecuencia='semanal'), agrupables por sección (Exterior/Interior), cacheadas
+   * offline. Fallback al seed local si no se pudo leer (arranque en frío).
+   */
+  async getFotoSlotsSemanal(): Promise<FotoSlotSemanal[]> {
+    const data = await this.catalog.refresh<FotoSlotSemanal[]>('foto_slots_semanal', async () => {
+      const { data, error } = await this.supabase.client
+        .from('checklist_foto_slots')
+        .select('slot, etiqueta, seccion, orden')
+        .eq('frecuencia', 'semanal')
+        .eq('activo', true)
+        .order('seccion', { ascending: true })
+        .order('orden', { ascending: true });
+      if (error) throw new Error(error.message);
+      const rows = (data as Array<{ slot: string; etiqueta: string; seccion: string }>) ?? [];
+      return rows.map((r) => ({
+        slot: r.slot,
+        label: r.etiqueta,
+        hint: /interior/i.test(r.seccion) ? '💺' : '🚙',
+        seccion: r.seccion,
+      }));
+    });
+    return data && data.length ? data : FOTOS_SEMANAL_FALLBACK;
+  }
+
+  /**
    * This week's report status for the current user's vehicles (current ISO
    * week). Drives the "Reporte semanal" badge and the vehicle picker. Cached.
    */
@@ -58,7 +90,9 @@ export class ReporteSemanalService {
       // Current week = the most recent semana_inicio in the view.
       const { data, error } = await this.supabase.client
         .from('v_reporte_semanal_cumplimiento')
-        .select('vehiculo_id, placa, tiene_reporte, reporte_fecha, resultado, semana_inicio, semana_fin')
+        .select(
+          'vehiculo_id, placa, tiene_reporte, reporte_fecha, resultado, semana_inicio, semana_fin, reportado_por, reportado_por_id, reportado_at, km_reporte',
+        )
         .eq('chofer_usuario_id', uid)
         .order('semana_inicio', { ascending: false });
       if (error) throw new Error(error.message);

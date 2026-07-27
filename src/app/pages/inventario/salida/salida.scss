@@ -76,22 +76,31 @@
   color: var(--color-text-secondary);
   font-size: 13px;
 }
+// Z19a — fila de artículo apilada: el NOMBRE ocupa su propia línea completa
+// (nunca se rompe en una columna estrecha peleando con el stepper), y debajo va
+// la fila de cantidad. El stock/aviso (mov__stock) queda como fila propia también.
 .mov__item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   padding: 12px 0;
   border-bottom: 1px solid var(--color-border);
+  min-width: 0; // permite que el texto largo haga wrap en vez de desbordar
 }
 .mov__item-name {
   font-weight: 600;
-  flex: 1;
+  line-height: 1.3;
+  word-break: break-word; // nombres largos hacen wrap, no desbordan
 }
 .mov__item-qty {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+// El botón de quitar se empuja al extremo derecho de la fila de cantidad.
+.mov__item-qty .mov__item-x {
+  margin-left: auto;
 }
 .mov__item-qty .field {
   width: 80px;
@@ -272,6 +281,10 @@
   margin: 8px 0;
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+.mov__req {
+  color: var(--color-error);
+  font-weight: 800;
 }
 .mov__band-exceso {
   margin-top: 14px;

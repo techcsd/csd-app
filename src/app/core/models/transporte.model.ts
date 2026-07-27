@@ -1,3 +1,12 @@
+/** Z10 — etiqueta corta del vehículo con año ("Izuzu D-Max 2023"). */
+export function vehiculoLabel(
+  v: { marca?: string | null; modelo?: string | null; anio?: number | null } | null | undefined,
+): string {
+  if (!v) return '';
+  const partes = [v.marca?.trim(), v.modelo?.trim(), v.anio ? String(v.anio) : null].filter(Boolean);
+  return partes.join(' ');
+}
+
 export type CombustibleNivel = 'E' | '1/4' | '1/2' | '3/4' | 'F';
 /**
  * V5 — ÚNICA lista de niveles de combustible de la app (pre-uso, reporte
@@ -44,7 +53,10 @@ export interface VehiculoDetalle {
   placa: string;
   marca: string;
   modelo: string;
+  anio?: number | null; // Z10
   tipo: string;
+  /** Z15 — uso del vehículo (obra/administrativo) para el pre-uso reducido. */
+  uso?: string | null;
   kilometraje: number;
   vencimiento_matricula: string | null;
   vencimiento_seguro: string | null;
@@ -60,6 +72,7 @@ export interface VehiculoACargo {
   placa: string;
   marca: string;
   modelo: string;
+  anio?: number | null; // Z10
   km: number;
   desde: string;
 }
@@ -69,6 +82,7 @@ export interface VehiculoPorRecibir {
   placa: string;
   marca: string;
   modelo: string;
+  anio?: number | null; // Z10
   km: number;
 }
 
@@ -83,6 +97,7 @@ export interface VehiculoDisponible {
   placa: string;
   marca: string;
   modelo: string;
+  anio?: number | null; // Z10
   tipo: string;
   km: number;
   /** U6 — path de la 1ª foto en el bucket `vehiculos` (o null). */
@@ -98,6 +113,7 @@ export interface MiAsignacion {
   placa: string;
   marca: string;
   modelo: string;
+  anio?: number | null; // Z10
   tipo: string;
   km: number;
   desde: string;
@@ -156,10 +172,20 @@ export interface ConduceItem {
 
 export interface Conduce {
   id: string;
+  /** Z20 — referencia corta legible derivada del id (no hay nº propio en BD). */
+  codigo: string;
   fecha: string;
+  /** Z20 — fecha y hora de creación del conduce (created_at). */
+  creado_en: string | null;
+  /** Z20 — quién creó/despachó el conduce. */
+  creador: string | null;
   estado: string;
-  destino: string | null;
-  bodega: string | null;
+  destino: string | null; // proyecto destino
+  bodega: string | null; // almacén de origen
+  /** Z20 — observaciones/motivo del despacho. */
+  observaciones: string | null;
+  /** Z20 — foto de evidencia del despacho (bucket inventario), si la hay. */
+  foto_path: string | null;
   items: ConduceItem[];
 }
 

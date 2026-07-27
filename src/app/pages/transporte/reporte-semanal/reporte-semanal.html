@@ -76,16 +76,21 @@
         <p class="screen__subtitle">
           @if (fotosFaltan()) { Faltan {{ fotosFaltan() }}. } @else { ✅ Completas. }
         </p>
-        <div class="rsem__fotos">
-          @for (f of fotosReq; track f.slot) {
-            <app-photo-slot
-              [label]="f.label"
-              [foto]="fotos()[f.slot] ?? null"
-              (captured)="onFoto(f.slot, $event)"
-              (cleared)="onFotoCleared(f.slot)"
-            />
-          }
-        </div>
+        <!-- Z11 — fotos agrupadas Exterior / Interior, cada slot dice qué foto es -->
+        @for (g of fotoGrupos(); track g.seccion) {
+          <h2 class="rsem__foto-grupo">{{ g.seccion }}</h2>
+          <div class="rsem__fotos">
+            @for (f of g.slots; track f.slot) {
+              <app-photo-slot
+                [label]="f.label"
+                [hint]="f.hint"
+                [foto]="fotos()[f.slot] ?? null"
+                (captured)="onFoto(f.slot, $event)"
+                (cleared)="onFotoCleared(f.slot)"
+              />
+            }
+          </div>
+        }
       }
 
       <!-- S19/S26a — km inteligente + nivel de combustible -->
@@ -124,7 +129,7 @@
           <li><span>Vehículo</span><b>{{ veh.placa }}</b></li>
           <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
-          <li><span>Fotos</span><b>{{ fotosReq.length }} ✓</b></li>
+          <li><span>Fotos</span><b>{{ fotoSlots().length }} ✓</b></li>
           <li><span>Resultado</span><b>{{ resultadoLocal() === 'aprobado' ? 'Todo bien' : resultadoLocal() === 'con_hallazgos' ? 'Con hallazgos' : 'Bloqueado' }}</b></li>
         </ul>
         @if (mantenimiento(); as m) {
@@ -205,6 +210,12 @@
             >
               @if (v.enviando && !v.tiene_reporte) {
                 <span class="rsem__estado rsem__estado--enviando">⏳ Enviando…</span>
+                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+              } @else if (v.reportado_por_otro) {
+                <!-- Z13 — ya lo reportó otra persona esta semana -->
+                <span class="rsem__estado rsem__estado--otro">
+                  Ya reportado por {{ v.reportado_por }}@if (v.reportado_at) { · {{ fechaHora(v.reportado_at) }} }
+                </span>
                 <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
               } @else if (v.tiene_reporte) {
                 <span class="rsem__estado rsem__estado--ok">✓ Ya reportado</span>

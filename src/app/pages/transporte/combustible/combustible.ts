@@ -83,8 +83,10 @@ export class CombustiblePage extends GuardedWizard {
   km = signal<number | null>(null);
   galones = signal<number | null>(null);
   monto = signal<number | null>(null);
-  // T4 — estación por catálogo (Total Energies preseleccionada) + "Otro" libre.
-  private static readonly ESTACIONES_FALLBACK = ['Total Energies', 'Shell', 'Esso', 'Sunix', 'United', 'Texaco'];
+  // Z9 — solo "Total Energies" (preseleccionada) + "Otro" (input libre). Se dejó
+  // de listar el catálogo completo: en campo casi siempre es Total Energies y lo
+  // demás va por "Otro".
+  private static readonly ESTACIONES_FALLBACK = ['Total Energies'];
   estaciones = signal<string[]>(CombustiblePage.ESTACIONES_FALLBACK);
   estacion = signal('Total Energies');
   estacionOtro = signal(false);
@@ -121,7 +123,7 @@ export class CombustiblePage extends GuardedWizard {
     super();
     this.registerBackGuard();
     resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
-    void this.loadEstaciones();
+    // Z9 — ya no se carga el catálogo de estaciones (solo Total Energies + Otro).
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
     if (this.vehiculoId) {
@@ -146,13 +148,7 @@ export class CombustiblePage extends GuardedWizard {
     void this.loadConductor();
   }
 
-  /** T4 — carga el catálogo de estaciones (offline-friendly; fallback local). */
-  private async loadEstaciones(): Promise<void> {
-    const list = await this.combustible.getEstaciones();
-    if (list.length) this.estaciones.set(list);
-  }
-
-  /** T4 — elegir una estación del catálogo (nombre canónico). */
+  /** Z9 — elegir la estación (Total Energies). */
   pickEstacion(nombre: string): void {
     this.estacion.set(nombre);
     this.estacionOtro.set(false);

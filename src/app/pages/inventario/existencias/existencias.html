@@ -19,16 +19,50 @@
       @if (loading()) {
         <app-skeleton [rows]="5" />
       } @else {
-        @for (e of filtered(); track e.articulo_id) {
-          <div class="stock-row">
-            <div class="stock-row__info">
-              <span class="stock-row__name">{{ e.nombre }}</span>
-              <span class="stock-row__code">{{ e.codigo }}</span>
-            </div>
-            <span class="stock-row__qty">{{ e.cantidad | number: '1.0-2' }} {{ e.unidad }}</span>
-          </div>
+        <!-- Z18 — existencias agrupadas por categoría (secciones colapsables) -->
+        @for (g of grupos(); track g.key) {
+          <section class="cat-group">
+            <button type="button" class="cat-group__head" (click)="toggle(g.key)" [attr.aria-expanded]="abierto(g.key)">
+              <span class="cat-group__name">
+                @if (g.destacada) { <span class="cat-group__star">★</span> }
+                {{ g.nombre }}
+              </span>
+              <span class="cat-group__meta">
+                <span class="cat-group__count">{{ g.total }}</span>
+                <span class="cat-group__chev">{{ abierto(g.key) ? '▲' : '▼' }}</span>
+              </span>
+            </button>
+
+            @if (abierto(g.key)) {
+              <div class="cat-group__body">
+                @for (e of g.items; track e.articulo_id) {
+                  <button type="button" class="stock-row" (click)="abrirArticulo(e)">
+                    <!-- Z17 — thumbnail del artículo (si tiene foto) -->
+                    @if (e.imagen_url) {
+                      <img class="stock-row__thumb" [src]="e.imagen_url" [alt]="e.nombre" loading="lazy" />
+                    }
+                    <div class="stock-row__info">
+                      <span class="stock-row__name">{{ e.nombre }}</span>
+                      <span class="stock-row__code">
+                        {{ e.codigo }}
+                        <!-- Z16 — badge de propiedad -->
+                        <span class="stock-row__badge" [class.stock-row__badge--ext]="esExterno(e)">{{ propiedadLabel(e.propiedad) }}</span>
+                      </span>
+                    </div>
+                    <span class="stock-row__qty">{{ e.cantidad | number: '1.0-2' }} {{ e.unidad }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </section>
         } @empty {
-          <p class="existencias__muted">No hay materiales en este almacén.</p>
+          <p class="existencias__muted">
+            @if (buscando()) {
+              No hay materiales que coincidan con “{{ query() }}”.
+            } @else {
+              No hay materiales en este almacén.
+            }
+          </p>
         }
       }
     }

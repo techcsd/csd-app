@@ -1,6 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ArticuloCat, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
+import {
+  ArticuloCat,
+  CartLinea,
+  CategoriaInv,
+  esArticuloExterno,
+  propiedadLabel,
+} from '../../../core/models/inventario.model';
 import { Skeleton } from '../skeleton/skeleton';
 
 const SIN_CATEGORIA = -1;
@@ -147,6 +153,26 @@ export class SelectorCategorias {
     return this.articulos()
       .filter((a) => this.perteneceA(a, id))
       .filter((a) => !q || a.nombre.toLowerCase().includes(q) || a.codigo.toLowerCase().includes(q));
+  });
+
+  // ── Z16 — agrupación CSD (propios) / Alquilados (externos) + badge ──
+  readonly propiedadLabel = propiedadLabel;
+  esExterno(a: ArticuloCat): boolean {
+    return esArticuloExterno(a.propiedad);
+  }
+  /** Z16 — los artículos de la categoría abierta, en dos grupos por propiedad
+   *  (solo se separan si conviven CSD y alquilados; si no, lista simple). */
+  articulosGrupos = computed<{ label: string; items: ArticuloCat[] }[]>(() => {
+    const vis = this.articulosVisibles();
+    const csd = vis.filter((a) => !this.esExterno(a));
+    const ext = vis.filter((a) => this.esExterno(a));
+    if (csd.length && ext.length) {
+      return [
+        { label: 'CSD (propios)', items: csd },
+        { label: 'Alquilados (externos)', items: ext },
+      ];
+    }
+    return [{ label: '', items: vis }];
   });
 
   cantidadDe(articuloId: string): number {

@@ -7,7 +7,8 @@ import { ChecklistCaptura, ChecklistPlantilla } from '../models/checklist-preuso
 
 // U10 — clave nueva ('_preuso') para invalidar cualquier caché viejo con la
 // plantilla de 33 ítems (PRE-USO-V2). Ahora solo trae plantillas de pre-uso.
-const CATALOG_PLANTILLAS = 'checklist_plantillas_preuso';
+// Z15: bumped a _v2 para traer uso_aplica (selección admin/obra por vehículo).
+const CATALOG_PLANTILLAS = 'checklist_plantillas_preuso_v2';
 
 /**
  * Pre-use vehicle checklist data + write path. Template reads go through the
@@ -32,7 +33,7 @@ export class ChecklistPreusoService {
       const { data, error } = await this.supabase.client
         .from('checklist_plantillas')
         .select(
-          'id, codigo, nombre, categoria, descripcion, activo, orden, frecuencia, items:checklist_plantilla_items(*)',
+          'id, codigo, nombre, categoria, descripcion, activo, orden, frecuencia, uso_aplica, items:checklist_plantilla_items(*)',
         )
         .eq('activo', true)
         // U10 — solo plantillas de pre-uso (nunca la semanal ni una legacy):

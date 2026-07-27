@@ -31,7 +31,59 @@
   text-align: center;
   padding: 24px;
 }
+// Z18 — sección colapsable por categoría.
+.cat-group {
+  margin-bottom: 10px;
+}
+.cat-group__head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+  text-align: left;
+}
+.cat-group__name {
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.cat-group__star {
+  color: var(--color-primary);
+}
+.cat-group__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+.cat-group__count {
+  min-width: 24px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+.cat-group__chev {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.cat-group__body {
+  padding-top: 8px;
+}
+
 .stock-row {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -41,6 +93,33 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   margin-bottom: 8px;
+  text-align: left;
+}
+.stock-row:active {
+  border-color: var(--color-primary);
+}
+// Z17 — thumbnail del artículo en la fila de existencias.
+.stock-row__thumb {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+// Z16 — badge de propiedad en la fila.
+.stock-row__badge {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+}
+.stock-row__badge--ext {
+  background: var(--color-warning-bg, rgba(234, 179, 8, 0.15));
+  color: var(--color-warning, #b45309);
 }
 .stock-row__info {
   display: flex;
