@@ -1,6 +1,7 @@
 # HANDOFF — CSD App
 
-## Ronda 11 app — PROMPT-4-CSD-APP (2026-07-27) — Z9/Z10/Z11/Z13/Z14/Z14c/Z15/Z16/Z17/Z18/Z19a/Z19b/Z20 — COMPLETA (FASES 1–6) · build VERDE · release 1.31.0
+## Ronda 11 app — PROMPT-4-CSD-APP (2026-07-27) — Z9/Z10/Z11/Z13/Z14/Z14c/Z15/Z16/Z17/Z18/Z19a/Z19b/Z20 — COMPLETA (FASES 1–6) · v1.31.0 PUBLICADA + MÍNIMA (FORZADA)
+**Release:** commit `904af25` en `main` (pusheado → deploy PWA). APK 1.31.0 firmado (cert prod `3c5316d8…df5065`) + bucket (`csd-app-1.31.0.apk`+`latest`+`version.json`) + historial Y1 (12 cambios) + `apk_url`. **1.31.0 PUBLICADA + MÍNIMA** (única fila movil con `publicada=true, minima=true`; 1.29.0/1.30.0 desmarcadas) → todos por debajo de 1.31.0 forzados a actualizar. `MIN_VERSION` (release-apk.mjs) + `version.json` alineados a 1.31.0. **Rollback:** `update sgc.app_versiones set publicada=true, minima=true where plataforma='movil' and version='1.29.0'` + `publicada=false, minima=false where version='1.31.0'`. **Pendiente: device-QA** (build sin probar en equipo; rollback disponible).
 **Estado:** TODAS las fases del PROMPT-4 implementadas y `npm run build` VERDE (solo warnings NG8102 preexistentes). `CONTEXTO.md` y el PROMPT-3-SGC NO están en disco; se verificó por **introspección de la BD real** que **PROMPT-3-SGC YA está aplicado** (seeds/columnas vivas hoy 2026-07-27): `articulos.propiedad`+`imagen_url`, `checklist_foto_slots` (semanal Exterior/Interior), plantilla `PRE-USO-ADMIN-V1` (`uso_aplica='administrativo'`), `crear_entrega_vehiculo(p_forzar_handover)`, vista `v_reporte_semanal_cumplimiento` con `reportado_por/_id/_at`. Por eso las FASES 🔗 3–6 fueron adelantables.
 
 **FASE 1:**
