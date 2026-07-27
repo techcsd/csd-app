@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.29.0';
+const VERSION = '1.30.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,20 +59,21 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.29.0';
-const RELEASED_AT = '2026-07-24';
+const RELEASED_AT = '2026-07-27';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Cuadro de multas, grabación de voz con nivel y "en proceso" más claro';
+const TITULO = 'No se trabajó, lluvia/obreros con contador, notas de voz múltiples y liberación por secciones';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Nuevo cuadro "Multas" en Transporte: registra una multa eligiendo el conductor ahí mismo.' },
-  { t: 'nuevo', d: 'Al grabar una nota de voz ahora ves barras que se mueven con tu voz y el tiempo transcurrido.' },
-  { t: 'mejora', d: '"Documentación en proceso" separa lo que dejaste a medio llenar de lo que está en cola por enviar, y muestra la fecha y hora de cada uno.' },
-  { t: 'mejora', d: 'En "Conduces y rutas" aparece un aviso cuando te asignan una ruta nueva, y desaparece al verla.' },
-  { t: 'mejora', d: 'Todos los formularios muestran su título en cada paso, para que siempre sepas qué estás llenando.' },
-  { t: 'arreglo', d: 'Al salir de "Registrar combustible" el botón de atrás ya no se queda en bucle.' },
-  { t: 'arreglo', d: 'En "Crear ruta" cada obra o bodega muestra su ícono correcto, sin emoji duplicado.' },
+  { t: 'nuevo', d: 'En la bitácora puedes marcar "No se trabajó en obra" y registrar el motivo en pocos toques, sin llenar todo el parte.' },
+  { t: 'nuevo', d: 'Ahora puedes grabar VARIAS notas de voz en un mismo formulario (bitácora, incidentes, reporte semanal, pre-uso, rutas y mantenimiento).' },
+  { t: 'nuevo', d: 'El checklist de liberación se llena por secciones, una pantalla a la vez, y guarda un borrador si sales sin terminar.' },
+  { t: 'nuevo', d: 'Al firmar la liberación eliges al responsable o residente del proyecto, y puedes firmar en sustitución de otro. Con una de esas dos firmas ya se libera.' },
+  { t: 'nuevo', d: 'Tu perfil ahora abre tu detalle (rol, licencia, documentos) y tiene acceso directo a la página web del sistema.' },
+  { t: 'mejora', d: 'Cuando llueve registras las horas que afectó y la cantidad de obreros con un contador, sin escribir.' },
+  { t: 'mejora', d: '"Mi actividad" quedó más ordenada: los contadores abren su listado y cada registro abre su detalle.' },
+  { t: 'mejora', d: 'En "¿Qué se hizo hoy?" lo que eliges sube a una lista de "Seleccionadas" para verlo y quitarlo fácil.' },
 ];
 
 const TIPO_POR_COMMIT = {
