@@ -30,6 +30,24 @@
 
 **FASE 6 — auditoría de navegación (S31/Y8):** flujos tocados revisados — recibir conduce (detalle→lista→`location.back()`), handover (finish/irADevolucion con `replaceUrl`), articulo-detalle (`location.back()`), existencias→artículo (push limpio, back regresa), combustible/salida/entrada sin cambios de nav. Sin bucles nuevos.
 
+**PENDIENTE device-QA (APK 1.31.0 + PWA; necesita teléfono/JWT real; nada de código pendiente salvo Z22/Z22c que es server):**
+- [ ] **Z14c** — recibir un vehículo OFFLINE que el server rechazará (p. ej. ya entregado a otro sin handover): al fallar en Pendientes, el vehículo **no** queda en "Asignados a mí"/"Tus vehículos" ni en "Enviando…"; una recepción con error de RED (transitorio) sí sigue reconciliándose.
+- [ ] **Z14** — recibir un vehículo que figura de OTRO: sale el aviso "Lo tiene {X} desde {fecha}. ¿Recibirlo de todas formas?"; "Sí, recibirlo" carga el wizard y al enviar el traspaso se registra en SGC (cierra la entrega anterior, queda a mi cargo). El caso "ya es mío" sigue redirigiendo a devolución.
+- [ ] **Z13** — con un vehículo ya reportado esta semana por OTRO conductor: la tarjeta del semanal muestra "Ya reportado por {nombre} · {fecha}" + "Rehacer" (no "Reportar"). Enviar un semanal marca el vehículo al instante ("⏳ Enviando…") sin salir/entrar (Z13c).
+- [ ] **Z11** — el reporte semanal pide las fotos agrupadas en **Exterior** e **Interior**, cada slot con su etiqueta; se envían y se ven en SGC.
+- [ ] **Z15** — un vehículo con `uso=administrativo` abre el pre-uso REDUCIDO (PRE-USO-ADMIN-V1) automáticamente; uno de obra abre el normal (V4). Título del wizard presente, back sano.
+- [ ] **Z9** — registrar combustible ofrece solo **Total Energies** (preseleccionada) + **Otro** (input libre); se envía y registra la echada.
+- [ ] **Z10** — el **año** aparece en tarjetas del picker/asignar/lista de vehículos y en el perfil del vehículo ("Isuzu D-Max 2023"). (Las tarjetas de "a mi cargo/por recibir" del hub no lo traen — es esperado, vienen del RPC.)
+- [ ] **Z18** — existencias agrupadas por categoría (secciones que abren/cierran, contador por grupo); el buscador filtra a través de todas y auto-expande.
+- [ ] **Z19a** — en la salida (y entrada) el nombre del artículo NO se ve cortado: nombre en su línea completa, stepper alineado, sin desbordes con nombres largos.
+- [ ] **Z19b** — salida/retiro y entrada NO dejan confirmar sin **≥1 foto de evidencia** (banner + botón deshabilitado). La "devolución de obra" (entrada) sigue sin exigir foto.
+- [ ] **Z16** — en requisición/pickers los artículos muestran badge **CSD**; cuando existan alquilados, se separan en "CSD (propios)" / "Alquilados (externos)".
+- [ ] **Z17** — tocar un artículo en existencias abre su detalle (código, categoría, propiedad, unidad, stock del almacén elegido); si tiene foto se ve el thumbnail + lightbox (hoy no hay `imagen_url` cargadas → placeholder 📦).
+- [ ] **Z20** — "Recibir conduce": lista con código/origen→destino/quién/cuándo; al abrir uno se ve el detalle con recibido/esperado editable, foto del despacho (si hay) con lightbox, nota, foto de recepción y confirmación tipo hoja; al confirmar sale de la lista.
+- [ ] **No regresión** — el outbox drena sin dejar nada en error; borradores/autosave intactos (recibir conduce, salida, entrada, pre-uso, semanal); combustible end-to-end; PWA arranca offline en frío.
+- [ ] **SGC web (regla #5)** — verificar que traspaso de vehículo, semanal con fotos Exterior/Interior, salida/entrada con evidencia y recepción de conduce se reflejan correctamente en la web.
+- [ ] Tras QA OK, si algo falla: **rollback** documentado arriba (volver 1.29.0 publicada+mínima).
+
 ## Ronda 11 app — PROMPT-2-CSD-APP (2026-07-27) — Z1/Z4/Z5/Z6/Z7/Z23/Z24/Z25/Z26 — COMPLETA · build VERDE · SIN publicar
 **Estado:** todo el PROMPT-2 implementado y `npm run build` VERDE (solo warnings NG8102 preexistentes). **Commit hecho, APK NO construida/publicada** (paso aparte — pedir a Xaviel). `CONTEXTO.md` (carpeta `25072026`) y `PROMPT-22-CSD-APP` (`imp 20072026`) NO están en disco; se trabajó con el detalle del prompt + introspección de la BD real para confirmar el contrato de PROMPT-1-SGC.
 
