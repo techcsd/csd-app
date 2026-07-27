@@ -82,6 +82,17 @@
   color: var(--color-info);
   font-weight: 700;
 }
+.ruta-card__cron {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-info);
+  font-variant-numeric: tabular-nums;
+}
+.ruta-card__tiempo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
 .ruta-card__actions .btn-ghost,
 .ruta-card__actions .btn-cta {
   width: auto;

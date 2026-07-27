@@ -12,6 +12,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
@@ -53,7 +54,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, VoiceNotes],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })
@@ -87,6 +88,7 @@ export class MantenimientoPage implements OnDestroy {
   descripcion = signal('');
   km = signal<number | null>(null);
   fotos = signal<Record<number, CapturedPhoto>>({});
+  voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
 
   /** X6-app — el checkbox "incluyó preventivo" solo aplica si NO es preventivo. */
   mostrarIncluyePreventivo = computed(() => {
@@ -294,6 +296,7 @@ export class MantenimientoPage implements OnDestroy {
         fecha: new Date().toISOString().slice(0, 10),
         km: this.km(),
         fotos,
+        voces: this.voces().map((n) => n.blob),
         placa: this.placa(),
       });
       await this.autosave.discard(this.clave); // limpia borrador + fotos

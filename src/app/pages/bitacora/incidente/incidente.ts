@@ -9,7 +9,7 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
-import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
+import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
@@ -38,7 +38,7 @@ const MIN_FOTOS = 1; // S6 — el RPC exige ≥1 foto en incidentes.
   selector: 'app-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Counter, BigConfirm, ConfirmDialog, VoiceRecorder, Skeleton],
+  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Counter, BigConfirm, ConfirmDialog, VoiceNotes, Skeleton],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })
@@ -83,7 +83,7 @@ export class IncidentePage implements OnDestroy {
   sucesoOtro = signal('');
   // Acciones tomadas.
   acciones = signal('');
-  voz = signal<Blob | null>(null);
+  voces = signal<VoiceNoteItem[]>([]); // Z23 — N notas de voz
   fotos = signal<CapturedPhoto[]>([]);
   capturing = signal(false);
   submitting = signal(false);
@@ -342,7 +342,7 @@ export class IncidentePage implements OnDestroy {
           ? this.equipoOperativoComentario().trim() || null
           : null,
         fotos: this.fotos().map((f) => f.blob),
-        voz: this.voz(),
+        voces: this.voces().map((n) => n.blob),
       });
       this.hydrated = false;
       await this.borrador.clear(this.draftKey);
@@ -373,7 +373,7 @@ export class IncidentePage implements OnDestroy {
         !!this.sucesoOtro().trim() ||
         !!this.acciones().trim() ||
         this.fotos().length > 0 ||
-        !!this.voz())
+        this.voces().length > 0)
     );
   }
 

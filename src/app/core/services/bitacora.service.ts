@@ -31,14 +31,22 @@ export interface ParteDiarioCaptura {
   restricciones: { tipo_restriccion: string; descripcion_otro: string | null }[];
   comentarios: string | null;
   fotos: Blob[];
+  // Z23 — notas de voz múltiples (bitacora_archivos).
+  voces: Blob[];
   // R21/R22 — clima y migración (el clima NO es incidente).
   llovio: boolean | null;
   lluviaDetalle: string | null;
+  // Z5 — horas que la lluvia afectó (0..24), solo si llovió.
+  horasLluvia: number | null;
   huboMigracion: boolean | null;
   migracionObreros: string[] | null;
   // W2 — equipos alquilados en uso hoy.
   huboEquipos: boolean | null;
   equiposAlquilados: EquipoAlquilado[];
+  // Z4 — "No se trabajó en obra": vuela el resto del parte, solo pide el motivo.
+  sinActividad: boolean;
+  motivoSinActividad: string | null;
+  motivoSinActividadDetalle: string | null;
 }
 
 export interface IncidenteCaptura {
@@ -59,7 +67,8 @@ export interface IncidenteCaptura {
   // T19 — comentario de operatividad (obligatorio si quedó fuera de servicio).
   equipoOperativoComentario: string | null;
   fotos: Blob[];
-  voz: Blob | null;
+  // Z23 — notas de voz múltiples (antes una sola). Van a bitacora_archivos.
+  voces: Blob[];
 }
 
 /**
@@ -206,8 +215,13 @@ export class BitacoraService {
         })),
         llovio: input.llovio,
         lluvia_detalle: input.lluviaDetalle,
+        horas_lluvia: input.horasLluvia, // Z5
         hubo_migracion: input.huboMigracion,
         migracion_obreros: input.migracionObreros,
+        // Z4 — "no se trabajó en obra"
+        sin_actividad: input.sinActividad,
+        motivo_sin_actividad: input.motivoSinActividad,
+        motivo_sin_actividad_detalle: input.motivoSinActividadDetalle,
         // S7 — hay equipos si hay alguno en uso, para retirar o dañado.
         hubo_equipos: input.huboEquipos || input.equiposAlquilados.length > 0,
         equipos_alquilados: input.equiposAlquilados.map((e) => ({
@@ -220,7 +234,7 @@ export class BitacoraService {
         })),
         capturado_en,
       },
-      fotos: this.buildFotos(id, input.fotos),
+      fotos: [...this.buildFotos(id, input.fotos), ...this.buildVoces(id, input.voces)],
       resumen: { tipo: 'parte_diario', proyecto_id: input.proyectoId, capturado_en },
     });
   }
@@ -284,9 +298,7 @@ export class BitacoraService {
       },
       fotos: [
         ...this.buildFotos(id, input.fotos),
-        ...(input.voz
-          ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/voz.webm`, slot: 'voz', blob: input.voz }]
-          : []),
+        ...this.buildVoces(id, input.voces),
       ],
       resumen: { tipo: 'incidente', proyecto_id: input.proyectoId, capturado_en },
     });
@@ -298,7 +310,7 @@ export class BitacoraService {
       const { data, error } = await this.supabase.client
         .from('bitacoras')
         .select(
-          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, horas_lluvia, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, sin_actividad, motivo_sin_actividad, motivo_sin_actividad_detalle, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })
@@ -369,6 +381,18 @@ export class BitacoraService {
     }));
   }
 
+  /** Z23 — N notas de voz como adjuntos de audio (bitacora_archivos). El handler
+   *  las reconoce por la extensión .webm y las marca tipo_mime audio/webm. */
+  private buildVoces(id: string, blobs: Blob[]) {
+    return (blobs ?? []).map((blob, i) => ({
+      id: crypto.randomUUID(),
+      bucket: BUCKET,
+      path: `${id}/voz_${i}.webm`,
+      slot: `voz_${i}`,
+      blob,
+    }));
+  }
+
   private registerHandler(): void {
     this.sync.register('bitacora', async (payload, photoPaths) => {
       const fotos = Object.keys(photoPaths).map((slot) => {
@@ -407,8 +431,13 @@ export class BitacoraService {
         p_capturado_en: payload['capturado_en'],
         p_llovio: payload['llovio'] ?? null,
         p_lluvia_detalle: payload['lluvia_detalle'] ?? null,
+        p_horas_lluvia: payload['horas_lluvia'] ?? null, // Z5
         p_hubo_migracion: payload['hubo_migracion'] ?? null,
         p_migracion_obreros: payload['migracion_obreros'] ?? null,
+        // Z4 — "no se trabajó en obra"
+        p_sin_actividad: payload['sin_actividad'] ?? false,
+        p_motivo_sin_actividad: payload['motivo_sin_actividad'] ?? null,
+        p_motivo_sin_actividad_detalle: payload['motivo_sin_actividad_detalle'] ?? null,
         p_hubo_equipos: payload['hubo_equipos'] ?? null,
         p_equipos_alquilados: payload['equipos_alquilados'] ?? [],
         // W3 — paridad con la web

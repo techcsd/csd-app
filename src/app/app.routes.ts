@@ -313,6 +313,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilPage),
   },
   {
+    // Z26 — detalle de mi propio usuario (solo lectura): datos, rol, licencia,
+    // última actividad, documentos. Sin gate de módulo (todo usuario tiene perfil).
+    path: 'perfil/mi-detalle',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/perfil/mi-detalle/mi-detalle').then((m) => m.MiDetallePage),
+  },
+  {
     path: 'pendientes',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/pendientes/pendientes').then((m) => m.PendientesPage),

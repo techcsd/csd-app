@@ -120,8 +120,7 @@
           <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">{{ capturing() ? '⏳…' : '📷 Cámara' }}</button>
           <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFromGallery()">{{ capturing() ? '⏳…' : '🖼️ Galería' }}</button>
         </div>
-        <label class="field-label">Nota de voz (opcional)</label>
-        <app-voice-recorder (recorded)="voz.set($event)" />
+        <app-voice-notes [(notes)]="voces" [max]="5" />
       }
 
       <!-- 6. Acciones tomadas -->
@@ -152,7 +151,7 @@
           }
           <li><span>¿Qué pasó?</span><b>{{ otroActivo() ? sucesoOtro() : suceso() }}</b></li>
           <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
-          <li><span>Nota de voz</span><b>{{ voz() ? 'Sí' : 'No' }}</b></li>
+          <li><span>Notas de voz</span><b>{{ voces().length }}</b></li>
           @if (acciones()) { <li><span>Acciones</span><b>{{ acciones() }}</b></li> }
         </ul>
       }

@@ -98,6 +98,8 @@ export interface ChecklistCaptura {
   /** The 7 mandatory guided shots (slot → compressed blob). */
   fotos: Record<string, Blob>;
   firma: Blob;
+  /** Z23 — notas de voz múltiples (opcional). */
+  voces?: Blob[];
   /** Locally-computed verdict, kept for the offline "mis registros" summary. */
   resultado: ChecklistResultado;
 }

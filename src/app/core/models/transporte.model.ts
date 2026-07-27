@@ -182,4 +182,10 @@ export interface RutaHoy {
   fecha: string;
   /** W4 — notas de la ruta (se capturaban pero no se mostraban). */
   notas?: string | null;
+  /** Y4 — instante del TAP en "Iniciar" (para el contador en vivo). */
+  iniciada_at?: string | null;
+  /** Y4 — instante del TAP en "Completar" (duración real = fin − inicio). */
+  finalizada_at?: string | null;
+  /** Y4 — estimación del maps al crear la ruta (min), para "real vs estimado". */
+  tiempo_estimado_min?: number | null;
 }

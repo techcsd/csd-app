@@ -5,6 +5,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Img } from '../../../shared/ui/img/img';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
+import { AudioNotasService, AudioEntidadTipo } from '../../../core/services/audio-notas.service';
 import { ChecklistDetalle, EchadaDetalle, MultaDetalle } from '../../../core/models/flota-reportes.model';
 import { nivelCombustibleLabel } from '../../../core/models/transporte.model';
 import { formatFecha } from '../../../core/util/fecha';
@@ -27,6 +28,7 @@ export class MiRegistroDetallePage {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private flota = inject(FlotaReportesService);
+  private audioNotas = inject(AudioNotasService);
 
   readonly tipo = this.route.snapshot.paramMap.get('tipo') ?? '';
   private readonly id = this.route.snapshot.paramMap.get('id') ?? '';
@@ -36,6 +38,7 @@ export class MiRegistroDetallePage {
   checklist = signal<ChecklistDetalle | null>(null);
   echada = signal<EchadaDetalle | null>(null);
   multa = signal<MultaDetalle | null>(null);
+  audios = signal<string[]>([]); // Z23 — URLs firmadas de las notas de voz
   fmtFecha = formatFecha;
 
   esChecklist = computed(() => this.tipo === 'checklist');
@@ -57,12 +60,26 @@ export class MiRegistroDetallePage {
       if (this.esMulta()) {
         this.multa.set(await this.flota.getMiMultaDetalle(this.id));
       } else if (this.esChecklist()) {
-        this.checklist.set(await this.flota.getMiChecklistDetalle(this.id));
+        const c = await this.flota.getMiChecklistDetalle(this.id);
+        this.checklist.set(c);
+        // Z23 — notas de voz del checklist (preuso vs semanal → entidad_tipo).
+        if (c) void this.loadAudios(c.tipo === 'inspeccion' ? 'reporte_semanal' : 'preuso');
       } else {
         this.echada.set(await this.flota.getMiEchadaDetalle(this.id));
       }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /** Z23 — carga y firma las URLs de las notas de voz (best-effort, online). */
+  private async loadAudios(entidadTipo: AudioEntidadTipo): Promise<void> {
+    try {
+      const notas = await this.audioNotas.list(entidadTipo, this.id);
+      const urls = await Promise.all(notas.map((n) => this.audioNotas.signedUrl(n.bucket, n.path)));
+      this.audios.set(urls.filter((u): u is string => !!u));
+    } catch {
+      /* las notas son secundarias; el detalle se ve igual sin ellas */
     }
   }
 

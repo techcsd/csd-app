@@ -22,11 +22,22 @@ export interface ClProyecto {
   nombre: string;
 }
 
-// Ciclo de firmas del procedimiento (los 3 obligatorios habilitan el vaciado).
+// Z2 — responsable/residente del proyecto ligado a un USUARIO real (para firmar).
+export type TipoResponsabilidad = 'residente' | 'responsable';
+export interface ClResponsable {
+  id: string;
+  usuario_id: string;
+  nombre: string;
+  email: string | null;
+  tipo_responsabilidad: TipoResponsabilidad;
+}
+
+// Ciclo de firmas del procedimiento.
 export type ClFirmaRol = 'maestro' | 'residente' | 'responsable' | 'cliente' | 'mivhed';
 
-// Q5 — solo Residente + Responsable son OBLIGATORIAS (el trigger sgc.trg_cl_firmado
-// pasa a 'firmado' con esas dos). Cliente y MIVHED quedan OPCIONALES.
+// Z3 — la liberación exige RESIDENTE **o** RESPONSABLE (el trigger sgc.trg_cl_firmado
+// pasa a 'firmado' con cualquiera de las dos). Cliente/MIVHED/maestro opcionales.
+// `obligatoria` marca las dos que forman el grupo "responsable O residente".
 export const CL_FIRMA_ROLES: { value: ClFirmaRol; label: string; obligatoria: boolean }[] = [
   { value: 'maestro', label: 'Maestro (ejecutor) (opcional)', obligatoria: false },
   { value: 'residente', label: 'Ing. Residente', obligatoria: true },
@@ -34,6 +45,9 @@ export const CL_FIRMA_ROLES: { value: ClFirmaRol; label: string; obligatoria: bo
   { value: 'cliente', label: 'Cliente (opcional)', obligatoria: false },
   { value: 'mivhed', label: 'MIVHED (opcional)', obligatoria: false },
 ];
+
+/** Z3 — roles que, con UNO firmado, ya liberan (residente O responsable). */
+export const CL_ROLES_LIBERAN: ClFirmaRol[] = ['residente', 'responsable'];
 
 export interface ClItemRespuesta {
   etiqueta: string;
@@ -57,6 +71,11 @@ export interface ClFirmaCaptura {
   blob: Blob;
   /** Q5 — 'pad' = trazo en pantalla; 'foto' = foto de la firma en papel. */
   metodo?: 'pad' | 'foto';
+  /** Z2 — usuario ligado (responsable/residente del proyecto), si se eligió de la lista. */
+  usuarioId?: string | null;
+  /** Z3 — firma EN SUSTITUCIÓN de otro responsable (usuario + nombre legible). */
+  enSustitucionDe?: string | null;
+  enSustitucionDeNombre?: string | null;
 }
 
 // Q5 (3b) — firmar un CL existente desde el aviso / la bandeja.

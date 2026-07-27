@@ -12,6 +12,7 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -22,6 +23,7 @@ import {
   ActividadEntry,
   CatOrdenado,
   ESTRUCTURAS,
+  MOTIVOS_SIN_ACTIVIDAD,
   Proyecto,
   ProyectoPartida,
   RESTRICCIONES,
@@ -39,7 +41,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton, WizardFooter],
+  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -58,8 +60,14 @@ export class PartePage implements OnDestroy {
   private draftKey = '';
   private hydrated = false;
 
-  readonly total = TOTAL;
   readonly minFotos = MIN_FOTOS;
+  readonly motivosSinActividad = MOTIVOS_SIN_ACTIVIDAD;
+  // Z4 — "No se trabajó en obra": el parte se resuelve en 3 pantallas.
+  sinActividad = signal(false);
+  motivoSinActividad = signal<string | null>(null);
+  motivoDetalle = signal('');
+  // Total de pasos efectivo: 3 en el flujo "no se trabajó", 10 en el normal.
+  total = computed(() => (this.sinActividad() ? 3 : TOTAL));
   // Fallback offline; se sobreescribe con el catálogo ordenado del SGC (S2).
   estructuras = signal<CatOrdenado[]>(ESTRUCTURAS.map((v) => ({ valor: v, destacado: false })));
   actividadesCat = signal<CatOrdenado[]>(ACTIVIDADES.map((v) => ({ valor: v, destacado: false })));
@@ -75,8 +83,10 @@ export class PartePage implements OnDestroy {
   // R21/R22 — clima y migración (primeras preguntas tras la obra).
   llovio = signal<boolean | null>(null);
   lluviaDetalle = signal('');
+  horasLluvia = signal(0); // Z5 — horas que la lluvia afectó (stepper 0..24)
   huboMigracion = signal<boolean | null>(null);
   migracionObreros = signal('');
+  migracionObrerosCount = signal(0); // Z5 — cantidad de obreros (stepper)
 
   // R24 — partidas planeadas del proyecto (referencia de cantidades).
   partidas = signal<ProyectoPartida[]>([]);
@@ -115,6 +125,7 @@ export class PartePage implements OnDestroy {
   comentarios = signal('');
 
   fotos = signal<CapturedPhoto[]>([]);
+  voces = signal<VoiceNoteItem[]>([]); // Z23 — N notas de voz
   capturing = signal(false);
 
   // W5 — spinner de carga de obras en el paso 1.
@@ -126,6 +137,11 @@ export class PartePage implements OnDestroy {
 
   proyectoNombre = computed(
     () => this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? '',
+  );
+
+  // Z4 — etiqueta legible del motivo "no se trabajó" para el resumen.
+  motivoSinActividadLabel = computed(
+    () => MOTIVOS_SIN_ACTIVIDAD.find((m) => m.value === this.motivoSinActividad())?.label ?? '—',
   );
 
   // Resumen de problemas: "Ninguno" si solo está NINGUNA (o vacío), si no el conteo.
@@ -153,6 +169,26 @@ export class PartePage implements OnDestroy {
       .map((a, i) => ({ a, i }))
       .filter((x) => (x.a.bloque ?? '') === this.sujetoActual()),
   );
+  // Z6 — lo elegido sube a una sección "Seleccionadas" al inicio; el resto
+  // mantiene el orden del catálogo (más usadas primero). Para la estructura actual.
+  actividadesElegidas = computed(() =>
+    this.actividadesCat().filter((ac) => this.actividadOn(ac.valor)),
+  );
+  actividadesDisponibles = computed(() =>
+    this.actividadesCat().filter((ac) => !this.actividadOn(ac.valor)),
+  );
+  // Z6 — estructuras del sujeto que ya tienen algún trabajo (marca ✓ sin reordenar).
+  private estructurasConActividad = computed(
+    () =>
+      new Set(
+        this.actividades()
+          .filter((a) => (a.bloque ?? '') === this.sujetoActual())
+          .map((a) => a.estructura),
+      ),
+  );
+  estructuraTiene(valor: string): boolean {
+    return this.estructurasConActividad().has(valor);
+  }
   // Equipos marcados para retirar / dañados (para las sub-preguntas de S7).
   equiposParaRetirar = computed(() => this.equiposAlquilados().filter((e) => e.para_retirar));
   equiposDanados = computed(() => this.equiposAlquilados().filter((e) => e.danado));
@@ -176,8 +212,13 @@ export class PartePage implements OnDestroy {
         proyectoId: this.proyectoId(),
         llovio: this.llovio(),
         lluviaDetalle: this.lluviaDetalle(),
+        horasLluvia: this.horasLluvia(),
+        sinActividad: this.sinActividad(),
+        motivoSinActividad: this.motivoSinActividad(),
+        motivoDetalle: this.motivoDetalle(),
         huboMigracion: this.huboMigracion(),
         migracionObreros: this.migracionObreros(),
+        migracionObrerosCount: this.migracionObrerosCount(),
         carpinteria: this.carpinteria(),
         acero: this.acero(),
         casa: this.casa(),
@@ -208,6 +249,8 @@ export class PartePage implements OnDestroy {
     step: number;
     llovio?: boolean | null;
     huboMigracion?: boolean | null;
+    sinActividad?: boolean;
+    motivoSinActividad?: string | null;
     carpinteria: number;
     acero: number;
     casa: number;
@@ -218,6 +261,8 @@ export class PartePage implements OnDestroy {
   }): boolean {
     return (
       s.step > 1 ||
+      !!s.sinActividad ||
+      !!s.motivoSinActividad ||
       s.llovio != null ||
       s.huboMigracion != null ||
       s.carpinteria > 0 ||
@@ -256,8 +301,13 @@ export class PartePage implements OnDestroy {
       this.proyectoId.set(draft.proyectoId);
       this.llovio.set(draft.llovio ?? null);
       this.lluviaDetalle.set(draft.lluviaDetalle ?? '');
+      this.horasLluvia.set(draft.horasLluvia ?? 0);
+      this.sinActividad.set(draft.sinActividad ?? false);
+      this.motivoSinActividad.set(draft.motivoSinActividad ?? null);
+      this.motivoDetalle.set(draft.motivoDetalle ?? '');
       this.huboMigracion.set(draft.huboMigracion ?? null);
       this.migracionObreros.set(draft.migracionObreros ?? '');
+      this.migracionObrerosCount.set(draft.migracionObrerosCount ?? 0);
       this.carpinteria.set(draft.carpinteria);
       this.acero.set(draft.acero);
       this.casa.set(draft.casa);
@@ -551,8 +601,8 @@ export class PartePage implements OnDestroy {
 
   primaryLabel = computed(() => {
     const s = this.step();
-    if (s === this.total) return this.submitting() ? 'Guardando…' : 'Enviar bitácora';
-    if (s === 5) {
+    if (s === this.total()) return this.submitting() ? 'Guardando…' : 'Enviar bitácora';
+    if (s === 5 && !this.sinActividad()) {
       if (this.paso5() === 'sujeto') return 'Continuar';
       if (this.paso5() === 'otro') return 'No, eso es todo';
     }
@@ -561,10 +611,16 @@ export class PartePage implements OnDestroy {
 
   backLabel = computed(() => (this.step() > 1 || this.paso5() !== 'sujeto' ? 'Atrás' : 'Cancelar'));
 
-  primaryDisabled = computed(() => this.step() >= this.total && this.submitting());
+  primaryDisabled = computed(() => this.step() >= this.total() && this.submitting());
+
+  /** Z4 — alternar "No se trabajó en obra" (solo desde la pantalla de obra). */
+  toggleSinActividad(): void {
+    this.sinActividad.update((v) => !v);
+    if (this.sinActividad()) this.step.set(1);
+  }
 
   onPrimary(): void {
-    if (this.step() >= this.total) {
+    if (this.step() >= this.total()) {
       void this.submit();
       return;
     }
@@ -603,9 +659,27 @@ export class PartePage implements OnDestroy {
         this.toast.error('Elige la obra.');
         return;
       }
-      void this.loadPartidas(this.proyectoId());
-      void this.loadCatalogo(this.proyectoId());
-      void this.loadEquiposObra(this.proyectoId());
+      // Z4 — el flujo "no se trabajó" no necesita catálogos/partidas/equipos.
+      if (!this.sinActividad()) {
+        void this.loadPartidas(this.proyectoId());
+        void this.loadCatalogo(this.proyectoId());
+        void this.loadEquiposObra(this.proyectoId());
+      }
+    }
+    // Z4 — flujo corto "no se trabajó": obra → motivo → resumen.
+    if (this.sinActividad()) {
+      if (s === 2) {
+        if (!this.motivoSinActividad()) {
+          this.toast.error('Elige el motivo de por qué no se trabajó.');
+          return;
+        }
+        if (this.motivoSinActividad() === 'otro' && !this.motivoDetalle().trim()) {
+          this.toast.error('Describe el motivo.');
+          return;
+        }
+      }
+      this.step.set(Math.min(this.total(), s + 1));
+      return;
     }
     if (s === 2 && this.llovio() === null) {
       this.toast.error('Dinos si llovió o está lloviendo.');
@@ -686,7 +760,7 @@ export class PartePage implements OnDestroy {
       }
     }
 
-    const nextStep = Math.min(this.total, s + 1);
+    const nextStep = Math.min(this.total(), s + 1);
     if (nextStep === 5) this.paso5.set('sujeto');
     if (nextStep === 8) this.paso8.set('uso');
     this.step.set(nextStep);
@@ -741,38 +815,50 @@ export class PartePage implements OnDestroy {
       this.toast.error('Elige la obra.');
       return;
     }
-    if (this.fotos().length < MIN_FOTOS) {
+    // Z4 — el parte "sin actividad" no exige fotos (espejo del RPC).
+    if (!this.sinActividad() && this.fotos().length < MIN_FOTOS) {
       this.toast.error(`Agrega al menos ${MIN_FOTOS} fotos de la obra.`);
       this.step.set(7);
       return;
     }
     this.submitting.set(true);
     try {
-      const obreros = this.migracionObreros()
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
+      // Z5 — obreros migrados por CANTIDAD (stepper). La web lee migracion_obreros
+      // como arreglo y cuenta su longitud, así que enviamos N entradas.
+      const nObreros = this.huboMigracion() ? this.migracionObrerosCount() : 0;
+      const obreros =
+        nObreros > 0 ? Array.from({ length: nObreros }, (_, i) => `Obrero ${i + 1}`) : null;
+      const sinAct = this.sinActividad();
       await this.bitacora.enqueueParteDiario({
         proyectoId: this.proyectoId(),
-        personalCarpinteria: this.carpinteria(),
-        personalAcero: this.acero(),
-        trabajadoresCasa: this.casa(),
-        otroPersonal: this.otroPersonal().trim() || null,
+        personalCarpinteria: sinAct ? 0 : this.carpinteria(),
+        personalAcero: sinAct ? 0 : this.acero(),
+        trabajadoresCasa: sinAct ? 0 : this.casa(),
+        otroPersonal: sinAct ? null : this.otroPersonal().trim() || null,
         bloqueEntrepiso: null, // S3 — el bloque ahora va por actividad
-        ingenieroResponsable: this.ingenieroResponsable().trim() || null,
-        horaFinTrabajo: this.horaFinTrabajo() || null,
-        actividades: this.actividades(),
-        restricciones: (this.restricciones().length ? this.restricciones() : ['NINGUNA']).map((r) => ({
-          tipo_restriccion: r,
-          descripcion_otro: r === 'NINGUNA' ? null : this.getRestriccionDesc(r).trim() || null,
-        })),
+        ingenieroResponsable: sinAct ? null : this.ingenieroResponsable().trim() || null,
+        horaFinTrabajo: sinAct ? null : this.horaFinTrabajo() || null,
+        actividades: sinAct ? [] : this.actividades(),
+        restricciones: sinAct
+          ? []
+          : (this.restricciones().length ? this.restricciones() : ['NINGUNA']).map((r) => ({
+              tipo_restriccion: r,
+              descripcion_otro: r === 'NINGUNA' ? null : this.getRestriccionDesc(r).trim() || null,
+            })),
         comentarios: this.comentarios().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
-        llovio: this.llovio(),
-        lluviaDetalle: this.llovio() ? this.lluviaDetalle().trim() || null : null,
-        huboMigracion: this.huboMigracion(),
-        migracionObreros: this.huboMigracion() && obreros.length ? obreros : null,
-        huboEquipos: this.huboEquipos(),
+        voces: this.voces().map((n) => n.blob),
+        llovio: sinAct ? null : this.llovio(),
+        lluviaDetalle: !sinAct && this.llovio() ? this.lluviaDetalle().trim() || null : null,
+        horasLluvia: !sinAct && this.llovio() && this.horasLluvia() > 0 ? this.horasLluvia() : null,
+        huboMigracion: sinAct ? null : this.huboMigracion(),
+        migracionObreros: sinAct ? null : obreros,
+        // Z4 — "no se trabajó en obra".
+        sinActividad: sinAct,
+        motivoSinActividad: sinAct ? this.motivoSinActividad() : null,
+        motivoSinActividadDetalle:
+          sinAct && this.motivoSinActividad() === 'otro' ? this.motivoDetalle().trim() || null : null,
+        huboEquipos: sinAct ? false : this.huboEquipos(),
         equiposAlquilados: this.equiposAlquilados()
           .filter((e) => e.equipo.trim())
           .map((e) => ({
@@ -816,8 +902,13 @@ interface ParteDraft {
   proyectoId: string;
   llovio: boolean | null;
   lluviaDetalle: string;
+  horasLluvia?: number; // Z5
   huboMigracion: boolean | null;
   migracionObreros: string;
+  migracionObrerosCount?: number; // Z5
+  sinActividad?: boolean; // Z4
+  motivoSinActividad?: string | null; // Z4
+  motivoDetalle?: string; // Z4
   carpinteria: number;
   acero: number;
   casa: number;

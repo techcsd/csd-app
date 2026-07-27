@@ -11,6 +11,7 @@ import { CameraService, CapturedDoc } from '../../../core/services/camera.servic
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -58,6 +59,7 @@ export class ReportarMultaPage {
   private reportes = inject(FlotaReportesService);
   private vehiculos = inject(VehiculosService);
   private conductores = inject(ConductoresService);
+  private ctx = inject(UserContextService);
   private camera = inject(CameraService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
@@ -124,9 +126,23 @@ export class ReportarMultaPage {
     ]);
     this.motivos.set(motivos);
 
-    // Y7 — abierto desde el hub: cargar conductores para el selector en hoja.
+    // Y7 — abierto desde el hub (sin conductor en la ruta):
+    //  · roles elevados → eligen a CUALQUIER conductor (selector en hoja).
+    //  · chofer → "me pusieron una multa": el conductor soy yo (sin selector).
     if (this.necesitaConductor()) {
-      void this.conductores.getConductores().then((cs) => this.conductoresLista.set(cs)).catch(() => {});
+      if (this.ctx.esFlotaElevado()) {
+        void this.conductores.getConductores().then((cs) => this.conductoresLista.set(cs)).catch(() => {});
+      } else {
+        const mi = await this.conductores.getMiConductor().catch(() => null);
+        if (mi) {
+          this.conductorId = mi.id;
+          this.conductorNombre.set(mi.nombre);
+          this.necesitaConductor.set(false); // conductor fijado a mí — no se muestra el selector
+        } else {
+          // Sin perfil de conductor propio: caer al selector como último recurso.
+          void this.conductores.getConductores().then((cs) => this.conductoresLista.set(cs)).catch(() => {});
+        }
+      }
     }
 
     if (draft) {

@@ -97,6 +97,14 @@
             <app-img [src]="c.firmaUrl" alt="Firma" ratio="3 / 1" fallback="✍️" />
           </a>
         }
+
+        <!-- Z23 — notas de voz -->
+        @if (audios().length) {
+          <h2 class="mrd__section">Notas de voz ({{ audios().length }})</h2>
+          @for (u of audios(); track u) {
+            <audio class="mrd__audio" [src]="u" controls></audio>
+          }
+        }
       } @else {
         <app-empty-state icon="🔍" title="No se encontró el registro" message="Puede que ya no esté disponible o no tengas acceso." />
       }

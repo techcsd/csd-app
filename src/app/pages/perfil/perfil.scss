@@ -32,6 +32,23 @@
   border-radius: var(--radius);
   background: var(--color-surface);
   margin-bottom: 20px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.perfil__card:active {
+  background: var(--color-secondary);
+}
+.perfil__card-txt {
+  flex: 1;
+  min-width: 0;
+}
+.perfil__card-chevron {
+  color: var(--color-text-secondary);
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 .perfil__avatar {
   width: 64px;

@@ -87,7 +87,10 @@ export class MisPartesPage {
   }
 
   titulo(b: BitacoraFull): string {
-    return b.tipo === 'incidente' ? 'Incidente' : b.tipo === 'visita' ? 'Visita' : 'Bitácora del día';
+    if (b.tipo === 'incidente') return 'Incidente';
+    if (b.tipo === 'visita') return 'Visita';
+    // Z4 — deja claro cuando no se trabajó en obra.
+    return b.sin_actividad ? 'Bitácora — No se trabajó' : 'Bitácora del día';
   }
 
   open(b: BitacoraFull): void {

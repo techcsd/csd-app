@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { CatalogService } from '../sync/catalog.service';
+import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 
 /**
  * X6-app — tipos de visita/mantenimiento tipificados, EXACTAMENTE los 4 que
@@ -22,6 +23,8 @@ export interface MantenimientoCaptura {
   incluyePreventivo: boolean;
   /** Up to 3 optional evidence photos, in capture order. */
   fotos: Blob[];
+  /** Z23 — notas de voz múltiples (opcional). */
+  voces?: Blob[];
   placa: string;
 }
 
@@ -35,6 +38,7 @@ export class MantenimientosService {
   private supabase = inject(SupabaseService);
   private sync = inject(SyncService);
   private catalog = inject(CatalogService);
+  private audioNotas = inject(AudioNotasService);
 
   constructor() {
     this.registerHandler();
@@ -52,6 +56,9 @@ export class MantenimientosService {
       slot: `foto_${idx}`,
       blob,
     }));
+    // Z23 — notas de voz (audio_notas, bucket flota-documentos).
+    const audio = this.audioNotas.buildAttachments('mantenimiento', id, AUDIO_BUCKET_FLOTA, input.voces ?? []);
+    fotos.push(...audio.fotos);
 
     await this.sync.enqueue({
       id,
@@ -65,6 +72,7 @@ export class MantenimientosService {
         fecha: input.fecha,
         km: input.km,
         incluye_preventivo: input.incluyePreventivo,
+        audios: audio.audios, // Z23
       },
       fotos,
       resumen: { placa: input.placa, tipo: input.tipo, capturado_en },
@@ -73,10 +81,9 @@ export class MantenimientosService {
 
   private registerHandler(): void {
     this.sync.register('mantenimiento', async (payload, photoPaths) => {
-      const fotos = Object.entries(photoPaths).map(([slot, path]) => ({
-        storage_path: path,
-        slot,
-      }));
+      const fotos = Object.entries(photoPaths)
+        .filter(([slot]) => !slot.startsWith('audio_'))
+        .map(([slot, path]) => ({ storage_path: path, slot }));
 
       const { error } = await this.supabase.client.rpc('crear_mantenimiento_app', {
         p_id: payload['id'],
@@ -91,6 +98,9 @@ export class MantenimientosService {
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // Z23 — registrar las notas de voz (idempotente por path).
+      await this.audioNotas.commit('mantenimiento', payload['id'] as string, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
 
       // P7 — el RPC avanza vehiculos.kilometraje; invalidar caches con km.
       const vehId = payload['vehiculo_id'] as string;

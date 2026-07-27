@@ -57,6 +57,19 @@
   grid-column: 1 / -1;
 }
 
+// Z25 — card-contador tocable (baja a su listado). Reset del <button>.
+.mact__card--tap {
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease;
+}
+.mact__card--tap:active {
+  border-color: var(--color-primary);
+}
+
 .mact__label {
   font-size: 13px;
   color: var(--color-text-secondary);
@@ -152,6 +165,35 @@
 .mact__act-sub {
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+// Z25 — detalle inline (accidentes/entregas/rutas creadas: se abren en el sitio).
+.mact__detalle {
+  margin: -4px 0 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mact__detalle p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.mact__detalle p span {
+  color: var(--color-text-secondary);
+}
+.mact__detalle-desc {
+  display: block !important;
+  padding-top: 6px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
 // S32/S24c — desglose + botón de multa.

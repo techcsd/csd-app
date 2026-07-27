@@ -25,6 +25,8 @@ export interface ReporteSemanalCaptura {
   // S26a — el semanal ahora pide lo mismo que el pre-uso: fotos guiadas + firma.
   fotos: Record<string, Blob>;
   firma: Blob | null;
+  // Z23 — notas de voz múltiples (opcional).
+  voces?: Blob[];
   /** Locally-computed verdict for the offline "mis registros" summary. */
   resultado: 'aprobado' | 'con_hallazgos' | 'bloqueado';
 }

@@ -12,7 +12,7 @@
       <button type="button" class="parte__topback" (click)="salir()" aria-label="Salir">←</button>
       <span class="parte__topttl">Bitácora del día</span>
     </header>
-    <app-step-bar [current]="step()" [total]="total" />
+    <app-step-bar [current]="step()" [total]="total()" />
     <div class="screen__body">
       <!-- 1. Obra -->
       @if (step() === 1) {
@@ -33,29 +33,93 @@
             }
           }
         </div>
+
+        <!-- Z4 — "No se trabajó en obra": vuela el resto del parte -->
+        <label class="field-label">¿No se trabajó hoy?</label>
+        <app-option-button
+          icon="🚫"
+          label="No se trabajó en obra"
+          [tone]="sinActividad() ? 'warning' : 'default'"
+          [selected]="sinActividad()"
+          (pressed)="toggleSinActividad()"
+        />
+        @if (sinActividad()) {
+          <p class="screen__subtitle">Solo te pediremos el motivo. Toca de nuevo para volver al parte normal.</p>
+        }
+      }
+
+      <!-- 2. Z4 — Motivo (solo "no se trabajó") -->
+      @if (step() === 2 && sinActividad()) {
+        <h1 class="screen__title">¿Por qué no se trabajó?</h1>
+        @for (m of motivosSinActividad; track m.value) {
+          <app-option-button
+            [icon]="m.icon"
+            [label]="m.label"
+            [selected]="motivoSinActividad() === m.value"
+            (pressed)="motivoSinActividad.set(m.value)"
+          />
+        }
+        @if (motivoSinActividad() === 'otro') {
+          <label class="field-label">Detalle del motivo</label>
+          <input class="field" type="text" [ngModel]="motivoDetalle()" (ngModelChange)="motivoDetalle.set($event)" placeholder="Describe el motivo" />
+        }
+        <label class="field-label">Comentario (opcional)</label>
+        <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
+
+        <!-- Foto opcional -->
+        @if (fotos().length) {
+          <div class="parte__fotos">
+            @for (f of fotos(); track f.previewUrl) {
+              <div class="parte__foto">
+                <img [src]="f.previewUrl" alt="foto" />
+                <button type="button" class="parte__foto-x" (click)="removeFoto($index)">✕</button>
+              </div>
+            }
+          </div>
+        }
+        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">📸 Agregar foto (opcional)</button>
+
+        <!-- Z23 — notas de voz (múltiples) -->
+        <app-voice-notes [(notes)]="voces" [max]="5" />
       }
 
       <!-- 2. Clima (lluvia) -->
-      @if (step() === 2) {
+      @if (step() === 2 && !sinActividad()) {
         <h1 class="screen__title">¿Está lloviendo o llovió?</h1>
         <p class="screen__subtitle">Es normal, no es un incidente. Solo lo registramos.</p>
         <app-option-button icon="🌧️" label="Sí" tone="warning" [selected]="llovio() === true" (pressed)="llovio.set(true)" />
         <app-option-button icon="☀️" label="No" tone="success" [selected]="llovio() === false" (pressed)="llovio.set(false)" />
         @if (llovio()) {
+          <!-- Z5 — horas que la lluvia afectó (stepper numérico) -->
+          <app-counter label="¿Cuántas horas afectó?" icon="⏱️" [(value)]="horasLluvia" [min]="0" [max]="24" />
           <label class="field-label">¿Cómo afectó? (opcional)</label>
           <input class="field" type="text" [ngModel]="lluviaDetalle()" (ngModelChange)="lluviaDetalle.set($event)" placeholder="Ej: paró el vaciado 2 horas" />
         }
       }
 
+      <!-- 3. Z4 — Resumen (solo "no se trabajó") -->
+      @if (step() === 3 && sinActividad()) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>Estado</span><b>No se trabajó en obra</b></li>
+          <li><span>Motivo</span><b>{{ motivoSinActividadLabel() }}</b></li>
+          @if (motivoSinActividad() === 'otro' && motivoDetalle()) {
+            <li><span>Detalle</span><b>{{ motivoDetalle() }}</b></li>
+          }
+          @if (comentarios()) { <li><span>Comentario</span><b>{{ comentarios() }}</b></li> }
+          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
+        </ul>
+      }
+
       <!-- 3. Migración -->
-      @if (step() === 3) {
+      @if (step() === 3 && !sinActividad()) {
         <h1 class="screen__title">¿Hubo problemas de migración?</h1>
         <app-option-button icon="⚠️" label="Sí" tone="warning" [selected]="huboMigracion() === true" (pressed)="huboMigracion.set(true)" />
         <app-option-button icon="✅" label="No" tone="success" [selected]="huboMigracion() === false" (pressed)="huboMigracion.set(false)" />
         @if (huboMigracion()) {
-          <label class="field-label">Obreros afectados (opcional)</label>
-          <p class="screen__subtitle">Escribe los nombres separados por coma.</p>
-          <input class="field" type="text" [ngModel]="migracionObreros()" (ngModelChange)="migracionObreros.set($event)" placeholder="Ej: Juan, Pedro" />
+          <!-- Z5 — cantidad de obreros (stepper numérico) -->
+          <app-counter label="¿Cuántos obreros?" icon="👷" [(value)]="migracionObrerosCount" [min]="0" />
         }
       }
 
@@ -107,16 +171,27 @@
           <div class="parte__chips">
             @for (e of estructuras(); track e.valor) {
               <button type="button" class="chip" [class.chip--on]="parteActual() === e.valor" (click)="toggleEstructura(e.valor)">
-                @if (e.destacado) { <span class="chip__star">★</span> }{{ e.valor }}
+                @if (e.destacado) { <span class="chip__star">★</span> }{{ e.valor }}@if (estructuraTiene(e.valor)) { <span class="chip__check">✓</span> }
               </button>
             }
           </div>
 
           @if (parteActual()) {
+            <!-- Z6 — Seleccionadas arriba (toca para quitar) -->
+            @if (actividadesElegidas().length) {
+              <label class="field-label">Seleccionadas (toca para quitar)</label>
+              <div class="parte__chips">
+                @for (ac of actividadesElegidas(); track ac.valor) {
+                  <button type="button" class="chip chip--on" (click)="toggleActividad(ac.valor)">
+                    @if (ac.destacado) { <span class="chip__star">★</span> }{{ ac.valor }} <span class="chip__x">✕</span>
+                  </button>
+                }
+              </div>
+            }
             <label class="field-label">¿Qué se hizo en {{ parteActual() }}? (toca para agregar)</label>
             <div class="parte__chips">
-              @for (ac of actividadesCat(); track ac.valor) {
-                <button type="button" class="chip" [class.chip--on]="actividadOn(ac.valor)" (click)="toggleActividad(ac.valor)">
+              @for (ac of actividadesDisponibles(); track ac.valor) {
+                <button type="button" class="chip" (click)="toggleActividad(ac.valor)">
                   @if (ac.destacado) { <span class="chip__star">★</span> }{{ ac.valor }}
                 </button>
               }
@@ -303,11 +378,14 @@
         <label class="field-label">Ingeniero responsable (opcional)</label>
         <input class="field" type="text" [ngModel]="ingenieroResponsable()" (ngModelChange)="ingenieroResponsable.set($event)" placeholder="Nombre del ingeniero" />
 
-        <label class="field-label">Hora de fin de trabajo (opcional)</label>
+        <label class="field-label">Hora de fin de jornada (opcional)</label>
         <input class="field" type="time" [ngModel]="horaFinTrabajo()" (ngModelChange)="horaFinTrabajo.set($event)" />
 
         <label class="field-label">Comentario (opcional)</label>
         <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
+
+        <!-- Z23 — notas de voz (múltiples) -->
+        <app-voice-notes [(notes)]="voces" [max]="5" />
       }
 
       <!-- 10. Resumen (no editable) -->

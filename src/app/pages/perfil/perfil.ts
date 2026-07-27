@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
+import { AppLauncher } from '@capacitor/app-launcher';
 import { environment } from '../../../environments/environment';
 import { UserContextService } from '../../core/services/user-context.service';
 import { SessionService } from '../../core/services/session.service';
@@ -141,6 +143,27 @@ export class PerfilPage {
 
   soporte(): void {
     void this.router.navigate(['/soporte']);
+  }
+
+  /** Z26 — el encabezado (avatar + nombre + rol) abre el detalle de mi propio usuario. */
+  verMiDetalle(): void {
+    void this.router.navigate(['/perfil/mi-detalle']);
+  }
+
+  /** Z24 — abrir la web del SGC en el navegador del sistema.
+   *  Nativo → AppLauncher; web/PWA (o si falla) → window.open '_system'.
+   *  Mismo patrón probado que conduces.ts comoLlegar(). */
+  async abrirWeb(): Promise<void> {
+    const url = environment.appUrl;
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await AppLauncher.openUrl({ url });
+        return;
+      } catch {
+        /* cae al fallback window.open */
+      }
+    }
+    window.open(url, '_system');
   }
 
   admin(): void {

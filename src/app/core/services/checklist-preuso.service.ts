@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 import { ChecklistCaptura, ChecklistPlantilla } from '../models/checklist-preuso.model';
 
 // U10 — clave nueva ('_preuso') para invalidar cualquier caché viejo con la
@@ -19,6 +20,7 @@ export class ChecklistPreusoService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
+  private audioNotas = inject(AudioNotasService);
 
   constructor() {
     this.registerHandler();
@@ -92,6 +94,10 @@ export class ChecklistPreusoService {
       };
     });
 
+    // Z23 — notas de voz (audio_notas, bucket flota-documentos).
+    const audio = this.audioNotas.buildAttachments('preuso', id, AUDIO_BUCKET_FLOTA, input.voces ?? []);
+    fotos.push(...audio.fotos);
+
     await this.sync.enqueue({
       id,
       tipo_op: 'checklist_preuso',
@@ -108,6 +114,7 @@ export class ChecklistPreusoService {
         datos: {},
         observacion: input.observacion,
         respuestas,
+        audios: audio.audios, // Z23
       },
       fotos,
       resumen: {
@@ -140,7 +147,7 @@ export class ChecklistPreusoService {
       }));
 
       const fotos = Object.entries(photoPaths)
-        .filter(([slot]) => slot !== 'firma')
+        .filter(([slot]) => slot !== 'firma' && !slot.startsWith('audio_'))
         .map(([slot, path]) => ({ storage_path: path, slot }));
 
       const { error } = await this.supabase.client.rpc('registrar_checklist_vehiculo', {
@@ -161,6 +168,9 @@ export class ChecklistPreusoService {
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // Z23 — registrar las notas de voz (idempotente por path).
+      await this.audioNotas.commit('preuso', payload['id'] as string, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
 
       // P7 — el RPC avanza vehiculos.kilometraje (regla no-retroceso, SGC). Al
       // sincronizar, invalidar las caches con km para que la app muestre el nuevo.

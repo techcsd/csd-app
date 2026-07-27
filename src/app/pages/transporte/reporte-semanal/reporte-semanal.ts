@@ -14,6 +14,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
+import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -64,7 +65,7 @@ interface VehSemanal {
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })
@@ -108,6 +109,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   km = signal<number | null>(null);
   nivelCombustible = signal<string | null>(null);
   fotos = signal<Record<string, CapturedPhoto>>({});
+  voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
   firmaLista = signal(false);
   firmaBlob = signal<Blob | null>(null);
   observacion = signal('');
@@ -452,6 +454,7 @@ export class ReporteSemanalPage extends GuardedWizard {
         respuestas,
         fotos,
         firma: this.firmaBlob(),
+        voces: this.voces().map((n) => n.blob),
         resultado,
       });
       this.resultadoEnviado.set(resultado);

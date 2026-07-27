@@ -1,0 +1,16 @@
+<div class="vnotes">
+  <label class="field-label">Notas de voz (opcional) · {{ notes().length }}/{{ max() }}</label>
+
+  @for (n of notes(); track n.url) {
+    <div class="vnotes__item">
+      <audio class="vnotes__audio" [src]="n.url" controls></audio>
+      <button type="button" class="vnotes__del" (click)="remove($index)" aria-label="Eliminar nota">✕</button>
+    </div>
+  }
+
+  @if (puedeGrabar()) {
+    <app-voice-recorder (recorded)="add($event)" />
+  } @else {
+    <p class="vnotes__max">Llegaste al máximo de {{ max() }} notas de voz.</p>
+  }
+</div>

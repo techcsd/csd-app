@@ -129,3 +129,8 @@
   background: #fef2f2;
   color: var(--color-error);
 }
+
+// Z4 — estado "no se trabajó" resaltado.
+.det__no-trabajo {
+  color: var(--color-warning, #d97706);
+}

@@ -33,7 +33,8 @@ const TILES: HubTile[] = [
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488', elevado: true },
-  { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c', elevado: true },
+  // Y7 — "Me pusieron una multa": visible para TODO chofer (no solo elevados).
+  { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c' },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
 ];
 

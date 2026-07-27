@@ -25,11 +25,11 @@ export interface EnProcesoItem {
 
 // Módulo → tipos de borrador (Dexie) y tipos de op del outbox que le pertenecen.
 const BORRADOR_TIPOS: Record<EnProcesoModulo, string[]> = {
-  bitacora: ['parte', 'incidente'],
+  bitacora: ['parte', 'incidente', 'cl_liberacion'],
   flota: ['checklist', 'vehiculo', 'conductor'],
 };
 const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
-  bitacora: ['bitacora'],
+  bitacora: ['bitacora', 'cl_liberacion'],
   flota: [
     'vehiculo_entrega',
     'combustible',
@@ -45,6 +45,7 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
 
 const OP_LABEL: Record<string, string> = {
   bitacora: 'Bitácora',
+  cl_liberacion: 'Checklist de liberación',
   vehiculo_entrega: 'Recibir/entregar vehículo',
   combustible: 'Registrar combustible',
   checklist_preuso: 'Checklist de pre-uso',
@@ -58,12 +59,13 @@ const OP_LABEL: Record<string, string> = {
 const BORRADOR_LABEL: Record<string, string> = {
   parte: 'Bitácora del día',
   incidente: 'Reporte de incidente',
+  cl_liberacion: 'Checklist de liberación',
   checklist: 'Checklist de vehículo',
   vehiculo: 'Vehículo',
   conductor: 'Conductor',
 };
 
-const RESUME_POR_CLAVE = new Set(['parte', 'incidente']);
+const RESUME_POR_CLAVE = new Set(['parte', 'incidente', 'cl_liberacion']);
 
 /**
  * V1 — "Documentación en proceso" reutilizable por módulo: une los borradores de

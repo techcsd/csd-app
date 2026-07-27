@@ -5,15 +5,16 @@
   </header>
 
   <div class="screen__body">
-    <div class="perfil__card">
+    <button type="button" class="perfil__card" (click)="verMiDetalle()">
       <div class="perfil__avatar">{{ (nombre() || '?').charAt(0) }}</div>
-      <div>
+      <div class="perfil__card-txt">
         <p class="perfil__nombre">{{ nombre() || 'Usuario' }}</p>
         @if (roles().length) {
           <p class="perfil__roles">{{ roles().join(', ') }}</p>
         }
       </div>
-    </div>
+      <span class="perfil__card-chevron" aria-hidden="true">›</span>
+    </button>
 
     <ul class="perfil__info">
       @if (obra(); as o) {
@@ -52,6 +53,10 @@
 
     <button type="button" class="btn-ghost perfil__btn" (click)="soporte()">
       🛟 Soporte y ayuda
+    </button>
+
+    <button type="button" class="btn-ghost perfil__btn" (click)="abrirWeb()">
+      🌐 Visitar página web
     </button>
 
     @if (isAdmin()) {

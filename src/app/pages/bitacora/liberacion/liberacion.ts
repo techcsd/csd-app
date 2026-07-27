@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
@@ -10,14 +10,15 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
-import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { ClLiberacionService } from '../../../core/services/cl-liberacion.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { BorradorService } from '../../../core/services/borrador.service';
 import {
   ClFirmaCaptura,
   ClFirmaRol,
@@ -25,7 +26,9 @@ import {
   ClPlantilla,
   ClPlantillaItem,
   ClProyecto,
+  ClResponsable,
   CL_FIRMA_ROLES,
+  CL_ROLES_LIBERAN,
 } from '../../../core/models/cl-liberacion.model';
 
 interface ItemDraft {
@@ -36,6 +39,18 @@ interface ItemDraft {
 interface SeccionGrupo {
   seccion: string;
   items: ClPlantillaItem[];
+}
+
+/** Z1 — borrador persistido del checklist (sin medios: fotos/firmas se recapturan). */
+interface ClDraft {
+  proyectoId: string;
+  plantillaId: string;
+  respuestas: Record<string, ItemDraft>;
+  bloque: string;
+  eje: string;
+  observacion: string;
+  step: number;
+  seccionIdx: number;
 }
 
 const TOTAL_STEPS = 5;
@@ -51,18 +66,20 @@ const TOTAL_STEPS = 5;
   selector: 'app-liberacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, WizardExit],
+  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, ConfirmDialog, Skeleton, WizardFooter, WizardExit],
   templateUrl: './liberacion.html',
   styleUrl: './liberacion.scss',
 })
 export class LiberacionPage implements OnDestroy {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private location = inject(Location);
   private service = inject(ClLiberacionService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
   private camera = inject(CameraService);
+  private borrador = inject(BorradorService);
 
   private sig = viewChild(SignaturePad);
 
@@ -70,7 +87,13 @@ export class LiberacionPage implements OnDestroy {
   readonly roles = CL_FIRMA_ROLES;
 
   step = signal(1);
+  // Z1 — el checklist (paso 2) se recorre UNA SECCIÓN POR PANTALLA (patrón hoja).
+  seccionIdx = signal(0);
   loading = signal(true);
+
+  // Z1 — borrador recuperable (aparece en "Documentación en proceso").
+  private draftKey = '';
+  private hydrated = false;
 
   proyectos = signal<ClProyecto[]>([]);
   plantillas = signal<ClPlantilla[]>([]);
@@ -99,6 +122,10 @@ export class LiberacionPage implements OnDestroy {
   firmas = signal<ClFirmaCaptura[]>([]);
   // Q5 — firma del cliente por FOTO (alternativa al trazo).
   firmaFoto = signal<CapturedPhoto | null>(null);
+  // Z2/Z3 — responsables/residentes del proyecto (usuarios reales) para preseleccionar.
+  responsables = signal<ClResponsable[]>([]);
+  firmaUsuarioId = signal<string | null>(null);
+  firmaSustituyeA = signal<ClResponsable | null>(null);
 
   submitting = signal(false);
   done = signal(false);
@@ -148,11 +175,29 @@ export class LiberacionPage implements OnDestroy {
     () => Object.values(this.respuestas()).filter((r) => r.cumple !== null).length,
   );
 
-  // Progreso de firmas obligatorias
+  // Z1 — sección visible del checklist (una por pantalla).
+  totalSecciones = computed(() => this.grupos().length);
+  seccionActual = computed<SeccionGrupo | null>(() => this.grupos()[this.seccionIdx()] ?? null);
+  private seccionRespondida(g: SeccionGrupo | null): boolean {
+    if (!g) return true;
+    return g.items.every((it) => this.draft(it.id).cumple !== null);
+  }
+
+  // Z3 — la liberación exige RESIDENTE **o** RESPONSABLE (una de las dos basta).
   faltanObligatorias = computed(() => {
     const puestas = new Set(this.firmas().map((f) => f.rol));
-    return CL_FIRMA_ROLES.filter((r) => r.obligatoria && !puestas.has(r.value)).map((r) => r.label);
+    const liberado = CL_ROLES_LIBERAN.some((r) => puestas.has(r));
+    return liberado ? [] : ['Ing. Residente o Ing. Responsable'];
   });
+
+  // Z2 — responsables del proyecto para el rol que se está firmando ahora.
+  responsablesDelRol = computed<ClResponsable[]>(() => {
+    const rol = this.firmaRol();
+    if (rol !== 'residente' && rol !== 'responsable') return [];
+    return this.responsables().filter((r) => r.tipo_responsabilidad === rol);
+  });
+  // Z3 — a quién se puede sustituir (cualquier responsable/residente ligado).
+  sustituibles = computed<ClResponsable[]>(() => this.responsables());
 
   // Q5 — checklist visual: cada rol con su estado (verde si firmó, gris si no).
   firmaEstados = computed(() => {
@@ -161,8 +206,43 @@ export class LiberacionPage implements OnDestroy {
   });
 
   constructor() {
+    // Z1 — resetear scroll en cada paso y en cada sección del checklist (hoja).
+    resetScrollOnStep(() => this.step(), () => this.seccionIdx(), () => this.done());
     void this.load();
     this.navGuard.register(this.backHandler); // U4 — botón físico Android
+    // Z1 — autosave del borrador (sin fotos/firmas) para recuperar tras un cierre.
+    effect(() => {
+      const snap = {
+        proyectoId: this.proyectoId(),
+        plantillaId: this.plantillaId(),
+        respuestas: this.respuestas(),
+        bloque: this.bloque(),
+        eje: this.eje(),
+        observacion: this.observacion(),
+        step: this.step(),
+        seccionIdx: this.seccionIdx(),
+      };
+      if (!this.hydrated || this.done()) return;
+      if (!this.hasContent()) return;
+      void this.borrador.save(this.draftKey, snap, {
+        tipo: 'cl_liberacion',
+        etiqueta: 'Checklist de liberación' + (this.proyectoSel()?.nombre ? ' · ' + this.proyectoSel()!.nombre : ''),
+        ruta: '/bitacora/liberacion',
+      });
+    });
+  }
+
+  /** ¿Hay algo que valga la pena guardar como borrador? */
+  private hasContent(): boolean {
+    return (
+      this.step() > 1 ||
+      !!this.proyectoId() ||
+      !!this.plantillaId() ||
+      this.respondidos() > 0 ||
+      !!this.bloque() ||
+      !!this.eje() ||
+      !!this.observacion()
+    );
   }
 
   ngOnDestroy(): void {
@@ -210,19 +290,52 @@ export class LiberacionPage implements OnDestroy {
       ]);
       this.proyectos.set(proyectos);
       this.plantillas.set(plantillas);
+
+      // Z1 — retomar un borrador (?borrador=) o empezar uno nuevo.
+      const claveParam = this.route.snapshot.queryParamMap.get('borrador');
+      const draft = claveParam ? await this.borrador.load<ClDraft>(claveParam) : null;
+      this.draftKey = draft && claveParam ? claveParam : `cl_liberacion:${crypto.randomUUID()}`;
+      if (draft) {
+        this.proyectoId.set(draft.proyectoId ?? '');
+        this.plantillaId.set(draft.plantillaId ?? '');
+        // Las respuestas se re-mapean por item.id (mismo catálogo de la plantilla).
+        this.respuestas.set(draft.respuestas ?? {});
+        this.bloque.set(draft.bloque ?? '');
+        this.eje.set(draft.eje ?? '');
+        this.observacion.set(draft.observacion ?? '');
+        this.seccionIdx.set(draft.seccionIdx ?? 0);
+        this.step.set(draft.step ?? 1);
+        // Z2 — al retomar, recargar los responsables del proyecto para la preselección.
+        if (draft.proyectoId) {
+          void this.service.getResponsables(draft.proyectoId).then((r) => this.responsables.set(r)).catch(() => {});
+        }
+        this.toast.show('Recuperamos tu checklist a medio llenar. Las fotos y firmas hay que capturarlas de nuevo.', 'info', 4500);
+      }
     } catch {
       this.toast.error('No se pudieron cargar obras/checklists.');
     } finally {
       this.loading.set(false);
+      this.hydrated = true; // a partir de aquí el autosave puede correr
     }
   }
 
   pickProyecto(id: string): void {
     this.proyectoId.set(id);
+    // Z2 — precargar los responsables/residentes del proyecto (best-effort, online;
+    // cacheado para offline). Alimenta la preselección de firmantes del paso 4.
+    if (id) {
+      void this.service
+        .getResponsables(id)
+        .then((r) => this.responsables.set(r))
+        .catch(() => this.responsables.set([]));
+    } else {
+      this.responsables.set([]);
+    }
   }
 
   pickPlantilla(id: string): void {
     this.plantillaId.set(id);
+    this.seccionIdx.set(0);
     const drafts: Record<string, ItemDraft> = {};
     for (const it of this.plantillaSel()?.items ?? []) {
       drafts[it.id] = { cumple: null, comentario: '' };
@@ -299,6 +412,23 @@ export class LiberacionPage implements OnDestroy {
   // ── Firmas ─────────────────────────────────────────────────
   pickRol(rol: ClFirmaRol): void {
     this.firmaRol.set(rol);
+    // Al cambiar de rol, reinicia el firmante ligado / sustitución.
+    this.firmaUsuarioId.set(null);
+    this.firmaSustituyeA.set(null);
+    // Z2 — si hay UN solo responsable ligado para ese rol, preselecciónalo.
+    const delRol = this.responsablesDelRol();
+    if (delRol.length === 1) this.pickResponsable(delRol[0]);
+  }
+
+  /** Z2 — elegir un responsable/residente ligado: fija nombre + usuario_id. */
+  pickResponsable(r: ClResponsable): void {
+    this.firmaNombre.set(r.nombre);
+    this.firmaUsuarioId.set(r.usuario_id);
+  }
+
+  /** Z3 — firmar EN SUSTITUCIÓN de otro responsable (o quitar la sustitución). */
+  pickSustituto(r: ClResponsable | null): void {
+    this.firmaSustituyeA.set(r);
   }
 
   /** Q5 — el cliente puede firmar subiendo una FOTO de la firma en papel. */
@@ -338,12 +468,24 @@ export class LiberacionPage implements OnDestroy {
       this.toast.error(rol === 'cliente' ? 'Captura la firma o sube su foto.' : 'Captura la firma primero.');
       return;
     }
+    const sust = this.firmaSustituyeA();
     this.firmas.update((list) => [
       ...list.filter((f) => f.rol !== rol),
-      { rol, nombre: this.firmaNombre().trim() || null, blob, metodo },
+      {
+        rol,
+        nombre: this.firmaNombre().trim() || null,
+        blob,
+        metodo,
+        // Z2/Z3 — usuario ligado + firma en sustitución.
+        usuarioId: this.firmaUsuarioId(),
+        enSustitucionDe: sust?.usuario_id ?? null,
+        enSustitucionDeNombre: sust?.nombre ?? null,
+      },
     ]);
     this.firmaRol.set(null);
     this.firmaNombre.set('');
+    this.firmaUsuarioId.set(null);
+    this.firmaSustituyeA.set(null);
     this.firmaLista.set(false);
     this.sig()?.clear();
     this.quitarFirmaFoto();
@@ -359,9 +501,27 @@ export class LiberacionPage implements OnDestroy {
   // ── Navegación ─────────────────────────────────────────────
   next(): void {
     if (!this.canAdvance()) return;
+    // Z1 — dentro del paso 2, avanzar SECCIÓN por SECCIÓN antes de saltar al paso 3.
+    if (this.step() === 2 && this.seccionIdx() < this.totalSecciones() - 1) {
+      this.seccionIdx.update((i) => i + 1);
+      return;
+    }
+    // Al entrar al paso 2, empezar en la primera sección.
+    if (this.step() === 1) this.seccionIdx.set(0);
     this.step.update((s) => Math.min(this.total, s + 1));
   }
   prev(): void {
+    // Z1 — dentro del paso 2, retroceder de sección en sección.
+    if (this.step() === 2 && this.seccionIdx() > 0) {
+      this.seccionIdx.update((i) => i - 1);
+      return;
+    }
+    // Volver del paso 3 al paso 2 aterriza en la ÚLTIMA sección (back sano — S31).
+    if (this.step() === 3) {
+      this.step.set(2);
+      this.seccionIdx.set(Math.max(0, this.totalSecciones() - 1));
+      return;
+    }
     this.step.update((s) => Math.max(1, s - 1));
   }
 
@@ -378,8 +538,9 @@ export class LiberacionPage implements OnDestroy {
         }
         return true;
       case 2:
-        if (this.respondidos() < this.totalItems()) {
-          this.toast.error('Responde todos los puntos del checklist.');
+        // Z1 — valida SOLO la sección visible; así se avanza hoja por hoja.
+        if (!this.seccionRespondida(this.seccionActual())) {
+          this.toast.error('Responde todos los puntos de esta sección.');
           return false;
         }
         return true;
@@ -418,6 +579,8 @@ export class LiberacionPage implements OnDestroy {
         firmas: this.firmas(),
       });
       this.clId.set(clId);
+      this.hydrated = false; // evita que el autosave re-cree el borrador ya enviado
+      await this.borrador.clear(this.draftKey);
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');

@@ -66,13 +66,14 @@
         }
       }
 
-      <!-- Step 2: verificar ítems -->
+      <!-- Step 2: verificar ítems — UNA SECCIÓN POR PANTALLA (Z1, patrón hoja) -->
       @if (step() === 2) {
-        <h1 class="screen__title">Verifica cada punto</h1>
-        <p class="screen__subtitle">{{ respondidos() }} de {{ totalItems() }} respondidos.</p>
+        @if (seccionActual(); as g) {
+          <h1 class="screen__title">{{ g.seccion }}</h1>
+          <p class="screen__subtitle">
+            Sección {{ seccionIdx() + 1 }} de {{ totalSecciones() }} · {{ respondidos() }}/{{ totalItems() }} en todo el checklist
+          </p>
 
-        @for (g of grupos(); track g.seccion) {
-          <h2 class="liber__section">{{ g.seccion }}</h2>
           @for (it of g.items; track it.id) {
             <div class="liber__item">
               <span class="liber__item-label">{{ it.etiqueta }}</span>
@@ -175,8 +176,8 @@
       @if (step() === 4) {
         <h1 class="screen__title">Ciclo de firmas</h1>
         <p class="screen__subtitle">
-          Solo <b>Residente</b> y <b>Responsable</b> son obligatorias; Cliente y MIVHED son opcionales.
-          Puedes guardar y <b>solicitar</b> las firmas que falten.
+          Con la firma del <b>Residente</b> <b>o</b> el <b>Responsable</b> se libera el vaciado.
+          Cliente y MIVHED son opcionales. Puedes guardar y <b>solicitar</b> las firmas que falten.
         </p>
 
         <!-- Q5 — checklist visual: verde al firmar -->
@@ -194,7 +195,7 @@
           }
         </div>
 
-        <label class="field-label">Rol que firma ahora</label>
+        <label class="field-label">¿En calidad de qué firma?</label>
         <div class="liber__roles">
           @for (r of roles; track r.value) {
             <app-option-button
@@ -205,8 +206,42 @@
           }
         </div>
 
+        <!-- Z2 — preseleccionar el firmante entre los responsables del proyecto -->
+        @if (responsablesDelRol().length) {
+          <label class="field-label">Persona del proyecto (toca para elegir)</label>
+          <div class="liber__roles">
+            @for (p of responsablesDelRol(); track p.usuario_id) {
+              <app-option-button
+                [label]="p.nombre"
+                icon="👤"
+                [selected]="firmaUsuarioId() === p.usuario_id"
+                (pressed)="pickResponsable(p)"
+              />
+            }
+          </div>
+        }
+
         <label class="field-label" for="fnom">Nombre de quien firma</label>
         <input id="fnom" class="field" type="text" [ngModel]="firmaNombre()" (ngModelChange)="firmaNombre.set($event)" placeholder="Nombre y apellido" />
+
+        <!-- Z3 — firmar EN SUSTITUCIÓN de otro responsable -->
+        @if (sustituibles().length) {
+          <label class="field-label">¿Firma en sustitución de alguien? (opcional)</label>
+          <div class="liber__roles">
+            <app-option-button
+              label="No, firmo por mí"
+              [selected]="!firmaSustituyeA()"
+              (pressed)="pickSustituto(null)"
+            />
+            @for (p of sustituibles(); track p.usuario_id) {
+              <app-option-button
+                [label]="'En sustitución de ' + p.nombre"
+                [selected]="firmaSustituyeA()?.usuario_id === p.usuario_id"
+                (pressed)="pickSustituto(p)"
+              />
+            }
+          </div>
+        }
 
         <!-- Q5 — el CLIENTE puede firmar subiendo una foto de la firma en papel -->
         @if (firmaRol() === 'cliente') {

@@ -15,6 +15,11 @@
 @if (invalido()) {
   <p class="kmin__err">⚠️ No puede ser menor al último registrado ({{ ultimo() | number: '1.0-0' }} km).</p>
 }
+@if (mantPorRevisar()) {
+  <p class="kmin__mant kmin__mant--revisar">
+    🛠️ Dato de mantenimiento por revisar — el último registrado supera el odómetro. Un encargado debe corregirlo.
+  </p>
+}
 @if (mant(); as m) {
   <p
     class="kmin__mant"

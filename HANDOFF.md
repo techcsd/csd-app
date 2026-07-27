@@ -1,5 +1,33 @@
 # HANDOFF — CSD App
 
+## Ronda 11 app — PROMPT-2-CSD-APP (2026-07-27) — Z1/Z4/Z5/Z6/Z7/Z23/Z24/Z25/Z26 — COMPLETA · build VERDE · SIN publicar
+**Estado:** todo el PROMPT-2 implementado y `npm run build` VERDE (solo warnings NG8102 preexistentes). **Commit hecho, APK NO construida/publicada** (paso aparte — pedir a Xaviel). `CONTEXTO.md` (carpeta `25072026`) y `PROMPT-22-CSD-APP` (`imp 20072026`) NO están en disco; se trabajó con el detalle del prompt + introspección de la BD real para confirmar el contrato de PROMPT-1-SGC.
+
+**Verificación del contrato PROMPT-1-SGC (BD real):** FASE 4 y 5 **VIVAS** (crear_bitacora_app con `p_sin_actividad`/`p_motivo_sin_actividad`/`p_motivo_sin_actividad_detalle`/`p_horas_lluvia`; `sgc.audio_notas` + `agregar_audio_nota`/`audios_de`/`max_audio_notas`). Firmas Z1 (Z2/Z3): el **SGC web + schema ya estaban aplicados** (`proyecto_responsables`, `responsables_de_proyecto`, `cl_registro_firmas.en_sustitucion_de`, trigger "residente O responsable"). Solo faltaba el wiring de la app + mapear la sustitución en `registrar_cl_app` → **migración aditiva aplicada**: `sql/2026-07-27-ronda11-z1-cl-app-sustitucion.sql`.
+
+**FASE 1 (adelantable):**
+- **Z6** — en el paso 5 del parte ("¿qué se hizo?"), lo elegido sube a una sección **"Seleccionadas (toca para quitar)"** arriba; disponibles abajo en orden de catálogo; estructuras con trabajo marcadas ✓. `parte.ts` (computeds `actividadesElegidas`/`actividadesDisponibles`/`estructuraTiene`) + `.html` + `.scss`.
+- **Z24** — botón **"🌐 Visitar página web"** en Mi perfil → `environment.appUrl` vía AppLauncher / `window.open('_system')`. `perfil.ts/.html`.
+- **Z26** — header de Mi perfil clickeable → nueva página **`/perfil/mi-detalle`** (solo lectura: avatar, roles, obra, última actividad; si conductor: licencia+vencimiento+estado, documentos con foto ampliable). Files: `pages/perfil/mi-detalle/*`, ruta en `app.routes.ts`.
+
+**FASE 2 (Z1 liberación):**
+- **UI hoja** — checklist **una sección por pantalla** (sub-máquina `seccionIdx`), `resetScrollOnStep`, **borradores** (autosave + retomar por `?borrador=`, registrado en "Documentación en proceso" como `cl_liberacion` — `en-proceso.service.ts`). `liberacion.ts/.html`.
+- **Z1 firmas** — `getResponsables(proyectoId)` (RPC `responsables_de_proyecto`, cacheado); paso 4 preselecciona firmante entre responsables/residentes ligados; **"¿en calidad de qué firma?"** + selector **"firma en sustitución de …"** (`en_sustitucion_de`); regla **"Residente O Responsable"** en `faltanObligatorias`. Firmas del outbox llevan `usuario_id`+`en_sustitucion_de(_nombre)`; el RPC ampliado los mapea. `cl-liberacion.model.ts`, `cl-liberacion.service.ts`, `liberacion.ts/.html`.
+
+**FASE 3 (Z25 Mi actividad):** reorganizada — cards resumen arriba (Checklists/Echadas **clickeables** → bajan a su sección), luego Multas · Entregas · Semanales · Pre-usos · Echadas · Rutas · Accidentes. Nada muerto al tap: multas/semanales/pre-usos/echadas abren detalle; accidentes/entregas/rutas-creadas **se expanden en el sitio** (sin página propia). Fechas con hora (Y1). `mi-actividad.ts/.html/.scss`.
+
+**FASE 4 (Z4/Z5):** Z4 "🚫 No se trabajó en obra" en la 1ª pantalla → 3 pantallas (motivo lluvia/falta_material/feriado/otro+detalle + comentario/foto/voz opcional → resumen → enviar); etiquetado en Mis bitácoras + detalle. Z5 steppers numéricos **horas_lluvia** (0–24) y **obreros** (→ `migracion_obreros` como arreglo de N para que el KPI web `.length` cuadre). `parte.ts/.html`, `bitacora.service.ts`, `bitacora.model.ts`, `mis-partes.ts`, `detalle.ts/.html`.
+
+**FASE 5 (Z23 notas de voz N):** componente compartido **`app-voice-notes`** (N notas, límite `max_audio_notas`=5, barras Y11, reproducir/eliminar). Bitácora+incidente: 1→N vía **`bitacora_archivos`** (retrocompatible, el detalle ya las reproduce). Flota (reporte semanal, pre-uso, ruta, mantenimiento): vía **`sgc.audio_notas`** + `agregar_audio_nota` (idempotente por path, bucket `flota-documentos`, `entidad_tipo` = reporte_semanal/preuso/ruta/mantenimiento). Playback post-envío en `mi-registro-detalle` (checklist). Files: `shared/ui/voice-notes/*`, `core/services/audio-notas.service.ts`, los 6 servicios/páginas de captura.
+
+**FASE 6 (Z7):** "fin de trabajo" → "fin de jornada" (parte paso 9 + detalle).
+
+**Pendiente / notas:**
+- **APK**: `npm run apk` (bump a 1.30.0 + registra historial Y1) y `npm run apk:publish` NO ejecutados — pedir a Xaviel. Publicar/forzar mínima = paso admin en SGC.
+- **Verificación en dispositivo** pendiente del PIN (build verificado, RLS de `flota-documentos` confirmada INSERT+UPDATE).
+- "Solicitar firma" del app sigue siendo broadcast al módulo bitácora (la web tiene targeting por persona) — mejora opcional.
+- `migracion_obreros` se envía como `["Obrero 1"…"Obrero N"]` (la app captura cantidad, no nombres) para que el dashboard web cuente bien.
+
 ## Ronda 10 app — PROMPT-22 (2026-07-24) — Y1/Y2/Y7/Y8/Y9c/Y10/Y3/Y11 + Y5 verif · Y4 BLOQUEADA — v1.29.0 PUBLICADA + MÍNIMA (FORZADA)
 **Release:** commit `bc9f266` (push → PWA). APK 1.29.0 firmado (cert prod `3c5316d8…df5065`) + bucket (`csd-app-1.29.0.apk`+`latest`+`version.json`) + historial Y1 (7 cambios) + `apk_url`. **1.29.0 PUBLICADA + MÍNIMA** (`publicada=true, minima=true`, única fila con flags; 1.28.0 despublicada y ya no mínima) → todos por debajo de 1.29.0 forzados a actualizar. `MIN_VERSION` (release-apk.mjs) + `version.json` alineados a 1.29.0. **Rollback:** `update sgc.app_versiones set publicada=true, minima=true where plataforma='movil' and version='1.28.0'` + `publicada=false, minima=false where version='1.29.0'`.
 

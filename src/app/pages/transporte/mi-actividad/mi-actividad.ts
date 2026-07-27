@@ -23,7 +23,7 @@ import { ConductorStats } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
+import { formatFecha, formatFechaMedia, formatFechaHumana } from '../../../core/util/fecha';
 
 /** Read-only driver profile: my flota activity/telemetry (R5) + docs (X1). */
 @Component({
@@ -63,6 +63,21 @@ export class MiActividadPage {
   historialExpandido = signal(false); // "ver más" (90 días → todo)
   fmtFecha = formatFecha; // U9 — fecha date-only
   fmtFechaMedia = formatFechaMedia; // U9 — timestamp
+  fmtFechaHumana = formatFechaHumana; // Y1 — timestamp con hora legible
+
+  // Z25 — filas sin página de detalle propia (accidentes/entregas/rutas creadas)
+  // se abren en el sitio: nada queda muerto al tap. Clave = `${tipo}:${id}`.
+  private expandidos = signal<Set<string>>(new Set());
+  esExpandido(key: string): boolean {
+    return this.expandidos().has(key);
+  }
+  toggleExpandir(key: string): void {
+    this.expandidos.update((s) => {
+      const next = new Set(s);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
 
   // X1 — documentos del conductor
   private condId = signal('');
@@ -197,6 +212,18 @@ export class MiActividadPage {
   /** S32 — drill-down a "Conduces y rutas". */
   verRutas(): void {
     void this.router.navigate(['/transporte/conduces']);
+  }
+
+  /** Z25 — el contador de arriba lleva a su listado (misma pantalla): baja a la
+   *  primera sección existente de la lista de ids. */
+  irASeccion(...ids: string[]): void {
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
   }
 
   /** S24(c) — el chofer registra una multa que le pusieron (ligada a él). */

@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { LocalStore } from './local-store.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 import { Conduce, RutaHoy } from '../models/transporte.model';
 import { Proyecto } from '../models/bitacora.model';
 
@@ -37,6 +38,8 @@ export interface RutaCaptura {
   origen_lng: number | null;
   destino_lat: number | null;
   destino_lng: number | null;
+  /** Z23 — notas de voz múltiples (opcional). */
+  voces?: Blob[];
 }
 
 /** Obra o almacén como destino, con sus coordenadas (U22). */
@@ -59,6 +62,7 @@ export class ConducesService {
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
   private store = inject(LocalStore);
+  private audioNotas = inject(AudioNotasService);
 
   constructor() {
     this.registerHandler();
@@ -159,6 +163,8 @@ export class ConducesService {
   async crearRuta(input: RutaCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    // Z23 — notas de voz (audio_notas, bucket flota-documentos).
+    const audio = this.audioNotas.buildAttachments('ruta', id, AUDIO_BUCKET_FLOTA, input.voces ?? []);
     await this.sync.enqueue({
       id,
       tipo_op: 'crear_ruta',
@@ -178,16 +184,28 @@ export class ConducesService {
         destino_lat: input.destino_lat,
         destino_lng: input.destino_lng,
         capturado_en,
+        audios: audio.audios, // Z23
       },
+      fotos: audio.fotos,
       resumen: { origen: input.origen, destino: input.destino, fecha: input.fecha, capturado_en },
     });
     void this.misRutas();
   }
 
-  async marcarRuta(rutaId: string, estado: 'en_curso' | 'completada' | 'cancelada'): Promise<void> {
+  /**
+   * Y4 — cambia el estado de la ruta registrando el instante del TAP (`p_at`),
+   * no el momento en que el servidor procesa la llamada. El servidor lo usa con
+   * sanity-check (no futuro, no anterior a la creación; fin ≥ inicio).
+   */
+  async marcarRuta(
+    rutaId: string,
+    estado: 'en_curso' | 'completada' | 'cancelada',
+    at: string = new Date().toISOString(),
+  ): Promise<void> {
     const { error } = await this.supabase.client.rpc('marcar_ruta_estado', {
       p_ruta_id: rutaId,
       p_estado: estado,
+      p_at: at,
     });
     if (error) throw new Error(error.message);
     void this.misRutas();
@@ -231,7 +249,7 @@ export class ConducesService {
   }
 
   private registerHandler(): void {
-    this.sync.register('crear_ruta', async (payload) => {
+    this.sync.register('crear_ruta', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('crear_ruta_app', {
         p_id: payload['id'],
         p_vehiculo_id: payload['vehiculo_id'],
@@ -249,6 +267,9 @@ export class ConducesService {
         p_origen_lng: payload['origen_lng'] ?? null,
       });
       if (error) throwSyncError(error);
+
+      // Z23 — registrar las notas de voz de la ruta (idempotente por path).
+      await this.audioNotas.commit('ruta', payload['id'] as string, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
     });
 
     this.sync.register('conduce_entrega', async (payload, photoPaths) => {

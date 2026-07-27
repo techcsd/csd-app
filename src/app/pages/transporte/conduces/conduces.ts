@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -27,7 +27,7 @@ const ESTADO_RUTA_LABEL: Record<string, string> = {
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
-export class ConducesPage {
+export class ConducesPage implements OnDestroy {
   private service = inject(ConducesService);
   private router = inject(Router);
   private location = inject(Location);
@@ -42,8 +42,19 @@ export class ConducesPage {
   rutas = signal<RutaHoy[]>([]);
   loading = signal(true);
 
+  /** Y4 — reloj que avanza cada segundo para el contador en vivo de rutas en curso. */
+  now = signal(Date.now());
+  private timer?: ReturnType<typeof setInterval>;
+
   constructor() {
     void this.load();
+    // El contador se calcula desde `iniciada_at` (no un acumulador en memoria),
+    // así sobrevive a salir y volver a la pantalla.
+    this.timer = setInterval(() => this.now.set(Date.now()), 1000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.timer) clearInterval(this.timer);
   }
 
   async load(): Promise<void> {
@@ -68,10 +79,22 @@ export class ConducesPage {
   }
 
   async ruta(rutaId: string, estado: 'en_curso' | 'completada'): Promise<void> {
+    // Y4 — capturar el instante del TAP (no el del round-trip al servidor).
+    const at = new Date().toISOString();
     try {
-      await this.service.marcarRuta(rutaId, estado);
+      await this.service.marcarRuta(rutaId, estado, at);
       this.rutas.update((list) =>
-        list.map((r) => (r.id === rutaId ? { ...r, estado } : r)),
+        list.map((r) =>
+          r.id === rutaId
+            ? {
+                ...r,
+                estado,
+                // Optimista: arranca el contador / fija el fin al instante del TAP.
+                iniciada_at: estado === 'en_curso' ? (r.iniciada_at ?? at) : r.iniciada_at,
+                finalizada_at: estado === 'completada' ? at : r.finalizada_at,
+              }
+            : r,
+        ),
       );
     } catch (e) {
       this.toast.error(
@@ -82,6 +105,32 @@ export class ConducesPage {
             : 'No se pudo actualizar la ruta.',
       );
     }
+  }
+
+  // ---- Y4 — tiempos de ruta -------------------------------------------------
+
+  private fmtHms(ms: number): string {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+  }
+
+  /** Contador en vivo (hh:mm:ss) de una ruta en curso; null si no aplica. */
+  cronometro(r: RutaHoy): string | null {
+    if (r.estado !== 'en_curso' || !r.iniciada_at) return null;
+    return this.fmtHms(this.now() - new Date(r.iniciada_at).getTime());
+  }
+
+  /** Resumen "real vs estimado" de una ruta completada; null si faltan datos. */
+  resumenTiempo(r: RutaHoy): { real: number; est: number | null; pct: number | null } | null {
+    if (r.estado !== 'completada' || !r.iniciada_at || !r.finalizada_at) return null;
+    const real = Math.max(
+      0,
+      Math.round((new Date(r.finalizada_at).getTime() - new Date(r.iniciada_at).getTime()) / 60000),
+    );
+    const est = r.tiempo_estimado_min ?? null;
+    const pct = est && est > 0 ? Math.round(((real - est) / est) * 100) : null;
+    return { real, est, pct };
   }
 
   /**

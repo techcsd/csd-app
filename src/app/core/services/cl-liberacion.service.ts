@@ -9,6 +9,7 @@ import {
   ClPlantilla,
   ClProyecto,
   ClRegistroDetalle,
+  ClResponsable,
   CL_FIRMA_ROLES,
 } from '../models/cl-liberacion.model';
 
@@ -79,6 +80,24 @@ export class ClLiberacionService {
     return data ?? [];
   }
 
+  /**
+   * Z2 — responsables/residentes del proyecto ligados a usuarios reales, para
+   * preseleccionar los firmantes. Vía RPC `responsables_de_proyecto` (misma que
+   * la web). Cacheado por proyecto para que la preselección funcione offline
+   * tras la primera carga con señal.
+   */
+  async getResponsables(proyectoId: string): Promise<ClResponsable[]> {
+    if (!proyectoId) return [];
+    const data = await this.catalog.refresh<ClResponsable[]>(`cl_responsables:${proyectoId}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('responsables_de_proyecto', {
+        p_proyecto_id: proyectoId,
+      });
+      if (error) throw new Error(error.message);
+      return ((data as ClResponsable[]) ?? []).filter((r) => r.usuario_id);
+    });
+    return data ?? [];
+  }
+
   /** Queue a liberación checklist. Works fully offline; syncs when there's signal.
    *  Q5 — devuelve el id (client uuid) para poder "solicitar firma" del CL. */
   async enqueueCl(input: ClCaptura): Promise<string> {
@@ -108,7 +127,17 @@ export class ClLiberacionService {
       const ext = metodo === 'foto' ? 'jpg' : 'png';
       const slot = `firma_${idx}`;
       fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `cl/${id}/${slot}.${ext}`, slot, blob: s.blob });
-      return { slot, rol: s.rol, nombre: s.nombre, orden: idx, metodo };
+      return {
+        slot,
+        rol: s.rol,
+        nombre: s.nombre,
+        orden: idx,
+        metodo,
+        // Z2/Z3 — firmante ligado + firma en sustitución.
+        usuario_id: s.usuarioId ?? null,
+        en_sustitucion_de: s.enSustitucionDe ?? null,
+        en_sustitucion_de_nombre: s.enSustitucionDeNombre ?? null,
+      };
     });
 
     await this.sync.enqueue({
@@ -304,10 +333,23 @@ export class ClLiberacionService {
         nombre: string | null;
         orden: number;
         metodo?: string;
+        usuario_id?: string | null;
+        en_sustitucion_de?: string | null;
+        en_sustitucion_de_nombre?: string | null;
       }>;
       const firmas = firmasMeta
         .filter((s) => photoPaths[s.slot])
-        .map((s) => ({ rol: s.rol, usuario_id: null, nombre: s.nombre, firma_path: photoPaths[s.slot], orden: s.orden, metodo: s.metodo ?? 'pad' }));
+        .map((s) => ({
+          rol: s.rol,
+          usuario_id: s.usuario_id ?? null,
+          nombre: s.nombre,
+          firma_path: photoPaths[s.slot],
+          orden: s.orden,
+          metodo: s.metodo ?? 'pad',
+          // Z3 — firma en sustitución (el RPC ampliado los mapea; builds viejos → null).
+          en_sustitucion_de: s.en_sustitucion_de ?? null,
+          en_sustitucion_de_nombre: s.en_sustitucion_de_nombre ?? null,
+        }));
 
       const { error } = await this.supabase.client.rpc('registrar_cl_app', {
         p_id: payload['id'],

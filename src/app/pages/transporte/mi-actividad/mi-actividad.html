@@ -29,18 +29,22 @@
 
       @if (stats(); as s) {
         <p class="mact__nombre">{{ s.nombre }}</p>
+        <!-- Z25 — resumen: cards uniformes; el contador baja a su listado -->
         <div class="mact__cards">
-          <div class="mact__card">
+          <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-semanales', 'sec-preusos')">
             <span class="mact__label">Checklists</span>
             <span class="mact__value">{{ s.checklists_total }}</span>
             @if (s.checklists_bloqueos > 0) {
               <span class="mact__sub mact__sub--warn">{{ s.checklists_bloqueos }} bloqueo(s)</span>
+            } @else {
+              <span class="mact__sub">Ver listado ›</span>
             }
-          </div>
-          <div class="mact__card">
+          </button>
+          <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-echadas')">
             <span class="mact__label">Echadas</span>
             <span class="mact__value">{{ s.combustible_echadas }}</span>
-          </div>
+            <span class="mact__sub">Ver listado ›</span>
+          </button>
           <div class="mact__card">
             <span class="mact__label">Vehículos usados</span>
             <span class="mact__value">{{ s.vehiculos_usados }}</span>
@@ -55,7 +59,7 @@
           @if (s.ultima_actividad) {
             <div class="mact__card mact__card--wide">
               <span class="mact__label">Última actividad</span>
-              <span class="mact__value mact__value--sm">{{ fmtFechaMedia(s.ultima_actividad) }}</span>
+              <span class="mact__value mact__value--sm">{{ fmtFechaHumana(s.ultima_actividad) }}</span>
             </div>
           }
         </div>
@@ -63,57 +67,9 @@
         <p class="mact__vacio">Sin actividad todavía. Aquí aparecerán tus checklists, combustible y vehículos usados.</p>
       }
 
-      <!-- S32 — rutas asignadas (drill-down a Conduces y rutas) -->
-      @if (rutas().length) {
-        <section class="mact__docs">
-          <h2 class="mact__docs-title">Mis rutas de hoy ({{ rutas().length }})</h2>
-          @for (r of rutas(); track r.id) {
-            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verRutas()">
-              <span class="mact__act-main">🗺️ {{ r.origen }} → {{ r.destino }}</span>
-              <span class="mact__act-sub">{{ r.estado }}</span>
-            </button>
-          }
-        </section>
-      }
-
-      <!-- V3 — rutas que yo creé/asigné (roles elevados) -->
-      @if (esElevado()) {
-        <section class="mact__docs">
-          <h2 class="mact__docs-title">Rutas que creé ({{ rutasCreadas().length }})</h2>
-          @if (!rutasCreadas().length) {
-            <p class="mact__vacio">Aún no has creado rutas en este período.</p>
-          } @else {
-            @for (r of rutasCreadas(); track r.id) {
-              <div class="mact__act-row">
-                <span class="mact__act-main">🗺️ {{ r.origen || '—' }} → {{ r.destino || '—' }}</span>
-                <span class="mact__act-sub">
-                  {{ r.fecha ? fmtFecha(r.fecha) : '—' }}
-                  @if (r.vehiculo?.placa) { · {{ r.vehiculo?.placa }} }
-                  @if (r.conductor?.nombre) { · 🪪 {{ r.conductor?.nombre }} }
-                  · {{ r.estado || '—' }}
-                </span>
-              </div>
-            }
-          }
-        </section>
-      }
-
-      <!-- S32 — accidentes -->
-      @if (accidentes().length) {
-        <section class="mact__docs">
-          <h2 class="mact__docs-title">Accidentes ({{ accidentes().length }})</h2>
-          @for (a of accidentes(); track a.id) {
-            <div class="mact__act-row">
-              <span class="mact__act-main">🚨 {{ a.vehiculo?.placa ?? 'Vehículo' }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
-              <span class="mact__act-sub">{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}@if (a.lesionados) { · {{ a.lesionados }} lesionado(s) }</span>
-            </div>
-          }
-        </section>
-      }
-
       <!-- S32 — multas -->
       @if (multas().length) {
-        <section class="mact__docs">
+        <section id="sec-multas" class="mact__docs">
           <h2 class="mact__docs-title">Multas ({{ multas().length }})</h2>
           @for (m of multas(); track m.id) {
             <!-- W5 — tap abre el detalle de la multa -->
@@ -125,34 +81,38 @@
         </section>
       }
 
-      <!-- S32 — entregas / recepciones -->
+      <!-- S32 — entregas / recepciones (se abren en el sitio: sin página propia) -->
       @if (entregas().length) {
-        <section class="mact__docs">
+        <section id="sec-entregas" class="mact__docs">
           <h2 class="mact__docs-title">Entregas y recepciones ({{ entregas().length }})</h2>
           @for (e of entregas(); track e.id) {
-            <div class="mact__act-row">
+            <button type="button" class="mact__act-row mact__act-row--link" (click)="toggleExpandir('entrega:' + e.id)">
               <span class="mact__act-main">{{ e.tipo === 'recepcion' ? '📥 Recepción' : '📤 Devolución' }} · {{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
-              <span class="mact__act-sub">{{ e.created_at ? fmtFecha(e.created_at) : '—' }}@if (e.km != null) { · {{ e.km }} km }</span>
-            </div>
+              <span class="mact__act-sub">{{ e.created_at ? fmtFechaHumana(e.created_at) : '—' }} {{ esExpandido('entrega:' + e.id) ? '⌄' : '›' }}</span>
+            </button>
+            @if (esExpandido('entrega:' + e.id)) {
+              <div class="mact__detalle">
+                <p><span>Tipo</span><b>{{ e.tipo === 'recepcion' ? 'Recepción' : 'Devolución' }}</b></p>
+                <p><span>Vehículo</span><b>{{ e.vehiculo?.placa ?? '—' }}</b></p>
+                <p><span>Kilometraje</span><b>{{ e.km != null ? e.km + ' km' : '—' }}</b></p>
+                <p><span>Fecha</span><b>{{ e.created_at ? fmtFechaHumana(e.created_at) : '—' }}</b></p>
+              </div>
+            }
           }
         </section>
       }
 
-      <!-- S32 — desglose de checklists (pre-uso vs semanal) -->
-      @if (breakdown().preuso || breakdown().semanal) {
-        <p class="mact__breakdown">📋 Pre-usos: <b>{{ breakdown().preuso }}</b> · Reportes semanales: <b>{{ breakdown().semanal }}</b></p>
-      }
-
       <!-- V2 — historial navegable: reportes semanales -->
       @if (semanales().length) {
-        <section class="mact__docs">
+        <section id="sec-semanales" class="mact__docs">
           <h2 class="mact__docs-title">Mis reportes semanales ({{ semanales().length }})</h2>
           @for (c of semanales(); track c.id) {
-            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verChecklist(c.id)">
+            <button type="button" class="mact__act-row mact__act-row--link" (click)="verChecklist(c.id)">
               <span class="mact__act-main">📋 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 {{ resultadoLabel(c.resultado) }}
                 @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
+                ›
               </span>
             </button>
           }
@@ -161,14 +121,15 @@
 
       <!-- V2 — historial navegable: pre-usos -->
       @if (preusos().length) {
-        <section class="mact__docs">
+        <section id="sec-preusos" class="mact__docs">
           <h2 class="mact__docs-title">Mis pre-usos ({{ preusos().length }})</h2>
           @for (c of preusos(); track c.id) {
-            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verChecklist(c.id)">
+            <button type="button" class="mact__act-row mact__act-row--link" (click)="verChecklist(c.id)">
               <span class="mact__act-main">🚙 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 {{ resultadoLabel(c.resultado) }}
                 @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
+                ›
               </span>
             </button>
           }
@@ -177,20 +138,90 @@
 
       <!-- V2 — historial navegable: echadas de combustible -->
       @if (echadas().length) {
-        <section class="mact__docs">
+        <section id="sec-echadas" class="mact__docs">
           <h2 class="mact__docs-title">Mis echadas de combustible ({{ echadas().length }})</h2>
           @for (e of echadas(); track e.id) {
-            <button type="button" class="mact__act-row mact__act-row--tap" (click)="verEchada(e.id)">
+            <button type="button" class="mact__act-row mact__act-row--link" (click)="verEchada(e.id)">
               <span class="mact__act-main">⛽ {{ e.vehiculo?.placa ?? 'Vehículo' }} · {{ e.fecha ? fmtFecha(e.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 @if (e.galones != null) { {{ e.galones }} gal }
                 @if (e.monto != null) { · RD$ {{ e.monto }} }
                 @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal }} km/gal }
                 @if (e.alerta_consumo) { · <span class="mact__alerta">⚠ anormal</span> }
+                ›
               </span>
             </button>
           }
         </section>
+      }
+
+      <!-- S32 — rutas asignadas (drill-down a Conduces y rutas) -->
+      @if (rutas().length) {
+        <section id="sec-rutas" class="mact__docs">
+          <h2 class="mact__docs-title">Mis rutas de hoy ({{ rutas().length }})</h2>
+          @for (r of rutas(); track r.id) {
+            <button type="button" class="mact__act-row mact__act-row--link" (click)="verRutas()">
+              <span class="mact__act-main">🗺️ {{ r.origen }} → {{ r.destino }}</span>
+              <span class="mact__act-sub">{{ r.estado }} ›</span>
+            </button>
+          }
+        </section>
+      }
+
+      <!-- V3 — rutas que yo creé/asigné (roles elevados) — se abren en el sitio -->
+      @if (esElevado()) {
+        <section id="sec-rutas-creadas" class="mact__docs">
+          <h2 class="mact__docs-title">Rutas que creé ({{ rutasCreadas().length }})</h2>
+          @if (!rutasCreadas().length) {
+            <p class="mact__vacio">Aún no has creado rutas en este período.</p>
+          } @else {
+            @for (r of rutasCreadas(); track r.id) {
+              <button type="button" class="mact__act-row mact__act-row--link" (click)="toggleExpandir('ruta:' + r.id)">
+                <span class="mact__act-main">🗺️ {{ r.origen || '—' }} → {{ r.destino || '—' }}</span>
+                <span class="mact__act-sub">{{ r.fecha ? fmtFecha(r.fecha) : '—' }} · {{ r.estado || '—' }} {{ esExpandido('ruta:' + r.id) ? '⌄' : '›' }}</span>
+              </button>
+              @if (esExpandido('ruta:' + r.id)) {
+                <div class="mact__detalle">
+                  <p><span>Origen</span><b>{{ r.origen || '—' }}</b></p>
+                  <p><span>Destino</span><b>{{ r.destino || '—' }}</b></p>
+                  <p><span>Vehículo</span><b>{{ r.vehiculo?.placa ?? '—' }}</b></p>
+                  <p><span>Conductor</span><b>{{ r.conductor?.nombre ?? '—' }}</b></p>
+                  <p><span>Estado</span><b>{{ r.estado || '—' }}</b></p>
+                  <p><span>Fecha</span><b>{{ r.fecha ? fmtFecha(r.fecha) : '—' }}</b></p>
+                </div>
+              }
+            }
+          }
+        </section>
+      }
+
+      <!-- S32 — accidentes — se abren en el sitio (sin página de detalle propia) -->
+      @if (accidentes().length) {
+        <section id="sec-accidentes" class="mact__docs">
+          <h2 class="mact__docs-title">Accidentes ({{ accidentes().length }})</h2>
+          @for (a of accidentes(); track a.id) {
+            <button type="button" class="mact__act-row mact__act-row--link" (click)="toggleExpandir('acc:' + a.id)">
+              <span class="mact__act-main">🚨 {{ a.vehiculo?.placa ?? 'Vehículo' }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
+              <span class="mact__act-sub">{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}@if (a.lesionados) { · {{ a.lesionados }} lesionado(s) } {{ esExpandido('acc:' + a.id) ? '⌄' : '›' }}</span>
+            </button>
+            @if (esExpandido('acc:' + a.id)) {
+              <div class="mact__detalle">
+                <p><span>Vehículo</span><b>{{ a.vehiculo?.placa ?? '—' }}</b></p>
+                <p><span>Fase</span><b>{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}</b></p>
+                <p><span>Lesionados</span><b>{{ a.lesionados ?? 0 }}</b></p>
+                <p><span>Fecha</span><b>{{ a.fecha ? fmtFecha(a.fecha) : '—' }}</b></p>
+                @if (a.descripcion) {
+                  <p class="mact__detalle-desc">{{ a.descripcion }}</p>
+                }
+              </div>
+            }
+          }
+        </section>
+      }
+
+      <!-- S32 — desglose de checklists (pre-uso vs semanal) -->
+      @if (breakdown().preuso || breakdown().semanal) {
+        <p class="mact__breakdown">📋 Pre-usos: <b>{{ breakdown().preuso }}</b> · Reportes semanales: <b>{{ breakdown().semanal }}</b></p>
       }
 
       <!-- V2/V3 — ver todo el historial (por defecto últimos 90 días) -->

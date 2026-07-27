@@ -21,6 +21,16 @@
               <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}</span>
               <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
               @if (r.notas) { <span class="ruta-card__notas">📝 {{ r.notas }}</span> }
+              <!-- Y4 — contador en vivo mientras la ruta está en curso -->
+              @if (cronometro(r); as t) {
+                <span class="ruta-card__cron">⏱️ En curso · {{ t }}</span>
+              }
+              <!-- Y4 — duración real vs estimada al completar -->
+              @if (resumenTiempo(r); as rt) {
+                <span class="ruta-card__tiempo">
+                  🏁 Duración {{ rt.real }} min@if (rt.est != null) { · Estimado {{ rt.est }} min@if (rt.pct != null) { ({{ rt.pct > 0 ? '+' : '' }}{{ rt.pct }}%) } }
+                </span>
+              }
             </div>
             <div class="ruta-card__actions">
               <button type="button" class="btn-ghost" (click)="comoLlegar(r)">🧭 Cómo llegar</button>

@@ -12,10 +12,16 @@
         <li><span>Obra</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>
         <li><span>Fecha</span><b>{{ fmtFecha(bit.fecha) }}</b></li>
         @if (bit.tipo === 'parte_diario') {
-          @if (bit.bloque_entrepiso) { <li><span>Bloque / entrepiso</span><b>{{ bit.bloque_entrepiso }}</b></li> }
-          @if (bit.ingeniero_responsable) { <li><span>Ing. responsable</span><b>{{ bit.ingeniero_responsable }}</b></li> }
-          @if (bit.hora_fin_trabajo) { <li><span>Fin de trabajo</span><b>{{ bit.hora_fin_trabajo }}</b></li> }
-          <li><span>Personal</span><b>{{ totalPersonal() }}</b></li>
+          @if (bit.sin_actividad) {
+            <li><span>Estado</span><b class="det__no-trabajo">🚫 No se trabajó en obra</b></li>
+            <li><span>Motivo</span><b>{{ motivoLabel(bit.motivo_sin_actividad) }}</b></li>
+            @if (bit.motivo_sin_actividad_detalle) { <li><span>Detalle</span><b>{{ bit.motivo_sin_actividad_detalle }}</b></li> }
+          } @else {
+            @if (bit.bloque_entrepiso) { <li><span>Bloque / entrepiso</span><b>{{ bit.bloque_entrepiso }}</b></li> }
+            @if (bit.ingeniero_responsable) { <li><span>Ing. responsable</span><b>{{ bit.ingeniero_responsable }}</b></li> }
+            @if (bit.hora_fin_trabajo) { <li><span>Fin de jornada</span><b>{{ bit.hora_fin_trabajo }}</b></li> }
+            <li><span>Personal</span><b>{{ totalPersonal() }}</b></li>
+          }
         }
         @if (bit.tipo === 'incidente') {
           <li><span>Tipo</span><b>{{ bit.incidente_tipo }}</b></li>
@@ -31,7 +37,7 @@
         @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
       </ul>
 
-      @if (bit.tipo === 'parte_diario') {
+      @if (bit.tipo === 'parte_diario' && !bit.sin_actividad) {
         <div class="det__personal">
           <span>🔨 Carpintería: {{ bit.personal_carpinteria }}</span>
           <span>🔩 Acero: {{ bit.personal_acero }}</span>
@@ -44,6 +50,7 @@
           <h2 class="det__section">Clima</h2>
           <p class="det__desc">
             {{ bit.llovio ? '🌧 Llovió' : '☀ Sin lluvia' }}
+            @if (bit.llovio && bit.horas_lluvia) { · {{ bit.horas_lluvia }} h }
             @if (bit.llovio && bit.lluvia_detalle) { — {{ bit.lluvia_detalle }} }
           </p>
         }

@@ -3,7 +3,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
-import { BitacoraFull } from '../../../core/models/bitacora.model';
+import { BitacoraFull, MOTIVOS_SIN_ACTIVIDAD } from '../../../core/models/bitacora.model';
 import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
 
 interface Media {
@@ -40,6 +40,11 @@ export class BitacoraDetallePage {
     const t = this.b()?.tipo;
     return t === 'incidente' ? 'Incidente' : t === 'visita' ? 'Visita' : 'Bitácora del día';
   });
+
+  /** Z4 — etiqueta legible del motivo "no se trabajó". */
+  motivoLabel(v: string | null | undefined): string {
+    return MOTIVOS_SIN_ACTIVIDAD.find((m) => m.value === v)?.label ?? v ?? '—';
+  }
 
   /** U13 — obreros afectados por migración (jsonb → lista de strings). */
   obrerosMigracion = computed<string[]>(() => {

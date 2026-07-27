@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 import { ChecklistPlantilla } from '../models/checklist-preuso.model';
 import { ReporteSemanalCaptura, ReporteSemanalVeh } from '../models/reporte-semanal.model';
 
@@ -20,6 +21,7 @@ export class ReporteSemanalService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
+  private audioNotas = inject(AudioNotasService);
 
   constructor() {
     this.registerHandler();
@@ -95,6 +97,9 @@ export class ReporteSemanalService {
     for (const [slot, blob] of Object.entries(input.fotos)) {
       fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `checklist/${id}/${slot}.jpg`, slot, blob });
     }
+    // Z23 — notas de voz (audio_notas, bucket flota-documentos).
+    const audio = this.audioNotas.buildAttachments('reporte_semanal', id, AUDIO_BUCKET_FLOTA, input.voces ?? []);
+    fotos.push(...audio.fotos);
 
     await this.sync.enqueue({
       id,
@@ -110,6 +115,7 @@ export class ReporteSemanalService {
         nivel_combustible: input.nivelCombustible,
         observacion: input.observacion,
         respuestas,
+        audios: audio.audios, // Z23
       },
       fotos,
       resumen: {
@@ -144,9 +150,9 @@ export class ReporteSemanalService {
         orden: r.orden,
       }));
 
-      // S26a — fotos guiadas (todo menos la firma) + firma aparte.
+      // S26a — fotos guiadas (todo menos la firma y las notas de voz) + firma aparte.
       const fotos = Object.entries(photoPaths)
-        .filter(([slot]) => slot !== 'firma')
+        .filter(([slot]) => slot !== 'firma' && !slot.startsWith('audio_'))
         .map(([slot, path]) => ({ storage_path: path, slot }));
 
       const { error } = await this.supabase.client.rpc('registrar_checklist_vehiculo', {
@@ -168,6 +174,14 @@ export class ReporteSemanalService {
         p_nivel_combustible: payload['nivel_combustible'] ?? null,
       });
       if (error) throwSyncError(error);
+
+      // Z23 — registrar las notas de voz (idempotente por path).
+      await this.audioNotas.commit(
+        'reporte_semanal',
+        payload['id'] as string,
+        payload['audios'] as AudioNotaMeta[] | undefined,
+        photoPaths,
+      );
 
       // P7 — el RPC avanza vehiculos.kilometraje (regla no-retroceso). Invalidar
       // las caches con km para que la app muestre el nuevo valor.

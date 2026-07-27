@@ -20,6 +20,7 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
+import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto } from '../../../core/services/camera.service';
@@ -109,7 +110,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -158,6 +159,7 @@ export class PreusoPage extends GuardedWizard {
   fotos = signal<Record<string, CapturedPhoto>>({});
   firmaLista = signal(false);
   firmaBlob = signal<Blob | null>(null);
+  voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
   precitaKm = signal(PRECITA_KM); // sgc.flota_config.umbral_precita_km (cargado en loadContext)
 
   submitting = signal(false);
@@ -650,6 +652,7 @@ export class PreusoPage extends GuardedWizard {
         respuestas,
         fotos,
         firma: firmaBlob,
+        voces: this.voces().map((n) => n.blob),
         resultado: this.veredicto(),
       });
       // M1 — enviado: limpia el borrador (estado + fotos) para no reofrecerlo.

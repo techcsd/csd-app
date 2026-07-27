@@ -36,6 +36,14 @@ export const RESTRICCIONES = [
   'OTRO',
 ] as const;
 
+// Z4 — motivos de "No se trabajó en obra" (mismo catálogo que la web SGC).
+export const MOTIVOS_SIN_ACTIVIDAD: { value: string; label: string; icon: string }[] = [
+  { value: 'lluvia', label: 'Lluvia', icon: '🌧️' },
+  { value: 'falta_material', label: 'Falta de material', icon: '📦' },
+  { value: 'feriado', label: 'Feriado / día no laborable', icon: '📅' },
+  { value: 'otro', label: 'Otro', icon: '✏️' },
+] as const;
+
 // S12 — tres tipos; las preguntas cambian según el tipo elegido.
 export const INCIDENTE_TIPOS = [
   { value: 'incidente', label: 'Incidente', icon: '⚠️' },
@@ -138,8 +146,13 @@ export interface BitacoraFull {
   // U13 — clima + migración (datos, no incidente).
   llovio?: boolean | null;
   lluvia_detalle?: string | null;
+  horas_lluvia?: number | null; // Z5
   hubo_migracion?: boolean | null;
   migracion_obreros?: unknown;
+  // Z4 — "no se trabajó en obra".
+  sin_actividad?: boolean | null;
+  motivo_sin_actividad?: string | null;
+  motivo_sin_actividad_detalle?: string | null;
   // W2 — equipos alquilados en uso.
   hubo_equipos_alquilados?: boolean | null;
   proyecto?: { nombre: string } | null;

@@ -37,6 +37,12 @@ export class KmInput {
   intervaloMantenimientoKm = input<number | null>(5000);
   /** Umbral "cerca del mantenimiento" (sgc.flota_config.umbral_precita_km). */
   precitaKm = input(500);
+  /**
+   * Y9 — flag defensivo explícito del servidor (`v_vehiculo_stats.mantenimiento_por_revisar`).
+   * Aunque no se pase, se deriva localmente con la MISMA regla del server
+   * (`km_ultimo_mantenimiento > odómetro`) desde los valores que ya recibe.
+   */
+  mantenimientoPorRevisar = input(false);
 
   /** El km escrito es menor al último registrado → incoherente. */
   invalido = computed(() => {
@@ -45,8 +51,22 @@ export class KmInput {
     return v != null && u != null && v < u;
   });
 
-  /** Estado de mantenimiento calculado con el km EN VIVO (null si no hay datos). */
+  /**
+   * Y9 — el dato base de mantenimiento es incoherente (el último mantenimiento
+   * "registrado" supera el odómetro). Regla idéntica a la del server
+   * (`km_ultimo_mantenimiento > vehiculos.kilometraje`). En ese caso NO se
+   * muestra un cálculo engañoso de "faltan X km" — se avisa que hay que revisarlo.
+   */
+  mantPorRevisar = computed(() => {
+    if (this.mantenimientoPorRevisar()) return true;
+    const base = this.ultimoMantenimientoKm();
+    const u = this.ultimo();
+    return base != null && u != null && base > u;
+  });
+
+  /** Estado de mantenimiento calculado con el km EN VIVO (null si no hay datos o el dato es incoherente). */
   mant = computed<KmMantenimiento | null>(() => {
+    if (this.mantPorRevisar()) return null; // Y9 — dato incoherente: no calcular
     const v = this.value();
     const base = this.ultimoMantenimientoKm();
     if (v == null || v <= 0 || base == null) return null;

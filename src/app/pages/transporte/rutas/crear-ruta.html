@@ -104,6 +104,8 @@
           <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="0" />
           <label class="field-label" for="notas">Notas (opcional)</label>
           <textarea id="notas" class="field cruta__notas" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Algo que recordar de la ruta…"></textarea>
+          <!-- Z23 — notas de voz (opcional) -->
+          <app-voice-notes [(notes)]="voces" [max]="5" />
         }
 
         <!-- 6. Resumen -->

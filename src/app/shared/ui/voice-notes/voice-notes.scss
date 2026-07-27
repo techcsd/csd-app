@@ -1,0 +1,34 @@
+.vnotes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.vnotes__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+.vnotes__audio {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+}
+.vnotes__del {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--color-secondary);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+.vnotes__max {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 0;
+}

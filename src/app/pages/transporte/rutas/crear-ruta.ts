@@ -12,6 +12,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/location-picker/location-picker';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
+import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { ConducesService, LugarDestino } from '../../../core/services/conduces.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -35,7 +36,7 @@ type DestinoModo = 'lugar' | 'mapa';
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker],
+  imports: [FormsModule, SelectList, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
@@ -82,6 +83,7 @@ export class CrearRutaPage implements OnDestroy {
   destinoMapaCoords = signal<{ lat: number; lng: number } | null>(null);
   km = signal<number | null>(null);
   notas = signal('');
+  voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
 
   // U23 — duración estimada (min) calculada por OSRM cuando hay coords de ambos extremos.
   duracionMin = signal<number | null>(null);
@@ -371,6 +373,7 @@ export class CrearRutaPage implements OnDestroy {
         origen_lng: this.gps?.lng ?? null,
         destino_lat: lugar?.latitud ?? mapaCoords?.lat ?? null,
         destino_lng: lugar?.longitud ?? mapaCoords?.lng ?? null,
+        voces: this.voces().map((n) => n.blob),
       });
       this.done.set(true);
     } catch (e) {
