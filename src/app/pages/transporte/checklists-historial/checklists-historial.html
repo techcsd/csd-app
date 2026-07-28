@@ -1,0 +1,55 @@
+<div class="screen chl">
+  <header class="chl__header">
+    <button type="button" class="chl__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="chl__icon">✅</span>
+    <h1 class="chl__title">Historial de checklists</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!rows().length) {
+      @if (!online) {
+        <app-empty-state icon="📡" title="Sin conexión" message="Conéctate a internet para ver el historial de checklists." />
+      } @else {
+        <app-empty-state icon="📋" title="Sin checklists" message="Todavía no hay checklists registrados en este período." />
+      }
+    } @else {
+      <!-- Filtros -->
+      <input
+        class="chl__search"
+        type="search"
+        placeholder="Buscar por placa o chofer…"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+      />
+      <div class="chl__filtros">
+        <button type="button" class="chip" [class.chip--on]="tipo() === 'todos'" (click)="setTipo('todos')">Todos</button>
+        <button type="button" class="chip" [class.chip--on]="tipo() === 'pre_uso'" (click)="setTipo('pre_uso')">Pre-uso</button>
+        <button type="button" class="chip" [class.chip--on]="tipo() === 'inspeccion'" (click)="setTipo('inspeccion')">Inspección</button>
+        <button type="button" class="chip" [class.chip--on]="soloHallazgos()" (click)="toggleHallazgos()">
+          🔴 Con hallazgos ({{ criticosCount() }})
+        </button>
+      </div>
+
+      @if (!filtrados().length) {
+        <app-empty-state icon="🔍" title="Sin resultados" message="Ningún checklist coincide con el filtro." />
+      } @else {
+        @for (r of filtrados(); track r.id) {
+          <button type="button" class="chl__card" (click)="abrir(r)">
+            <div class="chl__top">
+              <span class="chl__placa">{{ r.vehiculo?.placa ?? 'Vehículo' }}</span>
+              <span class="chl__tipo">{{ tipoLabel(r.tipo) }}</span>
+              <span class="chl__res chl__res--{{ r.resultado }}">{{ resultadoLabel(r.resultado) }}</span>
+            </div>
+            <div class="chl__mid">
+              @if (r.conductor?.nombre) { <span class="chl__chofer">👤 {{ r.conductor?.nombre }}</span> }
+              @if (r.kilometraje != null) { <span class="chl__km">{{ r.kilometraje }} km</span> }
+            </div>
+            <p class="chl__fecha">{{ fmtFecha(r.capturado_en ?? r.fecha) }}</p>
+          </button>
+        }
+      }
+    }
+  </div>
+</div>

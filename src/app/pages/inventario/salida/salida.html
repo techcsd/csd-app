@@ -115,13 +115,13 @@
     </div>
 
     <footer class="mov__nav">
-      <button type="button" class="btn-cta mov__wa" [disabled]="sharing()" (click)="compartir()">
-        {{ sharing() ? 'Compartiendo…' : '📲 Compartir por WhatsApp' }}
-      </button>
+      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 Compartir (PDF / Excel)</button>
       <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">Nuevo registro</button>
       <button type="button" class="btn-ghost" (click)="finish()">Volver a Inventario</button>
     </footer>
   }
+
+  <app-share-sheet [open]="shareOpen()" [doc]="shareDoc()" (closed)="shareOpen.set(false)" />
 
   <app-confirm-dialog
     [open]="confirmSalir()"

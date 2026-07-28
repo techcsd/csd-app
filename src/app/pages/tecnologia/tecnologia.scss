@@ -1,0 +1,233 @@
+.tec {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  &__back {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  &__icon {
+    font-size: 1.3rem;
+  }
+  &__title {
+    font-size: 1.2rem;
+    margin: 0;
+  }
+
+  &__version {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  &__version-label {
+    font-size: 0.8rem;
+    color: var(--main-ultra-light);
+  }
+  &__version-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+  }
+  &__version-new {
+    font-size: 0.85rem;
+    color: var(--Hub);
+  }
+
+  &__tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  &__tab {
+    flex: 1;
+    padding: 10px;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 12px;
+    color: var(--main-ultra-light);
+    font-size: 0.9rem;
+    cursor: pointer;
+
+    &--on {
+      border-color: var(--Hub);
+      color: #fff;
+      font-weight: 700;
+    }
+  }
+
+  /* Timeline de versiones */
+  &__timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  &__vitem {
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  &__vtop {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  &__vver {
+    font-weight: 800;
+    font-size: 1.1rem;
+  }
+  &__vfecha {
+    font-size: 0.8rem;
+    color: var(--main-ultra-light);
+  }
+  &__vtitulo {
+    margin: 4px 0 8px;
+    color: var(--main-ultra-light);
+    font-size: 0.9rem;
+  }
+  &__cambios {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  &__cambio {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 0.9rem;
+  }
+  &__cambio-d {
+    flex: 1;
+  }
+
+  &__tag {
+    flex: 0 0 auto;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #fff;
+    text-transform: uppercase;
+
+    &--nuevo {
+      background: #16a34a;
+    }
+    &--mejora {
+      background: #2563eb;
+    }
+    &--arreglo {
+      background: #d97706;
+    }
+    &--seguridad {
+      background: #7c3aed;
+    }
+  }
+
+  /* Reportes de errores */
+  &__err {
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  &__err-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: none;
+    border: none;
+    color: #fff;
+    text-align: left;
+    cursor: pointer;
+  }
+  &__err-main {
+    flex: 1;
+    min-width: 0;
+  }
+  &__err-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  &__err-dev {
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  &__err-msg {
+    margin: 5px 0 0;
+    font-size: 0.9rem;
+    color: #e5e5e5;
+    word-break: break-word;
+  }
+  &__err-meta {
+    margin: 4px 0 0;
+    font-size: 0.78rem;
+    color: var(--main-ultra-light);
+  }
+  &__caret {
+    flex: 0 0 auto;
+    color: var(--main-ultra-light);
+  }
+  &__err-body {
+    padding: 4px 16px 12px;
+    border-top: 1px solid #2d2d2d;
+  }
+  &__err-ruta {
+    font-size: 0.82rem;
+    color: var(--main-ultra-light);
+    word-break: break-word;
+  }
+  &__err-ctx {
+    font-size: 0.72rem;
+    color: var(--main-ultra-light);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 6px 0 0;
+  }
+
+  &__tagerr {
+    flex: 0 0 auto;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: #212121;
+    color: var(--main-ultra-light);
+
+    &--crash {
+      background: rgba(220, 38, 38, 0.2);
+      color: #f87171;
+    }
+    &--camera {
+      background: rgba(217, 119, 6, 0.2);
+      color: #fbbf24;
+    }
+    &--sync {
+      background: rgba(37, 99, 235, 0.2);
+      color: #60a5fa;
+    }
+    &--permission {
+      background: rgba(124, 58, 237, 0.2);
+      color: #a78bfa;
+    }
+  }
+}

@@ -14,7 +14,9 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { Proyecto } from '../../../core/models/bitacora.model';
 import { ArticuloCat, CartLinea, CategoriaInv, Urgencia } from '../../../core/models/inventario.model';
-import { compartirTexto } from '../../../core/util/share';
+import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
+import type { ExportDoc } from '../../../core/services/export.service';
+import { formatFechaMedia } from '../../../core/util/fecha';
 
 interface GrupoResumen {
   categoria: string;
@@ -30,7 +32,7 @@ interface GrupoResumen {
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, WizardFooter],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, WizardFooter, ShareSheet],
   templateUrl: './pedir.html',
   styleUrl: '../../inventario/salida/salida.scss',
 })
@@ -56,7 +58,6 @@ export class PedirPage implements OnDestroy {
   notas = signal('');
   submitting = signal(false);
   confirmSalir = signal(false);
-  sharing = signal(false);
 
   obraOptions = computed(() => this.proyectos().map((p) => ({ id: p.id, label: p.nombre })));
 
@@ -195,33 +196,35 @@ export class PedirPage implements OnDestroy {
     }
   }
 
-  // ── Compartir ──
-  private resumenTexto(): string {
-    const obra = this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? '—';
-    const fecha = new Date().toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' });
-    const urg = this.urgencia() === 'urgente' ? '🔴 URGENTE' : 'Normal';
-    const lineas = this.grupos()
-      .map(
-        (g) =>
-          `*${g.categoria}*\n` +
-          g.lineas.map((l) => `  • ${this.descripcionDe(l)}: ${l.cantidad} ${l.unidad}`).join('\n'),
-      )
-      .join('\n');
-    const notas = this.notas().trim() ? `\nNota: ${this.notas().trim()}` : '';
-    return `📝 *Requisición de material — CSD*\nObra: ${obra}\nUrgencia: ${urg}\nFecha: ${fecha}${notas}\n\n${lineas}\n\nTotal: ${this.totalItems()} artículo(s)`;
-  }
+  // ── Compartir (Y3 — PDF o Excel, no texto plano) ──
+  shareOpen = signal(false);
 
-  async compartir(): Promise<void> {
-    if (this.sharing()) return;
-    this.sharing.set(true);
-    try {
-      const res = await compartirTexto('Requisición de material', this.resumenTexto());
-      if (res.fallback) this.toast.success('Resumen copiado. Pégalo en WhatsApp.');
-    } catch {
-      this.toast.error('No se pudo compartir.');
-    } finally {
-      this.sharing.set(false);
+  shareDoc = computed<ExportDoc>(() => {
+    const obra = this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? '—';
+    const meta = [
+      { label: 'Obra', value: obra },
+      { label: 'Urgencia', value: this.urgencia() === 'urgente' ? 'URGENTE' : 'Normal' },
+      { label: 'Fecha', value: formatFechaMedia(new Date().toISOString()) },
+      ...(this.notas().trim() ? [{ label: 'Nota', value: this.notas().trim() }] : []),
+    ];
+    const rows = this.grupos().flatMap((g) =>
+      g.lineas.map((l) => [g.categoria, this.descripcionDe(l), l.cantidad, l.unidad]),
+    );
+    return {
+      title: 'Requisición de material',
+      filenameBase: 'requisicion-material',
+      meta,
+      table: { columns: ['Categoría', 'Artículo', 'Cantidad', 'Unidad'], rows, colWeights: [3, 5, 1.5, 1.5] },
+      footer: `Total: ${this.totalItems()} artículo(s)`,
+    };
+  });
+
+  compartir(): void {
+    if (!this.cart().length) {
+      this.toast.error('No hay material para compartir.');
+      return;
     }
+    this.shareOpen.set(true);
   }
 
   nuevoRegistro(): void {

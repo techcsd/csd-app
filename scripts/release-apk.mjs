@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.31.0';
+const VERSION = '1.32.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,26 +58,22 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.31.0';
-const RELEASED_AT = '2026-07-27';
+const MIN_VERSION = '1.32.0';
+const RELEASED_AT = '2026-07-28';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Recibir vehículo de otro, semanal con fotos y estado compartido, existencias por categoría y conduces claros';
+const TITULO = 'Tercera foto de combustible, compartir en PDF/Excel, historial de checklists, conteo y ajustes, sección Tecnología y reporte automático de errores';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Si un vehículo lo tiene otra persona, ahora puedes recibirlo de todas formas: te avisa quién lo tenía y desde cuándo, y al confirmar pasa a tu cargo.' },
-  { t: 'nuevo', d: 'El reporte semanal ahora pide fotos guiadas agrupadas en Exterior e Interior, y cada foto dice exactamente cuál tomar.' },
-  { t: 'nuevo', d: 'En el reporte semanal ves si un vehículo ya lo reportó otra persona esta semana ("Ya reportado por…") y puedes rehacerlo.' },
-  { t: 'nuevo', d: 'Las existencias se ven agrupadas por categoría, con secciones que se abren y cierran y un buscador que filtra en todas.' },
-  { t: 'nuevo', d: 'Cada artículo muestra si es de CSD o alquilado, su foto, y al tocarlo abres su detalle (código, categoría, unidad y stock del almacén).' },
-  { t: 'nuevo', d: 'Los vehículos administrativos usan un pre-uso más corto, automáticamente.' },
-  { t: 'mejora', d: 'Recibir un conduce es más claro: ves origen→destino, quién lo despachó, fecha y hora, y ajustas lo recibido vs lo esperado con foto de evidencia.' },
-  { t: 'mejora', d: 'El año del vehículo aparece en las tarjetas, selectores y perfiles ("Isuzu D-Max 2023").' },
-  { t: 'mejora', d: 'Al registrar combustible, la estación es Total Energies por defecto (u "Otro" si aplica).' },
-  { t: 'mejora', d: 'La salida y la entrada de material ahora piden una foto de evidencia antes de confirmar.' },
-  { t: 'arreglo', d: 'Un vehículo cuya asignación fue rechazada ya no queda pegado en "Asignados a mí".' },
-  { t: 'arreglo', d: 'Se corrigió el nombre del artículo que se veía cortado en la salida de material.' },
+  { t: 'nuevo', d: 'Al registrar combustible ahora se pide una tercera foto: la bomba en 0 (además del recibo y el tablero).' },
+  { t: 'nuevo', d: 'Nueva sección Tecnología: historial de versiones de la app y reportes de errores (para admin y Tecnología).' },
+  { t: 'nuevo', d: 'El jefe de flota ya puede ver en la app el historial de checklists que envían los choferes, con sus fotos.' },
+  { t: 'nuevo', d: 'Nuevo "Conteo y ajustes" de inventario: revisa el historial de conteos y ajustes con su detalle (antes → contado).' },
+  { t: 'mejora', d: 'Al compartir una salida, entrada o requisición ahora eliges PDF o Excel (antes solo texto) y lo mandas por WhatsApp.' },
+  { t: 'mejora', d: 'El conteo rápido agrupa los artículos por categoría, con secciones que se abren y cierran y un buscador.' },
+  { t: 'mejora', d: 'Si la cámara falla, la app te dice la causa (permiso, cámara en uso, WebView desactualizado) y cómo resolverlo, en vez de fallar en silencio.' },
+  { t: 'seguridad', d: 'La app reporta automáticamente los errores y fallos al equipo de Tecnología para resolverlos más rápido, sin enviar datos sensibles.' },
 ];
 
 const TIPO_POR_COMMIT = {

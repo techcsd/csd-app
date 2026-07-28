@@ -114,6 +114,13 @@ export class SyncService {
   private handlers = new Map<string, OpHandler>();
   private draining = false;
 
+  /**
+   * Y6 — sink opcional para fallos PERMANENTES del outbox (un RPC que rechaza,
+   * permiso/RLS, foto perdida, handler ausente…). Lo cablea ErrorReportService
+   * para telemetría. NO se inyecta el servicio aquí (evita ciclo de DI).
+   */
+  onPermanentError?: (op: OutboxOp, err: unknown) => void;
+
   pendingCount = signal(0);
   errorCount = signal(0);
   syncing = signal(false);
@@ -393,6 +400,8 @@ export class SyncService {
           });
           await db.mis_registros.update(op.id, { estado: 'error' });
         });
+        this.onPermanentError?.(op, new PermanentSyncError(
+          `Sin handler para "${op.tipo_op}" (posible desajuste de versión).`, 'incompatible'));
       } else {
         await db.outbox.update(op.id, {
           intentos,
@@ -473,6 +482,9 @@ export class SyncService {
         });
         await db.mis_registros.update(op.id, { estado: 'error' });
       });
+      // Y6 — solo los PERMANENTES van a telemetría (un transitorio agotado suele
+      // ser falta de señal, no un bug); evita ruido de reportes por mala cobertura.
+      if (permanent) this.onPermanentError?.(op, err);
     } else {
       await db.outbox.update(op.id, {
         estado: 'pending',

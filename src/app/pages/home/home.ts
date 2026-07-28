@@ -24,6 +24,9 @@ const TILES: HomeTile[] = [
   { modulo: 'inventario', icon: '📦', label: 'Inventario', route: '/inventario', tint: '#16a34a' },
   { modulo: 'compras', icon: '🛒', label: 'Requisición', route: '/solicitudes', tint: '#2563eb' },
   { modulo: 'admin', icon: '⚙️', label: 'Administración', route: '/admin', tint: '#3f3f46' },
+  // Y11 — Tecnología (admin + rol Tecnología/Encargado de Tecnología). El gating
+  // es genérico por módulo: `hasModulo('tecnologia')` ya lo resuelve.
+  { modulo: 'tecnologia', icon: '💻', label: 'Tecnología', route: '/tecnologia', tint: '#0891b2' },
 ];
 
 @Component({

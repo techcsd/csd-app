@@ -183,6 +183,13 @@ export const routes: Routes = [
       import('./pages/transporte/mi-registro/mi-registro-detalle').then((m) => m.MiRegistroDetallePage),
   },
   {
+    // Y7 — historial de checklists (jefe de flota ve lo que envía el chofer).
+    path: 'transporte/checklists',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/checklists-historial/checklists-historial').then((m) => m.ChecklistsHistorialPage),
+  },
+  {
     path: 'transporte/rutas/crear',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/rutas/crear-ruta').then((m) => m.CrearRutaPage),
@@ -289,6 +296,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/inventario/conteo/conteo').then((m) => m.ConteoPage),
   },
   {
+    // Y10 — "Conteo y ajustes": historial de conteos/ajustes de inventario.
+    path: 'inventario/conteos',
+    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    loadComponent: () => import('./pages/inventario/conteos/conteos').then((m) => m.ConteosPage),
+  },
+  {
     path: 'inventario/almacenes',
     canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
     loadComponent: () => import('./pages/inventario/almacenes/almacenes').then((m) => m.AlmacenesPage),
@@ -350,6 +363,12 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [authGuard, pinGuard, moduleGuard('admin')],
     loadComponent: () => import('./pages/admin/admin').then((m) => m.AdminPage),
+  },
+  {
+    // Y11-app — sección Tecnología (gateada por el módulo `tecnologia`).
+    path: 'tecnologia',
+    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    loadComponent: () => import('./pages/tecnologia/tecnologia').then((m) => m.TecnologiaPage),
   },
   {
     path: 'admin/reportes',

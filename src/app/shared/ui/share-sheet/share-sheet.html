@@ -1,0 +1,21 @@
+<app-bottom-sheet [open]="open()" titulo="Compartir como…" (closed)="cerrar()">
+  <div class="share-sheet">
+    <button type="button" class="share-opt" [disabled]="!!busy()" (click)="pick('pdf')">
+      <span class="share-opt__icon">📄</span>
+      <span class="share-opt__text">
+        <b>PDF</b>
+        <small>Documento para leer o imprimir</small>
+      </span>
+      @if (busy() === 'pdf') { <span class="share-opt__spin">…</span> }
+    </button>
+
+    <button type="button" class="share-opt" [disabled]="!!busy()" (click)="pick('excel')">
+      <span class="share-opt__icon">📊</span>
+      <span class="share-opt__text">
+        <b>Excel</b>
+        <small>Hoja de cálculo (.xlsx)</small>
+      </span>
+      @if (busy() === 'excel') { <span class="share-opt__spin">…</span> }
+    </button>
+  </div>
+</app-bottom-sheet>

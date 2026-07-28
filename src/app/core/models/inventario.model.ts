@@ -60,6 +60,25 @@ export interface Existencia {
   imagen_url: string | null;
 }
 
+/** Y10 — una línea de un conteo/ajuste en el historial (antes vs contada). */
+export interface ConteoItemHist {
+  cantidad_antes: number;
+  cantidad_contada: number;
+  articulo?: { nombre: string; codigo: string } | null;
+}
+
+/** Y10 — un conteo/ajuste de inventario en el historial (parity con la web). */
+export interface ConteoHistorial {
+  id: string;
+  motivo: string | null;
+  tipo: string | null; // 'ajuste' | 'chequeo_semanal'
+  observaciones: string | null;
+  created_at: string;
+  bodega?: { nombre: string } | null;
+  creado?: { nombre: string } | null;
+  items?: ConteoItemHist[];
+}
+
 /** A line in a salida/entrada/solicitud cart. */
 export interface MovItem {
   articulo_id: string;

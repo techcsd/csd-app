@@ -1,0 +1,53 @@
+.share-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 8px;
+}
+
+.share-opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 14px 16px;
+  background: #161616;
+  border: 1px solid #2d2d2d;
+  border-radius: 14px;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:active {
+    border-color: var(--Hub);
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+
+  &__icon {
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    b {
+      font-size: 1.05rem;
+    }
+    small {
+      color: var(--main-ultra-light);
+      font-size: 0.82rem;
+    }
+  }
+
+  &__spin {
+    margin-left: auto;
+    color: var(--Hub);
+  }
+}

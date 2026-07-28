@@ -81,6 +81,23 @@ export interface HistorialChecklist {
   vehiculo?: { placa: string } | null;
 }
 
+/**
+ * Y7 — una fila del "Historial de checklists" (vista del jefe de flota). La RLS
+ * `chk_veh_sel` scopea: elevado ve todo, el chofer solo los suyos.
+ */
+export interface ChecklistHistorialRow {
+  id: string;
+  fecha: string | null;
+  capturado_en: string | null;
+  tipo: string; // pre_uso | inspeccion
+  resultado: string | null; // aprobado | con_hallazgos | bloqueado
+  kilometraje: number | null;
+  tiene_criticos: boolean | null;
+  atendido: boolean | null;
+  vehiculo?: { placa: string; marca?: string; modelo?: string } | null;
+  conductor?: { nombre: string } | null;
+}
+
 /** V2 — una echada de combustible en el historial de "Mi actividad". */
 export interface HistorialEchada {
   id: string;

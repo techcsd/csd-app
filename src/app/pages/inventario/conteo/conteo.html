@@ -21,22 +21,48 @@
         @if (loading()) {
           <app-skeleton [rows]="5" />
         } @else {
-          @for (e of existencias(); track e.articulo_id) {
-            <div class="conteo__row">
-              <div class="conteo__info">
-                <span class="conteo__name">{{ e.nombre }}</span>
-                <span class="conteo__sys">Sistema: {{ e.cantidad }} {{ e.unidad }}</span>
-              </div>
-              <input
-                class="field conteo__input"
-                type="number"
-                inputmode="decimal"
-                [ngModel]="contado()[e.articulo_id]"
-                (ngModelChange)="setContado(e.articulo_id, $event)"
-              />
+          <!-- Y9 — buscador a través de todas las categorías -->
+          @if (existencias().length) {
+            <input
+              class="field conteo__search"
+              type="search"
+              placeholder="Buscar material…"
+              [ngModel]="query()"
+              (ngModelChange)="query.set($event)"
+            />
+          }
+
+          <!-- Y9 — artículos agrupados por categoría (secciones colapsables) -->
+          @for (g of grupos(); track g.key) {
+            <div class="cat-group">
+              <button type="button" class="cat-group__head" (click)="toggle(g.key)">
+                <span class="cat-group__name">@if (g.destacada) { ★ }{{ g.nombre }}</span>
+                <span class="cat-group__meta">{{ g.total }} <span class="cat-group__caret">{{ abierto(g.key) ? '▾' : '▸' }}</span></span>
+              </button>
+              @if (abierto(g.key)) {
+                <div class="cat-group__body">
+                  @for (e of g.items; track e.articulo_id) {
+                    <div class="conteo__row">
+                      <div class="conteo__info">
+                        <span class="conteo__name">{{ e.nombre }}</span>
+                        <span class="conteo__sys">Sistema: {{ e.cantidad }} {{ e.unidad }}</span>
+                      </div>
+                      <input
+                        class="field conteo__input"
+                        type="number"
+                        inputmode="decimal"
+                        [ngModel]="contado()[e.articulo_id]"
+                        (ngModelChange)="setContado(e.articulo_id, $event)"
+                      />
+                    </div>
+                  }
+                </div>
+              }
             </div>
           } @empty {
-            <p class="conteo__muted">Este almacén no tiene materiales.</p>
+            <p class="conteo__muted">
+              {{ existencias().length ? 'Ningún material coincide con la búsqueda.' : 'Este almacén no tiene materiales.' }}
+            </p>
           }
 
           <label class="field-label conteo__mt">Motivo (opcional)</label>

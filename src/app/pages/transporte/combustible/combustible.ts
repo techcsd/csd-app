@@ -96,6 +96,7 @@ export class CombustiblePage extends GuardedWizard {
   );
   fotoRecibo = signal<CapturedPhoto | null>(null);
   fotoTablero = signal<CapturedPhoto | null>(null);
+  fotoBomba = signal<CapturedPhoto | null>(null); // Y4 — bomba/estación en 0
 
   submitting = signal(false);
   done = signal(false);
@@ -116,7 +117,8 @@ export class CombustiblePage extends GuardedWizard {
 
   primeraEchada = computed(() => this.ultima().km == null);
 
-  fotosCompletas = computed(() => !!this.fotoRecibo() && !!this.fotoTablero());
+  // Y4 — las 3 fotos son obligatorias (recibo + tablero + bomba en 0).
+  fotosCompletas = computed(() => !!this.fotoRecibo() && !!this.fotoTablero() && !!this.fotoBomba());
   loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
 
   constructor() {
@@ -173,7 +175,8 @@ export class CombustiblePage extends GuardedWizard {
         this.monto() != null ||
         !!this.estacionOtroTexto().trim() ||
         !!this.fotoRecibo() ||
-        !!this.fotoTablero())
+        !!this.fotoTablero() ||
+        !!this.fotoBomba())
     );
   }
 
@@ -213,6 +216,12 @@ export class CombustiblePage extends GuardedWizard {
   }
   onFotoTableroCleared(): void {
     this.fotoTablero.set(null);
+  }
+  onFotoBomba(photo: CapturedPhoto): void {
+    this.fotoBomba.set(photo);
+  }
+  onFotoBombaCleared(): void {
+    this.fotoBomba.set(null);
   }
 
   next(): void {
@@ -291,6 +300,7 @@ export class CombustiblePage extends GuardedWizard {
         estacion: estacion ? estacion : null,
         fotoRecibo: this.fotoRecibo()!.blob,
         fotoTablero: this.fotoTablero()!.blob,
+        fotoBomba: this.fotoBomba()!.blob,
         placa: this.placa(),
       });
       this.resultado.set(this.calc());

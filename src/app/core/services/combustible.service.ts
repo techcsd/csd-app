@@ -122,6 +122,14 @@ export class CombustibleService {
         slot: 'tablero',
         blob: input.fotoTablero,
       },
+      // Y4 — foto de la bomba/estación en 0.
+      {
+        id: crypto.randomUUID(),
+        bucket: 'vehiculos',
+        path: `combustible/${id}/bomba.jpg`,
+        slot: 'bomba',
+        blob: input.fotoBomba,
+      },
     ];
 
     await this.sync.enqueue({
@@ -164,6 +172,7 @@ export class CombustibleService {
         p_estacion: payload['estacion'] ?? null,
         p_foto_recibo_path: photoPaths['recibo'] ?? null,
         p_foto_tablero_path: photoPaths['tablero'] ?? null,
+        p_foto_bomba_path: photoPaths['bomba'] ?? null, // Y4
         p_notas: null,
       });
       // A returned error is a server rejection (validation) → don't retry forever.

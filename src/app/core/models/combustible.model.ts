@@ -32,6 +32,7 @@ export interface CombustibleCaptura {
   estacion: string | null;
   fotoRecibo: Blob;
   fotoTablero: Blob;
+  fotoBomba: Blob; // Y4 — bomba/estación en 0
   placa: string;
 }
 

@@ -9,7 +9,18 @@ import { SelectList } from '../../../shared/ui/select-list/select-list';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Bodega, Existencia } from '../../../core/models/inventario.model';
+import { Bodega, CategoriaInv, Existencia } from '../../../core/models/inventario.model';
+
+/** Y9 — un grupo de artículos por categoría (sección colapsable, patrón Z18). */
+interface GrupoConteo {
+  key: string;
+  nombre: string;
+  destacada: boolean;
+  items: Existencia[];
+  total: number;
+}
+
+const SIN_CATEGORIA_KEY = 'sin';
 
 /** Guided physical count: adjust each article's stock to the counted value. */
 @Component({
@@ -31,9 +42,13 @@ export class ConteoPage {
   bodegaId = signal('');
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   existencias = signal<Existencia[]>([]);
+  categorias = signal<CategoriaInv[]>([]); // Y9
   contado = signal<Record<string, number>>({});
   motivo = signal('');
+  query = signal(''); // Y9 — buscador a través de todas las categorías
   loading = signal(false);
+  /** Y9 — categorías colapsadas manualmente (por key). */
+  private colapsadas = signal<Set<string>>(new Set());
   submitting = signal(false);
   done = signal(false);
   confirmarConforme = signal(false);
@@ -49,18 +64,75 @@ export class ConteoPage {
   hayCambios = computed(() => this.cambios().length > 0);
   puedeGuardar = computed(() => !!this.bodegaId() && this.existencias().length > 0);
 
+  // ── Y9 — agrupación por categorías (patrón Z18 de existencias) ──
+  buscando = computed(() => this.query().trim().length > 0);
+
+  private filtered = computed(() => {
+    const q = this.query().toLowerCase().trim();
+    if (!q) return this.existencias();
+    return this.existencias().filter(
+      (e) => e.nombre.toLowerCase().includes(q) || e.codigo.toLowerCase().includes(q),
+    );
+  });
+
+  grupos = computed<GrupoConteo[]>(() => {
+    const cats = [...this.categorias()].sort(
+      (a, b) => Number(b.destacada) - Number(a.destacada) || a.orden - b.orden,
+    );
+    const porCat = new Map<string, Existencia[]>();
+    for (const e of this.filtered()) {
+      const key = e.categoria_id != null ? String(e.categoria_id) : SIN_CATEGORIA_KEY;
+      const arr = porCat.get(key);
+      if (arr) arr.push(e);
+      else porCat.set(key, [e]);
+    }
+    const out: GrupoConteo[] = [];
+    for (const c of cats) {
+      const items = porCat.get(String(c.id));
+      if (!items?.length) continue;
+      items.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      out.push({ key: String(c.id), nombre: c.nombre, destacada: c.destacada, items, total: items.length });
+    }
+    const sin = porCat.get(SIN_CATEGORIA_KEY);
+    if (sin?.length) {
+      sin.sort((a, b) => a.nombre.localeCompare(b.nombre));
+      out.push({ key: SIN_CATEGORIA_KEY, nombre: 'Sin categoría', destacada: false, items: sin, total: sin.length });
+    }
+    return out;
+  });
+
+  abierto(key: string): boolean {
+    if (this.buscando()) return true;
+    return !this.colapsadas().has(key);
+  }
+
+  toggle(key: string): void {
+    if (this.buscando()) return;
+    this.colapsadas.update((s) => {
+      const next = new Set(s);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   constructor() {
     void this.init();
   }
 
   private async init(): Promise<void> {
-    const b = await this.inventario.getBodegas();
+    const [b, cats] = await Promise.all([
+      this.inventario.getBodegas(),
+      this.inventario.getCategorias().catch(() => []),
+    ]);
     this.bodegas.set(b);
+    this.categorias.set(cats);
     if (b.length === 1) await this.onBodega(b[0].id);
   }
 
   async onBodega(id: string): Promise<void> {
     this.bodegaId.set(id);
+    this.colapsadas.set(new Set());
     if (!id) return;
     this.loading.set(true);
     try {

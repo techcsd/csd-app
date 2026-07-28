@@ -1,0 +1,61 @@
+<div class="screen conteos">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Conteo y ajustes</h1>
+  </header>
+
+  <div class="screen__body">
+    <button type="button" class="btn-cta conteos__nuevo" (click)="nuevo()">🔢 Nuevo conteo</button>
+
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (!conteos().length) {
+      @if (!online) {
+        <app-empty-state icon="📡" title="Sin conexión" message="Conéctate a internet para ver el historial de conteos y ajustes." />
+      } @else {
+        <app-empty-state icon="🔢" title="Sin conteos" message="Todavía no hay conteos ni ajustes registrados." />
+      }
+    } @else {
+      @for (c of conteos(); track c.id) {
+        <div class="conteos__card">
+          <button type="button" class="conteos__head" (click)="toggle(c.id)">
+            <div class="conteos__head-main">
+              <div class="conteos__top">
+                <span class="conteos__bodega">{{ c.bodega?.nombre ?? 'Almacén' }}</span>
+                <span class="conteos__tipo">{{ tipoLabel(c.tipo) }}</span>
+              </div>
+              <p class="conteos__sub">
+                {{ (c.items?.length ?? 0) }} artículo(s) · {{ diferencias(c) }} con diferencia
+              </p>
+              <p class="conteos__meta">
+                {{ fmtFecha(c.created_at) }}@if (c.creado?.nombre) { · {{ c.creado?.nombre }} }
+              </p>
+            </div>
+            <span class="conteos__caret">{{ abierto(c.id) ? '▾' : '▸' }}</span>
+          </button>
+
+          @if (abierto(c.id)) {
+            <div class="conteos__body">
+              @if (c.motivo || c.observaciones) {
+                <p class="conteos__nota">{{ c.motivo || c.observaciones }}</p>
+              }
+              @for (it of c.items ?? []; track it.articulo?.codigo) {
+                <div class="conteos__row" [class.conteos__row--diff]="diff(it) !== 0">
+                  <span class="conteos__art">{{ it.articulo?.nombre ?? it.articulo?.codigo ?? 'Artículo' }}</span>
+                  <span class="conteos__nums">
+                    {{ it.cantidad_antes }} → <b>{{ it.cantidad_contada }}</b>
+                    @if (diff(it) !== 0) {
+                      <span class="conteos__delta" [class.conteos__delta--up]="diff(it) > 0">
+                        ({{ diff(it) > 0 ? '+' : '' }}{{ diff(it) }})
+                      </span>
+                    }
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

@@ -202,7 +202,8 @@
       @if (step() === 3) {
         <h1 class="screen__title">Fotos obligatorias</h1>
         <p class="screen__subtitle">
-          La foto del tablero respalda el kilometraje digitado; la del recibo respalda el monto.
+          El tablero respalda el kilometraje; el recibo respalda el monto; la bomba en 0
+          respalda los galones echados.
         </p>
         <div class="comb__fotos">
           <app-photo-slot
@@ -219,6 +220,13 @@
             (captured)="onFotoTablero($event)"
             (cleared)="onFotoTableroCleared()"
           />
+          <app-photo-slot
+            label="Bomba en 0"
+            hint="⛽"
+            [foto]="fotoBomba()"
+            (captured)="onFotoBomba($event)"
+            (cleared)="onFotoBombaCleared()"
+          />
         </div>
       }
 
@@ -230,7 +238,7 @@
           <li><span>Galones</span><b>{{ galones() | number: '1.0-2' }} gal</b></li>
           <li><span>Monto</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
           <li><span>Estación</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
-          <li><span>Fotos</span><b>{{ fotosCompletas() ? '2 ✓' : 'Faltan' }}</b></li>
+          <li><span>Fotos</span><b>{{ fotosCompletas() ? '3 ✓' : 'Faltan' }}</b></li>
           <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
         </ul>
       }

@@ -6,6 +6,7 @@ import {
   AccidenteCaptura,
   ChecklistBreakdown,
   ChecklistDetalle,
+  ChecklistHistorialRow,
   ChecklistRespuestaDetalle,
   DanoCaptura,
   EchadaDetalle,
@@ -201,6 +202,26 @@ export class FlotaReportesService {
       .limit(200);
     if (error) return [];
     return (data as unknown as HistorialChecklist[]) ?? [];
+  }
+
+  /**
+   * Y7 — historial de checklists para el jefe de flota (parity con la web). La
+   * RLS `chk_veh_sel` scopea las filas: elevado ve todo, el chofer solo los
+   * suyos. Online-first; se filtra en el cliente (vehículo/conductor/tipo/fecha).
+   */
+  async getChecklistsHistorial(dias = 90): Promise<ChecklistHistorialRow[]> {
+    const { data, error } = await this.supabase.client
+      .from('checklists_vehiculo')
+      .select(
+        'id, fecha, capturado_en, tipo, resultado, kilometraje, tiene_criticos, atendido, ' +
+          'vehiculo:vehiculos(placa, marca, modelo), conductor:conductores(nombre)',
+      )
+      .not('es_prueba', 'is', true)
+      .gte('fecha', this.desdeISO(dias))
+      .order('capturado_en', { ascending: false })
+      .limit(300);
+    if (error) return [];
+    return (data as unknown as ChecklistHistorialRow[]) ?? [];
   }
 
   /** V2 — historial navegable de MIS echadas de combustible, últimos `dias` días. */

@@ -1,0 +1,84 @@
+<div class="screen tec">
+  <header class="tec__header">
+    <button type="button" class="tec__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="tec__icon">💻</span>
+    <h1 class="tec__title">Tecnología</h1>
+  </header>
+
+  <div class="screen__body">
+    <!-- Versión instalada -->
+    <div class="tec__version">
+      <span class="tec__version-label">Versión instalada</span>
+      <span class="tec__version-num">{{ instalada }}</span>
+      @if (hayNueva() && publicada()) {
+        <span class="tec__version-new">Hay una nueva: {{ publicada() }}</span>
+      }
+    </div>
+
+    <!-- Tabs -->
+    <div class="tec__tabs">
+      <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'versiones'" (click)="setTab('versiones')">
+        Historial de versiones
+      </button>
+      <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'errores'" (click)="setTab('errores')">
+        Reportes de errores
+      </button>
+    </div>
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (tab() === 'versiones') {
+      @if (!versionesApp().length) {
+        <app-empty-state icon="📦" title="Sin historial" [message]="online ? 'No hay versiones registradas.' : 'Conéctate para ver el historial.'" />
+      } @else {
+        <ol class="tec__timeline">
+          @for (v of versionesApp(); track v.id) {
+            <li class="tec__vitem">
+              <div class="tec__vtop">
+                <span class="tec__vver">v{{ v.version }}</span>
+                @if (v.fecha) { <span class="tec__vfecha">{{ v.fecha }}</span> }
+              </div>
+              @if (v.titulo) { <p class="tec__vtitulo">{{ v.titulo }}</p> }
+              <ul class="tec__cambios">
+                @for (c of v.cambios; track $index) {
+                  <li class="tec__cambio">
+                    <span class="tec__tag tec__tag--{{ c.t }}">{{ cambioLabel[c.t] ?? c.t }}</span>
+                    <span class="tec__cambio-d">{{ c.d }}</span>
+                  </li>
+                }
+              </ul>
+            </li>
+          }
+        </ol>
+      }
+    } @else {
+      @if (!reportes().length) {
+        <app-empty-state icon="✅" title="Sin reportes" [message]="online ? 'No hay errores reportados. Todo en orden.' : 'Conéctate para ver los reportes.'" />
+      } @else {
+        @for (r of reportes(); track r.id) {
+          <div class="tec__err">
+            <button type="button" class="tec__err-head" (click)="toggle(r.id)">
+              <div class="tec__err-main">
+                <div class="tec__err-top">
+                  <span class="tec__tagerr tec__tagerr--{{ r.error_type }}">{{ r.error_type }}</span>
+                  <span class="tec__err-dev">{{ dispositivo(r) }}</span>
+                </div>
+                <p class="tec__err-msg">{{ r.message }}</p>
+                <p class="tec__err-meta">
+                  v{{ r.app_version }} · {{ r.platform }}@if (r.os_version) { {{ r.os_version }} } · {{ fmtFecha(r.created_at) }}
+                </p>
+              </div>
+              <span class="tec__caret">{{ abierto(r.id) ? '▾' : '▸' }}</span>
+            </button>
+            @if (abierto(r.id)) {
+              <div class="tec__err-body">
+                @if (ruta(r)) { <p class="tec__err-ruta">Ruta: {{ ruta(r) }}</p> }
+                <pre class="tec__err-ctx">{{ r.context | json }}</pre>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

@@ -9,6 +9,9 @@ import {
 } from '@angular/core';
 import { InAppCameraService } from '../../../core/services/in-app-camera.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ErrorReportService } from '../../../core/services/error-report.service';
+import { DeviceInfoService } from '../../../core/services/device-info.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
 
 const MAX_EDGE = 1280;
 const JPEG_QUALITY = 0.7;
@@ -29,6 +32,9 @@ const JPEG_QUALITY = 0.7;
 export class InAppCamera {
   cam = inject(InAppCameraService);
   private toast = inject(ToastService);
+  private errorReport = inject(ErrorReportService);
+  private device = inject(DeviceInfoService);
+  private permissions = inject(PermissionsService);
   private videoRef = viewChild<ElementRef<HTMLVideoElement>>('video');
 
   busy = signal(false);
@@ -58,9 +64,33 @@ export class InAppCamera {
         v.setAttribute('playsinline', 'true');
         await v.play().catch(() => {});
       }
-    } catch {
+    } catch (e) {
+      // Y5/Y6 — este es el punto EXACTO donde el WebView del equipo (caso OUKITEL)
+      // deniega getUserMedia. Antes se tragaba la excepción; ahora la capturamos
+      // con su nombre/estado de permiso/versión de WebView para el panel de
+      // Tecnología. El overlay muestra igual el botón "usar cámara del sistema".
       this.error.set(true);
+      void this.reportCameraError(e);
     }
+  }
+
+  /** Y6 — reporta el fallo de getUserMedia con contexto de diagnóstico. */
+  private async reportCameraError(e: unknown): Promise<void> {
+    const name = (e as { name?: string })?.name ?? '';
+    const msg = (e as Error)?.message ?? String(e);
+    let perm = 'desconocido';
+    try {
+      perm = await this.permissions.checkCamera();
+    } catch {
+      /* ignore */
+    }
+    void this.errorReport.report('camera', `getUserMedia ${name || 'falló'}: ${msg}`, {
+      point: 'in-app-overlay',
+      exception: name,
+      permiso: perm,
+      webview: this.device.info()?.webViewVersion ?? '',
+      webview_major: this.device.webViewMajor() ?? 0,
+    });
   }
 
   private stop(): void {

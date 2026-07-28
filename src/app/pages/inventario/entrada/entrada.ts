@@ -15,7 +15,9 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
-import { compartirTexto } from '../../../core/util/share';
+import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
+import type { ExportDoc } from '../../../core/services/export.service';
+import { formatFechaMedia } from '../../../core/util/fecha';
 
 interface GrupoResumen {
   categoria: string;
@@ -37,7 +39,7 @@ interface EntradaDraft {
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, PhotoSlot, WizardFooter],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, PhotoSlot, WizardFooter, ShareSheet],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })
@@ -77,7 +79,6 @@ export class EntradaPage implements OnDestroy {
   foto = signal<CapturedPhoto | null>(null);
   submitting = signal(false);
   confirmSalir = signal(false);
-  sharing = signal(false);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   bodegaNombre = computed(() => this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? 'el almacén');
@@ -315,32 +316,35 @@ export class EntradaPage implements OnDestroy {
     return this.motivo() || null;
   }
 
-  private resumenTexto(): string {
-    const alm = this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? '—';
-    const fecha = new Date().toLocaleString('es-DO', { dateStyle: 'medium', timeStyle: 'short' });
-    const lineas = this.grupos()
-      .map(
-        (g) =>
-          `*${g.categoria}*\n` +
-          g.lineas.map((l) => `  • ${l.nombre}${l.talla ? ` (Talla ${l.talla})` : ''}: ${l.cantidad} ${l.unidad}`).join('\n'),
-      )
-      .join('\n');
-    const refEfectiva = this.referenciaEfectiva();
-    const ref = refEfectiva ? `\n¿De dónde viene?: ${refEfectiva}` : '';
-    return `📦 *Entrada de material — CSD*\nAlmacén: ${alm}\nFecha: ${fecha}${ref}\n\n${lineas}\n\nTotal: ${this.totalItems()} artículo(s)`;
-  }
+  // ── Compartir (Y3 — PDF o Excel, no texto plano) ──
+  shareOpen = signal(false);
 
-  async compartir(): Promise<void> {
-    if (this.sharing()) return;
-    this.sharing.set(true);
-    try {
-      const res = await compartirTexto('Entrada de material', this.resumenTexto());
-      if (res.fallback) this.toast.success('Resumen copiado. Pégalo en WhatsApp.');
-    } catch {
-      this.toast.error('No se pudo compartir.');
-    } finally {
-      this.sharing.set(false);
+  shareDoc = computed<ExportDoc>(() => {
+    const alm = this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? '—';
+    const ref = this.referenciaEfectiva();
+    const meta = [
+      { label: 'Almacén', value: alm },
+      { label: 'Fecha', value: formatFechaMedia(new Date().toISOString()) },
+      ...(ref ? [{ label: '¿De dónde viene?', value: ref }] : []),
+    ];
+    const rows = this.grupos().flatMap((g) =>
+      g.lineas.map((l) => [g.categoria, `${l.nombre}${l.talla ? ` (Talla ${l.talla})` : ''}`, l.cantidad, l.unidad]),
+    );
+    return {
+      title: 'Entrada de material',
+      filenameBase: 'entrada-material',
+      meta,
+      table: { columns: ['Categoría', 'Artículo', 'Cantidad', 'Unidad'], rows, colWeights: [3, 5, 1.5, 1.5] },
+      footer: `Total: ${this.totalItems()} artículo(s)`,
+    };
+  });
+
+  compartir(): void {
+    if (!this.cart().length) {
+      this.toast.error('No hay material para compartir.');
+      return;
     }
+    this.shareOpen.set(true);
   }
 
   nuevoRegistro(): void {

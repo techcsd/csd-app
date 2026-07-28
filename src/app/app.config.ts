@@ -1,5 +1,6 @@
 import {
   ApplicationConfig,
+  ErrorHandler,
   provideBrowserGlobalErrorListeners,
   provideAppInitializer,
   isDevMode,
@@ -9,6 +10,7 @@ import { provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
+import { ErrorReportService } from './core/services/error-report.service';
 import { VehiculosService } from './core/services/vehiculos.service';
 import { MantenimientosService } from './core/services/mantenimientos.service';
 import { ChecklistPreusoService } from './core/services/checklist-preuso.service';
@@ -26,6 +28,11 @@ import { FlotaReportesService } from './core/services/flota-reportes.service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // Y6 — telemetría de errores: el ErrorHandler global usa el mismo singleton
+    // que se instancia abajo (para que report() y el handler del outbox compartan
+    // estado). Los listeners de window/promesa ya los instala provideBrowser… →
+    // desembocan aquí. `useExisting` evita crear dos instancias.
+    { provide: ErrorHandler, useExisting: ErrorReportService },
     // P9 — toda pantalla abre arriba (y respeta anclas). Además, en app.ts se
     // resetea el scroll de los contenedores internos (.screen/.screen__body),
     // que Angular no restaura por sí solo.
@@ -37,6 +44,9 @@ export const appConfig: ApplicationConfig = {
     // Instantiate feature services that register outbox handlers, so queued
     // captures sync even before the user opens that module.
     provideAppInitializer(() => {
+      // Y6 — instanciar primero la telemetría: registra su handler de outbox y
+      // engancha el sink de fallos permanentes del SyncService desde el arranque.
+      inject(ErrorReportService);
       inject(VehiculosService);
       inject(MantenimientosService);
       inject(ChecklistPreusoService);

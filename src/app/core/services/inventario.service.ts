@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, Existencia } from '../models/inventario.model';
+import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, ConteoHistorial, Existencia } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
@@ -395,6 +395,24 @@ export class InventarioService {
     void this.conducesPorRecibir();
   }
 
+  /**
+   * Y10 — historial de conteos/ajustes de inventario (parity con la web). La RLS
+   * `conteos_select` scopea a admin/módulo inventario. Online-first (el histórico
+   * no necesita offline completo).
+   */
+  async getConteos(): Promise<ConteoHistorial[]> {
+    const { data, error } = await this.supabase.client
+      .from('conteos_inventario')
+      .select(
+        'id, motivo, tipo, observaciones, created_at, bodega:bodegas(nombre), creado:usuarios(nombre), ' +
+          'items:conteo_items(cantidad_antes, cantidad_contada, articulo:articulos(nombre, codigo))',
+      )
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (error) return [];
+    return (data as unknown as ConteoHistorial[]) ?? [];
+  }
+
   async enqueueConteo(input: ConteoCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
@@ -502,6 +520,9 @@ export class InventarioService {
         p_items: payload['items'],
       });
       if (error) throwSyncError(error);
+      // Y10 — un conteo ajusta el stock: invalidar las existencias cacheadas para
+      // que existencias/conteo/salida reflejen las cantidades nuevas al recargar.
+      await this.catalog.invalidatePrefix('existencias_');
     });
   }
 }

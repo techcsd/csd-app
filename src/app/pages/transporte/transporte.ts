@@ -33,6 +33,8 @@ const TILES: HubTile[] = [
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488', elevado: true },
+  // Y7 — historial de checklists (el jefe de flota ve lo que envían los choferes).
+  { key: 'checklists', icon: '✅', label: 'Historial de checklists', tint: '#0369a1', elevado: true },
   // Y7 — "Me pusieron una multa": visible para TODO chofer (no solo elevados).
   { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c' },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
@@ -127,6 +129,7 @@ export class TransportePage {
       case 'vehiculos': return this.vehiculosLista();
       case 'conductores': return this.conductoresLista();
       case 'crearRuta': return this.crearRuta();
+      case 'checklists': return this.checklistsHistorial();
       case 'multas': return this.multas();
       case 'avisos': return this.avisos();
       case 'enProceso': return this.enProcesoAbrir();
@@ -148,6 +151,11 @@ export class TransportePage {
   /** S16 — crear ruta (solo elevados; el wizard tipo hoja llega en FASE 3). */
   crearRuta(): void {
     void this.router.navigate(['/transporte/rutas/crear']);
+  }
+
+  /** Y7 — historial de checklists (jefe de flota). */
+  checklistsHistorial(): void {
+    void this.router.navigate(['/transporte/checklists']);
   }
 
   /** Y7 — registrar multa desde el hub (la pantalla pide el conductor). */

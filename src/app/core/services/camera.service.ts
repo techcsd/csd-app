@@ -3,9 +3,21 @@ import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { InAppCameraService } from './in-app-camera.service';
 import { PermisoGateService } from './permiso-gate.service';
+import { ErrorReportService } from './error-report.service';
+import { DeviceInfoService } from './device-info.service';
+import { PermissionsService } from './permissions.service';
+import { ToastService } from './toast.service';
 
 /** W1 — practical cap for a single multi-pick batch (configurable, kept high). */
 const GALLERY_LIMIT = 40;
+
+/**
+ * Y5 — versión MAYOR mínima razonable del Android System WebView para que
+ * getUserMedia funcione de forma fiable (Chromium 80 ≈ 2020). Por debajo, un
+ * fallo de cámara probablemente sea el WebView desactualizado del equipo → se lo
+ * decimos al usuario. Es un umbral heurístico, documentado a propósito.
+ */
+const MIN_WEBVIEW_MAJOR = 80;
 
 export interface CapturedPhoto {
   /** Compressed JPEG blob, ready to upload to Storage. */
@@ -41,6 +53,10 @@ const NATIVE_QUALITY = 72;
 export class CameraService {
   private inApp = inject(InAppCameraService);
   private gate = inject(PermisoGateService);
+  private errorReport = inject(ErrorReportService);
+  private device = inject(DeviceInfoService);
+  private permissions = inject(PermissionsService);
+  private toast = inject(ToastService);
 
   get isNative(): boolean {
     return Capacitor.isNativePlatform();
@@ -78,9 +94,69 @@ export class CameraService {
         return { blob: res, previewUrl: URL.createObjectURL(res) };
       }
       return await this.takeConSistema();
-    } catch {
+    } catch (e) {
+      // M1 — seguimos sin tumbar el wizard (devolvemos null), pero YA NO en
+      // silencio: si es una cancelación del usuario, callamos; si es un fallo real
+      // (permiso, cámara en uso, WebView viejo), avisamos con causa+acción y lo
+      // reportamos (Y5/Y6).
+      if (!this.isCancel(e)) await this.handleCameraFailure(e, 'takePhoto');
       return null;
     }
+  }
+
+  /** ¿La excepción es una cancelación del usuario (no un error real)? */
+  private isCancel(e: unknown): boolean {
+    const m = ((e as Error)?.message ?? '').toLowerCase();
+    const name = (e as { name?: string })?.name ?? '';
+    return name === 'AbortError' || /cancel|dismiss|no image picked|user cancelled/.test(m);
+  }
+
+  /**
+   * Y5 — clasifica el fallo de cámara, avisa al usuario con la causa y una acción
+   * clara (nunca fallo silencioso) y lo reporta a telemetría con el estado del
+   * permiso y la versión del WebView (clave para el diagnóstico del OUKITEL).
+   */
+  private async handleCameraFailure(e: unknown, point: string): Promise<void> {
+    const name = (e as { name?: string })?.name ?? '';
+    const raw = ((e as Error)?.message ?? String(e)) || '';
+    const m = raw.toLowerCase();
+    let perm = 'desconocido';
+    try {
+      perm = await this.permissions.checkCamera();
+    } catch {
+      /* ignore */
+    }
+    const wvMajor = this.device.webViewMajor();
+
+    let text: string;
+    let withSettings = false;
+    if (perm === 'denied' || name === 'NotAllowedError' || /denied|permission|not allowed/.test(m)) {
+      text = 'La cámara está bloqueada por permisos.';
+      withSettings = true;
+    } else if (name === 'NotReadableError' || name === 'TrackStartError' || /in use|could not start|busy/.test(m)) {
+      text = 'La cámara está en uso por otra app. Ciérrala e intenta de nuevo.';
+    } else if (name === 'NotFoundError' || /not found|no camera|devices? not found/.test(m)) {
+      text = 'No se encontró una cámara en el dispositivo.';
+    } else if (this.isNative && wvMajor != null && wvMajor < MIN_WEBVIEW_MAJOR) {
+      text = `La app "Android System WebView" está desactualizada (v${wvMajor}). Actualízala desde Play Store para usar la cámara.`;
+    } else {
+      text = 'No se pudo abrir la cámara. Intenta de nuevo.';
+    }
+
+    if (withSettings && this.permissions.isNative) {
+      this.toast.withAction(text, { label: 'Abrir ajustes', run: () => void this.permissions.openAppSettings() });
+    } else {
+      this.toast.error(text);
+    }
+
+    void this.errorReport.report('camera', `${name || 'Error'}: ${raw}`, {
+      point,
+      exception: name,
+      permiso: perm,
+      webview: this.device.info()?.webViewVersion ?? '',
+      webview_major: wvMajor ?? 0,
+      native: this.isNative,
+    });
   }
 
   /** Cámara del sistema (Capacitor nativo / input web) — fallback. */
@@ -99,13 +175,18 @@ export class CameraService {
    * bitácora photo step so the user can attach 20+ photos in one go.
    */
   async pickFromGallery(limit = GALLERY_LIMIT): Promise<CapturedPhoto[]> {
-    const blobs = this.isNative ? await this.pickNativeMulti(limit) : await this.pickWebMulti();
-    const out: CapturedPhoto[] = [];
-    for (const raw of blobs) {
-      const blob = this.isNative ? raw : await this.compress(raw);
-      out.push({ blob, previewUrl: URL.createObjectURL(blob) });
+    try {
+      const blobs = this.isNative ? await this.pickNativeMulti(limit) : await this.pickWebMulti();
+      const out: CapturedPhoto[] = [];
+      for (const raw of blobs) {
+        const blob = this.isNative ? raw : await this.compress(raw);
+        out.push({ blob, previewUrl: URL.createObjectURL(blob) });
+      }
+      return out;
+    } catch (e) {
+      if (!this.isCancel(e)) await this.handleCameraFailure(e, 'pickFromGallery');
+      return [];
     }
-    return out;
   }
 
   /**
