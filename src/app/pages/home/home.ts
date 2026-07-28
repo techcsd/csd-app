@@ -23,6 +23,10 @@ const TILES: HomeTile[] = [
   { modulo: 'flota', icon: '🚚', label: 'Transporte', route: '/transporte', tint: '#f97316' },
   { modulo: 'inventario', icon: '📦', label: 'Inventario', route: '/inventario', tint: '#16a34a' },
   { modulo: 'compras', icon: '🛒', label: 'Requisición', route: '/solicitudes', tint: '#2563eb' },
+  // Y14 — Proyectos (gateado por módulo proyectos: admin/direccion/gerencia/
+  // gerente_proyectos/ingeniero_oficina). Los responsables sin módulo llegan al
+  // cronograma por deep-link de aviso (FASE 5).
+  { modulo: 'proyectos', icon: '🏗️', label: 'Proyectos', route: '/proyectos', tint: '#0d9488' },
   { modulo: 'admin', icon: '⚙️', label: 'Administración', route: '/admin', tint: '#3f3f46' },
   // Y11 — Tecnología (admin + rol Tecnología/Encargado de Tecnología). El gating
   // es genérico por módulo: `hasModulo('tecnologia')` ya lo resuelve.

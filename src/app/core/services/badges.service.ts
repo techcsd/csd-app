@@ -25,6 +25,8 @@ export class BadgesService {
     if (this.ctx.hasModulo('compras')) tasks.push(this.count('solicitudes_material', 'estado', 'pendiente', 'compras'));
     // Admin: reportes/comentarios de campo sin resolver (misma cola que Admin › Reportes).
     if (this.ctx.hasModulo('admin')) tasks.push(this.count('reportes_usuario', 'estado', 'resuelto', 'admin', 'neq'));
+    // Y15 — Proyectos: avisos de cronograma pendientes (por iniciar/vencer/atrasada).
+    if (this.ctx.hasModulo('proyectos')) tasks.push(this.countCronograma());
     // Bitácora: sin badge de servidor. Sus pendientes reales son borradores locales
     // (los cuenta EnProcesoService) y no hay una cola de aprobación en servidor propia
     // de bitácora en la app — los conduces por recibir ya se muestran en Inventario.
@@ -45,6 +47,20 @@ export class BadgesService {
       this._counts.update((m) => ({ ...m, [modulo]: count ?? 0 }));
     } catch {
       /* best-effort: sin conexión o sin permiso, no se muestra badge */
+    }
+  }
+
+  /** Y15 — avisos de cronograma pendientes (avisos_proyecto tipo cronograma_*). */
+  private async countCronograma(): Promise<void> {
+    try {
+      const { count } = await this.supabase.client
+        .from('avisos_proyecto')
+        .select('id', { count: 'exact', head: true })
+        .eq('estado', 'pendiente')
+        .like('tipo', 'cronograma_%');
+      this._counts.update((m) => ({ ...m, proyectos: count ?? 0 }));
+    } catch {
+      /* best-effort */
     }
   }
 }

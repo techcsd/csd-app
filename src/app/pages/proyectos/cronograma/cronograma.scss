@@ -1,0 +1,269 @@
+.crono {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  &__back {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  &__icon { font-size: 1.3rem; }
+  &__title { font-size: 1.2rem; margin: 0; }
+
+  &__tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  &__tab {
+    flex: 1;
+    padding: 10px;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 12px;
+    color: var(--main-ultra-light);
+    font-size: 0.9rem;
+    cursor: pointer;
+
+    &--on { border-color: var(--Hub); color: #fff; font-weight: 700; }
+  }
+
+  // ── Lista ──
+  &__card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-left: 4px solid #2d2d2d;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    color: #fff;
+    cursor: pointer;
+
+    &--critica { border-left-color: #dc2626; }
+    &--importante { border-left-color: #d97706; }
+    &--ordinaria { border-left-color: #3f3f46; }
+    &:active { border-color: var(--Hub); }
+  }
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  &__nombre { flex: 1; font-weight: 600; }
+  &__tipo {
+    flex: 0 0 auto;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: #212121;
+    color: var(--main-ultra-light);
+
+    &--critica { background: rgba(220, 38, 38, 0.18); color: #f87171; }
+    &--importante { background: rgba(217, 119, 6, 0.18); color: #fbbf24; }
+  }
+  &__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  &__estado {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #212121;
+    color: var(--main-ultra-light);
+
+    &--en_curso { background: rgba(37, 99, 235, 0.18); color: #60a5fa; }
+    &--completada { background: rgba(22, 163, 74, 0.18); color: #4ade80; }
+  }
+  &__sending { font-size: 0.72rem; color: var(--Hub); }
+  &__late { font-size: 0.72rem; color: #f87171; font-weight: 700; }
+  &__fechas {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--main-ultra-light);
+  }
+
+  // ── Timeline ──
+  &__timeline {
+    position: relative;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 12px;
+    padding: 12px 12px 12px 0;
+  }
+  &__today {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--Hub);
+    z-index: 2;
+  }
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+  }
+  &__row-name {
+    flex: 0 0 40%;
+    max-width: 40%;
+    padding-left: 12px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #e5e5e5;
+  }
+  &__track {
+    position: relative;
+    flex: 1;
+    height: 16px;
+    background: #0d0d0d;
+    border-radius: 4px;
+  }
+  &__bar {
+    position: absolute;
+    top: 2px;
+    height: 12px;
+    min-width: 4px;
+    border-radius: 4px;
+    background: #3f3f46;
+
+    &--critica { background: #dc2626; }
+    &--importante { background: #d97706; }
+    &--ordinaria { background: #52525b; }
+    &--done { opacity: 0.55; }
+    &--late { outline: 2px solid #f87171; }
+  }
+  &__legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--main-ultra-light);
+  }
+  &__dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    margin-right: 2px;
+
+    &--critica { background: #dc2626; }
+    &--importante { background: #d97706; }
+    &--ordinaria { background: #52525b; }
+  }
+  &__today-legend {
+    display: inline-block;
+    width: 2px;
+    height: 12px;
+    background: var(--Hub);
+    margin-right: 2px;
+    vertical-align: middle;
+  }
+
+  // ── Recálculos ──
+  &__subtitle { font-size: 1.05rem; margin: 18px 0 10px; }
+  &__recalc {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+  }
+  &__recalc-dias {
+    flex: 0 0 auto;
+    font-weight: 800;
+    color: #4ade80;
+
+    &--neg { color: #f87171; }
+  }
+  &__recalc-motivo { color: var(--main-ultra-light); }
+
+  // ── Hoja detalle / completar ──
+  &__detalle,
+  &__completar { padding-bottom: 8px; }
+  &__desc { color: var(--main-ultra-light); margin: 10px 0; font-size: 0.9rem; }
+  &__info {
+    list-style: none;
+    margin: 10px 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid #232323;
+      font-size: 0.9rem;
+
+      span { color: var(--main-ultra-light); }
+      b { text-align: right; }
+    }
+  }
+  &__justif {
+    background: #1a1206;
+    border: 1px solid #5c4a12;
+    color: #fbbf24;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    margin: 10px 0;
+  }
+  &__evidencia {
+    display: block;
+    margin: 10px 0;
+
+    img {
+      width: 100%;
+      max-height: 240px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid #2d2d2d;
+    }
+  }
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  &__muted { color: var(--main-ultra-light); font-size: 0.88rem; margin-top: 12px; }
+  &__hint { color: var(--main-ultra-light); font-size: 0.9rem; margin-bottom: 10px; }
+  &__label { display: block; margin: 14px 0 6px; font-size: 0.9rem; }
+  &__req { color: #f87171; }
+  &__textarea {
+    width: 100%;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 12px;
+    color: #fff;
+    padding: 12px;
+    font-size: 1rem;
+    resize: vertical;
+  }
+}

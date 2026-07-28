@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.32.0';
+const VERSION = '1.33.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,22 +58,20 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.32.0';
+const MIN_VERSION = '1.33.0';
 const RELEASED_AT = '2026-07-28';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Tercera foto de combustible, compartir en PDF/Excel, historial de checklists, conteo y ajustes, sección Tecnología y reporte automático de errores';
+const TITULO = 'Proyectos y Cronograma en la app: consulta tareas, inícialas/complétalas con foto (offline), vincula bitácoras y recibe avisos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Al registrar combustible ahora se pide una tercera foto: la bomba en 0 (además del recibo y el tablero).' },
-  { t: 'nuevo', d: 'Nueva sección Tecnología: historial de versiones de la app y reportes de errores (para admin y Tecnología).' },
-  { t: 'nuevo', d: 'El jefe de flota ya puede ver en la app el historial de checklists que envían los choferes, con sus fotos.' },
-  { t: 'nuevo', d: 'Nuevo "Conteo y ajustes" de inventario: revisa el historial de conteos y ajustes con su detalle (antes → contado).' },
-  { t: 'mejora', d: 'Al compartir una salida, entrada o requisición ahora eliges PDF o Excel (antes solo texto) y lo mandas por WhatsApp.' },
-  { t: 'mejora', d: 'El conteo rápido agrupa los artículos por categoría, con secciones que se abren y cierran y un buscador.' },
-  { t: 'mejora', d: 'Si la cámara falla, la app te dice la causa (permiso, cámara en uso, WebView desactualizado) y cómo resolverlo, en vez de fallar en silencio.' },
-  { t: 'seguridad', d: 'La app reporta automáticamente los errores y fallos al equipo de Tecnología para resolverlos más rápido, sin enviar datos sensibles.' },
+  { t: 'nuevo', d: 'Nueva sección Proyectos: consulta tus proyectos, sus fases y su avance.' },
+  { t: 'nuevo', d: 'Cronograma del proyecto en la app: lista y línea de tiempo de las tareas, con las críticas e importantes destacadas.' },
+  { t: 'nuevo', d: 'Inicia y completa tareas del cronograma desde el teléfono, con foto de evidencia; funciona sin señal y se sincroniza solo.' },
+  { t: 'nuevo', d: 'Si una tarea se completa tarde, la app pide la justificación (igual que en la web).' },
+  { t: 'nuevo', d: 'Desde el parte de bitácora puedes vincular la tarea del cronograma que avanzaste, y marcarla como completada.' },
+  { t: 'mejora', d: 'Avisos de cronograma en la app (tareas por iniciar, por vencer o atrasadas) con acceso directo a la tarea.' },
 ];
 
 const TIPO_POR_COMMIT = {

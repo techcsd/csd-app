@@ -1,0 +1,143 @@
+.proy {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  &__back {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  &__icon {
+    font-size: 1.3rem;
+  }
+  &__title {
+    font-size: 1.2rem;
+    margin: 0;
+  }
+
+  &__offline {
+    background: #2a2410;
+    border: 1px solid #5c4a12;
+    color: #fbbf24;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  &__avisos {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: #1a1206;
+    border: 1px solid #5c4a12;
+    color: #fbbf24;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  &__avisos-go {
+    color: var(--Hub);
+    font-size: 0.85rem;
+  }
+
+  &__search {
+    width: 100%;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
+  }
+
+  &__card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 10px;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:active {
+      border-color: var(--Hub);
+    }
+  }
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  &__nombre {
+    font-weight: 700;
+    font-size: 1.05rem;
+    flex: 1;
+  }
+  &__estado {
+    flex: 0 0 auto;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #212121;
+    color: var(--main-ultra-light);
+
+    &--en_progreso {
+      background: rgba(37, 99, 235, 0.18);
+      color: #60a5fa;
+    }
+    &--completado {
+      background: rgba(22, 163, 74, 0.18);
+      color: #4ade80;
+    }
+    &--pausado {
+      background: rgba(217, 119, 6, 0.18);
+      color: #fbbf24;
+    }
+    &--cancelado {
+      background: rgba(220, 38, 38, 0.18);
+      color: #f87171;
+    }
+  }
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    color: var(--main-ultra-light);
+    font-size: 0.85rem;
+  }
+  &__bar {
+    height: 6px;
+    background: #2d2d2d;
+    border-radius: 999px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  &__bar-fill {
+    height: 100%;
+    background: var(--Hub);
+    border-radius: 999px;
+  }
+  &__pct {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: var(--main-ultra-light);
+  }
+}

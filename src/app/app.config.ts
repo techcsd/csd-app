@@ -24,6 +24,7 @@ import { ReportesService } from './core/services/reportes.service';
 import { ClLiberacionService } from './core/services/cl-liberacion.service';
 import { DocumentosService } from './core/services/documentos.service';
 import { FlotaReportesService } from './core/services/flota-reportes.service';
+import { CronogramaService } from './core/services/cronograma.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -67,6 +68,8 @@ export const appConfig: ApplicationConfig = {
       inject(DocumentosService);
       // S22/S24 — handlers de accidente/daño/multa registrados al boot.
       inject(FlotaReportesService);
+      // Y15 — handlers de cronograma (tarea_iniciar/completar/enlazar).
+      inject(CronogramaService);
     }),
   ],
 };

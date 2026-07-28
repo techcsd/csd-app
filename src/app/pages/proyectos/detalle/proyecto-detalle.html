@@ -1,0 +1,55 @@
+<div class="screen pdet">
+  <header class="pdet__header">
+    <button type="button" class="pdet__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="pdet__title">Proyecto</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!proyecto()) {
+      <app-empty-state icon="🏗️" title="Proyecto no disponible" [message]="online ? 'No se encontró el proyecto.' : 'Conéctate para cargarlo.'" />
+    } @else {
+      <div class="pdet__head">
+        <h2 class="pdet__nombre">{{ proyecto()!.nombre }}</h2>
+        <span class="pdet__estado pdet__estado--{{ proyecto()!.estado }}">{{ estadoLabel[proyecto()!.estado] }}</span>
+      </div>
+
+      <button type="button" class="btn-cta pdet__crono" (click)="cronograma()">📅 Ver cronograma</button>
+
+      <!-- Datos generales -->
+      <div class="pdet__card">
+        @if (proyecto()!.codigo) { <div class="pdet__row"><span>Código</span><b>{{ proyecto()!.codigo }}</b></div> }
+        @if (proyecto()!.cliente) { <div class="pdet__row"><span>Cliente</span><b>{{ proyecto()!.cliente }}</b></div> }
+        @if (proyecto()!.responsable?.nombre) { <div class="pdet__row"><span>Responsable</span><b>{{ proyecto()!.responsable?.nombre }}</b></div> }
+        @if (proyecto()!.localidad || proyecto()!.ubicacion) { <div class="pdet__row"><span>Ubicación</span><b>{{ proyecto()!.localidad || proyecto()!.ubicacion }}</b></div> }
+        <div class="pdet__row"><span>Inicio</span><b>{{ fmt(proyecto()!.fecha_inicio) }}</b></div>
+        <div class="pdet__row"><span>Fin estimado</span><b>{{ fmt(proyecto()!.fecha_fin_estimada) }}</b></div>
+        @if (progreso() !== null) {
+          <div class="pdet__row"><span>Avance (fases)</span><b>{{ progreso() }}%</b></div>
+        }
+      </div>
+
+      @if (proyecto()!.descripcion) {
+        <p class="pdet__desc">{{ proyecto()!.descripcion }}</p>
+      }
+
+      <!-- Fases -->
+      <h3 class="pdet__subtitle">Fases</h3>
+      @if (!proyecto()!.fases.length) {
+        <p class="pdet__muted">Este proyecto no tiene fases registradas.</p>
+      } @else {
+        @for (f of proyecto()!.fases; track trackFase($index, f)) {
+          <div class="pdet__fase">
+            <div class="pdet__fase-top">
+              <span class="pdet__fase-nombre">{{ f.orden }}. {{ f.nombre }}</span>
+              <span class="pdet__fase-estado pdet__fase-estado--{{ f.estado }}">{{ faseEstadoLabel[f.estado] }}</span>
+            </div>
+            <div class="pdet__bar"><div class="pdet__bar-fill" [style.width.%]="f.progreso"></div></div>
+            <span class="pdet__fase-pct">{{ f.progreso }}%</span>
+          </div>
+        }
+      }
+    }
+  </div>
+</div>

@@ -173,7 +173,9 @@ export class BitacoraService {
     return data ?? [];
   }
 
-  async enqueueParteDiario(input: ParteDiarioCaptura): Promise<void> {
+  /** Encola el parte y devuelve su id (client-UUID = id de la bitácora), para que
+   *  el llamador pueda enlazar una tarea del cronograma en la misma sesión (Y15.8). */
+  async enqueueParteDiario(input: ParteDiarioCaptura): Promise<string> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     // S3/S4 — el "sujeto" ahora vive por actividad (bloque). Para paridad con la
@@ -237,6 +239,7 @@ export class BitacoraService {
       fotos: [...this.buildFotos(id, input.fotos), ...this.buildVoces(id, input.voces)],
       resumen: { tipo: 'parte_diario', proyecto_id: input.proyectoId, capturado_en },
     });
+    return id;
   }
 
   /** Q6 — unidades de medida (catálogo sgc.unidades), cacheadas offline como los

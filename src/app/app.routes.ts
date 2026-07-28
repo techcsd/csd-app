@@ -371,6 +371,32 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/tecnologia/tecnologia').then((m) => m.TecnologiaPage),
   },
   {
+    // Y14 — Proyectos (listado), gateado por el módulo `proyectos`.
+    path: 'proyectos',
+    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    loadComponent: () => import('./pages/proyectos/proyectos').then((m) => m.ProyectosPage),
+  },
+  {
+    // Y15 (FASE 5) — bandeja de avisos de cronograma (antes de :id para no chocar).
+    path: 'proyectos/avisos',
+    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    loadComponent: () =>
+      import('./pages/proyectos/avisos/cronograma-avisos').then((m) => m.CronogramaAvisosPage),
+  },
+  {
+    path: 'proyectos/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    loadComponent: () =>
+      import('./pages/proyectos/detalle/proyecto-detalle').then((m) => m.ProyectoDetallePage),
+  },
+  {
+    // Y15 — cronograma del proyecto (consulta + acciones offline-first).
+    path: 'proyectos/:id/cronograma',
+    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    loadComponent: () =>
+      import('./pages/proyectos/cronograma/cronograma').then((m) => m.CronogramaPage),
+  },
+  {
     path: 'admin/reportes',
     canActivate: [authGuard, pinGuard, moduleGuard('admin')],
     loadComponent: () => import('./pages/admin/reportes/reportes').then((m) => m.AdminReportesPage),

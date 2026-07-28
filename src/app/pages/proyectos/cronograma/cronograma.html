@@ -1,0 +1,154 @@
+<div class="screen crono">
+  <header class="crono__header">
+    <button type="button" class="crono__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="crono__icon">📅</span>
+    <h1 class="crono__title">Cronograma</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!tareas().length) {
+      <app-empty-state icon="📅" title="Sin tareas" [message]="online ? 'Este proyecto aún no tiene cronograma.' : 'Conéctate para cargar el cronograma.'" />
+    } @else {
+      <!-- Toggle vista -->
+      <div class="crono__tabs">
+        <button type="button" class="crono__tab" [class.crono__tab--on]="vista() === 'lista'" (click)="setVista('lista')">Lista</button>
+        <button type="button" class="crono__tab" [class.crono__tab--on]="vista() === 'timeline'" (click)="setVista('timeline')">Timeline</button>
+      </div>
+
+      @if (vista() === 'lista') {
+        @for (t of tareas(); track t.id) {
+          <button type="button" class="crono__card crono__card--{{ t.tipo }}" (click)="abrirDetalle(t)">
+            <div class="crono__top">
+              <span class="crono__nombre">{{ t.orden }}. {{ t.nombre }}</span>
+              <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] }}</span>
+            </div>
+            <div class="crono__badges">
+              <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] }}</span>
+              @if (enviando(t)) { <span class="crono__sending">⏳ Enviando…</span> }
+              @if (atrasada(t)) { <span class="crono__late">⚠ Atrasada</span> }
+            </div>
+            <div class="crono__fechas">
+              <span>Plan: {{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</span>
+              @if (t.fecha_inicio_real || t.fecha_fin_real) {
+                <span>Real: {{ fmt(t.fecha_inicio_real) }} → {{ fmt(t.fecha_fin_real) }}</span>
+              }
+            </div>
+          </button>
+        }
+      } @else {
+        <!-- Timeline simple (barras CSS) -->
+        <div class="crono__timeline">
+          @if (hoyPct() !== null) {
+            <div class="crono__today" [style.left.%]="hoyPct()"></div>
+          }
+          @for (b of barras(); track b.tarea.id) {
+            <div class="crono__row" (click)="abrirDetalle(b.tarea)">
+              <span class="crono__row-name">{{ b.tarea.orden }}. {{ b.tarea.nombre }}</span>
+              <div class="crono__track">
+                <div
+                  class="crono__bar crono__bar--{{ b.tarea.tipo }}"
+                  [class.crono__bar--done]="b.estado === 'completada'"
+                  [class.crono__bar--late]="b.atrasada"
+                  [style.left.%]="b.leftPct"
+                  [style.width.%]="b.widthPct"
+                ></div>
+              </div>
+            </div>
+          }
+        </div>
+        <p class="crono__legend">
+          <span class="crono__dot crono__dot--critica"></span> Crítica
+          <span class="crono__dot crono__dot--importante"></span> Importante
+          <span class="crono__dot crono__dot--ordinaria"></span> Ordinaria
+          <span class="crono__today-legend"></span> Hoy
+        </p>
+      }
+
+      <!-- Historial de recálculos -->
+      @if (data().recalculos.length) {
+        <h3 class="crono__subtitle">Ajustes del timeline</h3>
+        @for (r of data().recalculos; track r.id) {
+          <div class="crono__recalc">
+            <span class="crono__recalc-dias" [class.crono__recalc-dias--neg]="r.dias_movidos < 0">
+              {{ r.dias_movidos > 0 ? '+' : '' }}{{ r.dias_movidos }} d
+            </span>
+            <span class="crono__recalc-motivo">{{ motivoLabel[r.motivo] }}</span>
+          </div>
+        }
+      }
+    }
+  </div>
+
+  <!-- Hoja de detalle / completar -->
+  <app-bottom-sheet [open]="!!selected()" [titulo]="selected()?.nombre ?? ''" (closed)="cerrarHoja()">
+    @if (selected(); as t) {
+      @if (modo() === 'detalle') {
+        <div class="crono__detalle">
+          <div class="crono__badges">
+            <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] }}</span>
+            <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] }}</span>
+            @if (atrasada(t)) { <span class="crono__late">⚠ Atrasada</span> }
+          </div>
+          @if (t.descripcion) { <p class="crono__desc">{{ t.descripcion }}</p> }
+          <ul class="crono__info">
+            <li><span>Plan</span><b>{{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</b></li>
+            <li><span>Duración</span><b>{{ t.duracion_dias_plan }} día(s)</b></li>
+            @if (t.fecha_inicio_real) { <li><span>Inicio real</span><b>{{ fmt(t.fecha_inicio_real) }}</b></li> }
+            @if (t.fecha_fin_real) { <li><span>Fin real</span><b>{{ fmt(t.fecha_fin_real) }}</b></li> }
+          </ul>
+          @if (t.justificacion_retraso) {
+            <div class="crono__justif"><b>Justificación:</b> {{ t.justificacion_retraso }}</div>
+          }
+          @if (evidenciaUrl()) {
+            <a class="crono__evidencia" [href]="evidenciaUrl()" target="_blank" rel="noopener">
+              <img [src]="evidenciaUrl()" alt="Evidencia" />
+            </a>
+          }
+
+          @if (puedeGestionar() && !enviando(t)) {
+            <div class="crono__acciones">
+              @if (estado(t) === 'pendiente') {
+                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="iniciar(t)">▶ Iniciar tarea</button>
+              }
+              @if (estado(t) !== 'completada') {
+                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="abrirCompletar()">✓ Completar tarea</button>
+              }
+            </div>
+          } @else if (enviando(t)) {
+            <p class="crono__muted">⏳ Cambio en cola, se enviará al sincronizar.</p>
+          }
+        </div>
+      } @else {
+        <!-- Completar: foto obligatoria + justificación si atrasada -->
+        <div class="crono__completar">
+          <p class="crono__hint">Toma la foto de evidencia para completar la tarea.</p>
+          <app-photo-slot
+            label="Evidencia"
+            hint="📷"
+            [foto]="fotoCompletar()"
+            (captured)="onFoto($event)"
+            (cleared)="onFotoCleared()"
+          />
+          @if (selAtrasada()) {
+            <label class="crono__label">Justificación del retraso <span class="crono__req">*</span></label>
+            <textarea
+              class="crono__textarea"
+              rows="3"
+              placeholder="¿Por qué se completó tarde?"
+              [ngModel]="justificacion()"
+              (ngModelChange)="justificacion.set($event)"
+            ></textarea>
+          }
+          <div class="crono__acciones">
+            <button type="button" class="btn-cta" [disabled]="submitting()" (click)="completar()">
+              {{ submitting() ? 'Guardando…' : 'Confirmar completada' }}
+            </button>
+            <button type="button" class="btn-ghost" (click)="modo.set('detalle')">Atrás</button>
+          </div>
+        </div>
+      }
+    }
+  </app-bottom-sheet>
+</div>

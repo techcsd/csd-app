@@ -14,6 +14,8 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
+import { CronogramaService } from '../../../core/services/cronograma.service';
+import { CronogramaTarea } from '../../../core/models/cronograma.model';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -50,6 +52,7 @@ export class PartePage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private camera = inject(CameraService);
   private bitacora = inject(BitacoraService);
+  private cronograma = inject(CronogramaService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private ctx = inject(UserContextService);
@@ -125,6 +128,14 @@ export class PartePage implements OnDestroy {
   comentarios = signal('');
 
   fotos = signal<CapturedPhoto[]>([]);
+
+  // Y15.8 — vincular esta bitácora a una tarea del cronograma (opcional). Solo
+  // aparece si el proyecto tiene tareas activas visibles para el usuario.
+  tareasCronograma = signal<CronogramaTarea[]>([]);
+  tareaVinculada = signal<string | null>(null);
+  completarTarea = signal(false);
+  /** Se puede completar la tarea desde la bitácora solo si hay ≥1 foto (evidencia). */
+  puedeCompletarTarea = computed(() => !!this.tareaVinculada() && this.fotos().length > 0);
   voces = signal<VoiceNoteItem[]>([]); // Z23 — N notas de voz
   capturing = signal(false);
 
@@ -233,6 +244,8 @@ export class PartePage implements OnDestroy {
         hayDanados: this.hayDanados(),
         equiposAlquilados: this.equiposAlquilados(),
         comentarios: this.comentarios(),
+        tareaVinculada: this.tareaVinculada(), // Y15.8
+        completarTarea: this.completarTarea(), // Y15.8
         step: this.step(),
       };
       if (!this.hydrated || this.done()) return;
@@ -322,6 +335,8 @@ export class PartePage implements OnDestroy {
       this.hayDanados.set(draft.hayDanados ?? false);
       this.equiposAlquilados.set(draft.equiposAlquilados ?? []);
       this.comentarios.set(draft.comentarios ?? '');
+      this.tareaVinculada.set(draft.tareaVinculada ?? null); // Y15.8
+      this.completarTarea.set(draft.completarTarea ?? false); // Y15.8
       this.step.set(draft.step ?? 1);
       this.toast.show('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
     } else {
@@ -333,11 +348,27 @@ export class PartePage implements OnDestroy {
       void this.loadPartidas(this.proyectoId());
       void this.loadCatalogo(this.proyectoId());
       void this.loadEquiposObra(this.proyectoId());
+      void this.loadTareasCronograma(this.proyectoId());
     }
     this.hydrated = true;
   }
 
   /** T19 — sugerencias de equipos de ESTA obra (fallback al listado global). */
+  /** Y15.8 — tareas del cronograma de la obra (no completadas) para el vínculo. */
+  private async loadTareasCronograma(proyectoId: string): Promise<void> {
+    try {
+      const d = await this.cronograma.listar(proyectoId);
+      this.tareasCronograma.set(d.tareas.filter((t) => t.estado !== 'completada'));
+    } catch {
+      this.tareasCronograma.set([]); // sin acceso al cronograma → sin selector
+    }
+    // Si la tarea elegida ya no está, limpiar el vínculo.
+    if (this.tareaVinculada() && !this.tareasCronograma().some((t) => t.id === this.tareaVinculada())) {
+      this.tareaVinculada.set(null);
+      this.completarTarea.set(false);
+    }
+  }
+
   private async loadEquiposObra(proyectoId: string): Promise<void> {
     const deObra = await this.bitacora.getEquiposDeObra(proyectoId);
     if (deObra.length) this.equiposSugeridos.set(deObra);
@@ -665,6 +696,7 @@ export class PartePage implements OnDestroy {
         void this.loadCatalogo(this.proyectoId());
         void this.loadEquiposObra(this.proyectoId());
       }
+      void this.loadTareasCronograma(this.proyectoId()); // Y15.8 (aplica también a "no se trabajó")
     }
     // Z4 — flujo corto "no se trabajó": obra → motivo → resumen.
     if (this.sinActividad()) {
@@ -829,7 +861,7 @@ export class PartePage implements OnDestroy {
       const obreros =
         nObreros > 0 ? Array.from({ length: nObreros }, (_, i) => `Obrero ${i + 1}`) : null;
       const sinAct = this.sinActividad();
-      await this.bitacora.enqueueParteDiario({
+      const bitacoraId = await this.bitacora.enqueueParteDiario({
         proyectoId: this.proyectoId(),
         personalCarpinteria: sinAct ? 0 : this.carpinteria(),
         personalAcero: sinAct ? 0 : this.acero(),
@@ -870,6 +902,23 @@ export class PartePage implements OnDestroy {
             dano_detalle: e.danado ? (e.dano_detalle ?? '').trim() || null : null,
           })),
       });
+      // Y15.8 — vincular a la tarea del cronograma (op aparte, espera a que la
+      // bitácora se sincronice). Best-effort: nunca bloquea el guardado del parte.
+      const tareaId = this.tareaVinculada();
+      if (tareaId) {
+        const completar = this.completarTarea() && this.fotos().length > 0;
+        try {
+          await this.cronograma.enqueueEnlazar({
+            tareaId,
+            bitacoraId,
+            proyectoId: this.proyectoId(),
+            completar,
+            fotoEvidencia: completar ? this.fotos()[0].blob : null,
+          });
+        } catch {
+          /* el vínculo no debe tumbar el parte ya encolado */
+        }
+      }
       this.hydrated = false; // stop autosave; discard the draft
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
@@ -923,5 +972,7 @@ interface ParteDraft {
   hayDanados?: boolean;
   equiposAlquilados?: EquipoRow[];
   comentarios: string;
+  tareaVinculada?: string | null; // Y15.8
+  completarTarea?: boolean; // Y15.8
   step: number;
 }

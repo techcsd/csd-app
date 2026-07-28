@@ -384,6 +384,28 @@
         <label class="field-label">Comentario (opcional)</label>
         <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
 
+        <!-- Y15.8 — vincular a una tarea del cronograma (si la obra tiene) -->
+        @if (tareasCronograma().length) {
+          <label class="field-label">Tarea del cronograma (opcional)</label>
+          <select class="field" [ngModel]="tareaVinculada()" (ngModelChange)="tareaVinculada.set($event || null)">
+            <option [ngValue]="null">— Ninguna —</option>
+            @for (t of tareasCronograma(); track t.id) {
+              <option [ngValue]="t.id">{{ t.orden }}. {{ t.nombre }}</option>
+            }
+          </select>
+          @if (tareaVinculada()) {
+            <label class="field-check">
+              <input
+                type="checkbox"
+                [checked]="completarTarea()"
+                [disabled]="!puedeCompletarTarea()"
+                (change)="completarTarea.set($any($event.target).checked)"
+              />
+              <span>Marcar la tarea como completada @if (!puedeCompletarTarea()) { <small>(necesita al menos 1 foto)</small> }</span>
+            </label>
+          }
+        }
+
         <!-- Z23 — notas de voz (múltiples) -->
         <app-voice-notes [(notes)]="voces" [max]="5" />
       }

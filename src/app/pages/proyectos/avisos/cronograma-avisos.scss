@@ -1,0 +1,58 @@
+.cav {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  &__back {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  &__icon { font-size: 1.3rem; }
+  &__title { font-size: 1.2rem; margin: 0; }
+
+  &__card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #161616;
+    border: 1px solid #2d2d2d;
+    border-left: 4px solid #2d2d2d;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    color: #fff;
+    cursor: pointer;
+
+    &--cronograma_atrasada { border-left-color: #dc2626; }
+    &--cronograma_por_vencer { border-left-color: #d97706; }
+    &--cronograma_por_iniciar { border-left-color: #2563eb; }
+    &:active { border-color: var(--Hub); }
+  }
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  &__tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    background: #212121;
+    color: var(--main-ultra-light);
+
+    &--cronograma_atrasada { background: rgba(220, 38, 38, 0.18); color: #f87171; }
+    &--cronograma_por_vencer { background: rgba(217, 119, 6, 0.18); color: #fbbf24; }
+    &--cronograma_por_iniciar { background: rgba(37, 99, 235, 0.18); color: #60a5fa; }
+  }
+  &__proy { font-weight: 700; font-size: 0.95rem; }
+  &__msg { margin: 6px 0 0; font-size: 0.9rem; color: #e5e5e5; }
+  &__fecha { margin: 4px 0 0; font-size: 0.8rem; color: var(--main-ultra-light); }
+}
