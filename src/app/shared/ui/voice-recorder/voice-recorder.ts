@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, output
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
+import { ErrorReportService } from '../../../core/services/error-report.service';
 
 /**
  * Voice-note recorder — alternative to typing (UI/UX principle #3, incidente
@@ -19,6 +20,7 @@ export class VoiceRecorder implements OnDestroy {
   private toast = inject(ToastService);
   private permissions = inject(PermissionsService);
   private gate = inject(PermisoGateService);
+  private errors = inject(ErrorReportService);
 
   /** Y11 — número de barras del medidor de nivel (tipo WhatsApp). */
   readonly bars = Array.from({ length: 16 }, (_, i) => i);
@@ -154,6 +156,12 @@ export class VoiceRecorder implements OnDestroy {
   /** P1 — mensaje claro según la causa; ofrecer ajustes si quedó bloqueado. */
   private onMicError(e: unknown): void {
     const name = (e as DOMException)?.name ?? '';
+    // Y6 — telemetría explícita del fallo de grabación de voz (mismo pipeline
+    // outbox/sanitizado/anti-loop). `name` clasifica la causa (permiso/mic ausente).
+    void this.errors.report('voice', e instanceof Error ? e.message : String(e), {
+      name,
+      native: this.permissions.isNative,
+    });
     if (name === 'NotFoundError') {
       this.toast.error('No hay micrófono disponible en el dispositivo. Puedes escribir la nota.');
       return;

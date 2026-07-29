@@ -1,8 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { Geolocation, type Position } from '@capacitor/geolocation';
 import { Camera } from '@capacitor/camera';
 import { LocalStore } from './local-store.service';
+import { ErrorReportService } from './error-report.service';
 
 /** Native bridge to AppSettingsPlugin (android/.../AppSettingsPlugin.java). */
 interface AppSettingsPlugin {
@@ -37,6 +38,8 @@ export class PermissionsService {
   // Recordamos localmente que ya se concedió una vez (best-effort) para no repetir.
   private readonly CAM_OK_KEY = 'csd_perm_camera_granted';
   private readonly MIC_OK_KEY = 'csd_perm_mic_granted';
+
+  private errors = inject(ErrorReportService);
 
   constructor(private store: LocalStore) {}
 
@@ -147,7 +150,17 @@ export class PermissionsService {
       const pos = await this.acquireFirstFix({ enableHighAccuracy, timeout, maximumAge });
       return { ok: true, lat: pos.coords.latitude, lng: pos.coords.longitude };
     } catch (e) {
-      return { ok: false, reason: this.classifyPosError(e) };
+      const reason = this.classifyPosError(e);
+      // Y6 — telemetría explícita del fallo de adquisición GPS (mismo pipeline
+      // outbox/sanitizado/anti-loop). No reporta 'denied' (sale antes) sino los
+      // fallos reales de fix: timeout, gps-off, unavailable.
+      void this.errors.report('gps', e instanceof Error ? e.message : String(e), {
+        reason,
+        native: this.native,
+        high_accuracy: enableHighAccuracy,
+        timeout,
+      });
+      return { ok: false, reason };
     }
   }
 

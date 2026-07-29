@@ -90,6 +90,8 @@ export interface EquipoAlquilado {
   danado?: boolean;
   /** S7 — qué le pasó al equipo dañado. */
   dano_detalle?: string | null;
+  /** Z22 — foto opcional del daño (storage path en el bucket sgc-bitacora). */
+  foto_path?: string | null;
 }
 
 /** S2 — un valor de catálogo ya ordenado por catalogo_ordenado (destacado = de

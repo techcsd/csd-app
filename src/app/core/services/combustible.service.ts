@@ -115,13 +115,18 @@ export class CombustibleService {
         slot: 'recibo',
         blob: input.fotoRecibo,
       },
-      {
-        id: crypto.randomUUID(),
-        bucket: 'vehiculos',
-        path: `combustible/${id}/tablero.jpg`,
-        slot: 'tablero',
-        blob: input.fotoTablero,
-      },
+      // Z23-app — sin foto de tablero en una echada de persona (no hay odómetro).
+      ...(input.fotoTablero
+        ? [
+            {
+              id: crypto.randomUUID(),
+              bucket: 'vehiculos',
+              path: `combustible/${id}/tablero.jpg`,
+              slot: 'tablero',
+              blob: input.fotoTablero,
+            },
+          ]
+        : []),
       // Y4 — foto de la bomba/estación en 0.
       {
         id: crypto.randomUUID(),
@@ -138,15 +143,18 @@ export class CombustibleService {
       capturado_en,
       payload: {
         id,
-        vehiculo_id: input.vehiculoId,
+        vehiculo_id: input.vehiculoId, // Z23-app — null en echada de persona
         conductor_id: input.conductorId,
         fecha: input.fecha,
-        kilometraje: Math.round(input.kilometraje), // RPC param is integer
+        // Z23-app — sin odómetro en echada de persona.
+        kilometraje: input.kilometraje != null ? Math.round(input.kilometraje) : null,
         galones: input.galones,
         monto: input.monto,
         estacion: input.estacion,
         producto: input.producto, // Z23-app
         tarjeta: input.tarjeta, // Z23-app
+        titular: input.titular, // Z23-app
+        titular_es_persona: input.titularEsPersona, // Z23-app
       },
       fotos,
       resumen: {
@@ -158,7 +166,8 @@ export class CombustibleService {
     });
 
     // The "última echada" cache changes after a fill-up; refresh best-effort.
-    void this.getUltimaEchada(input.vehiculoId);
+    // (No aplica a una echada de persona: no está atada a un vehículo.)
+    if (input.vehiculoId) void this.getUltimaEchada(input.vehiculoId);
   }
 
   private registerHandler(): void {
@@ -178,15 +187,20 @@ export class CombustibleService {
         p_notas: null,
         p_producto: payload['producto'] ?? null, // Z23-app
         p_tarjeta: payload['tarjeta'] ?? null, // Z23-app
+        p_titular: payload['titular'] ?? null, // Z23-app
+        p_titular_es_persona: payload['titular_es_persona'] ?? false, // Z23-app
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
 
       // P7 — el RPC avanza vehiculos.kilometraje; invalidar caches con km.
-      const vehId = payload['vehiculo_id'] as string;
-      await this.catalog.invalidate(`veh_detalle:${vehId}`);
-      await this.catalog.invalidate('pendientes_transporte');
-      await this.catalog.invalidate('flota_vehiculos');
+      // Z23-app — una echada de persona no toca ningún vehículo: nada que invalidar.
+      const vehId = payload['vehiculo_id'] as string | null;
+      if (vehId) {
+        await this.catalog.invalidate(`veh_detalle:${vehId}`);
+        await this.catalog.invalidate('pendientes_transporte');
+        await this.catalog.invalidate('flota_vehiculos');
+      }
     });
   }
 }

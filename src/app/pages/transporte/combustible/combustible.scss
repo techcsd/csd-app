@@ -34,6 +34,16 @@
   font-weight: 800;
 }
 
+// Z23-app — separador "o" entre elegir vehículo y echada de persona.
+.comb__pick-o {
+  margin: 16px 0 8px;
+  text-align: center;
+  color: var(--muted, #929090);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
 .comb__foto {
   display: block;
   width: 100%;

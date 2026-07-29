@@ -23,18 +23,24 @@ export interface UltimaEchada {
 
 /** Input the combustible wizard hands to registrar(). */
 export interface CombustibleCaptura {
-  vehiculoId: string;
+  // Z23-app — nulo en una echada de tarjeta-persona (sin vehículo).
+  vehiculoId: string | null;
   conductorId: string | null;
   fecha: string; // YYYY-MM-DD
-  kilometraje: number;
+  // Z23-app — nulo en una echada de persona (no hay odómetro).
+  kilometraje: number | null;
   galones: number;
   monto: number;
   estacion: string | null;
   // Z23-app — campos de conciliación con el reporte del proveedor.
   producto: string | null; // 'diesel' | 'gasolina'
   tarjeta: string | null; // tarjeta usada (opcional)
+  // Z23-app — titular de la tarjeta cuando es de una persona (no de un vehículo).
+  titular: string | null;
+  titularEsPersona: boolean;
   fotoRecibo: Blob;
-  fotoTablero: Blob;
+  // Z23-app — sin foto de tablero en una echada de persona (no hay odómetro).
+  fotoTablero: Blob | null;
   fotoBomba: Blob; // Y4 — bomba/estación en 0
   placa: string;
 }

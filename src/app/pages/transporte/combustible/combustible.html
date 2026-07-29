@@ -12,6 +12,13 @@
         subtitulo="Selecciona el vehículo para registrar el combustible."
         (elegido)="onVehiculoElegido($event)"
       />
+      <!-- Z23-app — tarjeta asignada a una persona (sin vehículo) -->
+      <p class="comb__pick-o">o</p>
+      <app-option-button
+        icon="👤"
+        label="Echada de persona (sin vehículo)"
+        (pressed)="elegirPersona()"
+      />
     </div>
   </div>
 } @else if (done()) {
@@ -22,16 +29,23 @@
         <span class="comb__ok-check">✓</span>
         <h1 class="comb__ok-title">Combustible registrado</h1>
         <div class="comb__veh">
-          <span class="comb__placa">{{ placa() }}</span>
-          <span class="comb__modelo">{{ modelo() }}</span>
+          @if (modoPersona()) {
+            <span class="comb__placa">👤 {{ titular() || 'Tarjeta de persona' }}</span>
+            <span class="comb__modelo">Echada sin vehículo</span>
+          } @else {
+            <span class="comb__placa">{{ placa() }}</span>
+            <span class="comb__modelo">{{ modelo() }}</span>
+          }
         </div>
       </div>
 
       <div class="comb__cards">
-        <div class="comb__card">
-          <span class="comb__card-label">Kilometraje</span>
-          <span class="comb__card-value">{{ km() | number: '1.0-0' }} km</span>
-        </div>
+        @if (!modoPersona()) {
+          <div class="comb__card">
+            <span class="comb__card-label">Kilometraje</span>
+            <span class="comb__card-value">{{ km() | number: '1.0-0' }} km</span>
+          </div>
+        }
         <div class="comb__card">
           <span class="comb__card-label">Echados</span>
           <span class="comb__card-value">{{ galones() | number: '1.0-2' }} gal</span>
@@ -41,37 +55,42 @@
           <span class="comb__card-label">Precio por galón</span>
           <span class="comb__card-value">RD$ {{ resultado()?.precioPorGalon | number: '1.2-2' }}</span>
         </div>
-        <div class="comb__card">
-          <span class="comb__card-label">Rendimiento</span>
-          @if (resultado()?.rendimiento != null) {
-            <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} km/gal</span>
-            @if (ultima().promedio_rendimiento != null) {
-              <span class="comb__card-sub">Promedio: {{ ultima().promedio_rendimiento | number: '1.2-2' }} km/gal</span>
+        <!-- Z23-app — rendimiento/recorrido/costo solo aplican a un vehículo -->
+        @if (!modoPersona()) {
+          <div class="comb__card">
+            <span class="comb__card-label">Rendimiento</span>
+            @if (resultado()?.rendimiento != null) {
+              <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} km/gal</span>
+              @if (ultima().promedio_rendimiento != null) {
+                <span class="comb__card-sub">Promedio: {{ ultima().promedio_rendimiento | number: '1.2-2' }} km/gal</span>
+              }
+            } @else {
+              <span class="comb__card-value comb__card-value--muted">Primera echada</span>
             }
-          } @else {
-            <span class="comb__card-value comb__card-value--muted">Primera echada</span>
-          }
-        </div>
-        <div class="comb__card">
-          <span class="comb__card-label">Recorrido</span>
-          @if (resultado()?.kmRecorridos != null) {
-            <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} km</span>
-          } @else {
-            <span class="comb__card-value comb__card-value--muted">—</span>
-          }
-        </div>
-        <div class="comb__card">
-          <span class="comb__card-label">Costo por km</span>
-          @if (resultado()?.costoPorKm != null) {
-            <span class="comb__card-value">RD$ {{ resultado()?.costoPorKm | number: '1.2-2' }}</span>
-          } @else {
-            <span class="comb__card-value comb__card-value--muted">—</span>
-          }
-        </div>
+          </div>
+          <div class="comb__card">
+            <span class="comb__card-label">Recorrido</span>
+            @if (resultado()?.kmRecorridos != null) {
+              <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} km</span>
+            } @else {
+              <span class="comb__card-value comb__card-value--muted">—</span>
+            }
+          </div>
+          <div class="comb__card">
+            <span class="comb__card-label">Costo por km</span>
+            @if (resultado()?.costoPorKm != null) {
+              <span class="comb__card-value">RD$ {{ resultado()?.costoPorKm | number: '1.2-2' }}</span>
+            } @else {
+              <span class="comb__card-value comb__card-value--muted">—</span>
+            }
+          </div>
+        }
       </div>
 
       <!-- Consumption band -->
-      @if (resultado()?.rendimiento == null) {
+      @if (modoPersona()) {
+        <div class="comb__band comb__band--ok">✓ Echada de persona registrada.</div>
+      } @else if (resultado()?.rendimiento == null) {
         <div class="comb__band comb__band--info">
           Primera echada del vehículo. El rendimiento se calculará desde la próxima.
         </div>
@@ -100,6 +119,12 @@
     <div class="screen__body">
       @if (loading()) {
         <app-skeleton [rows]="2" />
+      } @else if (modoPersona()) {
+        <!-- Z23-app — echada de tarjeta-persona (sin vehículo) -->
+        <div class="comb__veh">
+          <span class="comb__placa">👤 Tarjeta de persona</span>
+          <span class="comb__modelo">Echada sin vehículo</span>
+        </div>
       } @else {
         <div class="comb__veh">
           @if (fotoUrl()) {
@@ -115,18 +140,21 @@
 
       <!-- V6 · Paso 1: km + galones + monto (todo lo que se digita, una hoja) -->
       @if (step() === 1) {
-        <h1 class="screen__title">Kilometraje y monto</h1>
-        <app-km-input
-          label="Kilometraje actual"
-          [(value)]="km"
-          [ultimo]="odometro()"
-          [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
-          [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
-        />
-        @if (!kmMenorOdometro() && kmInvalido()) {
-          <p class="comb__warn">Debe ser mayor a la última echada ({{ ultima().km | number: '1.0-0' }} km).</p>
-        } @else if (ultima().km != null) {
-          <p class="comb__hint">Última echada: {{ ultima().km | number: '1.0-0' }} km</p>
+        <h1 class="screen__title">{{ modoPersona() ? 'Galones y monto' : 'Kilometraje y monto' }}</h1>
+        <!-- Z23-app — la echada de persona no lleva odómetro -->
+        @if (!modoPersona()) {
+          <app-km-input
+            label="Kilometraje actual"
+            [(value)]="km"
+            [ultimo]="odometro()"
+            [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
+            [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
+          />
+          @if (!kmMenorOdometro() && kmInvalido()) {
+            <p class="comb__warn">Debe ser mayor a la última echada ({{ ultima().km | number: '1.0-0' }} km).</p>
+          } @else if (ultima().km != null) {
+            <p class="comb__hint">Última echada: {{ ultima().km | number: '1.0-0' }} km</p>
+          }
         }
 
         <label class="field-label" for="gal">Galones echados</label>
@@ -174,6 +202,19 @@
           />
         }
 
+        <!-- Z23-app — titular de la tarjeta (obligatorio en echada de persona) -->
+        @if (modoPersona()) {
+          <label class="field-label comb__mt" for="titular">Titular de la tarjeta</label>
+          <input
+            id="titular"
+            class="field"
+            type="text"
+            [ngModel]="titular()"
+            (ngModelChange)="titular.set($event)"
+            placeholder="Nombre de la persona"
+          />
+        }
+
         <!-- Z23-app — tarjeta usada (opcional, para conciliar por tarjeta) -->
         <label class="field-label comb__mt" for="tarjeta">Tarjeta (opcional)</label>
         <input
@@ -193,24 +234,27 @@
             <span>Precio por galón</span>
             <b>@if (calc().precioPorGalon != null) { RD$ {{ calc().precioPorGalon | number: '1.2-2' }} } @else { — }</b>
           </div>
-          <div class="comb__calc-row">
-            <span>Km recorridos</span>
-            <b>
-              @if (primeraEchada()) { Primera echada }
-              @else if (calc().kmRecorridos != null) { {{ calc().kmRecorridos | number: '1.0-0' }} km }
-              @else { — }
-            </b>
-          </div>
-          <div class="comb__calc-row">
-            <span>Rendimiento</span>
-            <b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { — }</b>
-          </div>
-          <div class="comb__calc-row">
-            <span>Costo por km</span>
-            <b>@if (calc().costoPorKm != null) { RD$ {{ calc().costoPorKm | number: '1.2-2' }} } @else { — }</b>
-          </div>
-          @if (calc().alertaConsumo) {
-            <div class="comb__calc-alert">⚠ Rendimiento bajo el promedio del vehículo.</div>
+          <!-- Z23-app — km/rendimiento/costo solo aplican a un vehículo -->
+          @if (!modoPersona()) {
+            <div class="comb__calc-row">
+              <span>Km recorridos</span>
+              <b>
+                @if (primeraEchada()) { Primera echada }
+                @else if (calc().kmRecorridos != null) { {{ calc().kmRecorridos | number: '1.0-0' }} km }
+                @else { — }
+              </b>
+            </div>
+            <div class="comb__calc-row">
+              <span>Rendimiento</span>
+              <b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { — }</b>
+            </div>
+            <div class="comb__calc-row">
+              <span>Costo por km</span>
+              <b>@if (calc().costoPorKm != null) { RD$ {{ calc().costoPorKm | number: '1.2-2' }} } @else { — }</b>
+            </div>
+            @if (calc().alertaConsumo) {
+              <div class="comb__calc-alert">⚠ Rendimiento bajo el promedio del vehículo.</div>
+            }
           }
         </div>
       }
@@ -219,8 +263,12 @@
       @if (step() === 3) {
         <h1 class="screen__title">Fotos obligatorias</h1>
         <p class="screen__subtitle">
-          El tablero respalda el kilometraje; el recibo respalda el monto; la bomba en 0
-          respalda los galones echados.
+          @if (modoPersona()) {
+            El recibo respalda el monto; la bomba en 0 respalda los galones echados.
+          } @else {
+            El tablero respalda el kilometraje; el recibo respalda el monto; la bomba en 0
+            respalda los galones echados.
+          }
         </p>
         <div class="comb__fotos">
           <app-photo-slot
@@ -230,13 +278,16 @@
             (captured)="onFotoRecibo($event)"
             (cleared)="onFotoReciboCleared()"
           />
-          <app-photo-slot
-            label="Tablero (km)"
-            hint="🎛️"
-            [foto]="fotoTablero()"
-            (captured)="onFotoTablero($event)"
-            (cleared)="onFotoTableroCleared()"
-          />
+          <!-- Z23-app — sin tablero en una echada de persona (no hay odómetro) -->
+          @if (!modoPersona()) {
+            <app-photo-slot
+              label="Tablero (km)"
+              hint="🎛️"
+              [foto]="fotoTablero()"
+              (captured)="onFotoTablero($event)"
+              (cleared)="onFotoTableroCleared()"
+            />
+          }
           <app-photo-slot
             label="Bomba en 0"
             hint="⛽"
@@ -251,14 +302,20 @@
       @if (step() === 4) {
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
-          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          @if (modoPersona()) {
+            <li><span>Titular</span><b>{{ titular() || '—' }}</b></li>
+          } @else {
+            <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          }
           <li><span>Galones</span><b>{{ galones() | number: '1.0-2' }} gal</b></li>
           <li><span>Monto</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
           <li><span>Combustible</span><b>{{ producto() === 'gasolina' ? 'Gasolina' : 'Diésel' }}</b></li>
           <li><span>Estación</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
           @if (tarjeta().trim()) { <li><span>Tarjeta</span><b>{{ tarjeta() }}</b></li> }
-          <li><span>Fotos</span><b>{{ fotosCompletas() ? '3 ✓' : 'Faltan' }}</b></li>
-          <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
+          <li><span>Fotos</span><b>{{ fotosCompletas() ? (modoPersona() ? '2 ✓' : '3 ✓') : 'Faltan' }}</b></li>
+          @if (!modoPersona()) {
+            <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
+          }
         </ul>
       }
     </div>

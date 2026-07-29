@@ -43,7 +43,9 @@ export interface ParteDiarioCaptura {
   migracionObreros: string[] | null;
   // W2 — equipos alquilados en uso hoy.
   huboEquipos: boolean | null;
-  equiposAlquilados: EquipoAlquilado[];
+  // Z22 — cada equipo puede llevar una foto opcional (solo los dañados), que va
+  // a bitacora_equipos_alquilados.foto_path (como la foto de restricción, Z21).
+  equiposAlquilados: (EquipoAlquilado & { foto?: Blob | null })[];
   // Z4 — "No se trabajó en obra": vuela el resto del parte, solo pide el motivo.
   sinActividad: boolean;
   motivoSinActividad: string | null;
@@ -229,19 +231,23 @@ export class BitacoraService {
         motivo_sin_actividad_detalle: input.motivoSinActividadDetalle,
         // S7 — hay equipos si hay alguno en uso, para retirar o dañado.
         hubo_equipos: input.huboEquipos || input.equiposAlquilados.length > 0,
-        equipos_alquilados: input.equiposAlquilados.map((e) => ({
+        equipos_alquilados: input.equiposAlquilados.map((e, i) => ({
           equipo: e.equipo,
           uso: e.uso,
           proveedor: e.proveedor,
           para_retirar: !!e.para_retirar, // S7
           danado: !!e.danado, // S7
           dano_detalle: e.dano_detalle ?? null, // S7
+          // Z22 — slot de la foto opcional del equipo dañado; el handler lo
+          // resuelve a foto_path (mismo índice que buildEquipoDanoFotos).
+          foto_slot: e.foto instanceof Blob ? `dano_${i}` : null,
         })),
         capturado_en,
       },
       fotos: [
         ...this.buildFotos(id, input.fotos),
         ...this.buildRestriccionFotos(id, input.restricciones),
+        ...this.buildEquipoDanoFotos(id, input.equiposAlquilados),
         ...this.buildVoces(id, input.voces),
       ],
       resumen: { tipo: 'parte_diario', proyecto_id: input.proyectoId, capturado_en },
@@ -320,7 +326,7 @@ export class BitacoraService {
       const { data, error } = await this.supabase.client
         .from('bitacoras')
         .select(
-          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, horas_lluvia, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, sin_actividad, motivo_sin_actividad, motivo_sin_actividad_detalle, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle), archivos:bitacora_archivos(nombre, url, tipo_mime)',
+          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, horas_lluvia, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, sin_actividad, motivo_sin_actividad, motivo_sin_actividad_detalle, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle, foto_path), archivos:bitacora_archivos(nombre, url, tipo_mime)',
         )
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })
@@ -432,6 +438,22 @@ export class BitacoraService {
       }));
   }
 
+  /** Z22 — foto opcional por equipo dañado (slot dano_<i>). El handler la enruta a
+   *  bitacora_equipos_alquilados.foto_path (NO al montón general de fotos). El
+   *  índice coincide con el de equipos_alquilados en el payload. */
+  private buildEquipoDanoFotos(id: string, equipos: { foto?: Blob | null }[]) {
+    return equipos
+      .map((e, i) => ({ e, i }))
+      .filter((x) => x.e.foto instanceof Blob)
+      .map((x) => ({
+        id: crypto.randomUUID(),
+        bucket: BUCKET,
+        path: `${id}/dano_${x.i}.jpg`,
+        slot: `dano_${x.i}`,
+        blob: x.e.foto as Blob,
+      }));
+  }
+
   /** Z23 — N notas de voz como adjuntos de audio (bitacora_archivos). El handler
    *  las reconoce por la extensión .webm y las marca tipo_mime audio/webm. */
   private buildVoces(id: string, blobs: Blob[]) {
@@ -446,10 +468,10 @@ export class BitacoraService {
 
   private registerHandler(): void {
     this.sync.register('bitacora', async (payload, photoPaths) => {
-      // Z21 — las fotos de restricción (restr_*) NO van al montón general: se
-      // enrutan a bitacora_restricciones.foto_path más abajo.
+      // Z21/Z22 — las fotos de restricción (restr_*) y de equipo dañado (dano_*)
+      // NO van al montón general: se enrutan a su foto_path más abajo.
       const fotos = Object.keys(photoPaths)
-        .filter((slot) => !slot.startsWith('restr_'))
+        .filter((slot) => !slot.startsWith('restr_') && !slot.startsWith('dano_'))
         .map((slot) => {
           const path = photoPaths[slot];
           const isAudio = path.endsWith('.webm');
@@ -466,6 +488,26 @@ export class BitacoraService {
         tipo_restriccion: r.tipo_restriccion,
         descripcion_otro: r.descripcion_otro,
         foto_path: r.foto_slot ? (photoPaths[r.foto_slot] ?? null) : null,
+      }));
+      // Z22 — resolver el slot de la foto de cada equipo dañado a su foto_path.
+      const equipos = ((payload['equipos_alquilados'] as
+        | {
+            equipo: string;
+            uso: string | null;
+            proveedor: string | null;
+            para_retirar: boolean;
+            danado: boolean;
+            dano_detalle: string | null;
+            foto_slot?: string | null;
+          }[]
+        | undefined) ?? []).map((e) => ({
+        equipo: e.equipo,
+        uso: e.uso,
+        proveedor: e.proveedor,
+        para_retirar: e.para_retirar,
+        danado: e.danado,
+        dano_detalle: e.dano_detalle,
+        foto_path: e.foto_slot ? (photoPaths[e.foto_slot] ?? null) : null,
       }));
       const { error } = await this.supabase.client.rpc('crear_bitacora_app', {
         p_id: payload['id'],
@@ -502,7 +544,7 @@ export class BitacoraService {
         p_motivo_sin_actividad: payload['motivo_sin_actividad'] ?? null,
         p_motivo_sin_actividad_detalle: payload['motivo_sin_actividad_detalle'] ?? null,
         p_hubo_equipos: payload['hubo_equipos'] ?? null,
-        p_equipos_alquilados: payload['equipos_alquilados'] ?? [],
+        p_equipos_alquilados: equipos, // Z22 — con foto_path resuelto
         // W3 — paridad con la web
         p_bloque_entrepiso: payload['bloque_entrepiso'] ?? null,
         p_ingeniero_responsable: payload['ingeniero_responsable'] ?? null,

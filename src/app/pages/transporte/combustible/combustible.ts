@@ -64,6 +64,9 @@ export class CombustiblePage extends GuardedWizard {
 
   vehiculoId = '';
   necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
+  // Z23-app — echada de tarjeta asignada a una PERSONA (sin vehículo ni odómetro).
+  modoPersona = signal(false);
+  titular = signal('');
   placa = signal('');
   modelo = signal('');
   fotoUrl = signal<string | null>(null); // U6
@@ -122,7 +125,12 @@ export class CombustiblePage extends GuardedWizard {
   primeraEchada = computed(() => this.ultima().km == null);
 
   // Y4 — las 3 fotos son obligatorias (recibo + tablero + bomba en 0).
-  fotosCompletas = computed(() => !!this.fotoRecibo() && !!this.fotoTablero() && !!this.fotoBomba());
+  // Z23-app — en una echada de persona no hay tablero (odómetro): recibo + bomba.
+  fotosCompletas = computed(() =>
+    this.modoPersona()
+      ? !!this.fotoRecibo() && !!this.fotoBomba()
+      : !!this.fotoRecibo() && !!this.fotoTablero() && !!this.fotoBomba(),
+  );
   loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
 
   constructor() {
@@ -146,6 +154,19 @@ export class CombustiblePage extends GuardedWizard {
     this.necesitaVehiculo.set(false);
     this.loading.set(true);
     this.cargarVehiculo();
+  }
+
+  /**
+   * Z23-app — echada de tarjeta-persona (sin vehículo): salta el selector y el
+   * odómetro. Solo se piden monto/galones, producto, tarjeta, titular y fotos
+   * (recibo + bomba; no hay tablero). Igual queda atribuida al conductor logueado.
+   */
+  elegirPersona(): void {
+    this.modoPersona.set(true);
+    this.vehiculoId = '';
+    this.necesitaVehiculo.set(false);
+    this.loading.set(false);
+    void this.loadConductor();
   }
 
   private cargarVehiculo(): void {
@@ -179,6 +200,7 @@ export class CombustiblePage extends GuardedWizard {
         this.monto() != null ||
         !!this.estacionOtroTexto().trim() ||
         !!this.tarjeta().trim() ||
+        !!this.titular().trim() || // Z23-app
         !!this.fotoRecibo() ||
         !!this.fotoTablero() ||
         !!this.fotoBomba())
@@ -249,18 +271,21 @@ export class CombustiblePage extends GuardedWizard {
     const s = this.step();
     // V6 — paso 1: km + galones + monto juntos (tipo hoja, sin scroll largo).
     if (s === 1) {
-      const km = this.km();
-      if (km == null || km <= 0) {
-        this.toast.error('Escribe el kilometraje actual.');
-        return false;
-      }
-      if (this.kmMenorOdometro()) {
-        this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
-        return false;
-      }
-      if (this.kmInvalido()) {
-        this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
-        return false;
+      // Z23-app — la echada de persona no tiene odómetro: se salta el km.
+      if (!this.modoPersona()) {
+        const km = this.km();
+        if (km == null || km <= 0) {
+          this.toast.error('Escribe el kilometraje actual.');
+          return false;
+        }
+        if (this.kmMenorOdometro()) {
+          this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
+          return false;
+        }
+        if (this.kmInvalido()) {
+          this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
+          return false;
+        }
       }
       if (!this.galones() || this.galones()! <= 0) {
         this.toast.error('Escribe los galones echados.');
@@ -275,6 +300,11 @@ export class CombustiblePage extends GuardedWizard {
     if (s === 2) {
       if (this.estacionOtro() && !this.estacionOtroTexto().trim()) {
         this.toast.error('Escribe el nombre de la estación.');
+        return false;
+      }
+      // Z23-app — el titular es obligatorio en una echada de persona.
+      if (this.modoPersona() && !this.titular().trim()) {
+        this.toast.error('Escribe el titular de la tarjeta.');
         return false;
       }
     }
@@ -295,20 +325,24 @@ export class CombustiblePage extends GuardedWizard {
     this.submitting.set(true);
     try {
       const estacion = this.estacionFinal();
+      const persona = this.modoPersona();
       await this.combustible.registrar({
-        vehiculoId: this.vehiculoId,
+        // Z23-app — echada de persona: sin vehículo ni odómetro ni foto de tablero.
+        vehiculoId: persona ? null : this.vehiculoId,
         conductorId: this.conductorId,
         fecha: new Date().toISOString().slice(0, 10),
-        kilometraje: this.km()!,
+        kilometraje: persona ? null : this.km()!,
         galones: this.galones()!,
         monto: this.monto()!,
         estacion: estacion ? estacion : null,
         producto: this.producto(), // Z23-app
         tarjeta: this.tarjeta().trim() || null, // Z23-app
+        titular: persona ? this.titular().trim() || null : null, // Z23-app
+        titularEsPersona: persona, // Z23-app
         fotoRecibo: this.fotoRecibo()!.blob,
-        fotoTablero: this.fotoTablero()!.blob,
+        fotoTablero: persona ? null : this.fotoTablero()!.blob,
         fotoBomba: this.fotoBomba()!.blob,
-        placa: this.placa(),
+        placa: persona ? '' : this.placa(),
       });
       this.resultado.set(this.calc());
       this.done.set(true);

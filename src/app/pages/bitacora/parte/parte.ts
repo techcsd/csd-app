@@ -133,6 +133,9 @@ export class PartePage implements OnDestroy {
   equiposSugeridos = signal<string[]>([]);
   retiroNombre = signal('');
   danoNombre = signal('');
+  // Z22 — foto opcional por equipo dañado (nombre → foto). No se persiste en el
+  // borrador (como las demás fotos, se retoma tomándola de nuevo).
+  equipoDanoFotos = signal<Record<string, CapturedPhoto>>({});
 
   comentarios = signal('');
 
@@ -550,6 +553,24 @@ export class PartePage implements OnDestroy {
     });
   }
 
+  // Z22 — foto opcional por equipo dañado (paso 8c). Se llavea por nombre de
+  // equipo (estable frente a la recreación del objeto fila en toggle/detalle).
+  getEquipoDanoFoto(nombre: string): CapturedPhoto | null {
+    return this.equipoDanoFotos()[nombre.trim()] ?? null;
+  }
+  onEquipoDanoFoto(nombre: string, photo: CapturedPhoto): void {
+    this.equipoDanoFotos.update((m) => ({ ...m, [nombre.trim()]: photo }));
+  }
+  onEquipoDanoFotoCleared(nombre: string): void {
+    this.equipoDanoFotos.update((m) => {
+      const next = { ...m };
+      const k = nombre.trim();
+      if (next[k]) URL.revokeObjectURL(next[k].previewUrl);
+      delete next[k];
+      return next;
+    });
+  }
+
   requiereDescripcion(r: string): boolean {
     return this.restricciones().includes(r) && r !== 'NINGUNA';
   }
@@ -645,6 +666,10 @@ export class PartePage implements OnDestroy {
   onHayDanadosChange(v: boolean): void {
     this.hayDanados.set(v);
     if (!v) {
+      // Z22 — al descartar los dañados, suelta todas sus fotos opcionales.
+      const m = this.equipoDanoFotos();
+      for (const k of Object.keys(m)) URL.revokeObjectURL(m[k].previewUrl);
+      this.equipoDanoFotos.set({});
       this.equiposAlquilados.update((l) =>
         l
           .filter((e) => !(e.soloRetiroDano && e.danado && !e.para_retirar))
@@ -654,6 +679,8 @@ export class PartePage implements OnDestroy {
   }
 
   toggleDanado(row: EquipoRow): void {
+    // Z22 — al desmarcar un equipo como dañado, suelta su foto opcional.
+    if (row.danado) this.onEquipoDanoFotoCleared(row.equipo);
     this.equiposAlquilados.update((l) =>
       l.map((e) => (e === row ? { ...e, danado: !e.danado } : e)),
     );
@@ -977,6 +1004,8 @@ export class PartePage implements OnDestroy {
             para_retirar: !!e.para_retirar,
             danado: !!e.danado,
             dano_detalle: e.danado ? (e.dano_detalle ?? '').trim() || null : null,
+            // Z22 — foto opcional (solo para equipos dañados).
+            foto: e.danado ? (this.equipoDanoFotos()[e.equipo.trim()]?.blob ?? null) : null,
           })),
       });
       // Y15.8 — vincular a la tarea del cronograma (op aparte, espera a que la

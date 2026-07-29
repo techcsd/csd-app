@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.34.0';
+const VERSION = '1.35.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,17 +62,13 @@ const MIN_VERSION = '1.34.0';
 const RELEASED_AT = '2026-07-29';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Pantallas más legibles, pre-uso en dos toques, combustible que cuadra con la estación y ayuda con buscador';
+const TITULO = 'Foto del equipo dañado, echada de persona sin vehículo y mejor reporte de fallas';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Arreglamos el texto ilegible en Tecnología, Auditoría y otras pantallas (letras oscuras sobre fondo oscuro).' },
-  { t: 'nuevo', d: 'En la bitácora, el bloque/piso/edificio se elige de la lista definida para la obra (o "Otro").' },
-  { t: 'nuevo', d: 'El equipo alquilado se elige de los equipos de la obra (o "Otro"), para no repetir nombres distintos.' },
-  { t: 'nuevo', d: 'Puedes adjuntar una foto opcional a cada problema/restricción del día en la bitácora.' },
-  { t: 'nuevo', d: 'Nuevo acceso "Hacer pre-uso" en Transporte: llegas a la inspección en dos toques.' },
-  { t: 'nuevo', d: 'Al echar combustible ahora indicas el producto (diésel/gasolina) y la tarjeta, para cuadrar con el reporte de la estación.' },
-  { t: 'nuevo', d: 'Tecnología ahora la ve todo el mundo, con una sección de "Dudas" con buscador; los reportes de errores quedan solo para el equipo de Tecnología.' },
+  { t: 'nuevo', d: 'En la bitácora, cuando marcas un equipo alquilado como dañado puedes adjuntarle una foto opcional.' },
+  { t: 'nuevo', d: 'Nueva "echada de persona": registra combustible cargado con una tarjeta asignada a alguien, sin vehículo, para que cuadre con el reporte de la estación.' },
+  { t: 'mejora', d: 'Mejor diagnóstico: la app ahora avisa al equipo de Tecnología cuando falla la ubicación (GPS) o la grabación de una nota de voz.' },
 ];
 
 const TIPO_POR_COMMIT = {
