@@ -47,6 +47,15 @@ export class UserContextService {
     this.roles().some((r) => UserContextService.FLOTA_ELEVADO.includes(r)),
   );
 
+  // Z26 — submódulos restringidos de Tecnología ("Versiones de App", "Reportes
+  // de errores"): visibles solo para estos roles (mismo criterio que
+  // sgc.es_tecnologia()). El resto de Tecnología (Historial de versiones, Guía,
+  // Dudas) lo ve TODO usuario.
+  private static readonly TECNOLOGIA = ['admin', 'tecnologia', 'gerencia', 'direccion'];
+  esTecnologia = computed(() =>
+    this.roles().some((r) => UserContextService.TECNOLOGIA.includes(r)),
+  );
+
   hasModulo(modulo: string): boolean {
     return this.modulos().includes(modulo);
   }

@@ -15,14 +15,20 @@
       }
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs — Versiones + Dudas para todos; "Reportes de errores" solo para
+         roles de Tecnología (Z26/Z30). -->
     <div class="tec__tabs">
       <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'versiones'" (click)="setTab('versiones')">
         Historial de versiones
       </button>
-      <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'errores'" (click)="setTab('errores')">
-        Reportes de errores
+      <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'dudas'" (click)="setTab('dudas')">
+        Dudas
       </button>
+      @if (esTecnologia()) {
+        <button type="button" class="tec__tab" [class.tec__tab--on]="tab() === 'errores'" (click)="setTab('errores')">
+          Reportes de errores
+        </button>
+      }
     </div>
 
     @if (loading()) {
@@ -50,6 +56,44 @@
             </li>
           }
         </ol>
+      }
+    } @else if (tab() === 'dudas') {
+      <!-- Z30 — Dudas + guías (mismo contenido que la web, desde sgc.ayuda_contenido) -->
+      <input class="field tec__search" type="search" [ngModel]="dudasQuery()" (ngModelChange)="dudasQuery.set($event)" placeholder="Buscar en Dudas…" aria-label="Buscar en Dudas" />
+      @if (!hayDudas()) {
+        <app-empty-state icon="❓" title="Sin resultados" [message]="online ? 'No hay dudas para esa búsqueda.' : 'Conéctate para ver las dudas.'" />
+      } @else {
+        @if (guiasVisibles().length) {
+          <h2 class="tec__dudas-h">Guías rápidas</h2>
+          @for (g of guiasVisibles(); track g.id) {
+            <div class="tec__guia">
+              <div class="tec__guia-top">
+                <span class="tec__guia-icon">{{ guiaIcono[g.icono] }}</span>
+                <span class="tec__guia-title">{{ g.titulo }}</span>
+              </div>
+              <ol class="tec__guia-pasos">
+                @for (p of g.pasos; track $index) { <li>{{ p }}</li> }
+              </ol>
+            </div>
+          }
+        }
+        @if (categoriasFiltradas().length) {
+          <h2 class="tec__dudas-h">Preguntas frecuentes</h2>
+          @for (c of categoriasFiltradas(); track c.id) {
+            <div class="tec__cat">
+              <span class="tec__cat-title">{{ c.titulo }}</span>
+              @for (it of c.items; track $index) {
+                <div class="tec__duda">
+                  <button type="button" class="tec__duda-q" (click)="toggleDuda(c.id + $index)">
+                    <span>{{ it.pregunta }}</span>
+                    <span class="tec__caret">{{ dudaAbierta(c.id + $index) ? '▾' : '▸' }}</span>
+                  </button>
+                  @if (dudaAbierta(c.id + $index)) { <p class="tec__duda-a">{{ it.respuesta }}</p> }
+                </div>
+              }
+            </div>
+          }
+        }
       }
     } @else {
       @if (!reportes().length) {

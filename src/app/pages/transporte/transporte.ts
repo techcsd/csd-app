@@ -26,6 +26,9 @@ interface HubTile {
 
 const TILES: HubTile[] = [
   { key: 'conduces', icon: '🧾', label: 'Conduces y rutas', tint: '#1e3a5f' },
+  // Z24 — "Hacer pre-uso" directo desde el hub: el chofer llega a la inspección
+  // en ≤2 toques (la pantalla elige el vehículo del pool si no hay contexto).
+  { key: 'preuso', icon: '📝', label: 'Hacer pre-uso', tint: '#0369a1' },
   { key: 'combustible', icon: '⛽', label: 'Registrar combustible', tint: '#dc2626' },
   { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
@@ -33,8 +36,9 @@ const TILES: HubTile[] = [
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488', elevado: true },
-  // Y7 — historial de checklists (el jefe de flota ve lo que envían los choferes).
-  { key: 'checklists', icon: '✅', label: 'Historial de checklists', tint: '#0369a1', elevado: true },
+  // Z24 — historial de checklists visible para TODO chofer (RLS chk_veh_sel: el
+  // chofer solo ve los suyos; el jefe de flota ve lo que envían todos).
+  { key: 'checklists', icon: '✅', label: 'Historial de checklists', tint: '#0369a1' },
   // Y7 — "Me pusieron una multa": visible para TODO chofer (no solo elevados).
   { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c' },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
@@ -122,6 +126,7 @@ export class TransportePage {
   openTile(t: HubTile): void {
     switch (t.key) {
       case 'conduces': return this.conduces();
+      case 'preuso': return this.preusoTop();
       case 'combustible': return this.combustibleTop();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
@@ -146,6 +151,11 @@ export class TransportePage {
   /** S26b — combustible sin vehículo en contexto (la pantalla elige del pool). */
   combustibleTop(): void {
     void this.router.navigate(['/transporte/combustible']);
+  }
+
+  /** Z24 — pre-uso sin vehículo en contexto (la pantalla elige del pool). ≤2 toques. */
+  preusoTop(): void {
+    void this.router.navigate(['/transporte/preuso']);
   }
 
   /** S16 — crear ruta (solo elevados; el wizard tipo hoja llega en FASE 3). */

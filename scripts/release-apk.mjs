@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.33.0';
+const VERSION = '1.34.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,19 +59,20 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.33.0';
-const RELEASED_AT = '2026-07-28';
+const RELEASED_AT = '2026-07-29';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Proyectos y Cronograma en la app: consulta tareas, inícialas/complétalas con foto (offline), vincula bitácoras y recibe avisos';
+const TITULO = 'Pantallas más legibles, pre-uso en dos toques, combustible que cuadra con la estación y ayuda con buscador';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Nueva sección Proyectos: consulta tus proyectos, sus fases y su avance.' },
-  { t: 'nuevo', d: 'Cronograma del proyecto en la app: lista y línea de tiempo de las tareas, con las críticas e importantes destacadas.' },
-  { t: 'nuevo', d: 'Inicia y completa tareas del cronograma desde el teléfono, con foto de evidencia; funciona sin señal y se sincroniza solo.' },
-  { t: 'nuevo', d: 'Si una tarea se completa tarde, la app pide la justificación (igual que en la web).' },
-  { t: 'nuevo', d: 'Desde el parte de bitácora puedes vincular la tarea del cronograma que avanzaste, y marcarla como completada.' },
-  { t: 'mejora', d: 'Avisos de cronograma en la app (tareas por iniciar, por vencer o atrasadas) con acceso directo a la tarea.' },
+  { t: 'arreglo', d: 'Arreglamos el texto ilegible en Tecnología, Auditoría y otras pantallas (letras oscuras sobre fondo oscuro).' },
+  { t: 'nuevo', d: 'En la bitácora, el bloque/piso/edificio se elige de la lista definida para la obra (o "Otro").' },
+  { t: 'nuevo', d: 'El equipo alquilado se elige de los equipos de la obra (o "Otro"), para no repetir nombres distintos.' },
+  { t: 'nuevo', d: 'Puedes adjuntar una foto opcional a cada problema/restricción del día en la bitácora.' },
+  { t: 'nuevo', d: 'Nuevo acceso "Hacer pre-uso" en Transporte: llegas a la inspección en dos toques.' },
+  { t: 'nuevo', d: 'Al echar combustible ahora indicas el producto (diésel/gasolina) y la tarjeta, para cuadrar con el reporte de la estación.' },
+  { t: 'nuevo', d: 'Tecnología ahora la ve todo el mundo, con una sección de "Dudas" con buscador; los reportes de errores quedan solo para el equipo de Tecnología.' },
 ];
 
 const TIPO_POR_COMMIT = {

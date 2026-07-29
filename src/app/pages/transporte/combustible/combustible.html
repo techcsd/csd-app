@@ -152,9 +152,14 @@
         />
       }
 
-      <!-- V6 · Paso 2: estación + cálculo automático debajo -->
+      <!-- V6 · Paso 2: producto + estación + tarjeta + cálculo automático debajo -->
       @if (step() === 2) {
-        <h1 class="screen__title">¿En qué estación?</h1>
+        <!-- Z23-app — producto (para conciliar con el reporte del proveedor) -->
+        <label class="field-label">¿Qué combustible?</label>
+        <app-option-button icon="🛢️" label="Diésel" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
+        <app-option-button icon="⛽" label="Gasolina" [selected]="producto() === 'gasolina'" (pressed)="producto.set('gasolina')" />
+
+        <h1 class="screen__title comb__mt">¿En qué estación?</h1>
         @for (e of estacionesVisibles(); track e) {
           <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
         }
@@ -168,6 +173,18 @@
             placeholder="Nombre de la estación"
           />
         }
+
+        <!-- Z23-app — tarjeta usada (opcional, para conciliar por tarjeta) -->
+        <label class="field-label comb__mt" for="tarjeta">Tarjeta (opcional)</label>
+        <input
+          id="tarjeta"
+          class="field"
+          type="text"
+          inputmode="numeric"
+          [ngModel]="tarjeta()"
+          (ngModelChange)="tarjeta.set($event)"
+          placeholder="N.º o nombre de la tarjeta"
+        />
 
         <!-- Cálculo automático (en vivo) -->
         <div class="comb__calc">
@@ -237,7 +254,9 @@
           <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           <li><span>Galones</span><b>{{ galones() | number: '1.0-2' }} gal</b></li>
           <li><span>Monto</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
+          <li><span>Combustible</span><b>{{ producto() === 'gasolina' ? 'Gasolina' : 'Diésel' }}</b></li>
           <li><span>Estación</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
+          @if (tarjeta().trim()) { <li><span>Tarjeta</span><b>{{ tarjeta() }}</b></li> }
           <li><span>Fotos</span><b>{{ fotosCompletas() ? '3 ✓' : 'Faltan' }}</b></li>
           <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
         </ul>

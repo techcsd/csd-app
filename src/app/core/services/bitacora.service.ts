@@ -28,7 +28,8 @@ export interface ParteDiarioCaptura {
   horaFinTrabajo: string | null;
   actividades: ActividadEntry[];
   // U12 — cada restricción lleva su descripción breve (obligatoria).
-  restricciones: { tipo_restriccion: string; descripcion_otro: string | null }[];
+  // Z21 — foto opcional por restricción (va a bitacora_restricciones.foto_path).
+  restricciones: { tipo_restriccion: string; descripcion_otro: string | null; foto?: Blob | null }[];
   comentarios: string | null;
   fotos: Blob[];
   // Z23 — notas de voz múltiples (bitacora_archivos).
@@ -211,9 +212,11 @@ export class BitacoraService {
           unidad: a.unidad ?? null, // Q6 — unidad del trabajo realizado
           bloque: a.bloque?.trim() || null, // S4 — sujeto de esta actividad
         })),
-        restricciones: input.restricciones.map((r) => ({
+        restricciones: input.restricciones.map((r, i) => ({
           tipo_restriccion: r.tipo_restriccion,
           descripcion_otro: r.descripcion_otro,
+          // Z21 — slot de la foto opcional; el handler lo resuelve a foto_path.
+          foto_slot: r.foto instanceof Blob ? `restr_${i}` : null,
         })),
         llovio: input.llovio,
         lluvia_detalle: input.lluviaDetalle,
@@ -236,7 +239,11 @@ export class BitacoraService {
         })),
         capturado_en,
       },
-      fotos: [...this.buildFotos(id, input.fotos), ...this.buildVoces(id, input.voces)],
+      fotos: [
+        ...this.buildFotos(id, input.fotos),
+        ...this.buildRestriccionFotos(id, input.restricciones),
+        ...this.buildVoces(id, input.voces),
+      ],
       resumen: { tipo: 'parte_diario', proyecto_id: input.proyectoId, capturado_en },
     });
     return id;
@@ -345,6 +352,29 @@ export class BitacoraService {
   }
 
   /**
+   * Z14/Z20 — estructuras definidas por la obra (bloques/pisos/edificios), del
+   * catálogo `proyecto_estructuras`. Alimenta el selector del paso 5 del parte
+   * (+ "Otro" texto libre). Cacheado offline por obra; si la obra no tiene
+   * estructuras definidas, devuelve [] y el paso 5 cae a texto libre (sin fricción).
+   */
+  async getEstructurasObra(proyectoId: string): Promise<string[]> {
+    if (!proyectoId) return [];
+    const data = await this.catalog.refresh<string[]>(`proyecto_estructuras_${proyectoId}`, async () => {
+      const { data, error } = await this.supabase.client
+        .from('proyecto_estructuras')
+        .select('nombre, orden')
+        .eq('proyecto_id', proyectoId)
+        .eq('activa', true)
+        .order('orden', { ascending: true });
+      if (error) throw new Error(error.message);
+      return ((data as { nombre: string }[]) ?? [])
+        .map((r) => (r.nombre ?? '').trim())
+        .filter(Boolean);
+    });
+    return data ?? [];
+  }
+
+  /**
    * W2 — nombres de equipos alquilados usados recientemente, para el <datalist>
    * de sugerencias. Best-effort online; devuelve [] si falla o sin señal.
    */
@@ -384,6 +414,24 @@ export class BitacoraService {
     }));
   }
 
+  /** Z21 — foto opcional por restricción (slot restr_<i>). El handler la enruta a
+   *  bitacora_restricciones.foto_path (NO al montón general de fotos). */
+  private buildRestriccionFotos(
+    id: string,
+    restricciones: { foto?: Blob | null }[],
+  ) {
+    return restricciones
+      .map((r, i) => ({ r, i }))
+      .filter((x) => x.r.foto instanceof Blob)
+      .map((x) => ({
+        id: crypto.randomUUID(),
+        bucket: BUCKET,
+        path: `${id}/restr_${x.i}.jpg`,
+        slot: `restr_${x.i}`,
+        blob: x.r.foto as Blob,
+      }));
+  }
+
   /** Z23 — N notas de voz como adjuntos de audio (bitacora_archivos). El handler
    *  las reconoce por la extensión .webm y las marca tipo_mime audio/webm. */
   private buildVoces(id: string, blobs: Blob[]) {
@@ -398,15 +446,27 @@ export class BitacoraService {
 
   private registerHandler(): void {
     this.sync.register('bitacora', async (payload, photoPaths) => {
-      const fotos = Object.keys(photoPaths).map((slot) => {
-        const path = photoPaths[slot];
-        const isAudio = path.endsWith('.webm');
-        return {
-          path,
-          nombre: path.split('/').pop() ?? `${slot}.jpg`,
-          tipo_mime: isAudio ? 'audio/webm' : 'image/jpeg',
-        };
-      });
+      // Z21 — las fotos de restricción (restr_*) NO van al montón general: se
+      // enrutan a bitacora_restricciones.foto_path más abajo.
+      const fotos = Object.keys(photoPaths)
+        .filter((slot) => !slot.startsWith('restr_'))
+        .map((slot) => {
+          const path = photoPaths[slot];
+          const isAudio = path.endsWith('.webm');
+          return {
+            path,
+            nombre: path.split('/').pop() ?? `${slot}.jpg`,
+            tipo_mime: isAudio ? 'audio/webm' : 'image/jpeg',
+          };
+        });
+      // Z21 — resolver el slot de cada restricción a su foto_path subido.
+      const restricciones = ((payload['restricciones'] as
+        | { tipo_restriccion: string; descripcion_otro: string | null; foto_slot?: string | null }[]
+        | undefined) ?? []).map((r) => ({
+        tipo_restriccion: r.tipo_restriccion,
+        descripcion_otro: r.descripcion_otro,
+        foto_path: r.foto_slot ? (photoPaths[r.foto_slot] ?? null) : null,
+      }));
       const { error } = await this.supabase.client.rpc('crear_bitacora_app', {
         p_id: payload['id'],
         p_proyecto_id: payload['proyecto_id'],
@@ -418,7 +478,7 @@ export class BitacoraService {
         p_trabajadores_casa: payload['trabajadores_casa'] ?? 0,
         p_otro_personal: payload['otro_personal'] ?? null,
         p_actividades: payload['actividades'] ?? [],
-        p_restricciones: payload['restricciones'] ?? [],
+        p_restricciones: restricciones, // Z21 — con foto_path resuelto
         p_incidente_tipo: payload['incidente_tipo'] ?? null,
         p_incidente_gravedad: payload['incidente_gravedad'] ?? null,
         p_incidente_lesionados: payload['incidente_lesionados'] ?? 0,

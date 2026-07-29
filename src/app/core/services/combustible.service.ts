@@ -145,6 +145,8 @@ export class CombustibleService {
         galones: input.galones,
         monto: input.monto,
         estacion: input.estacion,
+        producto: input.producto, // Z23-app
+        tarjeta: input.tarjeta, // Z23-app
       },
       fotos,
       resumen: {
@@ -174,6 +176,8 @@ export class CombustibleService {
         p_foto_tablero_path: photoPaths['tablero'] ?? null,
         p_foto_bomba_path: photoPaths['bomba'] ?? null, // Y4
         p_notas: null,
+        p_producto: payload['producto'] ?? null, // Z23-app
+        p_tarjeta: payload['tarjeta'] ?? null, // Z23-app
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);

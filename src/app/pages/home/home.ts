@@ -53,13 +53,19 @@ export class HomePage {
   badgeCounts = this.badges.counts; // Q2 — pendientes por módulo
   enProcesoCounts = this.enProceso.counts; // V1 — borradores/envíos por módulo
 
-  tiles = computed(() => TILES.filter((t) => this.ctx.hasModulo(t.modulo)));
+  // Z26 — Tecnología la ve TODO usuario (no depende del módulo `tecnologia`); el
+  // resto de tiles sigue gateado por módulo.
+  tiles = computed(() =>
+    TILES.filter((t) => t.modulo === 'tecnologia' || this.ctx.hasModulo(t.modulo)),
+  );
 
   constructor() {
     // Single-module user (e.g. chofer): drop straight into their module once.
-    const only = this.tiles();
-    if (only.length === 1 && this.session.consumeAutoEnter()) {
-      void this.router.navigate([only[0].route]);
+    // Tecnología es transversal (la ve todo el mundo), así que no cuenta para el
+    // auto-entrar: un chofer con un solo módulo de trabajo sigue entrando directo.
+    const work = this.tiles().filter((t) => t.modulo !== 'tecnologia');
+    if (work.length === 1 && this.session.consumeAutoEnter()) {
+      void this.router.navigate([work[0].route]);
     }
     // Q2 — badges de pendientes por módulo (best-effort, online).
     void this.badges.load();

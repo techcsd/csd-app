@@ -24,6 +24,14 @@
   --color-text-on-primary: #ffffff;
   --color-text-on-secondary: #ffffff;
 
+  /* Dark "panel" sections (Tecnología, Proyectos/Cronograma, Auditoría stat
+     cards) use the SGC/Hub dark-card pattern: #161616 surfaces with light text.
+     These two tokens were referenced by those pages but never defined here, so
+     their text rendered near-black-on-black (invisible). Defined light so the
+     dark cards read at >= 7:1. (Z31/Z32) */
+  --Hub: #ffb300; /* amber accent on dark panels (active borders, highlights) */
+  --main-ultra-light: #a8a8b2; /* muted light-grey text on dark panels */
+
   /* Semantic — color always paired with an icon (colorblind-safe) */
   --color-success: #16a34a; /* guardado / sincronizado / entregado */
   --color-warning: #d97706; /* pendiente de envío */

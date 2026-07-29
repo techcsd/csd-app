@@ -221,6 +221,13 @@ export const routes: Routes = [
       import('./pages/transporte/checklist/checklist').then((m) => m.ChecklistPage),
   },
   {
+    // Z24 — "Hacer pre-uso" directo desde el hub (sin vehículo en contexto): la
+    // pantalla muestra el selector del pool (necesitaVehiculo). ≤2 toques.
+    path: 'transporte/preuso',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () => import('./pages/transporte/preuso/preuso').then((m) => m.PreusoPage),
+  },
+  {
     path: 'transporte/preuso/:vehiculoId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/preuso/preuso').then((m) => m.PreusoPage),
@@ -365,9 +372,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/admin/admin').then((m) => m.AdminPage),
   },
   {
-    // Y11-app — sección Tecnología (gateada por el módulo `tecnologia`).
+    // Z26 — Tecnología la ve TODO usuario (Historial de versiones, Guía, Dudas).
+    // Los submódulos restringidos ("Versiones de App", "Reportes de errores") se
+    // gatean POR ROL dentro de la página (ctx.esTecnologia), no por módulo.
     path: 'tecnologia',
-    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tecnologia/tecnologia').then((m) => m.TecnologiaPage),
   },
   {

@@ -30,6 +30,9 @@ export interface CombustibleCaptura {
   galones: number;
   monto: number;
   estacion: string | null;
+  // Z23-app — campos de conciliación con el reporte del proveedor.
+  producto: string | null; // 'diesel' | 'gasolina'
+  tarjeta: string | null; // tarjeta usada (opcional)
   fotoRecibo: Blob;
   fotoTablero: Blob;
   fotoBomba: Blob; // Y4 — bomba/estación en 0

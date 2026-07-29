@@ -2,6 +2,11 @@
   background: var(--color-bg);
 }
 
+// Z23-app — separación entre bloques del paso 2 (producto / estación / tarjeta).
+.comb__mt {
+  margin-top: 20px;
+}
+
 // V4 — header del estado "Elige un vehículo" (coherente con transporte).
 .comb__pick-header {
   display: flex;

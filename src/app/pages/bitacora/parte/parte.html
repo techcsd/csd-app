@@ -139,18 +139,33 @@
         @if (paso5() === 'sujeto') {
           <h1 class="screen__title">¿En qué bloque, piso o edificio?</h1>
           <p class="screen__subtitle">Primero dinos de qué parte de la obra vas a hablar.</p>
-          <input
-            class="field"
-            type="text"
-            list="bloques-sugeridos"
-            [ngModel]="sujetoActual()"
-            (ngModelChange)="sujetoActual.set($event)"
-            placeholder="Ej: Bloque B · 3er nivel"
-            aria-label="Bloque, piso o edificio"
-          />
-          <datalist id="bloques-sugeridos">
-            @for (b of bloques(); track b) { <option [value]="b"></option> }
-          </datalist>
+
+          @if (estructurasObra().length) {
+            <!-- Z20 — selector de las estructuras definidas en la obra + "Otro". -->
+            <label class="field-label">Elige la parte de la obra</label>
+            <div class="parte__chips">
+              @for (b of estructurasObra(); track b) {
+                <button type="button" class="chip" [class.chip--on]="!sujetoOtro() && sujetoActual() === b" (click)="elegirEstructura(b)">📍 {{ b }}</button>
+              }
+              <button type="button" class="chip" [class.chip--on]="sujetoOtro()" (click)="elegirOtroEstructura()">➕ Otro</button>
+            </div>
+            @if (sujetoOtro()) {
+              <input class="field" type="text" [ngModel]="sujetoActual()" (ngModelChange)="sujetoActual.set($event)" placeholder="Ej: Bloque B · 3er nivel" aria-label="Bloque, piso o edificio" />
+            }
+          } @else {
+            <input
+              class="field"
+              type="text"
+              list="bloques-sugeridos"
+              [ngModel]="sujetoActual()"
+              (ngModelChange)="sujetoActual.set($event)"
+              placeholder="Ej: Bloque B · 3er nivel"
+              aria-label="Bloque, piso o edificio"
+            />
+            <datalist id="bloques-sugeridos">
+              @for (b of bloques(); track b) { <option [value]="b"></option> }
+            </datalist>
+          }
 
           @if (bloques().length) {
             <label class="field-label">Ya registraste (toca para agregarle más)</label>
@@ -264,6 +279,15 @@
                 [placeholder]="'Describa: ' + r.toLowerCase() + '…'"
                 aria-label="Describa la restricción"
               />
+              <!-- Z21 — foto opcional de esta restricción -->
+              <app-photo-slot
+                class="parte__restr-foto"
+                label="Foto (opcional)"
+                hint="📷"
+                [foto]="getRestriccionFoto(r)"
+                (captured)="onRestriccionFoto(r, $event)"
+                (cleared)="onRestriccionFotoCleared(r)"
+              />
             }
           }
         </div>
@@ -315,7 +339,19 @@
                     <span class="parte__equipo-num">Equipo</span>
                     <button type="button" class="parte__act-x" (click)="removeEquipo(e)">Quitar</button>
                   </div>
-                  <input class="field" type="text" list="equipos-sugeridos" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" placeholder="Equipo (ej: Retroexcavadora)" aria-label="Equipo" />
+                  <!-- Z22 — selector de los equipos de la obra + "Otro"; sin equipos registrados cae a texto libre. -->
+                  @if (equiposSugeridos().length) {
+                    <select class="field" [ngModel]="equipoSelectValue(e)" (ngModelChange)="onEquipoSelect(e, $event)" aria-label="Equipo">
+                      <option value="">Elige el equipo…</option>
+                      @for (s of equiposSugeridos(); track s) { <option [value]="s">{{ s }}</option> }
+                      <option value="__otro__">Otro (escribir)</option>
+                    </select>
+                    @if (esEquipoOtro(e)) {
+                      <input class="field" type="text" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" placeholder="Nombre del equipo" aria-label="Nombre del equipo" />
+                    }
+                  } @else {
+                    <input class="field" type="text" list="equipos-sugeridos" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" placeholder="Equipo (ej: Retroexcavadora)" aria-label="Equipo" />
+                  }
                   <input class="field" type="text" [ngModel]="e.uso" (ngModelChange)="updateEquipo(e, 'uso', $event)" placeholder="¿En qué se usó? (obligatorio)" aria-label="Uso del equipo" />
                   <input class="field" type="text" [ngModel]="e.proveedor" (ngModelChange)="updateEquipo(e, 'proveedor', $event)" placeholder="Proveedor (opcional)" aria-label="Proveedor del equipo" />
                 </div>

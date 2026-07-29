@@ -39,14 +39,14 @@
   flex-direction: column;
   gap: 4px;
   padding: 16px;
-  background: #161616;
-  border: 1px solid #2d2d2d;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
 }
 .aud__kpi-val {
   font-size: 28px;
   font-weight: 800;
-  color: var(--Hub, #ffb300);
+  color: var(--color-secondary); // brand blue, high-contrast on light card
 }
 .aud__kpi-lbl {
   font-size: 13px;

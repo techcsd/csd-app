@@ -91,6 +91,10 @@ export class CombustiblePage extends GuardedWizard {
   estacion = signal('Total Energies');
   estacionOtro = signal(false);
   estacionOtroTexto = signal('');
+  // Z23-app — producto (para conciliar con el reporte) + tarjeta (opcional).
+  // Default 'diesel' (la flota es mayormente diésel); el chofer cambia a gasolina.
+  producto = signal<'diesel' | 'gasolina'>('diesel');
+  tarjeta = signal('');
   estacionesVisibles = computed(() =>
     this.estaciones().filter((e) => e.trim().toLowerCase() !== 'otro'),
   );
@@ -174,6 +178,7 @@ export class CombustiblePage extends GuardedWizard {
         this.galones() != null ||
         this.monto() != null ||
         !!this.estacionOtroTexto().trim() ||
+        !!this.tarjeta().trim() ||
         !!this.fotoRecibo() ||
         !!this.fotoTablero() ||
         !!this.fotoBomba())
@@ -298,6 +303,8 @@ export class CombustiblePage extends GuardedWizard {
         galones: this.galones()!,
         monto: this.monto()!,
         estacion: estacion ? estacion : null,
+        producto: this.producto(), // Z23-app
+        tarjeta: this.tarjeta().trim() || null, // Z23-app
         fotoRecibo: this.fotoRecibo()!.blob,
         fotoTablero: this.fotoTablero()!.blob,
         fotoBomba: this.fotoBomba()!.blob,

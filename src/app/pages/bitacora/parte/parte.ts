@@ -6,6 +6,7 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
+import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -43,7 +44,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes],
+  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -109,12 +110,20 @@ export class PartePage implements OnDestroy {
   // que se está llenando en este momento.
   actividades = signal<ActividadEntry[]>([]);
   sujetoActual = signal<string>('');
+  // Z20 — estructuras (bloques/pisos/edificios) definidas por la obra
+  // (proyecto_estructuras). Si la obra tiene, el paso 5 muestra un selector; si
+  // no, cae a texto libre. `sujetoOtro` = el usuario eligió "Otro" (texto libre).
+  estructurasObra = signal<string[]>([]);
+  sujetoOtro = signal(false);
   // Estructura elegida dentro del sujeto actual (¿en qué parte?).
   parteActual = signal<string>('');
 
   restricciones = signal<string[]>([]);
   // U12 — descripción breve obligatoria por restricción seleccionada (tipo → texto).
   restriccionDesc = signal<Record<string, string>>({});
+  // Z21 — foto opcional por restricción seleccionada (tipo → foto). No se persiste
+  // en el borrador (como las demás fotos, se retoma tomándola de nuevo).
+  restriccionFotos = signal<Record<string, CapturedPhoto>>({});
 
   // W2/S7 — equipos alquilados (en uso / para retirar / dañados).
   huboEquipos = signal(false);
@@ -348,6 +357,7 @@ export class PartePage implements OnDestroy {
       void this.loadPartidas(this.proyectoId());
       void this.loadCatalogo(this.proyectoId());
       void this.loadEquiposObra(this.proyectoId());
+      void this.loadEstructurasObra(this.proyectoId()); // Z20
       void this.loadTareasCronograma(this.proyectoId());
     }
     this.hydrated = true;
@@ -372,6 +382,11 @@ export class PartePage implements OnDestroy {
   private async loadEquiposObra(proyectoId: string): Promise<void> {
     const deObra = await this.bitacora.getEquiposDeObra(proyectoId);
     if (deObra.length) this.equiposSugeridos.set(deObra);
+  }
+
+  /** Z20 — estructuras (bloques/pisos/edificios) definidas por la obra. */
+  private async loadEstructurasObra(proyectoId: string): Promise<void> {
+    this.estructurasObra.set(await this.bitacora.getEstructurasObra(proyectoId));
   }
 
   private async loadPartidas(proyectoId: string): Promise<void> {
@@ -412,6 +427,18 @@ export class PartePage implements OnDestroy {
     this.sujetoActual.set(bloque);
     this.parteActual.set('');
     this.paso5.set('actividades');
+  }
+
+  /** Z20 — elegir una estructura definida por la obra como bloque actual. */
+  elegirEstructura(nombre: string): void {
+    this.sujetoOtro.set(false);
+    this.sujetoActual.set(nombre);
+  }
+
+  /** Z20 — "Otro" (texto libre): habilita el input y limpia la selección. */
+  elegirOtroEstructura(): void {
+    this.sujetoOtro.set(true);
+    this.sujetoActual.set('');
   }
 
   /** S4 — "Sí, trabajé en otro bloque": limpia el sujeto y vuelve a elegirlo. */
@@ -497,7 +524,30 @@ export class PartePage implements OnDestroy {
         delete next[r];
         return next;
       });
+      // Z21 — al quitar la restricción, suelta su foto opcional.
+      this.restriccionFotos.update((m) => {
+        const next = { ...m };
+        if (next[r]) URL.revokeObjectURL(next[r].previewUrl);
+        delete next[r];
+        return next;
+      });
     }
+  }
+
+  // Z21 — foto opcional por restricción (paso 6).
+  getRestriccionFoto(r: string): CapturedPhoto | null {
+    return this.restriccionFotos()[r] ?? null;
+  }
+  onRestriccionFoto(r: string, photo: CapturedPhoto): void {
+    this.restriccionFotos.update((m) => ({ ...m, [r]: photo }));
+  }
+  onRestriccionFotoCleared(r: string): void {
+    this.restriccionFotos.update((m) => {
+      const next = { ...m };
+      if (next[r]) URL.revokeObjectURL(next[r].previewUrl);
+      delete next[r];
+      return next;
+    });
   }
 
   requiereDescripcion(r: string): boolean {
@@ -539,6 +589,31 @@ export class PartePage implements OnDestroy {
 
   updateEquipo(row: EquipoRow, field: 'equipo' | 'uso' | 'proveedor', value: string): void {
     this.equiposAlquilados.update((l) => l.map((e) => (e === row ? { ...e, [field]: value } : e)));
+  }
+
+  // Z22 — el campo "Equipo" es un selector de los equipos de la obra + "Otro"
+  // (texto libre). Si la obra no tiene equipos registrados, el template cae al
+  // input libre (sin fricción). '__otro__' es el centinela de la opción "Otro".
+  equipoSelectValue(row: EquipoRow): string {
+    if (row.otro) return '__otro__';
+    if (row.equipo && this.equiposSugeridos().includes(row.equipo)) return row.equipo;
+    return row.equipo ? '__otro__' : '';
+  }
+
+  esEquipoOtro(row: EquipoRow): boolean {
+    return !!row.otro || (!!row.equipo && !this.equiposSugeridos().includes(row.equipo));
+  }
+
+  onEquipoSelect(row: EquipoRow, value: string): void {
+    this.equiposAlquilados.update((l) =>
+      l.map((e) =>
+        e === row
+          ? value === '__otro__'
+            ? { ...e, otro: true, equipo: '' }
+            : { ...e, otro: false, equipo: value }
+          : e,
+      ),
+    );
   }
 
   onHayRetirarChange(v: boolean): void {
@@ -695,6 +770,7 @@ export class PartePage implements OnDestroy {
         void this.loadPartidas(this.proyectoId());
         void this.loadCatalogo(this.proyectoId());
         void this.loadEquiposObra(this.proyectoId());
+        void this.loadEstructurasObra(this.proyectoId()); // Z20
       }
       void this.loadTareasCronograma(this.proyectoId()); // Y15.8 (aplica también a "no se trabajó")
     }
@@ -876,6 +952,7 @@ export class PartePage implements OnDestroy {
           : (this.restricciones().length ? this.restricciones() : ['NINGUNA']).map((r) => ({
               tipo_restriccion: r,
               descripcion_otro: r === 'NINGUNA' ? null : this.getRestriccionDesc(r).trim() || null,
+              foto: r === 'NINGUNA' ? null : (this.restriccionFotos()[r]?.blob ?? null), // Z21
             })),
         comentarios: this.comentarios().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
@@ -944,6 +1021,8 @@ interface EquipoRow {
   dano_detalle: string;
   /** true si la fila se creó SOLO para retirar/dañar (no estaba "en uso"). */
   soloRetiroDano?: boolean;
+  /** Z22 — el usuario eligió "Otro" en el selector de equipo (texto libre). */
+  otro?: boolean;
 }
 
 /** Forma persistida del borrador del parte (S5). */
