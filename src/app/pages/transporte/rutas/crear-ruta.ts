@@ -55,9 +55,21 @@ export class CrearRutaPage implements OnDestroy {
 
   fmtDur = formatearDuracion; // U23 — para el template
 
-  // S16 — wizard tipo hoja: 1 vehículo → 2 conductor → 3 origen → 4 destino → 5 detalles → 6 resumen.
-  readonly total = 6;
+  // El jefe de flota (elevado) asigna la ruta a un conductor; el chofer se la crea
+  // a sí mismo y NO ve el paso "conductor" (el backend la auto-asigna a quien la crea).
+  readonly esElevado = this.ctx.esFlotaElevado();
+
+  // Wizard tipo hoja. Elevado (6): 1 vehículo → 2 conductor → 3 origen → 4 destino →
+  // 5 detalles → 6 resumen. Chofer (5): se salta el paso 2 (conductor).
+  private readonly MAX_STEP = 6;
+  readonly total = computed(() => (this.esElevado ? 6 : 5));
   step = signal(1);
+  // Paso "visible" para la barra de progreso: en el chofer los pasos internos
+  // 1,3,4,5,6 se muestran como 1..5 (se descuenta el paso 2 saltado).
+  displayStep = computed(() => {
+    const s = this.step();
+    return this.esElevado ? s : s > 2 ? s - 1 : s;
+  });
 
   loading = signal(true);
   submitting = signal(false);
@@ -119,13 +131,8 @@ export class CrearRutaPage implements OnDestroy {
   };
 
   constructor() {
-    // S16 — crear ruta es SOLO para roles elevados (jefe de flota/admin…). El
-    // chofer solo VE sus rutas asignadas (en "Conduces y rutas"). Redirige.
-    if (!this.ctx.esFlotaElevado()) {
-      this.toast.error('Las rutas las asigna el jefe de flota. Aquí ves las tuyas asignadas.');
-      void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
-      return;
-    }
+    // Crear ruta lo puede usar el jefe de flota (asigna a un conductor) y también
+    // el chofer (se la crea a sí mismo → el backend la auto-asigna a quien la crea).
     resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     void this.load();
     void this.captureGps();
@@ -326,7 +333,10 @@ export class CrearRutaPage implements OnDestroy {
       this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra o almacén de destino.' : 'Marca el destino en el mapa.');
       return;
     }
-    this.step.update((x) => Math.min(this.total, x + 1));
+    // El chofer se salta el paso 2 (conductor): la ruta es para él mismo.
+    let nxt = s + 1;
+    if (nxt === 2 && !this.esElevado) nxt = 3;
+    this.step.set(Math.min(this.MAX_STEP, nxt));
   }
 
   /** S16 — retrocede; en el paso 1 intenta salir (con confirmación si hay datos). */
@@ -335,7 +345,9 @@ export class CrearRutaPage implements OnDestroy {
       this.back();
       return;
     }
-    this.step.update((x) => Math.max(1, x - 1));
+    let prv = this.step() - 1;
+    if (prv === 2 && !this.esElevado) prv = 1; // saltar conductor al retroceder
+    this.step.set(Math.max(1, prv));
   }
 
   async guardar(): Promise<void> {
@@ -344,7 +356,7 @@ export class CrearRutaPage implements OnDestroy {
       this.toast.error('Elige el vehículo.');
       return;
     }
-    if (!this.conductorId()) {
+    if (this.esElevado && !this.conductorId()) {
       this.toast.error('Elige el conductor al que le asignas la ruta.');
       return;
     }

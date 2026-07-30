@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.40.0';
+const VERSION = '1.41.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,11 +62,13 @@ const MIN_VERSION = '1.34.0';
 const RELEASED_AT = '2026-07-30';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Transcripción de las notas de voz en el detalle de bitácora e incidentes';
+const TITULO = 'Los choferes ya pueden crearse sus propias rutas';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'En el detalle de una bitácora o incidente ahora se lee la transcripción automática de cada nota de voz (o "Transcribiendo…" mientras se procesa).' },
+  { t: 'nuevo', d: 'Los choferes ya pueden crearse sus propias rutas (antes solo las asignaba el jefe de flota); la ruta se asigna automáticamente a quien la crea.' },
+  { t: 'mejora', d: 'En la pantalla de inicio, los accesos de "Dudas y guías" y "Visitar web" ahora van en la misma línea para ocupar menos espacio.' },
+  { t: 'arreglo', d: 'El módulo "Tecnología" ya no aparece en el inicio de los usuarios que no lo tienen asignado (por ejemplo, los choferes).' },
 ];
 
 const TIPO_POR_COMMIT = {

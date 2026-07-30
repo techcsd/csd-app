@@ -35,7 +35,9 @@ const TILES: HubTile[] = [
   { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
-  { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488', elevado: true },
+  // El chofer también puede crearse rutas a sí mismo (se auto-asigna); el jefe de
+  // flota además elige a quién se la asigna. Por eso NO va gateado como elevado.
+  { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488' },
   // Z24 — historial de checklists visible para TODO chofer (RLS chk_veh_sel: el
   // chofer solo ve los suyos; el jefe de flota ve lo que envían todos).
   { key: 'checklists', icon: '✅', label: 'Historial de checklists', tint: '#0369a1' },

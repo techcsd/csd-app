@@ -24,7 +24,7 @@
       <span class="cruta__hicon">🧭</span>
       <h1 class="cruta__htitle">Crear ruta</h1>
     </header>
-    <app-step-bar [current]="step()" [total]="total" />
+    <app-step-bar [current]="displayStep()" [total]="total()" />
 
     <div class="screen__body">
       @if (loading()) {
@@ -113,7 +113,7 @@
           <h1 class="screen__title">Revisa y crea</h1>
           <ul class="resumen">
             <li><span>Vehículo</span><b>{{ vehiculoLabel() }}</b></li>
-            <li><span>Conductor</span><b>{{ conductorNombre() }}</b></li>
+            <li><span>Conductor</span><b>{{ esElevado ? conductorNombre() : 'Yo mismo' }}</b></li>
             <li><span>Origen</span><b>{{ origen() }}</b></li>
             <li><span>Destino</span><b>{{ destinoResumen() }}</b></li>
             @if (km() != null) { <li><span>Km estimados</span><b>{{ km() }}</b></li> }
@@ -125,10 +125,10 @@
 
     <app-wizard-footer
       [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Crear ruta')"
-      [primaryDisabled]="step() >= total && submitting()"
+      [primaryLabel]="displayStep() < total() ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Crear ruta')"
+      [primaryDisabled]="displayStep() >= total() && submitting()"
       (back)="prev()"
-      (primary)="step() < total ? next() : guardar()"
+      (primary)="displayStep() < total() ? next() : guardar()"
     />
 
     <!-- U4 — descartar cambios sin guardar -->
