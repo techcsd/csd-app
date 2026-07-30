@@ -38,6 +38,27 @@
         (picked)="tipo.set($event)"
       />
 
+      <!-- AA18 — color (select + Otro) -->
+      <label class="field-label" for="color">Color</label>
+      <select id="color" class="field" [ngModel]="colorEsOtro() ? '__otro__' : color()" (ngModelChange)="$event === '__otro__' ? color.set(' ') : color.set($event)">
+        <option value="">Elige el color…</option>
+        @for (c of colores; track c) { <option [value]="c">{{ c }}</option> }
+        <option value="__otro__">Otro…</option>
+      </select>
+      @if (colorEsOtro()) {
+        <input class="field" type="text" [ngModel]="color().trim()" (ngModelChange)="color.set($event)" placeholder="Escribe el color" aria-label="Otro color" />
+      }
+
+      <!-- AA17 — clasificación obra / oficina -->
+      <label class="field-label">¿De obra o de oficina?</label>
+      <app-option-button icon="🏗️" label="De obra" [selected]="uso() === 'obra'" (pressed)="uso.set('obra')" />
+      <app-option-button icon="🏢" label="De oficina" [selected]="uso() === 'oficina'" (pressed)="uso.set('oficina')" />
+
+      <!-- AA18 — medida de uso: km u horómetro -->
+      <label class="field-label">¿Se mide por…?</label>
+      <app-option-button icon="🛣️" label="Kilómetros" [selected]="medidaUso() === 'km'" (pressed)="medidaUso.set('km')" />
+      <app-option-button icon="⏱️" label="Horas de uso (horómetro)" [selected]="medidaUso() === 'horas'" (pressed)="medidaUso.set('horas')" />
+
       <label class="field-label" for="vin">VIN / número de chasis (opcional)</label>
       <input id="vin" class="field" type="text" autocapitalize="characters" [ngModel]="vin()" (ngModelChange)="vin.set($event)" placeholder="17 caracteres — identifica el vehículo" />
 
@@ -46,7 +67,7 @@
         <app-option-button [label]="e.label" [selected]="estado() === e.v" (pressed)="estado.set(e.v)" />
       }
 
-      <label class="field-label" for="km">Kilometraje</label>
+      <label class="field-label" for="km">{{ medidaLabel() }}</label>
       <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="kilometraje()" (ngModelChange)="kilometraje.set($event)" placeholder="0" />
 
       <label class="field-label" for="nm">Número de matrícula (opcional)</label>
@@ -59,17 +80,24 @@
       <input id="ns" class="field" type="text" [ngModel]="numeroSeguro()" (ngModelChange)="numeroSeguro.set($event)" placeholder="Número de póliza" />
 
       <label class="field-label" for="aseg">Aseguradora (opcional)</label>
-      <input id="aseg" class="field" type="text" [ngModel]="aseguradora()" (ngModelChange)="aseguradora.set($event)" placeholder="Compañía de seguro" />
+      <select id="aseg" class="field" [ngModel]="aseguradoraEsOtro() ? '__otro__' : aseguradora()" (ngModelChange)="$event === '__otro__' ? aseguradora.set(' ') : aseguradora.set($event)">
+        <option value="">Elige la aseguradora…</option>
+        @for (a of aseguradoras; track a) { <option [value]="a">{{ a }}</option> }
+        <option value="__otro__">Otro…</option>
+      </select>
+      @if (aseguradoraEsOtro()) {
+        <input class="field" type="text" [ngModel]="aseguradora().trim()" (ngModelChange)="aseguradora.set($event)" placeholder="Compañía de seguro" aria-label="Otra aseguradora" />
+      }
 
       <label class="field-label" for="vs">Vencimiento seguro (opcional)</label>
       <input id="vs" class="field" type="date" [ngModel]="vencSeguro()" (ngModelChange)="vencSeguro.set($event)" />
 
       <p class="vform__doc-hint">La foto de la matrícula y del seguro se sube desde el perfil del vehículo.</p>
 
-      <label class="field-label" for="kum">Km del último mantenimiento (opcional)</label>
+      <label class="field-label" for="kum">{{ medidaUso() === 'horas' ? 'Horas del último mantenimiento' : 'Km del último mantenimiento' }} (opcional)</label>
       <input id="kum" class="field" type="number" inputmode="numeric" [ngModel]="kmUltMant()" (ngModelChange)="kmUltMant.set($event)" placeholder="0" />
 
-      <label class="field-label" for="im">Mantenimiento cada (km)</label>
+      <label class="field-label" for="im">Mantenimiento cada ({{ medidaUso() === 'horas' ? 'horas' : 'km' }})</label>
       <input id="im" class="field" type="number" inputmode="numeric" [ngModel]="intervaloMant()" (ngModelChange)="intervaloMant.set($event)" placeholder="5000" />
 
       <label class="field-label" for="rend">Rendimiento esperado (km/gal) (opcional)</label>

@@ -44,6 +44,12 @@ export interface VehiculoEditable {
   numeroMatricula: string | null;
   numeroSeguro: string | null;
   aseguradora: string | null;
+  // AA18 — color del vehículo (select + Otro).
+  color: string | null;
+  // AA18 — medida de uso: 'km' (default) o 'horas' (horómetro; maquinaria).
+  medidaUso: string;
+  // AA17 — clasificación 'obra' | 'oficina'.
+  uso: string;
   // W7 — dato de prueba (solo lo marca un admin; RLS lo oculta a no-admins).
   esPrueba: boolean;
 }
@@ -422,7 +428,7 @@ export class VehiculosService {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
       .select(
-        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal, notas, fotos, vin, numero_matricula, numero_seguro, aseguradora, es_prueba',
+        'id, placa, marca, modelo, anio, tipo, estado, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal, notas, fotos, vin, numero_matricula, numero_seguro, aseguradora, color, medida_uso, uso, es_prueba',
       )
       .eq('id', id)
       .single();
@@ -448,6 +454,9 @@ export class VehiculosService {
       numeroMatricula: (v['numero_matricula'] as string) ?? null,
       numeroSeguro: (v['numero_seguro'] as string) ?? null,
       aseguradora: (v['aseguradora'] as string) ?? null,
+      color: (v['color'] as string) ?? null, // AA18
+      medidaUso: (v['medida_uso'] as string) ?? 'km', // AA18
+      uso: (v['uso'] as string) ?? 'obra', // AA17
       esPrueba: (v['es_prueba'] as boolean) ?? false,
     };
   }
@@ -471,6 +480,9 @@ export class VehiculosService {
       numero_matricula: input.numeroMatricula?.trim() || null,
       numero_seguro: input.numeroSeguro?.trim() || null,
       aseguradora: input.aseguradora?.trim() || null,
+      color: input.color?.trim() || null, // AA18
+      medida_uso: input.medidaUso || 'km', // AA18
+      uso: input.uso || 'obra', // AA17
       es_prueba: input.esPrueba, // W7
     };
   }

@@ -42,8 +42,16 @@ interface VehiculoDraft {
   numeroMatricula: string;
   numeroSeguro: string;
   aseguradora: string;
+  color: string;
+  medidaUso: 'km' | 'horas';
+  uso: 'obra' | 'oficina';
   esPrueba: boolean;
 }
+
+// AA18 — colores comunes (select + "Otro" → input libre).
+const COLORES = ['Blanco', 'Negro', 'Gris', 'Plateado', 'Rojo', 'Azul', 'Verde', 'Amarillo', 'Naranja', 'Marrón'];
+// AA18 — aseguradora habitual preseleccionada + "Otro".
+const ASEGURADORAS = ['Seguros Universal', 'Seguros Reservas', 'Mapfre BHD', 'La Colonial', 'Humano Seguros'];
 
 /** Alta/edición de vehículo (admin; RLS vehiculos:write = is_admin). */
 @Component({
@@ -99,9 +107,20 @@ export class VehiculoFormPage {
   vin = signal('');
   numeroMatricula = signal('');
   numeroSeguro = signal('');
-  aseguradora = signal('');
+  aseguradora = signal('Seguros Universal'); // AA18 — default habitual
+  color = signal(''); // AA18
+  medidaUso = signal<'km' | 'horas'>('km'); // AA18 — km | horas (horómetro)
+  uso = signal<'obra' | 'oficina'>('obra'); // AA17
   esPrueba = signal(false); // W7 — dato de prueba (solo admin)
   foto = signal<CapturedPhoto | null>(null);
+
+  readonly colores = COLORES;
+  readonly aseguradoras = ASEGURADORAS;
+  // AA18 — "Otro" cuando el valor no está en la lista (input libre).
+  colorEsOtro = computed(() => !!this.color() && !COLORES.includes(this.color()));
+  aseguradoraEsOtro = computed(() => !!this.aseguradora() && !ASEGURADORAS.includes(this.aseguradora()));
+  // AA18 — etiqueta del odómetro según la medida de uso.
+  medidaLabel = computed(() => (this.medidaUso() === 'horas' ? 'Horas de uso' : 'Kilometraje'));
 
   /** W7 — solo un admin marca/ve el switch de "Dato de prueba". */
   esAdmin = computed(() => this.ctx.hasRol('admin'));
@@ -149,6 +168,9 @@ export class VehiculoFormPage {
       numeroMatricula: this.numeroMatricula(),
       numeroSeguro: this.numeroSeguro(),
       aseguradora: this.aseguradora(),
+      color: this.color(),
+      medidaUso: this.medidaUso(),
+      uso: this.uso(),
       esPrueba: this.esPrueba(),
     };
   }
@@ -181,7 +203,10 @@ export class VehiculoFormPage {
         this.vin.set(d.vin ?? '');
         this.numeroMatricula.set(d.numeroMatricula ?? '');
         this.numeroSeguro.set(d.numeroSeguro ?? '');
-        this.aseguradora.set(d.aseguradora ?? '');
+        this.aseguradora.set(d.aseguradora ?? 'Seguros Universal');
+        this.color.set(d.color ?? '');
+        this.medidaUso.set(d.medidaUso ?? 'km');
+        this.uso.set(d.uso ?? 'obra');
         this.esPrueba.set(d.esPrueba ?? false);
       }
       this.borradorPrevio.set(null);
@@ -214,6 +239,9 @@ export class VehiculoFormPage {
         this.numeroMatricula.set(v.numeroMatricula ?? '');
         this.numeroSeguro.set(v.numeroSeguro ?? '');
         this.aseguradora.set(v.aseguradora ?? '');
+        this.color.set(v.color ?? '');
+        this.medidaUso.set((v.medidaUso as 'km' | 'horas') ?? 'km');
+        this.uso.set((v.uso as 'obra' | 'oficina') ?? 'obra');
         this.esPrueba.set(v.esPrueba ?? false);
       }
     } catch (e) {
@@ -249,6 +277,9 @@ export class VehiculoFormPage {
       numeroMatricula: this.numeroMatricula() || null,
       numeroSeguro: this.numeroSeguro() || null,
       aseguradora: this.aseguradora() || null,
+      color: this.color() || null, // AA18
+      medidaUso: this.medidaUso(), // AA18
+      uso: this.uso(), // AA17
       esPrueba: this.esPrueba(), // W7
     };
   }

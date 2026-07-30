@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.37.0';
+const VERSION = '1.38.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,13 @@ const MIN_VERSION = '1.34.0';
 const RELEASED_AT = '2026-07-29';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Más evidencia: voz por problema, varias fotos de daño y foto+voz por falla';
+const TITULO = 'Registrar vehículos: Telehandler, color, aseguradora, obra/oficina y medición por horas (horómetro)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'En la bitácora puedes adjuntar una nota de voz a cada problema del día, además de la foto y la descripción.' },
-  { t: 'nuevo', d: 'Cuando marcas un equipo alquilado como dañado puedes subir VARIAS fotos del daño.' },
-  { t: 'nuevo', d: 'En el reporte semanal, cada falla marcada acepta foto y nota de voz además del comentario.' },
+  { t: 'nuevo', d: 'Al crear o editar un vehículo puedes elegir el tipo Telehandler y marcarlo como "de obra" o "de oficina".' },
+  { t: 'nuevo', d: 'El color y la aseguradora ahora se eligen de una lista (Seguros Universal viene por defecto), con opción "Otro".' },
+  { t: 'nuevo', d: 'Maquinaria que se mide por HORAS de uso (horómetro): al registrar el vehículo eliges kilómetros u horas.' },
 ];
 
 const TIPO_POR_COMMIT = {
