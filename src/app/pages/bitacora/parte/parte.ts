@@ -124,6 +124,8 @@ export class PartePage implements OnDestroy {
   // Z21 — foto opcional por restricción seleccionada (tipo → foto). No se persiste
   // en el borrador (como las demás fotos, se retoma tomándola de nuevo).
   restriccionFotos = signal<Record<string, CapturedPhoto>>({});
+  // AA9 — nota de voz opcional por restricción (tipo → notas). Una por restricción.
+  restriccionVoces = signal<Record<string, VoiceNoteItem[]>>({});
 
   // W2/S7 — equipos alquilados (en uso / para retirar / dañados).
   huboEquipos = signal(false);
@@ -133,9 +135,9 @@ export class PartePage implements OnDestroy {
   equiposSugeridos = signal<string[]>([]);
   retiroNombre = signal('');
   danoNombre = signal('');
-  // Z22 — foto opcional por equipo dañado (nombre → foto). No se persiste en el
-  // borrador (como las demás fotos, se retoma tomándola de nuevo).
-  equipoDanoFotos = signal<Record<string, CapturedPhoto>>({});
+  // Z22/AA10 — fotos (VARIAS) por equipo dañado (nombre → fotos). No se persiste
+  // en el borrador (como las demás fotos, se retoman tomándolas de nuevo).
+  equipoDanoFotos = signal<Record<string, CapturedPhoto[]>>({});
 
   comentarios = signal('');
 
@@ -535,6 +537,13 @@ export class PartePage implements OnDestroy {
         delete next[r];
         return next;
       });
+      // AA9 — y su nota de voz opcional.
+      this.restriccionVoces.update((m) => {
+        const next = { ...m };
+        for (const n of next[r] ?? []) URL.revokeObjectURL(n.url);
+        delete next[r];
+        return next;
+      });
     }
   }
 
@@ -554,19 +563,38 @@ export class PartePage implements OnDestroy {
     });
   }
 
-  // Z22 — foto opcional por equipo dañado (paso 8c). Se llavea por nombre de
+  // AA9 — nota de voz opcional por restricción (paso 6). `[(notes)]` de VoiceNotes.
+  getRestriccionVoces(r: string): VoiceNoteItem[] {
+    return this.restriccionVoces()[r] ?? [];
+  }
+  setRestriccionVoces(r: string, notes: VoiceNoteItem[]): void {
+    this.restriccionVoces.update((m) => ({ ...m, [r]: notes }));
+  }
+
+  // Z22/AA10 — fotos (VARIAS) por equipo dañado (paso 8c). Se llavea por nombre de
   // equipo (estable frente a la recreación del objeto fila en toggle/detalle).
-  getEquipoDanoFoto(nombre: string): CapturedPhoto | null {
-    return this.equipoDanoFotos()[nombre.trim()] ?? null;
+  getEquipoDanoFotos(nombre: string): CapturedPhoto[] {
+    return this.equipoDanoFotos()[nombre.trim()] ?? [];
   }
-  onEquipoDanoFoto(nombre: string, photo: CapturedPhoto): void {
-    this.equipoDanoFotos.update((m) => ({ ...m, [nombre.trim()]: photo }));
+  addEquipoDanoFoto(nombre: string, photo: CapturedPhoto): void {
+    const k = nombre.trim();
+    this.equipoDanoFotos.update((m) => ({ ...m, [k]: [...(m[k] ?? []), photo] }));
   }
+  removeEquipoDanoFoto(nombre: string, index: number): void {
+    const k = nombre.trim();
+    this.equipoDanoFotos.update((m) => {
+      const list = m[k] ?? [];
+      const it = list[index];
+      if (it) URL.revokeObjectURL(it.previewUrl);
+      return { ...m, [k]: list.filter((_, i) => i !== index) };
+    });
+  }
+  /** Suelta TODAS las fotos de un equipo (al desmarcarlo como dañado). */
   onEquipoDanoFotoCleared(nombre: string): void {
     this.equipoDanoFotos.update((m) => {
       const next = { ...m };
       const k = nombre.trim();
-      if (next[k]) URL.revokeObjectURL(next[k].previewUrl);
+      for (const p of next[k] ?? []) URL.revokeObjectURL(p.previewUrl);
       delete next[k];
       return next;
     });
@@ -667,9 +695,9 @@ export class PartePage implements OnDestroy {
   onHayDanadosChange(v: boolean): void {
     this.hayDanados.set(v);
     if (!v) {
-      // Z22 — al descartar los dañados, suelta todas sus fotos opcionales.
+      // Z22/AA10 — al descartar los dañados, suelta todas sus fotos opcionales.
       const m = this.equipoDanoFotos();
-      for (const k of Object.keys(m)) URL.revokeObjectURL(m[k].previewUrl);
+      for (const k of Object.keys(m)) for (const p of m[k]) URL.revokeObjectURL(p.previewUrl);
       this.equipoDanoFotos.set({});
       this.equiposAlquilados.update((l) =>
         l
@@ -996,6 +1024,7 @@ export class PartePage implements OnDestroy {
               tipo_restriccion: r,
               descripcion_otro: r === 'NINGUNA' ? null : this.getRestriccionDesc(r).trim() || null,
               foto: r === 'NINGUNA' ? null : (this.restriccionFotos()[r]?.blob ?? null), // Z21
+              voz: r === 'NINGUNA' ? null : (this.restriccionVoces()[r]?.[0]?.blob ?? null), // AA9
             })),
         comentarios: this.comentarios().trim() || null,
         fotos: this.fotos().map((f) => f.blob),
@@ -1020,8 +1049,8 @@ export class PartePage implements OnDestroy {
             para_retirar: !!e.para_retirar,
             danado: !!e.danado,
             dano_detalle: e.danado ? (e.dano_detalle ?? '').trim() || null : null,
-            // Z22 — foto opcional (solo para equipos dañados).
-            foto: e.danado ? (this.equipoDanoFotos()[e.equipo.trim()]?.blob ?? null) : null,
+            // Z22/AA10 — fotos (varias) solo para equipos dañados.
+            fotos: e.danado ? (this.equipoDanoFotos()[e.equipo.trim()] ?? []).map((p) => p.blob) : [],
           })),
       });
       // Y15.8 — vincular a la tarea del cronograma (op aparte, espera a que la

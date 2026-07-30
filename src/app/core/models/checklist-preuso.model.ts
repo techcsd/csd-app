@@ -83,6 +83,8 @@ export interface RespuestaCaptura {
   orden: number;
   /** Optional evidence photo blob (usually only for a 'no' answer). */
   blob?: Blob | null;
+  /** AA13 — optional voice note blob for a 'no' answer (reporte semanal). */
+  voz?: Blob | null;
 }
 
 /** Input the pre-use wizard hands to enqueueChecklist(). */

@@ -142,13 +142,17 @@ export class ReporteSemanalService {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
 
-    const respuestas = input.respuestas.map((r) => ({
+    const respuestas = input.respuestas.map((r, i) => ({
       etiqueta: r.etiqueta,
       seccion: r.seccion,
       es_critico: r.es_critico,
       respuesta: r.respuesta,
       comentario: r.comentario,
       orden: r.orden,
+      // AA13 — slots de la foto + nota de voz opcionales de la falla; el handler
+      // los resuelve a foto_path / audio_path de la respuesta.
+      foto_slot: r.blob instanceof Blob ? `falla_foto_${i}` : null,
+      audio_slot: r.voz instanceof Blob ? `falla_audio_${i}` : null,
     }));
 
     // S26a — sube firma + fotos guiadas al bucket `vehiculos` (igual que pre-uso).
@@ -159,6 +163,15 @@ export class ReporteSemanalService {
     for (const [slot, blob] of Object.entries(input.fotos)) {
       fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `checklist/${id}/${slot}.jpg`, slot, blob });
     }
+    // AA13 — foto + nota de voz por falla marcada.
+    input.respuestas.forEach((r, i) => {
+      if (r.blob instanceof Blob) {
+        fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `checklist/${id}/falla_foto_${i}.jpg`, slot: `falla_foto_${i}`, blob: r.blob });
+      }
+      if (r.voz instanceof Blob) {
+        fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `checklist/${id}/falla_audio_${i}.webm`, slot: `falla_audio_${i}`, blob: r.voz });
+      }
+    });
     // Z23 — notas de voz (audio_notas, bucket flota-documentos).
     const audio = this.audioNotas.buildAttachments('reporte_semanal', id, AUDIO_BUCKET_FLOTA, input.voces ?? []);
     fotos.push(...audio.fotos);
@@ -202,6 +215,8 @@ export class ReporteSemanalService {
           respuesta: string;
           comentario: string | null;
           orden: number;
+          foto_slot?: string | null;
+          audio_slot?: string | null;
         }>
       ).map((r) => ({
         etiqueta: r.etiqueta,
@@ -210,11 +225,20 @@ export class ReporteSemanalService {
         respuesta: r.respuesta,
         comentario: r.comentario,
         orden: r.orden,
+        // AA13 — foto + voz de la falla resueltas a path.
+        foto_path: r.foto_slot ? (photoPaths[r.foto_slot] ?? null) : null,
+        audio_path: r.audio_slot ? (photoPaths[r.audio_slot] ?? null) : null,
       }));
 
-      // S26a — fotos guiadas (todo menos la firma y las notas de voz) + firma aparte.
+      // S26a — fotos guiadas (todo menos firma, notas de voz y evidencia de falla).
       const fotos = Object.entries(photoPaths)
-        .filter(([slot]) => slot !== 'firma' && !slot.startsWith('audio_'))
+        .filter(
+          ([slot]) =>
+            slot !== 'firma' &&
+            !slot.startsWith('audio_') &&
+            !slot.startsWith('falla_foto_') &&
+            !slot.startsWith('falla_audio_'),
+        )
         .map(([slot, path]) => ({ storage_path: path, slot }));
 
       const { error } = await this.supabase.client.rpc('registrar_checklist_vehiculo', {

@@ -65,6 +65,21 @@
                 placeholder="¿Qué falla tiene? (obligatorio)"
                 aria-label="Describe la falla"
               ></textarea>
+              <!-- AA13 — foto + nota de voz opcionales de la falla (evidencia en tiempo real → solo cámara) -->
+              <app-photo-slot
+                label="Foto de la falla (opcional)"
+                hint="📸"
+                [gallery]="false"
+                [foto]="getFallaFoto(it.id)"
+                (captured)="onFallaFoto(it.id, $event)"
+                (cleared)="onFallaFotoCleared(it.id)"
+              />
+              <app-voice-notes
+                [notes]="getFallaVoces(it.id)"
+                (notesChange)="setFallaVoces(it.id, $event)"
+                [max]="1"
+                [persistUrls]="true"
+              />
             }
           </div>
         }

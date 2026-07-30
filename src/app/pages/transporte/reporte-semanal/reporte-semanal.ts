@@ -129,6 +129,9 @@ export class ReporteSemanalPage extends GuardedWizard {
   respuestas = signal<Record<string, RespuestaValor>>({});
   /** U7 — comentario por ítem (obligatorio cuando la respuesta es "Falla"). */
   comentarios = signal<Record<string, string>>({});
+  // AA13 — foto + nota de voz opcionales por falla marcada (itemId → …).
+  fallaFotos = signal<Record<string, CapturedPhoto>>({});
+  fallaVoces = signal<Record<string, VoiceNoteItem[]>>({});
   km = signal<number | null>(null);
   nivelCombustible = signal<string | null>(null);
   fotos = signal<Record<string, CapturedPhoto>>({});
@@ -377,11 +380,36 @@ export class ReporteSemanalPage extends GuardedWizard {
         delete next[itemId];
         return next;
       });
+      // AA13 — y su foto + nota de voz opcionales.
+      this.onFallaFotoCleared(itemId);
+      this.setFallaVoces(itemId, []);
     }
   }
 
   setComentario(itemId: string, texto: string): void {
     this.comentarios.update((c) => ({ ...c, [itemId]: texto }));
+  }
+
+  // AA13 — foto + nota de voz opcionales por falla.
+  getFallaFoto(itemId: string): CapturedPhoto | null {
+    return this.fallaFotos()[itemId] ?? null;
+  }
+  onFallaFoto(itemId: string, photo: CapturedPhoto): void {
+    this.fallaFotos.update((m) => ({ ...m, [itemId]: photo }));
+  }
+  onFallaFotoCleared(itemId: string): void {
+    this.fallaFotos.update((m) => {
+      const next = { ...m };
+      if (next[itemId]) URL.revokeObjectURL(next[itemId].previewUrl);
+      delete next[itemId];
+      return next;
+    });
+  }
+  getFallaVoces(itemId: string): VoiceNoteItem[] {
+    return this.fallaVoces()[itemId] ?? [];
+  }
+  setFallaVoces(itemId: string, notes: VoiceNoteItem[]): void {
+    this.fallaVoces.update((m) => ({ ...m, [itemId]: notes }));
   }
 
   onFoto(slot: string, photo: CapturedPhoto): void {
@@ -475,6 +503,9 @@ export class ReporteSemanalPage extends GuardedWizard {
         // U7 — comentario de la falla (el RPC ya lo acepta por ítem).
         comentario: c[it.id]?.trim() || null,
         orden: it.orden,
+        // AA13 — foto + nota de voz opcionales de la falla.
+        blob: r[it.id] === 'no' ? (this.fallaFotos()[it.id]?.blob ?? null) : null,
+        voz: r[it.id] === 'no' ? (this.fallaVoces()[it.id]?.[0]?.blob ?? null) : null,
       }));
       const fotos: Record<string, Blob> = {};
       for (const f of this.fotoSlots()) fotos[f.slot] = this.fotos()[f.slot].blob;

@@ -288,6 +288,13 @@
                 (captured)="onRestriccionFoto(r, $event)"
                 (cleared)="onRestriccionFotoCleared(r)"
               />
+              <!-- AA9 — nota de voz opcional de esta restricción -->
+              <app-voice-notes
+                [notes]="getRestriccionVoces(r)"
+                (notesChange)="setRestriccionVoces(r, $event)"
+                [max]="1"
+                [persistUrls]="true"
+              />
             }
           }
         </div>
@@ -396,14 +403,21 @@
                 <app-option-button [label]="e.equipo" icon="🛠️" [selected]="e.danado" (pressed)="toggleDanado(e)" />
                 @if (e.danado) {
                   <input class="field parte__restr-desc" type="text" [ngModel]="e.dano_detalle" (ngModelChange)="setDanoDetalle(e, $event)" placeholder="¿Qué le pasó?" aria-label="Detalle del daño" />
-                  <!-- Z22 — foto opcional del equipo dañado -->
+                  <!-- Z22/AA10 — fotos (varias) del equipo dañado -->
+                  @for (p of getEquipoDanoFotos(e.equipo); track $index) {
+                    <app-photo-slot
+                      class="parte__restr-foto"
+                      label="Foto del daño"
+                      hint="📷"
+                      [foto]="p"
+                      (cleared)="removeEquipoDanoFoto(e.equipo, $index)"
+                    />
+                  }
                   <app-photo-slot
                     class="parte__restr-foto"
-                    label="Foto del daño (opcional)"
-                    hint="📷"
-                    [foto]="getEquipoDanoFoto(e.equipo)"
-                    (captured)="onEquipoDanoFoto(e.equipo, $event)"
-                    (cleared)="onEquipoDanoFotoCleared(e.equipo)"
+                    label="Agregar foto del daño (opcional)"
+                    hint="➕"
+                    (captured)="addEquipoDanoFoto(e.equipo, $event)"
                   />
                 }
               }

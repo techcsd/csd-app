@@ -28,8 +28,14 @@ export interface ParteDiarioCaptura {
   horaFinTrabajo: string | null;
   actividades: ActividadEntry[];
   // U12 — cada restricción lleva su descripción breve (obligatoria).
-  // Z21 — foto opcional por restricción (va a bitacora_restricciones.foto_path).
-  restricciones: { tipo_restriccion: string; descripcion_otro: string | null; foto?: Blob | null }[];
+  // Z21 — foto opcional por restricción (→ bitacora_restricciones.foto_path).
+  // AA9 — nota de voz opcional por restricción (→ bitacora_restricciones.audio_path).
+  restricciones: {
+    tipo_restriccion: string;
+    descripcion_otro: string | null;
+    foto?: Blob | null;
+    voz?: Blob | null;
+  }[];
   comentarios: string | null;
   fotos: Blob[];
   // Z23 — notas de voz múltiples (bitacora_archivos).
@@ -43,9 +49,9 @@ export interface ParteDiarioCaptura {
   migracionObreros: string[] | null;
   // W2 — equipos alquilados en uso hoy.
   huboEquipos: boolean | null;
-  // Z22 — cada equipo puede llevar una foto opcional (solo los dañados), que va
-  // a bitacora_equipos_alquilados.foto_path (como la foto de restricción, Z21).
-  equiposAlquilados: (EquipoAlquilado & { foto?: Blob | null })[];
+  // Z22/AA10 — cada equipo dañado puede llevar VARIAS fotos, que van a
+  // bitacora_equipos_alquilados.fotos_paths[] (+ foto_path = la primera).
+  equiposAlquilados: (EquipoAlquilado & { fotos?: Blob[] })[];
   // Z4 — "No se trabajó en obra": vuela el resto del parte, solo pide el motivo.
   sinActividad: boolean;
   motivoSinActividad: string | null;
@@ -219,6 +225,8 @@ export class BitacoraService {
           descripcion_otro: r.descripcion_otro,
           // Z21 — slot de la foto opcional; el handler lo resuelve a foto_path.
           foto_slot: r.foto instanceof Blob ? `restr_${i}` : null,
+          // AA9 — slot de la nota de voz opcional; el handler → audio_path.
+          audio_slot: r.voz instanceof Blob ? `restraudio_${i}` : null,
         })),
         llovio: input.llovio,
         lluvia_detalle: input.lluviaDetalle,
@@ -238,15 +246,18 @@ export class BitacoraService {
           para_retirar: !!e.para_retirar, // S7
           danado: !!e.danado, // S7
           dano_detalle: e.dano_detalle ?? null, // S7
-          // Z22 — slot de la foto opcional del equipo dañado; el handler lo
-          // resuelve a foto_path (mismo índice que buildEquipoDanoFotos).
-          foto_slot: e.foto instanceof Blob ? `dano_${i}` : null,
+          // Z22/AA10 — slots de las fotos del equipo dañado (varias); el handler
+          // las resuelve a fotos_paths[] (mismos índices que buildEquipoDanoFotos).
+          fotos_slots: (e.fotos ?? [])
+            .map((f, j) => (f instanceof Blob ? `dano_${i}_${j}` : null))
+            .filter((s): s is string => !!s),
         })),
         capturado_en,
       },
       fotos: [
         ...this.buildFotos(id, input.fotos),
         ...this.buildRestriccionFotos(id, input.restricciones),
+        ...this.buildRestriccionVoces(id, input.restricciones), // AA9
         ...this.buildEquipoDanoFotos(id, input.equiposAlquilados),
         ...this.buildVoces(id, input.voces),
       ],
@@ -438,20 +449,38 @@ export class BitacoraService {
       }));
   }
 
-  /** Z22 — foto opcional por equipo dañado (slot dano_<i>). El handler la enruta a
-   *  bitacora_equipos_alquilados.foto_path (NO al montón general de fotos). El
-   *  índice coincide con el de equipos_alquilados en el payload. */
-  private buildEquipoDanoFotos(id: string, equipos: { foto?: Blob | null }[]) {
-    return equipos
-      .map((e, i) => ({ e, i }))
-      .filter((x) => x.e.foto instanceof Blob)
+  /** AA9 — nota de voz opcional por restricción (slot restraudio_<i>). El handler
+   *  la enruta a bitacora_restricciones.audio_path (no al montón general). */
+  private buildRestriccionVoces(id: string, restricciones: { voz?: Blob | null }[]) {
+    return restricciones
+      .map((r, i) => ({ r, i }))
+      .filter((x) => x.r.voz instanceof Blob)
       .map((x) => ({
         id: crypto.randomUUID(),
         bucket: BUCKET,
-        path: `${id}/dano_${x.i}.jpg`,
-        slot: `dano_${x.i}`,
-        blob: x.e.foto as Blob,
+        path: `${id}/restraudio_${x.i}.webm`,
+        slot: `restraudio_${x.i}`,
+        blob: x.r.voz as Blob,
       }));
+  }
+
+  /** Z22/AA10 — fotos del equipo dañado (VARIAS, slots dano_<i>_<j>). El handler
+   *  las enruta a bitacora_equipos_alquilados.fotos_paths[] (no al montón general). */
+  private buildEquipoDanoFotos(id: string, equipos: { fotos?: Blob[] }[]) {
+    const out: Array<{ id: string; bucket: string; path: string; slot: string; blob: Blob }> = [];
+    equipos.forEach((e, i) => {
+      (e.fotos ?? []).forEach((blob, j) => {
+        if (!(blob instanceof Blob)) return;
+        out.push({
+          id: crypto.randomUUID(),
+          bucket: BUCKET,
+          path: `${id}/dano_${i}_${j}.jpg`,
+          slot: `dano_${i}_${j}`,
+          blob,
+        });
+      });
+    });
+    return out;
   }
 
   /** Z23 — N notas de voz como adjuntos de audio (bitacora_archivos). El handler
@@ -471,7 +500,10 @@ export class BitacoraService {
       // Z21/Z22 — las fotos de restricción (restr_*) y de equipo dañado (dano_*)
       // NO van al montón general: se enrutan a su foto_path más abajo.
       const fotos = Object.keys(photoPaths)
-        .filter((slot) => !slot.startsWith('restr_') && !slot.startsWith('dano_'))
+        .filter(
+          (slot) =>
+            !slot.startsWith('restr_') && !slot.startsWith('dano_') && !slot.startsWith('restraudio_'),
+        )
         .map((slot) => {
           const path = photoPaths[slot];
           const isAudio = path.endsWith('.webm');
@@ -483,11 +515,12 @@ export class BitacoraService {
         });
       // Z21 — resolver el slot de cada restricción a su foto_path subido.
       const restricciones = ((payload['restricciones'] as
-        | { tipo_restriccion: string; descripcion_otro: string | null; foto_slot?: string | null }[]
+        | { tipo_restriccion: string; descripcion_otro: string | null; foto_slot?: string | null; audio_slot?: string | null }[]
         | undefined) ?? []).map((r) => ({
         tipo_restriccion: r.tipo_restriccion,
         descripcion_otro: r.descripcion_otro,
         foto_path: r.foto_slot ? (photoPaths[r.foto_slot] ?? null) : null,
+        audio_path: r.audio_slot ? (photoPaths[r.audio_slot] ?? null) : null, // AA9
       }));
       // Z22 — resolver el slot de la foto de cada equipo dañado a su foto_path.
       const equipos = ((payload['equipos_alquilados'] as
@@ -498,17 +531,24 @@ export class BitacoraService {
             para_retirar: boolean;
             danado: boolean;
             dano_detalle: string | null;
-            foto_slot?: string | null;
+            fotos_slots?: string[] | null;
           }[]
-        | undefined) ?? []).map((e) => ({
-        equipo: e.equipo,
-        uso: e.uso,
-        proveedor: e.proveedor,
-        para_retirar: e.para_retirar,
-        danado: e.danado,
-        dano_detalle: e.dano_detalle,
-        foto_path: e.foto_slot ? (photoPaths[e.foto_slot] ?? null) : null,
-      }));
+        | undefined) ?? []).map((e) => {
+        const fotos_paths = (e.fotos_slots ?? [])
+          .map((s) => photoPaths[s])
+          .filter((p): p is string => !!p);
+        return {
+          equipo: e.equipo,
+          uso: e.uso,
+          proveedor: e.proveedor,
+          para_retirar: e.para_retirar,
+          danado: e.danado,
+          dano_detalle: e.dano_detalle,
+          // AA10 — todas las fotos; foto_path = la primera (retrocompat web).
+          fotos_paths,
+          foto_path: fotos_paths[0] ?? null,
+        };
+      });
       const { error } = await this.supabase.client.rpc('crear_bitacora_app', {
         p_id: payload['id'],
         p_proyecto_id: payload['proyecto_id'],
