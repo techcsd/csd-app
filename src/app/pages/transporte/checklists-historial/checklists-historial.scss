@@ -1,58 +1,90 @@
+// AA5 — rediseño con el design system de la app (light, tokens), como el hub de
+// Transporte / Mi actividad. Nada de tarjetas negras ad-hoc.
 .chl {
+  background: var(--color-bg);
+
   &__header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
+    gap: 12px;
+    padding: 16px;
+    background: var(--color-secondary);
+    color: #fff;
   }
   &__back {
-    background: none;
-    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
     color: #fff;
-    font-size: 1.5rem;
-    cursor: pointer;
+    font-size: 24px;
+    font-weight: 700;
+    flex: 0 0 auto;
   }
   &__icon {
-    font-size: 1.3rem;
+    font-size: 22px;
   }
   &__title {
-    font-size: 1.2rem;
     margin: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
   }
 
   &__search {
     width: 100%;
-    padding: 12px 14px;
+    min-height: var(--touch-min);
+    padding: 0 16px;
     margin-bottom: 12px;
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 12px;
-    color: #fff;
-    font-size: 1rem;
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-size: var(--fs-option);
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
   }
 
   &__filtros {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+  }
+  // Chip estándar (mismo look que .cat-tipos .chip): pill con borde, activo = marca.
+  .chip {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 2px solid var(--color-border);
+    background: var(--color-bg);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+  .chip--on {
+    border-color: var(--color-primary);
+    background: #fff7ed;
+    color: var(--color-primary-dark);
   }
 
   &__card {
     display: block;
     width: 100%;
     text-align: left;
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 14px;
-    padding: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
     margin-bottom: 10px;
-    color: #fff;
+    color: var(--color-text-primary);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: border-color 0.15s ease;
 
     &:active {
-      border-color: var(--Hub);
+      border-color: var(--color-primary);
     }
   }
 
@@ -63,36 +95,36 @@
     flex-wrap: wrap;
   }
   &__placa {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 1.05rem;
   }
   &__tipo {
     font-size: 0.8rem;
-    color: var(--main-ultra-light);
-    background: #212121;
-    padding: 2px 8px;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-2);
+    padding: 2px 10px;
     border-radius: 999px;
   }
   &__res {
     margin-left: auto;
     font-size: 0.78rem;
-    font-weight: 700;
-    padding: 3px 9px;
+    font-weight: 800;
+    padding: 3px 10px;
     border-radius: 999px;
-    background: #212121;
-    color: var(--main-ultra-light);
+    background: var(--color-surface-2);
+    color: var(--color-text-secondary);
 
     &--aprobado {
-      background: rgba(22, 163, 74, 0.18);
-      color: #4ade80;
+      background: var(--color-success-bg);
+      color: var(--color-success);
     }
     &--con_hallazgos {
-      background: rgba(217, 119, 6, 0.18);
-      color: #fbbf24;
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
     }
     &--bloqueado {
-      background: rgba(220, 38, 38, 0.2);
-      color: #f87171;
+      background: var(--color-error-bg);
+      color: var(--color-error);
     }
   }
 
@@ -101,13 +133,13 @@
     gap: 12px;
     flex-wrap: wrap;
     margin-top: 6px;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
 
   &__fecha {
     margin: 6px 0 0;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     font-size: 0.82rem;
   }
 }

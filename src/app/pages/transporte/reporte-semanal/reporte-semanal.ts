@@ -275,7 +275,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   /** U8 — recomputa cumplimiento del servidor + reportes en cola. */
   private async refreshEstados(): Promise<void> {
     const [semana, pend] = await Promise.all([
-      this.reportes.getSemana(),
+      this.reportes.getSemanaTodas(), // AA3 — estado por vehículo, no solo los míos
       this.sync.reportesSemanalesPendientes(),
     ]);
     this.semana.set(semana);
@@ -303,7 +303,7 @@ export class ReporteSemanalPage extends GuardedWizard {
     this.loading.set(true);
     try {
       const [semana, plantilla, fotoSlots, cond, pool, asignaciones, recepcionesEnCola] = await Promise.all([
-        this.reportes.getSemana(),
+        this.reportes.getSemanaTodas(), // AA3 — estado por vehículo, no solo los míos
         this.reportes.getPlantilla(),
         this.reportes.getFotoSlotsSemanal(), // Z11
         this.conductores.getMiConductor(),
@@ -496,7 +496,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       });
       this.resultadoEnviado.set(resultado);
       this.done.set(true);
-      this.semana.set(await this.reportes.getSemana());
+      this.semana.set(await this.reportes.getSemanaTodas()); // AA3
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar. Intenta de nuevo.');
     } finally {

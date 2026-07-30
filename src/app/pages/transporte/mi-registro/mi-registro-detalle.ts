@@ -38,7 +38,8 @@ export class MiRegistroDetallePage {
   checklist = signal<ChecklistDetalle | null>(null);
   echada = signal<EchadaDetalle | null>(null);
   multa = signal<MultaDetalle | null>(null);
-  audios = signal<string[]>([]); // Z23 — URLs firmadas de las notas de voz
+  // Z23/AA22 — notas de voz: URL firmada + transcripción automática (si existe).
+  audios = signal<{ url: string; transcripcion: string | null; estado: string | null }[]>([]);
   fmtFecha = formatFecha;
 
   esChecklist = computed(() => this.tipo === 'checklist');
@@ -76,8 +77,14 @@ export class MiRegistroDetallePage {
   private async loadAudios(entidadTipo: AudioEntidadTipo): Promise<void> {
     try {
       const notas = await this.audioNotas.list(entidadTipo, this.id);
-      const urls = await Promise.all(notas.map((n) => this.audioNotas.signedUrl(n.bucket, n.path)));
-      this.audios.set(urls.filter((u): u is string => !!u));
+      const items = await Promise.all(
+        notas.map(async (n) => ({
+          url: await this.audioNotas.signedUrl(n.bucket, n.path),
+          transcripcion: n.transcripcion ?? null,
+          estado: n.transcripcion_estado ?? null,
+        })),
+      );
+      this.audios.set(items.filter((a) => !!a.url) as { url: string; transcripcion: string | null; estado: string | null }[]);
     } catch {
       /* las notas son secundarias; el detalle se ve igual sin ellas */
     }

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { AppLauncher } from '@capacitor/app-launcher';
 import { BigButton } from '../../shared/ui/big-button/big-button';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
@@ -89,5 +90,20 @@ export class HomePage {
 
   reportar(): void {
     void this.router.navigate(['/reportar']);
+  }
+
+  /** AA6 — Dudas como entrada principal: abre Tecnología en la pestaña Dudas. */
+  dudas(): void {
+    void this.router.navigate(['/tecnologia'], { queryParams: { tab: 'dudas' } });
+  }
+
+  /** AA7 — abrir la página web (SGC) en el navegador del sistema. */
+  async visitarWeb(): Promise<void> {
+    const url = 'https://sgcconstructorasd.com';
+    try {
+      await AppLauncher.openUrl({ url });
+    } catch {
+      window.open(url, '_system');
+    }
   }
 }

@@ -36,6 +36,9 @@ export interface AudioNota {
   es_prueba: boolean;
   creado_por: string | null;
   created_at: string;
+  // AA22 — transcripción automática de la nota de voz (si el proveedor la generó).
+  transcripcion?: string | null;
+  transcripcion_estado?: string | null; // pendiente | completada | fallida
 }
 
 /**

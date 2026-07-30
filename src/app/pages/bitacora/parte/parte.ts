@@ -362,6 +362,7 @@ export class PartePage implements OnDestroy {
       void this.loadEquiposObra(this.proyectoId());
       void this.loadEstructurasObra(this.proyectoId()); // Z20
       void this.loadTareasCronograma(this.proyectoId());
+      this.prefillIngeniero(); // AA11
     }
     this.hydrated = true;
   }
@@ -800,6 +801,7 @@ export class PartePage implements OnDestroy {
         void this.loadEstructurasObra(this.proyectoId()); // Z20
       }
       void this.loadTareasCronograma(this.proyectoId()); // Y15.8 (aplica también a "no se trabajó")
+      this.prefillIngeniero(); // AA11 — default = encargado de la obra
     }
     // Z4 — flujo corto "no se trabajó": obra → motivo → resumen.
     if (this.sinActividad()) {
@@ -894,11 +896,25 @@ export class PartePage implements OnDestroy {
         // → paso 9.
       }
     }
+    // AA11 — el ingeniero responsable es OBLIGATORIO para pasar del paso 9.
+    if (s === 9 && !this.ingenieroResponsable().trim()) {
+      this.toast.error('Escribe el ingeniero responsable.');
+      return;
+    }
 
     const nextStep = Math.min(this.total(), s + 1);
     if (nextStep === 5) this.paso5.set('sujeto');
     if (nextStep === 8) this.paso8.set('uso');
     this.step.set(nextStep);
+  }
+
+  /** AA11 — precarga el ingeniero con el encargado de la obra (si el campo está
+   *  vacío); el usuario puede cambiarlo. */
+  private prefillIngeniero(): void {
+    if (this.ingenieroResponsable().trim()) return;
+    const p = this.proyectos().find((x) => x.id === this.proyectoId());
+    const enc = p?.responsable_nombre?.trim();
+    if (enc) this.ingenieroResponsable.set(enc);
   }
 
   private prev(): void {

@@ -68,8 +68,14 @@ export class ChecklistsHistorialPage {
     });
   });
 
+  // AA5 — el contador debe cuadrar con lo que muestra el filtro y las cards:
+  // un checklist "con hallazgos" es el que tiene críticos O resultado
+  // con_hallazgos/bloqueado (mismo predicado que `filtrados`).
   criticosCount = computed(
-    () => this.rows().filter((r) => r.tiene_criticos && !r.atendido).length,
+    () =>
+      this.rows().filter(
+        (r) => r.tiene_criticos || r.resultado === 'con_hallazgos' || r.resultado === 'bloqueado',
+      ).length,
   );
 
   setTipo(t: TipoFiltro): void {

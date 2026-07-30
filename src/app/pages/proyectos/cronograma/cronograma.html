@@ -127,6 +127,7 @@
           <app-photo-slot
             label="Evidencia"
             hint="📷"
+            [gallery]="false"
             [foto]="fotoCompletar()"
             (captured)="onFoto($event)"
             (cleared)="onFotoCleared()"

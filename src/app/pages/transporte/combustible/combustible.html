@@ -187,6 +187,17 @@
         <app-option-button icon="🛢️" label="Diésel" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
         <app-option-button icon="⛽" label="Gasolina" [selected]="producto() === 'gasolina'" (pressed)="producto.set('gasolina')" />
 
+        <!-- AA20 — subtipo Regular/Premium (obligatorio) -->
+        <label class="field-label comb__mt">¿Regular o Premium?</label>
+        <app-option-button icon="🟢" label="Regular" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
+        <app-option-button icon="⭐" label="Premium" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
+        @if (precioRef(); as pr) {
+          <p class="field-hint">
+            Precio oficial {{ productoCanonicoLabel[pr.producto] ?? pr.producto }}:
+            <b>RD$ {{ pr.precio | number: '1.2-2' }}/gal</b> ({{ pr.fuente }}, vigente desde {{ pr.vigencia_desde }})
+          </p>
+        }
+
         <h1 class="screen__title comb__mt">¿En qué estación?</h1>
         @for (e of estacionesVisibles(); track e) {
           <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { JsonPipe, Location } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { VersionService, VersionHistorial, CAMBIO_LABEL } from '../../core/services/version.service';
@@ -105,9 +106,13 @@ export class TecnologiaPage {
   hayNueva = computed(() => this.version.hayNueva());
   publicada = computed(() => this.version.info()?.version_publicada ?? null);
 
+  private route = inject(ActivatedRoute);
+
   constructor() {
     void this.loadVersiones();
     void this.version.check();
+    // AA6 — deep-link desde el menú principal: abrir directo en la pestaña Dudas.
+    if (this.route.snapshot.queryParamMap.get('tab') === 'dudas') this.setTab('dudas');
   }
 
   get online(): boolean {

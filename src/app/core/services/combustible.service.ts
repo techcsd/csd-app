@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { CombustibleCaptura, UltimaEchada } from '../models/combustible.model';
+import { CombustibleCaptura, PrecioCombustibleVigente, UltimaEchada } from '../models/combustible.model';
 import { db } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
@@ -102,6 +102,20 @@ export class CombustibleService {
     return data ?? [];
   }
 
+  /**
+   * AA20 — precios oficiales vigentes (MICM) por producto canónico. Se usan como
+   * referencia al registrar la echada. Cacheados offline (último conocido) por el
+   * canal de catálogos; devuelve [] sin señal en frío.
+   */
+  async getPreciosVigentes(): Promise<PrecioCombustibleVigente[]> {
+    const data = await this.catalog.refresh<PrecioCombustibleVigente[]>('fuel_prices_vigentes', async () => {
+      const { data, error } = await this.supabase.client.rpc('precios_combustible_vigentes');
+      if (error) throw new Error(error.message);
+      return (data as PrecioCombustibleVigente[]) ?? [];
+    });
+    return data ?? [];
+  }
+
   /** Queue a fuel record. Works fully offline; syncs when there's signal. */
   async registrar(input: CombustibleCaptura): Promise<void> {
     const id = crypto.randomUUID();
@@ -152,6 +166,7 @@ export class CombustibleService {
         monto: input.monto,
         estacion: input.estacion,
         producto: input.producto, // Z23-app
+        subtipo: input.subtipo, // AA20
         tarjeta: input.tarjeta, // Z23-app
         titular: input.titular, // Z23-app
         titular_es_persona: input.titularEsPersona, // Z23-app
@@ -186,6 +201,7 @@ export class CombustibleService {
         p_foto_bomba_path: photoPaths['bomba'] ?? null, // Y4
         p_notas: null,
         p_producto: payload['producto'] ?? null, // Z23-app
+        p_subtipo: payload['subtipo'] ?? null, // AA20
         p_tarjeta: payload['tarjeta'] ?? null, // Z23-app
         p_titular: payload['titular'] ?? null, // Z23-app
         p_titular_es_persona: payload['titular_es_persona'] ?? false, // Z23-app

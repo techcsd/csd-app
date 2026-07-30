@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.35.0';
+const VERSION = '1.36.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,19 @@ const MIN_VERSION = '1.34.0';
 const RELEASED_AT = '2026-07-29';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Foto del equipo dañado, echada de persona sin vehículo y mejor reporte de fallas';
+const TITULO = 'Pantallas más claras, combustible Regular/Premium con precio oficial, menú con Dudas y arreglos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'En la bitácora, cuando marcas un equipo alquilado como dañado puedes adjuntarle una foto opcional.' },
-  { t: 'nuevo', d: 'Nueva "echada de persona": registra combustible cargado con una tarjeta asignada a alguien, sin vehículo, para que cuadre con el reporte de la estación.' },
-  { t: 'mejora', d: 'Mejor diagnóstico: la app ahora avisa al equipo de Tecnología cuando falla la ubicación (GPS) o la grabación de una nota de voz.' },
+  { t: 'arreglo', d: 'Los reportes de errores ya no se quedan pegados en "Pendientes de envío": la telemetría se maneja sola en segundo plano.' },
+  { t: 'arreglo', d: 'El reporte semanal se marca como enviado al instante, aun en vehículos que no son tuyos.' },
+  { t: 'arreglo', d: 'Las notas de voz ya no se pierden al avanzar y volver entre pasos del formulario.' },
+  { t: 'mejora', d: 'Tecnología e Historial de checklists se rediseñaron con el estilo estándar de la app: más legibles y consistentes.' },
+  { t: 'mejora', d: 'Las fotos de evidencia (pre-uso, reporte semanal, tarea de cronograma) ahora son solo de cámara, no de galería.' },
+  { t: 'nuevo', d: 'Menú principal: acceso directo a "Dudas y guías" y a "Visitar página web".' },
+  { t: 'mejora', d: 'En la bitácora, el ingeniero responsable es obligatorio y viene precargado con el encargado de la obra.' },
+  { t: 'nuevo', d: 'Al echar combustible eliges Regular o Premium y ves el precio oficial vigente (MICM) como referencia.' },
+  { t: 'mejora', d: 'Las notas de voz muestran su transcripción automática cuando está lista.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -139,6 +139,10 @@ app-counter {
   max-width: 120px;
 }
 
+// AA11 — asterisco de campo obligatorio.
+.parte__req {
+  color: var(--color-error);
+}
 .parte__actrow {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);

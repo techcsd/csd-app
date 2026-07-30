@@ -32,6 +32,9 @@ import {
   CombustibleCalculo,
   calcularCombustible,
   UltimaEchada,
+  PrecioCombustibleVigente,
+  PRODUCTO_CANONICO_LABEL,
+  productoCanonico,
 } from '../../../core/models/combustible.model';
 
 const TOTAL_STEPS = 4;
@@ -97,6 +100,14 @@ export class CombustiblePage extends GuardedWizard {
   // Z23-app — producto (para conciliar con el reporte) + tarjeta (opcional).
   // Default 'diesel' (la flota es mayormente diésel); el chofer cambia a gasolina.
   producto = signal<'diesel' | 'gasolina'>('diesel');
+  // AA20 — subtipo Regular/Premium (obligatorio) + precio oficial de referencia.
+  subtipo = signal<'regular' | 'premium' | null>(null);
+  precios = signal<PrecioCombustibleVigente[]>([]);
+  readonly productoCanonicoLabel = PRODUCTO_CANONICO_LABEL;
+  precioRef = computed<PrecioCombustibleVigente | null>(() => {
+    const canon = productoCanonico(this.producto(), this.subtipo());
+    return this.precios().find((p) => p.producto === canon) ?? null;
+  });
   tarjeta = signal('');
   estacionesVisibles = computed(() =>
     this.estaciones().filter((e) => e.trim().toLowerCase() !== 'otro'),
@@ -138,6 +149,8 @@ export class CombustiblePage extends GuardedWizard {
     this.registerBackGuard();
     resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     // Z9 — ya no se carga el catálogo de estaciones (solo Total Energies + Otro).
+    // AA20 — precios oficiales de referencia (offline cache del último conocido).
+    void this.combustible.getPreciosVigentes().then((p) => this.precios.set(p));
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
     if (this.vehiculoId) {
@@ -298,6 +311,11 @@ export class CombustiblePage extends GuardedWizard {
     }
     // V6 — paso 2: estación (con el cálculo automático debajo).
     if (s === 2) {
+      // AA20 — el subtipo (Regular/Premium) es obligatorio.
+      if (!this.subtipo()) {
+        this.toast.error('Elige Regular o Premium.');
+        return false;
+      }
       if (this.estacionOtro() && !this.estacionOtroTexto().trim()) {
         this.toast.error('Escribe el nombre de la estación.');
         return false;
@@ -336,6 +354,7 @@ export class CombustiblePage extends GuardedWizard {
         monto: this.monto()!,
         estacion: estacion ? estacion : null,
         producto: this.producto(), // Z23-app
+        subtipo: this.subtipo(), // AA20
         tarjeta: this.tarjeta().trim() || null, // Z23-app
         titular: persona ? this.titular().trim() || null : null, // Z23-app
         titularEsPersona: persona, // Z23-app

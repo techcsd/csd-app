@@ -1,22 +1,32 @@
+// AA4 — rediseño con el design system de la app (light, tokens estándar), como
+// el hub de Transporte / Auditoría. Sin tarjetas negras ni tokens dark ad-hoc.
 .tec {
+  background: var(--color-bg);
+
   &__header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
+    gap: 12px;
+    padding: 16px;
+    background: var(--color-secondary);
+    color: #fff;
   }
   &__back {
-    background: none;
-    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
     color: #fff;
-    font-size: 1.5rem;
-    cursor: pointer;
+    font-size: 24px;
+    font-weight: 700;
+    flex: 0 0 auto;
   }
   &__icon {
-    font-size: 1.3rem;
+    font-size: 22px;
   }
   &__title {
-    font-size: 1.2rem;
+    font-size: var(--fs-title);
+    font-weight: 800;
     margin: 0;
   }
 
@@ -24,26 +34,28 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
     padding: 14px 16px;
     margin-bottom: 14px;
   }
   &__version-label {
     font-size: 0.8rem;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
   }
   &__version-num {
     font-size: 1.6rem;
     font-weight: 800;
-    color: #fff;
+    color: var(--color-text-primary);
   }
   &__version-new {
     font-size: 0.85rem;
-    color: var(--Hub);
+    font-weight: 700;
+    color: var(--color-primary);
   }
 
+  // Segmented control (mismo patrón que .aud__tab).
   &__tabs {
     display: flex;
     gap: 8px;
@@ -51,18 +63,19 @@
   }
   &__tab {
     flex: 1;
-    padding: 10px;
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 12px;
-    color: var(--main-ultra-light);
-    font-size: 0.9rem;
+    padding: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+    font-weight: 700;
     cursor: pointer;
 
     &--on {
-      border-color: var(--Hub);
+      background: var(--color-secondary);
+      border-color: var(--color-secondary);
       color: #fff;
-      font-weight: 700;
     }
   }
 
@@ -73,10 +86,10 @@
     padding: 0;
   }
   &__vitem {
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 14px;
-    padding: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
     margin-bottom: 10px;
   }
   &__vtop {
@@ -87,15 +100,15 @@
   &__vver {
     font-weight: 800;
     font-size: 1.1rem;
-    color: #fff;
+    color: var(--color-text-primary);
   }
   &__vfecha {
     font-size: 0.8rem;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
   }
   &__vtitulo {
     margin: 4px 0 8px;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
   &__cambios {
@@ -114,7 +127,7 @@
   }
   &__cambio-d {
     flex: 1;
-    color: #f4f4f5;
+    color: var(--color-text-primary);
   }
 
   &__tag {
@@ -127,13 +140,13 @@
     text-transform: uppercase;
 
     &--nuevo {
-      background: #16a34a;
+      background: var(--color-success);
     }
     &--mejora {
-      background: #2563eb;
+      background: var(--color-info);
     }
     &--arreglo {
-      background: #d97706;
+      background: var(--color-warning);
     }
     &--seguridad {
       background: #7c3aed;
@@ -142,19 +155,32 @@
 
   /* Z30 — Dudas + guías */
   &__search {
+    width: 100%;
+    min-height: var(--touch-min);
+    padding: 0 16px;
     margin-bottom: 14px;
+    background: var(--color-bg);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+    font-size: var(--fs-option);
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
   }
   &__dudas-h {
     font-size: 1rem;
     font-weight: 800;
-    color: #fff;
+    color: var(--color-text-primary);
     margin: 18px 0 10px;
   }
   &__guia {
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 14px;
-    padding: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
     margin-bottom: 10px;
   }
   &__guia-top {
@@ -168,7 +194,7 @@
   }
   &__guia-title {
     font-weight: 800;
-    color: #fff;
+    color: var(--color-text-primary);
   }
   &__guia-pasos {
     margin: 0;
@@ -176,24 +202,24 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    color: #e5e5e5;
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
   &__cat {
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 14px;
-    padding: 12px 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
     margin-bottom: 10px;
   }
   &__cat-title {
     display: block;
     font-weight: 800;
-    color: #fff;
+    color: var(--color-text-primary);
     margin-bottom: 6px;
   }
   &__duda {
-    border-top: 1px solid #2d2d2d;
+    border-top: 1px solid var(--color-border);
   }
   &__duda-q {
     width: 100%;
@@ -203,24 +229,25 @@
     gap: 10px;
     background: none;
     border: none;
-    color: #f4f4f5;
+    color: var(--color-text-primary);
     text-align: left;
     padding: 12px 0;
     font-size: 0.92rem;
+    font-weight: 600;
     cursor: pointer;
   }
   &__duda-a {
     margin: 0 0 12px;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     line-height: 1.5;
   }
 
   /* Reportes de errores */
   &__err {
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-radius: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
     margin-bottom: 10px;
     overflow: hidden;
   }
@@ -232,7 +259,7 @@
     padding: 14px 16px;
     background: none;
     border: none;
-    color: #fff;
+    color: var(--color-text-primary);
     text-align: left;
     cursor: pointer;
   }
@@ -253,30 +280,30 @@
   &__err-msg {
     margin: 5px 0 0;
     font-size: 0.9rem;
-    color: #e5e5e5;
+    color: var(--color-text-secondary);
     word-break: break-word;
   }
   &__err-meta {
     margin: 4px 0 0;
     font-size: 0.78rem;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
   }
   &__caret {
     flex: 0 0 auto;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
   }
   &__err-body {
     padding: 4px 16px 12px;
-    border-top: 1px solid #2d2d2d;
+    border-top: 1px solid var(--color-border);
   }
   &__err-ruta {
     font-size: 0.82rem;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     word-break: break-word;
   }
   &__err-ctx {
     font-size: 0.72rem;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     white-space: pre-wrap;
     word-break: break-word;
     margin: 6px 0 0;
@@ -289,24 +316,24 @@
     padding: 2px 8px;
     border-radius: 999px;
     text-transform: uppercase;
-    background: #212121;
-    color: var(--main-ultra-light);
+    background: var(--color-surface-2);
+    color: var(--color-text-secondary);
 
     &--crash {
-      background: rgba(220, 38, 38, 0.2);
-      color: #f87171;
+      background: var(--color-error-bg);
+      color: var(--color-error);
     }
     &--camera {
-      background: rgba(217, 119, 6, 0.2);
-      color: #fbbf24;
+      background: var(--color-warning-bg);
+      color: var(--color-warning);
     }
     &--sync {
-      background: rgba(37, 99, 235, 0.2);
-      color: #60a5fa;
+      background: #dbeafe;
+      color: var(--color-info);
     }
     &--permission {
-      background: rgba(124, 58, 237, 0.2);
-      color: #a78bfa;
+      background: #ede9fe;
+      color: #7c3aed;
     }
   }
 }

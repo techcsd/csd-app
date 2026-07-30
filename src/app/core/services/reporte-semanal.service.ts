@@ -14,6 +14,8 @@ import {
 const CATALOG_PLANTILLA = 'reporte_semanal_plantilla';
 // Z13: bumped a _v2 para traer el estado global (reportado_por/at).
 const CATALOG_SEMANA = 'reporte_semanal_semana_v2';
+// AA3: estado de la semana por VEHÍCULO (sin filtrar por chofer) para el listado.
+const CATALOG_SEMANA_TODAS = 'reporte_semanal_todas_v1';
 
 /**
  * Weekly vehicle report (R3). Reuses the checklist engine with the `semanal`
@@ -107,6 +109,32 @@ export class ReporteSemanalService {
   /** Count of the current user's vehicles still missing this week's report. */
   async pendientesCount(): Promise<number> {
     return (await this.getSemana()).filter((v) => !v.tiene_reporte).length;
+  }
+
+  /**
+   * AA3 — estado de la semana en curso por VEHÍCULO, SIN filtrar por chofer. El
+   * listado usa esto para marcar reportado cualquier vehículo con reporte de la
+   * semana, aunque no esté asignado a quien lo reportó (bug del "vehículo de
+   * prueba": la op drenaba pero seguía "pendiente" porque getSemana solo traía
+   * mis vehículos). La vista es `security_invoker`, así que RLS limita las filas
+   * a lo que el usuario puede ver (un chofer no ve la flota entera). El badge del
+   * hub sigue usando getSemana() (scoped a mis vehículos), sin regresión.
+   */
+  async getSemanaTodas(): Promise<ReporteSemanalVeh[]> {
+    const data = await this.catalog.refresh<ReporteSemanalVeh[]>(CATALOG_SEMANA_TODAS, async () => {
+      const { data, error } = await this.supabase.client
+        .from('v_reporte_semanal_cumplimiento')
+        .select(
+          'vehiculo_id, placa, tiene_reporte, reporte_fecha, resultado, semana_inicio, semana_fin, reportado_por, reportado_por_id, reportado_at, km_reporte',
+        )
+        .order('semana_inicio', { ascending: false });
+      if (error) throw new Error(error.message);
+      const rows = (data as ReporteSemanalVeh[]) ?? [];
+      if (!rows.length) return [];
+      const current = rows[0].semana_inicio;
+      return rows.filter((r) => r.semana_inicio === current);
+    });
+    return data ?? [];
   }
 
   /** Queue a weekly report. Works fully offline; syncs when there's signal. */
@@ -227,6 +255,7 @@ export class ReporteSemanalService {
       // reconsultar el servidor (ahora tiene_reporte=true) y no volver a
       // "Reportar" por caché vieja mientras la op ya se fue del outbox.
       await this.catalog.invalidate(CATALOG_SEMANA);
+      await this.catalog.invalidate(CATALOG_SEMANA_TODAS); // AA3
     });
   }
 }

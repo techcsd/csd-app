@@ -34,6 +34,7 @@ export interface CombustibleCaptura {
   estacion: string | null;
   // Z23-app — campos de conciliación con el reporte del proveedor.
   producto: string | null; // 'diesel' | 'gasolina'
+  subtipo: string | null; // AA20 — 'regular' | 'premium'
   tarjeta: string | null; // tarjeta usada (opcional)
   // Z23-app — titular de la tarjeta cuando es de una persona (no de un vehículo).
   titular: string | null;
@@ -43,6 +44,31 @@ export interface CombustibleCaptura {
   fotoTablero: Blob | null;
   fotoBomba: Blob; // Y4 — bomba/estación en 0
   placa: string;
+}
+
+/** AA20 — precio oficial vigente por producto canónico (referencia/widget). */
+export interface PrecioCombustibleVigente {
+  producto: string; // gasolina_regular | gasolina_premium | diesel_regular | diesel_premium
+  precio: number; // RD$/galón
+  vigencia_desde: string;
+  fuente: string;
+}
+
+/** AA20 — etiqueta legible de un producto canónico (espeja el SGC). */
+export const PRODUCTO_CANONICO_LABEL: Record<string, string> = {
+  gasolina_regular: 'Gasolina Regular',
+  gasolina_premium: 'Gasolina Premium',
+  diesel_regular: 'Diésel Regular',
+  diesel_premium: 'Diésel Óptimo',
+};
+
+/** AA20 — producto canónico a partir de producto (gasolina|diesel) + subtipo. */
+export function productoCanonico(
+  producto: string | null,
+  subtipo: string | null,
+): string | null {
+  if (!producto) return null;
+  return subtipo ? `${producto}_${subtipo}` : producto;
 }
 
 /** Live client-side derivation shown before saving (mirrors the server). */

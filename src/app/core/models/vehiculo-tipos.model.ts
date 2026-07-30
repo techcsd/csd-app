@@ -17,6 +17,7 @@ export const VEHICULO_TIPOS: ReadonlyArray<{ value: string; label: string }> = [
   { value: 'mixer', label: 'Mixer / Hormigonera' },
   { value: 'compactadora', label: 'Compactadora' },
   { value: 'montacargas', label: 'Montacargas' },
+  { value: 'telehandler', label: 'Telehandler' }, // AA18 — maquinaria (pesado, por horas)
   { value: 'otro', label: 'Otro' },
 ] as const;
 

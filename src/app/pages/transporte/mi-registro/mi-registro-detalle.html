@@ -101,8 +101,16 @@
         <!-- Z23 — notas de voz -->
         @if (audios().length) {
           <h2 class="mrd__section">Notas de voz ({{ audios().length }})</h2>
-          @for (u of audios(); track u) {
-            <audio class="mrd__audio" [src]="u" controls></audio>
+          @for (a of audios(); track a.url) {
+            <div class="mrd__voz">
+              <audio class="mrd__audio" [src]="a.url" controls></audio>
+              <!-- AA22 — transcripción automática junto al player. -->
+              @if (a.transcripcion) {
+                <p class="mrd__transcripcion">“{{ a.transcripcion }}”</p>
+              } @else if (a.estado === 'pendiente' || a.estado === 'procesando') {
+                <p class="mrd__transcripcion mrd__transcripcion--pend">Transcribiendo…</p>
+              }
+            </div>
           }
         }
       } @else {

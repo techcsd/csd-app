@@ -250,6 +250,7 @@
                 <app-photo-slot
                   label="Foto de la falla (opcional)"
                   hint="📸"
+                  [gallery]="false"
                   [foto]="draft(it.id).photo"
                   (captured)="onItemFoto(it.id, $event)"
                   (cleared)="onItemFotoCleared(it.id)"
@@ -273,6 +274,7 @@
             <app-photo-slot
               [label]="f.label"
               [hint]="f.hint"
+              [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
@@ -286,6 +288,7 @@
             <app-photo-slot
               [label]="f.label"
               [hint]="f.hint"
+              [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
@@ -300,7 +303,7 @@
         <p class="screen__subtitle">Firma para confirmar la revisión de pre-uso.</p>
         <app-signature-pad (changed)="onFirmaChanged($event)" />
         <!-- Z23 — notas de voz (opcional) -->
-        <app-voice-notes [(notes)]="voces" [max]="5" />
+        <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
       }
 
       <!-- Step 5: verdict preview + confirm -->

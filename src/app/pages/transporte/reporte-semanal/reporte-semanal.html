@@ -84,6 +84,7 @@
               <app-photo-slot
                 [label]="f.label"
                 [hint]="f.hint"
+                [gallery]="false"
                 [foto]="fotos()[f.slot] ?? null"
                 (captured)="onFoto(f.slot, $event)"
                 (cleared)="onFotoCleared(f.slot)"
@@ -119,7 +120,7 @@
         <p class="screen__subtitle">Firma para confirmar el reporte.</p>
         <app-signature-pad (changed)="onFirmaChanged($event)" />
         <!-- Z23 — notas de voz (opcional) -->
-        <app-voice-notes [(notes)]="voces" [max]="5" />
+        <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
       }
 
       <!-- Resumen + aviso de mantenimiento (S19) -->

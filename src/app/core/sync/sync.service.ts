@@ -115,6 +115,17 @@ export class SyncService {
   private draining = false;
 
   /**
+   * AA1 — ops "best-effort" (telemetría): si fallan al enviarse se DESCARTAN en
+   * silencio. Nunca aparecen en "Pendientes de envío", nunca piden acción al
+   * usuario, nunca bloquean el drain ni cuentan como pendientes. `error_report`
+   * es telemetría (PROMPT-2 FASE 1): perderla no le importa al usuario.
+   */
+  private static readonly SILENT_OPS = new Set<string>(['error_report']);
+  private static isSilent(tipo_op: string): boolean {
+    return SyncService.SILENT_OPS.has(tipo_op);
+  }
+
+  /**
    * Y6 — sink opcional para fallos PERMANENTES del outbox (un RPC que rechaza,
    * permiso/RLS, foto perdida, handler ausente…). Lo cablea ErrorReportService
    * para telemetría. NO se inyecta el servicio aquí (evita ciclo de DI).
@@ -129,13 +140,35 @@ export class SyncService {
   changed = signal(0);
 
   constructor() {
-    void this.refreshCounts();
+    // AA1 — limpieza one-shot: purga cualquier op silenciosa (error_report)
+    // atascada de builds viejos ANTES de que la bandeja las muestre. A partir
+    // del fix, estas ops nunca vuelven a quedarse en la cola (se descartan al
+    // fallar), así que esto solo elimina las heredadas.
+    void this.cleanupSilentOps().then(() => this.refreshCounts());
     // Drain as soon as connectivity returns.
     effect(() => {
       if (this.network.online()) void this.drain();
     });
     // Safety-net ticker for backoff retries while the app is open.
     setInterval(() => void this.drain(), TICK_MS);
+  }
+
+  /** AA1 — borra las ops silenciosas que quedaron encoladas por builds viejos. */
+  private async cleanupSilentOps(): Promise<void> {
+    try {
+      const stuck = await db.outbox.filter((o) => SyncService.isSilent(o.tipo_op)).toArray();
+      if (!stuck.length) return;
+      const ids = stuck.map((o) => o.id);
+      await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {
+        await db.outbox.bulkDelete(ids);
+        for (const id of ids) {
+          await db.fotos_pendientes.where('op_id').equals(id).delete();
+          await db.mis_registros.delete(id);
+        }
+      });
+    } catch {
+      /* la limpieza nunca debe romper el arranque */
+    }
   }
 
   /** Feature services register how their op type commits to the server. */
@@ -257,6 +290,7 @@ export class SyncService {
     const ops = await db.outbox.orderBy('created_local').toArray();
     const out: Array<OutboxOp & { fotos: number }> = [];
     for (const op of ops) {
+      if (SyncService.isSilent(op.tipo_op)) continue; // AA1 — telemetría nunca se muestra
       const fotos = await db.fotos_pendientes.where('op_id').equals(op.id).count();
       out.push({ ...op, fotos });
     }
@@ -329,12 +363,14 @@ export class SyncService {
   }
 
   private async refreshCounts(): Promise<void> {
-    const [pending, errored] = await Promise.all([
-      db.outbox.where('estado').anyOf('pending', 'syncing').count(),
-      db.outbox.where('estado').equals('error').count(),
-    ]);
-    this.pendingCount.set(pending);
-    this.errorCount.set(errored);
+    // AA1 — las ops silenciosas (telemetría) NO cuentan como pendientes/errores
+    // para no ensuciar el badge de sincronización.
+    const rows = await db.outbox.toArray();
+    const visible = rows.filter((o) => !SyncService.isSilent(o.tipo_op));
+    this.pendingCount.set(
+      visible.filter((o) => o.estado === 'pending' || o.estado === 'syncing').length,
+    );
+    this.errorCount.set(visible.filter((o) => o.estado === 'error').length);
     this.changed.update((n) => n + 1);
   }
 
@@ -384,6 +420,12 @@ export class SyncService {
   private async process(op: OutboxOp): Promise<void> {
     const handler = this.handlers.get(op.tipo_op);
     if (!handler) {
+      // AA1 — op silenciosa sin handler (no debería pasar): descártala, no la
+      // dejes acumularse ni pedir acción.
+      if (SyncService.isSilent(op.tipo_op)) {
+        await db.outbox.delete(op.id);
+        return;
+      }
       // S30 — con el bootstrap eager (app.config) esto no debería pasar. Red de
       // seguridad: NO dejar el item pending para siempre en silencio; contar
       // intentos con backoff y, tras MAX_INTENTOS, marcarlo error visible para
@@ -464,6 +506,16 @@ export class SyncService {
   }
 
   private async handleFailure(op: OutboxOp, err: unknown): Promise<void> {
+    // AA1 — telemetría best-effort: si falla al enviarse, se DESCARTA en silencio
+    // (nunca a estado 'error', nunca a la bandeja, sin reintentos ni ruido).
+    if (SyncService.isSilent(op.tipo_op)) {
+      await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {
+        await db.fotos_pendientes.where('op_id').equals(op.id).delete();
+        await db.mis_registros.delete(op.id);
+        await db.outbox.delete(op.id);
+      });
+      return;
+    }
     const permanent = err instanceof PermanentSyncError;
     const kind: SyncErrorKind = err instanceof PermanentSyncError ? err.kind : 'red';
     const intentos = op.intentos + 1;

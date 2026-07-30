@@ -168,7 +168,7 @@ export class BitacoraService {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
       const { data, error } = await this.supabase.client
         .from('proyectos')
-        .select('id, nombre')
+        .select('id, nombre, responsable_nombre')
         .order('nombre');
       if (error) throw new Error(error.message);
       return (data as Proyecto[]) ?? [];

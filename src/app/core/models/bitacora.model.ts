@@ -113,6 +113,8 @@ export interface ProyectoPartida {
 export interface Proyecto {
   id: string;
   nombre: string;
+  /** AA11 — encargado/ingeniero de la obra (default del paso 9 del parte). */
+  responsable_nombre?: string | null;
   /** U22 — coordenadas de la obra (para destino de rutas), si están cargadas. */
   latitud?: number | null;
   longitud?: number | null;

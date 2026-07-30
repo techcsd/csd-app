@@ -26,6 +26,15 @@ export class VoiceNotes implements OnDestroy {
   max = input(5);
   /** Two-way: la lista de notas grabadas (el padre lee los blobs al enviar). */
   notes = model<VoiceNoteItem[]>([]);
+  /**
+   * AA12 — cuando el componente vive dentro de un `@if` de paso de wizard, el
+   * padre CONSERVA `notes` (blob + url) entre pasos. Con esto NO revocamos las
+   * URLs al destruir el componente (si lo hacíamos, al volver al paso la nota
+   * salía gris `0:00/0:00` porque el object-URL ya estaba revocado — mismo bug
+   * que P10 en photo-slot). El padre es el dueño del ciclo de vida. Default
+   * false = comportamiento anterior (pantallas de un solo uso).
+   */
+  persistUrls = input(false);
 
   private rec = viewChild(VoiceRecorder);
 
@@ -48,6 +57,9 @@ export class VoiceNotes implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // AA12 — si el padre conserva las notas entre pasos, NO revocar (sería
+    // romper las URLs que el padre sigue mostrando). El padre libera al enviar/salir.
+    if (this.persistUrls()) return;
     for (const n of this.notes()) URL.revokeObjectURL(n.url);
   }
 }

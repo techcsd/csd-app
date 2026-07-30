@@ -29,8 +29,12 @@
     }
   </main>
 
-  <!-- Non-gated: everyone can report a problem or improvement. -->
+  <!-- Non-gated: available to everyone. -->
   <footer class="home__footer">
+    <!-- AA6 — Dudas como entrada principal (mismo contenido que Tecnología › Dudas). -->
+    <button type="button" class="home__link" (click)="dudas()">❓ Dudas y guías</button>
+    <!-- AA7 — "Visitar página web" justo encima de "Reportar problema". -->
+    <button type="button" class="home__link" (click)="visitarWeb()">🌐 Visitar página web</button>
     <button type="button" class="home__report" (click)="reportar()" data-tour="reportar">
       🛟 Reportar un problema o mejora
     </button>

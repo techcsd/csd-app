@@ -179,3 +179,18 @@
   width: 100%;
   margin-top: 8px;
 }
+// AA22 — transcripción de la nota de voz.
+.mrd__voz {
+  margin-bottom: 12px;
+}
+.mrd__transcripcion {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.mrd__transcripcion--pend {
+  opacity: 0.7;
+  font-style: normal;
+}

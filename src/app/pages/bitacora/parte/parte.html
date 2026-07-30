@@ -80,7 +80,7 @@
         <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">📸 Agregar foto (opcional)</button>
 
         <!-- Z23 — notas de voz (múltiples) -->
-        <app-voice-notes [(notes)]="voces" [max]="5" />
+        <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
       }
 
       <!-- 2. Clima (lluvia) -->
@@ -420,8 +420,9 @@
       <!-- 9. Datos finales (S8) -->
       @if (step() === 9) {
         <h1 class="screen__title">Datos finales</h1>
-        <label class="field-label">Ingeniero responsable (opcional)</label>
+        <label class="field-label">Ingeniero responsable <span class="parte__req">*</span></label>
         <input class="field" type="text" [ngModel]="ingenieroResponsable()" (ngModelChange)="ingenieroResponsable.set($event)" placeholder="Nombre del ingeniero" />
+        <p class="field-hint">Precargado con el encargado de la obra; puedes cambiarlo.</p>
 
         <label class="field-label">Hora de fin de jornada (opcional)</label>
         <input class="field" type="time" [ngModel]="horaFinTrabajo()" (ngModelChange)="horaFinTrabajo.set($event)" />
@@ -452,7 +453,7 @@
         }
 
         <!-- Z23 — notas de voz (múltiples) -->
-        <app-voice-notes [(notes)]="voces" [max]="5" />
+        <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
       }
 
       <!-- 10. Resumen (no editable) -->
