@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.39.0';
+const VERSION = '1.40.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,11 @@ const MIN_VERSION = '1.34.0';
 const RELEASED_AT = '2026-07-30';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Horómetro en todos los flujos, reordenar fotos del vehículo y micrófono sin re-preguntar';
+const TITULO = 'Transcripción de las notas de voz en el detalle de bitácora e incidentes';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'En maquinaria medida por horas (horómetro), toda la app pide y muestra "Horas de uso" en vez de kilómetros (combustible, pre-uso, mantenimiento, reporte semanal).' },
-  { t: 'nuevo', d: 'Al editar un vehículo puedes reordenar sus fotos y elegir cuál es la portada.' },
-  { t: 'arreglo', d: 'El micrófono ya no pide permiso en cada grabación de nota de voz: se concede una sola vez.' },
+  { t: 'mejora', d: 'En el detalle de una bitácora o incidente ahora se lee la transcripción automática de cada nota de voz (o "Transcribiendo…" mientras se procesa).' },
 ];
 
 const TIPO_POR_COMMIT = {

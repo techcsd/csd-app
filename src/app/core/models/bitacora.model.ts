@@ -163,5 +163,11 @@ export interface BitacoraFull {
   actividades?: { estructura: string; actividad: string; cantidad?: number | null; unidad?: string | null; bloque?: string | null }[];
   restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
   equipos?: EquipoAlquilado[];
-  archivos?: { nombre: string; url: string; tipo_mime: string | null }[];
+  archivos?: {
+    nombre: string;
+    url: string;
+    tipo_mime: string | null;
+    transcripcion?: string | null; // AA22
+    transcripcion_estado?: string | null; // AA22
+  }[];
 }

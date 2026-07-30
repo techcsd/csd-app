@@ -105,6 +105,19 @@
   grid-column: 1 / -1;
   width: 100%;
 }
+// AA22 — transcripción de la nota de voz bajo el player.
+.det__transcripcion {
+  grid-column: 1 / -1;
+  margin: 4px 0 8px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.det__transcripcion--pend {
+  opacity: 0.7;
+  font-style: normal;
+}
 
 // S4 — encabezado de bloque en actividades agrupadas.
 .det__bloque {

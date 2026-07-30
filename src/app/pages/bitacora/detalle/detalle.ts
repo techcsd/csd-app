@@ -9,6 +9,8 @@ import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
 interface Media {
   url: string;
   audio: boolean;
+  transcripcion: string | null; // AA22
+  estado: string | null; // AA22 — pendiente|procesando|completada|fallida
 }
 
 /** Read-only detail of one of my bitácoras, with photos/audio. */
@@ -79,7 +81,12 @@ export class BitacoraDetallePage {
         b.archivos.map(async (a) => {
           try {
             const url = await this.bitacora.getArchivoSignedUrl(a.url);
-            return { url, audio: (a.tipo_mime ?? '').startsWith('audio') };
+            return {
+              url,
+              audio: (a.tipo_mime ?? '').startsWith('audio'),
+              transcripcion: a.transcripcion ?? null, // AA22
+              estado: a.transcripcion_estado ?? null, // AA22
+            };
           } catch {
             return null;
           }

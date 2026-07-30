@@ -117,6 +117,12 @@
           @for (m of media(); track m.url) {
             @if (m.audio) {
               <audio class="det__audio" [src]="m.url" controls></audio>
+              <!-- AA22 — transcripción de la nota de voz. -->
+              @if (m.transcripcion) {
+                <p class="det__transcripcion">“{{ m.transcripcion }}”</p>
+              } @else if (m.estado === 'pendiente' || m.estado === 'procesando') {
+                <p class="det__transcripcion det__transcripcion--pend">Transcribiendo…</p>
+              }
             } @else {
               <a class="det__foto" [href]="m.url" target="_blank" rel="noopener">
                 <img [src]="m.url" alt="foto" loading="lazy" />
