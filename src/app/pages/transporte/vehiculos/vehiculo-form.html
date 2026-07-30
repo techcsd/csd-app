@@ -106,7 +106,26 @@
       <label class="field-label" for="notas">Notas (opcional)</label>
       <textarea id="notas" class="field vform__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
 
-      <label class="field-label">Foto (opcional)</label>
+      <!-- AA19 — fotos del vehículo: reordenar, elegir portada y quitar -->
+      @if (fotosExistentes().length) {
+        <label class="field-label">Fotos del vehículo (la 1ª es la portada)</label>
+        <div class="vform__fotos">
+          @for (p of fotosExistentes(); track p; let i = $index) {
+            <div class="vform__foto" [class.vform__foto--portada]="i === 0">
+              @if (fotoUrl(p)) { <img [src]="fotoUrl(p)" alt="Foto del vehículo" loading="lazy" /> }
+              @if (i === 0) { <span class="vform__foto-badge">Portada</span> }
+              <div class="vform__foto-acc">
+                <button type="button" (click)="moverFoto(i, -1)" [disabled]="i === 0" aria-label="Subir">▲</button>
+                <button type="button" (click)="moverFoto(i, 1)" [disabled]="i === fotosExistentes().length - 1" aria-label="Bajar">▼</button>
+                @if (i !== 0) { <button type="button" (click)="hacerPortada(i)" aria-label="Usar como portada">⭐</button> }
+                <button type="button" (click)="quitarFoto(i)" aria-label="Quitar">🗑️</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <label class="field-label">Agregar foto (opcional)</label>
       <app-photo-slot label="Foto del vehículo" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
 
       <!-- W7 — dato de prueba (solo admin): no cuenta como flota real -->

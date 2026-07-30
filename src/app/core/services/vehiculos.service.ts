@@ -181,7 +181,7 @@ export class VehiculosService {
         const { data, error } = await this.supabase.client
           .from('vehiculos')
           .select(
-            'id, placa, marca, modelo, anio, uso, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
+            'id, placa, marca, modelo, anio, uso, medida_uso, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
           )
           .eq('id', id)
           .single();
@@ -521,7 +521,27 @@ export class VehiculosService {
     const fotos = ((data as { fotos: string[] } | null)?.fotos ?? []).filter((p) => p !== path);
     const { error } = await this.supabase.client
       .from('vehiculos')
-      .update({ fotos: [path, ...fotos] })
+      .update({ fotos: [path, ...fotos], foto_portada: path }) // AA19 — la nueva es portada
+      .eq('id', id);
+    if (error) throw new Error(error.message);
+    await this.getFlota();
+  }
+
+  /** AA19 — sube una foto al storage y devuelve su path (sin tocar la fila). */
+  async subirFotoStorage(id: string, blob: Blob): Promise<string> {
+    const path = `${id}/perfil_${crypto.randomUUID()}.jpg`;
+    const { error } = await this.supabase.client.storage
+      .from('vehiculos')
+      .upload(path, blob, { upsert: true, contentType: blob.type || 'image/jpeg' });
+    if (error) throw new Error(error.message);
+    return path;
+  }
+
+  /** AA19 — persiste el ORDEN de las fotos + la portada (foto_portada = la 1ª). */
+  async guardarFotosOrden(id: string, fotos: string[]): Promise<void> {
+    const { error } = await this.supabase.client
+      .from('vehiculos')
+      .update({ fotos, foto_portada: fotos[0] ?? null })
       .eq('id', id);
     if (error) throw new Error(error.message);
     await this.getFlota();

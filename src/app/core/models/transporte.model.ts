@@ -57,6 +57,8 @@ export interface VehiculoDetalle {
   tipo: string;
   /** Z15 — uso del vehículo (obra/administrativo) para el pre-uso reducido. */
   uso?: string | null;
+  /** AA18 — medida de uso: 'km' (default) o 'horas' (horómetro/maquinaria). */
+  medida_uso?: string | null;
   kilometraje: number;
   vencimiento_matricula: string | null;
   vencimiento_seguro: string | null;

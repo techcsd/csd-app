@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.38.0';
+const VERSION = '1.39.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,16 +59,16 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // atascados —backfill de capturado_en— + firmar liberación desde el aviso).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.34.0';
-const RELEASED_AT = '2026-07-29';
+const RELEASED_AT = '2026-07-30';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Registrar vehículos: Telehandler, color, aseguradora, obra/oficina y medición por horas (horómetro)';
+const TITULO = 'Horómetro en todos los flujos, reordenar fotos del vehículo y micrófono sin re-preguntar';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Al crear o editar un vehículo puedes elegir el tipo Telehandler y marcarlo como "de obra" o "de oficina".' },
-  { t: 'nuevo', d: 'El color y la aseguradora ahora se eligen de una lista (Seguros Universal viene por defecto), con opción "Otro".' },
-  { t: 'nuevo', d: 'Maquinaria que se mide por HORAS de uso (horómetro): al registrar el vehículo eliges kilómetros u horas.' },
+  { t: 'mejora', d: 'En maquinaria medida por horas (horómetro), toda la app pide y muestra "Horas de uso" en vez de kilómetros (combustible, pre-uso, mantenimiento, reporte semanal).' },
+  { t: 'nuevo', d: 'Al editar un vehículo puedes reordenar sus fotos y elegir cuál es la portada.' },
+  { t: 'arreglo', d: 'El micrófono ya no pide permiso en cada grabación de nota de voz: se concede una sola vez.' },
 ];
 
 const TIPO_POR_COMMIT = {

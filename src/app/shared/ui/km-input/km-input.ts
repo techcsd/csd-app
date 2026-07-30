@@ -28,6 +28,9 @@ export interface KmMantenimiento {
 })
 export class KmInput {
   label = input('Kilometraje actual (km)');
+  /** AA18 — unidad de medida ('km' o 'h'): horómetro para maquinaria. Cambia el
+   *  sufijo de todos los textos (último registrado, mantenimiento…). */
+  sufijo = input('km');
   /** Two-way: el km que escribe el usuario. */
   value = model<number | null>(null);
   /** Último km registrado del vehículo (odómetro). */

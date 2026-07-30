@@ -10,10 +10,10 @@
   aria-label="Kilometraje"
 />
 @if (ultimo() != null) {
-  <p class="kmin__ref">Último registrado: <b>{{ ultimo() | number: '1.0-0' }} km</b></p>
+  <p class="kmin__ref">Último registrado: <b>{{ ultimo() | number: '1.0-0' }} {{ sufijo() }}</b></p>
 }
 @if (invalido()) {
-  <p class="kmin__err">⚠️ No puede ser menor al último registrado ({{ ultimo() | number: '1.0-0' }} km).</p>
+  <p class="kmin__err">⚠️ No puede ser menor al último registrado ({{ ultimo() | number: '1.0-0' }} {{ sufijo() }}).</p>
 }
 @if (mantPorRevisar()) {
   <p class="kmin__mant kmin__mant--revisar">
@@ -28,13 +28,13 @@
   >
     @switch (m.estado) {
       @case ('vencido') {
-        🔴 Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
+        🔴 Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} {{ sufijo() }} (próx. {{ m.proximo | number: '1.0-0' }} {{ sufijo() }}).
       }
       @case ('pre_cita') {
-        🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
+        🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} {{ sufijo() }} (próx. {{ m.proximo | number: '1.0-0' }} {{ sufijo() }}).
       }
       @default {
-        🟢 Faltan {{ m.faltan | number: '1.0-0' }} km para el mantenimiento.
+        🟢 Faltan {{ m.faltan | number: '1.0-0' }} {{ sufijo() }} para el mantenimiento.
       }
     }
   </p>

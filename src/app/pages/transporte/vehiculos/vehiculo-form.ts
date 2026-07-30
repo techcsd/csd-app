@@ -113,6 +113,9 @@ export class VehiculoFormPage {
   uso = signal<'obra' | 'oficina'>('obra'); // AA17
   esPrueba = signal(false); // W7 — dato de prueba (solo admin)
   foto = signal<CapturedPhoto | null>(null);
+  // AA19 — fotos existentes (paths) para reordenar / elegir portada / quitar.
+  fotosExistentes = signal<string[]>([]);
+  private fotoUrls = signal<Record<string, string>>({});
 
   readonly colores = COLORES;
   readonly aseguradoras = ASEGURADORAS;
@@ -243,6 +246,9 @@ export class VehiculoFormPage {
         this.medidaUso.set((v.medidaUso as 'km' | 'horas') ?? 'km');
         this.uso.set((v.uso as 'obra' | 'oficina') ?? 'obra');
         this.esPrueba.set(v.esPrueba ?? false);
+        // AA19 — fotos existentes + sus URLs firmadas para la galería.
+        this.fotosExistentes.set(v.fotos ?? []);
+        void this.loadFotosUrls(v.fotos ?? []);
       }
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el vehículo.');
@@ -256,6 +262,37 @@ export class VehiculoFormPage {
   }
   onFotoCleared(): void {
     this.foto.set(null);
+  }
+
+  // ── AA19 — galería de fotos: reordenar / portada / quitar ──────────────────
+  private async loadFotosUrls(paths: string[]): Promise<void> {
+    const map: Record<string, string> = {};
+    await Promise.all(
+      paths.map(async (p) => {
+        const u = await this.vehiculos.getFotoUrl(p);
+        if (u) map[p] = u;
+      }),
+    );
+    this.fotoUrls.set(map);
+  }
+  fotoUrl(path: string): string {
+    return this.fotoUrls()[path] ?? '';
+  }
+  moverFoto(i: number, dir: -1 | 1): void {
+    this.fotosExistentes.update((l) => {
+      const j = i + dir;
+      if (j < 0 || j >= l.length) return l;
+      const next = [...l];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+  /** Mueve la foto i al frente (índice 0 = portada). */
+  hacerPortada(i: number): void {
+    this.fotosExistentes.update((l) => (i <= 0 ? l : [l[i], ...l.filter((_, k) => k !== i)]));
+  }
+  quitarFoto(i: number): void {
+    this.fotosExistentes.update((l) => l.filter((_, k) => k !== i));
   }
 
   private build(): VehiculoEditable {
@@ -304,8 +341,14 @@ export class VehiculoFormPage {
       const id = this.esEdicion()
         ? (await this.vehiculos.actualizarVehiculo(this.vehiculoId(), data), this.vehiculoId())
         : await this.vehiculos.crearVehiculo(data);
-      const foto = this.foto();
-      if (foto) await this.vehiculos.subirFotoVehiculo(id, foto.blob);
+      // AA19 — sube la foto nueva (si hay) y persiste el orden + la portada.
+      const nueva = this.foto();
+      let fotosFinal = [...this.fotosExistentes()];
+      if (nueva) {
+        const p = await this.vehiculos.subirFotoStorage(id, nueva.blob);
+        fotosFinal = [p, ...fotosFinal]; // la nueva entra como portada
+      }
+      if (nueva || this.esEdicion()) await this.vehiculos.guardarFotosOrden(id, fotosFinal);
       void this.autosave.discard(this.clave());
       this.toast.success(this.esEdicion() ? 'Vehículo actualizado.' : 'Vehículo creado.');
       void this.router.navigate(['/transporte/vehiculo', id], { replaceUrl: true });

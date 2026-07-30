@@ -144,7 +144,8 @@
         <!-- Z23-app — la echada de persona no lleva odómetro -->
         @if (!modoPersona()) {
           <app-km-input
-            label="Kilometraje actual"
+            [label]="vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso actuales' : 'Kilometraje actual'"
+            [sufijo]="vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'"
             [(value)]="km"
             [ultimo]="odometro()"
             [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"

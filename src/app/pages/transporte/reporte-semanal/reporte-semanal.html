@@ -113,6 +113,8 @@
       @if (esKm()) {
         <h1 class="screen__title">Kilometraje y combustible</h1>
         <app-km-input
+          [label]="vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso actuales' : 'Kilometraje actual (km)'"
+          [sufijo]="vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'"
           [(value)]="km"
           [ultimo]="odometro()"
           [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
