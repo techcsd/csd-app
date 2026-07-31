@@ -135,3 +135,51 @@
   background: var(--color-bg);
   border-radius: var(--radius-sm);
 }
+
+// AC13/AC6 — detalle de ruta: paradas en orden + fotos de evidencia.
+.ruta-card__ver {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  padding: 4px 0;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+  text-align: left;
+}
+.ruta-card__detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.ruta-card__paso {
+  font-size: 14px;
+  color: var(--color-text-primary);
+
+  em {
+    color: var(--color-text-secondary);
+    font-style: normal;
+  }
+}
+.ruta-card__fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+.ruta-card__foto {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+.ruta-card__vacio {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

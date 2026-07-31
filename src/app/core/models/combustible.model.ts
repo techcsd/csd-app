@@ -32,6 +32,11 @@ export interface CombustibleCaptura {
   galones: number;
   monto: number;
   estacion: string | null;
+  // AC11 — origen de la echada. 'deposito_obra' = garrafón/depósito en obra
+  // (telehandler): sin estación ni precio de bomba, con obra y evidencia foto.
+  origen: 'estacion' | 'deposito_obra';
+  // AC11 — proyecto/obra donde se echó (solo depósito en obra; opcional).
+  proyectoId: string | null;
   // Z23-app — campos de conciliación con el reporte del proveedor.
   producto: string | null; // 'diesel' | 'gasolina'
   subtipo: string | null; // AA20 — 'regular' | 'premium'
@@ -39,10 +44,13 @@ export interface CombustibleCaptura {
   // Z23-app — titular de la tarjeta cuando es de una persona (no de un vehículo).
   titular: string | null;
   titularEsPersona: boolean;
-  fotoRecibo: Blob;
+  // AC11 — en depósito en obra no hay recibo/tablero/bomba: solo una foto de
+  // evidencia del equipo/garrafón. En estación siguen las 3 (recibo + tablero + bomba).
+  fotoRecibo: Blob | null;
   // Z23-app — sin foto de tablero en una echada de persona (no hay odómetro).
   fotoTablero: Blob | null;
-  fotoBomba: Blob; // Y4 — bomba/estación en 0
+  fotoBomba: Blob | null; // Y4 — bomba/estación en 0
+  fotoEvidencia: Blob | null; // AC11 — evidencia del equipo/garrafón (depósito en obra)
   placa: string;
 }
 

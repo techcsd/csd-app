@@ -54,6 +54,8 @@ export class AsignarVehiculoPage {
   // U12 — vehículos ya asignados a mí + su estado de reporte semanal.
   misAsignados = signal<Set<string>>(new Set());
   reportados = signal<Set<string>>(new Set());
+  // AC8 — vehículos asignados a OTRA persona (no re-asignables): id → nombre.
+  asignadosAOtros = signal<Record<string, string>>({});
   /** U6 — vehiculo_id → URL firmada de su foto (thumbnail del pool). */
   fotoUrls = signal<Record<string, string>>({});
 
@@ -83,10 +85,11 @@ export class AsignarVehiculoPage {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [disp, cond, asignaciones, semana, pendReportes] = await Promise.all([
+      const [disp, cond, asignaciones, activas, semana, pendReportes] = await Promise.all([
         this.vehiculos.getVehiculosDisponibles(),
         this.conductores.getMiConductor(),
         this.vehiculos.getMisAsignaciones().catch(() => []),
+        this.vehiculos.getAsignacionesActivas().catch(() => ({})), // AC8
         this.reportes.getSemana().catch(() => []),
         this.sync.reportesSemanalesPendientes().catch(() => new Map<string, string>()),
       ]);
@@ -94,6 +97,13 @@ export class AsignarVehiculoPage {
       this.necesitaConductor.set(!cond);
       // U12 — set de vehículos ya asignados a mí.
       this.misAsignados.set(new Set(asignaciones.map((a) => a.vehiculo_id)));
+      // AC8 — asignados a OTROS (excluyendo los míos, que ya maneja yaAsignado).
+      const mios = new Set(asignaciones.map((a) => a.vehiculo_id));
+      const otros: Record<string, string> = {};
+      for (const [vid, nombre] of Object.entries(activas)) {
+        if (!mios.has(vid)) otros[vid] = nombre;
+      }
+      this.asignadosAOtros.set(otros);
       // U12 — reportados esta semana (servidor + ops en cola).
       const rep = new Set<string>();
       for (const s of semana) if (s.tiene_reporte) rep.add(s.vehiculo_id);
@@ -108,6 +118,14 @@ export class AsignarVehiculoPage {
   /** U12 — ¿este vehículo ya está asignado a mí? */
   yaAsignado(id: string): boolean {
     return this.misAsignados().has(id);
+  }
+  /** AC8 — ¿está asignado a otra persona (no re-asignable)? */
+  asignadoAOtro(id: string): boolean {
+    return id in this.asignadosAOtros();
+  }
+  /** AC8 — nombre de quien lo tiene asignado. */
+  nombreAsignado(id: string): string {
+    return this.asignadosAOtros()[id] ?? '';
   }
   /** U12 — ¿ya tiene el reporte semanal de esta semana (o en cola)? */
   yaReportado(id: string): boolean {
@@ -134,6 +152,11 @@ export class AsignarVehiculoPage {
 
   seleccionar(v: VehiculoDisponible): void {
     if (this.yaAsignado(v.vehiculo_id)) return; // U12 — no re-asignar el propio
+    // AC8 — un vehículo asignado a otra persona no se puede volver a asignar.
+    if (this.asignadoAOtro(v.vehiculo_id)) {
+      this.toast.error(`Ese vehículo está asignado a ${this.nombreAsignado(v.vehiculo_id)}.`);
+      return;
+    }
     this.seleccionado.set(v);
   }
 

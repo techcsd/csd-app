@@ -175,6 +175,12 @@
   color: var(--color-warning);
 }
 
+// AC5 — hoy es el día programado del reporte de este equipo.
+.rsem__estado--hoy {
+  color: var(--primary);
+  font-weight: 800;
+}
+
 // Z13 — "ya reportado por otra persona": texto puede envolver (nombre largo).
 .rsem__estado--otro {
   color: var(--color-text-secondary);

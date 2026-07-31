@@ -20,7 +20,11 @@ export interface ConduceEntregaCaptura {
   receptor: string;
   notas: string | null;
   fotoEntrega: Blob;
+  /** AC7 — firma de quien RECIBE (receptor). */
   firma: Blob;
+  // AC7 — firma de quien ENTREGA (emisor: chofer/almacén). Ambas obligatorias.
+  emisorNombre: string;
+  firmaEmisor: Blob;
 }
 
 /** New-route capture the crear-ruta wizard hands to crearRuta(). */
@@ -40,6 +44,26 @@ export interface RutaCaptura {
   destino_lng: number | null;
   /** Z23 — notas de voz múltiples (opcional). */
   voces?: Blob[];
+  // AC13 — paradas intermedias ordenadas (estilo Uber), opcional. El destino
+  // sigue en la ruta (retrocompatible); estas son las paradas antes del destino.
+  paradas?: RutaParadaCaptura[];
+  // AC6 — fotos de evidencia inicial al crear la ruta (carga/vehículo/documento).
+  fotos?: Blob[];
+}
+
+/** AC13 — una parada intermedia de la ruta. */
+export interface RutaParadaCaptura {
+  ubicacion: string;
+  lat: number | null;
+  lng: number | null;
+  notas: string | null;
+  proyectoId: string | null;
+}
+
+/** AC13/AC6 — detalle de ruta para mostrar en el app (paradas + fotos). */
+export interface RutaDetalleApp {
+  paradas: { orden: number; ubicacion: string; notas: string | null }[];
+  fotos: string[]; // URLs firmadas
 }
 
 /** Obra o almacén como destino, con sus coordenadas (U22). */
@@ -119,6 +143,44 @@ export class ConducesService {
     return data ?? [];
   }
 
+  /**
+   * AC13/AC6 — detalle de una ruta para el app: paradas (en orden) + fotos de
+   * evidencia inicial (URLs firmadas). Online best-effort, cacheado por ruta para
+   * que se vea offline tras la primera carga. La RLS permite al creador/conductor.
+   */
+  async getRutaDetalle(rutaId: string): Promise<RutaDetalleApp> {
+    const data = await this.catalog.refresh<RutaDetalleApp>(`ruta_detalle:${rutaId}`, async () => {
+      const [par, fot] = await Promise.all([
+        this.supabase.client
+          .from('ruta_paradas')
+          .select('orden, ubicacion, notas')
+          .eq('ruta_id', rutaId)
+          .order('orden', { ascending: true }),
+        this.supabase.client
+          .from('ruta_fotos')
+          .select('storage_path, orden')
+          .eq('ruta_id', rutaId)
+          .order('orden', { ascending: true }),
+      ]);
+      if (par.error) throw new Error(par.error.message);
+      const paradas = ((par.data as Array<Record<string, unknown>>) ?? []).map((p) => ({
+        orden: (p['orden'] as number) ?? 0,
+        ubicacion: (p['ubicacion'] as string) ?? '',
+        notas: (p['notas'] as string) ?? null,
+      }));
+      // Firmar las URLs de las fotos (bucket flota-documentos). Tolerante a error.
+      const fotos: string[] = [];
+      for (const f of (fot.data as Array<{ storage_path: string }> | null) ?? []) {
+        const { data: signed } = await this.supabase.client.storage
+          .from(AUDIO_BUCKET_FLOTA)
+          .createSignedUrl(f.storage_path, 3600);
+        if (signed?.signedUrl) fotos.push(signed.signedUrl);
+      }
+      return { paradas, fotos };
+    });
+    return data ?? { paradas: [], fotos: [] };
+  }
+
   /** Obras/proyectos for the route destination picker (shared cache). */
   async getProyectos(): Promise<Proyecto[]> {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
@@ -165,6 +227,14 @@ export class ConducesService {
     const capturado_en = new Date().toISOString();
     // Z23 — notas de voz (audio_notas, bucket flota-documentos).
     const audio = this.audioNotas.buildAttachments('ruta', id, AUDIO_BUCKET_FLOTA, input.voces ?? []);
+    // AC6 — fotos de evidencia inicial (bucket flota-documentos, slot foto_N).
+    const evidencia = (input.fotos ?? []).map((blob, i) => ({
+      id: crypto.randomUUID(),
+      bucket: AUDIO_BUCKET_FLOTA,
+      path: `ruta/${id}/evidencia_${i}.jpg`,
+      slot: `foto_${i}`,
+      blob,
+    }));
     await this.sync.enqueue({
       id,
       tipo_op: 'crear_ruta',
@@ -185,8 +255,10 @@ export class ConducesService {
         destino_lng: input.destino_lng,
         capturado_en,
         audios: audio.audios, // Z23
+        paradas: input.paradas ?? [], // AC13
+        n_fotos: evidencia.length, // AC6
       },
-      fotos: audio.fotos,
+      fotos: [...audio.fotos, ...evidencia],
       resumen: { origen: input.origen, destino: input.destino, fecha: input.fecha, capturado_en },
     });
     void this.misRutas();
@@ -224,6 +296,7 @@ export class ConducesService {
         salida_id: input.salidaId,
         items: input.items,
         receptor: input.receptor,
+        emisor_nombre: input.emisorNombre, // AC7
         notas: input.notas,
       },
       fotos: [
@@ -240,6 +313,14 @@ export class ConducesService {
           path: `${input.salidaId}/${id}-firma.png`,
           slot: 'firma',
           blob: input.firma,
+        },
+        // AC7 — firma del emisor (quien entrega).
+        {
+          id: crypto.randomUUID(),
+          bucket: 'conduces',
+          path: `${input.salidaId}/${id}-firma-emisor.png`,
+          slot: 'firma_emisor',
+          blob: input.firmaEmisor,
         },
       ],
       resumen: { salida_id: input.salidaId, receptor: input.receptor, capturado_en },
@@ -268,13 +349,61 @@ export class ConducesService {
       });
       if (error) throwSyncError(error);
 
+      const rutaId = payload['id'] as string;
+
+      // AC13 — paradas intermedias (estilo Uber), en orden. set_ruta_paradas
+      // reemplaza las paradas de la ruta (idempotente ante reintentos del outbox).
+      const paradas = (payload['paradas'] as RutaParadaCaptura[] | undefined) ?? [];
+      if (paradas.length) {
+        const p_paradas = paradas
+          .filter((p) => p.ubicacion?.trim())
+          .map((p, i) => ({
+            orden: i + 1,
+            ubicacion: p.ubicacion,
+            lat: p.lat,
+            lng: p.lng,
+            notas: p.notas,
+            proyecto_id: p.proyectoId,
+          }));
+        const { error: ePar } = await this.supabase.client.rpc('set_ruta_paradas', {
+          p_ruta_id: rutaId,
+          p_paradas: p_paradas,
+        });
+        if (ePar) throwSyncError(ePar);
+      }
+
+      // AC6 — fotos de evidencia inicial → ruta_fotos (momento='inicio'). Insert
+      // directo (la RLS permite al creador). Guarda de idempotencia: si ya hay
+      // fotos de inicio (reintento del outbox tras éxito parcial), no re-inserta.
+      const nFotos = (payload['n_fotos'] as number | undefined) ?? 0;
+      if (nFotos > 0) {
+        const rows = [];
+        for (let i = 0; i < nFotos; i++) {
+          const path = photoPaths[`foto_${i}`];
+          if (path) rows.push({ ruta_id: rutaId, momento: 'inicio', storage_path: path, orden: i + 1 });
+        }
+        if (rows.length) {
+          const { data: yaHay } = await this.supabase.client
+            .from('ruta_fotos')
+            .select('id')
+            .eq('ruta_id', rutaId)
+            .eq('momento', 'inicio')
+            .limit(1);
+          if (!yaHay?.length) {
+            const { error: eFoto } = await this.supabase.client.from('ruta_fotos').insert(rows);
+            if (eFoto) throwSyncError(eFoto);
+          }
+        }
+      }
+
       // Z23 — registrar las notas de voz de la ruta (idempotente por path).
-      await this.audioNotas.commit('ruta', payload['id'] as string, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
+      await this.audioNotas.commit('ruta', rutaId, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
     });
 
     this.sync.register('conduce_entrega', async (payload, photoPaths) => {
+      const salidaId = payload['salida_id'] as string;
       const { error } = await this.supabase.client.rpc('entregar_conduce', {
-        p_salida_id: payload['salida_id'],
+        p_salida_id: salidaId,
         p_items: payload['items'],
         p_receptor: payload['receptor'],
         p_firma_url: photoPaths['firma'],
@@ -282,6 +411,31 @@ export class ConducesService {
         p_notas: payload['notas'] ?? null,
       });
       if (error) throwSyncError(error);
+
+      // AC7 — persistir AMBAS firmas en salida_firmas (emisor + receptor). El RPC
+      // es idempotente por (salida_id, rol), así que un reintento del outbox no
+      // duplica. Best-effort: si falla no revierte la entrega (ya registrada).
+      const { data: userData } = await this.supabase.client.auth.getUser();
+      const uid = userData.user?.id ?? null;
+      const firmaEmisor = photoPaths['firma_emisor'];
+      const firmaReceptor = photoPaths['firma'];
+      if (firmaEmisor) {
+        await this.supabase.client.rpc('firmar_conduce', {
+          p_salida_id: salidaId,
+          p_rol: 'emisor',
+          p_nombre: payload['emisor_nombre'] ?? 'Emisor',
+          p_firma_path: firmaEmisor,
+          p_usuario_id: uid,
+        });
+      }
+      if (firmaReceptor) {
+        await this.supabase.client.rpc('firmar_conduce', {
+          p_salida_id: salidaId,
+          p_rol: 'receptor',
+          p_nombre: payload['receptor'] ?? 'Receptor',
+          p_firma_path: firmaReceptor,
+        });
+      }
     });
   }
 }

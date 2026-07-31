@@ -34,6 +34,10 @@ const TILES: HomeTile[] = [
   { modulo: 'tecnologia', icon: '💻', label: 'Tecnología', route: '/tecnologia', tint: '#0891b2' },
 ];
 
+// AC4 — Notas: módulo GENERAL accesible por TODOS (incluidos choferes), como
+// Mensajes. No se gatea por módulo SGC; se muestra siempre.
+const NOTAS_TILE: HomeTile = { modulo: 'notas', icon: '🗒️', label: 'Notas', route: '/notas', tint: '#7c3aed' };
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -54,14 +58,34 @@ export class HomePage {
   badgeCounts = this.badges.counts; // Q2 — pendientes por módulo
   enProcesoCounts = this.enProceso.counts; // V1 — borradores/envíos por módulo
 
-  // El tile de Tecnología se gatea por módulo como el resto (un chofer NO lo ve).
-  // El contenido transversal (Dudas/guías, visitar web) sigue disponible para
-  // todos desde el footer del Home, no desde este tile.
-  tiles = computed(() => TILES.filter((t) => this.ctx.hasModulo(t.modulo)));
+  // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
+  // Tecnología se excluye de aquí porque NO es un módulo de trabajo (ver `tiles`).
+  private workTiles = computed(() =>
+    TILES.filter((t) => t.modulo !== 'tecnologia' && this.ctx.hasModulo(t.modulo)),
+  );
+
+  // AC2 — Tecnología es pública para TODOS excepto el rol chofer. No se gatea por
+  // el módulo 'tecnologia' (que solo tienen admin/tecnología) sino por !esChofer,
+  // así lo ven también dirección/gerencia/jefes/ingenieros. El contenido
+  // restringido (Versiones/Errores) sigue gateado por rol dentro de la página.
+  // El contenido transversal (Dudas/guías, visitar web) está en el footer para
+  // todos, incluidos los choferes.
+  tiles = computed(() => {
+    const work = this.workTiles();
+    // AC4 — Notas es general (todos, incl. choferes). Tecnología, todos menos chofer.
+    const extra: HomeTile[] = [NOTAS_TILE];
+    if (!this.ctx.esChofer()) {
+      const tec = TILES.find((t) => t.modulo === 'tecnologia');
+      if (tec) extra.push(tec);
+    }
+    return [...work, ...extra];
+  });
 
   constructor() {
-    // Single-module user (e.g. chofer): drop straight into their module once.
-    const work = this.tiles();
+    // Single work-module user (e.g. guarda de almacén): drop straight into their
+    // module once. Tecnología no cuenta (es transversal), así el auto-entrar de
+    // mono-módulo se mantiene aunque el tile de Tecnología esté presente.
+    const work = this.workTiles();
     if (work.length === 1 && this.session.consumeAutoEnter()) {
       void this.router.navigate([work[0].route]);
     }

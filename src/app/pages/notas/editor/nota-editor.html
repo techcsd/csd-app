@@ -1,0 +1,148 @@
+<div class="screen neditor" [style.background]="color() ?? 'var(--color-bg)'">
+  <header class="neditor__header">
+    <button type="button" class="neditor__back" (click)="back()" aria-label="Atrás">←</button>
+    <div class="neditor__actions">
+      @if (puedeEditar()) {
+        <button type="button" class="neditor__act" [class.neditor__act--on]="pinned()" (click)="togglePin()" aria-label="Fijar">📌</button>
+        <button type="button" class="neditor__act" (click)="toggleArchivar()" aria-label="Archivar">{{ archivada() ? '📤' : '🗄️' }}</button>
+      }
+      @if (esMia()) {
+        <button type="button" class="neditor__act" (click)="abrirCompartir()" aria-label="Compartir">👥</button>
+        <button type="button" class="neditor__act neditor__act--del" (click)="pedirBorrar()" aria-label="Borrar">🗑️</button>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="screen__body"><app-skeleton [rows]="4" /></div>
+  } @else {
+    <div class="screen__body">
+      @if (!puedeEditar()) {
+        <p class="neditor__ro">👁️ Solo lectura — te la compartieron sin permiso de editar.</p>
+      }
+
+      <input
+        class="neditor__titulo"
+        type="text"
+        [ngModel]="titulo()"
+        (ngModelChange)="titulo.set($event)"
+        [readonly]="!puedeEditar()"
+        placeholder="Título"
+        aria-label="Título de la nota"
+      />
+
+      <textarea
+        class="neditor__contenido"
+        [ngModel]="contenido()"
+        (ngModelChange)="contenido.set($event)"
+        [readonly]="!puedeEditar()"
+        placeholder="Escribe aquí… (usa - para listas o - [ ] para pendientes)"
+        aria-label="Contenido de la nota"
+      ></textarea>
+
+      @if (puedeEditar()) {
+        <label class="neditor__lbl">Color</label>
+        <div class="neditor__colores">
+          @for (c of colores; track c.label) {
+            <button
+              type="button"
+              class="neditor__color"
+              [class.neditor__color--on]="color() === c.valor"
+              [style.background]="c.valor ?? '#ffffff'"
+              [title]="c.label"
+              [attr.aria-label]="c.label"
+              (click)="setColor(c.valor)"
+            >@if (!c.valor) { 🚫 }</button>
+          }
+        </div>
+      }
+    </div>
+
+    <footer class="neditor__nav">
+      @if (puedeEditar()) {
+        <button type="button" class="btn-cta" [disabled]="guardando()" (click)="guardar()">
+          {{ guardando() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      } @else {
+        <button type="button" class="btn-ghost" (click)="back()">Volver</button>
+      }
+    </footer>
+  }
+
+  <!-- Panel de compartir (solo el dueño) -->
+  @if (mostrarCompartir()) {
+    <div class="neditor__sheet-back" (click)="cerrarCompartir()"></div>
+    <div class="neditor__sheet">
+      <div class="neditor__sheet-head">
+        <h2 class="neditor__sheet-title">Compartir nota</h2>
+        <button type="button" class="neditor__sheet-x" (click)="cerrarCompartir()" aria-label="Cerrar">✕</button>
+      </div>
+
+      <input
+        class="field"
+        type="search"
+        [ngModel]="busqueda()"
+        (ngModelChange)="busqueda.set($event); buscar()"
+        placeholder="Buscar usuario por nombre o correo…"
+        aria-label="Buscar usuario"
+      />
+
+      @if (buscando()) {
+        <p class="neditor__hint">Buscando…</p>
+      } @else if (busqueda().trim().length >= 2 && !resultados().length) {
+        <p class="neditor__hint">Sin resultados.</p>
+      }
+      @for (u of resultados(); track u.id) {
+        <div class="neditor__ures">
+          <div class="neditor__ures-info">
+            <span class="neditor__ures-nombre">{{ u.nombre }}</span>
+            @if (u.email) { <span class="neditor__ures-email">{{ u.email }}</span> }
+          </div>
+          <div class="neditor__ures-btns">
+            <button type="button" class="btn-ghost neditor__mini" (click)="agregar(u, 'ver')">👁️ Ver</button>
+            <button type="button" class="btn-ghost neditor__mini" (click)="agregar(u, 'editar')">✏️ Editar</button>
+          </div>
+        </div>
+      }
+
+      <h3 class="neditor__sheet-sub">Con acceso</h3>
+      @if (!compartidos().length) {
+        <p class="neditor__hint">Todavía no la has compartido con nadie.</p>
+      }
+      @for (c of compartidos(); track c.usuario_id) {
+        <div class="neditor__comp">
+          <div class="neditor__ures-info">
+            <span class="neditor__ures-nombre">{{ c.nombre }}</span>
+            @if (c.email) { <span class="neditor__ures-email">{{ c.email }}</span> }
+          </div>
+          <div class="neditor__ures-btns">
+            <button
+              type="button"
+              class="neditor__perm"
+              [class.neditor__perm--on]="c.permiso === 'ver'"
+              (click)="cambiarPermiso(c, 'ver')"
+            >Ver</button>
+            <button
+              type="button"
+              class="neditor__perm"
+              [class.neditor__perm--on]="c.permiso === 'editar'"
+              (click)="cambiarPermiso(c, 'editar')"
+            >Editar</button>
+            <button type="button" class="neditor__perm neditor__perm--del" (click)="quitar(c)" aria-label="Quitar">✕</button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <app-confirm-dialog
+    [open]="confirmBorrar()"
+    title="¿Borrar esta nota?"
+    message="Se borrará para ti y para quienes la tengan compartida. No se puede deshacer."
+    confirmLabel="Sí, borrar"
+    cancelLabel="Cancelar"
+    tone="danger"
+    (confirmed)="confirmarBorrar()"
+    (cancelled)="cancelarBorrar()"
+  />
+</div>

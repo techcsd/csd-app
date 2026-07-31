@@ -140,7 +140,18 @@
 
       <!-- V6 · Paso 1: km + galones + monto (todo lo que se digita, una hoja) -->
       @if (step() === 1) {
-        <h1 class="screen__title">{{ modoPersona() ? 'Galones y monto' : 'Kilometraje y monto' }}</h1>
+        <!-- AC11 — telehandler: elegir dónde se echó (depósito en obra por defecto) -->
+        @if (esTelehandler()) {
+          <label class="field-label">¿Dónde se echó?</label>
+          <app-option-button icon="🛢️" label="Depósito en obra (garrafón)" [selected]="esDeposito()" (pressed)="setOrigen('deposito_obra')" />
+          <app-option-button icon="⛽" label="Estación" [selected]="!esDeposito()" (pressed)="setOrigen('estacion')" />
+          <div class="comb__mt"></div>
+        }
+        <h1 class="screen__title">
+          @if (modoPersona()) { Galones y monto }
+          @else if (esDeposito()) { Horas y galones }
+          @else { Kilometraje y monto }
+        </h1>
         <!-- Z23-app — la echada de persona no lleva odómetro -->
         @if (!modoPersona()) {
           <app-km-input
@@ -169,7 +180,9 @@
           placeholder="0"
         />
 
-        <label class="field-label" for="monto">Monto pagado (RD$)</label>
+        <label class="field-label" for="monto">
+          {{ esDeposito() ? 'Costo (RD$, opcional)' : 'Monto pagado (RD$)' }}
+        </label>
         <input
           id="monto"
           class="field comb__num"
@@ -181,14 +194,87 @@
         />
       }
 
-      <!-- V6 · Paso 2: producto + estación + tarjeta + cálculo automático debajo -->
+      <!-- AC10 · Paso 2: fotos obligatorias (se capturan temprano, junto a la bomba) -->
       @if (step() === 2) {
+        <h1 class="screen__title">{{ esDeposito() ? 'Foto de evidencia' : 'Fotos obligatorias' }}</h1>
+        <p class="screen__subtitle">
+          @if (esDeposito()) {
+            Una foto del equipo/garrafón durante la echada (solo cámara).
+          } @else if (modoPersona()) {
+            El recibo respalda el monto; la bomba en 0 respalda los galones echados.
+          } @else {
+            El tablero respalda el kilometraje; el recibo respalda el monto; la bomba en 0
+            respalda los galones echados.
+          }
+        </p>
+        <div class="comb__fotos">
+          <!-- AC11 — depósito en obra: solo la foto de evidencia (solo cámara) -->
+          @if (esDeposito()) {
+            <app-photo-slot
+              label="Evidencia (equipo/garrafón)"
+              hint="📸"
+              [gallery]="false"
+              [foto]="fotoEvidencia()"
+              (captured)="onFotoEvidencia($event)"
+              (cleared)="onFotoEvidenciaCleared()"
+            />
+          } @else {
+            <app-photo-slot
+              label="Recibo"
+              hint="🧾"
+              [foto]="fotoRecibo()"
+              (captured)="onFotoRecibo($event)"
+              (cleared)="onFotoReciboCleared()"
+            />
+            <!-- Z23-app — sin tablero en una echada de persona (no hay odómetro) -->
+            @if (!modoPersona()) {
+              <app-photo-slot
+                label="Tablero (km)"
+                hint="🎛️"
+                [foto]="fotoTablero()"
+                (captured)="onFotoTablero($event)"
+                (cleared)="onFotoTableroCleared()"
+              />
+            }
+            <app-photo-slot
+              label="Bomba en 0"
+              hint="⛽"
+              [foto]="fotoBomba()"
+              (captured)="onFotoBomba($event)"
+              (cleared)="onFotoBombaCleared()"
+            />
+          }
+        </div>
+      }
+
+      <!-- AC10 · Paso 3: producto + estación + tarjeta + cálculo automático debajo -->
+      @if (step() === 3) {
         <!-- Z23-app — producto (para conciliar con el reporte del proveedor) -->
         <label class="field-label">¿Qué combustible?</label>
         <app-option-button icon="🛢️" label="Diésel" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
         <app-option-button icon="⛽" label="Gasolina" [selected]="producto() === 'gasolina'" (pressed)="producto.set('gasolina')" />
 
+        <!-- AC11 — depósito en obra: elegir la obra donde se echó (opcional) -->
+        @if (esDeposito()) {
+          <label class="field-label comb__mt" for="obra">Obra donde se echó (opcional)</label>
+          <select
+            id="obra"
+            class="field"
+            [ngModel]="proyectoId()"
+            (ngModelChange)="proyectoId.set($event)"
+          >
+            <option [ngValue]="null">— Sin especificar —</option>
+            @for (p of proyectos(); track p.id) {
+              <option [ngValue]="p.id">{{ p.nombre }}</option>
+            }
+          </select>
+          <p class="field-hint">
+            La echada de depósito queda como consumo interno (no entra a la conciliación de estación).
+          </p>
+        }
+
         <!-- AA20 — subtipo Regular/Premium (obligatorio) -->
+        @if (!esDeposito()) {
         <label class="field-label comb__mt">¿Regular o Premium?</label>
         <app-option-button icon="🟢" label="Regular" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
         <app-option-button icon="⭐" label="Premium" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
@@ -269,45 +355,7 @@
             }
           }
         </div>
-      }
-
-      <!-- V6 · Paso 3: fotos obligatorias -->
-      @if (step() === 3) {
-        <h1 class="screen__title">Fotos obligatorias</h1>
-        <p class="screen__subtitle">
-          @if (modoPersona()) {
-            El recibo respalda el monto; la bomba en 0 respalda los galones echados.
-          } @else {
-            El tablero respalda el kilometraje; el recibo respalda el monto; la bomba en 0
-            respalda los galones echados.
-          }
-        </p>
-        <div class="comb__fotos">
-          <app-photo-slot
-            label="Recibo"
-            hint="🧾"
-            [foto]="fotoRecibo()"
-            (captured)="onFotoRecibo($event)"
-            (cleared)="onFotoReciboCleared()"
-          />
-          <!-- Z23-app — sin tablero en una echada de persona (no hay odómetro) -->
-          @if (!modoPersona()) {
-            <app-photo-slot
-              label="Tablero (km)"
-              hint="🎛️"
-              [foto]="fotoTablero()"
-              (captured)="onFotoTablero($event)"
-              (cleared)="onFotoTableroCleared()"
-            />
-          }
-          <app-photo-slot
-            label="Bomba en 0"
-            hint="⛽"
-            [foto]="fotoBomba()"
-            (captured)="onFotoBomba($event)"
-            (cleared)="onFotoBombaCleared()"
-          />
-        </div>
+        }
       }
 
       <!-- V6 · Paso 4: revisa y envía (no editable) -->
@@ -317,15 +365,21 @@
           @if (modoPersona()) {
             <li><span>Titular</span><b>{{ titular() || '—' }}</b></li>
           } @else {
-            <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+            <li><span>{{ esDeposito() ? 'Horas' : 'Kilometraje' }}</span><b>{{ km() | number: '1.0-0' }} {{ esDeposito() ? 'h' : 'km' }}</b></li>
           }
           <li><span>Galones</span><b>{{ galones() | number: '1.0-2' }} gal</b></li>
-          <li><span>Monto</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
+          <li><span>{{ esDeposito() ? 'Costo' : 'Monto' }}</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
           <li><span>Combustible</span><b>{{ producto() === 'gasolina' ? 'Gasolina' : 'Diésel' }}</b></li>
-          <li><span>Estación</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
-          @if (tarjeta().trim()) { <li><span>Tarjeta</span><b>{{ tarjeta() }}</b></li> }
-          <li><span>Fotos</span><b>{{ fotosCompletas() ? (modoPersona() ? '2 ✓' : '3 ✓') : 'Faltan' }}</b></li>
-          @if (!modoPersona()) {
+          <!-- AC11 — depósito en obra: origen + obra en lugar de estación -->
+          @if (esDeposito()) {
+            <li><span>Origen</span><b>Depósito en obra</b></li>
+            <li><span>Obra</span><b>{{ obraNombre() || 'Sin especificar' }}</b></li>
+          } @else {
+            <li><span>Estación</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
+            @if (tarjeta().trim()) { <li><span>Tarjeta</span><b>{{ tarjeta() }}</b></li> }
+          }
+          <li><span>Fotos</span><b>{{ fotosCompletas() ? (esDeposito() ? '1 ✓' : (modoPersona() ? '2 ✓' : '3 ✓')) : 'Faltan' }}</b></li>
+          @if (!modoPersona() && !esDeposito()) {
             <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
           }
         </ul>

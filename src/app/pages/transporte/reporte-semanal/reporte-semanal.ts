@@ -32,7 +32,14 @@ import {
   RespuestaValor,
   RESPUESTA_OPCIONES,
 } from '../../../core/models/checklist-preuso.model';
-import { FOTOS_SEMANAL_FALLBACK, FotoSlotSemanal, ReporteSemanalVeh } from '../../../core/models/reporte-semanal.model';
+import {
+  FOTOS_SEMANAL_FALLBACK,
+  FotoSlotSemanal,
+  ReporteSemanalVeh,
+  tipoPlantillaSemanal,
+  diaReporteSemanalDow,
+  DIA_SEMANA_LABEL,
+} from '../../../core/models/reporte-semanal.model';
 import {
   VehiculoDetalle,
   VehiculoDisponible,
@@ -49,6 +56,8 @@ interface VehSemanal {
   modelo: string;
   anio: number | null; // Z10
   tipo: string;
+  /** AC14/AC5 — 'horas' = telehandler (plantilla y día de reporte propios). */
+  medida_uso: string | null;
   km: number;
   foto_path: string | null;
   tiene_reporte: boolean;
@@ -199,6 +208,7 @@ export class ReporteSemanalPage extends GuardedWizard {
         modelo: v.modelo,
         anio: v.anio ?? null, // Z10
         tipo: v.tipo,
+        medida_uso: v.medida_uso ?? 'km', // AC14/AC5
         km: v.km,
         foto_path: v.foto_path ?? null,
         tiene_reporte: s?.tiene_reporte ?? false,
@@ -215,6 +225,17 @@ export class ReporteSemanalPage extends GuardedWizard {
 
   // Un vehículo "enviando" ya no cuenta como pendiente (está resuelto en la cola).
   pendientes = computed(() => this.lista().filter((v) => !v.tiene_reporte && !v.enviando));
+
+  // AC5 — día de hoy (0=domingo … 6=sábado) para marcar "toca reportar HOY".
+  private hoyDow = new Date().getDay();
+  /** AC5 — hoy es el día programado de reporte de este vehículo (telehandler=sábado, resto=domingo). */
+  tocaHoy(v: VehSemanal): boolean {
+    return this.hoyDow === diaReporteSemanalDow(v.medida_uso) && !v.tiene_reporte && !v.enviando;
+  }
+  /** AC5 — nombre del día programado del vehículo ("sábado" / "domingo"). */
+  diaProgramadoLabel(v: VehSemanal): string {
+    return DIA_SEMANA_LABEL[diaReporteSemanalDow(v.medida_uso)];
+  }
 
   /** W4 — ids de vehículos asignados a mí (asignaciones + recepciones en cola). */
   misIds = signal<Set<string>>(new Set());
@@ -351,6 +372,20 @@ export class ReporteSemanalPage extends GuardedWizard {
 
   elegir(v: VehSemanal): void {
     this.vehiculo.set(v);
+    // AC14 — plantilla del semanal según el tipo del vehículo: el telehandler usa
+    // sus 15 puntos; el resto, la genérica. Se recarga por cada vehículo elegido.
+    this.plantilla.set(null);
+    void this.reportes
+      .getPlantilla(tipoPlantillaSemanal(v.medida_uso))
+      .then((p) => this.plantilla.set(p));
+    // AC5 — aviso si hoy no es el día programado de este equipo (se permite igual).
+    if (!v.tiene_reporte && !v.enviando && this.hoyDow !== diaReporteSemanalDow(v.medida_uso)) {
+      this.toast.show(
+        `Hoy no toca el reporte de este equipo (le toca los ${this.diaProgramadoLabel(v)}). Puedes reportarlo igual.`,
+        'info',
+        5000,
+      );
+    }
     this.step.set(1);
     this.respuestas.set({});
     this.km.set(null);

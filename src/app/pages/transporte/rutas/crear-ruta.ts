@@ -13,7 +13,9 @@ import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/locati
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
-import { ConducesService, LugarDestino } from '../../../core/services/conduces.service';
+import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { CapturedPhoto } from '../../../core/services/camera.service';
+import { ConducesService, LugarDestino, RutaParadaCaptura } from '../../../core/services/conduces.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
@@ -27,6 +29,16 @@ import { formatearDuracion } from '../../../core/util/duracion';
 
 type DestinoModo = 'lugar' | 'mapa';
 
+/** AC13 — una parada intermedia editable en el wizard. */
+interface ParadaUI {
+  lugarId: string;
+  ubicacion: string;
+  lat: number | null;
+  lng: number | null;
+  notas: string;
+  proyectoId: string | null;
+}
+
 /**
  * Crear ruta desde el móvil (R7). Espeja la creación de rutas de la web SGC
  * (vehículo + origen + destino [obra o libre] + fecha + km/notas opcionales),
@@ -36,7 +48,7 @@ type DestinoModo = 'lugar' | 'mapa';
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes],
+  imports: [FormsModule, SelectList, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
@@ -96,6 +108,13 @@ export class CrearRutaPage implements OnDestroy {
   km = signal<number | null>(null);
   notas = signal('');
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
+
+  // AC13 — paradas intermedias (estilo Uber): entre el origen y el destino final.
+  paradas = signal<ParadaUI[]>([]);
+  // AC6 — fotos de evidencia inicial (carga / vehículo / documento), solo cámara.
+  fotoCarga = signal<CapturedPhoto | null>(null);
+  fotoVehiculo = signal<CapturedPhoto | null>(null);
+  fotoDocumento = signal<CapturedPhoto | null>(null);
 
   // U23 — duración estimada (min) calculada por OSRM cuando hay coords de ambos extremos.
   duracionMin = signal<number | null>(null);
@@ -253,6 +272,54 @@ export class CrearRutaPage implements OnDestroy {
     void this.recalcularRuta();
   }
 
+  // AC13 — gestión de paradas intermedias (agregar / quitar / reordenar).
+  agregarParada(): void {
+    this.paradas.update((list) => [
+      ...list,
+      { lugarId: '', ubicacion: '', lat: null, lng: null, notas: '', proyectoId: null },
+    ]);
+  }
+  quitarParada(i: number): void {
+    this.paradas.update((list) => list.filter((_, idx) => idx !== i));
+  }
+  moverParada(i: number, dir: -1 | 1): void {
+    this.paradas.update((list) => {
+      const j = i + dir;
+      if (j < 0 || j >= list.length) return list;
+      const next = [...list];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+  }
+  /** AC13 — parada por obra/almacén (usa sus coordenadas). */
+  setParadaLugar(i: number, id: string): void {
+    const lugar = this.lugares().find((l) => l.id === id);
+    this.paradas.update((list) =>
+      list.map((p, idx) =>
+        idx === i
+          ? {
+              ...p,
+              lugarId: id,
+              ubicacion: lugar?.nombre ?? p.ubicacion,
+              lat: lugar?.latitud ?? null,
+              lng: lugar?.longitud ?? null,
+              proyectoId: lugar?.tipo === 'obra' ? id : null,
+            }
+          : p,
+      ),
+    );
+  }
+  setParadaNota(i: number, texto: string): void {
+    this.paradas.update((list) => list.map((p, idx) => (idx === i ? { ...p, notas: texto } : p)));
+  }
+
+  /** AC6 — fotos de evidencia inicial capturadas (no nulas), para el resumen. */
+  fotosEvidencia = computed(() =>
+    [this.fotoCarga(), this.fotoVehiculo(), this.fotoDocumento()].filter(
+      (f): f is CapturedPhoto => !!f,
+    ),
+  );
+
   /** U20/U22 — destino marcado en el mapa. */
   onDestinoUbicacion(u: UbicacionSeleccionada): void {
     this.destinoMapaCoords.set({ lat: u.latitud, lng: u.longitud });
@@ -386,6 +453,18 @@ export class CrearRutaPage implements OnDestroy {
         destino_lat: lugar?.latitud ?? mapaCoords?.lat ?? null,
         destino_lng: lugar?.longitud ?? mapaCoords?.lng ?? null,
         voces: this.voces().map((n) => n.blob),
+        // AC13 — paradas intermedias válidas (con ubicación), en orden.
+        paradas: this.paradas()
+          .filter((p) => p.ubicacion.trim())
+          .map<RutaParadaCaptura>((p) => ({
+            ubicacion: p.ubicacion.trim(),
+            lat: p.lat,
+            lng: p.lng,
+            notas: p.notas.trim() || null,
+            proyectoId: p.proyectoId,
+          })),
+        // AC6 — fotos de evidencia inicial (carga/vehículo/documento).
+        fotos: this.fotosEvidencia().map((f) => f.blob),
       });
       this.done.set(true);
     } catch (e) {
@@ -411,7 +490,9 @@ export class CrearRutaPage implements OnDestroy {
       this.destinoLugarId() ||
       this.destinoMapaTexto().trim() ||
       this.km() != null ||
-      this.notas().trim()
+      this.notas().trim() ||
+      this.paradas().length > 0 || // AC13
+      this.fotosEvidencia().length > 0 // AC6
     );
   }
 

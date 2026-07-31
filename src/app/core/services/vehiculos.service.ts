@@ -20,7 +20,9 @@ import {
 const REQUIRED_SLOTS = FOTOS_REQUERIDAS.map((f) => f.slot);
 const CATALOG_PENDIENTES = 'pendientes_transporte';
 const CATALOG_VEH_DETALLE = 'veh_detalle'; // + `:${vehiculoId}`
-const CATALOG_DISPONIBLES = 'vehiculos_disponibles';
+// AC14/AC5 — bump a _v2: ahora traemos medida_uso (telehandler = 'horas') para
+// elegir la plantilla por tipo y el día programado del reporte semanal.
+const CATALOG_DISPONIBLES = 'vehiculos_disponibles_v2';
 const CATALOG_MIS_ASIGNACIONES = 'mis_asignaciones';
 
 /** Editable vehicle fields for the admin create/edit form. */
@@ -310,7 +312,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
+        .select('id, placa, marca, modelo, anio, tipo, medida_uso, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .not('estado', 'in', '(baja,no_disponible)')
         .order('placa', { ascending: true });
@@ -322,6 +324,7 @@ export class VehiculosService {
         modelo: (v['modelo'] as string) ?? '',
         anio: (v['anio'] as number) ?? null, // Z10
         tipo: (v['tipo'] as string) ?? '',
+        medida_uso: (v['medida_uso'] as string) ?? 'km', // AC14/AC5 — 'horas' = telehandler
         km: (v['kilometraje'] as number) ?? 0,
         foto_path: ((v['fotos'] as string[] | null) ?? [])[0] ?? null,
         es_prueba: (v['es_prueba'] as boolean) ?? false,
@@ -389,6 +392,29 @@ export class VehiculosService {
         });
     });
     return data ?? [];
+  }
+
+  /**
+   * AC8 — asignaciones ACTIVAS de toda la flota: vehiculo_id → nombre de quien lo
+   * tiene. Se usa para excluir/deshabilitar en el selector de asignación (un
+   * vehículo ya asignado no se puede volver a asignar). El chofer tiene el módulo
+   * 'flota', así que la RLS le permite leerlas. Cacheado para uso offline.
+   */
+  async getAsignacionesActivas(): Promise<Record<string, string>> {
+    const data = await this.catalog.refresh<Record<string, string>>('asignaciones_activas', async () => {
+      const { data, error } = await this.supabase.client
+        .from('vehiculo_asignaciones')
+        .select('vehiculo_id, usuario:usuarios(nombre)')
+        .eq('activa', true);
+      if (error) throw new Error(error.message);
+      const map: Record<string, string> = {};
+      for (const r of (data as Array<Record<string, unknown>>) ?? []) {
+        const u = r['usuario'] as { nombre?: string } | null;
+        map[r['vehiculo_id'] as string] = u?.nombre ?? 'otro conductor';
+      }
+      return map;
+    });
+    return data ?? {};
   }
 
   /**

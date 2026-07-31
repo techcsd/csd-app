@@ -40,6 +40,39 @@
                 <button type="button" class="btn-cta" (click)="ruta(r.id, 'completada')">Completar</button>
               }
             </div>
+
+            <!-- AC13/AC6 — detalle: paradas en orden + fotos de evidencia inicial -->
+            <button type="button" class="ruta-card__ver" (click)="toggleDetalle(r.id)">
+              {{ estaExpandida(r.id) ? '▲ Ocultar detalle' : '▼ Ver paradas y fotos' }}
+            </button>
+            @if (estaExpandida(r.id)) {
+              @if (detalle(r.id); as d) {
+                <div class="ruta-card__detalle">
+                  <span class="ruta-card__paso"><b>1.</b> {{ r.origen }} <em>(origen)</em></span>
+                  @for (p of d.paradas; track p.orden) {
+                    <span class="ruta-card__paso">
+                      <b>{{ p.orden + 1 }}.</b> {{ p.ubicacion }}
+                      @if (p.notas) { <em>· {{ p.notas }}</em> }
+                    </span>
+                  }
+                  <span class="ruta-card__paso">
+                    <b>{{ d.paradas.length + 2 }}.</b> {{ r.destino }} <em>(destino)</em>
+                  </span>
+                  @if (d.fotos.length) {
+                    <div class="ruta-card__fotos">
+                      @for (f of d.fotos; track f) {
+                        <img class="ruta-card__foto" [src]="f" alt="Evidencia de la ruta" loading="lazy" />
+                      }
+                    </div>
+                  }
+                  @if (!d.paradas.length && !d.fotos.length) {
+                    <span class="ruta-card__vacio">Sin paradas ni fotos de evidencia.</span>
+                  }
+                </div>
+              } @else {
+                <p class="ruta-card__vacio">Cargando detalle…</p>
+              }
+            }
           </div>
         }
       }

@@ -35,20 +35,45 @@ export class ReporteSemanalService {
     this.registerHandler();
   }
 
-  /** The active weekly template with its items, cached for offline use. */
-  async getPlantilla(): Promise<ChecklistPlantilla | null> {
-    const data = await this.catalog.refresh<ChecklistPlantilla | null>(CATALOG_PLANTILLA, async () => {
-      const { data, error } = await this.supabase.client
-        .from('checklist_plantillas')
-        .select('id, codigo, nombre, categoria, descripcion, activo, orden, items:checklist_plantilla_items(*)')
-        .eq('frecuencia', 'semanal')
-        .eq('activo', true)
-        .order('orden', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw new Error(error.message);
-      if (!data) return null;
-      const p = data as ChecklistPlantilla;
+  /**
+   * AC14 — plantilla activa del semanal por TIPO de vehículo, cacheada offline.
+   * El telehandler usa su plantilla (`tipo_vehiculo='telehandler'`, los 15
+   * puntos); el resto usa la genérica (`tipo_vehiculo` nulo). Si no existe la
+   * específica, cae a la genérica para no dejar el wizard sin ítems.
+   */
+  async getPlantilla(tipoVehiculo?: string | null): Promise<ChecklistPlantilla | null> {
+    const tipo = tipoVehiculo?.trim().toLowerCase() || null;
+    const key = `${CATALOG_PLANTILLA}_${tipo ?? 'generic'}`;
+    const data = await this.catalog.refresh<ChecklistPlantilla | null>(key, async () => {
+      const base = () =>
+        this.supabase.client
+          .from('checklist_plantillas')
+          .select('id, codigo, nombre, categoria, descripcion, activo, orden, items:checklist_plantilla_items(*)')
+          .eq('frecuencia', 'semanal')
+          .eq('activo', true);
+
+      let row: unknown = null;
+      if (tipo) {
+        const { data, error } = await base()
+          .eq('tipo_vehiculo', tipo)
+          .order('orden', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw new Error(error.message);
+        row = data;
+      }
+      // Fallback (o tipo genérico): la plantilla sin tipo_vehiculo (camiones).
+      if (!row) {
+        const { data, error } = await base()
+          .is('tipo_vehiculo', null)
+          .order('orden', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (error) throw new Error(error.message);
+        row = data;
+      }
+      if (!row) return null;
+      const p = row as ChecklistPlantilla;
       return { ...p, items: [...(p.items ?? [])].sort((a, b) => a.orden - b.orden) };
     });
     return data ?? null;

@@ -78,3 +78,54 @@ app-option-button {
   border-top: 1px solid var(--color-border);
   background: var(--color-bg);
 }
+
+// AC7 — confirmación de entrega con ambas firmas.
+.entrega__ok {
+  text-align: center;
+  padding: 24px 0 8px;
+}
+.entrega__ok-check {
+  display: inline-block;
+  font-size: 44px;
+}
+.entrega__ok-title {
+  margin: 8px 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.entrega__ok-sub {
+  color: var(--color-text-secondary);
+}
+.entrega__firmas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.entrega__firma {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  background: var(--color-surface);
+  text-align: center;
+}
+.entrega__firma-rol {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+.entrega__firma-nombre {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 2px 0 8px;
+}
+.entrega__firma-img {
+  width: 100%;
+  height: auto;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}

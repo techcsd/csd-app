@@ -69,6 +69,18 @@
   color: var(--color-success);
   margin-bottom: 8px;
 }
+// AC8 — vehículo asignado a otra persona: se ve atenuado y no clickeable.
+.asignar__disabled {
+  display: block;
+  opacity: 0.55;
+}
+.asignar__tomado {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  margin-top: 6px;
+}
 .asignar__acciones {
   display: flex;
   flex-direction: column;

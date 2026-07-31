@@ -95,6 +95,29 @@
           } @else if (duracionMin() != null) {
             <p class="cruta__eta">🕒 Tiempo estimado: <strong>{{ fmtDur(duracionMin()) }}</strong></p>
           }
+
+          <!-- AC13 — paradas intermedias (estilo Uber): entre el origen y el destino -->
+          <label class="field-label cruta__paradas-lbl">Paradas intermedias (opcional)</label>
+          @for (p of paradas(); track $index) {
+            <div class="cruta__parada">
+              <div class="cruta__parada-head">
+                <span class="cruta__parada-n">Parada {{ $index + 1 }}</span>
+                <div class="cruta__parada-btns">
+                  <button type="button" class="cruta__parada-btn" [disabled]="$index === 0" (click)="moverParada($index, -1)" aria-label="Subir">↑</button>
+                  <button type="button" class="cruta__parada-btn" [disabled]="$index === paradas().length - 1" (click)="moverParada($index, 1)" aria-label="Bajar">↓</button>
+                  <button type="button" class="cruta__parada-btn cruta__parada-btn--del" (click)="quitarParada($index)" aria-label="Quitar">✕</button>
+                </div>
+              </div>
+              <select class="field" [ngModel]="p.lugarId" (ngModelChange)="setParadaLugar($index, $event)">
+                <option value="">— Elige obra o almacén —</option>
+                @for (l of lugares(); track l.id) {
+                  <option [value]="l.id">{{ l.tipo === 'obra' ? '🏗️' : '🏢' }} {{ l.nombre }}</option>
+                }
+              </select>
+              <input class="field cruta__parada-nota" type="text" [ngModel]="p.notas" (ngModelChange)="setParadaNota($index, $event)" placeholder="Nota de la parada (opcional)" />
+            </div>
+          }
+          <button type="button" class="btn-ghost cruta__add-parada" (click)="agregarParada()">➕ Agregar parada</button>
         }
 
         <!-- 5. Detalles -->
@@ -106,6 +129,14 @@
           <textarea id="notas" class="field cruta__notas" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Algo que recordar de la ruta…"></textarea>
           <!-- Z23 — notas de voz (opcional) -->
           <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
+
+          <!-- AC6 — fotos de evidencia inicial (carga / vehículo / documento), solo cámara -->
+          <label class="field-label">Fotos de evidencia inicial (opcional)</label>
+          <div class="cruta__fotos">
+            <app-photo-slot label="Carga" hint="📦" [gallery]="false" [foto]="fotoCarga()" (captured)="fotoCarga.set($event)" (cleared)="fotoCarga.set(null)" />
+            <app-photo-slot label="Vehículo" hint="🚚" [gallery]="false" [foto]="fotoVehiculo()" (captured)="fotoVehiculo.set($event)" (cleared)="fotoVehiculo.set(null)" />
+            <app-photo-slot label="Documento" hint="📄" [gallery]="false" [foto]="fotoDocumento()" (captured)="fotoDocumento.set($event)" (cleared)="fotoDocumento.set(null)" />
+          </div>
         }
 
         <!-- 6. Resumen -->
@@ -115,9 +146,11 @@
             <li><span>Vehículo</span><b>{{ vehiculoLabel() }}</b></li>
             <li><span>Conductor</span><b>{{ esElevado ? conductorNombre() : 'Yo mismo' }}</b></li>
             <li><span>Origen</span><b>{{ origen() }}</b></li>
+            @if (paradas().length) { <li><span>Paradas</span><b>{{ paradas().length }}</b></li> }
             <li><span>Destino</span><b>{{ destinoResumen() }}</b></li>
             @if (km() != null) { <li><span>Km estimados</span><b>{{ km() }}</b></li> }
             @if (duracionMin() != null) { <li><span>Tiempo</span><b>{{ fmtDur(duracionMin()) }}</b></li> }
+            @if (fotosEvidencia().length) { <li><span>Fotos</span><b>{{ fotosEvidencia().length }} ✓</b></li> }
           </ul>
         }
       }

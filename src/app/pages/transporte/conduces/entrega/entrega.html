@@ -1,13 +1,34 @@
 @if (done()) {
-  <app-big-confirm
-    [title]="online ? 'Entrega registrada' : 'Guardado'"
-    [note]="online
-      ? (incompleto() ? 'Se marcó como entrega incompleta.' : 'Conduce entregado completo.')
-      : 'Sin señal. Se enviará solo.'"
-    [tone]="online ? 'done' : 'pending'"
-    buttonLabel="Listo"
-    (dismissed)="finish()"
-  />
+  <!-- AC7 — confirmación con el detalle de ambas firmas del conduce -->
+  <div class="screen entrega">
+    <div class="screen__body">
+      <div class="entrega__ok">
+        <span class="entrega__ok-check">{{ online ? '✓' : '⏳' }}</span>
+        <h1 class="entrega__ok-title">{{ online ? 'Entrega registrada' : 'Guardado' }}</h1>
+        <p class="entrega__ok-sub">
+          {{ online
+            ? (incompleto() ? 'Se marcó como entrega incompleta.' : 'Conduce entregado completo.')
+            : 'Sin señal. Se enviará solo.' }}
+        </p>
+      </div>
+
+      <div class="entrega__firmas">
+        <div class="entrega__firma">
+          <span class="entrega__firma-rol">Entregó</span>
+          <span class="entrega__firma-nombre">{{ emisorNombre() }}</span>
+          @if (firmaEmisorUrl(); as u) { <img class="entrega__firma-img" [src]="u" alt="Firma de quien entrega" /> }
+        </div>
+        <div class="entrega__firma">
+          <span class="entrega__firma-rol">Recibió</span>
+          <span class="entrega__firma-nombre">{{ receptor() }}</span>
+          @if (firmaReceptorUrl(); as u) { <img class="entrega__firma-img" [src]="u" alt="Firma de quien recibe" /> }
+        </div>
+      </div>
+    </div>
+    <footer class="entrega__nav">
+      <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+    </footer>
+  </div>
 } @else if (loading()) {
   <div class="screen entrega">
     <div class="screen__body"><app-skeleton [rows]="5" /></div>
@@ -59,7 +80,21 @@
         }
       }
 
-      <h2 class="entrega__step">3. ¿Quién recibe?</h2>
+      <!-- AC7 — firma de quien ENTREGA (emisor: chofer/almacén) -->
+      <h2 class="entrega__step">3. ¿Quién entrega?</h2>
+      <input
+        class="field"
+        type="text"
+        [ngModel]="emisorNombre()"
+        (ngModelChange)="emisorNombre.set($event)"
+        placeholder="Nombre de quien entrega"
+      />
+
+      <h2 class="entrega__step">4. Firma de quien entrega</h2>
+      <app-signature-pad #emisorPad (changed)="onFirmaEmisor($event)" />
+
+      <!-- AC7 — firma de quien RECIBE (receptor: nombre libre o usuario) -->
+      <h2 class="entrega__step">5. ¿Quién recibe?</h2>
       <input
         class="field"
         type="text"
@@ -68,8 +103,8 @@
         placeholder="Nombre de quien recibe"
       />
 
-      <h2 class="entrega__step">4. Firma de quien recibe</h2>
-      <app-signature-pad />
+      <h2 class="entrega__step">6. Firma de quien recibe</h2>
+      <app-signature-pad #receptorPad (changed)="onFirmaReceptor($event)" />
     </div>
 
     <footer class="entrega__nav">

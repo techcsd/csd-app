@@ -380,6 +380,17 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/tecnologia/tecnologia').then((m) => m.TecnologiaPage),
   },
   {
+    // AC4 — Notas: módulo general accesible por todos (sin moduleGuard).
+    path: 'notas',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/notas/notas').then((m) => m.NotasPage),
+  },
+  {
+    path: 'notas/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/notas/editor/nota-editor').then((m) => m.NotaEditorPage),
+  },
+  {
     // Y14 — Proyectos (listado), gateado por el módulo `proyectos`.
     path: 'proyectos',
     canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],

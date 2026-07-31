@@ -121,35 +121,20 @@ export class CombustibleService {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
 
-    const fotos = [
-      {
-        id: crypto.randomUUID(),
-        bucket: 'vehiculos',
-        path: `combustible/${id}/recibo.jpg`,
-        slot: 'recibo',
-        blob: input.fotoRecibo,
-      },
-      // Z23-app — sin foto de tablero en una echada de persona (no hay odómetro).
-      ...(input.fotoTablero
-        ? [
-            {
-              id: crypto.randomUUID(),
-              bucket: 'vehiculos',
-              path: `combustible/${id}/tablero.jpg`,
-              slot: 'tablero',
-              blob: input.fotoTablero,
-            },
-          ]
-        : []),
-      // Y4 — foto de la bomba/estación en 0.
-      {
-        id: crypto.randomUUID(),
-        bucket: 'vehiculos',
-        path: `combustible/${id}/bomba.jpg`,
-        slot: 'bomba',
-        blob: input.fotoBomba,
-      },
-    ];
+    // AC11 — depósito en obra: solo una foto de evidencia (garrafón/equipo). Se
+    // guarda en el slot `recibo` para que el detalle web la muestre como evidencia.
+    // Estación: las 3 fotos de siempre (recibo + tablero + bomba en 0).
+    const fotos: Array<{ id: string; bucket: string; path: string; slot: string; blob: Blob }> = [];
+    const addFoto = (slot: string, name: string, blob: Blob | null) => {
+      if (blob) fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `combustible/${id}/${name}`, slot, blob });
+    };
+    if (input.origen === 'deposito_obra') {
+      addFoto('recibo', 'evidencia.jpg', input.fotoEvidencia);
+    } else {
+      addFoto('recibo', 'recibo.jpg', input.fotoRecibo);
+      addFoto('tablero', 'tablero.jpg', input.fotoTablero); // Z23-app — sin tablero en echada de persona
+      addFoto('bomba', 'bomba.jpg', input.fotoBomba); // Y4 — bomba/estación en 0
+    }
 
     await this.sync.enqueue({
       id,
@@ -165,6 +150,8 @@ export class CombustibleService {
         galones: input.galones,
         monto: input.monto,
         estacion: input.estacion,
+        origen: input.origen, // AC11
+        proyecto_id: input.proyectoId, // AC11
         producto: input.producto, // Z23-app
         subtipo: input.subtipo, // AA20
         tarjeta: input.tarjeta, // Z23-app
@@ -205,6 +192,8 @@ export class CombustibleService {
         p_tarjeta: payload['tarjeta'] ?? null, // Z23-app
         p_titular: payload['titular'] ?? null, // Z23-app
         p_titular_es_persona: payload['titular_es_persona'] ?? false, // Z23-app
+        p_origen: payload['origen'] ?? 'estacion', // AC11
+        p_proyecto_id: payload['proyecto_id'] ?? null, // AC11
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);

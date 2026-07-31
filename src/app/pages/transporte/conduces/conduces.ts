@@ -6,7 +6,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
-import { ConducesService } from '../../../core/services/conduces.service';
+import { ConducesService, RutaDetalleApp } from '../../../core/services/conduces.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { Conduce, RutaHoy } from '../../../core/models/transporte.model';
@@ -41,6 +41,29 @@ export class ConducesPage implements OnDestroy {
   conduces = signal<Conduce[]>([]);
   rutas = signal<RutaHoy[]>([]);
   loading = signal(true);
+
+  // AC13/AC6 — detalle de ruta (paradas + fotos) expandible en el sitio.
+  private expandidas = signal<Set<string>>(new Set());
+  private detalles = signal<Record<string, RutaDetalleApp>>({});
+  estaExpandida(id: string): boolean {
+    return this.expandidas().has(id);
+  }
+  detalle(id: string): RutaDetalleApp | null {
+    return this.detalles()[id] ?? null;
+  }
+  toggleDetalle(rutaId: string): void {
+    const abierto = this.expandidas().has(rutaId);
+    this.expandidas.update((s) => {
+      const next = new Set(s);
+      abierto ? next.delete(rutaId) : next.add(rutaId);
+      return next;
+    });
+    if (!abierto && !this.detalles()[rutaId]) {
+      void this.service
+        .getRutaDetalle(rutaId)
+        .then((d) => this.detalles.update((m) => ({ ...m, [rutaId]: d })));
+    }
+  }
 
   /** Y4 — reloj que avanza cada segundo para el contador en vivo de rutas en curso. */
   now = signal(Date.now());

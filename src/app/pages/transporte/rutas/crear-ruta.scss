@@ -155,3 +155,60 @@
   font-size: 14px;
   font-weight: 700;
 }
+
+// AC13 — paradas intermedias (estilo Uber).
+.cruta__paradas-lbl {
+  margin-top: 18px;
+}
+.cruta__parada {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+}
+.cruta__parada-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.cruta__parada-n {
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.cruta__parada-btns {
+  display: flex;
+  gap: 6px;
+}
+.cruta__parada-btn {
+  min-width: 34px;
+  min-height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface-2);
+  font-size: 15px;
+  font-weight: 800;
+
+  &:disabled {
+    opacity: 0.4;
+  }
+}
+.cruta__parada-btn--del {
+  color: var(--color-danger);
+}
+.cruta__parada-nota {
+  margin-top: 8px;
+}
+.cruta__add-parada {
+  width: 100%;
+  margin-top: 4px;
+}
+// AC6 — fotos de evidencia inicial.
+.cruta__fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}

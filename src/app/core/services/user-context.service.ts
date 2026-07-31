@@ -56,6 +56,12 @@ export class UserContextService {
     this.roles().some((r) => UserContextService.TECNOLOGIA.includes(r)),
   );
 
+  // AC2 — el módulo Tecnología es público para TODOS los usuarios EXCEPTO el
+  // rol chofer (experiencia reducida de la app). Espejo de sgc.es_chofer()
+  // (rol 'chofer_transportista'); un usuario con ese rol se considera chofer
+  // aunque tenga otros roles, igual que el helper del servidor.
+  esChofer = computed(() => this.hasRol('chofer_transportista'));
+
   hasModulo(modulo: string): boolean {
     return this.modulos().includes(modulo);
   }

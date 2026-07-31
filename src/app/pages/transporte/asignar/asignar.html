@@ -41,6 +41,20 @@
                 </button>
               </div>
             </app-vehiculo-card>
+          } @else if (asignadoAOtro(v.vehiculo_id)) {
+            <!-- AC8 — asignado a otra persona: deshabilitado, no re-asignable -->
+            <app-vehiculo-card
+              class="asignar__disabled"
+              [fotoUrl]="fotoUrls()[v.vehiculo_id]"
+              [placa]="v.placa"
+              [tipo]="v.tipo"
+              [km]="v.km"
+              [marca]="v.marca"
+              [modelo]="v.modelo"
+              [anio]="v.anio"
+            >
+              <span class="asignar__tomado">🔒 Asignado a {{ nombreAsignado(v.vehiculo_id) }}</span>
+            </app-vehiculo-card>
           } @else {
             <button type="button" class="asignar__vehbtn" (click)="seleccionar(v)">
               <app-vehiculo-card

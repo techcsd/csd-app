@@ -101,6 +101,9 @@ export interface VehiculoDisponible {
   modelo: string;
   anio?: number | null; // Z10
   tipo: string;
+  /** AC14/AC5 — 'km' | 'horas'. 'horas' identifica al telehandler (plantilla y
+   *  día de reporte propios). */
+  medida_uso?: string | null;
   km: number;
   /** U6 — path de la 1ª foto en el bucket `vehiculos` (o null). */
   foto_path?: string | null;

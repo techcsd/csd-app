@@ -26,6 +26,9 @@ import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
 import { CombustibleService } from '../../../core/services/combustible.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
+import { ConducesService } from '../../../core/services/conduces.service';
+import { UserContextService } from '../../../core/services/user-context.service';
+import { Proyecto } from '../../../core/models/bitacora.model';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
@@ -60,6 +63,8 @@ export class CombustiblePage extends GuardedWizard {
   private vehiculos = inject(VehiculosService);
   private combustible = inject(CombustibleService);
   private conductores = inject(ConductoresService);
+  private conduces = inject(ConducesService);
+  private ctx = inject(UserContextService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
 
@@ -116,6 +121,18 @@ export class CombustiblePage extends GuardedWizard {
   fotoTablero = signal<CapturedPhoto | null>(null);
   fotoBomba = signal<CapturedPhoto | null>(null); // Y4 — bomba/estación en 0
 
+  // AC11 — depósito en obra (telehandler): se echa desde garrafón, sin estación
+  // ni precio de bomba; galones + obra + horas del equipo + foto de evidencia.
+  origen = signal<'estacion' | 'deposito_obra'>('estacion');
+  proyectoId = signal<string | null>(null);
+  proyectos = signal<Proyecto[]>([]);
+  fotoEvidencia = signal<CapturedPhoto | null>(null);
+  /** Telehandler = equipo medido por horas (medida_uso='horas'). */
+  esTelehandler = computed(() => this.vehDetalle()?.medida_uso === 'horas');
+  esDeposito = computed(() => this.origen() === 'deposito_obra');
+  /** AC11 — nombre de la obra elegida (para el resumen). */
+  obraNombre = computed(() => this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? null);
+
   submitting = signal(false);
   done = signal(false);
   /** Snapshot of the live calc shown on the confirmation screen. */
@@ -137,11 +154,13 @@ export class CombustiblePage extends GuardedWizard {
 
   // Y4 — las 3 fotos son obligatorias (recibo + tablero + bomba en 0).
   // Z23-app — en una echada de persona no hay tablero (odómetro): recibo + bomba.
-  fotosCompletas = computed(() =>
-    this.modoPersona()
+  // AC11 — en depósito en obra solo la foto de evidencia del garrafón/equipo.
+  fotosCompletas = computed(() => {
+    if (this.esDeposito()) return !!this.fotoEvidencia();
+    return this.modoPersona()
       ? !!this.fotoRecibo() && !!this.fotoBomba()
-      : !!this.fotoRecibo() && !!this.fotoTablero() && !!this.fotoBomba(),
-  );
+      : !!this.fotoRecibo() && !!this.fotoTablero() && !!this.fotoBomba();
+  });
   loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
 
   constructor() {
@@ -216,7 +235,8 @@ export class CombustiblePage extends GuardedWizard {
         !!this.titular().trim() || // Z23-app
         !!this.fotoRecibo() ||
         !!this.fotoTablero() ||
-        !!this.fotoBomba())
+        !!this.fotoBomba() ||
+        !!this.fotoEvidencia()) // AC11
     );
   }
 
@@ -230,10 +250,42 @@ export class CombustiblePage extends GuardedWizard {
       }
       // U6 — detalle con km EFECTIVO (servidor + outbox) + datos de mantenimiento
       // para que el KmInput muestre el odómetro real y el estado en vivo.
-      void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => this.vehDetalle.set(d));
+      void this.vehiculos.getVehiculoDetalle(this.vehiculoId).then((d) => {
+        this.vehDetalle.set(d);
+        // AC11 — telehandler (medido por horas): preselecciona "Depósito en obra"
+        // y carga las obras para elegir dónde se echó.
+        if (d?.medida_uso === 'horas') {
+          this.origen.set('deposito_obra');
+          void this.loadProyectos();
+        }
+      });
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** AC11 — obras/proyectos para el depósito en obra (cache compartida, offline). */
+  private async loadProyectos(): Promise<void> {
+    const list = await this.conduces.getProyectos();
+    this.proyectos.set(list);
+    // Preseleccionar la obra activa del usuario si está en la lista.
+    const obra = this.ctx.obraActiva()?.id ?? null;
+    if (obra && !this.proyectoId() && list.some((p) => p.id === obra)) {
+      this.proyectoId.set(obra);
+    }
+  }
+
+  /** AC11 — alternar estación / depósito en obra (solo disponible en telehandler). */
+  setOrigen(o: 'estacion' | 'deposito_obra'): void {
+    this.origen.set(o);
+    if (o === 'deposito_obra' && !this.proyectos().length) void this.loadProyectos();
+  }
+
+  onFotoEvidencia(photo: CapturedPhoto): void {
+    this.fotoEvidencia.set(photo);
+  }
+  onFotoEvidenciaCleared(): void {
+    this.fotoEvidencia.set(null);
   }
 
   private async loadUltima(): Promise<void> {
@@ -304,13 +356,23 @@ export class CombustiblePage extends GuardedWizard {
         this.toast.error('Escribe los galones echados.');
         return false;
       }
-      if (!this.monto() || this.monto()! <= 0) {
+      // AC11 — en depósito en obra el monto/costo es opcional (garrafón).
+      if (!this.esDeposito() && (!this.monto() || this.monto()! <= 0)) {
         this.toast.error('Escribe el monto pagado.');
         return false;
       }
     }
-    // V6 — paso 2: estación (con el cálculo automático debajo).
-    if (s === 2) {
+    // AC10 — paso 2: fotos obligatorias (se capturan temprano, junto a la bomba,
+    // antes de arrancar). Antes iban en el paso 3.
+    if (s === 2 && !this.fotosCompletas()) {
+      this.toast.error('Faltan fotos para continuar.');
+      return false;
+    }
+    // AC10 — paso 3: producto + estación + tarjeta (con el cálculo automático
+    // debajo). Antes era el paso 2.
+    // AC11 — en depósito en obra no hay estación ni subtipo de bomba; la obra es
+    // opcional, así que este paso no bloquea.
+    if (s === 3 && !this.esDeposito()) {
       // AA20 — el subtipo (Regular/Premium) es obligatorio.
       if (!this.subtipo()) {
         this.toast.error('Elige Regular o Premium.');
@@ -326,11 +388,6 @@ export class CombustiblePage extends GuardedWizard {
         return false;
       }
     }
-    // V6 — paso 3: fotos obligatorias.
-    if (s === 3 && !this.fotosCompletas()) {
-      this.toast.error('Faltan fotos para continuar.');
-      return false;
-    }
     return true;
   }
 
@@ -344,6 +401,7 @@ export class CombustiblePage extends GuardedWizard {
     try {
       const estacion = this.estacionFinal();
       const persona = this.modoPersona();
+      const deposito = this.esDeposito(); // AC11
       await this.combustible.registrar({
         // Z23-app — echada de persona: sin vehículo ni odómetro ni foto de tablero.
         vehiculoId: persona ? null : this.vehiculoId,
@@ -351,16 +409,22 @@ export class CombustiblePage extends GuardedWizard {
         fecha: new Date().toISOString().slice(0, 10),
         kilometraje: persona ? null : this.km()!,
         galones: this.galones()!,
-        monto: this.monto()!,
-        estacion: estacion ? estacion : null,
+        // AC11 — depósito en obra: el costo es opcional (0 si no se conoce).
+        monto: this.monto() ?? 0,
+        // AC11 — sin estación en depósito en obra.
+        estacion: deposito ? null : estacion ? estacion : null,
+        origen: this.origen(), // AC11
+        proyectoId: deposito ? this.proyectoId() : null, // AC11
         producto: this.producto(), // Z23-app
-        subtipo: this.subtipo(), // AA20
-        tarjeta: this.tarjeta().trim() || null, // Z23-app
+        subtipo: deposito ? null : this.subtipo(), // AA20 (no aplica al depósito)
+        tarjeta: deposito ? null : this.tarjeta().trim() || null, // Z23-app
         titular: persona ? this.titular().trim() || null : null, // Z23-app
         titularEsPersona: persona, // Z23-app
-        fotoRecibo: this.fotoRecibo()!.blob,
-        fotoTablero: persona ? null : this.fotoTablero()!.blob,
-        fotoBomba: this.fotoBomba()!.blob,
+        // AC11 — fotos según el origen: depósito=evidencia; estación=recibo/tablero/bomba.
+        fotoRecibo: deposito ? null : this.fotoRecibo()!.blob,
+        fotoTablero: persona || deposito ? null : this.fotoTablero()!.blob,
+        fotoBomba: deposito ? null : this.fotoBomba()!.blob,
+        fotoEvidencia: deposito ? this.fotoEvidencia()!.blob : null,
         placa: persona ? '' : this.placa(),
       });
       this.resultado.set(this.calc());

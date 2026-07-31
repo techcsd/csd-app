@@ -74,9 +74,11 @@
         <p class="screen__subtitle">Las 6 fotos son obligatorias.</p>
         <div class="checklist__fotos">
           @for (f of fotosReq; track f.slot) {
+            <!-- AC9 — entrega/devolución: fotos solo cámara (evidencia en el acto) -->
             <app-photo-slot
               [label]="f.label"
               [hint]="f.hint"
+              [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
@@ -155,7 +157,8 @@
                   </button>
                 }
               </div>
-              <app-photo-slot label="Foto del daño" hint="📸" [foto]="d.photo" (captured)="onDanoFoto(di, $event)" />
+              <!-- AC9 — daño: foto solo cámara -->
+              <app-photo-slot label="Foto del daño" hint="📸" [gallery]="false" [foto]="d.photo" (captured)="onDanoFoto(di, $event)" />
               <input
                 class="field dano__desc"
                 type="text"

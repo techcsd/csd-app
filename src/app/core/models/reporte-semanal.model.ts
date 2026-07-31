@@ -19,6 +19,36 @@ export const FOTOS_SEMANAL_FALLBACK: FotoSlotSemanal[] = [
   { slot: 'int_asientos_tras', label: 'Interior — asientos traseros / baúl', hint: '🪑', seccion: 'Interior' },
 ];
 
+/**
+ * AC14/AC5 — un equipo medido por horas (telehandler) usa SU plantilla del
+ * reporte semanal (los 15 puntos) y su día programado; el resto usa los
+ * genéricos. La app detecta el telehandler por `medida_uso === 'horas'` porque
+ * en BD no existe un `tipo='telehandler'` (se guarda como equipo por horas).
+ */
+export function esTelehandler(medidaUso?: string | null): boolean {
+  return (medidaUso ?? 'km') === 'horas';
+}
+
+/** tipo_vehiculo con el que se busca la plantilla del semanal (null = genérica). */
+export function tipoPlantillaSemanal(medidaUso?: string | null): string | null {
+  return esTelehandler(medidaUso) ? 'telehandler' : null;
+}
+
+/**
+ * AC5 — día programado del reporte semanal (0=domingo … 6=sábado). Espeja
+ * sgc.flota_reporte_dias (camiones/vehículos = domingo; telehandler = sábado).
+ * Se mantiene del lado del cliente porque la tabla NO es legible por el app
+ * (SELECT solo para service_role) y el badge "toca hoy" debe funcionar offline.
+ */
+export function diaReporteSemanalDow(medidaUso?: string | null): number {
+  return esTelehandler(medidaUso) ? 6 : 0;
+}
+
+/** Nombre del día de la semana (para avisos "le toca los sábados"). */
+export const DIA_SEMANA_LABEL = [
+  'domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado',
+];
+
 /** One vehicle's weekly-report status for the current ISO week (R3). */
 export interface ReporteSemanalVeh {
   vehiculo_id: string;
