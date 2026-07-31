@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.42.0';
+const VERSION = '1.43.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,14 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-07-31';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Actualizaciones más fáciles y sin tantas vueltas';
+const TITULO = 'Requisición: buscar materiales al instante';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'Actualizar la app es más fácil: se descarga una sola vez y, si Android pide permiso para "instalar apps desconocidas", solo se pide la primera vez y la instalación continúa sola al volver (sin tener que descargar otra vez).' },
-  { t: 'mejora', d: 'La actualización se instala encima de la anterior de forma más limpia en teléfonos modernos (firma v3), sin marcarla como app distinta.' },
-  { t: 'nuevo', d: 'Los choferes ya pueden crearse sus propias rutas (antes solo las asignaba el jefe de flota); la ruta se asigna automáticamente a quien la crea.' },
-  { t: 'arreglo', d: 'El módulo "Tecnología" ya no aparece en el inicio de los usuarios que no lo tienen asignado (por ejemplo, los choferes).' },
+  { t: 'mejora', d: 'Pedir materiales en una requisición ahora es más rápido: en vez de entrar por categorías, escribes el nombre o el código en el buscador y los resultados aparecen al instante mientras escribes (funciona sin señal, con el catálogo guardado en el teléfono).' },
+  { t: 'mejora', d: 'Si lo que necesitas no está en el catálogo, puedes pedirlo escribiéndolo directamente desde el mismo buscador.' },
 ];
 
 const TIPO_POR_COMMIT = {

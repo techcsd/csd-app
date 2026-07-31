@@ -24,9 +24,11 @@ interface GrupoResumen {
 }
 
 /**
- * V13 — Requisición por el patrón de HOJAS: selección por categorías (con "Otros"
- * libre) → resumen editable (obra + urgencia) → éxito con compartir por WhatsApp.
- * Reusa SelectorCategorias en modo 'requisicion' y commitea vía crear_solicitud_app.
+ * V13 — Requisición por el patrón de HOJAS: selección de artículos → resumen
+ * editable (obra + urgencia) → éxito con compartir por WhatsApp.
+ * AB1 — la selección usa SelectorCategorias en `soloBuscador` (buscador en
+ * tiempo real sobre el catálogo offline, con "Otros" libre) en vez de categorías.
+ * Commitea vía crear_solicitud_app.
  */
 @Component({
   selector: 'app-pedir',

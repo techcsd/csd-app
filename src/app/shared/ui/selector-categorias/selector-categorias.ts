@@ -47,6 +47,13 @@ export class SelectorCategorias {
   loading = input(false); // V7: shimmer while the catalog loads (no blank grid)
   /** 'requisicion' unlocks the free-text "Otros" flow (V14/08). */
   modo = input<'stock' | 'requisicion'>('stock');
+  /**
+   * AB1 — modo "solo buscador": una sola pantalla con un buscador prominente que
+   * filtra el catálogo en tiempo real (nombre o código), sin el listado de
+   * categorías. Opt-in (solo Requisición lo activa); salida/entrada/conteo siguen
+   * con el patrón de categorías intacto.
+   */
+  soloBuscador = input(false);
   cart = model<CartLinea[]>([]);
 
   siguiente = output<void>();
@@ -174,6 +181,40 @@ export class SelectorCategorias {
     }
     return [{ label: '', items: vis }];
   });
+
+  // ── AB1 — buscador global (solo requisición) ──
+  private static readonly RESULTADOS_MAX = 40;
+
+  /** Resultados del buscador global: filtra por nombre o código; vacío si no hay
+   *  texto (estado inicial → se muestran los seleccionados / el hint). */
+  resultados = computed<ArticuloCat[]>(() => {
+    const q = this.query().toLowerCase().trim();
+    if (!q) return [];
+    return this.articulos().filter(
+      (a) => a.nombre.toLowerCase().includes(q) || a.codigo.toLowerCase().includes(q),
+    );
+  });
+
+  /** Recorte para no pintar cientos de filas de golpe (el catálogo es grande). */
+  resultadosMostrados = computed(() => this.resultados().slice(0, SelectorCategorias.RESULTADOS_MAX));
+  hayMasResultados = computed(() => this.resultados().length > SelectorCategorias.RESULTADOS_MAX);
+
+  /** Agrega como material libre lo que el usuario tecleó (no está en el catálogo);
+   *  reusa el flujo "Otros" existente y limpia el buscador. */
+  agregarLibreDesdeBusqueda(): void {
+    const desc = this.query().trim();
+    if (!desc) return;
+    this.otroDesc.set(desc);
+    this.otroUnidad.set('UND');
+    this.otroCant.set(1);
+    this.agregarOtro();
+    this.query.set('');
+  }
+
+  /** Quita una línea del carrito por su id (catálogo o "otros"). */
+  quitarLinea(articuloId: string): void {
+    this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
+  }
 
   cantidadDe(articuloId: string): number {
     return this.cart().find((l) => l.articulo_id === articuloId)?.cantidad ?? 0;
