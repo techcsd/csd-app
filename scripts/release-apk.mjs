@@ -55,10 +55,10 @@ const codeFromVersion = (v) => {
 const VERSION_CODE = codeFromVersion(VERSION);
 // Rollout escalonado (R15): el mínimo forzado se controla en SGC → app-versiones
 // (sgc.app_versiones.minima → version_publicada().version_minima, que alimenta el
-// gate bloqueante). 1.20.0 quedó como mínimo forzado (2026-07-20: fix de envíos
-// atascados —backfill de capturado_en— + firmar liberación desde el aviso).
+// gate bloqueante). 1.41.0 quedó como mínimo forzado (2026-07-31: choferes crean
+// sus propias rutas + accesos del inicio compactos + fix del tile Tecnología).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.34.0';
+const MIN_VERSION = '1.41.0';
 const RELEASED_AT = '2026-07-30';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
