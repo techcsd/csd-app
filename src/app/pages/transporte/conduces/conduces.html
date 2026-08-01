@@ -32,45 +32,109 @@
                 </span>
               }
             </div>
+            <!-- AE5 — Iniciar / Cómo llegar como BOTONES claros (no texto suelto) -->
             <div class="ruta-card__actions">
-              <button type="button" class="btn-ghost" (click)="comoLlegar(r)">🧭 Cómo llegar</button>
+              <button type="button" class="btn-outline ruta-card__btn" (click)="comoLlegar(r)">🧭 Cómo llegar</button>
               @if (r.estado === 'planificada') {
-                <button type="button" class="btn-ghost" (click)="ruta(r.id, 'en_curso')">Iniciar</button>
+                <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'en_curso')">▶ Iniciar ruta</button>
               } @else if (r.estado === 'en_curso') {
-                <button type="button" class="btn-cta" (click)="ruta(r.id, 'completada')">Completar</button>
+                <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'completada')">🏁 Completar</button>
               }
             </div>
 
-            <!-- AC13/AC6 — detalle: paradas en orden + fotos de evidencia inicial -->
+            <!-- AE5 — detalle de EJECUCIÓN: paradas con estado + conduce por parada -->
             <button type="button" class="ruta-card__ver" (click)="toggleDetalle(r.id)">
-              {{ estaExpandida(r.id) ? '▲ Ocultar detalle' : '▼ Ver paradas y fotos' }}
+              {{ estaExpandida(r.id) ? '▲ Ocultar paradas' : '▼ Ver paradas y carga' }}
             </button>
             @if (estaExpandida(r.id)) {
               @if (detalle(r.id); as d) {
                 <div class="ruta-card__detalle">
-                  <span class="ruta-card__paso"><b>1.</b> {{ r.origen }} <em>(origen)</em></span>
-                  @for (p of d.paradas; track p.orden) {
-                    <span class="ruta-card__paso">
-                      <b>{{ p.orden + 1 }}.</b> {{ p.ubicacion }}
-                      @if (p.notas) { <em>· {{ p.notas }}</em> }
-                    </span>
+                  <!-- Origen -->
+                  <div class="parada parada--extremo">
+                    <span class="parada__orden">A</span>
+                    <span class="parada__nombre">{{ r.origen }} <em>(origen)</em></span>
+                  </div>
+
+                  <!-- Paradas intermedias con estado, carga y acciones -->
+                  @for (p of d.paradas; track p.id) {
+                    <div class="parada parada--{{ p.estado }}">
+                      <span class="parada__orden">{{ p.orden }}</span>
+                      <div class="parada__body">
+                        <div class="parada__head">
+                          <span class="parada__nombre">{{ p.ubicacion }}</span>
+                          <span class="parada__chip parada__chip--{{ p.estado }}">{{ paradaEstadoLabel(p.estado) }}</span>
+                        </div>
+                        @if (p.notas) { <span class="parada__notas">📝 {{ p.notas }}</span> }
+                        @if (p.estado === 'entregada' && p.entregado_a) {
+                          <span class="parada__recibio">✓ Recibió: {{ p.entregado_a }}</span>
+                        }
+
+                        <!-- Conduce vinculado a la parada (carga que va ahí) -->
+                        @if (conduceDeParada(r.id, p); as c) {
+                          <div class="parada__conduce">
+                            <span class="parada__conduce-tit">📦 Conduce{{ c.destino ? ' · ' + c.destino : '' }}</span>
+                            <ul class="parada__conduce-items">
+                              @for (it of c.items; track it.articulo) {
+                                <li>{{ it.cantidad | number: '1.0-2' }} {{ it.unidad }} · {{ it.articulo }}</li>
+                              }
+                            </ul>
+                          </div>
+                        }
+
+                        <!-- Acciones por parada (mientras no esté entregada) -->
+                        @if (p.estado !== 'entregada') {
+                          <div class="parada__actions">
+                            <button type="button" class="btn-outline parada__btn" (click)="comoLlegarParada(p)">🧭 Cómo llegar</button>
+                            @if (p.estado === 'pendiente') {
+                              <button type="button" class="btn-outline parada__btn" [disabled]="paradaOcupada() === p.id" (click)="marcarParada(r.id, p, 'en_camino')">🚚 En camino</button>
+                            }
+                            @if (p.conduce_id) {
+                              <button type="button" class="btn-cta parada__btn" (click)="entregarConduceParada(p.conduce_id)">✍️ Entregar conduce</button>
+                            } @else {
+                              <button type="button" class="btn-cta parada__btn" [disabled]="paradaOcupada() === p.id" (click)="marcarParada(r.id, p, 'entregada')">✓ Entregada</button>
+                              <button type="button" class="btn-outline parada__btn" (click)="toggleAdjuntar(p.id)">➕ Adjuntar conduce</button>
+                            }
+                          </div>
+
+                          <!-- Selector de conduce a adjuntar a esta parada -->
+                          @if (adjuntando() === p.id) {
+                            <div class="parada__adjuntar">
+                              @if (conducesParaAdjuntar(r.id).length) {
+                                <span class="parada__adjuntar-tit">Elige el conduce que va a esta parada:</span>
+                                @for (c of conducesParaAdjuntar(r.id); track c.id) {
+                                  <button type="button" class="parada__adjuntar-opt" [disabled]="paradaOcupada() === p.id" (click)="adjuntarConduce(r.id, p.id, c.id)">
+                                    📦 {{ c.destino ?? 'Conduce' }} — {{ c.items.length }} artículo(s)
+                                  </button>
+                                }
+                              } @else {
+                                <span class="parada__vacio">No tienes conduces despachados sin asignar a una parada.</span>
+                              }
+                            </div>
+                          }
+                        }
+                      </div>
+                    </div>
                   }
-                  <span class="ruta-card__paso">
-                    <b>{{ d.paradas.length + 2 }}.</b> {{ r.destino }} <em>(destino)</em>
-                  </span>
-                  @if (d.fotos.length) {
+
+                  <!-- Destino -->
+                  <div class="parada parada--extremo">
+                    <span class="parada__orden">B</span>
+                    <span class="parada__nombre">{{ r.destino }} <em>(destino)</em></span>
+                  </div>
+
+                  @if (fotos(r.id).length) {
                     <div class="ruta-card__fotos">
-                      @for (f of d.fotos; track f) {
+                      @for (f of fotos(r.id); track f) {
                         <img class="ruta-card__foto" [src]="f" alt="Evidencia de la ruta" loading="lazy" />
                       }
                     </div>
                   }
-                  @if (!d.paradas.length && !d.fotos.length) {
-                    <span class="ruta-card__vacio">Sin paradas ni fotos de evidencia.</span>
+                  @if (!d.paradas.length) {
+                    <span class="ruta-card__vacio">Esta ruta no tiene paradas intermedias.</span>
                   }
                 </div>
               } @else {
-                <p class="ruta-card__vacio">Cargando detalle…</p>
+                <p class="ruta-card__vacio">Cargando paradas…</p>
               }
             }
           </div>

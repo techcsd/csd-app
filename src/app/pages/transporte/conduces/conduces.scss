@@ -93,11 +93,37 @@
   font-weight: 600;
   color: var(--color-text-secondary);
 }
-.ruta-card__actions .btn-ghost,
-.ruta-card__actions .btn-cta {
+.ruta-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ruta-card__btn {
   width: auto;
-  padding: 0 18px;
+  flex: 1 1 auto;
+  padding: 0 16px;
   min-height: 48px;
+}
+
+// AE5 — botón "outline": claramente un botón (borde + relleno), no un texto/enlace.
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 14px;
+  min-height: 44px;
+  padding: 0 14px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+  }
 }
 
 .conduce-card {
@@ -180,6 +206,138 @@
   border: 1px solid var(--color-border);
 }
 .ruta-card__vacio {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// ── AE5 — paradas de la ruta en EJECUCIÓN (estado + carga + acciones) ────────
+.parada {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--color-border);
+}
+.parada--extremo {
+  align-items: center;
+}
+.parada__orden {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+}
+.parada--entregada .parada__orden {
+  background: var(--color-success);
+}
+.parada--en_camino .parada__orden {
+  background: var(--color-info);
+}
+.parada__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.parada__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.parada__nombre {
+  font-weight: 700;
+  font-size: 15px;
+}
+.parada__chip {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+.parada__chip--en_camino {
+  background: var(--color-info);
+  color: #fff;
+}
+.parada__chip--entregada {
+  background: var(--color-success);
+  color: #fff;
+}
+.parada__notas {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.parada__recibio {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-success);
+}
+.parada__conduce {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  background: var(--color-bg);
+}
+.parada__conduce-tit {
+  font-weight: 700;
+  font-size: 13px;
+}
+.parada__conduce-items {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.parada__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+.parada__btn {
+  width: auto;
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.parada__adjuntar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.parada__adjuntar-tit {
+  font-size: 13px;
+  font-weight: 700;
+}
+.parada__adjuntar-opt {
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+.parada__vacio {
   font-size: 13px;
   color: var(--color-text-secondary);
 }

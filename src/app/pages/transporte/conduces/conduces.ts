@@ -6,7 +6,13 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
-import { ConducesService, RutaDetalleApp } from '../../../core/services/conduces.service';
+import {
+  ConducesService,
+  RutaDetalleTransporte,
+  RutaParadaEjec,
+  RutaConduceEjec,
+  ParadaEstado,
+} from '../../../core/services/conduces.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { Conduce, RutaHoy } from '../../../core/models/transporte.model';
@@ -16,6 +22,13 @@ const ESTADO_RUTA_LABEL: Record<string, string> = {
   en_curso: 'En curso',
   completada: 'Completada',
   cancelada: 'Cancelada',
+};
+
+const PARADA_ESTADO_LABEL: Record<ParadaEstado, string> = {
+  pendiente: 'Pendiente',
+  en_camino: 'En camino',
+  entregada: 'Entregada',
+  omitida: 'Omitida',
 };
 
 /** Driver's routes + dispatched conduces for the day. */
@@ -37,18 +50,32 @@ export class ConducesPage implements OnDestroy {
   estadoLabel(estado: string): string {
     return ESTADO_RUTA_LABEL[estado] ?? estado;
   }
+  paradaEstadoLabel(e: ParadaEstado): string {
+    return PARADA_ESTADO_LABEL[e] ?? e;
+  }
 
   conduces = signal<Conduce[]>([]);
   rutas = signal<RutaHoy[]>([]);
   loading = signal(true);
 
-  // AC13/AC6 — detalle de ruta (paradas + fotos) expandible en el sitio.
+  // AE5 — detalle de EJECUCIÓN de la ruta (paradas con estado + conduce vinculado)
+  // expandible en el sitio.
   private expandidas = signal<Set<string>>(new Set());
-  private detalles = signal<Record<string, RutaDetalleApp>>({});
+  private detalles = signal<Record<string, RutaDetalleTransporte>>({});
+  // AC6 — fotos de evidencia inicial de la ruta (no cambian durante la ejecución).
+  private fotosRuta = signal<Record<string, string[]>>({});
+  fotos(id: string): string[] {
+    return this.fotosRuta()[id] ?? [];
+  }
+  /** AE5 — parada cuyo selector "Adjuntar conduce" está abierto. */
+  adjuntando = signal<string | null>(null);
+  /** AE5 — parada con una acción en curso (spinner/anti-doble-tap). */
+  paradaOcupada = signal<string | null>(null);
+
   estaExpandida(id: string): boolean {
     return this.expandidas().has(id);
   }
-  detalle(id: string): RutaDetalleApp | null {
+  detalle(id: string): RutaDetalleTransporte | null {
     return this.detalles()[id] ?? null;
   }
   toggleDetalle(rutaId: string): void {
@@ -60,9 +87,85 @@ export class ConducesPage implements OnDestroy {
     });
     if (!abierto && !this.detalles()[rutaId]) {
       void this.service
-        .getRutaDetalle(rutaId)
+        .getRutaDetalleTransporte(rutaId)
         .then((d) => this.detalles.update((m) => ({ ...m, [rutaId]: d })));
+      // AC6 — fotos de evidencia inicial (una sola vez; no cambian en ejecución).
+      void this.service
+        .getRutaDetalle(rutaId)
+        .then((d) => this.fotosRuta.update((m) => ({ ...m, [rutaId]: d.fotos })));
     }
+  }
+
+  private async refrescarDetalle(rutaId: string): Promise<void> {
+    await this.service.invalidarRutaDetalle(rutaId);
+    const d = await this.service.getRutaDetalleTransporte(rutaId);
+    this.detalles.update((m) => ({ ...m, [rutaId]: d }));
+  }
+
+  // ── AE5 — ejecución por parada ─────────────────────────────────────────────
+
+  /** El conduce vinculado a una parada (para pintar sus ítems + botón entregar). */
+  conduceDeParada(rutaId: string, p: RutaParadaEjec): RutaConduceEjec | null {
+    if (!p.conduce_id) return null;
+    return this.detalle(rutaId)?.conduces.find((c) => c.id === p.conduce_id) ?? null;
+  }
+
+  /** Conduces del chofer que aún no están atados a una parada de esta ruta. */
+  conducesParaAdjuntar(rutaId: string): Conduce[] {
+    const usados = new Set(
+      (this.detalle(rutaId)?.paradas ?? [])
+        .map((p) => p.conduce_id)
+        .filter((id): id is string => !!id),
+    );
+    return this.conduces().filter((c) => !usados.has(c.id));
+  }
+
+  toggleAdjuntar(paradaId: string): void {
+    this.adjuntando.update((cur) => (cur === paradaId ? null : paradaId));
+  }
+
+  async adjuntarConduce(rutaId: string, paradaId: string, conduceId: string): Promise<void> {
+    if (this.paradaOcupada()) return;
+    this.paradaOcupada.set(paradaId);
+    try {
+      await this.service.vincularConduceParada(conduceId, paradaId);
+      this.adjuntando.set(null);
+      await this.refrescarDetalle(rutaId);
+      this.toast.success('Conduce adjuntado a la parada.');
+    } catch (e) {
+      this.toast.error(this.msgError(e, 'No se pudo adjuntar el conduce.'));
+    } finally {
+      this.paradaOcupada.set(null);
+    }
+  }
+
+  /** AE5 — avanza la parada (en_camino / entregada / omitida). */
+  async marcarParada(rutaId: string, p: RutaParadaEjec, estado: ParadaEstado): Promise<void> {
+    if (this.paradaOcupada()) return;
+    this.paradaOcupada.set(p.id);
+    try {
+      await this.service.avanzarParada(p.id, estado);
+      await this.refrescarDetalle(rutaId);
+    } catch (e) {
+      this.toast.error(this.msgError(e, 'No se pudo actualizar la parada.'));
+    } finally {
+      this.paradaOcupada.set(null);
+    }
+  }
+
+  /** AE5 — entregar el conduce de la parada (firmas AC7 → cierra la parada solo). */
+  entregarConduceParada(conduceId: string): void {
+    void this.router.navigate(['/transporte/conduces', conduceId]);
+  }
+
+  /** AE5 — navegar a la parada (usa sus coords si las tiene, si no su texto). */
+  comoLlegarParada(p: RutaParadaEjec): void {
+    void this.comoLlegarA(p.ubicacion, p.lat, p.lng);
+  }
+
+  private msgError(e: unknown, fallback: string): string {
+    if (!this.network.online()) return 'Sin señal. Vuelve a intentarlo cuando tengas conexión.';
+    return e instanceof Error ? e.message : fallback;
   }
 
   /** Y4 — reloj que avanza cada segundo para el contador en vivo de rutas en curso. */
@@ -162,15 +265,27 @@ export class ConducesPage implements OnDestroy {
    * ruta trazada); si Maps no está instalado o el intent falla, cae a la URL
    * https. En web/PWA siempre usa la URL https.
    */
-  async comoLlegar(r: RutaHoy): Promise<void> {
-    if (!r.destino) return;
-    const httpsUrl =
-      'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(r.destino);
+  comoLlegar(r: RutaHoy): void {
+    void this.comoLlegarA(r.destino, null, null);
+  }
+
+  /**
+   * W2/AE5 — abre la NAVEGACIÓN de Google Maps hacia un destino (ruta o parada).
+   * Con coordenadas navega a `lat,lng` (más preciso); sin ellas, por el texto.
+   * En nativo intenta el intent `google.navigation:`; si falla, cae a la URL https.
+   */
+  private async comoLlegarA(
+    destino: string | null,
+    lat: number | null,
+    lng: number | null,
+  ): Promise<void> {
+    const q = lat != null && lng != null ? `${lat},${lng}` : (destino ? encodeURIComponent(destino) : '');
+    if (!q) return;
+    const httpsUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + q;
 
     if (Capacitor.isNativePlatform()) {
       try {
-        // Sin coords disponibles en la ruta → navegación por texto del destino.
-        const navUrl = 'google.navigation:q=' + encodeURIComponent(r.destino);
+        const navUrl = 'google.navigation:q=' + q;
         const { value } = await AppLauncher.canOpenUrl({ url: navUrl });
         if (value) {
           await AppLauncher.openUrl({ url: navUrl });

@@ -34,6 +34,15 @@
         <span class="rsem__modelo">Reporte de esta semana</span>
       </div>
 
+      <!-- AE9 — recuperar el reporte tras un cierre inesperado / llamada / bloqueo -->
+      @if (borradorPrevio()) {
+        <app-draft-banner
+          [fecha]="borradorPrevio()"
+          (continuar)="continuarBorrador()"
+          (descartar)="descartarBorrador()"
+        />
+      }
+
       <!-- Una sección del checklist por pantalla -->
       @if (seccionActual(); as g) {
         <h1 class="screen__title">{{ g.seccion }}</h1>
@@ -238,6 +247,10 @@
               } @else if (v.tiene_reporte) {
                 <span class="rsem__estado rsem__estado--ok">✓ Ya reportado</span>
                 <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+              } @else if (tieneBorrador(v.vehiculo_id)) {
+                <!-- AE9 — reporte a medio llenar: retomar donde se quedó -->
+                <span class="rsem__estado rsem__estado--borrador">📝 Reporte a medio llenar</span>
+                <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">Continuar</button>
               } @else {
                 <!-- AC5 — hoy es el día programado de este equipo (telehandler=sábado, resto=domingo) -->
                 @if (tocaHoy(v)) {

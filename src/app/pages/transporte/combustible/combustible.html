@@ -117,7 +117,7 @@
 } @else {
   <div class="screen comb">
     <app-wizard-exit title="Registrar combustible" (exit)="intentarSalir()" />
-    <app-step-bar [current]="step()" [total]="total" />
+    <app-step-bar [current]="step()" [total]="total()" />
 
     <div class="screen__body">
       @if (loading()) {
@@ -141,8 +141,8 @@
         </div>
       }
 
-      <!-- V6 · Paso 1: km + galones + monto (todo lo que se digita, una hoja) -->
-      @if (step() === 1) {
+      <!-- AE6 · Paso 1: la foto de la bomba en 0 es lo PRIMERO (evidencia en depósito) -->
+      @if (stepKey() === 'bomba') {
         <!-- AC11 — telehandler: elegir dónde se echó (depósito en obra por defecto) -->
         @if (esTelehandler()) {
           <label class="field-label">¿Dónde se echó?</label>
@@ -150,6 +150,39 @@
           <app-option-button icon="⛽" label="Estación" [selected]="!esDeposito()" (pressed)="setOrigen('estacion')" />
           <div class="comb__mt"></div>
         }
+        @if (esDeposito()) {
+          <h1 class="screen__title">Foto de evidencia</h1>
+          <p class="screen__subtitle">Toma una foto del equipo/garrafón durante la echada (solo cámara).</p>
+          <div class="comb__fotos">
+            <app-photo-slot
+              label="Evidencia (equipo/garrafón)"
+              hint="📸"
+              [gallery]="false"
+              [foto]="fotoEvidencia()"
+              (captured)="onFotoEvidencia($event)"
+              (cleared)="onFotoEvidenciaCleared()"
+            />
+          </div>
+        } @else {
+          <h1 class="screen__title">Bomba en 0</h1>
+          <p class="screen__subtitle">
+            Antes de echar, toma la foto de la bomba/estación marcando <b>0</b>. Respalda los galones que vas a echar (solo cámara).
+          </p>
+          <div class="comb__fotos">
+            <app-photo-slot
+              label="Bomba en 0"
+              hint="⛽"
+              [gallery]="false"
+              [foto]="fotoBomba()"
+              (captured)="onFotoBomba($event)"
+              (cleared)="onFotoBombaCleared()"
+            />
+          </div>
+        }
+      }
+
+      <!-- Paso 2: km + galones + monto (todo lo que se digita, una hoja) -->
+      @if (stepKey() === 'digits') {
         <h1 class="screen__title">
           @if (modoPersona()) { Galones y monto }
           @else if (esDeposito()) { Horas y galones }
@@ -197,61 +230,41 @@
         />
       }
 
-      <!-- AC10 · Paso 2: fotos obligatorias (se capturan temprano, junto a la bomba) -->
-      @if (step() === 2) {
-        <h1 class="screen__title">{{ esDeposito() ? 'Foto de evidencia' : 'Fotos obligatorias' }}</h1>
+      <!-- AE6 · Paso 3: el resto de fotos (recibo + tablero); la bomba ya se tomó -->
+      @if (stepKey() === 'fotos') {
+        <h1 class="screen__title">Fotos del respaldo</h1>
         <p class="screen__subtitle">
-          @if (esDeposito()) {
-            Una foto del equipo/garrafón durante la echada (solo cámara).
-          } @else if (modoPersona()) {
-            El recibo respalda el monto; la bomba en 0 respalda los galones echados.
+          @if (modoPersona()) {
+            El recibo respalda el monto que pagaste (solo cámara).
           } @else {
-            El tablero respalda el kilometraje; el recibo respalda el monto; la bomba en 0
-            respalda los galones echados.
+            El recibo respalda el monto; el tablero respalda el kilometraje (solo cámara).
           }
         </p>
         <div class="comb__fotos">
-          <!-- AC11 — depósito en obra: solo la foto de evidencia (solo cámara) -->
-          @if (esDeposito()) {
+          <app-photo-slot
+            label="Recibo"
+            hint="🧾"
+            [gallery]="false"
+            [foto]="fotoRecibo()"
+            (captured)="onFotoRecibo($event)"
+            (cleared)="onFotoReciboCleared()"
+          />
+          <!-- Z23-app — sin tablero en una echada de persona (no hay odómetro) -->
+          @if (!modoPersona()) {
             <app-photo-slot
-              label="Evidencia (equipo/garrafón)"
-              hint="📸"
+              label="Tablero (km)"
+              hint="🎛️"
               [gallery]="false"
-              [foto]="fotoEvidencia()"
-              (captured)="onFotoEvidencia($event)"
-              (cleared)="onFotoEvidenciaCleared()"
-            />
-          } @else {
-            <app-photo-slot
-              label="Recibo"
-              hint="🧾"
-              [foto]="fotoRecibo()"
-              (captured)="onFotoRecibo($event)"
-              (cleared)="onFotoReciboCleared()"
-            />
-            <!-- Z23-app — sin tablero en una echada de persona (no hay odómetro) -->
-            @if (!modoPersona()) {
-              <app-photo-slot
-                label="Tablero (km)"
-                hint="🎛️"
-                [foto]="fotoTablero()"
-                (captured)="onFotoTablero($event)"
-                (cleared)="onFotoTableroCleared()"
-              />
-            }
-            <app-photo-slot
-              label="Bomba en 0"
-              hint="⛽"
-              [foto]="fotoBomba()"
-              (captured)="onFotoBomba($event)"
-              (cleared)="onFotoBombaCleared()"
+              [foto]="fotoTablero()"
+              (captured)="onFotoTablero($event)"
+              (cleared)="onFotoTableroCleared()"
             />
           }
         </div>
       }
 
-      <!-- AC10 · Paso 3: producto + estación + tarjeta + cálculo automático debajo -->
-      @if (step() === 3) {
+      <!-- Paso 4: producto + Regular/Premium + tarjeta/titular/obra -->
+      @if (stepKey() === 'detalles') {
         <!-- Z23-app — producto (para conciliar con el reporte del proveedor) -->
         <label class="field-label">¿Qué combustible?</label>
         <app-option-button icon="🛢️" label="Diésel" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
@@ -274,33 +287,17 @@
           <p class="field-hint">
             La echada de depósito queda como consumo interno (no entra a la conciliación de estación).
           </p>
-        }
-
-        <!-- AA20 — subtipo Regular/Premium (obligatorio) -->
-        @if (!esDeposito()) {
-        <label class="field-label comb__mt">¿Regular o Premium?</label>
-        <app-option-button icon="🟢" label="Regular" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
-        <app-option-button icon="⭐" label="Premium" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
-        @if (precioRef(); as pr) {
-          <p class="field-hint">
-            Precio oficial {{ productoCanonicoLabel[pr.producto] ?? pr.producto }}:
-            <b>RD$ {{ pr.precio | number: '1.2-2' }}/gal</b> ({{ pr.fuente }}, vigente desde {{ pr.vigencia_desde }})
-          </p>
-        }
-
-        <h1 class="screen__title comb__mt">¿En qué estación?</h1>
-        @for (e of estacionesVisibles(); track e) {
-          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
-        }
-        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
-        @if (estacionOtro()) {
-          <input
-            class="field comb__estacion-otro"
-            type="text"
-            [ngModel]="estacionOtroTexto()"
-            (ngModelChange)="estacionOtroTexto.set($event)"
-            placeholder="Nombre de la estación"
-          />
+        } @else {
+          <!-- AA20 — subtipo Regular/Premium (obligatorio) -->
+          <label class="field-label comb__mt">¿Regular o Premium?</label>
+          <app-option-button icon="🟢" label="Regular" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
+          <app-option-button icon="⭐" label="Premium" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
+          @if (precioRef(); as pr) {
+            <p class="field-hint">
+              Precio oficial {{ productoCanonicoLabel[pr.producto] ?? pr.producto }}:
+              <b>RD$ {{ pr.precio | number: '1.2-2' }}/gal</b> ({{ pr.fuente }}, vigente desde {{ pr.vigencia_desde }})
+            </p>
+          }
         }
 
         <!-- Z23-app — titular de la tarjeta (obligatorio en echada de persona) -->
@@ -317,16 +314,36 @@
         }
 
         <!-- Z23-app — tarjeta usada (opcional, para conciliar por tarjeta) -->
-        <label class="field-label comb__mt" for="tarjeta">Tarjeta (opcional)</label>
-        <input
-          id="tarjeta"
-          class="field"
-          type="text"
-          inputmode="numeric"
-          [ngModel]="tarjeta()"
-          (ngModelChange)="tarjeta.set($event)"
-          placeholder="N.º o nombre de la tarjeta"
-        />
+        @if (!esDeposito()) {
+          <label class="field-label comb__mt" for="tarjeta">Tarjeta (opcional)</label>
+          <input
+            id="tarjeta"
+            class="field"
+            type="text"
+            inputmode="numeric"
+            [ngModel]="tarjeta()"
+            (ngModelChange)="tarjeta.set($event)"
+            placeholder="N.º o nombre de la tarjeta"
+          />
+        }
+      }
+
+      <!-- AE6 · Paso 5: ¿En qué estación? + cálculo automático (paso propio, poco scroll) -->
+      @if (stepKey() === 'estacion') {
+        <h1 class="screen__title">¿En qué estación?</h1>
+        @for (e of estacionesVisibles(); track e) {
+          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
+        }
+        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
+        @if (estacionOtro()) {
+          <input
+            class="field comb__estacion-otro"
+            type="text"
+            [ngModel]="estacionOtroTexto()"
+            (ngModelChange)="estacionOtroTexto.set($event)"
+            placeholder="Nombre de la estación"
+          />
+        }
 
         <!-- Cálculo automático (en vivo) -->
         <div class="comb__calc">
@@ -358,11 +375,10 @@
             }
           }
         </div>
-        }
       }
 
-      <!-- V6 · Paso 4: revisa y envía (no editable) -->
-      @if (step() === 4) {
+      <!-- Paso final: revisa y envía (no editable) -->
+      @if (stepKey() === 'revisar') {
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
           @if (modoPersona()) {
@@ -392,10 +408,10 @@
     <!-- Nav -->
     <app-wizard-footer
       [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : (fotosCompletas() ? 'Guardar registro' : 'Faltan fotos para guardar'))"
-      [primaryDisabled]="step() >= total && (submitting() || !fotosCompletas())"
+      [primaryLabel]="step() < total() ? 'Siguiente' : (submitting() ? 'Guardando…' : (fotosCompletas() ? 'Guardar registro' : 'Faltan fotos para guardar'))"
+      [primaryDisabled]="step() >= total() && (submitting() || !fotosCompletas())"
       (back)="step() > 1 ? prev() : intentarSalir()"
-      (primary)="step() < total ? next() : submit()"
+      (primary)="step() < total() ? next() : submit()"
     />
 
     <!-- U4 — descartar cambios sin guardar -->

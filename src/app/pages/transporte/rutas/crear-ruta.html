@@ -118,6 +118,14 @@
             </div>
           }
           <button type="button" class="btn-ghost cruta__add-parada" (click)="agregarParada()">➕ Agregar parada</button>
+          @if (tipoRuta() === 'material') {
+            <!-- AE5 — el conduce (carga) se adjunta a cada parada DESPUÉS de crear la
+                 ruta, desde "Conduces y rutas" (ahí la parada ya existe y se traza). -->
+            <p class="field-hint cruta__paradas-hint">
+              📦 Tras crear la ruta podrás adjuntar un conduce a cada parada desde
+              <b>Conduces y rutas</b>, para indicar qué material va a cada punto.
+            </p>
+          }
         }
 
         <!-- 5. Detalles -->

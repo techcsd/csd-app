@@ -181,6 +181,12 @@
   font-weight: 800;
 }
 
+// AE9 — reporte semanal a medio llenar (borrador recuperable).
+.rsem__estado--borrador {
+  color: var(--primary);
+  font-weight: 700;
+}
+
 // Z13 — "ya reportado por otra persona": texto puede envolver (nombre largo).
 .rsem__estado--otro {
   color: var(--color-text-secondary);

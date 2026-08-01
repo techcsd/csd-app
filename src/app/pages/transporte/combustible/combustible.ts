@@ -42,14 +42,26 @@ import {
   RendimientoEstadoMeta,
 } from '../../../core/models/combustible.model';
 
-const TOTAL_STEPS = 4;
+/**
+ * AE6 — pasos LÓGICOS del wizard (la cantidad y el contenido dependen del modo:
+ * estación / persona / depósito en obra). El orden nace de AE6:
+ *   1) `bomba`    — la foto de la bomba en 0 (o evidencia en depósito) es lo
+ *                   PRIMERO que se pide, antes de digitar nada.
+ *   2) `digits`   — km + galones + monto.
+ *   3) `fotos`    — el resto de fotos (recibo + tablero); no aplica al depósito.
+ *   4) `detalles` — producto/Regular-Premium/tarjeta/titular/obra.
+ *   5) `estacion` — "¿En qué estación?" + el cálculo automático (paso propio para
+ *                   quitar el scroll largo del antiguo paso 3); no aplica al depósito.
+ *   6) `revisar`  — resumen y envío.
+ */
+type CombStep = 'bomba' | 'digits' | 'fotos' | 'detalles' | 'estacion' | 'revisar';
 
 /**
  * Fuel-log wizard (registro de combustible). The chofer digits only 3 numbers
  * — km actual, galones, monto — and the app derives price/gal, km recorridos,
- * rendimiento and costo/km live (mirroring the server). Two mandatory photos
- * (recibo + tablero), then a "Combustible registrado" confirmation with a
- * green/amber consumption band. Saved offline via the outbox.
+ * rendimiento and costo/km live (mirroring the server). Photos are camera-only:
+ * bomba-en-0 FIRST (AE6), then recibo + tablero, plus a "Combustible registrado"
+ * confirmation with a green/amber consumption band. Saved offline via the outbox.
  */
 @Component({
   selector: 'app-combustible',
@@ -69,8 +81,6 @@ export class CombustiblePage extends GuardedWizard {
   private ctx = inject(UserContextService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
-
-  readonly total = TOTAL_STEPS;
 
   vehiculoId = '';
   necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
@@ -93,6 +103,21 @@ export class CombustiblePage extends GuardedWizard {
   });
 
   step = signal(1);
+
+  /**
+   * AE6 — la secuencia de pasos depende del modo. En depósito en obra no hay
+   * fotos de recibo/tablero ni estación (garrafón), así que esos pasos se omiten.
+   * La bomba/evidencia siempre es el primer paso.
+   */
+  steps = computed<CombStep[]>(() =>
+    this.esDeposito()
+      ? ['bomba', 'digits', 'detalles', 'revisar']
+      : ['bomba', 'digits', 'fotos', 'detalles', 'estacion', 'revisar'],
+  );
+  total = computed(() => this.steps().length);
+  /** Clave lógica del paso actual (1-based → índice del array). */
+  stepKey = computed<CombStep>(() => this.steps()[this.step() - 1] ?? 'revisar');
+
   km = signal<number | null>(null);
   galones = signal<number | null>(null);
   monto = signal<number | null>(null);
@@ -327,7 +352,7 @@ export class CombustiblePage extends GuardedWizard {
 
   next(): void {
     if (!this.canAdvance()) return;
-    this.step.update((s) => Math.min(this.total, s + 1));
+    this.step.update((s) => Math.min(this.total(), s + 1));
   }
 
   prev(): void {
@@ -342,59 +367,80 @@ export class CombustiblePage extends GuardedWizard {
   });
 
   private canAdvance(): boolean {
-    const s = this.step();
-    // V6 — paso 1: km + galones + monto juntos (tipo hoja, sin scroll largo).
-    if (s === 1) {
-      // Z23-app — la echada de persona no tiene odómetro: se salta el km.
-      if (!this.modoPersona()) {
-        const km = this.km();
-        if (km == null || km <= 0) {
-          this.toast.error('Escribe el kilometraje actual.');
+    switch (this.stepKey()) {
+      // AE6 — paso 1: la foto de la bomba en 0 (o evidencia en depósito) es lo
+      // PRIMERO. Sin ella no se avanza.
+      case 'bomba': {
+        const foto = this.esDeposito() ? this.fotoEvidencia() : this.fotoBomba();
+        if (!foto) {
+          this.toast.error(this.esDeposito() ? 'Toma la foto de evidencia.' : 'Toma la foto de la bomba en 0.');
           return false;
         }
-        if (this.kmMenorOdometro()) {
-          this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
+        return true;
+      }
+      // Paso digits: km + galones + monto (tipo hoja, sin scroll largo).
+      case 'digits': {
+        // Z23-app — la echada de persona no tiene odómetro: se salta el km.
+        if (!this.modoPersona()) {
+          const km = this.km();
+          if (km == null || km <= 0) {
+            this.toast.error('Escribe el kilometraje actual.');
+            return false;
+          }
+          if (this.kmMenorOdometro()) {
+            this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
+            return false;
+          }
+          if (this.kmInvalido()) {
+            this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
+            return false;
+          }
+        }
+        if (!this.galones() || this.galones()! <= 0) {
+          this.toast.error('Escribe los galones echados.');
           return false;
         }
-        if (this.kmInvalido()) {
-          this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
+        // AC11 — en depósito en obra el monto/costo es opcional (garrafón).
+        if (!this.esDeposito() && (!this.monto() || this.monto()! <= 0)) {
+          this.toast.error('Escribe el monto pagado.');
           return false;
         }
+        return true;
       }
-      if (!this.galones() || this.galones()! <= 0) {
-        this.toast.error('Escribe los galones echados.');
-        return false;
+      // AE6 — paso fotos: el resto de fotos (recibo + tablero); la bomba ya se
+      // tomó en el paso 1.
+      case 'fotos': {
+        if (!this.fotoRecibo()) {
+          this.toast.error('Falta la foto del recibo.');
+          return false;
+        }
+        if (!this.modoPersona() && !this.fotoTablero()) {
+          this.toast.error('Falta la foto del tablero.');
+          return false;
+        }
+        return true;
       }
-      // AC11 — en depósito en obra el monto/costo es opcional (garrafón).
-      if (!this.esDeposito() && (!this.monto() || this.monto()! <= 0)) {
-        this.toast.error('Escribe el monto pagado.');
-        return false;
+      // Paso detalles: producto + Regular/Premium + tarjeta/titular/obra.
+      case 'detalles': {
+        // AA20 — el subtipo (Regular/Premium) es obligatorio (no aplica al depósito).
+        if (!this.esDeposito() && !this.subtipo()) {
+          this.toast.error('Elige Regular o Premium.');
+          return false;
+        }
+        // Z23-app — el titular es obligatorio en una echada de persona.
+        if (this.modoPersona() && !this.titular().trim()) {
+          this.toast.error('Escribe el titular de la tarjeta.');
+          return false;
+        }
+        return true;
       }
-    }
-    // AC10 — paso 2: fotos obligatorias (se capturan temprano, junto a la bomba,
-    // antes de arrancar). Antes iban en el paso 3.
-    if (s === 2 && !this.fotosCompletas()) {
-      this.toast.error('Faltan fotos para continuar.');
-      return false;
-    }
-    // AC10 — paso 3: producto + estación + tarjeta (con el cálculo automático
-    // debajo). Antes era el paso 2.
-    // AC11 — en depósito en obra no hay estación ni subtipo de bomba; la obra es
-    // opcional, así que este paso no bloquea.
-    if (s === 3 && !this.esDeposito()) {
-      // AA20 — el subtipo (Regular/Premium) es obligatorio.
-      if (!this.subtipo()) {
-        this.toast.error('Elige Regular o Premium.');
-        return false;
-      }
-      if (this.estacionOtro() && !this.estacionOtroTexto().trim()) {
-        this.toast.error('Escribe el nombre de la estación.');
-        return false;
-      }
-      // Z23-app — el titular es obligatorio en una echada de persona.
-      if (this.modoPersona() && !this.titular().trim()) {
-        this.toast.error('Escribe el titular de la tarjeta.');
-        return false;
+      // AE6 — paso estación: "¿En qué estación?" + cálculo automático.
+      case 'estacion': {
+        if (this.estacionOtro() && !this.estacionOtroTexto().trim()) {
+          this.toast.error('Escribe el nombre de la estación.');
+          return false;
+        }
+        return true;
       }
     }
     return true;

@@ -528,35 +528,14 @@ export class PreusoPage extends GuardedWizard {
     this.dropFoto(slot);
   }
 
+  // AE8 — el pre-uso simplificado (plantilla corta) se llena en UNA hoja: el
+  // checklist ya no se sub-pagina por sección; el paso 2 muestra todos los puntos
+  // a la vez (rápido de completar).
   next(): void {
     if (!this.canAdvance()) return;
-    const s = this.step();
-    // U2 — al entrar al checklist arranca en la primera sección.
-    if (s === 1) {
-      this.step.set(2);
-      this.secPaso2.set(0);
-      return;
-    }
-    // U2 — dentro del paso 2 avanza sección por sección antes de pasar a fotos.
-    if (s === 2 && !this.esUltimaSeccion()) {
-      this.secPaso2.update((i) => i + 1);
-      return;
-    }
     this.step.update((x) => Math.min(this.total, x + 1));
   }
   prev(): void {
-    const s = this.step();
-    // U2 — retrocede sección por sección dentro del checklist.
-    if (s === 2 && this.secPaso2() > 0) {
-      this.secPaso2.update((i) => i - 1);
-      return;
-    }
-    // Al volver de fotos (3) al checklist (2), reentrar en la última sección.
-    if (s === 3) {
-      this.step.set(2);
-      this.secPaso2.set(Math.max(0, this.grupos().length - 1));
-      return;
-    }
     this.step.update((x) => Math.max(1, x - 1));
   }
 
@@ -583,15 +562,13 @@ export class PreusoPage extends GuardedWizard {
         }
         return true;
       case 2: {
-        // U2 — validar solo la SECCIÓN visible (una por pantalla).
-        const sec = this.seccionActual2();
-        if (!sec) return true;
-        if (!sec.items.every((it) => this.draft(it.id).respuesta !== null)) {
-          this.toast.error('Responde todos los puntos de esta sección.');
+        // AE8 — el checklist va en una sola hoja: validar TODOS los puntos.
+        if (!this.itemsAplicables().every((it) => this.draft(it.id).respuesta !== null)) {
+          this.toast.error('Responde todos los puntos.');
           return false;
         }
         // P6 — un hallazgo CRÍTICO (bloquea el vehículo) exige explicar qué pasó.
-        const falta = sec.items.find(
+        const falta = this.itemsAplicables().find(
           (it) =>
             it.es_critico &&
             this.draft(it.id).respuesta === 'no' &&

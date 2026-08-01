@@ -71,6 +71,43 @@ export interface RutaDetalleApp {
   fotos: string[]; // URLs firmadas
 }
 
+/** AE5 — una parada de la ruta EN EJECUCIÓN: estado + evidencia + conduce vinculado. */
+export type ParadaEstado = 'pendiente' | 'en_camino' | 'entregada' | 'omitida';
+export interface RutaParadaEjec {
+  id: string;
+  orden: number;
+  ubicacion: string;
+  lat: number | null;
+  lng: number | null;
+  notas: string | null;
+  obra: string | null;
+  proyecto_id: string | null;
+  estado: ParadaEstado;
+  llegada_at: string | null;
+  entregada_at: string | null;
+  entregado_a: string | null;
+  /** id del conduce (salida) vinculado a esta parada, si lo hay. */
+  conduce_id: string | null;
+}
+
+/** AE5 — conduce vinculado a una ruta (nivel ruta o parada), para el detalle. */
+export interface RutaConduceEjec {
+  id: string;
+  fecha: string;
+  estado: string;
+  destino: string | null;
+  bodega: string | null;
+  ruta_parada_id: string | null;
+  parada_ubicacion: string | null;
+  items: { articulo: string; unidad: string; cantidad: number }[];
+}
+
+/** AE5 — detalle de ejecución de la ruta (ruta_detalle_transporte). */
+export interface RutaDetalleTransporte {
+  paradas: RutaParadaEjec[];
+  conduces: RutaConduceEjec[];
+}
+
 /** Obra o almacén como destino, con sus coordenadas (U22). */
 export interface LugarDestino {
   id: string;
@@ -184,6 +221,66 @@ export class ConducesService {
       return { paradas, fotos };
     });
     return data ?? { paradas: [], fotos: [] };
+  }
+
+  /**
+   * AE5 — detalle de EJECUCIÓN de la ruta: paradas con su estado/evidencia y el
+   * conduce vinculado a cada una, + los conduces de la ruta. Cacheado por ruta
+   * (offline tras la primera carga). El chofer asignado/creador la puede leer.
+   */
+  async getRutaDetalleTransporte(rutaId: string): Promise<RutaDetalleTransporte> {
+    const data = await this.catalog.refresh<RutaDetalleTransporte>(
+      `ruta_detalle_t:${rutaId}`,
+      async () => {
+        const { data, error } = await this.supabase.client.rpc('ruta_detalle_transporte', {
+          p_ruta_id: rutaId,
+        });
+        if (error) throw new Error(error.message);
+        const d = (data as Partial<RutaDetalleTransporte>) ?? {};
+        return { paradas: d.paradas ?? [], conduces: d.conduces ?? [] };
+      },
+    );
+    return data ?? { paradas: [], conduces: [] };
+  }
+
+  /**
+   * AE5 — ata un conduce PROPIO/asignado a una parada (y de paso a su ruta):
+   * "este material va a esta parada". `paradaId = null` desvincula. Online (como
+   * marcar_ruta_estado): el vínculo es un metadato ligero, no captura de campo.
+   */
+  async vincularConduceParada(salidaId: string, paradaId: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('vincular_conduce_parada', {
+      p_salida_id: salidaId,
+      p_ruta_parada_id: paradaId,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /**
+   * AE5 — avanza el estado de una parada (pendiente → en_camino → entregada), con
+   * evidencia opcional (nombre de quien recibió + nota). Para paradas SIN conduce
+   * (traslado/personal) o cierre manual; las paradas CON conduce se cierran solas
+   * al entregarse el conduce (trigger). Online, como marcar_ruta_estado.
+   */
+  async avanzarParada(
+    paradaId: string,
+    estado: ParadaEstado,
+    opts: { entregadoA?: string | null; notas?: string | null } = {},
+  ): Promise<void> {
+    const { error } = await this.supabase.client.rpc('avanzar_parada', {
+      p_parada_id: paradaId,
+      p_estado: estado,
+      p_foto_path: null,
+      p_firma_path: null,
+      p_entregado_a: opts.entregadoA ?? null,
+      p_notas: opts.notas ?? null,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** AE5 — fuerza el refetch del detalle de una ruta tras una mutación. */
+  async invalidarRutaDetalle(rutaId: string): Promise<void> {
+    await this.catalog.invalidate(`ruta_detalle_t:${rutaId}`);
   }
 
   /** Obras/proyectos for the route destination picker (shared cache). */

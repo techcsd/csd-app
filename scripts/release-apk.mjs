@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.45.0';
+const VERSION = '1.46.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,15 +62,16 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-01';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Notas con listas de tareas, ferretería del chofer y rendimiento de combustible';
+const TITULO = 'Cámara nativa, borrador del reporte semanal y rutas con paradas y conduces';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Notas: ahora puedes armar listas de tareas dentro de una nota — marca con un toque, agrega con Enter y reordena — con barra de formato (negrita, cursiva, títulos, viñetas) y compartir desde el mismo momento en que la creas. Los pendientes que enlaces a una tarea de la plataforma se marcan solos cuando esa tarea se completa.' },
-  { t: 'nuevo', d: 'Transporte del chofer: registra tus compras o retiros en la ferretería (con foto del recibo) y recibe mercancía sin salir de Transporte. Almacén lo confirma antes de que entre al inventario.' },
-  { t: 'nuevo', d: 'Crear ruta por tipo — Material, Personal o Traslado — para los recorridos que no llevan carga, como repartir personal entre obras en la mañana.' },
-  { t: 'mejora', d: 'Combustible: cada echada muestra su estado (Óptimo, Bajo, Anormal o Datos insuficientes) con una explicación corta del porqué. Una echada a pocos kilómetros de la anterior ya no dice "óptimo": dice "datos insuficientes", que es lo correcto.' },
-  { t: 'arreglo', d: 'El inicio de sesión con cédula y PIN ya no se queda cargando para siempre: si la conexión falla, te avisa claro y te deja reintentar.' },
+  { t: 'mejora', d: 'Al tomar fotos, la app ahora abre la CÁMARA del teléfono (como cualquier otra app) en vez de la cámara de adentro. Las fotos salen más nítidas y funciona en más teléfonos.' },
+  { t: 'nuevo', d: 'El reporte semanal ahora se guarda solo mientras lo llenas: si se cierra la app, entra una llamada o se bloquea el teléfono, al volver te ofrece retomarlo donde ibas, con el texto y las fotos intactos.' },
+  { t: 'mejora', d: 'Echar combustible: lo primero que se pide es la foto de la bomba en 0, y la pregunta de la estación quedó en su propia pantalla (menos scroll). Todas las fotos son solo con cámara.' },
+  { t: 'nuevo', d: 'Rutas con paradas: cada parada muestra su estado (pendiente, en camino, entregada), puedes adjuntarle el conduce del material que va ahí, y "Iniciar" y "Cómo llegar" ahora son botones claros. Al entregar el conduce con firma, la parada queda cerrada y trazada.' },
+  { t: 'mejora', d: 'Pre-uso más corto y rápido: un chequeo visual de lo que se ve a simple vista (gomas, luces, carrocería, fugas…) en una sola pantalla. El chequeo a fondo sigue en el reporte semanal del asignado.' },
+  { t: 'mejora', d: 'Notas: el editor del teléfono ahora tiene subrayado y listas numeradas, además de negrita, cursiva, títulos, viñetas y listas de tareas — igual que en la web.' },
 ];
 
 const TIPO_POR_COMMIT = {

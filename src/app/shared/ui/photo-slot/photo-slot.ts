@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 
 /**
  * A guided photo slot. Shows the example/silhouette of the required shot;
@@ -38,7 +39,8 @@ export class PhotoSlot implements OnDestroy {
   hint = input<string>('📷');
   /** P10 — foto ya capturada en el estado del padre, para rehidratar la miniatura. */
   foto = input<CapturedPhoto | null>(null);
-  /** W6 — ofrecer también "Galería" además de la cámara (activo por defecto). */
+  /** W6 — ofrecer también "Galería" además de la cámara (activo por defecto).
+   *  En los flujos solo-cámara el padre pasa `[gallery]="false"`; ver `showGallery`. */
   gallery = input<boolean>(true);
 
   captured = output<CapturedPhoto>();
@@ -46,15 +48,30 @@ export class PhotoSlot implements OnDestroy {
 
   private camera = inject(CameraService);
   private autosave = inject(AutosaveService);
+  private ctx = inject(UserContextService);
   preview = signal<string | null>(null);
   busy = signal(false);
 
   /** URL a mostrar: la recién capturada localmente o la rehidratada del padre. */
   displayUrl = computed(() => this.preview() ?? this.foto()?.previewUrl ?? null);
 
-  /** W6 — tomar con la cámara. */
+  /**
+   * AE6 — regla general del modo solo-cámara: la galería se ofrece cuando el
+   * flujo la permite (`gallery()`) O cuando el usuario es admin (Xaviel), que
+   * mantiene la galería en TODOS los flujos solo-cámara para QA/pruebas. Nadie
+   * más ve la galería en un flujo que la desactivó.
+   */
+  showGallery = computed(() => this.gallery() || this.ctx.esAdmin());
+
+  /** W6 — tomar con la cámara (nativa del sistema, AE7). */
   capture(): Promise<void> {
-    return this.run(() => this.camera.takePhoto());
+    return this.run(async () => {
+      // AE7 — la cámara NATIVA saca la app a primer plano y el SO puede matar el
+      // proceso (MIUI/OUKITEL/low-mem) mientras se toma la foto. Hacemos FLUSH del
+      // autosave ANTES de abrirla para no perder lo capturado (igual que la galería).
+      await this.autosave.flushAll();
+      return this.camera.takePhoto();
+    });
   }
 
   /**

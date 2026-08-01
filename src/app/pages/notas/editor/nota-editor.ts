@@ -209,11 +209,19 @@ export class NotaEditorPage {
   cmdItalic(): void {
     this.exec('italic');
   }
+  // AE4 — subrayado (espeja la toolbar web AD9; 'U' está en TAGS_PERMITIDAS).
+  cmdSubrayado(): void {
+    this.exec('underline');
+  }
   cmdTitulo(): void {
     this.exec('formatBlock', 'H3');
   }
   cmdVineta(): void {
     this.exec('insertUnorderedList');
+  }
+  // AE4 — lista numerada (espeja la toolbar web AD9; 'OL' está en TAGS_PERMITIDAS).
+  cmdNumerada(): void {
+    this.exec('insertOrderedList');
   }
 
   // ---- Checklist (AD9): táctil, agregar con Enter, reordenar ----------------

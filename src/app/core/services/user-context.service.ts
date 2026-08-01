@@ -62,6 +62,11 @@ export class UserContextService {
   // aunque tenga otros roles, igual que el helper del servidor.
   esChofer = computed(() => this.hasRol('chofer_transportista'));
 
+  // AE6 — el rol admin (Xaviel) mantiene la opción de GALERÍA en los flujos
+  // solo-cámara (combustible, reporte semanal, pre-uso, entrega/devolución) para
+  // QA/pruebas; nadie más la ve. Regla general del modo solo-cámara.
+  esAdmin = computed(() => this.hasRol('admin'));
+
   hasModulo(modulo: string): boolean {
     return this.modulos().includes(modulo);
   }

@@ -15,7 +15,7 @@
       <button type="button" class="photo-slot__cta photo-slot__cta--primary" (click)="capture()" [disabled]="busy()">
         📷 Tomar foto
       </button>
-      @if (gallery()) {
+      @if (showGallery()) {
         <button type="button" class="photo-slot__cta" (click)="pickFromGallery()" [disabled]="busy()">
           🖼️ Galería
         </button>

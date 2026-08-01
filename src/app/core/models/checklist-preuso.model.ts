@@ -23,6 +23,8 @@ export interface ChecklistPlantillaItem {
   orden: number;
   /** Display number from the catalog (e.g. "1.1", "P2"). */
   numero: string | null;
+  /** AE8 — short help text ("solo míralas…") shown under the item in the pre-uso. */
+  ayuda: string | null;
   /** Which vehicle class the item applies to: 'Ambos' | 'Liviano' | 'Pesado'. */
   aplica_a: string;
 }

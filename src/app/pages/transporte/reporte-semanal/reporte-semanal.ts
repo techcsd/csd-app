@@ -15,6 +15,7 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
+import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -22,6 +23,8 @@ import { ConductoresService } from '../../../core/services/conductores.service';
 import { ReporteSemanalService } from '../../../core/services/reporte-semanal.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { NetworkService } from '../../../core/services/network.service';
@@ -74,15 +77,32 @@ interface VehSemanal {
 }
 
 /**
+ * AE9 — slice liviano del reporte semanal persistido para recuperar el borrador
+ * tras un kill/llamada/bloqueo del teléfono. Las fotos viven aparte en
+ * borrador_fotos (patrón pre-uso M1); aquí solo el estado de texto/selección.
+ */
+interface ReporteSemanalDraft {
+  step: number;
+  vehiculoId: string;
+  respuestas: Record<string, RespuestaValor>;
+  comentarios: Record<string, string>;
+  km: number | null;
+  nivelCombustible: string | null;
+  observacion: string;
+  firmaLista: boolean;
+}
+
+/**
  * Weekly vehicle report — S17/S26a: ahora tipo hoja (una SECCIÓN por pantalla)
  * y pide lo mismo que el pre-uso (fotos guiadas, km con estado de mantenimiento
  * EN VIVO, nivel de combustible y firma). Un selector de vehículo al inicio.
+ * AE9 — autosave del borrador (estado + fotos) con recuperación al volver.
  */
 @Component({
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes, DraftBanner],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })
@@ -96,8 +116,21 @@ export class ReporteSemanalPage extends GuardedWizard {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private ctx = inject(UserContextService);
+  private autosave = inject(AutosaveService);
+  private borradorSvc = inject(BorradorService);
 
   private sig = viewChild(SignaturePad);
+
+  // AE9 — recuperación del borrador. `borradorPrevio` = timestamp del último
+  // autosave del vehículo elegido (muestra el banner "retomar / empezar nuevo").
+  // `borradoresPorVeh` = mapa vehiculoId→timestamp para marcar en el picker cuáles
+  // tienen un reporte a medio llenar. `hydratado` protege el autosave hasta que
+  // el vehículo está cargado (o el borrador rehidratado).
+  borradorPrevio = signal<number | null>(null);
+  borradoresPorVeh = signal<Map<string, number>>(new Map());
+  private hydratado = false;
+  /** Deep-link ?reanudar=<vehiculoId> (desde "Documentación en proceso"). */
+  private reanudarId: string | null = null;
 
   readonly opciones = RESPUESTA_OPCIONES;
   readonly niveles = NIVELES_COMBUSTIBLE;
@@ -287,6 +320,9 @@ export class ReporteSemanalPage extends GuardedWizard {
     // Q2 — destino de deep-link: ?item=<vehiculo_id> resalta esa tarjeta del pool.
     const item = this.route.snapshot.queryParamMap.get('item');
     if (item) this.highlightedId.set(item);
+    // AE9 — ?reanudar=<vehiculo_id>: retomar un reporte a medio llenar (viene de
+    // "Documentación en proceso"). Se procesa tras cargar el pool (en load()).
+    this.reanudarId = this.route.snapshot.queryParamMap.get('reanudar');
     void this.load();
     // U8 — refrescar estado del listado tras cada cambio del outbox (envío/drain),
     // como en /pendientes (P4/P5). Reconciliar servidor + ops en cola.
@@ -294,6 +330,47 @@ export class ReporteSemanalPage extends GuardedWizard {
       this.sync.changed();
       void this.refreshEstados();
     });
+    // AE9 — autosave del borrador (debounce + flush al ocultar/descargar) para
+    // recuperar el reporte si el SO mata el proceso, hay una llamada o se bloquea
+    // el teléfono. Las fotos se persisten aparte al capturarlas (persistFoto).
+    effect(() => {
+      const snap: ReporteSemanalDraft = {
+        step: this.step(),
+        vehiculoId: this.vehiculo()?.vehiculo_id ?? '',
+        respuestas: this.respuestas(),
+        comentarios: this.comentarios(),
+        km: this.km(),
+        nivelCombustible: this.nivelCombustible(),
+        observacion: this.observacion(),
+        firmaLista: this.firmaLista(),
+      };
+      const veh = this.vehiculo();
+      if (!this.hydratado || !veh || this.submitting() || this.done()) return;
+      if (!this.tieneDatos()) return;
+      this.autosave.queue(this.claveBorrador(veh.vehiculo_id), snap, {
+        tipo: 'checklist',
+        etiqueta: 'Reporte semanal' + (veh.placa ? ' · ' + veh.placa : ''),
+        ruta: `/transporte/reporte-semanal?reanudar=${veh.vehiculo_id}`,
+      });
+    });
+  }
+
+  private claveBorrador(vehiculoId?: string): string {
+    const uid = this.ctx.profile()?.id ?? 'anon';
+    const vid = vehiculoId ?? this.vehiculo()?.vehiculo_id ?? 'nuevo';
+    return `reporte_semanal:${vid}:${uid}`;
+  }
+
+  /** AE9 — persiste una foto del borrador (nunca debe romper la captura). */
+  private persistFoto(slot: string, blob: Blob): void {
+    const veh = this.vehiculo();
+    if (!veh) return;
+    void this.borradorSvc.saveFoto(this.claveBorrador(veh.vehiculo_id), slot, blob);
+  }
+  private dropFoto(slot: string): void {
+    const veh = this.vehiculo();
+    if (!veh) return;
+    void this.borradorSvc.removeFoto(this.claveBorrador(veh.vehiculo_id), slot);
   }
 
   /** U8 — recomputa cumplimiento del servidor + reportes en cola. */
@@ -319,8 +396,14 @@ export class ReporteSemanalPage extends GuardedWizard {
   }
 
   protected override salir(): void {
-    if (this.vehiculo()) this.vehiculo.set(null);
-    else this.location.back();
+    // AE9 — al volver al picker, flush del autosave y refresca los chips: si el
+    // usuario dejó el reporte a medio llenar, queda como "documentación en proceso".
+    if (this.vehiculo()) {
+      void this.autosave.flushAll().then(() => this.cargarBorradores());
+      this.vehiculo.set(null);
+    } else {
+      this.location.back();
+    }
   }
 
   private async load(): Promise<void> {
@@ -343,10 +426,42 @@ export class ReporteSemanalPage extends GuardedWizard {
       // W4 — "Tus vehículos" = asignados a mí + recepciones aún en la cola (U12).
       this.misIds.set(new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola]));
       void this.loadFotos(pool.map((v) => v.vehiculo_id));
+      // AE9 — marcar en el picker qué vehículos tienen un reporte a medio llenar.
+      await this.cargarBorradores();
+      // AE9 — retomar desde "Documentación en proceso" (?reanudar=<vehiculoId>).
+      if (this.reanudarId) {
+        const veh = this.lista().find((v) => v.vehiculo_id === this.reanudarId);
+        this.reanudarId = null;
+        if (veh) this.elegir(veh);
+      }
     } finally {
       this.loading.set(false);
       this.scrollToHighlighted(); // Q2 — tras pintar el listado
     }
+  }
+
+  /** AE9 — mapa vehiculoId→timestamp de los reportes a medio llenar (picker). */
+  private async cargarBorradores(): Promise<void> {
+    try {
+      const uid = this.ctx.profile()?.id ?? 'anon';
+      const prefix = 'reporte_semanal:';
+      const suffix = ':' + uid;
+      const map = new Map<string, number>();
+      for (const b of await this.borradorSvc.list()) {
+        if (b.clave.startsWith(prefix) && b.clave.endsWith(suffix)) {
+          const vid = b.clave.slice(prefix.length, b.clave.length - suffix.length);
+          if (vid) map.set(vid, b.updated_at);
+        }
+      }
+      this.borradoresPorVeh.set(map);
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  /** AE9 — ¿este vehículo tiene un reporte a medio llenar? (chip en el picker). */
+  tieneBorrador(vehiculoId: string): boolean {
+    return this.borradoresPorVeh().has(vehiculoId);
   }
 
   /** Q2 — hace scroll a la tarjeta del deep-link y quita el resaltado tras unos segundos. */
@@ -386,8 +501,15 @@ export class ReporteSemanalPage extends GuardedWizard {
         5000,
       );
     }
+    // Estado en blanco por vehículo (se rehidrata si el usuario retoma el borrador).
+    this.hydratado = false;
+    this.borradorPrevio.set(null);
     this.step.set(1);
     this.respuestas.set({});
+    this.comentarios.set({});
+    this.fallaFotos.set({});
+    this.fallaVoces.set({});
+    this.voces.set([]);
     this.km.set(null);
     this.nivelCombustible.set(null);
     this.fotos.set({});
@@ -403,6 +525,57 @@ export class ReporteSemanalPage extends GuardedWizard {
       this.vehDetalle.set(d);
       if (d?.kilometraje != null) this.odometro.set(d.kilometraje);
     });
+    // AE9 — ¿hay un reporte a medio llenar de este vehículo? → ofrecer retomarlo.
+    void this.borradorSvc.get(this.claveBorrador(v.vehiculo_id)).then((b) => {
+      if (b && this.vehiculo()?.vehiculo_id === v.vehiculo_id) this.borradorPrevio.set(b.updated_at);
+      this.hydratado = true;
+    });
+  }
+
+  /** AE9 — rehidrata el reporte (estado + fotos) tras un kill/llamada/bloqueo. */
+  async continuarBorrador(): Promise<void> {
+    const veh = this.vehiculo();
+    if (!veh) return;
+    const clave = this.claveBorrador(veh.vehiculo_id);
+    try {
+      const d = await this.borradorSvc.load<ReporteSemanalDraft>(clave);
+      if (d) {
+        this.respuestas.set(d.respuestas ?? {});
+        this.comentarios.set(d.comentarios ?? {});
+        this.km.set(d.km ?? null);
+        this.nivelCombustible.set(d.nivelCombustible ?? null);
+        this.observacion.set(d.observacion ?? '');
+      }
+      // Fotos: reconstruye Blobs + object URLs desde IndexedDB.
+      const fotos = await this.borradorSvc.loadFotos(clave);
+      const guided = { ...this.fotos() };
+      const fallas = { ...this.fallaFotos() };
+      for (const f of fotos) {
+        const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+        if (f.slot === 'firma') {
+          this.firmaBlob.set(f.blob);
+          this.firmaLista.set(true);
+        } else if (f.slot.startsWith('falla:')) {
+          fallas[f.slot.slice('falla:'.length)] = photo;
+        } else {
+          guided[f.slot] = photo;
+        }
+      }
+      this.fotos.set(guided);
+      this.fallaFotos.set(fallas);
+      const step = d?.step ?? 1;
+      this.step.set(step >= 1 && step <= this.total() ? step : 1);
+    } catch {
+      this.toast.error('No se pudo recuperar todo el borrador, pero puedes continuar.');
+    }
+    this.borradorPrevio.set(null);
+  }
+
+  descartarBorrador(): void {
+    const veh = this.vehiculo();
+    if (veh) void this.autosave.discard(this.claveBorrador(veh.vehiculo_id));
+    this.borradorPrevio.set(null);
+    void this.cargarBorradores();
   }
 
   setRespuesta(itemId: string, valor: RespuestaValor): void {
@@ -431,6 +604,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   }
   onFallaFoto(itemId: string, photo: CapturedPhoto): void {
     this.fallaFotos.update((m) => ({ ...m, [itemId]: photo }));
+    this.persistFoto('falla:' + itemId, photo.blob); // AE9
   }
   onFallaFotoCleared(itemId: string): void {
     this.fallaFotos.update((m) => {
@@ -439,6 +613,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       delete next[itemId];
       return next;
     });
+    this.dropFoto('falla:' + itemId); // AE9
   }
   getFallaVoces(itemId: string): VoiceNoteItem[] {
     return this.fallaVoces()[itemId] ?? [];
@@ -449,6 +624,7 @@ export class ReporteSemanalPage extends GuardedWizard {
 
   onFoto(slot: string, photo: CapturedPhoto): void {
     this.fotos.update((f) => ({ ...f, [slot]: photo }));
+    this.persistFoto(slot, photo.blob); // AE9
   }
   onFotoCleared(slot: string): void {
     this.fotos.update((f) => {
@@ -456,11 +632,16 @@ export class ReporteSemanalPage extends GuardedWizard {
       delete next[slot];
       return next;
     });
+    this.dropFoto(slot); // AE9
   }
 
   async onFirmaChanged(hasSignature: boolean): Promise<void> {
     this.firmaLista.set(hasSignature);
-    this.firmaBlob.set(hasSignature ? ((await this.sig()?.toBlob()) ?? null) : null);
+    const blob = hasSignature ? ((await this.sig()?.toBlob()) ?? null) : null;
+    this.firmaBlob.set(blob);
+    // AE9 — persistir/limpiar la firma en el borrador.
+    if (blob) this.persistFoto('firma', blob);
+    else this.dropFoto('firma');
   }
 
   next(): void {
@@ -560,6 +741,10 @@ export class ReporteSemanalPage extends GuardedWizard {
         voces: this.voces().map((n) => n.blob),
         resultado,
       });
+      // AE9 — enviado: limpia el borrador (estado + fotos) para no reofrecerlo.
+      void this.autosave.discard(this.claveBorrador(veh.vehiculo_id));
+      this.borradorPrevio.set(null);
+      void this.cargarBorradores();
       this.resultadoEnviado.set(resultado);
       this.done.set(true);
       this.semana.set(await this.reportes.getSemanaTodas()); // AA3
@@ -573,6 +758,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   finish(): void {
     this.done.set(false);
     this.vehiculo.set(null);
+    void this.cargarBorradores(); // AE9 — refresca los chips del picker
   }
 
   irAsignar(): void {

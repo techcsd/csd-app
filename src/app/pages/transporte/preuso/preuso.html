@@ -198,9 +198,10 @@
         ></textarea>
       }
 
-      <!-- Step 2: checklist -->
+      <!-- Step 2: checklist — AE8 (pre-uso simplificado): chequeo VISUAL rápido en
+           UNA sola hoja (todas las secciones de la plantilla corta a la vez). -->
       @if (step() === 2) {
-        <h1 class="screen__title">Revisa cada punto</h1>
+        <h1 class="screen__title">Revisa lo que se ve</h1>
         <div class="preuso__status preuso__status--{{ semaforo() }}">
           <span class="preuso__status-count">{{ respondidos() }} / {{ totalItems() }}</span>
           <span class="preuso__status-txt">
@@ -210,9 +211,8 @@
           </span>
         </div>
 
-        @if (seccionActual2(); as g) {
+        @for (g of grupos(); track g.seccion) {
           <h2 class="preuso__section">{{ g.seccion }}</h2>
-          <p class="preuso__section-prog">Sección {{ secPaso2() + 1 }} de {{ grupos().length }}</p>
           @for (it of g.items; track it.id) {
             <div class="preuso__item" [class.preuso__item--critico]="it.es_critico">
               <div class="preuso__item-head">
@@ -224,6 +224,7 @@
                   <span class="preuso__critico" title="Punto crítico">CRÍTICO · BLOQUEA</span>
                 }
               </div>
+              @if (it.ayuda) { <p class="preuso__item-ayuda">{{ it.ayuda }}</p> }
               <div class="preuso__opts">
                 @for (o of opciones; track o.valor) {
                   <app-option-button

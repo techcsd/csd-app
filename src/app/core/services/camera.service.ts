@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { InAppCameraService } from './in-app-camera.service';
 import { PermisoGateService } from './permiso-gate.service';
 import { ErrorReportService } from './error-report.service';
 import { DeviceInfoService } from './device-info.service';
@@ -51,7 +50,6 @@ const NATIVE_QUALITY = 72;
  */
 @Injectable({ providedIn: 'root' })
 export class CameraService {
-  private inApp = inject(InAppCameraService);
   private gate = inject(PermisoGateService);
   private errorReport = inject(ErrorReportService);
   private device = inject(DeviceInfoService);
@@ -66,39 +64,21 @@ export class CameraService {
     // X4 — punto único para TODAS las capturas de cámara (photo-slot, doc-slot,
     // foto de documento). Antes de abrir la cámara aseguramos el permiso con su
     // explicación; si falta y el usuario no lo concede, degradamos a null (sin
-    // crash ni spinner colgado) y la tarjeta ya le indicó cómo activarlo.
+    // crash ni spinner colgado) y la tarjeta ya le indicó cómo activarlo. El
+    // plugin nativo gestiona su propio prompt del SO, así que no hay doble prompt
+    // (AA16): el gate solo garantiza el permiso una vez.
     if (!(await this.gate.asegurar('camera'))) return null;
-    // M1 — blindaje total: una excepción aquí (permiso, plugin, WebView) jamás
-    // debe tumbar el wizard de pre-uso. Ante cualquier fallo devolvemos null.
+    // AE7 — cámara NATIVA del sistema: abrimos la app de cámara del teléfono
+    // (Capacitor Camera, `source: CameraSource.Camera`) en lugar de la cámara
+    // EMBEBIDA (overlay getUserMedia) que usábamos antes. La cámara del sistema
+    // es la que espera el usuario y resuelve el caso del OUKITEL de Y5, donde
+    // getUserMedia del WebView fallaba. En PWA cae al <input capture> (takeWeb).
+    // M1 — blindaje total: una excepción aquí (permiso, plugin) jamás debe tumbar
+    // el wizard; ante cualquier fallo real avisamos con causa+acción y lo
+    // reportamos (Y5/Y6), y devolvemos null. Cancelar no reporta.
     try {
-      // Cámara EMBEBIDA primero: captura dentro de la app (no sale a la cámara del
-      // sistema), lo que evita que MIUI/low-mem maten la app durante la foto. Si el
-      // dispositivo no soporta getUserMedia, cae a la cámara del sistema.
-      if (this.inApp.supported) {
-        // En nativo, asegura el permiso de cámara del SO para que getUserMedia del
-        // WebView funcione. REQUIERE `android.permission.CAMERA` en el manifest
-        // (M1): sin él, el WebView deniega getUserMedia y el overlay cae al
-        // fallback de sistema, que es lo que MIUI mataba.
-        if (this.isNative) {
-          try {
-            const p = await Camera.checkPermissions();
-            if (p.camera !== 'granted') await Camera.requestPermissions({ permissions: ['camera'] });
-          } catch {
-            /* seguimos: si falla, el overlay caerá a 'fallback' */
-          }
-        }
-        const res = await this.inApp.open();
-        if (res === 'fallback') return this.takeConSistema();
-        if (!res) return null;
-        // El overlay ya entrega un JPEG comprimido (≤1280, 0.7).
-        return { blob: res, previewUrl: URL.createObjectURL(res) };
-      }
       return await this.takeConSistema();
     } catch (e) {
-      // M1 — seguimos sin tumbar el wizard (devolvemos null), pero YA NO en
-      // silencio: si es una cancelación del usuario, callamos; si es un fallo real
-      // (permiso, cámara en uso, WebView viejo), avisamos con causa+acción y lo
-      // reportamos (Y5/Y6).
       if (!this.isCancel(e)) await this.handleCameraFailure(e, 'takePhoto');
       return null;
     }
