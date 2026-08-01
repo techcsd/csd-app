@@ -89,9 +89,13 @@ export class NotasPage {
     void this.router.navigate(['/notas', 'nueva']);
   }
 
-  /** Primeras líneas del contenido para el snippet de la tarjeta. */
+  /** Primeras líneas del contenido para el snippet (AD9 — el cuerpo puede ser HTML). */
   snippet(n: Nota): string {
-    return (n.contenido || '').replace(/\s+/g, ' ').slice(0, 120);
+    const raw = n.contenido || '';
+    const texto = /<[a-z][\s\S]*>/i.test(raw)
+      ? new DOMParser().parseFromString(raw, 'text/html').body.textContent || ''
+      : raw;
+    return texto.replace(/\s+/g, ' ').trim().slice(0, 120);
   }
 
   back(): void {

@@ -212,3 +212,16 @@
   gap: 10px;
   margin-top: 8px;
 }
+
+// AD6 — selector de tipo de ruta
+.cruta__tipos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.cruta__tipo-hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0 0 10px;
+}

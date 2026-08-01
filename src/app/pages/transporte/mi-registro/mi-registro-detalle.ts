@@ -7,6 +7,7 @@ import { Img } from '../../../shared/ui/img/img';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { AudioNotasService, AudioEntidadTipo } from '../../../core/services/audio-notas.service';
 import { ChecklistDetalle, EchadaDetalle, MultaDetalle } from '../../../core/models/flota-reportes.model';
+import { RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta } from '../../../core/models/combustible.model';
 import { nivelCombustibleLabel } from '../../../core/models/transporte.model';
 import { formatFecha } from '../../../core/util/fecha';
 
@@ -33,6 +34,11 @@ export class MiRegistroDetallePage {
   readonly tipo = this.route.snapshot.paramMap.get('tipo') ?? '';
   private readonly id = this.route.snapshot.paramMap.get('id') ?? '';
   readonly nivelLabel = nivelCombustibleLabel;
+
+  /** AD7 — meta del estado de rendimiento (badge + banda del porqué). */
+  rendMeta(estado: RendimientoEstado | null | undefined): RendimientoEstadoMeta | null {
+    return estado ? (RENDIMIENTO_ESTADO_META[estado] ?? null) : null;
+  }
 
   loading = signal(true);
   checklist = signal<ChecklistDetalle | null>(null);

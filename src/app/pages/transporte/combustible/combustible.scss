@@ -232,6 +232,15 @@ app-option-button {
   background: var(--color-surface);
   color: var(--color-text-secondary);
 }
+// AD7 — explicación del porqué del estado, debajo del título de la banda.
+.comb__band-why {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--fs-caption, 13px);
+  font-weight: 500;
+  line-height: 1.35;
+  opacity: 0.9;
+}
 
 .comb__note {
   margin-top: 12px;

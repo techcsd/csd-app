@@ -42,6 +42,33 @@ export interface UsuarioBusqueda {
   email: string | null;
 }
 
+/**
+ * AD9 — un ítem de checklist estructurado de una nota (espeja
+ * sgc.nota_checklist_items). Puede estar vinculado a una Tarea de la plataforma:
+ * cuando la tarea se completa, `done`/`done_auto` los marca el servidor (trigger)
+ * y la app solo lo muestra en solo lectura.
+ */
+export interface NotaChecklistItem {
+  id: string;
+  nota_id: string;
+  orden: number;
+  texto: string;
+  done: boolean;
+  /** true si lo marcó automáticamente una tarea vinculada (solo lectura en la app). */
+  done_auto: boolean;
+  /** tipo de objeto vinculado (hoy solo 'tarea'); null = ítem manual. */
+  ref_tipo: 'tarea' | null;
+  ref_id: string | null;
+}
+
+/** Lo que el editor persiste de un ítem manual (los vinculados no se tocan en la app). */
+export interface NotaChecklistItemCaptura {
+  id: string;
+  orden: number;
+  texto: string;
+  done: boolean;
+}
+
 /** Entrada que el editor le pasa a NotasService.guardar(). */
 export interface NotaCaptura {
   id: string;

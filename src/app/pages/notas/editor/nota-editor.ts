@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,11 +18,43 @@ import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import {
   Nota,
+  NotaChecklistItem,
   NotaCompartido,
   NotaPermiso,
   NOTA_COLORES,
   UsuarioBusqueda,
 } from '../../../core/models/nota.model';
+
+// AD9 — saneado del cuerpo HTML (una nota compartida puede traer HTML ajeno).
+// Se aplica ANTES de inyectarlo en el contenteditable (elementos detached no
+// ejecutan scripts ni cargan <img>), dejando solo formato básico sin atributos.
+const TAGS_PERMITIDAS = new Set([
+  'B', 'STRONG', 'I', 'EM', 'U', 'H1', 'H2', 'H3', 'UL', 'OL', 'LI', 'BR', 'DIV', 'P', 'SPAN',
+]);
+function sanitizeNoteHtml(html: string): string {
+  const div = document.createElement('div');
+  div.innerHTML = html ?? '';
+  const walk = (node: Element): void => {
+    [...node.children].forEach((el) => {
+      if (!TAGS_PERMITIDAS.has(el.tagName)) {
+        el.replaceWith(document.createTextNode(el.textContent ?? ''));
+        return;
+      }
+      [...el.attributes].forEach((a) => el.removeAttribute(a.name));
+      walk(el);
+    });
+  };
+  walk(div);
+  return div.innerHTML;
+}
+function esHtml(s: string): boolean {
+  return /<[a-z][\s\S]*>/i.test(s ?? '');
+}
+function plainToHtml(s: string): string {
+  const esc = (t: string) =>
+    t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return esc(s ?? '').replace(/\n/g, '<br>');
+}
 
 /**
  * AC4 — Editor de nota: título + contenido + color + fijar + archivar, y (para el
@@ -57,6 +97,14 @@ export class NotaEditorPage {
   guardando = signal(false);
   confirmBorrar = signal(false);
 
+  // ---- Checklist estructurado (AD9) ----
+  checklist = signal<NotaChecklistItem[]>([]);
+  private focoItemId: string | null = null;
+
+  // Cuerpo enriquecido (contenteditable) — se hidrata una sola vez.
+  private bodyEl = viewChild<ElementRef<HTMLElement>>('bodyRef');
+  private bodyHidratado = false;
+
   // ---- Compartir ----
   mostrarCompartir = signal(false);
   compartidos = signal<NotaCompartido[]>([]);
@@ -66,6 +114,18 @@ export class NotaEditorPage {
 
   constructor() {
     void this.load();
+    // Inyecta el HTML en el editor cuando el elemento existe (tras loading()).
+    effect(() => {
+      const el = this.bodyEl()?.nativeElement;
+      if (el && !this.bodyHidratado && !this.loading()) {
+        el.innerHTML = this.renderBody(this.contenido());
+        this.bodyHidratado = true;
+      }
+    });
+  }
+
+  private renderBody(raw: string): string {
+    return esHtml(raw) ? sanitizeNoteHtml(raw) : plainToHtml(raw);
   }
 
   private async load(): Promise<void> {
@@ -79,8 +139,11 @@ export class NotaEditorPage {
         this.puedeEditar.set(true);
       } else {
         this.id = param;
+        // Red de seguridad: alinea los checks vinculados con su tarea antes de leer.
+        await this.service.reconciliarChecklist(param);
         const n = await this.service.getNota(param);
         if (n) this.hidratar(n);
+        this.checklist.set(await this.service.getChecklist(param));
       }
       this.inicial = this.snapshot();
     } finally {
@@ -107,10 +170,17 @@ export class NotaEditorPage {
       this.color(),
       this.pinned(),
       this.archivada(),
+      this.checklist().map((i) => [i.id, i.orden, i.texto, i.done]),
     ]);
   }
   private dirty(): boolean {
     return this.snapshot() !== this.inicial;
+  }
+
+  private textoPlano(html: string): string {
+    const d = document.createElement('div');
+    d.innerHTML = html ?? '';
+    return (d.textContent ?? '').trim();
   }
 
   setColor(c: string | null): void {
@@ -120,14 +190,119 @@ export class NotaEditorPage {
     if (this.puedeEditar()) this.pinned.update((v) => !v);
   }
 
+  // ---- Cuerpo enriquecido: toolbar por botones (sin sintaxis manual) --------
+
+  onBodyInput(el: HTMLElement): void {
+    this.contenido.set(el.innerHTML);
+  }
+  private exec(cmd: string, val?: string): void {
+    const el = this.bodyEl()?.nativeElement;
+    if (!el || !this.puedeEditar()) return;
+    el.focus();
+    // execCommand está deprecado pero es la vía soportada en el WebView de Android/iOS.
+    document.execCommand(cmd, false, val);
+    this.contenido.set(el.innerHTML);
+  }
+  cmdBold(): void {
+    this.exec('bold');
+  }
+  cmdItalic(): void {
+    this.exec('italic');
+  }
+  cmdTitulo(): void {
+    this.exec('formatBlock', 'H3');
+  }
+  cmdVineta(): void {
+    this.exec('insertUnorderedList');
+  }
+
+  // ---- Checklist (AD9): táctil, agregar con Enter, reordenar ----------------
+
+  /** Solo los ítems manuales (los vinculados a una tarea los maneja el servidor). */
+  private manuales(): NotaChecklistItem[] {
+    return this.checklist().filter((i) => !i.ref_tipo);
+  }
+
+  agregarItem(despuesDe?: number): void {
+    if (!this.puedeEditar()) return;
+    const items = [...this.checklist()];
+    const nuevo: NotaChecklistItem = {
+      id: crypto.randomUUID(),
+      nota_id: this.id,
+      orden: 0,
+      texto: '',
+      done: false,
+      done_auto: false,
+      ref_tipo: null,
+      ref_id: null,
+    };
+    const pos = despuesDe != null ? despuesDe + 1 : items.length;
+    items.splice(pos, 0, nuevo);
+    this.renumerar(items);
+    this.checklist.set(items);
+    this.enfocar(nuevo.id);
+  }
+
+  toggleItem(item: NotaChecklistItem): void {
+    if (!this.puedeEditar() || item.ref_tipo) return; // los vinculados son solo lectura
+    this.checklist.update((items) =>
+      items.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i)),
+    );
+  }
+
+  setItemTexto(item: NotaChecklistItem, texto: string): void {
+    this.checklist.update((items) =>
+      items.map((i) => (i.id === item.id ? { ...i, texto } : i)),
+    );
+  }
+
+  quitarItem(item: NotaChecklistItem): void {
+    if (!this.puedeEditar() || item.ref_tipo) return;
+    const items = this.checklist().filter((i) => i.id !== item.id);
+    this.renumerar(items);
+    this.checklist.set(items);
+  }
+
+  moverItem(index: number, dir: -1 | 1): void {
+    if (!this.puedeEditar()) return;
+    const items = [...this.checklist()];
+    const j = index + dir;
+    if (j < 0 || j >= items.length) return;
+    [items[index], items[j]] = [items[j], items[index]];
+    this.renumerar(items);
+    this.checklist.set(items);
+  }
+
+  onItemEnter(index: number): void {
+    this.agregarItem(index);
+  }
+
+  private renumerar(items: NotaChecklistItem[]): void {
+    items.forEach((i, idx) => (i.orden = idx));
+  }
+
+  private enfocar(id: string): void {
+    this.focoItemId = id;
+    setTimeout(() => {
+      if (this.focoItemId !== id) return;
+      document.getElementById(`chk-${id}`)?.focus();
+      this.focoItemId = null;
+    }, 0);
+  }
+
   async guardar(volver = true): Promise<void> {
     if (this.guardando()) return;
     if (!this.puedeEditar()) {
       if (volver) this.location.back();
       return;
     }
-    // Nada que guardar en una nota nueva totalmente vacía.
-    if (this.esNueva && !this.titulo().trim() && !this.contenido().trim()) {
+    // Nada que guardar en una nota nueva totalmente vacía (ni cuerpo ni checklist).
+    if (
+      this.esNueva &&
+      !this.titulo().trim() &&
+      !this.textoPlano(this.contenido()) &&
+      !this.manuales().length
+    ) {
       if (volver) this.location.back();
       return;
     }
@@ -142,6 +317,7 @@ export class NotaEditorPage {
         archivada: this.archivada(),
         expectedUpdatedAt: this.expectedUpdatedAt,
       });
+      await this.persistirChecklist();
       this.inicial = this.snapshot();
       this.esNueva = false;
       if (volver) {
@@ -153,6 +329,17 @@ export class NotaEditorPage {
     } finally {
       this.guardando.set(false);
     }
+  }
+
+  /** Enqueue los ítems manuales del checklist (reemplazo idempotente). */
+  private async persistirChecklist(): Promise<void> {
+    const items = this.manuales().map((i) => ({
+      id: i.id,
+      orden: i.orden,
+      texto: i.texto.trim(),
+      done: i.done,
+    }));
+    await this.service.guardarChecklist(this.id, items);
   }
 
   async toggleArchivar(): Promise<void> {
@@ -204,6 +391,8 @@ export class NotaEditorPage {
           archivada: this.archivada(),
           expectedUpdatedAt: this.expectedUpdatedAt,
         });
+        // La nota ya existe en el servidor → el checklist puede persistir (FK ok).
+        await this.persistirChecklist();
         this.inicial = this.snapshot();
         this.esNueva = false;
       } catch (e) {

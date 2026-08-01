@@ -27,11 +27,16 @@ export interface ConduceEntregaCaptura {
   firmaEmisor: Blob;
 }
 
+/** AD6 — tipo de ruta (aditivo). Personal/traslado no exigen carga. */
+export type RutaTipo = 'material' | 'personal' | 'traslado';
+
 /** New-route capture the crear-ruta wizard hands to crearRuta(). */
 export interface RutaCaptura {
   vehiculoId: string;
   /** S16 — conductor asignado (el jefe de flota lo elige; dispara la notificación). */
   conductorId: string | null;
+  /** AD6 — tipo de ruta (solo lo fija el chofer al crearse la suya). */
+  tipo?: RutaTipo;
   origen: string;
   destino: string;
   fecha: string;
@@ -243,6 +248,7 @@ export class ConducesService {
         id,
         vehiculo_id: input.vehiculoId,
         conductor_id: input.conductorId,
+        tipo: input.tipo ?? 'material', // AD6
         origen: input.origen,
         destino: input.destino,
         fecha: input.fecha,
@@ -331,45 +337,66 @@ export class ConducesService {
 
   private registerHandler(): void {
     this.sync.register('crear_ruta', async (payload, photoPaths) => {
-      const { error } = await this.supabase.client.rpc('crear_ruta_app', {
-        p_id: payload['id'],
-        p_vehiculo_id: payload['vehiculo_id'],
-        p_conductor_id: payload['conductor_id'] ?? null, // S16 — conductor asignado
-        p_origen: payload['origen'],
-        p_destino: payload['destino'],
-        p_fecha: payload['fecha'],
-        p_km_estimado: payload['km_estimado'] ?? null,
-        p_notas: payload['notas'] ?? null,
-        p_destino_proyecto_id: payload['destino_proyecto_id'] ?? null,
-        p_destino_lat: payload['destino_lat'] ?? null,
-        p_destino_lng: payload['destino_lng'] ?? null,
-        p_capturado_en: payload['capturado_en'],
-        p_origen_lat: payload['origen_lat'] ?? null,
-        p_origen_lng: payload['origen_lng'] ?? null,
-      });
-      if (error) throwSyncError(error);
-
       const rutaId = payload['id'] as string;
+      const conductorId = (payload['conductor_id'] as string | null) ?? null;
+      const tipo = (payload['tipo'] as string) ?? 'material';
 
-      // AC13 — paradas intermedias (estilo Uber), en orden. set_ruta_paradas
-      // reemplaza las paradas de la ruta (idempotente ante reintentos del outbox).
+      // AC13 — paradas intermedias (estilo Uber), en orden.
       const paradas = (payload['paradas'] as RutaParadaCaptura[] | undefined) ?? [];
-      if (paradas.length) {
-        const p_paradas = paradas
-          .filter((p) => p.ubicacion?.trim())
-          .map((p, i) => ({
-            orden: i + 1,
-            ubicacion: p.ubicacion,
-            lat: p.lat,
-            lng: p.lng,
-            notas: p.notas,
-            proyecto_id: p.proyectoId,
-          }));
-        const { error: ePar } = await this.supabase.client.rpc('set_ruta_paradas', {
-          p_ruta_id: rutaId,
+      const p_paradas = paradas
+        .filter((p) => p.ubicacion?.trim())
+        .map((p, i) => ({
+          orden: i + 1,
+          ubicacion: p.ubicacion,
+          lat: p.lat,
+          lng: p.lng,
+          notas: p.notas,
+          proyecto_id: p.proyectoId,
+        }));
+
+      if (conductorId == null) {
+        // AD6 — el chofer se AUTO-asigna la ruta → RPC de alcance limitado que
+        // además fija el `tipo` (material|personal|traslado) y setea las paradas.
+        const { error } = await this.supabase.client.rpc('chofer_crear_ruta', {
+          p_id: rutaId,
+          p_tipo: tipo,
+          p_fecha: payload['fecha'],
+          p_origen: payload['origen'],
+          p_destino: payload['destino'],
+          p_vehiculo_id: payload['vehiculo_id'],
+          p_destino_proyecto_id: payload['destino_proyecto_id'] ?? null,
+          p_notas: payload['notas'] ?? null,
           p_paradas: p_paradas,
         });
-        if (ePar) throwSyncError(ePar);
+        if (error) throwSyncError(error);
+      } else {
+        // S16 — jefe de flota asigna la ruta a un conductor (dispara la notificación).
+        const { error } = await this.supabase.client.rpc('crear_ruta_app', {
+          p_id: rutaId,
+          p_vehiculo_id: payload['vehiculo_id'],
+          p_conductor_id: conductorId,
+          p_origen: payload['origen'],
+          p_destino: payload['destino'],
+          p_fecha: payload['fecha'],
+          p_km_estimado: payload['km_estimado'] ?? null,
+          p_notas: payload['notas'] ?? null,
+          p_destino_proyecto_id: payload['destino_proyecto_id'] ?? null,
+          p_destino_lat: payload['destino_lat'] ?? null,
+          p_destino_lng: payload['destino_lng'] ?? null,
+          p_capturado_en: payload['capturado_en'],
+          p_origen_lat: payload['origen_lat'] ?? null,
+          p_origen_lng: payload['origen_lng'] ?? null,
+        });
+        if (error) throwSyncError(error);
+
+        // set_ruta_paradas reemplaza las paradas (idempotente ante reintentos).
+        if (p_paradas.length) {
+          const { error: ePar } = await this.supabase.client.rpc('set_ruta_paradas', {
+            p_ruta_id: rutaId,
+            p_paradas: p_paradas,
+          });
+          if (ePar) throwSyncError(ePar);
+        }
       }
 
       // AC6 — fotos de evidencia inicial → ruta_fotos (momento='inicio'). Insert

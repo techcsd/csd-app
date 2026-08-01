@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.44.0';
+const VERSION = '1.45.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,21 +59,18 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-07-31';
+const RELEASED_AT = '2026-08-01';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Telehandler, conduces firmados, rutas con paradas y Notas';
+const TITULO = 'Notas con listas de tareas, ferretería del chofer y rendimiento de combustible';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Nuevo módulo Notas: crea notas personales, fíjalas, ponles color y archívalas. Puedes compartir una nota con otro usuario dándole permiso de solo ver o de editar. Funciona sin señal (se sincroniza al reconectar).' },
-  { t: 'nuevo', d: 'Telehandler: ahora tiene su propio reporte semanal con sus 15 puntos de inspección, y su combustible se registra como "depósito en obra" (desde garrafón, con horas del equipo y foto de evidencia) sin pasar por la bomba.' },
-  { t: 'nuevo', d: 'Conduces con dos firmas: al entregar un conduce se firma quien entrega y quien recibe; ambas quedan guardadas.' },
-  { t: 'nuevo', d: 'Rutas con varias paradas (estilo Uber): agrega, reordena y quita paradas, y adjunta fotos de evidencia al crear la ruta. El detalle muestra el recorrido en orden.' },
-  { t: 'mejora', d: 'Combustible: ahora las fotos se toman al principio (paso 2), junto a la bomba, para no olvidarlas al arrancar.' },
-  { t: 'mejora', d: 'Reporte semanal: fotos de las gomas y aviso del día que toca reportar cada vehículo (camiones el domingo, telehandler el sábado).' },
-  { t: 'arreglo', d: 'Un vehículo ya asignado a otra persona no se puede volver a asignar (aparece bloqueado con quién lo tiene).' },
-  { t: 'arreglo', d: 'Los choferes ya no ven la sección de Tecnología (sí siguen teniendo Dudas y guías).' },
+  { t: 'nuevo', d: 'Notas: ahora puedes armar listas de tareas dentro de una nota — marca con un toque, agrega con Enter y reordena — con barra de formato (negrita, cursiva, títulos, viñetas) y compartir desde el mismo momento en que la creas. Los pendientes que enlaces a una tarea de la plataforma se marcan solos cuando esa tarea se completa.' },
+  { t: 'nuevo', d: 'Transporte del chofer: registra tus compras o retiros en la ferretería (con foto del recibo) y recibe mercancía sin salir de Transporte. Almacén lo confirma antes de que entre al inventario.' },
+  { t: 'nuevo', d: 'Crear ruta por tipo — Material, Personal o Traslado — para los recorridos que no llevan carga, como repartir personal entre obras en la mañana.' },
+  { t: 'mejora', d: 'Combustible: cada echada muestra su estado (Óptimo, Bajo, Anormal o Datos insuficientes) con una explicación corta del porqué. Una echada a pocos kilómetros de la anterior ya no dice "óptimo": dice "datos insuficientes", que es lo correcto.' },
+  { t: 'arreglo', d: 'El inicio de sesión con cédula y PIN ya no se queda cargando para siempre: si la conexión falla, te avisa claro y te deja reintentar.' },
 ];
 
 const TIPO_POR_COMMIT = {

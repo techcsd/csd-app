@@ -31,14 +31,74 @@
         aria-label="Título de la nota"
       />
 
-      <textarea
+      <!-- AD9 — barra de formato reducida (mobile-first) + cuerpo enriquecido -->
+      @if (puedeEditar()) {
+        <div class="neditor__toolbar" role="toolbar" aria-label="Formato">
+          <button type="button" class="neditor__tool" (click)="cmdBold()" aria-label="Negrita"><b>B</b></button>
+          <button type="button" class="neditor__tool" (click)="cmdItalic()" aria-label="Cursiva"><i>I</i></button>
+          <button type="button" class="neditor__tool" (click)="cmdTitulo()" aria-label="Título">Título</button>
+          <button type="button" class="neditor__tool" (click)="cmdVineta()" aria-label="Viñetas">• Lista</button>
+        </div>
+      }
+      <div
+        #bodyRef
         class="neditor__contenido"
-        [ngModel]="contenido()"
-        (ngModelChange)="contenido.set($event)"
-        [readonly]="!puedeEditar()"
-        placeholder="Escribe aquí… (usa - para listas o - [ ] para pendientes)"
+        [attr.contenteditable]="puedeEditar()"
+        (input)="onBodyInput(bodyRef)"
+        data-placeholder="Escribe aquí…"
         aria-label="Contenido de la nota"
-      ></textarea>
+      ></div>
+
+      <!-- AD9 — checklist estructurado: táctil, Enter agrega, reordenar -->
+      @if (puedeEditar() || checklist().length) {
+        <div class="neditor__check">
+          <span class="neditor__lbl">Lista de tareas</span>
+          @for (item of checklist(); track item.id; let i = $index) {
+            <div
+              class="neditor__item"
+              [class.neditor__item--done]="item.done"
+              [class.neditor__item--link]="item.ref_tipo"
+            >
+              <button
+                type="button"
+                class="neditor__box"
+                (click)="toggleItem(item)"
+                [disabled]="!!item.ref_tipo || !puedeEditar()"
+                aria-label="Marcar tarea"
+              >{{ item.done ? '☑' : '☐' }}</button>
+
+              @if (item.ref_tipo) {
+                <span class="neditor__item-ro">{{ item.texto }}</span>
+                <span class="neditor__chip" title="Vinculada a una tarea de la plataforma">
+                  🔗 Tarea{{ item.done_auto ? ' · hecha' : '' }}
+                </span>
+              } @else {
+                <input
+                  [id]="'chk-' + item.id"
+                  class="neditor__item-input"
+                  type="text"
+                  [value]="item.texto"
+                  (input)="setItemTexto(item, $any($event.target).value)"
+                  (keydown.enter)="onItemEnter(i)"
+                  [readonly]="!puedeEditar()"
+                  placeholder="Escribe una tarea…"
+                  aria-label="Tarea"
+                />
+                @if (puedeEditar()) {
+                  <button type="button" class="neditor__item-btn" (click)="moverItem(i, -1)" aria-label="Subir">▲</button>
+                  <button type="button" class="neditor__item-btn" (click)="moverItem(i, 1)" aria-label="Bajar">▼</button>
+                  <button type="button" class="neditor__item-btn neditor__item-btn--del" (click)="quitarItem(item)" aria-label="Quitar">✕</button>
+                }
+              }
+            </div>
+          }
+          @if (puedeEditar()) {
+            <button type="button" class="neditor__add-list" (click)="agregarItem()">
+              {{ checklist().length ? '➕ Agregar tarea' : '➕ Lista de tareas' }}
+            </button>
+          }
+        </div>
+      }
 
       @if (puedeEditar()) {
         <label class="neditor__lbl">Color</label>

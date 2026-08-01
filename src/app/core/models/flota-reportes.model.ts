@@ -1,6 +1,8 @@
 // S22/S24 — reportes de flota desde la app (accidente, daño, multa). Contratos
 // de PROMPT-9 (RPCs *_app security-definer, idempotentes por p_id).
 
+import { RendimientoEstado } from './combustible.model';
+
 /** Fase del accidente: en el momento del suceso o un reporte posterior. */
 export type AccidenteFase = 'en_el_momento' | 'posterior';
 
@@ -107,6 +109,8 @@ export interface HistorialEchada {
   monto: number | null;
   rendimiento_km_gal: number | null;
   alerta_consumo: boolean | null;
+  estado: RendimientoEstado | null; // AD7 — estado calibrado (servidor)
+  motivo_alerta: string | null; // AD7 — porqué del estado (tooltip)
   vehiculo?: { placa: string } | null;
 }
 
@@ -158,6 +162,7 @@ export interface EchadaDetalle {
   costo_por_km: number | null;
   rendimiento_km_gal: number | null;
   alerta_consumo: boolean | null;
+  estado: RendimientoEstado | null; // AD7 — estado calibrado (servidor)
   motivo_alerta: string | null;
   estacion: string | null;
   notas: string | null;

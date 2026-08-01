@@ -122,7 +122,15 @@
         <div class="mrd__head">
           <div class="mrd__head-top">
             <span class="mrd__placa">{{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
-            @if (e.alerta_consumo) {
+            @if (rendMeta(e.estado); as m) {
+              <span
+                class="mrd__badge"
+                [class.mrd__badge--ok]="m.tone === 'success'"
+                [class.mrd__badge--warn]="m.tone === 'warning'"
+                [class.mrd__badge--error]="m.tone === 'error'"
+                [class.mrd__badge--muted]="m.tone === 'muted'"
+              >{{ m.icon }} {{ m.label }}</span>
+            } @else if (e.alerta_consumo) {
               <span class="mrd__badge mrd__badge--error">⚠ Consumo anormal</span>
             } @else if (e.rendimiento_km_gal != null) {
               <span class="mrd__badge mrd__badge--ok">✓ Normal</span>
@@ -142,8 +150,20 @@
           <li><span>Estación</span><b>{{ e.estacion ?? '—' }}</b></li>
         </ul>
 
-        @if (e.alerta_consumo && e.motivo_alerta) {
-          <div class="mrd__band mrd__band--warn">⚠ {{ e.motivo_alerta }}</div>
+        <!-- AD7 — el porqué del estado (siempre visible cuando el servidor lo calculó) -->
+        @if (e.motivo_alerta) {
+          @if (rendMeta(e.estado); as m) {
+            <div
+              class="mrd__band"
+              [class.mrd__band--ok]="m.tone === 'success'"
+              [class.mrd__band--warn]="m.tone === 'warning' || m.tone === 'error'"
+              [class.mrd__band--info]="m.tone === 'muted'"
+            >
+              <strong>{{ m.icon }} {{ m.label }}.</strong> {{ e.motivo_alerta }}
+            </div>
+          } @else if (e.alerta_consumo) {
+            <div class="mrd__band mrd__band--warn">⚠ {{ e.motivo_alerta }}</div>
+          }
         }
         @if (e.notas) {
           <h2 class="mrd__section">Notas</h2>

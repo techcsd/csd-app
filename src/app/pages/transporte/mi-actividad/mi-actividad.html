@@ -147,7 +147,11 @@
                 @if (e.galones != null) { {{ e.galones }} gal }
                 @if (e.monto != null) { · RD$ {{ e.monto }} }
                 @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal }} km/gal }
-                @if (e.alerta_consumo) { · <span class="mact__alerta">⚠ anormal</span> }
+                @if (rendMeta(e.estado); as m) {
+                  · <span class="mact__estado mact__estado--{{ m.tone }}">{{ m.icon }} {{ m.label }}</span>
+                } @else if (e.alerta_consumo) {
+                  · <span class="mact__alerta">⚠ anormal</span>
+                }
                 ›
               </span>
             </button>

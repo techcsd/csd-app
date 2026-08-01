@@ -100,6 +100,25 @@ export interface CartLinea {
   descripcion?: string | null;
 }
 
+/**
+ * AD6 — compra/retiro de ferretería registrado por el CHOFER desde Transporte.
+ * Queda como entrada PENDIENTE (chofer_registrar_compra_ferreteria) hasta que
+ * Almacén la confirma; el chofer nunca sube stock por su cuenta (antifraude).
+ */
+export interface CompraFerreteriaCaptura {
+  bodegaId: string;
+  proyectoId: string | null;
+  /** # de factura / referencia del recibo. */
+  referencia: string | null;
+  /** Nombre de la ferretería/suplidor (texto libre → va a observaciones). */
+  proveedor: string | null;
+  observaciones: string | null;
+  /** Materiales propuestos (Almacén ajusta al confirmar). Opcional. */
+  items: { articulo_id: string; cantidad: number }[];
+  /** Foto del recibo, solo-cámara. */
+  foto: Blob | null;
+}
+
 export type Urgencia = 'normal' | 'urgente';
 
 export interface SolicitudItem {

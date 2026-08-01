@@ -19,6 +19,7 @@ import {
   RutaCreada,
 } from '../../../core/models/flota-reportes.model';
 import { RutaHoy } from '../../../core/models/transporte.model';
+import { RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta } from '../../../core/models/combustible.model';
 import { ConductorStats } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
@@ -43,6 +44,11 @@ export class MiActividadPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+
+  /** AD7 — meta de un estado de rendimiento para pintar el chip. */
+  rendMeta(estado: RendimientoEstado | null | undefined): RendimientoEstadoMeta | null {
+    return estado ? (RENDIMIENTO_ESTADO_META[estado] ?? null) : null;
+  }
 
   loading = signal(true);
   stats = signal<ConductorStats | null>(null);

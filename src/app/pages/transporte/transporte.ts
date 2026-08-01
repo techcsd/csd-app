@@ -30,6 +30,9 @@ const TILES: HubTile[] = [
   // en ≤2 toques (la pantalla elige el vehículo del pool si no hay contexto).
   { key: 'preuso', icon: '📝', label: 'Hacer pre-uso', tint: '#0369a1' },
   { key: 'combustible', icon: '⛽', label: 'Registrar combustible', tint: '#dc2626' },
+  // AD6 — funciones de inventario del chofer dentro de Transporte.
+  { key: 'recibirMercancia', icon: '📥', label: 'Recibir mercancía', tint: '#0f766e' },
+  { key: 'ferreteria', icon: '🧾', label: 'Compra en ferretería', tint: '#9333ea' },
   { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
   { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
@@ -130,6 +133,8 @@ export class TransportePage {
       case 'conduces': return this.conduces();
       case 'preuso': return this.preusoTop();
       case 'combustible': return this.combustibleTop();
+      case 'recibirMercancia': return this.recibirMercancia();
+      case 'ferreteria': return this.ferreteria();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
       case 'asignar': return this.asignar();
@@ -163,6 +168,14 @@ export class TransportePage {
   /** S16 — crear ruta (solo elevados; el wizard tipo hoja llega en FASE 3). */
   crearRuta(): void {
     void this.router.navigate(['/transporte/rutas/crear']);
+  }
+
+  // AD6 — funciones de inventario del chofer dentro de Transporte.
+  recibirMercancia(): void {
+    void this.router.navigate(['/transporte/recibir-mercancia']);
+  }
+  ferreteria(): void {
+    void this.router.navigate(['/transporte/ferreteria']);
   }
 
   /** Y7 — historial de checklists (jefe de flota). */

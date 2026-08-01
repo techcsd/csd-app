@@ -3,7 +3,15 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { db } from '../db/app-db';
-import { Nota, NotaCaptura, NotaCompartido, NotaPermiso, UsuarioBusqueda } from '../models/nota.model';
+import {
+  Nota,
+  NotaCaptura,
+  NotaChecklistItem,
+  NotaChecklistItemCaptura,
+  NotaCompartido,
+  NotaPermiso,
+  UsuarioBusqueda,
+} from '../models/nota.model';
 
 const CATALOG_NOTAS = 'notas_all';
 
@@ -149,6 +157,82 @@ export class NotasService {
     await this.catalog.invalidate(CATALOG_NOTAS);
   }
 
+  // ---- Checklist estructurado (AD9) ----------------------------------------
+
+  /**
+   * Ítems de checklist de una nota. Lee directo (RLS) y superpone el último set
+   * pendiente del outbox (para verlos al instante offline). Los ítems vinculados a
+   * una tarea vienen siempre del servidor (los marca el trigger, no la app).
+   */
+  async getChecklist(notaId: string): Promise<NotaChecklistItem[]> {
+    let server: NotaChecklistItem[] = [];
+    try {
+      const { data, error } = await this.supabase.client
+        .from('nota_checklist_items')
+        .select('id, nota_id, orden, texto, done, done_auto, ref_tipo, ref_id')
+        .eq('nota_id', notaId)
+        .order('orden', { ascending: true });
+      if (!error) server = (data as unknown as NotaChecklistItem[]) ?? [];
+    } catch {
+      /* offline → solo pendientes */
+    }
+
+    const pend = await this.checklistPendiente(notaId);
+    if (!pend) return server.sort((a, b) => a.orden - b.orden);
+
+    // Hay un set pendiente: los ítems manuales los manda el cliente; los
+    // vinculados (ref_tipo) siguen siendo los del servidor.
+    const vinculados = server.filter((i) => i.ref_tipo);
+    return [...vinculados, ...pend].sort((a, b) => a.orden - b.orden);
+  }
+
+  /** Último `nota_checklist_set` pendiente en el outbox (ítems manuales). */
+  private async checklistPendiente(notaId: string): Promise<NotaChecklistItem[] | null> {
+    try {
+      const ops = await db.outbox.where('tipo_op').equals('nota_checklist_set').toArray();
+      const mine = ops
+        .filter((o) => (o.payload as Record<string, unknown>)['nota_id'] === notaId)
+        .sort((a, b) => (a.created_local ?? 0) - (b.created_local ?? 0));
+      const last = mine.at(-1);
+      if (!last) return null;
+      const items = ((last.payload as Record<string, unknown>)['items'] as NotaChecklistItemCaptura[]) ?? [];
+      return items.map((it) => ({
+        id: it.id,
+        nota_id: notaId,
+        orden: it.orden,
+        texto: it.texto,
+        done: it.done,
+        done_auto: false,
+        ref_tipo: null,
+        ref_id: null,
+      }));
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Reconcilia los ítems vinculados con el estado ACTUAL de su tarea (red de
+   * seguridad: "se marca solo al completarse"). Online, best-effort.
+   */
+  async reconciliarChecklist(notaId: string): Promise<void> {
+    try {
+      await this.supabase.client.rpc('sync_checklist_nota', { p_nota_id: notaId });
+    } catch {
+      /* offline / sin acceso → se verá el último estado conocido */
+    }
+  }
+
+  /** Guarda los ítems manuales del checklist por el outbox (reemplazo idempotente). */
+  async guardarChecklist(notaId: string, items: NotaChecklistItemCaptura[]): Promise<void> {
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'nota_checklist_set',
+      capturado_en: new Date().toISOString(),
+      payload: { nota_id: notaId, items },
+    });
+  }
+
   /** Borra una nota (solo el dueño; online — la RLS lo valida). */
   async eliminar(id: string): Promise<void> {
     const { error } = await this.supabase.client.from('notas').delete().eq('id', id);
@@ -236,6 +320,38 @@ export class NotasService {
       if (error) throwSyncError(error);
       // El contenido cambió en el servidor → refrescar la lista al drenar.
       await this.catalog.invalidate(CATALOG_NOTAS);
+    });
+
+    // AD9 — reemplazo idempotente de los ítems MANUALES del checklist. No toca los
+    // ítems vinculados a una tarea (ref_tipo not null): esos los maneja el servidor.
+    this.sync.register('nota_checklist_set', async (payload) => {
+      const notaId = payload['nota_id'] as string;
+      const items = (payload['items'] as NotaChecklistItemCaptura[]) ?? [];
+
+      if (items.length) {
+        const rows = items.map((it) => ({
+          id: it.id,
+          nota_id: notaId,
+          orden: it.orden,
+          texto: it.texto,
+          done: it.done,
+        }));
+        const { error } = await this.supabase.client
+          .from('nota_checklist_items')
+          .upsert(rows, { onConflict: 'id' });
+        if (error) throwSyncError(error);
+      }
+
+      // Borra los ítems manuales que el usuario quitó (solo ref_tipo IS NULL).
+      let del = this.supabase.client
+        .from('nota_checklist_items')
+        .delete()
+        .eq('nota_id', notaId)
+        .is('ref_tipo', null);
+      const keep = items.map((i) => i.id);
+      if (keep.length) del = del.not('id', 'in', `(${keep.join(',')})`);
+      const { error: eDel } = await del;
+      if (eDel) throwSyncError(eDel);
     });
   }
 }

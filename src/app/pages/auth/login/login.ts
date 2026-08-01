@@ -49,7 +49,14 @@ export class LoginPage {
     }
     this.loading.set(true);
     try {
-      const { user, error } = await this.auth.signIn(this.email(), this.password());
+      const { user, error, timedOut } = await this.auth.signIn(this.email(), this.password());
+      if (timedOut) {
+        this.toast.withAction(
+          'No pudimos verificar tus datos. La conexión tardó demasiado. Intenta de nuevo.',
+          { label: 'Reintentar', run: () => void this.submit() },
+        );
+        return;
+      }
       if (error || !user) {
         this.toast.error('Correo o contraseña incorrectos.');
         return;
@@ -83,17 +90,22 @@ export class LoginPage {
           this.toast.error(r.error ?? `Demasiados intentos. Espera ~${mins} min e intenta de nuevo.`);
         } else if (r.status === 401) {
           this.toast.error('Cédula o PIN incorrectos.');
+        } else if (r.networkError) {
+          // Red/timeout: nunca dejamos el spinner colgado — mensaje claro + reintento.
+          this.toast.withAction(
+            r.error ?? 'No pudimos verificar tus datos. Intenta de nuevo.',
+            { label: 'Reintentar', run: () => void this.submitConductor() },
+          );
         } else {
-          this.toast.error(r.error ?? 'No se pudo iniciar sesión. Revisa tu conexión.');
+          this.toast.error(r.error ?? 'No pudimos verificar tus datos. Intenta de nuevo.');
         }
         return;
       }
-      const user = await this.auth.getUser();
-      if (!user) {
-        this.toast.error('No se pudo iniciar sesión. Intenta de nuevo.');
+      if (!r.userId) {
+        this.toast.error('No pudimos verificar tus datos. Intenta de nuevo.');
         return;
       }
-      await this.afterAuth(user.id);
+      await this.afterAuth(r.userId);
     } catch {
       this.toast.error('No se pudo iniciar sesión. Revisa tu conexión.');
     } finally {

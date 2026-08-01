@@ -38,6 +38,8 @@ import {
   PrecioCombustibleVigente,
   PRODUCTO_CANONICO_LABEL,
   productoCanonico,
+  RENDIMIENTO_ESTADO_META,
+  RendimientoEstadoMeta,
 } from '../../../core/models/combustible.model';
 
 const TOTAL_STEPS = 4;
@@ -137,6 +139,13 @@ export class CombustiblePage extends GuardedWizard {
   done = signal(false);
   /** Snapshot of the live calc shown on the confirmation screen. */
   resultado = signal<CombustibleCalculo | null>(null);
+
+  /** AD7 — banda de estado del rendimiento en la confirmación (preview local). */
+  estadoBand = computed<{ meta: RendimientoEstadoMeta; motivo: string } | null>(() => {
+    const r = this.resultado();
+    if (!r) return null;
+    return { meta: RENDIMIENTO_ESTADO_META[r.estado], motivo: r.estadoMotivo };
+  });
 
   /** Live derivation shown in the dark box (mirrors the server). */
   calc = computed(() =>

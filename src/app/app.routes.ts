@@ -206,6 +206,19 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/transporte/asignar/asignar').then((m) => m.AsignarVehiculoPage),
   },
+  // AD6 — funciones de inventario del chofer DENTRO de Transporte (gate por 'flota',
+  // no 'inventario'): así funcionan aunque se revierta el acceso temporal a Inventario.
+  {
+    path: 'transporte/ferreteria',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () => import('./pages/transporte/ferreteria/ferreteria').then((m) => m.FerreteriaPage),
+  },
+  {
+    // Reutiliza la pantalla de recibir conduce (mercancía/traslado) bajo Transporte.
+    path: 'transporte/recibir-mercancia',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () => import('./pages/inventario/recibir/recibir').then((m) => m.RecibirConducePage),
+  },
   {
     path: 'transporte/recibir/:vehiculoId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

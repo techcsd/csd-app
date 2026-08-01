@@ -58,19 +58,136 @@
     outline: none;
   }
 }
+// AD9 — barra de formato reducida (mobile-first).
+.neditor__toolbar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.neditor__tool {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f1f22;
+
+  &:active {
+    background: var(--color-surface-2);
+  }
+}
+
 .neditor__contenido {
   width: 100%;
-  min-height: 260px;
+  min-height: 160px;
   border: none;
   background: transparent;
   font-size: 16px;
   line-height: 1.5;
   color: #1f1f22;
-  resize: vertical;
 
   &:focus {
     outline: none;
   }
+  // Placeholder para el contenteditable vacío.
+  &:empty::before {
+    content: attr(data-placeholder);
+    color: var(--color-text-secondary);
+    pointer-events: none;
+  }
+  :is(h1, h2, h3) {
+    font-weight: 800;
+    margin: 8px 0 4px;
+  }
+  ul {
+    padding-left: 22px;
+    margin: 4px 0;
+  }
+}
+
+// AD9 — checklist estructurado.
+.neditor__check {
+  margin-top: 16px;
+}
+.neditor__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+.neditor__item--done .neditor__item-input,
+.neditor__item--done .neditor__item-ro {
+  text-decoration: line-through;
+  color: var(--color-text-secondary);
+}
+.neditor__box {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+
+  &:disabled {
+    opacity: 1; // los vinculados se ven marcados, no "apagados"
+  }
+}
+.neditor__item-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 40px;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  background: transparent;
+  font-size: 16px;
+  color: #1f1f22;
+
+  &:focus {
+    outline: none;
+    border-bottom-color: var(--Hub);
+  }
+}
+.neditor__item-ro {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 16px;
+}
+.neditor__chip {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-2);
+  border-radius: 999px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+.neditor__item-btn {
+  min-width: 34px;
+  min-height: 36px;
+  border: none;
+  background: none;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.neditor__item-btn--del {
+  color: var(--color-danger);
+}
+.neditor__add-list {
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
 }
 
 .neditor__lbl {

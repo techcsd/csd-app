@@ -60,8 +60,16 @@ export class HomePage {
 
   // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
   // Tecnología se excluye de aquí porque NO es un módulo de trabajo (ver `tiles`).
+  // AD6 — el chofer NO ve Inventario: sus funciones de inventario viven ahora en
+  // Transporte (Recibir mercancía / Compra en ferretería). El acceso temporal al
+  // módulo se revierte en SGC tras publicar esta versión; aquí ya lo ocultamos.
   private workTiles = computed(() =>
-    TILES.filter((t) => t.modulo !== 'tecnologia' && this.ctx.hasModulo(t.modulo)),
+    TILES.filter(
+      (t) =>
+        t.modulo !== 'tecnologia' &&
+        this.ctx.hasModulo(t.modulo) &&
+        !(t.modulo === 'inventario' && this.ctx.esChofer()),
+    ),
   );
 
   // AC2 — Tecnología es pública para TODOS excepto el rol chofer. No se gatea por

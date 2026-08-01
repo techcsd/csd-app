@@ -1,0 +1,108 @@
+.ferr__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+}
+.ferr__back {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font-size: 22px;
+}
+.ferr__title {
+  font-size: 18px;
+  font-weight: 800;
+}
+.ferr__intro {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+.ferr__mt {
+  margin-top: 14px;
+}
+.ferr__req {
+  color: var(--color-danger);
+}
+.ferr__notas {
+  resize: vertical;
+}
+.ferr__band {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--color-warning-bg, #fef3c7);
+  color: var(--color-warning, #d97706);
+  font-size: 13px;
+  font-weight: 700;
+}
+.ferr__toggle {
+  margin-top: 16px;
+  width: 100%;
+  min-height: 46px;
+  border: 1px dashed var(--color-border);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-align: left;
+  padding: 0 14px;
+}
+.ferr__count {
+  display: inline-block;
+  min-width: 22px;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--Hub, #ffb300);
+  color: #121212;
+  font-size: 13px;
+  text-align: center;
+}
+.ferr__items {
+  margin-top: 10px;
+}
+.ferr__item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.ferr__item-name {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+.ferr__item-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ferr__step {
+  min-width: 40px;
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  font-size: 20px;
+  font-weight: 700;
+}
+.ferr__qty {
+  width: 72px;
+  text-align: center;
+}
+.ferr__unit {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.ferr__item-x {
+  margin-left: auto;
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: var(--color-danger);
+}

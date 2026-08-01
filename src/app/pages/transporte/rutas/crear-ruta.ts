@@ -15,7 +15,7 @@ import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-pick
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { CapturedPhoto } from '../../../core/services/camera.service';
-import { ConducesService, LugarDestino, RutaParadaCaptura } from '../../../core/services/conduces.service';
+import { ConducesService, LugarDestino, RutaParadaCaptura, RutaTipo } from '../../../core/services/conduces.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
@@ -108,6 +108,15 @@ export class CrearRutaPage implements OnDestroy {
   km = signal<number | null>(null);
   notas = signal('');
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
+
+  // AD6 — tipo de ruta (solo el chofer al crearse la suya; material no exige nada
+  // nuevo, personal/traslado no exigen carga). El elevado siempre crea 'material'.
+  tipoRuta = signal<RutaTipo>('material');
+  readonly tiposRuta: { valor: RutaTipo; label: string; icon: string; hint: string }[] = [
+    { valor: 'material', label: 'Material', icon: '📦', hint: 'Llevas carga/mercancía' },
+    { valor: 'personal', label: 'Personal', icon: '👷', hint: 'Repartes personal entre obras' },
+    { valor: 'traslado', label: 'Traslado', icon: '🚚', hint: 'Te mueves sin carga' },
+  ];
 
   // AC13 — paradas intermedias (estilo Uber): entre el origen y el destino final.
   paradas = signal<ParadaUI[]>([]);
@@ -442,6 +451,7 @@ export class CrearRutaPage implements OnDestroy {
       await this.conduces.crearRuta({
         vehiculoId: this.vehiculoId(),
         conductorId: this.conductorId() || null,
+        tipo: this.tipoRuta(), // AD6 — solo aplica en el alta del chofer (self-assign)
         origen: this.origen().trim(),
         destino: this.destinoTexto(),
         fecha: new Date().toISOString().slice(0, 10),

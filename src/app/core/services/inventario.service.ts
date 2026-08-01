@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, ConteoHistorial, Existencia } from '../models/inventario.model';
+import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
@@ -274,6 +274,43 @@ export class InventarioService {
     });
   }
 
+  /**
+   * AD6 — el CHOFER registra una compra/retiro en ferretería. Queda PENDIENTE
+   * (chofer_registrar_compra_ferreteria) hasta que Almacén la confirma y sube el
+   * stock. Offline-safe por outbox; idempotente por id. La app no tiene catálogo
+   * de proveedores/órdenes de compra → el proveedor va como texto en observaciones
+   * y la OC la enlaza Almacén al confirmar (gap documentado).
+   */
+  async enqueueCompraFerreteria(input: CompraFerreteriaCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const obs =
+      [
+        input.proveedor?.trim() ? `Ferretería/proveedor: ${input.proveedor.trim()}` : null,
+        input.observaciones?.trim() || null,
+      ]
+        .filter(Boolean)
+        .join(' — ') || null;
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'compra_ferreteria',
+      capturado_en,
+      payload: {
+        id,
+        bodega_id: input.bodegaId,
+        proyecto_id: input.proyectoId,
+        referencia: input.referencia?.trim() || null,
+        observaciones: obs,
+        items: input.items,
+        capturado_en,
+      },
+      fotos: input.foto
+        ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `ferreteria/${id}/recibo.jpg`, slot: 'recibo', blob: input.foto }]
+        : [],
+      resumen: { tipo: 'compra_ferreteria', capturado_en, items: input.items.length },
+    });
+  }
+
   async enqueueEntrada(input: EntradaCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
@@ -508,6 +545,22 @@ export class InventarioService {
         p_items: payload['items'],
         p_notas: payload['notas'] ?? null,
         p_foto_path: photoPaths['recepcion'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
+    this.sync.register('compra_ferreteria', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('chofer_registrar_compra_ferreteria', {
+        p_id: payload['id'],
+        p_fecha: (payload['capturado_en'] as string).slice(0, 10),
+        p_bodega_id: payload['bodega_id'],
+        p_proveedor_id: null, // la app no tiene catálogo de proveedores
+        p_proyecto_id: payload['proyecto_id'] ?? null,
+        p_orden_compra_id: null, // Almacén enlaza la OC al confirmar
+        p_referencia: payload['referencia'] ?? null,
+        p_observaciones: payload['observaciones'] ?? null,
+        p_foto_path: photoPaths['recibo'] ?? null,
+        p_items: payload['items'] ?? [],
       });
       if (error) throwSyncError(error);
     });

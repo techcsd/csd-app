@@ -1,0 +1,140 @@
+<div class="screen ferr">
+  @if (hoja() === 'form') {
+    <header class="ferr__header">
+      <button type="button" class="ferr__back" (click)="intentarSalir()" aria-label="Atrás">←</button>
+      <h1 class="ferr__title">🧾 Compra en ferretería</h1>
+    </header>
+
+    <div class="screen__body">
+      <p class="ferr__intro">
+        Registra el recibo de lo que compraste o retiraste. <b>Almacén lo confirma</b>
+        antes de que entre al stock.
+      </p>
+
+      <app-select-list
+        label="Almacén destino"
+        icon="🏬"
+        [options]="bodegaOptions()"
+        [selectedId]="bodegaId()"
+        (picked)="bodegaId.set($event)"
+      />
+
+      @if (obraOptions().length) {
+        <div class="ferr__mt">
+          <app-select-list
+            label="Obra (opcional)"
+            icon="🏗"
+            [options]="obraOptions()"
+            [selectedId]="obraId()"
+            (picked)="obraId.set($event)"
+          />
+        </div>
+      }
+
+      <label class="field-label ferr__mt" for="ferreteria">Ferretería / suplidor (opcional)</label>
+      <input
+        id="ferreteria"
+        class="field"
+        type="text"
+        [ngModel]="proveedor()"
+        (ngModelChange)="proveedor.set($event)"
+        placeholder="Ej: Ferretería Americana"
+      />
+
+      <label class="field-label ferr__mt" for="ref"># de factura / referencia (opcional)</label>
+      <input
+        id="ref"
+        class="field"
+        type="text"
+        [ngModel]="referencia()"
+        (ngModelChange)="referencia.set($event)"
+        placeholder="Ej: F-0012345"
+      />
+
+      <!-- Foto del recibo, solo-cámara, OBLIGATORIA -->
+      <label class="field-label ferr__mt">Foto del recibo <span class="ferr__req">*</span></label>
+      <app-photo-slot
+        label="Recibo (obligatorio)"
+        hint="🧾"
+        [gallery]="false"
+        [foto]="foto()"
+        (captured)="onFoto($event)"
+        (cleared)="onFotoCleared()"
+      />
+      @if (faltaFoto()) {
+        <div class="ferr__band">📷 Toma la foto del recibo para poder registrar.</div>
+      }
+
+      <label class="field-label ferr__mt" for="obs">Observaciones (opcional)</label>
+      <textarea
+        id="obs"
+        class="field ferr__notas"
+        rows="2"
+        [ngModel]="observaciones()"
+        (ngModelChange)="observaciones.set($event)"
+        placeholder="Algo que deba saber Almacén…"
+      ></textarea>
+
+      <!-- Materiales (opcional): Almacén ajusta al confirmar -->
+      <button type="button" class="ferr__toggle" (click)="verMateriales.set(!verMateriales())">
+        {{ verMateriales() ? '▾' : '▸' }} Detallar materiales (opcional)
+        @if (cart().length) { <span class="ferr__count">{{ cart().length }}</span> }
+      </button>
+
+      @if (cart().length) {
+        <div class="ferr__items">
+          @for (l of cart(); track l.articulo_id) {
+            <div class="ferr__item">
+              <span class="ferr__item-name">{{ l.nombre }}</span>
+              <div class="ferr__item-qty">
+                <button type="button" class="ferr__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
+                <input class="field ferr__qty" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
+                <button type="button" class="ferr__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
+                <span class="ferr__unit">{{ l.unidad }}</span>
+                <button type="button" class="ferr__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      @if (verMateriales()) {
+        <app-articulo-picker
+          [articulos]="articulos()"
+          [categorias]="categorias()"
+          [exclude]="excludeIds()"
+          (picked)="agregar($event)"
+        />
+      }
+    </div>
+
+    <app-wizard-footer
+      backLabel="Cancelar"
+      [primaryLabel]="submitting() ? 'Registrando…' : 'Registrar compra'"
+      [primaryDisabled]="submitting() || faltaFoto()"
+      (back)="intentarSalir()"
+      (primary)="submit()"
+    />
+  }
+
+  @if (hoja() === 'exito') {
+    <app-big-confirm
+      title="Compra registrada"
+      note="Queda pendiente de que Almacén la confirme para entrar al stock."
+      tone="done"
+      buttonLabel="Listo"
+      (dismissed)="finish()"
+    />
+  }
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir sin registrar?"
+    message="Se perderá lo que capturaste de la compra."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
+</div>

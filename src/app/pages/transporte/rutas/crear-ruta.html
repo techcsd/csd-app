@@ -123,6 +123,25 @@
         <!-- 5. Detalles -->
         @if (step() === 5) {
           <h1 class="screen__title">Detalles</h1>
+
+          <!-- AD6 — tipo de ruta (el chofer que se crea su ruta) -->
+          @if (!esElevado) {
+            <label class="field-label">Tipo de ruta</label>
+            <div class="cruta__tipos">
+              @for (t of tiposRuta; track t.valor) {
+                <app-option-button
+                  [icon]="t.icon"
+                  [label]="t.label"
+                  [selected]="tipoRuta() === t.valor"
+                  (pressed)="tipoRuta.set(t.valor)"
+                />
+              }
+            </div>
+            <p class="cruta__tipo-hint">
+              {{ tipoRuta() === 'material' ? 'Llevas carga/mercancía.' : tipoRuta() === 'personal' ? 'Repartes personal entre obras (no exige carga).' : 'Te mueves sin carga (traslado vacío).' }}
+            </p>
+          }
+
           <label class="field-label" for="km">Kilómetros estimados (opcional)</label>
           <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="0" />
           <label class="field-label" for="notas">Notas (opcional)</label>
@@ -144,6 +163,9 @@
           <h1 class="screen__title">Revisa y crea</h1>
           <ul class="resumen">
             <li><span>Vehículo</span><b>{{ vehiculoLabel() }}</b></li>
+            @if (!esElevado) {
+              <li><span>Tipo</span><b>{{ tipoRuta() === 'material' ? '📦 Material' : tipoRuta() === 'personal' ? '👷 Personal' : '🚚 Traslado' }}</b></li>
+            }
             <li><span>Conductor</span><b>{{ esElevado ? conductorNombre() : 'Yo mismo' }}</b></li>
             <li><span>Origen</span><b>{{ origen() }}</b></li>
             @if (paradas().length) { <li><span>Paradas</span><b>{{ paradas().length }}</b></li> }

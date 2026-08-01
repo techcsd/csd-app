@@ -87,19 +87,22 @@
         }
       </div>
 
-      <!-- Consumption band -->
+      <!-- AD7 — banda de estado del rendimiento (con el porqué) -->
       @if (modoPersona()) {
         <div class="comb__band comb__band--ok">✓ Echada de persona registrada.</div>
-      } @else if (resultado()?.rendimiento == null) {
-        <div class="comb__band comb__band--info">
-          Primera echada del vehículo. El rendimiento se calculará desde la próxima.
+      } @else if (estadoBand(); as b) {
+        <div
+          class="comb__band"
+          [class.comb__band--ok]="b.meta.tone === 'success'"
+          [class.comb__band--warn]="b.meta.tone === 'warning' || b.meta.tone === 'error'"
+          [class.comb__band--info]="b.meta.tone === 'muted'"
+        >
+          <strong>{{ b.meta.icon }} {{ b.meta.label }}</strong>
+          <span class="comb__band-why">{{ b.motivo }}</span>
+          @if (b.meta.tone === 'error') {
+            <span class="comb__band-why">Se envía un aviso a mantenimiento para revisar el vehículo.</span>
+          }
         </div>
-      } @else if (resultado()?.alertaConsumo) {
-        <div class="comb__band comb__band--warn">
-          ⚠ Consumo anormal. Se envía un aviso a mantenimiento para revisar el vehículo.
-        </div>
-      } @else {
-        <div class="comb__band comb__band--ok">✓ Consumo dentro de lo normal.</div>
       }
 
       @if (!online) {
