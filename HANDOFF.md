@@ -1,7 +1,11 @@
 # HANDOFF — CSD App
 
-## Ronda 01–02/08 — Feedback de campo (módulo Transporte) — 8 mejoras · v1.47.0 (rolling, no forzada)
-**Estado:** `npm run build` VERDE (10 warnings NG8102 preexistentes). **1 migración SGC aplicada** a prod: `dev/SGC/sql/2026-08-02-ae-ferreteria-recibir-chofer.sql`. Device-QA pendiente.
+## Ronda 01–02/08 — Feedback de campo (módulo Transporte) — v1.47.0 + v1.48.0 (rolling, no forzada)
+**Estado:** `npm run build` VERDE (10 warnings NG8102 preexistentes). **Migraciones SGC aplicadas** a prod: `2026-08-02-ae-ferreteria-recibir-chofer.sql` (+ **`2026-08-02-ae2-revert-ferreteria-antifraude.sql`** — ver más abajo). Device-QA pendiente.
+**Releases:** v1.47.0 (commit `d7406f9`) publicada; luego **v1.48.0** (ajuste antifraude + mejoras). Ambas rolling, no forzadas; piso 1.42.0. Cert prod `3c5316d8…df5065`.
+
+**⚠️ AJUSTE v1.48.0 (Xaviel pidió MANTENER el antifraude):** se **revirtió** la relajación del ítem 2 de abajo. `confirmar_entrada_chofer` vuelve a ser **solo Almacén/Inventario** (`2026-08-02-ae2-revert-...` aplicada). En el app: el chofer **VE** sus compras de ferretería en "Recibir mercancía" (solo lectura, "⏳ Pendiente de que Almacén confirme"); el botón **"Dar entrada"** solo aparece para Almacén/Inventario (`puedeConfirmarEntrada = hasModulo('inventario')||admin`). `mis_entradas_ferreteria_pendientes()` se mantiene (lista read-only).
+**+ Mejoras v1.48.0:** (a) **Sacar material** ahora tiene **tile propio en el hub** de Transporte + muestra el **stock disponible** por material en la bodega de origen (aviso si excede; `getExistencias`). (b) —
 
 **Lo hecho (feedback de Xaviel sobre v1.46.0):**
 1. **Chofer GENERA conduce (sacar material)** — nueva página `pages/transporte/generar-conduce` (ruta `transporte/generar-conduce`, gate `flota`) + botón "📦 Sacar material" en Conduces. Almacén origen + obra destino + buscador de materiales (solo-buscador) + cantidad → outbox `conduce_transportista` → RPC `crear_conduce_transportista` (valida stock). Aparece luego en "Conduces por entregar". `ConducesService.crearConduceTransportista` + handler.

@@ -50,9 +50,11 @@ export class RecibirConducePage {
   readonly fechaHora = formatFechaCortaHora;
 
   conduces = signal<Conduce[]>([]);
-  // AE — compras de ferretería pendientes de dar entrada (recibir el material).
+  // AE — compras de ferretería pendientes. El chofer las VE (solo lectura); solo
+  // Almacén/Inventario les da entrada (antifraude: Almacén valida antes de subir stock).
   entradasFerreteria = signal<EntradaFerreteriaPendiente[]>([]);
   confirmandoId = signal<string | null>(null);
+  puedeConfirmarEntrada = computed(() => this.ctx.hasModulo('inventario') || this.ctx.hasRol('admin'));
   loading = signal(true);
   /** Conduce abierto en la hoja de detalle (null = vista lista). */
   activo = signal<Conduce | null>(null);

@@ -392,3 +392,11 @@
   color: var(--color-warning);
   margin: 8px 0 0;
 }
+
+// AE — el chofer ve su compra pendiente (solo lectura; Almacén confirma).
+.ferr-entrada__pend {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-warning);
+}

@@ -52,9 +52,24 @@
                 <span class="gconduce__unit">{{ l.unidad }}</span>
                 <button type="button" class="gconduce__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
               </div>
+              @let s = stockDe(l.articulo_id);
+              @if (s !== null) {
+                <span class="gconduce__stock" [class.gconduce__stock--warn]="excedeStock(l)">
+                  @if (excedeStock(l)) {
+                    ⚠ Solo hay {{ s | number: '1.0-2' }} en el almacén
+                  } @else {
+                    Disponible: {{ s | number: '1.0-2' }}
+                  }
+                </span>
+              }
             </div>
           }
         </div>
+        @if (hayExceso()) {
+          <div class="gconduce__band gconduce__band--warn">
+            ⚠ Estás sacando más de lo disponible en algún material. Ajusta la cantidad (el almacén validará el stock al sincronizar).
+          </div>
+        }
       } @else {
         <div class="gconduce__band">🔎 Agrega al menos un material para generar el conduce.</div>
       }

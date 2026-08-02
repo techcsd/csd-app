@@ -10,9 +10,12 @@
       @if (loading()) {
         <app-skeleton [rows]="5" />
       } @else {
-        <!-- AE — compras de ferretería pendientes de dar entrada -->
+        <!-- AE — compras de ferretería pendientes. El chofer las ve (solo lectura);
+             Almacén/Inventario les da entrada (antifraude). -->
         @if (entradasFerreteria().length) {
-          <h2 class="recibir__section">Compras de ferretería por confirmar</h2>
+          <h2 class="recibir__section">
+            {{ puedeConfirmarEntrada() ? 'Compras de ferretería por confirmar' : 'Tus compras de ferretería' }}
+          </h2>
           @for (e of entradasFerreteria(); track e.id) {
             <div class="ferr-entrada">
               <div class="ferr-entrada__head">
@@ -28,16 +31,20 @@
               } @else {
                 <p class="ferr-entrada__sinitems">Sin materiales detallados (se registró solo el recibo).</p>
               }
-              <button
-                type="button"
-                class="btn-cta ferr-entrada__cta"
-                [disabled]="confirmandoId() === e.id || !e.items.length"
-                (click)="confirmarEntrada(e)"
-              >
-                {{ confirmandoId() === e.id ? 'Dando entrada…' : '✓ Dar entrada al almacén' }}
-              </button>
-              @if (!e.items.length) {
-                <p class="ferr-entrada__nota">Almacén debe detallar los materiales antes de dar entrada.</p>
+              @if (puedeConfirmarEntrada()) {
+                <button
+                  type="button"
+                  class="btn-cta ferr-entrada__cta"
+                  [disabled]="confirmandoId() === e.id || !e.items.length"
+                  (click)="confirmarEntrada(e)"
+                >
+                  {{ confirmandoId() === e.id ? 'Dando entrada…' : '✓ Dar entrada al almacén' }}
+                </button>
+                @if (!e.items.length) {
+                  <p class="ferr-entrada__nota">Detalla los materiales antes de dar entrada.</p>
+                }
+              } @else {
+                <span class="ferr-entrada__pend">⏳ Pendiente de que Almacén confirme la entrada.</span>
               }
             </div>
           }

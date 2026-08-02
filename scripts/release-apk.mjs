@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.47.0';
+const VERSION = '1.48.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,16 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Transporte: sacar y recibir material, firma al recibir y mapa mejorado';
+const TITULO = 'Sacar material con stock disponible y confirmación de Almacén en ferretería';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Sacar material: el chofer ya puede generar un conduce de salida desde el móvil — elige el almacén de origen, la obra destino y busca los materiales con su cantidad. Aparece en "Conduces por entregar" para entregarlo con firma.' },
-  { t: 'nuevo', d: 'Recibir mercancía de ferretería: la compra que registras aparece ahora en "Recibir mercancía" con sus materiales, y tú mismo puedes darle entrada al almacén/obra cuando la recibes.' },
-  { t: 'mejora', d: 'Compra en ferretería: eliges los materiales con un buscador (arriba y más visible), pones la cantidad, y todo queda listado en el conduce de entrada.' },
-  { t: 'mejora', d: 'Al recibir un conduce o mercancía ahora se firma la recepción (queda la prueba de quién recibió).' },
-  { t: 'mejora', d: 'Mapa y ubicaciones: el buscador encuentra establecimientos (talleres, ferreterías…) y las direcciones salen más cortas (sin "República Dominicana"). Las paradas de una ruta se pueden marcar también en el mapa.' },
-  { t: 'mejora', d: 'Detalles de transporte: el pre-uso tiene botón de volver, el perfil del telehandler muestra horas en vez de kilómetros, y en las rutas "Ver paradas" quedó debajo de los botones.' },
+  { t: 'nuevo', d: 'Sacar material: acceso directo desde el menú de Transporte ("Sacar material"), y al elegir cada material te muestra cuánto hay disponible en el almacén de origen.' },
+  { t: 'mejora', d: 'Compras de ferretería: quien confirma la entrada al stock es Almacén (control). Como chofer ves tus compras registradas en "Recibir mercancía" marcadas como pendientes de que Almacén las confirme.' },
 ];
 
 const TIPO_POR_COMMIT = {

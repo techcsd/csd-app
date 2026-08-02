@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { SelectList } from '../../../shared/ui/select-list/select-list';
@@ -26,7 +26,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm],
+  imports: [FormsModule, DecimalPipe, SelectList, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm],
   templateUrl: './generar-conduce.html',
   styleUrl: './generar-conduce.scss',
 })
@@ -53,11 +53,15 @@ export class GenerarConducePage implements OnDestroy {
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
+  // AE — stock disponible en la bodega de origen (articulo_id → cantidad), para
+  // avisar si el chofer intenta sacar más de lo que hay.
+  private existencias = signal<Record<string, number>>({});
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
   excludeIds = computed(() => this.cart().map((l) => l.articulo_id).filter((x): x is string => !!x));
   faltaItems = computed(() => this.cart().filter((l) => l.cantidad > 0).length === 0);
+  hayExceso = computed(() => this.cart().some((l) => this.excedeStock(l)));
 
   private readonly backHandler = (): boolean => {
     if (this.hoja() === 'form' && this.tieneDatos()) {
@@ -70,6 +74,34 @@ export class GenerarConducePage implements OnDestroy {
   constructor() {
     void this.init();
     this.navGuard.register(this.backHandler);
+    // AE — al elegir/cambiar la bodega de origen, carga su stock para el preview.
+    effect(() => {
+      const b = this.bodegaId();
+      if (b) void this.loadExistencias(b);
+    });
+  }
+
+  private async loadExistencias(bodegaId: string): Promise<void> {
+    try {
+      const ex = await this.inventario.getExistencias(bodegaId);
+      const map: Record<string, number> = {};
+      for (const e of ex) map[e.articulo_id] = e.cantidad;
+      this.existencias.set(map);
+    } catch {
+      /* offline / sin datos: el preview de stock queda vacío */
+    }
+  }
+
+  /** AE — stock disponible del material en la bodega elegida (null si no se sabe). */
+  stockDe(articuloId: string | null): number | null {
+    if (!articuloId) return null;
+    const m = this.existencias();
+    return articuloId in m ? m[articuloId] : null;
+  }
+  /** AE — la cantidad a sacar supera el stock conocido. */
+  excedeStock(l: CartLinea): boolean {
+    const s = this.stockDe(l.articulo_id);
+    return s != null && l.cantidad > s;
   }
 
   ngOnDestroy(): void {

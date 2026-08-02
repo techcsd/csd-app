@@ -32,6 +32,8 @@ const TILES: HubTile[] = [
   { key: 'combustible', icon: '⛽', label: 'Registrar combustible', tint: '#dc2626' },
   // AD6 — funciones de inventario del chofer dentro de Transporte.
   { key: 'recibirMercancia', icon: '📥', label: 'Recibir mercancía', tint: '#0f766e' },
+  // AE — el chofer genera un conduce (saca material de un almacén hacia una obra).
+  { key: 'sacarMaterial', icon: '📦', label: 'Sacar material', tint: '#7c3aed' },
   { key: 'ferreteria', icon: '🧾', label: 'Compra en ferretería', tint: '#9333ea' },
   { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
@@ -134,6 +136,7 @@ export class TransportePage {
       case 'preuso': return this.preusoTop();
       case 'combustible': return this.combustibleTop();
       case 'recibirMercancia': return this.recibirMercancia();
+      case 'sacarMaterial': return this.sacarMaterial();
       case 'ferreteria': return this.ferreteria();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
@@ -176,6 +179,10 @@ export class TransportePage {
   }
   ferreteria(): void {
     void this.router.navigate(['/transporte/ferreteria']);
+  }
+  /** AE — generar conduce: sacar material de un almacén hacia una obra. */
+  sacarMaterial(): void {
+    void this.router.navigate(['/transporte/generar-conduce']);
   }
 
   /** Y7 — historial de checklists (jefe de flota). */
