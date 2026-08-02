@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.50.0';
+const VERSION = '1.51.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,11 +62,13 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Ejecución de rutas SIN señal: paradas y conduces offline';
+const TITULO = 'Firma al entregar una parada y tiempo a la próxima parada';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'Rutas sin internet: ahora puedes marcar una parada "en camino" o "entregada" y adjuntar el conduce de la carga aunque no tengas señal. El cambio se ve al instante y se sincroniza solo cuando vuelve el internet.' },
+  { t: 'mejora', d: 'Entregar una parada sin conduce ahora pide la firma de quien recibe (y foto opcional), igual que un conduce: queda la prueba de la entrega. Funciona sin señal.' },
+  { t: 'mejora', d: 'En una ruta en curso puedes calcular con un toque el tiempo estimado a la próxima parada (usa tu ubicación).' },
+  { t: 'arreglo', d: 'Correcciones en el buscador del mapa y en la actualización en vivo de las paradas de una ruta.' },
 ];
 
 const TIPO_POR_COMMIT = {

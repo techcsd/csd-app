@@ -371,3 +371,72 @@
   min-height: 40px;
   font-size: 13px;
 }
+
+// AE — hoja para entregar una parada con firma + evidencia.
+.parada-sheet-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+}
+.parada-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--color-bg);
+  border-radius: 18px 18px 0 0;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+}
+.parada-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.parada-sheet__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.parada-sheet__x {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  font-size: 18px;
+  font-weight: 700;
+}
+.parada-sheet__sub {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.parada-sheet__mt {
+  margin-top: 14px;
+}
+.parada-sheet__req {
+  color: var(--color-danger);
+}
+.parada-sheet__cta {
+  margin-top: 16px;
+}
+
+// AE — tiempo estimado a la próxima parada.
+.ruta-card__eta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.ruta-card__eta-txt {
+  font-size: 14px;
+}
+.ruta-card__eta-btn {
+  margin-left: auto;
+  min-height: 40px;
+  font-size: 13px;
+}

@@ -1,12 +1,20 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { SyncService } from '../../../core/sync/sync.service';
+import { CapturedPhoto } from '../../../core/services/camera.service';
+import { GeocodingService } from '../../../core/services/geocoding.service';
+import { PermissionsService } from '../../../core/services/permissions.service';
+import { PermisoGateService } from '../../../core/services/permiso-gate.service';
+import { formatearDuracion } from '../../../core/util/duracion';
 import {
   ConducesService,
   RutaDetalleTransporte,
@@ -37,7 +45,7 @@ const PARADA_ESTADO_LABEL: Record<ParadaEstado, string> = {
   selector: 'app-conduces',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe],
+  imports: [FormsModule, Skeleton, EmptyState, SyncBar, DecimalPipe, SignaturePad, PhotoSlot],
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
@@ -48,7 +56,15 @@ export class ConducesPage implements OnDestroy {
   private toast = inject(ToastService);
   private network = inject(NetworkService);
   private sync = inject(SyncService);
+  private geo = inject(GeocodingService);
+  private permissions = inject(PermissionsService);
+  private gate = inject(PermisoGateService);
   private primerSync = true;
+  readonly fmtDur = formatearDuracion;
+
+  // AE — ETA (min) a la próxima parada por ruta, calculada bajo demanda con el GPS.
+  etaProxima = signal<Record<string, number | null>>({});
+  calculandoEta = signal<string | null>(null);
 
   estadoLabel(estado: string): string {
     return ESTADO_RUTA_LABEL[estado] ?? estado;
@@ -128,9 +144,40 @@ export class ConducesPage implements OnDestroy {
     );
   }
 
+  /** AE — ¿la próxima parada tiene coordenadas para calcular el tiempo? */
+  proximaTieneCoords(rutaId: string): boolean {
+    const np = this.proximaParada(rutaId);
+    return !!np && np.lat != null && np.lng != null;
+  }
+
+  /** AE — tiempo estimado (auto) desde tu posición actual a la próxima parada. */
+  async calcularEta(rutaId: string): Promise<void> {
+    if (this.calculandoEta()) return;
+    const np = this.proximaParada(rutaId);
+    if (!np || np.lat == null || np.lng == null) return;
+    if (!(await this.gate.asegurar('location'))) return;
+    this.calculandoEta.set(rutaId);
+    try {
+      const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 10000 });
+      if (!r.ok) {
+        this.toast.error('No se pudo obtener tu ubicación. Reintenta en un lugar despejado.');
+        return;
+      }
+      const ruta = await this.geo.ruta({ lat: r.lat, lng: r.lng }, { lat: np.lat, lng: np.lng });
+      this.etaProxima.update((m) => ({ ...m, [rutaId]: ruta ? Math.round(ruta.duracionSeg / 60) : null }));
+      if (!ruta) this.toast.error('No se pudo calcular el tiempo ahora (sin señal o sin ruta).');
+    } finally {
+      this.calculandoEta.set(null);
+    }
+  }
+
   private async refrescarDetalle(rutaId: string): Promise<void> {
     await this.service.invalidarRutaDetalle(rutaId);
     const d = await this.service.getRutaDetalleTransporte(rutaId);
+    // Si mientras cargábamos aparecieron ops pendientes (el chofer tocó "entregar"
+    // o "adjuntar" durante el refetch), NO pisar el estado optimista con el snapshot
+    // viejo del servidor. La próxima reconciliación (con outbox drenado) lo cuadra.
+    if (this.sync.pendingCount() > 0) return;
     this.detalles.update((m) => ({ ...m, [rutaId]: d }));
   }
 
@@ -172,6 +219,69 @@ export class ConducesPage implements OnDestroy {
       this.toast.error(this.msgError(e, 'No se pudo adjuntar el conduce.'));
     } finally {
       this.paradaOcupada.set(null);
+    }
+  }
+
+  // ── AE — entregar una parada SIN conduce con firma + evidencia (prueba AC7) ──
+  private sigPad = viewChild(SignaturePad);
+  entregando = signal<{ rutaId: string; parada: RutaParadaEjec } | null>(null);
+  entRecibio = signal('');
+  entFirmaBlob = signal<Blob | null>(null);
+  entFoto = signal<CapturedPhoto | null>(null);
+  entGuardando = signal(false);
+
+  abrirEntregarParada(rutaId: string, p: RutaParadaEjec): void {
+    this.entRecibio.set(p.entregado_a ?? '');
+    this.entFirmaBlob.set(null);
+    this.entFoto.set(null);
+    this.entregando.set({ rutaId, parada: p });
+  }
+  cerrarEntregarParada(): void {
+    this.entregando.set(null);
+  }
+  async onEntFirma(has: boolean): Promise<void> {
+    this.entFirmaBlob.set(has ? ((await this.sigPad()?.toBlob()) ?? null) : null);
+  }
+  onEntFoto(photo: CapturedPhoto): void {
+    this.entFoto.set(photo);
+  }
+  onEntFotoCleared(): void {
+    this.entFoto.set(null);
+  }
+
+  /** AE — confirma la entrega de una parada con nombre + firma (+ foto opcional). */
+  async confirmarEntregarParada(): Promise<void> {
+    const ctx = this.entregando();
+    if (!ctx || this.entGuardando()) return;
+    if (!this.entRecibio().trim()) {
+      this.toast.error('Escribe quién recibió.');
+      return;
+    }
+    if (!this.entFirmaBlob()) {
+      this.toast.error('Falta la firma de quien recibe.');
+      return;
+    }
+    this.entGuardando.set(true);
+    const { rutaId, parada } = ctx;
+    const nombre = this.entRecibio().trim();
+    // Optimista: la parada queda entregada al instante.
+    this.actualizarParadaLocal(rutaId, parada.id, {
+      estado: 'entregada',
+      entregada_at: new Date().toISOString(),
+      entregado_a: nombre,
+    });
+    this.entregando.set(null);
+    try {
+      await this.service.avanzarParada(parada.id, 'entregada', {
+        entregadoA: nombre,
+        firma: this.entFirmaBlob(),
+        foto: this.entFoto()?.blob ?? null,
+      });
+      this.toast.success('Parada entregada.');
+    } catch (e) {
+      this.toast.error(this.msgError(e, 'No se pudo registrar la entrega.'));
+    } finally {
+      this.entGuardando.set(false);
     }
   }
 

@@ -110,8 +110,9 @@ export class GeocodingService {
     });
     const res = await fetch(`${NOMINATIM}/search?${params.toString()}`, { signal });
     if (!res.ok) throw new Error(`El buscador de mapas respondió ${res.status}`);
-    const data = (await res.json()) as NominatimResult[];
-    return data.map((d) => ({
+    const data = (await res.json()) as unknown;
+    if (!Array.isArray(data)) return []; // Nominatim a veces devuelve un objeto de error con 200
+    return (data as NominatimResult[]).map((d) => ({
       nombre: etiquetaCorta(d.display_name, d.address, d.namedetails?.name ?? d.name),
       latitud: Number(d.lat),
       longitud: Number(d.lon),

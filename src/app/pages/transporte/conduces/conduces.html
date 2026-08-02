@@ -64,6 +64,16 @@
                         </button>
                       }
                     </div>
+                    @if (proximaTieneCoords(r.id)) {
+                      <div class="ruta-card__eta">
+                        @if (etaProxima()[r.id] != null) {
+                          <span class="ruta-card__eta-txt">🕒 A la próxima parada: <b>{{ fmtDur(etaProxima()[r.id]) }}</b></span>
+                        }
+                        <button type="button" class="btn-outline ruta-card__eta-btn" [disabled]="calculandoEta() === r.id" (click)="calcularEta(r.id)">
+                          {{ calculandoEta() === r.id ? 'Calculando…' : (etaProxima()[r.id] != null ? 'Recalcular tiempo' : '🕒 Calcular tiempo') }}
+                        </button>
+                      </div>
+                    }
                   }
                   <!-- Origen -->
                   <div class="parada parada--extremo">
@@ -90,7 +100,7 @@
                           <div class="parada__conduce">
                             <span class="parada__conduce-tit">📦 Conduce{{ c.destino ? ' · ' + c.destino : '' }}</span>
                             <ul class="parada__conduce-items">
-                              @for (it of c.items; track it.articulo) {
+                              @for (it of c.items; track $index) {
                                 <li>{{ it.cantidad | number: '1.0-2' }} {{ it.unidad }} · {{ it.articulo }}</li>
                               }
                             </ul>
@@ -107,7 +117,7 @@
                             @if (p.conduce_id) {
                               <button type="button" class="btn-cta parada__btn" (click)="entregarConduceParada(p.conduce_id)">✍️ Entregar conduce</button>
                             } @else {
-                              <button type="button" class="btn-cta parada__btn" [disabled]="paradaOcupada() === p.id" (click)="marcarParada(r.id, p, 'entregada')">✓ Entregada</button>
+                              <button type="button" class="btn-cta parada__btn" (click)="abrirEntregarParada(r.id, p)">✓ Entregar (con firma)</button>
                               <button type="button" class="btn-outline parada__btn" (click)="toggleAdjuntar(p.id)">➕ Adjuntar conduce</button>
                             }
                           </div>
@@ -198,4 +208,36 @@
   </div>
 
   <app-sync-bar />
+
+  <!-- AE — entregar una parada (sin conduce) con firma + evidencia -->
+  @if (entregando(); as e) {
+    <div class="parada-sheet-back" (click)="cerrarEntregarParada()"></div>
+    <div class="parada-sheet">
+      <div class="parada-sheet__head">
+        <h2 class="parada-sheet__title">Entregar parada {{ e.parada.orden }}</h2>
+        <button type="button" class="parada-sheet__x" (click)="cerrarEntregarParada()" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="parada-sheet__sub">{{ e.parada.ubicacion }}</p>
+
+      <label class="field-label" for="ent-recibio">¿Quién recibió?</label>
+      <input id="ent-recibio" class="field" type="text" [ngModel]="entRecibio()" (ngModelChange)="entRecibio.set($event)" placeholder="Nombre de quien recibe" />
+
+      <label class="field-label parada-sheet__mt">Firma de quien recibe <span class="parada-sheet__req">*</span></label>
+      <app-signature-pad (changed)="onEntFirma($event)" />
+
+      <label class="field-label parada-sheet__mt">Foto de la entrega (opcional)</label>
+      <app-photo-slot
+        label="Evidencia"
+        hint="📸"
+        [gallery]="false"
+        [foto]="entFoto()"
+        (captured)="onEntFoto($event)"
+        (cleared)="onEntFotoCleared()"
+      />
+
+      <button type="button" class="btn-cta parada-sheet__cta" [disabled]="entGuardando()" (click)="confirmarEntregarParada()">
+        {{ entGuardando() ? 'Guardando…' : '✓ Confirmar entrega' }}
+      </button>
+    </div>
+  }
 </div>

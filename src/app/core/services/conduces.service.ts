@@ -279,11 +279,19 @@ export class ConducesService {
   async avanzarParada(
     paradaId: string,
     estado: ParadaEstado,
-    opts: { entregadoA?: string | null; notas?: string | null } = {},
+    opts: { entregadoA?: string | null; notas?: string | null; foto?: Blob | null; firma?: Blob | null } = {},
   ): Promise<void> {
     const capturado_en = new Date().toISOString();
+    const opId = crypto.randomUUID();
+    const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
+    if (opts.foto) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'vehiculos', path: `paradas/${paradaId}/${opId}-foto.jpg`, slot: 'parada_foto', blob: opts.foto });
+    }
+    if (opts.firma) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `paradas/${paradaId}/${opId}-firma.png`, slot: 'parada_firma', blob: opts.firma });
+    }
     await this.sync.enqueue({
-      id: crypto.randomUUID(),
+      id: opId,
       tipo_op: 'parada_avanzar',
       capturado_en,
       payload: {
@@ -292,6 +300,7 @@ export class ConducesService {
         entregado_a: opts.entregadoA ?? null,
         notas: opts.notas ?? null,
       },
+      fotos,
       resumen: { tipo: 'avanzar_parada', parada_id: paradaId, capturado_en },
     });
   }
@@ -571,12 +580,12 @@ export class ConducesService {
 
     // AE5 — avanzar una parada (en_camino/entregada/omitida). Offline-first; el RPC
     // es idempotente (fija el estado).
-    this.sync.register('parada_avanzar', async (payload) => {
+    this.sync.register('parada_avanzar', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('avanzar_parada', {
         p_parada_id: payload['parada_id'],
         p_estado: payload['estado'],
-        p_foto_path: null,
-        p_firma_path: null,
+        p_foto_path: photoPaths['parada_foto'] ?? null,
+        p_firma_path: photoPaths['parada_firma'] ?? null,
         p_entregado_a: payload['entregado_a'] ?? null,
         p_notas: payload['notas'] ?? null,
       });
