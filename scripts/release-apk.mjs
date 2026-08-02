@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.48.0';
+const VERSION = '1.49.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,12 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Sacar material con stock disponible y confirmación de Almacén en ferretería';
+const TITULO = 'Rutas: progreso de paradas, ir a la próxima y actualización automática';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Sacar material: acceso directo desde el menú de Transporte ("Sacar material"), y al elegir cada material te muestra cuánto hay disponible en el almacén de origen.' },
-  { t: 'mejora', d: 'Compras de ferretería: quien confirma la entrada al stock es Almacén (control). Como chofer ves tus compras registradas en "Recibir mercancía" marcadas como pendientes de que Almacén las confirme.' },
+  { t: 'mejora', d: 'Rutas: al entrar, las rutas en curso abren sus paradas automáticamente; ves el progreso (por ejemplo "2/3 paradas entregadas") y un botón para ir directo a la próxima parada.' },
+  { t: 'mejora', d: 'Las paradas se actualizan solas: al entregar el conduce de una parada, esa parada queda marcada como entregada sin tener que recargar.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -54,6 +54,17 @@
             @if (estaExpandida(r.id)) {
               @if (detalle(r.id); as d) {
                 <div class="ruta-card__detalle">
+                  <!-- AE — progreso + ir a la próxima parada -->
+                  @if (progreso(r.id); as pr) {
+                    <div class="ruta-card__progreso">
+                      <span class="ruta-card__progreso-txt">📍 {{ pr.entregadas }}/{{ pr.total }} paradas entregadas</span>
+                      @if (proximaParada(r.id); as np) {
+                        <button type="button" class="btn-outline ruta-card__prox" (click)="comoLlegarParada(np)">
+                          🧭 Ir a la parada {{ np.orden }}
+                        </button>
+                      }
+                    </div>
+                  }
                   <!-- Origen -->
                   <div class="parada parada--extremo">
                     <span class="parada__orden">A</span>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, effect, inject, signal, untracked } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -6,6 +6,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
+import { SyncService } from '../../../core/sync/sync.service';
 import {
   ConducesService,
   RutaDetalleTransporte,
@@ -46,6 +47,8 @@ export class ConducesPage implements OnDestroy {
   private location = inject(Location);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
+  private sync = inject(SyncService);
+  private primerSync = true;
 
   estadoLabel(estado: string): string {
     return ESTADO_RUTA_LABEL[estado] ?? estado;
@@ -85,15 +88,44 @@ export class ConducesPage implements OnDestroy {
       abierto ? next.delete(rutaId) : next.add(rutaId);
       return next;
     });
-    if (!abierto && !this.detalles()[rutaId]) {
-      void this.service
-        .getRutaDetalleTransporte(rutaId)
-        .then((d) => this.detalles.update((m) => ({ ...m, [rutaId]: d })));
-      // AC6 — fotos de evidencia inicial (una sola vez; no cambian en ejecución).
-      void this.service
-        .getRutaDetalle(rutaId)
-        .then((d) => this.fotosRuta.update((m) => ({ ...m, [rutaId]: d.fotos })));
+    if (!abierto) this.cargarDetalle(rutaId);
+  }
+
+  /** Carga (una vez) el detalle de ejecución + las fotos de una ruta. */
+  private cargarDetalle(rutaId: string): void {
+    if (this.detalles()[rutaId]) return;
+    void this.service
+      .getRutaDetalleTransporte(rutaId)
+      .then((d) => this.detalles.update((m) => ({ ...m, [rutaId]: d })));
+    // AC6 — fotos de evidencia inicial (una sola vez; no cambian en ejecución).
+    void this.service
+      .getRutaDetalle(rutaId)
+      .then((d) => this.fotosRuta.update((m) => ({ ...m, [rutaId]: d.fotos })));
+  }
+
+  /** AE — abre automáticamente el detalle de las rutas EN CURSO: el chofer ve sus
+   *  paradas sin un toque extra al entrar. */
+  private autoExpandEnCurso(): void {
+    for (const r of this.rutas()) {
+      if (r.estado === 'en_curso' && !this.expandidas().has(r.id)) {
+        this.expandidas.update((s) => new Set(s).add(r.id));
+        this.cargarDetalle(r.id);
+      }
     }
+  }
+
+  /** AE — progreso de la ruta: paradas entregadas de total (null si sin paradas). */
+  progreso(rutaId: string): { entregadas: number; total: number } | null {
+    const d = this.detalle(rutaId);
+    if (!d || !d.paradas.length) return null;
+    return { entregadas: d.paradas.filter((p) => p.estado === 'entregada').length, total: d.paradas.length };
+  }
+
+  /** AE — próxima parada a atender (la primera pendiente o en camino). */
+  proximaParada(rutaId: string): RutaParadaEjec | null {
+    return (
+      this.detalle(rutaId)?.paradas.find((p) => p.estado === 'pendiente' || p.estado === 'en_camino') ?? null
+    );
   }
 
   private async refrescarDetalle(rutaId: string): Promise<void> {
@@ -177,6 +209,20 @@ export class ConducesPage implements OnDestroy {
     // El contador se calcula desde `iniciada_at` (no un acumulador en memoria),
     // así sobrevive a salir y volver a la pantalla.
     this.timer = setInterval(() => this.now.set(Date.now()), 1000);
+    // AE — al drenar el outbox (p. ej. una entrega de conduce que cierra su parada
+    // vía trigger), reconciliar con el servidor los detalles de ruta abiertos.
+    effect(() => {
+      this.sync.changed();
+      if (this.primerSync) {
+        this.primerSync = false;
+        return;
+      }
+      // Solo reconciliar con SEÑAL: offline, invalidar+refetch dejaría el detalle
+      // vacío (la caché se borró y la red falla). Sin señal, conservamos lo cargado.
+      if (!this.network.online()) return;
+      const abiertas = untracked(() => this.expandidas());
+      for (const id of abiertas) void this.refrescarDetalle(id);
+    });
   }
 
   ngOnDestroy(): void {
@@ -189,6 +235,7 @@ export class ConducesPage implements OnDestroy {
       const [c, r] = await Promise.all([this.service.misConduces(), this.service.misRutas()]);
       this.conduces.set(c);
       this.rutas.set(r);
+      this.autoExpandEnCurso(); // AE — abre las paradas de las rutas en curso
       // Y3 — al ver la lista, las rutas planificadas dejan de ser "nuevas" (limpia el badge).
       void this.service.marcarRutasVistas();
     } finally {

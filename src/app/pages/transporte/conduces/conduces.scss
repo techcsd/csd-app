@@ -353,3 +353,21 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+
+// AE — progreso de la ruta + botón "ir a la próxima parada".
+.ruta-card__progreso {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 6px;
+}
+.ruta-card__progreso-txt {
+  font-weight: 700;
+  font-size: 14px;
+}
+.ruta-card__prox {
+  margin-left: auto;
+  min-height: 40px;
+  font-size: 13px;
+}
