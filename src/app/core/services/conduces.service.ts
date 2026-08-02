@@ -256,37 +256,44 @@ export class ConducesService {
 
   /**
    * AE5 — ata un conduce PROPIO/asignado a una parada (y de paso a su ruta):
-   * "este material va a esta parada". `paradaId = null` desvincula. Online (como
-   * marcar_ruta_estado): el vínculo es un metadato ligero, no captura de campo.
+   * "este material va a esta parada". OFFLINE-first por outbox (idempotente); la
+   * UI aplica el cambio de forma optimista.
    */
-  async vincularConduceParada(salidaId: string, paradaId: string | null): Promise<void> {
-    const { error } = await this.supabase.client.rpc('vincular_conduce_parada', {
-      p_salida_id: salidaId,
-      p_ruta_parada_id: paradaId,
+  async vincularConduceParada(salidaId: string, paradaId: string): Promise<void> {
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'conduce_vincular_parada',
+      capturado_en,
+      payload: { salida_id: salidaId, parada_id: paradaId },
+      resumen: { tipo: 'vincular_parada', salida_id: salidaId, capturado_en },
     });
-    if (error) throw new Error(error.message);
   }
 
   /**
    * AE5 — avanza el estado de una parada (pendiente → en_camino → entregada), con
    * evidencia opcional (nombre de quien recibió + nota). Para paradas SIN conduce
    * (traslado/personal) o cierre manual; las paradas CON conduce se cierran solas
-   * al entregarse el conduce (trigger). Online, como marcar_ruta_estado.
+   * al entregarse el conduce (trigger). OFFLINE-first por outbox (idempotente).
    */
   async avanzarParada(
     paradaId: string,
     estado: ParadaEstado,
     opts: { entregadoA?: string | null; notas?: string | null } = {},
   ): Promise<void> {
-    const { error } = await this.supabase.client.rpc('avanzar_parada', {
-      p_parada_id: paradaId,
-      p_estado: estado,
-      p_foto_path: null,
-      p_firma_path: null,
-      p_entregado_a: opts.entregadoA ?? null,
-      p_notas: opts.notas ?? null,
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'parada_avanzar',
+      capturado_en,
+      payload: {
+        parada_id: paradaId,
+        estado,
+        entregado_a: opts.entregadoA ?? null,
+        notas: opts.notas ?? null,
+      },
+      resumen: { tipo: 'avanzar_parada', parada_id: paradaId, capturado_en },
     });
-    if (error) throw new Error(error.message);
   }
 
   /** AE5 — fuerza el refetch del detalle de una ruta tras una mutación. */
@@ -560,6 +567,29 @@ export class ConducesService {
 
       // Z23 — registrar las notas de voz de la ruta (idempotente por path).
       await this.audioNotas.commit('ruta', rutaId, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
+    });
+
+    // AE5 — avanzar una parada (en_camino/entregada/omitida). Offline-first; el RPC
+    // es idempotente (fija el estado).
+    this.sync.register('parada_avanzar', async (payload) => {
+      const { error } = await this.supabase.client.rpc('avanzar_parada', {
+        p_parada_id: payload['parada_id'],
+        p_estado: payload['estado'],
+        p_foto_path: null,
+        p_firma_path: null,
+        p_entregado_a: payload['entregado_a'] ?? null,
+        p_notas: payload['notas'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
+    // AE5 — atar un conduce a una parada. Offline-first; idempotente.
+    this.sync.register('conduce_vincular_parada', async (payload) => {
+      const { error } = await this.supabase.client.rpc('vincular_conduce_parada', {
+        p_salida_id: payload['salida_id'],
+        p_ruta_parada_id: payload['parada_id'],
+      });
+      if (error) throwSyncError(error);
     });
 
     // AE — el chofer genera un conduce (salida de material). El servidor valida el

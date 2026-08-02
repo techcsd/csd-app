@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
-  version: '1.49.0',
+  version: '1.50.0',
   // Canonical public URL used to build auth-email links (password reset) so
   // they always point at the live PWA — never at a local dev origin
   // (SGC hard-rule #5).

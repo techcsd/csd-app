@@ -159,10 +159,14 @@ export class ConducesPage implements OnDestroy {
   async adjuntarConduce(rutaId: string, paradaId: string, conduceId: string): Promise<void> {
     if (this.paradaOcupada()) return;
     this.paradaOcupada.set(paradaId);
+    // Optimista (offline-first): ata el conduce a la parada e inyéctalo en el
+    // detalle para que se vea al instante; el outbox lo confirma al sincronizar.
+    const conduce = this.conduces().find((c) => c.id === conduceId);
+    this.actualizarParadaLocal(rutaId, paradaId, { conduce_id: conduceId });
+    if (conduce) this.inyectarConduceLocal(rutaId, conduce, paradaId);
+    this.adjuntando.set(null);
     try {
       await this.service.vincularConduceParada(conduceId, paradaId);
-      this.adjuntando.set(null);
-      await this.refrescarDetalle(rutaId);
       this.toast.success('Conduce adjuntado a la parada.');
     } catch (e) {
       this.toast.error(this.msgError(e, 'No se pudo adjuntar el conduce.'));
@@ -171,18 +175,63 @@ export class ConducesPage implements OnDestroy {
     }
   }
 
-  /** AE5 — avanza la parada (en_camino / entregada / omitida). */
+  /** AE5 — avanza la parada (en_camino / entregada / omitida). Offline-first:
+   *  aplica el cambio de forma optimista y lo encola en el outbox. */
   async marcarParada(rutaId: string, p: RutaParadaEjec, estado: ParadaEstado): Promise<void> {
     if (this.paradaOcupada()) return;
     this.paradaOcupada.set(p.id);
+    const now = new Date().toISOString();
+    const cambios: Partial<RutaParadaEjec> = { estado };
+    if (estado === 'en_camino') cambios.llegada_at = p.llegada_at ?? now;
+    if (estado === 'entregada') cambios.entregada_at = now;
+    this.actualizarParadaLocal(rutaId, p.id, cambios); // optimista
     try {
       await this.service.avanzarParada(p.id, estado);
-      await this.refrescarDetalle(rutaId);
     } catch (e) {
       this.toast.error(this.msgError(e, 'No se pudo actualizar la parada.'));
     } finally {
       this.paradaOcupada.set(null);
     }
+  }
+
+  /** Aplica cambios optimistas a una parada del detalle cargado. */
+  private actualizarParadaLocal(rutaId: string, paradaId: string, cambios: Partial<RutaParadaEjec>): void {
+    this.detalles.update((m) => {
+      const d = m[rutaId];
+      if (!d) return m;
+      return {
+        ...m,
+        [rutaId]: { ...d, paradas: d.paradas.map((p) => (p.id === paradaId ? { ...p, ...cambios } : p)) },
+      };
+    });
+  }
+
+  /** Inyecta (optimista) un conduce recién atado a una parada en el detalle. */
+  private inyectarConduceLocal(rutaId: string, c: Conduce, paradaId: string): void {
+    this.detalles.update((m) => {
+      const d = m[rutaId];
+      if (!d) return m;
+      if (d.conduces.some((x) => x.id === c.id)) {
+        return {
+          ...m,
+          [rutaId]: {
+            ...d,
+            conduces: d.conduces.map((x) => (x.id === c.id ? { ...x, ruta_parada_id: paradaId } : x)),
+          },
+        };
+      }
+      const nuevo: RutaConduceEjec = {
+        id: c.id,
+        fecha: c.fecha,
+        estado: c.estado,
+        destino: c.destino,
+        bodega: c.bodega,
+        ruta_parada_id: paradaId,
+        parada_ubicacion: null,
+        items: c.items.map((it) => ({ articulo: it.articulo, unidad: it.unidad, cantidad: it.cantidad })),
+      };
+      return { ...m, [rutaId]: { ...d, conduces: [...d.conduces, nuevo] } };
+    });
   }
 
   /** AE5 — entregar el conduce de la parada (firmas AC7 → cierra la parada solo). */
@@ -213,13 +262,15 @@ export class ConducesPage implements OnDestroy {
     // vía trigger), reconciliar con el servidor los detalles de ruta abiertos.
     effect(() => {
       this.sync.changed();
+      const pend = this.sync.pendingCount();
       if (this.primerSync) {
         this.primerSync = false;
         return;
       }
-      // Solo reconciliar con SEÑAL: offline, invalidar+refetch dejaría el detalle
-      // vacío (la caché se borró y la red falla). Sin señal, conservamos lo cargado.
-      if (!this.network.online()) return;
+      // Reconciliar SOLO cuando el outbox está drenado y hay señal: si aún hay ops
+      // pendientes (una parada recién marcada), refetch traería el estado viejo del
+      // servidor y pisaría el cambio optimista. Offline, conservamos lo cargado.
+      if (pend > 0 || !this.network.online()) return;
       const abiertas = untracked(() => this.expandidas());
       for (const id of abiertas) void this.refrescarDetalle(id);
     });
