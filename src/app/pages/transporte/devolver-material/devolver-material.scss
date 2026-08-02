@@ -1,0 +1,140 @@
+.devol {
+  background: var(--color-bg);
+}
+.devol__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.devol__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.devol__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.devol__intro {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+.devol__mt {
+  margin-top: 14px;
+}
+.devol__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: -2px 0 8px;
+}
+.devol__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.devol__sec {
+  margin: 20px 0 6px;
+  font-size: var(--fs-option);
+  font-weight: 800;
+}
+.devol__band {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.devol__band--warn {
+  border-style: solid;
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+.devol__notas {
+  resize: vertical;
+}
+.devol__items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.devol__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.devol__item-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.devol__item-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.devol__step {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 22px;
+  font-weight: 700;
+}
+.devol__qty {
+  width: 74px;
+  text-align: center;
+}
+.devol__unit {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.devol__item-x {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: none;
+  color: var(--color-danger);
+  font-size: 18px;
+  font-weight: 700;
+}
+.devol__ures {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.devol__ures-nombre {
+  font-weight: 700;
+}
+.devol__ures-email {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.devol__sel {
+  margin: 10px 0;
+  font-size: 14px;
+  color: var(--color-success);
+  font-weight: 700;
+}

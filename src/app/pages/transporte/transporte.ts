@@ -34,7 +34,11 @@ const TILES: HubTile[] = [
   { key: 'recibirMercancia', icon: '📥', label: 'Recibir mercancía', tint: '#0f766e' },
   // AE — el chofer genera un conduce (saca material de un almacén hacia una obra).
   { key: 'sacarMaterial', icon: '📦', label: 'Sacar material', tint: '#7c3aed' },
+  // AE — devolver material de una obra a un almacén (con doble firma).
+  { key: 'devolverMaterial', icon: '↩️', label: 'Devolver material', tint: '#0f766e' },
   { key: 'ferreteria', icon: '🧾', label: 'Compra en ferretería', tint: '#9333ea' },
+  // AE — firmas de recepción pendientes asignadas a mí.
+  { key: 'porFirmar', icon: '✍️', label: 'Por firmar', tint: '#ca8a04' },
   { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
   { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
@@ -137,6 +141,8 @@ export class TransportePage {
       case 'combustible': return this.combustibleTop();
       case 'recibirMercancia': return this.recibirMercancia();
       case 'sacarMaterial': return this.sacarMaterial();
+      case 'devolverMaterial': return this.devolverMaterial();
+      case 'porFirmar': return this.porFirmar();
       case 'ferreteria': return this.ferreteria();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
@@ -183,6 +189,14 @@ export class TransportePage {
   /** AE — generar conduce: sacar material de un almacén hacia una obra. */
   sacarMaterial(): void {
     void this.router.navigate(['/transporte/generar-conduce']);
+  }
+  /** AE — devolver material de una obra a un almacén (doble firma). */
+  devolverMaterial(): void {
+    void this.router.navigate(['/transporte/devolver-material']);
+  }
+  /** AE — bandeja "Por firmar" (firmas de recepción pendientes). */
+  porFirmar(): void {
+    void this.router.navigate(['/transporte/por-firmar']);
   }
 
   /** Y7 — historial de checklists (jefe de flota). */

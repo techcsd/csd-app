@@ -1,0 +1,142 @@
+<div class="screen devol">
+  @if (hoja() === 'form') {
+    <header class="devol__header">
+      <button type="button" class="devol__back" (click)="intentarSalir()" aria-label="Atrás">←</button>
+      <h1 class="devol__title">↩️ Devolver material</h1>
+    </header>
+
+    <div class="screen__body">
+      <p class="devol__intro">
+        Devuelve material de una obra a un almacén. El stock se mueve al registrar;
+        confirma la entrega con tu firma y la de quien recibe.
+      </p>
+
+      <app-select-list
+        label="Obra de origen"
+        icon="🏗"
+        [options]="obraOptions()"
+        [selectedId]="obraId()"
+        (picked)="obraId.set($event)"
+      />
+      @if (!obras().length && !loading()) {
+        <p class="devol__hint">No hay obras con almacén propio para descontar.</p>
+      }
+
+      <div class="devol__mt">
+        <app-select-list
+          label="Almacén destino"
+          icon="🏬"
+          [options]="bodegaOptions()"
+          [selectedId]="bodegaId()"
+          (picked)="bodegaId.set($event)"
+        />
+      </div>
+
+      <!-- Materiales -->
+      <label class="field-label devol__mt">¿Qué material devuelves?</label>
+      <p class="devol__sub">Busca cada material y pon la cantidad.</p>
+      <app-articulo-picker
+        [articulos]="articulos()"
+        [categorias]="categorias()"
+        [soloBuscador]="true"
+        [exclude]="excludeIds()"
+        (picked)="agregar($event)"
+      />
+      @if (cart().length) {
+        <div class="devol__items">
+          @for (l of cart(); track l.articulo_id) {
+            <div class="devol__item">
+              <span class="devol__item-name">{{ l.nombre }}</span>
+              <div class="devol__item-qty">
+                <button type="button" class="devol__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
+                <input class="field devol__qty" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
+                <button type="button" class="devol__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
+                <span class="devol__unit">{{ l.unidad }}</span>
+                <button type="button" class="devol__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="devol__band">🔎 Agrega al menos un material para devolver.</div>
+      }
+
+      <label class="field-label devol__mt" for="ref">Referencia (opcional)</label>
+      <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" placeholder="Ej: nota de devolución" />
+
+      <label class="field-label devol__mt" for="obs">Observaciones (opcional)</label>
+      <textarea id="obs" class="field devol__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, detalles…"></textarea>
+
+      <!-- Firma del emisor (chofer) -->
+      <h2 class="devol__sec">Tu firma (quien entrega)</h2>
+      <p class="devol__sub">{{ emisorNombre() }}</p>
+      <app-signature-pad #emisorPad (changed)="onEmisorFirma()" />
+
+      <!-- Receptor -->
+      <h2 class="devol__sec">¿Quién recibe?</h2>
+      <app-option-button icon="🙋" label="Yo mismo (el chofer)" [selected]="receptorModo() === 'yo'" (pressed)="setReceptorModo('yo')" />
+      <app-option-button icon="👷" label="Un ingeniero / encargado" [selected]="receptorModo() === 'otro'" (pressed)="setReceptorModo('otro')" />
+
+      @if (receptorModo() === 'otro') {
+        <input
+          class="field devol__mt"
+          type="search"
+          [ngModel]="receptorBusqueda()"
+          (ngModelChange)="receptorBusqueda.set($event); buscarReceptor()"
+          placeholder="Buscar por nombre o correo…"
+        />
+        @if (buscando()) { <p class="devol__hint">Buscando…</p> }
+        @for (u of receptorResultados(); track u.id) {
+          <button type="button" class="devol__ures" (click)="pickReceptor(u)">
+            <span class="devol__ures-nombre">{{ u.nombre }}</span>
+            @if (u.email) { <span class="devol__ures-email">{{ u.email }}</span> }
+          </button>
+        }
+        @if (receptorSel(); as u) {
+          <div class="devol__sel">✓ Recibe: <b>{{ u.nombre }}</b></div>
+
+          <app-option-button icon="✍️" label="Está presente y firma ahora" [selected]="receptorPresente()" (pressed)="receptorPresente.set(true)" />
+          <app-option-button icon="⏳" label="No está: dejar su firma pendiente" [selected]="!receptorPresente()" (pressed)="receptorPresente.set(false)" />
+
+          @if (receptorPresente()) {
+            <p class="devol__sub devol__mt">Firma de {{ u.nombre }}</p>
+            <app-signature-pad #receptorPad (changed)="onReceptorFirma()" />
+          } @else {
+            <div class="devol__band devol__band--warn">
+              ⏳ Se registrará con la firma de <b>{{ u.nombre }}</b> pendiente. Le llegará un aviso para que la firme.
+            </div>
+          }
+        }
+      }
+    </div>
+
+    <app-wizard-footer
+      backLabel="Cancelar"
+      [primaryLabel]="submitting() ? 'Registrando…' : 'Registrar devolución'"
+      [primaryDisabled]="submitting() || faltaItems() || !obraId() || !bodegaId()"
+      (back)="intentarSalir()"
+      (primary)="submit()"
+    />
+  }
+
+  @if (hoja() === 'exito') {
+    <app-big-confirm
+      title="Devolución registrada"
+      [note]="pendiente() ? 'El material volvió al almacén. Falta la firma de quien recibe: le llegó un aviso para firmarla.' : 'El material volvió al almacén con las dos firmas.'"
+      tone="done"
+      buttonLabel="Listo"
+      (dismissed)="finish()"
+    />
+  }
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir sin registrar?"
+    message="Se perderá lo que capturaste de la devolución."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
+</div>

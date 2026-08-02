@@ -61,6 +61,45 @@ export interface EntradaFerreteriaPendiente {
   items: EntradaFerreteriaItem[];
 }
 
+/** AE — devolución de material (obra→almacén) por el chofer, con doble firma. */
+export interface DevolucionChoferCaptura {
+  bodegaDestinoId: string;
+  origenProyectoId: string;
+  referencia: string | null;
+  observaciones: string | null;
+  items: { articulo_id: string; cantidad: number }[];
+  emisorNombre: string;
+  firmaEmisor: Blob;
+  /** Receptor: presente (firma ahora) o asignado para firmar después. */
+  receptorNombre: string | null;
+  receptorUsuarioId: string | null;
+  firmaReceptor: Blob | null;
+}
+
+/** AE — un ítem de una firma pendiente (bandeja "Por firmar"). */
+export interface FirmaPendienteItem {
+  articulo: string;
+  unidad: string | null;
+  cantidad: number;
+}
+/** AE — una entrega con la firma del RECEPTOR pendiente asignada a mí. */
+export interface FirmaPendiente {
+  salida_id: string;
+  fecha: string;
+  motivo: string | null;
+  obra: string | null;
+  proyecto_id: string | null;
+  emisor: string | null;
+  items: FirmaPendienteItem[];
+}
+
+/** AE — un usuario elegible como receptor (buscador). */
+export interface UsuarioBusqueda {
+  id: string;
+  nombre: string;
+  email: string | null;
+}
+
 export interface ConteoCaptura {
   bodegaId: string;
   motivo: string | null;
@@ -510,6 +549,75 @@ export class InventarioService {
   }
 
   /**
+   * AE — el chofer registra una DEVOLUCIÓN de material (obra → almacén): el stock
+   * se mueve directo y se capturan las 2 firmas (emisor=chofer + receptor). Si el
+   * receptor no firmó ahora, su firma queda pendiente y se le enruta. Offline-safe.
+   */
+  async enqueueDevolucionChofer(input: DevolucionChoferCaptura): Promise<void> {
+    const id = crypto.randomUUID(); // = id de la salida (idempotencia)
+    const capturado_en = new Date().toISOString();
+    const fotos = [
+      { id: crypto.randomUUID(), bucket: 'conduces', path: `devoluciones/${id}/firma-emisor.png`, slot: 'firma_emisor', blob: input.firmaEmisor },
+    ];
+    if (input.firmaReceptor) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `devoluciones/${id}/firma-receptor.png`, slot: 'firma_receptor', blob: input.firmaReceptor });
+    }
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'devolucion_chofer',
+      capturado_en,
+      payload: {
+        id,
+        fecha: capturado_en.slice(0, 10),
+        bodega_destino_id: input.bodegaDestinoId,
+        origen_proyecto_id: input.origenProyectoId,
+        referencia: input.referencia,
+        observaciones: input.observaciones,
+        items: input.items,
+        emisor_nombre: input.emisorNombre,
+        receptor_nombre: input.receptorNombre,
+        receptor_usuario_id: input.receptorUsuarioId,
+      },
+      fotos,
+      resumen: { tipo: 'devolucion', bodega_destino_id: input.bodegaDestinoId, capturado_en },
+    });
+    await this.catalog.invalidatePrefix('existencias_');
+  }
+
+  /** AE — bandeja "Por firmar": entregas con mi firma de receptor pendiente. */
+  async misFirmasPendientes(): Promise<FirmaPendiente[]> {
+    const data = await this.catalog.refresh<FirmaPendiente[]>('firmas_pendientes', async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_firmas_pendientes');
+      if (error) throw new Error(error.message);
+      return (data as FirmaPendiente[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** AE — firmar (tarde) como receptor una entrega que estaba pendiente. Offline-safe. */
+  async enqueueFirmarReceptor(salidaId: string, nombre: string, firma: Blob): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_firmar_receptor',
+      capturado_en,
+      payload: { salida_id: salidaId, nombre },
+      fotos: [{ id: crypto.randomUUID(), bucket: 'conduces', path: `${salidaId}/firma-receptor-tardia.png`, slot: 'firma', blob: firma }],
+      resumen: { tipo: 'firmar_receptor', salida_id: salidaId, capturado_en },
+    });
+    await this.catalog.invalidate('firmas_pendientes');
+  }
+
+  /** AE — buscar usuarios para elegir al receptor (ingeniero/encargado). */
+  async buscarUsuarios(term: string): Promise<UsuarioBusqueda[]> {
+    if (term.trim().length < 2) return [];
+    const { data, error } = await this.supabase.client.rpc('buscar_usuarios', { p_term: term.trim() });
+    if (error) throw new Error(error.message);
+    return (data as UsuarioBusqueda[]) ?? [];
+  }
+
+  /**
    * Y10 — historial de conteos/ajustes de inventario (parity con la web). La RLS
    * `conteos_select` scopea a admin/módulo inventario. Online-first (el histórico
    * no necesita offline completo).
@@ -645,6 +753,36 @@ export class InventarioService {
       const { error } = await this.supabase.client.rpc('confirmar_entrada_chofer', {
         p_entrada_id: payload['entrada_id'],
         p_items: payload['items'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
+    // AE — devolución de material del chofer (obra→almacén) con doble firma.
+    this.sync.register('devolucion_chofer', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('chofer_registrar_devolucion', {
+        p_id: payload['id'],
+        p_fecha: payload['fecha'],
+        p_bodega_destino_id: payload['bodega_destino_id'],
+        p_origen_proyecto_id: payload['origen_proyecto_id'],
+        p_referencia: payload['referencia'] ?? null,
+        p_observaciones: payload['observaciones'] ?? null,
+        p_items: payload['items'],
+        p_emisor_nombre: payload['emisor_nombre'] ?? 'Chofer',
+        p_emisor_firma_path: photoPaths['firma_emisor'],
+        p_receptor_nombre: payload['receptor_nombre'] ?? null,
+        p_receptor_usuario_id: payload['receptor_usuario_id'] ?? null,
+        p_receptor_firma_path: photoPaths['firma_receptor'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
+    // AE — firmar (tarde) como receptor una entrega que estaba pendiente.
+    this.sync.register('conduce_firmar_receptor', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('firmar_conduce', {
+        p_salida_id: payload['salida_id'],
+        p_rol: 'receptor',
+        p_nombre: payload['nombre'] ?? 'Receptor',
+        p_firma_path: photoPaths['firma'],
       });
       if (error) throwSyncError(error);
     });

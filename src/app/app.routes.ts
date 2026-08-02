@@ -221,6 +221,21 @@ export const routes: Routes = [
       import('./pages/transporte/generar-conduce/generar-conduce').then((m) => m.GenerarConducePage),
   },
   {
+    // AE — devolver material (obra→almacén) con doble firma.
+    path: 'transporte/devolver-material',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/devolver-material/devolver-material').then((m) => m.DevolverMaterialPage),
+  },
+  {
+    // AE — bandeja "Por firmar" (firmas de recepción pendientes asignadas a mí).
+    // Sin moduleGuard: el receptor puede ser un ingeniero sin módulo flota; el RPC
+    // solo devuelve lo asignado al usuario actual (auth.uid()).
+    path: 'transporte/por-firmar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/transporte/por-firmar/por-firmar').then((m) => m.PorFirmarPage),
+  },
+  {
     // Reutiliza la pantalla de recibir conduce (mercancía/traslado) bajo Transporte.
     path: 'transporte/recibir-mercancia',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

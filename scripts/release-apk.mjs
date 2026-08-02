@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.51.0';
+const VERSION = '1.52.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Firma al entregar una parada y tiempo a la próxima parada';
+const TITULO = 'Devolver material con doble firma y firma pendiente enrutada';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'Entregar una parada sin conduce ahora pide la firma de quien recibe (y foto opcional), igual que un conduce: queda la prueba de la entrega. Funciona sin señal.' },
-  { t: 'mejora', d: 'En una ruta en curso puedes calcular con un toque el tiempo estimado a la próxima parada (usa tu ubicación).' },
-  { t: 'arreglo', d: 'Correcciones en el buscador del mapa y en la actualización en vivo de las paradas de una ruta.' },
+  { t: 'nuevo', d: 'Devolver material: desde Transporte, el chofer devuelve material de una obra a un almacén. El stock se mueve al registrar y la entrega se confirma con DOS firmas — la del chofer (quien entrega) y la de quien recibe (el propio chofer o el ingeniero/encargado).' },
+  { t: 'nuevo', d: 'Firma pendiente: si el ingeniero que recibe no está presente, su firma queda pendiente y le llega un aviso. Él la firma después desde la bandeja "Por firmar" del menú de Transporte.' },
 ];
 
 const TIPO_POR_COMMIT = {
