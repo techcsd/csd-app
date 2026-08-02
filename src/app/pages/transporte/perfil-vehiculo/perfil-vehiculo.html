@@ -1,8 +1,8 @@
 <div class="screen pveh">
   <header class="pveh__header">
     <button type="button" class="pveh__back" (click)="back()" aria-label="Atrás">←</button>
-    <span class="pveh__icon">🚙</span>
-    <h1 class="pveh__title">Perfil del vehículo</h1>
+    <span class="pveh__icon">{{ iconoPerfil() }}</span>
+    <h1 class="pveh__title">{{ tituloPerfil() }}</h1>
   </header>
 
   <div class="screen__body">
@@ -18,11 +18,11 @@
     @if (mantAlerta(); as m) {
       @if (m.estado === 'vencido') {
         <div class="pveh__alerta pveh__alerta--venc">
-          🔴 Mantenimiento atrasado por {{ -m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
+          🔴 Mantenimiento atrasado por {{ -m.faltan | number: '1.0-0' }} {{ unidadUso() }} (próx. {{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
         </div>
       } @else if (m.estado === 'pre_cita') {
         <div class="pveh__alerta pveh__alerta--pre">
-          🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km (próx. {{ m.proximo | number: '1.0-0' }} km).
+          🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} (próx. {{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
         </div>
       }
     }
@@ -61,8 +61,8 @@
     } @else {
       <div class="pveh__cards">
         <div class="pveh__card">
-          <span class="pveh__label">Kilometraje</span>
-          <span class="pveh__value">{{ (vehDetalle()?.kilometraje ?? stats()!.km_actual) | number: '1.0-0' }} km</span>
+          <span class="pveh__label">{{ labelUso() }}</span>
+          <span class="pveh__value">{{ (vehDetalle()?.kilometraje ?? stats()!.km_actual) | number: '1.0-0' }} {{ unidadUso() }}</span>
         </div>
         <div class="pveh__card">
           <span class="pveh__label">Echadas</span>
@@ -74,11 +74,11 @@
         <div class="pveh__card">
           <span class="pveh__label">Rendimiento real</span>
           @if (stats()!.rendimiento_promedio != null) {
-            <span class="pveh__value">{{ stats()!.rendimiento_promedio | number: '1.1-2' }} km/gal</span>
+            <span class="pveh__value">{{ stats()!.rendimiento_promedio | number: '1.1-2' }} {{ rendUnidad() }}</span>
           } @else { <span class="pveh__value pveh__value--muted">—</span> }
           <!-- S20 — esperado (manual) vs real -->
           @if (rendimientoEsperado() != null) {
-            <span class="pveh__sub">Esperado: {{ rendimientoEsperado() | number: '1.1-2' }} km/gal</span>
+            <span class="pveh__sub">Esperado: {{ rendimientoEsperado() | number: '1.1-2' }} {{ rendUnidad() }}</span>
             @if (stats()!.rendimiento_promedio != null) {
               @if (stats()!.rendimiento_promedio! >= rendimientoEsperado()!) {
                 <span class="pveh__sub">✅ En meta</span>
@@ -89,7 +89,7 @@
           }
         </div>
         <div class="pveh__card">
-          <span class="pveh__label">Costo por km</span>
+          <span class="pveh__label">{{ labelCostoUso() }}</span>
           @if (stats()!.costo_por_km_promedio != null) {
             <span class="pveh__value">RD$ {{ stats()!.costo_por_km_promedio | number: '1.2-2' }}</span>
           } @else { <span class="pveh__value pveh__value--muted">—</span> }
@@ -108,7 +108,7 @@
         <div class="pveh__card">
           <span class="pveh__label">Próx. mantenimiento</span>
           @if (stats()!.proximo_mantenimiento_km != null) {
-            <span class="pveh__value">{{ stats()!.proximo_mantenimiento_km | number: '1.0-0' }} km</span>
+            <span class="pveh__value">{{ stats()!.proximo_mantenimiento_km | number: '1.0-0' }} {{ unidadUso() }}</span>
           } @else { <span class="pveh__value pveh__value--muted">—</span> }
         </div>
         <div class="pveh__card">

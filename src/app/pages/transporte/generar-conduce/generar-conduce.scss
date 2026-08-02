@@ -1,0 +1,105 @@
+.gconduce {
+  background: var(--color-bg);
+}
+
+.gconduce__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.gconduce__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.gconduce__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.gconduce__intro {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+.gconduce__mt {
+  margin-top: 14px;
+}
+.gconduce__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: -2px 0 8px;
+}
+.gconduce__band {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.gconduce__notas {
+  resize: vertical;
+}
+
+// Carrito de materiales
+.gconduce__items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.gconduce__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.gconduce__item-name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.gconduce__item-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gconduce__step {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 22px;
+  font-weight: 700;
+}
+.gconduce__qty {
+  width: 74px;
+  text-align: center;
+}
+.gconduce__unit {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.gconduce__item-x {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: none;
+  color: var(--color-danger);
+  font-size: 18px;
+  font-weight: 700;
+}

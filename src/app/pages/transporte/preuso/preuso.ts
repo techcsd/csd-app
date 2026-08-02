@@ -737,6 +737,11 @@ export class PreusoPage extends GuardedWizard {
     void this.router.navigate(['/transporte'], { replaceUrl: true });
   }
 
+  /** Volver atrás desde el selector de vehículo (aún no hay datos que perder). */
+  salirPicker(): void {
+    this.location.back();
+  }
+
   get online(): boolean {
     return this.network.online();
   }

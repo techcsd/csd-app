@@ -31,6 +31,8 @@ type DestinoModo = 'lugar' | 'mapa';
 
 /** AC13 — una parada intermedia editable en el wizard. */
 interface ParadaUI {
+  /** AE — cómo se fija la parada: por obra/almacén o marcándola en el mapa. */
+  modo: 'lugar' | 'mapa';
   lugarId: string;
   ubicacion: string;
   lat: number | null;
@@ -285,8 +287,22 @@ export class CrearRutaPage implements OnDestroy {
   agregarParada(): void {
     this.paradas.update((list) => [
       ...list,
-      { lugarId: '', ubicacion: '', lat: null, lng: null, notas: '', proyectoId: null },
+      { modo: 'lugar', lugarId: '', ubicacion: '', lat: null, lng: null, notas: '', proyectoId: null },
     ]);
+  }
+  /** AE — alternar cómo se fija la parada: obra/almacén o punto en el mapa. */
+  setParadaModo(i: number, modo: 'lugar' | 'mapa'): void {
+    this.paradas.update((list) => list.map((p, idx) => (idx === i ? { ...p, modo } : p)));
+  }
+  /** AE — parada marcada/buscada en el mapa (pin, buscador o "mi ubicación"). */
+  onParadaUbicacion(i: number, u: UbicacionSeleccionada): void {
+    this.paradas.update((list) =>
+      list.map((p, idx) =>
+        idx === i
+          ? { ...p, ubicacion: u.direccion || 'Punto en el mapa', lat: u.latitud, lng: u.longitud, lugarId: '', proyectoId: null }
+          : p,
+      ),
+    );
   }
   quitarParada(i: number): void {
     this.paradas.update((list) => list.filter((_, idx) => idx !== i));

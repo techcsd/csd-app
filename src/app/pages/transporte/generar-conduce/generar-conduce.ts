@@ -4,34 +4,35 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { SelectList } from '../../../shared/ui/select-list/select-list';
-import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
-import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
+import { ConducesService } from '../../../core/services/conduces.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
 
 /**
- * AD6 — Compra/retiro en ferretería (chofer, dentro de Transporte). Registra el
- * recibo como una entrada PENDIENTE que Almacén confirma antes de subir stock
- * (antifraude). Foto del recibo solo-cámara. Materiales opcionales (Almacén
- * ajusta al confirmar). Offline-first por outbox.
+ * AE — Generar conduce (salida de material) desde el móvil: el chofer SACA
+ * material de una bodega hacia una obra. El servidor valida el stock
+ * (crear_conduce_transportista). Buscador de artículos (sin categorías) + cantidad.
+ * Offline-first por outbox; luego aparece en "Conduces por entregar" para
+ * entregarlo con las 2 firmas (AC7).
  */
 @Component({
-  selector: 'app-ferreteria',
+  selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, PhotoSlot, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm],
-  templateUrl: './ferreteria.html',
-  styleUrl: './ferreteria.scss',
+  imports: [FormsModule, SelectList, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm],
+  templateUrl: './generar-conduce.html',
+  styleUrl: './generar-conduce.scss',
 })
-export class FerreteriaPage implements OnDestroy {
+export class GenerarConducePage implements OnDestroy {
   private inventario = inject(InventarioService);
+  private conduces = inject(ConducesService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -47,10 +48,7 @@ export class FerreteriaPage implements OnDestroy {
   bodegaId = signal('');
   obras = signal<ObraOrigen[]>([]);
   obraId = signal('');
-  referencia = signal('');
-  proveedor = signal('');
   observaciones = signal('');
-  foto = signal<CapturedPhoto | null>(null);
 
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
@@ -58,8 +56,8 @@ export class FerreteriaPage implements OnDestroy {
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
-  faltaFoto = computed(() => !this.foto());
   excludeIds = computed(() => this.cart().map((l) => l.articulo_id).filter((x): x is string => !!x));
+  faltaItems = computed(() => this.cart().filter((l) => l.cantidad > 0).length === 0);
 
   private readonly backHandler = (): boolean => {
     if (this.hoja() === 'form' && this.tieneDatos()) {
@@ -97,7 +95,7 @@ export class FerreteriaPage implements OnDestroy {
     }
   }
 
-  // ---- Materiales (opcional) ----
+  // ---- Materiales ----
   agregar(a: ArticuloCat): void {
     this.cart.update((list) => {
       if (list.some((l) => l.articulo_id === a.id)) return list;
@@ -126,54 +124,40 @@ export class FerreteriaPage implements OnDestroy {
     this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
   }
 
-  onFoto(photo: CapturedPhoto): void {
-    this.foto.set(photo);
-  }
-  onFotoCleared(): void {
-    this.foto.set(null);
-  }
-
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
-      this.toast.error('Elige el almacén destino.');
+      this.toast.error('Elige el almacén de origen.');
       return;
     }
-    if (this.faltaFoto()) {
-      this.toast.error('Toma la foto del recibo antes de registrar.');
+    if (!this.obraId()) {
+      this.toast.error('Elige la obra destino.');
+      return;
+    }
+    if (this.faltaItems()) {
+      this.toast.error('Agrega al menos un material.');
       return;
     }
     this.submitting.set(true);
     try {
-      await this.inventario.enqueueCompraFerreteria({
+      await this.conduces.crearConduceTransportista({
         bodegaId: this.bodegaId(),
-        proyectoId: this.obraId() || null,
-        referencia: this.referencia().trim() || null,
-        proveedor: this.proveedor().trim() || null,
+        proyectoId: this.obraId(),
         observaciones: this.observaciones().trim() || null,
         items: this.cart()
           .filter((l) => l.cantidad > 0 && l.articulo_id)
           .map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad })),
-        foto: this.foto()?.blob ?? null,
       });
       this.hoja.set('exito');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la compra.');
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo generar el conduce.');
     } finally {
       this.submitting.set(false);
     }
   }
 
   private tieneDatos(): boolean {
-    return !!(
-      this.bodegaId() ||
-      this.obraId() ||
-      this.referencia().trim() ||
-      this.proveedor().trim() ||
-      this.observaciones().trim() ||
-      this.foto() ||
-      this.cart().length
-    );
+    return !!(this.bodegaId() || this.obraId() || this.observaciones().trim() || this.cart().length);
   }
 
   intentarSalir(): void {
@@ -189,7 +173,7 @@ export class FerreteriaPage implements OnDestroy {
   }
 
   finish(): void {
-    void this.router.navigate(['/transporte'], { replaceUrl: true });
+    void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
   }
 
   get online(): boolean {

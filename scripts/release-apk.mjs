@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.46.0';
+const VERSION = '1.47.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,19 +59,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-01';
+const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Cámara nativa, borrador del reporte semanal y rutas con paradas y conduces';
+const TITULO = 'Transporte: sacar y recibir material, firma al recibir y mapa mejorado';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'Al tomar fotos, la app ahora abre la CÁMARA del teléfono (como cualquier otra app) en vez de la cámara de adentro. Las fotos salen más nítidas y funciona en más teléfonos.' },
-  { t: 'nuevo', d: 'El reporte semanal ahora se guarda solo mientras lo llenas: si se cierra la app, entra una llamada o se bloquea el teléfono, al volver te ofrece retomarlo donde ibas, con el texto y las fotos intactos.' },
-  { t: 'mejora', d: 'Echar combustible: lo primero que se pide es la foto de la bomba en 0, y la pregunta de la estación quedó en su propia pantalla (menos scroll). Todas las fotos son solo con cámara.' },
-  { t: 'nuevo', d: 'Rutas con paradas: cada parada muestra su estado (pendiente, en camino, entregada), puedes adjuntarle el conduce del material que va ahí, y "Iniciar" y "Cómo llegar" ahora son botones claros. Al entregar el conduce con firma, la parada queda cerrada y trazada.' },
-  { t: 'mejora', d: 'Pre-uso más corto y rápido: un chequeo visual de lo que se ve a simple vista (gomas, luces, carrocería, fugas…) en una sola pantalla. El chequeo a fondo sigue en el reporte semanal del asignado.' },
-  { t: 'mejora', d: 'Notas: el editor del teléfono ahora tiene subrayado y listas numeradas, además de negrita, cursiva, títulos, viñetas y listas de tareas — igual que en la web.' },
+  { t: 'nuevo', d: 'Sacar material: el chofer ya puede generar un conduce de salida desde el móvil — elige el almacén de origen, la obra destino y busca los materiales con su cantidad. Aparece en "Conduces por entregar" para entregarlo con firma.' },
+  { t: 'nuevo', d: 'Recibir mercancía de ferretería: la compra que registras aparece ahora en "Recibir mercancía" con sus materiales, y tú mismo puedes darle entrada al almacén/obra cuando la recibes.' },
+  { t: 'mejora', d: 'Compra en ferretería: eliges los materiales con un buscador (arriba y más visible), pones la cantidad, y todo queda listado en el conduce de entrada.' },
+  { t: 'mejora', d: 'Al recibir un conduce o mercancía ahora se firma la recepción (queda la prueba de quién recibió).' },
+  { t: 'mejora', d: 'Mapa y ubicaciones: el buscador encuentra establecimientos (talleres, ferreterías…) y las direcciones salen más cortas (sin "República Dominicana"). Las paradas de una ruta se pueden marcar también en el mapa.' },
+  { t: 'mejora', d: 'Detalles de transporte: el pre-uso tiene botón de volver, el perfil del telehandler muestra horas en vez de kilómetros, y en las rutas "Ver paradas" quedó debajo de los botones.' },
 ];
 
 const TIPO_POR_COMMIT = {

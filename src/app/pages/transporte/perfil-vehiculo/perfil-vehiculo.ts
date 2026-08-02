@@ -86,6 +86,15 @@ export class PerfilVehiculoPage {
     const estado: 'ok' | 'pre_cita' | 'vencido' = faltan <= 0 ? 'vencido' : faltan <= 500 ? 'pre_cita' : 'ok';
     return { estado, faltan, proximo };
   });
+  // AE — telehandler (medida_uso='horas'): el perfil habla de HORAS, no de km.
+  esHoras = computed(() => this.vehDetalle()?.medida_uso === 'horas');
+  unidadUso = computed(() => (this.esHoras() ? 'h' : 'km'));
+  labelUso = computed(() => (this.esHoras() ? 'Horas de uso' : 'Kilometraje'));
+  rendUnidad = computed(() => (this.esHoras() ? 'h/gal' : 'km/gal'));
+  labelCostoUso = computed(() => (this.esHoras() ? 'Costo por hora' : 'Costo por km'));
+  tituloPerfil = computed(() => (this.esHoras() ? 'Perfil del equipo' : 'Perfil del vehículo'));
+  iconoPerfil = computed(() => (this.esHoras() ? '🏗️' : '🚙'));
+
   // V1/V2 — identificadores + pólizas del vehículo.
   vin = signal<string | null>(null);
   numeroMatricula = signal<string | null>(null);

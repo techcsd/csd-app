@@ -35,6 +35,30 @@ export interface RecepcionCaptura {
   items: { detalle_id: string; cantidad_recibida: number }[];
   notas: string | null;
   foto: Blob | null;
+  /** AE — firma del receptor (prueba de recepción, AC7) + su nombre. */
+  firmaReceptor?: Blob | null;
+  receptorNombre?: string | null;
+}
+
+/** AE — un ítem propuesto de una compra de ferretería pendiente de confirmar. */
+export interface EntradaFerreteriaItem {
+  articulo_id: string;
+  nombre: string;
+  unidad: string | null;
+  cantidad: number;
+}
+/** AE — compra de ferretería del chofer pendiente de dar entrada (recibir). */
+export interface EntradaFerreteriaPendiente {
+  id: string;
+  fecha: string;
+  referencia: string | null;
+  observaciones: string | null;
+  bodega: string | null;
+  bodega_id: string;
+  obra: string | null;
+  proyecto_id: string | null;
+  foto_path: string | null;
+  items: EntradaFerreteriaItem[];
 }
 
 export interface ConteoCaptura {
@@ -419,17 +443,70 @@ export class InventarioService {
   async enqueueRecepcion(input: RecepcionCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    const fotos = [];
+    if (input.foto) {
+      fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `recepcion/${id}.jpg`, slot: 'recepcion', blob: input.foto });
+    }
+    // AE — firma del receptor al bucket `conduces` (donde viven las firmas AC7).
+    if (input.firmaReceptor) {
+      fotos.push({
+        id: crypto.randomUUID(),
+        bucket: 'conduces',
+        path: `${input.salidaId}/${id}-firma-receptor.png`,
+        slot: 'firma_receptor',
+        blob: input.firmaReceptor,
+      });
+    }
     await this.sync.enqueue({
       id,
       tipo_op: 'conduce_recepcion',
       capturado_en,
-      payload: { salida_id: input.salidaId, items: input.items, notas: input.notas },
-      fotos: input.foto
-        ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `recepcion/${id}.jpg`, slot: 'recepcion', blob: input.foto }]
-        : [],
+      payload: {
+        salida_id: input.salidaId,
+        items: input.items,
+        notas: input.notas,
+        receptor_nombre: input.receptorNombre ?? null,
+      },
+      fotos,
       resumen: { tipo: 'recepcion', salida_id: input.salidaId, capturado_en },
     });
     void this.conducesPorRecibir();
+  }
+
+  /**
+   * AE — compras de ferretería del chofer pendientes de dar entrada (recibir el
+   * material). Online best-effort, cacheado para verse offline tras la 1ª carga.
+   */
+  async misEntradasFerreteriaPendientes(): Promise<EntradaFerreteriaPendiente[]> {
+    const data = await this.catalog.refresh<EntradaFerreteriaPendiente[]>(
+      'entradas_ferreteria_pend',
+      async () => {
+        const { data, error } = await this.supabase.client.rpc('mis_entradas_ferreteria_pendientes');
+        if (error) throw new Error(error.message);
+        return (data as EntradaFerreteriaPendiente[]) ?? [];
+      },
+    );
+    return data ?? [];
+  }
+
+  /**
+   * AE — el chofer da ENTRADA a su compra de ferretería (materializa stock en el
+   * almacén/obra destino). Offline-safe por outbox; el RPC es idempotente.
+   */
+  async enqueueConfirmarEntradaFerreteria(
+    entradaId: string,
+    items: { articulo_id: string; cantidad: number }[],
+  ): Promise<void> {
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'entrada_ferreteria_confirmar',
+      capturado_en,
+      payload: { entrada_id: entradaId, items },
+      resumen: { tipo: 'entrada_ferreteria', entrada_id: entradaId, capturado_en },
+    });
+    await this.catalog.invalidate('entradas_ferreteria_pend');
+    void this.misEntradasFerreteriaPendientes();
   }
 
   /**
@@ -540,11 +617,34 @@ export class InventarioService {
     });
 
     this.sync.register('conduce_recepcion', async (payload, photoPaths) => {
+      const salidaId = payload['salida_id'] as string;
       const { error } = await this.supabase.client.rpc('recibir_conduce_app', {
-        p_salida_id: payload['salida_id'],
+        p_salida_id: salidaId,
         p_items: payload['items'],
         p_notas: payload['notas'] ?? null,
         p_foto_path: photoPaths['recepcion'] ?? null,
+      });
+      if (error) throwSyncError(error);
+      // AE — firma del RECEPTOR (AC7). Idempotente por (salida_id, rol); best-effort:
+      // si falla no revierte la recepción (ya registrada).
+      const firmaReceptor = photoPaths['firma_receptor'];
+      if (firmaReceptor) {
+        const { data: userData } = await this.supabase.client.auth.getUser();
+        await this.supabase.client.rpc('firmar_conduce', {
+          p_salida_id: salidaId,
+          p_rol: 'receptor',
+          p_nombre: payload['receptor_nombre'] ?? 'Receptor',
+          p_firma_path: firmaReceptor,
+          p_usuario_id: userData.user?.id ?? null,
+        });
+      }
+    });
+
+    // AE — el chofer da entrada a su compra de ferretería (materializa stock).
+    this.sync.register('entrada_ferreteria_confirmar', async (payload) => {
+      const { error } = await this.supabase.client.rpc('confirmar_entrada_chofer', {
+        p_entrada_id: payload['entrada_id'],
+        p_items: payload['items'] ?? null,
       });
       if (error) throwSyncError(error);
     });

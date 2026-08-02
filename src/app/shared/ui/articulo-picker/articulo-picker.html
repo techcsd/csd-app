@@ -4,7 +4,7 @@
     type="search"
     [ngModel]="query()"
     (ngModelChange)="query.set($event)"
-    placeholder="🔎 Buscar material (opcional)"
+    [placeholder]="soloBuscador() ? '🔎 Buscar material por nombre o código' : '🔎 Buscar material (opcional)'"
   />
 
   <!-- Search results (span all categories) -->
@@ -20,6 +20,9 @@
         <p class="picker__muted">No se encontró ese material.</p>
       }
     </div>
+  } @else if (soloBuscador()) {
+    <!-- AE — solo-buscador: sin categorías; hint hasta que teclee -->
+    <p class="picker__muted">Escribe el nombre o código del material para agregarlo.</p>
   } @else if (!hasCategorias()) {
     <!-- Flat list (conteo/pedir) -->
     <div class="picker__list">

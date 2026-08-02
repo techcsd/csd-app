@@ -19,30 +19,82 @@ export interface RutaEstimada {
 const NOMINATIM = 'https://nominatim.openstreetmap.org';
 const OSRM = 'https://router.project-osrm.org';
 
+/** Componentes de dirección de Nominatim (parcial, solo lo que usamos). */
+interface NominatimAddress {
+  road?: string;
+  house_number?: string;
+  neighbourhood?: string;
+  suburb?: string;
+  quarter?: string;
+  residential?: string;
+  city_district?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  municipality?: string;
+  county?: string;
+}
+interface NominatimResult {
+  display_name: string;
+  lat: string;
+  lon: string;
+  name?: string;
+  address?: NominatimAddress;
+  namedetails?: { name?: string };
+}
+
+function ciudadDe(a?: NominatimAddress): string {
+  return a?.city ?? a?.town ?? a?.village ?? a?.municipality ?? a?.county ?? '';
+}
+function sectorDe(a?: NominatimAddress): string {
+  return a?.neighbourhood ?? a?.suburb ?? a?.quarter ?? a?.residential ?? a?.city_district ?? '';
+}
+function calleDe(a?: NominatimAddress): string {
+  return [a?.road, a?.house_number].filter(Boolean).join(' ');
+}
+
+/**
+ * Etiqueta CORTA y legible: nombre del establecimiento (si es un lugar) o la
+ * calle, + el sector y la ciudad. Se quitan país ("República Dominicana"),
+ * código postal y provincia (obvios/redundantes en campo). AE — el chofer
+ * necesita algo escaneable, no la dirección completa de Nominatim.
+ */
+function etiquetaCorta(display: string, a?: NominatimAddress, name?: string): string {
+  const principal = (name && name.trim()) || calleDe(a) || (display.split(',')[0] ?? '').trim();
+  const partes = [principal, sectorDe(a), ciudadDe(a)].filter((p): p is string => !!p && !!p.trim());
+  const uniq = partes.filter((p, i) => partes.indexOf(p) === i); // sin duplicados consecutivos
+  const corta = uniq.join(', ');
+  // Fallback si Nominatim no trajo address: recorta el país del display_name.
+  return corta || display.replace(/,?\s*(República Dominicana|Dominican Republic)\s*$/i, '').trim() || display;
+}
+
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
-  /** Coordenadas → dirección legible. */
+  /** Coordenadas → dirección legible y CORTA (sin país/código postal). */
   async reverse(lat: number, lng: number): Promise<string> {
     const params = new URLSearchParams({
       lat: String(lat),
       lon: String(lng),
       format: 'json',
       'accept-language': 'es',
+      addressdetails: '1',
+      zoom: '18',
     });
     try {
       const res = await fetch(`${NOMINATIM}/reverse?${params.toString()}`);
       if (!res.ok) return '';
-      const data = (await res.json()) as { display_name?: string };
-      return data.display_name ?? '';
+      const data = (await res.json()) as NominatimResult;
+      return etiquetaCorta(data.display_name ?? '', data.address, data.name);
     } catch {
       return '';
     }
   }
 
   /**
-   * Búsqueda de dirección/lugar → candidatos (sesgo RD). Propaga errores
-   * (throttle 429 / red) para que el UI distinga "sin resultados" de "fallo";
-   * acepta AbortSignal para cancelar búsquedas obsoletas (debounce en el UI).
+   * Búsqueda de dirección/lugar → candidatos (sesgo RD). Devuelve también
+   * ESTABLECIMIENTOS (talleres, ferreterías, etc.) por su nombre, con una
+   * etiqueta corta. Propaga errores (429/red) para que el UI distinga "sin
+   * resultados" de "fallo"; acepta AbortSignal para cancelar búsquedas obsoletas.
    */
   async buscar(texto: string, signal?: AbortSignal): Promise<LugarBusqueda[]> {
     if (!texto.trim()) return [];
@@ -51,13 +103,19 @@ export class GeocodingService {
       format: 'json',
       'accept-language': 'es',
       countrycodes: 'do',
-      limit: '6',
+      limit: '10',
       dedupe: '1',
+      addressdetails: '1',
+      namedetails: '1',
     });
     const res = await fetch(`${NOMINATIM}/search?${params.toString()}`, { signal });
     if (!res.ok) throw new Error(`El buscador de mapas respondió ${res.status}`);
-    const data = (await res.json()) as { display_name: string; lat: string; lon: string }[];
-    return data.map((d) => ({ nombre: d.display_name, latitud: Number(d.lat), longitud: Number(d.lon) }));
+    const data = (await res.json()) as NominatimResult[];
+    return data.map((d) => ({
+      nombre: etiquetaCorta(d.display_name, d.address, d.namedetails?.name ?? d.name),
+      latitud: Number(d.lat),
+      longitud: Number(d.lon),
+    }));
   }
 
   /**

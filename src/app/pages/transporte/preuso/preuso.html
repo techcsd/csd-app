@@ -1,6 +1,11 @@
 @if (necesitaVehiculo()) {
   <!-- B1 — elegir vehículo del pool cuando no llega por deep-link -->
   <div class="screen preuso">
+    <header class="preuso__pick-header">
+      <button type="button" class="preuso__pick-back" (click)="salirPicker()" aria-label="Atrás">←</button>
+      <span class="preuso__pick-icon">📋</span>
+      <h1 class="preuso__pick-title">Pre-uso del vehículo</h1>
+    </header>
     <div class="screen__body">
       <app-vehiculo-picker
         subtitulo="Selecciona el vehículo para hacer el pre-uso."

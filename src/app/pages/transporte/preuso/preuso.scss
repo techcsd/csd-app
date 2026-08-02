@@ -363,3 +363,31 @@
   color: var(--color-text-secondary);
   margin: -4px 0 12px;
 }
+
+// AE — header con back del selector de vehículo del pre-uso (antes no había forma
+// de volver atrás desde esa pantalla).
+.preuso__pick-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.preuso__pick-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.preuso__pick-icon {
+  font-size: 28px;
+}
+.preuso__pick-title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}

@@ -337,3 +337,58 @@
   font-size: 22px;
   font-weight: 700;
 }
+
+// AE — compras de ferretería pendientes de dar entrada.
+.recibir__section {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 18px 0 10px;
+}
+.ferr-entrada {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.ferr-entrada__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+.ferr-entrada__dest {
+  font-weight: 700;
+  font-size: var(--fs-option);
+}
+.ferr-entrada__ref {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.ferr-entrada__items {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+.ferr-entrada__items li {
+  padding: 8px 12px;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+.ferr-entrada__sinitems {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+.ferr-entrada__nota {
+  font-size: 12px;
+  color: var(--color-warning);
+  margin: 8px 0 0;
+}

@@ -6,9 +6,14 @@
   </header>
 
   <div class="screen__body">
-    <button type="button" class="btn-ghost conduces__crear" (click)="crearRuta()">
-      ➕ Crear ruta
-    </button>
+    <div class="conduces__acciones">
+      <button type="button" class="btn-ghost conduces__crear" (click)="generarConduce()">
+        📦 Sacar material
+      </button>
+      <button type="button" class="btn-ghost conduces__crear" (click)="crearRuta()">
+        ➕ Crear ruta
+      </button>
+    </div>
 
     @if (loading()) {
       <app-skeleton [rows]="5" />

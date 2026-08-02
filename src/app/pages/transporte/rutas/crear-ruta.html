@@ -108,12 +108,28 @@
                   <button type="button" class="cruta__parada-btn cruta__parada-btn--del" (click)="quitarParada($index)" aria-label="Quitar">✕</button>
                 </div>
               </div>
-              <select class="field" [ngModel]="p.lugarId" (ngModelChange)="setParadaLugar($index, $event)">
-                <option value="">— Elige obra o almacén —</option>
-                @for (l of lugares(); track l.id) {
-                  <option [value]="l.id">{{ l.tipo === 'obra' ? '🏗️' : '🏢' }} {{ l.nombre }}</option>
+              <!-- AE — la parada se fija por obra/almacén o marcándola en el mapa -->
+              <div class="cruta__parada-modo">
+                <button type="button" class="cruta__modo-btn" [class.cruta__modo-btn--on]="p.modo === 'lugar'" (click)="setParadaModo($index, 'lugar')">🏗️ Obra/Almacén</button>
+                <button type="button" class="cruta__modo-btn" [class.cruta__modo-btn--on]="p.modo === 'mapa'" (click)="setParadaModo($index, 'mapa')">📍 En el mapa</button>
+              </div>
+              @if (p.modo === 'lugar') {
+                <select class="field" [ngModel]="p.lugarId" (ngModelChange)="setParadaLugar($index, $event)">
+                  <option value="">— Elige obra o almacén —</option>
+                  @for (l of lugares(); track l.id) {
+                    <option [value]="l.id">{{ l.tipo === 'obra' ? '🏗️' : '🏢' }} {{ l.nombre }}</option>
+                  }
+                </select>
+              } @else {
+                <app-location-picker
+                  [latitud]="p.lat"
+                  [longitud]="p.lng"
+                  (ubicacionChange)="onParadaUbicacion($index, $event)"
+                />
+                @if (p.ubicacion) {
+                  <p class="cruta__parada-dir">📍 {{ p.ubicacion }}</p>
                 }
-              </select>
+              }
               <input class="field cruta__parada-nota" type="text" [ngModel]="p.notas" (ngModelChange)="setParadaNota($index, $event)" placeholder="Nota de la parada (opcional)" />
             </div>
           }

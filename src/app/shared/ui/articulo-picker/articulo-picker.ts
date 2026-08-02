@@ -22,6 +22,9 @@ export class ArticuloPicker {
   articulos = input<ArticuloCat[]>([]);
   categorias = input<CategoriaInv[]>([]);
   exclude = input<string[]>([]);
+  /** AE — modo solo-buscador: sin grilla de categorías; el usuario teclea y elige.
+   *  Con la búsqueda vacía muestra un hint (no vuelca todo el catálogo). */
+  soloBuscador = input<boolean>(false);
   picked = output<ArticuloCat>();
 
   query = signal('');

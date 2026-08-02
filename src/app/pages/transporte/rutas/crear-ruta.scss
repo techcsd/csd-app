@@ -225,3 +225,30 @@
   color: var(--color-text-secondary);
   margin: 0 0 10px;
 }
+
+// AE — cada parada se fija por obra/almacén o marcándola en el mapa.
+.cruta__parada-modo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cruta__modo-btn {
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.cruta__modo-btn--on {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--color-bg);
+}
+.cruta__parada-dir {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 6px 0 0;
+}

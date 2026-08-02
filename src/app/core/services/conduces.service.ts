@@ -56,6 +56,17 @@ export interface RutaCaptura {
   fotos?: Blob[];
 }
 
+/** AE — el chofer GENERA un conduce (salida de material) desde una bodega hacia
+ *  una obra. Valida stock en el servidor (crear_conduce_transportista). */
+export interface ConduceTransportistaCaptura {
+  bodegaId: string;
+  proyectoId: string | null;
+  observaciones: string | null;
+  items: { articulo_id: string; cantidad: number }[];
+  vehiculoId?: string | null;
+  rutaId?: string | null;
+}
+
 /** AC13 — una parada intermedia de la ruta. */
 export interface RutaParadaCaptura {
   ubicacion: string;
@@ -386,6 +397,33 @@ export class ConducesService {
     void this.misRutas();
   }
 
+  /**
+   * AE — el chofer GENERA un conduce (salida de material) desde una bodega hacia
+   * una obra. Offline-safe por outbox; el servidor valida el stock (idempotente
+   * por UUID). Aparece luego en "Conduces por entregar" para entregarlo con firmas.
+   */
+  async crearConduceTransportista(input: ConduceTransportistaCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_transportista',
+      capturado_en,
+      payload: {
+        id,
+        fecha: capturado_en.slice(0, 10),
+        bodega_id: input.bodegaId,
+        proyecto_id: input.proyectoId,
+        observaciones: input.observaciones,
+        vehiculo_id: input.vehiculoId ?? null,
+        ruta_id: input.rutaId ?? null,
+        items: input.items,
+      },
+      resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
+    });
+    void this.misConduces();
+  }
+
   /** Queue a conduce delivery (photo + receiver + signature). Offline-safe. */
   async entregarConduce(input: ConduceEntregaCaptura): Promise<void> {
     const id = crypto.randomUUID();
@@ -522,6 +560,22 @@ export class ConducesService {
 
       // Z23 — registrar las notas de voz de la ruta (idempotente por path).
       await this.audioNotas.commit('ruta', rutaId, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
+    });
+
+    // AE — el chofer genera un conduce (salida de material). El servidor valida el
+    // stock; idempotente por UUID.
+    this.sync.register('conduce_transportista', async (payload) => {
+      const { error } = await this.supabase.client.rpc('crear_conduce_transportista', {
+        p_id: payload['id'],
+        p_fecha: payload['fecha'],
+        p_bodega_id: payload['bodega_id'],
+        p_proyecto_id: payload['proyecto_id'] ?? null,
+        p_observaciones: payload['observaciones'] ?? null,
+        p_vehiculo_id: payload['vehiculo_id'] ?? null,
+        p_ruta_id: payload['ruta_id'] ?? null,
+        p_items: payload['items'],
+      });
+      if (error) throwSyncError(error);
     });
 
     this.sync.register('conduce_entrega', async (payload, photoPaths) => {

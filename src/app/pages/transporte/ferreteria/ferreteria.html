@@ -31,6 +31,35 @@
         </div>
       }
 
+      <!-- AE — ¿Qué compraste? buscador de materiales, arriba y visible (antes iba
+           colapsado al final). Solo buscador (sin categorías) — más rápido en campo. -->
+      <label class="field-label ferr__mt">¿Qué compraste?</label>
+      <p class="ferr__sub">Busca cada material, agrégalo y pon la cantidad.</p>
+      <app-articulo-picker
+        [articulos]="articulos()"
+        [categorias]="categorias()"
+        [soloBuscador]="true"
+        [exclude]="excludeIds()"
+        (picked)="agregar($event)"
+      />
+
+      @if (cart().length) {
+        <div class="ferr__items">
+          @for (l of cart(); track l.articulo_id) {
+            <div class="ferr__item">
+              <span class="ferr__item-name">{{ l.nombre }}</span>
+              <div class="ferr__item-qty">
+                <button type="button" class="ferr__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
+                <input class="field ferr__qty" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
+                <button type="button" class="ferr__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
+                <span class="ferr__unit">{{ l.unidad }}</span>
+                <button type="button" class="ferr__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       <label class="field-label ferr__mt" for="ferreteria">Ferretería / suplidor (opcional)</label>
       <input
         id="ferreteria"
@@ -74,38 +103,6 @@
         (ngModelChange)="observaciones.set($event)"
         placeholder="Algo que deba saber Almacén…"
       ></textarea>
-
-      <!-- Materiales (opcional): Almacén ajusta al confirmar -->
-      <button type="button" class="ferr__toggle" (click)="verMateriales.set(!verMateriales())">
-        {{ verMateriales() ? '▾' : '▸' }} Detallar materiales (opcional)
-        @if (cart().length) { <span class="ferr__count">{{ cart().length }}</span> }
-      </button>
-
-      @if (cart().length) {
-        <div class="ferr__items">
-          @for (l of cart(); track l.articulo_id) {
-            <div class="ferr__item">
-              <span class="ferr__item-name">{{ l.nombre }}</span>
-              <div class="ferr__item-qty">
-                <button type="button" class="ferr__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
-                <input class="field ferr__qty" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
-                <button type="button" class="ferr__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
-                <span class="ferr__unit">{{ l.unidad }}</span>
-                <button type="button" class="ferr__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
-              </div>
-            </div>
-          }
-        </div>
-      }
-
-      @if (verMateriales()) {
-        <app-articulo-picker
-          [articulos]="articulos()"
-          [categorias]="categorias()"
-          [exclude]="excludeIds()"
-          (picked)="agregar($event)"
-        />
-      }
     </div>
 
     <app-wizard-footer

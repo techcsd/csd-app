@@ -1,15 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
-import { InventarioService } from '../../../core/services/inventario.service';
+import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { InventarioService, EntradaFerreteriaPendiente } from '../../../core/services/inventario.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { Conduce } from '../../../core/models/transporte.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
 
@@ -28,7 +30,7 @@ interface RecibirDraft {
   selector: 'app-recibir-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, FormsModule, DecimalPipe, SyncBar, PhotoSlot],
+  imports: [Skeleton, EmptyState, FormsModule, DecimalPipe, SyncBar, PhotoSlot, SignaturePad],
   templateUrl: './recibir.html',
   styleUrl: './recibir.scss',
 })
@@ -38,6 +40,9 @@ export class RecibirConducePage {
   private location = inject(Location);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private ctx = inject(UserContextService);
+
+  private sig = viewChild(SignaturePad);
 
   private readonly clave = 'inventario:recibir';
   private hydrated = false;
@@ -45,12 +50,19 @@ export class RecibirConducePage {
   readonly fechaHora = formatFechaCortaHora;
 
   conduces = signal<Conduce[]>([]);
+  // AE — compras de ferretería pendientes de dar entrada (recibir el material).
+  entradasFerreteria = signal<EntradaFerreteriaPendiente[]>([]);
+  confirmandoId = signal<string | null>(null);
   loading = signal(true);
   /** Conduce abierto en la hoja de detalle (null = vista lista). */
   activo = signal<Conduce | null>(null);
   cantidades = signal<Record<string, number>>({});
   foto = signal<CapturedPhoto | null>(null);
   notas = signal(''); // APP-041 — discrepancias de recepción
+  // AE — firma del receptor (prueba de recepción, AC7).
+  receptorNombre = signal('');
+  firmaLista = signal(false);
+  firmaBlob = signal<Blob | null>(null);
   submitting = signal(false);
   /** Z20 — URL firmada de la foto del despacho (si la hay) + lightbox. */
   despachoFotoUrl = signal<string | null>(null);
@@ -86,10 +98,33 @@ export class RecibirConducePage {
   async load(): Promise<void> {
     this.loading.set(true);
     try {
-      this.conduces.set(await this.inventario.conducesPorRecibir());
+      const [conduces, entradas] = await Promise.all([
+        this.inventario.conducesPorRecibir(),
+        this.inventario.misEntradasFerreteriaPendientes().catch(() => [] as EntradaFerreteriaPendiente[]),
+      ]);
+      this.conduces.set(conduces);
+      this.entradasFerreteria.set(entradas);
       await this.restoreDraft();
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /** AE — dar entrada (materializar stock) a una compra de ferretería propia. */
+  async confirmarEntrada(e: EntradaFerreteriaPendiente): Promise<void> {
+    if (this.confirmandoId()) return;
+    this.confirmandoId.set(e.id);
+    try {
+      await this.inventario.enqueueConfirmarEntradaFerreteria(
+        e.id,
+        e.items.map((i) => ({ articulo_id: i.articulo_id, cantidad: i.cantidad })),
+      );
+      this.entradasFerreteria.update((list) => list.filter((x) => x.id !== e.id));
+      this.toast.success('Entrada registrada. Se sube al stock al sincronizar.');
+    } catch (err) {
+      this.toast.error(err instanceof Error ? err.message : 'No se pudo dar entrada.');
+    } finally {
+      this.confirmandoId.set(null);
     }
   }
 
@@ -117,6 +152,11 @@ export class RecibirConducePage {
       this.notas.set('');
       this.foto.set(null);
     }
+    // AE — precarga el receptor con el usuario logueado y limpia la firma (la firma
+    // no se persiste en el borrador: se re-firma al retomar).
+    if (!this.receptorNombre().trim()) this.receptorNombre.set(this.ctx.nombre() || '');
+    this.firmaLista.set(false);
+    this.firmaBlob.set(null);
     this.activo.set(c);
     this.despachoFotoUrl.set(null);
     this.lightbox.set(false);
@@ -157,9 +197,24 @@ export class RecibirConducePage {
     this.foto.set(null);
   }
 
+  /** AE — firma del receptor capturada en el pad. */
+  async onFirmaChanged(hasSignature: boolean): Promise<void> {
+    this.firmaLista.set(hasSignature);
+    this.firmaBlob.set(hasSignature ? ((await this.sig()?.toBlob()) ?? null) : null);
+  }
+
   async confirm(): Promise<void> {
     const c = this.activo();
     if (!c || this.submitting()) return;
+    // AE — el receptor debe firmar la recepción (prueba de entrega, AC7).
+    if (!this.receptorNombre().trim()) {
+      this.toast.error('Escribe el nombre de quien recibe.');
+      return;
+    }
+    if (!this.firmaBlob()) {
+      this.toast.error('Falta la firma de quien recibe.');
+      return;
+    }
     this.submitting.set(true);
     try {
       await this.inventario.enqueueRecepcion({
@@ -170,6 +225,8 @@ export class RecibirConducePage {
         })),
         notas: this.notas().trim() || null,
         foto: this.foto()?.blob ?? null,
+        firmaReceptor: this.firmaBlob(),
+        receptorNombre: this.receptorNombre().trim(),
       });
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.conduces.update((list) => list.filter((x) => x.id !== c.id));

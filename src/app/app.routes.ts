@@ -214,6 +214,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/ferreteria/ferreteria').then((m) => m.FerreteriaPage),
   },
   {
+    // AE — el chofer GENERA un conduce (salida de material) desde el móvil.
+    path: 'transporte/generar-conduce',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/generar-conduce/generar-conduce').then((m) => m.GenerarConducePage),
+  },
+  {
     // Reutiliza la pantalla de recibir conduce (mercancía/traslado) bajo Transporte.
     path: 'transporte/recibir-mercancia',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

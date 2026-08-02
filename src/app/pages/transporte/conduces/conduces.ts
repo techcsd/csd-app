@@ -204,6 +204,11 @@ export class ConducesPage implements OnDestroy {
     void this.router.navigate(['/transporte/rutas/crear']);
   }
 
+  /** AE — generar un conduce (sacar material de una bodega hacia una obra). */
+  generarConduce(): void {
+    void this.router.navigate(['/transporte/generar-conduce']);
+  }
+
   async ruta(rutaId: string, estado: 'en_curso' | 'completada'): Promise<void> {
     // Y4 — capturar el instante del TAP (no el del round-trip al servidor).
     const at = new Date().toISOString();
