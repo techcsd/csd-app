@@ -622,32 +622,38 @@ export class ConducesService {
 
       // AC7 — persistir las firmas en salida_firmas (emisor + receptor). El RPC es
       // idempotente por (salida_id, rol). Best-effort: si falla no revierte la entrega.
+      // Los RPCs de firma/enrutamiento SÍ se verifican (antifraude): si fallan, el
+      // outbox reintenta (todos idempotentes). Antes eran best-effort y una firma o
+      // el enrutamiento del pendiente se podía perder en silencio.
       const { data: userData } = await this.supabase.client.auth.getUser();
       const uid = userData.user?.id ?? null;
       const firmaEmisor = photoPaths['firma_emisor'];
       if (firmaEmisor) {
-        await this.supabase.client.rpc('firmar_conduce', {
+        const { error: eE } = await this.supabase.client.rpc('firmar_conduce', {
           p_salida_id: salidaId,
           p_rol: 'emisor',
           p_nombre: payload['emisor_nombre'] ?? 'Emisor',
           p_firma_path: firmaEmisor,
           p_usuario_id: uid,
         });
+        if (eE) throwSyncError(eE);
       }
       if (firmaReceptor) {
-        await this.supabase.client.rpc('firmar_conduce', {
+        const { error: eR } = await this.supabase.client.rpc('firmar_conduce', {
           p_salida_id: salidaId,
           p_rol: 'receptor',
           p_nombre: payload['receptor'] ?? 'Receptor',
           p_firma_path: firmaReceptor,
         });
+        if (eR) throwSyncError(eR);
       } else if (payload['receptor_usuario_id']) {
         // AE — receptor ausente: su firma queda PENDIENTE y se le enruta el aviso.
-        await this.supabase.client.rpc('asignar_firma_pendiente', {
+        const { error: eP } = await this.supabase.client.rpc('asignar_firma_pendiente', {
           p_salida_id: salidaId,
           p_usuario_id: payload['receptor_usuario_id'],
           p_nombre: payload['receptor'] ?? null,
         });
+        if (eP) throwSyncError(eP);
       }
     });
   }

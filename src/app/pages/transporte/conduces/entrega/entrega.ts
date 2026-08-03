@@ -232,6 +232,11 @@ export class ConduceEntregaPage {
   }
 
   finish(): void {
+    // Liberar las object-URLs de las firmas (evita fuga de memoria en la confirmación).
+    const e = this.firmaEmisorUrl();
+    if (e) URL.revokeObjectURL(e);
+    const r = this.firmaReceptorUrl();
+    if (r) URL.revokeObjectURL(r);
     void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
   }
 }

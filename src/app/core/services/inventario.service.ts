@@ -738,13 +738,16 @@ export class InventarioService {
       const firmaReceptor = photoPaths['firma_receptor'];
       if (firmaReceptor) {
         const { data: userData } = await this.supabase.client.auth.getUser();
-        await this.supabase.client.rpc('firmar_conduce', {
+        // Verificado (antifraude): si falla, el outbox reintenta (firmar_conduce es
+        // idempotente por (salida_id, rol)).
+        const { error: eF } = await this.supabase.client.rpc('firmar_conduce', {
           p_salida_id: salidaId,
           p_rol: 'receptor',
           p_nombre: payload['receptor_nombre'] ?? 'Receptor',
           p_firma_path: firmaReceptor,
           p_usuario_id: userData.user?.id ?? null,
         });
+        if (eF) throwSyncError(eF);
       }
     });
 

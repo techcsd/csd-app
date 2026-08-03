@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.54.0';
+const VERSION = '1.55.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,11 +62,11 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Entregar un conduce con la firma del receptor pendiente';
+const TITULO = 'Firmas de entrega más robustas al sincronizar';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Entregar un conduce cuando el que recibe no está: si el ingeniero/encargado de la obra no está, entregas igual y dejas su firma pendiente. Le llega un aviso y la firma después desde "Por firmar". Ya no te trabas esperando a que aparezca.' },
+  { t: 'seguridad', d: 'Más robustez en las firmas de entrega: si al sincronizar falla el registro de una firma o el aviso de una firma que quedó pendiente, ahora se reintenta solo en vez de perderse en silencio.' },
 ];
 
 const TIPO_POR_COMMIT = {
