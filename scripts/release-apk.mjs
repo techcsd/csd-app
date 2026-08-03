@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.52.0';
+const VERSION = '1.53.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,12 +62,11 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Devolver material con doble firma y firma pendiente enrutada';
+const TITULO = 'Aviso de "entregas por firmar" en la pantalla principal';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Devolver material: desde Transporte, el chofer devuelve material de una obra a un almacén. El stock se mueve al registrar y la entrega se confirma con DOS firmas — la del chofer (quien entrega) y la de quien recibe (el propio chofer o el ingeniero/encargado).' },
-  { t: 'nuevo', d: 'Firma pendiente: si el ingeniero que recibe no está presente, su firma queda pendiente y le llega un aviso. Él la firma después desde la bandeja "Por firmar" del menú de Transporte.' },
+  { t: 'mejora', d: 'Si tienes entregas por firmar, ahora te sale un aviso en la pantalla principal (y un contador en el menú de Transporte) para que las firmes de una vez, aunque no uses el módulo de Transporte.' },
 ];
 
 const TIPO_POR_COMMIT = {

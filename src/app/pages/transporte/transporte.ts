@@ -12,6 +12,7 @@ import { UserContextService } from '../../core/services/user-context.service';
 import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { ConducesService } from '../../core/services/conduces.service';
+import { InventarioService } from '../../core/services/inventario.service';
 import { MiAsignacion, PendientesTransporte } from '../../core/models/transporte.model';
 
 /** S15 — un cuadro del hub de transporte (patrón big-button del home). */
@@ -74,6 +75,7 @@ export class TransportePage {
   private badges = inject(BadgesService);
   private enProceso = inject(EnProcesoService);
   private conducesSvc = inject(ConducesService);
+  private inventario = inject(InventarioService);
 
   // V1 — documentación en proceso del módulo transporte/flota.
   private enProcesoCount = this.enProceso.counts;
@@ -92,6 +94,7 @@ export class TransportePage {
   asignaciones = signal<MiAsignacion[]>([]);
   reporteSemanalPend = signal(0);
   conducesNuevas = signal(0); // Y3 — rutas planificadas asignadas no vistas
+  firmasPendientes = signal(0); // AE — firmas de recepción por firmar
   loading = signal(true);
   /** P4 — vehículos con una recepción encolada (se marcan "Enviando…"). */
   enviandoIds = signal<Set<string>>(new Set());
@@ -128,6 +131,7 @@ export class TransportePage {
   badgeFor(key: string): number | null {
     if (key === 'semanal') return this.reporteSemanalPend() || null;
     if (key === 'conduces') return this.conducesNuevas() || null; // Y3
+    if (key === 'porFirmar') return this.firmasPendientes() || null; // AE
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
     if (key === 'enProceso') return this.enProcesoCount()['flota'] || null;
     return null;
@@ -224,6 +228,11 @@ export class TransportePage {
       this.reporteSemanalPend.set(semanalPend);
       this.enviandoIds.set(enviando);
       this.conducesNuevas.set(conducesNuevas);
+      // AE — firmas de recepción por firmar (best-effort).
+      void this.inventario
+        .misFirmasPendientes()
+        .then((l) => this.firmasPendientes.set(l.length))
+        .catch(() => {});
     } finally {
       this.loading.set(false);
     }

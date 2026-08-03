@@ -9,6 +9,17 @@
     <button type="button" class="home__logout" (click)="perfil()" aria-label="Mi perfil" data-tour="perfil">⚙️ Perfil</button>
   </header>
 
+  <!-- AE — firmas de recepción pendientes asignadas a mí -->
+  @if (firmasPendientes() > 0) {
+    <button type="button" class="home__firmar" (click)="irPorFirmar()">
+      <span class="home__firmar-icon">✍️</span>
+      <span class="home__firmar-txt">
+        Tienes {{ firmasPendientes() }} {{ firmasPendientes() === 1 ? 'entrega' : 'entregas' }} por firmar
+      </span>
+      <span class="home__firmar-go">›</span>
+    </button>
+  }
+
   <main class="home__grid" data-tour="tiles">
     @for (tile of tiles(); track tile.modulo) {
       <app-big-button

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { BigButton } from '../../shared/ui/big-button/big-button';
@@ -9,6 +9,8 @@ import { UserContextService } from '../../core/services/user-context.service';
 import { SessionService } from '../../core/services/session.service';
 import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
+import { InventarioService } from '../../core/services/inventario.service';
+import { SyncService } from '../../core/sync/sync.service';
 
 interface HomeTile {
   modulo: string;
@@ -52,11 +54,17 @@ export class HomePage {
   private router = inject(Router);
   private badges = inject(BadgesService);
   private enProceso = inject(EnProcesoService);
+  private inventario = inject(InventarioService);
+  private sync = inject(SyncService);
 
   nombre = this.ctx.nombre;
   obra = this.ctx.obraActiva;
   badgeCounts = this.badges.counts; // Q2 — pendientes por módulo
   enProcesoCounts = this.enProceso.counts; // V1 — borradores/envíos por módulo
+  // AE — firmas de recepción PENDIENTES asignadas a mí (banner de descubrimiento,
+  // porque un ingeniero receptor puede no tener el módulo flota).
+  firmasPendientes = signal(0);
+  private primerSync = true;
 
   // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
   // Tecnología se excluye de aquí porque NO es un módulo de trabajo (ver `tiles`).
@@ -101,6 +109,28 @@ export class HomePage {
     void this.badges.load();
     // V1 — contador de documentación en proceso (local, offline).
     void this.enProceso.refresh();
+    // AE — cuántas firmas de recepción me quedan por firmar (recarga al drenar).
+    void this.cargarFirmasPendientes();
+    effect(() => {
+      this.sync.changed();
+      if (this.primerSync) {
+        this.primerSync = false;
+        return;
+      }
+      if (this.sync.pendingCount() === 0) void this.cargarFirmasPendientes();
+    });
+  }
+
+  private async cargarFirmasPendientes(): Promise<void> {
+    try {
+      this.firmasPendientes.set((await this.inventario.misFirmasPendientes()).length);
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  irPorFirmar(): void {
+    void this.router.navigate(['/transporte/por-firmar']);
   }
 
   /** Q2+V1 — badge del tile = pendientes de aprobación + documentación en proceso. */

@@ -95,3 +95,31 @@
   font-size: var(--fs-option);
   font-weight: 700;
 }
+
+// AE — banner de firmas de recepción pendientes (descubrimiento para el receptor).
+.home__firmar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--Hub, #ffb300);
+  color: var(--main, #121212);
+  text-align: left;
+  cursor: pointer;
+}
+.home__firmar-icon {
+  font-size: 24px;
+}
+.home__firmar-txt {
+  flex: 1;
+  font-weight: 800;
+  font-size: 15px;
+}
+.home__firmar-go {
+  font-size: 26px;
+  font-weight: 800;
+}
