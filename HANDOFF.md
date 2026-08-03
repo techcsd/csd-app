@@ -1,5 +1,17 @@
 # HANDOFF — CSD App
 
+## ⏩ SESIÓN 03/08 — DEVICE-QA + hallazgo crítico WebView + v1.57.0 (rolling, piso 1.42.0)
+QA en teléfono real (Huawei STK-LX3, Android 10) vía ADB. **Build VERDE, cert prod `3c5316d8…df5065`.**
+
+- **🔴 HALLAZGO CRÍTICO — app en BLANCO en WebView viejo (raíz del misterio OUKITEL):** el equipo trae *Android System WebView* **Chromium 81**; Angular 21 usa sintaxis/APIs que no parsea (`??=`→85, `Object.hasOwn`→93, runtime ~111) → `SyntaxError` → pantalla blanca muda. **Bajar el build NO es opción:** Angular 21 rechaza compilar < “baseline widely available” (~Chromium 111; esbuild falla en `chrome80`). Confirmado en el bundle (77×`??=`, 3×`Object.hasOwn`).
+- **✅ FIX v1.57.0 — guard nativo:** `MainActivity.java` lee la versión de Chromium ANTES de cargar la app; si `< MIN_CHROMIUM_MAJOR (111)` muestra pantalla nativa clara en español con botón **ACTUALIZAR** (deep-link tienda) en vez del blanco. Verificado en el equipo (81 → aviso). Con WebView moderno no cambia nada. **Publicada rolling** (registrada Y1, `publicada=true`, apk en bucket, commit `314951b` push→PWA deploy). ⚠️ Un equipo que YA quedó en blanco con < 1.57.0 no se auto-actualiza (el chequeo vive en la app) → hay que actualizarle el WebView o reinstalar el APK a mano.
+- **✅ QA funcional (PWA en el Chrome 150 del propio equipo, mismo código Angular):** login correo+contraseña, set-PIN, Home con gating de módulos, Transporte hub (vehículos reales), Sacar material (conduce), Conduces y rutas (empty state), **Avisos** (campana, notificaciones reales: consumo anormal combustible + “compra ferretería por confirmar”). Todo renderiza OK. *No se enviaron transacciones (prod).* 
+- **✅ QA rol CHOFER:** se creó un chofer de prueba aislado (cédula `99900099900`), login cédula+PIN OK, **gating correcto** (home chofer = solo **Transporte + Notas**, sin Administración/Proyectos/etc.; Perfil muestra rol `Chofer_transportista`). **Test chofer + sus rows de auditoría BORRADOS de prod** (verificado). ⚠️ El conductor “TEST Conductor Prueba” (cédula `TEST-000-…`) está **vinculado a la cuenta admin** `tecnologia@…` — NO usarlo como chofer separado (rotarle el PIN cambia la clave del admin). La clave del admin quedó **restaurada a `Xavi4703`**.
+- **📄 Guía:** `docs/webview-viejo-guia.md` (pasos para el chofer + cómo inventariar el WebView del parque de equipos con ADB/Ajustes).
+- **Pendiente (device-QA de flujos con escritura):** sacar→entregar con firma, ferretería→recibir→Almacén confirma→stock, devolución con firma presente/pendiente→ingeniero firma en “Por firmar”. Requiere un chofer real (o autorizar transacciones de prueba en prod) — no se hizo para no ensuciar producción.
+
+---
+
 ## ⏩ RESUMEN SESIÓN 01–03/08 — módulo Transporte a fondo (v1.46 → v1.55, rolling, piso 1.42.0)
 Todas publicadas rolling (no forzadas), cert prod `3c5316d8…df5065`, build VERDE. **Device-QA es lo único pendiente** (mueve stock/cámara/GPS/firmas — no se puede headless). Migraciones SGC aplicadas a prod y commiteadas al repo SGC (algunas sin push).
 - **1.47** cámara nativa, borrador reporte semanal, combustible reordenado, notas formato, pre-uso corto, rutas paradas+conduces, firma al recibir, telehandler horas, mapa mejorado, paradas por mapa.
