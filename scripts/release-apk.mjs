@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.57.0';
+const VERSION = '1.58.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,11 +62,15 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-03';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Aviso claro cuando el navegador del sistema está viejo (se acabó la pantalla en blanco)';
+const TITULO = 'Rutas sin señal, telehandler por horas y arreglos de material (ronda de QA)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Si el “Android System WebView” de tu teléfono está muy viejo, la app ya no se queda en blanco sin explicación: ahora te muestra un aviso claro con un botón para actualizarlo desde la tienda.' },
+  { t: 'arreglo', d: 'Iniciar y completar una ruta ahora funciona sin señal: se guarda y se envía solo al reconectar (antes se trababa si no había internet).' },
+  { t: 'arreglo', d: 'En equipos medidos por horas (telehandler), registrar combustible y hacer el pre-uso ahora muestran HORAS (no kilómetros) en todas las pantallas, y ya no salta una falsa alerta de “posible fuga”.' },
+  { t: 'arreglo', d: 'Al firmar sin señal una entrega que estaba pendiente, la bandeja “Por firmar” ya no se queda en blanco: sigue mostrando las demás.' },
+  { t: 'arreglo', d: 'Devolver material a un almacén ya no puede descontar el stock dos veces si el envío se reintenta por mala señal.' },
+  { t: 'mejora', d: 'Al sacar o devolver material, si no hay existencia de un artículo ahora te avisa con una advertencia (antes no decía nada y fallaba después).' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -92,13 +92,19 @@ export class GenerarConducePage implements OnDestroy {
     }
   }
 
-  /** AE — stock disponible del material en la bodega elegida (null si no se sabe). */
+  /**
+   * AE — stock disponible del material en la bodega elegida.
+   * AE7 — si el preview de stock CARGÓ pero el artículo no está en el mapa, es
+   * porque su existencia es 0 (no "desconocido") → devolvemos 0 para avisar del
+   * exceso justo donde más importa. Solo es null cuando el mapa no cargó (offline).
+   */
   stockDe(articuloId: string | null): number | null {
     if (!articuloId) return null;
     const m = this.existencias();
-    return articuloId in m ? m[articuloId] : null;
+    if (articuloId in m) return m[articuloId];
+    return Object.keys(m).length > 0 ? 0 : null;
   }
-  /** AE — la cantidad a sacar supera el stock conocido. */
+  /** AE — la cantidad a sacar supera el stock conocido (0 cuenta como conocido). */
   excedeStock(l: CartLinea): boolean {
     const s = this.stockDe(l.articulo_id);
     return s != null && l.cantidad > s;

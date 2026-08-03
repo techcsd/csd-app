@@ -544,7 +544,12 @@ export class InventarioService {
       payload: { entrada_id: entradaId, items },
       resumen: { tipo: 'entrada_ferreteria', entrada_id: entradaId, capturado_en },
     });
-    await this.catalog.invalidate('entradas_ferreteria_pend');
+    // AE7 — quitar la entrada confirmada de la caché SIN borrarla (borrarla dejaba
+    // la lista vacía al recargar sin señal). El resto sigue visible offline.
+    await this.catalog.optimisticUpdate<EntradaFerreteriaPendiente[]>(
+      'entradas_ferreteria_pend',
+      (prev) => (prev ?? []).filter((e) => e.id !== entradaId),
+    );
     void this.misEntradasFerreteriaPendientes();
   }
 
@@ -606,7 +611,12 @@ export class InventarioService {
       fotos: [{ id: crypto.randomUUID(), bucket: 'conduces', path: `${salidaId}/firma-receptor-tardia.png`, slot: 'firma', blob: firma }],
       resumen: { tipo: 'firmar_receptor', salida_id: salidaId, capturado_en },
     });
-    await this.catalog.invalidate('firmas_pendientes');
+    // AE7 — quitar la firma resuelta de la caché SIN borrarla (borrarla dejaba la
+    // bandeja "Por firmar" vacía al recargar sin señal). El resto sigue visible.
+    await this.catalog.optimisticUpdate<FirmaPendiente[]>(
+      'firmas_pendientes',
+      (prev) => (prev ?? []).filter((f) => f.salida_id !== salidaId),
+    );
   }
 
   /** AE — stock del almacén de una obra ({articulo_id: cantidad}) para el preview
@@ -724,6 +734,9 @@ export class InventarioService {
         p_observaciones: null,
         p_creado_por: null, // el RPC usa auth.uid() por defecto
         p_items: payload['items'],
+        // AE7 — UUID de cliente → overload idempotente (evita doble-conteo de
+        // stock si el outbox reintenta tras una respuesta perdida).
+        p_id: payload['id'],
       });
       // Rechazo por stock insuficiente / obra sin almacén → P0001 permanente,
       // legible en "Pendientes de envío" (FASE 1).

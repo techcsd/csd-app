@@ -673,12 +673,17 @@ export class ReporteSemanalPage extends GuardedWizard {
       return false;
     }
     if (this.esKm()) {
+      const esHoras = this.vehDetalle()?.medida_uso === 'horas';
       if (this.km() == null || this.km()! <= 0) {
-        this.toast.error('Escribe el kilometraje actual.');
+        this.toast.error(esHoras ? 'Escribe las horas de uso actuales.' : 'Escribe el kilometraje actual.');
         return false;
       }
       if (this.kmInvalido()) {
-        this.toast.error(`El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`);
+        this.toast.error(
+          esHoras
+            ? `Las horas no pueden ser menores a las últimas registradas (${this.odometro()} h).`
+            : `El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`,
+        );
         return false;
       }
       if (!this.nivelCombustible()) {

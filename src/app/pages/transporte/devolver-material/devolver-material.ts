@@ -111,11 +111,17 @@ export class DevolverMaterialPage implements OnDestroy {
       this.existencias.set({});
     }
   }
-  /** AE — stock disponible del material en la obra (null si no se sabe). */
+  /**
+   * AE — stock disponible del material en la obra.
+   * AE7 — mapa cargado pero artículo ausente = existencia 0 (existencias_de_obra
+   * excluye los ceros) → devolvemos 0 para avisar del exceso. null solo si el
+   * preview no cargó (offline).
+   */
   stockDe(articuloId: string | null): number | null {
     if (!articuloId) return null;
     const m = this.existencias();
-    return articuloId in m ? m[articuloId] : null;
+    if (articuloId in m) return m[articuloId];
+    return Object.keys(m).length > 0 ? 0 : null;
   }
   /** AE — la cantidad a devolver supera el stock de la obra. */
   excedeStock(l: CartLinea): boolean {

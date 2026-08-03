@@ -173,6 +173,11 @@ export class PreusoPage extends GuardedWizard {
     return v ? `${v.marca} ${v.modelo}` : '';
   });
   esPesado = computed(() => esVehiculoPesado(this.vehiculo()?.tipo));
+  // AE7 — telehandler/equipo medido por HORAS: el pre-uso mostraba "km" en todos
+  // lados (odómetro, mantenimiento, resumen). Unidad/label parametrizados.
+  esHoras = computed(() => this.vehiculo()?.medida_uso === 'horas');
+  unidadUso = computed(() => (this.esHoras() ? 'h' : 'km'));
+  labelUso = computed(() => (this.esHoras() ? 'Horas de uso' : 'Kilometraje'));
   private clase = computed(() => claseVehiculo(this.vehiculo()?.tipo));
   /** #2 seguridad: el chofer debe estar autorizado para la clase del vehículo. */
   autorizadoParaVehiculo = computed(() => {
@@ -549,11 +554,13 @@ export class PreusoPage extends GuardedWizard {
           return false;
         }
         if (this.km() === null || this.km()! <= 0) {
-          this.toast.error('Escribe el kilometraje de salida.');
+          this.toast.error(this.esHoras() ? 'Escribe las horas de uso de salida.' : 'Escribe el kilometraje de salida.');
           return false;
         }
         if (this.kmInvalido()) {
-          this.toast.error(`No puede ser menor al último registrado (${this.vehiculo()?.kilometraje} km).`);
+          this.toast.error(
+            `No puede ser menor al último registrado (${this.vehiculo()?.kilometraje} ${this.unidadUso()}).`,
+          );
           return false;
         }
         if (!this.nivelCombustible()) {

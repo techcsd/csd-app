@@ -1,5 +1,17 @@
 # HANDOFF — CSD App
 
+## ⏩ SESIÓN 03/08 (cont.) — Ronda de QA de código del módulo Transporte + v1.58.0 (rolling)
+4 revisores en paralelo sobre Transporte (conduces/rutas, sacar/devolver material+firmas, combustible/preuso/vehículos, motor sync/outbox) → ~18 hallazgos sustanciados. **Arreglados (build VERDE):**
+- **[HIGH] Iniciar/completar ruta ahora es OFFLINE-first.** `marcarRuta` llamaba al RPC directo y fallaba sin señal; ahora va por el outbox (nuevo `tipo_op: 'ruta_estado'` + handler `marcar_ruta_estado`, idempotente). `conduces.service.ts` + `en-proceso.service.ts`.
+- **[HIGH] Telehandler (medida_uso='horas') mostraba HORAS como KM y disparaba falsa alerta "posible fuga".** `clasificarRendimientoLocal`/`calcularCombustible` ahora reciben `esHoras` (sin umbrales absolutos km; solo comparación vs su propio histórico, wording h/gal); confirmación de combustible, **reporte semanal** y **pre-uso** con unidades h/label correctos. `combustible.model.ts` + `combustible.*` + `reporte-semanal.*` + `preuso.*` (nuevo `esHoras/unidadUso/labelUso`).
+- **[HIGH] `inv_devolucion_obra` no era idempotente → doble-conteo de stock en reintento.** Migración SGC `2026-08-03-ae7-devolucion-obra-idempotente.sql` (aplicada + commiteada en repo SGC, sin push): nuevo overload de 9 args con `p_id` + guard `exists` (entrada.id=p_id, como `registrar_salida_app`); handler pasa `payload['id']`. Overload de 8 args conservado (compat).
+- **[MEDIUM] Firmar una pendiente sin señal vaciaba la bandeja.** `catalog.invalidate` (borraba caché) → offline reload = lista vacía. Nuevo `catalog.optimisticUpdate` reescribe la lista quitando el ítem (firmas_pendientes + entradas_ferreteria_pend).
+- **[MEDIUM] Stock 0/ausente no avisaba "excede".** `stockDe`/`excedeStock` en sacar+devolver: mapa cargado pero artículo ausente = 0 (avisa), null solo si no cargó (offline).
+
+**Pendientes (reportados, NO arreglados)** — priorizar con Xaviel: preuso foto-de-falla no enlazada al respuesta server-side (verificar convención web antes); adjuntar-conduce puede robar un conduce de otra ruta; ETA a próxima parada se queda vieja tras entregar; "No, faltó algo" con cantidades sin bajar se graba completo; **decisión de producto**: receptor "yo mismo" en devolución = 1 sola firma (colapsa el antifraude); + varios LOW (talla no capturada, SignaturePad sin listener de rotación, FIFO en backoff, en-proceso no cubre ops de inventario, última-echada por máx-odómetro). Ver findings completos en la conversación.
+
+---
+
 ## ⏩ SESIÓN 03/08 — DEVICE-QA + hallazgo crítico WebView + v1.57.0 (rolling, piso 1.42.0)
 QA en teléfono real (Huawei STK-LX3, Android 10) vía ADB. **Build VERDE, cert prod `3c5316d8…df5065`.**
 

@@ -154,7 +154,11 @@
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
           <li><span>Vehículo</span><b>{{ veh.placa }}</b></li>
-          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          @if (vehDetalle()?.medida_uso === 'horas') {
+            <li><span>Horas de uso</span><b>{{ km() | number: '1.0-0' }} h</b></li>
+          } @else {
+            <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          }
           <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
           <li><span>Fotos</span><b>{{ fotoSlots().length }} ✓</b></li>
           <li><span>Resultado</span><b>{{ resultadoLocal() === 'aprobado' ? 'Todo bien' : resultadoLocal() === 'con_hallazgos' ? 'Con hallazgos' : 'Bloqueado' }}</b></li>
@@ -162,8 +166,8 @@
         @if (mantenimiento(); as m) {
           @if (m.estado !== 'ok') {
             <p class="rsem__band" [class.rsem__band--warn]="m.estado === 'pre_cita'" [class.rsem__band--danger]="m.estado === 'vencido'">
-              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO (pasado con {{ -m.faltan | number: '1.0-0' }} km). }
-              @else { 🟠 Cerca del mantenimiento: faltan {{ m.faltan | number: '1.0-0' }} km. }
+              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO (pasado con {{ -m.faltan | number: '1.0-0' }} {{ vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km' }}). }
+              @else { 🟠 Cerca del mantenimiento: faltan {{ m.faltan | number: '1.0-0' }} {{ vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km' }}. }
             </p>
           }
         }

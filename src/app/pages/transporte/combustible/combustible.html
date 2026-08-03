@@ -51,33 +51,38 @@
           <span class="comb__card-value">{{ galones() | number: '1.0-2' }} gal</span>
           <span class="comb__card-sub">RD$ {{ monto() | number: '1.2-2' }}</span>
         </div>
-        <div class="comb__card">
-          <span class="comb__card-label">Precio por galón</span>
-          <span class="comb__card-value">RD$ {{ resultado()?.precioPorGalon | number: '1.2-2' }}</span>
-        </div>
+        <!-- AE7 — en depósito en obra (garrafón) no hay precio de bomba: el card
+             saldría "RD$ " en blanco. Solo se muestra cuando hay precio. -->
+        @if (!esDeposito()) {
+          <div class="comb__card">
+            <span class="comb__card-label">Precio por galón</span>
+            <span class="comb__card-value">RD$ {{ resultado()?.precioPorGalon | number: '1.2-2' }}</span>
+          </div>
+        }
         <!-- Z23-app — rendimiento/recorrido/costo solo aplican a un vehículo -->
+        <!-- AE7 — telehandler medido por HORAS: unidades h/gal y "por hora". -->
         @if (!modoPersona()) {
           <div class="comb__card">
             <span class="comb__card-label">Rendimiento</span>
             @if (resultado()?.rendimiento != null) {
-              <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} km/gal</span>
+              <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}</span>
               @if (ultima().promedio_rendimiento != null) {
-                <span class="comb__card-sub">Promedio: {{ ultima().promedio_rendimiento | number: '1.2-2' }} km/gal</span>
+                <span class="comb__card-sub">Promedio: {{ ultima().promedio_rendimiento | number: '1.2-2' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}</span>
               }
             } @else {
               <span class="comb__card-value comb__card-value--muted">Primera echada</span>
             }
           </div>
           <div class="comb__card">
-            <span class="comb__card-label">Recorrido</span>
+            <span class="comb__card-label">{{ esTelehandler() ? 'Uso' : 'Recorrido' }}</span>
             @if (resultado()?.kmRecorridos != null) {
-              <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} km</span>
+              <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} {{ esTelehandler() ? 'h' : 'km' }}</span>
             } @else {
               <span class="comb__card-value comb__card-value--muted">—</span>
             }
           </div>
           <div class="comb__card">
-            <span class="comb__card-label">Costo por km</span>
+            <span class="comb__card-label">{{ esTelehandler() ? 'Costo por hora' : 'Costo por km' }}</span>
             @if (resultado()?.costoPorKm != null) {
               <span class="comb__card-value">RD$ {{ resultado()?.costoPorKm | number: '1.2-2' }}</span>
             } @else {

@@ -60,7 +60,7 @@
       <!-- Registro -->
       <ul class="resumen">
         <li><span>Vehículo</span><b>{{ placa() }} · {{ modelo() }}</b></li>
-        <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+        <li><span>{{ labelUso() }}</span><b>{{ km() | number: '1.0-0' }} {{ unidadUso() }}</b></li>
         <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
         <li><span>Fotos</span><b>7 ✓</b></li>
         <li><span>Puntos</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
@@ -70,11 +70,11 @@
       @if (mantenimiento(); as m) {
         <div class="mant-box mant-box--{{ m.estado }}">
           @if (m.estado === 'vencido') {
-            ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km.
+            ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} {{ unidadUso() }}.
           } @else if (m.estado === 'pre_cita') {
-            ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km — se envió aviso para la PRE-CITA.
+            ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} — se envió aviso para la PRE-CITA.
           } @else {
-            Faltan {{ m.faltan | number: '1.0-0' }} km para el mantenimiento (próximo: {{ m.proximo | number: '1.0-0' }} km).
+            Faltan {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} para el mantenimiento (próximo: {{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
           }
         </div>
       }
@@ -128,9 +128,9 @@
         <span class="preuso__placa">{{ placa() || '—' }}</span>
         <span class="preuso__modelo">{{ modelo() }}</span>
         @if (mantResumen(); as mr) {
-          <span class="preuso__veh-km">Último registro: {{ mr.ultimoKm | number: '1.0-0' }} km</span>
+          <span class="preuso__veh-km">Último registro: {{ mr.ultimoKm | number: '1.0-0' }} {{ unidadUso() }}</span>
           <span class="preuso__veh-mant">
-            Mantenimiento cada {{ mr.intervalo | number: '1.0-0' }} km · próx. {{ mr.proximo | number: '1.0-0' }} km
+            Mantenimiento cada {{ mr.intervalo | number: '1.0-0' }} {{ unidadUso() }} · próx. {{ mr.proximo | number: '1.0-0' }} {{ unidadUso() }}
           </span>
         }
       </div>
@@ -145,9 +145,9 @@
       @if (step() === 1) {
         <h1 class="screen__title">Datos de salida</h1>
 
-        <label class="field-label" for="km">Kilometraje actual</label>
+        <label class="field-label" for="km">{{ esHoras() ? 'Horas de uso actuales' : 'Kilometraje actual' }}</label>
         @if (vehiculo()?.kilometraje != null) {
-          <p class="preuso__km-ref">Último registrado: {{ vehiculo()?.kilometraje | number: '1.0-0' }} km</p>
+          <p class="preuso__km-ref">Último registrado: {{ vehiculo()?.kilometraje | number: '1.0-0' }} {{ unidadUso() }}</p>
         }
         <input
           id="km"
@@ -157,11 +157,11 @@
           [class.preuso__km--error]="kmInvalido()"
           [ngModel]="km()"
           (ngModelChange)="km.set($event)"
-          placeholder="Escribe el km de hoy"
+          [placeholder]="esHoras() ? 'Escribe las horas de hoy' : 'Escribe el km de hoy'"
         />
         @if (kmInvalido()) {
           <p class="preuso__warn">
-            No puede ser menor al último registrado ({{ vehiculo()?.kilometraje | number: '1.0-0' }} km).
+            No puede ser menor al último registrado ({{ vehiculo()?.kilometraje | number: '1.0-0' }} {{ unidadUso() }}).
           </p>
         }
 
@@ -183,11 +183,11 @@
         @if (mantenimiento(); as m) {
           <div class="mant-box mant-box--{{ m.estado }}">
             @if (m.estado === 'vencido') {
-              ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km.
+              ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} {{ unidadUso() }}.
             } @else if (m.estado === 'pre_cita') {
-              ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} km para el mantenimiento ({{ m.proximo | number: '1.0-0' }} km). Se enviará aviso para agendar la PRE-CITA.
+              ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} para el mantenimiento ({{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}). Se enviará aviso para agendar la PRE-CITA.
             } @else {
-              Faltan {{ m.faltan | number: '1.0-0' }} km para el mantenimiento ({{ m.proximo | number: '1.0-0' }} km).
+              Faltan {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} para el mantenimiento ({{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
             }
           </div>
         }
@@ -337,7 +337,7 @@
 
         <ul class="resumen">
           <li><span>Vehículo</span><b>{{ placa() }}</b></li>
-          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          <li><span>{{ labelUso() }}</span><b>{{ km() | number: '1.0-0' }} {{ unidadUso() }}</b></li>
           <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
           <li><span>Fotos</span><b>7 ✓</b></li>
           <li><span>Firma</span><b>{{ firmaLista() ? '✓' : 'Pendiente' }}</b></li>

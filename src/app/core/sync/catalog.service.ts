@@ -52,6 +52,18 @@ export class CatalogService {
   }
 
   /**
+   * AE7 — reescribe OPTIMISTAMENTE una lista cacheada (p. ej. quitar el ítem que
+   * el chofer acaba de firmar/confirmar) en vez de BORRAR la caché con
+   * `invalidate`. Borrarla dejaba la pantalla VACÍA si el usuario recargaba sin
+   * señal (el loader falla → `read` devuelve null). Con esto, offline la lista
+   * sigue mostrando el resto; al reconectar, `refresh` re-consulta y cuadra.
+   */
+  async optimisticUpdate<T>(tipo: string, fn: (prev: T | null) => T): Promise<void> {
+    const prev = await this.read<T>(tipo);
+    await this.write(tipo, fn(prev));
+  }
+
+  /**
    * Refresh a catalogue via its loader when online. On failure (offline or
    * error) returns the last cached value so the UI degrades gracefully.
    */

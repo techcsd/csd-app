@@ -174,7 +174,7 @@ export class CombustiblePage extends GuardedWizard {
 
   /** Live derivation shown in the dark box (mirrors the server). */
   calc = computed(() =>
-    calcularCombustible(this.km(), this.galones(), this.monto(), this.ultima()),
+    calcularCombustible(this.km(), this.galones(), this.monto(), this.ultima(), this.esTelehandler()),
   );
 
   /** true when km isn't greater than the vehicle's last fill-up. */

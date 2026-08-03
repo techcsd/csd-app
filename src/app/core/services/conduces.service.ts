@@ -400,18 +400,25 @@ export class ConducesService {
    * Y4 — cambia el estado de la ruta registrando el instante del TAP (`p_at`),
    * no el momento en que el servidor procesa la llamada. El servidor lo usa con
    * sanity-check (no futuro, no anterior a la creación; fin ≥ inicio).
+   *
+   * AE7 — OFFLINE-first: iniciar/completar/cancelar una ruta va por el OUTBOX
+   * (antes llamaba al RPC directo y fallaba sin señal, rompiendo el contrato
+   * offline como el resto del flujo). El `at` es el instante del TAP, así que el
+   * proceso diferido no altera los tiempos. El RPC `marcar_ruta_estado` es
+   * idempotente (fija el estado con sanity-check) → seguro ante reintentos.
    */
   async marcarRuta(
     rutaId: string,
     estado: 'en_curso' | 'completada' | 'cancelada',
     at: string = new Date().toISOString(),
   ): Promise<void> {
-    const { error } = await this.supabase.client.rpc('marcar_ruta_estado', {
-      p_ruta_id: rutaId,
-      p_estado: estado,
-      p_at: at,
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'ruta_estado',
+      capturado_en: at,
+      payload: { ruta_id: rutaId, estado, at },
+      resumen: { tipo: 'ruta_estado', ruta_id: rutaId, estado, capturado_en: at },
     });
-    if (error) throw new Error(error.message);
     void this.misRutas();
   }
 
@@ -578,6 +585,17 @@ export class ConducesService {
         p_firma_path: photoPaths['parada_firma'] ?? null,
         p_entregado_a: payload['entregado_a'] ?? null,
         p_notas: payload['notas'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
+    // AE7 — iniciar/completar/cancelar una ruta. Offline-first; el RPC fija el
+    // estado con sanity-check → idempotente ante reintentos.
+    this.sync.register('ruta_estado', async (payload) => {
+      const { error } = await this.supabase.client.rpc('marcar_ruta_estado', {
+        p_ruta_id: payload['ruta_id'],
+        p_estado: payload['estado'],
+        p_at: payload['at'],
       });
       if (error) throwSyncError(error);
     });

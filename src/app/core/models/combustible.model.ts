@@ -44,17 +44,49 @@ export function clasificarRendimientoLocal(
   galones: number | null,
   rendimiento: number | null,
   baseline: number | null,
+  esHoras = false,
 ): { estado: RendimientoEstado; motivo: string } {
   if (kmRecorridos == null) {
     return {
       estado: 'datos_insuficientes',
-      motivo: 'Primera echada del vehículo — aún sin distancia para comparar el rendimiento.',
+      motivo: esHoras
+        ? 'Primera echada del equipo — aún sin horas para comparar el consumo.'
+        : 'Primera echada del vehículo — aún sin distancia para comparar el rendimiento.',
     };
   }
   if (!galones || galones <= 0 || rendimiento == null) {
     return {
       estado: 'datos_insuficientes',
       motivo: 'No hay galones/lectura suficientes para calcular el rendimiento.',
+    };
+  }
+  // AE7 — telehandler/equipo medido por HORAS: los umbrales absolutos de km
+  // (dist mínima, rendimiento imposible km/gal) NO aplican y disparaban un
+  // "posible fuga" falso. Para horas solo comparamos contra su PROPIO histórico
+  // (unidad-agnóstico): sin baseline suficiente, se registra sin alarmar.
+  if (esHoras) {
+    if (baseline != null && baseline > 0) {
+      const dev = Math.abs(rendimiento - baseline) / baseline;
+      if (dev > UMBRAL_ANORMAL_PCT / 100) {
+        return {
+          estado: 'anormal',
+          motivo: `Consumo fuera de rango: ${rendimiento.toFixed(1)} vs. lo esperado ≈ ${baseline.toFixed(1)} h/gal (desviación mayor al ${UMBRAL_ANORMAL_PCT}%). Revisar el equipo o la lectura.`,
+        };
+      }
+      if (rendimiento < baseline * (1 - CONSUMO_ANORMAL_PCT / 100)) {
+        return {
+          estado: 'bajo',
+          motivo: `Rinde ${rendimiento.toFixed(1)} h/gal, por debajo de lo normal (≈ ${baseline.toFixed(1)}) pero dentro de un margen explicable. Vale la pena vigilarlo.`,
+        };
+      }
+      return {
+        estado: 'optimo',
+        motivo: `Consumo dentro de lo esperado para este equipo (≈ ${baseline.toFixed(1)} h/gal).`,
+      };
+    }
+    return {
+      estado: 'datos_insuficientes',
+      motivo: `Consumo de ${rendimiento.toFixed(1)} h/gal registrado. Aún sin histórico propio suficiente para comparar (el rendimiento por hora se evalúa contra su promedio).`,
     };
   }
   if (kmRecorridos < DIST_MIN_KM) {
@@ -191,6 +223,7 @@ export function calcularCombustible(
   galones: number | null,
   monto: number | null,
   ultima: UltimaEchada,
+  esHoras = false,
 ): CombustibleCalculo {
   const g = galones && galones > 0 ? galones : null;
   const m = monto && monto > 0 ? monto : null;
@@ -214,7 +247,7 @@ export function calcularCombustible(
     alertaConsumo = rendimiento < (1 - CONSUMO_ANORMAL_PCT / 100) * baseline;
   }
 
-  const { estado, motivo } = clasificarRendimientoLocal(kmRecorridos, g, rendimiento, baseline);
+  const { estado, motivo } = clasificarRendimientoLocal(kmRecorridos, g, rendimiento, baseline, esHoras);
 
   return { precioPorGalon, kmRecorridos, rendimiento, costoPorKm, alertaConsumo, estado, estadoMotivo: motivo };
 }
