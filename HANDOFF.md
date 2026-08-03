@@ -1,5 +1,20 @@
 # HANDOFF — CSD App
 
+## ⏩ RESUMEN SESIÓN 01–03/08 — módulo Transporte a fondo (v1.46 → v1.55, rolling, piso 1.42.0)
+Todas publicadas rolling (no forzadas), cert prod `3c5316d8…df5065`, build VERDE. **Device-QA es lo único pendiente** (mueve stock/cámara/GPS/firmas — no se puede headless). Migraciones SGC aplicadas a prod y commiteadas al repo SGC (algunas sin push).
+- **1.47** cámara nativa, borrador reporte semanal, combustible reordenado, notas formato, pre-uso corto, rutas paradas+conduces, firma al recibir, telehandler horas, mapa mejorado, paradas por mapa.
+- **1.48** antifraude ferretería (Almacén confirma; chofer ve pendientes), stock al sacar material, tile "Sacar material".
+- **1.49** rutas en curso auto-expanden, progreso X/Y, ir a próxima parada, reconciliación al drenar.
+- **1.50** ejecución de rutas OFFLINE (paradas/adjuntar conduce sin señal, optimista).
+- **1.51** firma+evidencia al entregar parada, ETA a próxima parada, fixes de review.
+- **1.52** **Devolver material** (obra→almacén) con doble firma + firma pendiente enrutada (nuevo patrón: `firma_pendiente_usuario_id`, `asignar_firma_pendiente`/`mis_firmas_pendientes`, bandeja "Por firmar").
+- **1.53** banner "Por firmar" en Home + badge en hub (descubrimiento del receptor).
+- **1.54** firma pendiente enrutada también en la ENTREGA de conduces (receptor ausente → pendiente).
+- **1.55** review: firmas verificadas (no best-effort) + revoke object-URLs.
+**Regla #5 WEB — HECHO** (SGC commit `0e18d9b`, push→deploy): el detalle del conduce (`inventario/conduce`) muestra "firma de receptor **PENDIENTE** · Asignada a X" cuando `firma_pendiente_usuario_id` está set (aditivo: 1 campo en `SalidaInventario` + 1 rama de plantilla; `*` ya trae las columnas). Devoluciones ya se veían en Entradas/Movimientos/Conduces/Salidas. **Follow-ups menores (no bloquean):** stock preview en devolución (falta mapeo obra→bodega), notificar al chofer cuando su firma pendiente se completa, lector de notificaciones in-app. **Crítico ahora = device-QA.**
+
+---
+
 ## Ronda 01–02/08 — Feedback de campo (módulo Transporte) — v1.47.0 + v1.48.0 (rolling, no forzada)
 **Estado:** `npm run build` VERDE (10 warnings NG8102 preexistentes). **Migraciones SGC aplicadas** a prod: `2026-08-02-ae-ferreteria-recibir-chofer.sql` (+ **`2026-08-02-ae2-revert-ferreteria-antifraude.sql`** — ver más abajo). Device-QA pendiente.
 **Releases:** v1.47.0 (commit `d7406f9`) publicada; luego **v1.48.0** (ajuste antifraude + mejoras). Ambas rolling, no forzadas; piso 1.42.0. Cert prod `3c5316d8…df5065`.
