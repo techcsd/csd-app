@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.53.0';
+const VERSION = '1.54.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,11 +62,11 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Aviso de "entregas por firmar" en la pantalla principal';
+const TITULO = 'Entregar un conduce con la firma del receptor pendiente';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'Si tienes entregas por firmar, ahora te sale un aviso en la pantalla principal (y un contador en el menú de Transporte) para que las firmes de una vez, aunque no uses el módulo de Transporte.' },
+  { t: 'nuevo', d: 'Entregar un conduce cuando el que recibe no está: si el ingeniero/encargado de la obra no está, entregas igual y dejas su firma pendiente. Le llega un aviso y la firma después desde "Por firmar". Ya no te trabas esperando a que aparezca.' },
 ];
 
 const TIPO_POR_COMMIT = {

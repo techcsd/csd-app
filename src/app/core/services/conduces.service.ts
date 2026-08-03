@@ -20,11 +20,13 @@ export interface ConduceEntregaCaptura {
   receptor: string;
   notas: string | null;
   fotoEntrega: Blob;
-  /** AC7 — firma de quien RECIBE (receptor). */
-  firma: Blob;
-  // AC7 — firma de quien ENTREGA (emisor: chofer/almacén). Ambas obligatorias.
+  /** AC7 — firma de quien RECIBE (receptor). null = receptor ausente (pendiente). */
+  firma: Blob | null;
+  // AC7 — firma de quien ENTREGA (emisor: chofer/almacén). Obligatoria.
   emisorNombre: string;
   firmaEmisor: Blob;
+  /** AE — si el receptor NO firmó ahora, a quién se le asigna la firma pendiente. */
+  receptorUsuarioId?: string | null;
 }
 
 /** AD6 — tipo de ruta (aditivo). Personal/traslado no exigen carga. */
@@ -445,6 +447,16 @@ export class ConducesService {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
 
+    const fotos = [
+      { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-entrega.jpg`, slot: 'entrega', blob: input.fotoEntrega },
+      // AC7 — firma del emisor (quien entrega).
+      { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-firma-emisor.png`, slot: 'firma_emisor', blob: input.firmaEmisor },
+    ];
+    // AC7/AE — firma del receptor SOLO si está presente; si no, queda pendiente.
+    if (input.firma) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-firma.png`, slot: 'firma', blob: input.firma });
+    }
+
     await this.sync.enqueue({
       id,
       tipo_op: 'conduce_entrega',
@@ -455,31 +467,9 @@ export class ConducesService {
         receptor: input.receptor,
         emisor_nombre: input.emisorNombre, // AC7
         notas: input.notas,
+        receptor_usuario_id: input.receptorUsuarioId ?? null, // AE — firma pendiente
       },
-      fotos: [
-        {
-          id: crypto.randomUUID(),
-          bucket: 'conduces',
-          path: `${input.salidaId}/${id}-entrega.jpg`,
-          slot: 'entrega',
-          blob: input.fotoEntrega,
-        },
-        {
-          id: crypto.randomUUID(),
-          bucket: 'conduces',
-          path: `${input.salidaId}/${id}-firma.png`,
-          slot: 'firma',
-          blob: input.firma,
-        },
-        // AC7 — firma del emisor (quien entrega).
-        {
-          id: crypto.randomUUID(),
-          bucket: 'conduces',
-          path: `${input.salidaId}/${id}-firma-emisor.png`,
-          slot: 'firma_emisor',
-          blob: input.firmaEmisor,
-        },
-      ],
+      fotos,
       resumen: { salida_id: input.salidaId, receptor: input.receptor, capturado_en },
     });
 
@@ -619,23 +609,22 @@ export class ConducesService {
 
     this.sync.register('conduce_entrega', async (payload, photoPaths) => {
       const salidaId = payload['salida_id'] as string;
+      const firmaReceptor = photoPaths['firma']; // AE — puede faltar (receptor ausente)
       const { error } = await this.supabase.client.rpc('entregar_conduce', {
         p_salida_id: salidaId,
         p_items: payload['items'],
         p_receptor: payload['receptor'],
-        p_firma_url: photoPaths['firma'],
+        p_firma_url: firmaReceptor ?? null,
         p_foto_url: photoPaths['entrega'],
         p_notas: payload['notas'] ?? null,
       });
       if (error) throwSyncError(error);
 
-      // AC7 — persistir AMBAS firmas en salida_firmas (emisor + receptor). El RPC
-      // es idempotente por (salida_id, rol), así que un reintento del outbox no
-      // duplica. Best-effort: si falla no revierte la entrega (ya registrada).
+      // AC7 — persistir las firmas en salida_firmas (emisor + receptor). El RPC es
+      // idempotente por (salida_id, rol). Best-effort: si falla no revierte la entrega.
       const { data: userData } = await this.supabase.client.auth.getUser();
       const uid = userData.user?.id ?? null;
       const firmaEmisor = photoPaths['firma_emisor'];
-      const firmaReceptor = photoPaths['firma'];
       if (firmaEmisor) {
         await this.supabase.client.rpc('firmar_conduce', {
           p_salida_id: salidaId,
@@ -651,6 +640,13 @@ export class ConducesService {
           p_rol: 'receptor',
           p_nombre: payload['receptor'] ?? 'Receptor',
           p_firma_path: firmaReceptor,
+        });
+      } else if (payload['receptor_usuario_id']) {
+        // AE — receptor ausente: su firma queda PENDIENTE y se le enruta el aviso.
+        await this.supabase.client.rpc('asignar_firma_pendiente', {
+          p_salida_id: salidaId,
+          p_usuario_id: payload['receptor_usuario_id'],
+          p_nombre: payload['receptor'] ?? null,
         });
       }
     });

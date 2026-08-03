@@ -129,3 +129,44 @@ app-option-button {
   border-radius: 8px;
   border: 1px solid var(--color-border);
 }
+
+// AE — receptor ausente: búsqueda del ingeniero + firma pendiente.
+.entrega__mt {
+  margin-top: 12px;
+}
+.entrega__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.entrega__ures {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.entrega__ures-nombre {
+  font-weight: 700;
+}
+.entrega__ures-email {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.entrega__band {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
+  font-size: 13px;
+}
+.entrega__firma-pend {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-warning);
+}

@@ -21,7 +21,11 @@
         <div class="entrega__firma">
           <span class="entrega__firma-rol">Recibió</span>
           <span class="entrega__firma-nombre">{{ receptor() }}</span>
-          @if (firmaReceptorUrl(); as u) { <img class="entrega__firma-img" [src]="u" alt="Firma de quien recibe" /> }
+          @if (firmaReceptorUrl(); as u) {
+            <img class="entrega__firma-img" [src]="u" alt="Firma de quien recibe" />
+          } @else if (entregaPendiente()) {
+            <span class="entrega__firma-pend">⏳ Firma pendiente — le llegó un aviso.</span>
+          }
         </div>
       </div>
     </div>
@@ -93,18 +97,42 @@
       <h2 class="entrega__step">4. Firma de quien entrega</h2>
       <app-signature-pad #emisorPad (changed)="onFirmaEmisor($event)" />
 
-      <!-- AC7 — firma de quien RECIBE (receptor: nombre libre o usuario) -->
+      <!-- AC7/AE — receptor: presente (firma ahora) o ausente (firma pendiente) -->
       <h2 class="entrega__step">5. ¿Quién recibe?</h2>
-      <input
-        class="field"
-        type="text"
-        [ngModel]="receptor()"
-        (ngModelChange)="receptor.set($event)"
-        placeholder="Nombre de quien recibe"
-      />
+      <app-option-button icon="✍️" label="Está presente y firma ahora" [selected]="receptorPresente()" (pressed)="setReceptorPresente(true)" />
+      <app-option-button icon="⏳" label="No está: dejar su firma pendiente" [selected]="!receptorPresente()" (pressed)="setReceptorPresente(false)" />
 
-      <h2 class="entrega__step">6. Firma de quien recibe</h2>
-      <app-signature-pad #receptorPad (changed)="onFirmaReceptor($event)" />
+      @if (receptorPresente()) {
+        <input
+          class="field entrega__mt"
+          type="text"
+          [ngModel]="receptor()"
+          (ngModelChange)="receptor.set($event)"
+          placeholder="Nombre de quien recibe"
+        />
+        <h2 class="entrega__step">6. Firma de quien recibe</h2>
+        <app-signature-pad #receptorPad (changed)="onFirmaReceptor($event)" />
+      } @else {
+        <input
+          class="field entrega__mt"
+          type="search"
+          [ngModel]="receptorBusqueda()"
+          (ngModelChange)="receptorBusqueda.set($event); buscarReceptor()"
+          placeholder="Buscar al ingeniero / encargado…"
+        />
+        @if (buscando()) { <p class="entrega__hint">Buscando…</p> }
+        @for (u of receptorResultados(); track u.id) {
+          <button type="button" class="entrega__ures" (click)="pickReceptor(u)">
+            <span class="entrega__ures-nombre">{{ u.nombre }}</span>
+            @if (u.email) { <span class="entrega__ures-email">{{ u.email }}</span> }
+          </button>
+        }
+        @if (receptorSel(); as u) {
+          <div class="entrega__band">
+            ⏳ Se entregará con la firma de <b>{{ u.nombre }}</b> pendiente. Le llegará un aviso para firmarla en "Por firmar".
+          </div>
+        }
+      }
     </div>
 
     <footer class="entrega__nav">

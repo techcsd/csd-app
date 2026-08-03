@@ -8,6 +8,7 @@ import { SignaturePad } from '../../../../shared/ui/signature-pad/signature-pad'
 import { Skeleton } from '../../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../../core/services/camera.service';
 import { ConducesService } from '../../../../core/services/conduces.service';
+import { InventarioService, UsuarioBusqueda } from '../../../../core/services/inventario.service';
 import { NetworkService } from '../../../../core/services/network.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UserContextService } from '../../../../core/services/user-context.service';
@@ -30,6 +31,7 @@ export class ConduceEntregaPage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(ConducesService);
+  private inventario = inject(InventarioService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private ctx = inject(UserContextService);
@@ -48,6 +50,14 @@ export class ConduceEntregaPage {
   emisorNombre = signal('');
   firmaEmisorLista = signal(false);
   firmaReceptorLista = signal(false);
+  // AE — ¿el receptor está presente para firmar? Si no, se elige al ingeniero y su
+  // firma queda pendiente (se le enruta).
+  receptorPresente = signal(true);
+  receptorBusqueda = signal('');
+  receptorResultados = signal<UsuarioBusqueda[]>([]);
+  receptorSel = signal<UsuarioBusqueda | null>(null);
+  buscando = signal(false);
+  entregaPendiente = signal(false); // resultado: quedó firma de receptor pendiente
   submitting = signal(false);
   done = signal(false);
   // AC7 — vista previa de ambas firmas en la confirmación (detalle del conduce).
@@ -71,6 +81,35 @@ export class ConduceEntregaPage {
   }
   onFirmaReceptor(has: boolean): void {
     this.firmaReceptorLista.set(has);
+  }
+
+  // AE — receptor presente / ausente + búsqueda del ingeniero encargado.
+  setReceptorPresente(v: boolean): void {
+    this.receptorPresente.set(v);
+    if (v) {
+      this.receptorSel.set(null);
+      this.receptorResultados.set([]);
+    }
+  }
+  async buscarReceptor(): Promise<void> {
+    const term = this.receptorBusqueda().trim();
+    if (term.length < 2) {
+      this.receptorResultados.set([]);
+      return;
+    }
+    this.buscando.set(true);
+    try {
+      this.receptorResultados.set(await this.inventario.buscarUsuarios(term));
+    } catch {
+      /* best-effort */
+    } finally {
+      this.buscando.set(false);
+    }
+  }
+  pickReceptor(u: UsuarioBusqueda): void {
+    this.receptorSel.set(u);
+    this.receptorResultados.set([]);
+    this.receptorBusqueda.set(u.nombre);
   }
 
   private async load(): Promise<void> {
@@ -136,16 +175,34 @@ export class ConduceEntregaPage {
       this.toast.error('Falta la firma de quien entrega.');
       return;
     }
-    if (!this.receptor().trim()) {
-      this.toast.error('Escribe el nombre de quien recibe.');
-      return;
-    }
-    const firmaBlob = await this.sigReceptor()?.toBlob();
-    if (!firmaBlob) {
-      this.toast.error('Falta la firma de quien recibe.');
-      return;
+
+    // AE — receptor presente (firma ahora) o ausente (firma pendiente enrutada).
+    let receptorNombre: string;
+    let receptorUsuarioId: string | null = null;
+    let firmaReceptor: Blob | null = null;
+    if (this.receptorPresente()) {
+      if (!this.receptor().trim()) {
+        this.toast.error('Escribe el nombre de quien recibe.');
+        return;
+      }
+      firmaReceptor = (await this.sigReceptor()?.toBlob()) ?? null;
+      if (!firmaReceptor) {
+        this.toast.error('Falta la firma de quien recibe.');
+        return;
+      }
+      receptorNombre = this.receptor().trim();
+    } else {
+      const u = this.receptorSel();
+      if (!u) {
+        this.toast.error('Elige quién recibe (el ingeniero/encargado).');
+        return;
+      }
+      receptorNombre = u.nombre;
+      receptorUsuarioId = u.id;
+      firmaReceptor = null; // pendiente
     }
 
+    this.receptor.set(receptorNombre); // que la confirmación muestre el receptor
     this.submitting.set(true);
     try {
       await this.service.entregarConduce({
@@ -154,16 +211,18 @@ export class ConduceEntregaPage {
           detalle_id: it.detalle_id,
           cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad,
         })),
-        receptor: this.receptor().trim(),
+        receptor: receptorNombre,
         notas: null,
         fotoEntrega: this.foto()!.blob,
-        firma: firmaBlob,
+        firma: firmaReceptor,
         emisorNombre: this.emisorNombre().trim(), // AC7
         firmaEmisor, // AC7
+        receptorUsuarioId, // AE
       });
       // AC7 — mostrar ambas firmas en la confirmación (detalle del conduce).
       this.firmaEmisorUrl.set(URL.createObjectURL(firmaEmisor));
-      this.firmaReceptorUrl.set(URL.createObjectURL(firmaBlob));
+      if (firmaReceptor) this.firmaReceptorUrl.set(URL.createObjectURL(firmaReceptor));
+      this.entregaPendiente.set(!firmaReceptor);
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
