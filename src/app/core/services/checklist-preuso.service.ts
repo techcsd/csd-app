@@ -137,6 +137,7 @@ export class ChecklistPreusoService {
           respuesta: string;
           comentario: string | null;
           orden: number;
+          fotoSlot?: string | null;
         }>
       ).map((r) => ({
         etiqueta: r.etiqueta,
@@ -145,10 +146,15 @@ export class ChecklistPreusoService {
         respuesta: r.respuesta,
         comentario: r.comentario,
         orden: r.orden,
+        // AE7 — enlazar la FOTO DE LA FALLA a su respuesta (como el reporte
+        // semanal). Antes se soltaba en `p_fotos` sin enlace → foto huérfana.
+        foto_path: r.fotoSlot ? (photoPaths[r.fotoSlot] ?? null) : null,
       }));
 
       const fotos = Object.entries(photoPaths)
-        .filter(([slot]) => slot !== 'firma' && !slot.startsWith('audio_'))
+        // AE7 — item_N ya va enlazada a su respuesta (arriba); excluirla de las
+        // fotos guiadas para no duplicarla como si fuera una foto guiada.
+        .filter(([slot]) => slot !== 'firma' && !slot.startsWith('audio_') && !slot.startsWith('item_'))
         .map(([slot, path]) => ({ storage_path: path, slot }));
 
       const { error } = await this.supabase.client.rpc('registrar_checklist_vehiculo', {

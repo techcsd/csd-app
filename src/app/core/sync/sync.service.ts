@@ -192,15 +192,23 @@ export class SyncService {
     // como ArrayBuffer (+ type) y reconstruimos el Blob al subir. La conversión va
     // ANTES de la transacción (Dexie no permite await arbitrario dentro de ella).
     const fotos: FotoPendiente[] = await Promise.all(
-      (input.fotos ?? []).map(async (f) => ({
-        id: f.id,
-        op_id: input.id,
-        bucket: f.bucket,
-        path: f.path,
-        slot: f.slot,
-        data: await f.blob.arrayBuffer(),
-        type: f.blob.type || 'application/octet-stream',
-      })),
+      (input.fotos ?? []).map(async (f) => {
+        // AE7 — un slot requerido sin blob (bug de validación aguas arriba) daba
+        // un TypeError críptico en arrayBuffer() y se PERDÍA toda la captura. Falla
+        // con un mensaje claro y accionable (el caller lo muestra y se reintenta).
+        if (!f.blob) {
+          throw new Error(`Falta la foto/firma "${f.slot}". Vuelve a tomarla e intenta de nuevo.`);
+        }
+        return {
+          id: f.id,
+          op_id: input.id,
+          bucket: f.bucket,
+          path: f.path,
+          slot: f.slot,
+          data: await f.blob.arrayBuffer(),
+          type: f.blob.type || 'application/octet-stream',
+        };
+      }),
     );
 
     await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {

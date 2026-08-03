@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.59.0';
+const VERSION = '1.60.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,11 +62,16 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-03';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Devolver material: que lo confirme Almacén (antifraude)';
+const TITULO = 'Arreglos de rutas, conduces y pre-uso (2ª ronda de QA)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'seguridad', d: 'Al devolver material, la opción de recibir “tú mismo” cambió: ahora el material vuelve al almacén pero la recepción queda PENDIENTE de que Almacén la confirme (antes se firmaba solo, sin control). Almacén la ve en “Por firmar”.' },
+  { t: 'arreglo', d: 'Al adjuntar un conduce a una parada, ya no aparece uno que pertenece a otra ruta (evitaba “robarlo” de la otra ruta sin querer).' },
+  { t: 'arreglo', d: 'El tiempo estimado a la próxima parada se actualiza al entregar una parada (antes seguía mostrando el de la parada anterior).' },
+  { t: 'arreglo', d: 'La foto de una falla en el pre-uso ahora queda pegada a su punto del checklist (antes podía quedar suelta).' },
+  { t: 'mejora', d: 'Si al entregar dices que faltó material, ahora te pide bajar la cantidad de al menos un artículo (antes se registraba como completo).' },
+  { t: 'mejora', d: 'Las capturas de inventario (salidas, entradas, conteos y devoluciones) ahora aparecen en “Documentación en proceso”.' },
+  { t: 'mejora', d: 'Varios arreglos de estabilidad y consistencia de datos (fechas de combustible, memoria en la entrega, avisos de foto faltante).' },
 ];
 
 const TIPO_POR_COMMIT = {

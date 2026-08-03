@@ -46,9 +46,16 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
     'conduce_vincular_parada',
     'devolucion_chofer',
     'conduce_firmar_receptor',
+    'conduce_recepcion',
     'accidente_vehiculo',
     'dano_vehiculo',
     'multa_conductor',
+    // AE7 — capturas de inventario (antes en ninguna lista → invisibles en
+    // "en proceso"; sí contaban en el badge global y /pendientes).
+    'inv_salida',
+    'inv_entrada',
+    'inv_conteo',
+    'inv_devolucion_obra',
   ],
 };
 
@@ -70,6 +77,11 @@ const OP_LABEL: Record<string, string> = {
   conduce_vincular_parada: 'Conduce en parada',
   devolucion_chofer: 'Devolución de material',
   conduce_firmar_receptor: 'Firma de recepción',
+  conduce_recepcion: 'Recepción de conduce',
+  inv_salida: 'Salida de material',
+  inv_entrada: 'Entrada de material',
+  inv_conteo: 'Conteo de inventario',
+  inv_devolucion_obra: 'Devolución de obra',
   accidente_vehiculo: 'Reporte de accidente',
   dano_vehiculo: 'Reporte de daño',
   multa_conductor: 'Multa',

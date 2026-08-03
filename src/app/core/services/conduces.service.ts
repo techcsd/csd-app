@@ -623,6 +623,9 @@ export class ConducesService {
         p_items: payload['items'],
       });
       if (error) throwSyncError(error);
+      // AE7 — la salida bajó el stock de la bodega de origen → invalida el preview
+      // de existencias cacheado (como la devolución) para no mostrar un stock viejo.
+      await this.catalog.invalidatePrefix('existencias_');
     });
 
     this.sync.register('conduce_entrega', async (payload, photoPaths) => {

@@ -1,5 +1,21 @@
 # HANDOFF — CSD App
 
+## ⏩ SESIÓN 03/08 (cont.) — Pendientes de la ronda de QA + v1.60.0 (rolling)
+Cerré los hallazgos MEDIUM/LOW que quedaban de la revisión (build VERDE, publicado):
+- **[MEDIUM] adjuntar conduce cross-route:** `conducesParaAdjuntar` ahora excluye conduces atados a CUALQUIER ruta cargada (antes solo la actual → podía "robar" un conduce de otra ruta).
+- **[MEDIUM] ETA viejo:** `actualizarParadaLocal` limpia `etaProxima[rutaId]` cuando una parada avanza de estado (el ETA apuntaba a la parada anterior). + guard de `calcularEta` por ruta (no bloquea otras).
+- **[MEDIUM] foto de falla del pre-uso huérfana:** el handler `checklist_preuso` ahora enlaza `item_N` → `foto_path` de la respuesta (como el reporte semanal) y la excluye de las fotos guiadas. Verificado que el RPC persiste `r->>'foto_path'`. Sin cambio de backend.
+- **[LOW] "faltó algo":** si el chofer dice que faltó y no baja ninguna cantidad, ahora se lo exige (antes se grababa completo).
+- **[LOW] fuga de object-URL** en la entrega: se revocan también en `ngOnDestroy` (back por gesto).
+- **[LOW] "en proceso"** ahora cubre las ops de inventario (`inv_salida/entrada/conteo/devolucion_obra`, `conduce_recepcion`).
+- **[LOW] enqueue** con blob faltante: error claro y accionable (antes TypeError críptico que perdía la captura).
+- **[LOW] última echada:** la FECHA de referencia es la del registro más reciente (antes la del de mayor km).
+- **[LOW] preview de stock** al sacar material: invalida `existencias_` tras la salida.
+
+**Deferidos (reportados, requieren más que un arreglo puntual):** capturar **talla** en salida/devolución (falta UI por línea, artículos con `requiere_talla` la pierden); **SignaturePad** sin listener de rotación (redimensionar borra el trazo → fix con tradeoff); **FIFO en backoff** (`continue` deja pasar ops posteriores — tradeoff vs. head-of-line blocking; hazard bajo); `withTimeout` no cancela el upload en curso (ya mitigado por idempotencia). 
+
+---
+
 ## ⏩ SESIÓN 03/08 (cont.) — Devolución "yo mismo" → confirma Almacén + v1.59.0 (rolling)
 **Decisión de Xaviel** sobre el hallazgo de la ronda de QA (firma "yo mismo" colapsaba el antifraude): eligió **"que confirme Almacén"**. Implementado:
 - Migración SGC `2026-08-03-ae8-devolucion-confirma-almacen.sql` (aplicada + commiteada, sin push): columna `salidas_inventario.firma_pendiente_almacen`; nuevo overload de 13 args de `chofer_registrar_devolucion` con `p_confirmar_almacen` (mueve stock pero deja la firma de recibido PENDIENTE, sin auto-firmarse); `mis_firmas_pendientes` ahora también devuelve las pendientes de **Almacén** para usuarios con módulo inventario/admin (`+ pendiente_almacen`); `firmar_conduce` limpia el flag y avisa al creador al confirmarse. Como `sgc.bodegas` no tiene "encargado", es una **cola compartida** de Almacén (como ferretería). Verificado: `confirmar_almacen=true` salta la validación de receptor; `false` la exige.

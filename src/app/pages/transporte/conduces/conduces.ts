@@ -152,7 +152,9 @@ export class ConducesPage implements OnDestroy {
 
   /** AE — tiempo estimado (auto) desde tu posición actual a la próxima parada. */
   async calcularEta(rutaId: string): Promise<void> {
-    if (this.calculandoEta()) return;
+    // AE7 — guard por RUTA (antes era global y bloqueaba calcular el ETA de otra
+    // ruta mientras una calculaba — y el cálculo con GPS/OSRM tarda segundos).
+    if (this.calculandoEta() === rutaId) return;
     const np = this.proximaParada(rutaId);
     if (!np || np.lat == null || np.lng == null) return;
     if (!(await this.gate.asegurar('location'))) return;
@@ -189,13 +191,14 @@ export class ConducesPage implements OnDestroy {
     return this.detalle(rutaId)?.conduces.find((c) => c.id === p.conduce_id) ?? null;
   }
 
-  /** Conduces del chofer que aún no están atados a una parada de esta ruta. */
-  conducesParaAdjuntar(rutaId: string): Conduce[] {
-    const usados = new Set(
-      (this.detalle(rutaId)?.paradas ?? [])
-        .map((p) => p.conduce_id)
-        .filter((id): id is string => !!id),
-    );
+  /** Conduces del chofer que aún no están atados a NINGUNA parada (de esta u otra
+   *  ruta cargada). AE7 — antes solo excluía los de ESTA ruta, así que un conduce
+   *  ya atado a otra ruta seguía ofrecido aquí y adjuntarlo lo "robaba" de la otra. */
+  conducesParaAdjuntar(_rutaId: string): Conduce[] {
+    const usados = new Set<string>();
+    for (const d of Object.values(this.detalles())) {
+      for (const p of d.paradas) if (p.conduce_id) usados.add(p.conduce_id);
+    }
     return this.conduces().filter((c) => !usados.has(c.id));
   }
 
@@ -314,6 +317,16 @@ export class ConducesPage implements OnDestroy {
         [rutaId]: { ...d, paradas: d.paradas.map((p) => (p.id === paradaId ? { ...p, ...cambios } : p)) },
       };
     });
+    // AE7 — si la parada AVANZÓ de estado, la "próxima parada" cambió → el ETA
+    // calculado quedó viejo (apuntaba a la parada anterior). Lo invalidamos para
+    // que no muestre un tiempo engañoso; el chofer puede recalcular.
+    if (cambios.estado !== undefined) {
+      this.etaProxima.update((m) => {
+        const next = { ...m };
+        delete next[rutaId];
+        return next;
+      });
+    }
   }
 
   /** Inyecta (optimista) un conduce recién atado a una parada en el detalle. */

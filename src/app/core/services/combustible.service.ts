@@ -47,9 +47,13 @@ export class CombustibleService {
         .map((r) => r.rendimiento_km_gal)
         .filter((x): x is number => x != null);
       const promedio = rends.length ? rends.reduce((a, b) => a + b, 0) / rends.length : null;
+      // AE7 — la FECHA de referencia debe ser la del registro MÁS RECIENTE, no la
+      // del de mayor kilometraje (ordenamos por km para la base del odómetro, pero
+      // esa fila no es necesariamente la última cronológicamente).
+      const fechas = rows.map((r) => r.fecha).filter((x): x is string => !!x).sort();
       return {
         km: rows.length ? rows[0].kilometraje : null,
-        fecha: rows.length ? rows[0].fecha : null,
+        fecha: fechas.length ? fechas[fechas.length - 1] : null,
         promedio_rendimiento: promedio,
         n_echadas: rends.length,
       };

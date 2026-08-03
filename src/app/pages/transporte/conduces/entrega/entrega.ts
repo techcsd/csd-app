@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -27,7 +27,7 @@ import { Conduce } from '../../../../core/models/transporte.model';
   templateUrl: './entrega.html',
   styleUrl: './entrega.scss',
 })
-export class ConduceEntregaPage {
+export class ConduceEntregaPage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(ConducesService);
@@ -165,6 +165,12 @@ export class ConduceEntregaPage {
       this.toast.error('Dinos si llegó todo el material.');
       return;
     }
+    // AE7 — si el chofer dijo "faltó algo" pero no bajó ninguna cantidad, el
+    // servidor lo registraría como entrega COMPLETA (contradice su selección).
+    if (this.llegoTodo() === false && !this.incompleto()) {
+      this.toast.error('Dijiste que faltó material: baja la cantidad recibida de al menos un artículo.');
+      return;
+    }
     // AC7 — quien entrega + su firma.
     if (!this.emisorNombre().trim()) {
       this.toast.error('Escribe el nombre de quien entrega.');
@@ -231,12 +237,23 @@ export class ConduceEntregaPage {
     }
   }
 
-  finish(): void {
-    // Liberar las object-URLs de las firmas (evita fuga de memoria en la confirmación).
+  /** Libera las object-URLs de las firmas (evita fuga de memoria). */
+  private revocarFirmas(): void {
     const e = this.firmaEmisorUrl();
     if (e) URL.revokeObjectURL(e);
     const r = this.firmaReceptorUrl();
     if (r) URL.revokeObjectURL(r);
+    this.firmaEmisorUrl.set(null);
+    this.firmaReceptorUrl.set(null);
+  }
+
+  finish(): void {
+    this.revocarFirmas();
     void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
+  }
+
+  // AE7 — también al destruir la vista (back por gesto/hardware no llama finish()).
+  ngOnDestroy(): void {
+    this.revocarFirmas();
   }
 }
