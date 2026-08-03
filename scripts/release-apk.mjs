@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.56.0';
+const VERSION = '1.57.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,16 +59,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-02';
+const RELEASED_AT = '2026-08-03';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Avisos dentro de la app, stock en la devolución y aviso al completar firmas';
+const TITULO = 'Aviso claro cuando el navegador del sistema está viejo (se acabó la pantalla en blanco)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Avisos dentro de la app: una campana en la pantalla principal con tus avisos (firmas pendientes, confirmaciones y novedades). Al tocar uno te lleva a lo que corresponde.' },
-  { t: 'mejora', d: 'Devolver material ahora te muestra cuánto hay disponible en la obra por cada material, y te avisa si intentas devolver de más.' },
-  { t: 'mejora', d: 'Cuando firmas una entrega que había quedado pendiente, al chofer que la dejó le llega un aviso de que ya quedó firmada.' },
+  { t: 'arreglo', d: 'Si el “Android System WebView” de tu teléfono está muy viejo, la app ya no se queda en blanco sin explicación: ahora te muestra un aviso claro con un botón para actualizarlo desde la tienda.' },
 ];
 
 const TIPO_POR_COMMIT = {
