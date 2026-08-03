@@ -74,6 +74,9 @@ export interface DevolucionChoferCaptura {
   receptorNombre: string | null;
   receptorUsuarioId: string | null;
   firmaReceptor: Blob | null;
+  /** AE8 — el chofer no recibe él mismo: la firma de recibido queda PENDIENTE
+   *  para que Almacén (módulo inventario) la confirme. */
+  confirmarPorAlmacen?: boolean;
 }
 
 /** AE — un ítem de una firma pendiente (bandeja "Por firmar"). */
@@ -91,6 +94,9 @@ export interface FirmaPendiente {
   proyecto_id: string | null;
   emisor: string | null;
   items: FirmaPendienteItem[];
+  /** AE8 — true si está pendiente de confirmación por ALMACÉN (cola compartida),
+   *  no asignada a una persona. La app la etiqueta distinto. */
+  pendiente_almacen?: boolean;
 }
 
 /** AE — un usuario elegible como receptor (buscador). */
@@ -582,6 +588,7 @@ export class InventarioService {
         emisor_nombre: input.emisorNombre,
         receptor_nombre: input.receptorNombre,
         receptor_usuario_id: input.receptorUsuarioId,
+        confirmar_almacen: input.confirmarPorAlmacen ?? false, // AE8
       },
       fotos,
       resumen: { tipo: 'devolucion', bodega_destino_id: input.bodegaDestinoId, capturado_en },
@@ -796,6 +803,9 @@ export class InventarioService {
         p_receptor_nombre: payload['receptor_nombre'] ?? null,
         p_receptor_usuario_id: payload['receptor_usuario_id'] ?? null,
         p_receptor_firma_path: photoPaths['firma_receptor'] ?? null,
+        // AE8 — cuando el chofer no recibe él mismo, la firma queda pendiente de
+        // que la confirme Almacén (overload de 13 args).
+        p_confirmar_almacen: payload['confirmar_almacen'] ?? false,
       });
       if (error) throwSyncError(error);
     });

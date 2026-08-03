@@ -1,5 +1,13 @@
 # HANDOFF — CSD App
 
+## ⏩ SESIÓN 03/08 (cont.) — Devolución "yo mismo" → confirma Almacén + v1.59.0 (rolling)
+**Decisión de Xaviel** sobre el hallazgo de la ronda de QA (firma "yo mismo" colapsaba el antifraude): eligió **"que confirme Almacén"**. Implementado:
+- Migración SGC `2026-08-03-ae8-devolucion-confirma-almacen.sql` (aplicada + commiteada, sin push): columna `salidas_inventario.firma_pendiente_almacen`; nuevo overload de 13 args de `chofer_registrar_devolucion` con `p_confirmar_almacen` (mueve stock pero deja la firma de recibido PENDIENTE, sin auto-firmarse); `mis_firmas_pendientes` ahora también devuelve las pendientes de **Almacén** para usuarios con módulo inventario/admin (`+ pendiente_almacen`); `firmar_conduce` limpia el flag y avisa al creador al confirmarse. Como `sgc.bodegas` no tiene "encargado", es una **cola compartida** de Almacén (como ferretería). Verificado: `confirmar_almacen=true` salta la validación de receptor; `false` la exige.
+- App: `devolver-material` opción "Yo mismo" → **"🏬 Que lo confirme Almacén"** (sin firma propia; hint + nota de éxito propios); `DevolucionChoferCaptura.confirmarPorAlmacen` + handler `p_confirmar_almacen`; `FirmaPendiente.pendiente_almacen` + chip "🏬 Confirmación de Almacén" en la bandeja "Por firmar". El badge/banner de "Por firmar" del Home ya lo cubre (Almacén lo descubre ahí).
+- **Publicada v1.59.0** (rolling, piso 1.42.0). Build VERDE.
+
+---
+
 ## ⏩ SESIÓN 03/08 (cont.) — Ronda de QA de código del módulo Transporte + v1.58.0 (rolling)
 4 revisores en paralelo sobre Transporte (conduces/rutas, sacar/devolver material+firmas, combustible/preuso/vehículos, motor sync/outbox) → ~18 hallazgos sustanciados. **Arreglados (build VERDE):**
 - **[HIGH] Iniciar/completar ruta ahora es OFFLINE-first.** `marcarRuta` llamaba al RPC directo y fallaba sin señal; ahora va por el outbox (nuevo `tipo_op: 'ruta_estado'` + handler `marcar_ruta_estado`, idempotente). `conduces.service.ts` + `en-proceso.service.ts`.

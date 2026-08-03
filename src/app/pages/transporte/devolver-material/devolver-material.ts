@@ -53,6 +53,7 @@ export class DevolverMaterialPage implements OnDestroy {
   submitting = signal(false);
   confirmSalir = signal(false);
   pendiente = signal(false); // resultado: quedó firma pendiente
+  pendienteAlmacen = signal(false); // AE8 — pendiente de confirmación por Almacén
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal(''); // almacén destino
@@ -212,11 +213,16 @@ export class DevolverMaterialPage implements OnDestroy {
     let receptorNombre: string | null;
     let receptorUsuarioId: string | null;
     let firmaReceptor: Blob | null;
+    let confirmarPorAlmacen = false;
 
     if (this.receptorModo() === 'yo') {
-      receptorNombre = this.emisorNombre();
-      receptorUsuarioId = this.ctx.profile()?.id ?? null;
-      firmaReceptor = emisorBlob; // el chofer recibe él mismo → misma firma
+      // AE8 — el chofer NO se auto-firma la recepción (colapsaba el antifraude):
+      // el stock se mueve pero la firma de recibido queda PENDIENTE para que
+      // Almacén la confirme.
+      receptorNombre = 'Almacén';
+      receptorUsuarioId = null;
+      firmaReceptor = null;
+      confirmarPorAlmacen = true;
     } else {
       const u = this.receptorSel();
       if (!u) return this.toast.error('Elige quién recibe.');
@@ -243,9 +249,12 @@ export class DevolverMaterialPage implements OnDestroy {
         receptorNombre,
         receptorUsuarioId,
         firmaReceptor,
+        confirmarPorAlmacen,
       };
       await this.inventario.enqueueDevolucionChofer(captura);
-      this.pendiente.set(this.receptorModo() === 'otro' && !this.receptorPresente());
+      // Queda pendiente si: la confirma Almacén, o un receptor ausente firma luego.
+      this.pendienteAlmacen.set(confirmarPorAlmacen);
+      this.pendiente.set(confirmarPorAlmacen || (this.receptorModo() === 'otro' && !this.receptorPresente()));
       this.hoja.set('exito');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la devolución.');

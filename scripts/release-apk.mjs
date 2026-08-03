@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.58.0';
+const VERSION = '1.59.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,15 +62,11 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-03';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Rutas sin señal, telehandler por horas y arreglos de material (ronda de QA)';
+const TITULO = 'Devolver material: que lo confirme Almacén (antifraude)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Iniciar y completar una ruta ahora funciona sin señal: se guarda y se envía solo al reconectar (antes se trababa si no había internet).' },
-  { t: 'arreglo', d: 'En equipos medidos por horas (telehandler), registrar combustible y hacer el pre-uso ahora muestran HORAS (no kilómetros) en todas las pantallas, y ya no salta una falsa alerta de “posible fuga”.' },
-  { t: 'arreglo', d: 'Al firmar sin señal una entrega que estaba pendiente, la bandeja “Por firmar” ya no se queda en blanco: sigue mostrando las demás.' },
-  { t: 'arreglo', d: 'Devolver material a un almacén ya no puede descontar el stock dos veces si el envío se reintenta por mala señal.' },
-  { t: 'mejora', d: 'Al sacar o devolver material, si no hay existencia de un artículo ahora te avisa con una advertencia (antes no decía nada y fallaba después).' },
+  { t: 'seguridad', d: 'Al devolver material, la opción de recibir “tú mismo” cambió: ahora el material vuelve al almacén pero la recepción queda PENDIENTE de que Almacén la confirme (antes se firmaba solo, sin control). Almacén la ve en “Por firmar”.' },
 ];
 
 const TIPO_POR_COMMIT = {

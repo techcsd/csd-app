@@ -85,8 +85,14 @@
 
       <!-- Receptor -->
       <h2 class="devol__sec">¿Quién recibe?</h2>
-      <app-option-button icon="🙋" label="Yo mismo (el chofer)" [selected]="receptorModo() === 'yo'" (pressed)="setReceptorModo('yo')" />
+      <app-option-button icon="🏬" label="Que lo confirme Almacén" [selected]="receptorModo() === 'yo'" (pressed)="setReceptorModo('yo')" />
       <app-option-button icon="👷" label="Un ingeniero / encargado" [selected]="receptorModo() === 'otro'" (pressed)="setReceptorModo('otro')" />
+
+      @if (receptorModo() === 'yo') {
+        <div class="devol__band devol__band--warn">
+          ⏳ El material vuelve al almacén ahora. La recepción queda <b>pendiente de que Almacén la confirme</b> (le aparece en “Por firmar”).
+        </div>
+      }
 
       @if (receptorModo() === 'otro') {
         <input
@@ -133,7 +139,7 @@
   @if (hoja() === 'exito') {
     <app-big-confirm
       title="Devolución registrada"
-      [note]="pendiente() ? 'El material volvió al almacén. Falta la firma de quien recibe: le llegó un aviso para firmarla.' : 'El material volvió al almacén con las dos firmas.'"
+      [note]="pendienteAlmacen() ? 'El material volvió al almacén. Almacén debe confirmar la recepción (le aparece en “Por firmar”).' : pendiente() ? 'El material volvió al almacén. Falta la firma de quien recibe: le llegó un aviso para firmarla.' : 'El material volvió al almacén con las dos firmas.'"
       tone="done"
       buttonLabel="Listo"
       (dismissed)="finish()"
