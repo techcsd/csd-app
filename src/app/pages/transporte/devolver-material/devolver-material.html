@@ -54,9 +54,20 @@
                 <span class="devol__unit">{{ l.unidad }}</span>
                 <button type="button" class="devol__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
               </div>
+              @let s = stockDe(l.articulo_id);
+              @if (s !== null) {
+                <span class="devol__stock" [class.devol__stock--warn]="excedeStock(l)">
+                  @if (excedeStock(l)) { ⚠ En la obra solo hay {{ s | number: '1.0-2' }} } @else { En la obra: {{ s | number: '1.0-2' }} }
+                </span>
+              }
             </div>
           }
         </div>
+        @if (hayExceso()) {
+          <div class="devol__band devol__band--warn">
+            ⚠ Estás devolviendo más de lo que hay en la obra en algún material. Ajusta la cantidad (el servidor validará el stock).
+          </div>
+        }
       } @else {
         <div class="devol__band">🔎 Agrega al menos un material para devolver.</div>
       }

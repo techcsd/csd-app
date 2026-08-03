@@ -609,6 +609,14 @@ export class InventarioService {
     await this.catalog.invalidate('firmas_pendientes');
   }
 
+  /** AE — stock del almacén de una obra ({articulo_id: cantidad}) para el preview
+   *  de la devolución (avisar si se devuelve más de lo que hay). */
+  async existenciasDeObra(proyectoId: string): Promise<Record<string, number>> {
+    const { data, error } = await this.supabase.client.rpc('existencias_de_obra', { p_proyecto_id: proyectoId });
+    if (error) throw new Error(error.message);
+    return (data as Record<string, number>) ?? {};
+  }
+
   /** AE — buscar usuarios para elegir al receptor (ingeniero/encargado). */
   async buscarUsuarios(term: string): Promise<UsuarioBusqueda[]> {
     if (term.trim().length < 2) return [];

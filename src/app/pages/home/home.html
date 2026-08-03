@@ -6,7 +6,15 @@
         <p class="home__obra">Obra: {{ o.nombre }}</p>
       }
     </div>
-    <button type="button" class="home__logout" (click)="perfil()" aria-label="Mi perfil" data-tour="perfil">⚙️ Perfil</button>
+    <div class="home__header-actions">
+      <button type="button" class="home__bell" (click)="avisos()" aria-label="Avisos">
+        🔔
+        @if (avisosNoLeidos() > 0) {
+          <span class="home__bell-badge">{{ avisosNoLeidos() > 9 ? '9+' : avisosNoLeidos() }}</span>
+        }
+      </button>
+      <button type="button" class="home__logout" (click)="perfil()" aria-label="Mi perfil" data-tour="perfil">⚙️ Perfil</button>
+    </div>
   </header>
 
   <!-- AE — firmas de recepción pendientes asignadas a mí -->

@@ -228,6 +228,12 @@ export const routes: Routes = [
       import('./pages/transporte/devolver-material/devolver-material').then((m) => m.DevolverMaterialPage),
   },
   {
+    // AE — bandeja de avisos in-app (sgc.notificaciones). Para cualquier usuario.
+    path: 'avisos',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/avisos/avisos').then((m) => m.AvisosPage),
+  },
+  {
     // AE — bandeja "Por firmar" (firmas de recepción pendientes asignadas a mí).
     // Sin moduleGuard: el receptor puede ser un ingeniero sin módulo flota; el RPC
     // solo devuelve lo asignado al usuario actual (auth.uid()).

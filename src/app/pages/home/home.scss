@@ -123,3 +123,35 @@
   font-size: 26px;
   font-weight: 800;
 }
+
+// AE — campana de avisos con badge de no leídos.
+.home__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.home__bell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 20px;
+}
+.home__bell-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

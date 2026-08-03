@@ -1,0 +1,37 @@
+<div class="screen avisos">
+  <header class="avisos__header">
+    <button type="button" class="avisos__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="avisos__icon">🔔</span>
+    <h1 class="avisos__title">Avisos</h1>
+    @if (hayNoLeidos) {
+      <button type="button" class="avisos__todas" (click)="marcarTodas()">Marcar leídos</button>
+    }
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      @for (n of avisos(); track n.id) {
+        <button type="button" class="aviso" [class.aviso--unread]="!n.leida" (click)="abrir(n)">
+          @if (!n.leida) { <span class="aviso__dot"></span> }
+          <span class="aviso__icon">{{ iconFor(n.tipo) }}</span>
+          <span class="aviso__body">
+            <span class="aviso__titulo">{{ n.titulo }}</span>
+            @if (n.mensaje) { <span class="aviso__msg">{{ n.mensaje }}</span> }
+            <span class="aviso__fecha">{{ fechaHora(n.created_at) }}</span>
+          </span>
+          @if (n.ruta) { <span class="aviso__go">›</span> }
+        </button>
+      } @empty {
+        <app-empty-state
+          icon="🔔"
+          title="No tienes avisos"
+          message="Aquí te aparecen los avisos: firmas pendientes, confirmaciones y novedades que te toquen."
+          secondaryLabel="Actualizar"
+          (secondaryAction)="load()"
+        />
+      }
+    }
+  </div>
+</div>

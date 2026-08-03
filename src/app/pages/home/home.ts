@@ -11,6 +11,7 @@ import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { InventarioService } from '../../core/services/inventario.service';
 import { SyncService } from '../../core/sync/sync.service';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
 
 interface HomeTile {
   modulo: string;
@@ -56,6 +57,8 @@ export class HomePage {
   private enProceso = inject(EnProcesoService);
   private inventario = inject(InventarioService);
   private sync = inject(SyncService);
+  private notificaciones = inject(NotificacionesService);
+  avisosNoLeidos = this.notificaciones.noLeidas;
 
   nombre = this.ctx.nombre;
   obra = this.ctx.obraActiva;
@@ -111,6 +114,8 @@ export class HomePage {
     void this.enProceso.refresh();
     // AE — cuántas firmas de recepción me quedan por firmar (recarga al drenar).
     void this.cargarFirmasPendientes();
+    // AE — avisos no leídos (badge de la campana). Best-effort, online.
+    void this.notificaciones.refreshNoLeidas();
     effect(() => {
       this.sync.changed();
       if (this.primerSync) {
@@ -131,6 +136,10 @@ export class HomePage {
 
   irPorFirmar(): void {
     void this.router.navigate(['/transporte/por-firmar']);
+  }
+
+  avisos(): void {
+    void this.router.navigate(['/avisos']);
   }
 
   /** Q2+V1 — badge del tile = pendientes de aprobación + documentación en proceso. */

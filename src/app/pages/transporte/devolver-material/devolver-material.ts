@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { SelectList } from '../../../shared/ui/select-list/select-list';
@@ -32,7 +32,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-devolver-material',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton],
+  imports: [FormsModule, DecimalPipe, SelectList, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton],
   templateUrl: './devolver-material.html',
   styleUrl: './devolver-material.scss',
 })
@@ -64,6 +64,9 @@ export class DevolverMaterialPage implements OnDestroy {
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
+  // AE — stock disponible en el almacén de la obra origen (articulo_id → cantidad).
+  private existencias = signal<Record<string, number>>({});
+  hayExceso = computed(() => this.cart().some((l) => this.excedeStock(l)));
 
   // Receptor: yo mismo (el chofer) o un ingeniero/encargado.
   receptorModo = signal<'yo' | 'otro'>('yo');
@@ -90,9 +93,34 @@ export class DevolverMaterialPage implements OnDestroy {
   constructor() {
     void this.init();
     this.navGuard.register(this.backHandler);
+    // AE — al elegir/cambiar la obra origen, carga su stock para el preview.
+    effect(() => {
+      const o = this.obraId();
+      if (o) void this.loadExistencias(o);
+      else this.existencias.set({});
+    });
   }
   ngOnDestroy(): void {
     this.navGuard.clear(this.backHandler);
+  }
+
+  private async loadExistencias(proyectoId: string): Promise<void> {
+    try {
+      this.existencias.set(await this.inventario.existenciasDeObra(proyectoId));
+    } catch {
+      this.existencias.set({});
+    }
+  }
+  /** AE — stock disponible del material en la obra (null si no se sabe). */
+  stockDe(articuloId: string | null): number | null {
+    if (!articuloId) return null;
+    const m = this.existencias();
+    return articuloId in m ? m[articuloId] : null;
+  }
+  /** AE — la cantidad a devolver supera el stock de la obra. */
+  excedeStock(l: CartLinea): boolean {
+    const s = this.stockDe(l.articulo_id);
+    return s != null && l.cantidad > s;
   }
 
   private async init(): Promise<void> {

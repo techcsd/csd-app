@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.55.0';
+const VERSION = '1.56.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,11 +62,13 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Firmas de entrega más robustas al sincronizar';
+const TITULO = 'Avisos dentro de la app, stock en la devolución y aviso al completar firmas';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'seguridad', d: 'Más robustez en las firmas de entrega: si al sincronizar falla el registro de una firma o el aviso de una firma que quedó pendiente, ahora se reintenta solo en vez de perderse en silencio.' },
+  { t: 'nuevo', d: 'Avisos dentro de la app: una campana en la pantalla principal con tus avisos (firmas pendientes, confirmaciones y novedades). Al tocar uno te lleva a lo que corresponde.' },
+  { t: 'mejora', d: 'Devolver material ahora te muestra cuánto hay disponible en la obra por cada material, y te avisa si intentas devolver de más.' },
+  { t: 'mejora', d: 'Cuando firmas una entrega que había quedado pendiente, al chofer que la dejó le llega un aviso de que ya quedó firmada.' },
 ];
 
 const TIPO_POR_COMMIT = {

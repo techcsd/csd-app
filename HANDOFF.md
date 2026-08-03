@@ -11,6 +11,8 @@ Todas publicadas rolling (no forzadas), cert prod `3c5316d8…df5065`, build VER
 - **1.53** banner "Por firmar" en Home + badge en hub (descubrimiento del receptor).
 - **1.54** firma pendiente enrutada también en la ENTREGA de conduces (receptor ausente → pendiente).
 - **1.55** review: firmas verificadas (no best-effort) + revoke object-URLs.
+**+ v1.56.0 — Follow-ups menores (HECHOS):** (1) **Aviso al completar firma pendiente** — `firmar_conduce` (migración `2026-08-03-ae-firma-completada-aviso.sql`) avisa al `creado_por` cuando un receptor firma una firma que estaba pendiente. (2) **Preview de stock en devolución** — `existencias_de_obra(proyecto)` RPC (migración `2026-08-03-ae-existencias-de-obra.sql`) + `devolver-material` muestra el stock del almacén de la obra por material (aviso si excede). (3) **Lector de avisos in-app** — `NotificacionesService` (lee `sgc.notificaciones`, RLS ya permite propio SELECT/UPDATE) + página `/avisos` + **campana con badge en Home**. Migraciones SGC aplicadas + commiteadas (no push — no tocan la web).
+
 **Regla #5 WEB — HECHO** (SGC commit `0e18d9b`, push→deploy): el detalle del conduce (`inventario/conduce`) muestra "firma de receptor **PENDIENTE** · Asignada a X" cuando `firma_pendiente_usuario_id` está set (aditivo: 1 campo en `SalidaInventario` + 1 rama de plantilla; `*` ya trae las columnas). Devoluciones ya se veían en Entradas/Movimientos/Conduces/Salidas. **Follow-ups menores (no bloquean):** stock preview en devolución (falta mapeo obra→bodega), notificar al chofer cuando su firma pendiente se completa, lector de notificaciones in-app. **Crítico ahora = device-QA.**
 
 ---

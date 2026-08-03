@@ -1,0 +1,88 @@
+.avisos {
+  background: var(--color-bg);
+}
+.avisos__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.avisos__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.avisos__icon {
+  font-size: 26px;
+}
+.avisos__title {
+  margin: 0;
+  flex: 1;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.avisos__todas {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.aviso {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.aviso--unread {
+  border-color: var(--primary);
+  background: var(--color-bg);
+}
+.aviso__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--primary);
+  flex: 0 0 auto;
+}
+.aviso__icon {
+  font-size: 22px;
+}
+.aviso__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.aviso__titulo {
+  font-weight: 700;
+  font-size: 15px;
+}
+.aviso__msg {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.aviso__fecha {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.aviso__go {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+}
