@@ -1,0 +1,80 @@
+.estado-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-left: 5px solid var(--tint, var(--primary));
+  border-radius: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:active {
+    transform: scale(0.99);
+  }
+}
+
+.estado-bar__dot {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.estado-bar__txt {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.estado-bar__label {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--main);
+}
+
+.estado-bar__sub {
+  font-size: 13px;
+  color: var(--tint, var(--main-ultra-light));
+  font-weight: 600;
+}
+
+.estado-bar__cambiar {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.estado-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.estado-otros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.estado-otros__lbl {
+  font-weight: 700;
+  color: var(--main);
+}
+
+.estado-otros__input {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #d4d4d4;
+  border-radius: 12px;
+  font-size: 16px;
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+}

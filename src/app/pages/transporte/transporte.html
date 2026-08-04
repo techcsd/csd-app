@@ -6,6 +6,14 @@
   </header>
 
   <div class="screen__body">
+    <!-- AF26 — banner persistente si el GPS está apagado / permiso revocado -->
+    <app-gps-gate-banner />
+
+    <!-- AF28 — estado de disponibilidad del chofer (solo choferes) -->
+    @if (esChofer()) {
+      <app-estado-chofer-bar />
+    }
+
     <!-- S15 — hub como grid de cuadros grandes (patrón del home), gated por rol -->
     <div class="hub-grid">
       @for (t of tiles(); track t.key) {

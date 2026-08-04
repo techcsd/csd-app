@@ -105,6 +105,17 @@ export interface CartLinea {
  * Queda como entrada PENDIENTE (chofer_registrar_compra_ferreteria) hasta que
  * Almacén la confirma; el chofer nunca sube stock por su cuenta (antifraude).
  */
+/** AF32/AF31 — una ferretería visible para el chofer (origen de conduce/compra). */
+export interface Ferreteria {
+  id: string;
+  nombre: string;
+  direccion: string | null;
+  lat: number | null;
+  lng: number | null;
+  telefono: string | null;
+  contacto: string | null;
+}
+
 export interface CompraFerreteriaCaptura {
   bodegaId: string;
   proyectoId: string | null;
@@ -112,6 +123,8 @@ export interface CompraFerreteriaCaptura {
   referencia: string | null;
   /** Nombre de la ferretería/suplidor (texto libre → va a observaciones). */
   proveedor: string | null;
+  /** AF31/AF32 — id del proveedor-ferretería (del catálogo ferreterias_visibles). */
+  proveedorId?: string | null;
   observaciones: string | null;
   /** Materiales propuestos (Almacén ajusta al confirmar). Opcional. */
   items: { articulo_id: string; cantidad: number }[];

@@ -320,6 +320,36 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),
   },
   {
+    // AF22 — Transporte v2 "Mis rutas" (activas / hoy / historial). Reutiliza la
+    // pantalla de ejecución de rutas (misma que /transporte/conduces, que se
+    // conserva para deep-links viejos).
+    path: 'transporte/mis-rutas',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),
+  },
+  {
+    // AF22 — núcleo "Conduces" (sub-hub: crear/recibir/devolver/ferretería/por firmar/historial).
+    path: 'transporte/conduces-hub',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/conduces-hub/conduces-hub').then((m) => m.ConducesHubPage),
+  },
+  {
+    // AF27 — Seguimiento en vivo (jefe de flota / admin / tecnología). El RPC y la
+    // RLS gatean por es_flota_elevado; la página además valida en cliente.
+    path: 'transporte/seguimiento',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/seguimiento/seguimiento').then((m) => m.SeguimientoPage),
+  },
+  {
+    // AF29 — Historial de conduces (listado filtrable + detalle).
+    path: 'transporte/conduces-historial',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/conduces-historial/conduces-historial').then((m) => m.ConducesHistorialPage),
+  },
+  {
     path: 'transporte/conduces/:salidaId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>

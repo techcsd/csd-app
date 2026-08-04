@@ -1,16 +1,14 @@
 <div class="screen conduces">
   <header class="conduces__header">
     <button type="button" class="conduces__back" (click)="back()" aria-label="Atrás">←</button>
-    <span class="conduces__icon">🧾</span>
-    <h1 class="conduces__title">Conduces y rutas</h1>
+    <span class="conduces__icon">🗺️</span>
+    <h1 class="conduces__title">Mis rutas</h1>
   </header>
 
   <div class="screen__body">
+    <app-gps-gate-banner />
     <div class="conduces__acciones">
-      <button type="button" class="btn-ghost conduces__crear" (click)="generarConduce()">
-        📦 Sacar material
-      </button>
-      <button type="button" class="btn-ghost conduces__crear" (click)="crearRuta()">
+      <button type="button" class="btn-cta conduces__crear" (click)="crearRuta()">
         ➕ Crear ruta
       </button>
     </div>
@@ -18,9 +16,21 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
-      @if (rutas().length) {
+      <!-- AF25 — Rutas activas (en curso, arriba) + Rutas de hoy -->
+      @if (rutasActivas().length) {
+        <h2 class="conduces__section">Rutas activas</h2>
+        @for (r of rutasActivas(); track r.id) {
+          <ng-container *ngTemplateOutlet="rutaCard; context: { $implicit: r }"></ng-container>
+        }
+      }
+      @if (rutasHoy().length) {
         <h2 class="conduces__section">Rutas de hoy</h2>
-        @for (r of rutas(); track r.id) {
+        @for (r of rutasHoy(); track r.id) {
+          <ng-container *ngTemplateOutlet="rutaCard; context: { $implicit: r }"></ng-container>
+        }
+      }
+
+      <ng-template #rutaCard let-r>
           <div class="ruta-card">
             <div class="ruta-card__info">
               <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}</span>
@@ -46,6 +56,14 @@
                 <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'completada')">🏁 Completar</button>
               }
             </div>
+
+            <!-- AF25 — RUTA VIVA: agregar parada / cambiar destino (no "cancelar") -->
+            @if (r.estado === 'planificada' || r.estado === 'en_curso') {
+              <div class="ruta-card__viva">
+                <button type="button" class="btn-outline ruta-card__btn" (click)="abrirRutaViva(r.id, 'parada')">➕ Agregar parada</button>
+                <button type="button" class="btn-outline ruta-card__btn" (click)="abrirRutaViva(r.id, 'destino')">🔀 Cambiar destino</button>
+              </div>
+            }
 
             <!-- AE5 — detalle de EJECUCIÓN: paradas con estado + conduce por parada -->
             <button type="button" class="ruta-card__ver" (click)="toggleDetalle(r.id)">
@@ -164,8 +182,7 @@
               }
             }
           </div>
-        }
-      }
+      </ng-template>
 
       @if (conduces().length) {
         <h2 class="conduces__section">Conduces por entregar</h2>
@@ -237,6 +254,44 @@
 
       <button type="button" class="btn-cta parada-sheet__cta" [disabled]="entGuardando()" (click)="confirmarEntregarParada()">
         {{ entGuardando() ? 'Guardando…' : '✓ Confirmar entrega' }}
+      </button>
+    </div>
+  }
+
+  <!-- AF25 — RUTA VIVA: hoja para agregar parada / cambiar destino -->
+  @if (rutaViva(); as rv) {
+    <div class="parada-sheet-back" (click)="cerrarRutaViva()"></div>
+    <div class="parada-sheet">
+      <div class="parada-sheet__head">
+        <h2 class="parada-sheet__title">
+          {{ rv.modo === 'parada' ? 'Agregar parada' : 'Cambiar destino' }}
+        </h2>
+        <button type="button" class="parada-sheet__x" (click)="cerrarRutaViva()" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="parada-sheet__sub">
+        {{ rv.modo === 'parada'
+          ? 'La parada se agrega a la ruta y queda registrada (quién y cuándo).'
+          : 'No se cancela la ruta: el destino cambia y queda registrado.' }}
+      </p>
+
+      @if (proyectosOpts().length) {
+        <label class="field-label" for="rv-obra">Obra (opcional)</label>
+        <select id="rv-obra" class="field" [ngModel]="rvProyectoId()" (ngModelChange)="onRvProyecto($event)">
+          <option value="">— Elegir obra —</option>
+          @for (p of proyectosOpts(); track p.id) {
+            <option [value]="p.id">{{ p.nombre }}</option>
+          }
+        </select>
+      }
+
+      <label class="field-label parada-sheet__mt" for="rv-ubic">
+        {{ rv.modo === 'parada' ? 'Nombre de la parada' : 'Nuevo destino' }} <span class="parada-sheet__req">*</span>
+      </label>
+      <input id="rv-ubic" class="field" type="text" [ngModel]="rvUbicacion()" (ngModelChange)="rvUbicacion.set($event)"
+        [placeholder]="rv.modo === 'parada' ? 'Ej. Ferretería La Cadena' : 'Ej. Obra Bellón'" />
+
+      <button type="button" class="btn-cta parada-sheet__cta" [disabled]="rvGuardando()" (click)="confirmarRutaViva()">
+        {{ rvGuardando() ? 'Guardando…' : (rv.modo === 'parada' ? '➕ Agregar parada' : '🔀 Cambiar destino') }}
       </button>
     </div>
   }

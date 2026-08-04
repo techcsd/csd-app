@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia } from '../models/inventario.model';
+import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia, Ferreteria } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
@@ -363,9 +363,21 @@ export class InventarioService {
    * de proveedores/órdenes de compra → el proveedor va como texto en observaciones
    * y la OC la enlaza Almacén al confirmar (gap documentado).
    */
+  /** AF31/AF32 — ferreterías visibles para el chofer (origen de conduce = compra). */
+  async getFerreterias(): Promise<Ferreteria[]> {
+    const data = await this.catalog.refresh<Ferreteria[]>('ferreterias_visibles', async () => {
+      const { data, error } = await this.supabase.client.rpc('ferreterias_visibles');
+      if (error) throw new Error(error.message);
+      return (data as Ferreteria[]) ?? [];
+    });
+    return data ?? [];
+  }
+
   async enqueueCompraFerreteria(input: CompraFerreteriaCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    // Si viene un proveedor-ferretería del catálogo (AF31), va como id; el texto
+    // libre se conserva en observaciones como red de seguridad / para OC legacy.
     const obs =
       [
         input.proveedor?.trim() ? `Ferretería/proveedor: ${input.proveedor.trim()}` : null,
@@ -381,6 +393,7 @@ export class InventarioService {
         id,
         bodega_id: input.bodegaId,
         proyecto_id: input.proyectoId,
+        proveedor_id: input.proveedorId ?? null, // AF31 — id del catálogo
         referencia: input.referencia?.trim() || null,
         observaciones: obs,
         items: input.items,
@@ -873,7 +886,7 @@ export class InventarioService {
         p_id: payload['id'],
         p_fecha: (payload['capturado_en'] as string).slice(0, 10),
         p_bodega_id: payload['bodega_id'],
-        p_proveedor_id: null, // la app no tiene catálogo de proveedores
+        p_proveedor_id: payload['proveedor_id'] ?? null, // AF31 — ferretería del catálogo
         p_proyecto_id: payload['proyecto_id'] ?? null,
         p_orden_compra_id: null, // Almacén enlaza la OC al confirmar
         p_referencia: payload['referencia'] ?? null,

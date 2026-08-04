@@ -1,0 +1,107 @@
+// Leaflet CSS ya se carga global (angular.json → styles).
+
+.seg__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.seg__back {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--main);
+}
+
+.seg__icon {
+  font-size: 22px;
+}
+
+.seg__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--main);
+  margin: 0;
+}
+
+.seg__map {
+  height: 42vh;
+  width: 100%;
+  background: #e5e5e5;
+
+  &--hidden {
+    display: none;
+  }
+}
+
+.seg__body {
+  padding: 14px;
+}
+
+.seg__section {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--main);
+  margin: 0 0 10px;
+}
+
+.chofer-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.chofer-card__dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.chofer-card__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.chofer-card__nombre {
+  font-weight: 700;
+  color: var(--main);
+}
+
+.chofer-card__estado {
+  font-size: 13px;
+  color: var(--main-ultra-light);
+}
+
+.chofer-card__ruta {
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.chofer-card__hace {
+  font-size: 11px;
+  color: var(--main-ultra-light);
+  flex-shrink: 0;
+}
+// El estilo del marcador (.seg-marker__pin) vive en styles.scss (los DivIcon de
+// Leaflet no tienen encapsulación de componente).

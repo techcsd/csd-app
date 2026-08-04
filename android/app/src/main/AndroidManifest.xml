@@ -55,6 +55,11 @@
          en el merge, así que hay que declararlos aquí. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- AF27 — tracking en segundo plano durante rutas activas (foreground service,
+         @capacitor-community/background-geolocation). El servicio y sus permisos
+         FOREGROUND_SERVICE(_LOCATION) los aporta el manifest del plugin en el merge;
+         ACCESS_BACKGROUND_LOCATION (Android 10+) se declara aquí. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <!-- W2: "Cómo llegar" abre Google Maps con @capacitor/app-launcher. En

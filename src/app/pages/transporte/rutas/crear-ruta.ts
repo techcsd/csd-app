@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -24,8 +24,31 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
+import { TrackingService } from '../../../core/services/tracking.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
+import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { formatearDuracion } from '../../../core/util/duracion';
+
+/** AF24.5 — estado del borrador de crear-ruta (sin fotos; se re-capturan). */
+interface CrearRutaDraft {
+  vehiculoId: string;
+  vehiculoLabel: string;
+  conductorId: string;
+  origen: string;
+  origenLat: number | null;
+  origenLng: number | null;
+  usandoGps: boolean;
+  destinoModo: DestinoModo;
+  destinoLugarId: string;
+  destinoMapaTexto: string;
+  destinoMapaCoords: { lat: number; lng: number } | null;
+  km: number | null;
+  notas: string;
+  tipo: RutaTipo;
+  paradas: ParadaUI[];
+}
 
 type DestinoModo = 'lugar' | 'mapa';
 
@@ -50,7 +73,7 @@ interface ParadaUI {
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot],
+  imports: [FormsModule, SelectList, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
@@ -63,9 +86,17 @@ export class CrearRutaPage implements OnDestroy {
   private toast = inject(ToastService);
   private permissions = inject(PermissionsService);
   private gate = inject(PermisoGateService);
+  private tracking = inject(TrackingService);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
   private router = inject(Router);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+
+  // AF24.5 — borrador persistente (retomar si el teléfono se bloquea / muere la app).
+  private readonly clave = 'transporte:crear-ruta';
+  private hydrated = false;
+  draftFecha = signal<number | null>(null);
 
   fmtDur = formatearDuracion; // U23 — para el template
 
@@ -73,17 +104,11 @@ export class CrearRutaPage implements OnDestroy {
   // a sí mismo y NO ve el paso "conductor" (el backend la auto-asigna a quien la crea).
   readonly esElevado = this.ctx.esFlotaElevado();
 
-  // Wizard tipo hoja. Elevado (6): 1 vehículo → 2 conductor → 3 origen → 4 destino →
-  // 5 detalles → 6 resumen. Chofer (5): se salta el paso 2 (conductor).
-  private readonly MAX_STEP = 6;
-  readonly total = computed(() => (this.esElevado ? 6 : 5));
+  // AF24 — wizard de ≤4 pasos (igual para chofer y jefe de flota):
+  // 1 vehículo (+ conductor si es elevado) · 2 origen + destino + paradas ·
+  // 3 carga (foto obligatoria) + notas · 4 resumen.
+  readonly total = 4;
   step = signal(1);
-  // Paso "visible" para la barra de progreso: en el chofer los pasos internos
-  // 1,3,4,5,6 se muestran como 1..5 (se descuenta el paso 2 saltado).
-  displayStep = computed(() => {
-    const s = this.step();
-    return this.esElevado ? s : s > 2 ? s - 1 : s;
-  });
 
   loading = signal(true);
   submitting = signal(false);
@@ -136,12 +161,12 @@ export class CrearRutaPage implements OnDestroy {
   // U22 — obras + almacenes (con ícono por tipo) para los selectores de origen/destino.
   // Y2 — el ícono va por ítem (🏗️ obra / 🏢 bodega); NO se hornea en el label ni
   // se repite con el icon de la lista (eso causaba el doble emoji).
+  // AF24.2 — solo obras/proyectos como origen/destino (las obras ya son almacenes;
+  // se quitan los almacenes de los selectores para no duplicar destinos).
   lugarOpts = computed<SelectOption[]>(() =>
-    this.lugares().map((l) => ({
-      id: l.id,
-      label: l.nombre,
-      icon: l.tipo === 'obra' ? '🏗️' : '🏢',
-    })),
+    this.lugares()
+      .filter((l) => l.tipo === 'obra')
+      .map((l) => ({ id: l.id, label: l.nombre, icon: '🏗️' })),
   );
 
   selectedLugar = computed<LugarDestino | null>(
@@ -167,6 +192,78 @@ export class CrearRutaPage implements OnDestroy {
     void this.load();
     void this.captureGps();
     this.navGuard.register(this.backHandler); // U4 — botón físico Android
+    // AF24.5 — autosave del borrador (sin fotos): al cambiar cualquier campo,
+    // guarda el avance para poder retomarlo si el teléfono se bloquea o muere la app.
+    effect(() => this.autosaveEffect());
+  }
+
+  /** AF24.5 — snapshot + autosave del borrador (se dispara con cualquier cambio). */
+  private autosaveEffect(): void {
+    const snap: CrearRutaDraft = {
+      vehiculoId: this.vehiculoId(),
+      vehiculoLabel: this.vehiculoLabel(),
+      conductorId: this.conductorId(),
+      origen: this.origen(),
+      origenLat: this.gps?.lat ?? null,
+      origenLng: this.gps?.lng ?? null,
+      usandoGps: this.usandoGps(),
+      destinoModo: this.destinoModo(),
+      destinoLugarId: this.destinoLugarId(),
+      destinoMapaTexto: this.destinoMapaTexto(),
+      destinoMapaCoords: this.destinoMapaCoords(),
+      km: this.km(),
+      notas: this.notas(),
+      tipo: this.tipoRuta(),
+      paradas: this.paradas(),
+    };
+    // No trackear hasta hidratar / decidir, ni tras enviar.
+    if (!this.hydrated || this.done() || this.submitting()) return;
+    if (!this.tieneDatos()) return;
+    this.autosave.queue(this.clave, snap, {
+      tipo: 'crear_ruta',
+      etiqueta: 'Ruta',
+      ruta: this.location.path(),
+    });
+  }
+
+  /** AF24.5 — retomar el borrador: rehidrata los campos (las fotos se re-capturan). */
+  continuarBorrador(): void {
+    const load = async () => {
+      const d = await this.borrador.load<CrearRutaDraft>(this.clave);
+      if (d) {
+        this.vehiculoId.set(d.vehiculoId ?? '');
+        this.vehiculoLabel.set(d.vehiculoLabel ?? '');
+        this.conductorId.set(d.conductorId ?? '');
+        this.origen.set(d.origen ?? '');
+        this.gps = d.origenLat != null && d.origenLng != null ? { lat: d.origenLat, lng: d.origenLng } : null;
+        this.usandoGps.set(d.usandoGps ?? false);
+        this.destinoModo.set(d.destinoModo ?? 'lugar');
+        this.destinoLugarId.set(d.destinoLugarId ?? '');
+        this.destinoMapaTexto.set(d.destinoMapaTexto ?? '');
+        this.destinoMapaCoords.set(d.destinoMapaCoords ?? null);
+        this.km.set(d.km ?? null);
+        this.notas.set(d.notas ?? '');
+        this.tipoRuta.set(d.tipo ?? 'material');
+        this.paradas.set(d.paradas ?? []);
+      }
+      // AF24.5 — rehidrata las fotos del borrador (carga/documento).
+      const fotos = await this.borrador.loadFotos(this.clave);
+      for (const f of fotos) {
+        const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+        if (f.slot === 'carga') this.fotoCarga.set(photo);
+        else if (f.slot === 'documento') this.fotoDocumento.set(photo);
+      }
+      this.draftFecha.set(null);
+      this.hydrated = true;
+    };
+    void load();
+  }
+
+  /** AF24.5 — empezar de nuevo: descarta el borrador. */
+  descartarBorrador(): void {
+    void this.autosave.discard(this.clave);
+    this.draftFecha.set(null);
+    this.hydrated = true;
   }
 
   ngOnDestroy(): void {
@@ -184,6 +281,11 @@ export class CrearRutaPage implements OnDestroy {
       ]);
       this.lugares.set(lugares);
       this.conductorOpts.set(conductores.map((c) => ({ id: c.id, label: c.nombre })));
+      // AF24.5 — ¿hay un borrador previo? Ofrecer retomarlo (banner). Hasta que el
+      // usuario decida, NO trackeamos (para no pisar el borrador).
+      const d = await this.borrador.get(this.clave);
+      if (d) this.draftFecha.set(d.updated_at);
+      else this.hydrated = true;
     } finally {
       this.loading.set(false);
     }
@@ -224,7 +326,19 @@ export class CrearRutaPage implements OnDestroy {
       this.origen.set('Mi ubicación actual');
       this.usandoGps.set(true);
       this.origenLugarId.set('');
-      this.toast.success('Ubicación actual fijada como origen.');
+      // AF31.1 — geocerca: si estás dentro/junto a una obra registrada, ofrece
+      // fijarla como origen (continuidad salida-origen; nunca una coord suelta).
+      const cercana = this.obraCercana(r.lat, r.lng);
+      if (cercana) {
+        this.toast.withAction(
+          `¿Estás en la obra ${cercana.nombre}? Se registrará como el origen.`,
+          { label: 'Sí, es esa', run: () => this.onOrigenLugar(cercana.id) },
+          'info',
+          9000,
+        );
+      } else {
+        this.toast.success('Ubicación actual fijada como origen.');
+      }
       void this.recalcularRuta();
       return;
     }
@@ -245,6 +359,33 @@ export class CrearRutaPage implements OnDestroy {
     } else {
       this.toast.error('No se pudo obtener tu ubicación. Escribe el origen o márcalo en el mapa.');
     }
+  }
+
+  /** AF31.1 — obra registrada más cercana a un punto (≤300 m), o null. */
+  private obraCercana(lat: number, lng: number): LugarDestino | null {
+    let mejor: LugarDestino | null = null;
+    let mejorDist = 300; // metros
+    for (const l of this.lugares()) {
+      if (l.tipo !== 'obra' || l.latitud == null || l.longitud == null) continue;
+      const d = this.distanciaM(lat, lng, l.latitud, l.longitud);
+      if (d <= mejorDist) {
+        mejorDist = d;
+        mejor = l;
+      }
+    }
+    return mejor;
+  }
+
+  /** Distancia haversine en metros. */
+  private distanciaM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371000;
+    const toRad = (d: number) => (d * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(a));
   }
 
   onOrigenInput(v: string): void {
@@ -338,12 +479,31 @@ export class CrearRutaPage implements OnDestroy {
     this.paradas.update((list) => list.map((p, idx) => (idx === i ? { ...p, notas: texto } : p)));
   }
 
-  /** AC6 — fotos de evidencia inicial capturadas (no nulas), para el resumen. */
+  /** AC6/AF24.3 — fotos de evidencia inicial (la del VEHÍCULO se eliminó). */
   fotosEvidencia = computed(() =>
-    [this.fotoCarga(), this.fotoVehiculo(), this.fotoDocumento()].filter(
-      (f): f is CapturedPhoto => !!f,
-    ),
+    [this.fotoCarga(), this.fotoDocumento()].filter((f): f is CapturedPhoto => !!f),
   );
+
+  /** AF24.3 — la foto de carga es obligatoria en rutas de material. */
+  cargaObligatoria = computed(() => this.tipoRuta() === 'material');
+
+  // AF24.5 — las fotos del borrador se persisten en borrador_fotos y se rehidratan.
+  capFotoCarga(p: CapturedPhoto): void {
+    this.fotoCarga.set(p);
+    void this.borrador.saveFoto(this.clave, 'carga', p.blob);
+  }
+  clrFotoCarga(): void {
+    this.fotoCarga.set(null);
+    void this.borrador.removeFoto(this.clave, 'carga');
+  }
+  capFotoDocumento(p: CapturedPhoto): void {
+    this.fotoDocumento.set(p);
+    void this.borrador.saveFoto(this.clave, 'documento', p.blob);
+  }
+  clrFotoDocumento(): void {
+    this.fotoDocumento.set(null);
+    void this.borrador.removeFoto(this.clave, 'documento');
+  }
 
   /** U20/U22 — destino marcado en el mapa. */
   onDestinoUbicacion(u: UbicacionSeleccionada): void {
@@ -406,40 +566,43 @@ export class CrearRutaPage implements OnDestroy {
     this.destinoModo() === 'lugar' ? (this.selectedLugar()?.nombre ?? '') : this.destinoMapaTexto().trim(),
   );
 
-  /** S16 — avanza validando el paso actual. */
+  /** AF24 — avanza validando el paso actual (4 pasos). */
   next(): void {
     const s = this.step();
-    if (s === 1 && !this.vehiculoId()) {
-      this.toast.error('Elige el vehículo.');
+    if (s === 1) {
+      if (!this.vehiculoId()) {
+        this.toast.error('Elige el vehículo.');
+        return;
+      }
+      if (this.esElevado && !this.conductorId()) {
+        this.toast.error('Elige el conductor al que le asignas la ruta.');
+        return;
+      }
+    }
+    if (s === 2) {
+      if (!this.origen().trim()) {
+        this.toast.error('Indica el origen.');
+        return;
+      }
+      if (!this.destinoResumen()) {
+        this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra de destino.' : 'Marca el destino en el mapa.');
+        return;
+      }
+    }
+    if (s === 3 && this.cargaObligatoria() && !this.fotoCarga()) {
+      this.toast.error('Toma la foto de la carga.');
       return;
     }
-    if (s === 2 && !this.conductorId()) {
-      this.toast.error('Elige el conductor al que le asignas la ruta.');
-      return;
-    }
-    if (s === 3 && !this.origen().trim()) {
-      this.toast.error('Indica el origen.');
-      return;
-    }
-    if (s === 4 && !this.destinoResumen()) {
-      this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra o almacén de destino.' : 'Marca el destino en el mapa.');
-      return;
-    }
-    // El chofer se salta el paso 2 (conductor): la ruta es para él mismo.
-    let nxt = s + 1;
-    if (nxt === 2 && !this.esElevado) nxt = 3;
-    this.step.set(Math.min(this.MAX_STEP, nxt));
+    this.step.set(Math.min(this.total, s + 1));
   }
 
-  /** S16 — retrocede; en el paso 1 intenta salir (con confirmación si hay datos). */
+  /** Retrocede; en el paso 1 intenta salir (con confirmación si hay datos). */
   prev(): void {
     if (this.step() === 1) {
       this.back();
       return;
     }
-    let prv = this.step() - 1;
-    if (prv === 2 && !this.esElevado) prv = 1; // saltar conductor al retroceder
-    this.step.set(Math.max(1, prv));
+    this.step.set(Math.max(1, this.step() - 1));
   }
 
   async guardar(): Promise<void> {
@@ -457,9 +620,16 @@ export class CrearRutaPage implements OnDestroy {
       return;
     }
     if (!this.destinoTexto()) {
-      this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra o almacén de destino.' : 'Marca el destino en el mapa.');
+      this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra de destino.' : 'Marca el destino en el mapa.');
       return;
     }
+    // AF24.3 — la foto de carga es obligatoria en rutas de material.
+    if (this.cargaObligatoria() && !this.fotoCarga()) {
+      this.toast.error('Toma la foto de la carga.');
+      return;
+    }
+    // AF26 — crear una ruta exige GPS activo (bloquea si está apagado/revocado).
+    if (!(await this.tracking.exigirGps('crear_ruta'))) return;
     const lugar = this.destinoModo() === 'lugar' ? this.selectedLugar() : null;
     const mapaCoords = this.destinoModo() === 'mapa' ? this.destinoMapaCoords() : null;
     this.submitting.set(true);
@@ -492,6 +662,7 @@ export class CrearRutaPage implements OnDestroy {
         // AC6 — fotos de evidencia inicial (carga/vehículo/documento).
         fotos: this.fotosEvidencia().map((f) => f.blob),
       });
+      void this.autosave.discard(this.clave); // AF24.5 — borrador cumplido
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo crear la ruta. Intenta de nuevo.');
@@ -533,6 +704,8 @@ export class CrearRutaPage implements OnDestroy {
 
   confirmarSalir(): void {
     this.confirmSalir.set(false);
+    // AF24.5 — al descartar explícitamente, se limpia el borrador.
+    void this.autosave.discard(this.clave);
     this.location.back();
   }
 

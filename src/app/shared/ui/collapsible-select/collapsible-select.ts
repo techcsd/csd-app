@@ -22,6 +22,9 @@ export class CollapsibleSelect {
   selectedId = input<string>('');
   /** Texto del botón para volver a abrir la lista. */
   cambiarLabel = input<string>('Cambiar');
+  /** AF24.4 — pasa el buscador de `select-list` (listas largas: obras). */
+  searchable = input<boolean>(false);
+  searchPlaceholder = input<string>('Buscar…');
 
   picked = output<string>();
 

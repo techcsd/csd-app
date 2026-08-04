@@ -24,13 +24,16 @@
       <span class="cruta__hicon">🧭</span>
       <h1 class="cruta__htitle">Crear ruta</h1>
     </header>
-    <app-step-bar [current]="displayStep()" [total]="total()" />
+    <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
+      @if (draftFecha() !== null) {
+        <app-draft-banner [fecha]="draftFecha()" (continuar)="continuarBorrador()" (descartar)="descartarBorrador()" />
+      }
       @if (loading()) {
         <app-skeleton [rows]="4" />
       } @else {
-        <!-- 1. Vehículo -->
+        <!-- Paso 1 — Vehículo (+ conductor si es jefe de flota) -->
         @if (step() === 1) {
           <h1 class="screen__title">¿Qué vehículo?</h1>
           @if (!vehiculoId()) {
@@ -41,23 +44,21 @@
               <button type="button" class="cruta__veh-change" (click)="cambiarVehiculo()">Cambiar</button>
             </div>
           }
+          @if (esElevado) {
+            <label class="field-label cruta__paradas-lbl">¿A quién se la asignas?</label>
+            <p class="field-hint">El conductor recibirá un aviso con la ruta.</p>
+            <app-select-list
+              label="Conductor asignado"
+              icon="🪪"
+              [options]="conductorOpts()"
+              [selectedId]="conductorId()"
+              (picked)="conductorId.set($event)"
+            />
+          }
         }
 
-        <!-- 2. Conductor asignado (S16) -->
+        <!-- Paso 2 — Origen + destino + paradas -->
         @if (step() === 2) {
-          <h1 class="screen__title">¿A quién se la asignas?</h1>
-          <p class="screen__subtitle">El conductor recibirá un aviso con la ruta.</p>
-          <app-select-list
-            label="Conductor asignado"
-            icon="🪪"
-            [options]="conductorOpts()"
-            [selectedId]="conductorId()"
-            (picked)="conductorId.set($event)"
-          />
-        }
-
-        <!-- 3. Origen -->
-        @if (step() === 3) {
           <h1 class="screen__title">¿Desde dónde sale?</h1>
           <label class="field-label" for="origen">Origen</label>
           <input id="origen" class="field" type="text" [ngModel]="origen()" (ngModelChange)="onOrigenInput($event)" placeholder="¿Desde dónde sales?" />
@@ -65,24 +66,21 @@
           <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">🏗️ {{ origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén' }}</button>
           <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}</button>
           @if (origenLugar()) {
-            <app-select-list label="Obra o almacén de origen" [options]="lugarOpts()" [selectedId]="origenLugarId()" (picked)="onOrigenLugar($event)" />
+            <app-select-list label="Obra de origen" [options]="lugarOpts()" [selectedId]="origenLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onOrigenLugar($event)" />
             @if (selectedOrigenLugar() && selectedOrigenLugar()!.latitud == null) {
               <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
             }
           }
           @if (usandoGps()) { <p class="cruta__gps-ok">✓ Origen fijado: {{ origen() }}</p> }
           @if (origenMapa()) { <app-location-picker (ubicacionChange)="onOrigenUbicacion($event)" /> }
-        }
 
-        <!-- 4. Destino -->
-        @if (step() === 4) {
-          <h1 class="screen__title">¿A dónde va?</h1>
+          <h1 class="screen__title cruta__paradas-lbl">¿A dónde va?</h1>
           <div class="cruta__modo">
             <app-option-button icon="🏗️" label="Obra o almacén" [selected]="destinoModo() === 'lugar'" (pressed)="destinoModo.set('lugar')" />
             <app-option-button icon="🗺️" label="En el mapa" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
           </div>
           @if (destinoModo() === 'lugar') {
-            <app-select-list label="Obra o almacén de destino" [options]="lugarOpts()" [selectedId]="destinoLugarId()" (picked)="onDestinoLugar($event)" />
+            <app-select-list label="Obra de destino" [options]="lugarOpts()" [selectedId]="destinoLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onDestinoLugar($event)" />
             @if (selectedLugar() && selectedLugar()!.latitud == null) {
               <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
             }
@@ -144,9 +142,9 @@
           }
         }
 
-        <!-- 5. Detalles -->
-        @if (step() === 5) {
-          <h1 class="screen__title">Detalles</h1>
+        <!-- Paso 3 — Carga + detalles -->
+        @if (step() === 3) {
+          <h1 class="screen__title">Carga y detalles</h1>
 
           <!-- AD6 — tipo de ruta (el chofer que se crea su ruta) -->
           @if (!esElevado) {
@@ -173,17 +171,27 @@
           <!-- Z23 — notas de voz (opcional) -->
           <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
 
-          <!-- AC6 — fotos de evidencia inicial (carga / vehículo / documento), solo cámara -->
-          <label class="field-label">Fotos de evidencia inicial (opcional)</label>
+          <!-- AF24.3 — foto de CARGA obligatoria (material); la del vehículo se eliminó.
+               AF24.6 — el jefe de flota puede adjuntar un documento (factura). Solo cámara. -->
+          <label class="field-label">
+            Foto de la carga
+            @if (cargaObligatoria()) { <span class="cruta__req">*</span> }
+          </label>
           <div class="cruta__fotos">
-            <app-photo-slot label="Carga" hint="📦" [gallery]="false" [foto]="fotoCarga()" (captured)="fotoCarga.set($event)" (cleared)="fotoCarga.set(null)" />
-            <app-photo-slot label="Vehículo" hint="🚚" [gallery]="false" [foto]="fotoVehiculo()" (captured)="fotoVehiculo.set($event)" (cleared)="fotoVehiculo.set(null)" />
-            <app-photo-slot label="Documento" hint="📄" [gallery]="false" [foto]="fotoDocumento()" (captured)="fotoDocumento.set($event)" (cleared)="fotoDocumento.set(null)" />
+            <app-photo-slot label="Carga" hint="📦" [gallery]="false" [foto]="fotoCarga()" (captured)="capFotoCarga($event)" (cleared)="clrFotoCarga()" />
+            <app-photo-slot
+              [label]="esElevado ? 'Documento (factura)' : 'Documento'"
+              hint="📄"
+              [gallery]="esElevado"
+              [foto]="fotoDocumento()"
+              (captured)="capFotoDocumento($event)"
+              (cleared)="clrFotoDocumento()"
+            />
           </div>
         }
 
-        <!-- 6. Resumen -->
-        @if (step() === 6) {
+        <!-- Paso 4 — Resumen -->
+        @if (step() === 4) {
           <h1 class="screen__title">Revisa y crea</h1>
           <ul class="resumen">
             <li><span>Vehículo</span><b>{{ vehiculoLabel() }}</b></li>
@@ -204,10 +212,10 @@
 
     <app-wizard-footer
       [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="displayStep() < total() ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Crear ruta')"
-      [primaryDisabled]="displayStep() >= total() && submitting()"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Crear ruta')"
+      [primaryDisabled]="step() >= total && submitting()"
       (back)="prev()"
-      (primary)="displayStep() < total() ? next() : guardar()"
+      (primary)="step() < total ? next() : guardar()"
     />
 
     <!-- U4 — descartar cambios sin guardar -->

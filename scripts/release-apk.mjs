@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.62.0';
+const VERSION = '1.63.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,18 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-04';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Firmas en material, artículos de alto valor y recepciones de vehículo';
+const TITULO = 'Transporte v2: rutas vivas, conduces con origen, seguimiento en vivo y estados del chofer';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Firma al final de entrada y salida de material: firma quien recibe (entrada) o quien entrega (salida). La firma queda visible en la web.' },
-  { t: 'nuevo', d: 'Historial de recepciones de vehículo: consulta las actas de traspaso (quién dejó, quién recibió, km, condiciones y la llave).' },
-  { t: 'nuevo', d: 'Artículos de alto valor / “entrega en mano”: si un conduce lleva uno, se destaca y no puede auto-recibirse (los marca administración en la web).' },
+  { t: 'nuevo', d: 'Menú de Transporte renovado: Mis rutas, Conduces y Seguimiento, más ordenado y con menos pasos.' },
+  { t: 'nuevo', d: 'Crear conduce con origen: almacén, ferretería (compra) u “Otros” (lugar libre). Al elegir el vehículo, la ruta se genera sola.' },
+  { t: 'nuevo', d: 'Crear ruta en 4 pasos con foto de carga obligatoria y buscador de obras; si sales a mitad, se guarda un borrador para retomarlo.' },
+  { t: 'nuevo', d: 'Rutas vivas: agrega una parada o cambia el destino sobre la marcha (todo queda registrado).' },
+  { t: 'nuevo', d: 'Estado del chofer: Disponible, En ruta, Descanso, Almuerzo con cuenta regresiva de 1h e Inactivo.' },
+  { t: 'nuevo', d: 'Seguimiento en vivo para jefe de flota: mapa con la ubicación de los choferes, su estado y sus rutas activas.' },
+  { t: 'nuevo', d: 'Historial de conduces con filtros por fecha y estado.' },
+  { t: 'mejora', d: 'La ubicación debe estar activa: la app te avisa y te pide encender el GPS para crear rutas/conduces y marcar entregas.' },
 ];
 
 const TIPO_POR_COMMIT = {

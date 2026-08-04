@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { BigButton } from '../../shared/ui/big-button/big-button';
+import { EstadoChoferBar } from './estado-chofer/estado-chofer-bar';
+import { GpsGateBanner } from '../../shared/components/gps-gate-banner/gps-gate-banner';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
@@ -25,38 +27,38 @@ interface HubTile {
   elevado?: boolean;
 }
 
+// AF22 — Transporte v2: menú consolidado (TRANSPORTE-V2.md §7, aprobado). 3 núcleos
+// arriba (Mis rutas · Conduces · Seguimiento) + operativos sueltos. Los flujos viejos
+// (sacar material, recibir, devolver, ferretería, por firmar, crear ruta) siguen
+// existiendo por sus rutas — ahora se llega a ellos DENTRO de cada núcleo, no como
+// tiles sueltos; los deep-links de notificaciones viejas no se rompen.
 const TILES: HubTile[] = [
-  { key: 'conduces', icon: '🧾', label: 'Conduces y rutas', tint: '#1e3a5f' },
-  // Z24 — "Hacer pre-uso" directo desde el hub: el chofer llega a la inspección
-  // en ≤2 toques (la pantalla elige el vehículo del pool si no hay contexto).
+  // ── Núcleos ────────────────────────────────────────────────────────────────
+  // Mis rutas: activas / hoy / historial. Crear ruta y agregar parada son acciones
+  // dentro. (Absorbe "Conduces y rutas" + "Crear ruta".)
+  { key: 'misRutas', icon: '🗺️', label: 'Mis rutas', tint: '#0d9488' },
+  // Conduces: crear · recibir · devolver · ferretería · por firmar · historial.
+  { key: 'conducesHub', icon: '🧾', label: 'Conduces', tint: '#1e3a5f' },
+  // Seguimiento en vivo (solo jefe de flota / admin / tecnología).
+  { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
+
+  // ── Operativos sueltos (no son conduce/ruta) ────────────────────────────────
+  { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
+  // Z24 — "Hacer pre-uso" directo (≤2 toques; elige el vehículo del pool).
   { key: 'preuso', icon: '📝', label: 'Hacer pre-uso', tint: '#0369a1' },
   { key: 'combustible', icon: '⛽', label: 'Registrar combustible', tint: '#dc2626' },
   // AF17 — registro/log de echadas (solo roles elevados).
   { key: 'combustibleLog', icon: '📊', label: 'Registro de echadas', tint: '#dc2626', elevado: true },
-  // AD6 — funciones de inventario del chofer dentro de Transporte.
-  { key: 'recibirMercancia', icon: '📥', label: 'Recibir mercancía', tint: '#0f766e' },
-  // AE — el chofer genera un conduce (saca material de un almacén hacia una obra).
-  { key: 'sacarMaterial', icon: '📦', label: 'Sacar material', tint: '#7c3aed' },
-  // AE — devolver material de una obra a un almacén (con doble firma).
-  { key: 'devolverMaterial', icon: '↩️', label: 'Devolver material', tint: '#0f766e' },
-  { key: 'ferreteria', icon: '🧾', label: 'Compra en ferretería', tint: '#9333ea' },
-  // AE — firmas de recepción pendientes asignadas a mí.
-  { key: 'porFirmar', icon: '✍️', label: 'Por firmar', tint: '#ca8a04' },
   { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
-  { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
   // AF36 — historial de recepciones/traspasos de vehículo (actas).
   { key: 'misActas', icon: '📥', label: 'Recepciones de vehículo', tint: '#0891b2' },
+  // Z24 — historial de checklists visible para TODO chofer (RLS: ve solo los suyos).
+  { key: 'checklists', icon: '✅', label: 'Historial de checklists', tint: '#0369a1' },
+  // Y7 — "Me pusieron una multa": visible para TODO chofer.
+  { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c' },
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
-  // El chofer también puede crearse rutas a sí mismo (se auto-asigna); el jefe de
-  // flota además elige a quién se la asigna. Por eso NO va gateado como elevado.
-  { key: 'crearRuta', icon: '🗺️', label: 'Crear ruta', tint: '#0d9488' },
-  // Z24 — historial de checklists visible para TODO chofer (RLS chk_veh_sel: el
-  // chofer solo ve los suyos; el jefe de flota ve lo que envían todos).
-  { key: 'checklists', icon: '✅', label: 'Historial de checklists', tint: '#0369a1' },
-  // Y7 — "Me pusieron una multa": visible para TODO chofer (no solo elevados).
-  { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c' },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
 ];
 
@@ -65,7 +67,7 @@ const TILES: HubTile[] = [
   selector: 'app-transporte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe, BigButton],
+  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe, BigButton, EstadoChoferBar, GpsGateBanner],
   templateUrl: './transporte.html',
   styleUrl: './transporte.scss',
 })
@@ -83,6 +85,9 @@ export class TransportePage {
 
   // V1 — documentación en proceso del módulo transporte/flota.
   private enProcesoCount = this.enProceso.counts;
+
+  // AF28 — la barra de estado del chofer se muestra solo a choferes.
+  esChofer = this.ctx.esChofer;
 
   // S15 — cuadros del hub gated por rol (R14): el chofer ve solo los suyos.
   // V1 — añade "Documentación en proceso" cuando hay borradores/envíos pendientes.
@@ -137,8 +142,8 @@ export class TransportePage {
   /** S15 — badge del cuadro (reporte semanal pendiente / avisos de flota). */
   badgeFor(key: string): number | null {
     if (key === 'semanal') return this.reporteSemanalPend() || null;
-    if (key === 'conduces') return this.conducesNuevas() || null; // Y3
-    if (key === 'porFirmar') return this.firmasPendientes() || null; // AE
+    if (key === 'misRutas') return this.conducesNuevas() || null; // Y3 — rutas nuevas
+    if (key === 'conducesHub') return this.firmasPendientes() || null; // AE — por firmar
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
     if (key === 'enProceso') return this.enProcesoCount()['flota'] || null;
     return null;
@@ -147,27 +152,38 @@ export class TransportePage {
   /** S15 — despacha el cuadro tocado a su pantalla. */
   openTile(t: HubTile): void {
     switch (t.key) {
-      case 'conduces': return this.conduces();
+      case 'misRutas': return this.misRutas();
+      case 'conducesHub': return this.conducesHub();
+      case 'seguimiento': return this.seguimiento();
       case 'preuso': return this.preusoTop();
       case 'combustible': return this.combustibleTop();
       case 'combustibleLog': return this.combustibleLog();
-      case 'recibirMercancia': return this.recibirMercancia();
-      case 'sacarMaterial': return this.sacarMaterial();
-      case 'devolverMaterial': return this.devolverMaterial();
-      case 'porFirmar': return this.porFirmar();
-      case 'ferreteria': return this.ferreteria();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
       case 'asignar': return this.asignar();
       case 'misActas': return this.misActas();
       case 'vehiculos': return this.vehiculosLista();
       case 'conductores': return this.conductoresLista();
-      case 'crearRuta': return this.crearRuta();
       case 'checklists': return this.checklistsHistorial();
       case 'multas': return this.multas();
       case 'avisos': return this.avisos();
       case 'enProceso': return this.enProcesoAbrir();
     }
+  }
+
+  /** AF22 — Mis rutas (activas / hoy / historial). Reutiliza la pantalla de rutas. */
+  misRutas(): void {
+    void this.router.navigate(['/transporte/mis-rutas']);
+  }
+
+  /** AF22 — núcleo Conduces (crear · recibir · devolver · ferretería · por firmar · historial). */
+  conducesHub(): void {
+    void this.router.navigate(['/transporte/conduces-hub']);
+  }
+
+  /** AF27 — Seguimiento en vivo (jefe de flota / admin / tecnología). */
+  seguimiento(): void {
+    void this.router.navigate(['/transporte/seguimiento']);
   }
 
   /** V1 — documentación en proceso (borradores + envíos pendientes). Y10 — el

@@ -1,13 +1,22 @@
 @if (label()) {
   <label class="field-label">{{ label() }}</label>
 }
+@if (searchable() && options().length > 6) {
+  <input
+    class="field select-list__search"
+    type="text"
+    [ngModel]="query()"
+    (ngModelChange)="query.set($event)"
+    [placeholder]="searchPlaceholder()"
+  />
+}
 <div class="select-list">
-  @for (o of options(); track o.id) {
+  @for (o of visibles(); track o.id) {
     <button
       type="button"
       class="select-list__opt"
       [class.select-list__opt--on]="selectedId() === o.id"
-      (click)="picked.emit(o.id)"
+      (click)="onPick(o.id)"
     >
       @if (o.image) {
         <img class="select-list__thumb" [src]="o.image" alt="" />
@@ -20,6 +29,6 @@
       }
     </button>
   } @empty {
-    <p class="select-list__muted">No hay opciones.</p>
+    <p class="select-list__muted">{{ query() ? 'Sin resultados.' : 'No hay opciones.' }}</p>
   }
 </div>

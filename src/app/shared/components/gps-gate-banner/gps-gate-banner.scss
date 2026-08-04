@@ -1,0 +1,47 @@
+.gps-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 5px solid #dc2626;
+  border-radius: 14px;
+}
+
+.gps-banner__icon {
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.gps-banner__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.gps-banner__title {
+  font-weight: 800;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.gps-banner__msg {
+  font-size: 13px;
+  color: #7f1d1d;
+}
+
+.gps-banner__btn {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 8px 14px;
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}

@@ -61,12 +61,17 @@ export interface RutaCaptura {
 /** AE — el chofer GENERA un conduce (salida de material) desde una bodega hacia
  *  una obra. Valida stock en el servidor (crear_conduce_transportista). */
 export interface ConduceTransportistaCaptura {
-  bodegaId: string;
+  /** null = origen "Otros" (movimiento sin almacén de stock). */
+  bodegaId: string | null;
   proyectoId: string | null;
   observaciones: string | null;
   items: { articulo_id: string; cantidad: number }[];
+  /** AF23.4 — al pasar vehículo + obra, el servidor auto-genera la ruta al emitir. */
   vehiculoId?: string | null;
   rutaId?: string | null;
+  /** AF23.3 — firma de quien ENTREGA (emisor), obligatoria al emitir. */
+  firmaEmisor?: Blob | null;
+  emisorNombre?: string | null;
 }
 
 /** AC13 — una parada intermedia de la ruta. */
@@ -119,6 +124,44 @@ export interface RutaConduceEjec {
 export interface RutaDetalleTransporte {
   paradas: RutaParadaEjec[];
   conduces: RutaConduceEjec[];
+}
+
+/** AF29 — una fila del historial de conduces (mis_conduces_historial). */
+export interface ConduceHistorial {
+  id: string;
+  fecha: string;
+  creado_en: string;
+  estado: string;
+  fase: string | null;
+  alto_valor: boolean;
+  obra: string | null;
+  proyecto_id: string | null;
+  bodega: string | null;
+  ruta_id: string | null;
+  observaciones: string | null;
+  receptor: string | null;
+  entregado_en: string | null;
+  confirmado: boolean;
+  recibido_en: string | null;
+  firma_pendiente: boolean;
+  firma_pendiente_nombre: string | null;
+  items: { articulo: string; unidad: string; cantidad: number; alto_valor: boolean }[];
+}
+
+/** AF25 — fila de rutas_activas_y_hoy (activas primero + rutas de hoy). */
+export interface RutaActivaHoy {
+  id: string;
+  seccion: 'activa' | 'hoy';
+  estado: string;
+  tipo: string;
+  origen: string | null;
+  destino: string | null;
+  placa: string | null;
+  conductor_nombre: string | null;
+  fecha: string;
+  iniciada_at: string | null;
+  paradas_total: number;
+  paradas_entregadas: number;
 }
 
 /** Obra o almacén como destino, con sus coordenadas (U22). */
@@ -312,6 +355,93 @@ export class ConducesService {
     await this.catalog.invalidate(`ruta_detalle_t:${rutaId}`);
   }
 
+  /**
+   * AF25 — RUTA VIVA: agregar una parada a mitad de ruta. Offline-first por outbox
+   * (idempotente por op-id; el servidor registra el evento en ruta_eventos).
+   */
+  async agregarParadaRuta(
+    rutaId: string,
+    ubicacion: string,
+    opts: { proyectoId?: string | null; lat?: number | null; lng?: number | null; notas?: string | null } = {},
+  ): Promise<void> {
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'ruta_agregar_parada',
+      capturado_en,
+      payload: {
+        ruta_id: rutaId,
+        ubicacion,
+        proyecto_id: opts.proyectoId ?? null,
+        lat: opts.lat ?? null,
+        lng: opts.lng ?? null,
+        notas: opts.notas ?? null,
+      },
+      resumen: { tipo: 'agregar_parada', ruta_id: rutaId, ubicacion, capturado_en },
+    });
+  }
+
+  /**
+   * AF25 — RUTA VIVA: cambiar el destino (no existe "cancelar": es cambio de destino,
+   * y se trackea con quién/cuándo/dónde en ruta_eventos). Offline-first por outbox.
+   */
+  async cambiarDestinoRuta(
+    rutaId: string,
+    destino: string,
+    opts: { proyectoId?: string | null; lat?: number | null; lng?: number | null } = {},
+  ): Promise<void> {
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'ruta_cambiar_destino',
+      capturado_en,
+      payload: {
+        ruta_id: rutaId,
+        destino,
+        proyecto_id: opts.proyectoId ?? null,
+        lat: opts.lat ?? null,
+        lng: opts.lng ?? null,
+      },
+      resumen: { tipo: 'cambiar_destino', ruta_id: rutaId, destino, capturado_en },
+    });
+    void this.misRutas();
+  }
+
+  /**
+   * AF25/AF29 — listado "Rutas activas" (en_curso, arriba) + "Rutas de hoy".
+   * Cacheado (offline-friendly). El jefe de flota ve todas; el chofer las suyas.
+   */
+  async rutasActivasYHoy(): Promise<RutaActivaHoy[]> {
+    const data = await this.catalog.refresh<RutaActivaHoy[]>('rutas_activas_hoy', async () => {
+      const { data, error } = await this.supabase.client.rpc('rutas_activas_y_hoy');
+      if (error) throw new Error(error.message);
+      return (data as RutaActivaHoy[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /**
+   * AF29 — historial de conduces (matriz de visibilidad server-side). Online-first
+   * con cache razonable (histórico no necesita offline completo). Los filtros
+   * (fecha/obra) van al servidor; el filtro por fase se aplica en la UI.
+   */
+  async misConducesHistorial(
+    opts: { desde?: string | null; hasta?: string | null; proyectoId?: string | null } = {},
+  ): Promise<ConduceHistorial[]> {
+    const key = `conduces_hist:${opts.desde ?? ''}:${opts.hasta ?? ''}:${opts.proyectoId ?? ''}`;
+    const data = await this.catalog.refresh<ConduceHistorial[]>(key, async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_conduces_historial', {
+        p_desde: opts.desde ?? null,
+        p_hasta: opts.hasta ?? null,
+        p_proyecto_id: opts.proyectoId ?? null,
+        p_limite: 200,
+      });
+      if (error) throw new Error(error.message);
+      return (data as ConduceHistorial[]) ?? [];
+    });
+    return data ?? [];
+  }
+
   /** Obras/proyectos for the route destination picker (shared cache). */
   async getProyectos(): Promise<Proyecto[]> {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
@@ -430,6 +560,18 @@ export class ConducesService {
   async crearConduceTransportista(input: ConduceTransportistaCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    // AF23.3 — firma del emisor (quien entrega) al emitir: se sube y se sella con
+    // firmar_conduce(rol emisor) dentro del mismo handler (idempotente).
+    const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
+    if (input.firmaEmisor) {
+      fotos.push({
+        id: crypto.randomUUID(),
+        bucket: 'conduces',
+        path: `${id}/${id}-firma-emisor.png`,
+        slot: 'firma_emisor',
+        blob: input.firmaEmisor,
+      });
+    }
     await this.sync.enqueue({
       id,
       tipo_op: 'conduce_transportista',
@@ -437,13 +579,15 @@ export class ConducesService {
       payload: {
         id,
         fecha: capturado_en.slice(0, 10),
-        bodega_id: input.bodegaId,
+        bodega_id: input.bodegaId ?? null,
         proyecto_id: input.proyectoId,
         observaciones: input.observaciones,
         vehiculo_id: input.vehiculoId ?? null,
         ruta_id: input.rutaId ?? null,
         items: input.items,
+        emisor_nombre: input.emisorNombre ?? null,
       },
+      fotos,
       resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
     });
     void this.misConduces();
@@ -600,6 +744,31 @@ export class ConducesService {
       if (error) throwSyncError(error);
     });
 
+    // AF25 — RUTA VIVA: agregar una parada a mitad de ruta. Offline-first.
+    this.sync.register('ruta_agregar_parada', async (payload) => {
+      const { error } = await this.supabase.client.rpc('agregar_parada_ruta', {
+        p_ruta_id: payload['ruta_id'],
+        p_ubicacion: payload['ubicacion'],
+        p_proyecto_id: payload['proyecto_id'] ?? null,
+        p_lat: payload['lat'] ?? null,
+        p_lng: payload['lng'] ?? null,
+        p_notas: payload['notas'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
+    // AF25 — RUTA VIVA: cambiar el destino (cancelar = cambiar destino, se trackea).
+    this.sync.register('ruta_cambiar_destino', async (payload) => {
+      const { error } = await this.supabase.client.rpc('cambiar_destino_ruta', {
+        p_ruta_id: payload['ruta_id'],
+        p_destino: payload['destino'],
+        p_proyecto_id: payload['proyecto_id'] ?? null,
+        p_lat: payload['lat'] ?? null,
+        p_lng: payload['lng'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
     // AE5 — atar un conduce a una parada. Offline-first; idempotente.
     this.sync.register('conduce_vincular_parada', async (payload) => {
       const { error } = await this.supabase.client.rpc('vincular_conduce_parada', {
@@ -611,9 +780,10 @@ export class ConducesService {
 
     // AE — el chofer genera un conduce (salida de material). El servidor valida el
     // stock; idempotente por UUID.
-    this.sync.register('conduce_transportista', async (payload) => {
+    this.sync.register('conduce_transportista', async (payload, photoPaths) => {
+      const salidaId = payload['id'] as string;
       const { error } = await this.supabase.client.rpc('crear_conduce_transportista', {
-        p_id: payload['id'],
+        p_id: salidaId,
         p_fecha: payload['fecha'],
         p_bodega_id: payload['bodega_id'],
         p_proyecto_id: payload['proyecto_id'] ?? null,
@@ -623,6 +793,20 @@ export class ConducesService {
         p_items: payload['items'],
       });
       if (error) throwSyncError(error);
+      // AF23.3 — sella la firma del emisor (quien entrega) al emitir. Idempotente
+      // por (salida_id, rol). Best-effort verificado: el outbox reintenta si falla.
+      const firmaEmisor = photoPaths['firma_emisor'];
+      if (firmaEmisor) {
+        const { data: userData } = await this.supabase.client.auth.getUser();
+        const { error: eF } = await this.supabase.client.rpc('firmar_conduce', {
+          p_salida_id: salidaId,
+          p_rol: 'emisor',
+          p_nombre: payload['emisor_nombre'] ?? 'Emisor',
+          p_firma_path: firmaEmisor,
+          p_usuario_id: userData.user?.id ?? null,
+        });
+        if (eF) throwSyncError(eF);
+      }
       // AE7 — la salida bajó el stock de la bodega de origen → invalida el preview
       // de existencias cacheado (como la devolución) para no mostrar un stock viejo.
       await this.catalog.invalidatePrefix('existencias_');

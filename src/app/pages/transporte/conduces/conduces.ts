@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, effect, inject, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
@@ -6,7 +6,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
-import { DecimalPipe, Location } from '@angular/common';
+import { DecimalPipe, Location, NgTemplateOutlet } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { SyncService } from '../../../core/sync/sync.service';
@@ -24,6 +24,8 @@ import {
 } from '../../../core/services/conduces.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { TrackingService } from '../../../core/services/tracking.service';
+import { GpsGateBanner } from '../../../shared/components/gps-gate-banner/gps-gate-banner';
 import { Conduce, RutaHoy } from '../../../core/models/transporte.model';
 
 const ESTADO_RUTA_LABEL: Record<string, string> = {
@@ -45,7 +47,7 @@ const PARADA_ESTADO_LABEL: Record<ParadaEstado, string> = {
   selector: 'app-conduces',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, SyncBar, DecimalPipe, SignaturePad, PhotoSlot],
+  imports: [FormsModule, Skeleton, EmptyState, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner],
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
@@ -59,6 +61,7 @@ export class ConducesPage implements OnDestroy {
   private geo = inject(GeocodingService);
   private permissions = inject(PermissionsService);
   private gate = inject(PermisoGateService);
+  private tracking = inject(TrackingService);
   private primerSync = true;
   readonly fmtDur = formatearDuracion;
 
@@ -76,6 +79,10 @@ export class ConducesPage implements OnDestroy {
   conduces = signal<Conduce[]>([]);
   rutas = signal<RutaHoy[]>([]);
   loading = signal(true);
+
+  // AF25 — listado seccionado: Rutas activas (en curso, arriba) + Rutas de hoy.
+  rutasActivas = computed(() => this.rutas().filter((r) => r.estado === 'en_curso'));
+  rutasHoy = computed(() => this.rutas().filter((r) => r.estado !== 'en_curso'));
 
   // AE5 — detalle de EJECUCIÓN de la ruta (paradas con estado + conduce vinculado)
   // expandible en el sitio.
@@ -260,6 +267,8 @@ export class ConducesPage implements OnDestroy {
       this.toast.error('Escribe quién recibió.');
       return;
     }
+    // AF26 — marcar una entrega exige GPS activo.
+    if (!(await this.tracking.exigirGps('marcar_entrega'))) return;
     if (!this.entFirmaBlob()) {
       this.toast.error('Falta la firma de quien recibe.');
       return;
@@ -431,8 +440,16 @@ export class ConducesPage implements OnDestroy {
   }
 
   async ruta(rutaId: string, estado: 'en_curso' | 'completada'): Promise<void> {
+    // AF26 — iniciar una ruta exige GPS activo (bloquea si está apagado/revocado).
+    if (estado === 'en_curso' && !(await this.tracking.exigirGps('iniciar_ruta'))) return;
     // Y4 — capturar el instante del TAP (no el del round-trip al servidor).
     const at = new Date().toISOString();
+    // AF27 — arranca/detiene el tracking en primer plano con la ruta.
+    if (estado === 'en_curso') {
+      void this.tracking.iniciarTracking(null);
+    } else {
+      void this.tracking.detenerTracking();
+    }
     try {
       await this.service.marcarRuta(rutaId, estado, at);
       this.rutas.update((list) =>
@@ -528,6 +545,68 @@ export class ConducesPage implements OnDestroy {
       }
     }
     window.open(httpsUrl, '_system');
+  }
+
+  // ── AF25 — RUTA VIVA: agregar parada / cambiar destino ──────────────────────
+  rutaViva = signal<{ rutaId: string; modo: 'parada' | 'destino' } | null>(null);
+  rvUbicacion = signal('');
+  rvProyectoId = signal<string>('');
+  rvGuardando = signal(false);
+  proyectosOpts = signal<{ id: string; nombre: string }[]>([]);
+
+  abrirRutaViva(rutaId: string, modo: 'parada' | 'destino'): void {
+    this.rvUbicacion.set('');
+    this.rvProyectoId.set('');
+    this.rutaViva.set({ rutaId, modo });
+    if (!this.proyectosOpts().length) {
+      void this.service
+        .getProyectos()
+        .then((ps) => this.proyectosOpts.set(ps.map((p) => ({ id: p.id, nombre: p.nombre }))))
+        .catch(() => {});
+    }
+  }
+
+  cerrarRutaViva(): void {
+    this.rutaViva.set(null);
+  }
+
+  /** Al elegir una obra del select, usa su nombre como ubicación por defecto. */
+  onRvProyecto(id: string): void {
+    this.rvProyectoId.set(id);
+    const p = this.proyectosOpts().find((x) => x.id === id);
+    if (p && !this.rvUbicacion().trim()) this.rvUbicacion.set(p.nombre);
+  }
+
+  async confirmarRutaViva(): Promise<void> {
+    const ctx = this.rutaViva();
+    if (!ctx || this.rvGuardando()) return;
+    const ubic = this.rvUbicacion().trim();
+    if (!ubic) {
+      this.toast.error(ctx.modo === 'parada' ? 'Escribe la parada.' : 'Escribe el nuevo destino.');
+      return;
+    }
+    this.rvGuardando.set(true);
+    const proyectoId = this.rvProyectoId() || null;
+    try {
+      if (ctx.modo === 'parada') {
+        await this.service.agregarParadaRuta(ctx.rutaId, ubic, { proyectoId });
+        this.toast.success('Parada agregada a la ruta.');
+      } else {
+        await this.service.cambiarDestinoRuta(ctx.rutaId, ubic, { proyectoId });
+        this.toast.success('Destino cambiado. Queda registrado.');
+        // Optimista: refleja el nuevo destino en el card.
+        this.rutas.update((list) =>
+          list.map((r) => (r.id === ctx.rutaId ? { ...r, destino: ubic } : r)),
+        );
+      }
+      this.rutaViva.set(null);
+      // Refresca el detalle si estaba abierto (la parada nueva aparece al reconciliar).
+      if (this.expandidas().has(ctx.rutaId)) void this.refrescarDetalle(ctx.rutaId);
+    } catch (e) {
+      this.toast.error(this.msgError(e, 'No se pudo actualizar la ruta.'));
+    } finally {
+      this.rvGuardando.set(false);
+    }
   }
 
   back(): void {

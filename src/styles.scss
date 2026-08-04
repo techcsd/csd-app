@@ -443,3 +443,12 @@ textarea.field::placeholder {
   border: 2px solid #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
+
+/* AF27 — marcador de chofer en el mapa de Seguimiento (Leaflet DivIcon) */
+.seg-marker__pin {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}

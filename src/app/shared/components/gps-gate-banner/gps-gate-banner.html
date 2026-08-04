@@ -1,0 +1,10 @@
+@if (bloqueado()) {
+  <div class="gps-banner">
+    <span class="gps-banner__icon">📍</span>
+    <div class="gps-banner__body">
+      <span class="gps-banner__title">Ubicación desactivada</span>
+      <span class="gps-banner__msg">{{ mensaje() }}</span>
+    </div>
+    <button type="button" class="gps-banner__btn" (click)="activar()">Activar</button>
+  </div>
+}

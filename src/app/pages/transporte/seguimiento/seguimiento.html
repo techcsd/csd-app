@@ -1,0 +1,49 @@
+<div class="screen seg">
+  <header class="seg__header">
+    <button type="button" class="seg__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="seg__icon">📍</span>
+    <h1 class="seg__title">Seguimiento</h1>
+  </header>
+
+  <!-- El mapa siempre se monta (ngAfterViewInit lo inicializa); se oculta si no autorizado -->
+  <div class="seg__map" #map [class.seg__map--hidden]="!autorizado()"></div>
+
+  <div class="screen__body seg__body">
+    @if (!autorizado()) {
+      <app-empty-state
+        icon="🔒"
+        title="Solo para jefe de flota"
+        message="El seguimiento en vivo está disponible para jefe de flota, administración y tecnología."
+      />
+    } @else if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!choferes().length) {
+      <app-empty-state
+        icon="📍"
+        title="Sin choferes"
+        message="Aún no hay choferes con estado o posición para mostrar."
+      />
+    } @else {
+      <h2 class="seg__section">Choferes ({{ choferes().length }})</h2>
+      @for (c of choferes(); track c.usuario_id) {
+        <button type="button" class="chofer-card" (click)="centrarEn(c)">
+          <span class="chofer-card__dot" [style.background]="metaOf(c.estado).tint">
+            {{ metaOf(c.estado).icon }}
+          </span>
+          <div class="chofer-card__body">
+            <span class="chofer-card__nombre">{{ c.nombre }}</span>
+            <span class="chofer-card__estado">
+              {{ metaOf(c.estado).label }}@if (c.estado === 'otros' && c.otros_texto) { · {{ c.otros_texto }} }
+            </span>
+            @if (rutaDe(c.nombre); as r) {
+              <span class="chofer-card__ruta">
+                🗺️ {{ r.destino || 'Ruta' }} · {{ r.paradas_entregadas }}/{{ r.paradas_total }} paradas
+              </span>
+            }
+          </div>
+          <span class="chofer-card__hace">{{ actualizadoHace(c.capturado_en) }}</span>
+        </button>
+      }
+    }
+  </div>
+</div>
