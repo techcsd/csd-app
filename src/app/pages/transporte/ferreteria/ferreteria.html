@@ -11,7 +11,7 @@
         antes de que entre al stock.
       </p>
 
-      <app-select-list
+      <app-collapsible-select
         label="Almacén destino"
         icon="🏬"
         [options]="bodegaOptions()"
@@ -21,7 +21,7 @@
 
       @if (obraOptions().length) {
         <div class="ferr__mt">
-          <app-select-list
+          <app-collapsible-select
             label="Obra (opcional)"
             icon="🏗"
             [options]="obraOptions()"
@@ -93,6 +93,18 @@
       @if (faltaFoto()) {
         <div class="ferr__band">📷 Toma la foto del recibo para poder registrar.</div>
       }
+
+      <!-- AF12 — foto de la MERCANCÍA recibida (además del recibo), solo-cámara -->
+      <label class="field-label ferr__mt">Foto de la mercancía recibida</label>
+      <p class="ferr__sub">Muestra lo que recibiste (opcional pero recomendado).</p>
+      <app-photo-slot
+        label="Mercancía recibida"
+        hint="📦"
+        [gallery]="false"
+        [foto]="fotoMercancia()"
+        (captured)="onFotoMercancia($event)"
+        (cleared)="onFotoMercanciaCleared()"
+      />
 
       <label class="field-label ferr__mt" for="obs">Observaciones (opcional)</label>
       <textarea

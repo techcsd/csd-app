@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { CombustibleCaptura, PrecioCombustibleVigente, UltimaEchada } from '../models/combustible.model';
+import { CombustibleCaptura, EchadaLog, PrecioCombustibleVigente, UltimaEchada } from '../models/combustible.model';
 import { db } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
@@ -68,6 +68,27 @@ export class CombustibleService {
       return { ...base, km: pendKm };
     }
     return base;
+  }
+
+  /**
+   * AF17 — "Registro de echadas" para roles elevados (admin/jefe de flota/…). El
+   * RPC `log_combustible` ya gatea por rol (devuelve [] a no autorizados) y aísla
+   * los vehículos de prueba (solo admin). Online-first con cache razonable.
+   */
+  async getLogEchadas(filtros: {
+    desde?: string | null;
+    hasta?: string | null;
+    vehiculoId?: string | null;
+    usuarioId?: string | null;
+  } = {}): Promise<EchadaLog[]> {
+    const { data, error } = await this.supabase.client.rpc('log_combustible', {
+      p_desde: filtros.desde ?? null,
+      p_hasta: filtros.hasta ?? null,
+      p_vehiculo_id: filtros.vehiculoId ?? null,
+      p_usuario_id: filtros.usuarioId ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return (data as EchadaLog[]) ?? [];
   }
 
   /** Mayor kilometraje de echadas de este vehículo aún pendientes en el outbox. */
@@ -209,6 +230,7 @@ export class CombustibleService {
         await this.catalog.invalidate(`veh_detalle:${vehId}`);
         await this.catalog.invalidate('pendientes_transporte');
         await this.catalog.invalidate('flota_vehiculos');
+        await this.catalog.invalidate('mis_asignaciones'); // AF21
       }
     });
   }

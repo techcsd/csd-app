@@ -1,0 +1,114 @@
+<div class="screen tareas">
+  <header class="tareas__header">
+    <button type="button" class="tareas__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="tareas__icon">✅</span>
+    <h1 class="tareas__title">Tareas</h1>
+    @if (hoja() === 'lista' && !activo() && puedeCrear()) {
+      <button type="button" class="tareas__nueva" (click)="abrirCrear()">+ Nueva</button>
+    }
+  </header>
+
+  <div class="screen__body">
+    <!-- ── Crear ── -->
+    @if (hoja() === 'crear') {
+      <h2 class="tareas__h2">Nueva tarea</h2>
+      <label class="field-label">Título</label>
+      <input class="field" type="text" [ngModel]="nuevoTitulo()" (ngModelChange)="nuevoTitulo.set($event)" placeholder="¿Qué hay que hacer?" />
+
+      <label class="field-label tareas__mt">Descripción (opcional)</label>
+      <textarea class="field" rows="3" [ngModel]="nuevoDesc()" (ngModelChange)="nuevoDesc.set($event)" placeholder="Detalles…"></textarea>
+
+      <label class="field-label tareas__mt">Prioridad</label>
+      <div class="tareas__prio">
+        @for (p of prioridades; track p) {
+          <app-option-button [label]="prioridadMeta[p].label" [selected]="nuevaPrioridad() === p" (pressed)="nuevaPrioridad.set(p)" />
+        }
+      </div>
+
+      <label class="field-label tareas__mt">Asignar a</label>
+      <input class="field" type="search" [ngModel]="asignBusqueda()"
+        (ngModelChange)="asignBusqueda.set($event); buscarAsignado()" placeholder="Buscar por nombre o correo…" />
+      @if (buscando()) { <p class="tareas__hint">Buscando…</p> }
+      @for (u of asignResultados(); track u.id) {
+        <button type="button" class="tareas__ures" (click)="pickAsignado(u)">
+          <span class="tareas__ures-nombre">{{ u.nombre }}</span>
+          @if (u.email) { <span class="tareas__ures-email">{{ u.email }}</span> }
+        </button>
+      }
+      @if (asignSel(); as u) { <div class="tareas__sel">✓ Se la asignas a <b>{{ u.nombre }}</b></div> }
+
+      <label class="field-label tareas__mt">Fecha límite (opcional)</label>
+      <input class="field" type="date" [ngModel]="nuevaFechaLimite()" (ngModelChange)="nuevaFechaLimite.set($event)" />
+
+      <button type="button" class="btn-cta tareas__crear" [disabled]="submitting()" (click)="crear()">
+        {{ submitting() ? 'Creando…' : 'Crear tarea' }}
+      </button>
+    }
+
+    <!-- ── Detalle ── -->
+    @else if (activo(); as t) {
+      <div class="tareas__det">
+        <div class="tareas__det-top">
+          <span class="tareas__chip" [style.background]="estadoMeta[t.estado].tone">
+            {{ estadoMeta[t.estado].icon }} {{ estadoMeta[t.estado].label }}
+          </span>
+          <span class="tareas__prio-badge" [style.color]="prioridadMeta[t.prioridad].tone">
+            {{ prioridadMeta[t.prioridad].label }}
+          </span>
+        </div>
+        <h2 class="tareas__det-title">{{ t.titulo }}</h2>
+        @if (t.descripcion) { <p class="tareas__det-desc">{{ t.descripcion }}</p> }
+        <div class="tareas__det-meta">
+          @if (t.proyecto_nombre) { <p>🏗️ {{ t.proyecto_nombre }}</p> }
+          @if (t.asignado_por_nombre) { <p>👤 Asignada por {{ t.asignado_por_nombre }}</p> }
+          @if (t.fecha_limite) { <p>📅 Límite: {{ fecha(t.fecha_limite) }}</p> }
+        </div>
+
+        @if (esMia(t) && t.estado === 'pendiente') {
+          <button type="button" class="btn-cta tareas__accion" [disabled]="submitting()" (click)="iniciar(t)">
+            ▶️ Iniciar tarea
+          </button>
+        }
+        @if (esMia(t) && t.estado === 'en_progreso') {
+          @if (!completando()) {
+            <button type="button" class="btn-cta tareas__accion" (click)="pedirCompletar()">✅ Completar tarea</button>
+          } @else {
+            <label class="field-label tareas__mt">Nota de cierre (opcional)</label>
+            <textarea class="field" rows="2" [ngModel]="justificacion()" (ngModelChange)="justificacion.set($event)" placeholder="¿Qué se hizo?"></textarea>
+            <label class="field-label tareas__mt">Foto (opcional)</label>
+            <app-photo-slot label="Evidencia" hint="📷" [foto]="fotoCompletar()" (captured)="onFotoCompletar($event)" (cleared)="onFotoCompletarCleared()" />
+            <button type="button" class="btn-cta tareas__accion" [disabled]="submitting()" (click)="completar(t)">
+              {{ submitting() ? 'Guardando…' : 'Confirmar completada' }}
+            </button>
+          }
+        }
+      </div>
+    }
+
+    <!-- ── Lista ── -->
+    @else {
+      <button type="button" class="tareas__toggle" (click)="toggleCompletadas()">
+        {{ verCompletadas() ? 'Ocultar completadas' : 'Ver completadas' }}
+      </button>
+      @if (loading()) {
+        <app-skeleton [rows]="5" />
+      } @else {
+        @for (t of lista(); track t.id) {
+          <button type="button" class="tareas__card" (click)="abrir(t)">
+            <span class="tareas__card-chip" [style.background]="estadoMeta[t.estado].tone">{{ estadoMeta[t.estado].icon }}</span>
+            <span class="tareas__card-body">
+              <span class="tareas__card-title">{{ t.titulo }}</span>
+              <span class="tareas__card-sub">
+                <span class="tareas__prio-badge" [style.color]="prioridadMeta[t.prioridad].tone">{{ prioridadMeta[t.prioridad].label }}</span>
+                @if (t.fecha_limite) { · 📅 {{ fecha(t.fecha_limite) }} }
+              </span>
+            </span>
+            <span class="tareas__card-go">›</span>
+          </button>
+        } @empty {
+          <app-empty-state icon="✅" title="No tienes tareas" message="Aquí aparecen las tareas que te asignan y las que creas." />
+        }
+      }
+    }
+  </div>
+</div>

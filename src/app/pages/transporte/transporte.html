@@ -29,7 +29,7 @@
             <div class="veh-card__info">
               <span class="veh-card__placa">{{ v.placa }}</span>
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
-              <span class="veh-card__km">A tu cargo · {{ v.km | number: '1.0-0' }} km</span>
+              <span class="veh-card__km">A tu cargo · {{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
             <button type="button" class="btn-cta veh-card__cta" (click)="devolver(v.vehiculo_id)">
               Devolver vehículo
@@ -57,7 +57,7 @@
             <div class="veh-card__info">
               <span class="veh-card__placa">{{ v.placa }}</span>
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
-              <span class="veh-card__km">{{ v.km | number: '1.0-0' }} km</span>
+              <span class="veh-card__km">{{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
             @if (estaEnviando(v.vehiculo_id)) {
               <span class="veh-card__enviando">🔄 Enviando recepción…</span>
@@ -89,7 +89,7 @@
             <div class="veh-card__info">
               <span class="veh-card__placa">{{ v.placa }}</span>
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
-              <span class="veh-card__km">{{ v.tipo || 'Vehículo' }} · {{ v.km | number: '1.0-0' }} km</span>
+              <span class="veh-card__km">{{ v.tipo || 'Vehículo' }} · {{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
             @if (estaEnviando(v.vehiculo_id)) {
               <span class="veh-card__enviando">🔄 Enviando recepción…</span>

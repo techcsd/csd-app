@@ -1,0 +1,69 @@
+<div class="screen clog">
+  <header class="clog__header">
+    <button type="button" class="clog__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="clog__icon">⛽</span>
+    <h1 class="clog__title">Registro de echadas</h1>
+  </header>
+
+  <div class="screen__body">
+    <!-- Filtros: rango de fecha + búsqueda -->
+    <div class="clog__filtros">
+      <label class="clog__field">
+        <span>Desde</span>
+        <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+      </label>
+      <label class="clog__field">
+        <span>Hasta</span>
+        <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+      </label>
+      <button type="button" class="btn-cta clog__aplicar" (click)="load()">Aplicar</button>
+    </div>
+    <input
+      class="clog__buscar"
+      type="search"
+      placeholder="Buscar por placa, chofer o quién registró…"
+      [ngModel]="q()"
+      (ngModelChange)="q.set($event)"
+    />
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      @if (rows().length && sospechosas()) {
+        <p class="clog__resumen">⚠️ {{ sospechosas() }} echada(s) con salto o consumo sospechoso.</p>
+      }
+      @for (r of filtradas(); track r.id) {
+        <div class="clog__row" [class.clog__row--alerta]="esSospechosa(r)">
+          <div class="clog__row-top">
+            <span class="clog__placa">{{ r.placa || 'Persona' }}</span>
+            <span class="clog__fecha">{{ fechaMedia(r.fecha) }}</span>
+          </div>
+          <div class="clog__row-km">
+            @if (r.kilometraje != null) {
+              <span>{{ r.kilometraje | number: '1.0-0' }} km</span>
+              @if (r.km_recorridos != null) {
+                <span class="clog__delta" [class.clog__delta--alerta]="r.km_alerta">
+                  +{{ r.km_recorridos | number: '1.0-0' }} km
+                </span>
+              }
+            }
+            <span class="clog__gal">{{ r.galones | number: '1.0-1' }} gal</span>
+            @if (r.monto) { <span class="clog__monto">RD$ {{ r.monto | number: '1.0-0' }}</span> }
+          </div>
+          <div class="clog__row-meta">
+            @if (r.producto) { <span class="clog__chip">{{ r.producto }}{{ r.subtipo ? ' · ' + r.subtipo : '' }}</span> }
+            @if (r.km_alerta) { <span class="clog__chip clog__chip--alerta">Salto de km</span> }
+            @if (r.alerta_consumo) { <span class="clog__chip clog__chip--alerta">Consumo anormal</span> }
+            <span class="clog__quien">Registró: {{ r.registrado_nombre || '—' }}</span>
+          </div>
+        </div>
+      } @empty {
+        <app-empty-state
+          icon="⛽"
+          title="Sin echadas en este rango"
+          message="No hay registros de combustible para las fechas seleccionadas."
+        />
+      }
+    }
+  </div>
+</div>

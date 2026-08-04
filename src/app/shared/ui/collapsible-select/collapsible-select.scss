@@ -1,0 +1,41 @@
+.colsel {
+  margin-bottom: 10px;
+}
+.colsel__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+.colsel__chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.colsel__icon {
+  font-size: 20px;
+}
+.colsel__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.colsel__cambiar {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--primary, #ff5f00);
+  font-size: 14px;
+  font-weight: 800;
+}

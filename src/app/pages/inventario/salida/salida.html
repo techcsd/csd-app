@@ -26,10 +26,10 @@
     <div class="screen__body">
       <h2 class="mov__h2">Revisa el retiro</h2>
 
-      <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
+      <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
 
       <!-- W8 — destino: ¿hacia dónde va? -->
-      <app-select-list label="¿Hacia dónde va?" icon="📍" [options]="obraOptions()" [selectedId]="destinoId()" (picked)="destinoId.set($event)" />
+      <app-collapsible-select label="¿Hacia dónde va?" icon="📍" [options]="obraOptions()" [selectedId]="destinoId()" (picked)="destinoId.set($event)" />
 
       @if (!online) {
         <p class="mov__stock-hint">📴 Sin señal: el stock no se puede verificar ahora. Se validará al enviarse.</p>

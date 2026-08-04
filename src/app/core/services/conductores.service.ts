@@ -11,8 +11,14 @@ export interface FlotaConfig {
   precitaKm: number;
   licenciaDias: number;
   consumoPct: number;
+  umbralKmEchada: number; // AF19 — máximo km entre echadas consecutivas
 }
-const FLOTA_CONFIG_DEFAULT: FlotaConfig = { precitaKm: 500, licenciaDias: 30, consumoPct: 20 };
+const FLOTA_CONFIG_DEFAULT: FlotaConfig = {
+  precitaKm: 500,
+  licenciaDias: 30,
+  consumoPct: 20,
+  umbralKmEchada: 1000,
+};
 
 /**
  * Resolves the signed-in user's driver profile (sgc.conductores linked by
@@ -293,6 +299,7 @@ export class ConductoresService {
         precitaKm: val('umbral_precita_km', FLOTA_CONFIG_DEFAULT.precitaKm),
         licenciaDias: val('umbral_licencia_dias', FLOTA_CONFIG_DEFAULT.licenciaDias),
         consumoPct: val('umbral_consumo_pct', FLOTA_CONFIG_DEFAULT.consumoPct),
+        umbralKmEchada: val('umbral_km_echada', FLOTA_CONFIG_DEFAULT.umbralKmEchada), // AF19
       };
     });
     return data ?? FLOTA_CONFIG_DEFAULT;

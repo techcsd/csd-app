@@ -721,6 +721,7 @@ export class VehiculosService {
       await this.catalog.invalidate(`veh_detalle:${vehId}`);
       await this.catalog.invalidate('pendientes_transporte');
       await this.catalog.invalidate('flota_vehiculos');
+      await this.catalog.invalidate('mis_asignaciones'); // AF21
     });
   }
 }

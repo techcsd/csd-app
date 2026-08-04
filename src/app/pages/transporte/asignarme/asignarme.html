@@ -1,0 +1,133 @@
+@if (done()) {
+  <!-- Éxito -->
+  <div class="screen asig">
+    <div class="screen__body">
+      <div class="asig__ok">
+        <span class="asig__ok-check">✓</span>
+        <h1 class="asig__ok-title">Vehículo recibido</h1>
+        <p class="asig__ok-sub">
+          {{ online ? 'El traspaso se registró. Al anterior responsable se le notificó.' : 'Sin señal: se enviará solo al reconectar.' }}
+        </p>
+      </div>
+    </div>
+    <footer class="asig__nav">
+      <button type="button" class="btn-cta" (click)="finish()">Volver a Transporte</button>
+    </footer>
+  </div>
+} @else {
+  <div class="screen asig">
+    <header class="asig__header">
+      <button type="button" class="asig__back" (click)="back()" aria-label="Atrás">←</button>
+      <h1 class="asig__title">🚗 Asignarme vehículo</h1>
+    </header>
+    <app-step-bar [current]="step()" [total]="total" />
+
+    <div class="screen__body">
+      <!-- Paso 1: elegir vehículo (incluso asignado a otro) -->
+      @if (pasoActual() === 'vehiculo') {
+        <h2 class="asig__h2">¿Qué vehículo vas a recibir?</h2>
+        <p class="asig__sub">Puedes recibir uno aunque lo tenga otra persona: la responsabilidad pasará a ti.</p>
+        @if (loading()) {
+          <app-skeleton [rows]="4" />
+        } @else {
+          @for (v of disponibles(); track v.vehiculo_id) {
+            <button type="button" class="asig__veh" (click)="seleccionar(v)">
+              <app-vehiculo-card
+                [fotoUrl]="fotoUrls()[v.vehiculo_id]"
+                [placa]="v.placa"
+                [tipo]="v.tipo"
+                [km]="v.km"
+                [marca]="v.marca"
+                [modelo]="v.modelo"
+                [anio]="v.anio"
+                [esPrueba]="v.es_prueba ?? false"
+                [selected]="seleccionado()?.vehiculo_id === v.vehiculo_id"
+              />
+              @if (nombreAsignado(v.vehiculo_id)) {
+                <span class="asig__veh-otro">Ahora lo tiene: {{ nombreAsignado(v.vehiculo_id) }}</span>
+              }
+            </button>
+          } @empty {
+            <app-empty-state icon="🚗" title="No hay vehículos" message="No hay vehículos activos para recibir." />
+          }
+        }
+      }
+
+      <!-- Paso 2: condiciones (km + checklist corto) -->
+      @if (pasoActual() === 'condiciones') {
+        <h2 class="asig__h2">Condiciones del vehículo</h2>
+        <app-km-input [(value)]="km" [ultimo]="odometro()" />
+        @if (kmMenorOdometro()) {
+          <div class="asig__band">⚠️ El kilometraje no puede ser menor al registrado ({{ odometro() }} km).</div>
+        }
+        <p class="asig__sub asig__mt">Marca cómo está cada punto:</p>
+        @for (it of checkItems; track it) {
+          <div class="asig__check">
+            <span class="asig__check-label">{{ it }}</span>
+            <div class="asig__check-opts">
+              <app-option-button icon="✅" label="Bien" [selected]="checkDe(it) === 'ok'" (pressed)="setCheck(it, 'ok')" />
+              <app-option-button icon="⚠️" label="Falla" [selected]="checkDe(it) === 'falla'" (pressed)="setCheck(it, 'falla')" />
+              <app-option-button icon="➖" label="N/A" [selected]="checkDe(it) === 'na'" (pressed)="setCheck(it, 'na')" />
+            </div>
+          </div>
+        }
+        <label class="field-label asig__mt">Notas (opcional)</label>
+        <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event); queueDraft()"
+          placeholder="Algo que quede en el acta…" />
+      }
+
+      <!-- Paso 3: fotos guiadas -->
+      @if (pasoActual() === 'fotos') {
+        <h2 class="asig__h2">Fotos del vehículo</h2>
+        <p class="asig__sub">Toma las {{ fotosGuiadas.length }} fotos (protege a ambos: queda cómo lo recibiste).</p>
+        @for (f of fotosGuiadas; track f.slot) {
+          <app-photo-slot
+            [label]="f.label"
+            [hint]="f.hint"
+            [gallery]="false"
+            [foto]="fotos()[f.slot] ?? null"
+            (captured)="onFoto(f.slot, $event)"
+            (cleared)="onFotoCleared(f.slot)"
+          />
+        }
+      }
+
+      <!-- Paso 4: llave 1 (AF3) -->
+      @if (pasoActual() === 'llave') {
+        <h2 class="asig__h2">¿Dónde queda la llave 1?</h2>
+        <p class="asig__sub">Cada vehículo tiene 2 llaves; registra dónde queda la principal.</p>
+        <app-option-button icon="🧑‍✈️" label="Conmigo (chofer asignado)" [selected]="llave1() === 'chofer_asignado'" (pressed)="llave1.set('chofer_asignado'); queueDraft()" />
+        <app-option-button icon="🏢" label="En oficina central" [selected]="llave1() === 'oficina_central'" (pressed)="llave1.set('oficina_central'); queueDraft()" />
+        <app-option-button icon="📍" label="Otro lugar…" [selected]="llave1() === 'otro'" (pressed)="llave1.set('otro'); queueDraft()" />
+        @if (llave1() === 'otro') {
+          <input class="field asig__mt" type="text" [ngModel]="llave1Detalle()" (ngModelChange)="llave1Detalle.set($event); queueDraft()"
+            placeholder="¿Dónde queda la llave 1?" />
+        }
+      }
+
+      <!-- Paso 5: firma -->
+      @if (pasoActual() === 'firma') {
+        <h2 class="asig__h2">Tu firma</h2>
+        <p class="asig__sub">Con tu firma confirmas que recibes el vehículo en estas condiciones.</p>
+        <app-signature-pad (changed)="onFirmaChanged($event)" />
+      }
+    </div>
+
+    @if (pasoActual() === 'firma') {
+      <app-wizard-footer
+        backLabel="Atrás"
+        [primaryLabel]="submitting() ? 'Guardando…' : 'Recibir vehículo'"
+        [primaryDisabled]="submitting() || !firmaLista()"
+        (back)="prev()"
+        (primary)="confirmar()"
+      />
+    } @else {
+      <app-wizard-footer
+        [backLabel]="step() > 1 ? 'Atrás' : ''"
+        primaryLabel="Siguiente"
+        (back)="prev()"
+        (primary)="next()"
+      />
+    }
+  </div>
+}

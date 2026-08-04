@@ -117,6 +117,8 @@ export interface CompraFerreteriaCaptura {
   items: { articulo_id: string; cantidad: number }[];
   /** Foto del recibo, solo-cámara. */
   foto: Blob | null;
+  /** AF12 — foto de la mercancía recibida (además del recibo), solo-cámara. */
+  fotoMercancia?: Blob | null;
 }
 
 export type Urgencia = 'normal' | 'urgente';

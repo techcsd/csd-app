@@ -17,6 +17,7 @@ import { VersionService } from './core/services/version.service';
 import { ToastService } from './core/services/toast.service';
 import { NavGuardService } from './core/services/nav-guard.service';
 import { ActivityPingService } from './core/services/activity-ping.service';
+import { PushService } from './core/services/push.service';
 
 @Component({
   selector: 'app-root',
@@ -38,6 +39,7 @@ export class App {
   private navGuard = inject(NavGuardService);
   private session = inject(SessionService);
   private activityPing = inject(ActivityPingService);
+  private push = inject(PushService);
   private router = inject(Router);
 
   constructor() {
@@ -48,6 +50,7 @@ export class App {
     this.initBackButton();
     this.initScrollReset();
     this.activityPing.init(); // W12 — ping de actividad (open + resume, throttled)
+    void this.push.init(); // AF7 — push nativo (no-op en web/PWA)
   }
 
   /**

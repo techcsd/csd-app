@@ -3,17 +3,18 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
-import { NotificacionesService, Notificacion } from '../../core/services/notificaciones.service';
+import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
+import { NotificacionesService, Notificacion, notifAppRoute } from '../../core/services/notificaciones.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../core/util/fecha';
 
 /** AE — bandeja de avisos in-app (sgc.notificaciones): firmas pendientes, cierres,
- *  avisos de módulo. Tocar un aviso lo marca leído y navega a su destino. */
+ *  avisos de módulo. Tocar un aviso lo marca leído y navega a su destino (AF6). */
 @Component({
   selector: 'app-avisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, ConfirmDialog],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })
@@ -27,6 +28,7 @@ export class AvisosPage {
 
   loading = signal(true);
   avisos = signal<Notificacion[]>([]);
+  confirmBorrarTodas = signal(false);
 
   constructor() {
     void this.load();
@@ -54,13 +56,52 @@ export class AvisosPage {
       this.avisos.update((list) => list.map((x) => (x.id === n.id ? { ...x, leida: true } : x)));
       void this.service.marcarLeida(n.id).catch(() => {});
     }
-    if (n.ruta) {
-      // Best-effort: si la ruta no existe en la app, el router cae al fallback.
+    // AF6 — deep-link: traduce la ruta (a veces web) a una ruta válida de la app.
+    const dest = notifAppRoute(n);
+    if (dest && dest !== '/home') {
       try {
-        await this.router.navigateByUrl(n.ruta);
+        await this.router.navigateByUrl(dest);
       } catch {
         /* ignore */
       }
+    }
+  }
+
+  /** ¿este aviso lleva a algún lado? (para pintar la flecha ›). */
+  tieneDestino(n: Notificacion): boolean {
+    return notifAppRoute(n) !== '/home';
+  }
+
+  /** AF6 — eliminar un aviso (optimista + rollback si falla). */
+  async eliminar(n: Notificacion, ev: Event): Promise<void> {
+    ev.stopPropagation();
+    const prev = this.avisos();
+    this.avisos.set(prev.filter((x) => x.id !== n.id));
+    try {
+      await this.service.eliminar(n.id, !n.leida);
+    } catch {
+      this.avisos.set(prev); // rollback
+      this.toast.error('No se pudo eliminar el aviso.');
+    }
+  }
+
+  /** AF6 — "borrar todas" (con confirmación). */
+  pedirBorrarTodas(): void {
+    this.confirmBorrarTodas.set(true);
+  }
+  cancelarBorrarTodas(): void {
+    this.confirmBorrarTodas.set(false);
+  }
+  async borrarTodas(): Promise<void> {
+    this.confirmBorrarTodas.set(false);
+    const prev = this.avisos();
+    this.avisos.set([]);
+    try {
+      await this.service.eliminarTodas();
+      this.toast.success('Avisos eliminados.');
+    } catch {
+      this.avisos.set(prev);
+      this.toast.error('No se pudieron eliminar.');
     }
   }
 

@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { PinService } from './pin.service';
 import { WebauthnService } from './webauthn.service';
 import { UserContextService } from './user-context.service';
+import { PushService } from './push.service';
 
 /**
  * Coordinates the boot flow: session → PIN → profile. `unlocked` lives in
@@ -15,6 +16,7 @@ export class SessionService {
   private pin = inject(PinService);
   private webauthn = inject(WebauthnService);
   private ctx = inject(UserContextService);
+  private push = inject(PushService);
 
   private _unlocked = signal(false);
   unlocked = this._unlocked.asReadonly();
@@ -57,6 +59,7 @@ export class SessionService {
   }
 
   async logout(): Promise<void> {
+    await this.push.clearToken(); // AF7 — desactiva el token antes de cerrar sesión
     await this.auth.signOut();
     await this.pin.clear();
     // X8 — la credencial de Face ID (PWA) es local a este usuario/dispositivo;

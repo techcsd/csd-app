@@ -84,6 +84,10 @@ export class CombustiblePage extends GuardedWizard {
 
   vehiculoId = '';
   necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
+  // AF18 — solo el asignado registra en su vehículo; admin (Xaviel) ve todos (QA).
+  soloMisVehiculos = computed(() => !this.ctx.esAdmin());
+  // AF19 — máximo km entre echadas (flota_config.umbral_km_echada, default 1000).
+  umbralKm = signal(1000);
   // Z23-app — echada de tarjeta asignada a una PERSONA (sin vehículo ni odómetro).
   modoPersona = signal(false);
   titular = signal('');
@@ -133,7 +137,8 @@ export class CombustiblePage extends GuardedWizard {
   // Default 'diesel' (la flota es mayormente diésel); el chofer cambia a gasolina.
   producto = signal<'diesel' | 'gasolina'>('diesel');
   // AA20 — subtipo Regular/Premium (obligatorio) + precio oficial de referencia.
-  subtipo = signal<'regular' | 'premium' | null>(null);
+  // AF20 — default 'premium' (la flota siempre echa diésel premium); editable.
+  subtipo = signal<'regular' | 'premium' | null>('premium');
   precios = signal<PrecioCombustibleVigente[]>([]);
   readonly productoCanonicoLabel = PRODUCTO_CANONICO_LABEL;
   precioRef = computed<PrecioCombustibleVigente | null>(() => {
@@ -186,6 +191,14 @@ export class CombustiblePage extends GuardedWizard {
 
   primeraEchada = computed(() => this.ultima().km == null);
 
+  /** AF19 — el salto de km respecto a la última echada supera el umbral (irreal). */
+  kmDeltaExcede = computed(() => {
+    const km = this.km();
+    const prev = this.ultima().km;
+    const u = this.umbralKm();
+    return km != null && prev != null && u > 0 && km - prev > u;
+  });
+
   // Y4 — las 3 fotos son obligatorias (recibo + tablero + bomba en 0).
   // Z23-app — en una echada de persona no hay tablero (odómetro): recibo + bomba.
   // AC11 — en depósito en obra solo la foto de evidencia del garrafón/equipo.
@@ -204,6 +217,8 @@ export class CombustiblePage extends GuardedWizard {
     // Z9 — ya no se carga el catálogo de estaciones (solo Total Energies + Otro).
     // AA20 — precios oficiales de referencia (offline cache del último conocido).
     void this.combustible.getPreciosVigentes().then((p) => this.precios.set(p));
+    // AF19 — umbral de km entre echadas (configurable en flota_config, offline-cache).
+    void this.conductores.getFlotaConfig().then((c) => this.umbralKm.set(c.umbralKmEchada));
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
     if (this.vehiculoId) {
@@ -394,6 +409,23 @@ export class CombustiblePage extends GuardedWizard {
           if (this.kmInvalido()) {
             this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
             return false;
+          }
+          // AF19 — salto de km irreal: bloquea al chofer; el admin puede seguir
+          // (queda marcado km_alerta en el servidor). El server también lo valida.
+          if (this.kmDeltaExcede()) {
+            const delta = km! - this.ultima().km!;
+            if (this.ctx.esAdmin()) {
+              this.toast.show(
+                `Salto de ${delta} km (supera el máximo de ${this.umbralKm()} km). Puedes continuar como admin; quedará marcado para revisión.`,
+                'info',
+                6000,
+              );
+            } else {
+              this.toast.error(
+                `El salto de kilometraje (${delta} km) supera el máximo permitido (${this.umbralKm()} km). Verifica el odómetro.`,
+              );
+              return false;
+            }
           }
         }
         if (!this.galones() || this.galones()! <= 0) {

@@ -31,6 +31,8 @@ const TILES: HubTile[] = [
   // en ≤2 toques (la pantalla elige el vehículo del pool si no hay contexto).
   { key: 'preuso', icon: '📝', label: 'Hacer pre-uso', tint: '#0369a1' },
   { key: 'combustible', icon: '⛽', label: 'Registrar combustible', tint: '#dc2626' },
+  // AF17 — registro/log de echadas (solo roles elevados).
+  { key: 'combustibleLog', icon: '📊', label: 'Registro de echadas', tint: '#dc2626', elevado: true },
   // AD6 — funciones de inventario del chofer dentro de Transporte.
   { key: 'recibirMercancia', icon: '📥', label: 'Recibir mercancía', tint: '#0f766e' },
   // AE — el chofer genera un conduce (saca material de un almacén hacia una obra).
@@ -92,6 +94,9 @@ export class TransportePage {
 
   pendientes = signal<PendientesTransporte>({ a_cargo: [], por_recibir: [] });
   asignaciones = signal<MiAsignacion[]>([]);
+  // AF21 — km efectivo (servidor + outbox pendiente) por vehículo, para que los
+  // cards del hub muestren el MISMO km que el perfil (una sola fuente de verdad).
+  kmEff = signal<Record<string, number>>({});
   reporteSemanalPend = signal(0);
   conducesNuevas = signal(0); // Y3 — rutas planificadas asignadas no vistas
   firmasPendientes = signal(0); // AE — firmas de recepción por firmar
@@ -143,6 +148,7 @@ export class TransportePage {
       case 'conduces': return this.conduces();
       case 'preuso': return this.preusoTop();
       case 'combustible': return this.combustibleTop();
+      case 'combustibleLog': return this.combustibleLog();
       case 'recibirMercancia': return this.recibirMercancia();
       case 'sacarMaterial': return this.sacarMaterial();
       case 'devolverMaterial': return this.devolverMaterial();
@@ -171,6 +177,11 @@ export class TransportePage {
   /** S26b — combustible sin vehículo en contexto (la pantalla elige del pool). */
   combustibleTop(): void {
     void this.router.navigate(['/transporte/combustible']);
+  }
+
+  /** AF17 — registro de echadas (roles elevados). */
+  combustibleLog(): void {
+    void this.router.navigate(['/transporte/combustible-log']);
   }
 
   /** Z24 — pre-uso sin vehículo en contexto (la pantalla elige del pool). ≤2 toques. */
@@ -228,6 +239,8 @@ export class TransportePage {
       this.reporteSemanalPend.set(semanalPend);
       this.enviandoIds.set(enviando);
       this.conducesNuevas.set(conducesNuevas);
+      void this.computeKmEfectivo(pend, asig); // AF21
+
       // AE — firmas de recepción por firmar (best-effort).
       void this.inventario
         .misFirmasPendientes()
@@ -243,8 +256,30 @@ export class TransportePage {
     return this.enviandoIds().has(vehiculoId);
   }
 
+  /** AF21 — reconcilia el km de cada card con el outbox (misma regla que el perfil).
+   *  Así, si el chofer echó combustible/pre-uso offline (o antes del drain), el hub
+   *  muestra el km efectivo y no el número viejo cacheado del servidor. */
+  private async computeKmEfectivo(pend: PendientesTransporte, asig: MiAsignacion[]): Promise<void> {
+    const bases = new Map<string, number>();
+    for (const v of [...pend.a_cargo, ...pend.por_recibir]) bases.set(v.vehiculo_id, v.km ?? 0);
+    for (const a of asig) if (!bases.has(a.vehiculo_id)) bases.set(a.vehiculo_id, a.km ?? 0);
+    const entries = await Promise.all(
+      [...bases].map(async ([id, base]) => {
+        const km = await this.vehiculos.kmEfectivo(id, base).catch(() => base);
+        return [id, km ?? base] as const;
+      }),
+    );
+    this.kmEff.set(Object.fromEntries(entries));
+  }
+
+  /** AF21 — km a pintar en un card: el efectivo si ya se calculó, si no el base. */
+  kmOf(v: { vehiculo_id: string; km: number }): number {
+    return this.kmEff()[v.vehiculo_id] ?? v.km;
+  }
+
   asignar(): void {
-    void this.router.navigate(['/transporte/asignar']);
+    // AF34 — flujo unificado (asignarme + pre-uso + traspaso con acta).
+    void this.router.navigate(['/transporte/asignarme']);
   }
 
   reporteSemanal(): void {

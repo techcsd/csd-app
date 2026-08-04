@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selector-categorias';
-import { SelectList } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
@@ -39,7 +39,7 @@ interface EntradaDraft {
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, PhotoSlot, WizardFooter, ShareSheet],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, WizardFooter, ShareSheet],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })

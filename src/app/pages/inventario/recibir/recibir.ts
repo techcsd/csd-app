@@ -59,7 +59,12 @@ export class RecibirConducePage {
   /** Conduce abierto en la hoja de detalle (null = vista lista). */
   activo = signal<Conduce | null>(null);
   cantidades = signal<Record<string, number>>({});
-  foto = signal<CapturedPhoto | null>(null);
+  // AF30 — varias fotos de evidencia de la descarga (mínimo 2). `nuevaFoto` es el
+  // slot "agregar" (siempre vacío: al capturar se empuja al array y se limpia).
+  fotos = signal<CapturedPhoto[]>([]);
+  nuevaFoto = signal<CapturedPhoto | null>(null);
+  readonly MIN_FOTOS = 2;
+  faltanFotos = computed(() => this.fotos().length < this.MIN_FOTOS);
   notas = signal(''); // APP-041 — discrepancias de recepción
   // AE — firma del receptor (prueba de recepción, AC7).
   receptorNombre = signal('');
@@ -69,6 +74,9 @@ export class RecibirConducePage {
   /** Z20 — URL firmada de la foto del despacho (si la hay) + lightbox. */
   despachoFotoUrl = signal<string | null>(null);
   lightbox = signal(false);
+
+  /** AF16 — ¿el conduce lleva algún artículo de alto valor / entrega en mano? */
+  altoValor = computed(() => !!this.activo()?.items.some((it) => it.entregaEnMano));
 
   /** Z20 — ¿alguna cantidad recibida difiere de la esperada? (discrepancia). */
   hayDiscrepancia = computed(() => {
@@ -152,7 +160,8 @@ export class RecibirConducePage {
       for (const it of c.items) init[it.detalle_id] = it.cantidad;
       this.cantidades.set(init);
       this.notas.set('');
-      this.foto.set(null);
+      this.fotos.set([]);
+      this.nuevaFoto.set(null);
     }
     // AE — precarga el receptor con el usuario logueado y limpia la firma (la firma
     // no se persiste en el borrador: se re-firma al retomar).
@@ -192,11 +201,17 @@ export class RecibirConducePage {
     return (this.cantidades()[it.detalle_id] ?? it.cantidad) !== it.cantidad;
   }
 
-  onFoto(p: CapturedPhoto): void {
-    this.foto.set(p);
+  /** AF30 — al capturar, la foto se agrega a la lista y el slot vuelve a estar vacío. */
+  onAddFoto(p: CapturedPhoto): void {
+    this.fotos.update((list) => [...list, p]);
+    this.nuevaFoto.set(null);
   }
-  onFotoCleared(): void {
-    this.foto.set(null);
+  quitarFoto(i: number): void {
+    this.fotos.update((list) => {
+      const f = list[i];
+      if (f) URL.revokeObjectURL(f.previewUrl);
+      return list.filter((_, idx) => idx !== i);
+    });
   }
 
   /** AE — firma del receptor capturada en el pad. */
@@ -213,12 +228,26 @@ export class RecibirConducePage {
       this.toast.error('Escribe el nombre de quien recibe.');
       return;
     }
+    if (this.faltanFotos()) {
+      this.toast.error(`Toma al menos ${this.MIN_FOTOS} fotos de la mercancía recibida.`);
+      return;
+    }
     if (!this.firmaBlob()) {
       this.toast.error('Falta la firma de quien recibe.');
       return;
     }
     this.submitting.set(true);
     try {
+      // AF13 — checklist recibido vs enviado (para el registro de confirmación).
+      const checklist = c.items.map((it) => {
+        const recibida = this.cantidades()[it.detalle_id] ?? it.cantidad;
+        return {
+          nombre: it.articulo,
+          cantidad_enviada: it.cantidad,
+          cantidad_recibida: recibida,
+          diferencia: recibida - it.cantidad,
+        };
+      });
       await this.inventario.enqueueRecepcion({
         salidaId: c.id,
         items: c.items.map((it) => ({
@@ -226,7 +255,8 @@ export class RecibirConducePage {
           cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad,
         })),
         notas: this.notas().trim() || null,
-        foto: this.foto()?.blob ?? null,
+        fotos: this.fotos().map((f) => f.blob),
+        checklist,
         firmaReceptor: this.firmaBlob(),
         receptorNombre: this.receptorNombre().trim(),
       });

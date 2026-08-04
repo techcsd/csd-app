@@ -25,7 +25,7 @@
     <div class="screen__body">
       <h2 class="mov__h2">Revisa la entrada</h2>
 
-      <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
+      <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
 
       <label class="field-label mov__mt">¿De dónde viene el material?</label>
       <div class="mov__motivos">
@@ -47,7 +47,7 @@
       <!-- P12 — devolución de obra: elegir la obra y (si tiene almacén) descontar -->
       @if (esDevolucion()) {
         <div class="mov__mt">
-          <app-select-list
+          <app-collapsible-select
             label="¿De cuál obra viene?"
             icon="🏗"
             [options]="obraOpts()"

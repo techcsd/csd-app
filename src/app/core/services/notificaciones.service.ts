@@ -64,4 +64,55 @@ export class NotificacionesService {
     if (error) throw new Error(error.message);
     this._noLeidas.set(0);
   }
+
+  /** AF6 — eliminar un aviso (swipe/botón). RLS: solo los propios. */
+  async eliminar(id: string, eraNoLeida: boolean): Promise<void> {
+    const { error } = await this.supabase.client.from('notificaciones').delete().eq('id', id);
+    if (error) throw new Error(error.message);
+    if (eraNoLeida) this._noLeidas.update((n) => Math.max(0, n - 1));
+  }
+
+  /** AF6 — "borrar todas": elimina todos los avisos del usuario (RLS acota a los suyos). */
+  async eliminarTodas(): Promise<void> {
+    const { error } = await this.supabase.client
+      .from('notificaciones')
+      .delete()
+      .not('id', 'is', null); // RLS limita a usuario_id = auth.uid()
+    if (error) throw new Error(error.message);
+    this._noLeidas.set(0);
+  }
+}
+
+/**
+ * AF6 — traduce la `ruta` almacenada (a menudo una ruta WEB de SGC) a una ruta
+ * válida de la app. Las notificaciones se generan compartidas con la web, así que
+ * sus rutas apuntan al router web; sin traducir, el tap caía al fallback → home.
+ * Reutilizable por el deep-link del tap push (AF7).
+ */
+export function notifAppRoute(n: { tipo: string; ruta: string | null }): string {
+  const r = (n.ruta ?? '').trim();
+  // Firma de recepción pendiente → bandeja "Por firmar" (aunque venga sin ruta).
+  if (n.tipo === 'firma') return '/transporte/por-firmar';
+  if (!r) return '/home';
+  // Reporte semanal: web /flota/reporte-semanal → app /transporte/reporte-semanal.
+  if (r.startsWith('/flota/reporte-semanal')) return '/transporte/reporte-semanal';
+  // Resto de alertas de flota (consumo, mantenimiento, odómetro) → bandeja de avisos.
+  if (r.startsWith('/flota')) return '/transporte/avisos';
+  // Requisiciones/compras (web) → mis solicitudes en la app.
+  if (r.startsWith('/bitacora/solicitudes') || r.startsWith('/compras') || r.startsWith('/requisiciones')) {
+    return '/solicitudes/mis';
+  }
+  // Rutas que ya coinciden con el router de la app.
+  if (
+    r.startsWith('/transporte') ||
+    r.startsWith('/inventario') ||
+    r.startsWith('/proyectos') ||
+    r.startsWith('/bitacora') ||
+    r.startsWith('/solicitudes') ||
+    r.startsWith('/notas') ||
+    r.startsWith('/tareas')
+  ) {
+    return r;
+  }
+  return '/home';
 }

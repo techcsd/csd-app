@@ -300,6 +300,7 @@ export class ReporteSemanalService {
       await this.catalog.invalidate(`veh_detalle:${vehId}`);
       await this.catalog.invalidate('pendientes_transporte');
       await this.catalog.invalidate('flota_vehiculos');
+      await this.catalog.invalidate('mis_asignaciones'); // AF21
       // U8 — invalidar el cumplimiento semanal: al drenar, el listado debe
       // reconsultar el servidor (ahora tiene_reporte=true) y no volver a
       // "Reportar" por caché vieja mientras la op ya se fue del outbox.

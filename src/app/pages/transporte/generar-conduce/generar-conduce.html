@@ -11,7 +11,7 @@
         salir se descuenta del stock; luego lo entregas con firma.
       </p>
 
-      <app-select-list
+      <app-collapsible-select
         label="Almacén de origen"
         icon="🏬"
         [options]="bodegaOptions()"
@@ -20,7 +20,7 @@
       />
 
       <div class="gconduce__mt">
-        <app-select-list
+        <app-collapsible-select
           label="Obra destino"
           icon="🏗"
           [options]="obraOptions()"

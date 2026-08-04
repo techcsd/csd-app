@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 
-import { SelectList } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
@@ -26,7 +26,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-ferreteria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, PhotoSlot, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm],
+  imports: [FormsModule, CollapsibleSelect, PhotoSlot, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm],
   templateUrl: './ferreteria.html',
   styleUrl: './ferreteria.scss',
 })
@@ -51,6 +51,7 @@ export class FerreteriaPage implements OnDestroy {
   proveedor = signal('');
   observaciones = signal('');
   foto = signal<CapturedPhoto | null>(null);
+  fotoMercancia = signal<CapturedPhoto | null>(null); // AF12
 
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
@@ -101,9 +102,10 @@ export class FerreteriaPage implements OnDestroy {
   agregar(a: ArticuloCat): void {
     this.cart.update((list) => {
       if (list.some((l) => l.articulo_id === a.id)) return list;
+      // AF12 — el material recién elegido encabeza la lista (más reciente primero).
       return [
-        ...list,
         { articulo_id: a.id, nombre: a.nombre, unidad: a.unidad, categoria_id: a.categoria_id ?? null, cantidad: 1 },
+        ...list,
       ];
     });
   }
@@ -132,6 +134,12 @@ export class FerreteriaPage implements OnDestroy {
   onFotoCleared(): void {
     this.foto.set(null);
   }
+  onFotoMercancia(photo: CapturedPhoto): void {
+    this.fotoMercancia.set(photo);
+  }
+  onFotoMercanciaCleared(): void {
+    this.fotoMercancia.set(null);
+  }
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
@@ -155,6 +163,7 @@ export class FerreteriaPage implements OnDestroy {
           .filter((l) => l.cantidad > 0 && l.articulo_id)
           .map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad })),
         foto: this.foto()?.blob ?? null,
+        fotoMercancia: this.fotoMercancia()?.blob ?? null, // AF12
       });
       this.hoja.set('exito');
     } catch (e) {
@@ -172,6 +181,7 @@ export class FerreteriaPage implements OnDestroy {
       this.proveedor().trim() ||
       this.observaciones().trim() ||
       this.foto() ||
+      this.fotoMercancia() ||
       this.cart().length
     );
   }

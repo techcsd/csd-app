@@ -1,0 +1,180 @@
+.tareas {
+  background: var(--color-bg);
+}
+.tareas__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.tareas__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.tareas__icon {
+  font-size: 24px;
+}
+.tareas__title {
+  margin: 0;
+  flex: 1;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.tareas__nueva {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.tareas__h2 {
+  margin: 4px 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+}
+.tareas__mt {
+  margin-top: 14px;
+}
+.tareas__hint {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.tareas__prio {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.tareas__ures {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+.tareas__ures-nombre {
+  font-weight: 700;
+}
+.tareas__ures-email {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.tareas__sel {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(22, 163, 74, 0.08);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  font-size: 14px;
+}
+.tareas__crear,
+.tareas__accion {
+  width: 100%;
+  margin-top: 16px;
+}
+.tareas__toggle {
+  display: block;
+  margin: 0 0 12px auto;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+.tareas__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.tareas__card-chip {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+}
+.tareas__card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.tareas__card-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+.tareas__card-sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.tareas__card-go {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+}
+.tareas__prio-badge {
+  font-weight: 800;
+  font-size: 12px;
+}
+.tareas__det-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tareas__chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+.tareas__det-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+}
+.tareas__det-desc {
+  color: var(--color-text);
+  font-size: 15px;
+  white-space: pre-wrap;
+}
+.tareas__det-meta {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+
+  p {
+    margin: 4px 0;
+    color: var(--color-text-secondary);
+  }
+}

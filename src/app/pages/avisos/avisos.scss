@@ -36,21 +36,56 @@
   font-weight: 700;
 }
 
+// AF6 — "Borrar todas" bajo el header.
+.avisos__borrar-todas {
+  display: block;
+  margin: 0 0 10px auto;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .aviso {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: stretch;
+  gap: 4px;
   width: 100%;
-  text-align: left;
-  padding: 14px;
   margin-bottom: 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
+  overflow: hidden;
 }
 .aviso--unread {
   border-color: var(--primary);
   background: var(--color-bg);
+}
+// Región tappable principal (abre el deep-link).
+.aviso__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 14px;
+  background: transparent;
+}
+// AF6 — botón de eliminar (target ancho para dedos con guantes).
+.aviso__del {
+  flex: 0 0 auto;
+  width: 52px;
+  font-size: 20px;
+  background: transparent;
+  border-left: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.aviso__del:active {
+  background: rgba(220, 38, 38, 0.1);
 }
 .aviso__dot {
   width: 9px;

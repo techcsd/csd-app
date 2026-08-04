@@ -124,13 +124,24 @@
         }
       </section>
 
+      <!-- AF16 — alto valor / entrega en mano -->
+      @if (altoValor()) {
+        <div class="con-band con-band--alto">
+          🖐️ Este conduce lleva un artículo de <b>alto valor (entrega en mano)</b>. Debe recibirlo y
+          firmarlo el <b>responsable en persona</b> — no lo dejes ni lo auto-recibas.
+        </div>
+      }
+
       <!-- Ítems: recibido / esperado editable -->
       <h2 class="con-h2">¿Qué llegó?</h2>
       <p class="con-hint">Ajusta la cantidad <b>recibida</b> si no coincide con lo esperado.</p>
 
       @for (it of c.items; track it.detalle_id) {
         <div class="con-item" [class.con-item--dif]="difiere(it)">
-          <span class="con-item__name">{{ it.articulo }}</span>
+          <span class="con-item__name">
+            {{ it.articulo }}
+            @if (it.entregaEnMano) { <span class="con-item__alto">🖐️ Entrega en mano</span> }
+          </span>
           <div class="con-item__qty">
             <button type="button" class="con-step" (click)="ajustar(it.detalle_id, -1)" aria-label="Menos">−</button>
             <input class="field con-item__input" type="number" inputmode="decimal"
@@ -154,9 +165,31 @@
       <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)"
         placeholder="Ej: Llegaron 8 de 10 sacos" />
 
-      <!-- Foto de recepción -->
-      <label class="field-label con-mt">Foto de lo recibido (opcional)</label>
-      <app-photo-slot label="Evidencia de recepción" [foto]="foto()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+      <!-- AF30 — fotos de la mercancía recibida (mínimo 2, solo cámara) -->
+      <label class="field-label con-mt">
+        Fotos de lo recibido <span class="con-req">*</span>
+        <small class="con-hint"> (mínimo {{ MIN_FOTOS }})</small>
+      </label>
+      @if (fotos().length) {
+        <div class="con-fotos">
+          @for (f of fotos(); track $index) {
+            <div class="con-foto">
+              <img [src]="f.previewUrl" alt="Evidencia de recepción" />
+              <button type="button" class="con-foto__x" (click)="quitarFoto($index)" aria-label="Quitar foto">✕</button>
+            </div>
+          }
+        </div>
+      }
+      <app-photo-slot
+        label="Agregar foto de la mercancía"
+        hint="📦"
+        [gallery]="false"
+        [foto]="nuevaFoto()"
+        (captured)="onAddFoto($event)"
+      />
+      @if (faltanFotos()) {
+        <div class="con-band">📷 Toma al menos {{ MIN_FOTOS }} fotos de la mercancía recibida.</div>
+      }
 
       <!-- AE — firma del receptor (prueba de recepción, AC7) -->
       <label class="field-label con-mt" for="receptor">¿Quién recibe?</label>
@@ -168,7 +201,12 @@
 
     <footer class="con-nav">
       <button type="button" class="btn-ghost con-nav__back" (click)="cerrarDetalle()">Atrás</button>
-      <button type="button" class="btn-cta con-nav__cta" [disabled]="submitting()" (click)="confirm()">
+      <button
+        type="button"
+        class="btn-cta con-nav__cta"
+        [disabled]="submitting() || faltanFotos() || !firmaLista() || !receptorNombre().trim()"
+        (click)="confirm()"
+      >
         {{ submitting() ? 'Guardando…' : 'Confirmar recepción' }}
       </button>
     </footer>

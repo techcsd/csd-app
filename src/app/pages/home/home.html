@@ -28,25 +28,61 @@
     </button>
   }
 
-  <main class="home__grid" data-tour="tiles">
-    @for (tile of tiles(); track tile.modulo) {
-      <app-big-button
-        [icon]="tile.icon"
-        [label]="tile.label"
-        [tint]="tile.tint"
-        [badge]="badgeFor(tile.modulo)"
-        (pressed)="open(tile)"
-      />
-    } @empty {
-      <app-empty-state
-        icon="🔑"
-        title="Sin módulos asignados"
-        message="Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso."
-        ctaLabel="Reportar / pedir acceso"
-        (action)="reportar()"
-      />
+  @if (editMode()) {
+    <!-- AF38 — modo edición (admin): arrastrar para reordenar como un launcher -->
+    <div class="home__edit-bar">
+      <button type="button" class="btn-ghost" (click)="cancelarOrden()">Cancelar</button>
+      <span class="home__edit-hint">Arrastra para reordenar</span>
+      <button type="button" class="btn-cta" (click)="guardarOrden()">Listo</button>
+    </div>
+    <main class="home__grid home__grid--edit">
+      @for (tile of editTiles(); track tile.modulo; let i = $index) {
+        <button
+          type="button"
+          class="home__edit-tile"
+          [class.home__edit-tile--drag]="dragIndex() === i"
+          [style.background]="tile.tint"
+          [attr.data-edit-index]="i"
+          (pointerdown)="onDragStart(i, $event)"
+        >
+          <span class="home__edit-icon">{{ tile.icon }}</span>
+          <span class="home__edit-label">{{ tile.label }}</span>
+        </button>
+      }
+    </main>
+  } @else {
+    <main
+      class="home__grid"
+      data-tour="tiles"
+      (pointerdown)="onTilePointerDown()"
+      (pointerup)="onTilePointerUp()"
+      (pointerleave)="onTilePointerUp()"
+      (pointercancel)="onTilePointerUp()"
+    >
+      @for (tile of tiles(); track tile.modulo) {
+        <app-big-button
+          [icon]="tile.icon"
+          [label]="tile.label"
+          [tint]="tile.tint"
+          [badge]="badgeFor(tile.modulo)"
+          (pressed)="open(tile)"
+        />
+      } @empty {
+        <app-empty-state
+          icon="🔑"
+          title="Sin módulos asignados"
+          message="Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso."
+          ctaLabel="Reportar / pedir acceso"
+          (action)="reportar()"
+        />
+      }
+    </main>
+    @if (esAdmin()) {
+      <button type="button" class="home__ordenar" (click)="entrarEdicion()">
+        ✥ Ordenar módulos
+      </button>
     }
-  </main>
+  }
 
   <!-- Non-gated: available to everyone. -->
   <footer class="home__footer">

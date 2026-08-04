@@ -206,6 +206,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/transporte/asignar/asignar').then((m) => m.AsignarVehiculoPage),
   },
+  {
+    // AF34 — flujo unificado "Asignarme vehículo" + pre-uso + traspaso (acta).
+    path: 'transporte/asignarme',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/asignarme/asignarme').then((m) => m.AsignarmeVehiculoPage),
+  },
   // AD6 — funciones de inventario del chofer DENTRO de Transporte (gate por 'flota',
   // no 'inventario'): así funcionan aunque se revierta el acceso temporal a Inventario.
   {
@@ -292,6 +299,13 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
       import('./pages/transporte/combustible/combustible').then((m) => m.CombustiblePage),
+  },
+  {
+    // AF17 — "Registro de echadas" (roles elevados; el RPC log_combustible gatea por rol).
+    path: 'transporte/combustible-log',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/combustible-log/combustible-log').then((m) => m.CombustibleLogPage),
   },
   {
     path: 'transporte/conduces',
@@ -425,6 +439,12 @@ export const routes: Routes = [
     path: 'notas',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/notas/notas').then((m) => m.NotasPage),
+  },
+  {
+    // AF39 — Tareas: general (el RPC mis_tareas_app acota lo que ve cada usuario).
+    path: 'tareas',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/tareas/tareas').then((m) => m.TareasPage),
   },
   {
     path: 'notas/:id',

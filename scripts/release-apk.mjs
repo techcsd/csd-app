@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.60.0';
+const VERSION = '1.61.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,19 +59,27 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-03';
+const RELEASED_AT = '2026-08-04';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Arreglos de rutas, conduces y pre-uso (2ª ronda de QA)';
+const TITULO = 'Tareas, push, asignarme vehículo unificado y mejoras de inventario';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', d: 'Al adjuntar un conduce a una parada, ya no aparece uno que pertenece a otra ruta (evitaba “robarlo” de la otra ruta sin querer).' },
-  { t: 'arreglo', d: 'El tiempo estimado a la próxima parada se actualiza al entregar una parada (antes seguía mostrando el de la parada anterior).' },
-  { t: 'arreglo', d: 'La foto de una falla en el pre-uso ahora queda pegada a su punto del checklist (antes podía quedar suelta).' },
-  { t: 'mejora', d: 'Si al entregar dices que faltó material, ahora te pide bajar la cantidad de al menos un artículo (antes se registraba como completo).' },
-  { t: 'mejora', d: 'Las capturas de inventario (salidas, entradas, conteos y devoluciones) ahora aparecen en “Documentación en proceso”.' },
-  { t: 'mejora', d: 'Varios arreglos de estabilidad y consistencia de datos (fechas de combustible, memoria en la entrega, avisos de foto faltante).' },
+  { t: 'nuevo', d: 'Notificaciones push: ahora te llegan avisos al teléfono (por ejemplo, cuando te asignan una tarea) y al tocarlos te llevan directo a la pantalla.' },
+  { t: 'nuevo', d: 'Módulo de Tareas: revisa las tareas que te asignan, iníciarlas y complétalas con nota y foto.' },
+  { t: 'nuevo', d: '“Asignarme vehículo” unificado: eliges el vehículo (aunque lo tenga otro), haces el pre-uso corto con fotos y firma, registras la llave y queda un acta; al anterior se le avisa.' },
+  { t: 'nuevo', d: 'Registro de echadas de combustible para jefes de flota, con los kilometrajes sospechosos resaltados.' },
+  { t: 'nuevo', d: 'El administrador puede reordenar los módulos del inicio arrastrándolos, como los iconos del celular.' },
+  { t: 'mejora', d: 'Recibir mercancía ahora pide un checklist de lo recibido, varias fotos y la firma de quien recibe.' },
+  { t: 'mejora', d: 'Buscador de materiales en entrada y salida: al escribir se muestran los resultados de todo el catálogo.' },
+  { t: 'mejora', d: 'Al elegir un almacén, la lista se recoge y queda solo el elegido con un botón “Cambiar”.' },
+  { t: 'mejora', d: 'Combustible: sale Diésel Premium por defecto, solo se ofrece tu vehículo asignado y se bloquean kilometrajes irreales.' },
+  { t: 'mejora', d: 'Compra en ferretería: el material recién agregado encabeza la lista y puedes tomar una foto de la mercancía recibida.' },
+  { t: 'arreglo', d: 'El chofer ahora ve SOLO sus avisos (antes le llegaban avisos que no eran suyos).' },
+  { t: 'arreglo', d: 'En “Sacar material” ya carga el listado de obra/almacén de destino.' },
+  { t: 'arreglo', d: 'El kilometraje del vehículo asignado ahora coincide con el del perfil del vehículo.' },
+  { t: 'arreglo', d: 'Tocar una notificación ahora te lleva a su pantalla y puedes eliminarlas (o borrarlas todas).' },
 ];
 
 const TIPO_POR_COMMIT = {

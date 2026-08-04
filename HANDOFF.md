@@ -1,5 +1,53 @@
 # HANDOFF — CSD App
 
+## ⏩ SESIÓN 04/08 — PROMPT-2 ronda AF (FASES 1, 2, 3 y 8) — build VERDE, sin commit/push
+Ronda `imp 03082026` (IDs AF). PROMPT-1 (SGC backend) ya estaba aplicado (SGC v1.61.0 + push E2E). Hecho en la app (todo build VERDE; **no** se commiteó, **no** se subió versión). Migraciones SGC aplicadas a **prod** (aditivas, retrocompatibles) — pendientes de commitear en el repo SGC.
+
+**FASE 1 — bugs (raíz):**
+- **AF5 (chofer ve TODAS las notificaciones):** causa raíz NO era la RLS (ya filtra por `usuario_id`) sino `sgc.notificar_modulo()`: hace fan-out de una fila REAL por CADA usuario cuyo rol tenga el módulo → el rol "Chofer / Transportista" (modulos flota/inventario/transporte) recibía toda alerta de flota. **Fix server-side:** migración `sql/2026-08-04-af5-notif-chofer-scope.sql` — columna `sgc.roles.es_operativo` (=true para Chofer), `notificar_modulo` ahora excluye a quien SOLO tiene roles operativos. Los ~30 call-sites son alertas de supervisión (ninguna crítica para el chofer). **Nota:** las filas viejas ya insertadas siguen ahí hasta que el chofer las borre (AF6).
+- **AF21 (km desactualizado en "vehículo asignado"):** los cards del hub pintaban `v.km` crudo (cache servidor) sin reconciliar con el outbox; el perfil sí usa `kmEfectivo`. Fix: `transporte.ts` reconcilia cada card con `kmEfectivo` (`kmOf()`), y los 5 handlers km-advancing invalidan también `mis_asignaciones` (antes solo `pendientes_transporte`/`flota_vehiculos`).
+- **AF11-bug (listado destino no carga en sacar material):** `getObrasConBodega` leía `sgc.proyectos` directo pero la RLS de proyectos no incluye el módulo inventario → `[]` silencioso. Fix: RPC security-definer `sgc.obras_con_bodega()` (migración `sql/2026-08-04-af11-obras-con-bodega-rpc.sql`, gateada a inventario/compras/admin, respeta activo + aísla prueba); `inventario.service.getObrasConBodega` ahora usa el RPC.
+
+**FASE 2 — notificaciones:**
+- **AF6 (deep-link + eliminar + leído):** `notifAppRoute()` traduce la `ruta` (a menudo WEB) a ruta de la app; bandeja de avisos con **eliminar por ítem** + **"Borrar todas"** (migración `sql/2026-08-04-af6-notif-delete.sql`: policy delete + grant) + confirm dialog. Leído/no-leído ya existía.
+- **AF7 (push nativo):** infra SGC ya desplegada (device_tokens + send-push + `notificar` espeja push). App: instalado `@capacitor/push-notifications@8`, `npx cap sync android` OK, nuevo `PushService` (registra token vía `registrar_device_token`, deep-link al tap reusando `notifAppRoute`, foreground refresca badge, `clearToken` en logout). Wire: `App.init()` + `home` `syncToken()`. **PENDIENTE (Xaviel):** dejar `android/app/google-services.json` (proyecto Firebase csd-core) + probar en Android real. En PWA/iOS es no-op (fallback in-app documentado).
+
+**FASE 3 — combustible:**
+- **AF20:** default subtipo=**Premium** (tipo diesel ya era default).
+- **AF18:** el picker de combustible solo ofrece los vehículos asignados (`[soloMios]`); admin ve todos (espeja is_admin del RPC). Mensaje claro si no tiene asignado.
+- **AF19:** validación client-side de umbral de km (`flota_config.umbral_km_echada`, default 1000, en `FlotaConfig`): bloquea al chofer, admin puede seguir con warning (server también valida + marca `km_alerta`).
+- **AF17:** nueva pantalla **"Registro de echadas"** (`transporte/combustible-log`, tile elevado) consumiendo el RPC `log_combustible`; filtro por fecha + búsqueda; resalta saltos/consumo sospechoso.
+
+**FASE 8 — orden de módulos (AF38):** `ModuleOrderService` (get/set_module_order). Home aplica el orden guardado (todos lo ven, gating por rol intacto). Modo edición **solo admin**: long-press (o botón "Ordenar módulos") → drag & drop tipo launcher (pointer events, jiggle) → "Listo" persiste. ⚠️ El drag es pointer-based, **no verificado en device** — validar el arrastre en Android real.
+
+**FASE 4 — inventario UX (parcial, build VERDE):**
+- **AF9 buscador:** `SelectorCategorias` ahora muestra un buscador en la hoja de categorías: al escribir OCULTA las categorías y lista resultados de todo el catálogo (con stepper); al limpiar, vuelven las categorías. Beneficia entrada, salida y conteo (todos reusan el selector).
+- **AF10 colapso+Cambiar:** nuevo componente reutilizable `shared/ui/collapsible-select` (envuelve `select-list`): al elegir, la lista se recoge y queda el seleccionado + botón "Cambiar". Aplicado en salida (almacén + destino), entrada (almacén + obra origen) y ferretería (almacén + obra). Entrada/salida ya eran wizard de hojas (seleccion→resumen→éxito).
+- **AF12 ferretería:** el material recién elegido ahora ENCABEZA la lista (más reciente primero); nuevo photo-slot "Mercancía recibida" (solo cámara, además del recibo) — migración aditiva `sql/2026-08-04-af12-ferreteria-foto-mercancia.sql` (columna `entradas_inventario.foto_mercancia_path` + overload de 11 args de `chofer_registrar_compra_ferreteria`, el de 10 args se conserva) **aplicada a prod**; outbox sube la 2ª foto (slot `mercancia`).
+- **DEFERIDO — AF10 firma final en entrada/salida:** requiere overloads de `registrar_salida_app`/`registrar_entrada_app` con `p_firma_path` + columnas + **mostrar la firma en la web** (regla #5, repo SGC). Menor valor que AF13; se hace junto con la coordinación web.
+
+**FASE 5 — sacar/recibir con evidencia (hecho, build VERDE):**
+- **AF11:** `generar-conduce` (sacar material) usa `collapsible-select` en origen (almacén) y destino (obra). El "quién recibe" + auto-recepción→pendiente-firma ya vive en el flujo de ENTREGA (`entregarConduce` → `asignar_firma_pendiente`), no en la generación.
+- **AF13/AF30:** la pantalla de **recibir conduce/mercancía** ya tenía checklist editable (recibido vs enviado) + firma; se le agregó **mínimo 2 fotos obligatorias** de la descarga (solo cámara) y ahora **registra la evidencia completa** (todas las fotos + checklist + notas) vía `registrar_confirmacion_recepcion('conduce',…)` del backend `af1-confirmaciones` — visible en el detalle web. `recibir_conduce_app` + `firmar_conduce` siguen igual.
+- **AF16 alto valor:** migración `sql/2026-08-04-af16-articulo-entrega-en-mano.sql` (**aplicada**): flag `articulos.entrega_en_mano`. La app lo propaga a los items del conduce, y recibir muestra un **banner rojo + badge "🖐️ Entrega en mano"** avisando que debe recibir/firmar el responsable en persona (no auto-recepción). ⚠️ El BLOQUEO programático duro de la auto-recepción vive en el flujo de entrega (se afina en PROMPT-4); hoy ningún artículo está marcado (Xaviel marca la lista inicial en la web).
+
+**FASE 6 — "Asignarme vehículo" unificado (hecho, build VERDE):** nuevo flujo `pages/transporte/asignarme` (ruta `transporte/asignarme`; el tile "Asignarme vehículo" ahora apunta ahí). Wizard: elegir vehículo (incluso asignado a otro) → km + checklist corto de condiciones → fotos guiadas ext/int (solo cámara) → llave 1 (AF3) → firma → **`traspasar_vehiculo`** vía outbox (`TraspasoService`, tipo_op `vehiculo_traspaso`): reasigna, crea **acta**, notifica al anterior (in-app+push), registra llave 1. Borrador persistente (autosave). **AF35** (combustible fuera del pre-uso) ya viene del backend + este flujo no lo pide. ⚠️ **AF36** (historial integrado de pre-usos/recepciones) DEFERIDO — `mi-actividad` ya muestra pre-usos/semanales; el historial de actas de traspaso queda como lectura pendiente.
+
+**FASE 7 — Tareas (hecho, build VERDE):** `pages/tareas` (ruta `tareas`, tile general en Home — el chofer ve las suyas aunque no tenga el módulo). Lista vía RPC `mis_tareas_app` (migración `af39-mis-tareas-app.sql`, security-definer, resuelve nombres que la RLS bloquea al chofer); detalle; **iniciar/completar** por outbox (offline) → `iniciar_tarea`/`completar_tarea` (completar con nota+foto opcional); **crear** (online, gated por módulo `tareas`, con buscador de usuario). **Push al asignar:** nuevo trigger `af39-tarea-notificar-asignado.sql` → `notificar` (espeja push) en insert/reasignación. Deep-link `/tareas` añadido a `notifAppRoute`.
+
+**RONDA COMPLETA (FASES 1-8).** Migraciones SGC aplicadas a prod esta ronda (aditivas, retrocompatibles, **sin commit en repo SGC**): `af5`, `af11`, `af6`, `af12`, `af16`, `af39-mis-tareas-app`, `af39-tarea-notificar-asignado`. Se instaló `@capacitor/push-notifications` + `cap sync android`.
+
+**QA (04/08, hecho por Claude):**
+- **JS build VERDE** (todas las fases) + **build nativo Android `assembleDebug` VERDE** → el plugin `@capacitor/push-notifications` integra limpio en gradle (JDK 21 JBR).
+- **QA de backend impersonando un chofer real (Manolo, RLS con claims JWT):** AF11 `obras_con_bodega()` = 11 obras (antes []); AF17 `log_combustible` = 0 para el chofer (bien gateado); AF39 `mis_tareas_app` corre + el trigger de asignación crea la notificación "Nueva tarea asignada"; AF6 delete grant+policy OK; AF16/AF12 columnas OK.
+- **AF5 verificado y cerrado:** un broadcast `flota` nuevo YA NO le llega al chofer (recipient set replicado: Manolo=false; 6 usuarios de oficina siguen recibiendo; 7 choferes puros excluidos). Además se **limpiaron 80 filas de spam viejo** (títulos de broadcast) de las bandejas de los choferes puros — migración `sql/2026-08-04-af5-cleanup-notif-choferes.sql` aplicada. Manolo quedó solo con sus 2 tareas reales.
+
+**⛔ BLOQUEO PUSH (necesita tu Firebase):** el `google-services.json` de Descargas es del **paquete `app.constructorasd.com`**, pero el APK es **`com.constructorasd.csdapp`** → el plugin de Google Services exige que coincidan (si se coloca, el build de Android falla). NO se colocó. **Acción tuya:** en Firebase (proyecto `csd-core`) agrega una app Android con el paquete **`com.constructorasd.csdapp`** y descarga ESE `google-services.json` a `android/app/`. Con eso, `npm run apk` compila con push y ya funciona (token + deep-link ya están cableados).
+
+**Pendiente de Xaviel para cerrar del todo:** (1) el `google-services.json` correcto ↑ + prueba de push en device; (2) **conectar un teléfono por ADB** para device-QA de los flujos nuevos (traspaso, recibir con fotos+firma, drag&drop de módulos) — no había device conectado; (3) marcar en la web la lista inicial de artículos `entrega_en_mano` (AF16); (4) decidir si AF10-firma en entrada/salida y AF36-historial-de-actas se hacen (requieren coordinación web). Nada se commiteó ni se subió versión.
+
+---
+
 ## ⏩ SESIÓN 03/08 (cont.) — Pendientes de la ronda de QA + v1.60.0 (rolling)
 Cerré los hallazgos MEDIUM/LOW que quedaban de la revisión (build VERDE, publicado):
 - **[MEDIUM] adjuntar conduce cross-route:** `conducesParaAdjuntar` ahora excluye conduces atados a CUALQUIER ruta cargada (antes solo la actual → podía "robar" un conduce de otra ruta).

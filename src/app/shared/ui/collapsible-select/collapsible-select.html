@@ -1,0 +1,18 @@
+@if (colapsado()) {
+  <div class="colsel">
+    @if (label()) { <span class="colsel__label">{{ label() }}</span> }
+    <div class="colsel__chip">
+      <span class="colsel__icon">{{ seleccionado()?.icon || icon() }}</span>
+      <span class="colsel__name">{{ seleccionado()?.label }}</span>
+      <button type="button" class="colsel__cambiar" (click)="cambiar()">{{ cambiarLabel() }}</button>
+    </div>
+  </div>
+} @else {
+  <app-select-list
+    [label]="label()"
+    [icon]="icon()"
+    [options]="options()"
+    [selectedId]="selectedId()"
+    (picked)="onPicked($event)"
+  />
+}

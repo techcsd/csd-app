@@ -173,6 +173,8 @@ export interface ConduceItem {
   articulo: string;
   unidad: string;
   cantidad: number;
+  /** AF16 — artículo de alto valor / entrega en mano (destacar + no auto-recepción). */
+  entregaEnMano?: boolean;
 }
 
 export interface Conduce {

@@ -30,11 +30,22 @@ export interface EntradaCaptura {
   foto: Blob | null;
 }
 
+/** AF13 — línea del checklist de recepción (recibido vs enviado). */
+export interface RecepcionChecklistItem {
+  nombre: string;
+  cantidad_enviada: number;
+  cantidad_recibida: number;
+  diferencia: number;
+}
+
 export interface RecepcionCaptura {
   salidaId: string;
   items: { detalle_id: string; cantidad_recibida: number }[];
   notas: string | null;
-  foto: Blob | null;
+  /** AF30 — fotos de evidencia de la descarga (mínimo 2, solo cámara). */
+  fotos: Blob[];
+  /** AF13 — checklist recibido vs enviado (para el registro de confirmación). */
+  checklist?: RecepcionChecklistItem[];
   /** AE — firma del receptor (prueba de recepción, AC7) + su nombre. */
   firmaReceptor?: Blob | null;
   receptorNombre?: string | null;
@@ -165,17 +176,15 @@ export class InventarioService {
    */
   async getObrasConBodega(): Promise<ObraOrigen[]> {
     const data = await this.catalog.refresh<ObraOrigen[]>('obras_con_bodega', async () => {
-      const [proys, bods] = await Promise.all([
-        this.supabase.client.from('proyectos').select('id, nombre').order('nombre'),
-        this.supabase.client.from('bodegas').select('proyecto_id').eq('activo', true).not('proyecto_id', 'is', null),
-      ]);
-      if (proys.error) throw new Error(proys.error.message);
-      if (bods.error) throw new Error(bods.error.message);
-      const conBodega = new Set(((bods.data as { proyecto_id: string }[]) ?? []).map((b) => b.proyecto_id));
-      return ((proys.data as { id: string; nombre: string }[]) ?? []).map((p) => ({
+      // AF11-bug — leer proyectos directo devolvía [] a usuarios de inventario/chofer
+      // (la RLS de `proyectos` no incluye el módulo inventario). Se usa un RPC
+      // security-definer que respeta activo + aísla proyectos de prueba.
+      const { data, error } = await this.supabase.client.rpc('obras_con_bodega');
+      if (error) throw new Error(error.message);
+      return ((data as { id: string; nombre: string; tiene_bodega: boolean }[]) ?? []).map((p) => ({
         id: p.id,
         nombre: p.nombre,
-        tieneBodega: conBodega.has(p.id),
+        tieneBodega: p.tiene_bodega,
       }));
     });
     return data ?? [];
@@ -373,9 +382,15 @@ export class InventarioService {
         items: input.items,
         capturado_en,
       },
-      fotos: input.foto
-        ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `ferreteria/${id}/recibo.jpg`, slot: 'recibo', blob: input.foto }]
-        : [],
+      fotos: [
+        ...(input.foto
+          ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `ferreteria/${id}/recibo.jpg`, slot: 'recibo', blob: input.foto }]
+          : []),
+        // AF12 — foto de la mercancía recibida (adicional al recibo).
+        ...(input.fotoMercancia
+          ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `ferreteria/${id}/mercancia.jpg`, slot: 'mercancia', blob: input.fotoMercancia }]
+          : []),
+      ],
       resumen: { tipo: 'compra_ferreteria', capturado_en, items: input.items.length },
     });
   }
@@ -440,7 +455,7 @@ export class InventarioService {
           'id, fecha, created_at, estado, motivo, observaciones, foto_path, ' +
             'proyecto:proyectos(nombre), bodega:bodegas(nombre), ' +
             'creador:usuarios!salidas_inventario_creado_por_fkey(nombre), ' +
-            'detalle_salidas(id, cantidad, articulo:articulos(nombre, unidad))',
+            'detalle_salidas(id, cantidad, articulo:articulos(nombre, unidad, entrega_en_mano))',
         )
         .eq('estado', 'despachado')
         .order('created_at', { ascending: false })
@@ -451,7 +466,7 @@ export class InventarioService {
         motivo: string | null; observaciones: string | null; foto_path: string | null;
         proyecto: { nombre: string } | null; bodega: { nombre: string } | null;
         creador: { nombre: string } | null;
-        detalle_salidas: { id: string; cantidad: number; articulo: { nombre: string; unidad: string } | null }[];
+        detalle_salidas: { id: string; cantidad: number; articulo: { nombre: string; unidad: string; entrega_en_mano?: boolean } | null }[];
       };
       return ((data as unknown as Row[]) ?? []).map((r) => ({
         id: r.id,
@@ -469,6 +484,7 @@ export class InventarioService {
           articulo: d.articulo?.nombre ?? '—',
           unidad: d.articulo?.unidad ?? '',
           cantidad: Number(d.cantidad),
+          entregaEnMano: d.articulo?.entrega_en_mano ?? false, // AF16
         })),
       }));
     });
@@ -489,9 +505,10 @@ export class InventarioService {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     const fotos = [];
-    if (input.foto) {
-      fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `recepcion/${id}.jpg`, slot: 'recepcion', blob: input.foto });
-    }
+    // AF30 — varias fotos de evidencia de la descarga (slots recepcion_0..N).
+    (input.fotos ?? []).forEach((blob, i) => {
+      fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `recepcion/${id}-${i}.jpg`, slot: `recepcion_${i}`, blob });
+    });
     // AE — firma del receptor al bucket `conduces` (donde viven las firmas AC7).
     if (input.firmaReceptor) {
       fotos.push({
@@ -511,6 +528,7 @@ export class InventarioService {
         items: input.items,
         notas: input.notas,
         receptor_nombre: input.receptorNombre ?? null,
+        checklist: input.checklist ?? null, // AF13
       },
       fotos,
       resumen: { tipo: 'recepcion', salida_id: input.salidaId, capturado_en },
@@ -754,11 +772,17 @@ export class InventarioService {
 
     this.sync.register('conduce_recepcion', async (payload, photoPaths) => {
       const salidaId = payload['salida_id'] as string;
+      // AF30 — todas las fotos de evidencia de la descarga (slots recepcion_0..N).
+      const recepcionPaths = Object.keys(photoPaths)
+        .filter((k) => k.startsWith('recepcion'))
+        .sort()
+        .map((k) => photoPaths[k])
+        .filter((p): p is string => !!p);
       const { error } = await this.supabase.client.rpc('recibir_conduce_app', {
         p_salida_id: salidaId,
         p_items: payload['items'],
         p_notas: payload['notas'] ?? null,
-        p_foto_path: photoPaths['recepcion'] ?? null,
+        p_foto_path: recepcionPaths[0] ?? null, // la primera queda como foto principal
       });
       if (error) throwSyncError(error);
       // AE — firma del RECEPTOR (AC7). Idempotente por (salida_id, rol); best-effort:
@@ -776,6 +800,21 @@ export class InventarioService {
           p_usuario_id: userData.user?.id ?? null,
         });
         if (eF) throwSyncError(eF);
+      }
+      // AF13 — registra la evidencia completa (todas las fotos + checklist + notas)
+      // en el backend de confirmaciones (PROMPT-1), visible en el detalle web.
+      // Best-effort: la recepción ya quedó registrada arriba.
+      try {
+        await this.supabase.client.rpc('registrar_confirmacion_recepcion', {
+          p_entidad_tipo: 'conduce',
+          p_entidad_id: salidaId,
+          p_modo: 'presencial',
+          p_fotos: recepcionPaths,
+          p_notas: payload['notas'] ?? null,
+          p_checklist: payload['checklist'] ?? null,
+        });
+      } catch {
+        /* la confirmación de evidencia es complementaria; no revierte la recepción */
       }
     });
 
@@ -833,6 +872,7 @@ export class InventarioService {
         p_observaciones: payload['observaciones'] ?? null,
         p_foto_path: photoPaths['recibo'] ?? null,
         p_items: payload['items'] ?? [],
+        p_foto_mercancia_path: photoPaths['mercancia'] ?? null, // AF12
       });
       if (error) throwSyncError(error);
     });

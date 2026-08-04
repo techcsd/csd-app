@@ -12,17 +12,32 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
-      @for (n of avisos(); track n.id) {
-        <button type="button" class="aviso" [class.aviso--unread]="!n.leida" (click)="abrir(n)">
-          @if (!n.leida) { <span class="aviso__dot"></span> }
-          <span class="aviso__icon">{{ iconFor(n.tipo) }}</span>
-          <span class="aviso__body">
-            <span class="aviso__titulo">{{ n.titulo }}</span>
-            @if (n.mensaje) { <span class="aviso__msg">{{ n.mensaje }}</span> }
-            <span class="aviso__fecha">{{ fechaHora(n.created_at) }}</span>
-          </span>
-          @if (n.ruta) { <span class="aviso__go">›</span> }
+      @if (avisos().length) {
+        <button type="button" class="avisos__borrar-todas" (click)="pedirBorrarTodas()">
+          🗑️ Borrar todas
         </button>
+      }
+      @for (n of avisos(); track n.id) {
+        <div class="aviso" [class.aviso--unread]="!n.leida">
+          <button type="button" class="aviso__main" (click)="abrir(n)">
+            @if (!n.leida) { <span class="aviso__dot"></span> }
+            <span class="aviso__icon">{{ iconFor(n.tipo) }}</span>
+            <span class="aviso__body">
+              <span class="aviso__titulo">{{ n.titulo }}</span>
+              @if (n.mensaje) { <span class="aviso__msg">{{ n.mensaje }}</span> }
+              <span class="aviso__fecha">{{ fechaHora(n.created_at) }}</span>
+            </span>
+            @if (tieneDestino(n)) { <span class="aviso__go">›</span> }
+          </button>
+          <button
+            type="button"
+            class="aviso__del"
+            (click)="eliminar(n, $event)"
+            aria-label="Eliminar aviso"
+          >
+            🗑️
+          </button>
+        </div>
       } @empty {
         <app-empty-state
           icon="🔔"
@@ -34,4 +49,15 @@
       }
     }
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmBorrarTodas()"
+    title="¿Borrar todos los avisos?"
+    message="Se eliminarán todos tus avisos. Esta acción no se puede deshacer."
+    confirmLabel="Sí, borrar todas"
+    cancelLabel="Cancelar"
+    tone="danger"
+    (confirmed)="borrarTodas()"
+    (cancelled)="cancelarBorrarTodas()"
+  />
 </div>

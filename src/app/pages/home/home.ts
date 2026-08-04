@@ -12,6 +12,9 @@ import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { InventarioService } from '../../core/services/inventario.service';
 import { SyncService } from '../../core/sync/sync.service';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
+import { PushService } from '../../core/services/push.service';
+import { ModuleOrderService } from '../../core/services/module-order.service';
+import { ToastService } from '../../core/services/toast.service';
 
 interface HomeTile {
   modulo: string;
@@ -40,6 +43,9 @@ const TILES: HomeTile[] = [
 // AC4 — Notas: módulo GENERAL accesible por TODOS (incluidos choferes), como
 // Mensajes. No se gatea por módulo SGC; se muestra siempre.
 const NOTAS_TILE: HomeTile = { modulo: 'notas', icon: '🗒️', label: 'Notas', route: '/notas', tint: '#7c3aed' };
+// AF39 — Tareas: general (el chofer ve las tareas asignadas a él aunque no tenga
+// el módulo). El RPC mis_tareas_app acota la visibilidad.
+const TAREAS_TILE: HomeTile = { modulo: 'tareas_app', icon: '✅', label: 'Tareas', route: '/tareas', tint: '#0d9488' };
 
 @Component({
   selector: 'app-home',
@@ -58,7 +64,18 @@ export class HomePage {
   private inventario = inject(InventarioService);
   private sync = inject(SyncService);
   private notificaciones = inject(NotificacionesService);
+  private push = inject(PushService);
+  private moduleOrder = inject(ModuleOrderService);
+  private toast = inject(ToastService);
   avisosNoLeidos = this.notificaciones.noLeidas;
+
+  // AF38 — orden de módulos configurable por el admin (drag & drop tipo launcher).
+  esAdmin = this.ctx.esAdmin;
+  orderMap = signal<Record<string, number>>({});
+  editMode = signal(false);
+  editTiles = signal<HomeTile[]>([]);
+  dragIndex = signal<number | null>(null);
+  private lpTimer: ReturnType<typeof setTimeout> | null = null;
 
   nombre = this.ctx.nombre;
   obra = this.ctx.obraActiva;
@@ -91,14 +108,27 @@ export class HomePage {
   // todos, incluidos los choferes.
   tiles = computed(() => {
     const work = this.workTiles();
-    // AC4 — Notas es general (todos, incl. choferes). Tecnología, todos menos chofer.
-    const extra: HomeTile[] = [NOTAS_TILE];
+    // AC4 — Notas es general (todos, incl. choferes). AF39 — Tareas también.
+    // Tecnología, todos menos chofer.
+    const extra: HomeTile[] = [NOTAS_TILE, TAREAS_TILE];
     if (!this.ctx.esChofer()) {
       const tec = TILES.find((t) => t.modulo === 'tecnologia');
       if (tec) extra.push(tec);
     }
-    return [...work, ...extra];
+    return this.aplicarOrden([...work, ...extra]); // AF38
   });
+
+  /** AF38 — aplica el orden configurado por el admin; los no configurados quedan
+   *  después, en su orden por defecto. El gating por rol ya se aplicó (workTiles). */
+  private aplicarOrden(all: HomeTile[]): HomeTile[] {
+    const order = this.orderMap();
+    const idx = new Map(all.map((t, i) => [t.modulo, i]));
+    return [...all].sort((a, b) => {
+      const oa = order[a.modulo] ?? 1000 + (idx.get(a.modulo) ?? 0);
+      const ob = order[b.modulo] ?? 1000 + (idx.get(b.modulo) ?? 0);
+      return oa - ob;
+    });
+  }
 
   constructor() {
     // Single work-module user (e.g. guarda de almacén): drop straight into their
@@ -116,6 +146,10 @@ export class HomePage {
     void this.cargarFirmasPendientes();
     // AE — avisos no leídos (badge de la campana). Best-effort, online.
     void this.notificaciones.refreshNoLeidas();
+    // AF7 — ya hay sesión: registra/renueva el token push del usuario (native only).
+    void this.push.syncToken();
+    // AF38 — orden de módulos configurado (cache-then-network).
+    void this.cargarOrden();
     effect(() => {
       this.sync.changed();
       if (this.primerSync) {
@@ -149,7 +183,90 @@ export class HomePage {
   }
 
   open(tile: HomeTile): void {
+    if (this.editMode()) return; // AF38 — en modo edición no se navega
     void this.router.navigate([tile.route]);
+  }
+
+  // ── AF38 — orden de módulos (drag & drop, solo admin) ──────────────────────
+  private async cargarOrden(): Promise<void> {
+    try {
+      const rows = await this.moduleOrder.getOrder();
+      const map: Record<string, number> = {};
+      for (const r of rows) if (!r.parent) map[r.clave] = r.orden;
+      this.orderMap.set(map);
+    } catch {
+      /* best-effort: sin orden guardado, se usa el por defecto */
+    }
+  }
+
+  /** Long-press (admin) para entrar en modo edición, como un launcher de celular. */
+  onTilePointerDown(): void {
+    if (!this.ctx.esAdmin() || this.editMode()) return;
+    this.clearLongPress();
+    this.lpTimer = setTimeout(() => this.entrarEdicion(), 600);
+  }
+  onTilePointerUp(): void {
+    this.clearLongPress();
+  }
+  private clearLongPress(): void {
+    if (this.lpTimer) {
+      clearTimeout(this.lpTimer);
+      this.lpTimer = null;
+    }
+  }
+
+  entrarEdicion(): void {
+    this.editTiles.set([...this.tiles()]);
+    this.editMode.set(true);
+  }
+
+  private dragMove = (ev: PointerEvent): void => this.onDragMove(ev);
+  private dragEnd = (): void => this.onDragEnd();
+
+  onDragStart(i: number, ev: PointerEvent): void {
+    ev.preventDefault();
+    this.dragIndex.set(i);
+    window.addEventListener('pointermove', this.dragMove);
+    window.addEventListener('pointerup', this.dragEnd, { once: true });
+    window.addEventListener('pointercancel', this.dragEnd, { once: true });
+  }
+  private onDragMove(ev: PointerEvent): void {
+    const from = this.dragIndex();
+    if (from == null) return;
+    const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
+    const tileEl = el?.closest('[data-edit-index]') as HTMLElement | null;
+    if (!tileEl) return;
+    const to = Number(tileEl.dataset['editIndex']);
+    if (Number.isNaN(to) || to === from) return;
+    this.editTiles.update((list) => {
+      const next = [...list];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    this.dragIndex.set(to);
+  }
+  private onDragEnd(): void {
+    window.removeEventListener('pointermove', this.dragMove);
+    this.dragIndex.set(null);
+  }
+
+  async guardarOrden(): Promise<void> {
+    const items = this.editTiles().map((t, i) => ({ clave: t.modulo, orden: i }));
+    const map: Record<string, number> = {};
+    items.forEach((it) => (map[it.clave] = it.orden));
+    this.orderMap.set(map); // optimista: el home ya refleja el nuevo orden
+    this.editMode.set(false);
+    try {
+      await this.moduleOrder.setOrder(items);
+      this.toast.success('Orden de módulos guardado.');
+    } catch {
+      this.toast.error('No se pudo guardar el orden. Inténtalo de nuevo.');
+    }
+  }
+  cancelarOrden(): void {
+    this.editMode.set(false);
+    this.dragIndex.set(null);
   }
 
   perfil(): void {

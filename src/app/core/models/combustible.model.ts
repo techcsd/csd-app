@@ -5,6 +5,29 @@
  * sgc.flota_config; the server is the source of truth (offline preview only).
  */
 
+/** AF17 — una fila del "Registro de echadas" (RPC sgc.log_combustible). */
+export interface EchadaLog {
+  id: string;
+  fecha: string;
+  vehiculo_id: string | null;
+  placa: string | null;
+  kilometraje: number | null;
+  km_anterior: number | null;
+  km_recorridos: number | null;
+  galones: number | null;
+  monto: number | null;
+  producto: string | null;
+  subtipo: string | null;
+  estado: string | null;
+  km_alerta: boolean | null;
+  alerta_consumo: boolean | null;
+  registrado_por: string | null;
+  registrado_nombre: string | null;
+  conductor_nombre: string | null;
+  es_prueba: boolean | null;
+  created_at: string;
+}
+
 /** % below the vehicle's average km/gal that flags abnormal consumption. */
 export const CONSUMO_ANORMAL_PCT = 20; // sgc.flota_config → umbral_consumo_pct
 /** Minimum historical fill-ups before an abnormal-consumption alert can fire. */

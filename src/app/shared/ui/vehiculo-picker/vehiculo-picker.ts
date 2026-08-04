@@ -25,6 +25,8 @@ export class VehiculoPicker {
   /** Optional heading shown above the list. */
   titulo = input('Elige un vehículo');
   subtitulo = input('Selecciona el vehículo disponible para continuar.');
+  /** AF18 — cuando true, solo ofrece los vehículos asignados a mí (combustible). */
+  soloMios = input(false);
 
   elegido = output<VehiculoDisponible>();
 
@@ -36,8 +38,12 @@ export class VehiculoPicker {
 
   /** W4 — "Tus vehículos" primero. */
   mios = computed(() => this.disponibles().filter((v) => this.misIds().has(v.vehiculo_id)));
-  /** W4 — el resto de la flota disponible. */
-  resto = computed(() => this.disponibles().filter((v) => !this.misIds().has(v.vehiculo_id)));
+  /** W4 — el resto de la flota disponible (oculto cuando soloMios, AF18). */
+  resto = computed(() =>
+    this.soloMios() ? [] : this.disponibles().filter((v) => !this.misIds().has(v.vehiculo_id)),
+  );
+  /** AF18 — soloMios y no tengo ninguno asignado → mensaje claro (no lista ajena). */
+  sinAsignado = computed(() => this.soloMios() && !this.loading() && !this.mios().length);
 
   constructor() {
     void this.load();
