@@ -1,6 +1,17 @@
 # HANDOFF — CSD App
 
-## ⏩ SESIÓN 04/08 — PROMPT-2 ronda AF (FASES 1, 2, 3 y 8) — build VERDE, sin commit/push
+## ✅ SESIÓN 04/08 (cierre) — PROMPT-2 COMPLETO (FASES 1-8) + device-QA + RELEASE 1.61.0
+Ronda AF completa, **device-QA en Redmi Note 10 Pro (Android 13, WebView 152)**, y **publicada v1.61.0 (móvil, rolling, `publicada=true`, `minima=false`)**. Commit+push en ambos repos (csd-app `0a7dcdc`, SGC `ecdad10`).
+- **Push AF7 verificado E2E en device:** el token se registró al abrir la app; asignar una tarea → llegó la push "Nueva tarea asignada" (con app en background) y **el tap deep-linkeó a Tareas**. En foreground no muestra notificación del sistema (solo refresca el badge) — correcto.
+- **Tareas AF39:** lista/detalle/iniciar/completar OK. **Bug encontrado y arreglado en device-QA:** `iniciar_tarea`/`completar_tarea` son de `cronograma_tareas`, NO del módulo general `sgc.tareas` → se crearon `iniciar_tarea_app`/`completar_tarea_app` (migración `af39-tarea-estado-app.sql`) y se corrigió el handler del outbox.
+- **AF38 drag&drop de módulos:** verificado en device (arrastre real + persistencia en `app_module_order`); reseteado al orden default tras la prueba (es global).
+- **Firebase:** `google-services.json` correcto (paquete `com.constructorasd.csdapp`, proyecto csd-core) colocado en `android/app/` y **commiteado**. `processDebugGoogleServices` corre; APK firmado con cert prod `3c5316d8…`.
+- **QA de backend (impersonando chofer real):** AF11 obras=11, AF17 log=0 para chofer, AF5 broadcast excluye al chofer + 80 filas de spam viejo limpiadas.
+- **Pendiente menor:** AF10-firma en entrada/salida y AF36-historial-de-actas (requieren tocar la web); marcar en la web los artículos `entrega_en_mano` (AF16, hoy 0). El `es_prueba` de push en iOS PWA no aplica (fallback in-app documentado).
+
+---
+
+## ⏩ SESIÓN 04/08 — PROMPT-2 ronda AF (detalle por fase)
 Ronda `imp 03082026` (IDs AF). PROMPT-1 (SGC backend) ya estaba aplicado (SGC v1.61.0 + push E2E). Hecho en la app (todo build VERDE; **no** se commiteó, **no** se subió versión). Migraciones SGC aplicadas a **prod** (aditivas, retrocompatibles) — pendientes de commitear en el repo SGC.
 
 **FASE 1 — bugs (raíz):**
