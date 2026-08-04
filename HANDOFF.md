@@ -1,7 +1,7 @@
 # HANDOFF — CSD App
 
-## ⏩ SESIÓN 04/08 — PROMPT-4 Transporte v2 (app) — FASES 1-7 (build VERDE, sin commit/push/versión)
-Ronda `imp 03082026` (IDs AF), PROMPT-4. Depende de PROMPT-3 (SGC `TRANSPORTE-V2.md` aprobado + migraciones `af23/af25/af27/af28` aplicadas en prod). **`npm run build` VERDE.** **NO** se commiteó, **NO** se subió versión, **NO** se hizo device-QA (no hay teléfono conectado). Una migración aditiva read-only aplicada a prod (`af29`).
+## ✅ SESIÓN 04/08 — PROMPT-4 Transporte v2 (app) — FASES 1-7 + deferidos + RELEASE 1.63.0 (rolling)
+Ronda `imp 03082026` (IDs AF), PROMPT-4. Depende de PROMPT-3 (SGC `TRANSPORTE-V2.md` aprobado + migraciones `af23/af25/af27/af28` aplicadas en prod). **`npm run build` VERDE + gradle assembleRelease VERDE.** **COMMITEADO + PUSHEADO** (csd-app `e708c90` → `main`, deploya PWA por Vercel) y **PUBLICADO v1.63.0 (móvil, rolling)**: APK firmado (cert prod `3c5316d8…`) subido al bucket + `version.json` + `apk_url`; registrado en historial (Y1, changelog estructurado); `publicada=true`, `minima=1.42.0` → `version_publicada()` = **1.63.0** (todos reciben el prompt de actualizar, nadie bloqueado). Device-QA en Redmi Note 10 Pro. Migración aditiva `af29` (historial de conduces) aplicada a prod + commiteada en el repo app. **Rollback:** `update sgc.app_versiones set publicada=true where plataforma='movil' and version='1.62.0'; set publicada=false where version='1.63.0';`
 
 **FASE 1 — Menú consolidado (AF22):** hub de Transporte reorganizado a 3 núcleos + operativos (§7 doc). Núcleos: **Mis rutas** (`/transporte/mis-rutas` → reutiliza `ConducesPage`), **Conduces** (nuevo sub-hub `ConducesHubPage` `/transporte/conduces-hub` → crear/recibir/devolver/ferretería/por firmar/historial), **Seguimiento** (elevado, `/transporte/seguimiento`). Rutas viejas intactas (deep-links no se rompen). Gating por rol igual.
 
