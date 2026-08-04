@@ -45,6 +45,8 @@ const TILES: HubTile[] = [
   { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
   { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
+  // AF36 — historial de recepciones/traspasos de vehículo (actas).
+  { key: 'misActas', icon: '📥', label: 'Recepciones de vehículo', tint: '#0891b2' },
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   // El chofer también puede crearse rutas a sí mismo (se auto-asigna); el jefe de
@@ -157,6 +159,7 @@ export class TransportePage {
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
       case 'asignar': return this.asignar();
+      case 'misActas': return this.misActas();
       case 'vehiculos': return this.vehiculosLista();
       case 'conductores': return this.conductoresLista();
       case 'crearRuta': return this.crearRuta();
@@ -280,6 +283,11 @@ export class TransportePage {
   asignar(): void {
     // AF34 — flujo unificado (asignarme + pre-uso + traspaso con acta).
     void this.router.navigate(['/transporte/asignarme']);
+  }
+
+  /** AF36 — historial de recepciones/traspasos de vehículo. */
+  misActas(): void {
+    void this.router.navigate(['/transporte/mis-actas']);
   }
 
   reporteSemanal(): void {

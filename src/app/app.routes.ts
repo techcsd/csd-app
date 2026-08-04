@@ -213,6 +213,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/transporte/asignarme/asignarme').then((m) => m.AsignarmeVehiculoPage),
   },
+  {
+    // AF36 — historial de recepciones/traspasos de vehículo (actas).
+    path: 'transporte/mis-actas',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mis-actas/mis-actas').then((m) => m.MisActasPage),
+  },
   // AD6 — funciones de inventario del chofer DENTRO de Transporte (gate por 'flota',
   // no 'inventario'): así funcionan aunque se revierta el acceso temporal a Inventario.
   {

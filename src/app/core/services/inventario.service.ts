@@ -19,6 +19,8 @@ export interface SalidaCaptura {
   motivo: string | null;
   items: { articulo_id: string; cantidad: number; talla?: string | null }[];
   foto: Blob | null;
+  /** AF10 — firma de quien ENTREGA el material. */
+  firma?: Blob | null;
 }
 
 export interface EntradaCaptura {
@@ -28,6 +30,8 @@ export interface EntradaCaptura {
   otroReferencia?: string | null;
   items: { articulo_id: string; cantidad: number; talla?: string | null }[];
   foto: Blob | null;
+  /** AF10 — firma de quien RECIBE el material. */
+  firma?: Blob | null;
 }
 
 /** AF13 — línea del checklist de recepción (recibido vs enviado). */
@@ -347,7 +351,7 @@ export class InventarioService {
         items: input.items,
         capturado_en,
       },
-      fotos: this.fotoOf(id, input.foto),
+      fotos: this.fotoOf(id, input.foto, input.firma),
       resumen: { tipo: 'salida', capturado_en, items: input.items.length },
     });
   }
@@ -410,7 +414,7 @@ export class InventarioService {
         items: input.items,
         capturado_en,
       },
-      fotos: this.fotoOf(id, input.foto),
+      fotos: this.fotoOf(id, input.foto, input.firma),
       resumen: { tipo: 'entrada', capturado_en, items: input.items.length },
     });
   }
@@ -690,10 +694,12 @@ export class InventarioService {
     });
   }
 
-  private fotoOf(id: string, foto: Blob | null) {
-    return foto
-      ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/evidencia.jpg`, slot: 'evidencia', blob: foto }]
-      : [];
+  private fotoOf(id: string, foto: Blob | null, firma?: Blob | null) {
+    const out: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
+    if (foto) out.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/evidencia.jpg`, slot: 'evidencia', blob: foto });
+    // AF10 — firma final (entrega/recibe) junto a la evidencia.
+    if (firma) out.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/firma.png`, slot: 'firma', blob: firma });
+    return out;
   }
 
   /**
@@ -729,6 +735,7 @@ export class InventarioService {
         p_items: payload['items'],
         p_foto_path: photoPaths['evidencia'] ?? null,
         p_capturado_en: payload['capturado_en'],
+        p_firma_path: photoPaths['firma'] ?? null, // AF10
       });
       if (error) throwSyncError(error);
     });
@@ -741,6 +748,7 @@ export class InventarioService {
         p_items: payload['items'],
         p_foto_path: photoPaths['evidencia'] ?? null,
         p_capturado_en: payload['capturado_en'],
+        p_firma_path: photoPaths['firma'] ?? null, // AF10
       });
       if (error) throwSyncError(error);
       // B3/U25 — inteligencia de "Otro/s": registra el origen escrito a mano en

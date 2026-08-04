@@ -1,0 +1,67 @@
+.actas {
+  background: var(--color-bg);
+}
+.actas__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.actas__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.actas__icon {
+  font-size: 24px;
+}
+.actas__title {
+  margin: 0;
+  flex: 1;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.actas__card {
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.actas__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.actas__placa {
+  font-weight: 800;
+  font-size: 16px;
+}
+.actas__fecha {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.actas__flujo {
+  margin-top: 4px;
+  font-size: 14px;
+}
+.actas__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+.actas__notas {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

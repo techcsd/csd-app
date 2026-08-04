@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selec
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService } from '../../../core/services/inventario.service';
@@ -40,7 +41,7 @@ type StockInfo = { cantidad: number; unidad: string } | null;
   selector: 'app-salida',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, WizardFooter, ShareSheet],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet],
   templateUrl: './salida.html',
   styleUrl: './salida.scss',
 })
@@ -67,6 +68,10 @@ export class SalidaPage implements OnDestroy {
   loadingCat = signal(true); // V7 — shimmer while el catálogo carga
   notas = signal('');
   foto = signal<CapturedPhoto | null>(null);
+  // AF10 — firma de quien ENTREGA el material (obligatoria al confirmar).
+  private sig = viewChild(SignaturePad);
+  firmaLista = signal(false);
+  firmaBlob = signal<Blob | null>(null);
   submitting = signal(false);
   confirmSalir = signal(false);
   // W8 — destino (obra) opcional: "¿Hacia dónde va?".
@@ -200,6 +205,8 @@ export class SalidaPage implements OnDestroy {
   hayExceso = computed(() => this.cart().some((l) => this.excede(l)));
   /** Z19b — la foto de evidencia es OBLIGATORIA (mínimo 1). */
   faltaFoto = computed(() => !this.foto());
+  /** AF10 — la firma de quien entrega es OBLIGATORIA. */
+  faltaFirma = computed(() => !this.firmaLista());
 
   // ── Navegación entre hojas ──
   irResumen(): void {
@@ -256,6 +263,12 @@ export class SalidaPage implements OnDestroy {
     this.foto.set(null);
   }
 
+  /** AF10 — firma de quien entrega capturada en el pad. */
+  async onFirmaChanged(has: boolean): Promise<void> {
+    this.firmaLista.set(has);
+    this.firmaBlob.set(has ? ((await this.sig()?.toBlob()) ?? null) : null);
+  }
+
   // ── Confirmar ──
   /** W8 — al cambiar de almacén en el resumen, re-consultar el stock. */
   setBodega(id: string): void {
@@ -279,6 +292,11 @@ export class SalidaPage implements OnDestroy {
       this.toast.error('Agrega una foto de evidencia antes de confirmar.');
       return;
     }
+    // AF10 — firma de quien entrega obligatoria.
+    if (this.faltaFirma() || !this.firmaBlob()) {
+      this.toast.error('Falta la firma de quien entrega.');
+      return;
+    }
     this.submitting.set(true);
     try {
       // W8 — validación previa al éxito (online): confirmar existencias antes de
@@ -300,6 +318,7 @@ export class SalidaPage implements OnDestroy {
         motivo: this.notas().trim() || 'Consumo en obra',
         items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
         foto: this.foto()?.blob ?? null,
+        firma: this.firmaBlob(), // AF10
       });
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.hoja.set('exito');
@@ -349,6 +368,8 @@ export class SalidaPage implements OnDestroy {
     this.cart.set([]);
     this.notas.set('');
     this.foto.set(null);
+    this.firmaLista.set(false);
+    this.firmaBlob.set(null);
     this.destinoId.set('');
     this.stockMap.set({});
     this.hoja.set('seleccion');

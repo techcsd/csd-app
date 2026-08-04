@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selec
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
@@ -39,7 +40,7 @@ interface EntradaDraft {
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, WizardFooter, ShareSheet],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })
@@ -77,6 +78,10 @@ export class EntradaPage implements OnDestroy {
   cart = signal<CartLinea[]>([]);
   loadingCat = signal(true); // V7 — shimmer while el catálogo carga
   foto = signal<CapturedPhoto | null>(null);
+  // AF10 — firma de quien RECIBE (no aplica a la devolución de obra).
+  private sig = viewChild(SignaturePad);
+  firmaLista = signal(false);
+  firmaBlob = signal<Blob | null>(null);
   submitting = signal(false);
   confirmSalir = signal(false);
 
@@ -85,6 +90,8 @@ export class EntradaPage implements OnDestroy {
   /** Z19b — evidencia OBLIGATORIA en la entrada normal (la devolución de obra es
    *  un traspaso atómico por RPC sin foto, así que ahí no aplica). */
   faltaFoto = computed(() => !this.esDevolucion() && !this.foto());
+  /** AF10 — firma de quien recibe, obligatoria en la entrada normal (no devolución). */
+  faltaFirma = computed(() => !this.esDevolucion() && !this.firmaLista());
 
   // W8 — stock en vivo (informativo: la entrada suma al stock actual).
   stockMap = signal<Record<string, { cantidad: number; unidad: string } | null>>({});
@@ -253,6 +260,12 @@ export class EntradaPage implements OnDestroy {
     this.foto.set(null);
   }
 
+  /** AF10 — firma de quien recibe capturada en el pad. */
+  async onFirmaChanged(has: boolean): Promise<void> {
+    this.firmaLista.set(has);
+    this.firmaBlob.set(has ? ((await this.sig()?.toBlob()) ?? null) : null);
+  }
+
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
@@ -279,6 +292,11 @@ export class EntradaPage implements OnDestroy {
       this.toast.error('Agrega una foto de evidencia antes de confirmar.');
       return;
     }
+    // AF10 — firma de quien recibe obligatoria en la entrada normal.
+    if (this.faltaFirma() || (!this.esDevolucion() && !this.firmaBlob())) {
+      this.toast.error('Falta la firma de quien recibe.');
+      return;
+    }
     this.submitting.set(true);
     try {
       if (this.esDevolucion()) {
@@ -299,6 +317,7 @@ export class EntradaPage implements OnDestroy {
           otroReferencia: this.motivo() === 'Otro' ? this.motivoOtro().trim() || null : null,
           items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
           foto: this.foto()?.blob ?? null,
+          firma: this.firmaBlob(), // AF10
         });
       }
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
@@ -356,6 +375,8 @@ export class EntradaPage implements OnDestroy {
     this.obraOrigenId.set('');
     this.descontarObra.set(false);
     this.foto.set(null);
+    this.firmaLista.set(false);
+    this.firmaBlob.set(null);
     this.hoja.set('seleccion');
   }
 

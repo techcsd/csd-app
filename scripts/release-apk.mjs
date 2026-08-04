@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.61.0';
+const VERSION = '1.62.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,24 +62,13 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-04';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Tareas, push, asignarme vehículo unificado y mejoras de inventario';
+const TITULO = 'Firmas en material, artículos de alto valor y recepciones de vehículo';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Notificaciones push: ahora te llegan avisos al teléfono (por ejemplo, cuando te asignan una tarea) y al tocarlos te llevan directo a la pantalla.' },
-  { t: 'nuevo', d: 'Módulo de Tareas: revisa las tareas que te asignan, iníciarlas y complétalas con nota y foto.' },
-  { t: 'nuevo', d: '“Asignarme vehículo” unificado: eliges el vehículo (aunque lo tenga otro), haces el pre-uso corto con fotos y firma, registras la llave y queda un acta; al anterior se le avisa.' },
-  { t: 'nuevo', d: 'Registro de echadas de combustible para jefes de flota, con los kilometrajes sospechosos resaltados.' },
-  { t: 'nuevo', d: 'El administrador puede reordenar los módulos del inicio arrastrándolos, como los iconos del celular.' },
-  { t: 'mejora', d: 'Recibir mercancía ahora pide un checklist de lo recibido, varias fotos y la firma de quien recibe.' },
-  { t: 'mejora', d: 'Buscador de materiales en entrada y salida: al escribir se muestran los resultados de todo el catálogo.' },
-  { t: 'mejora', d: 'Al elegir un almacén, la lista se recoge y queda solo el elegido con un botón “Cambiar”.' },
-  { t: 'mejora', d: 'Combustible: sale Diésel Premium por defecto, solo se ofrece tu vehículo asignado y se bloquean kilometrajes irreales.' },
-  { t: 'mejora', d: 'Compra en ferretería: el material recién agregado encabeza la lista y puedes tomar una foto de la mercancía recibida.' },
-  { t: 'arreglo', d: 'El chofer ahora ve SOLO sus avisos (antes le llegaban avisos que no eran suyos).' },
-  { t: 'arreglo', d: 'En “Sacar material” ya carga el listado de obra/almacén de destino.' },
-  { t: 'arreglo', d: 'El kilometraje del vehículo asignado ahora coincide con el del perfil del vehículo.' },
-  { t: 'arreglo', d: 'Tocar una notificación ahora te lleva a su pantalla y puedes eliminarlas (o borrarlas todas).' },
+  { t: 'nuevo', d: 'Firma al final de entrada y salida de material: firma quien recibe (entrada) o quien entrega (salida). La firma queda visible en la web.' },
+  { t: 'nuevo', d: 'Historial de recepciones de vehículo: consulta las actas de traspaso (quién dejó, quién recibió, km, condiciones y la llave).' },
+  { t: 'nuevo', d: 'Artículos de alto valor / “entrega en mano”: si un conduce lleva uno, se destaca y no puede auto-recibirse (los marca administración en la web).' },
 ];
 
 const TIPO_POR_COMMIT = {

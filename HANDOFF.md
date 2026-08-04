@@ -1,5 +1,15 @@
 # HANDOFF — CSD App
 
+## ✅ SESIÓN 04/08 (cierre 2) — pendientes cerrados + RELEASE 1.62.0 (app + WEB)
+Se cerraron los 3 pendientes que quedaban (tocan también la web SGC). **App build VERDE + WEB build VERDE.** Publicada **v1.62.0 móvil (rolling)**. Migraciones aplicadas a prod.
+- **AF10 — firma final en entrada/salida:** columna `firma_path` + overloads de `registrar_salida_app`/`registrar_entrada_app` con `p_firma_path` (migración `af10-inventario-firma.sql`). App: paso de firma obligatorio (salida = quien entrega; entrada = quien recibe). **Web:** la firma se ve en el detalle de la entrada y en la fila de la salida (thumbnail + lightbox).
+- **AF16 — switch de alto valor en la web:** toggle "Alto valor / entrega en mano" en el formulario de artículo (`articulos`), guarda `entrega_en_mano`. Con esto ya puedes marcar los artículos (el dron, etc.); la app los destaca y bloquea la auto-recepción.
+- **AF36 — historial de recepciones de vehículo:** RPC `mis_actas_traspaso` + pantalla `transporte/mis-actas` (tile "Recepciones de vehículo" + enlace en el éxito de "Asignarme vehículo"). Muestra quién dejó/recibió, km, fotos, llave.
+- ⚠️ **Device-QA de este lote pendiente:** el teléfono se desconectó a mitad, así que 1.62.0 quedó publicada (OTA) pero no se probó en device el flujo de firma ni las actas. Builds verdes + RPCs verificados por impersonación. Cuando reconectes el teléfono, vale la pena un paso rápido: salida con firma → ver la firma en la web; y abrir "Recepciones de vehículo".
+- **Repos:** app + web commiteados y pusheados a `main` (el push a `main` de SGC deploya la web por Vercel).
+
+---
+
 ## ✅ SESIÓN 04/08 (cierre) — PROMPT-2 COMPLETO (FASES 1-8) + device-QA + RELEASE 1.61.0
 Ronda AF completa, **device-QA en Redmi Note 10 Pro (Android 13, WebView 152)**, y **publicada v1.61.0 (móvil, rolling, `publicada=true`, `minima=false`)**. Commit+push en ambos repos (csd-app `0a7dcdc`, SGC `ecdad10`).
 - **Push AF7 verificado E2E en device:** el token se registró al abrir la app; asignar una tarea → llegó la push "Nueva tarea asignada" (con app en background) y **el tap deep-linkeó a Tareas**. En foreground no muestra notificación del sistema (solo refresca el badge) — correcto.

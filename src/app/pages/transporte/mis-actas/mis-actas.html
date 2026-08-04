@@ -1,0 +1,41 @@
+<div class="screen actas">
+  <header class="actas__header">
+    <button type="button" class="actas__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="actas__icon">🚗</span>
+    <h1 class="actas__title">Recepciones de vehículo</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      @for (a of actas(); track a.id) {
+        <div class="actas__card">
+          <div class="actas__row">
+            <span class="actas__placa">{{ a.placa || 'Vehículo' }}</span>
+            <span class="actas__fecha">{{ fechaHora(a.created_at) }}</span>
+          </div>
+          <div class="actas__flujo">
+            @if (yoRecibi(a)) {
+              <span>📥 Lo recibiste de <b>{{ a.de_nombre || '—' }}</b></span>
+            } @else {
+              <span>📤 Lo entregaste a <b>{{ a.a_nombre || '—' }}</b></span>
+            }
+          </div>
+          <div class="actas__meta">
+            @if (a.km != null) { <span>🧭 {{ a.km | number: '1.0-0' }} km</span> }
+            @if (a.fotos?.length) { <span>📷 {{ a.fotos!.length }} foto(s)</span> }
+            @if (llaveLabel(a.llave1_ubicacion_tipo)) { <span>{{ llaveLabel(a.llave1_ubicacion_tipo) }}</span> }
+          </div>
+          @if (a.notas) { <p class="actas__notas">📝 {{ a.notas }}</p> }
+        </div>
+      } @empty {
+        <app-empty-state
+          icon="🚗"
+          title="Sin recepciones"
+          message="Aquí aparece el historial de vehículos que recibes o entregas, con sus condiciones y km."
+        />
+      }
+    }
+  </div>
+</div>

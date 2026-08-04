@@ -312,6 +312,11 @@ export class AsignarmeVehiculoPage {
     void this.router.navigate(['/transporte'], { replaceUrl: true });
   }
 
+  /** AF36 — ver el historial de recepciones/traspasos. */
+  verHistorial(): void {
+    void this.router.navigate(['/transporte/mis-actas']);
+  }
+
   back(): void {
     if (this.step() > 1 && !this.done()) {
       this.prev();

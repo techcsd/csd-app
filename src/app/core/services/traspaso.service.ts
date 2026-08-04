@@ -3,6 +3,22 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 
+/** AF36 — un acta de recepción/traspaso de vehículo (con nombres resueltos). */
+export interface ActaTraspaso {
+  id: string;
+  vehiculo_id: string | null;
+  placa: string | null;
+  km: number | null;
+  de_usuario_id: string | null;
+  de_nombre: string | null;
+  a_usuario_id: string | null;
+  a_nombre: string | null;
+  llave1_ubicacion_tipo: string | null;
+  fotos: string[] | null;
+  notas: string | null;
+  created_at: string;
+}
+
 /** AF34 — datos del traspaso/recepción de un vehículo (flujo unificado). */
 export interface TraspasoCaptura {
   vehiculoId: string;
@@ -32,6 +48,16 @@ export class TraspasoService {
 
   constructor() {
     this.registerHandler();
+  }
+
+  /** AF36 — historial de recepciones/traspasos del usuario (online-first + cache). */
+  async misActas(): Promise<ActaTraspaso[]> {
+    const data = await this.catalog.refresh<ActaTraspaso[]>('mis_actas_traspaso', async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_actas_traspaso');
+      if (error) throw new Error(error.message);
+      return (data as ActaTraspaso[]) ?? [];
+    });
+    return data ?? [];
   }
 
   async enqueueTraspaso(input: TraspasoCaptura): Promise<void> {
@@ -88,6 +114,7 @@ export class TraspasoService {
       await this.catalog.invalidate('flota_vehiculos');
       await this.catalog.invalidate('mis_asignaciones');
       await this.catalog.invalidate('vehiculos_disponibles_v2');
+      await this.catalog.invalidate('mis_actas_traspaso'); // AF36
     });
   }
 }
