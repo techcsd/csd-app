@@ -1,0 +1,93 @@
+<div class="screen nc">
+  <app-wizard-exit title="No conformidad" (exit)="pedirSalir()" />
+
+  @if (done()) {
+    <app-big-confirm
+      title="No conformidad registrada"
+      [note]="network.online() ? 'Guardada.' : 'Guardada. Se enviará cuando tengas señal.'"
+      tone="done"
+      buttonLabel="Listo"
+      (dismissed)="cerrar()"
+    />
+  } @else {
+    <div class="screen__body nc__body">
+      @if (borradorPrevio()) {
+        <div class="nc__draft">📝 Recuperamos un borrador sin terminar.</div>
+      }
+
+      <label class="field-label">Tipo</label>
+      <div class="nc__opts">
+        @for (t of tipos; track t.key) {
+          <app-option-button [icon]="t.icon" [label]="t.label" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
+        }
+      </div>
+
+      <label class="field-label nc__mt">Título</label>
+      <input class="field" type="text" [ngModel]="titulo()" (ngModelChange)="titulo.set($event)"
+        placeholder="Ej.: Acero sin recubrimiento" />
+
+      <label class="field-label nc__mt">Descripción</label>
+      <textarea class="field" rows="2" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"
+        placeholder="¿Qué se encontró?"></textarea>
+
+      <label class="field-label nc__mt">Severidad</label>
+      <div class="nc__opts">
+        @for (s of severidades; track s.key) {
+          <app-option-button [label]="s.label" [selected]="severidad() === s.key" (pressed)="severidad.set(s.key)" />
+        }
+      </div>
+
+      <label class="field-label nc__mt">Ubicación / frente (opcional)</label>
+      <input class="field" type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)"
+        placeholder="Ej.: Bloque B, eje 3" />
+
+      <label class="field-label nc__mt">Responsable de corregir (opcional)</label>
+      @if (respSel(); as r) {
+        <div class="nc__resp-sel">
+          <span>🧑 {{ r.nombre }}</span>
+          <button type="button" class="nc__resp-x" (click)="clearResp()">✕</button>
+        </div>
+      } @else {
+        <input class="field" type="text" [ngModel]="respBusqueda()" (ngModelChange)="respBusqueda.set($event); buscarResp()"
+          placeholder="Buscar por nombre…" />
+        @if (respResultados().length) {
+          <div class="nc__resp-list">
+            @for (u of respResultados(); track u.id) {
+              <button type="button" class="nc__resp-opt" (click)="pickResp(u)">{{ u.nombre }}</button>
+            }
+          </div>
+        }
+      }
+
+      <label class="field-label nc__mt">Foto(s)</label>
+      <div class="nc__fotos">
+        @for (i of slots; track i) {
+          <app-photo-slot [label]="'Foto ' + (i + 1)" hint="📸" [gallery]="false"
+            [foto]="fotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />
+        }
+      </div>
+
+      <label class="nc__toggle">
+        <input type="checkbox" [ngModel]="bloqueaVaciado()" (ngModelChange)="bloqueaVaciado.set($event)" />
+        Bloquea el vaciado (no se puede hormigonar hasta corregir)
+      </label>
+
+      <button type="button" class="btn-cta nc__guardar" [disabled]="!puedeGuardar() || submitting()" (click)="guardar()">
+        {{ submitting() ? 'Guardando…' : 'Levantar no conformidad' }}
+      </button>
+      @if (!puedeGuardar()) {
+        <p class="nc__hint">Elige el tipo, escribe título y descripción, y toma al menos una foto.</p>
+      }
+    </div>
+  }
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir sin guardar?"
+    message="Tu borrador queda guardado; puedes continuarlo luego."
+    confirmLabel="Salir"
+    cancelLabel="Seguir aquí"
+    (confirmed)="salir()"
+    (cancelled)="cancelarSalir()"
+  />
+</div>

@@ -1,0 +1,66 @@
+<div class="screen charla">
+  <app-wizard-exit title="Charla de seguridad" (exit)="pedirSalir()" />
+
+  @if (done()) {
+    <app-big-confirm
+      title="Charla registrada"
+      [note]="network.online() ? 'Guardada.' : 'Guardada. Se enviará cuando tengas señal.'"
+      tone="done"
+      buttonLabel="Listo"
+      (dismissed)="cerrar()"
+    />
+  } @else {
+    <div class="screen__body charla__body">
+      @if (borradorPrevio()) {
+        <div class="charla__draft">📝 Recuperamos un borrador sin terminar.</div>
+      }
+
+      <label class="field-label">Tema de la charla</label>
+      <input class="field" type="text" [ngModel]="tema()" (ngModelChange)="tema.set($event)"
+        placeholder="Ej.: Uso de arnés en alturas" />
+
+      <label class="field-label charla__mt">Duración</label>
+      <app-counter label="Minutos" icon="⏱️" [(value)]="duracion" [min]="1" [max]="60" />
+
+      <label class="field-label charla__mt">Asistentes</label>
+      <app-counter label="Personas" icon="👥" [(value)]="asistentes" [min]="0" [max]="200" />
+
+      <label class="field-label charla__mt">Notas (opcional)</label>
+      <textarea class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"
+        placeholder="Puntos tratados…"></textarea>
+
+      <label class="field-label charla__mt">Foto del grupo</label>
+      <div class="charla__fotos">
+        @for (i of slots; track i) {
+          <app-photo-slot [label]="'Foto ' + (i + 1)" hint="📸" [gallery]="false"
+            [foto]="fotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />
+        }
+      </div>
+
+      <label class="charla__firma-toggle">
+        <input type="checkbox" [ngModel]="firmando()" (ngModelChange)="firmando.set($event)" />
+        Firmar (encargado)
+      </label>
+      @if (firmando()) {
+        <app-signature-pad />
+      }
+
+      <button type="button" class="btn-cta charla__guardar" [disabled]="!puedeGuardar() || submitting()" (click)="guardar()">
+        {{ submitting() ? 'Guardando…' : 'Guardar charla' }}
+      </button>
+      @if (!puedeGuardar()) {
+        <p class="charla__hint">Escribe el tema y toma al menos una foto del grupo.</p>
+      }
+    </div>
+  }
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir sin guardar?"
+    message="Tu borrador queda guardado; puedes continuarlo luego."
+    confirmLabel="Salir"
+    cancelLabel="Seguir aquí"
+    (confirmed)="salir()"
+    (cancelled)="cancelarSalir()"
+  />
+</div>

@@ -1,0 +1,134 @@
+.log {
+  background: var(--color-bg);
+}
+.log__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.log__back {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--main, #121212);
+}
+.log__icon {
+  font-size: 1.5rem;
+}
+.log__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.log__nueva,
+.log__guardar {
+  width: 100%;
+  justify-content: center;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.log__section {
+  margin: 16px 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.log__empty {
+  color: var(--main-ultra-light, #929090);
+  font-size: 0.9rem;
+}
+.log__tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 8px;
+
+  button {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #e2e2e2;
+    border-radius: 10px;
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .log__tab--on {
+    border-color: var(--Hub, #ffb300);
+    background: rgba(255, 179, 0, 0.12);
+  }
+}
+.log__entrada {
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.log__entrada-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.log__entrada-num {
+  font-weight: 600;
+}
+.log__entrada-fecha {
+  font-weight: 700;
+  color: var(--primary, #ff5f00);
+}
+.log__entrada-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--main-ultra-light, #6b6b6b);
+}
+.log__entrada-estado {
+  text-transform: capitalize;
+}
+.log__prueba {
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.log__prueba-top {
+  display: flex;
+  justify-content: space-between;
+}
+.log__prueba-tipo {
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.log__prueba-fecha {
+  color: var(--main-ultra-light, #6b6b6b);
+  font-size: 0.85rem;
+}
+.log__prueba-res,
+.log__prueba-notas {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
+.log__opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.log__mt {
+  margin-top: 14px;
+}
+.log__fotos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.log__cancel {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+}

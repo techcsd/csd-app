@@ -25,6 +25,7 @@ import { ClLiberacionService } from './core/services/cl-liberacion.service';
 import { DocumentosService } from './core/services/documentos.service';
 import { FlotaReportesService } from './core/services/flota-reportes.service';
 import { CronogramaService } from './core/services/cronograma.service';
+import { ObraService } from './core/services/obra.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -70,6 +71,8 @@ export const appConfig: ApplicationConfig = {
       inject(FlotaReportesService);
       // Y15 — handlers de cronograma (tarea_iniciar/completar/enlazar).
       inject(CronogramaService);
+      // AG16 — handlers de Gestión de Obra (charla/NC/incidente/checklist/…).
+      inject(ObraService);
     }),
   ],
 };

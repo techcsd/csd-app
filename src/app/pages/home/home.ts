@@ -34,6 +34,10 @@ const TILES: HomeTile[] = [
   // gerente_proyectos/ingeniero_oficina). Los responsables sin módulo llegan al
   // cronograma por deep-link de aviso (FASE 5).
   { modulo: 'proyectos', icon: '🏗️', label: 'Proyectos', route: '/proyectos', tint: '#0d9488' },
+  // AG16 — Gestión de Producción de Obra (gerente_produccion / capataz). El capataz
+  // no tiene módulo padre (solo permisos obra.*), así que su gating es especial
+  // (puedeVerObra) en workTiles, no hasModulo.
+  { modulo: 'obra', icon: '🦺', label: 'Mi obra', route: '/obra', tint: '#0f766e' },
   { modulo: 'admin', icon: '⚙️', label: 'Administración', route: '/admin', tint: '#3f3f46' },
   // Y11 — Tecnología (admin + rol Tecnología/Encargado de Tecnología). El gating
   // es genérico por módulo: `hasModulo('tecnologia')` ya lo resuelve.
@@ -95,7 +99,8 @@ export class HomePage {
     TILES.filter(
       (t) =>
         t.modulo !== 'tecnologia' &&
-        this.ctx.hasModulo(t.modulo) &&
+        // AG16 — obra: gating por submódulos (el capataz no tiene módulo padre).
+        (t.modulo === 'obra' ? this.ctx.puedeVerObra() : this.ctx.hasModulo(t.modulo)) &&
         !(t.modulo === 'inventario' && this.ctx.esChofer()),
     ),
   );

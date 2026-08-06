@@ -1,0 +1,46 @@
+.charla {
+  background: var(--color-bg);
+}
+.charla__body {
+  display: flex;
+  flex-direction: column;
+}
+.charla__mt {
+  margin-top: 14px;
+}
+.charla__draft {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: #1d4ed8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+.charla__fotos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.charla__firma-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-weight: 600;
+}
+.charla__guardar {
+  width: 100%;
+  justify-content: center;
+  margin-top: 18px;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.charla__hint {
+  text-align: center;
+  color: var(--main-ultra-light, #929090);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}

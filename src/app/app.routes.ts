@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pinGuard } from './core/guards/pin.guard';
-import { moduleGuard } from './core/guards/module.guard';
+import { moduleGuard, submoduleGuard, obraGuard } from './core/guards/module.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -561,6 +561,67 @@ export const routes: Routes = [
     path: 'admin/versiones',
     canActivate: [authGuard, pinGuard, moduleGuard('admin')],
     loadComponent: () => import('./pages/admin/versiones/versiones').then((m) => m.AdminVersionesPage),
+  },
+  // ── AG16 — Gestión de Producción de Obra ("Mi obra") ──────────────────────
+  {
+    path: 'obra',
+    canActivate: [authGuard, pinGuard, obraGuard],
+    loadComponent: () => import('./pages/obra/obra').then((m) => m.ObraPage),
+  },
+  {
+    path: 'obra/plan/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.plan_dia')],
+    loadComponent: () => import('./pages/obra/plan-dia/plan-dia').then((m) => m.PlanDiaPage),
+  },
+  {
+    path: 'obra/charla/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.plan_dia', 'operar')],
+    loadComponent: () => import('./pages/obra/charla/charla').then((m) => m.CharlaPage),
+  },
+  {
+    path: 'obra/nc/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.no_conformidades', 'operar')],
+    loadComponent: () => import('./pages/obra/no-conformidad/no-conformidad').then((m) => m.NoConformidadPage),
+  },
+  {
+    path: 'obra/incidente/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.no_conformidades', 'operar')],
+    loadComponent: () => import('./pages/obra/incidente/incidente').then((m) => m.IncidentePage),
+  },
+  {
+    path: 'obra/mis-nc',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.no_conformidades')],
+    loadComponent: () => import('./pages/obra/mis-nc/mis-nc').then((m) => m.MisNcPage),
+  },
+  {
+    path: 'obra/checklists/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.checklists', 'operar')],
+    loadComponent: () => import('./pages/obra/checklists/checklists').then((m) => m.ChecklistsPage),
+  },
+  {
+    path: 'obra/recursos/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.plan_dia')],
+    loadComponent: () => import('./pages/obra/recursos/recursos').then((m) => m.RecursosPage),
+  },
+  {
+    path: 'obra/subcontratistas/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.subcontratistas', 'operar')],
+    loadComponent: () => import('./pages/obra/subcontratistas/subcontratistas').then((m) => m.SubcontratistasPage),
+  },
+  {
+    path: 'obra/avance/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.avance')],
+    loadComponent: () => import('./pages/obra/avance/avance').then((m) => m.AvancePage),
+  },
+  {
+    path: 'obra/logistica/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.avance')],
+    loadComponent: () => import('./pages/obra/logistica/logistica').then((m) => m.LogisticaPage),
+  },
+  {
+    path: 'obra/informe/:proyectoId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('obra.informes')],
+    loadComponent: () => import('./pages/obra/informe/informe').then((m) => m.InformePage),
   },
   {
     path: '403',

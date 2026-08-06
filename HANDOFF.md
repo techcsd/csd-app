@@ -1,5 +1,44 @@
 # HANDOFF — CSD App
 
+## 🔄 SESIÓN 06/08 — PROMPT-8 ronda AG (app) — AG16 "Mi obra" / Gestión de Producción de Obra (6 FASES)
+**Continuación de una sesión previa que quedó a medias.** `npm run build` **VERDE**. Backend AG16 (PROMPT-7/SGC, 6 migraciones) **ya aplicado a prod y verificado** contra el código del app. Código app **SIN commitear** (espera tu OK). Falta **device-QA** (necesita tu PIN + teléfono real).
+
+**Qué encontré a medias y arreglé esta sesión:**
+- **Build roto** por 2 causas → arregladas: (1) errores de tipo `unknown` como índice en `subcontratistas.html` y `avance.html` (se añadieron tipos `Frente` y `CronogramaTarea` en `obra.model.ts` y se propagaron al servicio + templates, sin `f['id']`); (2) faltaba `informe.scss` (creado, estilo `inf__*` consistente con el resto).
+- **Rutas incompletas:** solo estaban registradas FASE 1-2 (`plan`, `charla`, `nc`, `incidente`, `mis-nc`). Agregué las **7 rutas faltantes** (FASE 3-5): `checklists`, `recursos`, `subcontratistas`, `avance`, `logistica`, `informe` — cada una gateada por su submódulo AG12 (`submoduleGuard`).
+
+**Estado por FASE (código app + wiring — todo compila):**
+- **FASE 1 — Plan del día + charla:** `plan-dia` (viewer: charla del día + tareas) → `charla` (captura: tema, duración, asistentes, fotos del grupo solo-cámara + firmas, borrador). Outbox `obra_charla`.
+- **FASE 2 — NC e incidentes:** `no-conformidad` (tipo, **foto obligatoria** solo-cámara, ubicación, responsable, severidad; borrador), `incidente` (casi-accidente/incidente), `mis-nc` (bandeja: levantadas + acciones asignadas; cerrar con evidencia + verificar). Outbox `obra_nc/obra_incidente/obra_accion_hecha/obra_nc_verificar`.
+- **FASE 3 — Recursos + checklists:** `recursos` (stock por obra + pedido urgente vía `crear_solicitud_app` urgencia='urgente'), `checklists` (ejecutar plantillas calidad, fotos, borrador). Outbox `obra_pedido_urgente/obra_checklist`.
+- **FASE 4 — Subcontratistas + avance:** `subcontratistas` (frentes + editar % + cubicación con soportes, borrador), `avance` (curva plan vs real + reportar % por tarea de cronograma). Outbox `obra_cubicacion/obra_avance_tarea`.
+- **FASE 5 — Logística + informe:** `logistica` (pruebas de campo + mano de obra), `informe` (compilar auto → secciones manuales → enviar a Gerencia, PDF server-side). Outbox `obra_prueba_campo/obra_mano_obra`; informe usa RPCs directos online.
+- **FASE 6 — Home/hub:** tile "🦺 Mi obra" en Home (gating especial `puedeVerObra`), hub `/obra` con selección de obra (persistida en `obraActiva`) + tiles gateados por submódulo. Todo offline-first, fotos solo-cámara (`[gallery]="false"`), borradores en flujos largos.
+
+**Backend AG16 VERIFICADO en prod** (introspección vía Management API, todo ✅):
+- Las 6 migraciones SGC (`SGC/sql/2026-08-06-ag16-*.sql`) **están aplicadas**: 20 funciones + 7 tablas presentes.
+- **Firmas de los 18 RPCs coinciden exactamente** con las llamadas del app (params opcionales que el app omite: `p_elemento_id`, `p_detalle`, `p_vaciado_id` — todos con DEFAULT).
+- **EXECUTE grant** para `authenticated` en los 18 RPCs. **RLS habilitado + políticas + grants SELECT/UPDATE** en las 7 tablas de acceso directo (incl. el UPDATE directo de `obra_subcontratista_frentes`).
+- **Matriz AG12 sembrada:** `capataz` (sin módulo padre; `obra.plan_dia/checklists/no_conformidades`=operar → ve Plan/NC/Incidente/Mis pendientes/Checklists/Recursos), `gerente_produccion` (módulo `obra` → operar en TODOS los submódulos → ve todo), `admin` (todo). Gating verificado en `user-context` (`nivelSubmodulo`/`puedeVerObra`).
+
+**Archivos tocados (app, sin commitear):** `obra.model.ts` (+`Frente`,`CronogramaTarea`), `obra.service.ts` (tipos), `app.routes.ts` (+7 rutas), `informe.scss` (nuevo), `subcontratistas.{ts,html}`, `avance.{ts,html}`. Además lo que ya venía de la sesión previa: `app.config.ts`, `module.guard.ts`, `usuario.model.ts`, `user-context.service.ts`, `home.ts`, y todo `pages/obra/`.
+
+**PENDIENTE (tú / device-QA):**
+1. **Simular un día completo en teléfono real** (necesito tu PIN o un chofer/capataz de prueba aislado — ver memoria `test-conductor-linked-to-admin`): charla + plan → NC con foto → pedido urgente → checklist hormigonado → cubicación → % avance → informe semanal a Gerencia con PDF. Matar la app a mitad de cada flujo (borradores/outbox).
+2. **Verificar en SGC web** que las capturas aparecen (interconexión, rule #1).
+3. **¿Commit/push + APK?** No lo hago sin tu OK (regla). Cuando quieras: bump de versión + `npm run apk`.
+
+**Desviaciones vs `GESTION-OBRA.md`:** ninguna estructural detectada; el código sigue los contratos §6.1. (No re-leí el documento línea por línea esta sesión — lo validé por coincidencia exacta de firmas RPC. Si quieres una auditoría cláusula-por-cláusula del documento, dímelo.)
+
+**Migraciones app-side AG16 añadidas esta sesión (3, aplicadas a prod, SIN commitear en SGC):**
+- `2026-08-06-ag16-app-lecturas-obra.sql` — `mis_nc_asignadas()` (bandeja del responsable) + `stock_de_obra()` (stock con nombre/unidad).
+- `2026-08-06-ag16-pedido-urgente-obra.sql` — relaja el gate de `crear_solicitud_app` para aceptar acceso **obra** (el gerente no tiene módulo `compras`); scoping fino sigue en `requisicion_permitida()`.
+- `2026-08-06-ag16b-app-gaps.sql` — `asignar_tarea_obra` (plan del día asigna tareas reusando `sgc.tareas`+brigada), `mis_pedidos_obra` (seguimiento del pedido urgente por estado), `entradas_programadas_obra` (logística: OC con `fecha_programada`).
+
+**Funciones de campo AÑADIDAS sobre el mínimo (todo compila + RPC en prod):** asignación de tareas y **parte de mano de obra** (horas-hombre) desde Plan del día; **asignar acción correctiva** con búsqueda de responsable en Mis pendientes; **seguimiento de pedidos** (lista con estado) en Recursos; **entradas programadas** (tab) en Logística; **borrador (AE9)** de las secciones manuales del Informe. Total: **11 pantallas** obra + **12 rutas**.
+
+---
+
 ## 🔄 SESIÓN 06/08 — PROMPT-6 ronda AG (app) — FASE 1 (secret leak) + FASE 2 (mantenimiento) + FASE 3 (tracking) + FASE 4 (tareas dinámicas) + FASE 5 (leyenda mapa)
 Ronda `imp 03082026` (IDs AG), PROMPT-6. **`npm run build` VERDE.** Backend (4 migraciones) **aplicado a prod**; código app **SIN commitear** (espera tu OK, salvo FASE 1 que autorizaste). Depende de PROMPT-5/SGC AG15 (tareas dinámicas) y AF27/AF28 (tracking) ya en prod.
 

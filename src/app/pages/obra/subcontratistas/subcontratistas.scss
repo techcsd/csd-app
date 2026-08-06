@@ -1,0 +1,131 @@
+.sub {
+  background: var(--color-bg);
+}
+.sub__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.sub__back {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--main, #121212);
+}
+.sub__icon {
+  font-size: 1.5rem;
+}
+.sub__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.sub__pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 14px;
+  margin-bottom: 10px;
+  border: 1px solid #e2e2e2;
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+.sub__pick-nombre {
+  flex: 1;
+  font-weight: 600;
+}
+.sub__pick-esp {
+  font-size: 0.8rem;
+  color: var(--main-ultra-light, #6b6b6b);
+}
+.sub__pick-chevron {
+  font-size: 1.6rem;
+  color: var(--main-ultra-light, #929090);
+}
+.sub__volver {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--primary, #ff5f00);
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.sub__section {
+  margin: 14px 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.sub__empty {
+  color: var(--main-ultra-light, #929090);
+  font-size: 0.9rem;
+}
+.sub__frente {
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.sub__frente-desc {
+  font-weight: 600;
+}
+.sub__frente-avance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.sub__frente-input {
+  width: 80px;
+}
+.sub__frente-save {
+  flex: 1;
+}
+.sub__nueva,
+.sub__enviar {
+  width: 100%;
+  justify-content: center;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.sub__cub {
+  border: 1px solid #e2e2e2;
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+}
+.sub__cub-fechas,
+.sub__cub-nums {
+  display: flex;
+  gap: 10px;
+
+  label {
+    flex: 1;
+  }
+}
+.sub__mt {
+  margin-top: 12px;
+}
+.sub__fotos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sub__enviar {
+  margin-top: 14px;
+}
+.sub__cancel {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+}

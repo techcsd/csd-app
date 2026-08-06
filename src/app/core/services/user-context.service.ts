@@ -5,7 +5,7 @@ import { Usuario } from '../models/usuario.model';
 
 // Selección del perfil + roles/módulos (misma forma que usa SGC).
 const PROFILE_SELECT =
-  'id, nombre, email, activo, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos))';
+  'id, nombre, email, activo, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
 // Prefijo de la caché en disco del perfil (offline-first).
 const PROFILE_CACHE_PREFIX = 'perfil_';
 
@@ -74,6 +74,46 @@ export class UserContextService {
   hasRol(codigo: string): boolean {
     return this.roles().includes(codigo);
   }
+
+  // ── AG12 — permisos por submódulo (`modulo.submodulo` → ver|operar) ──────────
+  /** Mapa fusionado de permisos de submódulo de todos los roles del usuario. */
+  private permisos = computed(() => {
+    const merged: Record<string, 'ver' | 'operar'> = {};
+    for (const ur of this._profile()?.roles ?? []) {
+      for (const [k, v] of Object.entries(ur.rol.permisos ?? {})) {
+        // operar gana sobre ver si un rol lo eleva.
+        if (v === 'operar' || merged[k] !== 'operar') merged[k] = v as 'ver' | 'operar';
+      }
+    }
+    return merged;
+  });
+
+  /**
+   * Nivel efectivo sobre `modulo.submodulo` (espejo de `sgc.nivel_submodulo`):
+   * admin ⇒ operar; tener el módulo padre ⇒ operar (retrocompat AG12); si no, el
+   * permiso explícito del submódulo.
+   */
+  nivelSubmodulo(clave: string): 'ver' | 'operar' | null {
+    if (this.esAdmin()) return 'operar';
+    const padre = clave.split('.')[0];
+    if (this.hasModulo(padre)) return 'operar';
+    return this.permisos()[clave] ?? null;
+  }
+
+  puedeVerSubmodulo(clave: string): boolean {
+    const n = this.nivelSubmodulo(clave);
+    return n === 'ver' || n === 'operar';
+  }
+
+  puedeOperarSubmodulo(clave: string): boolean {
+    return this.nivelSubmodulo(clave) === 'operar';
+  }
+
+  /** ¿Puede ver ALGO del módulo Obra? (módulo padre o cualquier submódulo obra.*). */
+  puedeVerObra = computed(() => {
+    if (this.esAdmin() || this.hasModulo('obra')) return true;
+    return Object.keys(this.permisos()).some((k) => k.startsWith('obra.'));
+  });
 
   /**
    * Carga el perfil con cache-then-network: pinta al instante el perfil cacheado

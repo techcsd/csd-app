@@ -1,0 +1,122 @@
+.misnc {
+  background: var(--color-bg);
+}
+.misnc__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.misnc__back {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--main, #121212);
+}
+.misnc__icon {
+  font-size: 1.5rem;
+}
+.misnc__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.misnc__card {
+  border: 1px solid #e2e2e2;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+.misnc__card--open {
+  border-color: var(--Hub, #ffb300);
+}
+.misnc__card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.misnc__card-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.misnc__badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+.misnc__titulo {
+  font-weight: 600;
+}
+.misnc__obra,
+.misnc__vence {
+  font-size: 0.8rem;
+  color: var(--main-ultra-light, #6b6b6b);
+}
+.misnc__accion {
+  padding: 0 14px 14px;
+  border-top: 1px solid #eee;
+}
+.misnc__desc,
+.misnc__loc {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+}
+.misnc__cta {
+  width: 100%;
+  justify-content: center;
+  margin-top: 12px;
+}
+.misnc__accion-form {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px dashed #e2e2e2;
+  margin-top: 14px;
+  padding-top: 12px;
+}
+.misnc__mt {
+  margin-top: 12px;
+}
+.misnc__resp-sel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: 12px;
+  font-weight: 600;
+
+  button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--main-ultra-light, #929090);
+  }
+}
+.misnc__resp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.misnc__resp-opt {
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid #e2e2e2;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}

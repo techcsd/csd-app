@@ -1,0 +1,123 @@
+.inf {
+  background: var(--color-bg);
+}
+.inf__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.inf__back {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--main, #121212);
+}
+.inf__icon {
+  font-size: 1.5rem;
+}
+.inf__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.inf__generar {
+  width: 100%;
+  justify-content: center;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.inf__section {
+  margin: 16px 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.inf__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+.inf__row-periodo {
+  font-weight: 600;
+}
+.inf__row-estado {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #92600a;
+  background: rgba(255, 179, 0, 0.18);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.inf__row-estado--env {
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.14);
+}
+.inf__periodo {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+}
+.inf__draft {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: #1d4ed8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+.inf__kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.inf__kpi {
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fff;
+  text-align: center;
+
+  span {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--main-ultra-light, #6b6b6b);
+  }
+  b {
+    font-size: 1.1rem;
+  }
+}
+.inf__mt {
+  margin-top: 12px;
+}
+.inf__accion {
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+.inf__enviado {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  color: #15803d;
+  text-align: center;
+  font-weight: 600;
+}

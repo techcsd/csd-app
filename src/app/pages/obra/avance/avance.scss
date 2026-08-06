@@ -1,0 +1,97 @@
+.av {
+  background: var(--color-bg);
+}
+.av__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.av__back {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--main, #121212);
+}
+.av__icon {
+  font-size: 1.5rem;
+}
+.av__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.av__resumen {
+  border: 1px solid #e2e2e2;
+  border-radius: 14px;
+  padding: 14px;
+  background: #fff;
+}
+.av__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.av__bar-label {
+  width: 36px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.av__bar-track {
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: #eee;
+  overflow: hidden;
+}
+.av__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.av__bar-fill--plan {
+  background: #94a3b8;
+}
+.av__bar-fill--real {
+  background: #0891b2;
+}
+.av__bar-val {
+  width: 44px;
+  text-align: right;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.av__desv {
+  margin: 6px 0 0;
+  color: #b45309;
+  font-size: 0.85rem;
+}
+.av__section {
+  margin: 16px 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+.av__tarea {
+  border: 1px solid #e2e2e2;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.av__tarea-nombre {
+  font-weight: 600;
+}
+.av__tarea-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.av__tarea-input {
+  width: 80px;
+}
+.av__tarea-btn {
+  flex: 1;
+}
