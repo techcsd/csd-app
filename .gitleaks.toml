@@ -1,0 +1,19 @@
+# gitleaks config for csd-app
+# Extends the default ruleset; adds an allowlist for secrets that are
+# intentionally public so `gitleaks detect` stays clean (AG1).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public-by-design values (not real secrets)"
+# The Supabase ANON key is meant to ship in the client bundle and is
+# protected by RLS — it appears in src/environments/*.ts and the built
+# dist/android assets. This is NOT the service_role key (that lives only
+# in .env.local, gitignored). Allowlisted by its stable JWT signature.
+regexes = [
+  '''YMJQXxZUVZUBMh2TnIAz_0XGgpWEid-JQHbIAyoFqDs''',
+]
+paths = [
+  '''src/environments/environment\.ts''',
+  '''src/environments/environment\.prod\.ts''',
+]
