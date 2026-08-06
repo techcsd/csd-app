@@ -1,7 +1,7 @@
 # HANDOFF — CSD App
 
-## 🔄 SESIÓN 06/08 — PROMPT-8 ronda AG (app) — AG16 "Mi obra" / Gestión de Producción de Obra (6 FASES)
-**Continuación de una sesión previa que quedó a medias.** `npm run build` **VERDE**. Backend AG16 (PROMPT-7/SGC, 6 migraciones) **ya aplicado a prod y verificado** contra el código del app. Código app **SIN commitear** (espera tu OK). Falta **device-QA** (necesita tu PIN + teléfono real).
+## ✅ SESIÓN 06/08 — PROMPT-8 ronda AG (app) — AG16 "Mi obra" / Gestión de Producción de Obra (6 FASES) — RELEASE 1.65.0 (PUBLICADO)
+**COMPLETO, COMMITEADO, PUSHEADO y PUBLICADO a todos los usuarios.** `npm run build` **VERDE**. Backend AG16 aplicado a prod. **csd-app `main`** (`451e4bf` módulo + `c2b8713` bump) → deploya PWA; **SGC `main`** (`e18d68b`) migraciones app-side. **APK 1.65.0** firmado (cert prod `3c5316d8…`) + registrado (Y1) + subido al bucket + **`publicada=true` → `version_publicada()` = 1.65.0** (todos reciben el prompt de actualizar; `minima=1.42.0`, nadie bloqueado). Usuarios saltando desde su versión actual reciben TODO lo pendiente (PROMPT-6: mantenimiento/tracking/tareas vinculadas/Google Maps + PROMPT-8: Mi obra). **Rollback:** `update sgc.app_versiones set publicada=(version='1.63.0') where plataforma='movil';`. **Falta device-QA** (no bloquea; ya está en manos de usuarios).
 
 **Qué encontré a medias y arreglé esta sesión:**
 - **Build roto** por 2 causas → arregladas: (1) errores de tipo `unknown` como índice en `subcontratistas.html` y `avance.html` (se añadieron tipos `Frente` y `CronogramaTarea` en `obra.model.ts` y se propagaron al servicio + templates, sin `f['id']`); (2) faltaba `informe.scss` (creado, estilo `inf__*` consistente con el resto).
@@ -23,14 +23,30 @@
 
 **Archivos tocados (app, sin commitear):** `obra.model.ts` (+`Frente`,`CronogramaTarea`), `obra.service.ts` (tipos), `app.routes.ts` (+7 rutas), `informe.scss` (nuevo), `subcontratistas.{ts,html}`, `avance.{ts,html}`. Además lo que ya venía de la sesión previa: `app.config.ts`, `module.guard.ts`, `usuario.model.ts`, `user-context.service.ts`, `home.ts`, y todo `pages/obra/`.
 
-**PENDIENTE (tú / device-QA):**
-1. **Simular un día completo en teléfono real** (necesito tu PIN o un chofer/capataz de prueba aislado — ver memoria `test-conductor-linked-to-admin`): charla + plan → NC con foto → pedido urgente → checklist hormigonado → cubicación → % avance → informe semanal a Gerencia con PDF. Matar la app a mitad de cada flujo (borradores/outbox).
-2. **Verificar en SGC web** que las capturas aparecen (interconexión, rule #1).
-3. **¿Commit/push + APK?** No lo hago sin tu OK (regla). Cuando quieras: bump de versión + `npm run apk`.
+### Cierre de gaps (auditoría clause-by-clause vs GESTION-OBRA.md → TODO implementado)
+Tras auditar el módulo contra §4/§6.1/§8 del documento y las 6 fases de PROMPT-8, se cerraron **los 8 gaps** detectados. **Build VERDE**. Backend nuevo **aplicado a prod** + edge function **desplegada**.
 
-**Desviaciones vs `GESTION-OBRA.md`:** ninguna estructural detectada; el código sigue los contratos §6.1. (No re-leí el documento línea por línea esta sesión — lo validé por coincidencia exacta de firmas RPC. Si quieres una auditoría cláusula-por-cláusula del documento, dímelo.)
+- **G1 — NC responsable** ✅ picker de usuario (buscar_usuarios) en `no-conformidad`; `responsable_id` ya no va null; persiste en borrador.
+- **G2 — Logística entradas programadas** ✅ nueva pestaña "Entradas" en `logistica` (RPC `entradas_programadas_obra` sobre `ordenes_compra.fecha_programada`).
+- **G3 — Resumen del día** ✅ dashboard en el hub `/obra` (charla, tareas hoy, NC abiertas, mis pendientes, pedidos, % avance real) — `resumenDelDia` compone client-side.
+- **G4 — Armar/asignar tareas del día** ✅ en `plan-dia`: título + capataz (picker) + brigada → RPC `asignar_tarea_obra` (SECURITY DEFINER, gate `obra.plan_dia`, notifica al capataz). Crea `sgc.tareas` (reusa Tareas+AG15).
+- **G5 — Asignar acción correctiva** ✅ en `mis-nc`, sobre una NC: descripción + responsable (picker) + fecha compromiso → RPC existente `asignar_accion_correctiva`.
+- **G6 — Seguimiento del pedido** ✅ sección "Mis pedidos" (con chips de estado) en `recursos` (RPC `mis_pedidos_obra`).
+- **G7 — Informe borrador local (AE9)** ✅ autosave/borrador de las secciones manuales en `informe` (banner de recuperación; se descarta al guardar).
+- **G8 — Parte de mano de obra (horas-hombre)** ✅ sección en `plan-dia` (trabajadores×horas → outbox `obra_mano_obra`, decisión §8 #3). Ya no es método colgante.
+- **B1 — Edge PDF+email del informe** ✅ **`generar-informe-obra` DESPLEGADA** (`--no-verify-jwt`); secrets `INFRA_SYNC_SECRET`/`NOTIFICATIONS_FROM_EMAIL` verificados; `enviar_informe_semanal` postea a la URL correcta con el header secreto. El informe a Gerencia ya cierra end-to-end (in-app+push+email con PDF adjunto).
 
-**Migraciones app-side AG16 añadidas esta sesión (3, aplicadas a prod, SIN commitear en SGC):**
+**Backend nuevo (aplicado):** `SGC/sql/2026-08-06-ag16b-app-gaps.sql` — `entradas_programadas_obra`, `mis_pedidos_obra`, `asignar_tarea_obra` (los 3 con EXECUTE a authenticated; gate `obra.plan_dia` verificado: gerente por módulo padre, capataz por permiso explícito).
+
+**Deviaciones menores restantes (documentadas, no bloquean):** la NC generada desde un hallazgo de checklist no va pre-llenada (Rutina 4 lo sugería); cubicación queda en borrador y se aprueba en web (§4). Todo lo demás del documento y de PROMPT-8 está implementado.
+
+**Release (HECHO esta sesión):** bump 1.64.0 → **1.65.0** en los 4 sitios (release-apk.mjs, environment.{ts,prod.ts}, build.gradle) + changelog curado del módulo Mi obra; `npm run apk` (build+register Y1) + `npm run apk:publish` (bucket) + flip `publicada=true`. Commits: app `451e4bf` (módulo) + `c2b8713` (bump), SGC `e18d68b` (3 migraciones). Todo pusheado a `main`.
+
+**PENDIENTE (solo tú / device-QA — no bloquea, ya está publicado):**
+1. **Simular un día completo en teléfono real** (necesito tu PIN o un capataz de prueba aislado — memoria `test-conductor-linked-to-admin`): charla + plan (asignar tarea + mano de obra) → NC con foto y responsable → pedido urgente + ver estado → checklist → cubicación → % avance → informe semanal a Gerencia con PDF. Matar la app a mitad de cada flujo.
+2. **Verificar en SGC web** que las capturas aparecen (interconexión, rule #1). Si algo falla en device-QA, rollback con el SQL de arriba.
+
+**Migraciones app-side AG16 añadidas esta sesión (3, aplicadas a prod, COMMITEADAS en SGC `e18d68b`):**
 - `2026-08-06-ag16-app-lecturas-obra.sql` — `mis_nc_asignadas()` (bandeja del responsable) + `stock_de_obra()` (stock con nombre/unidad).
 - `2026-08-06-ag16-pedido-urgente-obra.sql` — relaja el gate de `crear_solicitud_app` para aceptar acceso **obra** (el gerente no tiene módulo `compras`); scoping fino sigue en `requisicion_permitida()`.
 - `2026-08-06-ag16b-app-gaps.sql` — `asignar_tarea_obra` (plan del día asigna tareas reusando `sgc.tareas`+brigada), `mis_pedidos_obra` (seguimiento del pedido urgente por estado), `entradas_programadas_obra` (logística: OC con `fecha_programada`).
