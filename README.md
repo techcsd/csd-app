@@ -2,6 +2,28 @@
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.16.
 
+## Secrets & local setup (read before building Android)
+
+Secrets are **never** committed. Two files are required locally and are gitignored:
+
+- **`.env.local`** (repo root) — Supabase URL, anon key, service_role/secret keys, Vercel OIDC. The
+  `service_role`/secret keys must live **only** here (or in CI secrets), never in app source. The Supabase
+  **anon** key that ships inside the app (`src/environments/environment*.ts`) is public by design — it is
+  protected by RLS and is expected to be readable in the client bundle.
+- **`android/app/google-services.json`** — Firebase/Android config (project id + Android **API key**). This
+  file is gitignored (AG1). To set it up:
+  1. Copy the template: `cp android/app/google-services.json.example android/app/google-services.json`
+  2. Fill in the real values from the Firebase console (Project settings → Your apps → `com.constructorasd.csdapp`),
+     **or** download the file directly from Firebase and drop it in place.
+  3. The Android API key **must be restricted** in Google Cloud Console to the app's package name
+     (`com.constructorasd.csdapp`) + release SHA-1/SHA-256 certificate fingerprints.
+  - CI: provide the file contents as a repository secret and write it out before `npm run apk`
+    (e.g. `echo "$GOOGLE_SERVICES_JSON" > android/app/google-services.json`).
+  - If the file is absent, the build still succeeds but Firebase push notifications are disabled
+    (`android/app/build.gradle` applies the google-services plugin only when the file exists).
+
+`npm run build` does not need either file; only the Android/APK build consumes `google-services.json`.
+
 ## Development server
 
 To start a local development server, run:

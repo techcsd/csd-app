@@ -57,5 +57,10 @@ Thumbs.db
 keystore.properties
 /android/local.properties
 
+# Firebase / Google config — contains the Android API key (identifier).
+# Keep it out of the repo (AG1). Place the real file locally / in CI from a
+# secret; a redacted template lives at google-services.json.example.
+/android/app/google-services.json
+
 # Vercel
 .vercel
