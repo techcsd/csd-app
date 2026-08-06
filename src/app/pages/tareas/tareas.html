@@ -40,6 +40,35 @@
       <label class="field-label tareas__mt">Fecha límite (opcional)</label>
       <input class="field" type="date" [ngModel]="nuevaFechaLimite()" (ngModelChange)="nuevaFechaLimite.set($event)" />
 
+      <!-- AG15 — vincular la tarea a una acción del sistema (se auto-completa sola). -->
+      <label class="field-label tareas__mt">Vincular a una acción (opcional)</label>
+      <div class="tareas__prio">
+        @for (v of vinculoTipos; track v.valor) {
+          <app-option-button [label]="v.label" [selected]="nuevoVinculo() === v.valor" (pressed)="setVinculo(v.valor)" />
+        }
+      </div>
+      @if (nuevoVinculo() === 'conduce') {
+        <p class="tareas__hint">Al iniciar, el chofer abre "crear conduce" pre-llenado; se completa al confirmar la entrega.</p>
+        <label class="field-label tareas__mt">Ferretería de compra (opcional)</label>
+        <select class="field" [ngModel]="vincFerreteria()" (ngModelChange)="vincFerreteria.set($event)">
+          <option value="">— Ninguna (sale de un almacén) —</option>
+          @for (f of ferreteriasVinc(); track f.id) { <option [value]="f.id">{{ f.nombre }}</option> }
+        </select>
+        <label class="field-label tareas__mt">Almacén de origen (opcional)</label>
+        <select class="field" [ngModel]="vincBodega()" (ngModelChange)="vincBodega.set($event)">
+          <option value="">— Sin especificar —</option>
+          @for (b of bodegasVinc(); track b.id) { <option [value]="b.id">{{ b.nombre }}</option> }
+        </select>
+        <label class="field-label tareas__mt">Obra destino (opcional)</label>
+        <select class="field" [ngModel]="vincObra()" (ngModelChange)="vincObra.set($event)">
+          <option value="">— Sin especificar —</option>
+          @for (o of obrasVinc(); track o.id) { <option [value]="o.id">{{ o.nombre }}</option> }
+        </select>
+      }
+      @if (nuevoVinculo() === 'ruta') {
+        <p class="tareas__hint">Al iniciar, el chofer abre "crear ruta"; se completa cuando la ruta termine.</p>
+      }
+
       <button type="button" class="btn-cta tareas__crear" [disabled]="submitting()" (click)="crear()">
         {{ submitting() ? 'Creando…' : 'Crear tarea' }}
       </button>
@@ -64,12 +93,35 @@
           @if (t.fecha_limite) { <p>📅 Límite: {{ fecha(t.fecha_limite) }}</p> }
         </div>
 
+        <!-- AG15 — vínculo dinámico: qué acción del sistema representa la tarea. -->
+        @if (t.linked_tipo) {
+          <div class="tareas__vinculo">
+            <span class="tareas__vinculo-ico">{{ linkedMeta[t.linked_tipo].icon }}</span>
+            <span>
+              Vinculada a <strong>{{ linkedMeta[t.linked_tipo].label }}</strong>
+              @if (t.auto_completada) { · se completó automáticamente }
+              @else if (t.linked_id) { · en curso }
+            </span>
+          </div>
+        }
+
         @if (esMia(t) && t.estado === 'pendiente') {
-          <button type="button" class="btn-cta tareas__accion" [disabled]="submitting()" (click)="iniciar(t)">
-            ▶️ Iniciar tarea
-          </button>
+          @if (puedeAbrirFlujo(t)) {
+            <button type="button" class="btn-cta tareas__accion" [disabled]="submitting()" (click)="iniciarYAbrir(t)">
+              {{ linkedMeta[t.linked_tipo!].icon }} {{ linkedMeta[t.linked_tipo!].cta }}
+            </button>
+          } @else {
+            <button type="button" class="btn-cta tareas__accion" [disabled]="submitting()" (click)="iniciar(t)">
+              ▶️ Iniciar tarea
+            </button>
+          }
         }
         @if (esMia(t) && t.estado === 'en_progreso') {
+          @if (puedeAbrirFlujo(t) && !completando()) {
+            <button type="button" class="btn-ghost tareas__accion" [disabled]="submitting()" (click)="iniciarYAbrir(t)">
+              {{ linkedMeta[t.linked_tipo!].icon }} Abrir {{ linkedMeta[t.linked_tipo!].label }}
+            </button>
+          }
           @if (!completando()) {
             <button type="button" class="btn-cta tareas__accion" (click)="pedirCompletar()">✅ Completar tarea</button>
           } @else {

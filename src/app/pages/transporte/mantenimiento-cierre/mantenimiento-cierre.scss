@@ -1,0 +1,75 @@
+.mant-cierre {
+  background: var(--color-bg);
+}
+
+.mant-cierre__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.mant-cierre__back {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--main, #121212);
+}
+.mant-cierre__icon {
+  font-size: 1.5rem;
+}
+.mant-cierre__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.mant-cierre__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mant-cierre__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mant-cierre__label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.mant-cierre__input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d8d8d8;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #fff;
+
+  &:focus {
+    outline: none;
+    border-color: var(--Hub, #ffb300);
+  }
+}
+.mant-cierre__textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.mant-cierre__fotos {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mant-cierre__confirmar {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}

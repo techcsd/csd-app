@@ -5,12 +5,57 @@ import { CatalogService } from '../sync/catalog.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 
 /**
- * X6-app — tipos de visita/mantenimiento tipificados, EXACTAMENTE los 4 que
- * acepta el servidor (`crear_mantenimiento_app`). Cualquier otro valor el RPC lo
- * coerce a 'preventivo', así que los valores viejos ('correctivo'/'emergencia')
- * se registraban mal → ahora usamos los canónicos.
+ * X6-app / AG9 — tipos de visita/mantenimiento, EXACTAMENTE los que acepta el
+ * servidor (`crear_mantenimiento_app`). Cualquier otro valor el RPC lo coerce a
+ * 'preventivo'. AG9 agregó 'otros' (tintado / servicios varios).
  */
-export type MantenimientoTipo = 'preventivo' | 'falla' | 'accidente_dano' | 'cambio_pieza';
+export type MantenimientoTipo =
+  | 'preventivo'
+  | 'falla'
+  | 'accidente_dano'
+  | 'cambio_pieza'
+  | 'engrase'
+  | 'hidraulico'
+  | 'otros';
+
+/** AG9 — etiqueta en español RD por tipo (para listar el historial en la app). */
+export const MANTENIMIENTO_TIPO_LABEL: Record<MantenimientoTipo, string> = {
+  preventivo: 'Preventivo',
+  falla: 'Falla / avería',
+  accidente_dano: 'Daño por accidente',
+  cambio_pieza: 'Cambio de pieza',
+  engrase: 'Engrase',
+  hidraulico: 'Hidráulico',
+  otros: 'Otros servicios',
+};
+
+/** AG9 — una fila del historial de mantenimientos de un vehículo (mantenimientos_por_vehiculo). */
+export interface MantenimientoItem {
+  id: string;
+  tipo: MantenimientoTipo;
+  descripcion: string | null;
+  fecha: string;
+  estado: 'pendiente' | 'en_proceso' | 'completado';
+  costo: number | null;
+  proveedor: string | null;
+  kilometraje: number | null;
+  notas: string | null;
+  fotos: string[] | null;
+  incluye_preventivo: boolean;
+  created_at: string;
+}
+
+/** AG9 — input del cierre de mantenimiento (costo + evidencia) desde la app. */
+export interface MantenimientoCierre {
+  id: string; // id del mantenimiento a cerrar
+  km: number | null;
+  costo: number | null;
+  proveedor: string | null;
+  notas: string | null;
+  fotos: Blob[];
+  placa: string;
+  vehiculoId: string;
+}
 
 /** Input the maintenance wizard hands to enqueueMantenimiento(). */
 export interface MantenimientoCaptura {
@@ -26,6 +71,8 @@ export interface MantenimientoCaptura {
   /** Z23 — notas de voz múltiples (opcional). */
   voces?: Blob[];
   placa: string;
+  /** AG15 — si nace de una tarea vinculada, su id (se enlaza al crear). */
+  tareaVinculada?: string | null;
 }
 
 /**
@@ -42,6 +89,50 @@ export class MantenimientosService {
 
   constructor() {
     this.registerHandler();
+    this.registerCierreHandler();
+  }
+
+  /**
+   * AG9 — historial de mantenimientos de un vehículo (próximos/en curso/historial se
+   * derivan en la UI de estado+fecha). Cacheado (read-through) para verse offline.
+   */
+  async mantenimientosPorVehiculo(vehiculoId: string): Promise<MantenimientoItem[]> {
+    const key = `mant_veh:${vehiculoId}`;
+    const data = await this.catalog.refresh<MantenimientoItem[]>(key, async () => {
+      const { data, error } = await this.supabase.client.rpc('mantenimientos_por_vehiculo', {
+        p_vehiculo_id: vehiculoId,
+      });
+      if (error) throw error;
+      return (data as MantenimientoItem[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** AG9 — encola el CIERRE de un mantenimiento (costo/proveedor/notas + evidencia). */
+  async enqueueCierre(input: MantenimientoCierre): Promise<void> {
+    const capturado_en = new Date().toISOString();
+    const fotos = input.fotos.map((blob, idx) => ({
+      id: crypto.randomUUID(),
+      bucket: 'vehiculos',
+      path: `mantenimiento/${input.id}/cierre_${idx}.jpg`,
+      slot: `cierre_${idx}`,
+      blob,
+    }));
+    await this.sync.enqueue({
+      id: `cierre_${input.id}`, // idempotencia: un cierre por mantenimiento
+      tipo_op: 'mantenimiento_cierre',
+      capturado_en,
+      payload: {
+        id: input.id,
+        vehiculo_id: input.vehiculoId,
+        km: input.km,
+        costo: input.costo,
+        proveedor: input.proveedor,
+        notas: input.notas,
+      },
+      fotos,
+      resumen: { placa: input.placa, capturado_en },
+    });
   }
 
   /** Queue a maintenance report. Works fully offline; syncs when there's signal. */
@@ -73,6 +164,7 @@ export class MantenimientosService {
         km: input.km,
         incluye_preventivo: input.incluyePreventivo,
         audios: audio.audios, // Z23
+        tarea_vinculada: input.tareaVinculada ?? null, // AG15
       },
       fotos,
       resumen: { placa: input.placa, tipo: input.tipo, capturado_en },
@@ -102,12 +194,48 @@ export class MantenimientosService {
       // Z23 — registrar las notas de voz (idempotente por path).
       await this.audioNotas.commit('mantenimiento', payload['id'] as string, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
 
+      // AG15 — si el mantenimiento nace de una tarea vinculada, enlázala (la tarea
+      // se completa sola al cerrarse el mantenimiento). Idempotente.
+      const tareaVinc = payload['tarea_vinculada'] as string | null;
+      if (tareaVinc) {
+        const { error: eV } = await this.supabase.client.rpc('vincular_tarea_entidad', {
+          p_tarea_id: tareaVinc,
+          p_tipo: 'mantenimiento',
+          p_entity_id: payload['id'],
+        });
+        if (eV) throwSyncError(eV);
+      }
+
       // P7 — el RPC avanza vehiculos.kilometraje; invalidar caches con km.
       const vehId = payload['vehiculo_id'] as string;
       await this.catalog.invalidate(`veh_detalle:${vehId}`);
+      await this.catalog.invalidate(`mant_veh:${vehId}`); // AG9 — refrescar el historial
       await this.catalog.invalidate('pendientes_transporte');
       await this.catalog.invalidate('flota_vehiculos');
       await this.catalog.invalidate('mis_asignaciones'); // AF21
+    });
+  }
+
+  /** AG9 — handler del cierre: completar_mantenimiento_app (costo + evidencia). */
+  private registerCierreHandler(): void {
+    this.sync.register('mantenimiento_cierre', async (payload, photoPaths) => {
+      const fotos = Object.entries(photoPaths).map(([slot, path]) => ({ storage_path: path, slot }));
+      const { error } = await this.supabase.client.rpc('completar_mantenimiento_app', {
+        p_id: payload['id'],
+        p_km: payload['km'] ?? null,
+        p_costo: payload['costo'] ?? null,
+        p_proveedor: payload['proveedor'] ?? null,
+        p_notas: payload['notas'] ?? null,
+        p_fotos: fotos,
+      });
+      if (error) throwSyncError(error);
+
+      const vehId = payload['vehiculo_id'] as string;
+      await this.catalog.invalidate(`veh_detalle:${vehId}`);
+      await this.catalog.invalidate(`mant_veh:${vehId}`);
+      await this.catalog.invalidate('pendientes_transporte');
+      await this.catalog.invalidate('flota_vehiculos');
+      await this.catalog.invalidate('mis_asignaciones');
     });
   }
 }

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -90,6 +90,9 @@ export class CrearRutaPage implements OnDestroy {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  /** AG15 — tarea que originó esta ruta (se enlaza al crear). */
+  private tareaVinculada: string | null = null;
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
 
@@ -189,6 +192,7 @@ export class CrearRutaPage implements OnDestroy {
     // Crear ruta lo puede usar el jefe de flota (asigna a un conductor) y también
     // el chofer (se la crea a sí mismo → el backend la auto-asigna a quien la crea).
     resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
+    this.tareaVinculada = this.route.snapshot.queryParamMap.get('tarea'); // AG15
     void this.load();
     void this.captureGps();
     this.navGuard.register(this.backHandler); // U4 — botón físico Android
@@ -661,6 +665,7 @@ export class CrearRutaPage implements OnDestroy {
           })),
         // AC6 — fotos de evidencia inicial (carga/vehículo/documento).
         fotos: this.fotosEvidencia().map((f) => f.blob),
+        tareaVinculada: this.tareaVinculada, // AG15
       });
       void this.autosave.discard(this.clave); // AF24.5 — borrador cumplido
       this.done.set(true);

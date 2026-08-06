@@ -19,7 +19,7 @@ import {
   ChoferSeguimiento,
   RutaActivaSeguimiento,
 } from '../../../core/services/seguimiento.service';
-import { estadoMeta } from '../../../core/services/chofer-estado.service';
+import { estadoMeta, ESTADOS_CHOFER } from '../../../core/services/chofer-estado.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 
 /** AF27 — Seguimiento en vivo (jefe de flota / admin / tecnología). */
@@ -48,6 +48,12 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   autorizado = signal(true);
 
   readonly metaOf = estadoMeta;
+  // AG10 — leyenda del mapa (mismos colores/estados que la web). Colapsable.
+  readonly estados = ESTADOS_CHOFER;
+  leyendaAbierta = signal(false);
+  toggleLeyenda(): void {
+    this.leyendaAbierta.update((v) => !v);
+  }
 
   /** Choferes con posición conocida (para el mapa). */
   conPosicion = computed(() => this.choferes().filter((c) => c.lat != null && c.lng != null));

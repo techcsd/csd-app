@@ -6,7 +6,31 @@
   </header>
 
   <!-- El mapa siempre se monta (ngAfterViewInit lo inicializa); se oculta si no autorizado -->
-  <div class="seg__map" #map [class.seg__map--hidden]="!autorizado()"></div>
+  <div class="seg__map-wrap">
+    <div class="seg__map" #map [class.seg__map--hidden]="!autorizado()"></div>
+
+    <!-- AG10 — leyenda del mapa (colores de estado AF28 + símbolos). Colapsable. -->
+    @if (autorizado()) {
+      <div class="seg__legend" [class.seg__legend--open]="leyendaAbierta()">
+        <button type="button" class="seg__legend-toggle" (click)="toggleLeyenda()">
+          {{ leyendaAbierta() ? '✕' : 'ℹ️' }} Leyenda
+        </button>
+        @if (leyendaAbierta()) {
+          <ul class="seg__legend-list">
+            @for (e of estados; track e.key) {
+              <li class="seg__legend-item">
+                <span class="seg__legend-dot" [style.background]="e.tint"></span>
+                {{ e.label }}@if (e.key === 'en_ruta') { <span class="seg__legend-note">(automático)</span> }
+              </li>
+            }
+            <li class="seg__legend-item seg__legend-item--sep">
+              <span class="seg__legend-ico">🗺️</span> Ruta activa · paradas entregadas/total
+            </li>
+          </ul>
+        }
+      </div>
+    }
+  </div>
 
   <div class="screen__body seg__body">
     @if (!autorizado()) {

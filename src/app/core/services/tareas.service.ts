@@ -2,7 +2,12 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { Tarea, TareaPrioridad } from '../models/tarea.model';
+import {
+  Tarea,
+  TareaPrioridad,
+  TareaLinkedTipo,
+  TareaLinkedParams,
+} from '../models/tarea.model';
 
 const CATALOG_TAREAS = 'mis_tareas';
 const BUCKET = 'inventario';
@@ -14,6 +19,9 @@ export interface CrearTareaInput {
   asignadoA: string;
   proyectoId: string | null;
   fechaLimite: string | null;
+  // AG15 — vínculo dinámico opcional (tarea → conduce/ruta/mantenimiento/cronograma).
+  linkedTipo?: TareaLinkedTipo | null;
+  linkedParams?: TareaLinkedParams | null;
 }
 
 /** Búsqueda de usuario para asignar (reusa buscar_usuarios). */
@@ -98,6 +106,26 @@ export class TareasService {
       proyecto_id: input.proyectoId,
       fecha_limite: input.fechaLimite,
       estado: 'pendiente',
+      // AG15 — vínculo dinámico (linked_id queda null hasta que se crea la entidad
+      // al "Iniciar"; linked_params lleva el pre-llenado del flujo).
+      linked_tipo: input.linkedTipo ?? null,
+      linked_params: input.linkedParams ?? {},
+    });
+    if (error) throw new Error(error.message);
+    await this.invalidar();
+  }
+
+  /**
+   * AG15 — vincula una tarea a la entidad que se acaba de crear (p. ej. el conduce),
+   * para que al completarse la entidad la tarea se cierre sola y notifique al asignador.
+   * Idempotente (el backend re-sincroniza al vincular). Best-effort desde la UI: el
+   * enganche fuerte vive en el handler del outbox del flujo (conduce/ruta).
+   */
+  async vincularEntidad(tareaId: string, tipo: TareaLinkedTipo, entityId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('vincular_tarea_entidad', {
+      p_tarea_id: tareaId,
+      p_tipo: tipo,
+      p_entity_id: entityId,
     });
     if (error) throw new Error(error.message);
     await this.invalidar();

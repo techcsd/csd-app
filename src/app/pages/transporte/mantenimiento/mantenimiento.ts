@@ -34,12 +34,14 @@ interface TipoOpcion {
   tone: 'default' | 'success' | 'warning' | 'error';
 }
 
-// X6-app — 4 tipos de visita, alineados con el servidor (crear_mantenimiento_app).
+// X6-app / AG9 — tipos de visita, alineados con el servidor (crear_mantenimiento_app).
 const TIPOS: TipoOpcion[] = [
   { valor: 'preventivo', label: 'Preventivo', icon: '🛠️', tone: 'success' },
   { valor: 'falla', label: 'Falla / avería', icon: '⚠️', tone: 'warning' },
   { valor: 'accidente_dano', label: 'Accidente o daño', icon: '🚨', tone: 'error' },
   { valor: 'cambio_pieza', label: 'Cambio de pieza', icon: '🔧', tone: 'default' },
+  // AG9 — servicios que no son mantenimiento clásico (tintado, lavado, etc.).
+  { valor: 'otros', label: 'Otros servicios', icon: '✨', tone: 'default' },
 ];
 
 const TOTAL_STEPS = 4;
@@ -76,6 +78,8 @@ export class MantenimientoPage implements OnDestroy {
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
 
   vehiculoId = '';
+  /** AG15 — tarea que originó este mantenimiento (se enlaza al crear). */
+  private tareaVinculada: string | null = null;
   placa = signal('');
   modelo = signal('');
   vehDetalle = signal<VehiculoDetalle | null>(null); // U15 — odómetro + mantenimiento
@@ -124,6 +128,8 @@ export class MantenimientoPage implements OnDestroy {
   constructor() {
     resetScrollOnStep(() => this.step(), () => this.done()); // U3/U4
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
+    // AG15 — si se abrió desde una tarea vinculada, recuérdala para enlazar al crear.
+    this.tareaVinculada = this.route.snapshot.queryParamMap.get('tarea');
     void this.loadVehiculo();
     void this.restoreDraft();
     this.navGuard.register(this.backHandler); // Q7 — botón físico Android
@@ -298,6 +304,7 @@ export class MantenimientoPage implements OnDestroy {
         fotos,
         voces: this.voces().map((n) => n.blob),
         placa: this.placa(),
+        tareaVinculada: this.tareaVinculada, // AG15
       });
       await this.autosave.discard(this.clave); // limpia borrador + fotos
       this.done.set(true);

@@ -36,34 +36,22 @@ Todos correctamente fuera del control de versiones (gitignored o leídos de arch
 3. Creado `android/app/google-services.json.example` (plantilla redacted).
 4. `README.md` → sección **"Secrets & local setup"** explicando cómo colocar el archivo real en local/CI.
 
-Estado en git: `.gitignore` modificado, `google-services.json` marcado `D` (staged delete), `google-services.json.example` sin trackear.
-
-**Falta commitear** — no se commitea nada sin tu OK (regla madre).
+Además: `.gitleaks.toml` con allowlist de la anon key (pública por diseño) → `gitleaks detect` sale limpio. **Commiteado** con tu OK.
 
 ---
 
-## 3. ⏸ PAUSA — Purga de historial (requiere force push, tu OK)
+## 3. ✅ HECHO — Purga de historial + force push
 
-`git rm --cached` solo lo saca de commits **futuros**; la key sigue en los 5 commits históricos. Para borrarla de **toda** la historia hay que reescribir commits y hacer **force push**. Esto reescribe hashes desde `0a7dcdc` en adelante.
+Con tu OK ("Do it now") se purgó `google-services.json` de **toda** la historia con **BFG 1.15.0** (corrido con el JBR de Android Studio — esta máquina no tiene Python/filter-repo) y se hizo **force push** a `origin/main` (`--force-with-lease`, tras backup en bundle).
 
-**Antes de ejecutar:**
-- [ ] ¿Alguien más tiene un clon del repo? Si sí, avisarles: tras el force push deben re-clonar (o `git fetch` + `git reset --hard origin/main`), **no** hacer merge/pull normal.
-- [ ] Confirmar que no hay PRs abiertos ni CI corriendo sobre esos commits.
+Verificado:
+- `git log --all -- android/app/google-services.json` → **vacío**.
+- La key `AIzaSy…` → **0 ocurrencias** en toda la historia.
+- `gitleaks detect -c .gitleaks.toml` → **no leaks found**.
+- Las 4 ramas de feature del remoto **no** contenían el archivo (nacieron antes del commit `0a7dcdc`) → no hubo que reescribirlas.
+- Backup del estado previo: `csd-app-backup-pre-purge.bundle` (guardado en el tmp del job).
 
-**Plan (lo ejecuto yo cuando digas OK):**
-```bash
-# Opción A — git filter-repo (recomendado; instalar: pip install git-filter-repo)
-git filter-repo --path android/app/google-services.json --invert-paths --force
-
-# Opción B — BFG (si prefieres): bfg --delete-files google-services.json
-
-# filter-repo elimina el remote 'origin' por seguridad; re-agregar y force-push:
-git remote add origin https://github.com/techcsd/csd-app.git
-git push origin --force --all
-git push origin --force --tags
-```
-- La key expuesta debe considerarse **comprometida igual** aunque se purgue (pudo cachearse/indexarse) → **rotarla sí o sí** (paso 4).
-- Tras la purga, verificar: `git log --all -- android/app/google-services.json` debe salir **vacío**.
+⚠️ **La key sigue comprometida** aunque se purgó (GitHub pudo cachearla/indexarla, y puede servir el commit viejo por SHA directo hasta su GC). **Rotarla (paso 4) es lo único que la neutraliza de verdad.**
 
 ---
 

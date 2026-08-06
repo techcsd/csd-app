@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -55,8 +55,12 @@ export class GenerarConducePage implements OnDestroy {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+
+  /** AG15 — id de la tarea que originó este conduce (se enlaza al emitir). */
+  private tareaVinculada: string | null = null;
 
   private sig = viewChild(SignaturePad);
 
@@ -193,9 +197,36 @@ export class GenerarConducePage implements OnDestroy {
       this.ferreterias.set(ferr);
       if (b.length === 1) this.bodegaId.set(b[0].id);
       if (asig.length === 1) this.vehiculoId.set(asig[0].vehiculo_id);
+      this.prefillFromQuery(); // AG15 — pre-llenar si viene de una tarea vinculada
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * AG15 — pre-llena el conduce cuando se abre desde una tarea vinculada
+   * (deep-link con queryParams). Ej.: "comprar en ferretería X y llevar a obra Y".
+   * El id de la tarea (`tarea`) se enlaza al conduce al emitir para que la tarea
+   * se complete sola cuando se confirme la entrega.
+   */
+  private prefillFromQuery(): void {
+    const q = this.route.snapshot.queryParamMap;
+    const origen = q.get('origen') as OrigenTipo | null;
+    if (origen === 'almacen' || origen === 'ferreteria' || origen === 'otros') {
+      this.setOrigen(origen);
+    }
+    const bodega = q.get('bodega');
+    if (bodega && this.bodegas().some((b) => b.id === bodega)) this.bodegaId.set(bodega);
+    const ferreteria = q.get('ferreteria');
+    if (ferreteria && this.ferreterias().some((f) => f.id === ferreteria)) {
+      this.ferreteriaId.set(ferreteria);
+    }
+    const obra = q.get('obra');
+    if (obra && this.obras().some((o) => o.id === obra)) {
+      this.destinoTipo.set('obra');
+      this.obraId.set(obra);
+    }
+    this.tareaVinculada = q.get('tarea');
   }
 
   /** AF31 — cambiar el tipo de origen limpia lo que no aplica. */
@@ -345,6 +376,7 @@ export class GenerarConducePage implements OnDestroy {
         items: otros
           ? []
           : this.cart().filter((l) => l.cantidad > 0 && l.articulo_id).map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad })),
+        tareaVinculada: this.tareaVinculada, // AG15 — enlaza la tarea a esta salida
       });
       this.hoja.set('exito');
     } catch (e) {

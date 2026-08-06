@@ -56,6 +56,8 @@ export interface RutaCaptura {
   paradas?: RutaParadaCaptura[];
   // AC6 — fotos de evidencia inicial al crear la ruta (carga/vehículo/documento).
   fotos?: Blob[];
+  /** AG15 — si la ruta nace de una tarea vinculada, su id (se enlaza al crear). */
+  tareaVinculada?: string | null;
 }
 
 /** AE — el chofer GENERA un conduce (salida de material) desde una bodega hacia
@@ -72,6 +74,8 @@ export interface ConduceTransportistaCaptura {
   /** AF23.3 — firma de quien ENTREGA (emisor), obligatoria al emitir. */
   firmaEmisor?: Blob | null;
   emisorNombre?: string | null;
+  /** AG15 — si el conduce nace de una tarea vinculada, su id (se enlaza al emitir). */
+  tareaVinculada?: string | null;
 }
 
 /** AC13 — una parada intermedia de la ruta. */
@@ -519,6 +523,7 @@ export class ConducesService {
         audios: audio.audios, // Z23
         paradas: input.paradas ?? [], // AC13
         n_fotos: evidencia.length, // AC6
+        tarea_vinculada: input.tareaVinculada ?? null, // AG15
       },
       fotos: [...audio.fotos, ...evidencia],
       resumen: { origen: input.origen, destino: input.destino, fecha: input.fecha, capturado_en },
@@ -586,6 +591,7 @@ export class ConducesService {
         ruta_id: input.rutaId ?? null,
         items: input.items,
         emisor_nombre: input.emisorNombre ?? null,
+        tarea_vinculada: input.tareaVinculada ?? null, // AG15
       },
       fotos,
       resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
@@ -717,6 +723,18 @@ export class ConducesService {
 
       // Z23 — registrar las notas de voz de la ruta (idempotente por path).
       await this.audioNotas.commit('ruta', rutaId, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);
+
+      // AG15 — si la ruta nace de una tarea vinculada, enlázala (la tarea se
+      // completa sola cuando la ruta llegue a 'completada'). Idempotente.
+      const tareaVinc = payload['tarea_vinculada'] as string | null;
+      if (tareaVinc) {
+        const { error: eV } = await this.supabase.client.rpc('vincular_tarea_entidad', {
+          p_tarea_id: tareaVinc,
+          p_tipo: 'ruta',
+          p_entity_id: rutaId,
+        });
+        if (eV) throwSyncError(eV);
+      }
     });
 
     // AE5 — avanzar una parada (en_camino/entregada/omitida). Offline-first; el RPC
@@ -806,6 +824,20 @@ export class ConducesService {
           p_usuario_id: userData.user?.id ?? null,
         });
         if (eF) throwSyncError(eF);
+      }
+      // AG15 — si el conduce nace de una tarea vinculada, enlázala a esta salida.
+      // Se hace AQUÍ (post-éxito, salida ya existe) y es idempotente: cuando la
+      // salida se marque 'entregado', el trigger completa la tarea sola y notifica
+      // al asignador. crear_conduce_transportista es idempotente por p_id, así que
+      // reintentar el handler tras un fallo de este link es seguro.
+      const tareaVinc = payload['tarea_vinculada'] as string | null;
+      if (tareaVinc) {
+        const { error: eV } = await this.supabase.client.rpc('vincular_tarea_entidad', {
+          p_tarea_id: tareaVinc,
+          p_tipo: 'conduce',
+          p_entity_id: salidaId,
+        });
+        if (eV) throwSyncError(eV);
       }
       // AE7 — la salida bajó el stock de la bodega de origen → invalida el preview
       // de existencias cacheado (como la devolución) para no mostrar un stock viejo.

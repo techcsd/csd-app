@@ -7,6 +7,40 @@
   justify-content: center;
   font-size: var(--fs-option);
 }
+// AG11 — indicador visible de tracking activo (el chofer ve que se reporta su GPS).
+.conduces__tracking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(22, 163, 74, 0.1);
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  color: #15803d;
+  font-size: var(--fs-body, 0.95rem);
+  font-weight: 600;
+}
+.conduces__tracking-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #16a34a;
+  flex: 0 0 auto;
+  animation: conduces-pulse 1.6s ease-in-out infinite;
+}
+@keyframes conduces-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
 // AE — fila de acciones: "Sacar material" + "Crear ruta".
 .conduces__acciones {
   display: flex;

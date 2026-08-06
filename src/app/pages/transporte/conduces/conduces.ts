@@ -64,6 +64,8 @@ export class ConducesPage implements OnDestroy {
   private tracking = inject(TrackingService);
   private primerSync = true;
   readonly fmtDur = formatearDuracion;
+  /** AG11 — para el indicador "Reportando tu ubicación" cuando hay ruta activa. */
+  readonly trackingActivo = this.tracking.rastreando;
 
   // AE — ETA (min) a la próxima parada por ruta, calculada bajo demanda con el GPS.
   etaProxima = signal<Record<string, number | null>>({});
@@ -129,11 +131,21 @@ export class ConducesPage implements OnDestroy {
   /** AE — abre automáticamente el detalle de las rutas EN CURSO: el chofer ve sus
    *  paradas sin un toque extra al entrar. */
   private autoExpandEnCurso(): void {
+    let rutaActiva: string | null = null;
     for (const r of this.rutas()) {
-      if (r.estado === 'en_curso' && !this.expandidas().has(r.id)) {
-        this.expandidas.update((s) => new Set(s).add(r.id));
-        this.cargarDetalle(r.id);
+      if (r.estado === 'en_curso') {
+        rutaActiva = rutaActiva ?? r.vehiculo_id ?? r.id;
+        if (!this.expandidas().has(r.id)) {
+          this.expandidas.update((s) => new Set(s).add(r.id));
+          this.cargarDetalle(r.id);
+        }
       }
+    }
+    // AG11 — si el chofer reabrió la app a mitad de una ruta activa, reanuda el
+    // tracking (el watcher vive en memoria y no sobrevive a que el SO mate el proceso).
+    if (rutaActiva) {
+      const veh = this.rutas().find((r) => r.estado === 'en_curso')?.vehiculo_id ?? null;
+      this.tracking.resumirSiRutaActiva(veh);
     }
   }
 
@@ -446,7 +458,9 @@ export class ConducesPage implements OnDestroy {
     const at = new Date().toISOString();
     // AF27 — arranca/detiene el tracking en primer plano con la ruta.
     if (estado === 'en_curso') {
-      void this.tracking.iniciarTracking(null);
+      // AG11 — etiqueta la posición con el vehículo real (antes iba siempre null).
+      const veh = this.rutas().find((r) => r.id === rutaId)?.vehiculo_id ?? null;
+      void this.tracking.iniciarTracking(veh);
     } else {
       void this.tracking.detenerTracking();
     }

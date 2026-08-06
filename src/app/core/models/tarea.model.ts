@@ -2,6 +2,19 @@
 export type TareaEstado = 'pendiente' | 'en_progreso' | 'completada' | 'cancelada';
 export type TareaPrioridad = 'baja' | 'media' | 'alta' | 'urgente';
 
+/** AG15 — tipos de entidad a la que una tarea puede vincularse. */
+export type TareaLinkedTipo = 'conduce' | 'ruta' | 'mantenimiento' | 'cronograma';
+
+/** AG15 — parámetros de pre-llenado del flujo vinculado (ferretería, obra, etc.). */
+export interface TareaLinkedParams {
+  origen_tipo?: string; // 'ferreteria' | 'almacen' | 'obra' | ...
+  ferreteria_id?: string;
+  bodega_id?: string;
+  obra_id?: string; // proyecto destino
+  vehiculo_id?: string;
+  [k: string]: unknown;
+}
+
 export interface Tarea {
   id: string;
   titulo: string;
@@ -17,7 +30,20 @@ export interface Tarea {
   fecha_limite: string | null;
   fecha_completada: string | null;
   created_at: string;
+  // AG15 — vínculo dinámico (opcional; las tareas sin vínculo funcionan igual).
+  linked_tipo?: TareaLinkedTipo | null;
+  linked_id?: string | null;
+  linked_params?: TareaLinkedParams | null;
+  auto_completada?: boolean;
 }
+
+/** AG15 — etiqueta del vínculo para la UI (qué flujo abre "Iniciar"). */
+export const TAREA_LINKED_META: Record<TareaLinkedTipo, { label: string; icon: string; cta: string }> = {
+  conduce: { label: 'Conduce', icon: '📦', cta: 'Iniciar y crear el conduce' },
+  ruta: { label: 'Ruta', icon: '🗺️', cta: 'Iniciar y crear la ruta' },
+  mantenimiento: { label: 'Mantenimiento', icon: '🔧', cta: 'Iniciar y registrar el mantenimiento' },
+  cronograma: { label: 'Cronograma', icon: '📅', cta: 'Iniciar' },
+};
 
 export const TAREA_ESTADO_META: Record<TareaEstado, { label: string; icon: string; tone: string }> = {
   pendiente: { label: 'Pendiente', icon: '🕒', tone: '#ca8a04' },

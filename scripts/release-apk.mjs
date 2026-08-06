@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.63.0';
+const VERSION = '1.64.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,21 +59,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-04';
+const RELEASED_AT = '2026-08-06';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Transporte v2: rutas vivas, conduces con origen, seguimiento en vivo y estados del chofer';
+const TITULO = 'Mantenimiento en la app, tracking más confiable y tareas vinculadas';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Menú de Transporte renovado: Mis rutas, Conduces y Seguimiento, más ordenado y con menos pasos.' },
-  { t: 'nuevo', d: 'Crear conduce con origen: almacén, ferretería (compra) u “Otros” (lugar libre). Al elegir el vehículo, la ruta se genera sola.' },
-  { t: 'nuevo', d: 'Crear ruta en 4 pasos con foto de carga obligatoria y buscador de obras; si sales a mitad, se guarda un borrador para retomarlo.' },
-  { t: 'nuevo', d: 'Rutas vivas: agrega una parada o cambia el destino sobre la marcha (todo queda registrado).' },
-  { t: 'nuevo', d: 'Estado del chofer: Disponible, En ruta, Descanso, Almuerzo con cuenta regresiva de 1h e Inactivo.' },
-  { t: 'nuevo', d: 'Seguimiento en vivo para jefe de flota: mapa con la ubicación de los choferes, su estado y sus rutas activas.' },
-  { t: 'nuevo', d: 'Historial de conduces con filtros por fecha y estado.' },
-  { t: 'mejora', d: 'La ubicación debe estar activa: la app te avisa y te pide encender el GPS para crear rutas/conduces y marcar entregas.' },
+  { t: 'nuevo', d: 'Mantenimientos del vehículo desde la app: ver el historial, registrar la llevada al taller (incluye “Otros servicios” como tintado) y cerrarlo con costo y foto de la factura.' },
+  { t: 'nuevo', d: 'Tareas vinculadas: una tarea puede abrir el flujo que le toca (crear un conduce o una ruta) ya pre-llenado, y se completa sola cuando confirmas la entrega.' },
+  { t: 'mejora', d: 'Seguimiento más confiable: la app reporta tu ubicación durante la ruta con un indicador visible, se reanuda sola si reabres la app y se recupera si el GPS se corta.' },
+  { t: 'mejora', d: 'Leyenda en el mapa de Seguimiento: explica los colores de cada estado del chofer.' },
+  { t: 'arreglo', d: 'El mapa de Seguimiento ya no muestra choferes “en ruta” de rutas viejas que quedaron abiertas.' },
+  { t: 'seguridad', d: 'Endurecimiento interno de credenciales del proyecto (sin cambios visibles para ti).' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -221,4 +221,7 @@ export interface RutaHoy {
   finalizada_at?: string | null;
   /** Y4 — estimación del maps al crear la ruta (min), para "real vs estimado". */
   tiempo_estimado_min?: number | null;
+  /** AG11 — vehículo de la ruta (para etiquetar la posición y reanudar tracking). */
+  vehiculo_id?: string | null;
+  placa?: string | null;
 }

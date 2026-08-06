@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { LocalStore } from './local-store.service';
 import { NetworkService } from './network.service';
 import { UserContextService } from './user-context.service';
+import { ErrorReportService } from './error-report.service';
 
 /** AF28 — los 6 estados de disponibilidad del chofer (mismo enum que el backend). */
 export type EstadoChofer =
@@ -63,6 +64,7 @@ export class ChoferEstadoService {
   private store = inject(LocalStore);
   private net = inject(NetworkService);
   private ctx = inject(UserContextService);
+  private errors = inject(ErrorReportService);
 
   private _estado = signal<EstadoChofer>('disponible');
   private _otros = signal<string | null>(null);
@@ -182,13 +184,23 @@ export class ChoferEstadoService {
   private async pushEstado(): Promise<void> {
     if (!this.net.online()) return;
     try {
-      await this.supabase.client.rpc('set_chofer_estado', {
+      const { error } = await this.supabase.client.rpc('set_chofer_estado', {
         p_estado: this._estado(),
         p_texto: this._otros(),
       });
+      if (error) {
+        // AG11 — el rechazo del RPC ya no se traga en silencio (era invisible por
+        // qué el estado del chofer nunca llegaba al Seguimiento del jefe).
+        this.errors.report('tracking', 'set_chofer_estado rechazó el cambio', {
+          code: error.code,
+          message: error.message,
+          estado: this._estado(),
+        });
+        return; // queda dirty → reintenta al volver la señal
+      }
       this.dirty = false;
     } catch {
-      /* se reintenta al volver la señal (effect) */
+      /* sin señal / error de red → se reintenta al volver la señal (effect) */
     }
   }
 

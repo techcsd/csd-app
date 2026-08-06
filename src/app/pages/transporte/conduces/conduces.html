@@ -7,6 +7,12 @@
 
   <div class="screen__body">
     <app-gps-gate-banner />
+    @if (trackingActivo()) {
+      <div class="conduces__tracking" role="status">
+        <span class="conduces__tracking-dot" aria-hidden="true"></span>
+        Reportando tu ubicación durante la ruta
+      </div>
+    }
     <div class="conduces__acciones">
       <button type="button" class="btn-cta conduces__crear" (click)="crearRuta()">
         ➕ Crear ruta

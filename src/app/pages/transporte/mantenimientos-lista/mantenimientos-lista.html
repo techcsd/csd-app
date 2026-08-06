@@ -1,0 +1,83 @@
+<div class="screen mant-lista">
+  <header class="mant-lista__header">
+    <button type="button" class="mant-lista__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mant-lista__icon">🔧</span>
+    <div>
+      <h1 class="mant-lista__title">Mantenimientos</h1>
+      @if (placa()) {
+        <p class="mant-lista__sub">{{ placa() }}</p>
+      }
+    </div>
+  </header>
+
+  <div class="screen__body">
+    <button type="button" class="btn-cta mant-lista__crear" (click)="registrar()">
+      ➕ Registrar mantenimiento
+    </button>
+
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      @if (pendientes().length) {
+        <h2 class="mant-lista__section">Pendientes / en curso</h2>
+        @for (m of pendientes(); track m.id) {
+          <div class="mant-card mant-card--pend">
+            <div class="mant-card__row">
+              <span class="mant-card__tipo">{{ tipoLabel(m.tipo) }}</span>
+              <span class="mant-card__estado">{{ estadoLabel(m.estado) }}</span>
+            </div>
+            @if (m.descripcion) {
+              <p class="mant-card__desc">{{ m.descripcion }}</p>
+            }
+            <div class="mant-card__meta">
+              <span>📅 {{ m.fecha | date: 'dd/MM/yyyy' }}</span>
+              @if (m.kilometraje != null) {
+                <span>🕑 {{ m.kilometraje | number: '1.0-0' }} km</span>
+              }
+              @if (m.proveedor) {
+                <span>🏭 {{ m.proveedor }}</span>
+              }
+            </div>
+            <button type="button" class="btn-cta mant-card__cerrar" (click)="cerrar(m)">
+              ✅ Cerrar con evidencia
+            </button>
+          </div>
+        }
+      }
+
+      @if (historial().length) {
+        <h2 class="mant-lista__section">Historial</h2>
+        @for (m of historial(); track m.id) {
+          <div class="mant-card">
+            <div class="mant-card__row">
+              <span class="mant-card__tipo">{{ tipoLabel(m.tipo) }}</span>
+              <span class="mant-card__estado mant-card__estado--ok">Completado</span>
+            </div>
+            @if (m.descripcion) {
+              <p class="mant-card__desc">{{ m.descripcion }}</p>
+            }
+            <div class="mant-card__meta">
+              <span>📅 {{ m.fecha | date: 'dd/MM/yyyy' }}</span>
+              @if (m.kilometraje != null) {
+                <span>🕑 {{ m.kilometraje | number: '1.0-0' }} km</span>
+              }
+              @if (m.proveedor) {
+                <span>🏭 {{ m.proveedor }}</span>
+              }
+              @if (m.costo != null) {
+                <span>💵 {{ m.costo | number: '1.0-2' }}</span>
+              }
+              @if (m.fotos?.length) {
+                <span>📷 {{ m.fotos!.length }}</span>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      @if (!pendientes().length && !historial().length) {
+        <p class="mant-lista__empty">Este vehículo no tiene mantenimientos registrados todavía.</p>
+      }
+    }
+  </div>
+</div>

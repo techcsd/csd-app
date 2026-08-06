@@ -165,6 +165,23 @@
   font-size: 15px;
   white-space: pre-wrap;
 }
+// AG15 — chip del vínculo dinámico en el detalle de la tarea.
+.tareas__vinculo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: #1d4ed8;
+  font-size: 14px;
+}
+.tareas__vinculo-ico {
+  font-size: 1.2rem;
+}
+
 .tareas__det-meta {
   margin: 12px 0;
   padding: 12px;

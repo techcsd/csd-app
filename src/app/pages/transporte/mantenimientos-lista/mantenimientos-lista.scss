@@ -1,0 +1,98 @@
+.mant-lista {
+  background: var(--color-bg);
+}
+
+.mant-lista__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.mant-lista__back {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--main, #121212);
+}
+.mant-lista__icon {
+  font-size: 1.5rem;
+}
+.mant-lista__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.mant-lista__sub {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--main-ultra-light, #929090);
+}
+
+.mant-lista__crear {
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.mant-lista__section {
+  margin: 14px 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.mant-lista__empty {
+  color: var(--main-ultra-light, #929090);
+  text-align: center;
+  padding: 24px 8px;
+}
+
+.mant-card {
+  border: 1px solid #e2e2e2;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+.mant-card--pend {
+  border-color: var(--Hub, #ffb300);
+  background: rgba(255, 179, 0, 0.06);
+}
+.mant-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.mant-card__tipo {
+  font-weight: 700;
+}
+.mant-card__estado {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 179, 0, 0.18);
+  color: #92600a;
+}
+.mant-card__estado--ok {
+  background: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+.mant-card__desc {
+  margin: 6px 0;
+  font-size: 0.95rem;
+}
+.mant-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--main-ultra-light, #6b6b6b);
+}
+.mant-card__cerrar {
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+}

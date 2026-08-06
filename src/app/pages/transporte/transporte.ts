@@ -343,7 +343,8 @@ export class TransportePage {
   }
 
   mantenimiento(vehiculoId: string): void {
-    void this.router.navigate(['/transporte/mantenimiento', vehiculoId]);
+    // AG9 — abre el hub de mantenimientos (historial + registrar + cerrar).
+    void this.router.navigate(['/transporte/mantenimientos', vehiculoId]);
   }
 
   combustible(vehiculoId: string): void {

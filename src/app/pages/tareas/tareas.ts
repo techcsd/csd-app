@@ -1,15 +1,26 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { OptionButton } from '../../shared/ui/option-button/option-button';
 import { PhotoSlot } from '../../shared/ui/photo-slot/photo-slot';
 import { TareasService, UsuarioBusqueda } from '../../core/services/tareas.service';
+import { InventarioService, ObraOrigen } from '../../core/services/inventario.service';
+import { Bodega, Ferreteria } from '../../core/models/inventario.model';
 import { UserContextService } from '../../core/services/user-context.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CapturedPhoto } from '../../core/services/camera.service';
-import { Tarea, TareaPrioridad, TAREA_ESTADO_META, TAREA_PRIORIDAD_META } from '../../core/models/tarea.model';
+import {
+  Tarea,
+  TareaPrioridad,
+  TareaLinkedTipo,
+  TareaLinkedParams,
+  TAREA_ESTADO_META,
+  TAREA_PRIORIDAD_META,
+  TAREA_LINKED_META,
+} from '../../core/models/tarea.model';
 import { formatFechaMedia } from '../../core/util/fecha';
 
 /**
@@ -27,13 +38,16 @@ import { formatFechaMedia } from '../../core/util/fecha';
 })
 export class TareasPage {
   private tareas = inject(TareasService);
+  private inventario = inject(InventarioService);
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private router = inject(Router);
 
   readonly fecha = formatFechaMedia;
   readonly estadoMeta = TAREA_ESTADO_META;
   readonly prioridadMeta = TAREA_PRIORIDAD_META;
+  readonly linkedMeta = TAREA_LINKED_META;
   readonly prioridades: TareaPrioridad[] = ['baja', 'media', 'alta', 'urgente'];
 
   loading = signal(true);
@@ -57,6 +71,21 @@ export class TareasPage {
   asignBusqueda = signal('');
   asignResultados = signal<UsuarioBusqueda[]>([]);
   asignSel = signal<UsuarioBusqueda | null>(null);
+
+  // AG15 — vínculo dinámico al crear la tarea (opcional).
+  readonly vinculoTipos: { valor: 'ninguno' | TareaLinkedTipo; label: string }[] = [
+    { valor: 'ninguno', label: 'Sin vínculo' },
+    { valor: 'conduce', label: '📦 Conduce' },
+    { valor: 'ruta', label: '🗺️ Ruta' },
+  ];
+  nuevoVinculo = signal<'ninguno' | TareaLinkedTipo>('ninguno');
+  vincObra = signal(''); // proyecto destino
+  vincFerreteria = signal('');
+  vincBodega = signal('');
+  obrasVinc = signal<ObraOrigen[]>([]);
+  ferreteriasVinc = signal<Ferreteria[]>([]);
+  bodegasVinc = signal<Bodega[]>([]);
+  private catalogosVincCargados = false;
   buscando = signal(false);
 
   private uid = computed(() => this.ctx.profile()?.id ?? null);
@@ -110,6 +139,54 @@ export class TareasPage {
     }
   }
 
+  /**
+   * AG15 — ¿esta tarea abre un flujo del sistema al iniciar? (v1: conduce con
+   * deep-link + auto-completado al confirmar la entrega). Se muestra el CTA
+   * "Iniciar y crear…" en el detalle.
+   */
+  puedeAbrirFlujo(t: Tarea | null): boolean {
+    if (!t || t.estado === 'completada' || t.estado === 'cancelada') return false;
+    if (t.linked_tipo === 'conduce' || t.linked_tipo === 'ruta') return true;
+    // Mantenimiento necesita el vehículo en los params para deep-linkear al wizard.
+    if (t.linked_tipo === 'mantenimiento') return !!t.linked_params?.vehiculo_id;
+    return false;
+  }
+
+  /**
+   * AG15 — inicia la tarea vinculada y abre el flujo correspondiente pre-llenado
+   * (deep-link). El flujo, al crear la entidad, la enlaza a la tarea; al confirmarse
+   * (entrega del conduce) la tarea se completa sola y notifica al asignador.
+   */
+  async iniciarYAbrir(t: Tarea): Promise<void> {
+    if (this.submitting()) return;
+    this.submitting.set(true);
+    try {
+      await this.tareas.iniciar(t.id);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo iniciar.');
+      this.submitting.set(false);
+      return;
+    }
+    this.submitting.set(false);
+    this.cerrar();
+    const p = t.linked_params ?? {};
+    if (t.linked_tipo === 'conduce') {
+      const queryParams: Record<string, string> = { tarea: t.id, origen: p.origen_tipo ?? 'almacen' };
+      if (p.bodega_id) queryParams['bodega'] = p.bodega_id;
+      if (p.ferreteria_id) queryParams['ferreteria'] = p.ferreteria_id;
+      if (p.obra_id) queryParams['obra'] = p.obra_id;
+      void this.router.navigate(['/transporte/generar-conduce'], { queryParams });
+    } else if (t.linked_tipo === 'ruta') {
+      void this.router.navigate(['/transporte/rutas/crear'], { queryParams: { tarea: t.id } });
+    } else if (t.linked_tipo === 'mantenimiento' && p.vehiculo_id) {
+      void this.router.navigate(['/transporte/mantenimiento', p.vehiculo_id], {
+        queryParams: { tarea: t.id },
+      });
+    } else {
+      await this.load();
+    }
+  }
+
   pedirCompletar(): void {
     this.completando.set(true);
   }
@@ -138,6 +215,7 @@ export class TareasPage {
   // ── Crear ──
   abrirCrear(): void {
     this.hoja.set('crear');
+    void this.cargarCatalogosVinculo();
   }
   cerrarCrear(): void {
     this.hoja.set('lista');
@@ -148,6 +226,28 @@ export class TareasPage {
     this.asignBusqueda.set('');
     this.asignResultados.set([]);
     this.asignSel.set(null);
+    this.nuevoVinculo.set('ninguno');
+    this.vincObra.set('');
+    this.vincFerreteria.set('');
+    this.vincBodega.set('');
+  }
+
+  /** AG15 — carga (una vez) los catálogos para armar el vínculo de la tarea. */
+  private async cargarCatalogosVinculo(): Promise<void> {
+    if (this.catalogosVincCargados) return;
+    this.catalogosVincCargados = true;
+    const [obras, ferr, bodegas] = await Promise.all([
+      this.inventario.getObrasConBodega().catch(() => [] as ObraOrigen[]),
+      this.inventario.getFerreterias().catch(() => [] as Ferreteria[]),
+      this.inventario.getBodegas().catch(() => [] as Bodega[]),
+    ]);
+    this.obrasVinc.set(obras);
+    this.ferreteriasVinc.set(ferr);
+    this.bodegasVinc.set(bodegas);
+  }
+
+  setVinculo(v: 'ninguno' | TareaLinkedTipo): void {
+    this.nuevoVinculo.set(v);
   }
 
   async buscarAsignado(): Promise<void> {
@@ -181,6 +281,22 @@ export class TareasPage {
       this.toast.error('Elige a quién se la asignas.');
       return;
     }
+    // AG15 — arma el vínculo si se eligió uno.
+    let linkedTipo: TareaLinkedTipo | null = null;
+    let linkedParams: TareaLinkedParams | null = null;
+    if (this.nuevoVinculo() === 'conduce') {
+      linkedTipo = 'conduce';
+      linkedParams = {
+        origen_tipo: this.vincFerreteria() ? 'ferreteria' : 'almacen',
+        ...(this.vincFerreteria() ? { ferreteria_id: this.vincFerreteria() } : {}),
+        ...(this.vincBodega() ? { bodega_id: this.vincBodega() } : {}),
+        ...(this.vincObra() ? { obra_id: this.vincObra() } : {}),
+      };
+    } else if (this.nuevoVinculo() === 'ruta') {
+      linkedTipo = 'ruta';
+      linkedParams = {};
+    }
+
     this.submitting.set(true);
     try {
       await this.tareas.crear({
@@ -190,6 +306,8 @@ export class TareasPage {
         asignadoA: this.asignSel()!.id,
         proyectoId: null,
         fechaLimite: this.nuevaFechaLimite() || null,
+        linkedTipo,
+        linkedParams,
       });
       this.toast.success('Tarea creada.');
       this.cerrarCrear();

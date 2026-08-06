@@ -288,10 +288,28 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/preuso/preuso').then((m) => m.PreusoPage),
   },
   {
+    // AG9 — hub de mantenimientos del vehículo (historial + registrar + cerrar).
+    path: 'transporte/mantenimientos/:vehiculoId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mantenimientos-lista/mantenimientos-lista').then(
+        (m) => m.MantenimientosListaPage,
+      ),
+  },
+  {
     path: 'transporte/mantenimiento/:vehiculoId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
       import('./pages/transporte/mantenimiento/mantenimiento').then((m) => m.MantenimientoPage),
+  },
+  {
+    // AG9 — cerrar un mantenimiento con costo/evidencia.
+    path: 'transporte/mantenimiento/:vehiculoId/cerrar/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mantenimiento-cierre/mantenimiento-cierre').then(
+        (m) => m.MantenimientoCierrePage,
+      ),
   },
   {
     // S26b — acceso directo "Registrar combustible" sin vehículo en contexto:

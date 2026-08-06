@@ -28,6 +28,9 @@
   margin: 0;
 }
 
+.seg__map-wrap {
+  position: relative;
+}
 .seg__map {
   height: 42vh;
   width: 100%;
@@ -36,6 +39,63 @@
   &--hidden {
     display: none;
   }
+}
+
+// AG10 — leyenda del mapa (overlay arriba-derecha, sobre los tiles de Leaflet).
+.seg__legend {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000; // por encima de los panes de Leaflet
+  background: #fff;
+  border: 1px solid #d8d8d8;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  max-width: 62%;
+}
+.seg__legend-toggle {
+  border: none;
+  background: transparent;
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--main, #121212);
+  width: 100%;
+  text-align: left;
+}
+.seg__legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.seg__legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.seg__legend-item--sep {
+  border-top: 1px solid #eee;
+  padding-top: 6px;
+}
+.seg__legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.seg__legend-note {
+  color: var(--main-ultra-light, #929090);
+  font-size: 0.75rem;
+}
+.seg__legend-ico {
+  font-size: 0.95rem;
 }
 
 .seg__body {

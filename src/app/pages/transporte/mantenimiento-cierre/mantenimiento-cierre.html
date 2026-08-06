@@ -1,0 +1,63 @@
+<div class="screen mant-cierre">
+  <header class="mant-cierre__header">
+    <button type="button" class="mant-cierre__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mant-cierre__icon">✅</span>
+    <h1 class="mant-cierre__title">Cerrar mantenimiento</h1>
+  </header>
+
+  <div class="screen__body mant-cierre__body">
+    <app-km-input label="Kilometraje al cerrar — opcional" sufijo="km" [(value)]="km" />
+
+    <label class="mant-cierre__field">
+      <span class="mant-cierre__label">Costo — opcional</span>
+      <input
+        class="mant-cierre__input"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        placeholder="RD$"
+        [ngModel]="costo()"
+        (ngModelChange)="costo.set($event)"
+      />
+    </label>
+
+    <label class="mant-cierre__field">
+      <span class="mant-cierre__label">Taller / proveedor — opcional</span>
+      <input
+        class="mant-cierre__input"
+        type="text"
+        placeholder="Nombre del taller"
+        [ngModel]="proveedor()"
+        (ngModelChange)="proveedor.set($event)"
+      />
+    </label>
+
+    <label class="mant-cierre__field">
+      <span class="mant-cierre__label">Notas — opcional</span>
+      <textarea
+        class="mant-cierre__input mant-cierre__textarea"
+        rows="3"
+        placeholder="Trabajo realizado, observaciones…"
+        [ngModel]="notas()"
+        (ngModelChange)="notas.set($event)"
+      ></textarea>
+    </label>
+
+    <span class="mant-cierre__label">Evidencia (factura / foto) — opcional</span>
+    <div class="mant-cierre__fotos">
+      @for (i of slots; track i) {
+        <app-photo-slot
+          [label]="i === 0 ? 'Factura' : 'Foto'"
+          hint="📷"
+          [foto]="fotos()[i] ?? null"
+          (captured)="onFoto(i, $event)"
+          (cleared)="onFotoCleared(i)"
+        />
+      }
+    </div>
+
+    <button type="button" class="btn-cta mant-cierre__confirmar" [disabled]="guardando()" (click)="confirmar()">
+      ✅ Cerrar mantenimiento
+    </button>
+  </div>
+</div>
