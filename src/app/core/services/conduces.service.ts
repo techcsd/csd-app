@@ -74,8 +74,45 @@ export interface ConduceTransportistaCaptura {
   /** AF23.3 — firma de quien ENTREGA (emisor), obligatoria al emitir. */
   firmaEmisor?: Blob | null;
   emisorNombre?: string | null;
+  /** AH4 — firma del chofer que TRANSPORTA (transportista), obligatoria al emitir.
+   *  Si es la misma persona que entrega, se pasa la MISMA imagen que firmaEmisor
+   *  (una sola firma con doble rol). */
+  firmaTransportista?: Blob | null;
+  transportistaNombre?: string | null;
+  /** AH4 — true si quien entrega es OTRA persona (no el chofer logueado): su firma
+   *  de emisor NO se atribuye al usuario actual. */
+  emisorEsOtro?: boolean;
   /** AG15 — si el conduce nace de una tarea vinculada, su id (se enlaza al emitir). */
   tareaVinculada?: string | null;
+}
+
+/** AH5 — una oferta de transferencia de responsabilidad de un conduce (inbox). */
+export interface ConduceTransferencia {
+  id: string;
+  salida_id: string;
+  estado: 'ofrecida' | 'aceptada' | 'rechazada' | 'cancelada';
+  ofrecida_en: string;
+  de_conductor_id: string | null;
+  de_nombre: string | null;
+  notas: string | null;
+  conduce_fecha: string | null;
+  conduce_obra: string | null;
+  conduce_bodega: string | null;
+  conduce_estado: string | null;
+  items_count: number;
+}
+
+/** AH5 — una entrada del historial de transferencias de un conduce. */
+export interface ConduceTransferenciaHist {
+  id: string;
+  estado: string;
+  ofrecida_en: string;
+  resuelta_en: string | null;
+  de_conductor_id: string | null;
+  de_nombre: string | null;
+  a_conductor_id: string | null;
+  a_nombre: string | null;
+  notas: string | null;
 }
 
 /** AC13 — una parada intermedia de la ruta. */
@@ -173,6 +210,19 @@ export interface LugarDestino {
   id: string;
   nombre: string;
   tipo: 'obra' | 'almacen';
+  latitud: number | null;
+  longitud: number | null;
+}
+
+/** AH9 — contrato canónico de destinos_transporte() (obra con almacén implícito
+ *  resuelto + almacenes sueltos; es_prueba-filtrado server-side). */
+export interface DestinoTransporte {
+  tipo: 'obra' | 'almacen';
+  id: string;
+  nombre: string;
+  proyecto_id: string | null;
+  bodega_id: string | null;
+  tiene_bodega: boolean;
   latitud: number | null;
   longitud: number | null;
 }
@@ -328,7 +378,15 @@ export class ConducesService {
   async avanzarParada(
     paradaId: string,
     estado: ParadaEstado,
-    opts: { entregadoA?: string | null; notas?: string | null; foto?: Blob | null; firma?: Blob | null } = {},
+    opts: {
+      entregadoA?: string | null;
+      notas?: string | null;
+      foto?: Blob | null;
+      firma?: Blob | null;
+      /** AH8 — ubicación donde el chofer completó la parada (tap). */
+      lat?: number | null;
+      lng?: number | null;
+    } = {},
   ): Promise<void> {
     const capturado_en = new Date().toISOString();
     const opId = crypto.randomUUID();
@@ -348,6 +406,9 @@ export class ConducesService {
         estado,
         entregado_a: opts.entregadoA ?? null,
         notas: opts.notas ?? null,
+        at: capturado_en, // AH8 — instante del tap (offline-safe)
+        lat: opts.lat ?? null, // AH8 — ubicación de completado
+        lng: opts.lng ?? null,
       },
       fotos,
       resumen: { tipo: 'avanzar_parada', parada_id: paradaId, capturado_en },
@@ -459,29 +520,37 @@ export class ConducesService {
     return data ?? [];
   }
 
-  /** U22 — obras + almacenes con coordenadas, para elegir destino de la ruta. */
+  /**
+   * AH9 — obras (destino real; su almacén va implícito y se resuelve server-side) +
+   * almacenes NO ligados a obra (ej. Bodega Central). Contrato canónico único
+   * `destinos_transporte()`: filtra es_prueba (AH11 — sin "Test") y NUNCA expone los
+   * almacenes de una obra como opción suelta. Reemplaza la mezcla obras+todas-las-
+   * bodegas anterior. `id` = proyecto (obra) | bodega (almacén suelto), como antes.
+   */
   async getLugaresDestino(): Promise<LugarDestino[]> {
     const data = await this.catalog.refresh<LugarDestino[]>('lugares_destino', async () => {
-      const [obras, almacenes] = await Promise.all([
-        this.supabase.client.from('proyectos').select('id, nombre, latitud, longitud').order('nombre'),
-        this.supabase.client.from('bodegas').select('id, nombre, latitud, longitud').eq('activo', true).order('nombre'),
-      ]);
-      if (obras.error) throw new Error(obras.error.message);
-      const lugares: LugarDestino[] = [];
-      for (const o of (obras.data as Array<Record<string, unknown>>) ?? []) {
-        lugares.push({
-          id: o['id'] as string, nombre: o['nombre'] as string, tipo: 'obra',
-          latitud: (o['latitud'] as number) ?? null, longitud: (o['longitud'] as number) ?? null,
-        });
-      }
-      // bodegas puede no tener columnas geo en un entorno viejo → tolerante.
-      for (const b of (almacenes.data as Array<Record<string, unknown>> | null) ?? []) {
-        lugares.push({
-          id: b['id'] as string, nombre: b['nombre'] as string, tipo: 'almacen',
-          latitud: (b['latitud'] as number) ?? null, longitud: (b['longitud'] as number) ?? null,
-        });
-      }
-      return lugares;
+      const { data: rows, error } = await this.supabase.client.rpc('destinos_transporte');
+      if (error) throw new Error(error.message);
+      return ((rows as Array<Record<string, unknown>>) ?? []).map((r) => ({
+        id: r['id'] as string,
+        nombre: r['nombre'] as string,
+        tipo: (r['tipo'] as 'obra' | 'almacen') ?? 'obra',
+        latitud: (r['latitud'] as number) ?? null,
+        longitud: (r['longitud'] as number) ?? null,
+      }));
+    });
+    return data ?? [];
+  }
+
+  /**
+   * AH9 — contrato canónico de destinos (obras con almacén resuelto + almacenes
+   * sueltos), para flujos que necesitan resolver la bodega implícita de una obra.
+   */
+  async getDestinos(): Promise<DestinoTransporte[]> {
+    const data = await this.catalog.refresh<DestinoTransporte[]>('destinos_transporte', async () => {
+      const { data: rows, error } = await this.supabase.client.rpc('destinos_transporte');
+      if (error) throw new Error(error.message);
+      return (rows as DestinoTransporte[]) ?? [];
     });
     return data ?? [];
   }
@@ -577,6 +646,17 @@ export class ConducesService {
         blob: input.firmaEmisor,
       });
     }
+    // AH4 — segunda firma (chofer que transporta). Cuando entrega y transporta la
+    // misma persona, este blob es idéntico al del emisor (una firma, doble rol).
+    if (input.firmaTransportista) {
+      fotos.push({
+        id: crypto.randomUUID(),
+        bucket: 'conduces',
+        path: `${id}/${id}-firma-transportista.png`,
+        slot: 'firma_transportista',
+        blob: input.firmaTransportista,
+      });
+    }
     await this.sync.enqueue({
       id,
       tipo_op: 'conduce_transportista',
@@ -591,6 +671,8 @@ export class ConducesService {
         ruta_id: input.rutaId ?? null,
         items: input.items,
         emisor_nombre: input.emisorNombre ?? null,
+        emisor_es_otro: input.emisorEsOtro ?? false, // AH4
+        transportista_nombre: input.transportistaNombre ?? null, // AH4
         tarea_vinculada: input.tareaVinculada ?? null, // AG15
       },
       fotos,
@@ -631,6 +713,84 @@ export class ConducesService {
     });
 
     void this.misConduces();
+  }
+
+  // ─── AH5 — Transferencia de responsabilidad de conduces entre choferes ──────
+
+  /** Choferes activos a los que se puede transferir. `choferes_activos` (AH5c) es
+   *  accesible a cualquier chofer (choferes_estado solo lo ve flota-elevado). */
+  async choferesParaTransferir(): Promise<{ id: string; label: string }[]> {
+    const { data, error } = await this.supabase.client.rpc('choferes_activos');
+    if (error) return [];
+    return ((data ?? []) as { conductor_id: string; nombre: string }[])
+      .filter((c) => c.conductor_id)
+      .map((c) => ({ id: c.conductor_id, label: c.nombre }));
+  }
+
+  /** Ofertas de transferencia ABIERTAS dirigidas a mí (inbox del receptor). */
+  async misTransferenciasPendientes(): Promise<ConduceTransferencia[]> {
+    const r = await this.catalog.refresh('mis_transferencias', async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_transferencias_conduce');
+      if (error) throw error;
+      return (data ?? []) as ConduceTransferencia[];
+    });
+    return r ?? [];
+  }
+
+  /** Historial de transferencias de un conduce (trazabilidad en el detalle). */
+  async transferenciasDeConduce(salidaId: string): Promise<ConduceTransferenciaHist[]> {
+    const { data, error } = await this.supabase.client.rpc('transferencias_de_conduce', {
+      p_salida_id: salidaId,
+    });
+    if (error) return [];
+    return (data ?? []) as ConduceTransferenciaHist[];
+  }
+
+  /**
+   * AH5 — el responsable actual OFRECE el conduce a otro chofer. Acción online
+   * (coordina a dos personas; no tiene sentido offline). El servidor valida que
+   * solo el chofer responsable (o flota) pueda ofrecer.
+   */
+  async ofrecerTransferencia(salidaId: string, aConductorId: string, notas: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('ofrecer_transferencia_conduce', {
+      p_salida_id: salidaId,
+      p_a_conductor_id: aConductorId,
+      p_notas: notas,
+    });
+    if (error) throwSyncError(error);
+    await this.catalog.invalidate('mis_transferencias').catch(() => {});
+  }
+
+  /**
+   * AH5 — el receptor ACEPTA la transferencia con foto + firma (evidencia
+   * obligatoria server-side, AH6/AH7). Offline-safe por outbox: sube foto+firma y
+   * llama aceptar_transferencia_conduce (reasigna el conduce y su ruta al nuevo chofer).
+   */
+  async aceptarTransferencia(transferenciaId: string, foto: Blob, firma: Blob): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_transf_aceptar',
+      capturado_en,
+      payload: { id, transferencia_id: transferenciaId },
+      fotos: [
+        { id: crypto.randomUUID(), bucket: 'conduces', path: `transferencias/${transferenciaId}/${id}-foto.jpg`, slot: 'transf_foto', blob: foto },
+        { id: crypto.randomUUID(), bucket: 'conduces', path: `transferencias/${transferenciaId}/${id}-firma.png`, slot: 'transf_firma', blob: firma },
+      ],
+      resumen: { tipo: 'conduce_transf_aceptar', transferencia_id: transferenciaId, capturado_en },
+    });
+    await this.catalog.invalidate('mis_transferencias').catch(() => {});
+  }
+
+  /** AH5 — el receptor rechaza (o el emisor/flota cancela) la oferta. Online. */
+  async rechazarTransferencia(transferenciaId: string, motivo: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('rechazar_transferencia_conduce', {
+      p_transferencia_id: transferenciaId,
+      p_motivo: motivo,
+    });
+    if (error) throwSyncError(error);
+    await this.catalog.invalidate('mis_transferencias').catch(() => {});
   }
 
   private registerHandler(): void {
@@ -747,6 +907,9 @@ export class ConducesService {
         p_firma_path: photoPaths['parada_firma'] ?? null,
         p_entregado_a: payload['entregado_a'] ?? null,
         p_notas: payload['notas'] ?? null,
+        p_at: payload['at'] ?? null, // AH8 — tap-time
+        p_lat: payload['lat'] ?? null, // AH8 — ubicación de completado
+        p_lng: payload['lng'] ?? null,
       });
       if (error) throwSyncError(error);
     });
@@ -814,16 +977,30 @@ export class ConducesService {
       // AF23.3 — sella la firma del emisor (quien entrega) al emitir. Idempotente
       // por (salida_id, rol). Best-effort verificado: el outbox reintenta si falla.
       const firmaEmisor = photoPaths['firma_emisor'];
+      const { data: userData } = await this.supabase.client.auth.getUser();
+      const uid = userData.user?.id ?? null;
       if (firmaEmisor) {
-        const { data: userData } = await this.supabase.client.auth.getUser();
         const { error: eF } = await this.supabase.client.rpc('firmar_conduce', {
           p_salida_id: salidaId,
           p_rol: 'emisor',
           p_nombre: payload['emisor_nombre'] ?? 'Emisor',
           p_firma_path: firmaEmisor,
-          p_usuario_id: userData.user?.id ?? null,
+          // Si otra persona entrega, su firma no se atribuye al usuario actual.
+          p_usuario_id: payload['emisor_es_otro'] ? null : uid,
         });
         if (eF) throwSyncError(eF);
+      }
+      // AH4 — segunda firma: el chofer que transporta. Idempotente por (salida, rol).
+      const firmaTransportista = photoPaths['firma_transportista'];
+      if (firmaTransportista) {
+        const { error: eT } = await this.supabase.client.rpc('firmar_conduce', {
+          p_salida_id: salidaId,
+          p_rol: 'transportista',
+          p_nombre: payload['transportista_nombre'] ?? payload['emisor_nombre'] ?? 'Chofer',
+          p_firma_path: firmaTransportista,
+          p_usuario_id: uid,
+        });
+        if (eT) throwSyncError(eT);
       }
       // AG15 — si el conduce nace de una tarea vinculada, enlázala a esta salida.
       // Se hace AQUÍ (post-éxito, salida ya existe) y es idempotente: cuando la
@@ -892,6 +1069,22 @@ export class ConducesService {
         });
         if (eP) throwSyncError(eP);
       }
+    });
+
+    // AH5 — el receptor acepta una transferencia de conduce (foto + firma). El RPC
+    // reasigna el conduce y su ruta al nuevo chofer; exige foto+firma (AH6/AH7).
+    // Idempotente por transferencia (aceptar dos veces devuelve el mismo id).
+    this.sync.register('conduce_transf_aceptar', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('aceptar_transferencia_conduce', {
+        p_transferencia_id: payload['transferencia_id'],
+        p_foto_path: photoPaths['transf_foto'],
+        p_firma_path: photoPaths['transf_firma'],
+      });
+      if (error) throwSyncError(error);
+      // El conduce y su ruta cambiaron de dueño → refrescar mis listados.
+      await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+      await this.catalog.invalidate(CATALOG_RUTAS).catch(() => {});
+      await this.catalog.invalidate('mis_transferencias').catch(() => {});
     });
   }
 }

@@ -1,0 +1,98 @@
+.tr-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+
+  &__back {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  &__icon { font-size: 22px; }
+  &__title { font-size: 18px; font-weight: 700; margin: 0; }
+}
+
+.tr-intro {
+  color: var(--main-ultra-light, #6b7280);
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.tr-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    color: #6b7280;
+  }
+  &__ruta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin: 6px 0;
+  }
+  &__arrow { color: #9ca3af; }
+  &__meta { font-size: 13px; color: #6b7280; }
+  &__notas { font-size: 13px; margin: 6px 0 0; color: #374151; }
+  &__actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    .btn-cta { flex: 1; }
+    .btn-ghost { width: auto; }
+  }
+}
+
+.tr-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 40;
+}
+.tr-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 41;
+  background: #fff;
+  border-radius: 18px 18px 0 0;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.18);
+
+  &__grip {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: #d1d5db;
+    margin: 2px auto 10px;
+  }
+  &__title { font-size: 18px; font-weight: 700; margin: 0; }
+  &__sub { font-size: 13px; color: #6b7280; margin: 4px 0 0; }
+  &__actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    .btn-cta { flex: 1; }
+    .btn-ghost { width: auto; }
+  }
+}
+
+.tr-mt { margin-top: 14px; }
+.tr-req { color: var(--primary, #ff5f00); }

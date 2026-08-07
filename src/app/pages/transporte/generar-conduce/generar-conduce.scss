@@ -118,3 +118,12 @@
   border-color: var(--color-warning);
   color: var(--color-warning);
 }
+
+// AH4 — checkbox "otra persona entrega"
+.gconduce__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  input { width: 20px; height: 20px; }
+}

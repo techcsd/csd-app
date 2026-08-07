@@ -3,7 +3,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { SelectList } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { Bodega, CategoriaInv, Existencia, esArticuloExterno, propiedadLabel } from '../../../core/models/inventario.model';
 
@@ -23,7 +23,7 @@ const SIN_CATEGORIA_KEY = 'sin';
   selector: 'app-existencias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, SelectList],
+  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect],
   templateUrl: './existencias.html',
   styleUrl: './existencias.scss',
 })

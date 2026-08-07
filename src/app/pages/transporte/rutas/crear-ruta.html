@@ -66,7 +66,7 @@
           <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">🏗️ {{ origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén' }}</button>
           <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}</button>
           @if (origenLugar()) {
-            <app-select-list label="Obra de origen" [options]="lugarOpts()" [selectedId]="origenLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onOrigenLugar($event)" />
+            <app-collapsible-select label="Obra de origen" icon="🏗️" [options]="lugarOpts()" [selectedId]="origenLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onOrigenLugar($event)" />
             @if (selectedOrigenLugar() && selectedOrigenLugar()!.latitud == null) {
               <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
             }
@@ -80,7 +80,7 @@
             <app-option-button icon="🗺️" label="En el mapa" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
           </div>
           @if (destinoModo() === 'lugar') {
-            <app-select-list label="Obra de destino" [options]="lugarOpts()" [selectedId]="destinoLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onDestinoLugar($event)" />
+            <app-collapsible-select label="Obra de destino" icon="🏗️" [options]="lugarOpts()" [selectedId]="destinoLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onDestinoLugar($event)" />
             @if (selectedLugar() && selectedLugar()!.latitud == null) {
               <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
             }
@@ -112,12 +112,15 @@
                 <button type="button" class="cruta__modo-btn" [class.cruta__modo-btn--on]="p.modo === 'mapa'" (click)="setParadaModo($index, 'mapa')">📍 En el mapa</button>
               </div>
               @if (p.modo === 'lugar') {
-                <select class="field" [ngModel]="p.lugarId" (ngModelChange)="setParadaLugar($index, $event)">
-                  <option value="">— Elige obra o almacén —</option>
-                  @for (l of lugares(); track l.id) {
-                    <option [value]="l.id">{{ l.tipo === 'obra' ? '🏗️' : '🏢' }} {{ l.nombre }}</option>
-                  }
-                </select>
+                <app-collapsible-select
+                  label="Obra o almacén"
+                  icon="🏗️"
+                  [options]="lugarOpts()"
+                  [selectedId]="p.lugarId || ''"
+                  [searchable]="true"
+                  searchPlaceholder="Buscar obra o almacén…"
+                  (picked)="setParadaLugar($index, $event)"
+                />
               } @else {
                 <app-location-picker
                   [latitud]="p.lat"

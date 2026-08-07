@@ -65,3 +65,14 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+
+// AH14 — fila clicable + marca/modelo + detalle
+.actas__card--tap { cursor: pointer; }
+.actas__marca { color: var(--main-ultra-light, #6b7280); font-weight: 500; }
+.actas__ver {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary, #ff5f00);
+}

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selector-categorias';
-import { SelectList } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
@@ -34,7 +34,7 @@ interface GrupoResumen {
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, SelectList, ConfirmDialog, WizardFooter, ShareSheet],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet],
   templateUrl: './pedir.html',
   styleUrl: '../../inventario/salida/salida.scss',
 })

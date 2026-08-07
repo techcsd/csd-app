@@ -1,0 +1,30 @@
+<div class="screen">
+  <header class="rh-header">
+    <button type="button" class="rh-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="rh-header__icon">🧑‍💼</span>
+    <h1 class="rh-header__title">Empleados</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      <input class="field rh-buscar" type="search" [ngModel]="q()" (ngModelChange)="q.set($event)"
+        placeholder="Buscar por nombre, cargo, cédula…" />
+
+      @for (e of lista(); track e.id) {
+        <div class="rh-card" (click)="abrir(e)">
+          <div class="rh-card__main">
+            <span class="rh-card__nombre">{{ nombreCompleto(e) }}</span>
+            <span class="rh-card__cargo">{{ e.cargo || 'Sin cargo' }}@if (e.departamento) { · {{ e.departamento }} }</span>
+          </div>
+          <span class="rh-card__chev">›</span>
+        </div>
+      } @empty {
+        <app-empty-state icon="🧑‍💼" title="Sin empleados" message="No hay empleados que coincidan con la búsqueda." />
+      }
+    }
+  </div>
+
+  <app-sync-bar />
+</div>

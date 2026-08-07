@@ -1,0 +1,54 @@
+.acta__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.acta__back { border: none; background: transparent; font-size: 24px; cursor: pointer; padding: 4px 8px; }
+.acta__icon { font-size: 22px; }
+.acta__title { font-size: 18px; font-weight: 700; margin: 0; }
+
+.acta__card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.acta__veh { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.acta__placa { font-size: 20px; font-weight: 800; }
+.acta__marca { color: #6b7280; }
+.acta__lineas p { margin: 3px 0; font-size: 14px; }
+.acta__notas { margin: 8px 0 0; font-size: 14px; color: #374151; }
+
+.acta__h2 { font-size: 16px; font-weight: 700; margin: 6px 0 10px; }
+
+.acta__falla {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.acta__falla-tit { font-weight: 700; margin: 0 0 4px; }
+.acta__falla-desc { margin: 0 0 8px; font-size: 14px; }
+
+.acta__check {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 14px;
+  &:last-child { border-bottom: none; }
+}
+.acta__resp { font-weight: 600; }
+.acta__resp--falla { color: #dc2626; }
+.acta__resp--ok { color: #16a34a; }
+
+.acta__fotos { display: flex; flex-wrap: wrap; gap: 10px; }
+.acta__foto { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid #e5e7eb; }
+.acta__audios, .acta__voz { margin-top: 8px; }
+.acta__audio { width: 100%; margin-top: 6px; }
+.acta__transcr { font-size: 13px; color: #6b7280; font-style: italic; margin: 4px 0 0; }
+.acta__vacio { color: #6b7280; text-align: center; margin-top: 40px; }

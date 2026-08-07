@@ -27,7 +27,7 @@
     <div class="screen__body">
       <h2 class="mov__h2">Revisa tu requisición</h2>
 
-      <app-select-list label="Obra" icon="🏗️" [options]="obraOptions()" [selectedId]="proyectoId()" (picked)="proyectoId.set($event)" />
+      <app-collapsible-select label="Obra" icon="🏗️" [options]="obraOptions()" [selectedId]="proyectoId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="proyectoId.set($event)" />
 
       <label class="field-label mov__mt">Urgencia</label>
       <div class="mov__motivos">

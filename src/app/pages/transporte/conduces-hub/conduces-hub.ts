@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BigButton } from '../../../shared/ui/big-button/big-button';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { InventarioService } from '../../../core/services/inventario.service';
+import { ConducesService } from '../../../core/services/conduces.service';
 
 interface ConduceTile {
   key: string;
@@ -22,6 +23,7 @@ const TILES: ConduceTile[] = [
   { key: 'devolver', icon: '↩️', label: 'Devolver', tint: '#0f766e', route: '/transporte/devolver-material' },
   { key: 'ferreteria', icon: '🧾', label: 'Compra en ferretería', tint: '#9333ea', route: '/transporte/ferreteria' },
   { key: 'porFirmar', icon: '✍️', label: 'Por firmar', tint: '#ca8a04', route: '/transporte/por-firmar' },
+  { key: 'transferencias', icon: '↔️', label: 'Transferencias', tint: '#0369a1', route: '/transporte/conduce-transferencias' },
   { key: 'historial', icon: '🗂️', label: 'Historial de conduces', tint: '#1e3a5f', route: '/transporte/conduces-historial' },
 ];
 
@@ -38,19 +40,27 @@ export class ConducesHubPage {
   private router = inject(Router);
   private location = inject(Location);
   private inventario = inject(InventarioService);
+  private conduces = inject(ConducesService);
 
   readonly tiles = TILES;
   firmasPendientes = signal(0);
+  transferenciasPendientes = signal(0);
 
   constructor() {
     void this.inventario
       .misFirmasPendientes()
       .then((l) => this.firmasPendientes.set(l.length))
       .catch(() => {});
+    // AH5 — badge de transferencias de conduce que me ofrecieron (por aceptar).
+    void this.conduces
+      .misTransferenciasPendientes()
+      .then((l) => this.transferenciasPendientes.set(l.length))
+      .catch(() => {});
   }
 
   badgeFor(key: string): number | null {
     if (key === 'porFirmar') return this.firmasPendientes() || null;
+    if (key === 'transferencias') return this.transferenciasPendientes() || null;
     return null;
   }
 

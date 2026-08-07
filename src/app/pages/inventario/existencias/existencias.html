@@ -5,7 +5,7 @@
   </header>
 
   <div class="screen__body">
-    <app-select-list label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="onBodega($event)" />
+    <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="onBodega($event)" />
 
     @if (bodegaId()) {
       <input

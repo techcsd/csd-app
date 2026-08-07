@@ -1,0 +1,90 @@
+<div class="screen acta">
+  <header class="acta__header">
+    <button type="button" class="acta__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="acta__icon">🚗</span>
+    <h1 class="acta__title">Acta de recepción</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (acta(); as a) {
+      <!-- Vehículo -->
+      <div class="acta__card">
+        <div class="acta__veh">
+          <span class="acta__placa">{{ a.placa || 'Vehículo' }}</span>
+          @if (marcaModelo()) { <span class="acta__marca">{{ marcaModelo() }}</span> }
+        </div>
+        <div class="acta__lineas">
+          <p>📤 Dejó: <strong>{{ a.de?.nombre || '—' }}</strong></p>
+          <p>📥 Recibió: <strong>{{ a.a?.nombre || '—' }}</strong></p>
+          @if (a.km != null) { <p>🧭 {{ a.km | number: '1.0-0' }} km</p> }
+          <p>🕒 {{ fechaHora(a.created_at) }}</p>
+          @if (llaveLabel(a.llave1_ubicacion_tipo)) { <p>{{ llaveLabel(a.llave1_ubicacion_tipo) }}</p> }
+        </div>
+        @if (a.notas) { <p class="acta__notas">📝 {{ a.notas }}</p> }
+      </div>
+
+      <!-- Fallas con evidencia (AH13) -->
+      @if (fallas().length) {
+        <h2 class="acta__h2">⚠️ Fallas reportadas</h2>
+        @for (f of fallas(); track f.etiqueta) {
+          <div class="acta__falla">
+            <p class="acta__falla-tit">{{ f.etiqueta }}</p>
+            @if (f.descripcion) { <p class="acta__falla-desc">{{ f.descripcion }}</p> }
+            @if (f.fotos?.length) {
+              <div class="acta__fotos">
+                @for (p of f.fotos; track p) {
+                  @if (url(p)) { <img class="acta__foto" [src]="url(p)" alt="Foto de la falla" loading="lazy" /> }
+                }
+              </div>
+            }
+            @if (f.audios?.length) {
+              <div class="acta__audios">
+                @for (p of f.audios; track p) {
+                  @if (url(p)) { <audio class="acta__audio" controls [src]="url(p)"></audio> }
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Checklist completo -->
+      <h2 class="acta__h2">Checklist de condiciones</h2>
+      <div class="acta__card">
+        @for (c of acta()!.condiciones; track c.etiqueta) {
+          <div class="acta__check">
+            <span>{{ c.etiqueta }}</span>
+            <span class="acta__resp acta__resp--{{ c.respuesta }}">{{ respLabel(c.respuesta) }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Notas de voz del acta -->
+      @if (a.audios?.length) {
+        <h2 class="acta__h2">🎤 Notas de voz</h2>
+        <div class="acta__card">
+          @for (au of a.audios; track au.id) {
+            <div class="acta__voz">
+              @if (url(au.path)) { <audio class="acta__audio" controls [src]="url(au.path)"></audio> }
+              @if (au.transcripcion) { <p class="acta__transcr">“{{ au.transcripcion }}”</p> }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Fotos generales -->
+      @if (a.fotos?.length) {
+        <h2 class="acta__h2">📷 Fotos</h2>
+        <div class="acta__fotos">
+          @for (p of a.fotos; track p) {
+            @if (url(p)) { <img class="acta__foto" [src]="url(p)" alt="Foto del acta" loading="lazy" /> }
+          }
+        </div>
+      }
+    } @else {
+      <p class="acta__vacio">No se encontró el acta.</p>
+    }
+  </div>
+</div>

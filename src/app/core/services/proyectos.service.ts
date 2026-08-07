@@ -3,6 +3,17 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { ProyectoApp } from '../models/proyecto.model';
 
+/** AH15 — una compra ligada a un proyecto (OC o compra de ferretería). */
+export interface CompraProyecto {
+  tipo: 'orden_compra' | 'ferreteria';
+  id: string;
+  fecha: string | null;
+  proveedor: string | null;
+  total: number | null;
+  estado: string | null;
+  referencia: string | null;
+}
+
 const CAT_PROYECTOS = 'proyectos_full'; // distinto del 'proyectos' mínimo (pedir/pickers)
 const SELECT =
   'id, codigo, nombre, cliente, tipo, estado, fecha_inicio, fecha_fin_estimada, fecha_fin_real, ' +
@@ -48,6 +59,21 @@ export class ProyectosService {
       .maybeSingle();
     if (error || !data) return local ? normalizar(local) : null;
     return normalizar(data as unknown as ProyectoApp);
+  }
+
+  /**
+   * AH15 — compras (órdenes de compra + ferretería) de un proyecto en un rango de
+   * fechas. El RPC `compras_de_proyecto` resuelve proveedor/total y respeta
+   * permisos (admin/proyectos/compras/obra/responsable/miembro) + es_prueba.
+   */
+  async comprasDeProyecto(proyectoId: string, desde: string | null, hasta: string | null): Promise<CompraProyecto[]> {
+    const { data, error } = await this.supabase.client.rpc('compras_de_proyecto', {
+      p_proyecto_id: proyectoId,
+      p_desde: desde,
+      p_hasta: hasta,
+    });
+    if (error) throw new Error(error.message);
+    return ((data as CompraProyecto[]) ?? []).map((c) => ({ ...c, total: c.total == null ? null : Number(c.total) }));
   }
 }
 

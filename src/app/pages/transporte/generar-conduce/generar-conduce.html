@@ -130,11 +130,26 @@
       </label>
       <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
 
-      <!-- ══════════ Firma del emisor (almacén / otros) ══════════ -->
+      <!-- ══════════ Firmas al emitir (AH4) — almacén / otros ══════════ -->
       @if (!esFerreteria()) {
-        <label class="field-label gconduce__mt">Firma de quien entrega <span class="gconduce__req">*</span></label>
-        <p class="gconduce__sub">Firma tú (el que saca/mueve el material). El receptor firmará al entregar.</p>
-        <app-signature-pad (changed)="onFirmaEmisor($event)" />
+        <label class="gconduce__check gconduce__mt">
+          <input type="checkbox" [ngModel]="otraPersonaEntrega()" (ngModelChange)="otraPersonaEntrega.set($event)" />
+          <span>Otra persona entrega el material (no soy yo)</span>
+        </label>
+
+        @if (otraPersonaEntrega()) {
+          <label class="field-label gconduce__mt" for="emisor-nombre">Nombre de quien entrega <span class="gconduce__req">*</span></label>
+          <input id="emisor-nombre" class="field" type="text" [ngModel]="emisorNombreOtro()" (ngModelChange)="emisorNombreOtro.set($event)" placeholder="Ej. Almacén central, Juan Pérez…" />
+          <label class="field-label gconduce__mt">Firma de quien entrega <span class="gconduce__req">*</span></label>
+          <app-signature-pad #emisorPad (changed)="onFirmaEmisor($event)" />
+          <label class="field-label gconduce__mt">Tu firma (chofer que transporta) <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
+          <app-signature-pad #choferPad (changed)="onFirmaTransportista($event)" />
+        } @else {
+          <label class="field-label gconduce__mt">Tu firma <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">Firma tú (entregas y transportas el material). El receptor firmará al entregar.</p>
+          <app-signature-pad #emisorPad (changed)="onFirmaEmisor($event)" />
+        }
       }
     </div>
 

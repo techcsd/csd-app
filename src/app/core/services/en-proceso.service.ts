@@ -3,7 +3,7 @@ import { db } from '../db/app-db';
 import { SyncService } from '../sync/sync.service';
 
 /** V1 — módulos que tienen "documentación en proceso" (borradores + envíos). */
-export type EnProcesoModulo = 'bitacora' | 'flota';
+export type EnProcesoModulo = 'bitacora' | 'flota' | 'rrhh';
 
 /** Un ítem "en proceso": un borrador (Dexie) o un envío en la cola (outbox). */
 export interface EnProcesoItem {
@@ -27,6 +27,7 @@ export interface EnProcesoItem {
 const BORRADOR_TIPOS: Record<EnProcesoModulo, string[]> = {
   bitacora: ['parte', 'incidente', 'cl_liberacion'],
   flota: ['checklist', 'vehiculo', 'conductor'],
+  rrhh: [],
 };
 const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
   bitacora: ['bitacora', 'cl_liberacion'],
@@ -49,6 +50,7 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
     'devolucion_chofer',
     'conduce_firmar_receptor',
     'conduce_recepcion',
+    'conduce_transf_aceptar',
     'accidente_vehiculo',
     'dano_vehiculo',
     'multa_conductor',
@@ -59,6 +61,7 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
     'inv_conteo',
     'inv_devolucion_obra',
   ],
+  rrhh: ['rrhh_asignar_item', 'rrhh_asignacion_estado'],
 };
 
 const OP_LABEL: Record<string, string> = {
@@ -82,6 +85,9 @@ const OP_LABEL: Record<string, string> = {
   devolucion_chofer: 'Devolución de material',
   conduce_firmar_receptor: 'Firma de recepción',
   conduce_recepcion: 'Recepción de conduce',
+  conduce_transf_aceptar: 'Aceptar transferencia de conduce',
+  rrhh_asignar_item: 'Asignación de item',
+  rrhh_asignacion_estado: 'Cambio de asignación',
   inv_salida: 'Salida de material',
   inv_entrada: 'Entrada de material',
   inv_conteo: 'Conteo de inventario',

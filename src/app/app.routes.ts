@@ -220,6 +220,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/transporte/mis-actas/mis-actas').then((m) => m.MisActasPage),
   },
+  {
+    // AH14 — detalle completo de un acta (condiciones + fallas voz/foto + firmas).
+    path: 'transporte/acta/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/acta-detalle/acta-detalle').then((m) => m.ActaDetallePage),
+  },
   // AD6 — funciones de inventario del chofer DENTRO de Transporte (gate por 'flota',
   // no 'inventario'): así funcionan aunque se revierta el acceso temporal a Inventario.
   {
@@ -368,6 +375,13 @@ export const routes: Routes = [
       import('./pages/transporte/conduces-historial/conduces-historial').then((m) => m.ConducesHistorialPage),
   },
   {
+    // AH5 — inbox de transferencias de conduce (aceptar con foto+firma / rechazar).
+    path: 'transporte/conduce-transferencias',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/conduce-transferencias/conduce-transferencias').then((m) => m.ConduceTransferenciasPage),
+  },
+  {
     path: 'transporte/conduces/:salidaId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
@@ -500,6 +514,24 @@ export const routes: Routes = [
     path: 'tareas',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tareas/tareas').then((m) => m.TareasPage),
+  },
+  {
+    // AH15 — consulta de Compras del proyecto (el RPC compras_de_proyecto acota acceso).
+    path: 'compras-proyecto',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/compras-proyecto/compras-proyecto').then((m) => m.ComprasProyectoPage),
+  },
+  {
+    // AH16 — RRHH: empleados (consulta) para el jefe de RRHH.
+    path: 'rrhh/empleados',
+    canActivate: [authGuard, pinGuard, moduleGuard('rrhh')],
+    loadComponent: () => import('./pages/rrhh/empleados/rrhh-empleados').then((m) => m.RrhhEmpleadosPage),
+  },
+  {
+    // AH16 — RRHH: ficha del empleado + asignaciones (AF33).
+    path: 'rrhh/empleado/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('rrhh')],
+    loadComponent: () => import('./pages/rrhh/empleado/rrhh-empleado').then((m) => m.RrhhEmpleadoPage),
   },
   {
     path: 'notas/:id',

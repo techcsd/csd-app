@@ -1,5 +1,36 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 07/08 — PROMPT-10 ronda AH (app) — 6 FASES: outbox, conduces (doble firma + transferencia + evidencia), paradas, dropdowns, checklist voz/foto + recepciones + compras, RRHH — **CÓDIGO HECHO, BUILD VERDE, SIN COMMIT/PUSH/RELEASE**
+**Depende de PROMPT-9 (SGC, ya en prod, commit `98d59d4`).** `npm run build` **VERDE (0 errores)**. Código app **SIN commitear** (espera tu OK). **10 migraciones aditivas SGC aplicadas a prod** (ver abajo) — SGC/sql **sin commitear**. **APK NO generado** (es release Y1 → espera tu OK). Device-QA (chofer real + jefe RRHH) pendiente = tuyo.
+
+**Qué encontré (gaps de PROMPT-9 cerrados server-side, todos aditivos):**
+- `recibir_conduce_app` NO exigía foto (AH6/AH7 solo endureció los otros 3 RPCs) → migración `ah6b`.
+- `firmar_conduce` rechazaba rol `transportista` (PROMPT-9 solo amplió el CHECK de la tabla) → `ah4b`.
+- `audio_notas.entidad_tipo` no aceptaba `traspaso_acta` (contrato AH13) → `ah13b`.
+- `avanzar_parada` no guardaba tap-time ni GPS → `ah8` (params `p_at/p_lat/p_lng` + columnas `entregada_lat/lng/completada_por`).
+- `choferes_estado` solo devuelve al propio chofer → nuevo `choferes_activos()` para el picker de transferencia (`ah5c`).
+- Nuevos reads: `mis_transferencias_conduce()` + `transferencias_de_conduce()` (`ah5b`).
+
+**Estado por FASE (código app):**
+- **FASE 1 (AH1/2/3/11 verificación + outbox resiliente):** ✅ ya estaba implementado — `throwSyncError`/`classifyKind` marca 42501/403 como `permiso` PERMANENTE (no loopea), telemetría Y6 solo en permanentes, mensaje "No tienes permiso…", botón "Reintentar todos". Nada nuevo salvo verificación. Device-QA con chofer real = tuyo.
+- **FASE 2 (conduces):** **AH4** 2ª firma al emitir en `generar-conduce` (checkbox "otra persona entrega" → 2 pads; si es la misma persona, 1 firma con doble rol emisor+transportista). **AH5** transferencia de conduce: tile "↔️ Transferencias" en el hub (badge), oferta desde el historial (picker `choferes_activos` + nota → `ofrecer_transferencia_conduce`), inbox del receptor (`/transporte/conduce-transferencias`: resumen → foto → firma → `aceptar_transferencia_conduce` por outbox; rechazar). **AH6/AH7** evidencia obligatoria: foto de la entrega por parada ahora OBLIGATORIA (UI) + `recibir_conduce_app` la exige server-side.
+- **FASE 3 (AH8 paradas completables):** botón "✓ Completar parada" para paradas sin conduce (marca `entregada` con **hora del tap + GPS**); las que tienen conduce se cierran solas al entregarse (trigger AE5, sin doble marcado). `avanzarParada` envía `at/lat/lng`. Progreso N/M ya visible en Mis rutas y Seguimiento.
+- **FASE 4 (AH9/AH10 dropdowns):** componente estándar = `app-collapsible-select` (buscador + colapso "seleccionado + Cambiar"). Migrados de listado-abierto (`app-select-list`) al dropdown: conteo, existencias, solicitudes/pedir, devolver-material (obra+almacén), crear-ruta (origen/destino/parada), bitácora/liberación (obra). `getLugaresDestino()` ahora consume el contrato canónico **`destinos_transporte()`** (AH9: obras con almacén implícito + almacenes sueltos; **es_prueba filtrado = sin "Test"**; nunca almacenes de obra sueltos). Los `<select>` nativos OPCIONALES (combustible obra, conduces reportar-vehículo, tareas-vínculo) se dejaron: ya son desplegables y tienen "sin especificar" (colapsar regresaría el "limpiar"). `obras_con_bodega` y `bodegas` ya filtran es_prueba server-side (verificado).
+- **FASE 5:** **AH13** en el checklist de recepción (`asignarme`), cada item con falla admite descripción + **nota de voz** (pipeline bitácora AA8-AA12) + **foto(s)** solo-cámara; van al acta (fotos/audios en `condiciones` por item + audios ligados al acta vía `agregar_audio_nota`). **AH14** Recepciones: filas clicables + **marca/modelo** (no solo placa) → detalle `/transporte/acta/:id` (condiciones, fallas texto/voz/foto, fotos, firmas) consumiendo `acta_traspaso_detalle`. **AH15** vista "Compras de obra" (`/compras-proyecto`, tile en Home para admin/proyectos/compras/obra) consumiendo `compras_de_proyecto` (OC + ferretería, totales, filtro fecha).
+- **FASE 6 (RRHH — alcance confirmado por Xaviel: "RRHH primero"):** **AH16** módulo RRHH en la app (tile 🧑‍💼 gateado por `hasModulo('rrhh')`): **empleados** (consulta + buscador) → **ficha** (`/rrhh/empleado/:id`) con datos + **asignaciones AF33** (registrar item con foto/nota + devolver/perdido/dañado, por outbox → `asignar_item_empleado`/`cambiar_estado_asignacion`). **AH17**: v1 = RRHH ES la Administración del jefe de RRHH; **gestión de usuarios NO va en la app** (sensible + online-only por Edge Functions; queda en la web).
+
+**Migraciones SGC aplicadas a prod (10, en `dev/SGC/sql/2026-08-07-*`, SIN commitear):** `ah4b-firmar-conduce-transportista`, `ah5b-transferencias-conduce-reads`, `ah5c-choferes-activos`, `ah6b-recibir-conduce-foto-obligatoria`, `ah8-parada-completar-tiempo-gps`, `ah13b-audio-notas-traspaso-acta`. (Las AH originales `ah1..ah15` ya venían de PROMPT-9.) Todas aditivas/retrocompatibles, verificadas por introspección.
+
+**PENDIENTE (tú):**
+1. **Revisar y dar OK a commit/push** (app csd-app + SGC) — nada pusheado. La web SGC ya está en `main` (PROMPT-9 `98d59d4`); estas 6 migraciones nuevas faltan commitear en SGC.
+2. **Generar/publicar APK** (`npm run apk` + `apk:publish` + flip `publicada`) tras device-QA — sube versión (Y1).
+3. **Rol jefe de RRHH:** el módulo `rrhh` hoy lo tienen admin/dirección/gerencia. Si quieres un rol dedicado "Jefe de RRHH", créalo en SGC con el módulo `rrhh` (el gating de la app ya está listo).
+4. **Device-QA:** chofer real (ruta con paradas completadas + conduce 2 firmas + transferir a otro chofer + entrega con foto+firma) y jefe de RRHH (empleados + asignar/devolver item). Verificar en SGC web (interconexión).
+
+**Selectores auditados (FASE 4) — migrados al dropdown estándar:** inventario/conteo, inventario/existencias, solicitudes/pedir, transporte/devolver-material (2), transporte/rutas/crear-ruta (origen+destino+parada), bitácora/liberación (obra). **Dejados como `<select>` nativo (opcionales, ya desplegables):** transporte/combustible (obra), transporte/conduces (reportar vehículo), tareas (vínculo obra/almacén/ferretería). **Ya estaban en collapsible:** generar-conduce, ferretería, entrada, salida.
+
+---
+
 ## ✅ SESIÓN 06/08 — PROMPT-8 ronda AG (app) — AG16 "Mi obra" / Gestión de Producción de Obra (6 FASES) — RELEASE 1.65.0 (PUBLICADO)
 **COMPLETO, COMMITEADO, PUSHEADO y PUBLICADO a todos los usuarios.** `npm run build` **VERDE**. Backend AG16 aplicado a prod. **csd-app `main`** (`451e4bf` módulo + `c2b8713` bump) → deploya PWA; **SGC `main`** (`e18d68b`) migraciones app-side. **APK 1.65.0** firmado (cert prod `3c5316d8…`) + registrado (Y1) + subido al bucket + **`publicada=true` → `version_publicada()` = 1.65.0** (todos reciben el prompt de actualizar; `minima=1.42.0`, nadie bloqueado). Usuarios saltando desde su versión actual reciben TODO lo pendiente (PROMPT-6: mantenimiento/tracking/tareas vinculadas/Google Maps + PROMPT-8: Mi obra). **Rollback:** `update sgc.app_versiones set publicada=(version='1.63.0') where plataforma='movil';`. **Falta device-QA** (no bloquea; ya está en manos de usuarios).
 

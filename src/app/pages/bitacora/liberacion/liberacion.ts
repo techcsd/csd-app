@@ -10,6 +10,7 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
@@ -66,7 +67,7 @@ const TOTAL_STEPS = 5;
   selector: 'app-liberacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, ConfirmDialog, Skeleton, WizardFooter, WizardExit],
+  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, CollapsibleSelect, ConfirmDialog, Skeleton, WizardFooter, WizardExit],
   templateUrl: './liberacion.html',
   styleUrl: './liberacion.scss',
 })

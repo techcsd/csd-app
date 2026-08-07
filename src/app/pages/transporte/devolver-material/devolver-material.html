@@ -11,11 +11,13 @@
         confirma la entrega con tu firma y la de quien recibe.
       </p>
 
-      <app-select-list
+      <app-collapsible-select
         label="Obra de origen"
         icon="🏗"
         [options]="obraOptions()"
         [selectedId]="obraId()"
+        [searchable]="true"
+        searchPlaceholder="Buscar obra…"
         (picked)="obraId.set($event)"
       />
       @if (!obras().length && !loading()) {
@@ -23,11 +25,13 @@
       }
 
       <div class="devol__mt">
-        <app-select-list
+        <app-collapsible-select
           label="Almacén destino"
           icon="🏬"
           [options]="bodegaOptions()"
           [selectedId]="bodegaId()"
+          [searchable]="true"
+          searchPlaceholder="Buscar almacén…"
           (picked)="bodegaId.set($event)"
         />
       </div>

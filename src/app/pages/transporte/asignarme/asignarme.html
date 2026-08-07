@@ -70,6 +70,30 @@
               <app-option-button icon="⚠️" label="Falla" [selected]="checkDe(it) === 'falla'" (pressed)="setCheck(it, 'falla')" />
               <app-option-button icon="➖" label="N/A" [selected]="checkDe(it) === 'na'" (pressed)="setCheck(it, 'na')" />
             </div>
+
+            <!-- AH13 — describir la falla: texto + voz + foto(s) -->
+            @if (esFalla(it)) {
+              <div class="asig__falla">
+                <label class="field-label">¿Qué falla tiene? (opcional)</label>
+                <input class="field" type="text" [ngModel]="descDe(it)" (ngModelChange)="setDesc(it, $event)"
+                  placeholder="Describe la falla…" />
+
+                <label class="field-label asig__mt">Nota de voz (opcional)</label>
+                <app-voice-notes [max]="3" [persistUrls]="true" [notes]="vocesDe(it)" (notesChange)="setVoces(it, $event)" />
+
+                <label class="field-label asig__mt">Foto(s) de la falla (opcional)</label>
+                <div class="asig__falla-fotos">
+                  @for (p of fotosFallaDe(it); track $index) {
+                    <app-photo-slot label="Falla" hint="📷" [gallery]="false" [foto]="p"
+                      (cleared)="quitarFotoFalla(it, $index)" />
+                  }
+                  @if (puedeAgregarFotoFalla(it)) {
+                    <app-photo-slot label="Agregar foto" hint="📷" [gallery]="false" [foto]="null"
+                      (captured)="addFotoFalla(it, $event)" />
+                  }
+                </div>
+              </div>
+            }
           </div>
         }
         <label class="field-label asig__mt">Notas (opcional)</label>

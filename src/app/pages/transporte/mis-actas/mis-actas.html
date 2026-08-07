@@ -10,9 +10,12 @@
       <app-skeleton [rows]="5" />
     } @else {
       @for (a of actas(); track a.id) {
-        <div class="actas__card">
+        <div class="actas__card actas__card--tap" (click)="abrir(a)">
           <div class="actas__row">
-            <span class="actas__placa">{{ a.placa || 'Vehículo' }}</span>
+            <span class="actas__placa">
+              {{ a.placa || 'Vehículo' }}
+              @if (marcaModelo(a)) { <small class="actas__marca">· {{ marcaModelo(a) }}</small> }
+            </span>
             <span class="actas__fecha">{{ fechaHora(a.created_at) }}</span>
           </div>
           <div class="actas__flujo">
@@ -28,6 +31,7 @@
             @if (llaveLabel(a.llave1_ubicacion_tipo)) { <span>{{ llaveLabel(a.llave1_ubicacion_tipo) }}</span> }
           </div>
           @if (a.notas) { <p class="actas__notas">📝 {{ a.notas }}</p> }
+          <span class="actas__ver">Ver acta completa →</span>
         </div>
       } @empty {
         <app-empty-state

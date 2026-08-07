@@ -101,6 +101,41 @@
                   ⏳ Pendiente de que firme {{ c.firma_pendiente_nombre || 'el responsable' }}
                 </p>
               }
+
+              <!-- AH5 — transferir la responsabilidad a otro chofer -->
+              @if (puedeTransferir(c)) {
+                <button type="button" class="btn-ghost conduce-det__transf" (click)="abrirTransferir(c)">
+                  ↔️ Transferir a otro chofer
+                </button>
+                @if (transferAbierto() === c.id) {
+                  <div class="conduce-transf">
+                    <app-collapsible-select
+                      label="Chofer que recibe"
+                      icon="🚚"
+                      [options]="choferes()"
+                      [selectedId]="choferSel()"
+                      [searchable]="true"
+                      searchPlaceholder="Buscar chofer…"
+                      (picked)="choferSel.set($event)"
+                    />
+                    <input
+                      class="field conduce-transf__nota"
+                      type="text"
+                      [ngModel]="notaTransfer()"
+                      (ngModelChange)="notaTransfer.set($event)"
+                      placeholder="Nota (opcional)"
+                    />
+                    <button
+                      type="button"
+                      class="btn-cta"
+                      [disabled]="!choferSel() || transfiriendo()"
+                      (click)="ofrecerTransferencia(c)"
+                    >
+                      {{ transfiriendo() ? 'Enviando…' : 'Ofrecer transferencia' }}
+                    </button>
+                  </div>
+                }
+              }
             </div>
           }
         </div>

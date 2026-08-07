@@ -62,7 +62,9 @@ export class GenerarConducePage implements OnDestroy {
   /** AG15 — id de la tarea que originó este conduce (se enlaza al emitir). */
   private tareaVinculada: string | null = null;
 
-  private sig = viewChild(SignaturePad);
+  // AH4 — dos firmas al emitir: quien entrega (emisor) + chofer que transporta.
+  private sigEmisor = viewChild<SignaturePad>('emisorPad');
+  private sigChofer = viewChild<SignaturePad>('choferPad');
 
   hoja = signal<'form' | 'exito'>('form');
   loading = signal(true);
@@ -107,6 +109,12 @@ export class GenerarConducePage implements OnDestroy {
   );
   // AF23.3 — firma de quien entrega (emisor) — almacén/otros.
   firmaEmisor = signal<Blob | null>(null);
+  // AH4 — ¿quien entrega es OTRA persona (no el chofer)? Por defecto no: el chofer
+  // entrega y transporta → una sola firma con doble rol. Si sí, se pide el nombre
+  // de quien entrega + una segunda firma (la del chofer que transporta).
+  otraPersonaEntrega = signal(false);
+  emisorNombreOtro = signal('');
+  firmaTransportista = signal<Blob | null>(null);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
@@ -119,12 +127,20 @@ export class GenerarConducePage implements OnDestroy {
   esFerreteria = computed(() => this.origenTipo() === 'ferreteria');
   esOtros = computed(() => this.origenTipo() === 'otros');
 
+  /** AH4 — ¿están las firmas requeridas? (emisor siempre; si otra persona entrega,
+   *  además el nombre del emisor + la firma del chofer que transporta). */
+  private firmasOk = computed(() => {
+    if (!this.firmaEmisor()) return false;
+    if (this.otraPersonaEntrega()) return !!(this.emisorNombreOtro().trim() && this.firmaTransportista());
+    return true;
+  });
+
   /** ¿Están los campos mínimos para emitir según el tipo de origen? */
   puedeEmitir = computed(() => {
     if (this.esFerreteria()) return !!(this.ferreteriaId() && this.bodegaId() && this.fotoRecibo());
     const destinoOk = this.destinoTipo() === 'obra' ? !!this.obraId() : !!this.suplidorNombre().trim();
-    if (this.esOtros()) return !!(this.otrosNombre().trim() && destinoOk && this.firmaEmisor());
-    return !!(this.bodegaId() && destinoOk && !this.faltaItems() && this.firmaEmisor());
+    if (this.esOtros()) return !!(this.otrosNombre().trim() && destinoOk && this.firmasOk());
+    return !!(this.bodegaId() && destinoOk && !this.faltaItems() && this.firmasOk());
   });
 
   /** Etiqueta del botón según el modo (compra vs conduce). */
@@ -278,7 +294,10 @@ export class GenerarConducePage implements OnDestroy {
   }
 
   async onFirmaEmisor(has: boolean): Promise<void> {
-    this.firmaEmisor.set(has ? ((await this.sig()?.toBlob()) ?? null) : null);
+    this.firmaEmisor.set(has ? ((await this.sigEmisor()?.toBlob()) ?? null) : null);
+  }
+  async onFirmaTransportista(has: boolean): Promise<void> {
+    this.firmaTransportista.set(has ? ((await this.sigChofer()?.toBlob()) ?? null) : null);
   }
 
   async submit(): Promise<void> {
@@ -353,6 +372,10 @@ export class GenerarConducePage implements OnDestroy {
       this.toast.error('Falta la firma de quien entrega.');
       return;
     }
+    if (this.otraPersonaEntrega() && (!this.emisorNombreOtro().trim() || !this.firmaTransportista())) {
+      this.toast.error('Falta el nombre de quien entrega y tu firma como chofer.');
+      return;
+    }
     if (!(await this.tracking.exigirGps('crear_conduce'))) return;
     this.submitting.set(true);
     try {
@@ -366,13 +389,20 @@ export class GenerarConducePage implements OnDestroy {
       if (this.observaciones().trim()) partes.push(this.observaciones().trim());
       const obs = partes.join(' — ') || null;
 
+      // AH4 — dos firmas. Si el chofer entrega y transporta (caso normal), la misma
+      // imagen se sella con ambos roles (emisor + transportista). Si otra persona
+      // entrega, el emisor lleva su nombre y firma; la 2ª firma es la del chofer.
+      const otra = this.otraPersonaEntrega();
       await this.conduces.crearConduceTransportista({
         bodegaId: otros ? null : this.bodegaId(), // "Otros": sin bodega de stock
         proyectoId: this.destinoTipo() === 'obra' ? this.obraId() : null,
         observaciones: obs,
         vehiculoId: this.vehiculoId() || null,
         firmaEmisor: this.firmaEmisor(),
-        emisorNombre: this.ctx.nombre() || null,
+        emisorNombre: (otra ? this.emisorNombreOtro().trim() : this.ctx.nombre()) || null,
+        emisorEsOtro: otra,
+        firmaTransportista: otra ? this.firmaTransportista() : this.firmaEmisor(),
+        transportistaNombre: this.ctx.nombre() || null,
         items: otros
           ? []
           : this.cart().filter((l) => l.cantidad > 0 && l.articulo_id).map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad })),
@@ -390,7 +420,7 @@ export class GenerarConducePage implements OnDestroy {
     return !!(
       this.bodegaId() || this.obraId() || this.ferreteriaId() || this.otrosNombre().trim() ||
       this.suplidorNombre().trim() || this.observaciones().trim() || this.cart().length ||
-      this.fotoRecibo() || this.fotoMercancia() || this.firmaEmisor()
+      this.fotoRecibo() || this.fotoMercancia() || this.firmaEmisor() || this.firmaTransportista()
     );
   }
 

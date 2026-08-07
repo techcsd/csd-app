@@ -5,7 +5,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
-import { SelectList } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -27,7 +27,7 @@ const SIN_CATEGORIA_KEY = 'sin';
   selector: 'app-conteo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, BigConfirm, ConfirmDialog, SelectList],
+  imports: [Skeleton, FormsModule, BigConfirm, ConfirmDialog, CollapsibleSelect],
   templateUrl: './conteo.html',
   styleUrl: './conteo.scss',
 })

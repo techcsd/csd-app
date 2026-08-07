@@ -1,0 +1,97 @@
+<div class="screen">
+  <header class="re-header">
+    <button type="button" class="re-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="re-header__icon">🧑‍💼</span>
+    <h1 class="re-header__title">Ficha del empleado</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (empleado(); as e) {
+      <!-- Datos -->
+      <div class="re-card">
+        <h2 class="re-nombre">{{ nombreCompleto() }}</h2>
+        <p class="re-cargo">{{ e.cargo || 'Sin cargo' }}@if (e.departamento) { · {{ e.departamento }} }</p>
+        <div class="re-datos">
+          @if (e.cedula) { <p>🪪 {{ e.cedula }}</p> }
+          @if (e.telefono) { <p>📞 {{ e.telefono }}</p> }
+          @if (e.email) { <p>✉️ {{ e.email }}</p> }
+          @if (e.tipo_contrato) { <p>📄 {{ e.tipo_contrato }}</p> }
+          @if (e.fecha_ingreso) { <p>📅 Ingreso: {{ e.fecha_ingreso | date: 'dd/MM/yyyy' }}</p> }
+        </div>
+      </div>
+
+      <!-- Asignaciones -->
+      <div class="re-asig-head">
+        <h2 class="re-h2">Asignaciones</h2>
+        <button type="button" class="btn-cta re-add" (click)="abrirRegistrar()">➕ Asignar</button>
+      </div>
+
+      @for (a of asignaciones(); track a.id) {
+        <div class="re-asig re-asig--{{ a.estado }}">
+          <div class="re-asig__row">
+            @if (url(a.foto_path)) { <img class="re-asig__foto" [src]="url(a.foto_path)" alt="Foto del item" loading="lazy" /> }
+            <div class="re-asig__body">
+              <span class="re-asig__nombre">{{ a.item_nombre }}</span>
+              @if (a.categoria) { <span class="re-asig__cat">{{ a.categoria }}</span> }
+              <span class="re-asig__estado re-asig__estado--{{ a.estado }}">{{ estadoLabel(a.estado) }}</span>
+            </div>
+          </div>
+          @if (a.notas) { <p class="re-asig__notas">📝 {{ a.notas }}</p> }
+          @if (a.estado === 'asignado') {
+            <div class="re-asig__actions">
+              <button type="button" class="btn-cta" (click)="pedirCambio(a, 'devuelto')">↩️ Devolver</button>
+              <button type="button" class="btn-ghost" (click)="pedirCambio(a, 'perdido')">Perdido</button>
+              <button type="button" class="btn-ghost" (click)="pedirCambio(a, 'dañado')">Dañado</button>
+            </div>
+          }
+        </div>
+      } @empty {
+        <p class="re-vacio">Sin items asignados.</p>
+      }
+    } @else {
+      <p class="re-vacio">No se encontró el empleado.</p>
+    }
+  </div>
+
+  <!-- Sheet: registrar asignación -->
+  @if (registrando()) {
+    <div class="re-sheet-back" (click)="cerrarRegistrar()"></div>
+    <div class="re-sheet">
+      <div class="re-sheet__grip"></div>
+      <h2 class="re-sheet__title">Asignar item</h2>
+
+      <label class="field-label re-mt">¿Qué le asignas? <span class="re-req">*</span></label>
+      <input class="field" type="text" [ngModel]="itemNombre()" (ngModelChange)="itemNombre.set($event)" placeholder="Ej. Casco, laptop, radio…" />
+
+      <label class="field-label re-mt">Categoría (opcional)</label>
+      <input class="field" type="text" [ngModel]="categoria()" (ngModelChange)="categoria.set($event)" placeholder="Ej. EPP, herramienta, equipo TI…" />
+
+      <label class="field-label re-mt">Nota (opcional)</label>
+      <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Detalle…" />
+
+      <label class="field-label re-mt">Foto (opcional)</label>
+      <app-photo-slot label="Foto del item" hint="📷" [gallery]="false" [foto]="foto()" (captured)="foto.set($event)" (cleared)="foto.set(null)" />
+
+      <div class="re-sheet__actions">
+        <button type="button" class="btn-ghost" (click)="cerrarRegistrar()">Cancelar</button>
+        <button type="button" class="btn-cta" [disabled]="guardando() || !itemNombre().trim()" (click)="registrar()">
+          {{ guardando() ? 'Guardando…' : 'Asignar' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <app-confirm-dialog
+    [open]="!!cambio()"
+    [title]="cambioTitulo()"
+    message="Se registrará el cambio de estado de esta asignación."
+    confirmLabel="Confirmar"
+    cancelLabel="Cancelar"
+    (confirmed)="confirmarCambio()"
+    (cancelled)="cancelarCambio()"
+  />
+
+  <app-sync-bar />
+</div>

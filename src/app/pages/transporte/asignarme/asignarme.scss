@@ -104,3 +104,17 @@
 .asig__nav {
   padding: 16px;
 }
+
+// AH13 — panel de evidencia por falla del checklist
+.asig__falla {
+  margin-top: 10px;
+  padding: 12px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+}
+.asig__falla-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

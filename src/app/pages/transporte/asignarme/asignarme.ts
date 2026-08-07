@@ -11,9 +11,10 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
-import { TraspasoService } from '../../../core/services/traspaso.service';
+import { TraspasoService, FallaChecklist } from '../../../core/services/traspaso.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
@@ -40,6 +41,8 @@ interface AsignarmeDraft {
   vehiculoId: string;
   km: number | null;
   checklist: Record<string, Respuesta>;
+  /** AH13 — descripción escrita de cada falla (los blobs de voz/foto no se persisten). */
+  fallaDesc?: Record<string, string>;
   llave1: Llave1 | null;
   llave1Detalle: string;
   notas: string;
@@ -55,7 +58,7 @@ interface AsignarmeDraft {
   selector: 'app-asignarme-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Skeleton, EmptyState, VehiculoCard, PhotoSlot, SignaturePad, KmInput],
+  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Skeleton, EmptyState, VehiculoCard, PhotoSlot, SignaturePad, VoiceNotes, KmInput],
   templateUrl: './asignarme.html',
   styleUrl: './asignarme.scss',
 })
@@ -87,6 +90,11 @@ export class AsignarmeVehiculoPage {
   step = signal(1);
   km = signal<number | null>(null);
   checklist = signal<Record<string, Respuesta>>({});
+  // AH13 — evidencia por item con falla: descripción + notas de voz + fotos.
+  fallaDesc = signal<Record<string, string>>({});
+  fallaVoces = signal<Record<string, VoiceNoteItem[]>>({});
+  fallaFotos = signal<Record<string, CapturedPhoto[]>>({});
+  readonly maxFotosFalla = 3;
   fotos = signal<Record<string, CapturedPhoto>>({});
   llave1 = signal<Llave1 | null>(null);
   llave1Detalle = signal('');
@@ -149,6 +157,7 @@ export class AsignarmeVehiculoPage {
         void this.cargarOdometro(veh.vehiculo_id);
         this.km.set(d.km ?? null);
         this.checklist.set(d.checklist ?? {});
+        this.fallaDesc.set(d.fallaDesc ?? {});
         this.llave1.set(d.llave1 ?? null);
         this.llave1Detalle.set(d.llave1Detalle ?? '');
         this.notas.set(d.notas ?? '');
@@ -164,6 +173,7 @@ export class AsignarmeVehiculoPage {
       vehiculoId: this.seleccionado()!.vehiculo_id,
       km: this.km(),
       checklist: this.checklist(),
+      fallaDesc: this.fallaDesc(),
       llave1: this.llave1(),
       llave1Detalle: this.llave1Detalle(),
       notas: this.notas(),
@@ -202,6 +212,42 @@ export class AsignarmeVehiculoPage {
   }
   checkDe(item: string): Respuesta | null {
     return this.checklist()[item] ?? null;
+  }
+
+  // ─── AH13 — describir una falla con texto + voz + foto ──────────────────────
+  esFalla(item: string): boolean {
+    return this.checkDe(item) === 'falla';
+  }
+  descDe(item: string): string {
+    return this.fallaDesc()[item] ?? '';
+  }
+  setDesc(item: string, v: string): void {
+    this.fallaDesc.update((m) => ({ ...m, [item]: v }));
+    this.queueDraft();
+  }
+  vocesDe(item: string): VoiceNoteItem[] {
+    return this.fallaVoces()[item] ?? [];
+  }
+  setVoces(item: string, v: VoiceNoteItem[]): void {
+    this.fallaVoces.update((m) => ({ ...m, [item]: v }));
+  }
+  fotosFallaDe(item: string): CapturedPhoto[] {
+    return this.fallaFotos()[item] ?? [];
+  }
+  puedeAgregarFotoFalla(item: string): boolean {
+    return this.fotosFallaDe(item).length < this.maxFotosFalla;
+  }
+  addFotoFalla(item: string, p: CapturedPhoto): void {
+    this.fallaFotos.update((m) => ({ ...m, [item]: [...(m[item] ?? []), p] }));
+  }
+  quitarFotoFalla(item: string, idx: number): void {
+    this.fallaFotos.update((m) => {
+      const arr = [...(m[item] ?? [])];
+      const f = arr[idx];
+      if (f) URL.revokeObjectURL(f.previewUrl);
+      arr.splice(idx, 1);
+      return { ...m, [item]: arr };
+    });
   }
 
   onFoto(slot: string, p: CapturedPhoto): void {
@@ -289,6 +335,15 @@ export class AsignarmeVehiculoPage {
       };
       const fotosBlobs: Record<string, Blob> = {};
       for (const [slot, ph] of Object.entries(this.fotos())) fotosBlobs[slot] = ph.blob;
+      // AH13 — por cada item con falla: descripción + fotos + notas de voz → acta.
+      const fallas: FallaChecklist[] = this.checkItems
+        .filter((it) => this.checkDe(it) === 'falla')
+        .map((it) => ({
+          etiqueta: it,
+          descripcion: this.descDe(it).trim() || null,
+          fotos: this.fotosFallaDe(it).map((p) => p.blob),
+          voces: this.vocesDe(it).map((n) => n.blob),
+        }));
       await this.traspaso.enqueueTraspaso({
         vehiculoId: veh.vehiculo_id,
         km: this.km(),
@@ -298,6 +353,7 @@ export class AsignarmeVehiculoPage {
         llave1Ubicacion: this.llave1(),
         llave1Detalle: this.llave1() === 'otro' ? this.llave1Detalle().trim() : null,
         notas: this.notas().trim() || null,
+        fallas,
       });
       void this.autosave.discard(this.clave);
       this.done.set(true);

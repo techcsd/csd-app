@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.65.0';
+const VERSION = '1.66.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,19 +59,21 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-06';
+const RELEASED_AT = '2026-08-07';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Mi obra: el día del gerente de producción y el capataz desde el teléfono';
+const TITULO = 'Conduces con doble firma y transferencia, paradas completables, RRHH y compras de obra';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Nuevo módulo “Mi obra” para gerentes de producción y capataces: todo lo del día de obra desde el teléfono, y funciona sin señal.' },
-  { t: 'nuevo', d: 'Plan del día: registra la charla de seguridad (tema, asistentes, foto del grupo) y asigna las tareas del día a tus capataces y brigadas.' },
-  { t: 'nuevo', d: 'Levanta no conformidades e incidentes en el recorrido con foto, ubicación y responsable; da seguimiento a tus pendientes y ciérralos con evidencia.' },
-  { t: 'nuevo', d: 'Checklists de calidad por actividad (replanteo, encofrado, acero, hormigonado…): si algo no cumple, levantas la no conformidad en un toque.' },
-  { t: 'nuevo', d: 'Pedidos urgentes de material y stock de la obra; subcontratistas con avance y cubicaciones; reporte de % de avance real vs plan.' },
-  { t: 'nuevo', d: 'Pruebas de campo, parte de mano de obra e informe semanal a Gerencia con su PDF, todo desde la obra.' },
+  { t: 'nuevo', d: 'Transferir un conduce a otro chofer: se lo ofreces y quien lo recibe lo acepta con foto y firma. Hasta que acepta, la responsabilidad sigue siendo tuya.' },
+  { t: 'nuevo', d: 'Al crear un conduce ahora firman los dos: quien entrega y el chofer que lo transporta (una sola firma si eres la misma persona).' },
+  { t: 'mejora', d: 'Completa cada parada de tu ruta con un toque; queda registrada la hora y el lugar. Si la parada tiene una entrega, se cierra sola al entregar.' },
+  { t: 'nuevo', d: 'Recepción de vehículo: por cada falla del chequeo puedes dejar descripción, nota de voz y fotos. El historial ahora muestra marca y modelo y abre el acta completa.' },
+  { t: 'nuevo', d: 'Recursos Humanos en el teléfono: consulta la ficha de los empleados y asigna o recibe equipos (con foto), aunque no tengas señal.' },
+  { t: 'nuevo', d: 'Compras de obra: consulta las compras de cada proyecto (órdenes de compra y ferretería) con totales y filtro por fecha.' },
+  { t: 'mejora', d: 'Las listas de obra y almacén ahora son desplegables con buscador; ya no aparecen los almacenes de prueba.' },
+  { t: 'arreglo', d: 'La foto de evidencia es obligatoria al confirmar una entrega o recepción, y los envíos rechazados por permiso ya no se reintentan en bucle: avisan claro y puedes reintentar todo tras un arreglo.' },
 ];
 
 const TIPO_POR_COMMIT = {

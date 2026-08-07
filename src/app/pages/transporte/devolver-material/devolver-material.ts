@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 
-import { SelectList } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -32,7 +32,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-devolver-material',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectList, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton],
   templateUrl: './devolver-material.html',
   styleUrl: './devolver-material.scss',
 })

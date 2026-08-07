@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe, Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { TraspasoService, ActaTraspaso } from '../../../core/services/traspaso.service';
@@ -25,6 +26,7 @@ export class MisActasPage {
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private router = inject(Router);
 
   readonly fechaHora = formatFechaCortaHora;
 
@@ -50,6 +52,16 @@ export class MisActasPage {
   /** ¿Yo recibí este vehículo (vs. yo lo entregué)? */
   yoRecibi(a: ActaTraspaso): boolean {
     return a.a_usuario_id === this.uid();
+  }
+
+  /** AH14 — marca + modelo (además de la placa) para reconocer el vehículo. */
+  marcaModelo(a: ActaTraspaso): string {
+    return [a.marca, a.modelo].filter(Boolean).join(' ');
+  }
+
+  /** AH14 — abrir el detalle completo del acta. */
+  abrir(a: ActaTraspaso): void {
+    void this.router.navigate(['/transporte/acta', a.id]);
   }
 
   llaveLabel(t: string | null): string {

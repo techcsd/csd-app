@@ -4,7 +4,10 @@ import { DatePipe, DecimalPipe, Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConducesService, ConduceHistorial } from '../../../core/services/conduces.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { NetworkService } from '../../../core/services/network.service';
 
 const FASE_LABEL: Record<string, string> = {
   emitido: 'Emitido',
@@ -26,17 +29,26 @@ const FASE_TINT: Record<string, string> = {
   selector: 'app-conduces-historial',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, SyncBar],
+  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, SyncBar, CollapsibleSelect],
   templateUrl: './conduces-historial.html',
   styleUrl: './conduces-historial.scss',
 })
 export class ConducesHistorialPage {
   private service = inject(ConducesService);
   private location = inject(Location);
+  private toast = inject(ToastService);
+  private network = inject(NetworkService);
 
   loading = signal(true);
   todos = signal<ConduceHistorial[]>([]);
   expandido = signal<string | null>(null);
+
+  // AH5 — transferencia de responsabilidad a otro chofer.
+  choferes = signal<{ id: string; label: string }[]>([]);
+  transferAbierto = signal<string | null>(null); // salida_id con el form abierto
+  choferSel = signal('');
+  notaTransfer = signal('');
+  transfiriendo = signal(false);
 
   // Filtros
   desde = signal<string>('');
@@ -77,6 +89,47 @@ export class ConducesHistorialPage {
 
   toggle(id: string): void {
     this.expandido.update((cur) => (cur === id ? null : id));
+  }
+
+  // ─── AH5 — transferir la responsabilidad de un conduce a otro chofer ────────
+
+  /** Solo mientras el chofer AÚN tiene el material (emitido / en tránsito). */
+  puedeTransferir(c: ConduceHistorial): boolean {
+    return !c.confirmado && (c.fase === 'emitido' || c.fase === 'en_transito');
+  }
+
+  async abrirTransferir(c: ConduceHistorial): Promise<void> {
+    if (this.transferAbierto() === c.id) {
+      this.transferAbierto.set(null);
+      return;
+    }
+    this.choferSel.set('');
+    this.notaTransfer.set('');
+    this.transferAbierto.set(c.id);
+    if (!this.choferes().length) {
+      this.choferes.set(await this.service.choferesParaTransferir().catch(() => []));
+    }
+  }
+
+  async ofrecerTransferencia(c: ConduceHistorial): Promise<void> {
+    if (!this.choferSel()) {
+      this.toast.error('Elige el chofer al que transfieres.');
+      return;
+    }
+    if (!this.network.online()) {
+      this.toast.error('Necesitas conexión para ofrecer una transferencia.');
+      return;
+    }
+    this.transfiriendo.set(true);
+    try {
+      await this.service.ofrecerTransferencia(c.id, this.choferSel(), this.notaTransfer().trim() || null);
+      this.toast.success('Transferencia ofrecida. El chofer la verá para aceptarla con foto y firma.');
+      this.transferAbierto.set(null);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo ofrecer la transferencia.');
+    } finally {
+      this.transfiriendo.set(false);
+    }
   }
 
   back(): void {

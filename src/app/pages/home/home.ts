@@ -38,6 +38,8 @@ const TILES: HomeTile[] = [
   // no tiene módulo padre (solo permisos obra.*), así que su gating es especial
   // (puedeVerObra) en workTiles, no hasModulo.
   { modulo: 'obra', icon: '🦺', label: 'Mi obra', route: '/obra', tint: '#0f766e' },
+  // AH16 — RRHH (jefe de RRHH): empleados + asignaciones AF33. Gating por hasModulo('rrhh').
+  { modulo: 'rrhh', icon: '🧑‍💼', label: 'RRHH', route: '/rrhh/empleados', tint: '#7c3aed' },
   { modulo: 'admin', icon: '⚙️', label: 'Administración', route: '/admin', tint: '#3f3f46' },
   // Y11 — Tecnología (admin + rol Tecnología/Encargado de Tecnología). El gating
   // es genérico por módulo: `hasModulo('tecnologia')` ya lo resuelve.
@@ -50,6 +52,9 @@ const NOTAS_TILE: HomeTile = { modulo: 'notas', icon: '🗒️', label: 'Notas',
 // AF39 — Tareas: general (el chofer ve las tareas asignadas a él aunque no tenga
 // el módulo). El RPC mis_tareas_app acota la visibilidad.
 const TAREAS_TILE: HomeTile = { modulo: 'tareas_app', icon: '✅', label: 'Tareas', route: '/tareas', tint: '#0d9488' };
+// AH15 — consulta de "Compras del proyecto" para roles con acceso a proyectos
+// (admin/proyectos/compras/obra — gerente de producción la aprovecha).
+const COMPRAS_TILE: HomeTile = { modulo: 'compras_proyecto', icon: '💰', label: 'Compras de obra', route: '/compras-proyecto', tint: '#b45309' };
 
 @Component({
   selector: 'app-home',
@@ -116,6 +121,10 @@ export class HomePage {
     // AC4 — Notas es general (todos, incl. choferes). AF39 — Tareas también.
     // Tecnología, todos menos chofer.
     const extra: HomeTile[] = [NOTAS_TILE, TAREAS_TILE];
+    // AH15 — Compras de obra: admin o roles con acceso a proyectos/compras/obra.
+    if (this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('compras') || this.ctx.puedeVerObra()) {
+      extra.push(COMPRAS_TILE);
+    }
     if (!this.ctx.esChofer()) {
       const tec = TILES.find((t) => t.modulo === 'tecnologia');
       if (tec) extra.push(tec);

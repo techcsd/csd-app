@@ -191,3 +191,13 @@
   color: #ca8a04;
   font-weight: 700;
 }
+
+// AH5 — transferencia de conduce
+.conduce-det__transf { width: auto; margin-top: 10px; }
+.conduce-transf {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  &__nota { width: 100%; }
+}

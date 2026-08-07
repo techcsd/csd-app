@@ -271,7 +271,17 @@ export class ConducesPage implements OnDestroy {
     this.entFoto.set(null);
   }
 
-  /** AE — confirma la entrega de una parada con nombre + firma (+ foto opcional). */
+  /** AH8 — ubicación actual (best-effort) para sellar dónde se completó la parada. */
+  private async coordsActuales(): Promise<{ lat: number; lng: number } | null> {
+    try {
+      const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 8000 });
+      return r.ok ? { lat: r.lat, lng: r.lng } : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** AE — confirma la entrega de una parada con nombre + firma + FOTO obligatoria (AH6/AH7). */
   async confirmarEntregarParada(): Promise<void> {
     const ctx = this.entregando();
     if (!ctx || this.entGuardando()) return;
@@ -281,6 +291,11 @@ export class ConducesPage implements OnDestroy {
     }
     // AF26 — marcar una entrega exige GPS activo.
     if (!(await this.tracking.exigirGps('marcar_entrega'))) return;
+    // AH7 — la foto de evidencia es OBLIGATORIA en toda confirmación de entrega.
+    if (!this.entFoto()) {
+      this.toast.error('Toma la foto de evidencia de la entrega.');
+      return;
+    }
     if (!this.entFirmaBlob()) {
       this.toast.error('Falta la firma de quien recibe.');
       return;
@@ -288,6 +303,7 @@ export class ConducesPage implements OnDestroy {
     this.entGuardando.set(true);
     const { rutaId, parada } = ctx;
     const nombre = this.entRecibio().trim();
+    const coords = await this.coordsActuales(); // AH8 — dónde se entregó
     // Optimista: la parada queda entregada al instante.
     this.actualizarParadaLocal(rutaId, parada.id, {
       estado: 'entregada',
@@ -300,6 +316,8 @@ export class ConducesPage implements OnDestroy {
         entregadoA: nombre,
         firma: this.entFirmaBlob(),
         foto: this.entFoto()?.blob ?? null,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
       });
       this.toast.success('Parada entregada.');
     } catch (e) {
@@ -309,10 +327,13 @@ export class ConducesPage implements OnDestroy {
     }
   }
 
-  /** AE5 — avanza la parada (en_camino / entregada / omitida). Offline-first:
-   *  aplica el cambio de forma optimista y lo encola en el outbox. */
+  /** AE5/AH8 — avanza la parada (en_camino / entregada / omitida). Offline-first:
+   *  aplica el cambio de forma optimista y lo encola. Al COMPLETAR ('entregada')
+   *  sin conduce vinculado, sella el instante del tap + la ubicación GPS. */
   async marcarParada(rutaId: string, p: RutaParadaEjec, estado: ParadaEstado): Promise<void> {
     if (this.paradaOcupada()) return;
+    // AH8 — completar una parada exige GPS activo (misma regla que una entrega).
+    if (estado === 'entregada' && !(await this.tracking.exigirGps('marcar_entrega'))) return;
     this.paradaOcupada.set(p.id);
     const now = new Date().toISOString();
     const cambios: Partial<RutaParadaEjec> = { estado };
@@ -320,7 +341,8 @@ export class ConducesPage implements OnDestroy {
     if (estado === 'entregada') cambios.entregada_at = now;
     this.actualizarParadaLocal(rutaId, p.id, cambios); // optimista
     try {
-      await this.service.avanzarParada(p.id, estado);
+      const coords = estado === 'entregada' ? await this.coordsActuales() : null;
+      await this.service.avanzarParada(p.id, estado, { lat: coords?.lat ?? null, lng: coords?.lng ?? null });
     } catch (e) {
       this.toast.error(this.msgError(e, 'No se pudo actualizar la parada.'));
     } finally {
