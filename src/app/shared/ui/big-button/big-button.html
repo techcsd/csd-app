@@ -1,4 +1,4 @@
-<button type="button" class="big-button" (click)="pressed.emit()">
+<button type="button" class="big-button" [class.big-button--compact]="compact()" (click)="pressed.emit()">
   @if (badge() && badge()! > 0) {
     <span class="big-button__badge">{{ badge() }}</span>
   }

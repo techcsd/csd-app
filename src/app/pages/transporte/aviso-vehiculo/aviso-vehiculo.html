@@ -1,0 +1,116 @@
+<div class="screen avis">
+  <header class="avis__header">
+    <button type="button" class="avis__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="avis__icon">📣</span>
+    <h1 class="avis__title">Aviso de vehículo</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (!vehiculo()) {
+      <app-vehiculo-picker
+        titulo="¿Sobre qué vehículo?"
+        subtitulo="Elige el vehículo para reportar una novedad o ver sus alertas."
+        [soloMios]="true"
+        (elegido)="onVehiculo($event)"
+      />
+    } @else {
+      <div class="avis__veh">
+        <span class="avis__veh-placa">🚚 {{ vehiculo()!.placa }}</span>
+        <button type="button" class="btn-ghost avis__cambiar" (click)="cambiarVehiculo()">Cambiar</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="avis__tabs" role="tablist">
+        <button type="button" class="avis__tab" [class.avis__tab--on]="tab() === 'reportar'" (click)="tab.set('reportar')">📣 Reportar</button>
+        <button type="button" class="avis__tab" [class.avis__tab--on]="tab() === 'alertas'" (click)="tab.set('alertas')">🔔 Alertas</button>
+      </div>
+
+      <!-- ══════════ Reportar novedad ══════════ -->
+      @if (tab() === 'reportar') {
+        <label class="field-label" for="desc">¿Qué pasó? <span class="avis__req">*</span></label>
+        <textarea id="desc" class="field avis__desc" rows="3" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Describe la novedad o el daño del vehículo…"></textarea>
+
+        <label class="field-label avis__mt">¿Qué tan grave es?</label>
+        <div class="avis__sev">
+          <app-option-button label="Baja" icon="🟢" [selected]="severidad() === 'baja'" (pressed)="severidad.set('baja')" />
+          <app-option-button label="Media" icon="🟡" [selected]="severidad() === 'media'" (pressed)="severidad.set('media')" />
+          <app-option-button label="Alta" icon="🔴" [selected]="severidad() === 'alta'" (pressed)="severidad.set('alta')" />
+        </div>
+
+        <label class="field-label avis__mt">Fotos <span class="avis__req">*</span></label>
+        <p class="avis__sub">Toma foto(s) de la novedad (solo cámara).</p>
+        <div class="avis__fotos">
+          @for (f of fotos(); track $index) {
+            <app-photo-slot
+              label="Foto {{ $index + 1 }}"
+              hint="📷"
+              [gallery]="false"
+              [foto]="f"
+              (captured)="setFoto($index, $event)"
+              (cleared)="setFoto($index, null)"
+            />
+          }
+        </div>
+
+        <button type="button" class="btn-cta avis__enviar" [disabled]="enviando() || !puedeReportar()" (click)="reportar()">
+          {{ enviando() ? 'Enviando…' : 'Reportar novedad' }}
+        </button>
+      }
+
+      <!-- ══════════ Alertas del vehículo ══════════ -->
+      @if (tab() === 'alertas') {
+        @if (cargandoAlertas()) {
+          <app-skeleton [rows]="4" />
+        } @else if (alertas(); as a) {
+          <div class="avis__cards">
+            <div class="avis__card">
+              <span class="avis__card-label">Matrícula vence</span>
+              <span class="avis__card-value">{{ a.vencimiento_matricula ? fmtFecha(a.vencimiento_matricula) : '—' }}</span>
+            </div>
+            <div class="avis__card">
+              <span class="avis__card-label">Seguro vence</span>
+              <span class="avis__card-value">{{ a.vencimiento_seguro ? fmtFecha(a.vencimiento_seguro) : '—' }}</span>
+            </div>
+            @if (a.km_faltan_mantenimiento != null) {
+              <div class="avis__card avis__card--wide" [class.avis__card--warn]="a.km_faltan_mantenimiento <= 0">
+                <span class="avis__card-label">Mantenimiento</span>
+                <span class="avis__card-value">
+                  @if (a.km_faltan_mantenimiento <= 0) { Vencido ({{ -a.km_faltan_mantenimiento }} km) }
+                  @else { Faltan {{ a.km_faltan_mantenimiento }} km }
+                </span>
+              </div>
+            }
+          </div>
+
+          @if (a.placas_pp.length) {
+            <section class="avis__sec">
+              <h2 class="avis__sec-title">Placas provisionales</h2>
+              @for (pp of a.placas_pp; track pp.id) {
+                <div class="avis__row">
+                  <span>🅿️ {{ pp.placa_pp || 'PP' }}</span>
+                  <span class="avis__row-sub">{{ pp.vencimiento ? 'Vence ' + fmtFecha(pp.vencimiento) : '' }} · {{ pp.estado }}</span>
+                </div>
+              }
+            </section>
+          }
+
+          @if (a.avisos.length) {
+            <section class="avis__sec">
+              <h2 class="avis__sec-title">Avisos abiertos ({{ a.avisos.length }})</h2>
+              @for (av of a.avisos; track av.id) {
+                <div class="avis__row">
+                  <span>⚠️ {{ av.mensaje || av.tipo }}</span>
+                  <span class="avis__row-sub">{{ av.severidad || 'media' }} · {{ fmtFecha(av.created_at) }}</span>
+                </div>
+              }
+            </section>
+          } @else {
+            <app-empty-state icon="✅" title="Sin alertas" message="Este vehículo no tiene alertas abiertas ahora mismo." />
+          }
+        } @else {
+          <app-empty-state icon="🔔" title="Sin datos" message="No pudimos cargar las alertas del vehículo." />
+        }
+      }
+    }
+  </div>
+</div>

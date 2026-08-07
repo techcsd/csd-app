@@ -49,7 +49,7 @@
               <!-- Y4 — duración real vs estimada al completar -->
               @if (resumenTiempo(r); as rt) {
                 <span class="ruta-card__tiempo">
-                  🏁 Duración {{ rt.real }} min@if (rt.est != null) { · Estimado {{ rt.est }} min@if (rt.pct != null) { ({{ rt.pct > 0 ? '+' : '' }}{{ rt.pct }}%) } }
+                  🏁 Duración {{ fmtDur(rt.real) }}@if (rt.est != null) { · Estimado {{ fmtDur(rt.est) }}@if (rt.pct != null) { ({{ rt.pct > 0 ? '+' : '' }}{{ rt.pct }}%) } }
                 </span>
               }
             </div>
@@ -78,6 +78,16 @@
             @if (estaExpandida(r.id)) {
               @if (detalle(r.id); as d) {
                 <div class="ruta-card__detalle">
+                  <!-- AI3 — ruta informativa: H.I/H.F, duración total, km y trayecto -->
+                  @if (d.ruta; as rh) {
+                    <div class="ruta-card__info">
+                      @if (rh.iniciada_at) { <span>🟢 H.I {{ fmtHora(rh.iniciada_at) }}</span> }
+                      @if (rh.finalizada_at) { <span>🏁 H.F {{ fmtHora(rh.finalizada_at) }}</span> }
+                      @if (rh.duracion_min != null) { <span>⏱️ {{ fmtDur(rh.duracion_min) }}</span> }
+                      @if (rh.km_real != null) { <span>🛣️ {{ rh.km_real }} km</span> }
+                      @if (d.trayecto?.length) { <span>📍 {{ d.trayecto!.length }} puntos de recorrido</span> }
+                    </div>
+                  }
                   <!-- AE — progreso + ir a la próxima parada -->
                   @if (progreso(r.id); as pr) {
                     <div class="ruta-card__progreso">
@@ -283,13 +293,16 @@
       </p>
 
       @if (proyectosOpts().length) {
-        <label class="field-label" for="rv-obra">Obra (opcional)</label>
-        <select id="rv-obra" class="field" [ngModel]="rvProyectoId()" (ngModelChange)="onRvProyecto($event)">
-          <option value="">— Elegir obra —</option>
-          @for (p of proyectosOpts(); track p.id) {
-            <option [value]="p.id">{{ p.nombre }}</option>
-          }
-        </select>
+        <label class="field-label">Obra (opcional)</label>
+        <app-collapsible-select
+          label="Obra"
+          icon="🏗️"
+          [options]="rvObraOptions()"
+          [selectedId]="rvProyectoId()"
+          [searchable]="true"
+          searchPlaceholder="Buscar obra…"
+          (picked)="onRvProyecto($event)"
+        />
       }
 
       <label class="field-label parada-sheet__mt" for="rv-ubic">

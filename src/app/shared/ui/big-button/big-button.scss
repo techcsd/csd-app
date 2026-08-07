@@ -21,6 +21,33 @@
   border-color: var(--color-primary);
 }
 
+// AI1 — variante compacta: icono más pequeño, 3 por fila.
+.big-button--compact {
+  min-height: 104px;
+  gap: 8px;
+  padding: 12px 8px;
+
+  .big-button__icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    font-size: 24px;
+  }
+
+  .big-button__label {
+    font-size: 13px;
+    line-height: 1.15;
+  }
+
+  .big-button__badge {
+    top: 6px;
+    right: 6px;
+    min-width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+}
+
 .big-button__icon {
   width: 72px;
   height: 72px;

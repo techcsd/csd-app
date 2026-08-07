@@ -1,0 +1,167 @@
+.avis {
+  background: var(--color-bg);
+}
+
+.avis__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.avis__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.avis__icon {
+  font-size: 26px;
+}
+
+.avis__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.avis__veh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.avis__veh-placa {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.avis__cambiar {
+  width: auto;
+}
+
+.avis__tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.avis__tab {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.avis__tab--on {
+  background: var(--Hub);
+  border-color: var(--Hub);
+  color: var(--main);
+}
+
+.avis__desc {
+  width: 100%;
+}
+
+.avis__mt {
+  margin-top: 16px;
+}
+
+.avis__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 8px;
+}
+
+.avis__req {
+  color: var(--color-danger, #dc2626);
+}
+
+.avis__sev {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.avis__fotos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.avis__enviar {
+  margin-top: 20px;
+}
+
+.avis__cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.avis__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.avis__card--wide {
+  grid-column: 1 / -1;
+}
+
+.avis__card--warn {
+  border-color: var(--color-danger, #dc2626);
+}
+
+.avis__card-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.avis__card-value {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.avis__sec {
+  margin-top: 8px;
+}
+
+.avis__sec-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 12px 0 8px;
+}
+
+.avis__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  margin-bottom: 8px;
+}
+
+.avis__row-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

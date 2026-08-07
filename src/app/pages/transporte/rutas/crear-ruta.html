@@ -174,14 +174,14 @@
           <!-- Z23 — notas de voz (opcional) -->
           <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
 
-          <!-- AF24.3 — foto de CARGA obligatoria (material); la del vehículo se eliminó.
-               AF24.6 — el jefe de flota puede adjuntar un documento (factura). Solo cámara. -->
+          <!-- AI5 — foto de la ruta OPCIONAL y genérica (la evidencia con peso vive en
+               el conduce). AF24.6 — el jefe de flota puede adjuntar un documento (factura). -->
           <label class="field-label">
-            Foto de la carga
+            Foto (opcional)
             @if (cargaObligatoria()) { <span class="cruta__req">*</span> }
           </label>
           <div class="cruta__fotos">
-            <app-photo-slot label="Carga" hint="📦" [gallery]="false" [foto]="fotoCarga()" (captured)="capFotoCarga($event)" (cleared)="clrFotoCarga()" />
+            <app-photo-slot label="Foto" hint="📷" [gallery]="false" [foto]="fotoCarga()" (captured)="capFotoCarga($event)" (cleared)="clrFotoCarga()" />
             <app-photo-slot
               [label]="esElevado ? 'Documento (factura)' : 'Documento'"
               hint="📄"

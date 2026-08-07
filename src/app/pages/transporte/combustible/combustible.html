@@ -278,18 +278,16 @@
 
         <!-- AC11 — depósito en obra: elegir la obra donde se echó (opcional) -->
         @if (esDeposito()) {
-          <label class="field-label comb__mt" for="obra">Obra donde se echó (opcional)</label>
-          <select
-            id="obra"
-            class="field"
-            [ngModel]="proyectoId()"
-            (ngModelChange)="proyectoId.set($event)"
-          >
-            <option [ngValue]="null">— Sin especificar —</option>
-            @for (p of proyectos(); track p.id) {
-              <option [ngValue]="p.id">{{ p.nombre }}</option>
-            }
-          </select>
+          <label class="field-label comb__mt">Obra donde se echó (opcional)</label>
+          <app-collapsible-select
+            label="Obra"
+            icon="🏗️"
+            [options]="obraOptions()"
+            [selectedId]="proyectoId() ?? ''"
+            [searchable]="true"
+            searchPlaceholder="Buscar obra…"
+            (picked)="proyectoId.set($event || null)"
+          />
           <p class="field-hint">
             La echada de depósito queda como consumo interno (no entra a la conciliación de estación).
           </p>

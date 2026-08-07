@@ -6,6 +6,8 @@ import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -38,7 +40,7 @@ const MIN_FOTOS = 1; // S6 — el RPC exige ≥1 foto en incidentes.
   selector: 'app-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Counter, BigConfirm, ConfirmDialog, VoiceNotes, Skeleton],
+  imports: [FormsModule, StepBar, WizardFooter, OptionButton, CollapsibleSelect, Counter, BigConfirm, ConfirmDialog, VoiceNotes, Skeleton],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })
@@ -65,6 +67,13 @@ export class IncidentePage implements OnDestroy {
   proyectos = signal<Proyecto[]>([]);
   loading = signal(true);
   proyectoId = signal('');
+  // AI14 — obra por dropdown estándar (AH10).
+  proyectoOpciones = computed<SelectOption[]>(() =>
+    this.proyectos().map((p) => ({ id: p.id, label: p.nombre })),
+  );
+  pickProyecto(id: string): void {
+    this.proyectoId.set(id);
+  }
   tipo = signal<IncidenteTipo | null>(null);
   gravedad = signal<string>('');
   lesionados = signal(0);

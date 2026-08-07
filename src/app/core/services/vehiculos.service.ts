@@ -69,6 +69,28 @@ export interface FlotaAviso {
   vehiculo?: { placa: string; estado: string } | null;
 }
 
+/** AI13 — alertas del vehículo (documentos por vencer, mantenimiento, placa PP). */
+export interface AlertasVehiculo {
+  vehiculo_id: string;
+  placa: string;
+  vencimiento_matricula: string | null;
+  vencimiento_seguro: string | null;
+  kilometraje: number | null;
+  km_ultimo_mantenimiento: number | null;
+  intervalo_mantenimiento_km: number | null;
+  km_faltan_mantenimiento: number | null;
+  avisos: { id: string; tipo: string; mensaje: string | null; severidad: string | null; estado: string; created_at: string }[];
+  placas_pp: { id: string; placa_pp: string | null; vencimiento: string | null; estado: string | null }[];
+}
+
+/** AI13 — captura de "reportar novedad de vehículo". */
+export interface NovedadCaptura {
+  vehiculoId: string;
+  descripcion: string;
+  severidad: 'baja' | 'media' | 'alta';
+  fotos: Blob[];
+}
+
 /** Input the checklist wizard hands to enqueueEntrega(). */
 export interface EntregaCaptura {
   vehiculoId: string;
@@ -690,6 +712,45 @@ export class VehiculosService {
     void this.misPendientes();
   }
 
+  /** AI13 — alertas del vehículo asignado (pestaña "Alertas" de Aviso de vehículo). */
+  async getAlertasVehiculo(vehiculoId: string): Promise<AlertasVehiculo | null> {
+    if (!vehiculoId) return null;
+    const { data, error } = await this.supabase.client.rpc('alertas_vehiculo', { p_vehiculo_id: vehiculoId });
+    if (error) throw new Error(error.message);
+    return (data as AlertasVehiculo) ?? null;
+  }
+
+  /**
+   * AI13 — el chofer reporta una novedad/daño del vehículo (→ bandeja Flota > Avisos
+   * + push a jefe de flota/admin). Offline-safe por outbox: sube las fotos al bucket
+   * `vehiculos` y llama `reportar_novedad_vehiculo` con las rutas.
+   */
+  async reportarNovedad(input: NovedadCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const fotos = input.fotos.map((blob, i) => ({
+      id: crypto.randomUUID(),
+      bucket: 'vehiculos',
+      path: `novedades/${input.vehiculoId}/${id}-${i}.jpg`,
+      slot: `foto_${i}`,
+      blob,
+    }));
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'aviso_novedad_vehiculo',
+      capturado_en,
+      payload: {
+        id,
+        vehiculo_id: input.vehiculoId,
+        descripcion: input.descripcion,
+        severidad: input.severidad,
+        n_fotos: fotos.length,
+      },
+      fotos,
+      resumen: { vehiculo_id: input.vehiculoId, severidad: input.severidad, capturado_en },
+    });
+  }
+
   private registerHandler(): void {
     this.sync.register('vehiculo_entrega', async (payload, photoPaths) => {
       const fotos = REQUIRED_SLOTS.map((slot) => ({ slot, path: photoPaths[slot] }));
@@ -722,6 +783,23 @@ export class VehiculosService {
       await this.catalog.invalidate('pendientes_transporte');
       await this.catalog.invalidate('flota_vehiculos');
       await this.catalog.invalidate('mis_asignaciones'); // AF21
+    });
+
+    // AI13 — reportar novedad de vehículo → avisos_flota (bandeja Flota) + push.
+    this.sync.register('aviso_novedad_vehiculo', async (payload, photoPaths) => {
+      const n = (payload['n_fotos'] as number) ?? 0;
+      const fotoPaths: string[] = [];
+      for (let i = 0; i < n; i++) {
+        const p = photoPaths[`foto_${i}`];
+        if (p) fotoPaths.push(p);
+      }
+      const { error } = await this.supabase.client.rpc('reportar_novedad_vehiculo', {
+        p_vehiculo_id: payload['vehiculo_id'],
+        p_descripcion: payload['descripcion'],
+        p_severidad: payload['severidad'] ?? 'media',
+        p_fotos: fotoPaths,
+      });
+      if (error) throwSyncError(error);
     });
   }
 }

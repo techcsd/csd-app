@@ -11,9 +11,12 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
-import { ConducesService } from '../../../core/services/conduces.service';
+import { ConducesService, Despachante } from '../../../core/services/conduces.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { TrackingService } from '../../../core/services/tracking.service';
@@ -23,10 +26,27 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv, Ferreteria } from '../../../core/models/inventario.model';
-import { MiAsignacion } from '../../../core/models/transporte.model';
+import { MiAsignacion, VehiculoDisponible } from '../../../core/models/transporte.model';
 
 /** AF31 — de dónde sale el material del conduce. */
 type OrigenTipo = 'almacen' | 'ferreteria' | 'otros';
+
+/** AE9 — slice del conduce persistido para retomar el borrador (sin fotos/firmas). */
+interface ConduceDraft {
+  origenTipo: OrigenTipo;
+  bodegaId: string;
+  obraId: string;
+  destinoTipo: 'obra' | 'suplidor';
+  suplidorNombre: string;
+  ferreteriaId: string;
+  referencia: string;
+  otrosNombre: string;
+  observaciones: string;
+  vehiculoId: string;
+  despachanteId: string;
+  despachanteLibre: string;
+  cart: CartLinea[];
+}
 
 /**
  * AE/AF31 — Crear conduce con selector de ORIGEN:
@@ -40,7 +60,7 @@ type OrigenTipo = 'almacen' | 'ferreteria' | 'otros';
   selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner],
   templateUrl: './generar-conduce.html',
   styleUrl: './generar-conduce.scss',
 })
@@ -58,13 +78,20 @@ export class GenerarConducePage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
+
+  // AE9 — borrador persistente del conduce (rehidrata al reabrir; fotos/firmas se re-capturan).
+  private readonly clave = 'transporte:generar-conduce';
+  draftFecha = signal<number | null>(null);
+  private hydrated = false;
 
   /** AG15 — id de la tarea que originó este conduce (se enlaza al emitir). */
   private tareaVinculada: string | null = null;
 
-  // AH4 — dos firmas al emitir: quien entrega (emisor) + chofer que transporta.
-  private sigEmisor = viewChild<SignaturePad>('emisorPad');
+  // AI2 — dos firmas al emitir: chofer (transportista) + despachante (emisor).
   private sigChofer = viewChild<SignaturePad>('choferPad');
+  private sigDespachante = viewChild<SignaturePad>('despachantePad');
 
   hoja = signal<'form' | 'exito'>('form');
   loading = signal(true);
@@ -103,22 +130,47 @@ export class GenerarConducePage implements OnDestroy {
 
   // AF23.4 — vehículo (para que el servidor auto-genere la ruta al emitir).
   misVehiculos = signal<MiAsignacion[]>([]);
+  // AI6 — todos los vehículos visibles (para poder elegir uno no asignado → Uso de vehículo).
+  todosVehiculos = signal<VehiculoDisponible[]>([]);
   vehiculoId = signal('');
   vehiculoOptions = computed(() =>
-    this.misVehiculos().map((v) => ({ id: v.vehiculo_id, label: `${v.placa} · ${v.marca} ${v.modelo}` })),
+    this.todosVehiculos().map((v) => ({ id: v.vehiculo_id, label: `${v.placa} · ${v.marca} ${v.modelo}` })),
   );
-  // AF23.3 — firma de quien entrega (emisor) — almacén/otros.
-  firmaEmisor = signal<Blob | null>(null);
-  // AH4 — ¿quien entrega es OTRA persona (no el chofer)? Por defecto no: el chofer
-  // entrega y transporta → una sola firma con doble rol. Si sí, se pide el nombre
-  // de quien entrega + una segunda firma (la del chofer que transporta).
-  otraPersonaEntrega = signal(false);
-  emisorNombreOtro = signal('');
-  firmaTransportista = signal<Blob | null>(null);
+  /** AI6 — ¿el vehículo elegido está asignado al chofer actual? */
+  private esVehiculoAsignado(id: string): boolean {
+    return this.misVehiculos().some((v) => v.vehiculo_id === id);
+  }
+  // AI2 — foto de recepción (el chofer CARGA el material del despachante) — solo cámara.
+  fotoRecepcion = signal<CapturedPhoto | null>(null);
+  // AI2 — despachante: quien entrega el material al chofer (select de personas del
+  // origen; nombre libre si el origen es ferretería/otros).
+  despachantes = signal<Despachante[]>([]);
+  despachanteId = signal(''); // usuario/empleado seleccionado
+  despachanteLibre = signal(''); // nombre libre (otros)
+  // AI2 — firmas de emisión: chofer (transportista) + despachante (emisor).
+  firmaChofer = signal<Blob | null>(null);
+  firmaDespachante = signal<Blob | null>(null);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
   ferreteriaOptions = computed(() => this.ferreterias().map((f) => ({ id: f.id, label: f.nombre })));
+  // AI2 — opciones del despachante (usuario/empleado). El id es namespaced por tipo
+  // para distinguir usuario↔empleado con el mismo uuid poco probable, pero seguro.
+  despachanteOptions = computed(() =>
+    this.despachantes().map((d) => ({
+      id: `${d.tipo}:${d.id}`,
+      label: d.detalle ? `${d.nombre} · ${d.detalle}` : d.nombre,
+    })),
+  );
+  despachanteSel = computed<Despachante | null>(() => {
+    const key = this.despachanteId();
+    if (!key) return null;
+    const [tipo, id] = key.split(':');
+    return this.despachantes().find((d) => d.tipo === tipo && d.id === id) ?? null;
+  });
+  /** Nombre del despachante para el conduce (picker o libre). */
+  despachanteNombre = computed(() => this.despachanteSel()?.nombre ?? this.despachanteLibre().trim());
+  despachanteOk = computed(() => !!(this.despachanteId() || this.despachanteLibre().trim()));
   excludeIds = computed(() => this.cart().map((l) => l.articulo_id).filter((x): x is string => !!x));
   faltaItems = computed(() => this.cart().filter((l) => l.cantidad > 0).length === 0);
   hayExceso = computed(() => this.cart().some((l) => this.excedeStock(l)));
@@ -127,20 +179,18 @@ export class GenerarConducePage implements OnDestroy {
   esFerreteria = computed(() => this.origenTipo() === 'ferreteria');
   esOtros = computed(() => this.origenTipo() === 'otros');
 
-  /** AH4 — ¿están las firmas requeridas? (emisor siempre; si otra persona entrega,
-   *  además el nombre del emisor + la firma del chofer que transporta). */
-  private firmasOk = computed(() => {
-    if (!this.firmaEmisor()) return false;
-    if (this.otraPersonaEntrega()) return !!(this.emisorNombreOtro().trim() && this.firmaTransportista());
-    return true;
-  });
+  /** AI2 — firmas requeridas al emitir: chofer + despachante. */
+  private firmasOk = computed(() => !!(this.firmaChofer() && this.firmaDespachante()));
 
   /** ¿Están los campos mínimos para emitir según el tipo de origen? */
   puedeEmitir = computed(() => {
     if (this.esFerreteria()) return !!(this.ferreteriaId() && this.bodegaId() && this.fotoRecibo());
     const destinoOk = this.destinoTipo() === 'obra' ? !!this.obraId() : !!this.suplidorNombre().trim();
-    if (this.esOtros()) return !!(this.otrosNombre().trim() && destinoOk && this.firmasOk());
-    return !!(this.bodegaId() && destinoOk && !this.faltaItems() && this.firmasOk());
+    // AI2 — el conduce exige: origen, destino, materiales, foto de recepción,
+    // despachante y ambas firmas (chofer + despachante).
+    const comun = destinoOk && !!this.fotoRecepcion() && this.despachanteOk() && this.firmasOk();
+    if (this.esOtros()) return !!(this.otrosNombre().trim() && comun);
+    return !!(this.bodegaId() && !this.faltaItems() && comun);
   });
 
   /** Etiqueta del botón según el modo (compra vs conduce). */
@@ -164,6 +214,65 @@ export class GenerarConducePage implements OnDestroy {
       const b = this.bodegaId();
       if (b && this.origenTipo() === 'almacen') void this.loadExistencias(b);
     });
+    // AE9 — autosave del borrador (sin fotos/firmas): al cambiar cualquier campo.
+    effect(() => this.autosaveEffect());
+  }
+
+  /** AE9 — snapshot + autosave del borrador (se dispara con cualquier cambio). */
+  private autosaveEffect(): void {
+    const snap: ConduceDraft = {
+      origenTipo: this.origenTipo(),
+      bodegaId: this.bodegaId(),
+      obraId: this.obraId(),
+      destinoTipo: this.destinoTipo(),
+      suplidorNombre: this.suplidorNombre(),
+      ferreteriaId: this.ferreteriaId(),
+      referencia: this.referencia(),
+      otrosNombre: this.otrosNombre(),
+      observaciones: this.observaciones(),
+      vehiculoId: this.vehiculoId(),
+      despachanteId: this.despachanteId(),
+      despachanteLibre: this.despachanteLibre(),
+      cart: this.cart(),
+    };
+    if (!this.hydrated || this.hoja() === 'exito' || this.submitting()) return;
+    if (!this.tieneDatos()) return;
+    this.autosave.queue(this.clave, snap, {
+      tipo: 'conduce',
+      etiqueta: 'Conduce',
+      ruta: this.location.path(),
+    });
+  }
+
+  /** AE9 — retomar el borrador: rehidrata los campos (fotos/firmas se re-capturan). */
+  continuarBorrador(): void {
+    void (async () => {
+      const d = await this.borrador.load<ConduceDraft>(this.clave);
+      if (d) {
+        this.origenTipo.set(d.origenTipo ?? 'almacen');
+        this.bodegaId.set(d.bodegaId ?? '');
+        this.obraId.set(d.obraId ?? '');
+        this.destinoTipo.set(d.destinoTipo ?? 'obra');
+        this.suplidorNombre.set(d.suplidorNombre ?? '');
+        this.ferreteriaId.set(d.ferreteriaId ?? '');
+        this.referencia.set(d.referencia ?? '');
+        this.otrosNombre.set(d.otrosNombre ?? '');
+        this.observaciones.set(d.observaciones ?? '');
+        this.vehiculoId.set(d.vehiculoId ?? '');
+        this.despachanteId.set(d.despachanteId ?? '');
+        this.despachanteLibre.set(d.despachanteLibre ?? '');
+        this.cart.set(d.cart ?? []);
+      }
+      this.draftFecha.set(null);
+      this.hydrated = true;
+    })();
+  }
+
+  /** AE9 — empezar de nuevo: descarta el borrador. */
+  descartarBorrador(): void {
+    void this.autosave.discard(this.clave);
+    this.draftFecha.set(null);
+    this.hydrated = true;
   }
 
   private async loadExistencias(bodegaId: string): Promise<void> {
@@ -197,23 +306,35 @@ export class GenerarConducePage implements OnDestroy {
   private async init(): Promise<void> {
     this.loading.set(true);
     try {
-      const [b, obras, a, cat, asig, ferr] = await Promise.all([
+      const [b, obras, a, cat, asig, todos, ferr, desp] = await Promise.all([
         this.inventario.getBodegas(),
         this.inventario.getObrasConBodega().catch(() => [] as ObraOrigen[]),
         this.inventario.getArticulos().catch(() => [] as ArticuloCat[]),
         this.inventario.getCategorias().catch(() => [] as CategoriaInv[]),
         this.vehiculos.getMisAsignaciones().catch(() => [] as MiAsignacion[]),
+        this.vehiculos.getVehiculosDisponibles().catch(() => [] as VehiculoDisponible[]),
         this.inventario.getFerreterias().catch(() => [] as Ferreteria[]),
+        this.conduces.despachantesDisponibles().catch(() => [] as Despachante[]),
       ]);
       this.bodegas.set(b);
       this.obras.set(obras);
       this.articulos.set(a);
       this.categorias.set(cat);
       this.misVehiculos.set(asig);
+      this.todosVehiculos.set(todos);
       this.ferreterias.set(ferr);
+      this.despachantes.set(desp);
       if (b.length === 1) this.bodegaId.set(b[0].id);
       if (asig.length === 1) this.vehiculoId.set(asig[0].vehiculo_id);
-      this.prefillFromQuery(); // AG15 — pre-llenar si viene de una tarea vinculada
+      const deepLink = this.prefillFromQuery(); // AG15 — pre-llenar si viene de una tarea vinculada
+      // AE9 — si NO viene de deep-link, ofrecer retomar un borrador previo (banner).
+      if (!deepLink) {
+        const d = await this.borrador.get(this.clave);
+        if (d) this.draftFecha.set(d.updated_at);
+        else this.hydrated = true;
+      } else {
+        this.hydrated = true;
+      }
     } finally {
       this.loading.set(false);
     }
@@ -225,24 +346,30 @@ export class GenerarConducePage implements OnDestroy {
    * El id de la tarea (`tarea`) se enlaza al conduce al emitir para que la tarea
    * se complete sola cuando se confirme la entrega.
    */
-  private prefillFromQuery(): void {
+  private prefillFromQuery(): boolean {
     const q = this.route.snapshot.queryParamMap;
+    let deepLink = false;
     const origen = q.get('origen') as OrigenTipo | null;
     if (origen === 'almacen' || origen === 'ferreteria' || origen === 'otros') {
       this.setOrigen(origen);
+      deepLink = true;
     }
     const bodega = q.get('bodega');
-    if (bodega && this.bodegas().some((b) => b.id === bodega)) this.bodegaId.set(bodega);
+    if (bodega && this.bodegas().some((b) => b.id === bodega)) { this.bodegaId.set(bodega); deepLink = true; }
     const ferreteria = q.get('ferreteria');
     if (ferreteria && this.ferreterias().some((f) => f.id === ferreteria)) {
       this.ferreteriaId.set(ferreteria);
+      deepLink = true;
     }
     const obra = q.get('obra');
     if (obra && this.obras().some((o) => o.id === obra)) {
       this.destinoTipo.set('obra');
       this.obraId.set(obra);
+      deepLink = true;
     }
     this.tareaVinculada = q.get('tarea');
+    if (this.tareaVinculada) deepLink = true;
+    return deepLink;
   }
 
   /** AF31 — cambiar el tipo de origen limpia lo que no aplica. */
@@ -293,17 +420,42 @@ export class GenerarConducePage implements OnDestroy {
     this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
   }
 
-  async onFirmaEmisor(has: boolean): Promise<void> {
-    this.firmaEmisor.set(has ? ((await this.sigEmisor()?.toBlob()) ?? null) : null);
+  async onFirmaChofer(has: boolean): Promise<void> {
+    this.firmaChofer.set(has ? ((await this.sigChofer()?.toBlob()) ?? null) : null);
   }
-  async onFirmaTransportista(has: boolean): Promise<void> {
-    this.firmaTransportista.set(has ? ((await this.sigChofer()?.toBlob()) ?? null) : null);
+  async onFirmaDespachante(has: boolean): Promise<void> {
+    this.firmaDespachante.set(has ? ((await this.sigDespachante()?.toBlob()) ?? null) : null);
   }
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (this.origenTipo() === 'ferreteria') return void this.submitFerreteria();
     return void this.submitConduce();
+  }
+
+  /**
+   * AI6 — si el chofer elige un vehículo que NO tiene asignado, lo mandamos primero
+   * al flujo "Uso de vehículo" (asignarme) con el vehículo preseleccionado; al
+   * terminarlo vuelve a este conduce (el borrador AE9 se guardó). Devuelve true si
+   * desvió (el caller debe abortar el submit). Los roles elevados no se desvían.
+   */
+  private async desviarAUsoDeVehiculo(): Promise<boolean> {
+    const vId = this.vehiculoId();
+    if (!vId || this.ctx.esFlotaElevado() || this.esVehiculoAsignado(vId)) return false;
+    // Evita el bucle si el traspaso aún no sincronizó (offline): solo desviamos una
+    // vez por vehículo en esta sesión.
+    const key = `ai6-uso:${vId}`;
+    try {
+      if (sessionStorage.getItem(key)) return false;
+      sessionStorage.setItem(key, '1');
+    } catch { /* sessionStorage no disponible */ }
+    this.toast.show('Primero registra el uso de este vehículo.', 'info');
+    await this.autosave.flushAll(); // AE9 — persiste el borrador antes de salir
+    const returnUrl = this.router.url;
+    await this.router.navigate(['/transporte/asignarme'], {
+      queryParams: { returnUrl, vehiculoId: vId },
+    });
+    return true;
   }
 
   /** AF31 — origen ferretería: compra → ENTRADA (reúsa el flujo de ferretería). */
@@ -335,6 +487,7 @@ export class GenerarConducePage implements OnDestroy {
         foto: this.fotoRecibo()?.blob ?? null,
         fotoMercancia: this.fotoMercancia()?.blob ?? null,
       });
+      void this.autosave.discard(this.clave); // AE9 — borrador cumplido
       this.hoja.set('exito');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la compra.');
@@ -368,14 +521,20 @@ export class GenerarConducePage implements OnDestroy {
       this.toast.error('Agrega al menos un material.');
       return;
     }
-    if (!this.firmaEmisor()) {
-      this.toast.error('Falta la firma de quien entrega.');
+    if (!this.fotoRecepcion()) {
+      this.toast.error('Toma la foto de recepción (el material que cargas).');
       return;
     }
-    if (this.otraPersonaEntrega() && (!this.emisorNombreOtro().trim() || !this.firmaTransportista())) {
-      this.toast.error('Falta el nombre de quien entrega y tu firma como chofer.');
+    if (!this.despachanteOk()) {
+      this.toast.error('Elige (o escribe) quién despacha el material.');
       return;
     }
+    if (!this.firmaChofer() || !this.firmaDespachante()) {
+      this.toast.error('Faltan las firmas del chofer y del despachante.');
+      return;
+    }
+    // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).
+    if (await this.desviarAUsoDeVehiculo()) return;
     if (!(await this.tracking.exigirGps('crear_conduce'))) return;
     this.submitting.set(true);
     try {
@@ -389,25 +548,26 @@ export class GenerarConducePage implements OnDestroy {
       if (this.observaciones().trim()) partes.push(this.observaciones().trim());
       const obs = partes.join(' — ') || null;
 
-      // AH4 — dos firmas. Si el chofer entrega y transporta (caso normal), la misma
-      // imagen se sella con ambos roles (emisor + transportista). Si otra persona
-      // entrega, el emisor lleva su nombre y firma; la 2ª firma es la del chofer.
-      const otra = this.otraPersonaEntrega();
-      await this.conduces.crearConduceTransportista({
+      // AI2 — conduce simplificado: despachante + foto de recepción + firmas
+      // (chofer transportista + despachante emisor) en un solo RPC.
+      const sel = this.despachanteSel();
+      await this.conduces.crearConduceSimple({
         bodegaId: otros ? null : this.bodegaId(), // "Otros": sin bodega de stock
         proyectoId: this.destinoTipo() === 'obra' ? this.obraId() : null,
         observaciones: obs,
         vehiculoId: this.vehiculoId() || null,
-        firmaEmisor: this.firmaEmisor(),
-        emisorNombre: (otra ? this.emisorNombreOtro().trim() : this.ctx.nombre()) || null,
-        emisorEsOtro: otra,
-        firmaTransportista: otra ? this.firmaTransportista() : this.firmaEmisor(),
-        transportistaNombre: this.ctx.nombre() || null,
         items: otros
           ? []
           : this.cart().filter((l) => l.cantidad > 0 && l.articulo_id).map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad })),
+        despachanteUsuarioId: sel?.tipo === 'usuario' ? sel.id : null,
+        despachanteEmpleadoId: sel?.tipo === 'empleado' ? sel.id : null,
+        despachanteNombre: this.despachanteNombre() || null,
+        fotoRecepcion: this.fotoRecepcion()?.blob ?? null,
+        firmaChofer: this.firmaChofer(),
+        firmaDespachante: this.firmaDespachante(),
         tareaVinculada: this.tareaVinculada, // AG15 — enlaza la tarea a esta salida
       });
+      void this.autosave.discard(this.clave); // AE9 — borrador cumplido
       this.hoja.set('exito');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo generar el conduce.');
@@ -420,7 +580,9 @@ export class GenerarConducePage implements OnDestroy {
     return !!(
       this.bodegaId() || this.obraId() || this.ferreteriaId() || this.otrosNombre().trim() ||
       this.suplidorNombre().trim() || this.observaciones().trim() || this.cart().length ||
-      this.fotoRecibo() || this.fotoMercancia() || this.firmaEmisor() || this.firmaTransportista()
+      this.fotoRecibo() || this.fotoMercancia() || this.fotoRecepcion() ||
+      this.despachanteId() || this.despachanteLibre().trim() ||
+      this.firmaChofer() || this.firmaDespachante()
     );
   }
 

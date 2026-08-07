@@ -19,6 +19,8 @@ export class BigButton {
   badge = input<number | null>(null);
   /** CSS color for the icon chip; defaults to brand orange. */
   tint = input<string>('var(--color-primary)');
+  /** AI1 — variante compacta (icono pequeño, 3 por fila) para sub-hubs. */
+  compact = input<boolean>(false);
 
   pressed = output<void>();
 }

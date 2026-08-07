@@ -18,7 +18,7 @@
             <span class="plan__charla-tema">{{ ch.tema || 'Charla registrada' }}</span>
           </div>
           <div class="plan__charla-meta">
-            @if (ch.duracion_min) { <span>⏱️ {{ ch.duracion_min }} min</span> }
+            @if (ch.duracion_min) { <span>⏱️ {{ fmtDur(ch.duracion_min) }}</span> }
             @if (ch.asistentes) { <span>👥 {{ ch.asistentes }} asistentes</span> }
             @if (ch.fotos?.length) { <span>📷 {{ ch.fotos!.length }}</span> }
           </div>

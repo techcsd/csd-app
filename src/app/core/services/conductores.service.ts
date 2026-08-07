@@ -20,6 +20,24 @@ const FLOTA_CONFIG_DEFAULT: FlotaConfig = {
   umbralKmEchada: 1000,
 };
 
+/** AI10 — periodo de las stats de "Mi actividad" / Perfil del conductor. */
+export type StatsPeriodo = 'mes' | '3m' | '6m' | '1a' | 'total';
+
+/** AI10/AI11 — stats del conductor por periodo (RPC stats_conductor_periodo). */
+export interface StatsConductorPeriodo {
+  conductor_id: string;
+  periodo: string;
+  desde: string | null;
+  rutas_completadas: number;
+  conduces_realizados: number;
+  galones: number;
+  km: number;
+  inspecciones: number;
+  pre_usos: number;
+  multas: number;
+  documentos: { tiene_cedula: boolean; tiene_licencia: boolean; total: number } | null;
+}
+
 /**
  * Resolves the signed-in user's driver profile (sgc.conductores linked by
  * usuario_id = auth uid). Cached in the catalog so pre-use licence blocks keep
@@ -58,6 +76,63 @@ export class ConductoresService {
     }
     if (data?.error) throw new Error(data.error);
     return data as { email: string; usuarioId: string; created?: boolean; rotated?: boolean };
+  }
+
+  /**
+   * AI9 — garantiza la fila de conductor del usuario actual si tiene rol chofer
+   * (RPC idempotente `asegurar_mi_conductor`). Se llama al abrir "Mi actividad"
+   * para que un chofer nunca vea el vacío "Aún no eres conductor". Invalida la
+   * caché de mi conductor si creó/vinculó la fila. Best-effort (online).
+   */
+  async asegurarMiConductor(): Promise<string | null> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('asegurar_mi_conductor');
+      if (error) return null;
+      const id = (data as string) ?? null;
+      if (id) this.catalog.invalidate(CATALOG_MI_CONDUCTOR);
+      return id;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * AI10/AI11 — stats del conductor por periodo (rutas, conduces, galones, km,
+   * inspecciones, multas, documentos). Una sola pasada server-side. Online;
+   * cacheado por (conductor, periodo) para offline.
+   */
+  async getStatsPeriodo(
+    conductorId: string,
+    periodo: StatsPeriodo = 'total',
+  ): Promise<StatsConductorPeriodo | null> {
+    if (!conductorId) return null;
+    const data = await this.catalog.refresh<StatsConductorPeriodo | null>(
+      `conductor_stats_periodo:${conductorId}:${periodo}`,
+      async () => {
+        const { data, error } = await this.supabase.client.rpc('stats_conductor_periodo', {
+          p_conductor_id: conductorId,
+          p_periodo: periodo,
+        });
+        if (error) throw new Error(error.message);
+        return (data as StatsConductorPeriodo) ?? null;
+      },
+    );
+    return data ?? null;
+  }
+
+  /** AI10 — documentos del conductor (licencia + resumen) para la sección Documentos. */
+  async getConductorDocumentos(
+    conductorId: string,
+  ): Promise<{ licencia: { tipo: string | null; numero: string | null; vencimiento: string | null } | null; resumen: { tiene_cedula: boolean; tiene_licencia: boolean; total: number } | null } | null> {
+    if (!conductorId) return null;
+    const { data, error } = await this.supabase.client.rpc('conductor_documentos', {
+      p_conductor_id: conductorId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as {
+      licencia: { tipo: string | null; numero: string | null; vencimiento: string | null } | null;
+      resumen: { tiene_cedula: boolean; tiene_licencia: boolean; total: number } | null;
+    }) ?? null;
   }
 
   /** The current user's conductor row, or null if they aren't a registered driver. */

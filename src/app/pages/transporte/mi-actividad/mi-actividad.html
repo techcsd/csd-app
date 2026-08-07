@@ -12,8 +12,8 @@
       <app-empty-state
         icon="🪪"
         title="Aún no eres conductor"
-        message="Cuando uses un vehículo por primera vez te registras como conductor y aquí verás tu historial de checklists, echadas y vehículos usados."
-        ctaLabel="Asignarme un vehículo"
+        message="Cuando uses un vehículo por primera vez te registras como conductor y aquí verás tus rutas, conduces, combustible e inspecciones."
+        ctaLabel="Usar un vehículo"
         (action)="irAsignar()"
       />
     } @else {
@@ -29,42 +29,56 @@
 
       @if (stats(); as s) {
         <p class="mact__nombre">{{ s.nombre }}</p>
-        <!-- Z25 — resumen: cards uniformes; el contador baja a su listado -->
-        <div class="mact__cards">
-          <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-semanales', 'sec-preusos')">
-            <span class="mact__label">Checklists</span>
-            <span class="mact__value">{{ s.checklists_total }}</span>
-            @if (s.checklists_bloqueos > 0) {
-              <span class="mact__sub mact__sub--warn">{{ s.checklists_bloqueos }} bloqueo(s)</span>
-            } @else {
-              <span class="mact__sub">Ver listado ›</span>
-            }
-          </button>
-          <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-echadas')">
-            <span class="mact__label">Echadas</span>
-            <span class="mact__value">{{ s.combustible_echadas }}</span>
+      }
+
+      <!-- AI10 — filtro de periodo (default: este mes) -->
+      <div class="mact__periodo" role="tablist" aria-label="Periodo">
+        @for (p of PERIODOS; track p.id) {
+          <button
+            type="button"
+            class="mact__periodo-chip"
+            [class.mact__periodo-chip--on]="periodo() === p.id"
+            (click)="setPeriodo(p.id)"
+          >{{ p.label }}</button>
+        }
+      </div>
+
+      <!-- AI10 — tiles homologados: rutas, conduces, galones, km, inspecciones, multas -->
+      @if (periodoStats(); as ps) {
+        <div class="mact__cards" [class.mact__cards--loading]="cargandoPeriodo()">
+          <div class="mact__card">
+            <span class="mact__label">Rutas completadas</span>
+            <span class="mact__value">{{ ps.rutas_completadas }}</span>
+          </div>
+          <div class="mact__card">
+            <span class="mact__label">Conduces realizados</span>
+            <span class="mact__value">{{ ps.conduces_realizados }}</span>
+          </div>
+          <div class="mact__card">
+            <span class="mact__label">Galones</span>
+            <span class="mact__value">{{ ps.galones }}</span>
+            <span class="mact__sub">GL consumidos</span>
+          </div>
+          <div class="mact__card">
+            <span class="mact__label">Kilómetros</span>
+            <span class="mact__value">{{ ps.km }}</span>
+            <span class="mact__sub">KM totales</span>
+          </div>
+          <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-semanales')">
+            <span class="mact__label">Inspecciones</span>
+            <span class="mact__value">{{ ps.inspecciones }}</span>
             <span class="mact__sub">Ver listado ›</span>
           </button>
-          <div class="mact__card">
-            <span class="mact__label">Vehículos usados</span>
-            <span class="mact__value">{{ s.vehiculos_usados }}</span>
-          </div>
-          <div class="mact__card">
-            <span class="mact__label">Licencia</span>
-            <span class="mact__value mact__value--sm">{{ s.estado_licencia || '—' }}</span>
-            @if (s.licencia_vencimiento) {
-              <span class="mact__sub">Vence {{ fmtFecha(s.licencia_vencimiento) }}</span>
-            }
-          </div>
-          @if (s.ultima_actividad) {
-            <div class="mact__card mact__card--wide">
-              <span class="mact__label">Última actividad</span>
-              <span class="mact__value mact__value--sm">{{ fmtFechaHumana(s.ultima_actividad) }}</span>
-            </div>
-          }
+          <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-multas')">
+            <span class="mact__label">Multas</span>
+            <span class="mact__value">{{ ps.multas }}</span>
+            <span class="mact__sub">Ver listado ›</span>
+          </button>
         </div>
+      } @else if (cargandoPeriodo()) {
+        <app-skeleton [rows]="2" />
       } @else {
-        <p class="mact__vacio">Sin actividad todavía. Aquí aparecerán tus checklists, combustible y vehículos usados.</p>
+        <p class="mact__vacio">Sin actividad en este periodo.</p>
       }
 
       <!-- S32 — multas -->
@@ -105,7 +119,7 @@
       <!-- V2 — historial navegable: reportes semanales -->
       @if (semanales().length) {
         <section id="sec-semanales" class="mact__docs">
-          <h2 class="mact__docs-title">Mis reportes semanales ({{ semanales().length }})</h2>
+          <h2 class="mact__docs-title">Mis inspecciones de vehículo ({{ semanales().length }})</h2>
           @for (c of semanales(); track c.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verChecklist(c.id)">
               <span class="mact__act-main">📋 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
@@ -122,7 +136,7 @@
       <!-- V2 — historial navegable: pre-usos -->
       @if (preusos().length) {
         <section id="sec-preusos" class="mact__docs">
-          <h2 class="mact__docs-title">Mis pre-usos ({{ preusos().length }})</h2>
+          <h2 class="mact__docs-title">Mis usos de vehículo ({{ preusos().length }})</h2>
           @for (c of preusos(); track c.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verChecklist(c.id)">
               <span class="mact__act-main">🚙 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
@@ -139,7 +153,7 @@
       <!-- V2 — historial navegable: echadas de combustible -->
       @if (echadas().length) {
         <section id="sec-echadas" class="mact__docs">
-          <h2 class="mact__docs-title">Mis echadas de combustible ({{ echadas().length }})</h2>
+          <h2 class="mact__docs-title">Mi combustible ({{ echadas().length }})</h2>
           @for (e of echadas(); track e.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verEchada(e.id)">
               <span class="mact__act-main">⛽ {{ e.vehiculo?.placa ?? 'Vehículo' }} · {{ e.fecha ? fmtFecha(e.fecha) : '—' }}</span>
@@ -221,11 +235,6 @@
             }
           }
         </section>
-      }
-
-      <!-- S32 — desglose de checklists (pre-uso vs semanal) -->
-      @if (breakdown().preuso || breakdown().semanal) {
-        <p class="mact__breakdown">📋 Pre-usos: <b>{{ breakdown().preuso }}</b> · Reportes semanales: <b>{{ breakdown().semanal }}</b></p>
       }
 
       <!-- V2/V3 — ver todo el historial (por defecto últimos 90 días) -->

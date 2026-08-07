@@ -15,6 +15,8 @@ import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
@@ -67,7 +69,7 @@ type CombStep = 'bomba' | 'digits' | 'fotos' | 'detalles' | 'estacion' | 'revisa
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -157,6 +159,11 @@ export class CombustiblePage extends GuardedWizard {
   // ni precio de bomba; galones + obra + horas del equipo + foto de evidencia.
   origen = signal<'estacion' | 'deposito_obra'>('estacion');
   proyectoId = signal<string | null>(null);
+  // AI14 — obra por dropdown estándar (opcional: "Sin especificar" limpia el valor).
+  obraOptions = computed<SelectOption[]>(() => [
+    { id: '', label: '— Sin especificar —' },
+    ...this.proyectos().map((p) => ({ id: p.id, label: p.nombre })),
+  ]);
   proyectos = signal<Proyecto[]>([]);
   fotoEvidencia = signal<CapturedPhoto | null>(null);
   /** Telehandler = equipo medido por horas (medida_uso='horas'). */

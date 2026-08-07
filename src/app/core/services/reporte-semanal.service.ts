@@ -220,7 +220,7 @@ export class ReporteSemanalService {
       fotos,
       resumen: {
         placa: input.placa,
-        plantilla: 'Reporte semanal',
+        plantilla: 'Inspección de vehículo',
         resultado: input.resultado,
         capturado_en,
       },

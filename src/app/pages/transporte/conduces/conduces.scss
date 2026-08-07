@@ -474,3 +474,16 @@
   min-height: 40px;
   font-size: 13px;
 }
+
+// AI3 — cabecera informativa de la ruta (H.I/H.F, duración, km, trayecto)
+.ruta-card__info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 10px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}

@@ -31,7 +31,7 @@ const TIPO_LABEL: Record<string, string> = {
   inv_conteo: 'Conteo de inventario',
   solicitud: 'Requisición de materiales',
   reporte: 'Reporte',
-  reporte_semanal: 'Reporte semanal',
+  reporte_semanal: 'Inspección de vehículo',
   documento_upload: 'Documento (cédula / licencia)',
 };
 

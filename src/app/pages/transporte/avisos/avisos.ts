@@ -15,7 +15,7 @@ const TIPO_LABEL: Record<string, string> = {
   pre_cita: 'Pre-cita de mantenimiento',
   mantenimiento: 'Mantenimiento',
   hallazgos: 'Hallazgos de checklist',
-  reporte_semanal: 'Reporte semanal pendiente',
+  reporte_semanal: 'Inspección de vehículo pendiente',
   bloqueo: 'Vehículo bloqueado',
 };
 

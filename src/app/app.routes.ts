@@ -375,6 +375,20 @@ export const routes: Routes = [
       import('./pages/transporte/conduces-historial/conduces-historial').then((m) => m.ConducesHistorialPage),
   },
   {
+    // AI13 — Aviso de vehículo (reportar novedad + ver alertas del vehículo).
+    path: 'transporte/aviso-vehiculo',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/aviso-vehiculo/aviso-vehiculo').then((m) => m.AvisoVehiculoPage),
+  },
+  {
+    // AI2 — Pendiente entrega (conduces emitidos por entregar; entregar/transferir).
+    path: 'transporte/conduces-pendientes',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/conduces-pendientes/conduces-pendientes').then((m) => m.ConducesPendientesPage),
+  },
+  {
     // AH5 — inbox de transferencias de conduce (aceptar con foto+firma / rechazar).
     path: 'transporte/conduce-transferencias',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

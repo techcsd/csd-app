@@ -53,7 +53,7 @@ export class MiRegistroDetallePage {
   icono = computed(() => (this.esChecklist() ? '📋' : this.esMulta() ? '🚦' : '⛽'));
   titulo = computed(() => {
     if (this.esMulta()) return 'Multa';
-    if (this.esChecklist()) return this.checklist()?.tipo === 'inspeccion' ? 'Reporte semanal' : 'Pre-uso';
+    if (this.esChecklist()) return this.checklist()?.tipo === 'inspeccion' ? 'Inspección de vehículo' : 'Uso de vehículo';
     return 'Echada de combustible';
   });
 

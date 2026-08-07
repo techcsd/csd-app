@@ -43,23 +43,47 @@
       }
 
 
-      <div class="pcon__cards">
+      <!-- AI11 — filtro de periodo (default: total/global) -->
+      <div class="pcon__periodo" role="tablist" aria-label="Periodo">
+        @for (p of PERIODOS; track p.id) {
+          <button
+            type="button"
+            class="pcon__periodo-chip"
+            [class.pcon__periodo-chip--on]="periodo() === p.id"
+            (click)="setPeriodo(p.id)"
+          >{{ p.label }}</button>
+        }
+      </div>
+
+      <!-- AI11 — tiles homologados (mismas métricas que Mi actividad) + licencia -->
+      <div class="pcon__cards" [class.pcon__cards--loading]="cargandoPeriodo()">
         <div class="pcon__card">
-          <span class="pcon__label">Checklists</span>
-          <span class="pcon__value">{{ stats()!.checklists_total }}</span>
-          @if (stats()!.checklists_bloqueos > 0) {
-            <span class="pcon__sub pcon__sub--warn">{{ stats()!.checklists_bloqueos }} bloqueo(s)</span>
-          }
+          <span class="pcon__label">Rutas completadas</span>
+          <span class="pcon__value">{{ periodoStats()?.rutas_completadas ?? 0 }}</span>
         </div>
         <div class="pcon__card">
-          <span class="pcon__label">Echadas</span>
-          <span class="pcon__value">{{ stats()!.combustible_echadas }}</span>
+          <span class="pcon__label">Conduces realizados</span>
+          <span class="pcon__value">{{ periodoStats()?.conduces_realizados ?? 0 }}</span>
         </div>
         <div class="pcon__card">
-          <span class="pcon__label">Vehículos usados</span>
-          <span class="pcon__value">{{ stats()!.vehiculos_usados }}</span>
+          <span class="pcon__label">Galones</span>
+          <span class="pcon__value">{{ periodoStats()?.galones ?? 0 }}</span>
+          <span class="pcon__sub">GL consumidos</span>
         </div>
         <div class="pcon__card">
+          <span class="pcon__label">Kilómetros</span>
+          <span class="pcon__value">{{ periodoStats()?.km ?? 0 }}</span>
+          <span class="pcon__sub">KM totales</span>
+        </div>
+        <div class="pcon__card">
+          <span class="pcon__label">Inspecciones</span>
+          <span class="pcon__value">{{ periodoStats()?.inspecciones ?? 0 }}</span>
+        </div>
+        <div class="pcon__card">
+          <span class="pcon__label">Multas</span>
+          <span class="pcon__value">{{ periodoStats()?.multas ?? 0 }}</span>
+        </div>
+        <div class="pcon__card pcon__card--wide">
           <span class="pcon__label">Licencia</span>
           @if (licEstado() === 'vencida') {
             <span class="pcon__badge pcon__badge--bad">Vencida</span>
@@ -77,12 +101,6 @@
             </span>
           }
         </div>
-        @if (stats()!.ultima_actividad) {
-          <div class="pcon__card pcon__card--wide">
-            <span class="pcon__label">Última actividad</span>
-            <span class="pcon__value pcon__value--sm">{{ fmtFechaMedia(stats()!.ultima_actividad) }}</span>
-          </div>
-        }
       </div>
 
       <!-- S32 — Accidentes del conductor -->
@@ -126,11 +144,6 @@
             </div>
           }
         </section>
-      }
-
-      <!-- S32 — desglose de checklists -->
-      @if (breakdown().preuso || breakdown().semanal) {
-        <p class="pcon__breakdown">📋 Pre-usos: <b>{{ breakdown().preuso }}</b> · Reportes semanales: <b>{{ breakdown().semanal }}</b></p>
       }
 
       <!-- P3 — Documentos: editables (subir/reemplazar por outbox) si tienes

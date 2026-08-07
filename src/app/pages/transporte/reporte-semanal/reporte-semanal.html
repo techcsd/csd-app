@@ -4,7 +4,7 @@
     <div class="screen__body">
       <div class="rsem__ok">
         <span class="rsem__ok-check">✓</span>
-        <h1 class="rsem__ok-title">Reporte semanal enviado</h1>
+        <h1 class="rsem__ok-title">Inspección de vehículo enviada</h1>
         <p class="rsem__ok-sub">{{ vehiculo()?.placa }}</p>
       </div>
       @if (resultadoEnviado() !== 'aprobado') {
@@ -26,7 +26,7 @@
   <!-- Wizard tipo hoja (S17): una sección por pantalla + fotos + km + firma + resumen -->
   <div class="screen rsem">
     <!-- Y9c — título persistente del formulario junto al progreso -->
-    <h1 class="rsem__wiztitle">Reporte semanal</h1>
+    <h1 class="rsem__wiztitle">Inspección de vehículo</h1>
     <app-step-bar [current]="step()" [total]="total()" />
     <div class="screen__body">
       <div class="rsem__veh">
@@ -200,7 +200,7 @@
     <header class="rsem__header">
       <button type="button" class="rsem__hback" (click)="intentarSalir()" aria-label="Atrás">←</button>
       <span class="rsem__hicon">📋</span>
-      <h1 class="rsem__htitle">Reporte semanal</h1>
+      <h1 class="rsem__htitle">Inspección de vehículo</h1>
     </header>
 
     <div class="screen__body">

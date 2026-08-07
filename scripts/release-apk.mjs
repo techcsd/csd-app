@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.66.0';
+const VERSION = '1.67.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,18 +62,21 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-07';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Conduces con doble firma y transferencia, paradas completables, RRHH y compras de obra';
+const TITULO = 'Transporte renovado: menú nuevo, conduce simplificado, Uso de vehículo, Aviso de vehículo y Mi actividad por periodo';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', d: 'Transferir un conduce a otro chofer: se lo ofreces y quien lo recibe lo acepta con foto y firma. Hasta que acepta, la responsabilidad sigue siendo tuya.' },
-  { t: 'nuevo', d: 'Al crear un conduce ahora firman los dos: quien entrega y el chofer que lo transporta (una sola firma si eres la misma persona).' },
-  { t: 'mejora', d: 'Completa cada parada de tu ruta con un toque; queda registrada la hora y el lugar. Si la parada tiene una entrega, se cierra sola al entregar.' },
-  { t: 'nuevo', d: 'Recepción de vehículo: por cada falla del chequeo puedes dejar descripción, nota de voz y fotos. El historial ahora muestra marca y modelo y abre el acta completa.' },
-  { t: 'nuevo', d: 'Recursos Humanos en el teléfono: consulta la ficha de los empleados y asigna o recibe equipos (con foto), aunque no tengas señal.' },
-  { t: 'nuevo', d: 'Compras de obra: consulta las compras de cada proyecto (órdenes de compra y ferretería) con totales y filtro por fecha.' },
-  { t: 'mejora', d: 'Las listas de obra y almacén ahora son desplegables con buscador; ya no aparecen los almacenes de prueba.' },
-  { t: 'arreglo', d: 'La foto de evidencia es obligatoria al confirmar una entrega o recepción, y los envíos rechazados por permiso ya no se reintentan en bucle: avisan claro y puedes reintentar todo tras un arreglo.' },
+  { t: 'mejora', d: 'Nuevo menú de Transporte más fácil de ver: 3 botones por fila con iconos claros, y arriba tu estado y los documentos que tienes en proceso.' },
+  { t: 'nuevo', d: 'Crear conduce en una sola pantalla: foto de recepción de lo que cargas, a quién se lo despachas y las dos firmas (chofer y despachante). El menú tiene Crear, Pendiente entrega e Histórico.' },
+  { t: 'nuevo', d: 'Aviso de vehículo: reporta una novedad o daño con foto (le llega al jefe de flota) y revisa las alertas del vehículo (matrícula, seguro y mantenimiento).' },
+  { t: 'mejora', d: 'Mi actividad renovada: filtra por periodo (este mes, 3 y 6 meses, un año o total) y mira tus rutas, conduces, galones, kilómetros, inspecciones y multas.' },
+  { t: 'mejora', d: 'Uso de vehículo (antes "asignarme vehículo" y "pre-uso"): más rápido, con solo 3 chequeos —documentación, llantas y luces— más fotos y firma.' },
+  { t: 'mejora', d: 'El "reporte semanal" ahora se llama "Inspección de vehículo" en toda la app.' },
+  { t: 'mejora', d: 'Las rutas muestran su duración en horas y minutos (ej. 16h 51m) y su recorrido; la foto de la ruta pasó a ser opcional.' },
+  { t: 'mejora', d: 'Si creas un conduce o una ruta con un vehículo que no es el tuyo, la app te lleva primero a registrar su uso y luego regresas a lo que estabas haciendo.' },
+  { t: 'mejora', d: 'En la bitácora del día eliges la obra desde un desplegable con buscador, y el trabajo que acabas de marcar aparece de primero para ponerle la cantidad sin buscar.' },
+  { t: 'mejora', d: 'Todas las listas de obra y almacén de la app son ahora desplegables con buscador (Mi obra, combustible, tareas y rutas), en vez de mostrar la lista completa.' },
+  { t: 'arreglo', d: 'Arreglado en la versión web (PWA): ya no aparece el aviso de "actualizar" en bucle que impedía usar la app; la web se actualiza sola.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -9,23 +9,65 @@
     <!-- AF26 — banner persistente si el GPS está apagado / permiso revocado -->
     <app-gps-gate-banner />
 
-    <!-- AF28 — estado de disponibilidad del chofer (solo choferes) -->
+    <!-- AI1 — banner Estado del chofer (AF28), arriba (solo choferes) -->
     @if (esChofer()) {
       <app-estado-chofer-bar />
     }
 
-    <!-- S15 — hub como grid de cuadros grandes (patrón del home), gated por rol -->
-    <div class="hub-grid">
-      @for (t of tiles(); track t.key) {
-        <app-big-button
-          [icon]="t.icon"
-          [label]="t.label"
-          [tint]="t.tint"
-          [badge]="badgeFor(t.key)"
-          (pressed)="openTile(t)"
-        />
-      }
-    </div>
+    <!-- AI1 — banner "Doc. en proceso" (borradores/envíos pendientes), arriba -->
+    @if (docEnProceso() > 0) {
+      <button type="button" class="transporte__doc-banner" (click)="enProcesoAbrir()">
+        <span class="transporte__doc-icon">📄</span>
+        <span class="transporte__doc-txt">
+          Doc. en proceso: <b>{{ docEnProceso() }}</b>
+        </span>
+        <span class="transporte__doc-go">Ver ›</span>
+      </button>
+    }
+
+    @if (editMode()) {
+      <!-- AI16 — modo edición (admin): arrastrar para reordenar los submódulos -->
+      <div class="transporte__edit-bar">
+        <button type="button" class="btn-ghost" (click)="cancelarOrden()">Cancelar</button>
+        <span class="transporte__edit-hint">Arrastra para reordenar</span>
+        <button type="button" class="btn-cta" (click)="guardarOrden()">Listo</button>
+      </div>
+      <div class="hub-grid hub-grid--compact hub-grid--edit">
+        @for (t of editTiles(); track t.key; let i = $index) {
+          <button
+            type="button"
+            class="transporte__edit-tile"
+            [class.transporte__edit-tile--drag]="dragIndex() === i"
+            [style.background]="t.tint"
+            [attr.data-edit-index]="i"
+            (pointerdown)="onDragStart(i, $event)"
+          >
+            <span class="transporte__edit-icon">{{ t.icon }}</span>
+            <span class="transporte__edit-label">{{ t.label }}</span>
+          </button>
+        }
+      </div>
+    } @else {
+      <!-- AI1 — hub como grid de 3 columnas con iconos pequeños (sketch) -->
+      <div
+        class="hub-grid hub-grid--compact"
+        (pointerdown)="onTilePointerDown()"
+        (pointerup)="onTilePointerUp()"
+        (pointerleave)="onTilePointerUp()"
+        (pointercancel)="onTilePointerUp()"
+      >
+        @for (t of tiles(); track t.key) {
+          <app-big-button
+            [icon]="t.icon"
+            [label]="t.label"
+            [tint]="t.tint"
+            [compact]="true"
+            [badge]="badgeFor(t.key)"
+            (pressed)="openTile(t)"
+          />
+        }
+      </div>
+    }
 
     @if (loading()) {
       <app-skeleton [rows]="5" />

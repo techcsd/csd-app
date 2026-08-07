@@ -17,15 +17,17 @@
       <app-empty-state icon="🏗️" title="Sin obras asignadas"
         message="No tienes obras asignadas. Pídele al administrador que te asigne a un proyecto." />
     } @else if (!seleccionada()) {
-      <!-- Selección de obra -->
+      <!-- AI14 — Selección de obra por dropdown estándar (buscador + colapso) -->
       <h2 class="obra__section">Elige tu obra</h2>
-      @for (o of obras(); track o.id) {
-        <button type="button" class="obra__pick" (click)="pick(o)">
-          <span class="obra__pick-ico">🏗️</span>
-          <span class="obra__pick-nombre">{{ o.nombre }}</span>
-          <span class="obra__pick-chevron">›</span>
-        </button>
-      }
+      <app-collapsible-select
+        label="Obra"
+        icon="🏗️"
+        [options]="obraOptions()"
+        [selectedId]="''"
+        [searchable]="true"
+        searchPlaceholder="Buscar obra…"
+        (picked)="pickPorId($event)"
+      />
     } @else {
       <!-- FASE 6 — resumen del día -->
       @if (resumen(); as r) {

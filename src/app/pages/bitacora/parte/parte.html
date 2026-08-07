@@ -20,17 +20,18 @@
         <div class="parte__obras">
           @if (loadingObras()) {
             <app-skeleton [rows]="4" />
+          } @else if (proyectos().length) {
+            <app-collapsible-select
+              label="Obra"
+              icon="🏗️"
+              [options]="proyectoOpciones()"
+              [selectedId]="proyectoId()"
+              [searchable]="true"
+              searchPlaceholder="Buscar obra…"
+              (picked)="pickProyecto($event)"
+            />
           } @else {
-            @for (p of proyectos(); track p.id) {
-              <app-option-button
-                [label]="p.nombre"
-                icon="🏗️"
-                [selected]="proyectoId() === p.id"
-                (pressed)="proyectoId.set(p.id)"
-              />
-            } @empty {
-              <p class="parte__muted">No hay obras disponibles.</p>
-            }
+            <p class="parte__muted">No hay obras disponibles.</p>
           }
         </div>
 

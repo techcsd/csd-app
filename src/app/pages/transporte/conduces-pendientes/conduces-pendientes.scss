@@ -1,0 +1,79 @@
+.cpend {
+  background: var(--color-bg);
+}
+
+.cpend__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.cpend__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.cpend__icon {
+  font-size: 26px;
+}
+
+.cpend__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.cpend__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.cpend__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.cpend__destino {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.cpend__meta {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.cpend__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cpend__btn {
+  flex: 1;
+}
+
+.cpend__transfer {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cpend__nota {
+  width: 100%;
+}

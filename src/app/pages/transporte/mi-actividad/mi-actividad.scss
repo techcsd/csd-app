@@ -37,10 +37,43 @@
   margin: 0 0 14px;
 }
 
+// AI10 — filtro de periodo (chips desplazables)
+.mact__periodo {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 0 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mact__periodo-chip {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.mact__periodo-chip--on {
+  background: var(--Hub);
+  border-color: var(--Hub);
+  color: var(--main);
+}
+
 .mact__cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
+  transition: opacity 0.15s ease;
+}
+
+.mact__cards--loading {
+  opacity: 0.5;
 }
 
 .mact__card {

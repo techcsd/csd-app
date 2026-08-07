@@ -6,6 +6,8 @@ import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { OptionButton } from '../../shared/ui/option-button/option-button';
 import { PhotoSlot } from '../../shared/ui/photo-slot/photo-slot';
+import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
+import { SelectOption } from '../../shared/ui/select-list/select-list';
 import { TareasService, UsuarioBusqueda } from '../../core/services/tareas.service';
 import { InventarioService, ObraOrigen } from '../../core/services/inventario.service';
 import { Bodega, Ferreteria } from '../../core/models/inventario.model';
@@ -32,7 +34,7 @@ import { formatFechaMedia } from '../../core/util/fecha';
   selector: 'app-tareas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot],
+  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, CollapsibleSelect],
   templateUrl: './tareas.html',
   styleUrl: './tareas.scss',
 })
@@ -85,6 +87,19 @@ export class TareasPage {
   obrasVinc = signal<ObraOrigen[]>([]);
   ferreteriasVinc = signal<Ferreteria[]>([]);
   bodegasVinc = signal<Bodega[]>([]);
+  // AI14 — vínculo por dropdowns estándar (opcionales; primera opción = ninguna).
+  ferreteriaVincOptions = computed<SelectOption[]>(() => [
+    { id: '', label: '— Ninguna (sale de un almacén) —' },
+    ...this.ferreteriasVinc().map((f) => ({ id: f.id, label: f.nombre })),
+  ]);
+  bodegaVincOptions = computed<SelectOption[]>(() => [
+    { id: '', label: '— Sin especificar —' },
+    ...this.bodegasVinc().map((b) => ({ id: b.id, label: b.nombre })),
+  ]);
+  obraVincOptions = computed<SelectOption[]>(() => [
+    { id: '', label: '— Sin especificar —' },
+    ...this.obrasVinc().map((o) => ({ id: o.id, label: o.nombre })),
+  ]);
   private catalogosVincCargados = false;
   buscando = signal(false);
 

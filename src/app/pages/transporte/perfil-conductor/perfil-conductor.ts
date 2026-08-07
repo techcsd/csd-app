@@ -5,7 +5,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { GenerarAcceso } from '../../../shared/components/generar-acceso/generar-acceso';
-import { ConductoresService } from '../../../core/services/conductores.service';
+import { ConductoresService, StatsPeriodo, StatsConductorPeriodo } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { ChecklistBreakdown, FlotaAccidente, FlotaEntrega, FlotaMulta } from '../../../core/models/flota-reportes.model';
@@ -62,6 +62,17 @@ export class PerfilConductorPage {
   condId = signal('');
   stats = signal<ConductorStats | null>(null);
   conductor = signal<Conductor | null>(null); // C3 — nota/tags
+  // AI11 — filtro de periodo (default: global/total) + stats por periodo homologadas.
+  readonly PERIODOS: { id: StatsPeriodo; label: string }[] = [
+    { id: 'total', label: 'Total' },
+    { id: 'mes', label: 'Este mes' },
+    { id: '3m', label: '3 meses' },
+    { id: '6m', label: '6 meses' },
+    { id: '1a', label: '1 año' },
+  ];
+  periodo = signal<StatsPeriodo>('total');
+  periodoStats = signal<StatsConductorPeriodo | null>(null);
+  cargandoPeriodo = signal(false);
   // C5 — TODAS las fotos por tipo (licencia: frente y dorso), no solo la última.
   cedulas = signal<DocView[]>([]);
   licencias = signal<DocView[]>([]);
@@ -115,6 +126,7 @@ export class PerfilConductorPage {
     this.loading.set(true);
     try {
       this.stats.set(await this.conductores.getStatsDe(id));
+      void this.loadPeriodo();
       try {
         this.conductor.set(await this.conductores.getConductor(id));
       } catch {
@@ -139,6 +151,24 @@ export class PerfilConductorPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** AI11 — stats del periodo actual para el conductor del perfil. */
+  private async loadPeriodo(): Promise<void> {
+    const id = this.condId();
+    if (!id) return;
+    this.cargandoPeriodo.set(true);
+    try {
+      this.periodoStats.set(await this.conductores.getStatsPeriodo(id, this.periodo()));
+    } finally {
+      this.cargandoPeriodo.set(false);
+    }
+  }
+
+  async setPeriodo(p: StatsPeriodo): Promise<void> {
+    if (this.periodo() === p) return;
+    this.periodo.set(p);
+    await this.loadPeriodo();
   }
 
   private async loadEnCola(id: string): Promise<void> {

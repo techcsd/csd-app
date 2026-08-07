@@ -50,20 +50,35 @@
       @if (nuevoVinculo() === 'conduce') {
         <p class="tareas__hint">Al iniciar, el chofer abre "crear conduce" pre-llenado; se completa al confirmar la entrega.</p>
         <label class="field-label tareas__mt">Ferretería de compra (opcional)</label>
-        <select class="field" [ngModel]="vincFerreteria()" (ngModelChange)="vincFerreteria.set($event)">
-          <option value="">— Ninguna (sale de un almacén) —</option>
-          @for (f of ferreteriasVinc(); track f.id) { <option [value]="f.id">{{ f.nombre }}</option> }
-        </select>
+        <app-collapsible-select
+          label="Ferretería"
+          icon="🧾"
+          [options]="ferreteriaVincOptions()"
+          [selectedId]="vincFerreteria()"
+          [searchable]="true"
+          searchPlaceholder="Buscar ferretería…"
+          (picked)="vincFerreteria.set($event)"
+        />
         <label class="field-label tareas__mt">Almacén de origen (opcional)</label>
-        <select class="field" [ngModel]="vincBodega()" (ngModelChange)="vincBodega.set($event)">
-          <option value="">— Sin especificar —</option>
-          @for (b of bodegasVinc(); track b.id) { <option [value]="b.id">{{ b.nombre }}</option> }
-        </select>
+        <app-collapsible-select
+          label="Almacén"
+          icon="🏬"
+          [options]="bodegaVincOptions()"
+          [selectedId]="vincBodega()"
+          [searchable]="true"
+          searchPlaceholder="Buscar almacén…"
+          (picked)="vincBodega.set($event)"
+        />
         <label class="field-label tareas__mt">Obra destino (opcional)</label>
-        <select class="field" [ngModel]="vincObra()" (ngModelChange)="vincObra.set($event)">
-          <option value="">— Sin especificar —</option>
-          @for (o of obrasVinc(); track o.id) { <option [value]="o.id">{{ o.nombre }}</option> }
-        </select>
+        <app-collapsible-select
+          label="Obra"
+          icon="🏗️"
+          [options]="obraVincOptions()"
+          [selectedId]="vincObra()"
+          [searchable]="true"
+          searchPlaceholder="Buscar obra…"
+          (picked)="vincObra.set($event)"
+        />
       }
       @if (nuevoVinculo() === 'ruta') {
         <p class="tareas__hint">Al iniciar, el chofer abre "crear ruta"; se completa cuando la ruta termine.</p>

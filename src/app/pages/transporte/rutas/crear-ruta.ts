@@ -18,6 +18,7 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ConducesService, LugarDestino, RutaParadaCaptura, RutaTipo } from '../../../core/services/conduces.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
+import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
@@ -81,7 +82,10 @@ interface ParadaUI {
 export class CrearRutaPage implements OnDestroy {
   private conduces = inject(ConducesService);
   private conductores = inject(ConductoresService);
+  private vehiculos = inject(VehiculosService);
   private ctx = inject(UserContextService);
+  // AI6 — ids de vehículos asignados al chofer actual (para desviar a Uso de vehículo).
+  private misAsignados = new Set<string>();
   private geo = inject(GeocodingService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
@@ -280,12 +284,14 @@ export class CrearRutaPage implements OnDestroy {
     try {
       // B1 — el vehículo se elige del pool (VehiculoPicker); aquí solo cargamos
       // los lugares (obras/almacenes) para origen/destino + S16 los conductores.
-      const [lugares, conductores] = await Promise.all([
+      const [lugares, conductores, asig] = await Promise.all([
         this.conduces.getLugaresDestino(),
         this.conductores.getConductores().catch(() => []),
+        this.esElevado ? Promise.resolve([]) : this.vehiculos.getMisAsignaciones().catch(() => []),
       ]);
       this.lugares.set(lugares);
       this.conductorOpts.set(conductores.map((c) => ({ id: c.id, label: c.nombre })));
+      this.misAsignados = new Set(asig.map((a) => a.vehiculo_id)); // AI6
       // AF24.5 — ¿hay un borrador previo? Ofrecer retomarlo (banner). Hasta que el
       // usuario decida, NO trackeamos (para no pisar el borrador).
       const d = await this.borrador.get(this.clave);
@@ -489,8 +495,9 @@ export class CrearRutaPage implements OnDestroy {
     [this.fotoCarga(), this.fotoDocumento()].filter((f): f is CapturedPhoto => !!f),
   );
 
-  /** AF24.3 — la foto de carga es obligatoria en rutas de material. */
-  cargaObligatoria = computed(() => this.tipoRuta() === 'material');
+  /** AI5 — la foto de la ruta pasa a OPCIONAL y genérica: la evidencia con peso
+   *  vive en el CONDUCE (recepción/entrega), no en la ruta (informativa). */
+  cargaObligatoria = computed(() => false);
 
   // AF24.5 — las fotos del borrador se persisten en borrador_fotos y se rehidratan.
   capFotoCarga(p: CapturedPhoto): void {
@@ -610,6 +617,29 @@ export class CrearRutaPage implements OnDestroy {
     this.step.set(Math.max(1, this.step() - 1));
   }
 
+  /**
+   * AI6 — si el chofer arma la ruta con un vehículo que NO tiene asignado, lo
+   * mandamos primero a "Uso de vehículo" (asignarme) con el vehículo preseleccionado;
+   * al terminar vuelve a este borrador (AF24.5). Devuelve true si desvió. Los roles
+   * elevados (asignan a otro conductor) no se desvían.
+   */
+  private async desviarAUsoDeVehiculo(): Promise<boolean> {
+    const vId = this.vehiculoId();
+    if (!vId || this.esElevado || this.misAsignados.has(vId)) return false;
+    // Evita el bucle si el traspaso aún no sincronizó: solo una vez por vehículo/sesión.
+    const key = `ai6-uso:${vId}`;
+    try {
+      if (sessionStorage.getItem(key)) return false;
+      sessionStorage.setItem(key, '1');
+    } catch { /* sessionStorage no disponible */ }
+    this.toast.show('Primero registra el uso de este vehículo.', 'info');
+    await this.autosave.flushAll(); // AF24.5 — persiste el borrador antes de salir
+    await this.router.navigate(['/transporte/asignarme'], {
+      queryParams: { returnUrl: this.router.url, vehiculoId: vId },
+    });
+    return true;
+  }
+
   async guardar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.vehiculoId()) {
@@ -633,6 +663,8 @@ export class CrearRutaPage implements OnDestroy {
       this.toast.error('Toma la foto de la carga.');
       return;
     }
+    // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).
+    if (await this.desviarAUsoDeVehiculo()) return;
     // AF26 — crear una ruta exige GPS activo (bloquea si está apagado/revocado).
     if (!(await this.tracking.exigirGps('crear_ruta'))) return;
     const lugar = this.destinoModo() === 'lugar' ? this.selectedLugar() : null;

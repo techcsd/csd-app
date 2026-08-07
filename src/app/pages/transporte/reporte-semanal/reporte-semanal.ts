@@ -349,7 +349,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       if (!this.tieneDatos()) return;
       this.autosave.queue(this.claveBorrador(veh.vehiculo_id), snap, {
         tipo: 'checklist',
-        etiqueta: 'Reporte semanal' + (veh.placa ? ' · ' + veh.placa : ''),
+        etiqueta: 'Inspección de vehículo' + (veh.placa ? ' · ' + veh.placa : ''),
         ruta: `/transporte/reporte-semanal?reanudar=${veh.vehiculo_id}`,
       });
     });

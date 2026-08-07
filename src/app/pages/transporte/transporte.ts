@@ -15,7 +15,12 @@ import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { InventarioService } from '../../core/services/inventario.service';
+import { ModuleOrderService } from '../../core/services/module-order.service';
+import { ToastService } from '../../core/services/toast.service';
 import { MiAsignacion, PendientesTransporte } from '../../core/models/transporte.model';
+
+/** AI16 — clave namespaced del scope de submódulos de Transporte. */
+const SUBMODULE_PARENT = 'transporte';
 
 /** S15 — un cuadro del hub de transporte (patrón big-button del home). */
 interface HubTile {
@@ -27,36 +32,27 @@ interface HubTile {
   elevado?: boolean;
 }
 
-// AF22 — Transporte v2: menú consolidado (TRANSPORTE-V2.md §7, aprobado). 3 núcleos
-// arriba (Mis rutas · Conduces · Seguimiento) + operativos sueltos. Los flujos viejos
-// (sacar material, recibir, devolver, ferretería, por firmar, crear ruta) siguen
-// existiendo por sus rutas — ahora se llega a ellos DENTRO de cada núcleo, no como
-// tiles sueltos; los deep-links de notificaciones viejas no se rompen.
+// AI1 — Transporte v3: menú "10 botones", 3 por fila (iconos pequeños), según el
+// sketch de Eduardo. Botones principales (todos los choferes) + un grupo de
+// gestión (roles elevados). Los banners Estado (AF28) y Doc-en-proceso van ARRIBA,
+// fuera del grid. Los flujos viejos siguen existiendo por sus rutas (redirects).
 const TILES: HubTile[] = [
-  // ── Núcleos ────────────────────────────────────────────────────────────────
-  // Mis rutas: activas / hoy / historial. Crear ruta y agregar parada son acciones
-  // dentro. (Absorbe "Conduces y rutas" + "Crear ruta".)
-  { key: 'misRutas', icon: '🗺️', label: 'Mis rutas', tint: '#0d9488' },
-  // Conduces: crear · recibir · devolver · ferretería · por firmar · historial.
-  { key: 'conducesHub', icon: '🧾', label: 'Conduces', tint: '#1e3a5f' },
-  // Seguimiento en vivo (solo jefe de flota / admin / tecnología).
-  { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
-
-  // ── Operativos sueltos (no son conduce/ruta) ────────────────────────────────
-  { key: 'asignar', icon: '➕', label: 'Asignarme vehículo', tint: '#2563eb' },
-  // Z24 — "Hacer pre-uso" directo (≤2 toques; elige el vehículo del pool).
-  { key: 'preuso', icon: '📝', label: 'Hacer pre-uso', tint: '#0369a1' },
-  { key: 'combustible', icon: '⛽', label: 'Registrar combustible', tint: '#dc2626' },
-  // AF17 — registro/log de echadas (solo roles elevados).
-  { key: 'combustibleLog', icon: '📊', label: 'Registro de echadas', tint: '#dc2626', elevado: true },
-  { key: 'semanal', icon: '📋', label: 'Reporte semanal', tint: '#f97316' },
-  { key: 'actividad', icon: '📈', label: 'Mi actividad', tint: '#16a34a' },
-  // AF36 — historial de recepciones/traspasos de vehículo (actas).
-  { key: 'misActas', icon: '📥', label: 'Recepciones de vehículo', tint: '#0891b2' },
-  // Z24 — historial de checklists visible para TODO chofer (RLS: ve solo los suyos).
-  { key: 'checklists', icon: '✅', label: 'Historial de checklists', tint: '#0369a1' },
-  // Y7 — "Me pusieron una multa": visible para TODO chofer.
+  // ── Botones principales (sketch AI1) ─────────────────────────────────────────
+  { key: 'misRutas', icon: '🗺️', label: 'Rutas', tint: '#0d9488' },
+  { key: 'conducesHub', icon: '🧾', label: 'Conduce', tint: '#1e3a5f' },
+  { key: 'combustible', icon: '⛽', label: 'Registro Combustible', tint: '#dc2626' },
+  // AI7 — "Uso de vehículo" (ex "Asignarme vehículo"): flujo unificado AF34.
+  { key: 'usoVehiculo', icon: '🚗', label: 'Uso de Vehículo', tint: '#2563eb' },
   { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c' },
+  // AI13 — Aviso de vehículo (reportar novedad + ver alertas).
+  { key: 'avisoVehiculo', icon: '📣', label: 'Aviso de Vehículo', tint: '#ca8a04' },
+  // AI8 — "Inspección Vehículo" (ex "Reporte semanal").
+  { key: 'semanal', icon: '📋', label: 'Inspección Vehículo', tint: '#f97316' },
+  { key: 'actividad', icon: '📈', label: 'Mi Actividad', tint: '#16a34a' },
+
+  // ── Gestión (solo roles elevados) ────────────────────────────────────────────
+  { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
+  { key: 'combustibleLog', icon: '📊', label: 'Registro de echadas', tint: '#dc2626', elevado: true },
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
@@ -82,22 +78,41 @@ export class TransportePage {
   private enProceso = inject(EnProcesoService);
   private conducesSvc = inject(ConducesService);
   private inventario = inject(InventarioService);
+  private moduleOrder = inject(ModuleOrderService);
+  private toast = inject(ToastService);
 
   // V1 — documentación en proceso del módulo transporte/flota.
   private enProcesoCount = this.enProceso.counts;
 
   // AF28 — la barra de estado del chofer se muestra solo a choferes.
   esChofer = this.ctx.esChofer;
+  esAdmin = () => this.ctx.esAdmin();
 
-  // S15 — cuadros del hub gated por rol (R14): el chofer ve solo los suyos.
-  // V1 — añade "Documentación en proceso" cuando hay borradores/envíos pendientes.
+  // AI16 — orden de submódulos configurado por el admin (drag & drop).
+  orderMap = signal<Record<string, number>>({});
+  editMode = signal(false);
+  editTiles = signal<HubTile[]>([]);
+  dragIndex = signal<number | null>(null);
+  private lpTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // AI1 — cuadros del hub gated por rol (R14): el chofer ve solo los suyos.
+  // El banner "Doc. en proceso" ya no es un tile: va arriba (ver template).
   tiles = computed(() => {
     const base = TILES.filter((t) => !t.elevado || this.ctx.esFlotaElevado());
-    if ((this.enProcesoCount()['flota'] ?? 0) > 0) {
-      base.push({ key: 'enProceso', icon: '📥', label: 'Documentación en proceso', tint: '#78716c' });
-    }
-    return base;
+    return this.aplicarOrden(base);
   });
+
+  /** AI16 — aplica el orden guardado de submódulos; los no configurados quedan
+   *  después en su orden por defecto. */
+  private aplicarOrden(all: HubTile[]): HubTile[] {
+    const order = this.orderMap();
+    const idx = new Map(all.map((t, i) => [t.key, i]));
+    return [...all].sort((a, b) => {
+      const oa = order[a.key] ?? 1000 + (idx.get(a.key) ?? 0);
+      const ob = order[b.key] ?? 1000 + (idx.get(b.key) ?? 0);
+      return oa - ob;
+    });
+  }
 
   pendientes = signal<PendientesTransporte>({ a_cargo: [], por_recibir: [] });
   asignaciones = signal<MiAsignacion[]>([]);
@@ -107,6 +122,7 @@ export class TransportePage {
   reporteSemanalPend = signal(0);
   conducesNuevas = signal(0); // Y3 — rutas planificadas asignadas no vistas
   firmasPendientes = signal(0); // AE — firmas de recepción por firmar
+  pendienteEntrega = signal(0); // AI2 — conduces emitidos pendientes de entrega
   loading = signal(true);
   /** P4 — vehículos con una recepción encolada (se marcan "Enviando…"). */
   enviandoIds = signal<Set<string>>(new Set());
@@ -137,38 +153,125 @@ export class TransportePage {
     });
     void this.badges.load(); // S15 — badge de avisos en el cuadro
     void this.enProceso.refresh(); // V1 — contador de documentación en proceso
+    void this.cargarOrden(); // AI16 — orden de submódulos configurado
   }
 
-  /** S15 — badge del cuadro (reporte semanal pendiente / avisos de flota). */
+  // ── AI16 — orden de submódulos (drag & drop, solo admin) ───────────────────
+  private async cargarOrden(): Promise<void> {
+    try {
+      const rows = await this.moduleOrder.getOrder();
+      const map: Record<string, number> = {};
+      for (const r of rows) if (r.parent === SUBMODULE_PARENT) map[r.clave] = r.orden;
+      this.orderMap.set(map);
+    } catch {
+      /* best-effort: sin orden guardado, se usa el por defecto */
+    }
+  }
+
+  onTilePointerDown(): void {
+    if (!this.esAdmin() || this.editMode()) return;
+    this.clearLongPress();
+    this.lpTimer = setTimeout(() => this.entrarEdicion(), 600);
+  }
+  onTilePointerUp(): void {
+    this.clearLongPress();
+  }
+  private clearLongPress(): void {
+    if (this.lpTimer) {
+      clearTimeout(this.lpTimer);
+      this.lpTimer = null;
+    }
+  }
+
+  entrarEdicion(): void {
+    this.editTiles.set([...this.tiles()]);
+    this.editMode.set(true);
+  }
+
+  private dragMove = (ev: PointerEvent): void => this.onDragMove(ev);
+  private dragEnd = (): void => this.onDragEnd();
+
+  onDragStart(i: number, ev: PointerEvent): void {
+    ev.preventDefault();
+    this.dragIndex.set(i);
+    window.addEventListener('pointermove', this.dragMove);
+    window.addEventListener('pointerup', this.dragEnd, { once: true });
+    window.addEventListener('pointercancel', this.dragEnd, { once: true });
+  }
+  private onDragMove(ev: PointerEvent): void {
+    const from = this.dragIndex();
+    if (from == null) return;
+    const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
+    const tileEl = el?.closest('[data-edit-index]') as HTMLElement | null;
+    if (!tileEl) return;
+    const to = Number(tileEl.dataset['editIndex']);
+    if (Number.isNaN(to) || to === from) return;
+    this.editTiles.update((list) => {
+      const next = [...list];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+    this.dragIndex.set(to);
+  }
+  private onDragEnd(): void {
+    window.removeEventListener('pointermove', this.dragMove);
+    this.dragIndex.set(null);
+  }
+
+  async guardarOrden(): Promise<void> {
+    const items = this.editTiles().map((t, i) => ({ clave: t.key, parent: SUBMODULE_PARENT, orden: i }));
+    const map: Record<string, number> = {};
+    items.forEach((it) => (map[it.clave] = it.orden));
+    this.orderMap.set(map); // optimista
+    this.editMode.set(false);
+    try {
+      await this.moduleOrder.setOrder(items);
+      this.toast.success('Orden guardado.');
+    } catch {
+      this.toast.error('No se pudo guardar el orden. Inténtalo de nuevo.');
+    }
+  }
+  cancelarOrden(): void {
+    this.editMode.set(false);
+    this.dragIndex.set(null);
+  }
+
+  /** S15 — badge del cuadro (inspección pendiente / avisos de flota). */
   badgeFor(key: string): number | null {
     if (key === 'semanal') return this.reporteSemanalPend() || null;
     if (key === 'misRutas') return this.conducesNuevas() || null; // Y3 — rutas nuevas
-    if (key === 'conducesHub') return this.firmasPendientes() || null; // AE — por firmar
+    if (key === 'conducesHub') return this.pendienteEntrega() || this.firmasPendientes() || null;
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
-    if (key === 'enProceso') return this.enProcesoCount()['flota'] || null;
     return null;
   }
 
+  /** V1 — total de documentación en proceso del módulo flota (banner arriba). */
+  docEnProceso = computed(() => this.enProcesoCount()['flota'] ?? 0);
+
   /** S15 — despacha el cuadro tocado a su pantalla. */
   openTile(t: HubTile): void {
+    if (this.editMode()) return; // AI16 — en modo edición no se navega
     switch (t.key) {
       case 'misRutas': return this.misRutas();
       case 'conducesHub': return this.conducesHub();
       case 'seguimiento': return this.seguimiento();
-      case 'preuso': return this.preusoTop();
       case 'combustible': return this.combustibleTop();
       case 'combustibleLog': return this.combustibleLog();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
-      case 'asignar': return this.asignar();
-      case 'misActas': return this.misActas();
+      case 'usoVehiculo': return this.asignar();
+      case 'avisoVehiculo': return this.avisoVehiculo();
       case 'vehiculos': return this.vehiculosLista();
       case 'conductores': return this.conductoresLista();
-      case 'checklists': return this.checklistsHistorial();
       case 'multas': return this.multas();
       case 'avisos': return this.avisos();
-      case 'enProceso': return this.enProcesoAbrir();
     }
+  }
+
+  /** AI13 — módulo "Aviso de vehículo" (reportar novedad + alertas). */
+  avisoVehiculo(): void {
+    void this.router.navigate(['/transporte/aviso-vehiculo']);
   }
 
   /** AF22 — Mis rutas (activas / hoy / historial). Reutiliza la pantalla de rutas. */
@@ -264,6 +367,12 @@ export class TransportePage {
       void this.inventario
         .misFirmasPendientes()
         .then((l) => this.firmasPendientes.set(l.length))
+        .catch(() => {});
+
+      // AI2 — conduces pendientes de entrega (badge del menú Conduce).
+      void this.conducesSvc
+        .pendientesEntregaCount()
+        .then((n) => this.pendienteEntrega.set(n))
         .catch(() => {});
     } finally {
       this.loading.set(false);

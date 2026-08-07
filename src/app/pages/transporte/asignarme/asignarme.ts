@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
@@ -27,14 +27,13 @@ type Paso = 'vehiculo' | 'condiciones' | 'fotos' | 'llave' | 'firma';
 type Respuesta = 'ok' | 'falla' | 'na';
 type Llave1 = 'chofer_asignado' | 'oficina_central' | 'otro';
 
-/** AF34 — checklist visual CORTO de condiciones (base plantilla AE8). */
+/** AI7 — "Uso de vehículo": checklist de 3 preguntas (Documentación, Llantas,
+ *  Luces) + "Fotos y comentarios" (los foto-slots + comentario, ya en el flujo).
+ *  Se quitó Frenos/Niveles/Carrocería; entra Documentación. Rápido de llenar. */
 const CHECK_ITEMS = [
-  'Llantas y presión',
-  'Luces (delanteras/traseras)',
-  'Frenos',
-  'Niveles (aceite/agua)',
-  'Carrocería / golpes',
-  'Documentos del vehículo',
+  'Documentación (matrícula y seguro)',
+  'Llantas',
+  'Luces',
 ] as const;
 
 interface AsignarmeDraft {
@@ -68,9 +67,14 @@ export class AsignarmeVehiculoPage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private location = inject(Location);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+
+  // AI6 — si llegamos aquí desde crear-ruta/conduce (vehículo no asignado), volvemos
+  // a ese borrador al terminar el Uso de vehículo.
+  private returnUrl: string | null = null;
 
   private sig = viewChild(SignaturePad);
 
@@ -132,6 +136,17 @@ export class AsignarmeVehiculoPage {
       this.asignadosAOtros.set(activas as Record<string, string>);
       void this.resolveFotos(disp);
       await this.restoreDraft();
+      // AI6 — preselección del vehículo + retorno al flujo de origen.
+      const q = this.route.snapshot.queryParamMap;
+      this.returnUrl = q.get('returnUrl');
+      const preId = q.get('vehiculoId');
+      if (preId && !this.seleccionado()) {
+        const veh = disp.find((v) => v.vehiculo_id === preId);
+        if (veh) {
+          this.seleccionar(veh);
+          this.step.set(2); // salta directo a condiciones
+        }
+      }
     } finally {
       this.loading.set(false);
     }
@@ -180,7 +195,7 @@ export class AsignarmeVehiculoPage {
     };
     this.autosave.queue(this.clave, snap, {
       tipo: 'asignarme',
-      etiqueta: 'Asignarme vehículo',
+      etiqueta: 'Uso de vehículo',
       ruta: this.location.path(),
     });
   }
@@ -365,6 +380,11 @@ export class AsignarmeVehiculoPage {
   }
 
   finish(): void {
+    // AI6 — si vinimos de crear-ruta/conduce, volvemos a ese borrador; si no, al hub.
+    if (this.returnUrl) {
+      void this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
+      return;
+    }
     void this.router.navigate(['/transporte'], { replaceUrl: true });
   }
 

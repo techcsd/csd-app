@@ -86,6 +86,31 @@ export interface ConduceTransportistaCaptura {
   tareaVinculada?: string | null;
 }
 
+/**
+ * AI2 — conduce simplificado (sketch de Eduardo): origen → destino → materiales →
+ * foto de recepción (el chofer carga del despachante) → despachante → firmas
+ * (chofer + despachante) → "Pendiente entrega". Un solo RPC `crear_conduce_simple`
+ * sella ambas firmas server-side. Offline-safe por outbox.
+ */
+export interface ConduceSimpleCaptura {
+  /** null = origen "Otros" (movimiento sin almacén de stock). */
+  bodegaId: string | null;
+  proyectoId: string | null;
+  observaciones: string | null;
+  items: { articulo_id: string; cantidad: number }[];
+  vehiculoId?: string | null;
+  /** Despachante: usuario/empleado del origen, o nombre libre (ferretería/otros). */
+  despachanteUsuarioId?: string | null;
+  despachanteEmpleadoId?: string | null;
+  despachanteNombre?: string | null;
+  /** Foto de recepción (el chofer carga el material del despachante) — solo cámara. */
+  fotoRecepcion?: Blob | null;
+  /** Firmas de emisión: chofer (transportista) + despachante (emisor). */
+  firmaChofer?: Blob | null;
+  firmaDespachante?: Blob | null;
+  tareaVinculada?: string | null;
+}
+
 /** AH5 — una oferta de transferencia de responsabilidad de un conduce (inbox). */
 export interface ConduceTransferencia {
   id: string;
@@ -161,8 +186,32 @@ export interface RutaConduceEjec {
   items: { articulo: string; unidad: string; cantidad: number }[];
 }
 
+/** AI3 — cabecera informativa de una ruta (H.I/H.F, duración, km). */
+export interface RutaCabecera {
+  id: string;
+  origen: string | null;
+  destino: string | null;
+  estado: string;
+  tipo: string | null;
+  fecha: string | null;
+  iniciada_at: string | null;
+  finalizada_at: string | null;
+  km_estimado: number | null;
+  km_real: number | null;
+  duracion_min: number | null;
+}
+
+/** AI3 — un punto del trayecto recorrido (tracking AF27). */
+export interface TrayectoPunto {
+  lat: number;
+  lng: number;
+  capturado_en: string;
+}
+
 /** AE5 — detalle de ejecución de la ruta (ruta_detalle_transporte). */
 export interface RutaDetalleTransporte {
+  ruta?: RutaCabecera | null; // AI3 — cabecera informativa
+  trayecto?: TrayectoPunto[]; // AI3 — recorrido del tracking
   paradas: RutaParadaEjec[];
   conduces: RutaConduceEjec[];
 }
@@ -187,6 +236,26 @@ export interface ConduceHistorial {
   firma_pendiente: boolean;
   firma_pendiente_nombre: string | null;
   items: { articulo: string; unidad: string; cantidad: number; alto_valor: boolean }[];
+}
+
+/** AI2 — una opción del select "Despachante" (usuario o empleado del origen). */
+export interface Despachante {
+  tipo: 'usuario' | 'empleado';
+  id: string;
+  nombre: string;
+  detalle: string | null;
+}
+
+/** AI2 — conduce emitido pendiente de entrega (mis_conduces_pendientes_entrega). */
+export interface ConducePendienteEntrega {
+  id: string;
+  fecha: string;
+  proyecto_id: string | null;
+  destino: string | null;
+  bodega: string | null;
+  estado: string;
+  fase: string | null;
+  created_at: string;
 }
 
 /** AF25 — fila de rutas_activas_y_hoy (activas primero + rutas de hoy). */
@@ -347,10 +416,15 @@ export class ConducesService {
         });
         if (error) throw new Error(error.message);
         const d = (data as Partial<RutaDetalleTransporte>) ?? {};
-        return { paradas: d.paradas ?? [], conduces: d.conduces ?? [] };
+        return {
+          ruta: d.ruta ?? null,
+          trayecto: d.trayecto ?? [],
+          paradas: d.paradas ?? [],
+          conduces: d.conduces ?? [],
+        };
       },
     );
-    return data ?? { paradas: [], conduces: [] };
+    return data ?? { ruta: null, trayecto: [], paradas: [], conduces: [] };
   }
 
   /**
@@ -505,6 +579,30 @@ export class ConducesService {
       return (data as ConduceHistorial[]) ?? [];
     });
     return data ?? [];
+  }
+
+  /** AI2 — universo del select "Despachante" (usuarios + empleados). Cacheado. */
+  async despachantesDisponibles(): Promise<Despachante[]> {
+    const data = await this.catalog.refresh<Despachante[]>('despachantes', async () => {
+      const { data, error } = await this.supabase.client.rpc('despachantes_disponibles');
+      if (error) throw new Error(error.message);
+      return (data as Despachante[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** AI2 — conduces emitidos pendientes de entrega (para el menú Conduce). */
+  async misConducesPendientesEntrega(): Promise<ConducePendienteEntrega[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_conduces_pendientes_entrega');
+    if (error) throw new Error(error.message);
+    return (data as ConducePendienteEntrega[]) ?? [];
+  }
+
+  /** AI2 — contador de conduces pendientes de entrega (badge). Best-effort. */
+  async pendientesEntregaCount(): Promise<number> {
+    const { data, error } = await this.supabase.client.rpc('mis_conduces_pendientes_entrega_count');
+    if (error) throw new Error(error.message);
+    return (data as number) ?? 0;
   }
 
   /** Obras/proyectos for the route destination picker (shared cache). */
@@ -674,6 +772,48 @@ export class ConducesService {
         emisor_es_otro: input.emisorEsOtro ?? false, // AH4
         transportista_nombre: input.transportistaNombre ?? null, // AH4
         tarea_vinculada: input.tareaVinculada ?? null, // AG15
+      },
+      fotos,
+      resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
+    });
+    void this.misConduces();
+  }
+
+  /**
+   * AI2 — conduce simplificado: emite con despachante + foto de recepción + firmas
+   * de chofer y despachante en un solo RPC (`crear_conduce_simple`, que sella ambas
+   * firmas server-side). Offline-safe por outbox; idempotente por UUID. Al emitir
+   * queda en "Pendiente entrega".
+   */
+  async crearConduceSimple(input: ConduceSimpleCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
+    if (input.fotoRecepcion) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-recepcion.jpg`, slot: 'carga', blob: input.fotoRecepcion });
+    }
+    if (input.firmaChofer) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-firma-chofer.png`, slot: 'firma_chofer', blob: input.firmaChofer });
+    }
+    if (input.firmaDespachante) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-firma-despachante.png`, slot: 'firma_despachante', blob: input.firmaDespachante });
+    }
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_simple',
+      capturado_en,
+      payload: {
+        id,
+        fecha: capturado_en.slice(0, 10),
+        bodega_id: input.bodegaId ?? null,
+        proyecto_id: input.proyectoId,
+        observaciones: input.observaciones,
+        vehiculo_id: input.vehiculoId ?? null,
+        items: input.items,
+        despachante_nombre: input.despachanteNombre ?? null,
+        despachante_usuario_id: input.despachanteUsuarioId ?? null,
+        despachante_empleado_id: input.despachanteEmpleadoId ?? null,
+        tarea_vinculada: input.tareaVinculada ?? null,
       },
       fotos,
       resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
@@ -1018,6 +1158,40 @@ export class ConducesService {
       }
       // AE7 — la salida bajó el stock de la bodega de origen → invalida el preview
       // de existencias cacheado (como la devolución) para no mostrar un stock viejo.
+      await this.catalog.invalidatePrefix('existencias_');
+    });
+
+    // AI2 — conduce simplificado: un solo RPC sella despachante + foto de recepción
+    // + firmas (chofer transportista + despachante emisor). Idempotente por UUID.
+    this.sync.register('conduce_simple', async (payload, photoPaths) => {
+      const salidaId = payload['id'] as string;
+      const { error } = await this.supabase.client.rpc('crear_conduce_simple', {
+        p_id: salidaId,
+        p_fecha: payload['fecha'],
+        p_bodega_id: payload['bodega_id'] ?? null,
+        p_proyecto_id: payload['proyecto_id'] ?? null,
+        p_observaciones: payload['observaciones'] ?? null,
+        p_vehiculo_id: payload['vehiculo_id'] ?? null,
+        p_ruta_id: null,
+        p_items: payload['items'],
+        p_despachante_nombre: payload['despachante_nombre'] ?? null,
+        p_despachante_usuario_id: payload['despachante_usuario_id'] ?? null,
+        p_despachante_empleado_id: payload['despachante_empleado_id'] ?? null,
+        p_carga_foto_path: photoPaths['carga'] ?? null,
+        p_firma_chofer_path: photoPaths['firma_chofer'] ?? null,
+        p_firma_despachante_path: photoPaths['firma_despachante'] ?? null,
+      });
+      if (error) throwSyncError(error);
+      // AG15 — enlaza la tarea vinculada (idempotente; se autocompleta al entregar).
+      const tareaVinc = payload['tarea_vinculada'] as string | null;
+      if (tareaVinc) {
+        const { error: eV } = await this.supabase.client.rpc('vincular_tarea_entidad', {
+          p_tarea_id: tareaVinc,
+          p_tipo: 'conduce',
+          p_entity_id: salidaId,
+        });
+        if (eV) throwSyncError(eV);
+      }
       await this.catalog.invalidatePrefix('existencias_');
     });
 

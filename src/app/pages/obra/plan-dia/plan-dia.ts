@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { PlanDelDia } from '../../../core/models/obra.model';
+import { formatearDuracion } from '../../../core/util/duracion';
 
 const ESTADO_TAREA: Record<string, { label: string; tint: string }> = {
   pendiente: { label: 'Pendiente', tint: '#ca8a04' },
@@ -35,6 +36,7 @@ export class PlanDiaPage {
   private toast = inject(ToastService);
 
   proyectoId = '';
+  protected fmtDur = formatearDuracion;
   readonly hoy = new Date().toISOString().slice(0, 10);
   loading = signal(true);
   plan = signal<PlanDelDia>({ charla: null, tareas: [] });

@@ -26,7 +26,7 @@ export interface EnProcesoItem {
 // Módulo → tipos de borrador (Dexie) y tipos de op del outbox que le pertenecen.
 const BORRADOR_TIPOS: Record<EnProcesoModulo, string[]> = {
   bitacora: ['parte', 'incidente', 'cl_liberacion'],
-  flota: ['checklist', 'vehiculo', 'conductor'],
+  flota: ['checklist', 'vehiculo', 'conductor', 'conduce'],
   rrhh: [],
 };
 const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
@@ -39,6 +39,7 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
     'mantenimiento',
     'crear_ruta',
     'conduce_transportista',
+    'conduce_simple',
     'conduce_entrega',
     'compra_ferreteria',
     'entrada_ferreteria_confirmar',
@@ -54,6 +55,7 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
     'accidente_vehiculo',
     'dano_vehiculo',
     'multa_conductor',
+    'aviso_novedad_vehiculo',
     // AE7 — capturas de inventario (antes en ninguna lista → invisibles en
     // "en proceso"; sí contaban en el badge global y /pendientes).
     'inv_salida',
@@ -69,11 +71,12 @@ const OP_LABEL: Record<string, string> = {
   cl_liberacion: 'Checklist de liberación',
   vehiculo_entrega: 'Recibir/entregar vehículo',
   combustible: 'Registrar combustible',
-  checklist_preuso: 'Checklist de pre-uso',
-  reporte_semanal: 'Reporte semanal',
+  checklist_preuso: 'Uso de vehículo',
+  reporte_semanal: 'Inspección de vehículo',
   mantenimiento: 'Reporte de mantenimiento',
   crear_ruta: 'Ruta',
   conduce_transportista: 'Conduce (salida de material)',
+  conduce_simple: 'Conduce',
   conduce_entrega: 'Entrega de conduce',
   compra_ferreteria: 'Compra en ferretería',
   entrada_ferreteria_confirmar: 'Entrada de ferretería',
@@ -95,6 +98,7 @@ const OP_LABEL: Record<string, string> = {
   accidente_vehiculo: 'Reporte de accidente',
   dano_vehiculo: 'Reporte de daño',
   multa_conductor: 'Multa',
+  aviso_novedad_vehiculo: 'Aviso de vehículo',
 };
 const BORRADOR_LABEL: Record<string, string> = {
   parte: 'Bitácora del día',

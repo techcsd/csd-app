@@ -21,12 +21,18 @@
         <h1 class="screen__title">¿En qué obra?</h1>
         @if (loading()) {
           <app-skeleton [rows]="4" />
+        } @else if (proyectos().length) {
+          <app-collapsible-select
+            label="Obra"
+            icon="🏗️"
+            [options]="proyectoOpciones()"
+            [selectedId]="proyectoId()"
+            [searchable]="true"
+            searchPlaceholder="Buscar obra…"
+            (picked)="pickProyecto($event)"
+          />
         } @else {
-          @for (p of proyectos(); track p.id) {
-            <app-option-button [label]="p.nombre" icon="🏗️" [selected]="proyectoId() === p.id" (pressed)="proyectoId.set(p.id)" />
-          } @empty {
-            <p class="incidente__or">No hay obras disponibles.</p>
-          }
+          <p class="incidente__or">No hay obras disponibles.</p>
         }
       }
 

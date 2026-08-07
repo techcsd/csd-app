@@ -6,6 +6,11 @@
     </header>
 
     <div class="screen__body">
+      <!-- AE9 — retomar un conduce a medio llenar -->
+      @if (draftFecha() !== null) {
+        <app-draft-banner [fecha]="draftFecha()" (continuar)="continuarBorrador()" (descartar)="descartarBorrador()" />
+      }
+
       <p class="gconduce__intro">
         ¿De dónde sale el material? Si es una obra/almacén, se descuenta del stock;
         si es una ferretería, se registra como compra (entrada).
@@ -125,31 +130,43 @@
         </div>
       }
 
+      <!-- ══════════ AI2 — Foto de recepción (chofer carga del despachante) ══════════ -->
+      @if (!esFerreteria()) {
+        <label class="field-label gconduce__mt">Foto de recepción <span class="gconduce__req">*</span></label>
+        <p class="gconduce__sub">Toma la foto del material que estás cargando (lo que te entrega el despachante).</p>
+        <div class="gconduce__fotos">
+          <app-photo-slot label="Recepción" hint="📦" [gallery]="false" [foto]="fotoRecepcion()" (captured)="fotoRecepcion.set($event)" (cleared)="fotoRecepcion.set(null)" />
+        </div>
+
+        <!-- AI2 — Despachante (quien te entrega el material) -->
+        <label class="field-label gconduce__mt">¿Quién despacha? <span class="gconduce__req">*</span></label>
+        @if (despachanteOptions().length) {
+          <app-collapsible-select
+            label="Despachante"
+            icon="🧑‍🔧"
+            [options]="despachanteOptions()"
+            [selectedId]="despachanteId()"
+            [searchable]="true"
+            searchPlaceholder="Buscar persona…"
+            (picked)="despachanteId.set($event)"
+          />
+        }
+        <input class="field gconduce__mt" type="text" [ngModel]="despachanteLibre()" (ngModelChange)="despachanteLibre.set($event)" placeholder="…o escribe el nombre de quien despacha" />
+      }
+
       <label class="field-label gconduce__mt" for="obs">
         {{ esOtros() ? '¿Qué mueves? (descripción)' : 'Observaciones (opcional)' }}
       </label>
       <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
 
-      <!-- ══════════ Firmas al emitir (AH4) — almacén / otros ══════════ -->
+      <!-- ══════════ AI2 — Firmas al emitir: chofer + despachante ══════════ -->
       @if (!esFerreteria()) {
-        <label class="gconduce__check gconduce__mt">
-          <input type="checkbox" [ngModel]="otraPersonaEntrega()" (ngModelChange)="otraPersonaEntrega.set($event)" />
-          <span>Otra persona entrega el material (no soy yo)</span>
-        </label>
-
-        @if (otraPersonaEntrega()) {
-          <label class="field-label gconduce__mt" for="emisor-nombre">Nombre de quien entrega <span class="gconduce__req">*</span></label>
-          <input id="emisor-nombre" class="field" type="text" [ngModel]="emisorNombreOtro()" (ngModelChange)="emisorNombreOtro.set($event)" placeholder="Ej. Almacén central, Juan Pérez…" />
-          <label class="field-label gconduce__mt">Firma de quien entrega <span class="gconduce__req">*</span></label>
-          <app-signature-pad #emisorPad (changed)="onFirmaEmisor($event)" />
-          <label class="field-label gconduce__mt">Tu firma (chofer que transporta) <span class="gconduce__req">*</span></label>
-          <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
-          <app-signature-pad #choferPad (changed)="onFirmaTransportista($event)" />
-        } @else {
-          <label class="field-label gconduce__mt">Tu firma <span class="gconduce__req">*</span></label>
-          <p class="gconduce__sub">Firma tú (entregas y transportas el material). El receptor firmará al entregar.</p>
-          <app-signature-pad #emisorPad (changed)="onFirmaEmisor($event)" />
-        }
+        <label class="field-label gconduce__mt">Tu firma (chofer) <span class="gconduce__req">*</span></label>
+        <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
+        <app-signature-pad #choferPad (changed)="onFirmaChofer($event)" />
+        <label class="field-label gconduce__mt">Firma del despachante <span class="gconduce__req">*</span></label>
+        <p class="gconduce__sub">Firma quien te entrega el material. El receptor firmará al entregar.</p>
+        <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
       }
     </div>
 

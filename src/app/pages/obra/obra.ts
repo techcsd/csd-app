@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { BigButton } from '../../shared/ui/big-button/big-button';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
+import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
+import { SelectOption } from '../../shared/ui/select-list/select-list';
 import { ObraService } from '../../core/services/obra.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { ObraProyecto, ResumenObra } from '../../core/models/obra.model';
@@ -39,7 +41,7 @@ const TILES: ObraTile[] = [
   selector: 'app-obra',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, EmptyState, Skeleton],
+  imports: [BigButton, EmptyState, Skeleton, CollapsibleSelect],
   templateUrl: './obra.html',
   styleUrl: './obra.scss',
 })
@@ -57,6 +59,13 @@ export class ObraPage {
 
   /** Tiles visibles según los permisos AG12 del usuario. */
   tiles = computed(() => TILES.filter((t) => this.ctx.puedeVerSubmodulo(t.submodulo)));
+
+  // AI14 — obra por dropdown estándar (no listado abierto de todas las obras).
+  obraOptions = computed<SelectOption[]>(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
+  pickPorId(id: string): void {
+    const o = this.obras().find((x) => x.id === id);
+    if (o) this.pick(o);
+  }
 
   constructor() {
     void this.cargar();

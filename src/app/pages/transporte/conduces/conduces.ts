@@ -15,6 +15,7 @@ import { GeocodingService } from '../../../core/services/geocoding.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
 import { formatearDuracion } from '../../../core/util/duracion';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 import {
   ConducesService,
   RutaDetalleTransporte,
@@ -26,6 +27,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { TrackingService } from '../../../core/services/tracking.service';
 import { GpsGateBanner } from '../../../shared/components/gps-gate-banner/gps-gate-banner';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { Conduce, RutaHoy } from '../../../core/models/transporte.model';
 
 const ESTADO_RUTA_LABEL: Record<string, string> = {
@@ -47,7 +50,7 @@ const PARADA_ESTADO_LABEL: Record<ParadaEstado, string> = {
   selector: 'app-conduces',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner],
+  imports: [FormsModule, Skeleton, EmptyState, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner, CollapsibleSelect],
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
@@ -64,6 +67,7 @@ export class ConducesPage implements OnDestroy {
   private tracking = inject(TrackingService);
   private primerSync = true;
   readonly fmtDur = formatearDuracion;
+  readonly fmtHora = formatFechaCortaHora; // AI3 — H.I/H.F de la ruta
   /** AG11 — para el indicador "Reportando tu ubicación" cuando hay ruta activa. */
   readonly trackingActivo = this.tracking.rastreando;
 
@@ -589,6 +593,11 @@ export class ConducesPage implements OnDestroy {
   rvProyectoId = signal<string>('');
   rvGuardando = signal(false);
   proyectosOpts = signal<{ id: string; nombre: string }[]>([]);
+  // AI14 — obra por dropdown estándar (opcional: "Elegir obra" = sin obra).
+  rvObraOptions = computed<SelectOption[]>(() => [
+    { id: '', label: '— Elegir obra —' },
+    ...this.proyectosOpts().map((p) => ({ id: p.id, label: p.nombre })),
+  ]);
 
   abrirRutaViva(rutaId: string, modo: 'parada' | 'destino'): void {
     this.rvUbicacion.set('');

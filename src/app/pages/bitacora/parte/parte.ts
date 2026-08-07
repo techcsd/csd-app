@@ -10,6 +10,8 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -44,7 +46,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot],
+  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -83,6 +85,13 @@ export class PartePage implements OnDestroy {
 
   proyectos = signal<Proyecto[]>([]);
   proyectoId = signal<string>('');
+  // AI14 — obra por dropdown estándar (AH10), no listado abierto.
+  proyectoOpciones = computed<SelectOption[]>(() =>
+    this.proyectos().map((p) => ({ id: p.id, label: p.nombre })),
+  );
+  pickProyecto(id: string): void {
+    this.proyectoId.set(id);
+  }
 
   // R21/R22 — clima y migración (primeras preguntas tras la obra).
   llovio = signal<boolean | null>(null);
@@ -485,7 +494,9 @@ export class PartePage implements OnDestroy {
       );
       if (idx >= 0) return list.filter((_, i) => i !== idx); // toca de nuevo = quitar
       const unidad = this.partidaDe(parte)?.unidad ?? null;
-      return [...list, { estructura: parte, actividad: a, cantidad: 1, unidad, bloque: sujeto }];
+      // AI15 — lo recién seleccionado va al PRINCIPIO (el usuario marca la cantidad
+      // sin scrollear); mismo criterio que AF12 en ferretería.
+      return [{ estructura: parte, actividad: a, cantidad: 1, unidad, bloque: sujeto }, ...list];
     });
   }
 

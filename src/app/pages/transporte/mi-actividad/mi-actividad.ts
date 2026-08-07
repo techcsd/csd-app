@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
-import { ConductoresService } from '../../../core/services/conductores.service';
+import { ConductoresService, StatsPeriodo, StatsConductorPeriodo } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
@@ -53,6 +53,17 @@ export class MiActividadPage {
   loading = signal(true);
   stats = signal<ConductorStats | null>(null);
   esConductor = signal(true);
+  // AI10 — filtro de periodo (default: mes en curso) + stats por periodo.
+  readonly PERIODOS: { id: StatsPeriodo; label: string }[] = [
+    { id: 'mes', label: 'Este mes' },
+    { id: '3m', label: '3 meses' },
+    { id: '6m', label: '6 meses' },
+    { id: '1a', label: '1 año' },
+    { id: 'total', label: 'Total' },
+  ];
+  periodo = signal<StatsPeriodo>('mes');
+  periodoStats = signal<StatsConductorPeriodo | null>(null);
+  cargandoPeriodo = signal(false);
   readonly esElevado = this.ctx.esFlotaElevado; // V3 — rutas creadas
   // S32 — actividad consolidada del chofer.
   rutas = signal<RutaHoy[]>([]);
@@ -111,11 +122,15 @@ export class MiActividadPage {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
+      // AI9 — garantiza el registro de conductor de un chofer (idempotente) para
+      // que nunca vea el vacío "Aún no eres conductor".
+      await this.conductores.asegurarMiConductor();
       const cond = await this.conductores.getMiConductor();
       this.esConductor.set(!!cond);
       if (cond) {
         this.condId.set(cond.id);
         this.stats.set(await this.conductores.getMiStats());
+        void this.loadPeriodo();
         await this.loadDocs();
         // S32 — rutas asignadas + accidentes + multas + entregas + desglose (best-effort, online).
         void this.conduces.misRutas().then((r) => this.rutas.set(r));
@@ -133,6 +148,25 @@ export class MiActividadPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** AI10 — carga las stats del periodo actual (server-side, una pasada). */
+  private async loadPeriodo(): Promise<void> {
+    const id = this.condId();
+    if (!id) return;
+    this.cargandoPeriodo.set(true);
+    try {
+      this.periodoStats.set(await this.conductores.getStatsPeriodo(id, this.periodo()));
+    } finally {
+      this.cargandoPeriodo.set(false);
+    }
+  }
+
+  /** AI10 — cambia el periodo del filtro y recarga los tiles. */
+  async setPeriodo(p: StatsPeriodo): Promise<void> {
+    if (this.periodo() === p) return;
+    this.periodo.set(p);
+    await this.loadPeriodo();
   }
 
   /** V2 — ventana del historial: 90 días o "todo" (ver más). */

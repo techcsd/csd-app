@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { environment } from '../../../environments/environment';
@@ -54,6 +55,14 @@ export class VersionService {
 
   readonly local = environment.version;
   info = signal<VersionPublicada | null>(null);
+  /**
+   * APP-022 — el gate de "versión mínima" y el aviso de "hay versión nueva" son de
+   * la APK de Android (descarga/instala un archivo). En la PWA/web NO aplican: el
+   * navegador/PWA se actualiza SOLO por el service worker (UpdateService). Forzar el
+   * gate en web dejaba a los usuarios en un BUCLE (el gate recarga, pero la versión
+   * del bundle no cambia → gate otra vez). En web nunca bloqueamos ni avisamos aquí.
+   */
+  private readonly esNativo = Capacitor.isNativePlatform();
 
   /** Refresh from the server (cached). Safe to call at startup. */
   async check(): Promise<void> {
@@ -119,14 +128,17 @@ export class VersionService {
     return this.info()?.version_publicada ?? this.local;
   }
 
-  /** True when the local build is below the published minimum → must update. */
+  /** True when the local build is below the published minimum → must update.
+   *  Solo en la APK nativa: la PWA/web se actualiza sola por service worker. */
   debeActualizar(): boolean {
+    if (!this.esNativo) return false;
     const min = this.info()?.version_minima;
     return !!min && cmpVersion(this.local, min) < 0;
   }
 
-  /** True when a newer published version exists (non-blocking nudge). */
+  /** True when a newer published version exists (non-blocking nudge). Native-only. */
   hayNueva(): boolean {
+    if (!this.esNativo) return false;
     const pub = this.info()?.version_publicada;
     return !!pub && cmpVersion(pub, this.local) > 0;
   }
