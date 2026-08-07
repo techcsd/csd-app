@@ -7,7 +7,9 @@
 
 **Fix 2 — Obras/almacenes como dropdown en TODAS las secciones (AI14 ampliado):** el picker de **Mi obra** (`obra.html`) mostraba TODAS las obras como cards → migrado a `app-collapsible-select`. También migrados a dropdown estándar los `<select>` nativos de obra/almacén: **combustible** (obra), **conduces** (obra de parada), **tareas** (ferretería+almacén+obra del vínculo). Auditoría: no quedan listas abiertas de obra/almacén como picker (excepto índices/CRUD: `proyectos` index, `inventario/almacenes` admin, `mis-partes` filtro — fuera de alcance por diseño).
 
-**Version bump 1.66.0 → 1.67.0** en los 4 sitios; APK 1.67.0 firmado (cert prod) + registrado (Y1); changelog curado ampliado con estos 2 fixes. **No publicado** (bucket sin subir, `publicada` sigue 1.66.0).
+**Version bump 1.66.0 → 1.67.0** en los 4 sitios; APK 1.67.0 firmado (cert prod) + registrado (Y1); changelog curado ampliado con estos 2 fixes.
+
+**✅ SHIPPED (07/08):** commit `a05be10` → push `main` → **PWA desplegado en Vercel** (verificado: bundle `main-E37IIFH4.js` idéntico al build local). **APK 1.67.0 publicado al bucket** (`csd-app-1.67.0.apk` + `latest` + `version.json`, `apk_url` seteado). **`publicada=true` para 1.67.0** (1.66.0 → false) → `version_publicada()` = **1.67.0**, `minima` = 1.42.0 (nadie bloqueado; ≥1.42.0 recibe el aviso de actualizar). **Rollback:** `update sgc.app_versiones set publicada=(version='1.66.0') where plataforma='movil';` + `git revert a05be10 && git push` para el PWA.
 
 ---
 
