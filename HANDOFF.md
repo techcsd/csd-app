@@ -1,7 +1,7 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 07/08 — PROMPT-10 ronda AH (app) — 6 FASES: outbox, conduces (doble firma + transferencia + evidencia), paradas, dropdowns, checklist voz/foto + recepciones + compras, RRHH — **CÓDIGO HECHO, BUILD VERDE, SIN COMMIT/PUSH/RELEASE**
-**Depende de PROMPT-9 (SGC, ya en prod, commit `98d59d4`).** `npm run build` **VERDE (0 errores)**. Código app **SIN commitear** (espera tu OK). **10 migraciones aditivas SGC aplicadas a prod** (ver abajo) — SGC/sql **sin commitear**. **APK NO generado** (es release Y1 → espera tu OK). Device-QA (chofer real + jefe RRHH) pendiente = tuyo.
+## ✅ SESIÓN 07/08 — PROMPT-10 ronda AH (app) — 6 FASES — **RELEASE 1.66.0 PUBLICADO (rolling)**
+**Depende de PROMPT-9 (SGC, en prod, commit `98d59d4`).** `npm run build` **VERDE (0 errores)**. **COMMITEADO + PUSHEADO:** app `8cb62d7` → `main` (deploya PWA por Vercel) · SGC `e0d8227` → `main` (6 migraciones AH follow-up). **APK 1.66.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, changelog curado) + subido al bucket (`csd-app-1.66.0.apk` + `latest` + `version.json`) + `apk_url` seteado. **`publicada=true` → `version_publicada()` = 1.66.0** (todos ≥1.42.0 reciben el prompt de actualizar; `minima=1.42.0`, nadie bloqueado). **Rollback:** `update sgc.app_versiones set publicada=(version='1.65.0') where plataforma='movil';`. **Único pendiente = device-QA** (chofer real + jefe RRHH; físico, tuyo) — ya está en manos de usuarios.
 
 **Qué encontré (gaps de PROMPT-9 cerrados server-side, todos aditivos):**
 - `recibir_conduce_app` NO exigía foto (AH6/AH7 solo endureció los otros 3 RPCs) → migración `ah6b`.
@@ -21,11 +21,9 @@
 
 **Migraciones SGC aplicadas a prod (10, en `dev/SGC/sql/2026-08-07-*`, SIN commitear):** `ah4b-firmar-conduce-transportista`, `ah5b-transferencias-conduce-reads`, `ah5c-choferes-activos`, `ah6b-recibir-conduce-foto-obligatoria`, `ah8-parada-completar-tiempo-gps`, `ah13b-audio-notas-traspaso-acta`. (Las AH originales `ah1..ah15` ya venían de PROMPT-9.) Todas aditivas/retrocompatibles, verificadas por introspección.
 
-**PENDIENTE (tú):**
-1. **Revisar y dar OK a commit/push** (app csd-app + SGC) — nada pusheado. La web SGC ya está en `main` (PROMPT-9 `98d59d4`); estas 6 migraciones nuevas faltan commitear en SGC.
-2. **Generar/publicar APK** (`npm run apk` + `apk:publish` + flip `publicada`) tras device-QA — sube versión (Y1).
-3. **Rol jefe de RRHH:** el módulo `rrhh` hoy lo tienen admin/dirección/gerencia. Si quieres un rol dedicado "Jefe de RRHH", créalo en SGC con el módulo `rrhh` (el gating de la app ya está listo).
-4. **Device-QA:** chofer real (ruta con paradas completadas + conduce 2 firmas + transferir a otro chofer + entrega con foto+firma) y jefe de RRHH (empleados + asignar/devolver item). Verificar en SGC web (interconexión).
+**PENDIENTE (tú) — nada bloquea, la versión ya está publicada:**
+1. **Device-QA:** chofer real (ruta con paradas completadas + conduce 2 firmas + transferir a otro chofer + entrega con foto+firma) y jefe de RRHH (empleados + asignar/devolver item). Verificar en SGC web (interconexión, rule #1). Si algo falla, rollback con el SQL de arriba.
+2. **Rol jefe de RRHH (opcional):** el módulo `rrhh` hoy lo tienen admin/dirección/gerencia. Si quieres un rol dedicado "Jefe de RRHH", créalo en SGC con el módulo `rrhh` (el gating de la app ya está listo).
 
 **Selectores auditados (FASE 4) — migrados al dropdown estándar:** inventario/conteo, inventario/existencias, solicitudes/pedir, transporte/devolver-material (2), transporte/rutas/crear-ruta (origen+destino+parada), bitácora/liberación (obra). **Dejados como `<select>` nativo (opcionales, ya desplegables):** transporte/combustible (obra), transporte/conduces (reportar vehículo), tareas (vínculo obra/almacén/ferretería). **Ya estaban en collapsible:** generar-conduce, ferretería, entrada, salida.
 
