@@ -54,6 +54,25 @@ export class BorradorService {
   }
 
   /**
+   * QA-18 — borra TODOS los borradores y sus fotos. Se llama al cerrar sesión
+   * para que en un teléfono compartido el usuario B no vea/reanude los borradores
+   * del usuario A (varias claves no están scopeadas por usuario). Best-effort:
+   * nunca lanza para no romper el logout.
+   */
+  async clearAll(): Promise<void> {
+    try {
+      await db.borradores.clear();
+    } catch {
+      /* ignore */
+    }
+    try {
+      await db.borrador_fotos.clear();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /**
    * S5 — migra el borrador de parte con la clave fija legacy `'parte_diario'` a
    * una clave por instancia (`parte_diario:{uuid}`), para que conviva con otros
    * borradores sin sobreescribirse. Idempotente: no hace nada si no existe.

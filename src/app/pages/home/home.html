@@ -48,8 +48,9 @@
     </div>
     <main class="home__grid home__grid--edit">
       @for (tile of editTiles(); track tile.modulo; let i = $index) {
-        <button
-          type="button"
+        <!-- QA-37: el contenedor arrastrable es un <div> (no interactivo) para no
+             anidar un <button> dentro de otro; el control de tamaño sí es un botón. -->
+        <div
           class="home__edit-tile"
           [class.home__edit-tile--drag]="dragIndex() === i"
           [class.home__tile--2x1]="editSizeOf(tile.modulo) === '2x1'"
@@ -60,14 +61,14 @@
         >
           <span class="home__edit-icon">{{ tile.icon }}</span>
           <span class="home__edit-label">{{ tile.label }}</span>
-          <span
+          <button
+            type="button"
             class="home__size-btn"
-            role="button"
             aria-label="Cambiar tamaño"
             (pointerdown)="$event.stopPropagation()"
             (click)="cycleSize(tile.modulo, $event)"
-          >⤢ {{ editSizeOf(tile.modulo) }}</span>
-        </button>
+          >⤢ {{ editSizeOf(tile.modulo) }}</button>
+        </div>
       }
     </main>
   } @else {

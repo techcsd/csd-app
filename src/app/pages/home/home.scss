@@ -40,6 +40,9 @@
   gap: var(--gap);
   padding: 16px;
   align-content: start;
+  // QA-21: empaqueta tiles anchos rellenando los huecos que deja un 1x1 suelto
+  // antes de un tile que ocupa 2 columnas (antes quedaba una celda vacía).
+  grid-auto-flow: dense;
 }
 
 /* A single visible tile spans the full width so it reads as "your job". */
@@ -52,6 +55,9 @@
 .home__grid {
   grid-auto-rows: minmax(104px, auto);
 }
+// QA-21: en un grid de 2 columnas, 2x1 y 2x2 se ven casi iguales (ambos ocupan
+// las 2 columnas; solo difieren en el row-span del 2x2). Se dejan las dos
+// opciones de tamaño; el parent/producto refinará la distinción visual.
 .home__tile--2x1 {
   grid-column: span 2;
 }

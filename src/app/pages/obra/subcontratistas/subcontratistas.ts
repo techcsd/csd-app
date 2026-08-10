@@ -83,6 +83,11 @@ export class SubcontratistasPage {
     this.frenteEdit.update((e) => ({ ...e, [id]: Math.max(0, Math.min(100, v || 0)) }));
   }
 
+  // QA-23 — avance de cubicación acotado 0..100 (mismo criterio que los frentes).
+  setCubAvance(v: number): void {
+    this.cubAvance.set(Math.max(0, Math.min(100, v || 0)));
+  }
+
   async guardarFrente(id: string): Promise<void> {
     try {
       await this.obra.actualizarFrenteAvance(id, this.frenteEdit()[id] ?? 0);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { BigButton } from '../../shared/ui/big-button/big-button';
@@ -68,7 +68,7 @@ const COMPRAS_TILE: HomeTile = { modulo: 'compras_proyecto', icon: '💰', label
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class HomePage {
+export class HomePage implements OnDestroy {
   private ctx = inject(UserContextService);
   private session = inject(SessionService);
   private router = inject(Router);
@@ -111,6 +111,8 @@ export class HomePage {
   // AJ5 — mensajes no leídos (badge del tile de Mensajes).
   mensajesNoLeidos = signal(0);
   private primerSync = true;
+  // QA-19: canal realtime de mensajes para mantener el badge de no leídos EN VIVO.
+  private mensajesUnsub: (() => void) | null = null;
 
   // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
   // Tecnología se excluye de aquí porque NO es un módulo de trabajo (ver `tiles`).
@@ -178,7 +180,10 @@ export class HomePage {
     // AJ8 — cuántas entregas debo confirmar como receptor.
     void this.cargarPorConfirmar();
     // AJ5 — mensajes no leídos (badge del tile de Mensajes).
-    void this.mensajes.contarNoLeidos().then((n) => this.mensajesNoLeidos.set(n)).catch(() => {});
+    this.recontarNoLeidos();
+    // QA-19: badge EN VIVO — recuenta en cada INSERT de mensajes (antes solo se
+    // actualizaba al re-entrar al Home). Canal propio; se cierra en ngOnDestroy.
+    this.mensajesUnsub = this.mensajes.suscribir(() => this.recontarNoLeidos());
     // AE — avisos no leídos (badge de la campana). Best-effort, online.
     void this.notificaciones.refreshNoLeidas();
     // AF7 — ya hay sesión: registra/renueva el token push del usuario (native only).
@@ -196,6 +201,20 @@ export class HomePage {
         void this.cargarPorConfirmar();
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    // QA-19: cierra el canal realtime de mensajes al salir del Home.
+    this.mensajesUnsub?.();
+    this.clearLongPress();
+  }
+
+  /** QA-19 — recuenta los mensajes no leídos y actualiza el badge (best-effort). */
+  private recontarNoLeidos(): void {
+    void this.mensajes
+      .contarNoLeidos()
+      .then((n) => this.mensajesNoLeidos.set(n))
+      .catch(() => {});
   }
 
   private async cargarFirmasPendientes(): Promise<void> {

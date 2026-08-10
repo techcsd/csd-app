@@ -27,6 +27,7 @@ interface PosBuffer {
 const BUFFER_KEY = 'tracking_buffer';
 const FLUSH_MS = 45_000; // AF27 — lote cada ~45 s en ruta activa
 const MAX_BUFFER = 12; // fuerza flush al llegar a este tamaño
+const MAX_PERSIST = 2000; // QA-35 — tope del buffer en disco (rutas largas offline)
 const WATCHDOG_MS = 60_000; // AG11 — el watchdog revisa cada minuto
 const STALE_FIX_MS = 5 * 60_000; // AG11 — sin fix en 5 min con ruta activa = re-armar
 
@@ -73,6 +74,10 @@ export class TrackingService {
   private ultimaFlushOk = Date.now();
   /** true mientras un re-arranque del watchdog está en curso (evita solaparlos). */
   private rearmando = false;
+  /** QA-10 — true mientras un flush está en vuelo (evita solapar dos envíos). */
+  private flushing = false;
+  /** QA-10 — se pidió un flush mientras había uno en vuelo → re-ejecutar al terminar. */
+  private flushAgain = false;
 
   constructor() {
     void this.restaurarBuffer();
@@ -274,8 +279,17 @@ export class TrackingService {
   /** Envía el lote acumulado a `registrar_posiciones` (offline-first: reintenta luego). */
   private async flush(): Promise<void> {
     if (!this.buffer.length || !this.net.online()) return;
-    const lote = this.buffer.slice();
+    // QA-10: un solo flush a la vez. Si llega otro disparo (timer/online/MAX_BUFFER)
+    // mientras hay uno en vuelo, se marca para re-ejecutar al terminar (coalescing)
+    // en lugar de solaparse — dos runs reenviaban el mismo lote y ambos recortaban
+    // el buffer, duplicando o perdiendo puntos.
+    if (this.flushing) {
+      this.flushAgain = true;
+      return;
+    }
+    this.flushing = true;
     try {
+      const lote = this.buffer.slice();
       const { error } = await this.supabase.client.rpc('registrar_posiciones', {
         p_posiciones: lote.map((p) => ({
           lat: p.lat,
@@ -297,12 +311,21 @@ export class TrackingService {
         });
         return; // conserva el buffer para reintentar
       }
-      // Quita del buffer lo que ya se envió (llegaron nuevos fixes mientras tanto).
-      this.buffer = this.buffer.slice(lote.length);
+      // QA-10: quita EXACTAMENTE los objetos enviados (por identidad), no por
+      // longitud — así un push() concurrente durante el await no causa drift.
+      const enviados = new Set(lote);
+      this.buffer = this.buffer.filter((p) => !enviados.has(p));
       this.ultimaFlushOk = Date.now();
       await this.persistBuffer();
     } catch {
       /* sin señal / error de red → se reintenta (no es un fallo reportable) */
+    } finally {
+      this.flushing = false;
+      // QA-10: hubo un disparo durante el envío → drena lo que quedó en el buffer.
+      if (this.flushAgain) {
+        this.flushAgain = false;
+        void this.flush();
+      }
     }
   }
 
@@ -373,7 +396,16 @@ export class TrackingService {
 
   private async persistBuffer(): Promise<void> {
     try {
-      await this.store.set(BUFFER_KEY, JSON.stringify(this.buffer.slice(-100)));
+      // QA-35: tope alto (2000) para no perder los fixes más antiguos en rutas
+      // largas sin señal; aún así acotado y con aviso al truncar.
+      let toSave = this.buffer;
+      if (toSave.length > MAX_PERSIST) {
+        console.warn(
+          `[tracking] buffer excede ${MAX_PERSIST} puntos (${toSave.length}); se descartan los más antiguos.`,
+        );
+        toSave = toSave.slice(-MAX_PERSIST);
+      }
+      await this.store.set(BUFFER_KEY, JSON.stringify(toSave));
     } catch {
       /* ignore */
     }

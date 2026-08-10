@@ -36,13 +36,16 @@ export class MensajesPage implements OnDestroy {
   resultados = signal<UsuarioBusqueda[]>([]);
   buscando = signal(false);
 
+  // QA-20: canal propio de esta vista; se cierra en ngOnDestroy.
+  private unsub: (() => void) | null = null;
+
   constructor() {
     void this.cargar();
-    this.mensajes.suscribir(() => void this.cargar());
+    this.unsub = this.mensajes.suscribir(() => void this.cargar());
   }
 
   ngOnDestroy(): void {
-    this.mensajes.desuscribir();
+    this.unsub?.();
   }
 
   private async cargar(): Promise<void> {

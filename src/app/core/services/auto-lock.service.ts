@@ -4,6 +4,7 @@ import { SessionService } from './session.service';
 import { PinService } from './pin.service';
 import { UserContextService } from './user-context.service';
 import { ToastService } from './toast.service';
+import { AutosaveService } from './autosave.service';
 
 // Re-lock after this long in the background. Short enough to protect a phone
 // left on a table; long enough that taking a photo (which backgrounds the
@@ -22,6 +23,7 @@ export class AutoLockService {
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private autosave = inject(AutosaveService);
   private hiddenAt: number | null = null;
 
   init(): void {
@@ -54,6 +56,11 @@ export class AutoLockService {
     }
 
     if (!(await this.pin.isSet())) return;
+    // QA-16 (AJ15) — asegurar que cualquier formulario en curso quede persistido
+    // antes de bloquear (el bloqueo destruye la pantalla sin diálogo de descarte).
+    // AutosaveService ya hace flush en `visibilitychange→hidden`; esto es un
+    // cinturón-y-tirantes por si el freeze del WebView cortó aquel flush.
+    await this.autosave.flushAll();
     this.session.lock();
     await this.router.navigate(['/auth/pin']);
   }

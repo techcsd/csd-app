@@ -1,6 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
 
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -10,6 +9,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ConducesService, EntregaPorConfirmar } from '../../../core/services/conduces.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
 
@@ -31,7 +31,7 @@ export class PorConfirmarPage {
   private conduces = inject(ConducesService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
-  private location = inject(Location);
+  private navGuard = inject(NavGuardService);
 
   private sigPad = viewChild<SignaturePad>('receptorPad');
 
@@ -47,6 +47,13 @@ export class PorConfirmarPage {
   llegoTodo = signal<boolean | null>(null);
   notas = signal('');
   enviando = signal(false);
+  // QA-13 — cantidades recibidas por item (editables cuando "Faltó algo").
+  cantidades = signal<Record<string, number>>({});
+
+  /** QA-13 — items del conduce que se está confirmando (si el RPC los provee). */
+  itemsActuales = computed(
+    () => this.entregas().find((e) => e.id === this.confirmandoId())?.items ?? [],
+  );
 
   constructor() {
     void this.load();
@@ -73,10 +80,31 @@ export class PorConfirmarPage {
     this.firmaLista.set(false);
     this.llegoTodo.set(null);
     this.notas.set('');
+    this.resetCantidades(id); // QA-13
   }
 
   onFirma(has: boolean): void {
     this.firmaLista.set(has);
+  }
+
+  // ── QA-13 — registrar QUÉ y CUÁNTO llegó cuando "Faltó algo" ────────────────
+  /** Reinicia las cantidades a las del conduce (todo recibido) para una entrega. */
+  private resetCantidades(id: string): void {
+    const e = this.entregas().find((x) => x.id === id);
+    const init: Record<string, number> = {};
+    for (const it of e?.items ?? []) init[it.detalle_id] = it.cantidad;
+    this.cantidades.set(init);
+  }
+
+  setLlegoTodo(value: boolean): void {
+    this.llegoTodo.set(value);
+    // "Sí, todo" restaura las cantidades completas del conduce.
+    if (value) this.resetCantidades(this.confirmandoId());
+  }
+
+  setCantidad(detalleId: string, value: number): void {
+    const max = this.itemsActuales().find((it) => it.detalle_id === detalleId)?.cantidad ?? Infinity;
+    this.cantidades.update((m) => ({ ...m, [detalleId]: Math.min(max, Math.max(0, value || 0)) }));
   }
 
   async confirmar(id: string): Promise<void> {
@@ -94,13 +122,25 @@ export class PorConfirmarPage {
       this.toast.error('Falta tu firma de confirmación.');
       return;
     }
+    // QA-13 — si faltó algo y tenemos el detalle del conduce, registramos las
+    // cantidades recibidas por item. Sin items (offline / RPC no los provee) se
+    // degrada al checklist Sí/No sin bloquear la confirmación.
+    const items =
+      this.llegoTodo() === false && this.itemsActuales().length
+        ? this.itemsActuales().map((it) => ({
+            detalle_id: it.detalle_id,
+            cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad,
+          }))
+        : null;
     this.enviando.set(true);
     try {
+      // QA-13 BACKEND: verify conduce_confirmar_receptor applies p_items
       await this.conduces.conduceConfirmarReceptor({
         salidaId: id,
         foto: this.foto()!.blob,
         firma,
         checklist: { llego_todo: this.llegoTodo() === true },
+        items,
         notas: this.notas().trim() || null,
       });
       this.toast.success('¡Recepción confirmada! Se avisó al chofer.');
@@ -114,6 +154,6 @@ export class PorConfirmarPage {
   }
 
   back(): void {
-    this.location.back();
+    this.navGuard.back('/transporte/conduces-hub'); // QA-15 — back seguro
   }
 }

@@ -10,24 +10,12 @@ import { Proyecto } from '../models/bitacora.model';
 const CATALOG_CONDUCES = 'mis_conduces';
 const CATALOG_RUTAS = 'mis_rutas';
 const CATALOG_PROYECTOS = 'proyectos';
+// QA-6 — claves de caché read-through para que "Pendiente entrega" y "Por
+// confirmar" sobrevivan offline (última foto del servidor).
+const CATALOG_PENDIENTES_ENTREGA = 'mis_conduces_pendientes_entrega';
+const CATALOG_POR_CONFIRMAR = 'mis_entregas_por_confirmar';
 /** Y3 — ids de rutas planificadas ya vistas (para el badge de "rutas nuevas"). */
 const VISTAS_KEY = 'conduces_rutas_vistas';
-
-/** Delivery capture the conduce screen hands to entregarConduce(). */
-export interface ConduceEntregaCaptura {
-  salidaId: string;
-  items: { detalle_id: string; cantidad_recibida: number }[];
-  receptor: string;
-  notas: string | null;
-  fotoEntrega: Blob;
-  /** AC7 — firma de quien RECIBE (receptor). null = receptor ausente (pendiente). */
-  firma: Blob | null;
-  // AC7 — firma de quien ENTREGA (emisor: chofer/almacén). Obligatoria.
-  emisorNombre: string;
-  firmaEmisor: Blob;
-  /** AE — si el receptor NO firmó ahora, a quién se le asigna la firma pendiente. */
-  receptorUsuarioId?: string | null;
-}
 
 /** AD6 — tipo de ruta (aditivo). Personal/traslado no exigen carga. */
 export type RutaTipo = 'material' | 'personal' | 'traslado';
@@ -269,6 +257,9 @@ export interface EntregaPorConfirmar {
   fase: string | null;
   entregado_en: string | null;
   entrega_foto_path: string | null;
+  /** QA-13 — ítems del conduce para registrar faltantes (si el RPC los provee;
+   *  puede venir vacío/ausente offline → la UI degrada al toggle Sí/No). */
+  items?: { detalle_id: string; articulo: string; unidad: string; cantidad: number }[];
 }
 
 /** AF25 — fila de rutas_activas_y_hoy (activas primero + rutas de hoy). */
@@ -618,11 +609,18 @@ export class ConducesService {
     return data ?? [];
   }
 
-  /** AI2 — conduces emitidos pendientes de entrega (para el menú Conduce). */
+  /**
+   * AI2 — conduces emitidos pendientes de entrega (para el menú Conduce).
+   * QA-6 — read-through cache (como misConduces/misRutas): la última foto del
+   * servidor sobrevive offline. Online el comportamiento es idéntico.
+   */
   async misConducesPendientesEntrega(): Promise<ConducePendienteEntrega[]> {
-    const { data, error } = await this.supabase.client.rpc('mis_conduces_pendientes_entrega');
-    if (error) throw new Error(error.message);
-    return (data as ConducePendienteEntrega[]) ?? [];
+    const data = await this.catalog.refresh<ConducePendienteEntrega[]>(CATALOG_PENDIENTES_ENTREGA, async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_conduces_pendientes_entrega');
+      if (error) throw new Error(error.message);
+      return (data as ConducePendienteEntrega[]) ?? [];
+    });
+    return data ?? [];
   }
 
   /** AI2 — contador de conduces pendientes de entrega (badge). Best-effort. */
@@ -846,40 +844,9 @@ export class ConducesService {
       resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
     });
     void this.misConduces();
-  }
-
-  /** Queue a conduce delivery (photo + receiver + signature). Offline-safe. */
-  async entregarConduce(input: ConduceEntregaCaptura): Promise<void> {
-    const id = crypto.randomUUID();
-    const capturado_en = new Date().toISOString();
-
-    const fotos = [
-      { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-entrega.jpg`, slot: 'entrega', blob: input.fotoEntrega },
-      // AC7 — firma del emisor (quien entrega).
-      { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-firma-emisor.png`, slot: 'firma_emisor', blob: input.firmaEmisor },
-    ];
-    // AC7/AE — firma del receptor SOLO si está presente; si no, queda pendiente.
-    if (input.firma) {
-      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-firma.png`, slot: 'firma', blob: input.firma });
-    }
-
-    await this.sync.enqueue({
-      id,
-      tipo_op: 'conduce_entrega',
-      capturado_en,
-      payload: {
-        salida_id: input.salidaId,
-        items: input.items,
-        receptor: input.receptor,
-        emisor_nombre: input.emisorNombre, // AC7
-        notas: input.notas,
-        receptor_usuario_id: input.receptorUsuarioId ?? null, // AE — firma pendiente
-      },
-      fotos,
-      resumen: { salida_id: input.salidaId, receptor: input.receptor, capturado_en },
-    });
-
-    void this.misConduces();
+    // QA-6 — el nuevo conduce cae en "Pendiente entrega": invalida su caché para
+    // que la próxima lectura lo traiga (se materializa al drenar el outbox online).
+    void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
   }
 
   // ─── AJ8 — Estados del conduce (chofer) + confirmación del receptor ─────────
@@ -933,11 +900,17 @@ export class ConducesService {
     return (data as string) ?? 'emitido';
   }
 
-  /** AJ8 — bandeja del RECEPTOR: entregas esperando su confirmación. */
+  /**
+   * AJ8 — bandeja del RECEPTOR: entregas esperando su confirmación.
+   * QA-6 — read-through cache (offline-friendly). Online idéntico.
+   */
   async misEntregasPorConfirmar(): Promise<EntregaPorConfirmar[]> {
-    const { data, error } = await this.supabase.client.rpc('mis_entregas_por_confirmar');
-    if (error) throw new Error(error.message);
-    return (data as EntregaPorConfirmar[]) ?? [];
+    const data = await this.catalog.refresh<EntregaPorConfirmar[]>(CATALOG_POR_CONFIRMAR, async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_entregas_por_confirmar');
+      if (error) throw new Error(error.message);
+      return (data as EntregaPorConfirmar[]) ?? [];
+    });
+    return data ?? [];
   }
 
   /** AJ8 — contador de entregas por confirmar (badge del home/hub). Best-effort. */
@@ -1317,8 +1290,12 @@ export class ConducesService {
         if (eV) throwSyncError(eV);
       }
       await this.catalog.invalidatePrefix('existencias_');
+      // QA-6 — el conduce ya existe en el servidor → refresca "Pendiente entrega".
+      await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
     });
 
+    // QA-32: handler kept for backward-compat with any queued conduce_entrega ops
+    // (legacy delivery capture con firma de receptor). El flujo AJ8 ya no lo usa.
     this.sync.register('conduce_entrega', async (payload, photoPaths) => {
       const salidaId = payload['salida_id'] as string;
       const firmaReceptor = photoPaths['firma']; // AE — puede faltar (receptor ausente)
@@ -1377,6 +1354,8 @@ export class ConducesService {
       });
       if (error) throwSyncError(error);
       await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+      // QA-6 — el estado del conduce cambió → refresca "Pendiente entrega".
+      await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
     });
 
     // AJ8 — el chofer marca ENTREGADO con foto obligatoria (sin firma del receptor).
@@ -1390,6 +1369,9 @@ export class ConducesService {
       });
       if (error) throwSyncError(error);
       await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+      // QA-6 — sale de "Pendiente entrega" y entra a "Por confirmar" (receptor).
+      await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+      await this.catalog.invalidate(CATALOG_POR_CONFIRMAR).catch(() => {});
     });
 
     // AJ8 — el RECEPTOR confirma la entrega desde su dispositivo (foto + firma).
@@ -1405,6 +1387,8 @@ export class ConducesService {
       });
       if (error) throwSyncError(error);
       await this.catalog.invalidatePrefix('existencias_').catch(() => {});
+      // QA-6 — confirmada → sale de "Por confirmar".
+      await this.catalog.invalidate(CATALOG_POR_CONFIRMAR).catch(() => {});
     });
 
     // AH5 — el receptor acepta una transferencia de conduce (foto + firma). El RPC

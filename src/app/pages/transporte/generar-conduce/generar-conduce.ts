@@ -375,6 +375,14 @@ export class GenerarConducePage implements OnDestroy {
         this.despachanteLibre.set(d.despachanteLibre ?? '');
         this.cart.set(d.cart ?? []);
       }
+      // QA-7 — rehidrata la foto de recepción + ambas firmas persistidas antes del
+      // desvío a "Uso de vehículo" (así el chofer no re-toma foto ni re-firma dos veces).
+      const fotos = await this.borrador.loadFotos(this.clave);
+      for (const f of fotos) {
+        if (f.slot === 'recepcion') this.fotoRecepcion.set({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) });
+        else if (f.slot === 'firma_chofer') this.firmaChofer.set(f.blob);
+        else if (f.slot === 'firma_despachante') this.firmaDespachante.set(f.blob);
+      }
       this.draftFecha.set(null);
       this.hydrated = true;
     })();
@@ -442,8 +450,12 @@ export class GenerarConducePage implements OnDestroy {
       // AE9 — si NO viene de deep-link, ofrecer retomar un borrador previo (banner).
       if (!deepLink) {
         const d = await this.borrador.get(this.clave);
-        if (d) this.draftFecha.set(d.updated_at);
-        else this.hydrated = true;
+        if (d) {
+          this.draftFecha.set(d.updated_at);
+          // QA-7 — al volver al conduce, si el desvío "Uso de vehículo" quedó a medias,
+          // re-habilita el desvío para que se pueda volver a disparar.
+          await this.limpiarDesvioSiAbandonado((d.data as ConduceDraft | undefined)?.vehiculoId);
+        } else this.hydrated = true;
       } else {
         this.hydrated = true;
       }
@@ -567,12 +579,38 @@ export class GenerarConducePage implements OnDestroy {
       sessionStorage.setItem(key, '1');
     } catch { /* sessionStorage no disponible */ }
     this.toast.show('Primero registra el uso de este vehículo.', 'info');
+    // QA-7 — persiste la foto de recepción + AMBAS firmas en borrador_fotos para no
+    // perderlas en el desvío a "Uso de vehículo" (el texto ya lo guarda el autosave AE9).
+    const foto = this.fotoRecepcion();
+    if (foto) await this.borrador.saveFoto(this.clave, 'recepcion', foto.blob);
+    const fCh = this.firmaChofer();
+    if (fCh) await this.borrador.saveFoto(this.clave, 'firma_chofer', fCh);
+    const fDe = this.firmaDespachante();
+    if (fDe) await this.borrador.saveFoto(this.clave, 'firma_despachante', fDe);
     await this.autosave.flushAll(); // AE9 — persiste el borrador antes de salir
     const returnUrl = this.router.url;
     await this.router.navigate(['/transporte/asignarme'], {
       queryParams: { returnUrl, vehiculoId: vId },
     });
     return true;
+  }
+
+  /**
+   * QA-7 — si volvemos al conduce y el vehículo AÚN no está asignado estando ONLINE,
+   * el chofer se salió de "Uso de vehículo" sin completarlo → limpiamos el flag de
+   * sesión para que el desvío se pueda volver a disparar. Offline NO se puede
+   * distinguir de un traspaso encolado sin sincronizar, así que ahí conservamos el
+   * guardia anti-bucle (AI6).
+   */
+  private async limpiarDesvioSiAbandonado(vId: string | null | undefined): Promise<void> {
+    if (!vId) return;
+    const key = `ai6-uso:${vId}`;
+    try {
+      if (!sessionStorage.getItem(key)) return;
+      if (this.network.online() && !this.esVehiculoAsignado(vId)) {
+        sessionStorage.removeItem(key);
+      }
+    } catch { /* sessionStorage no disponible */ }
   }
 
   /** AF31 — origen ferretería: compra → ENTRADA (reúsa el flujo de ferretería). */

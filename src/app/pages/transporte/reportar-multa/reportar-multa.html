@@ -49,7 +49,7 @@
       }
 
       <label class="field-label">Monto (opcional)</label>
-      <input class="field" type="number" inputmode="decimal" [ngModel]="monto()" (ngModelChange)="monto.set($event)" placeholder="RD$" />
+      <input class="field" type="number" inputmode="decimal" min="0" [ngModel]="monto()" (ngModelChange)="setMonto($event)" placeholder="RD$" />
 
       <label class="field-label">Vehículo (opcional)</label>
       <!-- W5 — selector de vehículo con el picker de tarjetas de la app (hoja inferior) -->

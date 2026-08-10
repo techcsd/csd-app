@@ -6,7 +6,7 @@ import { PhotoSlot } from '../../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../../shared/ui/option-button/option-button';
 import { Skeleton } from '../../../../shared/ui/skeleton/skeleton';
 import { CapturedPhoto } from '../../../../core/services/camera.service';
-import { ConducesService } from '../../../../core/services/conduces.service';
+import { ConducesService, ConducePendienteEntrega } from '../../../../core/services/conduces.service';
 import { NetworkService } from '../../../../core/services/network.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { Conduce } from '../../../../core/models/transporte.model';
@@ -69,8 +69,20 @@ export class ConduceEntregaPage {
     this.loading.set(true);
     try {
       const id = this.route.snapshot.paramMap.get('salidaId');
-      const list = await this.service.misConduces();
-      const c = list.find((x) => x.id === id) ?? null;
+      // QA-12 — resuelve el conduce por id desde la MISMA fuente que la lista que
+      // enlaza aquí ("Pendiente entrega", cacheada QA-6) MERGEADA con mis_conduces_hoy.
+      // Preferimos mis_conduces_hoy porque trae los items; si el conduce no es de hoy
+      // (o estamos offline) reconstruimos una cabecera desde la lista de pendientes.
+      // El mensaje "No encontramos…" queda solo como último recurso real.
+      const [conducesHoy, pendientes] = await Promise.all([
+        this.service.misConduces().catch(() => [] as Conduce[]),
+        this.service.misConducesPendientesEntrega().catch(() => [] as ConducePendienteEntrega[]),
+      ]);
+      let c = conducesHoy.find((x) => x.id === id) ?? null;
+      if (!c) {
+        const p = pendientes.find((x) => x.id === id) ?? null;
+        if (p) c = this.pendienteAConduce(p);
+      }
       this.conduce.set(c);
       if (c) {
         const init: Record<string, number> = {};
@@ -90,6 +102,27 @@ export class ConduceEntregaPage {
 
   get online(): boolean {
     return this.network.online();
+  }
+
+  /**
+   * QA-12 — cabecera mínima cuando el conduce no está en mis_conduces_hoy (no es de
+   * hoy / offline). La lista de "Pendiente entrega" no trae items, así que se muestran
+   * vacíos; el chofer igual puede avanzar estado / marcar entregado.
+   */
+  private pendienteAConduce(p: ConducePendienteEntrega): Conduce {
+    return {
+      id: p.id,
+      codigo: '#' + p.id.slice(0, 8).toUpperCase(),
+      fecha: p.fecha,
+      creado_en: p.created_at ?? null,
+      creador: null,
+      estado: p.estado,
+      destino: p.destino,
+      bodega: p.bodega,
+      observaciones: null,
+      foto_path: null,
+      items: [],
+    };
   }
 
   // ── Acciones de estado ──────────────────────────────────────────────────────

@@ -39,15 +39,19 @@ export class MensajesThreadPage implements OnDestroy {
   texto = signal('');
   enviando = signal(false);
 
+  // QA-20: canal propio del hilo (filtrado por conversación); se cierra en ngOnDestroy.
+  private unsub: (() => void) | null = null;
+
   constructor() {
     this.conversacionId = this.route.snapshot.paramMap.get('id') ?? '';
     void this.cargar();
     void this.mensajes.marcarLeida(this.conversacionId);
-    this.mensajes.suscribir(() => void this.cargar(true));
+    // QA-20: filtra server-side por esta conversación (antes escuchaba TODO).
+    this.unsub = this.mensajes.suscribir(() => void this.cargar(true), this.conversacionId);
   }
 
   ngOnDestroy(): void {
-    this.mensajes.desuscribir();
+    this.unsub?.();
   }
 
   private async cargar(silencioso = false): Promise<void> {

@@ -19,11 +19,14 @@
 
       <label class="field-label">Vincular a un usuario del sistema (opcional)</label>
       <p class="cform__hint">Si lo eliges, se autollenan sus datos. Déjalo vacío si el conductor no tiene usuario.</p>
-      <app-select-list
+      <!-- QA-38: dropdown colapsado (AH10) — la lista de usuarios es variable y larga -->
+      <app-collapsible-select
         label="Usuario"
         icon="👤"
         [options]="usuarioOpts()"
         [selectedId]="usuarioId()"
+        [searchable]="true"
+        searchPlaceholder="Buscar usuario…"
         (picked)="onUsuario($event)"
       />
       @if (usuarioId()) {

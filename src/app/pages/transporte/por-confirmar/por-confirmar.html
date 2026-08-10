@@ -28,9 +28,23 @@
 
               <label class="field-label porconf__mt">¿Llegó todo el material?</label>
               <div class="porconf__si-no">
-                <app-option-button icon="✅" label="Sí, todo" [selected]="llegoTodo() === true" (pressed)="llegoTodo.set(true)" />
-                <app-option-button icon="⚠️" label="Faltó algo" [selected]="llegoTodo() === false" (pressed)="llegoTodo.set(false)" />
+                <app-option-button icon="✅" label="Sí, todo" [selected]="llegoTodo() === true" (pressed)="setLlegoTodo(true)" />
+                <app-option-button icon="⚠️" label="Faltó algo" [selected]="llegoTodo() === false" (pressed)="setLlegoTodo(false)" />
               </div>
+
+              <!-- QA-13 — detalle del faltante: cantidades recibidas por item (si el conduce trae items). -->
+              @if (llegoTodo() === false && itemsActuales().length) {
+                <p class="porconf__sub">Ajusta la cantidad que sí llegó de cada material.</p>
+                <div class="porconf__items">
+                  @for (it of itemsActuales(); track it.detalle_id) {
+                    <div class="porconf__item">
+                      <span class="porconf__item-name">{{ it.articulo }}</span>
+                      <input class="field porconf__qty" type="number" inputmode="decimal" min="0" [ngModel]="cantidades()[it.detalle_id]" (ngModelChange)="setCantidad(it.detalle_id, $event)" />
+                      <span class="porconf__item-unit">/ {{ it.cantidad }} {{ it.unidad }}</span>
+                    </div>
+                  }
+                </div>
+              }
 
               <label class="field-label porconf__mt" for="nt-{{ e.id }}">Notas (opcional)</label>
               <textarea id="nt-{{ e.id }}" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Novedad de la recepción…"></textarea>

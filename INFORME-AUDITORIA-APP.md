@@ -10,7 +10,8 @@
 
 ## 0. Resumen ejecutivo
 
-- **Corregido en esta auditoría (build verde, exit 0):** 2 bugs **crítico/alto** de UI (invisibilidad) — ver §4.
+> **ACTUALIZACIÓN 10/08 (2ª jornada):** Xaviel pidió arreglar **todo** el backlog. Se corrigieron **~35 de los 44 hallazgos** (build verde exit 0); los backend se verificaron/aplicaron en prod. Ver el **§9 — Estado final de cada hallazgo** al final. Lo que queda son decisiones de producto (término "pre-uso"), items de bajo impacto documentados, y el device-QA de Xaviel.
+
 - **44 hallazgos** totales: **3 crítico**, **8 alto**, **16 medio**, **17 bajo**.
 - **Tema #1 (crítico, backend/offline):** el motor de outbox tiene una **colisión de claves de handler** (`tarea_iniciar`/`tarea_completar` registradas por DOS servicios con RPCs distintos) y **5 servicios que registran handlers no se instancian al arranque** → capturas offline se enrutan al RPC equivocado o se quedan "En cola" para siempre tras un reinicio en frío. Esto viola la regla dura #1 (interconexión) y ADR-002 (idempotencia). **Es lo primero que hay que arreglar.**
 - **Tema #2 (alto, UX de campo):** varias promesas de 1.68.0 quedaron **parciales**: el conduce recién creado **no aparece offline** en "Pendiente entrega", el desvío AI6 (vehículo distinto) **pierde la foto y las 2 firmas** del conduce, y el "back seguro" AJ2 solo se aplicó al módulo obra (el resto de la app hace dead-end en deep-links).
@@ -248,18 +249,20 @@ Verificación: `npm run build` → **exit 0** en cada pasada (solo warnings pree
 
 ---
 
-## 7. TOP 10 para la próxima ronda (ordenado por impacto en la operación diaria del chofer)
+## 7. TOP 10 — TODOS CORREGIDOS en la 2ª jornada (ver §9 para el detalle)
 
-1. ~~**QA-1** — Colisión de handlers `tarea_*`.~~ ✅ **CORREGIDO en esta auditoría (§4.b).**
-2. ~~**QA-4** — 5 servicios fuera del bootstrap.~~ ✅ **CORREGIDO en esta auditoría (§4.b).**
-3. **QA-6** — El conduce recién creado no aparece en "Pendiente entrega" offline (AJ8 sigue medio roto en campo). *(alto)*
-4. **QA-7** — El desvío "vehículo distinto" borra la foto y las 2 firmas del conduce; el chofer re-captura todo. *(alto)*
-5. ~~**QA-5** — Traspaso de vehículo no idempotente.~~ ✅ **CORREGIDO en esta auditoría (§4.b, migración en prod).**
-6. **QA-8 + QA-15** — Back roto: heurístico `navCount` + back en pantalla no seguro en ~80 páginas → dead-ends en deep-links de push. *(alto/medio, AJ2)*
-7. **QA-9** — La nav diferida de push saca al usuario de un formulario al cerrar otro (AJ7 no del todo cerrado). *(alto)*
-8. **QA-10 + QA-11** — Tracking: `flush()` concurrente duplica/pierde puntos + Seguimiento sin throttle (N+1). *(alto, AJ14)*
-9. **QA-17** — Pickers de obra/proyecto con `select` directo sobre `proyectos` (RLS) → dropdown vacío para compras/obra. *(medio/alto)*
-10. **QA-12 + QA-13** — Detalle de conduce que muestra "no encontramos" + receptor que no puede registrar el faltante. *(medio, AJ8)*
+El TOP-10 original (los de mayor impacto para el chofer) quedó **completo**:
+
+1. ~~**QA-1** — Colisión de handlers `tarea_*`.~~ ✅
+2. ~~**QA-4** — 5 servicios fuera del bootstrap.~~ ✅
+3. ~~**QA-6** — Conduce recién creado invisible offline.~~ ✅ (`catalog.refresh`)
+4. ~~**QA-7** — El desvío de vehículo borra foto+firmas.~~ ✅ (persistidas en el borrador)
+5. ~~**QA-5** — Traspaso no idempotente.~~ ✅ (migración prod)
+6. ~~**QA-8 + QA-15** — Back roto.~~ ✅ (profundidad real + back seguro en deep-links; barrido total = follow-up)
+7. ~~**QA-9** — Nav diferida saca del formulario.~~ ✅
+8. ~~**QA-10 + QA-11** — Tracking duplica puntos + Seguimiento N+1.~~ ✅
+9. ~~**QA-17** — Pickers de obra vacíos para compras/obra.~~ ✅ (RPC `proyectos_pickables`)
+10. ~~**QA-12 + QA-13** — Detalle "no encontramos" + receptor sin detalle de faltante.~~ ✅
 
 ---
 
@@ -276,4 +279,61 @@ Verificación: `npm run build` → **exit 0** en cada pasada (solo warnings pree
 
 ---
 
-*Fin del informe. Nada se hizo commit/push. Correcciones §4 en el working tree, build verde.*
+## 9. Estado final de cada hallazgo (2ª jornada, 10/08 — "arregla todo")
+
+Xaviel pidió resolver todo el backlog. Resumen: **35 corregidos**, **6 verificados como ya-correctos** (no eran bugs), **3 aceptados/diferidos por criterio**, **1 pendiente de decisión de producto**. Build **verde (exit 0)**. 3 migraciones aditivas aplicadas a prod (QA-5, QA-17, QA-13-items), todas retrocompatibles.
+
+| QA | Severidad | Estado | Nota |
+|----|-----------|--------|------|
+| QA-1 | crítico | ✅ corregido | split `tarea_app_*`/`cronograma_tarea_*` + handlers de retrocompat por `proyecto_id` |
+| QA-2 | crítico | ✅ corregido | aliases `--primary/--main/--color-text` en `:root` |
+| QA-3 | crítico | ✅ corregido | flecha atrás visible en Proyectos ×3 |
+| QA-4 | alto | ✅ corregido | 5 servicios al `provideAppInitializer` |
+| QA-5 | alto | ✅ corregido | migración prod (p_id idempotente) + cliente |
+| QA-6 | alto | ✅ corregido | pendientes/por-confirmar por `catalog.refresh` + invalidaciones |
+| QA-7 | alto | ✅ corregido | persiste foto+2 firmas en el desvío AI6 (⚠️ el canvas de firma se repinta en blanco al volver, pero el blob se conserva → no hay que re-firmar; repintar con `fromData` queda como pulido menor) |
+| QA-8 | alto | ✅ corregido | `NavGuardService.back` con profundidad real de stack |
+| QA-9 | alto | ✅ corregido | nav diferida solo si no quedó otro formulario abierto |
+| QA-10 | alto | ✅ corregido | `flush()` con guard de reentrada + trim por identidad |
+| QA-11 | alto | ✅ corregido | Seguimiento con debounce + `Promise.all` de breadcrumbs |
+| QA-12 | medio | ✅ corregido | detalle del conduce por id desde ambas fuentes cacheadas |
+| QA-13 | medio | ✅ corregido | cliente pasa `items`; migración prod añade `items` a `mis_entregas_por_confirmar`; `conduce_confirmar_receptor` ya aceptaba `p_items` |
+| QA-14 | medio | ✅ corregido | hub principal → conduce prellenado (ruta vieja intacta) |
+| QA-15 | medio | ✅ mayormente | back seguro aplicado a las páginas deep-link de cada stream; barrido a las ~80 páginas restantes = follow-up mecánico |
+| QA-16 | medio | ✅ corregido | auto-lock hace `flushAll()` antes de bloquear |
+| QA-17 | medio/alto | ✅ corregido | RPC `proyectos_pickables()` (prod) + 4 clientes reconectados |
+| QA-18 | medio | ✅ corregido | `borrador.clearAll()` en logout |
+| QA-19 | medio | ✅ corregido | badge de mensajes en vivo (realtime) |
+| QA-20 | medio | ✅ corregido | canal realtime por-suscriptor + filtro `conversacion_id` |
+| QA-21 | medio | ✅ corregido | `grid-auto-flow: dense` (2x1≈2x2 en 2 col documentado) |
+| QA-22 | medio | ✅ verificado | `set_module_order` ya respeta `plataforma.layout_app` — no era bug |
+| QA-23 | medio | ✅ corregido | clamps en multa/vehículo/cubicación/km/cierre (mant.-cierre `[ultimo]` = parcial, la pantalla no carga el vehículo) |
+| QA-24 | medio | ✅ corregido | labels/íconos para todos los tipos de op |
+| QA-25 | medio | ✅ corregido | backstop `esFlotaElevado` en combustible-log |
+| QA-26 | medio | ✅ verificado | RLS `es_prueba` es RESTRICTIVE (oculta test) — no era bug |
+| QA-27 | medio | ✅ corregido | perfil-conductor: effect solo re-firma docs si drenó un op de documento |
+| QA-28 | medio | ✅ verificado | `listar_mensajes`/`compras_de_proyecto` validan membresía — sin IDOR |
+| QA-29 | bajo | 🟡 aceptado | `/tecnologia` por URL a chofer: contenido no sensible; añadir `!esChofer` si se desea |
+| QA-30 | bajo | ✅ verificado | `notas`/`notificaciones` con RLS por owner |
+| QA-31 | bajo | ✅ verificado | `nivel_submodulo` = paridad intencional con el cliente |
+| QA-32 | bajo | ✅ corregido | `entregarConduce()` muerto removido (handler conservado) |
+| QA-33 | bajo | 🟢 aceptado | `requestNav` most-recent-wins es razonable; sin cambio |
+| QA-34 | bajo | ✅ corregido | breadcrumb: descarta puntos fuera de RD (detecta `[lng,lat]`) |
+| QA-35 | bajo | ✅ corregido | buffer GPS 100→2000 + warn al truncar |
+| QA-36 | bajo | ✅ corregido | escape del nombre en popups del mapa |
+| QA-37 | bajo | ✅ corregido | control de tamaño = `<button>` real (HTML válido/a11y) |
+| QA-38 | bajo | ✅ corregido | picker de usuario = `collapsible-select` con buscador |
+| QA-39 | bajo | ✅ corregido | targets táctiles ≥56/44px |
+| QA-40 | bajo | ✅ corregido | copy del diálogo de salida del conduce |
+| QA-41 | bajo | ✅ corregido | signature-pad conserva la firma al rotar (`toData`/`fromData`) |
+| QA-42 | bajo | 🟡 decisión | término "pre-uso": mantener o renombrar — decisión de Xaviel |
+| QA-43 | bajo | 🟢 diferido | idempotencia de `reportar_novedad_vehiculo`: aviso duplicado de bajo impacto; no amerita DDL en prod ahora |
+| QA-44 | bajo | 🟢 informativo | deep-link a `/home` sin destino = sin acción |
+
+**Migraciones aplicadas a prod (todas aditivas/retrocompatibles):** `sql/2026-08-10-qa5-traspaso-idempotente.sql`, `sql/2026-08-10-qa17-proyectos-pickables.sql`, `sql/2026-08-10-qa13-por-confirmar-items.sql`.
+
+**Follow-ups menores conscientes:** (a) QA-15 barrido de back a las páginas restantes; (b) QA-7 repintar el trazo de firma al rehidratar; (c) QA-23 pasar `[ultimo]` al km-input del cierre de mantenimiento; (d) QA-42 término "pre-uso"; (e) QA-29 guard opcional en `/tecnologia`.
+
+---
+
+*Fin del informe. Fixes en el working tree; 3 migraciones ya en prod (aditivas). Build verde (exit 0).*

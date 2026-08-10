@@ -62,6 +62,9 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private gPolylines = new Map<string, GAny>();
   private lPolylines = new Map<string, L.Polyline>();
   private readonly TRAZO_COLOR = '#2563eb';
+  // QA-11: debounce de recargas por realtime + memo del set de rutas activas.
+  private cargarTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastRutaIds = '';
 
   loading = signal(true);
   choferes = signal<ChoferSeguimiento[]>([]);
@@ -110,8 +113,18 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       this.initLeaflet();
     }
     void this.cargar();
-    // AF27 — realtime: al cambiar una posición, recarga (throttle simple por evento).
-    this.service.suscribir(() => void this.cargar());
+    // QA-11: realtime → recarga DEBOUNCED (trailing ~2.5s) para coalescer ráfagas
+    // de eventos de posición en vez de recargar todo por cada punto.
+    this.service.suscribir(() => this.cargarDebounced());
+  }
+
+  /** QA-11 — coalesce ráfagas de eventos realtime en una sola recarga. */
+  private cargarDebounced(): void {
+    if (this.cargarTimer) clearTimeout(this.cargarTimer);
+    this.cargarTimer = setTimeout(() => {
+      this.cargarTimer = null;
+      void this.cargar();
+    }, 2500);
   }
 
   private initLeaflet(): void {
@@ -130,6 +143,7 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.service.desuscribir();
+    if (this.cargarTimer) clearTimeout(this.cargarTimer); // QA-11
     for (const pl of this.lPolylines.values()) pl.remove();
     this.lPolylines.clear();
     this.map?.remove();
@@ -159,14 +173,23 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
 
   /** AJ14 — dibuja/actualiza la línea del recorrido del día de cada ruta activa. */
   private async pintarBreadcrumbs(): Promise<void> {
+    const rutas = this.rutasActivas();
+    // QA-11: si el conjunto de rutas activas no cambió desde el último render, no
+    // re-consultamos los breadcrumbs (los trazos ya dibujados se conservan).
+    const idsKey = rutas.map((r) => r.id).slice().sort().join(',');
+    if (idsKey === this.lastRutaIds) return;
+    this.lastRutaIds = idsKey;
+    // QA-11: fetches en PARALELO (antes: N+1 secuencial, uno por ruta activa).
+    const pares = await Promise.all(
+      rutas.map(async (r) => ({ id: r.id, coords: await this.service.rutaBreadcrumb(r.id) })),
+    );
     const vistos = new Set<string>();
-    for (const r of this.rutasActivas()) {
-      const coords = await this.service.rutaBreadcrumb(r.id);
+    for (const { id, coords } of pares) {
       if (coords.length < 2) continue;
-      vistos.add(r.id);
+      vistos.add(id);
       if (this.useGoogle && this.gmap) {
         const path = coords.map(([lat, lng]) => ({ lat, lng }));
-        const existing = this.gPolylines.get(r.id);
+        const existing = this.gPolylines.get(id);
         if (existing) existing.setPath(path);
         else {
           const pl = new this.g.Polyline({
@@ -176,13 +199,13 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
             strokeOpacity: 0.9,
             strokeWeight: 4,
           });
-          this.gPolylines.set(r.id, pl);
+          this.gPolylines.set(id, pl);
         }
       } else if (this.map) {
         const latlngs = coords.map(([lat, lng]) => [lat, lng] as L.LatLngTuple);
-        const existing = this.lPolylines.get(r.id);
+        const existing = this.lPolylines.get(id);
         if (existing) existing.setLatLngs(latlngs);
-        else this.lPolylines.set(r.id, L.polyline(latlngs, { color: this.TRAZO_COLOR, weight: 4, opacity: 0.9 }).addTo(this.map));
+        else this.lPolylines.set(id, L.polyline(latlngs, { color: this.TRAZO_COLOR, weight: 4, opacity: 0.9 }).addTo(this.map));
       }
     }
     // Quita trazos de rutas que ya no están activas.

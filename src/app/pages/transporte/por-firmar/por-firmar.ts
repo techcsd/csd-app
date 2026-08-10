@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DecimalPipe, Location } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { InventarioService, FirmaPendiente } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { SyncService } from '../../../core/sync/sync.service';
 
@@ -26,7 +27,7 @@ export class PorFirmarPage {
   private inventario = inject(InventarioService);
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
-  private location = inject(Location);
+  private navGuard = inject(NavGuardService);
   private sync = inject(SyncService);
 
   private sig = viewChild<SignaturePad>('pad');
@@ -97,6 +98,6 @@ export class PorFirmarPage {
   }
 
   back(): void {
-    this.location.back();
+    this.navGuard.back('/transporte/conduces-hub'); // QA-15 — back seguro
   }
 }

@@ -45,7 +45,9 @@ export class ComprasProyectoPage {
   private async cargarObras(): Promise<void> {
     this.loadingObras.set(true);
     try {
-      const ps = await this.proyectos.getProyectos();
+      // QA-17: usa el RPC de obras elegibles (incluye compras/obra, que la RLS
+      // directa de `proyectos` excluye) en vez del listado completo del módulo.
+      const ps = await this.proyectos.getProyectosPickables();
       this.obraOpts.set(ps.map((p) => ({ id: p.id, label: p.nombre })));
       // Preselecciona la obra activa del contexto si aplica.
       const activaId = this.ctx.obraActiva()?.id ?? null;

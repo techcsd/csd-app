@@ -296,6 +296,8 @@ export class VehiculoFormPage {
   }
 
   private build(): VehiculoEditable {
+    // QA-23 — ningún valor numérico puede ser negativo (clamp a >= 0).
+    const nn = (v: number | null | undefined): number | null => (v == null ? null : Math.max(0, v));
     return {
       placa: this.placa(),
       marca: this.marca(),
@@ -303,12 +305,12 @@ export class VehiculoFormPage {
       anio: this.anio() ?? new Date().getFullYear(),
       tipo: this.tipo(),
       estado: this.estado(),
-      kilometraje: this.kilometraje() ?? 0,
+      kilometraje: nn(this.kilometraje()) ?? 0,
       vencimientoMatricula: this.vencMatricula() || null,
       vencimientoSeguro: this.vencSeguro() || null,
-      kmUltimoMantenimiento: this.kmUltMant(),
-      intervaloMantenimientoKm: this.intervaloMant() ?? 5000,
-      rendimientoEsperadoKmGal: this.rendimientoEsperado(),
+      kmUltimoMantenimiento: nn(this.kmUltMant()),
+      intervaloMantenimientoKm: nn(this.intervaloMant()) ?? 5000,
+      rendimientoEsperadoKmGal: nn(this.rendimientoEsperado()),
       notas: this.notas() || null,
       vin: this.vin() || null,
       numeroMatricula: this.numeroMatricula() || null,

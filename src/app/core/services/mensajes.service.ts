@@ -1,5 +1,4 @@
 import { inject, Injectable } from '@angular/core';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { SyncService, throwSyncError } from '../sync/sync.service';
 
@@ -35,7 +34,6 @@ export interface Mensaje {
 export class MensajesService {
   private supabase = inject(SupabaseService);
   private sync = inject(SyncService);
-  private channel: RealtimeChannel | null = null;
   private registered = false;
 
   constructor() {
@@ -93,20 +91,28 @@ export class MensajesService {
     return data as string;
   }
 
-  /** Realtime: notifica en cada INSERT en sgc.mensajes (lista/hilo se recargan). */
-  suscribir(onChange: () => void): void {
-    this.desuscribir();
-    this.channel = this.supabase.client
-      .channel('mensajes-app')
-      .on('postgres_changes', { event: 'INSERT', schema: 'sgc', table: 'mensajes' }, () => onChange())
+  /**
+   * QA-20 — Realtime: notifica en cada INSERT en sgc.mensajes. Cada suscriptor
+   * (lista, hilo, home) obtiene su PROPIO canal → coexisten sin pisarse (antes un
+   * único canal compartido con `desuscribir()` global hacía que se robaran la
+   * suscripción). Devuelve la función para desuscribirse (llamar en ngOnDestroy).
+   * El hilo pasa `conversacionId` para filtrar server-side; lista/home escuchan
+   * todos los mensajes (cada uno con su propio canal).
+   */
+  suscribir(onChange: () => void, conversacionId?: string): () => void {
+    const filtro: { event: 'INSERT'; schema: string; table: string; filter?: string } = {
+      event: 'INSERT',
+      schema: 'sgc',
+      table: 'mensajes',
+    };
+    if (conversacionId) filtro.filter = `conversacion_id=eq.${conversacionId}`;
+    const channel = this.supabase.client
+      .channel(`mensajes-app-${crypto.randomUUID()}`)
+      .on('postgres_changes', filtro, () => onChange())
       .subscribe();
-  }
-
-  desuscribir(): void {
-    if (this.channel) {
-      void this.supabase.client.removeChannel(this.channel);
-      this.channel = null;
-    }
+    return () => {
+      void this.supabase.client.removeChannel(channel);
+    };
   }
 
   private registerHandler(): void {

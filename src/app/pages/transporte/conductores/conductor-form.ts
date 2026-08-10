@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
+import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select'; // QA-38
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -45,7 +46,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-conductor-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, ToggleSwitch, GenerarAcceso],
+  imports: [FormsModule, SelectList, CollapsibleSelect, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, ToggleSwitch, GenerarAcceso],
   templateUrl: './conductor-form.html',
   styleUrl: './conductor-form.scss',
 })

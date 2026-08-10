@@ -94,7 +94,18 @@ export class SeguimientoService {
   async rutaBreadcrumb(rutaId: string): Promise<[number, number][]> {
     const { data, error } = await this.supabase.client.rpc('ruta_breadcrumb_vivo', { p_ruta_id: rutaId });
     if (error) return [];
-    return ((data as [number, number][]) ?? []).filter((p) => Array.isArray(p) && p.length === 2);
+    const raw = ((data as [number, number][]) ?? []).filter((p) => Array.isArray(p) && p.length === 2);
+    // QA-34: descarta puntos fuera de RD (lat 17..20, lng -72..-68). Además detecta
+    // un [lng,lat] invertido (todos caerían fuera) sin tocar el happy path.
+    const dentro = raw.filter(
+      ([lat, lng]) => lat >= 17 && lat <= 20 && lng >= -72 && lng <= -68,
+    );
+    if (raw.length && !dentro.length) {
+      console.warn(
+        '[seguimiento] rutaBreadcrumb: todos los puntos fuera de RD (¿[lng,lat] invertido?), descartados.',
+      );
+    }
+    return dentro;
   }
 
   /** Suscribe el realtime de la última posición; llama a `onChange` en cada update. */

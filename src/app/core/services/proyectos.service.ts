@@ -15,6 +15,14 @@ export interface CompraProyecto {
 }
 
 const CAT_PROYECTOS = 'proyectos_full'; // distinto del 'proyectos' mínimo (pedir/pickers)
+const CAT_PICKABLES = 'proyectos_pickables'; // QA-17 — obras mínimas para pickers
+
+/** QA-17 — obra elegible para un picker (id/nombre). */
+export interface ProyectoPickable {
+  id: string;
+  nombre: string;
+  responsable_nombre: string | null;
+}
 const SELECT =
   'id, codigo, nombre, cliente, tipo, estado, fecha_inicio, fecha_fin_estimada, fecha_fin_real, ' +
   'ubicacion, localidad, descripcion, responsable:usuarios(nombre), ' +
@@ -44,6 +52,20 @@ export class ProyectosService {
       return (data as unknown as ProyectoApp[]) ?? [];
     });
     return (data ?? []).map(normalizar);
+  }
+
+  /**
+   * QA-17 — obras elegibles para pickers (p. ej. Compras de obra). Usa el RPC
+   * security-definer `proyectos_pickables`, que incluye a roles que la RLS directa
+   * de `proyectos` no admite (compras/bitácora/obra) y ya filtra `es_prueba`.
+   */
+  async getProyectosPickables(): Promise<ProyectoPickable[]> {
+    const data = await this.catalog.refresh<ProyectoPickable[]>(CAT_PICKABLES, async () => {
+      const { data, error } = await this.supabase.client.rpc('proyectos_pickables');
+      if (error) throw new Error(error.message);
+      return (data as ProyectoPickable[]) ?? [];
+    });
+    return data ?? [];
   }
 
   /** Detalle de un proyecto (sirve del cache del listado; refresca best-effort). */

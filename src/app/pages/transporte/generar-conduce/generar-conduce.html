@@ -199,10 +199,12 @@
     />
   }
 
+  <!-- QA-40 — el borrador NO se descarta al salir (confirmarSalir solo navega): la
+       copia refleja que se guarda y se puede continuar después. -->
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir sin guardar?"
-    message="Se perderá lo que llevas."
+    title="¿Salir del conduce?"
+    message="Se guarda como borrador; podrás continuar después."
     confirmLabel="Sí, salir"
     cancelLabel="Seguir aquí"
     tone="danger"

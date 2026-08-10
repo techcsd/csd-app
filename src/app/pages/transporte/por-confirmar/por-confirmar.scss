@@ -90,6 +90,40 @@
 .btn-cta.porconf__mt {
   width: 100%;
 }
+
+// QA-13 — detalle del faltante (cantidades recibidas por item).
+.porconf__sub {
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.porconf__items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.porconf__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.porconf__item-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.porconf__qty {
+  flex: 0 0 84px;
+  width: 84px;
+  text-align: right;
+}
+.porconf__item-unit {
+  flex: 0 0 auto;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
 .porconf__offline {
   margin-top: 10px;
   font-size: 13px;

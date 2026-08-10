@@ -78,7 +78,10 @@
 // AF6 — botón de eliminar (target ancho para dedos con guantes).
 .aviso__del {
   flex: 0 0 auto;
-  width: 52px;
+  // QA-39 — target táctil mínimo de 56px (dedos con guantes).
+  width: var(--touch-min);
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
   font-size: 20px;
   background: transparent;
   border-left: 1px solid var(--color-border);

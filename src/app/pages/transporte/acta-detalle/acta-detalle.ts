@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { DecimalPipe, Location } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { TraspasoService } from '../../../core/services/traspaso.service';
 import { AudioNotasService } from '../../../core/services/audio-notas.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
 
@@ -44,7 +45,7 @@ export class ActaDetallePage {
   private traspaso = inject(TraspasoService);
   private audio = inject(AudioNotasService);
   private route = inject(ActivatedRoute);
-  private location = inject(Location);
+  private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
 
   readonly fechaHora = formatFechaCortaHora;
@@ -127,6 +128,6 @@ export class ActaDetallePage {
   }
 
   back(): void {
-    this.location.back();
+    this.navGuard.back('/transporte/mis-actas'); // QA-15 — back seguro
   }
 }

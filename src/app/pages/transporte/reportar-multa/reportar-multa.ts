@@ -173,6 +173,16 @@ export class ReportarMultaPage {
     this.hydrated = true;
   }
 
+  // QA-23 — el monto no puede ser negativo (clamp a >= 0; vacío = null).
+  setMonto(v: number | null | string): void {
+    if (v === '' || v == null) {
+      this.monto.set(null);
+      return;
+    }
+    const n = Number(v);
+    this.monto.set(Number.isFinite(n) ? Math.max(0, n) : null);
+  }
+
   // ---- Motivo ----
   setMotivo(nombre: string): void {
     this.motivoSel.set(nombre);
@@ -248,7 +258,7 @@ export class ReportarMultaPage {
         conductorId: this.conductorId,
         vehiculoId: this.vehiculo()?.vehiculo_id ?? null,
         motivo,
-        monto: this.monto(),
+        monto: this.monto() != null ? Math.max(0, this.monto()!) : null, // QA-23 — nunca negativo
         estado: this.estado(),
         documento: this.documento() ? { blob: this.documento()!.blob, ext: this.documento()!.ext } : null,
       });

@@ -108,15 +108,18 @@ export class PerfilConductorPage {
 
   constructor() {
     void this.load();
-    // P3 — al drenar el outbox (o cualquier cambio), refrescar docs + cola: el
-    // "Subiendo…" desaparece y aparece el documento ya cargado del servidor.
+    // P3/QA-27 — al drenar el outbox refrescamos SIEMPRE la cola (barato, mueve
+    // el badge "Subiendo…"), pero re-firmar las URLs de los documentos solo
+    // cuando un documento de ESTE conductor realmente se subió (la cola bajó).
+    // Antes se re-firmaban en cada tick de sync (incluso por ops ajenas) y los
+    // docs se cargaban ~doble al inicio.
     effect(() => {
       this.sync.changed();
       const id = this.condId();
-      if (id) {
-        void this.loadEnCola(id);
-        void this.loadDocs(id);
-      }
+      if (!id) return;
+      void this.loadEnCola(id).then((drenoDoc) => {
+        if (drenoDoc) void this.loadDocs(id);
+      });
     });
   }
 
@@ -171,12 +174,22 @@ export class PerfilConductorPage {
     await this.loadPeriodo();
   }
 
-  private async loadEnCola(id: string): Promise<void> {
-    if (!id) return;
+  // QA-27 — nº de docs en cola en el tick anterior, para detectar cuándo drena
+  // (la cola baja) y solo entonces recargar/re-firmar los documentos.
+  private prevEnColaCount = 0;
+
+  /** @returns true si la cola de docs de este conductor BAJÓ (un doc drenó). */
+  private async loadEnCola(id: string): Promise<boolean> {
+    if (!id) return false;
     try {
-      this.enColaTipos.set(await this.documentos.tiposEnCola('conductor', id));
+      const tipos = await this.documentos.tiposEnCola('conductor', id);
+      const dreno = tipos.length < this.prevEnColaCount;
+      this.prevEnColaCount = tipos.length;
+      this.enColaTipos.set(tipos);
+      return dreno;
     } catch {
       /* la cola es secundaria; el perfil se ve igual sin ella */
+      return false;
     }
   }
 

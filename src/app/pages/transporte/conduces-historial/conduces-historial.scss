@@ -64,7 +64,11 @@
 }
 
 .hist-chip {
-  padding: 7px 12px;
+  // QA-39 — chip tappable con altura mínima cómoda (antes 7px 12px, muy bajo).
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 14px;
   border: 1px solid #d4d4d4;
   border-radius: 999px;
   background: #fff;

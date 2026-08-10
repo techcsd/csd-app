@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConducesService, ConducePendienteEntrega } from '../../../core/services/conduces.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
 
@@ -25,7 +25,7 @@ export class ConducesPendientesPage {
   private conduces = inject(ConducesService);
   private toast = inject(ToastService);
   private router = inject(Router);
-  private location = inject(Location);
+  private navGuard = inject(NavGuardService);
 
   fmtFecha = formatFecha;
 
@@ -88,6 +88,6 @@ export class ConducesPendientesPage {
   }
 
   back(): void {
-    this.location.back();
+    this.navGuard.back('/transporte/conduces-hub'); // QA-15 — back seguro
   }
 }

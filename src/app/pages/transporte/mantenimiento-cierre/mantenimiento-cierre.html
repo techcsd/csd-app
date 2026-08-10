@@ -6,6 +6,9 @@
   </header>
 
   <div class="screen__body mant-cierre__body">
+    <!-- QA-23: el guard de regresión de km-input requiere [ultimo] (odómetro
+         actual del vehículo); esta pantalla no carga el vehículo, así que no hay
+         último km que pasar. Si en el futuro se carga, pasar [ultimo]="odometro". -->
     <app-km-input label="Kilometraje al cerrar — opcional" sufijo="km" [(value)]="km" />
 
     <label class="mant-cierre__field">

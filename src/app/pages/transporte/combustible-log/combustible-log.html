@@ -6,6 +6,14 @@
   </header>
 
   <div class="screen__body">
+    @if (!autorizado()) {
+      <!-- QA-25 — backstop de rol en cliente (además del RPC gateado) -->
+      <app-empty-state
+        icon="🔒"
+        title="Solo para jefe de flota"
+        message="El registro de echadas está disponible para jefe de flota, administración y tecnología."
+      />
+    } @else {
     <!-- Filtros: rango de fecha + búsqueda -->
     <div class="clog__filtros">
       <label class="clog__field">
@@ -64,6 +72,7 @@
           message="No hay registros de combustible para las fechas seleccionadas."
         />
       }
+    }
     }
   </div>
 </div>

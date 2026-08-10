@@ -172,10 +172,10 @@ export class BitacoraService {
 
   async getProyectos(): Promise<Proyecto[]> {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
-      const { data, error } = await this.supabase.client
-        .from('proyectos')
-        .select('id, nombre, responsable_nombre')
-        .order('nombre');
+      // QA-17: el SELECT directo sobre `proyectos` devolvía [] a usuarios de bitácora
+      // sin vínculo de empleado (la RLS no admite ese módulo). Vía RPC security-definer
+      // que devuelve id/nombre/responsable_nombre para los roles que arman partes.
+      const { data, error } = await this.supabase.client.rpc('proyectos_pickables');
       if (error) throw new Error(error.message);
       return (data as Proyecto[]) ?? [];
     });

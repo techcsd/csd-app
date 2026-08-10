@@ -32,10 +32,9 @@ export class SolicitudesService {
 
   async getProyectos(): Promise<Proyecto[]> {
     const data = await this.catalog.refresh<Proyecto[]>(CAT_PROYECTOS, async () => {
-      const { data, error } = await this.supabase.client
-        .from('proyectos')
-        .select('id, nombre')
-        .order('nombre');
+      // QA-17: el SELECT directo sobre `proyectos` devolvía [] a usuarios de compras
+      // (la RLS no admite ese módulo). Vía RPC security-definer que sí los incluye.
+      const { data, error } = await this.supabase.client.rpc('proyectos_pickables');
       if (error) throw new Error(error.message);
       return (data as Proyecto[]) ?? [];
     });

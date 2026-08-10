@@ -4,6 +4,7 @@ import { DecimalPipe, Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CombustibleService } from '../../../core/services/combustible.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EchadaLog } from '../../../core/models/combustible.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
@@ -24,11 +25,15 @@ import { formatFechaMedia } from '../../../core/util/fecha';
 })
 export class CombustibleLogPage {
   private combustible = inject(CombustibleService);
+  private ctx = inject(UserContextService);
   private toast = inject(ToastService);
   private location = inject(Location);
 
   readonly fechaMedia = formatFechaMedia;
 
+  // QA-25 — backstop de rol en cliente (además del RPC gateado): solo roles
+  // elevados de flota ven el registro de echadas (mismo criterio que Seguimiento).
+  autorizado = signal(true);
   loading = signal(true);
   rows = signal<EchadaLog[]>([]);
   q = signal('');
@@ -50,10 +55,16 @@ export class CombustibleLogPage {
   sospechosas = computed(() => this.rows().filter((r) => r.km_alerta || r.alerta_consumo).length);
 
   constructor() {
+    if (!this.ctx.esFlotaElevado()) {
+      this.autorizado.set(false);
+      this.loading.set(false);
+      return;
+    }
     void this.load();
   }
 
   async load(): Promise<void> {
+    if (!this.autorizado()) return;
     this.loading.set(true);
     try {
       const list = await this.combustible.getLogEchadas({ desde: this.desde(), hasta: this.hasta() });

@@ -4,6 +4,7 @@ import { PinService } from './pin.service';
 import { WebauthnService } from './webauthn.service';
 import { UserContextService } from './user-context.service';
 import { PushService } from './push.service';
+import { BorradorService } from './borrador.service';
 
 /**
  * Coordinates the boot flow: session → PIN → profile. `unlocked` lives in
@@ -17,6 +18,7 @@ export class SessionService {
   private webauthn = inject(WebauthnService);
   private ctx = inject(UserContextService);
   private push = inject(PushService);
+  private borradores = inject(BorradorService);
 
   private _unlocked = signal(false);
   unlocked = this._unlocked.asReadonly();
@@ -66,6 +68,10 @@ export class SessionService {
     // el próximo usuario la vuelve a registrar. La nativa (BiometricService) es
     // solo un flag y el diálogo del SO confirma al dueño real del teléfono.
     await this.webauthn.clear();
+    // QA-18 — en un teléfono compartido varias claves de borrador no están
+    // scopeadas por usuario; al cerrar sesión se limpian TODOS para que el
+    // próximo usuario no vea/reanude lo que llenó el anterior. Best-effort.
+    await this.borradores.clearAll();
     this.ctx.clear();
     this._unlocked.set(false);
     this.autoEntered = false;

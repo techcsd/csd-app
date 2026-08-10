@@ -327,9 +327,12 @@ export class TransportePage {
   sacarMaterial(): void {
     void this.router.navigate(['/transporte/generar-conduce']);
   }
-  /** AE — devolver material de una obra a un almacén (doble firma). */
+  /** AE — devolver material: es un conduce con destino suplidor. QA-14 — usa la MISMA
+   *  ruta pre-llenada que conduces-hub (antes iba a /devolver-material, otro backend). */
   devolverMaterial(): void {
-    void this.router.navigate(['/transporte/devolver-material']);
+    void this.router.navigate(['/transporte/generar-conduce'], {
+      queryParams: { origen: 'almacen', destino: 'suplidor' },
+    });
   }
   /** AE — bandeja "Por firmar" (firmas de recepción pendientes). */
   porFirmar(): void {

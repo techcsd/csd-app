@@ -63,7 +63,7 @@
               <input class="field" type="number" min="0" [ngModel]="cubMonto()" (ngModelChange)="cubMonto.set(+$event)" />
             </label>
             <label class="field-label">Avance %
-              <input class="field" type="number" min="0" max="100" [ngModel]="cubAvance()" (ngModelChange)="cubAvance.set(+$event)" />
+              <input class="field" type="number" min="0" max="100" inputmode="numeric" [ngModel]="cubAvance()" (ngModelChange)="setCubAvance(+$event)" />
             </label>
           </div>
           <label class="field-label sub__mt">Soportes (fotos)</label>

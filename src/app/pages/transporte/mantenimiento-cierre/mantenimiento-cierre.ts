@@ -66,11 +66,13 @@ export class MantenimientoCierrePage {
     try {
       const fotosMap = this.fotos();
       const fotos = this.slots.map((i) => fotosMap[i]?.blob).filter((b): b is Blob => !!b);
+      // QA-23 — el costo no puede ser negativo (clamp a >= 0; vacío = null).
+      const costo = this.costo() != null ? Math.max(0, this.costo()!) : null;
       await this.mantenimientos.enqueueCierre({
         id: this.mantenimientoId,
         vehiculoId: this.vehiculoId,
         km: this.km(),
-        costo: this.costo(),
+        costo,
         proveedor: this.proveedor().trim() || null,
         notas: this.notas().trim() || null,
         fotos,
