@@ -1,6 +1,13 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 08/08 — PROMPT-14 ronda AJ (app) — Terminar Transporte v3 + nav + tracking + mensajería — **6 FASES, RELEASE 1.68.0 PUBLICADO (rolling)**
+## 🟢 SESIÓN 10/08 — PROMPT-15 AJ15 (auditoría QA completa) — **RELEASE 1.69.0 PUBLICADO (rolling)**
+Auditoría a nivel de código de toda la app (108 páginas) con 6 auditores paralelos → **`INFORME-AUDITORIA-APP.md`** (44 hallazgos QA-1..QA-44, priorizados, con evidencia `archivo:línea` y estado final en §9). **Se resolvió todo el backlog** a pedido de Xaviel: ~35 corregidos, 6 verificados como ya-correctos en backend (no eran bugs), 3 aceptados/diferidos, 1 pendiente de decisión de producto (QA-42 término "pre-uso"). `npm run build` **VERDE**. Commits: **`c9b40ea`** (TOP-3 + informe + UI), **`9e10db0`** (backlog QA-6..44), **`9395a21`** (bump 1.69.0). **Push a `main` hecho → PWA desplegado por Vercel. APK 1.69.0** firmado (cert prod `3c5316d8…5065`), registrado (Y1) y subido al bucket. **`publicada=true` para 1.69.0** (1.68.0→false) → **`version_publicada()` = 1.69.0**, `minima` = 1.42.0 (nadie bloqueado).
+- **3 migraciones aditivas/retrocompatibles aplicadas a prod:** `sql/2026-08-10-qa5-traspaso-idempotente.sql` (p_id idempotente), `sql/2026-08-10-qa17-proyectos-pickables.sql` (picker de obras para compras/bitácora), `sql/2026-08-10-qa13-por-confirmar-items.sql` (items[] en la bandeja del receptor). No rompen la web (callers viejos pasan NULL / ignoran la columna nueva).
+- **Fixes destacados:** colisión de handlers de outbox `tarea_*` (crítico), 5 servicios fuera del bootstrap (offline atascado, S30), traspaso no idempotente, conduce invisible offline, desvío de vehículo que borraba foto+firmas, back que moría/cerraba la app en deep-links, tracking que duplicaba puntos, pickers de obra vacíos, tokens CSS invisibles.
+- **Rollback:** `update sgc.app_versiones set publicada=(version='1.68.0') where plataforma='movil';` + `git revert 9395a21 9e10db0 c9b40ea && git push`. Las migraciones son aditivas (no requieren rollback; si se quisiera, revertir cada función a su definición previa).
+- **PENDIENTE (Xaviel):** decisión QA-42 (término "pre-uso"); device-QA con dos teléfonos; follow-ups menores en §9 del informe (barrido de `navGuard.back` a las ~80 páginas restantes, repintar trazo de firma al rehidratar, `[ultimo]` en cierre de mantenimiento).
+
+## SESIÓN 08/08 — PROMPT-14 ronda AJ (app) — Terminar Transporte v3 + nav + tracking + mensajería — **6 FASES, RELEASE 1.68.0 PUBLICADO (rolling)**
 **Depende de PROMPT-13 (SGC `0f7a511`, 6 migraciones `sql/2026-08-08-aj*` en prod).** `npm run build` **VERDE (exit 0)**. **SHIPPED:** commit **`80cbcfa`** → push `main` → **PWA desplegado por Vercel**. **APK 1.68.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, changelog estructurado por módulo `{t,d,m}`) + subido al bucket (`csd-app-1.68.0.apk` + `latest` + `version.json`, `apk_url` seteado). **`publicada=true` para 1.68.0** (1.67.0 → false) → **`version_publicada()` = 1.68.0**, `minima` = 1.42.0 (nadie bloqueado; todos los ≥1.42.0 reciben el aviso de actualizar). **Rollback:** `update sgc.app_versiones set publicada=(version='1.67.0') where plataforma='movil';` + `git revert 80cbcfa && git push` para el PWA. **Único pendiente = device-QA con DOS teléfonos** (chofer + receptor, uno Xiaomi) — físico, tuyo; ya está en manos de usuarios.
 
 ### FASE 1 — Navegación + pantalla de actualización (AJ2/AJ7/AJ3/AJ1) ✅
@@ -48,7 +55,7 @@
 ---
 
 ## Estado operativo (NOW)
-- **Release actual: 1.68.0 PUBLICADA (rolling).** `version_publicada()` = 1.68.0 · `minima` = 1.42.0 (nadie bloqueado). PWA en `main` (Vercel) + APK en el bucket `app-releases`. Último commit: `80cbcfa`.
+- **Release actual: 1.69.0 PUBLICADA (rolling).** `version_publicada()` = 1.69.0 · `minima` = 1.42.0 (nadie bloqueado). PWA en `main` (Vercel, push hecho) + APK 1.69.0 en el bucket `app-releases`. Último commit: `9395a21`.
 - **Publicar una versión a usuarios (flip rolling):** `update sgc.app_versiones set publicada=true where plataforma='movil' and version='X'; update sgc.app_versiones set publicada=false where plataforma='movil' and version='<anterior>';`. Registrar en el historial (Y1) NO publica — publicar es un paso aparte.
 - **Rollback de release:** flip `publicada` a la versión anterior + `git revert <commit> && git push` para el PWA.
 - **Cert de firma del APK (prod):** SHA-256 `3c5316d8…5065` (mismo desde 1.18.0; no cambiarlo o rompe las actualizaciones).
@@ -73,7 +80,8 @@
 Viven en la **memoria del proyecto** (`.claude/.../memory/MEMORY.md`) — no los dupliques aquí. Los más caros: WebView <111 = pantalla en blanco; permiso de ubicación DENEGADO ≠ bug de GPS; `usuarios`/`proyectos` con RLS restrictiva → usar RPC security-definer; buckets con `upsert` necesitan política UPDATE; el conductor "TEST Conductor Prueba" está ligado a la cuenta admin (no usarlo como chofer de prueba aislado); PWA iOS no puede consultar permisos de cámara (persistir flag). Contratos server-side vigentes: PROMPT-13 (AJ) en prod (SGC `0f7a511`).
 
 ## Historial de releases (una línea; el changelog completo está en `sgc.app_versiones` y en git)
-- **1.68.0** (08/08) PROMPT-14 AJ — conduce por hojas, receptor confirma en su teléfono, mensajería, launcher con tamaños, nav estable, trazado en vivo. *(detalle arriba)*
+- **1.69.0** (10/08) PROMPT-15 AJ15 — auditoría QA completa (`INFORME-AUDITORIA-APP.md`) + backlog resuelto: conduce offline, nav estable (deep-links), receptor registra faltante, tracking sin duplicar puntos, pickers de obra, tokens CSS invisibles, traspaso idempotente. 3 migraciones aditivas en prod. *(detalle arriba)*
+- **1.68.0** (08/08) PROMPT-14 AJ — conduce por hojas, receptor confirma en su teléfono, mensajería, launcher con tamaños, nav estable, trazado en vivo.
 - **1.67.0** (07/08) PROMPT-12 AI — Transporte v3: menú 3-col, conduce simplificado (foto+despachante+2 firmas), Uso de vehículo, Aviso de vehículo, Mi actividad por periodo; fix del bucle "actualizar" en PWA; obras/almacenes como dropdown.
 - **1.66.0** (07/08) PROMPT-10 AH — conduces (2 firmas al emitir, transferencia entre choferes, evidencia obligatoria), paradas completables con GPS, dropdowns AH10, RRHH (empleados+asignaciones AF33), Compras de obra.
 - **1.65.0** (06/08) PROMPT-8 AG16 "Mi obra" — plan del día+charla, NC/incidentes, checklists, recursos/pedidos, subcontratistas, avance, logística, informe semanal (PDF+email).
@@ -86,6 +94,6 @@ Viven en la **memoria del proyecto** (`.claude/.../memory/MEMORY.md`) — no los
 - **1.0.0–1.16.0** (07–18/07) — M1 foundations (auth+PIN, outbox offline, design system, PWA) → primeras rondas (bitácora, inventario, conduces, login conductor, fix crash de foto Android).
 
 ## Verify on resume
-- `git log --oneline -3` (último = `80cbcfa`, PROMPT-14 AJ 1.68.0).
+- `git log --oneline -4` (último = `9395a21`, bump 1.69.0; antes `9e10db0`/`c9b40ea` PROMPT-15).
 - `npm run build` → exit 0.
-- `select sgc.version_publicada();` → publicada 1.68.0 / minima 1.42.0.
+- `select sgc.version_publicada();` → publicada 1.69.0 / minima 1.42.0.
