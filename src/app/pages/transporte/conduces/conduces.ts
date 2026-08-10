@@ -148,8 +148,8 @@ export class ConducesPage implements OnDestroy {
     // AG11 — si el chofer reabrió la app a mitad de una ruta activa, reanuda el
     // tracking (el watcher vive en memoria y no sobrevive a que el SO mate el proceso).
     if (rutaActiva) {
-      const veh = this.rutas().find((r) => r.estado === 'en_curso')?.vehiculo_id ?? null;
-      this.tracking.resumirSiRutaActiva(veh);
+      const enCurso = this.rutas().find((r) => r.estado === 'en_curso');
+      this.tracking.resumirSiRutaActiva(enCurso?.vehiculo_id ?? null, enCurso?.id ?? null);
     }
   }
 
@@ -486,7 +486,7 @@ export class ConducesPage implements OnDestroy {
     if (estado === 'en_curso') {
       // AG11 — etiqueta la posición con el vehículo real (antes iba siempre null).
       const veh = this.rutas().find((r) => r.id === rutaId)?.vehiculo_id ?? null;
-      void this.tracking.iniciarTracking(veh);
+      void this.tracking.iniciarTracking(veh, rutaId);
     } else {
       void this.tracking.detenerTracking();
     }

@@ -20,6 +20,8 @@ interface PosBuffer {
   bateria: number | null;
   capturado_en: string;
   vehiculo_id: string | null;
+  /** AJ14 — ruta activa que originó el punto (para consolidar el trayecto). */
+  ruta_id: string | null;
 }
 
 const BUFFER_KEY = 'tracking_buffer';
@@ -67,6 +69,7 @@ export class TrackingService {
   private flushTimer: ReturnType<typeof setInterval> | null = null;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
   private vehiculoActual: string | null = null;
+  private rutaActual: string | null = null; // AJ14 — ruta activa a taggear en cada punto
   private ultimaFlushOk = Date.now();
   /** true mientras un re-arranque del watchdog está en curso (evita solaparlos). */
   private rearmando = false;
@@ -143,8 +146,10 @@ export class TrackingService {
 
   /** Arranca el reporte de posición (mientras haya una ruta activa). En nativo usa
    *  el foreground service (sigue en segundo plano); en web, watchPosition. */
-  async iniciarTracking(vehiculoId?: string | null): Promise<void> {
+  async iniciarTracking(vehiculoId?: string | null, rutaId?: string | null): Promise<void> {
     this.vehiculoActual = vehiculoId ?? null;
+    // AJ14 — conserva la ruta previa cuando el re-armado del watchdog no la reenvía.
+    if (rutaId !== undefined) this.rutaActual = rutaId;
     if (this.rastreando()) return;
     try {
       if (Capacitor.isNativePlatform()) {
@@ -210,13 +215,14 @@ export class TrackingService {
    * AG11 — reanuda el tracking si hay una ruta activa y no está corriendo (p. ej.
    * la app se reabrió a mitad de ruta o el SO mató el proceso). Idempotente.
    */
-  resumirSiRutaActiva(vehiculoId?: string | null): void {
+  resumirSiRutaActiva(vehiculoId?: string | null, rutaId?: string | null): void {
     if (this.rastreando()) {
-      // Ya corre: solo refresca el vehículo si llegó uno mejor.
+      // Ya corre: solo refresca el vehículo/ruta si llegó uno mejor.
       if (vehiculoId && !this.vehiculoActual) this.vehiculoActual = vehiculoId;
+      if (rutaId && !this.rutaActual) this.rutaActual = rutaId;
       return;
     }
-    void this.iniciarTracking(vehiculoId ?? null);
+    void this.iniciarTracking(vehiculoId ?? null, rutaId ?? null);
   }
 
   /** Detiene el tracking (al completar/cancelar la ruta) y drena lo pendiente. */
@@ -246,6 +252,7 @@ export class TrackingService {
       this.watchdogTimer = null;
     }
     this.rastreando.set(false);
+    this.rutaActual = null; // AJ14 — la ruta terminó
     await this.flush();
   }
 
@@ -257,6 +264,7 @@ export class TrackingService {
       bateria: await this.bateria(),
       capturado_en: new Date().toISOString(),
       vehiculo_id: this.vehiculoActual,
+      ruta_id: this.rutaActual,
     });
     this.ultimoFix.set(Date.now());
     await this.persistBuffer();
@@ -276,6 +284,7 @@ export class TrackingService {
           bateria: p.bateria,
           capturado_en: p.capturado_en,
           vehiculo_id: p.vehiculo_id,
+          ruta_id: p.ruta_id ?? null,
         })),
       });
       if (error) {

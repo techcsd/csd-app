@@ -198,9 +198,9 @@ export class ChecklistsPage implements OnDestroy {
     void this.router.navigate(['/obra/nc', this.proyectoId]);
   }
   cerrar(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
   back(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

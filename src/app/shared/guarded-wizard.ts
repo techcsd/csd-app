@@ -38,9 +38,11 @@ export abstract class GuardedWizard implements OnDestroy {
     this.navGuard.register(this.backHandler);
   }
 
-  /** Salida real. El subcomponente puede sobrescribir (p. ej. router). */
+  /** Salida real. El subcomponente puede sobrescribir (p. ej. router).
+   *  Usa el back seguro (AJ2): POP del histórico, con fallback a /home si esta fue
+   *  la primera pantalla (deep-link/arranque en frío) para no salir de la app. */
   protected salir(): void {
-    this.location.back();
+    this.navGuard.back();
   }
 
   intentarSalir(): void {

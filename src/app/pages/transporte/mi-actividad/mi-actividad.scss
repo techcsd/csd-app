@@ -260,3 +260,49 @@
   width: 100%;
   margin: 4px 0 12px;
 }
+
+// AJ11 — ficha de perfil propio del conductor (solo lectura), en cuadrículas 2xN
+.mact__perfil-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.mact__perfil-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.mact__perfil-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+.mact__perfil-cell--wide {
+  grid-column: 1 / -1;
+}
+.mact__perfil-k {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.mact__perfil-v {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+.mact__perfil-nota {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

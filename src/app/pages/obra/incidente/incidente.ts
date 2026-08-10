@@ -146,7 +146,7 @@ export class IncidentePage implements OnDestroy {
   }
   salir(): void {
     this.confirmSalir.set(false);
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 
   async guardar(): Promise<void> {
@@ -175,6 +175,6 @@ export class IncidentePage implements OnDestroy {
   }
 
   cerrar(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

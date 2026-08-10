@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { ObraService } from '../../../core/services/obra.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 
 interface Informe {
   id: string;
@@ -48,6 +49,7 @@ export class InformePage {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private location = inject(Location);
+  private navGuard = inject(NavGuardService);
 
   proyectoId = '';
   loading = signal(true);
@@ -183,6 +185,6 @@ export class InformePage {
   }
 
   back(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

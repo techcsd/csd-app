@@ -8,6 +8,7 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { Subcontratista, Frente } from '../../../core/models/obra.model';
 
 const MAX_SOPORTES = 3;
@@ -27,6 +28,7 @@ export class SubcontratistasPage {
   private obra = inject(ObraService);
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
+  private navGuard = inject(NavGuardService);
 
   readonly slots = Array.from({ length: MAX_SOPORTES }, (_, i) => i);
   readonly hoy = new Date().toISOString().slice(0, 10);
@@ -131,6 +133,6 @@ export class SubcontratistasPage {
   }
 
   back(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
+import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
@@ -30,6 +31,9 @@ import { MiAsignacion, VehiculoDisponible } from '../../../core/models/transport
 
 /** AF31 — de dónde sale el material del conduce. */
 type OrigenTipo = 'almacen' | 'ferreteria' | 'otros';
+
+/** AJ6 — hojas del wizard de creación de conduce. */
+type PasoKey = 'origen' | 'destino' | 'materiales' | 'ferr-fotos' | 'foto' | 'despacho' | 'resumen';
 
 /** AE9 — slice del conduce persistido para retomar el borrador (sin fotos/firmas). */
 interface ConduceDraft {
@@ -60,7 +64,7 @@ interface ConduceDraft {
   selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner],
   templateUrl: './generar-conduce.html',
   styleUrl: './generar-conduce.scss',
 })
@@ -88,6 +92,9 @@ export class GenerarConducePage implements OnDestroy {
 
   /** AG15 — id de la tarea que originó este conduce (se enlaza al emitir). */
   private tareaVinculada: string | null = null;
+
+  /** AJ6 — contexto con el que se cargaron los despachantes (evita recargas). */
+  private despachantesKey = '';
 
   // AI2 — dos firmas al emitir: chofer (transportista) + despachante (emisor).
   private sigChofer = viewChild<SignaturePad>('choferPad');
@@ -179,6 +186,24 @@ export class GenerarConducePage implements OnDestroy {
   esFerreteria = computed(() => this.origenTipo() === 'ferreteria');
   esOtros = computed(() => this.origenTipo() === 'otros');
 
+  // AJ6 — etiquetas legibles para la hoja de resumen.
+  origenNombre = computed(() => {
+    if (this.esFerreteria()) return this.ferreterias().find((f) => f.id === this.ferreteriaId())?.nombre ?? '';
+    if (this.esOtros()) return this.otrosNombre().trim();
+    return this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? '';
+  });
+  destinoNombre = computed(() => {
+    if (this.esFerreteria()) return this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? '';
+    return this.destinoTipo() === 'obra'
+      ? (this.obras().find((o) => o.id === this.obraId())?.nombre ?? '')
+      : this.suplidorNombre().trim();
+  });
+  vehiculoNombre = computed(() => {
+    const v = this.todosVehiculos().find((x) => x.vehiculo_id === this.vehiculoId());
+    return v ? `${v.placa} · ${v.marca} ${v.modelo}` : '';
+  });
+  itemsCount = computed(() => this.cart().filter((l) => l.cantidad > 0).length);
+
   /** AI2 — firmas requeridas al emitir: chofer + despachante. */
   private firmasOk = computed(() => !!(this.firmaChofer() && this.firmaDespachante()));
 
@@ -193,13 +218,88 @@ export class GenerarConducePage implements OnDestroy {
     return !!(this.bodegaId() && !this.faltaItems() && comun);
   });
 
-  /** Etiqueta del botón según el modo (compra vs conduce). */
+  /** Etiqueta del botón EMITIR según el modo (compra vs conduce). */
   primaryLabel = computed(() =>
     this.submitting() ? 'Guardando…' : this.esFerreteria() ? 'Registrar compra' : 'Generar conduce',
   );
 
+  // ══════════ AJ6 — wizard por hojas (una pregunta por pantalla) ══════════
+  paso = signal(0);
+
+  /** Hojas del wizard según el tipo de origen (patrón bitácora). */
+  pasos = computed<{ key: PasoKey; titulo: string }[]>(() => {
+    if (this.esFerreteria()) {
+      return [
+        { key: 'origen', titulo: 'Compra en ferretería' },
+        { key: 'materiales', titulo: '¿Qué compraste?' },
+        { key: 'ferr-fotos', titulo: 'Fotos' },
+        { key: 'resumen', titulo: 'Revisar y registrar' },
+      ];
+    }
+    const p: { key: PasoKey; titulo: string }[] = [
+      { key: 'origen', titulo: '¿De dónde sale?' },
+      { key: 'destino', titulo: '¿A dónde va?' },
+    ];
+    if (!this.esOtros()) p.push({ key: 'materiales', titulo: '¿Qué material sacas?' });
+    p.push({ key: 'foto', titulo: 'Foto de recepción' });
+    p.push({ key: 'despacho', titulo: 'Despachante y firmas' });
+    p.push({ key: 'resumen', titulo: 'Revisar y emitir' });
+    return p;
+  });
+
+  pasoActual = computed(() => this.pasos()[Math.min(this.paso(), this.pasos().length - 1)]);
+  esUltimo = computed(() => this.paso() >= this.pasos().length - 1);
+
+  /** Validación de la hoja actual: habilita "Siguiente" / "Emitir". */
+  pasoValido = computed(() => {
+    switch (this.pasoActual()?.key) {
+      case 'origen':
+        if (this.esFerreteria()) return !!(this.ferreteriaId() && this.bodegaId());
+        if (this.esOtros()) return !!this.otrosNombre().trim();
+        return !!this.bodegaId();
+      case 'destino':
+        return this.destinoTipo() === 'obra' ? !!this.obraId() : !!this.suplidorNombre().trim();
+      case 'materiales':
+        if (this.esFerreteria()) return true; // opcional en compra
+        return !this.faltaItems() && !this.hayExceso();
+      case 'ferr-fotos':
+        return !!this.fotoRecibo();
+      case 'foto':
+        return !!this.fotoRecepcion();
+      case 'despacho':
+        return this.despachanteOk() && this.firmasOk();
+      case 'resumen':
+        return this.puedeEmitir();
+      default:
+        return false;
+    }
+  });
+
+  /** Etiqueta del botón primario del footer (avanzar u emitir). */
+  primaryBtn = computed(() => (this.esUltimo() ? this.primaryLabel() : 'Siguiente'));
+
+  siguiente(): void {
+    if (!this.pasoValido() || this.submitting()) return;
+    if (this.esUltimo()) return void this.submit();
+    this.paso.update((p) => Math.min(p + 1, this.pasos().length - 1));
+  }
+
+  atras(): void {
+    if (this.paso() === 0) return this.intentarSalir();
+    this.paso.update((p) => p - 1);
+  }
+
   private readonly backHandler = (): boolean => {
-    if (this.hoja() === 'form' && this.tieneDatos()) {
+    if (this.hoja() !== 'form') return false;
+    if (this.confirmSalir()) {
+      this.confirmSalir.set(false); // back cierra el diálogo de salida
+      return true;
+    }
+    if (this.paso() > 0) {
+      this.paso.update((p) => p - 1); // back = hoja anterior
+      return true;
+    }
+    if (this.tieneDatos()) {
       this.confirmSalir.set(true);
       return true;
     }
@@ -213,6 +313,18 @@ export class GenerarConducePage implements OnDestroy {
     effect(() => {
       const b = this.bodegaId();
       if (b && this.origenTipo() === 'almacen') void this.loadExistencias(b);
+    });
+    // AJ6 — al fijar origen/destino, recarga los despachantes con contexto para que
+    // los vinculados a esa obra/almacén salgan primero (server-side).
+    effect(() => {
+      if (this.esFerreteria()) return;
+      const key = `${this.bodegaId()}|${this.obraId()}`;
+      if (key === this.despachantesKey || !(this.bodegaId() || this.obraId())) return;
+      this.despachantesKey = key;
+      void this.conduces
+        .despachantesDisponibles(this.bodegaId() || null, this.obraId() || null)
+        .then((d) => this.despachantes.set(d))
+        .catch(() => {});
     });
     // AE9 — autosave del borrador (sin fotos/firmas): al cambiar cualquier campo.
     effect(() => this.autosaveEffect());
@@ -365,6 +477,11 @@ export class GenerarConducePage implements OnDestroy {
     if (obra && this.obras().some((o) => o.id === obra)) {
       this.destinoTipo.set('obra');
       this.obraId.set(obra);
+      deepLink = true;
+    }
+    // AJ8 — "Devolver a suplidor" abre el conduce con destino suplidor pre-fijado.
+    if (q.get('destino') === 'suplidor') {
+      this.destinoTipo.set('suplidor');
       deepLink = true;
     }
     this.tareaVinculada = q.get('tarea');

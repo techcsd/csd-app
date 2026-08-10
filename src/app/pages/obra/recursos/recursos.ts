@@ -7,6 +7,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { StockObraItem, PedidoObra } from '../../../core/models/obra.model';
 
 const ESTADO_META: Record<string, { label: string; tint: string }> = {
@@ -38,6 +39,7 @@ export class RecursosPage {
   private obra = inject(ObraService);
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
+  private navGuard = inject(NavGuardService);
 
   proyectoId = '';
   tab = signal<'stock' | 'pedido'>('stock');
@@ -114,6 +116,6 @@ export class RecursosPage {
   }
 
   back(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

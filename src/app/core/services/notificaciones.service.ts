@@ -110,7 +110,8 @@ export function notifAppRoute(n: { tipo: string; ruta: string | null }): string 
     r.startsWith('/bitacora') ||
     r.startsWith('/solicitudes') ||
     r.startsWith('/notas') ||
-    r.startsWith('/tareas')
+    r.startsWith('/tareas') ||
+    r.startsWith('/mensajes')
   ) {
     return r;
   }

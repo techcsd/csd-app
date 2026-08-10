@@ -89,6 +89,14 @@ export class SeguimientoService {
       }));
   }
 
+  /** AJ14 — breadcrumb EN VIVO de una ruta activa (puntos del día) para dibujar la
+   *  línea del recorrido en el mapa. Best-effort (vacío si no hay puntos/permiso). */
+  async rutaBreadcrumb(rutaId: string): Promise<[number, number][]> {
+    const { data, error } = await this.supabase.client.rpc('ruta_breadcrumb_vivo', { p_ruta_id: rutaId });
+    if (error) return [];
+    return ((data as [number, number][]) ?? []).filter((p) => Array.isArray(p) && p.length === 2);
+  }
+
   /** Suscribe el realtime de la última posición; llama a `onChange` en cada update. */
   suscribir(onChange: () => void): void {
     this.desuscribir();

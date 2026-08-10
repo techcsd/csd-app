@@ -263,6 +263,26 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/por-firmar/por-firmar').then((m) => m.PorFirmarPage),
   },
   {
+    // AJ5 — Mensajería (mismo modelo que la web). General para todos los roles.
+    path: 'mensajes',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/mensajes/mensajes').then((m) => m.MensajesPage),
+  },
+  {
+    path: 'mensajes/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/mensajes/thread/thread').then((m) => m.MensajesThreadPage),
+  },
+  {
+    // AJ8 — bandeja del RECEPTOR: entregas que debe confirmar en SU teléfono.
+    // Sin moduleGuard: el receptor puede ser inventario/obra sin módulo flota; el
+    // RPC solo devuelve entregas donde el usuario actual es receptor autorizado.
+    path: 'transporte/por-confirmar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/por-confirmar/por-confirmar').then((m) => m.PorConfirmarPage),
+  },
+  {
     // Reutiliza la pantalla de recibir conduce (mercancía/traslado) bajo Transporte.
     path: 'transporte/recibir-mercancia',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

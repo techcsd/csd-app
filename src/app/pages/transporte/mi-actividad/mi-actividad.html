@@ -31,6 +31,26 @@
         <p class="mact__nombre">{{ s.nombre }}</p>
       }
 
+      <!-- AJ11 — perfil propio del conductor (solo lectura), en cuadrículas 2xN -->
+      @if (perfil()?.es_conductor) {
+        <button type="button" class="mact__perfil-toggle" (click)="togglePerfil()">
+          🪪 {{ verPerfil() ? 'Ocultar mi perfil' : 'Ver mi perfil de conductor' }}
+        </button>
+        @if (verPerfil()) {
+          @let p = perfil()!;
+          <div class="mact__perfil-grid">
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">Nombre</span><span class="mact__perfil-v">{{ p.nombre || '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">Cédula</span><span class="mact__perfil-v">{{ p.cedula || '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">Teléfono</span><span class="mact__perfil-v">{{ p.telefono || '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">Licencia</span><span class="mact__perfil-v">{{ p.licencia?.tipo || '—' }}{{ p.licencia?.numero ? ' · ' + p.licencia?.numero : '' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">Vence licencia</span><span class="mact__perfil-v">{{ p.licencia?.vencimiento ? fmtFecha(p.licencia!.vencimiento!) : '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">Autorizado</span><span class="mact__perfil-v">{{ p.tipo_vehiculo_autorizado || '—' }}</span></div>
+            <div class="mact__perfil-cell mact__perfil-cell--wide"><span class="mact__perfil-k">Vehículo asignado</span><span class="mact__perfil-v">{{ p.vehiculo ? (p.vehiculo.placa + ' · ' + (p.vehiculo.marca || '') + ' ' + (p.vehiculo.modelo || '')) : '—' }}</span></div>
+          </div>
+          <p class="mact__perfil-nota">Solo lectura. Para cambios, contacta al jefe de flota.</p>
+        }
+      }
+
       <!-- AI10 — filtro de periodo (default: este mes) -->
       <div class="mact__periodo" role="tablist" aria-label="Periodo">
         @for (p of PERIODOS; track p.id) {

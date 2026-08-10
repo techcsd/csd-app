@@ -1,0 +1,50 @@
+<div class="screen msgs">
+  <header class="msgs__header">
+    <button type="button" class="msgs__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="msgs__title">💬 Mensajes</h1>
+    <button type="button" class="msgs__new" (click)="toggleNueva()">{{ nuevaAbierta() ? '✕' : '＋' }}</button>
+  </header>
+
+  @if (nuevaAbierta()) {
+    <div class="msgs__nueva">
+      <input
+        class="field"
+        type="text"
+        [ngModel]="busqueda()"
+        (ngModelChange)="busqueda.set($event); buscar()"
+        placeholder="Buscar persona…"
+      />
+      @if (buscando()) { <p class="msgs__hint">Buscando…</p> }
+      @for (u of resultados(); track u.id) {
+        <button type="button" class="msgs__result" (click)="iniciarCon(u)">
+          <span class="msgs__avatar">{{ u.nombre.charAt(0) }}</span>
+          <span class="msgs__result-name">{{ u.nombre }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!conversaciones().length) {
+      <app-empty-state icon="💬" title="Sin conversaciones" message="Toca ＋ para empezar una conversación." />
+    } @else {
+      @for (c of conversaciones(); track c.id) {
+        <button type="button" class="msgs__row" (click)="abrir(c)">
+          <span class="msgs__avatar">{{ nombreDe(c).charAt(0) }}</span>
+          <span class="msgs__row-main">
+            <span class="msgs__row-top">
+              <span class="msgs__row-name">{{ nombreDe(c) }}</span>
+              @if (c.ultimo_at) { <span class="msgs__row-time">{{ fmt(c.ultimo_at) }}</span> }
+            </span>
+            <span class="msgs__row-prev">{{ c.ultimo_mensaje || 'Sin mensajes' }}</span>
+          </span>
+          @if (c.no_leidos > 0) {
+            <span class="msgs__badge">{{ c.no_leidos > 9 ? '9+' : c.no_leidos }}</span>
+          }
+        </button>
+      }
+    }
+  </div>
+</div>

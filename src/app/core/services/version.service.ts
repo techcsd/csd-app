@@ -17,10 +17,12 @@ export interface VersionPublicada {
 
 export type Plataforma = 'web' | 'movil';
 
-/** Cambio etiquetado (estilo "Keep a Changelog"). */
+/** Cambio etiquetado (estilo "Keep a Changelog"). AJ1: `m` = módulo (opcional)
+ *  para agrupar los bullets por módulo en la pantalla de actualización. */
 export interface CambioItem {
   t: 'nuevo' | 'mejora' | 'arreglo' | 'seguridad' | string;
   d: string;
+  m?: string | null;
 }
 
 export const CAMBIO_LABEL: Record<string, string> = {
@@ -149,6 +151,30 @@ export class VersionService {
 
   get notas(): string | null {
     return this.info()?.notas ?? null;
+  }
+
+  /**
+   * AJ1 — Changelog estructurado de la versión publicada (móvil), para pintar
+   * bullets agrupados por módulo en la pantalla de actualización. `app_versiones`
+   * es legible por `authenticated` (RLS using(true)); si no hay red o la versión
+   * no trae `cambios`, la pantalla cae al texto plano de `notas`. Best-effort.
+   */
+  async cambiosPublicados(): Promise<CambioItem[]> {
+    const pub = this.info()?.version_publicada;
+    if (!pub) return [];
+    try {
+      const { data, error } = await this.supabase.client
+        .from('app_versiones')
+        .select('cambios')
+        .eq('plataforma', 'movil')
+        .eq('version', pub)
+        .maybeSingle();
+      if (error || !data) return [];
+      const cambios = (data as { cambios: CambioItem[] | null }).cambios;
+      return Array.isArray(cambios) ? cambios : [];
+    } catch {
+      return [];
+    }
   }
 
   /** Historial de versiones (ambas plataformas), más reciente primero. Solo admin. */

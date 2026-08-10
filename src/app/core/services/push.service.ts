@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { SupabaseService } from './supabase.service';
 import { NotificacionesService, notifAppRoute } from './notificaciones.service';
+import { NavGuardService } from './nav-guard.service';
 
 /**
  * AF7 — Notificaciones push nativas (Android/FCM). La infraestructura vive en
@@ -19,6 +20,7 @@ export class PushService {
   private supabase = inject(SupabaseService);
   private router = inject(Router);
   private notifs = inject(NotificacionesService);
+  private navGuard = inject(NavGuardService);
 
   private started = false;
   private token: string | null = null;
@@ -40,10 +42,14 @@ export class PushService {
       void this.notifs.refreshNoLeidas().catch(() => {});
     });
     // Tap en la push → deep-link (mismo mapa que la bandeja de avisos, AF6).
+    // AJ7 — el deep-link pasa por el gate de navegación: si el usuario está en un
+    // formulario en curso, se difiere hasta que lo cierre (nunca lo saca del form).
     await PushNotifications.addListener('pushNotificationActionPerformed', (a) => {
       const data = (a.notification?.data ?? {}) as { tipo?: string; ruta?: string };
       const dest = notifAppRoute({ tipo: data.tipo ?? 'info', ruta: data.ruta ?? null });
-      if (dest && dest !== '/home') void this.router.navigateByUrl(dest).catch(() => {});
+      if (dest && dest !== '/home') {
+        this.navGuard.requestNav(() => void this.router.navigateByUrl(dest).catch(() => {}));
+      }
     });
 
     let perm = await PushNotifications.checkPermissions();

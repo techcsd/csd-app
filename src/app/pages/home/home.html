@@ -28,11 +28,22 @@
     </button>
   }
 
+  <!-- AJ8 — entregas que debo confirmar como receptor (desde mi propio teléfono) -->
+  @if (porConfirmar() > 0) {
+    <button type="button" class="home__firmar" (click)="irPorConfirmar()">
+      <span class="home__firmar-icon">📥</span>
+      <span class="home__firmar-txt">
+        Tienes {{ porConfirmar() }} {{ porConfirmar() === 1 ? 'entrega' : 'entregas' }} por confirmar
+      </span>
+      <span class="home__firmar-go">›</span>
+    </button>
+  }
+
   @if (editMode()) {
     <!-- AF38 — modo edición (admin): arrastrar para reordenar como un launcher -->
     <div class="home__edit-bar">
       <button type="button" class="btn-ghost" (click)="cancelarOrden()">Cancelar</button>
-      <span class="home__edit-hint">Arrastra para reordenar</span>
+      <span class="home__edit-hint">Arrastra para ordenar · toca ⤢ para el tamaño</span>
       <button type="button" class="btn-cta" (click)="guardarOrden()">Listo</button>
     </div>
     <main class="home__grid home__grid--edit">
@@ -41,12 +52,21 @@
           type="button"
           class="home__edit-tile"
           [class.home__edit-tile--drag]="dragIndex() === i"
+          [class.home__tile--2x1]="editSizeOf(tile.modulo) === '2x1'"
+          [class.home__tile--2x2]="editSizeOf(tile.modulo) === '2x2'"
           [style.background]="tile.tint"
           [attr.data-edit-index]="i"
           (pointerdown)="onDragStart(i, $event)"
         >
           <span class="home__edit-icon">{{ tile.icon }}</span>
           <span class="home__edit-label">{{ tile.label }}</span>
+          <span
+            class="home__size-btn"
+            role="button"
+            aria-label="Cambiar tamaño"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="cycleSize(tile.modulo, $event)"
+          >⤢ {{ editSizeOf(tile.modulo) }}</span>
         </button>
       }
     </main>
@@ -65,6 +85,8 @@
           [label]="tile.label"
           [tint]="tile.tint"
           [badge]="badgeFor(tile.modulo)"
+          [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
+          [class.home__tile--2x2]="sizeClass(tile.modulo) === '2x2'"
           (pressed)="open(tile)"
         />
       } @empty {
@@ -77,9 +99,9 @@
         />
       }
     </main>
-    @if (esAdmin()) {
+    @if (puedeEditarLayout()) {
       <button type="button" class="home__ordenar" (click)="entrarEdicion()">
-        ✥ Ordenar módulos
+        ✥ Ordenar y redimensionar módulos
       </button>
     }
   }

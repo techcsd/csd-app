@@ -1,188 +1,198 @@
 <div class="screen gconduce">
   @if (hoja() === 'form') {
     <header class="gconduce__header">
-      <button type="button" class="gconduce__back" (click)="intentarSalir()" aria-label="Atrás">←</button>
-      <h1 class="gconduce__title">📦 Crear conduce</h1>
+      <button type="button" class="gconduce__back" (click)="atras()" aria-label="Atrás">←</button>
+      <div class="gconduce__head-txt">
+        <h1 class="gconduce__title">📦 Crear conduce</h1>
+        <span class="gconduce__paso-titulo">{{ pasoActual()?.titulo }}</span>
+      </div>
     </header>
+    <app-step-bar [current]="paso() + 1" [total]="pasos().length" />
 
     <div class="screen__body">
-      <!-- AE9 — retomar un conduce a medio llenar -->
-      @if (draftFecha() !== null) {
+      <!-- AE9 — retomar un conduce a medio llenar (solo en la 1ª hoja) -->
+      @if (paso() === 0 && draftFecha() !== null) {
         <app-draft-banner [fecha]="draftFecha()" (continuar)="continuarBorrador()" (descartar)="descartarBorrador()" />
       }
 
-      <p class="gconduce__intro">
-        ¿De dónde sale el material? Si es una obra/almacén, se descuenta del stock;
-        si es una ferretería, se registra como compra (entrada).
-      </p>
-
-      <!-- AF31 — selector de tipo de origen -->
-      <div class="gconduce__origen">
-        <app-option-button icon="🏬" label="Almacén / obra" [selected]="origenTipo() === 'almacen'" (pressed)="setOrigen('almacen')" />
-        <app-option-button icon="🧾" label="Ferretería (compra)" [selected]="origenTipo() === 'ferreteria'" (pressed)="setOrigen('ferreteria')" />
-        <app-option-button icon="📍" label="Otros" [selected]="origenTipo() === 'otros'" (pressed)="setOrigen('otros')" />
-      </div>
-
-      <!-- ══════════ ALMACÉN (salida) ══════════ -->
-      @if (origenTipo() === 'almacen') {
-        <app-collapsible-select
-          label="Almacén de origen"
-          icon="🏬"
-          [options]="bodegaOptions()"
-          [selectedId]="bodegaId()"
-          [searchable]="true"
-          searchPlaceholder="Buscar almacén…"
-          (picked)="bodegaId.set($event)"
-        />
-
-        <!-- AF31.4 — destino: obra o suplidor (devolución de equipo alquilado) -->
-        <label class="field-label gconduce__mt">¿A dónde va?</label>
-        <div class="gconduce__origen">
-          <app-option-button icon="🏗" label="Obra" [selected]="destinoTipo() === 'obra'" (pressed)="destinoTipo.set('obra')" />
-          <app-option-button icon="🏭" label="Suplidor (devolución)" [selected]="destinoTipo() === 'suplidor'" (pressed)="destinoTipo.set('suplidor')" />
-        </div>
-        @if (destinoTipo() === 'obra') {
-          <div class="gconduce__mt">
-            <app-collapsible-select label="Obra destino" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="obraId.set($event)" />
+      @switch (pasoActual()?.key) {
+        <!-- ═══════════ HOJA: ORIGEN ═══════════ -->
+        @case ('origen') {
+          <p class="gconduce__intro">
+            ¿De dónde sale el material? Si es una obra/almacén se descuenta del stock;
+            si es una ferretería se registra como compra.
+          </p>
+          <div class="gconduce__origen">
+            <app-option-button icon="🏬" label="Almacén / obra" [selected]="origenTipo() === 'almacen'" (pressed)="setOrigen('almacen')" />
+            <app-option-button icon="🧾" label="Ferretería (compra)" [selected]="origenTipo() === 'ferreteria'" (pressed)="setOrigen('ferreteria')" />
+            <app-option-button icon="📍" label="Otros" [selected]="origenTipo() === 'otros'" (pressed)="setOrigen('otros')" />
           </div>
-        } @else {
-          <input class="field gconduce__mt" type="text" [ngModel]="suplidorNombre()" (ngModelChange)="suplidorNombre.set($event)" placeholder="Nombre del suplidor al que devuelves" />
+
+          @if (origenTipo() === 'almacen') {
+            <div class="gconduce__mt">
+              <app-collapsible-select label="Almacén de origen" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
+            </div>
+          } @else if (origenTipo() === 'ferreteria') {
+            @if (ferreteriaOptions().length) {
+              <app-collapsible-select label="Ferretería" icon="🧾" [options]="ferreteriaOptions()" [selectedId]="ferreteriaId()" [searchable]="true" searchPlaceholder="Buscar ferretería…" (picked)="onFerreteria($event)" />
+            } @else {
+              <div class="gconduce__band">🧾 No hay ferreterías registradas. Pídele a Compras que agregue una (visible para choferes).</div>
+            }
+            <div class="gconduce__mt">
+              <app-collapsible-select label="Almacén donde entra la compra" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
+            </div>
+            <label class="field-label gconduce__mt" for="ref">Referencia / # de factura (opcional)</label>
+            <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" placeholder="Ej. F-00123" />
+          } @else {
+            <label class="field-label gconduce__mt" for="otros">¿Desde dónde sale?</label>
+            <input id="otros" class="field" type="text" [ngModel]="otrosNombre()" (ngModelChange)="otrosNombre.set($event)" placeholder="Ej. Taller de la 27, casa del cliente…" />
+            <button type="button" class="btn-ghost gconduce__gps" (click)="tomarUbicacionOtros()">📍 Usar mi ubicación actual</button>
+            @if (otrosGpsOk()) { <p class="gconduce__gps-ok">✓ Ubicación de origen fijada.</p> }
+          }
         }
-      }
 
-      <!-- ══════════ FERRETERÍA (compra → entrada) ══════════ -->
-      @if (origenTipo() === 'ferreteria') {
-        @if (ferreteriaOptions().length) {
-          <app-collapsible-select label="Ferretería" icon="🧾" [options]="ferreteriaOptions()" [selectedId]="ferreteriaId()" (picked)="onFerreteria($event)" />
-        } @else {
-          <div class="gconduce__band">🧾 No hay ferreterías registradas. Pídele a Compras que agregue una (marcada como "visible para choferes").</div>
+        <!-- ═══════════ HOJA: DESTINO ═══════════ -->
+        @case ('destino') {
+          <p class="gconduce__intro">¿A dónde llevas el material?</p>
+          @if (origenTipo() === 'almacen') {
+            <div class="gconduce__origen">
+              <app-option-button icon="🏗" label="Obra" [selected]="destinoTipo() === 'obra'" (pressed)="destinoTipo.set('obra')" />
+              <app-option-button icon="🏭" label="Suplidor (devolución)" [selected]="destinoTipo() === 'suplidor'" (pressed)="destinoTipo.set('suplidor')" />
+            </div>
+          }
+          @if (destinoTipo() === 'obra') {
+            <div class="gconduce__mt">
+              <app-collapsible-select label="Obra destino" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="obraId.set($event)" />
+            </div>
+          } @else {
+            <label class="field-label gconduce__mt">Suplidor al que devuelves</label>
+            <input class="field" type="text" [ngModel]="suplidorNombre()" (ngModelChange)="suplidorNombre.set($event)" placeholder="Nombre del suplidor" />
+          }
         }
-        <div class="gconduce__mt">
-          <app-collapsible-select label="Almacén donde entra la compra" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
-        </div>
-        <label class="field-label gconduce__mt" for="ref">Referencia / # de factura (opcional)</label>
-        <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" placeholder="Ej. F-00123" />
-      }
 
-      <!-- ══════════ OTROS (origen libre) ══════════ -->
-      @if (origenTipo() === 'otros') {
-        <label class="field-label" for="otros">¿Desde dónde sale?</label>
-        <input id="otros" class="field" type="text" [ngModel]="otrosNombre()" (ngModelChange)="otrosNombre.set($event)" placeholder="Ej. Taller de la 27, casa del cliente…" />
-        <button type="button" class="btn-ghost gconduce__gps" (click)="tomarUbicacionOtros()">📍 Usar mi ubicación actual</button>
-        @if (otrosGpsOk()) { <p class="gconduce__gps-ok">✓ Ubicación de origen fijada.</p> }
-        <div class="gconduce__mt">
-          <app-collapsible-select label="Obra destino" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" (picked)="obraId.set($event)" />
-        </div>
-      }
+        <!-- ═══════════ HOJA: MATERIALES ═══════════ -->
+        @case ('materiales') {
+          <label class="field-label">
+            {{ esFerreteria() ? '¿Qué compraste?' : '¿Qué material sacas?' }}
+            @if (esFerreteria()) { <span class="gconduce__opt">(opcional)</span> }
+          </label>
+          <app-articulo-picker [articulos]="articulos()" [categorias]="categorias()" [soloBuscador]="true" [exclude]="excludeIds()" (picked)="agregar($event)" />
 
-      <!-- ══════════ Materiales (almacén / ferretería) ══════════ -->
-      @if (!esOtros()) {
-        <label class="field-label gconduce__mt">
-          {{ esFerreteria() ? '¿Qué compraste?' : '¿Qué material sacas?' }}
-          @if (esFerreteria()) { <span class="gconduce__opt">(opcional)</span> }
-        </label>
-        <app-articulo-picker
-          [articulos]="articulos()"
-          [categorias]="categorias()"
-          [soloBuscador]="true"
-          [exclude]="excludeIds()"
-          (picked)="agregar($event)"
-        />
-
-        @if (cart().length) {
-          <div class="gconduce__items">
-            @for (l of cart(); track l.articulo_id) {
-              <div class="gconduce__item">
-                <span class="gconduce__item-name">{{ l.nombre }}</span>
-                <div class="gconduce__item-qty">
-                  <button type="button" class="gconduce__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
-                  <input class="field gconduce__qty" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
-                  <button type="button" class="gconduce__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
-                  <span class="gconduce__unit">{{ l.unidad }}</span>
-                  <button type="button" class="gconduce__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
-                </div>
-                @if (origenTipo() === 'almacen') {
-                  @let s = stockDe(l.articulo_id);
-                  @if (s !== null) {
-                    <span class="gconduce__stock" [class.gconduce__stock--warn]="excedeStock(l)">
-                      @if (excedeStock(l)) { ⚠ Solo hay {{ s | number: '1.0-2' }} en el almacén }
-                      @else { Disponible: {{ s | number: '1.0-2' }} }
-                    </span>
+          @if (cart().length) {
+            <div class="gconduce__items">
+              @for (l of cart(); track l.articulo_id) {
+                <div class="gconduce__item">
+                  <span class="gconduce__item-name">{{ l.nombre }}</span>
+                  <div class="gconduce__item-qty">
+                    <button type="button" class="gconduce__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
+                    <input class="field gconduce__qty" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
+                    <button type="button" class="gconduce__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
+                    <span class="gconduce__unit">{{ l.unidad }}</span>
+                    <button type="button" class="gconduce__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
+                  </div>
+                  @if (origenTipo() === 'almacen') {
+                    @let s = stockDe(l.articulo_id);
+                    @if (s !== null) {
+                      <span class="gconduce__stock" [class.gconduce__stock--warn]="excedeStock(l)">
+                        @if (excedeStock(l)) { ⚠ Solo hay {{ s | number: '1.0-2' }} en el almacén }
+                        @else { Disponible: {{ s | number: '1.0-2' }} }
+                      </span>
+                    }
                   }
-                }
-              </div>
+                </div>
+              }
+            </div>
+            @if (hayExceso()) {
+              <div class="gconduce__band gconduce__band--warn">⚠ Estás sacando más de lo disponible en algún material. Ajusta la cantidad.</div>
+            }
+          } @else if (!esFerreteria()) {
+            <div class="gconduce__band">🔎 Agrega al menos un material para continuar.</div>
+          }
+        }
+
+        <!-- ═══════════ HOJA: FOTOS DE FERRETERÍA ═══════════ -->
+        @case ('ferr-fotos') {
+          <label class="field-label">Foto del recibo <span class="gconduce__req">*</span></label>
+          <div class="gconduce__fotos">
+            <app-photo-slot label="Recibo" hint="🧾" [gallery]="false" [foto]="fotoRecibo()" (captured)="fotoRecibo.set($event)" (cleared)="fotoRecibo.set(null)" />
+            <app-photo-slot label="Mercancía" hint="📦" [gallery]="false" [foto]="fotoMercancia()" (captured)="fotoMercancia.set($event)" (cleared)="fotoMercancia.set(null)" />
+          </div>
+          <label class="field-label gconduce__mt" for="obsf">Observaciones (opcional)</label>
+          <textarea id="obsf" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
+        }
+
+        <!-- ═══════════ HOJA: FOTO DE RECEPCIÓN ═══════════ -->
+        @case ('foto') {
+          <label class="field-label">Foto de recepción <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">Toma la foto del material que estás cargando (lo que te entrega el despachante).</p>
+          <div class="gconduce__fotos">
+            <app-photo-slot label="Recepción" hint="📦" [gallery]="false" [foto]="fotoRecepcion()" (captured)="fotoRecepcion.set($event)" (cleared)="fotoRecepcion.set(null)" />
+          </div>
+          <label class="field-label gconduce__mt" for="obs">{{ esOtros() ? '¿Qué mueves? (descripción)' : 'Observaciones (opcional)' }}</label>
+          <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
+        }
+
+        <!-- ═══════════ HOJA: DESPACHANTE + VEHÍCULO + FIRMAS ═══════════ -->
+        @case ('despacho') {
+          <label class="field-label">¿Quién despacha? <span class="gconduce__req">*</span></label>
+          @if (despachanteOptions().length) {
+            <app-collapsible-select label="Despachante" icon="🧑‍🔧" [options]="despachanteOptions()" [selectedId]="despachanteId()" [searchable]="true" searchPlaceholder="Buscar persona…" (picked)="despachanteId.set($event)" />
+          }
+          <input class="field gconduce__mt" type="text" [ngModel]="despachanteLibre()" (ngModelChange)="despachanteLibre.set($event)" placeholder="…o escribe el nombre de quien despacha" />
+
+          @if (vehiculoOptions().length) {
+            <label class="field-label gconduce__mt">¿En qué vehículo lo llevas? <span class="gconduce__opt">(opcional)</span></label>
+            <app-collapsible-select label="Vehículo" icon="🚚" [options]="vehiculoOptions()" [selectedId]="vehiculoId()" [searchable]="true" searchPlaceholder="Buscar vehículo…" (picked)="vehiculoId.set($event)" />
+          }
+
+          <label class="field-label gconduce__mt">Tu firma (chofer) <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
+          <app-signature-pad #choferPad (changed)="onFirmaChofer($event)" />
+          <label class="field-label gconduce__mt">Firma del despachante <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">Firma quien te entrega el material. El receptor firmará al confirmar la entrega.</p>
+          <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
+        }
+
+        <!-- ═══════════ HOJA: RESUMEN ═══════════ -->
+        @case ('resumen') {
+          <p class="gconduce__intro">Revisa antes de {{ esFerreteria() ? 'registrar la compra' : 'emitir el conduce' }}.</p>
+          <div class="gconduce__resumen">
+            <div class="gconduce__res-row"><span class="gconduce__res-k">Origen</span><span class="gconduce__res-v">{{ origenNombre() || '—' }}</span></div>
+            <div class="gconduce__res-row"><span class="gconduce__res-k">Destino</span><span class="gconduce__res-v">{{ destinoNombre() || '—' }}</span></div>
+            @if (!esOtros()) {
+              <div class="gconduce__res-row"><span class="gconduce__res-k">Materiales</span><span class="gconduce__res-v">{{ itemsCount() }} {{ itemsCount() === 1 ? 'artículo' : 'artículos' }}</span></div>
+            }
+            @if (!esFerreteria()) {
+              <div class="gconduce__res-row"><span class="gconduce__res-k">Foto de recepción</span><span class="gconduce__res-v">{{ fotoRecepcion() ? '✓ tomada' : '—' }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">Despachante</span><span class="gconduce__res-v">{{ despachanteNombre() || '—' }}</span></div>
+              @if (vehiculoNombre()) {
+                <div class="gconduce__res-row"><span class="gconduce__res-k">Vehículo</span><span class="gconduce__res-v">{{ vehiculoNombre() }}</span></div>
+              }
+              <div class="gconduce__res-row"><span class="gconduce__res-k">Firmas</span><span class="gconduce__res-v">{{ (firmaChofer() && firmaDespachante()) ? '✓ chofer + despachante' : '—' }}</span></div>
+            } @else {
+              <div class="gconduce__res-row"><span class="gconduce__res-k">Recibo</span><span class="gconduce__res-v">{{ fotoRecibo() ? '✓ tomado' : '—' }}</span></div>
             }
           </div>
-          @if (hayExceso()) {
-            <div class="gconduce__band gconduce__band--warn">⚠ Estás sacando más de lo disponible en algún material. Ajusta la cantidad.</div>
+          @if (!esFerreteria()) {
+            <div class="gconduce__band">Al emitir, el conduce queda <b>Pendiente de entrega</b>. El receptor confirmará desde su propio teléfono.</div>
           }
-        } @else if (!esFerreteria()) {
-          <div class="gconduce__band">🔎 Agrega al menos un material para generar el conduce.</div>
         }
-      }
-
-      <!-- ══════════ Fotos de ferretería ══════════ -->
-      @if (esFerreteria()) {
-        <label class="field-label gconduce__mt">Foto del recibo <span class="gconduce__req">*</span></label>
-        <div class="gconduce__fotos">
-          <app-photo-slot label="Recibo" hint="🧾" [gallery]="false" [foto]="fotoRecibo()" (captured)="fotoRecibo.set($event)" (cleared)="fotoRecibo.set(null)" />
-          <app-photo-slot label="Mercancía" hint="📦" [gallery]="false" [foto]="fotoMercancia()" (captured)="fotoMercancia.set($event)" (cleared)="fotoMercancia.set(null)" />
-        </div>
-      }
-
-      <!-- ══════════ AI2 — Foto de recepción (chofer carga del despachante) ══════════ -->
-      @if (!esFerreteria()) {
-        <label class="field-label gconduce__mt">Foto de recepción <span class="gconduce__req">*</span></label>
-        <p class="gconduce__sub">Toma la foto del material que estás cargando (lo que te entrega el despachante).</p>
-        <div class="gconduce__fotos">
-          <app-photo-slot label="Recepción" hint="📦" [gallery]="false" [foto]="fotoRecepcion()" (captured)="fotoRecepcion.set($event)" (cleared)="fotoRecepcion.set(null)" />
-        </div>
-
-        <!-- AI2 — Despachante (quien te entrega el material) -->
-        <label class="field-label gconduce__mt">¿Quién despacha? <span class="gconduce__req">*</span></label>
-        @if (despachanteOptions().length) {
-          <app-collapsible-select
-            label="Despachante"
-            icon="🧑‍🔧"
-            [options]="despachanteOptions()"
-            [selectedId]="despachanteId()"
-            [searchable]="true"
-            searchPlaceholder="Buscar persona…"
-            (picked)="despachanteId.set($event)"
-          />
-        }
-        <input class="field gconduce__mt" type="text" [ngModel]="despachanteLibre()" (ngModelChange)="despachanteLibre.set($event)" placeholder="…o escribe el nombre de quien despacha" />
-      }
-
-      <label class="field-label gconduce__mt" for="obs">
-        {{ esOtros() ? '¿Qué mueves? (descripción)' : 'Observaciones (opcional)' }}
-      </label>
-      <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
-
-      <!-- ══════════ AI2 — Firmas al emitir: chofer + despachante ══════════ -->
-      @if (!esFerreteria()) {
-        <label class="field-label gconduce__mt">Tu firma (chofer) <span class="gconduce__req">*</span></label>
-        <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
-        <app-signature-pad #choferPad (changed)="onFirmaChofer($event)" />
-        <label class="field-label gconduce__mt">Firma del despachante <span class="gconduce__req">*</span></label>
-        <p class="gconduce__sub">Firma quien te entrega el material. El receptor firmará al entregar.</p>
-        <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
       }
     </div>
 
     <app-wizard-footer
-      backLabel="Cancelar"
-      [primaryLabel]="primaryLabel()"
-      [primaryDisabled]="submitting() || !puedeEmitir()"
-      (back)="intentarSalir()"
-      (primary)="submit()"
+      [backLabel]="paso() === 0 ? 'Cancelar' : 'Atrás'"
+      [primaryLabel]="primaryBtn()"
+      [primaryDisabled]="submitting() || !pasoValido()"
+      (back)="atras()"
+      (primary)="siguiente()"
     />
   }
 
   @if (hoja() === 'exito') {
     <app-big-confirm
       [title]="esFerreteria() ? 'Compra registrada' : 'Conduce generado'"
-      [note]="esFerreteria() ? 'Almacén la confirmará para subir el stock.' : 'Aparece en Conduces. Entrégalo con la firma del receptor.'"
+      [note]="esFerreteria() ? 'Almacén la confirmará para subir el stock.' : 'Está en Pendiente de entrega. Cuando entregues, el receptor lo confirma desde su teléfono.'"
       tone="done"
       buttonLabel="Listo"
       (dismissed)="finish()"

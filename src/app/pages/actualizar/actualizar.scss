@@ -46,6 +46,72 @@
   line-height: 1.5;
 }
 
+// AJ1 — el changelog scrollea con altura limitada; el footer queda siempre visible.
+.actu__notas-scroll {
+  max-height: 42vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.actu__grupo + .actu__grupo {
+  margin-top: 14px;
+}
+.actu__grupo-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.actu__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.actu__item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+.actu__item--plano {
+  color: var(--color-text-secondary);
+}
+.actu__item--plano::before {
+  content: '•';
+  color: var(--color-primary);
+  font-weight: 800;
+}
+.actu__item-txt {
+  flex: 1;
+  color: var(--color-text-secondary);
+}
+.actu__chip {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+}
+.actu__chip--nuevo {
+  background: #16a34a;
+}
+.actu__chip--mejora {
+  background: #2563eb;
+}
+.actu__chip--arreglo {
+  background: #ca8a04;
+}
+.actu__chip--seguridad {
+  background: #dc2626;
+}
+
 .actu__progress {
   align-self: stretch;
   height: 14px;

@@ -9,6 +9,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { DatePipe } from '@angular/common';
 import { ObraService } from '../../../core/services/obra.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { EntradaProgramada } from '../../../core/models/obra.model';
 
 const MAX_FOTOS = 2;
@@ -32,6 +33,7 @@ export class LogisticaPage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private obra = inject(ObraService);
+  private navGuard = inject(NavGuardService);
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
 
@@ -114,6 +116,6 @@ export class LogisticaPage {
   }
 
   back(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

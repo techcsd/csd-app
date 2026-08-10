@@ -1,0 +1,33 @@
+<div class="screen thread">
+  <header class="thread__header">
+    <button type="button" class="thread__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="thread__title">💬 Conversación</h1>
+  </header>
+
+  <div class="thread__body" #scroller>
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      @for (m of lista(); track m.id) {
+        <div class="thread__msg" [class.thread__msg--mio]="esMio(m)">
+          @if (!esMio(m)) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
+          <span class="thread__burbuja">{{ m.contenido }}</span>
+          <span class="thread__hora">{{ fmt(m.created_at) }}</span>
+        </div>
+      }
+    }
+  </div>
+
+  <footer class="thread__compose">
+    <input
+      class="field thread__input"
+      type="text"
+      [ngModel]="texto()"
+      (ngModelChange)="texto.set($event)"
+      (keyup.enter)="enviar()"
+      placeholder="Escribe un mensaje…"
+    />
+    <button type="button" class="thread__send" [disabled]="enviando() || !texto().trim()" (click)="enviar()">➤</button>
+  </footer>
+  @if (!online) { <p class="thread__offline">Sin conexión: se enviará cuando vuelva el internet.</p> }
+</div>

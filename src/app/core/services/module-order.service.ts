@@ -4,11 +4,15 @@ import { CatalogService } from '../sync/catalog.service';
 
 const CATALOG_KEY = 'app_module_order';
 
-/** AF38 — una fila de orden de módulo (sgc.app_module_order). */
+/** AJ4 — tamaño de un tile del launcher. */
+export type ModuleSize = '1x1' | '2x1' | '2x2';
+
+/** AF38 / AJ4 — una fila de orden+tamaño de módulo (sgc.app_module_order). */
 export interface ModuleOrderRow {
   clave: string;
   parent: string | null;
   orden: number;
+  size: ModuleSize;
 }
 
 /**
@@ -30,14 +34,23 @@ export class ModuleOrderService {
         clave: r.clave,
         parent: r.parent ?? null,
         orden: r.orden ?? 0,
+        size: (r.size as ModuleSize) ?? '1x1',
       }));
     });
     return data ?? [];
   }
 
-  /** Persiste el nuevo orden (solo admin; el RPC valida). Invalida la cache. */
-  async setOrder(items: { clave: string; parent?: string | null; orden: number }[]): Promise<void> {
-    const payload = items.map((it) => ({ clave: it.clave, parent: it.parent ?? null, orden: it.orden }));
+  /** AJ4 — persiste orden + tamaño (admin o quien tenga plataforma.layout_app; el
+   *  RPC valida). Invalida la cache. */
+  async setOrder(
+    items: { clave: string; parent?: string | null; orden: number; size?: ModuleSize }[],
+  ): Promise<void> {
+    const payload = items.map((it) => ({
+      clave: it.clave,
+      parent: it.parent ?? null,
+      orden: it.orden,
+      size: it.size ?? '1x1',
+    }));
     const { error } = await this.supabase.client.rpc('set_module_order', { p_items: payload });
     if (error) throw new Error(error.message);
     await this.catalog.invalidate(CATALOG_KEY);

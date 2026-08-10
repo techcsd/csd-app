@@ -31,11 +31,24 @@
     } @else {
       <!-- FASE 6 — resumen del día -->
       @if (resumen(); as r) {
+        <!-- AJ3 — charla de seguridad del día: acción clara para quien la registra -->
+        @if (puedeCharla() && !r.charlaHecha) {
+          <button type="button" class="obra__charla-alert" (click)="irCharla()">
+            <span class="obra__charla-ico">🦺</span>
+            <span class="obra__charla-body">
+              <span class="obra__charla-title">Charla de seguridad de hoy: pendiente</span>
+              <span class="obra__charla-sub">Tócala para registrarla</span>
+            </span>
+            <span class="obra__charla-cta">Registrar →</span>
+          </button>
+        }
         <div class="obra__resumen">
-          <div class="obra__res-item" [class.obra__res-item--warn]="!r.charlaHecha">
-            <span class="obra__res-ico">{{ r.charlaHecha ? '✅' : '🦺' }}</span>
-            <span class="obra__res-txt">{{ r.charlaHecha ? 'Charla lista' : 'Falta charla' }}</span>
-          </div>
+          @if (puedeCharla() && r.charlaHecha) {
+            <div class="obra__res-item">
+              <span class="obra__res-ico">✅</span>
+              <span class="obra__res-txt">Charla lista</span>
+            </div>
+          }
           <div class="obra__res-item">
             <span class="obra__res-num">{{ r.tareasPendientes }}/{{ r.tareasHoy }}</span>
             <span class="obra__res-txt">Tareas hoy</span>

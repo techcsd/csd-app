@@ -258,6 +258,19 @@ export interface ConducePendienteEntrega {
   created_at: string;
 }
 
+/** AJ8 — entrega esperando confirmación del receptor (bandeja del receptor). */
+export interface EntregaPorConfirmar {
+  id: string;
+  fecha: string;
+  proyecto_id: string | null;
+  destino: string | null;
+  bodega: string | null;
+  estado: string;
+  fase: string | null;
+  entregado_en: string | null;
+  entrega_foto_path: string | null;
+}
+
 /** AF25 — fila de rutas_activas_y_hoy (activas primero + rutas de hoy). */
 export interface RutaActivaHoy {
   id: string;
@@ -582,7 +595,21 @@ export class ConducesService {
   }
 
   /** AI2 — universo del select "Despachante" (usuarios + empleados). Cacheado. */
-  async despachantesDisponibles(): Promise<Despachante[]> {
+  async despachantesDisponibles(bodegaId?: string | null, proyectoId?: string | null): Promise<Despachante[]> {
+    // AJ6 — con contexto (bodega/obra) pedimos fresco para que los vinculados a esa
+    // obra/almacén salgan primero; sin contexto usamos la caché (offline-friendly).
+    if (bodegaId || proyectoId) {
+      try {
+        const { data, error } = await this.supabase.client.rpc('despachantes_disponibles', {
+          p_bodega_id: bodegaId ?? null,
+          p_proyecto_id: proyectoId ?? null,
+        });
+        if (error) throw new Error(error.message);
+        return (data as Despachante[]) ?? [];
+      } catch {
+        /* offline / error → caché 0-arg abajo */
+      }
+    }
     const data = await this.catalog.refresh<Despachante[]>('despachantes', async () => {
       const { data, error } = await this.supabase.client.rpc('despachantes_disponibles');
       if (error) throw new Error(error.message);
@@ -853,6 +880,103 @@ export class ConducesService {
     });
 
     void this.misConduces();
+  }
+
+  // ─── AJ8 — Estados del conduce (chofer) + confirmación del receptor ─────────
+
+  /**
+   * AJ8 — el chofer marca el avance de su conduce: `en_transito` / `entregando`.
+   * Offline-safe por outbox (idempotente: el RPC solo avanza fases válidas).
+   */
+  async conduceActualizarEstado(salidaId: string, estado: 'en_transito' | 'entregando'): Promise<void> {
+    const id = crypto.randomUUID();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_estado_op',
+      capturado_en: new Date().toISOString(),
+      payload: { salida_id: salidaId, estado },
+      fotos: [],
+      resumen: { tipo: 'conduce_estado_op', salida_id: salidaId, estado },
+    });
+    void this.misConducesPendientesEntrega().catch(() => {});
+  }
+
+  /**
+   * AJ8 — el chofer marca ENTREGADO con foto de entrega OBLIGATORIA (NO firma del
+   * receptor). Deja el conduce pendiente de confirmación y notifica a los
+   * receptores del destino. Offline-safe por outbox.
+   */
+  async conduceMarcarEntregado(
+    salidaId: string,
+    fotoEntrega: Blob,
+    items: { detalle_id: string; cantidad_recibida: number }[] | null,
+    notas: string | null,
+  ): Promise<void> {
+    const id = crypto.randomUUID();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_entregado',
+      capturado_en: new Date().toISOString(),
+      payload: { salida_id: salidaId, items: items ?? null, notas: notas ?? null },
+      fotos: [
+        { id: crypto.randomUUID(), bucket: 'conduces', path: `${salidaId}/${id}-entrega.jpg`, slot: 'entrega', blob: fotoEntrega },
+      ],
+      resumen: { tipo: 'conduce_entregado', salida_id: salidaId },
+    });
+    void this.misConducesPendientesEntrega().catch(() => {});
+  }
+
+  /** AJ8 — fase actual del conduce (emitido/en_transito/entregando/entregado/…). */
+  async conduceFase(salidaId: string): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('conduce_fase', { p_salida_id: salidaId });
+    if (error) throw new Error(error.message);
+    return (data as string) ?? 'emitido';
+  }
+
+  /** AJ8 — bandeja del RECEPTOR: entregas esperando su confirmación. */
+  async misEntregasPorConfirmar(): Promise<EntregaPorConfirmar[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_entregas_por_confirmar');
+    if (error) throw new Error(error.message);
+    return (data as EntregaPorConfirmar[]) ?? [];
+  }
+
+  /** AJ8 — contador de entregas por confirmar (badge del home/hub). Best-effort. */
+  async entregasPorConfirmarCount(): Promise<number> {
+    const { data, error } = await this.supabase.client.rpc('mis_entregas_por_confirmar_count');
+    if (error) throw new Error(error.message);
+    return (data as number) ?? 0;
+  }
+
+  /**
+   * AJ8 — el RECEPTOR confirma la entrega DESDE SU dispositivo: foto + firma
+   * OBLIGATORIAS (server-side impide que confirme quien entregó). Genera la entrada
+   * de inventario y avisa al chofer. Offline-safe por outbox.
+   */
+  async conduceConfirmarReceptor(input: {
+    salidaId: string;
+    foto: Blob;
+    firma: Blob;
+    checklist?: { llego_todo: boolean } | null;
+    items?: { detalle_id: string; cantidad_recibida: number }[] | null;
+    notas?: string | null;
+  }): Promise<void> {
+    const id = crypto.randomUUID();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_confirmar',
+      capturado_en: new Date().toISOString(),
+      payload: {
+        salida_id: input.salidaId,
+        checklist: input.checklist ?? null,
+        items: input.items ?? null,
+        notas: input.notas ?? null,
+      },
+      fotos: [
+        { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-conf-foto.jpg`, slot: 'conf_foto', blob: input.foto },
+        { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-conf-firma.png`, slot: 'conf_firma', blob: input.firma },
+      ],
+      resumen: { tipo: 'conduce_confirmar', salida_id: input.salidaId },
+    });
   }
 
   // ─── AH5 — Transferencia de responsabilidad de conduces entre choferes ──────
@@ -1243,6 +1367,44 @@ export class ConducesService {
         });
         if (eP) throwSyncError(eP);
       }
+    });
+
+    // AJ8 — el chofer avanza el estado de su conduce (en_transito / entregando).
+    this.sync.register('conduce_estado_op', async (payload) => {
+      const { error } = await this.supabase.client.rpc('conduce_actualizar_estado', {
+        p_salida_id: payload['salida_id'],
+        p_estado: payload['estado'],
+      });
+      if (error) throwSyncError(error);
+      await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+    });
+
+    // AJ8 — el chofer marca ENTREGADO con foto obligatoria (sin firma del receptor).
+    // El RPC notifica a los receptores del destino para que confirmen en SU teléfono.
+    this.sync.register('conduce_entregado', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('conduce_marcar_entregado', {
+        p_salida_id: payload['salida_id'],
+        p_foto_path: photoPaths['entrega'],
+        p_items: payload['items'] ?? null,
+        p_notas: payload['notas'] ?? null,
+      });
+      if (error) throwSyncError(error);
+      await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+    });
+
+    // AJ8 — el RECEPTOR confirma la entrega desde su dispositivo (foto + firma).
+    // Server-side impide que confirme quien entregó; genera la entrada de inventario.
+    this.sync.register('conduce_confirmar', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('conduce_confirmar_receptor', {
+        p_salida_id: payload['salida_id'],
+        p_foto_path: photoPaths['conf_foto'],
+        p_firma_path: photoPaths['conf_firma'],
+        p_checklist: payload['checklist'] ?? null,
+        p_items: payload['items'] ?? null,
+        p_notas: payload['notas'] ?? null,
+      });
+      if (error) throwSyncError(error);
+      await this.catalog.invalidatePrefix('existencias_').catch(() => {});
     });
 
     // AH5 — el receptor acepta una transferencia de conduce (foto + firma). El RPC

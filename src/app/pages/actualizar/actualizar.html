@@ -10,10 +10,34 @@
       <p class="actu__sub">Estás en la {{ local }}.</p>
     }
 
-    @if (notas(); as n) {
+    @if (hayChangelog()) {
       <div class="actu__notas">
         <h2 class="actu__notas-title">Qué trae esta versión</h2>
-        <p class="actu__notas-body">{{ n }}</p>
+        <div class="actu__notas-scroll">
+          @if (grupos().length) {
+            @for (g of grupos(); track g.modulo) {
+              <div class="actu__grupo">
+                @if (g.modulo !== 'General') {
+                  <h3 class="actu__grupo-title">{{ g.modulo }}</h3>
+                }
+                <ul class="actu__lista">
+                  @for (c of g.items; track $index) {
+                    <li class="actu__item">
+                      <span class="actu__chip actu__chip--{{ c.t }}">{{ chipLabel(c.t) }}</span>
+                      <span class="actu__item-txt">{{ c.d }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          } @else {
+            <ul class="actu__lista">
+              @for (b of notasBullets(); track $index) {
+                <li class="actu__item actu__item--plano">{{ b }}</li>
+              }
+            </ul>
+          }
+        </div>
       </div>
     }
 

@@ -10,10 +10,12 @@ import { SessionService } from '../../core/services/session.service';
 import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { InventarioService } from '../../core/services/inventario.service';
+import { ConducesService } from '../../core/services/conduces.service';
+import { MensajesService } from '../../core/services/mensajes.service';
 import { SyncService } from '../../core/sync/sync.service';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { PushService } from '../../core/services/push.service';
-import { ModuleOrderService } from '../../core/services/module-order.service';
+import { ModuleOrderService, ModuleSize } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
 
 interface HomeTile {
@@ -49,6 +51,8 @@ const TILES: HomeTile[] = [
 // AC4 — Notas: módulo GENERAL accesible por TODOS (incluidos choferes), como
 // Mensajes. No se gatea por módulo SGC; se muestra siempre.
 const NOTAS_TILE: HomeTile = { modulo: 'notas', icon: '🗒️', label: 'Notas', route: '/notas', tint: '#7c3aed' };
+// AJ5 — Mensajes: general (todos los roles, como en la web). Badge de no leídos.
+const MENSAJES_TILE: HomeTile = { modulo: 'mensajes', icon: '💬', label: 'Mensajes', route: '/mensajes', tint: '#2563eb' };
 // AF39 — Tareas: general (el chofer ve las tareas asignadas a él aunque no tenga
 // el módulo). El RPC mis_tareas_app acota la visibilidad.
 const TAREAS_TILE: HomeTile = { modulo: 'tareas_app', icon: '✅', label: 'Tareas', route: '/tareas', tint: '#0d9488' };
@@ -71,6 +75,8 @@ export class HomePage {
   private badges = inject(BadgesService);
   private enProceso = inject(EnProcesoService);
   private inventario = inject(InventarioService);
+  private conduces = inject(ConducesService);
+  private mensajes = inject(MensajesService);
   private sync = inject(SyncService);
   private notificaciones = inject(NotificacionesService);
   private push = inject(PushService);
@@ -80,9 +86,15 @@ export class HomePage {
 
   // AF38 — orden de módulos configurable por el admin (drag & drop tipo launcher).
   esAdmin = this.ctx.esAdmin;
+  // AJ4 — personalizar layout es un permiso DELEGABLE (no solo admin).
+  puedeEditarLayout = computed(
+    () => this.ctx.esAdmin() || this.ctx.puedeOperarSubmodulo('plataforma.layout_app'),
+  );
   orderMap = signal<Record<string, number>>({});
+  sizeMap = signal<Record<string, ModuleSize>>({}); // AJ4 — tamaño por módulo
   editMode = signal(false);
   editTiles = signal<HomeTile[]>([]);
+  editSizes = signal<Record<string, ModuleSize>>({}); // AJ4 — tamaños en edición
   dragIndex = signal<number | null>(null);
   private lpTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -93,6 +105,11 @@ export class HomePage {
   // AE — firmas de recepción PENDIENTES asignadas a mí (banner de descubrimiento,
   // porque un ingeniero receptor puede no tener el módulo flota).
   firmasPendientes = signal(0);
+  // AJ8 — entregas que YO debo confirmar como receptor (banner de descubrimiento:
+  // el receptor puede ser inventario/obra sin módulo flota).
+  porConfirmar = signal(0);
+  // AJ5 — mensajes no leídos (badge del tile de Mensajes).
+  mensajesNoLeidos = signal(0);
   private primerSync = true;
 
   // Tiles de trabajo: gateados por el módulo SGC del usuario (igual que la web).
@@ -119,8 +136,8 @@ export class HomePage {
   tiles = computed(() => {
     const work = this.workTiles();
     // AC4 — Notas es general (todos, incl. choferes). AF39 — Tareas también.
-    // Tecnología, todos menos chofer.
-    const extra: HomeTile[] = [NOTAS_TILE, TAREAS_TILE];
+    // AJ5 — Mensajes también es general. Tecnología, todos menos chofer.
+    const extra: HomeTile[] = [MENSAJES_TILE, NOTAS_TILE, TAREAS_TILE];
     // AH15 — Compras de obra: admin o roles con acceso a proyectos/compras/obra.
     if (this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('compras') || this.ctx.puedeVerObra()) {
       extra.push(COMPRAS_TILE);
@@ -158,6 +175,10 @@ export class HomePage {
     void this.enProceso.refresh();
     // AE — cuántas firmas de recepción me quedan por firmar (recarga al drenar).
     void this.cargarFirmasPendientes();
+    // AJ8 — cuántas entregas debo confirmar como receptor.
+    void this.cargarPorConfirmar();
+    // AJ5 — mensajes no leídos (badge del tile de Mensajes).
+    void this.mensajes.contarNoLeidos().then((n) => this.mensajesNoLeidos.set(n)).catch(() => {});
     // AE — avisos no leídos (badge de la campana). Best-effort, online.
     void this.notificaciones.refreshNoLeidas();
     // AF7 — ya hay sesión: registra/renueva el token push del usuario (native only).
@@ -170,7 +191,10 @@ export class HomePage {
         this.primerSync = false;
         return;
       }
-      if (this.sync.pendingCount() === 0) void this.cargarFirmasPendientes();
+      if (this.sync.pendingCount() === 0) {
+        void this.cargarFirmasPendientes();
+        void this.cargarPorConfirmar();
+      }
     });
   }
 
@@ -182,8 +206,20 @@ export class HomePage {
     }
   }
 
+  private async cargarPorConfirmar(): Promise<void> {
+    try {
+      this.porConfirmar.set(await this.conduces.entregasPorConfirmarCount());
+    } catch {
+      /* best-effort */
+    }
+  }
+
   irPorFirmar(): void {
     void this.router.navigate(['/transporte/por-firmar']);
+  }
+
+  irPorConfirmar(): void {
+    void this.router.navigate(['/transporte/por-confirmar']);
   }
 
   avisos(): void {
@@ -192,6 +228,7 @@ export class HomePage {
 
   /** Q2+V1 — badge del tile = pendientes de aprobación + documentación en proceso. */
   badgeFor(modulo: string): number | null {
+    if (modulo === 'mensajes') return this.mensajesNoLeidos() || null;
     const total = (this.badgeCounts()[modulo] ?? 0) + (this.enProcesoCounts()[modulo] ?? 0);
     return total || null;
   }
@@ -206,16 +243,27 @@ export class HomePage {
     try {
       const rows = await this.moduleOrder.getOrder();
       const map: Record<string, number> = {};
-      for (const r of rows) if (!r.parent) map[r.clave] = r.orden;
+      const sizes: Record<string, ModuleSize> = {};
+      for (const r of rows) {
+        if (r.parent) continue;
+        map[r.clave] = r.orden;
+        sizes[r.clave] = r.size;
+      }
       this.orderMap.set(map);
+      this.sizeMap.set(sizes);
     } catch {
       /* best-effort: sin orden guardado, se usa el por defecto */
     }
   }
 
-  /** Long-press (admin) para entrar en modo edición, como un launcher de celular. */
+  /** AJ4 — clase de tamaño del tile (1x1 por defecto). */
+  sizeClass(modulo: string): ModuleSize {
+    return this.sizeMap()[modulo] ?? '1x1';
+  }
+
+  /** Long-press para entrar en modo edición (admin o permiso delegable AJ4). */
   onTilePointerDown(): void {
-    if (!this.ctx.esAdmin() || this.editMode()) return;
+    if (!this.puedeEditarLayout() || this.editMode()) return;
     this.clearLongPress();
     this.lpTimer = setTimeout(() => this.entrarEdicion(), 600);
   }
@@ -231,7 +279,19 @@ export class HomePage {
 
   entrarEdicion(): void {
     this.editTiles.set([...this.tiles()]);
+    this.editSizes.set({ ...this.sizeMap() });
     this.editMode.set(true);
+  }
+
+  /** AJ4 — cicla el tamaño de un tile: 1x1 → 2x1 → 2x2 → 1x1. */
+  cycleSize(modulo: string, ev: Event): void {
+    ev.stopPropagation();
+    const next: Record<ModuleSize, ModuleSize> = { '1x1': '2x1', '2x1': '2x2', '2x2': '1x1' };
+    this.editSizes.update((m) => ({ ...m, [modulo]: next[m[modulo] ?? '1x1'] }));
+  }
+
+  editSizeOf(modulo: string): ModuleSize {
+    return this.editSizes()[modulo] ?? '1x1';
   }
 
   private dragMove = (ev: PointerEvent): void => this.onDragMove(ev);
@@ -266,16 +326,26 @@ export class HomePage {
   }
 
   async guardarOrden(): Promise<void> {
-    const items = this.editTiles().map((t, i) => ({ clave: t.modulo, orden: i }));
+    const sizes = this.editSizes();
+    const items = this.editTiles().map((t, i) => ({
+      clave: t.modulo,
+      orden: i,
+      size: sizes[t.modulo] ?? ('1x1' as ModuleSize),
+    }));
     const map: Record<string, number> = {};
-    items.forEach((it) => (map[it.clave] = it.orden));
-    this.orderMap.set(map); // optimista: el home ya refleja el nuevo orden
+    const smap: Record<string, ModuleSize> = {};
+    items.forEach((it) => {
+      map[it.clave] = it.orden;
+      smap[it.clave] = it.size;
+    });
+    this.orderMap.set(map); // optimista: el home ya refleja el nuevo orden…
+    this.sizeMap.set(smap); // …y los tamaños
     this.editMode.set(false);
     try {
       await this.moduleOrder.setOrder(items);
-      this.toast.success('Orden de módulos guardado.');
+      this.toast.success('Módulos guardados.');
     } catch {
-      this.toast.error('No se pudo guardar el orden. Inténtalo de nuevo.');
+      this.toast.error('No se pudo guardar. Inténtalo de nuevo.');
     }
   }
   cancelarOrden(): void {

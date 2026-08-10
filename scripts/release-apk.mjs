@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.67.0';
+const VERSION = '1.68.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,24 +59,24 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-07';
+const RELEASED_AT = '2026-08-09';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Transporte renovado: menú nuevo, conduce simplificado, Uso de vehículo, Aviso de vehículo y Mi actividad por periodo';
-// Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad.
+const TITULO = 'Conduce paso a paso, el receptor confirma en su teléfono, mensajería en la app y navegación más estable';
+// Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
+// y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', d: 'Nuevo menú de Transporte más fácil de ver: 3 botones por fila con iconos claros, y arriba tu estado y los documentos que tienes en proceso.' },
-  { t: 'nuevo', d: 'Crear conduce en una sola pantalla: foto de recepción de lo que cargas, a quién se lo despachas y las dos firmas (chofer y despachante). El menú tiene Crear, Pendiente entrega e Histórico.' },
-  { t: 'nuevo', d: 'Aviso de vehículo: reporta una novedad o daño con foto (le llega al jefe de flota) y revisa las alertas del vehículo (matrícula, seguro y mantenimiento).' },
-  { t: 'mejora', d: 'Mi actividad renovada: filtra por periodo (este mes, 3 y 6 meses, un año o total) y mira tus rutas, conduces, galones, kilómetros, inspecciones y multas.' },
-  { t: 'mejora', d: 'Uso de vehículo (antes "asignarme vehículo" y "pre-uso"): más rápido, con solo 3 chequeos —documentación, llantas y luces— más fotos y firma.' },
-  { t: 'mejora', d: 'El "reporte semanal" ahora se llama "Inspección de vehículo" en toda la app.' },
-  { t: 'mejora', d: 'Las rutas muestran su duración en horas y minutos (ej. 16h 51m) y su recorrido; la foto de la ruta pasó a ser opcional.' },
-  { t: 'mejora', d: 'Si creas un conduce o una ruta con un vehículo que no es el tuyo, la app te lleva primero a registrar su uso y luego regresas a lo que estabas haciendo.' },
-  { t: 'mejora', d: 'En la bitácora del día eliges la obra desde un desplegable con buscador, y el trabajo que acabas de marcar aparece de primero para ponerle la cantidad sin buscar.' },
-  { t: 'mejora', d: 'Todas las listas de obra y almacén de la app son ahora desplegables con buscador (Mi obra, combustible, tareas y rutas), en vez de mostrar la lista completa.' },
-  { t: 'arreglo', d: 'Arreglado en la versión web (PWA): ya no aparece el aviso de "actualizar" en bucle que impedía usar la app; la web se actualiza sola.' },
+  { t: 'nuevo', m: 'Conduces', d: 'Crear conduce ahora es paso a paso (una pregunta por pantalla): origen, destino, materiales, foto, despachante y firmas, y un resumen antes de emitir. Se acabaron las listas largas: todo es un desplegable con buscador.' },
+  { t: 'nuevo', m: 'Conduces', d: 'Puedes marcar el avance de tu conduce: iniciar tránsito, "estoy entregando" y entregado (con foto de la entrega).' },
+  { t: 'nuevo', m: 'Conduces', d: 'Quien recibe el material lo confirma desde SU PROPIO teléfono (con foto y firma). Le llega un aviso y en el inicio ve "Tienes entregas por confirmar".' },
+  { t: 'mejora', m: 'Conduces', d: 'En el listado de despachante ya solo salen personas de obra/almacén (la gente de oficina no aparece). "Devolver" ahora abre el conduce con el destino de suplidor ya puesto.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Nueva mensajería en la app, igual que en la web: conversaciones, envío aunque estés sin señal y aviso con la cantidad de mensajes sin leer en el inicio.' },
+  { t: 'nuevo', m: 'Inicio', d: 'Puedes personalizar el inicio: además de reordenar, ahora cambias el tamaño de cada botón (chico, mediano o grande), como en el celular.' },
+  { t: 'mejora', m: 'Seguimiento', d: 'El mapa de seguimiento dibuja en vivo el recorrido de cada ruta activa, y las posiciones quedan ligadas a su ruta para ver el trayecto.' },
+  { t: 'mejora', m: 'Mi actividad', d: 'Se agregó el filtro de "1 semana", y ahora puedes ver tu propio perfil de conductor (solo lectura) en cuadrículas.' },
+  { t: 'arreglo', m: 'Navegación', d: 'Un aviso que llegaba mientras llenabas un formulario ya no te saca de lo que estás haciendo; el botón "atrás" en Mi obra dejó de dar vueltas raras.' },
+  { t: 'mejora', m: 'Actualización', d: 'La pantalla de "qué trae la versión" ahora se lee como una lista corta por módulo, y los botones siempre quedan visibles abajo.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -1,5 +1,53 @@
 # HANDOFF — CSD App
 
+## 🟠 SESIÓN 08/08 — PROMPT-14 ronda AJ (app) — Terminar Transporte v3 + nav + tracking + mensajería — **6 FASES, CÓDIGO COMPLETO, build VERDE (exit 0), SIN commit / SIN APK / SIN publicar**
+**Depende de PROMPT-13 (SGC `0f7a511`, 6 migraciones `sql/2026-08-08-aj*` en prod).** `npm run build` **VERDE**. **NADA de commit/push/APK/deploy** — esperando OK de Xaviel (regla Y1). Falta **device-QA con DOS teléfonos** (chofer + receptor, uno Xiaomi) — físico, tuyo.
+
+### FASE 1 — Navegación + pantalla de actualización (AJ2/AJ7/AJ3/AJ1) ✅
+- **AJ7 (raíz encontrada y arreglada):** `push.service` deep-linkeaba con `router.navigateByUrl` directo → un push de "ruta asignada" (auto-ruta AF23 al emitir conduce) te sacaba del formulario. La guarda solo cubría el botón físico Atrás. **Fix estructural:** `NavGuardService.requestNav()` DIFIERE cualquier navegación de segundo plano mientras hay un formulario abierto y la descarga al cerrarlo. El deep-link de push ahora pasa por ese gate.
+- **AJ2:** obra era el único módulo que usaba `router.navigate(['/obra'])` (PUSH) como "atrás" → ensuciaba el histórico y el botón físico ciclaba. Los **9 back de submódulos de obra** ahora usan `navGuard.back(fallback)` (POP real; nunca sale de la app en un deep-link de arranque en frío). `GuardedWizard.salir()` también usa el back seguro. Auditoría completa: ningún otro módulo tenía el antipatrón; RRHH (`/rrhh/empleados`) y mono-módulo auto-enter son por diseño (aterrizan en el home del módulo).
+- **AJ1:** la pantalla de actualización pinta el changelog como **bullets agrupados por módulo** (`app_versiones.cambios[{t,d,m}]`, RLS legible) con chips por tipo, área scrolleable de altura limitada y botones SIEMPRE fijos abajo; fallback a texto plano por oraciones para versiones viejas.
+- **AJ3:** "Falta charla" → banner claro y accionable **"Charla de seguridad de hoy: pendiente — Registrar →"** gateado a `obra.plan_dia` (oculto para el resto; ya no es residuo confuso).
+
+### FASE 2 — Conduce por hojas + dropdowns + despachantes elegibles (AJ6/AJ13) ✅
+- Crear conduce **rehecho como wizard de HOJAS** (step-bar + WizardFooter): Origen → Destino → Materiales → Foto de recepción → Despachante+Vehículo+Firmas → Resumen → Emitir. **Ningún listado abierto** (antes `collapsible-select` mostraba la lista completa sin selección → esa era la queja de la v1.67; ahora una hoja a la vez). Borrador AE9 intacto.
+- **Se agregó el selector de VEHÍCULO** en la hoja de despacho (no existía en el HTML) → ahora AI6 (vehículo distinto) puede dispararse desde el conduce.
+- Despachantes: la elegibilidad es server-side (PROMPT-13 `despachantes_disponibles` excluye oficina). La app recarga con contexto (`bodega`/`obra`) para que los vinculados salgan primero.
+
+### FASE 3 — Estados del conduce + confirmación del receptor en SU teléfono (AJ8) ✅
+- **Bug pendiente-invisible:** ya arreglado server-side (PROMPT-13, no filtra `es_prueba`); la app lista `mis_conduces_pendientes_entrega`.
+- **Estados del chofer** (rehice `conduces/entrega`): Iniciar tránsito → Estoy entregando → **Marcar entregado (foto obligatoria, SIN firma del receptor)**. Por outbox (`conduce_estado_op`, `conduce_entregado`).
+- **Receptor confirma en SU teléfono:** nueva página `/transporte/por-confirmar` (`mis_entregas_por_confirmar`) → foto + firma + ¿llegó todo? → `conduce_confirmar_receptor` (por outbox `conduce_confirmar`; server impide que confirme quien entregó). Banner de descubrimiento en el **Home** ("Tienes N entregas por confirmar") + tile en el hub de Conduces + deep-link de push. Ruta A,P-only (el receptor puede ser inventario/obra sin flota).
+- **"Devolver" eliminado como submódulo** → el tile "Devolver a suplidor" abre el wizard de conduce pre-llenado (destino suplidor).
+
+### FASE 4 — Mi actividad / perfil / rutas (AJ9/AJ10/AJ11/AJ12) ✅
+- **AJ9:** filtro de periodo con **"1 semana"** (primero) + los 6 tiles ya presentes (Rutas/Conduces/Galones/KM/Inspecciones/Multas).
+- **AJ11:** ficha **"Ver mi perfil de conductor"** (solo lectura, cuadrículas 2xN) en Mi actividad, vía `mi_perfil_conductor()`.
+- **AJ10:** verificado — el desvío AI6 (vehículo no asignado → Uso de vehículo → vuelve al borrador) está en **crear-ruta Y conduce** (a este último le faltaba el selector de vehículo, ya agregado).
+- **AJ12:** los campos de detalle de ruta (H.I/H.F/km/duración/trayecto) ya vienen de AI3; el replay visual de la polyline queda en FASE 5.
+
+### FASE 5 — Seguimiento: tracking + trazado (AJ14) 🟡 app-side ✅ / nativo+Xiaomi PENDIENTE
+- **HECHO (app):** cada punto GPS se **taggea con `ruta_id`** (habilita la consolidación server-side del trayecto). **Trazado en vivo:** el mapa de Seguimiento dibuja el **breadcrumb** (`ruta_breadcrumb_vivo`) de cada ruta activa (Google Maps y Leaflet), refrescado por realtime.
+- **YA EXISTÍA (AF27/AG11):** foreground service (`@capacitor-community/background-geolocation` con notificación), watchdog que re-arma el watcher, batching + buffer offline, gate GPS, telemetría Y6. Los filtros de accuracy/saltos ahora son server-side (PROMPT-13).
+- **PENDIENTE (nativo/dispositivo, TUYO):** (a) **exclusión de optimización de batería** con pantalla explicativa (crítico Xiaomi/MIUI) — requiere un plugin nativo, no se puede solo en TS; (b) muestreo adaptativo por tiempo (hoy `distanceFilter:40`); (c) **replay de la polyline consolidada** en el detalle de la ruta finalizada (los puntos `trayecto` ya se traen; falta el mini-mapa); (d) **validación con una ruta real en el Xiaomi**.
+
+### FASE 6 — Launcher con tamaños + mensajería (AJ4/AJ5) ✅
+- **AJ4:** modo edición del home ahora **redimensiona tiles** (1x1 / 2x1 / 2x2, botón ⤢ que cicla) además de reordenar; persiste en `get/set_module_order` (columna `size`). El permiso es **delegable**: `plataforma.layout_app` (ya no hardcodeado a admin) vía `puedeOperarSubmodulo`.
+- **AJ5:** módulo **Mensajes** nuevo (mismo modelo que la web): `/mensajes` (conversaciones + nueva por búsqueda de usuario) y `/mensajes/:id` (hilo con envío **offline por outbox** idempotente por `client_id`, realtime Supabase, marcar leído). Tile general en el Home con **badge de no leídos** (`contar_mensajes_no_leidos`) y deep-link de push. **v1 = solo texto** (adjuntos: el contrato los soporta pero la UI de compose es texto; queda como follow-up).
+
+### Archivos nuevos
+`pages/transporte/por-confirmar/*`, `pages/mensajes/*` (+ `thread/*`), `core/services/mensajes.service.ts`.
+### Servicios/áreas tocadas
+`nav-guard.service` (gate + back seguro), `push.service` (requestNav), `guarded-wizard`, `version.service`+`actualizar` (changelog), obra (9 back + charla), `generar-conduce` (wizard), `conduces.service` (estados/confirmar/entregado + handlers), `conduces/entrega` (state machine), `conduces-hub` (Devolver→conduce, Por confirmar), `home` (banners receptor + Mensajes + tamaños), `mi-actividad`+`conductores.service` (semana + perfil), `tracking.service`+`seguimiento` (ruta_id + breadcrumb), `en-proceso.service`, `module-order.service`, `notificaciones.service` (deep-link /mensajes), `app.routes.ts`.
+
+### PENDIENTE (Xaviel)
+1. Revisar/confirmar → OK para `git commit/push` + `npm run apk` (Y1) + `apk:publish` + flip `publicada`.
+2. **Device-QA DOS teléfonos** (chofer + receptor, uno Xiaomi): conduce por hojas → pendiente entrega (badge real) → estados → entregado → **receptor confirma DESDE SU teléfono**; navegación sin saltos; tracking en vivo + breadcrumb en el Xiaomi; mensajería entre dos usuarios; tamaños de tiles; changelog legible.
+3. FASE 5 nativo (batería/Xiaomi + replay polyline) y adjuntos en Mensajes = follow-up.
+4. Criterio final de despachantes y `despachante_test_user_id` (parámetros SGC, sin código).
+
+---
+
 ## 🔧 FOLLOW-UP 07/08 (tras device-QA) — 2 fixes + APK 1.67.0
 **Device-QA:** las 6 fases verificadas en teléfono real (chofer/admin) con datos de prod — sin bugs (screenshots en scratchpad). Detalle: sesión activa era un TEST conductor viejo (PIN 4703 rechazado); se cerró sesión (¿Olvidaste tu PIN? → logout) y se entró fresco como `tecnologia@` → PIN 4703 (per-device) → verificado menú v3, Mi actividad+periodo, conduce AI2 (foto recepción/despachante/2 firmas), Pendiente entrega, Aviso de vehículo (Reportar+Alertas), Uso de vehículo (3 checks), bitácora obra dropdown.
 

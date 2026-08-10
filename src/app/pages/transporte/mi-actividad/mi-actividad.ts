@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
-import { ConductoresService, StatsPeriodo, StatsConductorPeriodo } from '../../../core/services/conductores.service';
+import { ConductoresService, StatsPeriodo, StatsConductorPeriodo, MiPerfilConductor } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
@@ -53,8 +53,12 @@ export class MiActividadPage {
   loading = signal(true);
   stats = signal<ConductorStats | null>(null);
   esConductor = signal(true);
+  // AJ11 — perfil propio del conductor (solo lectura), en cuadrículas.
+  perfil = signal<MiPerfilConductor | null>(null);
+  verPerfil = signal(false);
   // AI10 — filtro de periodo (default: mes en curso) + stats por periodo.
   readonly PERIODOS: { id: StatsPeriodo; label: string }[] = [
+    { id: 'semana', label: '1 semana' },
     { id: 'mes', label: 'Este mes' },
     { id: '3m', label: '3 meses' },
     { id: '6m', label: '6 meses' },
@@ -129,6 +133,8 @@ export class MiActividadPage {
       this.esConductor.set(!!cond);
       if (cond) {
         this.condId.set(cond.id);
+        // AJ11 — perfil propio (solo lectura, en cuadrículas). Best-effort.
+        void this.conductores.miPerfilConductor().then((p) => this.perfil.set(p)).catch(() => {});
         this.stats.set(await this.conductores.getMiStats());
         void this.loadPeriodo();
         await this.loadDocs();
@@ -270,6 +276,11 @@ export class MiActividadPage {
   miMulta(): void {
     const id = this.condId();
     if (id) void this.router.navigate(['/transporte/conductor', id, 'multa']);
+  }
+
+  /** AJ11 — muestra/oculta la ficha de perfil (solo lectura). */
+  togglePerfil(): void {
+    this.verPerfil.update((v) => !v);
   }
 
   back(): void {

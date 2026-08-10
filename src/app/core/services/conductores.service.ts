@@ -21,7 +21,22 @@ const FLOTA_CONFIG_DEFAULT: FlotaConfig = {
 };
 
 /** AI10 — periodo de las stats de "Mi actividad" / Perfil del conductor. */
-export type StatsPeriodo = 'mes' | '3m' | '6m' | '1a' | 'total';
+export type StatsPeriodo = 'semana' | 'mes' | '3m' | '6m' | '1a' | 'total';
+
+/** AJ11 — perfil propio del conductor (solo lectura), RPC mi_perfil_conductor. */
+export interface MiPerfilConductor {
+  es_conductor: boolean;
+  conductor_id: string | null;
+  nombre: string | null;
+  cedula: string | null;
+  telefono: string | null;
+  tags: string[] | null;
+  nota: string | null;
+  licencia: { tipo: string | null; numero: string | null; vencimiento: string | null } | null;
+  tipo_vehiculo_autorizado: string | null;
+  vehiculo: { id: string; placa: string; marca: string | null; modelo: string | null } | null;
+  solo_lectura: boolean;
+}
 
 /** AI10/AI11 — stats del conductor por periodo (RPC stats_conductor_periodo). */
 export interface StatsConductorPeriodo {
@@ -136,6 +151,13 @@ export class ConductoresService {
   }
 
   /** The current user's conductor row, or null if they aren't a registered driver. */
+  /** AJ11 — el chofer lee SU propio perfil de conductor (solo lectura). */
+  async miPerfilConductor(): Promise<MiPerfilConductor | null> {
+    const { data, error } = await this.supabase.client.rpc('mi_perfil_conductor');
+    if (error) throw new Error(error.message);
+    return (data as MiPerfilConductor) ?? null;
+  }
+
   async getMiConductor(): Promise<Conductor | null> {
     const data = await this.catalog.refresh<Conductor | null>(CATALOG_MI_CONDUCTOR, async () => {
       const { data: userData } = await this.supabase.client.auth.getUser();

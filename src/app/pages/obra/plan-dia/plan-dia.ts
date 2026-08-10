@@ -8,6 +8,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { PlanDelDia } from '../../../core/models/obra.model';
 import { formatearDuracion } from '../../../core/util/duracion';
 
@@ -34,6 +35,7 @@ export class PlanDiaPage {
   private ctx = inject(UserContextService);
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
+  private navGuard = inject(NavGuardService);
 
   proyectoId = '';
   protected fmtDur = formatearDuracion;
@@ -153,6 +155,6 @@ export class PlanDiaPage {
   }
 
   back(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

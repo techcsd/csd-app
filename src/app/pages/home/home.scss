@@ -47,6 +47,19 @@
   grid-template-columns: 1fr;
 }
 
+/* AJ4 — tamaños de tile tipo launcher (columnas del grid de 2). El row-span da la
+   altura extra al 2x2 apoyándose en filas de base uniforme. */
+.home__grid {
+  grid-auto-rows: minmax(104px, auto);
+}
+.home__tile--2x1 {
+  grid-column: span 2;
+}
+.home__tile--2x2 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
 // AF38 — modo edición de orden (admin).
 .home__edit-bar {
   display: flex;
@@ -221,4 +234,21 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+// AJ4 — botón de tamaño en modo edición (esquina del tile)
+.home__edit-tile {
+  position: relative;
+}
+.home__size-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
 }

@@ -1,151 +1,92 @@
-@if (done()) {
-  <!-- AC7 — confirmación con el detalle de ambas firmas del conduce -->
-  <div class="screen entrega">
-    <div class="screen__body">
+<div class="screen entrega">
+  <header class="entrega__header">
+    <button type="button" class="entrega__back" (click)="finish()" aria-label="Atrás">←</button>
+    <h1 class="entrega__title">🚚 Entregar conduce</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!conduce()) {
+      <p class="entrega__empty">No encontramos este conduce.</p>
+    } @else if (done()) {
       <div class="entrega__ok">
-        <span class="entrega__ok-check">{{ online ? '✓' : '⏳' }}</span>
-        <h1 class="entrega__ok-title">{{ online ? 'Entrega registrada' : 'Guardado' }}</h1>
-        <p class="entrega__ok-sub">
-          {{ online
-            ? (incompleto() ? 'Se marcó como entrega incompleta.' : 'Conduce entregado completo.')
-            : 'Sin señal. Se enviará solo.' }}
-        </p>
+        <span class="entrega__ok-ico">✅</span>
+        <h2 class="entrega__ok-title">Entregado</h2>
+        <p class="entrega__ok-sub">El receptor recibió el aviso y confirmará la entrega desde su propio teléfono.</p>
+        <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+      </div>
+    } @else {
+      @let c = conduce()!;
+      <!-- Cabecera del conduce -->
+      <div class="entrega__card">
+        <div class="entrega__row"><span class="entrega__k">Conduce</span><span class="entrega__v">{{ c.codigo }}</span></div>
+        <div class="entrega__row"><span class="entrega__k">Destino</span><span class="entrega__v">{{ c.destino || '—' }}</span></div>
+        <div class="entrega__row"><span class="entrega__k">Origen</span><span class="entrega__v">{{ c.bodega || '—' }}</span></div>
+        <div class="entrega__row"><span class="entrega__k">Estado</span><span class="entrega__chip">{{ faseLabel() }}</span></div>
       </div>
 
-      <div class="entrega__firmas">
-        <div class="entrega__firma">
-          <span class="entrega__firma-rol">Entregó</span>
-          <span class="entrega__firma-nombre">{{ emisorNombre() }}</span>
-          @if (firmaEmisorUrl(); as u) { <img class="entrega__firma-img" [src]="u" alt="Firma de quien entrega" /> }
-        </div>
-        <div class="entrega__firma">
-          <span class="entrega__firma-rol">Recibió</span>
-          <span class="entrega__firma-nombre">{{ receptor() }}</span>
-          @if (firmaReceptorUrl(); as u) {
-            <img class="entrega__firma-img" [src]="u" alt="Firma de quien recibe" />
-          } @else if (entregaPendiente()) {
-            <span class="entrega__firma-pend">⏳ Firma pendiente — le llegó un aviso.</span>
+      <!-- Materiales -->
+      @if (c.items.length) {
+        <h2 class="entrega__section">Materiales</h2>
+        <ul class="entrega__items">
+          @for (it of c.items; track it.detalle_id) {
+            <li class="entrega__item"><span>{{ it.articulo }}</span><span class="entrega__item-qty">{{ it.cantidad }} {{ it.unidad }}</span></li>
           }
-        </div>
-      </div>
-    </div>
-    <footer class="entrega__nav">
-      <button type="button" class="btn-cta" (click)="finish()">Listo</button>
-    </footer>
-  </div>
-} @else if (loading()) {
-  <div class="screen entrega">
-    <div class="screen__body"><app-skeleton [rows]="5" /></div>
-  </div>
-} @else if (conduce(); as c) {
-  <div class="screen entrega">
-    <header class="entrega__header">
-      <button type="button" class="entrega__back" (click)="finish()" aria-label="Atrás">←</button>
-      <h1 class="entrega__title">Entregar conduce</h1>
-      <span class="entrega__destino">📍 {{ c.destino ?? 'Destino' }}</span>
-    </header>
-
-    <div class="screen__body">
-      <h2 class="entrega__step">1. Foto de la entrega</h2>
-      <app-photo-slot label="Foto en el destino" hint="📸" (captured)="onFoto($event)" (cleared)="foto.set(null)" />
-
-      <h2 class="entrega__step">2. ¿Llegó todo el material?</h2>
-      <app-option-button
-        icon="✅"
-        label="Sí, llegó todo"
-        tone="success"
-        [selected]="llegoTodo() === true"
-        (pressed)="setLlegoTodo(true)"
-      />
-      <app-option-button
-        icon="⚠️"
-        label="No, faltó algo"
-        tone="warning"
-        [selected]="llegoTodo() === false"
-        (pressed)="setLlegoTodo(false)"
-      />
-
-      @if (llegoTodo() === false) {
-        <h2 class="entrega__step">Cantidad recibida</h2>
-        @for (it of c.items; track it.detalle_id) {
-          <div class="entrega__item">
-            <span class="entrega__item-name">{{ it.articulo }}</span>
-            <div class="entrega__item-qty">
-              <input
-                class="field"
-                type="number"
-                inputmode="decimal"
-                [ngModel]="cantidades()[it.detalle_id]"
-                (ngModelChange)="setCantidad(it.detalle_id, $event)"
-              />
-              <span class="entrega__item-unit">/ {{ it.cantidad }} {{ it.unidad }}</span>
-            </div>
-          </div>
-        }
+        </ul>
       }
 
-      <!-- AC7 — firma de quien ENTREGA (emisor: chofer/almacén) -->
-      <h2 class="entrega__step">3. ¿Quién entrega?</h2>
-      <input
-        class="field"
-        type="text"
-        [ngModel]="emisorNombre()"
-        (ngModelChange)="emisorNombre.set($event)"
-        placeholder="Nombre de quien entrega"
-      />
-
-      <h2 class="entrega__step">4. Firma de quien entrega</h2>
-      <app-signature-pad #emisorPad (changed)="onFirmaEmisor($event)" />
-
-      <!-- AC7/AE — receptor: presente (firma ahora) o ausente (firma pendiente) -->
-      <h2 class="entrega__step">5. ¿Quién recibe?</h2>
-      <app-option-button icon="✍️" label="Está presente y firma ahora" [selected]="receptorPresente()" (pressed)="setReceptorPresente(true)" />
-      <app-option-button icon="⏳" label="No está: dejar su firma pendiente" [selected]="!receptorPresente()" (pressed)="setReceptorPresente(false)" />
-
-      @if (receptorPresente()) {
-        <input
-          class="field entrega__mt"
-          type="text"
-          [ngModel]="receptor()"
-          (ngModelChange)="receptor.set($event)"
-          placeholder="Nombre de quien recibe"
-        />
-        <h2 class="entrega__step">6. Firma de quien recibe</h2>
-        <app-signature-pad #receptorPad (changed)="onFirmaReceptor($event)" />
+      @if (yaEntregado()) {
+        <div class="entrega__band">✅ Ya marcaste este conduce como entregado. El receptor lo confirmará desde su teléfono.</div>
       } @else {
-        <input
-          class="field entrega__mt"
-          type="search"
-          [ngModel]="receptorBusqueda()"
-          (ngModelChange)="receptorBusqueda.set($event); buscarReceptor()"
-          placeholder="Buscar al ingeniero / encargado…"
-        />
-        @if (buscando()) { <p class="entrega__hint">Buscando…</p> }
-        @for (u of receptorResultados(); track u.id) {
-          <button type="button" class="entrega__ures" (click)="pickReceptor(u)">
-            <span class="entrega__ures-nombre">{{ u.nombre }}</span>
-            @if (u.email) { <span class="entrega__ures-email">{{ u.email }}</span> }
+        <!-- Acciones de estado del chofer -->
+        <h2 class="entrega__section">¿En qué vas?</h2>
+        <div class="entrega__acciones">
+          <button type="button" class="entrega__estado" [disabled]="!puedeIniciarTransito() || submitting()" (click)="iniciarTransito()">
+            🚚 Iniciar tránsito
+          </button>
+          <button type="button" class="entrega__estado" [disabled]="!puedeEntregando() || submitting()" (click)="estoyEntregando()">
+            📦 Estoy entregando
+          </button>
+        </div>
+
+        @if (!mostrarEntrega()) {
+          <button type="button" class="btn-cta entrega__mt" (click)="abrirEntrega()">✅ Marcar entregado</button>
+        } @else {
+          <!-- Panel de entrega: foto obligatoria + ¿llegó todo? -->
+          <h2 class="entrega__section">Foto de la entrega <span class="entrega__req">*</span></h2>
+          <p class="entrega__sub">Toma la foto del material entregado en destino.</p>
+          <app-photo-slot label="Entrega" hint="📸" [gallery]="false" [foto]="foto()" (captured)="onFoto($event)" (cleared)="foto.set(null)" />
+
+          <h2 class="entrega__section">¿Llegó todo el material?</h2>
+          <div class="entrega__si-no">
+            <app-option-button icon="✅" label="Sí, todo" [selected]="llegoTodo() === true" (pressed)="setLlegoTodo(true)" />
+            <app-option-button icon="⚠️" label="Faltó algo" [selected]="llegoTodo() === false" (pressed)="setLlegoTodo(false)" />
+          </div>
+
+          @if (llegoTodo() === false) {
+            <p class="entrega__sub">Ajusta la cantidad que sí llegó de cada material.</p>
+            <div class="entrega__items">
+              @for (it of c.items; track it.detalle_id) {
+                <div class="entrega__item">
+                  <span>{{ it.articulo }}</span>
+                  <input class="field entrega__qty" type="number" inputmode="decimal" [ngModel]="cantidades()[it.detalle_id]" (ngModelChange)="setCantidad(it.detalle_id, $event)" />
+                  <span class="entrega__unit">/ {{ it.cantidad }} {{ it.unidad }}</span>
+                </div>
+              }
+            </div>
+          }
+
+          <label class="field-label entrega__mt" for="nt">Notas (opcional)</label>
+          <textarea id="nt" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Novedad de la entrega…"></textarea>
+
+          <button type="button" class="btn-cta entrega__mt" [disabled]="submitting()" (click)="marcarEntregado()">
+            {{ submitting() ? 'Guardando…' : 'Confirmar entregado' }}
           </button>
         }
-        @if (receptorSel(); as u) {
-          <div class="entrega__band">
-            ⏳ Se entregará con la firma de <b>{{ u.nombre }}</b> pendiente. Le llegará un aviso para firmarla en "Por firmar".
-          </div>
-        }
       }
-    </div>
 
-    <footer class="entrega__nav">
-      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-        {{ submitting() ? 'Guardando…' : 'Confirmar entrega' }}
-      </button>
-    </footer>
+      @if (!online) { <p class="entrega__offline">Sin conexión: se enviará cuando vuelva el internet.</p> }
+    }
   </div>
-} @else {
-  <div class="screen entrega">
-    <div class="screen__body">
-      <p>No se encontró el conduce. Vuelve e intenta de nuevo.</p>
-      <button type="button" class="btn-ghost" (click)="finish()">Volver</button>
-    </div>
-  </div>
-}
+</div>

@@ -58,6 +58,10 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private ginfo: GAny = null;
   private useGoogle = false;
   private centrado = false;
+  // AJ14 — trazado en vivo por ruta activa (línea del recorrido del día).
+  private gPolylines = new Map<string, GAny>();
+  private lPolylines = new Map<string, L.Polyline>();
+  private readonly TRAZO_COLOR = '#2563eb';
 
   loading = signal(true);
   choferes = signal<ChoferSeguimiento[]>([]);
@@ -126,10 +130,14 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.service.desuscribir();
+    for (const pl of this.lPolylines.values()) pl.remove();
+    this.lPolylines.clear();
     this.map?.remove();
     this.map = null;
     for (const m of this.gmarkers.values()) m.setMap?.(null);
     this.gmarkers.clear();
+    for (const pl of this.gPolylines.values()) pl.setMap?.(null);
+    this.gPolylines.clear();
     this.gmap = null;
   }
 
@@ -143,9 +151,43 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       this.rutasActivas.set(rutas);
       if (this.useGoogle) this.pintarGoogle();
       else this.pintarLeaflet();
+      void this.pintarBreadcrumbs(); // AJ14 — trazado en vivo del recorrido
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** AJ14 — dibuja/actualiza la línea del recorrido del día de cada ruta activa. */
+  private async pintarBreadcrumbs(): Promise<void> {
+    const vistos = new Set<string>();
+    for (const r of this.rutasActivas()) {
+      const coords = await this.service.rutaBreadcrumb(r.id);
+      if (coords.length < 2) continue;
+      vistos.add(r.id);
+      if (this.useGoogle && this.gmap) {
+        const path = coords.map(([lat, lng]) => ({ lat, lng }));
+        const existing = this.gPolylines.get(r.id);
+        if (existing) existing.setPath(path);
+        else {
+          const pl = new this.g.Polyline({
+            path,
+            map: this.gmap,
+            strokeColor: this.TRAZO_COLOR,
+            strokeOpacity: 0.9,
+            strokeWeight: 4,
+          });
+          this.gPolylines.set(r.id, pl);
+        }
+      } else if (this.map) {
+        const latlngs = coords.map(([lat, lng]) => [lat, lng] as L.LatLngTuple);
+        const existing = this.lPolylines.get(r.id);
+        if (existing) existing.setLatLngs(latlngs);
+        else this.lPolylines.set(r.id, L.polyline(latlngs, { color: this.TRAZO_COLOR, weight: 4, opacity: 0.9 }).addTo(this.map));
+      }
+    }
+    // Quita trazos de rutas que ya no están activas.
+    for (const [id, pl] of this.gPolylines) if (!vistos.has(id)) { pl.setMap(null); this.gPolylines.delete(id); }
+    for (const [id, pl] of this.lPolylines) if (!vistos.has(id)) { pl.remove(); this.lPolylines.delete(id); }
   }
 
   // ── Google Maps ────────────────────────────────────────────────────────────

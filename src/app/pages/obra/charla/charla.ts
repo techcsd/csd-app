@@ -133,7 +133,7 @@ export class CharlaPage implements OnDestroy {
   }
   salir(): void {
     this.confirmSalir.set(false);
-    void this.router.navigate(['/obra/plan', this.proyectoId]);
+    this.navGuard.back('/obra/plan/' + this.proyectoId);
   }
 
   async guardar(): Promise<void> {
@@ -163,6 +163,6 @@ export class CharlaPage implements OnDestroy {
   }
 
   cerrar(): void {
-    void this.router.navigate(['/obra/plan', this.proyectoId]);
+    this.navGuard.back('/obra/plan/' + this.proyectoId);
   }
 }

@@ -1,0 +1,97 @@
+.porconf {
+  background: var(--color-bg);
+}
+
+.porconf__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.porconf__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.porconf__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.porconf__intro {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.porconf__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.porconf__card + .porconf__card {
+  margin-top: 12px;
+}
+.porconf__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  background: transparent;
+  text-align: left;
+}
+.porconf__row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.porconf__row-dest {
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.porconf__row-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.porconf__row-arrow {
+  flex: 0 0 auto;
+  font-weight: 800;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.porconf__panel {
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--color-border);
+}
+.porconf__req {
+  color: var(--color-error);
+}
+.porconf__mt {
+  margin-top: 14px;
+  display: block;
+}
+.porconf__si-no {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.btn-cta.porconf__mt {
+  width: 100%;
+}
+.porconf__offline {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

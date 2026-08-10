@@ -6,6 +6,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
+import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CronogramaTarea } from '../../../core/models/obra.model';
 
 /** AG16 FASE 4 — Avance real vs plan + reporte de % por tarea del cronograma. */
@@ -23,6 +24,7 @@ export class AvancePage {
   private obra = inject(ObraService);
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
+  private navGuard = inject(NavGuardService);
 
   proyectoId = '';
   loading = signal(true);
@@ -73,6 +75,6 @@ export class AvancePage {
   }
 
   back(): void {
-    void this.router.navigate(['/obra']);
+    this.navGuard.back('/obra');
   }
 }

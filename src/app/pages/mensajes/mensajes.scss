@@ -1,0 +1,115 @@
+.msgs {
+  background: var(--color-bg);
+}
+
+.msgs__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.msgs__back,
+.msgs__new {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+.msgs__title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.msgs__nueva {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.msgs__hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.msgs__result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 4px;
+  text-align: left;
+}
+.msgs__result-name {
+  font-weight: 700;
+}
+
+.msgs__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 4px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+.msgs__avatar {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--Hub, #ffb300);
+  color: #121212;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.msgs__row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.msgs__row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.msgs__row-name {
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.msgs__row-time {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.msgs__row-prev {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.msgs__badge {
+  flex: 0 0 auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--primary, #ff5f00);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
