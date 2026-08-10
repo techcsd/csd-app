@@ -26,6 +26,11 @@ import { DocumentosService } from './core/services/documentos.service';
 import { FlotaReportesService } from './core/services/flota-reportes.service';
 import { CronogramaService } from './core/services/cronograma.service';
 import { ObraService } from './core/services/obra.service';
+import { TraspasoService } from './core/services/traspaso.service';
+import { MensajesService } from './core/services/mensajes.service';
+import { NotasService } from './core/services/notas.service';
+import { RrhhService } from './core/services/rrhh.service';
+import { TareasService } from './core/services/tareas.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -69,10 +74,20 @@ export const appConfig: ApplicationConfig = {
       inject(DocumentosService);
       // S22/S24 — handlers de accidente/daño/multa registrados al boot.
       inject(FlotaReportesService);
-      // Y15 — handlers de cronograma (tarea_iniciar/completar/enlazar).
+      // Y15 — handlers de cronograma (cronograma_tarea_iniciar/completar/enlazar +
+      // compat de las claves viejas tarea_iniciar/completar). Ver QA-1.
       inject(CronogramaService);
       // AG16 — handlers de Gestión de Obra (charla/NC/incidente/checklist/…).
       inject(ObraService);
+      // QA-4 (AJ15) — S30-class: estos 5 servicios registran handlers de outbox en
+      // su constructor pero no se instanciaban al arranque → capturas offline
+      // (traspaso/mensaje/nota/asignación RRHH/tarea) quedaban "En cola" para siempre
+      // tras un reinicio en frío si la señal volvía antes de abrir el módulo.
+      inject(TraspasoService); // vehiculo_traspaso
+      inject(MensajesService); // mensaje_enviar
+      inject(NotasService); // nota_guardar / nota_checklist_set
+      inject(RrhhService); // rrhh_asignar_item / rrhh_asignacion_estado
+      inject(TareasService); // tarea_app_iniciar / tarea_app_completar
     }),
   ],
 };

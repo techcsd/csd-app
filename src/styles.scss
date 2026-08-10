@@ -32,6 +32,17 @@
   --Hub: #ffb300; /* amber accent on dark panels (active borders, highlights) */
   --main-ultra-light: #a8a8b2; /* muted light-grey text on dark panels */
 
+  /* QA-AJ15 — Aliases for stray tokens carried over from the other X Dev project
+     (--primary/--main/--color-text) that were used across ~20 component SCSS files
+     but never defined here. Undefined → the declaration dropped: invisible
+     backgrounds (home bell badge, Notas FAB, avisos dot), invisible selected
+     chips (conduces-historial), lost accents (estado-chofer-bar), and a second
+     wrong orange (#ff5f00 fallback) competing with the brand --color-primary.
+     Map each to its real semantic token so the design system stays single-source. */
+  --primary: var(--color-primary); /* accent / CTA orange */
+  --main: var(--color-text-primary); /* primary dark text */
+  --color-text: var(--color-text-primary); /* primary dark text (alt spelling) */
+
   /* Semantic — color always paired with an icon (colorblind-safe) */
   --color-success: #16a34a; /* guardado / sincronizado / entregado */
   --color-warning: #d97706; /* pendiente de envío */

@@ -92,8 +92,13 @@ export class CronogramaService {
       const p = op.payload as Record<string, unknown>;
       const tareaId = p['tarea_id'];
       if (typeof tareaId !== 'string') continue;
-      if (op.tipo_op === 'tarea_completar') out.set(tareaId, 'completar');
-      else if (op.tipo_op === 'tarea_iniciar' && out.get(tareaId) !== 'completar') out.set(tareaId, 'iniciar');
+      // QA-1: acepta la clave nueva `cronograma_tarea_*` y la vieja `tarea_*`
+      // (ops encoladas antes del split) — keyeado por tarea_id, así que no confunde
+      // con tareas del módulo general.
+      const completar = op.tipo_op === 'cronograma_tarea_completar' || op.tipo_op === 'tarea_completar';
+      const iniciar = op.tipo_op === 'cronograma_tarea_iniciar' || op.tipo_op === 'tarea_iniciar';
+      if (completar) out.set(tareaId, 'completar');
+      else if (iniciar && out.get(tareaId) !== 'completar') out.set(tareaId, 'iniciar');
     }
     return out;
   }
@@ -113,7 +118,7 @@ export class CronogramaService {
     const capturado_en = new Date().toISOString();
     await this.sync.enqueue({
       id,
-      tipo_op: 'tarea_iniciar',
+      tipo_op: 'cronograma_tarea_iniciar',
       capturado_en,
       payload: { id, tarea_id: tareaId, proyecto_id: proyectoId, fecha: capturado_en.slice(0, 10) },
     });
@@ -135,7 +140,7 @@ export class CronogramaService {
     const capturado_en = new Date().toISOString();
     await this.sync.enqueue({
       id,
-      tipo_op: 'tarea_completar',
+      tipo_op: 'cronograma_tarea_completar',
       capturado_en,
       payload: {
         id,
@@ -177,7 +182,10 @@ export class CronogramaService {
   }
 
   private registerHandlers(): void {
-    this.sync.register('tarea_iniciar', async (payload) => {
+    // QA-1 (AJ15): estos son los RPC de sgc.cronograma_tareas. Antes se registraban
+    // como 'tarea_iniciar'/'tarea_completar', colisionando con el módulo general de
+    // Tareas (TareasService, RPC *_app). Ahora usan claves propias `cronograma_*`.
+    this.sync.register('cronograma_tarea_iniciar', async (payload) => {
       const { error } = await this.supabase.client.rpc('iniciar_tarea', {
         p_tarea_id: payload['tarea_id'],
         p_fecha_inicio: payload['fecha'] ?? null,
@@ -186,7 +194,7 @@ export class CronogramaService {
       await this.catalog.invalidate(`${CAT_PREFIX}${payload['proyecto_id']}`);
     });
 
-    this.sync.register('tarea_completar', async (payload, photoPaths) => {
+    this.sync.register('cronograma_tarea_completar', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('completar_tarea', {
         p_tarea_id: payload['tarea_id'],
         p_foto_path: photoPaths['evidencia'] ?? null,
@@ -195,6 +203,47 @@ export class CronogramaService {
       });
       if (error) throwSyncError(error);
       await this.catalog.invalidate(`${CAT_PREFIX}${payload['proyecto_id']}`);
+    });
+
+    // QA-1 retrocompatibilidad: ops ya encoladas (≤1.68.0) usan la clave ambigua
+    // 'tarea_iniciar'/'tarea_completar'. CronogramaService se instancia al arranque
+    // (app.config) así que estos handlers siempre están presentes; se enruta por
+    // `proyecto_id` (las ops de cronograma lo llevan; las de Tareas general no) y por
+    // el slot de foto (`evidencia` vs `tarea`). Quitar tras drenar la flota (≥2 versiones).
+    this.sync.register('tarea_iniciar', async (payload) => {
+      if (payload['proyecto_id']) {
+        const { error } = await this.supabase.client.rpc('iniciar_tarea', {
+          p_tarea_id: payload['tarea_id'],
+          p_fecha_inicio: payload['fecha'] ?? null,
+        });
+        if (error) throwSyncError(error);
+        await this.catalog.invalidate(`${CAT_PREFIX}${payload['proyecto_id']}`);
+      } else {
+        const { error } = await this.supabase.client.rpc('iniciar_tarea_app', {
+          p_tarea_id: payload['tarea_id'],
+        });
+        if (error) throwSyncError(error);
+      }
+    });
+
+    this.sync.register('tarea_completar', async (payload, photoPaths) => {
+      if (payload['proyecto_id']) {
+        const { error } = await this.supabase.client.rpc('completar_tarea', {
+          p_tarea_id: payload['tarea_id'],
+          p_foto_path: photoPaths['evidencia'] ?? null,
+          p_justificacion: payload['justificacion'] ?? null,
+          p_fecha_fin: payload['fecha'] ?? null,
+        });
+        if (error) throwSyncError(error);
+        await this.catalog.invalidate(`${CAT_PREFIX}${payload['proyecto_id']}`);
+      } else {
+        const { error } = await this.supabase.client.rpc('completar_tarea_app', {
+          p_tarea_id: payload['tarea_id'],
+          p_justificacion: payload['justificacion'] ?? null,
+          p_foto_path: photoPaths['tarea'] ?? photoPaths['evidencia'] ?? null,
+        });
+        if (error) throwSyncError(error);
+      }
     });
 
     this.sync.register('tarea_enlazar', async (payload, photoPaths) => {

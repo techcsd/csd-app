@@ -172,6 +172,9 @@ export class TraspasoService {
         p_llave1_ubicacion: payload['llave1_ubicacion'] ?? null,
         p_llave1_detalle: payload['llave1_detalle'] ?? null,
         p_notas: payload['notas'] ?? null,
+        // QA-5 (AJ15) — client UUID idempotente: un reintento devuelve el acta ya
+        // creada en vez de duplicar acta + avance de km.
+        p_id: payload['id'],
       });
       if (error) throwSyncError(error);
       // AH13 — registrar las notas de voz contra el acta (reproducción + transcripción).

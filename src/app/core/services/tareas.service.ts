@@ -63,11 +63,11 @@ export class TareasService {
   async iniciar(tareaId: string): Promise<void> {
     await this.sync.enqueue({
       id: crypto.randomUUID(),
-      tipo_op: 'tarea_iniciar',
+      tipo_op: 'tarea_app_iniciar',
       capturado_en: new Date().toISOString(),
       payload: { tarea_id: tareaId, fecha_inicio: new Date().toISOString().slice(0, 10) },
       fotos: [],
-      resumen: { tipo: 'tarea_iniciar', tarea_id: tareaId },
+      resumen: { tipo: 'tarea_app_iniciar', tarea_id: tareaId },
     });
     await this.invalidar();
   }
@@ -77,7 +77,7 @@ export class TareasService {
     const id = crypto.randomUUID();
     await this.sync.enqueue({
       id,
-      tipo_op: 'tarea_completar',
+      tipo_op: 'tarea_app_completar',
       capturado_en: new Date().toISOString(),
       payload: {
         tarea_id: tareaId,
@@ -87,7 +87,7 @@ export class TareasService {
       fotos: foto
         ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `tareas/${tareaId}/${id}.jpg`, slot: 'tarea', blob: foto }]
         : [],
-      resumen: { tipo: 'tarea_completar', tarea_id: tareaId },
+      resumen: { tipo: 'tarea_app_completar', tarea_id: tareaId },
     });
     await this.invalidar();
   }
@@ -144,16 +144,20 @@ export class TareasService {
   }
 
   private registerHandlers(): void {
-    // OJO: iniciar_tarea/completar_tarea son de sgc.cronograma_tareas (cronograma
-    // de proyecto). El módulo general sgc.tareas usa *_app (ver migración AF39).
-    this.sync.register('tarea_iniciar', async (payload) => {
+    // QA-1 (AJ15): el módulo general sgc.tareas usa los RPC *_app y ANTES registraba
+    // 'tarea_iniciar'/'tarea_completar' — las MISMAS claves que CronogramaService
+    // (sgc.cronograma_tareas, RPC sin sufijo). Como `register` es last-wins, las ops
+    // de un módulo se enrutaban al RPC del otro. Ahora cada flujo tiene su propia
+    // clave (`tarea_app_*` vs `cronograma_tarea_*`); la retrocompatibilidad para ops
+    // ya encoladas con la clave vieja vive en CronogramaService (dispatch por proyecto_id).
+    this.sync.register('tarea_app_iniciar', async (payload) => {
       const { error } = await this.supabase.client.rpc('iniciar_tarea_app', {
         p_tarea_id: payload['tarea_id'],
       });
       if (error) throwSyncError(error);
     });
 
-    this.sync.register('tarea_completar', async (payload, photoPaths) => {
+    this.sync.register('tarea_app_completar', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('completar_tarea_app', {
         p_tarea_id: payload['tarea_id'],
         p_justificacion: payload['justificacion'] ?? null,

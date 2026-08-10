@@ -8,7 +8,7 @@
   &__back {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--color-text-primary); /* QA-AJ15: was #fff → invisible on the white header */
     font-size: 1.5rem;
     cursor: pointer;
   }
