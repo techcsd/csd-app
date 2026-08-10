@@ -24,6 +24,14 @@ import {
 const BUCKET_FOTOS = 'vehiculos'; // fotos de daño (upsert-safe)
 const BUCKET_DOCS = 'flota-documentos'; // acta AMET + documento de multa
 
+/** AK17 — conductor elegible para una multa (conductores_para_multa). */
+export interface ConductorMulta {
+  conductor_id: string;
+  nombre: string;
+  cedula: string | null;
+  es_yo: boolean;
+}
+
 /**
  * S22/S24 — reportes de flota por outbox: accidente, daño (fuera de entregas) y
  * multa de conductor. Escriben vía los RPC security-definer `registrar_*_app`
@@ -56,6 +64,25 @@ export class FlotaReportesService {
       return (data as MotivoMulta[]) ?? [];
     });
     return data ?? [];
+  }
+
+  // ── AK17 — multas seguras (gating server-side + picker correcto) ────────────
+  /**
+   * AK17 — conductores elegibles para una multa. Un no-elevado recibe SOLO su
+   * propia ficha (es_yo=true); un elevado recibe todos (incl. Papo, con la nueva
+   * definición de conductor). Reemplaza getConductores() (filtraba por rol/asignación).
+   */
+  async conductoresParaMulta(): Promise<ConductorMulta[]> {
+    const { data, error } = await this.supabase.client.rpc('conductores_para_multa');
+    if (error) throw new Error(error.message);
+    return (data as ConductorMulta[]) ?? [];
+  }
+
+  /** AK17 — ¿el usuario actual puede multar a OTROS? (roles elevados). */
+  async puedeMultarAOtros(): Promise<boolean> {
+    const { data, error } = await this.supabase.client.rpc('puede_multar_a_otros');
+    if (error) return false;
+    return (data as boolean) ?? false;
   }
 
   /** Firma un path del bucket privado `flota-documentos` (acta AMET / doc multa). */

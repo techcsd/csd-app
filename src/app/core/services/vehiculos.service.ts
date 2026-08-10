@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { AudioNotasService, AudioNotaMeta } from './audio-notas.service';
 import { db } from '../db/app-db';
 import {
   AsignacionResultado,
@@ -83,12 +84,33 @@ export interface AlertasVehiculo {
   placas_pp: { id: string; placa_pp: string | null; vencimiento: string | null; estado: string | null }[];
 }
 
-/** AI13 — captura de "reportar novedad de vehículo". */
+/** AI13/AK16 — captura de "reportar novedad de vehículo" (foto + video + voz). */
 export interface NovedadCaptura {
   vehiculoId: string;
   descripcion: string;
   severidad: 'baja' | 'media' | 'alta';
   fotos: Blob[];
+  /** AK16 — videos adjuntos (cámara). Suben al bucket vehiculos, col videos[]. */
+  videos?: Blob[];
+  /** AK16 — notas de voz (patrón AH13, entidad_tipo aviso_flota, bucket vehiculos). */
+  notasVoz?: Blob[];
+}
+
+/** AK16 — "Mis reportes" del chofer (mis_novedades_reportadas). */
+export interface MiNovedad {
+  id: string;
+  vehiculo_id: string;
+  placa: string | null;
+  mensaje: string;
+  severidad: string;
+  estado: string;
+  fotos: string[];
+  videos: string[];
+  created_at: string;
+  atendido_por: string | null;
+  atendido_por_nombre: string | null;
+  atendido_at: string | null;
+  nota_atencion: string | null;
 }
 
 /** Input the checklist wizard hands to enqueueEntrega(). */
@@ -118,6 +140,7 @@ export class VehiculosService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
+  private audioNotas = inject(AudioNotasService);
 
   constructor() {
     this.registerHandler();
@@ -735,6 +758,22 @@ export class VehiculosService {
       slot: `foto_${i}`,
       blob,
     }));
+    // AK16 — videos (bucket vehiculos, col videos[]).
+    const videos = (input.videos ?? []).map((blob, i) => ({
+      id: crypto.randomUUID(),
+      bucket: 'vehiculos',
+      path: `novedades/${input.vehiculoId}/${id}-video-${i}.${this.videoExt(blob)}`,
+      slot: `video_${i}`,
+      blob,
+    }));
+    // AK16 — notas de voz (patrón AH13). Path por el id del op (idempotente);
+    // el commit real usa el aviso.id que devuelve la RPC.
+    const { fotos: audioFotos, audios } = this.audioNotas.buildAttachments(
+      'aviso_flota',
+      id,
+      'vehiculos',
+      input.notasVoz ?? [],
+    );
     await this.sync.enqueue({
       id,
       tipo_op: 'aviso_novedad_vehiculo',
@@ -745,10 +784,31 @@ export class VehiculosService {
         descripcion: input.descripcion,
         severidad: input.severidad,
         n_fotos: fotos.length,
+        n_videos: videos.length,
+        audios,
       },
-      fotos,
+      fotos: [...fotos, ...videos, ...audioFotos],
       resumen: { vehiculo_id: input.vehiculoId, severidad: input.severidad, capturado_en },
     });
+  }
+
+  /** AK16 — extensión del video según su mime (mp4/webm/mov). */
+  private videoExt(blob: Blob): string {
+    const t = (blob.type || '').toLowerCase();
+    if (t.includes('mp4')) return 'mp4';
+    if (t.includes('quicktime') || t.includes('mov')) return 'mov';
+    if (t.includes('webm')) return 'webm';
+    return 'mp4';
+  }
+
+  /** AK16 — "Mis reportes" del chofer (novedades que YO reporté, con estado). */
+  async misNovedadesReportadas(desde?: string | null, hasta?: string | null): Promise<MiNovedad[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_novedades_reportadas', {
+      p_desde: desde ?? null,
+      p_hasta: hasta ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return (data as MiNovedad[]) ?? [];
   }
 
   private registerHandler(): void {
@@ -785,7 +845,8 @@ export class VehiculosService {
       await this.catalog.invalidate('mis_asignaciones'); // AF21
     });
 
-    // AI13 — reportar novedad de vehículo → avisos_flota (bandeja Flota) + push.
+    // AI13/AK16 — reportar novedad → avisos_flota (bandeja Flota) + push.
+    // Sube fotos + VIDEOS y registra NOTAS DE VOZ (AH13) tras crear el aviso.
     this.sync.register('aviso_novedad_vehiculo', async (payload, photoPaths) => {
       const n = (payload['n_fotos'] as number) ?? 0;
       const fotoPaths: string[] = [];
@@ -793,13 +854,26 @@ export class VehiculosService {
         const p = photoPaths[`foto_${i}`];
         if (p) fotoPaths.push(p);
       }
-      const { error } = await this.supabase.client.rpc('reportar_novedad_vehiculo', {
+      const nv = (payload['n_videos'] as number) ?? 0;
+      const videoPaths: string[] = [];
+      for (let i = 0; i < nv; i++) {
+        const p = photoPaths[`video_${i}`];
+        if (p) videoPaths.push(p);
+      }
+      const { data, error } = await this.supabase.client.rpc('reportar_novedad_vehiculo', {
         p_vehiculo_id: payload['vehiculo_id'],
         p_descripcion: payload['descripcion'],
         p_severidad: payload['severidad'] ?? 'media',
         p_fotos: fotoPaths,
+        p_videos: videoPaths,
       });
       if (error) throwSyncError(error);
+      // AK16 — registrar las notas de voz sobre el aviso recién creado (idempotente).
+      const avisoId = data as string | null;
+      const audios = payload['audios'] as AudioNotaMeta[] | undefined;
+      if (avisoId && audios?.length) {
+        await this.audioNotas.commit('aviso_flota', avisoId, audios, photoPaths);
+      }
     });
   }
 }

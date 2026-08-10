@@ -278,6 +278,51 @@ export interface RutaActivaHoy {
   paradas_entregadas: number;
 }
 
+/** AK1 — fila del historial de confirmaciones de entrega. */
+export interface ConfirmacionHistorialRow {
+  id: string;
+  fecha: string;
+  created_at: string;
+  proyecto_id: string | null;
+  proyecto: string | null;
+  bodega: string | null;
+  estado: string;
+  fase: string | null;
+  entregado_por: string | null;
+  entregado_por_nombre: string | null;
+  entregado_en: string | null;
+  recibido_por: string | null;
+  recibido_por_nombre: string | null;
+  recibido_en: string | null;
+  tiene_foto: boolean;
+  tiene_firma: boolean;
+}
+
+/** AK1 — detalle completo de una confirmación (jsonb de confirmacion_detalle). */
+export interface ConfirmacionDetalle {
+  id: string;
+  fecha: string;
+  created_at: string;
+  estado: string;
+  fase: string | null;
+  proyecto: string | null;
+  bodega: string | null;
+  entregado_por_nombre: string | null;
+  entregado_en: string | null;
+  entrega_foto_path: string | null;
+  entrega_foto_url?: string | null;
+  recibido_por_nombre: string | null;
+  recibido_en: string | null;
+  recepcion_foto_path: string | null;
+  recepcion_foto_url?: string | null;
+  notas_recepcion: string | null;
+  items: { articulo: string; cantidad: number; cantidad_recibida: number | null }[] | null;
+  firmas: { rol: string; nombre: string | null; firma_path: string | null; firma_url?: string | null; firmado_en: string | null }[] | null;
+  confirmaciones:
+    | { confirmado_por: string | null; modo: string | null; fotos: string[] | null; fotos_url?: string[]; notas: string | null; checklist: unknown; fecha: string }[]
+    | null;
+}
+
 /** Obra o almacén como destino, con sus coordenadas (U22). */
 export interface LugarDestino {
   id: string;
@@ -918,6 +963,63 @@ export class ConducesService {
     const { data, error } = await this.supabase.client.rpc('mis_entregas_por_confirmar_count');
     if (error) throw new Error(error.message);
     return (data as number) ?? 0;
+  }
+
+  // ── AK1 — Historial de confirmaciones de entrega ──────────────────────────
+  /**
+   * AK1 — historial filtrable de confirmaciones (fecha/obra/estado). La visibilidad
+   * la resuelve el server por matriz (admin/roles globales todo; responsables sus
+   * obras; chofer/emisor lo suyo). Best-effort online (cacheado offline-friendly).
+   */
+  async confirmacionesHistorial(f?: {
+    desde?: string | null;
+    hasta?: string | null;
+    proyectoId?: string | null;
+    estado?: 'completa' | 'incompleta' | null;
+  }): Promise<ConfirmacionHistorialRow[]> {
+    const key = `confirmaciones_historial:${f?.desde ?? ''}:${f?.hasta ?? ''}:${f?.proyectoId ?? ''}:${f?.estado ?? ''}`;
+    const data = await this.catalog.refresh<ConfirmacionHistorialRow[]>(key, async () => {
+      const { data, error } = await this.supabase.client.rpc('confirmaciones_historial', {
+        p_desde: f?.desde ?? null,
+        p_hasta: f?.hasta ?? null,
+        p_proyecto_id: f?.proyectoId ?? null,
+        p_estado: f?.estado ?? null,
+      });
+      if (error) throw new Error(error.message);
+      return (data as ConfirmacionHistorialRow[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** AK1 — detalle completo de una confirmación (items, quién entregó/confirmó,
+   *  cuándo, fotos y firmas). Firma las rutas de foto/firma (bucket conduces). */
+  async confirmacionDetalle(salidaId: string): Promise<ConfirmacionDetalle> {
+    const { data, error } = await this.supabase.client.rpc('confirmacion_detalle', { p_salida_id: salidaId });
+    if (error) throw new Error(error.message);
+    const d = (data ?? {}) as ConfirmacionDetalle;
+    // Firmar fotos/firmas para mostrarlas (bucket 'conduces', best-effort).
+    d.entrega_foto_url = await this.signConduce(d.entrega_foto_path);
+    d.recepcion_foto_url = await this.signConduce(d.recepcion_foto_path);
+    for (const fm of d.firmas ?? []) fm.firma_url = await this.signConduce(fm.firma_path);
+    for (const cf of d.confirmaciones ?? []) {
+      cf.fotos_url = [];
+      for (const p of cf.fotos ?? []) {
+        const u = await this.signConduce(p);
+        if (u) cf.fotos_url.push(u);
+      }
+    }
+    return d;
+  }
+
+  /** Firma una ruta de storage del bucket de conduces (best-effort → null). */
+  private async signConduce(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
+    try {
+      const { data } = await this.supabase.client.storage.from('conduces').createSignedUrl(path, 3600);
+      return data?.signedUrl ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /**

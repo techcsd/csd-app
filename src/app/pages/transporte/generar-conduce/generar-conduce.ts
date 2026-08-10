@@ -754,7 +754,10 @@ export class GenerarConducePage implements OnDestroy {
   }
 
   finish(): void {
-    void this.router.navigate(['/transporte/conduces'], { replaceUrl: true });
+    // AK9 — salir del wizard vuelve al HOME del módulo Conduce (conduces-hub),
+    // nunca a "Mis rutas" (/transporte/conduces = ConducesPage). Back seguro con
+    // POP real (AJ2): si se llegó por deep-link en frío, cae al hub sin salir.
+    this.navGuard.back('/transporte/conduces-hub');
   }
 
   get online(): boolean {

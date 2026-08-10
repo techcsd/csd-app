@@ -1,0 +1,64 @@
+<div class="screen usov">
+  <header class="usov__header">
+    <button type="button" class="usov__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="usov__icon">🚗</span>
+    <h1 class="usov__title">{{ titulo() }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (!vehiculoId()) {
+      <!-- Paso 1 — elegir vehículo -->
+      <app-vehiculo-picker
+        titulo="¿Qué vehículo vas a usar?"
+        subtitulo="Elige el vehículo. Si otro lo tiene en uso, podrás recibirlo."
+        (elegido)="onVehiculoElegido($event)"
+      />
+    } @else {
+      <!-- Vehículo elegido -->
+      <div class="usov__veh">
+        <span class="usov__veh-name">🚚 {{ etiqueta() || placa() || 'Vehículo' }}</span>
+        <button type="button" class="btn-ghost usov__cambiar" (click)="cambiarVehiculo()">Cambiar</button>
+      </div>
+
+      @if (loading()) {
+        <app-skeleton [rows]="3" />
+      } @else {
+        <!-- En uso por otro → recibir de X -->
+        @if (enUsoPorOtro()) {
+          <div class="usov__aviso">
+            🔄 Lo está usando <b>{{ estado()?.usuario_nombre || 'otro usuario' }}</b>@if (estado()?.desde) { desde {{ fmtFechaHora(estado()!.desde!) }} }.
+            Al recibirlo, la responsabilidad pasa a ti.
+          </div>
+        }
+
+        <!-- Ya lo tengo en uso yo (modo usar) → ofrecer soltar -->
+        @if (enUsoPorMi() && modo() === 'usar') {
+          <div class="usov__aviso usov__aviso--ok">
+            ✅ Ya tienes este vehículo en uso@if (estado()?.desde) { desde {{ fmtFechaHora(estado()!.desde!) }} }.
+          </div>
+          <button type="button" class="btn-cta usov__cta" (click)="irSoltar()">Soltar vehículo</button>
+        }
+
+        <!-- Formulario de captura (km + nivel) -->
+        @if (mostrarForm()) {
+          <label class="field-label" for="km">Kilometraje actual</label>
+          <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="Ej. 125400" />
+
+          <label class="field-label usov__mt">Nivel de gasolina <span class="usov__req">*</span></label>
+          <div class="usov__niveles">
+            @for (n of niveles; track n) {
+              <app-option-button [label]="n" [selected]="nivel() === n" (pressed)="setNivel(n)" />
+            }
+          </div>
+
+          <label class="field-label usov__mt" for="notas">Notas (opcional)</label>
+          <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Alguna novedad del vehículo…"></textarea>
+
+          <button type="button" class="btn-cta usov__cta usov__mt" [disabled]="!puedeGuardar()" (click)="guardar()">
+            {{ ctaLabel() }}
+          </button>
+        }
+      }
+    }
+  </div>
+</div>

@@ -6,7 +6,6 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { Onboarding } from '../../shared/components/onboarding/onboarding';
 import { UserContextService } from '../../core/services/user-context.service';
-import { SessionService } from '../../core/services/session.service';
 import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { InventarioService } from '../../core/services/inventario.service';
@@ -70,7 +69,6 @@ const COMPRAS_TILE: HomeTile = { modulo: 'compras_proyecto', icon: '💰', label
 })
 export class HomePage implements OnDestroy {
   private ctx = inject(UserContextService);
-  private session = inject(SessionService);
   private router = inject(Router);
   private badges = inject(BadgesService);
   private enProceso = inject(EnProcesoService);
@@ -164,13 +162,10 @@ export class HomePage implements OnDestroy {
   }
 
   constructor() {
-    // Single work-module user (e.g. guarda de almacén): drop straight into their
-    // module once. Tecnología no cuenta (es transversal), así el auto-entrar de
-    // mono-módulo se mantiene aunque el tile de Tecnología esté presente.
-    const work = this.workTiles();
-    if (work.length === 1 && this.session.consumeAutoEnter()) {
-      void this.router.navigate([work[0].route]);
-    }
+    // AK12 — arranque SIEMPRE en Home. Se elimina el auto-entrar de usuarios
+    // mono-módulo: para un chofer (único módulo = flota) eso abría Transporte
+    // solo en cada arranque en frío. Ahora solo una push tapeada navega
+    // (deep-link explícito por push.service, que pasa por el nav-guard).
     // Q2 — badges de pendientes por módulo (best-effort, online).
     void this.badges.load();
     // V1 — contador de documentación en proceso (local, offline).

@@ -20,3 +20,57 @@
   padding: 0;
   text-align: left;
 }
+
+// AK6 — modo dropdown: chip colapsado + trigger cerrado.
+.vpick__chip,
+.vpick__trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  min-height: 56px;
+  text-align: left;
+}
+.vpick__chip {
+  border: 1px solid var(--Hub, #ffb300);
+}
+.vpick__trigger {
+  border: 1px solid var(--color-border);
+}
+.vpick__chip-ico {
+  font-size: 20px;
+}
+.vpick__chip-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vpick__trigger-ph {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+.vpick__chip-cambiar {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--primary, #ff5f00);
+  font-size: 14px;
+  font-weight: 800;
+}
+.vpick__chevron {
+  flex: 0 0 auto;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}

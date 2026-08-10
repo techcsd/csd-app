@@ -1,0 +1,48 @@
+.alarma {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  background: var(--primary, #ff5f00);
+  color: #fff;
+}
+.alarma__pulse {
+  font-size: 72px;
+  animation: alarma-pulse 0.9s ease-in-out infinite;
+}
+@keyframes alarma-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+.alarma__title {
+  font-size: 26px;
+  font-weight: 900;
+  margin: 0;
+}
+.alarma__msg {
+  font-size: 16px;
+  line-height: 1.5;
+  max-width: 32ch;
+  margin: 0;
+  opacity: 0.95;
+}
+.alarma__cta {
+  width: 100%;
+  max-width: 360px;
+  background: #fff;
+  color: var(--primary, #ff5f00);
+  font-weight: 900;
+  margin-top: 8px;
+}
+.alarma__snooze {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.6);
+  max-width: 360px;
+  width: 100%;
+}

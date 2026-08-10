@@ -8,6 +8,7 @@ import { ConductoresService, StatsPeriodo, StatsConductorPeriodo, MiPerfilConduc
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
+import { VehiculoUsoService, MiUso } from '../../../core/services/vehiculo-uso.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import {
   ChecklistBreakdown,
@@ -40,6 +41,7 @@ export class MiActividadPage {
   private documentos = inject(DocumentosService);
   private conduces = inject(ConducesService);
   private flotaReportes = inject(FlotaReportesService);
+  private usoSvc = inject(VehiculoUsoService);
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -79,6 +81,8 @@ export class MiActividadPage {
   semanales = signal<HistorialChecklist[]>([]);
   preusos = signal<HistorialChecklist[]>([]);
   echadas = signal<HistorialEchada[]>([]);
+  // AK18 — historial de MIS usos de vehículo (modelo "en uso" v2).
+  usos = signal<MiUso[]>([]);
   // V3 — rutas creadas por el usuario (elevados).
   rutasCreadas = signal<RutaCreada[]>([]);
   historialExpandido = signal(false); // "ver más" (90 días → todo)
@@ -130,7 +134,15 @@ export class MiActividadPage {
       // que nunca vea el vacío "Aún no eres conductor".
       await this.conductores.asegurarMiConductor();
       const cond = await this.conductores.getMiConductor();
-      this.esConductor.set(!!cond);
+      // AK19 — el gate usa la definición AMPLIADA de conductor (rol chofer O ficha
+      // O sesión de uso de vehículo), no la asignación legacy: así Papo (que ya usó
+      // un vehículo) entra a SU actividad. Si no hay ficha pero sí actividad, la
+      // página igual muestra usos/inspecciones (por auth.uid()); nunca bloquea.
+      const ampliado = await this.conductores.esConductorAmpliado();
+      this.esConductor.set(!!cond || ampliado);
+      // AK18 — mis usos de vehículo (por auth.uid, no depende de la ficha) para que
+      // Papo vea su historial de usos aunque la ficha llegue tarde.
+      void this.usoSvc.misUsos().then((u) => this.usos.set(u)).catch(() => {});
       if (cond) {
         this.condId.set(cond.id);
         // AJ11 — perfil propio (solo lectura, en cuadrículas). Best-effort.

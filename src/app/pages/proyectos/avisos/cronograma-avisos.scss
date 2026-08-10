@@ -8,7 +8,9 @@
   &__back {
     background: none;
     border: none;
-    color: #fff;
+    // AK5 — el header va sobre fondo claro: #fff dejaba la flecha invisible
+    // (las otras 3 pantallas de Proyectos ya se corrigieron; a esta le faltaba).
+    color: var(--color-text-primary);
     font-size: 1.5rem;
     cursor: pointer;
   }

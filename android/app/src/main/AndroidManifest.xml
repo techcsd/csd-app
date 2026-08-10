@@ -60,6 +60,10 @@
          FOREGROUND_SERVICE(_LOCATION) los aporta el manifest del plugin en el merge;
          ACCESS_BACKGROUND_LOCATION (Android 10+) se declara aquí. -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- AK13 — permitir pedir la exclusión de optimización de batería (MIUI/OEM
+         agresivos matan el foreground service y se pierde el trayecto). El prompt
+         nativo se añadirá con un plugin; la app ya guía la config manual mientras. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <!-- W2: "Cómo llegar" abre Google Maps con @capacitor/app-launcher. En

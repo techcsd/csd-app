@@ -165,3 +165,73 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+
+/* AK16 — video adjunto + "Mis reportes" */
+.avis__videos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.avis__video {
+  position: relative;
+}
+.avis__video video {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 12px;
+  background: #000;
+}
+.avis__video-x {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 16px;
+}
+.avis__addvid {
+  align-self: flex-start;
+}
+.avis__mio {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  margin-bottom: 10px;
+}
+.avis__mio-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.avis__mio-placa {
+  font-weight: 700;
+}
+.avis__mio-estado {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: color-mix(in srgb, var(--color-warning, #ca8a04) 18%, transparent);
+  color: var(--color-warning, #ca8a04);
+}
+.avis__mio-estado--ok {
+  background: color-mix(in srgb, var(--color-success, #16a34a) 15%, transparent);
+  color: var(--color-success, #16a34a);
+}
+.avis__mio-msg {
+  font-size: 14px;
+}
+.avis__mio-meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

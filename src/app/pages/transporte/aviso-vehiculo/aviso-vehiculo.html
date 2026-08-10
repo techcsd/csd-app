@@ -6,7 +6,39 @@
   </header>
 
   <div class="screen__body">
-    @if (!vehiculo()) {
+    <!-- Tabs (siempre visibles; "Mis reportes" no requiere elegir vehículo) -->
+    <div class="avis__tabs" role="tablist">
+      <button type="button" class="avis__tab" [class.avis__tab--on]="tab() === 'reportar'" (click)="irTab('reportar')">📣 Reportar</button>
+      <button type="button" class="avis__tab" [class.avis__tab--on]="tab() === 'alertas'" (click)="irTab('alertas')">🔔 Alertas</button>
+      <button type="button" class="avis__tab" [class.avis__tab--on]="tab() === 'mios'" (click)="irTab('mios')">🗂️ Mis reportes</button>
+    </div>
+
+    <!-- ══════════ Mis reportes (chofer) — no requiere vehículo ══════════ -->
+    @if (tab() === 'mios') {
+      @if (cargandoMios()) {
+        <app-skeleton [rows]="4" />
+      } @else if (!misReportes().length) {
+        <app-empty-state icon="🗂️" title="Sin reportes" message="Aquí verás las novedades que reportes, con su estado (pendiente / atendido)." />
+      } @else {
+        @for (r of misReportes(); track r.id) {
+          <div class="avis__mio">
+            <div class="avis__mio-head">
+              <span class="avis__mio-placa">🚚 {{ r.placa || 'Vehículo' }}</span>
+              <span class="avis__mio-estado" [class.avis__mio-estado--ok]="r.estado === 'atendido'">{{ estadoLabel(r.estado) }}</span>
+            </div>
+            <span class="avis__mio-msg">{{ r.mensaje }}</span>
+            <span class="avis__mio-meta">
+              {{ fmtFechaHora(r.created_at) }} · {{ r.severidad }}
+              @if (r.fotos?.length) { · 📷 {{ r.fotos.length }} }
+              @if (r.videos?.length) { · 🎥 {{ r.videos.length }} }
+            </span>
+            @if (r.estado === 'atendido' && r.atendido_por_nombre) {
+              <span class="avis__mio-meta">✓ Atendido por {{ r.atendido_por_nombre }}@if (r.nota_atencion) { — {{ r.nota_atencion }} }</span>
+            }
+          </div>
+        }
+      }
+    } @else if (!vehiculo()) {
       <app-vehiculo-picker
         titulo="¿Sobre qué vehículo?"
         subtitulo="Elige el vehículo para reportar una novedad o ver sus alertas."
@@ -17,12 +49,6 @@
       <div class="avis__veh">
         <span class="avis__veh-placa">🚚 {{ vehiculo()!.placa }}</span>
         <button type="button" class="btn-ghost avis__cambiar" (click)="cambiarVehiculo()">Cambiar</button>
-      </div>
-
-      <!-- Tabs -->
-      <div class="avis__tabs" role="tablist">
-        <button type="button" class="avis__tab" [class.avis__tab--on]="tab() === 'reportar'" (click)="tab.set('reportar')">📣 Reportar</button>
-        <button type="button" class="avis__tab" [class.avis__tab--on]="tab() === 'alertas'" (click)="tab.set('alertas')">🔔 Alertas</button>
       </div>
 
       <!-- ══════════ Reportar novedad ══════════ -->
@@ -51,6 +77,23 @@
             />
           }
         </div>
+
+        <!-- AK16 — video opcional (cámara). -->
+        <label class="field-label avis__mt">Video (opcional)</label>
+        <p class="avis__sub">Graba un video corto de la novedad (hasta {{ videoMaxSeg }}s).</p>
+        <div class="avis__videos">
+          @for (v of videos(); track v.url) {
+            <div class="avis__video">
+              <video [src]="v.url" controls playsinline></video>
+              <button type="button" class="avis__video-x" (click)="quitarVideo($index)" aria-label="Quitar video">✕</button>
+            </div>
+          }
+          <button type="button" class="btn-ghost avis__addvid" (click)="agregarVideo()">🎥 Agregar video</button>
+        </div>
+
+        <!-- AK16 — nota de voz opcional (patrón AH13). -->
+        <label class="field-label avis__mt">Nota de voz (opcional)</label>
+        <app-voice-notes [(notes)]="notasVoz" [max]="3" />
 
         <button type="button" class="btn-cta avis__enviar" [disabled]="enviando() || !puedeReportar()" (click)="reportar()">
           {{ enviando() ? 'Enviando…' : 'Reportar novedad' }}

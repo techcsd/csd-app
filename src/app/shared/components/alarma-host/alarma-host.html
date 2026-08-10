@@ -1,0 +1,12 @@
+@if (activa()) {
+  <div class="alarma" role="alertdialog" aria-label="Alarma del reporte semanal">
+    <div class="alarma__pulse" aria-hidden="true">⏰</div>
+    <h1 class="alarma__title">Reporte semanal pendiente</h1>
+    <p class="alarma__msg">
+      Hoy es domingo y aún no has hecho el reporte semanal de tu vehículo.
+      Hazlo ahora para que Flota sepa cómo está.
+    </p>
+    <button type="button" class="btn-cta alarma__cta" (click)="hacerReporte()">Hacer reporte ahora</button>
+    <button type="button" class="btn-ghost alarma__snooze" (click)="posponer()">Posponer 1 hora</button>
+  </div>
+}

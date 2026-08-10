@@ -1,0 +1,135 @@
+<div class="screen conf">
+  <header class="conf__header">
+    <button type="button" class="conf__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="conf__icon">✅</span>
+    <h1 class="conf__title">Confirmaciones</h1>
+  </header>
+
+  <div class="screen__body">
+    <!-- Filtros -->
+    <div class="conf__filtros">
+      <app-collapsible-select
+        label="Obra"
+        icon="🏗️"
+        placeholder="Todas las obras"
+        [options]="obraOptions()"
+        [selectedId]="obraId()"
+        [searchable]="true"
+        searchPlaceholder="Buscar obra…"
+        (picked)="onObra($event)"
+      />
+      <div class="conf__estado">
+        <app-option-button label="Todas" [selected]="estado() === 'todas'" (pressed)="setEstado('todas')" />
+        <app-option-button icon="✅" label="Completas" [selected]="estado() === 'completa'" (pressed)="setEstado('completa')" />
+        <app-option-button icon="⚠️" label="Incompletas" [selected]="estado() === 'incompleta'" (pressed)="setEstado('incompleta')" />
+      </div>
+      <div class="conf__fechas">
+        <label class="conf__fecha">
+          <span>Desde</span>
+          <input class="field" type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" (change)="load()" />
+        </label>
+        <label class="conf__fecha">
+          <span>Hasta</span>
+          <input class="field" type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" (change)="load()" />
+        </label>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (!filas().length) {
+      <app-empty-state
+        icon="✅"
+        title="Sin confirmaciones"
+        message="Aquí verás las entregas confirmadas por el receptor. Ajusta los filtros o vuelve más tarde."
+      />
+    } @else {
+      @for (r of filas(); track r.id) {
+        <div class="conf__card">
+          <button type="button" class="conf__row" (click)="toggleDetalle(r)">
+            <div class="conf__row-info">
+              <span class="conf__destino">🏗️ {{ r.proyecto || 'Destino' }}</span>
+              <span class="conf__meta">Desde: {{ r.bodega || '—' }}</span>
+              @if (r.recibido_por_nombre) {
+                <span class="conf__meta">✓ Confirmó: {{ r.recibido_por_nombre }}</span>
+              }
+              <span class="conf__meta">🕒 {{ r.recibido_en ? fmtFechaHora(r.recibido_en) : fmtFecha(r.fecha) }}</span>
+            </div>
+            <span class="conf__chip" [class.conf__chip--inc]="r.estado === 'entregado_incompleto'">
+              {{ estadoLabel(r.estado) }}
+            </span>
+          </button>
+
+          @if (expandidaId() === r.id) {
+            <div class="conf__detalle">
+              @if (detalleLoading()) {
+                <app-skeleton [rows]="3" />
+              } @else if (detalle(); as d) {
+                <!-- Quién entregó / confirmó -->
+                <div class="conf__grid">
+                  <div class="conf__kv"><span class="conf__k">Entregó</span><span class="conf__v">{{ d.entregado_por_nombre || '—' }}</span></div>
+                  <div class="conf__kv"><span class="conf__k">Entregado</span><span class="conf__v">{{ d.entregado_en ? fmtFechaHora(d.entregado_en) : '—' }}</span></div>
+                  <div class="conf__kv"><span class="conf__k">Confirmó</span><span class="conf__v">{{ d.recibido_por_nombre || '—' }}</span></div>
+                  <div class="conf__kv"><span class="conf__k">Confirmado</span><span class="conf__v">{{ d.recibido_en ? fmtFechaHora(d.recibido_en) : '—' }}</span></div>
+                </div>
+
+                <!-- Materiales (pedido vs recibido) -->
+                @if (d.items?.length) {
+                  <h3 class="conf__sec">Materiales</h3>
+                  <ul class="conf__items">
+                    @for (it of d.items; track $index) {
+                      <li class="conf__item">
+                        <span>{{ it.articulo }}</span>
+                        <span class="conf__qty">
+                          {{ (it.cantidad_recibida ?? it.cantidad) | number: '1.0-2' }}
+                          @if (it.cantidad_recibida != null && it.cantidad_recibida < it.cantidad) {
+                            <em class="conf__falta">/ {{ it.cantidad | number: '1.0-2' }}</em>
+                          }
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                }
+
+                @if (d.notas_recepcion) {
+                  <p class="conf__notas">📝 {{ d.notas_recepcion }}</p>
+                }
+
+                <!-- Evidencia: fotos -->
+                @if (d.entrega_foto_url || d.recepcion_foto_url || d.confirmaciones?.length) {
+                  <h3 class="conf__sec">Evidencia</h3>
+                  <div class="conf__fotos">
+                    @if (d.entrega_foto_url) {
+                      <img class="conf__foto" [src]="d.entrega_foto_url" alt="Foto de entrega" loading="lazy" />
+                    }
+                    @if (d.recepcion_foto_url) {
+                      <img class="conf__foto" [src]="d.recepcion_foto_url" alt="Foto de recepción" loading="lazy" />
+                    }
+                    @for (cf of d.confirmaciones; track $index) {
+                      @for (u of cf.fotos_url; track u) {
+                        <img class="conf__foto" [src]="u" alt="Foto de confirmación" loading="lazy" />
+                      }
+                    }
+                  </div>
+                }
+
+                <!-- Firmas -->
+                @if (d.firmas?.length) {
+                  <h3 class="conf__sec">Firmas</h3>
+                  <div class="conf__firmas">
+                    @for (f of d.firmas; track $index) {
+                      <figure class="conf__firma">
+                        @if (f.firma_url) { <img [src]="f.firma_url" alt="Firma" loading="lazy" /> }
+                        <figcaption>{{ f.nombre || f.rol }}</figcaption>
+                      </figure>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

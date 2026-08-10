@@ -23,15 +23,6 @@ export class SessionService {
   private _unlocked = signal(false);
   unlocked = this._unlocked.asReadonly();
 
-  /** One-shot: a single-module user is dropped straight into their module on
-   *  launch, but coming back to Home manually still shows the button. */
-  private autoEntered = false;
-  consumeAutoEnter(): boolean {
-    if (this.autoEntered) return false;
-    this.autoEntered = true;
-    return true;
-  }
-
   async hasSession(): Promise<boolean> {
     return (await this.auth.getSession()) !== null;
   }
@@ -74,6 +65,5 @@ export class SessionService {
     await this.borradores.clearAll();
     this.ctx.clear();
     this._unlocked.set(false);
-    this.autoEntered = false;
   }
 }

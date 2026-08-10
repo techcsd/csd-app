@@ -207,7 +207,23 @@ export const routes: Routes = [
       import('./pages/transporte/asignar/asignar').then((m) => m.AsignarVehiculoPage),
   },
   {
+    // AK15 — "Uso de vehículo" v2 (reemplaza asignarme/pre-uso/recibir): nivel de
+    // gasolina + inicia/recibe/suelta sesión de uso. Con o sin vehículo en contexto.
+    path: 'transporte/uso-vehiculo',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/uso-vehiculo/uso-vehiculo').then((m) => m.UsoVehiculoPage),
+  },
+  {
+    path: 'transporte/uso-vehiculo/:vehiculoId',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/uso-vehiculo/uso-vehiculo').then((m) => m.UsoVehiculoPage),
+  },
+  {
     // AF34 — flujo unificado "Asignarme vehículo" + pre-uso + traspaso (acta).
+    // AK20 — DEPRECADO: ya no se enlaza desde el menú (Uso de vehículo lo reemplaza);
+    // la ruta se conserva para no romper deep-links viejos.
     path: 'transporte/asignarme',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
@@ -386,6 +402,15 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () =>
       import('./pages/transporte/seguimiento/seguimiento').then((m) => m.SeguimientoPage),
+  },
+  {
+    // AK1 — Historial de confirmaciones de entrega (matriz de visibilidad server-side).
+    // Sin moduleGuard: un ingeniero/responsable receptor puede no tener módulo flota;
+    // el RPC confirmaciones_historial acota lo que ve cada usuario.
+    path: 'transporte/confirmaciones',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/confirmaciones/confirmaciones').then((m) => m.ConfirmacionesPage),
   },
   {
     // AF29 — Historial de conduces (listado filtrable + detalle).

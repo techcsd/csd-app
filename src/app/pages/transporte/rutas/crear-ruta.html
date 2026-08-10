@@ -47,11 +47,15 @@
           @if (esElevado) {
             <label class="field-label cruta__paradas-lbl">¿A quién se la asignas?</label>
             <p class="field-hint">El conductor recibirá un aviso con la ruta.</p>
-            <app-select-list
+            <!-- AK6 — dropdown cerrado por defecto (antes lista abierta). -->
+            <app-collapsible-select
               label="Conductor asignado"
               icon="🪪"
+              placeholder="Seleccionar conductor"
               [options]="conductorOpts()"
               [selectedId]="conductorId()"
+              [searchable]="true"
+              searchPlaceholder="Buscar conductor…"
               (picked)="conductorId.set($event)"
             />
           }

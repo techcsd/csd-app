@@ -213,6 +213,8 @@ export interface RutaHoy {
   destino: string;
   estado: string;
   fecha: string;
+  /** AK22 — fecha y hora en que se planificó/creó la ruta (rutas.created_at). */
+  creado_en?: string | null;
   /** W4 — notas de la ruta (se capturaban pero no se mostraban). */
   notas?: string | null;
   /** Y4 — instante del TAP en "Iniciar" (para el contador en vivo). */

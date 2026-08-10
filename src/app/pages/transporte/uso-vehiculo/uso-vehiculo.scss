@@ -1,0 +1,77 @@
+.usov__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.usov__back {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--color-text-primary);
+  padding: 4px 8px;
+}
+.usov__icon {
+  font-size: 22px;
+}
+.usov__title {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.usov__veh {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 14px;
+}
+.usov__veh-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.usov__cambiar {
+  flex: 0 0 auto;
+}
+
+.usov__aviso {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-warning, #ca8a04) 14%, transparent);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+.usov__aviso--ok {
+  background: color-mix(in srgb, var(--color-success, #16a34a) 14%, transparent);
+}
+
+.usov__niveles {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.usov__niveles app-option-button {
+  flex: 1;
+  min-width: 56px;
+}
+
+.usov__mt {
+  margin-top: 16px;
+}
+.usov__req {
+  color: var(--primary, #ff5f00);
+}
+.usov__cta {
+  width: 100%;
+  margin-top: 8px;
+}

@@ -206,6 +206,7 @@ export class TrackingService {
       if (this.flushTimer) clearInterval(this.flushTimer);
       this.flushTimer = setInterval(() => void this.flush(), FLUSH_MS);
       this.iniciarWatchdog();
+      void this.avisarBateriaUnaVez(); // AK13 — exclusión de optimización de batería (MIUI)
     } catch (e) {
       // AG11 — antes fallaba en silencio ("el tracking simplemente no arranca").
       // Ahora lo reportamos a Y6 para no tener un punto ciego en el arranque.
@@ -214,6 +215,29 @@ export class TrackingService {
         msg: e instanceof Error ? e.message : String(e),
       });
     }
+  }
+
+  /**
+   * AK13 — MIUI/OEM agresivos matan el foreground service en background, así que el
+   * trayecto se pierde. Una sola vez (por instalación) avisamos al chofer que debe
+   * excluir la app de la optimización de batería + fijarla en recientes. El prompt
+   * nativo real (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) requiere un plugin
+   * nativo; hasta tenerlo, guiamos con instrucciones claras (config manual).
+   */
+  private async avisarBateriaUnaVez(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    const KEY = 'tracking_bateria_avisado';
+    try {
+      if (await this.store.get(KEY)) return;
+      await this.store.set(KEY, '1');
+    } catch {
+      /* si el store falla, mostramos el aviso igual (sin persistir) */
+    }
+    this.toast.show(
+      'Para que la ruta se rastree con la pantalla apagada: Ajustes → Batería → CSD App → "Sin restricciones", y fija la app en recientes.',
+      'info',
+      9000,
+    );
   }
 
   /**

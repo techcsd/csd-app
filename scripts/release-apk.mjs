@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.69.0';
+const VERSION = '1.70.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,21 +62,25 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-10';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Ronda de arreglos: conduces sin señal, navegación estable, listas de obra que cargan y detalles visuales';
+const TITULO = 'Transporte v4: Uso de vehículo con nivel de gasolina, avisos con voz y video, confirmaciones, multas seguras, desplegables y arranque en Inicio';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduces', d: 'El conduce que acabas de crear ya aparece en "Pendiente entrega" aunque estés sin señal, y el detalle abre bien desde el listado.' },
-  { t: 'mejora', m: 'Conduces', d: 'Cuando recibes y "faltó algo", ahora puedes indicar qué artículos y cuánto llegó de cada uno, no solo un sí/no.' },
-  { t: 'arreglo', m: 'Conduces', d: 'Si eliges un vehículo distinto al crear el conduce, ya no pierdes la foto ni las firmas al registrar el uso: vuelves justo donde estabas.' },
-  { t: 'arreglo', m: 'Navegación', d: 'El botón "atrás" ya no se queda pegado ni cierra la app cuando entras desde un aviso, y un aviso que llega mientras llenas algo no te cambia de pantalla.' },
-  { t: 'mejora', m: 'Seguimiento', d: 'El mapa ya no se traba con varios choferes moviéndose y el recorrido no pierde puntos cuando andas sin señal.' },
-  { t: 'mejora', m: 'Mensajes', d: 'El contador de mensajes sin leer del inicio se actualiza al momento cuando te llega uno.' },
-  { t: 'arreglo', m: 'Obras', d: 'Las listas de obra ahora cargan para todos (antes salían vacías al pedir materiales o en la bitácora para algunos usuarios).' },
-  { t: 'arreglo', m: 'Formularios', d: 'Los campos de números (multas, kilometraje, avances) ya no aceptan valores negativos, y "Pendientes de envío" muestra nombres claros en vez de códigos.' },
-  { t: 'arreglo', m: 'Visual', d: 'Se arreglaron botones e íconos que se veían invisibles (el contador del inicio, el botón de nueva nota, la flecha de atrás en Proyectos y los avisos).' },
-  { t: 'seguridad', m: 'Sesión', d: 'En teléfonos compartidos, al cerrar sesión ya no queda tu borrador a medias disponible para el siguiente usuario.' },
+  { t: 'arreglo', m: 'Inicio', d: 'La app ya no abre sola Transporte al iniciar: siempre arranca en el Inicio y navegas a donde quieras.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Al salir de "Crear conduce" con el botón atrás vuelves al menú de Conduce, ya no te manda a "Mis rutas".' },
+  { t: 'mejora', m: 'Conduces', d: 'Los selectores (almacén, obra, despachante, vehículo…) ahora son desplegables: salen cerrados y se abren al tocarlos, sin llenar la pantalla.' },
+  { t: 'mejora', m: 'Conduces', d: '"Marcar entrega" ahora es "Gestionar entrega"; "Iniciar tránsito" pasó a "Iniciar ruta"; y "Estoy entregando" abre directo la entrega (foto y todo).' },
+  { t: 'mejora', m: 'Conduces', d: 'Los conduces por entregar y las rutas muestran la fecha y la HORA exacta.' },
+  { t: 'nuevo', m: 'Conduces', d: 'Nueva pantalla "Confirmaciones": el historial de entregas confirmadas con items, quién entregó/confirmó, fotos y firmas.' },
+  { t: 'mejora', m: 'Conduces', d: 'Menú más limpio: Recibir, Por firmar, Devolver a suplidor y Compra en ferretería ahora se hacen desde "Crear conduce" y las confirmaciones.' },
+  { t: 'nuevo', m: 'Vehículos', d: 'Nuevo "Uso de vehículo": registras el nivel de gasolina y usas el vehículo; si lo tenía otro, lo recibes; y al terminar lo sueltas. Se quita "asignarme" y el checklist de pre-uso.' },
+  { t: 'arreglo', m: 'Vehículos', d: 'El vehículo que tienes en uso sale como "En uso" (no "Por recibir"), con la opción de soltarlo.' },
+  { t: 'arreglo', m: 'Mi actividad', d: 'Ya puedes entrar a "Mi actividad" aunque no tengas ficha de conductor: basta con haber usado un vehículo. Además ves el historial de tus usos.' },
+  { t: 'seguridad', m: 'Multas', d: 'Un chofer solo puede registrarse multas a sí mismo (queda bloqueado); solo los jefes pueden elegir a otro conductor.' },
+  { t: 'nuevo', m: 'Aviso de vehículo', d: 'Al reportar puedes adjuntar una nota de voz y un video, y ver "Mis reportes" con su estado (pendiente/atendido).' },
+  { t: 'nuevo', m: 'Reporte semanal', d: 'Alarma tipo despertador el domingo si aún no has hecho el reporte semanal de tu vehículo.' },
+  { t: 'arreglo', m: 'Proyectos', d: 'Se corrigió la flecha de atrás que se veía invisible en los avisos de cronograma.' },
 ];
 
 const TIPO_POR_COMMIT = {

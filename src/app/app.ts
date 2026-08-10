@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { ToastHost } from './shared/components/toast-host/toast-host';
 import { PermisoHost } from './shared/components/permiso-host/permiso-host';
+import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
 import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
@@ -18,11 +19,13 @@ import { ToastService } from './core/services/toast.service';
 import { NavGuardService } from './core/services/nav-guard.service';
 import { ActivityPingService } from './core/services/activity-ping.service';
 import { PushService } from './core/services/push.service';
+import { AlarmaService } from './core/services/alarma.service';
+import { ReporteSemanalService } from './core/services/reporte-semanal.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, InAppCamera],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, InAppCamera],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -40,6 +43,8 @@ export class App {
   private session = inject(SessionService);
   private activityPing = inject(ActivityPingService);
   private push = inject(PushService);
+  private alarma = inject(AlarmaService);
+  private reportes = inject(ReporteSemanalService);
   private router = inject(Router);
 
   constructor() {
@@ -51,6 +56,25 @@ export class App {
     this.initScrollReset();
     this.activityPing.init(); // W12 — ping de actividad (open + resume, throttled)
     void this.push.init(); // AF7 — push nativo (no-op en web/PWA)
+    void this.checkAlarmaDominical(); // AK10 — alarma del reporte semanal (domingo)
+  }
+
+  /**
+   * AK10 — al abrir la app un DOMINGO, si el usuario tiene el reporte semanal
+   * pendiente, dispara la alarma tipo despertador (in-app). El sonido puede quedar
+   * en espera hasta la primera interacción (política de autoplay); el overlay se ve
+   * igual. La push de alta prioridad es la señal cuando la app está en primer plano.
+   */
+  private async checkAlarmaDominical(): Promise<void> {
+    if (new Date().getDay() !== 0) return; // 0 = domingo
+    try {
+      const pend = await this.reportes.pendientesCount();
+      if (pend > 0) {
+        this.alarma.disparar({ vehiculoId: null, ruta: '/transporte/reporte-semanal' });
+      }
+    } catch {
+      /* sin sesión / offline: no alarma */
+    }
   }
 
   /**

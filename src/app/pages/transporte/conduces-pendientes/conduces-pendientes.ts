@@ -7,7 +7,7 @@ import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collaps
 import { ConducesService, ConducePendienteEntrega } from '../../../core/services/conduces.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { formatFecha } from '../../../core/util/fecha';
+import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 
 /**
  * AI2 — "Pendiente entrega": conduces emitidos que faltan por entregar al receptor.
@@ -28,6 +28,8 @@ export class ConducesPendientesPage {
   private navGuard = inject(NavGuardService);
 
   fmtFecha = formatFecha;
+  // AK7 — fecha + hora exacta de emisión (created_at), 12h homologado.
+  fmtFechaHora = formatFechaHumana;
 
   loading = signal(true);
   pendientes = signal<ConducePendienteEntrega[]>([]);

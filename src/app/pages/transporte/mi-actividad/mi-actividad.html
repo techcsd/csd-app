@@ -153,10 +153,28 @@
         </section>
       }
 
-      <!-- V2 — historial navegable: pre-usos -->
+      <!-- AK18 — historial de MIS usos de vehículo (sesiones del modelo "en uso" v2) -->
+      @if (usos().length) {
+        <section id="sec-usos" class="mact__docs">
+          <h2 class="mact__docs-title">Mis usos de vehículo ({{ usos().length }})</h2>
+          @for (u of usos(); track u.id) {
+            <div class="mact__act-row">
+              <span class="mact__act-main">🚗 {{ u.placa }} · {{ u.marca }} {{ u.modelo }}@if (u.activa) { <em class="mact__act-live"> · en uso</em> }</span>
+              <span class="mact__act-sub">
+                {{ fmtFechaHumana(u.inicio_at) }}@if (u.fin_at) { → {{ fmtFechaHumana(u.fin_at) }} }
+                @if (u.km_inicio != null) { · {{ u.km_inicio }}@if (u.km_fin != null) { → {{ u.km_fin }} } km }
+                @if (u.nivel_inicio) { · ⛽ {{ u.nivel_inicio }}@if (u.nivel_fin) { → {{ u.nivel_fin }} } }
+              </span>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- V2 — historial navegable: pre-usos (checklists históricos; el flujo se
+           retiró en AK15 pero sus registros siguen visibles) -->
       @if (preusos().length) {
         <section id="sec-preusos" class="mact__docs">
-          <h2 class="mact__docs-title">Mis usos de vehículo ({{ preusos().length }})</h2>
+          <h2 class="mact__docs-title">Mis pre-usos (historial) ({{ preusos().length }})</h2>
           @for (c of preusos(); track c.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verChecklist(c.id)">
               <span class="mact__act-main">🚙 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>

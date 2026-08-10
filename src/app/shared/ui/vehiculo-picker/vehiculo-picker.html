@@ -1,7 +1,25 @@
-@if (titulo()) {
+<!-- AK6 — modo dropdown colapsado: chip del vehículo elegido o trigger cerrado. -->
+@if (dropdown() && !mostrarLista()) {
+  @if (seleccionadoV(); as sv) {
+    <div class="vpick__chip">
+      <span class="vpick__chip-ico">🚚</span>
+      <span class="vpick__chip-name">{{ sv.placa }} · {{ sv.marca }} {{ sv.modelo }}</span>
+      <button type="button" class="vpick__chip-cambiar" (click)="abrir()">Cambiar</button>
+    </div>
+  } @else {
+    <button type="button" class="vpick__trigger" (click)="abrir()">
+      <span class="vpick__chip-ico">🚚</span>
+      <span class="vpick__trigger-ph">Seleccionar vehículo</span>
+      <span class="vpick__chevron" aria-hidden="true">▾</span>
+    </button>
+  }
+}
+
+@if (mostrarLista()) {
+@if (titulo() && !dropdown()) {
   <h1 class="screen__title">{{ titulo() }}</h1>
 }
-@if (subtitulo()) {
+@if (subtitulo() && !dropdown()) {
   <p class="screen__subtitle">{{ subtitulo() }}</p>
 }
 
@@ -58,4 +76,5 @@
       </button>
     }
   }
+}
 }

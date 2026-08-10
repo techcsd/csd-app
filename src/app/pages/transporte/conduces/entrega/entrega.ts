@@ -94,6 +94,9 @@ export class ConduceEntregaPage {
           /* offline: asumimos la fase por el estado crudo */
           this.fase.set(c.estado === 'entregado' || c.estado === 'entregado_incompleto' ? 'entregado' : 'emitido');
         }
+        // AK11 — si el chofer ya marcó "Estoy entregando", al reabrir aterriza
+        // DIRECTO en el proceso de entrega (foto + ¿llegó todo?), sin paso extra.
+        if (this.fase() === 'entregando') this.mostrarEntrega.set(true);
       }
     } finally {
       this.loading.set(false);
@@ -127,10 +130,14 @@ export class ConduceEntregaPage {
 
   // ── Acciones de estado ──────────────────────────────────────────────────────
   async iniciarTransito(): Promise<void> {
-    await this.avanzar('en_transito', 'En tránsito. Buen viaje.');
+    // AK11 — término homologado: "tránsito" → "ruta" en toda la UI.
+    await this.avanzar('en_transito', 'En ruta. Buen viaje.');
   }
   async estoyEntregando(): Promise<void> {
     await this.avanzar('entregando', 'Marcado como "entregando".');
+    // AK11 — "Estoy entregando" abre DIRECTO el proceso de entrega (foto y todo),
+    // sin pantalla intermedia ("Marcar entregado" ya no es un paso aparte).
+    this.mostrarEntrega.set(true);
   }
 
   private async avanzar(estado: 'en_transito' | 'entregando', ok: string): Promise<void> {
@@ -146,10 +153,6 @@ export class ConduceEntregaPage {
     } finally {
       this.submitting.set(false);
     }
-  }
-
-  abrirEntrega(): void {
-    this.mostrarEntrega.set(true);
   }
 
   onFoto(photo: CapturedPhoto): void {
@@ -207,7 +210,7 @@ export class ConduceEntregaPage {
 
 const FASE_LABEL: Record<string, string> = {
   emitido: 'Emitido',
-  en_transito: 'En tránsito',
+  en_transito: 'En ruta',
   entregando: 'Entregando',
   entregado: 'Entregado · esperando confirmación',
   confirmado: 'Confirmado',

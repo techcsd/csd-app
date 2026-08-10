@@ -124,6 +124,13 @@
   color: var(--color-text-secondary);
   margin-top: 2px;
 }
+// AK22 — fecha/hora de planificación de la ruta.
+.ruta-card__fecha {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
 .ruta-card__estado[data-estado='en_curso'] {
   color: var(--color-info);
   font-weight: 700;
@@ -192,6 +199,20 @@
 .conduce-card__bodega {
   font-size: 14px;
   color: var(--color-text-secondary);
+}
+// AK7 — fecha/hora exacta de emisión del conduce.
+.conduce-card__fecha {
+  display: block;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 8px;
+}
+// AK3 — empty propio de la sección "Conduces por entregar" (cuando hay rutas).
+.conduces__sub-empty {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 16px 8px;
 }
 .conduce-card__items {
   list-style: none;

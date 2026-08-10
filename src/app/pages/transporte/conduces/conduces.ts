@@ -15,7 +15,7 @@ import { GeocodingService } from '../../../core/services/geocoding.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
 import { formatearDuracion } from '../../../core/util/duracion';
-import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { formatFechaCortaHora, formatFechaHumana } from '../../../core/util/fecha';
 import {
   ConducesService,
   RutaDetalleTransporte,
@@ -68,6 +68,8 @@ export class ConducesPage implements OnDestroy {
   private primerSync = true;
   readonly fmtDur = formatearDuracion;
   readonly fmtHora = formatFechaCortaHora; // AI3 — H.I/H.F de la ruta
+  // AK7/AK22 — fecha + hora 12h homologada (emisión de conduce / planificación de ruta).
+  readonly fmtFechaHora = formatFechaHumana;
   /** AG11 — para el indicador "Reportando tu ubicación" cuando hay ruta activa. */
   readonly trackingActivo = this.tracking.rastreando;
 

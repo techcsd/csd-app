@@ -20,7 +20,9 @@
           <div class="cpend__info">
             <span class="cpend__destino">🏗️ {{ c.destino || 'Destino' }}</span>
             <span class="cpend__meta">
-              @if (c.bodega) { {{ c.bodega }} · } {{ fmtFecha(c.fecha) }}
+              @if (c.bodega) { {{ c.bodega }} · }
+              <!-- AK7 — fecha y hora exacta de emisión -->
+              {{ c.created_at ? fmtFechaHora(c.created_at) : fmtFecha(c.fecha) }}
             </span>
           </div>
           <div class="cpend__actions">

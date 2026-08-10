@@ -10,14 +10,12 @@ import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-pick
 import { CameraService, CapturedDoc } from '../../../core/services/camera.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
-import { ConductoresService } from '../../../core/services/conductores.service';
-import { UserContextService } from '../../../core/services/user-context.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
-import { Conductor } from '../../../core/models/conductor.model';
+import { ConductorMulta } from '../../../core/services/flota-reportes.service';
 import { MotivoMulta } from '../../../core/models/flota-reportes.model';
 
 /** Vehículo elegido, lo mínimo para pintarlo en el botón (W5). */
@@ -58,8 +56,6 @@ export class ReportarMultaPage {
   private route = inject(ActivatedRoute);
   private reportes = inject(FlotaReportesService);
   private vehiculos = inject(VehiculosService);
-  private conductores = inject(ConductoresService);
-  private ctx = inject(UserContextService);
   private camera = inject(CameraService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
@@ -71,9 +67,11 @@ export class ReportarMultaPage {
   // Y7 — cuando se abre desde el cuadro "Multas" del hub (sin conductor en la
   // ruta) hay que elegir el conductor aquí; desde el perfil ya viene fijado.
   necesitaConductor = signal(false);
-  conductoresLista = signal<Conductor[]>([]);
+  conductoresLista = signal<ConductorMulta[]>([]);
   conductorNombre = signal('');
   sheetConductor = signal(false);
+  /** AK17 — el conductor quedó fijado a MÍ (chofer): campo bloqueado, sin selector. */
+  conductorBloqueado = signal(false);
   // W5 — motivo: catálogo + "Otro (escribir)". Default = placeholder (no "Otro").
   motivos = signal<MotivoMulta[]>([]);
   motivoSel = signal<string>('');
@@ -126,22 +124,28 @@ export class ReportarMultaPage {
     ]);
     this.motivos.set(motivos);
 
-    // Y7 — abierto desde el hub (sin conductor en la ruta):
-    //  · roles elevados → eligen a CUALQUIER conductor (selector en hoja).
-    //  · chofer → "me pusieron una multa": el conductor soy yo (sin selector).
+    // AK17 — abierto desde el hub (sin conductor en la ruta). El gating es
+    // server-side (registrar_multa_app), pero la UI lo espeja:
+    //  · Elevado (puede_multar_a_otros) → selector completo con conductores_para_multa
+    //    (incluye a Papo, con la nueva definición de conductor).
+    //  · No-elevado (chofer) → conductor PRESELECCIONADO = él mismo, bloqueado, sin
+    //    selector. conductores_para_multa le devuelve solo su propia ficha.
     if (this.necesitaConductor()) {
-      if (this.ctx.esFlotaElevado()) {
-        void this.conductores.getConductores().then((cs) => this.conductoresLista.set(cs)).catch(() => {});
+      const [puedeOtros, lista] = await Promise.all([
+        this.reportes.puedeMultarAOtros().catch(() => false),
+        this.reportes.conductoresParaMulta().catch(() => [] as ConductorMulta[]),
+      ]);
+      if (puedeOtros) {
+        this.conductoresLista.set(lista);
       } else {
-        const mi = await this.conductores.getMiConductor().catch(() => null);
-        if (mi) {
-          this.conductorId = mi.id;
-          this.conductorNombre.set(mi.nombre);
-          this.necesitaConductor.set(false); // conductor fijado a mí — no se muestra el selector
-        } else {
-          // Sin perfil de conductor propio: caer al selector como último recurso.
-          void this.conductores.getConductores().then((cs) => this.conductoresLista.set(cs)).catch(() => {});
+        // Chofer: fijar a mí (la ficha propia, es_yo). Bloqueado.
+        const yo = lista.find((c) => c.es_yo) ?? lista[0] ?? null;
+        if (yo) {
+          this.conductorId = yo.conductor_id;
+          this.conductorNombre.set(yo.nombre);
         }
+        this.necesitaConductor.set(false);
+        this.conductorBloqueado.set(true);
       }
     }
 
@@ -216,8 +220,8 @@ export class ReportarMultaPage {
   cerrarConductorPicker(): void {
     this.sheetConductor.set(false);
   }
-  elegirConductor(c: Conductor): void {
-    this.conductorId = c.id;
+  elegirConductor(c: ConductorMulta): void {
+    this.conductorId = c.conductor_id;
     this.conductorNombre.set(c.nombre);
     this.sheetConductor.set(false);
   }

@@ -34,6 +34,16 @@
         } @else {
           <button type="button" class="rmul__veh-pick" (click)="abrirConductorPicker()">🪪 Elegir conductor</button>
         }
+      } @else if (conductorBloqueado()) {
+        <!-- AK17 — chofer: la multa es para él mismo (preseleccionado y bloqueado). -->
+        <label class="field-label">Conductor</label>
+        <div class="rmul__veh rmul__veh--locked">
+          <div class="rmul__veh-info">
+            <span class="rmul__veh-placa">{{ conductorNombre() || 'Tú' }}</span>
+            <span class="rmul__veh-sub">Solo puedes registrarte multas a ti mismo.</span>
+          </div>
+          <span class="rmul__lock" aria-hidden="true">🔒</span>
+        </div>
       }
 
       <label class="field-label">Motivo de la multa</label>
@@ -113,9 +123,9 @@
   <app-bottom-sheet [open]="sheetConductor()" titulo="Elige un conductor" (closed)="cerrarConductorPicker()">
     @if (sheetConductor()) {
       <div class="rmul__clist">
-        @for (c of conductoresLista(); track c.id) {
+        @for (c of conductoresLista(); track c.conductor_id) {
           <button type="button" class="rmul__citem" (click)="elegirConductor(c)">
-            <span class="rmul__citem-nombre">{{ c.nombre }}</span>
+            <span class="rmul__citem-nombre">{{ c.nombre }}@if (c.es_yo) { <em class="rmul__citem-yo"> (yo)</em> }</span>
             <span class="rmul__citem-ced">{{ c.cedula }}</span>
           </button>
         } @empty {

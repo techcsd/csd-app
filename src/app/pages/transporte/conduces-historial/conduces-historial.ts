@@ -11,7 +11,7 @@ import { NetworkService } from '../../../core/services/network.service';
 
 const FASE_LABEL: Record<string, string> = {
   emitido: 'Emitido',
-  en_transito: 'En tránsito',
+  en_transito: 'En ruta',
   entregado: 'Entregado',
   confirmado: 'Confirmado',
   pendiente_firma: 'Pendiente de firma',

@@ -7,6 +7,16 @@
       <button type="button" class="colsel__cambiar" (click)="cambiar()">{{ cambiarLabel() }}</button>
     </div>
   </div>
+} @else if (cerrado()) {
+  <!-- AK6 — trigger cerrado: la lista no se muestra hasta tocarlo. -->
+  <div class="colsel">
+    @if (label()) { <span class="colsel__label">{{ label() }}</span> }
+    <button type="button" class="colsel__trigger" (click)="abrir()">
+      <span class="colsel__icon">{{ icon() }}</span>
+      <span class="colsel__placeholder">{{ triggerLabel() }}</span>
+      <span class="colsel__chevron" aria-hidden="true">▾</span>
+    </button>
+  </div>
 } @else {
   <app-select-list
     [label]="label()"

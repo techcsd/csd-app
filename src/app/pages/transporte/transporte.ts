@@ -127,20 +127,10 @@ export class TransportePage {
   /** P4 — vehículos con una recepción encolada (se marcan "Enviando…"). */
   enviandoIds = signal<Set<string>>(new Set());
 
-  /** Active assignments not already shown in a_cargo / por_recibir (multi-asignación). */
-  otrasAsignaciones = computed(() => {
-    const known = new Set([
-      ...this.pendientes().a_cargo.map((v) => v.vehiculo_id),
-      ...this.pendientes().por_recibir.map((v) => v.vehiculo_id),
-    ]);
-    return this.asignaciones().filter((a) => !known.has(a.vehiculo_id));
-  });
-
+  // AK20 — "Asignados a mí" desaparece (se elimina el concepto de asignación).
+  // El vacío del hub depende solo del modelo nuevo: en uso + disponibles.
   vacio = computed(
-    () =>
-      !this.pendientes().a_cargo.length &&
-      !this.pendientes().por_recibir.length &&
-      !this.otrasAsignaciones().length,
+    () => !this.pendientes().a_cargo.length && !this.pendientes().por_recibir.length,
   );
 
   constructor() {
@@ -260,7 +250,7 @@ export class TransportePage {
       case 'combustibleLog': return this.combustibleLog();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
-      case 'usoVehiculo': return this.asignar();
+      case 'usoVehiculo': return this.usoVehiculo();
       case 'avisoVehiculo': return this.avisoVehiculo();
       case 'vehiculos': return this.vehiculosLista();
       case 'conductores': return this.conductoresLista();
@@ -408,9 +398,23 @@ export class TransportePage {
     return this.kmEff()[v.vehiculo_id] ?? v.km;
   }
 
-  asignar(): void {
-    // AF34 — flujo unificado (asignarme + pre-uso + traspaso con acta).
-    void this.router.navigate(['/transporte/asignarme']);
+  /** AK15/AK20 — "Uso de vehículo" v2 (reemplaza asignarme). Sin vehículo → elige del pool. */
+  usoVehiculo(): void {
+    void this.router.navigate(['/transporte/uso-vehiculo']);
+  }
+
+  /** AK14/AK15 — usar un vehículo concreto (desde su card). */
+  usar(v: { vehiculo_id: string; placa?: string; marca?: string; modelo?: string }): void {
+    void this.router.navigate(['/transporte/uso-vehiculo', v.vehiculo_id], {
+      queryParams: { placa: v.placa, label: `${v.placa} · ${v.marca ?? ''} ${v.modelo ?? ''}`.trim() },
+    });
+  }
+
+  /** AK14/AK15 — soltar el vehículo que tengo en uso (pide km + nivel). */
+  soltar(v: { vehiculo_id: string; placa?: string; marca?: string; modelo?: string }): void {
+    void this.router.navigate(['/transporte/uso-vehiculo', v.vehiculo_id], {
+      queryParams: { mode: 'soltar', placa: v.placa, label: `${v.placa} · ${v.marca ?? ''} ${v.modelo ?? ''}`.trim() },
+    });
   }
 
   /** AF36 — historial de recepciones/traspasos de vehículo. */

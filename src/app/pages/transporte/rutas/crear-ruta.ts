@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
+import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
@@ -75,7 +75,7 @@ interface ParadaUI {
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner],
+  imports: [FormsModule, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })

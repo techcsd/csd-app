@@ -41,6 +41,8 @@
             <div class="ruta-card__info">
               <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}</span>
               <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
+              <!-- AK22 — fecha y hora en que se planificó/creó la ruta -->
+              @if (r.creado_en) { <span class="ruta-card__fecha">📅 Planificada: {{ fmtFechaHora(r.creado_en) }}</span> }
               @if (r.notas) { <span class="ruta-card__notas">📝 {{ r.notas }}</span> }
               <!-- Y4 — contador en vivo mientras la ruta está en curso -->
               @if (cronometro(r); as t) {
@@ -202,42 +204,45 @@
           </div>
       </ng-template>
 
+      <!-- AK11 — "Conduces por entregar" se mantiene: el chofer inicia una ruta a
+           partir de un conduce. Mantiene su propio empty state (abajo). -->
       @if (conduces().length) {
         <h2 class="conduces__section">Conduces por entregar</h2>
-      }
-      @for (c of conduces(); track c.id) {
-        <div class="conduce-card">
-          <div class="conduce-card__head">
-            <span class="conduce-card__destino">📍 {{ c.destino ?? 'Destino' }}</span>
-            <span class="conduce-card__bodega">Desde: {{ c.bodega ?? '—' }}</span>
+        @for (c of conduces(); track c.id) {
+          <div class="conduce-card">
+            <div class="conduce-card__head">
+              <span class="conduce-card__destino">📍 {{ c.destino ?? 'Destino' }}</span>
+              <span class="conduce-card__bodega">Desde: {{ c.bodega ?? '—' }}</span>
+            </div>
+            <!-- AK7 — fecha y hora exacta de emisión del conduce -->
+            @if (c.creado_en) { <span class="conduce-card__fecha">🕒 Emitido: {{ fmtFechaHora(c.creado_en) }}</span> }
+            <ul class="conduce-card__items">
+              @for (it of c.items; track it.detalle_id) {
+                <li>{{ it.cantidad | number: '1.0-2' }} {{ it.unidad }} · {{ it.articulo }}</li>
+              }
+            </ul>
+            <!-- AK11 — "Gestionar entrega" (antes "Marcar entrega"): abre el flujo de
+                 estados (Iniciar ruta → Estoy entregando → entregado). -->
+            <button type="button" class="btn-cta" (click)="entregar(c)">Gestionar entrega</button>
           </div>
-          <ul class="conduce-card__items">
-            @for (it of c.items; track it.detalle_id) {
-              <li>{{ it.cantidad | number: '1.0-2' }} {{ it.unidad }} · {{ it.articulo }}</li>
-            }
-          </ul>
-          <button type="button" class="btn-cta" (click)="entregar(c)">Marcar entrega</button>
-        </div>
-      } @empty {
-        @if (!rutas().length) {
-          <app-empty-state
-            icon="🧾"
-            title="No tienes conduces por entregar"
-            message="Los conduces aparecen aquí cuando el almacén despacha materiales para que los lleves a una obra. También puedes registrar una ruta para hoy."
-            ctaLabel="Crear ruta"
-            secondaryLabel="Actualizar"
-            (action)="crearRuta()"
-            (secondaryAction)="load()"
-          />
-        } @else {
-          <app-empty-state
-            icon="🧾"
-            title="No tienes conduces por entregar"
-            message="Los conduces aparecen aquí cuando el almacén despacha materiales para que los lleves a una obra."
-            secondaryLabel="Actualizar"
-            (secondaryAction)="load()"
-          />
         }
+      }
+
+      <!-- AK3 — empty state SOBRE RUTAS (no sobre conduces). Solo cuando no hay ni
+           rutas ni conduces por entregar. -->
+      @if (!rutas().length && !conduces().length) {
+        <app-empty-state
+          icon="🗺️"
+          title="No tienes rutas activas ahora mismo"
+          message="Aquí verás tus rutas del día y los conduces que el almacén despache para que los lleves a una obra. Puedes crear una ruta cuando la necesites."
+          ctaLabel="Crear ruta"
+          secondaryLabel="Actualizar"
+          (action)="crearRuta()"
+          (secondaryAction)="load()"
+        />
+      } @else if (rutas().length && !conduces().length) {
+        <!-- AK3 — empty propio de la sección "Conduces por entregar" (hay rutas). -->
+        <p class="conduces__sub-empty">🧾 No tienes conduces por entregar por ahora.</p>
       }
     }
   </div>

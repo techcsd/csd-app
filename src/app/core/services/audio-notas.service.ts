@@ -13,6 +13,7 @@ export type AudioEntidadTipo =
   | 'ruta'
   | 'checklist'
   | 'traspaso_acta'
+  | 'aviso_flota'
   | 'otro';
 
 /** Bucket sugerido por módulo (mismos que usa el SGC web). */

@@ -112,6 +112,21 @@ export class ConductoresService {
   }
 
   /**
+   * AK19 — ¿el usuario actual es conductor (definición ampliada)? = rol chofer O
+   * ficha de conductor O sesión de uso de vehículo. Reemplaza el gate viejo de
+   * "Mi actividad" que dependía de la asignación legacy (bloqueaba a Papo).
+   */
+  async esConductorAmpliado(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('es_conductor_ampliado');
+      if (error) return false;
+      return (data as boolean) ?? false;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * AI10/AI11 — stats del conductor por periodo (rutas, conduces, galones, km,
    * inspecciones, multas, documentos). Una sola pasada server-side. Online;
    * cacheado por (conductor, periodo) para offline.

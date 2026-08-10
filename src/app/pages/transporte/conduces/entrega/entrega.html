@@ -43,17 +43,15 @@
         <h2 class="entrega__section">¿En qué vas?</h2>
         <div class="entrega__acciones">
           <button type="button" class="entrega__estado" [disabled]="!puedeIniciarTransito() || submitting()" (click)="iniciarTransito()">
-            🚚 Iniciar tránsito
+            🚚 Iniciar ruta
           </button>
           <button type="button" class="entrega__estado" [disabled]="!puedeEntregando() || submitting()" (click)="estoyEntregando()">
             📦 Estoy entregando
           </button>
         </div>
 
-        @if (!mostrarEntrega()) {
-          <button type="button" class="btn-cta entrega__mt" (click)="abrirEntrega()">✅ Marcar entregado</button>
-        } @else {
-          <!-- Panel de entrega: foto obligatoria + ¿llegó todo? -->
+        @if (mostrarEntrega()) {
+          <!-- AK11 — proceso de entrega DIRECTO (lo abre "Estoy entregando"): foto obligatoria + ¿llegó todo? -->
           <h2 class="entrega__section">Foto de la entrega <span class="entrega__req">*</span></h2>
           <p class="entrega__sub">Toma la foto del material entregado en destino.</p>
           <app-photo-slot label="Entrega" hint="📸" [gallery]="false" [foto]="foto()" (captured)="onFoto($event)" (cleared)="foto.set(null)" />

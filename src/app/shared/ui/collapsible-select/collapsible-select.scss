@@ -39,3 +39,31 @@
   font-size: 14px;
   font-weight: 800;
 }
+// AK6 — trigger cerrado (dropdown sin abrir).
+.colsel__trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+  min-height: 56px; // objetivo grande (guante/sol)
+}
+.colsel__placeholder {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.colsel__chevron {
+  flex: 0 0 auto;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}

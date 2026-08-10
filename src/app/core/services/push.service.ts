@@ -5,6 +5,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { SupabaseService } from './supabase.service';
 import { NotificacionesService, notifAppRoute } from './notificaciones.service';
 import { NavGuardService } from './nav-guard.service';
+import { AlarmaService } from './alarma.service';
 
 /**
  * AF7 — Notificaciones push nativas (Android/FCM). La infraestructura vive en
@@ -21,6 +22,7 @@ export class PushService {
   private router = inject(Router);
   private notifs = inject(NotificacionesService);
   private navGuard = inject(NavGuardService);
+  private alarma = inject(AlarmaService);
 
   private started = false;
   private token: string | null = null;
@@ -38,8 +40,13 @@ export class PushService {
       /* best-effort: sin token no hay push, pero las in-app siguen. */
     });
     // Foreground: refresca el contador del campanario (la in-app ya se insertó).
-    await PushNotifications.addListener('pushNotificationReceived', () => {
+    // AK10 — si es la push de alarma dominical, dispara la alarma tipo despertador.
+    await PushNotifications.addListener('pushNotificationReceived', (n) => {
       void this.notifs.refreshNoLeidas().catch(() => {});
+      const data = (n?.data ?? {}) as { tipo?: string; alarma?: string | boolean; ruta?: string; vehiculo_id?: string };
+      if (data.tipo === 'alarma-reporte-semanal' || data.alarma === true || data.alarma === 'true') {
+        this.alarma.disparar({ vehiculoId: data.vehiculo_id ?? null, ruta: data.ruta ?? '/transporte/reporte-semanal' });
+      }
     });
     // Tap en la push → deep-link (mismo mapa que la bandeja de avisos, AF6).
     // AJ7 — el deep-link pasa por el gate de navegación: si el usuario está en un

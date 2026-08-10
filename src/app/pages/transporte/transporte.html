@@ -72,20 +72,19 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
+      <!-- AK14 — vehículo(s) que tengo EN USO (a_cargo). -->
       @if (pendientes().a_cargo.length) {
-        <h2 class="transporte__section">Tu vehículo</h2>
+        <h2 class="transporte__section">En uso</h2>
         @for (v of pendientes().a_cargo; track v.vehiculo_id) {
           <div class="veh-card veh-card--activo">
             <div class="veh-card__info">
               <span class="veh-card__placa">{{ v.placa }}</span>
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
-              <span class="veh-card__km">A tu cargo · {{ kmOf(v) | number: '1.0-0' }} km</span>
+              <span class="veh-card__km">En uso · {{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
-            <button type="button" class="btn-cta veh-card__cta" (click)="devolver(v.vehiculo_id)">
-              Devolver vehículo
-            </button>
-            <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
-              📋 Checklist de pre-uso
+            <!-- AK15 — Uso de vehículo (registra/actualiza), sin checklist de pre-uso -->
+            <button type="button" class="btn-ghost veh-card__cta" (click)="usar(v)">
+              🚗 Uso de vehículo
             </button>
             <button type="button" class="btn-ghost veh-card__cta" (click)="combustible(v.vehiculo_id)">
               ⛽ Registrar combustible
@@ -96,12 +95,18 @@
             <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
               📊 Ver perfil
             </button>
+            <!-- AK14/AK15 — Soltar vehículo (pide km + nivel; lo deja libre) -->
+            <button type="button" class="btn-cta veh-card__cta" (click)="soltar(v)">
+              Soltar vehículo
+            </button>
           </div>
         }
       }
 
+      <!-- AK14/AK20 — vehículos disponibles para mí (responsable, sin sesión activa):
+           "recibir" se absorbe en Uso de vehículo. -->
       @if (pendientes().por_recibir.length) {
-        <h2 class="transporte__section">Por recibir</h2>
+        <h2 class="transporte__section">Para usar</h2>
         @for (v of pendientes().por_recibir; track v.vehiculo_id) {
           <div class="veh-card">
             <div class="veh-card__info">
@@ -109,53 +114,8 @@
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
               <span class="veh-card__km">{{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
-            @if (estaEnviando(v.vehiculo_id)) {
-              <span class="veh-card__enviando">🔄 Enviando recepción…</span>
-            } @else {
-              <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
-                Recibir vehículo
-              </button>
-            }
-            <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
-              📋 Checklist de pre-uso
-            </button>
-            <button type="button" class="btn-ghost veh-card__cta" (click)="combustible(v.vehiculo_id)">
-              ⛽ Registrar combustible
-            </button>
-            <button type="button" class="btn-ghost veh-card__cta" (click)="mantenimiento(v.vehiculo_id)">
-              🔧 Mantenimientos
-            </button>
-            <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
-              📊 Ver perfil
-            </button>
-          </div>
-        }
-      }
-
-      @if (otrasAsignaciones().length) {
-        <h2 class="transporte__section">Asignados a mí</h2>
-        @for (v of otrasAsignaciones(); track v.vehiculo_id) {
-          <div class="veh-card">
-            <div class="veh-card__info">
-              <span class="veh-card__placa">{{ v.placa }}</span>
-              <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
-              <span class="veh-card__km">{{ v.tipo || 'Vehículo' }} · {{ kmOf(v) | number: '1.0-0' }} km</span>
-            </div>
-            @if (estaEnviando(v.vehiculo_id)) {
-              <span class="veh-card__enviando">🔄 Enviando recepción…</span>
-            } @else {
-              <button type="button" class="btn-cta veh-card__cta" (click)="recibir(v.vehiculo_id)">
-                Recibir vehículo
-              </button>
-            }
-            <button type="button" class="btn-ghost veh-card__cta" (click)="preuso(v.vehiculo_id)">
-              📋 Checklist de pre-uso
-            </button>
-            <button type="button" class="btn-ghost veh-card__cta" (click)="combustible(v.vehiculo_id)">
-              ⛽ Registrar combustible
-            </button>
-            <button type="button" class="btn-ghost veh-card__cta" (click)="mantenimiento(v.vehiculo_id)">
-              🔧 Mantenimientos
+            <button type="button" class="btn-cta veh-card__cta" (click)="usar(v)">
+              🚗 Uso de vehículo
             </button>
             <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
               📊 Ver perfil
@@ -167,10 +127,10 @@
       @if (vacio()) {
         <app-empty-state
           icon="🚚"
-          title="Aún no tienes vehículos"
-          message="Aquí aparecen los vehículos que recibes y los que tienes a tu cargo. Asígnate uno para empezar a usarlo y registrar su recibimiento."
-          ctaLabel="Asignarme un vehículo"
-          (action)="asignar()"
+          title="Aún no tienes vehículos en uso"
+          message="Los vehículos son libres. Elige uno en «Uso de vehículo» para empezar a usarlo; si otro lo tiene, podrás recibirlo."
+          ctaLabel="Usar un vehículo"
+          (action)="usoVehiculo()"
         />
       }
     }

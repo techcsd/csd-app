@@ -3,7 +3,6 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigButton } from '../../../shared/ui/big-button/big-button';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
-import { InventarioService } from '../../../core/services/inventario.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 
 interface ConduceTile {
@@ -15,22 +14,22 @@ interface ConduceTile {
 }
 
 // AF22 — núcleo "Conduces": el conduce es el documento central de movimiento de
-// material. Todas las acciones de conduce viven aquí (crear/recibir/devolver/
-// ferretería/por firmar/historial). Cada una reutiliza su pantalla existente.
-// AI2 — menú del módulo Conduce (sketch de Eduardo): [+ Crear conduce]
-// [Pendiente entrega ①] [Histórico]. Las demás acciones (recibir/devolver/
-// ferretería/por firmar/transferencias) quedan como operativos secundarios.
-// AJ8 — "Devolver" ya no es un submódulo: la devolución es un conduce con destino
-// suplidor/almacén, así que el tile abre el wizard de conduce pre-llenado.
+// material. Cada acción reutiliza su pantalla existente.
+// AK8 — menú DEPURADO: se eliminan los submódulos "Recibir", "Por firmar",
+// "Devolver a suplidor" y "Compra en ferretería":
+//   · Recibir / Por firmar → los cubre la confirmación de entrega (el stock del
+//     destino solo sube al confirmar el receptor). Su función vive en "Por confirmar".
+//   · Devolver a suplidor → es un conduce con destino suplidor: se hace en "+ Crear
+//     conduce" (deep-link con destino=suplidor).
+//   · Compra en ferretería → es un conduce con origen ferretería: "+ Crear conduce".
+// Las rutas de esos flujos SE CONSERVAN para no romper deep-links/notificaciones
+// viejas (solo se quitan del menú). AK1 — se añade "Confirmaciones" (historial).
 const TILES: ConduceTile[] = [
   { key: 'crear', icon: '📦', label: '+ Crear conduce', tint: '#7c3aed', route: '/transporte/generar-conduce' },
   { key: 'pendienteEntrega', icon: '🚚', label: 'Pendiente entrega', tint: '#ea580c', route: '/transporte/conduces-pendientes' },
   { key: 'porConfirmar', icon: '📥', label: 'Por confirmar', tint: '#0f766e', route: '/transporte/por-confirmar' },
+  { key: 'confirmaciones', icon: '✅', label: 'Confirmaciones', tint: '#0d9488', route: '/transporte/confirmaciones' },
   { key: 'historial', icon: '🗂️', label: 'Histórico', tint: '#1e3a5f', route: '/transporte/conduces-historial' },
-  { key: 'recibir', icon: '📦', label: 'Recibir', tint: '#0f766e', route: '/transporte/recibir-mercancia' },
-  { key: 'devolver', icon: '↩️', label: 'Devolver a suplidor', tint: '#0f766e', route: '/transporte/generar-conduce' },
-  { key: 'ferreteria', icon: '🧾', label: 'Compra en ferretería', tint: '#9333ea', route: '/transporte/ferreteria' },
-  { key: 'porFirmar', icon: '✍️', label: 'Por firmar', tint: '#ca8a04', route: '/transporte/por-firmar' },
   { key: 'transferencias', icon: '↔️', label: 'Transferencias', tint: '#0369a1', route: '/transporte/conduce-transferencias' },
 ];
 
@@ -46,20 +45,14 @@ const TILES: ConduceTile[] = [
 export class ConducesHubPage {
   private router = inject(Router);
   private location = inject(Location);
-  private inventario = inject(InventarioService);
   private conduces = inject(ConducesService);
 
   readonly tiles = TILES;
-  firmasPendientes = signal(0);
   transferenciasPendientes = signal(0);
   pendienteEntrega = signal(0); // AI2
   porConfirmar = signal(0); // AJ8
 
   constructor() {
-    void this.inventario
-      .misFirmasPendientes()
-      .then((l) => this.firmasPendientes.set(l.length))
-      .catch(() => {});
     // AH5 — badge de transferencias de conduce que me ofrecieron (por aceptar).
     void this.conduces
       .misTransferenciasPendientes()
@@ -78,7 +71,6 @@ export class ConducesHubPage {
   }
 
   badgeFor(key: string): number | null {
-    if (key === 'porFirmar') return this.firmasPendientes() || null;
     if (key === 'transferencias') return this.transferenciasPendientes() || null;
     if (key === 'pendienteEntrega') return this.pendienteEntrega() || null;
     if (key === 'porConfirmar') return this.porConfirmar() || null;
@@ -86,13 +78,6 @@ export class ConducesHubPage {
   }
 
   open(t: ConduceTile): void {
-    // AJ8 — "Devolver a suplidor" abre el conduce pre-llenado (destino suplidor).
-    if (t.key === 'devolver') {
-      void this.router.navigate(['/transporte/generar-conduce'], {
-        queryParams: { origen: 'almacen', destino: 'suplidor' },
-      });
-      return;
-    }
     void this.router.navigate([t.route]);
   }
 

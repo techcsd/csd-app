@@ -27,8 +27,24 @@ export class VehiculoPicker {
   subtitulo = input('Selecciona el vehículo disponible para continuar.');
   /** AF18 — cuando true, solo ofrece los vehículos asignados a mí (combustible). */
   soloMios = input(false);
+  /** AK6 — modo dropdown: cerrado por defecto (trigger) → abre al tap → colapsa
+   *  mostrando el vehículo elegido + "Cambiar". Para selectores embebidos en un
+   *  formulario (combustible, multa, aviso, rutas). Los pasos dedicados de un
+   *  wizard lo dejan en false (la cuadrícula ES el paso). */
+  dropdown = input(false);
+  /** AK6 — id del vehículo ya elegido (para pintar el chip colapsado). */
+  selectedId = input<string>('');
 
   elegido = output<VehiculoDisponible>();
+
+  /** AK6 — la cuadrícula está abierta (el usuario tocó el trigger/"Cambiar"). */
+  abierto = signal(false);
+  /** AK6 — vehículo actualmente seleccionado (para el chip colapsado). */
+  seleccionadoV = computed(
+    () => this.disponibles().find((v) => v.vehiculo_id === this.selectedId()) ?? null,
+  );
+  /** AK6 — muestra la cuadrícula: siempre en modo normal; en dropdown solo si está abierto. */
+  mostrarLista = computed(() => !this.dropdown() || this.abierto());
 
   loading = signal(true);
   disponibles = signal<VehiculoDisponible[]>([]);
@@ -79,6 +95,12 @@ export class VehiculoPicker {
   }
 
   elegir(v: VehiculoDisponible): void {
+    this.abierto.set(false); // AK6 — al elegir, colapsa el dropdown
     this.elegido.emit(v);
+  }
+
+  /** AK6 — abre la cuadrícula (modo dropdown). */
+  abrir(): void {
+    this.abierto.set(true);
   }
 }
