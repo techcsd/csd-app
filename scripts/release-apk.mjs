@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.68.0';
+const VERSION = '1.69.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,24 +59,24 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-09';
+const RELEASED_AT = '2026-08-10';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Conduce paso a paso, el receptor confirma en su teléfono, mensajería en la app y navegación más estable';
+const TITULO = 'Ronda de arreglos: conduces sin señal, navegación estable, listas de obra que cargan y detalles visuales';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Conduces', d: 'Crear conduce ahora es paso a paso (una pregunta por pantalla): origen, destino, materiales, foto, despachante y firmas, y un resumen antes de emitir. Se acabaron las listas largas: todo es un desplegable con buscador.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Puedes marcar el avance de tu conduce: iniciar tránsito, "estoy entregando" y entregado (con foto de la entrega).' },
-  { t: 'nuevo', m: 'Conduces', d: 'Quien recibe el material lo confirma desde SU PROPIO teléfono (con foto y firma). Le llega un aviso y en el inicio ve "Tienes entregas por confirmar".' },
-  { t: 'mejora', m: 'Conduces', d: 'En el listado de despachante ya solo salen personas de obra/almacén (la gente de oficina no aparece). "Devolver" ahora abre el conduce con el destino de suplidor ya puesto.' },
-  { t: 'nuevo', m: 'Mensajes', d: 'Nueva mensajería en la app, igual que en la web: conversaciones, envío aunque estés sin señal y aviso con la cantidad de mensajes sin leer en el inicio.' },
-  { t: 'nuevo', m: 'Inicio', d: 'Puedes personalizar el inicio: además de reordenar, ahora cambias el tamaño de cada botón (chico, mediano o grande), como en el celular.' },
-  { t: 'mejora', m: 'Seguimiento', d: 'El mapa de seguimiento dibuja en vivo el recorrido de cada ruta activa, y las posiciones quedan ligadas a su ruta para ver el trayecto.' },
-  { t: 'mejora', m: 'Mi actividad', d: 'Se agregó el filtro de "1 semana", y ahora puedes ver tu propio perfil de conductor (solo lectura) en cuadrículas.' },
-  { t: 'arreglo', m: 'Navegación', d: 'Un aviso que llegaba mientras llenabas un formulario ya no te saca de lo que estás haciendo; el botón "atrás" en Mi obra dejó de dar vueltas raras.' },
-  { t: 'mejora', m: 'Actualización', d: 'La pantalla de "qué trae la versión" ahora se lee como una lista corta por módulo, y los botones siempre quedan visibles abajo.' },
+  { t: 'arreglo', m: 'Conduces', d: 'El conduce que acabas de crear ya aparece en "Pendiente entrega" aunque estés sin señal, y el detalle abre bien desde el listado.' },
+  { t: 'mejora', m: 'Conduces', d: 'Cuando recibes y "faltó algo", ahora puedes indicar qué artículos y cuánto llegó de cada uno, no solo un sí/no.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Si eliges un vehículo distinto al crear el conduce, ya no pierdes la foto ni las firmas al registrar el uso: vuelves justo donde estabas.' },
+  { t: 'arreglo', m: 'Navegación', d: 'El botón "atrás" ya no se queda pegado ni cierra la app cuando entras desde un aviso, y un aviso que llega mientras llenas algo no te cambia de pantalla.' },
+  { t: 'mejora', m: 'Seguimiento', d: 'El mapa ya no se traba con varios choferes moviéndose y el recorrido no pierde puntos cuando andas sin señal.' },
+  { t: 'mejora', m: 'Mensajes', d: 'El contador de mensajes sin leer del inicio se actualiza al momento cuando te llega uno.' },
+  { t: 'arreglo', m: 'Obras', d: 'Las listas de obra ahora cargan para todos (antes salían vacías al pedir materiales o en la bitácora para algunos usuarios).' },
+  { t: 'arreglo', m: 'Formularios', d: 'Los campos de números (multas, kilometraje, avances) ya no aceptan valores negativos, y "Pendientes de envío" muestra nombres claros en vez de códigos.' },
+  { t: 'arreglo', m: 'Visual', d: 'Se arreglaron botones e íconos que se veían invisibles (el contador del inicio, el botón de nueva nota, la flecha de atrás en Proyectos y los avisos).' },
+  { t: 'seguridad', m: 'Sesión', d: 'En teléfonos compartidos, al cerrar sesión ya no queda tu borrador a medias disponible para el siguiente usuario.' },
 ];
 
 const TIPO_POR_COMMIT = {
