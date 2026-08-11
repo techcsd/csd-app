@@ -11,7 +11,8 @@
   color: #fff;
 }
 .msgs__back,
-.msgs__new {
+.msgs__new,
+.msgs__refresh {
   width: 44px;
   height: 44px;
   border-radius: 12px;
@@ -19,6 +20,12 @@
   color: #fff;
   font-size: 22px;
   font-weight: 700;
+}
+.msgs__refresh {
+  font-size: 18px;
+  &:disabled {
+    opacity: 0.6;
+  }
 }
 .msgs__title {
   flex: 1;

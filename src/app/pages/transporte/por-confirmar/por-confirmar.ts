@@ -7,6 +7,7 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ConducesService, EntregaPorConfirmar } from '../../../core/services/conduces.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -24,7 +25,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-por-confirmar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, Skeleton, EmptyState],
+  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, Skeleton, EmptyState, LiveRefreshDirective],
   templateUrl: './por-confirmar.html',
   styleUrl: './por-confirmar.scss',
 })
@@ -40,6 +41,7 @@ export class PorConfirmarPage {
   fmtFecha = formatFecha;
 
   loading = signal(true);
+  refrescando = signal(false);
   entregas = signal<EntregaPorConfirmar[]>([]);
 
   // Fila expandida en modo confirmación.
@@ -61,15 +63,22 @@ export class PorConfirmarPage {
     void this.load();
   }
 
-  private async load(): Promise<void> {
-    this.loading.set(true);
+  private async load(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     try {
       this.entregas.set(await this.conduces.misEntregasPorConfirmar());
     } catch {
       this.toast.error('No pudimos cargar las entregas por confirmar.');
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
+  }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void {
+    void this.load(silent);
   }
 
   get online(): boolean {

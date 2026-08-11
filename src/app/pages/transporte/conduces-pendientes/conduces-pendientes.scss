@@ -100,6 +100,25 @@
   flex: 1;
 }
 
+// AM5 — fila del ciclo conduce→ruta.
+.cpend__ruta {
+  margin-top: 10px;
+  display: flex;
+}
+
+.cpend__iniciar {
+  flex: 1;
+}
+
+.cpend__enruta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-success, #1a7f37);
+}
+
 .cpend__transfer {
   margin-top: 14px;
   padding-top: 14px;

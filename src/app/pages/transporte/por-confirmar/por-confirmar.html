@@ -3,9 +3,10 @@
     <button type="button" class="porconf__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="porconf__title">📥 Entregas por confirmar</h1>
     <button type="button" class="porconf__hist" (click)="misConfirmaciones()">🕘 Mis confirmaciones</button>
+    <button type="button" class="porconf__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
   </header>
 
-  <div class="screen__body">
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
     @if (loading()) {
       <app-skeleton [rows]="3" />
     } @else if (!entregas().length) {

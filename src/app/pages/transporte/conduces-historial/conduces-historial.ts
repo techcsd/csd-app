@@ -6,6 +6,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { ConducesService, ConduceHistorial } from '../../../core/services/conduces.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -30,7 +31,7 @@ const FASE_TINT: Record<string, string> = {
   selector: 'app-conduces-historial',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, SyncBar, CollapsibleSelect],
+  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective],
   templateUrl: './conduces-historial.html',
   styleUrl: './conduces-historial.scss',
 })
@@ -42,6 +43,7 @@ export class ConducesHistorialPage {
   private network = inject(NetworkService);
 
   loading = signal(true);
+  refrescando = signal(false);
   todos = signal<ConduceHistorial[]>([]);
   expandido = signal<string | null>(null);
 
@@ -76,8 +78,9 @@ export class ConducesHistorialPage {
     void this.cargar();
   }
 
-  async cargar(): Promise<void> {
-    this.loading.set(true);
+  async cargar(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     try {
       const data = await this.service.misConducesHistorial({
         desde: this.desde() || null,
@@ -86,7 +89,13 @@ export class ConducesHistorialPage {
       this.todos.set(data);
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
+  }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void {
+    void this.cargar(silent);
   }
 
   toggle(id: string): void {

@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.71.0';
+const VERSION = '1.72.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,25 +62,20 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-11';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Ver y compartir conduce en PDF, Bodega Central como destino, bandeja del confirmador, Tecnología y Administración en la app, alarma del domingo autónoma y mantenimientos por chofer';
+const TITULO = 'Conduces más confiables (envío sin errores, transferencia al instante en ambos teléfonos, Iniciar ruta), refresh homologado y módulo Proyectos con crear/editar y ubicación por link de Maps';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Conduces', d: 'Ahora puedes VER el conduce como documento y compartirlo por WhatsApp o descargarlo en PDF.' },
-  { t: 'arreglo', m: 'Conduces', d: 'Pendiente entrega se actualiza: al aceptar una transferencia, al chofer que la envió le desaparece el conduce. Desliza hacia abajo o toca Actualizar; también se refresca al volver a la app.' },
-  { t: 'mejora', m: 'Conduces', d: 'Toca cualquier conduce para ver su detalle completo: materiales, firmas, fotos y estado actual.' },
-  { t: 'mejora', m: 'Conduces', d: 'El resumen al crear un conduce ahora lista los materiales con su cantidad, no solo el total.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Puedes enviar un conduce a la Bodega Central (o almacenes principales), no solo a obras.' },
-  { t: 'mejora', m: 'Confirmaciones', d: 'Antes de confirmar una entrega puedes ver el conduce completo (lo que debía llegar) para comparar.' },
-  { t: 'nuevo', m: 'Confirmaciones', d: 'Entrada permanente "Por confirmar" con contador, y "Mis confirmaciones" con tu historial (fotos, firma y diferencias).' },
-  { t: 'nuevo', m: 'Tecnología', d: 'Nuevo módulo Tecnología: inventario de equipos de TI con tipo, ubicación, precio en RD$ o US$ y varias fotos con portada; abre las fotos en grande.' },
-  { t: 'mejora', m: 'Sistema', d: 'La pantalla anterior de "Tecnología" (versiones, dudas y reportes de error) ahora se llama "Sistema".' },
-  { t: 'nuevo', m: 'Administración', d: 'Administración completa en la app: usuarios (invitar, roles, activar/desactivar, restablecer contraseña), matriz de roles y permisos, y parámetros del sistema.' },
-  { t: 'nuevo', m: 'Vehículos', d: 'Los choferes pueden registrar mantenimientos del vehículo que llevan (rutina, reparación, tintado, bombillo, gomas, batería…), con costo, taller y fotos.' },
-  { t: 'mejora', m: 'Reporte semanal', d: 'La alarma de inspección del domingo ahora suena aunque no hayas abierto la app, y sigue insistiendo cada 30 minutos hasta que la hagas.' },
-  { t: 'nuevo', m: 'Permisos', d: 'Al abrir la app por primera vez te pedimos todos los permisos de una sola vez (cámara, GPS, notificaciones y alarma), sin estar preguntando a cada rato.' },
-  { t: 'arreglo', m: 'Notas', d: 'Se arregló el texto largo que se salía de las tarjetas de Notas y el aviso de "Enviando…" que se quedaba pegado cuando una nota no se pudo enviar.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Se arregló el error al enviar una devolución a ferretería/suplidor ("la bodega ya no existe"). Ahora la devolución exige de qué almacén sale y no se puede enviar sin ese dato.' },
+  { t: 'mejora', m: 'Conduces', d: 'Si algo falla al enviar un conduce, el aviso en Pendientes de envío ahora es claro y accionable (p. ej. falta de existencia o de almacén), sin perder las fotos; corrige y reintenta.' },
+  { t: 'arreglo', m: 'Conduces', d: 'La transferencia de un conduce ahora se refleja al instante en los dos teléfonos: al que lo envió le desaparece y al que lo acepta le aparece completo en Pendiente entrega.' },
+  { t: 'nuevo', m: 'Conduces', d: 'Botón "Iniciar ruta" en cada conduce pendiente: arranca la ruta (aunque sea una devolución) y aparece en Mis rutas y en Seguimiento. Si el conduce no trae vehículo, te lo pide.' },
+  { t: 'mejora', m: 'Toda la app', d: 'Refrescar homologado en las listas (Mis rutas, Pendiente entrega, Por confirmar, Avisos, Mensajes, Mi actividad, Proyectos…): desliza hacia abajo, toca 🔄 o se actualiza solo al volver a la app.' },
+  { t: 'nuevo', m: 'Proyectos', d: 'Ya puedes crear y editar proyectos desde la app, paso a paso, con validación por rol.' },
+  { t: 'nuevo', m: 'Proyectos', d: 'Ubicación fácil de la obra: pega el link de Google Maps (o coordenadas) y se fija el pin solo; o muévelo en el mapa.' },
+  { t: 'mejora', m: 'Proyectos', d: 'La ficha del proyecto ahora muestra ordenados el ingeniero de obra, el maestro encargado, el contacto (teléfono clicable), la ubicación (Abrir en Maps) y el equipo — ya no todo metido en la descripción.' },
+  { t: 'mejora', m: 'Proyectos', d: 'Se corrigió el diseño del módulo (tarjetas claras homologadas con el resto de la app).' },
 ];
 
 const TIPO_POR_COMMIT = {

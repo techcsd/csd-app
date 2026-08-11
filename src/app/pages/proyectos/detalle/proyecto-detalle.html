@@ -2,6 +2,9 @@
   <header class="pdet__header">
     <button type="button" class="pdet__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="pdet__title">Proyecto</h1>
+    @if (proyecto() && puedeEditar()) {
+      <button type="button" class="pdet__editar" (click)="editar()" aria-label="Editar">✏️ Editar</button>
+    }
   </header>
 
   <div class="screen__body">
@@ -21,8 +24,8 @@
       <div class="pdet__card">
         @if (proyecto()!.codigo) { <div class="pdet__row"><span>Código</span><b>{{ proyecto()!.codigo }}</b></div> }
         @if (proyecto()!.cliente) { <div class="pdet__row"><span>Cliente</span><b>{{ proyecto()!.cliente }}</b></div> }
+        @if (proyecto()!.tipo) { <div class="pdet__row"><span>Tipo</span><b>{{ proyecto()!.tipo }}</b></div> }
         @if (proyecto()!.responsable?.nombre) { <div class="pdet__row"><span>Responsable</span><b>{{ proyecto()!.responsable?.nombre }}</b></div> }
-        @if (proyecto()!.localidad || proyecto()!.ubicacion) { <div class="pdet__row"><span>Ubicación</span><b>{{ proyecto()!.localidad || proyecto()!.ubicacion }}</b></div> }
         <div class="pdet__row"><span>Inicio</span><b>{{ fmt(proyecto()!.fecha_inicio) }}</b></div>
         <div class="pdet__row"><span>Fin estimado</span><b>{{ fmt(proyecto()!.fecha_fin_estimada) }}</b></div>
         @if (progreso() !== null) {
@@ -30,7 +33,48 @@
         }
       </div>
 
+      <!-- AM7 — Ubicación estructurada (pin + Abrir en Maps) -->
+      <div class="pdet__card">
+        <div class="pdet__row">
+          <span>Ubicación</span>
+          <b>{{ proyecto()!.direccion_geo || proyecto()!.localidad || proyecto()!.ubicacion || (mapsUrl() ? 'Con pin' : 'Sin ubicación') }}</b>
+        </div>
+        @if (mapsUrl(); as url) {
+          <a class="btn-ghost pdet__maps" [href]="url" target="_blank" rel="noopener">📍 Abrir en Google Maps</a>
+        } @else if (puedeEditar()) {
+          <button type="button" class="btn-ghost pdet__maps" (click)="editar()">📍 Agregar ubicación</button>
+        }
+      </div>
+
+      <!-- AM10 — data estructurada de obra (antes embutida en la descripción) -->
+      @if (proyecto()!.ingeniero_obra || proyecto()!.maestro_encargado || proyecto()!.contacto_nombre || proyecto()!.contacto_telefono) {
+        <div class="pdet__card">
+          @if (proyecto()!.ingeniero_obra) { <div class="pdet__row"><span>Ing. de obra</span><b>{{ proyecto()!.ingeniero_obra }}</b></div> }
+          @if (proyecto()!.maestro_encargado) { <div class="pdet__row"><span>Maestro encargado</span><b>{{ proyecto()!.maestro_encargado }}</b></div> }
+          @if (proyecto()!.contacto_nombre) { <div class="pdet__row"><span>Contacto</span><b>{{ proyecto()!.contacto_nombre }}</b></div> }
+          @if (proyecto()!.contacto_telefono; as tel) {
+            <div class="pdet__row"><span>Teléfono</span><a class="pdet__tel" [href]="'tel:' + tel">{{ tel }}</a></div>
+          }
+        </div>
+      }
+
+      <!-- AM9 — Equipo y responsables -->
+      <h3 class="pdet__subtitle">Equipo y responsables</h3>
+      @if (!responsables().length) {
+        <p class="pdet__muted">Sin responsables vinculados a esta obra.</p>
+      } @else {
+        <div class="pdet__card">
+          @for (r of responsables(); track trackResp($index, r)) {
+            <div class="pdet__row">
+              <span>{{ r.tipo_responsabilidad || 'Responsable' }}</span>
+              <b>{{ r.nombre }}</b>
+            </div>
+          }
+        </div>
+      }
+
       @if (proyecto()!.descripcion) {
+        <h3 class="pdet__subtitle">Descripción</h3>
         <p class="pdet__desc">{{ proyecto()!.descripcion }}</p>
       }
 

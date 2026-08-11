@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
+import { LiveRefreshDirective } from '../../shared/ui/live-refresh/live-refresh.directive';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { NotificacionesService, Notificacion, notifAppRoute } from '../../core/services/notificaciones.service';
@@ -14,7 +15,7 @@ import { formatFechaCortaHora } from '../../core/util/fecha';
   selector: 'app-avisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, ConfirmDialog],
+  imports: [Skeleton, EmptyState, ConfirmDialog, LiveRefreshDirective],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })
@@ -27,6 +28,7 @@ export class AvisosPage {
   readonly fechaHora = formatFechaCortaHora;
 
   loading = signal(true);
+  refrescando = signal(false);
   avisos = signal<Notificacion[]>([]);
   confirmBorrarTodas = signal(false);
 
@@ -34,15 +36,22 @@ export class AvisosPage {
     void this.load();
   }
 
-  async load(): Promise<void> {
-    this.loading.set(true);
+  async load(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     try {
       this.avisos.set(await this.service.getMisNotificaciones());
     } catch {
       this.toast.error('No se pudieron cargar los avisos.');
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
+  }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void {
+    void this.load(silent);
   }
 
   iconFor(tipo: string): string {

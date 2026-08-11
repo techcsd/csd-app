@@ -24,6 +24,19 @@ export class NotificacionesService {
   private _noLeidas = signal(0);
   noLeidas = this._noLeidas.asReadonly();
 
+  /**
+   * AM4 — tick que incrementa con CADA aviso nuevo que llega por realtime. Las
+   * pantallas de datos vivos (Pendiente entrega, Mis rutas, Por confirmar…) lo
+   * observan para refetchear al instante cuando el server notifica un cambio
+   * (p. ej. una transferencia aceptada avisa a emisor Y receptor con tipo
+   * 'transporte'), sin depender de que el usuario vuelva a foreground.
+   */
+  private _tick = signal(0);
+  tick = this._tick.asReadonly();
+  /** Tipo del último aviso recibido por realtime (para filtrar reacciones). */
+  private _lastTipo = signal<string | null>(null);
+  lastTipo = this._lastTipo.asReadonly();
+
   /** Últimos avisos del usuario (no leídos primero). Online. */
   async getMisNotificaciones(limit = 50): Promise<Notificacion[]> {
     const { data, error } = await this.supabase.client
@@ -70,6 +83,37 @@ export class NotificacionesService {
     const { error } = await this.supabase.client.from('notificaciones').delete().eq('id', id);
     if (error) throw new Error(error.message);
     if (eraNoLeida) this._noLeidas.update((n) => Math.max(0, n - 1));
+  }
+
+  /**
+   * AM4 — realtime de avisos: cada INSERT en sgc.notificaciones del usuario actual
+   * refresca el badge de no leídos y bombea `tick`/`lastTipo`. Un solo canal global
+   * (idempotente): sirve a todas las pantallas vivas que observan `tick`. Se activa
+   * tras el login (app.ts) y se mantiene mientras la sesión esté abierta.
+   */
+  private canal: { unsubscribe: () => void } | null = null;
+  async iniciarRealtime(): Promise<void> {
+    if (this.canal) return;
+    const { data } = await this.supabase.client.auth.getUser();
+    const uid = data.user?.id;
+    if (!uid) return;
+    const channel = this.supabase.client
+      .channel(`notificaciones-app-${uid}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'sgc', table: 'notificaciones', filter: `usuario_id=eq.${uid}` },
+        (payload: { new?: { tipo?: string } }) => {
+          this._lastTipo.set(payload?.new?.tipo ?? null);
+          this._tick.update((n) => n + 1);
+          void this.refreshNoLeidas().catch(() => {});
+        },
+      )
+      .subscribe();
+    this.canal = { unsubscribe: () => void this.supabase.client.removeChannel(channel) };
+  }
+  detenerRealtime(): void {
+    this.canal?.unsubscribe();
+    this.canal = null;
   }
 
   /** AF6 — "borrar todas": elimina todos los avisos del usuario (RLS acota a los suyos). */

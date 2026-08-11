@@ -21,12 +21,23 @@
   font-weight: 700;
 }
 
+.mact__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
 .mact__icon {
   font-size: 26px;
 }
 
 .mact__title {
   margin: 0;
+  flex: 1;
   font-size: var(--fs-title);
   font-weight: 800;
 }

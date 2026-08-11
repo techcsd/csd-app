@@ -1,0 +1,159 @@
+.pform {
+  background: var(--color-bg);
+}
+
+.pform__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pform__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: 22px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pform__head-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pform__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.pform__paso-titulo {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.pform__intro {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+
+.pform__mt {
+  margin-top: 14px;
+}
+
+.pform__row {
+  display: flex;
+  gap: 10px;
+}
+
+.pform__col {
+  flex: 1;
+  min-width: 0;
+}
+
+// AM7 — input de ubicación (link/coords) + botón resolver.
+.pform__ubic-in {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pform__ubic-in .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.pform__resolver {
+  width: auto;
+  flex-shrink: 0;
+  padding-inline: 16px;
+}
+
+.pform__coords {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.pform__mapa {
+  margin-top: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.pform__desc {
+  width: 100%;
+  resize: vertical;
+}
+
+.pform__resumen {
+  margin-top: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 12px 14px;
+}
+
+.pform__res-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 14px;
+
+  span {
+    color: var(--color-text-secondary);
+  }
+  b {
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+}
+
+.pform__band {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-bg, #fff4e5);
+  color: var(--color-warning-text, #7a4a00);
+  font-size: 14px;
+}
+
+.pform__muted {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+// Éxito
+.pform__exito {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.pform__exito-icon {
+  font-size: 56px;
+}
+
+.pform__exito-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}

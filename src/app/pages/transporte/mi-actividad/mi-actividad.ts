@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
+import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { ConductoresService, StatsPeriodo, StatsConductorPeriodo, MiPerfilConductor } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
 import { ConducesService } from '../../../core/services/conduces.service';
@@ -32,7 +33,7 @@ import { formatFecha, formatFechaMedia, formatFechaHumana } from '../../../core/
   selector: 'app-mi-actividad',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DocSlot],
+  imports: [Skeleton, EmptyState, DocSlot, LiveRefreshDirective],
   templateUrl: './mi-actividad.html',
   styleUrl: './mi-actividad.scss',
 })
@@ -53,6 +54,7 @@ export class MiActividadPage {
   }
 
   loading = signal(true);
+  refrescando = signal(false);
   stats = signal<ConductorStats | null>(null);
   esConductor = signal(true);
   // AJ11 — perfil propio del conductor (solo lectura), en cuadrículas.
@@ -127,8 +129,9 @@ export class MiActividadPage {
     void this.load();
   }
 
-  private async load(): Promise<void> {
-    this.loading.set(true);
+  private async load(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     try {
       // AI9 — garantiza el registro de conductor de un chofer (idempotente) para
       // que nunca vea el vacío "Aún no eres conductor".
@@ -165,8 +168,12 @@ export class MiActividadPage {
       }
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
   }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void { void this.load(silent); }
 
   /** AI10 — carga las stats del periodo actual (server-side, una pasada). */
   private async loadPeriodo(): Promise<void> {

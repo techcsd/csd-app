@@ -3,6 +3,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { VehiculosService, FlotaAviso } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -37,7 +38,7 @@ type Filtro = 'todos' | 'criticos' | 'mios';
   selector: 'app-avisos-flota',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EmptyState, Skeleton],
+  imports: [EmptyState, Skeleton, LiveRefreshDirective],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })
@@ -52,6 +53,7 @@ export class AvisosFlotaPage {
   fmtFecha = formatFechaMedia;
 
   loading = signal(true);
+  refrescando = signal(false);
   avisos = signal<FlotaAviso[]>([]);
   busyId = signal<string | null>(null);
   filtro = signal<Filtro>('todos');
@@ -94,13 +96,20 @@ export class AvisosFlotaPage {
     return TIPO_ICON[t] ?? '🔔';
   }
 
-  private async load(): Promise<void> {
-    this.loading.set(true);
+  private async load(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     try {
       this.avisos.set(await this.vehiculos.getAvisosFlota());
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
+  }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void {
+    void this.load(silent);
   }
 
   tipoLabel(t: string): string {

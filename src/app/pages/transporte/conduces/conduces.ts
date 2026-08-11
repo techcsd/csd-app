@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { DecimalPipe, Location, NgTemplateOutlet } from '@angular/common';
@@ -50,7 +51,7 @@ const PARADA_ESTADO_LABEL: Record<ParadaEstado, string> = {
   selector: 'app-conduces',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner, CollapsibleSelect],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner, CollapsibleSelect],
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
@@ -87,6 +88,7 @@ export class ConducesPage implements OnDestroy {
   conduces = signal<Conduce[]>([]);
   rutas = signal<RutaHoy[]>([]);
   loading = signal(true);
+  refrescando = signal(false);
 
   // AF25 — listado seccionado: Rutas activas (en curso, arriba) + Rutas de hoy.
   rutasActivas = computed(() => this.rutas().filter((r) => r.estado === 'en_curso'));
@@ -452,8 +454,9 @@ export class ConducesPage implements OnDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
-  async load(): Promise<void> {
-    this.loading.set(true);
+  async load(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     try {
       const [c, r] = await Promise.all([this.service.misConduces(), this.service.misRutas()]);
       this.conduces.set(c);
@@ -463,7 +466,13 @@ export class ConducesPage implements OnDestroy {
       void this.service.marcarRutasVistas();
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
+  }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void {
+    void this.load(silent);
   }
 
   entregar(conduce: Conduce): void {

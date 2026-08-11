@@ -76,6 +76,15 @@
   margin: 0;
   font-size: var(--fs-title);
   font-weight: 800;
+  flex: 1;
+}
+.conduces__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
 }
 
 .conduces__section {

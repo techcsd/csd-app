@@ -1,0 +1,145 @@
+<div class="screen pform">
+  @if (hoja() === 'form') {
+    <header class="pform__header">
+      <button type="button" class="pform__back" (click)="atras()" aria-label="Atrás">←</button>
+      <div class="pform__head-txt">
+        <h1 class="pform__title">{{ esEdicion() ? '✏️ Editar proyecto' : '🏗️ Nuevo proyecto' }}</h1>
+        <span class="pform__paso-titulo">{{ pasoActual().titulo }}</span>
+      </div>
+    </header>
+    <app-step-bar [current]="paso() + 1" [total]="pasos.length" />
+
+    <div class="screen__body">
+      @if (loading()) {
+        <p class="pform__muted">Cargando…</p>
+      } @else {
+        @switch (pasoActual().key) {
+          <!-- ═══════════ DATOS ═══════════ -->
+          @case ('datos') {
+            <label class="field-label" for="nombre">Nombre del proyecto *</label>
+            <input id="nombre" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Ej. City Place — Punta Cana" />
+
+            <label class="field-label pform__mt" for="cliente">Cliente</label>
+            <input id="cliente" class="field" type="text" [ngModel]="cliente()" (ngModelChange)="cliente.set($event)" placeholder="Cliente / propietario" />
+
+            <label class="field-label pform__mt" for="tipo">Tipo de obra</label>
+            <input id="tipo" class="field" type="text" [ngModel]="tipo()" (ngModelChange)="tipo.set($event)" placeholder="Ej. Residencial, Comercial…" />
+
+            <div class="pform__mt">
+              <app-collapsible-select
+                label="Estado"
+                icon="📌"
+                [options]="estadoOpciones"
+                [selectedId]="estado()"
+                (picked)="estado.set($any($event))"
+              />
+            </div>
+
+            <div class="pform__row pform__mt">
+              <div class="pform__col">
+                <label class="field-label" for="fi">Inicio</label>
+                <input id="fi" class="field" type="date" [ngModel]="fechaInicio()" (ngModelChange)="fechaInicio.set($event)" />
+              </div>
+              <div class="pform__col">
+                <label class="field-label" for="ff">Fin estimado</label>
+                <input id="ff" class="field" type="date" [ngModel]="fechaFin()" (ngModelChange)="fechaFin.set($event)" />
+              </div>
+            </div>
+
+            <label class="field-label pform__mt" for="presu">Presupuesto (RD$)</label>
+            <input id="presu" class="field" type="number" inputmode="numeric" [ngModel]="presupuesto()" (ngModelChange)="presupuesto.set($event)" placeholder="Opcional" />
+          }
+
+          <!-- ═══════════ UBICACIÓN ═══════════ -->
+          @case ('ubicacion') {
+            <p class="pform__intro">
+              Pega el <b>link de Google Maps</b> (incluye los cortos <i>maps.app.goo.gl</i>) o unas
+              <b>coordenadas</b> (“18.5601, -68.3725”) y toca <b>Resolver</b>. También puedes mover el
+              pin en el mapa.
+            </p>
+            <div class="pform__ubic-in">
+              <input
+                class="field"
+                type="text"
+                [ngModel]="ubicacionTexto()"
+                (ngModelChange)="ubicacionTexto.set($event)"
+                placeholder="Link de Maps o coordenadas"
+              />
+              <button type="button" class="btn-cta pform__resolver" [disabled]="resolviendo()" (click)="resolver()">
+                {{ resolviendo() ? '…' : 'Resolver' }}
+              </button>
+            </div>
+
+            @if (tieneUbicacion()) {
+              <p class="pform__coords">📍 {{ latSel() | number:'1.5-6' }}, {{ lngSel() | number:'1.5-6' }}</p>
+            } @else if (!esEdicion()) {
+              <p class="pform__muted">La ubicación es obligatoria para crear el proyecto.</p>
+            }
+
+            <div class="pform__mapa">
+              <app-location-picker [latitud]="latSel()" [longitud]="lngSel()" (ubicacionChange)="onUbicacion($event)" />
+            </div>
+          }
+
+          <!-- ═══════════ EQUIPO / CONTACTO ═══════════ -->
+          @case ('equipo') {
+            <p class="pform__intro">
+              Estos datos van a sus campos (no en la descripción): así se ven ordenados y el teléfono
+              queda clicable.
+            </p>
+            <label class="field-label" for="ing">Ingeniero(s) de obra</label>
+            <input id="ing" class="field" type="text" [ngModel]="ingenieroObra()" (ngModelChange)="ingenieroObra.set($event)" placeholder="Ej. Ing. Abraham Mercedez" />
+
+            <label class="field-label pform__mt" for="maestro">Maestro encargado</label>
+            <input id="maestro" class="field" type="text" [ngModel]="maestroEncargado()" (ngModelChange)="maestroEncargado.set($event)" placeholder="Ej. Antonio Urbáez" />
+
+            <label class="field-label pform__mt" for="cont">Contacto de obra</label>
+            <input id="cont" class="field" type="text" [ngModel]="contactoNombre()" (ngModelChange)="contactoNombre.set($event)" placeholder="Nombre del contacto" />
+
+            <label class="field-label pform__mt" for="tel">Teléfono de contacto</label>
+            <input id="tel" class="field" type="tel" inputmode="tel" [ngModel]="contactoTelefono()" (ngModelChange)="contactoTelefono.set($event)" placeholder="Ej. +1 829 958 1269" />
+          }
+
+          <!-- ═══════════ DESCRIPCIÓN + REVISAR ═══════════ -->
+          @case ('revisar') {
+            <label class="field-label" for="desc">Descripción (solo descripción real)</label>
+            <textarea id="desc" class="field pform__desc" rows="4" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Notas generales de la obra"></textarea>
+
+            <div class="pform__resumen">
+              <div class="pform__res-row"><span>Nombre</span><b>{{ nombre() || '—' }}</b></div>
+              <div class="pform__res-row"><span>Estado</span><b>{{ estadoLabel() }}</b></div>
+              @if (cliente()) { <div class="pform__res-row"><span>Cliente</span><b>{{ cliente() }}</b></div> }
+              <div class="pform__res-row">
+                <span>Ubicación</span>
+                <b>{{ tieneUbicacion() ? (latSel() | number:'1.5-6') + ', ' + (lngSel() | number:'1.5-6') : 'Sin fijar' }}</b>
+              </div>
+              @if (ingenieroObra()) { <div class="pform__res-row"><span>Ing. de obra</span><b>{{ ingenieroObra() }}</b></div> }
+              @if (contactoTelefono()) { <div class="pform__res-row"><span>Contacto</span><b>{{ contactoTelefono() }}</b></div> }
+            </div>
+
+            @if (!online) {
+              <div class="pform__band">Sin conexión: conéctate para guardar el proyecto.</div>
+            }
+          }
+        }
+      }
+    </div>
+
+    <app-wizard-footer
+      [backLabel]="paso() === 0 ? 'Salir' : 'Atrás'"
+      [primaryLabel]="primaryLabel()"
+      [primaryDisabled]="!pasoValido() || guardando() || loading()"
+      (back)="atras()"
+      (primary)="siguiente()"
+    />
+  } @else {
+    <!-- ÉXITO -->
+    <div class="screen__body pform__exito">
+      <span class="pform__exito-icon">✅</span>
+      <h2 class="pform__exito-title">{{ esEdicion() ? 'Proyecto actualizado' : 'Proyecto creado' }}</h2>
+      <p class="pform__muted">Los cambios ya están en el sistema (web y app).</p>
+      <button type="button" class="btn-cta" (click)="verProyecto()">Ver proyecto</button>
+      <button type="button" class="btn-ghost pform__mt" (click)="salir()">Volver a Proyectos</button>
+    </div>
+  }
+</div>

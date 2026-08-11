@@ -463,3 +463,15 @@ textarea.field::placeholder {
   border: 3px solid #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
+
+/* AM2 — indicador de pull-to-refresh (directiva appLiveRefresh, homologado). */
+.live-refresh-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  height: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  transition: height 0.1s ease;
+}

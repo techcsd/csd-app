@@ -1,9 +1,13 @@
 .pdet {
+  background: var(--color-bg);
+
   &__header {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 14px 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
   }
   &__back {
     background: none;
@@ -13,8 +17,20 @@
     cursor: pointer;
   }
   &__title {
+    flex: 1;
     font-size: 1.2rem;
     margin: 0;
+    color: var(--color-text-primary);
+  }
+  // AM9 — acceso a editar (gateado por rol).
+  &__editar {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
   }
 
   &__head {
@@ -27,6 +43,7 @@
     flex: 1;
     font-size: 1.3rem;
     margin: 0;
+    color: var(--color-text-primary);
   }
   &__estado {
     flex: 0 0 auto;
@@ -34,13 +51,13 @@
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 999px;
-    background: #212121;
-    color: var(--main-ultra-light);
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
 
-    &--en_progreso { background: rgba(37, 99, 235, 0.18); color: #60a5fa; }
-    &--completado { background: rgba(22, 163, 74, 0.18); color: #4ade80; }
-    &--pausado { background: rgba(217, 119, 6, 0.18); color: #fbbf24; }
-    &--cancelado { background: rgba(220, 38, 38, 0.18); color: #f87171; }
+    &--en_progreso { background: rgba(37, 99, 235, 0.14); color: #1d4ed8; }
+    &--completado { background: rgba(22, 163, 74, 0.14); color: #15803d; }
+    &--pausado { background: rgba(217, 119, 6, 0.14); color: #b45309; }
+    &--cancelado { background: rgba(220, 38, 38, 0.14); color: #b91c1c; }
   }
 
   &__crono {
@@ -49,8 +66,8 @@
   }
 
   &__card {
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 14px;
     padding: 8px 14px;
     margin-bottom: 14px;
@@ -60,33 +77,50 @@
     justify-content: space-between;
     gap: 12px;
     padding: 8px 0;
-    border-bottom: 1px solid #232323;
+    border-bottom: 1px solid var(--color-border);
     font-size: 0.92rem;
 
     &:last-child { border-bottom: none; }
 
-    span { color: var(--main-ultra-light); }
-    b { text-align: right; word-break: break-word; }
+    span { color: var(--color-text-secondary); }
+    b { text-align: right; word-break: break-word; color: var(--color-text-primary); }
+  }
+  // AM7/AM10 — acciones dentro de card (Maps, tel).
+  &__maps {
+    display: block;
+    width: 100%;
+    margin: 10px 0 4px;
+    text-align: center;
+    text-decoration: none;
+  }
+  &__tel {
+    text-align: right;
+    color: var(--primary);
+    font-weight: 700;
+    text-decoration: none;
   }
 
   &__desc {
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
     margin-bottom: 16px;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
   }
 
   &__subtitle {
     font-size: 1.05rem;
     margin: 8px 0 10px;
+    color: var(--color-text-primary);
   }
   &__muted {
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
   }
 
   &__fase {
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 8px;
@@ -99,6 +133,7 @@
   &__fase-nombre {
     flex: 1;
     font-weight: 600;
+    color: var(--color-text-primary);
   }
   &__fase-estado {
     flex: 0 0 auto;
@@ -106,15 +141,15 @@
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 999px;
-    background: #212121;
-    color: var(--main-ultra-light);
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
 
-    &--en_progreso { background: rgba(37, 99, 235, 0.18); color: #60a5fa; }
-    &--completada { background: rgba(22, 163, 74, 0.18); color: #4ade80; }
+    &--en_progreso { background: rgba(37, 99, 235, 0.14); color: #1d4ed8; }
+    &--completada { background: rgba(22, 163, 74, 0.14); color: #15803d; }
   }
   &__bar {
     height: 6px;
-    background: #2d2d2d;
+    background: var(--color-border);
     border-radius: 999px;
     margin-top: 8px;
     overflow: hidden;
@@ -128,6 +163,6 @@
     display: block;
     margin-top: 4px;
     font-size: 0.78rem;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
   }
 }

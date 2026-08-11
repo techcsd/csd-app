@@ -45,6 +45,40 @@
             <button type="button" class="btn-ghost cpend__btn" (click)="abrirTransferir(c.id)">↔️ Transferir</button>
           </div>
 
+          <!-- AM5 — ciclo conduce→ruta: arrancar la ruta del conduce (aparece en Mis rutas + Seguimiento) -->
+          <div class="cpend__ruta">
+            @if (enRuta(c)) {
+              <span class="cpend__enruta">🟢 En ruta</span>
+            } @else {
+              <button
+                type="button"
+                class="btn-ghost cpend__btn cpend__iniciar"
+                [disabled]="iniciandoId() === c.id"
+                (click)="iniciarRuta(c)"
+              >{{ iniciandoId() === c.id ? 'Iniciando…' : '🚚 Iniciar ruta' }}</button>
+            }
+          </div>
+
+          @if (vehPickerId() === c.id) {
+            <div class="cpend__transfer">
+              <app-collapsible-select
+                label="¿Con qué vehículo sales?"
+                icon="🚙"
+                [options]="vehiculoOptions()"
+                [selectedId]="vehiculoSel()"
+                [searchable]="true"
+                searchPlaceholder="Buscar vehículo…"
+                (picked)="vehiculoSel.set($event)"
+              />
+              <button
+                type="button"
+                class="btn-cta cpend__btn"
+                [disabled]="iniciandoId() === c.id || !vehiculoSel()"
+                (click)="confirmarIniciarConVehiculo(c)"
+              >{{ iniciandoId() === c.id ? 'Iniciando…' : 'Iniciar ruta' }}</button>
+            </div>
+          }
+
           @if (transfiriendoId() === c.id) {
             <div class="cpend__transfer">
               <app-collapsible-select

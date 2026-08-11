@@ -8,13 +8,14 @@ import { MensajesService, Conversacion } from '../../core/services/mensajes.serv
 import { InventarioService, UsuarioBusqueda } from '../../core/services/inventario.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFechaHumana } from '../../core/util/fecha';
+import { LiveRefreshDirective } from '../../shared/ui/live-refresh/live-refresh.directive';
 
 /** AJ5 — bandeja de conversaciones (mismo modelo que la web). Realtime + badges. */
 @Component({
   selector: 'app-mensajes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective],
   templateUrl: './mensajes.html',
   styleUrl: './mensajes.scss',
 })
@@ -28,6 +29,7 @@ export class MensajesPage implements OnDestroy {
   fmt = formatFechaHumana;
 
   loading = signal(true);
+  refrescando = signal(false);
   conversaciones = signal<Conversacion[]>([]);
 
   // Nueva conversación (búsqueda de usuario).
@@ -48,14 +50,22 @@ export class MensajesPage implements OnDestroy {
     this.unsub?.();
   }
 
-  private async cargar(): Promise<void> {
+  private async cargar(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     try {
       this.conversaciones.set(await this.mensajes.listarConversaciones());
     } catch {
       this.toast.error('No pudimos cargar tus mensajes.');
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
+  }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void {
+    void this.cargar(silent);
   }
 
   abrir(c: Conversacion): void {

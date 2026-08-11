@@ -728,18 +728,42 @@ export class GenerarConducePage implements OnDestroy {
       if (this.observaciones().trim()) partes.push(this.observaciones().trim());
       const obs = partes.join(' — ') || null;
 
+      const sel = this.despachanteSel();
+      const items = otros
+        ? []
+        : this.cart().filter((l) => l.cantidad > 0 && l.articulo_id).map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad }));
+
+      // AM1 — devolución a suplidor: RPC dedicada con ORIGEN (bodega) obligatorio.
+      // Nunca puede emitir con bodega_id null (server rechaza con DR451).
+      if (this.destinoTipo() === 'suplidor') {
+        await this.conduces.crearConduceDevolucionSuplidor({
+          bodegaOrigenId: this.bodegaId(),
+          proyectoOrigenId: null,
+          suplidorNombre: this.suplidorNombre().trim(),
+          observaciones: obs,
+          vehiculoId: this.vehiculoId() || null,
+          items,
+          despachanteUsuarioId: sel?.tipo === 'usuario' ? sel.id : null,
+          despachanteEmpleadoId: sel?.tipo === 'empleado' ? sel.id : null,
+          despachanteNombre: this.despachanteNombre() || null,
+          fotoRecepcion: this.fotoRecepcion()?.blob ?? null,
+          firmaChofer: this.firmaChofer(),
+          firmaDespachante: this.firmaDespachante(),
+        });
+        void this.autosave.discard(this.clave); // AE9 — borrador cumplido
+        this.hoja.set('exito');
+        return;
+      }
+
       // AI2 — conduce simplificado: despachante + foto de recepción + firmas
       // (chofer transportista + despachante emisor) en un solo RPC.
-      const sel = this.despachanteSel();
       await this.conduces.crearConduceSimple({
         bodegaId: otros ? null : this.bodegaId(), // "Otros": sin bodega de stock
         proyectoId: this.destinoTipo() === 'obra' ? this.obraId() : null,
         destinoAlmacenId: this.destinoTipo() === 'almacen' ? this.almacenId() : null, // AL10
         observaciones: obs,
         vehiculoId: this.vehiculoId() || null,
-        items: otros
-          ? []
-          : this.cart().filter((l) => l.cantidad > 0 && l.articulo_id).map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad })),
+        items,
         despachanteUsuarioId: sel?.tipo === 'usuario' ? sel.id : null,
         despachanteEmpleadoId: sel?.tipo === 'empleado' ? sel.id : null,
         despachanteNombre: this.despachanteNombre() || null,

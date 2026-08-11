@@ -1,9 +1,13 @@
 .proy {
+  background: var(--color-bg);
+
   &__header {
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 14px 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
   }
   &__back {
     background: none;
@@ -16,14 +20,27 @@
     font-size: 1.3rem;
   }
   &__title {
+    flex: 1;
     font-size: 1.2rem;
     margin: 0;
+    color: var(--color-text-primary);
+  }
+  // AM2 — botón refresh homologado.
+  &__refresh {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-size: 18px;
+    flex-shrink: 0;
   }
 
   &__offline {
-    background: #2a2410;
-    border: 1px solid #5c4a12;
-    color: #fbbf24;
+    background: var(--color-warning-bg, #fff4e5);
+    border: 1px solid var(--color-warning-border, #f0c98a);
+    color: var(--color-warning-text, #7a4a00);
     border-radius: 12px;
     padding: 10px 14px;
     font-size: 0.85rem;
@@ -35,9 +52,9 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    background: #1a1206;
-    border: 1px solid #5c4a12;
-    color: #fbbf24;
+    background: var(--color-warning-bg, #fff4e5);
+    border: 1px solid var(--color-warning-border, #f0c98a);
+    color: var(--color-warning-text, #7a4a00);
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 12px;
@@ -46,18 +63,24 @@
     cursor: pointer;
   }
   &__avisos-go {
-    color: var(--Hub);
+    color: var(--primary);
     font-size: 0.85rem;
+  }
+
+  // AM9 — crear proyecto.
+  &__nuevo {
+    width: 100%;
+    margin-bottom: 14px;
   }
 
   &__search {
     width: 100%;
     padding: 12px 14px;
     margin-bottom: 12px;
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
-    color: #fff;
+    color: var(--color-text-primary);
     font-size: 1rem;
   }
 
@@ -65,12 +88,12 @@
     display: block;
     width: 100%;
     text-align: left;
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 14px;
     padding: 14px;
     margin-bottom: 10px;
-    color: #fff;
+    color: var(--color-text-primary);
     cursor: pointer;
     transition: all 0.15s ease;
 
@@ -87,6 +110,7 @@
     font-weight: 700;
     font-size: 1.05rem;
     flex: 1;
+    color: var(--color-text-primary);
   }
   &__estado {
     flex: 0 0 auto;
@@ -94,24 +118,24 @@
     font-weight: 700;
     padding: 3px 9px;
     border-radius: 999px;
-    background: #212121;
-    color: var(--main-ultra-light);
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
 
     &--en_progreso {
-      background: rgba(37, 99, 235, 0.18);
-      color: #60a5fa;
+      background: rgba(37, 99, 235, 0.14);
+      color: #1d4ed8;
     }
     &--completado {
-      background: rgba(22, 163, 74, 0.18);
-      color: #4ade80;
+      background: rgba(22, 163, 74, 0.14);
+      color: #15803d;
     }
     &--pausado {
-      background: rgba(217, 119, 6, 0.18);
-      color: #fbbf24;
+      background: rgba(217, 119, 6, 0.14);
+      color: #b45309;
     }
     &--cancelado {
-      background: rgba(220, 38, 38, 0.18);
-      color: #f87171;
+      background: rgba(220, 38, 38, 0.14);
+      color: #b91c1c;
     }
   }
   &__meta {
@@ -119,12 +143,12 @@
     flex-wrap: wrap;
     gap: 4px;
     margin-top: 4px;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
     font-size: 0.85rem;
   }
   &__bar {
     height: 6px;
-    background: #2d2d2d;
+    background: var(--color-border);
     border-radius: 999px;
     margin-top: 10px;
     overflow: hidden;
@@ -138,6 +162,6 @@
     display: block;
     margin-top: 4px;
     font-size: 0.8rem;
-    color: var(--main-ultra-light);
+    color: var(--color-text-secondary);
   }
 }

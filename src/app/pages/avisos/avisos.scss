@@ -18,6 +18,18 @@
   font-size: 24px;
   font-weight: 700;
 }
+.avisos__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+}
+.avisos__refresh:disabled {
+  opacity: 0.6;
+}
 .avisos__icon {
   font-size: 26px;
 }

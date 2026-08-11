@@ -101,6 +101,29 @@ export interface ConduceSimpleCaptura {
   tareaVinculada?: string | null;
 }
 
+/**
+ * AM1 — devolución a suplidor ("devolver a ferretería"): el ORIGEN (bodega) es
+ * obligatorio y nombrado — sin destino de obra/almacén. Cierra el bug del
+ * bodega_id null (crear_conduce_devolucion_suplidor lo exige server-side).
+ */
+export interface ConduceDevolucionSuplidorCaptura {
+  /** ORIGEN obligatorio: almacén del que sale la mercancía. */
+  bodegaOrigenId: string;
+  /** Obra de la que sale (opcional; ayuda a resolver la bodega server-side). */
+  proyectoOrigenId?: string | null;
+  /** Nombre del suplidor al que se devuelve (va en observaciones estructuradas). */
+  suplidorNombre: string;
+  observaciones: string | null;
+  items: { articulo_id: string; cantidad: number }[];
+  vehiculoId?: string | null;
+  despachanteUsuarioId?: string | null;
+  despachanteEmpleadoId?: string | null;
+  despachanteNombre?: string | null;
+  fotoRecepcion?: Blob | null;
+  firmaChofer?: Blob | null;
+  firmaDespachante?: Blob | null;
+}
+
 /** AH5 — una oferta de transferencia de responsabilidad de un conduce (inbox). */
 export interface ConduceTransferencia {
   id: string;
@@ -246,6 +269,12 @@ export interface ConducePendienteEntrega {
   estado: string;
   fase: string | null;
   created_at: string;
+  // AM5 — estado de ruta del conduce (para decidir "Iniciar ruta" vs "En ruta").
+  ruta_id?: string | null;
+  ruta_estado?: string | null;
+  vehiculo_id?: string | null;
+  motivo?: string | null;
+  tiene_ruta?: boolean;
 }
 
 /** AJ8 — entrega esperando confirmación del receptor (bandeja del receptor). */
@@ -750,6 +779,26 @@ export class ConducesService {
     return (data as number) ?? 0;
   }
 
+  /**
+   * AM5 — arranca (o crea+adjunta) la ruta de un conduce emitido. Tras esto el
+   * conduce sale en "Mis rutas" y en Seguimiento. Requiere vehículo (el del conduce
+   * o el pasado; DR461 si falta, DR462 si no hay chofer). Online: iniciar una ruta
+   * enciende el tracking, que necesita conectividad; el mensaje del server ya viene
+   * accionable. Devuelve el ruta_id resultante.
+   */
+  async conduceIniciarRuta(salidaId: string, vehiculoId?: string | null): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('conduce_iniciar_ruta', {
+      p_salida_id: salidaId,
+      p_vehiculo_id: vehiculoId ?? null,
+    });
+    if (error) throw new Error(error.message);
+    // El conduce y su ruta cambiaron → refrescar mis listados vivos.
+    await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    await this.catalog.invalidate(CATALOG_RUTAS).catch(() => {});
+    await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+    return (data as { ruta_id?: string } | null)?.ruta_id ?? '';
+  }
+
   /** Obras/proyectos for the route destination picker (shared cache). */
   async getProyectos(): Promise<Proyecto[]> {
     const data = await this.catalog.refresh<Proyecto[]>(CATALOG_PROYECTOS, async () => {
@@ -967,6 +1016,48 @@ export class ConducesService {
     void this.misConduces();
     // QA-6 — el nuevo conduce cae en "Pendiente entrega": invalida su caché para
     // que la próxima lectura lo traiga (se materializa al drenar el outbox online).
+    void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+  }
+
+  /**
+   * AM1 — devolución a suplidor por contrato explícito: origen (bodega) OBLIGATORIO
+   * y nombrado; sin destino de obra/almacén; motivo 'devolucion' server-side. Blinda
+   * el bug del bodega_id null (el server rechaza con DR451 si el origen no resuelve).
+   * Offline-safe por outbox; idempotente por UUID.
+   */
+  async crearConduceDevolucionSuplidor(input: ConduceDevolucionSuplidorCaptura): Promise<void> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
+    if (input.fotoRecepcion) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-recepcion.jpg`, slot: 'carga', blob: input.fotoRecepcion });
+    }
+    if (input.firmaChofer) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-firma-chofer.png`, slot: 'firma_chofer', blob: input.firmaChofer });
+    }
+    if (input.firmaDespachante) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-firma-despachante.png`, slot: 'firma_despachante', blob: input.firmaDespachante });
+    }
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_devolucion_suplidor',
+      capturado_en,
+      payload: {
+        id,
+        fecha: capturado_en.slice(0, 10),
+        bodega_origen_id: input.bodegaOrigenId,
+        proyecto_origen_id: input.proyectoOrigenId ?? null,
+        observaciones: input.observaciones,
+        vehiculo_id: input.vehiculoId ?? null,
+        items: input.items,
+        despachante_nombre: input.despachanteNombre ?? null,
+        despachante_usuario_id: input.despachanteUsuarioId ?? null,
+        despachante_empleado_id: input.despachanteEmpleadoId ?? null,
+      },
+      fotos,
+      resumen: { bodega_id: input.bodegaOrigenId, suplidor: input.suplidorNombre, capturado_en },
+    });
+    void this.misConduces();
     void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
   }
 
@@ -1537,6 +1628,29 @@ export class ConducesService {
       await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
     });
 
+    // AM1 — devolución a suplidor: RPC dedicada con ORIGEN obligatorio (blinda el
+    // bug del bodega_id null). Errores estructurados (DR451) → mensaje accionable.
+    this.sync.register('conduce_devolucion_suplidor', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('crear_conduce_devolucion_suplidor', {
+        p_id: payload['id'],
+        p_fecha: payload['fecha'],
+        p_bodega_origen_id: payload['bodega_origen_id'],
+        p_proyecto_origen_id: payload['proyecto_origen_id'] ?? null,
+        p_observaciones: payload['observaciones'] ?? null,
+        p_vehiculo_id: payload['vehiculo_id'] ?? null,
+        p_items: payload['items'],
+        p_despachante_nombre: payload['despachante_nombre'] ?? null,
+        p_despachante_usuario_id: payload['despachante_usuario_id'] ?? null,
+        p_despachante_empleado_id: payload['despachante_empleado_id'] ?? null,
+        p_carga_foto_path: photoPaths['carga'] ?? null,
+        p_firma_chofer_path: photoPaths['firma_chofer'] ?? null,
+        p_firma_despachante_path: photoPaths['firma_despachante'] ?? null,
+      });
+      if (error) throwSyncError(error);
+      await this.catalog.invalidatePrefix('existencias_');
+      await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    });
+
     // QA-32: handler kept for backward-compat with any queued conduce_entrega ops
     // (legacy delivery capture con firma de receptor). El flujo AJ8 ya no lo usa.
     this.sync.register('conduce_entrega', async (payload, photoPaths) => {
@@ -1644,9 +1758,13 @@ export class ConducesService {
         p_firma_path: photoPaths['transf_firma'],
       });
       if (error) throwSyncError(error);
-      // El conduce y su ruta cambiaron de dueño → refrescar mis listados.
+      // AM4 — el conduce y su ruta cambiaron de dueño → refrescar TODOS mis listados
+      // vivos. Incluye "Pendiente entrega" (el receptor debe verlo YA; el emisor deja
+      // de verlo): antes se omitía y la bandeja quedaba inconsistente hasta un
+      // foreground/pull manual.
       await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
       await this.catalog.invalidate(CATALOG_RUTAS).catch(() => {});
+      await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
       await this.catalog.invalidate('mis_transferencias').catch(() => {});
     });
   }

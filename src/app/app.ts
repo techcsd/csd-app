@@ -23,6 +23,7 @@ import { PushService } from './core/services/push.service';
 import { AlarmaService } from './core/services/alarma.service';
 import { NativeAlarmService } from './core/services/native-alarm.service';
 import { ReporteSemanalService } from './core/services/reporte-semanal.service';
+import { NotificacionesService } from './core/services/notificaciones.service';
 
 @Component({
   selector: 'app-root',
@@ -48,6 +49,7 @@ export class App {
   private alarma = inject(AlarmaService);
   private nativeAlarm = inject(NativeAlarmService);
   private reportes = inject(ReporteSemanalService);
+  private notificaciones = inject(NotificacionesService);
   private router = inject(Router);
 
   constructor() {
@@ -64,8 +66,12 @@ export class App {
     // AL6 — re-evaluar al volver a primer plano (por si completó la inspección o
     // se le asignó un vehículo). Best-effort, nativo.
     if (Capacitor.isNativePlatform()) {
-      void CapApp.addListener('resume', () => void this.syncAlarmaNativa());
+      void CapApp.addListener('resume', () => {
+        void this.syncAlarmaNativa();
+        void this.notificaciones.iniciarRealtime(); // AM4 — reasegura el canal tras dormir
+      });
     }
+    void this.notificaciones.iniciarRealtime(); // AM4 — realtime de avisos (idempotente)
   }
 
   /**
@@ -110,6 +116,9 @@ export class App {
    */
   private initScrollReset(): void {
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
+      // AM4 — asegura el canal realtime de avisos una vez hay sesión (el constructor
+      // corre antes del login). Idempotente: no-op tras el primer arranque exitoso.
+      if (!this.router.url.startsWith('/auth')) void this.notificaciones.iniciarRealtime();
       // Doble rAF: esperar a que el router-outlet monte la pantalla nueva.
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {

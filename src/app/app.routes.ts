@@ -645,10 +645,22 @@ export const routes: Routes = [
       import('./pages/proyectos/avisos/cronograma-avisos').then((m) => m.CronogramaAvisosPage),
   },
   {
+    // AM9 — crear proyecto (por hojas, con ubicación fácil). Antes de :id.
+    path: 'proyectos/nuevo',
+    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    loadComponent: () => import('./pages/proyectos/form/proyecto-form').then((m) => m.ProyectoFormPage),
+  },
+  {
     path: 'proyectos/:id',
     canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
     loadComponent: () =>
       import('./pages/proyectos/detalle/proyecto-detalle').then((m) => m.ProyectoDetallePage),
+  },
+  {
+    // AM9 — editar proyecto existente (mismo wizard por hojas).
+    path: 'proyectos/:id/editar',
+    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    loadComponent: () => import('./pages/proyectos/form/proyecto-form').then((m) => m.ProyectoFormPage),
   },
   {
     // Y15 — cronograma del proyecto (consulta + acciones offline-first).

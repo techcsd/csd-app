@@ -3,9 +3,10 @@
     <button type="button" class="mact__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="mact__icon">📈</span>
     <h1 class="mact__title">Mi actividad</h1>
+    <button type="button" class="mact__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
   </header>
 
-  <div class="screen__body">
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
     @if (loading()) {
       <app-skeleton [rows]="4" />
     } @else if (!esConductor()) {

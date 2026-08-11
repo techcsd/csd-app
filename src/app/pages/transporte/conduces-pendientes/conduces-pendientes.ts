@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
@@ -8,9 +8,12 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConducesService, ConducePendienteEntrega } from '../../../core/services/conduces.service';
+import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { NotificacionesService } from '../../../core/services/notificaciones.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
+import { VehiculoDisponible } from '../../../core/models/transporte.model';
 
 /**
  * AI2 — "Pendiente entrega": conduces emitidos que faltan por entregar al receptor.
@@ -32,6 +35,8 @@ import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 })
 export class ConducesPendientesPage implements OnDestroy {
   private conduces = inject(ConducesService);
+  private vehiculos = inject(VehiculosService);
+  private notificaciones = inject(NotificacionesService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private navGuard = inject(NavGuardService);
@@ -57,20 +62,43 @@ export class ConducesPendientesPage implements OnDestroy {
   transferNota = signal('');
   enviandoTransfer = signal(false);
 
+  // AM5 — iniciar ruta del conduce (+ picker de vehículo si el conduce no lo trae).
+  iniciandoId = signal(''); // salida_id de la fila arrancando
+  vehPickerId = signal(''); // salida_id que muestra el selector de vehículo
+  vehiculoSel = signal('');
+  vehiculosDisp = signal<VehiculoDisponible[]>([]);
+  vehiculoOptions = computed(() =>
+    this.vehiculosDisp().map((v) => ({ id: v.vehiculo_id, label: `${v.placa} · ${v.marca} ${v.modelo}` })),
+  );
+
   private resumeHandle: PluginListenerHandle | null = null;
   private readonly onVisible = () => {
     if (document.visibilityState === 'visible') void this.load(true);
   };
+  // AM4 — refetch cuando cambia el tick de avisos (una transferencia aceptada avisa
+  // a AMBOS con tipo 'transporte'): así el emisor ve desaparecer el conduce y el
+  // receptor verlo aparecer AL INSTANTE, sin esperar a volver a foreground.
+  private ultimoTick = 0;
 
   constructor() {
     void this.load();
     void this.conduces.choferesParaTransferir().then((l) => this.choferes.set(l)).catch(() => {});
+    void this.vehiculos.getVehiculosDisponibles().then((v) => this.vehiculosDisp.set(v)).catch(() => {});
 
     // AL13 — refrescar al volver a primer plano.
     if (Capacitor.isNativePlatform()) {
       void CapApp.addListener('resume', () => void this.load(true)).then((h) => (this.resumeHandle = h));
     }
     document.addEventListener('visibilitychange', this.onVisible);
+
+    // AM4 — realtime: refetch al llegar un aviso de transporte (transferencia, etc.).
+    effect(() => {
+      const t = this.notificaciones.tick();
+      if (t === this.ultimoTick) return;
+      this.ultimoTick = t;
+      const tipo = this.notificaciones.lastTipo();
+      if (tipo === null || tipo === 'transporte') void this.load(true);
+    });
   }
 
   ngOnDestroy(): void {
@@ -129,6 +157,47 @@ export class ConducesPendientesPage implements OnDestroy {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo transferir.');
     } finally {
       this.enviandoTransfer.set(false);
+    }
+  }
+
+  // ── AM5 — iniciar la ruta del conduce ──────────────────────────────────────
+  /** ¿El conduce ya está en ruta (no ofrecer "Iniciar ruta")? */
+  enRuta(c: ConducePendienteEntrega): boolean {
+    return c.ruta_estado === 'en_curso';
+  }
+
+  /** Iniciar ruta: si el conduce ya trae vehículo, arranca directo; si no, pide uno. */
+  iniciarRuta(c: ConducePendienteEntrega): void {
+    if (c.vehiculo_id) {
+      void this.ejecutarIniciarRuta(c.id, null);
+    } else {
+      // Abre el selector de vehículo inline para esta fila.
+      this.vehPickerId.set(this.vehPickerId() === c.id ? '' : c.id);
+      this.vehiculoSel.set('');
+    }
+  }
+
+  /** Confirmar "Iniciar ruta" con el vehículo elegido (cuando el conduce no traía uno). */
+  confirmarIniciarConVehiculo(c: ConducePendienteEntrega): void {
+    if (!this.vehiculoSel()) {
+      this.toast.error('Elige el vehículo con el que sales.');
+      return;
+    }
+    void this.ejecutarIniciarRuta(c.id, this.vehiculoSel());
+  }
+
+  private async ejecutarIniciarRuta(salidaId: string, vehiculoId: string | null): Promise<void> {
+    if (this.iniciandoId()) return;
+    this.iniciandoId.set(salidaId);
+    try {
+      await this.conduces.conduceIniciarRuta(salidaId, vehiculoId);
+      this.toast.success('Ruta iniciada. La verás en Mis rutas y en Seguimiento.');
+      this.vehPickerId.set('');
+      await this.load(true);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo iniciar la ruta.');
+    } finally {
+      this.iniciandoId.set('');
     }
   }
 

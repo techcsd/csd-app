@@ -60,6 +60,7 @@ export function throwSyncError(error: unknown): never {
   // los fallos de permiso se reintentaban en bucle para siempre (bug P5 real).
   const codePermanente =
     /^(P0001|22|23|42)/.test(code) || // validación RPC / datos / FK-único / permiso-privilegio
+    /^DR\d/.test(code) || // AM1 — errores de negocio propios (DR451-454, DR461/462, DR471/472…): mensaje ya accionable, reintentar no ayuda
     /^PGRST(202|203|204|205)/.test(code) || // función/columna/tabla no encontrada (firma o schema)
     /schema cache|could not find the function/i.test(message);
   const statusPermanente = [400, 403, 404, 409, 422].includes(status);

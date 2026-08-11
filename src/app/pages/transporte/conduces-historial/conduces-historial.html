@@ -3,9 +3,10 @@
     <button type="button" class="hist-header__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="hist-header__icon">🗂️</span>
     <h1 class="hist-header__title">Historial de conduces</h1>
+    <button type="button" class="hist-header__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
   </header>
 
-  <div class="screen__body">
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
     <!-- Filtros -->
     <div class="hist-filtros">
       <div class="hist-filtros__row">

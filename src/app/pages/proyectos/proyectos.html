@@ -3,9 +3,12 @@
     <button type="button" class="proy__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="proy__icon">🏗️</span>
     <h1 class="proy__title">Proyectos</h1>
+    <button type="button" class="proy__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">
+      {{ refrescando() ? '…' : '🔄' }}
+    </button>
   </header>
 
-  <div class="screen__body">
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
     @if (!online) {
       <div class="proy__offline">📡 Sin conexión — mostrando lo último guardado.</div>
     }
@@ -15,6 +18,10 @@
         🔔 {{ avisosCount() }} aviso(s) de cronograma
         <span class="proy__avisos-go">Ver →</span>
       </button>
+    }
+
+    @if (puedeCrear()) {
+      <button type="button" class="btn-cta proy__nuevo" (click)="nuevo()">＋ Nuevo proyecto</button>
     }
 
     @if (loading()) {

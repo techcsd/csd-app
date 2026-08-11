@@ -5,6 +5,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -27,7 +28,7 @@ type EstadoFiltro = 'todas' | 'completa' | 'incompleta';
   selector: 'app-confirmaciones',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, OptionButton, CollapsibleSelect],
+  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, OptionButton, CollapsibleSelect, LiveRefreshDirective],
   templateUrl: './confirmaciones.html',
   styleUrl: './confirmaciones.scss',
 })
@@ -40,6 +41,7 @@ export class ConfirmacionesPage {
   readonly fmtFechaHora = formatFechaHumana;
 
   loading = signal(true);
+  refrescando = signal(false);
   filas = signal<ConfirmacionHistorialRow[]>([]);
 
   // AL8 — alcance: "Mías" (lo que YO confirmé) por defecto, o "Todas" (matriz/admin).
@@ -75,8 +77,9 @@ export class ConfirmacionesPage {
     }
   }
 
-  async load(): Promise<void> {
-    this.loading.set(true);
+  async load(silent = false): Promise<void> {
+    if (!silent) this.loading.set(true);
+    this.refrescando.set(true);
     const e = this.estado();
     try {
       if (this.modo() === 'mias') {
@@ -104,8 +107,12 @@ export class ConfirmacionesPage {
       this.toast.error('No pudimos cargar el historial de confirmaciones.');
     } finally {
       this.loading.set(false);
+      this.refrescando.set(false);
     }
   }
+
+  /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
+  refrescar(silent = false): void { void this.load(silent); }
 
   setModo(m: 'mias' | 'todas'): void {
     if (this.modo() === m) return;
