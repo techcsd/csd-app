@@ -1,6 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 11/08 (tarde) — PROMPT-6 ronda AM (app, 4 fases) — **RELEASE 1.72.0 PUBLICADO (rolling)**
+## 🟢 SESIÓN 11/08 (tarde) — PROMPT-6 ronda AM (app, 4 fases) — **RELEASE 1.72.1 PUBLICADO (rolling)**
+**Actualización 1.72.1:** se retiró el origen **"Otros"** del conduce (AM6 — camino muerto: crasheaba pre-AM1 por `bodega_id` NOT NULL y daba DR454 ahora; incompatible con el descuento de stock). Origen del conduce = Almacén/obra o Ferretería. Commit **`f0cbcc6`**, APK 1.72.1 firmado+registrado+subido, `publicada`=1.72.1. **AM8/AM10 backfill YA estaba aplicado en prod** (las 8 obras CSD-101..108 tienen lat/lng + `direccion_geo` [link Maps] + `ubicacion_metodo='backfill'` + ingeniero/maestro/contacto + descripción limpia; los únicos activos sin ubicación son 3 de prueba/junk sin link → nada que backfillear). Rollback 1.72.1→1.72.0: `update sgc.app_versiones set publicada=(version='1.72.0') where plataforma='movil';` + `git revert f0cbcc6 && git push`.
+
 Consume **PROMPT-5 (SGC AM, `e475c3d`, v1.72.0)** — verificado en prod: `resolver_bodega_origen`, `crear_conduce_devolucion_suplidor`, `conduce_iniciar_ruta`, `mis_conduces_pendientes_entrega` ampliada, trigger `trg_salidas_protege_portador`, `set_proyecto_ubicacion`, `proyectos_sin_ubicacion`, campos estructurados de `proyectos`, edge `resolve-maps-link` (ACTIVE). `npm run build` **exit 0**. **SHIPPED:** commit **`af0da65`** → push `main` → **PWA desplegado por Vercel**. **APK 1.72.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, changelog estructurado) + subido al bucket (`csd-app-1.72.0.apk` + `latest` + `version.json`, `apk_url` seteado). **`publicada=true` para 1.72.0** (1.71.0→false) → **`version_publicada()` = 1.72.0**. `version_minima` sigue en **1.70.0** (sin cambio; nadie nuevo bloqueado). **1 migración aplicada a prod:** `sql/2026-08-11-publicar-1.72.0.sql` (flip publicada). El resto del backend AM ya estaba en prod por PROMPT-5. **Rollback:** `update sgc.app_versiones set publicada=(version='1.71.0') where plataforma='movil';` + `git revert af0da65 && git push`.
 
 - **FASE 1 — Conduces confiables (AM1/AM3/AM4/AM5):**
@@ -19,7 +21,7 @@ Consume **PROMPT-5 (SGC AM, `e475c3d`, v1.72.0)** — verificado en prod: `resol
 ### ⚠️ Pendientes de Xaviel (PROMPT-6 AM)
 - **Shipping:** decidir commit/push (PWA) + `npm run apk`/`apk:publish` + flip `publicada`. NO se hizo (regla madre).
 - **Device-QA OBLIGATORIO (2 teléfonos reales):** (a) **AM4 transferencia**: emisor y receptor en teléfonos distintos → al aceptar, desaparece del emisor y aparece completo en el receptor **al instante** (realtime); (b) **AM1 caso 911→ferretería**: devolución a suplidor end-to-end + ver que un error de outbox se muestre claro (DR451-454) con reintento sin perder fotos; (c) **AM5**: crear conduce → Iniciar ruta → verlo vivo en Mis rutas + Seguimiento → Estoy entregando; (d) **AM7**: crear proyecto pegando un link `maps.app.goo.gl` real → pin correcto.
-- **Decisión AM6 "Otros":** ver arriba.
+- **Decisión AM6 "Otros":** RESUELTO — se eliminó en 1.72.1 (era camino muerto).
 - **AK21 (registro de echadas):** sigue BLOQUEADO (nota cortada); no se tocó.
 - **Follow-ups Proyectos:** backfill de ubicaciones desde descripciones (AM8, hay `sql/2026-08-11-am8-am10-backfill-ubicaciones-APLICAR-TRAS-OK.sql` en SGC, pendiente de tu OK) + migración asistida de descripciones→campos (AM10) son tareas de SGC/admin, no app. Expediente/Ejecución/Costos/Partidas/Cuadre/CL siguen solo en web (alcance app v1 acordado).
 
