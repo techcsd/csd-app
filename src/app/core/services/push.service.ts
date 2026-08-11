@@ -44,7 +44,13 @@ export class PushService {
     await PushNotifications.addListener('pushNotificationReceived', (n) => {
       void this.notifs.refreshNoLeidas().catch(() => {});
       const data = (n?.data ?? {}) as { tipo?: string; alarma?: string | boolean; ruta?: string; vehiculo_id?: string };
-      if (data.tipo === 'alarma-reporte-semanal' || data.alarma === true || data.alarma === 'true') {
+      // AK10 legacy + AL6 canónico (alarm-weekly-inspection) + flag genérico alarma.
+      if (
+        data.tipo === 'alarm-weekly-inspection' ||
+        data.tipo === 'alarma-reporte-semanal' ||
+        data.alarma === true ||
+        data.alarma === 'true'
+      ) {
         this.alarma.disparar({ vehiculoId: data.vehiculo_id ?? null, ruta: data.ruta ?? '/transporte/reporte-semanal' });
       }
     });

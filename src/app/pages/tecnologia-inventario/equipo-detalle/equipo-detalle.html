@@ -1,0 +1,53 @@
+<div class="screen tecdet">
+  <header class="tecdet__header">
+    <button type="button" class="tecdet__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="tecdet__icon">💻</span>
+    <h1 class="tecdet__title">Equipo</h1>
+    <button type="button" class="tecdet__edit" (click)="editar()" aria-label="Editar">✏️</button>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!equipo()) {
+      <app-empty-state icon="💻" title="No encontrado" message="Este equipo ya no existe." />
+    } @else if (equipo(); as e) {
+      <!-- Galería -->
+      @if (urls().length) {
+        <div class="tecdet__galeria">
+          @for (u of urls(); track u; let i = $index) {
+            <button type="button" class="tecdet__thumb" (click)="abrirLightbox(i)">
+              <img [src]="u" alt="Foto del equipo" loading="lazy" />
+            </button>
+          }
+        </div>
+      }
+
+      <h2 class="tecdet__nombre">{{ e.nombre }}</h2>
+      <span class="tecdet__estado tecdet__estado--{{ e.estado }}">{{ estadoDe() }}</span>
+
+      <div class="tecdet__grid">
+        @if (e.codigo) { <div class="tecdet__kv"><span>Código</span><b>{{ e.codigo }}</b></div> }
+        <div class="tecdet__kv"><span>Tipo</span><b>{{ tipoLabel() }}</b></div>
+        @if (e.marca) { <div class="tecdet__kv"><span>Marca</span><b>{{ e.marca }}</b></div> }
+        @if (e.modelo) { <div class="tecdet__kv"><span>Modelo</span><b>{{ e.modelo }}</b></div> }
+        @if (e.serie) { <div class="tecdet__kv"><span>Serie</span><b>{{ e.serie }}</b></div> }
+        @if ((e.costo ?? 0) > 0) { <div class="tecdet__kv"><span>Precio</span><b>{{ e.moneda }} {{ e.costo | number: '1.0-2' }}</b></div> }
+        @if (e.empleado) { <div class="tecdet__kv"><span>Asignado a</span><b>{{ e.empleado.nombre }} {{ e.empleado.apellido }}</b></div> }
+      </div>
+
+      @if (e.notas) {
+        <h3 class="tecdet__sec">Notas</h3>
+        <p class="tecdet__notas">{{ e.notas }}</p>
+      }
+    }
+  </div>
+
+  <!-- Lightbox -->
+  @if (lightboxUrl(); as u) {
+    <div class="tecdet__lightbox" (click)="cerrarLightbox()">
+      <img [src]="u" alt="Foto en grande" />
+      <button type="button" class="tecdet__lightbox-close" (click)="cerrarLightbox()" aria-label="Cerrar">✕</button>
+    </div>
+  }
+</div>

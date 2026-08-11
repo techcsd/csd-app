@@ -1,0 +1,88 @@
+<div class="screen ausr">
+  <header class="ausr__header">
+    <button type="button" class="ausr__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="ausr__icon">👥</span>
+    <h1 class="ausr__title">Usuarios</h1>
+    <button type="button" class="ausr__add" (click)="creando.set(!creando())" aria-label="Nuevo">{{ creando() ? '✕' : '➕' }}</button>
+  </header>
+
+  <div class="screen__body">
+    @if (creando()) {
+      <div class="ausr__alta">
+        <h2 class="ausr__alta-t">Nuevo usuario</h2>
+        <input class="field" type="email" [ngModel]="nuevoEmail()" (ngModelChange)="nuevoEmail.set($event)" placeholder="Correo" />
+        <input class="field ausr__mt" type="text" [ngModel]="nuevoNombre()" (ngModelChange)="nuevoNombre.set($event)" placeholder="Nombre completo" />
+        <select class="field ausr__mt" [ngModel]="nuevoRol()" (ngModelChange)="nuevoRol.set($event)">
+          <option [ngValue]="null">Sin rol (asignar luego)</option>
+          @for (r of roles(); track r.id) { <option [ngValue]="r.id">{{ r.nombre }}</option> }
+        </select>
+        <button type="button" class="btn-cta ausr__mt" [disabled]="enviandoAlta()" (click)="crear()">
+          {{ enviandoAlta() ? 'Enviando…' : 'Invitar por correo' }}
+        </button>
+        <p class="ausr__nota">Se le enviará un correo para fijar su contraseña.</p>
+      </div>
+    }
+
+    <input class="field ausr__buscar" type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" placeholder="Buscar usuario…" />
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!filtrados().length) {
+      <app-empty-state icon="👥" title="Sin usuarios" message="No hay usuarios que coincidan." />
+    } @else {
+      @for (u of filtrados(); track u.id) {
+        <div class="ausr-card" [class.ausr-card--off]="!u.activo">
+          <button type="button" class="ausr-card__row" (click)="abrir(u)">
+            <div class="ausr-card__info">
+              <span class="ausr-card__nombre">{{ u.nombre }} @if (!u.activo) { <em class="ausr-card__off">Inactivo</em> } @if (u.pendiente) { <em class="ausr-card__pend">Invitación pendiente</em> }</span>
+              <span class="ausr-card__email">{{ u.email || '—' }}</span>
+              <span class="ausr-card__roles">{{ rolesLabel(u) }}</span>
+            </div>
+            <span class="ausr-card__chev">{{ expandidoId() === u.id ? '▲' : '▾' }}</span>
+          </button>
+
+          @if (expandidoId() === u.id) {
+            <div class="ausr-card__panel">
+              <label class="field-label">Nombre</label>
+              <input class="field" type="text" [ngModel]="editNombre()" (ngModelChange)="editNombre.set($event)" />
+
+              <label class="field-label ausr__mt">Roles</label>
+              <div class="ausr__roles-list">
+                @for (r of roles(); track r.id) {
+                  <label class="ausr__rol">
+                    <input type="checkbox" [checked]="tieneRol(r.id)" (change)="toggleRol(r.id)" />
+                    <span>{{ r.nombre }}</span>
+                  </label>
+                }
+              </div>
+
+              <button type="button" class="btn-cta ausr__mt" [disabled]="guardando()" (click)="guardar(u)">
+                {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+              </button>
+
+              <div class="ausr__acciones">
+                <button type="button" class="btn-ghost" (click)="pedirReset(u)">🔑 Restablecer contraseña</button>
+                @if (u.pendiente) {
+                  <button type="button" class="btn-ghost" (click)="reenviar(u)">✉️ Reenviar invitación</button>
+                }
+                <button type="button" class="btn-ghost ausr__danger" (click)="pedirToggleActivo(u)">
+                  {{ u.activo ? '🚫 Desactivar' : '✅ Reactivar' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <app-confirm-dialog
+    [open]="!!confirm()"
+    title="Confirmar"
+    [message]="confirm()?.msg ?? ''"
+    confirmLabel="Sí, continuar"
+    cancelLabel="Cancelar"
+    (confirmed)="runConfirm()"
+    (cancelled)="confirm.set(null)"
+  />
+</div>

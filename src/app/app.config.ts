@@ -31,6 +31,7 @@ import { MensajesService } from './core/services/mensajes.service';
 import { NotasService } from './core/services/notas.service';
 import { RrhhService } from './core/services/rrhh.service';
 import { TareasService } from './core/services/tareas.service';
+import { TecnologiaService } from './core/services/tecnologia.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -88,6 +89,7 @@ export const appConfig: ApplicationConfig = {
       inject(NotasService); // nota_guardar / nota_checklist_set
       inject(RrhhService); // rrhh_asignar_item / rrhh_asignacion_estado
       inject(TareasService); // tarea_app_iniciar / tarea_app_completar
+      inject(TecnologiaService); // AL2 — tec_equipo_guardar
     }),
   ],
 };

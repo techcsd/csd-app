@@ -16,16 +16,28 @@ export type MantenimientoTipo =
   | 'cambio_pieza'
   | 'engrase'
   | 'hidraulico'
+  | 'reparacion'
+  | 'tintado'
+  | 'bombillo'
+  | 'neumatico'
+  | 'bateria'
+  | 'lavado'
   | 'otros';
 
-/** AG9 — etiqueta en español RD por tipo (para listar el historial en la app). */
+/** AG9/AL7 — etiqueta en español RD por tipo (para listar el historial en la app). */
 export const MANTENIMIENTO_TIPO_LABEL: Record<MantenimientoTipo, string> = {
-  preventivo: 'Preventivo',
+  preventivo: 'Mantenimiento de rutina',
   falla: 'Falla / avería',
   accidente_dano: 'Daño por accidente',
   cambio_pieza: 'Cambio de pieza',
   engrase: 'Engrase',
   hidraulico: 'Hidráulico',
+  reparacion: 'Reparación',
+  tintado: 'Tintado de cristales',
+  bombillo: 'Cambio de bombillo',
+  neumatico: 'Neumáticos / gomas',
+  bateria: 'Batería',
+  lavado: 'Lavado',
   otros: 'Otros servicios',
 };
 
@@ -43,6 +55,9 @@ export interface MantenimientoItem {
   fotos: string[] | null;
   incluye_preventivo: boolean;
   created_at: string;
+  /** AL7 — quién registró el mantenimiento (chofer o flota). */
+  creado_por?: string | null;
+  registrado_por?: string | null;
 }
 
 /** AG9 — input del cierre de mantenimiento (costo + evidencia) desde la app. */
@@ -66,6 +81,12 @@ export interface MantenimientoCaptura {
   km: number | null;
   /** X6-app — en visitas NO preventivas, si de paso se hizo preventivo. */
   incluyePreventivo: boolean;
+  /** AL7 — costo opcional del trabajo. */
+  costo?: number | null;
+  /** AL7 — taller/proveedor donde se hizo. */
+  proveedor?: string | null;
+  /** AL7 — notas del trabajo (aparte de la descripción). */
+  notas?: string | null;
   /** Up to 3 optional evidence photos, in capture order. */
   fotos: Blob[];
   /** Z23 — notas de voz múltiples (opcional). */
@@ -163,6 +184,9 @@ export class MantenimientosService {
         fecha: input.fecha,
         km: input.km,
         incluye_preventivo: input.incluyePreventivo,
+        costo: input.costo ?? null, // AL7
+        proveedor: input.proveedor ?? null, // AL7 (taller)
+        notas: input.notas ?? null, // AL7
         audios: audio.audios, // Z23
         tarea_vinculada: input.tareaVinculada ?? null, // AG15
       },
@@ -187,6 +211,9 @@ export class MantenimientosService {
         p_fotos: fotos,
         p_capturado_en: payload['capturado_en'],
         p_incluye_preventivo: payload['incluye_preventivo'] ?? false,
+        p_costo: payload['costo'] ?? null, // AL7
+        p_proveedor: payload['proveedor'] ?? null, // AL7
+        p_notas: payload['notas'] ?? null, // AL7
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);

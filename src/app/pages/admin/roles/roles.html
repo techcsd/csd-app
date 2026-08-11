@@ -1,0 +1,84 @@
+<div class="screen arol">
+  <header class="arol__header">
+    <button type="button" class="arol__back" (click)="editando() ? cerrar() : back()" aria-label="Atrás">←</button>
+    <span class="arol__icon">🔐</span>
+    <h1 class="arol__title">Roles y permisos</h1>
+    @if (!editando()) {
+      <button type="button" class="arol__add" (click)="nuevo()" aria-label="Nuevo rol">➕</button>
+    }
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!editando()) {
+      @if (!roles().length) {
+        <app-empty-state icon="🔐" title="Sin roles" message="Crea el primer rol con el botón +." />
+      } @else {
+        @for (r of roles(); track r.id) {
+          <button type="button" class="arol-card" (click)="editar(r)">
+            <div class="arol-card__info">
+              <span class="arol-card__nombre">{{ r.nombre }}</span>
+              @if (r.descripcion) { <span class="arol-card__desc">{{ r.descripcion }}</span> }
+              <span class="arol-card__mods">{{ modLabel(r) }}</span>
+            </div>
+            <span class="arol-card__chev">›</span>
+          </button>
+        }
+      }
+    } @else {
+      <!-- Editor -->
+      <label class="field-label">Nombre del rol</label>
+      <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Ej. Ingeniero de campo" />
+
+      <label class="field-label arol__mt">Descripción — opcional</label>
+      <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Para qué sirve este rol" />
+
+      <h2 class="arol__sec">Módulos y permisos</h2>
+      <p class="arol__hint">Marca un módulo para dar acceso completo. Para acceso parcial, deja el módulo sin marcar y elige el nivel por submódulo.</p>
+
+      @for (m of modulos; track m.key) {
+        <div class="arol-mod" [class.arol-mod--sens]="m.sensible">
+          <label class="arol-mod__head">
+            <input type="checkbox" [checked]="tieneMod(m.key)" (change)="toggleMod(m.key)" />
+            <span class="arol-mod__label">{{ m.label }} @if (m.sensible) { <em class="arol-mod__badge">acceso amplio</em> }</span>
+          </label>
+          <p class="arol-mod__desc">{{ m.desc }}</p>
+
+          @if (!tieneMod(m.key) && subsDe(m).length) {
+            <div class="arol-subs">
+              @for (s of subsDe(m); track s.key) {
+                <div class="arol-sub">
+                  <span class="arol-sub__label">{{ s.label }}</span>
+                  <select class="arol-sub__sel" [ngModel]="nivelDe(s.key)" (ngModelChange)="setNivel(s.key, $event)">
+                    <option value="">—</option>
+                    <option value="ver">Ver</option>
+                    <option value="operar">Operar</option>
+                  </select>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <button type="button" class="btn-cta arol__mt" [disabled]="guardando()" (click)="guardar()">
+        {{ guardando() ? 'Guardando…' : 'Guardar rol' }}
+      </button>
+      @if (editando() !== 'nuevo') {
+        <button type="button" class="btn-ghost arol__del" (click)="confirmDel.set($any(editando()))">🗑️ Eliminar rol</button>
+      }
+    }
+  </div>
+
+  <app-confirm-dialog
+    [open]="!!confirmDel()"
+    title="Eliminar rol"
+    [message]="'¿Eliminar el rol ' + (confirmDel()?.nombre ?? '') + '? No se puede si está en uso.'"
+    confirmLabel="Sí, eliminar"
+    cancelLabel="Cancelar"
+    tone="danger"
+    (confirmed)="eliminar()"
+    (cancelled)="confirmDel.set(null)"
+  />
+</div>

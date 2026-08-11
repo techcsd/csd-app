@@ -23,6 +23,19 @@
   margin: 0;
   font-size: var(--fs-title);
   font-weight: 800;
+  flex: 1;
+}
+.porconf__hist {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.porconf__ver {
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .porconf__intro {

@@ -55,7 +55,10 @@ export class NotasService {
     for (const n of server ?? []) byId.set(n.id, n);
     for (const [id, p] of pend) {
       const base = byId.get(id);
-      byId.set(id, { ...(base ?? ({} as Nota)), ...p, enviando: true });
+      // AL14 — respeta el estado real de la op: 'enviando' vs 'fallo' (ya no
+      // forzamos enviando:true, que dejaba la insignia "⏳ Enviando…" para siempre
+      // cuando la op había quedado en error permanente).
+      byId.set(id, { ...(base ?? ({} as Nota)), ...p });
     }
     return [...byId.values()].sort(this.ordenar);
   }
@@ -98,6 +101,7 @@ export class NotasService {
       const ops = await db.outbox.where('tipo_op').equals('nota_guardar').toArray();
       for (const op of ops) {
         const p = op.payload as Record<string, unknown>;
+        const fallo = op.estado === 'error'; // AL14
         map.set(p['id'] as string, {
           id: p['id'] as string,
           titulo: (p['titulo'] as string) ?? '',
@@ -110,6 +114,8 @@ export class NotasService {
           es_mia: true,
           compartida: false,
           permiso: 'editar',
+          enviando: !fallo, // AL14 — solo "enviando" si sigue en cola/reintentos
+          fallo, // AL14 — falló el envío (visible con acción de reintento en Pendientes)
         });
       }
     } catch {

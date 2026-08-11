@@ -128,10 +128,12 @@
 .tareas__card-title {
   font-weight: 700;
   font-size: 15px;
+  overflow-wrap: anywhere; // AL14
 }
 .tareas__card-sub {
   font-size: 12px;
   color: var(--color-text-secondary);
+  overflow-wrap: anywhere; // AL14
 }
 .tareas__card-go {
   font-size: 24px;
@@ -164,6 +166,7 @@
   color: var(--color-text);
   font-size: 15px;
   white-space: pre-wrap;
+  overflow-wrap: anywhere; // AL14 — pre-wrap solo no quiebra tokens sin espacios
 }
 // AG15 — chip del vínculo dinámico en el detalle de la tarea.
 .tareas__vinculo {

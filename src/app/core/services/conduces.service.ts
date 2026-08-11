@@ -84,6 +84,8 @@ export interface ConduceSimpleCaptura {
   /** null = origen "Otros" (movimiento sin almacén de stock). */
   bodegaId: string | null;
   proyectoId: string | null;
+  /** AL10 — destino = almacén central (Bodega Central). Excluyente con proyectoId. */
+  destinoAlmacenId?: string | null;
   observaciones: string | null;
   items: { articulo_id: string; cantidad: number }[];
   vehiculoId?: string | null;
@@ -321,6 +323,79 @@ export interface ConfirmacionDetalle {
   confirmaciones:
     | { confirmado_por: string | null; modo: string | null; fotos: string[] | null; fotos_url?: string[]; notas: string | null; checklist: unknown; fecha: string }[]
     | null;
+}
+
+/** AL9/AL13/AL4 — detalle completo de un conduce (jsonb de conduce_detalle_app).
+ *  Fuente única para: abrir desde cualquier listado (rows clickables), refrescar
+ *  tras transferencia (trae SIEMPRE portador/estado actual) y "Ver conduce" (PDF). */
+export interface ConduceDetalleItem {
+  detalle_id: string;
+  articulo_id: string;
+  articulo: string | null;
+  codigo: string | null;
+  unidad: string | null;
+  propiedad: string | null;
+  cantidad: number;
+  cantidad_recibida: number | null;
+}
+export interface ConduceDetalleFirma {
+  rol: string;
+  nombre: string | null;
+  firma_path: string | null;
+  firma_url?: string | null;
+  firmado_en: string | null;
+}
+export interface ConduceDetalleTransferencia {
+  id: string;
+  estado: string;
+  fase_al_transferir: string | null;
+  de: string | null;
+  a: string | null;
+  ofrecida_en: string | null;
+  resuelta_en: string | null;
+}
+export interface ConduceDetalle {
+  id: string;
+  numero: string;
+  fecha: string;
+  created_at: string;
+  estado: string;
+  fase: string | null;
+  motivo: string | null;
+  proyecto_id: string | null;
+  proyecto: string | null;
+  bodega_id: string | null;
+  bodega: string | null;
+  destino_almacen_id: string | null;
+  destino_almacen: string | null;
+  conductor_id: string | null;
+  conductor: string | null;
+  creado_por: string | null;
+  creado_por_nombre: string | null;
+  entregado_por: string | null;
+  entregado_por_nombre: string | null;
+  entregado_en: string | null;
+  entrega_foto_path: string | null;
+  entrega_foto_url?: string | null;
+  recibido_por: string | null;
+  recibido_por_nombre: string | null;
+  recibido_en: string | null;
+  recepcion_foto_path: string | null;
+  recepcion_foto_url?: string | null;
+  notas_recepcion: string | null;
+  ruta_id: string | null;
+  es_prueba: boolean;
+  items: ConduceDetalleItem[];
+  firmas: ConduceDetalleFirma[];
+  transferencias: ConduceDetalleTransferencia[];
+}
+
+/** AL10 — almacén central elegible como destino de un conduce (almacenes_destino). */
+export interface AlmacenDestino {
+  id: string;
+  nombre: string;
+  es_central: boolean;
+  es_principal: boolean;
 }
 
 /** Obra o almacén como destino, con sus coordenadas (U22). */
@@ -883,6 +958,7 @@ export class ConducesService {
         despachante_nombre: input.despachanteNombre ?? null,
         despachante_usuario_id: input.despachanteUsuarioId ?? null,
         despachante_empleado_id: input.despachanteEmpleadoId ?? null,
+        destino_almacen_id: input.destinoAlmacenId ?? null, // AL10
         tarea_vinculada: input.tareaVinculada ?? null,
       },
       fotos,
@@ -991,6 +1067,41 @@ export class ConducesService {
     return data ?? [];
   }
 
+  /**
+   * AL8 — "Mis confirmaciones": historial de lo que YO confirmé (recibido_por =
+   * yo). Subconjunto del historial global. Mapea al mismo shape de fila para
+   * reusar la UI del historial. `mis_confirmaciones(p_desde, p_hasta)`.
+   */
+  async misConfirmaciones(f?: { desde?: string | null; hasta?: string | null }): Promise<ConfirmacionHistorialRow[]> {
+    const key = `mis_confirmaciones:${f?.desde ?? ''}:${f?.hasta ?? ''}`;
+    const data = await this.catalog.refresh<ConfirmacionHistorialRow[]>(key, async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_confirmaciones', {
+        p_desde: f?.desde ?? null,
+        p_hasta: f?.hasta ?? null,
+      });
+      if (error) throw new Error(error.message);
+      return ((data as Array<Record<string, unknown>>) ?? []).map((r) => ({
+        id: r['id'] as string,
+        fecha: r['fecha'] as string,
+        created_at: r['created_at'] as string,
+        proyecto_id: (r['proyecto_id'] as string) ?? null,
+        proyecto: (r['destino'] as string) ?? null, // mis_confirmaciones expone `destino`
+        bodega: (r['bodega'] as string) ?? null,
+        estado: r['estado'] as string,
+        fase: (r['fase'] as string) ?? null,
+        entregado_por: (r['entregado_por'] as string) ?? null,
+        entregado_por_nombre: (r['entregado_por_nombre'] as string) ?? null,
+        entregado_en: (r['entregado_en'] as string) ?? null,
+        recibido_por: null,
+        recibido_por_nombre: null,
+        recibido_en: (r['recibido_en'] as string) ?? null,
+        tiene_foto: (r['tiene_foto'] as boolean) ?? false,
+        tiene_firma: (r['tiene_firma'] as boolean) ?? false,
+      }));
+    });
+    return data ?? [];
+  }
+
   /** AK1 — detalle completo de una confirmación (items, quién entregó/confirmó,
    *  cuándo, fotos y firmas). Firma las rutas de foto/firma (bucket conduces). */
   async confirmacionDetalle(salidaId: string): Promise<ConfirmacionDetalle> {
@@ -1009,6 +1120,35 @@ export class ConducesService {
       }
     }
     return d;
+  }
+
+  /**
+   * AL9/AL13/AL4 — detalle completo de un conduce (numero derivado, items con
+   * nombre/cant/unidad, PORTADOR actual, fotos, firmas, historial de transferencias).
+   * Fuente única para abrir desde cualquier listado y para "Ver conduce" (PDF).
+   * Firma las fotos/firmas (bucket conduces) para mostrarlas. Requiere red.
+   */
+  async conduceDetalleApp(salidaId: string): Promise<ConduceDetalle> {
+    const { data, error } = await this.supabase.client.rpc('conduce_detalle_app', { p_salida_id: salidaId });
+    if (error) throw new Error(error.message);
+    const d = (data ?? {}) as ConduceDetalle;
+    d.items ??= [];
+    d.firmas ??= [];
+    d.transferencias ??= [];
+    d.entrega_foto_url = await this.signConduce(d.entrega_foto_path);
+    d.recepcion_foto_url = await this.signConduce(d.recepcion_foto_path);
+    for (const fm of d.firmas) fm.firma_url = await this.signConduce(fm.firma_path);
+    return d;
+  }
+
+  /** AL10 — almacenes centrales elegibles como destino (Bodega Central primero). */
+  async almacenesDestino(): Promise<AlmacenDestino[]> {
+    const data = await this.catalog.refresh<AlmacenDestino[]>('almacenes_destino', async () => {
+      const { data, error } = await this.supabase.client.rpc('almacenes_destino');
+      if (error) throw new Error(error.message);
+      return (data as AlmacenDestino[]) ?? [];
+    });
+    return data ?? [];
   }
 
   /** Firma una ruta de storage del bucket de conduces (best-effort → null). */
@@ -1379,6 +1519,7 @@ export class ConducesService {
         p_carga_foto_path: photoPaths['carga'] ?? null,
         p_firma_chofer_path: photoPaths['firma_chofer'] ?? null,
         p_firma_despachante_path: photoPaths['firma_despachante'] ?? null,
+        p_destino_almacen_id: payload['destino_almacen_id'] ?? null, // AL10 (15-arg)
       });
       if (error) throwSyncError(error);
       // AG15 — enlaza la tarea vinculada (idempotente; se autocompleta al entregar).

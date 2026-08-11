@@ -75,6 +75,8 @@
 
           @if (expandido() === c.id) {
             <div class="conduce-det" (click)="$event.stopPropagation()">
+              <!-- AL9/AL4 — abrir el documento completo del conduce -->
+              <button type="button" class="btn-ghost conduce-det__ver" (click)="verConduce(c.id)">📄 Ver conduce</button>
               <ul class="conduce-det__items">
                 @for (it of c.items; track it.articulo) {
                   <li>

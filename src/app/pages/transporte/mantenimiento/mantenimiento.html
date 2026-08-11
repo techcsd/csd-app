@@ -76,6 +76,13 @@
           [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
           [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
+
+        <!-- AL7 — costo (opcional) + taller/lugar -->
+        <label class="field-label mantenimiento__mt" for="taller">¿Dónde lo hiciste? (taller / lugar) — opcional</label>
+        <input id="taller" class="field" type="text" [ngModel]="taller()" (ngModelChange)="taller.set($event)" placeholder="Ej. Taller Pérez, gomera de la esquina…" />
+
+        <label class="field-label mantenimiento__mt" for="costo">Costo (RD$) — opcional</label>
+        <input id="costo" class="field" type="number" inputmode="decimal" min="0" [ngModel]="costo()" (ngModelChange)="costo.set($event)" placeholder="0" />
       }
 
       <!-- Step 3: photos (mínimo 1) -->
@@ -109,6 +116,12 @@
           @if (km() !== null) {
             <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           }
+          @if (taller().trim()) {
+            <li><span>Taller</span><b>{{ taller() }}</b></li>
+          }
+          @if ((costo() ?? 0) > 0) {
+            <li><span>Costo</span><b>RD$ {{ costo() | number: '1.0-2' }}</b></li>
+          }
           <li><span>Fotos</span><b>{{ fotosCount() }}</b></li>
         </ul>
         <!-- U15 — miniaturas de las fotos adjuntas -->
@@ -120,6 +133,10 @@
           }
         </div>
         <p class="mantenimiento__desc-preview">{{ descripcion() }}</p>
+
+        <!-- AL7 — notas del trabajo (opcional) -->
+        <label class="field-label mantenimiento__mt" for="notas">Notas (opcional)</label>
+        <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Detalle adicional del trabajo…"></textarea>
       }
     </div>
 

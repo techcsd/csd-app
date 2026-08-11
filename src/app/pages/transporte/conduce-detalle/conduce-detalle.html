@@ -1,0 +1,135 @@
+<div class="screen cdet">
+  <header class="cdet__header">
+    <button type="button" class="cdet__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="cdet__icon">📄</span>
+    <h1 class="cdet__title">Conduce</h1>
+    <button type="button" class="cdet__refresh" (click)="load()" [disabled]="loading()" aria-label="Actualizar">🔄</button>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!detalle()) {
+      <app-empty-state icon="📄" title="No pudimos abrir el conduce" message="Revisa tu conexión y vuelve a intentar." />
+    } @else if (detalle(); as d) {
+      <!-- Documento (mismo formato que la web) -->
+      <article class="doc">
+        <header class="doc__head">
+          <div>
+            <h2 class="doc__empresa">Constructora Scheker & Domínguez</h2>
+            <p class="doc__sub">Conduce de Materiales y Equipos</p>
+          </div>
+          <div class="doc__meta">
+            <p><strong>No. Conduce:</strong> {{ d.numero }}</p>
+            <p><strong>Emisión:</strong> {{ d.created_at ? fmtFechaHora(d.created_at) : fmtFecha(d.fecha) }}</p>
+          </div>
+        </header>
+
+        <div class="doc__estado">
+          <span class="doc__chip" [class.doc__chip--inc]="incompleto()">{{ faseLabel() }}</span>
+          @if (d.es_prueba) { <span class="doc__chip doc__chip--test">PRUEBA</span> }
+        </div>
+
+        <!-- AL4 — compartir / descargar el conduce como PDF -->
+        <div class="cdet__acciones">
+          <button type="button" class="btn-cta" [disabled]="generando()" (click)="compartir()">
+            {{ generando() ? 'Generando…' : '📤 Compartir' }}
+          </button>
+          <button type="button" class="btn-ghost" [disabled]="generando()" (click)="descargar()">⬇️ Descargar PDF</button>
+        </div>
+
+        <!-- Info -->
+        <div class="doc__grid">
+          <div class="doc__kv"><span class="doc__k">Almacén de origen</span><span class="doc__v">{{ d.bodega || '—' }}</span></div>
+          <div class="doc__kv"><span class="doc__k">Destino</span><span class="doc__v">{{ destino() }}</span></div>
+          @if (d.motivo) { <div class="doc__kv"><span class="doc__k">Motivo</span><span class="doc__v">{{ d.motivo }}</span></div> }
+          <div class="doc__kv"><span class="doc__k">Transporta</span><span class="doc__v">{{ d.conductor || '—' }}</span></div>
+          <div class="doc__kv"><span class="doc__k">Entregado por</span><span class="doc__v">{{ d.entregado_por_nombre || '—' }}</span></div>
+          <div class="doc__kv"><span class="doc__k">Recibido por</span><span class="doc__v">{{ d.recibido_por_nombre || '—' }}</span></div>
+        </div>
+
+        <!-- Materiales -->
+        <h3 class="doc__sec">Materiales</h3>
+        @if (d.items.length) {
+          <div class="doc__table-wrap">
+            <table class="doc__table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Artículo</th>
+                  <th class="r">Enviada</th>
+                  @if (entregado()) { <th class="r">Recibida</th> }
+                  <th>Unidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (it of d.items; track it.detalle_id; let i = $index) {
+                  <tr>
+                    <td>{{ i + 1 }}</td>
+                    <td>
+                      {{ it.articulo || '—' }}
+                      @if (it.codigo) { <span class="doc__cod">{{ it.codigo }}</span> }
+                    </td>
+                    <td class="r">{{ it.cantidad | number: '1.0-2' }}</td>
+                    @if (entregado()) {
+                      <td class="r" [class.doc__short]="it.cantidad_recibida != null && it.cantidad_recibida < it.cantidad">
+                        {{ it.cantidad_recibida != null ? (it.cantidad_recibida | number: '1.0-2') : '—' }}
+                      </td>
+                    }
+                    <td>{{ it.unidad || '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="doc__vacio">Sin materiales.</p>
+        }
+
+        @if (d.notas_recepcion) {
+          <h3 class="doc__sec">Notas de recepción</h3>
+          <p class="doc__notas">{{ d.notas_recepcion }}</p>
+        }
+
+        <!-- Evidencia -->
+        @if (d.entrega_foto_url || d.recepcion_foto_url) {
+          <h3 class="doc__sec">Evidencia</h3>
+          <div class="doc__fotos">
+            @if (d.entrega_foto_url) {
+              <figure class="doc__foto"><img [src]="d.entrega_foto_url" alt="Foto de entrega" loading="lazy" /><figcaption>Entrega</figcaption></figure>
+            }
+            @if (d.recepcion_foto_url) {
+              <figure class="doc__foto"><img [src]="d.recepcion_foto_url" alt="Foto de recepción" loading="lazy" /><figcaption>Recepción</figcaption></figure>
+            }
+          </div>
+        }
+
+        <!-- Firmas -->
+        @if (d.firmas.length) {
+          <h3 class="doc__sec">Firmas</h3>
+          <div class="doc__firmas">
+            @for (f of d.firmas; track $index) {
+              <figure class="doc__firma">
+                @if (f.firma_url) { <img [src]="f.firma_url" alt="Firma" loading="lazy" /> } @else { <span class="doc__firma-linea"></span> }
+                <figcaption>{{ f.nombre || (f.rol === 'emisor' ? 'Entregado por' : 'Recibido por') }}</figcaption>
+              </figure>
+            }
+          </div>
+        }
+
+        <!-- Historial de transferencias -->
+        @if (d.transferencias.length) {
+          <h3 class="doc__sec">Transferencias</h3>
+          <ul class="doc__transf">
+            @for (t of d.transferencias; track t.id) {
+              <li>
+                <span class="doc__transf-de">{{ t.de || '—' }} → {{ t.a || '—' }}</span>
+                <span class="doc__transf-meta">{{ t.estado }} · {{ fmtFechaHora(t.ofrecida_en) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+    }
+  </div>
+</div>

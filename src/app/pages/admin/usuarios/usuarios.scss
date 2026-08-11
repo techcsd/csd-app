@@ -1,0 +1,122 @@
+.ausr__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.ausr__back,
+.ausr__add {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font-size: 20px;
+}
+.ausr__icon {
+  font-size: 22px;
+}
+.ausr__title {
+  font-size: 20px;
+  font-weight: 800;
+  flex: 1;
+}
+.ausr__mt {
+  margin-top: 10px;
+}
+.ausr__buscar {
+  margin-bottom: 12px;
+}
+.ausr__alta {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: var(--color-surface);
+}
+.ausr__alta-t {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 10px;
+}
+.ausr__nota {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 8px 0 0;
+}
+
+.ausr-card {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.ausr-card--off {
+  opacity: 0.7;
+}
+.ausr-card__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+}
+.ausr-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.ausr-card__nombre {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.ausr-card__off {
+  color: #b91c1c;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+.ausr-card__pend {
+  color: #b45309;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+.ausr-card__email,
+.ausr-card__roles {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.ausr-card__chev {
+  flex: 0 0 auto;
+}
+.ausr-card__panel {
+  padding: 0 14px 14px;
+  border-top: 1px dashed var(--color-border);
+}
+.ausr__roles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ausr__rol {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.ausr__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ausr__danger {
+  color: #b91c1c;
+}

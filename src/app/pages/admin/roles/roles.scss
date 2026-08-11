@@ -1,0 +1,131 @@
+.arol__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.arol__back,
+.arol__add {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font-size: 20px;
+}
+.arol__icon {
+  font-size: 22px;
+}
+.arol__title {
+  font-size: 20px;
+  font-weight: 800;
+  flex: 1;
+}
+.arol__mt {
+  margin-top: 14px;
+}
+.arol__sec {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 18px 0 4px;
+}
+.arol__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+
+.arol-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  text-align: left;
+  margin-bottom: 10px;
+}
+.arol-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.arol-card__nombre {
+  font-weight: 800;
+  font-size: 16px;
+}
+.arol-card__desc,
+.arol-card__mods {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.arol-card__chev {
+  font-size: 22px;
+  color: var(--color-text-secondary);
+}
+
+.arol-mod {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.arol-mod--sens {
+  border-color: #fca5a5;
+}
+.arol-mod__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+.arol-mod__badge {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+.arol-mod__desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 6px 0 0;
+}
+.arol-subs {
+  margin-top: 10px;
+  border-top: 1px dashed var(--color-border);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.arol-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.arol-sub__label {
+  font-size: 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.arol-sub__sel {
+  flex: 0 0 auto;
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 0 8px;
+}
+.arol__del {
+  margin-top: 10px;
+  color: #b91c1c;
+  width: 100%;
+}

@@ -30,6 +30,21 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- AL6 — alarma dominical autónoma. El receiver corre con la app cerrada. -->
+        <receiver
+            android:name=".AlarmReceiver"
+            android:exported="false" />
+        <!-- AL6 — re-programar la alarma tras un reinicio del teléfono. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
     <!-- Permissions -->
@@ -65,6 +80,15 @@
          nativo se añadirá con un plugin; la app ya guía la config manual mientras. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+    <!-- AL6 — alarma dominical AUTÓNOMA de inspección (suena con la app cerrada). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- AL5 — notificaciones (Android 13+). El permiso runtime lo pide el onboarding. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- W2: "Cómo llegar" abre Google Maps con @capacitor/app-launcher. En
          Android 11+ (package visibility) `canOpenUrl` devuelve false a menos que

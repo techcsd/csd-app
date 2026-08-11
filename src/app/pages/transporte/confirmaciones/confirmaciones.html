@@ -6,6 +6,12 @@
   </header>
 
   <div class="screen__body">
+    <!-- AL8 — alcance: mías (lo que confirmé) vs todas (matriz/admin) -->
+    <div class="conf__modo">
+      <app-option-button icon="🙋" label="Mis confirmaciones" [selected]="modo() === 'mias'" (pressed)="setModo('mias')" />
+      <app-option-button icon="🌐" label="Todas" [selected]="modo() === 'todas'" (pressed)="setModo('todas')" />
+    </div>
+
     <!-- Filtros -->
     <div class="conf__filtros">
       <app-collapsible-select

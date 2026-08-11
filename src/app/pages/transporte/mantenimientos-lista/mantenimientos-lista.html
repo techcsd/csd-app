@@ -37,6 +37,9 @@
               @if (m.proveedor) {
                 <span>🏭 {{ m.proveedor }}</span>
               }
+              @if (m.registrado_por) {
+                <span>🧑 {{ m.registrado_por }}</span>
+              }
             </div>
             <button type="button" class="btn-cta mant-card__cerrar" (click)="cerrar(m)">
               ✅ Cerrar con evidencia
@@ -66,6 +69,9 @@
               }
               @if (m.costo != null) {
                 <span>💵 {{ m.costo | number: '1.0-2' }}</span>
+              }
+              @if (m.registrado_por) {
+                <span>🧑 {{ m.registrado_por }}</span>
               }
               @if (m.fotos?.length) {
                 <span>📷 {{ m.fotos!.length }}</span>

@@ -1,0 +1,32 @@
+@if (visible()) {
+  <div class="permob" role="dialog" aria-modal="true">
+    <div class="permob__card">
+      <span class="permob__icon">🔒</span>
+      <h1 class="permob__title">Activa los permisos</h1>
+      <p class="permob__intro">Para que la app funcione en el campo (fotos, GPS, avisos y la alarma de inspección), actívalos de una vez. Solo te lo pedimos ahora.</p>
+
+      <ul class="permob__list">
+        <li><span class="permob__l">📷 Cámara</span><span class="permob__s permob__s--{{ camara() }}">{{ camara() === 'ok' ? '✓' : camara() === 'no' ? '⚠' : '' }}</span></li>
+        <li><span class="permob__l">🎙️ Micrófono</span><span class="permob__s permob__s--{{ micro() }}">{{ micro() === 'ok' ? '✓' : micro() === 'no' ? '⚠' : '' }}</span></li>
+        <li>
+          <span class="permob__l">📍 Ubicación</span>
+          <span class="permob__s permob__s--{{ ubicacion() }}">{{ ubicacion() === 'ok' ? '✓' : ubicacion() === 'no' ? '⚠' : '' }}</span>
+        </li>
+        <li><span class="permob__l">🔔 Notificaciones</span><span class="permob__s permob__s--{{ notif() }}">{{ notif() === 'ok' ? '✓' : notif() === 'no' ? '⚠' : '' }}</span></li>
+      </ul>
+
+      <button type="button" class="btn-cta permob__cta" [disabled]="corriendo()" (click)="activar()">
+        {{ corriendo() ? 'Solicitando…' : 'Activar permisos' }}
+      </button>
+
+      <p class="permob__sub">Estos requieren abrir Ajustes:</p>
+      <div class="permob__ajustes">
+        <button type="button" class="btn-ghost" (click)="ubicacionSiempre()">📍 Ubicación “todo el tiempo”</button>
+        <button type="button" class="btn-ghost" (click)="pedirAlarma()">⏰ Alarmas exactas</button>
+        <button type="button" class="btn-ghost" (click)="pedirBateria()">🔋 Batería sin restricción</button>
+      </div>
+
+      <button type="button" class="permob__done" (click)="finish()">Listo, continuar</button>
+    </div>
+  </div>
+}

@@ -2,6 +2,7 @@
   <header class="porconf__header">
     <button type="button" class="porconf__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="porconf__title">📥 Entregas por confirmar</h1>
+    <button type="button" class="porconf__hist" (click)="misConfirmaciones()">🕘 Mis confirmaciones</button>
   </header>
 
   <div class="screen__body">
@@ -23,6 +24,9 @@
 
           @if (confirmandoId() === e.id) {
             <div class="porconf__panel">
+              <!-- AL8 — ver el conduce completo (esperado) antes de confirmar -->
+              <button type="button" class="btn-ghost porconf__ver" (click)="verConduce(e.id)">📄 Ver conduce (lo que debía llegar)</button>
+
               <label class="field-label">Foto del material recibido <span class="porconf__req">*</span></label>
               <app-photo-slot label="Recepción" hint="📸" [gallery]="false" [foto]="foto()" (captured)="foto.set($event)" (cleared)="foto.set(null)" />
 

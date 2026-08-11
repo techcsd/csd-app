@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -32,6 +33,7 @@ export class PorConfirmarPage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private router = inject(Router);
 
   private sigPad = viewChild<SignaturePad>('receptorPad');
 
@@ -85,6 +87,17 @@ export class PorConfirmarPage {
 
   onFirma(has: boolean): void {
     this.firmaLista.set(has);
+  }
+
+  /** AL8 — ver el documento completo del conduce ANTES de confirmar (items
+   *  esperados, origen/destino, chofer, fotos de entrega, firmas). */
+  verConduce(id: string): void {
+    void this.router.navigate(['/transporte/conduce-detalle', id]);
+  }
+
+  /** AL8 — historial del propio confirmador (accesible aunque no sea flota). */
+  misConfirmaciones(): void {
+    void this.router.navigate(['/transporte/confirmaciones']);
   }
 
   // ── QA-13 — registrar QUÉ y CUÁNTO llegó cuando "Faltó algo" ────────────────

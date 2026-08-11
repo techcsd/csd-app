@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { DatePipe, DecimalPipe, Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -35,6 +36,7 @@ const FASE_TINT: Record<string, string> = {
 })
 export class ConducesHistorialPage {
   private service = inject(ConducesService);
+  private router = inject(Router);
   private location = inject(Location);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
@@ -89,6 +91,11 @@ export class ConducesHistorialPage {
 
   toggle(id: string): void {
     this.expandido.update((cur) => (cur === id ? null : id));
+  }
+
+  /** AL9/AL4 — abrir el documento del conduce (detalle + Ver conduce/PDF). */
+  verConduce(id: string): void {
+    void this.router.navigate(['/transporte/conduce-detalle', id]);
   }
 
   // ─── AH5 — transferir la responsabilidad de un conduce a otro chofer ────────

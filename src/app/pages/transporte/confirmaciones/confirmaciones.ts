@@ -42,6 +42,9 @@ export class ConfirmacionesPage {
   loading = signal(true);
   filas = signal<ConfirmacionHistorialRow[]>([]);
 
+  // AL8 — alcance: "Mías" (lo que YO confirmé) por defecto, o "Todas" (matriz/admin).
+  modo = signal<'mias' | 'todas'>('mias');
+
   // Filtros
   estado = signal<EstadoFiltro>('todas');
   obraId = signal('');
@@ -76,19 +79,39 @@ export class ConfirmacionesPage {
     this.loading.set(true);
     const e = this.estado();
     try {
-      this.filas.set(
-        await this.conduces.confirmacionesHistorial({
+      if (this.modo() === 'mias') {
+        // AL8 — mis confirmaciones (mis_confirmaciones no filtra por estado/obra en
+        // server → se filtra en cliente para conservar los mismos controles).
+        let rows = await this.conduces.misConfirmaciones({
           desde: this.desde() || null,
           hasta: this.hasta() || null,
-          proyectoId: this.obraId() || null,
-          estado: e === 'todas' ? null : e,
-        }),
-      );
+        });
+        if (this.obraId()) rows = rows.filter((r) => r.proyecto_id === this.obraId());
+        if (e === 'completa') rows = rows.filter((r) => r.estado !== 'entregado_incompleto');
+        else if (e === 'incompleta') rows = rows.filter((r) => r.estado === 'entregado_incompleto');
+        this.filas.set(rows);
+      } else {
+        this.filas.set(
+          await this.conduces.confirmacionesHistorial({
+            desde: this.desde() || null,
+            hasta: this.hasta() || null,
+            proyectoId: this.obraId() || null,
+            estado: e === 'todas' ? null : e,
+          }),
+        );
+      }
     } catch {
       this.toast.error('No pudimos cargar el historial de confirmaciones.');
     } finally {
       this.loading.set(false);
     }
+  }
+
+  setModo(m: 'mias' | 'todas'): void {
+    if (this.modo() === m) return;
+    this.modo.set(m);
+    this.expandidaId.set('');
+    void this.load();
   }
 
   setEstado(e: EstadoFiltro): void {

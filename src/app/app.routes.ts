@@ -434,6 +434,15 @@ export const routes: Routes = [
       import('./pages/transporte/conduces-pendientes/conduces-pendientes').then((m) => m.ConducesPendientesPage),
   },
   {
+    // AL9/AL13/AL4 — detalle de un conduce (documento) abierto desde cualquier
+    // listado. Sin moduleGuard: lo puede ver el receptor/confirmador (inventario/
+    // obra) además del chofer; el RPC valida la visibilidad server-side.
+    path: 'transporte/conduce-detalle/:salidaId',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/conduce-detalle/conduce-detalle').then((m) => m.ConduceDetallePage),
+  },
+  {
     // AH5 — inbox de transferencias de conduce (aceptar con foto+firma / rechazar).
     path: 'transporte/conduce-transferencias',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
@@ -562,6 +571,31 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tecnologia/tecnologia').then((m) => m.TecnologiaPage),
   },
+  // AL2 — Inventario tecnológico (módulo Tecnología real). Gating admin|tecnologia.
+  {
+    path: 'tecnologia-inventario',
+    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    loadComponent: () =>
+      import('./pages/tecnologia-inventario/tecnologia-inventario').then((m) => m.TecnologiaInventarioPage),
+  },
+  {
+    path: 'tecnologia-inventario/nuevo',
+    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    loadComponent: () =>
+      import('./pages/tecnologia-inventario/equipo-form/equipo-form').then((m) => m.TecEquipoFormPage),
+  },
+  {
+    path: 'tecnologia-inventario/:id/editar',
+    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    loadComponent: () =>
+      import('./pages/tecnologia-inventario/equipo-form/equipo-form').then((m) => m.TecEquipoFormPage),
+  },
+  {
+    path: 'tecnologia-inventario/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('tecnologia')],
+    loadComponent: () =>
+      import('./pages/tecnologia-inventario/equipo-detalle/equipo-detalle').then((m) => m.TecEquipoDetallePage),
+  },
   {
     // AC4 — Notas: módulo general accesible por todos (sin moduleGuard).
     path: 'notas',
@@ -622,6 +656,22 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
     loadComponent: () =>
       import('./pages/proyectos/cronograma/cronograma').then((m) => m.CronogramaPage),
+  },
+  {
+    // AL2 — Administración completo: usuarios, roles/permisos, parámetros.
+    path: 'admin/usuarios',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/usuarios/usuarios').then((m) => m.AdminUsuariosPage),
+  },
+  {
+    path: 'admin/roles',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/roles/roles').then((m) => m.AdminRolesPage),
+  },
+  {
+    path: 'admin/parametros',
+    canActivate: [authGuard, pinGuard, moduleGuard('admin')],
+    loadComponent: () => import('./pages/admin/parametros/parametros').then((m) => m.AdminParametrosPage),
   },
   {
     path: 'admin/reportes',

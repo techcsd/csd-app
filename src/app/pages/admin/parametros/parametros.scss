@@ -1,0 +1,56 @@
+.aparam__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.aparam__back {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font-size: 20px;
+}
+.aparam__icon {
+  font-size: 22px;
+}
+.aparam__title {
+  font-size: 20px;
+  font-weight: 800;
+}
+.aparam__buscar {
+  margin-bottom: 12px;
+}
+.aparam-card {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.aparam-card__clave {
+  font-weight: 800;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.aparam-card__desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+.aparam-card__edit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+.aparam-card__save {
+  flex: 0 0 auto;
+}

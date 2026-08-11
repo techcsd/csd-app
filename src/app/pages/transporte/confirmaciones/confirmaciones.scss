@@ -20,6 +20,15 @@
   margin: 0;
 }
 
+.conf__modo {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  > * {
+    flex: 1;
+  }
+}
+
 .conf__filtros {
   margin-bottom: 14px;
 }

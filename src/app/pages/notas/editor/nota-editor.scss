@@ -53,6 +53,7 @@
   color: #121212;
   padding: 4px 0;
   margin-bottom: 6px;
+  overflow-wrap: anywhere; // AL14
 
   &:focus {
     outline: none;
@@ -88,6 +89,7 @@
   font-size: 16px;
   line-height: 1.5;
   color: #1f1f22;
+  overflow-wrap: anywhere; // AL14 — el cuerpo largo sin espacios no desborda
 
   &:focus {
     outline: none;
@@ -155,6 +157,7 @@
   flex: 1 1 auto;
   min-width: 0;
   font-size: 16px;
+  overflow-wrap: anywhere; // AL14
 }
 .neditor__chip {
   flex-shrink: 0;

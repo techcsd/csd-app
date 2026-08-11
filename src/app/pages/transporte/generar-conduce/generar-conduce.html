@@ -57,16 +57,26 @@
           @if (origenTipo() === 'almacen') {
             <div class="gconduce__origen">
               <app-option-button icon="🏗" label="Obra" [selected]="destinoTipo() === 'obra'" (pressed)="destinoTipo.set('obra')" />
+              <!-- AL10 — Bodega Central / almacenes principales como destino -->
+              <app-option-button icon="🏢" label="Almacén central" [selected]="destinoTipo() === 'almacen'" (pressed)="destinoTipo.set('almacen')" />
               <app-option-button icon="🏭" label="Suplidor (devolución)" [selected]="destinoTipo() === 'suplidor'" (pressed)="destinoTipo.set('suplidor')" />
             </div>
           }
-          @if (destinoTipo() === 'obra') {
-            <div class="gconduce__mt">
-              <app-collapsible-select label="Obra destino" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="obraId.set($event)" />
-            </div>
-          } @else {
-            <label class="field-label gconduce__mt">Suplidor al que devuelves</label>
-            <input class="field" type="text" [ngModel]="suplidorNombre()" (ngModelChange)="suplidorNombre.set($event)" placeholder="Nombre del suplidor" />
+          @switch (destinoTipo()) {
+            @case ('obra') {
+              <div class="gconduce__mt">
+                <app-collapsible-select label="Obra destino" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="obraId.set($event)" />
+              </div>
+            }
+            @case ('almacen') {
+              <div class="gconduce__mt">
+                <app-collapsible-select label="Almacén destino" icon="🏢" [options]="almacenOptions()" [selectedId]="almacenId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="almacenId.set($event)" />
+              </div>
+            }
+            @default {
+              <label class="field-label gconduce__mt">Suplidor al que devuelves</label>
+              <input class="field" type="text" [ngModel]="suplidorNombre()" (ngModelChange)="suplidorNombre.set($event)" placeholder="Nombre del suplidor" />
+            }
           }
         }
 
@@ -161,6 +171,17 @@
             <div class="gconduce__res-row"><span class="gconduce__res-k">Destino</span><span class="gconduce__res-v">{{ destinoNombre() || '—' }}</span></div>
             @if (!esOtros()) {
               <div class="gconduce__res-row"><span class="gconduce__res-k">Materiales</span><span class="gconduce__res-v">{{ itemsCount() }} {{ itemsCount() === 1 ? 'artículo' : 'artículos' }}</span></div>
+              <!-- AL12 — detalle de materiales (nombre + cantidad + unidad) -->
+              @if (itemsResumen().length) {
+                <ul class="gconduce__res-items">
+                  @for (l of itemsResumen(); track l.articulo_id) {
+                    <li class="gconduce__res-item">
+                      <span class="gconduce__res-item-name">{{ l.nombre }}</span>
+                      <span class="gconduce__res-item-qty">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
+                    </li>
+                  }
+                </ul>
+              }
             }
             @if (!esFerreteria()) {
               <div class="gconduce__res-row"><span class="gconduce__res-k">Foto de recepción</span><span class="gconduce__res-v">{{ fotoRecepcion() ? '✓ tomada' : '—' }}</span></div>

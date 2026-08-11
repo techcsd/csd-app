@@ -29,6 +29,27 @@
   margin: 0;
   font-size: var(--fs-title);
   font-weight: 800;
+  flex: 1;
+}
+
+.cpend__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+}
+
+// AL13 — indicador de pull-to-refresh.
+.cpend__pull {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  transition: height 0.1s ease;
 }
 
 .cpend__card {
@@ -44,16 +65,30 @@
   flex-direction: column;
   gap: 4px;
   margin-bottom: 12px;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 .cpend__destino {
   font-size: 17px;
   font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .cpend__meta {
   font-size: 14px;
   color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.cpend__ver {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
 }
 
 .cpend__actions {

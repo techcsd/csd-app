@@ -82,10 +82,13 @@
   display: flex;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0; // AL14
 }
 .msgs__row-name {
   font-weight: 800;
   color: var(--color-text-primary);
+  min-width: 0;
+  overflow-wrap: anywhere; // AL14
 }
 .msgs__row-time {
   flex: 0 0 auto;

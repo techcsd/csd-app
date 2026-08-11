@@ -67,11 +67,13 @@
   border-radius: 14px;
   text-align: left;
   width: 100%;
+  min-width: 0; // AL14 — deja que el texto largo quiebre en vez de estirar la card
 }
 .nota-card__top {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0; // AL14
 }
 .nota-card__pin {
   font-size: 14px;
@@ -80,6 +82,8 @@
   font-weight: 800;
   font-size: 16px;
   color: #121212;
+  min-width: 0;
+  overflow-wrap: anywhere; // AL14 — quiebra URLs/tokens sin espacios
 }
 .nota-card__snippet {
   font-size: 14px;
@@ -89,6 +93,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere; // AL14
 }
 .nota-card__meta {
   display: flex;
@@ -104,6 +109,9 @@
 }
 .nota-card__badge--env {
   color: var(--color-warning);
+}
+.nota-card__badge--err {
+  color: var(--color-error, #dc2626); // AL14
 }
 
 .notas__fab {

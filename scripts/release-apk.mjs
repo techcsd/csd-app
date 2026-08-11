@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.70.0';
+const VERSION = '1.71.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,28 +59,28 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-10';
+const RELEASED_AT = '2026-08-11';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Transporte v4: Uso de vehículo con nivel de gasolina, avisos con voz y video, confirmaciones, multas seguras, desplegables y arranque en Inicio';
+const TITULO = 'Ver y compartir conduce en PDF, Bodega Central como destino, bandeja del confirmador, Tecnología y Administración en la app, alarma del domingo autónoma y mantenimientos por chofer';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Inicio', d: 'La app ya no abre sola Transporte al iniciar: siempre arranca en el Inicio y navegas a donde quieras.' },
-  { t: 'arreglo', m: 'Conduces', d: 'Al salir de "Crear conduce" con el botón atrás vuelves al menú de Conduce, ya no te manda a "Mis rutas".' },
-  { t: 'mejora', m: 'Conduces', d: 'Los selectores (almacén, obra, despachante, vehículo…) ahora son desplegables: salen cerrados y se abren al tocarlos, sin llenar la pantalla.' },
-  { t: 'mejora', m: 'Conduces', d: '"Marcar entrega" ahora es "Gestionar entrega"; "Iniciar tránsito" pasó a "Iniciar ruta"; y "Estoy entregando" abre directo la entrega (foto y todo).' },
-  { t: 'mejora', m: 'Conduces', d: 'Los conduces por entregar y las rutas muestran la fecha y la HORA exacta.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Nueva pantalla "Confirmaciones": el historial de entregas confirmadas con items, quién entregó/confirmó, fotos y firmas.' },
-  { t: 'mejora', m: 'Conduces', d: 'Menú más limpio: Recibir, Por firmar, Devolver a suplidor y Compra en ferretería ahora se hacen desde "Crear conduce" y las confirmaciones.' },
-  { t: 'nuevo', m: 'Vehículos', d: 'Nuevo "Uso de vehículo": registras el nivel de gasolina y usas el vehículo; si lo tenía otro, lo recibes; y al terminar lo sueltas. Se quita "asignarme" y el checklist de pre-uso.' },
-  { t: 'arreglo', m: 'Vehículos', d: 'El vehículo que tienes en uso sale como "En uso" (no "Por recibir"), con la opción de soltarlo.' },
-  { t: 'arreglo', m: 'Mi actividad', d: 'Ya puedes entrar a "Mi actividad" aunque no tengas ficha de conductor: basta con haber usado un vehículo. Además ves el historial de tus usos.' },
-  { t: 'seguridad', m: 'Multas', d: 'Un chofer solo puede registrarse multas a sí mismo (queda bloqueado); solo los jefes pueden elegir a otro conductor.' },
-  { t: 'nuevo', m: 'Aviso de vehículo', d: 'Al reportar puedes adjuntar una nota de voz y un video, y ver "Mis reportes" con su estado (pendiente/atendido).' },
-  { t: 'nuevo', m: 'Reporte semanal', d: 'Alarma tipo despertador el domingo si aún no has hecho el reporte semanal de tu vehículo.' },
-  { t: 'arreglo', m: 'Proyectos', d: 'Se corrigió la flecha de atrás que se veía invisible en los avisos de cronograma.' },
+  { t: 'nuevo', m: 'Conduces', d: 'Ahora puedes VER el conduce como documento y compartirlo por WhatsApp o descargarlo en PDF.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Pendiente entrega se actualiza: al aceptar una transferencia, al chofer que la envió le desaparece el conduce. Desliza hacia abajo o toca Actualizar; también se refresca al volver a la app.' },
+  { t: 'mejora', m: 'Conduces', d: 'Toca cualquier conduce para ver su detalle completo: materiales, firmas, fotos y estado actual.' },
+  { t: 'mejora', m: 'Conduces', d: 'El resumen al crear un conduce ahora lista los materiales con su cantidad, no solo el total.' },
+  { t: 'nuevo', m: 'Conduces', d: 'Puedes enviar un conduce a la Bodega Central (o almacenes principales), no solo a obras.' },
+  { t: 'mejora', m: 'Confirmaciones', d: 'Antes de confirmar una entrega puedes ver el conduce completo (lo que debía llegar) para comparar.' },
+  { t: 'nuevo', m: 'Confirmaciones', d: 'Entrada permanente "Por confirmar" con contador, y "Mis confirmaciones" con tu historial (fotos, firma y diferencias).' },
+  { t: 'nuevo', m: 'Tecnología', d: 'Nuevo módulo Tecnología: inventario de equipos de TI con tipo, ubicación, precio en RD$ o US$ y varias fotos con portada; abre las fotos en grande.' },
+  { t: 'mejora', m: 'Sistema', d: 'La pantalla anterior de "Tecnología" (versiones, dudas y reportes de error) ahora se llama "Sistema".' },
+  { t: 'nuevo', m: 'Administración', d: 'Administración completa en la app: usuarios (invitar, roles, activar/desactivar, restablecer contraseña), matriz de roles y permisos, y parámetros del sistema.' },
+  { t: 'nuevo', m: 'Vehículos', d: 'Los choferes pueden registrar mantenimientos del vehículo que llevan (rutina, reparación, tintado, bombillo, gomas, batería…), con costo, taller y fotos.' },
+  { t: 'mejora', m: 'Reporte semanal', d: 'La alarma de inspección del domingo ahora suena aunque no hayas abierto la app, y sigue insistiendo cada 30 minutos hasta que la hagas.' },
+  { t: 'nuevo', m: 'Permisos', d: 'Al abrir la app por primera vez te pedimos todos los permisos de una sola vez (cámara, GPS, notificaciones y alarma), sin estar preguntando a cada rato.' },
+  { t: 'arreglo', m: 'Notas', d: 'Se arregló el texto largo que se salía de las tarjetas de Notas y el aviso de "Enviando…" que se quedaba pegado cuando una nota no se pudo enviar.' },
 ];
 
 const TIPO_POR_COMMIT = {

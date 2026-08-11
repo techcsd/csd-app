@@ -6,6 +6,7 @@ import { App as CapApp } from '@capacitor/app';
 import { ToastHost } from './shared/components/toast-host/toast-host';
 import { PermisoHost } from './shared/components/permiso-host/permiso-host';
 import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
+import { PermisosOnboarding } from './shared/components/permisos-onboarding/permisos-onboarding';
 import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
@@ -20,12 +21,13 @@ import { NavGuardService } from './core/services/nav-guard.service';
 import { ActivityPingService } from './core/services/activity-ping.service';
 import { PushService } from './core/services/push.service';
 import { AlarmaService } from './core/services/alarma.service';
+import { NativeAlarmService } from './core/services/native-alarm.service';
 import { ReporteSemanalService } from './core/services/reporte-semanal.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, InAppCamera],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, InAppCamera],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -44,6 +46,7 @@ export class App {
   private activityPing = inject(ActivityPingService);
   private push = inject(PushService);
   private alarma = inject(AlarmaService);
+  private nativeAlarm = inject(NativeAlarmService);
   private reportes = inject(ReporteSemanalService);
   private router = inject(Router);
 
@@ -57,6 +60,29 @@ export class App {
     this.activityPing.init(); // W12 — ping de actividad (open + resume, throttled)
     void this.push.init(); // AF7 — push nativo (no-op en web/PWA)
     void this.checkAlarmaDominical(); // AK10 — alarma del reporte semanal (domingo)
+    void this.syncAlarmaNativa(); // AL6 — arma/cancela la alarma AUTÓNOMA (app cerrada)
+    // AL6 — re-evaluar al volver a primer plano (por si completó la inspección o
+    // se le asignó un vehículo). Best-effort, nativo.
+    if (Capacitor.isNativePlatform()) {
+      void CapApp.addListener('resume', () => void this.syncAlarmaNativa());
+    }
+  }
+
+  /**
+   * AL6 — mantiene la alarma nativa autónoma en sync con el estado real: si el
+   * usuario tiene la inspección semanal pendiente (vehículo en uso, regla server),
+   * la ARMA (sonará el domingo aunque la app esté cerrada); si ya no, la CANCELA.
+   * Corre en cada arranque/resume. No-op en web/PWA (iOS sin alarmas autónomas).
+   */
+  private async syncAlarmaNativa(): Promise<void> {
+    if (!this.nativeAlarm.disponible) return;
+    try {
+      const pend = await this.reportes.pendientesCount();
+      if (pend > 0) await this.nativeAlarm.enable();
+      else await this.nativeAlarm.disable();
+    } catch {
+      /* sin sesión / offline: no tocar la alarma */
+    }
   }
 
   /**

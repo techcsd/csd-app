@@ -25,6 +25,8 @@ export interface Nota {
   permiso?: NotaPermiso;
   /** true mientras la nota está pendiente de sincronizar (outbox). */
   enviando?: boolean;
+  /** AL14 — true si el envío de la nota falló (op en estado 'error' en el outbox). */
+  fallo?: boolean;
 }
 
 /** Un usuario con acceso a una nota (para el panel de compartir del dueño). */

@@ -34,13 +34,21 @@ interface TipoOpcion {
   tone: 'default' | 'success' | 'warning' | 'error';
 }
 
-// X6-app / AG9 — tipos de visita, alineados con el servidor (crear_mantenimiento_app).
+// X6-app / AG9 / AL7 — tipos de visita, alineados con el servidor (crear_mantenimiento_app).
+// AL7 — el chofer registra desde rutina hasta tintado/bombillo/gomas del vehículo en uso.
 const TIPOS: TipoOpcion[] = [
-  { valor: 'preventivo', label: 'Preventivo', icon: '🛠️', tone: 'success' },
+  { valor: 'preventivo', label: 'Mantenimiento de rutina', icon: '🛠️', tone: 'success' },
+  { valor: 'reparacion', label: 'Reparación', icon: '🔧', tone: 'warning' },
   { valor: 'falla', label: 'Falla / avería', icon: '⚠️', tone: 'warning' },
   { valor: 'accidente_dano', label: 'Accidente o daño', icon: '🚨', tone: 'error' },
-  { valor: 'cambio_pieza', label: 'Cambio de pieza', icon: '🔧', tone: 'default' },
-  // AG9 — servicios que no son mantenimiento clásico (tintado, lavado, etc.).
+  { valor: 'cambio_pieza', label: 'Cambio de pieza', icon: '🔩', tone: 'default' },
+  { valor: 'tintado', label: 'Tintado de cristales', icon: '🪟', tone: 'default' },
+  { valor: 'bombillo', label: 'Cambio de bombillo', icon: '💡', tone: 'default' },
+  { valor: 'neumatico', label: 'Neumáticos / gomas', icon: '🛞', tone: 'default' },
+  { valor: 'bateria', label: 'Batería', icon: '🔋', tone: 'default' },
+  { valor: 'engrase', label: 'Engrase', icon: '🛢️', tone: 'default' },
+  { valor: 'hidraulico', label: 'Hidráulico', icon: '💧', tone: 'default' },
+  { valor: 'lavado', label: 'Lavado', icon: '🧼', tone: 'default' },
   { valor: 'otros', label: 'Otros servicios', icon: '✨', tone: 'default' },
 ];
 
@@ -91,6 +99,9 @@ export class MantenimientoPage implements OnDestroy {
   incluyePreventivo = signal(false); // X6-app — solo en visitas no preventivas
   descripcion = signal('');
   km = signal<number | null>(null);
+  costo = signal<number | null>(null); // AL7 — opcional
+  taller = signal(''); // AL7 — taller/proveedor
+  notas = signal(''); // AL7 — notas del trabajo
   fotos = signal<Record<number, CapturedPhoto>>({});
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
 
@@ -135,7 +146,7 @@ export class MantenimientoPage implements OnDestroy {
     this.navGuard.register(this.backHandler); // Q7 — botón físico Android
     // U15 — autosave (regla: todo formulario lo tiene).
     effect(() => {
-      const snap = { tipo: this.tipo(), incluyePreventivo: this.incluyePreventivo(), descripcion: this.descripcion(), km: this.km(), step: this.step() };
+      const snap = { tipo: this.tipo(), incluyePreventivo: this.incluyePreventivo(), descripcion: this.descripcion(), km: this.km(), costo: this.costo(), taller: this.taller(), notas: this.notas(), step: this.step() };
       if (!this.hydrated || this.submitting() || this.done()) return;
       this.autosave.queue(this.clave, snap, { tipo: 'mantenimiento', etiqueta: 'Mantenimiento', ruta: this.location.path() });
     });
@@ -146,12 +157,15 @@ export class MantenimientoPage implements OnDestroy {
   }
 
   private async restoreDraft(): Promise<void> {
-    const draft = await this.borrador.load<{ tipo: MantenimientoTipo | null; incluyePreventivo?: boolean; descripcion: string; km: number | null; step: number }>(this.clave);
+    const draft = await this.borrador.load<{ tipo: MantenimientoTipo | null; incluyePreventivo?: boolean; descripcion: string; km: number | null; costo?: number | null; taller?: string; notas?: string; step: number }>(this.clave);
     if (draft) {
       this.tipo.set(draft.tipo ?? null);
       this.incluyePreventivo.set(draft.incluyePreventivo ?? false);
       this.descripcion.set(draft.descripcion ?? '');
       this.km.set(draft.km ?? null);
+      this.costo.set(draft.costo ?? null);
+      this.taller.set(draft.taller ?? '');
+      this.notas.set(draft.notas ?? '');
       const fotos = await this.borrador.loadFotos(this.clave);
       if (fotos.length) {
         const map: Record<number, CapturedPhoto> = {};
@@ -301,6 +315,9 @@ export class MantenimientoPage implements OnDestroy {
         descripcion,
         fecha: new Date().toISOString().slice(0, 10),
         km: this.km(),
+        costo: this.costo(), // AL7
+        proveedor: this.taller().trim() || null, // AL7
+        notas: this.notas().trim() || null, // AL7
         fotos,
         voces: this.voces().map((n) => n.blob),
         placa: this.placa(),

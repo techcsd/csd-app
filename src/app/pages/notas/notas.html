@@ -61,7 +61,9 @@
             @if (snippet(n); as s) { <span class="nota-card__snippet">{{ s }}</span> }
             <div class="nota-card__meta">
               <span>{{ fechaHora(n.updated_at) }}</span>
-              @if (n.enviando) {
+              @if (n.fallo) {
+                <span class="nota-card__badge nota-card__badge--err">⚠️ No se envió</span>
+              } @else if (n.enviando) {
                 <span class="nota-card__badge nota-card__badge--env">⏳ Enviando…</span>
               } @else if (n.compartida) {
                 <span class="nota-card__badge">{{ n.permiso === 'editar' ? '✏️ Puedes editar' : '👁️ Solo lectura' }}</span>

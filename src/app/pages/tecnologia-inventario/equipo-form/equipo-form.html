@@ -1,0 +1,130 @@
+@if (done()) {
+  <app-big-confirm
+    title="Guardado"
+    note="El equipo quedó registrado en el inventario tecnológico."
+    tone="done"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen tecform">
+    <app-wizard-exit [title]="equipoId() ? 'Editar equipo' : 'Nuevo equipo'" (exit)="intentarSalir()" />
+    <app-step-bar [current]="step()" [total]="total" />
+
+    <div class="screen__body">
+      <!-- 1: datos -->
+      @if (step() === 1) {
+        <h1 class="screen__title">Datos del equipo</h1>
+        <label class="field-label" for="nombre">Nombre <span class="tecform__req">*</span></label>
+        <input id="nombre" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Ej. Walkie-talkie Motorola" />
+
+        <label class="field-label tecform__mt" for="marca">Marca</label>
+        <input id="marca" class="field" type="text" [ngModel]="marca()" (ngModelChange)="marca.set($event)" placeholder="Marca" />
+        <label class="field-label tecform__mt" for="modelo">Modelo</label>
+        <input id="modelo" class="field" type="text" [ngModel]="modelo()" (ngModelChange)="modelo.set($event)" placeholder="Modelo" />
+        <label class="field-label tecform__mt" for="serie">Serie</label>
+        <input id="serie" class="field" type="text" [ngModel]="serie()" (ngModelChange)="serie.set($event)" placeholder="Número de serie" />
+
+        <label class="field-label tecform__mt">Estado</label>
+        <div class="tecform__estados">
+          @for (e of estados; track e[0]) {
+            <app-option-button [label]="e[1]" [selected]="estado() === e[0]" (pressed)="estado.set(e[0])" />
+          }
+        </div>
+      }
+
+      <!-- 2: tipo -->
+      @if (step() === 2) {
+        <h1 class="screen__title">Tipo de equipo</h1>
+        <app-collapsible-select label="Tipo" icon="🏷️" [options]="tipoOptions()" [selectedId]="tipoId()" [searchable]="true" searchPlaceholder="Buscar tipo…" (picked)="tipoId.set($event)" />
+        <label class="field-label tecform__mt">¿No está en la lista? Agrégalo</label>
+        <div class="tecform__nuevo-tipo">
+          <input class="field" type="text" [ngModel]="nuevoTipo()" (ngModelChange)="nuevoTipo.set($event)" placeholder="Ej. Walkie-talkie" />
+          <button type="button" class="btn-ghost" [disabled]="agregandoTipo() || !nuevoTipo().trim()" (click)="agregarTipo()">➕ Agregar</button>
+        </div>
+      }
+
+      <!-- 3: ubicación -->
+      @if (step() === 3) {
+        <h1 class="screen__title">Ubicación</h1>
+        <p class="screen__subtitle">¿Dónde está el equipo? (almacén u Oficina Central)</p>
+        <app-collapsible-select label="Ubicación" icon="📍" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
+      }
+
+      <!-- 4: precio -->
+      @if (step() === 4) {
+        <h1 class="screen__title">Precio</h1>
+        <label class="field-label">Moneda</label>
+        <div class="tecform__moneda">
+          <app-option-button label="RD$ (DOP)" [selected]="moneda() === 'DOP'" (pressed)="moneda.set('DOP')" />
+          <app-option-button label="US$ (USD)" [selected]="moneda() === 'USD'" (pressed)="moneda.set('USD')" />
+        </div>
+        <label class="field-label tecform__mt" for="costo">Costo — opcional</label>
+        <input id="costo" class="field" type="number" inputmode="decimal" min="0" [ngModel]="costo()" (ngModelChange)="costo.set($event)" placeholder="0" />
+
+        <label class="field-label tecform__mt" for="notas">Notas — opcional</label>
+        <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Detalle adicional…"></textarea>
+      }
+
+      <!-- 5: fotos -->
+      @if (step() === 5) {
+        <h1 class="screen__title">Fotos</h1>
+        <p class="screen__subtitle">Agrega varias fotos y elige la portada (★).</p>
+        <div class="tecform__foto-acciones">
+          <button type="button" class="btn-cta" (click)="tomarFoto()">📷 Tomar foto</button>
+          <button type="button" class="btn-ghost" (click)="elegirFotos()">🖼️ De la galería</button>
+        </div>
+        @if (fotos().length) {
+          <div class="tecform__galeria">
+            @for (f of fotos(); track f.key) {
+              <div class="tecform__foto" [class.tecform__foto--portada]="esPortada(f.key)">
+                <img [src]="f.previewUrl" alt="Foto del equipo" />
+                @if (esPortada(f.key)) { <span class="tecform__badge">Portada</span> }
+                <div class="tecform__foto-btns">
+                  <button type="button" (click)="marcarPortada(f.key)" aria-label="Marcar portada">★</button>
+                  <button type="button" (click)="quitarFoto(f.key)" aria-label="Quitar">✕</button>
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <p class="tecform__vacio">Sin fotos todavía.</p>
+        }
+      }
+
+      <!-- 6: resumen -->
+      @if (step() === 6) {
+        <h1 class="screen__title">Revisa y guarda</h1>
+        <ul class="resumen">
+          <li><span>Nombre</span><b>{{ nombre() }}</b></li>
+          <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>
+          <li><span>Estado</span><b>{{ estadoLabel() }}</b></li>
+          <li><span>Ubicación</span><b>{{ bodegaLabel() }}</b></li>
+          @if ((costo() ?? 0) > 0) {
+            <li><span>Precio</span><b>{{ moneda() }} {{ costo() | number: '1.0-2' }}</b></li>
+          }
+          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
+        </ul>
+      }
+    </div>
+
+    <app-wizard-footer
+      [backLabel]="step() > 1 ? 'Atrás' : ''"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Guardar')"
+      [primaryDisabled]="step() >= total && submitting()"
+      (back)="prev()"
+      (primary)="step() < total ? next() : guardar()"
+    />
+
+    <app-confirm-dialog
+      [open]="confirmSalir()"
+      title="¿Salir sin guardar?"
+      message="Perderás lo que llevas de este equipo."
+      confirmLabel="Sí, salir"
+      cancelLabel="Seguir aquí"
+      tone="danger"
+      (confirmed)="confirmarSalir()"
+      (cancelled)="cancelarSalir()"
+    />
+  </div>
+}

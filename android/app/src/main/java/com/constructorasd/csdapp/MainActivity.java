@@ -36,6 +36,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ApkInstallerPlugin.class);
         // P1/P2: deep-link a los ajustes de la app (permiso denegado permanente).
         registerPlugin(AppSettingsPlugin.class);
+        // AL6: alarma dominical autónoma (AlarmManager exacto + full-screen).
+        registerPlugin(AlarmSchedulerPlugin.class);
         super.onCreate(savedInstanceState);
 
         // WV-GUARD: si el WebView es demasiado viejo para Angular 21, reemplazamos

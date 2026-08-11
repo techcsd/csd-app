@@ -42,10 +42,17 @@ const TILES: HomeTile[] = [
   // AH16 — RRHH (jefe de RRHH): empleados + asignaciones AF33. Gating por hasModulo('rrhh').
   { modulo: 'rrhh', icon: '🧑‍💼', label: 'RRHH', route: '/rrhh/empleados', tint: '#7c3aed' },
   { modulo: 'admin', icon: '⚙️', label: 'Administración', route: '/admin', tint: '#3f3f46' },
-  // Y11 — Tecnología (admin + rol Tecnología/Encargado de Tecnología). El gating
-  // es genérico por módulo: `hasModulo('tecnologia')` ya lo resuelve.
-  { modulo: 'tecnologia', icon: '💻', label: 'Tecnología', route: '/tecnologia', tint: '#0891b2' },
+  // AL1/AL2 — Tecnología REAL = inventario tecnológico (activos de TI). Gating por
+  // módulo `tecnologia` (admin + rol Tecnología). El módulo viejo (versiones/dudas/
+  // errores) se renombró a "Sistema" (SISTEMA_TILE).
+  { modulo: 'tecnologia', icon: '💻', label: 'Tecnología', route: '/tecnologia-inventario', tint: '#0891b2' },
 ];
+
+// AL1 — "Sistema": lo que ANTES se llamaba Tecnología (Historial de versiones,
+// Dudas/guías, Reportes de error). Es transversal (no un módulo de trabajo): se
+// muestra a todos menos al chofer, como antes. El contenido restringido
+// (Versiones/Errores) sigue gateado por rol dentro de la propia página.
+const SISTEMA_TILE: HomeTile = { modulo: 'sistema', icon: '🛠️', label: 'Sistema', route: '/tecnologia', tint: '#475569' };
 
 // AC4 — Notas: módulo GENERAL accesible por TODOS (incluidos choferes), como
 // Mensajes. No se gatea por módulo SGC; se muestra siempre.
@@ -58,6 +65,10 @@ const TAREAS_TILE: HomeTile = { modulo: 'tareas_app', icon: '✅', label: 'Tarea
 // AH15 — consulta de "Compras del proyecto" para roles con acceso a proyectos
 // (admin/proyectos/compras/obra — gerente de producción la aprovecha).
 const COMPRAS_TILE: HomeTile = { modulo: 'compras_proyecto', icon: '💰', label: 'Compras de obra', route: '/compras-proyecto', tint: '#b45309' };
+// AL8 — "Entregas por confirmar": entrada PERMANENTE para el confirmador (no solo
+// el banner). Los de flota ya la tienen en el hub de Conduces; este tile la da a
+// los confirmadores sin módulo flota (inventario/obra/almacén). Badge = pendientes.
+const CONFIRMAR_TILE: HomeTile = { modulo: 'por_confirmar', icon: '📥', label: 'Por confirmar', route: '/transporte/por-confirmar', tint: '#ca8a04' };
 
 @Component({
   selector: 'app-home',
@@ -120,7 +131,6 @@ export class HomePage implements OnDestroy {
   private workTiles = computed(() =>
     TILES.filter(
       (t) =>
-        t.modulo !== 'tecnologia' &&
         // AG16 — obra: gating por submódulos (el capataz no tiene módulo padre).
         (t.modulo === 'obra' ? this.ctx.puedeVerObra() : this.ctx.hasModulo(t.modulo)) &&
         !(t.modulo === 'inventario' && this.ctx.esChofer()),
@@ -142,9 +152,14 @@ export class HomePage implements OnDestroy {
     if (this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('compras') || this.ctx.puedeVerObra()) {
       extra.push(COMPRAS_TILE);
     }
+    // AL1 — "Sistema" (antes Tecnología): transversal, todos menos chofer.
     if (!this.ctx.esChofer()) {
-      const tec = TILES.find((t) => t.modulo === 'tecnologia');
-      if (tec) extra.push(tec);
+      extra.push(SISTEMA_TILE);
+    }
+    // AL8 — entrada permanente al confirmador sin módulo flota (los de flota la
+    // tienen en el hub de Conduces). Se muestra a inventario/obra o si hay pendientes.
+    if (!this.ctx.hasModulo('flota') && (this.porConfirmar() > 0 || this.ctx.hasModulo('inventario') || this.ctx.puedeVerObra())) {
+      extra.push(CONFIRMAR_TILE);
     }
     return this.aplicarOrden([...work, ...extra]); // AF38
   });
@@ -243,6 +258,7 @@ export class HomePage implements OnDestroy {
   /** Q2+V1 — badge del tile = pendientes de aprobación + documentación en proceso. */
   badgeFor(modulo: string): number | null {
     if (modulo === 'mensajes') return this.mensajesNoLeidos() || null;
+    if (modulo === 'por_confirmar') return this.porConfirmar() || null; // AL8
     const total = (this.badgeCounts()[modulo] ?? 0) + (this.enProcesoCounts()[modulo] ?? 0);
     return total || null;
   }

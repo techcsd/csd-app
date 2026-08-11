@@ -1,0 +1,129 @@
+.tecdet__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.tecdet__back,
+.tecdet__edit {
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  background: none;
+  font-size: 20px;
+}
+.tecdet__icon {
+  font-size: 22px;
+}
+.tecdet__title {
+  font-size: 20px;
+  font-weight: 800;
+  flex: 1;
+}
+
+.tecdet__galeria {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.tecdet__thumb {
+  border: none;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.tecdet__nombre {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 6px;
+  overflow-wrap: anywhere;
+}
+.tecdet__estado {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+}
+.tecdet__estado--activo {
+  background: #dcfce7;
+  color: #166534;
+}
+.tecdet__estado--en_reparacion {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.tecdet__estado--dado_de_baja {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.tecdet__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+.tecdet__kv {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  span {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  b {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+}
+.tecdet__sec {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin: 16px 0 6px;
+}
+.tecdet__notas {
+  font-size: 15px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tecdet__lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  img {
+    max-width: 96vw;
+    max-height: 88vh;
+    object-fit: contain;
+  }
+}
+.tecdet__lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 22px;
+}

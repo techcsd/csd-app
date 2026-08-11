@@ -169,3 +169,29 @@
   color: var(--color-text-primary);
   word-break: break-word;
 }
+// AL12 — detalle de materiales en el resumen.
+.gconduce__res-items {
+  list-style: none;
+  margin: 0;
+  padding: 0 14px 12px;
+  border-top: 1px solid var(--color-border);
+}
+.gconduce__res-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.gconduce__res-item + .gconduce__res-item {
+  border-top: 1px dashed var(--color-border);
+}
+.gconduce__res-item-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.gconduce__res-item-qty {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
