@@ -25,7 +25,6 @@
           <div class="gconduce__origen">
             <app-option-button icon="🏬" label="Almacén / obra" [selected]="origenTipo() === 'almacen'" (pressed)="setOrigen('almacen')" />
             <app-option-button icon="🧾" label="Ferretería (compra)" [selected]="origenTipo() === 'ferreteria'" (pressed)="setOrigen('ferreteria')" />
-            <app-option-button icon="📍" label="Otros" [selected]="origenTipo() === 'otros'" (pressed)="setOrigen('otros')" />
           </div>
 
           @if (origenTipo() === 'almacen') {
@@ -43,11 +42,6 @@
             </div>
             <label class="field-label gconduce__mt" for="ref">Referencia / # de factura (opcional)</label>
             <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" placeholder="Ej. F-00123" />
-          } @else {
-            <label class="field-label gconduce__mt" for="otros">¿Desde dónde sale?</label>
-            <input id="otros" class="field" type="text" [ngModel]="otrosNombre()" (ngModelChange)="otrosNombre.set($event)" placeholder="Ej. Taller de la 27, casa del cliente…" />
-            <button type="button" class="btn-ghost gconduce__gps" (click)="tomarUbicacionOtros()">📍 Usar mi ubicación actual</button>
-            @if (otrosGpsOk()) { <p class="gconduce__gps-ok">✓ Ubicación de origen fijada.</p> }
           }
         }
 
@@ -138,7 +132,7 @@
           <div class="gconduce__fotos">
             <app-photo-slot label="Recepción" hint="📦" [gallery]="false" [foto]="fotoRecepcion()" (captured)="fotoRecepcion.set($event)" (cleared)="fotoRecepcion.set(null)" />
           </div>
-          <label class="field-label gconduce__mt" for="obs">{{ esOtros() ? '¿Qué mueves? (descripción)' : 'Observaciones (opcional)' }}</label>
+          <label class="field-label gconduce__mt" for="obs">Observaciones (opcional)</label>
           <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
         }
 
@@ -169,19 +163,17 @@
           <div class="gconduce__resumen">
             <div class="gconduce__res-row"><span class="gconduce__res-k">Origen</span><span class="gconduce__res-v">{{ origenNombre() || '—' }}</span></div>
             <div class="gconduce__res-row"><span class="gconduce__res-k">Destino</span><span class="gconduce__res-v">{{ destinoNombre() || '—' }}</span></div>
-            @if (!esOtros()) {
-              <div class="gconduce__res-row"><span class="gconduce__res-k">Materiales</span><span class="gconduce__res-v">{{ itemsCount() }} {{ itemsCount() === 1 ? 'artículo' : 'artículos' }}</span></div>
-              <!-- AL12 — detalle de materiales (nombre + cantidad + unidad) -->
-              @if (itemsResumen().length) {
-                <ul class="gconduce__res-items">
-                  @for (l of itemsResumen(); track l.articulo_id) {
-                    <li class="gconduce__res-item">
-                      <span class="gconduce__res-item-name">{{ l.nombre }}</span>
-                      <span class="gconduce__res-item-qty">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
-                    </li>
-                  }
-                </ul>
-              }
+            <div class="gconduce__res-row"><span class="gconduce__res-k">Materiales</span><span class="gconduce__res-v">{{ itemsCount() }} {{ itemsCount() === 1 ? 'artículo' : 'artículos' }}</span></div>
+            <!-- AL12 — detalle de materiales (nombre + cantidad + unidad) -->
+            @if (itemsResumen().length) {
+              <ul class="gconduce__res-items">
+                @for (l of itemsResumen(); track l.articulo_id) {
+                  <li class="gconduce__res-item">
+                    <span class="gconduce__res-item-name">{{ l.nombre }}</span>
+                    <span class="gconduce__res-item-qty">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
+                  </li>
+                }
+              </ul>
             }
             @if (!esFerreteria()) {
               <div class="gconduce__res-row"><span class="gconduce__res-k">Foto de recepción</span><span class="gconduce__res-v">{{ fotoRecepcion() ? '✓ tomada' : '—' }}</span></div>

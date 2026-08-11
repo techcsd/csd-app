@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.72.0';
+const VERSION = '1.72.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,7 +62,7 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-11';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Conduces más confiables (envío sin errores, transferencia al instante en ambos teléfonos, Iniciar ruta), refresh homologado y módulo Proyectos con crear/editar y ubicación por link de Maps';
+const TITULO = 'Conduces más confiables (envío sin errores, transferencia al instante en ambos teléfonos, Iniciar ruta), refresh homologado, Proyectos con crear/editar y ubicación por link de Maps, y menú de origen del conduce simplificado';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
@@ -76,6 +76,7 @@ const CAMBIOS_CURADOS = [
   { t: 'nuevo', m: 'Proyectos', d: 'Ubicación fácil de la obra: pega el link de Google Maps (o coordenadas) y se fija el pin solo; o muévelo en el mapa.' },
   { t: 'mejora', m: 'Proyectos', d: 'La ficha del proyecto ahora muestra ordenados el ingeniero de obra, el maestro encargado, el contacto (teléfono clicable), la ubicación (Abrir en Maps) y el equipo — ya no todo metido en la descripción.' },
   { t: 'mejora', m: 'Proyectos', d: 'Se corrigió el diseño del módulo (tarjetas claras homologadas con el resto de la app).' },
+  { t: 'mejora', m: 'Conduces', d: 'Al crear un conduce, el origen ahora es solo Almacén/obra o Ferretería; se quitó la opción "Otros" (no aplicaba al descuento de inventario).' },
 ];
 
 const TIPO_POR_COMMIT = {

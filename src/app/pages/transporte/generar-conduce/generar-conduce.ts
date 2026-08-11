@@ -21,16 +21,15 @@ import { ConducesService, Despachante, AlmacenDestino } from '../../../core/serv
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { TrackingService } from '../../../core/services/tracking.service';
-import { PermissionsService } from '../../../core/services/permissions.service';
-import { PermisoGateService } from '../../../core/services/permiso-gate.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv, Ferreteria } from '../../../core/models/inventario.model';
 import { MiAsignacion, VehiculoDisponible } from '../../../core/models/transporte.model';
 
-/** AF31 — de dónde sale el material del conduce. */
-type OrigenTipo = 'almacen' | 'ferreteria' | 'otros';
+/** AF31 — de dónde sale el material del conduce. (AM6 — se retiró "Otros": era un
+ *  camino muerto, incompatible con el descuento de stock del conduce.) */
+type OrigenTipo = 'almacen' | 'ferreteria';
 
 /** AJ6 — hojas del wizard de creación de conduce. */
 type PasoKey = 'origen' | 'destino' | 'materiales' | 'ferr-fotos' | 'foto' | 'despacho' | 'resumen';
@@ -45,7 +44,6 @@ interface ConduceDraft {
   suplidorNombre: string;
   ferreteriaId: string;
   referencia: string;
-  otrosNombre: string;
   observaciones: string;
   vehiculoId: string;
   despachanteId: string;
@@ -75,8 +73,6 @@ export class GenerarConducePage implements OnDestroy {
   private vehiculos = inject(VehiculosService);
   private ctx = inject(UserContextService);
   private tracking = inject(TrackingService);
-  private permissions = inject(PermissionsService);
-  private gate = inject(PermisoGateService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -134,11 +130,6 @@ export class GenerarConducePage implements OnDestroy {
   fotoRecibo = signal<CapturedPhoto | null>(null);
   fotoMercancia = signal<CapturedPhoto | null>(null);
 
-  // AF31 — "Otros": origen libre + coordenadas actuales.
-  otrosNombre = signal('');
-  private otrosCoords: { lat: number; lng: number } | null = null;
-  otrosGpsOk = signal(false);
-
   articulos = signal<ArticuloCat[]>([]);
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
@@ -193,12 +184,10 @@ export class GenerarConducePage implements OnDestroy {
 
   // ¿El origen es una ferretería? (compra/entrada, sin ruta/firma/vehículo)
   esFerreteria = computed(() => this.origenTipo() === 'ferreteria');
-  esOtros = computed(() => this.origenTipo() === 'otros');
 
   // AJ6 — etiquetas legibles para la hoja de resumen.
   origenNombre = computed(() => {
     if (this.esFerreteria()) return this.ferreterias().find((f) => f.id === this.ferreteriaId())?.nombre ?? '';
-    if (this.esOtros()) return this.otrosNombre().trim();
     return this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? '';
   });
   destinoNombre = computed(() => {
@@ -231,7 +220,6 @@ export class GenerarConducePage implements OnDestroy {
     // AI2 — el conduce exige: origen, destino, materiales, foto de recepción,
     // despachante y ambas firmas (chofer + despachante).
     const comun = destinoOk && !!this.fotoRecepcion() && this.despachanteOk() && this.firmasOk();
-    if (this.esOtros()) return !!(this.otrosNombre().trim() && comun);
     return !!(this.bodegaId() && !this.faltaItems() && comun);
   });
 
@@ -256,8 +244,8 @@ export class GenerarConducePage implements OnDestroy {
     const p: { key: PasoKey; titulo: string }[] = [
       { key: 'origen', titulo: '¿De dónde sale?' },
       { key: 'destino', titulo: '¿A dónde va?' },
+      { key: 'materiales', titulo: '¿Qué material sacas?' },
     ];
-    if (!this.esOtros()) p.push({ key: 'materiales', titulo: '¿Qué material sacas?' });
     p.push({ key: 'foto', titulo: 'Foto de recepción' });
     p.push({ key: 'despacho', titulo: 'Despachante y firmas' });
     p.push({ key: 'resumen', titulo: 'Revisar y emitir' });
@@ -272,7 +260,6 @@ export class GenerarConducePage implements OnDestroy {
     switch (this.pasoActual()?.key) {
       case 'origen':
         if (this.esFerreteria()) return !!(this.ferreteriaId() && this.bodegaId());
-        if (this.esOtros()) return !!this.otrosNombre().trim();
         return !!this.bodegaId();
       case 'destino':
         return this.destinoOk();
@@ -358,7 +345,6 @@ export class GenerarConducePage implements OnDestroy {
       suplidorNombre: this.suplidorNombre(),
       ferreteriaId: this.ferreteriaId(),
       referencia: this.referencia(),
-      otrosNombre: this.otrosNombre(),
       observaciones: this.observaciones(),
       vehiculoId: this.vehiculoId(),
       despachanteId: this.despachanteId(),
@@ -387,7 +373,6 @@ export class GenerarConducePage implements OnDestroy {
         this.suplidorNombre.set(d.suplidorNombre ?? '');
         this.ferreteriaId.set(d.ferreteriaId ?? '');
         this.referencia.set(d.referencia ?? '');
-        this.otrosNombre.set(d.otrosNombre ?? '');
         this.observaciones.set(d.observaciones ?? '');
         this.vehiculoId.set(d.vehiculoId ?? '');
         this.despachanteId.set(d.despachanteId ?? '');
@@ -495,7 +480,7 @@ export class GenerarConducePage implements OnDestroy {
     const q = this.route.snapshot.queryParamMap;
     let deepLink = false;
     const origen = q.get('origen') as OrigenTipo | null;
-    if (origen === 'almacen' || origen === 'ferreteria' || origen === 'otros') {
+    if (origen === 'almacen' || origen === 'ferreteria') {
       this.setOrigen(origen);
       deepLink = true;
     }
@@ -530,19 +515,6 @@ export class GenerarConducePage implements OnDestroy {
 
   onFerreteria(id: string): void {
     this.ferreteriaId.set(id);
-  }
-
-  /** AF31 — "Otros": toma la ubicación actual como origen (con permiso/gate). */
-  async tomarUbicacionOtros(): Promise<void> {
-    if (!(await this.gate.asegurar('location'))) return;
-    const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 10000 });
-    if (r.ok) {
-      this.otrosCoords = { lat: r.lat, lng: r.lng };
-      this.otrosGpsOk.set(true);
-      this.toast.success('Ubicación de origen fijada.');
-    } else {
-      this.toast.error('No se pudo obtener tu ubicación. Reintenta en un lugar despejado.');
-    }
   }
 
   // ---- Materiales ----
@@ -672,15 +644,9 @@ export class GenerarConducePage implements OnDestroy {
     }
   }
 
-  /** Almacén (salida) u Otros (movimiento sin stock) → conduce (+ ruta al emitir). */
+  /** Almacén (salida) → conduce (+ ruta al emitir). */
   private async submitConduce(): Promise<void> {
-    const otros = this.esOtros();
-    if (otros) {
-      if (!this.otrosNombre().trim()) {
-        this.toast.error('Escribe de dónde sale el material.');
-        return;
-      }
-    } else if (!this.bodegaId()) {
+    if (!this.bodegaId()) {
       this.toast.error('Elige el almacén de origen.');
       return;
     }
@@ -697,7 +663,7 @@ export class GenerarConducePage implements OnDestroy {
       this.toast.error('Escribe el suplidor al que devuelves.');
       return;
     }
-    if (!otros && this.faltaItems()) {
+    if (this.faltaItems()) {
       this.toast.error('Agrega al menos un material.');
       return;
     }
@@ -718,20 +684,14 @@ export class GenerarConducePage implements OnDestroy {
     if (!(await this.tracking.exigirGps('crear_conduce'))) return;
     this.submitting.set(true);
     try {
-      // Observaciones enriquecidas con origen "Otros" y/o destino suplidor.
+      // Observaciones enriquecidas con destino suplidor.
       const partes: string[] = [];
-      if (otros) {
-        const coords = this.otrosCoords ? ` (${this.otrosCoords.lat.toFixed(5)}, ${this.otrosCoords.lng.toFixed(5)})` : '';
-        partes.push(`Origen: ${this.otrosNombre().trim()}${coords}`);
-      }
       if (this.destinoTipo() === 'suplidor') partes.push(`Devolución a suplidor: ${this.suplidorNombre().trim()}`);
       if (this.observaciones().trim()) partes.push(this.observaciones().trim());
       const obs = partes.join(' — ') || null;
 
       const sel = this.despachanteSel();
-      const items = otros
-        ? []
-        : this.cart().filter((l) => l.cantidad > 0 && l.articulo_id).map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad }));
+      const items = this.cart().filter((l) => l.cantidad > 0 && l.articulo_id).map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad }));
 
       // AM1 — devolución a suplidor: RPC dedicada con ORIGEN (bodega) obligatorio.
       // Nunca puede emitir con bodega_id null (server rechaza con DR451).
@@ -758,7 +718,7 @@ export class GenerarConducePage implements OnDestroy {
       // AI2 — conduce simplificado: despachante + foto de recepción + firmas
       // (chofer transportista + despachante emisor) en un solo RPC.
       await this.conduces.crearConduceSimple({
-        bodegaId: otros ? null : this.bodegaId(), // "Otros": sin bodega de stock
+        bodegaId: this.bodegaId(),
         proyectoId: this.destinoTipo() === 'obra' ? this.obraId() : null,
         destinoAlmacenId: this.destinoTipo() === 'almacen' ? this.almacenId() : null, // AL10
         observaciones: obs,
@@ -783,7 +743,7 @@ export class GenerarConducePage implements OnDestroy {
 
   private tieneDatos(): boolean {
     return !!(
-      this.bodegaId() || this.obraId() || this.almacenId() || this.ferreteriaId() || this.otrosNombre().trim() ||
+      this.bodegaId() || this.obraId() || this.almacenId() || this.ferreteriaId() ||
       this.suplidorNombre().trim() || this.observaciones().trim() || this.cart().length ||
       this.fotoRecibo() || this.fotoMercancia() || this.fotoRecepcion() ||
       this.despachanteId() || this.despachanteLibre().trim() ||
