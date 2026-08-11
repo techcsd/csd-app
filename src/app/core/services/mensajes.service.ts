@@ -2,6 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { SyncService, throwSyncError } from '../sync/sync.service';
 
+/** AN6 — bucket de avatares de grupo (RLS scoped por conversación = carpeta). */
+const AVATAR_BUCKET = 'sgc-mensajes';
+
 /** AJ5 — una conversación (listar_conversaciones). Mismo modelo que la web. */
 export interface Conversacion {
   id: string;
@@ -13,16 +16,40 @@ export interface Conversacion {
   otro_usuario_id: string | null;
 }
 
-/** AJ5 — un mensaje (listar_mensajes). */
+/** AJ5 — un mensaje (listar_mensajes). AN6 añade `tipo` ('texto'|'sistema'). */
 export interface Mensaje {
   id: string;
   autor_id: string;
   autor_nombre: string | null;
   contenido: string | null;
+  tipo?: string; // 'texto' (default) | 'sistema' (evento del grupo)
   archivo_path: string | null;
   archivo_nombre: string | null;
   archivo_mime: string | null;
   created_at: string;
+}
+
+/** AN6 — un participante de un grupo (grupo_info). */
+export interface GrupoParticipante {
+  usuario_id: string;
+  nombre: string | null;
+  email: string | null;
+  rol: 'admin' | 'miembro';
+  added_at: string | null;
+  es_creador: boolean;
+}
+
+/** AN6 — info de un grupo tipo WhatsApp (grupo_info). */
+export interface GrupoInfo {
+  id: string;
+  tipo: string;
+  nombre: string | null;
+  descripcion: string | null;
+  avatar_path: string | null;
+  creado_por: string | null;
+  created_at: string | null;
+  mi_rol: 'admin' | 'miembro' | null;
+  participantes: GrupoParticipante[];
 }
 
 /**
@@ -89,6 +116,97 @@ export class MensajesService {
     const { data, error } = await this.supabase.client.rpc('crear_conversacion_directa', { p_otro: otroUsuarioId });
     if (error) throw new Error(error.message);
     return data as string;
+  }
+
+  // ── AN6 — Grupos tipo WhatsApp (info + gestión) ─────────────────────────────
+  /** Crea un grupo (el creador queda admin) → id del grupo. */
+  async crearGrupo(nombre: string, participantes: string[]): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('crear_grupo', {
+      p_nombre: nombre,
+      p_participantes: participantes,
+    });
+    if (error) throw new Error(error.message);
+    return data as string;
+  }
+
+  /** Info del grupo (meta + participantes con rol). Solo participantes. */
+  async grupoInfo(conversacionId: string): Promise<GrupoInfo> {
+    const { data, error } = await this.supabase.client.rpc('grupo_info', { p_conv: conversacionId });
+    if (error) throw new Error(error.message);
+    return data as GrupoInfo;
+  }
+
+  /** Edita nombre/descripción del grupo (solo admin del grupo). */
+  async grupoEditar(conversacionId: string, nombre: string, descripcion: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('grupo_editar', {
+      p_conv: conversacionId,
+      p_nombre: nombre,
+      p_descripcion: descripcion,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** Agrega un participante (solo admin). */
+  async grupoAgregar(conversacionId: string, usuarioId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('grupo_agregar', {
+      p_conv: conversacionId,
+      p_usuario_id: usuarioId,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** Quita un participante (solo admin; no al creador). */
+  async grupoQuitar(conversacionId: string, usuarioId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('grupo_quitar', {
+      p_conv: conversacionId,
+      p_usuario_id: usuarioId,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** Promueve/degrada admin (solo admin). */
+  async grupoPromover(conversacionId: string, usuarioId: string, admin: boolean): Promise<void> {
+    const { error } = await this.supabase.client.rpc('grupo_promover', {
+      p_conv: conversacionId,
+      p_usuario_id: usuarioId,
+      p_admin: admin,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** Salir del grupo (cualquier miembro). */
+  async grupoSalir(conversacionId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('grupo_salir', { p_conv: conversacionId });
+    if (error) throw new Error(error.message);
+  }
+
+  /**
+   * Sube el avatar del grupo al bucket sgc-mensajes (carpeta = conversación, para
+   * que la RLS `es_participante` lo permita) con un nombre ÚNICO por cambio (no
+   * upsert → no hace falta política UPDATE) y fija el path con grupo_set_avatar.
+   */
+  async cambiarAvatarGrupo(conversacionId: string, blob: Blob): Promise<void> {
+    const path = `${conversacionId}/avatar-${crypto.randomUUID()}.jpg`;
+    const { error: upErr } = await this.supabase.client.storage
+      .from(AVATAR_BUCKET)
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const { error } = await this.supabase.client.rpc('grupo_set_avatar', {
+      p_conv: conversacionId,
+      p_path: path,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** URL firmada del avatar del grupo (bucket sgc-mensajes, best-effort). */
+  async avatarUrl(path: string | null | undefined): Promise<string | null> {
+    if (!path) return null;
+    try {
+      const { data } = await this.supabase.client.storage.from(AVATAR_BUCKET).createSignedUrl(path, 3600);
+      return data?.signedUrl ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /**

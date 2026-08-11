@@ -1,0 +1,103 @@
+<div class="screen ginfo">
+  <header class="ginfo__header">
+    <button type="button" class="ginfo__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="ginfo__title">Info del grupo</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (info(); as g) {
+      <!-- Avatar + nombre -->
+      <section class="ginfo__hero">
+        <div class="ginfo__avatar-wrap">
+          @if (avatarUrl()) {
+            <img class="ginfo__avatar" [src]="avatarUrl()" alt="Foto del grupo" />
+          } @else {
+            <span class="ginfo__avatar ginfo__avatar--letra">{{ inicial(g.nombre) }}</span>
+          }
+          @if (soyAdmin()) {
+            <div class="ginfo__avatar-acciones">
+              <button type="button" (click)="cambiarAvatar('camara')" [disabled]="guardando()" aria-label="Tomar foto">📷</button>
+              <button type="button" (click)="cambiarAvatar('galeria')" [disabled]="guardando()" aria-label="Elegir de galería">🖼️</button>
+            </div>
+          }
+        </div>
+
+        @if (editando()) {
+          <div class="ginfo__editor">
+            <label class="ginfo__label">Nombre</label>
+            <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Nombre del grupo" />
+            <label class="ginfo__label">Descripción</label>
+            <textarea class="field" rows="3" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Descripción (opcional)"></textarea>
+            <div class="ginfo__editor-btns">
+              <button type="button" class="btn-ghost" (click)="editando.set(false)">Cancelar</button>
+              <button type="button" class="btn-cta" [disabled]="guardando()" (click)="guardarEdicion()">{{ guardando() ? 'Guardando…' : 'Guardar' }}</button>
+            </div>
+          </div>
+        } @else {
+          <h2 class="ginfo__nombre">{{ g.nombre || 'Grupo' }}</h2>
+          @if (g.descripcion) { <p class="ginfo__desc">{{ g.descripcion }}</p> }
+          @if (soyAdmin()) {
+            <button type="button" class="ginfo__editar" (click)="abrirEditar()">✏️ Editar nombre y descripción</button>
+          }
+        }
+      </section>
+
+      <!-- Participantes -->
+      <section class="ginfo__parts">
+        <div class="ginfo__parts-head">
+          <h3 class="ginfo__parts-title">{{ g.participantes.length }} participante{{ g.participantes.length === 1 ? '' : 's' }}</h3>
+          @if (soyAdmin()) {
+            <button type="button" class="ginfo__add" (click)="toggleAgregar()">{{ agregando() ? '✕' : '＋ Agregar' }}</button>
+          }
+        </div>
+
+        @if (agregando()) {
+          <div class="ginfo__buscar">
+            <input class="field" type="text" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); buscar()" placeholder="Buscar persona…" />
+            @if (buscando()) { <p class="ginfo__hint">Buscando…</p> }
+            @for (u of resultados(); track u.id) {
+              <button type="button" class="ginfo__result" (click)="agregar(u)">
+                <span class="ginfo__pic ginfo__pic--letra">{{ inicial(u.nombre) }}</span>
+                <span class="ginfo__result-name">{{ u.nombre }}</span>
+                <span class="ginfo__result-add">Agregar</span>
+              </button>
+            }
+            @if (!buscando() && busqueda().trim().length >= 2 && !resultados().length) {
+              <p class="ginfo__hint">Nadie más para agregar.</p>
+            }
+          </div>
+        }
+
+        @for (p of g.participantes; track p.usuario_id) {
+          <div class="ginfo__part">
+            <span class="ginfo__pic ginfo__pic--letra">{{ inicial(p.nombre) }}</span>
+            <div class="ginfo__part-main">
+              <span class="ginfo__part-name">{{ p.nombre || 'Usuario' }}</span>
+              @if (p.email) { <span class="ginfo__part-mail">{{ p.email }}</span> }
+            </div>
+            <div class="ginfo__part-tags">
+              @if (p.es_creador) { <span class="ginfo__chip ginfo__chip--creador">Creador</span> }
+              @else if (p.rol === 'admin') { <span class="ginfo__chip ginfo__chip--admin">Admin</span> }
+            </div>
+            @if (soyAdmin() && !p.es_creador) {
+              <div class="ginfo__part-acciones">
+                @if (p.rol === 'admin') {
+                  <button type="button" (click)="promover(p, false)">Quitar admin</button>
+                } @else {
+                  <button type="button" (click)="promover(p, true)">Hacer admin</button>
+                }
+                <button type="button" class="ginfo__quitar" (click)="quitar(p)">Quitar</button>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <button type="button" class="ginfo__salir" (click)="salir()">🚪 Salir del grupo</button>
+
+      @if (!online) { <p class="ginfo__offline">Sin conexión: la gestión del grupo necesita internet.</p> }
+    }
+  </div>
+</div>

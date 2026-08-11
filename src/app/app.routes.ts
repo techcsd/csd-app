@@ -96,20 +96,22 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/transporte').then((m) => m.TransportePage),
   },
   {
+    // AN2 — lista de vehículos: consulta con permiso Ver (o módulo flota).
     path: 'transporte/vehiculos',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.vehiculos')],
     loadComponent: () =>
       import('./pages/transporte/vehiculos/vehiculos').then((m) => m.VehiculosListaPage),
   },
   {
+    // AN2 — alta/edición: requiere Operar (el módulo flota lo hereda como operar).
     path: 'transporte/vehiculos/nuevo',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.vehiculos', 'operar')],
     loadComponent: () =>
       import('./pages/transporte/vehiculos/vehiculo-form').then((m) => m.VehiculoFormPage),
   },
   {
     path: 'transporte/vehiculos/:vehiculoId/editar',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.vehiculos', 'operar')],
     loadComponent: () =>
       import('./pages/transporte/vehiculos/vehiculo-form').then((m) => m.VehiculoFormPage),
   },
@@ -119,8 +121,9 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/avisos/avisos').then((m) => m.AvisosFlotaPage),
   },
   {
+    // AN2 — perfil del vehículo (consulta): permiso Ver o módulo flota.
     path: 'transporte/vehiculo/:vehiculoId',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.vehiculos')],
     loadComponent: () =>
       import('./pages/transporte/perfil-vehiculo/perfil-vehiculo').then((m) => m.PerfilVehiculoPage),
   },
@@ -146,26 +149,28 @@ export const routes: Routes = [
       import('./pages/transporte/reportar-multa/reportar-multa').then((m) => m.ReportarMultaPage),
   },
   {
+    // AN2 — lista de conductores (consulta): permiso Ver o módulo flota.
     path: 'transporte/conductores',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.conductores')],
     loadComponent: () =>
       import('./pages/transporte/conductores/conductores').then((m) => m.ConductoresListaPage),
   },
   {
     path: 'transporte/conductores/nuevo',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.conductores', 'operar')],
     loadComponent: () =>
       import('./pages/transporte/conductores/conductor-form').then((m) => m.ConductorFormPage),
   },
   {
     path: 'transporte/conductores/:conductorId/editar',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.conductores', 'operar')],
     loadComponent: () =>
       import('./pages/transporte/conductores/conductor-form').then((m) => m.ConductorFormPage),
   },
   {
+    // AN2 — perfil del conductor (consulta): permiso Ver o módulo flota.
     path: 'transporte/conductor/:conductorId',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('flota.conductores')],
     loadComponent: () =>
       import('./pages/transporte/perfil-conductor/perfil-conductor').then((m) => m.PerfilConductorPage),
   },
@@ -283,6 +288,12 @@ export const routes: Routes = [
     path: 'mensajes',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/mensajes/mensajes').then((m) => m.MensajesPage),
+  },
+  {
+    // AN6 — info/gestión de un grupo tipo WhatsApp (antes de :id para no chocar).
+    path: 'mensajes/:id/info',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/mensajes/grupo-info/grupo-info').then((m) => m.GrupoInfoPage),
   },
   {
     path: 'mensajes/:id',
@@ -461,43 +472,45 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/inventario/inventario').then((m) => m.InventarioPage),
   },
   {
+    // AN2 — existencias (consulta): permiso Ver de artículos o módulo inventario.
     path: 'inventario/existencias',
-    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
     loadComponent: () =>
       import('./pages/inventario/existencias/existencias').then((m) => m.ExistenciasPage),
   },
   {
     // Z17 — detalle de artículo (foto, código, categoría, propiedad, stock)
     path: 'inventario/articulo/:id',
-    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
     loadComponent: () =>
       import('./pages/inventario/articulo-detalle/articulo-detalle').then((m) => m.ArticuloDetallePage),
   },
   {
+    // AN2 — registrar salida: requiere Operar del submódulo salidas.
     path: 'inventario/salida',
-    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.salidas', 'operar')],
     loadComponent: () => import('./pages/inventario/salida/salida').then((m) => m.SalidaPage),
   },
   {
     path: 'inventario/entrada',
-    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.entradas', 'operar')],
     loadComponent: () => import('./pages/inventario/entrada/entrada').then((m) => m.EntradaPage),
   },
   {
     path: 'inventario/recibir',
-    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.entradas', 'operar')],
     loadComponent: () =>
       import('./pages/inventario/recibir/recibir').then((m) => m.RecibirConducePage),
   },
   {
     path: 'inventario/conteo',
-    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.conteos', 'operar')],
     loadComponent: () => import('./pages/inventario/conteo/conteo').then((m) => m.ConteoPage),
   },
   {
-    // Y10 — "Conteo y ajustes": historial de conteos/ajustes de inventario.
+    // Y10 — "Conteo y ajustes": historial (consulta): permiso Ver de conteos.
     path: 'inventario/conteos',
-    canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.conteos')],
     loadComponent: () => import('./pages/inventario/conteos/conteos').then((m) => m.ConteosPage),
   },
   {

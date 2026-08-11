@@ -53,7 +53,52 @@
   text-align: left;
 }
 .msgs__result-name {
+  flex: 1;
   font-weight: 700;
+}
+.msgs__result-pick {
+  flex: 0 0 auto;
+  font-weight: 800;
+  color: var(--primary, #ff5f00);
+}
+
+// AN6 — segmented Persona/Grupo + creación de grupo.
+.msgs__seg {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+
+  button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+  .msgs__seg--on {
+    background: var(--Hub, #ffb300);
+    border-color: transparent;
+    color: #121212;
+  }
+}
+.msgs__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+.msgs__chip {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--Hub-translucid, rgba(255, 179, 0, 0.2));
+  color: var(--color-text-primary);
+}
+.msgs__crear {
+  margin-top: 12px;
 }
 
 .msgs__row {

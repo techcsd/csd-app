@@ -34,9 +34,15 @@ export class MensajesPage implements OnDestroy {
 
   // Nueva conversación (búsqueda de usuario).
   nuevaAbierta = signal(false);
+  modo = signal<'persona' | 'grupo'>('persona');
   busqueda = signal('');
   resultados = signal<UsuarioBusqueda[]>([]);
   buscando = signal(false);
+
+  // AN6 — nuevo grupo (nombre + participantes multi-selección).
+  grupoNombre = signal('');
+  seleccionados = signal<UsuarioBusqueda[]>([]);
+  creando = signal(false);
 
   // QA-20: canal propio de esta vista; se cierra en ngOnDestroy.
   private unsub: (() => void) | null = null;
@@ -79,8 +85,48 @@ export class MensajesPage implements OnDestroy {
   // ── Nueva conversación ──────────────────────────────────────────────────────
   toggleNueva(): void {
     this.nuevaAbierta.update((v) => !v);
+    this.modo.set('persona');
     this.busqueda.set('');
     this.resultados.set([]);
+    this.grupoNombre.set('');
+    this.seleccionados.set([]);
+  }
+
+  setModo(m: 'persona' | 'grupo'): void {
+    this.modo.set(m);
+    this.busqueda.set('');
+    this.resultados.set([]);
+  }
+
+  // ── Nuevo grupo (AN6) ─────────────────────────────────────────────────────────
+  estaSeleccionado(u: UsuarioBusqueda): boolean {
+    return this.seleccionados().some((s) => s.id === u.id);
+  }
+
+  toggleSeleccion(u: UsuarioBusqueda): void {
+    this.seleccionados.update((l) => (l.some((s) => s.id === u.id) ? l.filter((s) => s.id !== u.id) : [...l, u]));
+  }
+
+  async crearGrupo(): Promise<void> {
+    const nombre = this.grupoNombre().trim();
+    if (!nombre) {
+      this.toast.error('Ponle un nombre al grupo.');
+      return;
+    }
+    if (!this.seleccionados().length) {
+      this.toast.error('Agrega al menos un participante.');
+      return;
+    }
+    this.creando.set(true);
+    try {
+      const id = await this.mensajes.crearGrupo(nombre, this.seleccionados().map((s) => s.id));
+      this.nuevaAbierta.set(false);
+      void this.router.navigate(['/mensajes', id]);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el grupo.');
+    } finally {
+      this.creando.set(false);
+    }
   }
 
   async buscar(): Promise<void> {

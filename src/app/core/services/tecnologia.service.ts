@@ -62,10 +62,28 @@ export class TecnologiaService {
     const data = await this.catalog.refresh<TecEquipo[]>(CATALOG_EQUIPOS, async () => {
       const { data, error } = await this.supabase.client
         .from('tec_equipos')
-        .select('*, empleado:empleados(nombre, apellido, cargo)')
+        .select('*')
         .order('created_at', { ascending: false });
       if (error) throw new Error(error.message);
-      return (data as TecEquipo[]) ?? [];
+      const equipos = (data as TecEquipo[]) ?? [];
+      // AN1 (PROMPT-7 FASE 1) — el nombre del "Asignado a" se resuelve por el
+      // directorio de referencia, NO por embed a `empleados`: esa tabla tiene RLS
+      // restrictiva (own OR rrhh), así que el rol Tecnología (sin módulo rrhh) veía
+      // el nombre en null. directorio_empleados() es security-definer y legible por
+      // cualquier autenticado. Best-effort: si falla, el equipo igual carga.
+      if (equipos.some((e) => e.empleado_id)) {
+        try {
+          const { data: dir } = await this.supabase.client.rpc('directorio_empleados');
+          const map = new Map<string, NonNullable<TecEquipo['empleado']>>();
+          for (const r of (dir as Array<{ id: string; nombre: string; apellido: string | null; cargo: string | null }>) ?? []) {
+            map.set(r.id, { nombre: r.nombre, apellido: r.apellido, cargo: r.cargo });
+          }
+          for (const e of equipos) e.empleado = e.empleado_id ? (map.get(e.empleado_id) ?? null) : null;
+        } catch {
+          /* best-effort: sin nombres, el equipo igual carga */
+        }
+      }
+      return equipos;
     });
     return data ?? [];
   }

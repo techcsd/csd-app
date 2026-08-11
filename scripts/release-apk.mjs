@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.72.1';
+const VERSION = '1.73.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,21 +62,17 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-11';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Conduces más confiables (envío sin errores, transferencia al instante en ambos teléfonos, Iniciar ruta), refresh homologado, Proyectos con crear/editar y ubicación por link de Maps, y menú de origen del conduce simplificado';
+const TITULO = 'Grupos de mensajes tipo WhatsApp, permisos por submódulo en Flota e Inventario, y datos de referencia visibles para roles restringidos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduces', d: 'Se arregló el error al enviar una devolución a ferretería/suplidor ("la bodega ya no existe"). Ahora la devolución exige de qué almacén sale y no se puede enviar sin ese dato.' },
-  { t: 'mejora', m: 'Conduces', d: 'Si algo falla al enviar un conduce, el aviso en Pendientes de envío ahora es claro y accionable (p. ej. falta de existencia o de almacén), sin perder las fotos; corrige y reintenta.' },
-  { t: 'arreglo', m: 'Conduces', d: 'La transferencia de un conduce ahora se refleja al instante en los dos teléfonos: al que lo envió le desaparece y al que lo acepta le aparece completo en Pendiente entrega.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Botón "Iniciar ruta" en cada conduce pendiente: arranca la ruta (aunque sea una devolución) y aparece en Mis rutas y en Seguimiento. Si el conduce no trae vehículo, te lo pide.' },
-  { t: 'mejora', m: 'Toda la app', d: 'Refrescar homologado en las listas (Mis rutas, Pendiente entrega, Por confirmar, Avisos, Mensajes, Mi actividad, Proyectos…): desliza hacia abajo, toca 🔄 o se actualiza solo al volver a la app.' },
-  { t: 'nuevo', m: 'Proyectos', d: 'Ya puedes crear y editar proyectos desde la app, paso a paso, con validación por rol.' },
-  { t: 'nuevo', m: 'Proyectos', d: 'Ubicación fácil de la obra: pega el link de Google Maps (o coordenadas) y se fija el pin solo; o muévelo en el mapa.' },
-  { t: 'mejora', m: 'Proyectos', d: 'La ficha del proyecto ahora muestra ordenados el ingeniero de obra, el maestro encargado, el contacto (teléfono clicable), la ubicación (Abrir en Maps) y el equipo — ya no todo metido en la descripción.' },
-  { t: 'mejora', m: 'Proyectos', d: 'Se corrigió el diseño del módulo (tarjetas claras homologadas con el resto de la app).' },
-  { t: 'mejora', m: 'Conduces', d: 'Al crear un conduce, el origen ahora es solo Almacén/obra o Ferretería; se quitó la opción "Otros" (no aplicaba al descuento de inventario).' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Grupos tipo WhatsApp: toca el nombre del grupo arriba para ver su info — foto, nombre, descripción y participantes. Los admins pueden cambiar la foto, editar el grupo, agregar o quitar gente y nombrar admins; cualquiera puede salir.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Los cambios del grupo ("Fulano agregó a Mengano", "cambió la foto"…) ahora aparecen dentro del chat como avisos.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Ya puedes crear un grupo desde la app: toca ＋ y cambia a "Grupo", ponle nombre y elige a las personas.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Con roles restringidos (p. ej. Chofer sin acceso a Inventario), al crear un conduce vuelven a aparecer los almacenes de origen y los materiales con existencia.' },
+  { t: 'mejora', m: 'Flota e Inventario', d: 'Las pantallas de consulta (vehículos, conductores, existencias, artículos, conteos) respetan si tu rol es de solo ver o puede operar: quien solo tiene permiso de ver entra en modo consulta, sin botones de acción.' },
+  { t: 'arreglo', m: 'Tecnología', d: 'En el inventario tecnológico, el "Asignado a" vuelve a mostrar el nombre del empleado aunque tu rol no administre RRHH.' },
 ];
 
 const TIPO_POR_COMMIT = {

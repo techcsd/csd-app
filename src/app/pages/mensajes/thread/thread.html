@@ -1,7 +1,25 @@
 <div class="screen thread">
   <header class="thread__header">
     <button type="button" class="thread__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="thread__title">💬 Conversación</h1>
+    <button
+      type="button"
+      class="thread__id"
+      [class.thread__id--tap]="esGrupo()"
+      [disabled]="!esGrupo()"
+      (click)="abrirInfo()"
+    >
+      @if (esGrupo()) {
+        @if (avatarUrl()) {
+          <img class="thread__avatar" [src]="avatarUrl()" alt="" />
+        } @else {
+          <span class="thread__avatar thread__avatar--letra">{{ (titulo() || '?').charAt(0) }}</span>
+        }
+      }
+      <span class="thread__id-main">
+        <span class="thread__title">{{ esGrupo() ? '' : '💬 ' }}{{ titulo() }}</span>
+        @if (esGrupo() && subtitulo()) { <span class="thread__sub">{{ subtitulo() }} · toca para ver info</span> }
+      </span>
+    </button>
   </header>
 
   <div class="thread__body" #scroller>
@@ -9,11 +27,15 @@
       <app-skeleton [rows]="5" />
     } @else {
       @for (m of lista(); track m.id) {
-        <div class="thread__msg" [class.thread__msg--mio]="esMio(m)">
-          @if (!esMio(m)) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
-          <span class="thread__burbuja">{{ m.contenido }}</span>
-          <span class="thread__hora">{{ fmt(m.created_at) }}</span>
-        </div>
+        @if (esSistema(m)) {
+          <div class="thread__evento"><span>{{ m.contenido }}</span></div>
+        } @else {
+          <div class="thread__msg" [class.thread__msg--mio]="esMio(m)">
+            @if (!esMio(m)) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
+            <span class="thread__burbuja">{{ m.contenido }}</span>
+            <span class="thread__hora">{{ fmt(m.created_at) }}</span>
+          </div>
+        }
       }
     }
   </div>

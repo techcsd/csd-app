@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { MensajesService, Mensaje } from '../../../core/services/mensajes.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -21,6 +21,7 @@ import { formatFechaHumana } from '../../../core/util/fecha';
 export class MensajesThreadPage implements OnDestroy {
   private mensajes = inject(MensajesService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private ctx = inject(UserContextService);
   private net = inject(NetworkService);
   private toast = inject(ToastService);
@@ -39,15 +40,51 @@ export class MensajesThreadPage implements OnDestroy {
   texto = signal('');
   enviando = signal(false);
 
+  // AN6 — meta de la conversación para el header (grupo → tappable + avatar).
+  titulo = signal('Conversación');
+  esGrupo = signal(false);
+  avatarUrl = signal<string | null>(null);
+  subtitulo = signal('');
+
   // QA-20: canal propio del hilo (filtrado por conversación); se cierra en ngOnDestroy.
   private unsub: (() => void) | null = null;
 
   constructor() {
     this.conversacionId = this.route.snapshot.paramMap.get('id') ?? '';
     void this.cargar();
+    void this.cargarMeta();
     void this.mensajes.marcarLeida(this.conversacionId);
     // QA-20: filtra server-side por esta conversación (antes escuchaba TODO).
     this.unsub = this.mensajes.suscribir(() => void this.cargar(true), this.conversacionId);
+  }
+
+  /** AN6 — resuelve el título/avatar del header y si es grupo (para abrir su info). */
+  private async cargarMeta(): Promise<void> {
+    try {
+      const conv = (await this.mensajes.listarConversaciones()).find((c) => c.id === this.conversacionId);
+      if (conv) {
+        this.titulo.set(conv.nombre || 'Conversación');
+        this.esGrupo.set(conv.tipo === 'grupo');
+      }
+      if (this.esGrupo()) {
+        const info = await this.mensajes.grupoInfo(this.conversacionId);
+        this.titulo.set(info.nombre || 'Grupo');
+        this.subtitulo.set(`${info.participantes.length} participante${info.participantes.length === 1 ? '' : 's'}`);
+        this.avatarUrl.set(await this.mensajes.avatarUrl(info.avatar_path));
+      }
+    } catch {
+      /* header cae a genérico; el hilo funciona igual */
+    }
+  }
+
+  /** AN6 — abre la info del grupo (solo grupos). */
+  abrirInfo(): void {
+    if (!this.esGrupo()) return;
+    void this.router.navigate(['/mensajes', this.conversacionId, 'info']);
+  }
+
+  esSistema(m: Mensaje): boolean {
+    return m.tipo === 'sistema';
   }
 
   ngOnDestroy(): void {

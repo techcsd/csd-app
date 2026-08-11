@@ -8,18 +8,54 @@
 
   @if (nuevaAbierta()) {
     <div class="msgs__nueva">
+      <div class="msgs__seg">
+        <button type="button" [class.msgs__seg--on]="modo() === 'persona'" (click)="setModo('persona')">Persona</button>
+        <button type="button" [class.msgs__seg--on]="modo() === 'grupo'" (click)="setModo('grupo')">Grupo</button>
+      </div>
+
+      @if (modo() === 'grupo') {
+        <input
+          class="field"
+          type="text"
+          [ngModel]="grupoNombre()"
+          (ngModelChange)="grupoNombre.set($event)"
+          placeholder="Nombre del grupo"
+        />
+        @if (seleccionados().length) {
+          <div class="msgs__chips">
+            @for (s of seleccionados(); track s.id) {
+              <button type="button" class="msgs__chip" (click)="toggleSeleccion(s)">{{ s.nombre }} ✕</button>
+            }
+          </div>
+        }
+      }
+
       <input
         class="field"
         type="text"
         [ngModel]="busqueda()"
         (ngModelChange)="busqueda.set($event); buscar()"
-        placeholder="Buscar persona…"
+        [placeholder]="modo() === 'grupo' ? 'Agregar participantes…' : 'Buscar persona…'"
       />
       @if (buscando()) { <p class="msgs__hint">Buscando…</p> }
       @for (u of resultados(); track u.id) {
-        <button type="button" class="msgs__result" (click)="iniciarCon(u)">
-          <span class="msgs__avatar">{{ u.nombre.charAt(0) }}</span>
-          <span class="msgs__result-name">{{ u.nombre }}</span>
+        @if (modo() === 'persona') {
+          <button type="button" class="msgs__result" (click)="iniciarCon(u)">
+            <span class="msgs__avatar">{{ u.nombre.charAt(0) }}</span>
+            <span class="msgs__result-name">{{ u.nombre }}</span>
+          </button>
+        } @else {
+          <button type="button" class="msgs__result" (click)="toggleSeleccion(u)">
+            <span class="msgs__avatar">{{ u.nombre.charAt(0) }}</span>
+            <span class="msgs__result-name">{{ u.nombre }}</span>
+            <span class="msgs__result-pick">{{ estaSeleccionado(u) ? '✓' : '＋' }}</span>
+          </button>
+        }
+      }
+
+      @if (modo() === 'grupo') {
+        <button type="button" class="btn-cta msgs__crear" [disabled]="creando()" (click)="crearGrupo()">
+          {{ creando() ? 'Creando…' : 'Crear grupo' }}
         </button>
       }
     </div>
