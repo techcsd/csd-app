@@ -79,6 +79,12 @@
   top: 0;
   z-index: 5;
 }
+// AN — igual que en transporte: los botones globales traen width:100% y en esta
+// fila flex aplastaban el hint del centro. Al ancho de su contenido.
+.home__edit-bar .btn-ghost,
+.home__edit-bar .btn-cta {
+  width: auto;
+}
 .home__edit-hint {
   font-size: 13px;
   font-weight: 700;

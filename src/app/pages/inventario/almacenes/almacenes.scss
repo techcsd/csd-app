@@ -126,3 +126,9 @@
 .almacenes__form-nav .btn-cta {
   flex: 1;
 }
+// AN — el .btn-ghost global trae width:100%; en esta fila flex eso hacía que
+// "Cancelar" acaparara el ancho y "Guardar" se aplastara. Lo dejamos al ancho
+// de su contenido para que el CTA (flex:1) ocupe el resto.
+.almacenes__form-nav .btn-ghost {
+  width: auto;
+}

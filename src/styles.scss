@@ -42,6 +42,11 @@
   --primary: var(--color-primary); /* accent / CTA orange */
   --main: var(--color-text-primary); /* primary dark text */
   --color-text: var(--color-text-primary); /* primary dark text (alt spelling) */
+  /* AN — `--color-danger` se usaba en 8 sitios (botones de borrar, marcador de
+     campo obligatorio "*") SIN fallback → la declaración `color` completa quedaba
+     inválida y el elemento heredaba el color del padre: el rojo de peligro se
+     perdía. Alias al token de error real para recuperar la señal. */
+  --color-danger: var(--color-error); /* rojo peligro/borrar/obligatorio */
 
   /* Semantic — color always paired with an icon (colorblind-safe) */
   --color-success: #16a34a; /* guardado / sincronizado / entregado */

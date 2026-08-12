@@ -169,12 +169,15 @@ export class CrearRutaPage implements OnDestroy {
   // U22 — obras + almacenes (con ícono por tipo) para los selectores de origen/destino.
   // Y2 — el ícono va por ítem (🏗️ obra / 🏢 bodega); NO se hornea en el label ni
   // se repite con el icon de la lista (eso causaba el doble emoji).
-  // AF24.2 — solo obras/proyectos como origen/destino (las obras ya son almacenes;
-  // se quitan los almacenes de los selectores para no duplicar destinos).
+  // AN — se reincluyen los almacenes SUELTOS (ej. Bodega Central) como origen/destino
+  // seleccionable. destinos_transporte() ya NUNCA expone el almacén implícito de una
+  // obra (AH9), así que no hay duplicado: solo aparecen las bodegas independientes.
   lugarOpts = computed<SelectOption[]>(() =>
-    this.lugares()
-      .filter((l) => l.tipo === 'obra')
-      .map((l) => ({ id: l.id, label: l.nombre, icon: '🏗️' })),
+    this.lugares().map((l) => ({
+      id: l.id,
+      label: l.nombre,
+      icon: l.tipo === 'obra' ? '🏗️' : '🏢',
+    })),
   );
 
   selectedLugar = computed<LugarDestino | null>(

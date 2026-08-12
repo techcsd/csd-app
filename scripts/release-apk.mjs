@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.73.0';
+const VERSION = '1.73.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,20 +59,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-11';
+const RELEASED_AT = '2026-08-12';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Grupos de mensajes tipo WhatsApp, permisos por submódulo en Flota e Inventario, y datos de referencia visibles para roles restringidos';
+const TITULO = 'Bodega Central seleccionable al crear rutas y arreglos visuales';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Mensajes', d: 'Grupos tipo WhatsApp: toca el nombre del grupo arriba para ver su info — foto, nombre, descripción y participantes. Los admins pueden cambiar la foto, editar el grupo, agregar o quitar gente y nombrar admins; cualquiera puede salir.' },
-  { t: 'nuevo', m: 'Mensajes', d: 'Los cambios del grupo ("Fulano agregó a Mengano", "cambió la foto"…) ahora aparecen dentro del chat como avisos.' },
-  { t: 'nuevo', m: 'Mensajes', d: 'Ya puedes crear un grupo desde la app: toca ＋ y cambia a "Grupo", ponle nombre y elige a las personas.' },
-  { t: 'arreglo', m: 'Conduces', d: 'Con roles restringidos (p. ej. Chofer sin acceso a Inventario), al crear un conduce vuelven a aparecer los almacenes de origen y los materiales con existencia.' },
-  { t: 'mejora', m: 'Flota e Inventario', d: 'Las pantallas de consulta (vehículos, conductores, existencias, artículos, conteos) respetan si tu rol es de solo ver o puede operar: quien solo tiene permiso de ver entra en modo consulta, sin botones de acción.' },
-  { t: 'arreglo', m: 'Tecnología', d: 'En el inventario tecnológico, el "Asignado a" vuelve a mostrar el nombre del empleado aunque tu rol no administre RRHH.' },
+  { t: 'arreglo', m: 'Transporte', d: 'Al crear una ruta, la "Bodega Central" (y demás almacenes) vuelve a aparecer y se puede elegir como origen, destino o parada.' },
+  { t: 'arreglo', m: 'General', d: 'Los botones de borrar y el asterisco de "campo obligatorio" vuelven a mostrarse en rojo.' },
+  { t: 'arreglo', m: 'General', d: 'Se corrigieron botones que se aplastaban en algunas pantallas (guardar almacén y las barras de edición de módulos).' },
 ];
 
 const TIPO_POR_COMMIT = {
