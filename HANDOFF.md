@@ -1,5 +1,12 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 13/08 (2) — AO UX del wizard de conduce — **RELEASE 1.74.1 PUBLICADO (rolling)**
+Pedido de Xaviel sobre el wizard de crear conduce. `npm run build` **exit 0**. **SHIPPED:** commit **`034ca16`** (feat) → push `main` → PWA por Vercel. **APK 1.74.1** firmado (cert prod `3c5316d8…5065`) + registrado (Y1) + subido al bucket (`csd-app-1.74.1.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=true` 1.74.1** (1.74.0→false) → `version_publicada()`=**1.74.1**; `version_minima` sigue **1.42.0**. **1 migración:** `sql/2026-08-13-publicar-1.74.1.sql` (flip; sin esquema). **Rollback:** `update sgc.app_versiones set publicada=(version='1.74.0') where plataforma='movil';` + `git revert 034ca16 && git push`.
+
+- **Desplegables en hoja modal (global):** `collapsible-select` ya NO expande el listado inline empujando la página; ahora abre el listado en una **hoja inferior (bottom-sheet) deslizable + scrolleable** por encima de la pantalla, y **se cierra al elegir** (o tocar fondo/✕). El trigger/chip queda compacto en su sitio. Reusa el primitivo `bottom-sheet`; aplica a **todos** los selectores (almacenes, obras, conductor, vehículo, paradas de ruta…).
+- **"Almacén central" = Bodega Central directo:** en el paso destino, elegir "Almacén central" **autoselecciona la Bodega Central** (central/principal) y muestra confirmación fija, en lugar de un picker — porque "Obra" ya cubre el almacén de cada obra (obra X ≡ almacén de obra X). "Cambiar" solo aparece si hay >1 almacén central; mensaje claro si no hay ninguno configurado (offline: usar Obra).
+
+
 ## 🟢 SESIÓN 13/08 — PROMPT-10 ronda AO (app, 3 de 5 fases) — **RELEASE 1.74.0 PUBLICADO (rolling)**
 Depende parcialmente de **PROMPT-9 (SGC)**, aún NO aplicado → FASE 3 y FASE 4 quedan pendientes (ver abajo). `npm run build` **exit 0**. **SHIPPED:** commit **`5c4a182`** (feat) → push `main` → **PWA la despliega Vercel**. **APK 1.74.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, changelog estructurado) + subido al bucket (`csd-app-1.74.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=true` para 1.74.0** (1.73.1→false) → **`version_publicada()` = 1.74.0**; `version_minima` sigue **1.42.0** (nadie bloqueado). **1 migración aplicada a prod:** `sql/2026-08-13-publicar-1.74.0.sql` (flip publicada; sin cambios de esquema). **Rollback:** `update sgc.app_versiones set publicada=(version='1.73.1') where plataforma='movil';` + `git revert 5c4a182 && git push` (PWA).
 
