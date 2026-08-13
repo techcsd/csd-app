@@ -1,0 +1,118 @@
+<div class="screen kardex">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Histórico del artículo</h1>
+  </header>
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="onRefresh($event)">
+    <!-- Encabezado: artículo + almacén + saldos -->
+    <div class="kardex__head">
+      <div class="kardex__title">
+        <span class="kardex__art">{{ articuloNombre() || 'Artículo' }}</span>
+        @if (bodegaNombre()) { <span class="kardex__bod">🏬 {{ bodegaNombre() }}</span> }
+      </div>
+      <div class="kardex__saldos">
+        <div class="kardex__saldo">
+          <span class="kardex__saldo-n">{{ saldoActual() | number: '1.0-2' }}</span>
+          <span class="kardex__saldo-l">Existencia</span>
+        </div>
+        <div class="kardex__saldo kardex__saldo--soft">
+          <span class="kardex__saldo-n">{{ apertura() | number: '1.0-2' }}</span>
+          <span class="kardex__saldo-l">Apertura</span>
+        </div>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      <!-- Timeline del stock (apertura = base; los movimientos mueven la curva) -->
+      <section class="kardex__timeline">
+        <span class="kardex__timeline-lbl">Existencias en el tiempo</span>
+        <svg [attr.viewBox]="'0 0 ' + vbW + ' ' + vbH" preserveAspectRatio="none" class="kardex__spark" role="img" aria-label="Línea de existencias en el tiempo">
+          <path [attr.d]="curvaArea()" class="kardex__spark-area" />
+          <path [attr.d]="curvaPath()" class="kardex__spark-line" />
+        </svg>
+      </section>
+
+      <!-- Filtros -->
+      <section class="kardex__filtros">
+        <div class="kardex__chips">
+          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'todos'" (click)="tipo.set('todos')">Todos</button>
+          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'entrada'" (click)="tipo.set('entrada')">Entradas</button>
+          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'salida'" (click)="tipo.set('salida')">Salidas</button>
+          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'ajuste'" (click)="tipo.set('ajuste')">Ajustes</button>
+        </div>
+
+        <div class="kardex__filtro-row">
+          @if (transportistas().length) {
+            <select class="field kardex__sel" [ngModel]="transportista()" (ngModelChange)="transportista.set($event)">
+              <option value="">Todo transporte</option>
+              @for (t of transportistas(); track t) { <option [value]="t">{{ t }}</option> }
+            </select>
+          }
+          @if (entregadores().length) {
+            <select class="field kardex__sel" [ngModel]="entrega()" (ngModelChange)="entrega.set($event)">
+              <option value="">Cualquiera entrega</option>
+              @for (e of entregadores(); track e) { <option [value]="e">{{ e }}</option> }
+            </select>
+          }
+        </div>
+
+        <div class="kardex__filtro-row">
+          <label class="kardex__date">Desde <input type="date" class="field" [ngModel]="desde()" (ngModelChange)="desde.set($event)" /></label>
+          <label class="kardex__date">Hasta <input type="date" class="field" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" /></label>
+        </div>
+
+        @if (hayFiltro()) {
+          <button type="button" class="kardex__clear" (click)="limpiarFiltros()">Limpiar filtros</button>
+        }
+      </section>
+
+      <!-- Movimientos (tabla → tarjetas en móvil) -->
+      <section class="kardex__movs">
+        @for (m of movsFiltrados(); track m.referencia_id) {
+          <article class="mov" [class.mov--in]="m.mov === 'entrada'" [class.mov--out]="m.mov === 'salida'" [class.mov--adj]="m.mov === 'ajuste'">
+            <div class="mov__top">
+              <span class="mov__badge">
+                @if (m.mov === 'entrada') { ↑ } @else if (m.mov === 'salida') { ↓ } @else { ⟳ }
+                {{ movLabel(m) }}
+              </span>
+              <span class="mov__fecha">{{ fechaHora(m.ts) }}</span>
+            </div>
+
+            <div class="mov__qty">
+              <span class="mov__delta" [class.mov__delta--neg]="m.delta < 0">{{ m.delta > 0 ? '+' : '' }}{{ m.delta | number: '1.0-2' }}</span>
+              <span class="mov__saldo">Saldo: <b>{{ m.saldo | number: '1.0-2' }}</b></span>
+            </div>
+
+            <div class="mov__grid">
+              @if (m.origen) { <div class="mov__cell"><span class="mov__k">Origen</span><span class="mov__v">{{ m.origen }}</span></div> }
+              @if (m.destino) { <div class="mov__cell"><span class="mov__k">Destino</span><span class="mov__v">{{ m.destino }}</span></div> }
+              @if (m.entrega_nombre) { <div class="mov__cell"><span class="mov__k">Entrega</span><span class="mov__v">{{ m.entrega_nombre }}</span></div> }
+              @if (m.recibe_nombre) { <div class="mov__cell"><span class="mov__k">Recibe</span><span class="mov__v">{{ m.recibe_nombre }}</span></div> }
+              @if (m.transporte_nombre) { <div class="mov__cell"><span class="mov__k">Transporte</span><span class="mov__v">{{ m.transporte_nombre }}</span></div> }
+            </div>
+
+            <div class="mov__foot">
+              @if (m.fotos.length || m.firmas.length) {
+                <span class="mov__evid">
+                  @if (m.fotos.length) { 📷 {{ m.fotos.length }} }
+                  @if (m.firmas.length) { ✍ {{ m.firmas.length }} }
+                </span>
+              }
+              @if (m.conduce_id) {
+                <button type="button" class="mov__conduce" (click)="verConduce(m)">{{ m.conduce_numero || 'Ver conduce' }} →</button>
+              }
+            </div>
+          </article>
+        } @empty {
+          <p class="kardex__muted">
+            @if (hayFiltro()) { No hay movimientos con esos filtros. }
+            @else { Este artículo aún no tiene movimientos en este almacén. }
+          </p>
+        }
+      </section>
+    }
+  </div>
+</div>

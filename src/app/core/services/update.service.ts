@@ -19,20 +19,39 @@ export class UpdateService {
   private toast = inject(ToastService);
 
   init(): void {
-    // PWA: activate + reload when the service worker has a new build.
+    // PWA (AP8): la web/PWA se actualiza SOLA por el service worker — nunca un botón
+    // "Actualizar ahora" (ese gate es solo de la APK nativa; ver version.service).
     if (this.swUpdate.isEnabled) {
       this.swUpdate.versionUpdates.subscribe((evt) => {
         if (evt.type === 'VERSION_READY') {
-          this.toast.show('Hay una versión nueva. Actualizando…', 'info', 2500);
+          // Toast sutil y auto-aplicar: activar + recargar. Sin fricción, sin prompt.
+          this.toast.show('Nueva versión cargada.', 'info', 2500);
           void this.swUpdate.activateUpdate().then(() => {
             setTimeout(() => document.location.reload(), 1500);
           });
         }
       });
+      // AP8 — iOS/Safari PWA no chequea el SW por su cuenta de forma fiable (suspende
+      // la pestaña). Chequeamos ACTIVAMENTE al arrancar y cada vez que la PWA vuelve al
+      // frente, para que un cambio publicado se tome solo (antes se quedaban en un
+      // build viejo — el que aún mostraba el prompt de actualizar).
+      void this.pull();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') void this.pull();
+      });
     }
     // Native (APK): can't self-update — check version.json and nudge the user.
     if (Capacitor.isNativePlatform()) {
       setTimeout(() => void this.checkAppVersion(), 5000);
+    }
+  }
+
+  /** Best-effort: pide al SW que busque una versión nueva (silencioso si no hay). */
+  private async pull(): Promise<void> {
+    try {
+      await this.swUpdate.checkForUpdate();
+    } catch {
+      /* offline / SW no listo — ignore */
     }
   }
 

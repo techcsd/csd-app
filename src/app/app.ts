@@ -20,6 +20,7 @@ import { VersionService } from './core/services/version.service';
 import { ToastService } from './core/services/toast.service';
 import { NavGuardService } from './core/services/nav-guard.service';
 import { ActivityPingService } from './core/services/activity-ping.service';
+import { PlatformReportService } from './core/services/platform-report.service';
 import { PushService } from './core/services/push.service';
 import { AlarmaService } from './core/services/alarma.service';
 import { NativeAlarmService } from './core/services/native-alarm.service';
@@ -47,6 +48,7 @@ export class App {
   private navGuard = inject(NavGuardService);
   private session = inject(SessionService);
   private activityPing = inject(ActivityPingService);
+  private platformReport = inject(PlatformReportService);
   private push = inject(PushService);
   private alarma = inject(AlarmaService);
   private nativeAlarm = inject(NativeAlarmService);
@@ -63,6 +65,7 @@ export class App {
     this.initBackButton();
     this.initScrollReset();
     this.activityPing.init(); // W12 — ping de actividad (open + resume, throttled)
+    this.platformReport.init(); // AP7 — reporta la plataforma del dispositivo (android|ios-pwa|web)
     void this.push.init(); // AF7 — push nativo (no-op en web/PWA)
     void this.checkAlarmaDominical(); // AK10 — alarma del reporte semanal (domingo)
     void this.syncAlarmaNativa(); // AL6 — arma/cancela la alarma AUTÓNOMA (app cerrada)

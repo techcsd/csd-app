@@ -8,8 +8,11 @@ import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { ConducesService, ConduceHistorial } from '../../../core/services/conduces.service';
+import { InventarioService } from '../../../core/services/inventario.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
+
+type RolFiltro = '' | 'emisor' | 'chofer' | 'receptor';
 
 const FASE_LABEL: Record<string, string> = {
   emitido: 'Emitido',
@@ -37,6 +40,7 @@ const FASE_TINT: Record<string, string> = {
 })
 export class ConducesHistorialPage {
   private service = inject(ConducesService);
+  private inventario = inject(InventarioService);
   private router = inject(Router);
   private location = inject(Location);
   private toast = inject(ToastService);
@@ -58,13 +62,39 @@ export class ConducesHistorialPage {
   desde = signal<string>('');
   hasta = signal<string>('');
   faseFiltro = signal<string>('');
+  // AP4 — obra (origen/destino distinguibles), mi rol y buscador.
+  obras = signal<{ id: string; label: string }[]>([]);
+  obraOrigen = signal<string>('');
+  obraDestino = signal<string>('');
+  rol = signal<RolFiltro>('');
+  query = signal<string>('');
+  filtrosAbiertos = signal(false);
 
   readonly fases = Object.keys(FASE_LABEL);
 
+  /** Opciones para los selectores de obra (con "Todas" al inicio). */
+  obraOpciones = computed(() => [{ id: '', label: 'Todas las obras' }, ...this.obras()]);
+
+  hayFiltroAvanzado = computed(
+    () => !!this.obraOrigen() || !!this.obraDestino() || !!this.rol() || !!this.desde() || !!this.hasta(),
+  );
+
   lista = computed(() => {
     const f = this.faseFiltro();
-    const todos = this.todos();
-    return f ? todos.filter((c) => c.fase === f) : todos;
+    const q = this.query().toLowerCase().trim();
+    let out = this.todos();
+    if (f) out = out.filter((c) => c.fase === f);
+    if (q) {
+      out = out.filter(
+        (c) =>
+          (c.obra ?? '').toLowerCase().includes(q) ||
+          (c.origen_proyecto ?? '').toLowerCase().includes(q) ||
+          (c.bodega ?? '').toLowerCase().includes(q) ||
+          (c.receptor ?? '').toLowerCase().includes(q) ||
+          (c.observaciones ?? '').toLowerCase().includes(q),
+      );
+    }
+    return out;
   });
 
   faseLabel(f: string | null): string {
@@ -76,6 +106,10 @@ export class ConducesHistorialPage {
 
   constructor() {
     void this.cargar();
+    void this.inventario
+      .getObrasDestino()
+      .then((os) => this.obras.set(os.map((o) => ({ id: o.id, label: o.nombre }))))
+      .catch(() => {});
   }
 
   async cargar(silent = false): Promise<void> {
@@ -85,12 +119,37 @@ export class ConducesHistorialPage {
       const data = await this.service.misConducesHistorial({
         desde: this.desde() || null,
         hasta: this.hasta() || null,
+        obraOrigen: this.obraOrigen() || null,
+        obraDestino: this.obraDestino() || null,
+        rol: this.rol() || null,
       });
       this.todos.set(data);
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
     }
+  }
+
+  /** AP4 — cambios de filtros server-side → recargar. */
+  onObraOrigen(id: string): void {
+    this.obraOrigen.set(id);
+    void this.cargar();
+  }
+  onObraDestino(id: string): void {
+    this.obraDestino.set(id);
+    void this.cargar();
+  }
+  setRol(r: RolFiltro): void {
+    this.rol.set(this.rol() === r ? '' : r);
+    void this.cargar();
+  }
+  limpiarFiltros(): void {
+    this.obraOrigen.set('');
+    this.obraDestino.set('');
+    this.rol.set('');
+    this.desde.set('');
+    this.hasta.set('');
+    void this.cargar();
   }
 
   /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */

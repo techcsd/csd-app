@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.74.2';
+const VERSION = '1.75.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,12 +62,18 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-13';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Todos los mapas de la app usan Google Maps';
+const TITULO = 'Inventario por almacén con histórico, Rutas activas y arreglo de obra destino';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'General', d: 'Todos los mapas de la app ahora usan Google Maps, incluido el de crear ruta (antes salía otro mapa). Buscar un punto y marcarlo en el mapa se ve igual en toda la app.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Al crear un conduce, la lista de obras de destino ya aparece para todos (antes decía "No hay opciones").' },
+  { t: 'nuevo', m: 'Inventario', d: 'Nueva vista "Inventario por almacén": ves los artículos y existencias de un almacén, con buscador. Entra desde Inventario o desde cada almacén.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Histórico por artículo (kardex): al lado de cada artículo, un botón abre todos sus movimientos (entradas/salidas/ajustes) con quién entrega, quién recibe, transporte y su conduce, más un gráfico de existencias en el tiempo.' },
+  { t: 'mejora', m: 'Inventario', d: 'Los materiales en cero ya no aparecen al elegir material para un conduce o salida (solo se ofrecen los que tienen existencia).' },
+  { t: 'mejora', m: 'Conduces', d: 'El historial de conduces ahora se puede filtrar por obra de salida o de llegada, por tu rol (emisor/chofer/receptor) y por fechas, con buscador.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Nuevo "Rutas activas" (para jefes de flota): ve qué está haciendo cada chofer y su ruta en curso, con un histórico de rutas filtrable.' },
+  { t: 'arreglo', m: 'General', d: 'En iPhone (app web), ya no aparece el aviso de "actualizar": la app se actualiza sola.' },
 ];
 
 const TIPO_POR_COMMIT = {

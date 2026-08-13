@@ -1,0 +1,98 @@
+<div class="screen rutas-act">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Rutas activas</h1>
+  </header>
+
+  @if (!autorizado()) {
+    <div class="screen__body">
+      <div class="rutas-act__band rutas-act__band--warn">🔒 Esta vista es solo para jefes de flota y roles elevados.</div>
+    </div>
+  } @else {
+    <!-- Tabs -->
+    <div class="rutas-act__tabs">
+      <button type="button" class="rutas-act__tab" [class.rutas-act__tab--on]="tab() === 'activas'" (click)="setTab('activas')">Activas</button>
+      <button type="button" class="rutas-act__tab" [class.rutas-act__tab--on]="tab() === 'historico'" (click)="setTab('historico')">Histórico</button>
+    </div>
+
+    <div class="screen__body" appLiveRefresh (appLiveRefresh)="onRefresh($event)">
+      @if (tab() === 'activas') {
+        @if (loading()) {
+          <app-skeleton [rows]="5" />
+        } @else {
+          <!-- Rutas en curso -->
+          <h2 class="rutas-act__section">🚚 En ruta ahora ({{ activas().length }})</h2>
+          @for (r of activas(); track r.id) {
+            <button type="button" class="ruta-card" (click)="verEnMapa()">
+              <div class="ruta-card__top">
+                <span class="ruta-card__chofer">{{ r.conductor_nombre || 'Sin chofer' }}</span>
+                @if (r.placa) { <span class="ruta-card__placa">{{ r.placa }}</span> }
+              </div>
+              <div class="ruta-card__dest">→ {{ r.destino || 'Sin destino' }}</div>
+              <div class="ruta-card__meta">
+                <span>⏱ {{ corriendo(r.iniciada_at) }} corriendo</span>
+                @if (r.paradas_total) { <span>📍 {{ r.paradas_entregadas }}/{{ r.paradas_total }} paradas</span> }
+                @if (ultimaPos(r.conductor_nombre); as u) { <span>📡 {{ u }}</span> }
+              </div>
+            </button>
+          } @empty {
+            <p class="rutas-act__muted">Ningún chofer está en ruta en este momento.</p>
+          }
+
+          <!-- Estado de los choferes -->
+          <h2 class="rutas-act__section">👷 Choferes</h2>
+          @for (c of choferes(); track c.usuario_id) {
+            <div class="chofer-row">
+              <span class="chofer-row__dot" [style.background]="estadoMeta(c.estado).tint"></span>
+              <span class="chofer-row__name">{{ c.nombre }}</span>
+              <span class="chofer-row__estado">
+                {{ estadoMeta(c.estado).icon }} {{ c.estado === 'otros' && c.otros_texto ? c.otros_texto : estadoMeta(c.estado).label }}
+                @if (c.capturado_en) { <small>· {{ hace(c.capturado_en) }}</small> }
+              </span>
+            </div>
+          } @empty {
+            <p class="rutas-act__muted">No hay choferes registrados.</p>
+          }
+        }
+      } @else {
+        <!-- Filtros del histórico -->
+        <div class="rutas-act__filtros">
+          <app-collapsible-select label="Chofer" icon="👷" [options]="choferOpciones()" [selectedId]="fConductor()" [searchable]="true" searchPlaceholder="Buscar chofer…" (picked)="onConductor($event)" />
+          <app-collapsible-select label="Obra (destino)" icon="🏗" [options]="obraOpciones()" [selectedId]="fObra()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onObra($event)" />
+          <div class="rutas-act__chips">
+            @for (e of estadosRuta; track e.key) {
+              <button type="button" class="ra-chip" [class.ra-chip--on]="fEstado() === e.key" (click)="setEstado(e.key)">{{ e.label }}</button>
+            }
+          </div>
+          <div class="rutas-act__fechas">
+            <label>Desde <input type="date" class="field" [ngModel]="fDesde()" (ngModelChange)="fDesde.set($event)" /></label>
+            <label>Hasta <input type="date" class="field" [ngModel]="fHasta()" (ngModelChange)="fHasta.set($event)" /></label>
+          </div>
+          <button type="button" class="btn-ghost rutas-act__aplicar" (click)="aplicarFiltros()">Aplicar fechas</button>
+        </div>
+
+        @if (cargandoHist()) {
+          <app-skeleton [rows]="5" />
+        } @else {
+          @for (r of historial(); track r.id) {
+            <div class="ruta-hist">
+              <div class="ruta-hist__top">
+                <span class="ruta-hist__chofer">{{ r.conductor_nombre || 'Sin chofer' }}</span>
+                <span class="ruta-hist__estado" [class.ruta-hist__estado--done]="r.estado === 'completada'">{{ estadoRutaLabel(r.estado) }}</span>
+              </div>
+              <div class="ruta-hist__ruta">{{ r.origen || '—' }} → {{ r.destino || '—' }}</div>
+              <div class="ruta-hist__meta">
+                <span>📅 {{ r.fecha }}</span>
+                @if (r.duracion_min != null) { <span>⏱ {{ r.duracion_min }} min</span> }
+                @if (r.km_real != null) { <span>🛣 {{ r.km_real | number: '1.0-1' }} km</span> }
+                @if (r.paradas_total) { <span>📍 {{ r.paradas_entregadas }}/{{ r.paradas_total }}</span> }
+              </div>
+            </div>
+          } @empty {
+            <p class="rutas-act__muted">No hay rutas con esos filtros.</p>
+          }
+        }
+      }
+    </div>
+  }
+</div>

@@ -10,6 +10,11 @@
       <span class="inv-action__icon">🔎</span>
       <span class="inv-action__label">Ver existencias</span>
     </button>
+    <!-- AP2 — inventario por almacén con histórico (kardex) por artículo -->
+    <button type="button" class="inv-action" (click)="go('/inventario/almacen')">
+      <span class="inv-action__icon">🏭</span>
+      <span class="inv-action__label">Inventario por almacén</span>
+    </button>
     <button type="button" class="inv-action inv-action--out" (click)="go('/inventario/salida')">
       <span class="inv-action__icon">➖</span>
       <span class="inv-action__label">Registrar salida</span>

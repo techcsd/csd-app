@@ -9,16 +9,46 @@
   <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
     <!-- Filtros -->
     <div class="hist-filtros">
-      <div class="hist-filtros__row">
-        <label class="hist-field">
-          <span>Desde</span>
-          <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
-        </label>
-        <label class="hist-field">
-          <span>Hasta</span>
-          <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
-        </label>
-      </div>
+      <input class="field hist-search" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Buscar por obra, almacén, receptor…" />
+
+      <button type="button" class="hist-masfiltros" (click)="filtrosAbiertos.set(!filtrosAbiertos())">
+        {{ filtrosAbiertos() ? 'Menos filtros ▲' : 'Más filtros ▾' }}
+        @if (hayFiltroAvanzado() && !filtrosAbiertos()) { <span class="hist-masfiltros__dot">●</span> }
+      </button>
+
+      @if (filtrosAbiertos()) {
+        <div class="hist-filtros__adv">
+          <div class="hist-filtros__row">
+            <label class="hist-field">
+              <span>Desde</span>
+              <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+            </label>
+            <label class="hist-field">
+              <span>Hasta</span>
+              <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+            </label>
+          </div>
+          <button type="button" class="btn-ghost hist-aplicar-fechas" (click)="cargar()">Aplicar fechas</button>
+
+          <!-- AP4 — obra distinguiendo origen (salida) vs destino (llegada) -->
+          <app-collapsible-select label="Obra de salida (origen)" icon="🏭" [options]="obraOpciones()" [selectedId]="obraOrigen()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onObraOrigen($event)" />
+          <app-collapsible-select label="Obra de llegada (destino)" icon="🏗" [options]="obraOpciones()" [selectedId]="obraDestino()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onObraDestino($event)" />
+
+          <!-- AP4 — responsable = mi rol en el conduce -->
+          <span class="hist-rol-lbl">Mi rol</span>
+          <div class="hist-chips">
+            <button type="button" class="hist-chip" [class.hist-chip--on]="rol() === ''" (click)="setRol('')">Todos</button>
+            <button type="button" class="hist-chip" [class.hist-chip--on]="rol() === 'emisor'" (click)="setRol('emisor')">Emisor</button>
+            <button type="button" class="hist-chip" [class.hist-chip--on]="rol() === 'chofer'" (click)="setRol('chofer')">Chofer</button>
+            <button type="button" class="hist-chip" [class.hist-chip--on]="rol() === 'receptor'" (click)="setRol('receptor')">Receptor</button>
+          </div>
+
+          @if (hayFiltroAvanzado()) {
+            <button type="button" class="hist-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+          }
+        </div>
+      }
+
       <div class="hist-chips">
         <button
           type="button"
@@ -39,7 +69,6 @@
           </button>
         }
       </div>
-      <button type="button" class="btn-cta hist-aplicar" (click)="cargar()">Aplicar fechas</button>
     </div>
 
     @if (loading()) {

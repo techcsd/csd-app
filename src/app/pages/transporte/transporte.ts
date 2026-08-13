@@ -52,6 +52,8 @@ const TILES: HubTile[] = [
 
   // ── Gestión (solo roles elevados) ────────────────────────────────────────────
   { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
+  // AP6 — Rutas activas (lista por chofer + histórico) para roles elevados.
+  { key: 'rutasActivas', icon: '🛰️', label: 'Rutas activas', tint: '#0ea5e9', elevado: true },
   { key: 'combustibleLog', icon: '📊', label: 'Registro de echadas', tint: '#dc2626', elevado: true },
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
@@ -246,6 +248,7 @@ export class TransportePage {
       case 'misRutas': return this.misRutas();
       case 'conducesHub': return this.conducesHub();
       case 'seguimiento': return this.seguimiento();
+      case 'rutasActivas': return this.rutasActivas();
       case 'combustible': return this.combustibleTop();
       case 'combustibleLog': return this.combustibleLog();
       case 'semanal': return this.reporteSemanal();
@@ -277,6 +280,11 @@ export class TransportePage {
   /** AF27 — Seguimiento en vivo (jefe de flota / admin / tecnología). */
   seguimiento(): void {
     void this.router.navigate(['/transporte/seguimiento']);
+  }
+
+  /** AP6 — Rutas activas: lista por chofer + histórico (roles elevados). */
+  rutasActivas(): void {
+    void this.router.navigate(['/transporte/rutas-activas']);
   }
 
   /** V1 — documentación en proceso (borradores + envíos pendientes). Y10 — el

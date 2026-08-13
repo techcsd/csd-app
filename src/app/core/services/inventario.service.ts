@@ -135,6 +135,50 @@ export interface ObraOrigen {
   tieneBodega: boolean;
 }
 
+/** AP2 — un artículo en la vista de inventario de un almacén. */
+export interface InventarioAlmacenItem {
+  articulo_id: string;
+  codigo: string;
+  nombre: string;
+  categoria: string | null;
+  unidad: string;
+  propiedad: string | null;
+  cantidad: number;
+  apertura: number;
+  es_cero: boolean;
+  es_prueba: boolean;
+}
+
+/** AP3 — un movimiento del kardex (sketch: Mov|Origen|Destino|Fecha|Entrega|Recibe|Transporte|Conduce). */
+export interface KardexMovimiento {
+  mov: 'entrada' | 'salida' | 'ajuste';
+  referencia_id: string;
+  referencia_tipo: string;
+  conduce_id: string | null;
+  conduce_numero: string | null;
+  fecha: string;
+  ts: string;
+  cantidad: number;
+  delta: number;
+  saldo: number;
+  origen: string | null;
+  destino: string | null;
+  entrega_nombre: string | null;
+  recibe_nombre: string | null;
+  transporte_nombre: string | null;
+  conductor_id: string | null;
+  firmas: { rol?: string; nombre?: string; firma_path?: string; firmado_en?: string }[];
+  fotos: string[];
+}
+
+/** AP3 — kardex de un artículo en un almacén (movimientos + serie del stock). */
+export interface Kardex {
+  apertura: number;
+  saldo_actual: number;
+  serie: { ts: string; saldo: number }[];
+  movimientos: KardexMovimiento[];
+}
+
 /** P12 — entrada por devolución de obra (con traspaso opcional del almacén). */
 export interface DevolucionObraCaptura {
   bodegaDestinoId: string;
@@ -189,6 +233,27 @@ export class InventarioService {
         id: p.id,
         nombre: p.nombre,
         tieneBodega: p.tiene_bodega,
+      }));
+    });
+    return data ?? [];
+  }
+
+  /**
+   * AP1 — obras para el selector de DESTINO del conduce/ruta. Va por el directorio
+   * de referencia SECURITY DEFINER (`directorio_proyectos`), desacoplado del módulo
+   * Proyectos: el chofer veía "No hay opciones." porque `obras_con_bodega` le
+   * devolvía [] (RLS frágil). El directorio expone id/nombre (+lat/lng para fijar
+   * coordenadas) sin financieros y respeta activo/es_prueba. El destino de obra no
+   * requiere `tieneBodega` (cualquier obra activa es destino válido).
+   */
+  async getObrasDestino(): Promise<ObraOrigen[]> {
+    const data = await this.catalog.refresh<ObraOrigen[]>('obras_destino', async () => {
+      const { data, error } = await this.supabase.client.rpc('directorio_proyectos');
+      if (error) throw new Error(error.message);
+      return ((data as { id: string; nombre: string }[]) ?? []).map((p) => ({
+        id: p.id,
+        nombre: p.nombre,
+        tieneBodega: true,
       }));
     });
     return data ?? [];
@@ -334,6 +399,70 @@ export class InventarioService {
       }));
     });
     return data ?? [];
+  }
+
+  /**
+   * AP2 — inventario de un almacén: artículos con existencia + apertura efectiva.
+   * Gateado server-side (`puede_ver_inventario_bodega`): admin, módulo inventario/
+   * compras/proyectos/obra, o responsable de la obra del almacén. Un 42501 = sin
+   * acceso (lo distinguimos del vacío). Cacheado por bodega para trabajar offline.
+   */
+  async inventarioAlmacen(
+    bodegaId: string,
+    incluirCero = true,
+    busqueda: string | null = null,
+  ): Promise<InventarioAlmacenItem[]> {
+    // Solo cacheamos la vista completa (sin búsqueda) para el uso offline.
+    const useCache = !busqueda;
+    const fetcher = async (): Promise<InventarioAlmacenItem[]> => {
+      const { data, error } = await this.supabase.client.rpc('inventario_almacen', {
+        p_bodega_id: bodegaId,
+        p_incluir_cero: incluirCero,
+        p_busqueda: busqueda,
+      });
+      if (error) throw new Error(error.message);
+      return ((data as InventarioAlmacenItem[]) ?? []).map((r) => ({
+        ...r,
+        cantidad: Number(r.cantidad ?? 0),
+        apertura: Number(r.apertura ?? 0),
+      }));
+    };
+    if (useCache) {
+      const data = await this.catalog.refresh<InventarioAlmacenItem[]>(
+        `inv_almacen_${bodegaId}_${incluirCero ? 'all' : 'nz'}`,
+        fetcher,
+      );
+      return data ?? [];
+    }
+    return fetcher();
+  }
+
+  /**
+   * AP3 — kardex de un artículo en un almacén (el sketch): movimientos + serie del
+   * stock para el timeline. Se trae completo (una llamada); los filtros de tipo/
+   * transportista/entrega/fecha se aplican en el cliente (recortan la lista, no la
+   * serie). El saldo por fila ya viene acumulado del server.
+   */
+  async kardexArticulo(articuloId: string, bodegaId: string): Promise<Kardex> {
+    const { data, error } = await this.supabase.client.rpc('kardex_articulo', {
+      p_articulo_id: articuloId,
+      p_bodega_id: bodegaId,
+    });
+    if (error) throw new Error(error.message);
+    const k = (data as Kardex) ?? { apertura: 0, saldo_actual: 0, serie: [], movimientos: [] };
+    return {
+      apertura: Number(k.apertura ?? 0),
+      saldo_actual: Number(k.saldo_actual ?? 0),
+      serie: (k.serie ?? []).map((p) => ({ ts: p.ts, saldo: Number(p.saldo) })),
+      movimientos: (k.movimientos ?? []).map((m) => ({
+        ...m,
+        cantidad: Number(m.cantidad ?? 0),
+        delta: Number(m.delta ?? 0),
+        saldo: Number(m.saldo ?? 0),
+        firmas: m.firmas ?? [],
+        fotos: m.fotos ?? [],
+      })),
+    };
   }
 
   async enqueueSalida(input: SalidaCaptura): Promise<void> {

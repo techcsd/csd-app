@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -29,6 +30,12 @@ export class AlmacenesPage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private router = inject(Router);
+
+  /** AP2 — abre el inventario (artículos + kardex) de este almacén. */
+  verInventario(b: BodegaAdmin): void {
+    void this.router.navigate(['/inventario/almacen', b.id]);
+  }
 
   loading = signal(true);
   bodegas = signal<BodegaAdmin[]>([]);

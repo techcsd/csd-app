@@ -38,6 +38,11 @@
           </div>
         }
       </dl>
+
+      @if (bodega()) {
+        <!-- AP3 — histórico de movimientos (kardex) del artículo en este almacén -->
+        <button type="button" class="btn-cta art__kardex" (click)="verKardex()">📊 Ver histórico de movimientos</button>
+      }
     } @else {
       <p class="art__muted">No se encontró el artículo.</p>
     }

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe, Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { ArticuloCat, Bodega, CategoriaInv, esArticuloExterno, propiedadLabel } from '../../../core/models/inventario.model';
@@ -20,8 +20,17 @@ export class ArticuloDetallePage {
   private inventario = inject(InventarioService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
+  private router = inject(Router);
 
   readonly propiedadLabel = propiedadLabel;
+
+  /** AP3 — kardex del artículo en el almacén en contexto (si se abrió desde uno). */
+  verKardex(): void {
+    const a = this.articulo();
+    const b = this.bodega();
+    if (!a || !b) return;
+    void this.router.navigate(['/inventario/kardex', b.id, a.id]);
+  }
 
   loading = signal(true);
   articulo = signal<ArticuloCat | null>(null);

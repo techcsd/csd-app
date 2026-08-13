@@ -54,6 +54,7 @@
               @if (b.ubicacion) { <span class="almacenes__ubi">📍 {{ b.ubicacion }}</span> }
             </div>
             <div class="almacenes__actions">
+              <button type="button" class="btn-ghost" (click)="verInventario(b)">📦 Inventario</button>
               <button type="button" class="btn-ghost" (click)="editar(b)">Editar</button>
               <button type="button" class="btn-ghost" (click)="b.activo ? pedirDesactivar(b) : toggleActivo(b)">
                 {{ b.activo ? 'Desactivar' : 'Activar' }}

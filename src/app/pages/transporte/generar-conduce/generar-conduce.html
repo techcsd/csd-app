@@ -60,6 +60,10 @@
             @case ('obra') {
               <div class="gconduce__mt">
                 <app-collapsible-select label="Obra destino" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="obraId.set($event)" />
+                @if (!obraOptions().length) {
+                  <!-- AP1 — nunca vacío silencioso: distingue sin-datos/offline de un error. -->
+                  <div class="gconduce__band">🏗 No hay obras disponibles ahora. Verifica tu conexión y vuelve a intentar; si el problema sigue, contacta a Tecnología.</div>
+                }
               </div>
             }
             @case ('almacen') {

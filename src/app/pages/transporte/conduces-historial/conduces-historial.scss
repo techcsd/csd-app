@@ -225,3 +225,50 @@
   gap: 10px;
   &__nota { width: 100%; }
 }
+
+// AP4 — filtros ampliados del histórico (obra origen/destino, mi rol, buscador)
+.hist-search {
+  width: 100%;
+  margin-bottom: 8px;
+}
+.hist-masfiltros {
+  background: none;
+  border: none;
+  color: var(--primary, #ff5f00);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 2px 0 8px;
+  cursor: pointer;
+
+  &__dot {
+    color: var(--Hub, #ffb300);
+    font-size: 0.7rem;
+    margin-left: 4px;
+  }
+}
+.hist-filtros__adv {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 10px;
+  border-bottom: 1px solid var(--color-border, #eee);
+  margin-bottom: 8px;
+}
+.hist-aplicar-fechas {
+  align-self: flex-start;
+}
+.hist-rol-lbl {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-text-soft, #999);
+}
+.hist-limpiar {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--color-error, #c0392b);
+  font-weight: 600;
+  padding: 4px 0;
+  cursor: pointer;
+}

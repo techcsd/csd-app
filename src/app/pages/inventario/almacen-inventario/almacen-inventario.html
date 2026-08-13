@@ -1,0 +1,48 @@
+<div class="screen almacen-inv">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Inventario del almacén</h1>
+  </header>
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="onRefresh($event)">
+    <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="onBodega($event)" />
+
+    @if (bodegaId()) {
+      @if (denegado()) {
+        <div class="almacen-inv__band almacen-inv__band--warn">🔒 No tienes acceso al inventario de este almacén. Pídeselo a Tecnología o a un administrador.</div>
+      } @else {
+        <input class="field almacen-inv__search" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Buscar material…" />
+
+        <label class="almacen-inv__toggle">
+          <input type="checkbox" [ngModel]="ocultarCero()" (ngModelChange)="ocultarCero.set($event)" />
+          Ocultar los que están en cero
+        </label>
+
+        @if (loading()) {
+          <app-skeleton [rows]="6" />
+        } @else {
+          <p class="almacen-inv__count">{{ totalMostrado() }} artículo(s)</p>
+          @for (it of visibles(); track it.articulo_id) {
+            <div class="inv-row" [class.inv-row--cero]="it.es_cero">
+              <button type="button" class="inv-row__main" (click)="abrirArticulo(it)">
+                <div class="inv-row__info">
+                  <span class="inv-row__name">{{ it.nombre }}</span>
+                  <span class="inv-row__code">{{ it.codigo }}@if (it.categoria) { · {{ it.categoria }} }</span>
+                </div>
+                <span class="inv-row__qty" [class.inv-row__qty--cero]="it.es_cero">
+                  {{ it.cantidad | number: '1.0-2' }} <small>{{ it.unidad }}</small>
+                </span>
+              </button>
+              <button type="button" class="inv-row__kardex" (click)="verKardex(it)" aria-label="Ver histórico de movimientos">📊 Histórico</button>
+            </div>
+          } @empty {
+            <p class="almacen-inv__muted">
+              @if (query()) { No hay materiales que coincidan con “{{ query() }}”. }
+              @else { No hay materiales en este almacén. }
+            </p>
+          }
+        }
+      }
+    }
+  </div>
+</div>

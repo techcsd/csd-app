@@ -551,7 +551,9 @@ export class GenerarConducePage implements OnDestroy {
     try {
       const [b, obras, a, cat, asig, todos, ferr, desp] = await Promise.all([
         this.inventario.getBodegas(),
-        this.inventario.getObrasConBodega().catch(() => [] as ObraOrigen[]),
+        // AP1 — obras de destino por el directorio de referencia (arregla el "No hay
+        // opciones." del chofer: obras_con_bodega le devolvía [] por la RLS de proyectos).
+        this.inventario.getObrasDestino().catch(() => [] as ObraOrigen[]),
         this.inventario.getArticulos().catch(() => [] as ArticuloCat[]),
         this.inventario.getCategorias().catch(() => [] as CategoriaInv[]),
         this.vehiculos.getMisAsignaciones().catch(() => [] as MiAsignacion[]),

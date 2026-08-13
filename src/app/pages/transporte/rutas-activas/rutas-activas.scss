@@ -1,0 +1,232 @@
+.rutas-act {
+  &__tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--color-border, #e6e6e6);
+  }
+
+  &__tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 12px 8px;
+    font-weight: 600;
+    color: var(--color-text-soft, #888);
+    cursor: pointer;
+
+    &--on {
+      color: var(--color-text, #1a1a1a);
+      border-bottom-color: var(--Hub, #ffb300);
+    }
+  }
+
+  &__section {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text, #333);
+    margin: 16px 0 8px;
+  }
+
+  &__muted {
+    text-align: center;
+    color: var(--color-text-soft, #999);
+    padding: 16px 12px;
+  }
+
+  &__band {
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    line-height: 1.4;
+
+    &--warn {
+      background: #fff6e5;
+      border: 1px solid #ffd591;
+      color: #8a5a00;
+    }
+  }
+
+  &__filtros {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border, #eee);
+    margin-bottom: 12px;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__fechas {
+    display: flex;
+    gap: 8px;
+
+    label {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      font-size: 0.75rem;
+      color: var(--color-text-soft, #888);
+      gap: 3px;
+    }
+  }
+
+  &__aplicar {
+    align-self: flex-start;
+  }
+}
+
+.ra-chip {
+  background: var(--color-surface-2, #f1f1f1);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 999px;
+  padding: 6px 13px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-soft, #555);
+  cursor: pointer;
+
+  &--on {
+    background: var(--Hub, #ffb300);
+    border-color: var(--Hub, #ffb300);
+    color: #1a1a1a;
+  }
+}
+
+.ruta-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e6e6e6);
+  border-left: 4px solid #2563eb;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__chofer {
+    font-weight: 700;
+    color: var(--color-text, #1a1a1a);
+  }
+
+  &__placa {
+    font-size: 0.8rem;
+    background: var(--color-surface-2, #f1f1f1);
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: var(--color-text-soft, #555);
+  }
+
+  &__dest {
+    margin: 4px 0;
+    color: var(--color-text, #333);
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--color-text-soft, #777);
+  }
+}
+
+.chofer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #eee);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--color-text, #222);
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__estado {
+    font-size: 0.82rem;
+    color: var(--color-text-soft, #666);
+    text-align: right;
+
+    small {
+      color: var(--color-text-soft, #999);
+    }
+  }
+}
+
+.ruta-hist {
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e6e6e6);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__chofer {
+    font-weight: 700;
+    color: var(--color-text, #1a1a1a);
+  }
+
+  &__estado {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-soft, #777);
+    background: var(--color-surface-2, #f1f1f1);
+    border-radius: 6px;
+    padding: 2px 8px;
+
+    &--done {
+      color: #16a34a;
+      background: #e8f7ee;
+    }
+  }
+
+  &__ruta {
+    margin: 4px 0;
+    color: var(--color-text, #333);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: var(--color-text-soft, #777);
+  }
+}

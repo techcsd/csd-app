@@ -415,6 +415,14 @@ export const routes: Routes = [
       import('./pages/transporte/seguimiento/seguimiento').then((m) => m.SeguimientoPage),
   },
   {
+    // AP6 — Rutas activas (lista por chofer + histórico), roles elevados. El RPC y
+    // la RLS gatean por es_flota_elevado; la página además valida en cliente.
+    path: 'transporte/rutas-activas',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/rutas-activas/rutas-activas').then((m) => m.RutasActivasPage),
+  },
+  {
     // AK1 — Historial de confirmaciones de entrega (matriz de visibilidad server-side).
     // Sin moduleGuard: un ingeniero/responsable receptor puede no tener módulo flota;
     // el RPC confirmaciones_historial acota lo que ve cada usuario.
@@ -484,6 +492,27 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
     loadComponent: () =>
       import('./pages/inventario/articulo-detalle/articulo-detalle').then((m) => m.ArticuloDetallePage),
+  },
+  {
+    // AP2 — inventario de un almacén (artículos + existencias + apertura). Doble
+    // gate: submódulo Ver + verdad server-side (`puede_ver_inventario_bodega`).
+    path: 'inventario/almacen/:bodegaId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
+    loadComponent: () =>
+      import('./pages/inventario/almacen-inventario/almacen-inventario').then((m) => m.AlmacenInventarioPage),
+  },
+  {
+    // AP2 — selector de almacén cuando se entra sin bodega fija (desde el hub).
+    path: 'inventario/almacen',
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
+    loadComponent: () =>
+      import('./pages/inventario/almacen-inventario/almacen-inventario').then((m) => m.AlmacenInventarioPage),
+  },
+  {
+    // AP3 — kardex por artículo×almacén (histórico de movimientos + timeline).
+    path: 'inventario/kardex/:bodegaId/:articuloId',
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
+    loadComponent: () => import('./pages/inventario/kardex/kardex').then((m) => m.KardexPage),
   },
   {
     // AN2 — registrar salida: requiere Operar del submódulo salidas.

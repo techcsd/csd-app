@@ -1,0 +1,120 @@
+.almacen-inv {
+  &__search {
+    margin: 12px 0 4px;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--color-text-soft, #555);
+    margin: 4px 0 10px;
+
+    input {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__count {
+    font-size: 0.85rem;
+    color: var(--color-text-soft, #666);
+    margin: 4px 0 8px;
+  }
+
+  &__muted {
+    text-align: center;
+    color: var(--color-text-soft, #888);
+    padding: 24px 12px;
+  }
+
+  &__band {
+    background: var(--color-surface, #f4f4f4);
+    border: 1px solid var(--color-border, #e0e0e0);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 12px;
+    font-size: 0.92rem;
+    line-height: 1.4;
+
+    &--warn {
+      background: #fff6e5;
+      border-color: #ffd591;
+      color: #8a5a00;
+    }
+  }
+}
+
+.inv-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e6e6e6);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  overflow: hidden;
+
+  &--cero {
+    opacity: 0.72;
+  }
+
+  &__main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: transparent;
+    border: none;
+    padding: 12px 14px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--color-text, #1a1a1a);
+    overflow-wrap: anywhere;
+  }
+
+  &__code {
+    font-size: 0.8rem;
+    color: var(--color-text-soft, #777);
+  }
+
+  &__qty {
+    font-weight: 700;
+    color: var(--color-text, #1a1a1a);
+    white-space: nowrap;
+
+    small {
+      font-weight: 500;
+      color: var(--color-text-soft, #888);
+    }
+
+    &--cero {
+      color: var(--color-error, #c0392b);
+    }
+  }
+
+  &__kardex {
+    flex: 0 0 auto;
+    background: var(--Hub-translucid, #fff3d6);
+    border: none;
+    border-left: 1px solid var(--color-border, #eee);
+    color: #8a5a00;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+}

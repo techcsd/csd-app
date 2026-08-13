@@ -240,6 +240,12 @@ export interface ConduceHistorial {
   obra: string | null;
   proyecto_id: string | null;
   bodega: string | null;
+  // AP4 — obra de ORIGEN (del almacén de salida) + almacén destino, para distinguir
+  // origen/destino en los filtros; responsable_match = roles del usuario en el conduce.
+  origen_proyecto_id?: string | null;
+  origen_proyecto?: string | null;
+  destino_almacen?: string | null;
+  responsable_match?: string[] | null;
   ruta_id: string | null;
   observaciones: string | null;
   receptor: string | null;
@@ -305,6 +311,28 @@ export interface RutaActivaHoy {
   conductor_nombre: string | null;
   fecha: string;
   iniciada_at: string | null;
+  paradas_total: number;
+  paradas_entregadas: number;
+}
+
+/** AP6 — fila del histórico de rutas (todas las creadas) para "Rutas activas". */
+export interface RutaHistorial {
+  id: string;
+  estado: string;
+  tipo: string | null;
+  origen: string | null;
+  destino: string | null;
+  destino_proyecto_id: string | null;
+  obra: string | null;
+  placa: string | null;
+  conductor_id: string | null;
+  conductor_nombre: string | null;
+  fecha: string;
+  iniciada_at: string | null;
+  finalizada_at: string | null;
+  km_real: number | null;
+  km_estimado: number | null;
+  duracion_min: number | null;
   paradas_total: number;
   paradas_entregadas: number;
 }
@@ -713,20 +741,61 @@ export class ConducesService {
   }
 
   /**
+   * AP6 — histórico de rutas (todas las creadas) para el submódulo "Rutas activas".
+   * Elevados ven todas; el resto las suyas (verdad server-side). Filtros combinables:
+   * chofer, rango de fechas, obra (destino) y estado. Cacheado por combinación.
+   */
+  async rutasHistorial(
+    opts: {
+      conductorId?: string | null;
+      desde?: string | null;
+      hasta?: string | null;
+      obraId?: string | null;
+      estado?: string | null;
+    } = {},
+  ): Promise<RutaHistorial[]> {
+    const key = `rutas_hist:${opts.conductorId ?? ''}:${opts.desde ?? ''}:${opts.hasta ?? ''}:${opts.obraId ?? ''}:${opts.estado ?? ''}`;
+    const data = await this.catalog.refresh<RutaHistorial[]>(key, async () => {
+      const { data, error } = await this.supabase.client.rpc('rutas_historial', {
+        p_conductor: opts.conductorId ?? null,
+        p_desde: opts.desde ?? null,
+        p_hasta: opts.hasta ?? null,
+        p_obra: opts.obraId ?? null,
+        p_estado: opts.estado ?? null,
+        p_limite: 200,
+      });
+      if (error) throw new Error(error.message);
+      return (data as RutaHistorial[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /**
    * AF29 — historial de conduces (matriz de visibilidad server-side). Online-first
    * con cache razonable (histórico no necesita offline completo). Los filtros
    * (fecha/obra) van al servidor; el filtro por fase se aplica en la UI.
    */
   async misConducesHistorial(
-    opts: { desde?: string | null; hasta?: string | null; proyectoId?: string | null } = {},
+    opts: {
+      desde?: string | null;
+      hasta?: string | null;
+      proyectoId?: string | null;
+      // AP4 — filtros combinables del histórico.
+      obraOrigen?: string | null;
+      obraDestino?: string | null;
+      rol?: 'emisor' | 'chofer' | 'receptor' | null;
+    } = {},
   ): Promise<ConduceHistorial[]> {
-    const key = `conduces_hist:${opts.desde ?? ''}:${opts.hasta ?? ''}:${opts.proyectoId ?? ''}`;
+    const key = `conduces_hist:${opts.desde ?? ''}:${opts.hasta ?? ''}:${opts.proyectoId ?? ''}:${opts.obraOrigen ?? ''}:${opts.obraDestino ?? ''}:${opts.rol ?? ''}`;
     const data = await this.catalog.refresh<ConduceHistorial[]>(key, async () => {
       const { data, error } = await this.supabase.client.rpc('mis_conduces_historial', {
         p_desde: opts.desde ?? null,
         p_hasta: opts.hasta ?? null,
         p_proyecto_id: opts.proyectoId ?? null,
         p_limite: 200,
+        p_obra_origen: opts.obraOrigen ?? null,
+        p_obra_destino: opts.obraDestino ?? null,
+        p_rol: opts.rol ?? null,
       });
       if (error) throw new Error(error.message);
       return (data as ConduceHistorial[]) ?? [];
