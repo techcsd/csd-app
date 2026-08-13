@@ -56,6 +56,31 @@
   font-size: 12px;
   color: var(--color-text-secondary);
 }
+// AO — destino "Almacén central" fijo (Bodega Central autoseleccionada).
+.gconduce__destino-fijo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.gconduce__destino-fijo-txt {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+}
+.gconduce__destino-cambiar {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--primary, #ff5f00);
+  font-size: 14px;
+  font-weight: 800;
+}
 
 // Carrito de materiales
 .gconduce__items {

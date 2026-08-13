@@ -1,20 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { SelectList, SelectOption } from '../select-list/select-list';
+import { BottomSheet } from '../bottom-sheet/bottom-sheet';
 
 /**
- * AF10 / AK6 — dropdown de verdad (cerrado por defecto). Envuelve `app-select-list`:
- *  - Sin selección → un botón "trigger" cerrado ("Seleccionar…"); el listado NO
- *    aparece hasta que el usuario lo toca (AK6 — antes se mostraba abierto).
- *  - Al tocar el trigger → abre la lista (con buscador si aplica).
- *  - Al elegir → se recoge y queda solo el seleccionado + botón "Cambiar".
- *  - "Cambiar" reabre la lista. Reutilizable en todo el wizard de conduce y en
- *    los selectores de vehículo/obra/despachante.
+ * AF10 / AK6 — dropdown de verdad (cerrado por defecto). AO — al abrir, el listado
+ * NO empuja el flujo de la página: sale en una **hoja inferior (modal deslizable)**
+ * por encima de la pantalla y se cierra al elegir (o tocar el fondo / ✕).
+ *  - Sin selección → un botón "trigger" cerrado ("Seleccionar…").
+ *  - Al tocarlo → abre la hoja con la lista (con buscador si aplica).
+ *  - Al elegir → se cierra la hoja y queda el chip seleccionado + botón "Cambiar".
+ *  - "Cambiar" reabre la hoja. Reutilizable en todo el wizard de conduce y en los
+ *    selectores de vehículo/obra/despachante.
  */
 @Component({
   selector: 'app-collapsible-select',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SelectList],
+  imports: [SelectList, BottomSheet],
   templateUrl: './collapsible-select.html',
   styleUrl: './collapsible-select.scss',
 })
@@ -33,26 +35,30 @@ export class CollapsibleSelect {
 
   picked = output<string>();
 
-  /** AK6 — la lista está abierta (el usuario tocó el trigger o "Cambiar"). */
-  private abierto = signal(false);
+  /** AO — la hoja modal con la lista está abierta. */
+  readonly abierto = signal(false);
 
   readonly seleccionado = computed<SelectOption | null>(
     () => this.options().find((o) => o.id === this.selectedId()) ?? null,
   );
-
-  /** Colapsado = hay una opción elegida y la lista no está abierta (chip + Cambiar). */
-  readonly colapsado = computed(() => !!this.seleccionado() && !this.abierto());
-
-  /** AK6 — cerrado = sin selección y sin abrir (muestra el trigger). */
-  readonly cerrado = computed(() => !this.seleccionado() && !this.abierto());
 
   /** Texto del trigger cerrado. */
   readonly triggerLabel = computed(
     () => this.placeholder() || (this.label() ? `Seleccionar ${this.label().toLowerCase()}` : 'Seleccionar…'),
   );
 
+  /** Título de la hoja modal. */
+  readonly tituloSheet = computed(
+    () => this.label() || this.placeholder() || 'Seleccionar',
+  );
+
   abrir(): void {
     this.abierto.set(true);
+  }
+
+  /** AO — cerrar sin elegir (fondo / ✕). */
+  cerrarSheet(): void {
+    this.abierto.set(false);
   }
 
   onPicked(id: string): void {

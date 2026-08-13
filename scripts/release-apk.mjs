@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.74.0';
+const VERSION = '1.74.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,17 +62,13 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-13';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Control de existencias al crear conduces, corregir conduces trabados, compartir en PDF y pantalla adaptada a más teléfonos';
+const TITULO = 'Listas desplegables en ventana deslizable y "Almacén central" directo a Bodega Central';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduces', d: 'Ya no puedes crear un conduce sacando más material del que hay en el almacén: cada material muestra su existencia y la app bloquea el exceso ANTES de emitir. Se acabaron los conduces que se quedaban trabados sin enviarse.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Los materiales sin existencia en el almacén de origen salen deshabilitados en el buscador (marcados "Sin stock").' },
-  { t: 'nuevo', m: 'Conduces', d: 'Si un conduce quedó trabado por existencia, ahora puedes tocar "Corregir" en Pendientes de envío: se reabre con sus datos y fotos para ajustar las cantidades y reenviarlo, sin perder nada.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Al terminar de crear un conduce puedes tocar "Ver / compartir conduce" para abrirlo y enviarlo en PDF por WhatsApp.' },
-  { t: 'arreglo', m: 'General', d: 'La pantalla principal se adapta mejor a teléfonos pequeños o con la letra del sistema muy grande: los botones ya no se desbordan ni cortan el texto.' },
-  { t: 'arreglo', m: 'General', d: 'Si el "Android System WebView" de tu teléfono está desactualizado, la app te avisa con un enlace directo para actualizarlo.' },
+  { t: 'mejora', m: 'General', d: 'Las listas desplegables (almacenes, obras, conductor, vehículo…) ahora se abren en una ventana deslizable sobre la pantalla, sin empujar el resto de la página; al elegir una opción se cierra sola.' },
+  { t: 'mejora', m: 'Conduces', d: 'Al crear un conduce, si eliges destino "Almacén central" ya se selecciona la Bodega Central automáticamente (la opción "Obra" cubre el almacén de cada obra).' },
 ];
 
 const TIPO_POR_COMMIT = {

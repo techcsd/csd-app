@@ -1,25 +1,25 @@
-@if (colapsado()) {
-  <div class="colsel">
-    @if (label()) { <span class="colsel__label">{{ label() }}</span> }
+<!-- AO — el trigger/chip queda SIEMPRE inline (compacto); la lista sale en la hoja
+     modal, sin empujar el flujo de la página. -->
+<div class="colsel">
+  @if (label()) { <span class="colsel__label">{{ label() }}</span> }
+  @if (seleccionado(); as sel) {
     <div class="colsel__chip">
-      <span class="colsel__icon">{{ seleccionado()?.icon || icon() }}</span>
-      <span class="colsel__name">{{ seleccionado()?.label }}</span>
+      <span class="colsel__icon">{{ sel.icon || icon() }}</span>
+      <span class="colsel__name">{{ sel.label }}</span>
       <button type="button" class="colsel__cambiar" (click)="cambiar()">{{ cambiarLabel() }}</button>
     </div>
-  </div>
-} @else if (cerrado()) {
-  <!-- AK6 — trigger cerrado: la lista no se muestra hasta tocarlo. -->
-  <div class="colsel">
-    @if (label()) { <span class="colsel__label">{{ label() }}</span> }
+  } @else {
     <button type="button" class="colsel__trigger" (click)="abrir()">
       <span class="colsel__icon">{{ icon() }}</span>
       <span class="colsel__placeholder">{{ triggerLabel() }}</span>
       <span class="colsel__chevron" aria-hidden="true">▾</span>
     </button>
-  </div>
-} @else {
+  }
+</div>
+
+<!-- AO — hoja inferior deslizable con la lista; elegir cierra la hoja. -->
+<app-bottom-sheet [open]="abierto()" [titulo]="tituloSheet()" (closed)="cerrarSheet()">
   <app-select-list
-    [label]="label()"
     [icon]="icon()"
     [options]="options()"
     [selectedId]="selectedId()"
@@ -27,4 +27,4 @@
     [searchPlaceholder]="searchPlaceholder()"
     (picked)="onPicked($event)"
   />
-}
+</app-bottom-sheet>

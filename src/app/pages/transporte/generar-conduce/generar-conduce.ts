@@ -126,6 +126,21 @@ export class GenerarConducePage implements OnDestroy {
   almacenOptions = computed(() =>
     this.almacenes().map((a) => ({ id: a.id, label: a.es_central ? `🏢 ${a.nombre}` : a.nombre })),
   );
+  // AO — destino "Almacén central" = **Bodega Central directo** (sin picker). La obra
+  // ya cubre el almacén de su obra (obra X ≡ almacén de obra X), así que "Almacén
+  // central" solo puede significar la bodega central/principal. Se autoselecciona; si
+  // por alguna razón hay más de un almacén central, se ofrece "Cambiar".
+  almacenCentral = computed<AlmacenDestino | null>(
+    () =>
+      this.almacenes().find((a) => a.es_central) ??
+      this.almacenes().find((a) => a.es_principal) ??
+      this.almacenes()[0] ??
+      null,
+  );
+  editarAlmacen = signal(false);
+  almacenSelNombre = computed(
+    () => this.almacenes().find((a) => a.id === this.almacenId())?.nombre ?? this.almacenCentral()?.nombre ?? '',
+  );
 
   // AF31 — ferreterías (origen = compra/entrada).
   ferreterias = signal<Ferreteria[]>([]);
@@ -334,8 +349,23 @@ export class GenerarConducePage implements OnDestroy {
         .then((d) => this.despachantes.set(d))
         .catch(() => {});
     });
+    // AO — destino "Almacén central": autoselecciona la Bodega Central (al elegir la
+    // opción y también cuando los almacenes terminen de cargar). No pisa una elección
+    // manual (solo actúa si aún no hay almacén elegido).
+    effect(() => {
+      if (this.destinoTipo() === 'almacen' && !this.almacenId()) {
+        const c = this.almacenCentral();
+        if (c) this.almacenId.set(c.id);
+      }
+    });
     // AE9 — autosave del borrador (sin fotos/firmas): al cambiar cualquier campo.
     effect(() => this.autosaveEffect());
+  }
+
+  /** AO — cambiar manualmente el almacén central (caso raro de >1 central). */
+  onAlmacenElegido(id: string): void {
+    this.almacenId.set(id);
+    this.editarAlmacen.set(false);
   }
 
   /** AE9 — snapshot + autosave del borrador (se dispara con cualquier cambio). */

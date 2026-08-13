@@ -63,8 +63,24 @@
               </div>
             }
             @case ('almacen') {
+              <!-- AO — Almacén central = Bodega Central directo (la obra ya cubre el
+                   almacén de la obra). Se autoselecciona; solo si hay >1 central se
+                   puede cambiar. -->
               <div class="gconduce__mt">
-                <app-collapsible-select label="Almacén destino" icon="🏢" [options]="almacenOptions()" [selectedId]="almacenId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="almacenId.set($event)" />
+                @if (almacenCentral()) {
+                  @if (editarAlmacen()) {
+                    <app-collapsible-select label="Almacén central destino" icon="🏢" [options]="almacenOptions()" [selectedId]="almacenId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="onAlmacenElegido($event)" />
+                  } @else {
+                    <div class="gconduce__destino-fijo">
+                      <span class="gconduce__destino-fijo-txt">🏢 Se enviará a <b>{{ almacenSelNombre() }}</b></span>
+                      @if (almacenes().length > 1) {
+                        <button type="button" class="gconduce__destino-cambiar" (click)="editarAlmacen.set(true)">Cambiar</button>
+                      }
+                    </div>
+                  }
+                } @else {
+                  <div class="gconduce__band">No hay un almacén central configurado. Usa "Obra" como destino o contacta a Tecnología.</div>
+                }
               </div>
             }
             @default {
