@@ -28,6 +28,21 @@
   border-color: var(--color-primary);
   background: #fff7ed;
 }
+// AO3 — artículo sin existencia en el almacén de origen: deshabilitado, no invita a elegirlo.
+.picker__item--off {
+  opacity: 0.55;
+  background: var(--color-surface-2);
+}
+.picker__item--off .picker__add {
+  background: var(--color-text-secondary);
+}
+.picker__stock {
+  color: var(--color-success);
+  font-weight: 600;
+}
+.picker__stock--off {
+  color: var(--color-danger);
+}
 .picker__name {
   flex: 1;
   font-size: var(--fs-option);

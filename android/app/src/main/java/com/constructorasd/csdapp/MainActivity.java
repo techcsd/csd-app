@@ -10,6 +10,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.webkit.PermissionRequest;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -66,6 +67,23 @@ public class MainActivity extends BridgeActivity {
                         runOnUiThread(() -> request.grant(request.getResources()));
                     }
                 });
+
+        // AO7 — TOPE de la escala de fuente del sistema. El WebView refleja el
+        // "Tamaño de fuente" de Ajustes de Android como textZoom (ej. 130 = 130%).
+        // Con escalas muy grandes (caso RAMIREZ) los tiles y textos reventaban el
+        // layout. Capamos a 140% para conservar algo de accesibilidad SIN destruir la
+        // distribución (el CSS ya degrada con elipsis/columnas fluidas). Ajustable.
+        capTextZoom();
+    }
+
+    /** AO7 — limita el textZoom (escala de fuente del sistema) a un máximo razonable. */
+    private void capTextZoom() {
+        try {
+            WebSettings ws = getBridge().getWebView().getSettings();
+            ws.setTextZoom(Math.min(ws.getTextZoom(), 140));
+        } catch (Exception ignored) {
+            // nunca romper el arranque por esto
+        }
     }
 
     /**

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 
@@ -14,7 +15,7 @@ const SIN_CATEGORIA = -1;
   selector: 'app-articulo-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, DecimalPipe],
   templateUrl: './articulo-picker.html',
   styleUrl: './articulo-picker.scss',
 })
@@ -25,7 +26,29 @@ export class ArticuloPicker {
   /** AE — modo solo-buscador: sin grilla de categorías; el usuario teclea y elige.
    *  Con la búsqueda vacía muestra un hint (no vuelca todo el catálogo). */
   soloBuscador = input<boolean>(false);
+  /** AO3 — stock disponible por artículo del almacén de origen. `null` = no verificar
+   *  (offline / origen sin stock, ej. ferretería) → no se marca ni bloquea nada. Con
+   *  mapa presente, los artículos en 0 salen deshabilitados y se muestra el disponible. */
+  stock = input<Record<string, number> | null>(null);
   picked = output<ArticuloCat>();
+
+  /** AO3 — disponible del artículo; null si no se pasó mapa (no marcar). Un artículo
+   *  ausente del mapa con stock cargado = 0 (el almacén no lo tiene). */
+  stockDe(id: string): number | null {
+    const m = this.stock();
+    if (!m) return null;
+    return id in m ? m[id] : 0;
+  }
+  /** AO3 — sin existencia conocida (0) → no se puede sacar. */
+  sinStock(a: ArticuloCat): boolean {
+    const s = this.stockDe(a.id);
+    return s !== null && s <= 0;
+  }
+  /** AO3 — bloqueo inmediato: no emite un artículo sin stock. */
+  pick(a: ArticuloCat): void {
+    if (this.sinStock(a)) return;
+    this.picked.emit(a);
+  }
 
   query = signal('');
   /** Selected category id, or null while showing the category grid. */

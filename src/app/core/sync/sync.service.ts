@@ -294,6 +294,22 @@ export class SyncService {
     await this.refreshCounts();
   }
 
+  /** AO3 — una op puntual (para reconstruir/corregir un conduce atascado). */
+  async getOp(id: string): Promise<OutboxOp | null> {
+    return (await db.outbox.get(id)) ?? null;
+  }
+
+  /** AO3 — fotos/firmas de una op, reconstruidas como Blob (WebKit-safe: ArrayBuffer
+   *  + type; fallback a blob legacy). Para copiarlas a un borrador antes de descartar
+   *  la op y NO perder la evidencia al corregir. */
+  async getOpFotos(id: string): Promise<Array<{ slot: string; blob: Blob }>> {
+    const rows = await db.fotos_pendientes.where('op_id').equals(id).toArray();
+    return rows.map((f) => ({
+      slot: f.slot,
+      blob: f.data ? new Blob([f.data], { type: f.type || 'image/jpeg' }) : (f.blob as Blob),
+    }));
+  }
+
   /** P5 — items del outbox para la pantalla de diagnóstico (FIFO, con nº fotos). */
   async listOutbox(): Promise<Array<OutboxOp & { fotos: number }>> {
     const ops = await db.outbox.orderBy('created_local').toArray();

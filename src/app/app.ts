@@ -3,6 +3,7 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
+import { AppLauncher } from '@capacitor/app-launcher';
 import { ToastHost } from './shared/components/toast-host/toast-host';
 import { PermisoHost } from './shared/components/permiso-host/permiso-host';
 import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
@@ -24,6 +25,7 @@ import { AlarmaService } from './core/services/alarma.service';
 import { NativeAlarmService } from './core/services/native-alarm.service';
 import { ReporteSemanalService } from './core/services/reporte-semanal.service';
 import { NotificacionesService } from './core/services/notificaciones.service';
+import { DeviceInfoService } from './core/services/device-info.service';
 
 @Component({
   selector: 'app-root',
@@ -50,6 +52,7 @@ export class App {
   private nativeAlarm = inject(NativeAlarmService);
   private reportes = inject(ReporteSemanalService);
   private notificaciones = inject(NotificacionesService);
+  private deviceInfo = inject(DeviceInfoService);
   private router = inject(Router);
 
   constructor() {
@@ -72,6 +75,38 @@ export class App {
       });
     }
     void this.notificaciones.iniciarRealtime(); // AM4 — realtime de avisos (idempotente)
+    void this.checkWebView(); // AO7 — aviso in-app si el WebView es muy viejo
+  }
+
+  /**
+   * AO7 — red de seguridad en-app: el guard NATIVO (MainActivity) reemplaza la app por
+   * una pantalla de "actualiza WebView" cuando detecta Chromium < 111, pero si NO pudo
+   * leer la versión (devuelve -1) la app carga igual y puede verse mal. Aquí, ya dentro
+   * de la app, si el motor resulta viejo mostramos un aviso accionable (Play Store). El
+   * umbral iguala el piso real de Angular 21 (MIN_CHROMIUM_MAJOR = 111 en el guard nativo).
+   */
+  private async checkWebView(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await this.deviceInfo.ready();
+      const major = this.deviceInfo.webViewMajor();
+      if (major != null && major > 0 && major < 111) {
+        this.toast.withAction(
+          `El “Android System WebView” de tu equipo (v${major}) está desactualizado y la app puede verse mal. Actualízalo desde Play Store.`,
+          {
+            label: 'Actualizar',
+            run: () =>
+              void AppLauncher.openUrl({
+                url: 'market://details?id=com.google.android.webview',
+              }).catch(() => {}),
+          },
+          'error',
+          12000,
+        );
+      }
+    } catch {
+      /* best-effort: nunca romper el arranque por el chequeo del WebView */
+    }
   }
 
   /**

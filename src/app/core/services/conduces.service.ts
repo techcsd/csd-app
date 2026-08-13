@@ -979,7 +979,7 @@ export class ConducesService {
    * firmas server-side). Offline-safe por outbox; idempotente por UUID. Al emitir
    * queda en "Pendiente entrega".
    */
-  async crearConduceSimple(input: ConduceSimpleCaptura): Promise<void> {
+  async crearConduceSimple(input: ConduceSimpleCaptura): Promise<string> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
@@ -1017,6 +1017,7 @@ export class ConducesService {
     // QA-6 — el nuevo conduce cae en "Pendiente entrega": invalida su caché para
     // que la próxima lectura lo traiga (se materializa al drenar el outbox online).
     void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    return id; // AO4 — id (idempotente) para deep-link al detalle tras emitir.
   }
 
   /**
@@ -1025,7 +1026,7 @@ export class ConducesService {
    * el bug del bodega_id null (el server rechaza con DR451 si el origen no resuelve).
    * Offline-safe por outbox; idempotente por UUID.
    */
-  async crearConduceDevolucionSuplidor(input: ConduceDevolucionSuplidorCaptura): Promise<void> {
+  async crearConduceDevolucionSuplidor(input: ConduceDevolucionSuplidorCaptura): Promise<string> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
@@ -1059,6 +1060,7 @@ export class ConducesService {
     });
     void this.misConduces();
     void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    return id; // AO4 — id (idempotente) para deep-link al detalle tras emitir.
   }
 
   // ─── AJ8 — Estados del conduce (chofer) + confirmación del receptor ─────────

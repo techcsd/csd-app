@@ -36,7 +36,11 @@
 .home__grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  // AO7 — columnas FLUIDAS (auto-fill) que se adaptan al ancho real del teléfono y a
+  // la escala de fuente del sistema. `min(150px, 100%)` como mínimo evita el desborde
+  // horizontal en pantallas ~5"/alta densidad (antes `1fr 1fr` fijo empujaba el
+  // contenido y cortaba "Notas"/"Mensajes"). En un teléfono normal siguen saliendo 2.
+  grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
   gap: var(--gap);
   padding: 16px;
   align-content: start;

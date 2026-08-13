@@ -97,6 +97,9 @@ body {
   /* Prevent iOS auto-zoom on inputs (< 16px triggers it). */
   -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: none;
+  /* AO7 — guarda anti-desborde horizontal: en teléfonos ~5"/alta densidad o con la
+     fuente del sistema muy grande, nada debe empujar la página de lado (RAMIREZ). */
+  overflow-x: hidden;
 }
 
 body {
@@ -131,6 +134,7 @@ button {
   // absorbs the space and the footer pins). Pages WITHOUT a __body (home, auth,
   // forbidden) scroll here instead of clipping their bottom content.
   overflow-y: auto;
+  overflow-x: hidden; // AO7 — nunca scroll/corte horizontal (fuente grande / pantalla chica)
   // Bottom inset is handled by each __nav footer / sync-bar (avoids doubling).
 }
 

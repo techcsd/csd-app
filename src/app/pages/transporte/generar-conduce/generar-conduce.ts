@@ -15,6 +15,7 @@ import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { SyncService } from '../../../core/sync/sync.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
 import { ConducesService, Despachante, AlmacenDestino } from '../../../core/services/conduces.service';
@@ -81,6 +82,7 @@ export class GenerarConducePage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private sync = inject(SyncService);
 
   // AE9 — borrador persistente del conduce (rehidrata al reabrir; fotos/firmas se re-capturan).
   private readonly clave = 'transporte:generar-conduce';
@@ -98,6 +100,8 @@ export class GenerarConducePage implements OnDestroy {
   private sigDespachante = viewChild<SignaturePad>('despachantePad');
 
   hoja = signal<'form' | 'exito'>('form');
+  // AO4 — id del conduce recién emitido (para "Ver / compartir conduce" en el éxito).
+  conduceCreadoId = signal<string | null>(null);
   loading = signal(true);
   submitting = signal(false);
   confirmSalir = signal(false);
@@ -399,6 +403,69 @@ export class GenerarConducePage implements OnDestroy {
     this.hydrated = true;
   }
 
+  /**
+   * AO3 — reconstruye un conduce ATASCADO (op del outbox con error, ej. "Stock
+   * insuficiente") como borrador editable: mapea el payload a los campos del wizard,
+   * copia sus fotos/firmas al borrador (para no perderlas), descarta la op atascada y
+   * rehidrata. El chofer corrige las cantidades/almacén y reenvía. Solo conduce_simple.
+   */
+  private async cargarCorreccion(opId: string): Promise<void> {
+    const op = await this.sync.getOp(opId);
+    if (!op || op.tipo_op !== 'conduce_simple') {
+      this.hydrated = true;
+      this.toast.error('No se pudo abrir ese conduce para corregir.');
+      return;
+    }
+    const p = op.payload as Record<string, unknown>;
+    // Reconstruye el carrito resolviendo nombre/unidad desde el catálogo ya cargado.
+    const items = (p['items'] as { articulo_id: string; cantidad: number }[]) ?? [];
+    const cart: CartLinea[] = items.map((it) => {
+      const art = this.articulos().find((a) => a.id === it.articulo_id);
+      return {
+        articulo_id: it.articulo_id,
+        nombre: art?.nombre ?? 'Material',
+        unidad: art?.unidad ?? 'u',
+        categoria_id: art?.categoria_id ?? null,
+        cantidad: it.cantidad,
+      };
+    });
+    // Despachante: reusa el picker si el id sigue disponible; si no, cae al nombre libre.
+    const dU = p['despachante_usuario_id'] as string | null;
+    const dE = p['despachante_empleado_id'] as string | null;
+    let despachanteId = '';
+    if (dU && this.despachantes().some((d) => d.tipo === 'usuario' && d.id === dU)) despachanteId = `usuario:${dU}`;
+    else if (dE && this.despachantes().some((d) => d.tipo === 'empleado' && d.id === dE)) despachanteId = `empleado:${dE}`;
+    const draft: ConduceDraft = {
+      origenTipo: 'almacen',
+      bodegaId: (p['bodega_id'] as string) ?? '',
+      obraId: (p['proyecto_id'] as string) ?? '',
+      destinoTipo: p['destino_almacen_id'] ? 'almacen' : 'obra',
+      almacenId: (p['destino_almacen_id'] as string) ?? '',
+      suplidorNombre: '',
+      ferreteriaId: '',
+      referencia: '',
+      observaciones: (p['observaciones'] as string) ?? '',
+      vehiculoId: (p['vehiculo_id'] as string) ?? '',
+      despachanteId,
+      despachanteLibre: despachanteId ? '' : ((p['despachante_nombre'] as string) ?? ''),
+      cart,
+    };
+    // Copia las fotos/firmas de la op ANTES de descartarla (no perder evidencia). El
+    // wizard espera el slot 'recepcion' para la foto de carga (en la op es 'carga').
+    const fotos = await this.sync.getOpFotos(opId);
+    await this.borrador.save(this.clave, draft, { tipo: 'conduce', etiqueta: 'Conduce', ruta: this.location.path() });
+    for (const f of fotos) {
+      await this.borrador.saveFoto(this.clave, f.slot === 'carga' ? 'recepcion' : f.slot, f.blob);
+    }
+    // Saca el conduce atascado del outbox: se recreará corregido al reenviar.
+    await this.sync.discard(opId);
+    // Rehidrata como un borrador normal y lleva al paso de materiales (donde se corrige).
+    this.continuarBorrador();
+    const idx = this.pasos().findIndex((x) => x.key === 'materiales');
+    if (idx >= 0) this.paso.set(idx);
+    this.toast.show('Corrige las cantidades y vuelve a enviar el conduce.', 'info', 6000);
+  }
+
   private async loadExistencias(bodegaId: string): Promise<void> {
     try {
       const ex = await this.inventario.getExistencias(bodegaId);
@@ -421,6 +488,28 @@ export class GenerarConducePage implements OnDestroy {
     if (this.origenTipo() !== 'almacen') return false;
     const s = this.stockDe(l.articulo_id);
     return s != null && l.cantidad > s;
+  }
+
+  /** AO3 — mapa de stock para el buscador de materiales: solo cuando el origen es un
+   *  almacén Y ya hay existencias cargadas (del último sync). `null` offline → el picker
+   *  no marca ni deshabilita nada (no hay dato que mostrar). */
+  stockParaPicker = computed<Record<string, number> | null>(() =>
+    this.origenTipo() === 'almacen' && Object.keys(this.existencias()).length > 0
+      ? this.existencias()
+      : null,
+  );
+
+  /** AO3 — ¿hay stock cargado del almacén de origen? (si no, avisamos que es sin verificar). */
+  stockSinVerificar = computed(
+    () => this.origenTipo() === 'almacen' && Object.keys(this.existencias()).length === 0,
+  );
+
+  /** AO3 — tope de cantidad de una línea: el disponible del almacén, o Infinity si no
+   *  aplica el chequeo (ferretería) o no hay dato (offline). */
+  private topeStock(articuloId: string): number {
+    if (this.origenTipo() !== 'almacen') return Infinity;
+    const s = this.stockDe(articuloId);
+    return s == null ? Infinity : s;
   }
 
   ngOnDestroy(): void {
@@ -452,6 +541,15 @@ export class GenerarConducePage implements OnDestroy {
       void this.conduces.almacenesDestino().then((al) => this.almacenes.set(al)).catch(() => {});
       if (b.length === 1) this.bodegaId.set(b[0].id);
       if (asig.length === 1) this.vehiculoId.set(asig[0].vehiculo_id);
+      // AO3 — ¿venimos a CORREGIR un conduce atascado en el outbox? (acceso directo
+      // desde el error de "Pendientes de envío"). Reconstruye el borrador desde el
+      // payload, conserva fotos/firmas y descarta la op atascada; el chofer ajusta las
+      // cantidades/almacén y reenvía.
+      const corregirId = this.route.snapshot.queryParamMap.get('corregir');
+      if (corregirId) {
+        await this.cargarCorreccion(corregirId);
+        return;
+      }
       const deepLink = this.prefillFromQuery(); // AG15 — pre-llenar si viene de una tarea vinculada
       // AE9 — si NO viene de deep-link, ofrecer retomar un borrador previo (banner).
       if (!deepLink) {
@@ -519,21 +617,35 @@ export class GenerarConducePage implements OnDestroy {
 
   // ---- Materiales ----
   agregar(a: ArticuloCat): void {
+    // AO3 — no se agrega un material sin existencia en el almacén de origen (el picker
+    // ya lo deshabilita; esto es el segundo cerrojo por si se llama directo).
+    if (this.origenTipo() === 'almacen') {
+      const s = this.stockDe(a.id);
+      if (s != null && s <= 0) {
+        this.toast.error(`No hay existencia de "${a.nombre}" en el almacén de origen.`);
+        return;
+      }
+    }
     this.cart.update((list) => {
       if (list.some((l) => l.articulo_id === a.id)) return list;
+      // AO3 — arranca en 1, pero nunca por encima del disponible.
+      const cant = Math.min(1, this.topeStock(a.id));
       return [
-        { articulo_id: a.id, nombre: a.nombre, unidad: a.unidad, categoria_id: a.categoria_id ?? null, cantidad: 1 },
+        { articulo_id: a.id, nombre: a.nombre, unidad: a.unidad, categoria_id: a.categoria_id ?? null, cantidad: cant },
         ...list,
       ];
     });
   }
   ajustar(articuloId: string, delta: number): void {
+    // AO3 — tope inmediato al disponible del almacén (no deja subir más de lo que hay).
+    const tope = this.topeStock(articuloId);
     this.cart.update((list) =>
-      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.max(0, l.cantidad + delta) } : l)).filter((l) => l.cantidad > 0),
+      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.min(tope, Math.max(0, l.cantidad + delta)) } : l)).filter((l) => l.cantidad > 0),
     );
   }
   setCantidad(articuloId: string, v: number): void {
-    const cant = Math.max(0, v || 0);
+    // AO3 — clamp a [0, disponible]: escribir más de lo que hay se corta al máximo.
+    const cant = Math.min(this.topeStock(articuloId), Math.max(0, v || 0));
     this.cart.update((list) =>
       list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)).filter((l) => l.cantidad > 0),
     );
@@ -667,6 +779,13 @@ export class GenerarConducePage implements OnDestroy {
       this.toast.error('Agrega al menos un material.');
       return;
     }
+    // AO3 — cerrojo duro: nunca emitir sacando más de lo disponible (defensa en
+    // profundidad; el paso ya lo bloquea y el server rechaza con AM1, pero así ni se crea
+    // el conduce que luego moriría en el outbox por "Stock insuficiente").
+    if (this.hayExceso()) {
+      this.toast.error('Estás sacando más de lo disponible en algún material. Ajusta las cantidades.');
+      return;
+    }
     if (!this.fotoRecepcion()) {
       this.toast.error('Toma la foto de recepción (el material que cargas).');
       return;
@@ -696,7 +815,7 @@ export class GenerarConducePage implements OnDestroy {
       // AM1 — devolución a suplidor: RPC dedicada con ORIGEN (bodega) obligatorio.
       // Nunca puede emitir con bodega_id null (server rechaza con DR451).
       if (this.destinoTipo() === 'suplidor') {
-        await this.conduces.crearConduceDevolucionSuplidor({
+        const nid = await this.conduces.crearConduceDevolucionSuplidor({
           bodegaOrigenId: this.bodegaId(),
           proyectoOrigenId: null,
           suplidorNombre: this.suplidorNombre().trim(),
@@ -710,6 +829,7 @@ export class GenerarConducePage implements OnDestroy {
           firmaChofer: this.firmaChofer(),
           firmaDespachante: this.firmaDespachante(),
         });
+        this.conduceCreadoId.set(nid); // AO4
         void this.autosave.discard(this.clave); // AE9 — borrador cumplido
         this.hoja.set('exito');
         return;
@@ -717,7 +837,7 @@ export class GenerarConducePage implements OnDestroy {
 
       // AI2 — conduce simplificado: despachante + foto de recepción + firmas
       // (chofer transportista + despachante emisor) en un solo RPC.
-      await this.conduces.crearConduceSimple({
+      const nid = await this.conduces.crearConduceSimple({
         bodegaId: this.bodegaId(),
         proyectoId: this.destinoTipo() === 'obra' ? this.obraId() : null,
         destinoAlmacenId: this.destinoTipo() === 'almacen' ? this.almacenId() : null, // AL10
@@ -732,6 +852,7 @@ export class GenerarConducePage implements OnDestroy {
         firmaDespachante: this.firmaDespachante(),
         tareaVinculada: this.tareaVinculada, // AG15 — enlaza la tarea a esta salida
       });
+      this.conduceCreadoId.set(nid); // AO4 — para "Ver / compartir conduce" en el éxito
       void this.autosave.discard(this.clave); // AE9 — borrador cumplido
       this.hoja.set('exito');
     } catch (e) {
@@ -768,6 +889,14 @@ export class GenerarConducePage implements OnDestroy {
     // nunca a "Mis rutas" (/transporte/conduces = ConducesPage). Back seguro con
     // POP real (AJ2): si se llegó por deep-link en frío, cae al hub sin salir.
     this.navGuard.back('/transporte/conduces-hub');
+  }
+
+  /** AO4 — abre el detalle del conduce recién emitido, donde ya existen Compartir
+   *  (PDF por WhatsApp) y Descargar. Reemplaza el wizard en el historial de nav. */
+  verConduce(): void {
+    const id = this.conduceCreadoId();
+    if (!id) return;
+    void this.router.navigate(['/transporte/conduce-detalle', id], { replaceUrl: true });
   }
 
   get online(): boolean {

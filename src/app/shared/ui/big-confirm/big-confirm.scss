@@ -51,3 +51,14 @@
 .big-confirm__btn:active {
   background: var(--color-surface);
 }
+// AO4 — acción secundaria: contorno blanco sobre el fondo de color (legible).
+.big-confirm__btn2 {
+  max-width: 320px;
+  width: auto;
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+.big-confirm__btn2:active {
+  background: rgba(255, 255, 255, 0.14);
+}

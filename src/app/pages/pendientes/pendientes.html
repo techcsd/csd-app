@@ -57,6 +57,13 @@
             }
 
             <div class="ob-row__actions">
+              <!-- AO3 — corregir un conduce atascado (ej. stock): reabre el wizard con
+                   los datos y fotos para ajustar cantidades/almacén y reenviar. -->
+              @if (puedeCorregir(item)) {
+                <button type="button" class="ob-btn ob-btn--retry" (click)="corregir(item)">
+                  ✏️ Corregir
+                </button>
+              }
               <!-- W1 — reintentar solo tiene sentido en errores transitorios -->
               @if (!item.permanente) {
                 <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">

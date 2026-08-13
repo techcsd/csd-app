@@ -24,8 +24,11 @@ export class BigConfirm {
   /** 'done' = synced (green), 'pending' = queued offline (amber). */
   tone = input<'done' | 'pending'>('done');
   buttonLabel = input<string>('Listo');
+  /** AO4 — acción secundaria opcional; con label vacío no se muestra. */
+  secondaryLabel = input<string>('');
 
   dismissed = output<void>();
+  secondary = output<void>();
 
   constructor() {
     effect(() => {

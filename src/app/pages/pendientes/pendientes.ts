@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBadge } from '../../shared/ui/sync-badge/sync-badge';
@@ -156,6 +157,7 @@ export class PendientesPage {
   private sync = inject(SyncService);
   private network = inject(NetworkService);
   private location = inject(Location);
+  private router = inject(Router);
 
   items = signal<OutboxItem[]>([]);
   loading = signal(true);
@@ -194,6 +196,16 @@ export class PendientesPage {
   /** S30 — se puede descartar: error permanente, o pending atascado >24h. */
   puedeDescartar(item: OutboxItem): boolean {
     return item.permanente === true || this.esViejo(item);
+  }
+
+  /** AO3 — un conduce con error (ej. stock insuficiente) se puede CORREGIR: reabre el
+   *  wizard con los datos y fotos del conduce atascado para ajustar cantidades/almacén. */
+  puedeCorregir(item: OutboxItem): boolean {
+    return item.estado === 'error' && item.tipo_op === 'conduce_simple';
+  }
+  /** AO3 — abre el wizard de conduce en modo corrección (reconstruye desde el payload). */
+  corregir(item: OutboxItem): void {
+    void this.router.navigate(['/transporte/generar-conduce'], { queryParams: { corregir: item.id } });
   }
 
   tipoLabel(t: string): string {

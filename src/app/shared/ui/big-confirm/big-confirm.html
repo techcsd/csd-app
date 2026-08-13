@@ -9,4 +9,10 @@
   <button type="button" class="btn-cta big-confirm__btn" (click)="dismissed.emit()">
     {{ buttonLabel() }}
   </button>
+  <!-- AO4 — acción secundaria opcional (ej. "Ver / compartir conduce"). -->
+  @if (secondaryLabel()) {
+    <button type="button" class="btn-ghost big-confirm__btn2" (click)="secondary.emit()">
+      {{ secondaryLabel() }}
+    </button>
+  }
 </div>

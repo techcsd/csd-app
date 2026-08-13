@@ -50,6 +50,12 @@
 .gconduce__notas {
   resize: vertical;
 }
+// AO3 — aviso sutil de stock del último sync (offline).
+.gconduce__hint {
+  margin: 8px 2px 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
 
 // Carrito de materiales
 .gconduce__items {

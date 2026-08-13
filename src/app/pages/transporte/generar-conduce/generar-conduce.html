@@ -80,7 +80,11 @@
             {{ esFerreteria() ? '¿Qué compraste?' : '¿Qué material sacas?' }}
             @if (esFerreteria()) { <span class="gconduce__opt">(opcional)</span> }
           </label>
-          <app-articulo-picker [articulos]="articulos()" [categorias]="categorias()" [soloBuscador]="true" [exclude]="excludeIds()" (picked)="agregar($event)" />
+          <app-articulo-picker [articulos]="articulos()" [categorias]="categorias()" [soloBuscador]="true" [exclude]="excludeIds()" [stock]="stockParaPicker()" (picked)="agregar($event)" />
+
+          @if (stockSinVerificar()) {
+            <p class="gconduce__hint">ℹ️ Sin conexión: mostrando existencias del último sync. Se verifican al enviar.</p>
+          }
 
           @if (cart().length) {
             <div class="gconduce__items">
@@ -208,7 +212,9 @@
       [note]="esFerreteria() ? 'Almacén la confirmará para subir el stock.' : 'Está en Pendiente de entrega. Cuando entregues, el receptor lo confirma desde su teléfono.'"
       tone="done"
       buttonLabel="Listo"
+      [secondaryLabel]="!esFerreteria() && conduceCreadoId() && online ? '📤 Ver / compartir conduce' : ''"
       (dismissed)="finish()"
+      (secondary)="verConduce()"
     />
   }
 
