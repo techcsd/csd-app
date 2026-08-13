@@ -1,5 +1,12 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 13/08 (3) — AO1 Google Maps en todo mapa — **RELEASE 1.74.2 PUBLICADO (rolling)**
+Regla de Xaviel: **todo mapa de la app usa Google Maps**. Se detectó que `location-picker` (crear ruta origen/destino/paradas, y demás usos) seguía en Leaflet — nunca intentaba Google. `npm run build` **exit 0**. **SHIPPED:** commit **`02efdb7`** (feat) → push `main` → PWA por Vercel. **APK 1.74.2** firmado (cert prod `3c5316d8…5065`) + registrado (Y1) + subido al bucket + `apk_url` actualizado. **`publicada=true` 1.74.2** (1.74.1→false; verificado por flags) → `version_minima` sigue **1.42.0**. **1 migración:** `sql/2026-08-13-publicar-1.74.2.sql` (flip; sin esquema). **Rollback:** `update sgc.app_versiones set publicada=(version='1.74.1') where plataforma='movil';` + `git revert 02efdb7 && git push`.
+
+- **location-picker → Google Maps** (espeja el patrón dual de `seguimiento`): carga vía `GoogleMapsLoaderService` (key por RPC `maps_api_key`, **confirmado no-null, 39 chars**) como primario; pin por toque **y arrastre** (dragend geocodifica); Leaflet queda SOLO como fallback offline/sin-key. Con esto los 2 únicos renders de mapa de la app (seguimiento + location-picker) usan Google. La búsqueda de texto sigue en Nominatim (migrar a Places = AO2, aún bloqueado en edge functions).
+- **⚠️ Dependencia de runtime (Xaviel):** para que el mapa renderice Google DENTRO del APK (WebView, origen `https://localhost`), la key de Google debe permitir ese **HTTP referrer** (`https://localhost/*`) — ver `docs/google-cloud-checklist-ao1.md` Key B. Si el referrer no lo incluye, Google falla con RefererNotAllowedMapError y cae a Leaflet (sin romperse). **Verificar en el teléfono:** crear ruta → ¿el mapa es Google? Si sale Leaflet, falta el referrer `localhost` en la key.
+
+
 ## 🟢 SESIÓN 13/08 (2) — AO UX del wizard de conduce — **RELEASE 1.74.1 PUBLICADO (rolling)**
 Pedido de Xaviel sobre el wizard de crear conduce. `npm run build` **exit 0**. **SHIPPED:** commit **`034ca16`** (feat) → push `main` → PWA por Vercel. **APK 1.74.1** firmado (cert prod `3c5316d8…5065`) + registrado (Y1) + subido al bucket (`csd-app-1.74.1.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=true` 1.74.1** (1.74.0→false) → `version_publicada()`=**1.74.1**; `version_minima` sigue **1.42.0**. **1 migración:** `sql/2026-08-13-publicar-1.74.1.sql` (flip; sin esquema). **Rollback:** `update sgc.app_versiones set publicada=(version='1.74.0') where plataforma='movil';` + `git revert 034ca16 && git push`.
 
