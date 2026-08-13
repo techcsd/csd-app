@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.74.1';
+const VERSION = '1.74.2';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-13';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Listas desplegables en ventana deslizable y "Almacén central" directo a Bodega Central';
+const TITULO = 'Todos los mapas de la app usan Google Maps';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'General', d: 'Las listas desplegables (almacenes, obras, conductor, vehículo…) ahora se abren en una ventana deslizable sobre la pantalla, sin empujar el resto de la página; al elegir una opción se cierra sola.' },
-  { t: 'mejora', m: 'Conduces', d: 'Al crear un conduce, si eliges destino "Almacén central" ya se selecciona la Bodega Central automáticamente (la opción "Obra" cubre el almacén de cada obra).' },
+  { t: 'mejora', m: 'General', d: 'Todos los mapas de la app ahora usan Google Maps, incluido el de crear ruta (antes salía otro mapa). Buscar un punto y marcarlo en el mapa se ve igual en toda la app.' },
 ];
 
 const TIPO_POR_COMMIT = {

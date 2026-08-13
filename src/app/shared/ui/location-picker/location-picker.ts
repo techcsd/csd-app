@@ -15,6 +15,11 @@ import * as L from 'leaflet';
 import { GeocodingService, LugarBusqueda } from '../../../core/services/geocoding.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+
+/* google.maps sin @types → lo tratamos como any (igual que seguimiento). */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type GAny = any;
 
 export interface UbicacionSeleccionada {
   latitud: number;
@@ -23,10 +28,11 @@ export interface UbicacionSeleccionada {
 }
 
 /**
- * U18/U19/U20/U21 — Selector de ubicación con mapa (Leaflet + OSM). Pin por
- * toque, búsqueda con sesgo RD, y "usar mi ubicación actual" (Geolocation nativo
- * de Capacitor). Aislado del resto de la app: emite {lat,lng,direccion}. Espeja
- * el picker de SGC web; adaptado a móvil (WebView Android + botones grandes).
+ * U18/U19/U20/U21 — Selector de ubicación con mapa. **AO — usa Google Maps** (regla:
+ * Google en TODO mapa de la app) vía `GoogleMapsLoaderService`; si no hay key/carga
+ * falla (offline), cae a Leaflet/OSM como red de seguridad (sin quedarse sin mapa).
+ * Pin por toque/arrastre, búsqueda con sesgo RD y "usar mi ubicación actual"
+ * (Geolocation nativo). Aislado del resto de la app: emite {lat,lng,direccion}.
  */
 @Component({
   selector: 'app-location-picker',
@@ -40,17 +46,28 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   private geocoding = inject(GeocodingService);
   private permissions = inject(PermissionsService);
   private toast = inject(ToastService);
+  private mapsLoader = inject(GoogleMapsLoaderService);
 
   latitud = input<number | null>(null);
   longitud = input<number | null>(null);
   ubicacionChange = output<UbicacionSeleccionada>();
 
   private mapEl = viewChild.required<ElementRef<HTMLDivElement>>('map');
+
+  // Google Maps (primario si hay key).
+  private g: GAny = null;
+  private gmap: GAny = null;
+  private gmarker: GAny = null;
+  private useGoogle = false;
+
+  // Leaflet (fallback offline / sin key).
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
 
+  private ready = false;
+
   // Vista por defecto: Santo Domingo, RD.
-  private readonly DEFAULT: L.LatLngTuple = [18.4861, -69.9312];
+  private readonly DEFAULT = { lat: 18.4861, lng: -69.9312 };
 
   direccion = signal('');
   buscando = signal(false);
@@ -66,50 +83,98 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     effect(() => {
       const lat = this.latitud();
       const lng = this.longitud();
-      if (this.map && lat != null && lng != null) {
-        this.map.setView([lat, lng], 15);
+      if (this.ready && lat != null && lng != null) {
+        this.centrar(lat, lng, 15);
         void this.setMarker(lat, lng, false);
       }
     });
   }
 
-  ngAfterViewInit() {
+  async ngAfterViewInit(): Promise<void> {
     const lat = this.latitud();
     const lng = this.longitud();
-    const center: L.LatLngTuple = lat != null && lng != null ? [lat, lng] : this.DEFAULT;
+    const center = lat != null && lng != null ? { lat, lng } : this.DEFAULT;
+    const zoom = lat != null ? 15 : 11;
 
-    this.map = L.map(this.mapEl().nativeElement, { center, zoom: lat != null ? 15 : 11 });
+    const gmaps = await this.mapsLoader.load();
+    if (gmaps) {
+      this.g = gmaps;
+      this.useGoogle = true;
+      this.gmap = new this.g.Map(this.mapEl().nativeElement, {
+        center,
+        zoom,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        clickableIcons: false,
+      });
+      // Pin por toque en el mapa.
+      this.gmap.addListener('click', (e: GAny) => {
+        void this.setMarker(e.latLng.lat(), e.latLng.lng(), true);
+      });
+    } else {
+      this.initLeaflet(center, zoom);
+    }
+
+    this.ready = true;
+    if (lat != null && lng != null) void this.setMarker(lat, lng, false);
+
+    // WebView Android: el mapa sale gris si no se recalcula el tamaño tras el layout.
+    this.nudge();
+    setTimeout(() => this.nudge(), 320);
+    setTimeout(() => this.nudge(), 700);
+  }
+
+  private initLeaflet(center: { lat: number; lng: number }, zoom: number): void {
+    this.map = L.map(this.mapEl().nativeElement, { center: [center.lat, center.lng], zoom });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '© OpenStreetMap',
     }).addTo(this.map);
-
-    if (lat != null && lng != null) this.setMarker(lat, lng, false);
-
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       void this.setMarker(e.latlng.lat, e.latlng.lng, true);
     });
-
-    // U18 — en el WebView de Android los tiles salen grises si no se recalcula
-    // el tamaño tras el layout. Varios nudges cubren el timing.
-    requestAnimationFrame(() => this.map?.invalidateSize());
-    setTimeout(() => this.map?.invalidateSize(), 320);
-    setTimeout(() => this.map?.invalidateSize(), 700);
   }
 
   /** Fuerza recálculo del tamaño (llamar al mostrar el contenedor). */
-  refrescar() {
-    this.map?.invalidateSize();
+  refrescar(): void {
+    this.nudge();
   }
 
-  ngOnDestroy() {
+  /** Recalcula el tamaño del mapa (Google o Leaflet) tras cambios de layout. */
+  private nudge(): void {
+    if (this.useGoogle) {
+      if (this.gmap && this.g) {
+        this.g.event.trigger(this.gmap, 'resize');
+        const c = this.gmap.getCenter?.();
+        if (c) this.gmap.setCenter(c);
+      }
+    } else {
+      this.map?.invalidateSize();
+    }
+  }
+
+  /** Centra el mapa activo en (lat,lng) con el zoom dado. */
+  private centrar(lat: number, lng: number, zoom: number): void {
+    if (this.useGoogle) {
+      this.gmap?.setCenter({ lat, lng });
+      this.gmap?.setZoom(zoom);
+    } else {
+      this.map?.setView([lat, lng], zoom);
+    }
+  }
+
+  ngOnDestroy(): void {
     if (this.searchTimer) clearTimeout(this.searchTimer);
     this.searchAbort?.abort();
     this.map?.remove();
     this.map = null;
+    this.gmarker?.setMap?.(null);
+    this.gmarker = null;
+    this.gmap = null;
   }
 
-  private customIcon(): L.DivIcon {
+  private leafletIcon(): L.DivIcon {
     // DivIcon evita los assets de imagen de Leaflet (se rompen con el bundler).
     return L.divIcon({
       className: 'lp-marker',
@@ -119,10 +184,23 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     });
   }
 
-  private async setMarker(lat: number, lng: number, emitAndGeocode: boolean) {
-    if (!this.map) return;
-    if (this.marker) this.marker.setLatLng([lat, lng]);
-    else this.marker = L.marker([lat, lng], { icon: this.customIcon() }).addTo(this.map);
+  private async setMarker(lat: number, lng: number, emitAndGeocode: boolean): Promise<void> {
+    if (this.useGoogle) {
+      if (!this.gmap) return;
+      if (this.gmarker) {
+        this.gmarker.setPosition({ lat, lng });
+      } else {
+        this.gmarker = new this.g.Marker({ position: { lat, lng }, map: this.gmap, draggable: true });
+        // Arrastrar el pin también fija/geocodifica el punto.
+        this.gmarker.addListener('dragend', (e: GAny) => {
+          void this.setMarker(e.latLng.lat(), e.latLng.lng(), true);
+        });
+      }
+    } else {
+      if (!this.map) return;
+      if (this.marker) this.marker.setLatLng([lat, lng]);
+      else this.marker = L.marker([lat, lng], { icon: this.leafletIcon() }).addTo(this.map);
+    }
     if (emitAndGeocode) {
       const dir = await this.geocoding.reverse(lat, lng);
       this.direccion.set(dir);
@@ -131,13 +209,13 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   }
 
   /** U21 — usar mi ubicación actual (permiso nativo + error visible). */
-  async usarMiUbicacion() {
+  async usarMiUbicacion(): Promise<void> {
     if (this.ubicando()) return;
     this.ubicando.set(true);
     try {
       const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 10000 });
       if (r.ok) {
-        this.map?.setView([r.lat, r.lng], 16);
+        this.centrar(r.lat, r.lng, 16);
         await this.setMarker(r.lat, r.lng, true);
         this.busquedaError.set('');
         return;
@@ -164,7 +242,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   }
 
   /** U19 — debounce por tecleo (Nominatim ~1 req/s) + cancelar obsoletas. */
-  onBuscar(texto: string) {
+  onBuscar(texto: string): void {
     if (this.searchTimer) clearTimeout(this.searchTimer);
     this.busquedaError.set('');
     const q = texto.trim();
@@ -177,7 +255,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     this.searchTimer = setTimeout(() => void this.ejecutarBusqueda(q), 400);
   }
 
-  private async ejecutarBusqueda(q: string) {
+  private async ejecutarBusqueda(q: string): Promise<void> {
     this.searchAbort?.abort();
     const ac = new AbortController();
     this.searchAbort = ac;
@@ -197,11 +275,11 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     }
   }
 
-  seleccionarResultado(r: LugarBusqueda) {
+  seleccionarResultado(r: LugarBusqueda): void {
     this.resultados.set([]);
     this.busquedaError.set('');
     this.direccion.set(r.nombre);
-    this.map?.setView([r.latitud, r.longitud], 16);
+    this.centrar(r.latitud, r.longitud, 16);
     void this.setMarker(r.latitud, r.longitud, false);
     this.ubicacionChange.emit({ latitud: r.latitud, longitud: r.longitud, direccion: r.nombre });
   }
