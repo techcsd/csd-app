@@ -512,25 +512,42 @@ export class PreusoPage extends GuardedWizard {
     this.respuestas.update((r) => ({ ...r, [itemId]: { ...this.draft(itemId), comentario } }));
   }
   onItemFoto(itemId: string, photo: CapturedPhoto): void {
+    // AQ14 — libera la vista previa anterior antes de reemplazarla (evita que los
+    // object-URL/blobs se acumulen en memoria durante la inspección en gama baja).
+    this.revoke(this.draft(itemId).photo?.previewUrl);
     this.respuestas.update((r) => ({ ...r, [itemId]: { ...this.draft(itemId), photo } }));
     this.persistFoto('item:' + itemId, photo.blob);
   }
   onItemFotoCleared(itemId: string): void {
+    this.revoke(this.draft(itemId).photo?.previewUrl);
     this.respuestas.update((r) => ({ ...r, [itemId]: { ...this.draft(itemId), photo: null } }));
     this.dropFoto('item:' + itemId);
   }
 
   onFoto(slot: string, photo: CapturedPhoto): void {
+    this.revoke(this.fotos()[slot]?.previewUrl); // AQ14 — libera la previa anterior
     this.fotos.update((f) => ({ ...f, [slot]: photo }));
     this.persistFoto(slot, photo.blob);
   }
   onFotoCleared(slot: string): void {
+    this.revoke(this.fotos()[slot]?.previewUrl); // AQ14 — libera al quitarla
     this.fotos.update((f) => {
       const next = { ...f };
       delete next[slot];
       return next;
     });
     this.dropFoto(slot);
+  }
+
+  /** AQ14 — revoca un object-URL de vista previa (best-effort; ignora blob: falsos). */
+  private revoke(url: string | null | undefined): void {
+    if (url && url.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   // AE8 — el pre-uso simplificado (plantilla corta) se llena en UNA hoja: el

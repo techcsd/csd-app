@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { CombustibleCaptura, EchadaLog, PrecioCombustibleVigente, UltimaEchada } from '../models/combustible.model';
+import { CombustibleCaptura, EchadaDetalle, EchadaLog, PrecioCombustibleVigente, UltimaEchada } from '../models/combustible.model';
 import { db } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
@@ -89,6 +89,102 @@ export class CombustibleService {
     });
     if (error) throw new Error(error.message);
     return (data as EchadaLog[]) ?? [];
+  }
+
+  /**
+   * AQ13/AQ6 — detalle de UNA echada por id. Lee registros_combustible directo
+   * (RLS: elevado ve todas; el chofer ve las de sus vehículos). Enriquece placa +
+   * nombres (usuarios via RPC) y firma las fotos (bucket vehiculos) para el lightbox.
+   * Devuelve null si no existe o el usuario no tiene acceso (RLS).
+   */
+  async getEchadaDetalle(id: string): Promise<EchadaDetalle | null> {
+    const { data, error } = await this.supabase.client
+      .from('registros_combustible')
+      .select(
+        'id, fecha, created_at, vehiculo_id, conductor_id, registrado_por, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, rendimiento_km_gal, costo_por_km, producto, subtipo, estacion, estado, alerta_consumo, km_alerta, motivo_alerta, origen, foto_recibo_path, foto_tablero_path, foto_bomba_path',
+      )
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    const row = data as Record<string, unknown>;
+
+    // Nombres (usuarios es admin-only RLS → resolver por RPC seguro).
+    const ids = [row['conductor_id'], row['registrado_por']].filter(Boolean) as string[];
+    const nombres: Record<string, string> = {};
+    if (ids.length) {
+      try {
+        const { data: us } = await this.supabase.client.rpc('usuarios_por_ids', { p_ids: ids });
+        for (const u of (us as Array<{ id: string; nombre: string }>) ?? []) nombres[u.id] = u.nombre;
+      } catch {
+        /* best-effort: sin nombres, el detalle sigue */
+      }
+    }
+
+    // Placa/descripción del vehículo (best-effort).
+    let placa: string | null = null;
+    let vehiculoDesc: string | null = null;
+    if (row['vehiculo_id']) {
+      try {
+        const { data: v } = await this.supabase.client
+          .from('vehiculos')
+          .select('placa, marca, modelo')
+          .eq('id', row['vehiculo_id'] as string)
+          .maybeSingle();
+        if (v) {
+          const vv = v as { placa?: string; marca?: string; modelo?: string };
+          placa = vv.placa ?? null;
+          vehiculoDesc = [vv.marca, vv.modelo].filter(Boolean).join(' ') || null;
+        }
+      } catch {
+        /* best-effort */
+      }
+    }
+
+    const conductorId = (row['conductor_id'] as string | null) ?? null;
+    const registradoPor = (row['registrado_por'] as string | null) ?? null;
+    return {
+      id: row['id'] as string,
+      fecha: row['fecha'] as string,
+      created_at: row['created_at'] as string,
+      vehiculo_id: (row['vehiculo_id'] as string | null) ?? null,
+      placa,
+      vehiculo_desc: vehiculoDesc,
+      conductor_id: conductorId,
+      conductor_nombre: conductorId ? nombres[conductorId] ?? null : null,
+      registrado_por: registradoPor,
+      registrado_nombre: registradoPor ? nombres[registradoPor] ?? null : null,
+      kilometraje: (row['kilometraje'] as number | null) ?? null,
+      km_anterior: (row['km_anterior'] as number | null) ?? null,
+      km_recorridos: (row['km_recorridos'] as number | null) ?? null,
+      galones: (row['galones'] as number | null) ?? null,
+      monto: (row['monto'] as number | null) ?? null,
+      precio_por_galon: (row['precio_por_galon'] as number | null) ?? null,
+      rendimiento_km_gal: (row['rendimiento_km_gal'] as number | null) ?? null,
+      costo_por_km: (row['costo_por_km'] as number | null) ?? null,
+      producto: (row['producto'] as string | null) ?? null,
+      subtipo: (row['subtipo'] as string | null) ?? null,
+      estacion: (row['estacion'] as string | null) ?? null,
+      estado: (row['estado'] as string | null) ?? null,
+      alerta_consumo: (row['alerta_consumo'] as boolean | null) ?? null,
+      km_alerta: (row['km_alerta'] as boolean | null) ?? null,
+      motivo_alerta: (row['motivo_alerta'] as string | null) ?? null,
+      origen: (row['origen'] as string | null) ?? null,
+      foto_recibo_url: await this.signVehiculoFoto(row['foto_recibo_path'] as string | null),
+      foto_tablero_url: await this.signVehiculoFoto(row['foto_tablero_path'] as string | null),
+      foto_bomba_url: await this.signVehiculoFoto(row['foto_bomba_path'] as string | null),
+    };
+  }
+
+  /** URL firmada de una foto de echada (bucket vehiculos, privado). Best-effort. */
+  private async signVehiculoFoto(path: string | null): Promise<string | null> {
+    if (!path) return null;
+    try {
+      const { data } = await this.supabase.client.storage.from('vehiculos').createSignedUrl(path, 3600);
+      return data?.signedUrl ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /** Mayor kilometraje de echadas de este vehículo aún pendientes en el outbox. */

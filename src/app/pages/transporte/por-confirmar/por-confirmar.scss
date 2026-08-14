@@ -4,11 +4,20 @@
 
 .porconf__header {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   padding: 16px;
   background: var(--color-secondary);
   color: #fff;
+}
+.porconf__header-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.porconf__header-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 .porconf__back {
   width: 44px;
@@ -24,6 +33,10 @@
   font-size: var(--fs-title);
   font-weight: 800;
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .porconf__hist {
   background: rgba(255, 255, 255, 0.15);

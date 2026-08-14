@@ -16,9 +16,13 @@
 }
 .conf__title {
   flex: 1;
+  min-width: 0;
   font-size: 20px;
   font-weight: 800;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .conf__refresh {
   flex: 0 0 auto;

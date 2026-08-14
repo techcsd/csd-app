@@ -14,15 +14,24 @@
         message="El registro de echadas está disponible para jefe de flota, administración y tecnología."
       />
     } @else {
+    <!-- AQ13 — filtros rápidos de periodo -->
+    <div class="clog__chips">
+      @for (p of periodos; track p.id) {
+        <button type="button" class="clog__chip-p" [class.clog__chip-p--on]="periodo() === p.id" (click)="setPeriodo(p)">
+          {{ p.label }}
+        </button>
+      }
+    </div>
+
     <!-- Filtros: rango de fecha + búsqueda -->
     <div class="clog__filtros">
       <label class="clog__field">
         <span>Desde</span>
-        <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event)" />
+        <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event); periodo.set('')" />
       </label>
       <label class="clog__field">
         <span>Hasta</span>
-        <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" />
+        <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event); periodo.set('')" />
       </label>
       <button type="button" class="btn-cta clog__aplicar" (click)="load()">Aplicar</button>
     </div>
@@ -41,10 +50,10 @@
         <p class="clog__resumen">⚠️ {{ sospechosas() }} echada(s) con salto o consumo sospechoso.</p>
       }
       @for (r of filtradas(); track r.id) {
-        <div class="clog__row" [class.clog__row--alerta]="esSospechosa(r)">
+        <button type="button" class="clog__row" [class.clog__row--alerta]="esSospechosa(r)" (click)="abrir(r)">
           <div class="clog__row-top">
             <span class="clog__placa">{{ r.placa || 'Persona' }}</span>
-            <span class="clog__fecha">{{ fechaMedia(r.fecha) }}</span>
+            <span class="clog__fecha">{{ fechaMedia(r.fecha) }} ›</span>
           </div>
           <div class="clog__row-km">
             @if (r.kilometraje != null) {
@@ -64,7 +73,7 @@
             @if (r.alerta_consumo) { <span class="clog__chip clog__chip--alerta">Consumo anormal</span> }
             <span class="clog__quien">Registró: {{ r.registrado_nombre || '—' }}</span>
           </div>
-        </div>
+        </button>
       } @empty {
         <app-empty-state
           icon="⛽"

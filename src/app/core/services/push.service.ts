@@ -58,8 +58,19 @@ export class PushService {
     // AJ7 — el deep-link pasa por el gate de navegación: si el usuario está en un
     // formulario en curso, se difiere hasta que lo cierre (nunca lo saca del form).
     await PushNotifications.addListener('pushNotificationActionPerformed', (a) => {
-      const data = (a.notification?.data ?? {}) as { tipo?: string; ruta?: string };
-      const dest = notifAppRoute({ tipo: data.tipo ?? 'info', ruta: data.ruta ?? null });
+      const data = (a.notification?.data ?? {}) as {
+        tipo?: string;
+        ruta?: string;
+        referencia_id?: string;
+        referencia_tipo?: string;
+      };
+      // AQ1/AQ6 — el deep-link usa la entidad asociada (echada, versión, conduce…).
+      const dest = notifAppRoute({
+        tipo: data.tipo ?? 'info',
+        ruta: data.ruta ?? null,
+        referencia_id: data.referencia_id ?? null,
+        referencia_tipo: data.referencia_tipo ?? null,
+      });
       if (dest && dest !== '/home') {
         this.navGuard.requestNav(() => void this.router.navigateByUrl(dest).catch(() => {}));
       }

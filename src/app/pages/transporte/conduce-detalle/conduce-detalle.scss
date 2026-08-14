@@ -224,3 +224,27 @@
   color: #71717a;
   white-space: nowrap;
 }
+
+// AQ10 — zona de eliminación (solo emisor/admin, conduce pendiente)
+.cdet__peligro {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+.cdet__eliminar {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-danger);
+  border: 1.5px solid var(--color-danger);
+  font-weight: 700;
+  font-size: 15px;
+}
+.cdet__eliminar:disabled { opacity: 0.5; }
+.cdet__peligro-nota {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

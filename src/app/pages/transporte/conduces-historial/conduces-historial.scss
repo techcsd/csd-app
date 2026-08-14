@@ -25,6 +25,10 @@
   color: var(--main);
   margin: 0;
   flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hist-header__refresh {

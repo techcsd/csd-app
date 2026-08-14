@@ -387,6 +387,14 @@ export const routes: Routes = [
       import('./pages/transporte/combustible-log/combustible-log').then((m) => m.CombustibleLogPage),
   },
   {
+    // AQ13/AQ6 — detalle de una echada (fila del registro + deep-link de consumo anormal).
+    // La RLS de registros_combustible acota: elevado ve todas; el chofer, las suyas.
+    path: 'transporte/echada/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/echada-detalle/echada-detalle').then((m) => m.EchadaDetallePage),
+  },
+  {
     path: 'transporte/conduces',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),

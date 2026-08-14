@@ -1,0 +1,76 @@
+<div class="screen ech">
+  <header class="ech__header">
+    <button type="button" class="ech__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="ech__icon">⛽</span>
+    <h1 class="ech__title">Echada</h1>
+    <button type="button" class="ech__refresh" (click)="load()" [disabled]="loading()" aria-label="Actualizar">🔄</button>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!echada()) {
+      <app-empty-state icon="⛽" title="No pudimos abrir la echada" message="Puede que ya no exista o no tengas acceso. Revisa tu conexión y reintenta." />
+    } @else if (echada(); as e) {
+      @if (sospechosa()) {
+        <div class="ech__alerta">
+          <span class="ech__alerta-t">⚠️ Consumo anormal</span>
+          @if (e.motivo_alerta) { <p class="ech__alerta-m">{{ e.motivo_alerta }}</p> }
+        </div>
+      }
+
+      <div class="ech__card">
+        <div class="ech__veh">
+          <span class="ech__placa">{{ e.placa || 'Persona' }}</span>
+          @if (e.vehiculo_desc) { <span class="ech__veh-desc">{{ e.vehiculo_desc }}</span> }
+        </div>
+        <p class="ech__fecha">{{ fmtFechaHora(e.created_at || e.fecha) }}</p>
+
+        <div class="ech__grid">
+          @if (e.kilometraje != null) {
+            <div class="ech__kv"><span class="ech__k">Odómetro</span><span class="ech__v">{{ e.kilometraje | number: '1.0-0' }} km</span></div>
+          }
+          @if (e.km_recorridos != null) {
+            <div class="ech__kv"><span class="ech__k">Recorrido</span><span class="ech__v" [class.ech__v--alerta]="e.km_alerta">+{{ e.km_recorridos | number: '1.0-0' }} km</span></div>
+          }
+          <div class="ech__kv"><span class="ech__k">Galones</span><span class="ech__v">{{ e.galones | number: '1.0-1' }} gal</span></div>
+          @if (e.monto != null) {
+            <div class="ech__kv"><span class="ech__k">Monto</span><span class="ech__v">RD$ {{ e.monto | number: '1.0-2' }}</span></div>
+          }
+          @if (e.precio_por_galon != null) {
+            <div class="ech__kv"><span class="ech__k">RD$/gal</span><span class="ech__v">{{ e.precio_por_galon | number: '1.0-2' }}</span></div>
+          }
+          @if (e.rendimiento_km_gal != null) {
+            <div class="ech__kv"><span class="ech__k">Rendimiento</span><span class="ech__v">{{ e.rendimiento_km_gal | number: '1.0-1' }} km/gal</span></div>
+          }
+          @if (e.costo_por_km != null) {
+            <div class="ech__kv"><span class="ech__k">Costo/km</span><span class="ech__v">RD$ {{ e.costo_por_km | number: '1.0-2' }}</span></div>
+          }
+          <div class="ech__kv"><span class="ech__k">Combustible</span><span class="ech__v">{{ tipoLabel() }}</span></div>
+          @if (e.estacion) { <div class="ech__kv"><span class="ech__k">Estación</span><span class="ech__v">{{ e.estacion }}</span></div> }
+          <div class="ech__kv"><span class="ech__k">Chofer</span><span class="ech__v">{{ e.conductor_nombre || '—' }}</span></div>
+          <div class="ech__kv"><span class="ech__k">Registró</span><span class="ech__v">{{ e.registrado_nombre || '—' }}</span></div>
+        </div>
+      </div>
+
+      @if (fotos().length) {
+        <h3 class="ech__sec">Fotos</h3>
+        <div class="ech__fotos">
+          @for (f of fotos(); track f.label) {
+            <button type="button" class="ech__foto" (click)="verFoto(f.url)">
+              <img [src]="f.url" [alt]="f.label" loading="lazy" />
+              <span class="ech__foto-cap">{{ f.label }}</span>
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  @if (lightboxUrl(); as lb) {
+    <div class="ech__lightbox" (click)="cerrarLightbox()">
+      <button type="button" class="ech__lightbox-x" (click)="cerrarLightbox()" aria-label="Cerrar">✕</button>
+      <img [src]="lb" alt="Foto" />
+    </div>
+  }
+</div>

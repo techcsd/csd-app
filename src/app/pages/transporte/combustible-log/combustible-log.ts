@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
+import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CombustibleService } from '../../../core/services/combustible.service';
@@ -8,6 +9,17 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { ToastService } from '../../../core/services/toast.service';
 import { EchadaLog } from '../../../core/models/combustible.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
+
+/** AQ13 — chips de periodo rápido (mismo patrón que Mi actividad AJ9). */
+type PeriodoChip = { id: string; label: string; dias: number };
+const PERIODOS: PeriodoChip[] = [
+  { id: '1d', label: '1 día', dias: 1 },
+  { id: '1s', label: '1 sem', dias: 7 },
+  { id: '1m', label: '1 mes', dias: 30 },
+  { id: '3m', label: '3 meses', dias: 90 },
+  { id: '6m', label: '6 meses', dias: 180 },
+  { id: '1a', label: '1 año', dias: 365 },
+];
 
 /**
  * AF17 — "Registro de echadas" para roles elevados (admin, jefe de flota,
@@ -28,8 +40,11 @@ export class CombustibleLogPage {
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private router = inject(Router);
 
   readonly fechaMedia = formatFechaMedia;
+  readonly periodos = PERIODOS;
+  periodo = signal<string>('1m');
 
   // QA-25 — backstop de rol en cliente (además del RPC gateado): solo roles
   // elevados de flota ven el registro de echadas (mismo criterio que Seguimiento).
@@ -78,6 +93,19 @@ export class CombustibleLogPage {
 
   esSospechosa(r: EchadaLog): boolean {
     return !!(r.km_alerta || r.alerta_consumo);
+  }
+
+  /** AQ13 — chip de periodo rápido: fija el rango de fechas y recarga. */
+  setPeriodo(p: PeriodoChip): void {
+    this.periodo.set(p.id);
+    this.desde.set(this.hace(p.dias));
+    this.hasta.set(this.hoy());
+    void this.load();
+  }
+
+  /** AQ13 — abrir el detalle de la echada (fotos, delta, motivo del flag). */
+  abrir(r: EchadaLog): void {
+    void this.router.navigate(['/transporte/echada', r.id]);
   }
 
   private hoy(): string {

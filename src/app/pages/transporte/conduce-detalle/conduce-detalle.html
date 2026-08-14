@@ -129,7 +129,27 @@
             }
           </ul>
         }
+
+        <!-- AQ10 — eliminar conduce creado por error (solo emisor/admin, mientras pendiente) -->
+        @if (puedeEliminar()) {
+          <div class="cdet__peligro">
+            <button type="button" class="cdet__eliminar" [disabled]="eliminando()" (click)="pedirEliminar()">
+              🗑️ Eliminar conduce
+            </button>
+            <p class="cdet__peligro-nota">Solo si se creó por error. Se repondrá su stock al almacén de origen.</p>
+          </div>
+        }
       </article>
     }
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmarEliminar()"
+    title="¿Eliminar este conduce?"
+    [message]="'Se eliminará el conduce ' + (detalle()?.numero || '') + ' y se repondrá su stock al almacén de origen. No se puede deshacer.'"
+    confirmLabel="Sí, eliminar"
+    cancelLabel="Cancelar"
+    tone="danger"
+    (confirmed)="eliminar()"
+    (cancelled)="confirmarEliminar.set(false)" />
 </div>

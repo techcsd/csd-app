@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.75.0';
+const VERSION = '1.76.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,21 +59,24 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-13';
+const RELEASED_AT = '2026-08-14';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Inventario por almacén con histórico, Rutas activas y arreglo de obra destino';
+const TITULO = 'Chat con fotos y archivos, notificaciones con sonido, eliminar conduces y detalle de echadas';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduces', d: 'Al crear un conduce, la lista de obras de destino ya aparece para todos (antes decía "No hay opciones").' },
-  { t: 'nuevo', m: 'Inventario', d: 'Nueva vista "Inventario por almacén": ves los artículos y existencias de un almacén, con buscador. Entra desde Inventario o desde cada almacén.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Histórico por artículo (kardex): al lado de cada artículo, un botón abre todos sus movimientos (entradas/salidas/ajustes) con quién entrega, quién recibe, transporte y su conduce, más un gráfico de existencias en el tiempo.' },
-  { t: 'mejora', m: 'Inventario', d: 'Los materiales en cero ya no aparecen al elegir material para un conduce o salida (solo se ofrecen los que tienen existencia).' },
-  { t: 'mejora', m: 'Conduces', d: 'El historial de conduces ahora se puede filtrar por obra de salida o de llegada, por tu rol (emisor/chofer/receptor) y por fechas, con buscador.' },
-  { t: 'nuevo', m: 'Transporte', d: 'Nuevo "Rutas activas" (para jefes de flota): ve qué está haciendo cada chofer y su ruta en curso, con un histórico de rutas filtrable.' },
-  { t: 'arreglo', m: 'General', d: 'En iPhone (app web), ya no aparece el aviso de "actualizar": la app se actualiza sola.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Ahora puedes enviar fotos y archivos (PDF, Word, Excel…) en el chat, como en WhatsApp: se ven en el hilo y las imágenes se abren en grande.' },
+  { t: 'nuevo', m: 'General', d: 'Las notificaciones ahora suenan y aparecen aunque no estés dentro de la app: mensajes, entregas por confirmar, rutas, consumo de combustible y nuevas actualizaciones.' },
+  { t: 'mejora', m: 'General', d: 'Al tocar una notificación te lleva directo a lo que pasó (por ejemplo, la echada con consumo anormal).' },
+  { t: 'nuevo', m: 'Conduces', d: 'Puedes eliminar un conduce creado por error, con una advertencia clara; se repone su stock automáticamente.' },
+  { t: 'arreglo', m: 'Conduces', d: 'El conduce que acabas de crear vuelve a aparecer al instante en "Pendiente entrega".' },
+  { t: 'mejora', m: 'Confirmaciones', d: 'La Bodega Central aparece en el filtro de obras de las confirmaciones.' },
+  { t: 'nuevo', m: 'Transporte', d: 'En el Registro de echadas puedes tocar una echada para ver su detalle completo con fotos, y filtrar rápido por 1 día, 1 semana, 1 mes, 3/6 meses o 1 año.' },
+  { t: 'arreglo', m: 'General', d: 'El tutorial de bienvenida ya no se corta: se ajusta a tu pantalla y los botones Siguiente/Saltar siempre se ven.' },
+  { t: 'mejora', m: 'Transporte', d: 'Mejor rendimiento en teléfonos de gama baja al tomar fotos (menos consumo de memoria).' },
+  { t: 'arreglo', m: 'Confirmaciones', d: 'Se arregló el encabezado de "Entregas por confirmar" que se montaba con los botones.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -78,11 +78,41 @@
 }
 
 .clog__row {
+  display: block;
+  width: 100%;
+  text-align: left;
   padding: 12px 14px;
   margin-bottom: 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   background: var(--color-surface);
+  color: inherit;
+  cursor: pointer;
+}
+.clog__row:active {
+  background: var(--color-bg);
+}
+
+// AQ13 — chips de periodo rápido
+.clog__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.clog__chip-p {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.clog__chip-p--on {
+  border-color: var(--Hub);
+  background: var(--Hub);
+  color: #121212;
 }
 .clog__row--alerta {
   border-color: rgba(220, 38, 38, 0.5);

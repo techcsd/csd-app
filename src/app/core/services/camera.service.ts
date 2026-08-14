@@ -36,6 +36,19 @@ export interface CapturedDoc {
   previewUrl: string | null;
 }
 
+/**
+ * AQ9 — a picked chat attachment: any file. Images are compressed like a photo;
+ * other documents (pdf/doc/xls/…) are kept as-is with their real name + mime.
+ */
+export interface CapturedFile {
+  blob: Blob;
+  nombre: string;
+  mime: string;
+  esImagen: boolean;
+  /** Object URL for image preview (null for non-images); revoke when done. */
+  previewUrl: string | null;
+}
+
 const MAX_EDGE = 1280;
 const JPEG_QUALITY = 0.7;
 /** Native camera/gallery quality (0-100) — Capacitor resizes + compresses on
@@ -198,6 +211,47 @@ export class CameraService {
           esImagen: true,
           ext: 'jpg',
           previewUrl: URL.createObjectURL(blob),
+        });
+      };
+      input.click();
+    });
+  }
+
+  /**
+   * AQ9 — pick ANY file for a chat attachment. Images are compressed (~1280px,
+   * q0.7 JPEG) like a photo; other documents (pdf/doc/xls/ppt/txt/csv…) are kept
+   * as-is with their real filename + mime. Works on the PWA and the Android
+   * WebView (plain file input). Returns null if the user cancels.
+   */
+  pickAttachment(): Promise<CapturedFile | null> {
+    return new Promise((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept =
+        'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.rtf,.zip';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          resolve(null);
+          return;
+        }
+        if (file.type.startsWith('image/')) {
+          const blob = await this.compress(file);
+          resolve({
+            blob,
+            nombre: file.name || 'foto.jpg',
+            mime: 'image/jpeg',
+            esImagen: true,
+            previewUrl: URL.createObjectURL(blob),
+          });
+          return;
+        }
+        resolve({
+          blob: file,
+          nombre: file.name || 'archivo',
+          mime: file.type || 'application/octet-stream',
+          esImagen: false,
+          previewUrl: null,
         });
       };
       input.click();

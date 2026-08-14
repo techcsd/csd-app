@@ -1,9 +1,13 @@
 <div class="screen porconf">
   <header class="porconf__header">
-    <button type="button" class="porconf__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="porconf__title">📥 Entregas por confirmar</h1>
-    <button type="button" class="porconf__hist" (click)="misConfirmaciones()">🕘 Mis confirmaciones</button>
-    <button type="button" class="porconf__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
+    <div class="porconf__header-top">
+      <button type="button" class="porconf__back" (click)="back()" aria-label="Atrás">←</button>
+      <h1 class="porconf__title">📥 Entregas por confirmar</h1>
+      <button type="button" class="porconf__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
+    </div>
+    <div class="porconf__header-actions">
+      <button type="button" class="porconf__hist" (click)="misConfirmaciones()">🕘 Mis confirmaciones</button>
+    </div>
   </header>
 
   <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">

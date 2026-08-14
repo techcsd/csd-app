@@ -1090,6 +1090,27 @@ export class ConducesService {
   }
 
   /**
+   * AQ10 — Eliminar (anular) un conduce creado por error. Soft-delete server-side
+   * vía `anular_conduce`: repone el stock si descontó del origen y cancela la ruta
+   * vinculada (o solo omite esta parada en rutas multi-parada). Solo el emisor
+   * mientras esté PENDIENTE (sin entregar ni confirmar) o un admin — el server valida
+   * y rechaza lo demás con un mensaje claro. Va por outbox (idempotente) para que
+   * el conduce desaparezca al instante y se materialice al drenar.
+   */
+  async eliminarConduce(salidaId: string, motivo?: string | null): Promise<void> {
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'conduce_eliminar',
+      capturado_en: new Date().toISOString(),
+      payload: { salida_id: salidaId, motivo: (motivo ?? '').trim() || null },
+      fotos: [],
+      resumen: { salida_id: salidaId },
+    });
+    void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    void this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+  }
+
+  /**
    * AM1 — devolución a suplidor por contrato explícito: origen (bodega) OBLIGATORIO
    * y nombrado; sin destino de obra/almacén; motivo 'devolucion' server-side. Blinda
    * el bug del bodega_id null (el server rechaza con DR451 si el origen no resuelve).
@@ -1435,6 +1456,17 @@ export class ConducesService {
   }
 
   private registerHandler(): void {
+    // AQ10 — eliminar/anular conduce (soft-delete server-side; repone stock + cancela ruta).
+    this.sync.register('conduce_eliminar', async (payload) => {
+      const { error } = await this.supabase.client.rpc('anular_conduce', {
+        p_salida_id: payload['salida_id'],
+        p_motivo: payload['motivo'] ?? null,
+      });
+      if (error) throwSyncError(error);
+      await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+      await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+    });
+
     this.sync.register('crear_ruta', async (payload, photoPaths) => {
       const rutaId = payload['id'] as string;
       const conductorId = (payload['conductor_id'] as string | null) ?? null;

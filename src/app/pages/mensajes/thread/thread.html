@@ -32,7 +32,21 @@
         } @else {
           <div class="thread__msg" [class.thread__msg--mio]="esMio(m)">
             @if (!esMio(m)) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
-            <span class="thread__burbuja">{{ m.contenido }}</span>
+            @if (esImagen(m)) {
+              @if (urlAdjunto(m); as u) {
+                <button type="button" class="thread__img-btn" (click)="verImagen(m)">
+                  <img class="thread__img" [src]="u" [alt]="m.archivo_nombre || 'Imagen'" loading="lazy" />
+                </button>
+              } @else {
+                <span class="thread__img thread__img--cargando">📷 Enviando…</span>
+              }
+            } @else if (esArchivo(m)) {
+              <button type="button" class="thread__archivo" (click)="abrirArchivo(m)">
+                <span class="thread__archivo-icon">📄</span>
+                <span class="thread__archivo-nombre">{{ m.archivo_nombre || 'Archivo' }}</span>
+              </button>
+            }
+            @if (m.contenido) { <span class="thread__burbuja">{{ m.contenido }}</span> }
             <span class="thread__hora">{{ fmt(m.created_at) }}</span>
           </div>
         }
@@ -40,7 +54,25 @@
     }
   </div>
 
+  @if (menuAdjuntar()) {
+    <div class="thread__adj-backdrop" (click)="toggleMenuAdjuntar()"></div>
+    <div class="thread__adj-menu">
+      <button type="button" class="thread__adj-op" [disabled]="adjuntando()" (click)="adjuntarCamara()">
+        <span class="thread__adj-emoji">📷</span> Cámara
+      </button>
+      <button type="button" class="thread__adj-op" [disabled]="adjuntando()" (click)="adjuntarGaleria()">
+        <span class="thread__adj-emoji">🖼️</span> Galería
+      </button>
+      <button type="button" class="thread__adj-op" [disabled]="adjuntando()" (click)="adjuntarArchivo()">
+        <span class="thread__adj-emoji">📎</span> Archivo
+      </button>
+    </div>
+  }
+
   <footer class="thread__compose">
+    <button type="button" class="thread__adj-btn" [disabled]="adjuntando()" (click)="toggleMenuAdjuntar()" aria-label="Adjuntar">
+      {{ adjuntando() ? '…' : '＋' }}
+    </button>
     <input
       class="field thread__input"
       type="text"
@@ -52,4 +84,11 @@
     <button type="button" class="thread__send" [disabled]="enviando() || !texto().trim()" (click)="enviar()">➤</button>
   </footer>
   @if (!online) { <p class="thread__offline">Sin conexión: se enviará cuando vuelva el internet.</p> }
+
+  @if (lightboxUrl(); as lb) {
+    <div class="thread__lightbox" (click)="cerrarLightbox()">
+      <button type="button" class="thread__lightbox-x" (click)="cerrarLightbox()" aria-label="Cerrar">✕</button>
+      <img [src]="lb" alt="Imagen" />
+    </div>
+  }
 </div>

@@ -3,11 +3,13 @@ import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { ConducesService, ConduceDetalle } from '../../../core/services/conduces.service';
 import { ConducePdfService } from '../../../core/services/conduce-pdf.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 
 /** Etiquetas de fase del conduce (homologado con la web). */
@@ -31,7 +33,7 @@ const FASE_LABEL: Record<string, string> = {
   selector: 'app-conduce-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog],
   templateUrl: './conduce-detalle.html',
   styleUrl: './conduce-detalle.scss',
 })
@@ -42,6 +44,7 @@ export class ConduceDetallePage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
+  private userCtx = inject(UserContextService);
 
   fmtFecha = formatFecha;
   fmtFechaHora = formatFechaHumana;
@@ -50,6 +53,8 @@ export class ConduceDetallePage {
   loading = signal(true);
   detalle = signal<ConduceDetalle | null>(null);
   generando = signal(false);
+  confirmarEliminar = signal(false);
+  eliminando = signal(false);
 
   faseLabel = computed(() => {
     const d = this.detalle();
@@ -64,6 +69,19 @@ export class ConduceDetallePage {
   destino = computed(() => {
     const d = this.detalle();
     return d?.proyecto || d?.destino_almacen || '—';
+  });
+
+  /**
+   * AQ10 — mostrar "Eliminar" solo cuando el estado/rol lo permite: el conduce está
+   * PENDIENTE (despachado, sin receptor) y el usuario es el emisor o un admin. El
+   * server (anular_conduce) revalida; esto solo evita ofrecer una acción que fallaría.
+   */
+  puedeEliminar = computed(() => {
+    const d = this.detalle();
+    if (!d) return false;
+    const pendiente = d.estado === 'despachado' && !d.recibido_por;
+    const soyEmisor = !!d.creado_por && d.creado_por === this.userCtx.profile()?.id;
+    return pendiente && (soyEmisor || this.userCtx.esAdmin());
   });
 
   constructor() {
@@ -121,6 +139,32 @@ export class ConduceDetallePage {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo descargar el conduce.');
     } finally {
       this.generando.set(false);
+    }
+  }
+
+  /** AQ10 — abre la advertencia de eliminación. */
+  pedirEliminar(): void {
+    this.confirmarEliminar.set(true);
+  }
+
+  /** AQ10 — confirma: encola el anular_conduce (repone stock + cancela ruta) y sale. */
+  async eliminar(): Promise<void> {
+    const d = this.detalle();
+    if (!d || this.eliminando()) return;
+    this.eliminando.set(true);
+    try {
+      await this.conduces.eliminarConduce(d.id);
+      this.confirmarEliminar.set(false);
+      this.toast.success(
+        this.network.online()
+          ? `Conduce ${d.numero} eliminado. Se repuso su stock.`
+          : 'Se eliminará al reconectar. Ya no aparecerá en tus listados.',
+      );
+      this.navGuard.back('/transporte/conduces-hub');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar el conduce.');
+    } finally {
+      this.eliminando.set(false);
     }
   }
 

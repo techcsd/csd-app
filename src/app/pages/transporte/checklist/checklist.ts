@@ -382,15 +382,28 @@ export class ChecklistPage implements OnDestroy {
   }
 
   onFoto(slot: string, photo: CapturedPhoto): void {
+    this.revoke(this.fotos()[slot]?.previewUrl); // AQ14 — libera la previa anterior
     this.fotos.update((f) => ({ ...f, [slot]: photo }));
   }
 
   onFotoCleared(slot: string): void {
+    this.revoke(this.fotos()[slot]?.previewUrl); // AQ14 — libera al quitarla
     this.fotos.update((f) => {
       const next = { ...f };
       delete next[slot];
       return next;
     });
+  }
+
+  /** AQ14 — revoca un object-URL de vista previa (evita acumular blobs en memoria). */
+  private revoke(url: string | null | undefined): void {
+    if (url && url.startsWith('blob:')) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   setDanos(value: boolean): void {
@@ -412,10 +425,12 @@ export class ChecklistPage implements OnDestroy {
   }
 
   onDanoFoto(i: number, photo: CapturedPhoto): void {
+    this.revoke(this.danos()[i]?.photo?.previewUrl); // AQ14
     this.danos.update((d) => d.map((x, idx) => (idx === i ? { ...x, photo } : x)));
   }
 
   removeDano(i: number): void {
+    this.revoke(this.danos()[i]?.photo?.previewUrl); // AQ14
     this.danos.update((d) => d.filter((_, idx) => idx !== i));
   }
 

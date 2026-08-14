@@ -23,12 +23,24 @@
 
 .tour__pop {
   position: fixed;
+  display: flex;
+  flex-direction: column;
   width: min(340px, calc(100vw - 24px));
+  // AQ4 — nunca más alto que el área segura → los botones no se cortan; si el
+  // contenido no cabe (font-scale grande), el texto scrollea y los botones quedan.
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px);
   background: var(--color-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lift);
   padding: 22px 20px 18px;
   animation: tour-pop 0.2s ease;
+}
+.tour__scroll {
+  overflow-y: auto;
+  min-height: 0;
+}
+.tour__actions {
+  flex: 0 0 auto;
 }
 .tour__pop--center {
   top: 50% !important;

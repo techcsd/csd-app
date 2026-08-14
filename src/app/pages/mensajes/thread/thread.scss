@@ -164,3 +164,122 @@
   color: var(--color-text-secondary);
   background: var(--color-bg);
 }
+
+// ── AQ9 — Adjuntos (imágenes, archivos, lightbox) ──────────────────────────
+.thread__adj-btn {
+  flex: 0 0 auto;
+  width: 44px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text);
+  font-size: 24px;
+  font-weight: 800;
+}
+.thread__adj-btn:disabled { opacity: 0.5; }
+
+.thread__adj-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.thread__adj-menu {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(76px + var(--safe-bottom));
+  z-index: 41;
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+.thread__adj-op {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.thread__adj-op:disabled { opacity: 0.5; }
+.thread__adj-emoji { font-size: 24px; }
+
+.thread__img-btn {
+  padding: 0;
+  background: none;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 220px;
+}
+.thread__img {
+  display: block;
+  max-width: 220px;
+  max-height: 240px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+.thread__img--cargando {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 120px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.thread__archivo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 240px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text);
+  text-align: left;
+}
+.thread__archivo-icon { font-size: 22px; flex: 0 0 auto; }
+.thread__archivo-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.thread__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.9);
+}
+.thread__lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.thread__lightbox-x {
+  position: absolute;
+  top: calc(12px + var(--safe-top));
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 22px;
+}

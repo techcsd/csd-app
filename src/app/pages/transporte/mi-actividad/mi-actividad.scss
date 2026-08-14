@@ -38,8 +38,12 @@
 .mact__title {
   margin: 0;
   flex: 1;
+  min-width: 0;
   font-size: var(--fs-title);
   font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mact__nombre {

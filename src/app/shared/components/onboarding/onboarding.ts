@@ -1,9 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   HostListener,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { LocalStore } from '../../../core/services/local-store.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
@@ -86,6 +88,10 @@ export class Onboarding {
   pop = signal<{ top: number; left: number } | null>(null);
   pidiendoPermiso = signal(false);
 
+  // AQ4 — referencia al tooltip para medir su altura REAL y recolocarlo (antes se
+  // asumía 210px fijos → decidía mal si iba arriba/abajo y se cortaba).
+  private popCard = viewChild<ElementRef<HTMLElement>>('popcard');
+
   constructor() {
     void this.store.get(DONE_KEY).then((v) => {
       if (!v) this.start();
@@ -114,7 +120,15 @@ export class Onboarding {
       this.pop.set(null);
       return;
     }
-    setTimeout(() => this.measure(el), 60);
+    // AQ4 — trae el elemento al centro del viewport ANTES de resaltarlo. Sin esto,
+    // un target fuera de pantalla (barra de sync abajo, tile bajo el pliegue en un
+    // teléfono chico) daba un rect fuera del área visible y el recuadro se cortaba.
+    try {
+      el.scrollIntoView({ block: 'center', inline: 'nearest' });
+    } catch {
+      /* navegadores viejos: se mide igual */
+    }
+    setTimeout(() => this.measure(el), 160);
   }
 
   next(): void {
@@ -146,28 +160,50 @@ export class Onboarding {
   private measure(el: HTMLElement): void {
     const r = el.getBoundingClientRect();
     const pad = 6;
+    const vh = window.innerHeight;
+    const safeTop = this.safeInset('--safe-top');
+    const safeBottom = this.safeInset('--safe-bottom');
+    // AQ4 — clampa el recuadro dentro del área segura (nunca bajo el notch/barra),
+    // por si el elemento quedó parcialmente fuera tras el scroll.
+    const top = Math.max(safeTop + 4, r.top - pad);
+    const bottom = Math.min(vh - safeBottom - 4, r.bottom + pad);
     const rect: Rect = {
-      top: r.top - pad,
-      left: r.left - pad,
+      top,
+      left: Math.max(4, r.left - pad),
       width: r.width + pad * 2,
-      height: r.height + pad * 2,
+      height: Math.max(24, bottom - top),
     };
     this.rect.set(rect);
-    this.pop.set(this.placePop(rect));
+    // 1ª pasada con altura estimada; 2ª con la altura REAL ya renderizada.
+    this.pop.set(this.placePop(rect, 220));
+    requestAnimationFrame(() => {
+      const h = this.popCard()?.nativeElement.offsetHeight;
+      if (h && this.rect() === rect) this.pop.set(this.placePop(rect, h));
+    });
   }
 
-  private placePop(rect: Rect): { top: number; left: number } {
+  /** AQ4 — lee un inset de área segura (--safe-top/--safe-bottom) en px. */
+  private safeInset(name: string): number {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue(name);
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  private placePop(rect: Rect, popH: number): { top: number; left: number } {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const tw = Math.min(340, vw - 24);
-    const th = 210;
     const gap = 14;
+    const safeTop = this.safeInset('--safe-top');
+    const safeBottom = this.safeInset('--safe-bottom');
     const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-    // Below the target if it fits, else above. Horizontally clamped on-screen.
-    const top =
-      rect.top + rect.height + gap + th < vh
-        ? rect.top + rect.height + gap
-        : Math.max(12, rect.top - th - gap);
+    const minTop = safeTop + 8;
+    const maxTop = Math.max(minTop, vh - safeBottom - popH - 8);
+    // Debajo del target si el tooltip cabe entero; si no, encima. Siempre clampado
+    // dentro del área segura para que los botones queden visibles.
+    const below = rect.top + rect.height + gap;
+    const cabeAbajo = below + popH <= vh - safeBottom - 8;
+    const top = clamp(cabeAbajo ? below : rect.top - popH - gap, minTop, maxTop);
     const left = clamp(rect.left, 12, vw - tw - 12);
     return { top, left };
   }

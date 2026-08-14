@@ -1,5 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { NotifSoundService } from './notif-sound.service';
 
 /** AE — un aviso in-app (sgc.notificaciones). */
 export interface Notificacion {
@@ -10,6 +11,9 @@ export interface Notificacion {
   ruta: string | null;
   leida: boolean;
   created_at: string;
+  // AQ1/AQ6 — deep-link a la entidad asociada (echada, conduce, ruta, versión…).
+  referencia_id?: string | null;
+  referencia_tipo?: string | null;
 }
 
 /**
@@ -20,6 +24,7 @@ export interface Notificacion {
 @Injectable({ providedIn: 'root' })
 export class NotificacionesService {
   private supabase = inject(SupabaseService);
+  private sound = inject(NotifSoundService);
 
   private _noLeidas = signal(0);
   noLeidas = this._noLeidas.asReadonly();
@@ -41,7 +46,7 @@ export class NotificacionesService {
   async getMisNotificaciones(limit = 50): Promise<Notificacion[]> {
     const { data, error } = await this.supabase.client
       .from('notificaciones')
-      .select('id, tipo, titulo, mensaje, ruta, leida, created_at')
+      .select('id, tipo, titulo, mensaje, ruta, leida, created_at, referencia_id, referencia_tipo')
       .order('leida', { ascending: true })
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -106,6 +111,8 @@ export class NotificacionesService {
           this._lastTipo.set(payload?.new?.tipo ?? null);
           this._tick.update((n) => n + 1);
           void this.refreshNoLeidas().catch(() => {});
+          // AQ1 — con la app abierta, un aviso nuevo suena sutil (tipo WhatsApp).
+          this.sound.chime();
         },
       )
       .subscribe();
@@ -133,10 +140,26 @@ export class NotificacionesService {
  * sus rutas apuntan al router web; sin traducir, el tap caía al fallback → home.
  * Reutilizable por el deep-link del tap push (AF7).
  */
-export function notifAppRoute(n: { tipo: string; ruta: string | null }): string {
+export function notifAppRoute(n: {
+  tipo: string;
+  ruta: string | null;
+  referencia_id?: string | null;
+  referencia_tipo?: string | null;
+}): string {
   const r = (n.ruta ?? '').trim();
   // Firma de recepción pendiente → bandeja "Por firmar" (aunque venga sin ruta).
   if (n.tipo === 'firma') return '/transporte/por-firmar';
+  // AQ1 — versión publicada → pantalla de actualización (deep-link del push de versión).
+  if (n.tipo === 'version_publicada' || n.referencia_tipo === 'version' || r.startsWith('/actualizar')) {
+    return '/actualizar';
+  }
+  // AQ6 — consumo anormal → detalle de LA echada (no la bandeja genérica de avisos).
+  // El id viene en referencia_id o embebido en la ruta web (?echada=<uuid>).
+  const echadaId =
+    n.referencia_tipo === 'echada' && n.referencia_id
+      ? n.referencia_id
+      : r.match(/[?&]echada=([0-9a-fA-F-]{36})/)?.[1] ?? null;
+  if (echadaId) return `/transporte/echada/${echadaId}`;
   if (!r) return '/home';
   // Reporte semanal: web /flota/reporte-semanal → app /transporte/reporte-semanal.
   if (r.startsWith('/flota/reporte-semanal')) return '/transporte/reporte-semanal';

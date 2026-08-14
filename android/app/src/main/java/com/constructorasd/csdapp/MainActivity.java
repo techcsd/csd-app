@@ -1,8 +1,12 @@
 package com.constructorasd.csdapp;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,6 +45,13 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(AlarmSchedulerPlugin.class);
         super.onCreate(savedInstanceState);
 
+        // AQ1 — canal de notificaciones de ALTA importancia (heads-up + sonido) para
+        // las push dirigidas al usuario (mensajes, entregas, rutas, consumo anormal,
+        // nueva versión…). Se registra SIEMPRE (aunque el WebView sea viejo) para que
+        // el sonido/aviso con la app cerrada funcione. FCM lo usa por defecto vía el
+        // meta-data del manifest (default_notification_channel_id = avisos_csd).
+        ensurePushChannel();
+
         // WV-GUARD: si el WebView es demasiado viejo para Angular 21, reemplazamos
         // la vista del bridge por un mensaje nativo accionable (el WebView del
         // bridge queda descartado; su SyntaxError en JS es inofensivo a nivel
@@ -74,6 +85,39 @@ public class MainActivity extends BridgeActivity {
         // layout. Capamos a 140% para conservar algo de accesibilidad SIN destruir la
         // distribución (el CSS ya degrada con elipsis/columnas fluidas). Ajustable.
         capTextZoom();
+    }
+
+    /** AQ1 — id del canal de avisos de alta importancia (heads-up + sonido). */
+    private static final String PUSH_CHANNEL_ID = "avisos_csd";
+
+    /**
+     * AQ1 — crea (idempotente) el canal de notificaciones de la app con importancia
+     * ALTA: sonido de notificación del sistema, vibración y heads-up. En Android 8+
+     * el canal manda sobre la importancia; sin esto las push llegaban silenciosas y
+     * sin banner emergente. El sonido/vibración respeta los ajustes del sistema y
+     * del propio canal (el usuario puede bajarlos desde Ajustes de la app).
+     */
+    private void ensurePushChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        try {
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm == null || nm.getNotificationChannel(PUSH_CHANNEL_ID) != null) return;
+            NotificationChannel ch = new NotificationChannel(
+                PUSH_CHANNEL_ID, "Avisos", NotificationManager.IMPORTANCE_HIGH);
+            ch.setDescription("Mensajes, entregas, rutas y alertas de la app.");
+            ch.enableVibration(true);
+            ch.setVibrationPattern(new long[] {0, 250, 150, 250});
+            ch.enableLights(true);
+            Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            AudioAttributes attrs = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+            ch.setSound(sound, attrs);
+            nm.createNotificationChannel(ch);
+        } catch (Exception ignored) {
+            // nunca romper el arranque por el canal
+        }
     }
 
     /** AO7 — limita el textZoom (escala de fuente del sistema) a un máximo razonable. */

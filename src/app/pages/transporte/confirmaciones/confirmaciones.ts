@@ -53,8 +53,14 @@ export class ConfirmacionesPage {
   desde = signal('');
   hasta = signal('');
   obras = signal<SelectOption[]>([]);
+  // AQ12 — Bodega Central (y demás almacenes centrales) también son destino de
+  // confirmaciones: se listan junto a las obras. Guardamos sus ids para el filtro
+  // client-side de "Mías" (donde el destino es un almacén, no una obra).
+  centrales = signal<SelectOption[]>([]);
+  private centralIds = computed(() => new Set(this.centrales().map((c) => c.id)));
   obraOptions = computed<SelectOption[]>(() => [
     { id: '', label: 'Todas las obras' },
+    ...this.centrales(),
     ...this.obras(),
   ]);
 
@@ -75,6 +81,15 @@ export class ConfirmacionesPage {
     } catch {
       /* best-effort */
     }
+    // AQ12 — almacenes centrales (Bodega Central) como destino de confirmaciones.
+    try {
+      const cs = await this.conduces.almacenesDestino();
+      this.centrales.set(
+        cs.filter((c) => c.es_central).map((c) => ({ id: c.id, label: `🏢 ${c.nombre}` })),
+      );
+    } catch {
+      /* best-effort */
+    }
   }
 
   async load(silent = false): Promise<void> {
@@ -89,7 +104,14 @@ export class ConfirmacionesPage {
           desde: this.desde() || null,
           hasta: this.hasta() || null,
         });
-        if (this.obraId()) rows = rows.filter((r) => r.proyecto_id === this.obraId());
+        if (this.obraId()) {
+          const oid = this.obraId();
+          // AQ12 — si el filtro es un almacén central, el destino no es una obra
+          // (proyecto_id null); las obras se filtran por su id como siempre.
+          rows = this.centralIds().has(oid)
+            ? rows.filter((r) => !r.proyecto_id)
+            : rows.filter((r) => r.proyecto_id === oid);
+        }
         if (e === 'completa') rows = rows.filter((r) => r.estado !== 'entregado_incompleto');
         else if (e === 'incompleta') rows = rows.filter((r) => r.estado === 'entregado_incompleto');
         this.filas.set(rows);

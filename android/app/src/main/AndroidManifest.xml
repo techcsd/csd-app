@@ -23,6 +23,12 @@
             </intent-filter>
         </activity>
 
+        <!-- AQ1 — FCM usa este canal de ALTA importancia por defecto para las push
+             de notificación (heads-up + sonido). El canal se crea en MainActivity. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="avisos_csd" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

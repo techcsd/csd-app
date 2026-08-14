@@ -28,6 +28,43 @@ export interface EchadaLog {
   created_at: string;
 }
 
+/**
+ * AQ13/AQ6 — detalle completo de UNA echada (registros_combustible). Fuente del
+ * deep-link de "consumo anormal" y del tap en el Registro de echadas. Fotos con
+ * URL firmada (bucket vehiculos) listas para el lightbox.
+ */
+export interface EchadaDetalle {
+  id: string;
+  fecha: string;
+  created_at: string;
+  vehiculo_id: string | null;
+  placa: string | null;
+  vehiculo_desc: string | null;
+  conductor_id: string | null;
+  conductor_nombre: string | null;
+  registrado_por: string | null;
+  registrado_nombre: string | null;
+  kilometraje: number | null;
+  km_anterior: number | null;
+  km_recorridos: number | null;
+  galones: number | null;
+  monto: number | null;
+  precio_por_galon: number | null;
+  rendimiento_km_gal: number | null;
+  costo_por_km: number | null;
+  producto: string | null;
+  subtipo: string | null;
+  estacion: string | null;
+  estado: string | null;
+  alerta_consumo: boolean | null;
+  km_alerta: boolean | null;
+  motivo_alerta: string | null;
+  origen: string | null;
+  foto_recibo_url: string | null;
+  foto_tablero_url: string | null;
+  foto_bomba_url: string | null;
+}
+
 /** % below the vehicle's average km/gal that flags abnormal consumption. */
 export const CONSUMO_ANORMAL_PCT = 20; // sgc.flota_config → umbral_consumo_pct
 /** Minimum historical fill-ups before an abnormal-consumption alert can fire. */

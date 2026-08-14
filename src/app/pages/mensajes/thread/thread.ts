@@ -7,6 +7,7 @@ import { MensajesService, Mensaje } from '../../../core/services/mensajes.servic
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { CameraService } from '../../../core/services/camera.service';
 import { formatFechaHumana } from '../../../core/util/fecha';
 
 /** AJ5 — hilo de una conversación: mensajes + envío (offline por outbox) + realtime. */
@@ -26,6 +27,7 @@ export class MensajesThreadPage implements OnDestroy {
   private net = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private camera = inject(CameraService);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
 
@@ -39,6 +41,13 @@ export class MensajesThreadPage implements OnDestroy {
   lista = signal<Mensaje[]>([]);
   texto = signal('');
   enviando = signal(false);
+
+  // AQ9 — adjuntos: menú tipo WhatsApp, URLs firmadas por path, lightbox.
+  menuAdjuntar = signal(false);
+  adjuntando = signal(false);
+  private urlsAdjuntos = signal<Record<string, string>>({});
+  private tempUrls: string[] = [];
+  lightboxUrl = signal<string | null>(null);
 
   // AN6 — meta de la conversación para el header (grupo → tappable + avatar).
   titulo = signal('Conversación');
@@ -89,18 +98,51 @@ export class MensajesThreadPage implements OnDestroy {
 
   ngOnDestroy(): void {
     this.unsub?.();
+    this.tempUrls.forEach((u) => URL.revokeObjectURL(u));
+    this.tempUrls = [];
   }
 
   private async cargar(silencioso = false): Promise<void> {
     if (!silencioso) this.loading.set(true);
     try {
-      this.lista.set(await this.mensajes.listarMensajes(this.conversacionId));
+      const msgs = await this.mensajes.listarMensajes(this.conversacionId);
+      // Al recargar del server, los bubbles optimistas (blob: URL) se descartan.
+      this.tempUrls.forEach((u) => URL.revokeObjectURL(u));
+      this.tempUrls = [];
+      this.lista.set(msgs);
+      void this.resolverAdjuntos(msgs);
       this.scrollAlFinal();
     } catch {
       if (!silencioso) this.toast.error('No pudimos cargar el hilo.');
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /** AQ9 — resuelve las URLs firmadas de las imágenes del hilo (best-effort). */
+  private async resolverAdjuntos(msgs: Mensaje[]): Promise<void> {
+    const faltan = msgs.filter(
+      (m) => m.archivo_path && this.esImagenMime(m.archivo_mime) && !this.urlsAdjuntos()[m.archivo_path],
+    );
+    for (const m of faltan) {
+      const url = await this.mensajes.adjuntoUrl(m.archivo_path);
+      if (url) this.urlsAdjuntos.update((u) => ({ ...u, [m.archivo_path as string]: url }));
+    }
+    this.scrollAlFinal();
+  }
+
+  private esImagenMime(mime: string | null | undefined): boolean {
+    return !!mime && mime.startsWith('image/');
+  }
+
+  esImagen(m: Mensaje): boolean {
+    return !!m.archivo_path && this.esImagenMime(m.archivo_mime);
+  }
+  esArchivo(m: Mensaje): boolean {
+    return !!m.archivo_path && !this.esImagenMime(m.archivo_mime);
+  }
+  urlAdjunto(m: Mensaje): string | null {
+    return (m.archivo_path && this.urlsAdjuntos()[m.archivo_path]) || null;
   }
 
   esMio(m: Mensaje): boolean {
@@ -138,6 +180,90 @@ export class MensajesThreadPage implements OnDestroy {
     } finally {
       this.enviando.set(false);
     }
+  }
+
+  // ── AQ9 — Adjuntos (imágenes y archivos, tipo WhatsApp) ─────────────────────
+  toggleMenuAdjuntar(): void {
+    this.menuAdjuntar.update((v) => !v);
+  }
+
+  async adjuntarCamara(): Promise<void> {
+    this.menuAdjuntar.set(false);
+    const foto = await this.camera.takePhoto();
+    if (foto) await this.enviarAdjunto({ blob: foto.blob, nombre: `foto-${Date.now()}.jpg`, mime: 'image/jpeg' }, foto.previewUrl);
+  }
+
+  async adjuntarGaleria(): Promise<void> {
+    this.menuAdjuntar.set(false);
+    const fotos = await this.camera.pickFromGallery(1);
+    const foto = fotos[0];
+    if (foto) await this.enviarAdjunto({ blob: foto.blob, nombre: `foto-${Date.now()}.jpg`, mime: 'image/jpeg' }, foto.previewUrl);
+  }
+
+  async adjuntarArchivo(): Promise<void> {
+    this.menuAdjuntar.set(false);
+    const f = await this.camera.pickAttachment();
+    if (f) await this.enviarAdjunto({ blob: f.blob, nombre: f.nombre, mime: f.mime }, f.previewUrl ?? undefined);
+  }
+
+  /** Encola el adjunto y pinta un bubble optimista con la vista previa local. */
+  private async enviarAdjunto(
+    file: { blob: Blob; nombre: string; mime: string },
+    previewUrl?: string,
+  ): Promise<void> {
+    if (this.adjuntando()) return;
+    this.adjuntando.set(true);
+    const tmpKey = 'tmp-adj-' + Date.now();
+    const esImg = file.mime.startsWith('image/');
+    if (esImg && previewUrl) {
+      this.tempUrls.push(previewUrl);
+      this.urlsAdjuntos.update((u) => ({ ...u, [tmpKey]: previewUrl }));
+    }
+    this.lista.update((l) => [
+      ...l,
+      {
+        id: tmpKey,
+        autor_id: this.yo() ?? '',
+        autor_nombre: 'Tú',
+        contenido: null,
+        archivo_path: tmpKey,
+        archivo_nombre: file.nombre,
+        archivo_mime: file.mime,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+    this.scrollAlFinal();
+    try {
+      await this.mensajes.enviarAdjunto(this.conversacionId, file);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el adjunto.');
+    } finally {
+      this.adjuntando.set(false);
+    }
+  }
+
+  /** Abre la imagen en el lightbox. */
+  verImagen(m: Mensaje): void {
+    const url = this.urlAdjunto(m);
+    if (url) this.lightboxUrl.set(url);
+  }
+  cerrarLightbox(): void {
+    this.lightboxUrl.set(null);
+  }
+
+  /** Abre/descarga un archivo con el visor del sistema (navegador externo). */
+  async abrirArchivo(m: Mensaje): Promise<void> {
+    if (!m.archivo_path) return;
+    if (m.archivo_path.startsWith('tmp-')) {
+      this.toast.error('El archivo aún se está enviando…');
+      return;
+    }
+    const url = await this.mensajes.adjuntoUrl(m.archivo_path);
+    if (!url) {
+      this.toast.error('No pudimos abrir el archivo.');
+      return;
+    }
+    window.open(url, '_blank');
   }
 
   private scrollAlFinal(): void {
