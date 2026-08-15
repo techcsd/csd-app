@@ -1,0 +1,146 @@
+.preg {
+  background: var(--color-bg);
+}
+
+.preg__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.preg__back {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.preg__head-txt {
+  min-width: 0;
+}
+.preg__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.preg__paso-titulo {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.preg__intro {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 0 0 12px;
+}
+.preg__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: -2px 0 8px;
+}
+.preg__mt {
+  margin-top: 14px;
+}
+.preg__req {
+  color: var(--color-danger, #e11d48);
+  font-weight: 700;
+}
+.preg__notas {
+  resize: vertical;
+}
+
+.preg__opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.preg__band {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  &--info {
+    border-style: solid;
+    border-color: var(--Hub, #ffb300);
+    background: var(--color-surface);
+  }
+}
+
+.preg__fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+// Fotos guiadas: instrucción + slot por foto
+.preg__guia {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.preg__guia-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.preg__guia-txt {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.preg__guia-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.preg__guia-ayuda {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+// Resumen
+.preg__resumen {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.preg__res-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--color-border);
+  &:last-child {
+    border-bottom: none;
+  }
+}
+.preg__res-k {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+.preg__res-v {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  min-width: 0;
+  word-break: break-word;
+}

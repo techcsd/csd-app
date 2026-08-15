@@ -1,0 +1,227 @@
+.pl-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+  &__back {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+  }
+  &__icon {
+    font-size: 22px;
+  }
+  &__title {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__refresh {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 20px;
+  }
+}
+
+.pl-band {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+  &--err {
+    border-color: var(--color-danger, #e11d48);
+    color: var(--color-danger, #e11d48);
+  }
+}
+
+// Conteos
+.pl-conteos {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 10px;
+}
+.pl-conteos__total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-right: 14px;
+  border-right: 1px solid var(--color-border);
+}
+.pl-conteos__n {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--primary, #ff5f00);
+  line-height: 1;
+}
+.pl-conteos__lbl {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+.pl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  &--cargo {
+    margin-bottom: 10px;
+  }
+}
+.pl-chip {
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  &--nac {
+    background: var(--color-surface);
+  }
+  b {
+    color: var(--color-text);
+  }
+}
+
+// Buscador
+.pl-search {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  .field {
+    flex: 1;
+    min-width: 0;
+  }
+}
+.pl-search__filtros {
+  width: 48px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 20px;
+}
+
+.pl-filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.pl-filtro-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pl-fchip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 13px;
+  &--on {
+    background: var(--Hub, #ffb300);
+    border-color: var(--Hub, #ffb300);
+    color: var(--main, #121212);
+    font-weight: 700;
+  }
+}
+.pl-limpiar {
+  align-self: flex-start;
+  padding: 6px 4px;
+  color: var(--primary, #ff5f00);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+// Cards
+.pl-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.pl-card__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pl-card__nombre {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.pl-card__inact {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+.pl-card__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.pl-card__sub {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.pl-card__chev {
+  font-size: 24px;
+  color: var(--color-text-secondary);
+  flex: 0 0 auto;
+}
+
+// FAB
+.pl-fab {
+  position: fixed;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0));
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--primary, #ff5f00);
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+}

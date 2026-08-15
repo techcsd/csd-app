@@ -1,0 +1,242 @@
+.pe-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+  &__back {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+  }
+  &__title {
+    margin: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+  }
+}
+
+.pe-band {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+  &--err {
+    border-color: var(--color-danger, #e11d48);
+    color: var(--color-danger, #e11d48);
+  }
+}
+
+.pe-card {
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  margin-bottom: 14px;
+}
+.pe-card__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.pe-avatar {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+.pe-card__id {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pe-nombre {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text);
+  word-break: break-word;
+}
+.pe-inact {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+.pe-cargo {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.pe-rows {
+  display: flex;
+  flex-direction: column;
+}
+.pe-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-border);
+  &:last-child {
+    border-bottom: none;
+  }
+}
+.pe-k {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  flex: 0 0 auto;
+}
+.pe-v {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  min-width: 0;
+  word-break: break-word;
+  a {
+    color: var(--primary, #ff5f00);
+  }
+}
+
+.pe-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.pe-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--primary, #ff5f00);
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  &:disabled {
+    opacity: 0.6;
+  }
+  &--ghost {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+}
+
+.pe-req {
+  color: var(--color-danger, #e11d48);
+}
+.pe-mt {
+  margin-top: 12px;
+}
+.pe-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.pe-notas {
+  resize: vertical;
+}
+
+.pe-sec {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 18px 0 10px;
+}
+
+.pe-galeria {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 45%), 1fr));
+  gap: 10px;
+}
+.pe-foto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+  }
+  &__empty {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    border-radius: 10px;
+    border: 1px dashed var(--color-border);
+    background: var(--color-bg);
+    opacity: 0.6;
+  }
+  &__lbl {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-align: center;
+  }
+}
+
+.pe-firma {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.pe-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+  &__x {
+    position: absolute;
+    top: calc(16px + env(safe-area-inset-top, 0));
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 22px;
+  }
+}

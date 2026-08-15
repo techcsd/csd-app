@@ -69,6 +69,10 @@ const COMPRAS_TILE: HomeTile = { modulo: 'compras_proyecto', icon: '💰', label
 // el banner). Los de flota ya la tienen en el hub de Conduces; este tile la da a
 // los confirmadores sin módulo flota (inventario/obra/almacén). Badge = pendientes.
 const CONFIRMAR_TILE: HomeTile = { modulo: 'por_confirmar', icon: '📥', label: 'Por confirmar', route: '/transporte/por-confirmar', tint: '#ca8a04' };
+// AR1 — Personal de obra: registro en obra + consulta. Gating amplio (quienes
+// pueden registrar/ver según la matriz): admin/proyectos/rrhh/dirección + capataz/
+// ingeniero por su obra. La RLS acota los datos a la obra del usuario.
+const PERSONAL_TILE: HomeTile = { modulo: 'personal_obra', icon: '🧑‍🔧', label: 'Personal de obra', route: '/proyectos/personal', tint: '#9333ea' };
 
 @Component({
   selector: 'app-home',
@@ -151,6 +155,18 @@ export class HomePage implements OnDestroy {
     // AH15 — Compras de obra: admin o roles con acceso a proyectos/compras/obra.
     if (this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('compras') || this.ctx.puedeVerObra()) {
       extra.push(COMPRAS_TILE);
+    }
+    // AR1 — Personal de obra: quienes pueden registrar/ver (matriz). Los ingenieros/
+    // capataces entran por su obra (puedeVerObra); la RLS acota los datos.
+    if (
+      this.ctx.esAdmin() ||
+      this.ctx.hasModulo('proyectos') ||
+      this.ctx.hasModulo('rrhh') ||
+      this.ctx.hasModulo('direccion') ||
+      this.ctx.puedeVerSubmodulo('proyectos.personal') ||
+      this.ctx.puedeVerObra()
+    ) {
+      extra.push(PERSONAL_TILE);
     }
     // AL1 — "Sistema" (antes Tecnología): transversal, todos menos chofer.
     if (!this.ctx.esChofer()) {

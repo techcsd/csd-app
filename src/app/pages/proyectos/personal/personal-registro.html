@@ -1,0 +1,171 @@
+<div class="screen preg">
+  @if (hoja() === 'form') {
+    <header class="preg__header">
+      <button type="button" class="preg__back" (click)="atras()" aria-label="Atrás">←</button>
+      <div class="preg__head-txt">
+        <h1 class="preg__title">🧑‍🔧 Registrar personal</h1>
+        <span class="preg__paso-titulo">{{ pasoActual()?.titulo }}</span>
+      </div>
+    </header>
+    <app-step-bar [current]="paso() + 1" [total]="pasos().length" />
+
+    <div class="screen__body">
+      @if (paso() === 0 && draftFecha() !== null) {
+        <app-draft-banner [fecha]="draftFecha()" (continuar)="continuarBorrador()" (descartar)="descartarBorrador()" />
+      }
+
+      @switch (pasoActual()?.key) {
+        <!-- ═══════════ HOJA: DATOS ═══════════ -->
+        @case ('datos') {
+          <label class="field-label">Obra <span class="preg__req">*</span></label>
+          <app-collapsible-select
+            label="Obra" icon="🏗"
+            [options]="obraOptions()" [selectedId]="proyectoId()"
+            [searchable]="true" searchPlaceholder="Buscar obra…"
+            (picked)="proyectoId.set($event)"
+          />
+          @if (!obraOptions().length) {
+            <div class="preg__band">🏗 No hay obras disponibles ahora. Verifica tu conexión y vuelve a intentar.</div>
+          }
+
+          <label class="field-label preg__mt" for="nom">Nombre <span class="preg__req">*</span></label>
+          <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Nombre" autocapitalize="words" />
+
+          <label class="field-label preg__mt" for="ape">Apellido</label>
+          <input id="ape" class="field" type="text" [ngModel]="apellido()" (ngModelChange)="apellido.set($event)" placeholder="Apellido" autocapitalize="words" />
+
+          <label class="field-label preg__mt">Nacionalidad <span class="preg__req">*</span></label>
+          <div class="preg__opts">
+            @for (n of nacionalidades; track n.value) {
+              <app-option-button [icon]="n.icon" [label]="n.label" [selected]="nacionalidad() === n.value" (pressed)="nacionalidad.set(n.value)" />
+            }
+          </div>
+
+          <label class="field-label preg__mt">Cargo <span class="preg__req">*</span></label>
+          <app-collapsible-select
+            label="Cargo" icon="🛠"
+            [options]="cargoOptions()" [selectedId]="cargoId()"
+            [searchable]="true" searchPlaceholder="Buscar cargo…"
+            (picked)="cargoId.set($event)"
+          />
+
+          <label class="field-label preg__mt" for="tel">Teléfono (opcional)</label>
+          <input id="tel" class="field" type="tel" inputmode="tel" [ngModel]="telefono()" (ngModelChange)="telefono.set($event)" placeholder="Ej. 809-000-0000" />
+        }
+
+        <!-- ═══════════ HOJA: DOCUMENTO ═══════════ -->
+        @case ('documento') {
+          <label class="field-label">Tipo de documento <span class="preg__req">*</span></label>
+          <div class="preg__opts">
+            @for (t of tiposDocumento; track t.value) {
+              <app-option-button [icon]="t.icon" [label]="t.label" [selected]="tipoDocumento() === t.value" (pressed)="tipoDocumento.set(t.value)" />
+            }
+          </div>
+
+          @if (requiereDocumento()) {
+            <label class="field-label preg__mt" for="doc">Número de documento</label>
+            <input id="doc" class="field" type="text" [ngModel]="documentoNumero()" (ngModelChange)="documentoNumero.set($event)" placeholder="Cédula o pasaporte" />
+
+            <label class="field-label preg__mt">{{ guiaDocumento.label }} <span class="preg__req">*</span></label>
+            <p class="preg__sub">{{ guiaDocumento.ayuda }}</p>
+            <div class="preg__fotos">
+              <app-photo-slot
+                [label]="guiaDocumento.label" [hint]="guiaDocumento.hint" [gallery]="false"
+                [foto]="fotoDe('documento')"
+                (captured)="onFoto('documento', $event)" (cleared)="onFotoClear('documento')"
+              />
+            </div>
+          } @else {
+            <div class="preg__band">Sin documento: se registra igual con las fotos de evidencia.</div>
+          }
+        }
+
+        <!-- ═══════════ HOJA: FOTOS GUIADAS ═══════════ -->
+        @case ('fotos') {
+          <p class="preg__intro">Toma cada foto con la cámara siguiendo la guía. La primera es obligatoria; las demás son muy recomendadas.</p>
+          <div class="preg__guia">
+            @for (g of guiaFotos; track g.tipo) {
+              <div class="preg__guia-item">
+                <div class="preg__guia-txt">
+                  <span class="preg__guia-label">{{ g.label }} @if (g.tipo === 'persona') { <span class="preg__req">*</span> }</span>
+                  <span class="preg__guia-ayuda">{{ g.ayuda }}</span>
+                </div>
+                <app-photo-slot
+                  [label]="g.label" [hint]="g.hint" [gallery]="false"
+                  [foto]="fotoDe(g.tipo)"
+                  (captured)="onFoto(g.tipo, $event)" (cleared)="onFotoClear(g.tipo)"
+                />
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ═══════════ HOJA: FIRMA (⏸ PAUSA) ═══════════ -->
+        @case ('firma') {
+          <label class="field-label" for="docf">Documento a firmar</label>
+          <input id="docf" class="field" type="text" [ngModel]="documentoFirmaNombre()" (ngModelChange)="documentoFirmaNombre.set($event)" />
+          <label class="field-label preg__mt">Firma <span class="preg__req">*</span></label>
+          <p class="preg__sub">La persona firma el documento de registro.</p>
+          <app-signature-pad #firmaPad (changed)="onFirma($event)" />
+        }
+
+        <!-- ═══════════ HOJA: CARNET ═══════════ -->
+        @case ('carnet') {
+          <p class="preg__intro">Este es el carnet que se generará. El número se emite en el servidor al sincronizar.</p>
+          <app-personal-carnet [personal]="carnetPreview()" [fotoDataUrl]="fotoPersonaUrl()" [verifyUrl]="verifyUrl()" />
+          <div class="preg__band preg__band--info">🔗 El código QR abre el expediente de esta persona en la web para verificarla.</div>
+        }
+
+        <!-- ═══════════ HOJA: RESUMEN ═══════════ -->
+        @case ('resumen') {
+          <p class="preg__intro">Revisa antes de registrar.</p>
+          <div class="preg__resumen">
+            <div class="preg__res-row"><span class="preg__res-k">Obra</span><span class="preg__res-v">{{ obraNombre() || '—' }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">Nombre</span><span class="preg__res-v">{{ nombre() }} {{ apellido() }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">Cargo</span><span class="preg__res-v">{{ cargoSel() ? cargoSel()!.nombre + ' · ' + cargoSel()!.codigo : '—' }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">Nacionalidad</span><span class="preg__res-v">{{ nacionalidadLabel() }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">Documento</span><span class="preg__res-v">{{ tipoDocLabel() }}{{ documentoNumero() ? ' · ' + documentoNumero() : '' }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">Fotos</span><span class="preg__res-v">{{ fotosTomadas() }} tomada{{ fotosTomadas() === 1 ? '' : 's' }}</span></div>
+            @if (firmaHabilitada) {
+              <div class="preg__res-row"><span class="preg__res-k">Firma</span><span class="preg__res-v">{{ firma() ? '✓ firmado' : '—' }}</span></div>
+            }
+          </div>
+          <label class="field-label preg__mt" for="notas">Notas (opcional)</label>
+          <textarea id="notas" class="field preg__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Observaciones…"></textarea>
+          <div class="preg__band">Al registrar, se envía por la cola de sincronización y el <b>carnet se emite</b> automáticamente. Funciona sin conexión.</div>
+        }
+      }
+    </div>
+
+    <app-wizard-footer
+      [backLabel]="paso() === 0 ? 'Cancelar' : 'Atrás'"
+      [primaryLabel]="primaryBtn()"
+      [primaryDisabled]="submitting() || !pasoValido()"
+      (back)="atras()"
+      (primary)="siguiente()"
+    />
+  }
+
+  @if (hoja() === 'exito') {
+    <app-big-confirm
+      title="Personal registrado"
+      note="Se envió a la cola de sincronización. El carnet (CSD-######) se emite al sincronizar y aparecerá en el expediente."
+      tone="done"
+      buttonLabel="Listo"
+      secondaryLabel="Registrar otra persona"
+      (dismissed)="finish()"
+      (secondary)="registrarOtro()"
+    />
+  }
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir del registro?"
+    message="Se guarda como borrador; podrás continuar después."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
+</div>

@@ -1,0 +1,92 @@
+<div class="screen">
+  <header class="pl-header">
+    <button type="button" class="pl-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="pl-header__icon">🧑‍🔧</span>
+    <h1 class="pl-header__title">Personal de obra</h1>
+    <button type="button" class="pl-header__refresh" (click)="refrescar()" aria-label="Refrescar">🔄</button>
+  </header>
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      @if (error()) {
+        <div class="pl-band pl-band--err">{{ error() }}</div>
+      }
+
+      <!-- Conteos rápidos -->
+      <div class="pl-conteos">
+        <div class="pl-conteos__total">
+          <span class="pl-conteos__n">{{ conteos().total }}</span>
+          <span class="pl-conteos__lbl">personal</span>
+        </div>
+        <div class="pl-chips">
+          @for (c of conteos().porNacionalidad; track c.k) {
+            <span class="pl-chip pl-chip--nac">{{ c.k }}: <b>{{ c.v }}</b></span>
+          }
+        </div>
+      </div>
+      @if (conteos().porCargo.length) {
+        <div class="pl-chips pl-chips--cargo">
+          @for (c of conteos().porCargo; track c.k) {
+            <span class="pl-chip">{{ c.k }}: <b>{{ c.v }}</b></span>
+          }
+        </div>
+      }
+
+      <!-- Buscador + filtros -->
+      <div class="pl-search">
+        <input class="field" type="search" [ngModel]="q()" (ngModelChange)="q.set($event)"
+          placeholder="Buscar por nombre, cédula, cargo, carnet…" />
+        <button type="button" class="pl-search__filtros" (click)="toggleFiltros()">⚙️</button>
+      </div>
+
+      @if (mostrarFiltros()) {
+        <div class="pl-filtros">
+          <app-collapsible-select label="Obra" icon="🏗" [options]="obraOptions()" [selectedId]="filObra()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="filObra.set($event)" />
+          <app-collapsible-select label="Cargo" icon="🛠" [options]="cargoOptions()" [selectedId]="filCargo()" [searchable]="true" searchPlaceholder="Buscar cargo…" (picked)="filCargo.set($event)" />
+          <div class="pl-filtro-chips">
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filNacionalidad() === ''" (click)="filNacionalidad.set('')">Todas</button>
+            @for (n of nacionalidades; track n.value) {
+              <button type="button" class="pl-fchip" [class.pl-fchip--on]="filNacionalidad() === n.value" (click)="filNacionalidad.set(n.value)">{{ n.icon }} {{ n.label }}</button>
+            }
+          </div>
+          <div class="pl-filtro-chips">
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === 'activo'" (click)="filEstado.set('activo')">Activos</button>
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === 'inactivo'" (click)="filEstado.set('inactivo')">Inactivos</button>
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === ''" (click)="filEstado.set('')">Todos</button>
+          </div>
+          <button type="button" class="pl-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+        </div>
+      }
+
+      <!-- Listado -->
+      @for (p of filtrados(); track p.id) {
+        <div class="pl-card" (click)="abrir(p)">
+          <div class="pl-card__main">
+            <span class="pl-card__nombre">
+              {{ p.nombre }} {{ p.apellido }}
+              @if (p.estado === 'inactivo') { <span class="pl-card__inact">Inactivo</span> }
+            </span>
+            <span class="pl-card__meta">
+              {{ p.cargo?.nombre || 'Sin cargo' }} · {{ nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad }}
+            </span>
+            <span class="pl-card__sub">
+              @if (p.carnet_numero) { 🎫 {{ p.carnet_numero }} } @else { ⏳ Carnet pendiente }
+              @if (p.documento_numero) { · {{ p.documento_numero }} }
+            </span>
+          </div>
+          <span class="pl-card__chev">›</span>
+        </div>
+      } @empty {
+        <app-empty-state icon="🧑‍🔧" title="Sin personal" message="No hay personal que coincida. Registra al primero con el botón +." />
+      }
+    }
+  </div>
+
+  @if (puedeRegistrar()) {
+    <button type="button" class="pl-fab" (click)="registrar()" aria-label="Registrar personal">＋</button>
+  }
+
+  <app-sync-bar />
+</div>

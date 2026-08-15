@@ -700,6 +700,25 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
     loadComponent: () => import('./pages/proyectos/form/proyecto-form').then((m) => m.ProyectoFormPage),
   },
+  // AR1 — Registro de Personal de obra (submódulo proyectos.personal). Antes de
+  // 'proyectos/:id' para que 'personal' no se tome como un id. Sin moduleGuard: la
+  // visibilidad es obra-scoped y la fuerza la RLS (elevados todo; ingeniero/capataz
+  // su obra) — como por-confirmar/confirmaciones; el tile/FAB gatean en cliente.
+  {
+    path: 'proyectos/personal',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/proyectos/personal/personal-lista').then((m) => m.PersonalListaPage),
+  },
+  {
+    path: 'proyectos/personal/registrar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/proyectos/personal/personal-registro').then((m) => m.PersonalRegistroPage),
+  },
+  {
+    path: 'proyectos/personal/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/proyectos/personal/personal-expediente').then((m) => m.PersonalExpedientePage),
+  },
   {
     path: 'proyectos/:id',
     canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],

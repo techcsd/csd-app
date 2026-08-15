@@ -1,0 +1,131 @@
+<div class="screen">
+  <header class="pe-header">
+    <button type="button" class="pe-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="pe-header__title">Expediente</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (error()) {
+      <div class="pe-band pe-band--err">{{ error() }}</div>
+    } @else if (personal(); as p) {
+      <!-- ── Datos ── -->
+      @if (!editando()) {
+        <div class="pe-card">
+          <div class="pe-card__top">
+            <div class="pe-avatar">
+              @if (fotoPersonaUrl()) {
+                <img [src]="fotoPersonaUrl()" alt="Foto" (click)="abrirFoto(fotoPersonaUrl()!)" />
+              } @else { <span>🧍</span> }
+            </div>
+            <div class="pe-card__id">
+              <span class="pe-nombre">
+                {{ p.nombre }} {{ p.apellido }}
+                @if (p.estado === 'inactivo') { <span class="pe-inact">Inactivo</span> }
+              </span>
+              <span class="pe-cargo">{{ cargoNombre(p.cargo_id) }}</span>
+            </div>
+          </div>
+          <div class="pe-rows">
+            <div class="pe-row"><span class="pe-k">Obra</span><span class="pe-v">{{ p.proyecto?.nombre ?? '—' }}</span></div>
+            <div class="pe-row"><span class="pe-k">Nacionalidad</span><span class="pe-v">{{ nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad }}</span></div>
+            <div class="pe-row"><span class="pe-k">Documento</span><span class="pe-v">{{ p.documento_numero || '—' }}</span></div>
+            @if (p.telefono) {
+              <div class="pe-row"><span class="pe-k">Teléfono</span><span class="pe-v"><a [href]="'tel:' + p.telefono">{{ p.telefono }}</a></span></div>
+            }
+            @if (p.notas) {
+              <div class="pe-row"><span class="pe-k">Notas</span><span class="pe-v">{{ p.notas }}</span></div>
+            }
+          </div>
+          @if (puedeGestionar()) {
+            <div class="pe-actions">
+              <button type="button" class="pe-btn" (click)="editar()">✏️ Editar</button>
+              <button type="button" class="pe-btn pe-btn--ghost" [disabled]="saving()" (click)="pedirCambioEstado()">
+                {{ p.estado === 'activo' ? '🚫 Desactivar' : '✅ Reactivar' }}
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Edición inline de datos -->
+        <div class="pe-card">
+          <label class="field-label" for="en">Nombre <span class="pe-req">*</span></label>
+          <input id="en" class="field" type="text" [ngModel]="eNombre()" (ngModelChange)="eNombre.set($event)" />
+          <label class="field-label pe-mt" for="ea">Apellido</label>
+          <input id="ea" class="field" type="text" [ngModel]="eApellido()" (ngModelChange)="eApellido.set($event)" />
+          <label class="field-label pe-mt">Nacionalidad</label>
+          <div class="pe-opts">
+            @for (n of nacionalidades; track n.value) {
+              <app-option-button [icon]="n.icon" [label]="n.label" [selected]="eNacionalidad() === n.value" (pressed)="eNacionalidad.set(n.value)" />
+            }
+          </div>
+          <label class="field-label pe-mt">Cargo</label>
+          <app-collapsible-select label="Cargo" icon="🛠" [options]="cargoOptions()" [selectedId]="eCargoId()" [searchable]="true" searchPlaceholder="Buscar cargo…" (picked)="eCargoId.set($event)" />
+          <label class="field-label pe-mt">Tipo de documento</label>
+          <div class="pe-opts">
+            @for (t of tiposDocumento; track t.value) {
+              <app-option-button [icon]="t.icon" [label]="t.label" [selected]="eTipoDoc() === t.value" (pressed)="eTipoDoc.set(t.value)" />
+            }
+          </div>
+          <label class="field-label pe-mt" for="ed">Número de documento</label>
+          <input id="ed" class="field" type="text" [ngModel]="eDocNumero()" (ngModelChange)="eDocNumero.set($event)" />
+          <label class="field-label pe-mt" for="et">Teléfono</label>
+          <input id="et" class="field" type="tel" inputmode="tel" [ngModel]="eTelefono()" (ngModelChange)="eTelefono.set($event)" />
+          <label class="field-label pe-mt" for="eno">Notas</label>
+          <textarea id="eno" class="field pe-notas" rows="2" [ngModel]="eNotas()" (ngModelChange)="eNotas.set($event)"></textarea>
+          <div class="pe-actions pe-mt">
+            <button type="button" class="pe-btn" [disabled]="saving()" (click)="guardarEdicion()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button>
+            <button type="button" class="pe-btn pe-btn--ghost" (click)="cancelarEdicion()">Cancelar</button>
+          </div>
+        </div>
+      }
+
+      <!-- ── Carnet ── -->
+      <h2 class="pe-sec">Carnet</h2>
+      <app-personal-carnet [personal]="p" [fotoDataUrl]="fotoPersonaUrl()" [verifyUrl]="verifyUrl()" />
+
+      <!-- ── Galería ── -->
+      <h2 class="pe-sec">Fotos de evidencia</h2>
+      <div class="pe-galeria">
+        @for (g of fotosGuia; track g.tipo) {
+          <div class="pe-foto">
+            @if (fotos()[g.tipo]; as url) {
+              <img [src]="url" [alt]="g.label" (click)="abrirFoto(url)" />
+            } @else {
+              <div class="pe-foto__empty">{{ g.hint }}</div>
+            }
+            <span class="pe-foto__lbl">{{ g.label }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- ── Firmas (⏸ si existen) ── -->
+      @if (firmas().length) {
+        <h2 class="pe-sec">Documentos firmados</h2>
+        @for (f of firmas(); track f.id) {
+          <div class="pe-firma">📄 {{ f.documento_nombre }}</div>
+        }
+      }
+    }
+  </div>
+
+  <!-- Lightbox -->
+  @if (lightboxUrl(); as url) {
+    <div class="pe-lightbox" (click)="cerrarFoto()">
+      <img [src]="url" alt="Foto ampliada" />
+      <button type="button" class="pe-lightbox__x" (click)="cerrarFoto()" aria-label="Cerrar">✕</button>
+    </div>
+  }
+
+  <app-confirm-dialog
+    [open]="confirmEstado()"
+    [title]="personal()?.estado === 'activo' ? '¿Desactivar personal?' : '¿Reactivar personal?'"
+    [message]="personal()?.estado === 'activo' ? 'No aparecerá en la lista de activos. Puedes reactivarlo después.' : 'Volverá a la lista de personal activo.'"
+    confirmLabel="Sí"
+    cancelLabel="Cancelar"
+    [tone]="personal()?.estado === 'activo' ? 'danger' : 'default'"
+    (confirmed)="confirmarEstado()"
+    (cancelled)="cancelarEstado()"
+  />
+</div>
