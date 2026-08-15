@@ -172,7 +172,8 @@ export class PersonalObraService {
       fotos,
       resumen: { tipo: 'personal_registro', nombre: `${input.nombre} ${input.apellido ?? ''}`.trim(), capturado_en },
     });
-    this.catalog.invalidate('personal_lista');
+    // No se invalida el cache aquí: offline dejaría la lista vacía (no hay red para
+    // recargarla). El handler invalida `personal_lista` tras sincronizar con éxito.
   }
 
   /** Edita datos (offline-safe). `cambios` = columnas a actualizar. */
@@ -187,7 +188,8 @@ export class PersonalObraService {
       fotos: [],
       resumen: { tipo: 'personal_editar', personal_id: id, capturado_en },
     });
-    this.catalog.invalidate('personal_lista');
+    // El handler invalida `personal_lista` al sincronizar (no aquí: offline dejaría
+    // la lista en blanco). El expediente ya refleja el cambio de forma optimista.
   }
 
   /** Activa/desactiva al personal (soft, por outbox). */

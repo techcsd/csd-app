@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.77.0';
+const VERSION = '1.77.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,16 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Registro de Personal de obra: fotos guiadas, carnet con QR y consulta';
+const TITULO = 'Ajuste de Personal de obra sin conexión';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Personal de obra', d: 'Ya puedes registrar al personal en la obra desde el teléfono, paso a paso: datos, nacionalidad, cargo, documento y fotos guiadas (persona, pared, carnet y la persona con su carnet y cédula).' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'Cada persona recibe un carnet con código QR de verificación; el número se emite automáticamente al sincronizar.' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'Consulta del personal de tu obra: buscador, filtros (cargo, nacionalidad, estado) y conteos rápidos. Cada persona abre su expediente con las fotos y el carnet.' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'Puedes editar los datos y activar/desactivar a una persona según tus permisos.' },
-  { t: 'mejora', m: 'Personal de obra', d: 'Funciona sin conexión: el registro se guarda como borrador (con las fotos) y se envía solo cuando vuelve la señal; si se interrumpe, lo retomas donde ibas.' },
+  { t: 'arreglo', m: 'Personal de obra', d: 'La lista de personal ya no se ve vacía al registrar o editar a alguien sin conexión: se mantiene visible y se actualiza sola al volver la señal.' },
 ];
 
 const TIPO_POR_COMMIT = {
