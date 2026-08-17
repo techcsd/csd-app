@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, DecimalPipe, Location } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
@@ -33,6 +34,7 @@ export class ComprasProyectoPage {
   private toast = inject(ToastService);
   private location = inject(Location);
   private network = inject(NetworkService);
+  private route = inject(ActivatedRoute);
 
   loadingObras = signal(true);
   loading = signal(false);
@@ -78,11 +80,10 @@ export class ComprasProyectoPage {
       // directa de `proyectos` excluye) en vez del listado completo del módulo.
       const ps = await this.proyectos.getProyectosPickables();
       this.obraOpts.set(ps.map((p) => ({ id: p.id, label: p.nombre })));
-      // Preselecciona la obra activa del contexto si aplica.
-      const activaId = this.ctx.obraActiva()?.id ?? null;
-      if (activaId && ps.some((p) => p.id === activaId)) {
-        this.proyectoId.set(activaId);
-        void this.cargar();
+      // AS24 — preselecciona por ?obra= (viene del detalle del proyecto) o la obra activa.
+      const preId = this.route.snapshot.queryParamMap.get('obra') ?? this.ctx.obraActiva()?.id ?? null;
+      if (preId && ps.some((p) => p.id === preId)) {
+        this.onObra(preId);
       }
     } finally {
       this.loadingObras.set(false);

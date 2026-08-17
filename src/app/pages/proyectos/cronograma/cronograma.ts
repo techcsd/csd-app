@@ -105,8 +105,12 @@ export class CronogramaPage {
       if (this.tareaDeep) {
         const t = data.tareas.find((x) => x.id === this.tareaDeep);
         if (t) this.abrirDetalle(t);
+        else this.toast.show('Esa tarea ya no está disponible.', 'info'); // AS24 #12
         this.tareaDeep = null;
       }
+    } catch (e) {
+      // AS24 #2 — antes un fallo de carga se veía como "sin cronograma" (empty-state).
+      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar el cronograma.');
     } finally {
       this.loading.set(false);
     }
@@ -121,7 +125,9 @@ export class CronogramaPage {
   }
 
   // ─── Vista ───
-  tareas = computed(() => this.data().tareas);
+  // AS24 #8 — no mostrar tareas de prueba en la app de campo (belt; el server ya
+  // filtra para no-admin, esto lo asegura también en el cliente).
+  tareas = computed(() => this.data().tareas.filter((t) => !t.es_prueba));
 
   estado(t: CronogramaTarea): CronogramaEstado {
     return this.cronograma.estadoEfectivo(t, this.pend().get(t.id));
@@ -170,6 +176,18 @@ export class CronogramaPage {
     const hoy = dayNum(this.hoyIso)!;
     const pct = ((hoy - min) / total) * 100;
     return pct < 0 || pct > 100 ? null : pct;
+  });
+
+  /**
+   * AS24 #1 — la línea "Hoy" vive en el contenedor completo, pero las barras
+   * empiezan tras la columna de nombre (40%). Se desplaza al mismo origen que las
+   * barras: 40% + (pct dentro del track × 60%). Mantener sincronizado con el ancho
+   * de `.crono__row-name` en el SCSS (40%).
+   */
+  private readonly NAME_COL_PCT = 40;
+  hoyLeftPct = computed<number | null>(() => {
+    const p = this.hoyPct();
+    return p == null ? null : this.NAME_COL_PCT + (p * (100 - this.NAME_COL_PCT)) / 100;
   });
 
   setVista(v: 'lista' | 'timeline'): void {

@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.82.0';
+const VERSION = '1.83.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,12 +62,14 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Gastos directos del proyecto';
+const TITULO = 'Proyectos: mejoras y arreglos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Proyectos', d: 'En "Compras del proyecto" ahora puedes registrar gastos directos (los que no pasan por requisición): categoría, concepto, monto, fecha y foto del recibo. Se ven en su propia pestaña, separados de las compras formales.' },
+  { t: 'mejora', m: 'Proyectos', d: 'Desde el detalle de una obra ahora entras directo a sus Compras y gastos y a su Personal de obra. Se muestran el presupuesto y la fecha de fin real.' },
+  { t: 'arreglo', m: 'Proyectos', d: 'Cronograma: la línea "Hoy" queda alineada con las barras; si una obra tiene tareas sin fechas, se explica en vez de mostrar un timeline en blanco; los errores de carga ya no se ven como "sin cronograma".' },
+  { t: 'arreglo', m: 'Proyectos', d: 'Editar un proyecto que no cargó ya no deja un formulario en blanco; se validan las fechas y el presupuesto.' },
 ];
 
 const TIPO_POR_COMMIT = {

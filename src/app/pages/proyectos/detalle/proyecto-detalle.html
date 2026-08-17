@@ -20,6 +20,14 @@
 
       <button type="button" class="btn-cta pdet__crono" (click)="cronograma()">📅 Ver cronograma</button>
 
+      <!-- AS24 — accesos directos a los sub-módulos de esta obra -->
+      <div class="pdet__accesos">
+        <button type="button" class="btn-ghost pdet__acceso" (click)="comprasYGastos()">💰 Compras y gastos</button>
+        @if (puedeVerPersonal()) {
+          <button type="button" class="btn-ghost pdet__acceso" (click)="personal()">🧑‍🔧 Personal de obra</button>
+        }
+      </div>
+
       <!-- Datos generales -->
       <div class="pdet__card">
         @if (proyecto()!.codigo) { <div class="pdet__row"><span>Código</span><b>{{ proyecto()!.codigo }}</b></div> }
@@ -28,6 +36,12 @@
         @if (proyecto()!.responsable?.nombre) { <div class="pdet__row"><span>Responsable</span><b>{{ proyecto()!.responsable?.nombre }}</b></div> }
         <div class="pdet__row"><span>Inicio</span><b>{{ fmt(proyecto()!.fecha_inicio) }}</b></div>
         <div class="pdet__row"><span>Fin estimado</span><b>{{ fmt(proyecto()!.fecha_fin_estimada) }}</b></div>
+        @if (proyecto()!.fecha_fin_real) {
+          <div class="pdet__row"><span>Fin real</span><b>{{ fmt(proyecto()!.fecha_fin_real) }}</b></div>
+        }
+        @if (proyecto()!.presupuesto != null) {
+          <div class="pdet__row"><span>Presupuesto</span><b>RD$ {{ proyecto()!.presupuesto | number: '1.0-2' }}</b></div>
+        }
         @if (progreso() !== null) {
           <div class="pdet__row"><span>Avance (fases)</span><b>{{ progreso() }}%</b></div>
         }

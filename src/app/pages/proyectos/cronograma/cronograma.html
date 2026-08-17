@@ -39,9 +39,13 @@
         }
       } @else {
         <!-- Timeline simple (barras CSS) -->
+        @if (!barras().length) {
+          <!-- AS24 #7 — hay tareas pero ninguna tiene fechas de plan → timeline vacío. -->
+          <p class="crono__muted">Las tareas de esta obra aún no tienen fechas planificadas, así que no hay línea de tiempo. Míralas en la lista.</p>
+        } @else {
         <div class="crono__timeline">
-          @if (hoyPct() !== null) {
-            <div class="crono__today" [style.left.%]="hoyPct()"></div>
+          @if (hoyLeftPct() !== null) {
+            <div class="crono__today" [style.left.%]="hoyLeftPct()"></div>
           }
           @for (b of barras(); track b.tarea.id) {
             <div class="crono__row" (click)="abrirDetalle(b.tarea)">
@@ -64,6 +68,7 @@
           <span class="crono__dot crono__dot--ordinaria"></span> Ordinaria
           <span class="crono__today-legend"></span> Hoy
         </p>
+        }
       }
 
       <!-- Historial de recálculos -->

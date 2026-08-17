@@ -56,7 +56,12 @@ export class CronogramaService {
       .order('created_at', { ascending: false })
       .limit(100);
     if (error) return [];
-    return (data as unknown as CronogramaAviso[]) ?? [];
+    // AS24 #3 — el embed to-one de PostgREST puede venir como arreglo de 1 elemento;
+    // normalizamos a objeto para que el nombre del proyecto sí se pinte.
+    return ((data as Array<Record<string, unknown>>) ?? []).map((r) => {
+      const p = r['proyecto'];
+      return { ...r, proyecto: Array.isArray(p) ? (p[0] ?? null) : (p ?? null) } as unknown as CronogramaAviso;
+    });
   }
 
   /** ¿El usuario puede gestionar (iniciar/completar) el cronograma? Autoritativo

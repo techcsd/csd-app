@@ -267,3 +267,11 @@
     resize: vertical;
   }
 }
+
+// AS24 — mensaje cuando no hay fechas para el timeline
+.crono__muted {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  padding: 20px 4px;
+  text-align: center;
+}

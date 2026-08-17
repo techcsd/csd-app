@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Location } from '@angular/common';
+import { DecimalPipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -21,7 +21,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-proyecto-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, DecimalPipe],
   templateUrl: './proyecto-detalle.html',
   styleUrl: './proyecto-detalle.scss',
 })
@@ -90,6 +90,26 @@ export class ProyectoDetallePage {
   cronograma(): void {
     void this.router.navigate(['/proyectos', this.id, 'cronograma']);
   }
+
+  // AS24 — accesos directos a los sub-módulos de esta obra (antes solo se llegaba
+  // por los tiles del home). El destino preselecciona esta obra por ?obra=.
+  comprasYGastos(): void {
+    void this.router.navigate(['/compras-proyecto'], { queryParams: { obra: this.id } });
+  }
+  personal(): void {
+    void this.router.navigate(['/proyectos/personal'], { queryParams: { obra: this.id } });
+  }
+
+  /** AS24 — accesos a Personal según el gate del tile del home. */
+  puedeVerPersonal = computed(
+    () =>
+      this.ctx.esAdmin() ||
+      this.ctx.hasModulo('proyectos') ||
+      this.ctx.hasModulo('rrhh') ||
+      this.ctx.hasModulo('direccion') ||
+      this.ctx.puedeVerSubmodulo('proyectos.personal') ||
+      this.ctx.puedeVerObra(),
+  );
 
   trackFase = (_: number, f: FaseProyecto) => f.id;
 

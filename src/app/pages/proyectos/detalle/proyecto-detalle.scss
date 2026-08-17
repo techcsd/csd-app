@@ -166,3 +166,24 @@
     color: var(--color-text-secondary);
   }
 }
+
+// AS24 — accesos directos a sub-módulos de la obra
+.pdet__accesos {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 4px;
+  flex-wrap: wrap;
+}
+.pdet__acceso {
+  flex: 1 1 45%;
+  min-width: 140px;
+}
+// AS24 — variantes de estado faltantes (planificación / fase pendiente).
+.pdet__estado--planificacion {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.pdet__fase-estado--pendiente {
+  background: #e5e7eb;
+  color: #374151;
+}

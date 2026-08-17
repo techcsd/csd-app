@@ -165,3 +165,9 @@
     color: var(--color-text-secondary);
   }
 }
+
+// AS24 — variante de estado "planificación" (la más común en proyectos nuevos).
+.proy__estado--planificacion {
+  background: #e0e7ff;
+  color: #3730a3;
+}

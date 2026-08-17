@@ -124,6 +124,12 @@ export class ProyectoFormPage implements OnDestroy {
     }
     try {
       const p = await this.proyectos.getProyecto(this.proyectoId());
+      if (!p) {
+        // AS24 — no cargó (borrado / offline sin cache): no dejar un form en blanco mudo.
+        this.toast.error(this.network.online() ? 'No se encontró el proyecto.' : 'Conéctate para editar este proyecto.');
+        this.navGuard.back('/proyectos');
+        return;
+      }
       if (p) {
         this.nombre.set(p.nombre ?? '');
         this.cliente.set(p.cliente ?? '');
@@ -220,6 +226,15 @@ export class ProyectoFormPage implements OnDestroy {
     }
     if (!this.esEdicion() && !this.tieneUbicacion()) {
       this.toast.error('Fija la ubicación de la obra antes de crear el proyecto.');
+      return;
+    }
+    // AS24 — validaciones de fechas y presupuesto.
+    if (this.fechaInicio() && this.fechaFin() && this.fechaFin() < this.fechaInicio()) {
+      this.toast.error('La fecha de fin no puede ser anterior a la de inicio.');
+      return;
+    }
+    if (this.presupuesto() != null && this.presupuesto()! < 0) {
+      this.toast.error('El presupuesto no puede ser negativo.');
       return;
     }
     if (!this.network.online()) {
