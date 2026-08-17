@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.84.0';
+const VERSION = '1.85.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Importar cronograma desde Excel';
+const TITULO = 'Filtrar proyectos por zona';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Proyectos', d: 'Ya puedes importar el cronograma de una obra desde un Excel (.xlsx): la app lee las actividades con su responsable, volumetría, fechas, días y avances, te muestra una vista previa y las carga al cronograma. (Los archivos .mpp de MS Project deben exportarse a Excel primero.)' },
-  { t: 'mejora', m: 'Proyectos', d: 'El detalle de cada actividad del cronograma ahora muestra la sección, responsable, volumetría, avance y rendimiento importados.' },
+  { t: 'nuevo', m: 'Proyectos', d: 'Ahora puedes filtrar los proyectos por zona (Cap Cana, Punta Cana, Santo Domingo, etc.), derivada de la ubicación de cada obra.' },
 ];
 
 const TIPO_POR_COMMIT = {

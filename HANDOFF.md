@@ -45,9 +45,17 @@ Migración `sql/2026-08-17-as17-uso-vehiculo-fotos.sql` (aditiva): 4 columnas `f
 - **Consulta:** el detalle de cada actividad ahora muestra sección/responsable/volumetría/avance/rendimiento (los campos ya venían en `listar_cronograma`; solo faltaba el modelo TS + UI).
 - **⚠️ .mpp DEFERIDO:** MS Project binario — no se parsea en el cliente. La app pide **exportar a Excel** (mensaje claro al elegir un .mpp). Opción futura: parseo server-side con mpxj vía edge function (SGC).
 
-### ⚠️ PENDIENTE de PROMPT-18 (próxima sesión)
-- **AS23** (filtro de proyectos por ubicación — **necesita definir qué significa**: §J asume dropdown de zonas tipo Punta Cana/Cap Cana).
-- **AS21 .mpp** (parser MS Project — mpxj/edge, SGC).
+### 🟢 AS23 — Filtro de proyectos por zona — **RELEASE 1.85.0 PUBLICADO (rolling)**
+**SHIPPED** + APK 1.85.0 + `publicada=1.85.0` (1.84.0→false). Xaviel definió "por ubicación" = **dropdown de zonas** (Cap Cana, Punta Cana, Santo Domingo, etc.). Client-only: `zonaDeProyecto()` (en `proyecto.model.ts`) deriva la zona del texto de `ubicacion`+`direccion_geo`+`localidad` contra `ZONAS_PROYECTO` (lista curada de zonas RD con keywords); el listado añade un `CollapsibleSelect` "📍 Zona" (solo si hay >1 zona) que filtra. **Verificado:** los 11 proyectos reales clasifican 100% (Cap Cana 3, Santo Domingo 3, Cana Bay 2, San Pedro/Punta Cana/Vista Cana 1 c/u; 0 sin clasificar).
+
+### ⚠️ PENDIENTE de PROMPT-18 — colas menores / otro repo (no bloquean)
+- **AS22** (proveedores con ubicación) → **web SGC** (la app no tiene form de proveedores; `proveedores.lat/lng` ya existe).
+- **AS10 / AS11-agregar-artículo** (inventario): AS10 apertura admin (propuesta solo-web; `set_apertura_lote` listo) + AS11 "agregar artículo NUEVO del catálogo" al almacén (decisión apertura-vs-entrada).
+- **AS21 .mpp** (parser MS Project binario — mpxj vía edge function, SGC). La app ya pide exportar a Excel.
+- **Follow-ups documentados de QA (AS24):** form de proyecto (asignar responsable, offline/outbox, proyecto sin ubicación si falla set_ubicacion, código PROY server-side), cronograma (permiso offline, Gantt axis/fases, a11y timeline), AS17 (pintar las 4 fotos de uso en historiales).
+
+### ✅ ESTADO PROMPT-18: app-side COMPLETO (7 releases: 1.78 → 1.85)
+FASE 1 (tracking, falta validación en vivo con Misael), FASE 2 (conduces + firma despachante), FASE 3 (sin-rol + login), FASE 4 (inventario: ubicación/ajuste/conteos; colas AS10/AS11-agregar), FASE 5 (flota + uso con fotos), FASE 6 (gastos, cronograma import xlsx, proyectos QA, zonas). Pendientes = físicos de Xaviel (validación tracking, briefing despachantes, device-QA) + web SGC (AS22) + colas de decisión.
 - **AS22 (web):** input de ubicación en el form de proveedores (SGC).
 - **FASE 4 restante:** AS11-agregar-artículo nuevo (decisión apertura-vs-entrada) + AS10 apertura admin (propuesta solo-web).
 - **AS17 follow-up:** pintar las 4 fotos de uso en los historiales.

@@ -37,6 +37,21 @@
         (ngModelChange)="query.set($event)"
       />
 
+      <!-- AS23 — filtro por zona (derivada de la ubicación). Solo si hay >1 zona. -->
+      @if (zonaOpciones().length > 2) {
+        <app-collapsible-select
+          label="Zona"
+          icon="📍"
+          [options]="zonaOpciones()"
+          [selectedId]="zonaFiltro()"
+          (picked)="onZona($event)"
+        />
+      }
+
+      @if (!filtrados().length) {
+        <app-empty-state icon="🔍" title="Sin resultados" message="Ningún proyecto coincide con el filtro." />
+      }
+
       @for (p of filtrados(); track p.id) {
         <button type="button" class="proy__card" (click)="abrir(p)">
           <div class="proy__top">
