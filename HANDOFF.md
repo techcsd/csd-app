@@ -1,5 +1,29 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 17/08 (2) — PROMPT-18 FASE 2/3/5 (AS2-9,15,16,18-20,25) — **RELEASE 1.79.0 PUBLICADO (rolling)**
+**SHIPPED:** commit **`74eb12c`** → push `main` → PWA por Vercel. **APK 1.79.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 8 cambios curados) + subido al bucket + `publicada=true` 1.79.0 (1.78.0→false). **3 migraciones aditivas a prod:** `2026-08-17-as6-confirmaciones-chofer.sql`, `2026-08-17-as2-notificar-despachante.sql`, `2026-08-17-publicar-1.79.0.sql`. **Rollback:** `update sgc.app_versiones set publicada=(version='1.78.0') where plataforma='movil';` + `git revert 74eb12c && git push`; backend: `drop trigger trg_conduce_notificar_despachante on sgc.salidas_inventario;` + restaurar `mis_confirmaciones` a la versión previa (solo receptor).
+
+**Descubrimiento clave:** casi todo el backend de FASE 2 YA estaba desplegado (PROMPT-17): `conduce_firmar_despachante`, `mis_conduces_por_firmar(_count)`, `conduce_firma_despachante_pendiente`, `conduce_marcar_entregado` con gate **DR456** (no entregar sin firma), `conduce_detalle_app` con `despachante`+`motivo_label`, y el trigger `tg_conduce_origen_distinto_destino`. El trabajo fue **cablear el cliente**.
+
+- **AS2 (firma remota del despachante — anti-fraude) ⚠️ CAMBIO DE FLUJO:** se **quitó el pad del despachante** del wizard del chofer (`generar-conduce`): ahora solo se exige la firma del CHOFER; el despachante (si es usuario del sistema) firma desde SU teléfono. Trigger nuevo `trg_conduce_notificar_despachante` → aviso "Conduce por firmar" con deep-link a `conduce-detalle`, donde el despachante ve un bloque "Firmar conduce" (signature-pad → sube a bucket `conduces` → `conduce_firmar_despachante`). El server ya bloquea la ENTREGA (DR456) hasta la firma. **⚠️ OPERATIVO:** esto activa el requisito de firma remota para TODOS los conduces con despachante del sistema — brief a los despachantes. Reversible (restaurar el pad + `firmasOk` con ambas firmas). Despachante de texto libre (no-usuario) NO requiere firma.
+- **AS3:** "Entregado por" = `despachante` real (antes leía `entregado_por_nombre`=null); "Motivo" usa `motivo_label` del server con fallback local (`uso_proyecto`→"Uso en proyecto").
+- **AS4:** bloqueo origen=destino en el wizard (computed `mismoOrigenDestino` por id + nombre → `destinoOk` false + banda de error).
+- **AS5:** fotos de evidencia + firmas clickables → lightbox (patrón reportar-vehiculo) en `conduce-detalle`.
+- **AS6:** `mis_confirmaciones` ampliado (aditivo) para que el chofer vea las confirmaciones de sus entregas confirmadas (`recibido_en not null` + entregado_por/conductor = yo).
+- **AS7/AS8:** login ya NO bloquea a usuarios sin módulos (`afterAuth`): entra con aviso informativo y usa Notas/Tareas/Mensajes/Dudas/Reportar (rutas ya `authGuard+pinGuard`). El tile "Por confirmar" del home ya no cuela por `porConfirmar()>0` (la banner accionable lo cubre).
+- **AS9:** toggle mostrar/ocultar contraseña en el login (SVG ojo/ojo-tachado).
+- **AS15:** "Marcar N como atendidos" en Avisos de flota (`atenderAvisos` bulk `.in()`, ConfirmDialog, respeta filtro, excluye bloqueos).
+- **AS16:** empty state de Registrar combustible con botón "🚗 Usar un vehículo" → `/transporte/uso-vehiculo`.
+- **AS18:** "ya reportado por" resuelve el nombre vía `usuarios_por_ids` (fallback en `ReporteSemanalService`) + UI "otro usuario" si sigue vacío.
+- **AS19:** `combustible-log` responsive (`.clog__filtros` flex-wrap + campos min-width + "Aplicar" a fila completa <380px).
+- **AS20:** card "En uso" (transporte hub) sin botón "Uso de vehículo" (reaparece en "Para usar" al soltar).
+- **AS25:** nueva pantalla `/mensajes/nuevo-grupo` (foto+nombre+descripción+integrantes con buscador) reusando `crear_grupo`→`grupo_editar`→`grupo_set_avatar`; la opción "Grupo" del ＋ ahora navega allí.
+
+### ⚠️ PENDIENTE de PROMPT-18 (no tocado — próxima(s) sesión(es))
+- **AS17** (FASE 5): Uso de vehículo con 4 fotos rápidas (frente/lateral izq/der/trasera) — falta (necesita columnas en `vehiculo_usos` + RPC `set_uso_fotos` + captura cliente + mostrar en historiales).
+- **FASE 4 inventario:** AS11 (editar stock/agregar artículo al almacén), AS10 (herramienta admin de apertura — propuesta solo-web), AS12 (ubicación de almacenes: vincular a proyecto o location-picker; hoy `bodegas.ubicacion` es texto libre, sin lat/lng), AS13 (unificar Conteos y Ajustes).
+- **FASE 6:** AS14 (gastos directos del proyecto: tabla+RPC+form), **AS21 (cronograma .mpp/.xlsx — GRANDE, necesita research del parser; los 2 archivos de ejemplo están en `C:\developer\improvements\imp 10082026\`)**, AS22 (proveedores con ubicación), AS23 (filtro de proyectos por ubicación), AS24 (QA del módulo Proyectos en la app).
+
 ## 🟢 SESIÓN 17/08 — PROMPT-18 FASE 1 (AS1) — 🔴 TRACKING desacoplado de rutas — **RELEASE 1.78.0 PUBLICADO (rolling) · falta SOLO la validación en vivo con Misael**
 **SHIPPED:** commit **`73794be`** → push `main` → **PWA por Vercel**. **APK 1.78.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 3 cambios curados) + subido al bucket (`csd-app-1.78.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=true` 1.78.0** (1.77.1→false) → `version_publicada()`=**1.78.0**; `version_minima` sigue **1.70.0**. **4 migraciones aplicadas a prod:** `2026-08-17-as1-tracking-continuo.sql`, `2026-08-17-as1b-chofer-breadcrumb.sql`, `2026-08-17-publicar-1.78.0.sql` (+ el flip). **Rollback:** `update sgc.app_versiones set publicada=(version='1.77.1') where plataforma='movil';` + `git revert 73794be && git push`; para el backend: `update sgc.parametros set valor='100' where clave='gps_precision_max_m';` + `drop function sgc.mi_config_tracking(); drop function sgc.otros_rastreados(); drop function sgc.chofer_breadcrumb_vivo(uuid,integer);` + `delete from sgc.usuario_flags where flag='comparte_ubicacion' and usuario_id in (select id from sgc.usuarios where nombre ilike '%misael%');`.
 
