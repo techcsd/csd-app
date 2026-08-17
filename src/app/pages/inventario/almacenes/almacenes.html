@@ -16,8 +16,29 @@
           <p class="almacenes__hint">Se guardará como: <b>{{ nombrePreview }}</b></p>
         }
 
-        <label class="field-label" for="ubi">Ubicación (opcional)</label>
-        <input id="ubi" class="field" type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)" placeholder="¿Dónde está?" />
+        <!-- AS12 — ubicación: vincular a una obra (la mayoría) o ubicación propia -->
+        <label class="field-label">Ubicación</label>
+        <div class="almacenes__seg">
+          <button type="button" class="almacenes__seg-btn" [class.almacenes__seg-btn--on]="modoUbic() === 'obra'" (click)="setModoUbic('obra')">🏗️ Vincular a una obra</button>
+          <button type="button" class="almacenes__seg-btn" [class.almacenes__seg-btn--on]="modoUbic() === 'propia'" (click)="setModoUbic('propia')">📍 Ubicación propia</button>
+        </div>
+
+        @if (modoUbic() === 'obra') {
+          <app-collapsible-select
+            label="Obra"
+            icon="🏗️"
+            [options]="obraOpciones()"
+            [selectedId]="obraId()"
+            [searchable]="true"
+            searchPlaceholder="Buscar obra…"
+            (picked)="onObraElegida($event)"
+          />
+          <p class="almacenes__hint">El almacén hereda la ubicación de la obra y se mantiene sincronizado.</p>
+        } @else {
+          <app-location-picker [latitud]="latSel()" [longitud]="lngSel()" (ubicacionChange)="onUbicacion($event)" />
+          <label class="field-label" for="ubi">Referencia (opcional)</label>
+          <input id="ubi" class="field" type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)" placeholder="Ej. frente al colmado" />
+        }
 
         <label class="field-label" for="desc">Descripción (opcional)</label>
         <textarea id="desc" class="field almacenes__area" rows="2" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"></textarea>

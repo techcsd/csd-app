@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ArticuloCat, Bodega, BodegaAdmin, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia, Ferreteria } from '../models/inventario.model';
+import { ArticuloCat, Bodega, BodegaAdmin, BodegaUbicacion, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia, Ferreteria } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
@@ -298,18 +298,38 @@ export class InventarioService {
   async getBodegasAdmin(): Promise<BodegaAdmin[]> {
     const { data, error } = await this.supabase.client
       .from('bodegas')
-      .select('id, nombre, descripcion, ubicacion, activo, es_principal')
+      .select(
+        'id, nombre, descripcion, ubicacion, activo, es_principal, proyecto_id, latitud, longitud, direccion_geo, ubicacion_hereda_proyecto, ubicacion_metodo',
+      )
       .order('nombre');
     if (error) throw new Error(error.message);
     return (data as BodegaAdmin[]) ?? [];
   }
 
-  /** Create a warehouse. Server trigger homologates the name (R18). */
-  async crearBodega(input: { nombre: string; descripcion: string | null; ubicacion: string | null }): Promise<void> {
+  /** AS12 — obras con ubicación (para vincular el almacén a una obra). */
+  async getProyectosConUbicacion(): Promise<{ id: string; nombre: string; latitud: number | null; longitud: number | null }[]> {
+    const { data, error } = await this.supabase.client.rpc('directorio_proyectos');
+    if (error) throw new Error(error.message);
+    return ((data as Array<Record<string, unknown>>) ?? []).map((p) => ({
+      id: p['id'] as string,
+      nombre: p['nombre'] as string,
+      latitud: (p['latitud'] as number) ?? null,
+      longitud: (p['longitud'] as number) ?? null,
+    }));
+  }
+
+  /** Create a warehouse. Server trigger homologates the name (R18). AS12 — ubicación opcional. */
+  async crearBodega(input: {
+    nombre: string;
+    descripcion: string | null;
+    ubicacion: string | null;
+    location?: BodegaUbicacion;
+  }): Promise<void> {
     const { error } = await this.supabase.client.from('bodegas').insert({
       nombre: input.nombre,
       descripcion: input.descripcion,
       ubicacion: input.ubicacion,
+      ...(input.location ?? {}),
     });
     if (error) throw new Error(error.message);
     await this.refreshBodegas();
@@ -317,11 +337,16 @@ export class InventarioService {
 
   async actualizarBodega(
     id: string,
-    input: { nombre: string; descripcion: string | null; ubicacion: string | null },
+    input: { nombre: string; descripcion: string | null; ubicacion: string | null; location?: BodegaUbicacion },
   ): Promise<void> {
     const { error } = await this.supabase.client
       .from('bodegas')
-      .update({ nombre: input.nombre, descripcion: input.descripcion, ubicacion: input.ubicacion })
+      .update({
+        nombre: input.nombre,
+        descripcion: input.descripcion,
+        ubicacion: input.ubicacion,
+        ...(input.location ?? {}),
+      })
       .eq('id', id);
     if (error) throw new Error(error.message);
     await this.refreshBodegas();

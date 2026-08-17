@@ -18,6 +18,13 @@
           Ocultar los que están en cero
         </label>
 
+        <!-- AS11 — editar/ajustar stock y agregar artículos (permiso Operar). -->
+        @if (puedeAjustar()) {
+          <button type="button" class="btn-ghost almacen-inv__ajustar" (click)="contarAjustar()">
+            ✏️ Contar / ajustar stock
+          </button>
+        }
+
         @if (loading()) {
           <app-skeleton [rows]="6" />
         } @else {

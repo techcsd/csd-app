@@ -132,3 +132,25 @@
 .almacenes__form-nav .btn-ghost {
   width: auto;
 }
+
+// AS12 — segmento vincular-a-obra / ubicación-propia
+.almacenes__seg {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.almacenes__seg-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.almacenes__seg-btn--on {
+  border-color: var(--Hub, #ffb300);
+  background: var(--Hub-translucid, #ffb3001a);
+}

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
@@ -37,6 +37,7 @@ export class ConteoPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private route = inject(ActivatedRoute);
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
@@ -127,7 +128,15 @@ export class ConteoPage {
     ]);
     this.bodegas.set(b);
     this.categorias.set(cats);
-    if (b.length === 1) await this.onBodega(b[0].id);
+    // AS11 — preselección por ?bodega= (viene de "Contar/ajustar" del inventario del almacén).
+    const preBodega = this.route.snapshot.queryParamMap.get('bodega');
+    if (preBodega && b.some((x) => x.id === preBodega)) await this.onBodega(preBodega);
+    else if (b.length === 1) await this.onBodega(b[0].id);
+  }
+
+  /** AS13 — ir al historial de conteos y ajustes. */
+  verHistorial(): void {
+    void this.router.navigate(['/inventario/conteos']);
   }
 
   async onBodega(id: string): Promise<void> {

@@ -6,6 +6,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { InventarioService, InventarioAlmacenItem } from '../../../core/services/inventario.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { Bodega } from '../../../core/models/inventario.model';
 
 /**
@@ -27,6 +28,10 @@ export class AlmacenInventarioPage {
   private location = inject(Location);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private ctx = inject(UserContextService);
+
+  /** AS11 — quién puede contar/ajustar el stock de un almacén (permiso Operar). */
+  puedeAjustar = computed(() => this.ctx.puedeOperarSubmodulo('inventario.conteos'));
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
@@ -100,6 +105,14 @@ export class AlmacenInventarioPage {
   /** Detalle del artículo (con el almacén elegido para el stock). */
   abrirArticulo(it: InventarioAlmacenItem): void {
     void this.router.navigate(['/inventario/articulo', it.articulo_id], {
+      queryParams: { bodega: this.bodegaId() || null },
+    });
+  }
+
+  /** AS11 — editar/ajustar el stock de este almacén: abre "Conteos y ajustes" con
+   *  el almacén ya seleccionado (agregar artículos del catálogo se hace ahí). */
+  contarAjustar(): void {
+    void this.router.navigate(['/inventario/conteo'], {
       queryParams: { bodega: this.bodegaId() || null },
     });
   }

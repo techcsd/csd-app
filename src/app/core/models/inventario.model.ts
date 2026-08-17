@@ -11,6 +11,23 @@ export interface BodegaAdmin {
   ubicacion: string | null;
   activo: boolean;
   es_principal: boolean;
+  // AS12 — ubicación: vinculada a una obra o propia (coordenadas/mapa).
+  proyecto_id?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
+  direccion_geo?: string | null;
+  ubicacion_hereda_proyecto?: boolean | null;
+  ubicacion_metodo?: string | null;
+}
+
+/** AS12 — datos para guardar la ubicación de un almacén. */
+export interface BodegaUbicacion {
+  proyecto_id: string | null;
+  latitud: number | null;
+  longitud: number | null;
+  direccion_geo: string | null;
+  ubicacion_hereda_proyecto: boolean;
+  ubicacion_metodo: string | null;
 }
 
 /** Article category (R16). destacada = shown first (Clavos/Madera/Acero…). */
