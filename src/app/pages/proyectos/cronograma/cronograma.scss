@@ -275,3 +275,21 @@
   padding: 20px 4px;
   text-align: center;
 }
+
+// AS21 — botones de importar cronograma
+.crono__importar {
+  margin-left: auto;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.crono__importar-vacio {
+  width: 100%;
+  margin-top: 16px;
+}

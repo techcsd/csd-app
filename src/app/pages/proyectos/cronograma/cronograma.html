@@ -3,6 +3,9 @@
     <button type="button" class="crono__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="crono__icon">📅</span>
     <h1 class="crono__title">Cronograma</h1>
+    @if (puedeGestionar()) {
+      <button type="button" class="crono__importar" (click)="importar()" aria-label="Importar Excel">📥 Importar</button>
+    }
   </header>
 
   <div class="screen__body">
@@ -10,6 +13,9 @@
       <app-skeleton [rows]="6" />
     } @else if (!tareas().length) {
       <app-empty-state icon="📅" title="Sin tareas" [message]="online ? 'Este proyecto aún no tiene cronograma.' : 'Conéctate para cargar el cronograma.'" />
+      @if (puedeGestionar()) {
+        <button type="button" class="btn-cta crono__importar-vacio" (click)="importar()">📥 Importar desde Excel</button>
+      }
     } @else {
       <!-- Toggle vista -->
       <div class="crono__tabs">
@@ -98,8 +104,13 @@
           </div>
           @if (t.descripcion) { <p class="crono__desc">{{ t.descripcion }}</p> }
           <ul class="crono__info">
+            @if (t.grupo) { <li><span>Sección</span><b>{{ t.grupo }}</b></li> }
+            @if (t.responsable) { <li><span>Responsable</span><b>{{ t.responsable }}</b></li> }
+            @if (t.volumetria) { <li><span>Volumetría</span><b>{{ t.volumetria }}</b></li> }
             <li><span>Plan</span><b>{{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</b></li>
             <li><span>Duración</span><b>{{ t.duracion_dias_plan }} día(s)</b></li>
+            @if (t.avance_pct != null) { <li><span>Avance</span><b>{{ t.avance_pct }}%</b></li> }
+            @if (t.rendimiento) { <li><span>Rendimiento</span><b>{{ t.rendimiento }}</b></li> }
             @if (t.fecha_inicio_real) { <li><span>Inicio real</span><b>{{ fmt(t.fecha_inicio_real) }}</b></li> }
             @if (t.fecha_fin_real) { <li><span>Fin real</span><b>{{ fmt(t.fecha_fin_real) }}</b></li> }
           </ul>

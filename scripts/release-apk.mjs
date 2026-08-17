@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.83.0';
+const VERSION = '1.84.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,14 +62,13 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Proyectos: mejoras y arreglos';
+const TITULO = 'Importar cronograma desde Excel';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Proyectos', d: 'Desde el detalle de una obra ahora entras directo a sus Compras y gastos y a su Personal de obra. Se muestran el presupuesto y la fecha de fin real.' },
-  { t: 'arreglo', m: 'Proyectos', d: 'Cronograma: la línea "Hoy" queda alineada con las barras; si una obra tiene tareas sin fechas, se explica en vez de mostrar un timeline en blanco; los errores de carga ya no se ven como "sin cronograma".' },
-  { t: 'arreglo', m: 'Proyectos', d: 'Editar un proyecto que no cargó ya no deja un formulario en blanco; se validan las fechas y el presupuesto.' },
+  { t: 'nuevo', m: 'Proyectos', d: 'Ya puedes importar el cronograma de una obra desde un Excel (.xlsx): la app lee las actividades con su responsable, volumetría, fechas, días y avances, te muestra una vista previa y las carga al cronograma. (Los archivos .mpp de MS Project deben exportarse a Excel primero.)' },
+  { t: 'mejora', m: 'Proyectos', d: 'El detalle de cada actividad del cronograma ahora muestra la sección, responsable, volumetría, avance y rendimiento importados.' },
 ];
 
 const TIPO_POR_COMMIT = {

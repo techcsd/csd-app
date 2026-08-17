@@ -75,6 +75,29 @@ export class CronogramaService {
     return data === true;
   }
 
+  /**
+   * AS21 — importa actividades (parseadas del .xlsx) al cronograma del proyecto vía
+   * `cronograma_importar`. `reemplazar` borra las tareas previas de esa fase/torre.
+   * Online (validación server-side + gate `puede_gestionar_cronograma`).
+   */
+  async importar(
+    proyectoId: string,
+    faseNombre: string,
+    tareas: Record<string, unknown>[],
+    reemplazar: boolean,
+  ): Promise<{ creadas: number; reemplazadas: number }> {
+    const { data, error } = await this.supabase.client.rpc('cronograma_importar', {
+      p_proyecto_id: proyectoId,
+      p_fase_nombre: faseNombre,
+      p_tareas: tareas,
+      p_reemplazar: reemplazar,
+    });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidate(`${CAT_PREFIX}${proyectoId}`);
+    const d = (data ?? {}) as { creadas?: number; reemplazadas?: number };
+    return { creadas: d.creadas ?? 0, reemplazadas: d.reemplazadas ?? 0 };
+  }
+
   /** URL firmada de la foto de evidencia (bucket privado). null si falla. */
   async getEvidenciaUrl(path: string | null): Promise<string | null> {
     if (!path) return null;

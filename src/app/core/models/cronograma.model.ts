@@ -27,6 +27,12 @@ export interface CronogramaTarea {
   es_prueba: boolean;
   created_at: string;
   updated_at: string;
+  // AS21 — campos del import de Excel (los devuelve listar_cronograma vía to_jsonb).
+  responsable?: string | null;
+  volumetria?: string | null;
+  avance_pct?: number | null;
+  rendimiento?: string | null;
+  grupo?: string | null;
 }
 
 /** Fila del historial de recálculos (auto-ajuste del timeline). */

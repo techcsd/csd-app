@@ -1,0 +1,155 @@
+.inv-sub-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.inv-sub-header__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  border: none;
+}
+.inv-sub-header__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.cimp__intro {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 12px 0;
+}
+
+.cimp__file {
+  display: block;
+  input {
+    display: none;
+  }
+}
+.cimp__file-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 14px;
+  border: 1.5px dashed var(--Hub, #ffb300);
+  border-radius: 12px;
+  background: var(--Hub-translucid, #ffb3001a);
+  color: var(--color-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+.cimp__archivo {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.cimp__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.cimp__band {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.cimp__band--warn {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+}
+
+.cimp__resumen {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+}
+.cimp__res-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 14px;
+  span {
+    color: var(--color-text-secondary);
+  }
+}
+
+.cimp__reemplazar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin: 8px 0 12px;
+}
+
+.cimp__tabla-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.cimp__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  th,
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+    white-space: nowrap;
+  }
+  th {
+    background: var(--color-bg);
+    font-weight: 800;
+  }
+  td:nth-child(2) {
+    white-space: normal;
+    min-width: 160px;
+  }
+}
+.cimp__grupo {
+  display: block;
+  font-size: 10px;
+  color: var(--Hub, #ffb300);
+  font-weight: 700;
+}
+.cimp__mas {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  padding: 8px;
+  margin: 0;
+}
+
+.cimp__importar {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.cimp__exito {
+  text-align: center;
+  padding: 32px 16px;
+  .cimp__exito-ico {
+    font-size: 48px;
+  }
+  h2 {
+    margin: 12px 0 6px;
+  }
+  p {
+    color: var(--color-text-secondary);
+    margin-bottom: 20px;
+  }
+  .btn-cta {
+    width: 100%;
+  }
+}

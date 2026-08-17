@@ -745,6 +745,13 @@ export const routes: Routes = [
       import('./pages/proyectos/cronograma/cronograma').then((m) => m.CronogramaPage),
   },
   {
+    // AS21 — importar el cronograma desde Excel (.xlsx).
+    path: 'proyectos/:id/cronograma/importar',
+    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    loadComponent: () =>
+      import('./pages/proyectos/cronograma/cronograma-importar').then((m) => m.CronogramaImportarPage),
+  },
+  {
     // AL2 — Administración completo: usuarios, roles/permisos, parámetros.
     path: 'admin/usuarios',
     canActivate: [authGuard, pinGuard, moduleGuard('admin')],

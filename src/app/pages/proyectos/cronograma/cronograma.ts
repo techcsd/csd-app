@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
@@ -58,6 +58,7 @@ export class CronogramaPage {
   private toast = inject(ToastService);
   private sync = inject(SyncService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private location = inject(Location);
 
   readonly tipoLabel = CRONOGRAMA_TIPO_LABEL;
@@ -192,6 +193,11 @@ export class CronogramaPage {
 
   setVista(v: 'lista' | 'timeline'): void {
     this.vista.set(v);
+  }
+
+  /** AS21 — importar cronograma desde Excel (.xlsx). */
+  importar(): void {
+    void this.router.navigate(['/proyectos', this.proyectoId, 'cronograma', 'importar']);
   }
 
   // ─── Detalle / acciones ───
