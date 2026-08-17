@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.77.1';
+const VERSION = '1.78.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,12 +62,14 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Ajuste de Personal de obra sin conexión';
+const TITULO = 'Ubicación en tiempo real de verdad';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Personal de obra', d: 'La lista de personal ya no se ve vacía al registrar o editar a alguien sin conexión: se mantiene visible y se actualiza sola al volver la señal.' },
+  { t: 'arreglo', m: 'Ubicación', d: 'Tu ubicación ahora se reporta durante toda la jornada, no solo cuando tienes una ruta abierta. Se acabó el "aparece en el mismo lugar por días": el jefe de flota te ve en tiempo real.' },
+  { t: 'mejora', m: 'Ubicación', d: 'La posición se refresca aunque estés detenido y se dibuja el recorrido (la línea por las calles) en Seguimiento.' },
+  { t: 'mejora', m: 'Ubicación', d: 'La app te pide excluirla de la optimización de batería con un solo toque, para seguir reportando con la pantalla apagada.' },
 ];
 
 const TIPO_POR_COMMIT = {

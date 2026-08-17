@@ -38,10 +38,13 @@ export class SeguimientoService {
   private supabase = inject(SupabaseService);
   private channel: RealtimeChannel | null = null;
 
-  /** Lista de choferes con estado + última posición. */
+  /** Lista de choferes con estado + última posición. AS1 — además incluye a quien
+   *  comparte ubicación sin ser chofer (p. ej. Misael, jefe de flota) vía
+   *  `otros_rastreados()`, para que también aparezca en el mapa. */
   async choferes(): Promise<ChoferSeguimiento[]> {
-    const [estadoRes, posRes] = await Promise.all([
+    const [estadoRes, otrosRes, posRes] = await Promise.all([
       this.supabase.client.rpc('choferes_estado'),
+      this.supabase.client.rpc('otros_rastreados').then((r) => r, () => ({ data: [], error: null })),
       this.supabase.client
         .from('chofer_ultima_posicion')
         .select('usuario_id, lat, lng, capturado_en'),
@@ -55,7 +58,20 @@ export class SeguimientoService {
         capturado_en: p['capturado_en'] as string,
       });
     }
-    return ((estadoRes.data as Array<Record<string, unknown>>) ?? []).map((r) => {
+    // AS1 — une choferes + otros rastreados (evitando duplicar por usuario_id).
+    const filas = [
+      ...((estadoRes.data as Array<Record<string, unknown>>) ?? []),
+      ...((otrosRes.data as Array<Record<string, unknown>>) ?? []),
+    ];
+    const vistos = new Set<string>();
+    return filas
+      .filter((r) => {
+        const id = r['usuario_id'] as string;
+        if (vistos.has(id)) return false;
+        vistos.add(id);
+        return true;
+      })
+      .map((r) => {
       const pos = posMap.get(r['usuario_id'] as string);
       return {
         usuario_id: r['usuario_id'] as string,
@@ -106,6 +122,17 @@ export class SeguimientoService {
       );
     }
     return dentro;
+  }
+
+  /** AS1 — breadcrumb EN VIVO de un CHOFER (últimas ~3 h), independiente de si hay
+   *  ruta formal. Es la "línea que sigue las calles" del tracking continuo. */
+  async choferBreadcrumb(usuarioId: string): Promise<[number, number][]> {
+    const { data, error } = await this.supabase.client.rpc('chofer_breadcrumb_vivo', {
+      p_usuario_id: usuarioId,
+    });
+    if (error) return [];
+    const raw = ((data as [number, number][]) ?? []).filter((p) => Array.isArray(p) && p.length === 2);
+    return raw.filter(([lat, lng]) => lat >= 17 && lat <= 20 && lng >= -72 && lng <= -68);
   }
 
   /** Suscribe el realtime de la última posición; llama a `onChange` en cada update. */

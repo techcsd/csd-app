@@ -8,6 +8,9 @@ import { ErrorReportService } from './error-report.service';
 /** Native bridge to AppSettingsPlugin (android/.../AppSettingsPlugin.java). */
 interface AppSettingsPlugin {
   open(): Promise<void>;
+  // AS1 — exclusión real de la optimización de batería (tracking en background).
+  isIgnoringBatteryOptimizations(): Promise<{ value: boolean }>;
+  requestIgnoreBatteryOptimizations(): Promise<{ alreadyIgnoring: boolean }>;
 }
 const AppSettings = registerPlugin<AppSettingsPlugin>('AppSettings');
 
@@ -336,6 +339,29 @@ export class PermissionsService {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * AS1 — ¿la app está excluida de la optimización de batería? (En no-nativo o si
+   * falla el bridge devolvemos true para no molestar con avisos que no aplican.)
+   */
+  async isIgnoringBattery(): Promise<boolean> {
+    if (!this.native) return true;
+    try {
+      return (await AppSettings.isIgnoringBatteryOptimizations()).value;
+    } catch {
+      return true;
+    }
+  }
+
+  /** AS1 — dispara el diálogo nativo de exclusión de optimización de batería. */
+  async requestIgnoreBattery(): Promise<void> {
+    if (!this.native) return;
+    try {
+      await AppSettings.requestIgnoreBatteryOptimizations();
+    } catch {
+      /* best-effort: si falla, el usuario puede hacerlo desde Ajustes */
     }
   }
 

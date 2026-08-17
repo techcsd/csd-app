@@ -27,6 +27,7 @@ import { NativeAlarmService } from './core/services/native-alarm.service';
 import { ReporteSemanalService } from './core/services/reporte-semanal.service';
 import { NotificacionesService } from './core/services/notificaciones.service';
 import { DeviceInfoService } from './core/services/device-info.service';
+import { TrackingService } from './core/services/tracking.service';
 
 @Component({
   selector: 'app-root',
@@ -55,7 +56,10 @@ export class App {
   private reportes = inject(ReporteSemanalService);
   private notificaciones = inject(NotificacionesService);
   private deviceInfo = inject(DeviceInfoService);
+  private tracking = inject(TrackingService);
   private router = inject(Router);
+  /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
+  private trackingArrancado = false;
 
   constructor() {
     void this.catalog.persistStorage();
@@ -75,6 +79,7 @@ export class App {
       void CapApp.addListener('resume', () => {
         void this.syncAlarmaNativa();
         void this.notificaciones.iniciarRealtime(); // AM4 — reasegura el canal tras dormir
+        void this.tracking.evaluarModoContinuo(); // AS1 — re-arma el tracking continuo
       });
     }
     void this.notificaciones.iniciarRealtime(); // AM4 — realtime de avisos (idempotente)
@@ -156,7 +161,17 @@ export class App {
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       // AM4 — asegura el canal realtime de avisos una vez hay sesión (el constructor
       // corre antes del login). Idempotente: no-op tras el primer arranque exitoso.
-      if (!this.router.url.startsWith('/auth')) void this.notificaciones.iniciarRealtime();
+      if (!this.router.url.startsWith('/auth')) {
+        void this.notificaciones.iniciarRealtime();
+        // AS1 — arranca el tracking continuo una vez hay sesión (una vez por login;
+        // se re-arma tras cada login porque `apagar()` en logout resetea el flag).
+        if (!this.trackingArrancado) {
+          this.trackingArrancado = true;
+          void this.tracking.evaluarModoContinuo();
+        }
+      } else {
+        this.trackingArrancado = false;
+      }
       // Doble rAF: esperar a que el router-outlet monte la pantalla nueva.
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {

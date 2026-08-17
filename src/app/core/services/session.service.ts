@@ -6,6 +6,7 @@ import { UserContextService } from './user-context.service';
 import { PushService } from './push.service';
 import { BorradorService } from './borrador.service';
 import { NotificacionesService } from './notificaciones.service';
+import { TrackingService } from './tracking.service';
 
 /**
  * Coordinates the boot flow: session → PIN → profile. `unlocked` lives in
@@ -21,6 +22,7 @@ export class SessionService {
   private push = inject(PushService);
   private borradores = inject(BorradorService);
   private notificaciones = inject(NotificacionesService);
+  private tracking = inject(TrackingService);
 
   private _unlocked = signal(false);
   unlocked = this._unlocked.asReadonly();
@@ -54,6 +56,7 @@ export class SessionService {
   }
 
   async logout(): Promise<void> {
+    await this.tracking.apagar(); // AS1 — deja de rastrear al usuario saliente
     this.notificaciones.detenerRealtime(); // AM4 — cierra el canal del usuario saliente
     await this.push.clearToken(); // AF7 — desactiva el token antes de cerrar sesión
     await this.auth.signOut();

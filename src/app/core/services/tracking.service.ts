@@ -30,6 +30,12 @@ const MAX_BUFFER = 12; // fuerza flush al llegar a este tamaño
 const MAX_PERSIST = 2000; // QA-35 — tope del buffer en disco (rutas largas offline)
 const WATCHDOG_MS = 60_000; // AG11 — el watchdog revisa cada minuto
 const STALE_FIX_MS = 5 * 60_000; // AG11 — sin fix en 5 min con ruta activa = re-armar
+// AS1 — latido de frescura: aunque el chofer esté parado (el watcher con
+// distanceFilter no dispara sin movimiento), forzamos un fix cada ~2.5 min para
+// que "hace X" y el mapa no se vean congelados (estilo Uber: "actualizado hace Xs").
+// También sirve de segunda vía de captura si el watcher nativo se estanca.
+const HEARTBEAT_MS = 150_000;
+const DEFAULT_DISTANCE_FILTER = 25; // m — override por mi_config_tracking()
 
 /**
  * AF26/AF27 — ubicación siempre activa + tracking en primer plano.
@@ -69,9 +75,21 @@ export class TrackingService {
   private bgWatcherId: string | null = null; // background-geolocation (nativo)
   private flushTimer: ReturnType<typeof setInterval> | null = null;
   private watchdogTimer: ReturnType<typeof setInterval> | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null; // AS1
   private vehiculoActual: string | null = null;
   private rutaActual: string | null = null; // AJ14 — ruta activa a taggear en cada punto
   private ultimaFlushOk = Date.now();
+  private ultimaCoord: { lat: number; lng: number; precision: number | null } | null = null; // AS1
+  /** AS1 — true cuando el usuario comparte ubicación → el tracking corre en
+   *  CONTINUO (todo el turno), no solo durante una ruta formal. Es la raíz del
+   *  "dura días para actualizar": antes solo se capturaba dentro de una ruta. */
+  private modoContinuo = false;
+  /** AS1 — distanceFilter efectivo (m), configurable desde mi_config_tracking(). */
+  private distanceFilter = DEFAULT_DISTANCE_FILTER;
+  /** AS1 — periodo de flush efectivo (ms), configurable desde el servidor. */
+  private flushMs = FLUSH_MS;
+  /** AS1 — evita evaluar el modo continuo dos veces en paralelo. */
+  private evaluando = false;
   /** true mientras un re-arranque del watchdog está en curso (evita solaparlos). */
   private rearmando = false;
   /** QA-10 — true mientras un flush está en vuelo (evita solapar dos envíos). */
@@ -147,10 +165,51 @@ export class TrackingService {
     }
   }
 
+  // ── AS1 — tracking continuo (todo el turno) ─────────────────────────────────
+
+  /**
+   * AS1 — decide si este usuario debe rastrear en CONTINUO y, de ser así, lo
+   * arranca. Se llama al bootear la app y al volver a primer plano. Antes el
+   * tracking solo corría dentro de una "ruta activa" formal → si el chofer no
+   * creaba una ruta en la app, no reportaba NADA (raíz del "dura días para
+   * actualizar", confirmado en `gps_ingesta_log`: 100% de los puntos traían
+   * ruta_id). Ahora `mi_config_tracking()` (server) decide por `comparte_ubicacion`
+   * (rol chofer_transportista o el override por usuario) y da la cadencia.
+   * Idempotente: si ya está rastreando, solo refresca la config.
+   */
+  async evaluarModoContinuo(): Promise<void> {
+    if (this.evaluando) return;
+    this.evaluando = true;
+    try {
+      const { data, error } = await this.supabase.client.rpc('mi_config_tracking');
+      const cfg = (data as Array<Record<string, unknown>> | null)?.[0];
+      if (error || !cfg) return; // sin sesión / offline: reintenta en el próximo resume
+      if (!cfg['comparte']) {
+        // No comparte ubicación (rol de oficina). Si venía en continuo (cambio de
+        // sesión), apágalo.
+        if (this.modoContinuo) {
+          this.modoContinuo = false;
+          await this.detenerTracking();
+        }
+        return;
+      }
+      this.distanceFilter = Number(cfg['distancia_m']) || DEFAULT_DISTANCE_FILTER;
+      this.flushMs = (Number(cfg['flush_seg']) || FLUSH_MS / 1000) * 1000;
+      this.modoContinuo = true;
+      // Arranca (o mantiene) el tracking sin atarlo a una ruta.
+      await this.iniciarTracking(this.vehiculoActual, undefined);
+    } catch {
+      /* best-effort: nunca romper el arranque de la app */
+    } finally {
+      this.evaluando = false;
+    }
+  }
+
   // ── AF27 — tracking en primer plano ─────────────────────────────────────────
 
-  /** Arranca el reporte de posición (mientras haya una ruta activa). En nativo usa
-   *  el foreground service (sigue en segundo plano); en web, watchPosition. */
+  /** Arranca el reporte de posición. En modo continuo (AS1) corre todo el turno;
+   *  con una ruta activa además etiqueta los puntos con la ruta. En nativo usa el
+   *  foreground service (sigue en segundo plano); en web, watchPosition. */
   async iniciarTracking(vehiculoId?: string | null, rutaId?: string | null): Promise<void> {
     this.vehiculoActual = vehiculoId ?? null;
     // AJ14 — conserva la ruta previa cuando el re-armado del watchdog no la reenvía.
@@ -161,11 +220,12 @@ export class TrackingService {
         // Foreground service con notificación persistente (Android).
         this.bgWatcherId = await BackgroundGeolocation.addWatcher(
           {
-            backgroundMessage: 'Reportando tu ubicación durante la ruta.',
-            backgroundTitle: 'CSD App — ruta activa',
+            // AS1 — el tracking corre en continuo (todo el turno), no solo en ruta.
+            backgroundMessage: 'Compartiendo tu ubicación con la empresa durante el trabajo.',
+            backgroundTitle: 'CSD App — ubicación activa',
             requestPermissions: true,
             stale: false,
-            distanceFilter: 40,
+            distanceFilter: this.distanceFilter,
           },
           (location, error) => {
             if (error) {
@@ -204,8 +264,9 @@ export class TrackingService {
       this.rastreando.set(true);
       this.ultimaFlushOk = Date.now();
       if (this.flushTimer) clearInterval(this.flushTimer);
-      this.flushTimer = setInterval(() => void this.flush(), FLUSH_MS);
+      this.flushTimer = setInterval(() => void this.flush(), this.flushMs);
       this.iniciarWatchdog();
+      this.iniciarHeartbeat(); // AS1 — frescura aunque el chofer esté parado
       void this.avisarBateriaUnaVez(); // AK13 — exclusión de optimización de batería (MIUI)
     } catch (e) {
       // AG11 — antes fallaba en silencio ("el tracking simplemente no arranca").
@@ -226,6 +287,8 @@ export class TrackingService {
    */
   private async avisarBateriaUnaVez(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
+    // AS1 — si ya está excluida de la optimización de batería, no hay nada que pedir.
+    if (await this.permissions.isIgnoringBattery()) return;
     const KEY = 'tracking_bateria_avisado';
     try {
       if (await this.store.get(KEY)) return;
@@ -233,10 +296,13 @@ export class TrackingService {
     } catch {
       /* si el store falla, mostramos el aviso igual (sin persistir) */
     }
-    this.toast.show(
-      'Para que la ruta se rastree con la pantalla apagada: Ajustes → Batería → CSD App → "Sin restricciones", y fija la app en recientes.',
+    // AS1 — antes era solo un toast de instrucciones; ahora ofrecemos el diálogo
+    // nativo real (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) con un botón.
+    this.toast.withAction(
+      'Para que tu ubicación se reporte con la pantalla apagada, permite que la app funcione sin restricción de batería.',
+      { label: 'Permitir', run: () => void this.permissions.requestIgnoreBattery() },
       'info',
-      9000,
+      12000,
     );
   }
 
@@ -254,8 +320,22 @@ export class TrackingService {
     void this.iniciarTracking(vehiculoId ?? null, rutaId ?? null);
   }
 
-  /** Detiene el tracking (al completar/cancelar la ruta) y drena lo pendiente. */
+  /**
+   * Al completar/cancelar una ruta. En modo continuo (AS1, chofer que comparte
+   * ubicación) NO se detiene el tracking: solo se quita la etiqueta de ruta y se
+   * drena el lote — el chofer se sigue rastreando durante el turno. Solo se detiene
+   * de verdad cuando el usuario NO comparte ubicación (oficina) o al cerrar sesión.
+   */
   async detenerTracking(): Promise<void> {
+    if (this.modoContinuo) {
+      this.rutaActual = null; // la ruta terminó, el tracking continúa
+      await this.flush();
+      return;
+    }
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
     if (this.bgWatcherId != null) {
       try {
         await BackgroundGeolocation.removeWatcher({ id: this.bgWatcherId });
@@ -285,6 +365,12 @@ export class TrackingService {
     await this.flush();
   }
 
+  /** AS1 — apaga el tracking por completo (cierre de sesión / usuario sin permiso). */
+  async apagar(): Promise<void> {
+    this.modoContinuo = false;
+    await this.detenerTracking();
+  }
+
   private async push(lat: number, lng: number, precision: number | null): Promise<void> {
     this.buffer.push({
       lat,
@@ -296,8 +382,41 @@ export class TrackingService {
       ruta_id: this.rutaActual,
     });
     this.ultimoFix.set(Date.now());
+    this.ultimaCoord = { lat, lng, precision }; // AS1 — para el latido de frescura
     await this.persistBuffer();
     if (this.buffer.length >= MAX_BUFFER) void this.flush();
+  }
+
+  // ── AS1 — latido de frescura ────────────────────────────────────────────────
+
+  private iniciarHeartbeat(): void {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = setInterval(() => void this.heartbeatTick(), HEARTBEAT_MS);
+  }
+
+  /**
+   * AS1 — si no llegó un fix nuevo del watcher (chofer parado: distanceFilter no
+   * dispara), fuerza uno para que la última posición y el "hace X" se refresquen.
+   * Si el fix falla, re-empuja la última coord con timestamp nuevo (heartbeat) —
+   * no mueve el marcador, solo actualiza la frescura.
+   */
+  private async heartbeatTick(): Promise<void> {
+    if (!this.rastreando()) return;
+    const last = this.ultimoFix();
+    // Solo si hace rato que no hay un fix del watcher (evita spam en movimiento).
+    if (last != null && Date.now() - last < HEARTBEAT_MS - 5_000) return;
+    try {
+      const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 20_000 });
+      if (r.ok) {
+        await this.push(r.lat, r.lng, null);
+        return;
+      }
+    } catch {
+      /* cae al re-empuje de la última coord */
+    }
+    if (this.ultimaCoord) {
+      await this.push(this.ultimaCoord.lat, this.ultimaCoord.lng, this.ultimaCoord.precision);
+    }
   }
 
   /** Envía el lote acumulado a `registrar_posiciones` (offline-first: reintenta luego). */

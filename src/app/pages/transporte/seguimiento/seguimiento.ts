@@ -64,7 +64,8 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private readonly TRAZO_COLOR = '#2563eb';
   // QA-11: debounce de recargas por realtime + memo del set de rutas activas.
   private cargarTimer: ReturnType<typeof setTimeout> | null = null;
-  private lastRutaIds = '';
+  // AS1 — clave de choferes con posición para no re-consultar trazos sin cambios.
+  private lastChoferIds = '';
 
   loading = signal(true);
   choferes = signal<ChoferSeguimiento[]>([]);
@@ -171,17 +172,22 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
     }
   }
 
-  /** AJ14 — dibuja/actualiza la línea del recorrido del día de cada ruta activa. */
+  /** AS1 — dibuja/actualiza la línea del recorrido reciente de cada chofer CON
+   *  posición (independiente de si hay una ruta formal). Antes solo se trazaban
+   *  las rutas activas → un chofer moviéndose sin ruta no dejaba línea. Ahora el
+   *  jefe de flota ve "la línea que sigue las calles" del tracking continuo. */
   private async pintarBreadcrumbs(): Promise<void> {
-    const rutas = this.rutasActivas();
-    // QA-11: si el conjunto de rutas activas no cambió desde el último render, no
-    // re-consultamos los breadcrumbs (los trazos ya dibujados se conservan).
-    const idsKey = rutas.map((r) => r.id).slice().sort().join(',');
-    if (idsKey === this.lastRutaIds) return;
-    this.lastRutaIds = idsKey;
-    // QA-11: fetches en PARALELO (antes: N+1 secuencial, uno por ruta activa).
+    const conPos = this.conPosicion();
+    // Si el conjunto de choferes con posición no cambió, conserva los trazos.
+    const idsKey = conPos.map((c) => c.usuario_id).slice().sort().join(',');
+    if (idsKey === this.lastChoferIds) return;
+    this.lastChoferIds = idsKey;
+    // Fetches en PARALELO, uno por chofer con posición.
     const pares = await Promise.all(
-      rutas.map(async (r) => ({ id: r.id, coords: await this.service.rutaBreadcrumb(r.id) })),
+      conPos.map(async (c) => ({
+        id: c.usuario_id,
+        coords: await this.service.choferBreadcrumb(c.usuario_id),
+      })),
     );
     const vistos = new Set<string>();
     for (const { id, coords } of pares) {
