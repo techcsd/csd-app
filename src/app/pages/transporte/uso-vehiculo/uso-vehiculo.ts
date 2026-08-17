@@ -4,6 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
+import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { CapturedPhoto } from '../../../core/services/camera.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -30,7 +32,7 @@ type Modo = 'usar' | 'soltar';
   selector: 'app-uso-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker],
+  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot],
   templateUrl: './uso-vehiculo.html',
   styleUrl: './uso-vehiculo.scss',
 })
@@ -59,6 +61,12 @@ export class UsoVehiculoPage {
   km = signal<number | null>(null);
   nivel = signal<NivelCombustible | null>(null);
   notas = signal('');
+
+  // AS17 — 4 fotos rápidas del vehículo (solo al tomar/recibir, no al soltar).
+  fotoFrente = signal<CapturedPhoto | null>(null);
+  fotoIzq = signal<CapturedPhoto | null>(null);
+  fotoDer = signal<CapturedPhoto | null>(null);
+  fotoTrasera = signal<CapturedPhoto | null>(null);
 
   /** El vehículo lo tiene otro → flujo "recibir de X". */
   enUsoPorOtro = computed(() => {
@@ -150,13 +158,26 @@ export class UsoVehiculoPage {
         });
         this.toast.success('Vehículo soltado. Queda libre.');
       } else {
-        await this.usoSvc.iniciarUso({
+        const r = await this.usoSvc.iniciarUso({
           vehiculoId: this.vehiculoId(),
           km: this.km(),
           nivel: this.nivel()!,
           notas: this.notas().trim() || null,
           recibir: this.enUsoPorOtro(),
         });
+        // AS17 — adjunta las 4 fotos a la sesión (best-effort: no tumbar el flujo).
+        if (r?.uso_id) {
+          try {
+            await this.usoSvc.setFotos(r.uso_id, {
+              frente: this.fotoFrente()?.blob ?? null,
+              izq: this.fotoIzq()?.blob ?? null,
+              der: this.fotoDer()?.blob ?? null,
+              trasera: this.fotoTrasera()?.blob ?? null,
+            });
+          } catch {
+            this.toast.show('El uso se registró, pero no pudimos subir alguna foto.', 'info');
+          }
+        }
         this.toast.success(this.enUsoPorOtro() ? 'Recibiste el vehículo. Ahora está a tu cargo.' : 'Estás usando el vehículo.');
       }
       this.done.set(true);

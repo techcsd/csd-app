@@ -75,3 +75,15 @@
   width: 100%;
   margin-top: 8px;
 }
+
+// AS17 — cuadrícula de las 4 fotos rápidas
+.usov__hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 8px;
+}
+.usov__fotos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}

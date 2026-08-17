@@ -19,8 +19,10 @@
 - **AS20:** card "En uso" (transporte hub) sin botón "Uso de vehículo" (reaparece en "Para usar" al soltar).
 - **AS25:** nueva pantalla `/mensajes/nuevo-grupo` (foto+nombre+descripción+integrantes con buscador) reusando `crear_grupo`→`grupo_editar`→`grupo_set_avatar`; la opción "Grupo" del ＋ ahora navega allí.
 
+### 🟢 AS17 (FASE 5) — Uso de vehículo con 4 fotos — **RELEASE 1.80.0 PUBLICADO (rolling)**
+Migración `sql/2026-08-17-as17-uso-vehiculo-fotos.sql` (aditiva): 4 columnas `foto_*_path` en `vehiculo_usos` + RPC `set_uso_fotos(uso_id, frente, izq, der, trasera)` (gate: dueño/flota/admin). Cliente: `uso-vehiculo` muestra 4 photo-slots (solo cámara) al tomar/recibir (no al soltar); tras `iniciar_uso_vehiculo` sube las fotos al bucket `vehiculos` y las adjunta con `set_uso_fotos` (best-effort). **Commit + APK + publicada=1.80.0** (1.79.0→false). **Follow-up:** mostrar esas fotos en los HISTORIALES de uso (AK18) — hoy se guardan pero la vista de historial aún no las pinta. **Rollback:** `update sgc.app_versiones set publicada=(version='1.79.0') where plataforma='movil';` + `git revert` del commit de AS17; backend: `drop function sgc.set_uso_fotos(uuid,text,text,text,text);` (las columnas son inocuas).
+
 ### ⚠️ PENDIENTE de PROMPT-18 (no tocado — próxima(s) sesión(es))
-- **AS17** (FASE 5): Uso de vehículo con 4 fotos rápidas (frente/lateral izq/der/trasera) — falta (necesita columnas en `vehiculo_usos` + RPC `set_uso_fotos` + captura cliente + mostrar en historiales).
 - **FASE 4 inventario:** AS11 (editar stock/agregar artículo al almacén), AS10 (herramienta admin de apertura — propuesta solo-web), AS12 (ubicación de almacenes: vincular a proyecto o location-picker; hoy `bodegas.ubicacion` es texto libre, sin lat/lng), AS13 (unificar Conteos y Ajustes).
 - **FASE 6:** AS14 (gastos directos del proyecto: tabla+RPC+form), **AS21 (cronograma .mpp/.xlsx — GRANDE, necesita research del parser; los 2 archivos de ejemplo están en `C:\developer\improvements\imp 10082026\`)**, AS22 (proveedores con ubicación), AS23 (filtro de proyectos por ubicación), AS24 (QA del módulo Proyectos en la app).
 

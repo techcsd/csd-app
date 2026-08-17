@@ -125,6 +125,41 @@ export class VehiculoUsoService {
     return data as { ok: boolean; estado: string };
   }
 
+  /**
+   * AS17 — adjunta las 4 fotos rápidas (frente/lateral izq/lateral der/trasera) a
+   * una sesión de uso. Sube al bucket `vehiculos` y las guarda con `set_uso_fotos`.
+   * Best-effort desde el caller (no debe tumbar el flujo si una foto falla).
+   */
+  async setFotos(
+    usoId: string,
+    fotos: { frente?: Blob | null; izq?: Blob | null; der?: Blob | null; trasera?: Blob | null },
+  ): Promise<void> {
+    const subir = async (slot: string, blob?: Blob | null): Promise<string | null> => {
+      if (!blob) return null;
+      const path = `uso/${usoId}/${slot}_${Date.now()}.jpg`;
+      const { error } = await this.supabase.client.storage
+        .from('vehiculos')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+      if (error) throw new Error(error.message);
+      return path;
+    };
+    const [f, i, d, t] = await Promise.all([
+      subir('frente', fotos.frente),
+      subir('lateral_izq', fotos.izq),
+      subir('lateral_der', fotos.der),
+      subir('trasera', fotos.trasera),
+    ]);
+    if (!f && !i && !d && !t) return;
+    const { error } = await this.supabase.client.rpc('set_uso_fotos', {
+      p_uso_id: usoId,
+      p_frente: f,
+      p_lateral_izq: i,
+      p_lateral_der: d,
+      p_trasera: t,
+    });
+    if (error) throw new Error(error.message);
+  }
+
   /** Mi sesión de uso activa (o null). */
   async miUsoActivo(): Promise<UsoActivo | null> {
     const { data, error } = await this.supabase.client.rpc('mi_uso_activo');

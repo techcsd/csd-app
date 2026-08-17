@@ -54,6 +54,18 @@
           <label class="field-label usov__mt" for="notas">Notas (opcional)</label>
           <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Alguna novedad del vehículo…"></textarea>
 
+          <!-- AS17 — 4 fotos rápidas del vehículo (solo al tomar/recibir). -->
+          @if (modo() !== 'soltar') {
+            <label class="field-label usov__mt">Fotos rápidas del vehículo</label>
+            <p class="usov__hint">Toma 4 fotos del estado en que recibes el vehículo.</p>
+            <div class="usov__fotos">
+              <app-photo-slot label="Frente" hint="🚗" [gallery]="false" [foto]="fotoFrente()" (captured)="fotoFrente.set($event)" (cleared)="fotoFrente.set(null)" />
+              <app-photo-slot label="Lateral izq." hint="⬅️" [gallery]="false" [foto]="fotoIzq()" (captured)="fotoIzq.set($event)" (cleared)="fotoIzq.set(null)" />
+              <app-photo-slot label="Lateral der." hint="➡️" [gallery]="false" [foto]="fotoDer()" (captured)="fotoDer.set($event)" (cleared)="fotoDer.set(null)" />
+              <app-photo-slot label="Trasera" hint="🔙" [gallery]="false" [foto]="fotoTrasera()" (captured)="fotoTrasera.set($event)" (cleared)="fotoTrasera.set(null)" />
+            </div>
+          }
+
           <button type="button" class="btn-cta usov__cta usov__mt" [disabled]="!puedeGuardar()" (click)="guardar()">
             {{ ctaLabel() }}
           </button>
