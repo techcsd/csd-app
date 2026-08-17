@@ -30,6 +30,8 @@ export class LoginPage {
   // Correo + contraseña
   email = signal('');
   password = signal('');
+  // AS9 — mostrar/ocultar contraseña.
+  verPassword = signal(false);
 
   // Cédula + PIN (conductor)
   cedula = signal('');
@@ -122,10 +124,16 @@ export class LoginPage {
       this.toast.error('Tu usuario está desactivado. Habla con administración.');
       return;
     }
+    // AS8 — un usuario SIN módulos ya NO se bloquea: entra y ve solo los módulos
+    // GLOBALES (Notas, Tareas, Mensajes, Dudas, Reportar un problema), cuyos datos
+    // ya están scopeados por RLS al propio usuario. El aviso de "habla con
+    // administración" pasa a ser informativo (no bloqueante).
     if (this.ctx.modulos().length === 0) {
-      await this.session.logout();
-      this.toast.error('Tu usuario no tiene módulos de la app. Habla con administración.');
-      return;
+      this.toast.show(
+        'Tu usuario aún no tiene módulos asignados. Puedes usar Notas, Tareas y Mensajes; pide acceso a administración para el resto.',
+        'info',
+        7000,
+      );
     }
     // Fresh login → set up the local PIN next (desbloqueo local, distinto del PIN de acceso).
     await this.router.navigate(['/auth/pin-setup']);

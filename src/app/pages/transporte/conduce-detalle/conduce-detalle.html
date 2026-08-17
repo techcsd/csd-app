@@ -42,11 +42,32 @@
         <div class="doc__grid">
           <div class="doc__kv"><span class="doc__k">Almacén de origen</span><span class="doc__v">{{ d.bodega || '—' }}</span></div>
           <div class="doc__kv"><span class="doc__k">Destino</span><span class="doc__v">{{ destino() }}</span></div>
-          @if (d.motivo) { <div class="doc__kv"><span class="doc__k">Motivo</span><span class="doc__v">{{ d.motivo }}</span></div> }
+          @if (d.motivo) { <div class="doc__kv"><span class="doc__k">Motivo</span><span class="doc__v">{{ motivoLabel() }}</span></div> }
           <div class="doc__kv"><span class="doc__k">Transporta</span><span class="doc__v">{{ d.conductor || '—' }}</span></div>
-          <div class="doc__kv"><span class="doc__k">Entregado por</span><span class="doc__v">{{ d.entregado_por_nombre || '—' }}</span></div>
+          <div class="doc__kv"><span class="doc__k">Entregado por</span><span class="doc__v">{{ entregadoPor() }}</span></div>
           <div class="doc__kv"><span class="doc__k">Recibido por</span><span class="doc__v">{{ d.recibido_por_nombre || '—' }}</span></div>
         </div>
+
+        <!-- AS2 — firma remota del despachante (solo el despachante designado, desde su sesión). -->
+        @if (puedeFirmarDespachante()) {
+          <div class="cdet__firmar">
+            <h3 class="doc__sec">Tu firma como despachante</h3>
+            <p class="cdet__firmar-nota">Eres el despachante de este conduce. Revisa los materiales y firma para que el chofer pueda marcar la entrega.</p>
+            @if (!firmandoDespachante()) {
+              <button type="button" class="btn-cta cdet__firmar-cta" (click)="firmandoDespachante.set(true)">🖊️ Firmar conduce</button>
+            } @else {
+              <app-signature-pad #despPad (changed)="onFirmaChange($event)" />
+              <div class="cdet__firmar-acciones">
+                <button type="button" class="btn-ghost" (click)="firmandoDespachante.set(false)">Cancelar</button>
+                <button type="button" class="btn-cta" [disabled]="!firmaLista() || guardandoFirma()" (click)="firmarComoDespachante()">
+                  {{ guardandoFirma() ? 'Firmando…' : 'Confirmar firma' }}
+                </button>
+              </div>
+            }
+          </div>
+        } @else if (d.firma_despachante_pendiente) {
+          <div class="doc__chip doc__chip--inc cdet__firmar-pend">Pendiente de firma del despachante</div>
+        }
 
         <!-- Materiales -->
         <h3 class="doc__sec">Materiales</h3>
@@ -94,12 +115,13 @@
         <!-- Evidencia -->
         @if (d.entrega_foto_url || d.recepcion_foto_url) {
           <h3 class="doc__sec">Evidencia</h3>
+          <!-- AS5 — fotos clickables → lightbox. -->
           <div class="doc__fotos">
             @if (d.entrega_foto_url) {
-              <figure class="doc__foto"><img [src]="d.entrega_foto_url" alt="Foto de entrega" loading="lazy" /><figcaption>Entrega</figcaption></figure>
+              <figure class="doc__foto"><img [src]="d.entrega_foto_url" alt="Foto de entrega" loading="lazy" (click)="verGrande(d.entrega_foto_url)" /><figcaption>Entrega</figcaption></figure>
             }
             @if (d.recepcion_foto_url) {
-              <figure class="doc__foto"><img [src]="d.recepcion_foto_url" alt="Foto de recepción" loading="lazy" /><figcaption>Recepción</figcaption></figure>
+              <figure class="doc__foto"><img [src]="d.recepcion_foto_url" alt="Foto de recepción" loading="lazy" (click)="verGrande(d.recepcion_foto_url)" /><figcaption>Recepción</figcaption></figure>
             }
           </div>
         }
@@ -110,7 +132,7 @@
           <div class="doc__firmas">
             @for (f of d.firmas; track $index) {
               <figure class="doc__firma">
-                @if (f.firma_url) { <img [src]="f.firma_url" alt="Firma" loading="lazy" /> } @else { <span class="doc__firma-linea"></span> }
+                @if (f.firma_url) { <img [src]="f.firma_url" alt="Firma" loading="lazy" (click)="verGrande(f.firma_url)" /> } @else { <span class="doc__firma-linea"></span> }
                 <figcaption>{{ f.nombre || (f.rol === 'emisor' ? 'Entregado por' : 'Recibido por') }}</figcaption>
               </figure>
             }
@@ -152,4 +174,12 @@
     tone="danger"
     (confirmed)="eliminar()"
     (cancelled)="confirmarEliminar.set(false)" />
+
+  <!-- AS5 — lightbox de evidencia -->
+  @if (lightboxUrl(); as url) {
+    <div class="cdet__lightbox" (click)="cerrarLightbox()">
+      <img [src]="url" alt="Evidencia" />
+      <button type="button" class="cdet__lightbox-close" (click)="cerrarLightbox()" aria-label="Cerrar">✕</button>
+    </div>
+  }
 </div>

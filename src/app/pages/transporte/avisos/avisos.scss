@@ -141,3 +141,18 @@
   background: #fef2f2;
   color: var(--color-error);
 }
+
+// AS15 — botón "marcar todos como atendidos"
+.avisos__marcar-todos {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+.avisos__marcar-todos:disabled { opacity: 0.5; }

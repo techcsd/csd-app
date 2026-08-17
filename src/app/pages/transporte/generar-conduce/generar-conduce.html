@@ -85,6 +85,12 @@
                 } @else {
                   <div class="gconduce__band">No hay un almacén central configurado. Usa "Obra" como destino o contacta a Tecnología.</div>
                 }
+                <!-- AS4 — origen = destino no se permite. -->
+                @if (mismoOrigenDestino()) {
+                  <div class="gconduce__band gconduce__band--error">
+                    El origen y el destino son el mismo almacén ({{ almacenSelNombre() }}). Elige un destino diferente.
+                  </div>
+                }
               </div>
             }
             @default {
@@ -176,9 +182,16 @@
           <label class="field-label gconduce__mt">Tu firma (chofer) <span class="gconduce__req">*</span></label>
           <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
           <app-signature-pad #choferPad (changed)="onFirmaChofer($event)" />
-          <label class="field-label gconduce__mt">Firma del despachante <span class="gconduce__req">*</span></label>
-          <p class="gconduce__sub">Firma quien te entrega el material. El receptor firmará al confirmar la entrega.</p>
-          <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
+          <!-- AS2 — anti-fraude: el despachante firma desde SU propio teléfono, no
+               aquí. Si es un usuario del sistema, le llega "Conduce por firmar" y no
+               podrás marcar la entrega hasta que firme. Si es un nombre libre, no
+               requiere firma. -->
+          @if (despachanteEsSistema()) {
+            <div class="gconduce__band gconduce__band--info gconduce__mt">
+              🖊️ <b>{{ despachanteNombre() }}</b> firmará el conduce desde su propio teléfono.
+              Le llegará un aviso "Conduce por firmar". Podrás transitar, pero <b>no marcar la entrega</b> hasta que firme.
+            </div>
+          }
         }
 
         <!-- ═══════════ HOJA: RESUMEN ═══════════ -->
@@ -205,7 +218,10 @@
               @if (vehiculoNombre()) {
                 <div class="gconduce__res-row"><span class="gconduce__res-k">Vehículo</span><span class="gconduce__res-v">{{ vehiculoNombre() }}</span></div>
               }
-              <div class="gconduce__res-row"><span class="gconduce__res-k">Firmas</span><span class="gconduce__res-v">{{ (firmaChofer() && firmaDespachante()) ? '✓ chofer + despachante' : '—' }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">Tu firma</span><span class="gconduce__res-v">{{ firmaChofer() ? '✓ firmada' : '—' }}</span></div>
+              @if (despachanteEsSistema()) {
+                <div class="gconduce__res-row"><span class="gconduce__res-k">Firma del despachante</span><span class="gconduce__res-v">Pendiente (firma desde su teléfono)</span></div>
+              }
             } @else {
               <div class="gconduce__res-row"><span class="gconduce__res-k">Recibo</span><span class="gconduce__res-v">{{ fotoRecibo() ? '✓ tomado' : '—' }}</span></div>
             }

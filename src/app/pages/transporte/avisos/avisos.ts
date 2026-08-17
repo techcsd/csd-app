@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculosService, FlotaAviso } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -38,7 +39,7 @@ type Filtro = 'todos' | 'criticos' | 'mios';
   selector: 'app-avisos-flota',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EmptyState, Skeleton, LiveRefreshDirective],
+  imports: [EmptyState, Skeleton, LiveRefreshDirective, ConfirmDialog],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })
@@ -57,6 +58,13 @@ export class AvisosFlotaPage {
   avisos = signal<FlotaAviso[]>([]);
   busyId = signal<string | null>(null);
   filtro = signal<Filtro>('todos');
+  // AS15 — marcar todos como atendidos (respeta el filtro; excluye bloqueos).
+  confirmarMarcarTodos = signal(false);
+  marcandoTodos = signal(false);
+
+  /** AS15 — avisos del filtro actual que se pueden marcar en lote (no bloqueos:
+   *  esos requieren reactivar el vehículo, una acción distinta). */
+  marcablesEnLote = computed(() => this.avisosFiltrados().filter((a) => !this.esBloqueo(a) && a.tipo !== 'bloqueo'));
 
   /** S33 — un aviso "crítico" (bloqueo, mantenimiento vencido o severidad alta). */
   esCritico(a: FlotaAviso): boolean {
@@ -157,6 +165,33 @@ export class AvisosFlotaPage {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo completar la acción.');
     } finally {
       this.busyId.set(null);
+    }
+  }
+
+  // ── AS15 — marcar todos como atendidos ──────────────────────────────────────
+  pedirMarcarTodos(): void {
+    if (!this.network.online()) {
+      this.toast.error('Necesitas conexión para esto.');
+      return;
+    }
+    if (!this.marcablesEnLote().length) return;
+    this.confirmarMarcarTodos.set(true);
+  }
+
+  async marcarTodos(): Promise<void> {
+    this.confirmarMarcarTodos.set(false);
+    const ids = this.marcablesEnLote().map((a) => a.id);
+    if (!ids.length) return;
+    this.marcandoTodos.set(true);
+    try {
+      const n = await this.vehiculos.atenderAvisos(ids, null);
+      const idSet = new Set(ids);
+      this.avisos.update((list) => list.filter((x) => !idSet.has(x.id)));
+      this.toast.success(`${n} aviso${n === 1 ? '' : 's'} marcado${n === 1 ? '' : 's'} como atendido${n === 1 ? '' : 's'}.`);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudieron marcar los avisos.');
+    } finally {
+      this.marcandoTodos.set(false);
     }
   }
 

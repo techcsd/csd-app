@@ -172,9 +172,12 @@ export class HomePage implements OnDestroy {
     if (!this.ctx.esChofer()) {
       extra.push(SISTEMA_TILE);
     }
-    // AL8 — entrada permanente al confirmador sin módulo flota (los de flota la
-    // tienen en el hub de Conduces). Se muestra a inventario/obra o si hay pendientes.
-    if (!this.ctx.hasModulo('flota') && (this.porConfirmar() > 0 || this.ctx.hasModulo('inventario') || this.ctx.puedeVerObra())) {
+    // AL8/AS7 — entrada permanente al confirmador sin módulo flota (los de flota la
+    // tienen en el hub de Conduces). Se muestra SOLO a inventario/obra. Antes bastaba
+    // con `porConfirmar()>0`, lo que colaba el tile en el home de un usuario SIN rol
+    // que resultara ser receptor: ahora ese caso se atiende con la BANNER accionable
+    // ("Tienes N por confirmar") de arriba — el home queda limpio.
+    if (!this.ctx.hasModulo('flota') && (this.ctx.hasModulo('inventario') || this.ctx.puedeVerObra())) {
       extra.push(CONFIRMAR_TILE);
     }
     return this.aplicarOrden([...work, ...extra]); // AF38

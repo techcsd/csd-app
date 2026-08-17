@@ -290,6 +290,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/mensajes/mensajes').then((m) => m.MensajesPage),
   },
   {
+    // AS25 — creación de grupo tipo WhatsApp (pantalla completa). Antes de :id.
+    path: 'mensajes/nuevo-grupo',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/mensajes/nuevo-grupo/nuevo-grupo').then((m) => m.NuevoGrupoPage),
+  },
+  {
     // AN6 — info/gestión de un grupo tipo WhatsApp (antes de :id para no chocar).
     path: 'mensajes/:id/info',
     canActivate: [authGuard, pinGuard],

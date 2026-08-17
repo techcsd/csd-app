@@ -245,7 +245,7 @@
               } @else if (v.reportado_por_otro) {
                 <!-- Z13 — ya lo reportó otra persona esta semana -->
                 <span class="rsem__estado rsem__estado--otro">
-                  Ya reportado por {{ v.reportado_por }}@if (v.reportado_at) { · {{ fechaHora(v.reportado_at) }} }
+                  Ya reportado por {{ v.reportado_por || 'otro usuario' }}@if (v.reportado_at) { · {{ fechaHora(v.reportado_at) }} }
                 </span>
                 <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
               } @else if (v.tiene_reporte) {

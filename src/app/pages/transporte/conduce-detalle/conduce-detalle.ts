@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { ConducesService, ConduceDetalle } from '../../../core/services/conduces.service';
 import { ConducePdfService } from '../../../core/services/conduce-pdf.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
@@ -23,6 +24,28 @@ const FASE_LABEL: Record<string, string> = {
   confirmado: 'Confirmado',
 };
 
+/** AS3 — etiquetas legibles del "Motivo" del conduce (evita mostrar el valor
+ *  crudo como `uso_proyecto`). Desconocidos se muestran prettificados. */
+const MOTIVO_LABEL: Record<string, string> = {
+  uso_proyecto: 'Uso en proyecto',
+  uso_en_proyecto: 'Uso en proyecto',
+  devolucion: 'Devolución',
+  devolucion_suplidor: 'Devolución a suplidor',
+  devolucion_obra: 'Devolución de obra',
+  traspaso: 'Traspaso entre almacenes',
+  compra: 'Compra / entrada',
+  entrada: 'Entrada',
+  venta: 'Venta',
+  reparacion: 'Reparación',
+  prestamo: 'Préstamo',
+};
+
+/** Prettifica un valor crudo tipo enum (`uso_proyecto` → "Uso proyecto"). */
+function prettify(v: string): string {
+  const s = v.replace(/_/g, ' ').trim();
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : v;
+}
+
 /**
  * AL9/AL13/AL4 — Detalle de un conduce (documento). Fuente única abierta desde
  * "Pendiente entrega", "Por confirmar", "Confirmaciones" e "Histórico". Refleja
@@ -33,7 +56,7 @@ const FASE_LABEL: Record<string, string> = {
   selector: 'app-conduce-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad],
   templateUrl: './conduce-detalle.html',
   styleUrl: './conduce-detalle.scss',
 })
@@ -55,6 +78,41 @@ export class ConduceDetallePage {
   generando = signal(false);
   confirmarEliminar = signal(false);
   eliminando = signal(false);
+  /** AS5 — url de la foto ampliada (lightbox). */
+  lightboxUrl = signal<string | null>(null);
+  /** AS2 — firma remota del despachante. */
+  private sigPad = viewChild<SignaturePad>('despPad');
+  firmandoDespachante = signal(false);
+  firmaLista = signal(false);
+  guardandoFirma = signal(false);
+
+  /** AS2 — ¿puedo firmar este conduce como despachante? (soy el designado y falta). */
+  puedeFirmarDespachante = computed(() => {
+    const d = this.detalle();
+    if (!d) return false;
+    return !!d.firma_despachante_pendiente && d.despachante_usuario_id === this.userCtx.profile()?.id;
+  });
+
+  /** AS3 — "Motivo" legible: prefiere la etiqueta del servidor (homologada con la
+   *  web), cae al mapa local y por último prettifica el valor crudo. */
+  motivoLabel = computed(() => {
+    const d = this.detalle();
+    if (d?.motivo_label) return d.motivo_label;
+    const m = d?.motivo;
+    if (!m) return '';
+    return MOTIVO_LABEL[m] ?? prettify(m);
+  });
+
+  /** AS3 — "Entregado por" = despachante (quien entregó el material al chofer). */
+  entregadoPor = computed(() => this.detalle()?.despachante || '—');
+
+  /** AS5 — abre/cierra la foto de evidencia en grande. */
+  verGrande(url: string | null | undefined): void {
+    if (url) this.lightboxUrl.set(url);
+  }
+  cerrarLightbox(): void {
+    this.lightboxUrl.set(null);
+  }
 
   faseLabel = computed(() => {
     const d = this.detalle();
@@ -86,6 +144,32 @@ export class ConduceDetallePage {
 
   constructor() {
     void this.load();
+  }
+
+  // ── AS2 — firmar como despachante ───────────────────────────────────────────
+  onFirmaChange(hasContent: boolean): void {
+    this.firmaLista.set(hasContent);
+  }
+
+  async firmarComoDespachante(): Promise<void> {
+    if (this.guardandoFirma()) return;
+    const blob = await this.sigPad()?.toBlob();
+    if (!blob) {
+      this.toast.error('Firma en el recuadro para continuar.');
+      return;
+    }
+    this.guardandoFirma.set(true);
+    try {
+      await this.conduces.firmarComoDespachante(this.salidaId, blob);
+      this.toast.success('Conduce firmado. El chofer ya puede marcar la entrega.');
+      this.firmandoDespachante.set(false);
+      this.firmaLista.set(false);
+      await this.load();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo firmar el conduce.');
+    } finally {
+      this.guardandoFirma.set(false);
+    }
   }
 
   async load(): Promise<void> {

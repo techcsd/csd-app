@@ -1,0 +1,78 @@
+<div class="screen ngrupo">
+  <header class="ngrupo__header">
+    <button type="button" class="ngrupo__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="ngrupo__title">Nuevo grupo</h1>
+  </header>
+
+  <div class="screen__body">
+    <!-- Foto + nombre -->
+    <div class="ngrupo__top">
+      <div class="ngrupo__avatar">
+        @if (avatarPreview(); as url) {
+          <img [src]="url" alt="Foto del grupo" />
+          <button type="button" class="ngrupo__avatar-x" (click)="quitarFoto()" aria-label="Quitar foto">✕</button>
+        } @else {
+          <span class="ngrupo__avatar-ph">👥</span>
+        }
+      </div>
+      <div class="ngrupo__foto-btns">
+        <button type="button" class="btn-ghost" (click)="elegirFoto('camara')">📷 Cámara</button>
+        <button type="button" class="btn-ghost" (click)="elegirFoto('galeria')">🖼️ Galería</button>
+      </div>
+    </div>
+
+    <label class="field-label" for="gnombre">Nombre del grupo <span class="ngrupo__req">*</span></label>
+    <input
+      id="gnombre"
+      class="field"
+      type="text"
+      maxlength="60"
+      [ngModel]="nombre()"
+      (ngModelChange)="nombre.set($event)"
+      placeholder="Ej. Obra Riviera Bay"
+    />
+
+    <label class="field-label ngrupo__mt" for="gdesc">Descripción <span class="ngrupo__opt">(opcional)</span></label>
+    <textarea
+      id="gdesc"
+      class="field ngrupo__desc"
+      rows="2"
+      maxlength="200"
+      [ngModel]="descripcion()"
+      (ngModelChange)="descripcion.set($event)"
+      placeholder="¿De qué trata el grupo?"
+    ></textarea>
+
+    <!-- Integrantes seleccionados -->
+    <label class="field-label ngrupo__mt">Integrantes ({{ seleccionados().length }})</label>
+    @if (seleccionados().length) {
+      <div class="ngrupo__chips">
+        @for (u of seleccionados(); track u.id) {
+          <span class="ngrupo__chip">{{ u.nombre }} <button type="button" (click)="quitar(u)" aria-label="Quitar">✕</button></span>
+        }
+      </div>
+    }
+
+    <!-- Buscador -->
+    <input
+      class="field ngrupo__mt"
+      type="text"
+      [ngModel]="busqueda()"
+      (ngModelChange)="busqueda.set($event); buscar()"
+      placeholder="Buscar personas para agregar…"
+    />
+    @if (buscando()) {
+      <p class="ngrupo__hint">Buscando…</p>
+    }
+    @for (u of resultados(); track u.id) {
+      <button type="button" class="ngrupo__result" (click)="toggle(u)">
+        <span class="ngrupo__result-name">{{ u.nombre }}</span>
+        <span class="ngrupo__result-check">{{ estaSeleccionado(u) ? '✓' : '+' }}</span>
+      </button>
+    }
+
+    <button type="button" class="btn-cta ngrupo__crear" [disabled]="!puedeCrear() || creando()" (click)="crear()">
+      {{ creando() ? 'Creando…' : 'Crear grupo' }}
+    </button>
+  </div>
+</div>

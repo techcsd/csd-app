@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.78.0';
+const VERSION = '1.79.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,14 +62,19 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Ubicación en tiempo real de verdad';
+const TITULO = 'Firma del despachante, grupos y mejoras';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Ubicación', d: 'Tu ubicación ahora se reporta durante toda la jornada, no solo cuando tienes una ruta abierta. Se acabó el "aparece en el mismo lugar por días": el jefe de flota te ve en tiempo real.' },
-  { t: 'mejora', m: 'Ubicación', d: 'La posición se refresca aunque estés detenido y se dibuja el recorrido (la línea por las calles) en Seguimiento.' },
-  { t: 'mejora', m: 'Ubicación', d: 'La app te pide excluirla de la optimización de batería con un solo toque, para seguir reportando con la pantalla apagada.' },
+  { t: 'seguridad', m: 'Conduces', d: 'El despachante ahora firma el conduce desde SU propio teléfono (evita suplantación). Le llega un aviso "Conduce por firmar" y el chofer no puede marcar la entrega hasta que firme.' },
+  { t: 'arreglo', m: 'Conduces', d: 'El "Entregado por" y el "Motivo" salen correctos (ya no aparece un dato crudo). Las fotos de evidencia se abren en grande al tocarlas.' },
+  { t: 'arreglo', m: 'Conduces', d: 'No se puede crear un conduce con el mismo almacén de origen y destino.' },
+  { t: 'mejora', m: 'Confirmaciones', d: 'El chofer ve en "Confirmaciones" las confirmaciones de sus propias entregas.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Crear un grupo ahora abre una pantalla completa: foto, nombre, descripción e integrantes con buscador (como WhatsApp).' },
+  { t: 'mejora', m: 'Flota', d: 'Avisos de flota: botón para marcar todos como atendidos. "Ya reportado por" muestra el nombre real. El registro de echadas se ve bien en pantallas pequeñas.' },
+  { t: 'mejora', m: 'Flota', d: 'Si ya tienes un vehículo en uso, no se repite el botón "Uso de vehículo"; y desde Registrar combustible puedes ir directo a usar uno.' },
+  { t: 'mejora', m: 'Acceso', d: 'Mostrar/ocultar la contraseña en el login. Los usuarios sin módulos ya pueden entrar y usar Notas, Tareas y Mensajes.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -172,6 +172,7 @@
     object-fit: cover;
     border-radius: 10px;
     border: 1px solid #d4d4d8;
+    cursor: pointer; // AS5 — abre el lightbox
   }
   figcaption {
     font-size: 11px;
@@ -247,4 +248,61 @@
   margin: 8px 0 0;
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+
+// AS5 — lightbox de evidencia (patrón compartido con reportar-vehiculo/echada).
+.cdet__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+}
+.cdet__lightbox-close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+// AS2 — bloque de firma del despachante
+.cdet__firmar {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: 12px;
+  background: var(--Hub-translucid, #ffb3001a);
+}
+.cdet__firmar-nota {
+  font-size: 13px;
+  color: #52525b;
+  margin: 0 0 12px;
+}
+.cdet__firmar-cta { width: 100%; }
+.cdet__firmar-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  button { flex: 1; }
+}
+.cdet__firmar-pend {
+  display: inline-block;
+  margin: 12px 0;
 }

@@ -19,6 +19,13 @@
         <button type="button" class="chip" [class.chip--on]="filtro() === 'mios'" (click)="setFiltro('mios')">Míos ({{ miosCount() }})</button>
       </div>
 
+      <!-- AS15 — marcar todos como atendidos (respeta el filtro; excluye bloqueos). -->
+      @if (marcablesEnLote().length) {
+        <button type="button" class="avisos__marcar-todos" [disabled]="marcandoTodos()" (click)="pedirMarcarTodos()">
+          ✅ Marcar {{ marcablesEnLote().length }} como atendido{{ marcablesEnLote().length === 1 ? '' : 's' }}
+        </button>
+      }
+
       @for (a of avisosFiltrados(); track a.id) {
         <div class="avisos__card" [class.avisos__card--alta]="esCritico(a)">
           <div class="avisos__top">
@@ -48,4 +55,14 @@
       }
     }
   </div>
+
+  <!-- AS15 — confirmación de marcado masivo -->
+  <app-confirm-dialog
+    [open]="confirmarMarcarTodos()"
+    title="¿Marcar todos como atendidos?"
+    [message]="'Se marcarán ' + marcablesEnLote().length + ' aviso(s) como atendidos. Los vehículos bloqueados no se incluyen (requieren reactivarse aparte).'"
+    confirmLabel="Sí, marcar todos"
+    cancelLabel="Cancelar"
+    (confirmed)="marcarTodos()"
+    (cancelled)="confirmarMarcarTodos.set(false)" />
 </div>

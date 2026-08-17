@@ -681,6 +681,24 @@ export class VehiculosService {
     await this.getAvisosFlota();
   }
 
+  /** AS15 — marcar VARIOS avisos como atendidos de una (masivo). Devuelve cuántos. */
+  async atenderAvisos(ids: string[], nota: string | null): Promise<number> {
+    if (!ids.length) return 0;
+    const { data: userData } = await this.supabase.client.auth.getUser();
+    const { error } = await this.supabase.client
+      .from('avisos_flota')
+      .update({
+        estado: 'atendido',
+        atendido_por: userData.user?.id ?? null,
+        atendido_at: new Date().toISOString(),
+        nota_atencion: nota?.trim() || 'Atendido en lote desde la app',
+      })
+      .in('id', ids);
+    if (error) throw new Error(error.message);
+    await this.getAvisosFlota();
+    return ids.length;
+  }
+
   /** Queue a checklist. Works fully offline; syncs when there's signal. */
   async enqueueEntrega(input: EntregaCaptura): Promise<void> {
     const id = crypto.randomUUID();

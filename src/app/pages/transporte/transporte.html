@@ -82,10 +82,9 @@
               <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
               <span class="veh-card__km">En uso · {{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
-            <!-- AK15 — Uso de vehículo (registra/actualiza), sin checklist de pre-uso -->
-            <button type="button" class="btn-ghost veh-card__cta" (click)="usar(v)">
-              🚗 Uso de vehículo
-            </button>
+            <!-- AS20 — el vehículo YA está en uso por mí: no se muestra "Uso de
+                 vehículo" (reaparece en "Para usar" al soltarlo). Solo combustible,
+                 mantenimiento, perfil y soltar. -->
             <button type="button" class="btn-ghost veh-card__cta" (click)="combustible(v.vehiculo_id)">
               ⛽ Registrar combustible
             </button>

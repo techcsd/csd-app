@@ -419,6 +419,12 @@ export interface ConduceDetalle {
   estado: string;
   fase: string | null;
   motivo: string | null;
+  // AS3 — etiqueta legible del motivo (homologada con la web) + despachante
+  // ("Entregado por" real: quien entregó el material al chofer).
+  motivo_label?: string | null;
+  despachante?: string | null;
+  despachante_usuario_id?: string | null;
+  firma_despachante_pendiente?: boolean;
   proyecto_id: string | null;
   proyecto: string | null;
   bodega_id: string | null;
@@ -445,6 +451,17 @@ export interface ConduceDetalle {
   items: ConduceDetalleItem[];
   firmas: ConduceDetalleFirma[];
   transferencias: ConduceDetalleTransferencia[];
+}
+
+/** AS2 — fila de "Conduces por firmar" (el despachante firma desde su teléfono). */
+export interface ConducePorFirmar {
+  id: string;
+  fecha: string;
+  created_at: string | null;
+  destino: string | null;
+  bodega: string | null;
+  estado: string | null;
+  fase: string | null;
 }
 
 /** AL10 — almacén central elegible como destino de un conduce (almacenes_destino). */
@@ -1283,6 +1300,51 @@ export class ConducesService {
       }));
     });
     return data ?? [];
+  }
+
+  // ── AS2 — firma remota del despachante ──────────────────────────────────────
+
+  /** AS2 — conduces donde YO soy el despachante y aún no he firmado. */
+  async misConducesPorFirmar(): Promise<ConducePorFirmar[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_conduces_por_firmar');
+    if (error) throw new Error(error.message);
+    return ((data as Array<Record<string, unknown>>) ?? []).map((r) => ({
+      id: r['id'] as string,
+      fecha: r['fecha'] as string,
+      created_at: (r['created_at'] as string) ?? null,
+      destino: (r['destino'] as string) ?? null,
+      bodega: (r['bodega'] as string) ?? null,
+      estado: (r['estado'] as string) ?? null,
+      fase: (r['fase'] as string) ?? null,
+    }));
+  }
+
+  /** AS2 — cuántos conduces tengo por firmar (para el badge). */
+  async misConducesPorFirmarCount(): Promise<number> {
+    const { data, error } = await this.supabase.client.rpc('mis_conduces_por_firmar_count');
+    if (error) return 0;
+    return (data as number) ?? 0;
+  }
+
+  /**
+   * AS2 — firma un conduce COMO despachante desde MI sesión (anti-fraude). Sube la
+   * firma al bucket conduces y llama `conduce_firmar_despachante` (el server valida
+   * que auth.uid = despachante designado). Acción online (el despachante tiene señal).
+   */
+  async firmarComoDespachante(salidaId: string, firma: Blob): Promise<void> {
+    const { data: userData } = await this.supabase.client.auth.getUser();
+    const uid = userData.user?.id ?? 'anon';
+    const path = `${salidaId}/firma_despachante_${uid}_${Date.now()}.png`;
+    const { error: upErr } = await this.supabase.client.storage
+      .from('conduces')
+      .upload(path, firma, { upsert: true, contentType: 'image/png' });
+    if (upErr) throw new Error(upErr.message);
+    const { error } = await this.supabase.client.rpc('conduce_firmar_despachante', {
+      p_salida_id: salidaId,
+      p_firma_path: path,
+    });
+    if (error) throw new Error(error.message);
+    this.catalog.invalidatePrefix('mis_confirmaciones');
   }
 
   /** AK1 — detalle completo de una confirmación (items, quién entregó/confirmó,

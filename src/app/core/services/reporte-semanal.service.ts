@@ -126,9 +126,38 @@ export class ReporteSemanalService {
       const rows = (data as ReporteSemanalVeh[]) ?? [];
       if (!rows.length) return [];
       const current = rows[0].semana_inicio;
-      return rows.filter((r) => r.semana_inicio === current);
+      return this.resolverReporteros(rows.filter((r) => r.semana_inicio === current));
     });
     return data ?? [];
+  }
+
+  /**
+   * AS18 — resuelve el nombre del reportero cuando la vista lo devuelve vacío
+   * (familia del bug "Usuario" de AN7). Usa `usuarios_por_ids` (security definer,
+   * evita la RLS admin-only de usuarios). Best-effort: si no resuelve, deja "".
+   */
+  private async resolverReporteros(rows: ReporteSemanalVeh[]): Promise<ReporteSemanalVeh[]> {
+    const faltan = [
+      ...new Set(
+        rows
+          .filter((r) => r.reportado_por_id && !(r.reportado_por ?? '').trim())
+          .map((r) => r.reportado_por_id as string),
+      ),
+    ];
+    if (!faltan.length) return rows;
+    try {
+      const { data } = await this.supabase.client.rpc('usuarios_por_ids', { p_ids: faltan });
+      const mapa = new Map<string, string>();
+      for (const u of (data as Array<{ id: string; nombre: string }>) ?? []) mapa.set(u.id, u.nombre);
+      for (const r of rows) {
+        if (r.reportado_por_id && !(r.reportado_por ?? '').trim()) {
+          r.reportado_por = mapa.get(r.reportado_por_id) ?? r.reportado_por;
+        }
+      }
+    } catch {
+      /* best-effort */
+    }
+    return rows;
   }
 
   /** Count of the current user's vehicles still missing this week's report. */
@@ -157,7 +186,7 @@ export class ReporteSemanalService {
       const rows = (data as ReporteSemanalVeh[]) ?? [];
       if (!rows.length) return [];
       const current = rows[0].semana_inicio;
-      return rows.filter((r) => r.semana_inicio === current);
+      return this.resolverReporteros(rows.filter((r) => r.semana_inicio === current));
     });
     return data ?? [];
   }

@@ -257,6 +257,11 @@ export class CombustiblePage extends GuardedWizard {
     void this.loadConductor();
   }
 
+  /** AS16 — atajo a "Uso de vehículo" desde el vacío de Registrar combustible. */
+  irAUsarVehiculo(): void {
+    void this.router.navigate(['/transporte/uso-vehiculo']);
+  }
+
   private cargarVehiculo(): void {
     void this.loadVehiculo();
     void this.loadUltima();

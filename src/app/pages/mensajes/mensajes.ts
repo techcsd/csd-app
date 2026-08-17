@@ -93,6 +93,13 @@ export class MensajesPage implements OnDestroy {
   }
 
   setModo(m: 'persona' | 'grupo'): void {
+    // AS25 — "Grupo" ahora abre la pantalla completa de creación (foto, nombre,
+    // descripción, integrantes con buscador) en vez del panel inline.
+    if (m === 'grupo') {
+      this.nuevaAbierta.set(false);
+      void this.router.navigate(['/mensajes/nuevo-grupo']);
+      return;
+    }
     this.modo.set(m);
     this.busqueda.set('');
     this.resultados.set([]);

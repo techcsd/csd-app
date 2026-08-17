@@ -83,6 +83,33 @@
   margin-bottom: 10px;
 }
 
+// AS9 — contenedor del input de contraseña con el botón de ojo.
+.login__field-wrap {
+  position: relative;
+  display: block;
+}
+.login__input--toggle {
+  padding-right: 46px; // espacio para el ojo
+}
+.login__eye {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 10px; // el input .field lleva margin-bottom:10px → el ojo cubre solo el input
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.login__eye:active {
+  color: var(--color-text);
+}
+
 .login__submit {
   margin-top: 12px;
 }

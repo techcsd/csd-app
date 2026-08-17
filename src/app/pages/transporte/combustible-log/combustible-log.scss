@@ -33,12 +33,17 @@
   align-items: flex-end;
   gap: 8px;
   margin-bottom: 10px;
+  // AS19 — en pantallas chicas / fuente grande, los dos campos + "Aplicar" se
+  // desbordaban y el botón salía cortado. Permite envolver y que "Aplicar" baje
+  // a una fila completa cuando no cabe.
+  flex-wrap: wrap;
 }
 .clog__field {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
+  flex: 1 1 130px; // ancho mínimo para no aplastarse antes de envolver
+  min-width: 130px;
   font-size: 12px;
   color: var(--color-text-secondary);
   font-weight: 700;
@@ -49,12 +54,26 @@
     border-radius: 10px;
     background: var(--color-surface);
     font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 .clog__aplicar {
   flex: 0 0 auto;
   width: auto;
   padding: 10px 16px;
+  // AS19 — si envolvió a su propia fila, ocupa todo el ancho (siempre visible).
+  &:only-child,
+  &:last-child {
+    margin-left: auto;
+  }
+}
+// AS19 — cuando el contenedor es angosto, "Aplicar" a fila completa.
+@media (max-width: 380px) {
+  .clog__aplicar {
+    flex: 1 0 100%;
+    margin-left: 0;
+  }
 }
 .clog__buscar {
   width: 100%;

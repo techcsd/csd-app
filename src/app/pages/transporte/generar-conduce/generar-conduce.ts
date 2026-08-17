@@ -222,15 +222,38 @@ export class GenerarConducePage implements OnDestroy {
   itemsCount = computed(() => this.cart().filter((l) => l.cantidad > 0).length);
   /** AL12 — items del resumen (nombre + cantidad + unidad). */
   itemsResumen = computed(() => this.cart().filter((l) => l.cantidad > 0));
+  /**
+   * AS4 — el origen no puede ser igual al destino (p. ej. Bodega Central → Bodega
+   * Central). Solo aplica cuando el destino es un almacén (la obra ≡ su propio
+   * almacén y el suplidor es texto). Compara por id y, por si el id-space difiere,
+   * también por nombre normalizado. El servidor lo revalida (trigger
+   * tg_conduce_origen_distinto_destino).
+   */
+  mismoOrigenDestino = computed(() => {
+    if (this.esFerreteria() || this.destinoTipo() !== 'almacen') return false;
+    const o = this.bodegaId();
+    const d = this.almacenId();
+    if (o && d && o === d) return true;
+    const on = this.origenNombre().trim().toLowerCase();
+    const dn = this.destinoNombre().trim().toLowerCase();
+    return !!on && on === dn;
+  });
+
   /** ¿El destino elegido es válido? (obra | suplidor | almacén central AL10) */
   destinoOk = computed(() => {
+    if (this.mismoOrigenDestino()) return false; // AS4
     if (this.destinoTipo() === 'obra') return !!this.obraId();
     if (this.destinoTipo() === 'almacen') return !!this.almacenId();
     return !!this.suplidorNombre().trim();
   });
 
-  /** AI2 — firmas requeridas al emitir: chofer + despachante. */
-  private firmasOk = computed(() => !!(this.firmaChofer() && this.firmaDespachante()));
+  /** AS2 — al emitir solo se exige la firma del CHOFER. La firma del despachante
+   *  es remota (firma desde su propio teléfono, anti-fraude); el servidor bloquea
+   *  la ENTREGA hasta que firme (DR456). */
+  private firmasOk = computed(() => !!this.firmaChofer());
+
+  /** AS2 — ¿el despachante es un usuario del sistema? (solo esos firman remoto). */
+  despachanteEsSistema = computed(() => this.despachanteSel()?.tipo === 'usuario');
 
   /** ¿Están los campos mínimos para emitir según el tipo de origen? */
   puedeEmitir = computed(() => {
@@ -826,8 +849,8 @@ export class GenerarConducePage implements OnDestroy {
       this.toast.error('Elige (o escribe) quién despacha el material.');
       return;
     }
-    if (!this.firmaChofer() || !this.firmaDespachante()) {
-      this.toast.error('Faltan las firmas del chofer y del despachante.');
+    if (!this.firmaChofer()) {
+      this.toast.error('Falta tu firma (chofer).');
       return;
     }
     // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).

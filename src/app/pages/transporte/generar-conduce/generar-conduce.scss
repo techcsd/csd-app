@@ -50,6 +50,13 @@
 .gconduce__notas {
   resize: vertical;
 }
+// AS4 — banda de error (origen = destino).
+.gconduce__band--error {
+  background: color-mix(in srgb, var(--color-error) 8%, transparent);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  font-weight: 600;
+}
 // AO3 — aviso sutil de stock del último sync (offline).
 .gconduce__hint {
   margin: 8px 2px 0;

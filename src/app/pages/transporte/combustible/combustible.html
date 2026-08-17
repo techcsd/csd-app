@@ -13,8 +13,15 @@
         [soloMios]="soloMisVehiculos()"
         (elegido)="onVehiculoElegido($event)"
       />
-      <!-- Z23-app — tarjeta asignada a una persona (sin vehículo) -->
+      <!-- AS16 — si no tengo un vehículo en uso, atajo directo a "Uso de vehículo"
+           (al terminar vuelvo con el vehículo ya en uso). -->
       <p class="comb__pick-o">o</p>
+      <app-option-button
+        icon="🚗"
+        label="Usar un vehículo"
+        (pressed)="irAUsarVehiculo()"
+      />
+      <!-- Z23-app — tarjeta asignada a una persona (sin vehículo) -->
       <app-option-button
         icon="👤"
         label="Echada de persona (sin vehículo)"
