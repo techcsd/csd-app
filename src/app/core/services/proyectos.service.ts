@@ -22,6 +22,26 @@ export interface CompraProyecto {
   referencia: string | null;
 }
 
+/** AS14 — categoría de gasto directo (catálogo). */
+export interface GastoCategoria {
+  clave: string;
+  label: string;
+}
+
+/** AS14 — gasto directo del proyecto (fuera de requisición). */
+export interface GastoDirecto {
+  id: string;
+  fecha: string;
+  categoria_clave: string;
+  categoria: string;
+  concepto: string;
+  monto: number;
+  recibo_path: string | null;
+  registrado_por: string | null;
+  registrado_por_nombre: string | null;
+  created_at: string;
+}
+
 const CAT_PROYECTOS = 'proyectos_full'; // distinto del 'proyectos' mínimo (pedir/pickers)
 const CAT_PICKABLES = 'proyectos_pickables'; // QA-17 — obras mínimas para pickers
 
@@ -107,6 +127,80 @@ export class ProyectosService {
     });
     if (error) throw new Error(error.message);
     return ((data as CompraProyecto[]) ?? []).map((c) => ({ ...c, total: c.total == null ? null : Number(c.total) }));
+  }
+
+  // ── AS14 — gastos directos del proyecto (fuera de requisición) ──────────────
+
+  /** Catálogo de categorías de gasto (alimentación, transporte, etc.). */
+  async getGastoCategorias(): Promise<GastoCategoria[]> {
+    const { data, error } = await this.supabase.client
+      .from('gasto_categorias')
+      .select('clave, label, orden, activo')
+      .eq('activo', true)
+      .order('orden');
+    if (error) throw new Error(error.message);
+    return ((data as Array<Record<string, unknown>>) ?? []).map((c) => ({
+      clave: c['clave'] as string,
+      label: c['label'] as string,
+    }));
+  }
+
+  /** ¿Puede el usuario registrar gastos directos en este proyecto? */
+  async puedeRegistrarGasto(proyectoId: string): Promise<boolean> {
+    const { data, error } = await this.supabase.client.rpc('puede_registrar_gasto_directo', {
+      p_proyecto_id: proyectoId,
+    });
+    if (error) return false;
+    return !!data;
+  }
+
+  /** Historial de gastos directos del proyecto. */
+  async gastosDirectos(proyectoId: string, desde: string | null, hasta: string | null): Promise<GastoDirecto[]> {
+    const { data, error } = await this.supabase.client.rpc('gastos_directos_de_proyecto', {
+      p_proyecto_id: proyectoId,
+      p_desde: desde,
+      p_hasta: hasta,
+    });
+    if (error) throw new Error(error.message);
+    return ((data as GastoDirecto[]) ?? []).map((g) => ({ ...g, monto: Number(g.monto) }));
+  }
+
+  /** Registra un gasto directo (con foto del recibo opcional). Online. */
+  async registrarGastoDirecto(input: {
+    proyectoId: string;
+    categoria: string;
+    concepto: string;
+    monto: number;
+    fecha: string | null;
+    recibo?: Blob | null;
+  }): Promise<void> {
+    const id = crypto.randomUUID();
+    let reciboPath: string | null = null;
+    if (input.recibo) {
+      const path = `gastos/${input.proyectoId}/${id}.jpg`;
+      const { error: upErr } = await this.supabase.client.storage
+        .from('obra')
+        .upload(path, input.recibo, { upsert: true, contentType: 'image/jpeg' });
+      if (upErr) throw new Error(upErr.message);
+      reciboPath = path;
+    }
+    const { error } = await this.supabase.client.rpc('registrar_gasto_directo', {
+      p_id: id,
+      p_proyecto_id: input.proyectoId,
+      p_categoria: input.categoria,
+      p_concepto: input.concepto,
+      p_monto: input.monto,
+      p_fecha: input.fecha,
+      p_recibo_path: reciboPath,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** AS14 — url firmada del recibo (bucket obra). */
+  async reciboUrl(path: string | null): Promise<string | null> {
+    if (!path) return null;
+    const { data } = await this.supabase.client.storage.from('obra').createSignedUrl(path, 3600);
+    return data?.signedUrl ?? null;
   }
 
   /** AM9 — equipo/responsables de la obra (RPC security-definer, respeta permisos). */

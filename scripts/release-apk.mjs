@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.81.0';
+const VERSION = '1.82.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,14 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Almacenes: ubicación y ajuste de stock';
+const TITULO = 'Gastos directos del proyecto';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Inventario', d: 'Al gestionar un almacén ahora puedes fijar su ubicación vinculándolo a una obra (hereda la ubicación) o poniéndola en el mapa.' },
-  { t: 'mejora', m: 'Inventario', d: 'Desde el inventario de un almacén puedes ir directo a "Contar / ajustar stock" (con permiso).' },
-  { t: 'mejora', m: 'Inventario', d: 'Conteos y ajustes quedan como un solo submódulo: hacer el conteo/ajuste y ver el historial, enlazados.' },
+  { t: 'nuevo', m: 'Proyectos', d: 'En "Compras del proyecto" ahora puedes registrar gastos directos (los que no pasan por requisición): categoría, concepto, monto, fecha y foto del recibo. Se ven en su propia pestaña, separados de las compras formales.' },
 ];
 
 const TIPO_POR_COMMIT = {
