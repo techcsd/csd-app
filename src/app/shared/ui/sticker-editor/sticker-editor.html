@@ -1,0 +1,33 @@
+<div class="stk-ed__back" (click)="cancelar()"></div>
+<div class="stk-ed">
+  <h2 class="stk-ed__title">Editar sticker</h2>
+  <p class="stk-ed__sub">Arrastra para encuadrar, ajusta el zoom y las esquinas. El fondo de las esquinas queda transparente.</p>
+
+  <div class="stk-ed__stage">
+    <canvas
+      #canvas
+      class="stk-ed__canvas"
+      width="512"
+      height="512"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp()"
+      (pointercancel)="onPointerUp()"
+    ></canvas>
+  </div>
+
+  <label class="stk-ed__label">Zoom</label>
+  <input class="stk-ed__range" type="range" min="1" max="3" step="0.02"
+    [ngModel]="zoom()" (ngModelChange)="onZoom($event)" />
+
+  <label class="stk-ed__label">Esquinas redondeadas</label>
+  <input class="stk-ed__range" type="range" min="0" max="50" step="1"
+    [ngModel]="radio()" (ngModelChange)="onRadio($event)" />
+
+  <div class="stk-ed__actions">
+    <button type="button" class="btn-ghost" (click)="cancelar()">Cancelar</button>
+    <button type="button" class="btn-cta" [disabled]="procesando()" (click)="confirmar()">
+      {{ procesando() ? 'Procesando…' : 'Usar sticker' }}
+    </button>
+  </div>
+</div>

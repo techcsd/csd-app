@@ -126,7 +126,7 @@
         @for (c of conductoresLista(); track c.conductor_id) {
           <button type="button" class="rmul__citem" (click)="elegirConductor(c)">
             <span class="rmul__citem-nombre">{{ c.nombre }}@if (c.es_yo) { <em class="rmul__citem-yo"> (yo)</em> }</span>
-            <span class="rmul__citem-ced">{{ c.cedula }}</span>
+            <span class="rmul__citem-ced">{{ c.cedula | cedula }}</span>
           </button>
         } @empty {
           <p class="rmul__cempty">No hay conductores.</p>

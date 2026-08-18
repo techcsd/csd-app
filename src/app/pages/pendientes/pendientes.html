@@ -57,6 +57,16 @@
             }
 
             <div class="ob-row__actions">
+              <!-- AV3 — el conduce espera la firma del despachante: recordarle +
+                   reintentar cuando firme (aunque el error sea "permanente"). -->
+              @if (puedeRecordarDespachante(item)) {
+                <button type="button" class="ob-btn ob-btn--retry" [disabled]="recordandoId() === item.id || !online()" (click)="recordarDespachante(item)">
+                  {{ recordandoId() === item.id ? 'Enviando…' : '🔔 Recordarle al despachante' }}
+                </button>
+                <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
+                  Reintentar
+                </button>
+              }
               <!-- AO3 — corregir un conduce atascado (ej. stock): reabre el wizard con
                    los datos y fotos para ajustar cantidades/almacén y reenviar. -->
               @if (puedeCorregir(item)) {

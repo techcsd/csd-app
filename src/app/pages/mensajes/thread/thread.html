@@ -17,7 +17,11 @@
       }
       <span class="thread__id-main">
         <span class="thread__title">{{ esGrupo() ? '' : '💬 ' }}{{ titulo() }}</span>
-        @if (esGrupo() && subtitulo()) { <span class="thread__sub">{{ subtitulo() }} · toca para ver info</span> }
+        @if (presenciaTexto()) {
+          <span class="thread__sub thread__sub--typing">{{ presenciaTexto() }}</span>
+        } @else if (esGrupo() && subtitulo()) {
+          <span class="thread__sub">{{ subtitulo() }} · toca para ver info</span>
+        }
       </span>
     </button>
   </header>
@@ -38,8 +42,28 @@
         } @else if (esSticker(m)) {
           <div class="thread__msg thread__msg--sticker" [class.thread__msg--mio]="esMio(m)">
             @if (!esMio(m) && esGrupo()) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
-            <img class="thread__sticker" [src]="stickerUrl(m.archivo_path)" alt="Sticker" loading="lazy" />
-            <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
+            <!-- AV4 — long-press (menú contextual) sobre un sticker recibido → guardar -->
+            <img class="thread__sticker" [src]="stickerUrl(m.archivo_path)" alt="Sticker" loading="lazy"
+              (contextmenu)="$event.preventDefault(); abrirCtxSticker(m)" />
+            <span class="thread__meta">
+              <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
+              @if (esMio(m)) { <span class="thread__tick" [attr.data-estado]="estadoRecibo(m)">{{ estadoRecibo(m) === 'enviado' ? '✓' : '✓✓' }}</span> }
+            </span>
+          </div>
+        } @else if (esAudio(m)) {
+          <!-- AV5 — nota de voz con player inline -->
+          <div class="thread__msg thread__msg--audio" [class.thread__msg--mio]="esMio(m)">
+            @if (!esMio(m) && esGrupo()) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
+            @if (audioUrl(m); as au) {
+              <audio class="thread__audio" [src]="au" controls preload="none"></audio>
+            } @else {
+              <span class="thread__audio-cargando">🎤 Enviando nota de voz…</span>
+            }
+            <span class="thread__meta">
+              @if (m.duracion_seg) { <span class="thread__audio-dur">🎤 {{ fmtDur(m.duracion_seg) }}</span> }
+              <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
+              @if (esMio(m)) { <span class="thread__tick" [attr.data-estado]="estadoRecibo(m)">{{ estadoRecibo(m) === 'enviado' ? '✓' : '✓✓' }}</span> }
+            </span>
           </div>
         } @else {
           <div class="thread__msg" [class.thread__msg--mio]="esMio(m)">
@@ -59,7 +83,10 @@
               </button>
             }
             @if (m.contenido) { <span class="thread__burbuja">{{ m.contenido }}</span> }
-            <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
+            <span class="thread__meta">
+              <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
+              @if (esMio(m)) { <span class="thread__tick" [attr.data-estado]="estadoRecibo(m)">{{ estadoRecibo(m) === 'enviado' ? '✓' : '✓✓' }}</span> }
+            </span>
           </div>
         }
       }
@@ -126,6 +153,9 @@
                   <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(s.ref)" aria-label="Enviar sticker">
                     <img [src]="stickerUrl(s.ref)" alt="Sticker" loading="lazy" />
                   </button>
+                  @if (!pack.es_sistema) {
+                    <button type="button" class="thread__stk-move" (click)="iniciarMoverSticker(s.id)" aria-label="Mover a otro pack">↪</button>
+                  }
                   @if (!pack.es_sistema && !s.es_asset) {
                     <button type="button" class="thread__stk-del" (click)="eliminarStickerLocal(s.id)" aria-label="Eliminar sticker">✕</button>
                   }
@@ -135,9 +165,41 @@
           }
         }
       </div>
-      <button type="button" class="thread__stk-upload" [disabled]="stickerUploading()" (click)="onStickerFile()">
-        {{ stickerUploading() ? 'Subiendo…' : '＋ Subir sticker' }}
-      </button>
+      <!-- AV4 — mover un sticker a un pack: elige destino -->
+      @if (moverStickerId()) {
+        <div class="thread__stk-move-bar">
+          <span>Mover a:</span>
+          @for (p of stickerPacksOrdenados(); track p.id) {
+            @if (!p.es_sistema) {
+              <button type="button" class="thread__stk-move-dest" (click)="moverAPack(p.id)">{{ p.nombre }}</button>
+            }
+          }
+          <button type="button" class="thread__stk-move-dest thread__stk-move-dest--cancel" (click)="moverStickerId.set(null)">✕</button>
+        </div>
+      }
+      <!-- AV4 — gestión de packs (crear pack nuevo) -->
+      @if (packMenuOpen()) {
+        <div class="thread__stk-packs">
+          <input class="field thread__stk-pack-input" type="text" [ngModel]="nuevoPackNombre()" (ngModelChange)="nuevoPackNombre.set($event)"
+            placeholder="Nombre del pack nuevo" maxlength="30" />
+          <button type="button" class="thread__stk-pack-crear" [disabled]="!nuevoPackNombre().trim()" (click)="crearPack()">＋ Crear pack</button>
+        </div>
+      }
+      <div class="thread__stk-footer">
+        <button type="button" class="thread__stk-upload" [disabled]="stickerUploading()" (click)="onStickerFile()">
+          {{ stickerUploading() ? 'Subiendo…' : '＋ Subir sticker' }}
+        </button>
+        <button type="button" class="thread__stk-packs-btn" (click)="togglePackMenu()">⚙ Packs</button>
+      </div>
+    </div>
+  }
+
+  <!-- AV5 — grabar una nota de voz (reutiliza la infra de voz AH13) -->
+  @if (grabandoVoz()) {
+    <div class="thread__voz">
+      <span class="thread__voz-hint">🎤 Graba tu nota de voz. Detén la grabación para enviarla.</span>
+      <app-voice-recorder (recorded)="onVozGrabada($event)" />
+      <button type="button" class="thread__voz-cancel" (click)="cancelarVoz()">Cancelar</button>
     </div>
   }
 
@@ -156,11 +218,15 @@
       class="field thread__input"
       type="text"
       [ngModel]="texto()"
-      (ngModelChange)="texto.set($event)"
+      (ngModelChange)="onTextoInput($event)"
       (keyup.enter)="enviar()"
       placeholder="Escribe un mensaje…"
     />
-    <button type="button" class="thread__send" [disabled]="enviando() || !texto().trim()" (click)="enviar()">➤</button>
+    @if (texto().trim()) {
+      <button type="button" class="thread__send" [disabled]="enviando()" (click)="enviar()">➤</button>
+    } @else {
+      <button type="button" class="thread__send thread__mic" [class.thread__mic--on]="grabandoVoz()" (click)="abrirVoz()" aria-label="Nota de voz">🎤</button>
+    }
   </footer>
   @if (!online) { <p class="thread__offline">Sin conexión: se enviará cuando vuelva el internet.</p> }
 
@@ -168,6 +234,21 @@
     <div class="thread__lightbox" (click)="cerrarLightbox()">
       <button type="button" class="thread__lightbox-x" (click)="cerrarLightbox()" aria-label="Cerrar">✕</button>
       <img [src]="lb" alt="Imagen" />
+    </div>
+  }
+
+  <!-- AV4 — editor de sticker antes de subir (recorte + esquinas → webp con alfa) -->
+  @if (editorImagen(); as img) {
+    <app-sticker-editor [imagen]="img" (confirmado)="onEditorConfirm($event)" (cancelado)="onEditorCancel()" />
+  }
+
+  <!-- AV4 — menú "Guardar sticker" (long-press sobre un sticker recibido) -->
+  @if (stickerCtx(); as ctx) {
+    <div class="thread__adj-backdrop" (click)="cerrarCtxSticker()"></div>
+    <div class="thread__ctx">
+      <img class="thread__ctx-preview" [src]="stickerUrl(ctx.ref)" alt="Sticker" />
+      <button type="button" class="thread__ctx-op" (click)="guardarStickerRecibido()">💾 Guardar sticker</button>
+      <button type="button" class="thread__ctx-op thread__ctx-op--cancel" (click)="cerrarCtxSticker()">Cancelar</button>
     </div>
   }
 </div>

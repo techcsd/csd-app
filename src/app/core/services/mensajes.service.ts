@@ -30,12 +30,24 @@ export interface Mensaje {
   autor_id: string;
   autor_nombre: string | null;
   contenido: string | null;
-  tipo?: string; // 'texto' (default) | 'sistema' (evento del grupo)
+  tipo?: string; // 'texto' (default) | 'sistema' | 'sticker' | 'audio' (AV5)
   archivo_path: string | null;
   archivo_nombre: string | null;
   archivo_mime: string | null;
+  duracion_seg?: number | null; // AV5 — nota de voz (tipo 'audio')
   created_at: string;
 }
+
+/** AV5 — cursores de recibo de un participante (para pintar ✓/✓✓/✓✓azul). */
+export interface Recibo {
+  usuario_id: string;
+  nombre: string;
+  last_read_at: string | null;
+  last_delivered_at: string | null;
+}
+
+/** AV5 — acción de presencia efímera en una conversación. */
+export type PresenciaAccion = 'escribiendo' | 'grabando' | 'sticker' | 'nada';
 
 /** AT16 — un sticker. `ref` = ruta de asset empaquetado ('assets/stickers/…') o
  *  path en el bucket público `sgc-stickers`; usar `stickerUrl(ref)` para el <img>. */
@@ -178,6 +190,49 @@ export class MensajesService {
     }
   }
 
+  /** AV5 — marca "recibido en el dispositivo" (cursor de entrega → ✓✓ del otro). */
+  async marcarEntregada(conversacionId: string): Promise<void> {
+    try {
+      await this.supabase.client.rpc('marcar_conversacion_entregada', { p_conversacion_id: conversacionId });
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  /** AV5 — cursores de recibo de los DEMÁS participantes (para ✓/✓✓/✓✓azul). */
+  async getRecibos(conversacionId: string): Promise<Recibo[]> {
+    const { data, error } = await this.supabase.client.rpc('conversacion_recibos', {
+      p_conversacion_id: conversacionId,
+    });
+    if (error) return [];
+    return (data as Recibo[]) ?? [];
+  }
+
+  /**
+   * AV5 — envía una NOTA DE VOZ (tipo 'audio'). El blob sube por outbox al bucket
+   * sgc-mensajes (carpeta = conversación, RLS es_participante); al drenar, el handler
+   * pasa el path + duración a `enviar_nota_voz`. Offline-safe e idempotente por client_id.
+   */
+  async enviarNotaVoz(conversacionId: string, blob: Blob, duracionSeg: number, mime = 'audio/webm'): Promise<void> {
+    if (blob.size > MAX_ADJUNTO_BYTES) throw new Error('La nota de voz supera el límite de 25 MB.');
+    const id = crypto.randomUUID();
+    const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
+    const path = `${conversacionId}/${id}.${ext}`;
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'nota_voz_enviar',
+      capturado_en: new Date().toISOString(),
+      payload: {
+        client_id: id,
+        conversacion_id: conversacionId,
+        duracion_seg: Math.max(0, Math.round(duracionSeg)),
+        archivo_mime: mime,
+      },
+      fotos: [{ id: crypto.randomUUID(), bucket: AVATAR_BUCKET, path, slot: 'audio', blob }],
+      resumen: { tipo: 'nota_voz_enviar', conversacion_id: conversacionId },
+    });
+  }
+
   async contarNoLeidos(): Promise<number> {
     const { data, error } = await this.supabase.client.rpc('contar_mensajes_no_leidos');
     if (error) return 0;
@@ -306,6 +361,46 @@ export class MensajesService {
     };
   }
 
+  /**
+   * AV5 — canal EFÍMERO de presencia/typing por conversación (broadcast, sin BD).
+   * Mismo nombre/payload que la web: `chat:presencia:{id}`, evento 'estado'
+   * { usuario_id, nombre, accion, at }. Devuelve { emitir, cerrar }.
+   */
+  presencia(
+    conversacionId: string,
+    yo: { id: string; nombre: string },
+    onEstado: (p: { usuario_id: string; nombre: string; accion: PresenciaAccion; at: number }) => void,
+  ): { emitir: (accion: PresenciaAccion) => void; cerrar: () => void } {
+    const channel = this.supabase.client.channel(`chat:presencia:${conversacionId}`, {
+      config: { broadcast: { self: false } },
+    });
+    channel
+      .on('broadcast', { event: 'estado' }, (msg) => {
+        const p = (msg as { payload?: Record<string, unknown> }).payload;
+        if (p && p['usuario_id'] && p['usuario_id'] !== yo.id) {
+          onEstado({
+            usuario_id: p['usuario_id'] as string,
+            nombre: (p['nombre'] as string) ?? '',
+            accion: (p['accion'] as PresenciaAccion) ?? 'nada',
+            at: (p['at'] as number) ?? Date.now(),
+          });
+        }
+      })
+      .subscribe();
+    return {
+      emitir: (accion: PresenciaAccion) => {
+        void channel.send({
+          type: 'broadcast',
+          event: 'estado',
+          payload: { usuario_id: yo.id, nombre: yo.nombre, accion, at: Date.now() },
+        });
+      },
+      cerrar: () => {
+        void this.supabase.client.removeChannel(channel);
+      },
+    };
+  }
+
   // ── AT16 — Stickers (mismo contrato que la web) ─────────────────────────────
   /**
    * URL usable en un <img src> para una ref de sticker. Un asset empaquetado
@@ -375,6 +470,41 @@ export class MensajesService {
     if (error) throw new Error(error.message);
   }
 
+  /** AV4 — crea un pack de stickers propio → id del pack. */
+  async crearPack(nombre: string): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('crear_pack_sticker', { p_nombre: nombre });
+    if (error) throw new Error(error.message);
+    return data as string;
+  }
+
+  /** AV4 — renombra un pack propio. */
+  async renombrarPack(packId: string, nombre: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('renombrar_pack_sticker', { p_pack_id: packId, p_nombre: nombre });
+    if (error) throw new Error(error.message);
+  }
+
+  /** AV4 — elimina un pack propio (sus stickers quedan sin pack / se limpian server-side). */
+  async eliminarPack(packId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('eliminar_pack_sticker', { p_pack_id: packId });
+    if (error) throw new Error(error.message);
+  }
+
+  /** AV4 — mueve un sticker propio a otro pack propio. */
+  async moverSticker(stickerId: string, packId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('mover_sticker', { p_sticker_id: stickerId, p_pack_id: packId });
+    if (error) throw new Error(error.message);
+  }
+
+  /** AV4 — guarda un sticker RECIBIDO (de otro) a mis stickers (pack dado o "Guardados"). */
+  async guardarSticker(ref: string, packId?: string): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('guardar_sticker', {
+      p_ref: ref,
+      p_pack_id: packId ?? null,
+    });
+    if (error) throw new Error(error.message);
+    return data as string;
+  }
+
   private registerHandler(): void {
     if (this.registered) return;
     this.registered = true;
@@ -399,6 +529,20 @@ export class MensajesService {
       } catch {
         /* best-effort */
       }
+    });
+    // AV5 — nota de voz: SyncService sube el audio a sgc-mensajes (slot 'audio')
+    // y nos pasa su path; llamamos enviar_nota_voz (idempotente por client_id).
+    this.sync.register('nota_voz_enviar', async (payload, photoPaths) => {
+      const archivoPath = photoPaths?.['audio'] ?? null;
+      if (!archivoPath) throwSyncError(new Error('Falta el audio de la nota de voz.'));
+      const { error } = await this.supabase.client.rpc('enviar_nota_voz', {
+        p_conversacion_id: payload['conversacion_id'],
+        p_archivo_path: archivoPath,
+        p_duracion_seg: payload['duracion_seg'] ?? 0,
+        p_archivo_mime: payload['archivo_mime'] ?? 'audio/webm',
+        p_client_id: payload['client_id'],
+      });
+      if (error) throwSyncError(error);
     });
     this.sync.register('mensaje_enviar', async (payload, photoPaths) => {
       // AQ9 — si el mensaje llevaba adjunto, SyncService ya lo subió a sgc-mensajes

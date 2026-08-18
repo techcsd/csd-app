@@ -50,6 +50,10 @@ interface CrearRutaDraft {
   notas: string;
   tipo: RutaTipo;
   paradas: ParadaUI[];
+  // AV11 — id estable de la ruta + flag de "documentación pendiente" (se desvió al
+  // checklist de uso). Al reanudar se reusa el mismo id → nunca se duplica.
+  rutaId?: string;
+  holdChecklist?: boolean;
 }
 
 type DestinoModo = 'lugar' | 'mapa';
@@ -143,6 +147,10 @@ export class CrearRutaPage implements OnDestroy {
   km = signal<number | null>(null);
   notas = signal('');
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
+  // AV11 — id estable de la ruta (idempotencia) + estado "documentación pendiente"
+  // cuando el flujo se desvió al checklist de uso y va a reanudar la MISMA ruta.
+  rutaId = signal('');
+  holdChecklist = signal(false);
 
   // AD6 — tipo de ruta (solo el chofer al crearse la suya; material no exige nada
   // nuevo, personal/traslado no exigen carga). El elevado siempre crea 'material'.
@@ -227,6 +235,8 @@ export class CrearRutaPage implements OnDestroy {
       notas: this.notas(),
       tipo: this.tipoRuta(),
       paradas: this.paradas(),
+      rutaId: this.rutaId() || undefined,
+      holdChecklist: this.holdChecklist() || undefined,
     };
     // No trackear hasta hidratar / decidir, ni tras enviar.
     if (!this.hydrated || this.done() || this.submitting()) return;
@@ -257,6 +267,9 @@ export class CrearRutaPage implements OnDestroy {
         this.notas.set(d.notas ?? '');
         this.tipoRuta.set(d.tipo ?? 'material');
         this.paradas.set(d.paradas ?? []);
+        // AV11 — reusar el MISMO id al reanudar (idempotencia) + estado hold.
+        this.rutaId.set(d.rutaId ?? '');
+        this.holdChecklist.set(d.holdChecklist ?? false);
       }
       // AF24.5 — rehidrata las fotos del borrador (carga/documento).
       const fotos = await this.borrador.loadFotos(this.clave);
@@ -635,7 +648,12 @@ export class CrearRutaPage implements OnDestroy {
       if (sessionStorage.getItem(key)) return false;
       sessionStorage.setItem(key, '1');
     } catch { /* sessionStorage no disponible */ }
-    this.toast.show('Primero registra el uso de este vehículo.', 'info');
+    // AV11 — fija el id ESTABLE de la ruta y marca "documentación pendiente" ANTES
+    // de irnos al checklist. Al volver, se reanuda ESTA ruta con el mismo id (no
+    // se crea una segunda). Ambos viajan en el borrador que flushAll persiste.
+    if (!this.rutaId()) this.rutaId.set(crypto.randomUUID());
+    this.holdChecklist.set(true);
+    this.toast.show('Primero registra el uso de este vehículo. Tu ruta queda pendiente y la reanudas al terminar.', 'info');
     await this.autosave.flushAll(); // AF24.5 — persiste el borrador antes de salir
     await this.router.navigate(['/transporte/asignarme'], {
       queryParams: { returnUrl: this.router.url, vehiculoId: vId },
@@ -672,9 +690,13 @@ export class CrearRutaPage implements OnDestroy {
     if (!(await this.tracking.exigirGps('crear_ruta'))) return;
     const lugar = this.destinoModo() === 'lugar' ? this.selectedLugar() : null;
     const mapaCoords = this.destinoModo() === 'mapa' ? this.destinoMapaCoords() : null;
+    // AV11 — id estable (idempotencia por p_id). Si venimos del checklist ya viene
+    // fijado; si no, lo generamos ahora para blindar también el doble-tap normal.
+    if (!this.rutaId()) this.rutaId.set(crypto.randomUUID());
     this.submitting.set(true);
     try {
       await this.conduces.crearRuta({
+        id: this.rutaId(),
         vehiculoId: this.vehiculoId(),
         conductorId: this.conductorId() || null,
         tipo: this.tipoRuta(), // AD6 — solo aplica en el alta del chofer (self-assign)

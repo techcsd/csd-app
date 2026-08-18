@@ -23,7 +23,10 @@ import {
   RutaParadaEjec,
   RutaConduceEjec,
   ParadaEstado,
+  LugarDestino,
+  RutaEvento,
 } from '../../../core/services/conduces.service';
+import { DestinoSelector, DestinoSeleccion } from '../../../shared/ui/destino-selector/destino-selector';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { TrackingService } from '../../../core/services/tracking.service';
@@ -51,7 +54,7 @@ const PARADA_ESTADO_LABEL: Record<ParadaEstado, string> = {
   selector: 'app-conduces',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner, CollapsibleSelect],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner, CollapsibleSelect, DestinoSelector],
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
@@ -611,8 +614,13 @@ export class ConducesPage implements OnDestroy {
   rutaViva = signal<{ rutaId: string; modo: 'parada' | 'destino' } | null>(null);
   rvUbicacion = signal('');
   rvProyectoId = signal<string>('');
+  // AV13 — coords del nuevo destino cuando se elige por pin de mapa.
+  rvLat = signal<number | null>(null);
+  rvLng = signal<number | null>(null);
   rvGuardando = signal(false);
   proyectosOpts = signal<{ id: string; nombre: string }[]>([]);
+  // AV13 — obras + almacenes (con lat/lng) para el selector de destino compartido.
+  lugaresDestino = signal<LugarDestino[]>([]);
   // AI14 — obra por dropdown estándar (opcional: "Elegir obra" = sin obra).
   rvObraOptions = computed<SelectOption[]>(() => [
     { id: '', label: '— Elegir obra —' },
@@ -622,6 +630,8 @@ export class ConducesPage implements OnDestroy {
   abrirRutaViva(rutaId: string, modo: 'parada' | 'destino'): void {
     this.rvUbicacion.set('');
     this.rvProyectoId.set('');
+    this.rvLat.set(null);
+    this.rvLng.set(null);
     this.rutaViva.set({ rutaId, modo });
     if (!this.proyectosOpts().length) {
       void this.service
@@ -629,6 +639,27 @@ export class ConducesPage implements OnDestroy {
         .then((ps) => this.proyectosOpts.set(ps.map((p) => ({ id: p.id, nombre: p.nombre }))))
         .catch(() => {});
     }
+    // AV13 — el selector de destino compartido usa obras + almacenes con coords
+    // (misma lista que el wizard de creación → paridad de opciones).
+    if (modo === 'destino' && !this.lugaresDestino().length) {
+      void this.service
+        .getLugaresDestino()
+        .then((ls) => this.lugaresDestino.set(ls))
+        .catch(() => {});
+    }
+  }
+
+  /** AV13 — eventos de cambio de destino del historial de la ruta (de→a). */
+  cambiosDestino(eventos: RutaEvento[] | undefined): RutaEvento[] {
+    return (eventos ?? []).filter((e) => e.tipo === 'destino_cambiado');
+  }
+
+  /** AV13 — selección del destino compartido (obra/almacén/pin) → estado local. */
+  onDestinoSel(sel: DestinoSeleccion): void {
+    this.rvUbicacion.set(sel.texto);
+    this.rvProyectoId.set(sel.proyectoId ?? '');
+    this.rvLat.set(sel.lat);
+    this.rvLng.set(sel.lng);
   }
 
   cerrarRutaViva(): void {
@@ -657,7 +688,11 @@ export class ConducesPage implements OnDestroy {
         await this.service.agregarParadaRuta(ctx.rutaId, ubic, { proyectoId });
         this.toast.success('Parada agregada a la ruta.');
       } else {
-        await this.service.cambiarDestinoRuta(ctx.rutaId, ubic, { proyectoId });
+        await this.service.cambiarDestinoRuta(ctx.rutaId, ubic, {
+          proyectoId,
+          lat: this.rvLat(),
+          lng: this.rvLng(),
+        });
         this.toast.success('Destino cambiado. Queda registrado.');
         // Optimista: refleja el nuevo destino en el card.
         this.rutas.update((list) =>

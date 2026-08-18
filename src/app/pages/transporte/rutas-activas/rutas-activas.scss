@@ -241,3 +241,11 @@
     color: var(--color-text-soft, #777);
   }
 }
+
+// AV13 — etiqueta "(modificada · hora)" junto al destino.
+.ruta-card__modtag {
+  font-size: 12px;
+  font-style: italic;
+  color: #92400e;
+  white-space: nowrap;
+}

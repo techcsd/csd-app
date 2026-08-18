@@ -3,19 +3,23 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
-import { MensajesService, Mensaje, StickerPack } from '../../../core/services/mensajes.service';
+import { MensajesService, Mensaje, StickerPack, Recibo, PresenciaAccion } from '../../../core/services/mensajes.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CameraService } from '../../../core/services/camera.service';
+import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
+import { StickerEditor } from '../../../shared/ui/sticker-editor/sticker-editor';
 import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
+
+type EstadoRecibo = 'enviado' | 'entregado' | 'leido';
 
 /** AJ5 — hilo de una conversación: mensajes + envío (offline por outbox) + realtime. */
 @Component({
   selector: 'app-mensajes-thread',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton],
+  imports: [FormsModule, Skeleton, VoiceRecorder, StickerEditor],
   templateUrl: './thread.html',
   styleUrl: './thread.scss',
 })
@@ -30,6 +34,7 @@ export class MensajesThreadPage implements OnDestroy {
   private camera = inject(CameraService);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
+  private recorder = viewChild(VoiceRecorder);
 
   fmtHora = formatHora;
   private yo(): string | null {
@@ -94,14 +99,44 @@ export class MensajesThreadPage implements OnDestroy {
   avatarUrl = signal<string | null>(null);
   subtitulo = signal('');
 
+  // AV5 — nota de voz (grabación inline) + player (url firmada por path).
+  grabandoVoz = signal(false);
+  private urlsAudio = signal<Record<string, string>>({});
+
+  // AV5 — recibos (✓/✓✓/✓✓azul) y presencia ("escribiendo…") de los demás.
+  private recibos = signal<Recibo[]>([]);
+  presenciaTexto = signal(''); // "escribiendo…" / "grabando…" / "buscando sticker…"
+
+  // AV4 — editor de sticker (imagen a editar antes de subir) + menús de packs.
+  editorImagen = signal<Blob | null>(null);
+  stickerCtx = signal<{ ref: string } | null>(null); // long-press sobre un sticker recibido
+  packMenuOpen = signal(false); // menú de gestión de packs
+  moverStickerId = signal<string | null>(null); // sticker a mover a otro pack
+
   // QA-20: canal propio del hilo (filtrado por conversación); se cierra en ngOnDestroy.
   private unsub: (() => void) | null = null;
+  // AV5 — presencia efímera (typing/grabando/sticker).
+  private presenciaCh: { emitir: (a: PresenciaAccion) => void; cerrar: () => void } | null = null;
+  private presenciaExpira: ReturnType<typeof setTimeout> | null = null;
+  private typingIdle: ReturnType<typeof setTimeout> | null = null;
+  private ultimaAccion: PresenciaAccion = 'nada';
+  // AV5 — los cursores de recibo NO están en realtime → refresco periódico suave
+  // mientras el hilo está abierto (para que ✓✓/azul avancen aunque no lleguen msgs).
+  private recibosTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.conversacionId = this.route.snapshot.paramMap.get('id') ?? '';
     void this.init();
     // QA-20: filtra server-side por esta conversación (antes escuchaba TODO).
-    this.unsub = this.mensajes.suscribir(() => void this.cargar(true), this.conversacionId);
+    this.unsub = this.mensajes.suscribir(() => void this.onRealtimeMsg(), this.conversacionId);
+    this.iniciarPresencia();
+  }
+
+  /** AV5 — al llegar un mensaje por realtime: recarga + marca entregado + refresca recibos. */
+  private async onRealtimeMsg(): Promise<void> {
+    await this.cargar(true);
+    void this.mensajes.marcarEntregada(this.conversacionId);
+    void this.refrescarRecibos();
   }
 
   /**
@@ -113,7 +148,52 @@ export class MensajesThreadPage implements OnDestroy {
     await this.cargarMeta();
     this.scrollNoLeidoPend = this.noLeidosInicial() > 0;
     await this.cargar();
+    // AV5 — al abrir: recibido + leído + traer los recibos de los demás.
+    void this.mensajes.marcarEntregada(this.conversacionId);
     void this.mensajes.marcarLeida(this.conversacionId);
+    void this.refrescarRecibos();
+    // Refresca los recibos cada 12s mientras el hilo está abierto.
+    this.recibosTimer = setInterval(() => void this.refrescarRecibos(), 12000);
+  }
+
+  /** AV5 — trae los cursores de recibo de los demás (para pintar los checks). */
+  private async refrescarRecibos(): Promise<void> {
+    this.recibos.set(await this.mensajes.getRecibos(this.conversacionId));
+  }
+
+  // ── AV5 — presencia / typing ────────────────────────────────────────────────
+  private iniciarPresencia(): void {
+    const p = this.ctx.profile();
+    if (!p) return;
+    this.presenciaCh = this.mensajes.presencia(
+      this.conversacionId,
+      { id: p.id, nombre: p.nombre ?? 'Alguien' },
+      (ev) => this.onPresencia(ev.accion, ev.nombre),
+    );
+  }
+
+  private onPresencia(accion: PresenciaAccion, nombre: string): void {
+    if (this.presenciaExpira) clearTimeout(this.presenciaExpira);
+    if (accion === 'nada') {
+      this.presenciaTexto.set('');
+      return;
+    }
+    const nombreCorto = this.esGrupo() ? (nombre.split(' ')[0] || nombre) + ' ' : '';
+    const verbo =
+      accion === 'grabando' ? 'grabando una nota de voz…'
+      : accion === 'sticker' ? 'buscando un sticker…'
+      : 'escribiendo…';
+    this.presenciaTexto.set(`${nombreCorto}${verbo}`);
+    // Auto-expira si el emisor deja de refrescar (~5s).
+    this.presenciaExpira = setTimeout(() => this.presenciaTexto.set(''), 5000);
+  }
+
+  /** Emite mi acción de presencia (throttle: no re-emite la misma seguidillas). */
+  private emitirPresencia(accion: PresenciaAccion): void {
+    if (!this.presenciaCh) return;
+    if (accion !== 'nada' && accion === this.ultimaAccion) return;
+    this.ultimaAccion = accion;
+    this.presenciaCh.emitir(accion);
   }
 
   /** AN6/AT14 — resuelve título/avatar/grupo y captura los no-leídos previos. */
@@ -148,6 +228,12 @@ export class MensajesThreadPage implements OnDestroy {
 
   ngOnDestroy(): void {
     this.unsub?.();
+    // AV5 — avisa que dejé de escribir y cierra el canal de presencia + timers.
+    this.emitirPresencia('nada');
+    this.presenciaCh?.cerrar();
+    if (this.presenciaExpira) clearTimeout(this.presenciaExpira);
+    if (this.typingIdle) clearTimeout(this.typingIdle);
+    if (this.recibosTimer) clearInterval(this.recibosTimer);
     this.tempUrls.forEach((u) => URL.revokeObjectURL(u));
     this.tempUrls = [];
   }
@@ -178,6 +264,14 @@ export class MensajesThreadPage implements OnDestroy {
       const url = await this.mensajes.adjuntoUrl(m.archivo_path);
       if (url) this.urlsAdjuntos.update((u) => ({ ...u, [m.archivo_path as string]: url }));
     }
+    // AV5 — resuelve las URLs firmadas de las notas de voz (audio) del hilo.
+    const audios = msgs.filter(
+      (m) => m.archivo_path && this.esAudio(m) && !m.archivo_path.startsWith('tmp-') && !this.urlsAudio()[m.archivo_path],
+    );
+    for (const m of audios) {
+      const url = await this.mensajes.adjuntoUrl(m.archivo_path);
+      if (url) this.urlsAudio.update((u) => ({ ...u, [m.archivo_path as string]: url }));
+    }
     // No re-posicionamos aquí: forzar el scroll al final rompería el anclaje al
     // primer no-leído (AT14). Las imágenes tienen tamaño acotado (poco reflow).
   }
@@ -200,8 +294,47 @@ export class MensajesThreadPage implements OnDestroy {
     return m.autor_id === this.yo();
   }
 
+  // ── AV5 — nota de voz (audio) ───────────────────────────────────────────────
+  esAudio(m: Mensaje): boolean {
+    return m.tipo === 'audio' || (!!m.archivo_mime && m.archivo_mime.startsWith('audio/'));
+  }
+  audioUrl(m: Mensaje): string | null {
+    return (m.archivo_path && this.urlsAudio()[m.archivo_path]) || null;
+  }
+  fmtDur(seg: number | null | undefined): string {
+    const s = Math.max(0, Math.round(seg ?? 0));
+    return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  }
+
+  // ── AV5 — recibos por mensaje (✓ enviado, ✓✓ recibido, ✓✓ azul leído) ────────
+  /** Estado de recibo de un mensaje MÍO según los cursores de los demás. En grupo,
+   *  "leído/recibido" exige que TODOS lo hayan leído/recibido (asunción AV5). */
+  estadoRecibo(m: Mensaje): EstadoRecibo {
+    if (m.id.startsWith('tmp-')) return 'enviado'; // aún en el outbox
+    const otros = this.recibos();
+    if (!otros.length) return 'enviado';
+    const t = new Date(m.created_at).getTime();
+    const leyeronTodos = otros.every((r) => r.last_read_at && new Date(r.last_read_at).getTime() >= t);
+    if (leyeronTodos) return 'leido';
+    const recibieronTodos = otros.every((r) => r.last_delivered_at && new Date(r.last_delivered_at).getTime() >= t);
+    if (recibieronTodos) return 'entregado';
+    return 'enviado';
+  }
+
   get online(): boolean {
     return this.net.online();
+  }
+
+  /** AV5 — al teclear: emite "escribiendo…" y programa "nada" tras ~3.5s de inactividad. */
+  onTextoInput(v: string): void {
+    this.texto.set(v);
+    if (!v.trim()) {
+      this.emitirPresencia('nada');
+      return;
+    }
+    this.emitirPresencia('escribiendo');
+    if (this.typingIdle) clearTimeout(this.typingIdle);
+    this.typingIdle = setTimeout(() => this.emitirPresencia('nada'), 3500);
   }
 
   async enviar(): Promise<void> {
@@ -223,6 +356,7 @@ export class MensajesThreadPage implements OnDestroy {
       },
     ]);
     this.texto.set('');
+    this.emitirPresencia('nada'); // AV5 — dejé de escribir
     this.scrollAlFinal();
     try {
       await this.mensajes.enviarMensaje(this.conversacionId, t);
@@ -230,6 +364,52 @@ export class MensajesThreadPage implements OnDestroy {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar.');
     } finally {
       this.enviando.set(false);
+    }
+  }
+
+  // ── AV5 — grabar y enviar una nota de voz ───────────────────────────────────
+  abrirVoz(): void {
+    this.grabandoVoz.set(true);
+    this.menuAdjuntar.set(false);
+    this.stickerPickerOpen.set(false);
+    this.emitirPresencia('grabando');
+  }
+  cancelarVoz(): void {
+    this.grabandoVoz.set(false);
+    this.emitirPresencia('nada');
+  }
+
+  /** El recorder emitió el blob al detenerse → lo enviamos (optimista) y cerramos. */
+  async onVozGrabada(blob: Blob | null): Promise<void> {
+    if (!blob) return; // clear() → nada que enviar
+    const dur = this.recorder()?.segundos() ?? 0;
+    this.grabandoVoz.set(false);
+    this.emitirPresencia('nada');
+    // Bubble optimista con la vista previa local.
+    const tmpKey = 'tmp-aud-' + Date.now();
+    const previewUrl = URL.createObjectURL(blob);
+    this.tempUrls.push(previewUrl);
+    this.urlsAudio.update((u) => ({ ...u, [tmpKey]: previewUrl }));
+    this.lista.update((l) => [
+      ...l,
+      {
+        id: tmpKey,
+        autor_id: this.yo() ?? '',
+        autor_nombre: 'Tú',
+        contenido: null,
+        tipo: 'audio',
+        archivo_path: tmpKey,
+        archivo_nombre: null,
+        archivo_mime: 'audio/webm',
+        duracion_seg: dur,
+        created_at: new Date().toISOString(),
+      },
+    ]);
+    this.scrollAlFinal();
+    try {
+      await this.mensajes.enviarNotaVoz(this.conversacionId, blob, dur, blob.type || 'audio/webm');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar la nota de voz.');
     }
   }
 
@@ -367,6 +547,8 @@ export class MensajesThreadPage implements OnDestroy {
     this.stickerPickerOpen.set(abrir);
     if (abrir) this.menuAdjuntar.set(false);
     if (abrir && !this.stickersCargados) void this.loadStickers();
+    // AV5 — presencia "buscando un sticker…" mientras el picker está abierto.
+    this.emitirPresencia(abrir ? 'sticker' : 'nada');
   }
 
   private async loadStickers(): Promise<void> {
@@ -412,17 +594,23 @@ export class MensajesThreadPage implements OnDestroy {
     }
   }
 
-  /** Sube una imagen como sticker propio y recarga los packs. */
+  /** AV4 — elige una imagen y abre el EDITOR (recorte + esquinas) antes de subir. */
   async onStickerFile(): Promise<void> {
     if (this.stickerUploading()) return;
     const fotos = await this.camera.pickFromGallery(1);
     const foto = fotos[0];
     if (!foto) return;
+    this.editorImagen.set(foto.blob);
+  }
+
+  /** AV4 — el editor devolvió el webp con alfa → lo subimos como sticker propio. */
+  async onEditorConfirm(webp: Blob): Promise<void> {
+    this.editorImagen.set(null);
     this.stickerUploading.set(true);
     try {
       const activo = this.stickerPackActivo();
       const packId = activo && !activo.es_sistema ? activo.id : undefined;
-      await this.mensajes.subirSticker(this.yo() ?? '', { blob: foto.blob, nombre: `sticker-${Date.now()}.jpg`, mime: 'image/jpeg' }, packId);
+      await this.mensajes.subirSticker(this.yo() ?? '', { blob: webp, nombre: `sticker-${Date.now()}.webp`, mime: 'image/webp' }, packId);
       this.stickerPacks.set(await this.mensajes.getMisStickers());
       this.toast.success('Sticker agregado.');
     } catch (e) {
@@ -430,6 +618,9 @@ export class MensajesThreadPage implements OnDestroy {
     } finally {
       this.stickerUploading.set(false);
     }
+  }
+  onEditorCancel(): void {
+    this.editorImagen.set(null);
   }
 
   /** Elimina un sticker propio y recarga los packs. */
@@ -439,6 +630,68 @@ export class MensajesThreadPage implements OnDestroy {
       this.stickerPacks.set(await this.mensajes.getMisStickers());
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar el sticker.');
+    }
+  }
+
+  // ── AV4 — packs (crear/renombrar/mover) + guardar sticker de otros ───────────
+  nuevoPackNombre = signal('');
+  togglePackMenu(): void {
+    this.packMenuOpen.update((v) => !v);
+    this.moverStickerId.set(null);
+  }
+
+  /** Crea un pack nuevo con el nombre escrito y recarga los packs. */
+  async crearPack(): Promise<void> {
+    const nombre = this.nuevoPackNombre().trim();
+    if (!nombre) return;
+    try {
+      const id = await this.mensajes.crearPack(nombre);
+      this.nuevoPackNombre.set('');
+      this.stickerPacks.set(await this.mensajes.getMisStickers());
+      this.stickerTab.set(id); // abre el pack recién creado
+      this.toast.success('Pack creado.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el pack.');
+    }
+  }
+
+  /** Marca un sticker para moverlo (luego se toca el pack destino). */
+  iniciarMoverSticker(stickerId: string): void {
+    this.moverStickerId.set(stickerId);
+    this.packMenuOpen.set(true);
+    this.toast.show('Elige el pack destino.', 'info');
+  }
+  async moverAPack(packId: string): Promise<void> {
+    const sid = this.moverStickerId();
+    if (!sid) return;
+    try {
+      await this.mensajes.moverSticker(sid, packId);
+      this.moverStickerId.set(null);
+      this.stickerPacks.set(await this.mensajes.getMisStickers());
+      this.toast.success('Sticker movido.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo mover el sticker.');
+    }
+  }
+
+  /** AV4 — long-press sobre un sticker RECIBIDO → menú "Guardar sticker". */
+  abrirCtxSticker(m: Mensaje): void {
+    if (m.tipo !== 'sticker' || !m.archivo_path || this.esMio(m)) return;
+    this.stickerCtx.set({ ref: m.archivo_path });
+  }
+  cerrarCtxSticker(): void {
+    this.stickerCtx.set(null);
+  }
+  async guardarStickerRecibido(): Promise<void> {
+    const ctx = this.stickerCtx();
+    if (!ctx) return;
+    this.stickerCtx.set(null);
+    try {
+      await this.mensajes.guardarSticker(ctx.ref);
+      this.stickersCargados = false;
+      this.toast.success('Sticker guardado en tus stickers.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el sticker.');
     }
   }
 

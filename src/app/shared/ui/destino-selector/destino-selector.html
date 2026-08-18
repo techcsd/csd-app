@@ -1,0 +1,24 @@
+<div class="dsel">
+  <div class="dsel__modo">
+    <app-option-button icon="🏗️" label="Obra o almacén" [selected]="modo() === 'lugar'" (pressed)="setModo('lugar')" />
+    <app-option-button icon="🗺️" label="En el mapa" [selected]="modo() === 'mapa'" (pressed)="setModo('mapa')" />
+  </div>
+
+  @if (modo() === 'lugar') {
+    <app-collapsible-select
+      label="Obra o almacén de destino"
+      icon="🏗️"
+      [options]="lugarOpts()"
+      [selectedId]="lugarId()"
+      [searchable]="true"
+      searchPlaceholder="Buscar obra o almacén…"
+      (picked)="onLugar($event)"
+    />
+    @if (selectedLugar() && selectedLugar()!.latitud == null) {
+      <p class="dsel__warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
+    }
+  } @else {
+    <app-location-picker (ubicacionChange)="onUbicacion($event)" />
+    @if (mapaTexto()) { <p class="dsel__ok">✓ Destino: {{ mapaTexto() }}</p> }
+  }
+</div>

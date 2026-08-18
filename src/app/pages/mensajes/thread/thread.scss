@@ -441,3 +441,141 @@
   color: #fff;
   font-size: 22px;
 }
+
+// ── AV5/AV4 — chat v3: presencia, recibos, voz, stickers v3 ──────────────────
+.thread__sub--typing {
+  color: var(--primary, #ff5f00);
+  font-style: italic;
+}
+
+// Meta (hora + checks) al pie de cada burbuja.
+.thread__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  align-self: flex-end;
+}
+.thread__tick {
+  font-size: 12px;
+  color: var(--main-ultra-light, #929090);
+  letter-spacing: -1px;
+}
+.thread__tick[data-estado='leido'] {
+  color: #34b7f1; // ✓✓ azul (leído), estilo WhatsApp
+}
+
+// Nota de voz (player inline).
+.thread__msg--audio .thread__audio {
+  max-width: 240px;
+  height: 40px;
+}
+.thread__audio-cargando,
+.thread__audio-dur {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+// Barra de grabación de voz sobre el composer.
+.thread__voz {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--secondary, #212121);
+  border-top: 1px solid #2d2d2d;
+  flex-wrap: wrap;
+}
+.thread__voz-hint {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--main-ultra-light, #929090);
+}
+.thread__voz-cancel {
+  background: none;
+  border: none;
+  color: var(--primary, #ff5f00);
+  font-weight: 600;
+  padding: 6px 8px;
+}
+
+// Botón de micrófono (aparece cuando no hay texto).
+.thread__mic--on {
+  background: var(--primary, #ff5f00);
+}
+
+// Menú contextual "Guardar sticker".
+.thread__ctx {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 1201;
+  background: var(--color-surface, #fff);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+}
+.thread__ctx-preview {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+}
+.thread__ctx-op {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--Hub, #ffb300);
+  font-weight: 600;
+  font-size: 15px;
+}
+.thread__ctx-op--cancel {
+  background: #eee;
+  color: #333;
+}
+
+// Stickers v3: mover + gestión de packs.
+.thread__stk-move {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--Hub, #ffb300);
+  font-size: 12px;
+  line-height: 20px;
+}
+.thread__stk-move-bar,
+.thread__stk-packs,
+.thread__stk-footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 4px 0;
+}
+.thread__stk-move-bar { font-size: 13px; }
+.thread__stk-move-dest {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 999px;
+  background: var(--color-surface, #fff);
+  font-size: 13px;
+}
+.thread__stk-pack-input { flex: 1; }
+.thread__stk-pack-crear,
+.thread__stk-packs-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-surface-2, #f0f0f0);
+  font-weight: 600;
+}
+.thread__stk-footer .thread__stk-upload { flex: 1; }

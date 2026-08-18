@@ -165,3 +165,29 @@
 }
 // El estilo del marcador (.seg-marker__pin) vive en styles.scss (los DivIcon de
 // Leaflet no tienen encapsulación de componente).
+
+// AV1 — selección de chofer + staleness en el panel.
+.seg__hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.chofer-card--sel {
+  border-color: var(--Hub);
+  box-shadow: 0 0 0 2px var(--Hub-translucid, rgba(255, 179, 0, 0.3));
+}
+.chofer-card--stale {
+  opacity: 0.8;
+}
+.chofer-card__trace-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.chofer-card__hace--stale {
+  color: #b45309;
+  font-weight: 600;
+}

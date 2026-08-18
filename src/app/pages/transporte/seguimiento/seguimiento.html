@@ -49,13 +49,18 @@
       />
     } @else {
       <h2 class="seg__section">Choferes ({{ choferes().length }})</h2>
+      <p class="seg__hint">Toca un chofer para ver su recorrido en el mapa. Toca de nuevo para ocultarlo.</p>
       @for (c of choferes(); track c.usuario_id) {
-        <button type="button" class="chofer-card" (click)="centrarEn(c)">
-          <span class="chofer-card__dot" [style.background]="metaOf(c.estado).tint">
-            {{ metaOf(c.estado).icon }}
+        <button type="button" class="chofer-card" [class.chofer-card--sel]="selectedId() === c.usuario_id"
+          [class.chofer-card--stale]="esStale(c.capturado_en)" (click)="seleccionar(c)">
+          <span class="chofer-card__dot" [style.background]="esStale(c.capturado_en) ? '#9ca3af' : metaOf(c.estado).tint">
+            {{ esStale(c.capturado_en) ? '📴' : metaOf(c.estado).icon }}
           </span>
           <div class="chofer-card__body">
-            <span class="chofer-card__nombre">{{ c.nombre }}</span>
+            <span class="chofer-card__nombre">
+              @if (selectedId() === c.usuario_id) { <span class="chofer-card__trace-dot" [style.background]="colorDe(c.usuario_id)"></span> }
+              {{ c.nombre }}
+            </span>
             <span class="chofer-card__estado">
               {{ metaOf(c.estado).label }}@if (c.estado === 'otros' && c.otros_texto) { · {{ c.otros_texto }} }
             </span>
@@ -66,7 +71,9 @@
               @if (ident(r); as vid) { <span class="chofer-card__ruta">🚚 {{ vid }}</span> }
             }
           </div>
-          <span class="chofer-card__hace">{{ actualizadoHace(c.capturado_en) }}</span>
+          <span class="chofer-card__hace" [class.chofer-card__hace--stale]="esStale(c.capturado_en)">
+            @if (esStale(c.capturado_en)) { 📴 } {{ actualizadoHace(c.capturado_en) }}
+          </span>
         </button>
       }
     }

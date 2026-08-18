@@ -1,0 +1,17 @@
+.dsel__modo {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dsel__warn {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.dsel__ok {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

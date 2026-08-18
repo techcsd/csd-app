@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
 import { ActivatedRoute } from '@angular/router';
 
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -33,7 +34,7 @@ const SGC_WEB = 'https://sgcconstructorasd.com';
   selector: 'app-personal-expediente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, CedulaPipe],
   templateUrl: './personal-expediente.html',
   styleUrl: './personal-expediente.scss',
 })

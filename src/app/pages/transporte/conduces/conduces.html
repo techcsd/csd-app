@@ -40,7 +40,9 @@
       <ng-template #rutaCard let-r>
           <div class="ruta-card">
             <div class="ruta-card__info">
-              <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}</span>
+              <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}
+                @if (r.modificada_at) { <em class="ruta-card__modtag">(modificada {{ fmtHora(r.modificada_at) }})</em> }
+              </span>
               <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
               <!-- AK22 — fecha y hora en que se planificó/creó la ruta -->
               @if (r.creado_en) { <span class="ruta-card__fecha">📅 Planificada: {{ fmtFechaHora(r.creado_en) }}</span> }
@@ -84,12 +86,31 @@
                   <!-- AI3 — ruta informativa: H.I/H.F, duración total, km y trayecto -->
                   @if (d.ruta; as rh) {
                     <div class="ruta-card__info">
-                      @if (rh.iniciada_at) { <span>🟢 H.I {{ fmtHora(rh.iniciada_at) }}</span> }
-                      @if (rh.finalizada_at) { <span>🏁 H.F {{ fmtHora(rh.finalizada_at) }}</span> }
+                      @if (rh.iniciada_at) { <span>🟢 Inicio {{ fmtHora(rh.iniciada_at) }}</span> }
+                      @if (rh.finalizada_at) { <span>🏁 Fin {{ fmtHora(rh.finalizada_at) }}</span> }
                       @if (rh.duracion_min != null) { <span>⏱️ {{ fmtDur(rh.duracion_min) }}</span> }
                       @if (rh.km_real != null) { <span>🛣️ {{ rh.km_real }} km</span> }
                       @if (d.trayecto?.length) { <span>📍 {{ d.trayecto!.length }} puntos de recorrido</span> }
                     </div>
+                    <!-- AV13 — la ruta fue modificada (cambio de destino) -->
+                    @if (rh.modificada_at) {
+                      <div class="ruta-card__mod">✏️ Modificada {{ fmtHora(rh.modificada_at) }}</div>
+                    }
+                  }
+                  <!-- AV13 — historial de cambios de destino (de→a, cuándo, quién) -->
+                  @if (cambiosDestino(d.eventos); as evs) {
+                    @if (evs.length) {
+                      <details class="ruta-card__hist">
+                        <summary>🕘 Historial de cambios de destino</summary>
+                        @for (ev of evs; track $index) {
+                          <div class="ruta-card__hist-row">
+                            <span class="ruta-card__hist-when">{{ fmtHora(ev.created_at) }}</span>
+                            <span class="ruta-card__hist-what">{{ ev.detalle }}</span>
+                            @if (ev.por) { <span class="ruta-card__hist-who">— {{ ev.por }}</span> }
+                          </div>
+                        }
+                      </details>
+                    }
                   }
                   <!-- AE — progreso + ir a la próxima parada -->
                   @if (progreso(r.id); as pr) {
@@ -298,24 +319,31 @@
           : 'No se cancela la ruta: el destino cambia y queda registrado.' }}
       </p>
 
-      @if (proyectosOpts().length) {
-        <label class="field-label">Obra (opcional)</label>
-        <app-collapsible-select
-          label="Obra"
-          icon="🏗️"
-          [options]="rvObraOptions()"
-          [selectedId]="rvProyectoId()"
-          [searchable]="true"
-          searchPlaceholder="Buscar obra…"
-          (picked)="onRvProyecto($event)"
-        />
+      @if (rv.modo === 'destino') {
+        <!-- AV13 — MISMO selector del wizard de creación: obra / almacén central /
+             almacén (dropdown) o pin en el mapa. Nada de "solo obra". -->
+        <label class="field-label parada-sheet__mt">Nuevo destino <span class="parada-sheet__req">*</span></label>
+        <app-destino-selector [lugares]="lugaresDestino()" (destinoChange)="onDestinoSel($event)" />
+        @if (rvUbicacion()) { <p class="parada-sheet__chosen">✓ Nuevo destino: {{ rvUbicacion() }}</p> }
+      } @else {
+        @if (proyectosOpts().length) {
+          <label class="field-label">Obra (opcional)</label>
+          <app-collapsible-select
+            label="Obra"
+            icon="🏗️"
+            [options]="rvObraOptions()"
+            [selectedId]="rvProyectoId()"
+            [searchable]="true"
+            searchPlaceholder="Buscar obra…"
+            (picked)="onRvProyecto($event)"
+          />
+        }
+        <label class="field-label parada-sheet__mt" for="rv-ubic">
+          Nombre de la parada <span class="parada-sheet__req">*</span>
+        </label>
+        <input id="rv-ubic" class="field" type="text" [ngModel]="rvUbicacion()" (ngModelChange)="rvUbicacion.set($event)"
+          placeholder="Ej. Ferretería La Cadena" />
       }
-
-      <label class="field-label parada-sheet__mt" for="rv-ubic">
-        {{ rv.modo === 'parada' ? 'Nombre de la parada' : 'Nuevo destino' }} <span class="parada-sheet__req">*</span>
-      </label>
-      <input id="rv-ubic" class="field" type="text" [ngModel]="rvUbicacion()" (ngModelChange)="rvUbicacion.set($event)"
-        [placeholder]="rv.modo === 'parada' ? 'Ej. Ferretería La Cadena' : 'Ej. Obra Bellón'" />
 
       <button type="button" class="btn-cta parada-sheet__cta" [disabled]="rvGuardando()" (click)="confirmarRutaViva()">
         {{ rvGuardando() ? 'Guardando…' : (rv.modo === 'parada' ? '➕ Agregar parada' : '🔀 Cambiar destino') }}

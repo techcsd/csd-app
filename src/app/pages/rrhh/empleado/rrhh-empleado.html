@@ -14,7 +14,7 @@
         <h2 class="re-nombre">{{ nombreCompleto() }}</h2>
         <p class="re-cargo">{{ e.cargo || 'Sin cargo' }}@if (e.departamento) { · {{ e.departamento }} }</p>
         <div class="re-datos">
-          @if (e.cedula) { <p>🪪 {{ e.cedula }}</p> }
+          @if (e.cedula) { <p>🪪 {{ e.cedula | cedula }}</p> }
           @if (e.telefono) { <p>📞 {{ e.telefono }}</p> }
           @if (e.email) { <p>✉️ {{ e.email }}</p> }
           @if (e.tipo_contrato) { <p>📄 {{ e.tipo_contrato }}</p> }

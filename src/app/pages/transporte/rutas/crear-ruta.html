@@ -30,6 +30,11 @@
       @if (draftFecha() !== null) {
         <app-draft-banner [fecha]="draftFecha()" (continuar)="continuarBorrador()" (descartar)="descartarBorrador()" />
       }
+      <!-- AV11 — la ruta se creó/quedó pendiente por el checklist de uso: al continuar
+           se REANUDA la MISMA ruta (no se crea otra). -->
+      @if (holdChecklist() && draftFecha() === null) {
+        <div class="crear-ruta__hold">📝 Documentación pendiente — termina el checklist de uso y toca <strong>Reanudar ruta</strong>. No se creará una ruta nueva.</div>
+      }
       @if (loading()) {
         <app-skeleton [rows]="4" />
       } @else {
@@ -219,7 +224,7 @@
 
     <app-wizard-footer
       [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Crear ruta')"
+      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : (holdChecklist() ? 'Reanudar ruta' : 'Crear ruta'))"
       [primaryDisabled]="step() >= total && submitting()"
       (back)="prev()"
       (primary)="step() < total ? next() : guardar()"

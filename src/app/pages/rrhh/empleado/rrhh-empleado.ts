@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DatePipe, Location } from '@angular/common';
+import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
@@ -16,7 +17,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-rrhh-empleado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog],
+  imports: [FormsModule, DatePipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog, CedulaPipe],
   templateUrl: './rrhh-empleado.html',
   styleUrl: './rrhh-empleado.scss',
 })

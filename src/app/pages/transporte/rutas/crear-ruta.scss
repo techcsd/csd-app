@@ -252,3 +252,15 @@
   color: var(--color-text-secondary);
   margin: 6px 0 0;
 }
+
+// AV11 — aviso "documentación pendiente" al volver del checklist de uso.
+.crear-ruta__hold {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius);
+  background: #fff7ed;
+  color: #92400e;
+  font-size: 14px;
+  line-height: 1.4;
+}

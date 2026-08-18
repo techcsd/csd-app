@@ -119,7 +119,9 @@ export class ActaDetallePage {
       case 'chofer_asignado': return '🧑‍✈️ Llave con el chofer';
       case 'oficina_central': return '🏢 Llave en oficina';
       case 'otro': return '📍 Llave en otro lugar';
-      default: return '';
+      // AV10 — sin dato (registros nuevos o históricos sin la pregunta): el
+      // default operativo es que la llave queda con el chofer.
+      default: return '🧑‍✈️ Llave con el chofer';
     }
   }
   marcaModelo(): string {

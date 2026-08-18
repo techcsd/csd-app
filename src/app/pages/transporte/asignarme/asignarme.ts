@@ -23,7 +23,7 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { FOTOS_PREUSO } from '../../../core/models/checklist-preuso.model';
 
-type Paso = 'vehiculo' | 'condiciones' | 'fotos' | 'llave' | 'firma';
+type Paso = 'vehiculo' | 'condiciones' | 'fotos' | 'firma'; // AV10 — sin 'llave'
 type Respuesta = 'ok' | 'falla' | 'na';
 type Llave1 = 'chofer_asignado' | 'oficina_central' | 'otro';
 
@@ -78,7 +78,8 @@ export class AsignarmeVehiculoPage {
 
   private sig = viewChild(SignaturePad);
 
-  readonly pasos: Paso[] = ['vehiculo', 'condiciones', 'fotos', 'llave', 'firma'];
+  // AV10 — se quitó el paso "llave" (innecesario: la llave queda con el chofer).
+  readonly pasos: Paso[] = ['vehiculo', 'condiciones', 'fotos', 'firma'];
   readonly fotosGuiadas = FOTOS_PREUSO;
   readonly checkItems = CHECK_ITEMS;
   private readonly clave = 'transporte:asignarme';
@@ -100,7 +101,9 @@ export class AsignarmeVehiculoPage {
   fallaFotos = signal<Record<string, CapturedPhoto[]>>({});
   readonly maxFotosFalla = 3;
   fotos = signal<Record<string, CapturedPhoto>>({});
-  llave1 = signal<Llave1 | null>(null);
+  // AV10 — default "con el chofer" (el paso ya no se pregunta; el dato se
+  // mantiene aditivo para históricos y detalles que lo muestran).
+  llave1 = signal<Llave1 | null>('chofer_asignado');
   llave1Detalle = signal('');
   notas = signal('');
   firmaLista = signal(false);
@@ -311,16 +314,6 @@ export class AsignarmeVehiculoPage {
           return false;
         }
         return true;
-      case 'llave':
-        if (!this.llave1()) {
-          this.toast.error('Indica dónde queda la llave 1.');
-          return false;
-        }
-        if (this.llave1() === 'otro' && !this.llave1Detalle().trim()) {
-          this.toast.error('Describe dónde queda la llave 1.');
-          return false;
-        }
-        return true;
       case 'firma':
         return true;
     }
@@ -365,7 +358,8 @@ export class AsignarmeVehiculoPage {
         condiciones,
         fotos: fotosBlobs,
         firma: this.firmaBlob(),
-        llave1Ubicacion: this.llave1(),
+        // AV10 — default "con el chofer" si no viene (paso removido).
+        llave1Ubicacion: this.llave1() ?? 'chofer_asignado',
         llave1Detalle: this.llave1() === 'otro' ? this.llave1Detalle().trim() : null,
         notas: this.notas().trim() || null,
         fallas,

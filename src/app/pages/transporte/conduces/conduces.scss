@@ -517,3 +517,43 @@
   color: var(--color-text-secondary);
   font-weight: 600;
 }
+
+// AV13 — "(modificada)" + historial de cambios de destino + destino elegido.
+.ruta-card__mod {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+}
+.ruta-card__hist {
+  margin-top: 8px;
+  font-size: 13px;
+  summary {
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+  }
+}
+.ruta-card__hist-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 0 0 8px;
+  color: var(--color-text-secondary);
+}
+.ruta-card__hist-when { font-weight: 600; color: var(--color-text); }
+.ruta-card__hist-who { font-style: italic; }
+.parada-sheet__chosen {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+// AV13 — etiqueta "(modificada · hora)" junto al destino.
+.ruta-card__modtag {
+  font-size: 12px;
+  font-style: italic;
+  color: #92400e;
+  white-space: nowrap;
+}

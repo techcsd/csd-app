@@ -10,7 +10,7 @@
         <span class="gacc__icon">🔐</span>
         <h2 class="gacc__title">{{ tieneAcceso() ? 'Restablecer PIN' : 'Generar acceso a la app' }}</h2>
         <p class="gacc__msg">
-          El conductor entra con su <strong>cédula{{ cedula() ? ' (' + cedula() + ')' : '' }}</strong>
+          El conductor entra con su <strong>cédula{{ cedula() ? ' (' + (cedula() | cedula) + ')' : '' }}</strong>
           y este PIN de 6 dígitos. Anótalo: no se vuelve a mostrar.
         </p>
 

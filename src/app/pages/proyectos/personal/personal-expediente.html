@@ -30,7 +30,7 @@
           <div class="pe-rows">
             <div class="pe-row"><span class="pe-k">Obra</span><span class="pe-v">{{ p.proyecto?.nombre ?? '—' }}</span></div>
             <div class="pe-row"><span class="pe-k">Nacionalidad</span><span class="pe-v">{{ nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad }}</span></div>
-            <div class="pe-row"><span class="pe-k">Documento</span><span class="pe-v">{{ p.documento_numero || '—' }}</span></div>
+            <div class="pe-row"><span class="pe-k">Documento</span><span class="pe-v">{{ (p.documento_numero | cedula) || '—' }}</span></div>
             @if (p.telefono) {
               <div class="pe-row"><span class="pe-k">Teléfono</span><span class="pe-v"><a [href]="'tel:' + p.telefono">{{ p.telefono }}</a></span></div>
             }

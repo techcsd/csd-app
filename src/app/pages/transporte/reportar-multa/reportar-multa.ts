@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
 import { ActivatedRoute } from '@angular/router';
 
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -48,7 +49,7 @@ interface MultaDraft {
   selector: 'app-reportar-multa',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, BigConfirm, BottomSheet, VehiculoPicker],
+  imports: [FormsModule, OptionButton, BigConfirm, BottomSheet, VehiculoPicker, CedulaPipe],
   templateUrl: './reportar-multa.html',
   styleUrl: './reportar-multa.scss',
 })

@@ -7,6 +7,8 @@ import { SyncBadge } from '../../shared/ui/sync-badge/sync-badge';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { SyncService } from '../../core/sync/sync.service';
 import { NetworkService } from '../../core/services/network.service';
+import { ConducesService } from '../../core/services/conduces.service';
+import { ToastService } from '../../core/services/toast.service';
 import { OutboxOp } from '../../core/db/app-db';
 import { formatFechaRelativa } from '../../core/util/fecha';
 
@@ -158,6 +160,10 @@ export class PendientesPage {
   private network = inject(NetworkService);
   private location = inject(Location);
   private router = inject(Router);
+  private conduces = inject(ConducesService);
+  private toast = inject(ToastService);
+  // AV3 — id del item cuyo recordatorio al despachante se está enviando.
+  recordandoId = signal<string | null>(null);
 
   items = signal<OutboxItem[]>([]);
   loading = signal(true);
@@ -208,6 +214,43 @@ export class PendientesPage {
     void this.router.navigate(['/transporte/generar-conduce'], { queryParams: { corregir: item.id } });
   }
 
+  /** AV3 — ¿este error es "falta la firma del despachante" (DR456)? */
+  esErrorFirmaDespachante(item: OutboxItem): boolean {
+    if (item.tipo_op !== 'conduce_entregado') return false;
+    const raw = (item.error_msg ?? '').toLowerCase();
+    return raw.includes('firma del despachante') || raw.includes('dr456');
+  }
+
+  /** AV3 — muestra el atajo "Recordarle al despachante" en ese error. */
+  puedeRecordarDespachante(item: OutboxItem): boolean {
+    return item.estado === 'error' && this.esErrorFirmaDespachante(item);
+  }
+
+  /** AV3 — re-avisa al despachante que firme (re-push manual desde el outbox). */
+  async recordarDespachante(item: OutboxItem): Promise<void> {
+    const salidaId = (item.payload as Record<string, unknown> | null)?.['salida_id'] as string | undefined;
+    if (!salidaId || this.recordandoId()) return;
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para recordarle al despachante.');
+      return;
+    }
+    this.recordandoId.set(item.id);
+    try {
+      const nombre = await this.conduces.recordarDespachante(salidaId);
+      if (nombre === null) {
+        // Ya firmó → reintenta el envío ahora.
+        this.toast.success('El despachante ya firmó. Reintentando el envío…');
+        void this.sync.retry(item.id);
+      } else {
+        this.toast.success(`Se le recordó a ${nombre}. Reintenta el envío cuando firme.`);
+      }
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el recordatorio.');
+    } finally {
+      this.recordandoId.set(null);
+    }
+  }
+
   tipoLabel(t: string): string {
     return TIPO_LABEL[t] ?? t;
   }
@@ -253,6 +296,12 @@ export class PendientesPage {
   detalleLegible(item: OutboxItem): string {
     const raw = (item.error_msg ?? '').toLowerCase();
     if (!raw) return '';
+
+    // AV3 — el conduce se rechazó porque falta la firma del despachante (DR456):
+    // accionable, no un fallo genérico. Se reintenta cuando el despachante firme.
+    if (this.esErrorFirmaDespachante(item)) {
+      return 'Falta la firma del despachante. No se puede entregar hasta que firme el conduce desde su sesión. Recuérdaselo con el botón de abajo y reintenta cuando firme.';
+    }
 
     // Duplicado / ya registrado (idempotencia o unique constraint).
     if (

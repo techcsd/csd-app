@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SessionService } from '../../../core/services/session.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { formatCedula, soloDigitosCedula } from '../../../core/util/cedula';
 
 type Modo = 'correo' | 'conductor';
 
@@ -33,7 +34,8 @@ export class LoginPage {
   // AS9 — mostrar/ocultar contraseña.
   verPassword = signal(false);
 
-  // Cédula + PIN (conductor)
+  // Cédula + PIN (conductor). `cedula` guarda el texto CON máscara (visual);
+  // el submit envía solo dígitos (AV9).
   cedula = signal('');
   pin = signal('');
 
@@ -41,6 +43,11 @@ export class LoginPage {
 
   setModo(m: Modo): void {
     this.modo.set(m);
+  }
+
+  // AV9 — máscara en vivo XXX-XXXXXXX-X (guiones solo visuales).
+  onCedulaInput(v: string): void {
+    this.cedula.set(formatCedula(v));
   }
 
   async submit(): Promise<void> {
@@ -73,7 +80,8 @@ export class LoginPage {
 
   async submitConductor(): Promise<void> {
     if (this.loading()) return;
-    const cedula = this.cedula().trim();
+    // El server recibe la cédula SIN guiones (solo dígitos).
+    const cedula = soloDigitosCedula(this.cedula());
     const pin = this.pin().trim();
     if (!cedula) {
       this.toast.error('Escribe tu cédula.');

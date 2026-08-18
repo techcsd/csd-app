@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, output, sign
 import { FormsModule } from '@angular/forms';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { CedulaPipe } from '../../pipes/cedula-pipe';
 
 /**
  * P8 — modal para generar el acceso a la app de un conductor (usuario = cédula,
@@ -12,7 +13,7 @@ import { NetworkService } from '../../../core/services/network.service';
   selector: 'app-generar-acceso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, CedulaPipe],
   templateUrl: './generar-acceso.html',
   styleUrl: './generar-acceso.scss',
 })

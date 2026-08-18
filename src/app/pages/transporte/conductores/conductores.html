@@ -42,7 +42,7 @@
           <span class="clist__avatar">{{ (c.nombre || '?').charAt(0) }}</span>
           <span class="clist__info">
             <span class="clist__name">{{ c.nombre }}</span>
-            @if (c.cedula) { <span class="clist__ced">{{ c.cedula }}</span> }
+            @if (c.cedula) { <span class="clist__ced">{{ c.cedula | cedula }}</span> }
             <span
               class="clist__lic"
               [class.clist__lic--warn]="licEstado(c) === 'por_vencer'"

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
 import { Router } from '@angular/router';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
@@ -20,7 +21,7 @@ const LIC_LABEL: Record<LicenciaEstado, string> = {
   selector: 'app-conductores-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, EmptyState, Skeleton],
+  imports: [FormsModule, EmptyState, Skeleton, CedulaPipe],
   templateUrl: './conductores.html',
   styleUrl: './conductores.scss',
 })

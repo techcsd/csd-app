@@ -242,6 +242,8 @@ export interface RutaHoy {
   iniciada_at?: string | null;
   /** Y4 — instante del TAP en "Completar" (duración real = fin − inicio). */
   finalizada_at?: string | null;
+  /** AV13 — última modificación relevante (cambio de destino). Null = nunca. */
+  modificada_at?: string | null;
   /** Y4 — estimación del maps al crear la ruta (min), para "real vs estimado". */
   tiempo_estimado_min?: number | null;
   /** AG11 — vehículo de la ruta (para etiquetar la posición y reanudar tracking). */

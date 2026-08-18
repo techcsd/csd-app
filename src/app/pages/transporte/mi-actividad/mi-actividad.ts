@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
+import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -33,7 +34,7 @@ import { formatFecha, formatFechaMedia, formatFechaHumana } from '../../../core/
   selector: 'app-mi-actividad',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DocSlot, LiveRefreshDirective],
+  imports: [Skeleton, EmptyState, DocSlot, LiveRefreshDirective, CedulaPipe],
   templateUrl: './mi-actividad.html',
   styleUrl: './mi-actividad.scss',
 })

@@ -26,9 +26,14 @@
         <div class="entrega__row"><span class="entrega__k">Estado</span><span class="entrega__chip">{{ faseLabel() }}</span></div>
       </div>
 
-      <!-- AU1 — bloqueo por firma del despachante pendiente -->
+      <!-- AU1/AV3 — bloqueo por firma del despachante pendiente + atajo para recordarle -->
       @if (firmaDespachantePend() && !yaEntregado()) {
-        <div class="entrega__band entrega__band--warn">⏳ Falta la firma del despachante. Podrás transitar, pero no marcar la entrega hasta que firme el conduce desde su sesión.</div>
+        <div class="entrega__band entrega__band--warn">
+          <p>⏳ Falta la firma del despachante. Podrás transitar, pero <strong>no marcar la entrega</strong> hasta que firme el conduce desde su sesión. Ya se le notificó.</p>
+          <button type="button" class="btn-ghost entrega__band-btn" [disabled]="recordando()" (click)="recordarDespachante()">
+            {{ recordando() ? 'Enviando…' : '🔔 Recordarle al despachante' }}
+          </button>
+        </div>
       }
 
       <!-- Materiales -->
@@ -50,8 +55,8 @@
           <button type="button" class="entrega__estado" [disabled]="!puedeIniciarTransito() || submitting()" (click)="iniciarTransito()">
             🚚 Iniciar ruta
           </button>
-          <button type="button" class="entrega__estado" [disabled]="!puedeEntregando() || submitting()" (click)="estoyEntregando()">
-            📦 Estoy entregando
+          <button type="button" class="entrega__estado" [disabled]="!puedeEntregando() || submitting() || firmaDespachantePend()" (click)="estoyEntregando()">
+            {{ firmaDespachantePend() ? '📦 Espera la firma del despachante' : '📦 Estoy entregando' }}
           </button>
         </div>
 

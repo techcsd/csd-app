@@ -41,7 +41,7 @@
           @let p = perfil()!;
           <div class="mact__perfil-grid">
             <div class="mact__perfil-cell"><span class="mact__perfil-k">Nombre</span><span class="mact__perfil-v">{{ p.nombre || '—' }}</span></div>
-            <div class="mact__perfil-cell"><span class="mact__perfil-k">Cédula</span><span class="mact__perfil-v">{{ p.cedula || '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">Cédula</span><span class="mact__perfil-v">{{ (p.cedula | cedula) || '—' }}</span></div>
             <div class="mact__perfil-cell"><span class="mact__perfil-k">Teléfono</span><span class="mact__perfil-v">{{ p.telefono || '—' }}</span></div>
             <div class="mact__perfil-cell"><span class="mact__perfil-k">Licencia</span><span class="mact__perfil-v">{{ p.licencia?.tipo || '—' }}{{ p.licencia?.numero ? ' · ' + p.licencia?.numero : '' }}</span></div>
             <div class="mact__perfil-cell"><span class="mact__perfil-k">Vence licencia</span><span class="mact__perfil-v">{{ p.licencia?.vencimiento ? fmtFecha(p.licencia!.vencimiento!) : '—' }}</span></div>

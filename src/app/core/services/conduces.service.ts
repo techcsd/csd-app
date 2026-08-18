@@ -47,6 +47,13 @@ export interface RutaCaptura {
   fotos?: Blob[];
   /** AG15 — si la ruta nace de una tarea vinculada, su id (se enlaza al crear). */
   tareaVinculada?: string | null;
+  /**
+   * AV11 — id ESTABLE de la ruta, generado una vez en el wizard y reutilizado al
+   * reanudar tras el checklist de uso. Garantiza idempotencia por p_id: un doble
+   * envío (o el flujo checklist→reanudar) reusa el mismo id y el server devuelve
+   * la ruta existente en vez de duplicar. Si no se pasa, se genera uno nuevo.
+   */
+  id?: string;
 }
 
 /** AE — el chofer GENERA un conduce (salida de material) desde una bodega hacia
@@ -214,9 +221,19 @@ export interface RutaCabecera {
   fecha: string | null;
   iniciada_at: string | null;
   finalizada_at: string | null;
+  // AV13 — última modificación relevante (cambio de destino). Null = nunca.
+  modificada_at?: string | null;
   km_estimado: number | null;
   km_real: number | null;
   duracion_min: number | null;
+}
+
+/** AV13 — un evento del historial de la ruta (cambio de destino, inicio/fin…). */
+export interface RutaEvento {
+  tipo: string;
+  detalle: string | null;
+  por: string | null;
+  created_at: string;
 }
 
 /** AI3 — un punto del trayecto recorrido (tracking AF27). */
@@ -232,6 +249,7 @@ export interface RutaDetalleTransporte {
   trayecto?: TrayectoPunto[]; // AI3 — recorrido del tracking
   paradas: RutaParadaEjec[];
   conduces: RutaConduceEjec[];
+  eventos?: RutaEvento[]; // AV13 — historial (cambios de destino, etc.)
 }
 
 /** AF29 — una fila del historial de conduces (mis_conduces_historial). */
@@ -319,6 +337,7 @@ export interface RutaActivaHoy {
   conductor_nombre: string | null;
   fecha: string;
   iniciada_at: string | null;
+  modificada_at?: string | null; // AV13
   paradas_total: number;
   paradas_entregadas: number;
 }
@@ -637,10 +656,11 @@ export class ConducesService {
           trayecto: d.trayecto ?? [],
           paradas: d.paradas ?? [],
           conduces: d.conduces ?? [],
+          eventos: d.eventos ?? [], // AV13
         };
       },
     );
-    return data ?? { ruta: null, trayecto: [], paradas: [], conduces: [] };
+    return data ?? { ruta: null, trayecto: [], paradas: [], conduces: [], eventos: [] };
   }
 
   /**
@@ -953,7 +973,8 @@ export class ConducesService {
 
   /** Queue a new route (R7). Offline-safe via the outbox; idempotent by UUID. */
   async crearRuta(input: RutaCaptura): Promise<void> {
-    const id = crypto.randomUUID();
+    // AV11 — id estable si el wizard lo provee (idempotencia por p_id al reanudar).
+    const id = input.id ?? crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     // Z23 — notas de voz (audio_notas, bucket flota-documentos).
     const audio = this.audioNotas.buildAttachments('ruta', id, AUDIO_BUCKET_FLOTA, input.voces ?? []);
@@ -1352,6 +1373,19 @@ export class ConducesService {
     });
     if (error) return false;
     return (data as boolean) ?? false;
+  }
+
+  /**
+   * AV3 — "Recordarle al despachante": re-avisa al despachante que un conduce
+   * sigue esperando su firma (re-push manual). Devuelve el nombre del despachante,
+   * o null si ya firmó (nada que recordar). Requiere red.
+   */
+  async recordarDespachante(salidaId: string): Promise<string | null> {
+    const { data, error } = await this.supabase.client.rpc('conduce_recordar_despachante', {
+      p_salida_id: salidaId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as string | null) ?? null;
   }
 
   /** AS2 — cuántos conduces tengo por firmar (para el badge). */

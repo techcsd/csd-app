@@ -47,6 +47,8 @@ export class ConduceEntregaPage {
   notas = signal('');
   // AU1 — al conduce le falta la firma del despachante (bloquea la entrega).
   firmaDespachantePend = signal(false);
+  // AV3 — atajo "Recordarle al despachante" (re-push manual).
+  recordando = signal(false);
 
   // Fases ya alcanzadas (para deshabilitar los botones anteriores).
   private readonly orden = ['emitido', 'en_transito', 'entregando', 'entregado', 'confirmado'];
@@ -143,10 +145,42 @@ export class ConduceEntregaPage {
     await this.avanzar('en_transito', 'En ruta. Buen viaje.');
   }
   async estoyEntregando(): Promise<void> {
+    // AV3 — bloqueo ANTES del esfuerzo: si falta la firma del despachante, ni
+    // siquiera se abre el proceso de entrega (foto/cantidades), para que el
+    // chofer no trabaje en vano.
+    if (this.firmaDespachantePend()) {
+      this.toast.error('Falta la firma del despachante. Aún no puedes entregar; recuérdaselo desde el aviso de arriba.');
+      return;
+    }
     await this.avanzar('entregando', 'Marcado como "entregando".');
     // AK11 — "Estoy entregando" abre DIRECTO el proceso de entrega (foto y todo),
     // sin pantalla intermedia ("Marcar entregado" ya no es un paso aparte).
     this.mostrarEntrega.set(true);
+  }
+
+  /** AV3 — recuerda al despachante que firme (re-push manual). */
+  async recordarDespachante(): Promise<void> {
+    const c = this.conduce();
+    if (!c || this.recordando()) return;
+    if (!this.online) {
+      this.toast.error('Necesitas conexión para recordarle al despachante.');
+      return;
+    }
+    this.recordando.set(true);
+    try {
+      const nombre = await this.service.recordarDespachante(c.id);
+      if (nombre === null) {
+        // Ya firmó entre medio → desbloquea la entrega.
+        this.firmaDespachantePend.set(false);
+        this.toast.success('El despachante ya firmó. Ya puedes marcar la entrega.');
+      } else {
+        this.toast.success(`Se le recordó a ${nombre}. Te avisaremos cuando firme.`);
+      }
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el recordatorio.');
+    } finally {
+      this.recordando.set(false);
+    }
   }
 
   private async avanzar(estado: 'en_transito' | 'entregando', ok: string): Promise<void> {

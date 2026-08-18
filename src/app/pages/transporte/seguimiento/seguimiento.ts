@@ -18,6 +18,7 @@ import {
   SeguimientoService,
   ChoferSeguimiento,
   RutaActivaSeguimiento,
+  UltimaPosRealtime,
 } from '../../../core/services/seguimiento.service';
 import { estadoMeta, ESTADOS_CHOFER } from '../../../core/services/chofer-estado.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -64,14 +65,20 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private ginfo: GAny = null;
   private useGoogle = false;
   private centrado = false;
-  // AJ14 — trazado en vivo por ruta activa (línea del recorrido del día).
+  // AJ14/AV1 — trazado en vivo POR CHOFER, sólo del seleccionado (color propio).
   private gPolylines = new Map<string, GAny>();
   private lPolylines = new Map<string, L.Polyline>();
-  private readonly TRAZO_COLOR = '#2563eb';
   // QA-11: debounce de recargas por realtime + memo del set de rutas activas.
   private cargarTimer: ReturnType<typeof setTimeout> | null = null;
-  // AS1 — clave de choferes con posición para no re-consultar trazos sin cambios.
-  private lastChoferIds = '';
+  // AV1 — el trazo pintado (para no re-consultar el mismo chofer sin cambios).
+  private breadcrumbId: string | null = null;
+  // AV1 — marcador seleccionado: su trayectoria se dibuja; los demás sólo marcador.
+  selectedId = signal<string | null>(null);
+  // AV1 — un marcador se considera "sin señal" si su último punto tiene >N min.
+  private readonly STALE_MIN = 10;
+  // AV1 — tick para refrescar el texto "última señal hace X" cada minuto.
+  now = signal(Date.now());
+  private nowTimer: ReturnType<typeof setInterval> | null = null;
 
   loading = signal(true);
   choferes = signal<ChoferSeguimiento[]>([]);
@@ -121,9 +128,12 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       this.initLeaflet();
     }
     void this.cargar();
-    // QA-11: realtime → recarga DEBOUNCED (trailing ~2.5s) para coalescer ráfagas
-    // de eventos de posición en vez de recargar todo por cada punto.
-    this.service.suscribir(() => this.cargarDebounced());
+    // AV1: realtime → mueve el marcador de ESE chofer al instante (dot en
+    // movimiento), y además programa una recarga DEBOUNCED (trailing ~2.5s) para
+    // reconciliar roster/estado/trazo sin recargar todo por cada punto.
+    this.service.suscribir((row) => this.onRealtime(row));
+    // AV1 — refresca el "hace X min" y la marca de staleness cada minuto.
+    this.nowTimer = setInterval(() => this.now.set(Date.now()), 60000);
   }
 
   /** QA-11 — coalesce ráfagas de eventos realtime en una sola recarga. */
@@ -133,6 +143,108 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       this.cargarTimer = null;
       void this.cargar();
     }, 2500);
+  }
+
+  /**
+   * AV1 — llega una posición nueva por realtime: mueve ESE marcador al instante
+   * (interpolado) y actualiza la fila en memoria (para "hace X" y staleness). Si el
+   * chofer no está en la lista todavía (nuevo), recarga. Siempre reconcilia con una
+   * recarga debounced (estado/roster viven en otra fuente).
+   */
+  private onRealtime(row: UltimaPosRealtime | null): void {
+    if (!row) {
+      this.cargarDebounced();
+      return;
+    }
+    const idx = this.choferes().findIndex((c) => c.usuario_id === row.usuario_id);
+    if (idx < 0) {
+      // Chofer nuevo con posición → recarga para traerlo con su estado.
+      this.cargarDebounced();
+      return;
+    }
+    // Actualiza la fila en memoria (inmutable) para el panel y la staleness.
+    this.choferes.update((list) =>
+      list.map((c) =>
+        c.usuario_id === row.usuario_id
+          ? { ...c, lat: row.lat, lng: row.lng, capturado_en: row.capturado_en }
+          : c,
+      ),
+    );
+    // Mueve el marcador (suave) sin recargar todo.
+    this.moverMarcador(row.usuario_id, row.lat, row.lng);
+    // Si es el chofer seleccionado, extiende su trayectoria.
+    if (this.selectedId() === row.usuario_id) {
+      this.breadcrumbId = null; // fuerza refetch del trazo del seleccionado
+      void this.pintarBreadcrumbSeleccionado();
+    }
+    // Reconciliar estado/roster de fondo (coalescido).
+    this.cargarDebounced();
+  }
+
+  /** AV1 — interpola el marcador de un chofer de su posición actual a la nueva. */
+  private moverMarcador(usuarioId: string, lat: number, lng: number): void {
+    if (this.useGoogle) {
+      const m = this.gmarkers.get(usuarioId);
+      if (!m) return;
+      const from = m.getPosition?.();
+      const fLat = from?.lat?.() ?? lat;
+      const fLng = from?.lng?.() ?? lng;
+      this.tween(fLat, fLng, lat, lng, (la, ln) => m.setPosition({ lat: la, lng: ln }));
+    } else {
+      const m = this.markers.get(usuarioId);
+      if (!m) return;
+      const from = m.getLatLng();
+      this.tween(from.lat, from.lng, lat, lng, (la, ln) => m.setLatLng([la, ln]));
+    }
+  }
+
+  /** AV1 — tween lineal breve (~800ms) para que el punto se vea moverse. */
+  private tween(
+    fromLat: number,
+    fromLng: number,
+    toLat: number,
+    toLng: number,
+    apply: (lat: number, lng: number) => void,
+  ): void {
+    // Salto grande (>2km) o sin cambio → sin animación.
+    const d = Math.hypot(toLat - fromLat, toLng - fromLng);
+    if (d === 0 || d > 0.02) {
+      apply(toLat, toLng);
+      return;
+    }
+    const dur = 800;
+    const start = performance.now();
+    const step = (t: number): void => {
+      const k = Math.min(1, (t - start) / dur);
+      apply(fromLat + (toLat - fromLat) * k, fromLng + (toLng - fromLng) * k);
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  /** AV1 — ¿el último punto de este chofer es viejo (sin señal)? */
+  esStale(iso: string | null): boolean {
+    if (!iso) return true;
+    return this.now() - new Date(iso).getTime() > this.STALE_MIN * 60000;
+  }
+
+  /** AV1 — color estable propio de cada chofer (para su trayectoria). */
+  colorDe(usuarioId: string): string {
+    let h = 0;
+    for (let i = 0; i < usuarioId.length; i++) h = (h * 31 + usuarioId.charCodeAt(i)) % 360;
+    return `hsl(${h}, 72%, 45%)`;
+  }
+
+  /** AV1 — selecciona/deselecciona un chofer: dibuja/oculta su trayectoria. */
+  seleccionar(c: ChoferSeguimiento): void {
+    const nuevo = this.selectedId() === c.usuario_id ? null : c.usuario_id;
+    this.selectedId.set(nuevo);
+    this.breadcrumbId = null;
+    // Repinta los marcadores para reflejar el anillo del seleccionado al instante.
+    if (this.useGoogle) this.pintarGoogle();
+    else this.pintarLeaflet();
+    void this.pintarBreadcrumbSeleccionado();
+    if (nuevo) this.centrarEn(c);
   }
 
   private initLeaflet(): void {
@@ -152,6 +264,7 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.service.desuscribir();
     if (this.cargarTimer) clearTimeout(this.cargarTimer); // QA-11
+    if (this.nowTimer) clearInterval(this.nowTimer); // AV1
     for (const pl of this.lPolylines.values()) pl.remove();
     this.lPolylines.clear();
     this.map?.remove();
@@ -173,7 +286,7 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       this.rutasActivas.set(rutas);
       if (this.useGoogle) this.pintarGoogle();
       else this.pintarLeaflet();
-      void this.pintarBreadcrumbs(); // AJ14 — trazado en vivo del recorrido
+      void this.pintarBreadcrumbSeleccionado(); // AV1 — solo el chofer seleccionado
       // AT10 — enfoca (una vez) al chofer que llegó por ?usuario, si tiene posición.
       if (this.focoUsuarioId && !this.focoAplicado) {
         const c = chof.find((x) => x.usuario_id === this.focoUsuarioId);
@@ -187,51 +300,42 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
     }
   }
 
-  /** AS1 — dibuja/actualiza la línea del recorrido reciente de cada chofer CON
-   *  posición (independiente de si hay una ruta formal). Antes solo se trazaban
-   *  las rutas activas → un chofer moviéndose sin ruta no dejaba línea. Ahora el
-   *  jefe de flota ve "la línea que sigue las calles" del tracking continuo. */
-  private async pintarBreadcrumbs(): Promise<void> {
-    const conPos = this.conPosicion();
-    // Si el conjunto de choferes con posición no cambió, conserva los trazos.
-    const idsKey = conPos.map((c) => c.usuario_id).slice().sort().join(',');
-    if (idsKey === this.lastChoferIds) return;
-    this.lastChoferIds = idsKey;
-    // Fetches en PARALELO, uno por chofer con posición.
-    const pares = await Promise.all(
-      conPos.map(async (c) => ({
-        id: c.usuario_id,
-        coords: await this.service.choferBreadcrumb(c.usuario_id),
-      })),
-    );
-    const vistos = new Set<string>();
-    for (const { id, coords } of pares) {
-      if (coords.length < 2) continue;
-      vistos.add(id);
-      if (this.useGoogle && this.gmap) {
-        const path = coords.map(([lat, lng]) => ({ lat, lng }));
-        const existing = this.gPolylines.get(id);
-        if (existing) existing.setPath(path);
-        else {
-          const pl = new this.g.Polyline({
-            path,
-            map: this.gmap,
-            strokeColor: this.TRAZO_COLOR,
-            strokeOpacity: 0.9,
-            strokeWeight: 4,
-          });
-          this.gPolylines.set(id, pl);
-        }
-      } else if (this.map) {
-        const latlngs = coords.map(([lat, lng]) => [lat, lng] as L.LatLngTuple);
-        const existing = this.lPolylines.get(id);
-        if (existing) existing.setLatLngs(latlngs);
-        else this.lPolylines.set(id, L.polyline(latlngs, { color: this.TRAZO_COLOR, weight: 4, opacity: 0.9 }).addTo(this.map));
-      }
+  /** AV1 — SÓLO el chofer seleccionado deja línea (color propio); se oculta al
+   *  deseleccionar. Se acabaron las líneas rectas superpuestas de todos a la vez.
+   *  La línea sigue los puntos crudos; el map-matching (calles) es un paso aparte
+   *  cuando la edge `snap-to-roads` esté decidida/implementada (⏸ PROMPT-23 AV7). */
+  private async pintarBreadcrumbSeleccionado(): Promise<void> {
+    const sel = this.selectedId();
+    // Ninguno seleccionado → limpia todos los trazos.
+    if (!sel) {
+      this.limpiarTrazos();
+      this.breadcrumbId = null;
+      return;
     }
-    // Quita trazos de rutas que ya no están activas.
-    for (const [id, pl] of this.gPolylines) if (!vistos.has(id)) { pl.setMap(null); this.gPolylines.delete(id); }
-    for (const [id, pl] of this.lPolylines) if (!vistos.has(id)) { pl.remove(); this.lPolylines.delete(id); }
+    // Ya está pintado ese mismo chofer → nada que hacer.
+    if (this.breadcrumbId === sel && (this.gPolylines.has(sel) || this.lPolylines.has(sel))) return;
+    this.limpiarTrazos();
+    const coords = await this.service.choferBreadcrumb(sel);
+    // La selección pudo cambiar mientras se resolvía el fetch.
+    if (this.selectedId() !== sel) return;
+    this.breadcrumbId = sel;
+    if (coords.length < 2) return;
+    const color = this.colorDe(sel);
+    if (this.useGoogle && this.gmap) {
+      const path = coords.map(([lat, lng]) => ({ lat, lng }));
+      const pl = new this.g.Polyline({ path, map: this.gmap, strokeColor: color, strokeOpacity: 0.9, strokeWeight: 4 });
+      this.gPolylines.set(sel, pl);
+    } else if (this.map) {
+      const latlngs = coords.map(([lat, lng]) => [lat, lng] as L.LatLngTuple);
+      this.lPolylines.set(sel, L.polyline(latlngs, { color, weight: 4, opacity: 0.9 }).addTo(this.map));
+    }
+  }
+
+  private limpiarTrazos(): void {
+    for (const [, pl] of this.gPolylines) pl.setMap?.(null);
+    this.gPolylines.clear();
+    for (const [, pl] of this.lPolylines) pl.remove();
+    this.lPolylines.clear();
   }
 
   // ── Google Maps ────────────────────────────────────────────────────────────
@@ -252,10 +356,8 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
         existing.setIcon(icon);
       } else {
         const m = new this.g.Marker({ position: pos, map: this.gmap, icon, title: c.nombre });
-        m.addListener('click', () => {
-          this.ginfo.setContent(`<b>${c.nombre}</b><br>${estadoMeta(c.estado).label}`);
-          this.ginfo.open(this.gmap, m);
-        });
+        // AV1 — tocar el marcador selecciona el chofer (dibuja su trayectoria).
+        m.addListener('click', () => this.seleccionar(c));
         this.gmarkers.set(c.usuario_id, m);
       }
     }
@@ -273,13 +375,15 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   }
 
   private iconoGoogle(c: ChoferSeguimiento): GAny {
+    const stale = this.esStale(c.capturado_en); // AV1 — sin señal reciente
+    const sel = this.selectedId() === c.usuario_id;
     return {
       path: this.g.SymbolPath.CIRCLE,
-      scale: 9,
-      fillColor: estadoMeta(c.estado).tint,
-      fillOpacity: 1,
-      strokeColor: '#ffffff',
-      strokeWeight: 2,
+      scale: sel ? 12 : 9,
+      fillColor: stale ? '#9ca3af' : estadoMeta(c.estado).tint, // gris si sin señal
+      fillOpacity: stale ? 0.65 : 1,
+      strokeColor: sel ? this.colorDe(c.usuario_id) : '#ffffff',
+      strokeWeight: sel ? 4 : 2,
     };
   }
 
@@ -299,7 +403,8 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
         existing.setIcon(icon);
       } else {
         const m = L.marker(latlng, { icon }).addTo(this.map);
-        m.bindPopup(`<b>${c.nombre}</b><br>${estadoMeta(c.estado).label}`);
+        // AV1 — tocar el marcador selecciona el chofer (dibuja su trayectoria).
+        m.on('click', () => this.seleccionar(c));
         this.markers.set(c.usuario_id, m);
       }
     }
@@ -316,12 +421,16 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   }
 
   private iconoLeaflet(c: ChoferSeguimiento): L.DivIcon {
-    const tint = estadoMeta(c.estado).tint;
+    const stale = this.esStale(c.capturado_en); // AV1
+    const sel = this.selectedId() === c.usuario_id;
+    const tint = stale ? '#9ca3af' : estadoMeta(c.estado).tint;
+    const ring = sel ? `box-shadow:0 0 0 3px ${this.colorDe(c.usuario_id)};` : '';
+    const size = sel ? 30 : 24;
     return L.divIcon({
-      className: 'seg-marker',
-      html: `<div class="seg-marker__pin" style="background:${tint}"></div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      className: 'seg-marker' + (stale ? ' seg-marker--stale' : ''),
+      html: `<div class="seg-marker__pin" style="background:${tint};opacity:${stale ? 0.65 : 1};${ring}"></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size / 2],
     });
   }
 
@@ -349,10 +458,13 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
 
   actualizadoHace(iso: string | null): string {
     if (!iso) return 'sin posición';
-    const min = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    // AV1 — usa el tick `now()` para refrescar el texto cada minuto.
+    const min = Math.round((this.now() - new Date(iso).getTime()) / 60000);
     if (min < 1) return 'ahora';
     if (min < 60) return `hace ${min} min`;
-    return `hace ${Math.round(min / 60)} h`;
+    const h = Math.round(min / 60);
+    if (h < 24) return `hace ${h} h`;
+    return `sin señal hace ${Math.round(h / 24)} d`;
   }
 
   back(): void {

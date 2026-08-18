@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal
 import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
@@ -171,6 +172,11 @@ export class RutasActivasPage implements OnDestroy {
     if (min < 60) return `hace ${min} min`;
     const h = Math.floor(min / 60);
     return `hace ${h} h ${min % 60} min`;
+  }
+
+  /** AV13 — hora corta de la última modificación (chip "(modificada)"). */
+  fmtHora(iso: string | null | undefined): string {
+    return iso ? formatFechaCortaHora(iso) : '';
   }
 
   /** Duración corriendo desde el inicio de la ruta (para las activas). */

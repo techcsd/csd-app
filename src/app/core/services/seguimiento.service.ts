@@ -17,6 +17,14 @@ export interface ChoferSeguimiento {
   capturado_en: string | null;
 }
 
+/** AV1 — fila de última posición recibida por realtime (para mover el marcador). */
+export interface UltimaPosRealtime {
+  usuario_id: string;
+  lat: number;
+  lng: number;
+  capturado_en: string | null;
+}
+
 /** AF27 — ruta activa (en curso) para el panel de Seguimiento. */
 export interface RutaActivaSeguimiento {
   id: string;
@@ -141,15 +149,32 @@ export class SeguimientoService {
     return raw.filter(([lat, lng]) => lat >= 17 && lat <= 20 && lng >= -72 && lng <= -68);
   }
 
-  /** Suscribe el realtime de la última posición; llama a `onChange` en cada update. */
-  suscribir(onChange: () => void): void {
+  /**
+   * AV1 — suscribe el realtime de la última posición. `onChange(row)` recibe la
+   * fila cambiada (usuario_id/lat/lng/capturado_en) para MOVER ese marcador en el
+   * acto (sin recargar todo). `row` es null cuando el evento no trae fila usable
+   * (DELETE) → el caller cae a una recarga completa.
+   */
+  suscribir(onChange: (row: UltimaPosRealtime | null) => void): void {
     this.desuscribir();
     this.channel = this.supabase.client
       .channel('seguimiento-posiciones')
       .on(
         'postgres_changes',
         { event: '*', schema: 'sgc', table: 'chofer_ultima_posicion' },
-        () => onChange(),
+        (payload) => {
+          const nw = (payload.new ?? null) as Record<string, unknown> | null;
+          if (nw && nw['usuario_id'] != null && nw['lat'] != null && nw['lng'] != null) {
+            onChange({
+              usuario_id: nw['usuario_id'] as string,
+              lat: Number(nw['lat']),
+              lng: Number(nw['lng']),
+              capturado_en: (nw['capturado_en'] as string) ?? null,
+            });
+          } else {
+            onChange(null);
+          }
+        },
       )
       .subscribe();
   }

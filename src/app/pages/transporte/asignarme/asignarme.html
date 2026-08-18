@@ -118,20 +118,7 @@
         }
       }
 
-      <!-- Paso 4: llave 1 (AF3) -->
-      @if (pasoActual() === 'llave') {
-        <h2 class="asig__h2">¿Dónde queda la llave 1?</h2>
-        <p class="asig__sub">Cada vehículo tiene 2 llaves; registra dónde queda la principal.</p>
-        <app-option-button icon="🧑‍✈️" label="Conmigo (chofer asignado)" [selected]="llave1() === 'chofer_asignado'" (pressed)="llave1.set('chofer_asignado'); queueDraft()" />
-        <app-option-button icon="🏢" label="En oficina central" [selected]="llave1() === 'oficina_central'" (pressed)="llave1.set('oficina_central'); queueDraft()" />
-        <app-option-button icon="📍" label="Otro lugar…" [selected]="llave1() === 'otro'" (pressed)="llave1.set('otro'); queueDraft()" />
-        @if (llave1() === 'otro') {
-          <input class="field asig__mt" type="text" [ngModel]="llave1Detalle()" (ngModelChange)="llave1Detalle.set($event); queueDraft()"
-            placeholder="¿Dónde queda la llave 1?" />
-        }
-      }
-
-      <!-- Paso 5: firma -->
+      <!-- Paso 4: firma (AV10 — se quitó el paso de la llave) -->
       @if (pasoActual() === 'firma') {
         <h2 class="asig__h2">Tu firma</h2>
         <p class="asig__sub">Con tu firma confirmas que recibes el vehículo en estas condiciones.</p>

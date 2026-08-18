@@ -28,7 +28,9 @@
                 <span class="ruta-card__chofer">{{ r.conductor_nombre || 'Sin chofer' }}</span>
                 @if (ident(r); as vid) { <span class="ruta-card__placa">{{ vid }}</span> }
               </div>
-              <div class="ruta-card__dest">→ {{ r.destino || 'Sin destino' }}</div>
+              <div class="ruta-card__dest">→ {{ r.destino || 'Sin destino' }}
+                @if (r.modificada_at) { <em class="ruta-card__modtag">(modificada {{ fmtHora(r.modificada_at) }})</em> }
+              </div>
               <div class="ruta-card__meta">
                 <span>⏱ {{ corriendo(r.iniciada_at) }} corriendo</span>
                 @if (r.paradas_total) { <span>📍 {{ r.paradas_entregadas }}/{{ r.paradas_total }} paradas</span> }
