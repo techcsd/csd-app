@@ -46,6 +46,12 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+// AT9 — año separado del modelo (evita "Malibu LS2009").
+.vcard__anio {
+  margin-left: 6px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
 
 .vcard__trailing {
   flex: 0 0 auto;

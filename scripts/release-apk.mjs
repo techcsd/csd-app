@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.86.0';
+const VERSION = '1.86.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,21 +59,15 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-15';
+const RELEASED_AT = '2026-08-18';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Filtrar proyectos por zona';
+const TITULO = 'Retoque visual de vehículos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Mensajes', d: 'Stickers en el chat: elige del pack incluido o sube los tuyos, y envíalos como en WhatsApp.' },
-  { t: 'mejora', m: 'Mensajes', d: 'El chat ahora muestra separadores por día (Hoy/Ayer/fecha), abre en tu primer mensaje sin leer y muestra las fotos como vista previa.' },
-  { t: 'mejora', m: 'Flota', d: 'Los vehículos se identifican por Marca, Modelo y Color (no solo la placa) en listas, selectores, avisos y seguimiento.' },
-  { t: 'nuevo', m: 'Flota', d: 'Panel "Vehículos en uso" (jefe de flota): quién usa cada vehículo ahora mismo, con acceso directo a verlo en el mapa.' },
-  { t: 'mejora', m: 'Flota', d: 'Checklists, avisos y reportes ahora muestran también la hora, no solo la fecha.' },
-  { t: 'arreglo', m: 'Rutas', d: 'La ubicación se asocia a la ruta desde que arranca; se corrige el aviso "esta ruta no tiene puntos de GPS".' },
-  { t: 'mejora', m: 'Ubicación', d: 'El permiso de batería se pide una sola vez y se mantiene entre actualizaciones (solo se vuelve a pedir si el teléfono lo revoca).' },
+  { t: 'arreglo', m: 'Flota', d: 'Retoque visual: el año del vehículo ya no se pega al modelo en las tarjetas (p. ej. "Malibu LS 2009").' },
 ];
 
 const TIPO_POR_COMMIT = {
