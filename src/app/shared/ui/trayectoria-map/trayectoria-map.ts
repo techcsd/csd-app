@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import * as L from 'leaflet';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+import { MapMatchingService } from '../../../core/services/map-matching.service';
 
 /* google.maps sin @types → any. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -41,11 +42,14 @@ export interface Parada {
 })
 export class TrayectoriaMap implements AfterViewInit, OnDestroy {
   private mapsLoader = inject(GoogleMapsLoaderService);
+  private mm = inject(MapMatchingService);
   private mapEl = viewChild.required<ElementRef<HTMLDivElement>>('map');
 
   /** Puntos del recorrido como tuplas [lat, lng] (formato de ruta_trayecto / recorrido_diario_de). */
   coords = input<[number, number][]>([]);
   paradas = input<Parada[]>([]);
+  /** AV7 — pegar la línea a las calles (map-matching). true por defecto. */
+  matchear = input<boolean>(true);
 
   private readonly DEFAULT = { lat: 18.4861, lng: -69.9312 };
   private ready = false;
@@ -112,8 +116,17 @@ export class TrayectoriaMap implements AfterViewInit, OnDestroy {
     return `${h}:${m} ${ap}`;
   }
 
-  private pintar(): void {
-    const pts = this.coords();
+  private pintarSeq = 0;
+  private async pintar(): Promise<void> {
+    const raw = this.coords();
+    const seq = ++this.pintarSeq;
+    let pts = raw;
+    // AV7 — pega la línea a las calles (cacheado server-side + en memoria). Si
+    // cambian las coords mientras se resuelve, descarta este render (evita pisar).
+    if (this.matchear() && raw.length >= 2) {
+      pts = await this.mm.snap(raw);
+      if (seq !== this.pintarSeq) return;
+    }
     if (this.useGoogle) this.pintarGoogle(pts);
     else this.pintarLeaflet(pts);
   }

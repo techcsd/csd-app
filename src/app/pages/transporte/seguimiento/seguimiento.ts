@@ -23,6 +23,7 @@ import {
 import { estadoMeta, ESTADOS_CHOFER } from '../../../core/services/chofer-estado.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+import { MapMatchingService } from '../../../core/services/map-matching.service';
 import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 
 /* google.maps sin @types → lo tratamos como any. */
@@ -46,6 +47,7 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private ctx = inject(UserContextService);
+  private mm = inject(MapMatchingService);
 
   // AT10 — al llegar desde "Vehículos en uso" (?usuario), centra ese chofer 1 vez.
   private focoUsuarioId = this.route.snapshot.queryParamMap.get('usuario');
@@ -315,11 +317,14 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
     // Ya está pintado ese mismo chofer → nada que hacer.
     if (this.breadcrumbId === sel && (this.gPolylines.has(sel) || this.lPolylines.has(sel))) return;
     this.limpiarTrazos();
-    const coords = await this.service.choferBreadcrumb(sel);
+    const crudos = await this.service.choferBreadcrumb(sel);
     // La selección pudo cambiar mientras se resolvía el fetch.
     if (this.selectedId() !== sel) return;
     this.breadcrumbId = sel;
-    if (coords.length < 2) return;
+    if (crudos.length < 2) return;
+    // AV7 — pega la línea a las calles (map-matching, cacheado). Degrada a crudos.
+    const coords = await this.mm.snap(crudos);
+    if (this.selectedId() !== sel) return;
     const color = this.colorDe(sel);
     if (this.useGoogle && this.gmap) {
       const path = coords.map(([lat, lng]) => ({ lat, lng }));

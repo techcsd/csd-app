@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.88.0';
+const VERSION = '1.88.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,21 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-20';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Chat con notas de voz y checks, seguimiento en vivo';
+const TITULO = 'La trayectoria sigue las calles';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo',   m: 'Mensajes', d: 'Notas de voz tipo WhatsApp: graba y envía audios desde el chat, con reproductor.' },
-  { t: 'nuevo',   m: 'Mensajes', d: 'Checks de estado del mensaje: ✓ enviado, ✓✓ recibido y ✓✓ azul cuando lo leyeron; y "escribiendo…" bajo el nombre.' },
-  { t: 'nuevo',   m: 'Mensajes', d: 'Stickers: edítalos antes de subirlos (recorte + esquinas redondeadas), organízalos en paquetes y guarda los stickers que otros te envíen.' },
-  { t: 'arreglo', m: 'Conduces', d: 'Si el conduce espera la firma del despachante, ahora se te avisa ANTES de entregar (no después) y puedes recordarle que firme.' },
-  { t: 'arreglo', m: 'Rutas',    d: 'Las rutas ya no se duplican al pasar por el checklist de uso: al terminar, "Reanudar ruta" continúa la misma.' },
-  { t: 'nuevo',   m: 'Rutas',    d: 'Cambiar destino ahora ofrece todas las opciones (obra, almacén o pin en el mapa) y la ruta muestra "(modificada)" con la hora y el historial del cambio.' },
-  { t: 'mejora',  m: 'Rutas',    d: 'Siglas más claras: "H.I/H.F" ahora dicen "Inicio/Fin".' },
-  { t: 'mejora',  m: 'Seguimiento', d: 'Los choferes se ven moverse en vivo, la trayectoria se dibuja solo del chofer que elijas y se marca "sin señal" a quien lleva rato sin reportar.' },
-  { t: 'mejora',  m: 'Acceso',   d: 'La cédula se formatea sola con guiones al escribirla en el login.' },
-  { t: 'mejora',  m: 'Vehículos', d: 'Uso de vehículo con un paso menos: se quitó la pregunta de dónde queda la llave.' },
+  { t: 'mejora', m: 'Seguimiento', d: 'La trayectoria de los choferes ahora sigue las calles (ya no líneas rectas) en el Seguimiento en vivo, en "Ver trayectoria" y en Mi recorrido.' },
 ];
 
 const TIPO_POR_COMMIT = {
