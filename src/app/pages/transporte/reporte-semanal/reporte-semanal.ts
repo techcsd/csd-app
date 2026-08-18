@@ -57,6 +57,7 @@ interface VehSemanal {
   placa: string;
   marca: string;
   modelo: string;
+  color: string | null; // AT9
   anio: number | null; // Z10
   tipo: string;
   /** AC14/AC5 — 'horas' = telehandler (plantilla y día de reporte propios). */
@@ -239,6 +240,7 @@ export class ReporteSemanalPage extends GuardedWizard {
         placa: v.placa,
         marca: v.marca,
         modelo: v.modelo,
+        color: v.color ?? null, // AT9
         anio: v.anio ?? null, // Z10
         tipo: v.tipo,
         medida_uso: v.medida_uso ?? 'km', // AC14/AC5

@@ -63,6 +63,7 @@
               <span class="chofer-card__ruta">
                 🗺️ {{ r.destino || 'Ruta' }} · {{ r.paradas_entregadas }}/{{ r.paradas_total }} paradas
               </span>
+              @if (ident(r); as vid) { <span class="chofer-card__ruta">🚚 {{ vid }}</span> }
             }
           </div>
           <span class="chofer-card__hace">{{ actualizadoHace(c.capturado_en) }}</span>

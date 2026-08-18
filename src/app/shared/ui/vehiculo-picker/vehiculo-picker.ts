@@ -3,7 +3,7 @@ import { VehiculoCard } from '../vehiculo-card/vehiculo-card';
 import { EmptyState } from '../empty-state/empty-state';
 import { Skeleton } from '../skeleton/skeleton';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
-import { VehiculoDisponible } from '../../../core/models/transporte.model';
+import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
 
 /**
  * B1 — reusable pool-of-vehicles picker (tarjetas con foto). Loads the shared
@@ -21,6 +21,9 @@ import { VehiculoDisponible } from '../../../core/models/transporte.model';
 })
 export class VehiculoPicker {
   private vehiculos = inject(VehiculosService);
+
+  /** AT9 — identificación homologada Marca Modelo · Color · Placa (para el chip). */
+  ident = vehiculoIdentidad;
 
   /** Optional heading shown above the list. */
   titulo = input('Elige un vehículo');

@@ -10,6 +10,7 @@ import { SeguimientoService, ChoferSeguimiento } from '../../../core/services/se
 import { InventarioService } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { estadoMeta } from '../../../core/services/chofer-estado.service';
+import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 
 type Tab = 'activas' | 'historico';
 
@@ -47,6 +48,7 @@ export class RutasActivasPage implements OnDestroy {
 
   readonly estadoMeta = estadoMeta;
   readonly estadosRuta = ESTADO_RUTA;
+  readonly ident = vehiculoIdentidad; // AT9
 
   autorizado = signal(true);
   tab = signal<Tab>('activas');

@@ -9,6 +9,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConducesService, ConducePendienteEntrega } from '../../../core/services/conduces.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { TrackingService } from '../../../core/services/tracking.service';
 import { NotificacionesService } from '../../../core/services/notificaciones.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -36,6 +37,7 @@ import { VehiculoDisponible } from '../../../core/models/transporte.model';
 export class ConducesPendientesPage implements OnDestroy {
   private conduces = inject(ConducesService);
   private vehiculos = inject(VehiculosService);
+  private tracking = inject(TrackingService);
   private notificaciones = inject(NotificacionesService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -169,7 +171,7 @@ export class ConducesPendientesPage implements OnDestroy {
   /** Iniciar ruta: si el conduce ya trae vehículo, arranca directo; si no, pide uno. */
   iniciarRuta(c: ConducePendienteEntrega): void {
     if (c.vehiculo_id) {
-      void this.ejecutarIniciarRuta(c.id, null);
+      void this.ejecutarIniciarRuta(c.id, null, c.vehiculo_id);
     } else {
       // Abre el selector de vehículo inline para esta fila.
       this.vehPickerId.set(this.vehPickerId() === c.id ? '' : c.id);
@@ -183,14 +185,18 @@ export class ConducesPendientesPage implements OnDestroy {
       this.toast.error('Elige el vehículo con el que sales.');
       return;
     }
-    void this.ejecutarIniciarRuta(c.id, this.vehiculoSel());
+    void this.ejecutarIniciarRuta(c.id, this.vehiculoSel(), this.vehiculoSel());
   }
 
-  private async ejecutarIniciarRuta(salidaId: string, vehiculoId: string | null): Promise<void> {
+  private async ejecutarIniciarRuta(salidaId: string, vehiculoId: string | null, vehiculoEfectivo: string | null): Promise<void> {
     if (this.iniciandoId()) return;
     this.iniciandoId.set(salidaId);
     try {
-      await this.conduces.conduceIniciarRuta(salidaId, vehiculoId);
+      const rutaId = await this.conduces.conduceIniciarRuta(salidaId, vehiculoId);
+      // AT2 — asocia los puntos GPS a la ruta DESDE que arranca (antes el ruta_id
+      // volvía aquí y se descartaba: en modo continuo los puntos salían con
+      // ruta_id=null hasta visitar "Mis rutas" → "esta ruta no tiene puntos de GPS").
+      if (rutaId) this.tracking.resumirSiRutaActiva(vehiculoEfectivo, rutaId);
       this.toast.success('Ruta iniciada. La verás en Mis rutas y en Seguimiento.');
       this.vehPickerId.set('');
       await this.load(true);

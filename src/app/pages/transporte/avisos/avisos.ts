@@ -9,7 +9,8 @@ import { VehiculosService, FlotaAviso } from '../../../core/services/vehiculos.s
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 
 const TIPO_LABEL: Record<string, string> = {
   seguro: 'Seguro por vencer',
@@ -51,7 +52,8 @@ export class AvisosFlotaPage {
   private router = inject(Router);
   private ctx = inject(UserContextService);
 
-  fmtFecha = formatFechaMedia;
+  fmtFecha = formatFechaCortaHora; // AT17 — fecha + hora
+  ident = vehiculoIdentidad; // AT9
 
   loading = signal(true);
   refrescando = signal(false);

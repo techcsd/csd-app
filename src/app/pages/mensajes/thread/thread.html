@@ -26,9 +26,21 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
-      @for (m of lista(); track m.id) {
+      @for (m of lista(); track m.id; let i = $index) {
+        @if (esNuevoDia(i)) {
+          <div class="thread__daysep"><span>{{ etiquetaDia(m.created_at) }}</span></div>
+        }
+        @if (m.id === primerNoLeidoId()) {
+          <div class="thread__unread-sep"><span>Mensajes no leídos</span></div>
+        }
         @if (esSistema(m)) {
           <div class="thread__evento"><span>{{ m.contenido }}</span></div>
+        } @else if (esSticker(m)) {
+          <div class="thread__msg thread__msg--sticker" [class.thread__msg--mio]="esMio(m)">
+            @if (!esMio(m) && esGrupo()) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
+            <img class="thread__sticker" [src]="stickerUrl(m.archivo_path)" alt="Sticker" loading="lazy" />
+            <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
+          </div>
         } @else {
           <div class="thread__msg" [class.thread__msg--mio]="esMio(m)">
             @if (!esMio(m)) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
@@ -47,7 +59,7 @@
               </button>
             }
             @if (m.contenido) { <span class="thread__burbuja">{{ m.contenido }}</span> }
-            <span class="thread__hora">{{ fmt(m.created_at) }}</span>
+            <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
           </div>
         }
       }
@@ -69,10 +81,77 @@
     </div>
   }
 
+  <!-- AT16 — selector de stickers -->
+  @if (stickerPickerOpen()) {
+    <div class="thread__adj-backdrop" (click)="stickerPickerOpen.set(false)"></div>
+    <div class="thread__stickers" role="dialog" aria-label="Stickers">
+      <div class="thread__stk-tabs">
+        <button
+          type="button"
+          class="thread__stk-tab"
+          [class.thread__stk-tab--active]="stickerTab() === 'recientes'"
+          (click)="stickerTab.set('recientes')"
+        >Recientes</button>
+        @for (p of stickerPacksOrdenados(); track p.id) {
+          <button
+            type="button"
+            class="thread__stk-tab"
+            [class.thread__stk-tab--active]="stickerTab() === p.id"
+            (click)="stickerTab.set(p.id)"
+          >{{ p.nombre }}</button>
+        }
+      </div>
+      <div class="thread__stk-panel">
+        @if (stickerLoading()) {
+          <p class="thread__stk-empty">Cargando stickers…</p>
+        } @else if (stickerTab() === 'recientes') {
+          @if (stickerRecientes().length === 0) {
+            <p class="thread__stk-empty">Aún no has usado stickers.</p>
+          } @else {
+            <div class="thread__stk-grid">
+              @for (ref of stickerRecientes(); track ref) {
+                <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(ref)" aria-label="Enviar sticker">
+                  <img [src]="stickerUrl(ref)" alt="Sticker" loading="lazy" />
+                </button>
+              }
+            </div>
+          }
+        } @else if (stickerPackActivo(); as pack) {
+          @if (pack.stickers.length === 0) {
+            <p class="thread__stk-empty">Este pack no tiene stickers.</p>
+          } @else {
+            <div class="thread__stk-grid">
+              @for (s of pack.stickers; track s.id) {
+                <div class="thread__stk-wrap">
+                  <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(s.ref)" aria-label="Enviar sticker">
+                    <img [src]="stickerUrl(s.ref)" alt="Sticker" loading="lazy" />
+                  </button>
+                  @if (!pack.es_sistema && !s.es_asset) {
+                    <button type="button" class="thread__stk-del" (click)="eliminarStickerLocal(s.id)" aria-label="Eliminar sticker">✕</button>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+      <button type="button" class="thread__stk-upload" [disabled]="stickerUploading()" (click)="onStickerFile()">
+        {{ stickerUploading() ? 'Subiendo…' : '＋ Subir sticker' }}
+      </button>
+    </div>
+  }
+
   <footer class="thread__compose">
     <button type="button" class="thread__adj-btn" [disabled]="adjuntando()" (click)="toggleMenuAdjuntar()" aria-label="Adjuntar">
       {{ adjuntando() ? '…' : '＋' }}
     </button>
+    <button
+      type="button"
+      class="thread__stk-btn"
+      [class.thread__stk-btn--active]="stickerPickerOpen()"
+      (click)="toggleStickerPicker()"
+      aria-label="Stickers"
+    >☺</button>
     <input
       class="field thread__input"
       type="text"

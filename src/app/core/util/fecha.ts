@@ -54,6 +54,45 @@ export function formatFechaCortaHora(ts: string | number | null | undefined): st
   return `${d}/${m} · ${h}:${min} ${period}`;
 }
 
+/** `timestamptz` → solo la hora `3:45 pm` (12h). Para el pie de cada mensaje del chat. */
+export function formatHora(ts: string | null | undefined): string {
+  if (!ts) return '';
+  const dt = new Date(ts);
+  if (isNaN(dt.getTime())) return '';
+  let h = dt.getHours();
+  const min = String(dt.getMinutes()).padStart(2, '0');
+  const period = h >= 12 ? 'pm' : 'am';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${min} ${period}`;
+}
+
+/** `YYYY-MM-DD` local de un timestamp (para comparar días calendario, sin UTC). */
+function diaLocal(ts: string | null | undefined): string {
+  if (!ts) return '';
+  const dt = new Date(ts);
+  if (isNaN(dt.getTime())) return '';
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+}
+
+/** AT14 — true si `a` y `b` caen en días calendario locales distintos (separador de fecha del chat). */
+export function esOtroDia(a: string | null | undefined, b: string | null | undefined): boolean {
+  return diaLocal(a) !== diaLocal(b);
+}
+
+/** AT14 — etiqueta del separador de día del chat: `Hoy` / `Ayer` / `14 jul 2026`. */
+export function etiquetaDiaChat(ts: string | null | undefined): string {
+  const dia = diaLocal(ts);
+  if (!dia) return '';
+  const hoy = new Date();
+  const ayer = new Date();
+  ayer.setDate(hoy.getDate() - 1);
+  const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  if (dia === fmt(hoy)) return 'Hoy';
+  if (dia === fmt(ayer)) return 'Ayer';
+  return formatFechaMedia(ts);
+}
+
 /** Relativa corta ("hace 5 min", "ayer"); >~2 días cae a `formatFechaHumana`. */
 export function formatFechaRelativa(ts: string | null | undefined): string {
   if (!ts) return '—';

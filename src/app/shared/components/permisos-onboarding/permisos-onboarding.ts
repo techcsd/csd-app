@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { PermissionsService, PermState } from '../../../core/services/permissions.service';
 import { NativeAlarmService } from '../../../core/services/native-alarm.service';
+import { LocalStore } from '../../../core/services/local-store.service';
 
 const FLAG = 'csd_permisos_onboarding_v2';
 
@@ -27,6 +28,7 @@ type Estado = 'idle' | 'ok' | 'no' | 'ajustes';
 export class PermisosOnboarding {
   private permissions = inject(PermissionsService);
   private nativeAlarm = inject(NativeAlarmService);
+  private store = inject(LocalStore);
 
   visible = signal(false);
   corriendo = signal(false);
@@ -41,10 +43,29 @@ export class PermisosOnboarding {
   constructor() {
     // Solo nativo y una sola vez.
     if (!Capacitor.isNativePlatform()) return;
+    void this.evaluarVisibilidad();
+  }
+
+  /**
+   * AT-batería — el flag vive en LocalStore (Preferences en nativo) para SOBREVIVIR
+   * a las actualizaciones del APK: así el onboarding de permisos (incluida la
+   * batería) se pide una sola vez y no reaparece tras cada update. Migra el flag
+   * viejo de `localStorage` para no re-mostrarlo a quien ya lo completó.
+   */
+  private async evaluarVisibilidad(): Promise<void> {
     try {
-      if (localStorage.getItem(FLAG)) return;
+      if (await this.store.get(FLAG)) return;
     } catch {
-      return;
+      /* si el store falla, seguimos evaluando */
+    }
+    // Migración: instalaciones previas guardaron el flag en localStorage.
+    try {
+      if (localStorage.getItem(FLAG)) {
+        await this.store.set(FLAG, '1');
+        return;
+      }
+    } catch {
+      /* ignore */
     }
     this.visible.set(true);
   }
@@ -89,7 +110,13 @@ export class PermisosOnboarding {
     this.bateria.set('ajustes');
   }
 
-  finish(): void {
+  async finish(): Promise<void> {
+    try {
+      await this.store.set(FLAG, '1');
+    } catch {
+      /* ignore */
+    }
+    // Fallback legacy (por si el store nativo fallara).
     try {
       localStorage.setItem(FLAG, '1');
     } catch {

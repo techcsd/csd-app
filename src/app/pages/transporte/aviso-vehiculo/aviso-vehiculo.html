@@ -143,7 +143,7 @@
               @for (av of a.avisos; track av.id) {
                 <div class="avis__row">
                   <span>⚠️ {{ av.mensaje || av.tipo }}</span>
-                  <span class="avis__row-sub">{{ av.severidad || 'media' }} · {{ fmtFecha(av.created_at) }}</span>
+                  <span class="avis__row-sub">{{ av.severidad || 'media' }} · {{ fmtFechaHora(av.created_at) }}</span>
                 </div>
               }
             </section>

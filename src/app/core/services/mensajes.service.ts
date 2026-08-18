@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { SyncService, throwSyncError } from '../sync/sync.service';
+import { environment } from '../../../environments/environment';
 
 /** AN6/AQ9 — bucket de mensajería (avatares de grupo + adjuntos). La RLS exige
  *  que la carpeta [1] del path sea la conversación (es_participante). */
@@ -8,6 +9,9 @@ const AVATAR_BUCKET = 'sgc-mensajes';
 
 /** AQ9 — límite de tamaño de un adjunto (coincide con el file_size_limit del bucket). */
 export const MAX_ADJUNTO_BYTES = 25 * 1024 * 1024;
+
+/** AT16 — bucket público de stickers propios del usuario (path = `{usuario_id}/{uuid}.ext`). */
+const STICKERS_BUCKET = 'sgc-stickers';
 
 /** AJ5 — una conversación (listar_conversaciones). Mismo modelo que la web. */
 export interface Conversacion {
@@ -31,6 +35,23 @@ export interface Mensaje {
   archivo_nombre: string | null;
   archivo_mime: string | null;
   created_at: string;
+}
+
+/** AT16 — un sticker. `ref` = ruta de asset empaquetado ('assets/stickers/…') o
+ *  path en el bucket público `sgc-stickers`; usar `stickerUrl(ref)` para el <img>. */
+export interface Sticker {
+  id: string;
+  ref: string;
+  es_asset: boolean;
+}
+
+/** AT16 — un pack de stickers (sistema o propio del usuario). */
+export interface StickerPack {
+  id: string;
+  nombre: string;
+  es_sistema: boolean;
+  orden: number;
+  stickers: Sticker[];
 }
 
 /** AN6 — un participante de un grupo (grupo_info). */
@@ -285,9 +306,100 @@ export class MensajesService {
     };
   }
 
+  // ── AT16 — Stickers (mismo contrato que la web) ─────────────────────────────
+  /**
+   * URL usable en un <img src> para una ref de sticker. Un asset empaquetado
+   * ('assets/…') se sirve tal cual; el resto es un path del bucket público
+   * `sgc-stickers` (no requiere firmar).
+   */
+  stickerUrl(ref: string): string {
+    return ref.startsWith('assets/')
+      ? ref
+      : `${environment.supabaseUrl}/storage/v1/object/public/${STICKERS_BUCKET}/${ref}`;
+  }
+
+  /** Packs de stickers del usuario (sistema + propios) con sus stickers. */
+  async getMisStickers(): Promise<StickerPack[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_stickers');
+    if (error) throw new Error(error.message);
+    return (data as StickerPack[]) ?? [];
+  }
+
+  /** Refs de los stickers usados más recientemente (más reciente primero). */
+  async getStickersRecientes(limite = 24): Promise<string[]> {
+    const { data, error } = await this.supabase.client.rpc('stickers_recientes', { p_limite: limite });
+    if (error) throw new Error(error.message);
+    return ((data as { ref: string; used_at: string }[]) ?? []).map((r) => r.ref);
+  }
+
+  /**
+   * Envía un sticker como mensaje (tipo 'sticker', ref en `archivo_path`).
+   * Offline-safe por outbox (idempotente por client_id); el handler hace el INSERT
+   * directo (la RLS `mensajes: insert` lo permite al ser participante) y registra
+   * la ref como reciente. Realtime lo entrega como cualquier otro mensaje.
+   */
+  async enviarSticker(conversacionId: string, ref: string): Promise<void> {
+    const id = crypto.randomUUID();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'sticker_enviar',
+      capturado_en: new Date().toISOString(),
+      payload: { client_id: id, conversacion_id: conversacionId, ref },
+      fotos: [],
+      resumen: { tipo: 'sticker_enviar', conversacion_id: conversacionId },
+    });
+  }
+
+  /**
+   * Sube una imagen como sticker propio al bucket público `sgc-stickers` (primer
+   * segmento del path = id del usuario, exigido por la RLS de Storage) y la
+   * registra vía `agregar_sticker`. Acción online (crear un sticker no es de campo).
+   */
+  async subirSticker(usuarioId: string, file: { blob: Blob; nombre: string; mime: string }, packId?: string): Promise<void> {
+    const ext = (file.nombre.split('.').pop() || (file.mime.split('/').pop() ?? 'webp')).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const path = `${usuarioId}/${crypto.randomUUID()}.${ext || 'webp'}`;
+    const { error: upErr } = await this.supabase.client.storage
+      .from(STICKERS_BUCKET)
+      .upload(path, file.blob, { upsert: false, contentType: file.mime });
+    if (upErr) throw new Error(upErr.message);
+    const { error } = await this.supabase.client.rpc('agregar_sticker', {
+      p_storage_path: path,
+      p_pack_id: packId ?? null,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** Elimina un sticker propio. */
+  async eliminarSticker(stickerId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('eliminar_sticker', { p_sticker_id: stickerId });
+    if (error) throw new Error(error.message);
+  }
+
   private registerHandler(): void {
     if (this.registered) return;
     this.registered = true;
+    // AT16 — sticker: INSERT directo (tipo 'sticker'); idempotente por client_msg_id.
+    this.sync.register('sticker_enviar', async (payload) => {
+      // autor_id debe ser auth.uid() (RLS `mensajes: insert`); lo leemos de la sesión local.
+      const yo = (await this.supabase.client.auth.getSession()).data.session?.user?.id ?? null;
+      const { error } = await this.supabase.client.from('mensajes').insert({
+        conversacion_id: payload['conversacion_id'],
+        autor_id: yo,
+        contenido: null,
+        archivo_path: payload['ref'],
+        archivo_mime: 'image/sticker',
+        tipo: 'sticker',
+        client_msg_id: payload['client_id'],
+      });
+      // 23505 = ya insertado (reintento del outbox); lo tratamos como éxito.
+      if (error && (error as { code?: string }).code !== '23505') throwSyncError(error);
+      // Recientes es una conveniencia: best-effort, no bloquea el envío.
+      try {
+        await this.supabase.client.rpc('registrar_sticker_reciente', { p_ref: payload['ref'] });
+      } catch {
+        /* best-effort */
+      }
+    });
     this.sync.register('mensaje_enviar', async (payload, photoPaths) => {
       // AQ9 — si el mensaje llevaba adjunto, SyncService ya lo subió a sgc-mensajes
       // y nos pasa su path en `photoPaths['adjunto']`.

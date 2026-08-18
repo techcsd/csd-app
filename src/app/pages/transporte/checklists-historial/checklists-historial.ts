@@ -7,7 +7,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ChecklistHistorialRow } from '../../../core/models/flota-reportes.model';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 
 type TipoFiltro = 'todos' | 'pre_uso' | 'inspeccion';
 
@@ -104,7 +104,7 @@ export class ChecklistsHistorialPage {
   }
 
   fmtFecha(iso: string | null): string {
-    return iso ? formatFechaMedia(iso) : '—';
+    return iso ? formatFechaCortaHora(iso) : '—'; // AT17 — fecha + hora
   }
 
   abrir(r: ChecklistHistorialRow): void {

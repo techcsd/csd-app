@@ -23,6 +23,9 @@ export interface RutaActivaSeguimiento {
   destino: string | null;
   origen: string | null;
   placa: string | null;
+  marca: string | null; // AT9
+  modelo: string | null; // AT9
+  color: string | null; // AT9
   conductor_nombre: string | null;
   paradas_total: number;
   paradas_entregadas: number;
@@ -99,6 +102,9 @@ export class SeguimientoService {
         destino: (r['destino'] as string) ?? null,
         origen: (r['origen'] as string) ?? null,
         placa: (r['placa'] as string) ?? null,
+        marca: (r['marca'] as string) ?? null,
+        modelo: (r['modelo'] as string) ?? null,
+        color: (r['color'] as string) ?? null,
         conductor_nombre: (r['conductor_nombre'] as string) ?? null,
         paradas_total: (r['paradas_total'] as number) ?? 0,
         paradas_entregadas: (r['paradas_entregadas'] as number) ?? 0,

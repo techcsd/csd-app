@@ -1,14 +1,14 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
-import { MensajesService, Mensaje } from '../../../core/services/mensajes.service';
+import { MensajesService, Mensaje, StickerPack } from '../../../core/services/mensajes.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CameraService } from '../../../core/services/camera.service';
-import { formatFechaHumana } from '../../../core/util/fecha';
+import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
 
 /** AJ5 — hilo de una conversación: mensajes + envío (offline por outbox) + realtime. */
 @Component({
@@ -31,7 +31,7 @@ export class MensajesThreadPage implements OnDestroy {
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
 
-  fmt = formatFechaHumana;
+  fmtHora = formatHora;
   private yo(): string | null {
     return this.ctx.profile()?.id ?? null;
   }
@@ -42,12 +42,51 @@ export class MensajesThreadPage implements OnDestroy {
   texto = signal('');
   enviando = signal(false);
 
+  // AT14 — no-leídos capturados ANTES de marcar leído (frontera del divisor).
+  noLeidosInicial = signal(0);
+  private scrollNoLeidoPend = false;
+
+  /** AT14 — id del primer mensaje no leído (los últimos `noLeidosInicial` de otros
+   *  autores, no de sistema). null si no hay no-leídos → el hilo abre al final. */
+  primerNoLeidoId = computed<string | null>(() => {
+    const n = this.noLeidosInicial();
+    if (n <= 0) return null;
+    const yo = this.yo();
+    const otros = this.lista().filter((m) => m.autor_id !== yo && m.tipo !== 'sistema' && !m.id.startsWith('tmp-'));
+    if (otros.length === 0) return null;
+    return otros[Math.max(0, otros.length - n)].id;
+  });
+
   // AQ9 — adjuntos: menú tipo WhatsApp, URLs firmadas por path, lightbox.
   menuAdjuntar = signal(false);
   adjuntando = signal(false);
   private urlsAdjuntos = signal<Record<string, string>>({});
   private tempUrls: string[] = [];
   lightboxUrl = signal<string | null>(null);
+
+  // AT16 — stickers: picker en el composer (recientes + packs), subir/enviar.
+  stickerPickerOpen = signal(false);
+  stickerPacks = signal<StickerPack[]>([]);
+  stickerRecientes = signal<string[]>([]);
+  stickerTab = signal<string>('recientes'); // 'recientes' | id de pack
+  stickerLoading = signal(false);
+  stickerUploading = signal(false);
+  private stickersCargados = false;
+
+  /** Packs ordenados: sistema primero (p.ej. "Básico"), luego por `orden`. */
+  stickerPacksOrdenados = computed(() =>
+    [...this.stickerPacks()].sort((a, b) => {
+      if (a.es_sistema !== b.es_sistema) return a.es_sistema ? -1 : 1;
+      return a.orden - b.orden;
+    }),
+  );
+
+  /** Pack activo (null cuando la pestaña es "recientes"). */
+  stickerPackActivo = computed<StickerPack | null>(() => {
+    const tab = this.stickerTab();
+    if (tab === 'recientes') return null;
+    return this.stickerPacks().find((p) => p.id === tab) ?? null;
+  });
 
   // AN6 — meta de la conversación para el header (grupo → tappable + avatar).
   titulo = signal('Conversación');
@@ -60,20 +99,31 @@ export class MensajesThreadPage implements OnDestroy {
 
   constructor() {
     this.conversacionId = this.route.snapshot.paramMap.get('id') ?? '';
-    void this.cargar();
-    void this.cargarMeta();
-    void this.mensajes.marcarLeida(this.conversacionId);
+    void this.init();
     // QA-20: filtra server-side por esta conversación (antes escuchaba TODO).
     this.unsub = this.mensajes.suscribir(() => void this.cargar(true), this.conversacionId);
   }
 
-  /** AN6 — resuelve el título/avatar del header y si es grupo (para abrir su info). */
+  /**
+   * AT14 — orden: (1) capturar los no-leídos + meta ANTES de marcar leído (para
+   * pintar el divisor "Mensajes no leídos"); (2) cargar el hilo y posicionarlo en
+   * el primer no-leído; (3) recién ahí marcar la conversación como leída.
+   */
+  private async init(): Promise<void> {
+    await this.cargarMeta();
+    this.scrollNoLeidoPend = this.noLeidosInicial() > 0;
+    await this.cargar();
+    void this.mensajes.marcarLeida(this.conversacionId);
+  }
+
+  /** AN6/AT14 — resuelve título/avatar/grupo y captura los no-leídos previos. */
   private async cargarMeta(): Promise<void> {
     try {
       const conv = (await this.mensajes.listarConversaciones()).find((c) => c.id === this.conversacionId);
       if (conv) {
         this.titulo.set(conv.nombre || 'Conversación');
         this.esGrupo.set(conv.tipo === 'grupo');
+        this.noLeidosInicial.set(conv.no_leidos ?? 0);
       }
       if (this.esGrupo()) {
         const info = await this.mensajes.grupoInfo(this.conversacionId);
@@ -111,7 +161,7 @@ export class MensajesThreadPage implements OnDestroy {
       this.tempUrls = [];
       this.lista.set(msgs);
       void this.resolverAdjuntos(msgs);
-      this.scrollAlFinal();
+      this.posicionar(silencioso);
     } catch {
       if (!silencioso) this.toast.error('No pudimos cargar el hilo.');
     } finally {
@@ -128,7 +178,8 @@ export class MensajesThreadPage implements OnDestroy {
       const url = await this.mensajes.adjuntoUrl(m.archivo_path);
       if (url) this.urlsAdjuntos.update((u) => ({ ...u, [m.archivo_path as string]: url }));
     }
-    this.scrollAlFinal();
+    // No re-posicionamos aquí: forzar el scroll al final rompería el anclaje al
+    // primer no-leído (AT14). Las imágenes tienen tamaño acotado (poco reflow).
   }
 
   private esImagenMime(mime: string | null | undefined): boolean {
@@ -267,10 +318,128 @@ export class MensajesThreadPage implements OnDestroy {
   }
 
   private scrollAlFinal(): void {
+    this.scrollNoLeidoPend = false;
     requestAnimationFrame(() => {
       const el = this.scroller()?.nativeElement;
       if (el) el.scrollTop = el.scrollHeight;
     });
+  }
+
+  /**
+   * AT14 — posiciona el hilo: en la carga inicial con no-leídos, al divisor
+   * "Mensajes no leídos"; en cualquier otro caso (o si no hay divisor), al final.
+   */
+  private posicionar(silencioso: boolean): void {
+    requestAnimationFrame(() => {
+      const el = this.scroller()?.nativeElement;
+      if (!el) return;
+      if (!silencioso && this.scrollNoLeidoPend && this.primerNoLeidoId()) {
+        const sep = el.querySelector('.thread__unread-sep') as HTMLElement | null;
+        if (sep) {
+          this.scrollNoLeidoPend = false;
+          el.scrollTop = Math.max(0, sep.offsetTop - 12);
+          return;
+        }
+      }
+      el.scrollTop = el.scrollHeight;
+    });
+  }
+
+  // ── AT14 — separadores de fecha (Hoy/Ayer/fecha) ────────────────────────────
+  /** true si el mensaje `i` inicia un nuevo día calendario respecto al anterior. */
+  esNuevoDia(i: number): boolean {
+    const list = this.lista();
+    if (i <= 0) return true;
+    return esOtroDia(list[i - 1].created_at, list[i].created_at);
+  }
+  etiquetaDia = etiquetaDiaChat;
+
+  // ── AT16 — stickers ─────────────────────────────────────────────────────────
+  esSticker(m: Mensaje): boolean {
+    return m.tipo === 'sticker';
+  }
+  stickerUrl(ref: string | null): string {
+    return ref ? this.mensajes.stickerUrl(ref) : '';
+  }
+
+  toggleStickerPicker(): void {
+    const abrir = !this.stickerPickerOpen();
+    this.stickerPickerOpen.set(abrir);
+    if (abrir) this.menuAdjuntar.set(false);
+    if (abrir && !this.stickersCargados) void this.loadStickers();
+  }
+
+  private async loadStickers(): Promise<void> {
+    this.stickerLoading.set(true);
+    try {
+      const [packs, recientes] = await Promise.all([
+        this.mensajes.getMisStickers(),
+        this.mensajes.getStickersRecientes(),
+      ]);
+      this.stickerPacks.set(packs);
+      this.stickerRecientes.set(recientes);
+      this.stickersCargados = true;
+    } catch {
+      this.toast.error('No pudimos cargar los stickers.');
+    } finally {
+      this.stickerLoading.set(false);
+    }
+  }
+
+  /** Envía un sticker (optimista + outbox); sube la ref al frente de recientes. */
+  async enviarStickerMsg(ref: string): Promise<void> {
+    this.stickerPickerOpen.set(false);
+    this.lista.update((l) => [
+      ...l,
+      {
+        id: 'tmp-stk-' + Date.now(),
+        autor_id: this.yo() ?? '',
+        autor_nombre: 'Tú',
+        contenido: null,
+        tipo: 'sticker',
+        archivo_path: ref,
+        archivo_nombre: null,
+        archivo_mime: 'image/sticker',
+        created_at: new Date().toISOString(),
+      },
+    ]);
+    this.stickerRecientes.update((list) => [ref, ...list.filter((r) => r !== ref)]);
+    this.scrollAlFinal();
+    try {
+      await this.mensajes.enviarSticker(this.conversacionId, ref);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el sticker.');
+    }
+  }
+
+  /** Sube una imagen como sticker propio y recarga los packs. */
+  async onStickerFile(): Promise<void> {
+    if (this.stickerUploading()) return;
+    const fotos = await this.camera.pickFromGallery(1);
+    const foto = fotos[0];
+    if (!foto) return;
+    this.stickerUploading.set(true);
+    try {
+      const activo = this.stickerPackActivo();
+      const packId = activo && !activo.es_sistema ? activo.id : undefined;
+      await this.mensajes.subirSticker(this.yo() ?? '', { blob: foto.blob, nombre: `sticker-${Date.now()}.jpg`, mime: 'image/jpeg' }, packId);
+      this.stickerPacks.set(await this.mensajes.getMisStickers());
+      this.toast.success('Sticker agregado.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo subir el sticker.');
+    } finally {
+      this.stickerUploading.set(false);
+    }
+  }
+
+  /** Elimina un sticker propio y recarga los packs. */
+  async eliminarStickerLocal(stickerId: string): Promise<void> {
+    try {
+      await this.mensajes.eliminarSticker(stickerId);
+      this.stickerPacks.set(await this.mensajes.getMisStickers());
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar el sticker.');
+    }
   }
 
   back(): void {

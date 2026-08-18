@@ -287,17 +287,46 @@ export class TrackingService {
    */
   private async avisarBateriaUnaVez(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
-    // AS1 — si ya está excluida de la optimización de batería, no hay nada que pedir.
-    if (await this.permissions.isIgnoringBattery()) return;
-    const KEY = 'tracking_bateria_avisado';
-    try {
-      if (await this.store.get(KEY)) return;
-      await this.store.set(KEY, '1');
-    } catch {
-      /* si el store falla, mostramos el aviso igual (sin persistir) */
+    // Flags en LocalStore (Preferences en nativo → SOBREVIVEN a las actualizaciones
+    // del APK; no se re-piden en cada ingreso). AT-batería.
+    const KEY_ASKED = 'tracking_bateria_avisado';
+    const KEY_GRANTED = 'tracking_bateria_concedida';
+
+    // Solo llegamos aquí cuando el usuario COMPARTE ubicación (iniciarTracking se
+    // dispara desde evaluarModoContinuo con comparte=true) → el permiso se pide
+    // únicamente a quienes rastrean (AO6).
+    if (await this.permissions.isIgnoringBattery()) {
+      // Ya excluida: recuerda que estuvo concedida para detectar una revocación futura.
+      try {
+        await this.store.set(KEY_GRANTED, '1');
+      } catch {
+        /* best-effort */
+      }
+      return;
     }
-    // AS1 — antes era solo un toast de instrucciones; ahora ofrecemos el diálogo
-    // nativo real (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) con un botón.
+
+    // No está excluida. Decidimos si pedirla:
+    //  - fresca (nunca preguntada) → pedir una vez;
+    //  - estuvo concedida y el SO la revocó → volver a pedir;
+    //  - ya se preguntó y el usuario no la dio → NO insistir en cada ingreso.
+    let debePedir = false;
+    try {
+      const concedidaAntes = (await this.store.get(KEY_GRANTED)) === '1';
+      const yaPreguntada = (await this.store.get(KEY_ASKED)) === '1';
+      if (concedidaAntes) {
+        debePedir = true; // el SO la revocó → re-pedir
+        await this.store.remove(KEY_GRANTED);
+      } else if (!yaPreguntada) {
+        debePedir = true; // primer ingreso → pedir una vez
+      }
+      if (debePedir) await this.store.set(KEY_ASKED, '1');
+    } catch {
+      // Si el store falla, pedimos igual (sin persistir el estado).
+      debePedir = true;
+    }
+    if (!debePedir) return;
+
+    // Diálogo nativo real (ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) tras el toast.
     this.toast.withAction(
       'Para que tu ubicación se reporte con la pantalla apagada, permite que la app funcione sin restricción de batería.',
       { label: 'Permitir', run: () => void this.permissions.requestIgnoreBattery() },

@@ -32,7 +32,7 @@
             <span class="avisos__ticon">{{ tipoIcon(a.tipo) }}</span>
             <span class="avisos__tipo">{{ tipoLabel(a.tipo) }}</span>
             @if (esCritico(a)) { <span class="avisos__crit">CRÍTICO</span> }
-            @if (a.vehiculo?.placa) { <span class="avisos__placa">{{ a.vehiculo?.placa }}</span> }
+            @if (a.vehiculo) { <span class="avisos__placa">{{ ident(a.vehiculo) }}</span> }
           </div>
           @if (a.mensaje) { <p class="avisos__msg">{{ a.mensaje }}</p> }
           <p class="avisos__fecha">{{ fmtFecha(a.created_at) }}</p>

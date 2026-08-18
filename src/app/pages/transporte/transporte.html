@@ -78,8 +78,8 @@
         @for (v of pendientes().a_cargo; track v.vehiculo_id) {
           <div class="veh-card veh-card--activo">
             <div class="veh-card__info">
-              <span class="veh-card__placa">{{ v.placa }}</span>
-              <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
+              <span class="veh-card__placa">{{ v.marca }} {{ v.modelo }}</span>
+              <span class="veh-card__modelo">{{ v.placa }}</span>
               <span class="veh-card__km">En uso · {{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
             <!-- AS20 — el vehículo YA está en uso por mí: no se muestra "Uso de
@@ -109,8 +109,8 @@
         @for (v of pendientes().por_recibir; track v.vehiculo_id) {
           <div class="veh-card">
             <div class="veh-card__info">
-              <span class="veh-card__placa">{{ v.placa }}</span>
-              <span class="veh-card__modelo">{{ v.marca }} {{ v.modelo }}</span>
+              <span class="veh-card__placa">{{ v.marca }} {{ v.modelo }}</span>
+              <span class="veh-card__modelo">{{ v.placa }}</span>
               <span class="veh-card__km">{{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
             <button type="button" class="btn-cta veh-card__cta" (click)="usar(v)">

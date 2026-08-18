@@ -5,9 +5,10 @@ import { Router } from '@angular/router';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
-import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { VehiculosService, VehiculoEnUso } from '../../../core/services/vehiculos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
-import { VehiculoDisponible } from '../../../core/models/transporte.model';
+import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 
 /** Browse the whole fleet → tap a vehicle to open its profile (R4). */
 @Component({
@@ -25,11 +26,19 @@ export class VehiculosListaPage {
   private location = inject(Location);
 
   esAdmin = () => this.ctx.hasModulo('admin');
+  esFlotaElevado = this.ctx.esFlotaElevado; // AT10 — panel "en uso" solo supervisores
+
+  ident = vehiculoIdentidad; // AT9
+  fmtHora = formatFechaCortaHora; // AT17
 
   loading = signal(true);
   private todos = signal<VehiculoDisponible[]>([]);
   fotoUrls = signal<Record<string, string>>({});
   query = signal('');
+
+  // AT10 — panel "Vehículos en uso" (colapsable).
+  enUso = signal<VehiculoEnUso[]>([]);
+  enUsoAbierto = signal(false);
 
   lista = computed(() => {
     const q = this.query().toLowerCase().trim();
@@ -56,6 +65,27 @@ export class VehiculosListaPage {
     } finally {
       this.loading.set(false);
     }
+    // AT10 — carga aparte del panel "en uso" (best-effort; el RPC gatea por rol).
+    if (this.esFlotaElevado()) {
+      try {
+        this.enUso.set(await this.vehiculos.getVehiculosEnUso());
+      } catch {
+        /* sin panel si el RPC no está disponible o no hay permiso */
+      }
+    }
+  }
+
+  toggleEnUso(): void {
+    this.enUsoAbierto.update((v) => !v);
+  }
+
+  /** AT10 — ver al chofer que usa el vehículo en el mapa de Seguimiento. */
+  verEnSeguimiento(u: VehiculoEnUso): void {
+    void this.router.navigate(['/transporte/seguimiento'], { queryParams: { usuario: u.usuario_id } });
+  }
+
+  verPerfil(u: VehiculoEnUso): void {
+    void this.router.navigate(['/transporte/vehiculo', u.vehiculo_id]);
   }
 
   private async resolveFotos(flota: VehiculoDisponible[]): Promise<void> {

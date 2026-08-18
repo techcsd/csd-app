@@ -7,6 +7,21 @@ export function vehiculoLabel(
   return partes.join(' ');
 }
 
+/**
+ * AT9 — identificación homologada del vehículo: `Marca Modelo · Color · Placa`
+ * (p.ej. "Hyundai Cantus · Gris · G675571"). No se conocen las placas de memoria,
+ * pero sí marca/modelo/color → esta es la etiqueta única para listados, selectores,
+ * cards y avisos. Omite con elegancia lo que falte (color/placa) sin dejar huecos.
+ */
+export function vehiculoIdentidad(
+  v: { marca?: string | null; modelo?: string | null; color?: string | null; placa?: string | null } | null | undefined,
+): string {
+  if (!v) return '';
+  const mm = [v.marca?.trim(), v.modelo?.trim()].filter(Boolean).join(' ');
+  const partes = [mm || null, v.color?.trim() || null, v.placa?.trim() || null].filter(Boolean);
+  return partes.join(' · ');
+}
+
 export type CombustibleNivel = 'E' | '1/4' | '1/2' | '3/4' | 'F';
 /**
  * V5 — ÚNICA lista de niveles de combustible de la app (pre-uso, reporte
@@ -53,6 +68,7 @@ export interface VehiculoDetalle {
   placa: string;
   marca: string;
   modelo: string;
+  color?: string | null; // AT9
   anio?: number | null; // Z10
   tipo: string;
   /** Z15 — uso del vehículo (obra/administrativo) para el pre-uso reducido. */
@@ -74,6 +90,7 @@ export interface VehiculoACargo {
   placa: string;
   marca: string;
   modelo: string;
+  color?: string | null; // AT9
   anio?: number | null; // Z10
   km: number;
   desde: string;
@@ -84,6 +101,7 @@ export interface VehiculoPorRecibir {
   placa: string;
   marca: string;
   modelo: string;
+  color?: string | null; // AT9
   anio?: number | null; // Z10
   km: number;
 }
@@ -99,6 +117,7 @@ export interface VehiculoDisponible {
   placa: string;
   marca: string;
   modelo: string;
+  color?: string | null; // AT9
   anio?: number | null; // Z10
   tipo: string;
   /** AC14/AC5 — 'km' | 'horas'. 'horas' identifica al telehandler (plantilla y
@@ -118,6 +137,7 @@ export interface MiAsignacion {
   placa: string;
   marca: string;
   modelo: string;
+  color?: string | null; // AT9
   anio?: number | null; // Z10
   tipo: string;
   km: number;
@@ -133,6 +153,7 @@ export interface AsignacionResultado {
   placa: string;
   marca: string;
   modelo: string;
+  color?: string | null; // AT9
   tipo: string;
   kilometraje: number;
   vencimiento_matricula: string | null;

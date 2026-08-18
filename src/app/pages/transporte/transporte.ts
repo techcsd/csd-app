@@ -17,7 +17,7 @@ import { ConducesService } from '../../core/services/conduces.service';
 import { InventarioService } from '../../core/services/inventario.service';
 import { ModuleOrderService } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
-import { MiAsignacion, PendientesTransporte } from '../../core/models/transporte.model';
+import { MiAsignacion, PendientesTransporte, vehiculoIdentidad } from '../../core/models/transporte.model';
 
 /** AI16 — clave namespaced del scope de submódulos de Transporte. */
 const SUBMODULE_PARENT = 'transporte';
@@ -412,16 +412,16 @@ export class TransportePage {
   }
 
   /** AK14/AK15 — usar un vehículo concreto (desde su card). */
-  usar(v: { vehiculo_id: string; placa?: string; marca?: string; modelo?: string }): void {
+  usar(v: { vehiculo_id: string; placa?: string; marca?: string; modelo?: string; color?: string | null }): void {
     void this.router.navigate(['/transporte/uso-vehiculo', v.vehiculo_id], {
-      queryParams: { placa: v.placa, label: `${v.placa} · ${v.marca ?? ''} ${v.modelo ?? ''}`.trim() },
+      queryParams: { placa: v.placa, label: vehiculoIdentidad(v) },
     });
   }
 
   /** AK14/AK15 — soltar el vehículo que tengo en uso (pide km + nivel). */
-  soltar(v: { vehiculo_id: string; placa?: string; marca?: string; modelo?: string }): void {
+  soltar(v: { vehiculo_id: string; placa?: string; marca?: string; modelo?: string; color?: string | null }): void {
     void this.router.navigate(['/transporte/uso-vehiculo', v.vehiculo_id], {
-      queryParams: { mode: 'soltar', placa: v.placa, label: `${v.placa} · ${v.marca ?? ''} ${v.modelo ?? ''}`.trim() },
+      queryParams: { mode: 'soltar', placa: v.placa, label: vehiculoIdentidad(v) },
     });
   }
 

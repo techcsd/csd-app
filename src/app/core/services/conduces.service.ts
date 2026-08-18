@@ -308,6 +308,9 @@ export interface RutaActivaHoy {
   origen: string | null;
   destino: string | null;
   placa: string | null;
+  marca: string | null; // AT9
+  modelo: string | null; // AT9
+  color: string | null; // AT9
   conductor_nombre: string | null;
   fecha: string;
   iniciada_at: string | null;

@@ -58,6 +58,19 @@ export interface VehiculoEditable {
 }
 
 /** A flota alert (avisos_flota) for the app's avisos screen. */
+/** AT10 — una fila del panel "Vehículos en uso" (RPC vehiculos_en_uso). */
+export interface VehiculoEnUso {
+  vehiculo_id: string;
+  placa: string;
+  marca: string | null;
+  modelo: string | null;
+  usuario_id: string;
+  usuario_nombre: string | null;
+  desde: string;
+  km_inicio: number | null;
+  nivel_inicio: string | null;
+}
+
 export interface FlotaAviso {
   id: string;
   tipo: string;
@@ -67,7 +80,7 @@ export interface FlotaAviso {
   severidad: string | null;
   estado: string;
   created_at: string;
-  vehiculo?: { placa: string; estado: string } | null;
+  vehiculo?: { placa: string; marca?: string | null; modelo?: string | null; color?: string | null; estado: string } | null;
 }
 
 /** AI13 — alertas del vehículo (documentos por vencer, mantenimiento, placa PP). */
@@ -163,7 +176,7 @@ export class VehiculosService {
   } | null> {
     const { data, error } = await this.supabase.client
       .from('vehiculos')
-      .select('id, placa, marca, modelo, anio, kilometraje, fotos, vin, numero_matricula, numero_seguro, aseguradora')
+      .select('id, placa, marca, modelo, color, anio, kilometraje, fotos, vin, numero_matricula, numero_seguro, aseguradora')
       .eq('id', id)
       .single();
     if (error) {
@@ -228,7 +241,7 @@ export class VehiculosService {
         const { data, error } = await this.supabase.client
           .from('vehiculos')
           .select(
-            'id, placa, marca, modelo, anio, uso, medida_uso, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
+            'id, placa, marca, modelo, color, anio, uso, medida_uso, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
           )
           .eq('id', id)
           .single();
@@ -333,7 +346,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<VehiculoDisponible[]>('flota_vehiculos', async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
+        .select('id, placa, marca, modelo, color, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .order('placa', { ascending: true });
       if (error) throw new Error(error.message);
@@ -342,6 +355,7 @@ export class VehiculosService {
         placa: v['placa'] as string,
         marca: (v['marca'] as string) ?? '',
         modelo: (v['modelo'] as string) ?? '',
+        color: (v['color'] as string) ?? null, // AT9
         anio: (v['anio'] as number) ?? null, // Z10
         tipo: (v['tipo'] as string) ?? '',
         km: (v['kilometraje'] as number) ?? 0,
@@ -352,12 +366,23 @@ export class VehiculosService {
     return data ?? [];
   }
 
+  /**
+   * AT10 — flota EN USO ahora mismo: quién tiene cada vehículo y desde cuándo
+   * (RPC `vehiculos_en_uso`, gate flota-elevado server-side). Para el panel
+   * "Vehículos en uso" dentro de Vehículos.
+   */
+  async getVehiculosEnUso(): Promise<VehiculoEnUso[]> {
+    const { data, error } = await this.supabase.client.rpc('vehiculos_en_uso');
+    if (error) throw new Error(error.message);
+    return ((data as VehiculoEnUso[]) ?? []);
+  }
+
   /** Vehicles available to self-assign (activo + estado disponible), cached. */
   async getVehiculosDisponibles(): Promise<VehiculoDisponible[]> {
     const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, anio, tipo, medida_uso, kilometraje, estado, activo, fotos, es_prueba')
+        .select('id, placa, marca, modelo, color, anio, tipo, medida_uso, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .not('estado', 'in', '(baja,no_disponible)')
         .order('placa', { ascending: true });
@@ -367,6 +392,7 @@ export class VehiculosService {
         placa: v['placa'] as string,
         marca: (v['marca'] as string) ?? '',
         modelo: (v['modelo'] as string) ?? '',
+        color: (v['color'] as string) ?? null, // AT9
         anio: (v['anio'] as number) ?? null, // Z10
         tipo: (v['tipo'] as string) ?? '',
         medida_uso: (v['medida_uso'] as string) ?? 'km', // AC14/AC5 — 'horas' = telehandler
@@ -412,7 +438,7 @@ export class VehiculosService {
       const { data, error } = await this.supabase.client
         .from('vehiculo_asignaciones')
         .select(
-          'id, desde, origen, vehiculo:vehiculos(id, placa, marca, modelo, anio, tipo, kilometraje)',
+          'id, desde, origen, vehiculo:vehiculos(id, placa, marca, modelo, color, anio, tipo, kilometraje)',
         )
         .eq('usuario_id', uid)
         .eq('activa', true)
@@ -428,6 +454,7 @@ export class VehiculosService {
             placa: v['placa'] as string,
             marca: (v['marca'] as string) ?? '',
             modelo: (v['modelo'] as string) ?? '',
+        color: (v['color'] as string) ?? null, // AT9
             anio: (v['anio'] as number) ?? null, // Z10
             tipo: (v['tipo'] as string) ?? '',
             km: (v['kilometraje'] as number) ?? 0,
@@ -647,7 +674,7 @@ export class VehiculosService {
     const data = await this.catalog.refresh<FlotaAviso[]>('avisos_flota', async () => {
       const { data, error } = await this.supabase.client
         .from('avisos_flota')
-        .select('id, tipo, vehiculo_id, conductor_id, mensaje, severidad, estado, created_at, vehiculo:vehiculos(placa, estado)')
+        .select('id, tipo, vehiculo_id, conductor_id, mensaje, severidad, estado, created_at, vehiculo:vehiculos(placa, marca, modelo, color, estado)')
         .eq('estado', 'pendiente')
         .order('created_at', { ascending: false })
         .limit(100);

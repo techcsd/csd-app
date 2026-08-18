@@ -15,7 +15,7 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { UbicacionLabelService } from '../../../core/services/ubicacion-label.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { VehiculoDetalle } from '../../../core/models/transporte.model';
@@ -156,7 +156,7 @@ export class ChecklistPage implements OnDestroy {
   /** Z14 — el usuario confirmó recibir un vehículo que tenía otro (traspaso). */
   forzarHandover = signal(false);
   /** Z14 — fecha legible del "desde" del handover. */
-  readonly fechaCorta = formatFechaMedia;
+  readonly fechaCorta = formatFechaCortaHora; // AT17 — fecha + hora
 
   titulo = computed(() => (this.tipo === 'recepcion' ? 'Recibir vehículo' : 'Devolver vehículo'));
 

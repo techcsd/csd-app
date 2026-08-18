@@ -10,6 +10,38 @@
       <button type="button" class="btn-cta vlist__add" (click)="nuevo()">➕ Agregar vehículo</button>
     }
 
+    <!-- AT10 — panel "Vehículos en uso" (quién usa cada vehículo ahora mismo) -->
+    @if (esFlotaElevado() && enUso().length) {
+      <div class="enuso">
+        <button type="button" class="enuso__head" (click)="toggleEnUso()" [attr.aria-expanded]="enUsoAbierto()">
+          <span class="enuso__title">🚗 En uso ahora · {{ enUso().length }}</span>
+          <span class="enuso__chev">{{ enUsoAbierto() ? '▲' : '▼' }}</span>
+        </button>
+        @if (enUsoAbierto()) {
+          <div class="enuso__list">
+            @for (u of enUso(); track u.vehiculo_id) {
+              <div class="enuso__card">
+                <div class="enuso__info">
+                  <span class="enuso__veh">{{ ident(u) }}</span>
+                  <span class="enuso__quien">👤 {{ u.usuario_nombre || 'Alguien' }} · desde {{ fmtHora(u.desde) }}</span>
+                  @if (u.km_inicio != null || u.nivel_inicio) {
+                    <span class="enuso__meta">
+                      @if (u.km_inicio != null) { {{ u.km_inicio }} km }
+                      @if (u.nivel_inicio) { · ⛽ {{ u.nivel_inicio }} }
+                    </span>
+                  }
+                </div>
+                <div class="enuso__actions">
+                  <button type="button" class="btn-ghost enuso__act" (click)="verEnSeguimiento(u)">📍 Ver en el mapa</button>
+                  <button type="button" class="btn-ghost enuso__act" (click)="verPerfil(u)">📊 Perfil</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
     <input
       class="field vlist__search"
       type="text"
@@ -35,6 +67,7 @@
             [tipo]="v.tipo"
             [km]="v.km"
             [marca]="v.marca"
+            [color]="v.color"
             [modelo]="v.modelo"
             [anio]="v.anio"
           />

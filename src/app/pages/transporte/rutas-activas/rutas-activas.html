@@ -26,7 +26,7 @@
             <button type="button" class="ruta-card" (click)="verEnMapa()">
               <div class="ruta-card__top">
                 <span class="ruta-card__chofer">{{ r.conductor_nombre || 'Sin chofer' }}</span>
-                @if (r.placa) { <span class="ruta-card__placa">{{ r.placa }}</span> }
+                @if (ident(r); as vid) { <span class="ruta-card__placa">{{ vid }}</span> }
               </div>
               <div class="ruta-card__dest">→ {{ r.destino || 'Sin destino' }}</div>
               <div class="ruta-card__meta">

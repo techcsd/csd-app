@@ -10,7 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import * as L from 'leaflet';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -22,6 +22,7 @@ import {
 import { estadoMeta, ESTADOS_CHOFER } from '../../../core/services/chofer-estado.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 
 /* google.maps sin @types → lo tratamos como any. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -42,7 +43,12 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private service = inject(SeguimientoService);
   private location = inject(Location);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private ctx = inject(UserContextService);
+
+  // AT10 — al llegar desde "Vehículos en uso" (?usuario), centra ese chofer 1 vez.
+  private focoUsuarioId = this.route.snapshot.queryParamMap.get('usuario');
+  private focoAplicado = false;
   private mapsLoader = inject(GoogleMapsLoaderService);
 
   private mapEl = viewChild.required<ElementRef<HTMLDivElement>>('map');
@@ -73,6 +79,7 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   autorizado = signal(true);
 
   readonly metaOf = estadoMeta;
+  readonly ident = vehiculoIdentidad; // AT9
   // AG10 — leyenda del mapa (mismos colores/estados que la web). Colapsable.
   readonly estados = ESTADOS_CHOFER;
   leyendaAbierta = signal(false);
@@ -167,6 +174,14 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       if (this.useGoogle) this.pintarGoogle();
       else this.pintarLeaflet();
       void this.pintarBreadcrumbs(); // AJ14 — trazado en vivo del recorrido
+      // AT10 — enfoca (una vez) al chofer que llegó por ?usuario, si tiene posición.
+      if (this.focoUsuarioId && !this.focoAplicado) {
+        const c = chof.find((x) => x.usuario_id === this.focoUsuarioId);
+        if (c && c.lat != null && c.lng != null) {
+          this.focoAplicado = true;
+          this.centrarEn(c);
+        }
+      }
     } finally {
       this.loading.set(false);
     }
