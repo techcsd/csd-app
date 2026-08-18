@@ -162,13 +162,22 @@ export class GenerarConducePage implements OnDestroy {
   libreNombre = signal('');
   libreCantidad = signal(1);
   libreUnidad = signal('');
-  /** Sugerencias del catálogo que matchean el nombre escrito (evita duplicar el catálogo). */
+  /** Normaliza para buscar: minúsculas + sin acentos (el chofer teclea sin tildes). */
+  private normalizar(s: string): string {
+    return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+  /** Sugerencias del catálogo que matchean lo escrito (nombre o código, sin acentos)
+   *  para evitar duplicar el catálogo. AU4. */
   sugerenciasLibre = computed<ArticuloCat[]>(() => {
-    const q = this.libreNombre().trim().toLowerCase();
+    const q = this.normalizar(this.libreNombre().trim());
     if (q.length < 2) return [];
     const enCarrito = new Set(this.cart().map((l) => l.articulo_id));
     return this.articulos()
-      .filter((a) => a.nombre.toLowerCase().includes(q) && !enCarrito.has(a.id))
+      .filter(
+        (a) =>
+          !enCarrito.has(a.id) &&
+          (this.normalizar(a.nombre).includes(q) || this.normalizar(a.codigo).includes(q)),
+      )
       .slice(0, 4);
   });
   itemsLibresCount = computed(() => this.itemsLibres().length);

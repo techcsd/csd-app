@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.87.0';
+const VERSION = '1.87.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,17 +62,12 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-19';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Recorrido offline, bandeja del despachante y materiales fuera de catálogo';
+const TITULO = 'Sugerencias de material sin acentos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Flota', d: 'Nueva pantalla "Mi recorrido": el trazado de tu día en un mapa con las paradas y sus horas (estilo Google Timeline).' },
-  { t: 'nuevo', m: 'Flota', d: 'Tu recorrido se guarda en el teléfono aunque no tengas internet y se sube solo al reconectar — no se pierde nada. Verás cuántos puntos faltan por sincronizar.' },
-  { t: 'nuevo', m: 'Flota', d: 'Al completar una ruta puedes ver la trayectoria que recorriste.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Bandeja "Conduces por firmar" para el despachante, con aviso cuando te eligen para firmar.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Si un material no está en el catálogo, ahora puedes agregarlo como nota en el conduce y se avisa al administrador para crearlo.' },
-  { t: 'arreglo', m: 'Conduces', d: 'El chofer ya no puede marcar la entrega si falta la firma del despachante: ahora se avisa claro y se bloquea a tiempo.' },
+  { t: 'mejora', m: 'Conduces', d: 'Al escribir un material fuera del catálogo, las sugerencias del catálogo ahora funcionan aunque escribas sin acentos (p. ej. "metalico" encuentra "METÁLICO") y también por código.' },
 ];
 
 const TIPO_POR_COMMIT = {
