@@ -98,6 +98,24 @@ export interface BorradorFoto {
   type: string;
 }
 
+/**
+ * AU7 — un punto GPS en el BUFFER OFFLINE de posiciones (tipo Google Timeline). La
+ * captura NUNCA depende de la red: cada fix se persiste aquí (IndexedDB) y se sube
+ * por batch cuando hay conexión (registrar_posiciones, que acepta timestamps viejos
+ * y re-consolida el recorrido del día). `seq` es autoincremental → FIFO por orden de
+ * captura; se purga tras subir y por antigüedad (buffer de ~7 días).
+ */
+export interface PosicionBuffer {
+  seq?: number;
+  lat: number;
+  lng: number;
+  precision: number | null;
+  bateria: number | null;
+  capturado_en: string;
+  vehiculo_id: string | null;
+  ruta_id: string | null;
+}
+
 export class AppDb extends Dexie {
   catalogos!: Table<CatalogoEntry, string>;
   outbox!: Table<OutboxOp, string>;
@@ -105,6 +123,7 @@ export class AppDb extends Dexie {
   borradores!: Table<Borrador, string>;
   mis_registros!: Table<RegistroLocal, string>;
   borrador_fotos!: Table<BorradorFoto, string>;
+  posiciones!: Table<PosicionBuffer, number>;
 
   constructor() {
     super('csd-app');
@@ -118,6 +137,10 @@ export class AppDb extends Dexie {
     // v2 (M1) — fotos de borrador para recuperar el pre-uso tras un kill del SO.
     this.version(2).stores({
       borrador_fotos: 'id, clave',
+    });
+    // v3 (AU7) — buffer offline de posiciones GPS (FIFO por seq + purga por fecha).
+    this.version(3).stores({
+      posiciones: '++seq, capturado_en',
     });
   }
 }

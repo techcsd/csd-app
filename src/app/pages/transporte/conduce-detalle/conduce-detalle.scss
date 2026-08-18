@@ -306,3 +306,41 @@
   display: inline-block;
   margin: 12px 0;
 }
+
+// AU4 — materiales fuera del catálogo (nota libre)
+.cdet__libres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cdet__libre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #f59e0b;
+  background: #fff7ed;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.cdet__libre-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.cdet__libre-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.cdet__libre-qty {
+  flex: 0 0 auto;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}

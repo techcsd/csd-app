@@ -6,6 +6,7 @@ import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
 import { Conduce, RutaHoy } from '../models/transporte.model';
 import { Proyecto } from '../models/bitacora.model';
+import { ItemLibre } from '../models/inventario.model';
 
 const CATALOG_CONDUCES = 'mis_conduces';
 const CATALOG_RUTAS = 'mis_rutas';
@@ -99,6 +100,8 @@ export interface ConduceSimpleCaptura {
   firmaChofer?: Blob | null;
   firmaDespachante?: Blob | null;
   tareaVinculada?: string | null;
+  /** AU4 — materiales NO catalogados (nota libre); viajan en el conduce sin tocar stock. */
+  itemsLibres?: ItemLibre[];
 }
 
 /**
@@ -122,6 +125,8 @@ export interface ConduceDevolucionSuplidorCaptura {
   fotoRecepcion?: Blob | null;
   firmaChofer?: Blob | null;
   firmaDespachante?: Blob | null;
+  /** AU4 — materiales NO catalogados (nota libre); viajan en el conduce sin tocar stock. */
+  itemsLibres?: ItemLibre[];
 }
 
 /** AH5 — una oferta de transferencia de responsabilidad de un conduce (inbox). */
@@ -398,6 +403,14 @@ export interface ConduceDetalleItem {
   cantidad: number;
   cantidad_recibida: number | null;
 }
+/** AU4 — item libre (material no catalogado) del detalle del conduce. */
+export interface ConduceItemLibre {
+  id: string;
+  nombre: string;
+  cantidad: number;
+  unidad: string | null;
+  articulo_vinculado_id: string | null;
+}
 export interface ConduceDetalleFirma {
   rol: string;
   nombre: string | null;
@@ -452,6 +465,8 @@ export interface ConduceDetalle {
   ruta_id: string | null;
   es_prueba: boolean;
   items: ConduceDetalleItem[];
+  /** AU4 — materiales NO catalogados (nota libre) que viajan en el conduce. */
+  items_libres?: ConduceItemLibre[];
   firmas: ConduceDetalleFirma[];
   transferencias: ConduceDetalleTransferencia[];
 }
@@ -1098,6 +1113,7 @@ export class ConducesService {
         despachante_empleado_id: input.despachanteEmpleadoId ?? null,
         destino_almacen_id: input.destinoAlmacenId ?? null, // AL10
         tarea_vinculada: input.tareaVinculada ?? null,
+        items_libres: input.itemsLibres ?? [], // AU4 — material no catalogado (nota libre)
       },
       fotos,
       resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
@@ -1164,6 +1180,7 @@ export class ConducesService {
         despachante_nombre: input.despachanteNombre ?? null,
         despachante_usuario_id: input.despachanteUsuarioId ?? null,
         despachante_empleado_id: input.despachanteEmpleadoId ?? null,
+        items_libres: input.itemsLibres ?? [], // AU4 — material no catalogado (nota libre)
       },
       fotos,
       resumen: { bodega_id: input.bodegaOrigenId, suplidor: input.suplidorNombre, capturado_en },
@@ -1322,6 +1339,21 @@ export class ConducesService {
     }));
   }
 
+  /**
+   * AU1 — ¿le falta al conduce la firma del despachante? El chofer NO puede
+   * marcar la entrega hasta que sea false (regla server-side DR456). Se usa para
+   * bloquear proactivamente en la pantalla de entrega (el outbox no puede
+   * mostrar el rechazo DR456 en el momento). Requiere red; sin red devuelve false
+   * (el server igual bloquea al sincronizar).
+   */
+  async conduceFirmaDespachantePendiente(salidaId: string): Promise<boolean> {
+    const { data, error } = await this.supabase.client.rpc('conduce_firma_despachante_pendiente', {
+      p_salida_id: salidaId,
+    });
+    if (error) return false;
+    return (data as boolean) ?? false;
+  }
+
   /** AS2 — cuántos conduces tengo por firmar (para el badge). */
   async misConducesPorFirmarCount(): Promise<number> {
     const { data, error } = await this.supabase.client.rpc('mis_conduces_por_firmar_count');
@@ -1381,6 +1413,7 @@ export class ConducesService {
     if (error) throw new Error(error.message);
     const d = (data ?? {}) as ConduceDetalle;
     d.items ??= [];
+    d.items_libres ??= []; // AU4
     d.firmas ??= [];
     d.transferencias ??= [];
     d.entrega_foto_url = await this.signConduce(d.entrega_foto_path);
@@ -1518,6 +1551,29 @@ export class ConducesService {
     });
     if (error) throwSyncError(error);
     await this.catalog.invalidate('mis_transferencias').catch(() => {});
+  }
+
+  /**
+   * AU4 — tras crear el conduce, adjunta los materiales NO catalogados (nota libre)
+   * vía `agregar_items_libres_conduce` (dispara la alerta al admin/inventario). Se
+   * corre DENTRO del mismo handler del outbox (misma op) para ser offline-safe.
+   * Idempotente: si el conduce ya tiene items libres (reintento del handler tras un
+   * fallo posterior), no vuelve a insertarlos ni a re-alertar.
+   */
+  private async agregarItemsLibresSiHay(salidaId: string, payload: Record<string, unknown>): Promise<void> {
+    const libres = (payload['items_libres'] as ItemLibre[] | undefined) ?? [];
+    if (!salidaId || !libres.length) return;
+    const { data: yaHay } = await this.supabase.client
+      .from('salida_items_libres')
+      .select('id')
+      .eq('salida_id', salidaId)
+      .limit(1);
+    if (yaHay && yaHay.length) return; // ya adjuntados (reintento idempotente)
+    const { error } = await this.supabase.client.rpc('agregar_items_libres_conduce', {
+      p_salida_id: salidaId,
+      p_items: libres,
+    });
+    if (error) throwSyncError(error);
   }
 
   private registerHandler(): void {
@@ -1791,6 +1847,7 @@ export class ConducesService {
         });
         if (eV) throwSyncError(eV);
       }
+      await this.agregarItemsLibresSiHay(salidaId, payload); // AU4
       await this.catalog.invalidatePrefix('existencias_');
       // QA-6 — el conduce ya existe en el servidor → refresca "Pendiente entrega".
       await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
@@ -1815,6 +1872,7 @@ export class ConducesService {
         p_firma_despachante_path: photoPaths['firma_despachante'] ?? null,
       });
       if (error) throwSyncError(error);
+      await this.agregarItemsLibresSiHay(payload['id'] as string, payload); // AU4
       await this.catalog.invalidatePrefix('existencias_');
       await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
     });

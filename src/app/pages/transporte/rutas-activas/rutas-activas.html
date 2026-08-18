@@ -75,7 +75,7 @@
           <app-skeleton [rows]="5" />
         } @else {
           @for (r of historial(); track r.id) {
-            <div class="ruta-hist">
+            <button type="button" class="ruta-hist" (click)="verTrayectoria(r.id)">
               <div class="ruta-hist__top">
                 <span class="ruta-hist__chofer">{{ r.conductor_nombre || 'Sin chofer' }}</span>
                 <span class="ruta-hist__estado" [class.ruta-hist__estado--done]="r.estado === 'completada'">{{ estadoRutaLabel(r.estado) }}</span>
@@ -87,7 +87,8 @@
                 @if (r.km_real != null) { <span>🛣 {{ r.km_real | number: '1.0-1' }} km</span> }
                 @if (r.paradas_total) { <span>📍 {{ r.paradas_entregadas }}/{{ r.paradas_total }}</span> }
               </div>
-            </div>
+              <span class="ruta-hist__cta">🗺️ Ver trayectoria ▸</span>
+            </button>
           } @empty {
             <p class="rutas-act__muted">No hay rutas con esos filtros.</p>
           }

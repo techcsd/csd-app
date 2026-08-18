@@ -153,6 +153,13 @@
   color: var(--color-text-secondary);
 }
 
+.entrega__band--warn {
+  border-color: #f59e0b;
+  background: #fff7ed;
+  color: #92400e;
+  font-weight: 600;
+}
+
 .entrega__offline {
   margin-top: 14px;
   font-size: 13px;

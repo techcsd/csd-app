@@ -49,6 +49,8 @@ const TILES: HubTile[] = [
   // AI8 — "Inspección Vehículo" (ex "Reporte semanal").
   { key: 'semanal', icon: '📋', label: 'Inspección Vehículo', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi Actividad', tint: '#16a34a' },
+  // AU7 — "Mi recorrido" (Timeline diario: trazo + paradas + estado offline).
+  { key: 'miRecorrido', icon: '🗺️', label: 'Mi Recorrido', tint: '#0ea5e9' },
 
   // ── Gestión (solo roles elevados) ────────────────────────────────────────────
   { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
@@ -253,6 +255,7 @@ export class TransportePage {
       case 'combustibleLog': return this.combustibleLog();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
+      case 'miRecorrido': return void this.router.navigate(['/transporte/mi-recorrido']);
       case 'usoVehiculo': return this.usoVehiculo();
       case 'avisoVehiculo': return this.avisoVehiculo();
       case 'vehiculos': return this.vehiculosLista();

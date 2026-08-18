@@ -516,6 +516,15 @@ export class ConducesPage implements OnDestroy {
             : r,
         ),
       );
+      // AU5 — al completar, ofrece ver la trayectoria recorrida (replay).
+      if (estado === 'completada') {
+        this.toast.withAction(
+          'Ruta completada.',
+          { label: '🗺️ Ver trayectoria', run: () => void this.router.navigate(['/transporte/trayectoria', rutaId]) },
+          'success',
+          8000,
+        );
+      }
     } catch (e) {
       this.toast.error(
         !this.network.online()

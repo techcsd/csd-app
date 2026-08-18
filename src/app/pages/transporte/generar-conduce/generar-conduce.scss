@@ -233,3 +233,74 @@
   font-weight: 700;
   color: var(--color-text-secondary);
 }
+
+// AU4 — material fuera de catálogo (item libre)
+.gconduce__libre {
+  margin-top: 14px;
+}
+.gconduce__item--libre {
+  border-color: #f59e0b;
+  background: #fff7ed;
+}
+.gconduce__libre-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.gconduce__libre-add {
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px;
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  font-size: 15px;
+}
+.gconduce__libre-form {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius);
+  background: #fffdf8;
+}
+.gconduce__libre-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.gconduce__libre-col {
+  flex: 1;
+  min-width: 0;
+}
+.gconduce__libre-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.gconduce__libre-actions .btn-cta,
+.gconduce__libre-actions .btn-ghost {
+  flex: 1;
+}
+.gconduce__sugs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0;
+}
+.gconduce__sug {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}

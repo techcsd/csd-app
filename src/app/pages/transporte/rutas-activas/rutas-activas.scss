@@ -183,11 +183,22 @@
 }
 
 .ruta-hist {
+  display: block;
+  width: 100%;
+  text-align: left;
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, #e6e6e6);
   border-radius: 12px;
   padding: 10px 12px;
   margin-bottom: 8px;
+
+  &__cta {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+  }
 
   &__top {
     display: flex;

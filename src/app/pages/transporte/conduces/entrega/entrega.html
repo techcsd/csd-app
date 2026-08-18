@@ -26,6 +26,11 @@
         <div class="entrega__row"><span class="entrega__k">Estado</span><span class="entrega__chip">{{ faseLabel() }}</span></div>
       </div>
 
+      <!-- AU1 — bloqueo por firma del despachante pendiente -->
+      @if (firmaDespachantePend() && !yaEntregado()) {
+        <div class="entrega__band entrega__band--warn">⏳ Falta la firma del despachante. Podrás transitar, pero no marcar la entrega hasta que firme el conduce desde su sesión.</div>
+      }
+
       <!-- Materiales -->
       @if (c.items.length) {
         <h2 class="entrega__section">Materiales</h2>
@@ -78,8 +83,8 @@
           <label class="field-label entrega__mt" for="nt">Notas (opcional)</label>
           <textarea id="nt" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Novedad de la entrega…"></textarea>
 
-          <button type="button" class="btn-cta entrega__mt" [disabled]="submitting()" (click)="marcarEntregado()">
-            {{ submitting() ? 'Guardando…' : 'Confirmar entregado' }}
+          <button type="button" class="btn-cta entrega__mt" [disabled]="submitting() || firmaDespachantePend()" (click)="marcarEntregado()">
+            {{ submitting() ? 'Guardando…' : firmaDespachantePend() ? 'Espera la firma del despachante' : 'Confirmar entregado' }}
           </button>
         }
       }

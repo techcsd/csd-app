@@ -1,0 +1,22 @@
+<div class="screen tray">
+  <header class="tray__header">
+    <button type="button" class="tray__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="tray__title">🗺️ Trayectoria de la ruta</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!tienePuntos()) {
+      <app-empty-state icon="🛰️" title="Sin trayectoria" message="Esta ruta no tiene puntos de recorrido registrados (o aún se está consolidando)." />
+    } @else {
+      <div class="tray__stats">
+        <div class="tray__stat"><span class="tray__stat-v">{{ data()!.km | number: '1.0-1' }}</span><span class="tray__stat-k">km</span></div>
+        <div class="tray__stat"><span class="tray__stat-v">{{ data()!.puntos }}</span><span class="tray__stat-k">puntos</span></div>
+      </div>
+      <div class="tray__map">
+        <app-trayectoria-map [coords]="coords()" />
+      </div>
+    }
+  </div>
+</div>

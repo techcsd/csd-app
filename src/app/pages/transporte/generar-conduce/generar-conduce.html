@@ -142,6 +142,62 @@
           } @else if (!esFerreteria()) {
             <div class="gconduce__band">🔎 Agrega al menos un material para continuar.</div>
           }
+
+          <!-- ═══ AU4 — material NO catalogado (nota libre) ═══ -->
+          @if (!esFerreteria()) {
+            <div class="gconduce__libre">
+              @if (itemsLibres().length) {
+                <label class="field-label">Materiales fuera del catálogo</label>
+                <div class="gconduce__items">
+                  @for (l of itemsLibres(); track $index) {
+                    <div class="gconduce__item gconduce__item--libre">
+                      <span class="gconduce__item-name">{{ l.nombre }} <span class="gconduce__libre-tag">Fuera de catálogo</span></span>
+                      <div class="gconduce__item-qty">
+                        <span class="gconduce__unit">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
+                        <button type="button" class="gconduce__item-x" (click)="quitarItemLibre($index)" aria-label="Quitar">✕</button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (!mostrarFormLibre()) {
+                <button type="button" class="gconduce__libre-add" (click)="abrirFormLibre()">
+                  ➕ El artículo no está en la lista
+                </button>
+              } @else {
+                <div class="gconduce__libre-form">
+                  <label class="field-label" for="libre-nombre">Nombre del material</label>
+                  <input id="libre-nombre" class="field" type="text" [ngModel]="libreNombre()" (ngModelChange)="libreNombre.set($event)" placeholder="Ej.: Tubo PVC especial" />
+
+                  @if (sugerenciasLibre().length) {
+                    <p class="gconduce__hint">¿Es alguno de estos? Úsalo del catálogo (descuenta stock):</p>
+                    <div class="gconduce__sugs">
+                      @for (a of sugerenciasLibre(); track a.id) {
+                        <button type="button" class="gconduce__sug" (click)="usarSugerencia(a)">{{ a.nombre }}</button>
+                      }
+                    </div>
+                  }
+
+                  <div class="gconduce__libre-row">
+                    <div class="gconduce__libre-col">
+                      <label class="field-label" for="libre-cant">Cantidad</label>
+                      <input id="libre-cant" class="field" type="number" inputmode="decimal" min="1" [ngModel]="libreCantidad()" (ngModelChange)="libreCantidad.set($event)" />
+                    </div>
+                    <div class="gconduce__libre-col">
+                      <label class="field-label" for="libre-unidad">Unidad</label>
+                      <input id="libre-unidad" class="field" type="text" [ngModel]="libreUnidad()" (ngModelChange)="libreUnidad.set($event)" placeholder="u, m, saco…" />
+                    </div>
+                  </div>
+                  <p class="gconduce__hint">No descuenta stock. Se le avisará al admin para crear el artículo.</p>
+                  <div class="gconduce__libre-actions">
+                    <button type="button" class="btn-ghost" (click)="cancelarLibre()">Cancelar</button>
+                    <button type="button" class="btn-cta" (click)="agregarItemLibre()">Agregar material</button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
         }
 
         <!-- ═══════════ HOJA: FOTOS DE FERRETERÍA ═══════════ -->
@@ -207,6 +263,18 @@
                 @for (l of itemsResumen(); track l.articulo_id) {
                   <li class="gconduce__res-item">
                     <span class="gconduce__res-item-name">{{ l.nombre }}</span>
+                    <span class="gconduce__res-item-qty">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
+                  </li>
+                }
+              </ul>
+            }
+            <!-- AU4 — materiales fuera del catálogo (nota libre) -->
+            @if (itemsLibres().length) {
+              <div class="gconduce__res-row"><span class="gconduce__res-k">Fuera de catálogo</span><span class="gconduce__res-v">{{ itemsLibresCount() }} {{ itemsLibresCount() === 1 ? 'material' : 'materiales' }}</span></div>
+              <ul class="gconduce__res-items">
+                @for (l of itemsLibres(); track $index) {
+                  <li class="gconduce__res-item">
+                    <span class="gconduce__res-item-name">{{ l.nombre }} <span class="gconduce__libre-tag">Fuera de catálogo</span></span>
                     <span class="gconduce__res-item-qty">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
                   </li>
                 }

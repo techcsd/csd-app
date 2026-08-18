@@ -1,0 +1,87 @@
+.porfirm {
+  background: var(--color-bg);
+}
+
+.porfirm__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.porfirm__back,
+.porfirm__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.porfirm__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.porfirm__intro {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.porfirm__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 14px;
+  margin-bottom: 12px;
+  transition: all 0.15s ease;
+}
+.porfirm__card:active {
+  border-color: var(--Hub);
+}
+.porfirm__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.porfirm__num {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}
+.porfirm__dest {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.porfirm__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.porfirm__cta {
+  flex: 0 0 auto;
+  font-weight: 800;
+  color: var(--primary);
+  font-size: 15px;
+}

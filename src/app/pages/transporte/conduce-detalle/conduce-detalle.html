@@ -107,6 +107,19 @@
           <p class="doc__vacio">Sin materiales.</p>
         }
 
+        <!-- AU4 — materiales fuera del catálogo (nota libre) -->
+        @if (d.items_libres && d.items_libres.length) {
+          <h3 class="doc__sec">Materiales fuera del catálogo</h3>
+          <ul class="cdet__libres">
+            @for (l of d.items_libres; track l.id) {
+              <li class="cdet__libre">
+                <span class="cdet__libre-name">{{ l.nombre }} <span class="cdet__libre-tag">Fuera de catálogo</span></span>
+                <span class="cdet__libre-qty">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad || 'u' }}</span>
+              </li>
+            }
+          </ul>
+        }
+
         @if (d.notas_recepcion) {
           <h3 class="doc__sec">Notas de recepción</h3>
           <p class="doc__notas">{{ d.notas_recepcion }}</p>

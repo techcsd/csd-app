@@ -316,6 +316,31 @@ export const routes: Routes = [
       import('./pages/transporte/por-confirmar/por-confirmar').then((m) => m.PorConfirmarPage),
   },
   {
+    // AU1 — bandeja del DESPACHANTE: conduces donde el usuario fue elegido
+    // despachante y aún no firma. Sin moduleGuard: el despachante puede ser
+    // cualquier usuario del sistema; el RPC solo devuelve los suyos (auth.uid()).
+    path: 'transporte/conduces-por-firmar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/conduces-por-firmar/conduces-por-firmar').then(
+        (m) => m.ConducesPorFirmarPage,
+      ),
+  },
+  {
+    // AU5 — "Ver trayectoria" (replay estático) de una ruta finalizada.
+    path: 'transporte/trayectoria/:rutaId',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/trayectoria/trayectoria').then((m) => m.TrayectoriaPage),
+  },
+  {
+    // AU7 — "Mi recorrido" diario del chofer (Timeline: trazo + paradas + offline).
+    path: 'transporte/mi-recorrido',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/mi-recorrido/mi-recorrido').then((m) => m.MiRecorridoPage),
+  },
+  {
     // Reutiliza la pantalla de recibir conduce (mercancía/traslado) bajo Transporte.
     path: 'transporte/recibir-mercancia',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
@@ -492,6 +517,17 @@ export const routes: Routes = [
     path: 'inventario',
     canActivate: [authGuard, pinGuard, moduleGuard('inventario')],
     loadComponent: () => import('./pages/inventario/inventario').then((m) => m.InventarioPage),
+  },
+  {
+    // AU4 — bandeja de material NO catalogado (solo lectura). Sin moduleGuard: el
+    // RPC gatea por admin/inventario y devuelve [] a otros; destino del push
+    // 'material_no_catalogado'.
+    path: 'inventario/material-no-catalogado',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/inventario/material-no-catalogado/material-no-catalogado').then(
+        (m) => m.MaterialNoCatalogadoPage,
+      ),
   },
   {
     // AN2 — existencias (consulta): permiso Ver de artículos o módulo inventario.

@@ -12,22 +12,13 @@ import { LocalStore } from './local-store.service';
 import { NetworkService } from './network.service';
 import { ToastService } from './toast.service';
 import { ErrorReportService } from './error-report.service';
+import { db, PosicionBuffer } from '../db/app-db';
 
-interface PosBuffer {
-  lat: number;
-  lng: number;
-  precision: number | null;
-  bateria: number | null;
-  capturado_en: string;
-  vehiculo_id: string | null;
-  /** AJ14 — ruta activa que originó el punto (para consolidar el trayecto). */
-  ruta_id: string | null;
-}
-
-const BUFFER_KEY = 'tracking_buffer';
+const LEGACY_BUFFER_KEY = 'tracking_buffer'; // AU7 — buffer viejo en LocalStore (se migra a Dexie)
 const FLUSH_MS = 45_000; // AF27 — lote cada ~45 s en ruta activa
 const MAX_BUFFER = 12; // fuerza flush al llegar a este tamaño
-const MAX_PERSIST = 2000; // QA-35 — tope del buffer en disco (rutas largas offline)
+const FLUSH_BATCH = 300; // AU7 — puntos por lote de subida (rutas largas offline)
+const BUFFER_MAX_DAYS = 7; // AU7 — se purgan los puntos locales de más de 7 días
 const WATCHDOG_MS = 60_000; // AG11 — el watchdog revisa cada minuto
 const STALE_FIX_MS = 5 * 60_000; // AG11 — sin fix en 5 min con ruta activa = re-armar
 // AS1 — latido de frescura: aunque el chofer esté parado (el watcher con
@@ -69,8 +60,9 @@ export class TrackingService {
   rastreando = signal(false);
   /** AG11 — epoch ms del último fix capturado (para el watchdog / indicador). */
   ultimoFix = signal<number | null>(null);
-
-  private buffer: PosBuffer[] = [];
+  /** AU7 — puntos GPS locales aún sin subir ("N puntos por sincronizar"). */
+  private _pendientesSync = signal(0);
+  pendientesSync = this._pendientesSync.asReadonly();
   private watchId: string | null = null; // @capacitor/geolocation (web)
   private bgWatcherId: string | null = null; // background-geolocation (nativo)
   private flushTimer: ReturnType<typeof setInterval> | null = null;
@@ -98,11 +90,60 @@ export class TrackingService {
   private flushAgain = false;
 
   constructor() {
-    void this.restaurarBuffer();
+    void this.bootBuffer();
     // Al recuperar señal, intenta drenar las posiciones acumuladas.
     effect(() => {
       if (this.net.online()) void this.flush();
     });
+  }
+
+  /**
+   * AU7 — arranque del buffer offline (Dexie): migra el buffer viejo de LocalStore
+   * (si quedó de una versión anterior), purga los puntos de más de 7 días y publica
+   * el conteo "por sincronizar". Best-effort: nunca rompe el arranque de la app.
+   */
+  private async bootBuffer(): Promise<void> {
+    try {
+      await this.migrarBufferLegacy();
+      await this.purgarViejos();
+      await this.refrescarPendientes();
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  /** AU7 — trae a Dexie el buffer que versiones previas guardaban en LocalStore. */
+  private async migrarBufferLegacy(): Promise<void> {
+    const raw = await this.store.get(LEGACY_BUFFER_KEY);
+    if (!raw) return;
+    try {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) {
+        await db.posiciones.bulkAdd(
+          (arr as PosicionBuffer[]).map((p) => ({
+            lat: p.lat, lng: p.lng, precision: p.precision ?? null, bateria: p.bateria ?? null,
+            capturado_en: p.capturado_en, vehiculo_id: p.vehiculo_id ?? null, ruta_id: p.ruta_id ?? null,
+          })),
+        );
+      }
+    } catch {
+      /* dato corrupto: se descarta */
+    }
+    await this.store.remove(LEGACY_BUFFER_KEY);
+  }
+
+  /** AU7 — descarta puntos locales de más de BUFFER_MAX_DAYS (ISO ordena lexicográfico). */
+  private async purgarViejos(): Promise<void> {
+    const corte = new Date(Date.now() - BUFFER_MAX_DAYS * 86_400_000).toISOString();
+    await db.posiciones.where('capturado_en').below(corte).delete();
+  }
+
+  private async refrescarPendientes(): Promise<void> {
+    try {
+      this._pendientesSync.set(await db.posiciones.count());
+    } catch {
+      /* ignore */
+    }
   }
 
   // ── AF26 — gate por GPS ─────────────────────────────────────────────────────
@@ -394,6 +435,12 @@ export class TrackingService {
     await this.flush();
   }
 
+  /** AU7 — fuerza un intento de subir el buffer offline ("N por sincronizar"). */
+  async sincronizarAhora(): Promise<void> {
+    await this.flush();
+    await this.refrescarPendientes();
+  }
+
   /** AS1 — apaga el tracking por completo (cierre de sesión / usuario sin permiso). */
   async apagar(): Promise<void> {
     this.modoContinuo = false;
@@ -401,19 +448,25 @@ export class TrackingService {
   }
 
   private async push(lat: number, lng: number, precision: number | null): Promise<void> {
-    this.buffer.push({
-      lat,
-      lng,
-      precision,
-      bateria: await this.bateria(),
-      capturado_en: new Date().toISOString(),
-      vehiculo_id: this.vehiculoActual,
-      ruta_id: this.rutaActual,
-    });
+    // AU7 — persiste SIEMPRE a Dexie (nunca depende de la red). La subida es un
+    // batch aparte (flush) que corre cuando hay conexión.
+    try {
+      await db.posiciones.add({
+        lat,
+        lng,
+        precision,
+        bateria: await this.bateria(),
+        capturado_en: new Date().toISOString(),
+        vehiculo_id: this.vehiculoActual,
+        ruta_id: this.rutaActual,
+      });
+      this._pendientesSync.update((n) => n + 1);
+    } catch {
+      /* IndexedDB no disponible: el fix se pierde solo en el caso extremo de no poder escribir */
+    }
     this.ultimoFix.set(Date.now());
     this.ultimaCoord = { lat, lng, precision }; // AS1 — para el latido de frescura
-    await this.persistBuffer();
-    if (this.buffer.length >= MAX_BUFFER) void this.flush();
+    if (this._pendientesSync() >= MAX_BUFFER) void this.flush();
   }
 
   // ── AS1 — latido de frescura ────────────────────────────────────────────────
@@ -448,52 +501,56 @@ export class TrackingService {
     }
   }
 
-  /** Envía el lote acumulado a `registrar_posiciones` (offline-first: reintenta luego). */
+  /**
+   * AU7 — sube el buffer de Dexie a `registrar_posiciones` por LOTES (FIFO por seq),
+   * borrando cada lote solo tras confirmarse. Offline-first: sin señal no hace nada
+   * y reintenta luego; el server acepta timestamps viejos (buffer offline) y
+   * re-consolida el recorrido del día. Single-flight (QA-10).
+   */
   private async flush(): Promise<void> {
-    if (!this.buffer.length || !this.net.online()) return;
-    // QA-10: un solo flush a la vez. Si llega otro disparo (timer/online/MAX_BUFFER)
-    // mientras hay uno en vuelo, se marca para re-ejecutar al terminar (coalescing)
-    // en lugar de solaparse — dos runs reenviaban el mismo lote y ambos recortaban
-    // el buffer, duplicando o perdiendo puntos.
+    if (!this.net.online()) return;
     if (this.flushing) {
       this.flushAgain = true;
       return;
     }
     this.flushing = true;
     try {
-      const lote = this.buffer.slice();
-      const { error } = await this.supabase.client.rpc('registrar_posiciones', {
-        p_posiciones: lote.map((p) => ({
-          lat: p.lat,
-          lng: p.lng,
-          precision: p.precision,
-          bateria: p.bateria,
-          capturado_en: p.capturado_en,
-          vehiculo_id: p.vehiculo_id,
-          ruta_id: p.ruta_id ?? null,
-        })),
-      });
-      if (error) {
-        // AG11 — el rechazo del RPC (RLS/permiso/param) ya NO se traga en silencio:
-        // era el punto ciego que dejaba "sin ubicación" sin rastro en telemetría.
-        this.errors.report('tracking', 'registrar_posiciones rechazó el lote', {
-          code: error.code,
-          message: error.message,
-          lote: lote.length,
+      // Drena en varios lotes mientras queden puntos y haya señal.
+      for (;;) {
+        const lote = await db.posiciones.orderBy('seq').limit(FLUSH_BATCH).toArray();
+        if (!lote.length) break;
+        const { error } = await this.supabase.client.rpc('registrar_posiciones', {
+          p_posiciones: lote.map((p) => ({
+            lat: p.lat,
+            lng: p.lng,
+            precision: p.precision,
+            bateria: p.bateria,
+            capturado_en: p.capturado_en,
+            vehiculo_id: p.vehiculo_id,
+            ruta_id: p.ruta_id ?? null,
+          })),
         });
-        return; // conserva el buffer para reintentar
+        if (error) {
+          // AG11 — el rechazo del RPC (RLS/permiso/param) NO se traga en silencio.
+          this.errors.report('tracking', 'registrar_posiciones rechazó el lote', {
+            code: error.code,
+            message: error.message,
+            lote: lote.length,
+          });
+          return; // conserva el buffer para reintentar
+        }
+        // Borra EXACTAMENTE lo enviado (por seq); los push() concurrentes tienen seq
+        // mayor y no entran en este lote → sin drift.
+        await db.posiciones.bulkDelete(lote.map((p) => p.seq!).filter((s) => s != null));
+        this.ultimaFlushOk = Date.now();
+        await this.refrescarPendientes();
+        if (!this.net.online()) break;
+        if (lote.length < FLUSH_BATCH) break; // no quedaban más
       }
-      // QA-10: quita EXACTAMENTE los objetos enviados (por identidad), no por
-      // longitud — así un push() concurrente durante el await no causa drift.
-      const enviados = new Set(lote);
-      this.buffer = this.buffer.filter((p) => !enviados.has(p));
-      this.ultimaFlushOk = Date.now();
-      await this.persistBuffer();
     } catch {
       /* sin señal / error de red → se reintenta (no es un fallo reportable) */
     } finally {
       this.flushing = false;
-      // QA-10: hubo un disparo durante el envío → drena lo que quedó en el buffer.
       if (this.flushAgain) {
         this.flushAgain = false;
         void this.flush();
@@ -520,7 +577,7 @@ export class TrackingService {
     this.rearmando = true;
     this.errors.report('tracking', 'watchdog: sin fixes recientes, re-armando watcher', {
       sin_fix_ms: sinFixMs,
-      buffer: this.buffer.length,
+      buffer: this._pendientesSync(),
       native: Capacitor.isNativePlatform(),
     });
     try {
@@ -566,31 +623,4 @@ export class TrackingService {
     return null;
   }
 
-  private async persistBuffer(): Promise<void> {
-    try {
-      // QA-35: tope alto (2000) para no perder los fixes más antiguos en rutas
-      // largas sin señal; aún así acotado y con aviso al truncar.
-      let toSave = this.buffer;
-      if (toSave.length > MAX_PERSIST) {
-        console.warn(
-          `[tracking] buffer excede ${MAX_PERSIST} puntos (${toSave.length}); se descartan los más antiguos.`,
-        );
-        toSave = toSave.slice(-MAX_PERSIST);
-      }
-      await this.store.set(BUFFER_KEY, JSON.stringify(toSave));
-    } catch {
-      /* ignore */
-    }
-  }
-
-  private async restaurarBuffer(): Promise<void> {
-    const raw = await this.store.get(BUFFER_KEY);
-    if (!raw) return;
-    try {
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) this.buffer = arr as PosBuffer[];
-    } catch {
-      /* ignore */
-    }
-  }
 }

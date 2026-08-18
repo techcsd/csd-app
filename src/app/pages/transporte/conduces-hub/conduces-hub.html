@@ -8,7 +8,7 @@
   <div class="screen__body">
     <p class="hub-intro">El conduce es el documento del movimiento de material. Crea uno y su ruta se genera sola.</p>
     <div class="hub-grid">
-      @for (t of tiles; track t.key) {
+      @for (t of tiles(); track t.key) {
         <app-big-button
           [icon]="t.icon"
           [label]="t.label"

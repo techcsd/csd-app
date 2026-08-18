@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ArticuloCat, Bodega, BodegaAdmin, BodegaUbicacion, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia, Ferreteria } from '../models/inventario.model';
+import { ArticuloCat, Bodega, BodegaAdmin, BodegaUbicacion, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia, Ferreteria, MaterialNoCatalogado } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
@@ -393,6 +393,19 @@ export class InventarioService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * AU4 — bandeja de material NO catalogado: items libres reportados en conduces
+   * pendientes de crear/vincular su artículo (regla AT11 — visibles para depurar el
+   * catálogo). El RPC gatea por admin/inventario (devuelve [] a otros roles).
+   */
+  async materialNoCatalogadoPendientes(incluirResueltos = false): Promise<MaterialNoCatalogado[]> {
+    const { data, error } = await this.supabase.client.rpc('material_no_catalogado_pendientes', {
+      p_incluir_resueltos: incluirResueltos,
+    });
+    if (error) throw new Error(error.message);
+    return (data as MaterialNoCatalogado[]) ?? [];
   }
 
   async getExistencias(bodegaId: string): Promise<Existencia[]> {

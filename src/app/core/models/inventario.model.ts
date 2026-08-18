@@ -118,6 +118,34 @@ export interface CartLinea {
 }
 
 /**
+ * AU4 — material NO catalogado escrito como nota libre en el conduce (nombre +
+ * cantidad + unidad). No toca stock; viaja en el conduce/PDF/confirmación y
+ * dispara una alerta al admin/inventario para crear el artículo. Se envía por el
+ * mismo outbox del conduce (RPC agregar_items_libres_conduce).
+ */
+export interface ItemLibre {
+  nombre: string;
+  cantidad: number;
+  unidad: string;
+}
+
+/** AU4 — fila de la bandeja de material NO catalogado (material_no_catalogado_pendientes). */
+export interface MaterialNoCatalogado {
+  id: string;
+  salida_id: string;
+  conduce_numero: string;
+  nombre: string;
+  cantidad: number;
+  unidad: string | null;
+  articulo_vinculado_id: string | null;
+  articulo_vinculado: string | null;
+  reportado_por: string | null;
+  proyecto: string | null;
+  created_at: string;
+  vinculado_at: string | null;
+}
+
+/**
  * AD6 — compra/retiro de ferretería registrado por el CHOFER desde Transporte.
  * Queda como entrada PENDIENTE (chofer_registrar_compra_ferreteria) hasta que
  * Almacén la confirma; el chofer nunca sube stock por su cuenta (antifraude).

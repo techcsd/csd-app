@@ -149,6 +149,10 @@ export function notifAppRoute(n: {
   const r = (n.ruta ?? '').trim();
   // Firma de recepción pendiente → bandeja "Por firmar" (aunque venga sin ruta).
   if (n.tipo === 'firma') return '/transporte/por-firmar';
+  // AU1 — recordatorio al DESPACHANTE (tipo 'conduce_firma') → su bandeja de firma.
+  // La web manda ruta '/transporte/por-firmar' (que en la app es la del RECEPTOR),
+  // así que aquí se mapea por tipo a la bandeja correcta del despachante.
+  if (n.tipo === 'conduce_firma') return '/transporte/conduces-por-firmar';
   // AQ1 — versión publicada → pantalla de actualización (deep-link del push de versión).
   if (n.tipo === 'version_publicada' || n.referencia_tipo === 'version' || r.startsWith('/actualizar')) {
     return '/actualizar';

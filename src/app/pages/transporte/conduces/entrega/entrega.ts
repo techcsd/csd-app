@@ -45,6 +45,8 @@ export class ConduceEntregaPage {
   llegoTodo = signal<boolean | null>(null);
   cantidades = signal<Record<string, number>>({});
   notas = signal('');
+  // AU1 — al conduce le falta la firma del despachante (bloquea la entrega).
+  firmaDespachantePend = signal(false);
 
   // Fases ya alcanzadas (para deshabilitar los botones anteriores).
   private readonly orden = ['emitido', 'en_transito', 'entregando', 'entregado', 'confirmado'];
@@ -97,6 +99,13 @@ export class ConduceEntregaPage {
         // AK11 — si el chofer ya marcó "Estoy entregando", al reabrir aterriza
         // DIRECTO en el proceso de entrega (foto + ¿llegó todo?), sin paso extra.
         if (this.fase() === 'entregando') this.mostrarEntrega.set(true);
+        // AU1 — ¿el despachante ya firmó? (best-effort, solo online). Bloquea la
+        // entrega proactivamente para no dejar un conduce "entregado" que luego el
+        // server rechace en silencio al sincronizar (DR456).
+        this.service
+          .conduceFirmaDespachantePendiente(c.id)
+          .then((p) => this.firmaDespachantePend.set(p))
+          .catch(() => {});
       }
     } finally {
       this.loading.set(false);
@@ -176,6 +185,11 @@ export class ConduceEntregaPage {
     if (this.submitting()) return;
     const c = this.conduce();
     if (!c) return;
+    // AU1 — no dejar marcar la entrega si falta la firma del despachante.
+    if (this.firmaDespachantePend()) {
+      this.toast.error('Falta la firma del despachante. No puedes entregar hasta que firme el conduce desde su sesión.');
+      return;
+    }
     if (!this.foto()) {
       this.toast.error('Toma la foto de la entrega.');
       return;

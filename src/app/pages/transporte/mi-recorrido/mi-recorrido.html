@@ -1,0 +1,61 @@
+<div class="screen mrec">
+  <header class="mrec__header">
+    <button type="button" class="mrec__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="mrec__title">🗺️ Mi recorrido</h1>
+    @if (esHoy()) { <span class="mrec__vivo">● en vivo</span> }
+  </header>
+
+  <div class="screen__body">
+    <!-- Días -->
+    <div class="mrec__dias">
+      @for (d of dias; track d.fecha) {
+        <button type="button" class="mrec__dia" [class.mrec__dia--on]="d.fecha === fechaSel()" (click)="seleccionar(d.fecha)">
+          {{ d.label }}
+        </button>
+      }
+    </div>
+
+    <!-- AU7 — puntos por sincronizar (buffer offline) -->
+    @if (pendientes() > 0) {
+      <button type="button" class="mrec__pend" (click)="sincronizar()">
+        📡 {{ pendientes() }} {{ pendientes() === 1 ? 'punto' : 'puntos' }} por sincronizar · toca para reintentar
+      </button>
+    }
+
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!tienePuntos()) {
+      <app-empty-state icon="🛰️" title="Sin recorrido" message="No hay puntos de recorrido para este día." />
+    } @else {
+      <div class="mrec__stats">
+        <div class="mrec__stat"><span class="mrec__stat-v">{{ data()!.km | number: '1.0-1' }}</span><span class="mrec__stat-k">km</span></div>
+        <div class="mrec__stat"><span class="mrec__stat-v">{{ data()!.puntos }}</span><span class="mrec__stat-k">puntos</span></div>
+        <div class="mrec__stat"><span class="mrec__stat-v">{{ paradas().length }}</span><span class="mrec__stat-k">paradas</span></div>
+      </div>
+
+      <div class="mrec__map">
+        <app-trayectoria-map [coords]="coords()" [paradas]="paradas()" />
+      </div>
+
+      <div class="mrec__linea">
+        <div class="mrec__hito mrec__hito--ini">
+          <span class="mrec__hito-dot"></span>
+          <span class="mrec__hito-txt">Inicio · {{ hhmm(data()!.primer_at) }}</span>
+        </div>
+        @for (p of paradas(); track $index) {
+          <div class="mrec__hito mrec__hito--parada">
+            <span class="mrec__hito-dot"></span>
+            <span class="mrec__hito-txt">
+              Parada · {{ hhmm(p.inicio_at) }} → {{ hhmm(p.fin_at) }}
+              <span class="mrec__hito-min">{{ p.minutos }} min</span>
+            </span>
+          </div>
+        }
+        <div class="mrec__hito mrec__hito--fin">
+          <span class="mrec__hito-dot"></span>
+          <span class="mrec__hito-txt">Fin · {{ hhmm(data()!.ultimo_at) }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigButton } from '../../../shared/ui/big-button/big-button';
@@ -47,10 +47,24 @@ export class ConducesHubPage {
   private location = inject(Location);
   private conduces = inject(ConducesService);
 
-  readonly tiles = TILES;
   transferenciasPendientes = signal(0);
   pendienteEntrega = signal(0); // AI2
   porConfirmar = signal(0); // AJ8
+  porFirmarDespachante = signal(0); // AU1
+
+  // AU1 — la entrada "Por firmar (despachante)" solo aparece cuando el usuario
+  // tiene conduces pendientes de su firma (no ensucia el hub del resto).
+  readonly tiles = computed<ConduceTile[]>(() => {
+    if (this.porFirmarDespachante() <= 0) return TILES;
+    const extra: ConduceTile = {
+      key: 'porFirmar',
+      icon: '🖊️',
+      label: 'Por firmar (despachante)',
+      tint: '#b45309',
+      route: '/transporte/conduces-por-firmar',
+    };
+    return [TILES[0], extra, ...TILES.slice(1)];
+  });
 
   constructor() {
     // AH5 — badge de transferencias de conduce que me ofrecieron (por aceptar).
@@ -68,12 +82,18 @@ export class ConducesHubPage {
       .entregasPorConfirmarCount()
       .then((n) => this.porConfirmar.set(n))
       .catch(() => {});
+    // AU1 — conduces donde soy despachante y no he firmado (muestra el tile + badge).
+    void this.conduces
+      .misConducesPorFirmarCount()
+      .then((n) => this.porFirmarDespachante.set(n))
+      .catch(() => {});
   }
 
   badgeFor(key: string): number | null {
     if (key === 'transferencias') return this.transferenciasPendientes() || null;
     if (key === 'pendienteEntrega') return this.pendienteEntrega() || null;
     if (key === 'porConfirmar') return this.porConfirmar() || null;
+    if (key === 'porFirmar') return this.porFirmarDespachante() || null;
     return null;
   }
 

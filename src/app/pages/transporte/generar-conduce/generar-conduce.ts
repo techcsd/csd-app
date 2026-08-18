@@ -25,7 +25,7 @@ import { TrackingService } from '../../../core/services/tracking.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
-import { ArticuloCat, Bodega, CartLinea, CategoriaInv, Ferreteria } from '../../../core/models/inventario.model';
+import { ArticuloCat, Bodega, CartLinea, CategoriaInv, Ferreteria, ItemLibre } from '../../../core/models/inventario.model';
 import { MiAsignacion, VehiculoDisponible } from '../../../core/models/transporte.model';
 
 /** AF31 — de dónde sale el material del conduce. (AM6 — se retiró "Otros": era un
@@ -50,6 +50,7 @@ interface ConduceDraft {
   despachanteId: string;
   despachanteLibre: string;
   cart: CartLinea[];
+  itemsLibres?: ItemLibre[]; // AU4
 }
 
 /**
@@ -153,6 +154,24 @@ export class GenerarConducePage implements OnDestroy {
   categorias = signal<CategoriaInv[]>([]);
   cart = signal<CartLinea[]>([]);
   private existencias = signal<Record<string, number>>({});
+
+  // AU4 — materiales NO catalogados (nota libre): nombre + cantidad + unidad. No
+  // tocan stock; viajan en el conduce y alertan al admin para crear el artículo.
+  itemsLibres = signal<ItemLibre[]>([]);
+  mostrarFormLibre = signal(false);
+  libreNombre = signal('');
+  libreCantidad = signal(1);
+  libreUnidad = signal('');
+  /** Sugerencias del catálogo que matchean el nombre escrito (evita duplicar el catálogo). */
+  sugerenciasLibre = computed<ArticuloCat[]>(() => {
+    const q = this.libreNombre().trim().toLowerCase();
+    if (q.length < 2) return [];
+    const enCarrito = new Set(this.cart().map((l) => l.articulo_id));
+    return this.articulos()
+      .filter((a) => a.nombre.toLowerCase().includes(q) && !enCarrito.has(a.id))
+      .slice(0, 4);
+  });
+  itemsLibresCount = computed(() => this.itemsLibres().length);
 
   // AF23.4 — vehículo (para que el servidor auto-genere la ruta al emitir).
   misVehiculos = signal<MiAsignacion[]>([]);
@@ -407,6 +426,7 @@ export class GenerarConducePage implements OnDestroy {
       despachanteId: this.despachanteId(),
       despachanteLibre: this.despachanteLibre(),
       cart: this.cart(),
+      itemsLibres: this.itemsLibres(), // AU4
     };
     if (!this.hydrated || this.hoja() === 'exito' || this.submitting()) return;
     if (!this.tieneDatos()) return;
@@ -435,6 +455,7 @@ export class GenerarConducePage implements OnDestroy {
         this.despachanteId.set(d.despachanteId ?? '');
         this.despachanteLibre.set(d.despachanteLibre ?? '');
         this.cart.set(d.cart ?? []);
+        this.itemsLibres.set(d.itemsLibres ?? []); // AU4
       }
       // QA-7 — rehidrata la foto de recepción + ambas firmas persistidas antes del
       // desvío a "Uso de vehículo" (así el chofer no re-toma foto ni re-firma dos veces).
@@ -709,6 +730,36 @@ export class GenerarConducePage implements OnDestroy {
     this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
   }
 
+  // ---- AU4 — item libre (material no catalogado) ----
+  abrirFormLibre(): void {
+    this.mostrarFormLibre.set(true);
+  }
+  cancelarLibre(): void {
+    this.mostrarFormLibre.set(false);
+    this.libreNombre.set('');
+    this.libreCantidad.set(1);
+    this.libreUnidad.set('');
+  }
+  /** El usuario eligió una sugerencia del catálogo → mejor agregarla como item normal. */
+  usarSugerencia(a: ArticuloCat): void {
+    this.agregar(a);
+    this.cancelarLibre();
+  }
+  agregarItemLibre(): void {
+    const nombre = this.libreNombre().trim();
+    if (!nombre) {
+      this.toast.error('Escribe el nombre del material.');
+      return;
+    }
+    const cantidad = Math.max(1, Number(this.libreCantidad()) || 1);
+    const unidad = this.libreUnidad().trim() || 'u';
+    this.itemsLibres.update((list) => [{ nombre, cantidad, unidad }, ...list]);
+    this.cancelarLibre();
+  }
+  quitarItemLibre(index: number): void {
+    this.itemsLibres.update((list) => list.filter((_, i) => i !== index));
+  }
+
   async onFirmaChofer(has: boolean): Promise<void> {
     this.firmaChofer.set(has ? ((await this.sigChofer()?.toBlob()) ?? null) : null);
   }
@@ -883,6 +934,7 @@ export class GenerarConducePage implements OnDestroy {
           fotoRecepcion: this.fotoRecepcion()?.blob ?? null,
           firmaChofer: this.firmaChofer(),
           firmaDespachante: this.firmaDespachante(),
+          itemsLibres: this.itemsLibres(), // AU4
         });
         this.conduceCreadoId.set(nid); // AO4
         void this.autosave.discard(this.clave); // AE9 — borrador cumplido
@@ -906,6 +958,7 @@ export class GenerarConducePage implements OnDestroy {
         firmaChofer: this.firmaChofer(),
         firmaDespachante: this.firmaDespachante(),
         tareaVinculada: this.tareaVinculada, // AG15 — enlaza la tarea a esta salida
+        itemsLibres: this.itemsLibres(), // AU4
       });
       this.conduceCreadoId.set(nid); // AO4 — para "Ver / compartir conduce" en el éxito
       void this.autosave.discard(this.clave); // AE9 — borrador cumplido
@@ -920,7 +973,7 @@ export class GenerarConducePage implements OnDestroy {
   private tieneDatos(): boolean {
     return !!(
       this.bodegaId() || this.obraId() || this.almacenId() || this.ferreteriaId() ||
-      this.suplidorNombre().trim() || this.observaciones().trim() || this.cart().length ||
+      this.suplidorNombre().trim() || this.observaciones().trim() || this.cart().length || this.itemsLibres().length ||
       this.fotoRecibo() || this.fotoMercancia() || this.fotoRecepcion() ||
       this.despachanteId() || this.despachanteLibre().trim() ||
       this.firmaChofer() || this.firmaDespachante()

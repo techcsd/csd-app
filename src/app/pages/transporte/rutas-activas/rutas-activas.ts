@@ -155,6 +155,11 @@ export class RutasActivasPage implements OnDestroy {
     void this.router.navigate(['/transporte/seguimiento']);
   }
 
+  /** AU5 — trayectoria (replay estático) de una ruta del histórico. */
+  verTrayectoria(rutaId: string): void {
+    void this.router.navigate(['/transporte/trayectoria', rutaId]);
+  }
+
   // ── Helpers de tiempo ─────────────────────────────────────────────────────
   /** "hace X min/h" desde una marca ISO; '' si no hay. */
   hace(ts: string | null): string {
