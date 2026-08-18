@@ -12,10 +12,16 @@ Consume **PROMPT-19** (contratos ya en prod: RPCs de stickers, `vehiculos_en_uso
 Instalado por ADB. **Confirmado en el equipo real:** (a) **chat** — separadores "14 Ago 2026"/"Ayer"/"Hoy", **divisor "MENSAJES NO LEÍDOS"** y apertura anclada a él, hora por mensaje; **picker de stickers** (pack "Básico" con los 16 SVGs renderizando desde `assets/`), **envío de sticker** 👍 → aparece sin burbuja, se persiste y sobrevive la recarga realtime ("Todo enviado"); (b) **Vehículos** — cards "Chevrolet Malibu LS2009 · Blanco · A631739" (Marca Modelo · Color · Placa); (c) **panel "En uso ahora · 3"** con kIA k2700/Chevrolet Malibu/Manitou, quién usa + desde+hora + km + nivel + acciones; (d) **"Ver en el mapa"** → Seguimiento **enfocó a FELIX DELGADO** (info window, "hace 5 min" = tracking fresco en app actualizada); (e) **AT4** — "Choferes (8)" solo choferes/jefe.
 - **🐞 Fix en QA:** el pack de sistema tenía el nombre mal codificado ("B�sico") del seed de PROMPT-19 → `update sticker_packs set nombre='Básico'` (dato compartido, aplicado a prod; **espejar en SGC**).
 
-### ⚠️ Pendientes (PROMPT-20 AT)
-- **Físico (Xaviel):** prueba de chat con **dos dispositivos** (separadores/no-leído/previews/stickers en ambos); **validación EN VIVO del tracking con Misael** sigue abierta (AS1) — el fix de asociación punto↔ruta (AT2) se verá cuando un chofer real inicie una ruta desde "Conduce → Iniciar ruta".
-- **SGC (repo padre):** espejar el fix del nombre del pack (`fix-sticker-pack-nombre`); confirmar que la web ya trae el mismo nombre corregido.
-- **Nits (no bloquean):** el chip de año pega con el modelo en la card ("Malibu LS2009") — cosmético preexistente; stickers propios subidos por galería salen JPEG (sin transparencia) — v1 aceptable.
+### 🟢 PARCHE 1.86.1 (mismo día) — retoque visual
+`fix(app)` commit **`c681436`** + APK 1.86.1 firmado/registrado/subido + `publicada`=1.86.1 (`sql/2026-08-18-publicar-1.86.1.sql`, `274656d`). **Arreglo:** el año del vehículo se pegaba al modelo en la card ("Malibu LS2009") → estilo `.vcard__anio` (margin-left) → "Malibu LS 2009". **Device-QA:** verificado en el Huawei (cards con año separado). **Rollback:** `update sgc.app_versiones set publicada=(version='1.86.0') where plataforma='movil';` + `git revert c681436`.
+
+### ✅ SGC (repo padre) — espejado
+Fix del nombre del pack de stickers mirroreado: `SGC/sql/2026-08-18-fix-sticker-pack-nombre.sql` (commit `955e0f2`, push `main`). El seed `at16-stickers.sql` ya estaba bien codificado (la corrupción fue en el apply a prod; el dato ya está reparado en la BD compartida). PROMPT-19 web ya venía commiteado (SGC `c402fd7`, 1.80.1).
+
+### ⚠️ Pendientes (PROMPT-20 AT) — solo físicos de Xaviel
+- **Prueba de chat con dos dispositivos** (separadores/no-leído/previews/stickers en ambos extremos).
+- **Validación EN VIVO del tracking con Misael** sigue abierta (AS1) — el fix de asociación punto↔ruta (AT2) se verá cuando un chofer real inicie una ruta desde "Conduce → Iniciar ruta". El resto de PROMPT-20 quedó verificado en device por Claude.
+- **Nit (no bloquea):** stickers propios subidos por galería salen JPEG (sin transparencia) — v1 aceptable.
 
 
 ## 🟢 SESIÓN 17/08 (2) — PROMPT-18 FASE 2/3/5 (AS2-9,15,16,18-20,25) — **RELEASE 1.79.0 PUBLICADO (rolling)**
