@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.90.0';
+const VERSION = '1.90.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,14 +62,16 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-19';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Notas de voz arregladas de raíz, grabación tipo WhatsApp y enlaces clickeables';
+const TITULO = 'Notas de voz arregladas de raíz, grabación tipo WhatsApp, enlaces y más';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Mensajes', d: 'Las notas de voz ya no se pierden: antes, si mandabas otro mensaje mientras la nota subía, la nota desaparecía. Ahora cada nota vive hasta que llega de verdad — muestra un reloj mientras sube, un ⚠️ para reintentar si algo falla (sin perder nada), y ✓ solo cuando el servidor la confirma.' },
+  { t: 'arreglo', m: 'Mensajes', d: 'Las notas de voz por fin se envían y llegan de verdad (la causa real era del servidor, ya corregida). Además, si mandas otro mensaje mientras la nota sube, la nota ya NO desaparece: muestra un reloj mientras sube, un ⚠️ para reintentar si algo falla (sin perder nada), y ✓ cuando el servidor la confirma.' },
   { t: 'mejora', m: 'Mensajes', d: 'Nueva barra de grabación de voz tipo WhatsApp: empieza a grabar al tocar el micrófono, con la onda de sonido en vivo, el tiempo, y botones claros de cancelar y enviar.' },
   { t: 'nuevo', m: 'Mensajes', d: 'Los enlaces (links) que te mandan en el chat ahora son clickeables: al tocarlos se abren en el navegador.' },
+  { t: 'arreglo', m: 'Transporte', d: 'El PDF del conduce ahora muestra bien el motivo (p. ej. "Uso en proyecto") y quién entregó el material, en vez de códigos internos o "vacío".' },
+  { t: 'mejora', m: 'Transporte', d: 'Las 4 fotos que tomas al recibir un vehículo (frente, lados y trasera) ahora se ven en tu historial de usos ("Mi actividad").' },
 ];
 
 const TIPO_POR_COMMIT = {
