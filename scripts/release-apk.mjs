@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.90.1';
+const VERSION = '1.91.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,16 +62,19 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-19';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Notas de voz arregladas de raíz, grabación tipo WhatsApp, enlaces y más';
+const TITULO = 'Solicitud de movimiento, la app abre sin internet, y mejoras en el chat';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Mensajes', d: 'Las notas de voz por fin se envían y llegan de verdad (la causa real era del servidor, ya corregida). Además, si mandas otro mensaje mientras la nota sube, la nota ya NO desaparece: muestra un reloj mientras sube, un ⚠️ para reintentar si algo falla (sin perder nada), y ✓ cuando el servidor la confirma.' },
-  { t: 'mejora', m: 'Mensajes', d: 'Nueva barra de grabación de voz tipo WhatsApp: empieza a grabar al tocar el micrófono, con la onda de sonido en vivo, el tiempo, y botones claros de cancelar y enviar.' },
-  { t: 'nuevo', m: 'Mensajes', d: 'Los enlaces (links) que te mandan en el chat ahora son clickeables: al tocarlos se abren en el navegador.' },
-  { t: 'arreglo', m: 'Transporte', d: 'El PDF del conduce ahora muestra bien el motivo (p. ej. "Uso en proyecto") y quién entregó el material, en vez de códigos internos o "vacío".' },
-  { t: 'mejora', m: 'Transporte', d: 'Las 4 fotos que tomas al recibir un vehículo (frente, lados y trasera) ahora se ven en tu historial de usos ("Mi actividad").' },
+  { t: 'arreglo', m: 'General', d: 'La app ya NO te saca al inicio de sesión cuando la abres sin internet: entra directo con tu sesión y los datos guardados, y muestra un aviso de "sin conexión". Todo lo enviado se sube solo al reconectar.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Solicitud de movimiento: un ingeniero pide al departamento de transporte mover material o equipo (con prioridad y fecha), y los encargados lo ven en su bandeja y crean la ruta con su chofer.' },
+  { t: 'mejora', m: 'Mensajes', d: 'Las notas de voz muestran su duración real desde que llegan (ya no 0:00 hasta reproducir) y puedes escucharlas más rápido (1x, 1.5x o 2x).' },
+  { t: 'mejora', m: 'Mensajes', d: 'El chat se sincroniza mejor entre tus dispositivos: al reconectar o volver a abrir la app, se ponen al día los mensajes que faltaban.' },
+  { t: 'nuevo', m: 'Transporte', d: '"Conduces por implementar": lista los conduces con material aún por vincular al catálogo, con su contador.' },
+  { t: 'nuevo', m: 'Mi perfil', d: 'Ya puedes editar tu nombre visible y tu teléfono desde "Mi perfil".' },
+  { t: 'mejora', m: 'Transporte', d: 'El color del vehículo se ve en toda su identificación (combustible, multas y "en uso").' },
+  { t: 'mejora', m: 'Inventario', d: 'El buscador de artículos tolera errores de tipeo (encuentra aunque escribas rápido o con acentos).' },
 ];
 
 const TIPO_POR_COMMIT = {

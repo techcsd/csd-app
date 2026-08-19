@@ -1,0 +1,85 @@
+<div class="screen csolm">
+  <header class="csolm__header">
+    <button type="button" class="csolm__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="csolm__title">Nueva solicitud de movimiento</h1>
+  </header>
+
+  <div class="screen__body csolm__body">
+    <label class="field-label">Obra <span class="csolm__req">*</span></label>
+    <app-collapsible-select
+      icon="🏗️"
+      label="Obra"
+      [options]="obraOpts()"
+      [selectedId]="proyectoId()"
+      placeholder="Elige la obra"
+      [searchable]="true"
+      (picked)="proyectoId.set($event)"
+    />
+
+    <label class="field-label">¿Qué se mueve? <span class="csolm__req">*</span></label>
+    <input
+      class="field"
+      type="text"
+      [ngModel]="queSeMueve()"
+      (ngModelChange)="queSeMueve.set($event)"
+      placeholder="Ej: 20 sacos de cemento, andamios…"
+    />
+
+    <label class="field-label">Tipo de carga</label>
+    <div class="csolm__opts">
+      @for (t of tipos; track t.key) {
+        <app-option-button [label]="t.label" [selected]="tipoCarga() === t.key" (pressed)="tipoCarga.set(t.key)" />
+      }
+    </div>
+
+    <label class="field-label">Origen (dónde está)</label>
+    <input
+      class="field"
+      type="text"
+      [ngModel]="origen()"
+      (ngModelChange)="origen.set($event)"
+      placeholder="Ej: Bodega Central, obra Riviera…"
+    />
+
+    <label class="field-label">Destino (a dónde va)</label>
+    <input
+      class="field"
+      type="text"
+      [ngModel]="destino()"
+      (ngModelChange)="destino.set($event)"
+      placeholder="Ej: obra Monterezzo Torre 2…"
+    />
+
+    <label class="field-label">Prioridad</label>
+    <div class="csolm__opts">
+      @for (p of prioridades; track p.key) {
+        <app-option-button
+          [label]="p.label"
+          [selected]="prioridad() === p.key"
+          [tone]="p.tone"
+          (pressed)="prioridad.set(p.key)"
+        />
+      }
+    </div>
+
+    <label class="field-label">¿Para cuándo lo necesitas en obra?</label>
+    <input class="field" type="date" [ngModel]="fechaReq()" (ngModelChange)="fechaReq.set($event)" />
+
+    <label class="field-label">Notas (opcional)</label>
+    <textarea
+      class="field csolm__notas"
+      [ngModel]="notas()"
+      (ngModelChange)="notas.set($event)"
+      rows="3"
+      placeholder="Detalles útiles para transporte…"
+    ></textarea>
+  </div>
+
+  <app-wizard-footer
+    backLabel="Cancelar"
+    primaryLabel="Enviar solicitud"
+    [primaryDisabled]="!puedeEnviar()"
+    (back)="back()"
+    (primary)="enviar()"
+  />
+</div>

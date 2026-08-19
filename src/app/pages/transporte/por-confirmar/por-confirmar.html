@@ -55,6 +55,22 @@
                 </div>
               }
 
+              <!-- AU4 — materiales LIBRES (no catalogados) que viajan en el conduce: visibles al recibir. -->
+              @if (libres().length) {
+                <p class="porconf__sub">Materiales sin catalogar en este conduce:</p>
+                <div class="porconf__items">
+                  @for (l of libres(); track l.id) {
+                    <div class="porconf__item">
+                      <span class="porconf__item-name">{{ l.nombre }}</span>
+                      <span class="porconf__item-unit">{{ l.cantidad }} {{ l.unidad }}</span>
+                    </div>
+                  }
+                </div>
+                @if (llegoTodo() === false) {
+                  <p class="porconf__hint">Si faltó alguno de estos, anótalo en las notas (su cantidad exacta se ajusta al vincularlo).</p>
+                }
+              }
+
               <label class="field-label porconf__mt" for="nt-{{ e.id }}">Notas (opcional)</label>
               <textarea id="nt-{{ e.id }}" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Novedad de la recepción…"></textarea>
 

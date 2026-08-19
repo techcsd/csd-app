@@ -15,13 +15,14 @@ import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
+import { FormsModule } from '@angular/forms';
 
 /** Profile / settings: identity, app version, update check, logout. */
 @Component({
   selector: 'app-perfil',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialog, AvatarEditor],
+  imports: [ConfirmDialog, AvatarEditor, FormsModule],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
@@ -39,7 +40,13 @@ export class PerfilPage {
   private location = inject(Location);
 
   nombre = this.ctx.nombre;
+  telefono = this.ctx.telefono; // AY1
   roles = this.ctx.roles;
+  // AY1 — edición self-service de nombre + teléfono.
+  editando = signal(false);
+  nombreEdit = signal('');
+  telefonoEdit = signal('');
+  guardandoPerfil = signal(false);
   // AW7 — foto de perfil.
   avatarUrl = this.ctx.miAvatarUrl;
   editorImagen = signal<Blob | null>(null);
@@ -179,6 +186,37 @@ export class PerfilPage {
   }
   onFotoCancel(): void {
     this.editorImagen.set(null);
+  }
+
+  /** AY1 — abre el modo edición de mi perfil (nombre + teléfono). */
+  editarPerfil(): void {
+    this.nombreEdit.set(this.nombre());
+    this.telefonoEdit.set(this.telefono());
+    this.editando.set(true);
+  }
+  cancelarEdicion(): void {
+    this.editando.set(false);
+  }
+  async guardarPerfil(): Promise<void> {
+    if (this.guardandoPerfil()) return;
+    if (!this.nombreEdit().trim()) {
+      this.toast.error('El nombre no puede quedar vacío.');
+      return;
+    }
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para actualizar tu perfil.');
+      return;
+    }
+    this.guardandoPerfil.set(true);
+    try {
+      await this.ctx.actualizarMiPerfil(this.nombreEdit().trim(), this.telefonoEdit().trim());
+      this.toast.success('Perfil actualizado.');
+      this.editando.set(false);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar el perfil.');
+    } finally {
+      this.guardandoPerfil.set(false);
+    }
   }
 
   /** Z24 — abrir la web del SGC en el navegador del sistema.

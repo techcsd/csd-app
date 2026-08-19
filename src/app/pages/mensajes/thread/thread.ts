@@ -10,8 +10,11 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CameraService } from '../../../core/services/camera.service';
 import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
+import { VoicePlayer } from '../../../shared/ui/voice-player/voice-player';
 import { StickerEditor } from '../../../shared/ui/sticker-editor/sticker-editor';
 import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
+import { App as CapApp } from '@capacitor/app';
+import type { PluginListenerHandle } from '@capacitor/core';
 
 type EstadoRecibo = 'pendiente' | 'error' | 'enviado' | 'entregado' | 'leido';
 
@@ -26,7 +29,7 @@ interface Segmento {
   selector: 'app-mensajes-thread',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, StickerEditor],
+  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, VoicePlayer, StickerEditor],
   templateUrl: './thread.html',
   styleUrl: './thread.scss',
 })
@@ -165,6 +168,51 @@ export class MensajesThreadPage implements OnDestroy {
       this.sync.changed();
       void this.refrescarPendientes();
     });
+    // AY16 — sincronización entre dispositivos. Al RECUPERAR conexión reconcilia
+    // y re-suscribe el canal realtime: un canal muerto offline/standby no revive
+    // solo, y por eso dos pantallas veían sets distintos de mensajes.
+    let onlinePrev = this.net.online();
+    effect(() => {
+      const on = this.net.online();
+      if (on && !onlinePrev) void this.reconectar();
+      onlinePrev = on;
+    });
+    // AY16 — al volver del segundo plano (SO nativo o pestaña PWA) también hay que
+    // hacer catch-up aunque la red no haya cambiado (el socket pudo cerrarse en
+    // standby). Nativo: 'resume'; web/PWA: visibilitychange.
+    void CapApp.addListener('resume', () => void this.reconectar()).then((h) => (this.resumeSub = h));
+    this.onVisible = () => {
+      if (document.visibilityState === 'visible') void this.reconectar();
+    };
+    document.addEventListener('visibilitychange', this.onVisible);
+  }
+
+  private resumeSub?: PluginListenerHandle;
+  private onVisible?: () => void;
+  private reconectando = false;
+
+  /**
+   * AY16 — catch-up de reconexión/resume: rehace la suscripción realtime (el
+   * canal pudo morir), reconcilia el hilo con el server (delta vía listar_mensajes)
+   * y re-deriva recibos/pendientes. Los pendientes viejos con error se reintentan
+   * solos porque SyncService drena el outbox al volver la red (constraint `audio`
+   * ya válido) — aquí solo aseguramos que la VISTA converja.
+   */
+  private async reconectar(): Promise<void> {
+    if (this.reconectando || !this.conversacionId) return;
+    this.reconectando = true;
+    try {
+      this.unsub?.();
+      this.unsub = this.mensajes.suscribir(() => void this.onRealtimeMsg(), this.conversacionId);
+      this.presenciaCh?.cerrar();
+      this.iniciarPresencia();
+      await this.cargar(true);
+      void this.mensajes.marcarEntregada(this.conversacionId);
+      void this.refrescarRecibos();
+      void this.refrescarPendientes();
+    } finally {
+      this.reconectando = false;
+    }
   }
 
   /** AV5 — al llegar un mensaje por realtime: recarga + marca entregado + refresca recibos. */
@@ -320,6 +368,9 @@ export class MensajesThreadPage implements OnDestroy {
 
   ngOnDestroy(): void {
     this.unsub?.();
+    // AY16 — libera los listeners de reconexión/resume.
+    void this.resumeSub?.remove();
+    if (this.onVisible) document.removeEventListener('visibilitychange', this.onVisible);
     // AV5 — avisa que dejé de escribir y cierra el canal de presencia + timers.
     this.emitirPresencia('nada');
     this.presenciaCh?.cerrar();

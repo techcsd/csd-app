@@ -9,7 +9,7 @@ const AVATARS_BUCKET = 'sgc-avatars';
 
 // Selección del perfil + roles/módulos (misma forma que usa SGC).
 const PROFILE_SELECT =
-  'id, nombre, email, activo, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
+  'id, nombre, email, telefono, activo, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
 // Prefijo de la caché en disco del perfil (offline-first).
 const PROFILE_CACHE_PREFIX = 'perfil_';
 
@@ -43,6 +43,24 @@ export class UserContextService {
   roles = computed(() => this._profile()?.roles?.map((ur) => ur.rol.codigo) ?? []);
 
   nombre = computed(() => this._profile()?.nombre ?? '');
+  /** AY1 — teléfono editable por el propio usuario. */
+  telefono = computed(() => this._profile()?.telefono ?? '');
+
+  /**
+   * AY1 — edición self-service de MI nombre visible + teléfono (RPC self-scoped
+   * mi_perfil_actualizar por auth.uid(); NO toca rol/permisos/login/es_prueba).
+   * Refresca el perfil para que la UI muestre el cambio.
+   */
+  async actualizarMiPerfil(nombre: string, telefono: string): Promise<void> {
+    const id = this._profile()?.id;
+    if (!id) throw new Error('Sesión no cargada.');
+    const { error } = await this.supabase.client.rpc('mi_perfil_actualizar', {
+      p_nombre: nombre,
+      p_telefono: telefono,
+    });
+    if (error) throw new Error(error.message);
+    await this.loadProfile(id);
+  }
 
   /** AW7 — URL pública de mi foto de perfil (o null si no tengo). */
   miAvatarUrl = computed<string | null>(() => {

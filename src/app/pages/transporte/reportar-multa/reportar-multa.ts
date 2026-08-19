@@ -25,6 +25,7 @@ interface VehSel {
   placa: string;
   marca: string;
   modelo: string;
+  color?: string | null; // AT9 — "Marca Modelo · Color · Placa"
 }
 
 /** Estado del formulario persistido (sin el blob del documento, que va aparte). */
@@ -173,7 +174,7 @@ export class ReportarMultaPage {
       this.borradorPrevio.set(true);
     } else if (asignaciones.length) {
       const a = asignaciones[0];
-      this.vehiculo.set({ vehiculo_id: a.vehiculo_id, placa: a.placa, marca: a.marca, modelo: a.modelo });
+      this.vehiculo.set({ vehiculo_id: a.vehiculo_id, placa: a.placa, marca: a.marca, modelo: a.modelo, color: a.color ?? null });
     }
     this.hydrated = true;
   }
@@ -207,7 +208,7 @@ export class ReportarMultaPage {
     this.sheetAbierto.set(false);
   }
   elegirVehiculo(v: VehiculoDisponible): void {
-    this.vehiculo.set({ vehiculo_id: v.vehiculo_id, placa: v.placa, marca: v.marca, modelo: v.modelo });
+    this.vehiculo.set({ vehiculo_id: v.vehiculo_id, placa: v.placa, marca: v.marca, modelo: v.modelo, color: v.color ?? null });
     this.sheetAbierto.set(false);
   }
   quitarVehiculo(): void {

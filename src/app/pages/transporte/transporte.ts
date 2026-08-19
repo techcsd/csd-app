@@ -15,6 +15,7 @@ import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { InventarioService } from '../../core/services/inventario.service';
+import { SolicitudMovimientoService } from '../../core/services/solicitud-movimiento.service';
 import { ModuleOrderService } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
 import { MiAsignacion, PendientesTransporte, vehiculoIdentidad } from '../../core/models/transporte.model';
@@ -51,6 +52,9 @@ const TILES: HubTile[] = [
   { key: 'actividad', icon: '📈', label: 'Mi Actividad', tint: '#16a34a' },
   // AU7 — "Mi recorrido" (Timeline diario: trazo + paradas + estado offline).
   { key: 'miRecorrido', icon: '🗺️', label: 'Mi Recorrido', tint: '#0ea5e9' },
+  // AY11 — Solicitud de movimiento (ingeniero solicita; referente planifica). Visible
+  // a todos: la RLS decide el alcance (propias vs bandeja completa).
+  { key: 'solicitudMovimiento', icon: '🚚', label: 'Solicitud de Movimiento', tint: '#9333ea' },
 
   // ── Gestión (solo roles elevados) ────────────────────────────────────────────
   { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
@@ -82,6 +86,7 @@ export class TransportePage {
   private enProceso = inject(EnProcesoService);
   private conducesSvc = inject(ConducesService);
   private inventario = inject(InventarioService);
+  private solicitudMov = inject(SolicitudMovimientoService);
   private moduleOrder = inject(ModuleOrderService);
   private toast = inject(ToastService);
 
@@ -127,6 +132,7 @@ export class TransportePage {
   conducesNuevas = signal(0); // Y3 — rutas planificadas asignadas no vistas
   firmasPendientes = signal(0); // AE — firmas de recepción por firmar
   pendienteEntrega = signal(0); // AI2 — conduces emitidos pendientes de entrega
+  solicitudesPend = signal(0); // AY11 — solicitudes de movimiento pendientes
   loading = signal(true);
   /** P4 — vehículos con una recepción encolada (se marcan "Enviando…"). */
   enviandoIds = signal<Set<string>>(new Set());
@@ -146,6 +152,8 @@ export class TransportePage {
       void this.load();
     });
     void this.badges.load(); // S15 — badge de avisos en el cuadro
+    // AY11 — badge de solicitudes de movimiento pendientes (best-effort).
+    void this.solicitudMov.pendientesCount().then((n) => this.solicitudesPend.set(n)).catch(() => {});
     void this.enProceso.refresh(); // V1 — contador de documentación en proceso
     void this.cargarOrden(); // AI16 — orden de submódulos configurado
   }
@@ -237,6 +245,7 @@ export class TransportePage {
     if (key === 'misRutas') return this.conducesNuevas() || null; // Y3 — rutas nuevas
     if (key === 'conducesHub') return this.pendienteEntrega() || this.firmasPendientes() || null;
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
+    if (key === 'solicitudMovimiento') return this.solicitudesPend() || null; // AY11
     return null;
   }
 
@@ -256,6 +265,7 @@ export class TransportePage {
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
       case 'miRecorrido': return void this.router.navigate(['/transporte/mi-recorrido']);
+      case 'solicitudMovimiento': return void this.router.navigate(['/transporte/solicitudes-movimiento']);
       case 'usoVehiculo': return this.usoVehiculo();
       case 'avisoVehiculo': return this.avisoVehiculo();
       case 'vehiculos': return this.vehiculosLista();

@@ -37,8 +37,15 @@ export class VehiculoPicker {
   dropdown = input(false);
   /** AK6 — id del vehículo ya elegido (para pintar el chip colapsado). */
   selectedId = input<string>('');
+  /** AW16 — muestra "En uso · [usuario]" por ítem EN el picker (no solo post-selección).
+   *  Opt-in: solo lo piden los flujos de roles elevados (planificar/asignar). Best-effort:
+   *  si el usuario no puede leer vehiculos_en_uso, el mapa queda vacío y no pinta nada. */
+  mostrarEnUso = input(false);
 
   elegido = output<VehiculoDisponible>();
+
+  /** AW16 — vehiculo_id → nombre del usuario que lo tiene en uso ahora mismo. */
+  enUso = signal<Record<string, string>>({});
 
   /** AK6 — la cuadrícula está abierta (el usuario tocó el trigger/"Cambiar"). */
   abierto = signal(false);
@@ -80,6 +87,17 @@ export class VehiculoPicker {
       this.disponibles.set(disp);
       this.misIds.set(new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola]));
       void this.resolveFotos(disp);
+      // AW16 — quién tiene cada vehículo EN USO ahora (best-effort; requiere permiso).
+      if (this.mostrarEnUso()) {
+        void this.vehiculos
+          .getVehiculosEnUso()
+          .then((rows) => {
+            const map: Record<string, string> = {};
+            for (const r of rows) map[r.vehiculo_id] = r.usuario_nombre ?? 'Alguien';
+            this.enUso.set(map);
+          })
+          .catch(() => {});
+      }
     } finally {
       this.loading.set(false);
     }

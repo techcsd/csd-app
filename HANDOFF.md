@@ -1,5 +1,52 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 23/08 — PROMPT-30 ronda AY (app) — **RELEASE 1.91.0 (build APK firmado + registrado) · AY9 verificado en device · build verde**
+
+**TL;DR:** Ronda AY completa. Cerrado lo de mayor valor: 🔴 **AY9 (la app botaba al login sin red) — VERIFICADO EN DEVICE**, el **saga de voices** (duración real + velocidad + sync entre dispositivos + saneo), **AT9 color**, **AY13 conduces por implementar**, **AW6 fuzzy**, **AY11 "Solicitud de movimiento" (módulo completo)**, **AY1 "Mi perfil" editable (nombre+teléfono, backend nuevo)**, **AU4** (recepción por-ítem revivida + libres visibles), **AW16** (En uso · usuario en el picker). **APK 1.91.0** firmado (cert `3c5316d8…5065`) + registrado (Y1, 8 cambios curados). PROMPT-29 (SGC) ya DESPLEGADO en prod. Migración aditiva aplicada: `sql/2026-08-23-ay1-perfil-self-edit.sql`.
+
+**⚠️ AL PUBLICAR:** `npm run apk:publish` (sube el APK) → flip `publicada=1.91.0`, **mantener `version_minima=1.70.0`** (rolling, NO bloqueante).
+
+### ✅ Hecho esta sesión (build verde)
+- **🔴 AY9 — offline-first de la sesión (la app botaba al login sin red):** raíz = en un arranque offline con el access token expirado (~1h), Supabase `getSession()` quema ~25-30s reintentando un refresh imposible y devuelve `null` (el refresh token SIGUE en disco); `authGuard`→`hasSession()` leía ese `null` como "deslogueado". **Fix:** `hasSession()` ahora confía en la **sesión persistida en disco** (`SupabaseService.readStoredSession()` lee la clave `sb-<ref>-auth-token` de Preferences/localStorage) — Supabase solo borra ese blob por logout explícito o revocación CONFIRMADA, nunca por fallo de red. Mata el falso-logout Y la pantalla en blanco de 25-30s (no más `getSession()` en el guard). `ensureProfile()` toma el userId del blob → el perfil cacheado carga offline. Archivos: `core/services/{supabase,auth,session}.service.ts`.
+- **FASE 3 chat (cierre del saga de voices):**
+  - **Player nuevo `shared/ui/voice-player`** (reemplaza `<audio controls>`): muestra la **duración real desde metadata** (`duracion_seg`) al instante — nunca 0:00 — + control de **velocidad 1×/1.5×/2×** (AW13) + iconos SVG (AW12). El envío de `duracion_seg` YA estaba (recorder→outbox→`enviar_nota_voz`), solo faltaba el player.
+  - **Sync entre dispositivos (AY16):** `thread.ts` ahora hace **catch-up de reconexión/resume** — al volver la red (effect sobre `net.online()`) o del segundo plano (`CapApp 'resume'` + `visibilitychange`) **re-suscribe el canal realtime** (moría en standby → dos pantallas divergían) y reconcilia con `listar_mensajes`.
+  - **Saneo de pendientes viejos:** `SyncService.sanearErroresAudioUnaVez()` reencola UNA vez (flag Preferences) las notas de voz que quedaron en `error` antes del fix del constraint `mensajes_tipo_chk` (el drain salta las `error`). RPC idempotente → no duplica.
+- **AT9 — color en TODA la identificación:** `VehiculoEnUso`, `getVehiculo`, `combustible`, `reportar-multa` (`VehSel`) ahora llevan/pintan `color`. `vehiculos_en_uso` (RPC) YA devolvía `color`; `vehiculoIdentidad()` ya lo formatea. (`VehiculoDisponible`/`MiAsignacion` ya tenían el campo de antes.)
+- **AY13 — "Conduces por implementar":** tile condicional + badge en `conduces-hub` + página nueva `conduces-por-implementar` + wrappers `conducesPorImplementar()/_Count()` (RPC ya en prod). Read-only (el vínculo del artículo es del admin en la web).
+- **AW6 — fuzzy en `articulo-picker`:** input opcional `buscador` (retrocompatible): cuando el filtro local se queda corto, cae al RPC `buscar_articulos` (pg_trgm, debounce 300ms) y fusiona hits. Cableado en `generar-conduce` y `ferreteria`. **NO** en `devolver-material` a propósito (ahí solo se devuelve stock existente de la obra; fuzzy catálogo-wide sería incorrecto).
+- **AY11 — MÓDULO NUEVO "Solicitud de movimiento" COMPLETO:** `core/services/solicitud-movimiento.service.ts` (+ eager-boot en `app.config`) + 2 páginas (`solicitud-movimiento/`): crear (ingeniero, **offline por outbox** `solicitud_movimiento_crear`) + bandeja (ingeniero ve las suyas por RLS; **referente** ve todas con filtros estado/prioridad, planifica con **hoja** vehículo+chofer+fecha → `planificar_solicitud_con_ruta`, completa/cancela). Prioridad con escala de color (AY3, no todo rojo) + semáforo de urgencia por `dias_para_requerimiento`. Tile + badge en el hub de Flota + rutas. Todos los RPC ya en prod.
+- **AS14 — decisión de Xaviel APLICADA:** el gasto directo queda **online-only A PROPÓSITO** (es dinero; evita montos "flotando" sin confirmar). El mensaje "necesitas conexión" ya existía; se **documentó la decisión** como única excepción consciente a ADR-002 (`compras-proyecto.ts`).
+- **AS3 / AS17:** **YA estaban hechos** en 1.90.1 (commits `c745b14`/`e8f830c`). El reporte de auditoría era PRE-fix.
+- **AY1 "Mi perfil" editable — DESBLOQUEADO y HECHO:** migración `sql/2026-08-23-ay1-perfil-self-edit.sql` (aplicada a prod) agrega `usuarios.telefono` + RPC self-scoped `mi_perfil()` / `mi_perfil_actualizar(p_nombre,p_telefono)` (auth.uid(), auditado). La foto ya tenía self-RPC (`actualizar_mi_avatar`). App: `pages/perfil` edita nombre + teléfono + foto; email/rol read-only. **Falta espejo web (AY12)** en SGC (columna ya existe; construir la UI de perfil editable en la web).
+- **AU4 — recepción por-ítem revivida:** `mis_entregas_por_confirmar` NO trae items, así que el flujo "Faltó algo" por-ítem estaba MUERTO. `por-confirmar` ahora trae el detalle (`conduce_detalle_app`) al abrir → cantidades por ítem catalogado funcionan; los ítems LIBRES se MUESTRAN (AT11). **Falta backend** para PERSISTIR la cantidad-recibida de un ítem libre (viven en tabla aparte sin columna `cantidad_recibida`; `conduce_confirmar_receptor` sólo aplica p_items por `salida_detalles.detalle_id`).
+
+### ⏳ Pendiente — Claude puede (próxima ronda)
+- **AS1 — hard-kill revival del tracking:** el stack ya es sólido (FGS del plugin comunitario con `distanceFilter` = adaptativo por movimiento, NO 1s fijo; watchdog JS 60s; heartbeat; BootReceiver; exclusión de batería sólo a sharers con re-pedido si el SO revoca — **AT-batería ya HECHO**, verificado en `tracking.service.ts:329`). Lo que falta (START_STICKY/onTaskRemoved/WorkManager para revivir tras kill DURO del SO) vive DENTRO del plugin comunitario `@capacitor-community/background-geolocation` (no en Java de la app) → requiere fork + QA multi-fabricante. Se DIFIRIÓ: no arriesgar el tracking de todas las guaguas en un release sin device-QA multi-escenario.
+- **AV13** (crear-ruta → `DestinoSelector` compartido): refactor SIN valor para el usuario sobre un wizard crítico y frágil (el gotcha del filtro lugarOpts vive ahí) → DIFERIDO para no arriesgar la creación de rutas en un release que no puedo device-QA a fondo.
+- **AW12** (barrido emoji→SVG masivo, ~1091 líneas): gradual por diseño (el voice-player nuevo ya es SVG). Pendiente el grueso.
+
+### 🔴 Pendiente — Xaviel (físico / su cuenta)
+- **Publicar:** `npm run apk:publish` + flip `publicada=1.91.0` (mantener `version_minima=1.70.0`). *(Si me diste OK, lo hago yo.)*
+- **Device-QA con tu huella/PIN (no puedo autenticar tu cuenta):** entrar a la app y probar (a) **AY11** ingeniero crea solicitud offline → referente planifica hasta ruta; (b) **voice player** duración al llegar + velocidad; (c) **banner offline** dentro de la app; (d) los **5 tests de voces** (2 teléfonos A→B; voz+texto; salir/entrar; modo avión; web↔app).
+- **✅ AY9 YA VERIFICADO EN DEVICE (Huawei STK-LX3, Android 10):** sin red (wifi+data off, "Network is unreachable") + force-stop + cold-launch → la app llegó a la pantalla de **desbloqueo biométrico en ~3s** (sesión VIVA, NO login, y SIN la pantalla en blanco de 25-30s del bug viejo). El flujo biométrico sólo corre para un usuario logueado con sesión persistida.
+- **Espejo web (AY12):** perfil editable en la web; Solicitud de movimiento en la web (PROMPT-29 ya tiene el backend).
+
+### ⚠️ Gotchas de esta sesión
+- **PROMPT-29 YA está en prod:** introspección confirmó `mensajes.duracion_seg`, `enviar_nota_voz(...p_duracion_seg...)`, tabla `solicitudes_movimiento` + RPCs (crear/listar/planificar_solicitud_con_ruta/completar/cancelar/es_referente_movimiento/_pendientes_count), `conduces_por_implementar[_count]`, `buscar_articulos`, `vehiculos_en_uso` con `color`.
+- **AS3/AS17 eran falsos "abiertos":** el reporte de auditoría se escribió ANTES de los commits que ya los arreglaron (1.90.1). Verificar prod/working-tree antes de "re-arreglar".
+- **Clave de storage de la sesión:** Supabase la deriva como `sb-${hostname.split('.')[0]}-auth-token` (verificado en `supabase-js` 2.110.1, `index.cjs:1243`). NO cambiar el `storageKey` del cliente o se invalidan las sesiones persistidas (justo el bug AY9).
+- **`OptionButton` requiere `[label]`** (no usa ng-content) — costó un ciclo de build.
+- **`PluginListenerHandle`** se importa de `@capacitor/core`, no de `@capacitor/app`.
+- **Introspección read-only de prod:** POST SQL a `https://api.supabase.com/v1/projects/<REF>/database/query` con `SUPABASE_ACCESS_TOKEN` (system env var). Útil para verificar contratos antes de consumirlos.
+
+### Verify on resume
+- `cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build` → exit 0 (solo warnings de budget preexistentes).
+- Versión 1.91.0 en `release-apk.mjs` / `src/environments/*` / `android/app/build.gradle` (alineadas). APK firmado en `android/app/build/outputs/apk/release/app-release.apk`, ya registrado en `sgc.app_versiones`.
+- Migración AY1 aplicada a prod: `sql/2026-08-23-ay1-perfil-self-edit.sql` (usuarios.telefono + mi_perfil/mi_perfil_actualizar).
+
+---
+
 ## 🟢 SESIÓN 19/08 (AUDITORÍA) — PROMPT-28 ronda AX — **RELEASE 1.90.1 PUBLICADO (rolling) · web SGC 1.84.1 · voices ARREGLADOS DE RAÍZ (device-QA ✅) · auditoría AK→AW**
 
 ### 🔴🔴 RAÍZ REAL de los voices (device-QA la delató) — ARREGLADA

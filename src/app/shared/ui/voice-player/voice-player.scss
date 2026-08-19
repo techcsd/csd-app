@@ -1,0 +1,72 @@
+.vplayer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 200px;
+  padding: 2px 0;
+
+  &__btn {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    svg {
+      fill: currentColor;
+    }
+
+    &:active {
+      transform: scale(0.94);
+    }
+  }
+
+  &__track {
+    flex: 1 1 auto;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.14);
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    transition: width 0.1s linear;
+  }
+
+  &__time {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    color: var(--main-ultra-light);
+    font-variant-numeric: tabular-nums;
+    min-width: 34px;
+    text-align: right;
+  }
+
+  &__speed {
+    flex: 0 0 auto;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    background: transparent;
+    color: var(--main);
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    transition: all 0.15s ease;
+
+    &:active {
+      transform: scale(0.94);
+    }
+  }
+}

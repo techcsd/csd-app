@@ -106,7 +106,7 @@
             {{ esFerreteria() ? '¿Qué compraste?' : '¿Qué material sacas?' }}
             @if (esFerreteria()) { <span class="gconduce__opt">(opcional)</span> }
           </label>
-          <app-articulo-picker [articulos]="articulos()" [categorias]="categorias()" [soloBuscador]="true" [exclude]="excludeIds()" [stock]="stockParaPicker()" (picked)="agregar($event)" />
+          <app-articulo-picker [articulos]="articulos()" [categorias]="categorias()" [soloBuscador]="true" [exclude]="excludeIds()" [stock]="stockParaPicker()" [buscador]="buscarArticulosFuzzy" (picked)="agregar($event)" />
 
           @if (stockSinVerificar()) {
             <p class="gconduce__hint">ℹ️ Sin conexión: mostrando existencias del último sync. Se verifican al enviar.</p>

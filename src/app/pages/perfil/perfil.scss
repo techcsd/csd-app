@@ -117,3 +117,39 @@
 .perfil__logout:active {
   background: #b91c1c;
 }
+
+/* AY1 — bloque "editar mi perfil" (nombre + teléfono) */
+.perfil__miperfil {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.perfil__miperfil-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.perfil__miperfil-row b {
+  color: var(--color-text);
+  text-align: right;
+}
+.perfil__miperfil .perfil__btn {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.perfil__miperfil--edit .field {
+  margin-bottom: 10px;
+}
+.perfil__miperfil-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.perfil__miperfil-acciones .perfil__foto-btn {
+  flex: 1;
+}

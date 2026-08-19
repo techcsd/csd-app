@@ -33,6 +33,7 @@ import { RrhhService } from './core/services/rrhh.service';
 import { TareasService } from './core/services/tareas.service';
 import { TecnologiaService } from './core/services/tecnologia.service';
 import { PersonalObraService } from './core/services/personal-obra.service';
+import { SolicitudMovimientoService } from './core/services/solicitud-movimiento.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -92,6 +93,7 @@ export const appConfig: ApplicationConfig = {
       inject(TareasService); // tarea_app_iniciar / tarea_app_completar
       inject(TecnologiaService); // AL2 — tec_equipo_guardar
       inject(PersonalObraService); // AR1 — personal_registro / personal_editar
+      inject(SolicitudMovimientoService); // AY11 — solicitud_movimiento_crear (offline)
     }),
   ],
 };

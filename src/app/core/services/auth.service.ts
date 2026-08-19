@@ -153,6 +153,21 @@ export class AuthService {
     return data.session;
   }
 
+  /**
+   * AY9 — true when a session is persisted on disk (refresh token present),
+   * regardless of connectivity. This is the offline-first source of truth for
+   * "logged in": the blob is cleared only by explicit logout or a server-confirmed
+   * revocation, so it never yields a false logout on a network failure.
+   */
+  async hasStoredSession(): Promise<boolean> {
+    return (await this.supabase.readStoredSession()) !== null;
+  }
+
+  /** AY9 — userId from the persisted session (offline-safe; no network round-trip). */
+  async getStoredUserId(): Promise<string | undefined> {
+    return (await this.supabase.readStoredSession())?.user?.id;
+  }
+
   async getUser(): Promise<User | null> {
     const { data } = await this.supabase.client.auth.getUser();
     return data.user;

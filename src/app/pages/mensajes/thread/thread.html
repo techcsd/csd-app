@@ -77,12 +77,11 @@
           <div class="thread__msg thread__msg--audio" [class.thread__msg--mio]="esMio(m)">
             @if (!esMio(m) && esGrupo()) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
             @if (audioUrl(m); as au) {
-              <audio class="thread__audio" [src]="au" controls preload="none"></audio>
+              <app-voice-player [src]="au" [duracion]="m.duracion_seg ?? null" />
             } @else {
               <span class="thread__audio-cargando">Enviando nota de voz…</span>
             }
             <span class="thread__meta">
-              @if (m.duracion_seg) { <span class="thread__audio-dur">{{ fmtDur(m.duracion_seg) }}</span> }
               <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
               <ng-container [ngTemplateOutlet]="tick" [ngTemplateOutletContext]="{ $implicit: m }" />
             </span>

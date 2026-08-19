@@ -67,7 +67,7 @@
         <div class="rmul__veh">
           <div class="rmul__veh-info">
             <span class="rmul__veh-placa">{{ v.placa }}</span>
-            <span class="rmul__veh-modelo">{{ v.marca }} {{ v.modelo }}</span>
+            <span class="rmul__veh-modelo">{{ v.marca }} {{ v.modelo }}@if (v.color) { · {{ v.color }} }</span>
           </div>
           <div class="rmul__veh-actions">
             <button type="button" class="btn-ghost" (click)="abrirPicker()">Cambiar</button>

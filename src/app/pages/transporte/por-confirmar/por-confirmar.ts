@@ -9,7 +9,12 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { CapturedPhoto } from '../../../core/services/camera.service';
-import { ConducesService, EntregaPorConfirmar } from '../../../core/services/conduces.service';
+import {
+  ConducesService,
+  EntregaPorConfirmar,
+  ConduceDetalleItem,
+  ConduceItemLibre,
+} from '../../../core/services/conduces.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -53,11 +58,17 @@ export class PorConfirmarPage {
   enviando = signal(false);
   // QA-13 — cantidades recibidas por item (editables cuando "Faltó algo").
   cantidades = signal<Record<string, number>>({});
+  // AU4 — items del conduce traídos del DETALLE al abrir (la lista mis_entregas
+  // NO trae items, por eso el flujo por-item estaba muerto). Ahora sí hay qué recibir.
+  private detalleItems = signal<ConduceDetalleItem[]>([]);
+  // AU4 — items LIBRES (material no catalogado). Se MUESTRAN al recibir (AT11); su
+  // cantidad-recibida aún no persiste server-side (tabla aparte sin columna) → sólo
+  // informativo hasta el follow-up de backend.
+  libres = signal<ConduceItemLibre[]>([]);
+  cargandoDetalle = signal(false);
 
-  /** QA-13 — items del conduce que se está confirmando (si el RPC los provee). */
-  itemsActuales = computed(
-    () => this.entregas().find((e) => e.id === this.confirmandoId())?.items ?? [],
-  );
+  /** AU4 — items catalogados del conduce que se está confirmando (del detalle). */
+  itemsActuales = computed(() => this.detalleItems());
 
   constructor() {
     void this.load();
@@ -86,12 +97,34 @@ export class PorConfirmarPage {
   }
 
   abrir(id: string): void {
-    this.confirmandoId.set(this.confirmandoId() === id ? '' : id);
+    const abriendo = this.confirmandoId() !== id;
+    this.confirmandoId.set(abriendo ? id : '');
     this.foto.set(null);
     this.firmaLista.set(false);
     this.llegoTodo.set(null);
     this.notas.set('');
-    this.resetCantidades(id); // QA-13
+    this.detalleItems.set([]);
+    this.libres.set([]);
+    this.cantidades.set({});
+    // AU4 — trae el detalle del conduce (items catalogados + libres) para que el
+    // flujo "Faltó algo" tenga QUÉ recibir por ítem (la lista no los provee).
+    if (abriendo) void this.cargarDetalle(id);
+  }
+
+  private async cargarDetalle(id: string): Promise<void> {
+    this.cargandoDetalle.set(true);
+    try {
+      const d = await this.conduces.conduceDetalleApp(id);
+      // Ignora si el usuario ya cambió de fila mientras cargaba.
+      if (this.confirmandoId() !== id) return;
+      this.detalleItems.set(d.items ?? []);
+      this.libres.set(d.items_libres ?? []);
+      this.resetCantidades(id);
+    } catch {
+      // Sin red / sin detalle: se degrada al checklist Sí/No (sin bloquear).
+    } finally {
+      this.cargandoDetalle.set(false);
+    }
   }
 
   onFirma(has: boolean): void {
@@ -111,10 +144,9 @@ export class PorConfirmarPage {
 
   // ── QA-13 — registrar QUÉ y CUÁNTO llegó cuando "Faltó algo" ────────────────
   /** Reinicia las cantidades a las del conduce (todo recibido) para una entrega. */
-  private resetCantidades(id: string): void {
-    const e = this.entregas().find((x) => x.id === id);
+  private resetCantidades(_id: string): void {
     const init: Record<string, number> = {};
-    for (const it of e?.items ?? []) init[it.detalle_id] = it.cantidad;
+    for (const it of this.detalleItems()) init[it.detalle_id] = it.cantidad;
     this.cantidades.set(init);
   }
 

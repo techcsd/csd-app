@@ -501,6 +501,26 @@ export interface ConducePorFirmar {
   fase: string | null;
 }
 
+/**
+ * AY13 — un conduce con ≥1 ítem libre aún sin vincular a un artículo del catálogo
+ * (no generó movimiento real de inventario). El admin lo resuelve en la web
+ * creando/vinculando el artículo; la app solo lo REFLEJA (RPC conduces_por_implementar).
+ */
+export interface ConducePorImplementar {
+  salida_id: string;
+  conduce_numero: string | null;
+  fecha: string;
+  estado: string;
+  estado_label: string | null;
+  proyecto: string | null;
+  bodega: string | null;
+  creado_por: string | null;
+  pendientes: number; // ítems libres sin vincular
+  total_libres: number;
+  es_prueba: boolean;
+  created_at: string;
+}
+
 /** AL10 — almacén central elegible como destino de un conduce (almacenes_destino). */
 export interface AlmacenDestino {
   id: string;
@@ -1386,6 +1406,36 @@ export class ConducesService {
     });
     if (error) throw new Error(error.message);
     return (data as string | null) ?? null;
+  }
+
+  /**
+   * AY13 — conduces con ítems libres sin vincular ("por implementar"). Read-only:
+   * el vínculo del artículo es del admin (web); la app lo lista con su badge.
+   */
+  async conducesPorImplementar(): Promise<ConducePorImplementar[]> {
+    const { data, error } = await this.supabase.client.rpc('conduces_por_implementar');
+    if (error) throw new Error(error.message);
+    return ((data as Array<Record<string, unknown>>) ?? []).map((r) => ({
+      salida_id: r['salida_id'] as string,
+      conduce_numero: (r['conduce_numero'] as string) ?? null,
+      fecha: r['fecha'] as string,
+      estado: r['estado'] as string,
+      estado_label: (r['estado_label'] as string) ?? null,
+      proyecto: (r['proyecto'] as string) ?? null,
+      bodega: (r['bodega'] as string) ?? null,
+      creado_por: (r['creado_por'] as string) ?? null,
+      pendientes: (r['pendientes'] as number) ?? 0,
+      total_libres: (r['total_libres'] as number) ?? 0,
+      es_prueba: (r['es_prueba'] as boolean) ?? false,
+      created_at: r['created_at'] as string,
+    }));
+  }
+
+  /** AY13 — cuántos conduces están "por implementar" (badge del hub). */
+  async conducesPorImplementarCount(): Promise<number> {
+    const { data, error } = await this.supabase.client.rpc('conduces_por_implementar_count');
+    if (error) return 0;
+    return (data as number) ?? 0;
   }
 
   /** AS2 — cuántos conduces tengo por firmar (para el badge). */

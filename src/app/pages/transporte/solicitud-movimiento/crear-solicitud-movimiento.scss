@@ -1,0 +1,52 @@
+.csolm {
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.csolm__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.csolm__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.csolm__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  flex: 1;
+  min-width: 0;
+}
+
+.csolm__body {
+  padding: 16px;
+  padding-bottom: 96px;
+}
+
+.csolm__req {
+  color: var(--primary);
+}
+
+.csolm__opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.csolm__notas {
+  resize: vertical;
+  min-height: 72px;
+}

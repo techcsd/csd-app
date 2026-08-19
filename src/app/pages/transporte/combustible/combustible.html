@@ -42,7 +42,7 @@
             <span class="comb__modelo">Echada sin vehículo</span>
           } @else {
             <span class="comb__placa">{{ placa() }}</span>
-            <span class="comb__modelo">{{ modelo() }}</span>
+            <span class="comb__modelo">{{ modelo() }}@if (color()) { · {{ color() }} }</span>
           }
         </div>
       </div>

@@ -327,6 +327,34 @@ export const routes: Routes = [
       ),
   },
   {
+    // AY13 — "Conduces por implementar": conduces con ítems libres sin vincular.
+    // Sin moduleGuard: el RPC filtra por permiso; read-only (el vínculo es del admin web).
+    path: 'transporte/conduces-por-implementar',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/conduces-por-implementar/conduces-por-implementar').then(
+        (m) => m.ConducesPorImplementarPage,
+      ),
+  },
+  {
+    // AY11 — Solicitudes de movimiento (bandeja: propias del ingeniero / todas del referente).
+    path: 'transporte/solicitudes-movimiento',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/solicitud-movimiento/solicitudes-movimiento').then(
+        (m) => m.SolicitudesMovimientoPage,
+      ),
+  },
+  {
+    // AY11 — crear solicitud de movimiento (ingeniero, offline por outbox).
+    path: 'transporte/crear-solicitud-movimiento',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/solicitud-movimiento/crear-solicitud-movimiento').then(
+        (m) => m.CrearSolicitudMovimientoPage,
+      ),
+  },
+  {
     // AU5 — "Ver trayectoria" (replay estático) de una ruta finalizada.
     path: 'transporte/trayectoria/:rutaId',
     canActivate: [authGuard, pinGuard],

@@ -16,6 +16,7 @@ export interface Usuario {
   id: string;
   nombre: string;
   email: string;
+  telefono?: string | null; // AY1 — editable por el propio usuario
   activo?: boolean;
   avatar_path?: string | null;
   roles?: UsuarioRol[];

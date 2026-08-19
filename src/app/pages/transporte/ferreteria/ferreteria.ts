@@ -32,6 +32,8 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
 })
 export class FerreteriaPage implements OnDestroy {
   private inventario = inject(InventarioService);
+  /** AW6 — buscador fuzzy (server, pg_trgm) para el articulo-picker. */
+  buscarArticulosFuzzy = (q: string): Promise<ArticuloCat[]> => this.inventario.buscarArticulos(q, 12);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);

@@ -64,6 +64,7 @@ export interface VehiculoEnUso {
   placa: string;
   marca: string | null;
   modelo: string | null;
+  color: string | null; // AT9 — identificación completa "Marca Modelo · Color · Placa"
   usuario_id: string;
   usuario_nombre: string | null;
   desde: string;
@@ -166,6 +167,7 @@ export class VehiculosService {
     placa: string;
     marca: string;
     modelo: string;
+    color: string | null; // AT9
     anio: number | null; // Z10
     kilometraje: number;
     foto_path: string | null;
@@ -191,6 +193,7 @@ export class VehiculosService {
             placa: hit.placa,
             marca: hit.marca,
             modelo: hit.modelo,
+            color: (hit as { color?: string | null }).color ?? null, // AT9 (offline cache may lack it)
             anio: hit.anio ?? null, // Z10
             kilometraje: hit.km,
             foto_path: null,
@@ -206,6 +209,7 @@ export class VehiculosService {
       placa: string;
       marca: string;
       modelo: string;
+      color: string | null;
       anio: number | null;
       kilometraje: number;
       fotos: string[] | null;
@@ -219,6 +223,7 @@ export class VehiculosService {
       placa: v.placa,
       marca: v.marca,
       modelo: v.modelo,
+      color: v.color ?? null, // AT9
       anio: v.anio ?? null, // Z10
       kilometraje: v.kilometraje,
       foto_path: (v.fotos ?? [])[0] ?? null,

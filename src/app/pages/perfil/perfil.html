@@ -31,6 +31,32 @@
       </button>
     </div>
 
+    <!-- AY1 — editar mi nombre visible + teléfono (no la cédula/login/rol/permisos) -->
+    @if (!editando()) {
+      <div class="perfil__miperfil">
+        <div class="perfil__miperfil-row">
+          <span>Nombre</span><b>{{ nombre() || '—' }}</b>
+        </div>
+        <div class="perfil__miperfil-row">
+          <span>Teléfono</span><b>{{ telefono() || 'Sin teléfono' }}</b>
+        </div>
+        <button type="button" class="btn-ghost perfil__btn" (click)="editarPerfil()">✏️ Editar mi perfil</button>
+      </div>
+    } @else {
+      <div class="perfil__miperfil perfil__miperfil--edit">
+        <label class="field-label">Nombre visible</label>
+        <input class="field" type="text" [ngModel]="nombreEdit()" (ngModelChange)="nombreEdit.set($event)" placeholder="Tu nombre" />
+        <label class="field-label">Teléfono</label>
+        <input class="field" type="tel" inputmode="tel" [ngModel]="telefonoEdit()" (ngModelChange)="telefonoEdit.set($event)" placeholder="Ej: 809-555-1234" />
+        <div class="perfil__miperfil-acciones">
+          <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="cancelarEdicion()">Cancelar</button>
+          <button type="button" class="btn-cta perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="guardarPerfil()">
+            {{ guardandoPerfil() ? 'Guardando…' : 'Guardar' }}
+          </button>
+        </div>
+      </div>
+    }
+
     <ul class="perfil__info">
       @if (obra(); as o) {
         <li><span>Obra activa</span><b>{{ o.nombre }}</b></li>

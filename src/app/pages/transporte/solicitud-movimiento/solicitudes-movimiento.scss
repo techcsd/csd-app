@@ -1,0 +1,262 @@
+.solm {
+  background: var(--color-bg);
+  position: relative;
+  min-height: 100%;
+}
+
+.solm__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.solm__back,
+.solm__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.solm__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.solm__filtros {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.solm__filtro {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.solm__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.solm__card--prueba {
+  border-style: dashed;
+  opacity: 0.9;
+}
+
+.solm__card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+// AY3 — prioridad con escala de color (no todo rojo).
+.solm__prio {
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 2px 8px;
+  color: #fff;
+}
+.solm__prio[data-prio='baja'] {
+  background: #16a34a;
+}
+.solm__prio[data-prio='media'] {
+  background: #0284c7;
+}
+.solm__prio[data-prio='alta'] {
+  background: #ea580c;
+}
+.solm__prio[data-prio='urgente'] {
+  background: #dc2626;
+}
+
+.solm__estado {
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+}
+.solm__estado[data-estado='completada'] {
+  background: rgba(22, 163, 74, 0.14);
+  color: #15803d;
+}
+.solm__estado[data-estado='cancelada'] {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--main-ultra-light);
+}
+.solm__estado[data-estado='planificada'],
+.solm__estado[data-estado='en_curso'] {
+  background: rgba(2, 132, 199, 0.14);
+  color: #0369a1;
+}
+
+.solm__prueba-tag {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: var(--main-ultra-light);
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+
+.solm__que {
+  margin: 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.solm__ruta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+.solm__flecha {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.solm__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.solm__urg {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 3px 8px;
+  margin-bottom: 6px;
+}
+.solm__urg[data-urg='vencida'] {
+  background: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+}
+.solm__urg[data-urg='urgente'] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+}
+.solm__urg[data-urg='proxima'] {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0369a1;
+}
+.solm__urg[data-urg='normal'] {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-secondary);
+}
+
+.solm__notas {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.solm__acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.solm__act {
+  flex: 1;
+  width: auto;
+}
+
+.solm__fab {
+  position: fixed;
+  right: 18px;
+  bottom: 22px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+}
+
+// ── Hoja de planificación ────────────────────────────────────────────────────
+.solm__sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 40;
+}
+.solm__sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: var(--color-bg);
+  border-radius: 18px 18px 0 0;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+}
+.solm__sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.solm__sheet-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+.solm__sheet-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text);
+  font-size: 18px;
+}
+.solm__sheet-sub {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.solm__sheet-cta {
+  width: 100%;
+  margin-top: 16px;
+}

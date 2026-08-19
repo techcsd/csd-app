@@ -27,8 +27,18 @@ export class SessionService {
   private _unlocked = signal(false);
   unlocked = this._unlocked.asReadonly();
 
+  /**
+   * AY9 — offline-first session check. A session persisted on disk (refresh
+   * token present) means "logged in", full stop: supabase clears that blob only
+   * on explicit logout or a server-CONFIRMED revocation, never on a network
+   * failure. We deliberately do NOT call `getSession()` here — offline with an
+   * expired access token it burns ~25-30s retrying a refresh it can't do (the
+   * "blank screen") and then returns null, which the guard used to misread as a
+   * logout and bounce the user to /login. Reading the stored token is instant
+   * and correct; `autoRefreshToken` renews it in the background on reconnect.
+   */
   async hasSession(): Promise<boolean> {
-    return (await this.auth.getSession()) !== null;
+    return this.auth.hasStoredSession();
   }
 
   /**
@@ -41,8 +51,12 @@ export class SessionService {
    */
   async ensureProfile(): Promise<void> {
     if (this.ctx.profile()) return;
-    const session = await this.auth.getSession();
-    const userId = session?.user?.id;
+    // AY9 — prefer the userId read straight from the persisted session (offline-safe,
+    // no network round-trip, no refresh stall). Fall back to a live getSession()
+    // only if the stored blob couldn't be parsed. This is what lets an offline
+    // cold start still resolve the userId and load the cached profile (offline
+    // modules). Los datos siguen protegidos por RLS con el token real.
+    const userId = (await this.auth.getStoredUserId()) ?? (await this.auth.getSession())?.user?.id;
     if (userId) await this.ctx.loadProfile(userId);
   }
 

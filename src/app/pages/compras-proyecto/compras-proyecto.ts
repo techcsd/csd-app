@@ -112,6 +112,12 @@ export class ComprasProyectoPage {
     }
   }
 
+  // AS14 — DECISIÓN (Xaviel, 23/08/2026): el gasto directo es ONLINE-ONLY A PROPÓSITO.
+  // Es DINERO: preferimos exigir conexión y confirmar contra el server en el momento
+  // antes que dejar montos "flotando" sin confirmar en el outbox (un monto encolado
+  // que el usuario cree registrado pero aún no subió es peor que pedir internet). Es
+  // la ÚNICA excepción consciente a ADR-002 (todo write por outbox); documentada aquí
+  // para que futuras auditorías no lo marquen como bug. El resto de la app sí es offline.
   abrirFormGasto(): void {
     if (!this.network.online()) {
       this.toast.error('Necesitas conexión para registrar un gasto.');

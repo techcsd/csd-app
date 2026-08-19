@@ -51,19 +51,34 @@ export class ConducesHubPage {
   pendienteEntrega = signal(0); // AI2
   porConfirmar = signal(0); // AJ8
   porFirmarDespachante = signal(0); // AU1
+  porImplementar = signal(0); // AY13
 
-  // AU1 — la entrada "Por firmar (despachante)" solo aparece cuando el usuario
-  // tiene conduces pendientes de su firma (no ensucia el hub del resto).
+  // AU1/AY13 — las entradas condicionales solo aparecen cuando hay algo que hacer
+  // (no ensucian el hub del resto).
   readonly tiles = computed<ConduceTile[]>(() => {
-    if (this.porFirmarDespachante() <= 0) return TILES;
-    const extra: ConduceTile = {
-      key: 'porFirmar',
-      icon: '🖊️',
-      label: 'Por firmar (despachante)',
-      tint: '#b45309',
-      route: '/transporte/conduces-por-firmar',
-    };
-    return [TILES[0], extra, ...TILES.slice(1)];
+    let out = TILES;
+    if (this.porFirmarDespachante() > 0) {
+      const extra: ConduceTile = {
+        key: 'porFirmar',
+        icon: '🖊️',
+        label: 'Por firmar (despachante)',
+        tint: '#b45309',
+        route: '/transporte/conduces-por-firmar',
+      };
+      out = [out[0], extra, ...out.slice(1)];
+    }
+    // AY13 — conduces con ítems libres sin vincular (el admin los "implementa" en la web).
+    if (this.porImplementar() > 0) {
+      const extra: ConduceTile = {
+        key: 'porImplementar',
+        icon: '🧩',
+        label: 'Por implementar',
+        tint: '#6d28d9',
+        route: '/transporte/conduces-por-implementar',
+      };
+      out = [...out, extra];
+    }
+    return out;
   });
 
   constructor() {
@@ -87,6 +102,11 @@ export class ConducesHubPage {
       .misConducesPorFirmarCount()
       .then((n) => this.porFirmarDespachante.set(n))
       .catch(() => {});
+    // AY13 — conduces con ítems libres sin vincular (muestra el tile + badge).
+    void this.conduces
+      .conducesPorImplementarCount()
+      .then((n) => this.porImplementar.set(n))
+      .catch(() => {});
   }
 
   badgeFor(key: string): number | null {
@@ -94,6 +114,7 @@ export class ConducesHubPage {
     if (key === 'pendienteEntrega') return this.pendienteEntrega() || null;
     if (key === 'porConfirmar') return this.porConfirmar() || null;
     if (key === 'porFirmar') return this.porFirmarDespachante() || null;
+    if (key === 'porImplementar') return this.porImplementar() || null;
     return null;
   }
 

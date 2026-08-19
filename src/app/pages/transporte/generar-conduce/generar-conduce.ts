@@ -184,6 +184,9 @@ export class GenerarConducePage implements OnDestroy {
     this.libreTimer = setTimeout(() => void this.buscarSugerenciasLibre(q), 350);
   }
 
+  /** AW6 — buscador fuzzy (server, pg_trgm) para el articulo-picker principal. */
+  buscarArticulosFuzzy = (q: string): Promise<ArticuloCat[]> => this.inventario.buscarArticulos(q, 12);
+
   private async buscarSugerenciasLibre(q: string): Promise<void> {
     const enCarrito = new Set(this.cart().map((l) => l.articulo_id));
     // Fuzzy server-side; si no hay red/resultados, cae a la caché local (substring sin acentos).

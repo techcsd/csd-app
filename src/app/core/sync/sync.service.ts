@@ -1,4 +1,5 @@
 import { effect, inject, Injectable, signal } from '@angular/core';
+import { Preferences } from '@capacitor/preferences';
 import { SupabaseService } from '../services/supabase.service';
 import { NetworkService } from '../services/network.service';
 import { db, FotoPendiente, OutboxOp } from '../db/app-db';
@@ -146,6 +147,10 @@ export class SyncService {
     // del fix, estas ops nunca vuelven a quedarse en la cola (se descartan al
     // fallar), así que esto solo elimina las heredadas.
     void this.cleanupSilentOps().then(() => this.refreshCounts());
+    // AY16 — reencola UNA vez las notas de voz que murieron en `error` antes del
+    // fix del constraint mensajes_tipo_chk (cada una fallaba con 23514). Ahora
+    // `audio` es válido, así que el saga de voices se sanea solo al actualizar.
+    void this.sanearErroresAudioUnaVez();
     // Drain as soon as connectivity returns.
     effect(() => {
       if (this.network.online()) void this.drain();
@@ -169,6 +174,35 @@ export class SyncService {
       });
     } catch {
       /* la limpieza nunca debe romper el arranque */
+    }
+  }
+
+  /**
+   * AY16 — saneo one-shot de las notas de voz atascadas en `error` desde antes
+   * del fix del CHECK `mensajes_tipo_chk` (rechazaba tipo='audio'). Las reencola
+   * a `pending` para que el drain las suba ahora que el constraint las acepta; el
+   * RPC `enviar_nota_voz` es idempotente (ON CONFLICT) → un reenvío no duplica.
+   * Gate por flag de Preferences para que corra SOLO una vez (no reintenta en
+   * bucle si una op falla luego por una razón real).
+   */
+  private async sanearErroresAudioUnaVez(): Promise<void> {
+    try {
+      const KEY = 'sync.audioErrorSanitized.v1';
+      const { value } = await Preferences.get({ key: KEY });
+      if (value === '1') return;
+      const errored = (await db.outbox.toArray()).filter(
+        (o) => o.estado === 'error' && o.tipo_op === 'nota_voz_enviar',
+      );
+      for (const o of errored) {
+        await db.outbox.update(o.id, { estado: 'pending', proximo_intento: 0 });
+      }
+      await Preferences.set({ key: KEY, value: '1' });
+      if (errored.length) {
+        await this.refreshCounts();
+        void this.drain();
+      }
+    } catch {
+      /* la sanitización nunca debe romper el arranque */
     }
   }
 

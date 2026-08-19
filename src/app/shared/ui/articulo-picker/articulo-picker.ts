@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
@@ -30,7 +30,40 @@ export class ArticuloPicker {
    *  (offline / origen sin stock, ej. ferretería) → no se marca ni bloquea nada. Con
    *  mapa presente, los artículos en 0 salen deshabilitados y se muestra el disponible. */
   stock = input<Record<string, number> | null>(null);
+  /** AW6 — buscador FUZZY server-side opcional (RPC buscar_articulos, pg_trgm): tolera
+   *  typos/acentos y encuentra artículos que no están en la lista local cargada. Si no
+   *  se pasa (o offline / <2 chars), el picker se comporta igual que antes (solo local). */
+  buscador = input<((q: string) => Promise<ArticuloCat[]>) | null>(null);
   picked = output<ArticuloCat>();
+
+  /** AW6 — resultados del buscador fuzzy del server (se fusionan con los locales). */
+  private serverHits = signal<ArticuloCat[]>([]);
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private searchSeq = 0;
+
+  constructor() {
+    // AW6 — al teclear, dispara la búsqueda fuzzy del server con debounce (300ms).
+    // Es aditivo: si no hay `buscador`, serverHits queda vacío y no cambia nada.
+    effect(() => {
+      const q = this.query().trim();
+      const fn = this.buscador();
+      if (this.searchTimer) clearTimeout(this.searchTimer);
+      if (!fn || q.length < 2) {
+        this.serverHits.set([]);
+        return;
+      }
+      const seq = ++this.searchSeq;
+      this.searchTimer = setTimeout(() => {
+        void fn(q)
+          .then((hits) => {
+            if (seq === this.searchSeq) this.serverHits.set(hits);
+          })
+          .catch(() => {
+            if (seq === this.searchSeq) this.serverHits.set([]);
+          });
+      }, 300);
+    });
+  }
 
   /** AO3 — disponible del artículo; null si no se pasó mapa (no marcar). Un artículo
    *  ausente del mapa con stock cargado = 0 (el almacén no lo tiene). */
@@ -97,11 +130,19 @@ export class ArticuloPicker {
       // AW6 — búsqueda más amigable: sin acentos y por TODAS las palabras escritas
       // (orden libre): "tubo pvc" matchea "PVC tubería"; también por código.
       const tokens = q.split(/\s+/).filter(Boolean);
-      return items.filter((a) => {
+      const locales = items.filter((a) => {
         const nombre = this.norm(a.nombre);
         const codigo = this.norm(a.codigo);
         return tokens.every((t) => nombre.includes(t) || codigo.includes(t));
       });
+      // AW6 — completa con los hits FUZZY del server (typos/pg_trgm) que el filtro
+      // local no cazó, respetando exclude + stock. Aditivo: sin `buscador`, vacío.
+      const ex = new Set(this.exclude());
+      const yaEsta = new Set(locales.map((a) => a.id));
+      const extra = this.serverHits().filter(
+        (a) => !yaEsta.has(a.id) && !ex.has(a.id) && !this.sinStock(a),
+      );
+      return [...locales, ...extra];
     }
     // No categories provided → flat list (conteo/pedir keep their old behavior).
     if (!this.hasCategorias()) return items;

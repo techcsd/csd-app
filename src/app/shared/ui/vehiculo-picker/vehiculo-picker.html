@@ -54,7 +54,11 @@
           [modelo]="v.modelo"
           [anio]="v.anio"
           [esPrueba]="v.es_prueba ?? false"
-        />
+        >
+          @if (enUso()[v.vehiculo_id]; as u) {
+            <span class="vpick__enuso">En uso · {{ u }}</span>
+          }
+        </app-vehiculo-card>
       </button>
     }
   }
@@ -74,7 +78,11 @@
           [modelo]="v.modelo"
           [anio]="v.anio"
           [esPrueba]="v.es_prueba ?? false"
-        />
+        >
+          @if (enUso()[v.vehiculo_id]; as u) {
+            <span class="vpick__enuso">En uso · {{ u }}</span>
+          }
+        </app-vehiculo-card>
       </button>
     }
   }

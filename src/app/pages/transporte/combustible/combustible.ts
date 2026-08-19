@@ -95,6 +95,7 @@ export class CombustiblePage extends GuardedWizard {
   titular = signal('');
   placa = signal('');
   modelo = signal('');
+  color = signal(''); // AT9 — "Marca Modelo · Color · Placa"
   fotoUrl = signal<string | null>(null); // U6
   vehDetalle = signal<VehiculoDetalle | null>(null); // U6 — odómetro + mantenimiento
   /** U6 — odómetro efectivo (servidor + outbox) como referencia del KmInput. */
@@ -307,6 +308,7 @@ export class CombustiblePage extends GuardedWizard {
       if (v) {
         this.placa.set(v.placa);
         this.modelo.set(`${v.marca} ${v.modelo}`);
+        this.color.set(v.color ?? ''); // AT9
         if (v.foto_path) this.fotoUrl.set(await this.vehiculos.getFotoUrl(v.foto_path));
       }
       // U6 — detalle con km EFECTIVO (servidor + outbox) + datos de mantenimiento
