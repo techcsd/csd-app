@@ -63,7 +63,9 @@
           @if (esReferente()) {
             <div class="solm__acciones">
               @if (s.estado === 'pendiente') {
-                <button type="button" class="btn-cta solm__act" (click)="abrirPlanificar(s)">Planificar</button>
+                <button type="button" class="btn-cta solm__act" [disabled]="planificandoId() === s.id" (click)="planificar(s)">
+                  {{ planificandoId() === s.id ? 'Abriendo…' : 'Planificar' }}
+                </button>
                 <button type="button" class="btn-ghost solm__act" (click)="cancelar(s)">Cancelar</button>
               } @else if (s.estado === 'planificada' || s.estado === 'en_curso') {
                 <button type="button" class="btn-ghost solm__act" (click)="completar(s)">Marcar completada</button>
@@ -78,48 +80,4 @@
 
   <!-- FAB crear (cualquiera puede solicitar; el ingeniero es el caso principal) -->
   <button type="button" class="solm__fab" (click)="crear()" aria-label="Nueva solicitud">＋</button>
-
-  <!-- Hoja de planificación (referente) -->
-  @if (planificando(); as s) {
-    <div class="solm__sheet-backdrop" (click)="cerrarPlanificar()"></div>
-    <div class="solm__sheet">
-      <div class="solm__sheet-head">
-        <h2 class="solm__sheet-title">Planificar movimiento</h2>
-        <button type="button" class="solm__sheet-close" (click)="cerrarPlanificar()" aria-label="Cerrar">✕</button>
-      </div>
-      <p class="solm__sheet-sub">{{ s.que_se_mueve }} · {{ s.origen || '—' }} → {{ s.destino || s.proyecto || '—' }}</p>
-
-      <label class="field-label">Vehículo</label>
-      <app-vehiculo-picker
-        [dropdown]="true"
-        titulo="Vehículo para la ruta"
-        [selectedId]="planVehiculoId()"
-        [mostrarEnUso]="true"
-        (elegido)="onVehiculo($event)"
-      />
-
-      <label class="field-label">Chofer (opcional)</label>
-      <app-collapsible-select
-        icon="🧑‍✈️"
-        label="Chofer"
-        [options]="conductorOpts()"
-        [selectedId]="planConductorId()"
-        placeholder="Sin asignar (se asigna después)"
-        [searchable]="true"
-        (picked)="planConductorId.set($event)"
-      />
-
-      <label class="field-label">Fecha de la ruta</label>
-      <input class="field" type="date" [ngModel]="planFecha()" (ngModelChange)="planFecha.set($event)" />
-
-      <button
-        type="button"
-        class="btn-cta solm__sheet-cta"
-        [disabled]="!puedePlanificar()"
-        (click)="confirmarPlanificar()"
-      >
-        {{ guardandoPlan() ? 'Creando ruta…' : 'Crear ruta y planificar' }}
-      </button>
-    </div>
-  }
 </div>

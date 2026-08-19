@@ -11,6 +11,16 @@ export const moduleGuard = (modulo: string): CanActivateFn => {
   };
 };
 
+/** AY11 — gate por CUALQUIERA de varios módulos (ej. crear-ruta = flota O ingeniería:
+ *  el referente de movimiento planifica sin tener el módulo flota completo). */
+export const moduleAnyGuard = (modulos: string[]): CanActivateFn => {
+  return () => {
+    const ctx = inject(UserContextService);
+    const router = inject(Router);
+    return modulos.some((m) => ctx.hasModulo(m)) ? true : router.createUrlTree(['/403']);
+  };
+};
+
 /**
  * AG12 — gates a route by an `modulo.submodulo` key at the given level (mirror of
  * `puede_ver/operar_submodulo`). Needed for `obra.*` because the `capataz` role has

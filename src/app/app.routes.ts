@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pinGuard } from './core/guards/pin.guard';
-import { moduleGuard, submoduleGuard, obraGuard } from './core/guards/module.guard';
+import { moduleGuard, moduleAnyGuard, submoduleGuard, obraGuard } from './core/guards/module.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -196,7 +196,8 @@ export const routes: Routes = [
   },
   {
     path: 'transporte/rutas/crear',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    // AY11 — flota (chofer/jefe) O ingeniería (referente planifica una solicitud sin flota).
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'ingenieria'])],
     loadComponent: () => import('./pages/transporte/rutas/crear-ruta').then((m) => m.CrearRutaPage),
   },
   {
@@ -335,6 +336,12 @@ export const routes: Routes = [
       import('./pages/transporte/conduces-por-implementar/conduces-por-implementar').then(
         (m) => m.ConducesPorImplementarPage,
       ),
+  },
+  {
+    // AY11 — hub del módulo Ingeniería (concentra Solicitud de movimiento, etc.).
+    path: 'ingenieria',
+    canActivate: [authGuard, pinGuard, moduleGuard('ingenieria')],
+    loadComponent: () => import('./pages/ingenieria/ingenieria').then((m) => m.IngenieriaPage),
   },
   {
     // AY11 — Solicitudes de movimiento (bandeja: propias del ingeniero / todas del referente).

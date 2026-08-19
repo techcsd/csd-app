@@ -9,19 +9,21 @@ import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import {
   SolicitudMovimientoService,
   PrioridadSolicitud,
+  TipoCarga,
+  DireccionMovimiento,
 } from '../../../core/services/solicitud-movimiento.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 
-interface OpcionTipo {
-  key: string;
-  label: string;
-}
-const TIPOS_CARGA: OpcionTipo[] = [
-  { key: 'material', label: 'Material' },
+const TIPOS_CARGA: Array<{ key: TipoCarga; label: string }> = [
+  { key: 'materiales', label: 'Materiales' },
   { key: 'equipo', label: 'Equipo' },
-  { key: 'otro', label: 'Otro' },
+  { key: 'otros', label: 'Otros' },
+];
+const DIRECCIONES: Array<{ key: DireccionMovimiento; label: string }> = [
+  { key: 'a_obra', label: 'Llevar a la obra' },
+  { key: 'de_obra', label: 'Sacar de la obra' },
 ];
 const PRIORIDADES: Array<{ key: PrioridadSolicitud; label: string; tone: 'default' | 'success' | 'warning' | 'error' }> = [
   { key: 'baja', label: 'Baja', tone: 'success' },
@@ -51,18 +53,24 @@ export class CrearSolicitudMovimientoPage {
   private router = inject(Router);
 
   readonly tipos = TIPOS_CARGA;
+  readonly direcciones = DIRECCIONES;
   readonly prioridades = PRIORIDADES;
 
   obraOpts = signal<SelectOption[]>([]);
   proyectoId = signal('');
+  direccion = signal<DireccionMovimiento>('a_obra');
+  otroPunto = signal('');
   queSeMueve = signal('');
-  tipoCarga = signal('material');
-  origen = signal('');
-  destino = signal('');
+  tipoCarga = signal<TipoCarga>('materiales');
   prioridad = signal<PrioridadSolicitud>('media');
   fechaReq = signal('');
   notas = signal('');
   enviando = signal(false);
+
+  /** Etiqueta del "otro extremo" según la dirección (para el placeholder/label). */
+  otroLabel = computed(() =>
+    this.direccion() === 'a_obra' ? '¿De dónde sale el material?' : '¿A dónde va el material?',
+  );
 
   puedeEnviar = computed(
     () => !!this.proyectoId() && this.queSeMueve().trim().length > 0 && !this.enviando(),
@@ -87,10 +95,10 @@ export class CrearSolicitudMovimientoPage {
     try {
       await this.solicitudes.crear({
         proyectoId: this.proyectoId(),
+        direccion: this.direccion(),
+        otroPunto: this.otroPunto().trim(),
         queSeMueve: this.queSeMueve().trim(),
         tipoCarga: this.tipoCarga(),
-        origenTexto: this.origen().trim(),
-        destinoTexto: this.destino().trim(),
         prioridad: this.prioridad(),
         fechaRequerimiento: this.fechaReq() || null,
         notas: this.notas().trim() || null,

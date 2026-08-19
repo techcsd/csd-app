@@ -29,6 +29,9 @@ interface HomeTile {
 const TILES: HomeTile[] = [
   { modulo: 'bitacora', icon: '📓', label: 'Bitácora', route: '/bitacora', tint: '#1e3a5f' },
   { modulo: 'flota', icon: '🚚', label: 'Transporte', route: '/transporte', tint: '#f97316' },
+  // AY11 — Ingeniería: concentra lo de ingenieros/producción (Solicitud de movimiento,
+  // + submódulos futuros). Gateado por hasModulo('ingenieria').
+  { modulo: 'ingenieria', icon: '📐', label: 'Ingeniería', route: '/ingenieria', tint: '#0369a1' },
   { modulo: 'inventario', icon: '📦', label: 'Inventario', route: '/inventario', tint: '#16a34a' },
   { modulo: 'compras', icon: '🛒', label: 'Requisición', route: '/solicitudes', tint: '#2563eb' },
   // Y14 — Proyectos (gateado por módulo proyectos: admin/direccion/gerencia/

@@ -1,0 +1,39 @@
+.hub-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.hub-header__back {
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--main);
+}
+
+.hub-header__icon {
+  font-size: 24px;
+}
+
+.hub-header__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--main);
+  margin: 0;
+}
+
+.hub-intro {
+  font-size: 14px;
+  color: var(--main-ultra-light);
+  margin: 0 0 14px;
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}

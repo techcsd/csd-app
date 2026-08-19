@@ -100,6 +100,9 @@ export class CrearRutaPage implements OnDestroy {
   private borrador = inject(BorradorService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  /** AY11 — si la ruta se crea PLANIFICANDO una solicitud de movimiento, su id
+   *  (se vincula al crear y pre-llena origen/destino). */
+  private solicitudId = this.route.snapshot.queryParamMap.get('solicitud');
   /** AG15 — tarea que originó esta ruta (se enlaza al crear). */
   private tareaVinculada: string | null = null;
   private location = inject(Location);
@@ -114,7 +117,9 @@ export class CrearRutaPage implements OnDestroy {
 
   // El jefe de flota (elevado) asigna la ruta a un conductor; el chofer se la crea
   // a sí mismo y NO ve el paso "conductor" (el backend la auto-asigna a quien la crea).
-  readonly esElevado = this.ctx.esFlotaElevado();
+  // AY11 — planificar una solicitud SIEMPRE es modo "asignador" (el referente elige
+  // el chofer), aunque su rol no sea flota-elevado.
+  readonly esElevado = this.ctx.esFlotaElevado() || !!this.solicitudId;
 
   // AF24 — wizard de ≤4 pasos (igual para chofer y jefe de flota):
   // 1 vehículo (+ conductor si es elevado) · 2 origen + destino + paradas ·
@@ -308,6 +313,13 @@ export class CrearRutaPage implements OnDestroy {
       this.lugares.set(lugares);
       this.conductorOpts.set(conductores.map((c) => ({ id: c.id, label: c.nombre })));
       this.misAsignados = new Set(asig.map((a) => a.vehiculo_id)); // AI6
+      // AY11 — al planificar una solicitud, pre-llena origen/destino desde ella
+      // (la obra ancla + el otro extremo) y salta el banner de borrador.
+      if (this.solicitudId) {
+        this.prefillDesdeSolicitud();
+        this.hydrated = true;
+        return;
+      }
       // AF24.5 — ¿hay un borrador previo? Ofrecer retomarlo (banner). Hasta que el
       // usuario decida, NO trackeamos (para no pisar el borrador).
       const d = await this.borrador.get(this.clave);
@@ -316,6 +328,41 @@ export class CrearRutaPage implements OnDestroy {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * AY11 — pre-llena origen/destino desde la solicitud de movimiento. La obra
+   * (proyecto) es un `lugar` cuyo id == proyecto_id, así que si viene en la lista la
+   * preseleccionamos (con sus coords); el otro extremo va como texto.
+   */
+  private prefillDesdeSolicitud(): void {
+    const qp = this.route.snapshot.queryParamMap;
+    const destLugar = qp.get('destinoLugarId');
+    const origLugar = qp.get('origenLugarId');
+    const origTexto = qp.get('origenTexto');
+    const destTexto = qp.get('destinoTexto');
+    const notas = qp.get('notas');
+    const hayLugar = (id: string | null) => !!id && this.lugares().some((l) => l.id === id);
+
+    // Destino
+    if (hayLugar(destLugar)) {
+      this.destinoModo.set('lugar');
+      this.destinoLugarId.set(destLugar!);
+    } else if (destTexto) {
+      this.destinoModo.set('mapa');
+      this.destinoMapaTexto.set(destTexto);
+    }
+    // Origen (crear-ruta valida/envía el texto `origen`; si la obra está en la lista
+    // usamos su nombre como texto).
+    if (hayLugar(origLugar)) {
+      const l = this.lugares().find((x) => x.id === origLugar);
+      this.origenLugar.set(true);
+      this.origenLugarId.set(origLugar!);
+      if (l) this.origen.set(l.nombre);
+    } else if (origTexto) {
+      this.origen.set(origTexto);
+    }
+    if (notas) this.notas.set(notas);
   }
 
   /** B1 — vehículo elegido del pool: continúa creando la ruta con ese vehículo. */
@@ -724,6 +771,7 @@ export class CrearRutaPage implements OnDestroy {
         // AC6 — fotos de evidencia inicial (carga/vehículo/documento).
         fotos: this.fotosEvidencia().map((f) => f.blob),
         tareaVinculada: this.tareaVinculada, // AG15
+        solicitudId: this.solicitudId, // AY11 — vincula la ruta a la solicitud al crear
       });
       void this.autosave.discard(this.clave); // AF24.5 — borrador cumplido
       this.done.set(true);

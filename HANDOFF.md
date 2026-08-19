@@ -1,5 +1,17 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 23/08 (cont.) — PROMPT-30 AY — **RELEASE 1.92.0 · Módulo NUEVO "Ingeniería" + Solicitud de movimiento re-arquitecturada**
+
+**TL;DR:** Por decisión de Xaviel, "Solicitud de movimiento" NO va en Flota (no darle Flota completo a un ingeniero). Se creó el **módulo NUEVO "Ingeniería"** (concentra ingenieros/producción) con su gate propio; la Solicitud vive ahí. **Planificar = redirigir al wizard de crear-ruta PRE-LLENADO** desde la solicitud (obra→origen/destino según dirección) + vincular la ruta creada a la solicitud. Migración aplicada: `sql/2026-08-23-ay11-modulo-ingenieria.sql`. **APK 1.92.0** firmado + registrado. Build verde.
+
+**Bugs de AY11 que se cazaron (habrían roto el create):** el CHECK de `solicitudes_movimiento` exige `origen_tipo/destino_tipo ∈ (almacen,obra,proveedor,otro)` y `tipo_carga ∈ (materiales,equipo,otros)` — el create v1 mandaba `'texto'` y `'material'/'otro'` (23514). Corregido: la obra es origen/destino según la dirección; tipos válidos.
+
+**Cambios clave:**
+- Migración: `'ingenieria'` añadido a `roles.modulos` de ingenieros (ingeniero_campo/oficina, jefe_ingenieros, gerente_produccion/proyectos) + referentes (direccion/gerencia/jefe_flota/logistica/coord_compras/guarda_almacen); RPCs `vincular_solicitud_ruta(sol,ruta)` (referente-only, marca planificada + copia chofer) y `solicitud_movimiento_detalle(id)` (para pre-llenar).
+- App: `pages/ingenieria` hub (home tile gated `hasModulo('ingenieria')` + ruta `moduleGuard('ingenieria')`); Solicitud movida ahí (quitada del hub de Flota). Create form v2 con **Dirección** (Llevar a la obra / Sacar de la obra). Planificar → `router.navigate('/transporte/rutas/crear', {queryParams:{solicitud, destinoLugarId/origenLugarId, textos, notas}})`. `crear-ruta` lee esos params, pre-llena origen/destino, fuerza modo asignador (elige chofer) y pasa `solicitud_id` a `crear_ruta`; el handler llama `vincular_solicitud_ruta` tras crear. `crear-ruta` route ahora `moduleAnyGuard(['flota','ingenieria'])` (el referente sin flota puede planificar).
+
+**⚠️ QA en device BLOQUEADO por mi culpa:** desactivé sin querer el biométrico en el teléfono FKTVB (STK-LX3) durante el QA de 1.91.0 → ahora pide **PIN** (no lo tengo) y no puedo entrar a tap-testear el módulo Ingeniería. El 2º teléfono (6dbf1af4) está **unauthorized** (falta aceptar el prompt de depuración USB en pantalla). **Necesito que Xaviel:** (a) me dé el PIN o desbloquee FKTVB (y re-active biométrico: Perfil → Usar huella); (b) acepte el prompt USB en 6dbf1af4. El código de 1.92.0 está build-verde + backend aplicado/verificado; falta el tap-through en vivo del create ingeniero + planificar→ruta.
+
 ## 🟢 SESIÓN 23/08 — PROMPT-30 ronda AY (app) — **RELEASE 1.91.0 (build APK firmado + registrado) · AY9 verificado en device · build verde**
 
 **TL;DR:** Ronda AY completa. Cerrado lo de mayor valor: 🔴 **AY9 (la app botaba al login sin red) — VERIFICADO EN DEVICE**, el **saga de voices** (duración real + velocidad + sync entre dispositivos + saneo), **AT9 color**, **AY13 conduces por implementar**, **AW6 fuzzy**, **AY11 "Solicitud de movimiento" (módulo completo)**, **AY1 "Mi perfil" editable (nombre+teléfono, backend nuevo)**, **AU4** (recepción por-ítem revivida + libres visibles), **AW16** (En uso · usuario en el picker). **APK 1.91.0** firmado (cert `3c5316d8…5065`) + registrado (Y1, 8 cambios curados). PROMPT-29 (SGC) ya DESPLEGADO en prod. Migración aditiva aplicada: `sql/2026-08-23-ay1-perfil-self-edit.sql`.

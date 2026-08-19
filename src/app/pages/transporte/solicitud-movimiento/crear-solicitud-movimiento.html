@@ -25,30 +25,28 @@
       placeholder="Ej: 20 sacos de cemento, andamios…"
     />
 
+    <label class="field-label">Dirección del movimiento</label>
+    <div class="csolm__opts">
+      @for (d of direcciones; track d.key) {
+        <app-option-button [label]="d.label" [selected]="direccion() === d.key" (pressed)="direccion.set(d.key)" />
+      }
+    </div>
+
+    <label class="field-label">{{ otroLabel() }}</label>
+    <input
+      class="field"
+      type="text"
+      [ngModel]="otroPunto()"
+      (ngModelChange)="otroPunto.set($event)"
+      placeholder="Ej: Bodega Central, proveedor Ferretería X…"
+    />
+
     <label class="field-label">Tipo de carga</label>
     <div class="csolm__opts">
       @for (t of tipos; track t.key) {
         <app-option-button [label]="t.label" [selected]="tipoCarga() === t.key" (pressed)="tipoCarga.set(t.key)" />
       }
     </div>
-
-    <label class="field-label">Origen (dónde está)</label>
-    <input
-      class="field"
-      type="text"
-      [ngModel]="origen()"
-      (ngModelChange)="origen.set($event)"
-      placeholder="Ej: Bodega Central, obra Riviera…"
-    />
-
-    <label class="field-label">Destino (a dónde va)</label>
-    <input
-      class="field"
-      type="text"
-      [ngModel]="destino()"
-      (ngModelChange)="destino.set($event)"
-      placeholder="Ej: obra Monterezzo Torre 2…"
-    />
 
     <label class="field-label">Prioridad</label>
     <div class="csolm__opts">

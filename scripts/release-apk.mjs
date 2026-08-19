@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.91.0';
+const VERSION = '1.92.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,19 +62,14 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-19';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Solicitud de movimiento, la app abre sin internet, y mejoras en el chat';
+const TITULO = 'Nuevo módulo Ingeniería con Solicitud de movimiento';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'General', d: 'La app ya NO te saca al inicio de sesión cuando la abres sin internet: entra directo con tu sesión y los datos guardados, y muestra un aviso de "sin conexión". Todo lo enviado se sube solo al reconectar.' },
-  { t: 'nuevo', m: 'Transporte', d: 'Solicitud de movimiento: un ingeniero pide al departamento de transporte mover material o equipo (con prioridad y fecha), y los encargados lo ven en su bandeja y crean la ruta con su chofer.' },
-  { t: 'mejora', m: 'Mensajes', d: 'Las notas de voz muestran su duración real desde que llegan (ya no 0:00 hasta reproducir) y puedes escucharlas más rápido (1x, 1.5x o 2x).' },
-  { t: 'mejora', m: 'Mensajes', d: 'El chat se sincroniza mejor entre tus dispositivos: al reconectar o volver a abrir la app, se ponen al día los mensajes que faltaban.' },
-  { t: 'nuevo', m: 'Transporte', d: '"Conduces por implementar": lista los conduces con material aún por vincular al catálogo, con su contador.' },
-  { t: 'nuevo', m: 'Mi perfil', d: 'Ya puedes editar tu nombre visible y tu teléfono desde "Mi perfil".' },
-  { t: 'mejora', m: 'Transporte', d: 'El color del vehículo se ve en toda su identificación (combustible, multas y "en uso").' },
-  { t: 'mejora', m: 'Inventario', d: 'El buscador de artículos tolera errores de tipeo (encuentra aunque escribas rápido o con acentos).' },
+  { t: 'nuevo', m: 'Ingeniería', d: 'Nuevo módulo "Ingeniería" que agrupa las herramientas de ingenieros y producción en obra.' },
+  { t: 'nuevo', m: 'Ingeniería', d: 'Solicitud de movimiento: un ingeniero pide mover material o equipo (llevar a la obra o sacar de la obra), con prioridad y fecha. Los encargados lo ven en su bandeja y, al planificar, se abre la creación de ruta YA pre-llenada con el origen y el destino de la solicitud.' },
+  { t: 'mejora', m: 'Ingeniería', d: 'Las prioridades se ven con colores (baja/media/alta/urgente) y hay un semáforo por la fecha en que se necesita en obra.' },
 ];
 
 const TIPO_POR_COMMIT = {

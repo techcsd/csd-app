@@ -47,6 +47,9 @@ export interface RutaCaptura {
   fotos?: Blob[];
   /** AG15 — si la ruta nace de una tarea vinculada, su id (se enlaza al crear). */
   tareaVinculada?: string | null;
+  /** AY11 — si la ruta se crea PLANIFICANDO una solicitud de movimiento, su id
+   *  (al crear la ruta se vincula → la solicitud pasa a 'planificada'). */
+  solicitudId?: string | null;
   /**
    * AV11 — id ESTABLE de la ruta, generado una vez en el wizard y reutilizado al
    * reanudar tras el checklist de uso. Garantiza idempotencia por p_id: un doble
@@ -1030,6 +1033,7 @@ export class ConducesService {
         paradas: input.paradas ?? [], // AC13
         n_fotos: evidencia.length, // AC6
         tarea_vinculada: input.tareaVinculada ?? null, // AG15
+        solicitud_id: input.solicitudId ?? null, // AY11
       },
       fotos: [...audio.fotos, ...evidencia],
       resumen: { origen: input.origen, destino: input.destino, fecha: input.fecha, capturado_en },
@@ -1772,6 +1776,17 @@ export class ConducesService {
           p_entity_id: rutaId,
         });
         if (eV) throwSyncError(eV);
+      }
+
+      // AY11 — si la ruta nace de PLANIFICAR una solicitud de movimiento, vincúlala
+      // (la solicitud pasa a 'planificada' + toma el chofer de la ruta). Idempotente.
+      const solicitudVinc = payload['solicitud_id'] as string | null;
+      if (solicitudVinc) {
+        const { error: eS } = await this.supabase.client.rpc('vincular_solicitud_ruta', {
+          p_solicitud_id: solicitudVinc,
+          p_ruta_id: rutaId,
+        });
+        if (eS) throwSyncError(eS);
       }
     });
 

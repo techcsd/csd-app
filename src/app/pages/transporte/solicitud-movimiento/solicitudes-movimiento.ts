@@ -5,19 +5,14 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
-import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
-import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
-import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import {
   SolicitudMovimientoService,
   SolicitudMovimiento,
   PrioridadSolicitud,
   EstadoSolicitud,
 } from '../../../core/services/solicitud-movimiento.service';
-import { ConductoresService } from '../../../core/services/conductores.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { formatFecha } from '../../../core/util/fecha';
 
 const PRIORIDAD_LABEL: Record<PrioridadSolicitud, string> = {
@@ -43,13 +38,12 @@ const ESTADO_LABEL: Record<EstadoSolicitud, string> = {
   selector: 'app-solicitudes-movimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, VehiculoPicker, CollapsibleSelect],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective],
   templateUrl: './solicitudes-movimiento.html',
   styleUrl: './solicitudes-movimiento.scss',
 })
 export class SolicitudesMovimientoPage {
   private solicitudes = inject(SolicitudMovimientoService);
-  private conductores = inject(ConductoresService);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -67,19 +61,10 @@ export class SolicitudesMovimientoPage {
   filtroEstado = signal<EstadoSolicitud | ''>('');
   filtroPrioridad = signal<PrioridadSolicitud | ''>('');
 
-  // Hoja de planificación.
-  planificando = signal<SolicitudMovimiento | null>(null);
-  planVehiculoId = signal('');
-  planVehiculoLabel = signal('');
-  planConductorId = signal('');
-  planFecha = signal('');
-  conductorOpts = signal<SelectOption[]>([]);
-  guardandoPlan = signal(false);
+  planificandoId = signal('');
 
   readonly estados: EstadoSolicitud[] = ['pendiente', 'planificada', 'en_curso', 'completada', 'cancelada'];
   readonly prioridades: PrioridadSolicitud[] = ['baja', 'media', 'alta', 'urgente'];
-
-  puedePlanificar = computed(() => !!this.planVehiculoId() && !this.guardandoPlan());
 
   constructor() {
     void this.init();
@@ -87,12 +72,6 @@ export class SolicitudesMovimientoPage {
 
   private async init(): Promise<void> {
     this.esReferente.set(await this.solicitudes.esReferente().catch(() => false));
-    if (this.esReferente()) {
-      void this.conductores
-        .getConductores()
-        .then((cs) => this.conductorOpts.set(cs.map((c) => ({ id: c.id, label: c.nombre }))))
-        .catch(() => {});
-    }
     await this.load();
   }
 
@@ -150,41 +129,31 @@ export class SolicitudesMovimientoPage {
     return `En ${d} días`;
   }
 
-  // ── Planificación (referente) ───────────────────────────────────────────────
-  abrirPlanificar(s: SolicitudMovimiento): void {
-    this.planificando.set(s);
-    this.planVehiculoId.set('');
-    this.planVehiculoLabel.set('');
-    this.planConductorId.set('');
-    this.planFecha.set(s.fecha_requerimiento ?? '');
-  }
-  cerrarPlanificar(): void {
-    this.planificando.set(null);
-  }
-  onVehiculo(v: VehiculoDisponible): void {
-    this.planVehiculoId.set(v.vehiculo_id);
-    this.planVehiculoLabel.set(vehiculoIdentidad(v));
-  }
-
-  async confirmarPlanificar(): Promise<void> {
-    const s = this.planificando();
-    if (!s || !this.puedePlanificar()) return;
-    this.guardandoPlan.set(true);
+  // ── Planificación (referente) → wizard de crear-ruta PRE-LLENADO ─────────────
+  /**
+   * AY11 — planificar = crear la ruta en el wizard normal de crear-ruta, PRE-LLENADO
+   * desde la solicitud (origen/destino según la obra y la dirección). Al guardar la
+   * ruta, se vincula a la solicitud (queda 'planificada'). No le damos Flota al
+   * ingeniero: es el referente quien planifica desde su bandeja.
+   */
+  async planificar(s: SolicitudMovimiento): Promise<void> {
+    if (this.planificandoId()) return;
+    this.planificandoId.set(s.id);
     try {
-      await this.solicitudes.planificar(
-        s.id,
-        this.planVehiculoId(),
-        this.planConductorId() || null,
-        this.planFecha() || null,
-        null,
-      );
-      this.toast.success('Ruta creada y solicitud planificada.');
-      this.cerrarPlanificar();
-      await this.load(true);
+      const d = await this.solicitudes.detalle(s.id);
+      const qp: Record<string, string> = { solicitud: s.id };
+      // La obra ancla + el otro extremo, para pre-llenar origen/destino en crear-ruta.
+      if (d?.destino_proyecto_id) qp['destinoLugarId'] = d.destino_proyecto_id;
+      if (d?.origen_proyecto_id) qp['origenLugarId'] = d.origen_proyecto_id;
+      if (d?.origen_texto) qp['origenTexto'] = d.origen_texto;
+      if (d?.destino_texto) qp['destinoTexto'] = d.destino_texto;
+      if (d?.fecha_requerimiento) qp['fecha'] = d.fecha_requerimiento;
+      if (d?.notas) qp['notas'] = d.notas;
+      await this.router.navigate(['/transporte/rutas/crear'], { queryParams: qp });
     } catch {
-      this.toast.error('No pudimos planificar la solicitud. Revisa la conexión.');
+      this.toast.error('No pudimos abrir el planificador. Revisa la conexión.');
     } finally {
-      this.guardandoPlan.set(false);
+      this.planificandoId.set('');
     }
   }
 
