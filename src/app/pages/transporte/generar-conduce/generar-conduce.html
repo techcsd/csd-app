@@ -168,7 +168,7 @@
               } @else {
                 <div class="gconduce__libre-form">
                   <label class="field-label" for="libre-nombre">Nombre del material</label>
-                  <input id="libre-nombre" class="field" type="text" [ngModel]="libreNombre()" (ngModelChange)="libreNombre.set($event)" placeholder="Ej.: Tubo PVC especial" />
+                  <input id="libre-nombre" class="field" type="text" [ngModel]="libreNombre()" (ngModelChange)="onLibreNombre($event)" placeholder="Ej.: Tubo PVC especial" />
 
                   @if (sugerenciasLibre().length) {
                     <p class="gconduce__hint">¿Es alguno de estos? Úsalo del catálogo (descuenta stock):</p>

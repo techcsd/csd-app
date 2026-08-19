@@ -5,6 +5,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -32,7 +34,7 @@ type Modo = 'usar' | 'soltar';
   selector: 'app-uso-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot],
+  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot, ConfirmDialog],
   templateUrl: './uso-vehiculo.html',
   styleUrl: './uso-vehiculo.scss',
 })
@@ -46,6 +48,10 @@ export class UsoVehiculoPage {
 
   readonly niveles = NIVELES_COMBUSTIBLE;
   readonly fmtFechaHora = formatFechaHumana;
+  readonly ident = vehiculoIdentidad; // AT9
+
+  // AW16 — confirmación antes de RECIBIR un vehículo que otro tiene en uso.
+  confirmRecibir = signal(false);
 
   vehiculoId = signal('');
   placa = signal('');
@@ -95,6 +101,34 @@ export class UsoVehiculoPage {
   });
 
   titulo = computed(() => (this.modo() === 'soltar' ? 'Soltar vehículo' : 'Uso de vehículo'));
+
+  /** AW16 — identidad AT9 del vehículo (Marca Modelo · Color · Placa). */
+  identEstado = computed(() => {
+    const e = this.estado();
+    const s = e ? this.ident({ marca: e.marca, modelo: e.modelo, color: e.color, placa: e.placa }) : '';
+    return s || this.etiqueta() || this.placa() || 'el vehículo';
+  });
+
+  /** AW16 — mensaje del diálogo de confirmación de recibir. */
+  mensajeRecibir = computed(() => {
+    const e = this.estado();
+    const nombre = e?.usuario_nombre || 'otro usuario';
+    const desde = e?.desde ? ` desde ${this.fmtFechaHora(e.desde)}` : '';
+    return `Este vehículo está en uso de ${nombre}${desde}. ¿Confirmas que lo vas a recibir? Se le avisará a ${nombre} y al jefe de flota, y quedará a tu cargo.`;
+  });
+
+  /** AW16 — el CTA: si es "recibir de X", confirma primero (nunca bloquea, solo avisa). */
+  onCta(): void {
+    if (this.enUsoPorOtro()) {
+      this.confirmRecibir.set(true);
+      return;
+    }
+    void this.guardar();
+  }
+  confirmarRecibir(): void {
+    this.confirmRecibir.set(false);
+    void this.guardar();
+  }
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('vehiculoId');

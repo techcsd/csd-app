@@ -21,6 +21,10 @@ export const ACTIVIDADES = [
   'TERMINACIONES DE ENCOFRADO/ARMADO',
   'VACIADO',
   'DESENCOFRADO',
+  // AW4 — valores nuevos (también sembrados server-side; aquí para el fallback offline).
+  'COLOCACION DE CABEZALES',
+  'FONDO DE VIGA',
+  'ENCOSTILLADO DE FONDO DE LOSAS',
 ] as const;
 
 // U11 — 'CLIMA' se quitó: el clima ya se pregunta al inicio del wizard (lluvia).
@@ -77,6 +81,8 @@ export interface ActividadEntry {
   unidad?: string | null;
   /** S4 — bloque/piso/edificio (sujeto) al que pertenece esta actividad. */
   bloque?: string | null;
+  /** AW1 — "se trabajó" sin cantidad exacta: la cantidad es aproximada (marca "~"). */
+  es_aproximada?: boolean | null;
 }
 
 /** W2 — un equipo alquilado en uso en la obra hoy. */
@@ -99,6 +105,8 @@ export interface EquipoAlquilado {
 export interface CatOrdenado {
   valor: string;
   destacado: boolean;
+  /** AW1 — el valor permite "se trabajó" sin cantidad exacta (cantidad aproximada). */
+  permite_sin_cantidad?: boolean;
 }
 
 /** A planned line item for a project (R24), shown as reference in the wizard. */
@@ -126,6 +134,9 @@ export interface BitacoraFull {
   fecha: string;
   created_at?: string | null;
   tipo: string;
+  // AW2 — autor (quién la hizo). El nombre se resuelve vía usuarios_por_ids.
+  usuario_id?: string | null;
+  autor_nombre?: string | null;
   comentarios: string | null;
   // W3 — paridad con la web (parte diario).
   bloque_entrepiso?: string | null;
@@ -160,7 +171,7 @@ export interface BitacoraFull {
   // W2 — equipos alquilados en uso.
   hubo_equipos_alquilados?: boolean | null;
   proyecto?: { nombre: string } | null;
-  actividades?: { estructura: string; actividad: string; cantidad?: number | null; unidad?: string | null; bloque?: string | null }[];
+  actividades?: { estructura: string; actividad: string; cantidad?: number | null; unidad?: string | null; bloque?: string | null; es_aproximada?: boolean | null }[];
   restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
   equipos?: EquipoAlquilado[];
   archivos?: {

@@ -34,6 +34,7 @@
           @if (bit.incidente_equipo_operativo != null) { <li><span>¿Operativo?</span><b>{{ bit.incidente_equipo_operativo ? 'Sí' : 'No, fuera de servicio' }}</b></li> }
           @if (bit.incidente_equipo_operativo_comentario) { <li><span>Comentario</span><b>{{ bit.incidente_equipo_operativo_comentario }}</b></li> }
         }
+        @if (bit.autor_nombre) { <li><span>Hecha por</span><b>{{ bit.autor_nombre }}</b></li> }
         @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
       </ul>
 
@@ -70,7 +71,7 @@
           <p class="det__bloque">📍 {{ g.bloque }}</p>
           <ul class="det__list">
             @for (a of g.items; track $index) {
-              <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · {{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</b> }</li>
+              <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · @if (a.es_aproximada) { ~ }{{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</b> }@if (a.es_aproximada) { <span class="det__aprox">(aprox.)</span> }</li>
             }
           </ul>
         }

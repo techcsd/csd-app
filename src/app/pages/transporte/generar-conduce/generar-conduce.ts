@@ -166,20 +166,37 @@ export class GenerarConducePage implements OnDestroy {
   private normalizar(s: string): string {
     return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   }
-  /** Sugerencias del catálogo que matchean lo escrito (nombre o código, sin acentos)
-   *  para evitar duplicar el catálogo. AU4. */
-  sugerenciasLibre = computed<ArticuloCat[]>(() => {
-    const q = this.normalizar(this.libreNombre().trim());
-    if (q.length < 2) return [];
+  /** AU4/AW6 — sugerencias del catálogo mientras el chofer escribe un material
+   *  libre (para evitar duplicar el catálogo). Ahora usa la búsqueda FUZZY del
+   *  server (`buscar_articulos`: tolera tipeo/acentos/orden/código), con fallback
+   *  a la caché offline. Debounce 350 ms. */
+  sugerenciasLibre = signal<ArticuloCat[]>([]);
+  private libreTimer: ReturnType<typeof setTimeout> | null = null;
+
+  onLibreNombre(v: string): void {
+    this.libreNombre.set(v);
+    if (this.libreTimer) clearTimeout(this.libreTimer);
+    const q = v.trim();
+    if (q.length < 2) {
+      this.sugerenciasLibre.set([]);
+      return;
+    }
+    this.libreTimer = setTimeout(() => void this.buscarSugerenciasLibre(q), 350);
+  }
+
+  private async buscarSugerenciasLibre(q: string): Promise<void> {
     const enCarrito = new Set(this.cart().map((l) => l.articulo_id));
-    return this.articulos()
-      .filter(
-        (a) =>
-          !enCarrito.has(a.id) &&
-          (this.normalizar(a.nombre).includes(q) || this.normalizar(a.codigo).includes(q)),
-      )
-      .slice(0, 4);
-  });
+    // Fuzzy server-side; si no hay red/resultados, cae a la caché local (substring sin acentos).
+    let res = await this.inventario.buscarArticulos(q, 8).catch(() => [] as ArticuloCat[]);
+    if (!res.length) {
+      const qn = this.normalizar(q);
+      res = this.articulos().filter(
+        (a) => this.normalizar(a.nombre).includes(qn) || this.normalizar(a.codigo).includes(qn),
+      );
+    }
+    if (this.libreNombre().trim() !== q) return; // el texto cambió mientras resolvía
+    this.sugerenciasLibre.set(res.filter((a) => !enCarrito.has(a.id)).slice(0, 5));
+  }
   itemsLibresCount = computed(() => this.itemsLibres().length);
 
   // AF23.4 — vehículo (para que el servidor auto-genere la ruta al emitir).

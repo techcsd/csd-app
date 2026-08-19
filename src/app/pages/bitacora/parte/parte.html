@@ -205,11 +205,15 @@
               </div>
             }
             <label class="field-label">¿Qué se hizo en {{ parteActual() }}? (toca para agregar)</label>
+            <!-- AW6 — buscador de actividades (sin acentos, por palabras) -->
+            <input class="field parte__act-buscar" type="search" [ngModel]="filtroActividad()" (ngModelChange)="filtroActividad.set($event)" placeholder="Buscar actividad…" />
             <div class="parte__chips">
               @for (ac of actividadesDisponibles(); track ac.valor) {
                 <button type="button" class="chip" (click)="toggleActividad(ac.valor)">
                   @if (ac.destacado) { <span class="chip__star">★</span> }{{ ac.valor }}
                 </button>
+              } @empty {
+                <span class="parte__act-vacio">Sin coincidencias. Toca “Otro” para escribirla.</span>
               }
             </div>
           }
@@ -225,7 +229,8 @@
                 </div>
                 <div class="parte__actrow-qty">
                   <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, -1)" aria-label="Menos">−</button>
-                  <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="row.a.cantidad" (ngModelChange)="setCantidadAct(row.i, $event)" />
+                  <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="row.a.cantidad" (ngModelChange)="setCantidadAct(row.i, $event)"
+                    [placeholder]="row.a.es_aproximada ? '~ aprox.' : ''" />
                   <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, 1)" aria-label="Más">+</button>
                   <select class="field parte__unidad" [ngModel]="row.a.unidad ?? ''" (ngModelChange)="setUnidadAct(row.i, $event)">
                     <option value="">Unidad…</option>
@@ -237,6 +242,10 @@
                     }
                   </select>
                 </div>
+                <!-- AW1 — marcar la cantidad como aproximada (varillas, encofrado…): "se trabajó" sin número exacto -->
+                <button type="button" class="parte__aprox" [class.parte__aprox--on]="row.a.es_aproximada" (click)="toggleAproximada(row.i)">
+                  {{ row.a.es_aproximada ? '~ Cantidad aproximada (se trabajó)' : '~ Marcar como aproximada' }}
+                </button>
                 @if (partidaDe(row.a.estructura); as p) {
                   <span class="parte__plan">Plan: {{ p.cantidad_planeada }} {{ p.unidad || '' }}</span>
                 }

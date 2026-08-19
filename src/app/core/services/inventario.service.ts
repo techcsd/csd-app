@@ -278,6 +278,43 @@ export class InventarioService {
     return list.find((a) => a.id === id) ?? null;
   }
 
+  /**
+   * AW6 — búsqueda FUZZY de artículos (RPC `buscar_articulos`, pg_trgm + unaccent):
+   * tolera errores de tipeo, acentos y orden de palabras, y matchea por nombre,
+   * código, categoría y subgrupo con ranking por relevancia. Devuelve ArticuloCat
+   * mapeando por id contra la caché del catálogo (conserva los campos que usan los
+   * pickers). Online; sin red o &lt;2 chars devuelve []. El caller debe hacer debounce.
+   */
+  async buscarArticulos(query: string, limit = 20): Promise<ArticuloCat[]> {
+    const q = (query ?? '').trim();
+    if (q.length < 2) return [];
+    const { data, error } = await this.supabase.client.rpc('buscar_articulos', {
+      p_query: q,
+      p_limit: limit,
+    });
+    if (error) return [];
+    const rows =
+      (data as Array<{ id: string; codigo: string; nombre: string; categoria_id: number; unidad: string; propiedad: string }>) ??
+      [];
+    const cache = await this.getArticulos().catch(() => [] as ArticuloCat[]);
+    const byId = new Map(cache.map((a) => [a.id, a]));
+    return rows.map(
+      (r) =>
+        byId.get(r.id) ??
+        ({
+          id: r.id,
+          nombre: r.nombre,
+          codigo: r.codigo,
+          unidad: r.unidad,
+          categoria_id: r.categoria_id,
+          requiere_talla: false,
+          nota: null,
+          propiedad: r.propiedad,
+          imagen_url: null,
+        } as ArticuloCat),
+    );
+  }
+
   /** Active article categories (R16), destacadas first, cached offline. */
   async getCategorias(): Promise<CategoriaInv[]> {
     const data = await this.catalog.refresh<CategoriaInv[]>(CAT_CATEGORIAS, async () => {

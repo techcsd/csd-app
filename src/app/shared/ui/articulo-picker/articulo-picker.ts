@@ -85,13 +85,23 @@ export class ArticuloPicker {
   /** Whether we drive the UI by categories (only when categories were provided). */
   hasCategorias = computed(() => this.categorias().length > 0);
 
+  /** AW6 — normaliza para buscar: minúsculas + sin acentos (el usuario teclea sin tildes). */
+  private norm(s: string | null | undefined): string {
+    return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+
   visible = computed(() => {
-    const q = this.query().toLowerCase().trim();
+    const q = this.norm(this.query().trim());
     const items = this.disponibles();
     if (q) {
-      return items.filter(
-        (a) => a.nombre.toLowerCase().includes(q) || a.codigo.toLowerCase().includes(q),
-      );
+      // AW6 — búsqueda más amigable: sin acentos y por TODAS las palabras escritas
+      // (orden libre): "tubo pvc" matchea "PVC tubería"; también por código.
+      const tokens = q.split(/\s+/).filter(Boolean);
+      return items.filter((a) => {
+        const nombre = this.norm(a.nombre);
+        const codigo = this.norm(a.codigo);
+        return tokens.every((t) => nombre.includes(t) || codigo.includes(t));
+      });
     }
     // No categories provided → flat list (conteo/pedir keep their old behavior).
     if (!this.hasCategorias()) return items;

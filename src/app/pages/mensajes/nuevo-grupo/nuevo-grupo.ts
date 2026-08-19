@@ -6,6 +6,7 @@ import { MensajesService } from '../../../core/services/mensajes.service';
 import { InventarioService, UsuarioBusqueda } from '../../../core/services/inventario.service';
 import { CameraService } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
 
 /**
  * AS25 — creación de grupo tipo WhatsApp en una pantalla completa: foto, nombre,
@@ -17,7 +18,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-nuevo-grupo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, AvatarEditor],
   templateUrl: './nuevo-grupo.html',
   styleUrl: './nuevo-grupo.scss',
 })
@@ -50,17 +51,26 @@ export class NuevoGrupoPage implements OnDestroy {
     if (this.avatarPreview()) URL.revokeObjectURL(this.avatarPreview()!);
   }
 
+  // AW7 — imagen elegida pendiente de ajustar en el editor (recorte circular).
+  editorImagen = signal<Blob | null>(null);
+
   async elegirFoto(desde: 'camara' | 'galeria'): Promise<void> {
-    try {
-      const foto =
-        desde === 'camara' ? await this.camera.takePhoto() : (await this.camera.pickFromGallery(1))[0] ?? null;
-      if (!foto) return;
-      if (this.avatarPreview()) URL.revokeObjectURL(this.avatarPreview()!);
-      this.avatarBlob = foto.blob;
-      this.avatarPreview.set(URL.createObjectURL(foto.blob));
-    } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo tomar la foto.');
-    }
+    const foto =
+      desde === 'camara' ? await this.camera.takePhoto() : (await this.camera.pickFromGallery(1))[0] ?? null;
+    if (!foto) return;
+    // AW7 — abre el editor (recorte + zoom) antes de fijar la foto del grupo.
+    this.editorImagen.set(foto.blob);
+  }
+
+  /** AW7 — el editor devolvió la foto recortada → la deja lista (se sube al crear). */
+  onAvatarEditado(blob: Blob): void {
+    this.editorImagen.set(null);
+    if (this.avatarPreview()) URL.revokeObjectURL(this.avatarPreview()!);
+    this.avatarBlob = blob;
+    this.avatarPreview.set(URL.createObjectURL(blob));
+  }
+  onAvatarCancel(): void {
+    this.editorImagen.set(null);
   }
 
   quitarFoto(): void {

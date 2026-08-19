@@ -124,23 +124,37 @@ export class BitacoraService {
     proyectoId: string,
   ): Promise<{ estructuras: CatOrdenado[]; actividades: CatOrdenado[] }> {
     const key = `catalogo_ordenado_${proyectoId}`;
-    const rows = await this.catalog.refresh<{ tipo: string; valor: string; destacado: boolean }[]>(
-      key,
-      async () => {
-        const { data, error } = await this.supabase.client.rpc('catalogo_ordenado', {
-          p_proyecto_id: proyectoId,
-        });
-        if (error) throw new Error(error.message);
-        // El RPC ya devuelve las filas ordenadas (destacadas primero, luego orden).
-        return ((data as { tipo: string; valor: string; activo: boolean; destacado: boolean }[]) ?? [])
-          .filter((r) => r.activo !== false)
-          .map((r) => ({ tipo: r.tipo, valor: r.valor, destacado: !!r.destacado }));
-      },
-    );
+    const rows = await this.catalog.refresh<
+      { tipo: string; valor: string; destacado: boolean; permite_sin_cantidad: boolean }[]
+    >(key, async () => {
+      const { data, error } = await this.supabase.client.rpc('catalogo_ordenado', {
+        p_proyecto_id: proyectoId,
+      });
+      if (error) throw new Error(error.message);
+      // El RPC ya devuelve las filas ordenadas (destacadas primero, luego orden).
+      return (
+        (data as {
+          tipo: string;
+          valor: string;
+          activo: boolean;
+          destacado: boolean;
+          permite_sin_cantidad?: boolean;
+        }[]) ?? []
+      )
+        .filter((r) => r.activo !== false)
+        .map((r) => ({
+          tipo: r.tipo,
+          valor: r.valor,
+          destacado: !!r.destacado,
+          permite_sin_cantidad: !!r.permite_sin_cantidad, // AW1
+        }));
+    });
     const list = rows ?? [];
     if (list.length) {
       const by = (t: string): CatOrdenado[] =>
-        list.filter((r) => r.tipo === t).map((r) => ({ valor: r.valor, destacado: r.destacado }));
+        list
+          .filter((r) => r.tipo === t)
+          .map((r) => ({ valor: r.valor, destacado: r.destacado, permite_sin_cantidad: r.permite_sin_cantidad }));
       return { estructuras: by('estructura'), actividades: by('actividad') };
     }
     // Fallback: catálogo plano (sin ranking) → ninguno destacado.
@@ -219,6 +233,7 @@ export class BitacoraService {
           cantidad: a.cantidad ?? null,
           unidad: a.unidad ?? null, // Q6 — unidad del trabajo realizado
           bloque: a.bloque?.trim() || null, // S4 — sujeto de esta actividad
+          es_aproximada: a.es_aproximada ?? false, // AW1 — cantidad aproximada
         })),
         restricciones: input.restricciones.map((r, i) => ({
           tipo_restriccion: r.tipo_restriccion,
@@ -331,21 +346,62 @@ export class BitacoraService {
     });
   }
 
-  /** My bitácoras (server, RLS-scoped to own), cached for offline viewing. */
+  /** AW2/AW5 — select común (incluye usuario_id para el autor + es_aproximada AW1). */
+  private readonly BITA_SELECT =
+    'id, fecha, created_at, tipo, usuario_id, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, horas_lluvia, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, sin_actividad, motivo_sin_actividad, motivo_sin_actividad_detalle, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque, es_aproximada), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle, foto_path), archivos:bitacora_archivos(nombre, url, tipo_mime, transcripcion, transcripcion_estado)';
+
+  /** AW2 — resuelve el nombre del autor (usuario_id) vía usuarios_por_ids (RLS-safe;
+   *  `usuarios` es admin-only). Best-effort: sin red, quedan sin nombre. */
+  private async resolverAutores(rows: BitacoraFull[]): Promise<BitacoraFull[]> {
+    const ids = [...new Set(rows.map((r) => r.usuario_id).filter(Boolean))] as string[];
+    if (!ids.length) return rows;
+    try {
+      const { data } = await this.supabase.client.rpc('usuarios_por_ids', { p_ids: ids });
+      const nameById = new Map(((data as { id: string; nombre: string }[]) ?? []).map((u) => [u.id, u.nombre]));
+      for (const r of rows) if (r.usuario_id) r.autor_nombre = nameById.get(r.usuario_id) ?? null;
+    } catch {
+      /* offline / sin permiso: best-effort */
+    }
+    return rows;
+  }
+
+  /** Mis bitácoras (solo las propias), cacheadas para ver offline. AW5 — se filtra
+   *  por usuario_id explícito porque para roles elevados la RLS ya abre las ajenas. */
   async misBitacoras(): Promise<BitacoraFull[]> {
     const data = await this.catalog.refresh<BitacoraFull[]>('mis_bitacoras', async () => {
-      const { data, error } = await this.supabase.client
+      const uid = (await this.supabase.client.auth.getUser()).data.user?.id ?? null;
+      let query = this.supabase.client
         .from('bitacoras')
-        .select(
-          'id, fecha, created_at, tipo, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, horas_lluvia, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, sin_actividad, motivo_sin_actividad, motivo_sin_actividad_detalle, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle, foto_path), archivos:bitacora_archivos(nombre, url, tipo_mime, transcripcion, transcripcion_estado)',
-        )
+        .select(this.BITA_SELECT)
         .order('fecha', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(50);
+      if (uid) query = query.eq('usuario_id', uid);
+      const { data, error } = await query;
       if (error) throw new Error(error.message);
-      return (data as unknown as BitacoraFull[]) ?? [];
+      return this.resolverAutores((data as unknown as BitacoraFull[]) ?? []);
     });
     return data ?? [];
+  }
+
+  /** AW5 — TODAS las bitácoras (de todos los ingenieros). Solo para roles con
+   *  permiso (la RLS abre las filas server-side); online. */
+  async todasBitacoras(): Promise<BitacoraFull[]> {
+    const { data, error } = await this.supabase.client
+      .from('bitacoras')
+      .select(this.BITA_SELECT)
+      .order('fecha', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return this.resolverAutores((data as unknown as BitacoraFull[]) ?? []);
+  }
+
+  /** AW5 — ¿puedo ver bitácoras de otros? (gate server-side; conmuta el tab "Todas"). */
+  async puedeVerOtrasBitacoras(): Promise<boolean> {
+    const { data, error } = await this.supabase.client.rpc('puede_ver_otras_bitacoras');
+    if (error) return false;
+    return (data as boolean) ?? false;
   }
 
   /**

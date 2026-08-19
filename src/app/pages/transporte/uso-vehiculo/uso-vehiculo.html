@@ -23,11 +23,11 @@
       @if (loading()) {
         <app-skeleton [rows]="3" />
       } @else {
-        <!-- En uso por otro → recibir de X -->
+        <!-- AW16 — En uso por otro → aviso claro (identidad AT9) + recibir de X -->
         @if (enUsoPorOtro()) {
           <div class="usov__aviso">
-            🔄 Lo está usando <b>{{ estado()?.usuario_nombre || 'otro usuario' }}</b>@if (estado()?.desde) { desde {{ fmtFechaHora(estado()!.desde!) }} }.
-            Al recibirlo, la responsabilidad pasa a ti.
+            🔄 <b>{{ identEstado() }}</b> está en uso de <b>{{ estado()?.usuario_nombre || 'otro usuario' }}</b>@if (estado()?.desde) { desde {{ fmtFechaHora(estado()!.desde!) }} }.
+            Confirma con esa persona antes de recibirlo. Al recibirlo, la responsabilidad pasa a ti y se le avisa.
           </div>
         }
 
@@ -66,11 +66,22 @@
             </div>
           }
 
-          <button type="button" class="btn-cta usov__cta usov__mt" [disabled]="!puedeGuardar()" (click)="guardar()">
+          <button type="button" class="btn-cta usov__cta usov__mt" [disabled]="!puedeGuardar()" (click)="onCta()">
             {{ ctaLabel() }}
           </button>
         }
       }
     }
   </div>
+
+  <!-- AW16 — confirmación antes de recibir un vehículo que otro tiene en uso -->
+  <app-confirm-dialog
+    [open]="confirmRecibir()"
+    title="Vehículo en uso de otra persona"
+    [message]="mensajeRecibir()"
+    confirmLabel="Sí, recibirlo"
+    cancelLabel="Cancelar"
+    (confirmed)="confirmarRecibir()"
+    (cancelled)="confirmRecibir.set(false)"
+  />
 </div>

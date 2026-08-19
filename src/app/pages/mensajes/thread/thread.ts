@@ -12,7 +12,7 @@ import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder'
 import { StickerEditor } from '../../../shared/ui/sticker-editor/sticker-editor';
 import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
 
-type EstadoRecibo = 'enviado' | 'entregado' | 'leido';
+type EstadoRecibo = 'pendiente' | 'enviado' | 'entregado' | 'leido';
 
 /** AJ5 — hilo de una conversación: mensajes + envío (offline por outbox) + realtime. */
 @Component({
@@ -310,7 +310,9 @@ export class MensajesThreadPage implements OnDestroy {
   /** Estado de recibo de un mensaje MÍO según los cursores de los demás. En grupo,
    *  "leído/recibido" exige que TODOS lo hayan leído/recibido (asunción AV5). */
   estadoRecibo(m: Mensaje): EstadoRecibo {
-    if (m.id.startsWith('tmp-')) return 'enviado'; // aún en el outbox
+    // AW13 — un mensaje aún en el outbox (optimista) NO puede parecer enviado:
+    // muestra "pendiente" (reloj) hasta que el server lo confirme (realtime → recarga).
+    if (m.id.startsWith('tmp-')) return 'pendiente';
     const otros = this.recibos();
     if (!otros.length) return 'enviado';
     const t = new Date(m.created_at).getTime();

@@ -1,0 +1,68 @@
+.av-ed__back {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1200;
+}
+
+.av-ed {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  z-index: 1201;
+  background: var(--color-surface, #fff);
+  border-radius: 18px 18px 0 0;
+  padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.av-ed__title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.av-ed__sub {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.av-ed__stage {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.av-ed__canvas {
+  width: min(280px, 72vw);
+  height: min(280px, 72vw);
+  border-radius: 14px;
+  touch-action: none;
+  cursor: grab;
+  background: #eee;
+}
+.av-ed__canvas:active {
+  cursor: grabbing;
+}
+
+.av-ed__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 8px 0 2px;
+  color: var(--color-text-secondary);
+}
+.av-ed__range {
+  width: 100%;
+}
+
+.av-ed__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  button {
+    flex: 1;
+  }
+}

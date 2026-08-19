@@ -579,3 +579,11 @@
   font-weight: 600;
 }
 .thread__stk-footer .thread__stk-upload { flex: 1; }
+
+// AW13 — check de "pendiente" (reloj) mientras la nota/mensaje aún sube por el outbox.
+.thread__tick--pend {
+  display: inline-flex;
+  align-items: center;
+  color: var(--main-ultra-light, #929090);
+  svg { display: block; }
+}

@@ -14,6 +14,11 @@ export interface EstadoUso {
   km_inicio?: number | null;
   nivel_inicio?: NivelCombustible | null;
   es_mio?: boolean;
+  // AW16 — identificación del vehículo (AT9: Marca Modelo · Color · Placa).
+  marca?: string | null;
+  modelo?: string | null;
+  color?: string | null;
+  placa?: string | null;
 }
 
 /** AK20 — mi sesión de uso activa (mi_uso_activo). */

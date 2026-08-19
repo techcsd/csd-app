@@ -32,6 +32,11 @@ export class MisPartesPage {
   loading = signal(true);
   error = signal(false); // APP-035 — distinguir error de carga de "sin bitácoras"
   fmtFecha = formatFecha; // U9
+  fmtHora = formatFechaCortaHora; // AW2 — fecha · hora
+
+  // AW5 — vista: "Mis bitácoras" (propias) vs "Todas" (solo roles con permiso).
+  vista = signal<'mias' | 'todas'>('mias');
+  puedeVerTodas = signal(false);
 
   // V1 — "En proceso / Pendientes de envío": borradores (Dexie) + envíos en cola.
   proceso = signal<EnProcesoItem[]>([]);
@@ -55,6 +60,8 @@ export class MisPartesPage {
 
   constructor() {
     void this.load();
+    // AW5 — ¿puede ver bitácoras de otros? (conmuta el tab "Todas").
+    void this.bitacora.puedeVerOtrasBitacoras().then((p) => this.puedeVerTodas.set(p));
     // V1 — refresca la sección "en proceso" al entrar y tras cada cambio del outbox.
     effect(() => {
       this.sync.changed();
@@ -66,11 +73,21 @@ export class MisPartesPage {
     this.filtroObra.update((cur) => (cur === nombre ? '' : nombre));
   }
 
+  /** AW5 — cambia entre "Mis bitácoras" y "Todas". */
+  setVista(v: 'mias' | 'todas'): void {
+    if (this.vista() === v) return;
+    this.vista.set(v);
+    this.filtroObra.set('');
+    void this.load();
+  }
+
   async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(false);
     try {
-      this.bitacoras.set(await this.bitacora.misBitacoras());
+      const data =
+        this.vista() === 'todas' ? await this.bitacora.todasBitacoras() : await this.bitacora.misBitacoras();
+      this.bitacoras.set(data);
     } catch {
       this.error.set(true);
     } finally {

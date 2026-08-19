@@ -46,6 +46,13 @@
         (action)="load()"
       />
     } @else {
+      <!-- AW5 — Mis bitácoras vs Todas (solo roles con permiso) -->
+      @if (puedeVerTodas()) {
+        <div class="mis-partes__tabs">
+          <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'mias'" (click)="setVista('mias')">Mis bitácoras</button>
+          <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'todas'" (click)="setVista('todas')">Todas las bitácoras</button>
+        </div>
+      }
       <!-- Q9 — filtro por obra (segmentar) con conteo -->
       @if (obras().length > 1) {
         <div class="mis-partes__filtros">
@@ -64,7 +71,11 @@
           <div class="bit-row__info">
             <span class="bit-row__tipo">{{ titulo(b) }}</span>
             <span class="bit-row__obra">{{ b.proyecto?.nombre ?? '—' }}</span>
-            <span class="bit-row__fecha">{{ fmtFecha(b.fecha) }}</span>
+            <!-- AW2 — autor (en "Todas") + fecha · hora exacta -->
+            <span class="bit-row__fecha">
+              @if (vista() === 'todas' && b.autor_nombre) { 🧑‍🔧 {{ b.autor_nombre }} · }
+              {{ b.created_at ? fmtHora(b.created_at) : fmtFecha(b.fecha) }}
+            </span>
           </div>
           <span class="bit-row__chev">›</span>
         </button>

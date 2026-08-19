@@ -100,4 +100,9 @@
       @if (!online) { <p class="ginfo__offline">Sin conexión: la gestión del grupo necesita internet.</p> }
     }
   </div>
+
+  <!-- AW7 — editor de foto de grupo (recorte circular) antes de subir -->
+  @if (editorImagen(); as img) {
+    <app-avatar-editor [imagen]="img" (confirmado)="onAvatarEditado($event)" (cancelado)="onAvatarCancel()" />
+  }
 </div>

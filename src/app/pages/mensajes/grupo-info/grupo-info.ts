@@ -8,6 +8,7 @@ import { InventarioService, UsuarioBusqueda } from '../../../core/services/inven
 import { CameraService } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
 
 /**
  * AN6 — Info y gestión de un grupo tipo WhatsApp: foto/nombre/descripción
@@ -21,7 +22,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-grupo-info',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton],
+  imports: [FormsModule, Skeleton, AvatarEditor],
   templateUrl: './grupo-info.html',
   styleUrl: './grupo-info.scss',
 })
@@ -114,20 +115,33 @@ export class GrupoInfoPage {
   }
 
   // ── Avatar ───────────────────────────────────────────────────────────────────
+  // AW7 — imagen elegida pendiente de ajustar en el editor (recorte circular).
+  editorImagen = signal<Blob | null>(null);
+
   async cambiarAvatar(desde: 'camara' | 'galeria'): Promise<void> {
     if (!this.soyAdmin() || this.guardando()) return;
+    const foto =
+      desde === 'camara' ? await this.camera.takePhoto() : (await this.camera.pickFromGallery(1))[0] ?? null;
+    if (!foto) return;
+    // AW7 — abre el editor (recorte + zoom) antes de subir.
+    this.editorImagen.set(foto.blob);
+  }
+
+  /** AW7 — el editor devolvió la foto recortada (JPEG cuadrada) → subir. */
+  async onAvatarEditado(blob: Blob): Promise<void> {
+    this.editorImagen.set(null);
+    this.guardando.set(true);
     try {
-      const foto =
-        desde === 'camara' ? await this.camera.takePhoto() : (await this.camera.pickFromGallery(1))[0] ?? null;
-      if (!foto) return;
-      this.guardando.set(true);
-      await this.mensajes.cambiarAvatarGrupo(this.conversacionId, foto.blob);
+      await this.mensajes.cambiarAvatarGrupo(this.conversacionId, blob);
       await this.cargar();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar la foto.');
     } finally {
       this.guardando.set(false);
     }
+  }
+  onAvatarCancel(): void {
+    this.editorImagen.set(null);
   }
 
   // ── Participantes ─────────────────────────────────────────────────────────────

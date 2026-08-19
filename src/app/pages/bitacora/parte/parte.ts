@@ -208,9 +208,32 @@ export class PartePage implements OnDestroy {
   actividadesElegidas = computed(() =>
     this.actividadesCat().filter((ac) => this.actividadOn(ac.valor)),
   );
-  actividadesDisponibles = computed(() =>
-    this.actividadesCat().filter((ac) => !this.actividadOn(ac.valor)),
-  );
+  // AW6 — buscador amigable de actividades (sin acentos, por palabras).
+  filtroActividad = signal('');
+  private normalizarTxt(s: string): string {
+    return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+  actividadesDisponibles = computed(() => {
+    const q = this.normalizarTxt(this.filtroActividad().trim());
+    const base = this.actividadesCat().filter((ac) => !this.actividadOn(ac.valor));
+    if (!q) return base;
+    const tokens = q.split(/\s+/).filter(Boolean);
+    return base.filter((ac) => {
+      const v = this.normalizarTxt(ac.valor);
+      return tokens.every((t) => v.includes(t));
+    });
+  });
+
+  /** AW1 — ¿la actividad permite "se trabajó" sin cantidad exacta (cantidad aprox.)? */
+  permiteSinCantidad(actividad: string): boolean {
+    return !!this.actividadesCat().find((ac) => ac.valor === actividad)?.permite_sin_cantidad;
+  }
+  /** AW1 — marca/desmarca una fila como cantidad APROXIMADA. */
+  toggleAproximada(i: number): void {
+    this.actividades.update((a) =>
+      a.map((x, idx) => (idx === i ? { ...x, es_aproximada: !x.es_aproximada } : x)),
+    );
+  }
   // Z6 — estructuras del sujeto que ya tienen algún trabajo (marca ✓ sin reordenar).
   private estructurasConActividad = computed(
     () =>
@@ -494,9 +517,12 @@ export class PartePage implements OnDestroy {
       );
       if (idx >= 0) return list.filter((_, i) => i !== idx); // toca de nuevo = quitar
       const unidad = this.partidaDe(parte)?.unidad ?? null;
+      // AW1 — ítems difíciles de medir (varillas, encofrado…): arrancan como
+      // cantidad APROXIMADA (el ingeniero puede poner un número o dejar "se trabajó").
+      const aprox = this.permiteSinCantidad(a);
       // AI15 — lo recién seleccionado va al PRINCIPIO (el usuario marca la cantidad
       // sin scrollear); mismo criterio que AF12 en ferretería.
-      return [{ estructura: parte, actividad: a, cantidad: 1, unidad, bloque: sujeto }, ...list];
+      return [{ estructura: parte, actividad: a, cantidad: aprox ? null : 1, unidad, bloque: sujeto, es_aproximada: aprox }, ...list];
     });
   }
 

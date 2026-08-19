@@ -147,3 +147,11 @@
 .det__no-trabajo {
   color: var(--color-warning, #d97706);
 }
+
+// AW1 — marca "(aprox.)" junto a una cantidad aproximada.
+.det__aprox {
+  margin-left: 4px;
+  font-size: 12px;
+  font-style: italic;
+  color: #92400e;
+}

@@ -6,7 +6,12 @@
 
   <div class="screen__body">
     <button type="button" class="perfil__card" (click)="verMiDetalle()">
-      <div class="perfil__avatar">{{ (nombre() || '?').charAt(0) }}</div>
+      <!-- AW7 — foto de perfil (imagen si tiene; si no, inicial) -->
+      @if (avatarUrl()) {
+        <img class="perfil__avatar perfil__avatar--img" [src]="avatarUrl()" alt="Foto de perfil" />
+      } @else {
+        <div class="perfil__avatar">{{ (nombre() || '?').charAt(0) }}</div>
+      }
       <div class="perfil__card-txt">
         <p class="perfil__nombre">{{ nombre() || 'Usuario' }}</p>
         @if (roles().length) {
@@ -15,6 +20,16 @@
       </div>
       <span class="perfil__card-chevron" aria-hidden="true">›</span>
     </button>
+
+    <!-- AW7 — cambiar mi foto de perfil (editor con recorte circular) -->
+    <div class="perfil__foto-acciones">
+      <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="subiendoFoto()" (click)="cambiarMiFoto('galeria')">
+        {{ subiendoFoto() ? 'Guardando…' : (avatarUrl() ? 'Cambiar mi foto' : 'Poner mi foto') }}
+      </button>
+      <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="subiendoFoto()" (click)="cambiarMiFoto('camara')">
+        Tomar foto
+      </button>
+    </div>
 
     <ul class="perfil__info">
       @if (obra(); as o) {
@@ -78,4 +93,9 @@
     (confirmed)="logout()"
     (cancelled)="cancelarCerrarSesion()"
   />
+
+  <!-- AW7 — editor de foto de perfil (recorte circular) antes de subir -->
+  @if (editorImagen(); as img) {
+    <app-avatar-editor [imagen]="img" (confirmado)="onFotoEditada($event)" (cancelado)="onFotoCancel()" />
+  }
 </div>

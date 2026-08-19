@@ -507,7 +507,12 @@ export class SyncService {
     const fotos = await db.fotos_pendientes.where('op_id').equals(opId).toArray();
     const paths: Record<string, string> = {};
     for (const foto of fotos) {
-      const type = foto.type || foto.blob?.type || 'application/octet-stream';
+      const rawType = foto.type || foto.blob?.type || 'application/octet-stream';
+      // AW13 — el allowlist de mime del bucket valida por igualdad EXACTA y NO
+      // acepta parámetros de codec: MediaRecorder produce 'audio/webm;codecs=opus'
+      // (o 'audio/mp4;codecs=…' en iOS) → Storage responde 415 y la nota de voz
+      // nunca sube (se "perdía"). Se sube con el mime BASE (audio/webm, audio/mp4).
+      const type = rawType.split(';')[0].trim();
       // Reconstruye el Blob desde los bytes (o usa el legacy Blob si existiera).
       const body = foto.data ? new Blob([foto.data], { type }) : foto.blob;
       if (!body) {

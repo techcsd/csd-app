@@ -216,7 +216,9 @@ export class MensajesService {
   async enviarNotaVoz(conversacionId: string, blob: Blob, duracionSeg: number, mime = 'audio/webm'): Promise<void> {
     if (blob.size > MAX_ADJUNTO_BYTES) throw new Error('La nota de voz supera el límite de 25 MB.');
     const id = crypto.randomUUID();
-    const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';
+    // AW13 — mime BASE (sin ';codecs=…'): el allowlist del bucket lo valida exacto.
+    const baseMime = (mime || 'audio/webm').split(';')[0].trim();
+    const ext = baseMime.includes('mp4') ? 'm4a' : baseMime.includes('ogg') ? 'ogg' : 'webm';
     const path = `${conversacionId}/${id}.${ext}`;
     await this.sync.enqueue({
       id,
@@ -226,7 +228,7 @@ export class MensajesService {
         client_id: id,
         conversacion_id: conversacionId,
         duracion_seg: Math.max(0, Math.round(duracionSeg)),
-        archivo_mime: mime,
+        archivo_mime: baseMime,
       },
       fotos: [{ id: crypto.randomUUID(), bucket: AVATAR_BUCKET, path, slot: 'audio', blob }],
       resumen: { tipo: 'nota_voz_enviar', conversacion_id: conversacionId },

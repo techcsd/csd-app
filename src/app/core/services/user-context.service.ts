@@ -2,6 +2,10 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { Usuario } from '../models/usuario.model';
+import { environment } from '../../../environments/environment';
+
+/** AW7 — bucket público de fotos de perfil de usuario. */
+const AVATARS_BUCKET = 'sgc-avatars';
 
 // Selección del perfil + roles/módulos (misma forma que usa SGC).
 const PROFILE_SELECT =
@@ -39,6 +43,30 @@ export class UserContextService {
   roles = computed(() => this._profile()?.roles?.map((ur) => ur.rol.codigo) ?? []);
 
   nombre = computed(() => this._profile()?.nombre ?? '');
+
+  /** AW7 — URL pública de mi foto de perfil (o null si no tengo). */
+  miAvatarUrl = computed<string | null>(() => {
+    const p = this._profile()?.avatar_path;
+    return p ? `${environment.supabaseUrl}/storage/v1/object/public/${AVATARS_BUCKET}/${p}` : null;
+  });
+
+  /**
+   * AW7 — sube mi foto de perfil (ya recortada por el editor) al bucket público
+   * `sgc-avatars` con un nombre único (no upsert → no requiere política UPDATE) y
+   * actualiza `usuarios.avatar_path` vía `actualizar_mi_avatar`. Refresca el perfil.
+   */
+  async actualizarMiAvatar(blob: Blob): Promise<void> {
+    const id = this._profile()?.id;
+    if (!id) throw new Error('Sesión no cargada.');
+    const path = `${id}/avatar-${crypto.randomUUID()}.jpg`;
+    const { error: upErr } = await this.supabase.client.storage
+      .from(AVATARS_BUCKET)
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const { error } = await this.supabase.client.rpc('actualizar_mi_avatar', { p_path: path });
+    if (error) throw new Error(error.message);
+    await this.loadProfile(id);
+  }
 
   // R14/S15 — roles de flota ELEVADOS (mismo criterio que sgc.es_flota_elevado()).
   // El chofer (chofer_transportista) NO es elevado: ve solo sus cuadros.

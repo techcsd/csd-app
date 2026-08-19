@@ -1,0 +1,29 @@
+<div class="av-ed__back" (click)="cancelar()"></div>
+<div class="av-ed">
+  <h2 class="av-ed__title">Ajusta tu foto</h2>
+  <p class="av-ed__sub">Arrastra para centrar y usa el zoom. Se guardará lo que quede dentro del círculo.</p>
+
+  <div class="av-ed__stage">
+    <canvas
+      #canvas
+      class="av-ed__canvas"
+      width="512"
+      height="512"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp()"
+      (pointercancel)="onPointerUp()"
+    ></canvas>
+  </div>
+
+  <label class="av-ed__label">Zoom</label>
+  <input class="av-ed__range" type="range" min="1" max="3" step="0.02"
+    [ngModel]="zoom()" (ngModelChange)="onZoom($event)" />
+
+  <div class="av-ed__actions">
+    <button type="button" class="btn-ghost" (click)="cancelar()">Cancelar</button>
+    <button type="button" class="btn-cta" [disabled]="procesando()" (click)="confirmar()">
+      {{ procesando() ? 'Procesando…' : 'Usar foto' }}
+    </button>
+  </div>
+</div>

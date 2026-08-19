@@ -12,14 +12,16 @@ import { BiometricService } from '../../core/services/biometric.service';
 import { WebauthnService } from '../../core/services/webauthn.service';
 import { VersionService } from '../../core/services/version.service';
 import { ToastService } from '../../core/services/toast.service';
+import { CameraService } from '../../core/services/camera.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
+import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 
 /** Profile / settings: identity, app version, update check, logout. */
 @Component({
   selector: 'app-perfil',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialog],
+  imports: [ConfirmDialog, AvatarEditor],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
@@ -32,11 +34,16 @@ export class PerfilPage {
   private webauthn = inject(WebauthnService);
   private versionSvc = inject(VersionService);
   private toast = inject(ToastService);
+  private camera = inject(CameraService);
   private router = inject(Router);
   private location = inject(Location);
 
   nombre = this.ctx.nombre;
   roles = this.ctx.roles;
+  // AW7 — foto de perfil.
+  avatarUrl = this.ctx.miAvatarUrl;
+  editorImagen = signal<Blob | null>(null);
+  subiendoFoto = signal(false);
   obra = this.ctx.obraActiva;
   isAdmin = () => this.ctx.hasModulo('admin');
   online = this.network.online;
@@ -148,6 +155,30 @@ export class PerfilPage {
   /** Z26 — el encabezado (avatar + nombre + rol) abre el detalle de mi propio usuario. */
   verMiDetalle(): void {
     void this.router.navigate(['/perfil/mi-detalle']);
+  }
+
+  /** AW7 — elegir una foto de perfil → editor (recorte circular) → subir. */
+  async cambiarMiFoto(desde: 'camara' | 'galeria'): Promise<void> {
+    if (this.subiendoFoto()) return;
+    const foto =
+      desde === 'camara' ? await this.camera.takePhoto() : (await this.camera.pickFromGallery(1))[0] ?? null;
+    if (!foto) return;
+    this.editorImagen.set(foto.blob);
+  }
+  async onFotoEditada(blob: Blob): Promise<void> {
+    this.editorImagen.set(null);
+    this.subiendoFoto.set(true);
+    try {
+      await this.ctx.actualizarMiAvatar(blob);
+      this.toast.success('Foto de perfil actualizada.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar la foto.');
+    } finally {
+      this.subiendoFoto.set(false);
+    }
+  }
+  onFotoCancel(): void {
+    this.editorImagen.set(null);
   }
 
   /** Z24 — abrir la web del SGC en el navegador del sistema.

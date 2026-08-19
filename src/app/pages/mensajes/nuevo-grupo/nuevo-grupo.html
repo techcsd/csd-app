@@ -75,4 +75,9 @@
       {{ creando() ? 'Creando…' : 'Crear grupo' }}
     </button>
   </div>
+
+  <!-- AW7 — editor de foto de grupo (recorte circular) antes de fijarla -->
+  @if (editorImagen(); as img) {
+    <app-avatar-editor [imagen]="img" (confirmado)="onAvatarEditado($event)" (cancelado)="onAvatarCancel()" />
+  }
 </div>

@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.88.1';
+const VERSION = '1.89.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,12 +62,17 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-20';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'La trayectoria sigue las calles';
+const TITULO = 'Notas de voz que sí llegan, búsqueda amigable, foto de perfil y más';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Seguimiento', d: 'La trayectoria de los choferes ahora sigue las calles (ya no líneas rectas) en el Seguimiento en vivo, en "Ver trayectoria" y en Mi recorrido.' },
+  { t: 'arreglo', m: 'Mensajes', d: 'Las notas de voz ahora SÍ se envían y llegan a los demás. Antes se veían enviadas pero desaparecían al salir del chat (el audio no subía por un problema de formato). Mientras sube, el mensaje muestra un reloj (pendiente); solo pasa a ✓ cuando llega de verdad al servidor.' },
+  { t: 'nuevo', m: 'Perfil', d: 'Foto de perfil: puedes poner y ajustar tu foto (recorte circular con zoom) — tanto la tuya como la de los grupos.' },
+  { t: 'nuevo', m: 'Bitácoras', d: '"Mis bitácoras" y "Todas las bitácoras": los supervisores ven las de todos; cada bitácora muestra quién la hizo y a qué hora.' },
+  { t: 'mejora', m: 'Bitácoras', d: 'Varillas y encofrado (difíciles de medir): puedes marcar la cantidad como aproximada ("~") o "se trabajó" sin número exacto. Nuevas actividades: cabezales, fondo de viga y encostillado de losas. Buscador de actividades más fácil.' },
+  { t: 'mejora', m: 'Inventario', d: 'Búsqueda de materiales más amigable: te sugiere aunque escribas sin acentos o con el nombre incompleto (por parecido, código o categoría).' },
+  { t: 'nuevo', m: 'Vehículos', d: 'Al elegir un vehículo que otra persona tiene en uso, ahora te avisa "en uso de X desde…" y te pide confirmar antes de recibirlo.' },
 ];
 
 const TIPO_POR_COMMIT = {

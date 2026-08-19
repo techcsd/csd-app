@@ -63,6 +63,20 @@
   font-weight: 800;
   flex-shrink: 0;
 }
+// AW7 — foto de perfil (imagen recortada en círculo).
+.perfil__avatar--img {
+  object-fit: cover;
+  background: #eee;
+}
+.perfil__foto-acciones {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.perfil__foto-btn {
+  flex: 1;
+  font-size: 13px;
+}
 .perfil__nombre {
   margin: 0;
   font-size: 20px;
