@@ -64,3 +64,6 @@ keystore.properties
 
 # Vercel
 .vercel
+
+# Session scratchpad (temp introspection scripts, QA screenshots)
+scratchpad/
