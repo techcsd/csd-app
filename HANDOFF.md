@@ -1,6 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 19/08 (AUDITORÍA) — PROMPT-28 ronda AX — **fix DEFINITIVO de voices (AX1/AX2) + links (AX3) + auditoría AK→AW · build verde app+web · SIN commit/deploy/APK (espera OK de Xaviel)**
+## 🟢 SESIÓN 19/08 (AUDITORÍA) — PROMPT-28 ronda AX — **RELEASE 1.90.0 PUBLICADO (rolling) · web SGC 1.84.1 desplegado · auditoría AK→AW**
+
+**SHIPPED:** app commits `1d3e504` (fix AX) + `fb59a2a` (publish SQL) → push `main` → PWA por Vercel. SGC web `16f5997` (AX3 links, 1.84.1) → push `main` → deploy Vercel. **APK 1.90.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 3 cambios curados) + subido al bucket (`latest`+`version.json`+`apk_url`). **`publicada`=1.90.0**, **`version_minima`=1.70.0 (verificado)** vía `sql/2026-08-19-publicar-1.90.0.sql`. Sin migraciones de esquema (backend de voz verificado sano en prod). **Rollback:** `update sgc.app_versiones set publicada=(version='1.89.0') where plataforma='movil';` + `git revert fb59a2a 1d3e504 && git push`; web: `git revert 16f5997 && git push`. **⏳ device-QA de campo (5 tests voz) sigue pendiente** — el fix es estructural, no "debería funcionar". Preview de links (AX3 v2): diseñado en `AX3-link-preview-design.md` (⏸ decide Xaviel).
 
 ### 🔴 FASE 1 — VOICES: raíz real encontrada y arreglada estructuralmente (AX1)
 El fix de 1.89.0 (mime BASE) era correcto pero NO era la raíz. Introspección de prod (solo lectura) confirmó que el **backend está sano**: `enviar_nota_voz(uuid,text,int,text,text)` con nombres de param exactos, `SECURITY DEFINER`, idempotente (`ON CONFLICT uq_mensajes_client`); bucket `sgc-mensajes` permite todos los mimes de audio base. **El bug era 100% cliente**, dos causas:
