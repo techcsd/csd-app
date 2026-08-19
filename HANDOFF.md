@@ -4,7 +4,7 @@
 
 **TL;DR:** Ronda AY completa. Cerrado lo de mayor valor: 🔴 **AY9 (la app botaba al login sin red) — VERIFICADO EN DEVICE**, el **saga de voices** (duración real + velocidad + sync entre dispositivos + saneo), **AT9 color**, **AY13 conduces por implementar**, **AW6 fuzzy**, **AY11 "Solicitud de movimiento" (módulo completo)**, **AY1 "Mi perfil" editable (nombre+teléfono, backend nuevo)**, **AU4** (recepción por-ítem revivida + libres visibles), **AW16** (En uso · usuario en el picker). **APK 1.91.0** firmado (cert `3c5316d8…5065`) + registrado (Y1, 8 cambios curados). PROMPT-29 (SGC) ya DESPLEGADO en prod. Migración aditiva aplicada: `sql/2026-08-23-ay1-perfil-self-edit.sql`.
 
-**⚠️ AL PUBLICAR:** `npm run apk:publish` (sube el APK) → flip `publicada=1.91.0`, **mantener `version_minima=1.70.0`** (rolling, NO bloqueante).
+**PUBLICADO:** `publicada=1.91.0` + **`minima=1.91.0` (BLOQUEANTE, a propósito)** — Xaviel quiere a TODOS en la última para probar bien el seguimiento/trackeo de choferes en vivo. (OJO: NO revertir minima a 1.70.0; fue decisión de Xaviel forzar la última.)
 
 ### ✅ Hecho esta sesión (build verde)
 - **🔴 AY9 — offline-first de la sesión (la app botaba al login sin red):** raíz = en un arranque offline con el access token expirado (~1h), Supabase `getSession()` quema ~25-30s reintentando un refresh imposible y devuelve `null` (el refresh token SIGUE en disco); `authGuard`→`hasSession()` leía ese `null` como "deslogueado". **Fix:** `hasSession()` ahora confía en la **sesión persistida en disco** (`SupabaseService.readStoredSession()` lee la clave `sb-<ref>-auth-token` de Preferences/localStorage) — Supabase solo borra ese blob por logout explícito o revocación CONFIRMADA, nunca por fallo de red. Mata el falso-logout Y la pantalla en blanco de 25-30s (no más `getSession()` en el guard). `ensureProfile()` toma el userId del blob → el perfil cacheado carga offline. Archivos: `core/services/{supabase,auth,session}.service.ts`.
@@ -26,11 +26,18 @@
 - **AV13** (crear-ruta → `DestinoSelector` compartido): refactor SIN valor para el usuario sobre un wizard crítico y frágil (el gotcha del filtro lugarOpts vive ahí) → DIFERIDO para no arriesgar la creación de rutas en un release que no puedo device-QA a fondo.
 - **AW12** (barrido emoji→SVG masivo, ~1091 líneas): gradual por diseño (el voice-player nuevo ya es SVG). Pendiente el grueso.
 
+### ✅ Device-QA HECHO esta sesión (Huawei STK-LX3, Android 10, sesión "Test User 3" / jefe_ingenieros, con la app 1.91.0 instalada)
+- **AY9 ✅** — sin red (wifi+data off, "Network is unreachable") + force-stop + cold-launch → desbloqueo biométrico en **~3s** (sesión VIVA, NO login, SIN la pantalla en blanco de 25-30s). Home offline renderiza con data cacheada. (El biométrico sólo corre para un usuario logueado con sesión persistida.)
+- **AY1 ✅** — Perfil → Editar mi perfil → escribí teléfono → Guardar → **"Perfil actualizado"** + teléfono persistido (RPC `mi_perfil_actualizar` end-to-end).
+- **Voice player (AY16 + AW13) ✅** — un voice existente en "Grupo test" pinta el player NUEVO: botón ▶ SVG + **duración "0:09" desde metadata** (no 0:00) + chip de velocidad **"1×"**. Links clickeables (AX3, TikTok) ✅. Recibos ✓✓ azules ✅.
+- **Versión 1.91.0 ✅** confirmada en Perfil.
+
 ### 🔴 Pendiente — Xaviel (físico / su cuenta)
-- **Publicar:** `npm run apk:publish` + flip `publicada=1.91.0` (mantener `version_minima=1.70.0`). *(Si me diste OK, lo hago yo.)*
-- **Device-QA con tu huella/PIN (no puedo autenticar tu cuenta):** entrar a la app y probar (a) **AY11** ingeniero crea solicitud offline → referente planifica hasta ruta; (b) **voice player** duración al llegar + velocidad; (c) **banner offline** dentro de la app; (d) los **5 tests de voces** (2 teléfonos A→B; voz+texto; salir/entrar; modo avión; web↔app).
-- **✅ AY9 YA VERIFICADO EN DEVICE (Huawei STK-LX3, Android 10):** sin red (wifi+data off, "Network is unreachable") + force-stop + cold-launch → la app llegó a la pantalla de **desbloqueo biométrico en ~3s** (sesión VIVA, NO login, y SIN la pantalla en blanco de 25-30s del bug viejo). El flujo biométrico sólo corre para un usuario logueado con sesión persistida.
-- **Espejo web (AY12):** perfil editable en la web; Solicitud de movimiento en la web (PROMPT-29 ya tiene el backend).
+- **⚠️ Re-activar el biométrico en el teléfono de prueba:** lo desactivé por accidente durante el QA (un tap cayó en "Usar huella / Face ID"). Re-activar = Perfil → "Usar huella / Face ID" + tu huella. El PIN sigue funcionando; sin impacto real.
+- **Device-QA que necesita tu cuenta/2º teléfono:** (a) **AY11** + **Conduces por implementar** NO son alcanzables como "Test User 3" (jefe_ingenieros NO tiene módulo Flota → el tile no aparece; probar con un usuario con Flota); (b) los **5 tests de voces** 2-teléfonos (A→B; voz+texto; salir/entrar; modo avión; web↔app); (c) **seguimiento/trackeo en vivo** de un chofer (con `minima=1.91.0` ya todos van a la última).
+- **⚠️ Gating AY11:** el tile "Solicitud de movimiento" está bajo el módulo **Flota**. Si los INGENIEROS no tienen el módulo flota en `roles.modulos`, no verán la entrada para crear solicitudes. Revisar/ajustar el gating (¿mover a un módulo que el ingeniero sí tenga, o darle flota?).
+- **Banner offline (menor):** el home no muestra un banner "sin conexión" prominente (el estado sale en Perfil "Sin señal" + sync bar). Polish opcional.
+- **Espejo web (AY12):** perfil editable + Solicitud de movimiento en la web (PROMPT-29 ya tiene el backend; falta la UI web).
 
 ### ⚠️ Gotchas de esta sesión
 - **PROMPT-29 YA está en prod:** introspección confirmó `mensajes.duracion_seg`, `enviar_nota_voz(...p_duracion_seg...)`, tabla `solicitudes_movimiento` + RPCs (crear/listar/planificar_solicitud_con_ruta/completar/cancelar/es_referente_movimiento/_pendientes_count), `conduces_por_implementar[_count]`, `buscar_articulos`, `vehiculos_en_uso` con `color`.
