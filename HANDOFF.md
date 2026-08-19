@@ -1,8 +1,21 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 19/08 (AUDITORÍA) — PROMPT-28 ronda AX — **RELEASE 1.90.0 PUBLICADO (rolling) · web SGC 1.84.1 desplegado · auditoría AK→AW**
+## 🟢 SESIÓN 19/08 (AUDITORÍA) — PROMPT-28 ronda AX — **RELEASE 1.90.1 PUBLICADO (rolling) · web SGC 1.84.1 · voices ARREGLADOS DE RAÍZ (device-QA ✅) · auditoría AK→AW**
 
-**SHIPPED:** app commits `1d3e504` (fix AX) + `fb59a2a` (publish SQL) → push `main` → PWA por Vercel. SGC web `16f5997` (AX3 links, 1.84.1) → push `main` → deploy Vercel. **APK 1.90.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 3 cambios curados) + subido al bucket (`latest`+`version.json`+`apk_url`). **`publicada`=1.90.0**, **`version_minima`=1.70.0 (verificado)** vía `sql/2026-08-19-publicar-1.90.0.sql`. Sin migraciones de esquema (backend de voz verificado sano en prod). **Rollback:** `update sgc.app_versiones set publicada=(version='1.89.0') where plataforma='movil';` + `git revert fb59a2a 1d3e504 && git push`; web: `git revert 16f5997 && git push`. **⏳ device-QA de campo (5 tests voz) sigue pendiente** — el fix es estructural, no "debería funcionar". Preview de links (AX3 v2): diseñado en `AX3-link-preview-design.md` (⏸ decide Xaviel).
+### 🔴🔴 RAÍZ REAL de los voices (device-QA la delató) — ARREGLADA
+El fix de cliente (1.90.0) era necesario pero NO era la raíz del no-envío. El device-QA (Xiaomi+Huawei por ADB) + `sgc.app_error_reports` revelaron: **`enviar_nota_voz` inserta `tipo='audio'` pero el CHECK `mensajes_tipo_chk` solo permitía ('texto','sistema','sticker') → cada nota moría con 23514 check_violation en la BD** (desde AV5; visto en 1.88.1/1.89.0/1.90.0). Los fixes de mime nunca pudieron ayudar. **Fix:** `sql/2026-08-19-ax1-mensajes-tipo-audio.sql` ensancha el CHECK a incluir 'audio' (aditivo; arregla app Y web). **Verificado en device (Xiaomi):** grabar→enviar→**✓** + fila audio/webm/53s en `sgc.mensajes`; **un texto justo después NO borró el voice** (fix cliente AX1 confirmado en vivo). Committeado en app (`5d6f466`) y SGC (`e827112`).
+
+### Además: AS3 + AS17 (2 "falsos done" de la auditoría, cerrados)
+- **AS3:** el PDF del conduce ahora usa el motivo legible + despachante real (`conduce-pdf.service.ts`), no el enum crudo ni entregado_por_nombre null.
+- **AS17:** `mis_usos_vehiculo` ahora devuelve los 4 paths de foto (migración aditiva `sql/2026-08-19-as17-fotos-en-historial.sql`); **Mi actividad** pinta las miniaturas + lightbox. Antes las fotos se subían pero eran invisibles (violaba AT11).
+
+**SHIPPED:** app `1d3e504`(AX)+`fb59a2a`+`5d6f466`(constraint)+`c745b14`(AS3/AS17)+`e8f830c`(1.90.1)+`6823f2e`(publish) → push `main`. SGC web `16f5997`(AX3 1.84.1)+`e827112`(constraint)+`dbd4928`(AS17 mirror). **APK 1.90.1** firmado (cert `3c5316d8…5065`)+registrado(Y1,5 cambios)+subido. **`publicada=1.90.1`, `version_minima=1.70.0` (verificado)**. **Rollback:** `update sgc.app_versiones set publicada=(version='1.89.0') where plataforma='movil';` + revert de los commits; el constraint es aditivo (no hace falta revertirlo).
+
+### ⏳ Pendientes (físicos / próxima ronda)
+- **Voices device-QA:** confirmar recepción+reproducción en el 2º teléfono (Huawei quedó con PIN a mitad del QA); modo avión; web↔app. El envío ✓ y el "texto no borra el voice" ya verificados en device.
+- **Nota menor:** el player de audio muestra "0:00/0:00" hasta reproducir (webm sin header de duración); la duración real sí se guarda (duracion_seg) y se muestra aparte. Cosmético.
+- **Gaps de auditoría abiertos** (ver `REPORTE-AUDITORIA-CSD-APP.md`): AW12 (emoji→SVG masivo), AS1 (watchdog nativo/wake lock/GPS adaptativo/batería fabricante), AS14 (gastos offline), AT9 (color en combustible/reportar-multa/VehiculoEnUso), AV13 (selector compartido), AW6 (fuzzy en articulo-picker), AW13-velocidad (1x/1.5x/2x), AW16 (label "en uso" en picker).
+- **AX3 preview de links:** diseñado en `AX3-link-preview-design.md` (⏸ decide Xaviel).
 
 ### 🔴 FASE 1 — VOICES: raíz real encontrada y arreglada estructuralmente (AX1)
 El fix de 1.89.0 (mime BASE) era correcto pero NO era la raíz. Introspección de prod (solo lectura) confirmó que el **backend está sano**: `enviar_nota_voz(uuid,text,int,text,text)` con nombres de param exactos, `SECURITY DEFINER`, idempotente (`ON CONFLICT uq_mensajes_client`); bucket `sgc-mensajes` permite todos los mimes de audio base. **El bug era 100% cliente**, dos causas:
