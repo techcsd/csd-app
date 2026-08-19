@@ -166,6 +166,16 @@
                 @if (u.km_inicio != null) { · {{ u.km_inicio }}@if (u.km_fin != null) { → {{ u.km_fin }} } km }
                 @if (u.nivel_inicio) { · ⛽ {{ u.nivel_inicio }}@if (u.nivel_fin) { → {{ u.nivel_fin }} } }
               </span>
+              <!-- AS17 — las 4 fotos del uso (frente/lateral/trasera) ahora visibles -->
+              @if (fotosDe(u.id).length) {
+                <div class="mact__uso-fotos">
+                  @for (f of fotosDe(u.id); track f) {
+                    <button type="button" class="mact__uso-foto" (click)="abrirFoto(f)" aria-label="Ver foto del vehículo">
+                      <img [src]="f" alt="Foto del vehículo" loading="lazy" />
+                    </button>
+                  }
+                </div>
+              }
             </div>
           }
         </section>
@@ -308,4 +318,12 @@
       </section>
     }
   </div>
+
+  <!-- AS17 — lightbox para las fotos del uso de vehículo -->
+  @if (lightboxUrl(); as lb) {
+    <div class="mact__lightbox" (click)="cerrarFoto()">
+      <button type="button" class="mact__lightbox-x" (click)="cerrarFoto()" aria-label="Cerrar">✕</button>
+      <img [src]="lb" alt="Foto del vehículo" />
+    </div>
+  }
 </div>

@@ -6,6 +6,29 @@ import { Share } from '@capacitor/share';
 import { ConduceDetalle } from './conduces.service';
 import { formatFecha, formatFechaHumana } from '../util/fecha';
 
+// AS3 — mismas etiquetas que el detalle (conduce-detalle): el PDF debe mostrar el
+// motivo legible y el despachante real, no el enum crudo ni entregado_por_nombre (null).
+const MOTIVO_LABEL: Record<string, string> = {
+  uso_proyecto: 'Uso en proyecto',
+  uso_en_proyecto: 'Uso en proyecto',
+  devolucion: 'Devolución',
+  devolucion_suplidor: 'Devolución a suplidor',
+  devolucion_obra: 'Devolución de obra',
+  traspaso: 'Traspaso entre almacenes',
+  compra: 'Compra / entrada',
+  entrada: 'Entrada',
+  venta: 'Venta',
+  reparacion: 'Reparación',
+  prestamo: 'Préstamo',
+};
+function motivoLabelDe(d: ConduceDetalle): string {
+  if (d.motivo_label) return d.motivo_label;
+  const m = d.motivo;
+  if (!m) return '—';
+  const s = m.replace(/_/g, ' ').trim();
+  return MOTIVO_LABEL[m] ?? (s ? s.charAt(0).toUpperCase() + s.slice(1) : m);
+}
+
 const FASE_LABEL: Record<string, string> = {
   emitido: 'Emitido',
   en_transito: 'En ruta',
@@ -68,9 +91,9 @@ export class ConducePdfService {
     const rows: [string, string][] = [
       ['Almacén de origen', d.bodega || '—'],
       ['Destino', destino],
-      ['Motivo', d.motivo || '—'],
+      ['Motivo', motivoLabelDe(d)],
       ['Transporta', d.conductor || '—'],
-      ['Entregado por', d.entregado_por_nombre || '—'],
+      ['Entregado por', d.despachante || d.entregado_por_nombre || '—'],
       ['Recibido por', d.recibido_por_nombre || '—'],
     ];
     doc.setFontSize(9);

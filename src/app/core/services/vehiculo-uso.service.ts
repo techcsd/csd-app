@@ -51,6 +51,11 @@ export interface MiUso {
   nivel_fin: NivelCombustible | null;
   recibido_de: string | null;
   activa: boolean;
+  // AS17 — paths de las 4 fotos rápidas (frente/lateral izq/lateral der/trasera).
+  foto_frente_path?: string | null;
+  foto_lateral_izq_path?: string | null;
+  foto_lateral_der_path?: string | null;
+  foto_trasera_path?: string | null;
 }
 
 /** AK20 — el vehículo está en uso por OTRO (DR409): la UI ofrece "recibir de X". */
@@ -180,6 +185,21 @@ export class VehiculoUsoService {
     });
     if (error) throw new Error(error.message);
     return (data as MiUso[]) ?? [];
+  }
+
+  /**
+   * AS17 — URLs firmadas de las 4 fotos de una sesión de uso (bucket `vehiculos`),
+   * en orden frente/izq/der/trasera, omitiendo las ausentes. Best-effort.
+   */
+  async usoFotoUrls(u: MiUso): Promise<string[]> {
+    const paths = [u.foto_frente_path, u.foto_lateral_izq_path, u.foto_lateral_der_path, u.foto_trasera_path]
+      .filter((p): p is string => !!p);
+    const urls: string[] = [];
+    for (const path of paths) {
+      const { data } = await this.supabase.client.storage.from('vehiculos').createSignedUrl(path, 3600);
+      if (data?.signedUrl) urls.push(data.signedUrl);
+    }
+    return urls;
   }
 
   private parseDetail(details?: string): { en_uso_por?: string; nombre?: string; desde?: string } | null {

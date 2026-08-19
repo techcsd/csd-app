@@ -86,12 +86,35 @@ export class MiActividadPage {
   echadas = signal<HistorialEchada[]>([]);
   // AK18 — historial de MIS usos de vehículo (modelo "en uso" v2).
   usos = signal<MiUso[]>([]);
+  // AS17 — URLs firmadas de las 4 fotos por uso (id → urls) + lightbox.
+  usoFotos = signal<Record<string, string[]>>({});
+  lightboxUrl = signal<string | null>(null);
   // V3 — rutas creadas por el usuario (elevados).
   rutasCreadas = signal<RutaCreada[]>([]);
   historialExpandido = signal(false); // "ver más" (90 días → todo)
   fmtFecha = formatFecha; // U9 — fecha date-only
   fmtFechaMedia = formatFechaMedia; // U9 — timestamp
   fmtFechaHumana = formatFechaHumana; // Y1 — timestamp con hora legible
+
+  /** AS17 — firma (best-effort) las 4 fotos de cada uso que las tenga. */
+  private async cargarUsoFotos(usos: MiUso[]): Promise<void> {
+    for (const u of usos) {
+      const tieneFotos = u.foto_frente_path || u.foto_lateral_izq_path || u.foto_lateral_der_path || u.foto_trasera_path;
+      if (!tieneFotos) continue;
+      const urls = await this.usoSvc.usoFotoUrls(u);
+      if (urls.length) this.usoFotos.update((m) => ({ ...m, [u.id]: urls }));
+    }
+  }
+  /** AS17 — fotos firmadas de un uso (o vacío). */
+  fotosDe(id: string): string[] {
+    return this.usoFotos()[id] ?? [];
+  }
+  abrirFoto(url: string): void {
+    this.lightboxUrl.set(url);
+  }
+  cerrarFoto(): void {
+    this.lightboxUrl.set(null);
+  }
 
   // Z25 — filas sin página de detalle propia (accidentes/entregas/rutas creadas)
   // se abren en el sitio: nada queda muerto al tap. Clave = `${tipo}:${id}`.
@@ -146,7 +169,10 @@ export class MiActividadPage {
       this.esConductor.set(!!cond || ampliado);
       // AK18 — mis usos de vehículo (por auth.uid, no depende de la ficha) para que
       // Papo vea su historial de usos aunque la ficha llegue tarde.
-      void this.usoSvc.misUsos().then((u) => this.usos.set(u)).catch(() => {});
+      void this.usoSvc.misUsos().then((u) => {
+        this.usos.set(u);
+        void this.cargarUsoFotos(u); // AS17 — firma las fotos de los usos que las tengan
+      }).catch(() => {});
       if (cond) {
         this.condId.set(cond.id);
         // AJ11 — perfil propio (solo lectura, en cuadrículas). Best-effort.
