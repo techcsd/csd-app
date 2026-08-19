@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Location } from '@angular/common';
+import { Location, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
-import { MensajesService, Mensaje, StickerPack, Recibo, PresenciaAccion } from '../../../core/services/mensajes.service';
+import { MensajesService, Mensaje, StickerPack, Recibo, PresenciaAccion, PendienteMsg } from '../../../core/services/mensajes.service';
+import { SyncService } from '../../../core/sync/sync.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -12,19 +13,26 @@ import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder'
 import { StickerEditor } from '../../../shared/ui/sticker-editor/sticker-editor';
 import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
 
-type EstadoRecibo = 'pendiente' | 'enviado' | 'entregado' | 'leido';
+type EstadoRecibo = 'pendiente' | 'error' | 'enviado' | 'entregado' | 'leido';
+
+/** AX3 — un tramo de un mensaje de texto: texto plano o un link clickeable. */
+interface Segmento {
+  link: boolean;
+  v: string;
+}
 
 /** AJ5 — hilo de una conversación: mensajes + envío (offline por outbox) + realtime. */
 @Component({
   selector: 'app-mensajes-thread',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, VoiceRecorder, StickerEditor],
+  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, StickerEditor],
   templateUrl: './thread.html',
   styleUrl: './thread.scss',
 })
 export class MensajesThreadPage implements OnDestroy {
   private mensajes = inject(MensajesService);
+  private sync = inject(SyncService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ctx = inject(UserContextService);
@@ -43,9 +51,30 @@ export class MensajesThreadPage implements OnDestroy {
 
   conversacionId = '';
   loading = signal(true);
+  /** Mensajes CONFIRMADOS por el server (fuente = listar_mensajes). */
   lista = signal<Mensaje[]>([]);
+  /** AX1 — mensajes aún en el outbox (pending/syncing/error), derivados de la cola
+   *  durable. Nunca se pierden en un reload; su estado real siempre se refleja. */
+  pendientes = signal<PendienteMsg[]>([]);
   texto = signal('');
   enviando = signal(false);
+
+  /** AX1 — vista renderizada = confirmados del server + pendientes del outbox (al
+   *  final, en orden de captura). Un `set(serverMsgs)` en cargar() ya no borra un
+   *  pendiente: vive en `pendientes` hasta que su op se confirma o falla visible. */
+  vista = computed<Mensaje[]>(() => {
+    const base = this.lista();
+    const pend = this.pendientes().map((p) => this.pendToMensaje(p));
+    return pend.length ? [...base, ...pend] : base;
+  });
+  /** AX1 — estado por client_id para pintar reloj (pending) o ⚠️ (error). */
+  private pendEstado = computed<Map<string, PendienteMsg['estado']>>(() => {
+    const m = new Map<string, PendienteMsg['estado']>();
+    for (const p of this.pendientes()) m.set(p.client_id, p.estado);
+    return m;
+  });
+  /** AX1 — object-URLs de la vista previa local de audios/imágenes pendientes. */
+  private pendBlobUrls = new Map<string, string>();
 
   // AT14 — no-leídos capturados ANTES de marcar leído (frontera del divisor).
   noLeidosInicial = signal(0);
@@ -130,6 +159,12 @@ export class MensajesThreadPage implements OnDestroy {
     // QA-20: filtra server-side por esta conversación (antes escuchaba TODO).
     this.unsub = this.mensajes.suscribir(() => void this.onRealtimeMsg(), this.conversacionId);
     this.iniciarPresencia();
+    // AX1 — cada cambio del outbox (encolar/subir/confirmar/error) re-deriva los
+    // pendientes de este hilo, así el estado (reloj → ✓ / ⚠️) siempre está vivo.
+    effect(() => {
+      this.sync.changed();
+      void this.refrescarPendientes();
+    });
   }
 
   /** AV5 — al llegar un mensaje por realtime: recarga + marca entregado + refresca recibos. */
@@ -137,6 +172,7 @@ export class MensajesThreadPage implements OnDestroy {
     await this.cargar(true);
     void this.mensajes.marcarEntregada(this.conversacionId);
     void this.refrescarRecibos();
+    void this.refrescarPendientes();
   }
 
   /**
@@ -148,6 +184,7 @@ export class MensajesThreadPage implements OnDestroy {
     await this.cargarMeta();
     this.scrollNoLeidoPend = this.noLeidosInicial() > 0;
     await this.cargar();
+    await this.refrescarPendientes();
     // AV5 — al abrir: recibido + leído + traer los recibos de los demás.
     void this.mensajes.marcarEntregada(this.conversacionId);
     void this.mensajes.marcarLeida(this.conversacionId);
@@ -159,6 +196,61 @@ export class MensajesThreadPage implements OnDestroy {
   /** AV5 — trae los cursores de recibo de los demás (para pintar los checks). */
   private async refrescarRecibos(): Promise<void> {
     this.recibos.set(await this.mensajes.getRecibos(this.conversacionId));
+  }
+
+  /**
+   * AX1 — re-deriva los mensajes pendientes DESDE el outbox y sincroniza las
+   * object-URLs de vista previa (audio/imagen). Si el nº de pendientes bajó (una op
+   * se confirmó o se descartó), recarga del server por si el realtime no disparó
+   * → así el mensaje real reemplaza al pendiente sin quedar en el limbo.
+   */
+  private async refrescarPendientes(): Promise<void> {
+    const pend = await this.mensajes.pendientesDe(this.conversacionId);
+    const activos = new Set(pend.map((p) => p.client_id));
+    // Revoca las URLs de pendientes que ya no están (confirmados/descartados).
+    for (const [cid, url] of [...this.pendBlobUrls]) {
+      if (!activos.has(cid)) {
+        URL.revokeObjectURL(url);
+        this.pendBlobUrls.delete(cid);
+        this.urlsAudio.update((u) => { const c = { ...u }; delete c[cid]; return c; });
+        this.urlsAdjuntos.update((u) => { const c = { ...u }; delete c[cid]; return c; });
+      }
+    }
+    // Crea la vista previa local de audios/imágenes nuevos aún sin subir.
+    for (const p of pend) {
+      if (p.blob && !this.pendBlobUrls.has(p.client_id)) {
+        const url = URL.createObjectURL(p.blob);
+        this.pendBlobUrls.set(p.client_id, url);
+        if (p.tipo === 'audio') this.urlsAudio.update((u) => ({ ...u, [p.client_id]: url }));
+        else this.urlsAdjuntos.update((u) => ({ ...u, [p.client_id]: url }));
+      }
+    }
+    const bajo = pend.length < this.pendientes().length;
+    this.pendientes.set(pend);
+    if (bajo) void this.cargar(true); // una op se confirmó → traer el mensaje real
+  }
+
+  /** AX1 — mapea un pendiente del outbox al modelo Mensaje para pintarlo en la vista. */
+  private pendToMensaje(p: PendienteMsg): Mensaje {
+    const conArchivo = p.tipo === 'audio' || p.tipo === 'imagen' || p.tipo === 'archivo';
+    return {
+      id: p.client_id,
+      autor_id: this.yo() ?? '',
+      autor_nombre: 'Tú',
+      contenido: p.contenido,
+      // esImagen/esArchivo se apoyan en el mime; sticker/audio en `tipo`.
+      tipo: p.tipo === 'sticker' ? 'sticker' : p.tipo === 'audio' ? 'audio' : 'texto',
+      archivo_path: p.tipo === 'sticker' ? p.ref : conArchivo ? p.client_id : null,
+      archivo_nombre: p.archivo_nombre,
+      archivo_mime: p.tipo === 'sticker' ? 'image/sticker' : p.archivo_mime,
+      duracion_seg: p.duracion_seg,
+      created_at: new Date(p.created_local).toISOString(),
+    };
+  }
+
+  /** AX1 — reintenta el envío de un mensaje pendiente que quedó en error (⚠️). */
+  reintentar(m: Mensaje): void {
+    void this.sync.retry(m.id).then(() => this.refrescarPendientes());
   }
 
   // ── AV5 — presencia / typing ────────────────────────────────────────────────
@@ -236,6 +328,38 @@ export class MensajesThreadPage implements OnDestroy {
     if (this.recibosTimer) clearInterval(this.recibosTimer);
     this.tempUrls.forEach((u) => URL.revokeObjectURL(u));
     this.tempUrls = [];
+    // AX1 — libera las object-URLs de vista previa de los pendientes.
+    for (const url of this.pendBlobUrls.values()) URL.revokeObjectURL(url);
+    this.pendBlobUrls.clear();
+  }
+
+  // ── AX3 — links clickeables en los mensajes de texto ────────────────────────
+  /** Parte el texto en tramos: texto plano + URLs http/https clickeables. Solo
+   *  reconoce esquemas seguros (http/https) → no ejecuta ni abre nada raro. */
+  segmentos(texto: string | null): Segmento[] {
+    if (!texto) return [];
+    const re = /(https?:\/\/[^\s<>"']+)/gi;
+    const out: Segmento[] = [];
+    let last = 0;
+    let mm: RegExpExecArray | null;
+    while ((mm = re.exec(texto)) !== null) {
+      if (mm.index > last) out.push({ link: false, v: texto.slice(last, mm.index) });
+      // Recorta la puntuación final que no suele ser parte del link (".,;:!?)").
+      let url = mm[0];
+      const trailing = url.match(/[)\].,;:!?»"']+$/);
+      if (trailing) url = url.slice(0, url.length - trailing[0].length);
+      out.push({ link: true, v: url });
+      last = mm.index + url.length;
+    }
+    if (last < texto.length) out.push({ link: false, v: texto.slice(last) });
+    return out;
+  }
+
+  /** Abre un link en el navegador (app: navegador del sistema; web: pestaña nueva
+   *  con noopener). Solo http/https válidos. */
+  abrirLink(url: string): void {
+    if (!/^https?:\/\//i.test(url)) return;
+    window.open(url, '_blank', 'noopener,noreferrer');
   }
 
   private async cargar(silencioso = false): Promise<void> {
@@ -310,9 +434,11 @@ export class MensajesThreadPage implements OnDestroy {
   /** Estado de recibo de un mensaje MÍO según los cursores de los demás. En grupo,
    *  "leído/recibido" exige que TODOS lo hayan leído/recibido (asunción AV5). */
   estadoRecibo(m: Mensaje): EstadoRecibo {
-    // AW13 — un mensaje aún en el outbox (optimista) NO puede parecer enviado:
-    // muestra "pendiente" (reloj) hasta que el server lo confirme (realtime → recarga).
-    if (m.id.startsWith('tmp-')) return 'pendiente';
+    // AX1 — un mensaje aún en el outbox refleja su estado REAL: reloj mientras
+    // sube (pending/syncing) y ⚠️ si falló (error, con reintento). Solo cuando el
+    // server lo confirma (op borrada del outbox) pasa a ✓/✓✓ por los recibos.
+    const pend = this.pendEstado().get(m.id);
+    if (pend) return pend === 'error' ? 'error' : 'pendiente';
     const otros = this.recibos();
     if (!otros.length) return 'enviado';
     const t = new Date(m.created_at).getTime();
@@ -343,25 +469,14 @@ export class MensajesThreadPage implements OnDestroy {
     const t = this.texto().trim();
     if (!t || this.enviando()) return;
     this.enviando.set(true);
-    // Optimista: pinta el mensaje al instante; el realtime/recarga lo reconcilia.
-    this.lista.update((l) => [
-      ...l,
-      {
-        id: 'tmp-' + Date.now(),
-        autor_id: this.yo() ?? '',
-        autor_nombre: 'Tú',
-        contenido: t,
-        archivo_path: null,
-        archivo_nombre: null,
-        archivo_mime: null,
-        created_at: new Date().toISOString(),
-      },
-    ]);
     this.texto.set('');
     this.emitirPresencia('nada'); // AV5 — dejé de escribir
-    this.scrollAlFinal();
     try {
+      // AX1 — encola en el outbox; el pendiente se pinta desde la cola (durable),
+      // no desde una lista optimista que un reload borraría.
       await this.mensajes.enviarMensaje(this.conversacionId, t);
+      await this.refrescarPendientes();
+      this.scrollAlFinal();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar.');
     } finally {
@@ -381,36 +496,25 @@ export class MensajesThreadPage implements OnDestroy {
     this.emitirPresencia('nada');
   }
 
-  /** El recorder emitió el blob al detenerse → lo enviamos (optimista) y cerramos. */
+  /** El recorder emitió el blob al detenerse (o null al cancelar) → lo encolamos. */
   async onVozGrabada(blob: Blob | null): Promise<void> {
-    if (!blob) return; // clear() → nada que enviar
+    // Lee la duración ANTES de ocultar el recorder (ocultarlo lo destruye).
     const dur = this.recorder()?.segundos() ?? 0;
     this.grabandoVoz.set(false);
     this.emitirPresencia('nada');
-    // Bubble optimista con la vista previa local.
-    const tmpKey = 'tmp-aud-' + Date.now();
-    const previewUrl = URL.createObjectURL(blob);
-    this.tempUrls.push(previewUrl);
-    this.urlsAudio.update((u) => ({ ...u, [tmpKey]: previewUrl }));
-    this.lista.update((l) => [
-      ...l,
-      {
-        id: tmpKey,
-        autor_id: this.yo() ?? '',
-        autor_nombre: 'Tú',
-        contenido: null,
-        tipo: 'audio',
-        archivo_path: tmpKey,
-        archivo_nombre: null,
-        archivo_mime: 'audio/webm',
-        duracion_seg: dur,
-        created_at: new Date().toISOString(),
-      },
-    ]);
-    this.scrollAlFinal();
+    if (!blob) return; // cancelar → nada que enviar
+    // AX1 — instrumentación por eslabón: si el envío vuelve a fallar, el logcat
+    // muestra EXACTAMENTE dónde muere (grabación → cola → subida → RPC).
+    console.info('[voz] grabada', { size: blob.size, type: blob.type, dur });
     try {
+      // El pendiente se pinta desde el outbox (durable); un mensaje posterior ya
+      // no puede borrarlo y el estado real (reloj → ✓ / ⚠️) siempre se ve.
       await this.mensajes.enviarNotaVoz(this.conversacionId, blob, dur, blob.type || 'audio/webm');
+      console.info('[voz] encolada en outbox');
+      await this.refrescarPendientes();
+      this.scrollAlFinal();
     } catch (e) {
+      console.error('[voz] fallo al encolar', e);
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar la nota de voz.');
     }
   }
@@ -446,28 +550,13 @@ export class MensajesThreadPage implements OnDestroy {
   ): Promise<void> {
     if (this.adjuntando()) return;
     this.adjuntando.set(true);
-    const tmpKey = 'tmp-adj-' + Date.now();
-    const esImg = file.mime.startsWith('image/');
-    if (esImg && previewUrl) {
-      this.tempUrls.push(previewUrl);
-      this.urlsAdjuntos.update((u) => ({ ...u, [tmpKey]: previewUrl }));
-    }
-    this.lista.update((l) => [
-      ...l,
-      {
-        id: tmpKey,
-        autor_id: this.yo() ?? '',
-        autor_nombre: 'Tú',
-        contenido: null,
-        archivo_path: tmpKey,
-        archivo_nombre: file.nombre,
-        archivo_mime: file.mime,
-        created_at: new Date().toISOString(),
-      },
-    ]);
-    this.scrollAlFinal();
+    // AX1 — la vista previa la reconstruye refrescarPendientes desde el blob del
+    // outbox; liberamos el previewUrl del picker (evita fuga; ya no se usa aquí).
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     try {
       await this.mensajes.enviarAdjunto(this.conversacionId, file);
+      await this.refrescarPendientes();
+      this.scrollAlFinal();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el adjunto.');
     } finally {
@@ -530,8 +619,8 @@ export class MensajesThreadPage implements OnDestroy {
   // ── AT14 — separadores de fecha (Hoy/Ayer/fecha) ────────────────────────────
   /** true si el mensaje `i` inicia un nuevo día calendario respecto al anterior. */
   esNuevoDia(i: number): boolean {
-    const list = this.lista();
-    if (i <= 0) return true;
+    const list = this.vista();
+    if (i <= 0 || !list[i] || !list[i - 1]) return i === 0;
     return esOtroDia(list[i - 1].created_at, list[i].created_at);
   }
   etiquetaDia = etiquetaDiaChat;
@@ -570,27 +659,14 @@ export class MensajesThreadPage implements OnDestroy {
     }
   }
 
-  /** Envía un sticker (optimista + outbox); sube la ref al frente de recientes. */
+  /** Envía un sticker (pendiente desde el outbox); sube la ref al frente de recientes. */
   async enviarStickerMsg(ref: string): Promise<void> {
     this.stickerPickerOpen.set(false);
-    this.lista.update((l) => [
-      ...l,
-      {
-        id: 'tmp-stk-' + Date.now(),
-        autor_id: this.yo() ?? '',
-        autor_nombre: 'Tú',
-        contenido: null,
-        tipo: 'sticker',
-        archivo_path: ref,
-        archivo_nombre: null,
-        archivo_mime: 'image/sticker',
-        created_at: new Date().toISOString(),
-      },
-    ]);
     this.stickerRecientes.update((list) => [ref, ...list.filter((r) => r !== ref)]);
-    this.scrollAlFinal();
     try {
       await this.mensajes.enviarSticker(this.conversacionId, ref);
+      await this.refrescarPendientes();
+      this.scrollAlFinal();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el sticker.');
     }

@@ -1,5 +1,22 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 19/08 (AUDITORÍA) — PROMPT-28 ronda AX — **fix DEFINITIVO de voices (AX1/AX2) + links (AX3) + auditoría AK→AW · build verde app+web · SIN commit/deploy/APK (espera OK de Xaviel)**
+
+### 🔴 FASE 1 — VOICES: raíz real encontrada y arreglada estructuralmente (AX1)
+El fix de 1.89.0 (mime BASE) era correcto pero NO era la raíz. Introspección de prod (solo lectura) confirmó que el **backend está sano**: `enviar_nota_voz(uuid,text,int,text,text)` con nombres de param exactos, `SECURITY DEFINER`, idempotente (`ON CONFLICT uq_mensajes_client`); bucket `sgc-mensajes` permite todos los mimes de audio base. **El bug era 100% cliente**, dos causas:
+1. **"Se borra al enviar otro mensaje":** `thread.ts cargar()` hacía `lista.set(msgs)` (solo server) y `onRealtimeMsg` recargaba en cada INSERT → un texto posterior borraba el bubble optimista `tmp-` del voice aún subiendo.
+2. **"Reloj eterno":** el hilo no reflejaba el estado real del outbox (op en `error` seguía con reloj, sin ⚠️ ni reintento).
+- **Fix:** los pendientes ahora se derivan de la **cola durable (outbox/Dexie)**, no de una lista en memoria. `SyncService.opsMensajeria()` + `MensajesService.pendientesDe()` → `PendienteMsg`; `thread.ts` `vista = [...lista(server), ...pendientes(outbox)]`; `cargar()` solo toca `lista` (imposible borrar un pendiente); `estadoRecibo()` lee estado real (pending/syncing→reloj, error→⚠️ tocable para reintentar, confirmado→✓/✓✓); `effect(sync.changed)` re-deriva; instrumentación `[voz]` por eslabón. Retry idempotente server-side. **Archivos:** `core/sync/sync.service.ts`, `core/services/mensajes.service.ts`, `pages/mensajes/thread/thread.{ts,html,scss}`.
+- **AX2 (UI grabación WhatsApp):** `shared/ui/voice-recorder` reescrito con input `mode`; `'push'` (chat) auto-arranca + barra un-solo-estado [🗑][punto+waveform+timer][➤] con SVG (AW12, fuera el 🎤); `'toggle'` legacy conservado para `voice-notes` (no roto).
+- **AX3 (links clickeables):** linkify seguro http/https en `thread` (app) y **espejado en SGC web** (`src/app/pages/mensajes/mensajes.{ts,html,scss}`, uncommitted, build verde). **Preview tipo WhatsApp: PROPUESTO, no hecho (⏸ decide Xaviel).**
+- **Builds:** app `npm run build` exit 0; SGC web exit 0.
+- **⏳ PENDIENTE (físico, Xaviel):** los 5 tests de device-QA (2 teléfonos A→B; voz+texto inmediato; salir/entrar; modo avión; web↔app). La raíz ya no es "debería funcionar" — es estructural.
+
+### FASE 2/3/4 — Auditoría AK→AW (solo lectura)
+Reporte: **`C:\developer\improvements\imp 10082026\REPORTE-AUDITORIA-CSD-APP.md`** (matrices en `scratchpad/matrix-*.md` + `fase3-deep.md`). Hallazgos graves: (1) voices ✅ arreglado FASE 1; (2) **AS3 PDF** imprime motivo crudo + entregado_por null (`conduce-pdf.service.ts:71,73`); (3) **AS17** 4 fotos de uso = escritura muerta (no se pintan en historiales); (4) **AW12** emoji→SVG casi sin migrar (~1091 líneas); (5) **AS1** tracking nativo parcial (watchdog JS, sin wake lock, GPS 1s, sin batería por-fabricante); (6) **AS14** gastos rompen offline-first. `es_prueba` ✔ y UI 100% español ✔.
+
+---
+
 ## 🟢 SESIÓN 21/08 — PROMPT-26 ronda AW (app) — **RELEASE 1.89.0 PUBLICADO (rolling) · build verde**
 Consume **PROMPT-25 (SGC AW)** — verificado en prod: `buscar_articulos` (fuzzy pg_trgm+unaccent), rol `jefe_ingenieros`, `puede_ver_otras_bitacoras`, `catalogo_ordenado(+permite_sin_cantidad)`, `crear_bitacora_app(+es_aproximada)`, valores AW4 sembrados, `iniciar_uso_vehiculo(+p_recibir)`/`estado_uso_vehiculo(+color)`, `actualizar_mi_avatar`+bucket `sgc-avatars`, `usuarios_por_ids`. **SHIPPED:** commit **`2362389`** → push `main` → PWA por Vercel. **APK 1.89.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 6 cambios curados) + subido al bucket. **`publicada`=1.89.0**, **`version_minima`=1.70.0 (verificado — blindaje aplicado en `sql/2026-08-21-publicar-1.89.0.sql`)**. **Rollback:** `update sgc.app_versiones set publicada=(version='1.88.1') where plataforma='movil';` + `git revert 2362389 && git push`. Sin migraciones de esquema nuevas.
 

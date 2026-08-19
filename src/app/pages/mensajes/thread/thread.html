@@ -26,11 +26,33 @@
     </button>
   </header>
 
+  <!-- AX1 — sello de estado del mensaje (reutilizable): reloj (enviando), ⚠️
+       (falló → reintentar), o ✓/✓✓ según los recibos. -->
+  <ng-template #tick let-m>
+    @if (esMio(m)) {
+      @switch (estadoRecibo(m)) {
+        @case ('pendiente') {
+          <span class="thread__tick thread__tick--pend" title="Enviando…" aria-label="Enviando">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>
+          </span>
+        }
+        @case ('error') {
+          <button type="button" class="thread__tick thread__tick--err" (click)="reintentar(m)" title="No se envió. Toca para reintentar." aria-label="No se envió. Reintentar">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5 1.2 13.5h13.6L8 1.5z"/><path d="M8 6.4v3.1"/><circle cx="8" cy="11.6" r="0.5" fill="currentColor" stroke="none"/></svg>
+          </button>
+        }
+        @default {
+          <span class="thread__tick" [attr.data-estado]="estadoRecibo(m)">{{ estadoRecibo(m) === 'enviado' ? '✓' : '✓✓' }}</span>
+        }
+      }
+    }
+  </ng-template>
+
   <div class="thread__body" #scroller>
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
-      @for (m of lista(); track m.id; let i = $index) {
+      @for (m of vista(); track m.id; let i = $index) {
         @if (esNuevoDia(i)) {
           <div class="thread__daysep"><span>{{ etiquetaDia(m.created_at) }}</span></div>
         }
@@ -47,15 +69,7 @@
               (contextmenu)="$event.preventDefault(); abrirCtxSticker(m)" />
             <span class="thread__meta">
               <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
-              @if (esMio(m)) {
-                @if (estadoRecibo(m) === 'pendiente') {
-                  <span class="thread__tick thread__tick--pend" title="Enviando…" aria-label="Enviando">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>
-                  </span>
-                } @else {
-                  <span class="thread__tick" [attr.data-estado]="estadoRecibo(m)">{{ estadoRecibo(m) === 'enviado' ? '✓' : '✓✓' }}</span>
-                }
-              }
+              <ng-container [ngTemplateOutlet]="tick" [ngTemplateOutletContext]="{ $implicit: m }" />
             </span>
           </div>
         } @else if (esAudio(m)) {
@@ -65,20 +79,12 @@
             @if (audioUrl(m); as au) {
               <audio class="thread__audio" [src]="au" controls preload="none"></audio>
             } @else {
-              <span class="thread__audio-cargando">🎤 Enviando nota de voz…</span>
+              <span class="thread__audio-cargando">Enviando nota de voz…</span>
             }
             <span class="thread__meta">
-              @if (m.duracion_seg) { <span class="thread__audio-dur">🎤 {{ fmtDur(m.duracion_seg) }}</span> }
+              @if (m.duracion_seg) { <span class="thread__audio-dur">{{ fmtDur(m.duracion_seg) }}</span> }
               <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
-              @if (esMio(m)) {
-                @if (estadoRecibo(m) === 'pendiente') {
-                  <span class="thread__tick thread__tick--pend" title="Enviando…" aria-label="Enviando">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>
-                  </span>
-                } @else {
-                  <span class="thread__tick" [attr.data-estado]="estadoRecibo(m)">{{ estadoRecibo(m) === 'enviado' ? '✓' : '✓✓' }}</span>
-                }
-              }
+              <ng-container [ngTemplateOutlet]="tick" [ngTemplateOutletContext]="{ $implicit: m }" />
             </span>
           </div>
         } @else {
@@ -98,18 +104,13 @@
                 <span class="thread__archivo-nombre">{{ m.archivo_nombre || 'Archivo' }}</span>
               </button>
             }
-            @if (m.contenido) { <span class="thread__burbuja">{{ m.contenido }}</span> }
+            @if (m.contenido) {
+              <!-- AX3 — texto con links http/https clickeables (linkify seguro) -->
+              <span class="thread__burbuja">@for (s of segmentos(m.contenido); track $index) {@if (s.link) {<a class="thread__link" [href]="s.v" target="_blank" rel="noopener noreferrer" (click)="$event.preventDefault(); abrirLink(s.v)">{{ s.v }}</a>} @else {{{ s.v }}}}</span>
+            }
             <span class="thread__meta">
               <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
-              @if (esMio(m)) {
-                @if (estadoRecibo(m) === 'pendiente') {
-                  <span class="thread__tick thread__tick--pend" title="Enviando…" aria-label="Enviando">
-                    <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>
-                  </span>
-                } @else {
-                  <span class="thread__tick" [attr.data-estado]="estadoRecibo(m)">{{ estadoRecibo(m) === 'enviado' ? '✓' : '✓✓' }}</span>
-                }
-              }
+              <ng-container [ngTemplateOutlet]="tick" [ngTemplateOutletContext]="{ $implicit: m }" />
             </span>
           </div>
         }
@@ -218,46 +219,45 @@
     </div>
   }
 
-  <!-- AV5 — grabar una nota de voz (reutiliza la infra de voz AH13) -->
   @if (grabandoVoz()) {
-    <div class="thread__voz">
-      <span class="thread__voz-hint">Graba tu nota de voz. Detén la grabación para enviarla.</span>
-      <app-voice-recorder (recorded)="onVozGrabada($event)" />
-      <button type="button" class="thread__voz-cancel" (click)="cancelarVoz()">Cancelar</button>
-    </div>
-  }
-
-  <footer class="thread__compose">
-    <button type="button" class="thread__adj-btn" [disabled]="adjuntando()" (click)="toggleMenuAdjuntar()" aria-label="Adjuntar">
-      {{ adjuntando() ? '…' : '＋' }}
-    </button>
-    <button
-      type="button"
-      class="thread__stk-btn"
-      [class.thread__stk-btn--active]="stickerPickerOpen()"
-      (click)="toggleStickerPicker()"
-      aria-label="Stickers"
-    >☺</button>
-    <input
-      class="field thread__input"
-      type="text"
-      [ngModel]="texto()"
-      (ngModelChange)="onTextoInput($event)"
-      (keyup.enter)="enviar()"
-      placeholder="Escribe un mensaje…"
-    />
-    @if (texto().trim()) {
-      <button type="button" class="thread__send" [disabled]="enviando()" (click)="enviar()">➤</button>
-    } @else {
-      <button type="button" class="thread__send thread__mic" [class.thread__mic--on]="grabandoVoz()" (click)="abrirVoz()" aria-label="Nota de voz">
-        <!-- AW12 — icono de micrófono en SVG (estilo WhatsApp), no emoji -->
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
-          <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/>
-          <path d="M19 12a7 7 0 0 1-6 6.92V22h-2v-3.08A7 7 0 0 1 5 12h2a5 5 0 0 0 10 0h2z"/>
-        </svg>
+    <!-- AX2 — barra de grabación tipo WhatsApp: reemplaza el composer con un solo
+         estado (papelera cancelar · punto rojo + waveform + timer · enviar). -->
+    <footer class="thread__compose thread__compose--rec">
+      <app-voice-recorder mode="push" (recorded)="onVozGrabada($event)" />
+    </footer>
+  } @else {
+    <footer class="thread__compose">
+      <button type="button" class="thread__adj-btn" [disabled]="adjuntando()" (click)="toggleMenuAdjuntar()" aria-label="Adjuntar">
+        {{ adjuntando() ? '…' : '＋' }}
       </button>
-    }
-  </footer>
+      <button
+        type="button"
+        class="thread__stk-btn"
+        [class.thread__stk-btn--active]="stickerPickerOpen()"
+        (click)="toggleStickerPicker()"
+        aria-label="Stickers"
+      >☺</button>
+      <input
+        class="field thread__input"
+        type="text"
+        [ngModel]="texto()"
+        (ngModelChange)="onTextoInput($event)"
+        (keyup.enter)="enviar()"
+        placeholder="Escribe un mensaje…"
+      />
+      @if (texto().trim()) {
+        <button type="button" class="thread__send" [disabled]="enviando()" (click)="enviar()" aria-label="Enviar">➤</button>
+      } @else {
+        <button type="button" class="thread__send thread__mic" (click)="abrirVoz()" aria-label="Grabar nota de voz">
+          <!-- AW12 — icono de micrófono en SVG (estilo WhatsApp), no emoji -->
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+            <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/>
+            <path d="M19 12a7 7 0 0 1-6 6.92V22h-2v-3.08A7 7 0 0 1 5 12h2a5 5 0 0 0 10 0h2z"/>
+          </svg>
+        </button>
+      }
+    </footer>
+  }
   @if (!online) { <p class="thread__offline">Sin conexión: se enviará cuando vuelva el internet.</p> }
 
   @if (lightboxUrl(); as lb) {

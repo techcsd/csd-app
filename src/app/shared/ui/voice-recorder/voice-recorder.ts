@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, output, signal } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, OnDestroy, computed, inject, input, output, signal } from '@angular/core';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
@@ -22,10 +22,20 @@ export class VoiceRecorder implements OnDestroy {
   private gate = inject(PermisoGateService);
   private errors = inject(ErrorReportService);
 
+  /**
+   * AX2 — modo de UI:
+   *  - 'toggle' (default): botón grabar/detener + vista previa + `clear()`. Lo usa
+   *    `voice-notes` para acumular N notas en un formulario.
+   *  - 'push': barra tipo WhatsApp de un solo estado; AUTO-arranca la grabación al
+   *    mostrarse y expone `enviarNota()`/`cancelar()`. Lo usa el chat.
+   */
+  mode = input<'toggle' | 'push'>('toggle');
+
   /** Y11 — número de barras del medidor de nivel (tipo WhatsApp). */
   readonly bars = Array.from({ length: 16 }, (_, i) => i);
 
   recording = signal(false);
+  /** 'toggle' — object-URL de la vista previa tras detener (para el <audio>). */
   previewUrl = signal<string | null>(null);
   /** Y11 — nivel por barra (0..1) del micrófono en vivo. */
   niveles = signal<number[]>(new Array(16).fill(0));
@@ -37,6 +47,8 @@ export class VoiceRecorder implements OnDestroy {
 
   private recorder: MediaRecorder | null = null;
   private chunks: Blob[] = [];
+  /** AX2 — true cuando el usuario canceló: onstop emite null en vez del blob. */
+  private cancelado = false;
   // Y11 — Web Audio para el medidor de nivel.
   private audioCtx: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
@@ -52,27 +64,51 @@ export class VoiceRecorder implements OnDestroy {
     return `${m}:${ss.toString().padStart(2, '0')}`;
   });
 
+  constructor() {
+    // AX2 — en modo 'push' (chat) arranca la grabación al mostrarse (un solo
+    // estado tipo WhatsApp). El tap en el mic del composer es el gesto del
+    // usuario y el permiso ya suele estar concedido por el onboarding (AL5/AW13).
+    afterNextRender(() => {
+      if (this.mode() === 'push') void this.start();
+    });
+  }
+
+  /** Alterna grabar/detener (modo 'toggle', usado por voice-notes). */
   async toggle(): Promise<void> {
-    if (this.recording()) {
-      this.recorder?.stop();
-      return;
-    }
+    if (this.recording()) this.recorder?.stop();
+    else await this.start();
+  }
+
+  /** Arranca la grabación. Si no hay permiso/mic, emite null (el consumidor cierra). */
+  async start(): Promise<void> {
+    if (this.recording()) return;
     // X4 — asegurar el micrófono con su explicación antes de grabar; si el
     // usuario no lo concede, la tarjeta ya le indicó cómo activarlo.
-    if (!(await this.gate.asegurar('mic'))) return;
+    if (!(await this.gate.asegurar('mic'))) {
+      this.recorded.emit(null);
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       this.chunks = [];
+      this.cancelado = false;
       this.recorder = new MediaRecorder(stream);
       this.recorder.ondataavailable = (e) => e.data.size && this.chunks.push(e.data);
       this.recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         this.stopMeter();
-        const blob = new Blob(this.chunks, { type: this.recorder?.mimeType || 'audio/webm' });
-        const old = this.previewUrl();
-        if (old) URL.revokeObjectURL(old);
-        this.previewUrl.set(URL.createObjectURL(blob));
         this.recording.set(false);
+        if (this.cancelado) {
+          this.recorded.emit(null);
+          return;
+        }
+        const blob = new Blob(this.chunks, { type: this.recorder?.mimeType || 'audio/webm' });
+        // 'toggle' — deja una vista previa reproducible; 'push' (chat) envía directo.
+        if (this.mode() === 'toggle') {
+          const old = this.previewUrl();
+          if (old) URL.revokeObjectURL(old);
+          this.previewUrl.set(URL.createObjectURL(blob));
+        }
         this.recorded.emit(blob);
       };
       this.recorder.start();
@@ -80,7 +116,21 @@ export class VoiceRecorder implements OnDestroy {
       this.startMeter(stream); // Y11 — medidor de nivel + timer
     } catch (e) {
       this.onMicError(e);
+      this.recorded.emit(null);
     }
+  }
+
+  /** AX2 — detiene y ENVÍA la nota (onstop emite el blob). Modo 'push'. */
+  enviarNota(): void {
+    if (this.recording()) this.recorder?.stop();
+    else this.recorded.emit(null);
+  }
+
+  /** AX2 — CANCELA: detiene y descarta (onstop emite null). */
+  cancelar(): void {
+    this.cancelado = true;
+    if (this.recording()) this.recorder?.stop();
+    else this.recorded.emit(null);
   }
 
   /**
@@ -180,6 +230,7 @@ export class VoiceRecorder implements OnDestroy {
     this.toast.error('No pudimos usar el micrófono. Puedes escribir la nota.');
   }
 
+  /** Modo 'toggle' — resetea el grabador para la siguiente nota (emite null). */
   clear(): void {
     const old = this.previewUrl();
     if (old) URL.revokeObjectURL(old);
@@ -188,10 +239,11 @@ export class VoiceRecorder implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // APP-063 — liberar la object-URL de audio si el componente se destruye.
+    // AX2 — si se destruye mientras graba, corta sin emitir (el consumidor cerró).
+    this.cancelado = true;
+    if (this.recording()) this.recorder?.stop();
     const old = this.previewUrl();
     if (old) URL.revokeObjectURL(old);
-    if (this.recording()) this.recorder?.stop();
     this.stopMeter(); // Y11 — liberar Web Audio + timer
   }
 }

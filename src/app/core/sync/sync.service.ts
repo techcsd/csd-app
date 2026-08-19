@@ -310,6 +310,26 @@ export class SyncService {
     }));
   }
 
+  /**
+   * AX1 — ops de mensajería aún sin confirmar para una conversación, en orden
+   * FIFO, con sus blobs reconstruidos. El hilo de chat pinta los mensajes
+   * PENDIENTES desde AQUÍ (la cola durable), no desde una lista optimista en
+   * memoria: así un `set(serverMsgs)` en un reload NUNCA borra un pendiente y el
+   * estado real (pending/syncing/error) siempre se refleja. Cada item vive hasta
+   * confirmarse (op borrada del outbox) o fallar visiblemente (estado 'error').
+   */
+  async opsMensajeria(
+    conversacionId: string,
+  ): Promise<Array<{ op: OutboxOp; fotos: Array<{ slot: string; blob: Blob }> }>> {
+    const TIPOS = new Set(['mensaje_enviar', 'nota_voz_enviar', 'sticker_enviar']);
+    const ops = (await db.outbox.orderBy('created_local').toArray()).filter(
+      (o) => TIPOS.has(o.tipo_op) && o.payload['conversacion_id'] === conversacionId,
+    );
+    const out: Array<{ op: OutboxOp; fotos: Array<{ slot: string; blob: Blob }> }> = [];
+    for (const op of ops) out.push({ op, fotos: await this.getOpFotos(op.id) });
+    return out;
+  }
+
   /** P5 — items del outbox para la pantalla de diagnóstico (FIFO, con nº fotos). */
   async listOutbox(): Promise<Array<OutboxOp & { fotos: number }>> {
     const ops = await db.outbox.orderBy('created_local').toArray();

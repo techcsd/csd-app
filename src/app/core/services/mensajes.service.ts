@@ -38,6 +38,25 @@ export interface Mensaje {
   created_at: string;
 }
 
+/**
+ * AX1 — un mensaje aún en el outbox (no confirmado por el server). El hilo lo
+ * pinta DESDE la cola durable, así un reload nunca lo borra y su estado real
+ * (pending/syncing/error) siempre se ve. `client_id` = id de la op del outbox.
+ */
+export interface PendienteMsg {
+  client_id: string;
+  tipo: 'texto' | 'audio' | 'sticker' | 'imagen' | 'archivo';
+  contenido: string | null;
+  archivo_nombre: string | null;
+  archivo_mime: string | null;
+  duracion_seg: number | null;
+  ref: string | null; // sticker
+  estado: 'pending' | 'syncing' | 'error';
+  error_msg: string | null;
+  created_local: number;
+  blob: Blob | null; // preview local (audio / imagen) antes de subir
+}
+
 /** AV5 — cursores de recibo de un participante (para pintar ✓/✓✓/✓✓azul). */
 export interface Recibo {
   usuario_id: string;
@@ -232,6 +251,39 @@ export class MensajesService {
       },
       fotos: [{ id: crypto.randomUUID(), bucket: AVATAR_BUCKET, path, slot: 'audio', blob }],
       resumen: { tipo: 'nota_voz_enviar', conversacion_id: conversacionId },
+    });
+  }
+
+  /**
+   * AX1 — mensajes de esta conversación aún en el outbox (pending/syncing/error),
+   * mapeados para pintarlos en el hilo. La fuente es la cola durable (Dexie), no
+   * una lista optimista en memoria → un envío posterior JAMÁS borra un pendiente.
+   */
+  async pendientesDe(conversacionId: string): Promise<PendienteMsg[]> {
+    const rows = await this.sync.opsMensajeria(conversacionId);
+    return rows.map(({ op, fotos }) => {
+      const p = op.payload;
+      const estado: PendienteMsg['estado'] =
+        op.estado === 'error' ? 'error' : op.estado === 'syncing' ? 'syncing' : 'pending';
+      const mime = (p['archivo_mime'] as string | undefined) ?? null;
+      let tipo: PendienteMsg['tipo'] = 'texto';
+      if (op.tipo_op === 'nota_voz_enviar') tipo = 'audio';
+      else if (op.tipo_op === 'sticker_enviar') tipo = 'sticker';
+      else if (mime) tipo = mime.startsWith('image/') ? 'imagen' : 'archivo';
+      const blob = fotos.find((f) => f.slot === 'audio' || f.slot === 'adjunto')?.blob ?? null;
+      return {
+        client_id: op.id,
+        tipo,
+        contenido: (p['contenido'] as string | null) ?? null,
+        archivo_nombre: (p['archivo_nombre'] as string | null) ?? null,
+        archivo_mime: mime,
+        duracion_seg: (p['duracion_seg'] as number | null) ?? null,
+        ref: (p['ref'] as string | null) ?? null,
+        estado,
+        error_msg: op.error_msg ?? null,
+        created_local: op.created_local,
+        blob,
+      };
     });
   }
 
