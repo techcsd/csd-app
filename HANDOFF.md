@@ -12,6 +12,7 @@ Consume **PROMPT-25 (SGC AW)** — verificado en prod: `buscar_articulos` (fuzzy
 
 ### ⏸ PENDIENTES PROMPT-26 (no bloquean; para próxima ronda)
 - **Publicar 1.89.0** (subir APK + flip publicada) — espera OK de Xaviel. **⚠️ al flip, revisar que `version_minima` siga 1.70.0** (en 1.88.1 salió mal, ver más abajo).
+- **AW15 (voz en la web) ✅ HECHO:** mismo bug del mime; arreglado en SGC `mensajeria.service.enviarNotaVoz` (mime BASE) → web **1.83.1** (commits `7ccde49`+`2c647c8`, deploy Vercel).
 - **AW14 (Reportes de errores):** triage + workflow "solucionado"/Historial + metadata (usuario/dispositivo/versión) — mayormente web SGC + backend; no tocado.
 - **FASE 2 pulido:** UI de grabación WhatsApp fina + velocidad de reproducción.
 - **AW12:** auditoría global de emojis→SVG (se migró el mic; el resto gradual).
