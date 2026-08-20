@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { InventarioService } from '../../../core/services/inventario.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 
 /** Normaliza para búsqueda tolerante a acentos/mayúsculas. */
@@ -33,8 +34,15 @@ function norm(s: string): string {
 })
 export class CatalogoPage {
   private inventario = inject(InventarioService);
+  private ctx = inject(UserContextService);
   private location = inject(Location);
   private router = inject(Router);
+
+  /** AS20 — puede crear artículos (admin o módulo inventario). */
+  puedeCrear = this.ctx.puedeOperarSubmodulo.bind(this.ctx);
+  nuevo(): void {
+    void this.router.navigate(['/inventario/articulo-nuevo']);
+  }
 
   loading = signal(true);
   private articulos = signal<ArticuloCat[]>([]);

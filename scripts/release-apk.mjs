@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.93.0';
+const VERSION = '1.94.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,20 +62,14 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-19';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Nuevo módulo Ingeniería con Solicitud de movimiento';
+const TITULO = 'Requisiciones gestionables + crear artículos con fotos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Mensajes', d: 'Notas de voz estilo WhatsApp: arrastra la barra para adelantar o retroceder, cambia la velocidad (1×/1.5×/2×) y al terminar una se reproduce sola la siguiente.' },
-  { t: 'nuevo', m: 'Mensajes', d: 'Los PDF se abren DENTRO del chat (con paso de páginas y zoom), sin descargarlos ni salir de la conversación.' },
-  { t: 'nuevo', m: 'Mensajes', d: 'Stickers favoritos: guarda tus stickers preferidos para tenerlos de primero.' },
-  { t: 'mejora', m: 'Mensajes', d: 'Chat más parejo: burbujas homologadas, imágenes sin recorte y tarjetas de documento más claras.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Catálogo de artículos en la app: busca por nombre o código, ve la foto, el stock por almacén y el historial de movimientos.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Edita artículos y agrégales una foto (cámara o galería) desde la app.' },
-  { t: 'nuevo', m: 'Requisiciones', d: 'Bandeja de TODAS las requisiciones para los encargados: filtros por estado/urgencia/obra, búsqueda y el detalle completo de cada una.' },
-  { t: 'mejora', m: 'Conduces', d: 'El despachante que no está en el sistema puede firmar el conduce en el mismo teléfono.' },
-  { t: 'arreglo', m: 'Perfil', d: 'La versión instalada de la app ahora se reporta correctamente en cada arranque.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Los encargados ahora pueden APROBAR (eligiendo el almacén de despacho) o RECHAZAR una requisición directamente desde la app; el faltante genera la compra automáticamente.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Crea artículos nuevos desde la app con código automático, eligiendo (o creando) categoría y unidad, y con VARIAS fotos (la primera es la portada).' },
+  { t: 'mejora', m: 'Inventario', d: 'En un artículo puedes gestionar sus fotos: agregar varias, elegir cuál es la portada y quitar las que no van.' },
 ];
 
 const TIPO_POR_COMMIT = {

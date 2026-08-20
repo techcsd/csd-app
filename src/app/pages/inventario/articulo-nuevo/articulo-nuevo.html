@@ -1,0 +1,55 @@
+<div class="screen artn">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Nuevo artículo</h1>
+  </header>
+
+  <div class="screen__body">
+    <label class="field-label">Nombre <span class="artn__req">*</span></label>
+    <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" maxlength="120" placeholder="Nombre del artículo" />
+
+    <label class="field-label artn__mt">Categoría <span class="artn__req">*</span></label>
+    <app-collapsible-select label="Categoría" icon="🏷️" [options]="categoriaOptions()" [selectedId]="categoriaSelId()" [searchable]="true" searchPlaceholder="Buscar categoría…" (picked)="onCategoria($event)" />
+    <div class="artn__inline">
+      <input class="field" type="text" [ngModel]="nuevaCategoria()" (ngModelChange)="nuevaCategoria.set($event)" maxlength="60" placeholder="…o crea una categoría nueva" />
+      <button type="button" class="btn-ghost artn__inline-btn" [disabled]="!nuevaCategoria().trim() || creandoCategoria()" (click)="crearCategoria()">＋</button>
+    </div>
+
+    <label class="field-label artn__mt">Unidad</label>
+    <app-collapsible-select label="Unidad" icon="📏" [options]="unidadOptions()" [selectedId]="unidad()" [searchable]="true" searchPlaceholder="Buscar unidad…" (picked)="onUnidad($event)" />
+    <div class="artn__inline">
+      <input class="field" type="text" [ngModel]="nuevaUnidad()" (ngModelChange)="nuevaUnidad.set($event)" maxlength="30" placeholder="…o crea una unidad nueva (ej. saco)" />
+      <button type="button" class="btn-ghost artn__inline-btn" [disabled]="!nuevaUnidad().trim() || creandoUnidad()" (click)="crearUnidad()">＋</button>
+    </div>
+
+    <label class="field-label artn__mt">Propiedad</label>
+    <div class="artn__toggle">
+      <button type="button" class="artn__opt" [class.artn__opt--on]="propiedad() === 'propio_csd'" (click)="propiedad.set('propio_csd')">CSD (propio)</button>
+      <button type="button" class="artn__opt" [class.artn__opt--on]="propiedad() === 'alquilado'" (click)="propiedad.set('alquilado')">Alquilado</button>
+    </div>
+
+    <label class="field-label artn__mt">Nota</label>
+    <textarea class="field artn__nota" [ngModel]="nota()" (ngModelChange)="nota.set($event)" maxlength="240" rows="2" placeholder="Notas (opcional)"></textarea>
+
+    <label class="field-label artn__mt">Fotos <span class="artn__opt-txt">(la primera es la portada)</span></label>
+    <div class="artn__fotos">
+      @for (f of fotos(); track f.preview; let i = $index) {
+        <div class="artn__foto">
+          <img [src]="f.preview" alt="" />
+          @if (i === 0) { <span class="artn__foto-portada">Portada</span> }
+          <button type="button" class="artn__foto-x" (click)="quitarFoto(i)" aria-label="Quitar">✕</button>
+        </div>
+      }
+    </div>
+    <div class="artn__foto-acts">
+      <button type="button" class="btn-ghost" (click)="agregarFotoCamara()">📷 Cámara</button>
+      <button type="button" class="btn-ghost" (click)="agregarFotoGaleria()">🖼️ Galería</button>
+    </div>
+
+    @if (!online) { <p class="artn__offline">Sin conexión: necesitas internet para crear el artículo.</p> }
+
+    <button type="button" class="btn-cta artn__save" [disabled]="!puedeGuardar() || guardando() || !online" (click)="guardar()">
+      {{ guardando() ? 'Creando…' : 'Crear artículo' }}
+    </button>
+  </div>
+</div>

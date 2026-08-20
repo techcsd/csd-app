@@ -140,3 +140,45 @@
   text-align: center;
   padding: 24px;
 }
+
+// AS7 — gestión (aprobar/rechazar)
+.reqd__acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+
+  .btn-cta,
+  .btn-ghost {
+    flex: 1;
+  }
+}
+.reqd__rechazar {
+  color: var(--color-danger, #d32f2f);
+}
+.reqd__rechazar-confirm {
+  background: var(--color-danger, #d32f2f);
+}
+.reqd__panel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.reqd__panel-sub {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.reqd__mt {
+  margin-top: 12px;
+}
+.reqd__nota {
+  width: 100%;
+  resize: vertical;
+}
+.reqd__off {
+  margin: 10px 0 0;
+  color: var(--color-danger, #d32f2f);
+  font-size: 13px;
+}

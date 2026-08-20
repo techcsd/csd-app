@@ -1,33 +1,67 @@
-.arted {
+.artn {
   background: var(--color-bg);
 }
-.arted__mt {
+.artn__mt {
   margin-top: 16px;
 }
-.arted__req {
+.artn__req {
   color: var(--color-danger, #d32f2f);
 }
-.arted__opt-txt {
+.artn__opt-txt {
   color: var(--color-text-secondary);
   font-weight: 400;
   font-size: 12px;
 }
+.artn__inline {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 
-// Galería multi-foto
-.arted__fotos {
+  .field {
+    flex: 1;
+  }
+}
+.artn__inline-btn {
+  flex: 0 0 auto;
+  width: 48px;
+  font-size: 22px;
+  font-weight: 800;
+}
+.artn__toggle {
+  display: flex;
+  gap: 8px;
+}
+.artn__opt {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.artn__opt--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary);
+}
+.artn__nota {
+  width: 100%;
+  resize: vertical;
+}
+.artn__fotos {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
 }
-.arted__foto {
+.artn__foto {
   position: relative;
-  width: 90px;
-  height: 90px;
+  width: 84px;
+  height: 84px;
   border-radius: 10px;
   overflow: hidden;
   background: var(--color-surface-2);
-  border: 2px solid transparent;
 
   img {
     width: 100%;
@@ -35,14 +69,11 @@
     object-fit: cover;
   }
 }
-.arted__foto--portada {
-  border-color: var(--color-primary);
-}
-.arted__foto-tag {
+.artn__foto-portada {
   position: absolute;
   left: 0;
-  right: 0;
   bottom: 0;
+  right: 0;
   padding: 2px 0;
   text-align: center;
   font-size: 10px;
@@ -50,7 +81,7 @@
   background: rgba(255, 95, 0, 0.85);
   color: #fff;
 }
-.arted__foto-x {
+.artn__foto-x {
   position: absolute;
   top: 2px;
   right: 2px;
@@ -62,17 +93,7 @@
   font-size: 12px;
   font-weight: 800;
 }
-.arted__foto-ph {
-  width: 90px;
-  height: 90px;
-  border-radius: 10px;
-  background: var(--color-surface-2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 34px;
-}
-.arted__foto-acts {
+.artn__foto-acts {
   display: flex;
   gap: 10px;
   margin-top: 10px;
@@ -81,26 +102,12 @@
     flex: 1;
   }
 }
-.arted__subiendo {
-  margin: 8px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-}
-.arted__nota {
-  width: 100%;
-  resize: vertical;
-}
-.arted__offline {
+.artn__offline {
   margin: 12px 0 0;
   color: var(--color-danger, #d32f2f);
   font-size: 13px;
 }
-.arted__save {
+.artn__save {
   width: 100%;
   margin-top: 20px;
-}
-.arted__muted {
-  color: var(--color-text-secondary);
-  text-align: center;
-  padding: 24px;
 }

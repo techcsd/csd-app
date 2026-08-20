@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { InventarioService } from '../../../core/services/inventario.service';
@@ -10,9 +10,15 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 
-/** AS20 — editar un artículo del catálogo (admin + módulo inventario): nombre,
- *  unidad, categoría, nota e IMAGEN (cámara o galería). Online (editar el catálogo
- *  no es trabajo de campo). Al guardar, la imagen se ve en el catálogo y pickers. */
+interface ImagenArt {
+  id: string;
+  url: string;
+  portada: boolean;
+  orden: number;
+}
+
+/** AS20 — editar un artículo (admin + módulo inventario): nombre, unidad, categoría,
+ *  nota + MÚLTIPLES fotos con portada (cámara o galería). Online. */
 @Component({
   selector: 'app-articulo-editar',
   standalone: true,
@@ -27,26 +33,24 @@ export class ArticuloEditarPage {
   private net = inject(NetworkService);
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private location = inject(Location);
 
   loading = signal(true);
   guardando = signal(false);
+  subiendoFoto = signal(false);
   private id = '';
   articulo = signal<ArticuloCat | null>(null);
   categorias = signal<CategoriaInv[]>([]);
+  imagenes = signal<ImagenArt[]>([]);
 
   nombre = signal('');
   unidad = signal('');
   categoriaId = signal<number | null>(null);
   nota = signal('');
-  imagenActual = signal<string | null>(null); // URL pública existente
-  private nuevaImagen = signal<Blob | null>(null);
-  nuevaPreview = signal<string | null>(null);
 
   categoriaOptions = computed(() => this.categorias().map((c) => ({ id: String(c.id), label: c.nombre })));
   categoriaSelId = computed(() => (this.categoriaId() != null ? String(this.categoriaId()) : ''));
-  imagenMostrada = computed(() => this.nuevaPreview() ?? this.imagenActual());
+  puedeGuardar = computed(() => this.nombre().trim().length > 0);
 
   get online(): boolean {
     return this.net.online();
@@ -71,51 +75,75 @@ export class ArticuloEditarPage {
         this.unidad.set(a.unidad ?? '');
         this.categoriaId.set(a.categoria_id ?? null);
         this.nota.set(a.nota ?? '');
-        this.imagenActual.set(a.imagen_url ?? null);
       }
+      await this.recargarImagenes();
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private async recargarImagenes(): Promise<void> {
+    this.imagenes.set(await this.inventario.getImagenesArticulo(this.id));
   }
 
   onCategoria(id: string): void {
     this.categoriaId.set(id ? Number(id) : null);
   }
 
-  async tomarFoto(): Promise<void> {
-    const foto = await this.camera.takePhoto();
-    if (foto) this.setImagen(foto.blob, foto.previewUrl);
+  private async subir(blob: Blob): Promise<void> {
+    if (!this.net.online()) {
+      this.toast.error('Necesitas conexión para subir fotos.');
+      return;
+    }
+    this.subiendoFoto.set(true);
+    try {
+      await this.inventario.agregarImagenArticulo(this.id, blob, this.imagenes().length === 0);
+      await this.recargarImagenes();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo subir la foto.');
+    } finally {
+      this.subiendoFoto.set(false);
+    }
   }
-  async elegirGaleria(): Promise<void> {
-    const fotos = await this.camera.pickFromGallery(1);
-    if (fotos[0]) this.setImagen(fotos[0].blob, fotos[0].previewUrl);
+  async fotoCamara(): Promise<void> {
+    const f = await this.camera.takePhoto();
+    if (f) await this.subir(f.blob);
   }
-  private setImagen(blob: Blob, preview: string): void {
-    const prev = this.nuevaPreview();
-    if (prev) URL.revokeObjectURL(prev);
-    this.nuevaImagen.set(blob);
-    this.nuevaPreview.set(preview);
+  async fotoGaleria(): Promise<void> {
+    const fs = await this.camera.pickFromGallery(1);
+    if (fs[0]) await this.subir(fs[0].blob);
   }
-
-  puedeGuardar = computed(() => this.nombre().trim().length > 0);
+  async hacerPortada(img: ImagenArt): Promise<void> {
+    if (img.portada) return;
+    try {
+      await this.inventario.setPortadaArticulo(img.id);
+      await this.recargarImagenes();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo fijar la portada.');
+    }
+  }
+  async quitarFoto(img: ImagenArt): Promise<void> {
+    try {
+      await this.inventario.eliminarImagenArticulo(img.id);
+      await this.recargarImagenes();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar la foto.');
+    }
+  }
 
   async guardar(): Promise<void> {
     if (this.guardando() || !this.puedeGuardar()) return;
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para editar el artículo.');
+      this.toast.error('Necesitas conexión para guardar.');
       return;
     }
     this.guardando.set(true);
     try {
-      let imagenUrl: string | undefined;
-      const blob = this.nuevaImagen();
-      if (blob) imagenUrl = await this.inventario.subirImagenArticulo(this.id, blob);
       await this.inventario.actualizarArticulo(this.id, {
         nombre: this.nombre().trim(),
         unidad: this.unidad().trim(),
         categoriaId: this.categoriaId(),
         nota: this.nota().trim() || null,
-        ...(imagenUrl ? { imagenUrl } : {}),
       });
       this.toast.success('Artículo actualizado.');
       this.location.back();

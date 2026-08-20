@@ -96,6 +96,39 @@ export class SolicitudesService {
     return (data as RequisicionDetalle) ?? null;
   }
 
+  /**
+   * AS7 — aprueba una requisición: despacha lo disponible del almacén elegido y el
+   * faltante genera una solicitud de compra (lógica server-side de `aprobar_requisicion`,
+   * la misma de la web). Online (mueve stock; no va por outbox a propósito).
+   */
+  async aprobarRequisicion(input: {
+    id: string;
+    bodegaId: string;
+    fecha: string;
+    responsable?: string | null;
+    observaciones?: string | null;
+    items: { articulo_id: string | null; descripcion: string; cantidad: number; unidad: string | null; talla: string | null }[];
+  }): Promise<void> {
+    const { error } = await this.supabase.client.rpc('aprobar_requisicion', {
+      p_solicitud_id: input.id,
+      p_bodega_id: input.bodegaId,
+      p_fecha: input.fecha,
+      p_responsable: input.responsable ?? null,
+      p_observaciones: input.observaciones ?? null,
+      p_items: input.items,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** AS7 — rechaza una requisición con una nota (RPC `rechazar_solicitud_material`). Online. */
+  async rechazarRequisicion(id: string, nota: string | null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('rechazar_solicitud_material', {
+      p_solicitud_id: id,
+      p_notas: nota,
+    });
+    if (error) throw new Error(error.message);
+  }
+
   /** Conteo de requisiciones pendientes para el badge de la bandeja. */
   async bandejaCount(): Promise<number> {
     try {

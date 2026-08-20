@@ -295,6 +295,83 @@ export class InventarioService {
     return data.publicUrl;
   }
 
+  /** AS20 — unidades de medida (catálogo). */
+  async getUnidades(): Promise<{ id: string; codigo: string; nombre: string }[]> {
+    const data = await this.catalog.refresh<{ id: string; codigo: string; nombre: string }[]>('unidades_v1', async () => {
+      const { data, error } = await this.supabase.client
+        .from('unidades')
+        .select('id, codigo, nombre')
+        .eq('activo', true)
+        .order('nombre');
+      if (error) throw new Error(error.message);
+      return (data as { id: string; codigo: string; nombre: string }[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** AS20 — crea una categoría de inventario → id. */
+  async crearCategoria(nombre: string, destacada = false): Promise<number> {
+    const { data, error } = await this.supabase.client.rpc('crear_categoria_app', { p_nombre: nombre, p_destacada: destacada });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidatePrefix(CAT_CATEGORIAS);
+    await this.getCategorias();
+    return data as number;
+  }
+
+  /** AS20 — crea una unidad de medida → id. */
+  async crearUnidad(nombre: string, codigo?: string): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('crear_unidad_app', { p_nombre: nombre, p_codigo: codigo ?? null });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidatePrefix('unidades_v1');
+    await this.getUnidades();
+    return data as string;
+  }
+
+  /** AS20 — crea un artículo (código auto CSD-<orden>-<seq>) → { id, codigo }. */
+  async crearArticulo(input: { nombre: string; categoriaId: number; unidad?: string; propiedad?: string; nota?: string }): Promise<{ id: string; codigo: string }> {
+    const { data, error } = await this.supabase.client.rpc('crear_articulo_app', {
+      p_nombre: input.nombre,
+      p_categoria_id: input.categoriaId,
+      p_unidad: input.unidad ?? null,
+      p_propiedad: input.propiedad ?? 'propio_csd',
+      p_nota: input.nota ?? null,
+    });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidatePrefix(CAT_ARTICULOS);
+    await this.getArticulos();
+    return data as { id: string; codigo: string };
+  }
+
+  // ── AS20 — múltiples fotos por artículo (con portada) ───────────────────────
+  async getImagenesArticulo(articuloId: string): Promise<{ id: string; url: string; portada: boolean; orden: number }[]> {
+    const { data, error } = await this.supabase.client
+      .from('articulo_imagenes')
+      .select('id, url, portada, orden')
+      .eq('articulo_id', articuloId)
+      .order('orden');
+    if (error) return [];
+    return (data as { id: string; url: string; portada: boolean; orden: number }[]) ?? [];
+  }
+
+  async agregarImagenArticulo(articuloId: string, blob: Blob, portada = false): Promise<void> {
+    const url = await this.subirImagenArticulo(articuloId, blob);
+    const { error } = await this.supabase.client.rpc('articulo_imagen_agregar', { p_articulo_id: articuloId, p_url: url, p_portada: portada });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidatePrefix(CAT_ARTICULOS);
+  }
+
+  async setPortadaArticulo(imagenId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('articulo_set_portada', { p_imagen_id: imagenId });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidatePrefix(CAT_ARTICULOS);
+  }
+
+  async eliminarImagenArticulo(imagenId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('articulo_imagen_eliminar', { p_imagen_id: imagenId });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidatePrefix(CAT_ARTICULOS);
+  }
+
   /**
    * AS20 — actualiza campos/imagen de un artículo vía `articulo_actualizar_app`
    * (solo los valores provistos; el resto se conserva). Gate server-side. Refresca

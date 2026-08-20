@@ -44,7 +44,44 @@
         </div>
       }
 
-      <p class="reqd__hint">La gestión (aprobar / rechazar) se hace desde el sistema web por ahora.</p>
+      <!-- AS7 — gestión (aprobar/rechazar) para admin/módulo inventario -->
+      @if (puedeGestionar() && esPendiente()) {
+        @if (modo() === 'none') {
+          <div class="reqd__acciones">
+            <button type="button" class="btn-cta reqd__aprobar" (click)="abrirAprobar()">✓ Aprobar</button>
+            <button type="button" class="btn-ghost reqd__rechazar" (click)="abrirRechazar()">✕ Rechazar</button>
+          </div>
+        } @else if (modo() === 'aprobar') {
+          <div class="reqd__panel">
+            <h3 class="reqd__sec">Aprobar y despachar</h3>
+            <p class="reqd__panel-sub">Se despacha lo disponible del almacén; el faltante genera una solicitud de compra automáticamente.</p>
+            <label class="field-label">Almacén de despacho</label>
+            <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
+            <label class="field-label reqd__mt">Responsable (opcional)</label>
+            <input class="field" type="text" [ngModel]="responsable()" (ngModelChange)="responsable.set($event)" placeholder="Quién recibe/despacha" />
+            <label class="field-label reqd__mt">Observaciones (opcional)</label>
+            <input class="field" type="text" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Notas del despacho" />
+            @if (!online) { <p class="reqd__off">Necesitas conexión para aprobar.</p> }
+            <div class="reqd__acciones reqd__mt">
+              <button type="button" class="btn-cta" [disabled]="!bodegaId() || procesando() || !online" (click)="confirmarAprobar()">{{ procesando() ? 'Aprobando…' : 'Confirmar aprobación' }}</button>
+              <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
+            </div>
+          </div>
+        } @else {
+          <div class="reqd__panel">
+            <h3 class="reqd__sec">Rechazar requisición</h3>
+            <label class="field-label">Motivo (opcional)</label>
+            <textarea class="field reqd__nota" [ngModel]="rechazoNota()" (ngModelChange)="rechazoNota.set($event)" rows="3" maxlength="240" placeholder="Por qué se rechaza"></textarea>
+            @if (!online) { <p class="reqd__off">Necesitas conexión para rechazar.</p> }
+            <div class="reqd__acciones reqd__mt">
+              <button type="button" class="btn-cta reqd__rechazar-confirm" [disabled]="procesando() || !online" (click)="confirmarRechazar()">{{ procesando() ? 'Rechazando…' : 'Confirmar rechazo' }}</button>
+              <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
+            </div>
+          </div>
+        }
+      } @else if (puedeGestionar() && !esPendiente()) {
+        <p class="reqd__hint">Esta requisición ya fue procesada ({{ estadoLabel(r.estado) }}).</p>
+      }
     }
   </div>
 </div>

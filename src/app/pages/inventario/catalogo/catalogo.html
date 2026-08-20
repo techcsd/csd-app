@@ -2,6 +2,9 @@
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="inv-sub-header__title">Catálogo de artículos</h1>
+    @if (puedeCrear('inventario.articulos')) {
+      <button type="button" class="cat__nuevo" (click)="nuevo()">＋ Nuevo</button>
+    }
   </header>
 
   <div class="screen__body">

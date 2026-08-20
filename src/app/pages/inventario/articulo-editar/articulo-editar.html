@@ -10,18 +10,24 @@
     } @else if (!articulo()) {
       <p class="arted__muted">No se encontró el artículo.</p>
     } @else {
-      <!-- Imagen -->
-      <div class="arted__foto">
-        @if (imagenMostrada(); as img) {
-          <img [src]="img" alt="Imagen del artículo" />
-        } @else {
+      <!-- Galería de fotos (portada + agregar/quitar) -->
+      <label class="field-label">Fotos <span class="arted__opt-txt">(toca una para hacerla portada)</span></label>
+      <div class="arted__fotos">
+        @for (img of imagenes(); track img.id) {
+          <div class="arted__foto" [class.arted__foto--portada]="img.portada" (click)="hacerPortada(img)">
+            <img [src]="img.url" alt="" />
+            @if (img.portada) { <span class="arted__foto-tag">Portada</span> }
+            <button type="button" class="arted__foto-x" (click)="$event.stopPropagation(); quitarFoto(img)" aria-label="Quitar">✕</button>
+          </div>
+        } @empty {
           <div class="arted__foto-ph">📦</div>
         }
       </div>
       <div class="arted__foto-acts">
-        <button type="button" class="btn-ghost" (click)="tomarFoto()">📷 Cámara</button>
-        <button type="button" class="btn-ghost" (click)="elegirGaleria()">🖼️ Galería</button>
+        <button type="button" class="btn-ghost" [disabled]="subiendoFoto()" (click)="fotoCamara()">📷 Cámara</button>
+        <button type="button" class="btn-ghost" [disabled]="subiendoFoto()" (click)="fotoGaleria()">🖼️ Galería</button>
       </div>
+      @if (subiendoFoto()) { <p class="arted__subiendo">Subiendo foto…</p> }
 
       <label class="field-label arted__mt">Nombre <span class="arted__req">*</span></label>
       <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" maxlength="120" placeholder="Nombre del artículo" />

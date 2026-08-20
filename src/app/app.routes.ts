@@ -586,6 +586,13 @@ export const routes: Routes = [
       import('./pages/inventario/articulo-detalle/articulo-detalle').then((m) => m.ArticuloDetallePage),
   },
   {
+    // AS20 — crear artículo nuevo (código auto + fotos). Gate: operar sobre artículos.
+    path: 'inventario/articulo-nuevo',
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos', 'operar')],
+    loadComponent: () =>
+      import('./pages/inventario/articulo-nuevo/articulo-nuevo').then((m) => m.ArticuloNuevoPage),
+  },
+  {
     // AS20 — editar artículo (campos + imagen). Gate: operar sobre artículos
     // (admin o módulo inventario); el RPC lo vuelve a validar server-side.
     path: 'inventario/articulo/:id/editar',
