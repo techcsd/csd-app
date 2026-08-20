@@ -1,5 +1,13 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN (cont.) — PROMPT-2 AS — **RELEASE 1.94.0 PUBLICADO (rolling) · gestión de requisiciones (aprobar/rechazar) + crear artículos con multi-foto · build verde**
+
+**SHIPPED:** commit **`96eb6eb`** → push `main` → PWA por Vercel. **APK 1.94.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 3 cambios) + subido al bucket. **`publicada=1.94.0`** (rolling), **`minima=1.92.0` INTACTA**. Migración aditiva aplicada a prod + espejada en SGC (`45afa54`): `sql/2026-08-20-as20-articulo-gestion.sql`. **Rollback:** `update sgc.app_versiones set publicada=(version='1.93.0') where plataforma='movil';` + `git revert 96eb6eb`.
+
+- **AS7 (app):** en la bandeja de requisiciones, **aprobar** (elige almacén → `aprobar_requisicion`, despacha lo disponible + compra por faltante) y **rechazar** con nota (`rechazar_solicitud_material`). Solo admin/módulo inventario; online. Ambos RPC ya estaban grant a `authenticated`.
+- **AS20 (completo, app):** **crear artículo** nuevo (código auto `CSD-<orden cat>-<seq>`, misma convención web) con creación inline de categoría/unidad + **múltiples fotos con portada**; edición gestiona la galería (agregar/quitar/portada). Botón "Nuevo" en el catálogo para gestores. Backend: tabla `articulo_imagenes` + RPCs (crear_articulo/categoria/unidad + imagen_agregar/set_portada/eliminar); la portada sincroniza `articulos.imagen_url`.
+- **AS3/AS4/AS5/AS6 — VERIFICADOS YA-HECHOS en SGC** (no requieren trabajo): AS3 Estadísticas (KPIs+gráfico+tabla+export, `estadisticas.ts` + `sql/2026-08-19-as3-*`), AS4 permisos matriz tri-estado+presets+diff+auditoría (`admin/roles/*` + `sql/2026-08-19-as4-*`), AS5 rol `logistica` existe + **Raykler (`almacen@`) ya lo tiene** + es_flota_elevado + ve requisiciones por módulo inventario (renombrado a "Logística y Transportación"), AS6 email con PDF adjunto (pdf-lib) + destinatarios (`notificar-solicitud` + `sql/2026-08-19-as6-*`). Único nice-to-have de AS6: el link del email apunta a la bandeja genérica, no a la requisición por id.
+
 ## 🟢 SESIÓN — PROMPT-2 ronda AS (app) — **RELEASE 1.93.0 PUBLICADO (rolling) · chat WhatsApp + Artículos + bandeja requisiciones + firma despachante · build verde**
 
 **SHIPPED:** commit **`78c8449`** → push `main` → PWA por Vercel. **APK 1.93.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 9 cambios curados) + subido al bucket (`csd-app-1.93.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=1.93.0`** (rolling), **`minima=1.92.0` INTACTA** (no se forzó otra actualización obligatoria). **Rollback:** `update sgc.app_versiones set publicada=(version='1.92.0') where plataforma='movil';` + `git revert 78c8449 && git push`. Las 2 migraciones son aditivas (no requieren revert).
