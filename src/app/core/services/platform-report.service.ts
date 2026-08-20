@@ -59,9 +59,15 @@ export class PlatformReportService {
       const { data } = await this.supabase.client.auth.getSession();
       if (!data.session) return; // sin sesión no hay a quién marcar
       const info = await this.device.ready();
+      // AS3 — reportar SIEMPRE la versión instalada. `set_mi_plataforma` upsertea
+      // `app_version = coalesce(excluded, viejo)`: si mandamos NULL (como antes),
+      // el valor quedaba CONGELADO en el del primer insert (de ahí el desfase
+      // 1.86 vs 1.90 que vio Xaviel). Pasando environment.version se actualiza
+      // en cada arranque/resume.
       const { error } = await this.supabase.client.rpc('set_mi_plataforma', {
         p_plataforma: this.plataforma(),
         p_modelo: info.model ?? null,
+        p_app_version: environment.version,
       });
       if (error) {
         if (!environment.production) console.warn('[PlatformReport] set_mi_plataforma:', error.code, error.message);

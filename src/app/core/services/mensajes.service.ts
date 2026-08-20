@@ -34,6 +34,7 @@ export interface Mensaje {
   archivo_path: string | null;
   archivo_nombre: string | null;
   archivo_mime: string | null;
+  archivo_size?: number | null; // AS10 — peso en bytes (conocido para pendientes)
   duracion_seg?: number | null; // AV5 — nota de voz (tipo 'audio')
   created_at: string;
 }

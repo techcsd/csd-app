@@ -1,0 +1,50 @@
+<div class="screen reqd">
+  <header class="reqd__header">
+    <button type="button" class="reqd__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="reqd__title">Requisición</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error() || !req()) {
+      <p class="reqd__muted">No pudimos cargar esta requisición o no tienes acceso.</p>
+    } @else if (req(); as r) {
+      <div class="reqd__top">
+        <span class="reqd__obra">{{ r.proyecto_nombre ?? 'Obra' }}</span>
+        <span class="reqd__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
+      </div>
+
+      <dl class="reqd__facts">
+        <div><dt>Solicitante</dt><dd>{{ r.solicitante_nombre ?? '—' }}</dd></div>
+        <div><dt>Fecha</dt><dd>{{ fmtFecha(r.created_at) }}</dd></div>
+        <div><dt>Urgencia</dt><dd>{{ r.urgencia === 'urgente' ? '🔴 Urgente' : 'Normal' }}</dd></div>
+        @if (r.atendido_por_nombre) { <div><dt>Atendida por</dt><dd>{{ r.atendido_por_nombre }}</dd></div> }
+        @if (r.notas) { <div><dt>Notas</dt><dd>{{ r.notas }}</dd></div> }
+      </dl>
+
+      <h3 class="reqd__sec">Artículos ({{ r.items.length }})</h3>
+      <ul class="reqd__items">
+        @for (it of r.items; track it.id) {
+          <li class="reqd__item">
+            <span class="reqd__item-cant">{{ it.cantidad }} {{ it.unidad || '' }}</span>
+            <span class="reqd__item-desc">
+              {{ it.descripcion }}
+              @if (it.talla) { <span class="reqd__item-talla">Talla {{ it.talla }}</span> }
+              @if (it.codigo) { <span class="reqd__item-code">{{ it.codigo }}</span> }
+            </span>
+          </li>
+        }
+      </ul>
+
+      @if (r.salida_id || r.solicitud_compra_id) {
+        <div class="reqd__links">
+          @if (r.salida_id) { <span class="reqd__link">📦 Despachada por conduce</span> }
+          @if (r.solicitud_compra_id) { <span class="reqd__link">🛒 Generó solicitud de compra</span> }
+        </div>
+      }
+
+      <p class="reqd__hint">La gestión (aprobar / rechazar) se hace desde el sistema web por ahora.</p>
+    }
+  </div>
+</div>

@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.92.0';
+const VERSION = '1.93.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -67,9 +67,15 @@ const TITULO = 'Nuevo módulo Ingeniería con Solicitud de movimiento';
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Ingeniería', d: 'Nuevo módulo "Ingeniería" que agrupa las herramientas de ingenieros y producción en obra.' },
-  { t: 'nuevo', m: 'Ingeniería', d: 'Solicitud de movimiento: un ingeniero pide mover material o equipo (llevar a la obra o sacar de la obra), con prioridad y fecha. Los encargados lo ven en su bandeja y, al planificar, se abre la creación de ruta YA pre-llenada con el origen y el destino de la solicitud.' },
-  { t: 'mejora', m: 'Ingeniería', d: 'Las prioridades se ven con colores (baja/media/alta/urgente) y hay un semáforo por la fecha en que se necesita en obra.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Notas de voz estilo WhatsApp: arrastra la barra para adelantar o retroceder, cambia la velocidad (1×/1.5×/2×) y al terminar una se reproduce sola la siguiente.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Los PDF se abren DENTRO del chat (con paso de páginas y zoom), sin descargarlos ni salir de la conversación.' },
+  { t: 'nuevo', m: 'Mensajes', d: 'Stickers favoritos: guarda tus stickers preferidos para tenerlos de primero.' },
+  { t: 'mejora', m: 'Mensajes', d: 'Chat más parejo: burbujas homologadas, imágenes sin recorte y tarjetas de documento más claras.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Catálogo de artículos en la app: busca por nombre o código, ve la foto, el stock por almacén y el historial de movimientos.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Edita artículos y agrégales una foto (cámara o galería) desde la app.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Bandeja de TODAS las requisiciones para los encargados: filtros por estado/urgencia/obra, búsqueda y el detalle completo de cada una.' },
+  { t: 'mejora', m: 'Conduces', d: 'El despachante que no está en el sistema puede firmar el conduce en el mismo teléfono.' },
+  { t: 'arreglo', m: 'Perfil', d: 'La versión instalada de la app ahora se reporta correctamente en cada arranque.' },
 ];
 
 const TIPO_POR_COMMIT = {

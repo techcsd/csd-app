@@ -278,6 +278,47 @@ export class InventarioService {
     return list.find((a) => a.id === id) ?? null;
   }
 
+  // ── AS20 — edición de artículos desde la app (admin + módulo inventario) ─────
+  /**
+   * AS20 — sube una imagen de catálogo al bucket PÚBLICO `sgc-articulos` y devuelve
+   * su URL pública (la app pinta `imagen_url` como src directo). Online (editar el
+   * catálogo no es trabajo de campo). El gate de escritura lo aplica la RLS del
+   * bucket (admin/módulo inventario).
+   */
+  async subirImagenArticulo(articuloId: string, blob: Blob): Promise<string> {
+    const path = `${articuloId}/${crypto.randomUUID()}.jpg`;
+    const { error } = await this.supabase.client.storage
+      .from('sgc-articulos')
+      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
+    if (error) throw new Error(error.message);
+    const { data } = this.supabase.client.storage.from('sgc-articulos').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  /**
+   * AS20 — actualiza campos/imagen de un artículo vía `articulo_actualizar_app`
+   * (solo los valores provistos; el resto se conserva). Gate server-side. Refresca
+   * la caché del catálogo para que la lista y los pickers reflejen el cambio.
+   */
+  async actualizarArticulo(
+    id: string,
+    campos: { nombre?: string; unidad?: string; categoriaId?: number | null; propiedad?: string; nota?: string | null; imagenUrl?: string | null },
+  ): Promise<void> {
+    const { error } = await this.supabase.client.rpc('articulo_actualizar_app', {
+      p_id: id,
+      p_nombre: campos.nombre ?? null,
+      p_unidad: campos.unidad ?? null,
+      p_categoria_id: campos.categoriaId ?? null,
+      p_propiedad: campos.propiedad ?? null,
+      p_nota: campos.nota === undefined ? null : campos.nota,
+      p_imagen_url: campos.imagenUrl === undefined ? null : campos.imagenUrl,
+    });
+    if (error) throw new Error(error.message);
+    // El catálogo cacheado quedó viejo: re-cárgalo (afecta catálogo + pickers).
+    await this.catalog.invalidatePrefix(CAT_ARTICULOS);
+    await this.getArticulos();
+  }
+
   /**
    * AW6 — búsqueda FUZZY de artículos (RPC `buscar_articulos`, pg_trgm + unaccent):
    * tolera errores de tipeo, acentos y orden de palabras, y matchea por nombre,

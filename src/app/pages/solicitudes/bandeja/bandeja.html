@@ -1,0 +1,52 @@
+<div class="screen bandeja">
+  <header class="bandeja__header">
+    <button type="button" class="bandeja__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="bandeja__title">Requisiciones</h1>
+  </header>
+
+  <div class="bandeja__filtros">
+    <input
+      class="field bandeja__search"
+      type="search"
+      [ngModel]="busqueda()"
+      (ngModelChange)="onBusqueda($event)"
+      placeholder="🔎 Buscar por obra, solicitante o artículo"
+    />
+    <div class="bandeja__chips">
+      @for (e of estados; track e.label) {
+        <button type="button" class="bandeja__chip" [class.bandeja__chip--on]="estado() === e.key" (click)="setEstado(e.key)">{{ e.label }}</button>
+      }
+      <button type="button" class="bandeja__chip bandeja__chip--urg" [class.bandeja__chip--on]="urgencia() === 'urgente'" (click)="toggleUrgente()">🔴 Urgentes</button>
+    </div>
+  </div>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (noAutorizado()) {
+      <app-empty-state icon="🔒" title="Sin acceso" message="No tienes permiso para ver todas las requisiciones." />
+    } @else {
+      @for (f of filas(); track f.id) {
+        <button type="button" class="req-card" [attr.data-estado]="f.estado" (click)="abrir(f)">
+          <div class="req-card__top">
+            <span class="req-card__obra">{{ f.proyecto_nombre ?? 'Obra' }}</span>
+            <span class="req-card__estado" [attr.data-estado]="f.estado">{{ estadoLabel(f.estado) }}</span>
+          </div>
+          <div class="req-card__meta">
+            <span>{{ fmtFecha(f.created_at) }}</span>
+            <span>· {{ f.solicitante_nombre ?? 'Solicitante' }}</span>
+            @if (f.urgencia === 'urgente') { <span class="req-card__urg">🔴 Urgente</span> }
+          </div>
+          <div class="req-card__foot">
+            <span>{{ f.items_count }} artículo{{ f.items_count === 1 ? '' : 's' }}</span>
+            @if (f.tiene_conduce) { <span class="req-card__tag">📦 Con conduce</span> }
+            @if (f.tiene_compra) { <span class="req-card__tag">🛒 En compra</span> }
+            <span class="req-card__chevron" aria-hidden="true">›</span>
+          </div>
+        </button>
+      } @empty {
+        <app-empty-state icon="🗂️" title="No hay requisiciones" message="No se encontraron requisiciones con esos filtros." />
+      }
+    }
+  </div>
+</div>

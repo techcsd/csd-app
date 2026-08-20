@@ -1,0 +1,30 @@
+<div class="pdfv" role="dialog" aria-label="Visor de PDF">
+  <header class="pdfv__bar">
+    <button type="button" class="pdfv__x" (click)="cerrar()" aria-label="Cerrar">✕</button>
+    <span class="pdfv__nombre">{{ nombre() }}</span>
+    @if (totalPaginas() > 0) {
+      <span class="pdfv__pag">{{ pagina() }} / {{ totalPaginas() }}</span>
+    }
+  </header>
+
+  <div class="pdfv__viewport">
+    @if (loading()) {
+      <p class="pdfv__msg">Cargando documento…</p>
+    } @else if (error()) {
+      <p class="pdfv__msg">No pudimos mostrar este PDF. Usa “Descargar” para abrirlo.</p>
+    }
+    <canvas #canvas class="pdfv__canvas" [class.pdfv__canvas--hidden]="loading() || error()"></canvas>
+  </div>
+
+  @if (!loading() && !error()) {
+    <footer class="pdfv__ctrls">
+      <button type="button" class="pdfv__nav" [disabled]="pagina() <= 1" (click)="prev()" aria-label="Página anterior">‹</button>
+      <div class="pdfv__zoom">
+        <button type="button" (click)="zoomOut()" aria-label="Alejar">−</button>
+        <span class="pdfv__zoom-pct">{{ escalaPct() }}%</span>
+        <button type="button" (click)="zoomIn()" aria-label="Acercar">+</button>
+      </div>
+      <button type="button" class="pdfv__nav" [disabled]="pagina() >= totalPaginas()" (click)="next()" aria-label="Página siguiente">›</button>
+    </footer>
+  }
+</div>

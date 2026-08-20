@@ -1,0 +1,47 @@
+<div class="screen arted">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Editar artículo</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (!articulo()) {
+      <p class="arted__muted">No se encontró el artículo.</p>
+    } @else {
+      <!-- Imagen -->
+      <div class="arted__foto">
+        @if (imagenMostrada(); as img) {
+          <img [src]="img" alt="Imagen del artículo" />
+        } @else {
+          <div class="arted__foto-ph">📦</div>
+        }
+      </div>
+      <div class="arted__foto-acts">
+        <button type="button" class="btn-ghost" (click)="tomarFoto()">📷 Cámara</button>
+        <button type="button" class="btn-ghost" (click)="elegirGaleria()">🖼️ Galería</button>
+      </div>
+
+      <label class="field-label arted__mt">Nombre <span class="arted__req">*</span></label>
+      <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" maxlength="120" placeholder="Nombre del artículo" />
+
+      <label class="field-label arted__mt">Unidad</label>
+      <input class="field" type="text" [ngModel]="unidad()" (ngModelChange)="unidad.set($event)" maxlength="20" placeholder="ud, m, kg, saco…" />
+
+      @if (categoriaOptions().length) {
+        <label class="field-label arted__mt">Categoría</label>
+        <app-collapsible-select label="Categoría" icon="🏷️" [options]="categoriaOptions()" [selectedId]="categoriaSelId()" [searchable]="true" searchPlaceholder="Buscar categoría…" (picked)="onCategoria($event)" />
+      }
+
+      <label class="field-label arted__mt">Nota</label>
+      <textarea class="field arted__nota" [ngModel]="nota()" (ngModelChange)="nota.set($event)" maxlength="240" rows="3" placeholder="Notas del artículo (opcional)"></textarea>
+
+      @if (!online) { <p class="arted__offline">Sin conexión: necesitas internet para guardar cambios del catálogo.</p> }
+
+      <button type="button" class="btn-cta arted__save" [disabled]="!puedeGuardar() || guardando() || !online" (click)="guardar()">
+        {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+      </button>
+    }
+  </div>
+</div>

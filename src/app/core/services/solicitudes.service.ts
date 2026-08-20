@@ -3,7 +3,16 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Proyecto } from '../models/bitacora.model';
-import { Solicitud, Urgencia } from '../models/inventario.model';
+import { RequisicionBandeja, RequisicionDetalle, Solicitud, Urgencia } from '../models/inventario.model';
+
+/** AS7 — filtros de la bandeja de requisiciones. */
+export interface RequisicionFiltros {
+  estado?: string | null;
+  proyectoId?: string | null;
+  urgencia?: string | null;
+  busqueda?: string | null;
+  limite?: number;
+}
 
 const CAT_PROYECTOS = 'proyectos';
 const CAT_SOLICITUDES = 'mis_solicitudes';
@@ -53,6 +62,49 @@ export class SolicitudesService {
       return (data as unknown as Solicitud[]) ?? [];
     });
     return data ?? [];
+  }
+
+  // ── AS7 — Bandeja de requisiciones (todas, por rol) ─────────────────────────
+  /** ¿El usuario puede ver TODAS las requisiciones? (gate server-side). */
+  async puedeVerTodas(): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('puede_ver_todas_requisiciones');
+      if (error) return false;
+      return !!data;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Listado filtrable de todas las requisiciones visibles. Online (best-effort). */
+  async bandeja(filtros: RequisicionFiltros = {}): Promise<RequisicionBandeja[]> {
+    const { data, error } = await this.supabase.client.rpc('requisiciones_bandeja', {
+      p_estado: filtros.estado ?? null,
+      p_proyecto_id: filtros.proyectoId ?? null,
+      p_urgencia: filtros.urgencia ?? null,
+      p_busqueda: filtros.busqueda ?? null,
+      p_limite: filtros.limite ?? 100,
+    });
+    if (error) throw new Error(error.message);
+    return (data as RequisicionBandeja[]) ?? [];
+  }
+
+  /** Detalle completo de una requisición (por rol o por su solicitante). */
+  async detalle(id: string): Promise<RequisicionDetalle | null> {
+    const { data, error } = await this.supabase.client.rpc('requisicion_detalle', { p_id: id });
+    if (error) throw new Error(error.message);
+    return (data as RequisicionDetalle) ?? null;
+  }
+
+  /** Conteo de requisiciones pendientes para el badge de la bandeja. */
+  async bandejaCount(): Promise<number> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('requisiciones_bandeja_count');
+      if (error) return 0;
+      return (data as number) ?? 0;
+    } catch {
+      return 0;
+    }
   }
 
   async enqueueSolicitud(input: SolicitudCaptura): Promise<void> {

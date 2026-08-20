@@ -14,6 +14,14 @@
       <span class="sol-action__icon">📋</span>
       <span class="sol-action__label">Mis requisiciones</span>
     </button>
+    <!-- AS7 — bandeja de TODAS las requisiciones (solo roles con función de requisición) -->
+    @if (puedeVerTodas()) {
+      <button type="button" class="sol-action" (click)="go('/solicitudes/bandeja')">
+        <span class="sol-action__icon">🗂️</span>
+        <span class="sol-action__label">Requisiciones (todas)</span>
+        @if (pendientes() > 0) { <span class="sol-action__badge">{{ pendientes() }}</span> }
+      </button>
+    }
   </div>
 
   <app-sync-bar />

@@ -197,4 +197,50 @@ export interface Solicitud {
   items?: SolicitudItem[];
 }
 
+/** AS7 — una fila de la bandeja de requisiciones (todas, por rol). */
+export interface RequisicionBandeja {
+  id: string;
+  estado: string;
+  urgencia: string;
+  notas: string | null;
+  created_at: string;
+  proyecto_id: string | null;
+  proyecto_nombre: string | null;
+  solicitante_id: string | null;
+  solicitante_nombre: string | null;
+  items_count: number;
+  tiene_conduce: boolean;
+  tiene_compra: boolean;
+}
+
+/** AS7 — ítem del detalle de una requisición. */
+export interface RequisicionDetalleItem {
+  id: string;
+  descripcion: string;
+  cantidad: number;
+  unidad: string | null;
+  talla: string | null;
+  articulo_id: string | null;
+  codigo: string | null;
+}
+
+/** AS7 — detalle completo de una requisición (bandeja). */
+export interface RequisicionDetalle {
+  id: string;
+  estado: string;
+  urgencia: string;
+  notas: string | null;
+  created_at: string;
+  updated_at: string | null;
+  atendido_en: string | null;
+  proyecto_id: string | null;
+  proyecto_nombre: string | null;
+  solicitante_id: string | null;
+  solicitante_nombre: string | null;
+  atendido_por_nombre: string | null;
+  salida_id: string | null;
+  solicitud_compra_id: string | null;
+  items: RequisicionDetalleItem[];
+}
+
 export const SOLICITUD_PASOS = ['pendiente', 'aprobada', 'entregada'] as const;

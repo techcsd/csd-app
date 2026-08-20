@@ -5,6 +5,7 @@
     (click)="toggle()"
     [attr.aria-label]="playing() ? 'Pausar' : 'Reproducir'"
   >
+    @if (noReproducido()) { <span class="vplayer__unread" aria-hidden="true"></span> }
     @if (playing()) {
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
         <rect x="6" y="5" width="4" height="14" rx="1" />
@@ -17,8 +18,24 @@
     }
   </button>
 
-  <div class="vplayer__track" role="progressbar" [attr.aria-valuenow]="progreso()">
+  <!-- AS11 — barra de progreso arrastrable (seek): touch/ratón + teclado -->
+  <div
+    class="vplayer__track"
+    #track
+    role="slider"
+    tabindex="0"
+    aria-label="Posición de la nota de voz"
+    [attr.aria-valuenow]="progreso()"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerUp($event)"
+    (keydown)="onKey($event)"
+  >
     <div class="vplayer__fill" [style.width.%]="progreso()"></div>
+    <div class="vplayer__handle" [style.left.%]="progreso()"></div>
   </div>
 
   <span class="vplayer__time">{{ etiquetaTiempo() }}</span>

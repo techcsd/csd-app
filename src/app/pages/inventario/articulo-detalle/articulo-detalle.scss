@@ -1,6 +1,66 @@
 .art {
   background: var(--color-bg);
 }
+// AS20 — botón editar en el header del detalle.
+.art__editar {
+  margin-left: auto;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+// AS20 — stock por almacén (lista con kardex por fila).
+.art__stock {
+  margin-top: 18px;
+}
+.art__stock-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.art__stock-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  text-align: left;
+}
+.art__stock-row--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+}
+.art__stock-bodega {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.art__stock-cant {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.art__stock-kardex {
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+.art__stock-hint {
+  margin: 4px 2px 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
 .inv-sub-header {
   display: flex;
   align-items: center;

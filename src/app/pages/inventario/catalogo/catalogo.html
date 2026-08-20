@@ -1,0 +1,50 @@
+<div class="screen cat">
+  <header class="inv-sub-header">
+    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="inv-sub-header__title">Catálogo de artículos</h1>
+  </header>
+
+  <div class="screen__body">
+    <input
+      class="field cat__search"
+      type="search"
+      [ngModel]="query()"
+      (ngModelChange)="query.set($event)"
+      placeholder="🔎 Buscar por nombre o código"
+    />
+
+    <!-- Filtro por categoría -->
+    <div class="cat__chips">
+      <button type="button" class="cat__chip" [class.cat__chip--on]="categoriaSel() === null" (click)="filtrarCategoria(null)">Todas</button>
+      @for (c of categoriaChips(); track c.id) {
+        <button type="button" class="cat__chip" [class.cat__chip--on]="categoriaSel() === c.id" (click)="filtrarCategoria(c.id)">{{ c.nombre }}</button>
+      }
+    </div>
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      <p class="cat__count">{{ total() }} artículo{{ total() === 1 ? '' : 's' }}</p>
+      <div class="cat__list">
+        @for (a of visible(); track a.id) {
+          <button type="button" class="cat__item" (click)="abrir(a)">
+            <span class="cat__thumb">
+              @if (a.imagen_url) { <img [src]="a.imagen_url" [alt]="a.nombre" loading="lazy" /> }
+              @else { <span class="cat__thumb-ph">📦</span> }
+            </span>
+            <span class="cat__info">
+              <span class="cat__name" [title]="a.nombre">{{ a.nombre }}</span>
+              <span class="cat__meta">
+                @if (a.codigo) { <span class="cat__code">{{ a.codigo }}</span> }
+                {{ a.unidad || '' }} · {{ nombreCategoria(a.categoria_id) }}
+              </span>
+            </span>
+            <span class="cat__chevron" aria-hidden="true">›</span>
+          </button>
+        } @empty {
+          <p class="cat__muted">No se encontró ningún artículo.</p>
+        }
+      </div>
+    }
+  </div>
+</div>

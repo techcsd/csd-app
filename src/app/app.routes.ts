@@ -565,6 +565,13 @@ export const routes: Routes = [
       ),
   },
   {
+    // AS20 — catálogo global de artículos (solo lectura): buscador nombre/código,
+    // filtro por categoría, detalle con stock por almacén + kardex.
+    path: 'inventario/catalogo',
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
+    loadComponent: () => import('./pages/inventario/catalogo/catalogo').then((m) => m.CatalogoPage),
+  },
+  {
     // AN2 — existencias (consulta): permiso Ver de artículos o módulo inventario.
     path: 'inventario/existencias',
     canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
@@ -577,6 +584,14 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos')],
     loadComponent: () =>
       import('./pages/inventario/articulo-detalle/articulo-detalle').then((m) => m.ArticuloDetallePage),
+  },
+  {
+    // AS20 — editar artículo (campos + imagen). Gate: operar sobre artículos
+    // (admin o módulo inventario); el RPC lo vuelve a validar server-side.
+    path: 'inventario/articulo/:id/editar',
+    canActivate: [authGuard, pinGuard, submoduleGuard('inventario.articulos', 'operar')],
+    loadComponent: () =>
+      import('./pages/inventario/articulo-editar/articulo-editar').then((m) => m.ArticuloEditarPage),
   },
   {
     // AP2 — inventario de un almacén (artículos + existencias + apertura). Doble
@@ -646,6 +661,18 @@ export const routes: Routes = [
     path: 'solicitudes/mis',
     canActivate: [authGuard, pinGuard, moduleGuard('compras')],
     loadComponent: () => import('./pages/solicitudes/mis/mis').then((m) => m.MisSolicitudesPage),
+  },
+  {
+    // AS7 — bandeja de TODAS las requisiciones (gate server-side por rol; la página
+    // muestra "sin acceso" si el RPC lo niega). Detalle = destino del deep-link AS6.
+    path: 'solicitudes/bandeja',
+    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    loadComponent: () => import('./pages/solicitudes/bandeja/bandeja').then((m) => m.RequisicionesBandejaPage),
+  },
+  {
+    path: 'solicitudes/requisicion/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    loadComponent: () => import('./pages/solicitudes/detalle/detalle').then((m) => m.RequisicionDetallePage),
   },
 
   {

@@ -68,6 +68,18 @@
   font-weight: 600;
   color: rgba(255, 255, 255, 0.75);
 }
+// AS9 — acción del header (info del grupo).
+.thread__hact {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 // AN6 — evento de sistema ("X agregó a Y") centrado, sin burbuja de autor.
 .thread__evento {
@@ -142,7 +154,7 @@
 }
 
 .thread__msg {
-  max-width: 82%;
+  max-width: 75%;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -158,18 +170,33 @@
   color: var(--color-text-secondary);
   padding-left: 6px;
 }
+// AS9 — burbuja homologada: mismo padding/radio; la "cola" (radio pequeño en una
+// esquina) distingue propio (abajo-derecha) de ajeno (abajo-izquierda) SIN depender
+// solo del color.
 .thread__burbuja {
   padding: 10px 14px;
-  border-radius: 16px;
+  border-radius: 16px 16px 16px 5px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   word-break: break-word;
 }
 .thread__msg--mio .thread__burbuja {
+  border-radius: 16px 16px 5px 16px;
   background: var(--Hub, #ffb300);
   border-color: transparent;
   color: #121212;
+}
+// AS9 — nota de voz dentro de una burbuja homologada (antes flotaba sin fondo).
+.thread__burbuja--audio {
+  padding: 4px 8px;
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+.thread__msg--mio .thread__burbuja--audio {
+  background: rgba(255, 179, 0, 0.2);
+  color: var(--color-text-primary);
 }
 // AX3 — link clickeable dentro de un mensaje de texto.
 .thread__link {
@@ -272,19 +299,25 @@
 .thread__adj-op:disabled { opacity: 0.5; }
 .thread__adj-emoji { font-size: 24px; }
 
+// AS9 — imagen con relación de aspecto preservada (antes recortaba con cover).
 .thread__img-btn {
   padding: 0;
-  background: none;
-  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 16px 16px 16px 5px;
   overflow: hidden;
-  max-width: 220px;
+  max-width: min(240px, 72vw);
+  line-height: 0;
+}
+.thread__msg--mio .thread__img-btn {
+  border-radius: 16px 16px 5px 16px;
 }
 .thread__img {
   display: block;
-  max-width: 220px;
-  max-height: 240px;
-  border-radius: 12px;
-  object-fit: cover;
+  width: auto;
+  height: auto;
+  max-width: min(240px, 72vw);
+  max-height: 320px;
+  object-fit: contain;
 }
 .thread__img--cargando {
   display: flex;
@@ -296,24 +329,80 @@
   color: var(--color-text-secondary);
   font-size: 13px;
 }
-.thread__archivo {
+// AS10 — card de documento (PDF/doc/xls) estilo WhatsApp.
+.thread__doc {
   display: flex;
   align-items: center;
-  gap: 8px;
-  max-width: 240px;
+  gap: 10px;
+  width: 260px;
+  max-width: 72vw;
   padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--color-text);
+  border-radius: 16px 16px 16px 5px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   text-align: left;
 }
-.thread__archivo-icon { font-size: 22px; flex: 0 0 auto; }
-.thread__archivo-nombre {
-  font-size: 13px;
-  font-weight: 600;
+.thread__msg--mio .thread__doc { border-radius: 16px 16px 5px 16px; }
+.thread__doc--pend { opacity: 0.75; }
+.thread__doc-badge {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 46px;
+  border-radius: 8px;
+  background: rgba(211, 47, 47, 0.12);
+  color: #d32f2f; // PDF por defecto (rojo doc)
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+
+  &[data-tipo='XLS'] { background: rgba(33, 150, 83, 0.12); color: #219653; }
+  &[data-tipo='DOC'] { background: rgba(26, 86, 219, 0.12); color: #1a56db; }
+  &[data-tipo='ZIP'] { background: rgba(0, 0, 0, 0.08); color: var(--color-text-secondary); }
+}
+.thread__doc-tipo {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.thread__doc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.thread__doc-nombre {
+  font-size: 13.5px;
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.thread__doc-meta {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+}
+.thread__doc-acts {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.thread__doc-act {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--primary, #ff5f00);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+.thread__doc-act--ghost {
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text);
 }
 
 // ── AT16 — Stickers (botón + picker) ───────────────────────────────────────
@@ -399,6 +488,24 @@
     height: 100%;
     object-fit: contain;
   }
+}
+// AS12 — corazón/estrella de favorito en cada celda del selector.
+.thread__stk-fav {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  color: var(--color-text-secondary, #888);
+  font-size: 13px;
+  line-height: 22px;
+}
+.thread__stk-fav--on {
+  color: #f5a623;
 }
 .thread__stk-del {
   position: absolute;
@@ -533,6 +640,10 @@
   background: var(--Hub, #ffb300);
   font-weight: 600;
   font-size: 15px;
+}
+.thread__ctx-op--alt {
+  background: var(--color-surface-2, #f0f0f0);
+  color: var(--color-text-primary, #222);
 }
 .thread__ctx-op--cancel {
   background: #eee;

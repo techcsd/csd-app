@@ -247,6 +247,13 @@
               🖊️ <b>{{ despachanteNombre() }}</b> firmará el conduce desde su propio teléfono.
               Le llegará un aviso "Conduce por firmar". Podrás transitar, pero <b>no marcar la entrega</b> hasta que firme.
             </div>
+          } @else if (despachanteOk()) {
+            <!-- AS1 — despachante externo/empleado sin cuenta: firma EN PERSONA, en
+                 este mismo teléfono (no hay a quién enviarle una firma remota). No
+                 bloquea la emisión; queda ligada al conduce y visible en el detalle. -->
+            <label class="field-label gconduce__mt">Firma del despachante <span class="gconduce__opt">(opcional)</span></label>
+            <p class="gconduce__sub">🖊️ <b>{{ despachanteNombre() }}</b> firma aquí, en este teléfono, para dejar constancia de la entrega.</p>
+            <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
           }
         }
 
@@ -289,6 +296,8 @@
               <div class="gconduce__res-row"><span class="gconduce__res-k">Tu firma</span><span class="gconduce__res-v">{{ firmaChofer() ? '✓ firmada' : '—' }}</span></div>
               @if (despachanteEsSistema()) {
                 <div class="gconduce__res-row"><span class="gconduce__res-k">Firma del despachante</span><span class="gconduce__res-v">Pendiente (firma desde su teléfono)</span></div>
+              } @else if (despachanteOk()) {
+                <div class="gconduce__res-row"><span class="gconduce__res-k">Firma del despachante</span><span class="gconduce__res-v">{{ firmaDespachante() ? '✓ firmada en persona' : 'Sin firma' }}</span></div>
               }
             } @else {
               <div class="gconduce__res-row"><span class="gconduce__res-k">Recibo</span><span class="gconduce__res-v">{{ fotoRecibo() ? '✓ tomado' : '—' }}</span></div>

@@ -2,6 +2,9 @@
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="inv-sub-header__title">Artículo</h1>
+    @if (!loading() && articulo() && puedeEditar('inventario.articulos')) {
+      <button type="button" class="art__editar" (click)="editar()">✏️ Editar</button>
+    }
   </header>
 
   <div class="screen__body">
@@ -28,21 +31,26 @@
         <div><dt>Unidad</dt><dd>{{ a.unidad || '—' }}</dd></div>
         <div><dt>Propiedad</dt><dd>{{ esExterno() ? 'Alquilado (externo)' : 'CSD (propio)' }}</dd></div>
         @if (a.nota) { <div><dt>Nota</dt><dd>{{ a.nota }}</dd></div> }
-        @if (bodega(); as b) {
-          <div>
-            <dt>Stock en {{ b.nombre }}</dt>
-            <dd>
-              @if (stock(); as s) { {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || a.unidad }} }
-              @else { — }
-            </dd>
-          </div>
-        }
       </dl>
 
-      @if (bodega()) {
-        <!-- AP3 — histórico de movimientos (kardex) del artículo en este almacén -->
-        <button type="button" class="btn-cta art__kardex" (click)="verKardex()">📊 Ver histórico de movimientos</button>
-      }
+      <!-- AS20 — stock por almacén (todos) + kardex por almacén -->
+      <section class="art__stock">
+        <h3 class="art__stock-title">Stock por almacén</h3>
+        @if (cargandoStock()) {
+          <p class="art__muted">Consultando existencias…</p>
+        } @else if (stockPorAlmacen().length === 0) {
+          <p class="art__muted">Sin existencias registradas.</p>
+        } @else {
+          @for (s of stockPorAlmacen(); track s.bodegaId) {
+            <button type="button" class="art__stock-row" [class.art__stock-row--on]="s.destacado" (click)="verKardex(s.bodegaId)">
+              <span class="art__stock-bodega">{{ s.nombre }}</span>
+              <span class="art__stock-cant">{{ s.cantidad | number: '1.0-2' }} {{ s.unidad }}</span>
+              <span class="art__stock-kardex" aria-hidden="true">📊</span>
+            </button>
+          }
+          <p class="art__stock-hint">Toca un almacén para ver su histórico de movimientos.</p>
+        }
+      </section>
     } @else {
       <p class="art__muted">No se encontró el artículo.</p>
     }

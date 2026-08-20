@@ -169,9 +169,15 @@ export function notifAppRoute(n: {
   if (r.startsWith('/flota/reporte-semanal')) return '/transporte/reporte-semanal';
   // Resto de alertas de flota (consumo, mantenimiento, odómetro) → bandeja de avisos.
   if (r.startsWith('/flota')) return '/transporte/avisos';
-  // Requisiciones/compras (web) → mis solicitudes en la app.
+  // Requisiciones/compras (web). AS6 — si la push trae el id de la requisición
+  // (referencia_id o embebido en la ruta), aterriza en SU detalle; si no, en la
+  // lista. El detalle valida acceso server-side (rol o solicitante).
   if (r.startsWith('/bitacora/solicitudes') || r.startsWith('/compras') || r.startsWith('/requisiciones')) {
-    return '/solicitudes/mis';
+    const reqId =
+      (['requisicion', 'solicitud', 'material', 'solicitud_material'].includes(n.referencia_tipo ?? '') && n.referencia_id)
+        ? n.referencia_id
+        : r.match(/([0-9a-fA-F-]{36})/)?.[1] ?? null;
+    return reqId ? `/solicitudes/requisicion/${reqId}` : '/solicitudes/mis';
   }
   // Rutas que ya coinciden con el router de la app.
   if (

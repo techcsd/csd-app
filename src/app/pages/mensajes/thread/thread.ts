@@ -9,8 +9,10 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CameraService } from '../../../core/services/camera.service';
+import { StickerFavoritosService } from '../../../core/services/sticker-favoritos.service';
 import { VoiceRecorder } from '../../../shared/ui/voice-recorder/voice-recorder';
 import { VoicePlayer } from '../../../shared/ui/voice-player/voice-player';
+import { PdfViewer } from '../../../shared/ui/pdf-viewer/pdf-viewer';
 import { StickerEditor } from '../../../shared/ui/sticker-editor/sticker-editor';
 import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
 import { App as CapApp } from '@capacitor/app';
@@ -29,7 +31,7 @@ interface Segmento {
   selector: 'app-mensajes-thread',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, VoicePlayer, StickerEditor],
+  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, VoicePlayer, PdfViewer, StickerEditor],
   templateUrl: './thread.html',
   styleUrl: './thread.scss',
 })
@@ -43,6 +45,7 @@ export class MensajesThreadPage implements OnDestroy {
   private toast = inject(ToastService);
   private location = inject(Location);
   private camera = inject(CameraService);
+  private fav = inject(StickerFavoritosService);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
   private recorder = viewChild(VoiceRecorder);
@@ -229,6 +232,7 @@ export class MensajesThreadPage implements OnDestroy {
    * el primer no-leído; (3) recién ahí marcar la conversación como leída.
    */
   private async init(): Promise<void> {
+    void this.fav.cargar(); // AS12 — favoritos de stickers (offline)
     await this.cargarMeta();
     this.scrollNoLeidoPend = this.noLeidosInicial() > 0;
     await this.cargar();
@@ -291,6 +295,7 @@ export class MensajesThreadPage implements OnDestroy {
       archivo_path: p.tipo === 'sticker' ? p.ref : conArchivo ? p.client_id : null,
       archivo_nombre: p.archivo_nombre,
       archivo_mime: p.tipo === 'sticker' ? 'image/sticker' : p.archivo_mime,
+      archivo_size: p.blob?.size ?? null,
       duracion_seg: p.duracion_seg,
       created_at: new Date(p.created_local).toISOString(),
     };
@@ -459,10 +464,81 @@ export class MensajesThreadPage implements OnDestroy {
     return !!m.archivo_path && this.esImagenMime(m.archivo_mime);
   }
   esArchivo(m: Mensaje): boolean {
-    return !!m.archivo_path && !this.esImagenMime(m.archivo_mime);
+    return !!m.archivo_path && !this.esImagenMime(m.archivo_mime) && !this.esAudio(m);
   }
   urlAdjunto(m: Mensaje): string | null {
     return (m.archivo_path && this.urlsAdjuntos()[m.archivo_path]) || null;
+  }
+
+  // ── AS10 — documentos (PDF con visor inline; otros con abrir/descargar) ─────
+  /** true si el adjunto es un PDF (por mime o extensión del nombre). */
+  esPdf(m: Mensaje): boolean {
+    const mime = (m.archivo_mime || '').toLowerCase();
+    if (mime === 'application/pdf') return true;
+    return /\.pdf$/i.test(m.archivo_nombre || '');
+  }
+  /** true mientras el archivo aún está en el outbox (no se puede abrir todavía). */
+  archivoPendiente(m: Mensaje): boolean {
+    return !!this.pendEstado().get(m.id) || (m.archivo_path?.startsWith('tmp-') ?? false);
+  }
+  /** Etiqueta corta de tipo para el card ("PDF", "DOC", "XLS", "ZIP", …). */
+  tipoArchivo(m: Mensaje): string {
+    const mime = (m.archivo_mime || '').toLowerCase();
+    const nombre = (m.archivo_nombre || '').toLowerCase();
+    if (mime.includes('pdf') || nombre.endsWith('.pdf')) return 'PDF';
+    if (mime.includes('word') || /\.docx?$/.test(nombre)) return 'DOC';
+    if (mime.includes('sheet') || mime.includes('excel') || /\.xlsx?$/.test(nombre)) return 'XLS';
+    if (mime.includes('zip') || /\.(zip|rar|7z)$/.test(nombre)) return 'ZIP';
+    const ext = nombre.split('.').pop() ?? '';
+    return ext ? ext.slice(0, 4).toUpperCase() : 'DOC';
+  }
+  /** Peso legible (KB/MB) si se conoce; '' si no. */
+  pesoArchivo(m: Mensaje): string {
+    const b = m.archivo_size;
+    if (!b || b <= 0) return '';
+    if (b < 1024) return `${b} B`;
+    if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+    return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  // AS10 — visor de PDF inline (sin salir de la conversación).
+  pdfVisor = signal<{ url: string; nombre: string } | null>(null);
+  cerrarPdf(): void {
+    this.pdfVisor.set(null);
+  }
+
+  /** Toca un documento: PDF → visor inline; otros tipos → abrir externo. */
+  async abrirDoc(m: Mensaje): Promise<void> {
+    if (this.archivoPendiente(m) || !m.archivo_path) {
+      this.toast.error('El archivo aún se está enviando…');
+      return;
+    }
+    const url = await this.mensajes.adjuntoUrl(m.archivo_path);
+    if (!url) {
+      this.toast.error('No pudimos abrir el archivo.');
+      return;
+    }
+    if (this.esPdf(m)) {
+      this.pdfVisor.set({ url, nombre: m.archivo_nombre || 'Documento' });
+    } else {
+      // doc/xls/otros: no se previsualizan → abrir con el visor del sistema.
+      this.toast.show('Este tipo no se previsualiza; se abrirá aparte.', 'info');
+      window.open(url, '_blank');
+    }
+  }
+
+  /** Descarga/comparte el documento con el visor del sistema (navegador externo). */
+  async descargarDoc(m: Mensaje): Promise<void> {
+    if (this.archivoPendiente(m) || !m.archivo_path) {
+      this.toast.error('El archivo aún se está enviando…');
+      return;
+    }
+    const url = await this.mensajes.adjuntoUrl(m.archivo_path);
+    if (!url) {
+      this.toast.error('No pudimos abrir el archivo.');
+      return;
+    }
+    window.open(url, '_blank');
   }
 
   esMio(m: Mensaje): boolean {
@@ -622,21 +698,6 @@ export class MensajesThreadPage implements OnDestroy {
   }
   cerrarLightbox(): void {
     this.lightboxUrl.set(null);
-  }
-
-  /** Abre/descarga un archivo con el visor del sistema (navegador externo). */
-  async abrirArchivo(m: Mensaje): Promise<void> {
-    if (!m.archivo_path) return;
-    if (m.archivo_path.startsWith('tmp-')) {
-      this.toast.error('El archivo aún se está enviando…');
-      return;
-    }
-    const url = await this.mensajes.adjuntoUrl(m.archivo_path);
-    if (!url) {
-      this.toast.error('No pudimos abrir el archivo.');
-      return;
-    }
-    window.open(url, '_blank');
   }
 
   private scrollAlFinal(): void {
@@ -811,6 +872,7 @@ export class MensajesThreadPage implements OnDestroy {
   cerrarCtxSticker(): void {
     this.stickerCtx.set(null);
   }
+  /** AS12 — "Guardar en un pack" desde la hoja (crea/usa "Guardados" server-side). */
   async guardarStickerRecibido(): Promise<void> {
     const ctx = this.stickerCtx();
     if (!ctx) return;
@@ -822,6 +884,25 @@ export class MensajesThreadPage implements OnDestroy {
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el sticker.');
     }
+  }
+
+  // ── AS12 — Favoritos de stickers (local, offline) ───────────────────────────
+  /** Refs favoritas (reactivo, para el selector). */
+  favoritos = this.fav.refs;
+  esFavorito(ref: string | null): boolean {
+    return !!ref && this.fav.esFavorito(ref);
+  }
+  /** Alterna un sticker en favoritos (desde el selector o la hoja "Guardar"). */
+  async toggleFavorito(ref: string): Promise<void> {
+    const esFav = await this.fav.toggle(ref);
+    this.toast.show(esFav ? 'Añadido a favoritos.' : 'Quitado de favoritos.', 'info');
+  }
+  /** Desde la hoja de un sticker recibido: añadir/quitar de favoritos. */
+  async favoritoDesdeCtx(): Promise<void> {
+    const ctx = this.stickerCtx();
+    if (!ctx) return;
+    this.stickerCtx.set(null);
+    await this.toggleFavorito(ctx.ref);
   }
 
   back(): void {

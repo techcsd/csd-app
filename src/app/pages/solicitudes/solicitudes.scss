@@ -47,6 +47,20 @@
 .sol-action__icon {
   font-size: 32px;
 }
+.sol-action__badge {
+  margin-left: auto;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 14px;
+  background: var(--color-danger, #d32f2f);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
 .sol-action--primary {
   border-color: var(--color-info);
   background: #eff6ff;

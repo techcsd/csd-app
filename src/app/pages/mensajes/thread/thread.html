@@ -8,15 +8,14 @@
       [disabled]="!esGrupo()"
       (click)="abrirInfo()"
     >
-      @if (esGrupo()) {
-        @if (avatarUrl()) {
-          <img class="thread__avatar" [src]="avatarUrl()" alt="" />
-        } @else {
-          <span class="thread__avatar thread__avatar--letra">{{ (titulo() || '?').charAt(0) }}</span>
-        }
+      <!-- AS9 — avatar SIEMPRE (grupo: foto/inicial; 1-a-1: inicial), nunca un hueco -->
+      @if (esGrupo() && avatarUrl()) {
+        <img class="thread__avatar" [src]="avatarUrl()" alt="" />
+      } @else {
+        <span class="thread__avatar thread__avatar--letra">{{ (titulo() || '?').charAt(0) }}</span>
       }
       <span class="thread__id-main">
-        <span class="thread__title">{{ esGrupo() ? '' : '💬 ' }}{{ titulo() }}</span>
+        <span class="thread__title">{{ titulo() }}</span>
         @if (presenciaTexto()) {
           <span class="thread__sub thread__sub--typing">{{ presenciaTexto() }}</span>
         } @else if (esGrupo() && subtitulo()) {
@@ -24,6 +23,11 @@
         }
       </span>
     </button>
+    @if (esGrupo()) {
+      <button type="button" class="thread__hact" (click)="abrirInfo()" aria-label="Información del grupo">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 5a1.4 1.4 0 1 1 0 2.8A1.4 1.4 0 0 1 12 7zm1.4 10.5h-2.8v-6h2.8z"/></svg>
+      </button>
+    }
   </header>
 
   <!-- AX1 — sello de estado del mensaje (reutilizable): reloj (enviando), ⚠️
@@ -76,11 +80,13 @@
           <!-- AV5 — nota de voz con player inline -->
           <div class="thread__msg thread__msg--audio" [class.thread__msg--mio]="esMio(m)">
             @if (!esMio(m) && esGrupo()) { <span class="thread__autor">{{ m.autor_nombre }}</span> }
-            @if (audioUrl(m); as au) {
-              <app-voice-player [src]="au" [duracion]="m.duracion_seg ?? null" />
-            } @else {
-              <span class="thread__audio-cargando">Enviando nota de voz…</span>
-            }
+            <div class="thread__burbuja thread__burbuja--audio">
+              @if (audioUrl(m); as au) {
+                <app-voice-player [src]="au" [duracion]="m.duracion_seg ?? null" [msgId]="m.id" [orden]="i" [mio]="esMio(m)" />
+              } @else {
+                <span class="thread__audio-cargando">Enviando nota de voz…</span>
+              }
+            </div>
             <span class="thread__meta">
               <span class="thread__hora">{{ fmtHora(m.created_at) }}</span>
               <ng-container [ngTemplateOutlet]="tick" [ngTemplateOutletContext]="{ $implicit: m }" />
@@ -98,10 +104,29 @@
                 <span class="thread__img thread__img--cargando">📷 Enviando…</span>
               }
             } @else if (esArchivo(m)) {
-              <button type="button" class="thread__archivo" (click)="abrirArchivo(m)">
-                <span class="thread__archivo-icon">📄</span>
-                <span class="thread__archivo-nombre">{{ m.archivo_nombre || 'Archivo' }}</span>
-              </button>
+              <!-- AS10 — card de documento: icono por tipo, nombre + peso, Ver/Descargar -->
+              <div class="thread__doc" [class.thread__doc--pend]="archivoPendiente(m)">
+                <span class="thread__doc-badge" [attr.data-tipo]="tipoArchivo(m)" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V7h3.5L13 3.5z"/></svg>
+                  <span class="thread__doc-tipo">{{ tipoArchivo(m) }}</span>
+                </span>
+                <span class="thread__doc-info">
+                  <span class="thread__doc-nombre" [title]="m.archivo_nombre || 'Documento'">{{ m.archivo_nombre || 'Documento' }}</span>
+                  <span class="thread__doc-meta">
+                    @if (archivoPendiente(m)) { Enviando… }
+                    @else {
+                      @if (esPdf(m)) { PDF } @else { {{ tipoArchivo(m) }} }
+                      @if (pesoArchivo(m)) { · {{ pesoArchivo(m) }} }
+                    }
+                  </span>
+                </span>
+                @if (!archivoPendiente(m)) {
+                  <span class="thread__doc-acts">
+                    <button type="button" class="thread__doc-act" (click)="abrirDoc(m)">Ver</button>
+                    <button type="button" class="thread__doc-act thread__doc-act--ghost" (click)="descargarDoc(m)" aria-label="Descargar">↓</button>
+                  </span>
+                }
+              </div>
             }
             @if (m.contenido) {
               <!-- AX3 — texto con links http/https clickeables (linkify seguro) -->
@@ -137,6 +162,13 @@
     <div class="thread__adj-backdrop" (click)="stickerPickerOpen.set(false)"></div>
     <div class="thread__stickers" role="dialog" aria-label="Stickers">
       <div class="thread__stk-tabs">
+        <!-- AS12 — Favoritos primero (estilo WhatsApp) -->
+        <button
+          type="button"
+          class="thread__stk-tab"
+          [class.thread__stk-tab--active]="stickerTab() === 'favoritos'"
+          (click)="stickerTab.set('favoritos')"
+        >★ Favoritos</button>
         <button
           type="button"
           class="thread__stk-tab"
@@ -155,15 +187,33 @@
       <div class="thread__stk-panel">
         @if (stickerLoading()) {
           <p class="thread__stk-empty">Cargando stickers…</p>
+        } @else if (stickerTab() === 'favoritos') {
+          @if (favoritos().length === 0) {
+            <p class="thread__stk-empty">Aún no tienes favoritos. Toca el ★ de un sticker para guardarlo aquí.</p>
+          } @else {
+            <div class="thread__stk-grid">
+              @for (ref of favoritos(); track ref) {
+                <div class="thread__stk-wrap">
+                  <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(ref)" aria-label="Enviar sticker">
+                    <img [src]="stickerUrl(ref)" alt="Sticker" loading="lazy" />
+                  </button>
+                  <button type="button" class="thread__stk-fav thread__stk-fav--on" (click)="toggleFavorito(ref)" aria-label="Quitar de favoritos">★</button>
+                </div>
+              }
+            </div>
+          }
         } @else if (stickerTab() === 'recientes') {
           @if (stickerRecientes().length === 0) {
             <p class="thread__stk-empty">Aún no has usado stickers.</p>
           } @else {
             <div class="thread__stk-grid">
               @for (ref of stickerRecientes(); track ref) {
-                <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(ref)" aria-label="Enviar sticker">
-                  <img [src]="stickerUrl(ref)" alt="Sticker" loading="lazy" />
-                </button>
+                <div class="thread__stk-wrap">
+                  <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(ref)" aria-label="Enviar sticker">
+                    <img [src]="stickerUrl(ref)" alt="Sticker" loading="lazy" />
+                  </button>
+                  <button type="button" class="thread__stk-fav" [class.thread__stk-fav--on]="esFavorito(ref)" (click)="toggleFavorito(ref)" [attr.aria-label]="esFavorito(ref) ? 'Quitar de favoritos' : 'Añadir a favoritos'">{{ esFavorito(ref) ? '★' : '☆' }}</button>
+                </div>
               }
             </div>
           }
@@ -177,6 +227,7 @@
                   <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(s.ref)" aria-label="Enviar sticker">
                     <img [src]="stickerUrl(s.ref)" alt="Sticker" loading="lazy" />
                   </button>
+                  <button type="button" class="thread__stk-fav" [class.thread__stk-fav--on]="esFavorito(s.ref)" (click)="toggleFavorito(s.ref)" [attr.aria-label]="esFavorito(s.ref) ? 'Quitar de favoritos' : 'Añadir a favoritos'">{{ esFavorito(s.ref) ? '★' : '☆' }}</button>
                   @if (!pack.es_sistema) {
                     <button type="button" class="thread__stk-move" (click)="iniciarMoverSticker(s.id)" aria-label="Mover a otro pack">↪</button>
                   }
@@ -266,6 +317,11 @@
     </div>
   }
 
+  <!-- AS10 — visor de PDF inline (sin salir de la conversación) -->
+  @if (pdfVisor(); as pv) {
+    <app-pdf-viewer [src]="pv.url" [nombre]="pv.nombre" (cerrado)="cerrarPdf()" />
+  }
+
   <!-- AV4 — editor de sticker antes de subir (recorte + esquinas → webp con alfa) -->
   @if (editorImagen(); as img) {
     <app-sticker-editor [imagen]="img" (confirmado)="onEditorConfirm($event)" (cancelado)="onEditorCancel()" />
@@ -276,7 +332,10 @@
     <div class="thread__adj-backdrop" (click)="cerrarCtxSticker()"></div>
     <div class="thread__ctx">
       <img class="thread__ctx-preview" [src]="stickerUrl(ctx.ref)" alt="Sticker" />
-      <button type="button" class="thread__ctx-op" (click)="guardarStickerRecibido()">💾 Guardar sticker</button>
+      <button type="button" class="thread__ctx-op" (click)="favoritoDesdeCtx()">
+        {{ esFavorito(ctx.ref) ? '★ Quitar de favoritos' : '★ Añadir a favoritos' }}
+      </button>
+      <button type="button" class="thread__ctx-op thread__ctx-op--alt" (click)="guardarStickerRecibido()">＋ Guardar en un pack</button>
       <button type="button" class="thread__ctx-op thread__ctx-op--cancel" (click)="cerrarCtxSticker()">Cancelar</button>
     </div>
   }

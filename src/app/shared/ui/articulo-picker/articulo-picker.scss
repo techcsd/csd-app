@@ -43,16 +43,23 @@
 .picker__stock--off {
   color: var(--color-danger);
 }
+// AS8 — nombre largo NO debe empujar el botón "+" fuera: min-width:0 + ellipsis.
 .picker__name {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--fs-option);
   font-weight: 600;
 }
 .picker__meta {
+  flex: 0 0 auto;
   font-size: 13px;
   color: var(--color-text-secondary);
 }
 .picker__add {
+  flex: 0 0 auto;
   width: 34px;
   height: 34px;
   border-radius: 50%;

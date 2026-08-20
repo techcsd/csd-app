@@ -6,6 +6,11 @@
   </header>
 
   <div class="screen__body">
+    <!-- AS20 — catálogo global de artículos (buscar, ver detalle + stock por almacén) -->
+    <button type="button" class="inv-action" (click)="go('/inventario/catalogo')">
+      <span class="inv-action__icon">📋</span>
+      <span class="inv-action__label">Catálogo de artículos</span>
+    </button>
     <button type="button" class="inv-action" (click)="go('/inventario/existencias')">
       <span class="inv-action__icon">🔎</span>
       <span class="inv-action__label">Ver existencias</span>
