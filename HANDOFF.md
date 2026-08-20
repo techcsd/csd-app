@@ -16,7 +16,7 @@
 
 **Pendiente próxima ronda:** DIFERIDO (necesita más producto/schema): AS20 crear-artículo/categorías/unidades/multi-foto; AS7 wizard aprobar/rechazar en la app (aprobar = bodega+ítems; reject no tiene RPC → usar web). FÍSICO (Xaviel): AS14 trayecto real conducido (4ª vez — snap ya desplegado; revival hard-kill diferido), AS4 QA con Raykler (Logística) + exponer bandeja a roles sin módulo `compras` (matriz AS4/AS5), AS2 perfil chofer (contrato). SGC WEB (otro repo): espejos AS4 (permisos)/AS3 (Estadísticas)/AS6 (email requisición). **Device-QA pendiente de TODO lo de esta sesión.**
 
-**2 migraciones nuevas aplicadas a prod (aditivas, verificadas):** `sql/2026-08-20-as7-requisiciones-bandeja.sql`, `sql/2026-08-20-as20-articulo-edit.sql`. **Espejarlas al repo SGC/sql (sin commit).**
+**2 migraciones nuevas aplicadas a prod (aditivas, verificadas):** `sql/2026-08-20-as7-requisiciones-bandeja.sql`, `sql/2026-08-20-as20-articulo-edit.sql`. **✅ Espejadas y committeadas en el repo padre SGC** (`SGC/sql/` — commit `8c1ff79`, push `main`).
 
 ## 🟢 SESIÓN 23/08 (cont.) — PROMPT-30 AY — **RELEASE 1.92.0 · Módulo NUEVO "Ingeniería" + Solicitud de movimiento re-arquitecturada**
 
