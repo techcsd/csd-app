@@ -1,6 +1,14 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 20/08 — PROMPT-4 ronda AT (app) — **FASE 1 cámara + AT10 + AT2 (Mi rendimiento) + AT4 COMPLETO (5 flujos) + 3 migraciones SGC (aplicadas a prod) · build verde · SIN commit/push/release app (esperando OK de Xaviel + device-QA)**
+## 🟢 SESIÓN 20-21/08 — PROMPT-4 ronda AT (app) — **RELEASE 1.95.0 PUBLICADO (rolling) · PROMPT-4 completo del lado field-app · build verde**
+
+**SHIPPED:** commit **`4cc9a17`** → push `main` → PWA por Vercel. **APK 1.95.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 12 cambios curados) + subido al bucket (`csd-app-1.95.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=1.95.0`** (rolling), **`minima=1.92.0` INTACTA** (NO forzada). **Rollback:** `update sgc.app_versiones set publicada=(version='1.94.0') where plataforma='movil';` + `git revert 4cc9a17 && git push`. Las 3 migraciones SGC son aditivas (revert opcional, ver abajo). **⚠️ Device-QA pendiente de TODO** (no se pudo probar en equipo; especial atención a AT4 en crear-ruta/generar-conduce que son frágiles, y a la cámara en el iPhone 13 de Raykler).
+
+**Migraciones SGC aplicadas a prod (aditivas) — espejadas en `SGC/sql`:** `2026-08-20-at-backend-gaps.sql`, `2026-08-20-at14-vehiculos-en-uso-prueba.sql`, `2026-08-21-at23-notif-prefs-usuario.sql`.
+
+---
+
+## 🟡 (detalle) SESIÓN 20/08 — PROMPT-4 ronda AT (app) — **FASE 1 cámara + AT10 + AT2 (Mi rendimiento) + AT4 COMPLETO (5 flujos) + migraciones SGC**
 
 ### 🟢 Migraciones SGC APLICADAS a prod esta sesión (aditivas; espejadas en SGC/sql, SIN commit)
 `sql/2026-08-20-at-backend-gaps.sql` (autorizado por Xaviel):
