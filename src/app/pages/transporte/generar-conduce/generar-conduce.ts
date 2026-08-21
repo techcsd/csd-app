@@ -12,13 +12,15 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-picker';
+import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
-import { ConducesService, Despachante, AlmacenDestino } from '../../../core/services/conduces.service';
+import { ConducesService, Despachante, AlmacenDestino, ReceptorDisponible } from '../../../core/services/conduces.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { TrackingService } from '../../../core/services/tracking.service';
@@ -65,7 +67,7 @@ interface ConduceDraft {
   selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner, AyudantePicker],
   templateUrl: './generar-conduce.html',
   styleUrl: './generar-conduce.scss',
 })
@@ -223,6 +225,9 @@ export class GenerarConducePage implements OnDestroy {
   despachanteLibre = signal(''); // nombre libre (otros)
   // AI2 — firmas de emisión: chofer (transportista) + despachante (emisor).
   firmaChofer = signal<Blob | null>(null);
+  /** AT4 — usuario_id del ayudante (opcional); le suma el conduce al incentivo. */
+  ayudanteId = signal<string | null>(null);
+  onAyudante = (u: AyudanteUsuario | null): void => this.ayudanteId.set(u?.id ?? null);
   firmaDespachante = signal<Blob | null>(null);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
@@ -242,6 +247,15 @@ export class GenerarConducePage implements OnDestroy {
     const [tipo, id] = key.split(':');
     return this.despachantes().find((d) => d.tipo === tipo && d.id === id) ?? null;
   });
+
+  // AT16 — receptor elegido (solo cuando el destino es una obra). Alimenta la
+  // matriz de autorizados a confirmar de esa obra (receptores_disponibles).
+  receptores = signal<ReceptorDisponible[]>([]);
+  receptorId = signal('');
+  receptorOptions = computed(() =>
+    this.receptores().map((r) => ({ id: r.id, label: r.detalle ? `${r.nombre} · ${r.detalle}` : r.nombre })),
+  );
+  receptorNombre = computed(() => this.receptores().find((r) => r.id === this.receptorId())?.nombre ?? null);
   /** Nombre del despachante para el conduce (picker o libre). */
   despachanteNombre = computed(() => this.despachanteSel()?.nombre ?? this.despachanteLibre().trim());
   despachanteOk = computed(() => !!(this.despachanteId() || this.despachanteLibre().trim()));
@@ -428,6 +442,21 @@ export class GenerarConducePage implements OnDestroy {
         const c = this.almacenCentral();
         if (c) this.almacenId.set(c.id);
       }
+    });
+    // AT16 — cargar los receptores elegibles cuando el destino es una obra concreta.
+    effect(() => {
+      const esObra = this.destinoTipo() === 'obra';
+      const obra = this.obraId();
+      const bodega = this.bodegaId();
+      if (!esObra || !obra) {
+        this.receptores.set([]);
+        this.receptorId.set('');
+        return;
+      }
+      void this.conduces
+        .receptoresDisponibles(obra, bodega || null)
+        .then((r) => this.receptores.set(r))
+        .catch(() => this.receptores.set([]));
     });
     // AE9 — autosave del borrador (sin fotos/firmas): al cambiar cualquier campo.
     effect(() => this.autosaveEffect());
@@ -964,6 +993,7 @@ export class GenerarConducePage implements OnDestroy {
           firmaChofer: this.firmaChofer(),
           firmaDespachante: this.firmaDespachante(),
           itemsLibres: this.itemsLibres(), // AU4
+          ayudanteId: this.ayudanteId(), // AT4
         });
         this.conduceCreadoId.set(nid); // AO4
         void this.autosave.discard(this.clave); // AE9 — borrador cumplido
@@ -988,6 +1018,10 @@ export class GenerarConducePage implements OnDestroy {
         firmaDespachante: this.firmaDespachante(),
         tareaVinculada: this.tareaVinculada, // AG15 — enlaza la tarea a esta salida
         itemsLibres: this.itemsLibres(), // AU4
+        ayudanteId: this.ayudanteId(), // AT4
+        // AT16 — receptor dirigido solo aplica a destino OBRA.
+        receptorUsuarioId: this.destinoTipo() === 'obra' ? this.receptorId() || null : null,
+        receptorNombre: this.destinoTipo() === 'obra' ? this.receptorNombre() : null,
       });
       this.conduceCreadoId.set(nid); // AO4 — para "Ver / compartir conduce" en el éxito
       void this.autosave.discard(this.clave); // AE9 — borrador cumplido

@@ -14,6 +14,8 @@ import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/locati
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
+import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-picker';
+import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ConducesService, LugarDestino, RutaParadaCaptura, RutaTipo } from '../../../core/services/conduces.service';
@@ -79,7 +81,7 @@ interface ParadaUI {
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner],
+  imports: [FormsModule, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner, AyudantePicker],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
@@ -152,6 +154,9 @@ export class CrearRutaPage implements OnDestroy {
   km = signal<number | null>(null);
   notas = signal('');
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
+  /** AT4 — usuario_id del ayudante (opcional); le suma la ruta al incentivo. */
+  ayudanteId = signal<string | null>(null);
+  onAyudante = (u: AyudanteUsuario | null): void => this.ayudanteId.set(u?.id ?? null);
   // AV11 — id estable de la ruta (idempotencia) + estado "documentación pendiente"
   // cuando el flujo se desvió al checklist de uso y va a reanudar la MISMA ruta.
   rutaId = signal('');
@@ -772,6 +777,7 @@ export class CrearRutaPage implements OnDestroy {
         fotos: this.fotosEvidencia().map((f) => f.blob),
         tareaVinculada: this.tareaVinculada, // AG15
         solicitudId: this.solicitudId, // AY11 — vincula la ruta a la solicitud al crear
+        ayudanteId: this.ayudanteId(), // AT4
       });
       void this.autosave.discard(this.clave); // AF24.5 — borrador cumplido
       this.done.set(true);

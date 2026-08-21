@@ -310,6 +310,8 @@
         <app-signature-pad (changed)="onFirmaChanged($event)" />
         <!-- Z23 — notas de voz (opcional) -->
         <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
+        <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma la inspección al incentivo) -->
+        <app-ayudante-picker (ayudanteChange)="onAyudante($event)" />
       }
 
       <!-- Step 5: verdict preview + confirm -->

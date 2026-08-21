@@ -1,0 +1,96 @@
+<div class="screen mirend">
+  <header class="mirend__header">
+    <button type="button" class="mirend__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mirend__icon">🏅</span>
+    <h1 class="mirend__title">Mi rendimiento</h1>
+    <button type="button" class="mirend__refresh" (click)="load()" [disabled]="loading()" aria-label="Actualizar">🔄</button>
+  </header>
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="onRefresh($event)">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!actual()) {
+      <app-empty-state
+        icon="🏅"
+        title="Aún no hay informe"
+        message="Tu rendimiento de la semana aparecerá aquí cuando empieces a registrar actividad (rutas, conduces, combustible, inspecciones y tu reporte semanal)." />
+    } @else if (actual(); as a) {
+      <!-- Semana en curso -->
+      <section class="mirend__actual" [class.mirend__actual--ok]="a.cumplio" [class.mirend__actual--bajo]="!a.cumplio">
+        <p class="mirend__semana">Semana {{ a.semana }} · {{ rango(a) }}</p>
+        <div class="mirend__badge" [class.mirend__badge--ok]="a.cumplio" [class.mirend__badge--bajo]="!a.cumplio">
+          {{ a.cumplio ? '✅ Cumpliste' : '⚠️ Rendimiento bajo' }}
+        </div>
+
+        <div class="mirend__puntaje">
+          <span class="mirend__puntaje-num">{{ a.puntaje }}</span>
+          <span class="mirend__puntaje-de">de {{ a.minimo }} mín.</span>
+        </div>
+
+        <div class="mirend__barra">
+          <div class="mirend__barra-fill" [class.mirend__barra-fill--ok]="a.cumplio" [style.width.%]="progreso()"></div>
+        </div>
+
+        @if (!a.cumplio) {
+          <p class="mirend__faltan">Te falta{{ faltan() === 1 ? '' : 'n' }} <b>{{ faltan() }}</b> punto{{ faltan() === 1 ? '' : 's' }} para el mínimo de la semana.</p>
+        }
+      </section>
+
+      <!-- Desglose por renglón -->
+      <h2 class="mirend__sec">¿De dónde sale tu puntaje?</h2>
+      <ul class="mirend__renglones">
+        @for (r of renglones(); track r.key) {
+          <li class="mirend__renglon">
+            <button type="button" class="mirend__renglon-head" (click)="toggle(r.key)" [disabled]="!r.refs.length">
+              <span class="mirend__renglon-ico">{{ r.icono }}</span>
+              <span class="mirend__renglon-label">{{ r.label }}</span>
+              <span class="mirend__renglon-pts">{{ r.puntos }} pt{{ r.puntos === 1 ? '' : 's' }}</span>
+              @if (r.refs.length) { <span class="mirend__renglon-caret">{{ abierto() === r.key ? '▾' : '▸' }}</span> }
+            </button>
+            <p class="mirend__renglon-sub">
+              {{ r.propio }} propia{{ r.propio === 1 ? '' : 's' }}@if (r.ayudante) { <span class="mirend__ayud"> · {{ r.ayudante }} como ayudante</span> }
+            </p>
+
+            @if (abierto() === r.key) {
+              <ul class="mirend__refs">
+                @for (ref of r.refs; track ref.id) {
+                  <li class="mirend__ref" [class.mirend__ref--link]="esClickable(ref)" (click)="abrirRef(ref)">
+                    <span class="mirend__ref-fecha">{{ fmtFecha(ref.fecha) }}</span>
+                    @if (ref.ayudante) { <span class="mirend__ref-tag">ayudante</span> }
+                    @if (esClickable(ref)) { <span class="mirend__ref-go">Ver ›</span> }
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+
+      <!-- Decisión de la semana en curso -->
+      <div class="mirend__decision mirend__decision--{{ a.decision || 'pendiente' }}">
+        Incentivo de esta semana: <b>{{ decisionLabel(a) }}</b>
+        @if (a.decidido_en) { <span class="mirend__decision-fecha"> · {{ fmtFechaHora(a.decidido_en) }}</span> }
+        @if (a.motivo) { <p class="mirend__decision-motivo">"{{ a.motivo }}"</p> }
+      </div>
+
+      <!-- Histórico -->
+      @if (historico().length) {
+        <h2 class="mirend__sec">Semanas anteriores</h2>
+        <ul class="mirend__hist">
+          @for (s of historico(); track s.informe_id) {
+            <li class="mirend__hist-row">
+              <div class="mirend__hist-main">
+                <span class="mirend__hist-semana">Sem. {{ s.semana }}</span>
+                <span class="mirend__hist-rango">{{ rango(s) }}</span>
+              </div>
+              <span class="mirend__hist-pts" [class.mirend__hist-pts--ok]="s.cumplio">{{ s.puntaje }}/{{ s.minimo }}</span>
+              <span class="mirend__hist-dec mirend__hist-dec--{{ s.decision || 'pendiente' }}">{{ decisionLabel(s) }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <p class="mirend__nota">El incentivo no se paga solo: aprobarlo es una decisión de logística y gerencia. Aquí ves tu puntaje y en qué vas.</p>
+    }
+  </div>
+</div>

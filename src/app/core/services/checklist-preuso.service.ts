@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
+import { AyudanteService } from './ayudante.service';
 import { ChecklistCaptura, ChecklistPlantilla } from '../models/checklist-preuso.model';
 
 // U10 — clave nueva ('_preuso') para invalidar cualquier caché viejo con la
@@ -22,6 +23,7 @@ export class ChecklistPreusoService {
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
   private audioNotas = inject(AudioNotasService);
+  private ayudantes = inject(AyudanteService); // AT4
 
   constructor() {
     this.registerHandler();
@@ -116,6 +118,7 @@ export class ChecklistPreusoService {
         observacion: input.observacion,
         respuestas,
         audios: audio.audios, // Z23
+        ayudante_id: input.ayudanteId ?? null, // AT4
       },
       fotos,
       resumen: {
@@ -175,6 +178,10 @@ export class ChecklistPreusoService {
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // AT4 — sumar la actividad al ayudante (best-effort; id = client UUID).
+      const ayudanteId = payload['ayudante_id'] as string | null | undefined;
+      if (ayudanteId) await this.ayudantes.marcar('inspeccion', payload['id'] as string, ayudanteId);
 
       // Z23 — registrar las notas de voz (idempotente por path).
       await this.audioNotas.commit('preuso', payload['id'] as string, payload['audios'] as AudioNotaMeta[] | undefined, photoPaths);

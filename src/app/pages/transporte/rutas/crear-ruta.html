@@ -183,6 +183,9 @@
           <!-- Z23 — notas de voz (opcional) -->
           <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
 
+          <!-- AT4 — ¿vas con ayudante? (opcional; le suma la ruta al incentivo) -->
+          <app-ayudante-picker (ayudanteChange)="onAyudante($event)" />
+
           <!-- AI5 — foto de la ruta OPCIONAL y genérica (la evidencia con peso vive en
                el conduce). AF24.6 — el jefe de flota puede adjuntar un documento (factura). -->
           <label class="field-label">

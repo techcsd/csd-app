@@ -36,8 +36,38 @@ export class MaterialNoCatalogadoPage {
   incluirResueltos = signal(false);
   items = signal<MaterialNoCatalogado[]>([]);
 
+  // AT11 — declinar: item cuyo panel de motivos está abierto + envío en curso.
+  declinandoId = signal<string | null>(null);
+  enviandoDeclina = signal(false);
+  readonly motivos = [
+    'No es necesario crear el artículo',
+    'Ya existe en el catálogo',
+    'Duplicado',
+  ];
+
   constructor() {
     void this.load();
+  }
+
+  /** AT11 — abre/cierra el panel de motivos de un item. */
+  toggleDeclinar(id: string): void {
+    this.declinandoId.set(this.declinandoId() === id ? null : id);
+  }
+
+  /** AT11 — declina un item con el motivo elegido (→ historial + aviso al reportero). */
+  async declinar(item: MaterialNoCatalogado, motivo: string): Promise<void> {
+    if (this.enviandoDeclina()) return;
+    this.enviandoDeclina.set(true);
+    try {
+      await this.inventario.declinarItemLibre(item.id, motivo);
+      this.toast.success('Material declinado. Se avisó a quien lo reportó.');
+      this.declinandoId.set(null);
+      await this.load(true);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo declinar.');
+    } finally {
+      this.enviandoDeclina.set(false);
+    }
   }
 
   private async load(silent = false): Promise<void> {

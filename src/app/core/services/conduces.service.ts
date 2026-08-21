@@ -4,6 +4,7 @@ import { CatalogService } from '../sync/catalog.service';
 import { LocalStore } from './local-store.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
+import { AyudanteService } from './ayudante.service';
 import { Conduce, RutaHoy } from '../models/transporte.model';
 import { Proyecto } from '../models/bitacora.model';
 import { ItemLibre } from '../models/inventario.model';
@@ -50,6 +51,8 @@ export interface RutaCaptura {
   /** AY11 — si la ruta se crea PLANIFICANDO una solicitud de movimiento, su id
    *  (al crear la ruta se vincula → la solicitud pasa a 'planificada'). */
   solicitudId?: string | null;
+  /** AT4 — usuario_id del ayudante (opcional); le suma la ruta al incentivo. */
+  ayudanteId?: string | null;
   /**
    * AV11 — id ESTABLE de la ruta, generado una vez en el wizard y reutilizado al
    * reanudar tras el checklist de uso. Garantiza idempotencia por p_id: un doble
@@ -112,6 +115,11 @@ export interface ConduceSimpleCaptura {
   tareaVinculada?: string | null;
   /** AU4 — materiales NO catalogados (nota libre); viajan en el conduce sin tocar stock. */
   itemsLibres?: ItemLibre[];
+  /** AT4 — usuario_id del ayudante (opcional); le suma el conduce al incentivo. */
+  ayudanteId?: string | null;
+  /** AT16 — receptor elegido (usuario del sistema) al que se dirige la confirmación. */
+  receptorUsuarioId?: string | null;
+  receptorNombre?: string | null;
 }
 
 /**
@@ -137,6 +145,17 @@ export interface ConduceDevolucionSuplidorCaptura {
   firmaDespachante?: Blob | null;
   /** AU4 — materiales NO catalogados (nota libre); viajan en el conduce sin tocar stock. */
   itemsLibres?: ItemLibre[];
+  /** AT4 — usuario_id del ayudante (opcional); le suma el conduce al incentivo. */
+  ayudanteId?: string | null;
+}
+
+/** AT16 — un receptor elegible del conduce (matriz de autorizados de la obra). */
+export interface ReceptorDisponible {
+  id: string;
+  nombre: string;
+  detalle: string;
+  /** true si está vinculado formalmente a la obra (vs. rol elevado global). */
+  vinculado: boolean;
 }
 
 /** AH5 — una oferta de transferencia de responsabilidad de un conduce (inbox). */
@@ -566,6 +585,7 @@ export class ConducesService {
   private sync = inject(SyncService);
   private store = inject(LocalStore);
   private audioNotas = inject(AudioNotasService);
+  private ayudantes = inject(AyudanteService); // AT4
 
   constructor() {
     this.registerHandler();
@@ -1034,6 +1054,7 @@ export class ConducesService {
         n_fotos: evidencia.length, // AC6
         tarea_vinculada: input.tareaVinculada ?? null, // AG15
         solicitud_id: input.solicitudId ?? null, // AY11
+        ayudante_id: input.ayudanteId ?? null, // AT4
       },
       fotos: [...audio.fotos, ...evidencia],
       resumen: { origen: input.origen, destino: input.destino, fecha: input.fecha, capturado_en },
@@ -1159,6 +1180,9 @@ export class ConducesService {
         destino_almacen_id: input.destinoAlmacenId ?? null, // AL10
         tarea_vinculada: input.tareaVinculada ?? null,
         items_libres: input.itemsLibres ?? [], // AU4 — material no catalogado (nota libre)
+        ayudante_id: input.ayudanteId ?? null, // AT4
+        receptor_usuario_id: input.receptorUsuarioId ?? null, // AT16
+        receptor_nombre: input.receptorNombre ?? null, // AT16
       },
       fotos,
       resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
@@ -1226,6 +1250,7 @@ export class ConducesService {
         despachante_usuario_id: input.despachanteUsuarioId ?? null,
         despachante_empleado_id: input.despachanteEmpleadoId ?? null,
         items_libres: input.itemsLibres ?? [], // AU4 — material no catalogado (nota libre)
+        ayudante_id: input.ayudanteId ?? null, // AT4
       },
       fotos,
       resumen: { bodega_id: input.bodegaOrigenId, suplidor: input.suplidorNombre, capturado_en },
@@ -1510,6 +1535,38 @@ export class ConducesService {
     return d;
   }
 
+  /**
+   * AT16 — usuarios elegibles como RECEPTOR del conduce en la obra destino
+   * (misma matriz que decide quién puede confirmar: responsables de la obra +
+   * roles elevados). Online best-effort.
+   */
+  async receptoresDisponibles(proyectoId: string | null, bodegaId: string | null): Promise<ReceptorDisponible[]> {
+    const { data, error } = await this.supabase.client.rpc('receptores_disponibles', {
+      p_proyecto_id: proyectoId,
+      p_bodega_id: bodegaId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as ReceptorDisponible[]) ?? [];
+  }
+
+  /**
+   * AT10 — marca/desmarca un conduce como dato de PRUEBA (solo admin, online).
+   * RPC genérico `marcar_movimiento_inventario_prueba('salidas_inventario', id,
+   * valor)`. Un conduce de prueba no suma al inventario/KPIs, no notifica y queda
+   * invisible salvo con el toggle "mostrar datos de prueba" del admin.
+   */
+  async marcarConducePrueba(salidaId: string, esPrueba: boolean): Promise<void> {
+    const { error } = await this.supabase.client.rpc('marcar_movimiento_inventario_prueba', {
+      p_tabla: 'salidas_inventario',
+      p_id: salidaId,
+      p_valor: esPrueba,
+    });
+    if (error) throw new Error(error.message);
+    void this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+    void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    this.catalog.invalidatePrefix('mis_confirmaciones');
+  }
+
   /** AL10 — almacenes centrales elegibles como destino (Bodega Central primero). */
   async almacenesDestino(): Promise<AlmacenDestino[]> {
     const data = await this.catalog.refresh<AlmacenDestino[]>('almacenes_destino', async () => {
@@ -1648,6 +1705,32 @@ export class ConducesService {
    * Idempotente: si el conduce ya tiene items libres (reintento del handler tras un
    * fallo posterior), no vuelve a insertarlos ni a re-alertar.
    */
+  /** AT4 — si el conduce se creó con ayudante, súmale la actividad (best-effort). */
+  private async marcarAyudanteConduce(payload: Record<string, unknown>, salidaId: string): Promise<void> {
+    const ayudanteId = payload['ayudante_id'] as string | null | undefined;
+    if (ayudanteId && salidaId) await this.ayudantes.marcar('conduce', salidaId, ayudanteId);
+  }
+
+  /**
+   * AT16 — si se eligió un receptor, dirige la confirmación a esa persona
+   * (`asignar_firma_pendiente`: setea `firma_pendiente_usuario_id`, que alimenta
+   * la matriz `confirmadores_de_conduce`). Best-effort: cualquier autorizado de la
+   * obra puede confirmar igual; el elegido solo recibe la notificación dirigida.
+   */
+  private async dirigirReceptor(payload: Record<string, unknown>, salidaId: string): Promise<void> {
+    const receptorId = payload['receptor_usuario_id'] as string | null | undefined;
+    if (!receptorId || !salidaId) return;
+    try {
+      await this.supabase.client.rpc('asignar_firma_pendiente', {
+        p_salida_id: salidaId,
+        p_usuario_id: receptorId,
+        p_nombre: (payload['receptor_nombre'] as string | null) ?? null,
+      });
+    } catch {
+      /* best-effort: el conduce ya existe y cualquier autorizado puede confirmar */
+    }
+  }
+
   private async agregarItemsLibresSiHay(salidaId: string, payload: Record<string, unknown>): Promise<void> {
     const libres = (payload['items_libres'] as ItemLibre[] | undefined) ?? [];
     if (!salidaId || !libres.length) return;
@@ -1738,6 +1821,10 @@ export class ConducesService {
           if (ePar) throwSyncError(ePar);
         }
       }
+
+      // AT4 — sumarle la ruta al ayudante (best-effort; id de la ruta = client UUID).
+      const ayudanteId = payload['ayudante_id'] as string | null | undefined;
+      if (ayudanteId) await this.ayudantes.marcar('ruta', rutaId, ayudanteId);
 
       // AC6 — fotos de evidencia inicial → ruta_fotos (momento='inicio'). Insert
       // directo (la RLS permite al creador). Guarda de idempotencia: si ya hay
@@ -1867,6 +1954,7 @@ export class ConducesService {
         p_items: payload['items'],
       });
       if (error) throwSyncError(error);
+      await this.marcarAyudanteConduce(payload, salidaId); // AT4
       // AF23.3 — sella la firma del emisor (quien entrega) al emitir. Idempotente
       // por (salida_id, rol). Best-effort verificado: el outbox reintenta si falla.
       const firmaEmisor = photoPaths['firma_emisor'];
@@ -1936,6 +2024,8 @@ export class ConducesService {
         p_destino_almacen_id: payload['destino_almacen_id'] ?? null, // AL10 (15-arg)
       });
       if (error) throwSyncError(error);
+      await this.marcarAyudanteConduce(payload, salidaId); // AT4
+      await this.dirigirReceptor(payload, salidaId); // AT16
       // AG15 — enlaza la tarea vinculada (idempotente; se autocompleta al entregar).
       const tareaVinc = payload['tarea_vinculada'] as string | null;
       if (tareaVinc) {
@@ -1971,6 +2061,7 @@ export class ConducesService {
         p_firma_despachante_path: photoPaths['firma_despachante'] ?? null,
       });
       if (error) throwSyncError(error);
+      await this.marcarAyudanteConduce(payload, payload['id'] as string); // AT4
       await this.agregarItemsLibresSiHay(payload['id'] as string, payload); // AU4
       await this.catalog.invalidatePrefix('existencias_');
       await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});

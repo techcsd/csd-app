@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { AyudanteService } from './ayudante.service';
 import { CombustibleCaptura, EchadaDetalle, EchadaLog, PrecioCombustibleVigente, UltimaEchada } from '../models/combustible.model';
 import { db } from '../db/app-db';
 
@@ -19,6 +20,7 @@ export class CombustibleService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
+  private ayudantes = inject(AyudanteService); // AT4
 
   constructor() {
     this.registerHandler();
@@ -278,6 +280,7 @@ export class CombustibleService {
         tarjeta: input.tarjeta, // Z23-app
         titular: input.titular, // Z23-app
         titular_es_persona: input.titularEsPersona, // Z23-app
+        ayudante_id: input.ayudanteId ?? null, // AT4
       },
       fotos,
       resumen: {
@@ -318,6 +321,18 @@ export class CombustibleService {
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // AT4 — sumarle la echada al ayudante. registrar_combustible_app NO devuelve
+      // el row id, así que lo resolvemos por client_uuid (echada_id) y marcamos.
+      const ayudanteId = payload['ayudante_id'] as string | null | undefined;
+      if (ayudanteId) {
+        try {
+          const { data: echId } = await this.supabase.client.rpc('echada_id', { p_client_uuid: payload['id'] });
+          if (echId) await this.ayudantes.marcar('echada', echId as string, ayudanteId);
+        } catch {
+          /* best-effort: la echada ya quedó registrada */
+        }
+      }
 
       // P7 — el RPC avanza vehiculos.kilometraje; invalidar caches con km.
       // Z23-app — una echada de persona no toca ningún vehículo: nada que invalidar.

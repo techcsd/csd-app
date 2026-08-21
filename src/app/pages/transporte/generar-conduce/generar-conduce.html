@@ -255,6 +255,14 @@
             <p class="gconduce__sub">🖊️ <b>{{ despachanteNombre() }}</b> firma aquí, en este teléfono, para dejar constancia de la entrega.</p>
             <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
           }
+          <!-- AT16 — ¿quién recibe en la obra? (dirige la confirmación; opcional) -->
+          @if (destinoTipo() === 'obra' && receptorOptions().length) {
+            <label class="field-label gconduce__mt">¿Quién recibe en la obra? <span class="gconduce__opt">(opcional)</span></label>
+            <p class="gconduce__sub">Le llegará el aviso para confirmar la entrega. Cualquier autorizado de la obra puede confirmar igual.</p>
+            <app-collapsible-select label="Receptor" icon="📥" [options]="receptorOptions()" [selectedId]="receptorId()" [searchable]="true" searchPlaceholder="Buscar quién recibe…" (picked)="receptorId.set($event)" />
+          }
+          <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma el conduce al incentivo) -->
+          <app-ayudante-picker (ayudanteChange)="onAyudante($event)" />
         }
 
         <!-- ═══════════ HOJA: RESUMEN ═══════════ -->

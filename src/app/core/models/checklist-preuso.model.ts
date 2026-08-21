@@ -106,6 +106,8 @@ export interface ChecklistCaptura {
   firma: Blob;
   /** Z23 — notas de voz múltiples (opcional). */
   voces?: Blob[];
+  /** AT4 — usuario_id del ayudante (opcional); le suma esta actividad al incentivo. */
+  ayudanteId?: string | null;
   /** Locally-computed verdict, kept for the offline "mis registros" summary. */
   resultado: ChecklistResultado;
 }

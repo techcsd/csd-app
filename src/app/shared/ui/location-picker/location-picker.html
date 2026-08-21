@@ -1,4 +1,34 @@
 <div class="lp">
+  <!-- AT13 — pegar link de Google Maps o coordenadas -->
+  <div class="lp__link">
+    <input
+      type="text"
+      class="field lp__link-input"
+      placeholder="Pega el link de Google Maps o coordenadas"
+      [value]="linkTexto()"
+      (input)="linkTexto.set($any($event.target).value)"
+      (keyup.enter)="fijarLink()"
+      aria-label="Pegar link de Google Maps o coordenadas"
+      inputmode="text"
+      autocapitalize="off"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button
+      type="button"
+      class="btn-cta lp__link-btn"
+      (click)="fijarLink()"
+      [disabled]="resolviendo() || !linkTexto().trim()"
+    >
+      {{ resolviendo() ? 'Resolviendo…' : 'Fijar' }}
+    </button>
+  </div>
+  @if (resolviendo()) {
+    <p class="lp__msg">Resolviendo…</p>
+  } @else if (linkError()) {
+    <p class="lp__msg lp__msg--error">{{ linkError() }}</p>
+  }
+
   <div class="lp__search">
     <input
       type="search"

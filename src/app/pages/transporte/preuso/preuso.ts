@@ -21,6 +21,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
+import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-picker';
+import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto } from '../../../core/services/camera.service';
@@ -110,7 +112,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes, AyudantePicker],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -160,6 +162,9 @@ export class PreusoPage extends GuardedWizard {
   firmaLista = signal(false);
   firmaBlob = signal<Blob | null>(null);
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
+  /** AT4 — usuario_id del ayudante (opcional); le suma la inspección al incentivo. */
+  ayudanteId = signal<string | null>(null);
+  onAyudante = (u: AyudanteUsuario | null): void => this.ayudanteId.set(u?.id ?? null);
   precitaKm = signal(PRECITA_KM); // sgc.flota_config.umbral_precita_km (cargado en loadContext)
 
   submitting = signal(false);
@@ -672,6 +677,7 @@ export class PreusoPage extends GuardedWizard {
         fotos,
         firma: firmaBlob,
         voces: this.voces().map((n) => n.blob),
+        ayudanteId: this.ayudanteId(), // AT4
         resultado: this.veredicto(),
       });
       // M1 — enviado: limpia el borrador (estado + fotos) para no reofrecerlo.

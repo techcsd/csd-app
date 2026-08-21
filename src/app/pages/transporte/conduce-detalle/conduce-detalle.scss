@@ -227,6 +227,14 @@
 }
 
 // AQ10 — zona de eliminación (solo emisor/admin, conduce pendiente)
+// AT10 — zona admin (marcar prueba), mismo patrón que la zona de peligro.
+.cdet__admin {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
 .cdet__peligro {
   margin-top: 20px;
   padding-top: 16px;

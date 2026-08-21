@@ -1,0 +1,267 @@
+.inc {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.inc__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.inc__back {
+  font-size: 22px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-primary);
+  min-width: 40px;
+  min-height: 40px;
+}
+.inc__icon {
+  font-size: 22px;
+}
+.inc__title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+}
+
+// ── Selector de semana ────────────────────────────────────────────────────────
+.inc__semana-sel {
+  padding: 16px 16px 0;
+}
+
+.inc__aviso {
+  margin: 14px 16px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+// ── Acción en bloque ──────────────────────────────────────────────────────────
+.inc__bulk {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 14px 16px 4px;
+  min-height: var(--touch-min);
+  padding: 12px;
+  border: 1px solid var(--color-success);
+  border-radius: var(--radius);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: 16px;
+  font-weight: 800;
+}
+.inc__bulk:disabled {
+  opacity: 0.5;
+}
+
+// ── Listado por chofer ────────────────────────────────────────────────────────
+.inc__list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.inc__row {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  padding: 14px;
+}
+.inc__row--saving {
+  opacity: 0.6;
+}
+
+.inc__row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inc__nombre {
+  flex: 1;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--color-text-primary);
+}
+.inc__flag {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.inc__row-mid {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.inc__pts {
+  font-weight: 900;
+  font-size: 17px;
+  color: var(--color-error);
+}
+.inc__pts--ok {
+  color: var(--color-success);
+}
+
+.inc__badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #fff;
+}
+.inc__badge--ok {
+  background: var(--color-success);
+}
+.inc__badge--bajo {
+  background: var(--color-error);
+}
+
+.inc__dec {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.inc__dec--aprobado {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+.inc__dec--declinado {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.inc__decby {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.inc__motivo {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+// ── Acciones por fila ─────────────────────────────────────────────────────────
+.inc__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.inc__act {
+  flex: 1;
+  min-height: var(--touch-min);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 800;
+}
+.inc__act:disabled {
+  opacity: 0.5;
+}
+.inc__act--aprobar {
+  background: var(--color-success);
+  color: #fff;
+  border: none;
+}
+.inc__act--declinar {
+  background: var(--color-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.inc__nota {
+  margin: 20px 16px 28px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.4;
+}
+
+// ── Modal declinar (motivo obligatorio) ───────────────────────────────────────
+.inc-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(18, 18, 18, 0.55);
+}
+.inc-modal__card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 22px 20px 18px;
+  box-shadow: var(--shadow-lift);
+}
+.inc-modal__title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.inc-modal__msg {
+  margin: 0 0 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+.inc-modal__area {
+  width: 100%;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  padding: 12px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+}
+.inc-modal__area:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+.inc-modal__btn {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 14px;
+  border-radius: var(--radius);
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 10px;
+  border: none;
+}
+.inc-modal__btn:disabled {
+  opacity: 0.5;
+}
+.inc-modal__btn--danger {
+  background: var(--color-error);
+  color: #fff;
+}
+.inc-modal__btn--ghost {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}

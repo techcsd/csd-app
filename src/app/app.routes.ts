@@ -688,6 +688,22 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/actualizar/actualizar').then((m) => m.ActualizarPage),
   },
   {
+    // AT2 — "Mi rendimiento" del chofer (informe de incentivo propio). Sin
+    // moduleGuard: todo usuario ve SOLO lo suyo (la RLS del RPC filtra por
+    // auth.uid()). Destino de la push del lunes (ruta '/mi-rendimiento').
+    path: 'mi-rendimiento',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/mi-rendimiento/mi-rendimiento').then((m) => m.MiRendimientoPage),
+  },
+  {
+    // AT3 — "Gestión del incentivo" (logística/gerencia/admin): aprobar/declinar el
+    // incentivo de cada chofer. Sin moduleGuard: la página se auto-gatea con
+    // puede_gestionar_incentivos() (quien no tenga permiso ve "Sin acceso").
+    path: 'incentivos',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/incentivos/incentivos').then((m) => m.IncentivosPage),
+  },
+  {
     path: 'perfil',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilPage),

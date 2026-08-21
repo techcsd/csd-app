@@ -233,6 +233,8 @@ export interface CombustibleCaptura {
   fotoBomba: Blob | null; // Y4 — bomba/estación en 0
   fotoEvidencia: Blob | null; // AC11 — evidencia del equipo/garrafón (depósito en obra)
   placa: string;
+  /** AT4 — usuario_id del ayudante (opcional); le suma la echada al incentivo. */
+  ayudanteId?: string | null;
 }
 
 /** AA20 — precio oficial vigente por producto canónico (referencia/widget). */

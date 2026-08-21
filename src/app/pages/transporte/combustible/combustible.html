@@ -413,6 +413,8 @@
             <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
           }
         </ul>
+        <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma la echada al incentivo) -->
+        <app-ayudante-picker (ayudanteChange)="onAyudante($event)" />
       }
     </div>
 

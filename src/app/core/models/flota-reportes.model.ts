@@ -138,6 +138,9 @@ export interface ChecklistDetalle {
   id: string;
   tipo: string; // pre_uso | inspeccion
   fecha: string | null;
+  /** AT22 — momento exacto de captura/registro (para fecha+hora en el detalle). */
+  capturado_en?: string | null;
+  created_at?: string | null;
   resultado: string | null;
   kilometraje: number | null;
   nivel_combustible: string | null;
@@ -153,6 +156,8 @@ export interface ChecklistDetalle {
 export interface EchadaDetalle {
   id: string;
   fecha: string | null;
+  /** AT22 — momento exacto del registro (para fecha+hora en el detalle). */
+  created_at?: string | null;
   kilometraje: number | null;
   km_anterior: number | null;
   km_recorridos: number | null;

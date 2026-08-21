@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.94.0';
+const VERSION = '1.95.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,17 +59,26 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-19';
+const RELEASED_AT = '2026-08-21';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Requisiciones gestionables + crear artículos con fotos';
+const TITULO = 'Incentivo por uso de la app + cámara iPhone + receptor de conduce';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Requisiciones', d: 'Los encargados ahora pueden APROBAR (eligiendo el almacén de despacho) o RECHAZAR una requisición directamente desde la app; el faltante genera la compra automáticamente.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Crea artículos nuevos desde la app con código automático, eligiendo (o creando) categoría y unidad, y con VARIAS fotos (la primera es la portada).' },
-  { t: 'mejora', m: 'Inventario', d: 'En un artículo puedes gestionar sus fotos: agregar varias, elegir cuál es la portada y quitar las que no van.' },
+  { t: 'arreglo', m: 'Cámara', d: 'Arreglada la cámara en iPhone (PWA): antes pedía permiso y no abría. Ahora abre bien y, si no, hay un botón de ayuda y la opción de subir la foto para no quedarte trancado.' },
+  { t: 'nuevo', m: 'Incentivo', d: 'Nueva pantalla "Mi rendimiento": cada chofer ve su puntaje de la semana (reporte, inspecciones, echadas, rutas y conduces), si cumplió el mínimo y el detalle de cada actividad.' },
+  { t: 'nuevo', m: 'Incentivo', d: 'Al crear ruta, conduce, echada o inspección puedes indicar si vas con un AYUDANTE, para que esa actividad también le cuente a él.' },
+  { t: 'nuevo', m: 'Incentivo', d: 'Logística y gerencia pueden APROBAR o DECLINAR (con motivo) el incentivo de cada chofer por semana, con "aprobar todos los que cumplieron".' },
+  { t: 'nuevo', m: 'Conduces', d: 'Al entregar un conduce a una obra puedes elegir QUIÉN lo recibe; a esa persona le llega el aviso para confirmar (cualquier autorizado de la obra también puede).' },
+  { t: 'nuevo', m: 'Rutas', d: 'Al crear una ruta puedes PEGAR el link de Google Maps (o coordenadas) y el mapa ubica y fija el punto solo, para que confirmes.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Puedes DECLINAR un material no catalogado (no hace falta, ya existe o duplicado): sale de la bandeja y se avisa a quien lo reportó.' },
+  { t: 'nuevo', m: 'Inventario', d: 'El administrador puede hacer un "Ajuste real" del stock de un almacén (fija el valor real) sin generar un movimiento ni un salto en la gráfica.' },
+  { t: 'nuevo', m: 'Avisos', d: 'Ahora puedes silenciar por categoría los avisos que no te aportan, desde el engranaje de la pantalla de Avisos.' },
+  { t: 'mejora', m: 'Inventario', d: 'Los vehículos y datos de PRUEBA ya no aparecen en los selectores ni listados a usuarios normales (solo el administrador, con el interruptor de datos de prueba).' },
+  { t: 'mejora', m: 'General', d: 'Los detalles ahora muestran fecha Y hora exacta; las rutas nuevas salen primero.' },
+  { t: 'seguridad', m: 'Conduces', d: 'El administrador puede marcar un conduce como PRUEBA para que no cuente en inventario, avisos ni KPIs.' },
 ];
 
 const TIPO_POR_COMMIT = {

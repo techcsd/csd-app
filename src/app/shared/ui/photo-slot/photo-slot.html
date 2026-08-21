@@ -21,5 +21,37 @@
         </button>
       }
     </div>
+    <!-- AT9 — ayuda/fallback en web (PWA/iOS): la cámara puede no abrir por permisos. -->
+    @if (esWeb) {
+      <button type="button" class="photo-slot__help" (click)="abrirAyuda()" [disabled]="busy()">
+        ¿No abre la cámara?
+      </button>
+    }
   </div>
 }
+
+<!-- AT9 — hoja de ayuda de permisos de cámara (iOS/PWA) + fallback "Subir foto" -->
+<app-bottom-sheet [open]="ayudaAbierta()" titulo="¿No abre la cámara?" (closed)="cerrarAyuda()">
+  <div class="cam-ayuda">
+    @if (esIOS) {
+      <p class="cam-ayuda__intro">
+        En iPhone/iPad la cámara se abre desde el sistema. Si te pide permiso y no abre,
+        actívalo así:
+      </p>
+      <ol class="cam-ayuda__pasos">
+        <li>Abre <b>Ajustes</b> del iPhone.</li>
+        <li>Busca <b>Safari</b> → <b>Cámara</b> y ponlo en <b>Permitir</b>.</li>
+        <li>Si usas la app desde la pantalla de inicio, ciérrala y vuelve a abrirla.</li>
+      </ol>
+    } @else {
+      <p class="cam-ayuda__intro">
+        Revisa que le hayas dado permiso de <b>cámara</b> a este sitio en los ajustes del
+        navegador. Mientras tanto, puedes subir una foto:
+      </p>
+    }
+    <p class="cam-ayuda__intro">¿Sigue sin abrir? Sube la foto desde tu teléfono:</p>
+    <button type="button" class="photo-slot__cta photo-slot__cta--primary" (click)="subirFoto()" [disabled]="busy()">
+      ⬆️ Subir foto
+    </button>
+  </div>
+</app-bottom-sheet>

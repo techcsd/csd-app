@@ -20,6 +20,8 @@ import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-picker';
+import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { Img } from '../../../shared/ui/img/img';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
@@ -69,7 +71,7 @@ type CombStep = 'bomba' | 'digits' | 'fotos' | 'detalles' | 'estacion' | 'revisa
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput, AyudantePicker],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -177,6 +179,9 @@ export class CombustiblePage extends GuardedWizard {
   done = signal(false);
   /** Snapshot of the live calc shown on the confirmation screen. */
   resultado = signal<CombustibleCalculo | null>(null);
+  /** AT4 — usuario_id del ayudante (opcional); le suma la echada al incentivo. */
+  ayudanteId = signal<string | null>(null);
+  onAyudante = (u: AyudanteUsuario | null): void => this.ayudanteId.set(u?.id ?? null);
 
   /** AD7 — banda de estado del rendimiento en la confirmación (preview local). */
   estadoBand = computed<{ meta: RendimientoEstadoMeta; motivo: string } | null>(() => {
@@ -527,6 +532,7 @@ export class CombustiblePage extends GuardedWizard {
         fotoBomba: deposito ? null : this.fotoBomba()!.blob,
         fotoEvidencia: deposito ? this.fotoEvidencia()!.blob : null,
         placa: persona ? '' : this.placa(),
+        ayudanteId: this.ayudanteId(), // AT4
       });
       this.resultado.set(this.calc());
       this.done.set(true);

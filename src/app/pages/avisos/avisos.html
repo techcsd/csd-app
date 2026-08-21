@@ -6,6 +6,8 @@
     @if (hayNoLeidos) {
       <button type="button" class="avisos__todas" (click)="marcarTodas()">Marcar leídos</button>
     }
+    <!-- AT23 — preferencias: silenciar categorías informativas -->
+    <button type="button" class="avisos__refresh" (click)="abrirPrefs()" aria-label="Preferencias de avisos">⚙️</button>
     <button type="button" class="avisos__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
   </header>
 
@@ -61,4 +63,14 @@
     (confirmed)="borrarTodas()"
     (cancelled)="cancelarBorrarTodas()"
   />
+
+  <!-- AT23 — hoja de preferencias de avisos (silenciar categorías informativas) -->
+  <app-bottom-sheet [open]="prefsAbierto()" titulo="Preferencias de avisos" (closed)="cerrarPrefs()">
+    <div class="avisos-prefs">
+      <p class="avisos-prefs__intro">Elige qué avisos quieres recibir en la app. Los que apagues dejan de aparecer aquí (no afectan a los demás).</p>
+      @for (c of categorias; track c.tipo) {
+        <app-toggle-switch [checked]="recibe(c.tipo)" [label]="c.label" (checkedChange)="onTogglePref(c.tipo, $event)" />
+      }
+    </div>
+  </app-bottom-sheet>
 </div>

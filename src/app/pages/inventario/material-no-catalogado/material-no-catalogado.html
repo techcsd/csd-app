@@ -32,6 +32,21 @@
           </div>
           @if (m.articulo_vinculado_id) {
             <div class="mnc__linked">✓ Vinculado a: {{ m.articulo_vinculado || 'artículo' }}</div>
+          } @else {
+            <!-- AT11 — declinar: no hace falta crear el artículo / ya existe / duplicado -->
+            <div class="mnc__acciones">
+              <button type="button" class="mnc__declinar" (click)="toggleDeclinar(m.id)">
+                {{ declinandoId() === m.id ? 'Cancelar' : '✕ Declinar' }}
+              </button>
+            </div>
+            @if (declinandoId() === m.id) {
+              <div class="mnc__motivos">
+                <p class="mnc__motivos-h">¿Por qué se declina?</p>
+                @for (mo of motivos; track mo) {
+                  <button type="button" class="mnc__motivo" [disabled]="enviandoDeclina()" (click)="declinar(m, mo)">{{ mo }}</button>
+                }
+              </div>
+            }
           }
         </div>
       }

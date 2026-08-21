@@ -4,6 +4,28 @@
   gap: 8px;
 }
 
+// AT13 — fila de pegar link (input + botón Fijar)
+.lp__link {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.lp__link-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lp__link-btn {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 56px;
+  padding: 0 20px;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
 .lp__search {
   position: relative;
 }

@@ -41,6 +41,23 @@
                 </span>
               </button>
               <button type="button" class="inv-row__kardex" (click)="verKardex(it)" aria-label="Ver histórico de movimientos">📊 Histórico</button>
+              <!-- AT12 — Ajuste real (solo admin): rebase de la línea base sin movimiento. -->
+              @if (esAdmin()) {
+                <button type="button" class="inv-row__ajuste" (click)="toggleAjuste(it)">
+                  {{ ajusteId() === it.articulo_id ? 'Cancelar' : '⚖️ Ajuste real' }}
+                </button>
+                @if (ajusteId() === it.articulo_id) {
+                  <div class="inv-row__ajuste-panel">
+                    <p class="inv-row__ajuste-hint">Fija el stock real informado. No genera movimiento ni escalón en la gráfica.</p>
+                    <div class="inv-row__ajuste-row">
+                      <input class="field" type="number" inputmode="decimal" min="0" [ngModel]="ajusteValor()" (ngModelChange)="ajusteValor.set($event)" placeholder="Cantidad real" />
+                      <button type="button" class="btn-cta" [disabled]="ajustando()" (click)="guardarAjuste(it)">
+                        {{ ajustando() ? 'Guardando…' : 'Guardar' }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
             </div>
           } @empty {
             <p class="almacen-inv__muted">

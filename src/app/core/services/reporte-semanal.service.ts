@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta, AUDIO_BUCKET_FLOTA } from './audio-notas.service';
+import { AyudanteService } from './ayudante.service';
 import { ChecklistPlantilla } from '../models/checklist-preuso.model';
 import {
   FOTOS_SEMANAL_FALLBACK,
@@ -30,6 +31,7 @@ export class ReporteSemanalService {
   private catalog = inject(CatalogService);
   private sync = inject(SyncService);
   private audioNotas = inject(AudioNotasService);
+  private ayudantes = inject(AyudanteService); // AT4
 
   constructor() {
     this.registerHandler();
@@ -245,6 +247,7 @@ export class ReporteSemanalService {
         observacion: input.observacion,
         respuestas,
         audios: audio.audios, // Z23
+        ayudante_id: input.ayudanteId ?? null, // AT4
       },
       fotos,
       resumen: {
@@ -314,6 +317,12 @@ export class ReporteSemanalService {
         p_nivel_combustible: payload['nivel_combustible'] ?? null,
       });
       if (error) throwSyncError(error);
+
+      // AT4 — si el chofer marcó un ayudante, sumarle esta actividad (best-effort:
+      // la actividad ya quedó creada con el mismo id = client UUID). El reporte
+      // semanal se guarda como checklist, así que el titular se resuelve igual.
+      const ayudanteId = payload['ayudante_id'] as string | null | undefined;
+      if (ayudanteId) await this.ayudantes.marcar('reporte_semanal', payload['id'] as string, ayudanteId);
 
       // Z23 — registrar las notas de voz (idempotente por path).
       await this.audioNotas.commit(

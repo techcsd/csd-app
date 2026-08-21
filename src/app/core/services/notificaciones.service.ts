@@ -42,7 +42,50 @@ export class NotificacionesService {
   private _lastTipo = signal<string | null>(null);
   lastTipo = this._lastTipo.asReadonly();
 
-  /** Últimos avisos del usuario (no leídos primero). Online. */
+  // AT23 — tipos de aviso que el usuario silenció (se ocultan de la bandeja Y del
+  // badge, solo para él; no cambia a quién le llega el evento). Cache en memoria.
+  private _silenced = signal<Set<string>>(new Set());
+  private prefsCargadas = false;
+
+  /** AT23 — carga (una vez) los tipos silenciados del usuario. Best-effort. */
+  private async ensurePrefs(): Promise<Set<string>> {
+    if (this.prefsCargadas) return this._silenced();
+    try {
+      const { data } = await this.supabase.client.rpc('mis_notif_prefs');
+      const s = new Set<string>();
+      for (const r of (data as { tipo: string; silenciado: boolean }[]) ?? []) {
+        if (r.silenciado) s.add(r.tipo);
+      }
+      this._silenced.set(s);
+    } catch {
+      /* best-effort: sin prefs, no se silencia nada */
+    }
+    this.prefsCargadas = true;
+    return this._silenced();
+  }
+
+  /** AT23 — todas las preferencias del usuario (para la pantalla de ajustes). */
+  async misNotifPrefs(): Promise<{ tipo: string; silenciado: boolean }[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_notif_prefs');
+    if (error) throw new Error(error.message);
+    return (data as { tipo: string; silenciado: boolean }[]) ?? [];
+  }
+
+  /** AT23 — silencia/reactiva un tipo; actualiza la cache y el badge. */
+  async setNotifPref(tipo: string, silenciado: boolean): Promise<void> {
+    const { error } = await this.supabase.client.rpc('set_notif_pref', { p_tipo: tipo, p_silenciado: silenciado });
+    if (error) throw new Error(error.message);
+    this._silenced.update((s) => {
+      const next = new Set(s);
+      if (silenciado) next.add(tipo);
+      else next.delete(tipo);
+      return next;
+    });
+    this.prefsCargadas = true;
+    void this.refreshNoLeidas();
+  }
+
+  /** Últimos avisos del usuario (no leídos primero). Online. AT23 — oculta los silenciados. */
   async getMisNotificaciones(limit = 50): Promise<Notificacion[]> {
     const { data, error } = await this.supabase.client
       .from('notificaciones')
@@ -51,17 +94,21 @@ export class NotificacionesService {
       .order('created_at', { ascending: false })
       .limit(limit);
     if (error) throw new Error(error.message);
-    const list = (data as Notificacion[]) ?? [];
+    const silenced = await this.ensurePrefs();
+    const list = ((data as Notificacion[]) ?? []).filter((n) => !silenced.has(n.tipo)); // AT23
     this._noLeidas.set(list.filter((n) => !n.leida).length);
     return list;
   }
 
-  /** Cuenta de no leídos (para el badge). Best-effort. */
+  /** Cuenta de no leídos (para el badge). Best-effort. AT23 — excluye los silenciados. */
   async refreshNoLeidas(): Promise<void> {
-    const { count, error } = await this.supabase.client
+    const silenced = await this.ensurePrefs();
+    let query = this.supabase.client
       .from('notificaciones')
       .select('id', { count: 'exact', head: true })
       .eq('leida', false);
+    if (silenced.size) query = query.not('tipo', 'in', `(${[...silenced].join(',')})`); // AT23
+    const { count, error } = await query;
     if (!error) this._noLeidas.set(count ?? 0);
   }
 

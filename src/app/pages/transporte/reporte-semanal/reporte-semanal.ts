@@ -16,6 +16,8 @@ import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
+import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-picker';
+import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -103,7 +105,7 @@ interface ReporteSemanalDraft {
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes, DraftBanner],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes, DraftBanner, AyudantePicker],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })
@@ -182,6 +184,9 @@ export class ReporteSemanalPage extends GuardedWizard {
   firmaLista = signal(false);
   firmaBlob = signal<Blob | null>(null);
   observacion = signal('');
+  /** AT4 — usuario_id del ayudante (opcional); le suma la actividad al incentivo. */
+  ayudanteId = signal<string | null>(null);
+  onAyudante = (u: AyudanteUsuario | null): void => this.ayudanteId.set(u?.id ?? null);
   submitting = signal(false);
   done = signal(false);
   resultadoEnviado = signal<'aprobado' | 'con_hallazgos' | 'bloqueado'>('aprobado');
@@ -746,6 +751,7 @@ export class ReporteSemanalPage extends GuardedWizard {
         fotos,
         firma: this.firmaBlob(),
         voces: this.voces().map((n) => n.blob),
+        ayudanteId: this.ayudanteId(), // AT4
         resultado,
       });
       // AE9 — enviado: limpia el borrador (estado + fotos) para no reofrecerlo.

@@ -563,6 +563,37 @@ export class InventarioService {
     return (data as MaterialNoCatalogado[]) ?? [];
   }
 
+  /**
+   * AT11 — DECLINAR un material no catalogado (no hace falta crear el artículo, ya
+   * existe, duplicado…). Lo saca de la bandeja → historial, con motivo, y notifica
+   * a quien lo reportó. `sugeridoArticuloId` opcional (cuando el motivo es "ya existe").
+   */
+  async declinarItemLibre(itemLibreId: string, motivo: string, sugeridoArticuloId: string | null = null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('declinar_item_libre', {
+      p_item_libre_id: itemLibreId,
+      p_motivo: motivo,
+      p_sugerido_articulo_id: sugeridoArticuloId,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /**
+   * AT12 — "Ajuste real": fija el stock de un artículo/almacén al valor REAL
+   * informado, SIN generar un movimiento en el kardex ni un escalón en la gráfica
+   * (rebase de la línea base; hermano de AP5). Solo admin — el RPC lo revalida
+   * server-side. Online. Invalida la caché del inventario del almacén.
+   */
+  async ajusteRealStock(articuloId: string, bodegaId: string, cantidadReal: number): Promise<void> {
+    const { error } = await this.supabase.client.rpc('ajuste_real_stock', {
+      p_articulo_id: articuloId,
+      p_bodega_id: bodegaId,
+      p_cantidad_real: cantidadReal,
+    });
+    if (error) throw new Error(error.message);
+    void this.catalog.invalidate(`inv_almacen_${bodegaId}_all`).catch(() => {});
+    void this.catalog.invalidate(`inv_almacen_${bodegaId}_nz`).catch(() => {});
+  }
+
   async getExistencias(bodegaId: string): Promise<Existencia[]> {
     // Z18/Z16/Z17: bumped key a _v3 para traer categoria_id + propiedad + imagen_url.
     const key = `existencias_v3_${bodegaId}`;

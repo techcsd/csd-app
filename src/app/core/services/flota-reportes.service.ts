@@ -305,7 +305,7 @@ export class FlotaReportesService {
     const { data, error } = await this.supabase.client
       .from('checklists_vehiculo')
       .select(
-        'id, tipo, fecha, resultado, kilometraje, nivel_combustible, observaciones, firma_path, ' +
+        'id, tipo, fecha, capturado_en, created_at, resultado, kilometraje, nivel_combustible, observaciones, firma_path, ' +
           'vehiculo:vehiculos(placa, marca, modelo), conductor:conductores(nombre), ' +
           'respuestas:checklist_vehiculo_respuestas(etiqueta, seccion, es_critico, respuesta, comentario, orden), ' +
           'fotos:checklist_vehiculo_fotos(slot, storage_path)',
@@ -314,7 +314,8 @@ export class FlotaReportesService {
       .maybeSingle();
     if (error || !data) return null;
     const row = data as unknown as {
-      id: string; tipo: string; fecha: string | null; resultado: string | null;
+      id: string; tipo: string; fecha: string | null; capturado_en: string | null; created_at: string | null;
+      resultado: string | null;
       kilometraje: number | null; nivel_combustible: string | null; observaciones: string | null;
       firma_path: string | null;
       vehiculo?: { placa: string; marca?: string; modelo?: string } | null;
@@ -331,7 +332,9 @@ export class FlotaReportesService {
     ).filter((f): f is { slot: string; url: string } => !!f.url);
     const firmaUrl = await this.signedVehiculos(row.firma_path);
     return {
-      id: row.id, tipo: row.tipo, fecha: row.fecha, resultado: row.resultado,
+      id: row.id, tipo: row.tipo, fecha: row.fecha,
+      capturado_en: row.capturado_en, created_at: row.created_at, // AT22
+      resultado: row.resultado,
       kilometraje: row.kilometraje, nivel_combustible: row.nivel_combustible,
       observaciones: row.observaciones, vehiculo: row.vehiculo ?? null, conductor: row.conductor ?? null,
       respuestas, fotos, firmaUrl,
@@ -344,7 +347,7 @@ export class FlotaReportesService {
     const { data, error } = await this.supabase.client
       .from('registros_combustible')
       .select(
-        'id, fecha, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, ' +
+        'id, fecha, created_at, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, ' +
           'costo_por_km, rendimiento_km_gal, alerta_consumo, estado, motivo_alerta, estacion, notas, ' +
           'foto_recibo_path, foto_tablero_path, vehiculo:vehiculos(placa, marca)',
       )

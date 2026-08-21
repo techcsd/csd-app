@@ -9,7 +9,7 @@ import { AudioNotasService, AudioEntidadTipo } from '../../../core/services/audi
 import { ChecklistDetalle, EchadaDetalle, MultaDetalle } from '../../../core/models/flota-reportes.model';
 import { RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta } from '../../../core/models/combustible.model';
 import { nivelCombustibleLabel } from '../../../core/models/transporte.model';
-import { formatFecha } from '../../../core/util/fecha';
+import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 
 /**
  * V2 (follow-up) — detalle de solo lectura de un registro del historial de "Mi
@@ -47,6 +47,7 @@ export class MiRegistroDetallePage {
   // Z23/AA22 — notas de voz: URL firmada + transcripción automática (si existe).
   audios = signal<{ url: string; transcripcion: string | null; estado: string | null }[]>([]);
   fmtFecha = formatFecha;
+  fmtFechaHora = formatFechaHumana; // AT22 — fecha + hora exacta en el detalle
 
   esChecklist = computed(() => this.tipo === 'checklist');
   esMulta = computed(() => this.tipo === 'multa');

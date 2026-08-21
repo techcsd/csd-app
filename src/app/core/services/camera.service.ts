@@ -73,26 +73,66 @@ export class CameraService {
     return Capacitor.isNativePlatform();
   }
 
+  /** AT9 — ¿PWA sobre iOS (Safari/WKWebView)? La cámara aquí es terreno de
+   *  `<input capture>`, no de la cámara nativa de Capacitor. */
+  get isIOSWeb(): boolean {
+    if (this.isNative) return false;
+    const ua = navigator.userAgent || '';
+    // iPadOS 13+ se presenta como "Macintosh" pero con pantalla táctil.
+    return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+  }
+
   async takePhoto(): Promise<CapturedPhoto | null> {
-    // X4 — punto único para TODAS las capturas de cámara (photo-slot, doc-slot,
-    // foto de documento). Antes de abrir la cámara aseguramos el permiso con su
-    // explicación; si falta y el usuario no lo concede, degradamos a null (sin
-    // crash ni spinner colgado) y la tarjeta ya le indicó cómo activarlo. El
-    // plugin nativo gestiona su propio prompt del SO, así que no hay doble prompt
-    // (AA16): el gate solo garantiza el permiso una vez.
+    // AT9 — PWA/iOS y web en general: NO pasamos por la puerta de permisos.
+    // `<input type=file capture>` usa el permiso de cámara DEL SISTEMA (el que
+    // pide iOS al abrir su cámara), no el permiso de sitio de Safari — y sondear
+    // con getUserMedia (lo que hacía la puerta) es (a) innecesario para el input
+    // capture y (b) DESTRUYE el gesto de usuario que iOS exige para que
+    // `input.click()` abra la cámara. Esa era la causa de "pide permiso pero
+    // nunca abre". Por eso el camino web abre el input DE FORMA SÍNCRONA, sin
+    // ningún `await` previo (takeWeb() se invoca síncrono dentro del executor de
+    // su Promise). El llamador (photo-slot) tampoco debe `await` nada antes.
+    if (!this.isNative) {
+      try {
+        const raw = await this.takeWeb();
+        if (!raw) return null;
+        const blob = await this.compress(raw);
+        return { blob, previewUrl: URL.createObjectURL(blob) };
+      } catch (e) {
+        if (!this.isCancel(e)) await this.handleCameraFailure(e, 'takePhoto');
+        return null;
+      }
+    }
+    // X4 — nativo (Android): aseguramos el permiso con su explicación; si falta y
+    // el usuario no lo concede, degradamos a null (sin crash ni spinner colgado).
+    // El plugin nativo gestiona su propio prompt del SO (sin doble prompt, AA16).
     if (!(await this.gate.asegurar('camera'))) return null;
-    // AE7 — cámara NATIVA del sistema: abrimos la app de cámara del teléfono
-    // (Capacitor Camera, `source: CameraSource.Camera`) en lugar de la cámara
-    // EMBEBIDA (overlay getUserMedia) que usábamos antes. La cámara del sistema
+    // AE7 — cámara NATIVA del sistema (Capacitor Camera, `CameraSource.Camera`):
     // es la que espera el usuario y resuelve el caso del OUKITEL de Y5, donde
-    // getUserMedia del WebView fallaba. En PWA cae al <input capture> (takeWeb).
-    // M1 — blindaje total: una excepción aquí (permiso, plugin) jamás debe tumbar
-    // el wizard; ante cualquier fallo real avisamos con causa+acción y lo
-    // reportamos (Y5/Y6), y devolvemos null. Cancelar no reporta.
+    // getUserMedia del WebView fallaba. M1 — blindaje total: cualquier fallo real
+    // avisa con causa+acción y se reporta (Y5/Y6), devolviendo null. Cancelar no reporta.
     try {
       return await this.takeConSistema();
     } catch (e) {
       if (!this.isCancel(e)) await this.handleCameraFailure(e, 'takePhoto');
+      return null;
+    }
+  }
+
+  /**
+   * AT9 — fallback explícito "Subir foto" para iOS/PWA cuando la cámara no abre:
+   * abre el selector de archivos SIN `capture`, así el usuario puede elegir una
+   * foto de su carrete (o sacarla desde la hoja del sistema). Nunca lo dejamos
+   * sin poder completar el checklist. Devuelve la foto comprimida o null.
+   */
+  async pickSingleFile(): Promise<CapturedPhoto | null> {
+    try {
+      const raw = await this.pickWebSingle();
+      if (!raw) return null;
+      const blob = await this.compress(raw);
+      return { blob, previewUrl: URL.createObjectURL(blob) };
+    } catch (e) {
+      if (!this.isCancel(e)) await this.handleCameraFailure(e, 'pickSingleFile');
       return null;
     }
   }
@@ -308,14 +348,58 @@ export class CameraService {
   }
 
   private takeWeb(): Promise<Blob | null> {
+    return this.openFileInput(true);
+  }
+
+  /** AT9 — selector de archivo SIN `capture` (fallback "Subir foto" en iOS). */
+  private pickWebSingle(): Promise<Blob | null> {
+    return this.openFileInput(false);
+  }
+
+  /**
+   * AT9 — abre un `<input type=file>` de una sola imagen de forma robusta en iOS:
+   *  - `capture='environment'` cuando `withCapture` (abre la cámara del sistema);
+   *  - se ADJUNTA al DOM (algunos WebView de iOS ignoran el click de un input
+   *    huérfano) y se limpia al terminar;
+   *  - detecta la cancelación (evento `cancel` + reenfoque de la ventana) para
+   *    que el slot no quede colgado en "⏳" si el usuario cierra la cámara sin
+   *    tomar la foto (antes la promesa nunca resolvía → botón trabado).
+   * IMPORTANTE: el executor de `new Promise` corre síncrono, así que `click()`
+   * se dispara dentro del gesto de usuario (requisito de iOS). No añadir `await`
+   * antes de llamar a este método.
+   */
+  private openFileInput(withCapture: boolean): Promise<Blob | null> {
     return new Promise((resolve) => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
-      input.setAttribute('capture', 'environment');
-      input.onchange = () => resolve(input.files?.[0] ?? null);
-      // If the user cancels the picker there is no reliable event; the promise
-      // simply never resolves for that attempt, which is fine (no photo added).
+      if (withCapture) input.setAttribute('capture', 'environment');
+      input.style.position = 'fixed';
+      input.style.left = '-9999px';
+      input.style.opacity = '0';
+
+      let settled = false;
+      const done = (b: Blob | null) => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener('focus', onFocus);
+        input.remove();
+        resolve(b);
+      };
+      const onFocus = () => {
+        // Al volver el foco a la ventana (la cámara/selector se cerró), damos un
+        // margen a `change` para ganar; si no llegó archivo, fue cancelación.
+        setTimeout(() => {
+          if (!input.files || input.files.length === 0) done(null);
+        }, 1200);
+      };
+
+      input.onchange = () => done(input.files?.[0] ?? null);
+      // `cancel` es moderno (Chromium/Safari recientes); el reenfoque cubre el resto.
+      input.addEventListener('cancel', () => done(null));
+      window.addEventListener('focus', onFocus);
+
+      document.body.appendChild(input);
       input.click();
     });
   }

@@ -1,0 +1,295 @@
+.mirend {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mirend__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.mirend__back,
+.mirend__refresh {
+  font-size: 22px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-primary);
+  min-width: 40px;
+  min-height: 40px;
+}
+.mirend__icon {
+  font-size: 22px;
+}
+.mirend__title {
+  flex: 1;
+  font-size: 18px;
+  font-weight: 800;
+  margin: 0;
+}
+
+// ── Semana en curso ─────────────────────────────────────────────────────────
+.mirend__actual {
+  margin: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  text-align: center;
+}
+.mirend__actual--ok {
+  border-color: var(--color-success);
+}
+.mirend__actual--bajo {
+  border-color: var(--color-danger, #e5484d);
+}
+
+.mirend__semana {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0 0 10px;
+}
+
+.mirend__badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+}
+.mirend__badge--ok {
+  background: var(--color-success);
+}
+.mirend__badge--bajo {
+  background: var(--color-danger, #e5484d);
+}
+
+.mirend__puntaje {
+  margin: 14px 0 8px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+}
+.mirend__puntaje-num {
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--color-text-primary);
+}
+.mirend__puntaje-de {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+
+.mirend__barra {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+.mirend__barra-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-danger, #e5484d);
+  transition: width 0.3s ease;
+}
+.mirend__barra-fill--ok {
+  background: var(--color-success);
+}
+
+.mirend__faltan {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+// ── Desglose ────────────────────────────────────────────────────────────────
+.mirend__sec {
+  margin: 22px 16px 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.mirend__renglones {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mirend__renglon {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  padding: 12px 14px;
+}
+.mirend__renglon-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--color-text-primary);
+  text-align: left;
+}
+.mirend__renglon-head:disabled {
+  opacity: 1;
+}
+.mirend__renglon-ico {
+  font-size: 20px;
+}
+.mirend__renglon-label {
+  flex: 1;
+  font-weight: 700;
+  font-size: 15px;
+}
+.mirend__renglon-pts {
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.mirend__renglon-caret {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.mirend__renglon-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.mirend__ayud {
+  color: var(--color-primary);
+}
+
+.mirend__refs {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px dashed var(--color-border);
+  padding-top: 10px;
+}
+.mirend__ref {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  padding: 6px 4px;
+}
+.mirend__ref--link {
+  color: var(--color-text-primary);
+}
+.mirend__ref-fecha {
+  flex: 1;
+}
+.mirend__ref-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.mirend__ref-go {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+// ── Decisión + histórico ────────────────────────────────────────────────────
+.mirend__decision {
+  margin: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+.mirend__decision--aprobado {
+  border-color: var(--color-success);
+}
+.mirend__decision--declinado {
+  border-color: var(--color-danger, #e5484d);
+}
+.mirend__decision-fecha {
+  color: var(--color-text-secondary);
+}
+.mirend__decision-motivo {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.mirend__hist {
+  list-style: none;
+  margin: 0;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mirend__hist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+.mirend__hist-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.mirend__hist-semana {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+.mirend__hist-rango {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.mirend__hist-pts {
+  font-weight: 800;
+  color: var(--color-danger, #e5484d);
+}
+.mirend__hist-pts--ok {
+  color: var(--color-success);
+}
+.mirend__hist-dec {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.mirend__hist-dec--aprobado {
+  color: var(--color-success);
+  border-color: var(--color-success);
+}
+.mirend__hist-dec--declinado {
+  color: var(--color-danger, #e5484d);
+  border-color: var(--color-danger, #e5484d);
+}
+
+.mirend__nota {
+  margin: 20px 16px 28px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  text-align: center;
+  line-height: 1.4;
+}

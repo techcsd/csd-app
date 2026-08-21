@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { ToggleSwitch } from '../../../shared/ui/toggle-switch/toggle-switch';
 import { VehiculosService, VehiculoEnUso } from '../../../core/services/vehiculos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
@@ -15,7 +16,7 @@ import { formatFechaCortaHora } from '../../../core/util/fecha';
   selector: 'app-vehiculos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, VehiculoCard, EmptyState, Skeleton],
+  imports: [FormsModule, VehiculoCard, EmptyState, Skeleton, ToggleSwitch],
   templateUrl: './vehiculos.html',
   styleUrl: './vehiculos.scss',
 })
@@ -26,6 +27,8 @@ export class VehiculosListaPage {
   private location = inject(Location);
 
   esAdmin = () => this.ctx.hasModulo('admin');
+  // AT14 — el toggle "Mostrar datos de prueba" es un privilegio del rol admin (W7).
+  esAdminRol = () => this.ctx.esAdmin();
   esFlotaElevado = this.ctx.esFlotaElevado; // AT10 — panel "en uso" solo supervisores
 
   ident = vehiculoIdentidad; // AT9
@@ -36,14 +39,34 @@ export class VehiculosListaPage {
   fotoUrls = signal<Record<string, string>>({});
   query = signal('');
 
+  // AT14 — mostrar datos de prueba. Solo tiene efecto para el admin (rol); un
+  // no-admin nunca ve filas `es_prueba` sin importar este valor.
+  mostrarPrueba = signal(false);
+
   // AT10 — panel "Vehículos en uso" (colapsable).
   enUso = signal<VehiculoEnUso[]>([]);
   enUsoAbierto = signal(false);
 
+  // AT14 — flota visible: oculta los `es_prueba` salvo que un admin los revele.
+  private todosVisible = computed(() =>
+    this.esAdminRol() && this.mostrarPrueba()
+      ? this.todos()
+      : this.todos().filter((v) => !v.es_prueba),
+  );
+
+  // AT14 — panel "En uso" visible. El RPC `vehiculos_en_uso` ya oculta los
+  // `es_prueba` a los no-admins server-side, pero NO devuelve la columna, así que
+  // el admin no puede ocultarlos aquí con el toggle (ver TODO AT14 en el servicio).
+  // AT14 — oculta las sesiones de uso de vehículos de prueba salvo que el admin
+  // active el toggle (los no-admin ya no las reciben del servidor).
+  enUsoVisible = computed(() =>
+    this.esAdminRol() && this.mostrarPrueba() ? this.enUso() : this.enUso().filter((u) => !u.es_prueba),
+  );
+
   lista = computed(() => {
     const q = this.query().toLowerCase().trim();
-    if (!q) return this.todos();
-    return this.todos().filter(
+    if (!q) return this.todosVisible();
+    return this.todosVisible().filter(
       (v) =>
         v.placa.toLowerCase().includes(q) ||
         v.marca.toLowerCase().includes(q) ||

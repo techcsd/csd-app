@@ -49,12 +49,58 @@
 .inv-row {
   display: flex;
   align-items: stretch;
+  flex-wrap: wrap; // AT12 — el panel de "Ajuste real" cae a una línea completa
   gap: 8px;
   background: var(--color-surface, #fff);
   border: 1px solid var(--color-border, #e6e6e6);
   border-radius: 14px;
   margin-bottom: 8px;
   overflow: hidden;
+
+  // AT12 — Ajuste real (admin): botón + panel, a ancho completo bajo la fila.
+  &__ajuste {
+    flex-basis: 100%;
+    order: 9;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary);
+    background: transparent;
+    border: none;
+    border-top: 1px dashed var(--color-border);
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  &__ajuste-panel {
+    flex-basis: 100%;
+    order: 10;
+    padding: 0 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__ajuste-hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  &__ajuste-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .field {
+      flex: 1;
+    }
+    .btn-cta {
+      width: auto;
+      min-height: 48px;
+      padding: 0 18px;
+      white-space: nowrap;
+    }
+  }
 
   &--cero {
     opacity: 0.72;

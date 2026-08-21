@@ -165,6 +165,16 @@
           </ul>
         }
 
+        <!-- AT10 — marcar/desmarcar como dato de prueba (solo admin) -->
+        @if (esAdmin()) {
+          <div class="cdet__admin">
+            <button type="button" class="btn-ghost" [disabled]="marcandoPrueba()" (click)="togglePrueba()">
+              {{ marcandoPrueba() ? 'Guardando…' : (d.es_prueba ? '✅ Quitar marca de prueba' : '🧪 Marcar como prueba') }}
+            </button>
+            <p class="cdet__peligro-nota">Los conduces de prueba no cuentan para inventario, KPIs ni avisos, y solo los ves tú (admin).</p>
+          </div>
+        }
+
         <!-- AQ10 — eliminar conduce creado por error (solo emisor/admin, mientras pendiente) -->
         @if (puedeEliminar()) {
           <div class="cdet__peligro">

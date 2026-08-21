@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { UserContextService } from './user-context.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta } from './audio-notas.service';
@@ -70,6 +71,7 @@ export interface VehiculoEnUso {
   desde: string;
   km_inicio: number | null;
   nivel_inicio: string | null;
+  es_prueba?: boolean; // AT14 — para el toggle admin "mostrar datos de prueba"
 }
 
 export interface FlotaAviso {
@@ -153,6 +155,7 @@ export interface EntregaCaptura {
 export class VehiculosService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
+  private ctx = inject(UserContextService);
   private sync = inject(SyncService);
   private audioNotas = inject(AudioNotasService);
 
@@ -379,6 +382,12 @@ export class VehiculosService {
   async getVehiculosEnUso(): Promise<VehiculoEnUso[]> {
     const { data, error } = await this.supabase.client.rpc('vehiculos_en_uso');
     if (error) throw new Error(error.message);
+    // AT14 — el RPC `vehiculos_en_uso` ya OCULTA server-side los `es_prueba` a los
+    // no-admins (`(not es_prueba) or is_admin`), así que un no-admin nunca recibe
+    // filas de prueba. Pero el RPC NO devuelve la columna `es_prueba`, por lo que
+    // el toggle "Mostrar datos de prueba" del admin no puede ocultarlas en el panel
+    // "En uso". TODO AT14: exponer `es_prueba` en el RETURN de sgc.vehiculos_en_uso
+    // (server-side) para poder filtrarlas también en la vista del admin.
     return ((data as VehiculoEnUso[]) ?? []);
   }
 
@@ -406,7 +415,12 @@ export class VehiculosService {
         es_prueba: (v['es_prueba'] as boolean) ?? false,
       }));
     });
-    return data ?? [];
+    // AT14 — un vehículo `es_prueba` NUNCA se OFRECE a un no-admin (raíz del bug
+    // "Amarok de prueba en uso por Misael"): se filtra aquí, en la única fuente que
+    // alimenta todos los selectores (picker, asignarme, semanal, generar conduce…).
+    // El admin (rol) SÍ los ve para QA.
+    const rows = data ?? [];
+    return this.ctx.esAdmin() ? rows : rows.filter((v) => !v.es_prueba);
   }
 
   /** U6 — foto_path (primera) por vehículo, para pintar fotos en listas. */

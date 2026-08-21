@@ -56,6 +56,48 @@
   opacity: 0.5;
 }
 
+// AT9 — enlace discreto "¿No abre la cámara?" (solo web/PWA).
+.photo-slot__help {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: transparent;
+  border: none;
+  text-decoration: underline;
+  padding: 6px 8px;
+  min-height: 32px;
+}
+
+.photo-slot__help:disabled {
+  opacity: 0.5;
+}
+
+// AT9 — contenido de la hoja de ayuda de cámara.
+.cam-ayuda {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 2px 8px;
+}
+
+.cam-ayuda__intro {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+
+.cam-ayuda__pasos {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+
 .photo-slot--done {
   border-style: solid;
   border-color: var(--color-success);

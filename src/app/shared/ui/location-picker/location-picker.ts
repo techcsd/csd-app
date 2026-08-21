@@ -75,6 +75,11 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   busquedaError = signal('');
   ubicando = signal(false);
 
+  // AT13 — pegar link de Google Maps / coordenadas.
+  linkTexto = signal('');
+  resolviendo = signal(false);
+  linkError = signal('');
+
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
   private searchAbort: AbortController | null = null;
 
@@ -205,6 +210,33 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
       const dir = await this.geocoding.reverse(lat, lng);
       this.direccion.set(dir);
       this.ubicacionChange.emit({ latitud: lat, longitud: lng, direccion: dir });
+    }
+  }
+
+  /**
+   * AT13 — resuelve el link de Google Maps o las coordenadas pegadas, centra el
+   * mapa y fija el pin. La edge maneja links cortos, ?q=lat,lng, @lat,lng y coords
+   * a secas, así que no filtramos en cliente: resolvemos lo que se pegue.
+   */
+  async fijarLink(): Promise<void> {
+    const entrada = this.linkTexto().trim();
+    if (!entrada || this.resolviendo()) return;
+    this.resolviendo.set(true);
+    this.linkError.set('');
+    try {
+      const { lat, lng, direccion } = await this.geocoding.resolverLink(entrada);
+      this.centrar(lat, lng, 16);
+      await this.setMarker(lat, lng, false);
+      this.direccion.set(direccion);
+      this.ubicacionChange.emit({ latitud: lat, longitud: lng, direccion });
+      this.linkTexto.set('');
+      this.busquedaError.set('');
+    } catch (e) {
+      this.linkError.set(
+        (e as Error)?.message || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.',
+      );
+    } finally {
+      this.resolviendo.set(false);
     }
   }
 

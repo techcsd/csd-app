@@ -1,0 +1,44 @@
+<div class="ayud">
+  <app-toggle-switch [checked]="activo()" [label]="label()" (checkedChange)="onToggle($event)" />
+
+  @if (activo()) {
+    @if (seleccionado(); as s) {
+      <!-- Ayudante elegido -->
+      <div class="ayud__chip">
+        <span class="ayud__chip-ava">👷</span>
+        <span class="ayud__chip-nom">{{ s.nombre }}</span>
+        <button type="button" class="ayud__chip-x" (click)="limpiar()" aria-label="Quitar ayudante">✕</button>
+      </div>
+      <p class="ayud__nota">Esta actividad también contará para <b>{{ s.nombre }}</b>.</p>
+    } @else {
+      <!-- Sugerencia del último ayudante -->
+      @if (ultimo(); as u) {
+        <button type="button" class="ayud__ultimo" (click)="usarUltimo()">
+          Llevar a <b>{{ u.nombre }}</b> (el último)
+        </button>
+      }
+      <!-- Buscador -->
+      <input
+        class="ayud__input"
+        type="text"
+        [ngModel]="term()"
+        (ngModelChange)="onTerm($event)"
+        placeholder="Busca a tu ayudante por nombre o cédula"
+        autocomplete="off" />
+      @if (buscando()) {
+        <p class="ayud__hint">Buscando…</p>
+      } @else if (resultados().length) {
+        <ul class="ayud__res">
+          @for (u of resultados(); track u.id) {
+            <li class="ayud__res-row" (click)="elegir(u)">
+              <span class="ayud__res-ava">👷</span>
+              <span class="ayud__res-nom">{{ u.nombre }}</span>
+            </li>
+          }
+        </ul>
+      } @else if (term().length >= 2) {
+        <p class="ayud__hint">Sin resultados. Revisa el nombre o tu conexión.</p>
+      }
+    }
+  }
+</div>

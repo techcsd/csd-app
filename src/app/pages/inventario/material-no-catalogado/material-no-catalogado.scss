@@ -1,6 +1,50 @@
 .mnc {
   background: var(--color-bg);
 }
+
+// AT11 — declinar material no catalogado.
+.mnc__acciones {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+.mnc__declinar {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-danger);
+  background: transparent;
+  border: 1px solid var(--color-danger);
+  border-radius: 999px;
+  padding: 8px 16px;
+  min-height: 40px;
+}
+.mnc__motivos {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px dashed var(--color-border);
+  padding-top: 10px;
+}
+.mnc__motivos-h {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.mnc__motivo {
+  text-align: left;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 48px;
+}
+.mnc__motivo:disabled {
+  opacity: 0.5;
+}
 .mnc__header {
   display: flex;
   align-items: center;

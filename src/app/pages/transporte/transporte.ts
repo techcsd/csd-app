@@ -49,6 +49,8 @@ const TILES: HubTile[] = [
   // AI8 — "Inspección Vehículo" (ex "Reporte semanal").
   { key: 'semanal', icon: '📋', label: 'Inspección Vehículo', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi Actividad', tint: '#16a34a' },
+  // AT2 — "Mi rendimiento": informe de incentivo propio (puntaje semanal + badge).
+  { key: 'miRendimiento', icon: '🏅', label: 'Mi Rendimiento', tint: '#eab308' },
   // AU7 — "Mi recorrido" (Timeline diario: trazo + paradas + estado offline).
   { key: 'miRecorrido', icon: '🗺️', label: 'Mi Recorrido', tint: '#0ea5e9' },
 
@@ -60,6 +62,9 @@ const TILES: HubTile[] = [
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
+  // AT3 — Gestión del incentivo (logística/gerencia). La página se re-gatea con
+  // puede_gestionar_incentivos(): un flota-elevado sin permiso ve "Sin acceso".
+  { key: 'incentivos', icon: '🏆', label: 'Incentivos', tint: '#ca8a04', elevado: true },
 ];
 
 /** Transporte hub: vehicles to receive / already in charge / self-assigned. */
@@ -255,6 +260,7 @@ export class TransportePage {
       case 'combustibleLog': return this.combustibleLog();
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
+      case 'miRendimiento': return void this.router.navigate(['/mi-rendimiento']);
       case 'miRecorrido': return void this.router.navigate(['/transporte/mi-recorrido']);
       case 'usoVehiculo': return this.usoVehiculo();
       case 'avisoVehiculo': return this.avisoVehiculo();
@@ -262,6 +268,7 @@ export class TransportePage {
       case 'conductores': return this.conductoresLista();
       case 'multas': return this.multas();
       case 'avisos': return this.avisos();
+      case 'incentivos': return void this.router.navigate(['/incentivos']);
     }
   }
 

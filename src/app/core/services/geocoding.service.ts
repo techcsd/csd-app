@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { SupabaseService } from './supabase.service';
 
 export interface LugarBusqueda {
   nombre: string;
@@ -70,6 +71,32 @@ function etiquetaCorta(display: string, a?: NominatimAddress, name?: string): st
 
 @Injectable({ providedIn: 'root' })
 export class GeocodingService {
+  private supabase = inject(SupabaseService);
+
+  /**
+   * AT13 — resuelve un link de Google Maps (incluidos los cortos maps.app.goo.gl /
+   * goo.gl/maps) o un par de coordenadas pegadas → {lat, lng, direccion}. El cliente
+   * no puede seguir el redirect (CORS) → lo hace la edge `resolve-maps-link` (misma
+   * que usa ProyectosService.resolverUbicacion). Geocodifica inverso para una
+   * dirección legible. Lanza con mensaje claro en español si falla.
+   */
+  async resolverLink(entrada: string): Promise<{ lat: number; lng: number; direccion: string }> {
+    const { data, error } = await this.supabase.client.functions.invoke('resolve-maps-link', {
+      body: { url: entrada },
+    });
+    if (error) {
+      // La edge devuelve el detalle en el body aun con status !=2xx.
+      const ctx = (error as { context?: { error?: string } })?.context?.error;
+      throw new Error(ctx || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.');
+    }
+    const r = data as { lat?: number; lng?: number; error?: string };
+    if (r?.error || r?.lat == null || r?.lng == null) {
+      throw new Error(r?.error || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.');
+    }
+    const direccion = await this.reverse(r.lat, r.lng);
+    return { lat: r.lat, lng: r.lng, direccion };
+  }
+
   /** Coordenadas → dirección legible y CORTA (sin país/código postal). */
   async reverse(lat: number, lng: number): Promise<string> {
     const params = new URLSearchParams({

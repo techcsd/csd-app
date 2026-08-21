@@ -7,6 +7,7 @@ import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collaps
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { InventarioService, InventarioAlmacenItem } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { ToastService } from '../../../core/services/toast.service';
 import { Bodega } from '../../../core/models/inventario.model';
 
 /**
@@ -29,9 +30,16 @@ export class AlmacenInventarioPage {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private ctx = inject(UserContextService);
+  private toast = inject(ToastService);
 
   /** AS11 — quién puede contar/ajustar el stock de un almacén (permiso Operar). */
   puedeAjustar = computed(() => this.ctx.puedeOperarSubmodulo('inventario.conteos'));
+  /** AT12 — "Ajuste real" (rebase sin movimiento): solo admin. */
+  esAdmin = computed(() => this.ctx.esAdmin());
+  // AT12 — artículo con el panel de ajuste real abierto + valor tecleado + envío.
+  ajusteId = signal<string | null>(null);
+  ajusteValor = signal<number | null>(null);
+  ajustando = signal(false);
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
@@ -115,6 +123,37 @@ export class AlmacenInventarioPage {
     void this.router.navigate(['/inventario/conteo'], {
       queryParams: { bodega: this.bodegaId() || null },
     });
+  }
+
+  // ── AT12 — Ajuste real (rebase de la línea base, sin movimiento) ─────────────
+  /** Abre/cierra el panel de ajuste real de un artículo, prellenando el valor. */
+  toggleAjuste(it: InventarioAlmacenItem): void {
+    if (this.ajusteId() === it.articulo_id) {
+      this.ajusteId.set(null);
+      return;
+    }
+    this.ajusteId.set(it.articulo_id);
+    this.ajusteValor.set(it.cantidad);
+  }
+
+  /** Fija el stock del artículo al valor real informado (sin kardex ni escalón). */
+  async guardarAjuste(it: InventarioAlmacenItem): Promise<void> {
+    if (this.ajustando()) return;
+    const real = this.ajusteValor();
+    if (real == null || real < 0 || isNaN(real)) {
+      return;
+    }
+    this.ajustando.set(true);
+    try {
+      await this.inventario.ajusteRealStock(it.articulo_id, this.bodegaId(), real);
+      this.toast.success('Stock ajustado al valor real (sin movimiento).');
+      this.ajusteId.set(null);
+      await this.load(true);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo ajustar el stock.');
+    } finally {
+      this.ajustando.set(false);
+    }
   }
 
   back(): void {

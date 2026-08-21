@@ -78,6 +78,9 @@ export class ConduceDetallePage {
   generando = signal(false);
   confirmarEliminar = signal(false);
   eliminando = signal(false);
+  /** AT10 — marcar/desmarcar el conduce como dato de prueba (admin). */
+  marcandoPrueba = signal(false);
+  esAdmin = computed(() => this.userCtx.esAdmin());
   /** AS5 — url de la foto ampliada (lightbox). */
   lightboxUrl = signal<string | null>(null);
   /** AS2 — firma remota del despachante. */
@@ -223,6 +226,27 @@ export class ConduceDetallePage {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo descargar el conduce.');
     } finally {
       this.generando.set(false);
+    }
+  }
+
+  /** AT10 — alterna es_prueba del conduce (admin, online). */
+  async togglePrueba(): Promise<void> {
+    const d = this.detalle();
+    if (!d || this.marcandoPrueba()) return;
+    if (!this.network.online()) {
+      this.toast.error('Necesitas conexión para cambiar esto.');
+      return;
+    }
+    const nuevo = !d.es_prueba;
+    this.marcandoPrueba.set(true);
+    try {
+      await this.conduces.marcarConducePrueba(d.id, nuevo);
+      this.toast.success(nuevo ? 'Conduce marcado como prueba.' : 'El conduce ya no es de prueba.');
+      await this.load();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar la marca de prueba.');
+    } finally {
+      this.marcandoPrueba.set(false);
     }
   }
 

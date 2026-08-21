@@ -11,6 +11,7 @@ import {
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { BottomSheet } from '../bottom-sheet/bottom-sheet';
 
 /**
  * A guided photo slot. Shows the example/silhouette of the required shot;
@@ -29,6 +30,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
   selector: 'app-photo-slot',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [BottomSheet],
   templateUrl: './photo-slot.html',
   styleUrl: './photo-slot.scss',
 })
@@ -51,9 +53,15 @@ export class PhotoSlot implements OnDestroy {
   private ctx = inject(UserContextService);
   preview = signal<string | null>(null);
   busy = signal(false);
+  /** AT9 — hoja de ayuda "la cámara no abre" (iOS/PWA). */
+  ayudaAbierta = signal(false);
 
   /** URL a mostrar: la recién capturada localmente o la rehidratada del padre. */
   displayUrl = computed(() => this.preview() ?? this.foto()?.previewUrl ?? null);
+
+  /** AT9 — en web (PWA) ofrecemos el enlace de ayuda/fallback; en iOS lo destacamos. */
+  esWeb = !this.camera.isNative;
+  esIOS = this.camera.isIOSWeb;
 
   /**
    * AE6 — regla general del modo solo-cámara: la galería se ofrece cuando el
@@ -63,15 +71,41 @@ export class PhotoSlot implements OnDestroy {
    */
   showGallery = computed(() => this.gallery() || this.ctx.esAdmin());
 
-  /** W6 — tomar con la cámara (nativa del sistema, AE7). */
+  /** W6 — tomar con la cámara (nativa del sistema en Android, `<input capture>` en web). */
   capture(): Promise<void> {
+    // AT9 — en web/iOS el `<input capture>` DEBE abrirse dentro del gesto de
+    // usuario: NO se puede `await` nada antes (ni el flush), o iOS ignora el
+    // click y "pide permiso pero nunca abre". Disparamos el flush en paralelo
+    // (best-effort) y abrimos la cámara de forma síncrona.
+    if (this.esWeb) {
+      void this.autosave.flushAll();
+      return this.run(() => this.camera.takePhoto());
+    }
+    // AE7 — nativo (Android): la cámara del sistema saca la app a primer plano y
+    // el SO puede matar el proceso (MIUI/OUKITEL/low-mem); hacemos FLUSH del
+    // autosave ANTES de abrirla para no perder lo capturado.
     return this.run(async () => {
-      // AE7 — la cámara NATIVA saca la app a primer plano y el SO puede matar el
-      // proceso (MIUI/OUKITEL/low-mem) mientras se toma la foto. Hacemos FLUSH del
-      // autosave ANTES de abrirla para no perder lo capturado (igual que la galería).
       await this.autosave.flushAll();
       return this.camera.takePhoto();
     });
+  }
+
+  /**
+   * AT9 — fallback "Subir foto" desde la hoja de ayuda: cuando la cámara no abre
+   * en iOS, el usuario elige una foto de su carrete/archivos y completa igual.
+   */
+  subirFoto(): Promise<void> {
+    this.ayudaAbierta.set(false);
+    void this.autosave.flushAll();
+    return this.run(() => this.camera.pickSingleFile());
+  }
+
+  abrirAyuda(): void {
+    this.ayudaAbierta.set(true);
+  }
+
+  cerrarAyuda(): void {
+    this.ayudaAbierta.set(false);
   }
 
   /**

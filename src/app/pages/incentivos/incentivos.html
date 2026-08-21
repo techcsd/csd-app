@@ -1,0 +1,159 @@
+<div class="screen inc">
+  <header class="inc__header">
+    <button type="button" class="inc__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="inc__icon">🏆</span>
+    <h1 class="inc__title">Incentivos</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (checkingAccess()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!hasAccess()) {
+      <app-empty-state
+        icon="🔒"
+        title="Sin acceso"
+        message="Solo logística y gerencia pueden gestionar el incentivo." />
+    } @else if (loadingSemanas()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!semanas().length) {
+      <app-empty-state
+        icon="🏆"
+        title="Aún no hay semanas"
+        message="Cuando los choferes empiecen a registrar actividad, aquí aparecerán las semanas para gestionar el incentivo." />
+    } @else {
+      <!-- Selector de semana -->
+      <div class="inc__semana-sel">
+        <app-collapsible-select
+          icon="📅"
+          label="Semana"
+          placeholder="Elegir semana"
+          [options]="semanaOptions()"
+          [selectedId]="selectedKey()"
+          cambiarLabel="Cambiar semana"
+          (picked)="onSemanaPicked($event)" />
+      </div>
+
+      <!-- Aviso: la aprobación es una decisión humana -->
+      <p class="inc__aviso">
+        ⚖️ El informe no paga solo: <b>aprobar es una decisión humana que queda registrada</b>
+        (quién y cuándo).
+      </p>
+
+      <!-- Acción en bloque -->
+      @if (selectedSemana()) {
+        <button
+          type="button"
+          class="inc__bulk"
+          (click)="pedirAprobarTodos()"
+          [disabled]="savingAll() || loadingList() || cumplieronPendientes() === 0">
+          @if (savingAll()) { Aprobando… }
+          @else { ✅ Aprobar todos los que cumplieron ({{ cumplieronPendientes() }}) }
+        </button>
+      }
+
+      <!-- Listado por chofer -->
+      @if (loadingList()) {
+        <app-skeleton [rows]="5" />
+      } @else if (!filas().length) {
+        <app-empty-state
+          icon="🏆"
+          title="Sin choferes esta semana"
+          message="No hay informes de incentivo para la semana seleccionada." />
+      } @else {
+        <ul class="inc__list">
+          @for (f of filas(); track f.informe_id) {
+            <li class="inc__row" [class.inc__row--saving]="saving(f.informe_id)">
+              <div class="inc__row-top">
+                <span class="inc__nombre">{{ f.nombre }}</span>
+                @if (tieneFlags(f)) {
+                  <span class="inc__flag" title="Revisar posibles señales de inflado">⚠ revisar</span>
+                }
+              </div>
+
+              <div class="inc__row-mid">
+                <span class="inc__pts" [class.inc__pts--ok]="f.cumplio">{{ f.puntaje }}/{{ f.minimo }}</span>
+                <span class="inc__badge" [class.inc__badge--ok]="f.cumplio" [class.inc__badge--bajo]="!f.cumplio">
+                  {{ f.cumplio ? 'Cumplió' : 'Rendimiento bajo' }}
+                </span>
+                <span class="inc__dec inc__dec--{{ f.decision || 'pendiente' }}">{{ decisionLabel(f) }}</span>
+              </div>
+
+              @if (f.decision && f.decidido_por_nombre) {
+                <p class="inc__decby">
+                  {{ f.decision === 'aprobado' ? 'Aprobado' : 'Declinado' }} por {{ f.decidido_por_nombre }}
+                  @if (f.decidido_en) { · {{ fmtDecidido(f.decidido_en) }} }
+                </p>
+              }
+              @if (f.decision === 'declinado' && f.motivo) {
+                <p class="inc__motivo">"{{ f.motivo }}"</p>
+              }
+
+              @if (!f.decision) {
+                <div class="inc__actions">
+                  <button
+                    type="button"
+                    class="inc__act inc__act--aprobar"
+                    (click)="aprobar(f)"
+                    [disabled]="saving(f.informe_id)">
+                    {{ saving(f.informe_id) ? 'Guardando…' : 'Aprobar' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="inc__act inc__act--declinar"
+                    (click)="abrirDeclinar(f)"
+                    [disabled]="saving(f.informe_id)">
+                    Declinar
+                  </button>
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <p class="inc__nota">
+        Aprobar o declinar afecta el pago del incentivo del chofer. Cada decisión queda en el
+        historial (inmutable) con tu nombre y la hora.
+      </p>
+    }
+  </div>
+</div>
+
+<!-- Confirmación: aprobar todos los que cumplieron -->
+<app-confirm-dialog
+  [open]="confirmAllOpen()"
+  title="¿Aprobar a todos los que cumplieron?"
+  message="Se aprobará el incentivo de cada chofer que alcanzó el mínimo esta semana. Es una decisión registrada a tu nombre."
+  confirmLabel="Sí, aprobar"
+  cancelLabel="Cancelar"
+  (confirmed)="aprobarTodos()"
+  (cancelled)="cancelarAprobarTodos()" />
+
+<!-- Modal: declinar (motivo obligatorio) -->
+@if (declinarFila(); as f) {
+  <div class="inc-modal" role="alertdialog" aria-modal="true" (click)="cerrarDeclinar()">
+    <div class="inc-modal__card" (click)="$event.stopPropagation()">
+      <h2 class="inc-modal__title">Declinar incentivo</h2>
+      <p class="inc-modal__msg">
+        Vas a declinar el incentivo de <b>{{ f.nombre }}</b> ({{ f.puntaje }}/{{ f.minimo }}).
+        Escribe el motivo — el chofer lo verá.
+      </p>
+      <textarea
+        class="inc-modal__area"
+        rows="3"
+        placeholder="Motivo (obligatorio)…"
+        [ngModel]="declinarMotivo()"
+        (ngModelChange)="declinarMotivo.set($event)"></textarea>
+      <button
+        type="button"
+        class="inc-modal__btn inc-modal__btn--danger"
+        (click)="confirmarDeclinar()"
+        [disabled]="saving(f.informe_id) || !declinarMotivo().trim()">
+        {{ saving(f.informe_id) ? 'Guardando…' : 'Declinar' }}
+      </button>
+      <button type="button" class="inc-modal__btn inc-modal__btn--ghost" (click)="cerrarDeclinar()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+}

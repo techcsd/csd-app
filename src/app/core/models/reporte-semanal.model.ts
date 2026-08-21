@@ -81,6 +81,8 @@ export interface ReporteSemanalCaptura {
   firma: Blob | null;
   // Z23 — notas de voz múltiples (opcional).
   voces?: Blob[];
+  /** AT4 — usuario_id del ayudante (opcional); le suma esta actividad al incentivo. */
+  ayudanteId?: string | null;
   /** Locally-computed verdict for the offline "mis registros" summary. */
   resultado: 'aprobado' | 'con_hallazgos' | 'bloqueado';
 }

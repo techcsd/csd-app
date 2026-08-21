@@ -5,9 +5,24 @@ import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { LiveRefreshDirective } from '../../shared/ui/live-refresh/live-refresh.directive';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
+import { BottomSheet } from '../../shared/ui/bottom-sheet/bottom-sheet';
+import { ToggleSwitch } from '../../shared/ui/toggle-switch/toggle-switch';
 import { NotificacionesService, Notificacion, notifAppRoute } from '../../core/services/notificaciones.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../core/util/fecha';
+
+/** AT23 — categorías informativas que el usuario puede silenciar (se excluyen a
+ *  propósito las que requieren acción: firmas, alertas, errores). */
+const CATEGORIAS_NOTIF: { tipo: string; label: string }[] = [
+  { tipo: 'version_publicada', label: 'Nuevas versiones de la app' },
+  { tipo: 'material_no_catalogado', label: 'Material no catalogado' },
+  { tipo: 'otros_valor', label: 'Valores fuera de catálogo' },
+  { tipo: 'solicitud_movimiento', label: 'Solicitudes de movimiento' },
+  { tipo: 'flota', label: 'Avisos de flota' },
+  { tipo: 'transporte', label: 'Transporte y rutas' },
+  { tipo: 'conduce', label: 'Conduces' },
+  { tipo: 'novedad', label: 'Novedades' },
+];
 
 /** AE — bandeja de avisos in-app (sgc.notificaciones): firmas pendientes, cierres,
  *  avisos de módulo. Tocar un aviso lo marca leído y navega a su destino (AF6). */
@@ -15,7 +30,7 @@ import { formatFechaCortaHora } from '../../core/util/fecha';
   selector: 'app-avisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, ConfirmDialog, LiveRefreshDirective],
+  imports: [Skeleton, EmptyState, ConfirmDialog, LiveRefreshDirective, BottomSheet, ToggleSwitch],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })
@@ -31,6 +46,11 @@ export class AvisosPage {
   refrescando = signal(false);
   avisos = signal<Notificacion[]>([]);
   confirmBorrarTodas = signal(false);
+
+  // AT23 — preferencias de notificación (silenciar categorías informativas).
+  readonly categorias = CATEGORIAS_NOTIF;
+  prefsAbierto = signal(false);
+  silenciados = signal<Set<string>>(new Set());
 
   constructor() {
     void this.load();
@@ -126,6 +146,42 @@ export class AvisosPage {
 
   get hayNoLeidos(): boolean {
     return this.avisos().some((n) => !n.leida);
+  }
+
+  // ── AT23 — preferencias de notificación ─────────────────────────────────────
+  async abrirPrefs(): Promise<void> {
+    this.prefsAbierto.set(true);
+    try {
+      const prefs = await this.service.misNotifPrefs();
+      const s = new Set<string>();
+      for (const p of prefs) if (p.silenciado) s.add(p.tipo);
+      this.silenciados.set(s);
+    } catch {
+      /* best-effort: si falla, se muestran todos como activos */
+    }
+  }
+  cerrarPrefs(): void {
+    this.prefsAbierto.set(false);
+  }
+  /** El toggle muestra "recibir" (ON = NO silenciado). */
+  recibe(tipo: string): boolean {
+    return !this.silenciados().has(tipo);
+  }
+  async onTogglePref(tipo: string, recibir: boolean): Promise<void> {
+    const silenciar = !recibir;
+    // optimista
+    this.silenciados.update((s) => {
+      const next = new Set(s);
+      if (silenciar) next.add(tipo);
+      else next.delete(tipo);
+      return next;
+    });
+    try {
+      await this.service.setNotifPref(tipo, silenciar);
+      void this.load(true); // re-filtra la bandeja
+    } catch {
+      this.toast.error('No se pudo guardar la preferencia.');
+    }
   }
 
   back(): void {

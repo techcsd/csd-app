@@ -52,7 +52,7 @@
           </div>
           <span class="mrd__sub">{{ c.vehiculo?.marca }} {{ c.vehiculo?.modelo }}</span>
           <ul class="resumen">
-            <li><span>Fecha</span><b>{{ c.fecha ? fmtFecha(c.fecha) : '—' }}</b></li>
+            <li><span>Fecha</span><b>{{ (c.capturado_en || c.created_at || c.fecha) ? fmtFechaHora(c.capturado_en || c.created_at || c.fecha) : '—' }}</b></li>
             @if (c.conductor?.nombre) { <li><span>Conductor</span><b>{{ c.conductor?.nombre }}</b></li> }
             <li><span>Kilometraje</span><b>{{ c.kilometraje != null ? (c.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>
             <li><span>Combustible</span><b>{{ nivelLabel(c.nivel_combustible) }}</b></li>
@@ -136,7 +136,7 @@
               <span class="mrd__badge mrd__badge--ok">✓ Normal</span>
             }
           </div>
-          <span class="mrd__sub">{{ e.vehiculo?.marca }} · {{ e.fecha ? fmtFecha(e.fecha) : '—' }}</span>
+          <span class="mrd__sub">{{ e.vehiculo?.marca }} · {{ (e.created_at || e.fecha) ? fmtFechaHora(e.created_at || e.fecha) : '—' }}</span>
         </div>
 
         <ul class="resumen">
