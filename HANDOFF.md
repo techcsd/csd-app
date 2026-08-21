@@ -10,7 +10,7 @@
 
 ## 🟡 (detalle) SESIÓN 20/08 — PROMPT-4 ronda AT (app) — **FASE 1 cámara + AT10 + AT2 (Mi rendimiento) + AT4 COMPLETO (5 flujos) + migraciones SGC**
 
-### 🟢 Migraciones SGC APLICADAS a prod esta sesión (aditivas; espejadas en SGC/sql, SIN commit)
+### 🟢 Migraciones SGC APLICADAS a prod esta sesión (aditivas; espejadas y committeadas en SGC — `2615fe6` + `5868e7d`)
 `sql/2026-08-20-at-backend-gaps.sql` (autorizado por Xaviel):
 - **AT24** — `mis_rutas_hoy` ahora ordena `fecha desc, iniciada_at desc nulls last, created_at desc` (antes solo `fecha desc` → rutas del mismo día en orden indefinido, "la nueva abajo"). Verificado.
 - **AT3** — `incentivo_mi_rendimiento` DROP+CREATE añadiendo `motivo` a la salida (la vista `v_incentivo_decision_vigente` ya lo tenía) + `grant execute ... to authenticated`. **OJO**: la 1ª col se llama **`informe_id`** (RETURNS TABLE la renombra; el prosrc `select s.id` engaña) — el modelo de la app se corrigió a `informe_id`.
@@ -19,7 +19,7 @@
 
 `sql/2026-08-20-at14-vehiculos-en-uso-prueba.sql` (aplicada+espejada): **AT14** — `vehiculos_en_uso` DROP+CREATE añadiendo `es_prueba` a la salida (para el toggle admin). Los no-admin ya no la reciben (WHERE intacto). Rollback: recrear sin la columna.
 
-**Contexto:** PROMPT-4 (ronda AT) es enorme (6 fases). El backend ya está listo en prod — `CONTRATOS-PROMPT-4-DESDE-WEB.md` + introspección confirmó las 5 RPCs de la ronda: `marcar_movimiento_inventario_prueba(p_tabla,p_id,p_valor)`, `marcar_ayudante`/`quitar_ayudante(p_activity_type,p_activity_id,p_usuario_id)`, `incentivo_mi_rendimiento()`, `receptores_disponibles(p_proyecto_id,p_bodega_id)`. Esta sesión cerró lo urgente (cámara) + un fix corto, y dejó mapeado el resto. **NADA committeado/publicado** (regla: avisar a Xaviel).
+**Contexto:** PROMPT-4 (ronda AT) es enorme (6 fases). El backend ya estaba listo en prod — `CONTRATOS-PROMPT-4-DESDE-WEB.md` + introspección confirmó las RPCs de la ronda. Esta sesión (3 tandas) cerró **TODO el lado field-app de la ronda AT** y **publicó 1.95.0** (ver encabezado). Lo que queda es puramente web/backend (ver "Pendiente" abajo) + device-QA.
 
 ### ✅ Hecho esta sesión (build verde, sin commit)
 - **🔴 FASE 1 — AT9 cámara iPhone (Raykler) — CAUSA RAÍZ + FIX.** Raíz real: NO era permiso denegado, era **pérdida del gesto de usuario de iOS**. El camino web de `CameraService.takePhoto()` corría la puerta de permisos → `getUserMedia({video})` como sonda ANTES de abrir la cámara; en iOS eso es (a) innecesario (`<input capture>` usa el permiso de cámara DEL SISTEMA, no el de sitio de Safari) y (b) los saltos async revocan el user-activation, así que el `input.click()` final es un no-op silencioso = "pide permiso pero nunca abre". El `await autosave.flushAll()` de `photo-slot.capture()` lo rompía igual.
@@ -48,19 +48,21 @@
 - **AT12 — "Ajuste real" de stock — HECHO** (backend YA existía: `ajuste_real_stock(articulo,bodega,cantidad_real)` rebasa la apertura vía `_aplicar_apertura`, SIN movimiento/escalón, admin-only; `ajuste_real_lote` para bulk). App: `inventario.ajusteRealStock()` + acción admin "⚖️ Ajuste real" por artículo en `almacen-inventario` (input prellenado con el stock actual → guarda → refresca).
 - **AT23 — preferencias de notificación por usuario — HECHO:** migración `sql/2026-08-21-at23-notif-prefs-usuario.sql` (tabla `notif_pref_usuario` + RLS own + RPCs `mis_notif_prefs`/`set_notif_pref`). App: `NotificacionesService.misNotifPrefs/setNotifPref` + filtro por tipos silenciados en la bandeja Y el badge (`refreshNoLeidas` con `.not('tipo','in',…)`); hoja "⚙ Preferencias" en Avisos con toggles de categorías informativas (se EXCLUYEN a propósito firmas/alertas/errores). **Nota:** la "matriz única de destinatarios" (quién recibe qué) sigue siendo server-side (SGC/PROMPT-3); esto es el control POR USUARIO (silenciar), additivo y sin riesgo.
 
-### ⏳ Pendiente real (NO field-app)
-- **AT23 (resto) — matriz de destinatarios server-side:** SGC/PROMPT-3 (quién recibe cada evento). Verificar el "9+" por rol con usuarios reales (device-QA).
-- **AT12 (bulk web):** el import del listado de stock real por archivo (`ajuste_real_lote`) como pantalla de escritorio → WEB SGC.
-- **AT22 (resto):** barrer detalles de inventario web (entradas/salidas/movimientos/conteos) con fecha+hora.
-- **AT16 — selector de receptor** al entregar conduce: consume `receptores_disponibles(proyecto,bodega)` + setear `salidas_inventario.firma_pendiente_usuario_id`; dropdown `collapsible-select` (AH10) en `generar-conduce`. AT8: al confirmar entrega ya hecha usar `conduce_confirmar_receptor` (no re-firmar emisor).
-- **AT13 — pegar link de ubicación en crear-ruta:** reutilizar `proyectos.service.resolverUbicacion()` (edge `resolve-maps-link`) — el patrón vive en `proyecto-form.ts` (`resolver()` + input `ubicacionTexto`); portar al paso de ubicación de `crear-ruta` (hoy usa `location-picker` pin-only).
-- **AT22 — fecha+hora 12h en todos los detalles:** `fecha.ts` ya tiene `formatFechaHumana` (= el `formatFechaHoraDisplay` de la web). `conduce-detalle` ya lo usa; barrer echada-detalle/uso-vehiculo/mi-registro-detalle/salida/entrada (swap `formatFecha`/`formatFechaMedia`→`formatFechaHumana`).
-- **AT14 — filtro es_prueba en "Vehículos en uso" + selectores:** `vehiculos_en_uso` trae `es_prueba` pero no hay filtro cliente ni toggle; el Amarok "en uso por Misael" = sesión de uso sobre vehículo test seleccionable por no-admin (el filtro falta en el SELECTOR de vehículos). AT26 = auditoría transversal.
-- **AT6 (inventario módulo Ingeniería para paridad web), AT11, AT12, AT15, AT18-20 (datos de obras), AT23 (segmentar notif.):** ver reporte.
+### ⏳ Pendiente — SOLO web/backend (SGC) + device-QA (nada field-app)
+Se entregó a Xaviel un **prompt completo para la ventana de SGC** (web) con todo esto (paridad web de lo que ganó la app + items web-only). Resumen:
+- **AT8 (web):** el form "Registrar entrega del conduce" (Raykler firmaba por los dos) — separar mostrador vs confirmación; emisor solo-lectura. La app ya está bien.
+- **AT7 (web):** "Aprobar requisición" — matching difuso + preseleccionar `articulo_id` + "+ Agregar renglón" + stock por renglón + fix overflow AS8. La app ya manda `articulo_id`.
+- **AT23 (resto):** matriz de destinatarios "quién recibe qué" server-side (el SGC ya subió su matriz editable en `5868e7d`); verificar el "9+" por rol con usuarios reales.
+- **AT12 (bulk web):** import del listado de stock real por archivo (`ajuste_real_lote`) con previsualización → pantalla de escritorio.
+- **AT22 (resto):** barrer detalles web (entradas/salidas/movimientos/conteos + flota) con fecha+hora 12h.
+- **AT6:** crear el módulo **Ingeniería** en la web + mover "Solicitud de movimiento" ahí con icono (ver `INGENIERIA-PARIDAD-WEB.md`) + tabla de paridad.
+- **Paridad web** de: incentivo (vista informe + gestión + cron/email lunes), ayudante, receptor de conduce, link de ubicación (crear-ruta web AQ2), `es_prueba` en selectores web, declinar material no catalogado, marcar conduce prueba, prefs de notificación por usuario, fecha+hora.
+- **AT18-20:** datos de obras — **ya hechos por la web** (CONTRATOS: ingenieros asignados, Sócrates jefe_ingenieros, Brisas cerrada). Confirmar nombre Monterrezo/Monterezzo.
+- **DEVICE-QA (Xaviel):** todo 1.95.0 sin probar en equipo. Prioridad: **cámara en el iPhone 13 de Raykler** (AT9) y **AT4 en crear-ruta/generar-conduce** (flujos frágiles). Rollback: `update sgc.app_versiones set publicada=(version='1.94.0') where plataforma='movil';` + `git revert 4cc9a17`.
 
 ### Componentes/contratos clave (para retomar)
-- Dropdown estándar AH10 = `shared/ui/collapsible-select`. Outbox = `sync.register(tipo_op, handler)` en `core/sync/sync.service.ts:210`. Parser de link ubicación = `proyectos.service.resolverUbicacion()` (edge `resolve-maps-link`).
-- **Verify on resume:** `npm run build` → exit 0 (solo warnings de budget preexistentes). Versión en 1.94.0 (esta sesión NO bumpeó versión).
+- Dropdown estándar AH10 = `shared/ui/collapsible-select`. Outbox = `sync.register(tipo_op, handler)` en `core/sync/sync.service.ts:210`. Parser de link ubicación = `GeocodingService.resolverLink()` / `proyectos.service.resolverUbicacion()` (edge `resolve-maps-link`). Picker de ayudante = `shared/ui/ayudante-picker`. `marcar_ayudante` necesita el ROW id = client UUID (`payload['id']`) salvo echada (vía `echada_id(client_uuid)`). `incentivo_mi_rendimiento` col 1 = `informe_id` (no `id`).
+- **Verify on resume:** `npm run build` → exit 0 (solo warnings de budget preexistentes). Versión **1.95.0** (bumpeada + publicada esta sesión).
 
 ## 🟢 SESIÓN (cont.) — PROMPT-2 AS — **RELEASE 1.94.0 PUBLICADO (rolling) · gestión de requisiciones (aprobar/rechazar) + crear artículos con multi-foto · build verde**
 
