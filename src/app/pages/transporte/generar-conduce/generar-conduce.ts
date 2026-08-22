@@ -34,8 +34,19 @@ import { MiAsignacion, VehiculoDisponible } from '../../../core/models/transport
  *  camino muerto, incompatible con el descuento de stock del conduce.) */
 type OrigenTipo = 'almacen' | 'ferreteria';
 
-/** AJ6 — hojas del wizard de creación de conduce. */
-type PasoKey = 'origen' | 'destino' | 'materiales' | 'ferr-fotos' | 'foto' | 'despacho' | 'resumen';
+/** AJ6/AU14 — hojas del wizard de creación de conduce. AU14 separó el antiguo paso
+ *  "despacho" (que juntaba tres cosas) en: `despacho` (despachante+vehículo) →
+ *  `firma` (tu firma de chofer) → `receptor` (quién recibe + ayudante). */
+type PasoKey =
+  | 'origen'
+  | 'destino'
+  | 'materiales'
+  | 'ferr-fotos'
+  | 'foto'
+  | 'despacho'
+  | 'firma'
+  | 'receptor'
+  | 'resumen';
 
 /** AE9 — slice del conduce persistido para retomar el borrador (sin fotos/firmas). */
 interface ConduceDraft {
@@ -351,7 +362,10 @@ export class GenerarConducePage implements OnDestroy {
       { key: 'materiales', titulo: '¿Qué material sacas?' },
     ];
     p.push({ key: 'foto', titulo: 'Foto de recepción' });
-    p.push({ key: 'despacho', titulo: 'Despachante y firmas' });
+    // AU14 — una decisión por pantalla: despachante → tu firma → quién recibe → revisión.
+    p.push({ key: 'despacho', titulo: 'Despachante' });
+    p.push({ key: 'firma', titulo: 'Tu firma' });
+    p.push({ key: 'receptor', titulo: 'Quién recibe' });
     p.push({ key: 'resumen', titulo: 'Revisar y emitir' });
     return p;
   });
@@ -375,7 +389,11 @@ export class GenerarConducePage implements OnDestroy {
       case 'foto':
         return !!this.fotoRecepcion();
       case 'despacho':
-        return this.despachanteOk() && this.firmasOk();
+        return this.despachanteOk();
+      case 'firma':
+        return this.firmasOk();
+      case 'receptor':
+        return true; // AU14 — receptor y ayudante son opcionales
       case 'resumen':
         return this.puedeEmitir();
       default:

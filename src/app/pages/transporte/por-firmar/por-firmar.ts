@@ -9,6 +9,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { SyncService } from '../../../core/sync/sync.service';
+import { traducir } from '../../../core/util/dominio-labels';
 
 /**
  * AE — Bandeja "Por firmar": entregas (devoluciones/conduces) cuya firma de RECEPTOR
@@ -38,6 +39,11 @@ export class PorFirmarPage {
   nombre = signal('');
   guardando = signal(false);
   private primerSync = true;
+
+  /** AU15 — "Motivo" legible (nunca el valor crudo `uso_proyecto`). */
+  motivoLabel(m: string | null | undefined): string {
+    return traducir('conduce_motivo', m) || 'Entrega de material';
+  }
 
   constructor() {
     void this.load();

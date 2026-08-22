@@ -28,6 +28,7 @@ import { Documento } from '../../../core/models/documento.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha, formatFechaMedia, formatFechaHumana } from '../../../core/util/fecha';
+import { traducir } from '../../../core/util/dominio-labels';
 
 /** Read-only driver profile: my flota activity/telemetry (R5) + docs (X1). */
 @Component({
@@ -39,6 +40,11 @@ import { formatFecha, formatFechaMedia, formatFechaHumana } from '../../../core/
   styleUrl: './mi-actividad.scss',
 })
 export class MiActividadPage {
+  /** AU15 — estado de ruta legible (nunca el valor crudo `en_ruta`/`en_curso`). */
+  estadoRutaLabel(e: string | null | undefined): string {
+    return traducir('ruta_estado', e);
+  }
+
   private conductores = inject(ConductoresService);
   private documentos = inject(DocumentosService);
   private conduces = inject(ConducesService);

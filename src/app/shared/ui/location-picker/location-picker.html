@@ -34,9 +34,15 @@
       type="search"
       class="field"
       placeholder="Buscar dirección o lugar…"
+      [value]="busquedaTexto()"
       (input)="onBuscar($any($event.target).value)"
       aria-label="Buscar ubicación"
     />
+    @if (buscando()) {
+      <p class="lp__msg">Buscando…</p>
+    } @else if (busquedaError()) {
+      <p class="lp__msg lp__msg--error">{{ busquedaError() }}</p>
+    }
     @if (resultados().length > 0) {
       <ul class="lp__results">
         @for (r of resultados(); track r.nombre) {

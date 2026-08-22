@@ -32,8 +32,9 @@
       <label class="field-label arted__mt">Nombre <span class="arted__req">*</span></label>
       <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" maxlength="120" placeholder="Nombre del artículo" />
 
+      <!-- AU13 — unidad como desplegable del catálogo del sistema (sgc.unidades), no texto libre. -->
       <label class="field-label arted__mt">Unidad</label>
-      <input class="field" type="text" [ngModel]="unidad()" (ngModelChange)="unidad.set($event)" maxlength="20" placeholder="ud, m, kg, saco…" />
+      <app-collapsible-select label="Unidad" icon="📏" [options]="unidadOptions()" [selectedId]="unidad()" [searchable]="true" searchPlaceholder="Buscar unidad…" (picked)="onUnidad($event)" />
 
       @if (categoriaOptions().length) {
         <label class="field-label arted__mt">Categoría</label>

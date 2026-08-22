@@ -55,6 +55,22 @@ export interface ArticuloCat {
   imagen_url: string | null;
 }
 
+/** AU12 — resultado de `buscar_articulos` (alias-aware): además del artículo, dice POR
+ *  QUÉ coincidió, para poder mostrar "coincide con el apodo «X»". */
+export interface ArticuloBusqueda extends ArticuloCat {
+  match_por?: 'apodo' | 'codigo' | 'categoria' | 'nombre' | string;
+  match_alias?: string | null;
+}
+
+/** AU12 — apodo/alias de un artículo. */
+export interface ArticuloAlias {
+  id: string;
+  alias: string;
+  creado_por: string | null;
+  creador: string | null;
+  created_at: string;
+}
+
 /** Z16 — ¿el artículo es alquilado/externo (no propio de CSD)? */
 export function esArticuloExterno(propiedad: string | null | undefined): boolean {
   return !!propiedad && propiedad !== 'propio_csd';

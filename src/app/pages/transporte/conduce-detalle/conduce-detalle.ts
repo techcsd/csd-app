@@ -12,39 +12,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
-
-/** Etiquetas de fase del conduce (homologado con la web). */
-const FASE_LABEL: Record<string, string> = {
-  emitido: 'Emitido',
-  en_transito: 'En ruta',
-  entregando: 'Entregando',
-  entregado: 'Entregado',
-  entregado_incompleto: 'Entregado incompleto',
-  pendiente_firma: 'Pendiente de firma',
-  confirmado: 'Confirmado',
-};
-
-/** AS3 — etiquetas legibles del "Motivo" del conduce (evita mostrar el valor
- *  crudo como `uso_proyecto`). Desconocidos se muestran prettificados. */
-const MOTIVO_LABEL: Record<string, string> = {
-  uso_proyecto: 'Uso en proyecto',
-  uso_en_proyecto: 'Uso en proyecto',
-  devolucion: 'Devolución',
-  devolucion_suplidor: 'Devolución a suplidor',
-  devolucion_obra: 'Devolución de obra',
-  traspaso: 'Traspaso entre almacenes',
-  compra: 'Compra / entrada',
-  entrada: 'Entrada',
-  venta: 'Venta',
-  reparacion: 'Reparación',
-  prestamo: 'Préstamo',
-};
-
-/** Prettifica un valor crudo tipo enum (`uso_proyecto` → "Uso proyecto"). */
-function prettify(v: string): string {
-  const s = v.replace(/_/g, ' ').trim();
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : v;
-}
+// AU15 — etiquetas desde el diccionario central (ya no mapas locales por pantalla).
+import { CONDUCE_MOTIVO_LABELS, humanizarEnum, traducir } from '../../../core/util/dominio-labels';
 
 /**
  * AL9/AL13/AL4 — Detalle de un conduce (documento). Fuente única abierta desde
@@ -103,7 +72,7 @@ export class ConduceDetallePage {
     if (d?.motivo_label) return d.motivo_label;
     const m = d?.motivo;
     if (!m) return '';
-    return MOTIVO_LABEL[m] ?? prettify(m);
+    return CONDUCE_MOTIVO_LABELS[m] ?? humanizarEnum(m);
   });
 
   /** AS3 — "Entregado por" = despachante (quien entregó el material al chofer). */
@@ -120,7 +89,7 @@ export class ConduceDetallePage {
   faseLabel = computed(() => {
     const d = this.detalle();
     if (!d) return '';
-    return FASE_LABEL[d.fase ?? ''] ?? FASE_LABEL[d.estado ?? ''] ?? d.fase ?? d.estado ?? '—';
+    return traducir('conduce_fase', d.fase || d.estado) || '—';
   });
   incompleto = computed(() => this.detalle()?.estado === 'entregado_incompleto');
   entregado = computed(() => {

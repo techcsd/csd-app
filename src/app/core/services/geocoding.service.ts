@@ -13,6 +13,16 @@ export interface RutaEstimada {
 }
 
 /**
+ * AU16 — error de resolución de link que puede traer un `suggestQuery`: el link
+ * apunta a un lugar SIN coordenadas exactas (p. ej. Ferretería MC), así que la UI
+ * puede precargar el buscador con ese nombre en vez de dejar al chofer trancado.
+ */
+export interface LinkResolveError extends Error {
+  suggestQuery?: string;
+  resolvedUrl?: string;
+}
+
+/**
  * U19 — Geocoding keyless (OpenStreetMap Nominatim), sesgado a República
  * Dominicana (countrycodes=do, idioma es). Espeja el servicio de SGC web.
  * Forma independiente del proveedor por si luego se cambia a uno pago.
@@ -85,16 +95,46 @@ export class GeocodingService {
       body: { url: entrada },
     });
     if (error) {
-      // La edge devuelve el detalle en el body aun con status !=2xx.
-      const ctx = (error as { context?: { error?: string } })?.context?.error;
-      throw new Error(ctx || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.');
+      // AU16 — con supabase-js, en un status !=2xx `error.context` es la Response de la
+      // edge; hay que leer su body JSON para sacar el mensaje útil y `suggest_query`
+      // (antes se leía `context.error`, que era undefined → siempre el error genérico).
+      const body = await this.readEdgeError(error);
+      throw this.buildLinkError(body);
     }
-    const r = data as { lat?: number; lng?: number; error?: string };
+    const r = data as { lat?: number; lng?: number; error?: string; suggest_query?: string; resolved_url?: string };
     if (r?.error || r?.lat == null || r?.lng == null) {
-      throw new Error(r?.error || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.');
+      throw this.buildLinkError(r);
     }
     const direccion = await this.reverse(r.lat, r.lng);
     return { lat: r.lat, lng: r.lng, direccion };
+  }
+
+  /** Lee el body JSON de un error de edge function (FunctionsHttpError → Response). */
+  private async readEdgeError(
+    error: unknown,
+  ): Promise<{ error?: string; suggest_query?: string; resolved_url?: string }> {
+    const ctx = (error as { context?: unknown })?.context;
+    if (ctx instanceof Response) {
+      try {
+        return await ctx.clone().json();
+      } catch {
+        /* body no-JSON */
+      }
+    }
+    // Compat con formas viejas: {context:{error}} o Error con message.
+    const legacy = (error as { context?: { error?: string }; message?: string })?.context?.error;
+    return { error: legacy || (error as Error)?.message };
+  }
+
+  private buildLinkError(
+    body: { error?: string; suggest_query?: string; resolved_url?: string } | null | undefined,
+  ): LinkResolveError {
+    const err = new Error(
+      body?.error || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.',
+    ) as LinkResolveError;
+    err.suggestQuery = body?.suggest_query;
+    err.resolvedUrl = body?.resolved_url;
+    return err;
   }
 
   /** Coordenadas → dirección legible y CORTA (sin país/código postal). */

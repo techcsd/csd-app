@@ -13,6 +13,10 @@
       @for (a of visible(); track a.id) {
         <button type="button" class="picker__item" [class.picker__item--off]="sinStock(a)" [disabled]="sinStock(a)" (click)="pick(a)">
           <span class="picker__name" [title]="a.nombre">{{ a.nombre }}</span>
+          @if (apodoMatch(a); as apodo) {
+            <!-- AU12 — por qué coincidió: enseña el nombre oficial al usuario -->
+            <span class="picker__apodo">coincide con el apodo «{{ apodo }}»</span>
+          }
           <span class="picker__meta">
             {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · Sin stock } @else { · {{ stockDe(a.id) | number: '1.0-2' }} disp. }</span>}
           </span>

@@ -73,6 +73,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   buscando = signal(false);
   resultados = signal<LugarBusqueda[]>([]);
   busquedaError = signal('');
+  busquedaTexto = signal('');
   ubicando = signal(false);
 
   // AT13 — pegar link de Google Maps / coordenadas.
@@ -232,9 +233,18 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
       this.linkTexto.set('');
       this.busquedaError.set('');
     } catch (e) {
+      const err = e as { message?: string; suggestQuery?: string };
       this.linkError.set(
-        (e as Error)?.message || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.',
+        err?.message || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.',
       );
+      // AU16 — el link apunta a un lugar sin coordenadas exactas: en vez de dejar al
+      // chofer trancado, precargamos el buscador con el nombre sugerido por la edge y
+      // lanzamos la búsqueda de lugares para que elija el punto a un toque.
+      if (err?.suggestQuery) {
+        this.linkTexto.set('');
+        this.busquedaTexto.set(err.suggestQuery);
+        this.onBuscar(err.suggestQuery);
+      }
     } finally {
       this.resolviendo.set(false);
     }
@@ -277,6 +287,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   onBuscar(texto: string): void {
     if (this.searchTimer) clearTimeout(this.searchTimer);
     this.busquedaError.set('');
+    this.busquedaTexto.set(texto);
     const q = texto.trim();
     if (!q) {
       this.resultados.set([]);
@@ -310,6 +321,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   seleccionarResultado(r: LugarBusqueda): void {
     this.resultados.set([]);
     this.busquedaError.set('');
+    this.busquedaTexto.set(r.nombre);
     this.direccion.set(r.nombre);
     this.centrar(r.latitud, r.longitud, 16);
     void this.setMarker(r.latitud, r.longitud, false);

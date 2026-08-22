@@ -41,6 +41,7 @@ export class ArticuloEditarPage {
   private id = '';
   articulo = signal<ArticuloCat | null>(null);
   categorias = signal<CategoriaInv[]>([]);
+  unidades = signal<{ id: string; codigo: string; nombre: string }[]>([]);
   imagenes = signal<ImagenArt[]>([]);
 
   nombre = signal('');
@@ -50,6 +51,15 @@ export class ArticuloEditarPage {
 
   categoriaOptions = computed(() => this.categorias().map((c) => ({ id: String(c.id), label: c.nombre })));
   categoriaSelId = computed(() => (this.categoriaId() != null ? String(this.categoriaId()) : ''));
+  // AU13 — la unidad sale del catálogo del sistema (sgc.unidades), nunca texto libre.
+  // Si el artículo trae una unidad que ya no está en el catálogo, la mostramos igual
+  // como opción para no perder el valor actual.
+  unidadOptions = computed(() => {
+    const opts = this.unidades().map((u) => ({ id: u.codigo, label: u.nombre }));
+    const cur = this.unidad().trim();
+    if (cur && !opts.some((o) => o.id === cur)) opts.unshift({ id: cur, label: cur });
+    return opts;
+  });
   puedeGuardar = computed(() => this.nombre().trim().length > 0);
 
   get online(): boolean {
@@ -64,11 +74,13 @@ export class ArticuloEditarPage {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
     this.loading.set(true);
     try {
-      const [a, cats] = await Promise.all([
+      const [a, cats, unis] = await Promise.all([
         this.inventario.getArticulo(this.id),
         this.inventario.getCategorias().catch(() => [] as CategoriaInv[]),
+        this.inventario.getUnidades().catch(() => []),
       ]);
       this.categorias.set(cats);
+      this.unidades.set(unis);
       if (a) {
         this.articulo.set(a);
         this.nombre.set(a.nombre);
@@ -88,6 +100,9 @@ export class ArticuloEditarPage {
 
   onCategoria(id: string): void {
     this.categoriaId.set(id ? Number(id) : null);
+  }
+  onUnidad(codigo: string): void {
+    this.unidad.set(codigo);
   }
 
   private async subir(blob: Blob): Promise<void> {

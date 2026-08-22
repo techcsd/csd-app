@@ -1,6 +1,58 @@
 .art {
   background: var(--color-bg);
 }
+// AU12 — apodos del artículo.
+.art__apodos {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.art__apodos-title {
+  font-size: var(--fs-option);
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.art__apodos-hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0 0 10px;
+}
+.art__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.art__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--Hub-translucid, rgba(255, 179, 0, 0.15));
+  border: 1px solid var(--Hub);
+  font-size: 14px;
+  font-weight: 600;
+}
+.art__chip-x {
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px;
+}
+.art__apodo-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.art__apodo-add .field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 // AS20 — botón editar en el header del detalle.
 .art__editar {
   margin-left: auto;

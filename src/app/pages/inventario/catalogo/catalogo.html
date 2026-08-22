@@ -13,16 +13,34 @@
       type="search"
       [ngModel]="query()"
       (ngModelChange)="query.set($event)"
-      placeholder="🔎 Buscar por nombre o código"
+      placeholder="🔎 Buscar por nombre, código o apodo"
     />
 
-    <!-- Filtro por categoría -->
-    <div class="cat__chips">
-      <button type="button" class="cat__chip" [class.cat__chip--on]="categoriaSel() === null" (click)="filtrarCategoria(null)">Todas</button>
-      @for (c of categoriaChips(); track c.id) {
-        <button type="button" class="cat__chip" [class.cat__chip--on]="categoriaSel() === c.id" (click)="filtrarCategoria(c.id)">{{ c.nombre }}</button>
-      }
-    </div>
+    <!-- AU11 — filtro por categoría: pocas → chips; muchas → selector en hoja con buscador -->
+    @if (usarSelector()) {
+      <div class="cat__filtro">
+        <app-collapsible-select
+          label="Categoría"
+          icon="🏷️"
+          placeholder="Todas las categorías"
+          [options]="categoriaOptions()"
+          [selectedId]="categoriaSelId()"
+          [searchable]="true"
+          searchPlaceholder="Buscar categoría…"
+          (picked)="onCategoriaSel($event)"
+        />
+        @if (categoriaSel() !== null) {
+          <button type="button" class="cat__clear" (click)="quitarFiltro()">✕ Quitar filtro</button>
+        }
+      </div>
+    } @else {
+      <div class="cat__chips">
+        <button type="button" class="cat__chip" [class.cat__chip--on]="categoriaSel() === null" (click)="filtrarCategoria(null)">Todas</button>
+        @for (c of categoriaChips(); track c.id) {
+          <button type="button" class="cat__chip" [class.cat__chip--on]="categoriaSel() === c.id" (click)="filtrarCategoria(c.id)">{{ c.nombre }}</button>
+        }
+      </div>
+    }
 
     @if (loading()) {
       <app-skeleton [rows]="6" />
@@ -37,6 +55,9 @@
             </span>
             <span class="cat__info">
               <span class="cat__name" [title]="a.nombre">{{ a.nombre }}</span>
+              @if (apodoMatch(a); as apodo) {
+                <span class="cat__apodo">coincide con el apodo «{{ apodo }}»</span>
+              }
               <span class="cat__meta">
                 @if (a.codigo) { <span class="cat__code">{{ a.codigo }}</span> }
                 {{ a.unidad || '' }} · {{ nombreCategoria(a.categoria_id) }}

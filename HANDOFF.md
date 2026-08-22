@@ -1,5 +1,45 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 22/08/2026 — PROMPT-6 ronda AU (app) — **FASE 1–4 + AU14 HECHOS · build verde · SIN commit/push/release · device-QA pendiente**
+
+**TL;DR:** Se implementaron y compilaron (build verde, `npm run build` exit 0) las FASES 1–4 de PROMPT-6 + el split del wizard (AU14). **NO se hizo commit, push, APK ni release** (esperando tu OK + pruebas en equipo). FASE 5 (AU6 árbol + AU1-app) se entregó como **propuesta** (`C:\developer\improvements\agosto 2026\imp 19082026\AU1-AU6-PROPUESTA-APP.md`), sin tocar menús/rutas — tú apruebas antes de ejecutar. Versión sigue en **1.95.0** (no se bumpeó porque no hubo release).
+
+### ✅ Hecho esta sesión (build verde, sin commit)
+- **FASE 1 — AU10 PWA se actualiza sola.** Diagnóstico: la pantalla "Actualizar" del iPhone NO era el gate de versión mínima (ese ya es solo-nativo). Eran dos fugas: `/actualizar` mostraba botón "⬇️ Descargar" siempre que hay APK (`apkUrl()` sin gate de plataforma) y toda notificación `version_publicada` hacía deep-link ahí en toda plataforma. **Fix:** `core/services/update.service.ts` — VERSION_READY activa + **recarga silenciosa** pero **DIFERIDA** mientras `navGuard.formActivo || sync.syncing()` (reintenta en NavigationEnd, visibilitychange y un backstop de 3s); anti-bucle con `sessionStorage('sw-reloaded-at')` 10s; el outbox nunca se pierde (vive en IndexedDB, sobrevive la recarga). `pages/actualizar/{ts,html}` — botón gateado a `esNativo`; en PWA auto-corre `updates.check()` sin botón. **Cierra AS3** (el reporter manda `environment.version` del bundle en ejecución → activar el SW de forma fiable es lo que hace que Estadísticas deje de reportar versión vieja). Ver memoria [[au10-pwa-update-and-actualizar-leak]].
+- **FASE 2 — AU16 link de Google Maps (era un bug real).** La edge `resolve-maps-link` ya estaba cableada (AT13) y expande `maps.app.goo.gl`. El cliente **descartaba el body del error** (`error.context` es un `Response`, no `{error}`) → siempre el mensaje genérico. **Fix:** `geocoding.service.resolverLink` lee `error.context.clone().json()` → mensaje real + `suggest_query`; lanza `LinkResolveError` con `suggestQuery`; `location-picker.fijarLink` lo usa para **precargar el buscador** (nuevo signal `busquedaTexto`, ahora `[value]`-bound) y correr `onBuscar`. Mismo fix en la copia paralela `proyectos.service.resolverUbicacion`. Ver memoria [[au16-maps-link-edge-error-body]]. **Nota:** crear-ruta reimplementa el toggle obra/mapa inline en vez de usar `destino-selector` — parte paralela a unificar (no crítico).
+- **FASE 3 — AU15 etiquetas.** Nuevo diccionario central `core/util/dominio-labels.ts` (espejo del contrato web `SGC/src/shared/utils/dominio-labels.util.ts`). Refactor de `conduce-detalle` a él. Arregladas las **3 fugas crudas reales**: `por-firmar.html` (motivo ×2) y `mi-actividad.html` (estado de ruta). AU9 (receptor "quién recibe" al crear) **ya existía** de AT16 — no hubo que construirlo.
+- **FASE 4 — AU13/AU12/AU11.**
+  - **AU13** unidad como desplegable en `articulo-editar` (`app-collapsible-select` alimentado por `getUnidades()`/`sgc.unidades`, mantiene el valor legacy si no está en el catálogo). Espeja `articulo-nuevo` que ya lo tenía.
+  - **AU12** apodos: `buscar_articulos` ahora devuelve `match_por`/`match_alias` (nuevo tipo `ArticuloBusqueda`); `inventario.service` añadió `listarAlias/agregarAlias/eliminarAlias` (RPCs `articulo_alias_*`, gate server-side admin/inventario). `articulo-picker` y `catalogo` muestran "coincide con el apodo «X»". `catalogo` ahora hace búsqueda alias-aware online (RPC) además del filtro local. Gestión de apodos (chips add/quitar) en `articulo-detalle` para admin/inventario.
+  - **AU11** filtro de categoría: `catalogo` usa `app-collapsible-select` en hoja si hay >5 categorías, chips si ≤5, con "Quitar filtro"; el filtro **sobrevive a la navegación** vía `CatalogoFiltroStore` (root, señales categoria+query).
+- **AU14 — wizard de conduce en 3 pasos** (aprobado por Xaviel). `generar-conduce`: el paso `despacho` (que juntaba despachante+vehículo+firma chofer+firma despachante+quién recibe+ayudante) se separó en `despacho` (despachante+vehículo+firma despachante en persona) → `firma` (tu firma chofer, pantalla propia + "✓ Firma capturada") → `receptor` (quién recibe + ayudante) → `resumen`. `pasoValido` ajustado; StepBar cuadra solo (deriva de `pasos().length`); back/borrador intactos (el back solo hace `paso--`). Ferretería sin cambios.
+
+### ⏳ Pendiente — Claude puede hacer (cuando Xaviel dé OK)
+1. **AU6 (ejecutar el árbol de Ingeniería en la app)** — solo tras aprobar la propuesta (`AU1-AU6-PROPUESTA-APP.md`). Cambio = agrupar en el menú (home tile "Ingeniería" + hub `/ingenieria` con sub-tiles Producción de Obra/Bitácora/Solicitud de movimiento, gateados por su clave); conservar `/bitacora` y `/obra` (patrón de ruta duplicada, NO `redirectTo`); badges suben al padre; `module-order` scope `ingenieria`. Verificar por rol que nadie pierde/gana acceso. Coordinar con web AT6.
+2. **Release 1.95.1** (si Xaviel aprueba): bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `scripts/release-apk.mjs`; `npm run build` → `npm run apk` (registra versión Y1) → `npm run apk:publish`. NO forzar mínima.
+3. **Consolidación AU1** (fusionar/eliminar/renombrar de las 6 divergencias) — se decide con la web, un dominio por vez, con tu OK.
+4. **Polish opcional:** unificar crear-ruta con `destino-selector`; consolidar los label maps duplicados de `conduce-pdf.service.ts`/`entrega`/`conduces-historial` sobre `dominio-labels.ts`.
+
+### 🔴 Pendiente — SOLO Xaviel (físico)
+- **Device-QA de TODO** (no puedo probar en equipo). Guiones abajo (Gotchas). Especial: **AU10 en iPhone real** (Xaviel + Raykler iPhone 13) — publicar una versión y confirmar auto-actualización sin botón, sin perder un form a medias, sin bucle, y que Estadísticas reporte la versión correcta; **AU16** con el link exacto `maps.app.goo.gl/QDH6VUdkxUvAyN8z6`; **AU14** wizard cronometrado con un chofer real (si separar cansa, evaluar juntar los 2 pasos livianos).
+- **Aprobar** la propuesta AU6/AU1 y decidir: ¿Proyectos dentro o fuera de Ingeniería? ¿algo más entra? ¿app en paralelo con web o esperar AT6?
+- **Commit/push/release** — nada se subió; dar OK.
+
+### ⚠️ Gotchas / device-test script
+- **AU10 real solo se valida en iPhone**: en dev el SW está deshabilitado (`enabled: !isDevMode()`). Para probar: build+deploy PWA (Vercel), abrir la PWA instalada, publicar OTRA versión, volver a la PWA → debe recargar sola. Probar recarga DIFERIDA: entrar a un wizard/firma, publicar, confirmar que NO recarga hasta salir del form.
+- **`environment.version` es del bundle en ejecución** — si el SW sirve el bundle viejo, reporta viejo (raíz de AS3). El fix de AU10 es lo que lo corrige; verificar en Estadísticas tras el ciclo.
+- **`buscar_articulos` alias-aware es online** — el catálogo sigue navegando offline por caché, pero la búsqueda por apodo/typo requiere señal (se suma sobre lo local). Sin red, solo matchea nombre/código local.
+- **Alias gate**: `articulo_alias_listar/agregar/eliminar` están gateados server-side (admin/inventario). La UI de apodos en `articulo-detalle` solo se muestra si `puedeEditar('inventario.articulos')`; un no-editor ni siquiera llama `listarAlias`.
+- **AU14 firmas cruzan pasos**: `firmaChofer`/`firmaDespachante` se capturan en el `(changed)` del pad a un signal → sobreviven el cambio de paso. Al volver atrás al paso firma, el pad se re-crea vacío pero el signal conserva la firma (se muestra "✓ Firma capturada"). Igual comportamiento que antes.
+
+### ✅ Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # debe terminar en "Output location" (exit 0)
+git status                                                          # varios archivos modificados, SIN commit
+```
+
+---
+
 ## 🟢 SESIÓN 20-21/08 — PROMPT-4 ronda AT (app) — **RELEASE 1.95.0 PUBLICADO (rolling) · PROMPT-4 completo del lado field-app · build verde**
 
 **SHIPPED:** commit **`4cc9a17`** → push `main` → PWA por Vercel. **APK 1.95.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 12 cambios curados) + subido al bucket (`csd-app-1.95.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=1.95.0`** (rolling), **`minima=1.92.0` INTACTA** (NO forzada). **Rollback:** `update sgc.app_versiones set publicada=(version='1.94.0') where plataforma='movil';` + `git revert 4cc9a17 && git push`. Las 3 migraciones SGC son aditivas (revert opcional, ver abajo). **⚠️ Device-QA pendiente de TODO** (no se pudo probar en equipo; especial atención a AT4 en crear-ruta/generar-conduce que son frágiles, y a la cámara en el iPhone 13 de Raykler).

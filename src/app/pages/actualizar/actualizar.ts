@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Location } from '@angular/common';
 import { CAMBIO_LABEL, CambioItem, VersionService } from '../../core/services/version.service';
 import { UpdaterService } from '../../core/services/updater.service';
+import { UpdateService } from '../../core/services/update.service';
 
 /**
  * V3/V4 — "Nueva versión disponible" screen. Reached from the update banner,
@@ -24,6 +25,7 @@ import { UpdaterService } from '../../core/services/updater.service';
 export class ActualizarPage {
   private versionSvc = inject(VersionService);
   private updater = inject(UpdaterService);
+  private updates = inject(UpdateService);
   private location = inject(Location);
 
   esNativo = this.updater.esNativo;
@@ -37,6 +39,11 @@ export class ActualizarPage {
   apkUrl = () => this.versionSvc.apkUrl;
 
   iniciado = signal(false);
+
+  /** AU10 — en la PWA no hay botón: al abrir esta pantalla (p. ej. por el deep-link
+   *  de una notificación de versión) buscamos el build nuevo; si lo hay, el service
+   *  worker lo activa y recarga solo. */
+  buscandoPwa = signal(false);
 
   /** Changelog estructurado de la versión publicada (best-effort, red). */
   private cambios = signal<CambioItem[]>([]);
@@ -74,6 +81,12 @@ export class ActualizarPage {
 
   constructor() {
     void this.cargarCambios();
+    // AU10 — PWA: no ofrecer descargas; disparar la búsqueda del SW y dejar que se
+    // actualice sola. Si no hay nada nuevo, el toast lo confirma.
+    if (!this.esNativo) {
+      this.buscandoPwa.set(true);
+      void this.updates.check().finally(() => this.buscandoPwa.set(false));
+    }
   }
 
   private async cargarCambios(): Promise<void> {

@@ -222,7 +222,7 @@
           <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
         }
 
-        <!-- ═══════════ HOJA: DESPACHANTE + VEHÍCULO + FIRMAS ═══════════ -->
+        <!-- ═══════════ HOJA: DESPACHANTE (+ VEHÍCULO) — AU14 ═══════════ -->
         @case ('despacho') {
           <label class="field-label">¿Quién despacha? <span class="gconduce__req">*</span></label>
           @if (despachanteOptions().length) {
@@ -235,31 +235,40 @@
             <app-collapsible-select label="Vehículo" icon="🚚" [options]="vehiculoOptions()" [selectedId]="vehiculoId()" [searchable]="true" searchPlaceholder="Buscar vehículo…" (picked)="vehiculoId.set($event)" />
           }
 
-          <label class="field-label gconduce__mt">Tu firma (chofer) <span class="gconduce__req">*</span></label>
-          <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
-          <app-signature-pad #choferPad (changed)="onFirmaChofer($event)" />
-          <!-- AS2 — anti-fraude: el despachante firma desde SU propio teléfono, no
-               aquí. Si es un usuario del sistema, le llega "Conduce por firmar" y no
-               podrás marcar la entrega hasta que firme. Si es un nombre libre, no
-               requiere firma. -->
+          <!-- AS2 — anti-fraude: el despachante firma desde SU propio teléfono, no aquí.
+               Si es un usuario del sistema, le llega "Conduce por firmar". Si es un
+               nombre libre/empleado, firma EN PERSONA en este teléfono (AS1). -->
           @if (despachanteEsSistema()) {
             <div class="gconduce__band gconduce__band--info gconduce__mt">
               🖊️ <b>{{ despachanteNombre() }}</b> firmará el conduce desde su propio teléfono.
               Le llegará un aviso "Conduce por firmar". Podrás transitar, pero <b>no marcar la entrega</b> hasta que firme.
             </div>
           } @else if (despachanteOk()) {
-            <!-- AS1 — despachante externo/empleado sin cuenta: firma EN PERSONA, en
-                 este mismo teléfono (no hay a quién enviarle una firma remota). No
-                 bloquea la emisión; queda ligada al conduce y visible en el detalle. -->
             <label class="field-label gconduce__mt">Firma del despachante <span class="gconduce__opt">(opcional)</span></label>
             <p class="gconduce__sub">🖊️ <b>{{ despachanteNombre() }}</b> firma aquí, en este teléfono, para dejar constancia de la entrega.</p>
             <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
           }
-          <!-- AT16 — ¿quién recibe en la obra? (dirige la confirmación; opcional) -->
+        }
+
+        <!-- ═══════════ HOJA: TU FIRMA (CHOFER) — AU14 (pantalla propia) ═══════════ -->
+        @case ('firma') {
+          <label class="field-label">Tu firma (chofer) <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
+          <app-signature-pad #choferPad (changed)="onFirmaChofer($event)" />
+          @if (firmaChofer()) {
+            <p class="gconduce__band gconduce__band--info gconduce__mt">✓ Firma capturada. Si quieres rehacerla, limpia y vuelve a firmar.</p>
+          }
+        }
+
+        <!-- ═══════════ HOJA: QUIÉN RECIBE (+ AYUDANTE) — AU14 ═══════════ -->
+        @case ('receptor') {
+          <!-- AT16/AU9 — ¿quién recibe en la obra? (dirige la confirmación; opcional) -->
           @if (destinoTipo() === 'obra' && receptorOptions().length) {
-            <label class="field-label gconduce__mt">¿Quién recibe en la obra? <span class="gconduce__opt">(opcional)</span></label>
+            <label class="field-label">¿Quién recibe en la obra? <span class="gconduce__opt">(opcional)</span></label>
             <p class="gconduce__sub">Le llegará el aviso para confirmar la entrega. Cualquier autorizado de la obra puede confirmar igual.</p>
             <app-collapsible-select label="Receptor" icon="📥" [options]="receptorOptions()" [selectedId]="receptorId()" [searchable]="true" searchPlaceholder="Buscar quién recibe…" (picked)="receptorId.set($event)" />
+          } @else {
+            <p class="gconduce__sub">La confirmación de entrega la hará quien reciba en el destino. Puedes continuar.</p>
           }
           <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma el conduce al incentivo) -->
           <app-ayudante-picker (ayudanteChange)="onAyudante($event)" />

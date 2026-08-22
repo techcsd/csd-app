@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
+import { ArticuloBusqueda, ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 
 const SIN_CATEGORIA = -1;
 
@@ -159,6 +159,13 @@ export class ArticuloPicker {
     if (catId === SIN_CATEGORIA) return items.filter((a) => a.categoria_id == null).length;
     const kids = this.childrenOf(catId);
     return items.filter((a) => a.categoria_id === catId || (a.categoria_id != null && kids.has(a.categoria_id))).length;
+  }
+
+  /** AU12 — si el artículo salió por un apodo, devuelve ese apodo para mostrar
+   *  "coincide con el apodo «X»" (así el usuario aprende el nombre oficial). */
+  apodoMatch(a: ArticuloCat): string | null {
+    const b = a as ArticuloBusqueda;
+    return b.match_por === 'apodo' && b.match_alias ? b.match_alias : null;
   }
 
   seleccionarCategoria(catId: number): void {

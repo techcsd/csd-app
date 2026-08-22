@@ -12,7 +12,7 @@
       @for (item of pendientes(); track item.salida_id) {
         <div class="pfirma__card">
           <div class="pfirma__card-head">
-            <span class="pfirma__card-tit">↩️ {{ item.motivo || 'Entrega de material' }}</span>
+            <span class="pfirma__card-tit">↩️ {{ motivoLabel(item.motivo) }}</span>
             @if (item.pendiente_almacen) { <span class="pfirma__card-obra">🏬 Confirmación de Almacén</span> }
             @if (item.obra) { <span class="pfirma__card-obra">Obra: {{ item.obra }}</span> }
             @if (item.emisor) { <span class="pfirma__card-emisor">Entregó: {{ item.emisor }}</span> }
@@ -46,7 +46,7 @@
         <h2 class="pfirma__sheet-title">Firmar recepción</h2>
         <button type="button" class="pfirma__sheet-x" (click)="cerrarFirmar()" aria-label="Cerrar">✕</button>
       </div>
-      <p class="pfirma__sheet-sub">{{ f.motivo || 'Entrega de material' }}@if (f.obra) { · {{ f.obra }} }</p>
+      <p class="pfirma__sheet-sub">{{ motivoLabel(f.motivo) }}@if (f.obra) { · {{ f.obra }} }</p>
 
       <label class="field-label" for="pf-nombre">Tu nombre</label>
       <input id="pf-nombre" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Nombre de quien firma" />

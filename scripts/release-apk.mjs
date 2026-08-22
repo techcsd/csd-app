@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.95.0';
+const VERSION = '1.96.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,26 +59,21 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.42.0';
-const RELEASED_AT = '2026-08-21';
+const RELEASED_AT = '2026-08-22';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Incentivo por uso de la app + cámara iPhone + receptor de conduce';
+const TITULO = 'La app se actualiza sola + apodos de artículos + link de Maps arreglado + conduce más claro';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Cámara', d: 'Arreglada la cámara en iPhone (PWA): antes pedía permiso y no abría. Ahora abre bien y, si no, hay un botón de ayuda y la opción de subir la foto para no quedarte trancado.' },
-  { t: 'nuevo', m: 'Incentivo', d: 'Nueva pantalla "Mi rendimiento": cada chofer ve su puntaje de la semana (reporte, inspecciones, echadas, rutas y conduces), si cumplió el mínimo y el detalle de cada actividad.' },
-  { t: 'nuevo', m: 'Incentivo', d: 'Al crear ruta, conduce, echada o inspección puedes indicar si vas con un AYUDANTE, para que esa actividad también le cuente a él.' },
-  { t: 'nuevo', m: 'Incentivo', d: 'Logística y gerencia pueden APROBAR o DECLINAR (con motivo) el incentivo de cada chofer por semana, con "aprobar todos los que cumplieron".' },
-  { t: 'nuevo', m: 'Conduces', d: 'Al entregar un conduce a una obra puedes elegir QUIÉN lo recibe; a esa persona le llega el aviso para confirmar (cualquier autorizado de la obra también puede).' },
-  { t: 'nuevo', m: 'Rutas', d: 'Al crear una ruta puedes PEGAR el link de Google Maps (o coordenadas) y el mapa ubica y fija el punto solo, para que confirmes.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Puedes DECLINAR un material no catalogado (no hace falta, ya existe o duplicado): sale de la bandeja y se avisa a quien lo reportó.' },
-  { t: 'nuevo', m: 'Inventario', d: 'El administrador puede hacer un "Ajuste real" del stock de un almacén (fija el valor real) sin generar un movimiento ni un salto en la gráfica.' },
-  { t: 'nuevo', m: 'Avisos', d: 'Ahora puedes silenciar por categoría los avisos que no te aportan, desde el engranaje de la pantalla de Avisos.' },
-  { t: 'mejora', m: 'Inventario', d: 'Los vehículos y datos de PRUEBA ya no aparecen en los selectores ni listados a usuarios normales (solo el administrador, con el interruptor de datos de prueba).' },
-  { t: 'mejora', m: 'General', d: 'Los detalles ahora muestran fecha Y hora exacta; las rutas nuevas salen primero.' },
-  { t: 'seguridad', m: 'Conduces', d: 'El administrador puede marcar un conduce como PRUEBA para que no cuente en inventario, avisos ni KPIs.' },
+  { t: 'arreglo', m: 'General', d: 'La app (en iPhone/navegador) ahora se actualiza SOLA: al abrirla toma la última versión sin pedirte "Actualizar", sin recargar mientras llenas un formulario o firmas, y sin perder los registros que aún no se han subido.' },
+  { t: 'arreglo', m: 'Rutas', d: 'Arreglado el link de Google Maps al crear ruta o conduce: los links cortos (maps.app.goo.gl) ahora sí resuelven; y si el link no trae el punto exacto, te lo busca por nombre en vez de dejarte trancado, con un mensaje claro de qué pasó.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Los artículos ahora tienen APODOS: busca por el nombre común (ej. «panel de 24») y la app te dice con cuál apodo coincidió, para que aprendas el nombre oficial. Admin/Inventario puede agregar o quitar apodos desde el detalle del artículo.' },
+  { t: 'mejora', m: 'Conduces', d: 'Crear conduce es más fácil de entender: "Tu firma (chofer)" y "Quién recibe en la obra" ahora son pasos aparte (una decisión por pantalla).' },
+  { t: 'mejora', m: 'Inventario', d: 'El filtro por categoría del catálogo ahora es un selector con buscador (en vez del deslizador), muestra la categoría activa con "quitar filtro" y no se pierde al entrar y volver de un artículo.' },
+  { t: 'mejora', m: 'Inventario', d: 'Al editar un artículo, la unidad se elige de una lista del catálogo del sistema (incluye m², quintal, etc.), ya no se escribe a mano.' },
+  { t: 'mejora', m: 'General', d: 'Se corrigieron textos técnicos que se veían crudos en pantalla (por ejemplo "uso_proyecto" ahora dice "Uso en proyecto").' },
 ];
 
 const TIPO_POR_COMMIT = {

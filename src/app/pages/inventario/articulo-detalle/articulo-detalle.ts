@@ -2,9 +2,12 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { DecimalPipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { FormsModule } from '@angular/forms';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
-import { ArticuloCat, Bodega, CategoriaInv, esArticuloExterno, propiedadLabel } from '../../../core/models/inventario.model';
+import { NetworkService } from '../../../core/services/network.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { ArticuloAlias, ArticuloCat, Bodega, CategoriaInv, esArticuloExterno, propiedadLabel } from '../../../core/models/inventario.model';
 
 /** Z17 — detalle de un artículo: foto grande, código, categoría, propiedad,
  *  unidad y stock del almacén elegido. Se abre al tocar un artículo en
@@ -13,13 +16,15 @@ import { ArticuloCat, Bodega, CategoriaInv, esArticuloExterno, propiedadLabel } 
   selector: 'app-articulo-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton],
+  imports: [DecimalPipe, FormsModule, Skeleton],
   templateUrl: './articulo-detalle.html',
   styleUrl: './articulo-detalle.scss',
 })
 export class ArticuloDetallePage {
   private inventario = inject(InventarioService);
   private ctx = inject(UserContextService);
+  private net = inject(NetworkService);
+  private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private router = inject(Router);
@@ -52,6 +57,18 @@ export class ArticuloDetallePage {
   stockPorAlmacen = signal<{ bodegaId: string; nombre: string; cantidad: number; unidad: string; destacado: boolean }[]>([]);
   cargandoStock = signal(false);
 
+  // AU12 — apodos del artículo (gestión para admin/inventario).
+  aliases = signal<ArticuloAlias[]>([]);
+  nuevoAlias = signal('');
+  aliasBusy = signal(false);
+
+  get puedeApodos(): boolean {
+    return this.puedeEditar('inventario.articulos');
+  }
+  get online(): boolean {
+    return this.net.online();
+  }
+
   categoriaNombre = computed(() => {
     const a = this.articulo();
     if (!a?.categoria_id) return 'Sin categoría';
@@ -83,8 +100,60 @@ export class ArticuloDetallePage {
       // AS20 — stock por almacén (todos). En paralelo; tolerante a offline (los
       // que no respondan quedan fuera). Con mayor cantidad primero.
       if (a && bodegas.length) void this.cargarStockPorAlmacen(id, bodegas, bodegaId, a.unidad);
+      // AU12 — apodos (solo admin/inventario; el RPC está gateado). Best-effort.
+      if (a && this.puedeApodos) void this.cargarAlias(id);
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  /** AU12 — carga los apodos del artículo (best-effort). */
+  private async cargarAlias(articuloId: string): Promise<void> {
+    try {
+      this.aliases.set(await this.inventario.listarAlias(articuloId));
+    } catch {
+      /* sin permiso / offline — no bloquea el detalle */
+    }
+  }
+
+  /** AU12 — agrega un apodo (online). */
+  async agregarApodo(): Promise<void> {
+    const alias = this.nuevoAlias().trim();
+    const a = this.articulo();
+    if (!alias || !a || this.aliasBusy()) return;
+    if (!this.net.online()) {
+      this.toast.error('Necesitas conexión para agregar apodos.');
+      return;
+    }
+    this.aliasBusy.set(true);
+    try {
+      await this.inventario.agregarAlias(a.id, alias);
+      this.nuevoAlias.set('');
+      await this.cargarAlias(a.id);
+      this.toast.success('Apodo agregado.');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo agregar el apodo.');
+    } finally {
+      this.aliasBusy.set(false);
+    }
+  }
+
+  /** AU12 — quita un apodo (online). */
+  async quitarApodo(alias: ArticuloAlias): Promise<void> {
+    const a = this.articulo();
+    if (!a || this.aliasBusy()) return;
+    if (!this.net.online()) {
+      this.toast.error('Necesitas conexión para quitar apodos.');
+      return;
+    }
+    this.aliasBusy.set(true);
+    try {
+      await this.inventario.eliminarAlias(alias.id);
+      await this.cargarAlias(a.id);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo quitar el apodo.');
+    } finally {
+      this.aliasBusy.set(false);
     }
   }
 

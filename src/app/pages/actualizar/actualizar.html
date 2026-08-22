@@ -2,9 +2,13 @@
   <div class="screen__body actu__body">
     <span class="actu__icon">⬆️</span>
 
-    @if (hayNueva()) {
+    @if (esNativo && hayNueva()) {
       <h1 class="actu__title">Nueva versión {{ nueva() }} disponible</h1>
       <p class="actu__sub">Tienes la {{ local }}. Actualiza para tener las últimas mejoras y arreglos.</p>
+    } @else if (!esNativo) {
+      <!-- AU10 — la PWA se actualiza sola; nunca un botón "Actualizar". -->
+      <h1 class="actu__title">{{ buscandoPwa() ? 'Buscando la última versión…' : 'Ya tienes la última versión' }}</h1>
+      <p class="actu__sub">Estás en la {{ local }}. Esta app se actualiza sola: al refrescar verás la versión nueva.</p>
     } @else {
       <h1 class="actu__title">Ya tienes la última versión</h1>
       <p class="actu__sub">Estás en la {{ local }}.</p>
@@ -69,7 +73,9 @@
 
   <footer class="actu__nav">
     <button type="button" class="btn-ghost actu__back" (click)="volver()">Ahora no</button>
-    @if (hayNueva() || apkUrl()) {
+    <!-- AU10 — el botón de descarga/instalación es SOLO para la APK nativa. En la
+         PWA no hay botón: el service worker ya activó el build nuevo y recarga solo. -->
+    @if (esNativo && (hayNueva() || apkUrl())) {
       <button
         type="button"
         class="btn-cta"

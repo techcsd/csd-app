@@ -222,9 +222,19 @@ export class ProyectosService {
       body: { url: entrada },
     });
     if (error) {
-      // La edge devuelve el detalle en el body aun con status !=2xx.
-      const ctx = (error as { context?: { error?: string } })?.context?.error;
-      throw new Error(ctx || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.');
+      // AU16 — con supabase-js, en un status !=2xx `error.context` es la Response de la
+      // edge; hay que leer su body JSON para el mensaje útil (antes se leía
+      // `context.error`, undefined → siempre el error genérico).
+      let msg = '';
+      const ctx = (error as { context?: unknown })?.context;
+      if (ctx instanceof Response) {
+        try {
+          msg = ((await ctx.clone().json()) as { error?: string })?.error ?? '';
+        } catch {
+          /* body no-JSON */
+        }
+      }
+      throw new Error(msg || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.');
     }
     const r = data as Partial<UbicacionResuelta> & { error?: string };
     if (r?.error || r?.lat == null || r?.lng == null) {

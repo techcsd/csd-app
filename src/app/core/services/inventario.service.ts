@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
-import { ArticuloCat, Bodega, BodegaAdmin, BodegaUbicacion, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia, Ferreteria, MaterialNoCatalogado } from '../models/inventario.model';
+import { ArticuloAlias, ArticuloBusqueda, ArticuloCat, Bodega, BodegaAdmin, BodegaUbicacion, CategoriaInv, CompraFerreteriaCaptura, ConteoHistorial, Existencia, Ferreteria, MaterialNoCatalogado } from '../models/inventario.model';
 import { Conduce } from '../models/transporte.model';
 
 const CAT_BODEGAS = 'bodegas';
@@ -403,7 +403,7 @@ export class InventarioService {
    * mapeando por id contra la caché del catálogo (conserva los campos que usan los
    * pickers). Online; sin red o &lt;2 chars devuelve []. El caller debe hacer debounce.
    */
-  async buscarArticulos(query: string, limit = 20): Promise<ArticuloCat[]> {
+  async buscarArticulos(query: string, limit = 20): Promise<ArticuloBusqueda[]> {
     const q = (query ?? '').trim();
     if (q.length < 2) return [];
     const { data, error } = await this.supabase.client.rpc('buscar_articulos', {
@@ -412,12 +412,23 @@ export class InventarioService {
     });
     if (error) return [];
     const rows =
-      (data as Array<{ id: string; codigo: string; nombre: string; categoria_id: number; unidad: string; propiedad: string }>) ??
-      [];
+      (data as Array<{
+        id: string;
+        codigo: string;
+        nombre: string;
+        categoria_id: number;
+        unidad: string;
+        propiedad: string;
+        match_por?: string;
+        match_alias?: string | null;
+      }>) ?? [];
     const cache = await this.getArticulos().catch(() => [] as ArticuloCat[]);
     const byId = new Map(cache.map((a) => [a.id, a]));
-    return rows.map(
-      (r) =>
+    // AU12 — conservamos el artículo de la caché (con foto, nota, etc.) pero le
+    // adjuntamos POR QUÉ coincidió (match_por/match_alias), que el picker/catálogo
+    // usan para mostrar "coincide con el apodo «X»".
+    return rows.map((r) => {
+      const base =
         byId.get(r.id) ??
         ({
           id: r.id,
@@ -429,8 +440,36 @@ export class InventarioService {
           nota: null,
           propiedad: r.propiedad,
           imagen_url: null,
-        } as ArticuloCat),
-    );
+        } as ArticuloCat);
+      return { ...base, match_por: r.match_por, match_alias: r.match_alias ?? null };
+    });
+  }
+
+  // ── AU12 — apodos/alias de artículos (gate server-side: admin o módulo inventario) ──
+
+  /** Lista los apodos de un artículo. */
+  async listarAlias(articuloId: string): Promise<ArticuloAlias[]> {
+    const { data, error } = await this.supabase.client.rpc('articulo_alias_listar', {
+      p_articulo_id: articuloId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as ArticuloAlias[]) ?? [];
+  }
+
+  /** Agrega un apodo a un artículo. Devuelve el id del alias creado. */
+  async agregarAlias(articuloId: string, alias: string): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('articulo_alias_agregar', {
+      p_articulo_id: articuloId,
+      p_alias: alias,
+    });
+    if (error) throw new Error(error.message);
+    return data as string;
+  }
+
+  /** Elimina un apodo por su id. */
+  async eliminarAlias(id: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('articulo_alias_eliminar', { p_id: id });
+    if (error) throw new Error(error.message);
   }
 
   /** Active article categories (R16), destacadas first, cached offline. */

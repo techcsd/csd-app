@@ -115,3 +115,27 @@
   text-align: center;
   padding: 24px;
 }
+
+// AU11 — filtro por categoría en hoja (muchas categorías) + quitar filtro.
+.cat__filtro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cat__clear {
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+// AU12 — "coincide con el apodo «X»" bajo el nombre.
+.cat__apodo {
+  display: block;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--Hub);
+}

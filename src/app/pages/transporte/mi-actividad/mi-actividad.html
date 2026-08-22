@@ -229,7 +229,7 @@
           @for (r of rutas(); track r.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verRutas()">
               <span class="mact__act-main">🗺️ {{ r.origen }} → {{ r.destino }}</span>
-              <span class="mact__act-sub">{{ r.estado }} ›</span>
+              <span class="mact__act-sub">{{ estadoRutaLabel(r.estado) }} ›</span>
             </button>
           }
         </section>

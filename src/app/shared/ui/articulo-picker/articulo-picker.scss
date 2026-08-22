@@ -17,12 +17,21 @@
 .picker__item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 4px 10px;
   padding: 16px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   text-align: left;
+}
+// AU12 — "coincide con el apodo «X»": línea completa debajo del nombre.
+.picker__apodo {
+  order: 9;
+  flex-basis: 100%;
+  font-size: 12px;
+  color: var(--Hub);
+  font-style: italic;
 }
 .picker__item:active {
   border-color: var(--color-primary);

@@ -33,6 +33,43 @@
         @if (a.nota) { <div><dt>Nota</dt><dd>{{ a.nota }}</dd></div> }
       </dl>
 
+      <!-- AU12 — apodos: nombres no oficiales para encontrar el artículo en las búsquedas
+           (admin/inventario). "panel de 24" → resuelve al nombre técnico. -->
+      @if (puedeApodos) {
+        <section class="art__apodos">
+          <h3 class="art__apodos-title">Apodos</h3>
+          <p class="art__apodos-hint">Nombres no oficiales para encontrar este artículo al buscar (ej. «panel de 24»).</p>
+          @if (aliases().length) {
+            <div class="art__chips">
+              @for (al of aliases(); track al.id) {
+                <span class="art__chip">
+                  {{ al.alias }}
+                  <button type="button" class="art__chip-x" [disabled]="aliasBusy()" (click)="quitarApodo(al)" aria-label="Quitar apodo">✕</button>
+                </span>
+              }
+            </div>
+          } @else {
+            <p class="art__muted">Sin apodos todavía.</p>
+          }
+          <div class="art__apodo-add">
+            <input
+              class="field"
+              type="text"
+              [ngModel]="nuevoAlias()"
+              (ngModelChange)="nuevoAlias.set($event)"
+              (keyup.enter)="agregarApodo()"
+              maxlength="60"
+              placeholder="Agregar apodo…"
+              autocapitalize="off"
+            />
+            <button type="button" class="btn-cta" [disabled]="aliasBusy() || !nuevoAlias().trim()" (click)="agregarApodo()">
+              {{ aliasBusy() ? '…' : 'Agregar' }}
+            </button>
+          </div>
+          @if (!online) { <p class="art__muted">Sin conexión: necesitas internet para editar apodos.</p> }
+        </section>
+      }
+
       <!-- AS20 — stock por almacén (todos) + kardex por almacén -->
       <section class="art__stock">
         <h3 class="art__stock-title">Stock por almacén</h3>
