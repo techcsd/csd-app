@@ -15,25 +15,30 @@ interface ObraTile {
   icon: string;
   label: string;
   tint: string;
-  /** Submódulo AG12 requerido (nivel ver). '' = solo módulo obra. */
+  /** Submódulo AG12 requerido. '' = solo módulo obra. */
   submodulo: string;
+  /** Nivel que EXIGE la ruta destino (guard). Debe coincidir con el submoduleGuard
+   *  de app.routes para que el tile NUNCA lleve a un 403 (regla AU8). */
+  nivel: 'ver' | 'operar';
   /** Ruta destino; `:id` se reemplaza por la obra seleccionada, o cross-obra si `crossObra`. */
   route: string;
   crossObra?: boolean;
 }
 
-// Acciones del módulo Obra (una tarjeta = una tarea). Cada una gateada por submódulo.
+// Acciones del módulo Obra (una tarjeta = una tarea). Cada una gateada por submódulo
+// EN SU NIVEL REAL: las acciones que ESCRIBEN exigen 'operar' (su ruta también), así un
+// usuario con solo 'ver' no ve un tile que terminaría en 403.
 const TILES: ObraTile[] = [
-  { key: 'plan', icon: '📋', label: 'Plan del día', tint: '#0f766e', submodulo: 'obra.plan_dia', route: '/obra/plan/:id' },
-  { key: 'nc', icon: '⚠️', label: 'Levantar no conformidad', tint: '#ea580c', submodulo: 'obra.no_conformidades', route: '/obra/nc/:id' },
-  { key: 'incidente', icon: '🚨', label: 'Incidente / casi-accidente', tint: '#dc2626', submodulo: 'obra.no_conformidades', route: '/obra/incidente/:id' },
-  { key: 'mis-nc', icon: '✅', label: 'Mis pendientes', tint: '#ca8a04', submodulo: 'obra.no_conformidades', route: '/obra/mis-nc', crossObra: true },
-  { key: 'checklists', icon: '📝', label: 'Checklists de calidad', tint: '#2563eb', submodulo: 'obra.checklists', route: '/obra/checklists/:id' },
-  { key: 'recursos', icon: '📦', label: 'Recursos y pedidos', tint: '#16a34a', submodulo: 'obra.plan_dia', route: '/obra/recursos/:id' },
-  { key: 'subcontratistas', icon: '👷', label: 'Subcontratistas', tint: '#7c3aed', submodulo: 'obra.subcontratistas', route: '/obra/subcontratistas/:id' },
-  { key: 'avance', icon: '📈', label: 'Avance de obra', tint: '#0891b2', submodulo: 'obra.avance', route: '/obra/avance/:id' },
-  { key: 'logistica', icon: '🧪', label: 'Logística y pruebas', tint: '#b45309', submodulo: 'obra.avance', route: '/obra/logistica/:id' },
-  { key: 'informe', icon: '📄', label: 'Informe semanal', tint: '#1e3a5f', submodulo: 'obra.informes', route: '/obra/informe/:id' },
+  { key: 'plan', icon: '📋', label: 'Plan del día', tint: '#0f766e', submodulo: 'obra.plan_dia', nivel: 'ver', route: '/obra/plan/:id' },
+  { key: 'nc', icon: '⚠️', label: 'Levantar no conformidad', tint: '#ea580c', submodulo: 'obra.no_conformidades', nivel: 'operar', route: '/obra/nc/:id' },
+  { key: 'incidente', icon: '🚨', label: 'Incidente / casi-accidente', tint: '#dc2626', submodulo: 'obra.no_conformidades', nivel: 'operar', route: '/obra/incidente/:id' },
+  { key: 'mis-nc', icon: '✅', label: 'Mis pendientes', tint: '#ca8a04', submodulo: 'obra.no_conformidades', nivel: 'ver', route: '/obra/mis-nc', crossObra: true },
+  { key: 'checklists', icon: '📝', label: 'Checklists de calidad', tint: '#2563eb', submodulo: 'obra.checklists', nivel: 'operar', route: '/obra/checklists/:id' },
+  { key: 'recursos', icon: '📦', label: 'Recursos y pedidos', tint: '#16a34a', submodulo: 'obra.plan_dia', nivel: 'ver', route: '/obra/recursos/:id' },
+  { key: 'subcontratistas', icon: '👷', label: 'Subcontratistas', tint: '#7c3aed', submodulo: 'obra.subcontratistas', nivel: 'operar', route: '/obra/subcontratistas/:id' },
+  { key: 'avance', icon: '📈', label: 'Avance de obra', tint: '#0891b2', submodulo: 'obra.avance', nivel: 'ver', route: '/obra/avance/:id' },
+  { key: 'logistica', icon: '🧪', label: 'Logística y pruebas', tint: '#b45309', submodulo: 'obra.avance', nivel: 'ver', route: '/obra/logistica/:id' },
+  { key: 'informe', icon: '📄', label: 'Informe semanal', tint: '#1e3a5f', submodulo: 'obra.informes', nivel: 'ver', route: '/obra/informe/:id' },
 ];
 
 /** AG16 — Hub del módulo "Mi obra": selección de obra + acciones gateadas por submódulo. */
@@ -57,12 +62,20 @@ export class ObraPage {
   resumen = signal<ResumenObra | null>(null);
   readonly hoy = new Date().toISOString().slice(0, 10);
 
-  /** Tiles visibles según los permisos AG12 del usuario. */
-  tiles = computed(() => TILES.filter((t) => this.ctx.puedeVerSubmodulo(t.submodulo)));
+  /** Tiles visibles según los permisos AG12 del usuario, EN EL NIVEL que exige la
+   *  ruta (ver/operar): un tile de acción (operar) no se muestra a quien solo tiene
+   *  'ver', para no llevarlo a un 403 (regla AU8: el menú y el guard leen lo mismo). */
+  tiles = computed(() =>
+    TILES.filter((t) =>
+      t.nivel === 'operar'
+        ? this.ctx.puedeOperarSubmodulo(t.submodulo)
+        : this.ctx.puedeVerSubmodulo(t.submodulo),
+    ),
+  );
 
-  /** AJ3 — la charla de seguridad la registra quien opera el Plan del día. Para
-   *  el resto NO tiene sentido el indicador "falta charla" (se oculta). */
-  puedeCharla = computed(() => this.ctx.puedeVerSubmodulo('obra.plan_dia'));
+  /** AJ3 — la charla de seguridad la REGISTRA quien opera el Plan del día (su ruta
+   *  exige 'operar'); para el resto se oculta el indicador "falta charla". */
+  puedeCharla = computed(() => this.ctx.puedeOperarSubmodulo('obra.plan_dia'));
 
   // AI14 — obra por dropdown estándar (no listado abierto de todas las obras).
   obraOptions = computed<SelectOption[]>(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
