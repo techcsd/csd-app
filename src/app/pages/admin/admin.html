@@ -15,10 +15,12 @@
       <span class="adm-action__icon">🔐</span>
       <span class="adm-action__label">Roles y permisos</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/rrhh/empleados')">
-      <span class="adm-action__icon">🧑‍💼</span>
-      <span class="adm-action__label">Empleados y asignaciones</span>
-    </button>
+    @if (hasModulo('rrhh')) {
+      <button type="button" class="adm-action" (click)="go('/rrhh/empleados')">
+        <span class="adm-action__icon">🧑‍💼</span>
+        <span class="adm-action__label">Empleados y asignaciones</span>
+      </button>
+    }
     <button type="button" class="adm-action" (click)="go('/admin/parametros')">
       <span class="adm-action__icon">🎚️</span>
       <span class="adm-action__label">Parámetros del sistema</span>
