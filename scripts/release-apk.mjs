@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.96.1';
+const VERSION = '1.96.2';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,13 @@ const MIN_VERSION = '1.42.0';
 const RELEASED_AT = '2026-08-22';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Arreglo del menú de Producción de Obra + accesos de roles';
+const TITULO = 'Crear ruta desde Ingeniería + limpieza de accesos en el menú';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Producción de Obra', d: 'El menú de "Mi obra" ya no muestra acciones que no puedes realizar (antes tocabas "No conformidad", "Checklists", etc. y salía "Acceso restringido"). Cada tarjeta aparece solo si tienes permiso para usarla.' },
-  { t: 'mejora', m: 'Accesos', d: 'Los ingenieros de campo ahora tienen acceso a Producción de Obra (plan del día, avance, no conformidades, checklists, informe); el guarda de almacén ya puede crear conduces.' },
+  { t: 'nuevo', m: 'Ingeniería', d: 'Desde el módulo Ingeniería ahora puedes "Crear ruta" directamente (antes solo estaba dentro de Transporte).' },
+  { t: 'arreglo', m: 'Administración', d: 'El menú de Administración ya no muestra "Empleados y asignaciones" a quien no tiene el módulo de RRHH (antes llevaba a "Acceso restringido").' },
 ];
 
 const TIPO_POR_COMMIT = {

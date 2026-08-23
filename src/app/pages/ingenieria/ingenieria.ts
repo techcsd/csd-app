@@ -41,6 +41,15 @@ export class IngenieriaPage {
       tint: '#9333ea',
       route: '/transporte/solicitudes-movimiento',
     },
+    {
+      // La ruta /transporte/rutas/crear admite flota|ingenieria (moduleAnyGuard),
+      // pero antes no se ofrecía desde acá → el ingeniero no la encontraba.
+      key: 'crearRuta',
+      icon: '🗺️',
+      label: 'Crear ruta',
+      tint: '#0891b2',
+      route: '/transporte/rutas/crear',
+    },
   ]);
 
   constructor() {
