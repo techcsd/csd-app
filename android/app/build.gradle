@@ -13,7 +13,7 @@ if (hasKeystore) {
 // name (major*1_000_000 + minor*1_000 + patch) so it always increments with the
 // version and matches the backend's version_code scheme (e.g. 1.5.0 -> 1005000).
 // Keep appVersionName in sync with src/environments/* and scripts/release-apk.mjs.
-def appVersionName = "1.96.3"
+def appVersionName = "1.96.4"
 def computeVersionCode = { String name ->
     def p = name.tokenize('.')
     def major = (p.size() > 0 ? p[0] : "0").toInteger()
@@ -80,6 +80,11 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    // AL6-fix — CsdMessagingService extiende el servicio FCM de Capacitor; el módulo
+    // app necesita firebase-messaging en su classpath (el plugin de push lo declara
+    // como implementation y no lo expone). Misma versión que @capacitor/push-notifications.
+    def fcmVersion = rootProject.hasProperty('firebaseMessagingVersion') ? rootProject.ext.firebaseMessagingVersion : '25.0.1'
+    implementation "com.google.firebase:firebase-messaging:$fcmVersion"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"

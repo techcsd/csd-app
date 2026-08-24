@@ -35,6 +35,23 @@ public class MainActivity extends BridgeActivity {
     // STK-LX3 con Chromium 81). El umbral iguala el piso real de Angular 21.
     private static final int MIN_CHROMIUM_MAJOR = 111;
 
+    // AL6-fix — bandera de primer plano leída por CsdMessagingService: si la app
+    // está visible cuando llega la push de alarma, la deja al overlay in-app (JS);
+    // si está en background, el servicio dispara la alarma nativa full-screen.
+    public static volatile boolean isForeground = false;
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        isForeground = true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isForeground = false;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // V3: register the APK self-installer plugin before the bridge boots.
@@ -51,6 +68,14 @@ public class MainActivity extends BridgeActivity {
         // el sonido/aviso con la app cerrada funcione. FCM lo usa por defecto vía el
         // meta-data del manifest (default_notification_channel_id = avisos_csd).
         ensurePushChannel();
+
+        // AL6-fix — crear SIEMPRE al arranque el canal de ALARMA de inspección
+        // ('alarma_inspeccion': sonido de alarma, IMPORTANCE_HIGH, bypass DnD). Antes
+        // solo se creaba de forma perezosa cuando la alarma NATIVA disparaba; por eso
+        // la push dominical (data.channel_id='alarma_inspeccion') caía al canal por
+        // defecto 'avisos_csd' y llegaba SILENCIOSA (solo badge) con la app cerrada.
+        // Creándolo aquí, la push de fondo suena como despertador y hace heads-up.
+        try { WeeklyAlarm.ensureChannel(getApplicationContext()); } catch (Exception ignored) {}
 
         // WV-GUARD: si el WebView es demasiado viejo para Angular 21, reemplazamos
         // la vista del bridge por un mensaje nativo accionable (el WebView del

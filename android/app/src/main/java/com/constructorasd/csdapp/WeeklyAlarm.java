@@ -120,7 +120,18 @@ public final class WeeklyAlarm {
 
     // ── Notificación full-screen tipo alarma ───────────────────────────────────
     public static void fire(Context ctx) {
+        fire(ctx, null, null);
+    }
+
+    /**
+     * AL6 — muestra la alarma full-screen. Con título/cuerpo opcionales (los usa la
+     * push dominical de fondo, CsdMessagingService, para mostrar la placa; si vienen
+     * vacíos cae a los textos por defecto). Crea el canal si falta.
+     */
+    public static void fire(Context ctx, String title, String body) {
         ensureChannel(ctx);
+        String t = (title != null && !title.trim().isEmpty()) ? title : "Inspección de tu vehículo";
+        String bd = (body != null && !body.trim().isEmpty()) ? body : "Haz ahora la inspección. Sonará hasta que la completes.";
 
         Intent open = new Intent(ctx, MainActivity.class);
         open.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -138,8 +149,8 @@ public final class WeeklyAlarm {
             b.setSound(alarmSound());
         }
         b.setSmallIcon(android.R.drawable.ic_lock_idle_alarm);
-        b.setContentTitle("Inspección de tu vehículo");
-        b.setContentText("Haz ahora la inspección. Sonará hasta que la completes.");
+        b.setContentTitle(t);
+        b.setContentText(bd);
         b.setAutoCancel(true);
         b.setOngoing(false);
         b.setContentIntent(content);
@@ -158,7 +169,7 @@ public final class WeeklyAlarm {
         if (nm != null) nm.cancel(NOTIF_ID);
     }
 
-    private static void ensureChannel(Context ctx) {
+    public static void ensureChannel(Context ctx) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
         if (nm == null || nm.getNotificationChannel(CHANNEL_ID) != null) return;

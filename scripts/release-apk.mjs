@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.96.3';
+const VERSION = '1.96.4';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,16 +58,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.96.3';
+const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-08-23';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Actualizaciones compatibles con más teléfonos (arreglo "Aplicación no instalada")';
+const TITULO = 'La alarma del reporte semanal ahora suena con la app cerrada';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Actualización', d: 'Se corrigió el error "Aplicación no instalada" al actualizar en algunos teléfonos (Xiaomi/MIUI y Android más viejos): se restauró la firma v1 del APK para que el instalador del sistema la reconozca.' },
+  { t: 'arreglo', m: 'Flota', d: 'La alarma del reporte semanal del domingo ahora suena y aparece en pantalla completa aunque tengas la app cerrada o en segundo plano (antes solo se veía al abrir la app).' },
+  { t: 'mejora', m: 'Notificaciones', d: 'La alarma de inspección llega con sonido de despertador y aviso emergente.' },
 ];
 
 const TIPO_POR_COMMIT = {
