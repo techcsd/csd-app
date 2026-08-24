@@ -20,8 +20,12 @@ import {
   NACIONALIDADES,
   NACIONALIDAD_LABEL,
   TIPOS_DOCUMENTO,
+  CUADRILLAS,
+  ASEGURAMIENTO,
+  ASEGURAMIENTO_LABEL,
   Nacionalidad,
   TipoDocumento,
+  AseguramientoEstado,
   PersonalObra,
   PersonalFirma,
 } from '../../../core/models/personal-obra.model';
@@ -50,6 +54,9 @@ export class PersonalExpedientePage implements OnInit {
   readonly nacionalidades = NACIONALIDADES;
   readonly tiposDocumento = TIPOS_DOCUMENTO;
   readonly nacionalidadLabel = NACIONALIDAD_LABEL;
+  readonly cuadrillas = CUADRILLAS; // AV4
+  readonly aseguramientos = ASEGURAMIENTO; // AV4
+  readonly aseguramientoLabel = ASEGURAMIENTO_LABEL; // AV4
 
   personal = signal<PersonalObra | null>(null);
   fotos = signal<Partial<Record<FotoTipo, string>>>({});
@@ -69,10 +76,14 @@ export class PersonalExpedientePage implements OnInit {
   eTipoDoc = signal<TipoDocumento>('cedula');
   eDocNumero = signal('');
   eCargoId = signal('');
+  eCuadrilla = signal(''); // AV4
+  eAseguramiento = signal<AseguramientoEstado>('desconocido'); // AV4
   eTelefono = signal('');
   eNotas = signal('');
 
   cargoOptions = computed(() => this.cargos().map((c) => ({ id: c.id, label: `${c.nombre} · ${c.codigo}` })));
+  cuadrillaOptions = computed(() => this.cuadrillas.map((c) => ({ id: c.value, label: c.label }))); // AV4
+  aseguramientoActual = computed(() => this.personal()?.aseguramiento_estado ?? 'desconocido'); // AV4
 
   puedeGestionar = computed(
     () =>
@@ -148,6 +159,8 @@ export class PersonalExpedientePage implements OnInit {
     this.eTipoDoc.set(p.tipo_documento);
     this.eDocNumero.set(p.documento_numero ?? '');
     this.eCargoId.set(p.cargo_id ?? '');
+    this.eCuadrilla.set((p.cuadrilla as string) ?? ''); // AV4
+    this.eAseguramiento.set(p.aseguramiento_estado ?? 'desconocido'); // AV4
     this.eTelefono.set(p.telefono ?? '');
     this.eNotas.set(p.notas ?? '');
     this.editando.set(true);
@@ -173,6 +186,8 @@ export class PersonalExpedientePage implements OnInit {
         tipo_documento: this.eTipoDoc(),
         documento_numero: this.eDocNumero().trim() || null,
         cargo_id: this.eCargoId() || null,
+        cuadrilla: this.eCuadrilla() || null, // AV4
+        aseguramiento_estado: this.eAseguramiento(), // AV4
         telefono: this.eTelefono().trim() || null,
         notas: this.eNotas().trim() || null,
       };

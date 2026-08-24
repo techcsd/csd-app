@@ -20,6 +20,8 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
 import { CronogramaService } from '../../../core/services/cronograma.service';
 import { CronogramaTarea } from '../../../core/models/cronograma.model';
 import { BitacoraService } from '../../../core/services/bitacora.service';
+import { ProyectosService } from '../../../core/services/proyectos.service';
+import { ResponsableProyecto } from '../../../core/models/proyecto.model';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -55,6 +57,7 @@ export class PartePage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private camera = inject(CameraService);
   private bitacora = inject(BitacoraService);
+  private proyectosSvc = inject(ProyectosService);
   private cronograma = inject(CronogramaService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
@@ -91,6 +94,8 @@ export class PartePage implements OnDestroy {
   );
   pickProyecto(id: string): void {
     this.proyectoId.set(id);
+    // AV3 — al cambiar de obra, recargar sus ingenieros y por defecto el principal.
+    void this.loadIngenierosObra(id, true);
   }
 
   // R21/R22 — clima y migración (primeras preguntas tras la obra).
@@ -109,6 +114,11 @@ export class PartePage implements OnDestroy {
   // W3 — datos finales del parte (paso 9).
   ingenieroResponsable = signal('');
   horaFinTrabajo = signal('');
+  // AV3 — ingenieros responsables de la obra (N:M). El principal va primero; el
+  // usuario elige ENTRE ellos (chips) en vez de escribir a mano. Vacío offline →
+  // el input libre sigue funcionando (fallback). El valor guardado es el NOMBRE
+  // (crear_bitacora_app recibe texto → retrocompatible).
+  ingenierosObra = signal<ResponsableProyecto[]>([]);
 
   carpinteria = signal(0);
   acero = signal(0);
@@ -397,6 +407,7 @@ export class PartePage implements OnDestroy {
       void this.loadEstructurasObra(this.proyectoId()); // Z20
       void this.loadTareasCronograma(this.proyectoId());
       this.prefillIngeniero(); // AA11
+      void this.loadIngenierosObra(this.proyectoId()); // AV3
     }
     this.hydrated = true;
   }
@@ -867,6 +878,7 @@ export class PartePage implements OnDestroy {
       }
       void this.loadTareasCronograma(this.proyectoId()); // Y15.8 (aplica también a "no se trabajó")
       this.prefillIngeniero(); // AA11 — default = encargado de la obra
+      void this.loadIngenierosObra(this.proyectoId()); // AV3 — picker de ingenieros
     }
     // Z4 — flujo corto "no se trabajó": obra → motivo → resumen.
     if (this.sinActividad()) {
@@ -974,12 +986,43 @@ export class PartePage implements OnDestroy {
   }
 
   /** AA11 — precarga el ingeniero con el encargado de la obra (si el campo está
-   *  vacío); el usuario puede cambiarlo. */
+   *  vacío); el usuario puede cambiarlo. Offline-safe (usa el nombre cacheado del
+   *  proyecto, que es el ingeniero PRINCIPAL espejado en responsable_nombre). */
   private prefillIngeniero(): void {
     if (this.ingenieroResponsable().trim()) return;
     const p = this.proyectos().find((x) => x.id === this.proyectoId());
     const enc = p?.responsable_nombre?.trim();
     if (enc) this.ingenieroResponsable.set(enc);
+  }
+
+  /**
+   * AV3 — carga los ingenieros responsables de la obra (N:M) para el picker del
+   * paso 9. Best-effort/online (offline queda el input libre + el prefill). Si el
+   * campo está vacío —o `forceDefault` y el nombre actual no pertenece a la obra
+   * nueva— por defecto el ingeniero PRINCIPAL (es_principal), como la web.
+   */
+  private async loadIngenierosObra(proyectoId: string, forceDefault = false): Promise<void> {
+    if (!proyectoId) {
+      this.ingenierosObra.set([]);
+      return;
+    }
+    try {
+      const eng = (await this.proyectosSvc.responsablesDeProyecto(proyectoId)).filter((e) => e.activo);
+      this.ingenierosObra.set(eng);
+      const actual = this.ingenieroResponsable().trim();
+      const enLista = eng.some((e) => e.nombre.trim() === actual);
+      if (!actual || (forceDefault && !enLista)) {
+        const principal = eng.find((e) => e.es_principal) ?? eng[0];
+        if (principal?.nombre) this.ingenieroResponsable.set(principal.nombre);
+      }
+    } catch {
+      /* offline / error → se conserva el input libre y el prefill del encargado */
+    }
+  }
+
+  /** AV3 — elige un ingeniero de la obra desde los chips del paso 9. */
+  elegirIngeniero(nombre: string): void {
+    this.ingenieroResponsable.set(nombre);
   }
 
   private prev(): void {

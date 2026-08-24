@@ -108,6 +108,13 @@ export class UserContextService {
   // aunque tenga otros roles, igual que el helper del servidor.
   esChofer = computed(() => this.hasRol('chofer_transportista'));
 
+  // AV2 — "Mi rendimiento" (informe de incentivo PERSONAL) participa SOLO el
+  // Chofer y el Jefe de flota. Fuente ÚNICA del gating (menú de Transporte + guard
+  // de ruta), espejo del gating por rol de la web: NO lo ven admin/gerencia/
+  // dirección (esos conservan las vistas ADMINISTRATIVAS del incentivo — /incentivos
+  // —, no la personal). Un `if` suelto por pantalla es justo lo que AV2 prohíbe.
+  puedeVerMiRendimiento = computed(() => this.esChofer() || this.hasRol('jefe_flota'));
+
   // AE6 — el rol admin (Xaviel) mantiene la opción de GALERÍA en los flujos
   // solo-cámara (combustible, reporte semanal, pre-uso, entrega/devolución) para
   // QA/pruebas; nadie más la ve. Regla general del modo solo-cámara.

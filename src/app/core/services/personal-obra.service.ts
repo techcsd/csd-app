@@ -30,6 +30,9 @@ export interface RegistroCaptura {
   tipoDocumento: PersonalObra['tipo_documento'];
   documentoNumero: string | null;
   cargoId: string | null;
+  /** AV4 — cuadrilla (eje TECNICO) + aseguramiento manual. */
+  cuadrilla: string | null;
+  aseguramientoEstado: PersonalObra['aseguramiento_estado'];
   telefono: string | null;
   notas: string | null;
   /** Fotos por tipo (blob). Las ausentes se omiten. */
@@ -164,6 +167,8 @@ export class PersonalObraService {
         tipo_documento: input.tipoDocumento,
         documento_numero: input.documentoNumero,
         cargo_id: input.cargoId,
+        cuadrilla: input.cuadrilla, // AV4
+        aseguramiento_estado: input.aseguramientoEstado ?? 'desconocido', // AV4
         telefono: input.telefono,
         notas: input.notas,
         registrado_por: this.ctx.profile()?.id ?? null,
@@ -213,6 +218,8 @@ export class PersonalObraService {
           tipo_documento: payload['tipo_documento'] ?? 'cedula',
           documento_numero: payload['documento_numero'] ?? null,
           cargo_id: payload['cargo_id'] ?? null,
+          cuadrilla: payload['cuadrilla'] ?? null, // AV4
+          aseguramiento_estado: payload['aseguramiento_estado'] ?? 'desconocido', // AV4
           telefono: payload['telefono'] ?? null,
           notas: payload['notas'] ?? null,
           registrado_por: payload['registrado_por'] ?? null,

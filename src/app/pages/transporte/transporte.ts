@@ -30,6 +30,8 @@ interface HubTile {
   tint: string;
   /** true = solo roles elevados (R14); false/omitido = también el chofer. */
   elevado?: boolean;
+  /** AV2 — true = incentivo PERSONAL ("Mi rendimiento"): solo Chofer y Jefe de flota. */
+  incentivoPersonal?: boolean;
 }
 
 // AI1 — Transporte v3: menú "10 botones", 3 por fila (iconos pequeños), según el
@@ -50,7 +52,8 @@ const TILES: HubTile[] = [
   { key: 'semanal', icon: '📋', label: 'Inspección Vehículo', tint: '#f97316' },
   { key: 'actividad', icon: '📈', label: 'Mi Actividad', tint: '#16a34a' },
   // AT2 — "Mi rendimiento": informe de incentivo propio (puntaje semanal + badge).
-  { key: 'miRendimiento', icon: '🏅', label: 'Mi Rendimiento', tint: '#eab308' },
+  // AV2 — solo Chofer y Jefe de flota (incentivoPersonal); no admin/gerencia.
+  { key: 'miRendimiento', icon: '🏅', label: 'Mi Rendimiento', tint: '#eab308', incentivoPersonal: true },
   // AU7 — "Mi recorrido" (Timeline diario: trazo + paradas + estado offline).
   { key: 'miRecorrido', icon: '🗺️', label: 'Mi Recorrido', tint: '#0ea5e9' },
 
@@ -107,7 +110,11 @@ export class TransportePage {
   // AI1 — cuadros del hub gated por rol (R14): el chofer ve solo los suyos.
   // El banner "Doc. en proceso" ya no es un tile: va arriba (ver template).
   tiles = computed(() => {
-    const base = TILES.filter((t) => !t.elevado || this.ctx.esFlotaElevado());
+    const base = TILES.filter((t) => {
+      // AV2 — "Mi rendimiento": solo Chofer y Jefe de flota (fuente única en ctx).
+      if (t.incentivoPersonal) return this.ctx.puedeVerMiRendimiento();
+      return !t.elevado || this.ctx.esFlotaElevado();
+    });
     return this.aplicarOrden(base);
   });
 

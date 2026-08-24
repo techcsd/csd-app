@@ -2,8 +2,14 @@
 // entidad/contrato) para que el carnet/QR y el expediente coincidan con la web.
 
 export type Nacionalidad = 'dominicano' | 'haitiano' | 'otro';
-export type TipoDocumento = 'cedula' | 'pasaporte' | 'carnet_electoral' | 'ninguno';
+// AV4 — catálogo de tipo de documento homologado con la web (SGC): se agrega
+// `id_permiso_trabajo` (ID / permiso de trabajo, para haitianos regularizados).
+export type TipoDocumento = 'cedula' | 'id_permiso_trabajo' | 'pasaporte' | 'carnet_electoral' | 'ninguno';
 export type EstadoPersonal = 'activo' | 'inactivo';
+// AV4 — eje TECNICO del listado (cuadrilla), independiente del cargo (nivel).
+export type Cuadrilla = 'varillero' | 'carpintero' | 'ayudante' | 'capataz' | 'otro';
+// AV4 — estado de aseguramiento (flag manual, default aprobado por RRHH).
+export type AseguramientoEstado = 'asegurado' | 'no_asegurado' | 'desconocido';
 
 /** Los 5 tipos de foto de evidencia (en el orden del expediente). */
 export type FotoTipo = 'persona' | 'documento' | 'pared' | 'carnet' | 'persona_carnet_cedula';
@@ -46,6 +52,11 @@ export interface PersonalObra {
   tipo_documento: TipoDocumento;
   documento_numero?: string | null;
   cargo_id?: string | null;
+  // AV4 — cuadrilla (eje TECNICO) + aseguramiento + activo en obra (ciclo de import).
+  cuadrilla?: Cuadrilla | string | null;
+  aseguramiento_estado?: AseguramientoEstado;
+  aseguramiento_fecha?: string | null;
+  activo_en_obra?: boolean;
   empleado_id?: string | null;
   telefono?: string | null;
   notas?: string | null;
@@ -76,10 +87,32 @@ export const NACIONALIDADES: { value: Nacionalidad; label: string; icon: string 
 
 export const TIPOS_DOCUMENTO: { value: TipoDocumento; label: string; icon: string }[] = [
   { value: 'cedula', label: 'Cédula', icon: '🪪' },
+  { value: 'id_permiso_trabajo', label: 'ID / permiso de trabajo', icon: '🆔' },
   { value: 'pasaporte', label: 'Pasaporte', icon: '📘' },
   { value: 'carnet_electoral', label: 'Carnet electoral', icon: '🗳️' },
   { value: 'ninguno', label: 'Sin documento', icon: '🚫' },
 ];
+
+// AV4 — cuadrillas (eje TECNICO). "otro" = fuera de las estándar.
+export const CUADRILLAS: { value: Cuadrilla; label: string }[] = [
+  { value: 'varillero', label: 'Varillero (acero)' },
+  { value: 'carpintero', label: 'Carpintero' },
+  { value: 'ayudante', label: 'Ayudante' },
+  { value: 'capataz', label: 'Capataz' },
+  { value: 'otro', label: 'Otra' },
+];
+
+// AV4 — estado de aseguramiento (semáforo de la ficha/control por obra).
+export const ASEGURAMIENTO: { value: AseguramientoEstado; label: string; icon: string }[] = [
+  { value: 'asegurado', label: 'Asegurado', icon: '🟢' },
+  { value: 'no_asegurado', label: 'No asegurado', icon: '🔴' },
+  { value: 'desconocido', label: 'Sin definir', icon: '⚪' },
+];
+export const ASEGURAMIENTO_LABEL: Record<string, string> = {
+  asegurado: 'Asegurado',
+  no_asegurado: 'No asegurado',
+  desconocido: 'Sin definir',
+};
 
 /** Guía de las 5 fotos del expediente (orden + instrucción en pantalla). */
 export const FOTOS_GUIA: { tipo: FotoTipo; label: string; ayuda: string; hint: string }[] = [

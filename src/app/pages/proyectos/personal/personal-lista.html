@@ -45,6 +45,14 @@
         <div class="pl-filtros">
           <app-collapsible-select label="Obra" icon="🏗" [options]="obraOptions()" [selectedId]="filObra()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="filObra.set($event)" />
           <app-collapsible-select label="Cargo" icon="🛠" [options]="cargoOptions()" [selectedId]="filCargo()" [searchable]="true" searchPlaceholder="Buscar cargo…" (picked)="filCargo.set($event)" />
+          <!-- AV4 — filtro por cuadrilla (eje TECNICO) -->
+          <app-collapsible-select label="Cuadrilla" icon="👷" [options]="cuadrillaOptions()" [selectedId]="filCuadrilla()" (picked)="filCuadrilla.set($event)" />
+          <!-- AV4 — filtro por aseguramiento (control de portería/supervisión) -->
+          <div class="pl-filtro-chips">
+            @for (a of aseguramientoOptions(); track a.id) {
+              <button type="button" class="pl-fchip" [class.pl-fchip--on]="filAseguramiento() === a.id" (click)="filAseguramiento.set(a.id)">{{ a.label }}</button>
+            }
+          </div>
           <div class="pl-filtro-chips">
             <button type="button" class="pl-fchip" [class.pl-fchip--on]="filNacionalidad() === ''" (click)="filNacionalidad.set('')">Todas</button>
             @for (n of nacionalidades; track n.value) {
@@ -65,11 +73,14 @@
         <div class="pl-card" (click)="abrir(p)">
           <div class="pl-card__main">
             <span class="pl-card__nombre">
+              <!-- AV4 — semáforo de aseguramiento de un vistazo (verde/rojo/gris) -->
+              <span class="pl-card__aseg" [title]="aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido']">{{ aseguramientoIcono(p) }}</span>
               {{ p.nombre }} {{ p.apellido }}
               @if (p.estado === 'inactivo') { <span class="pl-card__inact">Inactivo</span> }
             </span>
             <span class="pl-card__meta">
               {{ p.cargo?.nombre || 'Sin cargo' }} · {{ nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad }}
+              @if (p.cuadrilla) { · 👷 {{ p.cuadrilla }} }
             </span>
             <span class="pl-card__sub">
               @if (p.carnet_numero) { 🎫 {{ p.carnet_numero }} } @else { ⏳ Carnet pendiente }

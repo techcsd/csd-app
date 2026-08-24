@@ -314,6 +314,11 @@
   display: inline-block;
   margin: 12px 0;
 }
+// AV1 — despachante inválido (datos viejos): estado de corrección, no el pad.
+.cdet__firmar--correccion {
+  border-color: #ef4444;
+  background: #ef44441a;
+}
 
 // AU4 — materiales fuera del catálogo (nota libre)
 .cdet__libres {

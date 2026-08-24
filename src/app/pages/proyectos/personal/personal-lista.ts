@@ -10,7 +10,7 @@ import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collaps
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
-import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
+import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, CUADRILLAS, ASEGURAMIENTO, ASEGURAMIENTO_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
 
 /** AR1 (app) — Consulta del personal de obra: conteos + buscador + filtros + rows. */
 @Component({
@@ -29,6 +29,9 @@ export class PersonalListaPage {
 
   readonly nacionalidades = NACIONALIDADES;
   readonly nacionalidadLabel = NACIONALIDAD_LABEL;
+  readonly cuadrillas = CUADRILLAS; // AV4
+  readonly aseguramientos = ASEGURAMIENTO; // AV4
+  readonly aseguramientoLabel = ASEGURAMIENTO_LABEL; // AV4
 
   loading = signal(true);
   error = signal('');
@@ -41,10 +44,19 @@ export class PersonalListaPage {
   filCargo = signal('');
   filNacionalidad = signal('');
   filEstado = signal<'activo' | 'inactivo' | ''>('activo');
+  filCuadrilla = signal(''); // AV4
+  filAseguramiento = signal(''); // AV4
   mostrarFiltros = signal(false);
 
   obraOptions = computed(() => [{ id: '', label: 'Todas las obras' }, ...this.obras().map((o) => ({ id: o.id, label: o.nombre }))]);
   cargoOptions = computed(() => [{ id: '', label: 'Todos los cargos' }, ...this.cargos().map((c) => ({ id: c.id, label: c.nombre }))]);
+  cuadrillaOptions = computed(() => [{ id: '', label: 'Todas las cuadrillas' }, ...this.cuadrillas.map((c) => ({ id: c.value, label: c.label }))]); // AV4
+  aseguramientoOptions = computed(() => [{ id: '', label: 'Todos' }, ...this.aseguramientos.map((a) => ({ id: a.value, label: a.label }))]); // AV4
+
+  /** AV4 — icono de semáforo del aseguramiento (verde/rojo/gris) para la fila. */
+  aseguramientoIcono(p: PersonalObra): string {
+    return this.aseguramientos.find((a) => a.value === (p.aseguramiento_estado ?? 'desconocido'))?.icon ?? '⚪';
+  }
 
   /** Oculta datos de prueba salvo al admin (QA). */
   private visibles = computed(() => this.personal().filter((p) => this.ctx.esAdmin() || !p.es_prueba));
@@ -54,12 +66,16 @@ export class PersonalListaPage {
     const nac = this.filNacionalidad();
     const est = this.filEstado();
     const obra = this.filObra();
+    const cuad = this.filCuadrilla(); // AV4
+    const aseg = this.filAseguramiento(); // AV4
     const term = this.q().trim().toLowerCase();
     return this.visibles().filter((p) => {
       if (obra && p.proyecto_id !== obra) return false;
       if (cargo && p.cargo_id !== cargo) return false;
       if (nac && p.nacionalidad !== nac) return false;
       if (est && p.estado !== est) return false;
+      if (cuad && (p.cuadrilla ?? '') !== cuad) return false; // AV4
+      if (aseg && (p.aseguramiento_estado ?? 'desconocido') !== aseg) return false; // AV4
       if (term) {
         const hay = `${p.nombre} ${p.apellido ?? ''} ${p.documento_numero ?? ''} ${p.cargo?.nombre ?? ''} ${p.carnet_numero ?? ''}`.toLowerCase();
         if (!hay.includes(term)) return false;
@@ -132,6 +148,8 @@ export class PersonalListaPage {
     this.filCargo.set('');
     this.filNacionalidad.set('');
     this.filEstado.set('activo');
+    this.filCuadrilla.set(''); // AV4
+    this.filAseguramiento.set(''); // AV4
     this.q.set('');
   }
 

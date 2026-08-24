@@ -65,6 +65,12 @@
               </div>
             }
           </div>
+        } @else if (despachanteRequiereCorreccion()) {
+          <!-- AV1 — figuras como despachante pero tu rol no puede firmar: corrección pendiente. -->
+          <div class="cdet__firmar cdet__firmar--correccion">
+            <h3 class="doc__sec">⚠️ Firma no disponible</h3>
+            <p class="cdet__firmar-nota">Figuras como despachante de este conduce, pero tu rol no está habilitado para firmar como despachante. El conduce necesita corrección: pide a un almacenista o al administrador que reasigne el despachante.</p>
+          </div>
         } @else if (d.firma_despachante_pendiente) {
           <div class="doc__chip doc__chip--inc cdet__firmar-pend">Pendiente de firma del despachante</div>
         }

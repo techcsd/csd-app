@@ -49,6 +49,21 @@
             (picked)="cargoId.set($event)"
           />
 
+          <!-- AV4 — cuadrilla (eje TECNICO: acero/carpintería/casa) + aseguramiento -->
+          <label class="field-label preg__mt">Cuadrilla (opcional)</label>
+          <app-collapsible-select
+            label="Cuadrilla" icon="👷"
+            [options]="cuadrillaOptions()" [selectedId]="cuadrilla()"
+            (picked)="cuadrilla.set($event)"
+          />
+
+          <label class="field-label preg__mt">Aseguramiento</label>
+          <div class="preg__opts">
+            @for (a of aseguramientos; track a.value) {
+              <app-option-button [icon]="a.icon" [label]="a.label" [selected]="aseguramiento() === a.value" (pressed)="aseguramiento.set(a.value)" />
+            }
+          </div>
+
           <label class="field-label preg__mt" for="tel">Teléfono (opcional)</label>
           <input id="tel" class="field" type="tel" inputmode="tel" [ngModel]="telefono()" (ngModelChange)="telefono.set($event)" placeholder="Ej. 809-000-0000" />
         }

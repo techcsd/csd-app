@@ -1,5 +1,45 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 24/08/2026 — PROMPT-8 ronda AV (app) — **FASES 1-5 IMPLEMENTADAS · build verde · SIN commit/push/release (falta OK + device-QA de Xaviel)**
+
+**TL;DR:** PROMPT-8 depende de PROMPT-7 (SGC), que **ya está en prod** (SGC `88e1bc2` + `71017fc`, migraciones AV1/AV3/AV4/AV7 aplicadas). Esta sesión cableó el lado app de las 5 fases consumiendo esos contratos. **`npm run build` = verde** (solo warnings preexistentes de budget + un NG8102 preexistente en personal-carnet.html, ninguno mío). **NADA committeado/subido** — dar OK y correr device-QA antes de release. No se bumpeó versión.
+
+### ✅ Hecho esta sesión (build verde, sin commit)
+- **🔴 FASE 1 — AV1 guard de la firma del despachante.** Raíz (según SGC): el selector ya se arregló server-side (`despachantes_disponibles` filtra por `es_despachante_elegible` → chofer FUERA, gerente_proyectos DENTRO) + un **bug del server** en `firmar_conduce` (rechazaba despachantes elegibles) ya corregido en prod. Lo que faltaba en la app: **no ofrecer el pad a quien el server va a rechazar**.
+  - `conduces.service.ts`: `ConducePorFirmar` ahora trae `despachante_elegible` (de `mis_conduces_por_firmar`); nuevo `soyDespachanteElegiblePara(salidaId)`.
+  - `conduce-detalle.ts/.html`: `puedeFirmarDespachante` ahora exige **elegible === true**; nuevo `despachanteRequiereCorreccion` → panel rojo "Firma no disponible / reasignar despachante" en vez del pad. `load()` resuelve la elegibilidad desde la matriz única. El catch de `firmarComoDespachante` detecta `DESP_INELEGIBLE:` → limpia el mensaje + pasa a corrección (defensa en profundidad).
+  - `conduces-por-firmar.html`: filas inelegibles → chip "⚠️ Tu rol no puede firmar — requiere corrección" + CTA "Ver ▸" (abre el detalle, que muestra el panel de corrección, NO el pad).
+  - **Selectores (4, una regla):** despachante→`despachantes_disponibles` ✅, receptor+confirmador→`receptores_disponibles` ✅ (ambos ya filtran server-side, AT16/AU9). **Transporta: SIN cambio** — PROMPT-7 no shipeó fuente de elegibilidad para "transporta" (no existe `es_transportista_elegible`). Ver pendientes §G.
+  - **Offline/outbox:** la firma remota del despachante es **RPC online directo** (no outbox) → no hay caso de firma encolada atascada. La firma en persona al crear ya no puede elegir chofer (selector filtrado).
+- **FASE 2 — AV2 gating "Mi rendimiento".** Fuente única en `UserContextService.puedeVerMiRendimiento = esChofer() || hasRol('jefe_flota')`. Tile `miRendimiento` del hub Transporte gateado con eso (flag `incentivoPersonal`); ruta `/mi-rendimiento` con nuevo `roleAnyGuard(['chofer_transportista','jefe_flota'])` (defensa en profundidad para deep-links/push). Admin/gerencia/dirección **dejan de ver** "Mi rendimiento" pero conservan `/incentivos` (gestión). Los destinatarios del informe semanal (AV7) son server-side (edge `incentivo-semanal` + `destinatarios_informe_incentivo`) → nada app-side.
+- **FASE 3 — AV6 árbol de Ingeniería.** Árbol canónico (doc SGC `AV5-AV6-...md`): **"Crear ruta" es de Flota/Transporte, NO de Ingeniería** → se retiró el tile del hub `/ingenieria`. Sigue accesible desde el flujo Transporte (pantalla Rutas/Conduce), desde "Planificar" de Solicitud de movimiento, y la ruta `/transporte/rutas/crear` mantiene `moduleAnyGuard(['flota','ingenieria'])` (deep-links vivos). **Nombre ya unificado**: la requisición ya se llama **"Requisición"** en la app (home.ts:36); "Solicitud de movimiento" (AY11) se mantiene (es otro flujo). Ingeniería queda con "Solicitud de movimiento" (las demás capacidades —bitácora, requisición, mi proyecto— ya existen como módulos propios en la app: paridad de **capacidades**).
+- **FASE 5 — AV3 N ingenieros en la bitácora.** `parte.ts`: el campo "Ingeniero responsable" (antes texto libre precargado con un solo nombre) ahora ofrece **chips de los ingenieros de la obra** (`responsables_de_proyecto`, principal primero y marcado) manteniendo el input libre como fallback offline. `proyecto.model.ts` `ResponsableProyecto` +`es_principal`. Default = **principal** (espejo de `responsable_nombre`, offline-safe). Valor guardado = nombre (texto) → retrocompatible con `crear_bitacora_app`. ⚠️ ojo colisión de nombres: el servicio se inyecta como `proyectosSvc` (ya existe una signal `proyectos`).
+- **FASE 4 — AV4 ficha del personal (capa aditiva).** El backend AV4 **ya está en prod** (columnas `cuadrilla`, `aseguramiento_estado/fecha/doc_path`, `activo_en_obra`; `personal_obra` vacía). La **captura cara + documento en obra por outbox YA existía** (registro tiene 5 slots incl. `persona`, `documento`, `persona_carnet_cedula`, solo-cámara). Añadido esta sesión:
+  - `personal-obra.model.ts`: tipos+listas `Cuadrilla`, `AseguramientoEstado`, `CUADRILLAS`, `ASEGURAMIENTO(_LABEL)`; `tipo_documento` +`id_permiso_trabajo` (homologado con SGC); campos en `PersonalObra`.
+  - `personal-obra.service.ts`: `RegistroCaptura` + payload + upsert del handler escriben `cuadrilla`+`aseguramiento_estado`.
+  - **registro** (alta): campos Cuadrilla (select) + Aseguramiento (option-buttons) en el paso Datos, en borrador/autosave/registrarOtro/submit.
+  - **expediente** (ficha): muestra Cuadrilla + Aseguramiento; edición inline los incluye (via `enqueueEditar`, offline-safe).
+  - **control por obra** (`personal-lista`): **semáforo de aseguramiento** por fila (🟢/🔴/⚪) + cuadrilla en meta; nuevos filtros **Cuadrilla** y **Aseguramiento** (+ los ya existentes obra/cargo/nacionalidad/estado). Sigue siendo lista de filas (no galería de fotos — posible follow-up).
+  - El **import como ciclo** (diff/historial/bajas) es feature **WEB** (Excel de escritorio) → nada app-side.
+
+### ⏳ Pendiente — Claude puede hacer (cuando Xaviel dé OK)
+1. **Release** (si Xaviel aprueba): bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `scripts/release-apk.mjs`; `npm run build` → `npm run apk` (registra versión Y1) → `npm run apk:publish`. NO forzar mínima.
+2. **FASE 4 nice-to-have:** vista de control como **galería de miniaturas** (cara+documento) en vez de filas; captura/edición rápida de `aseguramiento_doc_path` (documento de respaldo del seguro) — hoy solo el flag+fecha.
+3. **Transporta (AV1):** si Xaviel define roles elegibles para "transporta", pedir a SGC un `es_transportista_elegible` y filtrar el selector de conductor igual que despachante.
+
+### 🔴 Pendiente — SOLO Xaviel (físico / decisión) — §G del CONTEXTO-ACTUALIZACION-3
+- **Device-QA de TODO** (no puedo probar en equipo). Guiones: (AV1) reproducir `CND-747ED8AB` como Papo (chofer-despachante) → antes: pad + banner rojo; después: fila "requiere corrección" + panel, **nunca el pad**; y confirmar que Test User 3 (Gerente_proyectos) SÍ aparece como despachante y puede firmar. (AV2) "Mi rendimiento" invisible para admin/gerencia, visible para chofer + jefe de flota. (AV6) el ingeniero ya NO ve "Crear ruta" en su hub pero sí puede planificar. (AV3) al armar un parte, elegir entre los ingenieros de la obra. (AV4) registrar personal con cuadrilla+aseguramiento y ver el semáforo/filtros.
+- **Decisiones abiertas (§G):** **Transporta** ¿admite no-choferes? (no tocado). **AV4:** definición exacta de "asegurado" (hoy flag manual, default RRHH), nombres finales del catálogo de tipo de documento, ¿quién ve números de documento? **AV6:** confirmar que la app puede **agrupar** (paridad de capacidades, no de menú) — se asumió que sí.
+- **Commit/push/release** — nada se subió; dar OK.
+
+### ✅ Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
+git status   # varios archivos modificados, SIN commit
+```
+
+---
+
 ## 🟢 SESIÓN 22/08/2026 — PROMPT-6 ronda AU (app) — **RELEASE 1.96.0 PUBLICADO (rolling) · FASE 1–4 + AU14 · verificado en dispositivo (Android)**
 
 **SHIPPED:** commit **`4ffb15e`** → push `main` → PWA por Vercel. **APK 1.96.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 7 cambios curados) + subido al bucket (`csd-app-1.96.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=1.96.0`** (rolling, `sql/2026-08-22-publicar-1.96.0.sql` aplicado), **`minima=1.92.0` INTACTA** (NO forzada). `version_publicada()` ya devuelve 1.96.0. **Rollback:** `update sgc.app_versiones set publicada=(version='1.95.0') where plataforma='movil';` + `git revert 4ffb15e && git push`.

@@ -17,6 +17,12 @@ interface IngTile {
  * AY11 — hub de "Ingeniería": concentra los submódulos de ingenieros/producción.
  * Hoy: Solicitud de movimiento (pedir al depto. de transporte mover material/equipo;
  * los referentes planifican creando la ruta). Extensible para más submódulos.
+ *
+ * AV6 — árbol canónico web↔app: "Crear ruta" es de FLOTA/Transporte (una ruta es
+ * transporte: vehículo, chofer, paradas, tracking), NO de Ingeniería — se retiró de
+ * este hub. Ingeniería ORIGINA la Solicitud de movimiento; el referente la convierte
+ * en ruta desde ahí (Planificar) o desde Flota. La ruta /transporte/rutas/crear sigue
+ * admitiendo flota|ingenieria (deep-links vivos), solo dejó de ofrecerse suelta acá.
  */
 @Component({
   selector: 'app-ingenieria',
@@ -41,15 +47,7 @@ export class IngenieriaPage {
       tint: '#9333ea',
       route: '/transporte/solicitudes-movimiento',
     },
-    {
-      // La ruta /transporte/rutas/crear admite flota|ingenieria (moduleAnyGuard),
-      // pero antes no se ofrecía desde acá → el ingeniero no la encontraba.
-      key: 'crearRuta',
-      icon: '🗺️',
-      label: 'Crear ruta',
-      tint: '#0891b2',
-      route: '/transporte/rutas/crear',
-    },
+    // AV6 — "Crear ruta" migró a Flota/Transporte (era transporte, no ingeniería).
   ]);
 
   constructor() {

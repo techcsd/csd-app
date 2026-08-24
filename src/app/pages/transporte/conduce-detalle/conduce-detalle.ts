@@ -58,12 +58,29 @@ export class ConduceDetallePage {
   firmaLista = signal(false);
   guardandoFirma = signal(false);
 
-  /** AS2 — ¿puedo firmar este conduce como despachante? (soy el designado y falta). */
-  puedeFirmarDespachante = computed(() => {
+  /**
+   * AV1 — ¿soy un despachante ELEGIBLE? (matriz única server-side
+   * `es_despachante_elegible`, leída vía mis_conduces_por_firmar). null = aún no
+   * resuelto / sin señal → no se ofrece el pad. Solo se resuelve cuando soy el
+   * despachante designado y falta mi firma.
+   */
+  despachanteElegible = signal<boolean | null>(null);
+
+  /** AS2 — ¿soy el despachante designado de este conduce y falta mi firma? */
+  private soyDespachanteDesignado = computed(() => {
     const d = this.detalle();
     if (!d) return false;
     return !!d.firma_despachante_pendiente && d.despachante_usuario_id === this.userCtx.profile()?.id;
   });
+
+  /** AS2/AV1 — ¿puedo firmar? Soy el designado Y mi rol es elegible (nunca ofrecer
+   *  el pad a un inelegible: la firma que dibuje será rechazada por el servidor). */
+  puedeFirmarDespachante = computed(() => this.soyDespachanteDesignado() && this.despachanteElegible() === true);
+
+  /** AV1 — soy el despachante designado PERO mi rol NO es elegible: el conduce
+   *  quedó con un despachante inválido (datos viejos) y requiere corrección
+   *  (reasignar despachante). Se muestra un estado claro en vez del pad. */
+  despachanteRequiereCorreccion = computed(() => this.soyDespachanteDesignado() && this.despachanteElegible() === false);
 
   /** AS3 — "Motivo" legible: prefiere la etiqueta del servidor (homologada con la
    *  web), cae al mapa local y por último prettifica el valor crudo. */
@@ -138,7 +155,17 @@ export class ConduceDetallePage {
       this.firmaLista.set(false);
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo firmar el conduce.');
+      // AV1 — defensa en profundidad: si el servidor rechaza por rol no elegible
+      // (DESP_INELEGIBLE), pasar al estado de corrección y mostrar el porqué limpio.
+      const msg = e instanceof Error ? e.message : 'No se pudo firmar el conduce.';
+      if (msg.includes('DESP_INELEGIBLE')) {
+        this.despachanteElegible.set(false);
+        this.firmandoDespachante.set(false);
+        this.firmaLista.set(false);
+        this.toast.error(msg.replace(/^.*DESP_INELEGIBLE:\s*/, ''));
+      } else {
+        this.toast.error(msg);
+      }
     } finally {
       this.guardandoFirma.set(false);
     }
@@ -151,7 +178,18 @@ export class ConduceDetallePage {
     }
     this.loading.set(true);
     try {
-      this.detalle.set(await this.conduces.conduceDetalleApp(this.salidaId));
+      const d = await this.conduces.conduceDetalleApp(this.salidaId);
+      this.detalle.set(d);
+      // AV1 — si soy el despachante designado y falta mi firma, resolver la
+      // elegibilidad desde la matriz única server-side antes de ofrecer el pad.
+      this.despachanteElegible.set(null);
+      if (d.firma_despachante_pendiente && d.despachante_usuario_id === this.userCtx.profile()?.id) {
+        try {
+          this.despachanteElegible.set(await this.conduces.soyDespachanteElegiblePara(this.salidaId));
+        } catch {
+          /* sin señal → queda null (no se ofrece el pad; el servidor sigue como defensa) */
+        }
+      }
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar el conduce.');
     } finally {

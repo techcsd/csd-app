@@ -85,3 +85,14 @@
   color: var(--primary);
   font-size: 15px;
 }
+// AV1 — despachante inválido: fila de "corrección pendiente" (no ofrece firmar).
+.porfirm__card--correccion {
+  border-color: #ef4444;
+  background: #ef44440d;
+}
+.porfirm__warn {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ef4444;
+}

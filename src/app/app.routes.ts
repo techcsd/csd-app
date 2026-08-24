@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pinGuard } from './core/guards/pin.guard';
-import { moduleGuard, moduleAnyGuard, submoduleGuard, obraGuard } from './core/guards/module.guard';
+import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard } from './core/guards/module.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -688,11 +688,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/actualizar/actualizar').then((m) => m.ActualizarPage),
   },
   {
-    // AT2 — "Mi rendimiento" del chofer (informe de incentivo propio). Sin
-    // moduleGuard: todo usuario ve SOLO lo suyo (la RLS del RPC filtra por
-    // auth.uid()). Destino de la push del lunes (ruta '/mi-rendimiento').
+    // AT2 — "Mi rendimiento" del chofer (informe de incentivo propio). Destino de
+    // la push del lunes (ruta '/mi-rendimiento'). AV2 — solo Chofer y Jefe de flota
+    // participan del incentivo: roleAnyGuard cierra el deep-link para el resto
+    // (defensa en profundidad; el menú ya lo oculta vía puedeVerMiRendimiento).
     path: 'mi-rendimiento',
-    canActivate: [authGuard, pinGuard],
+    canActivate: [authGuard, pinGuard, roleAnyGuard(['chofer_transportista', 'jefe_flota'])],
     loadComponent: () => import('./pages/mi-rendimiento/mi-rendimiento').then((m) => m.MiRendimientoPage),
   },
   {

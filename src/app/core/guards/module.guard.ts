@@ -21,6 +21,16 @@ export const moduleAnyGuard = (modulos: string[]): CanActivateFn => {
   };
 };
 
+/** AV2 — gate por CUALQUIERA de varios roles (roles.codigo). Usado por
+ *  "Mi rendimiento": solo Chofer y Jefe de flota participan del incentivo. */
+export const roleAnyGuard = (codigos: string[]): CanActivateFn => {
+  return () => {
+    const ctx = inject(UserContextService);
+    const router = inject(Router);
+    return codigos.some((c) => ctx.hasRol(c)) ? true : router.createUrlTree(['/403']);
+  };
+};
+
 /**
  * AG12 — gates a route by an `modulo.submodulo` key at the given level (mirror of
  * `puede_ver/operar_submodulo`). Needed for `obra.*` because the `capataz` role has

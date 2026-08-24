@@ -27,8 +27,11 @@ import {
   FOTOS_GUIA,
   NACIONALIDADES,
   TIPOS_DOCUMENTO,
+  CUADRILLAS,
+  ASEGURAMIENTO,
   Nacionalidad,
   TipoDocumento,
+  AseguramientoEstado,
   PersonalObra,
 } from '../../../core/models/personal-obra.model';
 
@@ -53,6 +56,8 @@ interface RegistroDraft {
   tipoDocumento: TipoDocumento;
   documentoNumero: string;
   cargoId: string;
+  cuadrilla: string; // AV4
+  aseguramiento: AseguramientoEstado; // AV4
   telefono: string;
   notas: string;
 }
@@ -97,6 +102,8 @@ export class PersonalRegistroPage implements OnDestroy {
 
   readonly nacionalidades = NACIONALIDADES;
   readonly tiposDocumento = TIPOS_DOCUMENTO;
+  readonly cuadrillas = CUADRILLAS; // AV4
+  readonly aseguramientos = ASEGURAMIENTO; // AV4
   readonly firmaHabilitada = FIRMA_HABILITADA;
   /** Guía de la foto del documento (paso 2). */
   readonly guiaDocumento = FOTOS_GUIA.find((g) => g.tipo === 'documento')!;
@@ -127,6 +134,8 @@ export class PersonalRegistroPage implements OnDestroy {
   tipoDocumento = signal<TipoDocumento>('cedula');
   documentoNumero = signal('');
   cargoId = signal('');
+  cuadrilla = signal(''); // AV4 — eje TECNICO (cuadrilla)
+  aseguramiento = signal<AseguramientoEstado>('desconocido'); // AV4
   telefono = signal('');
   notas = signal('');
 
@@ -138,6 +147,8 @@ export class PersonalRegistroPage implements OnDestroy {
 
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
   cargoOptions = computed(() => this.cargos().map((c) => ({ id: c.id, label: `${c.nombre} · ${c.codigo}` })));
+  cuadrillaOptions = computed(() => this.cuadrillas.map((c) => ({ id: c.value, label: c.label }))); // AV4
+  cuadrillaLabel = computed(() => this.cuadrillas.find((c) => c.value === this.cuadrilla())?.label ?? '');
 
   cargoSel = computed<Cargo | null>(() => this.cargos().find((c) => c.id === this.cargoId()) ?? null);
   obraNombre = computed(() => this.obras().find((o) => o.id === this.proyectoId())?.nombre ?? '');
@@ -286,6 +297,8 @@ export class PersonalRegistroPage implements OnDestroy {
       tipoDocumento: this.tipoDocumento(),
       documentoNumero: this.documentoNumero(),
       cargoId: this.cargoId(),
+      cuadrilla: this.cuadrilla(),
+      aseguramiento: this.aseguramiento(),
       telefono: this.telefono(),
       notas: this.notas(),
     };
@@ -310,6 +323,8 @@ export class PersonalRegistroPage implements OnDestroy {
         this.tipoDocumento.set(d.tipoDocumento ?? 'cedula');
         this.documentoNumero.set(d.documentoNumero ?? '');
         this.cargoId.set(d.cargoId ?? '');
+        this.cuadrilla.set(d.cuadrilla ?? '');
+        this.aseguramiento.set(d.aseguramiento ?? 'desconocido');
         this.telefono.set(d.telefono ?? '');
         this.notas.set(d.notas ?? '');
       }
@@ -433,6 +448,8 @@ export class PersonalRegistroPage implements OnDestroy {
         tipoDocumento: this.tipoDocumento(),
         documentoNumero: this.documentoNumero().trim() || null,
         cargoId: this.cargoId() || null,
+        cuadrilla: this.cuadrilla() || null, // AV4
+        aseguramientoEstado: this.aseguramiento(), // AV4
         telefono: this.telefono().trim() || null,
         notas: this.notas().trim() || null,
         fotos: fotosBlobs,
@@ -459,6 +476,8 @@ export class PersonalRegistroPage implements OnDestroy {
     this.tipoDocumento.set('cedula');
     this.documentoNumero.set('');
     this.cargoId.set('');
+    this.cuadrilla.set('');
+    this.aseguramiento.set('desconocido');
     this.telefono.set('');
     this.notas.set('');
     this.registroId.set(crypto.randomUUID());

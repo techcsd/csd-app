@@ -13,13 +13,17 @@
     } @else {
       <p class="porfirm__intro">Fuiste elegido como despachante en estos conduces. Fírmalos para que el chofer pueda entregar.</p>
       @for (c of conduces_(); track c.id) {
-        <button type="button" class="porfirm__card" (click)="firmar(c.id)">
+        <button type="button" class="porfirm__card" [class.porfirm__card--correccion]="!c.despachante_elegible" (click)="firmar(c.id)">
           <div class="porfirm__main">
             <span class="porfirm__num">{{ numero(c.id) }}</span>
             <span class="porfirm__dest">{{ c.destino || c.bodega || 'Conduce' }}</span>
             <span class="porfirm__sub">{{ fmtFecha(c.created_at || c.fecha) }}</span>
+            @if (!c.despachante_elegible) {
+              <!-- AV1 — tu rol no puede firmar: el conduce requiere corrección. -->
+              <span class="porfirm__warn">⚠️ Tu rol no puede firmar — requiere corrección</span>
+            }
           </div>
-          <span class="porfirm__cta">Firmar ▸</span>
+          <span class="porfirm__cta">{{ c.despachante_elegible ? 'Firmar ▸' : 'Ver ▸' }}</span>
         </button>
       }
     }

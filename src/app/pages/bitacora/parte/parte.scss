@@ -143,6 +143,34 @@ app-counter {
 .parte__req {
   color: var(--color-error);
 }
+// AV3 — chips para elegir entre los ingenieros de la obra (principal marcado).
+.parte__ing-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.parte__ing-chip {
+  padding: 10px 14px;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.parte__ing-chip--sel {
+  border-color: var(--Hub, #ffb300);
+  background: var(--Hub-translucid, rgba(255, 179, 0, 0.12));
+}
+.parte__ing-principal {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--Hub, #ffb300);
+}
 .parte__actrow {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);

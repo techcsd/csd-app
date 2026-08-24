@@ -521,6 +521,13 @@ export interface ConducePorFirmar {
   bodega: string | null;
   estado: string | null;
   fase: string | null;
+  /**
+   * AV1 — ¿el despachante designado (= yo, en esta bandeja) es ELEGIBLE según la
+   * matriz única server-side (`es_despachante_elegible`)? Si es false, el conduce
+   * quedó con un despachante inválido (datos viejos): NO se ofrece el pad de firma,
+   * se muestra "corrección pendiente". Servidores viejos sin la columna → true.
+   */
+  despachante_elegible: boolean;
 }
 
 /**
@@ -1406,7 +1413,22 @@ export class ConducesService {
       bodega: (r['bodega'] as string) ?? null,
       estado: (r['estado'] as string) ?? null,
       fase: (r['fase'] as string) ?? null,
+      // AV1 — la matriz única expone si el despachante actual es elegible.
+      despachante_elegible: (r['despachante_elegible'] as boolean) ?? true,
     }));
+  }
+
+  /**
+   * AV1 — ¿soy un despachante ELEGIBLE para ESTE conduce? Lee la matriz única
+   * server-side vía `mis_conduces_por_firmar` (columna `despachante_elegible`, que
+   * es `es_despachante_elegible(auth.uid())`). El pad de firma del detalle se gatea
+   * con esto: un inelegible NUNCA dibuja una firma que el servidor va a rechazar.
+   * Devuelve null si el conduce no está en mi bandeja (no aplica / sin señal).
+   */
+  async soyDespachanteElegiblePara(salidaId: string): Promise<boolean | null> {
+    const rows = await this.misConducesPorFirmar();
+    const row = rows.find((r) => r.id === salidaId);
+    return row ? row.despachante_elegible : null;
   }
 
   /**

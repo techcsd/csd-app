@@ -31,6 +31,11 @@
             <div class="pe-row"><span class="pe-k">Obra</span><span class="pe-v">{{ p.proyecto?.nombre ?? '—' }}</span></div>
             <div class="pe-row"><span class="pe-k">Nacionalidad</span><span class="pe-v">{{ nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad }}</span></div>
             <div class="pe-row"><span class="pe-k">Documento</span><span class="pe-v">{{ (p.documento_numero | cedula) || '—' }}</span></div>
+            <!-- AV4 — cuadrilla + aseguramiento en la ficha -->
+            @if (p.cuadrilla) {
+              <div class="pe-row"><span class="pe-k">Cuadrilla</span><span class="pe-v">👷 {{ p.cuadrilla }}</span></div>
+            }
+            <div class="pe-row"><span class="pe-k">Aseguramiento</span><span class="pe-v">{{ aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido'] }}</span></div>
             @if (p.telefono) {
               <div class="pe-row"><span class="pe-k">Teléfono</span><span class="pe-v"><a [href]="'tel:' + p.telefono">{{ p.telefono }}</a></span></div>
             }
@@ -62,6 +67,15 @@
           </div>
           <label class="field-label pe-mt">Cargo</label>
           <app-collapsible-select label="Cargo" icon="🛠" [options]="cargoOptions()" [selectedId]="eCargoId()" [searchable]="true" searchPlaceholder="Buscar cargo…" (picked)="eCargoId.set($event)" />
+          <!-- AV4 — cuadrilla (eje TECNICO) + aseguramiento manual -->
+          <label class="field-label pe-mt">Cuadrilla</label>
+          <app-collapsible-select label="Cuadrilla" icon="👷" [options]="cuadrillaOptions()" [selectedId]="eCuadrilla()" (picked)="eCuadrilla.set($event)" />
+          <label class="field-label pe-mt">Aseguramiento</label>
+          <div class="pe-opts">
+            @for (a of aseguramientos; track a.value) {
+              <app-option-button [icon]="a.icon" [label]="a.label" [selected]="eAseguramiento() === a.value" (pressed)="eAseguramiento.set(a.value)" />
+            }
+          </div>
           <label class="field-label pe-mt">Tipo de documento</label>
           <div class="pe-opts">
             @for (t of tiposDocumento; track t.value) {
