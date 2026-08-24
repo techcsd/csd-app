@@ -328,6 +328,24 @@ export class SyncService {
     await this.refreshCounts();
   }
 
+  /**
+   * AW2 — cancela por completo una op AÚN pendiente (para "Revisar y corregir"):
+   * borra la op, sus fotos y el registro local. A diferencia de `discard`, NO deja
+   * un registro en 'error' (la echada nunca se envió y se va a re-registrar
+   * corregida). Devuelve false si ya se envió o está en curso (no cancelable).
+   */
+  async cancelPending(id: string): Promise<boolean> {
+    const op = await db.outbox.get(id);
+    if (!op || op.estado !== 'pending') return false;
+    await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {
+      await db.fotos_pendientes.where('op_id').equals(id).delete();
+      await db.outbox.delete(id);
+      await db.mis_registros.delete(id);
+    });
+    await this.refreshCounts();
+    return true;
+  }
+
   /** AO3 — una op puntual (para reconstruir/corregir un conduce atascado). */
   async getOp(id: string): Promise<OutboxOp | null> {
     return (await db.outbox.get(id)) ?? null;

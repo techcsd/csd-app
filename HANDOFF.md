@@ -1,5 +1,45 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 24/08/2026 — PROMPT-10 ronda AW (app) — **FASES 1-4 implementadas · build verde · SIN commit/release · ⏳ device-QA + `ANTHROPIC_API_KEY` pendientes**
+
+**Estado:** las 4 fases de PROMPT-10 cableadas consumiendo los contratos server-side de PROMPT-9 (ya en prod). **`npm run build` = verde** (solo warnings preexistentes: NG8102 en reporte-semanal/personal-carnet + budgets). **NADA committeado ni publicado** — esperando OK de Xaviel. **No hay migraciones nuevas** (todo el backend AW ya existía; la app solo consume + pone UI).
+
+### ✅ Hecho esta sesión (build verde, sin commit)
+- **🔴 FASE 1 — AW3 input de galones a prueba de dedazos (la causa raíz del 34,118).**
+  - **Parser nuevo** `core/util/numero.ts` `parseNumeroFlexible(raw, 'decimal'|'monto')`: respeta el punto decimal sin depender del locale dominicano. Galones "34.118" → **34.118** (antes 34118). Monto "10.000" → 10000. Los inputs de galones/monto pasaron de `type="number"` (locale-dependiente) a `type="text" inputmode="decimal"` con texto crudo (`galonesRaw`/`montoRaw`) + parseo controlado.
+  - **Valor interpretado EN VIVO** bajo los inputs ("= 34.12 gal · RD$ 293.10/gal") → el chofer ve lo que se guardará antes de guardar.
+  - **Validación cliente espejo del server** (`validarEchadaCliente` en el modelo): bloqueo si galones > capacidad×`tanque_margen_bloqueo`(1.15) o precio fuera de RD$100–600; confirmación suave si galones > capacidad×`tanque_margen_alerta`(0.85). Capacidad = `vehiculos.capacidad_tanque_gal` o tope por clase de `flota_config` (`getTanqueConfig`/`getCapacidadTanque` nuevos en el service, cacheados offline). Nota: el price band solo ya atrapa el 34118 clásico (0.29/gal < 100).
+  - **Ciclo `needs_confirm`** (2 pasos, mismo `client_uuid`): la confirmación suave se resuelve EN PANTALLA antes de encolar (offline-safe) → al aceptar se encola con `confirmado=true`; el handler pasa `p_confirmado`. Si el server aún devuelve `needs_confirm` (desfase de umbrales), el handler lo detiene como `PermanentSyncError` (estado 'error' visible, NO ✅ silencioso, NO bucle).
+  - **Echada rechazada (23514) no se pierde**: ya iba por `throwSyncError` (código 23 → PermanentSyncError → bandeja con el mensaje en español del server). Verificado.
+- **FASE 2 — AW2 pantalla de combustible / anomalía con dirección.**
+  - `calcularCombustible` ahora devuelve `direccion: 'alto'|'bajo'|null` (espejo de `direccion_alerta`). La banda de la confirmación: **'alto'** (rinde imposiblemente bien = error de dato) → "Revisa la lectura… NO se avisa a mantenimiento"; **'bajo'** (anormal) → "Se avisa a mantenimiento". El 'bajo' LEVE (warning) ya no dice nada de mantenimiento. Se acabó el "Se envía aviso a mantenimiento" indiscriminado.
+  - **Referencia visible**: "Comparado con las últimas N echadas válidas (promedio X km/gal)". El promedio de `getUltimaEchada` ahora **excluye echadas inválidas** (estado 'anormal' + outliers fuera de [10,35] km/gal) para cuadrar con el server.
+  - **"Revisar y corregir"**: botón en la banda de anomalía → cancela la echada AÚN pendiente (`sync.cancelPending` nuevo: borra op+fotos+registro, sin dejar 'error') y reabre el wizard en el paso de digitación con datos/fotos intactos (sin duplicar). Si ya se envió → lleva a "Mi actividad".
+  - AS15 cámara-only + evidencia en el detalle: verificado ya-correcto (photo-slot `[gallery]="false"`; echada-detalle firma y muestra las fotos).
+- **FASE 3 — AW1 cronograma: vacío ≠ error + proyecto de prueba visible.**
+  - `cronograma.ts`: nuevo signal `error` → si la carga FALLA se pinta estado de error + "🔄 Reintentar" (antes caía a "Sin tareas"). Empty-state solo cuando de verdad no hay tareas.
+  - **Riviera Bay TEST (35 tareas es_prueba) ahora se ve**: el belt `filter(!es_prueba)` ocultaba TODO en un proyecto de prueba. Ahora si el proyecto es de prueba (todas sus tareas es_prueba) se muestran; en un proyecto REAL se sigue ocultando una tarea de prueba suelta.
+  - **Import desde Excel**: funciona 100% desde la app (`cronograma-importar` + `parseCronogramaXlsx` client-side + RPC `cronograma_importar`, gate `puede_gestionar_cronograma`). No hace falta redirigir a la web.
+- **🤖 FASE 4 — AW4 Compa (asistente de IA) en la app.** (implementada vía subagente, revisada)
+  - `core/services/compa.service.ts` + `core/models/compa.model.ts`: consume la edge **`assistant`** (chat `{mensaje, conversacion_id}` → `{respuesta, herramientas, propuesta}`; ejecutar `{ejecutar:<propuesta>, conversacion_id}` → `{respuesta, ejecutado}`). NUNCA ejecuta la acción por su cuenta. Errores 401/429/**503 sin API key** → burbuja amable (lee el body de la Response como geocoding); el 503 muestra el mensaje "no configurado" tal cual si viene.
+  - `pages/compa/*`: chat (burbujas user/assistant, "escribiendo…", sugerencias iniciales), **hoja de Confirmar/Cancelar** para las `propuesta` de escritura (tarea/requisición/conduce), **entrada de voz** (reusa `voice-recorder` mode push → edge `transcribe-audio` best-effort → texto editable antes de enviar), offline-aware. Ruta `/compa` (solo authGuard+pinGuard, SIN gate de módulo) + tile "🤖 Compa" en el home (general para todos, como Mensajes).
+
+### ⏳ Pendiente — Claude puede hacer (con OK de Xaviel)
+1. **Commit + release** (bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `release-apk.mjs` → `npm run build` → `npm run apk` (registra Y1) → `npm run apk:publish`). NO forzar mínima. Nada subido aún.
+2. **FAB global de Compa** (opcional): decidí NO añadir un botón flotante global (app.html/app.ts) para no solapar los footers fijos de los muchos wizards; el tile del home da acceso a un toque. Si Xaviel lo quiere "siempre a un toque" desde cualquier pantalla, es un follow-up acotado (gatear por no-auth/no-gate/no-ruta-compa).
+
+### 🔴 Pendiente — SOLO Xaviel (físico / prerrequisito)
+- **`ANTHROPIC_API_KEY`** (secret del proyecto Supabase): prerrequisito para probar Compa de punta a punta. Sin él la edge responde 503 y la app muestra "Compa aún no está configurado" con elegancia (no crashea).
+- **Device-QA de TODO** (no puedo probar en equipo). Guiones: (AW3) intentar registrar 34,118 gal desde la app — imposible (parser + validación + server); ver el valor interpretado en vivo; probar el ciclo needs_confirm (valor casi-tanque-lleno → confirma → guarda sin duplicar). (AW2) forzar una echada 'alto' (km muy alto) → ver "Revisa la lectura" + "Revisar y corregir"; una 'bajo' anormal → "Se avisa a mantenimiento". (AW1) abrir "Riviera Bay TEST" como no-admin → ver las 35 tareas; simular fallo de red → ver "No pudimos cargar… Reintentar" (no "Sin tareas"). (AW4) Compa: chat + voz + una propuesta de escritura → hoja Confirmar.
+
+### ✅ Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
+git status   # varios archivos modificados + pages/compa/* nuevos, SIN commit
+```
+
+---
+
 ## 🟢 SESIÓN 24/08/2026 — PROMPT-8 ronda AV (app) — **RELEASE 1.97.0 PUBLICADO (rolling) · FASES 1-5 · build verde · ⏳ device-QA pendiente**
 
 **SHIPPED:** commit **`3049cdd`** → push `main` → PWA por Vercel. **APK 1.97.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 6 cambios curados) + subido al bucket (`csd-app-1.97.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=1.97.0`** (rolling, `sql/2026-08-24-publicar-1.97.0.sql` aplicado), **`minima=1.96.4` INTACTA** (NO forzada). `version_publicada()` ya devuelve 1.97.0. **Rollback:** `update sgc.app_versiones set publicada=(version='1.96.4') where plataforma='movil';` + `git revert 3049cdd && git push`.

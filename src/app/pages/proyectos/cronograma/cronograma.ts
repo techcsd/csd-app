@@ -72,6 +72,9 @@ export class CronogramaPage {
   pend = signal<Map<string, TareaAccionPendiente>>(new Map());
   puedeGestionar = signal(false);
   loading = signal(true);
+  // AW1 — vacío ≠ error: si la carga FALLA lo decimos ("no pudimos cargar…" +
+  // reintentar) en vez de pintar "Sin tareas" (patrón AU5/AS2). null = sin error.
+  error = signal<string | null>(null);
   vista = signal<'lista' | 'timeline'>('lista');
   readonly hoyIso = new Date().toISOString().slice(0, 10);
 
@@ -94,6 +97,7 @@ export class CronogramaPage {
 
   async load(): Promise<void> {
     this.loading.set(true);
+    this.error.set(null); // AW1 — reintento limpio
     try {
       const [data, puede] = await Promise.all([
         this.cronograma.listar(this.proyectoId),
@@ -110,8 +114,9 @@ export class CronogramaPage {
         this.tareaDeep = null;
       }
     } catch (e) {
-      // AS24 #2 — antes un fallo de carga se veía como "sin cronograma" (empty-state).
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar el cronograma.');
+      // AW1/AS24 #2 — un fallo de carga NO es "sin cronograma": se marca como error
+      // para pintar el estado de reintento (nunca el empty-state "Sin tareas").
+      this.error.set(e instanceof Error ? e.message : 'No pudimos cargar el cronograma.');
     } finally {
       this.loading.set(false);
     }
@@ -126,9 +131,19 @@ export class CronogramaPage {
   }
 
   // ─── Vista ───
-  // AS24 #8 — no mostrar tareas de prueba en la app de campo (belt; el server ya
-  // filtra para no-admin, esto lo asegura también en el cliente).
-  tareas = computed(() => this.data().tareas.filter((t) => !t.es_prueba));
+  // AW1 — un proyecto DE PRUEBA (Riviera Bay TEST) tiene TODAS sus tareas es_prueba;
+  // el server ya las devuelve a cualquiera que pueda ver el proyecto (fix PROMPT-9).
+  // Antes el belt AS24 #8 (filter !es_prueba) las ocultaba TODAS → salía vacío para
+  // no-admin. Ahora: si el proyecto es de prueba, se muestran; si es un proyecto real,
+  // se sigue ocultando una tarea de prueba SUELTA (belt intacto para producción).
+  private esProyectoPrueba = computed(() => {
+    const all = this.data().tareas;
+    return all.length > 0 && all.every((t) => t.es_prueba);
+  });
+  tareas = computed(() => {
+    const all = this.data().tareas;
+    return this.esProyectoPrueba() ? all : all.filter((t) => !t.es_prueba);
+  });
 
   estado(t: CronogramaTarea): CronogramaEstado {
     return this.cronograma.estadoEfectivo(t, this.pend().get(t.id));

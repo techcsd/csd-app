@@ -1,0 +1,106 @@
+<div class="screen compa">
+  <!-- Header -->
+  <header class="compa__header">
+    <button type="button" class="compa__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="compa__avatar" aria-hidden="true">🤖</span>
+    <span class="compa__id-main">
+      <span class="compa__title">Compa</span>
+      <span class="compa__sub">Tu asistente</span>
+    </span>
+  </header>
+
+  <!-- Hilo -->
+  <div class="compa__body" #scroller>
+    @if (vacio()) {
+      <!-- Estado inicial: presentación + sugerencias -->
+      <div class="compa__intro">
+        <span class="compa__intro-emoji" aria-hidden="true">🤖</span>
+        <h2 class="compa__intro-title">Hola, soy Compa</h2>
+        <p class="compa__intro-text">
+          Pregúntame por tus tareas, conduces, firmas o pídeme que registre algo por ti.
+        </p>
+        <div class="compa__chips">
+          @for (s of sugerencias; track s) {
+            <button type="button" class="compa__chip" [disabled]="enviando()" (click)="usarSugerencia(s)">
+              {{ s }}
+            </button>
+          }
+        </div>
+      </div>
+    } @else {
+      @for (m of mensajes(); track m.id) {
+        <div class="compa__msg" [class.compa__msg--mio]="m.rol === 'user'">
+          <span class="compa__burbuja">{{ m.texto }}</span>
+        </div>
+      }
+    }
+
+    <!-- Indicador "escribiendo…" mientras se espera la respuesta -->
+    @if (pensando()) {
+      <div class="compa__msg">
+        <span class="compa__burbuja compa__typing" aria-label="Compa está escribiendo">
+          <span class="compa__dot"></span>
+          <span class="compa__dot"></span>
+          <span class="compa__dot"></span>
+        </span>
+      </div>
+    }
+  </div>
+
+  <!-- Composer -->
+  @if (grabandoVoz()) {
+    <!-- Barra de grabación tipo WhatsApp (auto-arranca; emite el blob al detener). -->
+    <footer class="compa__compose compa__compose--rec">
+      <app-voice-recorder mode="push" (recorded)="onVozGrabada($event)" />
+    </footer>
+  } @else {
+    <footer class="compa__compose">
+      <input
+        class="field compa__input"
+        type="text"
+        [ngModel]="texto()"
+        (ngModelChange)="texto.set($event)"
+        (keyup.enter)="enviar()"
+        [disabled]="!online || transcribiendo()"
+        [placeholder]="transcribiendo() ? 'Transcribiendo…' : 'Escríbele a Compa…'"
+      />
+      @if (texto().trim()) {
+        <button type="button" class="compa__send" [disabled]="enviando() || !online" (click)="enviar()" aria-label="Enviar">➤</button>
+      } @else {
+        <button type="button" class="compa__send compa__mic" [disabled]="!online || transcribiendo()" (click)="abrirVoz()" aria-label="Grabar nota de voz">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+            <path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/>
+            <path d="M19 12a7 7 0 0 1-6 6.92V22h-2v-3.08A7 7 0 0 1 5 12h2a5 5 0 0 0 10 0h2z"/>
+          </svg>
+        </button>
+      }
+    </footer>
+  }
+
+  @if (!online) {
+    <p class="compa__offline">Compa necesita conexión.</p>
+  }
+
+  <!-- Hoja de confirmación de una acción propuesta -->
+  <app-bottom-sheet [open]="!!propuesta()" [titulo]="propuesta()?.titulo ?? ''" (closed)="cancelarPropuesta()">
+    @if (propuesta(); as p) {
+      <div class="compa__prop">
+        @if (p.lineas.length) {
+          <ul class="compa__prop-lineas">
+            @for (l of p.lineas; track $index) {
+              <li>{{ l }}</li>
+            }
+          </ul>
+        }
+        <div class="compa__prop-acts">
+          <button type="button" class="btn-cta" [disabled]="ejecutando()" (click)="confirmarPropuesta()">
+            {{ ejecutando() ? 'Confirmando…' : 'Confirmar' }}
+          </button>
+          <button type="button" class="btn-ghost" [disabled]="ejecutando()" (click)="cancelarPropuesta()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    }
+  </app-bottom-sheet>
+</div>

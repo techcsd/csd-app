@@ -112,8 +112,28 @@
         >
           <strong>{{ b.meta.icon }} {{ b.meta.label }}</strong>
           <span class="comb__band-why">{{ b.motivo }}</span>
+          <!-- AW2 — solo una ANOMALÍA real (tono error) dispara acción; el texto
+               depende de su DIRECCIÓN: 'bajo' = posible problema del vehículo →
+               mantenimiento; 'alto' = error de dato → revisar la lectura, NO
+               mantenimiento. Un 'bajo' leve (warning) es solo un aviso, sin acción. -->
           @if (b.meta.tone === 'error') {
-            <span class="comb__band-why">Se envía un aviso a mantenimiento para revisar el vehículo.</span>
+            @if (resultado()?.direccion === 'alto') {
+              <span class="comb__band-why">
+                Revisa la lectura (kilometraje y galones): puede que falte una echada anterior por
+                registrar o que el kilometraje esté mal escrito. No se avisa a mantenimiento.
+              </span>
+            } @else {
+              <span class="comb__band-why">Se avisa a mantenimiento para revisar el vehículo.</span>
+            }
+            <!-- AW2 — referencia usada para "lo esperado" (promedio de echadas válidas) -->
+            @if (ultima().promedio_rendimiento != null && ultima().n_echadas > 0) {
+              <span class="comb__band-ref">
+                Comparado con las últimas {{ ultima().n_echadas }} echadas válidas de este vehículo
+                (promedio {{ ultima().promedio_rendimiento | number: '1.1-1' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}).
+              </span>
+            }
+            <!-- AW2 — corregir en el momento, sin buscar dónde se guardó -->
+            <button type="button" class="comb__band-fix" (click)="corregir()">✏️ Revisar y corregir</button>
           }
         </div>
       }
@@ -219,13 +239,16 @@
         }
 
         <label class="field-label" for="gal">Galones echados</label>
+        <!-- AW3 — texto (no type=number) + inputmode decimal: el parseo respeta el
+             punto decimal (34.118 = 34.118 gal, ya no 34118). -->
         <input
           id="gal"
           class="field comb__num"
-          type="number"
+          type="text"
           inputmode="decimal"
-          [ngModel]="galones()"
-          (ngModelChange)="galones.set($event)"
+          autocomplete="off"
+          [ngModel]="galonesRaw()"
+          (ngModelChange)="onGalonesInput($event)"
           placeholder="0"
         />
 
@@ -235,12 +258,32 @@
         <input
           id="monto"
           class="field comb__num"
-          type="number"
+          type="text"
           inputmode="decimal"
-          [ngModel]="monto()"
-          (ngModelChange)="monto.set($event)"
+          autocomplete="off"
+          [ngModel]="montoRaw()"
+          (ngModelChange)="onMontoInput($event)"
           placeholder="0"
         />
+
+        <!-- AW3 — valor INTERPRETADO en vivo: el chofer ve exactamente lo que se
+             guardará antes de guardar (a prueba de dedazos). -->
+        @if (galones() != null) {
+          <div class="comb__interpreta" [class.comb__interpreta--error]="!!validacion().bloqueo">
+            <span class="comb__interpreta-line">
+              = <b>{{ galones() | number: '1.0-2' }} gal</b>
+              @if (!esDeposito() && monto()) { · <b>RD$ {{ monto() | number: '1.2-2' }}</b> }
+            </span>
+            @if (!esDeposito() && calc().precioPorGalon != null) {
+              <span class="comb__interpreta-sub">RD$ {{ calc().precioPorGalon | number: '1.2-2' }}/gal</span>
+            }
+          </div>
+        }
+        @if (validacion().bloqueo; as b) {
+          <p class="comb__warn">⛔ {{ b }}</p>
+        } @else if (validacion().confirmar; as c) {
+          <p class="comb__hint comb__hint--warn">⚠ {{ c }}</p>
+        }
       }
 
       <!-- AE6 · Paso 3: el resto de fotos (recibo + tablero); la bomba ya se tomó -->
@@ -437,6 +480,17 @@
       tone="danger"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"
+    />
+
+    <!-- AW3 — confirmación suave: echada inusualmente grande (needs_confirm) -->
+    <app-confirm-dialog
+      [open]="!!confirmSoft()"
+      title="¿Confirmas la cantidad?"
+      [message]="confirmSoft() ?? ''"
+      confirmLabel="Sí, es correcto"
+      cancelLabel="Voy a revisar"
+      (confirmed)="confirmarEchadaInusual()"
+      (cancelled)="cancelarEchadaInusual()"
     />
   </div>
 }

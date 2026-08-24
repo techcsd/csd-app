@@ -44,7 +44,13 @@ import {
   productoCanonico,
   RENDIMIENTO_ESTADO_META,
   RendimientoEstadoMeta,
+  TanqueConfig,
+  TANQUE_CONFIG_DEFAULT,
+  EchadaValidacion,
+  capacidadTanqueEfectiva,
+  validarEchadaCliente,
 } from '../../../core/models/combustible.model';
+import { parseNumeroFlexible } from '../../../core/util/numero';
 
 /**
  * AE6 — pasos LÓGICOS del wizard (la cantidad y el contenido dependen del modo:
@@ -130,6 +136,21 @@ export class CombustiblePage extends GuardedWizard {
   km = signal<number | null>(null);
   galones = signal<number | null>(null);
   monto = signal<number | null>(null);
+  // AW3 — texto crudo de galones/monto (input tipo texto, parseo a prueba de
+  // locale). El valor numérico (galones/monto) se deriva con parseNumeroFlexible.
+  galonesRaw = signal('');
+  montoRaw = signal('');
+
+  // AW3 — umbrales de tanque/precio (flota_config) + capacidad del vehículo, para
+  // el bloqueo/confirmación EN VIVO al digitar (el servidor revalida).
+  tanqueCfg = signal<TanqueConfig>(TANQUE_CONFIG_DEFAULT);
+  capacidad = signal<number>(TANQUE_CONFIG_DEFAULT.capDefault);
+  /** AW3 — el chofer confirmó una echada inusualmente grande (needs_confirm). */
+  confirmado = signal(false);
+  /** AW3 — mensaje de confirmación suave en curso (abre la hoja). null = cerrada. */
+  confirmSoft = signal<string | null>(null);
+  /** AW2 — client id de la echada recién registrada (para "Revisar y corregir"). */
+  lastId = signal<string | null>(null);
   // Z9 — solo "Total Energies" (preseleccionada) + "Otro" (input libre). Se dejó
   // de listar el catálogo completo: en campo casi siempre es Total Energies y lo
   // demás va por "Otro".
@@ -195,6 +216,31 @@ export class CombustiblePage extends GuardedWizard {
     calcularCombustible(this.km(), this.galones(), this.monto(), this.ultima(), this.esTelehandler()),
   );
 
+  /**
+   * AW3 — validación EN VIVO espejo del servidor: galones vs capacidad del tanque
+   * (×margen) + banda de precio. En depósito en obra (garrafón) no aplica; en una
+   * echada de persona no hay tanque (capacidad ∞) pero sí banda de precio — que ya
+   * atrapa el dedazo clásico (34118 gal ÷ RD$10.000 ≈ RD$0.29/gal, bajo el mínimo).
+   */
+  validacion = computed<EchadaValidacion>(() => {
+    if (this.esDeposito()) return { bloqueo: null, confirmar: null };
+    const cap = this.modoPersona() ? Number.POSITIVE_INFINITY : this.capacidad();
+    return validarEchadaCliente(this.galones(), this.calc().precioPorGalon, cap, this.tanqueCfg());
+  });
+
+  /** AW3 — texto de galones digitado: parsea a prueba de locale (34.118 = 34.118). */
+  onGalonesInput(v: string): void {
+    this.galonesRaw.set(v);
+    this.galones.set(parseNumeroFlexible(v, 'decimal'));
+    this.confirmado.set(false); // cambió la cantidad → re-confirmar si vuelve a ser inusual
+  }
+  /** AW3 — texto de monto: parsea como pesos ("10.000" = 10000). */
+  onMontoInput(v: string): void {
+    this.montoRaw.set(v);
+    this.monto.set(parseNumeroFlexible(v, 'monto'));
+    this.confirmado.set(false);
+  }
+
   /** true when km isn't greater than the vehicle's last fill-up. */
   kmInvalido = computed(() => {
     const km = this.km();
@@ -232,6 +278,8 @@ export class CombustiblePage extends GuardedWizard {
     void this.combustible.getPreciosVigentes().then((p) => this.precios.set(p));
     // AF19 — umbral de km entre echadas (configurable en flota_config, offline-cache).
     void this.conductores.getFlotaConfig().then((c) => this.umbralKm.set(c.umbralKmEchada));
+    // AW3 — umbrales de tanque/precio para el bloqueo/confirmación en vivo.
+    void this.combustible.getTanqueConfig().then((c) => this.tanqueCfg.set(c));
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
     if (this.vehiculoId) {
@@ -272,6 +320,17 @@ export class CombustiblePage extends GuardedWizard {
     void this.loadVehiculo();
     void this.loadUltima();
     void this.loadConductor();
+    void this.loadCapacidad(); // AW3
+  }
+
+  /** AW3 — capacidad efectiva del tanque de este vehículo (para el bloqueo en vivo). */
+  private async loadCapacidad(): Promise<void> {
+    try {
+      const { capacidad, tipo } = await this.combustible.getCapacidadTanque(this.vehiculoId);
+      this.capacidad.set(capacidadTanqueEfectiva(capacidad, tipo, this.tanqueCfg()));
+    } catch {
+      /* best-effort: sin dato, queda el default; el servidor revalida */
+    }
   }
 
   /** Z9 — elegir la estación (Total Energies). */
@@ -456,6 +515,13 @@ export class CombustiblePage extends GuardedWizard {
           this.toast.error('Escribe el monto pagado.');
           return false;
         }
+        // AW3 — bloqueo duro espejo del servidor: galones sobre la capacidad del
+        // tanque o precio fuera de la banda. Impide avanzar con un dedazo (34118).
+        const bloqueo = this.validacion().bloqueo;
+        if (bloqueo) {
+          this.toast.error(bloqueo);
+          return false;
+        }
         return true;
       }
       // AE6 — paso fotos: el resto de fotos (recibo + tablero); la bomba ya se
@@ -503,12 +569,25 @@ export class CombustiblePage extends GuardedWizard {
       this.toast.error('Faltan fotos para guardar.');
       return;
     }
+    // AW3 — última barrera espejo del servidor antes de encolar.
+    const v = this.validacion();
+    if (v.bloqueo) {
+      this.toast.error(v.bloqueo);
+      return;
+    }
+    // AW3 — confirmación suave (needs_confirm): echada inusualmente grande. NO se
+    // encola hasta que el chofer la confirme; al confirmar se re-envía con el mismo
+    // client_uuid y confirmado=true (la RPC no re-pide ni duplica).
+    if (v.confirmar && !this.confirmado()) {
+      this.confirmSoft.set(v.confirmar);
+      return;
+    }
     this.submitting.set(true);
     try {
       const estacion = this.estacionFinal();
       const persona = this.modoPersona();
       const deposito = this.esDeposito(); // AC11
-      await this.combustible.registrar({
+      const nuevoId = await this.combustible.registrar({
         // Z23-app — echada de persona: sin vehículo ni odómetro ni foto de tablero.
         vehiculoId: persona ? null : this.vehiculoId,
         conductorId: this.conductorId,
@@ -533,7 +612,9 @@ export class CombustiblePage extends GuardedWizard {
         fotoEvidencia: deposito ? this.fotoEvidencia()!.blob : null,
         placa: persona ? '' : this.placa(),
         ayudanteId: this.ayudanteId(), // AT4
+        confirmado: this.confirmado(), // AW3 — echada inusual ya confirmada
       });
+      this.lastId.set(nuevoId); // AW2 — para "Revisar y corregir"
       this.resultado.set(this.calc());
       this.done.set(true);
     } catch (e) {
@@ -541,6 +622,42 @@ export class CombustiblePage extends GuardedWizard {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  /** AW3 — el chofer confirmó la echada inusual: reintenta el envío (confirmado=true). */
+  confirmarEchadaInusual(): void {
+    this.confirmSoft.set(null);
+    this.confirmado.set(true);
+    void this.submit();
+  }
+  /** AW3 — canceló la confirmación: vuelve a la revisión para corregir la cantidad. */
+  cancelarEchadaInusual(): void {
+    this.confirmSoft.set(null);
+  }
+
+  /**
+   * AW2 — "Revisar y corregir": reabre la echada recién registrada para verificar
+   * la lectura, sin obligar a buscar dónde se guardó. Si aún está pendiente en la
+   * cola, la cancela (sin duplicar) y vuelve al paso de digitación con los datos y
+   * fotos intactos. Si ya se envió, no se puede editar en sitio: lleva a la actividad.
+   */
+  async corregir(): Promise<void> {
+    const id = this.lastId();
+    if (id) {
+      const cancelada = await this.combustible.cancelarPendiente(id);
+      if (!cancelada) {
+        this.toast.show('Esta echada ya se envió. Puedes revisarla en tu actividad.', 'info');
+        void this.router.navigate(['/transporte/mi-actividad']);
+        return;
+      }
+    }
+    // Reabre el wizard en el paso de digitación con los datos intactos.
+    this.confirmado.set(false);
+    this.lastId.set(null);
+    this.resultado.set(null);
+    this.done.set(false);
+    const idx = this.steps().indexOf('digits');
+    this.step.set(idx >= 0 ? idx + 1 : 1);
   }
 
   finish(): void {

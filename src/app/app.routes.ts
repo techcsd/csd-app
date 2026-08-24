@@ -308,6 +308,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/mensajes/thread/thread').then((m) => m.MensajesThreadPage),
   },
   {
+    // FASE 4 — "Compa" (asistente de IA). General para todo usuario autenticado
+    // (como Mensajería): sin moduleGuard. Reutiliza la edge `assistant` (hereda
+    // los permisos del usuario server-side).
+    path: 'compa',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/compa/compa').then((m) => m.CompaPage),
+  },
+  {
     // AJ8 — bandeja del RECEPTOR: entregas que debe confirmar en SU teléfono.
     // Sin moduleGuard: el receptor puede ser inventario/obra sin módulo flota; el
     // RPC solo devuelve entregas donde el usuario actual es receptor autorizado.

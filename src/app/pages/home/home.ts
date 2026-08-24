@@ -62,6 +62,8 @@ const SISTEMA_TILE: HomeTile = { modulo: 'sistema', icon: '🛠️', label: 'Sis
 const NOTAS_TILE: HomeTile = { modulo: 'notas', icon: '🗒️', label: 'Notas', route: '/notas', tint: '#7c3aed' };
 // AJ5 — Mensajes: general (todos los roles, como en la web). Badge de no leídos.
 const MENSAJES_TILE: HomeTile = { modulo: 'mensajes', icon: '💬', label: 'Mensajes', route: '/mensajes', tint: '#2563eb' };
+// FASE 4 — Compa (asistente de IA): general para todos (como Mensajes). Sin badge.
+const COMPA_TILE: HomeTile = { modulo: 'compa', icon: '🤖', label: 'Compa', route: '/compa', tint: '#6d28d9' };
 // AF39 — Tareas: general (el chofer ve las tareas asignadas a él aunque no tenga
 // el módulo). El RPC mis_tareas_app acota la visibilidad.
 const TAREAS_TILE: HomeTile = { modulo: 'tareas_app', icon: '✅', label: 'Tareas', route: '/tareas', tint: '#0d9488' };
@@ -154,7 +156,7 @@ export class HomePage implements OnDestroy {
     const work = this.workTiles();
     // AC4 — Notas es general (todos, incl. choferes). AF39 — Tareas también.
     // AJ5 — Mensajes también es general. Tecnología, todos menos chofer.
-    const extra: HomeTile[] = [MENSAJES_TILE, NOTAS_TILE, TAREAS_TILE];
+    const extra: HomeTile[] = [MENSAJES_TILE, COMPA_TILE, NOTAS_TILE, TAREAS_TILE];
     // AH15 — Compras de obra: admin o roles con acceso a proyectos/compras/obra.
     if (this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('compras') || this.ctx.puedeVerObra()) {
       extra.push(COMPRAS_TILE);

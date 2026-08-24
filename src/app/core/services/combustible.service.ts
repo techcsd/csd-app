@@ -1,9 +1,20 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { throwSyncError, SyncService } from '../sync/sync.service';
+import { throwSyncError, PermanentSyncError, SyncService } from '../sync/sync.service';
 import { AyudanteService } from './ayudante.service';
-import { CombustibleCaptura, EchadaDetalle, EchadaLog, PrecioCombustibleVigente, UltimaEchada } from '../models/combustible.model';
+import {
+  CombustibleCaptura,
+  EchadaDetalle,
+  EchadaLog,
+  NeedsConfirmResp,
+  PrecioCombustibleVigente,
+  REND_MAX_KM_GAL,
+  REND_MIN_KM_GAL,
+  TanqueConfig,
+  TANQUE_CONFIG_DEFAULT,
+  UltimaEchada,
+} from '../models/combustible.model';
 import { db } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
@@ -35,7 +46,7 @@ export class CombustibleService {
     const data = await this.catalog.refresh<UltimaEchada>(key, async () => {
       const { data, error } = await this.supabase.client
         .from('registros_combustible')
-        .select('kilometraje, fecha, rendimiento_km_gal')
+        .select('kilometraje, fecha, rendimiento_km_gal, estado')
         .eq('vehiculo_id', vehiculoId)
         .not('kilometraje', 'is', null)
         .order('kilometraje', { ascending: false });
@@ -44,10 +55,15 @@ export class CombustibleService {
         kilometraje: number | null;
         fecha: string | null;
         rendimiento_km_gal: number | null;
+        estado: string | null;
       }>;
+      // AW2 — el promedio "esperado" solo usa echadas VÁLIDAS: excluye las
+      // marcadas anómalas y los outliers de piso/techo (rendimiento imposible),
+      // para que el número que muestra la app cuadre con el del servidor.
       const rends = rows
+        .filter((r) => r.estado !== 'anormal')
         .map((r) => r.rendimiento_km_gal)
-        .filter((x): x is number => x != null);
+        .filter((x): x is number => x != null && x >= REND_MIN_KM_GAL && x <= REND_MAX_KM_GAL);
       const promedio = rends.length ? rends.reduce((a, b) => a + b, 0) / rends.length : null;
       // AE7 — la FECHA de referencia debe ser la del registro MÁS RECIENTE, no la
       // del de mayor kilometraje (ordenamos por km para la base del odómetro, pero
@@ -239,8 +255,70 @@ export class CombustibleService {
     return data ?? [];
   }
 
-  /** Queue a fuel record. Works fully offline; syncs when there's signal. */
-  async registrar(input: CombustibleCaptura): Promise<void> {
+  /**
+   * AW3 — umbrales de tanque/precio (sgc.flota_config) para el preview del
+   * cliente. Cacheados offline (último conocido). El servidor revalida.
+   */
+  async getTanqueConfig(): Promise<TanqueConfig> {
+    const data = await this.catalog.refresh<TanqueConfig>('tanque_config', async () => {
+      const { data, error } = await this.supabase.client.from('flota_config').select('clave, valor');
+      if (error) throw new Error(error.message);
+      const m = new Map((data ?? []).map((r: { clave: string; valor: string }) => [r.clave, Number(r.valor)]));
+      const val = (k: string, d: number) => {
+        const n = m.get(k);
+        return n != null && !Number.isNaN(n) ? n : d;
+      };
+      const d = TANQUE_CONFIG_DEFAULT;
+      return {
+        capPorClase: {
+          automovil: val('tanque_cap_automovil', d.capPorClase['automovil']),
+          suv: val('tanque_cap_suv', d.capPorClase['suv']),
+          pickup: val('tanque_cap_pickup', d.capPorClase['pickup']),
+          camion: val('tanque_cap_camion', d.capPorClase['camion']),
+          pesado: val('tanque_cap_pesado', d.capPorClase['pesado']),
+        },
+        capDefault: val('tanque_cap_default', d.capDefault),
+        margenBloqueo: val('tanque_margen_bloqueo', d.margenBloqueo),
+        margenAlerta: val('tanque_margen_alerta', d.margenAlerta),
+        precioMin: val('precio_gal_min', d.precioMin),
+        precioMax: val('precio_gal_max', d.precioMax),
+      };
+    });
+    return data ?? TANQUE_CONFIG_DEFAULT;
+  }
+
+  /**
+   * AW3 — capacidad de tanque + clase (`tipo`) del vehículo, para el preview del
+   * bloqueo por galones. Cacheado por vehículo (offline-friendly).
+   */
+  async getCapacidadTanque(vehiculoId: string): Promise<{ capacidad: number | null; tipo: string | null }> {
+    const data = await this.catalog.refresh<{ capacidad: number | null; tipo: string | null }>(
+      `tanque_veh:${vehiculoId}`,
+      async () => {
+        const { data, error } = await this.supabase.client
+          .from('vehiculos')
+          .select('capacidad_tanque_gal, tipo')
+          .eq('id', vehiculoId)
+          .maybeSingle();
+        if (error) throw new Error(error.message);
+        const r = (data ?? {}) as { capacidad_tanque_gal?: number | null; tipo?: string | null };
+        return { capacidad: r.capacidad_tanque_gal ?? null, tipo: r.tipo ?? null };
+      },
+    );
+    return data ?? { capacidad: null, tipo: null };
+  }
+
+  /**
+   * AW2 — cancela una echada AÚN pendiente en el outbox (para "Revisar y corregir").
+   * Borra la op + sus fotos + el registro local, atómicamente. Devuelve false si ya
+   * se envió (no hay nada que cancelar) — en ese caso no se puede corregir en sitio.
+   */
+  async cancelarPendiente(id: string): Promise<boolean> {
+    return this.sync.cancelPending(id);
+  }
+
+  /** Queue a fuel record. Works fully offline; syncs when there's signal. Returns the client id. */
+  async registrar(input: CombustibleCaptura): Promise<string> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
 
@@ -281,6 +359,7 @@ export class CombustibleService {
         titular: input.titular, // Z23-app
         titular_es_persona: input.titularEsPersona, // Z23-app
         ayudante_id: input.ayudanteId ?? null, // AT4
+        confirmado: input.confirmado ?? false, // AW3 — echada inusual ya confirmada
       },
       fotos,
       resumen: {
@@ -294,11 +373,12 @@ export class CombustibleService {
     // The "última echada" cache changes after a fill-up; refresh best-effort.
     // (No aplica a una echada de persona: no está atada a un vehículo.)
     if (input.vehiculoId) void this.getUltimaEchada(input.vehiculoId);
+    return id;
   }
 
   private registerHandler(): void {
     this.sync.register('combustible', async (payload, photoPaths) => {
-      const { error } = await this.supabase.client.rpc('registrar_combustible_app', {
+      const { data, error } = await this.supabase.client.rpc('registrar_combustible_app', {
         p_client_uuid: payload['id'],
         p_vehiculo_id: payload['vehiculo_id'],
         p_conductor_id: payload['conductor_id'] ?? null,
@@ -318,9 +398,25 @@ export class CombustibleService {
         p_titular_es_persona: payload['titular_es_persona'] ?? false, // Z23-app
         p_origen: payload['origen'] ?? 'estacion', // AC11
         p_proyecto_id: payload['proyecto_id'] ?? null, // AC11
+        p_confirmado: payload['confirmado'] === true, // AW3 — echada inusual ya confirmada por el chofer
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
+
+      // AW3 — confirmación suave: la RPC NO insertó y devolvió needs_confirm. En el
+      // flujo normal esto se resuelve en pantalla ANTES de encolar (se envía
+      // p_confirmado=true), así que llegar aquí significa un desfase de umbrales
+      // (p. ej. la capacidad del vehículo cambió). NO marcar ✅ ni reintentar en
+      // bucle: se detiene visible (estado 'error') con el mensaje del server para
+      // que el chofer la vuelva a registrar y confirme. Nada se pierde en silencio.
+      const nc = data as NeedsConfirmResp | null;
+      if (nc && nc.needs_confirm === true) {
+        throw new PermanentSyncError(
+          nc.confirm_message ??
+            'Esta echada es inusualmente grande y necesita que la confirmes. Vuelve a registrarla y confirma la cantidad.',
+          'validacion',
+        );
+      }
 
       // AT4 — sumarle la echada al ayudante. registrar_combustible_app NO devuelve
       // el row id, así que lo resolvemos por client_uuid (echada_id) y marcamos.

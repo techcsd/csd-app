@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.97.0';
+const VERSION = '1.98.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,17 +62,16 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-08-24';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Firmas de conduce por rol, incentivos por rol y ficha de personal';
+const TITULO = 'Compa (asistente de IA), registro de galones a prueba de errores y cronograma más claro';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduce', d: 'Si tu rol no puede firmar un conduce como despachante, la app ya no te deja dibujar la firma para rechazarla al final: muestra que el conduce necesita corrección (reasignar despachante).' },
-  { t: 'mejora', m: 'Conduce', d: 'Al elegir despachante ya no aparecen choferes; sí aparecen los roles habilitados (almacén, logística, gerente de proyectos, jefe de flota, admin).' },
-  { t: 'mejora', m: 'Incentivos', d: '“Mi rendimiento” ahora se muestra solo a Chofer y Jefe de flota (los demás roles ya no lo ven).' },
-  { t: 'nuevo', m: 'Bitácora', d: 'Al hacer un parte puedes elegir el ingeniero responsable entre los ingenieros de la obra (una obra puede tener varios; el principal viene marcado).' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'La ficha del trabajador ahora incluye cuadrilla y estado de aseguramiento; la consulta por obra tiene semáforo de asegurado y filtros por cuadrilla y aseguramiento.' },
-  { t: 'mejora', m: 'Ingeniería', d: '“Crear ruta” se movió a Flota/Transporte (una ruta es transporte); Ingeniería mantiene la Solicitud de movimiento.' },
+  { t: 'nuevo', m: 'Compa', d: 'Nuevo asistente Compa: pregúntale por chat o por voz (“¿qué tareas tengo?”, “¿tengo conduces por firmar?”) y consulta tus datos reales. Las acciones (crear tarea, requisición o conduce) siempre pasan por una confirmación antes de hacerse.' },
+  { t: 'arreglo', m: 'Combustible', d: 'El registro de galones ya no confunde el punto decimal: “34.118” se guarda como 34.12 galones (no 34,118). Ves en vivo lo que se va a guardar y no puedes pasarte de la capacidad del tanque ni de un precio irreal.' },
+  { t: 'nuevo', m: 'Combustible', d: 'Si una echada es casi el tanque lleno, la app te pide confirmar antes de guardar (sin duplicarla).' },
+  { t: 'mejora', m: 'Combustible', d: 'Cuando el rendimiento sale imposiblemente bueno (suele ser un error de dato), la app te pide revisar el kilometraje/galones en vez de avisar a mantenimiento; y puedes “Revisar y corregir” la echada en el momento.' },
+  { t: 'arreglo', m: 'Proyectos', d: 'El cronograma distingue “sin tareas” de un error de carga (con botón Reintentar) y ya muestra las obras de prueba.' },
 ];
 
 const TIPO_POR_COMMIT = {

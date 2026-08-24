@@ -235,6 +235,115 @@ export interface CombustibleCaptura {
   placa: string;
   /** AT4 — usuario_id del ayudante (opcional); le suma la echada al incentivo. */
   ayudanteId?: string | null;
+  /**
+   * AW3 — el usuario confirmó una echada inusualmente grande (galones sobre el
+   * margen de alerta del tanque). Viaja como `p_confirmado` a la RPC: con `true`
+   * el servidor inserta sin volver a pedir confirmación (mismo client_uuid).
+   */
+  confirmado?: boolean;
+}
+
+/**
+ * AW3 — configuración de tanque/precio (sgc.flota_config) para el preview del
+ * cliente. El servidor es la fuente de verdad; estos umbrales solo alimentan el
+ * bloqueo/alerta EN VIVO al digitar (galones vs capacidad, banda de precio).
+ */
+export interface TanqueConfig {
+  /** Tope por clase cuando el vehículo no define `capacidad_tanque_gal`. */
+  capPorClase: Record<string, number>;
+  capDefault: number;
+  /** Galones > capacidad × margenBloqueo → BLOQUEO duro (RPC 23514). */
+  margenBloqueo: number;
+  /** Galones > capacidad × margenAlerta → confirmación suave (needs_confirm). */
+  margenAlerta: number;
+  precioMin: number;
+  precioMax: number;
+}
+
+export const TANQUE_CONFIG_DEFAULT: TanqueConfig = {
+  capPorClase: {
+    automovil: 25,
+    suv: 45,
+    pickup: 45,
+    camion: 120,
+    pesado: 250,
+  },
+  capDefault: 80,
+  margenBloqueo: 1.15,
+  margenAlerta: 0.85,
+  precioMin: 100,
+  precioMax: 600,
+};
+
+/**
+ * AW3 — capacidad efectiva del tanque para el preview: la del vehículo si está
+ * definida; si no, el tope por su clase (`tipo`); si tampoco, el default. Best
+ * effort — el `tipo` puede no mapear a una clase conocida y ahí cae al default.
+ */
+export function capacidadTanqueEfectiva(
+  capacidadVehiculo: number | null | undefined,
+  tipo: string | null | undefined,
+  cfg: TanqueConfig,
+): number {
+  if (capacidadVehiculo != null && capacidadVehiculo > 0) return capacidadVehiculo;
+  const clase = (tipo ?? '').trim().toLowerCase();
+  return cfg.capPorClase[clase] ?? cfg.capDefault;
+}
+
+/** AW3 — resultado de la validación de echada en el cliente (espeja al server). */
+export interface EchadaValidacion {
+  /** Mensaje de BLOQUEO (no se puede guardar). null si pasa. */
+  bloqueo: string | null;
+  /** Mensaje de CONFIRMACIÓN suave (echada inusual). null si no aplica. */
+  confirmar: string | null;
+}
+
+/**
+ * AW3 — valida en el cliente lo mismo que la RPC `registrar_combustible_app`:
+ * galones vs capacidad del tanque (×margen) y banda de precio por galón. Solo
+ * para estación (el depósito en obra usa garrafón, sin bomba ni banda de precio).
+ * El servidor revalida y tiene la última palabra.
+ */
+export function validarEchadaCliente(
+  galones: number | null,
+  precioPorGalon: number | null,
+  capacidad: number,
+  cfg: TanqueConfig,
+): EchadaValidacion {
+  const out: EchadaValidacion = { bloqueo: null, confirmar: null };
+  if (galones != null && galones > 0) {
+    const topeBloqueo = capacidad * cfg.margenBloqueo;
+    const topeAlerta = capacidad * cfg.margenAlerta;
+    if (galones > topeBloqueo) {
+      out.bloqueo =
+        `Son ${galones.toLocaleString('es-DO', { maximumFractionDigits: 2 })} galones, ` +
+        `más de lo que cabe en el tanque (≈ ${capacidad} gal). Revisa el número — ` +
+        `quizás pusiste el monto en galones o se coló un punto de más.`;
+      return out;
+    }
+    if (galones > topeAlerta) {
+      out.confirmar =
+        `${galones.toLocaleString('es-DO', { maximumFractionDigits: 2 })} galones es casi el ` +
+        `tanque lleno (≈ ${capacidad} gal). ¿Seguro que echaste esa cantidad?`;
+    }
+  }
+  if (precioPorGalon != null && precioPorGalon > 0) {
+    if (precioPorGalon < cfg.precioMin || precioPorGalon > cfg.precioMax) {
+      out.bloqueo =
+        `El precio sale en RD$ ${precioPorGalon.toLocaleString('es-DO', { maximumFractionDigits: 2 })}/gal, ` +
+        `fuera del rango normal (RD$ ${cfg.precioMin}–${cfg.precioMax}). ` +
+        `Verifica los galones y el monto.`;
+    }
+  }
+  return out;
+}
+
+/** AW3 — respuesta de `registrar_combustible_app` cuando pide confirmación suave. */
+export interface NeedsConfirmResp {
+  needs_confirm: boolean;
+  confirm_message?: string;
+  cap?: number;
+  galones?: number;
 }
 
 /** AA20 — precio oficial vigente por producto canónico (referencia/widget). */
@@ -273,6 +382,14 @@ export interface CombustibleCalculo {
   // AD7 — estado preview (se confirma al sincronizar con el servidor).
   estado: RendimientoEstado;
   estadoMotivo: string;
+  /**
+   * AW2 — dirección de la anomalía (espeja `direccion_alerta` del servidor):
+   *  · 'bajo' = rinde por debajo de lo normal → se avisa a mantenimiento.
+   *  · 'alto' = rinde imposiblemente bien = error de dato → revisar la lectura,
+   *             NO se avisa a mantenimiento.
+   *  · null   = sin anomalía.
+   */
+  direccion: 'alto' | 'bajo' | null;
 }
 
 /**
@@ -311,5 +428,25 @@ export function calcularCombustible(
 
   const { estado, motivo } = clasificarRendimientoLocal(kmRecorridos, g, rendimiento, baseline, esHoras);
 
-  return { precioPorGalon, kmRecorridos, rendimiento, costoPorKm, alertaConsumo, estado, estadoMotivo: motivo };
+  // AW2 — dirección de la anomalía (para el texto del aviso). Espeja la lógica del
+  // servidor: rinde imposiblemente ALTO = error de dato (revisar lectura); rinde
+  // BAJO (o imposiblemente bajo) = posible problema del vehículo (mantenimiento).
+  let direccion: 'alto' | 'bajo' | null = null;
+  if (estado === 'anormal' || estado === 'bajo') {
+    if (rendimiento == null) {
+      direccion = 'bajo';
+    } else if (esHoras) {
+      direccion = baseline != null && baseline > 0 && rendimiento > baseline ? 'alto' : 'bajo';
+    } else if (rendimiento > REND_MAX_KM_GAL) {
+      direccion = 'alto';
+    } else if (rendimiento < REND_MIN_KM_GAL) {
+      direccion = 'bajo';
+    } else if (baseline != null && baseline > 0) {
+      direccion = rendimiento > baseline ? 'alto' : 'bajo';
+    } else {
+      direccion = 'bajo';
+    }
+  }
+
+  return { precioPorGalon, kmRecorridos, rendimiento, costoPorKm, alertaConsumo, estado, estadoMotivo: motivo, direccion };
 }

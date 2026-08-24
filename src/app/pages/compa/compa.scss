@@ -1,0 +1,251 @@
+.compa {
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+.compa__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.compa__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+.compa__avatar {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--Hub, #ffb300);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.compa__id-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.compa__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.compa__sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+// ── Hilo ──────────────────────────────────────────────────────────────────
+.compa__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+// Estado inicial (presentación + chips de sugerencia).
+.compa__intro {
+  margin: auto;
+  max-width: 340px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 8px;
+}
+.compa__intro-emoji {
+  font-size: 56px;
+}
+.compa__intro-title {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.compa__intro-text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.compa__chips {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.compa__chip {
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.compa__chip:active {
+  border-color: var(--Hub, #ffb300);
+}
+.compa__chip:disabled {
+  opacity: 0.5;
+}
+
+// Burbujas.
+.compa__msg {
+  max-width: 82%;
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+}
+.compa__msg--mio {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.compa__burbuja {
+  padding: 10px 14px;
+  border-radius: 16px 16px 16px 5px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+.compa__msg--mio .compa__burbuja {
+  border-radius: 16px 16px 5px 16px;
+  background: var(--Hub, #ffb300);
+  border-color: transparent;
+  color: #121212;
+}
+
+// Indicador "escribiendo…" (tres puntos).
+.compa__typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.compa__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--main-ultra-light, #929090);
+  animation: compa-blink 1.2s infinite ease-in-out;
+}
+.compa__dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.compa__dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes compa-blink {
+  0%, 60%, 100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+// ── Composer ──────────────────────────────────────────────────────────────
+.compa__compose {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + var(--safe-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.compa__compose--rec {
+  align-items: center;
+}
+.compa__compose--rec app-voice-recorder {
+  flex: 1;
+  min-width: 0;
+}
+.compa__input {
+  flex: 1;
+}
+.compa__send {
+  flex: 0 0 auto;
+  width: 52px;
+  border-radius: 14px;
+  background: var(--primary, #ff5f00);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.compa__send:disabled {
+  opacity: 0.5;
+}
+.compa__offline {
+  margin: 0;
+  padding: 6px 16px calc(6px + var(--safe-bottom));
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+}
+
+// ── Hoja de confirmación de propuesta ──────────────────────────────────────
+.compa__prop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.compa__prop-lineas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+}
+.compa__prop-acts {
+  display: flex;
+  gap: 10px;
+
+  .btn-cta {
+    flex: 1;
+  }
+  // Footer button width gotcha: .btn-ghost es width:100% global → colapsa el CTA
+  // en un flex; forzamos ancho automático al secundario.
+  .btn-ghost {
+    width: auto;
+    flex: 0 0 auto;
+  }
+}
