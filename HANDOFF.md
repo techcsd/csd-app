@@ -1,8 +1,10 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 24/08/2026 — PROMPT-8 ronda AV (app) — **FASES 1-5 IMPLEMENTADAS · build verde · SIN commit/push/release (falta OK + device-QA de Xaviel)**
+## 🟢 SESIÓN 24/08/2026 — PROMPT-8 ronda AV (app) — **RELEASE 1.97.0 PUBLICADO (rolling) · FASES 1-5 · build verde · ⏳ device-QA pendiente**
 
-**TL;DR:** PROMPT-8 depende de PROMPT-7 (SGC), que **ya está en prod** (SGC `88e1bc2` + `71017fc`, migraciones AV1/AV3/AV4/AV7 aplicadas). Esta sesión cableó el lado app de las 5 fases consumiendo esos contratos. **`npm run build` = verde** (solo warnings preexistentes de budget + un NG8102 preexistente en personal-carnet.html, ninguno mío). **NADA committeado/subido** — dar OK y correr device-QA antes de release. No se bumpeó versión.
+**SHIPPED:** commit **`3049cdd`** → push `main` → PWA por Vercel. **APK 1.97.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 6 cambios curados) + subido al bucket (`csd-app-1.97.0.apk` + `latest` + `version.json`, `apk_url` actualizado). **`publicada=1.97.0`** (rolling, `sql/2026-08-24-publicar-1.97.0.sql` aplicado), **`minima=1.96.4` INTACTA** (NO forzada). `version_publicada()` ya devuelve 1.97.0. **Rollback:** `update sgc.app_versiones set publicada=(version='1.96.4') where plataforma='movil';` + `git revert 3049cdd && git push`.
+
+**TL;DR:** PROMPT-8 depende de PROMPT-7 (SGC), que **ya está en prod** (SGC `88e1bc2` + `71017fc`, migraciones AV1/AV3/AV4/AV7 aplicadas). Esta sesión cableó el lado app de las 5 fases consumiendo esos contratos, y **publicó 1.97.0** (rolling). **`npm run build` = verde** (solo warnings preexistentes de budget + un NG8102 preexistente en personal-carnet.html, ninguno mío). **⏳ Falta device-QA de todo** (no puedo probar en equipo).
 
 ### ✅ Hecho esta sesión (build verde, sin commit)
 - **🔴 FASE 1 — AV1 guard de la firma del despachante.** Raíz (según SGC): el selector ya se arregló server-side (`despachantes_disponibles` filtra por `es_despachante_elegible` → chofer FUERA, gerente_proyectos DENTRO) + un **bug del server** en `firmar_conduce` (rechazaba despachantes elegibles) ya corregido en prod. Lo que faltaba en la app: **no ofrecer el pad a quien el server va a rechazar**.
@@ -23,19 +25,18 @@
   - El **import como ciclo** (diff/historial/bajas) es feature **WEB** (Excel de escritorio) → nada app-side.
 
 ### ⏳ Pendiente — Claude puede hacer (cuando Xaviel dé OK)
-1. **Release** (si Xaviel aprueba): bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `scripts/release-apk.mjs`; `npm run build` → `npm run apk` (registra versión Y1) → `npm run apk:publish`. NO forzar mínima.
-2. **FASE 4 nice-to-have:** vista de control como **galería de miniaturas** (cara+documento) en vez de filas; captura/edición rápida de `aseguramiento_doc_path` (documento de respaldo del seguro) — hoy solo el flag+fecha.
-3. **Transporta (AV1):** si Xaviel define roles elegibles para "transporta", pedir a SGC un `es_transportista_elegible` y filtrar el selector de conductor igual que despachante.
+1. **FASE 4 nice-to-have:** vista de control como **galería de miniaturas** (cara+documento) en vez de filas; captura/edición rápida de `aseguramiento_doc_path` (documento de respaldo del seguro) — hoy solo el flag+fecha.
+2. **Transporta (AV1):** el selector de conductor YA sale de `conductores` (solo choferes) → no era bug de selector. Si Xaviel decide que "transporta" admite otros roles, pedir a SGC la fuente de elegibilidad y filtrar igual que despachante.
 
 ### 🔴 Pendiente — SOLO Xaviel (físico / decisión) — §G del CONTEXTO-ACTUALIZACION-3
 - **Device-QA de TODO** (no puedo probar en equipo). Guiones: (AV1) reproducir `CND-747ED8AB` como Papo (chofer-despachante) → antes: pad + banner rojo; después: fila "requiere corrección" + panel, **nunca el pad**; y confirmar que Test User 3 (Gerente_proyectos) SÍ aparece como despachante y puede firmar. (AV2) "Mi rendimiento" invisible para admin/gerencia, visible para chofer + jefe de flota. (AV6) el ingeniero ya NO ve "Crear ruta" en su hub pero sí puede planificar. (AV3) al armar un parte, elegir entre los ingenieros de la obra. (AV4) registrar personal con cuadrilla+aseguramiento y ver el semáforo/filtros.
 - **Decisiones abiertas (§G):** **Transporta** ¿admite no-choferes? (no tocado). **AV4:** definición exacta de "asegurado" (hoy flag manual, default RRHH), nombres finales del catálogo de tipo de documento, ¿quién ve números de documento? **AV6:** confirmar que la app puede **agrupar** (paridad de capacidades, no de menú) — se asumió que sí.
-- **Commit/push/release** — nada se subió; dar OK.
+- **Release YA hecho** (1.97.0 rolling, commit `3049cdd`, minima 1.96.4 intacta). Rollback arriba si algo falla en device-QA.
 
 ### ✅ Verify on resume
 ```
 cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
-git status   # varios archivos modificados, SIN commit
+git log --oneline -1   # 3049cdd feat(app): ronda AV ... + 1.97.0
 ```
 
 ---
