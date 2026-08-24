@@ -13,7 +13,7 @@ if (hasKeystore) {
 // name (major*1_000_000 + minor*1_000 + patch) so it always increments with the
 // version and matches the backend's version_code scheme (e.g. 1.5.0 -> 1005000).
 // Keep appVersionName in sync with src/environments/* and scripts/release-apk.mjs.
-def appVersionName = "1.96.2"
+def appVersionName = "1.96.3"
 def computeVersionCode = { String name ->
     def p = name.tokenize('.')
     def major = (p.size() > 0 ? p[0] : "0").toInteger()
@@ -32,9 +32,13 @@ android {
                 storePassword keystoreProps['storePassword']
                 keyAlias keystoreProps['keyAlias']
                 keyPassword keystoreProps['keyPassword']
-                // minSdk 24 → v1 (JAR) no hace falta; firmamos con v2 + v3 para una
-                // instalación/actualización más limpia y "reconocible" en Android 9+.
-                enableV1Signing false
+                // Firmamos con v1 + v2 + v3. v1 (JAR) no es estrictamente
+                // necesario con minSdk 24, PERO algunos instaladores de OEM
+                // (MIUI/Xiaomi, Android viejo) rechazan con "Aplicación no
+                // instalada" un APK que solo trae v2/v3. Reactivarlo es aditivo
+                // (misma keystore, mismo cert) y maximiza la compatibilidad de
+                // instalación/actualización en la flota de campo.
+                enableV1Signing true
                 enableV2Signing true
                 enableV3Signing true
             }
