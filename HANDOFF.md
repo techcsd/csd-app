@@ -24,6 +24,13 @@
   - `core/services/compa.service.ts` + `core/models/compa.model.ts`: consume la edge **`assistant`** (chat `{mensaje, conversacion_id}` → `{respuesta, herramientas, propuesta}`; ejecutar `{ejecutar:<propuesta>, conversacion_id}` → `{respuesta, ejecutado}`). NUNCA ejecuta la acción por su cuenta. Errores 401/429/**503 sin API key** → burbuja amable (lee el body de la Response como geocoding); el 503 muestra el mensaje "no configurado" tal cual si viene.
   - `pages/compa/*`: chat (burbujas user/assistant, "escribiendo…", sugerencias iniciales), **hoja de Confirmar/Cancelar** para las `propuesta` de escritura (tarea/requisición/conduce), **entrada de voz** (reusa `voice-recorder` mode push → edge `transcribe-audio` best-effort → texto editable antes de enviar), offline-aware. Ruta `/compa` (solo authGuard+pinGuard, SIN gate de módulo) + tile "🤖 Compa" en el home (general para todos, como Mensajes).
 
+### 🧪 QA de Compa (usuarios de prueba) — verificado 2026-08-25
+Compa es **general a todo usuario autenticado** (sin gate de módulo) → NO hace falta un QA user nuevo; los **18 QA users** (`qa_<rol>@constructorasd.com`, ver `QA-USERS.local`) ya lo cubren. Cambios (todo en `scratchpad/` + `QA-USERS.local`, **gitignored** — no entran al repo):
+- `scratchpad/qa-roles.mjs`: nuevo modo **`compa`** (`node scratchpad/qa-roles.mjs compa`) — loguea cada rol e invoca la edge `assistant` con su JWT, clasificando OK / **SIN-KEY(503)** / RATE(429) / AUTH(401).
+- **Corrido across los 18 roles → todos `SIN-KEY(503)`** = correcto MIENTRAS falta `ANTHROPIC_API_KEY`. Ya confirma: la edge está desplegada + accesible, cada rol autentica e invoca bien (camino de herencia de permisos), y el 503 es el que dispara el mensaje amable "no configurado" en la app.
+- Re-ejecutar `compa` **después** de poner la key: debe pasar a `OK(resp:…c, tools:N)` con **N variando por rol** (esa variación confirma la herencia de permisos: chofer < admin).
+- Los 18 QA users se re-confirmaron `activo=true` (`node scratchpad/qa-roles.mjs create`, idempotente).
+
 ### ⏳ Pendiente — Claude puede hacer (con OK de Xaviel)
 1. **Commit + release** (bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `release-apk.mjs` → `npm run build` → `npm run apk` (registra Y1) → `npm run apk:publish`). NO forzar mínima. Nada subido aún.
 2. **FAB global de Compa** (opcional): decidí NO añadir un botón flotante global (app.html/app.ts) para no solapar los footers fijos de los muchos wizards; el tile del home da acceso a un toque. Si Xaviel lo quiere "siempre a un toque" desde cualquier pantalla, es un follow-up acotado (gatear por no-auth/no-gate/no-ruta-compa).
