@@ -1,10 +1,14 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 25/08/2026 — PROMPT-12 ronda AX (app) — **RELEASE 1.99.0 PUBLICADO (rolling) · 5 FASES · build verde · SGC edge desplegada · ⏳ device-QA pendiente**
+## 🟢 SESIÓN 25/08/2026 — PROMPT-12 ronda AX (app+web) — **RELEASE 1.99.0 PUBLICADO (rolling) · 5 FASES + paridad web · build verde (2 repos) · TODO COMMITEADO/PUSHEADO · ⏳ device-QA pendiente**
 
-**SHIPPED:** commit **`6439782`** (app feat AX + 1.99.0) → push `main` (PWA por Vercel). **APK 1.99.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 5 cambios curados) + subido al bucket (`csd-app-1.99.0.apk` + `latest` + `version.json` + `apk_url`). **`publicada=1.99.0`** (rolling, `sql/2026-08-25-publicar-1.99.0.sql`), **`minima=1.96.4` INTACTA**. Verificado: `version_publicada()` = 1.99.0 / mínima 1.96.4. **Rollback:** `update sgc.app_versiones set publicada=(version='1.98.0') where plataforma='movil';` + `git revert 6439782 && git push`.
+**SHIPPED — app (`csd-app`):** `6439782` (feat AX + 1.99.0) → `52b2622` (publish SQL + handoff) → `6f56068` (docs) → push `main` (PWA por Vercel). **APK 1.99.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 5 cambios curados) + subido al bucket (`csd-app-1.99.0.apk` + `latest` + `version.json` + `apk_url`). **`publicada=1.99.0`** (rolling, `sql/2026-08-25-publicar-1.99.0.sql`), **`minima=1.96.4` INTACTA**. Verificado: `version_publicada()` = 1.99.0 / mínima 1.96.4.
 
-**Estado:** las 5 fases de PROMPT-12 hechas + publicadas. `npm run build` = **verde** (solo warnings preexistentes). **Aplicado a prod:** (1) edge `conductor-login` generalizada (AX2, deploy) — **uncommitted en SGC**; (2) `sql/2026-08-25-ax4-activar-penalizacion.sql` (resta −1/día); (3) `sql/2026-08-25-ax4-aviso-en-ruta.sql` (aviso "¿sigues en ruta?"). Las 3 (edge + 2 SQL) siguen **sin commitear en SGC** — espejar/commitear allá (dominio incentivo/flota). **AX6 web:** ✅ UNIFICADO (decisión de Xaviel: paridad total web=app). SGC `650171f` — el form web `bitacora/nueva` ahora agrega "Otros" como una estructura MÁS de la matriz (texto libre) y guarda `estructura` verbatim (no más `estructura='OTROS'`+actividad). Se verificó que NADA fuera del form consumía `estructura='OTROS'` (ni SQL ni otro front) → seguro. Build SGC verde. Deploy por CI de SGC (Vercel) al push.
+**SHIPPED — web/backend (`SGC`):** `b6d0269` (AX2 login rol-agnóstico + AX4 penalización activa + AX4 aviso "¿sigues en ruta?") + `650171f` (AX6 web: "Otros" verbatim). Push `main` → deploy por CI de SGC (Vercel). Edge `conductor-login` **desplegada a prod** (`npx supabase functions deploy`). **TODO committeado en ambos repos** (ya no queda nada suelto).
+
+**Rollback app:** `update sgc.app_versiones set publicada=(version='1.98.0') where plataforma='movil';` + `git revert 6439782 && git push`.
+
+**Estado:** las 5 fases de PROMPT-12 + la paridad web de AX6, hechas y en producción. Builds **verdes** en ambos repos (app: solo warnings preexistentes; SGC: bundle OK). Aplicado a prod: edge `conductor-login` generalizada + `sql/2026-08-25-ax4-activar-penalizacion.sql` (−1/día, gracia 2, tope 4) + `sql/2026-08-25-ax4-aviso-en-ruta.sql` (extiende AV6) + `sql/2026-08-25-publicar-1.99.0.sql` (rolling). **AX6 web unificado:** el form `bitacora/nueva` agrega "Otros" como una estructura MÁS de la matriz y guarda `estructura` verbatim (se retiró `estructura='OTROS'`); verificado que nada lo consumía → seguro.
 
 ### ✅ FASE 1 — AX7: input de cantidad que borraba el item
 - **Componente nuevo `shared/ui/qty-input/`** (uno solo para toda la app, como pidió AX7): tolera vacío mientras se edita (el item NUNCA se borra al vaciar — borrar es la ✕), **selecciona-todo al enfocar** (tocar "1" + teclear "25" = 25), `type="text" inputmode="decimal"` + `parseNumeroFlexible` (locale RD, base AW3), revierte al último válido en blur si queda vacío/≤0, botones ± con piso/tope, min>0.
@@ -33,18 +37,22 @@
 - **✅ ACTIVADA en prod** (decisión Xaviel): `sql/2026-08-25-ax4-activar-penalizacion.sql` → `_penal_pts_dia=1` (gracia 2, tope 4). Verificado (config activa v1). Toma efecto en el próximo Recalcular/cierre (semana 34 exenta por AX4c).
 - **✅ AVISO PREVENTIVO en prod:** `sql/2026-08-25-ax4-aviso-en-ruta.sql` → **extiende AV6** `recordar_estados_chofer` con la rama **'en_ruta' ≥ 8h → push "¿Sigues en ruta?"** (deep-link `/mi-actividad`, dedup 1/día, es_prueba excluido). AV6 ya cubría inactivo>4h y disponible>12h. Corre en el cron horario existente `sgc-recordar-estados-chofer` (verificado: param=8, cron activo, fn con la rama). El deep-link usa el `ruta` estándar de `notificar` → sin cambio en la app. **NO construí** el predictor "te faltan N días para perder puntos" (riesgo de falsos positivos); la transparencia (renglón negativo) + los nudges AV6 + el de en_ruta cubren la conducta.
 
-### 🔴 Pendiente — decisión/acción de Xaviel
-1. **Commit/push** de: (a) app (5 fases, build verde), (b) SGC `conductor-login` generalizada (ya en prod, sin commit). + **release** app si aplica (bump + `npm run apk` + publish) — NADA subido aún.
-2. **AX4:** activar la penalización (`_penal_pts_dia` en Configurar puntaje) cuando quieras — hoy está en 0 (no-op).
-3. **AX4 preventive push:** ¿construyo el cron en SGC (detecta estado stale > umbral → push)? Es el único hueco de FASE 3.
-4. **AX6 web:** "Otros" en el form web de bitácora (paridad).
-5. **Device-QA:** (AX7) borrar la cantidad no borra el item + tocar-teclea-reemplaza en los 6 flujos; (AX10) crear ruta con vehículo libre → uso-vehiculo canónico → vuelve al borrador; (AX2) login capataz real por cédula → menú solo bitácora + ve/firma su conduce; (AX4) ver el renglón negativo con la penal activada.
+### ✅ Cerrado esta sesión (todo aplicado/pusheado)
+1. ~~Commit/push app + SGC + release 1.99.0~~ → hecho (app `6f56068`, SGC `650171f`, APK+rolling publicados).
+2. ~~AX4 activar penalización~~ → hecho (`_penal_pts_dia=1`, gracia 2, tope 4; verificado config activa v1).
+3. ~~AX4 aviso preventivo~~ → hecho (rama en_ruta≥8h en AV6, cron horario existente, verificado).
+4. ~~AX6 web paridad~~ → hecho (SGC `650171f`).
+
+### 🔴 Pendiente — SOLO Xaviel (físico)
+- **Device-QA de TODO** (no puedo en equipo). Guiones: (AX7) borrar la cantidad NO borra el item + tocar-teclea-reemplaza en los 6 flujos (conduce, requisición, ferretería, devolución, entrada/salida); (AX10) crear ruta con vehículo libre → uso-vehiculo CANÓNICO → volver a la ruta a medio hacer sin perder lo tecleado; (AX2) login de un capataz REAL por cédula → menú solo bitácora + ve/firma su conduce; (AX4) ver el renglón negativo de estancamiento (tras un Recalcular con la penal activa) + recibir el push "¿sigues en ruta?" tras 8h; (AX6 web) agregar "Otros" en bitácora web → aparece como estructura y se guarda con ese nombre.
+- **Opcional (no lo hice a propósito):** predictor "te faltan N días para perder puntos" — riesgo de falsos positivos; la transparencia + los nudges AV6 + el de en_ruta ya cubren la conducta. Si lo quieres, hay que replicar la definición de "señal" de AX4c por semana en curso.
 
 ### ✅ Verify on resume
 ```
 cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
 node scratchpad/ax2-capataz-smoke.mjs   # capataz login por cédula OK end-to-end
-git status   # muchos modificados, SIN commit (app); SGC conductor-login también sin commit
+git -C "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" log --oneline -1   # 6f56068 (o posterior)
+git -C "C:/Users/xavie/Desktop/X Dev/dev/SGC" log --oneline -1        # 650171f (o posterior)
 ```
 
 ---
