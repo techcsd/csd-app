@@ -21,7 +21,7 @@
       [class.login__tab--on]="modo() === 'conductor'"
       (click)="setModo('conductor')"
     >
-      Soy conductor
+      Con cédula
     </button>
   </div>
 
@@ -112,8 +112,9 @@
         {{ loading() ? 'Entrando…' : 'Entrar' }}
       </button>
 
+      <!-- AX2 — el acceso por cédula sirve a chofer Y capataz (rol resuelto por el backend). -->
       <p class="login__hint">
-        ¿No tienes acceso? Pídele a administración que te lo genere desde tu perfil de conductor.
+        ¿No tienes acceso? Pídele a administración que te lo genere desde tu ficha (conductor o capataz).
       </p>
     </form>
   }

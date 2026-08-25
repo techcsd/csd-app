@@ -707,8 +707,10 @@ export class CrearRutaPage implements OnDestroy {
     this.holdChecklist.set(true);
     this.toast.show('Primero registra el uso de este vehículo. Tu ruta queda pendiente y la reanudas al terminar.', 'info');
     await this.autosave.flushAll(); // AF24.5 — persiste el borrador antes de salir
-    await this.router.navigate(['/transporte/asignarme'], {
-      queryParams: { returnUrl: this.router.url, vehiculoId: vId },
+    // AX10 — desvío a la pantalla CANÓNICA de uso de vehículo (la del menú, v2/AK15),
+    // ya NO a la vieja `asignarme` (deprecada). `returnUrl` reanuda ESTA ruta.
+    await this.router.navigate(['/transporte/uso-vehiculo', vId], {
+      queryParams: { returnUrl: this.router.url },
     });
     return true;
   }

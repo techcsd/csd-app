@@ -136,6 +136,10 @@ export class PartePage implements OnDestroy {
   sujetoOtro = signal(false);
   // Estructura elegida dentro del sujeto actual (¿en qué parte?).
   parteActual = signal<string>('');
+  // AX6 — el usuario eligió "Otros" en el elemento (columna/viga…): habilita un
+  // texto libre OBLIGATORIO que se guarda tal cual en `estructura` (se reporta
+  // verbatim y alimenta el catálogo de estructuras — ciclo AT11/AU12).
+  parteOtro = signal(false);
 
   restricciones = signal<string[]>([]);
   // U12 — descripción breve obligatoria por restricción seleccionada (tipo → texto).
@@ -499,7 +503,14 @@ export class PartePage implements OnDestroy {
 
   /** Elige/cambia la estructura actual (¿en qué parte?). Vuelve a tocarla para cerrar. */
   toggleEstructura(e: string): void {
+    this.parteOtro.set(false); // AX6 — al elegir una del catálogo, sale del modo "Otros"
     this.parteActual.update((cur) => (cur === e ? '' : e));
+  }
+
+  /** AX6 — "Otros": habilita el texto libre obligatorio y limpia la selección. */
+  elegirOtraParte(): void {
+    this.parteOtro.set(true);
+    this.parteActual.set('');
   }
 
   /** ¿La actividad ya está agregada para el sujeto + estructura actual? */
@@ -516,10 +527,13 @@ export class PartePage implements OnDestroy {
 
   /** Toca una actividad → agrega (o quita) la fila {sujeto, parte, actividad}. */
   toggleActividad(a: string): void {
-    const parte = this.parteActual();
+    const parte = this.parteActual().trim();
     const sujeto = this.sujetoActual();
     if (!parte) {
-      this.toast.error('Primero elige en qué parte se trabajó (arriba).');
+      // AX6 — "Otros" sin texto: exige especificar qué se trabajó.
+      this.toast.error(
+        this.parteOtro() ? 'Escribe qué se trabajó (especifica el "Otros").' : 'Primero elige en qué parte se trabajó (arriba).',
+      );
       return;
     }
     this.actividades.update((list) => {

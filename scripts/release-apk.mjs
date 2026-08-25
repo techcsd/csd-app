@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.98.0';
+const VERSION = '1.99.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,19 +59,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-08-24';
+const RELEASED_AT = '2026-08-25';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Compa (asistente de IA), registro de galones a prueba de errores y cronograma más claro';
+const TITULO = 'Cantidad a prueba de errores, “Otros” en bitácora, acceso de capataz y transparencia del incentivo';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Compa', d: 'Nuevo asistente Compa: pregúntale por chat o por voz (“¿qué tareas tengo?”, “¿tengo conduces por firmar?”) y consulta tus datos reales. Las acciones (crear tarea, requisición o conduce) siempre pasan por una confirmación antes de hacerse.' },
-  { t: 'arreglo', m: 'Combustible', d: 'El registro de galones ya no confunde el punto decimal: “34.118” se guarda como 34.12 galones (no 34,118). Ves en vivo lo que se va a guardar y no puedes pasarte de la capacidad del tanque ni de un precio irreal.' },
-  { t: 'nuevo', m: 'Combustible', d: 'Si una echada es casi el tanque lleno, la app te pide confirmar antes de guardar (sin duplicarla).' },
-  { t: 'mejora', m: 'Combustible', d: 'Cuando el rendimiento sale imposiblemente bueno (suele ser un error de dato), la app te pide revisar el kilometraje/galones en vez de avisar a mantenimiento; y puedes “Revisar y corregir” la echada en el momento.' },
-  { t: 'arreglo', m: 'Proyectos', d: 'El cronograma distingue “sin tareas” de un error de carga (con botón Reintentar) y ya muestra las obras de prueba.' },
+  { t: 'arreglo', m: 'Conduce', d: 'Al escribir la cantidad de un artículo ya NO se borra el renglón si dejas el campo vacío: toca el número y escribe el que quieras (se selecciona solo, así “25” reemplaza al “1”). Mismo comportamiento en conduce, requisición, ferretería, devolución y entradas/salidas de inventario.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Nueva opción “Otros” al elegir el elemento trabajado (columna, viga…): si el tuyo no está, lo escribes y queda registrado en el reporte.' },
+  { t: 'arreglo', m: 'Flota', d: '“Crear ruta” con un vehículo que no está en uso ahora te lleva a la pantalla correcta de “Uso de vehículo” y te devuelve a tu ruta a medio hacer sin perder lo que escribiste.' },
+  { t: 'nuevo', m: 'Acceso', d: 'Los capataces ya pueden entrar con su cédula y PIN, igual que los choferes (pestaña “Con cédula”).' },
+  { t: 'nuevo', m: 'Mi rendimiento', d: 'Si pasas días laborables sin actividad ni actualizar tu estado, verás el descuento de puntos con las fechas exactas que lo causaron; y la app te avisa si llevas mucho tiempo “En ruta” sin actualizar.' },
 ];
 
 const TIPO_POR_COMMIT = {

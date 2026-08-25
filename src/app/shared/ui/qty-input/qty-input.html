@@ -1,0 +1,19 @@
+<div class="qty-input">
+  @if (steppers()) {
+    <button type="button" class="qty-input__step" (click)="step(-1)" [disabled]="atMin()" aria-label="Menos">−</button>
+  }
+  <input
+    #inp
+    class="field qty-input__field"
+    type="text"
+    inputmode="decimal"
+    [value]="raw()"
+    (focus)="onFocus(inp)"
+    (input)="onInput(inp.value)"
+    (blur)="onBlur()"
+    [attr.aria-label]="ariaLabel()"
+  />
+  @if (steppers()) {
+    <button type="button" class="qty-input__step" (click)="step(1)" [disabled]="atMax()" aria-label="Más">+</button>
+  }
+</div>

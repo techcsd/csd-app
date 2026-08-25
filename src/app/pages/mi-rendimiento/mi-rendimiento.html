@@ -66,6 +66,34 @@
         }
       </ul>
 
+      <!-- AX4 — penalización por estado estancado (renglón negativo, auditable) -->
+      @if (penalizacion(); as p) {
+        <ul class="mirend__renglones mirend__renglones--penal">
+          <li class="mirend__renglon mirend__renglon--penal">
+            <button type="button" class="mirend__renglon-head" (click)="toggle(p.key)" [disabled]="!p.refs.length">
+              <span class="mirend__renglon-ico">{{ p.icono }}</span>
+              <span class="mirend__renglon-label">{{ p.label }}</span>
+              <span class="mirend__renglon-pts mirend__renglon-pts--neg">{{ p.puntos }} pt{{ p.puntos === -1 ? '' : 's' }}</span>
+              @if (p.refs.length) { <span class="mirend__renglon-caret">{{ abierto() === p.key ? '▾' : '▸' }}</span> }
+            </button>
+            <p class="mirend__renglon-sub">
+              Pasaste <b>{{ p.refs.length }}</b> día{{ p.refs.length === 1 ? '' : 's' }} laborable{{ p.refs.length === 1 ? '' : 's' }} sin registrar actividad ni cambiar tu estado. Mantén tu estado al día para no perder puntos.
+            </p>
+
+            @if (abierto() === p.key) {
+              <ul class="mirend__refs">
+                @for (ref of p.refs; track ref.id) {
+                  <li class="mirend__ref">
+                    <span class="mirend__ref-fecha">{{ fmtFecha(ref.fecha) }}</span>
+                    <span class="mirend__ref-tag">sin actividad</span>
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        </ul>
+      }
+
       <!-- Decisión de la semana en curso -->
       <div class="mirend__decision mirend__decision--{{ a.decision || 'pendiente' }}">
         Incentivo de esta semana: <b>{{ decisionLabel(a) }}</b>

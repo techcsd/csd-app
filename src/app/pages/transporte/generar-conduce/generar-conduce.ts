@@ -8,6 +8,7 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
+import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
@@ -78,7 +79,7 @@ interface ConduceDraft {
   selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner, AyudantePicker],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, QtyInput, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner, AyudantePicker],
   templateUrl: './generar-conduce.html',
   styleUrl: './generar-conduce.scss',
 })
@@ -656,7 +657,7 @@ export class GenerarConducePage implements OnDestroy {
 
   /** AO3 — tope de cantidad de una línea: el disponible del almacén, o Infinity si no
    *  aplica el chequeo (ferretería) o no hay dato (offline). */
-  private topeStock(articuloId: string): number {
+  protected topeStock(articuloId: string): number {
     if (this.origenTipo() !== 'almacen') return Infinity;
     const s = this.stockDe(articuloId);
     return s == null ? Infinity : s;
@@ -788,18 +789,13 @@ export class GenerarConducePage implements OnDestroy {
       ];
     });
   }
-  ajustar(articuloId: string, delta: number): void {
-    // AO3 — tope inmediato al disponible del almacén (no deja subir más de lo que hay).
-    const tope = this.topeStock(articuloId);
-    this.cart.update((list) =>
-      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.min(tope, Math.max(0, l.cantidad + delta)) } : l)).filter((l) => l.cantidad > 0),
-    );
-  }
   setCantidad(articuloId: string, v: number): void {
     // AO3 — clamp a [0, disponible]: escribir más de lo que hay se corta al máximo.
+    // AX7 — SIN `.filter(cant > 0)`: vaciar la cantidad ya no borra el item (eso
+    // es la ✕). El qty-input nunca emite vacío; el submit ya filtra los 0.
     const cant = Math.min(this.topeStock(articuloId), Math.max(0, v || 0));
     this.cart.update((list) =>
-      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)).filter((l) => l.cantidad > 0),
+      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)),
     );
   }
   quitar(articuloId: string): void {
@@ -876,8 +872,10 @@ export class GenerarConducePage implements OnDestroy {
     if (fDe) await this.borrador.saveFoto(this.clave, 'firma_despachante', fDe);
     await this.autosave.flushAll(); // AE9 — persiste el borrador antes de salir
     const returnUrl = this.router.url;
-    await this.router.navigate(['/transporte/asignarme'], {
-      queryParams: { returnUrl, vehiculoId: vId },
+    // AX10 — desvío a la pantalla CANÓNICA de uso de vehículo (la del menú, v2/AK15),
+    // ya NO a la vieja `asignarme` (deprecada). `returnUrl` reanuda el conduce.
+    await this.router.navigate(['/transporte/uso-vehiculo', vId], {
+      queryParams: { returnUrl },
     });
     return true;
   }

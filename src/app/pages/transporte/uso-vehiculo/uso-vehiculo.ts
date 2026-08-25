@@ -130,12 +130,19 @@ export class UsoVehiculoPage {
     void this.guardar();
   }
 
+  /** AX10 — a dónde volver tras poner el vehículo en uso (p.ej. "crear ruta" que
+   *  nos desvió aquí porque el vehículo no estaba en uso). Preserva el borrador. */
+  private returnUrl: string | null = null;
+
   constructor() {
-    const id = this.route.snapshot.paramMap.get('vehiculoId');
     const q = this.route.snapshot.queryParamMap;
+    // AX10 — el id llega por path normalmente; como fallback lo aceptamos por query
+    // (deep-links viejos de `asignarme` que ahora redirigen aquí conservan ?vehiculoId).
+    const id = this.route.snapshot.paramMap.get('vehiculoId') ?? q.get('vehiculoId');
     this.modo.set(q.get('mode') === 'soltar' ? 'soltar' : 'usar');
     this.placa.set(q.get('placa') ?? '');
     this.etiqueta.set(q.get('label') ?? q.get('placa') ?? '');
+    this.returnUrl = q.get('returnUrl');
     if (id) {
       this.vehiculoId.set(id);
       void this.cargarEstado();
@@ -215,7 +222,13 @@ export class UsoVehiculoPage {
         this.toast.success(this.enUsoPorOtro() ? 'Recibiste el vehículo. Ahora está a tu cargo.' : 'Estás usando el vehículo.');
       }
       this.done.set(true);
-      this.router.navigate(['/transporte'], { replaceUrl: true });
+      // AX10 — si vinimos desviados desde "crear ruta"/"generar conduce" (el
+      // vehículo no estaba en uso), volvemos allí con el borrador intacto.
+      if (this.returnUrl) {
+        this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
+      } else {
+        this.router.navigate(['/transporte'], { replaceUrl: true });
+      }
     } catch (e) {
       if (e instanceof VehiculoEnUsoError) {
         // El estado cambió entre la consulta y el submit: re-consulta para ofrecer "recibir de X".

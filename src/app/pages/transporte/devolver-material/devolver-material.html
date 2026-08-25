@@ -52,9 +52,7 @@
             <div class="devol__item">
               <span class="devol__item-name">{{ l.nombre }}</span>
               <div class="devol__item-qty">
-                <button type="button" class="devol__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
-                <input class="field devol__qty" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
-                <button type="button" class="devol__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
+                <app-qty-input [value]="l.cantidad" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
                 <span class="devol__unit">{{ l.unidad }}</span>
                 <button type="button" class="devol__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
               </div>

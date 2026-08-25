@@ -15,6 +15,7 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { Proyecto } from '../../../core/models/bitacora.model';
 import { ArticuloCat, CartLinea, CategoriaInv, Urgencia } from '../../../core/models/inventario.model';
 import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
+import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia } from '../../../core/util/fecha';
 
@@ -34,7 +35,7 @@ interface GrupoResumen {
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet, QtyInput],
   templateUrl: './pedir.html',
   styleUrl: '../../inventario/salida/salida.scss',
 })
@@ -133,19 +134,12 @@ export class PedirPage implements OnDestroy {
   }
 
   // ── Edición en el resumen ──
-  ajustar(articuloId: string, delta: number): void {
-    this.cart.update((list) =>
-      list
-        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.max(0, l.cantidad + delta) } : l))
-        .filter((l) => l.cantidad > 0),
-    );
-  }
+  // AX7 — SIN `.filter(cant > 0)`: vaciar la cantidad ya no borra el item (eso
+  // es la ✕). El qty-input nunca emite vacío; el submit ya guarda los válidos.
   setCantidad(articuloId: string, v: number): void {
     const cant = Math.max(0, v || 0);
     this.cart.update((list) =>
-      list
-        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l))
-        .filter((l) => l.cantidad > 0),
+      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)),
     );
   }
   quitar(articuloId: string): void {

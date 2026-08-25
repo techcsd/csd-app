@@ -155,6 +155,17 @@
   font-weight: 800;
   color: var(--color-primary);
 }
+// AX4 — penalización por estado estancado (renglón negativo, en rojo).
+.mirend__renglones--penal {
+  margin-top: 10px;
+}
+.mirend__renglon--penal {
+  border-color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface));
+}
+.mirend__renglon-pts--neg {
+  color: var(--color-danger);
+}
 .mirend__renglon-caret {
   color: var(--color-text-secondary);
   font-size: 13px;

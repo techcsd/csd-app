@@ -41,9 +41,7 @@
           <div class="mov__item">
             <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· Talla {{ l.talla }}</small> }</span>
             <div class="mov__item-qty">
-              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id!, -1)" aria-label="Menos">−</button>
-              <input class="field mov__qty-input" type="number" inputmode="decimal" [ngModel]="l.cantidad" (ngModelChange)="setCantidad(l.articulo_id!, $event)" />
-              <button type="button" class="mov__step" (click)="ajustar(l.articulo_id!, 1)" aria-label="Más">+</button>
+              <app-qty-input [value]="l.cantidad" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
               <span class="mov__item-unit">{{ l.unidad }}</span>
               <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
             </div>

@@ -228,12 +228,12 @@ export const routes: Routes = [
   },
   {
     // AF34 — flujo unificado "Asignarme vehículo" + pre-uso + traspaso (acta).
-    // AK20 — DEPRECADO: ya no se enlaza desde el menú (Uso de vehículo lo reemplaza);
-    // la ruta se conserva para no romper deep-links viejos.
+    // AK20 — DEPRECADO por "Uso de vehículo" v2. AX10 — la pantalla vieja se RETIRA:
+    // la ruta redirige a la canónica (los deep-links viejos conservan ?vehiculoId /
+    // ?returnUrl automáticamente). El componente `asignarme` queda sin uso.
     path: 'transporte/asignarme',
-    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
-    loadComponent: () =>
-      import('./pages/transporte/asignarme/asignarme').then((m) => m.AsignarmeVehiculoPage),
+    redirectTo: 'transporte/uso-vehiculo',
+    pathMatch: 'full',
   },
   {
     // AF36 — historial de recepciones/traspasos de vehículo (actas).

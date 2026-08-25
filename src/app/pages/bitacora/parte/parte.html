@@ -186,11 +186,16 @@
           <label class="field-label">¿En qué parte?</label>
           <div class="parte__chips">
             @for (e of estructuras(); track e.valor) {
-              <button type="button" class="chip" [class.chip--on]="parteActual() === e.valor" (click)="toggleEstructura(e.valor)">
+              <button type="button" class="chip" [class.chip--on]="!parteOtro() && parteActual() === e.valor" (click)="toggleEstructura(e.valor)">
                 @if (e.destacado) { <span class="chip__star">★</span> }{{ e.valor }}@if (estructuraTiene(e.valor)) { <span class="chip__check">✓</span> }
               </button>
             }
+            <!-- AX6 — "Otros": salida cuando el elemento no está en el catálogo. -->
+            <button type="button" class="chip" [class.chip--on]="parteOtro()" (click)="elegirOtraParte()">➕ Otros</button>
           </div>
+          @if (parteOtro()) {
+            <input class="field" type="text" [ngModel]="parteActual()" (ngModelChange)="parteActual.set($event)" placeholder="Especifica qué se trabajó (ej: Escalera, Rampa…)" aria-label="Especifica qué se trabajó" />
+          }
 
           @if (parteActual()) {
             <!-- Z6 — Seleccionadas arriba (toca para quitar) -->

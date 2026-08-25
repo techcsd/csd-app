@@ -1,5 +1,52 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 25/08/2026 — PROMPT-12 ronda AX (app) — **5 FASES cableadas · build verde · SGC edge desplegada (capataz login) · SIN commit/release · ⏳ device-QA pendiente**
+
+**Estado:** las 5 fases de PROMPT-12 hechas. `npm run build` = **verde** (solo warnings preexistentes: NG8102 reporte-semanal/personal-carnet + budgets). **NO se commiteó ni se hizo release** (esperando OK de Xaviel). **Se aplicó a prod (autorizado por Xaviel):** (1) edge `conductor-login` generalizada (AX2, deploy) — uncommitted en SGC; (2) `sql/2026-08-25-ax4-activar-penalizacion.sql` (activa la resta −1/día); (3) `sql/2026-08-25-ax4-aviso-en-ruta.sql` (aviso preventivo "¿sigues en ruta?"). Las 2 SQL están en `csd-app/sql` — **espejar/commitear en SGC** (dominio incentivo/flota es de SGC). El resto del backend AX (acceso capataz, motor AX4) ya estaba en prod desde la ronda AX/SGC.
+
+### ✅ FASE 1 — AX7: input de cantidad que borraba el item
+- **Componente nuevo `shared/ui/qty-input/`** (uno solo para toda la app, como pidió AX7): tolera vacío mientras se edita (el item NUNCA se borra al vaciar — borrar es la ✕), **selecciona-todo al enfocar** (tocar "1" + teclear "25" = 25), `type="text" inputmode="decimal"` + `parseNumeroFlexible` (locale RD, base AW3), revierte al último válido en blur si queda vacío/≤0, botones ± con piso/tope, min>0.
+- **Cableado en los 6 carritos con el bug** (todos tenían `.filter(cant>0)` que borraba): generar-conduce, solicitudes/pedir, ferretería, devolver-material, inventario/entrada, inventario/salida. Se quitó el `.filter` (el submit ya filtra) y se removió el `ajustar` viejo.
+- **recibir/conteo NO se tocaron a propósito**: ahí 0 es un valor VÁLIDO (recepción parcial / conteo cero) y usan mapa keyed (nunca tuvieron el bug). El componente es para carritos donde el renglón debe ser >0.
+
+### ✅ FASE 2 — AX6: "Otros" en la bitácora (elemento trabajado)
+- `pages/bitacora/parte`: chip **"➕ Otros"** en el selector de estructura (¿en qué parte?) + input de **texto libre OBLIGATORIO** ("Especifica qué se trabajó"). El texto se guarda **tal cual en `estructura`** (columna es texto crudo sin CHECK → **retrocompatible, cero migración**), se reporta verbatim y alimenta `bitacora_catalogo_usos` (ciclo AT11/AU12). `toggleActividad` exige el texto si es "Otros". El catálogo de estructuras **ya es administrable** (DB `sgc.bitacora_catalogos` tipo='estructura', RPC `catalogo_ordenado`).
+- **Paridad web OWED**: el mismo "Otros" en el form web de bitácora (SGC) queda pendiente.
+
+### ✅ FASE 4 — AX10: un solo "Uso de vehículo"
+- **Causa raíz:** `crear-ruta.ts` y `generar-conduce.ts` desviaban a la pantalla **DEPRECADA `/transporte/asignarme`** (pesada: checklist+firma+fotos) en vez de la CANÓNICA `/transporte/uso-vehiculo` (v2/AK15, ligera: km+nivel). `crear_ruta_app` **NO exige** asignación (solo vehículo activo) → repuntar es seguro.
+- **Fix:** ambos desvíos ahora van a `/transporte/uso-vehiculo/:id?returnUrl=…`; `uso-vehiculo` aprende a **volver al `returnUrl`** al guardar (reanuda el borrador AE9, anti-loop sessionStorage intacto). La ruta vieja `/transporte/asignarme` **redirige** a la canónica (deep-links viejos conservan `?vehiculoId/?returnUrl`; `uso-vehiculo` lee `vehiculoId` de query como fallback). Componente `asignarme` queda sin uso.
+- **Diferencia de validación documentada** (AU1): asignarme exigía checklist+firma; la canónica solo nivel. Decisión = la canónica (menú, v2).
+
+### ✅ FASE 5 — AX2: login del Capataz por cédula — DESPLEGADO + smoke OK
+- **Backend AX2 ya existía** (SGC `7a36a6a`): `acceso-cedula` (crea acceso capataz `cap-<ced>@personal…`, rol capataz, módulos `['bitacora']`). **Lo que faltaba era el LOGIN**: `conductor-login` era solo-chofer.
+- **Generalicé `conductor-login` (SGC)**: rol-agnóstico, prueba los dominios en orden (chofer primero = retrocompatible, luego capataz) — **el front no manda `tipo`**, lo resuelve el backend. **Desplegada a prod** (`npx supabase functions deploy conductor-login`). **Uncommitted en SGC.**
+- **App:** tab de login relabel "Soy conductor" → **"Con cédula"** + hint genérico (sirve a chofer Y capataz). El post-login ya era rol-driven → sin bifurcar código.
+- **Smoke end-to-end OK** (`scratchpad/ax2-capataz-smoke.mjs`): admin rota PIN del capataz de prueba (QA Capataz Prueba, ced `00199988877`, es_prueba) → `conductor-login` devuelve sesión → `mi_perfil` = el capataz → rol=capataz, módulos=`['bitacora']` → PIN incorrecto = 401. **El chofer por cédula sigue igual** (dominio chofer primero, comportamiento idéntico).
+
+### ✅ FASE 3 — AX4: penalización por estado estancado (lado chofer)
+- **El motor YA está en prod** (SGC `AX4_penalizacion_estancamiento` + `AX4b/c`): renglón negativo `estancamiento` en `incentivo_semana.conteos`. Regla: por cada día laborable (domingo exento) SIN señal (ni cambio en `chofer_estado_historial` ni actividad ese día) → `min(max(días_sin − gracia, 0) × pts_día, tope)`. Config versionada en `incentivo_config.pesos._penal_*` (**gracia=2, tope=4, pts_día=0 = APAGADO por defecto**). Corre dentro de `incentivo_generar_semana` (recalcular/cierre). **Xaviel lo activa** poniendo `_penal_pts_dia>0` en "Configurar puntaje".
+- **App (esta sesión):** "Mi rendimiento" ahora muestra el **renglón NEGATIVO auditable** (rojo, "Días sin actividad", −N pts) **expandible a las fechas exactas** que lo causaron (misma auditabilidad AT1). Consume el `estancamiento` del RPC existente `incentivo_mi_rendimiento`.
+- **Ya existía:** "Cambiar estado" a un toque (`estado-chofer-bar` en rutas-activas/confirmaciones/seguimiento) → cambiar estado ES la señal que evita la resta. Exenciones (domingo/días con señal/sin actividad) son server-side.
+- **✅ ACTIVADA en prod** (decisión Xaviel): `sql/2026-08-25-ax4-activar-penalizacion.sql` → `_penal_pts_dia=1` (gracia 2, tope 4). Verificado (config activa v1). Toma efecto en el próximo Recalcular/cierre (semana 34 exenta por AX4c).
+- **✅ AVISO PREVENTIVO en prod:** `sql/2026-08-25-ax4-aviso-en-ruta.sql` → **extiende AV6** `recordar_estados_chofer` con la rama **'en_ruta' ≥ 8h → push "¿Sigues en ruta?"** (deep-link `/mi-actividad`, dedup 1/día, es_prueba excluido). AV6 ya cubría inactivo>4h y disponible>12h. Corre en el cron horario existente `sgc-recordar-estados-chofer` (verificado: param=8, cron activo, fn con la rama). El deep-link usa el `ruta` estándar de `notificar` → sin cambio en la app. **NO construí** el predictor "te faltan N días para perder puntos" (riesgo de falsos positivos); la transparencia (renglón negativo) + los nudges AV6 + el de en_ruta cubren la conducta.
+
+### 🔴 Pendiente — decisión/acción de Xaviel
+1. **Commit/push** de: (a) app (5 fases, build verde), (b) SGC `conductor-login` generalizada (ya en prod, sin commit). + **release** app si aplica (bump + `npm run apk` + publish) — NADA subido aún.
+2. **AX4:** activar la penalización (`_penal_pts_dia` en Configurar puntaje) cuando quieras — hoy está en 0 (no-op).
+3. **AX4 preventive push:** ¿construyo el cron en SGC (detecta estado stale > umbral → push)? Es el único hueco de FASE 3.
+4. **AX6 web:** "Otros" en el form web de bitácora (paridad).
+5. **Device-QA:** (AX7) borrar la cantidad no borra el item + tocar-teclea-reemplaza en los 6 flujos; (AX10) crear ruta con vehículo libre → uso-vehiculo canónico → vuelve al borrador; (AX2) login capataz real por cédula → menú solo bitácora + ve/firma su conduce; (AX4) ver el renglón negativo con la penal activada.
+
+### ✅ Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
+node scratchpad/ax2-capataz-smoke.mjs   # capataz login por cédula OK end-to-end
+git status   # muchos modificados, SIN commit (app); SGC conductor-login también sin commit
+```
+
+---
+
 ## 🟢 SESIÓN 24-25/08/2026 — PROMPT-10 ronda AW (app) — **RELEASE 1.98.0 PUBLICADO (rolling) · FASES 1-4 · Compa activado end-to-end · build verde · ⏳ device-QA pendiente**
 
 **Estado:** las 4 fases de PROMPT-10 cableadas + **publicadas en 1.98.0** (commit `467cdac`, rolling, minima 1.96.4 intacta). **Compa (AW4) funciona end-to-end**: `ANTHROPIC_API_KEY` puesto + bug del edge SGC arreglado/desplegado (`1fbc6cf`) + verificado con los 18 QA users. **`npm run build` = verde** (solo warnings preexistentes). **No hubo migraciones de esquema nuevas** (todo el backend AW ya existía; solo se publicó 1.98.0 + se activó Compa).

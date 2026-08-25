@@ -7,6 +7,7 @@ import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collaps
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
+import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { CapturedPhoto } from '../../../core/services/camera.service';
@@ -26,7 +27,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-ferreteria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, PhotoSlot, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm],
+  imports: [FormsModule, CollapsibleSelect, PhotoSlot, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, QtyInput],
   templateUrl: './ferreteria.html',
   styleUrl: './ferreteria.scss',
 })
@@ -111,19 +112,12 @@ export class FerreteriaPage implements OnDestroy {
       ];
     });
   }
-  ajustar(articuloId: string, delta: number): void {
-    this.cart.update((list) =>
-      list
-        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.max(0, l.cantidad + delta) } : l))
-        .filter((l) => l.cantidad > 0),
-    );
-  }
+  // AX7 — SIN `.filter(cant > 0)`: vaciar la cantidad ya no borra el item (eso
+  // es la ✕). El qty-input nunca emite vacío; el submit ya guarda los válidos.
   setCantidad(articuloId: string, v: number): void {
     const cant = Math.max(0, v || 0);
     this.cart.update((list) =>
-      list
-        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l))
-        .filter((l) => l.cantidad > 0),
+      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)),
     );
   }
   quitar(articuloId: string): void {

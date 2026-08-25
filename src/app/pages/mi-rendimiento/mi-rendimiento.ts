@@ -78,6 +78,19 @@ export class MiRendimientoPage {
     });
   });
 
+  /**
+   * AX4 — renglón NEGATIVO por estado estancado: días laborables (no domingo) en
+   * los que el chofer no registró NINGUNA actividad ni cambió su estado. El motor
+   * lo aplica con gracia + tope (config versionada AT1). Se muestra aparte, en
+   * rojo, y se puede expandir para ver EXACTAMENTE qué días lo causaron (misma
+   * auditabilidad que los renglones positivos). null si no hay penalización.
+   */
+  penalizacion = computed<RenglonView | null>(() => {
+    const v = this.actual()?.conteos?.['estancamiento'];
+    if (!v || (v.puntos ?? 0) >= 0) return null;
+    return { key: 'estancamiento', label: 'Días sin actividad', icono: '⚠️', propio: 0, ayudante: 0, puntos: v.puntos ?? 0, refs: v.refs ?? [] };
+  });
+
   /** Puntos que faltan para el mínimo (0 si ya cumplió). */
   faltan = computed(() => {
     const a = this.actual();

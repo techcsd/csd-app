@@ -17,6 +17,7 @@ import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
 import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
+import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia } from '../../../core/util/fecha';
 
@@ -40,7 +41,7 @@ interface EntradaDraft {
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })
@@ -230,20 +231,12 @@ export class EntradaPage implements OnDestroy {
     this.confirmSalir.set(false);
   }
 
-  ajustar(articuloId: string, delta: number): void {
-    this.cart.update((list) =>
-      list
-        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.max(0, l.cantidad + delta) } : l))
-        .filter((l) => l.cantidad > 0),
-    );
-  }
-
+  // AX7 — SIN `.filter(cant > 0)`: vaciar la cantidad ya no borra el item (eso
+  // es la ✕). El qty-input nunca emite vacío; el submit ya guarda los válidos.
   setCantidad(articuloId: string, v: number): void {
     const cant = Math.max(0, v || 0);
     this.cart.update((list) =>
-      list
-        .map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l))
-        .filter((l) => l.cantidad > 0),
+      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)),
     );
   }
 

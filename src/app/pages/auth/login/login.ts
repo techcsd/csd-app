@@ -10,7 +10,9 @@ import { formatCedula, soloDigitosCedula } from '../../../core/util/cedula';
 type Modo = 'correo' | 'conductor';
 
 /** First-time / re-login. Online-only flow (User Flow §2). Dos vías: correo +
- *  contraseña (usuarios del sistema) o cédula + PIN (conductores, P5). */
+ *  contraseña (usuarios del sistema) o cédula + PIN (P5). AX2 — la vía por cédula
+ *  es ROL-AGNÓSTICA: sirve a chofer Y capataz; el backend (`conductor-login`)
+ *  resuelve el rol por el dominio del email sintético. Sin bifurcar código. */
 @Component({
   selector: 'app-login',
   standalone: true,

@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
+import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
@@ -32,7 +33,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-devolver-material',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton, QtyInput],
   templateUrl: './devolver-material.html',
   styleUrl: './devolver-material.scss',
 })
@@ -157,15 +158,12 @@ export class DevolverMaterialPage implements OnDestroy {
       return [...list, { articulo_id: a.id, nombre: a.nombre, unidad: a.unidad, categoria_id: a.categoria_id ?? null, cantidad: 1 }];
     });
   }
-  ajustar(articuloId: string, delta: number): void {
-    this.cart.update((list) =>
-      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.max(0, l.cantidad + delta) } : l)).filter((l) => l.cantidad > 0),
-    );
-  }
+  // AX7 — SIN `.filter(cant > 0)`: vaciar la cantidad ya no borra el item (eso
+  // es la ✕). El qty-input nunca emite vacío; el submit ya guarda los válidos.
   setCantidad(articuloId: string, v: number): void {
     const cant = Math.max(0, v || 0);
     this.cart.update((list) =>
-      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)).filter((l) => l.cantidad > 0),
+      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)),
     );
   }
   quitar(articuloId: string): void {
