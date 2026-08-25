@@ -1,8 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 24/08/2026 — PROMPT-10 ronda AW (app) — **FASES 1-4 implementadas · build verde · SIN commit/release · ⏳ device-QA + `ANTHROPIC_API_KEY` pendientes**
+## 🟢 SESIÓN 24-25/08/2026 — PROMPT-10 ronda AW (app) — **RELEASE 1.98.0 PUBLICADO (rolling) · FASES 1-4 · Compa activado end-to-end · build verde · ⏳ device-QA pendiente**
 
-**Estado:** las 4 fases de PROMPT-10 cableadas consumiendo los contratos server-side de PROMPT-9 (ya en prod). **`npm run build` = verde** (solo warnings preexistentes: NG8102 en reporte-semanal/personal-carnet + budgets). **NADA committeado ni publicado** — esperando OK de Xaviel. **No hay migraciones nuevas** (todo el backend AW ya existía; la app solo consume + pone UI).
+**Estado:** las 4 fases de PROMPT-10 cableadas + **publicadas en 1.98.0** (commit `467cdac`, rolling, minima 1.96.4 intacta). **Compa (AW4) funciona end-to-end**: `ANTHROPIC_API_KEY` puesto + bug del edge SGC arreglado/desplegado (`1fbc6cf`) + verificado con los 18 QA users. **`npm run build` = verde** (solo warnings preexistentes). **No hubo migraciones de esquema nuevas** (todo el backend AW ya existía; solo se publicó 1.98.0 + se activó Compa).
 
 ### ✅ Hecho esta sesión (build verde, sin commit)
 - **🔴 FASE 1 — AW3 input de galones a prueba de dedazos (la causa raíz del 34,118).**
@@ -27,22 +27,29 @@
 ### 🧪 QA de Compa (usuarios de prueba) — verificado 2026-08-25
 Compa es **general a todo usuario autenticado** (sin gate de módulo) → NO hace falta un QA user nuevo; los **18 QA users** (`qa_<rol>@constructorasd.com`, ver `QA-USERS.local`) ya lo cubren. Cambios (todo en `scratchpad/` + `QA-USERS.local`, **gitignored** — no entran al repo):
 - `scratchpad/qa-roles.mjs`: nuevo modo **`compa`** (`node scratchpad/qa-roles.mjs compa`) — loguea cada rol e invoca la edge `assistant` con su JWT, clasificando OK / **SIN-KEY(503)** / RATE(429) / AUTH(401).
-- **Corrido across los 18 roles → todos `SIN-KEY(503)`** = correcto MIENTRAS falta `ANTHROPIC_API_KEY`. Ya confirma: la edge está desplegada + accesible, cada rol autentica e invoca bien (camino de herencia de permisos), y el 503 es el que dispara el mensaje amable "no configurado" en la app.
-- Re-ejecutar `compa` **después** de poner la key: debe pasar a `OK(resp:…c, tools:N)` con **N variando por rol** (esa variación confirma la herencia de permisos: chofer < admin).
+- **✅ VERIFICADO END-TO-END (con API key puesta):** los 18 roles dan `OK(resp:…c, tools:1)` con respuestas que VARÍAN por rol → herencia de permisos confirmada. El path de escritura (v2) también responde (pide la obra cuando el QA user no tiene proyectos asignados — correcto, no fabrica propuesta). `AUTH(401)`=sesión; `RATE(429)`=límite 60/h.
 - Los 18 QA users se re-confirmaron `activo=true` (`node scratchpad/qa-roles.mjs create`, idempotente).
 
-### ⏳ Pendiente — Claude puede hacer (con OK de Xaviel)
-1. **Commit + release** (bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `release-apk.mjs` → `npm run build` → `npm run apk` (registra Y1) → `npm run apk:publish`). NO forzar mínima. Nada subido aún.
-2. **FAB global de Compa** (opcional): decidí NO añadir un botón flotante global (app.html/app.ts) para no solapar los footers fijos de los muchos wizards; el tile del home da acceso a un toque. Si Xaviel lo quiere "siempre a un toque" desde cualquier pantalla, es un follow-up acotado (gatear por no-auth/no-gate/no-ruta-compa).
+### 🔑 API key + fix del edge (Compa YA funciona end-to-end) — 2026-08-25
+- **`ANTHROPIC_API_KEY` CONFIGURADO** como secret del proyecto Supabase (Management API, HTTP 201). La key vino en `X Dev/dev/SGC/ANTHROPIC_API_KEY.env` — **gitignored** en SGC (`.env*` + `*.env`), NO trackeada ni committeada (no llega a GitHub). Ya está en secrets → el archivo suelto es redundante en disco (se puede borrar).
+- **🐛 Bug del edge (SGC) encontrado + arreglado:** `supabase/functions/assistant/index.ts` hacía `createClient(...)` SIN `db:{schema:'sgc'}` → todas las `.rpc/.from` resolvían en `public` y `capacidades_asistente` daba PGRST202 → **500 "No pude leer tus permisos"** (Compa nunca había corrido end-to-end). Fix 1 línea (`db:{schema:'sgc'}`) → **desplegado a prod** (`supabase functions deploy assistant`) + committeado/pusheado en SGC (`1fbc6cf`).
+- **Modelo:** secret opcional `ASSISTANT_MODEL` (default `claude-haiku-4-5-20251001`). Para más capacidad: `ASSISTANT_MODEL=claude-sonnet-5` en secrets (sin tocar código).
 
-### 🔴 Pendiente — SOLO Xaviel (físico / prerrequisito)
-- **`ANTHROPIC_API_KEY`** (secret del proyecto Supabase): prerrequisito para probar Compa de punta a punta. Sin él la edge responde 503 y la app muestra "Compa aún no está configurado" con elegancia (no crashea).
+### ✅ RELEASE 1.98.0 PUBLICADO (rolling) — ya hecho
+Commit **`467cdac`** (feat AW) + `8cacdd6`/(este) docs → push `main` → PWA por Vercel. **APK 1.98.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 5 cambios) + subido al bucket (`csd-app-1.98.0.apk` + `latest` + `version.json` + `apk_url`). **`publicada=1.98.0`** (rolling, `sql/2026-08-24-publicar-1.98.0.sql`), **`minima=1.96.4` INTACTA**. **Compa activado** (API key + fix del edge SGC `1fbc6cf`, ver arriba). **Rollback:** `update sgc.app_versiones set publicada=(version='1.97.0') where plataforma='movil';` + `git revert 467cdac && git push`.
+
+### ⏳ Pendiente — Claude puede hacer (con OK de Xaviel)
+1. **FAB global de Compa** (opcional): decidí NO añadir un botón flotante global (app.html/app.ts) para no solapar los footers fijos de los muchos wizards; el tile del home da acceso a un toque. Si Xaviel lo quiere "siempre a un toque" desde cualquier pantalla, es un follow-up acotado (gatear por no-auth/no-gate/no-ruta-compa).
+
+### 🔴 Pendiente — SOLO Xaviel (físico)
+- ✅ **`ANTHROPIC_API_KEY`** — CONFIGURADO 2026-08-25 (ver "🔑 API key + fix del edge"). Compa funciona end-to-end. (Opcional: borrar el `ANTHROPIC_API_KEY.env` suelto del repo SGC ahora que la key está en secrets.)
 - **Device-QA de TODO** (no puedo probar en equipo). Guiones: (AW3) intentar registrar 34,118 gal desde la app — imposible (parser + validación + server); ver el valor interpretado en vivo; probar el ciclo needs_confirm (valor casi-tanque-lleno → confirma → guarda sin duplicar). (AW2) forzar una echada 'alto' (km muy alto) → ver "Revisa la lectura" + "Revisar y corregir"; una 'bajo' anormal → "Se avisa a mantenimiento". (AW1) abrir "Riviera Bay TEST" como no-admin → ver las 35 tareas; simular fallo de red → ver "No pudimos cargar… Reintentar" (no "Sin tareas"). (AW4) Compa: chat + voz + una propuesta de escritura → hoja Confirmar.
 
 ### ✅ Verify on resume
 ```
 cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
-git status   # varios archivos modificados + pages/compa/* nuevos, SIN commit
+git log --oneline -3   # 467cdac feat ronda AW + 1.98.0 (publicado)
+node scratchpad/qa-roles.mjs compa   # Compa: 18 roles OK (con la API key puesta)
 ```
 
 ---
