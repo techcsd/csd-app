@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.0.2';
+const VERSION = '2.1.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,15 +59,21 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-08-25';
+const RELEASED_AT = '2026-08-28';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Cantidad a prueba de errores, “Otros” en bitácora, acceso de capataz y transparencia del incentivo';
+const TITULO = 'Transporte v3: conduce externo, despachos y lugares «Otros» · dictado de Compa arreglado · «Otros» en bitácora';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Proyectos', d: 'Nuevo perfil “Ingeniero de Oficina” (cubicaciones/presupuesto): ve todas las obras y sus costos, con requisición y bitácora. No crea ni edita proyectos — eso queda para gerencia/oficina de proyectos.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Conduce externo: registra cuando un proveedor transporta con su camión — proveedor (o «Otro»), foto de placa y carga, y de dónde a dónde. Funciona sin señal.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Lugares «Otros»: si un lugar no aparece en el buscador, pega el link de Google Maps o escríbelo a mano. Ya no te quedas trancado.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Despachos: cuando una requisición queda por despachar, la jalas y el conduce trae sus materiales ya cargados (editables), con aviso si ya tiene otro conduce en camino.' },
+  { t: 'arreglo', m: 'Compa', d: 'El dictado por voz vuelve a funcionar; si algo falla te dice la causa (sin señal, no se entendió…) y puedes revisar el texto antes de enviarlo.' },
+  { t: 'mejora', m: 'Compa', d: 'Compa te trata según tu rol (Ing., maestro…) y te sugiere lo tuyo: tu ruta, conduces, puntaje o entregas por confirmar.' },
+  { t: 'nuevo', m: 'Bitácora', d: '«Otros» también en las actividades: si la actividad no está en la lista, la escribes y entra con su cantidad y unidad.' },
+  { t: 'mejora', m: 'Personal de obra', d: 'El personal de prueba se muestra con su distintivo y ya no “desaparece” de la lista.' },
 ];
 
 const TIPO_POR_COMMIT = {
