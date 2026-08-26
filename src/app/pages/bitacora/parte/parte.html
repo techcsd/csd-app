@@ -218,9 +218,26 @@
                   @if (ac.destacado) { <span class="chip__star">★</span> }{{ ac.valor }}
                 </button>
               } @empty {
-                <span class="parte__act-vacio">Sin coincidencias. Toca “Otro” para escribirla.</span>
+                <!-- AZ6 — el buscador sin resultados OFRECE agregarlo como "Otros" (nunca mudo). -->
+                @if (filtroActividad().trim()) {
+                  <button type="button" class="chip chip--on" (click)="agregarActividadOtro(filtroActividad())">
+                    ➕ Agregar como Otros: “{{ filtroActividad().trim() }}”
+                  </button>
+                } @else {
+                  <span class="parte__act-vacio">Sin coincidencias. Toca “➕ Otros” para escribirla.</span>
+                }
               }
+              <!-- AZ6 — "Otros": salida cuando la actividad no está en el catálogo. -->
+              <button type="button" class="chip" [class.chip--on]="actividadOtro()" (click)="elegirActividadOtra()">➕ Otros</button>
             </div>
+            @if (actividadOtro()) {
+              <div class="parte__otro-row">
+                <input class="field" type="text" [ngModel]="actividadOtroTexto()" (ngModelChange)="actividadOtroTexto.set($event)"
+                  placeholder="Especifica qué se hizo (ej: Curado, Limpieza…)" aria-label="Especifica qué se hizo"
+                  (keyup.enter)="agregarActividadOtro()" />
+                <button type="button" class="parte__otro-add" (click)="agregarActividadOtro()">Agregar</button>
+              </div>
+            }
           }
 
           <!-- Lista de lo agregado en este bloque, cada uno con su cantidad -->

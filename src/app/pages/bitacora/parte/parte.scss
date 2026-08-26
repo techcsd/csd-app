@@ -394,6 +394,27 @@ app-counter {
   color: var(--color-text-secondary);
   padding: 4px 2px;
 }
+// AZ6 — fila del texto libre "Otros" (segundo nivel): input + botón Agregar.
+.parte__otro-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.parte__otro-row .field {
+  flex: 1;
+}
+.parte__otro-add {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+.parte__otro-add:active {
+  background: var(--color-primary-dark);
+}
 .parte__aprox {
   margin-top: 8px;
   padding: 6px 12px;

@@ -237,6 +237,13 @@ export class PartePage implements OnDestroy {
       return tokens.every((t) => v.includes(t));
     });
   });
+  // AZ6 — "Otros" en el SEGUNDO nivel (actividades). Espejo del patrón AX6 del
+  // primer nivel (estructura): el chip "+ Otros" habilita un texto libre que
+  // entra como una actividad más del renglón (con su cantidad/unidad). El texto
+  // libre alimenta el repositorio "Valores 'Otro'" por trigger de BD (membresía
+  // de catálogo) → no necesita marca en el payload.
+  actividadOtro = signal(false);
+  actividadOtroTexto = signal('');
 
   /** AW1 — ¿la actividad permite "se trabajó" sin cantidad exacta (cantidad aprox.)? */
   permiteSinCantidad(actividad: string): boolean {
@@ -511,6 +518,50 @@ export class PartePage implements OnDestroy {
   elegirOtraParte(): void {
     this.parteOtro.set(true);
     this.parteActual.set('');
+  }
+
+  /** AZ6 — "Otros" en actividades: revela el texto libre (arrastra lo ya buscado). */
+  elegirActividadOtra(): void {
+    const q = this.filtroActividad().trim();
+    if (q) this.actividadOtroTexto.set(q);
+    this.actividadOtro.set(true);
+  }
+
+  /**
+   * AZ6 — agrega una actividad "Otros" (texto libre) como renglón del sujeto +
+   * parte actual, igual que una del catálogo. `texto` opcional viene del atajo
+   * del estado vacío del buscador ("Agregar como Otros: '<texto>'").
+   */
+  agregarActividadOtro(texto?: string): void {
+    const actividad = (texto ?? this.actividadOtroTexto()).trim();
+    const parte = this.parteActual().trim();
+    const sujeto = this.sujetoActual();
+    if (!parte) {
+      this.toast.error('Primero elige en qué parte se trabajó (arriba).');
+      return;
+    }
+    if (!actividad) {
+      this.toast.error('Escribe qué se hizo (especifica el "Otros").');
+      return;
+    }
+    const yaEsta = this.actividades().some(
+      (x) => (x.bloque ?? '') === sujeto && x.estructura === parte
+        && x.actividad.toLowerCase() === actividad.toLowerCase(),
+    );
+    if (yaEsta) {
+      this.toast.show('Esa actividad ya está agregada.', 'info');
+    } else {
+      const unidad = this.partidaDe(parte)?.unidad ?? null;
+      // AI15 — lo recién agregado va al PRINCIPIO (marca la cantidad sin scroll).
+      this.actividades.update((list) => [
+        { estructura: parte, actividad, cantidad: 1, unidad, bloque: sujeto, es_aproximada: false },
+        ...list,
+      ]);
+    }
+    // Sal del modo "Otros" y limpia el buscador para volver a la lista normal.
+    this.actividadOtroTexto.set('');
+    this.actividadOtro.set(false);
+    this.filtroActividad.set('');
   }
 
   /** ¿La actividad ya está agregada para el sujeto + estructura actual? */

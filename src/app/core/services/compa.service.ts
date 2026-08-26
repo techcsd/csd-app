@@ -3,6 +3,18 @@ import { SupabaseService } from './supabase.service';
 import { CompaRespuesta, Propuesta } from '../models/compa.model';
 
 /**
+ * AZ5 — Resultado de una transcripción de voz, con la CAUSA cuando falla, para
+ * que el UI muestre un mensaje específico (no un genérico "no pudimos transcribir"):
+ *  - vacio          → no se entendió nada (intenta de nuevo o escribe)
+ *  - no_configurado → el proyecto no tiene STT configurado (tema de Tecnología)
+ *  - sin_conexion   → se perdió la conexión al transcribir
+ *  - servicio       → el servicio de voz falló (red/proveedor)
+ */
+export type TranscripcionResultado =
+  | { ok: true; texto: string }
+  | { ok: false; causa: 'vacio' | 'no_configurado' | 'sin_conexion' | 'servicio' };
+
+/**
  * FASE 4 "Compa" — cliente del asistente de IA. Reutiliza la edge `assistant`
  * (ya desplegada; NO hay backend nuevo). El JWT del usuario lo adjunta
  * supabase-js al invocar, así el asistente hereda sus permisos server-side.
@@ -70,28 +82,41 @@ export class CompaService {
   }
 
   /**
-   * Transcribe una nota de voz vía la edge `transcribe-audio`. Best-effort: la
-   * forma exacta del request/response es incierta, así que enviamos FormData con
-   * el blob bajo `audio` y leemos defensivamente la transcripción de varias
-   * claves posibles. NUNCA lanza: devuelve null si falla (el llamador cae a
-   * escribir a mano).
+   * AZ5 — Transcribe una nota de voz SÍNCRONA vía la edge `transcribe-now`
+   * (recibe el blob y devuelve `{ text }` en el mismo turno). Distinta de
+   * `transcribe-audio` (barrido por pg_cron, protegido con x-sync-secret — jamás
+   * usable así desde el cliente: ese era el bug del banner "No pudimos transcribir").
+   *
+   * NUNCA lanza: devuelve un {@link TranscripcionResultado} con la CAUSA cuando
+   * falla, para que el UI muestre el mensaje correcto (config vs conexión vs
+   * "no se entendió"). El texto transcrito lo edita el usuario antes de enviar.
    */
-  async transcribir(blob: Blob): Promise<string | null> {
+  async transcribir(blob: Blob): Promise<TranscripcionResultado> {
     try {
       const fd = new FormData();
-      fd.append('audio', blob, 'nota.webm');
-      const { data, error } = await this.supabase.client.functions.invoke('transcribe-audio', {
+      fd.append('file', blob, 'nota.webm');
+      const { data, error } = await this.supabase.client.functions.invoke('transcribe-now', {
         body: fd,
       });
-      if (error) return null;
-      const r = (data ?? {}) as Record<string, unknown>;
-      for (const clave of ['text', 'transcripcion', 'transcript', 'respuesta']) {
-        const v = r[clave];
-        if (typeof v === 'string' && v.trim()) return v.trim();
+      if (error) {
+        const status = this.statusDe(error);
+        const body = await this.readEdgeError(error);
+        // 503 = STT sin configurar en el proyecto (avísale a Tecnología).
+        if (status === 503 || body?.error === 'stt_not_configured') {
+          return { ok: false, causa: 'no_configurado' };
+        }
+        // Sin status/context = fallo de red (functions.invoke no llegó a la edge).
+        if (status == null) return { ok: false, causa: 'sin_conexion' };
+        return { ok: false, causa: 'servicio' };
       }
-      return null;
+      const r = (data ?? {}) as Record<string, unknown>;
+      const texto = typeof r['text'] === 'string' ? (r['text'] as string).trim() : '';
+      if (texto) return { ok: true, texto };
+      // 200 con texto vacío = no se entendió (ruido de obra, audio muy corto…).
+      return { ok: false, causa: 'vacio' };
     } catch {
-      return null;
+      // Excepción inesperada (sin Response) = tratamos como fallo de red.
+      return { ok: false, causa: 'sin_conexion' };
     }
   }
 

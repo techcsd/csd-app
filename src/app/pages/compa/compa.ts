@@ -156,19 +156,38 @@ export class CompaPage {
   /** El recorder emitió el blob (o null al cancelar) → transcribe al composer. */
   async onVozGrabada(blob: Blob | null): Promise<void> {
     this.grabandoVoz.set(false);
-    if (!blob) return; // cancelado
+    if (!blob) return; // cancelado (o mic sin permiso: el recorder ya avisó la causa)
+    // AZ5 — la transcripción necesita conexión; si se perdió tras grabar, avisa claro.
+    if (!this.online) {
+      this.toast.error('Sin conexión: no se pudo transcribir. Intenta con señal o escribe tu mensaje.');
+      return;
+    }
     this.transcribiendo.set(true);
     try {
-      const texto = await this.compa.transcribir(blob);
-      if (texto) {
+      const r = await this.compa.transcribir(blob);
+      if (r.ok) {
         // Coloca el texto en el composer para que el usuario lo EDITE antes de enviar.
         const actual = this.texto().trim();
-        this.texto.set(actual ? `${actual} ${texto}` : texto);
+        this.texto.set(actual ? `${actual} ${r.texto}` : r.texto);
       } else {
-        this.toast.error('No pudimos transcribir. Escribe tu mensaje.');
+        this.toast.error(this.mensajeTranscripcion(r.causa));
       }
     } finally {
       this.transcribiendo.set(false);
+    }
+  }
+
+  /** AZ5 — mensaje específico por causa (el fallback siempre invita a escribir). */
+  private mensajeTranscripcion(causa: 'vacio' | 'no_configurado' | 'sin_conexion' | 'servicio'): string {
+    switch (causa) {
+      case 'vacio':
+        return 'No se entendió. Intenta de nuevo o escribe tu mensaje.';
+      case 'no_configurado':
+        return 'El dictado por voz no está disponible ahora. Escribe tu mensaje.';
+      case 'sin_conexion':
+        return 'Sin conexión: no se pudo transcribir. Intenta con señal o escribe tu mensaje.';
+      default:
+        return 'No pudimos transcribir ahora. Intenta de nuevo o escribe tu mensaje.';
     }
   }
 

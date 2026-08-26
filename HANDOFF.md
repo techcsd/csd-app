@@ -1,5 +1,44 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 26/08/2026 (tarde) — PROMPT-16 ronda AZ (app) — **FASE 1 (mic de Compa) + FASE 2 ("Otros" en actividades) DESPLEGADAS A PROD · builds verdes · ⏳ 1 secret de Xaviel + device-QA · SIN commit/push (a la espera de tu OK)**
+
+**TL;DR:** dos frentes independientes del PROMPT-16. **AZ5**: el mic de Compa daba "No pudimos transcribir" porque el cliente le pegaba a la edge equivocada; arreglado con una edge síncrona nueva + causas diferenciadas (ya desplegada). **AZ6**: "Otros" en el 2º nivel de la bitácora (actividades), app + web + trigger que alimenta `/admin/otros-valores` (migración aplicada a prod). FASE 3 espera a PROMPT-15. **Código NO commiteado aún** — builds verdes, deploy de edge + migración YA en prod (con tu OK explícito), pero falta el `git commit/push` (avísame).
+
+### ✅ FASE 1 — AZ5: micrófono de Compa ("No pudimos transcribir")
+- **Causa real** (no era permiso de mic): `compa.service.transcribir` posteaba el blob a la edge **`transcribe-audio`**, que es un **barrido por pg_cron** (AA22) — ignora el body, exige `x-sync-secret` (probé prod → **401**) y responde `{ok,transcritos,fallidos}` sin campo de texto. La transcripción **nunca podía** salir → banner genérico incluso con HTTP 200.
+- **Fix:** edge **nueva síncrona** `SGC/supabase/functions/transcribe-now/index.ts` — recibe `file`/`audio`, JWT-verificada (sin listar en `config.toml` = `verify_jwt=true`, como `assistant`), mismos secrets STT (`STT_PROVIDER`/`STT_API_KEY`||`OPENAI_API_KEY`/`STT_MODEL`), devuelve `{text}`, errores **diferenciados**: `503 stt_not_configured`, `400 empty_audio`, `502 stt_failed`. **Desplegada a prod.**
+- Cliente `compa.service.ts` → `transcribir()` devuelve `TranscripcionResultado` (`ok+texto` | `causa`), lee `error.context.json()` (patrón AU16). `compa.ts onVozGrabada` mapea causa→mensaje (vacío/no_configurado/sin_conexion/servicio) + pre-check offline. **Confirmar-antes-de-enviar (FASE 1.3) YA existía** (el texto cae al composer) — preservado.
+- **AZ11 (trato por rol) YA está** en la edge compartida `assistant` (`tratamientoDeRoles`: "Ing."+usted a ingenieros, "maestro" a capataces…). La app usa esa edge → lo hereda. Verificado por inspección.
+
+### ✅ FASE 2 — AZ6: "Otros" en el segundo nivel de la bitácora (actividades)
+- **App** (`pages/bitacora/parte` `.ts/.html/.scss`): chip **"➕ Otros"** junto a las actividades → texto libre obligatorio → renglón normal con cantidad/unidad (`agregarActividadOtro`, señales `actividadOtro`/`actividadOtroTexto`). El buscador sin resultados **ofrece** "➕ Agregar como Otros: '<texto>'" (nunca mudo).
+- **Web** (`SGC/src/app/pages/bitacora/nueva` `.ts/.html/.scss`): paridad — input **"+ Otros"** por estructura dentro de la matriz (`actividadesVista(estructura)`, `actividadesOtras`, `agregarActividadOtro(estructura)`), se auto-marca con cantidad/unidad, persiste en el borrador (`Draft.actividadesOtras` + derivación al recuperar).
+- **Alimenta "Valores 'Otro'"** por **trigger de BD** `trg_registrar_otro_actividad` (migración `SGC/sql/2026-08-26-az6-bitacora-otros-actividad.sql`, **aplicada a prod**) — mismo patrón que `bitacora.restriccion`, cubre app **y** web sin recrear los RPCs. Registra `bitacora.actividad` y (de paso) `bitacora.estructura` cuando el texto no está en catálogo. Se pinta solo en `/admin/otros-valores` (`contextoLabel`).
+
+### 🔴 Pendiente — SOLO Xaviel
+- **`STT_API_KEY` (bloquea el dictado real):** el proyecto NO tiene key STT (`transcribe-now` probada → devuelve `503 stt_not_configured`, que es la causa honesta que ve el usuario). **Claude/Anthropic NO tiene API de transcripción** (no acepta audio) → hay que usar un proveedor STT dedicado. Cuando quiera: `npx supabase secrets set STT_PROVIDER=groq STT_API_KEY=gsk_...` (Groq whisper, barato) **o** `STT_API_KEY=sk-...` (OpenAI, default). No requiere re-deploy. La misma key activa también las notas de voz web dormidas (AA22).
+- **Device-QA:** iPhone (AT9/AU10) + Android de obra dictándole a Compa de punta a punta (tras poner la key); capturar bitácora con actividad "Otros" → ver renglón + registro en `/admin/otros-valores`.
+
+### 💡 Pendiente — Claude puede hacer
+- **git commit/push** de esta sesión (app + SGC) — NO lo hice (regla madre). Cuando digas: app (`compa.ts`, `compa.service.ts`, `parte.*`) + SGC (`transcribe-now/`, `config.toml` sin cambios, `bitacora/nueva/*`, `sql/2026-08-26-az6-*`). **No hubo release de APK** (FASE 1/2 no cambian la versión instalada; decidir si ameritan bump).
+- **FASE 3** (AZ3 personal visible, AZ1 resolver de plantillas, AZ7 badge PRUEBA en app) — **espera a PROMPT-15** (backend SGC).
+
+### ⚠️ Gotchas de esta sesión
+- **`transcribe-audio` ≠ transcripción síncrona:** es un cron sweeper con `x-sync-secret` (401 desde cliente) y responde sin campo de texto → jamás usable desde el front. Por eso la edge nueva `transcribe-now`. (Memoria: `az5-compa-transcribe-root-cause`.)
+- **Anthropic no hace STT:** los modelos Claude aceptan texto/imagen/PDF, no audio. La key de Claude vive como secret de edge (`ANTHROPIC_API_KEY`, la usa `assistant`), NO en los `.env` locales — pero da igual, no sirve para transcribir.
+- **Feed a "Valores 'Otro'" por trigger, no por RPC:** el 1er nivel (estructura AX6) NUNCA alimentó `otros_valores` (solo `bitacora_catalogo_usos`). El trigger nuevo en `bitacora_actividades` cubre estructura **y** actividad para app+web de un golpe, sin tocar `crear_bitacora_app`/`crear_entrada_bitacora`.
+- **Edge deploy:** `npx supabase functions deploy transcribe-now --project-ref jeeqhgccqefbqilntcpu` desde `C:/Users/xavie/Desktop/X Dev/dev/SGC` (usa `SUPABASE_ACCESS_TOKEN` del env; el warning "Docker is not running" es inofensivo).
+
+### ✅ Verify on resume (PROMPT-16)
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # verde
+curl -s -X POST "https://jeeqhgccqefbqilntcpu.supabase.co/functions/v1/transcribe-now" \
+  -H "Authorization: Bearer <anon>" -F "dummy=x"                  # 503 stt_not_configured (o 400 si ya hay key)
+# tras poner STT_API_KEY, un audio real debe devolver {text}
+```
+
+---
+
 ## 🟢 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) + follow-ups + rol Ingeniero de Oficina — **RELEASE 2.0.0 → 2.0.2 PUBLICADO (rolling) · app+SGC verdes · TODO COMMITEADO/PUSHEADO · ⏳ device-QA pendiente**
 
 **TL;DR:** cableado el lado app de la ronda AY (recepción canónica ya estaba; el trabajo real fue el gating por submódulo para que los Ingenieros no perdieran Requisición/Proyectos + banner de usuario de prueba). Luego, 3 follow-ups + una corrección de diseño de roles que pidió Xaviel: **se re-separó "Ingeniero de Oficina" del de campo** (cubicaciones/presupuesto ven todas las obras + costos pero NO gestionan proyectos). App publicada **2.0.2** (rolling, minima 1.96.4 intacta). **Se tocó SGC** (3 migraciones + front web) — todo aplicado a prod y pusheado.
