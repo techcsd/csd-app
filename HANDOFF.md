@@ -1,6 +1,6 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 26/08/2026 (tarde) — PROMPT-16 ronda AZ (app) — **FASES 1+2+3 COMPLETAS · commiteadas y pusheadas (app `fadc2a7`+`<fase3>`; SGC `36fd02b`) · edge + migración en prod · builds verdes · ⏳ 1 secret de Xaviel + device-QA**
+## 🟢 SESIÓN 26/08/2026 (tarde) — PROMPT-16 ronda AZ (app) — **FASES 1+2+3 COMPLETAS · commiteadas y pusheadas (app `fadc2a7`+`75dd0ba`; SGC `36fd02b`) · edge + migración en prod · builds verdes · ⏳ 1 secret de Xaviel + device-QA**
 
 **TL;DR:** PROMPT-16 completo. **AZ5 (F1)**: el mic de Compa daba "No pudimos transcribir" porque el cliente le pegaba a la edge equivocada; arreglado con una edge síncrona nueva `transcribe-now` + causas diferenciadas (desplegada; falta solo la `STT_API_KEY`). **AZ6 (F2)**: "Otros" en el 2º nivel de la bitácora (actividades), app + web + trigger que alimenta `/admin/otros-valores` (migración en prod). **F3 (paridad AZ, tras correr PROMPT-15)**: AZ3 personal/capataz test visible (era ocultamiento client-side de `es_prueba`) con estado vacío honesto + AZ7 badge PRUEBA en personal; AZ1 N/A (la app no muestra contratos); AZ11 heredado. Todo commiteado y pusheado; deploy/migración en prod con tu OK.
 
