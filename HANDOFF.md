@@ -1,8 +1,10 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) — **build verde · SIN commit/push/release (esperando OK de Xaviel) · ⏳ device-QA + release pendientes**
+## 🟢 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) — **RELEASE 2.0.0 PUBLICADO (rolling) · build verde · commit+push a main · ⏳ device-QA pendiente**
 
-**Depende de PROMPT-13 (SGC), que YA está en prod** (commits `ff9170e` 1.97.0 + `d1b6889` 1.98.0 + `0544e52` 1.98.1; migraciones AY aplicadas; edges desplegadas). Esta sesión cableó el LADO APP de la ronda AY. **`npm run build` = verde** (solo warnings preexistentes: NG8102 personal-carnet/reporte-semanal, budget). **NO se tocó SGC. NO commit/push/release** (regla madre: avisar a Xaviel primero).
+**SHIPPED:** commit `37d8fd2` (feat AY + 2.0.0) + este docs → push `main` (PWA por Vercel). **APK 2.0.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 4 cambios curados) + subido al bucket (`csd-app-2.0.0.apk` + `latest` + `version.json` + `apk_url`). **`publicada=2.0.0`** (rolling, `sql/2026-08-26-publicar-2.0.0.sql` aplicado), **`minima=1.96.4` INTACTA**. Verificado: `version_publicada()` = 2.0.0 / mínima 1.96.4. **Rollback:** `update sgc.app_versiones set publicada=(version='1.99.0') where plataforma='movil';` + `git revert 37d8fd2 && git push`.
+
+**Depende de PROMPT-13 (SGC), que YA está en prod** (commits `ff9170e` 1.97.0 + `d1b6889` 1.98.0 + `0544e52` 1.98.1; migraciones AY aplicadas; edges desplegadas). Esta sesión cableó el LADO APP de la ronda AY. **`npm run build` = verde** (solo warnings preexistentes: NG8102 personal-carnet/reporte-semanal, budget). **NO se tocó SGC** (PROMPT-13 ya está completo en prod).
 
 **Hallazgo clave:** la app ya era la implementación de REFERENCIA de casi todo AY —
 - **FASE 1 (recepción canónica) = YA HECHA en la app.** El flujo `por-confirmar` (AJ8) hace **ver conduce + foto + firma como UNA sola op de outbox** (`tipo_op: conduce_confirmar` → RPC `conduce_confirmar_receptor`, que ya escribía `salida_firmas` receptor + `recepcion_confirmaciones` + entrada en obra). Foto obligatoria (solo-cámara AS15), firma obligatoria, botón "Ver conduce" antes de confirmar. El PDF ya incluye `recepcion_foto_url` + firma del receptor. AY2 en la WEB adoptó ESTE comportamiento (unificó `confirmar_recepcion_salida` para igualar a la app). Rutas muertas ya resueltas (AK8 depuró tiles, dejó rutas vivas para deep-links). **→ cero cambios de código en FASE 1; solo verificación/paridad.**
@@ -19,8 +21,8 @@ El rol unificado **Ingenieros** (`ingeniero_campo`) perdió los módulos `compra
 ### 📄 Entregable
 - **`AY8-AUDITORIA-E2E-INGENIEROS-APP.md`** (carpeta improvements) — tabla E2E app-side (17 funciones), para juntar con la web. Todo ✅ salvo #3 (estado de OC derivada, follow-up app) y #8 (verificar scoping de `proyectos_pickables`, backend/SGC).
 
-### 🔴 Pendiente — decisión / físico (Xaviel)
-- **Autorizar commit/push + release** (1.99.1 o 2.0.0). NO lo hice (regla). Al aprobar: bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `scripts/release-apk.mjs`; `npm run build` → `npm run apk` (registra Y1) → `npm run apk:publish`; publicar rolling (NO forzar mínima).
+### 🔴 Pendiente — SOLO Xaviel (físico)
+- ~~Autorizar + release~~ → hecho (2.0.0 rolling, commit `37d8fd2`, minima 1.96.4 intacta).
 - **Device-QA:** (AY1/AY2) recibir un conduce como ingeniero/capataz/chofer → ver conduce + foto + firma → confirmado (evidencia en detalle + PDF). (FASE 2) loguear un **Ingenieros** (usuario test AY7) → ve Requisición + Proyectos (sus obras, sin Presupuesto) + cronograma + personal; loguear **Logística** → no ve submódulos de Ingeniería con 403. (AY7) crear un usuario test en SGC → banner "USUARIO DE PRUEBA" en la app.
 
 ### Follow-ups app (próxima tanda)
