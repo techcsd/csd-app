@@ -1,8 +1,9 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) — **RELEASE 2.0.0 PUBLICADO (rolling) · build verde · commit+push a main · ⏳ device-QA pendiente**
+## 🟢 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) — **RELEASE 2.0.0 + 2.0.1 PUBLICADOS (rolling) · build verde · commit+push a main · ⏳ device-QA pendiente**
 
-**SHIPPED:** commit `37d8fd2` (feat AY + 2.0.0) + este docs → push `main` (PWA por Vercel). **APK 2.0.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 4 cambios curados) + subido al bucket (`csd-app-2.0.0.apk` + `latest` + `version.json` + `apk_url`). **`publicada=2.0.0`** (rolling, `sql/2026-08-26-publicar-2.0.0.sql` aplicado), **`minima=1.96.4` INTACTA**. Verificado: `version_publicada()` = 2.0.0 / mínima 1.96.4. **Rollback:** `update sgc.app_versiones set publicada=(version='1.99.0') where plataforma='movil';` + `git revert 37d8fd2 && git push`.
+**SHIPPED 2.0.0:** commit `37d8fd2` (feat AY) → push `main` (PWA por Vercel). **APK 2.0.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 4 cambios) + bucket (`csd-app-2.0.0.apk` + `latest` + `version.json` + `apk_url`). `sql/2026-08-26-publicar-2.0.0.sql`.
+**SHIPPED 2.0.1** (follow-ups): estado de la OC en "Mis requisiciones". APK 2.0.1 firmado + registrado + subido; **`publicada=2.0.1`** (rolling, `sql/2026-08-26-publicar-2.0.1.sql`), **`minima=1.96.4` INTACTA**. Verificado: `version_publicada()` = 2.0.1 / mínima 1.96.4. **Rollback:** `update sgc.app_versiones set publicada=(version='2.0.0') where plataforma='movil';` (o `1.99.0`) + `git revert && git push`.
 
 **Depende de PROMPT-13 (SGC), que YA está en prod** (commits `ff9170e` 1.97.0 + `d1b6889` 1.98.0 + `0544e52` 1.98.1; migraciones AY aplicadas; edges desplegadas). Esta sesión cableó el LADO APP de la ronda AY. **`npm run build` = verde** (solo warnings preexistentes: NG8102 personal-carnet/reporte-semanal, budget). **NO se tocó SGC** (PROMPT-13 ya está completo en prod).
 
@@ -25,8 +26,10 @@ El rol unificado **Ingenieros** (`ingeniero_campo`) perdió los módulos `compra
 - ~~Autorizar + release~~ → hecho (2.0.0 rolling, commit `37d8fd2`, minima 1.96.4 intacta).
 - **Device-QA:** (AY1/AY2) recibir un conduce como ingeniero/capataz/chofer → ver conduce + foto + firma → confirmado (evidencia en detalle + PDF). (FASE 2) loguear un **Ingenieros** (usuario test AY7) → ve Requisición + Proyectos (sus obras, sin Presupuesto) + cronograma + personal; loguear **Logística** → no ve submódulos de Ingeniería con 403. (AY7) crear un usuario test en SGC → banner "USUARIO DE PRUEBA" en la app.
 
-### Follow-ups app (próxima tanda)
-- Consumir `mis_ordenes_de_compra` en "Mis solicitudes" (estado de la OC). Verificar `proyectos_pickables` scope (SGC). Evaluar módulo `documentos` en móvil.
+### Follow-ups (post-2.0.0) — atendidos esta sesión → **RELEASE 2.0.1**
+1. **✅ HECHO (2.0.1): `mis_ordenes_de_compra` en "Mis requisiciones".** `solicitudes.service.misOrdenesDeCompra()` (RPC AY3, cache-then-network) + `mis.ts` mapea `solicitud_id → orden` + chip "🧾 Orden {numero} · {estado} · {proveedor}" bajo cada requisición. Offline-safe (best-effort; si falla, se degrada al estado de la requis). Estados de OC con etiqueta legible (`ordenEstadoLabel`).
+2. **🔎 VERIFICADO → BACKEND próxima tanda: `proyectos_pickables` es sobre-amplio.** Devuelve TODAS las obras a quien tenga cualquiera de los módulos `proyectos/compras/obra/bitacora/inventario/flota/transporte`; para el resto solo `responsable_id` + `proyecto_empleados`. **Le falta `proyecto_responsables` (N:M AV3) + `es_capataz_de_proyecto`.** El ingeniero (tiene bitacora/obra) ve TODAS las obras en los dropdowns de bitácora/requisición → funciona pero no scoped. **NO se arregló porque no es seguro sin rediseño:** quitar `bitacora` rompería al **capataz** (su único módulo es `bitacora`, no está en responsables/empleados → lista vacía); `directorio_proyectos` tiene el mismo hueco (no cubre capataz). Fix real = rediseñar scoping + probar todos los roles web+app (RPC compartido con la web). Memoria [[proyectos-pickables-overbroad]].
+3. **📋 EVALUADO — módulo `documentos` en móvil = feature grande, NO en esta tanda.** En la web es plantillas → rellenar campos → generar/descargar (editor de documentos). Llevarlo a móvil es un módulo nuevo completo (no un follow-up). Recomendación: definir alcance con Xaviel (¿solo ver/descargar documentos ya generados? ¿o también rellenar?) y planificarlo como su propia fase.
 
 ### ✅ Verify on resume
 ```

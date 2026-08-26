@@ -23,6 +23,15 @@
               <li>{{ it.cantidad }} {{ it.unidad }} · {{ it.descripcion }}</li>
             }
           </ul>
+          <!-- AY3 — si lo faltante se convirtió en orden de compra, muestra su avance real. -->
+          @if (ordenDe(s.id); as oc) {
+            <div class="sol-card__orden">
+              <span class="sol-card__orden-ico">🧾</span>
+              <span class="sol-card__orden-txt">
+                Orden {{ oc.numero }} · {{ ordenEstadoLabel(oc.orden_estado) }}@if (oc.proveedor) { · {{ oc.proveedor }} }
+              </span>
+            </div>
+          }
         </div>
       } @empty {
         <app-empty-state

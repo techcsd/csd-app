@@ -3,7 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Proyecto } from '../models/bitacora.model';
-import { RequisicionBandeja, RequisicionDetalle, Solicitud, Urgencia } from '../models/inventario.model';
+import { MiOrdenCompra, RequisicionBandeja, RequisicionDetalle, Solicitud, Urgencia } from '../models/inventario.model';
 
 /** AS7 — filtros de la bandeja de requisiciones. */
 export interface RequisicionFiltros {
@@ -16,6 +16,7 @@ export interface RequisicionFiltros {
 
 const CAT_PROYECTOS = 'proyectos';
 const CAT_SOLICITUDES = 'mis_solicitudes';
+const CAT_MIS_ORDENES = 'mis_ordenes_compra';
 
 export interface SolicitudCaptura {
   proyectoId: string;
@@ -60,6 +61,20 @@ export class SolicitudesService {
         .limit(50);
       if (error) throw new Error(error.message);
       return (data as unknown as Solicitud[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /**
+   * AY3 (follow-up) — estado de las órdenes de compra nacidas de MIS requisiciones
+   * (RPC scoped a solicitante_id). Cache-then-network (offline-safe): si no hay señal
+   * usa lo cacheado. Se usa en "Mis requisiciones" para mostrar el avance de la orden.
+   */
+  async misOrdenesDeCompra(): Promise<MiOrdenCompra[]> {
+    const data = await this.catalog.refresh<MiOrdenCompra[]>(CAT_MIS_ORDENES, async () => {
+      const { data, error } = await this.supabase.client.rpc('mis_ordenes_de_compra');
+      if (error) throw new Error(error.message);
+      return (data as MiOrdenCompra[]) ?? [];
     });
     return data ?? [];
   }

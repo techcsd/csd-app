@@ -213,6 +213,23 @@ export interface Solicitud {
   items?: SolicitudItem[];
 }
 
+/**
+ * AY3 (follow-up app) — estado de la ORDEN DE COMPRA nacida de una de mis
+ * requisiciones (RPC `mis_ordenes_de_compra`, scoped a solicitante_id). Permite
+ * mostrar en "Mis requisiciones" que lo faltante ya se convirtió en orden y su
+ * estado real (aprobada/recibida…). Keyed por `solicitud_id`.
+ */
+export interface MiOrdenCompra {
+  solicitud_id: string;
+  solicitud_estado: string;
+  orden_id: string;
+  numero: string;
+  orden_estado: string;
+  proveedor: string | null;
+  total: number | null;
+  creada_at: string | null;
+}
+
 /** AS7 — una fila de la bandeja de requisiciones (todas, por rol). */
 export interface RequisicionBandeja {
   id: string;

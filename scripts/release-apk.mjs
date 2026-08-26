@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -67,10 +67,7 @@ const TITULO = 'Cantidad a prueba de errores, “Otros” en bitácora, acceso d
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Ingeniería', d: 'Los ingenieros ya pueden hacer sus requisiciones y ver sus proyectos (ficha, cronograma y personal de las obras que les tocan) directamente desde la app.' },
-  { t: 'mejora', m: 'Proyectos', d: 'Cada quien ve solo las obras que le corresponden; los datos de costos/presupuesto quedan reservados para gerencia y oficina.' },
-  { t: 'mejora', m: 'Menú', d: 'El menú muestra exactamente lo que tu rol puede abrir — se acabaron las opciones que al tocarlas decían “sin acceso”.' },
-  { t: 'nuevo', m: 'Pruebas', d: 'Las cuentas de prueba muestran un aviso “USUARIO DE PRUEBA” para no confundirlas con las cuentas reales.' },
+  { t: 'nuevo', m: 'Requisición', d: 'En “Mis requisiciones” ahora ves el avance de la orden de compra que nació de tu pedido: número de orden, estado (en preparación, aprobada, recibida…) y proveedor.' },
 ];
 
 const TIPO_POR_COMMIT = {
