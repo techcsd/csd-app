@@ -120,6 +120,30 @@ export interface ConduceSimpleCaptura {
   /** AT16 — receptor elegido (usuario del sistema) al que se dirige la confirmación. */
   receptorUsuarioId?: string | null;
   receptorNombre?: string | null;
+  /** BA/FASE 2 — despacho de una requisición: enlaza el conduce a la requisición. */
+  origenRequisicionId?: string | null;
+}
+
+/** BA/Transporte v3 (FASE 2) — requisición lista para despachar. */
+export interface RequisicionPorDespachar {
+  id: string;
+  proyecto_id: string;
+  proyecto_nombre: string | null;
+  solicitante: string | null;
+  fecha: string;
+  renglones: number;
+  created_at: string;
+}
+
+/** BA/Transporte v3 (FASE 2) — avance de una requisición, renglón por renglón. */
+export interface RenglonAvance {
+  articulo_id: string | null;
+  descripcion: string;
+  unidad: string | null;
+  talla: string | null;
+  solicitado: number;
+  despachado: number;
+  pendiente: number;
 }
 
 /** BA/Transporte v3 — proveedor de transportación (catálogo + alta al vuelo). */
@@ -1227,6 +1251,7 @@ export class ConducesService {
         ayudante_id: input.ayudanteId ?? null, // AT4
         receptor_usuario_id: input.receptorUsuarioId ?? null, // AT16
         receptor_nombre: input.receptorNombre ?? null, // AT16
+        origen_requisicion_id: input.origenRequisicionId ?? null, // BA/FASE2 despacho
       },
       fotos,
       resumen: { bodega_id: input.bodegaId, proyecto_id: input.proyectoId, capturado_en },
@@ -1306,6 +1331,32 @@ export class ConducesService {
       resumen: { transporta: input.transportaTexto ?? 'proveedor', capturado_en },
     });
     return id;
+  }
+
+  // ── BA/Transporte v3 (FASE 2) — Despachos ──────────────────────────────────
+
+  /** Requisiciones "por despachar" que el chofer/logística puede jalar. */
+  async requisicionesPorDespachar(): Promise<RequisicionPorDespachar[]> {
+    const data = await this.catalog.refresh<RequisicionPorDespachar[]>('requisiciones_por_despachar', async () => {
+      const { data: rows, error } = await this.supabase.client.rpc('requisiciones_por_despachar');
+      if (error) throw new Error(error.message);
+      return (rows as RequisicionPorDespachar[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** Avance de una requisición (solicitado vs despachado, renglón por renglón). */
+  async requisicionAvance(id: string): Promise<RenglonAvance[]> {
+    const { data, error } = await this.supabase.client.rpc('requisicion_avance', { p_solicitud_id: id });
+    if (error) throw new Error(error.message);
+    return (data as RenglonAvance[]) ?? [];
+  }
+
+  /** ¿La requisición ya tiene despachos en curso? (aviso suave de duplicado). */
+  async requisicionTieneDespachos(id: string): Promise<number> {
+    const { data, error } = await this.supabase.client.rpc('requisicion_tiene_despachos', { p_solicitud_id: id });
+    if (error) return 0;
+    return (data as number) ?? 0;
   }
 
   /**
@@ -2166,6 +2217,15 @@ export class ConducesService {
         if (eV) throwSyncError(eV);
       }
       await this.agregarItemsLibresSiHay(salidaId, payload); // AU4
+      // BA/FASE 2 — si el conduce es un despacho, enlázalo a la requisición.
+      const reqId = payload['origen_requisicion_id'] as string | null;
+      if (reqId) {
+        const { error: eR } = await this.supabase.client.rpc('despacho_marcar', {
+          p_salida_id: salidaId,
+          p_requisicion_id: reqId,
+        });
+        if (eR) throwSyncError(eR);
+      }
       await this.catalog.invalidatePrefix('existencias_');
       // QA-6 — el conduce ya existe en el servidor → refresca "Pendiente entrega".
       await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});

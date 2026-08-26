@@ -304,3 +304,27 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+// BA/Transporte v3 (FASE 2) — banner de despacho (conduce vinculado a requisición).
+.gconduce__despacho {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-primary, #ff5f00);
+  border-radius: var(--radius-sm, 12px);
+  background: #fff7ed;
+}
+.gconduce__despacho-tag {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  background: var(--color-primary, #ff5f00);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.gconduce__despacho-txt { font-size: 13px; color: var(--color-text); font-weight: 600; }
+.gconduce__despacho-dup { font-size: 12px; color: #b45309; font-weight: 600; }

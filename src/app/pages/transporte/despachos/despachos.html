@@ -1,0 +1,31 @@
+<div class="screen">
+  <header class="dp-header">
+    <button type="button" class="dp-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="dp-header__icon">📋</span>
+    <h1 class="dp-header__title">Por despachar</h1>
+    <button type="button" class="dp-header__refresh" (click)="refrescar()" aria-label="Refrescar">🔄</button>
+  </header>
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      @if (error()) { <div class="dp-band dp-band--err">{{ error() }}</div> }
+
+      @for (r of requisiciones(); track r.id) {
+        <button type="button" class="dp-card" (click)="despachar(r)">
+          <div class="dp-card__main">
+            <span class="dp-card__obra">🏗 {{ r.proyecto_nombre || 'Obra' }}</span>
+            <span class="dp-card__meta">{{ r.renglones }} renglón(es){{ r.solicitante ? ' · ' + r.solicitante : '' }}</span>
+          </div>
+          <span class="dp-card__cta">Despachar ›</span>
+        </button>
+      } @empty {
+        <app-empty-state icon="📋" title="Nada por despachar"
+          message="Cuando aprueben una requisición para despacho, aparecerá aquí." />
+      }
+    }
+  </div>
+
+  <app-sync-bar />
+</div>

@@ -106,6 +106,13 @@ export class GenerarConducePage implements OnDestroy {
 
   /** AG15 — id de la tarea que originó este conduce (se enlaza al emitir). */
   private tareaVinculada: string | null = null;
+  // BA/Transporte v3 (FASE 2) — despacho: este conduce salda una requisición.
+  private origenRequisicionId: string | null = null;
+  /** Renglones pre-cargados desde la requisición (para el banner "CONDUCE (#REQ)"). */
+  despachoRenglones = signal(0);
+  /** Aviso suave: cuántos despachos EN CURSO ya tiene la requisición. */
+  despachosPrevios = signal(0);
+  esDespacho = signal(false);
 
   /** AJ6 — contexto con el que se cargaron los despachantes (evita recargas). */
   private despachantesKey = '';
@@ -755,7 +762,45 @@ export class GenerarConducePage implements OnDestroy {
     }
     this.tareaVinculada = q.get('tarea');
     if (this.tareaVinculada) deepLink = true;
+    // BA/FASE 2 — despacho de una requisición: origen almacén + destino la obra
+    // (el param `obra` ya la fijó) + renglones predeterminados (editables) y aviso
+    // suave de duplicado. El id se enlaza al emitir (despacho_marcar).
+    const req = q.get('requisicion');
+    if (req) {
+      this.origenRequisicionId = req;
+      this.esDespacho.set(true);
+      this.setOrigen('almacen');
+      deepLink = true;
+      void this.cargarDespachoRequisicion(req);
+    }
     return deepLink;
+  }
+
+  /** BA/FASE 2 — precarga los renglones pendientes de la requisición al carrito. */
+  private async cargarDespachoRequisicion(id: string): Promise<void> {
+    try {
+      const [avance, previos] = await Promise.all([
+        this.conduces.requisicionAvance(id),
+        this.conduces.requisicionTieneDespachos(id),
+      ]);
+      this.despachosPrevios.set(previos);
+      const lineas: CartLinea[] = avance
+        .filter((r) => r.articulo_id && Number(r.pendiente) > 0)
+        .map((r) => {
+          const art = this.articulos().find((a) => a.id === r.articulo_id);
+          return {
+            articulo_id: r.articulo_id as string,
+            nombre: art?.nombre ?? r.descripcion,
+            unidad: art?.unidad ?? r.unidad ?? 'u',
+            categoria_id: art?.categoria_id ?? null,
+            cantidad: Number(r.pendiente) || 0,
+          };
+        });
+      if (lineas.length) this.cart.set(lineas);
+      this.despachoRenglones.set(lineas.length);
+    } catch {
+      /* sin avance: el chofer agrega los materiales a mano; el vínculo se mantiene */
+    }
   }
 
   /** AF31 — cambiar el tipo de origen limpia lo que no aplica. */
@@ -1033,6 +1078,7 @@ export class GenerarConducePage implements OnDestroy {
         firmaChofer: this.firmaChofer(),
         firmaDespachante: this.firmaDespachante(),
         tareaVinculada: this.tareaVinculada, // AG15 — enlaza la tarea a esta salida
+        origenRequisicionId: this.origenRequisicionId, // BA/FASE2 — despacho de requisición
         itemsLibres: this.itemsLibres(), // AU4
         ayudanteId: this.ayudanteId(), // AT4
         // AT16 — receptor dirigido solo aplica a destino OBRA.

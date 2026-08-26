@@ -54,6 +54,7 @@ export class ConducesHubPage {
   porConfirmar = signal(0); // AJ8
   porFirmarDespachante = signal(0); // AU1
   porImplementar = signal(0); // AY13
+  porDespachar = signal(0); // BA/FASE2 — requisiciones por despachar
 
   // AU1/AY13 — las entradas condicionales solo aparecen cuando hay algo que hacer
   // (no ensucian el hub del resto).
@@ -79,6 +80,18 @@ export class ConducesHubPage {
         route: '/transporte/conduces-por-implementar',
       };
       out = [...out, extra];
+    }
+    // BA/FASE2 — "Por despachar" solo aparece cuando hay requisiciones esperando
+    // (mientras el flag auto-conduce siga en true, esto queda en 0 → tile oculto).
+    if (this.porDespachar() > 0) {
+      const extra: ConduceTile = {
+        key: 'porDespachar',
+        icon: '📋',
+        label: 'Por despachar',
+        tint: '#b45309',
+        route: '/transporte/despachos',
+      };
+      out = [out[0], extra, ...out.slice(1)];
     }
     return out;
   });
@@ -109,6 +122,11 @@ export class ConducesHubPage {
       .conducesPorImplementarCount()
       .then((n) => this.porImplementar.set(n))
       .catch(() => {});
+    // BA/FASE2 — requisiciones por despachar (muestra el tile + badge cuando hay).
+    void this.conduces
+      .requisicionesPorDespachar()
+      .then((l) => this.porDespachar.set(l.length))
+      .catch(() => {});
   }
 
   badgeFor(key: string): number | null {
@@ -117,6 +135,7 @@ export class ConducesHubPage {
     if (key === 'porConfirmar') return this.porConfirmar() || null;
     if (key === 'porFirmar') return this.porFirmarDespachante() || null;
     if (key === 'porImplementar') return this.porImplementar() || null;
+    if (key === 'porDespachar') return this.porDespachar() || null;
     return null;
   }
 

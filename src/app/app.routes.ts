@@ -272,6 +272,12 @@ export const routes: Routes = [
       import('./pages/transporte/conduce-externo/conduce-externo').then((m) => m.ConduceExternoPage),
   },
   {
+    // BA/Transporte v3 (FASE 2) — requisiciones "por despachar" (el chofer jala).
+    path: 'transporte/despachos',
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    loadComponent: () => import('./pages/transporte/despachos/despachos').then((m) => m.DespachosPage),
+  },
+  {
     // AE — devolver material (obra→almacén) con doble firma.
     path: 'transporte/devolver-material',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

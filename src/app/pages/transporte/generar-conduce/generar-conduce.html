@@ -10,6 +10,18 @@
     <app-step-bar [current]="paso() + 1" [total]="pasos().length" />
 
     <div class="screen__body">
+      <!-- BA/FASE 2 — despacho de una requisición: rótulo + aviso suave de duplicado. -->
+      @if (esDespacho()) {
+        <div class="gconduce__despacho">
+          <span class="gconduce__despacho-tag">CONDUCE (#REQ)</span>
+          <span class="gconduce__despacho-txt">
+            Despacho de requisición · {{ despachoRenglones() }} renglón(es) precargados (editables).
+          </span>
+          @if (despachosPrevios() > 0) {
+            <span class="gconduce__despacho-dup">⚠️ Esta requisición ya tiene {{ despachosPrevios() }} conduce(s) en curso — puedes continuar.</span>
+          }
+        </div>
+      }
       <!-- AE9 — retomar un conduce a medio llenar (solo en la 1ª hoja) -->
       @if (paso() === 0 && draftFecha() !== null) {
         <app-draft-banner [fecha]="draftFecha()" (continuar)="continuarBorrador()" (descartar)="descartarBorrador()" />
