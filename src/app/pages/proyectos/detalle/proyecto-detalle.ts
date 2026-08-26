@@ -41,10 +41,9 @@ export class ProyectoDetallePage {
   responsables = signal<ResponsableProyecto[]>([]);
   loading = signal(true);
 
-  // AM9 — mismo gate que la web (set_proyecto_ubicacion / edición de proyecto).
-  puedeEditar = computed(
-    () => this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('direccion'),
-  );
+  // AM9/AY4c — editar proyecto: solo quien GESTIONA proyectos (el Ingeniero de Oficina
+  // ve la ficha + costos pero es solo-lectura; la RLS de update lo fuerza igual).
+  puedeEditar = computed(() => this.ctx.puedeGestionarProyectos());
 
   // AY4 — costos/finanzas del proyecto (p. ej. Presupuesto) SOLO a nivel operar
   // (admin/gerencia/proyectos). El rol Ingenieros entra con `proyectos.obras=ver`:

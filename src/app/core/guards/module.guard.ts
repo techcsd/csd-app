@@ -51,3 +51,14 @@ export const obraGuard: CanActivateFn = () => {
   const router = inject(Router);
   return ctx.puedeVerObra() ? true : router.createUrlTree(['/403']);
 };
+
+/**
+ * AY4c — gestión de proyectos (crear/editar la obra). El Ingeniero de Oficina VE la
+ * ficha + costos (submoduleGuard proyectos.obras) pero NO gestiona → este guard lo
+ * bloquea de /nuevo y /:id/editar. Espejo de `sgc.puede_gestionar_proyectos()`.
+ */
+export const proyectosGestionGuard: CanActivateFn = () => {
+  const ctx = inject(UserContextService);
+  const router = inject(Router);
+  return ctx.puedeGestionarProyectos() ? true : router.createUrlTree(['/403']);
+};

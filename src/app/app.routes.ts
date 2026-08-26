@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { pinGuard } from './core/guards/pin.guard';
-import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard } from './core/guards/module.guard';
+import { moduleGuard, moduleAnyGuard, roleAnyGuard, submoduleGuard, obraGuard, proyectosGestionGuard } from './core/guards/module.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'home' },
@@ -839,10 +839,10 @@ export const routes: Routes = [
       import('./pages/proyectos/avisos/cronograma-avisos').then((m) => m.CronogramaAvisosPage),
   },
   {
-    // AM9 — crear proyecto (por hojas, con ubicación fácil). Antes de :id. AY4 — crear
-    // es OPERAR (gerencia/proyectos); el ingeniero (proyectos.obras=ver) no lo ve.
+    // AM9 — crear proyecto (por hojas, con ubicación fácil). Antes de :id. AY4c — solo
+    // quien GESTIONA proyectos (el Ingeniero de Oficina ve todo pero es solo-lectura).
     path: 'proyectos/nuevo',
-    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.obras', 'operar')],
+    canActivate: [authGuard, pinGuard, proyectosGestionGuard],
     loadComponent: () => import('./pages/proyectos/form/proyecto-form').then((m) => m.ProyectoFormPage),
   },
   // AR1 — Registro de Personal de obra (submódulo proyectos.personal). Antes de
@@ -873,9 +873,9 @@ export const routes: Routes = [
       import('./pages/proyectos/detalle/proyecto-detalle').then((m) => m.ProyectoDetallePage),
   },
   {
-    // AM9 — editar proyecto existente (mismo wizard por hojas). Editar = OPERAR.
+    // AM9 — editar proyecto existente (mismo wizard por hojas). AY4c — solo gestión.
     path: 'proyectos/:id/editar',
-    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.obras', 'operar')],
+    canActivate: [authGuard, pinGuard, proyectosGestionGuard],
     loadComponent: () => import('./pages/proyectos/form/proyecto-form').then((m) => m.ProyectoFormPage),
   },
   {

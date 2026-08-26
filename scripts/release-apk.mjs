@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.0.1';
+const VERSION = '2.0.2';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -67,7 +67,7 @@ const TITULO = 'Cantidad a prueba de errores, “Otros” en bitácora, acceso d
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Requisición', d: 'En “Mis requisiciones” ahora ves el avance de la orden de compra que nació de tu pedido: número de orden, estado (en preparación, aprobada, recibida…) y proveedor.' },
+  { t: 'nuevo', m: 'Proyectos', d: 'Nuevo perfil “Ingeniero de Oficina” (cubicaciones/presupuesto): ve todas las obras y sus costos, con requisición y bitácora. No crea ni edita proyectos — eso queda para gerencia/oficina de proyectos.' },
 ];
 
 const TIPO_POR_COMMIT = {

@@ -53,10 +53,9 @@ export class ProyectosPage {
     return [{ id: '', label: 'Todas las zonas' }, ...ops];
   });
 
-  // AM9 — crear proyecto: mismo gate que la web.
-  puedeCrear = computed(
-    () => this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('direccion'),
-  );
+  // AM9/AY4c — crear proyecto: solo quien GESTIONA proyectos (no el Ingeniero de
+  // Oficina, que tiene el módulo solo para ver todas las obras + costos).
+  puedeCrear = computed(() => this.ctx.puedeGestionarProyectos());
 
   filtrados = computed(() => {
     const q = this.query().trim().toLowerCase();

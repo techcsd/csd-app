@@ -168,6 +168,20 @@ export class UserContextService {
     return this.nivelSubmodulo(clave) === 'operar';
   }
 
+  /**
+   * AY4c — ¿puede GESTIONAR proyectos (crear/editar/borrar la obra)? Tener el módulo
+   * `proyectos` por un rol que NO sea `ingeniero_oficina`. El Ingeniero de Oficina lleva
+   * ese módulo SOLO para VER todas las obras + costos (cubicaciones) → es solo-lectura
+   * sobre la ficha. Espejo de `sgc.puede_gestionar_proyectos()` (la RLS lo fuerza igual).
+   */
+  puedeGestionarProyectos = computed(
+    () =>
+      this.esAdmin() ||
+      (this._profile()?.roles ?? []).some(
+        (ur) => ur.rol.codigo !== 'ingeniero_oficina' && (ur.rol.modulos ?? []).includes('proyectos'),
+      ),
+  );
+
   /** ¿Puede ver ALGO del módulo Obra? (módulo padre o cualquier submódulo obra.*). */
   puedeVerObra = computed(() => {
     if (this.esAdmin() || this.hasModulo('obra')) return true;
