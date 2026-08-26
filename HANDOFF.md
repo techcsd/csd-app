@@ -1,43 +1,63 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) — **RELEASE 2.0.0 + 2.0.1 PUBLICADOS (rolling) · build verde · commit+push a main · ⏳ device-QA pendiente**
+## 🟢 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) + follow-ups + rol Ingeniero de Oficina — **RELEASE 2.0.0 → 2.0.2 PUBLICADO (rolling) · app+SGC verdes · TODO COMMITEADO/PUSHEADO · ⏳ device-QA pendiente**
 
-**SHIPPED 2.0.0:** commit `37d8fd2` (feat AY) → push `main` (PWA por Vercel). **APK 2.0.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 4 cambios) + bucket (`csd-app-2.0.0.apk` + `latest` + `version.json` + `apk_url`). `sql/2026-08-26-publicar-2.0.0.sql`.
-**SHIPPED 2.0.1** (follow-ups): estado de la OC en "Mis requisiciones". APK 2.0.1 + `sql/2026-08-26-publicar-2.0.1.sql`.
-**SHIPPED 2.0.2** (rol Ingeniero de Oficina): ver todas las obras + costos (cubicaciones) pero NO gestionar proyectos (crear/editar) → `puedeGestionarProyectos` en app+web + RLS de escritura de proyectos. APK 2.0.2 firmado + registrado + subido; **`publicada=2.0.2`** (rolling, `sql/2026-08-26-publicar-2.0.2.sql`), **`minima=1.96.4` INTACTA**. Verificado: `version_publicada()` = 2.0.2 / mínima 1.96.4. **Rollback:** `update sgc.app_versiones set publicada=(version='2.0.1') where plataforma='movil';` + `git revert && git push`.
+**TL;DR:** cableado el lado app de la ronda AY (recepción canónica ya estaba; el trabajo real fue el gating por submódulo para que los Ingenieros no perdieran Requisición/Proyectos + banner de usuario de prueba). Luego, 3 follow-ups + una corrección de diseño de roles que pidió Xaviel: **se re-separó "Ingeniero de Oficina" del de campo** (cubicaciones/presupuesto ven todas las obras + costos pero NO gestionan proyectos). App publicada **2.0.2** (rolling, minima 1.96.4 intacta). **Se tocó SGC** (3 migraciones + front web) — todo aplicado a prod y pusheado.
 
-**Depende de PROMPT-13 (SGC), que YA está en prod** (commits `ff9170e` 1.97.0 + `d1b6889` 1.98.0 + `0544e52` 1.98.1; migraciones AY aplicadas; edges desplegadas). Esta sesión cableó el LADO APP de la ronda AY. **`npm run build` = verde** (solo warnings preexistentes: NG8102 personal-carnet/reporte-semanal, budget). **NO se tocó SGC** (PROMPT-13 ya está completo en prod).
+**Versiones app (todas rolling, minima 1.96.4 INTACTA, cert prod `3c5316d8…5065`):**
+- **2.0.0** `37d8fd2` — ronda AY (gating submódulo + costos ocultos + banner prueba). `sql/2026-08-26-publicar-2.0.0.sql`.
+- **2.0.1** `897fc35` — estado de la orden de compra en "Mis requisiciones". `…publicar-2.0.1.sql`.
+- **2.0.2** `8e2819e` — AY4c: Ingeniero de Oficina no gestiona proyectos. `…publicar-2.0.2.sql`. **`version_publicada()` = 2.0.2 / mínima 1.96.4** (verificado).
+- Cada APK: firmado + registrado (Y1) + subido al bucket (`csd-app-<v>.apk` + `latest` + `version.json` + `apk_url`). Últimos commits app: `471868f` (docs).
 
-**Hallazgo clave:** la app ya era la implementación de REFERENCIA de casi todo AY —
-- **FASE 1 (recepción canónica) = YA HECHA en la app.** El flujo `por-confirmar` (AJ8) hace **ver conduce + foto + firma como UNA sola op de outbox** (`tipo_op: conduce_confirmar` → RPC `conduce_confirmar_receptor`, que ya escribía `salida_firmas` receptor + `recepcion_confirmaciones` + entrada en obra). Foto obligatoria (solo-cámara AS15), firma obligatoria, botón "Ver conduce" antes de confirmar. El PDF ya incluye `recepcion_foto_url` + firma del receptor. AY2 en la WEB adoptó ESTE comportamiento (unificó `confirmar_recepcion_salida` para igualar a la app). Rutas muertas ya resueltas (AK8 depuró tiles, dejó rutas vivas para deep-links). **→ cero cambios de código en FASE 1; solo verificación/paridad.**
-- **FASE 2 (submódulos) — la app YA leía `roles.permisos` (jsonb) desde AG12** (`submoduleGuard`, `puedeVer/OperarSubmodulo`, hub Obra gateado tile por tile). AY5 (Logística veía submódulos de Ingeniería con 403) **no existe en la app**: el hub `/ingenieria` tiene UN solo tile (Solicitud de movimiento); los submódulos de producción viven bajo `/obra` (ya submódulo-gateado).
+**Commits SGC (todos pusheados a `main` → Vercel; migraciones aplicadas a prod):**
+- `668e1fe` — scoping de `proyectos_pickables` (follow-up #2).
+- `af4f13f` — rol `ingeniero_oficina` re-separado (`sql/…-ay4b-ingeniero-oficina.sql`).
+- `4163ef4` — AY4c: `puede_gestionar_proyectos()` + RLS + front web (`sql/…-ay4c-oficina-no-crea-proyectos.sql`).
 
-### ✅ Cambios de esta sesión (build verde, sin commit)
-El rol unificado **Ingenieros** (`ingeniero_campo`) perdió los módulos `compras`/`proyectos` completos (ahora solo submódulos: `compras.solicitudes=operar`, `proyectos.obras/cronograma=ver`, `proyectos.personal=operar`). La app gateaba Requisición y Proyectos por `hasModulo('compras')`/`hasModulo('proyectos')` → **el ingeniero se quedaba fuera**. Fix:
-1. **`app.routes.ts`** — Requisición: `/solicitudes`, `/pedir`, `/mis`, `/requisicion/:id` → `submoduleGuard('compras.solicitudes')` (`pedir`='operar'). Bandeja (`/solicitudes/bandeja`) SIGUE en `moduleGuard('compras')` (aprobar = coordinador, no ingeniero). Proyectos: `/proyectos`, `/proyectos/:id` → `submoduleGuard('proyectos.obras')`; cronograma + avisos → `submoduleGuard('proyectos.cronograma')`; crear/editar/importar → mismos submódulos a nivel `'operar'` (el ingeniero ver-only no entra). Retrocompat: quien tiene el módulo padre pasa igual (módulo⇒operar en `nivelSubmodulo`).
-2. **`home.ts`** — nuevo `tileVisible()`: tiles Requisición y Proyectos por **módulo O submódulo** (obra ya era especial). Menú == guard (AU8/AY5).
-3. **`proyecto-detalle.ts/.html`** — `puedeVerCostos()` (admin || operar `proyectos.obras`); el renglón **Presupuesto** se oculta al ingeniero (ver). Espejo del `submoduloOperarGuard` web (AY4). La app NO muestra costos de producción de obra (`obra/avance` sin costos) → paridad con web 1.98.1 sin tocar nada.
-4. **`badges.service.ts`** — badge de avisos de cronograma incluye al ingeniero (`|| puedeVerSubmodulo('proyectos.cronograma')`).
-5. **AY7 banner "USUARIO DE PRUEBA"** — `es_prueba` añadido a `PROFILE_SELECT` + modelo `Usuario` + `ctx.esPrueba` (computed); banner ámbar en el shell (`app.html`/`app.ts`/`app.scss`), suprimido en `/auth`, patrón del version-banner. El usuario test se comporta 100% como su rol (login estándar con el email sintético `t-<n>@test…local`); el banner es la única diferencia visible app-side. La creación/eliminación/"entrar como" son admin-only en SGC (edges `admin-crear-usuario-test`/`admin-usuario-test-login`).
+**Rollback app:** `update sgc.app_versiones set publicada=(version='2.0.1') where plataforma='movil';` (o 2.0.0 / 1.99.0) + `git revert <commit> && git push`.
 
-### 📄 Entregable
-- **`AY8-AUDITORIA-E2E-INGENIEROS-APP.md`** (carpeta improvements) — tabla E2E app-side (17 funciones), para juntar con la web. Todo ✅ salvo #3 (estado de OC derivada, follow-up app) y #8 (verificar scoping de `proyectos_pickables`, backend/SGC).
+**Depende de PROMPT-13 (SGC), YA en prod** (`ff9170e` 1.97.0 + `d1b6889` 1.98.0 + `0544e52` 1.98.1).
 
-### 🔴 Pendiente — SOLO Xaviel (físico)
-- ~~Autorizar + release~~ → hecho (2.0.0 rolling, commit `37d8fd2`, minima 1.96.4 intacta).
-- **Device-QA:** (AY1/AY2) recibir un conduce como ingeniero/capataz/chofer → ver conduce + foto + firma → confirmado (evidencia en detalle + PDF). (FASE 2) loguear un **Ingenieros** (usuario test AY7) → ve Requisición + Proyectos (sus obras, sin Presupuesto) + cronograma + personal; loguear **Logística** → no ve submódulos de Ingeniería con 403. (AY7) crear un usuario test en SGC → banner "USUARIO DE PRUEBA" en la app.
+### ✅ Done — PROMPT-14 (3 fases)
+- **FASE 1 (recepción canónica) = ya estaba en la app** (cero código). `por-confirmar` (AJ8) hace **ver conduce + foto + firma como UNA op de outbox** (`conduce_confirmar` → RPC `conduce_confirmar_receptor`, que ya escribía `salida_firmas` receptor + `recepcion_confirmaciones` + entrada en obra). Foto/firma obligatorias, "Ver conduce" antes de confirmar, PDF con evidencia. La WEB (AY2) copió ESTE comportamiento. **No cambiar la app a `confirmar_recepcion_salida`.**
+- **FASE 2/3 (el fix real):** el rol Ingenieros perdió los módulos `compras`/`proyectos` completos (solo submódulos) → la app los gateaba por `hasModulo` y dejaba al ingeniero fuera. Cambios (app):
+  1. `app.routes.ts` — Requisición `/solicitudes*` → `submoduleGuard('compras.solicitudes')` (bandeja de aprobar sigue en `moduleGuard('compras')`); Proyectos `/proyectos*` → `submoduleGuard('proyectos.obras'/'proyectos.cronograma')` (ver), crear/editar/importar → nivel `operar` (luego AY4c los cambió a `proyectosGestionGuard`, ver abajo).
+  2. `home.ts` `tileVisible()` — tiles Requisición/Proyectos por módulo O submódulo (menú == guard).
+  3. `proyecto-detalle.ts/.html` — `puedeVerCostos()` oculta el Presupuesto al ingeniero de campo (ver). La app no muestra costos de producción (`obra/avance` sin costos → paridad web 1.98.1).
+  4. `badges.service.ts` — badge de cronograma incluye al ingeniero (`proyectos.cronograma`).
+  5. **AY7 banner "USUARIO DE PRUEBA"** — `es_prueba` en `PROFILE_SELECT` + modelo `Usuario` + `ctx.esPrueba`; banner ámbar en el shell (`app.html/ts/scss`), suprimido en `/auth`. El test user entra con su email sintético y se comporta 100% como su rol.
+- **AY5** no existe en la app (hub `/ingenieria` de un solo tile; producción vive en `/obra`, ya submódulo-gateado).
+- **Entregable:** `AY8-AUDITORIA-E2E-INGENIEROS-APP.md` (carpeta improvements) — tabla E2E app-side (17 funciones).
 
-### Follow-ups (post-2.0.0) — atendidos esta sesión → **RELEASE 2.0.1**
-1. **✅ HECHO (2.0.1): `mis_ordenes_de_compra` en "Mis requisiciones".** `solicitudes.service.misOrdenesDeCompra()` (RPC AY3, cache-then-network) + `mis.ts` mapea `solicitud_id → orden` + chip "🧾 Orden {numero} · {estado} · {proveedor}" bajo cada requisición. Offline-safe (best-effort; si falla, se degrada al estado de la requis). Estados de OC con etiqueta legible (`ordenEstadoLabel`).
-2. **✅ HECHO (SGC `668e1fe`): rediseño de scoping de `proyectos_pickables`.** Se confirmó que el RPC es **APP-ONLY** (0 consumidores en la web/edge → blast radius = solo los dropdowns de bitácora/requisición/compras-de-obra de la app). `sql/2026-08-26-ay-proyectos-pickables-scope.sql` (aplicado a prod): set amplio = `admin/proyectos/inventario/compras/direccion` (igual que `directorio_proyectos`); el resto (campo) ve SOLO sus obras (`es_responsable_de_proyecto` + `es_capataz_de_proyecto` + `proyecto_empleados`); **fallback AW1**: quien no esté ligado a ninguna obra ve todas (nunca selector vacío) → **cero regresión**. Verificado en prod: 8 de campo scoped a sus obras, 7 en fallback (5 QA + 2 reales sin obra: **Angel Medina, Ramon Cabrera**), 5 amplios sin cambio. **Pendiente Xaviel (opcional):** asignar su obra a Angel Medina y Ramon Cabrera para acotarlos (hoy ven todas). Memoria [[proyectos-pickables-overbroad]].
-4. **✅ HECHO (SGC `af4f13f`): re-separar "Ingeniero de Oficina" del de campo.** El merge AY4 (campo+oficina en un rol) resultó incorrecto: los de OFICINA hacen cubicaciones/presupuesto, NO son encargados de obra → necesitan TODAS las obras + costos (lo contrario del de campo). Decisión Xaviel: rol aparte. `sql/2026-08-26-ay4b-ingeniero-oficina.sql` (SGC, aplicado a prod): rol `ingeniero_oficina` "Ingeniero de Oficina" = módulos `[proyectos,bitacora,ingenieria,documentos,tareas]` + `compras.solicitudes:operar`. El módulo `proyectos` le da (SIN código app/web nuevo) todas las obras (RLS) + costos/presupuesto (`puedeVerCostos` operar) + requisición/bitácora. `ingeniero_campo` → "Ingeniero de Campo" (código intacto, sigue scoped/sin costos). Asignado aditivo (sin quitar campo → cero regresión) a los ingenieros reales sin obra: **Angel Medina, Ramon Cabrera** (+ 2 QA). **Pendiente Xaviel:** verificar en Admin › Roles que campo/oficina estén bien repartidos. **Creación de proyectos ACOTADA** (AY4c, ver abajo): el de oficina ya NO crea/edita proyectos.
-   - **AY4c (SGC `<pendiente push>`) + app 2.0.2:** el Ingeniero de Oficina es **solo-lectura sobre la ficha** de proyecto (ve costos, no gestiona). Helper `sgc.puede_gestionar_proyectos()` (módulo proyectos por un rol ≠ ingeniero_oficina) en las RLS insert/update/delete de `proyectos` (enforcement real, app+web) + espejo `puedeGestionarProyectos` en app (`user-context`, `proyectos.ts` puedeCrear, `proyecto-detalle` puedeEditar, guard `proyectosGestionGuard` en /nuevo y /:id/editar) y web (UserService + `proyectos-gestion.guard` + botones "Nuevo/Editar" gateados). Verificado en prod: solo `ingeniero_oficina` → gestiona=false; managers sin cambio.
-5. **📋 EVALUADO — módulo `documentos` en móvil = feature grande, NO en esta tanda.** En la web es plantillas → rellenar campos → generar/descargar (editor de documentos). Llevarlo a móvil es un módulo nuevo completo (no un follow-up). Recomendación: definir alcance con Xaviel (¿solo ver/descargar documentos ya generados? ¿o también rellenar?) y planificarlo como su propia fase.
+### ✅ Done — Follow-ups
+1. **`mis_ordenes_de_compra` en "Mis requisiciones"** (2.0.1). `solicitudes.service.misOrdenesDeCompra()` (cache-then-network) + chip "🧾 Orden {numero} · {estado} · {proveedor}" por requis (offline-safe).
+2. **Scoping de `proyectos_pickables`** (SGC `668e1fe`). RPC **APP-ONLY** (0 consumidores web). Amplio = admin/proyectos/inventario/compras/direccion; campo ve SOLO sus obras (`es_responsable`/`es_capataz`/empleado); **fallback AW1**: no-ligado ve todas → cero regresión. Verificado: 8 scoped, 7 fallback (5 QA + Angel Medina, Ramon Cabrera), 5 amplios.
+3. **`documentos` en móvil** — EVALUADO: módulo nuevo completo (plantillas→rellenar→descargar), no un follow-up. Requiere definir alcance con Xaviel; planificar como fase propia.
+4. **Rol "Ingeniero de Oficina" re-separado** (SGC `af4f13f`, decisión Xaviel: el merge AY4 estaba mal — oficina hace cubicaciones/presupuesto, no es encargado de obra). `ingeniero_oficina` = módulos `[proyectos,bitacora,ingenieria,documentos,tareas]` + `compras.solicitudes:operar` → el módulo `proyectos` le da todas las obras (RLS) + costos + requis/bitácora **sin código app/web nuevo**. `ingeniero_campo` renombrado a "Ingeniero de Campo" (código intacto, scoped/sin costos). Asignado aditivo a los ingenieros reales sin obra (Angel Medina, Ramon Cabrera + 2 QA).
+5. **AY4c — Oficina NO gestiona proyectos** (SGC `4163ef4` + app 2.0.2). Helper `sgc.puede_gestionar_proyectos()` (módulo proyectos por un rol ≠ ingeniero_oficina) en las RLS **insert/update/delete** de `proyectos` (enforcement real, app+web). Espejo en front: app (`user-context.puedeGestionarProyectos`, `proyectos.ts` puedeCrear, `proyecto-detalle` puedeEditar, `proyectosGestionGuard` en /nuevo y /:id/editar) y web (`UserService.puedeGestionarProyectos`, `proyectos-gestion.guard`, botones Nuevo/Editar gateados). Verificado: solo `ingeniero_oficina` → gestiona=false.
+
+### 🔴 Pendiente — SOLO Xaviel
+- **Admin › Roles:** verificar el reparto Ingeniero de Campo vs Oficina (asigné Angel Medina + Ramon Cabrera a Oficina por ser los únicos ingenieros reales sin obra). Opcional: asignar su obra a un ingeniero de campo sin asignación para que deje de ver todas.
+- **Device-QA:** (AY1/AY2) recibir conduce (ingeniero/capataz/chofer) → ver+foto+firma → confirmado, evidencia en detalle+PDF. (FASE 2) usuario test **Ingeniero de Campo** → Requisición + Proyectos (solo sus obras, SIN Presupuesto) + cronograma + personal; **Ingeniero de Oficina** → todas las obras + Presupuesto, pero SIN botón Nuevo/Editar proyecto; **Logística** → sin 403 en Ingeniería. (2.0.1) chip de orden de compra en "Mis requisiciones". (AY7) crear usuario test en SGC → banner "USUARIO DE PRUEBA" en la app.
+
+### 💡 Pendiente — Claude puede hacer (si Xaviel quiere)
+- Acotar también la **importación de cronograma** y otras escrituras de proyecto al de oficina (hoy AY4c cubre crear/editar/borrar el proyecto; `/:id/cronograma/importar` sigue en `submoduleGuard('proyectos.cronograma','operar')`, que el de oficina pasa por el módulo).
+- Módulo `documentos` en móvil (follow-up #3) — tras definir alcance.
+
+### ⚠️ Gotchas de esta sesión
+- **`proyectos_pickables` es APP-ONLY** (grep confirmó 0 consumidores en SGC web/edge) — clave para animarse a rediseñarlo sin miedo a romper la web.
+- **No se puede scoper obras quitando el módulo `bitacora`/`obra`** sin romper al **capataz** (su único módulo es `bitacora`, se liga por `es_capataz_de_proyecto`, no por responsables/empleados) → por eso el **fallback AW1** (no-ligado ve todas) fue imprescindible. `directorio_proyectos` tiene el mismo hueco de capataz.
+- **Retrocompat de `nivelSubmodulo`:** tener el módulo padre ⇒ `operar` en TODOS sus submódulos. Por eso, para bloquear al de oficina de gestionar proyectos (que tiene el módulo), NO sirve un submoduleGuard — hubo que crear `puede_gestionar_proyectos()` (módulo por un rol ≠ oficina).
+- **`apply-migration.mjs` muestra solo el ÚLTIMO result set** de un script multi-statement; para verificar, poner el SELECT de interés al final o correr una query aislada.
+- **`git commit -m @'…'@`** (heredoc PowerShell) NO funciona en la Bash tool (POSIX) → el `@` se cuela en el subject. Usar heredoc POSIX `-F - <<'EOF'`.
 
 ### ✅ Verify on resume
 ```
 cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
-git status   # cambios AY sin commitear (app.routes/home/proyecto-detalle/badges/user-context/usuario.model/app.*)
+git -C "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" log --oneline -1   # 471868f (o posterior)
+git -C "C:/Users/xavie/Desktop/X Dev/dev/SGC" log --oneline -1        # 4163ef4 (o posterior)
+node scripts/apply-migration.mjs <(echo "select sgc.version_publicada();")  # publicada 2.0.2 / minima 1.96.4
 ```
 
 ---
