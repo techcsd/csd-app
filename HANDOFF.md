@@ -13,7 +13,8 @@
 **Commits SGC (todos pusheados a `main` → Vercel; migraciones aplicadas a prod):**
 - `668e1fe` — scoping de `proyectos_pickables` (follow-up #2).
 - `af4f13f` — rol `ingeniero_oficina` re-separado (`sql/…-ay4b-ingeniero-oficina.sql`).
-- `4163ef4` — AY4c: `puede_gestionar_proyectos()` + RLS + front web (`sql/…-ay4c-oficina-no-crea-proyectos.sql`).
+- `4163ef4` — AY4c: `puede_gestionar_proyectos()` + RLS proyectos + front web (`sql/…-ay4c-oficina-no-crea-proyectos.sql`).
+- `d57e219` — AY4d: `puede_gestionar_cronograma()` excluye a oficina (import + escrituras de cronograma), sin release app (`sql/…-ay4d-oficina-no-gestiona-cronograma.sql`).
 
 **Rollback app:** `update sgc.app_versiones set publicada=(version='2.0.1') where plataforma='movil';` (o 2.0.0 / 1.99.0) + `git revert <commit> && git push`.
 
@@ -56,8 +57,8 @@
 ### ✅ Verify on resume
 ```
 cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
-git -C "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" log --oneline -1   # 471868f (o posterior)
-git -C "C:/Users/xavie/Desktop/X Dev/dev/SGC" log --oneline -1        # 4163ef4 (o posterior)
+git -C "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" log --oneline -1   # f6dbf14 (o posterior)
+git -C "C:/Users/xavie/Desktop/X Dev/dev/SGC" log --oneline -1        # d57e219 (o posterior)
 node scripts/apply-migration.mjs <(echo "select sgc.version_publicada();")  # publicada 2.0.2 / minima 1.96.4
 ```
 
