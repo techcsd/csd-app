@@ -18,6 +18,8 @@ export interface Usuario {
   email: string;
   telefono?: string | null; // AY1 — editable por el propio usuario
   activo?: boolean;
+  /** AY7 — usuario de PRUEBA (email sintético, excluido de lo real). Muestra banner. */
+  es_prueba?: boolean;
   avatar_path?: string | null;
   roles?: UsuarioRol[];
 }

@@ -39,7 +39,7 @@
         @if (proyecto()!.fecha_fin_real) {
           <div class="pdet__row"><span>Fin real</span><b>{{ fmt(proyecto()!.fecha_fin_real) }}</b></div>
         }
-        @if (proyecto()!.presupuesto != null) {
+        @if (proyecto()!.presupuesto != null && puedeVerCostos()) {
           <div class="pdet__row"><span>Presupuesto</span><b>RD$ {{ proyecto()!.presupuesto | number: '1.0-2' }}</b></div>
         }
         @if (progreso() !== null) {

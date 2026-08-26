@@ -33,10 +33,13 @@ const TILES: HomeTile[] = [
   // + submódulos futuros). Gateado por hasModulo('ingenieria').
   { modulo: 'ingenieria', icon: '📐', label: 'Ingeniería', route: '/ingenieria', tint: '#0369a1' },
   { modulo: 'inventario', icon: '📦', label: 'Inventario', route: '/inventario', tint: '#16a34a' },
+  // AY3 — Requisición: el rol Ingenieros ORIGINA requisiciones por el submódulo
+  // `compras.solicitudes` (ya no tiene el módulo `compras` completo). Gating especial
+  // en workTiles (módulo O submódulo), no hasModulo a secas.
   { modulo: 'compras', icon: '🛒', label: 'Requisición', route: '/solicitudes', tint: '#2563eb' },
-  // Y14 — Proyectos (gateado por módulo proyectos: admin/direccion/gerencia/
-  // gerente_proyectos/ingeniero_oficina). Los responsables sin módulo llegan al
-  // cronograma por deep-link de aviso (FASE 5).
+  // Y14/AY4 — Proyectos. El rol Ingenieros ve SUS obras por el submódulo
+  // `proyectos.obras` (ya no tiene el módulo `proyectos` completo); admin/dirección/
+  // gerencia lo conservan por módulo. Gating especial en workTiles (módulo O submódulo).
   { modulo: 'proyectos', icon: '🏗️', label: 'Proyectos', route: '/proyectos', tint: '#0d9488' },
   // AG16 — Gestión de Producción de Obra (gerente_produccion / capataz). El capataz
   // no tiene módulo padre (solo permisos obra.*), así que su gating es especial
@@ -138,13 +141,29 @@ export class HomePage implements OnDestroy {
   // Transporte (Recibir mercancía / Compra en ferretería). El acceso temporal al
   // módulo se revierte en SGC tras publicar esta versión; aquí ya lo ocultamos.
   private workTiles = computed(() =>
-    TILES.filter(
-      (t) =>
-        // AG16 — obra: gating por submódulos (el capataz no tiene módulo padre).
-        (t.modulo === 'obra' ? this.ctx.puedeVerObra() : this.ctx.hasModulo(t.modulo)) &&
-        !(t.modulo === 'inventario' && this.ctx.esChofer()),
-    ),
+    TILES.filter((t) => this.tileVisible(t) && !(t.modulo === 'inventario' && this.ctx.esChofer())),
   );
+
+  /**
+   * Gating de un tile de trabajo por su módulo — con las excepciones que ya no
+   * dependen del módulo padre completo (mismo criterio que sus route guards):
+   * - obra (AG16): el capataz no tiene módulo padre, solo permisos `obra.*`.
+   * - compras (AY3): el rol Ingenieros origina requisiciones por `compras.solicitudes`.
+   * - proyectos (AY4): el rol Ingenieros ve sus obras por `proyectos.obras`.
+   * Regla AU8/AY5: el menú y el guard leen la MISMA matriz (nada visible que dé 403).
+   */
+  private tileVisible(t: HomeTile): boolean {
+    switch (t.modulo) {
+      case 'obra':
+        return this.ctx.puedeVerObra();
+      case 'compras':
+        return this.ctx.hasModulo('compras') || this.ctx.puedeVerSubmodulo('compras.solicitudes');
+      case 'proyectos':
+        return this.ctx.hasModulo('proyectos') || this.ctx.puedeVerSubmodulo('proyectos.obras');
+      default:
+        return this.ctx.hasModulo(t.modulo);
+    }
+  }
 
   // AC2 — Tecnología es pública para TODOS excepto el rol chofer. No se gatea por
   // el módulo 'tecnologia' (que solo tienen admin/tecnología) sino por !esChofer,

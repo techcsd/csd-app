@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '1.99.0';
+const VERSION = '2.0.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -67,11 +67,10 @@ const TITULO = 'Cantidad a prueba de errores, “Otros” en bitácora, acceso d
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduce', d: 'Al escribir la cantidad de un artículo ya NO se borra el renglón si dejas el campo vacío: toca el número y escribe el que quieras (se selecciona solo, así “25” reemplaza al “1”). Mismo comportamiento en conduce, requisición, ferretería, devolución y entradas/salidas de inventario.' },
-  { t: 'nuevo', m: 'Bitácora', d: 'Nueva opción “Otros” al elegir el elemento trabajado (columna, viga…): si el tuyo no está, lo escribes y queda registrado en el reporte.' },
-  { t: 'arreglo', m: 'Flota', d: '“Crear ruta” con un vehículo que no está en uso ahora te lleva a la pantalla correcta de “Uso de vehículo” y te devuelve a tu ruta a medio hacer sin perder lo que escribiste.' },
-  { t: 'nuevo', m: 'Acceso', d: 'Los capataces ya pueden entrar con su cédula y PIN, igual que los choferes (pestaña “Con cédula”).' },
-  { t: 'nuevo', m: 'Mi rendimiento', d: 'Si pasas días laborables sin actividad ni actualizar tu estado, verás el descuento de puntos con las fechas exactas que lo causaron; y la app te avisa si llevas mucho tiempo “En ruta” sin actualizar.' },
+  { t: 'nuevo', m: 'Ingeniería', d: 'Los ingenieros ya pueden hacer sus requisiciones y ver sus proyectos (ficha, cronograma y personal de las obras que les tocan) directamente desde la app.' },
+  { t: 'mejora', m: 'Proyectos', d: 'Cada quien ve solo las obras que le corresponden; los datos de costos/presupuesto quedan reservados para gerencia y oficina.' },
+  { t: 'mejora', m: 'Menú', d: 'El menú muestra exactamente lo que tu rol puede abrir — se acabaron las opciones que al tocarlas decían “sin acceso”.' },
+  { t: 'nuevo', m: 'Pruebas', d: 'Las cuentas de prueba muestran un aviso “USUARIO DE PRUEBA” para no confundirlas con las cuentas reales.' },
 ];
 
 const TIPO_POR_COMMIT = {

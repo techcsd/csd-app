@@ -25,8 +25,11 @@ export class BadgesService {
     if (this.ctx.hasModulo('compras')) tasks.push(this.count('solicitudes_material', 'estado', 'pendiente', 'compras'));
     // Admin: reportes/comentarios de campo sin resolver (misma cola que Admin › Reportes).
     if (this.ctx.hasModulo('admin')) tasks.push(this.count('reportes_usuario', 'estado', 'resuelto', 'admin', 'neq'));
-    // Y15 — Proyectos: avisos de cronograma pendientes (por iniciar/vencer/atrasada).
-    if (this.ctx.hasModulo('proyectos')) tasks.push(this.countCronograma());
+    // Y15/AY4 — Proyectos: avisos de cronograma pendientes (por iniciar/vencer/atrasada).
+    // Incluye al rol Ingenieros (submódulo proyectos.cronograma, sin módulo completo).
+    if (this.ctx.hasModulo('proyectos') || this.ctx.puedeVerSubmodulo('proyectos.cronograma')) {
+      tasks.push(this.countCronograma());
+    }
     // Bitácora: sin badge de servidor. Sus pendientes reales son borradores locales
     // (los cuenta EnProcesoService) y no hay una cola de aprobación en servidor propia
     // de bitácora en la app — los conduces por recibir ya se muestran en Inventario.

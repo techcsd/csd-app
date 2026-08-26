@@ -46,6 +46,13 @@ export class ProyectoDetallePage {
     () => this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('direccion'),
   );
 
+  // AY4 — costos/finanzas del proyecto (p. ej. Presupuesto) SOLO a nivel operar
+  // (admin/gerencia/proyectos). El rol Ingenieros entra con `proyectos.obras=ver`:
+  // ve la ficha de su obra PERO no los costos. Espejo del submoduloOperarGuard web.
+  puedeVerCostos = computed(
+    () => this.ctx.esAdmin() || this.ctx.puedeOperarSubmodulo('proyectos.obras'),
+  );
+
   // AM7 — link a Google Maps si hay coordenadas estructuradas.
   mapsUrl = computed(() => {
     const p = this.proyecto();

@@ -9,7 +9,7 @@ const AVATARS_BUCKET = 'sgc-avatars';
 
 // Selección del perfil + roles/módulos (misma forma que usa SGC).
 const PROFILE_SELECT =
-  'id, nombre, email, telefono, activo, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
+  'id, nombre, email, telefono, activo, es_prueba, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
 // Prefijo de la caché en disco del perfil (offline-first).
 const PROFILE_CACHE_PREFIX = 'perfil_';
 
@@ -119,6 +119,12 @@ export class UserContextService {
   // solo-cámara (combustible, reporte semanal, pre-uso, entrega/devolución) para
   // QA/pruebas; nadie más la ve. Regla general del modo solo-cámara.
   esAdmin = computed(() => this.hasRol('admin'));
+
+  // AY7 — usuario de PRUEBA: se comporta 100% como su rol (mismo menú/guards/RPCs),
+  // con una diferencia visible: banner "USUARIO DE PRUEBA" (shell) + exclusión de lo
+  // real (server-side). Fuente única para pintar el banner. Espejo de
+  // sgc.soy_usuario_prueba(); aquí lo leemos del propio perfil (self-read).
+  esPrueba = computed(() => this._profile()?.es_prueba === true);
 
   hasModulo(modulo: string): boolean {
     return this.modulos().includes(modulo);

@@ -663,30 +663,35 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/inventario/almacenes/almacenes').then((m) => m.AlmacenesPage),
   },
   {
+    // AY3 — la Requisición se gatea por SUBMÓDULO `compras.solicitudes` (no por el
+    // módulo `compras` completo): el rol Ingenieros ORIGINA requisiciones sin
+    // gestionar órdenes/proveedores. Los que tienen el módulo `compras` completo
+    // pasan igual (retrocompat: módulo padre ⇒ operar en sus submódulos).
     path: 'solicitudes',
-    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes')],
     loadComponent: () => import('./pages/solicitudes/solicitudes').then((m) => m.SolicitudesPage),
   },
   {
     path: 'solicitudes/pedir',
-    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes', 'operar')],
     loadComponent: () => import('./pages/solicitudes/pedir/pedir').then((m) => m.PedirPage),
   },
   {
     path: 'solicitudes/mis',
-    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes')],
     loadComponent: () => import('./pages/solicitudes/mis/mis').then((m) => m.MisSolicitudesPage),
   },
   {
-    // AS7 — bandeja de TODAS las requisiciones (gate server-side por rol; la página
-    // muestra "sin acceso" si el RPC lo niega). Detalle = destino del deep-link AS6.
+    // AS7 — bandeja de TODAS las requisiciones (aprobar): sigue siendo del módulo
+    // `compras` completo (coordinador de compras), NO del ingeniero que solo origina.
+    // El gate server-side por rol confirma; la página muestra "sin acceso" si lo niega.
     path: 'solicitudes/bandeja',
     canActivate: [authGuard, pinGuard, moduleGuard('compras')],
     loadComponent: () => import('./pages/solicitudes/bandeja/bandeja').then((m) => m.RequisicionesBandejaPage),
   },
   {
     path: 'solicitudes/requisicion/:id',
-    canActivate: [authGuard, pinGuard, moduleGuard('compras')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes')],
     loadComponent: () => import('./pages/solicitudes/detalle/detalle').then((m) => m.RequisicionDetallePage),
   },
 
@@ -818,22 +823,26 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/notas/editor/nota-editor').then((m) => m.NotaEditorPage),
   },
   {
-    // Y14 — Proyectos (listado), gateado por el módulo `proyectos`.
+    // Y14 — Proyectos (listado). AY4 — gateado por SUBMÓDULO `proyectos.obras`:
+    // el rol Ingenieros ve SUS obras (ver) sin tener el módulo `proyectos` completo;
+    // los que tienen el módulo pasan igual (retrocompat módulo⇒operar). La RLS scopea
+    // los datos a las obras del usuario (responsable/adjunto/empleado).
     path: 'proyectos',
-    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.obras')],
     loadComponent: () => import('./pages/proyectos/proyectos').then((m) => m.ProyectosPage),
   },
   {
     // Y15 (FASE 5) — bandeja de avisos de cronograma (antes de :id para no chocar).
     path: 'proyectos/avisos',
-    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.cronograma')],
     loadComponent: () =>
       import('./pages/proyectos/avisos/cronograma-avisos').then((m) => m.CronogramaAvisosPage),
   },
   {
-    // AM9 — crear proyecto (por hojas, con ubicación fácil). Antes de :id.
+    // AM9 — crear proyecto (por hojas, con ubicación fácil). Antes de :id. AY4 — crear
+    // es OPERAR (gerencia/proyectos); el ingeniero (proyectos.obras=ver) no lo ve.
     path: 'proyectos/nuevo',
-    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.obras', 'operar')],
     loadComponent: () => import('./pages/proyectos/form/proyecto-form').then((m) => m.ProyectoFormPage),
   },
   // AR1 — Registro de Personal de obra (submódulo proyectos.personal). Antes de
@@ -856,28 +865,31 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/proyectos/personal/personal-expediente').then((m) => m.PersonalExpedientePage),
   },
   {
+    // AY4 — ficha del proyecto (ver): el ingeniero ve la ficha de SUS obras. Los
+    // costos/finanzas se ocultan dentro de la página (puedeVerCostos, nivel operar).
     path: 'proyectos/:id',
-    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.obras')],
     loadComponent: () =>
       import('./pages/proyectos/detalle/proyecto-detalle').then((m) => m.ProyectoDetallePage),
   },
   {
-    // AM9 — editar proyecto existente (mismo wizard por hojas).
+    // AM9 — editar proyecto existente (mismo wizard por hojas). Editar = OPERAR.
     path: 'proyectos/:id/editar',
-    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.obras', 'operar')],
     loadComponent: () => import('./pages/proyectos/form/proyecto-form').then((m) => m.ProyectoFormPage),
   },
   {
-    // Y15 — cronograma del proyecto (consulta + acciones offline-first).
+    // Y15 — cronograma del proyecto (consulta + acciones offline-first). AY4 —
+    // submódulo `proyectos.cronograma` (ver): el ingeniero ve el cronograma de su obra.
     path: 'proyectos/:id/cronograma',
-    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.cronograma')],
     loadComponent: () =>
       import('./pages/proyectos/cronograma/cronograma').then((m) => m.CronogramaPage),
   },
   {
-    // AS21 — importar el cronograma desde Excel (.xlsx).
+    // AS21 — importar el cronograma desde Excel (.xlsx). Importar = OPERAR.
     path: 'proyectos/:id/cronograma/importar',
-    canActivate: [authGuard, pinGuard, moduleGuard('proyectos')],
+    canActivate: [authGuard, pinGuard, submoduleGuard('proyectos.cronograma', 'operar')],
     loadComponent: () =>
       import('./pages/proyectos/cronograma/cronograma-importar').then((m) => m.CronogramaImportarPage),
   },

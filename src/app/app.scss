@@ -102,3 +102,29 @@
   flex: 0 0 auto;
   font-size: 22px;
 }
+
+/* AY7 — banner de sesión de usuario de PRUEBA (ámbar para distinguirlo del de versión). */
+.test-user-banner {
+  position: sticky;
+  top: 0;
+  z-index: 499;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  padding-top: calc(8px + var(--safe-top));
+  background: #b45309;
+  color: #fff;
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.test-user-banner__icon {
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+.test-user-banner__txt {
+  font-size: 13px;
+}

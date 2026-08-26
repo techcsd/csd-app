@@ -54,5 +54,12 @@
       <span class="version-banner__chev">›</span>
     </button>
   }
+  @if (ctx.esPrueba() && !enAuth()) {
+    <!-- AY7: sesión de usuario de PRUEBA. Se comporta como su rol; esto solo avisa. -->
+    <div class="test-user-banner" role="status">
+      <span class="test-user-banner__icon">🧪</span>
+      <span class="test-user-banner__txt">USUARIO DE PRUEBA — esta sesión es solo para pruebas</span>
+    </div>
+  }
   <router-outlet />
 }

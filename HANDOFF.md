@@ -1,5 +1,39 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 26/08/2026 — PROMPT-14 ronda AY (app) — **build verde · SIN commit/push/release (esperando OK de Xaviel) · ⏳ device-QA + release pendientes**
+
+**Depende de PROMPT-13 (SGC), que YA está en prod** (commits `ff9170e` 1.97.0 + `d1b6889` 1.98.0 + `0544e52` 1.98.1; migraciones AY aplicadas; edges desplegadas). Esta sesión cableó el LADO APP de la ronda AY. **`npm run build` = verde** (solo warnings preexistentes: NG8102 personal-carnet/reporte-semanal, budget). **NO se tocó SGC. NO commit/push/release** (regla madre: avisar a Xaviel primero).
+
+**Hallazgo clave:** la app ya era la implementación de REFERENCIA de casi todo AY —
+- **FASE 1 (recepción canónica) = YA HECHA en la app.** El flujo `por-confirmar` (AJ8) hace **ver conduce + foto + firma como UNA sola op de outbox** (`tipo_op: conduce_confirmar` → RPC `conduce_confirmar_receptor`, que ya escribía `salida_firmas` receptor + `recepcion_confirmaciones` + entrada en obra). Foto obligatoria (solo-cámara AS15), firma obligatoria, botón "Ver conduce" antes de confirmar. El PDF ya incluye `recepcion_foto_url` + firma del receptor. AY2 en la WEB adoptó ESTE comportamiento (unificó `confirmar_recepcion_salida` para igualar a la app). Rutas muertas ya resueltas (AK8 depuró tiles, dejó rutas vivas para deep-links). **→ cero cambios de código en FASE 1; solo verificación/paridad.**
+- **FASE 2 (submódulos) — la app YA leía `roles.permisos` (jsonb) desde AG12** (`submoduleGuard`, `puedeVer/OperarSubmodulo`, hub Obra gateado tile por tile). AY5 (Logística veía submódulos de Ingeniería con 403) **no existe en la app**: el hub `/ingenieria` tiene UN solo tile (Solicitud de movimiento); los submódulos de producción viven bajo `/obra` (ya submódulo-gateado).
+
+### ✅ Cambios de esta sesión (build verde, sin commit)
+El rol unificado **Ingenieros** (`ingeniero_campo`) perdió los módulos `compras`/`proyectos` completos (ahora solo submódulos: `compras.solicitudes=operar`, `proyectos.obras/cronograma=ver`, `proyectos.personal=operar`). La app gateaba Requisición y Proyectos por `hasModulo('compras')`/`hasModulo('proyectos')` → **el ingeniero se quedaba fuera**. Fix:
+1. **`app.routes.ts`** — Requisición: `/solicitudes`, `/pedir`, `/mis`, `/requisicion/:id` → `submoduleGuard('compras.solicitudes')` (`pedir`='operar'). Bandeja (`/solicitudes/bandeja`) SIGUE en `moduleGuard('compras')` (aprobar = coordinador, no ingeniero). Proyectos: `/proyectos`, `/proyectos/:id` → `submoduleGuard('proyectos.obras')`; cronograma + avisos → `submoduleGuard('proyectos.cronograma')`; crear/editar/importar → mismos submódulos a nivel `'operar'` (el ingeniero ver-only no entra). Retrocompat: quien tiene el módulo padre pasa igual (módulo⇒operar en `nivelSubmodulo`).
+2. **`home.ts`** — nuevo `tileVisible()`: tiles Requisición y Proyectos por **módulo O submódulo** (obra ya era especial). Menú == guard (AU8/AY5).
+3. **`proyecto-detalle.ts/.html`** — `puedeVerCostos()` (admin || operar `proyectos.obras`); el renglón **Presupuesto** se oculta al ingeniero (ver). Espejo del `submoduloOperarGuard` web (AY4). La app NO muestra costos de producción de obra (`obra/avance` sin costos) → paridad con web 1.98.1 sin tocar nada.
+4. **`badges.service.ts`** — badge de avisos de cronograma incluye al ingeniero (`|| puedeVerSubmodulo('proyectos.cronograma')`).
+5. **AY7 banner "USUARIO DE PRUEBA"** — `es_prueba` añadido a `PROFILE_SELECT` + modelo `Usuario` + `ctx.esPrueba` (computed); banner ámbar en el shell (`app.html`/`app.ts`/`app.scss`), suprimido en `/auth`, patrón del version-banner. El usuario test se comporta 100% como su rol (login estándar con el email sintético `t-<n>@test…local`); el banner es la única diferencia visible app-side. La creación/eliminación/"entrar como" son admin-only en SGC (edges `admin-crear-usuario-test`/`admin-usuario-test-login`).
+
+### 📄 Entregable
+- **`AY8-AUDITORIA-E2E-INGENIEROS-APP.md`** (carpeta improvements) — tabla E2E app-side (17 funciones), para juntar con la web. Todo ✅ salvo #3 (estado de OC derivada, follow-up app) y #8 (verificar scoping de `proyectos_pickables`, backend/SGC).
+
+### 🔴 Pendiente — decisión / físico (Xaviel)
+- **Autorizar commit/push + release** (1.99.1 o 2.0.0). NO lo hice (regla). Al aprobar: bump `src/environments/*` + `android/app/build.gradle` + `VERSION` en `scripts/release-apk.mjs`; `npm run build` → `npm run apk` (registra Y1) → `npm run apk:publish`; publicar rolling (NO forzar mínima).
+- **Device-QA:** (AY1/AY2) recibir un conduce como ingeniero/capataz/chofer → ver conduce + foto + firma → confirmado (evidencia en detalle + PDF). (FASE 2) loguear un **Ingenieros** (usuario test AY7) → ve Requisición + Proyectos (sus obras, sin Presupuesto) + cronograma + personal; loguear **Logística** → no ve submódulos de Ingeniería con 403. (AY7) crear un usuario test en SGC → banner "USUARIO DE PRUEBA" en la app.
+
+### Follow-ups app (próxima tanda)
+- Consumir `mis_ordenes_de_compra` en "Mis solicitudes" (estado de la OC). Verificar `proyectos_pickables` scope (SGC). Evaluar módulo `documentos` en móvil.
+
+### ✅ Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0, "Output location"
+git status   # cambios AY sin commitear (app.routes/home/proyecto-detalle/badges/user-context/usuario.model/app.*)
+```
+
+---
+
 ## 🟢 SESIÓN 25/08/2026 — PROMPT-12 ronda AX (app+web) — **RELEASE 1.99.0 PUBLICADO (rolling) · 5 FASES + paridad web · build verde (2 repos) · TODO COMMITEADO/PUSHEADO · ⏳ device-QA pendiente**
 
 **SHIPPED — app (`csd-app`):** `6439782` (feat AX + 1.99.0) → `52b2622` (publish SQL + handoff) → `6f56068` (docs) → push `main` (PWA por Vercel). **APK 1.99.0** firmado (cert prod `3c5316d8…5065`) + registrado (Y1, 5 cambios curados) + subido al bucket (`csd-app-1.99.0.apk` + `latest` + `version.json` + `apk_url`). **`publicada=1.99.0`** (rolling, `sql/2026-08-25-publicar-1.99.0.sql`), **`minima=1.96.4` INTACTA**. Verificado: `version_publicada()` = 1.99.0 / mínima 1.96.4.

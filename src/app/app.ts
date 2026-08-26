@@ -28,6 +28,7 @@ import { ReporteSemanalService } from './core/services/reporte-semanal.service';
 import { NotificacionesService } from './core/services/notificaciones.service';
 import { DeviceInfoService } from './core/services/device-info.service';
 import { TrackingService } from './core/services/tracking.service';
+import { UserContextService } from './core/services/user-context.service';
 
 @Component({
   selector: 'app-root',
@@ -57,6 +58,8 @@ export class App {
   private notificaciones = inject(NotificacionesService);
   private deviceInfo = inject(DeviceInfoService);
   private tracking = inject(TrackingService);
+  /** AY7 — banner "USUARIO DE PRUEBA" en el shell (esPrueba del perfil). */
+  ctx = inject(UserContextService);
   private router = inject(Router);
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
   private trackingArrancado = false;
