@@ -12,9 +12,11 @@
 - **F3 («Otros» lugares):** `LugaresService.buscar()` (RPC `buscar_lugares`) + componente `shared/ui/lugar-picker` (emite `LugarSel {tipo,id,nombre,lat,lng,proyecto_id,bodega_id}`). Texto libre = sin coords → el server lo manda a "Lugares por registrar" (lo hace `crear_conduce_externo`). Usado en conduce externo (origen+destino).
 - **F2 (despachos):** migración aditiva (NO toca `crear_conduce_simple` — enlace por `despacho_marcar` post-creación). App: `ConduceSimpleCaptura.origenRequisicionId` → payload → handler `conduce_simple` llama `despacho_marcar`. Pantalla `despachos` (`requisicionesPorDespachar`) + tile condicional. `generar-conduce` retrofit contenido (guard por query `?requisicion`): precarga cart desde `requisicion_avance` (pendiente, editable), banner "CONDUCE (#REQ)", aviso duplicado. **No había límite de un-conduce-activo** (verificado) → conduces simultáneos ya funcionan.
 
+### ✅ Release publicado
+- **APK 2.1.0 (ronda AZ+BA)** firmado (cert prod `3c5316d8…5065`), registrado (Y1) y **publicado**: subido al bucket (`csd-app-2.1.0.apk` + `latest` + `version.json` + `apk_url`) y marcado **`publicada=true`** (rolling a todos). **Mínima 1.96.4 INTACTA** (no fuerza). `version_publicada('movil')` = 2.1.0. Commit `d6f5488`. **Rollback:** `update sgc.app_versiones set publicada=(version='2.0.2') where plataforma='movil';`
+
 ### 🔴 Pendiente — SOLO Xaviel
 - **Apagar el flag `requisicion_auto_conduce`** (parámetro en `sgc.parametros`) cuando quieras que la aprobación DEJE de generar conduce automático y el flujo de despacho de la app sea el vivo. Hasta entonces "Por despachar" sale vacío (tile oculto) — es a propósito.
-- **APK de la ronda** (AZ + BA juntas): `npm run apk` + `apk:publish`. Nada de esto le llega al chofer/capataz nativo hasta un APK nuevo (la PWA ya lo tiene por push).
 - **Device-QA:** conduce externo offline (crear proveedor al vuelo → fotos placa/carga → emitir → "viaje registrado"; caso carga no-inventario); caso «Otros»/"Bellón" en el selector; despacho en 2 viajes con renglones editados (tras apagar el flag); chips de Compa por rol iguales a la web.
 
 ### 💡 Follow-ups (Claude puede)
