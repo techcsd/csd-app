@@ -22,6 +22,7 @@
             <div class="pe-card__id">
               <span class="pe-nombre">
                 {{ p.nombre }} {{ p.apellido }}
+                @if (p.es_prueba) { <span class="pe-prueba">PRUEBA</span> }
                 @if (p.estado === 'inactivo') { <span class="pe-inact">Inactivo</span> }
               </span>
               <span class="pe-cargo">{{ cargoNombre(p.cargo_id) }}</span>

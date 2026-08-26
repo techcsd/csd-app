@@ -58,8 +58,27 @@ export class PersonalListaPage {
     return this.aseguramientos.find((a) => a.value === (p.aseguramiento_estado ?? 'desconocido'))?.icon ?? '⚪';
   }
 
-  /** Oculta datos de prueba salvo al admin (QA). */
-  private visibles = computed(() => this.personal().filter((p) => this.ctx.esAdmin() || !p.es_prueba));
+  /**
+   * AZ3 — ¿esta sesión puede ver registros de prueba? Admin (QA) o el PROPIO usuario
+   * de prueba (el capataz test vive en su obra test y debe ver su propio personal —
+   * si no, su lista sale "vacía" cuando en realidad está oculto). El banner AY7 ya
+   * avisa que la sesión es de prueba.
+   */
+  private verPrueba = computed(() => this.ctx.esAdmin() || this.ctx.esPrueba());
+  /** Oculta datos de prueba salvo a admin o a la propia sesión de prueba. */
+  private visibles = computed(() => this.personal().filter((p) => this.verPrueba() || !p.es_prueba));
+
+  /**
+   * AZ3 — vacío ≠ oculto ≠ error: cuántos registros EXISTEN pero están ocultos SOLO
+   * por el filtro de datos de prueba (para que el estado vacío diga la verdad).
+   */
+  ocultosPrueba = computed(() => (this.verPrueba() ? 0 : this.personal().filter((p) => p.es_prueba).length));
+  /** Causa del estado vacío (se evalúa cuando `filtrados()` está vacío). */
+  motivoVacio = computed<'filtros' | 'todos_prueba' | 'sin_datos'>(() => {
+    if (this.visibles().length > 0) return 'filtros'; // hay visibles, pero los filtros los excluyen
+    if (this.ocultosPrueba() > 0) return 'todos_prueba'; // todo lo que existe es de prueba y está oculto
+    return 'sin_datos';
+  });
 
   filtrados = computed(() => {
     const cargo = this.filCargo();

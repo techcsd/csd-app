@@ -76,6 +76,7 @@
               <!-- AV4 — semáforo de aseguramiento de un vistazo (verde/rojo/gris) -->
               <span class="pl-card__aseg" [title]="aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido']">{{ aseguramientoIcono(p) }}</span>
               {{ p.nombre }} {{ p.apellido }}
+              @if (p.es_prueba) { <span class="pl-card__prueba">PRUEBA</span> }
               @if (p.estado === 'inactivo') { <span class="pl-card__inact">Inactivo</span> }
             </span>
             <span class="pl-card__meta">
@@ -90,7 +91,18 @@
           <span class="pl-card__chev">›</span>
         </div>
       } @empty {
-        <app-empty-state icon="🧑‍🔧" title="Sin personal" message="No hay personal que coincida. Registra al primero con el botón +." />
+        <!-- AZ3 — vacío ≠ oculto ≠ error: el estado vacío dice la verdad. -->
+        @switch (motivoVacio()) {
+          @case ('filtros') {
+            <app-empty-state icon="🔍" title="Sin coincidencias" message="Ningún personal coincide con los filtros. Ajústalos o límpialos." />
+          }
+          @case ('todos_prueba') {
+            <app-empty-state icon="🧪" title="Solo hay personal de prueba" [message]="ocultosPrueba() + ' registro(s) de prueba están ocultos en la vista normal.'" />
+          }
+          @default {
+            <app-empty-state icon="🧑‍🔧" title="Aún no hay personal" message="Registra al primero con el botón +." />
+          }
+        }
       }
     }
   </div>
