@@ -1,0 +1,127 @@
+.lp {
+  display: block;
+}
+.lp__label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+// Lugar elegido
+.lp__chosen {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm, 12px);
+  background: #fff7ed;
+}
+.lp__chosen-ic { font-size: 20px; }
+.lp__chosen-txt { flex: 1; font-weight: 600; color: var(--color-text); }
+.lp__tag {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.lp__chosen-x {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+// Buscador
+.lp__search { position: relative; }
+.lp__spin {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+}
+.lp__err { color: var(--color-error); font-size: 13px; margin: 6px 2px 0; }
+.lp__empty { color: var(--color-text-secondary); font-size: 13px; margin: 8px 2px 0; }
+.lp__hint { color: var(--color-text-secondary); font-size: 12px; margin: 6px 2px 0; }
+
+// Resultados
+.lp__results {
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 12px);
+  overflow: hidden;
+}
+.lp__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border);
+}
+.lp__row:last-child { border-bottom: 0; }
+.lp__row:active { background: var(--color-bg); }
+.lp__row-ic { font-size: 18px; }
+.lp__row-main { flex: 1; display: flex; flex-direction: column; }
+.lp__row-name { font-weight: 600; color: var(--color-text); }
+.lp__row-det { font-size: 12px; color: var(--color-text-secondary); }
+.lp__row-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #121212;
+  background: var(--Hub, #ffb300);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+// Salidas (link / otros)
+.lp__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.lp__act {
+  flex: 1 1 auto;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.lp__act--on {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+  color: var(--color-primary-dark);
+}
+.lp__inline {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.lp__inline .field { flex: 1; }
+.lp__go {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  border-radius: var(--radius-sm, 12px);
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+.lp__go:disabled { opacity: 0.5; }

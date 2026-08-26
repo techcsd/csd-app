@@ -1,0 +1,101 @@
+<div class="screen">
+  <header class="ce-header">
+    <button type="button" class="ce-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="ce-header__icon">🚛</span>
+    <h1 class="ce-header__title">Conduce externo</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (exito(); as prov) {
+      <!-- Éxito -->
+      <div class="ce-exito">
+        <span class="ce-exito__ic">✅</span>
+        <h2 class="ce-exito__title">Viaje registrado a {{ prov }}</h2>
+        <p class="ce-exito__txt">El conduce externo se guardó. Si estás sin señal, se enviará solo al reconectar.</p>
+        <button type="button" class="btn-cta" (click)="nuevo()">Registrar otro</button>
+        <button type="button" class="btn-ghost" (click)="irAlHub()">Volver a Conduces</button>
+      </div>
+    } @else {
+      <p class="ce-intro">Para cuando un <b>proveedor</b> transporta con su camión. Foto de placa obligatoria.</p>
+
+      <!-- 1. Transporta -->
+      <section class="ce-sec">
+        <h2 class="ce-sec__title">¿Quién transporta?</h2>
+        @if (proveedorSel(); as prov) {
+          <div class="ce-chosen">
+            <span class="ce-chosen__ic">🚚</span>
+            <span class="ce-chosen__txt">
+              {{ prov.nombre }}
+              @if (prov.texto) { <span class="ce-tag">sin registrar</span> }
+            </span>
+            <button type="button" class="ce-chosen__x" (click)="quitarProveedor()" aria-label="Cambiar">✕</button>
+          </div>
+        } @else {
+          <input class="field" type="search" [ngModel]="busquedaProv()" (ngModelChange)="busquedaProv.set($event)"
+            placeholder="Buscar proveedor…" aria-label="Buscar proveedor" />
+          @if (proveedoresFiltrados().length) {
+            <div class="ce-provlist">
+              @for (p of proveedoresFiltrados(); track p.id) {
+                <button type="button" class="ce-provrow" (click)="elegirProveedor(p)">
+                  <span class="ce-provrow__name">{{ p.nombre }}</span>
+                  @if (p.estado === 'sin_ratificar') { <span class="ce-tag">por ratificar</span> }
+                </button>
+              }
+            </div>
+          }
+          <button type="button" class="ce-otro-btn" [class.ce-otro-btn--on]="modoOtroProv()" (click)="abrirOtroProv()">➕ Otro proveedor</button>
+          @if (modoOtroProv()) {
+            <div class="ce-otro">
+              <input class="field" type="text" [ngModel]="nombreOtro()" (ngModelChange)="nombreOtro.set($event)"
+                placeholder="Nombre del proveedor" aria-label="Nombre del proveedor" />
+              <input class="field" type="tel" [ngModel]="telOtro()" (ngModelChange)="telOtro.set($event)"
+                placeholder="Teléfono (opcional)" aria-label="Teléfono" />
+              <div class="ce-otro__acts">
+                <button type="button" class="btn-cta ce-otro__save" [disabled]="!nombreOtro().trim() || creandoProv()" (click)="crearProveedor()">
+                  {{ creandoProv() ? 'Registrando…' : 'Registrar proveedor' }}
+                </button>
+                <button type="button" class="btn-ghost" [disabled]="!nombreOtro().trim()" (click)="usarOtroTexto()">Usar sin registrar</button>
+              </div>
+            </div>
+          }
+        }
+      </section>
+
+      <!-- 2. Fotos -->
+      <section class="ce-sec">
+        <h2 class="ce-sec__title">Fotos del camión</h2>
+        <div class="ce-fotos">
+          <app-photo-slot label="Placa *" hint="🚙" [gallery]="false"
+            [foto]="placaFoto()" (captured)="placaFoto.set($event)" (cleared)="placaFoto.set(null)" />
+          <app-photo-slot label="Carga" hint="📦" [gallery]="false"
+            [foto]="cargaFoto()" (captured)="cargaFoto.set($event)" (cleared)="cargaFoto.set(null)" />
+        </div>
+        <p class="ce-hint">La placa es obligatoria. La carga puede ir en la misma foto si se ve.</p>
+      </section>
+
+      <!-- 3. Material -->
+      <section class="ce-sec">
+        <h2 class="ce-sec__title">¿Qué mueve?</h2>
+        <input class="field" type="text" [ngModel]="materialDesc()" (ngModelChange)="materialDesc.set($event)"
+          placeholder="Ej: mueble, nevera, varillas…" aria-label="Qué mueve" />
+        <p class="ce-hint">Descripción libre. No afecta el inventario.</p>
+      </section>
+
+      <!-- 4. Origen → destino -->
+      <section class="ce-sec">
+        <h2 class="ce-sec__title">Origen y destino</h2>
+        <app-lugar-picker label="Origen" placeholder="¿De dónde sale?" (picked)="onOrigen($event)" />
+        <div class="ce-arrow" aria-hidden="true">↓</div>
+        <app-lugar-picker label="Destino" placeholder="¿A dónde va?" (picked)="onDestino($event)" />
+      </section>
+
+      @if (error()) { <p class="ce-err">{{ error() }}</p> }
+
+      <button type="button" class="btn-cta ce-emitir" [disabled]="!puedeEmitir()" (click)="emitir()">
+        {{ guardando() ? 'Emitiendo…' : 'Emitir conduce externo' }}
+      </button>
+    }
+  </div>
+
+  <app-sync-bar />
+</div>

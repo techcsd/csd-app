@@ -122,6 +122,43 @@ export interface ConduceSimpleCaptura {
   receptorNombre?: string | null;
 }
 
+/** BA/Transporte v3 — proveedor de transportación (catálogo + alta al vuelo). */
+export interface ProveedorTransporte {
+  id: string;
+  nombre: string;
+  telefono: string | null;
+  estado: string; // 'sin_ratificar' | 'ratificado'
+  es_prueba: boolean;
+  viajes_total?: number;
+  viajes_pendientes_pago?: number;
+}
+
+/** BA/Transporte v3 — una parte (origen/destino) del conduce externo, ya normalizada. */
+export interface ConduceExternoLugar {
+  nombre: string | null;
+  lat: number | null;
+  lng: number | null;
+  proyecto_id: string | null;
+  bodega_id: string | null;
+}
+
+/** BA/Transporte v3 (FASE 1) — captura del conduce externo (proveedor transporta). */
+export interface ConduceExternoCaptura {
+  transportaProveedorId: string | null;
+  transportaTexto: string | null;
+  /** Foto de la placa del camión — OBLIGATORIA. */
+  placaFoto: Blob;
+  /** Foto de la carga (opcional; puede ir en la misma toma de la placa). */
+  cargaFoto: Blob | null;
+  materialDescripcion: string | null;
+  /** Items del catálogo (afectan inventario si tocan un almacén nuestro); null si carga libre. */
+  items: { articulo_id: string; cantidad: number }[] | null;
+  origen: ConduceExternoLugar | null;
+  destino: ConduceExternoLugar | null;
+  /** BA/FASE 2 — despacho de una requisición vía conduce externo (opcional). */
+  origenRequisicionId?: string | null;
+}
+
 /**
  * AM1 — devolución a suplidor ("devolver a ferretería"): el ORIGEN (bodega) es
  * obligatorio y nombrado — sin destino de obra/almacén. Cierra el bug del
@@ -1201,6 +1238,76 @@ export class ConducesService {
     return id; // AO4 — id (idempotente) para deep-link al detalle tras emitir.
   }
 
+  // ── BA/Transporte v3 (FASE 1) — Conduce externo + proveedores ──────────────
+
+  /** Catálogo de proveedores de transportación (cache-then-network, offline-safe). */
+  async proveedoresTransporte(): Promise<ProveedorTransporte[]> {
+    const data = await this.catalog.refresh<ProveedorTransporte[]>('proveedores_transporte', async () => {
+      const { data: rows, error } = await this.supabase.client.rpc('proveedores_transporte_listado', {
+        p_solo_por_ratificar: false,
+      });
+      if (error) throw new Error(error.message);
+      return (rows as ProveedorTransporte[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** Alta al vuelo de un proveedor (nace "sin ratificar"; usable de inmediato). Online. */
+  async crearProveedorTransporte(nombre: string, telefono?: string | null): Promise<string> {
+    const { data, error } = await this.supabase.client.rpc('proveedor_transporte_crear', {
+      p_nombre: nombre.trim(),
+      p_telefono: telefono?.trim() || null,
+      p_contacto: null,
+      p_rnc: null,
+      p_notas: null,
+    });
+    if (error) throw new Error(error.message);
+    void this.catalog.invalidate('proveedores_transporte').catch(() => {});
+    return data as string;
+  }
+
+  /**
+   * BA/FASE 1 — crea un conduce externo (un proveedor transporta). Offline-safe vía
+   * outbox: sube la(s) foto(s) de placa/carga y llama a `crear_conduce_externo`. El
+   * viaje al proveedor y la bandeja de «Otros» los registra el servidor al emitir.
+   */
+  async crearConduceExterno(input: ConduceExternoCaptura): Promise<string> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [
+      { id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-placa.jpg`, slot: 'placa', blob: input.placaFoto },
+    ];
+    if (input.cargaFoto) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${id}/${id}-carga.jpg`, slot: 'carga', blob: input.cargaFoto });
+    }
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'conduce_externo',
+      capturado_en,
+      payload: {
+        id,
+        transporta_proveedor_id: input.transportaProveedorId ?? null,
+        transporta_texto: input.transportaTexto ?? null,
+        material_descripcion: input.materialDescripcion ?? null,
+        items: input.items ?? null,
+        origen: input.origen?.nombre ?? null,
+        origen_lat: input.origen?.lat ?? null,
+        origen_lng: input.origen?.lng ?? null,
+        origen_proyecto_id: input.origen?.proyecto_id ?? null,
+        origen_bodega_id: input.origen?.bodega_id ?? null,
+        destino: input.destino?.nombre ?? null,
+        destino_lat: input.destino?.lat ?? null,
+        destino_lng: input.destino?.lng ?? null,
+        destino_proyecto_id: input.destino?.proyecto_id ?? null,
+        destino_bodega_id: input.destino?.bodega_id ?? null,
+        origen_requisicion_id: input.origenRequisicionId ?? null,
+      },
+      fotos,
+      resumen: { transporta: input.transportaTexto ?? 'proveedor', capturado_en },
+    });
+    return id;
+  }
+
   /**
    * AQ10 — Eliminar (anular) un conduce creado por error. Soft-delete server-side
    * vía `anular_conduce`: repone el stock si descontó del origen y cancela la ruta
@@ -2062,6 +2169,35 @@ export class ConducesService {
       await this.catalog.invalidatePrefix('existencias_');
       // QA-6 — el conduce ya existe en el servidor → refresca "Pendiente entrega".
       await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    });
+
+    // BA/Transporte v3 (FASE 1) — conduce externo (un proveedor transporta). El
+    // servidor registra el viaje al proveedor y la bandeja de «Otros» al emitir.
+    this.sync.register('conduce_externo', async (payload, photoPaths) => {
+      if (!photoPaths['placa']) {
+        throwSyncError(new Error('Falta la foto de la placa del camión.'));
+      }
+      const { error } = await this.supabase.client.rpc('crear_conduce_externo', {
+        p_transporta_proveedor_id: payload['transporta_proveedor_id'] ?? null,
+        p_transporta_texto: payload['transporta_texto'] ?? null,
+        p_placa_foto_path: photoPaths['placa'],
+        p_carga_foto_path: photoPaths['carga'] ?? null,
+        p_material_descripcion: payload['material_descripcion'] ?? null,
+        p_items: payload['items'] ?? null,
+        p_origen: payload['origen'] ?? null,
+        p_origen_lat: payload['origen_lat'] ?? null,
+        p_origen_lng: payload['origen_lng'] ?? null,
+        p_origen_proyecto_id: payload['origen_proyecto_id'] ?? null,
+        p_origen_bodega_id: payload['origen_bodega_id'] ?? null,
+        p_destino: payload['destino'] ?? null,
+        p_destino_lat: payload['destino_lat'] ?? null,
+        p_destino_lng: payload['destino_lng'] ?? null,
+        p_destino_proyecto_id: payload['destino_proyecto_id'] ?? null,
+        p_destino_bodega_id: payload['destino_bodega_id'] ?? null,
+        p_emisor_firma_path: null,
+        p_origen_requisicion_id: payload['origen_requisicion_id'] ?? null,
+      });
+      if (error) throwSyncError(error);
     });
 
     // AM1 — devolución a suplidor: RPC dedicada con ORIGEN obligatorio (blinda el

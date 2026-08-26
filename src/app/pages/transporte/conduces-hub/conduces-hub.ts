@@ -26,6 +26,8 @@ interface ConduceTile {
 // viejas (solo se quitan del menú). AK1 — se añade "Confirmaciones" (historial).
 const TILES: ConduceTile[] = [
   { key: 'crear', icon: '📦', label: '+ Crear conduce', tint: '#7c3aed', route: '/transporte/generar-conduce' },
+  // BA/Transporte v3 (FASE 1) — conduce a tercero (un proveedor transporta).
+  { key: 'externo', icon: '🚛', label: 'Conduce externo', tint: '#c2410c', route: '/transporte/conduce-externo' },
   { key: 'pendienteEntrega', icon: '🚚', label: 'Pendiente entrega', tint: '#ea580c', route: '/transporte/conduces-pendientes' },
   { key: 'porConfirmar', icon: '📥', label: 'Por confirmar', tint: '#0f766e', route: '/transporte/por-confirmar' },
   { key: 'confirmaciones', icon: '✅', label: 'Confirmaciones', tint: '#0d9488', route: '/transporte/confirmaciones' },

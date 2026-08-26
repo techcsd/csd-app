@@ -264,6 +264,14 @@ export const routes: Routes = [
       import('./pages/transporte/generar-conduce/generar-conduce').then((m) => m.GenerarConducePage),
   },
   {
+    // BA/Transporte v3 (FASE 1) — conduce externo (un proveedor transporta). El
+    // servidor exige puede_crear_conduce (admin/inventario/chofer) — defensa en capa.
+    path: 'transporte/conduce-externo',
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    loadComponent: () =>
+      import('./pages/transporte/conduce-externo/conduce-externo').then((m) => m.ConduceExternoPage),
+  },
+  {
     // AE — devolver material (obra→almacén) con doble firma.
     path: 'transporte/devolver-material',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

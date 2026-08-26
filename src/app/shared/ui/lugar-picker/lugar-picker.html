@@ -1,0 +1,69 @@
+<div class="lp">
+  <label class="lp__label">{{ label() }}</label>
+
+  @if (seleccionado(); as sel) {
+    <!-- Lugar elegido -->
+    <div class="lp__chosen">
+      <span class="lp__chosen-ic">{{ icono(sel.tipo) }}</span>
+      <span class="lp__chosen-txt">
+        {{ sel.nombre }}
+        @if (sel.tipo === 'texto') { <span class="lp__tag">Sin mapa</span> }
+      </span>
+      <button type="button" class="lp__chosen-x" (click)="limpiar()" aria-label="Cambiar lugar">✕</button>
+    </div>
+  } @else {
+    <!-- Buscador -->
+    <div class="lp__search">
+      <input class="field" type="search" [ngModel]="q()" (ngModelChange)="onBuscar($event)"
+        [placeholder]="placeholder()" [attr.aria-label]="label()" />
+      @if (buscando()) { <span class="lp__spin" aria-hidden="true">…</span> }
+    </div>
+
+    @if (errorBusqueda()) { <p class="lp__err">{{ errorBusqueda() }}</p> }
+
+    <!-- Resultados -->
+    @if (resultados().length) {
+      <div class="lp__results">
+        @for (r of resultados(); track $index) {
+          <button type="button" class="lp__row" (click)="elegir(r)">
+            <span class="lp__row-ic">{{ icono(r.tipo) }}</span>
+            <span class="lp__row-main">
+              <span class="lp__row-name">{{ r.nombre }}</span>
+              @if (r.detalle) { <span class="lp__row-det">{{ r.detalle }}</span> }
+            </span>
+            @if (r.origen === 'sistema') { <span class="lp__row-badge">Registrado</span> }
+          </button>
+        }
+      </div>
+    } @else if (hayTexto() && !buscando()) {
+      <p class="lp__empty">Sin coincidencias. Pega un link de Google Maps o usa «Otros».</p>
+    }
+
+    <!-- Salidas: link de Google Maps + «Otros» (nunca trancado) -->
+    <div class="lp__actions">
+      <button type="button" class="lp__act" [class.lp__act--on]="modoLink()" (click)="abrirLink()">🔗 Link de Google Maps</button>
+      <button type="button" class="lp__act" [class.lp__act--on]="modoOtros()" (click)="abrirOtros()">➕ Otros</button>
+    </div>
+
+    @if (modoLink()) {
+      <div class="lp__inline">
+        <input class="field" type="url" [ngModel]="link()" (ngModelChange)="link.set($event)"
+          placeholder="Pega el link de Google Maps" aria-label="Link de Google Maps"
+          (keyup.enter)="resolverLink()" />
+        <button type="button" class="lp__go" [disabled]="resolviendoLink() || !link().trim()" (click)="resolverLink()">
+          {{ resolviendoLink() ? '…' : 'Usar' }}
+        </button>
+      </div>
+      @if (errorLink()) { <p class="lp__err">{{ errorLink() }}</p> }
+    }
+
+    @if (modoOtros()) {
+      <div class="lp__inline">
+        <input class="field" type="text" [ngModel]="otroTexto()" (ngModelChange)="otroTexto.set($event)"
+          placeholder="Escribe el lugar (ej: Bellón)" aria-label="Otro lugar" (keyup.enter)="confirmarOtros()" />
+        <button type="button" class="lp__go" [disabled]="!otroTexto().trim()" (click)="confirmarOtros()">Usar</button>
+      </div>
+      <p class="lp__hint">Se registrará el nombre tal cual; sin mapa/ETA. Raykler lo agregará al catálogo.</p>
+    }
+  }
+</div>
