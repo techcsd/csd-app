@@ -1,5 +1,27 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 28/08/2026 — PROMPT-18 ronda BA (app) — Transporte v3 — **F1+F2+F3+F4 COMPLETAS · commiteadas y pusheadas · migración F2 aplicada a prod · builds verdes · ⏳ APK + device-QA + apagar flag auto-conduce**
+
+**TL;DR:** Transporte v3 en la app, apoyado en PROMPT-17 (SGC web 1.100.0 + migraciones BA ya en prod). **F4** chips de Compa por rol (RPC `compa_sugerencias`). **F1** conduce externo (nuevo submódulo: proveedor con alta al vuelo/«Otro», foto de placa obligatoria + carga, material libre, origen→destino, outbox→`crear_conduce_externo`). **F3** selector de lugar compartido `lugar-picker` (buscador `buscar_lugares` + link Maps AU16 + «Otros» libre; nunca trancado). **F2** despachos: nueva migración aditiva (`despacho_marcar`, `requisiciones_por_despachar`, `requisicion_tiene_despachos`, **aplicada a prod**) + pantalla "Por despachar" + deep-link a generar-conduce que precarga renglones editables, rótulo "CONDUCE (#REQ)" y aviso suave de duplicado, y enlaza al emitir. Todo commiteado+pusheado.
+
+**Commits app:** `a12fd45` (F4) · `9086781` (F1+F3) · `84d7140` (F2). **Commit SGC:** `8705b7b` (migración F2 `sql/2026-08-28-ba-fase2-despacho-app.sql`).
+
+### ✅ Hecho por fase
+- **F4 (BA3):** `compa.service.sugerencias()` → RPC `compa_sugerencias`; `compa.ts/html` pinta chips + saludo + subtítulo por persona (chofer/ingeniero/logística/admin/default), fallback estático offline. Misma fuente que la web (`sgc.compa_chips`).
+- **F1 (conduce externo):** tile "Conduce externo" en `conduces-hub` + ruta `/transporte/conduce-externo` (guard `moduleAnyGuard(['flota','inventario'])`, el server exige `puede_crear_conduce`). Página `conduce-externo` (form corto). Servicio: `proveedoresTransporte()` (cache), `crearProveedorTransporte()` (alta al vuelo online; offline cae a «texto»), `crearConduceExterno()` → outbox `tipo_op:'conduce_externo'` → RPC `crear_conduce_externo` (fotos placa/carga por paths). Handler registrado dentro de `ConducesService` (ya eager-booted).
+- **F3 («Otros» lugares):** `LugaresService.buscar()` (RPC `buscar_lugares`) + componente `shared/ui/lugar-picker` (emite `LugarSel {tipo,id,nombre,lat,lng,proyecto_id,bodega_id}`). Texto libre = sin coords → el server lo manda a "Lugares por registrar" (lo hace `crear_conduce_externo`). Usado en conduce externo (origen+destino).
+- **F2 (despachos):** migración aditiva (NO toca `crear_conduce_simple` — enlace por `despacho_marcar` post-creación). App: `ConduceSimpleCaptura.origenRequisicionId` → payload → handler `conduce_simple` llama `despacho_marcar`. Pantalla `despachos` (`requisicionesPorDespachar`) + tile condicional. `generar-conduce` retrofit contenido (guard por query `?requisicion`): precarga cart desde `requisicion_avance` (pendiente, editable), banner "CONDUCE (#REQ)", aviso duplicado. **No había límite de un-conduce-activo** (verificado) → conduces simultáneos ya funcionan.
+
+### 🔴 Pendiente — SOLO Xaviel
+- **Apagar el flag `requisicion_auto_conduce`** (parámetro en `sgc.parametros`) cuando quieras que la aprobación DEJE de generar conduce automático y el flujo de despacho de la app sea el vivo. Hasta entonces "Por despachar" sale vacío (tile oculto) — es a propósito.
+- **APK de la ronda** (AZ + BA juntas): `npm run apk` + `apk:publish`. Nada de esto le llega al chofer/capataz nativo hasta un APK nuevo (la PWA ya lo tiene por push).
+- **Device-QA:** conduce externo offline (crear proveedor al vuelo → fotos placa/carga → emitir → "viaje registrado"; caso carga no-inventario); caso «Otros»/"Bellón" en el selector; despacho en 2 viajes con renglones editados (tras apagar el flag); chips de Compa por rol iguales a la web.
+
+### 💡 Follow-ups (Claude puede)
+- **Conduce externo — items del catálogo:** hoy solo descripción libre (cubre el caso mueble/nevera). Falta el picker de artículos para el caso con impacto de inventario (origen/destino almacén). El backend `crear_conduce_externo` ya acepta `p_items`.
+- **F3 en crear-ruta:** el `lugar-picker` está en conduce externo; falta cablearlo también en crear-ruta (el spec lo menciona; hoy crear-ruta usa LocationPicker + destinos_transporte).
+- **Badge PRUEBA** en pickers de usuario (marginal, AZ7 follow-up).
+
 ## 🟢 SESIÓN 26/08/2026 (tarde) — PROMPT-16 ronda AZ (app) — **FASES 1+2+3 COMPLETAS · commiteadas y pusheadas (app `fadc2a7`+`75dd0ba`; SGC `36fd02b`) · edge + migración en prod · builds verdes · ⏳ 1 secret de Xaviel + device-QA**
 
 **TL;DR:** PROMPT-16 completo. **AZ5 (F1)**: el mic de Compa daba "No pudimos transcribir" porque el cliente le pegaba a la edge equivocada; arreglado con una edge síncrona nueva `transcribe-now` + causas diferenciadas (desplegada; falta solo la `STT_API_KEY`). **AZ6 (F2)**: "Otros" en el 2º nivel de la bitácora (actividades), app + web + trigger que alimenta `/admin/otros-valores` (migración en prod). **F3 (paridad AZ, tras correr PROMPT-15)**: AZ3 personal/capataz test visible (era ocultamiento client-side de `es_prueba`) con estado vacío honesto + AZ7 badge PRUEBA en personal; AZ1 N/A (la app no muestra contratos); AZ11 heredado. Todo commiteado y pusheado; deploy/migración en prod con tu OK.
