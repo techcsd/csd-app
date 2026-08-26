@@ -16,12 +16,15 @@ import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CompaMensaje, Propuesta } from '../../core/models/compa.model';
 
-/** Sugerencias iniciales (chips) cuando el hilo está vacío. */
+/** Sugerencias iniciales (chips) por defecto — fallback si la RPC por rol falla. */
 const SUGERENCIAS = [
   '¿Qué tareas tengo?',
   '¿Tengo conduces por firmar?',
   'Créame una tarea en mi obra',
 ];
+/** Saludo/subtítulo por defecto (fallback del intro por rol, BA3). */
+const SALUDO_DEFAULT = 'Hola, soy Compa';
+const SUBTITULO_DEFAULT = 'Pregúntame por tus tareas, conduces, firmas o pídeme que registre algo por ti.';
 
 /**
  * FASE 4 "Compa" — chat con el asistente de IA. Reutiliza la edge `assistant`
@@ -63,7 +66,10 @@ export class CompaPage {
   /** true mientras se ejecuta la propuesta confirmada. */
   ejecutando = signal(false);
 
-  readonly sugerencias = SUGERENCIAS;
+  /** BA3 — chips + saludo/subtítulo por rol (RPC compa_sugerencias); fallback estático. */
+  sugerencias = signal<string[]>(SUGERENCIAS);
+  saludo = signal(SALUDO_DEFAULT);
+  subtitulo = signal(SUBTITULO_DEFAULT);
 
   /** conversacion_id devuelto por el primer turno; se reenvía en los siguientes. */
   private conversacionId: string | null = null;
@@ -72,6 +78,20 @@ export class CompaPage {
 
   get online(): boolean {
     return this.net.online();
+  }
+
+  constructor() {
+    void this.cargarSugerencias();
+  }
+
+  /** BA3 — carga los chips/saludo por rol (una fuente para web y app). Best-effort. */
+  private async cargarSugerencias(): Promise<void> {
+    if (!this.online) return; // el fallback estático ya cubre el offline
+    const s = await this.compa.sugerencias();
+    if (!s) return;
+    this.sugerencias.set(s.chips);
+    if (s.saludo) this.saludo.set(s.saludo);
+    if (s.subtitulo) this.subtitulo.set(s.subtitulo);
   }
 
   /** Envía el texto del composer. */

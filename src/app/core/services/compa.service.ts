@@ -120,6 +120,28 @@ export class CompaService {
     }
   }
 
+  /**
+   * BA3 — chips + saludo/subtítulo de Compa POR ROL (fuente única web+app+edge:
+   * RPC `compa_sugerencias`, que resuelve la persona del usuario del JWT). Best-effort:
+   * devuelve null si falla y el llamador cae a sus valores por defecto.
+   */
+  async sugerencias(): Promise<{ chips: string[]; saludo: string; subtitulo: string } | null> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('compa_sugerencias');
+      if (error || !Array.isArray(data) || data.length === 0) return null;
+      const rows = data as { texto: string; saludo: string | null; subtitulo: string | null }[];
+      const chips = rows.map((r) => r.texto).filter((t): t is string => !!t && !!t.trim());
+      if (!chips.length) return null;
+      return {
+        chips,
+        saludo: rows[0]?.saludo?.trim() || '',
+        subtitulo: rows[0]?.subtitulo?.trim() || '',
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // ── Manejo de errores de edge (patrón de geocoding.service) ─────────────────
 
   /** Convierte un error de edge en una CompaRespuesta sintética (burbuja amable). */

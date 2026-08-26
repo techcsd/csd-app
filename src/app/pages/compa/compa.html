@@ -15,12 +15,10 @@
       <!-- Estado inicial: presentación + sugerencias -->
       <div class="compa__intro">
         <span class="compa__intro-emoji" aria-hidden="true">🤖</span>
-        <h2 class="compa__intro-title">Hola, soy Compa</h2>
-        <p class="compa__intro-text">
-          Pregúntame por tus tareas, conduces, firmas o pídeme que registre algo por ti.
-        </p>
+        <h2 class="compa__intro-title">{{ saludo() }}</h2>
+        <p class="compa__intro-text">{{ subtitulo() }}</p>
         <div class="compa__chips">
-          @for (s of sugerencias; track s) {
+          @for (s of sugerencias(); track s) {
             <button type="button" class="compa__chip" [disabled]="enviando()" (click)="usarSugerencia(s)">
               {{ s }}
             </button>
