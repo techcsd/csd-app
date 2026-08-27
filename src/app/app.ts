@@ -29,6 +29,7 @@ import { NotificacionesService } from './core/services/notificaciones.service';
 import { DeviceInfoService } from './core/services/device-info.service';
 import { TrackingService } from './core/services/tracking.service';
 import { UserContextService } from './core/services/user-context.service';
+import { ImpersonationService } from './core/services/impersonation.service';
 
 @Component({
   selector: 'app-root',
@@ -60,11 +61,14 @@ export class App {
   private tracking = inject(TrackingService);
   /** AY7 — banner "USUARIO DE PRUEBA" en el shell (esPrueba del perfil). */
   ctx = inject(UserContextService);
+  /** BB — "Entrar como": banner "Estás viendo como X" + salir. */
+  imp = inject(ImpersonationService);
   private router = inject(Router);
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
   private trackingArrancado = false;
 
   constructor() {
+    void this.imp.init(); // BB — rehidrata "entrar como" + auto-salida al vencer (1h)
     void this.catalog.persistStorage();
     this.updates.init();
     this.autoLock.init();
@@ -83,6 +87,7 @@ export class App {
         void this.syncAlarmaNativa();
         void this.notificaciones.iniciarRealtime(); // AM4 — reasegura el canal tras dormir
         void this.tracking.evaluarModoContinuo(); // AS1 — re-arma el tracking continuo
+        this.imp.checkExpiracion(); // BB — sal de "entrar como" si venció el tope de 1h
       });
     }
     void this.notificaciones.iniciarRealtime(); // AM4 — realtime de avisos (idempotente)
@@ -231,6 +236,12 @@ export class App {
   /** APP-046 — no mostrar el banner de versión sobre login/PIN. */
   enAuth(): boolean {
     return this.router.url.startsWith('/auth');
+  }
+
+  /** BB — vuelve a mi usuario (admin) y regresa al home. */
+  async salirImpersonacion(): Promise<void> {
+    await this.imp.salir();
+    await this.router.navigate(['/home']);
   }
 
   irActualizar(): void {

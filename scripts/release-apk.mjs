@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.2.0';
+const VERSION = '2.3.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,16 +62,13 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-08-29';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Hora en las echadas · Compa no pierde lo que escribes · historiales con «Cargar más»';
+const TITULO = 'Admin: «Entrar como» un usuario desde el móvil (para reproducir sus problemas)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Combustible', d: 'Las echadas ahora muestran la fecha y la HORA (no solo el día) en el registro, el listado y la confirmación.' },
-  { t: 'arreglo', m: 'Combustible', d: 'Una echada tomada sin señal conserva la hora REAL en que la registraste, aunque suba más tarde al tener conexión.' },
-  { t: 'arreglo', m: 'Compa', d: 'Ya no se pierde lo que escribes: puedes seguir tecleando mientras Compa responde (enviar se activa al terminar) y tu borrador queda guardado si sales y vuelves.' },
-  { t: 'mejora', m: 'Compa', d: 'Cada mensaje muestra su hora y, tras enviar, el cursor queda listo para seguir escribiendo.' },
-  { t: 'mejora', m: 'Mi actividad', d: 'Los historiales largos (rutas, echadas, inspecciones, notas…) cargan por partes con «Cargar más» — abren más rápido y gastan menos datos.' },
+  { t: 'nuevo', m: 'Administración', d: 'Los administradores pueden «Entrar como» un usuario desde el móvil (Usuarios → abrir el usuario → «Entrar como»), igual que en la web, para reproducir sus problemas de primera mano. Un banner arriba avisa a quién estás viendo y te deja volver a tu cuenta al instante.' },
+  { t: 'seguridad', m: 'Administración', d: '«Entrar como» es solo para administradores, no funciona con otros administradores ni contigo mismo, nunca cambia la contraseña del usuario, y queda registrado en la auditoría (inicio y fin). Se sale solo tras 1 hora.' },
 ];
 
 const TIPO_POR_COMMIT = {

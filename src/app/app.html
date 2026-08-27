@@ -54,11 +54,21 @@
       <span class="version-banner__chev">›</span>
     </button>
   }
-  @if (ctx.esPrueba() && !enAuth()) {
+  @if (ctx.esPrueba() && !imp.activo() && !enAuth()) {
     <!-- AY7: sesión de usuario de PRUEBA. Se comporta como su rol; esto solo avisa. -->
     <div class="test-user-banner" role="status">
       <span class="test-user-banner__icon">🧪</span>
       <span class="test-user-banner__txt">USUARIO DE PRUEBA — esta sesión es solo para pruebas</span>
+    </div>
+  }
+  @if (imp.activo() && !enAuth()) {
+    <!-- BB "Entrar como": ves la app como otro usuario. Toca "Salir" para volver a tu cuenta. -->
+    <div class="imp-banner" role="status">
+      <span class="imp-banner__icon">👁️</span>
+      <span class="imp-banner__txt">
+        Estás viendo como <b>{{ imp.targetNombre() }}</b>@if (ctx.esPrueba()) { <span class="imp-banner__prueba">🧪 prueba</span> }
+      </span>
+      <button type="button" class="imp-banner__salir" (click)="salirImpersonacion()">Salir</button>
     </div>
   }
   <router-outlet />

@@ -34,7 +34,7 @@
         <div class="ausr-card" [class.ausr-card--off]="!u.activo">
           <button type="button" class="ausr-card__row" (click)="abrir(u)">
             <div class="ausr-card__info">
-              <span class="ausr-card__nombre">{{ u.nombre }} @if (!u.activo) { <em class="ausr-card__off">Inactivo</em> } @if (u.pendiente) { <em class="ausr-card__pend">Invitación pendiente</em> }</span>
+              <span class="ausr-card__nombre">{{ u.nombre }} @if (!u.activo) { <em class="ausr-card__off">Inactivo</em> } @if (u.pendiente) { <em class="ausr-card__pend">Invitación pendiente</em> } @if (u.es_prueba) { <em class="ausr-card__prueba">🧪 Prueba</em> }</span>
               <span class="ausr-card__email">{{ u.email || '—' }}</span>
               <span class="ausr-card__roles">{{ rolesLabel(u) }}</span>
             </div>
@@ -61,6 +61,11 @@
               </button>
 
               <div class="ausr__acciones">
+                @if (puedeEntrarComo(u)) {
+                  <button type="button" class="btn-ghost ausr__entrar" [disabled]="entrandoComoId() === u.id" (click)="pedirEntrarComo(u)">
+                    {{ entrandoComoId() === u.id ? 'Entrando…' : '👁️ Entrar como este usuario' }}
+                  </button>
+                }
                 <button type="button" class="btn-ghost" (click)="pedirReset(u)">🔑 Restablecer contraseña</button>
                 @if (u.pendiente) {
                   <button type="button" class="btn-ghost" (click)="reenviar(u)">✉️ Reenviar invitación</button>

@@ -1,5 +1,31 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 29/08/2026 (tarde) — «Entrar como» en el móvil (app 2.3.0) — **COMPLETO · build verde · commit+push+APK publicado (rolling) · verificado end-to-end · ⏳ device-QA**
+
+**TL;DR:** un admin ya puede **«Entrar como» otro usuario desde el app** (paridad con la web AZ10), justo para reproducir de primera mano la falla de un usuario (p.ej. Manolo Durán) y probar los usuarios de prueba. **Reusa los edges de prod** `admin-entrar-como` + `admin-fin-impersonacion` (admin-gateados, auditados, no tocan la contraseña del target). **Sin backend nuevo.**
+
+### ✅ Cómo funciona (app)
+- **Servicio nuevo** `core/services/impersonation.service.ts`: `entrarComo(id)` → `getSession()` (guarda tokens admin) → invoke `admin-entrar-como` → `verifyOtp({token_hash, type:'magiclink'})` (swap de sesión al target) → `ctx.clear()`+`loadProfile(target)`. `salir()` → `setSession(tokens admin)` (local, sirve offline) → `ctx.loadProfile(admin)` → invoke `admin-fin-impersonacion`. Estado persistido en LocalStore (`csd.impersonacion`) → sobrevive reinicio; auto-salida al pasar 1h (init + resume).
+- **Swap en sitio, sin recarga:** el PIN es del DISPOSITIVO (del admin) → no lo re-pide ni al reiniciar. **No** re-registramos push ni tracking → la suplantación **no secuestra** las notificaciones/GPS del dispositivo (siguen ligados al admin). El banner sobrevive al reinicio (con "Salir").
+- **Entrada:** `/admin/usuarios` → abrir usuario → botón **«👁️ Entrar como este usuario»** (oculto para uno mismo, admins, inactivos y pendientes; el server igual lo bloquea). Chip **🧪 Prueba** en los usuarios de prueba (`es_prueba` añadido al select de `getUsuarios`). Bloquea si hay envíos en el outbox (no arrastrar escrituras del admin como el target).
+- **Banner** en el shell (`app.html`, índigo) "Estás viendo como **X**" + "Salir"; suprime el banner 🧪 de prueba mientras se suplanta (se muestra dentro del de impersonación).
+- **Archivos:** `impersonation.service.ts` (nuevo), `app.ts/html/scss` (banner + init + resume + salir), `admin/usuarios.ts/html/scss` (acción + chip), `admin.service.ts` (`es_prueba` en `UsuarioAdmin` + select).
+
+### ✅ Verificado (Node, contra los edges reales de prod)
+- `generateLink('magiclink')` → `token_hash`; `verifyOtp` en cliente anon **cambia la sesión al target** con access+refresh reales ✓ (mecanismo exacto del app).
+- `admin-entrar-como` y `admin-fin-impersonacion` **vivos y admin-gateados** (401 sin admin) ✓.
+- (No se pudo loguear `qa_admin@` — contraseña ≠ la compartida; se verificó el token-path con service_role + un chofer de prueba real "Napo".)
+
+### 🚀 Release 2.3.0 (rolling)
+- Versión 2.3.0 en `environment(.prod).ts` + `build.gradle` + `release-apk.mjs`. APK firmado (cert prod `3c5316d8…5065`), registrado (Y1) y **publicado** al bucket; **`publicada=2.3.0`**, **mínima 1.96.4 intacta**. `sql/2026-08-29-publicar-2.3.0.sql`. **Rollback:** `update sgc.app_versiones set publicada=(version='2.2.0') where plataforma='movil';`
+
+### 🔴 Pendiente — SOLO Xaviel
+- **Device-QA:** como admin real, `/admin/usuarios` → abrir Manolo Durán → «Entrar como» → ver la app como él → «Salir» (vuelve a admin). Ídem con un usuario 🧪 de prueba. Cerrar y reabrir la app mientras se suplanta (tu PIN entra, banner sigue, «Salir» funciona). Verás en Admin→Auditoría los eventos `impersonacion_inicio/fin`.
+
+### ⚠️ Notas / límites v1
+- Mientras suplantas: push y GPS del dispositivo **siguen siendo del admin** (a propósito, para no secuestrarlos); las notificaciones realtime que llegan son las del admin (los datos/pantallas sí son del target al navegar).
+- Requiere señal para ENTRAR (invoca el edge). Para SALIR no (restaura la sesión localmente).
+
 ## 🟢 SESIÓN 29/08/2026 — PROMPT-20 ronda BB (app) — paridad: hora en echadas, input de Compa, paginación — **F1+F2+F3 COMPLETAS · build verde · migración BB6 aplicada a prod (aditiva, verificada) · ⏳ sin commit/push ni APK (avisar) + device-QA**
 
 **TL;DR:** tanda corta de paridad web↔app. **F1 (BB6)** las echadas muestran fecha **+ hora** en todas las vistas (log, mi-actividad, detalle ya la tenía, confirmación "Combustible registrado") y **la hora de captura manda sobre la de sync** (echada offline sincronizada tarde ya no queda con la hora del sync). **F2 (BB2)** input de Compa: nunca pierde el texto (fix del bug Enter-durante-streaming + borrador persistente en localStorage, paridad AY10), enviar deshabilitado mientras responde, foco de vuelta al composer tras enviar (sin robar foco al entrar → no abre teclado de golpe en móvil), timestamps al pie de cada burbuja (AY11a). **F3 (BB11)** paginación por lotes (25, "Cargar más") en "Mi actividad" (8 historiales), Registro de echadas y Notas.

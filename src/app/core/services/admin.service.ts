@@ -80,6 +80,7 @@ export interface UsuarioAdmin {
   nombre: string;
   email: string | null;
   activo: boolean;
+  es_prueba?: boolean; // BB — usuario de prueba (para "entrar como" y su chip)
   avatar_path?: string | null;
   roles: { rol: RolAdmin }[];
   conductores?: { id: string; nombre: string }[];
@@ -182,7 +183,7 @@ export class AdminService {
   async getUsuarios(): Promise<UsuarioAdmin[]> {
     const { data, error } = await this.supabase.client
       .from('usuarios')
-      .select('id, nombre, email, activo, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(id, codigo, nombre, modulos, permisos)), conductores:conductores!usuario_id(id, nombre)')
+      .select('id, nombre, email, activo, es_prueba, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(id, codigo, nombre, modulos, permisos)), conductores:conductores!usuario_id(id, nombre)')
       .order('nombre');
     if (error) throw new Error(error.message);
     const usuarios = (data as unknown as UsuarioAdmin[]) ?? [];

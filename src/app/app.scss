@@ -128,3 +128,42 @@
 .test-user-banner__txt {
   font-size: 13px;
 }
+
+// BB "Entrar como" — banner de suplantación (índigo, con botón Salir)
+.imp-banner {
+  position: sticky;
+  top: 0;
+  z-index: 499;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  padding-top: calc(8px + var(--safe-top));
+  background: #4338ca;
+  color: #fff;
+}
+.imp-banner__icon {
+  font-size: 18px;
+  flex: 0 0 auto;
+}
+.imp-banner__txt {
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 700;
+}
+.imp-banner__prueba {
+  margin-left: 6px;
+  font-weight: 800;
+  opacity: 0.9;
+}
+.imp-banner__salir {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+}

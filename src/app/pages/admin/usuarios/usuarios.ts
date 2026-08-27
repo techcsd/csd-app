@@ -4,8 +4,12 @@ import { Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { Router } from '@angular/router';
 import { AdminService, UsuarioAdmin, RolAdmin } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { ImpersonationService } from '../../../core/services/impersonation.service';
+import { UserContextService } from '../../../core/services/user-context.service';
+import { SyncService } from '../../../core/sync/sync.service';
 
 /** AL2 — Administración › Usuarios: alta (invitación), roles, activar/desactivar,
  *  reset de contraseña. Escrituras vía edge functions + RPCs (gate is_admin). */
@@ -21,6 +25,12 @@ export class AdminUsuariosPage {
   private admin = inject(AdminService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private imp = inject(ImpersonationService);
+  private ctx = inject(UserContextService);
+  private sync = inject(SyncService);
+  private router = inject(Router);
+
+  entrandoComoId = signal<string>('');
 
   loading = signal(true);
   usuarios = signal<UsuarioAdmin[]>([]);
@@ -175,6 +185,45 @@ export class AdminUsuariosPage {
     this.confirm.set(null);
     c?.run();
   }
+
+  // ── BB "Entrar como" — ver la app como este usuario (reproducir su problema) ──
+  /** No se puede entrar como uno mismo ni como otro admin (el server también lo bloquea). */
+  esSelf(u: UsuarioAdmin): boolean {
+    return u.id === this.ctx.profile()?.id;
+  }
+  esAdminUsuario(u: UsuarioAdmin): boolean {
+    return (u.roles ?? []).some((r) => r.rol.codigo === 'admin');
+  }
+  puedeEntrarComo(u: UsuarioAdmin): boolean {
+    return u.activo && !u.pendiente && !this.esSelf(u) && !this.esAdminUsuario(u);
+  }
+
+  pedirEntrarComo(u: UsuarioAdmin): void {
+    if (!this.puedeEntrarComo(u) || this.entrandoComoId()) return;
+    this.confirm.set({
+      msg: `¿Entrar como "${u.nombre}"? Verás la app como este usuario. Sal cuando termines con el botón "Salir" del banner superior.`,
+      run: () => void this.doEntrarComo(u),
+    });
+  }
+  private async doEntrarComo(u: UsuarioAdmin): Promise<void> {
+    // No arrastrar envíos del admin: se subirían como el otro usuario.
+    if (this.sync.pendingCount() > 0) {
+      this.toast.error('Tienes envíos pendientes. Espera a que sincronicen antes de entrar como otro usuario.');
+      return;
+    }
+    this.entrandoComoId.set(u.id);
+    try {
+      const r = await this.imp.entrarComo(u.id, u.nombre);
+      if (!r.ok) {
+        this.toast.error(r.error ?? 'No se pudo entrar como este usuario.');
+        return;
+      }
+      await this.router.navigate(['/home']);
+    } finally {
+      this.entrandoComoId.set('');
+    }
+  }
+
   back(): void {
     this.location.back();
   }
