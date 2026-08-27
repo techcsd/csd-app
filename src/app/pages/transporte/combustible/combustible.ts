@@ -51,6 +51,7 @@ import {
   validarEchadaCliente,
 } from '../../../core/models/combustible.model';
 import { parseNumeroFlexible } from '../../../core/util/numero';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 
 /**
  * AE6 — pasos LÓGICOS del wizard (la cantidad y el contenido dependen del modo:
@@ -198,6 +199,8 @@ export class CombustiblePage extends GuardedWizard {
 
   submitting = signal(false);
   done = signal(false);
+  registradoEn = signal<string>(''); // BB6 — momento de captura (fecha + hora) en la confirmación
+  readonly fmtFechaHora = formatFechaCortaHora;
   /** Snapshot of the live calc shown on the confirmation screen. */
   resultado = signal<CombustibleCalculo | null>(null);
   /** AT4 — usuario_id del ayudante (opcional); le suma la echada al incentivo. */
@@ -616,6 +619,7 @@ export class CombustiblePage extends GuardedWizard {
       });
       this.lastId.set(nuevoId); // AW2 — para "Revisar y corregir"
       this.resultado.set(this.calc());
+      this.registradoEn.set(new Date().toISOString()); // BB6 — hora real de captura
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');

@@ -40,7 +40,7 @@
       type="search"
       placeholder="Buscar por placa, chofer o quién registró…"
       [ngModel]="q()"
-      (ngModelChange)="q.set($event)"
+      (ngModelChange)="q.set($event); resetPag()"
     />
 
     @if (loading()) {
@@ -49,11 +49,11 @@
       @if (rows().length && sospechosas()) {
         <p class="clog__resumen">⚠️ {{ sospechosas() }} echada(s) con salto o consumo sospechoso.</p>
       }
-      @for (r of filtradas(); track r.id) {
+      @for (r of visibles(); track r.id) {
         <button type="button" class="clog__row" [class.clog__row--alerta]="esSospechosa(r)" (click)="abrir(r)">
           <div class="clog__row-top">
             <span class="clog__placa">{{ r.placa || 'Persona' }}</span>
-            <span class="clog__fecha">{{ fechaMedia(r.fecha) }} ›</span>
+            <span class="clog__fecha">{{ fechaHora(r.created_at || r.fecha) }} ›</span>
           </div>
           <div class="clog__row-km">
             @if (r.kilometraje != null) {
@@ -80,6 +80,11 @@
           title="Sin echadas en este rango"
           message="No hay registros de combustible para las fechas seleccionadas."
         />
+      }
+      @if (hayMas()) {
+        <button type="button" class="btn-ghost clog__mas" (click)="cargarMas()">
+          Cargar más ({{ filtradas().length - visibleCount() }} restantes)
+        </button>
       }
     }
     }

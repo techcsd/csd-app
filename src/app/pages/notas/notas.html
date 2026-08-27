@@ -21,14 +21,14 @@
       class="field notas__buscar"
       type="search"
       [ngModel]="busqueda()"
-      (ngModelChange)="busqueda.set($event)"
+      (ngModelChange)="busqueda.set($event); resetPag()"
       placeholder="Buscar en tus notas…"
       aria-label="Buscar notas"
     />
 
     <!-- Ver archivadas (solo en Mis notas) -->
     @if (tab() === 'mias' && (hayArchivadasMias() || verArchivadas())) {
-      <button type="button" class="notas__arch-toggle" (click)="verArchivadas.set(!verArchivadas())">
+      <button type="button" class="notas__arch-toggle" (click)="verArchivadas.set(!verArchivadas()); resetPag()">
         {{ verArchivadas() ? '← Volver a las activas' : '🗄️ Ver archivadas' }}
       </button>
     }
@@ -47,7 +47,7 @@
       />
     } @else {
       <div class="notas__list">
-        @for (n of filtradas(); track n.id) {
+        @for (n of visibles(); track n.id) {
           <button
             type="button"
             class="nota-card"
@@ -70,6 +70,9 @@
               }
             </div>
           </button>
+        }
+        @if (hayMas()) {
+          <button type="button" class="btn-ghost notas__mas" (click)="cargarMas()">Cargar más</button>
         }
       </div>
     }

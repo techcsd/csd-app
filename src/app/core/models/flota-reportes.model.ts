@@ -104,6 +104,7 @@ export interface ChecklistHistorialRow {
 export interface HistorialEchada {
   id: string;
   fecha: string | null;
+  created_at?: string | null; // BB6 — hora exacta (la de captura manda sobre la de sync)
   kilometraje: number | null;
   galones: number | null;
   monto: number | null;

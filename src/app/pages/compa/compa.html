@@ -29,6 +29,7 @@
       @for (m of mensajes(); track m.id) {
         <div class="compa__msg" [class.compa__msg--mio]="m.rol === 'user'">
           <span class="compa__burbuja">{{ m.texto }}</span>
+          @if (m.ts) { <span class="compa__hora">{{ fmtHora(m.ts) }}</span> }
         </div>
       }
     }
@@ -54,16 +55,17 @@
   } @else {
     <footer class="compa__compose">
       <input
+        #composer
         class="field compa__input"
         type="text"
         [ngModel]="texto()"
         (ngModelChange)="texto.set($event)"
         (keyup.enter)="enviar()"
         [disabled]="!online || transcribiendo()"
-        [placeholder]="transcribiendo() ? 'Transcribiendo…' : 'Escríbele a Compa…'"
+        [placeholder]="transcribiendo() ? 'Transcribiendo…' : (enviando() ? 'Compa está respondiendo…' : 'Escríbele a Compa…')"
       />
       @if (texto().trim()) {
-        <button type="button" class="compa__send" [disabled]="enviando() || !online" (click)="enviar()" aria-label="Enviar">➤</button>
+        <button type="button" class="compa__send" [disabled]="enviando() || !online" [title]="enviando() ? 'Compa está respondiendo…' : 'Enviar'" (click)="enviar()" aria-label="Enviar">➤</button>
       } @else {
         <button type="button" class="compa__send compa__mic" [disabled]="!online || transcribiendo()" (click)="abrirVoz()" aria-label="Grabar nota de voz">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">

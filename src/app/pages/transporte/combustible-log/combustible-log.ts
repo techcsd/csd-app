@@ -8,7 +8,7 @@ import { CombustibleService } from '../../../core/services/combustible.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EchadaLog } from '../../../core/models/combustible.model';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import { formatFechaCortaHora } from '../../../core/util/fecha';
 
 /** AQ13 — chips de periodo rápido (mismo patrón que Mi actividad AJ9). */
 type PeriodoChip = { id: string; label: string; dias: number };
@@ -42,8 +42,11 @@ export class CombustibleLogPage {
   private location = inject(Location);
   private router = inject(Router);
 
-  readonly fechaMedia = formatFechaMedia;
+  readonly fechaHora = formatFechaCortaHora; // BB6 — fecha + hora (la de captura manda)
   readonly periodos = PERIODOS;
+  // BB11 — paginación por lotes (memoria/datos móviles): render incremental.
+  private readonly LOTE = 30;
+  visibleCount = signal(this.LOTE);
   periodo = signal<string>('1m');
 
   // QA-25 — backstop de rol en cliente (además del RPC gateado): solo roles
@@ -69,6 +72,17 @@ export class CombustibleLogPage {
 
   sospechosas = computed(() => this.rows().filter((r) => r.km_alerta || r.alerta_consumo).length);
 
+  // BB11 — solo se pinta el lote visible; "Cargar más" crece de 30 en 30.
+  visibles = computed(() => this.filtradas().slice(0, this.visibleCount()));
+  hayMas = computed(() => this.filtradas().length > this.visibleCount());
+  cargarMas(): void {
+    this.visibleCount.update((n) => n + this.LOTE);
+  }
+  /** Reinicia el lote visible (nueva carga o nuevo filtro). */
+  resetPag(): void {
+    this.visibleCount.set(this.LOTE);
+  }
+
   constructor() {
     if (!this.ctx.esFlotaElevado()) {
       this.autorizado.set(false);
@@ -84,6 +98,7 @@ export class CombustibleLogPage {
     try {
       const list = await this.combustible.getLogEchadas({ desde: this.desde(), hasta: this.hasta() });
       this.rows.set(list);
+      this.resetPag(); // BB11 — nueva carga arranca en el primer lote
     } catch {
       this.toast.error('No se pudo cargar el registro de echadas.');
     } finally {

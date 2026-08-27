@@ -75,6 +75,13 @@
   font-weight: 600;
   color: var(--color-text-secondary);
 }
+// BB6 — fecha + hora de captura en la confirmación
+.comb__fecha {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
 
 .comb__num {
   font-size: 26px;

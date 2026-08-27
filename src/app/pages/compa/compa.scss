@@ -139,6 +139,12 @@
   border-color: transparent;
   color: #121212;
 }
+// BB2/AY11a — hora al pie de la burbuja
+.compa__hora {
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
 
 // Indicador "escribiendo…" (tres puntos).
 .compa__typing {

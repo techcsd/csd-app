@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, WritableSignal } from '@angular/core';
 import { Location } from '@angular/common';
 import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
 import { Router } from '@angular/router';
@@ -27,7 +27,7 @@ import { ConductorStats } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { formatFecha, formatFechaMedia, formatFechaHumana } from '../../../core/util/fecha';
+import { formatFecha, formatFechaMedia, formatFechaHumana, formatFechaCortaHora } from '../../../core/util/fecha';
 import { traducir } from '../../../core/util/dominio-labels';
 
 /** Read-only driver profile: my flota activity/telemetry (R5) + docs (X1). */
@@ -101,6 +101,34 @@ export class MiActividadPage {
   fmtFecha = formatFecha; // U9 — fecha date-only
   fmtFechaMedia = formatFechaMedia; // U9 — timestamp
   fmtFechaHumana = formatFechaHumana; // Y1 — timestamp con hora legible
+  fmtFechaHora = formatFechaCortaHora; // BB6 — dd/mm · hh:mm (echadas con hora)
+
+  // BB11 — paginación por lotes: cada historial largo se pinta de a `LOTE`, con
+  // "Cargar más". Evita renderizar cientos de filas de golpe (memoria/scroll).
+  private readonly LOTE = 25;
+  private lotes: Record<string, WritableSignal<number>> = {
+    multas: signal(this.LOTE),
+    entregas: signal(this.LOTE),
+    semanales: signal(this.LOTE),
+    preusos: signal(this.LOTE),
+    echadas: signal(this.LOTE),
+    usos: signal(this.LOTE),
+    rutasCreadas: signal(this.LOTE),
+    accidentes: signal(this.LOTE),
+  };
+  /** Recorta un historial al lote visible actual (orden ya es descendente por fecha). */
+  lim<T>(key: string, arr: T[]): T[] {
+    return arr.slice(0, this.lotes[key]());
+  }
+  hayMasLote(key: string, total: number): boolean {
+    return total > this.lotes[key]();
+  }
+  verMasLote(key: string): void {
+    this.lotes[key].update((n) => n + this.LOTE);
+  }
+  private resetLotes(): void {
+    for (const k of Object.keys(this.lotes)) this.lotes[k].set(this.LOTE);
+  }
 
   /** AS17 — firma (best-effort) las 4 fotos de cada uso que las tenga. */
   private async cargarUsoFotos(usos: MiUso[]): Promise<void> {
@@ -162,6 +190,7 @@ export class MiActividadPage {
   private async load(silent = false): Promise<void> {
     if (!silent) this.loading.set(true);
     this.refrescando.set(true);
+    this.resetLotes(); // BB11 — cada carga arranca en el primer lote
     try {
       // AI9 — garantiza el registro de conductor de un chofer (idempotente) para
       // que nunca vea el vacío "Aún no eres conductor".

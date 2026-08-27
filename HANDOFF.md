@@ -1,5 +1,42 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 29/08/2026 — PROMPT-20 ronda BB (app) — paridad: hora en echadas, input de Compa, paginación — **F1+F2+F3 COMPLETAS · build verde · migración BB6 aplicada a prod (aditiva, verificada) · ⏳ sin commit/push ni APK (avisar) + device-QA**
+
+**TL;DR:** tanda corta de paridad web↔app. **F1 (BB6)** las echadas muestran fecha **+ hora** en todas las vistas (log, mi-actividad, detalle ya la tenía, confirmación "Combustible registrado") y **la hora de captura manda sobre la de sync** (echada offline sincronizada tarde ya no queda con la hora del sync). **F2 (BB2)** input de Compa: nunca pierde el texto (fix del bug Enter-durante-streaming + borrador persistente en localStorage, paridad AY10), enviar deshabilitado mientras responde, foco de vuelta al composer tras enviar (sin robar foco al entrar → no abre teclado de golpe en móvil), timestamps al pie de cada burbuja (AY11a). **F3 (BB11)** paginación por lotes (25, "Cargar más") en "Mi actividad" (8 historiales), Registro de echadas y Notas.
+
+### ✅ F1 — BB6: hora en las echadas + captura manda
+- **Migración `sql/2026-08-29-bb6-echada-captura.sql` (APLICADA A PROD, verificada):** RPC nuevo aislado `sgc.combustible_marcar_captura(p_id, p_capturado_en)` que corrige `registros_combustible.created_at` a la hora REAL de captura (guardas: solo hacia atrás, nunca al futuro, solo el dueño/admin). **NO toca** `registrar_combustible_app` (función AW3 de 250 líneas). Probado con fila real: mueve 5h atrás ✓, ignora futuro ✓, otro usuario no puede ✓.
+- **App:** `combustible.service` mete `capturado_en` en el payload y, tras insertar, llama al RPC (best-effort). `log_combustible` YA devolvía `created_at` (no hizo falta tocarlo). Vistas: `combustible-log` (dd/mm · hh:mm), `mi-actividad` echadas (created_at con hora + fallback fecha), `getMisEchadas` ahora selecciona `created_at`, confirmación `combustible.html` muestra 🕑 hora de captura. Detalles (echada-detalle / mi-registro-detalle) ya usaban `formatFechaHumana` (con hora).
+
+### ✅ F2 — BB2: input de Compa (app)
+- **Bug de pérdida de texto arreglado:** `enviar()` chequeaba `enviando()` DESPUÉS de limpiar `texto` → al pulsar Enter durante el streaming se borraba el texto pero el envío no salía (guard de re-entrada). Ahora chequea primero → el texto se conserva.
+- **Enviar deshabilitado durante streaming** (ya lo estaba vía `enviando()`), placeholder "Compa está respondiendo…" + tooltip. **Input sigue habilitado** para escribir el próximo mensaje.
+- **Borrador persistente** (`localStorage` `compa_borrador`, effect) — sobrevive salir/entrar (paridad AY10). Se limpia al enviar.
+- **Foco:** `#composer` viewChild; tras enviar se re-enfoca (dentro del gesto, mantiene el teclado). **NO** hay autofocus al montar (móvil: no abrir teclado de golpe).
+- **Timestamps:** `CompaMensaje.ts` (ISO) + `formatHora` al pie de cada burbuja (AY11a).
+
+### ✅ F3 — BB11: paginación de historiales
+- **`mi-actividad` ("Mi perfil de conductor"):** helper de lotes (`lim`/`hayMasLote`/`verMasLote`, `LOTE=25`) por sección — multas, entregas, inspecciones, pre-usos, echadas, usos, rutas creadas, accidentes — cada una con "Cargar más". Reinicia al recargar. Convive con el filtro de rango existente (90d ↔ todo, `verMas`).
+- **`combustible-log`** y **`notas`:** render incremental client-side (`visibles`/`hayMas`/`cargarMas`) + "Cargar más"; reinicia al cambiar filtro/búsqueda/tab.
+- Orden descendente ya venía de los servicios. (Client-side slice: la data ya venía acotada por ventana de fecha + `.limit`; esto ataca memoria/scroll. Paginación server-side real por RPC = follow-up si crece.)
+
+### 🔴 Pendiente — SOLO Xaviel
+- **Commit/push + APK:** NO hice nada de esto (regla madre). Cuando digas: app (combustible.service/model, flota-reportes.service/model, mi-actividad, combustible, combustible-log, compa .ts/.html/.scss + compa.model, notas, util/fecha sin cambios) + `sql/2026-08-29-bb6-echada-captura.sql`. Decidir si amerita bump de APK (F1 cambia datos visibles; F2/F3 son UX).
+- **Device-QA:** echada **offline** → sincronizar más tarde → confirmar que el log/detalle muestran la HORA de captura (no la de sync); Compa: escribir durante el streaming sin perder texto, salir/entrar y ver el borrador, foco de vuelta tras enviar; "Mi actividad"/echadas/notas con muchos registros → "Cargar más".
+
+### ⚠️ Notas
+- BB6 backend es **app-first** (el problema de captura≠sync es único de la app offline); la web (PROMPT-19) solo necesitaba pintar `created_at` con hora. El RPC nuevo es aditivo y no interfiere.
+- `combustible_marcar_captura` dispara la auditoría en su UPDATE (actor = usuario que sincroniza) — normal.
+
+### ✅ Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0
+# RPC en prod:
+node scripts/apply-migration.mjs <(echo "select proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='sgc' and proname='combustible_marcar_captura';")
+```
+
+---
+
 ## 🟢 SESIÓN 28/08/2026 — PROMPT-18 ronda BA (app) — Transporte v3 — **F1+F2+F3+F4 COMPLETAS · commiteadas y pusheadas · migración F2 aplicada a prod · builds verdes · ⏳ APK + device-QA + apagar flag auto-conduce**
 
 **TL;DR:** Transporte v3 en la app, apoyado en PROMPT-17 (SGC web 1.100.0 + migraciones BA ya en prod). **F4** chips de Compa por rol (RPC `compa_sugerencias`). **F1** conduce externo (nuevo submódulo: proveedor con alta al vuelo/«Otro», foto de placa obligatoria + carga, material libre, origen→destino, outbox→`crear_conduce_externo`). **F3** selector de lugar compartido `lugar-picker` (buscador `buscar_lugares` + link Maps AU16 + «Otros» libre; nunca trancado). **F2** despachos: nueva migración aditiva (`despacho_marcar`, `requisiciones_por_despachar`, `requisicion_tiene_despachos`, **aplicada a prod**) + pantalla "Por despachar" + deep-link a generar-conduce que precarga renglones editables, rótulo "CONDUCE (#REQ)" y aviso suave de duplicado, y enlaza al emitir. Todo commiteado+pusheado.

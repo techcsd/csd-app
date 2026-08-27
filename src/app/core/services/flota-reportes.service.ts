@@ -256,7 +256,7 @@ export class FlotaReportesService {
     if (!conductorId) return [];
     const { data, error } = await this.supabase.client
       .from('registros_combustible')
-      .select('id, fecha, kilometraje, galones, monto, rendimiento_km_gal, alerta_consumo, estado, motivo_alerta, vehiculo:vehiculos(placa)')
+      .select('id, fecha, created_at, kilometraje, galones, monto, rendimiento_km_gal, alerta_consumo, estado, motivo_alerta, vehiculo:vehiculos(placa)')
       .eq('conductor_id', conductorId)
       .not('es_prueba', 'is', true) // V2 — ocultar echadas de prueba (incluye NULL)
       .gte('fecha', this.desdeISO(dias))

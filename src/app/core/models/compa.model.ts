@@ -41,4 +41,6 @@ export interface CompaMensaje {
   propuesta?: Propuesta | null;
   /** true mientras el turno del usuario espera respuesta (indicador local). */
   enviando?: boolean;
+  /** BB2/AY11a — instante del mensaje (ISO) para pintar la hora al pie de la burbuja. */
+  ts?: string;
 }

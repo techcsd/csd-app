@@ -45,6 +45,10 @@
             <span class="comb__modelo">{{ modelo() }}@if (color()) { · {{ color() }} }</span>
           }
         </div>
+        <!-- BB6 — fecha + hora de la captura -->
+        @if (registradoEn()) {
+          <span class="comb__fecha">🕑 {{ fmtFechaHora(registradoEn()) }}</span>
+        }
       </div>
 
       <div class="comb__cards">

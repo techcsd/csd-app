@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   computed,
+  effect,
   inject,
   signal,
   viewChild,
@@ -15,6 +16,10 @@ import { CompaService } from '../../core/services/compa.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CompaMensaje, Propuesta } from '../../core/models/compa.model';
+import { formatHora } from '../../core/util/fecha';
+
+/** BB2 — clave del borrador persistente del composer (sobrevive al navegar). */
+const BORRADOR_KEY = 'compa_borrador';
 
 /** Sugerencias iniciales (chips) por defecto — fallback si la RPC por rol falla. */
 const SUGERENCIAS = [
@@ -49,6 +54,9 @@ export class CompaPage {
   private location = inject(Location);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
+  private inputEl = viewChild<ElementRef<HTMLInputElement>>('composer');
+
+  readonly fmtHora = formatHora; // BB2/AY11a — hora al pie de cada burbuja
 
   /** Historial en memoria del hilo (por sesión). */
   mensajes = signal<CompaMensaje[]>([]);
@@ -82,6 +90,23 @@ export class CompaPage {
 
   constructor() {
     void this.cargarSugerencias();
+    // BB2 — el borrador del composer sobrevive al salir/entrar (paridad AY10).
+    // NO se autoenfoca al montar: en móvil abrir el teclado de golpe molesta.
+    try {
+      const guardado = localStorage.getItem(BORRADOR_KEY);
+      if (guardado) this.texto.set(guardado);
+    } catch {
+      /* localStorage bloqueado (modo privado): sin persistencia, no es crítico */
+    }
+    effect(() => {
+      const t = this.texto();
+      try {
+        if (t) localStorage.setItem(BORRADOR_KEY, t);
+        else localStorage.removeItem(BORRADOR_KEY);
+      } catch {
+        /* best-effort */
+      }
+    });
   }
 
   /** BA3 — carga los chips/saludo por rol (una fuente para web y app). Best-effort. */
@@ -96,10 +121,19 @@ export class CompaPage {
 
   /** Envía el texto del composer. */
   async enviar(): Promise<void> {
+    // BB2 — si Compa todavía responde, NO limpiamos ni perdemos el texto: el envío
+    // queda para cuando termine (el botón está deshabilitado; Enter simplemente no hace nada).
+    if (this.enviando()) return;
     const t = this.texto().trim();
     if (!t) return;
     this.texto.set('');
+    this.enfocarInput(); // BB2 — seguir tecleando sin re-tocar (mantiene el teclado abierto)
     await this.enviarTexto(t);
+  }
+
+  /** BB2 — devuelve el foco al composer (dentro del gesto del usuario, para no cerrar el teclado). */
+  private enfocarInput(): void {
+    this.inputEl()?.nativeElement.focus();
   }
 
   /** Toca un chip de sugerencia → lo envía directo. */
@@ -121,7 +155,7 @@ export class CompaPage {
     this.pensando.set(true);
     this.mensajes.update((list) => [
       ...list,
-      { id: this.nuevoId(), rol: 'user', texto: t },
+      { id: this.nuevoId(), rol: 'user', texto: t, ts: new Date().toISOString() },
     ]);
     this.scrollAlFinal();
     try {
@@ -129,7 +163,7 @@ export class CompaPage {
       if (r.conversacion_id) this.conversacionId = r.conversacion_id;
       this.mensajes.update((list) => [
         ...list,
-        { id: this.nuevoId(), rol: 'assistant', texto: r.respuesta, propuesta: r.propuesta },
+        { id: this.nuevoId(), rol: 'assistant', texto: r.respuesta, propuesta: r.propuesta, ts: new Date().toISOString() },
       ]);
       // Si el turno trae una propuesta de escritura, abre la hoja de confirmación.
       if (r.propuesta) this.propuesta.set(r.propuesta);
@@ -150,7 +184,7 @@ export class CompaPage {
       const r = await this.compa.ejecutar(p, this.conversacionId);
       this.mensajes.update((list) => [
         ...list,
-        { id: this.nuevoId(), rol: 'assistant', texto: r.respuesta },
+        { id: this.nuevoId(), rol: 'assistant', texto: r.respuesta, ts: new Date().toISOString() },
       ]);
       this.propuesta.set(null);
       this.scrollAlFinal();

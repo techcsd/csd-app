@@ -77,8 +77,21 @@ export class NotasPage {
     this.notas().some((n) => n.es_mia && n.archivada),
   );
 
+  // BB11 — paginación por lotes (render incremental; datos/memoria móvil).
+  private readonly LOTE = 25;
+  visibleCount = signal(this.LOTE);
+  visibles = computed(() => this.filtradas().slice(0, this.visibleCount()));
+  hayMas = computed(() => this.filtradas().length > this.visibleCount());
+  cargarMas(): void {
+    this.visibleCount.update((n) => n + this.LOTE);
+  }
+  resetPag(): void {
+    this.visibleCount.set(this.LOTE);
+  }
+
   setTab(t: Tab): void {
     this.tab.set(t);
+    this.resetPag(); // nuevo filtro → primer lote
   }
 
   abrir(n: Nota): void {

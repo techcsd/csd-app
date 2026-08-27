@@ -360,6 +360,7 @@ export class CombustibleService {
         titular_es_persona: input.titularEsPersona, // Z23-app
         ayudante_id: input.ayudanteId ?? null, // AT4
         confirmado: input.confirmado ?? false, // AW3 — echada inusual ya confirmada
+        capturado_en, // BB6 — hora REAL de captura (para corregir created_at si se sincroniza tarde)
       },
       fotos,
       resumen: {
@@ -416,6 +417,21 @@ export class CombustibleService {
             'Esta echada es inusualmente grande y necesita que la confirmes. Vuelve a registrarla y confirma la cantidad.',
           'validacion',
         );
+      }
+
+      // BB6 — la hora de captura manda: si la echada se sincroniza más tarde (offline),
+      // corregimos created_at a la hora real en que se echó el combustible. El id del
+      // row es el client_uuid (= payload.id). Best-effort: si falla, queda la de sync.
+      const capturadoEn = payload['capturado_en'] as string | null | undefined;
+      if (capturadoEn) {
+        try {
+          await this.supabase.client.rpc('combustible_marcar_captura', {
+            p_id: payload['id'],
+            p_capturado_en: capturadoEn,
+          });
+        } catch {
+          /* best-effort: la echada ya quedó registrada con la hora de sync */
+        }
       }
 
       // AT4 — sumarle la echada al ayudante. registrar_combustible_app NO devuelve
