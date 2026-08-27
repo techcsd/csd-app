@@ -3,6 +3,7 @@ import { VehiculoCard } from '../vehiculo-card/vehiculo-card';
 import { EmptyState } from '../empty-state/empty-state';
 import { Skeleton } from '../skeleton/skeleton';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { VehiculoUsoService } from '../../../core/services/vehiculo-uso.service';
 import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
 
 /**
@@ -21,6 +22,7 @@ import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/tran
 })
 export class VehiculoPicker {
   private vehiculos = inject(VehiculosService);
+  private usoSvc = inject(VehiculoUsoService);
 
   /** AT9 — identificación homologada Marca Modelo · Color · Placa (para el chip). */
   ident = vehiculoIdentidad;
@@ -59,7 +61,9 @@ export class VehiculoPicker {
   loading = signal(true);
   disponibles = signal<VehiculoDisponible[]>([]);
   fotoUrls = signal<Record<string, string>>({});
-  /** W4 — ids de vehículos asignados a mí (asignaciones + recepciones en cola). */
+  /** W4 — ids "míos": asignaciones + recepciones en cola + vehículos que tengo EN USO
+   *  ahora (uso v2). Incluir el "en uso" es clave: un chofer puede estar usando un
+   *  vehículo que NO es su asignación formal (lo recibió), y debe poder echarle gas. */
   misIds = signal<Set<string>>(new Set());
 
   /** W4 — "Tus vehículos" primero. */
@@ -78,14 +82,20 @@ export class VehiculoPicker {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      // W4 — cargar disponibles + mis asignaciones/recepciones en paralelo.
-      const [disp, asignaciones, recepcionesEnCola] = await Promise.all([
+      // W4 — cargar disponibles + mis asignaciones/recepciones + mis usos activos.
+      const [disp, asignaciones, recepcionesEnCola, misUsos] = await Promise.all([
         this.vehiculos.getVehiculosDisponibles(),
         this.vehiculos.getMisAsignaciones().catch(() => []),
         this.vehiculos.entregasRecepcionPendientes().catch(() => new Set<string>()),
+        this.usoSvc.misUsos().catch(() => []),
       ]);
       this.disponibles.set(disp);
-      this.misIds.set(new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola]));
+      // Los vehículos que tengo EN USO ahora también son "míos" (aunque su asignación
+      // formal sea de otro) → así el chofer puede echarle gas al que realmente maneja.
+      const enUsoMios = misUsos.filter((u) => u.activa).map((u) => u.vehiculo_id);
+      this.misIds.set(
+        new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola, ...enUsoMios]),
+      );
       void this.resolveFotos(disp);
       // AW16 — quién tiene cada vehículo EN USO ahora (best-effort; requiere permiso).
       if (this.mostrarEnUso()) {

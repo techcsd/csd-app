@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.3.0';
+const VERSION = '2.4.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,13 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-08-29';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Admin: «Entrar como» un usuario desde el móvil (para reproducir sus problemas)';
+const TITULO = 'Combustible: puedes echarle gas al vehículo que TIENES EN USO';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Administración', d: 'Los administradores pueden «Entrar como» un usuario desde el móvil (Usuarios → abrir el usuario → «Entrar como»), igual que en la web, para reproducir sus problemas de primera mano. Un banner arriba avisa a quién estás viendo y te deja volver a tu cuenta al instante.' },
-  { t: 'seguridad', m: 'Administración', d: '«Entrar como» es solo para administradores, no funciona con otros administradores ni contigo mismo, nunca cambia la contraseña del usuario, y queda registrado en la auditoría (inicio y fin). Se sale solo tras 1 hora.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Si tienes un vehículo EN USO (aunque no sea tu asignado), ahora aparece en «Tus vehículos» al registrar combustible y puedes echarle gas. Antes solo salía tu asignado y el sistema lo rechazaba.' },
+  { t: 'mejora', m: 'Combustible', d: 'El vehículo que manejas ahora se ofrece de primero al registrar combustible.' },
 ];
 
 const TIPO_POR_COMMIT = {

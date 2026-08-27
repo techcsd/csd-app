@@ -1,5 +1,29 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 29/08/2026 (tarde 2) — Bug de combustible del vehículo EN USO (app 2.4.0) — **COMPLETO · build verde · commit+push+APK publicado (rolling) · migración aplicada+verificada · ⏳ device-QA**
+
+**TL;DR:** hallado con «Entrar como» MANOLO DURAN. Manolo tiene el **KIA L473027 EN USO** (uso v2 activo) pero su **asignación formal** es la Nissan L441660, y el KIA está **asignado a otro**. Al «Registrar combustible» el selector solo mostraba la Nissan (asignación) y **no dejaba elegir el KIA**; y aunque lo eligiera, el RPC lo **rechazaba** (guard AF18 "solo el usuario asignado"). Arreglado en cliente **y** backend para que **las echadas sigan al vehículo EN USO**, no solo a la asignación.
+
+### ✅ Causa raíz (dos capas)
+- **Cliente:** `vehiculo-picker` armaba "Tus vehículos" solo de `vehiculo_asignaciones` (+ recepciones en cola) → ignoraba el uso v2. El KIA solo salía en "Resto de la flota", oculto en combustible (`soloMios=true` para no-admin).
+- **Backend:** `registrar_combustible_app` (AF18) exigía ser el **asignado activo**; el KIA está asignado a otro → bloqueaba a Manolo pese a tenerlo en uso y ser su responsable.
+
+### ✅ Fix
+- **Cliente** (`shared/ui/vehiculo-picker/vehiculo-picker.ts`): agrega mis **usos v2 activos** (`usoSvc.misUsos().filter(activa)`) a `misIds` → los vehículos que tengo EN USO salen en "Tus vehículos" (aun con `soloMios`). La tarjeta "EN USO" del hub ya hace deep-link con el `vehiculo_id` (preselecciona y salta el selector).
+- **Backend** (`sql/2026-08-29-fuel-enuso-driver.sql`, **aplicada a prod**): AF18 ahora también permite a quien tenga un **uso v2 activo** (`vehiculo_usos.fin_at is null`) sobre el vehículo. Aditivo: solo AMPLÍA. Recrea SOLO el overload con `p_confirmado` (el que llama la app), cuerpo idéntico salvo ese bloque (parcheado desde el dump de prod para no re-transcribir 250 líneas ni tocar el mojibake del overload viejo).
+
+### ✅ Verificado (prod, JWT simulado)
+- Manolo → KIA: **AF18 PASA** ✓ (frena luego en km=0, prueba que el gate pasó). Usuario ajeno (ni asignado ni en uso) → **sigue BLOQUEADO** ✓. Build verde.
+
+### 🚀 Release 2.4.0 (rolling)
+- 2.4.0 en `environment(.prod).ts` + `build.gradle` + `release-apk.mjs`. APK firmado + registrado (Y1) + publicado; **`publicada=2.4.0`**, **mínima 1.96.4 intacta**. `sql/2026-08-29-publicar-2.4.0.sql`. Rollback: `update sgc.app_versiones set publicada=(version='2.3.0') where plataforma='movil';`
+
+### 🔴 Pendiente — SOLO Xaviel
+- **Device-QA:** como Manolo (o «Entrar como» él) → Registrar combustible → el KIA sale en "Tus vehículos" y la echada se guarda. Verifica también **«Soltar vehículo»** del KIA (necesita señal + nivel; si sigue sin poder, avísame y reviso `estado_uso_vehiculo` vs `mis_pendientes_transporte`).
+
+### ⚠️ Nota
+- El overload viejo de `registrar_combustible_app` (sin `p_confirmado`) NO se tocó (tiene mojibake preexistente en sus mensajes y la app no lo usa). Si la web usa ese overload para sus echadas, el mismo fix habría que espejarlo allá — a confirmar en SGC.
+
 ## 🟢 SESIÓN 29/08/2026 (tarde) — «Entrar como» en el móvil (app 2.3.0) — **COMPLETO · build verde · commit+push+APK publicado (rolling) · verificado end-to-end · ⏳ device-QA**
 
 **TL;DR:** un admin ya puede **«Entrar como» otro usuario desde el app** (paridad con la web AZ10), justo para reproducir de primera mano la falla de un usuario (p.ej. Manolo Durán) y probar los usuarios de prueba. **Reusa los edges de prod** `admin-entrar-como` + `admin-fin-impersonacion` (admin-gateados, auditados, no tocan la contraseña del target). **Sin backend nuevo.**
