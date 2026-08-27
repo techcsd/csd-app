@@ -1,5 +1,13 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 29/08/2026 (tarde 4) — «Un vehículo EN USO por chofer» (invariante de BD, app+web) — **COMPLETO · migración aplicada+verificada · sin APK (solo BD)**
+
+**TL;DR:** raíz de la confusión asignación↔uso: choferes con VARIOS vehículos "en uso" a la vez (Polin figuraba en 2-3) porque `iniciar_uso_vehiculo` cerraba el uso del OTRO tenedor del mismo vehículo, pero NO los usos previos del PROPIO chofer en otros vehículos. **Descarté el auto-sync asignación→uso** (radio de impacto grande en la web: combustible/rutas/reportes se basan en `vehiculo_asignaciones` — lo confirmé mapeando SGC). En su lugar, invariante limpio y seguro **solo en el modelo "en uso"**: **un chofer = un vehículo en uso a la vez.**
+- **`sql/2026-08-29-un-uso-activo-por-chofer.sql` (APLICADA A PROD):** (1) trigger `BEFORE INSERT` `trg_uso_unico_por_chofer` → al abrir un uso activo cierra los otros usos activos del mismo chofer (mismo `es_prueba`); (2) limpieza de una vez: deja solo el uso más reciente por chofer, cierra los fantasmas.
+- **Paridad app↔web AUTOMÁTICA:** es un trigger de BD y `iniciar_uso_vehiculo` es el ÚNICO insertador de `vehiculo_usos` (lo llaman ambos) → la web queda igual sin cambiar código. **NO toca `vehiculo_asignaciones`** → cero impacto en combustible/rutas/reportes web.
+- **Verificado (prod):** nadie con >1 uso activo ✓; Manolo→KIA L473027, Polin→L441660 (era 2-3), Misael→L478815. Trigger probado (insert de 2º uso → queda 1, rollback). Sin APK (cambio solo de BD).
+- **⚠️ Dato residual (admin/SGC):** las **asignaciones viejas** siguen (Manolo asignado a la Nissan que usa Polin, etc.). NO las toqué a propósito (la web depende de ellas para roster/combustible/rutas). El síntoma del app ya está resuelto (2.4.0/2.5.0). Si quieres alinear asignaciones, es decisión de admin en SGC (o una limpieza guiada caso por caso).
+
 ## 🟢 SESIÓN 29/08/2026 (tarde 3) — Combustible: «Tus vehículos» = el EN USO, no la asignación vieja (app 2.5.0) — **COMPLETO · build verde · commit+push+APK publicado (rolling)**
 
 **TL;DR:** seguimiento del 2.4.0. Xaviel notó que a Manolo LE SEGUÍA SALIENDO la Nissan en el selector aunque no la usa. **Datos:** Manolo está **asignado** a la Nissan L441660 (desde 18-ago) pero **la Nissan la USA POLIN RAMIREZ** (uso activo); Manolo **maneja la KIA L473027** (uso activo 26-ago). El selector mostraba la **asignación** (dato viejo), no lo que usa. **Fix (2.5.0):** en `vehiculo-picker`, si tienes vehículo(s) EN USO, "Tus vehículos" = esos (+ recepciones en cola); solo si **no** tienes ninguno en uso cae a la asignación formal. Así Manolo ve solo la KIA. (2.4.0 los unía a ambos; 2.5.0 hace que el "en uso" MANDE.)
