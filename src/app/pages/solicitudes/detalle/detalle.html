@@ -2,6 +2,9 @@
   <header class="reqd__header">
     <button type="button" class="reqd__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="reqd__title">Requisición</h1>
+    <button type="button" class="reqd__refresh" (click)="refrescar()" [disabled]="refreshing()" aria-label="Actualizar">
+      {{ refreshing() ? '…' : '↻' }}
+    </button>
   </header>
 
   <div class="screen__body">
@@ -10,18 +13,57 @@
     } @else if (error() || !req()) {
       <p class="reqd__muted">No pudimos cargar esta requisición o no tienes acceso.</p>
     } @else if (req(); as r) {
+      @if (desincronizado()) {
+        <div class="reqd__offbanner">📴 Sin conexión — mostrando la última versión sincronizada.</div>
+      }
+
       <div class="reqd__top">
-        <span class="reqd__obra">{{ r.proyecto_nombre ?? 'Obra' }}</span>
+        <button type="button" class="reqd__obra" [class.reqd__obra--link]="puedeVerObra()" (click)="verObra()">
+          🏗️ {{ r.proyecto_nombre ?? 'Obra' }}@if (puedeVerObra()) { <span class="reqd__obra-go">›</span> }
+        </button>
         <span class="reqd__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
       </div>
 
+      <div class="reqd__code">
+        <span class="reqd__code-req">{{ codigo(r.folio) }}</span>
+        @if ((r.version ?? 1) > 1) { <span class="reqd__code-ver">v{{ r.version }}</span> }
+      </div>
+
       <dl class="reqd__facts">
-        <div><dt>Solicitante</dt><dd>{{ r.solicitante_nombre ?? '—' }}</dd></div>
+        <div>
+          <dt>Solicitante</dt>
+          <dd>{{ r.solicitante_nombre ?? '—' }}@if (r.solicitante_rol) { <span class="reqd__rol">{{ r.solicitante_rol }}</span> }</dd>
+        </div>
         <div><dt>Fecha</dt><dd>{{ fmtFecha(r.created_at) }}</dd></div>
         <div><dt>Urgencia</dt><dd>{{ r.urgencia === 'urgente' ? '🔴 Urgente' : 'Normal' }}</dd></div>
         @if (r.atendido_por_nombre) { <div><dt>Atendida por</dt><dd>{{ r.atendido_por_nombre }}</dd></div> }
+        @if (r.cerrada_por_nombre) { <div><dt>Cerrada por</dt><dd>{{ r.cerrada_por_nombre }}</dd></div> }
         @if (r.notas) { <div><dt>Notas</dt><dd>{{ r.notas }}</dd></div> }
       </dl>
+
+      @if (r.cancelada_motivo) {
+        <div class="reqd__aviso reqd__aviso--danger">🚫 Cancelada: {{ r.cancelada_motivo }}</div>
+      }
+
+      <!-- BA6 — avance de despachos -->
+      @if (hayDespachos() && avanceResumen(); as res) {
+        <div class="reqd__avance">
+          <h3 class="reqd__sec">Avance de despacho</h3>
+          <p class="reqd__avance-sub">{{ res.despachados }} de {{ res.total }} renglones despachados</p>
+          <ul class="reqd__avance-list">
+            @for (a of avance(); track a.descripcion) {
+              <li class="reqd__avance-row" [class.reqd__avance-row--done]="a.pendiente <= 0">
+                <span class="reqd__avance-name">{{ a.descripcion }}</span>
+                <span class="reqd__avance-cant">
+                  {{ a.despachado }} / {{ a.solicitado }} {{ a.unidad || '' }}
+                  @if (a.pendiente > 0) { <em class="reqd__avance-pend">faltan {{ a.pendiente }}</em> }
+                  @else { <span class="reqd__avance-ok">✓</span> }
+                </span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
 
       <h3 class="reqd__sec">Artículos ({{ r.items.length }})</h3>
       <ul class="reqd__items">
@@ -32,6 +74,7 @@
               {{ it.descripcion }}
               @if (it.talla) { <span class="reqd__item-talla">Talla {{ it.talla }}</span> }
               @if (it.codigo) { <span class="reqd__item-code">{{ it.codigo }}</span> }
+              @if (!it.articulo_id) { <span class="reqd__item-nc">no catalogado</span> }
             </span>
           </li>
         }
@@ -39,49 +82,161 @@
 
       @if (r.salida_id || r.solicitud_compra_id) {
         <div class="reqd__links">
-          @if (r.salida_id) { <span class="reqd__link">📦 Despachada por conduce</span> }
+          @if (r.salida_id) {
+            <button type="button" class="reqd__link reqd__link--btn" (click)="verConduce()">📦 Ver conduce vinculado ›</button>
+          }
           @if (r.solicitud_compra_id) { <span class="reqd__link">🛒 Generó solicitud de compra</span> }
         </div>
       }
 
-      <!-- AS7 — gestión (aprobar/rechazar) para admin/módulo inventario -->
-      @if (puedeGestionar() && esPendiente()) {
-        @if (modo() === 'none') {
-          <div class="reqd__acciones">
+      <!-- BB10 — historial de ediciones -->
+      @if (ediciones().length) {
+        <h3 class="reqd__sec">Historial</h3>
+        <ul class="reqd__hist">
+          @for (e of ediciones(); track e.editado_at) {
+            <li class="reqd__hist-row">
+              <span class="reqd__hist-ico">✏️</span>
+              <span class="reqd__hist-txt">Editada por {{ e.editado_por_nombre ?? '—' }} · {{ fmtFecha(e.editado_at) }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- ── Acciones por estado ── -->
+      @if (modo() === 'none') {
+        <div class="reqd__acciones">
+          @if (puedeEditar()) {
+            <button type="button" class="btn-cta reqd__editar" (click)="abrirEditar()">✏️ Editar</button>
+          }
+          @if (puedeGestionar() && esPendiente()) {
             <button type="button" class="btn-cta reqd__aprobar" (click)="abrirAprobar()">✓ Aprobar</button>
             <button type="button" class="btn-ghost reqd__rechazar" (click)="abrirRechazar()">✕ Rechazar</button>
+          }
+          @if (puedeCancelar()) {
+            <button type="button" class="btn-ghost reqd__cancelar" (click)="abrirCancelar()">🚫 Cancelar requisición</button>
+          }
+        </div>
+      }
+
+      <!-- Aprobar -->
+      @if (modo() === 'aprobar') {
+        <div class="reqd__panel">
+          <h3 class="reqd__sec">Aprobar y despachar</h3>
+          <p class="reqd__panel-sub">Se despacha lo disponible del almacén; el faltante genera una solicitud de compra automáticamente.</p>
+          <label class="field-label">Almacén de despacho</label>
+          <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="onBodegaElegida($event)" />
+
+          @if (bodegaId()) {
+            <!-- AT7 — stock por renglón del almacén elegido -->
+            <ul class="reqd__stock">
+              @for (it of req()!.items; track it.id) {
+                <li class="reqd__stock-row">
+                  <span class="reqd__stock-name">{{ it.descripcion }}</span>
+                  <span class="reqd__stock-cant">
+                    Pide {{ it.cantidad }}
+                    @if (it.articulo_id) {
+                      · <b [class.reqd__stock-falta]="(stockDe(it) ?? 0) < it.cantidad">{{ stockDe(it) }} en stock</b>
+                    } @else { · <em>no catalogado</em> }
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+
+          <label class="field-label reqd__mt">Responsable (opcional)</label>
+          <input class="field" type="text" [ngModel]="responsable()" (ngModelChange)="responsable.set($event)" placeholder="Quién recibe/despacha" />
+          <label class="field-label reqd__mt">Observaciones (opcional)</label>
+          <input class="field" type="text" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Notas del despacho" />
+          @if (!online) { <p class="reqd__off">Necesitas conexión para aprobar.</p> }
+          <div class="reqd__acciones reqd__mt">
+            <button type="button" class="btn-cta" [disabled]="!bodegaId() || procesando() || !online" (click)="confirmarAprobar()">{{ procesando() ? 'Aprobando…' : 'Confirmar aprobación' }}</button>
+            <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
           </div>
-        } @else if (modo() === 'aprobar') {
-          <div class="reqd__panel">
-            <h3 class="reqd__sec">Aprobar y despachar</h3>
-            <p class="reqd__panel-sub">Se despacha lo disponible del almacén; el faltante genera una solicitud de compra automáticamente.</p>
-            <label class="field-label">Almacén de despacho</label>
-            <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
-            <label class="field-label reqd__mt">Responsable (opcional)</label>
-            <input class="field" type="text" [ngModel]="responsable()" (ngModelChange)="responsable.set($event)" placeholder="Quién recibe/despacha" />
-            <label class="field-label reqd__mt">Observaciones (opcional)</label>
-            <input class="field" type="text" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Notas del despacho" />
-            @if (!online) { <p class="reqd__off">Necesitas conexión para aprobar.</p> }
-            <div class="reqd__acciones reqd__mt">
-              <button type="button" class="btn-cta" [disabled]="!bodegaId() || procesando() || !online" (click)="confirmarAprobar()">{{ procesando() ? 'Aprobando…' : 'Confirmar aprobación' }}</button>
-              <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
+        </div>
+      }
+
+      <!-- Rechazar -->
+      @if (modo() === 'rechazar') {
+        <div class="reqd__panel">
+          <h3 class="reqd__sec">Rechazar requisición</h3>
+          <label class="field-label">Motivo (opcional)</label>
+          <textarea class="field reqd__nota" [ngModel]="rechazoNota()" (ngModelChange)="rechazoNota.set($event)" rows="3" maxlength="240" placeholder="Por qué se rechaza"></textarea>
+          @if (!online) { <p class="reqd__off">Necesitas conexión para rechazar.</p> }
+          <div class="reqd__acciones reqd__mt">
+            <button type="button" class="btn-cta reqd__rechazar-confirm" [disabled]="procesando() || !online" (click)="confirmarRechazar()">{{ procesando() ? 'Rechazando…' : 'Confirmar rechazo' }}</button>
+            <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
+          </div>
+        </div>
+      }
+
+      <!-- BB10 — Editar (autor, pendiente) -->
+      @if (modo() === 'editar') {
+        <div class="reqd__panel">
+          <h3 class="reqd__sec">Editar requisición</h3>
+
+          <label class="field-label">Urgencia</label>
+          <div class="reqd__chips">
+            <button type="button" class="chip" [class.chip--on]="editUrgencia() === 'normal'" (click)="editUrgencia.set('normal')">Normal</button>
+            <button type="button" class="chip" [class.chip--on]="editUrgencia() === 'urgente'" (click)="editUrgencia.set('urgente')">🔴 Urgente</button>
+          </div>
+
+          <label class="field-label reqd__mt">Renglones</label>
+          @for (it of editItems(); track it.id) {
+            <div class="reqd__edit-item">
+              <span class="reqd__edit-name">
+                {{ it.descripcion }}@if (it.talla) { <small>· Talla {{ it.talla }}</small> }
+                @if (esCustomEdit(it)) { <span class="reqd__item-nc">no catalogado</span> }
+              </span>
+              <div class="reqd__edit-row">
+                <app-qty-input [value]="it.cantidad" (valueChange)="setCantidadEdit(it.id, $event)" ariaLabel="Cantidad" />
+                @if (esCustomEdit(it)) {
+                  <select class="field reqd__edit-unit" [ngModel]="it.unidad" (ngModelChange)="setUnidadEdit(it.id, $event)">
+                    @for (u of unidades(); track u) { <option [value]="u">{{ u }}</option> }
+                    @if (it.unidad && !unidades().includes(it.unidad)) { <option [value]="it.unidad">{{ it.unidad }}</option> }
+                  </select>
+                } @else {
+                  <span class="reqd__edit-unitfix">{{ it.unidad }}</span>
+                }
+                <button type="button" class="reqd__edit-x" (click)="pedirQuitarEdit(it.id)" aria-label="Quitar">✕</button>
+              </div>
             </div>
+          }
+
+          <label class="field-label reqd__mt">Nota (opcional)</label>
+          <input class="field" type="text" [ngModel]="editNotas()" (ngModelChange)="editNotas.set($event)" placeholder="Ej: Para el vaciado del lunes" />
+
+          @if (!online) { <p class="reqd__off">Necesitas conexión para guardar.</p> }
+          <div class="reqd__acciones reqd__mt">
+            <button type="button" class="btn-cta" [disabled]="procesando() || !online" (click)="guardarEdicion()">{{ procesando() ? 'Guardando…' : 'Guardar cambios' }}</button>
+            <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
           </div>
-        } @else {
-          <div class="reqd__panel">
-            <h3 class="reqd__sec">Rechazar requisición</h3>
-            <label class="field-label">Motivo (opcional)</label>
-            <textarea class="field reqd__nota" [ngModel]="rechazoNota()" (ngModelChange)="rechazoNota.set($event)" rows="3" maxlength="240" placeholder="Por qué se rechaza"></textarea>
-            @if (!online) { <p class="reqd__off">Necesitas conexión para rechazar.</p> }
-            <div class="reqd__acciones reqd__mt">
-              <button type="button" class="btn-cta reqd__rechazar-confirm" [disabled]="procesando() || !online" (click)="confirmarRechazar()">{{ procesando() ? 'Rechazando…' : 'Confirmar rechazo' }}</button>
-              <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
-            </div>
+        </div>
+      }
+
+      <!-- BA6 — Cancelar con motivo -->
+      @if (modo() === 'cancelar') {
+        <div class="reqd__panel">
+          <h3 class="reqd__sec">Cancelar requisición</h3>
+          <label class="field-label">Motivo (obligatorio)</label>
+          <textarea class="field reqd__nota" [ngModel]="rechazoNota()" (ngModelChange)="rechazoNota.set($event)" rows="3" maxlength="240" placeholder="Por qué se cancela"></textarea>
+          @if (!online) { <p class="reqd__off">Necesitas conexión para cancelar.</p> }
+          <div class="reqd__acciones reqd__mt">
+            <button type="button" class="btn-cta reqd__rechazar-confirm" [disabled]="procesando() || !online || !rechazoNota().trim()" (click)="confirmarCancelar()">{{ procesando() ? 'Cancelando…' : 'Confirmar cancelación' }}</button>
+            <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Volver</button>
           </div>
-        }
-      } @else if (puedeGestionar() && !esPendiente()) {
-        <p class="reqd__hint">Esta requisición ya fue procesada ({{ estadoLabel(r.estado) }}).</p>
+        </div>
       }
     }
   </div>
+
+  <app-confirm-dialog
+    [open]="confirmarQuitar() !== null"
+    title="¿Quitar este renglón?"
+    message="Se eliminará de la requisición al guardar."
+    confirmLabel="Sí, quitar"
+    cancelLabel="Conservar"
+    tone="danger"
+    (confirmed)="confirmarQuitarEdit()"
+    (cancelled)="cancelarQuitar()"
+  />
 </div>

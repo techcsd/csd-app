@@ -35,10 +35,43 @@ export type SyncErrorKind =
 /** A server-side rejection that retrying won't fix (e.g. validation). */
 export class PermanentSyncError extends Error {
   kind: SyncErrorKind;
-  constructor(message: string, kind: SyncErrorKind = 'validacion') {
+  /** BC3 — campo señalado por el servidor (error tipado 22023). */
+  campo?: string;
+  /** BC3 — motivo estable del rechazo (requerido | formato_invalido | …). */
+  motivo?: string;
+  constructor(message: string, kind: SyncErrorKind = 'validacion', campo?: string, motivo?: string) {
     super(message);
     this.kind = kind;
+    this.campo = campo;
+    this.motivo = motivo;
   }
+}
+
+/**
+ * BC3 — extrae {campo, motivo} del error tipado del servidor (primitiva
+ * `sgc.error_campo` → errcode 22023, `details` = JSON {campo,motivo}, `hint`=campo).
+ * Ver docs/BC3-outbox-validacion-contrato.md.
+ */
+export function parseCampoMotivo(error: unknown): { campo?: string; motivo?: string } {
+  const e = error as { details?: unknown; hint?: unknown };
+  let campo: string | undefined;
+  let motivo: string | undefined;
+  const details = e?.details;
+  if (typeof details === 'string' && details.trim().startsWith('{')) {
+    try {
+      const j = JSON.parse(details) as { campo?: string; motivo?: string };
+      if (j.campo) campo = String(j.campo);
+      if (j.motivo) motivo = String(j.motivo);
+    } catch {
+      /* details no era JSON: se ignora */
+    }
+  } else if (details && typeof details === 'object') {
+    const j = details as { campo?: string; motivo?: string };
+    if (j.campo) campo = String(j.campo);
+    if (j.motivo) motivo = String(j.motivo);
+  }
+  if (!campo && typeof e?.hint === 'string' && e.hint.trim()) campo = e.hint.trim();
+  return { campo, motivo };
 }
 
 /**
@@ -68,12 +101,19 @@ export function throwSyncError(error: unknown): never {
   // 401/408/429/5xx son transitorios SOLO si no hay un código permanente detrás.
   const transient = (status === 401 || status === 408 || status === 429 || status >= 500) && !codePermanente;
   if (codePermanente || (statusPermanente && !transient)) {
-    throw new PermanentSyncError(message, classifyKind(code, status, message));
+    // BC3 — si el servidor señaló el campo (error tipado 22023 / borde 22P02), lo
+    // arrastramos para que la tarjeta del outbox pueda marcarlo al corregir.
+    const { campo, motivo } = parseCampoMotivo(error);
+    throw new PermanentSyncError(message, classifyKind(code, status, message), campo, motivo);
   }
   throw new Error(message); // default: retryable with backoff
 }
 
 function classifyKind(code: string, status: number, message = ''): SyncErrorKind {
+  // BC3 — error tipado de validación con campo señalado (sgc.error_campo → 22023):
+  // el mensaje ya viene en español y es accionable → 'validacion' (no 'datos'
+  // genérico) para que la app muestre el texto real y marque el campo.
+  if (/^22023/.test(code)) return 'validacion';
   // Desajuste de firma/esquema (PostgREST no encuentra la función) → app/servidor
   // desactualizado; no se arregla reintentando.
   if (/^PGRST(202|203|204|205)/.test(code) || /schema cache|could not find the function/i.test(message)) {
@@ -278,6 +318,8 @@ export class SyncService {
       proximo_intento: 0,
       error_msg: undefined,
       error_kind: undefined,
+      error_campo: undefined,
+      error_motivo: undefined,
       permanente: false,
     });
     await db.mis_registros.update(id, { estado: 'pending' });
@@ -306,6 +348,8 @@ export class SyncService {
             proximo_intento: 0,
             error_msg: undefined,
             error_kind: undefined,
+            error_campo: undefined,
+            error_motivo: undefined,
             permanente: false,
           });
           await db.mis_registros.update(op.id, { estado: 'pending' });
@@ -622,6 +666,9 @@ export class SyncService {
     const kind: SyncErrorKind = err instanceof PermanentSyncError ? err.kind : 'red';
     const intentos = op.intentos + 1;
     const msg = err instanceof Error ? err.message : String(err);
+    // BC3 — campo/motivo señalado por el servidor (para marcarlo al corregir).
+    const campo = err instanceof PermanentSyncError ? err.campo : undefined;
+    const motivo = err instanceof PermanentSyncError ? err.motivo : undefined;
 
     if (permanent || intentos >= MAX_INTENTOS) {
       // Transitorio agotado tras MAX_INTENTOS → casi seguro red/servidor: se puede
@@ -632,6 +679,8 @@ export class SyncService {
           intentos,
           error_msg: msg,
           error_kind: kind,
+          error_campo: campo,
+          error_motivo: motivo,
           permanente: permanent,
         });
         await db.mis_registros.update(op.id, { estado: 'error' });
@@ -646,6 +695,8 @@ export class SyncService {
         proximo_intento: Date.now() + BACKOFF[intentos - 1],
         error_msg: msg,
         error_kind: kind,
+        error_campo: undefined,
+        error_motivo: undefined,
       });
     }
   }

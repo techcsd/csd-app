@@ -4,7 +4,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
-import { MiOrdenCompra, Solicitud } from '../../../core/models/inventario.model';
+import { MiOrdenCompra, Solicitud, requisicionCodigo } from '../../../core/models/inventario.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
 
 /** Track my material requests: Enviada → Aprobada → Entregada. */
@@ -21,8 +21,15 @@ export class MisSolicitudesPage {
   private router = inject(Router);
   private location = inject(Location);
 
+  codigo = requisicionCodigo; // BC4 — REQ-XXXXXX
+
   nueva(): void {
     void this.router.navigate(['/solicitudes/pedir']);
+  }
+
+  /** BC1 — abre el detalle completo de la requisición tocada. */
+  abrir(s: Solicitud): void {
+    void this.router.navigate(['/solicitudes/requisicion', s.id]);
   }
 
   solicitudes = signal<Solicitud[]>([]);
@@ -81,12 +88,17 @@ export class MisSolicitudesPage {
         return 'Enviada';
       case 'aprobada':
         return 'Aprobada';
+      case 'por_despachar':
+        return 'Por despachar';
       case 'entregada':
         return 'Recibida';
+      case 'completada':
       case 'cerrada':
         return 'Completada';
       case 'rechazada':
         return 'Rechazada';
+      case 'cancelada':
+        return 'Cancelada';
       default:
         return e;
     }

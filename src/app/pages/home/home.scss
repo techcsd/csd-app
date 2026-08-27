@@ -54,6 +54,69 @@
   grid-template-columns: 1fr;
 }
 
+/* BC5 — home agrupado por dominio. */
+.home__groups {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0 4px;
+  align-content: start;
+}
+.home__group {
+  display: block;
+}
+/* dentro de un grupo el grid no debe volver a estirar ni doble-padear */
+.home__group .home__grid {
+  flex: initial;
+  padding: 4px 16px 8px;
+}
+.home__group-hd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 16px 4px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary);
+}
+.home__group-hd::before {
+  content: '';
+  width: 4px;
+  align-self: stretch;
+  min-height: 16px;
+  border-radius: 3px;
+  background: var(--g, var(--color-text-secondary));
+}
+.home__group-hd--foryou {
+  color: var(--primary, #ff5f00);
+}
+.home__group-hd--foryou::before {
+  background: var(--primary, #ff5f00);
+}
+.home__group-ic {
+  font-size: 16px;
+}
+.home__group-lb {
+  flex: 1;
+  min-width: 0;
+}
+.home__group-badge {
+  flex: 0 0 auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--primary, #ff5f00);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
 /* AJ4 — tamaños de tile tipo launcher (columnas del grid de 2). El row-span da la
    altura extra al 2x2 apoyándose en filas de base uniforme. */
 .home__grid {

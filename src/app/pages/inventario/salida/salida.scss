@@ -127,6 +127,14 @@
   font-size: 14px;
   color: var(--color-text-secondary);
 }
+// BC2 — desplegable de unidad para material NO catalogado en el resumen.
+.mov__item-qty .field.mov__item-unitsel {
+  width: auto;
+  min-width: 88px;
+  height: 44px;
+  padding: 0 8px;
+  text-align: left;
+}
 .mov__item-x {
   color: var(--color-error);
   font-size: 18px;

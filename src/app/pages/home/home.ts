@@ -82,6 +82,37 @@ const CONFIRMAR_TILE: HomeTile = { modulo: 'por_confirmar', icon: '📥', label:
 // ingeniero por su obra. La RLS acota los datos a la obra del usuario.
 const PERSONAL_TILE: HomeTile = { modulo: 'personal_obra', icon: '🧑‍🔧', label: 'Personal de obra', route: '/proyectos/personal', tint: '#9333ea' };
 
+// BC5 — agrupación del home por dominio (árbol aprobado por Xaviel). Cada tile
+// conserva su gating/ruta/badge; solo cambia la PRESENTACIÓN (grupos). El orden de
+// GROUPS es el de aparición; un grupo sin tiles visibles no se muestra.
+interface HomeGroup {
+  key: string;
+  label: string;
+  icon: string;
+  color: string;
+  modulos: string[]; // qué claves de tile caen en este grupo
+}
+const GROUPS: HomeGroup[] = [
+  { key: 'ingenieria', label: 'Ingeniería y producción', icon: '📐', color: '#2563eb',
+    modulos: ['compras', 'ingenieria', 'bitacora', 'proyectos', 'obra', 'personal_obra', 'compras_proyecto', 'tareas_app'] },
+  { key: 'transporte', label: 'Transporte', icon: '🚚', color: '#f97316',
+    modulos: ['flota', 'por_confirmar'] },
+  { key: 'inventario', label: 'Inventario', icon: '📦', color: '#16a34a',
+    modulos: ['inventario'] },
+  { key: 'comunicacion', label: 'Comunicación', icon: '💬', color: '#6d28d9',
+    modulos: ['mensajes', 'compa', 'notas'] },
+  { key: 'administracion', label: 'Administración y sistema', icon: '⚙️', color: '#475569',
+    modulos: ['admin', 'rrhh', 'tecnologia', 'sistema'] },
+];
+/** Grupo por defecto para cualquier tile que no esté mapeado arriba. */
+const GRUPO_OTROS: HomeGroup = { key: 'otros', label: 'Otros', icon: '🗂️', color: '#475569', modulos: [] };
+
+/** BC5 — la fila "Para ti" agrupa un tile de menú aunque su badge/valor viva aparte. */
+interface HomeGrupoRender extends HomeGroup {
+  tiles: HomeTile[];
+  badge: number | null;
+}
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -205,6 +236,72 @@ export class HomePage implements OnDestroy {
       extra.push(CONFIRMAR_TILE);
     }
     return this.aplicarOrden([...work, ...extra]); // AF38
+  });
+
+  /**
+   * BC5 — reparte los tiles visibles (ya gateados y ordenados) en los grupos por
+   * dominio. Conserva el orden dentro de cada grupo (respeta el orden del admin,
+   * AF38). Un grupo sin tiles no se muestra. El badge del grupo suma los de sus
+   * tiles (AU6c) sin quitar el badge por tile.
+   */
+  grupos = computed<HomeGrupoRender[]>(() => {
+    const all = this.tiles();
+    const claveDe = new Map<string, string>();
+    for (const g of GROUPS) for (const m of g.modulos) claveDe.set(m, g.key);
+    const buckets = new Map<string, HomeTile[]>();
+    for (const t of all) {
+      const gk = claveDe.get(t.modulo) ?? GRUPO_OTROS.key;
+      const arr = buckets.get(gk) ?? [];
+      arr.push(t);
+      buckets.set(gk, arr);
+    }
+    const defs = [...GROUPS, GRUPO_OTROS];
+    const out: HomeGrupoRender[] = [];
+    for (const g of defs) {
+      const tiles = buckets.get(g.key) ?? [];
+      if (!tiles.length) continue;
+      const badge = tiles.reduce((sum, t) => sum + (this.badgeFor(t.modulo) ?? 0), 0);
+      out.push({ ...g, tiles, badge: badge || null });
+    }
+    return out;
+  });
+
+  /** BC5 — orden de preferencia de "Para ti" según el rol (claves de tile). */
+  private paraTiPrioridad(): string[] {
+    if (this.ctx.esChofer()) return ['flota', 'por_confirmar', 'mensajes', 'tareas_app'];
+    // Capataz / obra (sin módulo proyectos completo): su día empieza en la obra.
+    if (this.ctx.puedeVerObra() && !this.ctx.hasModulo('proyectos')) {
+      return ['obra', 'bitacora', 'personal_obra', 'compras'];
+    }
+    // Ingeniero (origina requisiciones / ve sus obras) o dirección de proyectos.
+    if (
+      this.ctx.hasModulo('proyectos') ||
+      this.ctx.puedeVerSubmodulo('proyectos.obras') ||
+      this.ctx.puedeVerSubmodulo('compras.solicitudes')
+    ) {
+      return ['proyectos', 'compras', 'bitacora', 'tareas_app'];
+    }
+    return [];
+  }
+
+  /**
+   * BC5 — fila "Para ti": accesos frecuentes del rol arriba. Toma de la lista de
+   * prioridad los que el usuario realmente tiene; si no arma ≥2, cae a los primeros
+   * tiles de trabajo. Estos tiles TAMBIÉN aparecen en su grupo (es un atajo).
+   */
+  paraTi = computed<HomeTile[]>(() => {
+    const all = this.tiles();
+    const byMod = new Map(all.map((t) => [t.modulo, t]));
+    const pick: HomeTile[] = [];
+    for (const m of this.paraTiPrioridad()) {
+      const t = byMod.get(m);
+      if (t) pick.push(t);
+    }
+    if (pick.length < 2) {
+      const fallback = all.slice(0, 3);
+      for (const t of fallback) if (!pick.includes(t)) pick.push(t);
+    }
+    return pick.slice(0, 4);
   });
 
   /** AF38 — aplica el orden configurado por el admin; los no configurados quedan

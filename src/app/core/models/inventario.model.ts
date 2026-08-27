@@ -209,8 +209,16 @@ export interface Solicitud {
   urgencia: string;
   notas: string | null;
   created_at: string;
+  /** BC4 — folio secuencial legible; se muestra como REQ-XXXXXX. */
+  folio?: number | null;
   proyecto?: { nombre: string } | null;
   items?: SolicitudItem[];
+}
+
+/** BC4 — código citable de la requisición (REQ-XXXXXX) a partir del folio.
+ *  Espejo de `requisicionCodigo` de la web (SGC/src/shared/models/solicitud.model.ts). */
+export function requisicionCodigo(folio: number | null | undefined): string {
+  return folio != null ? 'REQ-' + String(folio).padStart(6, '0') : '—';
 }
 
 /**
@@ -257,7 +265,8 @@ export interface RequisicionDetalleItem {
   codigo: string | null;
 }
 
-/** AS7 — detalle completo de una requisición (bandeja). */
+/** AS7 — detalle completo de una requisición (bandeja). BC1/BC4 — enriquecido con
+ *  folio (REQ-XXX), rol del solicitante, versión y datos de cancelación/cierre. */
 export interface RequisicionDetalle {
   id: string;
   estado: string;
@@ -274,6 +283,40 @@ export interface RequisicionDetalle {
   salida_id: string | null;
   solicitud_compra_id: string | null;
   items: RequisicionDetalleItem[];
+  // BC4 — contexto etiquetado adicional.
+  folio?: number | null;
+  solicitante_rol?: string | null;
+  version?: number | null;
+  cancelada_motivo?: string | null;
+  cerrada_en?: string | null;
+  cerrada_por_nombre?: string | null;
+}
+
+/** BA6 — avance de un renglón: solicitado vs despachado vs pendiente. */
+export interface RequisicionAvanceItem {
+  articulo_id: string | null;
+  descripcion: string;
+  unidad: string | null;
+  talla: string | null;
+  solicitado: number;
+  despachado: number;
+  pendiente: number;
+}
+
+/** BB10 — una edición del autor sobre su requisición (para el historial). */
+export interface RequisicionEdicion {
+  editado_por: string | null;
+  editado_por_nombre: string | null;
+  editado_at: string;
+  cambios: { antes?: unknown; despues?: unknown } | null;
+}
+
+/** BB10 — payload para editar una requisición pendiente (solo el autor). */
+export interface RequisicionEditar {
+  id: string;
+  urgencia?: string | null;
+  notas?: string | null;
+  items?: { articulo_id: string | null; descripcion: string; cantidad: number; unidad: string | null; talla: string | null }[];
 }
 
 export const SOLICITUD_PASOS = ['pendiente', 'aprobada', 'entregada'] as const;

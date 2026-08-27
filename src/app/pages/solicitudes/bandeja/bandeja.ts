@@ -37,9 +37,11 @@ export class RequisicionesBandejaPage {
     { key: null, label: 'Todas' },
     { key: 'pendiente', label: 'Pendientes' },
     { key: 'aprobada', label: 'Aprobadas' },
+    { key: 'por_despachar', label: 'Por despachar' },
     { key: 'entregada', label: 'Entregadas' },
+    { key: 'completada', label: 'Completadas' },
     { key: 'rechazada', label: 'Rechazadas' },
-    { key: 'cerrada', label: 'Cerradas' },
+    { key: 'cancelada', label: 'Canceladas' },
   ];
 
   pendientesCount = computed(() => this.filas().filter((f) => f.estado === 'pendiente').length);
@@ -84,9 +86,12 @@ export class RequisicionesBandejaPage {
     switch (e) {
       case 'pendiente': return 'Pendiente';
       case 'aprobada': return 'Aprobada';
+      case 'por_despachar': return 'Por despachar';
       case 'entregada': return 'Entregada';
-      case 'cerrada': return 'Cerrada';
+      case 'completada':
+      case 'cerrada': return 'Completada';
       case 'rechazada': return 'Rechazada';
+      case 'cancelada': return 'Cancelada';
       default: return e;
     }
   }

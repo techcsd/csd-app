@@ -18,6 +18,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { CronogramaService } from '../../../core/services/cronograma.service';
+import { ValidacionCampoError } from '../../../core/util/validar';
 import { CronogramaTarea } from '../../../core/models/cronograma.model';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { ProyectosService } from '../../../core/services/proyectos.service';
@@ -1211,8 +1212,12 @@ export class PartePage implements OnDestroy {
             completar,
             fotoEvidencia: completar ? this.fotos()[0].blob : null,
           });
-        } catch {
-          /* el vínculo no debe tumbar el parte ya encolado */
+        } catch (e) {
+          // BC3 — el vínculo no debe tumbar el parte ya encolado; pero si no se pudo
+          // encolar (dato inválido), avisamos suave (no bloqueante) en vez de callar.
+          if (e instanceof ValidacionCampoError) {
+            this.toast.error(`El parte se guardó, pero no se pudo enlazar a la tarea: ${e.message}`);
+          }
         }
       }
       this.hydrated = false; // stop autosave; discard the draft

@@ -29,7 +29,7 @@
       @for (f of filas(); track f.id) {
         <button type="button" class="req-card" [attr.data-estado]="f.estado" (click)="abrir(f)">
           <div class="req-card__top">
-            <span class="req-card__obra">{{ f.proyecto_nombre ?? 'Obra' }}</span>
+            <span class="req-card__obra">🏗️ {{ f.proyecto_nombre ?? 'Obra' }}</span>
             <span class="req-card__estado" [attr.data-estado]="f.estado">{{ estadoLabel(f.estado) }}</span>
           </div>
           <div class="req-card__meta">

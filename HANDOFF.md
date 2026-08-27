@@ -1,5 +1,45 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 30/08/2026 — PROMPT-22 ronda BC (app) — requisiciones usables, outbox que se corrige, home agrupado — **F1+F2+F3+F4 COMPLETAS · build verde · migración aplicada a prod · ⏳ sin commit/push ni APK (avisar) + device-QA**
+
+**TL;DR:** las 4 fases del PROMPT-22 hechas sobre los contratos de PROMPT-21 (SGC 1.102.0, ya en prod: folio REQ, `error_campo`, `editar_requisicion`, `requisicion_avance/ediciones`). Xaviel **aprobó el home agrupado** (mock artifact `home-agrupado-v1`) → aplicado.
+
+### ✅ F1 — BC1+BC4: detalle de "Mis requisiciones"
+- **Migración `sql/2026-08-30-bc1-bc4-requisicion-detalle-extra.sql` (APLICADA A PROD):** extiende `requisicion_detalle` (jsonb, `create or replace` aditivo → web solo gana claves) con `folio`, `solicitante_rol`, `version`, `cancelada_motivo`, `cerrada_en`, `cerrada_por_nombre`. `add column if not exists` defensivo de cancelada_motivo/cerrada_por/cerrada_en. **Beneficia también a la web** (aún no consume las claves nuevas — pendiente espejo).
+- **App:** `mis` list → tarjetas TAPPABLES (→ `/solicitudes/requisicion/:id`) con chip 🏗️ obra + código REQ-XXXXXX. `detalle` reescrito: obra etiquetada+link a ficha, solicitante+rol, REQ-XXX+versión, estado, **avance de despachos** (`requisicion_avance`: "N de M renglones", solicitado/despachado/pendiente por renglón), **historial** (`requisicion_ediciones`), motivo de cancelación; acciones por estado — **Editar (BB10)** inline (urgencia+notas+renglones qty/unidad/quitar, `editar_requisicion`), **Cancelar** (`requisicion_cancelar`, `puede_gestionar_requisicion`), Aprobar/Rechazar (aprobador, +**stock por renglón** AT7 del almacén elegido), **ver conduce** vinculado; **pull-to-refresh** (botón ↻) + **offline** marcado (caché por id, "última versión sincronizada"). Bandeja: chip 🏗️ + filtros de estado nuevos (por_despachar/completada/cancelada).
+- **Helper `requisicionCodigo(folio)`** (espejo web) en `inventario.model.ts`.
+
+### ✅ F2 — BC2: cantidad y unidad editables en no catalogados
+- Antes: "Aguacate · 1 UND" clavado. Ahora el item "Otros" tiene **cantidad editable** (± + input) y **unidad editable** (dropdown AU13 + texto libre, UND default) tanto en el selector (lista "Seleccionados" de `soloBuscador`) como en el **resumen** de `pedir`. Util nuevo `core/util/unidades.ts` (`combinarUnidades`). La cantidad/unidad viajan completas a la requisición (ya lo hacían al RPC; el hueco era la edición en UI).
+
+### ✅ F3 — BC3: el outbox que se corrige
+- **Contrato PROMPT-21** (`docs/BC3-outbox-validacion-contrato.md`): error tipado 22023 `{campo, motivo}`.
+- `sync.service`: `parseCampoMotivo()` extrae `details`/`hint`; `PermanentSyncError` ahora lleva `campo/motivo`; se persisten en la op (`error_campo/error_motivo` en `OutboxOp`); 22023 → kind `validacion` (mensaje real del server, ya no la frase genérica "dato con formato inválido"). Política transitorio (backoff, 6 intentos) vs validación (sin auto-retry) ya estaba; ahora bien clasificada.
+- **Validar ANTES de encolar** (`core/util/validar.ts`: `esUuid/exigirUuid/ValidacionCampoError`): el **enlace de tarea** valida tarea_id/bitacora_id (uuid) + foto-si-completar antes de entrar al outbox (era el bug 22P02 de la captura). El handler `tarea_enlazar`: si la bitácora dependiente quedó en **error**, corta el auto-retry con error de validación señalando `bitacora_id` (ya no bucle de 15 h).
+- **Pendientes**: `mensajeError` muestra el campo señalado ("Revisa la bitácora."). "Corregir" editable sigue para conduce_simple (AO3); para el resto, mensaje con campo + Reintentar.
+
+### ✅ F4 — BC5: home agrupado (aprobado por Xaviel)
+- Mock artifact `home-agrupado-v1` → **"Aprobar y aplicar tal cual"**. `home.ts/html/scss`: vista NO-edición ahora en **5 grupos** (Ingeniería y producción / Transporte / Inventario / Comunicación / Administración y sistema) + fila **"Para ti"** por rol (chofer→transporte/por-confirmar; capataz→obra/bitácora/personal; ingeniero→proyectos/requisición/bitácora). **Gating intacto** (misma matriz, grupo vacío no se muestra), **badges suman al grupo** (sin perder el del tile), deep-links vivos, y el **modo edición (AF38/AJ4) intacto** (el orden guardado ordena dentro del grupo).
+
+### 🔴 Pendiente — SOLO Xaviel / device-QA
+- **Sin commit/push ni APK** (regla madre). Decidir bump de APK (F1-F4 cambian UI visible → sí amerita).
+- **Device-QA:** como ingeniero/capataz/chofer test (es_prueba): Mis requisiciones→detalle (obra, REQ, avance, editar pendiente, cancelar); "Aguacate" en 7 UND end-to-end hasta aprobador; outbox: reprocesar el "Enlace de tarea" real (ahora auto-resuelve o pide corregir con campo); home agrupado por rol.
+- **Espejo web (paridad):** que la web consuma las claves nuevas de `requisicion_detalle` (rol/version/cancelación) — hoy solo lee folio.
+
+### §E respuestas / defaults tomados
+- **BC2 unidad:** dropdown del catálogo **+ texto libre** (unión — cubre ambas opciones).
+- **BC3 retry:** transitorios con backoff, tope 6 intentos; validación sin auto-retry (ya vigente).
+- **BC4 aprobador:** se añadió stock por renglón (AT7); nada más pedido.
+- **BC6/AZ10:** fuera de PROMPT-22 (la app ya tiene "Entrar como" 2.3.0; la impersonación de usuarios reales es SGC PROMPT-21 F2).
+
+### Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0
+```
+
+---
+
+
 ## 🟢 SESIÓN 29/08/2026 (tarde 4) — «Un vehículo EN USO por chofer» (invariante de BD, app+web) — **COMPLETO · migración aplicada+verificada · sin APK (solo BD)**
 
 **TL;DR:** raíz de la confusión asignación↔uso: choferes con VARIOS vehículos "en uso" a la vez (Polin figuraba en 2-3) porque `iniciar_uso_vehiculo` cerraba el uso del OTRO tenedor del mismo vehículo, pero NO los usos previos del PROPIO chofer en otros vehículos. **Descarté el auto-sync asignación→uso** (radio de impacto grande en la web: combustible/rutas/reportes se basan en `vehiculo_asignaciones` — lo confirmé mapeando SGC). En su lugar, invariante limpio y seguro **solo en el modelo "en uso"**: **un chofer = un vehículo en uso a la vez.**

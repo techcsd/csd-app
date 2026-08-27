@@ -271,7 +271,8 @@ export class PendientesPage {
       case 'conflicto':
         return 'Este envío ya había sido registrado antes.';
       case 'datos':
-        return 'Hay un dato con formato inválido en el registro.';
+        // BC3 — si el servidor señaló el campo, decir CUÁL (ya no una frase genérica).
+        return this.conCampo(item, item.error_msg || 'Un dato del registro tiene un formato inválido.');
       case 'foto':
         return 'La foto ya no está disponible en el teléfono. Descártalo y vuelve a capturarlo.';
       case 'incompatible':
@@ -279,11 +280,37 @@ export class PendientesPage {
       case 'red':
         return 'Sin conexión estable. Se reintentará solo cuando vuelva la señal.';
       case 'validacion':
-        // El RPC devuelve un mensaje ya en español; se muestra tal cual.
-        return item.error_msg || 'El sistema rechazó los datos de este registro.';
+        // BC3 — el RPC devuelve un mensaje ya en español; se muestra tal cual + el campo.
+        return this.conCampo(item, item.error_msg || 'El sistema rechazó los datos de este registro.');
       default:
         return item.error_msg || 'No se pudo enviar. Intenta de nuevo o descártalo.';
     }
+  }
+
+  // BC3 — nombres de campo legibles para el aviso "revisa <campo>".
+  private static readonly CAMPO_LABEL: Record<string, string> = {
+    tarea_id: 'la tarea',
+    bitacora_id: 'la bitácora',
+    foto_path: 'la foto de evidencia',
+    proyecto_id: 'la obra',
+    fecha: 'la fecha',
+    litros: 'los litros',
+    monto: 'el monto',
+    odometro: 'el odómetro',
+    origen_id: 'el origen',
+    destino_id: 'el destino',
+    salida_id: 'el conduce',
+  };
+  /** BC3 — ¿el fallo señaló un campo concreto a corregir? */
+  campoSenalado(item: OutboxItem): string | null {
+    const c = (item as OutboxItem & { error_campo?: string }).error_campo;
+    if (!c) return null;
+    return PendientesPage.CAMPO_LABEL[c] ?? c;
+  }
+  /** Añade "Revisa <campo>." al mensaje cuando el servidor lo señaló. */
+  private conCampo(item: OutboxItem, base: string): string {
+    const c = this.campoSenalado(item);
+    return c ? `${base} Revisa ${c}.` : base;
   }
 
   /**

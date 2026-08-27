@@ -1,9 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
-import { SyncService, throwSyncError } from '../sync/sync.service';
+import { PermanentSyncError, SyncService, throwSyncError } from '../sync/sync.service';
 import { db } from '../db/app-db';
 import { CronogramaAviso, CronogramaData, CronogramaTarea } from '../models/cronograma.model';
+import { ValidacionCampoError, exigirUuid } from '../util/validar';
 
 const BUCKET = 'sgc-cronograma';
 const CAT_PREFIX = 'cronograma_'; // + proyectoId
@@ -195,6 +196,15 @@ export class CronogramaService {
     completar: boolean;
     fotoEvidencia?: Blob | null;
   }): Promise<void> {
+    // BC3 — validar ANTES de encolar (mismas reglas del servidor): un id vacío o
+    // mal formado reventaba en el borde de PostgREST (22P02) → tarjeta atascada con
+    // "dato con formato inválido" sin decir el campo. Ahora se corrige aquí.
+    exigirUuid(input.tareaId, 'tarea_id', 'la tarea a la que enlazar');
+    exigirUuid(input.bitacoraId, 'bitacora_id', 'la bitácora a enlazar');
+    if (input.completar && !input.fotoEvidencia) {
+      throw new ValidacionCampoError('foto_path', 'requerida_para_completar',
+        'Para completar la tarea hace falta una foto de evidencia.');
+    }
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
     const fotos = input.completar && input.fotoEvidencia
@@ -275,11 +285,24 @@ export class CronogramaService {
     });
 
     this.sync.register('tarea_enlazar', async (payload, photoPaths) => {
-      // Guarda de dependencia: no enlazar hasta que la bitácora se haya enviado
-      // (su op del outbox usa el mismo id). Si sigue en cola, reintentar luego.
+      // Guarda de dependencia (BC3): no enlazar hasta que la bitácora se haya
+      // enviado (su op del outbox usa el mismo id).
       const bitacoraId = payload['bitacora_id'] as string;
       const parteOp = await db.outbox.get(bitacoraId);
-      if (parteOp) throw new Error('Esperando que la bitácora se sincronice…'); // transitorio
+      if (parteOp) {
+        if (parteOp.estado === 'error') {
+          // La bitácora falló (p. ej. permiso BC7): el enlace NO se resolverá solo
+          // reintentando → error de validación accionable señalando el campo, para
+          // que el usuario arregle primero la bitácora (no un bucle de 15 h).
+          throw new PermanentSyncError(
+            'La bitácora enlazada no se pudo guardar. Corrige y reenvía la bitácora; luego reintenta el enlace.',
+            'validacion',
+            'bitacora_id',
+            'no_existe',
+          );
+        }
+        throw new Error('Esperando que la bitácora se sincronice…'); // transitorio → auto-retry
+      }
       const { error } = await this.supabase.client.rpc('enlazar_bitacora_tarea', {
         p_tarea_id: payload['tarea_id'],
         p_bitacora_id: bitacoraId,

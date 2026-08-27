@@ -15,6 +15,7 @@
         [loading]="loadingCat()"
         modo="requisicion"
         [soloBuscador]="true"
+        [unidades]="unidades()"
         [(cart)]="cart"
         (siguiente)="irResumen()"
         (cancelar)="intentarSalir()"
@@ -42,7 +43,15 @@
             <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· Talla {{ l.talla }}</small> }</span>
             <div class="mov__item-qty">
               <app-qty-input [value]="l.cantidad" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
-              <span class="mov__item-unit">{{ l.unidad }}</span>
+              @if (esCustomLinea(l)) {
+                <!-- BC2 — unidad editable para material NO catalogado -->
+                <select class="field mov__item-unitsel" [ngModel]="l.unidad" (ngModelChange)="setUnidad(l.articulo_id!, $event)" aria-label="Unidad">
+                  @for (u of unidades(); track u) { <option [value]="u">{{ u }}</option> }
+                  @if (l.unidad && !unidades().includes(l.unidad)) { <option [value]="l.unidad">{{ l.unidad }}</option> }
+                </select>
+              } @else {
+                <span class="mov__item-unit">{{ l.unidad }}</span>
+              }
               <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
             </div>
           </div>

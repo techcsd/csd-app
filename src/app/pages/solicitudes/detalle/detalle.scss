@@ -20,8 +20,29 @@
 }
 .reqd__title {
   margin: 0;
+  flex: 1;
   font-size: var(--fs-title);
   font-weight: 800;
+}
+.reqd__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.reqd__offbanner {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .reqd__top {
@@ -32,7 +53,16 @@
   margin-bottom: 12px;
 }
 .reqd__obra {
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: left;
+  min-width: 0;
+  color: var(--color-text);
+}
+.reqd__obra--link {
+  color: var(--color-info);
+}
+.reqd__obra-go {
   font-weight: 800;
 }
 .reqd__estado {
@@ -45,9 +75,199 @@
   color: var(--color-text-secondary);
 
   &[data-estado='pendiente'] { background: #fef3c7; color: #b45309; }
-  &[data-estado='aprobada'] { background: #dbeafe; color: #1d4ed8; }
-  &[data-estado='entregada'] { background: #dcfce7; color: #15803d; }
-  &[data-estado='rechazada'] { background: #fee2e2; color: #b91c1c; }
+  &[data-estado='aprobada'],
+  &[data-estado='por_despachar'] { background: #dbeafe; color: #1d4ed8; }
+  &[data-estado='entregada'],
+  &[data-estado='completada'] { background: #dcfce7; color: #15803d; }
+  &[data-estado='rechazada'],
+  &[data-estado='cancelada'] { background: #fee2e2; color: #b91c1c; }
+}
+.reqd__code {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.reqd__code-req {
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--color-text);
+}
+.reqd__code-ver {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+}
+.reqd__rol {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 8px;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.reqd__aviso {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.reqd__aviso--danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+// BA6 — avance de despachos
+.reqd__avance {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+.reqd__avance-sub {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-info);
+}
+.reqd__avance-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reqd__avance-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.reqd__avance-name {
+  min-width: 0;
+  font-weight: 600;
+}
+.reqd__avance-cant {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.reqd__avance-pend {
+  color: var(--color-warning);
+  font-style: normal;
+  font-weight: 700;
+}
+.reqd__avance-ok {
+  color: var(--color-success);
+}
+.reqd__item-nc {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+// BB10 — historial
+.reqd__hist {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reqd__hist-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// AT7 — stock por renglón (aprobador)
+.reqd__stock {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reqd__stock-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.reqd__stock-name {
+  min-width: 0;
+  font-weight: 600;
+}
+.reqd__stock-cant {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+}
+.reqd__stock-falta {
+  color: var(--color-error);
+}
+
+// BB10 — editor
+.reqd__chips {
+  display: flex;
+  gap: 8px;
+}
+.reqd__edit-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.reqd__edit-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.reqd__edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reqd__edit-unit {
+  width: auto;
+  min-width: 84px;
+}
+.reqd__edit-unitfix {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.reqd__edit-x {
+  margin-left: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--color-surface-2);
+  color: var(--color-error);
+  font-size: 18px;
+  font-weight: 700;
+}
+.reqd__link--btn {
+  border: none;
+  cursor: pointer;
+  color: var(--color-info);
+}
+.reqd__cancelar {
+  color: var(--color-error);
 }
 
 .reqd__facts {

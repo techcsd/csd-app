@@ -3,7 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Proyecto } from '../models/bitacora.model';
-import { MiOrdenCompra, RequisicionBandeja, RequisicionDetalle, Solicitud, Urgencia } from '../models/inventario.model';
+import { MiOrdenCompra, RequisicionAvanceItem, RequisicionBandeja, RequisicionDetalle, RequisicionEdicion, RequisicionEditar, Solicitud, Urgencia } from '../models/inventario.model';
 
 /** AS7 — filtros de la bandeja de requisiciones. */
 export interface RequisicionFiltros {
@@ -56,7 +56,7 @@ export class SolicitudesService {
     const data = await this.catalog.refresh<Solicitud[]>(CAT_SOLICITUDES, async () => {
       const { data, error } = await this.supabase.client
         .from('solicitudes_material')
-        .select('id, estado, urgencia, notas, created_at, proyecto:proyectos(nombre), items:solicitud_material_items(descripcion, cantidad, unidad)')
+        .select('id, estado, urgencia, notas, created_at, folio, proyecto:proyectos(nombre), items:solicitud_material_items(descripcion, cantidad, unidad)')
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw new Error(error.message);
@@ -104,11 +104,85 @@ export class SolicitudesService {
     return (data as RequisicionBandeja[]) ?? [];
   }
 
-  /** Detalle completo de una requisición (por rol o por su solicitante). */
+  /** BC1 — Detalle completo de una requisición (por rol o por su solicitante).
+   *  Cache-then-network: offline devuelve la última versión sincronizada (marcada
+   *  en la UI vía `detalleFetchedAt`). */
   async detalle(id: string): Promise<RequisicionDetalle | null> {
-    const { data, error } = await this.supabase.client.rpc('requisicion_detalle', { p_id: id });
+    const data = await this.catalog.refresh<RequisicionDetalle | null>(`req_detalle:${id}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('requisicion_detalle', { p_id: id });
+      if (error) throw new Error(error.message);
+      return (data as RequisicionDetalle) ?? null;
+    });
+    return data ?? null;
+  }
+
+  /** BC1 — ¿cuándo se cargó por última vez el detalle cacheado? (null = nunca). */
+  async detalleFetchedAt(id: string): Promise<number | null> {
+    return this.catalog.fetchedAt(`req_detalle:${id}`);
+  }
+
+  /** BA6 — avance de despachos renglón por renglón (solicitado/despachado/pendiente). */
+  async avance(id: string): Promise<RequisicionAvanceItem[]> {
+    const data = await this.catalog.refresh<RequisicionAvanceItem[]>(`req_avance:${id}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('requisicion_avance', { p_solicitud_id: id });
+      if (error) throw new Error(error.message);
+      return (data as RequisicionAvanceItem[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** BB10 — historial de ediciones del autor sobre su requisición. */
+  async ediciones(id: string): Promise<RequisicionEdicion[]> {
+    const data = await this.catalog.refresh<RequisicionEdicion[]>(`req_ediciones:${id}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('requisicion_ediciones', { p_solicitud_id: id });
+      if (error) throw new Error(error.message);
+      return (data as RequisicionEdicion[]) ?? [];
+    });
+    return data ?? [];
+  }
+
+  /** BA6 — ¿el usuario puede gestionar (cancelar/cerrar) esta requisición? */
+  async puedeGestionar(id: string): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('puede_gestionar_requisicion', { p_solicitud_id: id });
+      if (error) return false;
+      return !!data;
+    } catch {
+      return false;
+    }
+  }
+
+  /** BB10 — edita una requisición PENDIENTE (solo el autor/admin). Online (no
+   *  outbox: es una corrección puntual que necesita eco inmediato del servidor). */
+  async editar(input: RequisicionEditar): Promise<void> {
+    const { error } = await this.supabase.client.rpc('editar_requisicion', {
+      p_solicitud_id: input.id,
+      p_urgencia: input.urgencia ?? null,
+      p_notas: input.notas ?? null,
+      p_items: input.items ?? null,
+    });
     if (error) throw new Error(error.message);
-    return (data as RequisicionDetalle) ?? null;
+    await this.invalidarCache(input.id);
+  }
+
+  /** BA6 — cancela una requisición con motivo obligatorio (rol con permiso). Online. */
+  async cancelar(id: string, motivo: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('requisicion_cancelar', {
+      p_solicitud_id: id,
+      p_motivo: motivo,
+    });
+    if (error) throw new Error(error.message);
+    await this.invalidarCache(id);
+  }
+
+  /** BC1 — fuerza re-consulta del detalle/avance/ediciones (pull-to-refresh). */
+  async invalidarCache(id: string): Promise<void> {
+    await Promise.all([
+      this.catalog.invalidate(`req_detalle:${id}`),
+      this.catalog.invalidate(`req_avance:${id}`),
+      this.catalog.invalidate(`req_ediciones:${id}`),
+      this.catalog.invalidate(CAT_SOLICITUDES),
+    ]);
   }
 
   /**

@@ -48,6 +48,12 @@ export interface OutboxOp {
   error_msg?: string;
   /** P5 — familia de la causa del último fallo (para traducir a español). */
   error_kind?: string;
+  /** BC3 — campo señalado por el servidor (error tipado 22023 {campo, motivo}) para
+   *  marcarlo al corregir. Vacío si el error no especificó un campo. */
+  error_campo?: string;
+  /** BC3 — motivo estable del rechazo del campo (requerido | formato_invalido |
+   *  no_existe | fuera_de_rango | duplicado | requerida_para_completar). */
+  error_motivo?: string;
   /** P5 — true si el error es permanente (no se reencola en "reintentar todo"). */
   permanente?: boolean;
   capturado_en: string;

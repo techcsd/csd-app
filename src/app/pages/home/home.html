@@ -72,25 +72,58 @@
       }
     </main>
   } @else {
+    <!-- BC5 — home agrupado por dominio (árbol aprobado). Long-press → editar. -->
     <main
-      class="home__grid"
+      class="home__groups"
       data-tour="tiles"
       (pointerdown)="onTilePointerDown()"
       (pointerup)="onTilePointerUp()"
       (pointerleave)="onTilePointerUp()"
       (pointercancel)="onTilePointerUp()"
     >
-      @for (tile of tiles(); track tile.modulo) {
-        <app-big-button
-          [icon]="tile.icon"
-          [label]="tile.label"
-          [tint]="tile.tint"
-          [badge]="badgeFor(tile.modulo)"
-          [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
-          [class.home__tile--2x2]="sizeClass(tile.modulo) === '2x2'"
-          (pressed)="open(tile)"
-        />
-      } @empty {
+      @if (tiles().length) {
+        <!-- Para ti: accesos frecuentes del rol -->
+        @if (paraTi().length) {
+          <section class="home__group">
+            <h2 class="home__group-hd home__group-hd--foryou">⭐ Para ti</h2>
+            <div class="home__grid">
+              @for (tile of paraTi(); track tile.modulo) {
+                <app-big-button
+                  [icon]="tile.icon"
+                  [label]="tile.label"
+                  [tint]="tile.tint"
+                  [badge]="badgeFor(tile.modulo)"
+                  (pressed)="open(tile)"
+                />
+              }
+            </div>
+          </section>
+        }
+
+        <!-- Grupos por dominio -->
+        @for (g of grupos(); track g.key) {
+          <section class="home__group">
+            <h2 class="home__group-hd" [style.--g]="g.color">
+              <span class="home__group-ic">{{ g.icon }}</span>
+              <span class="home__group-lb">{{ g.label }}</span>
+              @if (g.badge) { <span class="home__group-badge">{{ g.badge > 9 ? '9+' : g.badge }}</span> }
+            </h2>
+            <div class="home__grid">
+              @for (tile of g.tiles; track tile.modulo) {
+                <app-big-button
+                  [icon]="tile.icon"
+                  [label]="tile.label"
+                  [tint]="tile.tint"
+                  [badge]="badgeFor(tile.modulo)"
+                  [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
+                  [class.home__tile--2x2]="sizeClass(tile.modulo) === '2x2'"
+                  (pressed)="open(tile)"
+                />
+              }
+            </div>
+          </section>
+        }
+      } @else {
         <app-empty-state
           icon="🔑"
           title="Sin módulos asignados"

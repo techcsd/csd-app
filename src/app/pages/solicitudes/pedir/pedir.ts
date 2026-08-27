@@ -18,6 +18,7 @@ import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { combinarUnidades } from '../../../core/util/unidades';
 
 interface GrupoResumen {
   categoria: string;
@@ -57,6 +58,7 @@ export class PedirPage implements OnDestroy {
   categorias = signal<CategoriaInv[]>([]);
   loadingCat = signal(true);
   cart = signal<CartLinea[]>([]);
+  unidades = signal<string[]>([]); // BC2 — dropdown de unidades (AU13) para no catalogados
   urgencia = signal<Urgencia>('normal');
   notas = signal('');
   submitting = signal(false);
@@ -106,6 +108,11 @@ export class PedirPage implements OnDestroy {
       this.proyectos.set(p);
       this.articulos.set(a);
       this.categorias.set(cat);
+      // BC2 — unidades para el desplegable de material no catalogado.
+      this.inventario
+        .getUnidades()
+        .then((u) => this.unidades.set(combinarUnidades(u.map((x) => x.nombre || x.codigo))))
+        .catch(() => this.unidades.set(combinarUnidades([])));
       const obra = this.ctx.obraActiva();
       if (obra) this.proyectoId.set(obra.id);
       else if (p.length === 1) this.proyectoId.set(p[0].id);
@@ -145,6 +152,16 @@ export class PedirPage implements OnDestroy {
   quitar(articuloId: string): void {
     this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
     if (!this.cart().length) this.hoja.set('seleccion');
+  }
+
+  /** BC2 — cambia la unidad de un renglón no catalogado (dropdown AU13 + libre). */
+  setUnidad(articuloId: string, unidad: string): void {
+    const u = (unidad ?? '').trim() || 'UND';
+    this.cart.update((list) => list.map((l) => (l.articulo_id === articuloId ? { ...l, unidad: u } : l)));
+  }
+  /** ¿El renglón es material NO catalogado (id sintético "otro:*")? */
+  esCustomLinea(l: CartLinea): boolean {
+    return this.esCustom(l);
   }
 
   get online(): boolean {

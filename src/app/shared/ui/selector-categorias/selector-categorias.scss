@@ -197,6 +197,31 @@
   color: var(--color-text-secondary);
 }
 
+// BC2 — edición en línea de material NO catalogado
+.selcat__item-nc {
+  display: inline-block;
+  margin: 2px 0;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 700;
+}
+.selcat__otro-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.selcat__unit {
+  width: auto;
+  min-width: 88px;
+  height: 40px;
+  padding: 0 8px;
+}
+
 .selcat__item-nota {
   font-size: 12px;
   color: var(--color-text-secondary);

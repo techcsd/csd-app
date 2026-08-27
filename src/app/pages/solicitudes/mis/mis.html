@@ -9,12 +9,13 @@
       <app-skeleton [rows]="5" />
     } @else {
       @for (s of solicitudes(); track s.id) {
-        <div class="sol-card" [attr.data-estado]="s.estado">
+        <button type="button" class="sol-card" [attr.data-estado]="s.estado" (click)="abrir(s)">
           <div class="sol-card__top">
-            <span class="sol-card__proyecto">{{ s.proyecto?.nombre ?? 'Obra' }}</span>
+            <span class="sol-card__chip">🏗️ {{ s.proyecto?.nombre ?? 'Obra' }}</span>
             <span class="sol-card__estado">{{ estadoLabel(s.estado) }}</span>
           </div>
           <div class="sol-card__meta">
+            <span class="sol-card__code">{{ codigo(s.folio) }}</span>
             <span>{{ fmtFecha(s.created_at) }}</span>
             @if (s.urgencia === 'urgente') { <span class="sol-card__urg">🔴 Urgente</span> }
           </div>
@@ -32,7 +33,8 @@
               </span>
             </div>
           }
-        </div>
+          <span class="sol-card__ver">Ver detalle ›</span>
+        </button>
       } @empty {
         <app-empty-state
           icon="📝"

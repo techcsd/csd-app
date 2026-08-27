@@ -54,6 +54,8 @@ export class SelectorCategorias {
    * con el patrón de categorías intacto.
    */
   soloBuscador = input(false);
+  /** BC2 — unidades para el desplegable de material NO catalogado (AU13). */
+  unidades = input<string[]>([]);
   cart = model<CartLinea[]>([]);
 
   siguiente = output<void>();
@@ -214,6 +216,28 @@ export class SelectorCategorias {
   /** Quita una línea del carrito por su id (catálogo o "otros"). */
   quitarLinea(articuloId: string): void {
     this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
+  }
+
+  // ── BC2 — edición en línea de un material NO catalogado (cantidad + unidad) ──
+  /** ¿La línea del carrito es un "Otros" (no catalogado)? */
+  esCustomLinea(l: CartLinea): boolean {
+    return this.esCustom(l);
+  }
+  /** Fija la cantidad de una línea "Otros" (permite vacío transitorio → 0). */
+  setCantidadLinea(articuloId: string, v: number): void {
+    const cant = Math.max(0, Math.floor((v || 0) * 100) / 100);
+    this.cart.update((list) => list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: cant } : l)));
+  }
+  /** ± sobre una línea "Otros" (mínimo 1). */
+  ajustarOtro(articuloId: string, delta: number): void {
+    this.cart.update((list) =>
+      list.map((l) => (l.articulo_id === articuloId ? { ...l, cantidad: Math.max(1, (l.cantidad || 0) + delta) } : l)),
+    );
+  }
+  /** Cambia la unidad de una línea "Otros" (dropdown AU13 + texto libre). */
+  setUnidadLinea(articuloId: string, unidad: string): void {
+    const u = (unidad ?? '').trim() || 'UND';
+    this.cart.update((list) => list.map((l) => (l.articulo_id === articuloId ? { ...l, unidad: u } : l)));
   }
 
   cantidadDe(articuloId: string): number {

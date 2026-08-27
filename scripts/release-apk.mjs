@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.5.0';
+const VERSION = '2.6.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,15 +59,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-08-29';
+const RELEASED_AT = '2026-08-30';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Combustible: «Tus vehículos» = el que TIENES EN USO (no la asignación vieja)';
+const TITULO = 'Requisiciones con detalle completo + inicio agrupado por área';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Combustible', d: 'Al registrar combustible, «Tus vehículos» ahora muestra el que REALMENTE tienes en uso, no un vehículo asignado que ya no manejas. Y puedes echarle gas sin que el sistema lo rechace.' },
+  { t: 'nuevo', m: 'Requisición', d: 'Abre cualquiera de tus requisiciones para ver su detalle: obra, código REQ, estado, avance de despacho renglón por renglón, historial y quién la atendió.' },
+  { t: 'nuevo', m: 'Requisición', d: 'Edita tu requisición mientras esté pendiente (cantidades, unidades, urgencia y notas) o cancélala con un motivo.' },
+  { t: 'arreglo', m: 'Requisición', d: 'Al pedir un material que no está en el catálogo («Otros»), ya puedes escribir la cantidad y elegir la unidad — antes se quedaba fijo en «1 UND».' },
+  { t: 'mejora', m: 'Inicio', d: 'La pantalla de inicio agrupa los módulos por área (Ingeniería, Transporte, Inventario, Comunicación, Administración) con una fila «Para ti» arriba según tu rol.' },
+  { t: 'arreglo', m: 'Envíos', d: 'Si un envío queda pendiente por un dato inválido, la app te dice qué campo corregir en vez de un mensaje genérico, y ya no se reintenta en vano por horas.' },
 ];
 
 const TIPO_POR_COMMIT = {
