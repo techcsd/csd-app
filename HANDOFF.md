@@ -1,5 +1,11 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 29/08/2026 (tarde 3) — Combustible: «Tus vehículos» = el EN USO, no la asignación vieja (app 2.5.0) — **COMPLETO · build verde · commit+push+APK publicado (rolling)**
+
+**TL;DR:** seguimiento del 2.4.0. Xaviel notó que a Manolo LE SEGUÍA SALIENDO la Nissan en el selector aunque no la usa. **Datos:** Manolo está **asignado** a la Nissan L441660 (desde 18-ago) pero **la Nissan la USA POLIN RAMIREZ** (uso activo); Manolo **maneja la KIA L473027** (uso activo 26-ago). El selector mostraba la **asignación** (dato viejo), no lo que usa. **Fix (2.5.0):** en `vehiculo-picker`, si tienes vehículo(s) EN USO, "Tus vehículos" = esos (+ recepciones en cola); solo si **no** tienes ninguno en uso cae a la asignación formal. Así Manolo ve solo la KIA. (2.4.0 los unía a ambos; 2.5.0 hace que el "en uso" MANDE.)
+- **Archivo:** `shared/ui/vehiculo-picker/vehiculo-picker.ts` (lógica de `misIds`). Build verde. Release 2.5.0 firmado + registrado + publicado, **`publicada=2.5.0`**, mínima 1.96.4 intacta. `sql/2026-08-29-publicar-2.5.0.sql`.
+- **⚠️ Dato para Xaviel (no lo toqué — es de admin/ops):** la **asignación de Manolo a la Nissan está vieja** (Polin la usa). Conviene que el admin la reasigne/limpie en SGC. Mientras exista, AF18 dejaría a Manolo echarle gas a la Nissan (es el "asignado") aunque Polin la maneje — no es riesgo grave pero es señal de que el modelo asignación(v1) vs uso(v2) sigue desincronizado en datos. Si quieres, puedo proponer que iniciar un uso de otro vehículo cierre/segunde la asignación previa.
+
 ## 🟢 SESIÓN 29/08/2026 (tarde 2) — Bug de combustible del vehículo EN USO (app 2.4.0) — **COMPLETO · build verde · commit+push+APK publicado (rolling) · migración aplicada+verificada · ⏳ device-QA**
 
 **TL;DR:** hallado con «Entrar como» MANOLO DURAN. Manolo tiene el **KIA L473027 EN USO** (uso v2 activo) pero su **asignación formal** es la Nissan L441660, y el KIA está **asignado a otro**. Al «Registrar combustible» el selector solo mostraba la Nissan (asignación) y **no dejaba elegir el KIA**; y aunque lo eligiera, el RPC lo **rechazaba** (guard AF18 "solo el usuario asignado"). Arreglado en cliente **y** backend para que **las echadas sigan al vehículo EN USO**, no solo a la asignación.

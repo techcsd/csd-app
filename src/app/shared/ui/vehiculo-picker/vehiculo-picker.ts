@@ -90,12 +90,17 @@ export class VehiculoPicker {
         this.usoSvc.misUsos().catch(() => []),
       ]);
       this.disponibles.set(disp);
-      // Los vehículos que tengo EN USO ahora también son "míos" (aunque su asignación
-      // formal sea de otro) → así el chofer puede echarle gas al que realmente maneja.
+      // "Tus vehículos" = lo que REALMENTE manejas. El "en uso" (uso v2) manda sobre
+      // la asignación formal, que puede estar vieja: p. ej. Manolo está asignado a la
+      // Nissan (que hoy usa OTRO) pero él maneja la KIA. Si tienes algo EN USO, esos
+      // (+ recepciones en cola) son "los tuyos"; solo si NO tienes ninguno en uso caemos
+      // a la asignación formal. Así no aparece un vehículo que no estás usando.
       const enUsoMios = misUsos.filter((u) => u.activa).map((u) => u.vehiculo_id);
-      this.misIds.set(
-        new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola, ...enUsoMios]),
-      );
+      const recep = [...recepcionesEnCola];
+      const idsMios = enUsoMios.length
+        ? [...enUsoMios, ...recep]
+        : [...asignaciones.map((a) => a.vehiculo_id), ...recep];
+      this.misIds.set(new Set(idsMios));
       void this.resolveFotos(disp);
       // AW16 — quién tiene cada vehículo EN USO ahora (best-effort; requiere permiso).
       if (this.mostrarEnUso()) {
