@@ -1,6 +1,12 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 30/08/2026 — PROMPT-22 ronda BC (app) — requisiciones usables, outbox que se corrige, home agrupado — **F1+F2+F3+F4 COMPLETAS · build verde · migración aplicada a prod · ⏳ sin commit/push ni APK (avisar) + device-QA**
+## 🟢 SESIÓN 30/08/2026 — PROMPT-22 ronda BC (app) — requisiciones usables, outbox que se corrige, home agrupado — **F1+F2+F3+F4 COMPLETAS · build verde · migración a prod · smoke de datos VERDE · commit `73d2222` PUSHEADO (PWA deploy) · APK 2.6.0 firmado+registrado+SUBIDO al bucket · ⏳ falta flip `publicada=2.6.0` (rollout Android) + device visual-QA**
+
+### 🚀 Release 2.6.0
+- Commit `73d2222` en `main` (pusheado) → Vercel deploya la **PWA** 2.6.0 (iPhone/web ya la reciben).
+- APK 2.6.0 firmado (cert prod `3c5316d8…5065`), **registrado (Y1)** con CAMBIOS_CURADOS, y **subido al bucket** (`csd-app-2.6.0.apk` + `latest` + `version.json` + `apk_url`). Descarga: `…/app-releases/csd-app-2.6.0.apk`.
+- **NO forzado a Android todavía:** `publicada` sigue en 2.5.0 (paso de admin aparte). Para hacer rolling a todos: `update sgc.app_versiones set publicada=(version='2.6.0') where plataforma='movil';` (minima 1.96.4 INTACTA). **Rollback PWA:** `git revert 73d2222 && git push`. **Rollback Android:** `update … set publicada=(version='2.5.0') …`.
+- **Verificación:** `npm run build` verde; `node scratchpad/qa-bc-smoke.mjs` **TODO VERDE** (folio/rol/version, avance, editar→v2+historial, error tipado 22023 {campo,motivo}, no-catalogado 7 UND). **Visual-QA en device pendiente** (no había device/emulador/navegador para renderizar; falta ver el detalle/home agrupado en pantalla real).
 
 **TL;DR:** las 4 fases del PROMPT-22 hechas sobre los contratos de PROMPT-21 (SGC 1.102.0, ya en prod: folio REQ, `error_campo`, `editar_requisicion`, `requisicion_avance/ediciones`). Xaviel **aprobó el home agrupado** (mock artifact `home-agrupado-v1`) → aplicado.
 
