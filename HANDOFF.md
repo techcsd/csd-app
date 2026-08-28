@@ -1,11 +1,13 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 31/08/2026 — PROMPT-23 ronda BD (app) — revert home agrupado (toggle opcional) + recepción completa (ver+foto+firmar) — **F1+F2 COMPLETAS · build verde · 2 migraciones aplicadas+verificadas en prod · ⏳ sin commit/push/APK (regla madre) + device-QA**
+## 🟢 SESIÓN 31/08/2026 — PROMPT-23 ronda BD (app) — revert home agrupado (toggle opcional) + recepción completa (ver+foto+firmar) — **F1+F2 COMPLETAS · build verde · 2 migraciones en prod · commit `e9b14f9` · APK 2.7.0 firmado+registrado · ⏳ falta push (PWA) + apk:publish + flip publicada + device-QA**
 
 **TL;DR:** dos entregas. **F1 (BD1):** el home agrupado (BC5) se **revierte como default** → vuelve el **grid plano** para todos; la vista agrupada queda como **preferencia por usuario server-side** ("Agrupar módulos por sección" en Perfil, OFF por defecto). La agrupada se **arregló**: sin bloque "Para ti" (mataba la duplicación), cada módulo UNA vez, **Tareas/Mensajes/Notas/Compa en sección "General"** (ya no dentro de Ingeniería), secciones **colapsables**. **F2 (BD2):** recibir = **VER conduce + FOTO + FIRMA**. Bandeja canónica única **"Entregas por recibir"** que **fusiona** las dos colas (por confirmar + por firmar) **deduplicadas por salida**; `/transporte/por-firmar` ahora **redirige**; **banner del home unificado** ("N por recibir"); la **firma sale de la sesión** (se eliminó el "Tu nombre" editable que dejaba firmar "como" otro). Foto **obligatoria pero no bloqueante** (si no se puede, exige nota).
 
-### 🚀 Estado / release
-- **NO commit/push/APK** (regla madre — avisar). Cambios UI visibles (home + recepción) → amerita bump (sugerido **2.7.0**) cuando Xaviel dé el OK.
+### 🚀 Estado / release 2.7.0
+- **Commit `e9b14f9` en `main`** (aún NO pusheado — para deployar la PWA: `git push`). Versión bumpeada a **2.7.0** en environments/build.gradle/release-apk.mjs.
+- **APK 2.7.0 firmado** (cert prod `3c5316d8…5065`) y **registrado (Y1)** con CAMBIOS_CURADOS (título "Inicio más simple + recibir entregas con foto y firma"). En `android/app/build/outputs/apk/release/app-release.apk` (11 MB). **NO subido al bucket** (`apk:publish` pendiente) y **NO forzado**: `publicada=false`, `minima=false`. Rolling a Android: `node scripts/release-apk.mjs` (sube al bucket) + admin flip `publicada=2.7.0` en SGC.
+- ⚠️ Observación (no la toqué, es tu dominio admin): en `sgc.app_versiones` móvil, **2.6.0 figura `minima=true`** (no 1.96.4). Si esperabas mínima 1.96.4, revísalo.
 - **2 migraciones aplicadas a PROD** (aditivas, verificadas):
   - `sql/2026-08-31-bd1-preferencias-usuario.sql` — columna `sgc.usuarios.preferencias jsonb` + RPC self-scoped `mi_preferencia_set(clave,valor)`. Primera clave: `agrupar_home`.
   - `sql/2026-08-31-bd2-recibir-foto-firma.sql` — `firmar_conduce` +`p_foto_path`+`p_nota` (rama receptor guarda `recepcion_foto_path`/`notas_recepcion`; se DROPeó la firma de 8 args y se recreó con 10 → callers viejos resuelven por defaults); `conduce_confirmar_receptor` **foto no bloqueante** (exige foto **O** nota) + limpia `firma_pendiente_*` al confirmar (mata la redundancia AY2: una entrega entregada-con-firma-pendiente salía en las DOS bandejas). Firma verificada; runtime OK (ambas llegan al guard auth).
