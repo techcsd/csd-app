@@ -112,6 +112,12 @@
 .porconf__req {
   color: var(--color-error);
 }
+// BD2 — recordatorio de que la firma va a nombre de la sesión (no editable).
+.porconf__firmante {
+  margin: 2px 0 8px;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
 .porconf__mt {
   margin-top: 14px;
   display: block;

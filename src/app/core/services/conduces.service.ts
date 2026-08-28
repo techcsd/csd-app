@@ -1775,13 +1775,19 @@ export class ConducesService {
    */
   async conduceConfirmarReceptor(input: {
     salidaId: string;
-    foto: Blob;
+    foto: Blob | null; // BD2 — obligatoria pero NO bloqueante (si falta, exige nota)
     firma: Blob;
     checklist?: { llego_todo: boolean } | null;
     items?: { detalle_id: string; cantidad_recibida: number }[] | null;
     notas?: string | null;
   }): Promise<void> {
     const id = crypto.randomUUID();
+    const fotos = [
+      { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-conf-firma.png`, slot: 'conf_firma', blob: input.firma },
+    ];
+    if (input.foto) {
+      fotos.unshift({ id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-conf-foto.jpg`, slot: 'conf_foto', blob: input.foto });
+    }
     await this.sync.enqueue({
       id,
       tipo_op: 'conduce_confirmar',
@@ -1792,10 +1798,7 @@ export class ConducesService {
         items: input.items ?? null,
         notas: input.notas ?? null,
       },
-      fotos: [
-        { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-conf-foto.jpg`, slot: 'conf_foto', blob: input.foto },
-        { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-conf-firma.png`, slot: 'conf_firma', blob: input.firma },
-      ],
+      fotos,
       resumen: { tipo: 'conduce_confirmar', salida_id: input.salidaId },
     });
   }
@@ -2370,7 +2373,7 @@ export class ConducesService {
     this.sync.register('conduce_confirmar', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('conduce_confirmar_receptor', {
         p_salida_id: payload['salida_id'],
-        p_foto_path: photoPaths['conf_foto'],
+        p_foto_path: photoPaths['conf_foto'] ?? null, // BD2 — puede faltar (con nota)
         p_firma_path: photoPaths['conf_firma'],
         p_checklist: payload['checklist'] ?? null,
         p_items: payload['items'] ?? null,

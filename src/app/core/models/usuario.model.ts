@@ -21,6 +21,8 @@ export interface Usuario {
   /** AY7 — usuario de PRUEBA (email sintético, excluido de lo real). Muestra banner. */
   es_prueba?: boolean;
   avatar_path?: string | null;
+  /** BD1 — bolsa de preferencias por usuario (server-side). P. ej. `agrupar_home`. */
+  preferencias?: Record<string, unknown> | null;
   roles?: UsuarioRol[];
 }
 

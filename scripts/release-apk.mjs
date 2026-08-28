@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.6.0';
+const VERSION = '2.7.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,16 +62,16 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-08-30';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Requisiciones con detalle completo + inicio agrupado por área';
+const TITULO = 'Inicio más simple + recibir entregas con foto y firma';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Requisición', d: 'Abre cualquiera de tus requisiciones para ver su detalle: obra, código REQ, estado, avance de despacho renglón por renglón, historial y quién la atendió.' },
-  { t: 'nuevo', m: 'Requisición', d: 'Edita tu requisición mientras esté pendiente (cantidades, unidades, urgencia y notas) o cancélala con un motivo.' },
-  { t: 'arreglo', m: 'Requisición', d: 'Al pedir un material que no está en el catálogo («Otros»), ya puedes escribir la cantidad y elegir la unidad — antes se quedaba fijo en «1 UND».' },
-  { t: 'mejora', m: 'Inicio', d: 'La pantalla de inicio agrupa los módulos por área (Ingeniería, Transporte, Inventario, Comunicación, Administración) con una fila «Para ti» arriba según tu rol.' },
-  { t: 'arreglo', m: 'Envíos', d: 'Si un envío queda pendiente por un dato inválido, la app te dice qué campo corregir en vez de un mensaje genérico, y ya no se reintenta en vano por horas.' },
+  { t: 'mejora', m: 'Inicio', d: 'La pantalla de inicio vuelve a mostrar todos tus módulos a la vista, sin tener que buscar entre secciones. Si prefieres verlos agrupados por área, actívalo en Perfil → «Agrupar módulos por sección».' },
+  { t: 'nuevo', m: 'Recepción', d: 'Al recibir una entrega ahora puedes abrir el conduce completo, tomarle foto a lo recibido y firmar — todo en un mismo paso. Nada de firmar a ciegas.' },
+  { t: 'mejora', m: 'Recepción', d: 'Las entregas «por firmar» y «por confirmar» se unieron en una sola bandeja «Entregas por recibir», con un solo aviso y el conteo real.' },
+  { t: 'seguridad', m: 'Recepción', d: 'La firma de recepción sale de tu propia sesión (ya no se escribe un nombre libre): nadie puede firmar «como» otra persona.' },
+  { t: 'mejora', m: 'Recepción', d: 'Si no puedes tomar la foto (sin señal, cámara o permiso), puedes confirmar dejando una nota que lo explique — la foto es obligatoria pero no te bloquea.' },
 ];
 
 const TIPO_POR_COMMIT = {

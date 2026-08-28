@@ -1,5 +1,37 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 31/08/2026 — PROMPT-23 ronda BD (app) — revert home agrupado (toggle opcional) + recepción completa (ver+foto+firmar) — **F1+F2 COMPLETAS · build verde · 2 migraciones aplicadas+verificadas en prod · ⏳ sin commit/push/APK (regla madre) + device-QA**
+
+**TL;DR:** dos entregas. **F1 (BD1):** el home agrupado (BC5) se **revierte como default** → vuelve el **grid plano** para todos; la vista agrupada queda como **preferencia por usuario server-side** ("Agrupar módulos por sección" en Perfil, OFF por defecto). La agrupada se **arregló**: sin bloque "Para ti" (mataba la duplicación), cada módulo UNA vez, **Tareas/Mensajes/Notas/Compa en sección "General"** (ya no dentro de Ingeniería), secciones **colapsables**. **F2 (BD2):** recibir = **VER conduce + FOTO + FIRMA**. Bandeja canónica única **"Entregas por recibir"** que **fusiona** las dos colas (por confirmar + por firmar) **deduplicadas por salida**; `/transporte/por-firmar` ahora **redirige**; **banner del home unificado** ("N por recibir"); la **firma sale de la sesión** (se eliminó el "Tu nombre" editable que dejaba firmar "como" otro). Foto **obligatoria pero no bloqueante** (si no se puede, exige nota).
+
+### 🚀 Estado / release
+- **NO commit/push/APK** (regla madre — avisar). Cambios UI visibles (home + recepción) → amerita bump (sugerido **2.7.0**) cuando Xaviel dé el OK.
+- **2 migraciones aplicadas a PROD** (aditivas, verificadas):
+  - `sql/2026-08-31-bd1-preferencias-usuario.sql` — columna `sgc.usuarios.preferencias jsonb` + RPC self-scoped `mi_preferencia_set(clave,valor)`. Primera clave: `agrupar_home`.
+  - `sql/2026-08-31-bd2-recibir-foto-firma.sql` — `firmar_conduce` +`p_foto_path`+`p_nota` (rama receptor guarda `recepcion_foto_path`/`notas_recepcion`; se DROPeó la firma de 8 args y se recreó con 10 → callers viejos resuelven por defaults); `conduce_confirmar_receptor` **foto no bloqueante** (exige foto **O** nota) + limpia `firma_pendiente_*` al confirmar (mata la redundancia AY2: una entrega entregada-con-firma-pendiente salía en las DOS bandejas). Firma verificada; runtime OK (ambas llegan al guard auth).
+
+### ✅ F1 — BD1: home grid plano por defecto + agrupado opcional
+- `home.ts/html/scss`: default = **grid plano** (`tiles()`), agrupado detrás de `ctx.agruparHome()`. GROUPS: `general` (tareas_app/mensajes/notas/compa) reemplaza "Comunicación"; se quitó `tareas_app` de Ingeniería. **Eliminado** `paraTi`/`paraTiPrioridad`/bloque "Para ti". Secciones colapsables (estado en localStorage `home_grupos_colapsados`). Badges/deep-links idénticos en ambas vistas.
+- `user-context.service.ts`: `agruparHome` (lee `preferencias.agrupar_home`), `setPreferencia()` optimista (signal + caché de disco, revierte si falla el RPC). `PROFILE_SELECT` +`preferencias`; `usuario.model.ts` +`preferencias`.
+- `perfil.ts/html`: botón toggle "Agrupar módulos por sección" (requiere conexión; server-side).
+
+### ✅ F2 — BD2: recibir = ver + foto + firmar (bandeja canónica única)
+- **`por-confirmar` reescrita** → "Entregas por recibir": fusiona `misEntregasPorConfirmar` + `misFirmasPendientes` vía `core/util/recepcion.ts` (`fusionarEntregasPorRecibir`, dedup por salida, gana la ruta 'confirmar' más rica). Cada fila: Ver conduce (deep-link `conduce-detalle`, cierra AX1) → foto (`app-photo-slot` AS15) → firma (identidad de sesión, **sin campo de nombre libre**). Fuente 'confirmar' además pregunta ¿llegó todo?+cantidades; fuente 'firmar' es ver+foto+firma. Foto no bloqueante: si falta, exige nota.
+- `conduceConfirmarReceptor` y `enqueueFirmarReceptor` ahora aceptan **foto opcional** (+nota); handlers pasan `p_foto_path ?? null` / `p_nota`. **`por-firmar` page borrada**; ruta redirige; `notificaciones` tipo 'firma' → `/transporte/por-confirmar`; tiles home/hub relabel "Por confirmar"→"Por recibir"; banner home unificado a `porRecibir` (dedup).
+- **Identidad de sesión (AS1/AU9):** el handover en persona de `generar-conduce` YA estaba bien (despachante firma desde su móvil o "en persona" marcado) — no se tocó. La única superficie que dejaba firmar "como" otro (por-firmar) quedó cerrada.
+
+### 🔴 Pendiente — SOLO Xaviel / device-QA
+- **Commit/push + APK** (cuando digas; sugiero 2.7.0). Archivos: ver `git status` (home/perfil/por-confirmar/user-context/inventario/conduces/notificaciones/app.routes/conduces-hub + `core/util/recepcion.ts` nuevo + 2 sql).
+- **Espejo web (SGC, paridad):** `conduce_confirmar_receptor` relajado (foto O nota) y `firmar_conduce` +foto — la web ya manda foto siempre, así que no se rompe; espejar el "confirmar sin foto con nota" en la web es opcional. Copiar ambos .sql a `SGC/sql/` (siguen sin commitear en SGC).
+- **Device-QA por rol (es_prueba):** chofer/capataz/ingeniero en **ambas** vistas del home (grid plano default; activar "Agrupar" en Perfil → agrupado sin duplicados, Tareas en General, secciones colapsables; toggle sobrevive reinstalación). Recepción: abrir una entrega → Ver conduce → foto → firmar (online y **airplane mode**); confirmar SIN foto con nota (no bloquea); verificar en SGC web que la entrega quedó recibida con foto/firma/hora/quién.
+
+### Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0
+```
+
+---
+
 ## 🟢 SESIÓN 30/08/2026 — PROMPT-22 ronda BC (app) — requisiciones usables, outbox que se corrige, home agrupado — **F1+F2+F3+F4 COMPLETAS · build verde · migración a prod · smoke de datos VERDE · commit `73d2222` PUSHEADO (PWA deploy) · APK 2.6.0 firmado+registrado+SUBIDO al bucket · ⏳ falta flip `publicada=2.6.0` (rollout Android) + device visual-QA**
 
 ### 🚀 Release 2.6.0

@@ -11,20 +11,23 @@ import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refre
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import {
   ConducesService,
-  EntregaPorConfirmar,
   ConduceDetalleItem,
   ConduceItemLibre,
 } from '../../../core/services/conduces.service';
+import { InventarioService } from '../../../core/services/inventario.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
+import { EntregaPorRecibir, fusionarEntregasPorRecibir } from '../../../core/util/recepcion';
 
 /**
- * AJ8 — bandeja del RECEPTOR: entregas que el chofer marcó como entregadas y que
- * el receptor debe CONFIRMAR desde SU PROPIO teléfono (foto + firma + ¿llegó
- * todo?). El servidor impide que confirme quien entregó (antisuplantación).
- * Offline-safe por outbox.
+ * BD2 — bandeja CANÓNICA del receptor: "Entregas por recibir". Fusiona las dos
+ * colas antiguas ("por confirmar" AJ8 + "por firmar" AE) en UNA sola lista
+ * deduplicada. Recibir = VER el conduce + FOTO de lo recibido + FIRMA (identidad de
+ * sesión, no editable). La foto es obligatoria pero no bloqueante (si no se puede,
+ * se exige una nota). Todo viaja como UNA operación por el outbox (offline-safe).
  */
 @Component({
   selector: 'app-por-confirmar',
@@ -36,6 +39,8 @@ import { formatFecha } from '../../../core/util/fecha';
 })
 export class PorConfirmarPage {
   private conduces = inject(ConducesService);
+  private inventario = inject(InventarioService);
+  private ctx = inject(UserContextService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
@@ -44,12 +49,13 @@ export class PorConfirmarPage {
   private sigPad = viewChild<SignaturePad>('receptorPad');
 
   fmtFecha = formatFecha;
+  nombreSesion = this.ctx.nombre; // BD2 — la firma va a nombre del usuario logueado
 
   loading = signal(true);
   refrescando = signal(false);
-  entregas = signal<EntregaPorConfirmar[]>([]);
+  entregas = signal<EntregaPorRecibir[]>([]);
 
-  // Fila expandida en modo confirmación.
+  // Fila expandida en modo recepción.
   confirmandoId = signal('');
   foto = signal<CapturedPhoto | null>(null);
   firmaLista = signal(false);
@@ -58,16 +64,12 @@ export class PorConfirmarPage {
   enviando = signal(false);
   // QA-13 — cantidades recibidas por item (editables cuando "Faltó algo").
   cantidades = signal<Record<string, number>>({});
-  // AU4 — items del conduce traídos del DETALLE al abrir (la lista mis_entregas
-  // NO trae items, por eso el flujo por-item estaba muerto). Ahora sí hay qué recibir.
+  // AU4 — items del conduce traídos del DETALLE al abrir.
   private detalleItems = signal<ConduceDetalleItem[]>([]);
-  // AU4 — items LIBRES (material no catalogado). Se MUESTRAN al recibir (AT11); su
-  // cantidad-recibida aún no persiste server-side (tabla aparte sin columna) → sólo
-  // informativo hasta el follow-up de backend.
   libres = signal<ConduceItemLibre[]>([]);
   cargandoDetalle = signal(false);
 
-  /** AU4 — items catalogados del conduce que se está confirmando (del detalle). */
+  /** AU4 — items catalogados del conduce que se está recibiendo (del detalle). */
   itemsActuales = computed(() => this.detalleItems());
 
   constructor() {
@@ -78,9 +80,14 @@ export class PorConfirmarPage {
     if (!silent) this.loading.set(true);
     this.refrescando.set(true);
     try {
-      this.entregas.set(await this.conduces.misEntregasPorConfirmar());
+      // BD2 — fusiona las dos fuentes en una sola bandeja deduplicada por salida.
+      const [confirmar, firmar] = await Promise.all([
+        this.conduces.misEntregasPorConfirmar(),
+        this.inventario.misFirmasPendientes(),
+      ]);
+      this.entregas.set(fusionarEntregasPorRecibir(confirmar, firmar));
     } catch {
-      this.toast.error('No pudimos cargar las entregas por confirmar.');
+      this.toast.error('No pudimos cargar las entregas por recibir.');
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
@@ -106,8 +113,6 @@ export class PorConfirmarPage {
     this.detalleItems.set([]);
     this.libres.set([]);
     this.cantidades.set({});
-    // AU4 — trae el detalle del conduce (items catalogados + libres) para que el
-    // flujo "Faltó algo" tenga QUÉ recibir por ítem (la lista no los provee).
     if (abriendo) void this.cargarDetalle(id);
   }
 
@@ -131,7 +136,7 @@ export class PorConfirmarPage {
     this.firmaLista.set(has);
   }
 
-  /** AL8 — ver el documento completo del conduce ANTES de confirmar (items
+  /** AL8 — ver el documento completo del conduce ANTES de recibir (items
    *  esperados, origen/destino, chofer, fotos de entrega, firmas). */
   verConduce(id: string): void {
     void this.router.navigate(['/transporte/conduce-detalle', id]);
@@ -143,7 +148,6 @@ export class PorConfirmarPage {
   }
 
   // ── QA-13 — registrar QUÉ y CUÁNTO llegó cuando "Faltó algo" ────────────────
-  /** Reinicia las cantidades a las del conduce (todo recibido) para una entrega. */
   private resetCantidades(_id: string): void {
     const init: Record<string, number> = {};
     for (const it of this.detalleItems()) init[it.detalle_id] = it.cantidad;
@@ -152,7 +156,6 @@ export class PorConfirmarPage {
 
   setLlegoTodo(value: boolean): void {
     this.llegoTodo.set(value);
-    // "Sí, todo" restaura las cantidades completas del conduce.
     if (value) this.resetCantidades(this.confirmandoId());
   }
 
@@ -161,47 +164,59 @@ export class PorConfirmarPage {
     this.cantidades.update((m) => ({ ...m, [detalleId]: Math.min(max, Math.max(0, value || 0)) }));
   }
 
-  async confirmar(id: string): Promise<void> {
+  async confirmar(e: EntregaPorRecibir): Promise<void> {
     if (this.enviando()) return;
-    if (!this.foto()) {
-      this.toast.error('Toma la foto del material recibido.');
-      return;
-    }
-    if (this.llegoTodo() === null) {
-      this.toast.error('Dinos si llegó todo el material.');
-      return;
-    }
     const firma = await this.sigPad()?.toBlob();
     if (!firma) {
-      this.toast.error('Falta tu firma de confirmación.');
+      this.toast.error('Falta tu firma de recepción.');
       return;
     }
-    // QA-13 — si faltó algo y tenemos el detalle del conduce, registramos las
-    // cantidades recibidas por item. Sin items (offline / RPC no los provee) se
-    // degrada al checklist Sí/No sin bloquear la confirmación.
-    const items =
-      this.llegoTodo() === false && this.itemsActuales().length
-        ? this.itemsActuales().map((it) => ({
-            detalle_id: it.detalle_id,
-            cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad,
-          }))
-        : null;
+    const foto = this.foto();
+    const notas = this.notas().trim();
+    // BD2 — foto obligatoria pero NO bloqueante: si no hay foto, se exige una nota.
+    if (!foto && !notas) {
+      this.toast.error('Toma la foto de lo recibido; si no puedes, explica por qué en las notas.');
+      return;
+    }
     this.enviando.set(true);
     try {
-      // QA-13 BACKEND: verify conduce_confirmar_receptor applies p_items
-      await this.conduces.conduceConfirmarReceptor({
-        salidaId: id,
-        foto: this.foto()!.blob,
-        firma,
-        checklist: { llego_todo: this.llegoTodo() === true },
-        items,
-        notas: this.notas().trim() || null,
-      });
+      if (e.fuente === 'confirmar') {
+        if (this.llegoTodo() === null) {
+          this.toast.error('Dinos si llegó todo el material.');
+          this.enviando.set(false);
+          return;
+        }
+        // QA-13 — si faltó algo y tenemos el detalle, registra cantidades por item.
+        const items =
+          this.llegoTodo() === false && this.itemsActuales().length
+            ? this.itemsActuales().map((it) => ({
+                detalle_id: it.detalle_id,
+                cantidad_recibida: this.cantidades()[it.detalle_id] ?? it.cantidad,
+              }))
+            : null;
+        await this.conduces.conduceConfirmarReceptor({
+          salidaId: e.salidaId,
+          foto: foto?.blob ?? null,
+          firma,
+          checklist: { llego_todo: this.llegoTodo() === true },
+          items,
+          notas: notas || null,
+        });
+      } else {
+        // BD2 — fuente "por firmar": firma + foto (nombre de la sesión, no editable).
+        await this.inventario.enqueueFirmarReceptor({
+          salidaId: e.salidaId,
+          nombre: this.nombreSesion() || 'Receptor',
+          firma,
+          foto: foto?.blob ?? null,
+          nota: notas || null,
+        });
+      }
       this.toast.success('¡Recepción confirmada! Se avisó al chofer.');
       this.confirmandoId.set('');
-      this.entregas.update((list) => list.filter((e) => e.id !== id));
-    } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo confirmar. Intenta de nuevo.');
+      this.entregas.update((list) => list.filter((x) => x.salidaId !== e.salidaId));
+    } catch (err) {
+      this.toast.error(err instanceof Error ? err.message : 'No se pudo confirmar. Intenta de nuevo.');
     } finally {
       this.enviando.set(false);
     }

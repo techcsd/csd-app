@@ -291,12 +291,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/avisos/avisos').then((m) => m.AvisosPage),
   },
   {
-    // AE — bandeja "Por firmar" (firmas de recepción pendientes asignadas a mí).
-    // Sin moduleGuard: el receptor puede ser un ingeniero sin módulo flota; el RPC
-    // solo devuelve lo asignado al usuario actual (auth.uid()).
+    // BD2 — "Por firmar" se fusionó en la bandeja canónica "Entregas por recibir"
+    // (/transporte/por-confirmar). Se conserva el path como REDIRECT para no romper
+    // deep-links viejos (avisos/push que apuntaban aquí).
     path: 'transporte/por-firmar',
-    canActivate: [authGuard, pinGuard],
-    loadComponent: () => import('./pages/transporte/por-firmar/por-firmar').then((m) => m.PorFirmarPage),
+    redirectTo: 'transporte/por-confirmar',
+    pathMatch: 'full',
   },
   {
     // AJ5 — Mensajería (mismo modelo que la web). General para todos los roles.

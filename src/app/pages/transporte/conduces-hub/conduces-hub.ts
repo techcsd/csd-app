@@ -29,7 +29,7 @@ const TILES: ConduceTile[] = [
   // BA/Transporte v3 (FASE 1) — conduce a tercero (un proveedor transporta).
   { key: 'externo', icon: '🚛', label: 'Conduce externo', tint: '#c2410c', route: '/transporte/conduce-externo' },
   { key: 'pendienteEntrega', icon: '🚚', label: 'Pendiente entrega', tint: '#ea580c', route: '/transporte/conduces-pendientes' },
-  { key: 'porConfirmar', icon: '📥', label: 'Por confirmar', tint: '#0f766e', route: '/transporte/por-confirmar' },
+  { key: 'porConfirmar', icon: '📥', label: 'Por recibir', tint: '#0f766e', route: '/transporte/por-confirmar' },
   { key: 'confirmaciones', icon: '✅', label: 'Confirmaciones', tint: '#0d9488', route: '/transporte/confirmaciones' },
   { key: 'historial', icon: '🗂️', label: 'Histórico', tint: '#1e3a5f', route: '/transporte/conduces-historial' },
   { key: 'transferencias', icon: '↔️', label: 'Transferencias', tint: '#0369a1', route: '/transporte/conduce-transferencias' },

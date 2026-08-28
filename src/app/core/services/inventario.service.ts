@@ -1033,18 +1033,35 @@ export class InventarioService {
     return data ?? [];
   }
 
-  /** AE — firmar (tarde) como receptor una entrega que estaba pendiente. Offline-safe. */
-  async enqueueFirmarReceptor(salidaId: string, nombre: string, firma: Blob): Promise<void> {
+  /**
+   * AE/BD2 — recibir como receptor una entrega pendiente de firma: firma + FOTO de lo
+   * recibido (obligatoria pero no bloqueante → si no hay foto se exige una nota). El
+   * nombre viene de la SESIÓN (identidad no editable). Offline-safe por outbox.
+   */
+  async enqueueFirmarReceptor(input: {
+    salidaId: string;
+    nombre: string;
+    firma: Blob;
+    foto?: Blob | null;
+    nota?: string | null;
+  }): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    const fotos = [
+      { id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/firma-receptor-tardia.png`, slot: 'firma', blob: input.firma },
+    ];
+    if (input.foto) {
+      fotos.push({ id: crypto.randomUUID(), bucket: 'conduces', path: `${input.salidaId}/${id}-recepcion-foto.jpg`, slot: 'foto_recepcion', blob: input.foto });
+    }
     await this.sync.enqueue({
       id,
       tipo_op: 'conduce_firmar_receptor',
       capturado_en,
-      payload: { salida_id: salidaId, nombre },
-      fotos: [{ id: crypto.randomUUID(), bucket: 'conduces', path: `${salidaId}/firma-receptor-tardia.png`, slot: 'firma', blob: firma }],
-      resumen: { tipo: 'firmar_receptor', salida_id: salidaId, capturado_en },
+      payload: { salida_id: input.salidaId, nombre: input.nombre, nota: input.nota ?? null },
+      fotos,
+      resumen: { tipo: 'firmar_receptor', salida_id: input.salidaId, capturado_en },
     });
+    const salidaId = input.salidaId;
     // AE7 — quitar la firma resuelta de la caché SIN borrarla (borrarla dejaba la
     // bandeja "Por firmar" vacía al recargar sin señal). El resto sigue visible.
     await this.catalog.optimisticUpdate<FirmaPendiente[]>(
@@ -1262,13 +1279,16 @@ export class InventarioService {
       if (error) throwSyncError(error);
     });
 
-    // AE — firmar (tarde) como receptor una entrega que estaba pendiente.
+    // AE/BD2 — firmar como receptor una entrega pendiente = recibir: firma + FOTO de
+    // lo recibido (y nota si no se pudo tomar foto). El nombre viene de la sesión.
     this.sync.register('conduce_firmar_receptor', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('firmar_conduce', {
         p_salida_id: payload['salida_id'],
         p_rol: 'receptor',
         p_nombre: payload['nombre'] ?? 'Receptor',
         p_firma_path: photoPaths['firma'],
+        p_foto_path: photoPaths['foto_recepcion'] ?? null, // BD2 — foto de recepción
+        p_nota: payload['nota'] ?? null,
       });
       if (error) throwSyncError(error);
     });

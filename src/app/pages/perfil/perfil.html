@@ -88,6 +88,11 @@
       🔑 Cambiar PIN
     </button>
 
+    <!-- BD1 — preferencia de presentación del inicio (off por defecto = cuadrícula) -->
+    <button type="button" class="btn-ghost perfil__btn" [disabled]="agrupadoBusy()" (click)="toggleAgrupado()">
+      {{ agrupado() ? '✅ Módulos agrupados por sección' : '🗂️ Agrupar módulos por sección' }}
+    </button>
+
     <button type="button" class="btn-ghost perfil__btn" (click)="enProceso()">
       📝 Documentación en proceso
     </button>

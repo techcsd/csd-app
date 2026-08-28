@@ -17,23 +17,12 @@
     </div>
   </header>
 
-  <!-- AE — firmas de recepción pendientes asignadas a mí -->
-  @if (firmasPendientes() > 0) {
-    <button type="button" class="home__firmar" (click)="irPorFirmar()">
-      <span class="home__firmar-icon">✍️</span>
-      <span class="home__firmar-txt">
-        Tienes {{ firmasPendientes() }} {{ firmasPendientes() === 1 ? 'entrega' : 'entregas' }} por firmar
-      </span>
-      <span class="home__firmar-go">›</span>
-    </button>
-  }
-
-  <!-- AJ8 — entregas que debo confirmar como receptor (desde mi propio teléfono) -->
-  @if (porConfirmar() > 0) {
-    <button type="button" class="home__firmar" (click)="irPorConfirmar()">
+  <!-- BD2 — banner ÚNICO: entregas por recibir (fusión firmar + confirmar) -->
+  @if (porRecibir() > 0) {
+    <button type="button" class="home__firmar" (click)="irPorRecibir()">
       <span class="home__firmar-icon">📥</span>
       <span class="home__firmar-txt">
-        Tienes {{ porConfirmar() }} {{ porConfirmar() === 1 ? 'entrega' : 'entregas' }} por confirmar
+        Tienes {{ porRecibir() }} {{ porRecibir() === 1 ? 'entrega' : 'entregas' }} por recibir
       </span>
       <span class="home__firmar-go">›</span>
     </button>
@@ -71,8 +60,9 @@
         </div>
       }
     </main>
-  } @else {
-    <!-- BC5 — home agrupado por dominio (árbol aprobado). Long-press → editar. -->
+  } @else if (agruparHome()) {
+    <!-- BD1 — vista AGRUPADA por dominio (OPCIONAL, se activa en Perfil). Secciones
+         colapsables; cada módulo aparece una sola vez. Long-press → editar. -->
     <main
       class="home__groups"
       data-tour="tiles"
@@ -82,48 +72,68 @@
       (pointercancel)="onTilePointerUp()"
     >
       @if (tiles().length) {
-        <!-- Para ti: accesos frecuentes del rol -->
-        @if (paraTi().length) {
-          <section class="home__group">
-            <h2 class="home__group-hd home__group-hd--foryou">⭐ Para ti</h2>
-            <div class="home__grid">
-              @for (tile of paraTi(); track tile.modulo) {
-                <app-big-button
-                  [icon]="tile.icon"
-                  [label]="tile.label"
-                  [tint]="tile.tint"
-                  [badge]="badgeFor(tile.modulo)"
-                  (pressed)="open(tile)"
-                />
-              }
-            </div>
-          </section>
-        }
-
-        <!-- Grupos por dominio -->
         @for (g of grupos(); track g.key) {
-          <section class="home__group">
-            <h2 class="home__group-hd" [style.--g]="g.color">
+          <section class="home__group" [class.home__group--collapsed]="grupoColapsado(g.key)">
+            <button type="button" class="home__group-hd" [style.--g]="g.color" (click)="toggleGrupo(g.key)">
               <span class="home__group-ic">{{ g.icon }}</span>
               <span class="home__group-lb">{{ g.label }}</span>
               @if (g.badge) { <span class="home__group-badge">{{ g.badge > 9 ? '9+' : g.badge }}</span> }
-            </h2>
-            <div class="home__grid">
-              @for (tile of g.tiles; track tile.modulo) {
-                <app-big-button
-                  [icon]="tile.icon"
-                  [label]="tile.label"
-                  [tint]="tile.tint"
-                  [badge]="badgeFor(tile.modulo)"
-                  [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
-                  [class.home__tile--2x2]="sizeClass(tile.modulo) === '2x2'"
-                  (pressed)="open(tile)"
-                />
-              }
-            </div>
+              <span class="home__group-chevron" aria-hidden="true">{{ grupoColapsado(g.key) ? '▸' : '▾' }}</span>
+            </button>
+            @if (!grupoColapsado(g.key)) {
+              <div class="home__grid">
+                @for (tile of g.tiles; track tile.modulo) {
+                  <app-big-button
+                    [icon]="tile.icon"
+                    [label]="tile.label"
+                    [tint]="tile.tint"
+                    [badge]="badgeFor(tile.modulo)"
+                    [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
+                    [class.home__tile--2x2]="sizeClass(tile.modulo) === '2x2'"
+                    (pressed)="open(tile)"
+                  />
+                }
+              </div>
+            }
           </section>
         }
       } @else {
+        <app-empty-state
+          icon="🔑"
+          title="Sin módulos asignados"
+          message="Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso."
+          ctaLabel="Reportar / pedir acceso"
+          (action)="reportar()"
+        />
+      }
+    </main>
+    @if (puedeEditarLayout()) {
+      <button type="button" class="home__ordenar" (click)="entrarEdicion()">
+        ✥ Ordenar y redimensionar módulos
+      </button>
+    }
+  } @else {
+    <!-- BD1 — vista por defecto: grid plano (todo a la vista, orden por rol). El home
+         agrupado quedó como preferencia opcional (Perfil → "Agrupar módulos"). -->
+    <main
+      class="home__grid"
+      data-tour="tiles"
+      (pointerdown)="onTilePointerDown()"
+      (pointerup)="onTilePointerUp()"
+      (pointerleave)="onTilePointerUp()"
+      (pointercancel)="onTilePointerUp()"
+    >
+      @for (tile of tiles(); track tile.modulo) {
+        <app-big-button
+          [icon]="tile.icon"
+          [label]="tile.label"
+          [tint]="tile.tint"
+          [badge]="badgeFor(tile.modulo)"
+          [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
+          [class.home__tile--2x2]="sizeClass(tile.modulo) === '2x2'"
+          (pressed)="open(tile)"
+        />
+      } @empty {
         <app-empty-state
           icon="🔑"
           title="Sin módulos asignados"

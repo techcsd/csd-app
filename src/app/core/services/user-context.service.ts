@@ -9,7 +9,7 @@ const AVATARS_BUCKET = 'sgc-avatars';
 
 // Selección del perfil + roles/módulos (misma forma que usa SGC).
 const PROFILE_SELECT =
-  'id, nombre, email, telefono, activo, es_prueba, avatar_path, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
+  'id, nombre, email, telefono, activo, es_prueba, avatar_path, preferencias, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
 // Prefijo de la caché en disco del perfil (offline-first).
 const PROFILE_CACHE_PREFIX = 'perfil_';
 
@@ -60,6 +60,40 @@ export class UserContextService {
     });
     if (error) throw new Error(error.message);
     await this.loadProfile(id);
+  }
+
+  /**
+   * BD1 — ¿el usuario prefiere el home AGRUPADO por sección? Preferencia por usuario
+   * (server-side, sobrevive reinstalación/multi-dispositivo). Por defecto OFF: el
+   * home vuelve al grid plano para todos; el que la quiera la activa en Perfil.
+   */
+  agruparHome = computed(() => this._profile()?.preferencias?.['agrupar_home'] === true);
+
+  /**
+   * BD1 — fija una preferencia del usuario (RPC self-scoped `mi_preferencia_set`).
+   * Aplica OPTIMISTA en local (signal + caché de disco) para que la UI reaccione
+   * al instante y sobreviva un reinicio offline; revierte si el servidor falla.
+   */
+  async setPreferencia(clave: string, valor: unknown): Promise<void> {
+    const prev = this._profile()?.preferencias?.[clave];
+    this.aplicarPreferenciaLocal(clave, valor);
+    const { error } = await this.supabase.client.rpc('mi_preferencia_set', {
+      p_clave: clave,
+      p_valor: valor,
+    });
+    if (error) {
+      this.aplicarPreferenciaLocal(clave, prev); // revertir
+      throw new Error(error.message);
+    }
+  }
+
+  /** BD1 — actualiza una preferencia en el perfil en memoria + la caché en disco. */
+  private aplicarPreferenciaLocal(clave: string, valor: unknown): void {
+    const p = this._profile();
+    if (!p) return;
+    const next: Usuario = { ...p, preferencias: { ...(p.preferencias ?? {}), [clave]: valor } };
+    this._profile.set(next);
+    void this.catalog.optimisticUpdate<Usuario>(`${PROFILE_CACHE_PREFIX}${p.id}`, () => next);
   }
 
   /** AW7 — URL pública de mi foto de perfil (o null si no tengo). */

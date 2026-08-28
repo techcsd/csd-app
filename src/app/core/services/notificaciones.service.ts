@@ -194,8 +194,9 @@ export function notifAppRoute(n: {
   referencia_tipo?: string | null;
 }): string {
   const r = (n.ruta ?? '').trim();
-  // Firma de recepción pendiente → bandeja "Por firmar" (aunque venga sin ruta).
-  if (n.tipo === 'firma') return '/transporte/por-firmar';
+  // BD2 — firma de recepción pendiente → bandeja canónica "Entregas por recibir"
+  // (antes /transporte/por-firmar, ahora fusionada en por-confirmar).
+  if (n.tipo === 'firma') return '/transporte/por-confirmar';
   // AU1 — recordatorio al DESPACHANTE (tipo 'conduce_firma') → su bandeja de firma.
   // La web manda ruta '/transporte/por-firmar' (que en la app es la del RECEPTOR),
   // así que aquí se mapea por tipo a la bandeja correcta del despachante.

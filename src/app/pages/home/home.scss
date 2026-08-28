@@ -71,16 +71,23 @@
   flex: initial;
   padding: 4px 16px 8px;
 }
+/* BD1 — la cabecera del grupo es un botón (colapsa/expande la sección). */
 .home__group-hd {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0;
-  padding: 8px 16px 4px;
+  padding: 10px 16px 6px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.02em;
   color: var(--color-text-secondary);
+  -webkit-tap-highlight-color: transparent;
 }
 .home__group-hd::before {
   content: '';
@@ -90,18 +97,21 @@
   border-radius: 3px;
   background: var(--g, var(--color-text-secondary));
 }
-.home__group-hd--foryou {
-  color: var(--primary, #ff5f00);
-}
-.home__group-hd--foryou::before {
-  background: var(--primary, #ff5f00);
-}
 .home__group-ic {
   font-size: 16px;
 }
 .home__group-lb {
   flex: 1;
   min-width: 0;
+}
+.home__group-chevron {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+.home__group--collapsed .home__group-hd {
+  padding-bottom: 10px;
 }
 .home__group-badge {
   flex: 0 0 auto;

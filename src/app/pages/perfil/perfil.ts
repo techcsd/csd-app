@@ -53,6 +53,9 @@ export class PerfilPage {
   subiendoFoto = signal(false);
   obra = this.ctx.obraActiva;
   isAdmin = () => this.ctx.hasModulo('admin');
+  // BD1 — preferencia por usuario: agrupar el home por sección (off por defecto).
+  agrupado = this.ctx.agruparHome;
+  agrupadoBusy = signal(false);
   online = this.network.online;
   version = environment.version;
   versionPublicada = () => this.versionSvc.etiquetaVersion;
@@ -94,6 +97,29 @@ export class PerfilPage {
       }
     } finally {
       this.faceIdBusy.set(false);
+    }
+  }
+
+  /**
+   * BD1 — alterna el home agrupado por sección (preferencia por usuario, server-side).
+   * Requiere conexión (se persiste en el servidor para sobrevivir reinstalaciones y
+   * valer en todos los dispositivos del usuario).
+   */
+  async toggleAgrupado(): Promise<void> {
+    if (this.agrupadoBusy()) return;
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para cambiar esta preferencia.');
+      return;
+    }
+    this.agrupadoBusy.set(true);
+    try {
+      const next = !this.agrupado();
+      await this.ctx.setPreferencia('agrupar_home', next);
+      this.toast.success(next ? 'Módulos agrupados por sección.' : 'Módulos en cuadrícula (por defecto).');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la preferencia.');
+    } finally {
+      this.agrupadoBusy.set(false);
     }
   }
 

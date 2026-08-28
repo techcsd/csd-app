@@ -16,6 +16,7 @@ import { NotificacionesService } from '../../core/services/notificaciones.servic
 import { PushService } from '../../core/services/push.service';
 import { ModuleOrderService, ModuleSize } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
+import { fusionarEntregasPorRecibir } from '../../core/util/recepcion';
 
 interface HomeTile {
   modulo: string;
@@ -76,15 +77,16 @@ const COMPRAS_TILE: HomeTile = { modulo: 'compras_proyecto', icon: '💰', label
 // AL8 — "Entregas por confirmar": entrada PERMANENTE para el confirmador (no solo
 // el banner). Los de flota ya la tienen en el hub de Conduces; este tile la da a
 // los confirmadores sin módulo flota (inventario/obra/almacén). Badge = pendientes.
-const CONFIRMAR_TILE: HomeTile = { modulo: 'por_confirmar', icon: '📥', label: 'Por confirmar', route: '/transporte/por-confirmar', tint: '#ca8a04' };
+const CONFIRMAR_TILE: HomeTile = { modulo: 'por_confirmar', icon: '📥', label: 'Por recibir', route: '/transporte/por-confirmar', tint: '#ca8a04' };
 // AR1 — Personal de obra: registro en obra + consulta. Gating amplio (quienes
 // pueden registrar/ver según la matriz): admin/proyectos/rrhh/dirección + capataz/
 // ingeniero por su obra. La RLS acota los datos a la obra del usuario.
 const PERSONAL_TILE: HomeTile = { modulo: 'personal_obra', icon: '🧑‍🔧', label: 'Personal de obra', route: '/proyectos/personal', tint: '#9333ea' };
 
-// BC5 — agrupación del home por dominio (árbol aprobado por Xaviel). Cada tile
-// conserva su gating/ruta/badge; solo cambia la PRESENTACIÓN (grupos). El orden de
-// GROUPS es el de aparición; un grupo sin tiles visibles no se muestra.
+// BC5/BD1 — agrupación del home por dominio (vista OPCIONAL, off por defecto). Cada
+// tile conserva su gating/ruta/badge; solo cambia la PRESENTACIÓN (grupos). El orden
+// de GROUPS es el de aparición; un grupo sin tiles visibles no se muestra. Cada
+// módulo aparece UNA sola vez (sin fila "Para ti" que lo duplicaba).
 interface HomeGroup {
   key: string;
   label: string;
@@ -92,22 +94,25 @@ interface HomeGroup {
   color: string;
   modulos: string[]; // qué claves de tile caen en este grupo
 }
+// BD1 — Tareas/Mensajes/Notas/Compa NO son de Ingeniería: son GENERALES (un chofer
+// ve Tareas porque es de todos). Van en su propia sección "General". El grupo de
+// Ingeniería ya no arrastra `tareas_app`.
 const GROUPS: HomeGroup[] = [
   { key: 'ingenieria', label: 'Ingeniería y producción', icon: '📐', color: '#2563eb',
-    modulos: ['compras', 'ingenieria', 'bitacora', 'proyectos', 'obra', 'personal_obra', 'compras_proyecto', 'tareas_app'] },
+    modulos: ['compras', 'ingenieria', 'bitacora', 'proyectos', 'obra', 'personal_obra', 'compras_proyecto'] },
   { key: 'transporte', label: 'Transporte', icon: '🚚', color: '#f97316',
     modulos: ['flota', 'por_confirmar'] },
   { key: 'inventario', label: 'Inventario', icon: '📦', color: '#16a34a',
     modulos: ['inventario'] },
-  { key: 'comunicacion', label: 'Comunicación', icon: '💬', color: '#6d28d9',
-    modulos: ['mensajes', 'compa', 'notas'] },
+  { key: 'general', label: 'General', icon: '💬', color: '#6d28d9',
+    modulos: ['tareas_app', 'mensajes', 'notas', 'compa'] },
   { key: 'administracion', label: 'Administración y sistema', icon: '⚙️', color: '#475569',
     modulos: ['admin', 'rrhh', 'tecnologia', 'sistema'] },
 ];
 /** Grupo por defecto para cualquier tile que no esté mapeado arriba. */
 const GRUPO_OTROS: HomeGroup = { key: 'otros', label: 'Otros', icon: '🗂️', color: '#475569', modulos: [] };
 
-/** BC5 — la fila "Para ti" agrupa un tile de menú aunque su badge/valor viva aparte. */
+/** BC5 — un grupo del home ya resuelto: sus tiles visibles + su badge sumado. */
 interface HomeGrupoRender extends HomeGroup {
   tiles: HomeTile[];
   badge: number | null;
@@ -154,12 +159,10 @@ export class HomePage implements OnDestroy {
   obra = this.ctx.obraActiva;
   badgeCounts = this.badges.counts; // Q2 — pendientes por módulo
   enProcesoCounts = this.enProceso.counts; // V1 — borradores/envíos por módulo
-  // AE — firmas de recepción PENDIENTES asignadas a mí (banner de descubrimiento,
-  // porque un ingeniero receptor puede no tener el módulo flota).
-  firmasPendientes = signal(0);
-  // AJ8 — entregas que YO debo confirmar como receptor (banner de descubrimiento:
-  // el receptor puede ser inventario/obra sin módulo flota).
-  porConfirmar = signal(0);
+  // BD2 — entregas por RECIBIR: banner ÚNICO (fusiona "por firmar" AE + "por
+  // confirmar" AJ8, deduplicado). El receptor puede ser un ingeniero/obra sin
+  // módulo flota → banner de descubrimiento.
+  porRecibir = signal(0);
   // AJ5 — mensajes no leídos (badge del tile de Mensajes).
   mensajesNoLeidos = signal(0);
   private primerSync = true;
@@ -266,43 +269,43 @@ export class HomePage implements OnDestroy {
     return out;
   });
 
-  /** BC5 — orden de preferencia de "Para ti" según el rol (claves de tile). */
-  private paraTiPrioridad(): string[] {
-    if (this.ctx.esChofer()) return ['flota', 'por_confirmar', 'mensajes', 'tareas_app'];
-    // Capataz / obra (sin módulo proyectos completo): su día empieza en la obra.
-    if (this.ctx.puedeVerObra() && !this.ctx.hasModulo('proyectos')) {
-      return ['obra', 'bitacora', 'personal_obra', 'compras'];
+  // BD1 — ¿mostrar el home AGRUPADO? Preferencia por usuario (server-side), OFF por
+  // defecto: el default es el grid plano. La vista agrupada es opcional.
+  agruparHome = this.ctx.agruparHome;
+
+  // BD1 — secciones colapsables (para acortar el scroll en la vista agrupada). El
+  // estado se guarda por dispositivo (localStorage): recordar qué grupos plegó el
+  // usuario es una comodidad local, no un dato de negocio.
+  private static readonly COLAPSADOS_KEY = 'home_grupos_colapsados';
+  colapsados = signal<Set<string>>(new Set(this.leerColapsados()));
+
+  private leerColapsados(): string[] {
+    try {
+      const raw = localStorage.getItem(HomePage.COLAPSADOS_KEY);
+      const arr = raw ? (JSON.parse(raw) as unknown) : [];
+      return Array.isArray(arr) ? arr.filter((x): x is string => typeof x === 'string') : [];
+    } catch {
+      return [];
     }
-    // Ingeniero (origina requisiciones / ve sus obras) o dirección de proyectos.
-    if (
-      this.ctx.hasModulo('proyectos') ||
-      this.ctx.puedeVerSubmodulo('proyectos.obras') ||
-      this.ctx.puedeVerSubmodulo('compras.solicitudes')
-    ) {
-      return ['proyectos', 'compras', 'bitacora', 'tareas_app'];
-    }
-    return [];
   }
 
-  /**
-   * BC5 — fila "Para ti": accesos frecuentes del rol arriba. Toma de la lista de
-   * prioridad los que el usuario realmente tiene; si no arma ≥2, cae a los primeros
-   * tiles de trabajo. Estos tiles TAMBIÉN aparecen en su grupo (es un atajo).
-   */
-  paraTi = computed<HomeTile[]>(() => {
-    const all = this.tiles();
-    const byMod = new Map(all.map((t) => [t.modulo, t]));
-    const pick: HomeTile[] = [];
-    for (const m of this.paraTiPrioridad()) {
-      const t = byMod.get(m);
-      if (t) pick.push(t);
-    }
-    if (pick.length < 2) {
-      const fallback = all.slice(0, 3);
-      for (const t of fallback) if (!pick.includes(t)) pick.push(t);
-    }
-    return pick.slice(0, 4);
-  });
+  grupoColapsado(key: string): boolean {
+    return this.colapsados().has(key);
+  }
+
+  toggleGrupo(key: string): void {
+    this.colapsados.update((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      try {
+        localStorage.setItem(HomePage.COLAPSADOS_KEY, JSON.stringify([...next]));
+      } catch {
+        /* best-effort */
+      }
+      return next;
+    });
+  }
 
   /** AF38 — aplica el orden configurado por el admin; los no configurados quedan
    *  después, en su orden por defecto. El gating por rol ya se aplicó (workTiles). */
@@ -325,10 +328,8 @@ export class HomePage implements OnDestroy {
     void this.badges.load();
     // V1 — contador de documentación en proceso (local, offline).
     void this.enProceso.refresh();
-    // AE — cuántas firmas de recepción me quedan por firmar (recarga al drenar).
-    void this.cargarFirmasPendientes();
-    // AJ8 — cuántas entregas debo confirmar como receptor.
-    void this.cargarPorConfirmar();
+    // BD2 — cuántas entregas me quedan por recibir (fusión firmar+confirmar).
+    void this.cargarPorRecibir();
     // AJ5 — mensajes no leídos (badge del tile de Mensajes).
     this.recontarNoLeidos();
     // QA-19: badge EN VIVO — recuenta en cada INSERT de mensajes (antes solo se
@@ -347,8 +348,7 @@ export class HomePage implements OnDestroy {
         return;
       }
       if (this.sync.pendingCount() === 0) {
-        void this.cargarFirmasPendientes();
-        void this.cargarPorConfirmar();
+        void this.cargarPorRecibir();
       }
     });
   }
@@ -367,27 +367,20 @@ export class HomePage implements OnDestroy {
       .catch(() => {});
   }
 
-  private async cargarFirmasPendientes(): Promise<void> {
+  /** BD2 — total deduplicado de entregas por recibir (firmar + confirmar). */
+  private async cargarPorRecibir(): Promise<void> {
     try {
-      this.firmasPendientes.set((await this.inventario.misFirmasPendientes()).length);
+      const [confirmar, firmar] = await Promise.all([
+        this.conduces.misEntregasPorConfirmar(),
+        this.inventario.misFirmasPendientes(),
+      ]);
+      this.porRecibir.set(fusionarEntregasPorRecibir(confirmar, firmar).length);
     } catch {
       /* best-effort */
     }
   }
 
-  private async cargarPorConfirmar(): Promise<void> {
-    try {
-      this.porConfirmar.set(await this.conduces.entregasPorConfirmarCount());
-    } catch {
-      /* best-effort */
-    }
-  }
-
-  irPorFirmar(): void {
-    void this.router.navigate(['/transporte/por-firmar']);
-  }
-
-  irPorConfirmar(): void {
+  irPorRecibir(): void {
     void this.router.navigate(['/transporte/por-confirmar']);
   }
 
@@ -398,7 +391,7 @@ export class HomePage implements OnDestroy {
   /** Q2+V1 — badge del tile = pendientes de aprobación + documentación en proceso. */
   badgeFor(modulo: string): number | null {
     if (modulo === 'mensajes') return this.mensajesNoLeidos() || null;
-    if (modulo === 'por_confirmar') return this.porConfirmar() || null; // AL8
+    if (modulo === 'por_confirmar') return this.porRecibir() || null; // BD2
     const total = (this.badgeCounts()[modulo] ?? 0) + (this.enProcesoCounts()[modulo] ?? 0);
     return total || null;
   }
