@@ -43,9 +43,9 @@
   width: 100%;
   padding: 14px;
   margin-bottom: 8px;
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
   text-align: left;
 }
@@ -84,10 +84,10 @@
   gap: 8px;
 }
 .inf__kpi {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 10px;
-  background: #fff;
+  background: var(--color-surface);
   text-align: center;
 
   span {

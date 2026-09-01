@@ -95,7 +95,7 @@
   &--on {
     background: var(--Hub, #ffb300);
     border-color: var(--Hub, #ffb300);
-    color: #1a1a1a;
+    color: var(--color-text-primary);
   }
 }
 

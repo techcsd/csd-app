@@ -49,9 +49,9 @@
   button {
     flex: 1;
     padding: 10px;
-    border: 1px solid #e2e2e2;
+    border: 1px solid var(--color-border);
     border-radius: 10px;
-    background: #fff;
+    background: var(--color-surface);
     font-weight: 600;
     cursor: pointer;
   }
@@ -61,11 +61,11 @@
   }
 }
 .log__entrada {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 8px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .log__entrada-top {
   display: flex;
@@ -91,11 +91,11 @@
   text-transform: capitalize;
 }
 .log__prueba {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 8px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .log__prueba-top {
   display: flex;

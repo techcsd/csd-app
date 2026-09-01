@@ -49,11 +49,11 @@
 }
 
 .mant-card {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 10px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .mant-card--pend {
   border-color: var(--Hub, #ffb300);

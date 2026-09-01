@@ -5,8 +5,8 @@
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #fff;
-  border-bottom: 1px solid #eee;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .seg__back {
@@ -47,8 +47,8 @@
   top: 10px;
   right: 10px;
   z-index: 1000; // por encima de los panes de Leaflet
-  background: #fff;
-  border: 1px solid #d8d8d8;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   overflow: hidden;
@@ -81,7 +81,7 @@
   white-space: nowrap;
 }
 .seg__legend-item--sep {
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
   padding-top: 6px;
 }
 .seg__legend-dot {
@@ -117,8 +117,8 @@
   text-align: left;
   padding: 12px;
   margin-bottom: 10px;
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   cursor: pointer;
 }

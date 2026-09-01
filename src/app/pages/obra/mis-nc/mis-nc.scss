@@ -24,10 +24,10 @@
   font-weight: 700;
 }
 .misnc__card {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   margin-bottom: 10px;
-  background: #fff;
+  background: var(--color-surface);
   overflow: hidden;
 }
 .misnc__card--open {
@@ -67,7 +67,7 @@
 }
 .misnc__accion {
   padding: 0 14px 14px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--color-border);
 }
 .misnc__desc,
 .misnc__loc {
@@ -82,7 +82,7 @@
 .misnc__accion-form {
   display: flex;
   flex-direction: column;
-  border-top: 1px dashed #e2e2e2;
+  border-top: 1px dashed var(--color-border);
   margin-top: 14px;
   padding-top: 12px;
 }
@@ -115,8 +115,8 @@
 .misnc__resp-opt {
   text-align: left;
   padding: 12px 14px;
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
 }

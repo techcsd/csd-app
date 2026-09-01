@@ -198,7 +198,7 @@
   width: 140px;
   height: 70px;
   object-fit: contain;
-  background: #fff;
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 8px;
 }

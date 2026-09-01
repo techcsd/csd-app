@@ -3,7 +3,7 @@
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--color-border);
 
   &__back {
     border: none;
@@ -24,8 +24,8 @@
 }
 
 .tr-card {
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 12px;
@@ -36,7 +36,7 @@
     align-items: baseline;
     gap: 8px;
     font-size: 13px;
-    color: #6b7280;
+    color: var(--color-text-secondary);
   }
   &__ruta {
     display: flex;
@@ -45,9 +45,9 @@
     font-weight: 600;
     margin: 6px 0;
   }
-  &__arrow { color: #9ca3af; }
-  &__meta { font-size: 13px; color: #6b7280; }
-  &__notas { font-size: 13px; margin: 6px 0 0; color: #374151; }
+  &__arrow { color: var(--color-text-secondary); }
+  &__meta { font-size: 13px; color: var(--color-text-secondary); }
+  &__notas { font-size: 13px; margin: 6px 0 0; color: var(--color-text-secondary); }
   &__actions {
     display: flex;
     gap: 10px;
@@ -69,7 +69,7 @@
   right: 0;
   bottom: 0;
   z-index: 41;
-  background: #fff;
+  background: var(--color-surface);
   border-radius: 18px 18px 0 0;
   padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
   max-height: 88vh;
@@ -84,7 +84,7 @@
     margin: 2px auto 10px;
   }
   &__title { font-size: 18px; font-weight: 700; margin: 0; }
-  &__sub { font-size: 13px; color: #6b7280; margin: 4px 0 0; }
+  &__sub { font-size: 13px; color: var(--color-text-secondary); margin: 4px 0 0; }
   &__actions {
     display: flex;
     gap: 10px;

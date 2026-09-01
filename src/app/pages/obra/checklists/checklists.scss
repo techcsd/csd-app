@@ -13,9 +13,9 @@
   width: 100%;
   padding: 16px 14px;
   margin-bottom: 10px;
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
   text-align: left;
 }
@@ -37,11 +37,11 @@
   letter-spacing: 0.02em;
 }
 .cl__item {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 10px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .cl__item-etq {
   font-weight: 600;

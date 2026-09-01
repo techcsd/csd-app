@@ -24,10 +24,10 @@
   font-weight: 700;
 }
 .av__resumen {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 14px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .av__bar {
   display: flex;
@@ -44,7 +44,7 @@
   flex: 1;
   height: 12px;
   border-radius: 999px;
-  background: #eee;
+  background: var(--color-surface-2);
   overflow: hidden;
 }
 .av__bar-fill {
@@ -74,11 +74,11 @@
   font-weight: 700;
 }
 .av__tarea {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 8px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .av__tarea-nombre {
   font-weight: 600;

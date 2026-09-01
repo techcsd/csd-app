@@ -184,6 +184,6 @@
   color: #3730a3;
 }
 .pdet__fase-estado--pendiente {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
 }

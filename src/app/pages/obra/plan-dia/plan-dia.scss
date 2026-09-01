@@ -52,10 +52,10 @@
 .plan__form {
   display: flex;
   flex-direction: column;
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 14px;
-  background: #fff;
+  background: var(--color-surface);
   margin-bottom: 10px;
 }
 .plan__form-save {
@@ -98,9 +98,9 @@
 .plan__pick-opt {
   text-align: left;
   padding: 12px 14px;
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
 }
 .plan__mo-open {
@@ -146,11 +146,11 @@
   color: var(--main-ultra-light, #6b6b6b);
 }
 .plan__tarea {
-  border: 1px solid #e2e2e2;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 12px 14px;
   margin-bottom: 10px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .plan__tarea-top {
   display: flex;

@@ -81,13 +81,13 @@
 .nota-card__titulo {
   font-weight: 800;
   font-size: 16px;
-  color: #121212;
+  color: var(--color-text-primary);
   min-width: 0;
   overflow-wrap: anywhere; // AL14 — quiebra URLs/tokens sin espacios
 }
 .nota-card__snippet {
   font-size: 14px;
-  color: #3f3f46;
+  color: var(--color-text-secondary);
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -101,7 +101,7 @@
   justify-content: space-between;
   gap: 8px;
   font-size: 12px;
-  color: #52525b;
+  color: var(--color-text-secondary);
 }
 .nota-card__badge {
   font-weight: 700;

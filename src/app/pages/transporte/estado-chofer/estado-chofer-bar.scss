@@ -5,8 +5,8 @@
   width: 100%;
   padding: 12px 14px;
   margin-bottom: 14px;
-  background: #fff;
-  border: 1px solid #e5e5e5;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-left: 5px solid var(--tint, var(--primary));
   border-radius: 14px;
   text-align: left;
@@ -69,7 +69,7 @@
 .estado-otros__input {
   width: 100%;
   padding: 14px;
-  border: 1px solid #d4d4d4;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   font-size: 16px;
 
