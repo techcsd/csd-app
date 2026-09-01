@@ -45,6 +45,14 @@
         <div class="reqd__aviso reqd__aviso--danger">🚫 Cancelada: {{ r.cancelada_motivo }}</div>
       }
 
+      <!-- BF6 — motivo del rechazo: visible para corregir y reenviar -->
+      @if (esRechazada()) {
+        <div class="reqd__aviso reqd__aviso--warn">
+          ✕ Rechazada@if (r.motivo_rechazo) { : {{ r.motivo_rechazo }} }
+          @if (puedeEditar()) { <span class="reqd__aviso-hint">Corrige lo señalado y reenvíala para aprobación.</span> }
+        </div>
+      }
+
       <!-- BA6 — avance de despachos -->
       @if (hayDespachos() && avanceResumen(); as res) {
         <div class="reqd__avance">
@@ -96,7 +104,13 @@
           @for (e of ediciones(); track e.editado_at) {
             <li class="reqd__hist-row">
               <span class="reqd__hist-ico">✏️</span>
-              <span class="reqd__hist-txt">Editada por {{ e.editado_por_nombre ?? '—' }} · {{ fmtFecha(e.editado_at) }}</span>
+              <div class="reqd__hist-txt">
+                <span>Editada por {{ e.editado_por_nombre ?? '—' }} · {{ fmtFecha(e.editado_at) }}</span>
+                <!-- BF6 — diff legible (el aprobador ve qué cambió) -->
+                @for (c of resumenCambios(e); track c) {
+                  <span class="reqd__hist-diff">{{ c }}</span>
+                }
+              </div>
             </li>
           }
         </ul>
@@ -106,7 +120,9 @@
       @if (modo() === 'none') {
         <div class="reqd__acciones">
           @if (puedeEditar()) {
-            <button type="button" class="btn-cta reqd__editar" (click)="abrirEditar()">✏️ Editar</button>
+            <button type="button" class="btn-cta reqd__editar" (click)="abrirEditar()">
+              {{ esRechazada() ? '🔧 Corregir y reenviar' : '✏️ Editar' }}
+            </button>
           }
           @if (puedeGestionar() && esPendiente()) {
             <button type="button" class="btn-cta reqd__aprobar" (click)="abrirAprobar()">✓ Aprobar</button>
@@ -172,9 +188,21 @@
       <!-- BB10 — Editar (autor, pendiente) -->
       @if (modo() === 'editar') {
         <div class="reqd__panel">
-          <h3 class="reqd__sec">Editar requisición</h3>
+          <h3 class="reqd__sec">{{ esRechazada() ? 'Corregir requisición' : 'Editar requisición' }}</h3>
 
-          <label class="field-label">Urgencia</label>
+          <!-- BF6 — obra editable (el campo que en la práctica se equivoca) -->
+          <label class="field-label">Obra / ubicación</label>
+          <app-collapsible-select
+            label="Obra"
+            icon="🏗️"
+            [options]="proyectoOptions()"
+            [selectedId]="editProyectoId()"
+            [searchable]="true"
+            searchPlaceholder="Buscar obra…"
+            (picked)="editProyectoId.set($event)"
+          />
+
+          <label class="field-label reqd__mt">Urgencia</label>
           <div class="reqd__chips">
             <button type="button" class="chip" [class.chip--on]="editUrgencia() === 'normal'" (click)="editUrgencia.set('normal')">Normal</button>
             <button type="button" class="chip" [class.chip--on]="editUrgencia() === 'urgente'" (click)="editUrgencia.set('urgente')">🔴 Urgente</button>
@@ -207,7 +235,9 @@
 
           @if (!online) { <p class="reqd__off">Necesitas conexión para guardar.</p> }
           <div class="reqd__acciones reqd__mt">
-            <button type="button" class="btn-cta" [disabled]="procesando() || !online" (click)="guardarEdicion()">{{ procesando() ? 'Guardando…' : 'Guardar cambios' }}</button>
+            <button type="button" class="btn-cta" [disabled]="procesando() || !online" (click)="guardarEdicion()">
+              {{ procesando() ? (esRechazada() ? 'Reenviando…' : 'Guardando…') : (esRechazada() ? 'Corregir y reenviar' : 'Guardar cambios') }}
+            </button>
             <button type="button" class="btn-ghost" [disabled]="procesando()" (click)="cancelarAccion()">Cancelar</button>
           </div>
         </div>

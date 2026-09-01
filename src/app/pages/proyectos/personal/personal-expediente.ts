@@ -9,6 +9,8 @@ import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collaps
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { PersonalCarnet } from '../../../shared/ui/personal-carnet/personal-carnet';
+import { PdfViewer } from '../../../shared/ui/pdf-viewer/pdf-viewer';
+import { formatFechaMedia } from '../../../core/util/fecha';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -38,7 +40,7 @@ const SGC_WEB = 'https://sgcconstructorasd.com';
   selector: 'app-personal-expediente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, CedulaPipe],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, PdfViewer, CedulaPipe],
   templateUrl: './personal-expediente.html',
   styleUrl: './personal-expediente.scss',
 })
@@ -50,6 +52,7 @@ export class PersonalExpedientePage implements OnInit {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
 
+  readonly fmtFecha = formatFechaMedia;
   readonly fotosGuia = FOTOS_GUIA;
   readonly nacionalidades = NACIONALIDADES;
   readonly tiposDocumento = TIPOS_DOCUMENTO;
@@ -67,6 +70,9 @@ export class PersonalExpedientePage implements OnInit {
   saving = signal(false);
   lightboxUrl = signal<string | null>(null);
   confirmEstado = signal(false);
+  // BF8 — visor del documento/contrato firmado (snapshot AZ1).
+  docVisor = signal<{ url: string; nombre: string } | null>(null);
+  abriendoDoc = signal<string | null>(null);
 
   // Edición inline
   editando = signal(false);
@@ -147,6 +153,38 @@ export class PersonalExpedientePage implements OnInit {
   }
   cerrarFoto(): void {
     this.lightboxUrl.set(null);
+  }
+
+  // ── BF8 — ver el documento/contrato firmado (PDF inline o imagen) ────────────
+  /** El documento firmado congelado (documento_path, snapshot AZ1); si no lo hay,
+   *  cae a la firma sola (firma_path). PDF → visor inline; imagen → lightbox. */
+  async abrirDocumento(f: PersonalFirma): Promise<void> {
+    if (this.abriendoDoc()) return;
+    const path = f.documento_path || f.firma_path;
+    if (!path) {
+      this.toast.error('Este documento no tiene archivo adjunto.');
+      return;
+    }
+    this.abriendoDoc.set(f.id);
+    try {
+      const url = await this.service.fotoUrl(path);
+      if (!url) {
+        this.toast.error('No se pudo abrir el documento.');
+        return;
+      }
+      if (/\.pdf(\?|$)/i.test(path)) {
+        this.docVisor.set({ url, nombre: f.documento_nombre || 'Documento firmado' });
+      } else {
+        this.lightboxUrl.set(url);
+      }
+    } catch {
+      this.toast.error('No se pudo abrir el documento.');
+    } finally {
+      this.abriendoDoc.set(null);
+    }
+  }
+  cerrarDoc(): void {
+    this.docVisor.set(null);
   }
 
   // ── Edición ────────────────────────────────────────────────────────────────

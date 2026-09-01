@@ -115,15 +115,29 @@
         }
       </div>
 
-      <!-- ── Firmas (⏸ si existen) ── -->
+      <!-- ── BF8 — Documentos y contratos firmados (snapshot AZ1) ── -->
       @if (firmas().length) {
-        <h2 class="pe-sec">Documentos firmados</h2>
+        <h2 class="pe-sec">Documentos y contratos firmados</h2>
         @for (f of firmas(); track f.id) {
-          <div class="pe-firma">📄 {{ f.documento_nombre }}</div>
+          <button type="button" class="pe-firma" (click)="abrirDocumento(f)" [disabled]="abriendoDoc() === f.id">
+            <span class="pe-firma__ico">📄</span>
+            <span class="pe-firma__body">
+              <span class="pe-firma__nombre">{{ f.documento_nombre }}</span>
+              <span class="pe-firma__meta">
+                Firmado {{ fmtFecha(f.firmado_at) }}@if (!f.documento_path) { · solo firma }
+              </span>
+            </span>
+            <span class="pe-firma__go">{{ abriendoDoc() === f.id ? '…' : '›' }}</span>
+          </button>
         }
       }
     }
   </div>
+
+  <!-- BF8 — visor inline del documento/contrato firmado -->
+  @if (docVisor(); as dv) {
+    <app-pdf-viewer [src]="dv.url" [nombre]="dv.nombre" (cerrado)="cerrarDoc()" />
+  }
 
   <!-- Lightbox -->
   @if (lightboxUrl(); as url) {

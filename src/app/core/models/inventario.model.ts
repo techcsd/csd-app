@@ -290,6 +290,8 @@ export interface RequisicionDetalle {
   cancelada_motivo?: string | null;
   cerrada_en?: string | null;
   cerrada_por_nombre?: string | null;
+  // BF6 — motivo del rechazo (para el flujo rechazada → corregir → reenviar).
+  motivo_rechazo?: string | null;
 }
 
 /** BA6 — avance de un renglón: solicitado vs despachado vs pendiente. */
@@ -311,11 +313,13 @@ export interface RequisicionEdicion {
   cambios: { antes?: unknown; despues?: unknown } | null;
 }
 
-/** BB10 — payload para editar una requisición pendiente (solo el autor). */
+/** BB10/BF6 — payload para editar una requisición pendiente o rechazada (autor).
+ *  BF6 añade `proyectoId` (obra editable) — el campo que en la práctica se equivoca. */
 export interface RequisicionEditar {
   id: string;
   urgencia?: string | null;
   notas?: string | null;
+  proyectoId?: string | null;
   items?: { articulo_id: string | null; descripcion: string; cantidad: number; unidad: string | null; talla: string | null }[];
 }
 

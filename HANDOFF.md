@@ -1,5 +1,42 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 01/09/2026 — PROMPT-27 ronda BF (app) — paridad tras PROMPT-26 (SGC 1.107.x, ya en prod) — **build verde · 1 migración aditiva a prod · ⏳ sin commit/push/APK (avisar) + device-QA**
+
+**TL;DR:** las 5 fases de PROMPT-27. La mayor parte del trabajo pesado ya venía resuelto por PROMPT-26 en el backend (SGC 1.107.0/1.107.1, todas las migraciones BF aplicadas a prod). Lo que tocó de verdad en la app: **FASE 3 (BF6)** requisición corregible y **FASE 4 (BF8)** expediente con documentos/contratos. FASE 1/2/5 quedaron cubiertas por el backend + pulido menor.
+
+### ✅ FASE 1 — BF7: el chofer ve sus obras (el caso de la captura)
+- **NO requirió cambio de app.** El fix es 100% backend: `directorio_proyectos(p_contexto default 'conduce')` — contexto WIDE por defecto devuelve **todas las obras activas para todos** (el chofer entrega donde lo manden). Aplicada a prod (SGC `2026-09-01-bf7-directorio-proyectos-contexto.sql`). La app llama `directorio_proyectos` **sin args** en 3 sitios (`inventario.getObrasDestino`, `getProyectosConUbicacion`, `personal-obra.getObras`) → todos auto-arreglados. Verificado: `directorio_proyectos({})` → 200 con obras.
+- `generar-conduce` ya tenía banda no-silenciosa (AP1) para "no hay obras". Requisición sigue usando `proyectos_pickables` (SCOPED, correcto — el ingeniero ve las suyas + red AW1).
+
+### ✅ FASE 2 — BF1/BF2: proveedor con tipos
+- **NO requirió cambio de app.** BF1 (explota por `is_hardware_store` null) lo arregla el guard trigger `trg_proveedores_null_guard` (coalesce). El alta al vuelo del conduce externo usa `proveedor_transporte_crear` (firma intacta) que **estampa `tipos=['transportista']` server-side**; el selector usa `proveedores_transporte_listado` (filtra transportista). Ambos RPC existen en prod (bf2b/bf2c aplicadas). El form es transportista-específico por contexto → no pide tipo (correcto).
+
+### ✅ FASE 3 — BF6: requisición corregible (obra + rechazada→corregir→reenviar) — **código nuevo**
+- **Migración `sql/2026-09-01-bf6-app-requisicion-detalle-motivo.sql` (APLICADA A PROD, aditiva):** `requisicion_detalle` ahora devuelve `motivo_rechazo` (el RPC de bf6 añadió la columna pero no la exponía el detalle). `create or replace` que solo añade una clave jsonb → la web solo gana el campo. Copiada a `SGC/sql/` para paridad.
+- `editar_requisicion` en prod ya es 5-arg (`+p_proyecto_id`, editable en `pendiente` **y** `rechazada`, devuelve `{ok,version,reenviada}`). App:
+  - `solicitudes.service.editar()` manda `p_proyecto_id` y devuelve `{reenviada,version}`.
+  - `inventario.model`: `RequisicionEditar +proyectoId`, `RequisicionDetalle +motivo_rechazo`.
+  - `solicitudes/detalle` (`detalle.ts/html/scss`): `puedeEditar` ahora incluye **rechazada**; **selector de obra editable** en el panel (reusa `getProyectos`/proyectos_pickables); aviso ámbar con el **motivo del rechazo**; el botón dice **"🔧 Corregir y reenviar"** en rechazada; al guardar una rechazada, toast "corregida y reenviada"; **diff legible en el Historial** (`resumenCambios`: reenviada, obra X→Y, urgencia, renglones, notas) → el aprobador ve qué cambió (FASE 3.2).
+
+### ✅ FASE 4 — BF8: expediente con documentos/contratos firmados — **código nuevo**
+- El expediente (`proyectos/personal/personal-expediente`) ya traía `firmas()` con `documento_path` (el PDF firmado congelado, snapshot AZ1) pero solo pintaba `📄 nombre` estático. Ahora cada firma es **tappable** → abre el documento: PDF inline con `app-pdf-viewer` (mismo patrón del chat), o imagen en el lightbox si no es PDF; cae a `firma_path` si no hay documento. Muestra fecha de firma + "solo firma" cuando no hay documento. (`.ts/.html/.scss`.) BF8 en la web fue solo un grant de permiso a RRHH (no toca app).
+
+### ✅ FASE 5 — BF4: rastro de notificaciones + preferencias
+- **Rastro de entrega (FASE 5.1):** es trabajo del edge `send-push` + admin web (tabla `notif_entregas`, `notif_entregas_recientes` admin-only). La app ya registra `device_tokens` (`push.service`) — nada que cambiar.
+- **Silenciado real:** con BF4 aplicado, `send_push` respeta `notif_pref_usuario` **server-side** → los toggles que la app ya tenía (Avisos ⚙️, `mis_notif_prefs`/`set_notif_pref`) ahora silencian el push de verdad, no solo la bandeja. Los 8 tipos hardcodeados de la app coinciden con los `es_operativa=false` del catálogo server.
+- **App (nuevo):** entrada en **Perfil → "🔔 Preferencias de avisos"** que deep-linkea a `/avisos?prefs=1` (avisos auto-abre la hoja de preferencias vía queryParam). (`perfil.html/.ts`, `avisos.ts`.)
+
+### 🔴 Pendiente — SOLO Xaviel / device-QA
+- **Sin commit/push ni APK** (regla madre). Archivos: `solicitudes/detalle/*`, `proyectos/personal/personal-expediente.*`, `perfil.html/.ts`, `avisos.ts`, `core/services/solicitudes.service.ts`, `core/models/inventario.model.ts`, `sql/2026-09-01-bf6-app-requisicion-detalle-motivo.sql` (+copia en SGC). Decidir bump de APK (F3/F4/F5 cambian UI visible).
+- **Device-QA (es_prueba):** (1) **chofer** crea conduce Bodega Central → Torre Alpha, online y **airplane mode** (obra destino ya carga). (2) **ingeniero/capataz**: Mis requisiciones → detalle de una **rechazada** → ve el motivo → cambia la **obra** → "Corregir y reenviar" → vuelve a pendiente (v2) → el aprobador ve el diff en Historial. (3) **RRHH/ingeniero**: expediente de personal → tocar un documento firmado → se abre el PDF. (4) Perfil → Preferencias de avisos → silenciar un informativo → verificar que ya no llega el push.
+
+### Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0
+```
+
+---
+
 ## 🟢 SESIÓN 31/08/2026 — PROMPT-23 ronda BD (app) — revert home agrupado (toggle opcional) + recepción completa (ver+foto+firmar) — **F1+F2 COMPLETAS · build verde · 2 migraciones en prod · commit `e9b14f9` · APK 2.7.0 firmado+registrado · ⏳ falta push (PWA) + apk:publish + flip publicada + device-QA**
 
 **TL;DR:** dos entregas. **F1 (BD1):** el home agrupado (BC5) se **revierte como default** → vuelve el **grid plano** para todos; la vista agrupada queda como **preferencia por usuario server-side** ("Agrupar módulos por sección" en Perfil, OFF por defecto). La agrupada se **arregló**: sin bloque "Para ti" (mataba la duplicación), cada módulo UNA vez, **Tareas/Mensajes/Notas/Compa en sección "General"** (ya no dentro de Ingeniería), secciones **colapsables**. **F2 (BD2):** recibir = **VER conduce + FOTO + FIRMA**. Bandeja canónica única **"Entregas por recibir"** que **fusiona** las dos colas (por confirmar + por firmar) **deduplicadas por salida**; `/transporte/por-firmar` ahora **redirige**; **banner del home unificado** ("N por recibir"); la **firma sale de la sesión** (se eliminó el "Tu nombre" editable que dejaba firmar "como" otro). Foto **obligatoria pero no bloqueante** (si no se puede, exige nota).

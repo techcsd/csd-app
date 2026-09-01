@@ -19,6 +19,7 @@ import {
   RequisicionEdicion,
   requisicionCodigo,
 } from '../../../core/models/inventario.model';
+import { Proyecto } from '../../../core/models/bitacora.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
 import { combinarUnidades } from '../../../core/util/unidades';
 
@@ -76,20 +77,30 @@ export class RequisicionDetallePage {
   // AT7 — stock por renglón del almacén elegido (para el aprobador).
   private stockPorArticulo = signal<Record<string, number>>({});
 
-  // BB10 — edición del autor (pendiente).
+  // BB10/BF6 — edición del autor (pendiente o rechazada).
   editItems = signal<EditItem[]>([]);
   editUrgencia = signal<'normal' | 'urgente'>('normal');
   editNotas = signal('');
+  editProyectoId = signal(''); // BF6 — obra editable
+  proyectos = signal<Proyecto[]>([]); // BF6 — obras pickables (mismo scoping que crear)
   unidades = signal<string[]>([]);
   puedeGestionarSig = signal(false);
   confirmarQuitar = signal<string | null>(null);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
+  proyectoOptions = computed(() => this.proyectos().map((p) => ({ id: p.id, label: p.nombre })));
+  private proyectosMap = computed(() => {
+    const m: Record<string, string> = {};
+    for (const p of this.proyectos()) m[p.id] = p.nombre;
+    return m;
+  });
   puedeGestionar = computed(() => this.ctx.esAdmin() || this.ctx.hasModulo('inventario'));
   esPendiente = computed(() => this.req()?.estado === 'pendiente');
+  /** BF6 — una rechazada no es callejón: el autor la corrige y la reenvía. */
+  esRechazada = computed(() => this.req()?.estado === 'rechazada');
   esAutor = computed(() => !!this.req()?.solicitante_id && this.req()?.solicitante_id === this.ctx.profile()?.id);
-  /** BB10 — el autor (o admin) edita mientras esté pendiente. */
-  puedeEditar = computed(() => this.esPendiente() && (this.esAutor() || this.ctx.esAdmin()));
+  /** BB10/BF6 — el autor (o admin) edita mientras esté pendiente O rechazada. */
+  puedeEditar = computed(() => (this.esPendiente() || this.esRechazada()) && (this.esAutor() || this.ctx.esAdmin()));
   /** BA6 — cancelar: rol con permiso (o el autor de la pendiente). */
   puedeCancelar = computed(
     () => this.req()?.estado !== 'cancelada' && this.req()?.estado !== 'completada' && (this.puedeGestionarSig() || (this.esAutor() && this.esPendiente())),
@@ -143,6 +154,10 @@ export class RequisicionDetallePage {
     // Almacenes para el despacho (solo si puede gestionar).
     if (this.puedeGestionar()) {
       this.inventario.getBodegas().then((b) => this.bodegas.set(b)).catch(() => {});
+    }
+    // BF6 — obras para el selector de edición + resolver nombres en el historial.
+    if (this.puedeEditar() || this.ediciones().length) {
+      this.service.getProyectos().then((p) => this.proyectos.set(p)).catch(() => {});
     }
   }
 
@@ -248,12 +263,16 @@ export class RequisicionDetallePage {
     }
   }
 
-  // ── BB10 — editar la requisición pendiente ──
+  // ── BB10/BF6 — editar la requisición pendiente o rechazada ──
   async abrirEditar(): Promise<void> {
     const r = this.req();
     if (!r) return;
     this.editUrgencia.set(r.urgencia === 'urgente' ? 'urgente' : 'normal');
     this.editNotas.set(r.notas ?? '');
+    this.editProyectoId.set(r.proyecto_id ?? '');
+    if (!this.proyectos().length) {
+      this.service.getProyectos().then((p) => this.proyectos.set(p)).catch(() => {});
+    }
     this.editItems.set(
       r.items.map((i) => ({
         id: i.id,
@@ -309,10 +328,11 @@ export class RequisicionDetallePage {
     }
     this.procesando.set(true);
     try {
-      await this.service.editar({
+      const { reenviada } = await this.service.editar({
         id: r.id,
         urgencia: this.editUrgencia(),
         notas: this.editNotas().trim() || null,
+        proyectoId: this.editProyectoId() || null,
         items: items.map((it) => ({
           articulo_id: it.articulo_id,
           descripcion: it.descripcion,
@@ -321,7 +341,7 @@ export class RequisicionDetallePage {
           talla: it.talla,
         })),
       });
-      this.toast.success('Requisición actualizada.');
+      this.toast.success(reenviada ? 'Requisición corregida y reenviada para aprobación.' : 'Requisición actualizada.');
       this.modo.set('none');
       await this.refrescar();
     } catch (e) {
@@ -329,6 +349,28 @@ export class RequisicionDetallePage {
     } finally {
       this.procesando.set(false);
     }
+  }
+
+  /** BF6 — resumen legible del diff de una edición (para el aprobador y el autor). */
+  resumenCambios(e: RequisicionEdicion): string[] {
+    const c = e.cambios as { antes?: Record<string, unknown>; despues?: Record<string, unknown>; reenviada?: boolean } | null;
+    if (!c || !c.antes || !c.despues) return [];
+    const a = c.antes;
+    const d = c.despues;
+    const map = this.proyectosMap();
+    const out: string[] = [];
+    if (c.reenviada) out.push('🔄 Corregida y reenviada tras rechazo');
+    if (a['proyecto_id'] !== d['proyecto_id']) {
+      const na = (a['proyecto_id'] && map[a['proyecto_id'] as string]) || 'obra anterior';
+      const nd = (d['proyecto_id'] && map[d['proyecto_id'] as string]) || 'obra nueva';
+      out.push(`🏗️ Obra: ${na} → ${nd}`);
+    }
+    if (a['urgencia'] !== d['urgencia']) out.push(`Urgencia: ${a['urgencia'] === 'urgente' ? 'urgente' : 'normal'} → ${d['urgencia'] === 'urgente' ? 'urgente' : 'normal'}`);
+    const na = Array.isArray(a['items']) ? (a['items'] as unknown[]).length : null;
+    const nd = Array.isArray(d['items']) ? (d['items'] as unknown[]).length : null;
+    if (na !== null && nd !== null && na !== nd) out.push(`Renglones: ${na} → ${nd}`);
+    if ((a['notas'] ?? '') !== (d['notas'] ?? '')) out.push('Notas actualizadas');
+    return out;
   }
 
   // ── BA6 — cancelar con motivo ──

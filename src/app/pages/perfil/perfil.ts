@@ -176,6 +176,12 @@ export class PerfilPage {
     }
   }
 
+  /** BF4 — abre la bandeja de avisos con las preferencias desplegadas (silenciar
+   *  los avisos informativos; los operativos no se pueden silenciar). */
+  preferenciasAvisos(): void {
+    void this.router.navigate(['/avisos'], { queryParams: { prefs: '1' } });
+  }
+
   enProceso(): void {
     void this.router.navigate(['/en-proceso']);
   }

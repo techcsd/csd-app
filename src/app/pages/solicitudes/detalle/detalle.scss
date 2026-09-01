@@ -122,6 +122,18 @@
   background: #fee2e2;
   color: #b91c1c;
 }
+// BF6 — motivo del rechazo (corregible)
+.reqd__aviso--warn {
+  background: #fef3c7;
+  color: #92400e;
+}
+.reqd__aviso-hint {
+  display: block;
+  margin-top: 4px;
+  font-weight: 600;
+  font-size: 13px;
+  opacity: 0.9;
+}
 
 // BA6 — avance de despachos
 .reqd__avance {
@@ -193,6 +205,16 @@
   gap: 8px;
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+.reqd__hist-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+// BF6 — diff legible de una edición (el aprobador ve qué cambió)
+.reqd__hist-diff {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 // AT7 — stock por renglón (aprobador)

@@ -152,17 +152,22 @@ export class SolicitudesService {
     }
   }
 
-  /** BB10 — edita una requisición PENDIENTE (solo el autor/admin). Online (no
-   *  outbox: es una corrección puntual que necesita eco inmediato del servidor). */
-  async editar(input: RequisicionEditar): Promise<void> {
-    const { error } = await this.supabase.client.rpc('editar_requisicion', {
+  /** BB10/BF6 — edita una requisición PENDIENTE o RECHAZADA (solo el autor/admin).
+   *  Online (no outbox: es una corrección puntual que necesita eco inmediato del
+   *  servidor). BF6: al editar una RECHAZADA, el server la reenvía (vuelve a
+   *  'pendiente' a la misma bandeja, v2) — se devuelve `reenviada` para el aviso. */
+  async editar(input: RequisicionEditar): Promise<{ reenviada: boolean; version: number | null }> {
+    const { data, error } = await this.supabase.client.rpc('editar_requisicion', {
       p_solicitud_id: input.id,
       p_urgencia: input.urgencia ?? null,
       p_notas: input.notas ?? null,
       p_items: input.items ?? null,
+      p_proyecto_id: input.proyectoId ?? null,
     });
     if (error) throw new Error(error.message);
     await this.invalidarCache(input.id);
+    const res = (data ?? {}) as { reenviada?: boolean; version?: number };
+    return { reenviada: !!res.reenviada, version: res.version ?? null };
   }
 
   /** BA6 — cancela una requisición con motivo obligatorio (rol con permiso). Online. */

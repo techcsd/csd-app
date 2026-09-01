@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { LiveRefreshDirective } from '../../shared/ui/live-refresh/live-refresh.directive';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
@@ -39,6 +39,7 @@ export class AvisosPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private route = inject(ActivatedRoute);
 
   readonly fechaHora = formatFechaCortaHora;
 
@@ -54,6 +55,10 @@ export class AvisosPage {
 
   constructor() {
     void this.load();
+    // BF4 — deep-link desde Perfil: /avisos?prefs=1 abre directo las preferencias.
+    if (this.route.snapshot.queryParamMap.get('prefs') === '1') {
+      void this.abrirPrefs();
+    }
   }
 
   async load(silent = false): Promise<void> {

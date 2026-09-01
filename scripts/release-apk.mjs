@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.8.1';
+const VERSION = '2.9.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -67,7 +67,10 @@ const TITULO = 'Tema oscuro';
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Apariencia', d: 'Nuevo tema oscuro: enciéndelo o apágalo con el switch en Perfil → «Tema oscuro». La app arranca en claro (mejor para el sol) y recuerda tu preferencia; además se sincroniza con la versión web: si lo pones oscuro en un lado, el otro lo hereda.' },
+  { t: 'arreglo', m: 'Conduces', d: 'El chofer vuelve a ver TODAS las obras al crear un conduce: el selector de «Obra destino» ya no sale vacío («No hay opciones»). Entregas donde te manden, sin trabas.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Ahora puedes corregir una requisición sin rehacerla: cambia la obra/ubicación mientras está pendiente, y si te la rechazan verás el motivo, la corriges y la reenvías como la misma requisición (queda el historial de lo que cambió para quien aprueba).' },
+  { t: 'nuevo', m: 'Personal de obra', d: 'El expediente de cada persona ahora muestra sus documentos y contratos firmados: tócalos para abrir el PDF y verlo completo.' },
+  { t: 'mejora', m: 'Avisos', d: 'Nueva entrada en Perfil → «Preferencias de avisos» para silenciar los avisos informativos que no te aportan. Ahora silenciarlos también apaga la notificación en el teléfono (antes solo los ocultaba en la bandeja). Los avisos operativos importantes no se pueden silenciar.' },
 ];
 
 const TIPO_POR_COMMIT = {
