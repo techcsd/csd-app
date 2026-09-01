@@ -79,6 +79,35 @@
   --transition: 0.15s ease;
 }
 
+/* ── Tema OSCURO (opt-in por usuario, sincronizado con la web vía mi_tema/set_tema).
+   Mismos nombres de token, valores oscuros → todo lo que usa --color-* themea solo.
+   Default sigue siendo claro (mejor para sol); esto solo aplica con
+   [data-theme="dark"] en <html>. ── */
+[data-theme='dark'] {
+  --color-bg: #0f1720;
+  --color-surface: #17222e;
+  --color-surface-2: #1f2d3b;
+  --color-border: #30404f;
+
+  --color-text-primary: #e8eef4;
+  --color-text-secondary: #aebccd;
+  /* --color-text-on-primary / -on-secondary siguen blancos (texto sobre relleno
+     naranja/azul de marca): se mantienen. */
+
+  --color-success: #3faa63;
+  --color-warning: #e0952f;
+  --color-error: #e05a4c;
+  --color-info: #4a90d0;
+  --color-success-bg: rgba(22, 163, 74, 0.22);
+  --color-warning-bg: rgba(217, 119, 6, 0.24);
+  --color-error-bg: rgba(220, 38, 38, 0.26);
+
+  --main-ultra-light: #8fa0b3;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

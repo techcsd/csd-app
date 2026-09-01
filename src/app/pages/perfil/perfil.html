@@ -68,6 +68,13 @@
       }
     </ul>
 
+    <app-toggle-switch
+      [checked]="theme.isDark()"
+      label="Tema oscuro"
+      hint="Se sincroniza con la web"
+      (checkedChange)="theme.set($event ? 'dark' : 'light')"
+    />
+
     <button type="button" class="btn-ghost perfil__btn" [disabled]="checking()" (click)="buscarActualizacion()">
       {{ checking() ? 'Buscando…' : '🔄 Buscar actualización' }}
     </button>

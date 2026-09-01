@@ -30,6 +30,7 @@ import { DeviceInfoService } from './core/services/device-info.service';
 import { TrackingService } from './core/services/tracking.service';
 import { UserContextService } from './core/services/user-context.service';
 import { ImpersonationService } from './core/services/impersonation.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -40,6 +41,7 @@ import { ImpersonationService } from './core/services/impersonation.service';
 })
 export class App {
   // Injecting these boots the connectivity watcher + outbox drainer at startup.
+  private theme = inject(ThemeService); // BE6 — aplica el tema y sincroniza con la web
   private sync = inject(SyncService);
   private network = inject(NetworkService);
   private catalog = inject(CatalogService);

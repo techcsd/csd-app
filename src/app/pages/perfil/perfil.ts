@@ -15,6 +15,8 @@ import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
+import { ToggleSwitch } from '../../shared/ui/toggle-switch/toggle-switch';
+import { ThemeService } from '../../core/services/theme.service';
 import { FormsModule } from '@angular/forms';
 
 /** Profile / settings: identity, app version, update check, logout. */
@@ -22,11 +24,12 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-perfil',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialog, AvatarEditor, FormsModule],
+  imports: [ConfirmDialog, AvatarEditor, ToggleSwitch, FormsModule],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
 export class PerfilPage {
+  protected theme = inject(ThemeService);
   private ctx = inject(UserContextService);
   private session = inject(SessionService);
   private updates = inject(UpdateService);
