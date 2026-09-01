@@ -1,6 +1,12 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 01/09/2026 — PROMPT-27 ronda BF (app) — paridad tras PROMPT-26 (SGC 1.107.x, ya en prod) — **build verde · 1 migración aditiva a prod · ⏳ sin commit/push/APK (avisar) + device-QA**
+## 🟢 SESIÓN 01/09/2026 — PROMPT-27 ronda BF (app) — paridad tras PROMPT-26 (SGC 1.107.x, ya en prod) — **build verde · 1 migración aditiva a prod · commit `723512e` (NO pusheado) · APK 2.9.0 firmado+registrado (Y1) · ⏳ falta push (PWA) + apk:publish + device-QA**
+
+### 🚀 Release 2.9.0 (estado)
+- **Commit `723512e` en `main` — NO pusheado** (17 archivos). Versión bumpeada a 2.9.0 en environment(.prod).ts / build.gradle / release-apk.mjs.
+- **APK 2.9.0 firmado** (cert prod `3c5316d8…5065`) en `android/app/build/outputs/apk/release/app-release.apk`, **registrado en el historial (Y1)** vía `registrar_version` con `CAMBIOS_CURADOS` (conduces/requisiciones/personal/avisos). **NO subido al bucket ni publicado.**
+- **Para completar el release (cuando digas):** `git push` (deploya la PWA a iPhone/web) → `npm run apk:publish` (sube el APK al bucket para descarga/rolling) → flip `publicada=2.9.0` en SGC (`update sgc.app_versiones set publicada=(version='2.9.0') where plataforma='movil';`). Mínima intacta. **Rollback PWA:** `git revert 723512e && git push`. **Rollback Android:** volver `publicada` a 2.8.1.
+- **SGC (paridad):** la copia de `sql/2026-09-01-bf6-app-requisicion-detalle-motivo.sql` quedó en `SGC/sql/` sin commitear en ese repo.
 
 **TL;DR:** las 5 fases de PROMPT-27. La mayor parte del trabajo pesado ya venía resuelto por PROMPT-26 en el backend (SGC 1.107.0/1.107.1, todas las migraciones BF aplicadas a prod). Lo que tocó de verdad en la app: **FASE 3 (BF6)** requisición corregible y **FASE 4 (BF8)** expediente con documentos/contratos. FASE 1/2/5 quedaron cubiertas por el backend + pulido menor.
 
