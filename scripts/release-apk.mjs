@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.7.0';
+const VERSION = '2.8.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,19 +59,15 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-08-30';
+const RELEASED_AT = '2026-09-01';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Inicio más simple + recibir entregas con foto y firma';
+const TITULO = 'Tema oscuro';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Inicio', d: 'La pantalla de inicio vuelve a mostrar todos tus módulos a la vista, sin tener que buscar entre secciones. Si prefieres verlos agrupados por área, actívalo en Perfil → «Agrupar módulos por sección».' },
-  { t: 'nuevo', m: 'Recepción', d: 'Al recibir una entrega ahora puedes abrir el conduce completo, tomarle foto a lo recibido y firmar — todo en un mismo paso. Nada de firmar a ciegas.' },
-  { t: 'mejora', m: 'Recepción', d: 'Las entregas «por firmar» y «por confirmar» se unieron en una sola bandeja «Entregas por recibir», con un solo aviso y el conteo real.' },
-  { t: 'seguridad', m: 'Recepción', d: 'La firma de recepción sale de tu propia sesión (ya no se escribe un nombre libre): nadie puede firmar «como» otra persona.' },
-  { t: 'mejora', m: 'Recepción', d: 'Si no puedes tomar la foto (sin señal, cámara o permiso), puedes confirmar dejando una nota que lo explique — la foto es obligatoria pero no te bloquea.' },
+  { t: 'nuevo', m: 'Apariencia', d: 'Nuevo tema oscuro: enciéndelo o apágalo con el switch en Perfil → «Tema oscuro». La app arranca en claro (mejor para el sol) y recuerda tu preferencia; además se sincroniza con la versión web: si lo pones oscuro en un lado, el otro lo hereda.' },
 ];
 
 const TIPO_POR_COMMIT = {
