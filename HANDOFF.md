@@ -7,7 +7,12 @@
 - **APK 2.10.0 firmado** (cert prod `3c5316d8…5065`), **registrado (Y1)** con `CAMBIOS_CURADOS` (pendientes/retiro/bitácora) y **subido al bucket** (`csd-app-2.10.0.apk` + `latest` + `version.json` + `apk_url`). Descarga: `…/app-releases/csd-app-2.10.0.apk`.
 - **Publicada:** `sql/2026-09-02-publicar-2.10.0.sql` → `publicada=(version='2.10.0')` móvil (rolling). **`minima` INTACTA = 2.9.0** (tu dominio admin). **Rollback Android:** `update sgc.app_versiones set publicada=(version='2.9.0') where plataforma='movil';` **Rollback PWA:** `git revert a53b511 <este> && git push`.
 - **Señal-fix publicada** (`sql/2026-09-02-bg-publicar-fixes-rescate.sql`, min_app_version 2.10.0): 42501 (RLS) + 22001 (varchar) → la app del ingeniero (2.10.0) le sugerirá el reintento de sus bitácoras. **Verificado activas en prod.**
-- **Espejo SGC:** las 4 `sql/2026-09-02-*` copiadas a `SGC/sql/` (siguen sin commitear en ese repo).
+
+### 🌐 Web SGC — RELEASE 1.108.0 PUBLICADA (PROMPT-28, el padre) — TODO HECHO
+- **SGC `7f65341` (feat BG web 1.108.0) + `acf6953` (edge assistant) PUSHEADOS a `main`** → Vercel deploya la web 1.108.0 y la registra en el historial (hook de deploy + red de seguridad al arrancar). package.json 1.107.1→1.108.0 + `release-notes.json` con changelog BG.
+- **Contenido:** panel **«Registros atascados (outbox)»** (Tecnología, telemetría `reportar_outbox_atascado`), **retiro de material dañado** (web: pages + `retiros.service`), fix del constraint de requisiciones (BG5), bitácora varchar 200 (BG5). Build verde.
+- **Edge `assistant` redeployado** a prod → tool `material_en_cuarentena` viva en Compa (verificada 200 como almacén).
+- Las 6 `sql/*bg*` de PROMPT-28/29 ahora **commiteadas** en SGC (antes uncommitted). **Rollback web:** `git revert 7f65341 && git push` (SGC).
 
 **TL;DR:** depende de PROMPT-28 (SGC, **verificado deployado en prod**: fix-signal + telemetría + constraint `cancelada` + `estructura` varchar 200 + tablas de retiro). Esta ronda es el lado app: **F1** la 3ª categoría de outbox "error del sistema", **F2** ver contenido/duplicar/exportar, **F5** contador de texto, **F4** retiro de material dañado (construido, Xaviel lo aprobó), **F3** mecanismo de rescate + procedimiento. Decisiones de Xaviel: reintento post-fix **sugerido** (banner), y **construir BG4 ahora**.
 
@@ -41,8 +46,7 @@
 ### 🔴 Pendiente — SOLO con-el-ingeniero / device-QA / SGC
 - **Rescate CON el ingeniero** (criterio de éxito, ya TODO listo para él): su app 2.10.0 (rolling) le mostrará el banner "Hay una corrección que puede resolver tus N pendientes" → él reintenta desde Pendientes → **verificar las 3 bitácoras completas con fotos en la web** (SGC · Bitácora). NO descartar hasta que confirme. Ver `docs/BG-rescate-bitacoras.md`.
 - **Device-QA (QA users):** forzar un error de sistema → mensaje honesto + Descartar escondido + banner de reintento. Retiro: crear con fotos offline → airplane mode → reconecta → aparece en Mis retiros + notifica a inventario en SGC. (Nota: los `qa_*` son `es_prueba=FALSE` → crean data real.)
-- **Espejo SGC:** las 4 `sql/2026-09-02-*` ya copiadas a `SGC/sql/`, pero **el repo SGC sigue sin commitear** (los BG de PROMPT-28 también). Commitear cuando toques SGC.
-- **Compa:** la tool `material_en_cuarentena` necesita **redeploy del edge `assistant`** (HELD, ver contrato BG4).
+- ~~Espejo SGC / edge Compa~~ **HECHO** — web 1.108.0 + edge `assistant` commiteados, pusheados y deployados (ver arriba). No queda nada del lado web.
 
 ### Verify on resume
 ```
