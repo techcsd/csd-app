@@ -431,3 +431,16 @@ app-counter {
   color: var(--color-text);
   font-weight: 600;
 }
+
+// F5 (BG5) — contador de caracteres del texto libre de estructura/bloque (varchar 200).
+.char-count {
+  display: block;
+  text-align: right;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  &--warn {
+    color: var(--color-error, #c0392b);
+    font-weight: 700;
+  }
+}

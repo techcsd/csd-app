@@ -1930,6 +1930,14 @@ export class ConducesService {
     if (error) throwSyncError(error);
   }
 
+  /** BG1 §4 — ¿el error es "ya tiene una recepción confirmada"? (idempotencia: el
+   *  primer intento sí escribió; un reintento tras perder el ack debe contar como
+   *  éxito, no como fallo atascado). */
+  private esRecepcionYaConfirmada(error: unknown): boolean {
+    const msg = (error as { message?: string })?.message ?? String(error);
+    return /ya tiene.*recepci[oó]n confirmada|recepci[oó]n ya (fue )?confirmada|ya (fue )?confirmad[ao]/i.test(msg);
+  }
+
   private registerHandler(): void {
     // AQ10 — eliminar/anular conduce (soft-delete server-side; repone stock + cancela ruta).
     this.sync.register('conduce_eliminar', async (payload) => {
@@ -2379,7 +2387,11 @@ export class ConducesService {
         p_items: payload['items'] ?? null,
         p_notas: payload['notas'] ?? null,
       });
-      if (error) throwSyncError(error);
+      // BG1 §4 (idempotencia) — si el primer intento SÍ escribió pero se perdió el
+      // ack (red), un reintento choca con "ya tiene una recepción confirmada": eso
+      // es ÉXITO, no un fallo (el conduce ya quedó recibido). Se trata como OK para
+      // que la op salga del outbox en vez de quedar atascada.
+      if (error && !this.esRecepcionYaConfirmada(error)) throwSyncError(error);
       await this.catalog.invalidatePrefix('existencias_').catch(() => {});
       // QA-6 — confirmada → sale de "Por confirmar".
       await this.catalog.invalidate(CATALOG_POR_CONFIRMAR).catch(() => {});

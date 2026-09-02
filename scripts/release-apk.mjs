@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.9.0';
+const VERSION = '2.10.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,18 +59,18 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-09-01';
+const RELEASED_AT = '2026-09-02';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Tema oscuro';
+const TITULO = 'Tus pendientes no pierden data + retiro de material dañado';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Conduces', d: 'El chofer vuelve a ver TODAS las obras al crear un conduce: el selector de «Obra destino» ya no sale vacío («No hay opciones»). Entregas donde te manden, sin trabas.' },
-  { t: 'nuevo', m: 'Requisiciones', d: 'Ahora puedes corregir una requisición sin rehacerla: cambia la obra/ubicación mientras está pendiente, y si te la rechazan verás el motivo, la corriges y la reenvías como la misma requisición (queda el historial de lo que cambió para quien aprueba).' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'El expediente de cada persona ahora muestra sus documentos y contratos firmados: tócalos para abrir el PDF y verlo completo.' },
-  { t: 'mejora', m: 'Avisos', d: 'Nueva entrada en Perfil → «Preferencias de avisos» para silenciar los avisos informativos que no te aportan. Ahora silenciarlos también apaga la notificación en el teléfono (antes solo los ocultaba en la bandeja). Los avisos operativos importantes no se pueden silenciar.' },
+  { t: 'arreglo', m: 'Pendientes de envío', d: 'Si algo no se pudo enviar por un problema del sistema (no por ti ni por tu dato), ahora se conserva y te lo decimos claro: podrás reintentarlo cuando se publique la corrección. Ya no aparece «Descartar» de un toque sobre data real de la obra — para borrarla hay que confirmarlo dos veces con aviso.' },
+  { t: 'nuevo', m: 'Pendientes de envío', d: 'Toca un pendiente para VER su contenido completo con sus fotos. Puedes duplicarlo a una bitácora nueva (sin re-teclear nada) o compartirlo por WhatsApp como último recurso.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Nueva solicitud de «Retiro de material dañado» desde la obra: artículo, cantidad, motivo del daño y fotos del material (obligatorias). Funciona sin señal y le llega a almacén; sigues su estado en «Mis retiros».' },
+  { t: 'mejora', m: 'Bitácora', d: 'Los campos de texto largo ahora muestran un contador y un límite, para que el parte no se corte al enviarse.' },
 ];
 
 const TIPO_POR_COMMIT = {

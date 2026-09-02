@@ -1,0 +1,100 @@
+<div class="screen ret-det">
+  <header class="ret-det__header">
+    <button type="button" class="ret-det__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="ret-det__title">Retiro de material</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (!detalle() || detalle()?.error) {
+      <p class="ret-det__empty">No se pudo cargar este retiro.</p>
+    } @else {
+      @let r = detalle()!.retiro;
+      <div class="ret-det__card">
+        <div class="ret-det__top">
+          <span class="ret-det__folio">{{ codigo(r.folio) }}</span>
+          <span class="ret-det__estado" [attr.data-estado]="r.estado">{{ estadoLabel[r.estado] }}</span>
+        </div>
+        <div class="ret-det__fila"><span>Obra</span><b>{{ r.proyecto_nombre || '—' }}</b></div>
+        <div class="ret-det__fila"><span>Motivo del daño</span><b>{{ motivoLabel[r.motivo_dano] }}</b></div>
+        @if (r.motivo_dano_detalle) {
+          <div class="ret-det__fila"><span>Detalle</span><b>{{ r.motivo_dano_detalle }}</b></div>
+        }
+        @if (r.almacen_nombre) {
+          <div class="ret-det__fila"><span>Almacén destino</span><b>{{ r.almacen_nombre }}</b></div>
+        }
+        @if (r.disposicion) {
+          <div class="ret-det__fila"><span>Disposición</span><b>{{ r.disposicion }}</b></div>
+        }
+        @if (r.notas) {
+          <div class="ret-det__fila"><span>Notas</span><b>{{ r.notas }}</b></div>
+        }
+        <div class="ret-det__fila"><span>Fecha</span><b>{{ fmt(r.created_at) }}</b></div>
+      </div>
+
+      @if (r.rechazada_motivo) {
+        <div class="ret-det__aviso ret-det__aviso--rechazo">✋ Rechazado: {{ r.rechazada_motivo }}</div>
+      }
+      @if (r.cancelada_motivo) {
+        <div class="ret-det__aviso">🚫 Cancelado: {{ r.cancelada_motivo }}</div>
+      }
+
+      <!-- Artículos -->
+      <div class="ret-det__card">
+        <h2 class="ret-det__sec">Artículos ({{ detalle()!.items.length }})</h2>
+        @for (it of detalle()!.items; track $index) {
+          <div class="ret-det__item">
+            <span>{{ it.descripcion }}</span>
+            <b>{{ it.cantidad }} {{ it.unidad || '' }}</b>
+          </div>
+        }
+      </div>
+
+      <!-- Fotos -->
+      @if (fotoUrls().length) {
+        <div class="ret-det__card">
+          <h2 class="ret-det__sec">Fotos del daño ({{ fotoUrls().length }})</h2>
+          <div class="ret-det__fotos">
+            @for (u of fotoUrls(); track u) {
+              <button type="button" class="ret-det__foto" (click)="abrirFoto(u)">
+                <img [src]="u" alt="Material dañado" loading="lazy" />
+              </button>
+            }
+          </div>
+        </div>
+      } @else if (detalle()!.retiro && (detalle()!.fotos.length)) {
+        <p class="ret-det__muted">📷 {{ detalle()!.fotos.length }} foto(s) — conéctate para verlas.</p>
+      }
+
+      @if (puedeCancelar()) {
+        <button type="button" class="ret-det__cancelar" (click)="pedirCancelar()">Cancelar este retiro</button>
+      }
+    }
+  </div>
+
+  <!-- Visor de foto -->
+  @if (fotoAbierta(); as url) {
+    <div class="ret-lightbox" (click)="cerrarFoto()">
+      <img [src]="url" alt="Foto" />
+      <button type="button" class="ret-lightbox__close" (click)="cerrarFoto()" aria-label="Cerrar">✕</button>
+    </div>
+  }
+
+  <!-- Cancelar con motivo -->
+  @if (confirmarCancelar()) {
+    <div class="ret-modal" (click)="cancelarCancelacion()">
+      <div class="ret-modal__box" (click)="$event.stopPropagation()">
+        <h3 class="ret-modal__title">Cancelar retiro</h3>
+        <p class="ret-modal__msg">Escribe el motivo de la cancelación (obligatorio).</p>
+        <textarea class="field" rows="3" [ngModel]="motivoCancelar()" (ngModelChange)="motivoCancelar.set($event)" placeholder="Motivo"></textarea>
+        <div class="ret-modal__btns">
+          <button type="button" class="ret-modal__btn ret-modal__btn--ghost" (click)="cancelarCancelacion()">Volver</button>
+          <button type="button" class="ret-modal__btn ret-modal__btn--danger" [disabled]="cancelando()" (click)="confirmarCancelacion()">
+            {{ cancelando() ? 'Cancelando…' : 'Cancelar retiro' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

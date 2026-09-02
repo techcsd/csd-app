@@ -1,0 +1,36 @@
+<div class="screen retiros">
+  <header class="retiros__header">
+    <button type="button" class="retiros__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="retiros__icon">🚮</span>
+    <h1 class="retiros__title">Mis retiros</h1>
+    <button type="button" class="retiros__refresh" (click)="refrescar()" [disabled]="!online()" aria-label="Actualizar">↻</button>
+  </header>
+
+  <div class="screen__body">
+    <button type="button" class="retiros__nuevo" (click)="nuevo()">➕ Retirar material dañado</button>
+
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (items().length === 0) {
+      <app-empty-state
+        icon="🚮"
+        title="Sin retiros"
+        message="Cuando reportes material dañado para retiro, aparecerá aquí con su estado."
+      />
+    } @else {
+      @for (it of items(); track it.id) {
+        <button type="button" class="ret-card" [attr.data-estado]="it.estado" (click)="abrir(it)">
+          <div class="ret-card__top">
+            <span class="ret-card__folio">{{ codigo(it.folio) }}</span>
+            <span class="ret-card__estado" [attr.data-estado]="it.estado">{{ estadoLabel[it.estado] }}</span>
+          </div>
+          <div class="ret-card__body">
+            <span class="ret-card__obra">🏗️ {{ it.proyecto_nombre || 'Obra' }}</span>
+            <span class="ret-card__meta">{{ motivoLabel[it.motivo_dano] }} · {{ it.items_count }} artículo(s) · 📷 {{ it.fotos_count }}</span>
+          </div>
+          <span class="ret-card__fecha">{{ fmt(it.created_at) }}</span>
+        </button>
+      }
+    }
+  </div>
+</div>

@@ -1,0 +1,211 @@
+.ob-detalle {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border, #e5e5e5);
+  }
+  &__back {
+    background: none;
+    border: none;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--color-text, #212121);
+    padding: 4px 8px;
+  }
+  &__title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--color-text-soft, #666);
+  }
+
+  &__card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border, #e5e5e5);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin: 12px 16px;
+  }
+
+  &__resumen-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  &__tipo {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  &__fecha {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--color-text-soft, #777);
+  }
+  &__msg {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--color-text, #333);
+    &--sistema {
+      background: #fff6e6;
+      border: 1px solid #ffd98a;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+  }
+
+  &__sec {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--Hub, #ffb300);
+    margin: 0 0 10px;
+  }
+
+  &__fila {
+    display: flex;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-soft, #f0f0f0);
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  &__label {
+    flex: 0 0 42%;
+    font-size: 14px;
+    color: var(--color-text-soft, #777);
+  }
+  &__valor {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  &__fotos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  &__foto {
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__audios {
+    margin: 4px 16px;
+    font-size: 13px;
+    color: var(--color-text-soft, #777);
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 8px 16px 28px;
+  }
+  &__descartar {
+    align-self: center;
+    margin-top: 6px;
+    background: none;
+    border: none;
+    color: #c0392b;
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 8px;
+  }
+}
+
+// Chip de categoría
+.ob-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  &[data-tone='sistema'] {
+    background: #fdeaea;
+    color: #c0392b;
+  }
+  &[data-tone='dato'] {
+    background: #fff3d6;
+    color: #a06a00;
+  }
+  &[data-tone='transitorio'] {
+    background: #eaf1fb;
+    color: #2b5ca0;
+  }
+}
+
+// Botones de acción (min 56px táctil)
+.ob-btn {
+  min-height: 56px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #d8d8d8);
+  background: var(--card-bg, #fff);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--color-text, #212121);
+  &:disabled {
+    opacity: 0.55;
+  }
+  &--primary {
+    background: var(--Hub, #ffb300);
+    border-color: var(--Hub, #ffb300);
+    color: #1a1a1a;
+  }
+}
+
+// Lightbox de foto a pantalla completa
+.ob-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    max-width: 96vw;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+  &__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,115 @@
+<div class="screen ob-detalle">
+  <header class="ob-detalle__header">
+    <button type="button" class="ob-detalle__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="ob-detalle__title">Contenido del pendiente</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (!op()) {
+      <p class="ob-detalle__empty">Este pendiente ya no está en la cola.</p>
+    } @else {
+      <!-- Cabecera: tipo + categoría + fecha -->
+      <div class="ob-detalle__card ob-detalle__resumen">
+        <div class="ob-detalle__resumen-top">
+          <span class="ob-detalle__tipo">{{ contenido()?.tipoLabel }}</span>
+          @if (pill(); as p) {
+            <span class="ob-pill" [attr.data-tone]="p.tone">{{ p.label }}</span>
+          }
+        </div>
+        <span class="ob-detalle__fecha">{{ fmt(op()!.capturado_en) }}</span>
+
+        @if (enError()) {
+          <p class="ob-detalle__msg" [class.ob-detalle__msg--sistema]="esSistema()">{{ mensaje() }}</p>
+        }
+      </div>
+
+      <!-- Contenido (solo lectura) -->
+      @for (sec of contenido()?.secciones; track sec.titulo) {
+        <div class="ob-detalle__card">
+          <h2 class="ob-detalle__sec">{{ sec.titulo }}</h2>
+          @for (f of sec.filas; track $index) {
+            <div class="ob-detalle__fila">
+              <span class="ob-detalle__label">{{ f.label }}</span>
+              <span class="ob-detalle__valor">{{ f.valor }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Fotos -->
+      @if (contenido()?.fotos?.length) {
+        <div class="ob-detalle__card">
+          <h2 class="ob-detalle__sec">Fotos ({{ contenido()!.fotos.length }})</h2>
+          <div class="ob-detalle__fotos">
+            @for (foto of contenido()!.fotos; track foto.url) {
+              <button type="button" class="ob-detalle__foto" (click)="abrirFoto(foto.url)">
+                <img [src]="foto.url" [alt]="foto.nombre" loading="lazy" />
+              </button>
+            }
+          </div>
+        </div>
+      }
+      @if (contenido()?.audios) {
+        <p class="ob-detalle__audios">🎙️ {{ contenido()!.audios }} nota(s) de voz guardada(s) en el teléfono.</p>
+      }
+
+      <!-- Acciones -->
+      <div class="ob-detalle__acciones">
+        @if (enError()) {
+          <button type="button" class="ob-btn ob-btn--primary" [disabled]="!online()" (click)="reintentar()">
+            🔄 Reintentar el envío
+          </button>
+        }
+        @if (puedeDuplicar()) {
+          <button type="button" class="ob-btn" [disabled]="duplicando()" (click)="duplicar()">
+            {{ duplicando() ? 'Duplicando…' : '📄 Duplicar a nueva bitácora' }}
+          </button>
+        }
+        <button type="button" class="ob-btn" [disabled]="exportando()" (click)="exportar()">
+          {{ exportando() ? 'Preparando…' : '📤 Compartir / exportar' }}
+        </button>
+
+        <!-- Descartar vive SOLO aquí (nunca en la tarjeta); doble confirmación
+             para 'sistema' con aviso de pérdida de data real. -->
+        @if (enError()) {
+          <button type="button" class="ob-detalle__descartar" (click)="pedirDescartar()">
+            Descartar este registro…
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Visor de foto a pantalla completa -->
+  @if (fotoAbierta(); as url) {
+    <div class="ob-lightbox" (click)="cerrarFoto()">
+      <img [src]="url" alt="Foto" />
+      <button type="button" class="ob-lightbox__close" (click)="cerrarFoto()" aria-label="Cerrar">✕</button>
+    </div>
+  }
+
+  <!-- Descarte paso 1 -->
+  <app-confirm-dialog
+    [open]="descartarPaso() === 1"
+    title="¿Descartar este registro?"
+    [message]="esSistema() ? AVISO_PERDIDA + ' ¿Seguro que quieres borrarlo?' : 'No se enviará y se borrará de la cola. Quedará marcado como no enviado en tus registros. Esta acción no se puede deshacer.'"
+    [confirmLabel]="esSistema() ? 'Sí, continuar' : 'Descartar'"
+    cancelLabel="Conservar"
+    tone="danger"
+    (confirmed)="siguienteDescarte()"
+    (cancelled)="cancelarDescarte()"
+  />
+  <!-- Descarte paso 2 (solo 'sistema') -->
+  <app-confirm-dialog
+    [open]="descartarPaso() === 2"
+    title="Última confirmación"
+    message="Vas a borrar para siempre esta data real de la obra y sus fotos. No hay forma de recuperarla. ¿Continuar?"
+    confirmLabel="Borrar definitivamente"
+    cancelLabel="No, conservar"
+    tone="danger"
+    (confirmed)="siguienteDescarte()"
+    (cancelled)="cancelarDescarte()"
+  />
+</div>

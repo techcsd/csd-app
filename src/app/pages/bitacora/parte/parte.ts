@@ -71,6 +71,10 @@ export class PartePage implements OnDestroy {
   private hydrated = false;
 
   readonly minFotos = MIN_FOTOS;
+  // F5 (BG5) — límite del texto libre de estructura/bloque (columnas varchar(200)
+  // de bitacora_actividades). Con el contador el usuario ve "180/200" en vez de
+  // descubrir el error "value too long" recién al enviar. Espejo del server.
+  readonly maxTexto = 200;
   readonly motivosSinActividad = MOTIVOS_SIN_ACTIVIDAD;
   // Z4 — "No se trabajó en obra": el parte se resuelve en 3 pantallas.
   sinActividad = signal(false);
@@ -406,7 +410,18 @@ export class PartePage implements OnDestroy {
       this.tareaVinculada.set(draft.tareaVinculada ?? null); // Y15.8
       this.completarTarea.set(draft.completarTarea ?? false); // Y15.8
       this.step.set(draft.step ?? 1);
-      this.toast.show('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
+      // BG3 — "Duplicar a nueva bitácora" copia las fotos principales al borrador
+      // (slots foto_*). Si las hay, las rehidratamos para no re-tomarlas. Los
+      // borradores normales no persisten fotos, así que esto solo aplica a copias.
+      const fotosDraft = (await this.borrador.loadFotos(this.draftKey))
+        .filter((f) => /^foto_\d+/.test(f.slot))
+        .sort((a, b) => this.slotIdx(a.slot) - this.slotIdx(b.slot));
+      if (fotosDraft.length) {
+        this.fotos.set(fotosDraft.map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) })));
+        this.toast.show('Copiamos tu bitácora y sus fotos. Revísala y envíala. (Fotos de restricción/equipo hay que retomarlas.)', 'info', 5000);
+      } else {
+        this.toast.show('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
+      }
     } else {
       const obra = this.ctx.obraActiva();
       if (obra) this.proyectoId.set(obra.id);
@@ -422,6 +437,12 @@ export class PartePage implements OnDestroy {
       void this.loadIngenierosObra(this.proyectoId()); // AV3
     }
     this.hydrated = true;
+  }
+
+  /** BG3 — índice numérico de un slot `foto_<n>` (para ordenar las fotos copiadas). */
+  private slotIdx(slot: string): number {
+    const m = /foto_(\d+)/.exec(slot);
+    return m ? Number(m[1]) : 0;
   }
 
   /** T19 — sugerencias de equipos de ESTA obra (fallback al listado global). */

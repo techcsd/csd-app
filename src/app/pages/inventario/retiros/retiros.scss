@@ -1,0 +1,118 @@
+.retiros {
+  background: var(--color-bg);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--color-secondary);
+    color: #fff;
+  }
+  &__back,
+  &__refresh {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    &:disabled {
+      opacity: 0.4;
+    }
+  }
+  &__icon {
+    font-size: 26px;
+  }
+  &__title {
+    flex: 1;
+    margin: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+  }
+
+  &__nuevo {
+    width: 100%;
+    min-height: 56px;
+    margin-bottom: 14px;
+    border-radius: var(--radius);
+    background: var(--Hub, #ffb300);
+    color: #1a1a1a;
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+.ret-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-text-secondary);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+
+  &[data-estado='rechazada'],
+  &[data-estado='cancelada'] {
+    border-left-color: var(--color-error, #c0392b);
+  }
+  &[data-estado='en_cuarentena'] {
+    border-left-color: #a06a00;
+  }
+  &[data-estado='dispuesta'] {
+    border-left-color: #2ea043;
+  }
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  &__folio {
+    font-weight: 800;
+    font-size: 15px;
+  }
+  &__estado {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    &[data-estado='rechazada'],
+    &[data-estado='cancelada'] {
+      background: #fdeaea;
+      color: #c0392b;
+      border-color: transparent;
+    }
+    &[data-estado='dispuesta'] {
+      background: #e7f6ec;
+      color: #1c7c38;
+      border-color: transparent;
+    }
+  }
+  &__body {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  &__obra {
+    font-weight: 600;
+  }
+  &__meta {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+  }
+  &__fecha {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+}

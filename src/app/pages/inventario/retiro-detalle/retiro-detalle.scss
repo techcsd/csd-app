@@ -1,0 +1,231 @@
+.ret-det {
+  background: var(--color-bg);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--color-secondary);
+    color: #fff;
+  }
+  &__back {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  &__title {
+    margin: 0;
+    font-size: var(--fs-title);
+    font-weight: 800;
+  }
+
+  &__empty,
+  &__muted {
+    padding: 20px;
+    text-align: center;
+    color: var(--color-text-secondary);
+  }
+
+  &__card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin: 12px 0;
+  }
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  &__folio {
+    font-weight: 800;
+    font-size: 16px;
+  }
+  &__estado {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+    &[data-estado='rechazada'],
+    &[data-estado='cancelada'] {
+      background: #fdeaea;
+      color: #c0392b;
+    }
+    &[data-estado='dispuesta'] {
+      background: #e7f6ec;
+      color: #1c7c38;
+    }
+  }
+  &__fila {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+    span {
+      color: var(--color-text-secondary);
+    }
+    b {
+      text-align: right;
+      word-break: break-word;
+    }
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__aviso {
+    margin: 0 0 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(120, 120, 120, 0.12);
+    font-size: 14px;
+    font-weight: 600;
+    &--rechazo {
+      background: #fdeaea;
+      color: #c0392b;
+    }
+  }
+
+  &__sec {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--Hub, #ffb300);
+    margin: 0 0 10px;
+  }
+  &__item {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--color-border);
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__fotos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  &__foto {
+    padding: 0;
+    border: none;
+    background: none;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__cancelar {
+    display: block;
+    width: 100%;
+    min-height: 52px;
+    margin: 8px 0 28px;
+    border-radius: var(--radius);
+    background: none;
+    border: 1px solid var(--color-error, #c0392b);
+    color: var(--color-error, #c0392b);
+    font-size: 15px;
+    font-weight: 700;
+  }
+}
+
+.ret-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    max-width: 96vw;
+    max-height: 90vh;
+    object-fit: contain;
+  }
+  &__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 20px;
+  }
+}
+
+.ret-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  &__box {
+    width: 100%;
+    max-width: 420px;
+    background: var(--color-surface, #fff);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  &__title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  &__msg {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+  }
+  &__btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  &__btn {
+    flex: 1;
+    min-height: 52px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    &--ghost {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+    }
+    &--danger {
+      background: var(--color-error, #c0392b);
+      color: #fff;
+      &:disabled {
+        opacity: 0.5;
+      }
+    }
+  }
+}

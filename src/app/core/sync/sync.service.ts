@@ -3,6 +3,19 @@ import { Preferences } from '@capacitor/preferences';
 import { SupabaseService } from '../services/supabase.service';
 import { NetworkService } from '../services/network.service';
 import { db, FotoPendiente, OutboxOp } from '../db/app-db';
+import { outboxCategoria } from '../util/outbox-categoria';
+
+/** BG1(c) — un fix publicado por Tecnología (RPC `outbox_fixes_activos`). Si un
+ *  pendiente 'sistema' coincide (tipo_op / error_code y versión ≥ min), la app
+ *  sugiere reintentarlo. */
+export interface OutboxFixActivo {
+  id: string;
+  tipo_op: string | null;
+  error_code: string | null;
+  min_app_version: string | null;
+  descripcion: string;
+  publicado_en: string;
+}
 
 /**
  * A handler knows how to commit one kind of field capture to Supabase.
@@ -39,11 +52,15 @@ export class PermanentSyncError extends Error {
   campo?: string;
   /** BC3 — motivo estable del rechazo (requerido | formato_invalido | …). */
   motivo?: string;
-  constructor(message: string, kind: SyncErrorKind = 'validacion', campo?: string, motivo?: string) {
+  /** BG1 — SQLSTATE crudo (42501/23514/22001/22023…) para clasificar la categoría
+   *  del outbox por código, no por texto. */
+  code?: string;
+  constructor(message: string, kind: SyncErrorKind = 'validacion', campo?: string, motivo?: string, code?: string) {
     super(message);
     this.kind = kind;
     this.campo = campo;
     this.motivo = motivo;
+    this.code = code;
   }
 }
 
@@ -103,8 +120,9 @@ export function throwSyncError(error: unknown): never {
   if (codePermanente || (statusPermanente && !transient)) {
     // BC3 — si el servidor señaló el campo (error tipado 22023 / borde 22P02), lo
     // arrastramos para que la tarjeta del outbox pueda marcarlo al corregir.
+    // BG1 — y el SQLSTATE crudo, para clasificar la categoría por código.
     const { campo, motivo } = parseCampoMotivo(error);
-    throw new PermanentSyncError(message, classifyKind(code, status, message), campo, motivo);
+    throw new PermanentSyncError(message, classifyKind(code, status, message), campo, motivo, code || undefined);
   }
   throw new Error(message); // default: retryable with backoff
 }
@@ -318,9 +336,13 @@ export class SyncService {
       proximo_intento: 0,
       error_msg: undefined,
       error_kind: undefined,
+      error_code: undefined,
       error_campo: undefined,
       error_motivo: undefined,
       permanente: false,
+      // BG1 — un reintento explícito re-abre la ventana de telemetría: si vuelve a
+      // fallar como 'sistema', se re-reporta (actualiza ultima_vez / reabre resuelto).
+      reportado_sistema: false,
     });
     await db.mis_registros.update(id, { estado: 'pending' });
     await this.refreshCounts();
@@ -348,14 +370,43 @@ export class SyncService {
             proximo_intento: 0,
             error_msg: undefined,
             error_kind: undefined,
+            error_code: undefined,
             error_campo: undefined,
             error_motivo: undefined,
             permanente: false,
+            reportado_sistema: false,
           });
           await db.mis_registros.update(op.id, { estado: 'pending' });
         }
       });
     }
+    await this.refreshCounts();
+    void this.drain();
+  }
+
+  /** BG1(c) — reintenta un conjunto concreto de ops (los que un fix publicado dice
+   *  que puede resolver). Resetea intentos/estado como `retry`, en una transacción. */
+  async retryVarios(ids: string[]): Promise<void> {
+    if (!ids.length) return;
+    await db.transaction('rw', db.outbox, db.mis_registros, async () => {
+      for (const id of ids) {
+        const op = await db.outbox.get(id);
+        if (!op) continue;
+        await db.outbox.update(id, {
+          estado: 'pending',
+          intentos: 0,
+          proximo_intento: 0,
+          error_msg: undefined,
+          error_kind: undefined,
+          error_code: undefined,
+          error_campo: undefined,
+          error_motivo: undefined,
+          permanente: false,
+          reportado_sistema: false,
+        });
+        await db.mis_registros.update(id, { estado: 'pending' });
+      }
+    });
     await this.refreshCounts();
     void this.drain();
   }
@@ -669,6 +720,8 @@ export class SyncService {
     // BC3 — campo/motivo señalado por el servidor (para marcarlo al corregir).
     const campo = err instanceof PermanentSyncError ? err.campo : undefined;
     const motivo = err instanceof PermanentSyncError ? err.motivo : undefined;
+    // BG1 — SQLSTATE crudo, para clasificar la categoría por código.
+    const code = err instanceof PermanentSyncError ? err.code : undefined;
 
     if (permanent || intentos >= MAX_INTENTOS) {
       // Transitorio agotado tras MAX_INTENTOS → casi seguro red/servidor: se puede
@@ -679,6 +732,7 @@ export class SyncService {
           intentos,
           error_msg: msg,
           error_kind: kind,
+          error_code: code,
           error_campo: campo,
           error_motivo: motivo,
           permanente: permanent,
@@ -688,6 +742,11 @@ export class SyncService {
       // Y6 — solo los PERMANENTES van a telemetría (un transitorio agotado suele
       // ser falta de señal, no un bug); evita ruido de reportes por mala cobertura.
       if (permanent) this.onPermanentError?.(op, err);
+      // BG1/BG2 — si el fallo es de categoría 'sistema' (RLS/constraint/bug del
+      // server, no culpa del usuario ni de su dato), lo reportamos a Tecnología
+      // (best-effort) para que la data real atascada nunca se descubra por
+      // screenshot dos semanas después. Idempotente por dedup_key server-side.
+      void this.reportarSistemaSiCorresponde({ ...op, estado: 'error', error_kind: kind, error_code: code, error_campo: campo, permanente: permanent, error_msg: msg, intentos });
     } else {
       await db.outbox.update(op.id, {
         estado: 'pending',
@@ -695,9 +754,71 @@ export class SyncService {
         proximo_intento: Date.now() + BACKOFF[intentos - 1],
         error_msg: msg,
         error_kind: kind,
+        error_code: code,
         error_campo: undefined,
         error_motivo: undefined,
       });
+    }
+  }
+
+  /**
+   * BG1/BG2 — reporta a Tecnología un item atascado por error de SISTEMA (una vez
+   * por entrada al error; el RPC es idempotente por dedup_key igualmente). No
+   * bloquea ni ensucia el flujo: si no hay red o el RPC falla, se ignora y se
+   * volverá a intentar en el próximo fallo. NO se llama para 'dato' ni 'transitorio'.
+   */
+  private async reportarSistemaSiCorresponde(op: OutboxOp): Promise<void> {
+    try {
+      if (SyncService.isSilent(op.tipo_op)) return;
+      if (op.reportado_sistema) return;
+      if (outboxCategoria(op) !== 'sistema') return;
+      if (!this.network.online()) return;
+      const fotos = await db.fotos_pendientes.where('op_id').equals(op.id).count();
+      const edadHoras = Math.max(0, Math.round((Date.now() - op.created_local) / 3_600_000));
+      const resumen = this.payloadResumen(op);
+      const { error } = await this.supabase.client.rpc('reportar_outbox_atascado', {
+        p_dedup_key: op.id,
+        p_tipo_op: op.tipo_op,
+        p_categoria: 'sistema',
+        p_error_kind: op.error_kind ?? null,
+        p_error_code: op.error_code ?? null,
+        p_error_msg: op.error_msg ?? null,
+        p_intentos: op.intentos,
+        p_fotos_count: fotos,
+        p_edad_horas: edadHoras,
+        p_payload_resumen: resumen,
+      });
+      if (!error) await db.outbox.update(op.id, { reportado_sistema: true });
+    } catch {
+      /* telemetría best-effort: nunca romper el drain */
+    }
+  }
+
+  /** BG2 — resumen CHICO del payload para la telemetría (NO el payload completo ni
+   *  las fotos): solo claves de identificación para que Tecnología ubique el caso. */
+  private payloadResumen(op: OutboxOp): Record<string, unknown> {
+    const p = op.payload ?? {};
+    const out: Record<string, unknown> = {};
+    for (const k of ['proyecto_id', 'fecha', 'tipo', 'vehiculo_id', 'salida_id', 'folio', 'destino_id', 'origen_id']) {
+      if (p[k] != null) out[k] = p[k];
+    }
+    return out;
+  }
+
+  /**
+   * BG1(c) — señales "corregido" publicadas por Tecnología (`outbox_fixes_activos`).
+   * La pantalla de Pendientes las usa para SUGERIR el reintento de los atascados de
+   * categoría 'sistema' que coincidan (por tipo_op / error_code y versión de la app).
+   * Best-effort/online: sin red devuelve []. No cachea (la lista es corta y volátil).
+   */
+  async outboxFixesActivos(): Promise<OutboxFixActivo[]> {
+    try {
+      if (!this.network.online()) return [];
+      const { data, error } = await this.supabase.client.rpc('outbox_fixes_activos');
+      if (error || !Array.isArray(data)) return [];
+      return data as OutboxFixActivo[];
+    } catch {
+      return [];
     }
   }
 }

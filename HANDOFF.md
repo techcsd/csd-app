@@ -1,5 +1,51 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 02/09/2026 — PROMPT-29 ronda BG (app) — el outbox que no pierde data + retiro de material dañado — **build verde · smoke VERDE (usuarios QA) · 3 migraciones aditivas a prod · SIN commit/push/APK (regla madre) · ⏳ device-QA + rescate CON el ingeniero + publicar señal-fix al release**
+
+**TL;DR:** depende de PROMPT-28 (SGC, **verificado deployado en prod**: fix-signal + telemetría + constraint `cancelada` + `estructura` varchar 200 + tablas de retiro). Esta ronda es el lado app: **F1** la 3ª categoría de outbox "error del sistema", **F2** ver contenido/duplicar/exportar, **F5** contador de texto, **F4** retiro de material dañado (construido, Xaviel lo aprobó), **F3** mecanismo de rescate + procedimiento. Decisiones de Xaviel: reintento post-fix **sugerido** (banner), y **construir BG4 ahora**.
+
+### ✅ F1 (BG1) — tercera categoría "error del sistema"
+- `core/util/outbox-categoria.ts`: clasifica por **CÓDIGO** (no texto) → `transitorio | dato | sistema`. 42501/23514/22001/incompatible → **sistema**; 22023/22P02/2350x + `error_campo` → **dato**; resto/red → transitorio.
+- `OutboxOp` +`error_code`+`reportado_sistema`; `PermanentSyncError` +`code`; `sync.service` persiste el SQLSTATE, y al entrar a 'sistema' llama **`reportar_outbox_atascado`** (telemetría, best-effort, 1×/entrada).
+- **Mensaje honesto** para 'sistema' (`MENSAJE_SISTEMA`) — reemplaza el incorrecto "No tienes permiso… contacta a un administrador" (que salía por RLS). **Descartar escondido**: NO aparece en la tarjeta para 'sistema'; vive en la vista de contenido tras **doble confirmación** con aviso de pérdida.
+- **Banner de reintento sugerido** (`outbox_fixes_activos` → `retryVarios`): "Hay una corrección que puede resolver tus N pendientes — ¿reintentar?". `core/util/version.ts` para el gate min_app_version.
+- Reintento manual siempre disponible para 'sistema' (reenvía payload+fotos íntegros; idempotente por client-uuid).
+
+### ✅ F2 (BG3) — ver contenido + duplicar + exportar
+- Nueva página `pages/pendientes/outbox-detalle` (`/pendientes/:id`): tap en la tarjeta → **solo-lectura** de todo el contenido + fotos (lightbox). `OutboxContenidoService` humaniza el payload (labels compartidos en `core/util/outbox-labels.ts`).
+- **Duplicar a nueva bitácora**: reconstruye un borrador de parte desde el payload + **copia las fotos principales** a `borrador_fotos`; el wizard `parte` ahora **rehidrata** esas fotos (solo en copias). **Exportar**: PDF con texto + fotos embebidas → Share (WhatsApp).
+
+### ✅ F5 — contador/límite de texto (varchar 200)
+- Wizard `parte`: `maxlength=200` + contador "N/200" en los inputs de **estructura/bloque** (columnas varchar(200) de `bitacora_actividades`). El overflow ahora es 'dato' con Corregir, no un `varchar` crudo.
+
+### ✅ F4 (BG4) — retiro de material dañado (app)
+- `core/services/retiros.service.ts` (handler outbox **`retiro_material`**, registrado en `app.config`), `core/models/retiro.model.ts`. Sube fotos a **`sgc-retiro`** → `crear_retiro_material`.
+- Páginas: **`inventario/retiro-nuevo`** (obra + artículos AU12/descripción + motivo + **fotos OBLIGATORIAS** + notas, offline-first), **`inventario/retiros`** (Mis retiros), **`inventario/retiro-detalle`** (estado + fotos firmadas + cancelar con motivo). Entrada desde **Requisiciones → "Retirar material dañado"** (gate `compras.solicitudes`).
+- **3 migraciones aditivas APLICADAS a prod** (aditivas, verificadas por smoke):
+  - `sql/2026-09-02-bg4-retiro-storage-update.sql` — política **UPDATE** del bucket `sgc-retiro` (upsert del outbox necesita INSERT+UPDATE, si no el reintento 42501).
+  - `sql/2026-09-02-bg4-retiro-client-id-idempotente.sql` — `crear_retiro_material` 9-arg con **`p_client_id`** (guarda if-exists) → reenvío no duplica. Sobrecarga; la 8-arg sigue viva.
+  - `sql/2026-09-02-bg4-retiros-listado-ve-prueba.sql` — `retiros_listado` muestra sus retiros de prueba a usuarios `es_prueba` (convención AZ3).
+
+### ✅ F3 — mecanismo de rescate + idempotencia
+- `crear_bitacora_app` ya es idempotente por `p_id` → reintento post-fix no duplica. Handler `conduce_confirmar`: "ya tiene recepción confirmada" ahora cuenta como **ÉXITO** (BG1 §4, ack perdido).
+- **Procedimiento documentado**: `docs/BG-rescate-bitacoras.md`. Señal-fix a publicar al release: `sql/2026-09-02-bg-publicar-fixes-rescate.sql` (⚠️ reemplazar `<VERSION>` por la versión del APK).
+- **Follow-up conocido**: `crear_conduce_externo` sin client-uuid (podría duplicar un conduce externo en reintento) — no bloquea el rescate.
+
+### 🔴 Pendiente — SOLO Xaviel / device-QA / con-el-ingeniero
+- **Sin commit/push ni APK** (regla madre). Decidir bump (F1-F5 cambian UI/DB). Archivos: ver `git status` (12 M + 4 sql + 5 páginas/servicios/utils nuevos + docs).
+- **Espejo SGC (paridad):** copiar los 4 `sql/2026-09-02-*` a `SGC/sql/` (siguen sin commitear allá). Los BG de PROMPT-28 también seguían uncommitted en SGC.
+- **Rescate CON el ingeniero** (criterio de éxito): publicar APK → forzar update → publicar señal-fix (con la versión) → él reintenta desde Pendientes → verificar las **3 bitácoras completas con fotos en la web**. NO descartar hasta que confirme. Ver `docs/BG-rescate-bitacoras.md`.
+- **Device-QA (es_prueba/QA users):** forzar un error de sistema (usuario sin política) → mensaje honesto + Descartar escondido → publicar fix → banner sugerido → reintentar → llega sin duplicar. Retiro: crear con fotos offline → airplane mode → reconecta → aparece en Mis retiros + notifica a inventario en SGC.
+- **Compa:** la tool `material_en_cuarentena` necesita **redeploy del edge `assistant`** (HELD, ver contrato BG4).
+
+### Verify on resume
+```
+cd "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" && npm run build   # exit 0
+node <scratchpad>/smoke-bg.mjs   # 🟢 SMOKE VERDE (retiro + telemetría + fix-signal, usuarios QA)
+```
+
+---
+
 ## 🟢 SESIÓN 01/09/2026 — PROMPT-27 ronda BF (app) — paridad tras PROMPT-26 (SGC 1.107.x, ya en prod) — **build verde · 1 migración aditiva a prod · commits `723512e`+`c37d621` PUSHEADOS (PWA deploy) · APK 2.9.0 firmado+registrado+SUBIDO al bucket · `publicada=2.9.0` (rolling) · ⏳ solo device-QA**
 
 ### 🚀 Release 2.9.0 — PUBLICADA (rolling)

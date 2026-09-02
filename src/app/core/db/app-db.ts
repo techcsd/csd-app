@@ -48,6 +48,10 @@ export interface OutboxOp {
   error_msg?: string;
   /** P5 — familia de la causa del último fallo (para traducir a español). */
   error_kind?: string;
+  /** BG1 — SQLSTATE crudo del último fallo (42501 RLS, 23514 check, 22001 varchar,
+   *  22023 dato tipado…). La categoría del outbox (transitorio/dato/sistema) se
+   *  deriva del CÓDIGO, no del texto. Vacío para fallos de red/transitorios. */
+  error_code?: string;
   /** BC3 — campo señalado por el servidor (error tipado 22023 {campo, motivo}) para
    *  marcarlo al corregir. Vacío si el error no especificó un campo. */
   error_campo?: string;
@@ -56,6 +60,10 @@ export interface OutboxOp {
   error_motivo?: string;
   /** P5 — true si el error es permanente (no se reencola en "reintentar todo"). */
   permanente?: boolean;
+  /** BG1 — ya se reportó a Tecnología (telemetría `reportar_outbox_atascado`) como
+   *  atascado de categoría 'sistema'. Evita re-reportar en cada tick (el RPC es
+   *  idempotente igualmente, pero esto ahorra la llamada de red). */
+  reportado_sistema?: boolean;
   capturado_en: string;
   created_local: number;
 }

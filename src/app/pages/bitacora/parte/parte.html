@@ -151,18 +151,21 @@
               <button type="button" class="chip" [class.chip--on]="sujetoOtro()" (click)="elegirOtroEstructura()">➕ Otro</button>
             </div>
             @if (sujetoOtro()) {
-              <input class="field" type="text" [ngModel]="sujetoActual()" (ngModelChange)="sujetoActual.set($event)" placeholder="Ej: Bloque B · 3er nivel" aria-label="Bloque, piso o edificio" />
+              <input class="field" type="text" [maxlength]="maxTexto" [ngModel]="sujetoActual()" (ngModelChange)="sujetoActual.set($event)" placeholder="Ej: Bloque B · 3er nivel" aria-label="Bloque, piso o edificio" />
+              <span class="char-count" [class.char-count--warn]="sujetoActual().length >= maxTexto">{{ sujetoActual().length }}/{{ maxTexto }}</span>
             }
           } @else {
             <input
               class="field"
               type="text"
               list="bloques-sugeridos"
+              [maxlength]="maxTexto"
               [ngModel]="sujetoActual()"
               (ngModelChange)="sujetoActual.set($event)"
               placeholder="Ej: Bloque B · 3er nivel"
               aria-label="Bloque, piso o edificio"
             />
+            <span class="char-count" [class.char-count--warn]="sujetoActual().length >= maxTexto">{{ sujetoActual().length }}/{{ maxTexto }}</span>
             <datalist id="bloques-sugeridos">
               @for (b of bloques(); track b) { <option [value]="b"></option> }
             </datalist>
@@ -194,7 +197,8 @@
             <button type="button" class="chip" [class.chip--on]="parteOtro()" (click)="elegirOtraParte()">➕ Otros</button>
           </div>
           @if (parteOtro()) {
-            <input class="field" type="text" [ngModel]="parteActual()" (ngModelChange)="parteActual.set($event)" placeholder="Especifica qué se trabajó (ej: Escalera, Rampa…)" aria-label="Especifica qué se trabajó" />
+            <input class="field" type="text" [maxlength]="maxTexto" [ngModel]="parteActual()" (ngModelChange)="parteActual.set($event)" placeholder="Especifica qué se trabajó (ej: Escalera, Rampa…)" aria-label="Especifica qué se trabajó" />
+            <span class="char-count" [class.char-count--warn]="parteActual().length >= maxTexto">{{ parteActual().length }}/{{ maxTexto }}</span>
           }
 
           @if (parteActual()) {

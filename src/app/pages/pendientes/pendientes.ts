@@ -5,141 +5,23 @@ import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBadge } from '../../shared/ui/sync-badge/sync-badge';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
-import { SyncService } from '../../core/sync/sync.service';
+import { SyncService, OutboxFixActivo } from '../../core/sync/sync.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { ToastService } from '../../core/services/toast.service';
 import { OutboxOp } from '../../core/db/app-db';
 import { formatFechaRelativa } from '../../core/util/fecha';
+import { tipoOpLabel, tipoOpIcon } from '../../core/util/outbox-labels';
+import {
+  outboxCategoria,
+  categoriaPill,
+  MENSAJE_SISTEMA,
+  OutboxCategoria,
+} from '../../core/util/outbox-categoria';
+import { versionAlMenos } from '../../core/util/version';
+import { environment } from '../../../environments/environment';
 
 type OutboxItem = OutboxOp & { fotos: number };
-
-// P5 — etiqueta en español para cada tipo de operación del outbox.
-const TIPO_LABEL: Record<string, string> = {
-  bitacora: 'Parte / incidente de bitácora',
-  checklist_preuso: 'Pre-uso de vehículo',
-  vehiculo_entrega: 'Entrega / recepción de vehículo',
-  mantenimiento: 'Mantenimiento de vehículo',
-  combustible: 'Combustible',
-  mantenimiento_cierre: 'Cierre de mantenimiento',
-  crear_ruta: 'Ruta creada',
-  ruta_estado: 'Cambio de estado de ruta',
-  ruta_agregar_parada: 'Parada agregada a ruta',
-  ruta_cambiar_destino: 'Cambio de destino de ruta',
-  parada_avanzar: 'Avance de parada',
-  conduce_entrega: 'Entrega de conduce',
-  conduce_recepcion: 'Recepción de conduce',
-  conduce_simple: 'Conduce (entrega directa)',
-  conduce_transportista: 'Conduce con transportista',
-  conduce_estado_op: 'Cambio de estado de conduce',
-  conduce_entregado: 'Conduce entregado',
-  conduce_confirmar: 'Confirmación de conduce',
-  conduce_vincular_parada: 'Conduce vinculado a parada',
-  conduce_firmar_receptor: 'Firma de recepción de conduce',
-  conduce_transf_aceptar: 'Aceptar transferencia de conduce',
-  vehiculo_traspaso: 'Traspaso de vehículo',
-  aviso_novedad_vehiculo: 'Novedad de vehículo',
-  accidente_vehiculo: 'Accidente de vehículo',
-  dano_vehiculo: 'Daño de vehículo',
-  multa_conductor: 'Multa de conductor',
-  mensaje_enviar: 'Mensaje enviado',
-  tarea_app_iniciar: 'Inicio de tarea',
-  tarea_app_completar: 'Tarea completada',
-  cronograma_tarea_iniciar: 'Inicio de tarea de cronograma',
-  cronograma_tarea_completar: 'Tarea de cronograma completada',
-  tarea_enlazar: 'Enlace de tarea',
-  rrhh_asignar_item: 'Asignación de item a empleado',
-  rrhh_asignacion_estado: 'Cambio de asignación',
-  cl_liberacion: 'Liberación de checklist',
-  inv_entrada: 'Entrada de inventario',
-  inv_devolucion_obra: 'Devolución de obra',
-  inv_salida: 'Salida de inventario',
-  inv_conteo: 'Conteo de inventario',
-  devolucion_chofer: 'Devolución de chofer',
-  compra_ferreteria: 'Compra en ferretería',
-  entrada_ferreteria_confirmar: 'Confirmar entrada de ferretería',
-  solicitud: 'Requisición de materiales',
-  reporte: 'Reporte',
-  reporte_semanal: 'Inspección de vehículo',
-  documento_upload: 'Documento (cédula / licencia)',
-  nota_guardar: 'Nota guardada',
-  nota_checklist_set: 'Nota de checklist',
-  // obra_* — módulo de obra
-  obra_charla: 'Charla de seguridad',
-  obra_nc: 'No conformidad',
-  obra_incidente: 'Incidente en obra',
-  obra_accion_hecha: 'Acción correctiva hecha',
-  obra_nc_verificar: 'Verificación de no conformidad',
-  obra_checklist: 'Checklist de obra',
-  obra_cubicacion: 'Cubicación',
-  obra_avance_tarea: 'Avance de tarea de obra',
-  obra_prueba_campo: 'Prueba de campo',
-  obra_mano_obra: 'Registro de mano de obra',
-  obra_pedido_urgente: 'Pedido urgente',
-};
-
-const TIPO_ICON: Record<string, string> = {
-  bitacora: '📓',
-  checklist_preuso: '📋',
-  vehiculo_entrega: '🚚',
-  mantenimiento: '🔧',
-  combustible: '⛽',
-  mantenimiento_cierre: '🔧',
-  crear_ruta: '🗺️',
-  ruta_estado: '🗺️',
-  ruta_agregar_parada: '📍',
-  ruta_cambiar_destino: '📍',
-  parada_avanzar: '📍',
-  conduce_entrega: '📦',
-  conduce_recepcion: '📥',
-  conduce_simple: '📦',
-  conduce_transportista: '🚛',
-  conduce_estado_op: '🔄',
-  conduce_entregado: '📦',
-  conduce_confirmar: '✅',
-  conduce_vincular_parada: '🔗',
-  conduce_firmar_receptor: '✍️',
-  conduce_transf_aceptar: '↔️',
-  vehiculo_traspaso: '🔁',
-  aviso_novedad_vehiculo: '⚠️',
-  accidente_vehiculo: '💥',
-  dano_vehiculo: '🛠️',
-  multa_conductor: '🚦',
-  mensaje_enviar: '💬',
-  tarea_app_iniciar: '▶️',
-  tarea_app_completar: '✅',
-  cronograma_tarea_iniciar: '▶️',
-  cronograma_tarea_completar: '✅',
-  tarea_enlazar: '🔗',
-  rrhh_asignar_item: '🧑‍💼',
-  rrhh_asignacion_estado: '🧑‍💼',
-  cl_liberacion: '✅',
-  inv_entrada: '📥',
-  inv_devolucion_obra: '🏗️',
-  inv_salida: '📤',
-  inv_conteo: '🔢',
-  devolucion_chofer: '↩️',
-  compra_ferreteria: '🛒',
-  entrada_ferreteria_confirmar: '📥',
-  solicitud: '🛒',
-  reporte: '📝',
-  reporte_semanal: '📊',
-  documento_upload: '🪪',
-  nota_guardar: '🗒️',
-  nota_checklist_set: '🗒️',
-  // obra_* — módulo de obra
-  obra_charla: '🦺',
-  obra_nc: '⚠️',
-  obra_incidente: '🚨',
-  obra_accion_hecha: '✅',
-  obra_nc_verificar: '🔎',
-  obra_checklist: '📋',
-  obra_cubicacion: '📐',
-  obra_avance_tarea: '📈',
-  obra_prueba_campo: '🧪',
-  obra_mano_obra: '👷',
-  obra_pedido_urgente: '🛒',
-};
 
 /**
  * P5 — "Pendientes de envío". Diagnóstico visible del outbox: cada captura sin
@@ -170,6 +52,11 @@ export class PendientesPage {
   expandido = signal<string | null>(null);
   confirmarDescartarId = signal<string | null>(null);
 
+  // BG1(c) — fixes publicados por Tecnología (señal "corregido") + ids de los
+  // pendientes 'sistema' que un fix puede resolver → banner de reintento sugerido.
+  private fixes = signal<OutboxFixActivo[]>([]);
+  reintentandoFix = signal(false);
+
   online = this.network.online;
   fmt = formatFechaRelativa;
 
@@ -179,6 +66,8 @@ export class PendientesPage {
       this.sync.changed();
       void this.load();
     });
+    // BG1(c) — consulta las correcciones publicadas (online, best-effort).
+    void this.cargarFixes();
   }
 
   private async load(): Promise<void> {
@@ -187,6 +76,41 @@ export class PendientesPage {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  private async cargarFixes(): Promise<void> {
+    this.fixes.set(await this.sync.outboxFixesActivos());
+  }
+
+  /** BG1(c) — pendientes 'sistema' que coinciden con un fix publicado (por tipo_op /
+   *  error_code y versión de la app ≥ mínima del fix). Sugerimos reintentarlos. */
+  private itemsConFix(): OutboxItem[] {
+    const fixes = this.fixes();
+    if (!fixes.length) return [];
+    return this.items().filter((it) => {
+      if (!this.esSistema(it)) return false;
+      return fixes.some(
+        (f) =>
+          (!f.tipo_op || f.tipo_op === it.tipo_op) &&
+          (!f.error_code || (it.error_code ?? '').startsWith(f.error_code)) &&
+          versionAlMenos(environment.version, f.min_app_version),
+      );
+    });
+  }
+  /** ¿Hay una corrección publicada que aplica a pendientes atascados? (banner) */
+  hayFixSugerido(): boolean {
+    return this.itemsConFix().length > 0;
+  }
+  fixSugeridoCount(): number {
+    return this.itemsConFix().length;
+  }
+  /** BG1(c) — reintenta los pendientes que la corrección publicada puede resolver. */
+  reintentarConFix(): void {
+    const ids = this.itemsConFix().map((i) => i.id);
+    if (!ids.length || this.reintentandoFix()) return;
+    this.reintentandoFix.set(true);
+    void this.sync.retryVarios(ids).finally(() => this.reintentandoFix.set(false));
+    this.toast.show('Reintentando tus pendientes con la corrección…', 'info');
   }
 
   hayReintentables(): boolean {
@@ -199,8 +123,12 @@ export class PendientesPage {
   esViejo(item: OutboxItem): boolean {
     return item.estado !== 'error' && Date.now() - item.created_local > this.VIEJO_MS;
   }
-  /** S30 — se puede descartar: error permanente, o pending atascado >24h. */
+  /** S30/BG1 — se puede descartar DESDE LA TARJETA: error permanente de DATO, o
+   *  pending atascado >24h. Los de categoría 'sistema' NO muestran Descartar aquí
+   *  (data real de obra): su descarte vive en la vista de contenido, tras doble
+   *  confirmación con aviso de pérdida. */
   puedeDescartar(item: OutboxItem): boolean {
+    if (this.esSistema(item)) return false;
     return item.permanente === true || this.esViejo(item);
   }
 
@@ -252,18 +180,38 @@ export class PendientesPage {
   }
 
   tipoLabel(t: string): string {
-    return TIPO_LABEL[t] ?? t;
+    return tipoOpLabel(t);
   }
   tipoIcon(t: string): string {
-    return TIPO_ICON[t] ?? '📄';
+    return tipoOpIcon(t);
   }
 
-  /** P5 — error técnico → mensaje entendible en español según su familia. */
+  // ── BG1 — categoría (transitorio / dato / sistema) ─────────────────────────
+  categoria(item: OutboxItem): OutboxCategoria {
+    return outboxCategoria(item);
+  }
+  esSistema(item: OutboxItem): boolean {
+    return item.estado === 'error' && this.categoria(item) === 'sistema';
+  }
+  pill(item: OutboxItem) {
+    return categoriaPill(this.categoria(item));
+  }
+
+  /** BG3 — tap en la tarjeta → vista de solo-lectura del contenido + duplicar/exportar. */
+  abrirContenido(item: OutboxItem): void {
+    void this.router.navigate(['/pendientes', item.id]);
+  }
+
+  /** P5/BG1 — error técnico → mensaje entendible en español según su categoría. */
   mensajeError(item: OutboxItem): string {
     if (item.estado !== 'error' && !item.error_msg) return '';
+    // BG1 — categoría 'sistema': el mensaje NO culpa al usuario (el permiso de
+    // negocio existe; el sistema estaba mal configurado). Reemplaza el texto viejo
+    // "No tienes permiso para enviar esto. Contacta a un administrador".
+    if (this.esSistema(item)) return MENSAJE_SISTEMA;
     switch (item.error_kind) {
       case 'permiso':
-        return 'No tienes permiso para enviar esto. Contacta a un administrador.';
+        return MENSAJE_SISTEMA;
       case 'referencia':
         return 'Hace referencia a algo que ya no existe o está duplicado.';
       case 'no-encontrado':
@@ -353,9 +301,10 @@ export class PendientesPage {
       if (rotaFk) return 'Hace referencia a algo que ya no existe en el sistema.';
     }
 
-    // Permiso / RLS.
+    // Permiso / RLS → categoría 'sistema' (no es culpa del usuario). El mensaje
+    // honesto ya lo da mensajeError(); aquí no repetimos una frase que culpe.
     if (raw.includes('row-level security') || raw.includes('permission denied') || raw.includes('not authorized')) {
-      return 'No tienes permiso para enviar esto. Contacta a un administrador.';
+      return '';
     }
 
     // Existencias insuficientes (salida de inventario, carrera).

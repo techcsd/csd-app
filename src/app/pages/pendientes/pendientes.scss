@@ -63,10 +63,80 @@
   border-left-color: var(--Hub, #ffb300);
 }
 
+// BG1(c) — banner de corrección publicada (reintento sugerido).
+.pendientes__fix {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: var(--radius);
+  background: rgba(46, 160, 67, 0.12);
+  border: 1px solid rgba(46, 160, 67, 0.4);
+}
+.pendientes__fix-txt {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.pendientes__fix-btn {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: #2ea043;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+// BG1 — colores del borde por categoría del error.
+.ob-row[data-cat='sistema'][data-estado='error'] {
+  border-left-color: #c0392b;
+}
+.ob-row[data-cat='dato'][data-estado='error'] {
+  border-left-color: #a06a00;
+}
+
 .ob-row__top {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+// BG3 — cabecera tappable (abre el contenido). Reset de botón.
+.ob-row__top--tap {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+}
+
+// BG1 — chip de categoría en la tarjeta.
+.ob-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  &[data-tone='sistema'] {
+    background: #fdeaea;
+    color: #c0392b;
+  }
+  &[data-tone='dato'] {
+    background: #fff3d6;
+    color: #a06a00;
+  }
+  &[data-tone='transitorio'] {
+    background: #eaf1fb;
+    color: #2b5ca0;
+  }
 }
 .ob-row__icon {
   font-size: 26px;

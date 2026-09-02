@@ -1,0 +1,138 @@
+<div class="screen retiro">
+  <header class="retiro__header">
+    <button type="button" class="retiro__back" (click)="salir()" aria-label="Atrás">←</button>
+    <span class="retiro__icon">🚮</span>
+    <h1 class="retiro__title">Retirar material dañado</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (done()) {
+      <div class="retiro__done">
+        <span class="retiro__done-icon">✅</span>
+        <h2 class="retiro__done-title">Solicitud guardada</h2>
+        <p class="retiro__done-msg">
+          @if (online()) {
+            Se está enviando. Almacén la revisará y aprobará el retiro.
+          } @else {
+            Se enviará sola cuando vuelva la señal. Puedes seguir trabajando.
+          }
+        </p>
+        <button type="button" class="retiro__cta" (click)="irAMisRetiros()">Ver mis retiros</button>
+      </div>
+    } @else if (loadingCat()) {
+      <app-skeleton [rows]="5" />
+    } @else {
+      <!-- Obra -->
+      <section class="retiro__sec">
+        <label class="retiro__label">Obra</label>
+        @if (proyectos().length) {
+          <app-collapsible-select
+            label="Obra"
+            icon="🏗️"
+            [options]="proyectoOpciones()"
+            [selectedId]="proyectoId()"
+            [searchable]="true"
+            searchPlaceholder="Buscar obra…"
+            (picked)="proyectoId.set($event)"
+          />
+        } @else {
+          <p class="retiro__muted">No hay obras disponibles.</p>
+        }
+      </section>
+
+      <!-- Artículos -->
+      <section class="retiro__sec">
+        <label class="retiro__label">¿Qué material se dañó?</label>
+        <app-articulo-picker
+          [articulos]="articulos()"
+          [categorias]="categorias()"
+          [exclude]="excludeIds()"
+          [soloBuscador]="true"
+          [buscador]="buscador"
+          (picked)="addArticulo($event)"
+        />
+        <!-- No catalogado: descripción libre -->
+        <div class="retiro__libre">
+          <input class="field" type="text" [ngModel]="descripcionLibre()" (ngModelChange)="descripcionLibre.set($event)"
+            placeholder="…o escribe una descripción" (keyup.enter)="addDescripcion()" />
+          <button type="button" class="retiro__add-libre" [disabled]="!descripcionLibre().trim()" (click)="addDescripcion()">Agregar</button>
+        </div>
+
+        @if (items().length) {
+          <ul class="retiro__items">
+            @for (it of items(); track $index) {
+              <li class="retiro__item">
+                <div class="retiro__item-top">
+                  <span class="retiro__item-desc">{{ it.descripcion }}</span>
+                  <button type="button" class="retiro__item-del" (click)="removeItem($index)" aria-label="Quitar">✕</button>
+                </div>
+                <div class="retiro__item-qty">
+                  <app-qty-input [value]="it.cantidad" (valueChange)="setCantidad($index, $event)" ariaLabel="Cantidad" />
+                  <select class="field retiro__unidad" [ngModel]="it.unidad ?? ''" (ngModelChange)="setUnidad($index, $event)" aria-label="Unidad">
+                    @if (it.unidad && !unidades().includes(it.unidad)) { <option [value]="it.unidad">{{ it.unidad }}</option> }
+                    @for (u of unidades(); track u) { <option [value]="u">{{ u }}</option> }
+                  </select>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="retiro__muted">Toca un artículo del buscador o escribe una descripción.</p>
+        }
+      </section>
+
+      <!-- Motivo del daño -->
+      <section class="retiro__sec">
+        <label class="retiro__label">Motivo del daño</label>
+        <div class="retiro__motivos">
+          @for (m of motivos; track m.value) {
+            <app-option-button [icon]="m.icon" [label]="motivoLabel[m.value]" [selected]="motivo() === m.value" (pressed)="pickMotivo(m.value)" />
+          }
+        </div>
+        @if (motivo() === 'otro') {
+          <input class="field" type="text" [ngModel]="motivoDetalle()" (ngModelChange)="motivoDetalle.set($event)"
+            placeholder="Describe qué pasó" maxlength="200" />
+        }
+      </section>
+
+      <!-- Fotos obligatorias -->
+      <section class="retiro__sec">
+        <label class="retiro__label">Fotos del material dañado <span class="retiro__req">(obligatorio)</span></label>
+        <p class="retiro__hint">La foto es la evidencia del retiro. Toma al menos una.</p>
+        <div class="retiro__fotos">
+          @for (f of fotos(); track f.previewUrl) {
+            <div class="retiro__foto">
+              <img [src]="f.previewUrl" alt="Material dañado" />
+              <button type="button" class="retiro__foto-del" (click)="removeFoto($index)" aria-label="Quitar foto">✕</button>
+            </div>
+          }
+        </div>
+        <div class="retiro__foto-btns">
+          <button type="button" class="retiro__foto-btn" [disabled]="capturing()" (click)="addFoto()">📷 Tomar foto</button>
+          <button type="button" class="retiro__foto-btn retiro__foto-btn--ghost" [disabled]="capturing()" (click)="addFromGallery()">🖼️ Galería</button>
+        </div>
+      </section>
+
+      <!-- Notas -->
+      <section class="retiro__sec">
+        <label class="retiro__label">Notas (opcional)</label>
+        <textarea class="field retiro__notas" [ngModel]="notas()" (ngModelChange)="notas.set($event)" rows="2" placeholder="Algo más que agregar"></textarea>
+      </section>
+
+      <button type="button" class="retiro__cta" [disabled]="!puedeEnviar() || submitting()" (click)="enviar()">
+        {{ submitting() ? 'Guardando…' : 'Enviar solicitud de retiro' }}
+      </button>
+    }
+  </div>
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir sin enviar?"
+    message="Perderás lo que llevas de esta solicitud de retiro."
+    confirmLabel="Salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
+</div>

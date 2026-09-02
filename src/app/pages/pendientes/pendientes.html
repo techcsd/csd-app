@@ -15,6 +15,19 @@
         message="No tienes nada esperando. Cuando captures algo sin señal, aparecerá aquí hasta que se envíe."
       />
     } @else {
+      <!-- BG1(c) — una corrección publicada puede resolver pendientes atascados. -->
+      @if (hayFixSugerido()) {
+        <div class="pendientes__fix">
+          <p class="pendientes__fix-txt">
+            ✅ Hay una corrección que puede resolver
+            {{ fixSugeridoCount() }} pendiente{{ fixSugeridoCount() === 1 ? '' : 's' }}.
+          </p>
+          <button type="button" class="pendientes__fix-btn" [disabled]="!online() || reintentandoFix()" (click)="reintentarConFix()">
+            {{ reintentandoFix() ? 'Reintentando…' : 'Reintentar ahora' }}
+          </button>
+        </div>
+      }
+
       @if (hayReintentables()) {
         <button type="button" class="pendientes__retry-all" [disabled]="!online()" (click)="reintentarTodo()">
           🔄 Reintentar todos
@@ -25,15 +38,20 @@
       }
 
       @for (item of items(); track item.id) {
-        <div class="ob-row" [attr.data-estado]="item.estado">
-          <div class="ob-row__top">
+        <div class="ob-row" [attr.data-estado]="item.estado" [attr.data-cat]="categoria(item)">
+          <!-- BG3 — tap en la cabecera abre el contenido completo (solo lectura). -->
+          <button type="button" class="ob-row__top ob-row__top--tap" (click)="abrirContenido(item)">
             <span class="ob-row__icon">{{ tipoIcon(item.tipo_op) }}</span>
             <div class="ob-row__info">
               <span class="ob-row__tipo">{{ tipoLabel(item.tipo_op) }}</span>
               <span class="ob-row__fecha">{{ fmt(item.capturado_en) }}</span>
             </div>
-            <app-sync-badge [state]="item.estado" />
-          </div>
+            @if (item.estado === 'error') {
+              <span class="ob-pill" [attr.data-tone]="pill(item).tone">{{ pill(item).label }}</span>
+            } @else {
+              <app-sync-badge [state]="item.estado" />
+            }
+          </button>
 
           <div class="ob-row__meta">
             @if (item.fotos > 0) {
@@ -74,16 +92,22 @@
                   ✏️ Corregir
                 </button>
               }
-              <!-- W1 — reintentar solo tiene sentido en errores transitorios -->
-              @if (!item.permanente) {
+              <!-- BG1 — 'sistema' SIEMPRE reintentable (post-fix); transitorio también.
+                   'dato' no auto-reintenta (se corrige/duplica). -->
+              @if (esSistema(item) || !item.permanente) {
                 <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
                   Reintentar
                 </button>
               }
+              <button type="button" class="ob-btn ob-btn--ghost" (click)="abrirContenido(item)">
+                Ver contenido
+              </button>
               <button type="button" class="ob-btn ob-btn--ghost" (click)="toggleDetalle(item.id)">
                 {{ expandido() === item.id ? 'Ocultar detalle técnico' : 'Ver detalle técnico' }}
               </button>
-              @if (item.permanente) {
+              <!-- BG1 — Descartar NO aparece para 'sistema' (data real): vive en la
+                   vista de contenido tras doble confirmación. Solo dato/atascado. -->
+              @if (puedeDescartar(item)) {
                 <button type="button" class="ob-btn ob-btn--danger" (click)="pedirDescartar(item)">
                   Descartar
                 </button>

@@ -709,6 +709,24 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/solicitudes/detalle/detalle').then((m) => m.RequisicionDetallePage),
   },
 
+  // BG4 — Retiro de material dañado (lo origina el ingeniero de la obra, mismo
+  // público que las requisiciones → submódulo compras.solicitudes).
+  {
+    path: 'inventario/retiros',
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes')],
+    loadComponent: () => import('./pages/inventario/retiros/retiros').then((m) => m.RetirosPage),
+  },
+  {
+    path: 'inventario/retiro/nuevo',
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes', 'operar')],
+    loadComponent: () => import('./pages/inventario/retiro-nuevo/retiro-nuevo').then((m) => m.RetiroNuevoPage),
+  },
+  {
+    path: 'inventario/retiro/:id',
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes')],
+    loadComponent: () => import('./pages/inventario/retiro-detalle/retiro-detalle').then((m) => m.RetiroDetallePage),
+  },
+
   {
     path: 'actualizar',
     canActivate: [authGuard],
@@ -747,6 +765,12 @@ export const routes: Routes = [
     path: 'pendientes',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/pendientes/pendientes').then((m) => m.PendientesPage),
+  },
+  {
+    // BG3 — vista de solo-lectura del contenido de un pendiente (+ duplicar / exportar).
+    path: 'pendientes/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/pendientes/outbox-detalle/outbox-detalle').then((m) => m.OutboxDetallePage),
   },
   {
     path: 'en-proceso',
