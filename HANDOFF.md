@@ -1,6 +1,13 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 02/09/2026 — PROMPT-29 ronda BG (app) — el outbox que no pierde data + retiro de material dañado — **build verde · smoke VERDE (usuarios QA) · 3 migraciones aditivas a prod · SIN commit/push/APK (regla madre) · ⏳ device-QA + rescate CON el ingeniero + publicar señal-fix al release**
+## 🟢 SESIÓN 02/09/2026 — PROMPT-29 ronda BG (app) — el outbox que no pierde data + retiro de material dañado — **RELEASE 2.10.0 PUBLICADA (rolling) · commits `a53b511`+`<este>` PUSHEADOS (PWA) · APK 2.10.0 firmado+registrado+SUBIDO · señal-fix publicada · build verde · smoke VERDE · ⏳ solo device-QA + rescate CON el ingeniero**
+
+### 🚀 Release 2.10.0 — PUBLICADA (rolling) — TODO HECHO
+- **Push a `main`** (`a53b511` feat BG + `<este>` release) → Vercel deploya la **PWA 2.10.0** (iPhone/web). Versión alineada en environments/build.gradle/release-apk.mjs.
+- **APK 2.10.0 firmado** (cert prod `3c5316d8…5065`), **registrado (Y1)** con `CAMBIOS_CURADOS` (pendientes/retiro/bitácora) y **subido al bucket** (`csd-app-2.10.0.apk` + `latest` + `version.json` + `apk_url`). Descarga: `…/app-releases/csd-app-2.10.0.apk`.
+- **Publicada:** `sql/2026-09-02-publicar-2.10.0.sql` → `publicada=(version='2.10.0')` móvil (rolling). **`minima` INTACTA = 2.9.0** (tu dominio admin). **Rollback Android:** `update sgc.app_versiones set publicada=(version='2.9.0') where plataforma='movil';` **Rollback PWA:** `git revert a53b511 <este> && git push`.
+- **Señal-fix publicada** (`sql/2026-09-02-bg-publicar-fixes-rescate.sql`, min_app_version 2.10.0): 42501 (RLS) + 22001 (varchar) → la app del ingeniero (2.10.0) le sugerirá el reintento de sus bitácoras. **Verificado activas en prod.**
+- **Espejo SGC:** las 4 `sql/2026-09-02-*` copiadas a `SGC/sql/` (siguen sin commitear en ese repo).
 
 **TL;DR:** depende de PROMPT-28 (SGC, **verificado deployado en prod**: fix-signal + telemetría + constraint `cancelada` + `estructura` varchar 200 + tablas de retiro). Esta ronda es el lado app: **F1** la 3ª categoría de outbox "error del sistema", **F2** ver contenido/duplicar/exportar, **F5** contador de texto, **F4** retiro de material dañado (construido, Xaviel lo aprobó), **F3** mecanismo de rescate + procedimiento. Decisiones de Xaviel: reintento post-fix **sugerido** (banner), y **construir BG4 ahora**.
 
@@ -31,11 +38,10 @@
 - **Procedimiento documentado**: `docs/BG-rescate-bitacoras.md`. Señal-fix a publicar al release: `sql/2026-09-02-bg-publicar-fixes-rescate.sql` (⚠️ reemplazar `<VERSION>` por la versión del APK).
 - **Follow-up conocido**: `crear_conduce_externo` sin client-uuid (podría duplicar un conduce externo en reintento) — no bloquea el rescate.
 
-### 🔴 Pendiente — SOLO Xaviel / device-QA / con-el-ingeniero
-- **Sin commit/push ni APK** (regla madre). Decidir bump (F1-F5 cambian UI/DB). Archivos: ver `git status` (12 M + 4 sql + 5 páginas/servicios/utils nuevos + docs).
-- **Espejo SGC (paridad):** copiar los 4 `sql/2026-09-02-*` a `SGC/sql/` (siguen sin commitear allá). Los BG de PROMPT-28 también seguían uncommitted en SGC.
-- **Rescate CON el ingeniero** (criterio de éxito): publicar APK → forzar update → publicar señal-fix (con la versión) → él reintenta desde Pendientes → verificar las **3 bitácoras completas con fotos en la web**. NO descartar hasta que confirme. Ver `docs/BG-rescate-bitacoras.md`.
-- **Device-QA (es_prueba/QA users):** forzar un error de sistema (usuario sin política) → mensaje honesto + Descartar escondido → publicar fix → banner sugerido → reintentar → llega sin duplicar. Retiro: crear con fotos offline → airplane mode → reconecta → aparece en Mis retiros + notifica a inventario en SGC.
+### 🔴 Pendiente — SOLO con-el-ingeniero / device-QA / SGC
+- **Rescate CON el ingeniero** (criterio de éxito, ya TODO listo para él): su app 2.10.0 (rolling) le mostrará el banner "Hay una corrección que puede resolver tus N pendientes" → él reintenta desde Pendientes → **verificar las 3 bitácoras completas con fotos en la web** (SGC · Bitácora). NO descartar hasta que confirme. Ver `docs/BG-rescate-bitacoras.md`.
+- **Device-QA (QA users):** forzar un error de sistema → mensaje honesto + Descartar escondido + banner de reintento. Retiro: crear con fotos offline → airplane mode → reconecta → aparece en Mis retiros + notifica a inventario en SGC. (Nota: los `qa_*` son `es_prueba=FALSE` → crean data real.)
+- **Espejo SGC:** las 4 `sql/2026-09-02-*` ya copiadas a `SGC/sql/`, pero **el repo SGC sigue sin commitear** (los BG de PROMPT-28 también). Commitear cuando toques SGC.
 - **Compa:** la tool `material_en_cuarentena` necesita **redeploy del edge `assistant`** (HELD, ver contrato BG4).
 
 ### Verify on resume
