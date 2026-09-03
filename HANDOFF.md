@@ -10,7 +10,8 @@
 
 ### ✅ FASE 5 (BI6) — PIN de acceso auto-servicio (decisión Xaviel: rename + cambio propio; NO el cambio obligatorio en 1er ingreso)
 - **Rename**: candado local = "🔒 Bloqueo de la app" (perfil + pin-change reworded); el de cédula = "🔑 PIN de acceso". Se acabó la ambigüedad de dos "PIN".
-- **Cambio propio**: nueva pantalla `pages/auth/pin-acceso-change/` (`/auth/pin-acceso-change`, authGuard+pinGuard, pin-pad `[length]=6`), gateada `esCedula()` en perfil. `AuthService.cambiarMiPinAcceso()` → edge padre `acceso-cedula` **modo `self` NUEVO** (aditivo): re-autentica para verificar el PIN actual, rechaza triviales, **solo toca el PIN del uid del token**, auditado (`audit_log` via='self'), va ANTES del gate admin/tecnología. Modos admin intactos. **Edge desplegada a prod (verify_jwt=true)**; smoke no-auth → 401 ✓.
+- **Cambio propio**: nueva pantalla `pages/auth/pin-acceso-change/` (`/auth/pin-acceso-change`, authGuard+pinGuard, pin-pad `[length]=6`), gateada `esCedula()` en perfil. `AuthService.cambiarMiPinAcceso()` → edge padre `acceso-cedula` **modo `self` NUEVO** (aditivo): re-autentica para verificar el PIN actual, rechaza triviales, **solo toca el PIN del uid del token**, auditado (`audit_log` via='self'), va ANTES del gate admin/tecnología. Modos admin intactos. **Edge desplegada a prod (verify_jwt=true)**.
+  - **✅ VERIFICADA e2e en prod con un usuario de cédula real** (aislado/desechable, `c-00099988877@…local`, creado+probado+eliminado — cleanup verificado 0 residuos vía cascade FK): **9/9 aserciones** con el propio token del usuario (JWT normal, no service_role) — (1) happy-path → `200 {rotated:true}`, el PIN viejo deja de autenticar y el nuevo sí; (2) PIN actual incorrecto → `401` sin cambiar nada; (3) PIN nuevo trivial `111111` → `400`; (4) PIN nuevo == actual → `400`; (5) integridad tras los rechazos. Script en `<scratchpad>/test-self-pin.mjs`. **Solo falta device-QA de la UI** (que el botón navegue + el pin-pad de 6 díg con guantes) — el backend + contrato están verificados.
 
 ### ✅ Huecos de FASE 1–3 que el commit `4b3fbd3` no cubrió (cerrados esta sesión)
 - **FASE 3.5**: unión `AppErrorType` cerrada (+`tracking`/`login`, sin `(string & {})`) → un tipo nuevo no compila hasta declararlo (alineada con el CHECK del padre PROMPT-32 F6.1). Call-sites ya eran correctos.
@@ -20,7 +21,7 @@
 ### 🔴 Criterio de éxito PENDIENTE — device / con-el-ingeniero (no se puede desde aquí)
 - **Las 3 bitácoras del ingeniero** viven SOLO en su Android (IndexedDB por dispositivo). Con la 2.12.0 instalada: reintentarlas DESDE SU TELÉFONO → **contar fotos llegadas vs declaradas** en SGC web. NO descartar hasta confirmar.
 - **Escenario avión ×2**: crear bitácora con 5 fotos → sin red → reintentar 3× → UNA sola con las 5. Repetir sobre un registro con subida parcial previa (BI1).
-- **FASE 5 device-QA**: un chofer de cédula cambia su PIN de acceso desde su teléfono (necesita su PIN actual real — no testeable con qa_* que son de correo real → dan 409 "usa correo").
+- **FASE 5 device-QA**: SOLO falta la UI en el teléfono (el botón "Cambiar mi PIN de acceso" navega + pin-pad 6 díg con guantes). El **backend/contrato ya está VERIFICADO e2e en prod** (9/9, ver FASE 5 arriba); los qa_* no sirven para esto (correo real → 409 "usa correo"), por eso se probó con un usuario de cédula desechable.
 
 ### 🟡 §F / pendientes conocidos
 - El filtro server-side del watchdog (`SGC/sql/2026-09-03-bh-suprimir-ruido-watchdog.sql`) **se queda** como red para clientes viejos que nunca actualizan (el cliente 2.12.0 ya NO emite el ruido).
