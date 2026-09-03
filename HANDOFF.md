@@ -1,8 +1,16 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 02–03/09/2026 — PROMPT-31 ronda BH (app) — **TODO EL TRABAJO DE APP + BACKEND OWED HECHO Y VERIFICADO · build verde · guard verde · SIN commit/push/APK (esperando OK de Xaviel)**
+## 🟢 SESIÓN 02–03/09/2026 — PROMPT-31 ronda BH (app) — **RELEASE 2.11.0 PUBLICADA (rolling) · commit `7587d27` PUSHEADO a main (PWA) · APK 2.11.0 firmado+registrado+SUBIDO · publicada, minima INTACTA en 2.10.0 · build+guard verdes**
 
-**TL;DR:** las 8 ideas BH cerradas. Traslado de Ingeniería aplicado (Xaviel aprobó el mock). 4 migraciones nuevas **aditivas aplicadas a prod** (`tareas_todas_app`; `crear_solicitud_compra_app`+`mis_solicitudes_compra_app`+`solicitudes_compra.client_id`; **`tg_conduce_autoruta` trigger BH3 despacho**). PROMPT-30 (SGC) resultó ya ejecutado en prod (incentivo excluye `derivada_de_conduce`, reject-motivo obligatorio, bh4-cedula, bh6, bh7-articulo_id, bh8). Nada commiteado/pusheado/publicado.
+### 🚀 Release 2.11.0 — PUBLICADA (rolling) — TODO HECHO (03-sep)
+- **Commit `7587d27`** (131 archivos) **pusheado a `main`** → Vercel deploya la **PWA 2.11.0**. Versión alineada en environments ×2 / build.gradle / release-apk.mjs (versionCode 2 011 000).
+- **APK 2.11.0 firmado** (cert prod `3c5316d8…5065`), **registrado (Y1)** con `CAMBIOS_CURADOS` (8 cambios tipados por módulo) y **subido al bucket** (`csd-app-2.11.0.apk` + `latest` + `version.json` + `apk_url`). Descarga: `…/app-releases/csd-app-2.11.0.apk`.
+- **Publicada:** `sql/2026-09-03-publicar-2.11.0.sql` → `publicada=(version='2.11.0')` móvil (rolling). **`minima` INTACTA = 2.10.0** (nadie forzado). `version_publicada()` verificado: publicada 2.11.0 / minima 2.10.0.
+- **Rollback Android:** `update sgc.app_versiones set publicada=(version='2.10.0') where plataforma='movil';` · **Rollback PWA:** `git revert 7587d27 && git push`.
+- ⏳ **Pendiente device-QA**: capturas AA del oscuro (emulador) + smoke real por rol (capataz cédula → bitácora; chofer ve ruta del conduce).
+- ⚠️ **SGC (repo web) sin commit**: `SGC/sql/2026-09-03-bh3-autoruta-despacho-trigger.sql` está APLICADO a prod pero falta commitearlo en el repo SGC (no rompe la web; el trigger es DB-only). Espejar `tareas_todas_app`/`crear_solicitud_compra_app` en `SGC/PARIDAD.md`.
+
+**TL;DR:** las 8 ideas BH cerradas. Traslado de Ingeniería aplicado (mock aprobado). 4 migraciones **aditivas en prod** (`tareas_todas_app`; `crear_solicitud_compra_app`+`mis_solicitudes_compra_app`+`solicitudes_compra.client_id`; **`tg_conduce_autoruta`**). PROMPT-30 (SGC) resultó ya ejecutado en prod (incentivo excluye `derivada_de_conduce`, reject-motivo obligatorio, bh4-cedula, bh6, bh7-articulo_id, bh8).
 
 ### ✅ BH2 traslado CERRADO + BH3 despacho + verificaciones (03-sep)
 - **Traslado puro** (`home.ts`): quien tiene el módulo `ingenieria` **pierde de su home** los tiles movidos (`MOVED_TO_INGENIERIA` = bitacora, obra, compras/Requisición, por_confirmar, personal_obra, compras_proyecto) → los usa desde el hub /ingenieria (que ahora los tiene TODOS, incl. Compras de obra). **Para todos los demás el home NO cambia** (un capataz con bitácora pero sin ingeniería no pierde nada). Cero pérdida de acceso.
