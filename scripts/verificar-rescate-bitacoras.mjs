@@ -1,21 +1,20 @@
-// Detector de RESCATE de bitácoras atascadas (BI2/PROMPT-33 — criterio de éxito).
+// Detector de campo (PROMPT-33 BI) — vigila 3 señales del criterio de éxito:
+//   1) RESCATE: las 3 bitácoras del ingeniero (captura 20/25 ago) que viven SOLO en su
+//      Android. Al reintentar en 2.12.0, cada una se INSERTA en sgc.bitacoras con `fecha`
+//      de agosto pero `created_at` de AHORA — ese desfase es la señal inequívoca. Se
+//      cuentan sus fotos en el bucket sgc-bitacora (llegadas vs actividades).
+//   2) TELEMETRÍA: su app 2.12.0 registra las atascadas en sgc.outbox_atascados.
+//   3) WATCHDOG: filas nuevas con firma de watchdog en sgc.app_error_reports DESPUÉS del
+//      release — no debería aparecer ninguna (BI4 dejó de emitir + filtro server-side).
+//      Si aparece una de un cliente 2.12.0 = regresión; de un cliente viejo = fuga del filtro.
 //
-// Las 3 bitácoras del ingeniero (captura 20 y 25 de agosto) viven SOLO en su Android
-// (IndexedDB por dispositivo) y no tienen rastro en el servidor. Cuando él actualice a
-// 2.12.0 y reintente, cada una se INSERTA en sgc.bitacoras con `fecha` de agosto pero
-// `created_at` de AHORA — ese desfase es la señal inequívoca de una bitácora rescatada.
-//
-// Este script lista esas bitácoras y CUENTA sus fotos en el bucket sgc-bitacora
-// (foto_/restr_/dano_/voz_), para verificar "llegadas vs declaradas". Corre cuando
-// quieras: `node scripts/verificar-rescate-bitacoras.mjs`
-//
-// Umbral: una bitácora es "rescatada" si su fecha es anterior a UMBRAL_CAPTURA y su
-// created_at es posterior a UMBRAL_INSERCION (ajusta si cambia la ventana).
+// Corre cuando quieras: `node scripts/verificar-rescate-bitacoras.mjs`
+// Imprime al final `VERDICTO: SILENCIO` o `VERDICTO: ALERTA — <motivos>`.
 import { readFileSync } from 'fs';
 import { createClient } from '@supabase/supabase-js';
 
 const UMBRAL_CAPTURA = '2026-09-01'; // fecha de captura ANTERIOR a esto = vieja
-const UMBRAL_INSERCION = '2026-09-03T20:00:00Z'; // insertada DESPUÉS de esto = tardía (post-release 2.12.0)
+const UMBRAL_RELEASE = '2026-09-03T20:00:00Z'; // insertado/reportado DESPUÉS = post-release 2.12.0
 
 const env = Object.fromEntries(
   readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
@@ -31,55 +30,76 @@ const nombreUsuario = async (id) => {
 };
 const contarFotos = async (bitacoraId) => {
   const { data, error } = await admin.storage.from('sgc-bitacora').list(bitacoraId, { limit: 200 });
-  if (error) return { total: 0, detalle: `(error listando: ${error.message})` };
-  const slots = { foto: 0, restr: 0, dano: 0, voz: 0, otro: 0 };
+  if (error) return { total: 0, detalle: `(error: ${error.message})` };
+  const s = { foto: 0, restr: 0, dano: 0, voz: 0, otro: 0 };
   for (const f of data ?? []) {
-    if (/^foto_/.test(f.name)) slots.foto++;
-    else if (/^restr/.test(f.name)) slots.restr++;
-    else if (/^dano/.test(f.name)) slots.dano++;
-    else if (/^voz|^restraudio/.test(f.name)) slots.voz++;
-    else slots.otro++;
+    if (/^foto_/.test(f.name)) s.foto++;
+    else if (/^restr/.test(f.name)) s.restr++;
+    else if (/^dano/.test(f.name)) s.dano++;
+    else if (/^voz|^restraudio/.test(f.name)) s.voz++;
+    else s.otro++;
   }
-  const total = (data ?? []).length;
-  return { total, detalle: `foto=${slots.foto} restr=${slots.restr} dano=${slots.dano} voz=${slots.voz}${slots.otro ? ` otro=${slots.otro}` : ''}` };
+  return { total: (data ?? []).length, detalle: `foto=${s.foto} restr=${s.restr} dano=${s.dano} voz=${s.voz}${s.otro ? ` otro=${s.otro}` : ''}` };
 };
 
-console.log('== Detector de rescate de bitácoras (PROMPT-33 BI2) ==\n');
+console.log('== Detector de campo (PROMPT-33 BI) ==\n');
+const motivos = [];
 
-// 1) señal temprana: la app 2.12.0 del ingeniero registró sus atascadas en telemetría.
+// ── 1) RESCATE ───────────────────────────────────────────────────────────────
+const { data: rescatadas, error: eB } = await admin.from('bitacoras')
+  .select('id,fecha,usuario_id,created_at,es_prueba')
+  .lt('fecha', UMBRAL_CAPTURA).gte('created_at', UMBRAL_RELEASE)
+  .order('created_at', { ascending: false });
+if (eB) { console.error('error bitacoras:', eB.message); process.exit(1); }
+if (rescatadas?.length) {
+  console.log(`🟢 ${rescatadas.length} BITÁCORA(S) RESCATADA(S):`);
+  for (const b of rescatadas) {
+    const nombre = await nombreUsuario(b.usuario_id);
+    const { data: acts } = await admin.from('bitacora_actividades').select('id').eq('bitacora_id', b.id);
+    const fotos = await contarFotos(b.id);
+    console.log(`   • ${b.id} — ${nombre}${b.es_prueba ? ' [PRUEBA]' : ''}`);
+    console.log(`     captura ${b.fecha} → entró ${b.created_at?.slice(0, 16).replace('T', ' ')} · actividades ${acts?.length ?? 0} · fotos ${fotos.total} (${fotos.detalle})`);
+  }
+  motivos.push(`${rescatadas.length} bitácora(s) rescatada(s) — verificar fotos vs declaradas, NO descartar`);
+} else {
+  console.log('⚪ Rescate: ninguna bitácora rescatada aún.');
+}
+
+// ── 2) TELEMETRÍA ─────────────────────────────────────────────────────────────
 const { data: atascadas } = await admin.from('outbox_atascados')
   .select('usuario_nombre,tipo_op,fotos_count,intentos,resuelto,ultima_vez')
   .eq('tipo_op', 'bitacora').order('ultima_vez', { ascending: false });
 if (atascadas?.length) {
-  console.log(`🟡 Telemetría: ${atascadas.length} bitácora(s) reportada(s) como atascada(s) por la app:`);
+  const noRes = atascadas.filter((a) => !a.resuelto);
+  console.log(`\n🟡 Telemetría: ${atascadas.length} bitácora(s) atascada(s) reportada(s) (${noRes.length} sin resolver):`);
   for (const a of atascadas) console.log(`   - ${a.usuario_nombre} · ${a.fotos_count} fotos · ${a.intentos} intentos · resuelto=${a.resuelto} · ${a.ultima_vez?.slice(0, 10)}`);
-  console.log('   (significa que su app ya está en 2.12.0 y reclasificó — el reintento es el siguiente paso)\n');
+  if (noRes.length) motivos.push(`${noRes.length} atascada(s) en telemetría (su app ya está en 2.12.0)`);
 } else {
-  console.log('⚪ Telemetría: 0 bitácoras atascadas registradas (su app aún no reportó / no está en 2.12.0).\n');
+  console.log('\n⚪ Telemetría: 0 bitácoras atascadas registradas.');
 }
 
-// 2) señal fuerte: bitácoras rescatadas (fecha vieja, insertadas ahora).
-const { data: rescatadas, error } = await admin.from('bitacoras')
-  .select('id,fecha,usuario_id,created_at,proyecto_id,es_prueba')
-  .lt('fecha', UMBRAL_CAPTURA).gte('created_at', UMBRAL_INSERCION)
-  .order('created_at', { ascending: false });
-if (error) { console.error('error consultando bitacoras:', error.message); process.exit(1); }
+// ── 3) WATCHDOG ───────────────────────────────────────────────────────────────
+const { data: wd } = await admin.from('app_error_reports')
+  .select('app_version,platform,message,created_at')
+  .ilike('message', '%watchdog%').gte('created_at', UMBRAL_RELEASE)
+  .order('created_at', { ascending: false }).limit(30);
+if (wd?.length) {
+  const porVer = {};
+  for (const r of wd) porVer[r.app_version || '?'] = (porVer[r.app_version || '?'] || 0) + 1;
+  console.log(`\n🔴 Watchdog: ${wd.length} reporte(s) post-release en el panel — NO debería haber ninguno:`);
+  console.log('   por versión:', JSON.stringify(porVer));
+  console.log('   ejemplo:', wd[0].message?.slice(0, 80));
+  const de212 = wd.filter((r) => (r.app_version || '').startsWith('2.12'));
+  if (de212.length) motivos.push(`🔴 ${de212.length} reporte(s) de watchdog de clientes 2.12.0 — REGRESIÓN (el cliente no debería emitir)`);
+  else motivos.push(`${wd.length} reporte(s) de watchdog de clientes viejos post-release — fuga del filtro server-side (revisar la firma)`);
+} else {
+  console.log('\n⚪ Watchdog: 0 reportes en el panel post-release (fix OK).');
+}
 
-if (!rescatadas?.length) {
-  console.log('⚪ Ninguna bitácora rescatada aún (ninguna con fecha < ' + UMBRAL_CAPTURA + ' insertada tras el release).');
-  console.log('   → El ingeniero todavía no ha reintentado, o aún no llegan al servidor.');
+// ── VEREDICTO ─────────────────────────────────────────────────────────────────
+console.log('');
+if (motivos.length) {
+  console.log('VERDICTO: ALERTA — ' + motivos.join(' · '));
   process.exit(0);
 }
-
-console.log(`🟢 ${rescatadas.length} BITÁCORA(S) RESCATADA(S) detectada(s):\n`);
-for (const b of rescatadas) {
-  const nombre = await nombreUsuario(b.usuario_id);
-  const { data: acts } = await admin.from('bitacora_actividades').select('id').eq('bitacora_id', b.id);
-  const fotos = await contarFotos(b.id);
-  console.log(`  • ${b.id}`);
-  console.log(`    ingeniero: ${nombre}${b.es_prueba ? ' [PRUEBA]' : ''}`);
-  console.log(`    captura: ${b.fecha}  →  entró al servidor: ${b.created_at?.slice(0, 16).replace('T', ' ')}`);
-  console.log(`    actividades: ${acts?.length ?? 0}  ·  fotos en bucket: ${fotos.total} (${fotos.detalle})`);
-  console.log('');
-}
-console.log('⚠️  Verifica fotos LLEGADAS vs DECLARADAS con el ingeniero: si faltan, NO descartar (BI7).');
+console.log('VERDICTO: SILENCIO (nada que reportar).');
