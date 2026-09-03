@@ -1,0 +1,75 @@
+<div class="screen bdash">
+  <header class="bdash__header">
+    <button type="button" class="bdash__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="bdash__icon">📊</span>
+    <h1 class="bdash__title">Dashboard de bitácora</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (error()) {
+      <app-empty-state icon="⚠️" title="No pudimos cargar el dashboard" message="Puede ser la conexión. Toca para reintentar." ctaLabel="Reintentar" (action)="load()" />
+    } @else {
+      @if (viendoTodas()) {
+        <p class="bdash__scope">Vista de todas las obras.</p>
+      } @else {
+        <p class="bdash__scope">Tus bitácoras.</p>
+      }
+
+      <!-- Stats -->
+      <div class="bdash__stats">
+        <div class="bdash__stat">
+          <span class="bdash__stat-n">{{ hoyCount() }}</span>
+          <span class="bdash__stat-l">Bitácoras hoy</span>
+        </div>
+        <div class="bdash__stat">
+          <span class="bdash__stat-n">{{ semanaCount() }}</span>
+          <span class="bdash__stat-l">Esta semana</span>
+        </div>
+        <button type="button" class="bdash__stat bdash__stat--btn" [class.bdash__stat--alert]="liberacionesPend() > 0" (click)="irALiberaciones()">
+          <span class="bdash__stat-n">{{ liberacionesPend() }}</span>
+          <span class="bdash__stat-l">Liberaciones por firmar ›</span>
+        </button>
+        <div class="bdash__stat" [class.bdash__stat--alert]="ncAbiertas() > 0">
+          <span class="bdash__stat-n">{{ ncAbiertas() }}</span>
+          <span class="bdash__stat-l">No conformidades abiertas</span>
+        </div>
+      </div>
+
+      <!-- Actividad por obra (semana) -->
+      @if (porObra().length) {
+        <h3 class="bdash__sec">Actividad por obra (7 días)</h3>
+        <ul class="bdash__obras">
+          @for (o of porObra(); track o.obra) {
+            <li class="bdash__obra">
+              <span class="bdash__obra-nom">🏗️ {{ o.obra }}</span>
+              <span class="bdash__obra-n">{{ o.n }}</span>
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- Recientes -->
+      <h3 class="bdash__sec">Bitácoras recientes</h3>
+      @if (recientes().length) {
+        <ul class="bdash__list">
+          @for (b of recientes(); track b.id) {
+            <li class="bdash__row">
+              <span class="bdash__row-fecha">{{ fmtFecha(b.fecha) }}</span>
+              <div class="bdash__row-body">
+                <span class="bdash__row-tipo">{{ tipoLabel(b) }}</span>
+                @if (b.proyecto?.nombre) { <span class="bdash__row-obra">{{ b.proyecto?.nombre }}</span> }
+                @if (b.autor_nombre) { <span class="bdash__row-autor">· {{ b.autor_nombre }}</span> }
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <app-empty-state icon="📓" title="Sin bitácoras" message="Cuando se registren partes diarios e incidentes, aquí verás el pulso de la obra." />
+      }
+
+      <button type="button" class="btn-ghost bdash__ir" (click)="irABitacora()">Ir a Bitácora ›</button>
+    }
+  </div>
+</div>

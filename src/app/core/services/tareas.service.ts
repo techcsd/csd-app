@@ -49,14 +49,36 @@ export class TareasService {
   /** Mis tareas (asignadas a mí o creadas por mí). Online-first + cache offline. */
   async misTareas(incluirCompletadas = false): Promise<Tarea[]> {
     const key = `${CATALOG_TAREAS}${incluirCompletadas ? '_all' : ''}`;
-    const data = await this.catalog.refresh<Tarea[]>(key, async () => {
+    const out = await this.catalog.refreshDetailed<Tarea[]>(key, async () => {
       const { data, error } = await this.supabase.client.rpc('mis_tareas_app', {
         p_incluir_completadas: incluirCompletadas,
       });
       if (error) throw new Error(error.message);
       return (data as Tarea[]) ?? [];
     });
-    return data ?? [];
+    // BH6 — si la consulta FALLÓ y no hay nada en caché, propaga el error para que la
+    // pantalla muestre "no se pudo cargar" con reintento, en vez de un falso "no tienes
+    // tareas" (el bug de la tarea de Wagner: vacío y fallo se veían idénticos). Si hay
+    // caché, se degrada mostrándola (offline-first).
+    if (out.failed && !out.fromCache) {
+      throw new Error('No pudimos cargar tus tareas. Revisa tu conexión e inténtalo de nuevo.');
+    }
+    return out.data ?? [];
+  }
+
+  /**
+   * BH6 — TODAS las tareas (roles que asignan): gestión desde la app, para ver las
+   * tareas por usuario y su estado. Gateada en el servidor (is_admin/tiene_modulo);
+   * si el rol no aplica, la RPC lanza "No autorizado". Online (vista de gestión,
+   * siempre fresca — no se cachea offline).
+   */
+  async todasTareas(incluirCompletadas = false, asignadoA: string | null = null): Promise<Tarea[]> {
+    const { data, error } = await this.supabase.client.rpc('tareas_todas_app', {
+      p_incluir_completadas: incluirCompletadas,
+      p_asignado_a: asignadoA,
+    });
+    if (error) throw new Error(error.message);
+    return (data as Tarea[]) ?? [];
   }
 
   /** Iniciar una tarea (pendiente → en progreso). Offline-first. */

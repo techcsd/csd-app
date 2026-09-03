@@ -10,7 +10,7 @@
       <div class="midet__avatar">{{ inicial() }}</div>
       <p class="midet__nombre">{{ nombre() || 'Usuario' }}</p>
       @if (email()) {
-        <p class="midet__email">{{ email() }}</p>
+        <p class="midet__email">{{ email() | emailDisplay }}</p>
       }
       @if (rolesNombres().length) {
         <div class="midet__roles">

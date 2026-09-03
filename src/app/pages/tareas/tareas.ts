@@ -8,6 +8,7 @@ import { OptionButton } from '../../shared/ui/option-button/option-button';
 import { PhotoSlot } from '../../shared/ui/photo-slot/photo-slot';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
 import { SelectOption } from '../../shared/ui/select-list/select-list';
+import { EmailDisplayPipe } from '../../shared/ui/pipes/email-display.pipe';
 import { TareasService, UsuarioBusqueda } from '../../core/services/tareas.service';
 import { InventarioService, ObraOrigen } from '../../core/services/inventario.service';
 import { Bodega, Ferreteria } from '../../core/models/inventario.model';
@@ -34,7 +35,7 @@ import { formatFechaMedia } from '../../core/util/fecha';
   selector: 'app-tareas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, CollapsibleSelect],
+  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, CollapsibleSelect, EmailDisplayPipe],
   templateUrl: './tareas.html',
   styleUrl: './tareas.scss',
 })
@@ -53,8 +54,25 @@ export class TareasPage {
   readonly prioridades: TareaPrioridad[] = ['baja', 'media', 'alta', 'urgente'];
 
   loading = signal(true);
+  error = signal(false); // BH6 — falló la carga (distinto de lista vacía)
   lista = signal<Tarea[]>([]);
   verCompletadas = signal(false);
+
+  // BH6 — vista para roles que asignan: "Mis tareas" (propias) vs "Todas" (gestión,
+  // agrupadas por usuario con su estado). "Todas" solo existe si puedeCrear().
+  vista = signal<'mias' | 'todas'>('mias');
+  todas = signal<Tarea[]>([]);
+  /** Agrupa "Todas" por usuario asignado, para ver de un vistazo qué tiene cada quien. */
+  gruposPorUsuario = computed(() => {
+    const map = new Map<string, { usuario: string; tareas: Tarea[] }>();
+    for (const t of this.todas()) {
+      const nombre = t.asignado_a_nombre ?? 'Sin asignar';
+      const key = t.asignado_a ?? '—';
+      if (!map.has(key)) map.set(key, { usuario: nombre, tareas: [] });
+      map.get(key)!.tareas.push(t);
+    }
+    return [...map.values()];
+  });
   activo = signal<Tarea | null>(null);
   hoja = signal<'lista' | 'crear'>('lista');
   submitting = signal(false);
@@ -111,10 +129,16 @@ export class TareasPage {
 
   async load(): Promise<void> {
     this.loading.set(true);
+    this.error.set(false);
     try {
-      this.lista.set(await this.tareas.misTareas(this.verCompletadas()));
+      if (this.vista() === 'todas') {
+        this.todas.set(await this.tareas.todasTareas(this.verCompletadas()));
+      } else {
+        this.lista.set(await this.tareas.misTareas(this.verCompletadas()));
+      }
     } catch {
-      this.toast.error('No se pudieron cargar las tareas.');
+      // BH6 — estado de error explícito con reintento, no un falso vacío silencioso.
+      this.error.set(true);
     } finally {
       this.loading.set(false);
     }
@@ -122,6 +146,13 @@ export class TareasPage {
 
   toggleCompletadas(): void {
     this.verCompletadas.update((v) => !v);
+    void this.load();
+  }
+
+  /** BH6 — alterna entre "Mis tareas" y "Todas" (solo roles que asignan). */
+  cambiarVista(v: 'mias' | 'todas'): void {
+    if (this.vista() === v) return;
+    this.vista.set(v);
     void this.load();
   }
 

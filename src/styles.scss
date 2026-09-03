@@ -3,110 +3,12 @@
    Field app for Constructora SD. Designed for low digital
    literacy, gloves, direct sunlight, low-end Android.
    (See UI/UX doc: icon+text, huge targets, contrast >= 7:1.)
+
+   Los tokens (claro + oscuro, --color-* + capa semántica web) viven en
+   ./styles/_tokens.scss (BH5 — paridad BE con la web). Aquí solo helpers de layout.
    ============================================================ */
 
-:root {
-  /* Brand */
-  --color-primary: #f97316; /* naranja construcción — CTAs */
-  --color-primary-dark: #c2570c; /* pressed */
-  --color-secondary: #1e3a5f; /* azul CSD — headers/marca */
-  --color-accent: #facc15; /* badges de pendientes */
-
-  /* Surfaces (max luminance for sunlight) */
-  --color-bg: #ffffff;
-  --color-surface: #f4f4f5;
-  --color-surface-2: #e9e9ec;
-  --color-border: #d4d4d8;
-
-  /* Text (>= 7:1 contrast, never light grey on white) */
-  --color-text-primary: #18181b;
-  --color-text-secondary: #3f3f46;
-  --color-text-on-primary: #ffffff;
-  --color-text-on-secondary: #ffffff;
-
-  /* Dark "panel" sections (Tecnología, Proyectos/Cronograma, Auditoría stat
-     cards) use the SGC/Hub dark-card pattern: #161616 surfaces with light text.
-     These two tokens were referenced by those pages but never defined here, so
-     their text rendered near-black-on-black (invisible). Defined light so the
-     dark cards read at >= 7:1. (Z31/Z32) */
-  --Hub: #ffb300; /* amber accent on dark panels (active borders, highlights) */
-  --main-ultra-light: #a8a8b2; /* muted light-grey text on dark panels */
-
-  /* QA-AJ15 — Aliases for stray tokens carried over from the other X Dev project
-     (--primary/--main/--color-text) that were used across ~20 component SCSS files
-     but never defined here. Undefined → the declaration dropped: invisible
-     backgrounds (home bell badge, Notas FAB, avisos dot), invisible selected
-     chips (conduces-historial), lost accents (estado-chofer-bar), and a second
-     wrong orange (#ff5f00 fallback) competing with the brand --color-primary.
-     Map each to its real semantic token so the design system stays single-source. */
-  --primary: var(--color-primary); /* accent / CTA orange */
-  --main: var(--color-text-primary); /* primary dark text */
-  --color-text: var(--color-text-primary); /* primary dark text (alt spelling) */
-  /* AN — `--color-danger` se usaba en 8 sitios (botones de borrar, marcador de
-     campo obligatorio "*") SIN fallback → la declaración `color` completa quedaba
-     inválida y el elemento heredaba el color del padre: el rojo de peligro se
-     perdía. Alias al token de error real para recuperar la señal. */
-  --color-danger: var(--color-error); /* rojo peligro/borrar/obligatorio */
-
-  /* Semantic — color always paired with an icon (colorblind-safe) */
-  --color-success: #16a34a; /* guardado / sincronizado / entregado */
-  --color-warning: #d97706; /* pendiente de envío */
-  --color-error: #dc2626; /* error / daño / incidente */
-  --color-info: #2563eb;
-  --color-success-bg: #dcfce7;
-  --color-warning-bg: #fef3c7;
-  --color-error-bg: #fee2e2;
-
-  /* Typography */
-  --font-body: system-ui, 'Roboto', 'Segoe UI', sans-serif;
-  --fs-home-btn: 22px;
-  --fs-title: 24px;
-  --fs-option: 18px;
-  --fs-body: 16px; /* absolute minimum */
-
-  /* Touch & spacing — gloves-friendly */
-  --touch-min: 56px;
-  --gap: 12px;
-  --radius: 16px;
-  --radius-sm: 10px;
-
-  /* Safe areas (notches / gesture bars) */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12);
-  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --transition: 0.15s ease;
-}
-
-/* ── Tema OSCURO (opt-in por usuario, sincronizado con la web vía mi_tema/set_tema).
-   Mismos nombres de token, valores oscuros → todo lo que usa --color-* themea solo.
-   Default sigue siendo claro (mejor para sol); esto solo aplica con
-   [data-theme="dark"] en <html>. ── */
-[data-theme='dark'] {
-  --color-bg: #0f1720;
-  --color-surface: #17222e;
-  --color-surface-2: #1f2d3b;
-  --color-border: #30404f;
-
-  --color-text-primary: #e8eef4;
-  --color-text-secondary: #aebccd;
-  /* --color-text-on-primary / -on-secondary siguen blancos (texto sobre relleno
-     naranja/azul de marca): se mantienen. */
-
-  --color-success: #3faa63;
-  --color-warning: #e0952f;
-  --color-error: #e05a4c;
-  --color-info: #4a90d0;
-  --color-success-bg: rgba(22, 163, 74, 0.22);
-  --color-warning-bg: rgba(217, 119, 6, 0.24);
-  --color-error-bg: rgba(220, 38, 38, 0.26);
-
-  --main-ultra-light: #8fa0b3;
-
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.6);
-}
+@use './styles/tokens';
 
 * {
   box-sizing: border-box;
@@ -440,7 +342,7 @@ textarea.field::placeholder {
 }
 .cat-tipos .chip--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 .cat-section {

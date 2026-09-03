@@ -39,8 +39,8 @@
   margin-bottom: 12px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
   font-size: 13px;
   font-weight: 700;
 }
@@ -74,13 +74,13 @@
   background: var(--color-surface-2);
   color: var(--color-text-secondary);
 
-  &[data-estado='pendiente'] { background: #fef3c7; color: #b45309; }
+  &[data-estado='pendiente'] { background: var(--color-warning-bg); color: var(--color-warning); }
   &[data-estado='aprobada'],
-  &[data-estado='por_despachar'] { background: #dbeafe; color: #1d4ed8; }
+  &[data-estado='por_despachar'] { background: var(--color-info-bg); color: var(--color-info); }
   &[data-estado='entregada'],
-  &[data-estado='completada'] { background: #dcfce7; color: #15803d; }
+  &[data-estado='completada'] { background: var(--color-success-bg); color: var(--color-success); }
   &[data-estado='rechazada'],
-  &[data-estado='cancelada'] { background: #fee2e2; color: #b91c1c; }
+  &[data-estado='cancelada'] { background: var(--color-error-bg); color: var(--color-error); }
 }
 .reqd__code {
   display: flex;
@@ -119,13 +119,13 @@
   font-weight: 700;
 }
 .reqd__aviso--danger {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 // BF6 — motivo del rechazo (corregible)
 .reqd__aviso--warn {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 .reqd__aviso-hint {
   display: block;
@@ -185,8 +185,8 @@
   margin-left: 8px;
   padding: 1px 7px;
   border-radius: 8px;
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
   font-size: 12px;
   font-weight: 700;
 }

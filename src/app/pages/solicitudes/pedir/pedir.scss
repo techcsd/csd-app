@@ -97,7 +97,7 @@
 }
 .urg-btn--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
 }
 .urg-btn--danger.urg-btn--on {
   border-color: var(--color-error);

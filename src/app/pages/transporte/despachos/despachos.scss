@@ -12,7 +12,7 @@
 .dp-header__refresh { font-size: 18px; width: 40px; height: 40px; }
 
 .dp-band--err {
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-error);
   border: 1px solid var(--color-error);
   border-radius: var(--radius-sm, 12px);

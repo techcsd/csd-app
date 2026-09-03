@@ -32,7 +32,7 @@
       @for (u of asignResultados(); track u.id) {
         <button type="button" class="tareas__ures" (click)="pickAsignado(u)">
           <span class="tareas__ures-nombre">{{ u.nombre }}</span>
-          @if (u.email) { <span class="tareas__ures-email">{{ u.email }}</span> }
+          @if (u.email) { <span class="tareas__ures-email">{{ u.email | emailDisplay }}</span> }
         </button>
       }
       @if (asignSel(); as u) { <div class="tareas__sel">✓ Se la asignas a <b>{{ u.nombre }}</b></div> }
@@ -154,11 +154,52 @@
 
     <!-- ── Lista ── -->
     @else {
+      <!-- BH6 — roles que asignan alternan entre sus tareas y la gestión global. -->
+      @if (puedeCrear()) {
+        <div class="tareas__vista">
+          <button type="button" class="tareas__vista-btn" [class.tareas__vista-btn--on]="vista() === 'mias'" (click)="cambiarVista('mias')">Mis tareas</button>
+          <button type="button" class="tareas__vista-btn" [class.tareas__vista-btn--on]="vista() === 'todas'" (click)="cambiarVista('todas')">Todas las tareas</button>
+        </div>
+      }
+
       <button type="button" class="tareas__toggle" (click)="toggleCompletadas()">
         {{ verCompletadas() ? 'Ocultar completadas' : 'Ver completadas' }}
       </button>
+
       @if (loading()) {
         <app-skeleton [rows]="5" />
+      } @else if (error()) {
+        <!-- BH6 — falló la carga: NO es "no tienes tareas". Estado de error con reintento. -->
+        <app-empty-state
+          icon="⚠️"
+          title="No pudimos cargar las tareas"
+          message="Puede ser la conexión. Toca para reintentar."
+          ctaLabel="Reintentar"
+          (action)="load()"
+        />
+      } @else if (vista() === 'todas') {
+        <!-- BH6 — gestión: tareas agrupadas por usuario, con su estado. -->
+        @for (g of gruposPorUsuario(); track g.usuario) {
+          <div class="tareas__grupo">
+            <h3 class="tareas__grupo-tit">👤 {{ g.usuario }} <span class="tareas__grupo-n">{{ g.tareas.length }}</span></h3>
+            @for (t of g.tareas; track t.id) {
+              <button type="button" class="tareas__card" (click)="abrir(t)">
+                <span class="tareas__card-chip" [style.background]="estadoMeta[t.estado].tone">{{ estadoMeta[t.estado].icon }}</span>
+                <span class="tareas__card-body">
+                  <span class="tareas__card-title">{{ t.titulo }}</span>
+                  <span class="tareas__card-sub">
+                    <span class="tareas__prio-badge" [style.color]="prioridadMeta[t.prioridad].tone">{{ prioridadMeta[t.prioridad].label }}</span>
+                    · {{ estadoMeta[t.estado].label }}
+                    @if (t.fecha_limite) { · 📅 {{ fecha(t.fecha_limite) }} }
+                  </span>
+                </span>
+                <span class="tareas__card-go">›</span>
+              </button>
+            }
+          </div>
+        } @empty {
+          <app-empty-state icon="📋" title="No hay tareas" message="Aún no hay tareas asignadas en el sistema." />
+        }
       } @else {
         @for (t of lista(); track t.id) {
           <button type="button" class="tareas__card" (click)="abrir(t)">

@@ -24,10 +24,10 @@
   &__nombre { font-weight: 700; }
   &__cat { font-size: 13px; color: var(--color-text-secondary); }
   &__estado { align-self: flex-start; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; }
-  &__estado--asignado { background: #dbeafe; color: #1d4ed8; }
-  &__estado--devuelto { background: #dcfce7; color: #15803d; }
-  &__estado--perdido { background: #fee2e2; color: #b91c1c; }
-  &__estado--dañado { background: #fef3c7; color: #b45309; }
+  &__estado--asignado { background: var(--color-info-bg); color: var(--color-info); }
+  &__estado--devuelto { background: var(--color-success-bg); color: var(--color-success); }
+  &__estado--perdido { background: var(--color-error-bg); color: var(--color-error); }
+  &__estado--dañado { background: var(--color-warning-bg); color: var(--color-warning); }
   &__notas { font-size: 13px; color: var(--color-text-secondary); margin: 8px 0 0; }
   &__actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;
     .btn-cta { width: auto; } .btn-ghost { width: auto; } }

@@ -97,7 +97,7 @@
 
 // BG1 — colores del borde por categoría del error.
 .ob-row[data-cat='sistema'][data-estado='error'] {
-  border-left-color: #c0392b;
+  border-left-color: var(--color-error);
 }
 .ob-row[data-cat='dato'][data-estado='error'] {
   border-left-color: #a06a00;
@@ -127,7 +127,7 @@
   white-space: nowrap;
   &[data-tone='sistema'] {
     background: #fdeaea;
-    color: #c0392b;
+    color: var(--color-error);
   }
   &[data-tone='dato'] {
     background: #fff3d6;

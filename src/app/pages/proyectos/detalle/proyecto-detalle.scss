@@ -54,10 +54,10 @@
     background: var(--color-bg);
     color: var(--color-text-secondary);
 
-    &--en_progreso { background: rgba(37, 99, 235, 0.14); color: #1d4ed8; }
-    &--completado { background: rgba(22, 163, 74, 0.14); color: #15803d; }
-    &--pausado { background: rgba(217, 119, 6, 0.14); color: #b45309; }
-    &--cancelado { background: rgba(220, 38, 38, 0.14); color: #b91c1c; }
+    &--en_progreso { background: rgba(37, 99, 235, 0.14); color: var(--color-info); }
+    &--completado { background: rgba(22, 163, 74, 0.14); color: var(--color-success); }
+    &--pausado { background: rgba(217, 119, 6, 0.14); color: var(--color-warning); }
+    &--cancelado { background: rgba(220, 38, 38, 0.14); color: var(--color-error); }
   }
 
   &__crono {
@@ -144,8 +144,8 @@
     background: var(--color-bg);
     color: var(--color-text-secondary);
 
-    &--en_progreso { background: rgba(37, 99, 235, 0.14); color: #1d4ed8; }
-    &--completada { background: rgba(22, 163, 74, 0.14); color: #15803d; }
+    &--en_progreso { background: rgba(37, 99, 235, 0.14); color: var(--color-info); }
+    &--completada { background: rgba(22, 163, 74, 0.14); color: var(--color-success); }
   }
   &__bar {
     height: 6px;
@@ -180,8 +180,8 @@
 }
 // AS24 — variantes de estado faltantes (planificación / fase pendiente).
 .pdet__estado--planificacion {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }
 .pdet__fase-estado--pendiente {
   background: var(--color-surface-2);

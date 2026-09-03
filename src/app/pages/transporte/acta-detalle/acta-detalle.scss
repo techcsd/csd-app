@@ -25,7 +25,7 @@
 .acta__h2 { font-size: 16px; font-weight: 700; margin: 6px 0 10px; }
 
 .acta__falla {
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   border: 1px solid #fed7aa;
   border-radius: 12px;
   padding: 12px;
@@ -43,8 +43,8 @@
   &:last-child { border-bottom: none; }
 }
 .acta__resp { font-weight: 600; }
-.acta__resp--falla { color: #dc2626; }
-.acta__resp--ok { color: #16a34a; }
+.acta__resp--falla { color: var(--color-error); }
+.acta__resp--ok { color: var(--color-success); }
 
 .acta__fotos { display: flex; flex-wrap: wrap; gap: 10px; }
 .acta__foto { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid var(--color-border); }

@@ -85,6 +85,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/bitacora/cl-firmas/cl-firmas').then((m) => m.ClFirmasPage),
   },
   {
+    // BH2 — Dashboard de bitácora (hueco de capacidad de la web): pulso de la obra.
+    path: 'bitacora/dashboard',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/bitacora/dashboard/dashboard').then((m) => m.BitacoraDashboardPage),
+  },
+  {
     // Q5 (3b) — detalle de un CL para revisarlo y firmar (deep-link del aviso).
     path: 'bitacora/cl/:id',
     canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
@@ -708,6 +714,14 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes')],
     loadComponent: () => import('./pages/solicitudes/detalle/detalle').then((m) => m.RequisicionDetallePage),
   },
+  {
+    // BH8 — Solicitud de compra a mano (Compras/Raykler): la pantalla que la app no
+    // tenía. Mismo submódulo que origina compras; offline por outbox (idempotente).
+    path: 'compras/solicitud-compra',
+    canActivate: [authGuard, pinGuard, submoduleGuard('compras.solicitudes')],
+    loadComponent: () =>
+      import('./pages/compras/solicitud-compra/solicitud-compra').then((m) => m.SolicitudCompraPage),
+  },
 
   // BG4 — Retiro de material dañado (lo origina el ingeniero de la obra, mismo
   // público que las requisiciones → submódulo compras.solicitudes).
@@ -982,6 +996,12 @@ export const routes: Routes = [
     path: 'obra',
     canActivate: [authGuard, pinGuard, obraGuard],
     loadComponent: () => import('./pages/obra/obra').then((m) => m.ObraPage),
+  },
+  {
+    // BH2 — "Mi proyecto" (hueco de capacidad de la web): resumen de obra solo lectura.
+    path: 'obra/mi-proyecto',
+    canActivate: [authGuard, pinGuard, obraGuard],
+    loadComponent: () => import('./pages/obra/mi-proyecto/mi-proyecto').then((m) => m.MiProyectoPage),
   },
   {
     path: 'obra/plan/:proyectoId',

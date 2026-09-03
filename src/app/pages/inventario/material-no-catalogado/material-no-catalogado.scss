@@ -99,7 +99,7 @@
 }
 .mnc__card {
   border: 1px solid #f59e0b;
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   border-radius: var(--radius);
   padding: 14px;
   margin-bottom: 12px;
@@ -136,5 +136,5 @@
   margin-top: 8px;
   font-size: 13px;
   font-weight: 700;
-  color: #15803d;
+  color: var(--color-success);
 }

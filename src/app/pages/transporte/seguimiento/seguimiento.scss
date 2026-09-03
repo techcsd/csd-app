@@ -153,7 +153,7 @@
 
 .chofer-card__ruta {
   font-size: 12px;
-  color: #2563eb;
+  color: var(--color-info);
   font-weight: 600;
   margin-top: 2px;
 }
@@ -188,6 +188,6 @@
   vertical-align: middle;
 }
 .chofer-card__hace--stale {
-  color: #b45309;
+  color: var(--color-warning);
   font-weight: 600;
 }

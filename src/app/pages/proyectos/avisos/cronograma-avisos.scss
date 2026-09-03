@@ -21,18 +21,18 @@
     display: block;
     width: 100%;
     text-align: left;
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-left: 4px solid #2d2d2d;
+    background: #161616; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border-left: 4px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 8px;
     color: #fff;
     cursor: pointer;
 
-    &--cronograma_atrasada { border-left-color: #dc2626; }
-    &--cronograma_por_vencer { border-left-color: #d97706; }
-    &--cronograma_por_iniciar { border-left-color: #2563eb; }
+    &--cronograma_atrasada { border-left-color: var(--color-error); }
+    &--cronograma_por_vencer { border-left-color: var(--color-warning); }
+    &--cronograma_por_iniciar { border-left-color: var(--color-info); }
     &:active { border-color: var(--Hub); }
   }
   &__top {
@@ -47,7 +47,7 @@
     padding: 2px 8px;
     border-radius: 999px;
     text-transform: uppercase;
-    background: #212121;
+    background: #212121; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     color: var(--main-ultra-light);
 
     &--cronograma_atrasada { background: rgba(220, 38, 38, 0.18); color: #f87171; }

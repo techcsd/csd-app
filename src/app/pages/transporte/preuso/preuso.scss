@@ -9,7 +9,7 @@
   padding: 20px;
   border: 2px solid var(--color-primary);
   border-radius: var(--radius);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   margin-bottom: 16px;
 }
 .preuso__placa {
@@ -109,7 +109,7 @@
 }
 .fuel-btn--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 

@@ -34,7 +34,7 @@
 .option-button--selected {
   border-color: var(--color-primary);
   border-width: 3px;
-  background: #fff7ed;
+  background: var(--color-primary-bg); // BH5 — antes #fff7ed quemado (1.10:1 en oscuro)
 }
 
 .option-button[data-tone='error'].option-button--selected {

@@ -82,7 +82,7 @@ app-counter {
 }
 .chip--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 
@@ -337,11 +337,11 @@ app-counter {
   font-weight: 700;
 }
 .parte__tag--retiro {
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 .parte__tag--dano {
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-error);
 }
 

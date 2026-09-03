@@ -50,10 +50,10 @@
   font-weight: 800;
 }
 .permob__s--ok {
-  color: #16a34a;
+  color: var(--color-success);
 }
 .permob__s--no {
-  color: #b45309;
+  color: var(--color-warning);
 }
 .permob__cta {
   width: 100%;

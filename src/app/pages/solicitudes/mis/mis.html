@@ -8,7 +8,7 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
-      @for (s of solicitudes(); track s.id) {
+      @for (s of visibles(); track s.id) {
         <button type="button" class="sol-card" [attr.data-estado]="s.estado" (click)="abrir(s)">
           <div class="sol-card__top">
             <span class="sol-card__chip">🏗️ {{ s.proyecto?.nombre ?? 'Obra' }}</span>
@@ -36,13 +36,31 @@
           <span class="sol-card__ver">Ver detalle ›</span>
         </button>
       } @empty {
-        <app-empty-state
-          icon="📝"
-          title="Todavía no has hecho requisiciones"
-          message="Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición: enviada, aprobada y recibida."
-          ctaLabel="Nueva requisición"
-          (action)="nueva()"
-        />
+        @if (canceladasCount() > 0) {
+          <!-- BH1 — todas las requisiciones están canceladas: no es "vacío", están ocultas -->
+          <app-empty-state
+            icon="🚫"
+            title="No hay requisiciones activas"
+            message="Todas tus requisiciones están canceladas. Puedes verlas con el botón de abajo o crear una nueva."
+            ctaLabel="Nueva requisición"
+            (action)="nueva()"
+          />
+        } @else {
+          <app-empty-state
+            icon="📝"
+            title="Todavía no has hecho requisiciones"
+            message="Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición: enviada, aprobada y recibida."
+            ctaLabel="Nueva requisición"
+            (action)="nueva()"
+          />
+        }
+      }
+
+      <!-- BH1 — toggle para ver/ocultar las canceladas (ocultas por defecto) -->
+      @if (canceladasCount() > 0) {
+        <button type="button" class="mis-sol__toggle" (click)="toggleCanceladas()">
+          {{ mostrarCanceladas() ? 'Ocultar canceladas' : 'Ver canceladas (' + canceladasCount() + ')' }}
+        </button>
       }
     }
   </div>

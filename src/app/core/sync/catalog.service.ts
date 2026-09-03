@@ -68,13 +68,29 @@ export class CatalogService {
    * error) returns the last cached value so the UI degrades gracefully.
    */
   async refresh<T>(tipo: string, loader: () => Promise<T>): Promise<T | null> {
+    return (await this.refreshDetailed(tipo, loader)).data;
+  }
+
+  /**
+   * BH6 — como `refresh`, pero DISTINGUE "vacío" de "falló". `refresh` atrapaba
+   * cualquier error del loader y devolvía la caché (posiblemente nula) → una
+   * consulta que fallaba se veía idéntica a "no tienes nada". Aquí el llamador sabe
+   * si hubo fallo y si lo que devuelve viene de caché, para poder mostrar un estado
+   * de ERROR con reintento en vez de un falso vacío (hermano de la telemetría de BG2:
+   * los fallos se ven, no se adivinan). Patrón reutilizable por cualquier lista.
+   */
+  async refreshDetailed<T>(
+    tipo: string,
+    loader: () => Promise<T>,
+  ): Promise<{ data: T | null; failed: boolean; fromCache: boolean }> {
     try {
       const data = await loader();
       await this.write(tipo, data);
-      return data;
+      return { data, failed: false, fromCache: false };
     } catch (e) {
       console.warn(`CatalogService.refresh(${tipo}) failed, using cache:`, e);
-      return this.read<T>(tipo);
+      const data = await this.read<T>(tipo);
+      return { data, failed: true, fromCache: data !== null };
     }
   }
 }

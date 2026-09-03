@@ -35,7 +35,7 @@
 }
 .picker__item:active {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
 }
 // AO3 — artículo sin existencia en el almacén de origen: deshabilitado, no invita a elegirlo.
 .picker__item--off {
@@ -109,7 +109,7 @@
 .picker__cat--destacada {
   border-color: var(--color-primary);
   border-width: 2px;
-  background: #fff7ed;
+  background: var(--color-primary-bg);
 }
 .picker__cat-name {
   font-size: var(--fs-option);

@@ -76,13 +76,13 @@
   overflow-wrap: anywhere;
 }
 .ausr-card__off {
-  color: #b91c1c;
+  color: var(--color-error);
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
 }
 .ausr-card__pend {
-  color: #b45309;
+  color: var(--color-warning);
   font-size: 12px;
   font-style: normal;
   font-weight: 700;
@@ -118,7 +118,7 @@
   margin-top: 12px;
 }
 .ausr__danger {
-  color: #b91c1c;
+  color: var(--color-error);
 }
 // BB — chip de usuario de prueba + acción "Entrar como"
 .ausr-card__prueba {

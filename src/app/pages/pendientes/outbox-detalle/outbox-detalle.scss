@@ -132,7 +132,7 @@
     margin-top: 6px;
     background: none;
     border: none;
-    color: #c0392b;
+    color: var(--color-error);
     font-size: 14px;
     text-decoration: underline;
     cursor: pointer;
@@ -149,7 +149,7 @@
   white-space: nowrap;
   &[data-tone='sistema'] {
     background: #fdeaea;
-    color: #c0392b;
+    color: var(--color-error);
   }
   &[data-tone='dato'] {
     background: #fff3d6;

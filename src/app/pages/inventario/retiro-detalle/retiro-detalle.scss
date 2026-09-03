@@ -59,7 +59,7 @@
     &[data-estado='rechazada'],
     &[data-estado='cancelada'] {
       background: #fdeaea;
-      color: #c0392b;
+      color: var(--color-error);
     }
     &[data-estado='dispuesta'] {
       background: #e7f6ec;
@@ -94,7 +94,7 @@
     font-weight: 600;
     &--rechazo {
       background: #fdeaea;
-      color: #c0392b;
+      color: var(--color-error);
     }
   }
 

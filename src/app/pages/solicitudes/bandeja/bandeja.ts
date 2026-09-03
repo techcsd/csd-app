@@ -46,6 +46,12 @@ export class RequisicionesBandejaPage {
 
   pendientesCount = computed(() => this.filas().filter((f) => f.estado === 'pendiente').length);
 
+  // BH1 — en "Todas", las canceladas (a menudo pruebas) no deben estorbar. Se ocultan
+  // salvo que el usuario elija explícitamente el filtro "Canceladas".
+  filasVisibles = computed(() =>
+    this.estado() === 'cancelada' ? this.filas() : this.filas().filter((f) => f.estado !== 'cancelada'),
+  );
+
   private debounce: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {

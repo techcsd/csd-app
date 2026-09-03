@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.10.0';
+const VERSION = '2.11.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,18 +59,22 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-09-02';
+const RELEASED_AT = '2026-09-03';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Tus pendientes no pierden data + retiro de material dañado';
+const TITULO = 'Ingeniería en un solo lugar + tema oscuro parejo';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Pendientes de envío', d: 'Si algo no se pudo enviar por un problema del sistema (no por ti ni por tu dato), ahora se conserva y te lo decimos claro: podrás reintentarlo cuando se publique la corrección. Ya no aparece «Descartar» de un toque sobre data real de la obra — para borrarla hay que confirmarlo dos veces con aviso.' },
-  { t: 'nuevo', m: 'Pendientes de envío', d: 'Toca un pendiente para VER su contenido completo con sus fotos. Puedes duplicarlo a una bitácora nueva (sin re-teclear nada) o compartirlo por WhatsApp como último recurso.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Nueva solicitud de «Retiro de material dañado» desde la obra: artículo, cantidad, motivo del daño y fotos del material (obligatorias). Funciona sin señal y le llega a almacén; sigues su estado en «Mis retiros».' },
-  { t: 'mejora', m: 'Bitácora', d: 'Los campos de texto largo ahora muestran un contador y un límite, para que el parte no se corte al enviarse.' },
+  { t: 'nuevo', m: 'Ingeniería', d: 'El módulo Ingeniería ahora reúne TODO tu trabajo en un solo lugar: requisición, bitácora, tu obra, entregas por confirmar, personal y compras. Y trae dos vistas nuevas: «Mi proyecto» (avance real vs plan, tus pendientes y partidas) y «Dashboard de bitácora» (el pulso de la semana).' },
+  { t: 'nuevo', m: 'Compras', d: 'Nueva pantalla «Solicitud de compra»: pide a Compras que compre algo que no hay en existencia, con sus renglones y proveedor sugerido. Funciona sin señal y no se duplica si se reintenta.' },
+  { t: 'nuevo', m: 'Tareas', d: 'Quien asigna tareas tiene ahora «Todas las tareas», para ver por persona qué tiene cada quien y en qué estado. En «Mis tareas» cada quien ve solo las suyas.' },
+  { t: 'mejora', m: 'Apariencia', d: 'El tema oscuro quedó parejo en toda la app: textos, pastillas y botones legibles, sin cajas blancas ni azules invisibles.' },
+  { t: 'mejora', m: 'Transporte', d: 'Cuando te asignan un conduce con chofer y vehículo, su ruta se crea sola —con su origen, destino y carga—, sin tener que pulsar «Iniciar ruta».' },
+  { t: 'arreglo', m: 'Requisiciones', d: 'Ya no se te ofrece «Rechazar» tu propia requisición (el sistema lo negaba y confundía). Las canceladas se ocultan por defecto para que no parezcan trabajo pendiente.' },
+  { t: 'arreglo', m: 'Tareas', d: 'Si una lista no carga por falta de señal, ahora lo dice y te deja reintentar, en vez de parecer que no tienes nada.' },
+  { t: 'seguridad', m: 'Acceso', d: 'El PIN de acceso por cédula pide exactamente 6 dígitos con un aviso claro; y en ningún lado verás correos internos raros: se muestra tu cédula.' },
 ];
 
 const TIPO_POR_COMMIT = {

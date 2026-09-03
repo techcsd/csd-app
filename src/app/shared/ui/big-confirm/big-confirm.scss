@@ -45,7 +45,10 @@
 .big-confirm__btn {
   margin-top: 12px;
   max-width: 320px;
-  background: #fff;
+  // BH5 — antes background:#fff fijo + color:var(--color-text-primary) → en oscuro
+  // texto claro sobre blanco (1.17:1), ilegible salvo pulsado. Ahora themea: claro =
+  // botón blanco/tinta oscura, oscuro = botón oscuro/tinta clara sobre el diálogo de color.
+  background: var(--color-bg);
   color: var(--color-text-primary);
 }
 .big-confirm__btn:active {

@@ -12,8 +12,8 @@
   width: 100%;
   min-height: 64px;
   padding: 14px 16px;
-  background: #161616;
-  border: 1px solid #2d2d2d;
+  background: #161616; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+  border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
   border-radius: 14px;
   color: #fff;
   text-align: left;

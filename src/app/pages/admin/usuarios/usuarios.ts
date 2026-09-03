@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { EmailDisplayPipe } from '../../../shared/ui/pipes/email-display.pipe';
 import { Router } from '@angular/router';
 import { AdminService, UsuarioAdmin, RolAdmin } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -17,7 +18,7 @@ import { SyncService } from '../../../core/sync/sync.service';
   selector: 'app-admin-usuarios',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, EmailDisplayPipe],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss',
 })

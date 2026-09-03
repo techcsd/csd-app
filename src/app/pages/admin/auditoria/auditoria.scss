@@ -95,10 +95,10 @@
   background: var(--color-secondary);
 }
 .aud__bar-fill--acc {
-  background: #2563eb;
+  background: var(--color-info);
 }
 .aud__bar-fill--area {
-  background: #16a34a;
+  background: var(--color-success);
 }
 .aud__bar-fill--dia {
   background: var(--Hub, #ffb300);

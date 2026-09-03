@@ -25,14 +25,14 @@
   color: var(--color-success, #16a34a);
 }
 .kmin__mant--pre {
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 .kmin__mant--venc {
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-error);
 }
 .kmin__mant--revisar {
-  background: #fef9c3;
-  color: #854d0e;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }

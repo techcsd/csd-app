@@ -49,6 +49,9 @@ export class ThemeService {
 
   private applyToDom(t: Theme): void {
     document.documentElement.setAttribute('data-theme', t);
+    // BH5 — el theme-color (barra de estado / chrome del PWA) sigue al tema.
+    const meta = document.getElementById('theme-color-meta');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#2e5586' : '#1e3a5f');
   }
 
   async syncFromServer(): Promise<void> {

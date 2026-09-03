@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { EmailDisplayPipe } from '../../../shared/ui/pipes/email-display.pipe';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
@@ -27,7 +28,7 @@ interface DocView {
   selector: 'app-mi-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton],
+  imports: [Skeleton, EmailDisplayPipe],
   templateUrl: './mi-detalle.html',
   styleUrl: './mi-detalle.scss',
 })

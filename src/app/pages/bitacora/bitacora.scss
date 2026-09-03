@@ -51,7 +51,7 @@
 }
 .bit-action--primary {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
 }
 .bit-action--danger {
   border-color: var(--color-error);

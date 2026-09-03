@@ -161,9 +161,9 @@
   letter-spacing: 0.02em;
   color: #fff;
 
-  &--nuevo { background: #16a34a; }
-  &--mejora { background: #2563eb; }
-  &--arreglo { background: #d97706; }
+  &--nuevo { background: var(--color-success); }
+  &--mejora { background: var(--color-info); }
+  &--arreglo { background: var(--color-warning); }
   &--seguridad { background: #7c3aed; }
 }
 

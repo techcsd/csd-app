@@ -35,7 +35,7 @@
           <button type="button" class="ausr-card__row" (click)="abrir(u)">
             <div class="ausr-card__info">
               <span class="ausr-card__nombre">{{ u.nombre }} @if (!u.activo) { <em class="ausr-card__off">Inactivo</em> } @if (u.pendiente) { <em class="ausr-card__pend">Invitación pendiente</em> } @if (u.es_prueba) { <em class="ausr-card__prueba">🧪 Prueba</em> }</span>
-              <span class="ausr-card__email">{{ u.email || '—' }}</span>
+              <span class="ausr-card__email">{{ (u.email | emailDisplay) || '—' }}</span>
               <span class="ausr-card__roles">{{ rolesLabel(u) }}</span>
             </div>
             <span class="ausr-card__chev">{{ expandidoId() === u.id ? '▲' : '▾' }}</span>

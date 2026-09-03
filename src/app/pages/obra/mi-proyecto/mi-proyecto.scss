@@ -1,0 +1,214 @@
+.mp {
+  background: var(--color-bg);
+}
+.mp__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.mp__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+.mp__icon {
+  font-size: 24px;
+}
+.mp__title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.mp__obra {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  margin: 4px 0 12px;
+  color: var(--color-text-primary);
+}
+.mp__codigo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-left: 8px;
+}
+.mp__muted {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+.mp__sec {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 22px 0 10px;
+}
+
+// ── Card de avance ──
+.mp__card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 12px 0;
+  background: var(--color-surface);
+}
+.mp__card-tit {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-bottom: 12px;
+}
+.mp__bar {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--color-surface-2);
+  overflow: hidden;
+}
+.mp__bar--sm {
+  height: 8px;
+  margin: 4px 0;
+}
+.mp__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-success);
+  transition: width 0.3s ease;
+}
+.mp__bar-plan {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 20px;
+  background: var(--color-text-primary);
+  border-radius: 2px;
+}
+.mp__bar-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.mp__bar-meta b {
+  color: var(--color-text-primary);
+  font-size: 18px;
+}
+
+// ── Stats de pendientes ──
+.mp__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+.mp__stat {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 12px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mp__stat--alert {
+  border-color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.mp__stat-n {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.mp__stat-l {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.mp__charla {
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+  margin-bottom: 4px;
+}
+.mp__charla--ok {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+// ── Partidas ──
+.mp__partidas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mp__partida {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: var(--color-surface);
+}
+.mp__partida-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.mp__partida-nom {
+  font-weight: 600;
+  font-size: 15px;
+}
+.mp__partida-pct {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--color-success);
+}
+.mp__partida-falta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// ── Bitácoras ──
+.mp__bitas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mp__bita {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.mp__bita:last-child {
+  border-bottom: none;
+}
+.mp__bita-fecha {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.mp__bita-txt {
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.mp__bita-autor {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.mp__ir {
+  margin-top: 20px;
+}

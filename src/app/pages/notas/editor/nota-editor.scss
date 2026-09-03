@@ -213,7 +213,7 @@
   font-size: 14px;
 }
 .neditor__color--on {
-  border-color: #121212;
+  border-color: #121212; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
   box-shadow: 0 0 0 2px #fff inset;
 }
 

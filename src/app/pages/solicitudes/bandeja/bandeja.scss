@@ -50,12 +50,12 @@
 }
 .bandeja__chip--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary);
 }
 .bandeja__chip--urg.bandeja__chip--on {
   border-color: var(--color-danger, #d32f2f);
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-danger, #d32f2f);
 }
 
@@ -102,10 +102,10 @@
   background: var(--color-surface-2);
   color: var(--color-text-secondary);
 
-  &[data-estado='pendiente'] { background: #fef3c7; color: #b45309; }
-  &[data-estado='aprobada'] { background: #dbeafe; color: #1d4ed8; }
-  &[data-estado='entregada'] { background: #dcfce7; color: #15803d; }
-  &[data-estado='rechazada'] { background: #fee2e2; color: #b91c1c; }
+  &[data-estado='pendiente'] { background: var(--color-warning-bg); color: var(--color-warning); }
+  &[data-estado='aprobada'] { background: var(--color-info-bg); color: var(--color-info); }
+  &[data-estado='entregada'] { background: var(--color-success-bg); color: var(--color-success); }
+  &[data-estado='rechazada'] { background: var(--color-error-bg); color: var(--color-error); }
 }
 .req-card__meta {
   display: flex;

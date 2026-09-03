@@ -252,9 +252,9 @@
   }
 
   &__warn {
-    color: #b45309;
+    color: var(--color-warning);
     font-size: 0.9rem;
-    background: #fef3c7;
+    background: var(--color-warning-bg);
     padding: 10px 12px;
     border-radius: 10px;
   }

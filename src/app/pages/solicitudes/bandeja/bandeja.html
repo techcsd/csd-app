@@ -26,7 +26,7 @@
     } @else if (noAutorizado()) {
       <app-empty-state icon="🔒" title="Sin acceso" message="No tienes permiso para ver todas las requisiciones." />
     } @else {
-      @for (f of filas(); track f.id) {
+      @for (f of filasVisibles(); track f.id) {
         <button type="button" class="req-card" [attr.data-estado]="f.estado" (click)="abrir(f)">
           <div class="req-card__top">
             <span class="req-card__obra">🏗️ {{ f.proyecto_nombre ?? 'Obra' }}</span>

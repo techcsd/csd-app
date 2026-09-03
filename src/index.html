@@ -8,7 +8,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#1e3a5f" />
+    <meta id="theme-color-meta" name="theme-color" content="#1e3a5f" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -18,9 +18,13 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <script>
       // Aplica el tema cacheado antes de pintar (evita el parpadeo claro→oscuro).
+      // BH5 — el theme-color (barra de estado / chrome del PWA) sigue al tema activo:
+      // claro = azul de header #1e3a5f, oscuro = header oscuro #2e5586.
       try {
         if (localStorage.getItem('csd-theme') === 'dark') {
           document.documentElement.setAttribute('data-theme', 'dark');
+          var m = document.getElementById('theme-color-meta');
+          if (m) m.setAttribute('content', '#2e5586');
         }
       } catch (e) {}
     </script>

@@ -63,8 +63,8 @@
   font-size: 13px;
 }
 .cimp__band--warn {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
   border: 1px solid #fbbf24;
 }
 

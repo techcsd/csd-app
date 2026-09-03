@@ -102,9 +102,12 @@
   cursor: pointer;
 
   &--on {
-    background: var(--main);
-    color: #fff;
-    border-color: var(--main);
+    // BH5 — antes background:var(--main) (=--color-text-primary): en oscuro se
+    // invierte a claro → pastilla blanca sobre blanco (1.07:1). El "seleccionado"
+    // usa el naranja de marca, como el resto de la app.
+    background: var(--color-primary);
+    color: var(--color-text-on-primary);
+    border-color: var(--color-primary);
   }
 }
 
@@ -165,12 +168,12 @@
 }
 
 .conduce-card__hv {
-  color: #b45309;
+  color: var(--color-warning);
   font-weight: 700;
 }
 
 .conduce-card__pend {
-  color: #dc2626;
+  color: var(--color-error);
   font-weight: 700;
 }
 
@@ -211,7 +214,7 @@
 }
 
 .conduce-det__ok {
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 700;
 }
 

@@ -91,7 +91,7 @@
   border-radius: 10px;
   background: rgba(220, 38, 38, 0.08);
   border: 1px solid rgba(220, 38, 38, 0.25);
-  color: #b91c1c;
+  color: var(--color-error);
   font-size: 13px;
   font-weight: 700;
 }
@@ -162,7 +162,7 @@
   color: var(--color-text-secondary);
 }
 .clog__delta--alerta {
-  color: #b91c1c;
+  color: var(--color-error);
   font-weight: 800;
 }
 .clog__gal,
@@ -189,7 +189,7 @@
 .clog__chip--alerta {
   background: rgba(220, 38, 38, 0.1);
   border-color: rgba(220, 38, 38, 0.4);
-  color: #b91c1c;
+  color: var(--color-error);
 }
 .clog__quien {
   margin-left: auto;

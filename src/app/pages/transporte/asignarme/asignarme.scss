@@ -43,7 +43,7 @@
   border-radius: 10px;
   background: rgba(220, 38, 38, 0.08);
   border: 1px solid rgba(220, 38, 38, 0.3);
-  color: #b91c1c;
+  color: var(--color-error);
   font-size: 13px;
   font-weight: 700;
 }
@@ -87,7 +87,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #16a34a;
+  background: var(--color-success);
   color: #fff;
   font-size: 40px;
   font-weight: 800;
@@ -109,7 +109,7 @@
 .asig__falla {
   margin-top: 10px;
   padding: 12px;
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   border: 1px solid #fed7aa;
   border-radius: 12px;
 }

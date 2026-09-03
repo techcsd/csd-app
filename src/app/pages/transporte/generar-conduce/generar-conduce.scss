@@ -240,7 +240,7 @@
 }
 .gconduce__item--libre {
   border-color: #f59e0b;
-  background: #fff7ed;
+  background: var(--color-primary-bg);
 }
 .gconduce__libre-tag {
   display: inline-block;
@@ -314,7 +314,7 @@
   margin-bottom: 12px;
   border: 1px solid var(--color-primary, #ff5f00);
   border-radius: var(--radius-sm, 12px);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
 }
 .gconduce__despacho-tag {
   align-self: flex-start;
@@ -327,4 +327,4 @@
   border-radius: 999px;
 }
 .gconduce__despacho-txt { font-size: 13px; color: var(--color-text); font-weight: 600; }
-.gconduce__despacho-dup { font-size: 12px; color: #b45309; font-weight: 600; }
+.gconduce__despacho-dup { font-size: 12px; color: var(--color-warning); font-weight: 600; }

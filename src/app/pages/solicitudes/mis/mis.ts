@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Location } from '@angular/common';
@@ -37,6 +37,17 @@ export class MisSolicitudesPage {
   private ordenes = signal<Map<string, MiOrdenCompra>>(new Map());
   loading = signal(true);
   fmtFecha = formatFechaMedia; // U9
+
+  // BH1 — las canceladas (a menudo pruebas) no deben parecer trabajo pendiente:
+  // ocultas por defecto, con un toggle para verlas.
+  mostrarCanceladas = signal(false);
+  canceladasCount = computed(() => this.solicitudes().filter((s) => s.estado === 'cancelada').length);
+  visibles = computed(() =>
+    this.mostrarCanceladas() ? this.solicitudes() : this.solicitudes().filter((s) => s.estado !== 'cancelada'),
+  );
+  toggleCanceladas(): void {
+    this.mostrarCanceladas.update((v) => !v);
+  }
 
   constructor() {
     void this.load();

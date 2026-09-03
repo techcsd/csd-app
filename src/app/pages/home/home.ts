@@ -82,6 +82,9 @@ const CONFIRMAR_TILE: HomeTile = { modulo: 'por_confirmar', icon: '📥', label:
 // pueden registrar/ver según la matriz): admin/proyectos/rrhh/dirección + capataz/
 // ingeniero por su obra. La RLS acota los datos a la obra del usuario.
 const PERSONAL_TILE: HomeTile = { modulo: 'personal_obra', icon: '🧑‍🔧', label: 'Personal de obra', route: '/proyectos/personal', tint: '#9333ea' };
+// BH8 — Solicitud de compra a mano: para el equipo de Compras (Raykler). Distinta de
+// "Requisición" (pedir material del almacén). Gating por el módulo `compras`.
+const SOLCOMPRA_TILE: HomeTile = { modulo: 'solicitud_compra', icon: '🛍️', label: 'Solicitud de compra', route: '/compras/solicitud-compra', tint: '#b45309' };
 
 // BC5/BD1 — agrupación del home por dominio (vista OPCIONAL, off por defecto). Cada
 // tile conserva su gating/ruta/badge; solo cambia la PRESENTACIÓN (grupos). El orden
@@ -99,7 +102,7 @@ interface HomeGroup {
 // Ingeniería ya no arrastra `tareas_app`.
 const GROUPS: HomeGroup[] = [
   { key: 'ingenieria', label: 'Ingeniería y producción', icon: '📐', color: '#2563eb',
-    modulos: ['compras', 'ingenieria', 'bitacora', 'proyectos', 'obra', 'personal_obra', 'compras_proyecto'] },
+    modulos: ['compras', 'ingenieria', 'bitacora', 'proyectos', 'obra', 'personal_obra', 'compras_proyecto', 'solicitud_compra'] },
   { key: 'transporte', label: 'Transporte', icon: '🚚', color: '#f97316',
     modulos: ['flota', 'por_confirmar'] },
   { key: 'inventario', label: 'Inventario', icon: '📦', color: '#16a34a',
@@ -214,6 +217,11 @@ export class HomePage implements OnDestroy {
     if (this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.hasModulo('compras') || this.ctx.puedeVerObra()) {
       extra.push(COMPRAS_TILE);
     }
+    // BH8 — Solicitud de compra a mano: el equipo de Compras (Raykler). Donde vive
+    // quien la necesita; el ingeniero origina por Requisición, no por aquí.
+    if (this.ctx.esAdmin() || this.ctx.hasModulo('compras')) {
+      extra.push(SOLCOMPRA_TILE);
+    }
     // AR1 — Personal de obra: quienes pueden registrar/ver (matriz). Los ingenieros/
     // capataces entran por su obra (puedeVerObra); la RLS acota los datos.
     if (
@@ -238,8 +246,26 @@ export class HomePage implements OnDestroy {
     if (!this.ctx.hasModulo('flota') && (this.ctx.hasModulo('inventario') || this.ctx.puedeVerObra())) {
       extra.push(CONFIRMAR_TILE);
     }
-    return this.aplicarOrden([...work, ...extra]); // AF38
+    // BH2 — TRASLADO PURO (aprobado por Xaviel, con mock): quien tiene el módulo
+    // `ingenieria` accede a su trabajo desde el hub /ingenieria, así que esos tiles se
+    // RETIRAN de su home (queda enfocado: Ingeniería + Proyectos + generales). Para
+    // TODOS los demás (p. ej. un capataz con bitácora pero SIN ingeniería) el home NO
+    // cambia — así nadie pierde acceso a un módulo que no está en su hub. El "Ingeniería"
+    // tile y el hub llevan cada uno su propio gate por ruta (regla BH1).
+    const all = [...work, ...extra];
+    const filtrados = this.ctx.hasModulo('ingenieria')
+      ? all.filter((t) => !HomePage.MOVED_TO_INGENIERIA.has(t.modulo))
+      : all;
+    return this.aplicarOrden(filtrados); // AF38
   });
+
+  // BH2 — módulos cuyo tile se retira del home de quien tiene `ingenieria` (viven en el
+  // hub /ingenieria). Coincide con el set del mock: Bitácora, Requisición, Mi obra,
+  // Por recibir, Personal de obra, Compras de obra. (Proyectos, Transporte e Inventario
+  // se QUEDAN en el home; los generales también.)
+  private static readonly MOVED_TO_INGENIERIA = new Set([
+    'bitacora', 'obra', 'compras', 'por_confirmar', 'personal_obra', 'compras_proyecto',
+  ]);
 
   /**
    * BC5 — reparte los tiles visibles (ya gateados y ordenados) en los grupos por

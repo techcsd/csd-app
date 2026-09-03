@@ -52,6 +52,9 @@ function run(cmd, args, opts = {}) {
   }
 }
 
+// BH5 — guarda de tokens: rompe el build si reaparece un fondo/borde oscuro quemado
+// (el bug del tema oscuro). El `ng build` directo no dispara el prebuild de npm.
+run('node', ['scripts/verify-tokens.mjs']);
 run('npx', ['ng', 'build']);
 run('npx', ['cap', 'sync', 'android']);
 

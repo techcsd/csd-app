@@ -23,8 +23,8 @@
   &__tab {
     flex: 1;
     padding: 10px;
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: #161616; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     border-radius: 12px;
     color: var(--main-ultra-light);
     font-size: 0.9rem;
@@ -38,17 +38,17 @@
     display: block;
     width: 100%;
     text-align: left;
-    background: #161616;
-    border: 1px solid #2d2d2d;
-    border-left: 4px solid #2d2d2d;
+    background: #161616; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border-left: 4px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     border-radius: 12px;
     padding: 12px 14px;
     margin-bottom: 8px;
     color: #fff;
     cursor: pointer;
 
-    &--critica { border-left-color: #dc2626; }
-    &--importante { border-left-color: #d97706; }
+    &--critica { border-left-color: var(--color-error); }
+    &--importante { border-left-color: var(--color-warning); }
     &--ordinaria { border-left-color: #3f3f46; }
     &:active { border-color: var(--Hub); }
   }
@@ -65,7 +65,7 @@
     padding: 2px 8px;
     border-radius: 999px;
     text-transform: uppercase;
-    background: #212121;
+    background: #212121; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     color: var(--main-ultra-light);
 
     &--critica { background: rgba(220, 38, 38, 0.18); color: #f87171; }
@@ -82,7 +82,7 @@
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 999px;
-    background: #212121;
+    background: #212121; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     color: var(--main-ultra-light);
 
     &--en_curso { background: rgba(37, 99, 235, 0.18); color: #60a5fa; }
@@ -102,8 +102,8 @@
   // ── Timeline ──
   &__timeline {
     position: relative;
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: #161616; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     border-radius: 12px;
     padding: 12px 12px 12px 0;
   }
@@ -147,8 +147,8 @@
     border-radius: 4px;
     background: #3f3f46;
 
-    &--critica { background: #dc2626; }
-    &--importante { background: #d97706; }
+    &--critica { background: var(--color-error); }
+    &--importante { background: var(--color-warning); }
     &--ordinaria { background: #52525b; }
     &--done { opacity: 0.55; }
     &--late { outline: 2px solid #f87171; }
@@ -169,8 +169,8 @@
     border-radius: 3px;
     margin-right: 2px;
 
-    &--critica { background: #dc2626; }
-    &--importante { background: #d97706; }
+    &--critica { background: var(--color-error); }
+    &--importante { background: var(--color-warning); }
     &--ordinaria { background: #52525b; }
   }
   &__today-legend {
@@ -188,8 +188,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: #161616; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     border-radius: 10px;
     padding: 10px 12px;
     margin-bottom: 6px;
@@ -243,7 +243,7 @@
       max-height: 240px;
       object-fit: cover;
       border-radius: 12px;
-      border: 1px solid #2d2d2d;
+      border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     }
   }
   &__acciones {
@@ -258,8 +258,8 @@
   &__req { color: #f87171; }
   &__textarea {
     width: 100%;
-    background: #161616;
-    border: 1px solid #2d2d2d;
+    background: #161616; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
+    border: 1px solid #2d2d2d; // tokens-allow-dark — panel oscuro deliberado (patrón dark-card SGC/Hub)
     border-radius: 12px;
     color: #fff;
     padding: 12px;

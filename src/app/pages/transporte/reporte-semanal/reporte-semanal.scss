@@ -311,7 +311,7 @@
 }
 .rsem__niveles .chip--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 .rsem__fotos {
@@ -320,7 +320,7 @@
   gap: 10px;
 }
 .rsem__band--danger {
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-error);
 }
 

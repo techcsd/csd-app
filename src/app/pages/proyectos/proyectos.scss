@@ -123,19 +123,19 @@
 
     &--en_progreso {
       background: rgba(37, 99, 235, 0.14);
-      color: #1d4ed8;
+      color: var(--color-info);
     }
     &--completado {
       background: rgba(22, 163, 74, 0.14);
-      color: #15803d;
+      color: var(--color-success);
     }
     &--pausado {
       background: rgba(217, 119, 6, 0.14);
-      color: #b45309;
+      color: var(--color-warning);
     }
     &--cancelado {
       background: rgba(220, 38, 38, 0.14);
-      color: #b91c1c;
+      color: var(--color-error);
     }
   }
   &__meta {
@@ -168,6 +168,6 @@
 
 // AS24 — variante de estado "planificación" (la más común en proyectos nuevos).
 .proy__estado--planificacion {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--color-info-bg);
+  color: var(--color-info);
 }

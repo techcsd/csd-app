@@ -135,11 +135,11 @@
   font-size: 12px;
 }
 .det__flag--retiro {
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 .det__flag--dano {
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-error);
 }
 
@@ -153,5 +153,5 @@
   margin-left: 4px;
   font-size: 12px;
   font-style: italic;
-  color: #92400e;
+  color: var(--color-warning);
 }

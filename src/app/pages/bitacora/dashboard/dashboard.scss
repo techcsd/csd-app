@@ -1,0 +1,156 @@
+.bdash {
+  background: var(--color-bg);
+}
+.bdash__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.bdash__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+}
+.bdash__icon {
+  font-size: 24px;
+}
+.bdash__title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.bdash__scope {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 4px 0 14px;
+}
+.bdash__sec {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin: 22px 0 10px;
+}
+
+// ── Stats ──
+.bdash__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.bdash__stat {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 14px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+.bdash__stat--btn {
+  cursor: pointer;
+}
+.bdash__stat--alert {
+  border-color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.bdash__stat-n {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+.bdash__stat-l {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+// ── Actividad por obra ──
+.bdash__obras {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bdash__obra {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  margin-bottom: 8px;
+}
+.bdash__obra-nom {
+  font-weight: 600;
+  font-size: 15px;
+}
+.bdash__obra-n {
+  flex-shrink: 0;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Recientes ──
+.bdash__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.bdash__row {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.bdash__row:last-child {
+  border-bottom: none;
+}
+.bdash__row-fecha {
+  flex-shrink: 0;
+  width: 70px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.bdash__row-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+}
+.bdash__row-tipo {
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.bdash__row-obra {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.bdash__row-autor {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.bdash__ir {
+  margin-top: 20px;
+}

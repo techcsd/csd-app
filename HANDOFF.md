@@ -1,5 +1,61 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 02–03/09/2026 — PROMPT-31 ronda BH (app) — **TODO EL TRABAJO DE APP + BACKEND OWED HECHO Y VERIFICADO · build verde · guard verde · SIN commit/push/APK (esperando OK de Xaviel)**
+
+**TL;DR:** las 8 ideas BH cerradas. Traslado de Ingeniería aplicado (Xaviel aprobó el mock). 4 migraciones nuevas **aditivas aplicadas a prod** (`tareas_todas_app`; `crear_solicitud_compra_app`+`mis_solicitudes_compra_app`+`solicitudes_compra.client_id`; **`tg_conduce_autoruta` trigger BH3 despacho**). PROMPT-30 (SGC) resultó ya ejecutado en prod (incentivo excluye `derivada_de_conduce`, reject-motivo obligatorio, bh4-cedula, bh6, bh7-articulo_id, bh8). Nada commiteado/pusheado/publicado.
+
+### ✅ BH2 traslado CERRADO + BH3 despacho + verificaciones (03-sep)
+- **Traslado puro** (`home.ts`): quien tiene el módulo `ingenieria` **pierde de su home** los tiles movidos (`MOVED_TO_INGENIERIA` = bitacora, obra, compras/Requisición, por_confirmar, personal_obra, compras_proyecto) → los usa desde el hub /ingenieria (que ahora los tiene TODOS, incl. Compras de obra). **Para todos los demás el home NO cambia** (un capataz con bitácora pero sin ingeniería no pierde nada). Cero pérdida de acceso.
+- **BH3 despacho — TRIGGER `tg_conduce_autoruta`** (`SGC/sql/2026-09-03-bh3-autoruta-despacho-trigger.sql`, aplicado): `AFTER UPDATE OF conductor_id, vehiculo_id` en `salidas_inventario`, WHEN ambos no-null + sin ruta → `conduce_asegurar_ruta` (best-effort, swallow, no recursión). Captura el UPDATE CRUDO de la web. **Smoke rollback-safe PASÓ**: asignar chofer+vehículo → ruta creada, `derivada=true` (el incentivo la excluye → "no suma", ya vivo en prod). El manual "Iniciar ruta" sigue de red de seguridad.
+- **Verificado ya-en-prod (PROMPT-30)**: `incentivo_generar_semana` excluye `derivada_de_conduce` (líneas 31/80); `rechazar_solicitud_compra` exige motivo ("El motivo del rechazo es obligatorio").
+- **`saasasa`**: ya está `es_prueba=true` (dato correcto; su visibilidad es el hiding client-side AZ3, no un dato mal).
+- **Wagner — RESUELTO, sin fix de datos**: NO hay usuario duplicado; su `auth.users.id` = `usuarios.id` = `asignado_a` de la tarea "Ingeniero retira esosnpuntales" (5cc6dc87…). El síntoma (salía en la lista de otro) era el leak `tiene_modulo` → cerrado por BH6 (mis_tareas_app estricta). Wagner la ve porque su uid = asignado_a; y FASE 4 cubre el caso de fetch fallido silencioso.
+
+### ✅ BH1 — "Rechazar/Aprobar" ya no se le ofrece al autor
+- `pages/solicitudes/detalle.ts`: `puedeAprobarORechazar = puedeGestionar() && esPendiente() && (!esAutor() || esAdmin())` (espeja el guard del server). Template usa ese computed.
+- Canceladas ocultas por defecto: `mis/` (toggle "Ver canceladas (N)") y `bandeja/` (`filasVisibles`, salvo filtro "Canceladas" explícito).
+- **Verificado**: constraint **BG5 aplicada en prod** (incluye `cancelada`) → cancelar no revienta. **Auditoría (agente general-purpose): 0 instancias nuevas** del patrón (firmar/despachar conduce, aprobar retiro BG4, aprobar mov. → todos ya gateados por computed o lista server-scoped).
+
+### ✅ BH5 — tema oscuro (la grande)
+- **`src/styles/_tokens.scss`** = fuente única (claro+oscuro). `styles.scss` hace `@use './styles/tokens'`. Capa semántica web (`--bg/--surface/--border/--text/--brand/--success…`) como **alias sobre `--color-*`** (dirección de shim INVERSA a la web, documentada). Nuevos: `--color-info-bg`, `--color-primary-bg`. Dark: `--color-secondary` sube a `#2e5586` (headers antes ≈ invisibles).
+- **Guard `scripts/verify-tokens.mjs`** en `prebuild` (npm) **Y** en `build-apk.mjs` (el APK llama `ng build` directo). **Probado que rompe** con un hex oscuro nuevo. Escape-hatch `// tokens-allow-dark` (21 líneas dark-card + carnet "papel").
+- 3 primitivos (option-button/select-list/big-confirm) + **~230 hex en ~95 archivos** → tokens (barrido determinista `scratchpad/dark-sweep*.mjs`, dry-run revisado). Carnet pineado (colores fijos). `index.html` theme-color sigue al tema (via `theme.service.applyToDom`).
+- ⏳ **Pendiente: capturas AA antes/después en oscuro** (necesitan la app en emulador).
+
+### ✅ BH6 — tareas
+- `mis_tareas_app` ya era **estrictamente personal en prod** (el chequeo previo matcheó la palabra en un comentario). Hueco real: roles elevados perdían la vista global → **RPC `sgc.tareas_todas_app(p_incluir_completadas, p_asignado_a)`** gateada (is_admin/tiene_modulo), APLICADA.
+- App: vista **"Todas las tareas"** (segmented `Mis tareas`/`Todas`, solo si `puedeCrear()`), **agrupada por usuario** con estado. Detalle sigue gateado por `esMia` (un jefe abre ajena en solo lectura).
+- App-side vacío-vs-error: `CatalogService.refreshDetailed` (data/failed/fromCache); Tareas propaga fallo → estado de error con **Reintentar** (no falso "no tienes tareas").
+
+### ✅ BH4 — login por cédula (app-side)
+- `login.ts`: PIN validado a **exactamente 6 dígitos** (`/^\d{6}$/`) con mensaje claro (antes ≥4 y el server negaba sin explicar).
+- Pipe **`emailDisplay`** (`shared/ui/pipes/`) + util `usuario-email.ts`: oculta correos sintéticos `*.constructorasd.local` → muestra la cédula / "Usuario de prueba". Aplicado en `perfil/mi-detalle`, `admin/usuarios`, picker de asignados de tareas.
+
+### ✅ BH7/BH8 — solicitud de compra en la app
+- **Migración `sql/2026-09-02-bh8-solicitud-compra-app.sql` APLICADA**: `solicitudes_compra.client_id` (unique parcial) + `crear_solicitud_compra_app(...)` SECURITY DEFINER **idempotente por client_id** (no toca `crear_solicitud_compra` web) + `mis_solicitudes_compra_app()` (lista + procedencia folio REQ).
+- App: `pages/compras/solicitud-compra/` (form: obra + categoría + renglones libres + notas, offline por outbox) + lista con estado/procedencia. `SolicitudesCompraService` (handler `solicitud_compra_crear`, booteado en `app.config`). Ruta `/compras/solicitud-compra` (submoduleGuard `compras.solicitudes`). Tile en home gateado `hasModulo('compras')`.
+- **Smoke e2e PASÓ** (`scratchpad/bh8-smoke.mjs`, como qa_coord_compras): crear → **reintento idempotente = mismo id** → lista con estado pendiente + items → limpieza (qa_* es data real).
+
+### ✅ BH3 — chofer ve la ruta de su conduce (app-side COMPLETO por infra existente)
+- La app **ya renderiza rutas** (conduces.html ruta-card: origen, paradas/destino, carga, "Iniciar ruta" vs en-ruta). La **transferencia ya está cableada server-side**: `aceptar_transferencia_conduce` → `conduce_asegurar_ruta` (idempotente, marca `rutas.derivada_de_conduce`, arma la carga "4 PINO DE MADERA" de detalle_salidas+items_libres). → **cero código app nuevo**.
+
+### 🟡 BH2 — hub de Ingeniería
+- **Hub LLENADO** (`pages/ingenieria/ingenieria.ts`): de 1 tile → hasta **9 tiles gateados** (Requisición, Solicitud de movimiento, Confirmar entregas, Bitácora, **Dashboard de bitácora**, Mi obra, **Mi proyecto**, Personal, Solicitud de compra), cada uno con el MISMO gate que el guard de su ruta (regla BH1). **Sin tocar el home** (atajos conviven).
+- **2 huecos de capacidad CONSTRUIDOS** (aggregators de solo lectura sobre RPCs existentes, cero backend nuevo):
+  - **`pages/obra/mi-proyecto/`** (`/obra/mi-proyecto`, obraGuard): avance real vs plan (`calcular_avance_obra`), mis pendientes (`resumenDelDia`: tareas/NC/pedidos/charla), partidas próximas (`getPartidas`), últimas bitácoras. Selector de obra si hay >1.
+  - **`pages/bitacora/dashboard/`** (`/bitacora/dashboard`, moduleGuard bitacora): bitácoras hoy/semana, liberaciones por firmar (`getClsPendientes`), NC abiertas (`misNcAsignadas`), actividad por obra (agrupa la semana), recientes. Escala a `todasBitacoras` si `puedeVerOtrasBitacoras`.
+  - Verificado: columnas `avance_plan_pct`/`avance_real_pct` OK; todos los RPCs ya son de producción (usados por /obra y /bitacora). Build + guard verdes.
+- **Mock "traslado puro" publicado** (Artifact + `scratchpad/bh2-mock.html`) — antes/después para un Ingeniero de campo. Xaviel eligió **traslado puro** → ⏳ **espera su aprobación del mock** antes de quitar tiles del home (lección BD1).
+
+### ⏳ PENDIENTE (lo que queda de verdad — necesita decisión / build aparte)
+- **BH4 alta por cédula en admin** (NO empezado): 3ª pestaña "acceso por cédula" en `admin/usuarios` reutilizando `acceso-cedula` + email opcional en el modelo. `usuarios.cedula` ya existe (SGC bh4). Es un feature cross-repo (edge + admin UI) — su propia ronda.
+- **BH7 lado web** (opcional): `ordenes.ts` de SGC ya no manda `null` al rechazar porque el server exige motivo; falta el drawer de procedencia (requisición+conduces) + recuperar `articulo_id` (SGC bh7 ya agregó la columna). Es del repo web.
+- **Docs**: espejar `tareas_todas_app`/`crear_solicitud_compra_app` en `SGC/PARIDAD.md`; cerrar AV6.
+- **QA/telemetría**: silenciar el watchdog×297 en el panel de Tecnología (decisión de qué grupo callar); **capturas AA antes/después del oscuro** (emulador).
+- **Release**: sin commit/push/APK/publish (esperando OK). TODAS las migraciones aplicadas son aditivas/backward-compatible; el trigger BH3 es best-effort (swallow → nunca tumba un despacho).
+
+---
+
 ## 🟢 SESIÓN 02/09/2026 — PROMPT-29 ronda BG (app) — el outbox que no pierde data + retiro de material dañado — **RELEASE 2.10.0 PUBLICADA (rolling) · commits `a53b511`+`<este>` PUSHEADOS (PWA) · APK 2.10.0 firmado+registrado+SUBIDO · señal-fix publicada · build verde · smoke VERDE · ⏳ solo device-QA + rescate CON el ingeniero**
 
 ### 🚀 Release 2.10.0 — PUBLICADA (rolling) — TODO HECHO

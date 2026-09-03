@@ -61,7 +61,7 @@
   border-radius: 999px;
 }
 .inf__row-estado--env {
-  color: #15803d;
+  color: var(--color-success);
   background: rgba(22, 163, 74, 0.14);
 }
 .inf__periodo {
@@ -72,7 +72,7 @@
 .inf__draft {
   background: rgba(37, 99, 235, 0.08);
   border: 1px solid rgba(37, 99, 235, 0.3);
-  color: #1d4ed8;
+  color: var(--color-info);
   border-radius: 12px;
   padding: 10px 12px;
   margin-bottom: 12px;
@@ -117,7 +117,7 @@
   border-radius: 12px;
   background: rgba(22, 163, 74, 0.1);
   border: 1px solid rgba(22, 163, 74, 0.3);
-  color: #15803d;
+  color: var(--color-success);
   text-align: center;
   font-weight: 600;
 }

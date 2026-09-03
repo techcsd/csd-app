@@ -10,7 +10,7 @@
 .vcard--on {
   border-color: var(--color-primary);
   border-width: 2px;
-  background: #fff7ed;
+  background: var(--color-primary-bg);
 }
 .vcard--done {
   opacity: 0.75;

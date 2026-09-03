@@ -1,0 +1,162 @@
+// ════════════════════════════════════════════════════════════════════════════
+//  CSD App — Design tokens (BH5 / paridad BE con la web)
+//  ---------------------------------------------------------------------------
+//  Fuente única de color, tipografía, radios y sombras del campo-app. Portado del
+//  sistema de la web (SGC/src/styles/_tokens.scss) para paridad real del tema oscuro.
+//
+//  DOS CAPAS:
+//   1. --color-* : la familia histórica de la app (usada en 194 componentes) — SIGUE
+//      siendo la FUENTE de valores. Aquí viven los hex de cada tema.
+//   2. Nombres SEMÁNTICOS de la web (--bg, --surface, --border, --text, --brand,
+//      --accent, --success/-bg, --danger/-bg, --warning/-bg, --info/-bg…) como ALIAS
+//      que apuntan a --color-*, así themean solos y le dan a la app el MISMO
+//      vocabulario que la web (código nuevo/migrado + resuelve las 10 refs muertas
+//      var(--border)/var(--surface-2)/var(--border-soft) que sobrevivían por fallback).
+//      Es la dirección de shim inversa a la web (allá el semántico es fuente y --sgc-*
+//      el alias; acá --color-* es fuente y el semántico el alias) porque la app NO
+//      migró sus componentes — se documenta a propósito.
+//
+//  DIVERGENCIAS DE VALOR con la web, DELIBERADAS (no "corregir"):
+//    --radius      16px (app, targets con guantes)   vs 10px (web)
+//    --radius-sm   10px (app)                         vs 6px  (web)
+//    --transition  0.15s ease (app) — y se usa como FRAGMENTO, p. ej.
+//      `transition: transform var(--transition)` (option-button/pin-pad/big-button/
+//      step-bar). Por eso NO puede llevar el `all` que la web mete en su --transition:
+//      quedaría `transition: transform all 0.2s ease`, inválido. Se conserva 0.15s ease.
+//
+//  El bloque oscuro COMPLETA lo que 2.8.x dejó a medias (redefinía 16 de 39): ahora
+//  también themean --color-secondary (azul de headers, antes ≈ indistinguible del
+//  fondo) y aparecen --color-info-bg y --color-primary-bg (tinte de "seleccionado").
+//  --color-primary/-dark, --color-accent y --Hub se dejan a propósito heredando el
+//  valor claro: naranja/ámbar/amarillo leen bien sobre fondo oscuro (marca).
+//
+//  Default = CLARO (decisión BE6, mejor para el sol); dark es opt-in [data-theme='dark'].
+// ════════════════════════════════════════════════════════════════════════════
+
+:root {
+  /* Brand */
+  --color-primary: #f97316; /* naranja construcción — CTAs */
+  --color-primary-dark: #c2570c; /* pressed */
+  --color-secondary: #1e3a5f; /* azul CSD — headers/marca */
+  --color-accent: #facc15; /* badges de pendientes */
+
+  /* Surfaces (max luminance for sunlight) */
+  --color-bg: #ffffff;
+  --color-surface: #f4f4f5;
+  --color-surface-2: #e9e9ec;
+  --color-border: #d4d4d8;
+
+  /* Text (>= 7:1 contrast, never light grey on white) */
+  --color-text-primary: #18181b;
+  --color-text-secondary: #3f3f46;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-secondary: #ffffff;
+
+  /* Dark "panel" accents (Tecnología/Proyectos/Auditoría dark cards + amber highlights). */
+  --Hub: #ffb300; /* amber accent (active borders, dark-card highlights) */
+  --main-ultra-light: #a8a8b2; /* muted light-grey text on dark panels */
+
+  /* QA-AJ15 — aliases de tokens sueltos heredados del otro proyecto X-Dev. */
+  --primary: var(--color-primary); /* accent / CTA orange */
+  --main: var(--color-text-primary); /* primary dark text */
+  --color-text: var(--color-text-primary); /* primary dark text (alt spelling) */
+  /* AN — alias al error real para recuperar el rojo peligro/borrar/obligatorio. */
+  --color-danger: var(--color-error);
+
+  /* Semantic status — color always paired with an icon (colorblind-safe) */
+  --color-success: #16a34a; /* guardado / sincronizado / entregado */
+  --color-warning: #d97706; /* pendiente de envío */
+  --color-error: #dc2626; /* error / daño / incidente */
+  --color-info: #2563eb;
+  --color-success-bg: #dcfce7;
+  --color-warning-bg: #fef3c7;
+  --color-error-bg: #fee2e2;
+  --color-info-bg: #dbeafe; /* BH5 — faltaba (la web lo tiene); lo usan los tintes info */
+
+  /* BH5 — tinte "seleccionado" naranja: antes iba quemado como #fff7ed en los
+     primitivos (option-button/select-list) y en ~36 pantallas → en oscuro daba
+     texto claro sobre crema (1.10:1). Token para que themee. */
+  --color-primary-bg: #fff7ed;
+
+  /* Typography */
+  --font-body: system-ui, 'Roboto', 'Segoe UI', sans-serif;
+  --fs-home-btn: 22px;
+  --fs-title: 24px;
+  --fs-option: 18px;
+  --fs-body: 16px; /* absolute minimum */
+
+  /* Touch & spacing — gloves-friendly */
+  --touch-min: 56px;
+  --gap: 12px;
+  --radius: 16px;
+  --radius-sm: 10px;
+
+  /* Safe areas (notches / gesture bars) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --transition: 0.15s ease;
+
+  /* ── Capa SEMÁNTICA (vocabulario de la web). Alias sobre --color-*, themea sola. ── */
+  --bg: var(--color-bg);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-2);
+  --surface-3: var(--color-surface-2); /* la app no tiene 3ª superficie: reusa la 2ª */
+  --border: var(--color-border);
+  --border-strong: var(--color-border);
+  --border-soft: var(--color-border);
+  --text: var(--color-text-primary);
+  --text-2: var(--color-text-secondary);
+  --text-3: var(--main-ultra-light);
+  --brand: var(--color-secondary); /* la "marca" visible de la app es el azul de headers */
+  --brand-hover: var(--color-primary);
+  --brand-soft: var(--color-surface-2);
+  --accent: var(--Hub);
+  --accent-soft: var(--color-warning-bg);
+  --success: var(--color-success);
+  --success-bg: var(--color-success-bg);
+  --danger: var(--color-error);
+  --danger-bg: var(--color-error-bg);
+  --warning: var(--color-warning);
+  --warning-bg: var(--color-warning-bg);
+  --info: var(--color-info);
+  --info-bg: var(--color-info-bg);
+}
+
+// ── Tema OSCURO (opt-in por usuario, sincronizado con la web vía mi_tema/set_tema).
+//    Redefine SOLO --color-* (los semánticos son alias y siguen solos). Default claro.
+[data-theme='dark'] {
+  --color-bg: #0f1720;
+  --color-surface: #17222e;
+  --color-surface-2: #1f2d3b;
+  --color-border: #30404f;
+
+  --color-text-primary: #e8eef4;
+  --color-text-secondary: #aebccd;
+  /* --color-text-on-primary / -on-secondary siguen blancos (texto sobre relleno
+     naranja/azul de marca): decisión escrita, se mantienen. */
+
+  /* BH5 — el azul de headers antes NO themeaba (#1e3a5f ≈ #0f1720 del fondo →
+     header indistinguible). Se sube a un azul legible que separa del fondo y
+     mantiene el texto blanco por encima de AA. */
+  --color-secondary: #2e5586;
+  /* --color-primary / -dark, --color-accent y --Hub se dejan heredando el valor
+     claro a propósito: naranja/amarillo/ámbar leen bien sobre oscuro (marca). */
+
+  --color-success: #3faa63;
+  --color-warning: #e0952f;
+  --color-error: #e05a4c;
+  --color-info: #4a90d0;
+  --color-success-bg: rgba(22, 163, 74, 0.22);
+  --color-warning-bg: rgba(217, 119, 6, 0.24);
+  --color-error-bg: rgba(220, 38, 38, 0.26);
+  --color-info-bg: rgba(37, 99, 235, 0.28);
+  --color-primary-bg: rgba(249, 115, 22, 0.20); /* tinte naranja translúcido para "seleccionado" */
+
+  --main-ultra-light: #8fa0b3;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.6);
+}

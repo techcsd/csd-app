@@ -171,7 +171,7 @@
   margin-bottom: 8px;
 
   &--in { border-left-color: #2e9e5b; }
-  &--out { border-left-color: #c0392b; }
+  &--out { border-left-color: var(--color-error); }
   &--adj { border-left-color: #8a6d3b; }
 
   &__top {
@@ -206,7 +206,7 @@
     color: #2e9e5b;
 
     &--neg {
-      color: #c0392b;
+      color: var(--color-error);
     }
   }
 

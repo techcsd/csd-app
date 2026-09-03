@@ -9,7 +9,7 @@
   padding: 20px;
   border: 2px solid var(--color-primary);
   border-radius: var(--radius);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   margin-bottom: 16px;
 }
 .checklist__placa {
@@ -51,7 +51,7 @@
 .fuel-btn--on {
   border-color: var(--color-primary);
   border-width: 3px;
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 
@@ -104,7 +104,7 @@
 }
 .chip--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 
@@ -159,11 +159,11 @@
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   font-weight: 700;
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 .checklist__mant--venc {
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-error);
 }
 

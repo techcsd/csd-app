@@ -66,8 +66,8 @@
   padding: 11px;
   border: 1px solid #f59e0b;
   border-radius: var(--radius);
-  background: #fff7ed;
-  color: #92400e;
+  background: var(--color-primary-bg);
+  color: var(--color-warning);
   font-weight: 700;
   font-size: 13.5px;
 }
@@ -123,10 +123,10 @@
   background: var(--main-ultra-light);
 }
 .mrec__hito--ini .mrec__hito-dot {
-  background: #16a34a;
+  background: var(--color-success);
 }
 .mrec__hito--fin .mrec__hito-dot {
-  background: #dc2626;
+  background: var(--color-error);
 }
 .mrec__hito--parada .mrec__hito-dot {
   background: #f59e0b;

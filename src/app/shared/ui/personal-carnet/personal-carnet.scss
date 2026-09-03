@@ -8,23 +8,26 @@
   border: 1px solid #ddd;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 
+  // BH5 — el carnet es un DOCUMENTO imprimible ("papel"): no themea. Sus colores
+  // van fijos (antes con var(--main)/var(--Hub) → en oscuro la banda se volvía blanca
+  // sobre texto blanco). Banda oscura + logo ámbar, iguales en claro y oscuro.
   &__top {
-    background: var(--main, #121212);
+    background: #121212; // tokens-allow-dark — carnet imprimible (papel)
     color: #fff;
     padding: 12px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
     b { font-size: 13px; letter-spacing: 0.04em; }
-    small { display: block; font-size: 10px; color: var(--Hub, #ffb300); }
+    small { display: block; font-size: 10px; color: #ffb300; }
   }
   &__logo {
     height: 34px;
     min-width: 34px;
     padding: 0 8px;
     border-radius: 8px;
-    background: var(--Hub, #ffb300);
-    color: var(--main, #121212);
+    background: #ffb300;
+    color: #121212;
     font-weight: 800;
     font-size: 15px;
     letter-spacing: 0.04em;

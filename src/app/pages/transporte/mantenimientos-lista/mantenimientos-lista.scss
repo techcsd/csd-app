@@ -78,7 +78,7 @@
 }
 .mant-card__estado--ok {
   background: rgba(22, 163, 74, 0.14);
-  color: #15803d;
+  color: var(--color-success);
 }
 .mant-card__desc {
   margin: 6px 0;

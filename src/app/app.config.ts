@@ -35,6 +35,7 @@ import { TecnologiaService } from './core/services/tecnologia.service';
 import { PersonalObraService } from './core/services/personal-obra.service';
 import { SolicitudMovimientoService } from './core/services/solicitud-movimiento.service';
 import { RetirosService } from './core/services/retiros.service';
+import { SolicitudesCompraService } from './core/services/solicitudes-compra.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -96,6 +97,7 @@ export const appConfig: ApplicationConfig = {
       inject(PersonalObraService); // AR1 — personal_registro / personal_editar
       inject(SolicitudMovimientoService); // AY11 — solicitud_movimiento_crear (offline)
       inject(RetirosService); // BG4 — retiro_material (retiro de material dañado, offline)
+      inject(SolicitudesCompraService); // BH8 — solicitud_compra_crear (offline, idempotente)
     }),
   ],
 };

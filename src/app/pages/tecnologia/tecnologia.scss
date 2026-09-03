@@ -328,12 +328,12 @@
       color: var(--color-warning);
     }
     &--sync {
-      background: #dbeafe;
+      background: var(--color-info-bg);
       color: var(--color-info);
     }
     &--permission {
-      background: #ede9fe;
-      color: #7c3aed;
+      background: var(--color-info-bg);
+      color: var(--color-info); // BH5 — antes #7c3aed sobre tinte claro (isla que no themea)
     }
   }
 }

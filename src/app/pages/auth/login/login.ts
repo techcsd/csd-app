@@ -89,8 +89,11 @@ export class LoginPage {
       this.toast.error('Escribe tu cédula.');
       return;
     }
-    if (pin.length < 4) {
-      this.toast.error('Escribe tu PIN.');
+    // BH4 — el PIN de acceso por cédula es de EXACTAMENTE 6 dígitos (así lo crea el
+    // alta en `acceso-cedula`). Validar aquí con mensaje claro; antes aceptaba ≥4 y el
+    // servidor lo rechazaba sin explicar por qué.
+    if (!/^\d{6}$/.test(pin)) {
+      this.toast.error('El PIN es de 6 dígitos.');
       return;
     }
     this.loading.set(true);

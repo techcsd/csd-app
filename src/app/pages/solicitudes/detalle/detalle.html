@@ -124,7 +124,7 @@
               {{ esRechazada() ? '🔧 Corregir y reenviar' : '✏️ Editar' }}
             </button>
           }
-          @if (puedeGestionar() && esPendiente()) {
+          @if (puedeAprobarORechazar()) {
             <button type="button" class="btn-cta reqd__aprobar" (click)="abrirAprobar()">✓ Aprobar</button>
             <button type="button" class="btn-ghost reqd__rechazar" (click)="abrirRechazar()">✕ Rechazar</button>
           }

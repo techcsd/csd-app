@@ -80,7 +80,7 @@
   color: #fff;
 }
 .solm__prio[data-prio='baja'] {
-  background: #16a34a;
+  background: var(--color-success);
 }
 .solm__prio[data-prio='media'] {
   background: #0284c7;
@@ -89,7 +89,7 @@
   background: #ea580c;
 }
 .solm__prio[data-prio='urgente'] {
-  background: #dc2626;
+  background: var(--color-error);
 }
 
 .solm__estado {
@@ -102,7 +102,7 @@
 }
 .solm__estado[data-estado='completada'] {
   background: rgba(22, 163, 74, 0.14);
-  color: #15803d;
+  color: var(--color-success);
 }
 .solm__estado[data-estado='cancelada'] {
   background: rgba(0, 0, 0, 0.08);
@@ -111,7 +111,7 @@
 .solm__estado[data-estado='planificada'],
 .solm__estado[data-estado='en_curso'] {
   background: rgba(2, 132, 199, 0.14);
-  color: #0369a1;
+  color: var(--color-info);
 }
 
 .solm__prueba-tag {
@@ -164,7 +164,7 @@
 }
 .solm__urg[data-urg='vencida'] {
   background: rgba(220, 38, 38, 0.14);
-  color: #b91c1c;
+  color: var(--color-error);
 }
 .solm__urg[data-urg='urgente'] {
   background: rgba(234, 88, 12, 0.14);
@@ -172,7 +172,7 @@
 }
 .solm__urg[data-urg='proxima'] {
   background: rgba(2, 132, 199, 0.12);
-  color: #0369a1;
+  color: var(--color-info);
 }
 .solm__urg[data-urg='normal'] {
   background: rgba(0, 0, 0, 0.05);

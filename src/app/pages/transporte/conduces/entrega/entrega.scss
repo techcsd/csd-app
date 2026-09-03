@@ -155,8 +155,8 @@
 
 .entrega__band--warn {
   border-color: #f59e0b;
-  background: #fff7ed;
-  color: #92400e;
+  background: var(--color-primary-bg);
+  color: var(--color-warning);
   font-weight: 600;
 }
 

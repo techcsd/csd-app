@@ -100,16 +100,16 @@
   white-space: nowrap;
 }
 .actu__chip--nuevo {
-  background: #16a34a;
+  background: var(--color-success);
 }
 .actu__chip--mejora {
-  background: #2563eb;
+  background: var(--color-info);
 }
 .actu__chip--arreglo {
   background: #ca8a04;
 }
 .actu__chip--seguridad {
-  background: #dc2626;
+  background: var(--color-error);
 }
 
 .actu__progress {

@@ -125,7 +125,7 @@
 }
 .avisos__filtros .chip--on {
   border-color: var(--color-primary);
-  background: #fff7ed;
+  background: var(--color-primary-bg);
   color: var(--color-primary-dark);
 }
 .avisos__ticon {
@@ -138,7 +138,7 @@
   border-radius: 999px;
   font-size: 11px;
   font-weight: 800;
-  background: #fef2f2;
+  background: var(--color-error-bg);
   color: var(--color-error);
 }
 

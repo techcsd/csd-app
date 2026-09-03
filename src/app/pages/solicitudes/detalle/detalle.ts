@@ -96,6 +96,14 @@ export class RequisicionDetallePage {
   });
   puedeGestionar = computed(() => this.ctx.esAdmin() || this.ctx.hasModulo('inventario'));
   esPendiente = computed(() => this.req()?.estado === 'pendiente');
+  /** BH1 — Aprobar/Rechazar son actos de un TERCERO gestor: el servidor niega
+   *  auto-aprobar ("No puedes aprobar tu propia requisición") y auto-rechazar
+   *  ("No puedes rechazar tu propia solicitud"). La visibilidad del botón se deriva
+   *  de la MISMA condición del guard: nunca se pinta al autor (salvo admin). Al autor
+   *  le queda "Cancelar", que sí le corresponde (puedeCancelar). */
+  puedeAprobarORechazar = computed(
+    () => this.puedeGestionar() && this.esPendiente() && (!this.esAutor() || this.ctx.esAdmin()),
+  );
   /** BF6 — una rechazada no es callejón: el autor la corrige y la reenvía. */
   esRechazada = computed(() => this.req()?.estado === 'rechazada');
   esAutor = computed(() => !!this.req()?.solicitante_id && this.req()?.solicitante_id === this.ctx.profile()?.id);
