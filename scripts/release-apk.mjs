@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.11.0';
+const VERSION = '2.12.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,19 +62,16 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-09-03';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Ingeniería en un solo lugar + tema oscuro parejo';
+const TITULO = 'Reenvío de bitácoras atascadas + fijar PIN de campo';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Ingeniería', d: 'El módulo Ingeniería ahora reúne TODO tu trabajo en un solo lugar: requisición, bitácora, tu obra, entregas por confirmar, personal y compras. Y trae dos vistas nuevas: «Mi proyecto» (avance real vs plan, tus pendientes y partidas) y «Dashboard de bitácora» (el pulso de la semana).' },
-  { t: 'nuevo', m: 'Compras', d: 'Nueva pantalla «Solicitud de compra»: pide a Compras que compre algo que no hay en existencia, con sus renglones y proveedor sugerido. Funciona sin señal y no se duplica si se reintenta.' },
-  { t: 'nuevo', m: 'Tareas', d: 'Quien asigna tareas tiene ahora «Todas las tareas», para ver por persona qué tiene cada quien y en qué estado. En «Mis tareas» cada quien ve solo las suyas.' },
-  { t: 'mejora', m: 'Apariencia', d: 'El tema oscuro quedó parejo en toda la app: textos, pastillas y botones legibles, sin cajas blancas ni azules invisibles.' },
-  { t: 'mejora', m: 'Transporte', d: 'Cuando te asignan un conduce con chofer y vehículo, su ruta se crea sola —con su origen, destino y carga—, sin tener que pulsar «Iniciar ruta».' },
-  { t: 'arreglo', m: 'Requisiciones', d: 'Ya no se te ofrece «Rechazar» tu propia requisición (el sistema lo negaba y confundía). Las canceladas se ocultan por defecto para que no parezcan trabajo pendiente.' },
-  { t: 'arreglo', m: 'Tareas', d: 'Si una lista no carga por falta de señal, ahora lo dice y te deja reintentar, en vez de parecer que no tienes nada.' },
-  { t: 'seguridad', m: 'Acceso', d: 'El PIN de acceso por cédula pide exactamente 6 dígitos con un aviso claro; y en ningún lado verás correos internos raros: se muestra tu cédula.' },
+  { t: 'arreglo', m: 'Bitácora', d: 'Las bitácoras que quedaban atascadas al reenviarse («no se pueden reenviar») ya se envían: se corrigió el permiso que hacía fallar la subida de sus fotos al reintentar. Tu información nunca se perdió.' },
+  { t: 'mejora', m: 'Pendientes de envío', d: '«Reintentar» aparece siempre que algo no se pudo enviar —también cuando el problema es del sistema o el registro sigue esperando—, y el aviso de abajo cuenta TODO lo pendiente, no solo lo que falló. Cuando Tecnología publica una corrección, la app te la sugiere.' },
+  { t: 'arreglo', m: 'Bitácora', d: 'Al «Duplicar» una bitácora atascada para rescatarla, ahora se copian TODAS sus fotos y notas de voz (no solo algunas), y ese rescate ya no se borra al cerrar sesión. Una captura con fotos perdidas no se envía en silencio.' },
+  { t: 'mejora', m: 'Batería', d: 'El vigilante de ubicación deja de reintentar (y de reportarse a sí mismo) cuando no hay permiso de ubicación o GPS — menos consumo de batería y menos ruido.' },
+  { t: 'seguridad', m: 'Acceso', d: 'Para un usuario que entra con cédula, ahora se puede «Fijar PIN» directamente desde Administración (antes decía que enviaba un correo que no existe). El cambio queda registrado.' },
 ];
 
 const TIPO_POR_COMMIT = {
