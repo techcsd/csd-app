@@ -171,13 +171,17 @@ export class OutboxContenidoService {
       tipo: 'parte',
       etiqueta: 'Bitácora (copia)' + (nombreObra ? ' · ' + nombreObra : ''),
       ruta: '/bitacora/parte',
+      rescate: true, // BI7 — data real de obra: sobrevive al cierre de sesión
     });
 
-    // Copia las fotos PRINCIPALES (slots foto_*) al borrador para que el wizard las
-    // rehidrate — sin re-tomarlas. Las de restricción/equipo (por índice) se retoman.
+    // BI7 — copia TODAS las fotos/audios del parte al borrador para que el wizard las
+    // rehidrate — sin re-tomarlas. Antes solo copiaba `foto_*` y se PERDÍAN las de
+    // restricción (restr_*), notas de voz de restricción (restraudio_*), fotos de
+    // equipo dañado (dano_*) y adjuntos de voz (voz_*): si el usuario duplicaba y luego
+    // descartaba el original —el flujo que el propio rescate recomienda— esa evidencia
+    // desaparecía. Regla madre BG: la data real de obra NUNCA se pierde.
     const fotos = await db.fotos_pendientes.where('op_id').equals(op.id).toArray();
     for (const f of fotos) {
-      if (!/^foto_\d+/.test(f.slot)) continue;
       const blob = f.data ? new Blob([f.data], { type: f.type || 'image/jpeg' }) : f.blob;
       if (blob) await this.borrador.saveFoto(draftKey, f.slot, blob);
     }

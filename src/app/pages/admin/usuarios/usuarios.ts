@@ -150,6 +150,43 @@ export class AdminUsuariosPage {
     }
   }
 
+  /** BI5 — ¿entra por cédula (email sintético, sin buzón real)? Entonces el botón
+   *  es "Fijar PIN", no "Restablecer contraseña" (que mandaría un correo inexistente). */
+  esSintetico(u: UsuarioAdmin): boolean {
+    return /@(conductores|personal|test)\.constructorasd\.local$/i.test(u.email ?? '');
+  }
+
+  private pinTrivial(pin: string): boolean {
+    if (!/^\d{6}$/.test(pin)) return true;
+    if (/^(\d)\1{5}$/.test(pin)) return true;
+    if (['123456', '654321', '123123', '121212', '112233'].includes(pin)) return true;
+    let asc = true, desc = true;
+    for (let i = 1; i < 6; i++) { const d = pin.charCodeAt(i) - pin.charCodeAt(i - 1); if (d !== 1) asc = false; if (d !== -1) desc = false; }
+    return asc || desc;
+  }
+  private genPin(): string {
+    for (let i = 0; i < 50; i++) {
+      const a = new Uint32Array(6); crypto.getRandomValues(a);
+      const p = Array.from(a, (n) => (n % 10).toString()).join('');
+      if (!this.pinTrivial(p)) return p;
+    }
+    return '481973';
+  }
+
+  /** BI5 — fija el PIN de un usuario de cédula (paridad con la web). */
+  async pedirFijarPin(u: UsuarioAdmin): Promise<void> {
+    const sugerido = this.genPin();
+    const pin = (window.prompt(`Fijar PIN de 6 dígitos para ${u.nombre} (entra con su cédula + PIN). Sugerido:`, sugerido) ?? '').trim();
+    if (!pin) return;
+    if (this.pinTrivial(pin)) { this.toast.error('Ese PIN es demasiado fácil (repetido/secuencia). Elige otro.'); return; }
+    try {
+      await this.admin.fijarPinUsuario(u.id, pin);
+      this.toast.success(`PIN fijado. Entrégaselo a ${u.nombre}: ${pin}`);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : 'No se pudo fijar el PIN.');
+    }
+  }
+
   async reenviar(u: UsuarioAdmin): Promise<void> {
     try {
       await this.admin.reenviarInvitacion(u.id);

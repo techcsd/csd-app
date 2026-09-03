@@ -92,7 +92,11 @@ export class PendientesPage {
       return fixes.some(
         (f) =>
           (!f.tipo_op || f.tipo_op === it.tipo_op) &&
-          (!f.error_code || (it.error_code ?? '').startsWith(f.error_code)) &&
+          // BI2 — error_code es OPCIONAL: solo estrecha cuando el ITEM lo trae. Los
+          // registros atascados de agosto lo tienen VACÍO y siempre lo tendrán (el
+          // campo nació en 2.10.0; StorageApiError no trae code) → exigirlo hacía la
+          // señal estructuralmente inalcanzable. tipo_op + versión bastan.
+          (!f.error_code || !(it.error_code ?? '').trim() || (it.error_code ?? '').startsWith(f.error_code)) &&
           versionAlMenos(environment.version, f.min_app_version),
       );
     });
@@ -114,14 +118,26 @@ export class PendientesPage {
   }
 
   hayReintentables(): boolean {
-    // W1 — solo los errores transitorios (no permanentes) se pueden reintentar.
-    return this.items().some((i) => i.estado === 'error' && !i.permanente);
+    // BI2 — "Reintentar todos" se muestra siempre que haya algo en `error`, permanente
+    // o no. El reintento de un permanente (RLS/constraint post-fix) es PRECISAMENTE la
+    // acción que BG1 vino a habilitar; esconderlo cuando todo es permanente era lo
+    // contrario de lo que hace falta.
+    return this.items().some((i) => i.estado === 'error');
   }
 
   /** S30 — un pending/syncing lleva demasiado tiempo atascado (>24h). */
   private readonly VIEJO_MS = 24 * 60 * 60 * 1000;
   esViejo(item: OutboxItem): boolean {
     return item.estado !== 'error' && Date.now() - item.created_local > this.VIEJO_MS;
+  }
+
+  /** BI2 — un pending/syncing que ya falló al menos una vez o lleva > 2 min sin salir
+   *  puede reintentarse a mano (antes NO tenía ningún reintento y era invisible en el
+   *  banner de errores). Fuerza el envío ahora sin esperar el backoff. */
+  private readonly ATASCADO_MS = 2 * 60 * 1000;
+  puedeForzarEnvio(item: OutboxItem): boolean {
+    if (item.estado === 'error') return false;
+    return item.intentos > 0 || Date.now() - item.created_local > this.ATASCADO_MS;
   }
   /** S30/BG1 — se puede descartar DESDE LA TARJETA: error permanente de DATO, o
    *  pending atascado >24h. Los de categoría 'sistema' NO muestran Descartar aquí

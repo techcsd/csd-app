@@ -113,7 +113,10 @@ export function throwSyncError(error: unknown): never {
     /^(P0001|22|23|42)/.test(code) || // validación RPC / datos / FK-único / permiso-privilegio
     /^DR\d/.test(code) || // AM1 — errores de negocio propios (DR451-454, DR461/462, DR471/472…): mensaje ya accionable, reintentar no ayuda
     /^PGRST(202|203|204|205)/.test(code) || // función/columna/tabla no encontrada (firma o schema)
-    /schema cache|could not find the function/i.test(message);
+    /schema cache|could not find the function/i.test(message) ||
+    // BI2 — RLS de Storage: StorageApiError puede no traer code ni status usable;
+    // se reconoce por el mensaje para no reintentar en bucle en silencio.
+    /violates row-level security|row-level security policy/i.test(message);
   const statusPermanente = [400, 403, 404, 409, 422].includes(status);
   // 401/408/429/5xx son transitorios SOLO si no hay un código permanente detrás.
   const transient = (status === 401 || status === 408 || status === 429 || status >= 500) && !codePermanente;
@@ -128,6 +131,11 @@ export function throwSyncError(error: unknown): never {
 }
 
 function classifyKind(code: string, status: number, message = ''): SyncErrorKind {
+  // BI2 — una denegación de RLS de Storage se reconoce por el MENSAJE, no por el
+  // status: storage-api la ha devuelto como 403 y como 400. Sin esto, un 400 caía a
+  // 'validacion' → categoría 'dato' → la app ofrecía "Descartar" como única salida
+  // sobre data real de obra (justo lo contrario de lo que BG1 vino a garantizar).
+  if (/violates row-level security|row-level security policy/i.test(message)) return 'permiso';
   // BC3 — error tipado de validación con campo señalado (sgc.error_campo → 22023):
   // el mensaje ya viene en español y es accionable → 'validacion' (no 'datos'
   // genérico) para que la app muestre el texto real y marque el campo.
@@ -209,6 +217,11 @@ export class SyncService {
     // fix del constraint mensajes_tipo_chk (cada una fallaba con 23514). Ahora
     // `audio` es válido, así que el saga de voices se sanea solo al actualizar.
     void this.sanearErroresAudioUnaVez();
+    // BI2 — reclasifica UNA vez las filas viejas en `error` cuyo error_code está vacío
+    // (nacieron antes de que el campo existiera, 2.10.0), derivando code/kind del
+    // error_msg. Sin esto, las bitácoras RLS de agosto quedan como 'dato'/'transitorio'
+    // y NO aparecen en el banner de "hay una corrección" (que exige categoría sistema).
+    void this.sanearClasificacionUnaVez();
     // Drain as soon as connectivity returns.
     effect(() => {
       if (this.network.online()) void this.drain();
@@ -264,6 +277,39 @@ export class SyncService {
     }
   }
 
+  /**
+   * BI2 — reclasifica UNA vez las filas en `error` con error_code vacío, derivando
+   * code/kind del error_msg (RLS/varchar/check). Así las bitácoras de agosto quedan
+   * en categoría 'sistema' (Descartar escondido + reintento post-fix + banner de fix)
+   * en vez de 'dato'/'transitorio'. Idempotente por flag; no reencola (no re-envía),
+   * solo corrige la clasificación para que la UI ofrezca lo correcto.
+   */
+  private async sanearClasificacionUnaVez(): Promise<void> {
+    try {
+      const KEY = 'sync.reclasificacion.v1';
+      const { value } = await Preferences.get({ key: KEY });
+      if (value === '1') return;
+      const errored = (await db.outbox.toArray()).filter(
+        (o) => o.estado === 'error' && !(o.error_code ?? '').trim() && !SyncService.isSilent(o.tipo_op),
+      );
+      for (const o of errored) {
+        const msg = (o.error_msg ?? '').toLowerCase();
+        let code: string | undefined;
+        let kind: SyncErrorKind | undefined;
+        if (/violates row-level security|row-level security policy/.test(msg)) { code = '42501'; kind = 'permiso'; }
+        else if (/value too long for type/.test(msg)) { code = '22001'; kind = 'datos'; }
+        else if (/violates check constraint/.test(msg)) { code = '23514'; kind = 'datos'; }
+        if (code) {
+          await db.outbox.update(o.id, { error_code: code, error_kind: kind, permanente: true });
+        }
+      }
+      await Preferences.set({ key: KEY, value: '1' });
+      if (errored.length) await this.refreshCounts();
+    } catch {
+      /* la reclasificación nunca debe romper el arranque */
+    }
+  }
+
   /** Feature services register how their op type commits to the server. */
   register(tipo_op: string, handler: OpHandler): void {
     this.handlers.set(tipo_op, handler);
@@ -280,6 +326,7 @@ export class SyncService {
       proximo_intento: 0,
       capturado_en: input.capturado_en ?? new Date().toISOString(),
       created_local: Date.now(),
+      fotos_declaradas: (input.fotos ?? []).length, // BI7 — para verificar que no se pierdan al enviar
     };
     // WebKit/iOS falla al guardar Blob/File en IndexedDB → persistimos los bytes
     // como ArrayBuffer (+ type) y reconstruimos el Blob al subir. La conversión va
@@ -648,6 +695,18 @@ export class SyncService {
     await db.outbox.update(op.id, { estado: 'syncing' });
     try {
       const photoPaths = await this.withTimeout(this.uploadPhotos(op.id), 90_000, 'subida de fotos');
+      // BI7 — no enviar una captura con fotos PERDIDAS en silencio: si al encolar
+      // declaró N adjuntos y ahora subieron menos (pérdida post-encolado en Dexie),
+      // se marca error visible en vez de grabar una bitácora incompleta que nadie
+      // sabría que perdió evidencia. (En el flujo normal coinciden — enqueue es
+      // todo-o-nada, AE7 — así que esto solo salta ante una pérdida real.)
+      const subidas = Object.keys(photoPaths).length;
+      if ((op.fotos_declaradas ?? 0) > subidas) {
+        throw new PermanentSyncError(
+          `Faltan fotos de este envío (${subidas} de ${op.fotos_declaradas}). No se envía incompleto para no perder evidencia.`,
+          'foto',
+        );
+      }
       // Compatibilidad con items encolados por versiones viejas: si el payload no
       // trae `capturado_en` (varios RPC lo EXIGEN → fallaban con "function not
       // found" y reintentar no ayudaba), lo rellenamos desde la fila del outbox,

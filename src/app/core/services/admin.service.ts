@@ -239,6 +239,16 @@ export class AdminService {
     if (error) throw new Error(this.fnError(error));
   }
 
+  /** BI5 — fija/rota el PIN de un usuario de cédula (email sintético) por usuarioId.
+   *  Reutiliza la edge acceso-cedula (modo usuarioId, audit_log). Paridad con la web. */
+  async fijarPinUsuario(usuarioId: string, pin: string): Promise<void> {
+    const { data, error } = await this.supabase.client.functions.invoke('acceso-cedula', {
+      body: { usuarioId, pin },
+    });
+    if (error) throw new Error(this.fnError(error));
+    if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+  }
+
   async reenviarInvitacion(userId: string): Promise<void> {
     const { error } = await this.supabase.client.functions.invoke('admin-resend-invite', {
       body: { userId, redirectTo: SET_PASSWORD_URL },

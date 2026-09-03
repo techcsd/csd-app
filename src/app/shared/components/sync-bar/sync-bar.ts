@@ -34,8 +34,15 @@ export class SyncBar {
 
   text = computed(() => {
     switch (this.state()) {
-      case 'error':
-        return `${this.errors()} con problema · toca para revisar`;
+      case 'error': {
+        // BI2 — el conteo incluye TODO lo pendiente (error + pending/syncing). Un
+        // "1 con problema" que esconde otras dos bitácoras atascadas en pending era
+        // el peor mensaje posible.
+        const otros = this.pending();
+        return otros > 0
+          ? `${this.errors() + otros} sin enviar · toca para revisar`
+          : `${this.errors()} con problema · toca para revisar`;
+      }
       case 'offline':
         return this.pending() > 0
           ? `Sin señal · ${this.pending()} se enviarán solos`

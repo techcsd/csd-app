@@ -64,6 +64,10 @@ export interface OutboxOp {
    *  atascado de categoría 'sistema'. Evita re-reportar en cada tick (el RPC es
    *  idempotente igualmente, pero esto ahorra la llamada de red). */
   reportado_sistema?: boolean;
+  /** BI7 — nº de fotos/adjuntos que la captura declaró al encolar. En el envío se
+   *  compara contra los que realmente subieron: si faltan (pérdida post-encolado en
+   *  Dexie), NO se envía la bitácora incompleta en silencio — se marca error visible. */
+  fotos_declaradas?: number;
   capturado_en: string;
   created_local: number;
 }

@@ -84,6 +84,13 @@ export class TrackingService {
   private evaluando = false;
   /** true mientras un re-arranque del watchdog está en curso (evita solaparlos). */
   private rearmando = false;
+  /** BI4 — re-armados consecutivos SIN que llegue un fix. Tras MAX el watchdog DESISTE
+   *  (deja de re-armar y de reportar): un watcher que nunca va a entregar un fix
+   *  (PWA con permiso 'prompt' nunca concedido) NO es telemetría, es un bucle infinito
+   *  de ~12 reportes/hora por dispositivo. Se resetea a 0 cuando por fin llega un fix. */
+  private watchdogReintentosSinFix = 0;
+  private static readonly WATCHDOG_MAX_REINTENTOS = 3;
+  private watchdogDesistio = false;
   /** QA-10 — true mientras un flush está en vuelo (evita solapar dos envíos). */
   private flushing = false;
   /** QA-10 — se pidió un flush mientras había uno en vuelo → re-ejecutar al terminar. */
@@ -465,6 +472,10 @@ export class TrackingService {
       /* IndexedDB no disponible: el fix se pierde solo en el caso extremo de no poder escribir */
     }
     this.ultimoFix.set(Date.now());
+    // BI4 — llegó un fix real: el watcher SÍ funciona → resetear el contador de
+    // desistimiento del watchdog (vuelve a vigilar con normalidad).
+    this.watchdogReintentosSinFix = 0;
+    this.watchdogDesistio = false;
     this.ultimaCoord = { lat, lng, precision }; // AS1 — para el latido de frescura
     if (this._pendientesSync() >= MAX_BUFFER) void this.flush();
   }
@@ -569,17 +580,28 @@ export class TrackingService {
   }
 
   private async watchdogTick(): Promise<void> {
-    if (!this.rastreando() || this.rearmando) return;
+    if (!this.rastreando() || this.rearmando || this.watchdogDesistio) return;
     const last = this.ultimoFix();
     const sinFixMs = last == null ? Date.now() - this.ultimaFlushOk : Date.now() - last;
     if (sinFixMs < STALE_FIX_MS) return;
-    // El tracking DEBERÍA estar reportando y no lo está → reportar y re-armar.
+
+    // BI4 — si el permiso de ubicación está denegado o no hay geolocalización, el
+    // watcher NO va a entregar nunca: no re-armar ni reportar (log local y desistir).
+    const permiso = await this.permissions.checkLocation().catch(() => 'denied' as const);
+    const sinGps = permiso === 'denied' || (!Capacitor.isNativePlatform() && !('geolocation' in navigator));
+
+    // BI4 — desistir tras N re-armados consecutivos sin un solo fix (o sin permiso):
+    // el mensaje del watchdog deja de EMITIRSE (era el 48% del panel de errores);
+    // baja a log local para que el filtro server-side pueda retirarse.
+    if (sinGps || this.watchdogReintentosSinFix >= TrackingService.WATCHDOG_MAX_REINTENTOS) {
+      this.watchdogDesistio = true;
+      console.warn('[tracking] watchdog desiste: sin fix', { sinFixMs, sinGps, reintentos: this.watchdogReintentosSinFix });
+      return;
+    }
+
     this.rearmando = true;
-    this.errors.report('tracking', 'watchdog: sin fixes recientes, re-armando watcher', {
-      sin_fix_ms: sinFixMs,
-      buffer: this._pendientesSync(),
-      native: Capacitor.isNativePlatform(),
-    });
+    this.watchdogReintentosSinFix++;
+    console.warn('[tracking] watchdog re-armando watcher (sin fix)', { sinFixMs, intento: this.watchdogReintentosSinFix });
     try {
       const veh = this.vehiculoActual;
       await this.pararWatchers();

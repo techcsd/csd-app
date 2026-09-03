@@ -5,12 +5,31 @@
 > por RLS, y una tercera (**~18 h antes del 03-sep, 10 fotos**) por `varchar(50)`. La data
 > sigue en SU teléfono (Dexie: `outbox` + `fotos_pendientes`) — nunca se perdió.
 
-## Lo que ya está resuelto (backend, PROMPT-28, en prod)
-- **RLS de bitácora**: el flujo `crear_bitacora_app` (DEFINER) pasa para ingeniero de
-  campo/oficina y capataz (ver `SGC/scripts/smoke-bitacora-app-prod.mjs`).
-- **varchar**: `bitacora_actividades.estructura` ampliada a **200** (verificado en prod).
+## ⚠️ Corrección (BI1, 03-sep): la causa real era Storage, no la bitácora
+La versión anterior de este doc afirmaba que "el flujo pasa" apoyándose en un smoke que
+**nunca probaba un reintento** — insertaba en rutas NUEVAS y hacía rollback (el único camino
+que siempre funcionó, el INSERT). Dio verde mientras el reintento seguía roto. **La causa
+real, verificada:** el bucket `sgc-bitacora` era el ÚNICO de los buckets de campo sin
+política **UPDATE** en `storage.objects`. La app sube las fotos con `upsert:true` a rutas
+deterministas (`${id}/foto_${i}.jpg`); el 1er intento entra (INSERT), pero **todo reintento
+re-sube la misma ruta → UPDATE → sin política, RLS lo niega**. El reintento moría en la
+foto #1, antes de llegar a la bitácora. Cerrado por `SGC/sql/2026-09-03-bi1-bitacora-storage-update.sql`.
+
+## Lo que ya está resuelto (backend, en prod)
+- **Storage UPDATE (BI1)**: `sgc-bitacora` ya tiene su política UPDATE (+ auditadas las 10
+  buckets con upsert; se cerraron además `sgc-documentos` y `sgc-rrhh`). Verificado con el
+  smoke que **reintenta** (`SGC/scripts/smoke-bitacora-app-prod.mjs`, ahora corre dos pasadas
+  sobre la misma ruta y exige que la 2ª pase) y con un re-upload real como ingeniero de campo.
+- **RLS de bitácora**: `crear_bitacora_app` (DEFINER) siempre pasó — su gate es
+  `tiene_modulo('bitacora')`, agnóstico de rol. Nunca fue el problema.
+- **varchar**: `bitacora_actividades.estructura` ampliada a **200** (BG). `bloque_entrepiso`
+  ampliado a **200** en BI2 (`SGC/sql/2026-09-03-bi2-bloque-entrepiso-200.sql`).
 - **Idempotencia**: `crear_bitacora_app` es idempotente por `p_id` (client UUID) → un
   reintento tras un fix **no duplica** aunque un intento previo haya escrito a medias.
+- **Fotos ya rescatables**: las 3 bitácoras atascadas de Jonathan Roman tienen sus fotos ya
+  en Storage (folders huérfanos `63fa7138…`/6, `bda603c7…`/2, `1a35f057…`/10). El reintento
+  desde su teléfono (app ≥ la que ofrece el reintento, PROMPT-33) las graba referenciando
+  esas rutas — **sin re-subir bytes perdidos**.
 
 ## Lo que aporta la app (PROMPT-29, este cambio)
 - **Categoría 'sistema'** en el outbox: conserva indefinidamente, mensaje honesto

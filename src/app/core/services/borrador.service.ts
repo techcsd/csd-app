@@ -12,6 +12,9 @@ export interface BorradorMeta {
   tipo?: string;
   etiqueta?: string;
   ruta?: string;
+  /** BI7 — borrador nacido de rescatar una bitácora atascada (Duplicar). Contiene
+   *  data real de obra que aún no está en el servidor → NO se borra al cerrar sesión. */
+  rescate?: boolean;
 }
 
 /**
@@ -29,7 +32,8 @@ export class BorradorService {
       tipo: meta?.tipo,
       etiqueta: meta?.etiqueta,
       ruta: meta?.ruta,
-    });
+      ...(meta?.rescate ? { rescate: true } : {}),
+    } as Borrador);
   }
 
   async load<T>(clave: string): Promise<T | null> {
@@ -61,14 +65,18 @@ export class BorradorService {
    */
   async clearAll(): Promise<void> {
     try {
-      await db.borradores.clear();
+      // BI7 — preserva los borradores de RESCATE (data real de obra sin enviar): un
+      // logout no puede borrar lo que se duplicó de una bitácora atascada. El resto
+      // sí se limpia (privacidad en teléfono compartido, QA-18).
+      const rescatados = (await db.borradores.toArray()).filter((b) => (b as Borrador & { rescate?: boolean }).rescate);
+      const clavesRescate = new Set(rescatados.map((b) => b.clave));
+      const aBorrar = (await db.borradores.toArray()).filter((b) => !clavesRescate.has(b.clave)).map((b) => b.clave);
+      await db.borradores.bulkDelete(aBorrar);
+      const fotos = await db.borrador_fotos.toArray();
+      const fotosABorrar = fotos.filter((f) => !clavesRescate.has(f.clave)).map((f) => f.id);
+      await db.borrador_fotos.bulkDelete(fotosABorrar);
     } catch {
-      /* ignore */
-    }
-    try {
-      await db.borrador_fotos.clear();
-    } catch {
-      /* ignore */
+      /* nunca romper el logout */
     }
   }
 
