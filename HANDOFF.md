@@ -1,5 +1,34 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 03/09/2026 — PROMPT-33 ronda BI (app) — **RELEASE 2.12.0 PUBLICADA (rolling) · commits `7b51b2c`+`fae20ea`+`1f9c600` PUSHEADOS (PWA) · SGC edge `acceso-cedula` (modo self) DESPLEGADA+PUSHEADA (`3d1116b`) · APK 2.12.0 firmado+registrado+SUBIDO · publicada, minima INTACTA en 2.10.0 · build verde**
+
+### 🚀 Release 2.12.0 — PUBLICADA (rolling) — TODO HECHO (03-sep)
+- **FASES 1–4 (BI2/BI4/BI5/BI7)** ya venían del commit previo `4b3fbd3` (bump `ace4b50`). Esta sesión: **verificadas** + cerrados los huecos que dejó + **FASE 5** construida + **release completo**.
+- **APK 2.12.0** firmado (cert prod `3c5316d8…5065`), **registrado (Y1)** con `CAMBIOS_CURADOS` (6 cambios, +FASE 5) y **subido al bucket** (`csd-app-2.12.0.apk` + `latest` + `version.json` + `apk_url`). Descarga: `…/app-releases/csd-app-2.12.0.apk`.
+- **Publicada:** `sql/2026-09-03-publicar-2.12.0.sql` → `publicada=(2.12.0)`. **`minima` INTACTA = 2.10.0** (`sql/2026-09-03-minima-intacta-2.10.0.sql` — corrigió un minima=true erróneo que había quedado en 2.12.0 al registrar; habría forzado a todos). **Estado verificado**: publicada 2.12.0 / minima 2.10.0.
+- **Rollback Android:** `update sgc.app_versiones set publicada=(version='2.11.0') where plataforma='movil';` · **Rollback PWA:** `git revert 1f9c600 fae20ea 7b51b2c && git push` · **Rollback edge:** re-deploy la versión previa de `acceso-cedula` (o `git revert 3d1116b` en SGC + redeploy).
+
+### ✅ FASE 5 (BI6) — PIN de acceso auto-servicio (decisión Xaviel: rename + cambio propio; NO el cambio obligatorio en 1er ingreso)
+- **Rename**: candado local = "🔒 Bloqueo de la app" (perfil + pin-change reworded); el de cédula = "🔑 PIN de acceso". Se acabó la ambigüedad de dos "PIN".
+- **Cambio propio**: nueva pantalla `pages/auth/pin-acceso-change/` (`/auth/pin-acceso-change`, authGuard+pinGuard, pin-pad `[length]=6`), gateada `esCedula()` en perfil. `AuthService.cambiarMiPinAcceso()` → edge padre `acceso-cedula` **modo `self` NUEVO** (aditivo): re-autentica para verificar el PIN actual, rechaza triviales, **solo toca el PIN del uid del token**, auditado (`audit_log` via='self'), va ANTES del gate admin/tecnología. Modos admin intactos. **Edge desplegada a prod (verify_jwt=true)**; smoke no-auth → 401 ✓.
+
+### ✅ Huecos de FASE 1–3 que el commit `4b3fbd3` no cubrió (cerrados esta sesión)
+- **FASE 3.5**: unión `AppErrorType` cerrada (+`tracking`/`login`, sin `(string & {})`) → un tipo nuevo no compila hasta declararlo (alineada con el CHECK del padre PROMPT-32 F6.1). Call-sites ya eran correctos.
+- **FASE 1.4 + 2.3/2.4 (crítico)**: pérdida de fotos (`kind:'foto'`) ahora **se CONSERVA** (Reintentar sí, Descartar-en-tarjeta NO; salida = Duplicar), en vez de ofrecer BORRAR la bitácora como única acción. `esConservable()` en `pendientes.ts`. Es el caso real de BI1.
+- **FASE 2.6**: clamp defensivo de la cabecera `bloque_entrepiso` al `varchar(100)` (bloques por-actividad íntegros; ensanche BD real = PROMPT-32 F3.2).
+
+### 🔴 Criterio de éxito PENDIENTE — device / con-el-ingeniero (no se puede desde aquí)
+- **Las 3 bitácoras del ingeniero** viven SOLO en su Android (IndexedDB por dispositivo). Con la 2.12.0 instalada: reintentarlas DESDE SU TELÉFONO → **contar fotos llegadas vs declaradas** en SGC web. NO descartar hasta confirmar.
+- **Escenario avión ×2**: crear bitácora con 5 fotos → sin red → reintentar 3× → UNA sola con las 5. Repetir sobre un registro con subida parcial previa (BI1).
+- **FASE 5 device-QA**: un chofer de cédula cambia su PIN de acceso desde su teléfono (necesita su PIN actual real — no testeable con qa_* que son de correo real → dan 409 "usa correo").
+
+### 🟡 §F / pendientes conocidos
+- El filtro server-side del watchdog (`SGC/sql/2026-09-03-bh-suprimir-ruido-watchdog.sql`) **se queda** como red para clientes viejos que nunca actualizan (el cliente 2.12.0 ya NO emite el ruido).
+- **Cambio obligatorio de PIN en 1er ingreso** (`pin_cambiado_at`): FUERA por decisión de Xaviel (eligió rename+cambio propio, no full FASE 5). Queda para una ronda futura si se quiere cerrar el hueco de "el PIN del admin queda vigente para siempre".
+- **PROMPT-32 (SGC padre)**: F1 (política UPDATE `sgc-bitacora`) es la dependencia de FASE 1 — el commit `4b3fbd3` la daba por desplegada (SGC 1.110.0). F3.1/F3.2/F6.1 son mejoras server que acompañan; verificar que estén en prod si algo de outbox/tipos se comporta raro.
+
+---
+
 ## 🟢 SESIÓN 02–03/09/2026 — PROMPT-31 ronda BH (app) — **RELEASE 2.11.0 PUBLICADA (rolling) · commit `7587d27` PUSHEADO a main (PWA) · APK 2.11.0 firmado+registrado+SUBIDO · publicada, minima INTACTA en 2.10.0 · build+guard verdes**
 
 ### 🚀 Release 2.11.0 — PUBLICADA (rolling) — TODO HECHO (03-sep)
