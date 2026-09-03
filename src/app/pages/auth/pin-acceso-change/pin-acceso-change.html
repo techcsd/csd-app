@@ -1,0 +1,24 @@
+<div class="screen pin-screen">
+  <header class="pin-screen__header">
+    <button type="button" class="pin-screen__back" (click)="back()" aria-label="Atrás">←</button>
+  </header>
+  <div class="pin-screen__body">
+    <h1 class="pin-screen__title">
+      {{ step() === 'actual' ? 'Tu PIN de acceso actual' : step() === 'nuevo' ? 'Nuevo PIN de acceso' : 'Repite el nuevo PIN' }}
+    </h1>
+    <p class="pin-screen__hint">
+      {{ step() === 'actual'
+        ? 'Escribe tu PIN de acceso actual (el de 6 números con el que entras con tu cédula).'
+        : step() === 'nuevo'
+          ? 'Elige 6 números nuevos. Con este PIN entrarás a la app con tu cédula.'
+          : 'Escríbelo otra vez para confirmar.' }}
+    </p>
+    @if (!online()) {
+      <p class="pin-screen__attempts">Sin señal. Necesitas internet para cambiar el PIN de acceso.</p>
+    }
+    <app-pin-pad [(value)]="value" [length]="6" (completed)="onCompleted($event)" />
+    @if (guardando()) {
+      <p class="pin-screen__hint">Guardando…</p>
+    }
+  </div>
+</div>

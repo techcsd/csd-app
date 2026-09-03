@@ -32,7 +32,7 @@ export class PinChangePage {
       const ok = await this.pin.verify(entered);
       this.value.set('');
       if (!ok) {
-        this.toast.error('PIN actual incorrecto.');
+        this.toast.error('El bloqueo actual no es correcto.');
         return;
       }
       this.step.set('nuevo');
@@ -54,7 +54,7 @@ export class PinChangePage {
     }
     try {
       await this.pin.setPin(entered);
-      this.toast.success('PIN actualizado.');
+      this.toast.success('Bloqueo de la app actualizado.');
       this.location.back();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el PIN.');

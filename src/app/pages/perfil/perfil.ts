@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
+import { esEmailSintetico } from '../../core/util/usuario-email';
 import { Capacitor } from '@capacitor/core';
 import { AppLauncher } from '@capacitor/app-launcher';
 import { environment } from '../../../environments/environment';
@@ -56,6 +57,9 @@ export class PerfilPage {
   subiendoFoto = signal(false);
   obra = this.ctx.obraActiva;
   isAdmin = () => this.ctx.hasModulo('admin');
+  // BI6 (FASE 5) — un usuario de acceso por cédula (email sintético) puede cambiar su
+  // PIN de acceso él mismo. Los de correo real usan el restablecimiento por correo.
+  esCedula = computed(() => esEmailSintetico(this.ctx.profile()?.email));
   // BD1 — preferencia por usuario: agrupar el home por sección (off por defecto).
   agrupado = this.ctx.agruparHome;
   agrupadoBusy = signal(false);
@@ -126,9 +130,14 @@ export class PerfilPage {
     }
   }
 
-  /** X10 — cambiar el PIN estando desbloqueado (pide el PIN actual). */
+  /** X10 — cambiar el BLOQUEO local de la app (PIN de 4 díg del dispositivo). */
   cambiarPin(): void {
     void this.router.navigate(['/auth/pin-change']);
+  }
+
+  /** BI6 (FASE 5) — cambiar el PIN de ACCESO (6 díg, servidor) — solo cédula. */
+  cambiarPinAcceso(): void {
+    void this.router.navigate(['/auth/pin-acceso-change']);
   }
 
   async toggleBiometria(): Promise<void> {

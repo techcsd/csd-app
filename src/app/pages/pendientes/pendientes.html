@@ -93,8 +93,9 @@
                 </button>
               }
               <!-- BG1 — 'sistema' SIEMPRE reintentable (post-fix); transitorio también.
-                   'dato' no auto-reintenta (se corrige/duplica). -->
-              @if (esSistema(item) || !item.permanente) {
+                   BI7 — foto (data real) también: reintento sí, borrar no. 'dato' puro
+                   no auto-reintenta (se corrige/duplica). -->
+              @if (esConservable(item) || !item.permanente) {
                 <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
                   Reintentar
                 </button>

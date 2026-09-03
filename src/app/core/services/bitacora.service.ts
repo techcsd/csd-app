@@ -207,9 +207,17 @@ export class BitacoraService {
     const bloquesDistintos = [
       ...new Set(input.actividades.map((a) => (a.bloque ?? '').trim()).filter(Boolean)),
     ];
-    const bloqueEntrepiso = bloquesDistintos.length
+    const bloqueEntrepisoRaw = bloquesDistintos.length
       ? bloquesDistintos.join(', ')
       : input.bloqueEntrepiso;
+    // BI7 (FASE 2.6) — la cabecera `bloque_entrepiso` es un varchar(100) en la BD (el
+    // ensanche real va en PROMPT-32 F3.2). El join de muchos bloques distintos podía
+    // pasarse de 100 → 22001 (categoría 'sistema', atasco). Esto es un RESUMEN: cada
+    // bloque real queda íntegro por actividad, así que recortar el resumen no pierde
+    // data de obra. Clamp defensivo para que la cabecera nunca reviente el envío.
+    const bloqueEntrepiso = (bloqueEntrepisoRaw ?? '').length > 100
+      ? (bloqueEntrepisoRaw ?? '').slice(0, 100)
+      : bloqueEntrepisoRaw;
     await this.sync.enqueue({
       id,
       tipo_op: 'bitacora',

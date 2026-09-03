@@ -144,7 +144,8 @@ export class PendientesPage {
    *  (data real de obra): su descarte vive en la vista de contenido, tras doble
    *  confirmación con aviso de pérdida. */
   puedeDescartar(item: OutboxItem): boolean {
-    if (this.esSistema(item)) return false;
+    // BI7 — 'sistema' Y foto (data real) no muestran Descartar en la tarjeta.
+    if (this.esConservable(item)) return false;
     return item.permanente === true || this.esViejo(item);
   }
 
@@ -209,6 +210,15 @@ export class PendientesPage {
   esSistema(item: OutboxItem): boolean {
     return item.estado === 'error' && this.categoria(item) === 'sistema';
   }
+  /** BI7 — un error de FOTO (faltan adjuntos declarados / bytes perdidos en el
+   *  teléfono) es data real de obra: se CONSERVA como 'sistema' (reintento sí,
+   *  Descartar-en-tarjeta NO). Antes caía en 'dato' → la app ofrecía BORRAR la
+   *  bitácora como única acción, justo lo contrario de la regla madre BG. El
+   *  descarte sigue disponible pero solo desde la vista de contenido (doble
+   *  confirmación), y la salida recomendada es Duplicar (conserva las que quedan). */
+  esConservable(item: OutboxItem): boolean {
+    return this.esSistema(item) || (item.estado === 'error' && item.error_kind === 'foto');
+  }
   pill(item: OutboxItem) {
     return categoriaPill(this.categoria(item));
   }
@@ -238,7 +248,9 @@ export class PendientesPage {
         // BC3 — si el servidor señaló el campo, decir CUÁL (ya no una frase genérica).
         return this.conCampo(item, item.error_msg || 'Un dato del registro tiene un formato inválido.');
       case 'foto':
-        return 'La foto ya no está disponible en el teléfono. Descártalo y vuelve a capturarlo.';
+        // BI7 — no invita a Descartar (sería borrar evidencia real): la salida es
+        // Duplicar (conserva las fotos que sí quedan) y volver a tomar las faltantes.
+        return 'Faltan fotos de este registro en el teléfono, así que no se envió para no perder evidencia. Usa "Ver contenido" → Duplicar para conservar las que quedan y volver a tomar las faltantes.';
       case 'incompatible':
         return 'No se pudo procesar (posible desajuste de versión con el servidor). Descártalo; si vuelve a pasar, actualiza la app.';
       case 'red':

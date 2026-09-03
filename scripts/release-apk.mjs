@@ -72,6 +72,7 @@ const CAMBIOS_CURADOS = [
   { t: 'arreglo', m: 'Bitácora', d: 'Al «Duplicar» una bitácora atascada para rescatarla, ahora se copian TODAS sus fotos y notas de voz (no solo algunas), y ese rescate ya no se borra al cerrar sesión. Una captura con fotos perdidas no se envía en silencio.' },
   { t: 'mejora', m: 'Batería', d: 'El vigilante de ubicación deja de reintentar (y de reportarse a sí mismo) cuando no hay permiso de ubicación o GPS — menos consumo de batería y menos ruido.' },
   { t: 'seguridad', m: 'Acceso', d: 'Para un usuario que entra con cédula, ahora se puede «Fijar PIN» directamente desde Administración (antes decía que enviaba un correo que no existe). El cambio queda registrado.' },
+  { t: 'nuevo', m: 'Acceso', d: 'Si entras con cédula, ahora puedes cambiar tu PIN de acceso (los 6 números) tú mismo desde tu perfil, escribiendo el actual y el nuevo. Y quedó claro qué es cada cosa: «Bloqueo de la app» es el candado de este teléfono; «PIN de acceso» es con el que entras con tu cédula.' },
 ];
 
 const TIPO_POR_COMMIT = {

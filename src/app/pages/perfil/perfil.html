@@ -91,9 +91,18 @@
       </button>
     }
 
+    <!-- BI6 (FASE 5) — desambiguación: el LOCAL es el bloqueo del teléfono (4 díg), el
+         de ACCESO es el de entrar con cédula (6 díg, servidor). Antes ambos se llamaban
+         "PIN" y el trabajador solo podía cambiar el que no importa. -->
     <button type="button" class="btn-ghost perfil__btn" (click)="cambiarPin()">
-      🔑 Cambiar PIN
+      🔒 Bloqueo de la app
     </button>
+
+    @if (esCedula()) {
+      <button type="button" class="btn-ghost perfil__btn" (click)="cambiarPinAcceso()">
+        🔑 Cambiar mi PIN de acceso
+      </button>
+    }
 
     <!-- BD1 — preferencia de presentación del inicio (off por defecto = cuadrícula) -->
     <button type="button" class="btn-ghost perfil__btn" [disabled]="agrupadoBusy()" (click)="toggleAgrupado()">

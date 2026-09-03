@@ -4,13 +4,13 @@
   </header>
   <div class="pin-screen__body">
     <h1 class="pin-screen__title">
-      {{ step() === 'actual' ? 'Tu PIN actual' : step() === 'nuevo' ? 'Nuevo PIN' : 'Repite el nuevo PIN' }}
+      {{ step() === 'actual' ? 'Bloqueo actual de la app' : step() === 'nuevo' ? 'Nuevo bloqueo de la app' : 'Repite el nuevo bloqueo' }}
     </h1>
     <p class="pin-screen__hint">
       {{ step() === 'actual'
-        ? 'Escribe tu PIN actual para confirmar que eres tú.'
+        ? 'Escribe el bloqueo actual (los 4 números que abren la app en este teléfono) para confirmar que eres tú.'
         : step() === 'nuevo'
-          ? 'Elige 4 números nuevos para desbloquear la app.'
+          ? 'Elige 4 números nuevos para desbloquear la app en este teléfono.'
           : 'Escríbelo otra vez para confirmar.' }}
     </p>
     <app-pin-pad [(value)]="value" (completed)="onCompleted($event)" />

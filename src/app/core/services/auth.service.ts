@@ -148,6 +148,36 @@ export class AuthService {
     return { error };
   }
 
+  /**
+   * BI6 (FASE 5) — el propio trabajador cambia SU PIN de ACCESO (6 dígitos, el de
+   * cédula + PIN que vive en auth.users) — distinto del bloqueo local de la app.
+   * Va por la MISMA edge del padre que usa Administración (`acceso-cedula`), en su
+   * modo `self`: verifica el PIN actual en el servidor, rechaza PIN triviales y
+   * queda auditado (audit_log via='self'). Requiere conexión. El mensaje de error
+   * de la edge ya viene accionable en español → se propaga tal cual.
+   */
+  async cambiarMiPinAcceso(pinActual: string, pinNuevo: string): Promise<void> {
+    const { data, error } = await this.supabase.client.functions.invoke('acceso-cedula', {
+      body: { self: true, pinActual, pinNuevo },
+    });
+    if (error) {
+      // supabase-js mete el cuerpo de error de la edge en context (Response) — leerlo
+      // para dar el motivo real ("Tu PIN actual no es correcto") y no un 400 opaco.
+      const ctx = (error as { context?: Response }).context;
+      let msg = error.message;
+      if (ctx && typeof ctx.json === 'function') {
+        try {
+          const b = (await ctx.json()) as { error?: string };
+          if (b?.error) msg = b.error;
+        } catch {
+          /* cuerpo no-JSON: se queda el message genérico */
+        }
+      }
+      throw new Error(msg);
+    }
+    if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+  }
+
   async getSession(): Promise<Session | null> {
     const { data } = await this.supabase.client.auth.getSession();
     return data.session;

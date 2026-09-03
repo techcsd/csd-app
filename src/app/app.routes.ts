@@ -38,6 +38,14 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/auth/pin-change/pin-change').then((m) => m.PinChangePage),
   },
+  {
+    // BI6 (FASE 5) — cambiar el PIN de ACCESO (6 díg, servidor) estando ya dentro.
+    // Distinto del bloqueo local (pin-change). Solo se enlaza para usuarios de cédula.
+    path: 'auth/pin-acceso-change',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/auth/pin-acceso-change/pin-acceso-change').then((m) => m.PinAccesoChangePage),
+  },
 
   // App (session + PIN unlocked)
   {

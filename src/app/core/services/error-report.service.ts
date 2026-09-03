@@ -9,7 +9,13 @@ import { DeviceInfoService } from './device-info.service';
 /**
  * Y6 — tipos de error que instrumentamos. `crash`/`error` son automáticos
  * (ErrorHandler + listeners de window); el resto son puntos críticos con
- * `report(...)` explícito (cámara, GPS, voz, sync, permisos).
+ * `report(...)` explícito (cámara, GPS, voz, sync, permisos, tracking, login).
+ *
+ * BI4 — unión CERRADA a propósito (antes terminaba en `(string & {})`, que aceptaba
+ * cualquier cadena y por eso `tracking`/`login` no estaban declarados y el servidor
+ * los coaccionaba a `other`). El CHECK del servidor se amplía en PROMPT-32 F6.1 para
+ * aceptar estos mismos tipos; mantener ambas listas alineadas. Cerrarla hace que un
+ * tipo nuevo NO compile hasta añadirlo aquí (y, por regla de paridad, en el CHECK).
  */
 export type AppErrorType =
   | 'crash'
@@ -19,7 +25,8 @@ export type AppErrorType =
   | 'voice'
   | 'sync'
   | 'permission'
-  | (string & {});
+  | 'tracking'
+  | 'login';
 
 /** Y11 — una fila de la vista compacta de reportes (Tecnología). */
 export interface AppErrorReportRow {
