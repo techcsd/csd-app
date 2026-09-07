@@ -36,6 +36,8 @@ import { PersonalObraService } from './core/services/personal-obra.service';
 import { SolicitudMovimientoService } from './core/services/solicitud-movimiento.service';
 import { RetirosService } from './core/services/retiros.service';
 import { SolicitudesCompraService } from './core/services/solicitudes-compra.service';
+import { CatalogService } from './core/sync/catalog.service';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -98,6 +100,12 @@ export const appConfig: ApplicationConfig = {
       inject(SolicitudMovimientoService); // AY11 — solicitud_movimiento_crear (offline)
       inject(RetirosService); // BG4 — retiro_material (retiro de material dañado, offline)
       inject(SolicitudesCompraService); // BH8 — solicitud_compra_crear (offline, idempotente)
+
+      // BJ5 — al estrenar versión, suelta las cachés de proyectos que pudieron
+      // guardar un VACÍO bajo la RLS vieja (lista/pickers/liberación/conduces). El
+      // prefijo 'proyectos' cubre 'proyectos', 'proyectos_full' y 'proyectos_pickables'.
+      // Idempotente por versión; nunca rompe el arranque.
+      void inject(CatalogService).invalidateOnVersionChange(environment.version, ['proyectos']);
     }),
   ],
 };

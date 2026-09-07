@@ -1,5 +1,46 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 07/09/2026 — PROMPT-35 ronda BJ (app) — **CÓDIGO HECHO · build+guard verdes · release 2.13.0 PREPARADO (versión bumpeada, changelog curado) · SIN commit/push/APK/publicar (esperando GO de Xaviel)**
+
+> Nota: los `CONTEXTO-ACTUALIZACION-15/16/17.md` **no están en el repo**; se trabajó desde las refs archivo:línea del prompt + los repos hermanos. **Todas las decisiones §F ya estaban resueltas** en `../dev/SGC` (ronda BJ web ya SHIPPED en 1.112.0–1.115.0), así que nada quedó bloqueado.
+
+### 🔴 FASE 1 (BJ5) — Proyectos vacío
+- **Parent RLS ya en prod**: `SGC/sql/2026-09-05-bj5-proyectos-select-rls-alinear.sql` (aplicada + smoke por rol OK: admin 15, resto 11, nunca 0). La app lee `.from('proyectos')` directo → gobernada por esa política.
+- **Docstring corregido** (`core/services/proyectos.service.ts`): fuera el supuesto roto "quien ve el tile recibe todos por `hasModulo`"; documentada la RLS nueva (submódulo `proyectos.obras` + red AW1).
+- 🔴 **Cache-bust al desplegar**: `CatalogService.invalidateOnVersionChange(version, prefijos)` (nuevo) + wired en `app.config.ts` initializer → al estrenar versión suelta **una vez** el prefijo `proyectos` (cubre `proyectos`/`proyectos_full`/`proyectos_pickables` → lista, pickers, cl-liberación y conduces). Idempotente, no rompe el arranque. Evita "parece que no se arregló" por el vacío cacheado.
+- **Botón "+ Nuevo proyecto"**: `puedeGestionarProyectos()` es **espejo fiel** del server `puede_gestionar_proyectos()` (verificado contra `ay4c`). Tras el fix RLS un gestor siempre ve la lista → desaparece la contradicción "vacío + botón".
+- **Mejor vacío** (`proyectos.html`): "Sin obras asignadas / pídele a tu supervisor o Tecnología que te vincule" (red AW1).
+
+### 🔴 FASE 2 (BJ1) — Compresión de imágenes
+- **Compresor único nuevo**: `core/utils/comprimir-imagen.util.ts` (perfiles + `comprimirImagen` + `perfilNativo` + guarda "no subir más bytes de los que llegaron"), **espejo del de la web**.
+- **3 implementaciones unificadas**: `camera.service` (JS + nativo), `in-app-camera` (usa los NÚMEROS del perfil, sin doble-encode) y `avatar-editor` (0.9→avatar 0.8).
+- **Hueco nativo cerrado**: `Camera.getPhoto`/`pickImages` ahora pasan `width+height=maxLado` (antes solo `width` → verticales sin acotar). Cámara + galería (40 fotos) quedan acotadas en el dispositivo.
+- **Perfil `evidencia` = 1280/0.72 en AMBOS repos** (decisión Xaviel: máximo ahorro, NO 1600/0.75). Neto = puro ahorro (nativo mantiene q72, ahora acota el lado largo de las verticales ~1707→1280; horizontales no suben). **Web `../dev/SGC/src/shared/utils/comprimir-imagen.util.ts` también editada → ⚠️ la WEB necesita redeploy** (código cambiado, sin desplegar).
+- Firmas intactas (PNG). Bytes ya comprimidos NO se re-comprimen (outbox/subida sin tocar).
+
+### FASE 3 (BJ4) — Despacho parcial (app=referencia, solo verificación)
+- Sin cambios: el 2º conduce sale de `requisiciones_por_despachar()` (RPC), `?requisicion=` prellena solo `pendiente>0` (`generar-conduce.ts:788`), `qty-input [max]` + `✕ quitar` intactos. Línea cancelada (pendiente 0) ya no se ofrece.
+
+### FASE 4 (BJ6) — Duplicar artículo
+- Botón **📋 Duplicar** en `articulo-detalle` (mismo gate que Editar) → `articulo-nuevo` con `history.state.duplicarDe`. Prellena nombre "(copia)"/categoría/unidad/propiedad/nota; **código lo acuña `crear_articulo_app`**, sin heredar foto ni `articulo_imagenes`.
+- **`requiere_talla` visible** como aviso (no persistible: el RPC no lo acepta → es del lado web, como dice #2). Display-only en la app.
+
+### Release 2.13.0 — PREPARADO (sin publicar)
+- **Versión bumpeada** en los 4 sitios: `environment.ts`, `environment.prod.ts`, `android/app/build.gradle` (appVersionName), `scripts/release-apk.mjs` (VERSION + RELEASED_AT 2026-09-07). versionCode derivado = 2 013 000.
+- **`CAMBIOS_CURADOS` curado** (3 cambios: arreglo Proyectos, mejora Fotos, nuevo Inventario-Duplicar). TITULO nuevo.
+- `npm run build` + prebuild (verify-tokens) **verdes**.
+- **PENDIENTE (GO de Xaviel)**: (1) `npm run apk` (build firmado + registra Y1, sin publicar) → luego `npm run apk:publish` + publicar en SGC; (2) **redeploy web** por el cambio de `evidencia` en el util; (3) commit/push (PWA). **minima INTACTA en 2.10.0 — no forzar.**
+
+### 🔴 Verificación device / prod PENDIENTE (no se puede desde aquí)
+- **BJ1 #9**: medir peso medio de foto ANTES/DESPUÉS en un teléfono real de obra (es el número que justifica la tanda).
+- **Escenario avión**: bitácora con 5 fotos → sin red → reintentar → UNA sola con las 5, peso nuevo.
+- **BJ5 smoke por rol** en la app: ingeniero campo/oficina, jefe ingenieros, capataz, chofer, Raykler, admin → lista muestra obras + un dropdown de cada contexto.
+
+### 🟡 Fuera de alcance (deliberado)
+- **BJ1 #7 (miniaturas en PDFs) / #8 (transform en 11 signers + caché de URLs)**: "opcional/va aparte" en el prompt; riesgo de degradar vistas a tamaño completo. El 90% del ahorro (compresión en captura) ya está. Tanda futura.
+
+---
+
 ## 🟢 SESIÓN 03/09/2026 — PROMPT-33 ronda BI (app) — **RELEASE 2.12.0 PUBLICADA (rolling) · commits `7b51b2c`+`fae20ea`+`1f9c600` PUSHEADOS (PWA) · SGC edge `acceso-cedula` (modo self) DESPLEGADA+PUSHEADA (`3d1116b`) · APK 2.12.0 firmado+registrado+SUBIDO · publicada, minima INTACTA en 2.10.0 · build verde**
 
 ### 🚀 Release 2.12.0 — PUBLICADA (rolling) — TODO HECHO (03-sep)

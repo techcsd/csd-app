@@ -1,10 +1,16 @@
 <div class="screen artn">
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">Nuevo artículo</h1>
+    <h1 class="inv-sub-header__title">{{ esDuplicado() ? 'Duplicar artículo' : 'Nuevo artículo' }}</h1>
   </header>
 
   <div class="screen__body">
+    @if (esDuplicado()) {
+      <p class="artn__dup-nota">📋 Copia de un artículo existente. Revisa el nombre y guarda para crear uno nuevo (con su propio código). La foto no se hereda.</p>
+    }
+    @if (origenRequiereTalla()) {
+      <p class="artn__talla-nota">👕 El artículo original maneja <strong>tallas como atributo</strong> (la talla se elige en el pedido). No crees un artículo por talla.</p>
+    }
     <label class="field-label">Nombre <span class="artn__req">*</span></label>
     <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" maxlength="120" placeholder="Nombre del artículo" />
 

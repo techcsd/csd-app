@@ -44,6 +44,14 @@ export class ArticuloNuevoPage {
   nota = signal('');
   fotos = signal<FotoNueva[]>([]);
 
+  // BJ6 — ¿venimos de "Duplicar"? Prellena el formulario con el artículo origen
+  // (nombre "(copia)", categoría, unidad, propiedad, nota). NO se hereda la foto ni
+  // las imágenes (apuntan al id del ORIGEN). Si el origen requiere talla, lo AVISAMOS
+  // (la talla es un atributo del pedido, no un artículo por talla) — el nuevo artículo
+  // se crea sin talla igualmente (crear_articulo_app no la fija; unificar es del lado web).
+  esDuplicado = signal(false);
+  origenRequiereTalla = signal(false);
+
   // Creación inline
   nuevaCategoria = signal('');
   creandoCategoria = signal(false);
@@ -61,7 +69,28 @@ export class ArticuloNuevoPage {
   }
 
   constructor() {
+    this.prellenarSiDuplica();
     void this.init();
+  }
+
+  /** BJ6 — lee el artículo origen pasado por navegación (history.state) y prellena. */
+  private prellenarSiDuplica(): void {
+    const src = (history.state?.['duplicarDe'] ?? null) as {
+      nombre?: string;
+      categoria_id?: number | null;
+      unidad?: string | null;
+      propiedad?: string | null;
+      nota?: string | null;
+      requiere_talla?: boolean;
+    } | null;
+    if (!src) return;
+    this.esDuplicado.set(true);
+    this.nombre.set(`${(src.nombre ?? '').trim()} (copia)`.trim());
+    this.categoriaId.set(src.categoria_id ?? null);
+    this.unidad.set(src.unidad ?? '');
+    this.propiedad.set(src.propiedad || 'propio_csd');
+    this.nota.set(src.nota ?? '');
+    this.origenRequiereTalla.set(!!src.requiere_talla);
   }
 
   private async init(): Promise<void> {

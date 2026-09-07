@@ -3,6 +3,7 @@
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="inv-sub-header__title">Artículo</h1>
     @if (!loading() && articulo() && puedeEditar('inventario.articulos')) {
+      <button type="button" class="art__editar" (click)="duplicar()" aria-label="Duplicar">📋</button>
       <button type="button" class="art__editar" (click)="editar()">✏️ Editar</button>
     }
   </header>

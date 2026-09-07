@@ -60,11 +60,20 @@ const SELECT =
   'fases:fases_proyecto(id, proyecto_id, nombre, descripcion, estado, fecha_inicio, fecha_fin, progreso, orden)';
 
 /**
- * Y14 — lectura del módulo Proyectos para la app (listado + detalle). La RLS de
- * `proyectos` scopea las filas (admin/módulo proyectos → todos; responsable/
- * miembro → los suyos); el tile de Proyectos está gateado por `hasModulo
- * ('proyectos')`, así que quien lo ve recibe todos. Online-first con cache
- * (patrón CatalogService) para que la navegación no rompa sin señal.
+ * Y14 — lectura del módulo Proyectos para la app (listado + detalle). Es un
+ * `.from('proyectos')` DIRECTO, gobernado SÓLO por la política RLS `"proyectos:
+ * select"` del servidor.
+ *
+ * BJ5 — corregido el supuesto viejo: el tile de Proyectos ya NO se gatea por
+ * `hasModulo('proyectos')`; AY4 amplió la ruta al submódulo `proyectos.obras`
+ * (ingeniería de campo/oficina, jefe de ingenieros…). La RLS del padre
+ * (migración `2026-09-05-bj5-proyectos-select-rls-alinear.sql`, aplicada a prod)
+ * fue reescrita ADITIVAMENTE para concordar con `proyectos_pickables()`: admite
+ * módulos amplios (proyectos/inventario/compras/direccion/transporte/flota), el
+ * submódulo `proyectos.obras`, responsable/capataz/empleado de la obra, y la red
+ * AW1 "vacío ≠ mudo" (sin obra ligada → ve todas). Por eso quien entra ve la
+ * lista (nunca 0 por scoping). Online-first con cache (patrón CatalogService)
+ * para que la navegación no rompa sin señal.
  */
 @Injectable({ providedIn: 'root' })
 export class ProyectosService {

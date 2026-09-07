@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { PERFILES_COMPRESION } from '../../../core/utils/comprimir-imagen.util';
 
 /**
  * AW7 — editor de foto de perfil (usuario y grupo): recorte CIRCULAR con zoom y
@@ -158,8 +159,9 @@ export class AvatarEditor implements AfterViewInit, OnChanges, OnDestroy {
       const x = (S - w) / 2 + this.offX;
       const y = (S - h) / 2 + this.offY;
       ctx.drawImage(img, x, y, w, h);
+      // BJ1 — perfil 'avatar' (512/0.8), fuente única compartida con la web.
       const blob = await new Promise<Blob | null>((resolve) =>
-        out.toBlob((b) => resolve(b), 'image/jpeg', 0.9),
+        out.toBlob((b) => resolve(b), 'image/jpeg', PERFILES_COMPRESION.avatar.calidad),
       );
       if (blob) this.confirmado.emit(blob);
     } finally {

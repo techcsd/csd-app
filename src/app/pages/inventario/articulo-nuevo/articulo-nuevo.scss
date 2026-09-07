@@ -107,6 +107,21 @@
   color: var(--color-danger, #d32f2f);
   font-size: 13px;
 }
+// BJ6 — avisos del flujo "duplicar".
+.artn__dup-nota,
+.artn__talla-nota {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  background: var(--color-surface-2, #f1f3f5);
+  color: var(--color-text-secondary);
+}
+.artn__talla-nota {
+  background: color-mix(in srgb, var(--Hub, #ffb300) 14%, transparent);
+  color: var(--color-text);
+}
 .artn__save {
   width: 100%;
   margin-top: 20px;

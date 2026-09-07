@@ -6,6 +6,7 @@ import { ErrorReportService } from './error-report.service';
 import { DeviceInfoService } from './device-info.service';
 import { PermissionsService } from './permissions.service';
 import { ToastService } from './toast.service';
+import { comprimirImagen, perfilNativo, PerfilCompresion } from '../utils/comprimir-imagen.util';
 
 /** W1 — practical cap for a single multi-pick batch (configurable, kept high). */
 const GALLERY_LIMIT = 40;
@@ -49,17 +50,14 @@ export interface CapturedFile {
   previewUrl: string | null;
 }
 
-const MAX_EDGE = 1280;
-const JPEG_QUALITY = 0.7;
-/** Native camera/gallery quality (0-100) — Capacitor resizes + compresses on
- *  device, which is far faster than decoding a full-res photo in JS canvas. */
-const NATIVE_QUALITY = 72;
-
 /**
  * Single entry point for taking photos. Uses the native camera on Android
  * (Capacitor) and an <input capture> fallback on the PWA. Always returns a
- * compressed JPEG (~1280px longest edge, ~70%) so field captures stay under
- * the mobile-data budget (PRD: parte diario w/ 6 fotos <= 3MB).
+ * compressed JPEG using the shared BJ1 profiles (evidencia ~1600px/0.75) so
+ * field captures stay under the mobile-data budget (PRD: parte diario w/ 6 fotos
+ * <= 3MB). En nativo, Capacitor redimensiona/comprime EN EL DISPOSITIVO con los
+ * mismos parámetros (`perfilNativo`) — no re-encodeamos en JS (evita pérdida
+ * generacional). Los perfiles son idénticos a los de la web (paridad BH5).
  */
 @Injectable({ providedIn: 'root' })
 export class CameraService {
@@ -244,7 +242,9 @@ export class CameraService {
           resolve({ blob: file, nombre: file.name, esImagen: false, ext: 'pdf', previewUrl: null });
           return;
         }
-        const blob = await this.compress(file);
+        // Perfil 'documento' (2000/0.8): un documento escaneado necesita más
+        // legibilidad que una foto de evidencia.
+        const blob = await this.compress(file, 'documento');
         resolve({
           blob,
           nombre: file.name || 'documento.jpg',
@@ -306,8 +306,12 @@ export class CameraService {
   }
 
   private async pickNativeMulti(limit: number): Promise<Blob[]> {
-    // width → Capacitor baja la resolución en el dispositivo (rápido).
-    const res = await Camera.pickImages({ quality: NATIVE_QUALITY, limit, width: MAX_EDGE });
+    // BJ1 — Capacitor redimensiona + comprime EN EL DISPOSITIVO con el perfil
+    // evidencia (width+height acotan el lado mayor). Antes 40 fotos de galería
+    // entraban SIN comprimir (peor caso del sistema) porque el path nativo saltaba
+    // el canvas JS y solo pasaba `width`.
+    const { quality, width, height } = perfilNativo('evidencia');
+    const res = await Camera.pickImages({ quality, limit, width, height });
     const blobs: Blob[] = [];
     for (const p of res.photos) {
       if (!p.webPath) continue;
@@ -332,11 +336,14 @@ export class CameraService {
   }
 
   private async takeNative(): Promise<Blob | null> {
+    // BJ1 — perfil evidencia aplicado EN EL DISPOSITIVO por Capacitor (rápido y sin
+    // pérdida generacional). width Y height = maxLado acotan el lado mayor en ambas
+    // orientaciones (antes solo `width` dejaba las verticales sin acotar).
+    const { quality, width, height } = perfilNativo('evidencia');
     const photo = await Camera.getPhoto({
-      quality: NATIVE_QUALITY,
-      // width → Capacitor redimensiona en el dispositivo (mucho más rápido que
-      // decodificar la foto a resolución completa en JS). Mantiene el aspecto.
-      width: MAX_EDGE,
+      quality,
+      width,
+      height,
       allowEditing: false,
       resultType: CameraResultType.Uri,
       source: CameraSource.Camera,
@@ -404,27 +411,8 @@ export class CameraService {
     });
   }
 
-  /** Downscale + re-encode to JPEG via canvas. */
-  private async compress(source: Blob): Promise<Blob> {
-    const bitmap = await createImageBitmap(source);
-    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
-    const w = Math.round(bitmap.width * scale);
-    const h = Math.round(bitmap.height * scale);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return source;
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close();
-
-    return new Promise((resolve) => {
-      canvas.toBlob(
-        (b) => resolve(b ?? source),
-        'image/jpeg',
-        JPEG_QUALITY,
-      );
-    });
+  /** BJ1 — comprime en JS (path web/PWA) usando el compresor compartido con perfiles. */
+  private compress(source: Blob, perfil: PerfilCompresion = 'evidencia'): Promise<Blob> {
+    return comprimirImagen(source, perfil);
   }
 }

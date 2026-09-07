@@ -12,9 +12,13 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ErrorReportService } from '../../../core/services/error-report.service';
 import { DeviceInfoService } from '../../../core/services/device-info.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
+import { PERFILES_COMPRESION } from '../../../core/utils/comprimir-imagen.util';
 
-const MAX_EDGE = 1280;
-const JPEG_QUALITY = 0.7;
+// BJ1 — mismo perfil 'evidencia' que camera.service/web (fuente única). El overlay
+// dibuja el frame del <video> directo a canvas, así que usa los NÚMEROS del perfil
+// (no comprimirImagen(Blob)) para no re-codificar: sigue siendo un solo encode.
+const MAX_EDGE = PERFILES_COMPRESION.evidencia.maxLado;
+const JPEG_QUALITY = PERFILES_COMPRESION.evidencia.calidad;
 
 /**
  * Overlay de cámara embebida (getUserMedia). Se renderiza una vez en la raíz de

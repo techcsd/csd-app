@@ -52,6 +52,28 @@ export class CatalogService {
   }
 
   /**
+   * BJ5 — al ARRANCAR con una versión NUEVA de la app, suelta (una sola vez por
+   * versión) las cachés indicadas. Motivo: si una RLS vieja hizo que un loader
+   * cacheara un VACÍO (p. ej. la lista de proyectos, arreglada en el padre), tras
+   * desplegar la corrección la pantalla seguiría vacía offline y "parece que no se
+   * arregló". Online el `refresh` ya re-consulta y sobrescribe; esto cubre el vacío
+   * cacheado hasta el primer refresh con señal. Idempotente: guarda un marcador con
+   * la versión y no vuelve a hacer nada hasta el próximo bump. Devuelve true si buscó.
+   */
+  async invalidateOnVersionChange(version: string, prefijos: string[]): Promise<boolean> {
+    const MARK = '__cache_bust_version__';
+    try {
+      const prev = (await db.catalogos.get(MARK))?.data as string | undefined;
+      if (prev === version) return false;
+      for (const p of prefijos) await this.invalidatePrefix(p);
+      await db.catalogos.put({ tipo: MARK, data: version, fetched_at: Date.now() });
+      return true;
+    } catch {
+      return false; // nunca romper el arranque por un fallo de caché
+    }
+  }
+
+  /**
    * AE7 — reescribe OPTIMISTAMENTE una lista cacheada (p. ej. quitar el ítem que
    * el chofer acaba de firmar/confirmar) en vez de BORRAR la caché con
    * `invalidate`. Borrarla dejaba la pantalla VACÍA si el usuario recargaba sin

@@ -40,6 +40,31 @@ export class ArticuloDetallePage {
     if (a) void this.router.navigate(['/inventario/articulo', a.id, 'editar']);
   }
 
+  /**
+   * BJ6 — Duplicar: abre el formulario de CREACIÓN prellenado con el contenido del
+   * artículo origen (nombre "(copia)", categoría, unidad, propiedad, nota), dejando
+   * el original INTACTO. El código lo acuña el servidor al guardar (CSD-…); NO se
+   * heredan la foto ni las imágenes (apuntan a la ruta del id ORIGEN). `requiere_talla`
+   * viaja sólo para AVISAR en el formulario (la talla es atributo del pedido). Espejo
+   * del `duplicar()` de la web.
+   */
+  duplicar(): void {
+    const a = this.articulo();
+    if (!a) return;
+    void this.router.navigate(['/inventario/articulo-nuevo'], {
+      state: {
+        duplicarDe: {
+          nombre: a.nombre,
+          categoria_id: a.categoria_id,
+          unidad: a.unidad,
+          propiedad: a.propiedad,
+          nota: a.nota,
+          requiere_talla: a.requiere_talla,
+        },
+      },
+    });
+  }
+
   /** AP3 — kardex del artículo en un almacén concreto. */
   verKardex(bodegaId: string): void {
     const a = this.articulo();

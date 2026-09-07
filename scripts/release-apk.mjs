@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.12.0';
+const VERSION = '2.13.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,20 +59,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-09-03';
+const RELEASED_AT = '2026-09-07';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Reenvío de bitácoras atascadas + fijar PIN de campo';
+const TITULO = 'Obras que ya no salen vacías + fotos más livianas + duplicar artículo';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Bitácora', d: 'Las bitácoras que quedaban atascadas al reenviarse («no se pueden reenviar») ya se envían: se corrigió el permiso que hacía fallar la subida de sus fotos al reintentar. Tu información nunca se perdió.' },
-  { t: 'mejora', m: 'Pendientes de envío', d: '«Reintentar» aparece siempre que algo no se pudo enviar —también cuando el problema es del sistema o el registro sigue esperando—, y el aviso de abajo cuenta TODO lo pendiente, no solo lo que falló. Cuando Tecnología publica una corrección, la app te la sugiere.' },
-  { t: 'arreglo', m: 'Bitácora', d: 'Al «Duplicar» una bitácora atascada para rescatarla, ahora se copian TODAS sus fotos y notas de voz (no solo algunas), y ese rescate ya no se borra al cerrar sesión. Una captura con fotos perdidas no se envía en silencio.' },
-  { t: 'mejora', m: 'Batería', d: 'El vigilante de ubicación deja de reintentar (y de reportarse a sí mismo) cuando no hay permiso de ubicación o GPS — menos consumo de batería y menos ruido.' },
-  { t: 'seguridad', m: 'Acceso', d: 'Para un usuario que entra con cédula, ahora se puede «Fijar PIN» directamente desde Administración (antes decía que enviaba un correo que no existe). El cambio queda registrado.' },
-  { t: 'nuevo', m: 'Acceso', d: 'Si entras con cédula, ahora puedes cambiar tu PIN de acceso (los 6 números) tú mismo desde tu perfil, escribiendo el actual y el nuevo. Y quedó claro qué es cada cosa: «Bloqueo de la app» es el candado de este teléfono; «PIN de acceso» es con el que entras con tu cédula.' },
+  { t: 'arreglo', m: 'Proyectos', d: 'La lista de obras ya no sale vacía: ahora ves las obras a las que estás vinculado (ingeniería de campo/oficina, jefe de ingenieros, capataz, chofer…). Y si de verdad no tienes ninguna, la pantalla te dice a quién pedir acceso en vez de quedar muda.' },
+  { t: 'mejora', m: 'Fotos', d: 'Las fotos que tomas y las que eliges de la galería pesan menos: se ajustan al momento de tomarlas (una sola vez, para no perder calidad de más), así gastas menos datos y se envían más rápido — sobre todo las fotos verticales. Las firmas no se tocan.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Nuevo botón «Duplicar» en un artículo: crea uno nuevo copiando nombre, categoría, unidad, propiedad y nota del original (con su propio código). No copia la foto ni cambia el artículo original.' },
 ];
 
 const TIPO_POR_COMMIT = {
