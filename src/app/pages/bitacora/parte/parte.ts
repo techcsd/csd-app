@@ -38,7 +38,9 @@ import {
 } from '../../../core/models/bitacora.model';
 
 const TOTAL = 10;
-const MIN_FOTOS = 2; // S6 — mínimo de fotos por bitácora (espejo del RPC).
+// S6 — mínimo de fotos por bitácora (espejo del RPC). BK5: el padre NO creó el knob
+// `bitacora_min_fotos`, así que sigue hardcodeado (ver docs/bk5-limites-fotos.md).
+const MIN_FOTOS = 2;
 
 /** Sub-pasos internos del paso 5 (multi-bloque) y del paso 8 (equipos). */
 type Paso5 = 'sujeto' | 'actividades' | 'otro';

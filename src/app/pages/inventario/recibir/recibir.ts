@@ -63,6 +63,7 @@ export class RecibirConducePage {
   // slot "agregar" (siempre vacío: al capturar se empuja al array y se limpia).
   fotos = signal<CapturedPhoto[]>([]);
   nuevaFoto = signal<CapturedPhoto | null>(null);
+  // BK5: knob `bitacora_min_fotos` del padre no existe → hardcodeado (docs/bk5-limites-fotos.md).
   readonly MIN_FOTOS = 2;
   faltanFotos = computed(() => this.fotos().length < this.MIN_FOTOS);
   notas = signal(''); // APP-041 — discrepancias de recepción

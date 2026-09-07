@@ -2,6 +2,23 @@ import { inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { NotifSoundService } from './notif-sound.service';
 
+/**
+ * BK1 — estado por tipo del panel de Avisos: el catálogo (sgc.notif_tipo) mezclado
+ * con la preferencia propia del usuario Y con si Administración lo apagó. Permite
+ * distinguir "lo apagué yo" (silenciado_por_mi) de "lo apagó Administración"
+ * (deshabilitado_por_admin), la 4ª regla aplicada a un control: no ofrecer un switch
+ * que el servidor va a ignorar. Viene de la RPC `mis_notif_estado()`.
+ */
+export interface NotifEstado {
+  tipo: string;
+  etiqueta: string;
+  descripcion: string | null;
+  es_operativa: boolean;
+  orden: number;
+  silenciado_por_mi: boolean;
+  deshabilitado_por_admin: boolean;
+}
+
 /** AE — un aviso in-app (sgc.notificaciones). */
 export interface Notificacion {
   id: string;
@@ -69,6 +86,19 @@ export class NotificacionesService {
     const { data, error } = await this.supabase.client.rpc('mis_notif_prefs');
     if (error) throw new Error(error.message);
     return (data as { tipo: string; silenciado: boolean }[]) ?? [];
+  }
+
+  /**
+   * BK1 — estado completo del panel de Avisos: catálogo (sgc.notif_tipo) + mi
+   * preferencia + si Administración lo apagó, en UNA lectura (RPC `mis_notif_estado`).
+   * Reemplaza la lista de tipos hardcodeada del cliente por la fuente de verdad del
+   * padre (así aparecen también chat/soporte/alarmas/notas). Lanza si falla; la
+   * pantalla cae a una lista de respaldo.
+   */
+  async misNotifEstado(): Promise<NotifEstado[]> {
+    const { data, error } = await this.supabase.client.rpc('mis_notif_estado');
+    if (error) throw new Error(error.message);
+    return (data as NotifEstado[]) ?? [];
   }
 
   /** AT23 — silencia/reactiva un tipo; actualiza la cache y el badge. */

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
@@ -7,22 +7,38 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { BottomSheet } from '../../shared/ui/bottom-sheet/bottom-sheet';
 import { ToggleSwitch } from '../../shared/ui/toggle-switch/toggle-switch';
-import { NotificacionesService, Notificacion, notifAppRoute } from '../../core/services/notificaciones.service';
+import {
+  NotificacionesService,
+  Notificacion,
+  NotifEstado,
+  notifAppRoute,
+} from '../../core/services/notificaciones.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../core/util/fecha';
 
-/** AT23 — categorías informativas que el usuario puede silenciar (se excluyen a
- *  propósito las que requieren acción: firmas, alertas, errores). */
-const CATEGORIAS_NOTIF: { tipo: string; label: string }[] = [
-  { tipo: 'version_publicada', label: 'Nuevas versiones de la app' },
+/**
+ * BK1 — lista de respaldo si `mis_notif_estado()` falla (sin red / RPC vieja). El
+ * catálogo real vive ahora en `sgc.notif_tipo` (padre) y lo pinta la RPC; esta lista
+ * solo cubre el caso degradado. Etiquetas alineadas con el catálogo (antes divergían:
+ * "Nuevas versiones de la app" vs "Nuevas versiones").
+ */
+const CATEGORIAS_FALLBACK: { tipo: string; label: string }[] = [
+  { tipo: 'version_publicada', label: 'Nuevas versiones' },
   { tipo: 'material_no_catalogado', label: 'Material no catalogado' },
   { tipo: 'otros_valor', label: 'Valores fuera de catálogo' },
   { tipo: 'solicitud_movimiento', label: 'Solicitudes de movimiento' },
+  { tipo: 'mensaje', label: 'Mensajes de chat' },
+  { tipo: 'soporte', label: 'Soporte' },
+  { tipo: 'nota_compartida', label: 'Notas compartidas' },
   { tipo: 'flota', label: 'Avisos de flota' },
   { tipo: 'transporte', label: 'Transporte y rutas' },
   { tipo: 'conduce', label: 'Conduces' },
   { tipo: 'novedad', label: 'Novedades' },
 ];
+
+/** BK1 — alarmas dominicales: se MUESTRAN (son ruido de teléfono) pero no se apagan
+ *  a la ligera (el padre las marca es_operativa); van como "Siempre activa". */
+const ALARMAS = new Set(['alarma-reporte-semanal', 'alarm-weekly-inspection']);
 
 /** AE — bandeja de avisos in-app (sgc.notificaciones): firmas pendientes, cierres,
  *  avisos de módulo. Tocar un aviso lo marca leído y navega a su destino (AF6). */
@@ -48,10 +64,18 @@ export class AvisosPage {
   avisos = signal<Notificacion[]>([]);
   confirmBorrarTodas = signal(false);
 
-  // AT23 — preferencias de notificación (silenciar categorías informativas).
-  readonly categorias = CATEGORIAS_NOTIF;
+  // BK1 — preferencias de notificación: catálogo completo (sgc.notif_tipo) + mi
+  // preferencia + estado de Administración, vía `mis_notif_estado()`.
   prefsAbierto = signal(false);
-  silenciados = signal<Set<string>>(new Set());
+  estados = signal<NotifEstado[]>([]);
+
+  /** Tipos que se muestran en el panel: los apagables (no operativos) + los que
+   *  Administración apagó (para que el usuario lo vea) + las alarmas dominicales. */
+  estadosVisibles = computed(() =>
+    this.estados().filter(
+      (e) => !e.es_operativa || e.deshabilitado_por_admin || ALARMAS.has(e.tipo),
+    ),
+  );
 
   constructor() {
     void this.load();
@@ -153,38 +177,61 @@ export class AvisosPage {
     return this.avisos().some((n) => !n.leida);
   }
 
-  // ── AT23 — preferencias de notificación ─────────────────────────────────────
+  // ── BK1 — preferencias de notificación (catálogo + admin + propia) ───────────
   async abrirPrefs(): Promise<void> {
     this.prefsAbierto.set(true);
     try {
-      const prefs = await this.service.misNotifPrefs();
-      const s = new Set<string>();
-      for (const p of prefs) if (p.silenciado) s.add(p.tipo);
-      this.silenciados.set(s);
+      this.estados.set(await this.service.misNotifEstado());
     } catch {
-      /* best-effort: si falla, se muestran todos como activos */
+      // Respaldo: catálogo mínimo + mis prefs (sin poder mostrar estado de admin).
+      try {
+        const prefs = await this.service.misNotifPrefs();
+        const sil = new Set(prefs.filter((p) => p.silenciado).map((p) => p.tipo));
+        this.estados.set(
+          CATEGORIAS_FALLBACK.map((c, i) => ({
+            tipo: c.tipo,
+            etiqueta: c.label,
+            descripcion: null,
+            es_operativa: false,
+            orden: i,
+            silenciado_por_mi: sil.has(c.tipo),
+            deshabilitado_por_admin: false,
+          })),
+        );
+      } catch {
+        this.estados.set([]);
+      }
     }
   }
   cerrarPrefs(): void {
     this.prefsAbierto.set(false);
   }
-  /** El toggle muestra "recibir" (ON = NO silenciado). */
-  recibe(tipo: string): boolean {
-    return !this.silenciados().has(tipo);
+  /** ¿El usuario controla este tipo? (no operativo y no apagado por Administración). */
+  editable(e: NotifEstado): boolean {
+    return !e.es_operativa && !e.deshabilitado_por_admin;
   }
-  async onTogglePref(tipo: string, recibir: boolean): Promise<void> {
+  /** El toggle muestra "recibir" (ON = NO silenciado por mí). */
+  recibe(e: NotifEstado): boolean {
+    return !e.silenciado_por_mi;
+  }
+  /** Texto para los tipos que el usuario NO controla. */
+  estadoLabel(e: NotifEstado): string {
+    return e.deshabilitado_por_admin ? 'Desactivado por Administración' : 'Siempre activa';
+  }
+  async onTogglePref(e: NotifEstado, recibir: boolean): Promise<void> {
     const silenciar = !recibir;
     // optimista
-    this.silenciados.update((s) => {
-      const next = new Set(s);
-      if (silenciar) next.add(tipo);
-      else next.delete(tipo);
-      return next;
-    });
+    this.estados.update((list) =>
+      list.map((x) => (x.tipo === e.tipo ? { ...x, silenciado_por_mi: silenciar } : x)),
+    );
     try {
-      await this.service.setNotifPref(tipo, silenciar);
+      await this.service.setNotifPref(e.tipo, silenciar);
       void this.load(true); // re-filtra la bandeja
     } catch {
+      // rollback
+      this.estados.update((list) =>
+        list.map((x) => (x.tipo === e.tipo ? { ...x, silenciado_por_mi: !silenciar } : x)),
+      );
       this.toast.error('No se pudo guardar la preferencia.');
     }
   }

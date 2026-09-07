@@ -1,0 +1,80 @@
+.inc-part__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+.inc-part__back {
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: var(--color-text);
+  padding: 4px 8px;
+}
+.inc-part__icon {
+  font-size: 20px;
+}
+.inc-part__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.inc-part__intro {
+  margin: 4px 0 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.inc-part__add {
+  margin-bottom: 16px;
+}
+
+.inc-part__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.inc-part__row {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: opacity 0.15s ease;
+}
+.inc-part__row--saving {
+  opacity: 0.6;
+}
+.inc-part__row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inc-part__nombre {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.inc-part__pill {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.inc-part__meta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

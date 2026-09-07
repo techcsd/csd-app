@@ -1,0 +1,72 @@
+<div class="screen inc-part">
+  <header class="inc-part__header">
+    <button type="button" class="inc-part__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="inc-part__icon">👥</span>
+    <h1 class="inc-part__title">Participantes</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (checkingAccess()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!hasAccess()) {
+      <app-empty-state
+        icon="🔒"
+        title="Sin acceso"
+        message="Solo logística y gerencia pueden gestionar el padrón del Desempeño." />
+    } @else if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else {
+      <p class="inc-part__intro">
+        Quiénes participan del Desempeño. Marcar <b>«cuenta para el pago»</b> no cambia el rol de la
+        persona: solo declara que su actividad puntúa. Hoy cuentan <b>{{ cuentanPago() }}</b>.
+      </p>
+
+      <!-- Agregar persona (usuarios que aún no están en el padrón) -->
+      <div class="inc-part__add">
+        <app-collapsible-select
+          icon="➕"
+          label="Agregar persona"
+          placeholder="Agregar persona al padrón"
+          [searchable]="true"
+          searchPlaceholder="Buscar persona…"
+          [options]="candidatoOptions()"
+          (picked)="agregar($event)" />
+      </div>
+
+      @if (!participantes().length) {
+        <app-empty-state
+          icon="👥"
+          title="Padrón vacío"
+          message="Agrega personas para que participen del Desempeño." />
+      } @else {
+        <ul class="inc-part__list">
+          @for (p of participantes(); track p.usuario_id) {
+            <li class="inc-part__row" [class.inc-part__row--saving]="saving(p.usuario_id)">
+              <div class="inc-part__row-top">
+                <span class="inc-part__nombre">{{ p.nombre }}</span>
+                @if (p.es_prueba) { <span class="inc-part__pill">PRUEBA</span> }
+              </div>
+
+              <app-toggle-switch
+                [checked]="p.participa"
+                label="Participa"
+                (checkedChange)="toggleParticipa(p, $event)" />
+
+              <app-toggle-switch
+                [checked]="p.es_chofer"
+                label="Cuenta para el pago"
+                hint="Su actividad puntúa; no cambia su rol"
+                (checkedChange)="toggleChofer(p, $event)" />
+
+              @if (p.ultimo_cambio_por) {
+                <p class="inc-part__meta">
+                  Último cambio por {{ p.ultimo_cambio_por }}@if (p.ultimo_motivo) { · «{{ p.ultimo_motivo }}» }
+                </p>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  </div>
+</div>

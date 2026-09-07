@@ -47,8 +47,8 @@
 
     @if (modoLink()) {
       <div class="lp__inline">
-        <input class="field" type="url" [ngModel]="link()" (ngModelChange)="link.set($event)"
-          placeholder="Pega el link de Google Maps" aria-label="Link de Google Maps"
+        <input class="field" type="text" [ngModel]="link()" (ngModelChange)="link.set($event)"
+          placeholder="Pega el link de Maps o el mensaje de WhatsApp" aria-label="Link de Google Maps o mensaje de WhatsApp"
           (keyup.enter)="resolverLink()" />
         <button type="button" class="lp__go" [disabled]="resolviendoLink() || !link().trim()" (click)="resolverLink()">
           {{ resolviendoLink() ? '…' : 'Usar' }}

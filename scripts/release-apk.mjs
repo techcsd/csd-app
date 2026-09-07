@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.13.0';
+const VERSION = '2.14.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,14 +62,14 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-09-07';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Obras que ya no salen vacías + fotos más livianas + duplicar artículo';
+const TITULO = 'Elige qué avisos te llegan + pegar el mensaje de WhatsApp para fijar ubicación + Participantes de Desempeño';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Proyectos', d: 'La lista de obras ya no sale vacía: ahora ves las obras a las que estás vinculado (ingeniería de campo/oficina, jefe de ingenieros, capataz, chofer…). Y si de verdad no tienes ninguna, la pantalla te dice a quién pedir acceso en vez de quedar muda.' },
-  { t: 'mejora', m: 'Fotos', d: 'Las fotos que tomas y las que eliges de la galería pesan menos: se ajustan al momento de tomarlas (una sola vez, para no perder calidad de más), así gastas menos datos y se envían más rápido — sobre todo las fotos verticales. Las firmas no se tocan.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Nuevo botón «Duplicar» en un artículo: crea uno nuevo copiando nombre, categoría, unidad, propiedad y nota del original (con su propio código). No copia la foto ni cambia el artículo original.' },
+  { t: 'mejora', m: 'Avisos', d: 'Ahora eliges qué avisos te llegan (chat, soporte, novedades y más) desde el ⚙️ en la pantalla de Avisos. Apagar uno deja de mandártelo de verdad (aquí y como notificación). Y si Administración apagó un aviso, la app te lo dice claro («Desactivado por Administración») en vez de mostrarte un interruptor que no haría nada.' },
+  { t: 'mejora', m: 'Ubicación', d: 'Al fijar una ubicación por link ya puedes pegar el mensaje COMPLETO de WhatsApp (el nombre del lugar y el link juntos): la app saca la ubicación sola y te avisa que «tomó el link del mensaje». Si el link apunta a un negocio sin coordenadas exactas, te lo ofrece para buscarlo por nombre en vez de dejarte trancado.' },
+  { t: 'nuevo', m: 'Desempeño', d: 'Nueva pantalla de Participantes (logística/gerencia): agrega a alguien al padrón del Desempeño —aunque no tenga el rol de chofer— y marca si «cuenta para el pago». Marcarlo no cambia su rol, solo declara que su actividad puntúa.' },
 ];
 
 const TIPO_POR_COMMIT = {

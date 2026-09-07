@@ -150,3 +150,29 @@
   line-height: 1.4;
   color: var(--color-text-secondary);
 }
+
+// BK1 — fila de un tipo que el usuario NO controla (operativo o apagado por admin).
+.avisos-prefs__locked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 2px;
+}
+.avisos-prefs__locked-label {
+  font-size: 15px;
+  color: var(--color-text-secondary);
+}
+.avisos-prefs__locked-tag {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-2);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+.avisos-prefs__locked-tag--admin {
+  color: var(--color-danger);
+}

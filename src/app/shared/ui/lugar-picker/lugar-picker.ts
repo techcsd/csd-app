@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, output, si
 import { FormsModule } from '@angular/forms';
 import { LugaresService, LugarSistema } from '../../../core/services/lugares.service';
 import { GeocodingService, LinkResolveError } from '../../../core/services/geocoding.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 /**
  * BA/Transporte v3 (FASE 3) — lugar seleccionado. Forma normalizada que consume
@@ -45,6 +46,7 @@ interface Resultado {
 export class LugarPicker {
   private lugares = inject(LugaresService);
   private geo = inject(GeocodingService);
+  private toast = inject(ToastService);
 
   label = input<string>('Lugar');
   placeholder = input<string>('Buscar obra, almacén o lugar…');
@@ -146,6 +148,8 @@ export class LugarPicker {
     try {
       const r = await this.geo.resolverLink(entrada);
       this.aplicar({ tipo: 'coord', nombre: r.direccion || 'Ubicación del link', lat: r.lat, lng: r.lng });
+      // BK2 — si la edge sacó el link de un mensaje completo (WhatsApp), decirlo.
+      if (r.note) this.toast.success(r.note);
     } catch (e) {
       // AU16 — si el link trae un nombre sugerido, precarga el buscador (no tranca).
       const err = e as LinkResolveError;

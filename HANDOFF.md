@@ -1,5 +1,44 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 07/09/2026 — PROMPT-37 ronda BK (app) — **CÓDIGO LISTO · build+guard verdes · 1 migración aditiva APLICADA a prod · SIN commit/push/APK (esperando a Xaviel)**
+
+> El padre **PROMPT-36-SGC (ronda BK)** ya está EN PROD (verificado por agente): `notif_tipo` (catálogo, ~37 tipos activos) + `notif_regla` con nivel usuario + `notif_permitida` cableado en los 7 emisores + trigger de versión; edge `resolve-maps-link` con `suggest_query`/`query=`/extracción de mensaje WhatsApp; padrón `incentivo_participante` (llave en `usuarios`) + `set_incentivo_participante` + `incentivo_participantes`/`incentivo_candidatos`. **Único hueco del padre: NO creó el knob `bitacora_min_fotos`** (FASE 3.1 queda hardcodeada).
+
+### ✅ FASE 1 (BK1) — la app deja de mostrar lo que el admin apagó
+- **Catálogo dinámico**: la lista de 8 tipos hardcodeada en `avisos.ts` se reemplazó por **`mis_notif_estado()`** (RPC NUEVA, ver abajo). Ahora aparecen también chat/soporte/notas (es_operativa=false → apagables) y las **alarmas dominicales** (mostradas como "Siempre activa"). Etiqueta de versión alineada al catálogo ("Nuevas versiones", antes divergía).
+- **Distingue "lo apagó Administración" de "lo apagué yo"**: si una `notif_regla` de admin deshabilita un tipo para el usuario, la hoja de Preferencias lo muestra como **"Desactivado por Administración"** (chip rojo, sin switch) en vez de un toggle que el server ignoraría (4ª regla). Respaldo a lista mínima si la RPC falla.
+- **Decisión de diseño (respeta el padre)**: solo los tipos **es_operativa=false** son auto-silenciables; los operativos (firmas, entregas, alarmas, resumen_operaciones) NO — evita que un chofer se apague avisos críticos. Si Xaviel quiere que alarmas/resumen sean auto-apagables por el usuario, es **flip de `es_operativa` en `sgc.notif_tipo` del padre** (afecta también a la web).
+- **RPC NUEVA aplicada a prod**: `sql/2026-09-07-bk1-mis-notif-estado.sql` → `sgc.mis_notif_estado()` (catálogo + mi pref + admin-off en UNA lectura; security definer, own-uid, solo lectura). **APLICADA** (`apply-migration`), smoke OK (37 filas, `notif_regla_habilitado` bien). **Paridad (regla #5)**: la web (`ajustes-notificaciones`) HOY no muestra admin-off — conviene adoptar esta misma lectura allá.
+- **FASE 1.1 (caché)**: la bandeja se lee LIVE de Supabase (sin caché Dexie). La supresión real ahora es server-side (`notif_permitida` en los emisores) → filas apagadas ni se insertan. Nada que invalidar; el filtro en memoria `_silenced` (pref propia) se mantiene y es inofensivo.
+- **FASE 1.4 (push)**: `registrar_device_token` existe y `push.service` lo llama — OK. ⏳ **Pendiente device**: e2e de push en teléfono real + confirmar que `FCM_SERVICE_ACCOUNT_JSON` está configurado (FASE 0 del padre).
+
+### ✅ FASE 2 (BK2) — link de Maps, lado app
+- **`location-picker` (crear ruta)**: la lógica de `suggest_query` (precargar el buscador en vez de dejar el campo vacío) **ya estaba** (AU16, ronda previa) — verificada.
+- **"Tomé el link del mensaje"**: `geocoding.service.resolverLink()` ahora propaga `note` y `source` (antes los descartaba); `location-picker` y `lugar-picker` lo muestran como toast al resolver un mensaje completo de WhatsApp. Para `source='places'` se prefiere el nombre/dirección de la edge al reverse.
+- **Placeholders**: ambos pickers ahora dicen "…o el mensaje de WhatsApp". `lugar-picker` cambió `type="url"→text` (pegar el mensaje completo).
+- **FASE 2.3/2.4 (round-trip)**: `proyecto-detalle` genera `?api=1&query=lat,lng` y la edge ya matchea `query=` (regex índice 43) → resuelve. `proyectos.service.resolverUbicacion()` usa la misma edge → hereda. Verificado contra el código de la edge; ⏳ falta la prueba real teléfono→WhatsApp.
+
+### ✅ FASE 3 (BK5) — mínimos y máximos de fotos — **documentado**, ver `docs/bk5-limites-fotos.md`
+- **Mínimo (3.1)**: el padre NO creó `bitacora_min_fotos` → `MIN_FOTOS` **sigue hardcodeado** (parte=2, incidente=1, recibir=2), con comentario que apunta al doc. Reabrir cuando el padre publique el knob.
+- **Máximos por formulario (3.2)** — **decisión Xaviel: dejar en código + documentar** (son UX por pantalla, no política; `bitacora_max_fotos=40` sigue siendo el techo del server). Los 9 inventariados en el doc.
+- **Duplicados cross-repo (3.3)**: impersonación 1h, `STALE_MIN=10`, largo del PIN=6 — anotados en el doc (no unificados esta ronda).
+
+### ✅ FASE 4 (BK3) — participantes de Desempeño en la app — **aprobada por Xaviel, construida**
+- **Servicio**: `IncentivoGestionService` +`participantes()`/`candidatos()`/`setParticipante(usuarioId,participa,esChofer,motivo)` (RPCs del padre).
+- **Pantalla NUEVA** `pages/incentivos/participantes/` (ruta `/incentivos/participantes`, auto-gateada por `puede_gestionar_incentivos()`): lista del padrón con 2 toggles por persona (**Participa** + **Cuenta para el pago = es_chofer**, con hint "no cambia su rol"), pill PRUEBA, y **picker "Agregar persona"** (CollapsibleSelect searchable sobre `incentivo_candidatos`). Enlace "👥 Participantes" en el header de `/incentivos` (solo gestores).
+- **/mi-rendimiento para Misael**: **sin cambios necesarios** — el gate de ruta ya admite `jefe_flota` (Misael) y `incentivo_mi_rendimiento()` filtra solo `usuario_id=auth.uid()` (verificado). Marcar a Misael `es_chofer` en el padrón → `incentivo_generar_semana` (gateado por padrón) lo incluye → su pantalla se llena sola. ⏳ **device-QA**: marcar Misael y ver /mi-rendimiento llenarse.
+
+### ✅ FASE 5 (BK4) — reporte diario — nada en la app
+- Verificado: `resumen_operaciones` e `informe_incentivo` **están en `notif_tipo`** y gateados por `notif_permitida` → apagables por gobernanza (admin matriz web + honrado server-side). Nada que construir en la app.
+
+### 🔴 ANTES DE PUBLICAR (pendiente Xaviel)
+- **NO** se hizo commit/push/APK/publicar (regla del prompt). Falta: bump de versión (2.14.0) en los 4 sitios + `npm run apk`/`apk:publish` + publicar + commit PWA. **Avisar/decidir con Xaviel.**
+- **Migración ya en prod**: `sql/2026-09-07-bk1-mis-notif-estado.sql` (aditiva, read-only). Rollback si hiciera falta: `drop function if exists sgc.mis_notif_estado();` (la app cae al respaldo). Falta **commitear** este .sql + el código en el repo.
+- **Paridad SGC owed**: (1) adoptar `mis_notif_estado()`/admin-off en la web `ajustes-notificaciones`; (2) el knob `bitacora_min_fotos` sigue debiéndose en el padre.
+- **§F del CONTEXTO-ACTUALIZACION-18.md**: el archivo NO está en el repo (como en rondas previas). Decisiones tomadas en esta sesión: FASE 4 = SÍ (Xaviel), FASE 3.2 = dejar en código (Xaviel). El resto de §F no es consultable desde aquí.
+
+---
+
 ## 🟢 SESIÓN 07/09/2026 — PROMPT-35 ronda BJ (app) — **RELEASE 2.13.0 PUBLICADA (rolling) · commit `0613b10` PUSHEADO a main (PWA) · APK 2.13.0 firmado+registrado+SUBIDO · web util 1280/0.72 pusheada a SGC main `4187e43` (redeploy) · build+guard verdes**
 
 > ⚠️ **minima en prod = 2.12.0** (NO 2.10.0 como decía el HANDOFF de la sesión anterior — la corrección `minima-intacta-2.10.0` nunca llegó a prod, o algo re-registró 2.12.0 con minima=true). 2.13.0 quedó minima=false (NO forzado). Publicar 2.13.0 NO tocó minima → floor sigue 2.12.0 (usuarios <2.12.0 forzados; el resto recibe 2.13.0 como opcional). Si Xaviel quiere relajar el floor a 2.10.0: `update sgc.app_versiones set minima=(version='2.10.0') where plataforma='movil';` (decisión suya, no la tomé sola).

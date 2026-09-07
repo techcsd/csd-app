@@ -4,11 +4,11 @@
     <input
       type="text"
       class="field lp__link-input"
-      placeholder="Pega el link de Google Maps o coordenadas"
+      placeholder="Pega el link de Maps, las coordenadas o el mensaje de WhatsApp"
       [value]="linkTexto()"
       (input)="linkTexto.set($any($event.target).value)"
       (keyup.enter)="fijarLink()"
-      aria-label="Pegar link de Google Maps o coordenadas"
+      aria-label="Pegar link de Google Maps, coordenadas o mensaje de WhatsApp"
       inputmode="text"
       autocapitalize="off"
       autocomplete="off"

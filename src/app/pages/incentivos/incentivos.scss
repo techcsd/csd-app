@@ -28,6 +28,15 @@
   font-weight: 800;
   margin: 0;
 }
+// BK3 — enlace al padrón de participantes (solo gestores).
+.inc__part-link {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+  padding: 6px 8px;
+}
 
 // ── Selector de semana ────────────────────────────────────────────────────────
 .inc__semana-sel {

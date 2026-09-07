@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
@@ -26,7 +27,7 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
   selector: 'app-incentivos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, ConfirmDialog],
+  imports: [FormsModule, RouterLink, Skeleton, EmptyState, CollapsibleSelect, ConfirmDialog],
   templateUrl: './incentivos.html',
   styleUrl: './incentivos.scss',
 })

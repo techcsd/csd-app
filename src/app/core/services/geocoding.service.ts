@@ -90,7 +90,9 @@ export class GeocodingService {
    * que usa ProyectosService.resolverUbicacion). Geocodifica inverso para una
    * dirección legible. Lanza con mensaje claro en español si falla.
    */
-  async resolverLink(entrada: string): Promise<{ lat: number; lng: number; direccion: string }> {
+  async resolverLink(
+    entrada: string,
+  ): Promise<{ lat: number; lng: number; direccion: string; note?: string; source?: string }> {
     const { data, error } = await this.supabase.client.functions.invoke('resolve-maps-link', {
       body: { url: entrada },
     });
@@ -101,12 +103,29 @@ export class GeocodingService {
       const body = await this.readEdgeError(error);
       throw this.buildLinkError(body);
     }
-    const r = data as { lat?: number; lng?: number; error?: string; suggest_query?: string; resolved_url?: string };
+    // BK2 — la edge devuelve `note` cuando extrajo el link de un mensaje completo
+    // ("Tomé el link del mensaje.") y `source` (coords|maps_link|places). Los
+    // propagamos para que la UI lo diga (antes se descartaban). Para `places` la
+    // edge ya trae un nombre/dirección buenos → los preferimos al reverse.
+    const r = data as {
+      lat?: number;
+      lng?: number;
+      error?: string;
+      suggest_query?: string;
+      resolved_url?: string;
+      note?: string;
+      source?: string;
+      name?: string;
+      address?: string;
+    };
     if (r?.error || r?.lat == null || r?.lng == null) {
       throw this.buildLinkError(r);
     }
-    const direccion = await this.reverse(r.lat, r.lng);
-    return { lat: r.lat, lng: r.lng, direccion };
+    const direccion =
+      r.source === 'places' && (r.name || r.address)
+        ? [r.name, r.address].filter(Boolean).join(' — ')
+        : await this.reverse(r.lat, r.lng);
+    return { lat: r.lat, lng: r.lng, direccion, note: r.note?.trim() || undefined, source: r.source };
   }
 
   /** Lee el body JSON de un error de edge function (FunctionsHttpError → Response). */

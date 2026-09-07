@@ -64,12 +64,22 @@
     (cancelled)="cancelarBorrarTodas()"
   />
 
-  <!-- AT23 — hoja de preferencias de avisos (silenciar categorías informativas) -->
+  <!-- BK1 — hoja de preferencias de avisos: catálogo del servidor + estado de admin -->
   <app-bottom-sheet [open]="prefsAbierto()" titulo="Preferencias de avisos" (closed)="cerrarPrefs()">
     <div class="avisos-prefs">
-      <p class="avisos-prefs__intro">Elige qué avisos quieres recibir en la app. Los que apagues dejan de aparecer aquí (no afectan a los demás).</p>
-      @for (c of categorias; track c.tipo) {
-        <app-toggle-switch [checked]="recibe(c.tipo)" [label]="c.label" (checkedChange)="onTogglePref(c.tipo, $event)" />
+      <p class="avisos-prefs__intro">Elige qué avisos quieres recibir en la app. Los que apagues dejan de llegarte (aquí y como notificación). Algunos los gestiona Administración.</p>
+      @for (e of estadosVisibles(); track e.tipo) {
+        @if (editable(e)) {
+          <app-toggle-switch [checked]="recibe(e)" [label]="e.etiqueta" (checkedChange)="onTogglePref(e, $event)" />
+        } @else {
+          <div class="avisos-prefs__locked">
+            <span class="avisos-prefs__locked-label">{{ e.etiqueta }}</span>
+            <span
+              class="avisos-prefs__locked-tag"
+              [class.avisos-prefs__locked-tag--admin]="e.deshabilitado_por_admin"
+            >{{ estadoLabel(e) }}</span>
+          </div>
+        }
       }
     </div>
   </app-bottom-sheet>

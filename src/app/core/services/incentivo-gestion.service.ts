@@ -43,6 +43,31 @@ export interface IncentivoGestionFila {
   decidido_en: string | null;
 }
 
+/**
+ * BK3 — una fila del padrón de Desempeño (RPC `incentivo_participantes`). La llave
+ * es el USUARIO (no el conductor), así entran personas sin el rol chofer (Misael:
+ * jefe_flota) y `es_chofer` se marca como DATO, no como rol. Solo `es_chofer &&
+ * participa` cuenta para el pago (lo gatea el motor server-side).
+ */
+export interface IncentivoParticipante {
+  conductor_id: string | null;
+  usuario_id: string;
+  nombre: string;
+  participa: boolean;
+  es_prueba: boolean;
+  es_chofer: boolean;
+  ultimo_cambio_en: string | null;
+  ultimo_cambio_por: string | null;
+  ultimo_motivo: string | null;
+}
+
+/** BK3 — candidato para "Agregar persona" (RPC `incentivo_candidatos`): usuarios
+ *  activos que aún NO están en el padrón. */
+export interface IncentivoCandidato {
+  usuario_id: string;
+  nombre: string;
+}
+
 /** Una entrada del historial inmutable de decisiones (RPC `incentivo_historial`). */
 export interface IncentivoDecisionHist {
   decision: string;
@@ -108,5 +133,40 @@ export class IncentivoGestionService {
     });
     if (error) throw new Error(error.message);
     return (data as IncentivoDecisionHist[]) ?? [];
+  }
+
+  // ── BK3 — Padrón de participantes ────────────────────────────────────────────
+  /** Padrón actual de Desempeño (todos los usuarios incluidos, choferes o no). */
+  async participantes(): Promise<IncentivoParticipante[]> {
+    const { data, error } = await this.supabase.client.rpc('incentivo_participantes');
+    if (error) throw new Error(error.message);
+    return (data as IncentivoParticipante[]) ?? [];
+  }
+
+  /** Candidatos para "Agregar persona" (activos que aún no están en el padrón). */
+  async candidatos(): Promise<IncentivoCandidato[]> {
+    const { data, error } = await this.supabase.client.rpc('incentivo_candidatos');
+    if (error) throw new Error(error.message);
+    return (data as IncentivoCandidato[]) ?? [];
+  }
+
+  /**
+   * Agrega/actualiza a una persona en el padrón: `participa` (dentro/fuera del
+   * incentivo) y `es_chofer` (cuenta para el pago). Marcar es_chofer NO otorga el
+   * rol — solo declara la condición (BK3 §F). Idempotente por usuario.
+   */
+  async setParticipante(
+    usuarioId: string,
+    participa: boolean,
+    esChofer: boolean,
+    motivo: string | null = null,
+  ): Promise<void> {
+    const { error } = await this.supabase.client.rpc('set_incentivo_participante', {
+      p_usuario_id: usuarioId,
+      p_participa: participa,
+      p_es_chofer: esChofer,
+      p_motivo: motivo,
+    });
+    if (error) throw new Error(error.message);
   }
 }

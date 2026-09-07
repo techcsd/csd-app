@@ -225,13 +225,15 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     this.resolviendo.set(true);
     this.linkError.set('');
     try {
-      const { lat, lng, direccion } = await this.geocoding.resolverLink(entrada);
+      const { lat, lng, direccion, note } = await this.geocoding.resolverLink(entrada);
       this.centrar(lat, lng, 16);
       await this.setMarker(lat, lng, false);
       this.direccion.set(direccion);
       this.ubicacionChange.emit({ latitud: lat, longitud: lng, direccion });
       this.linkTexto.set('');
       this.busquedaError.set('');
+      // BK2 — si la edge extrajo la URL de un mensaje completo (WhatsApp), decirlo.
+      if (note) this.toast.success(note);
     } catch (e) {
       const err = e as { message?: string; suggestQuery?: string };
       this.linkError.set(

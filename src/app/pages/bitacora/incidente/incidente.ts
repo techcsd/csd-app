@@ -28,7 +28,9 @@ import {
 } from '../../../core/models/bitacora.model';
 
 const TOTAL = 7;
-const MIN_FOTOS = 1; // S6 — el RPC exige ≥1 foto en incidentes.
+// S6 — el RPC exige ≥1 foto en incidentes. BK5: el knob `bitacora_min_fotos` del padre
+// no existe → sigue hardcodeado (ver docs/bk5-limites-fotos.md).
+const MIN_FOTOS = 1;
 
 /**
  * S11/S12/S13 — reporte de incidencia tipo hojas (patrón del parte): obra → tipo

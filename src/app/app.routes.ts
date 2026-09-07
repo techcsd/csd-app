@@ -772,6 +772,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/incentivos/incentivos').then((m) => m.IncentivosPage),
   },
   {
+    // BK3 — "Participantes del Desempeño": padrón keyed en usuarios (incluir a
+    // alguien sin el rol chofer, p. ej. Misael/jefe_flota, y marcar es_chofer como
+    // dato). Auto-gateada con puede_gestionar_incentivos() igual que /incentivos.
+    path: 'incentivos/participantes',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/incentivos/participantes/participantes').then((m) => m.IncentivoParticipantesPage),
+  },
+  {
     path: 'perfil',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/perfil/perfil').then((m) => m.PerfilPage),
