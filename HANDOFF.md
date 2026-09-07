@@ -1,6 +1,6 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 07/09/2026 — PROMPT-37 ronda BK (app) — **CÓDIGO LISTO · build+guard verdes · 1 migración aditiva APLICADA a prod · SIN commit/push/APK (esperando a Xaviel)**
+## 🟢 SESIÓN 07/09/2026 — PROMPT-37 ronda BK (app) — **RELEASE 2.14.0 PUBLICADA (rolling) · commit `30449de` PUSHEADO a main (PWA) · APK 2.14.0 firmado+registrado+SUBIDO · minima INTACTA en 2.13.0 · build+guard verdes**
 
 > El padre **PROMPT-36-SGC (ronda BK)** ya está EN PROD (verificado por agente): `notif_tipo` (catálogo, ~37 tipos activos) + `notif_regla` con nivel usuario + `notif_permitida` cableado en los 7 emisores + trigger de versión; edge `resolve-maps-link` con `suggest_query`/`query=`/extracción de mensaje WhatsApp; padrón `incentivo_participante` (llave en `usuarios`) + `set_incentivo_participante` + `incentivo_participantes`/`incentivo_candidatos`. **Único hueco del padre: NO creó el knob `bitacora_min_fotos`** (FASE 3.1 queda hardcodeada).
 
@@ -31,11 +31,23 @@
 ### ✅ FASE 5 (BK4) — reporte diario — nada en la app
 - Verificado: `resumen_operaciones` e `informe_incentivo` **están en `notif_tipo`** y gateados por `notif_permitida` → apagables por gobernanza (admin matriz web + honrado server-side). Nada que construir en la app.
 
-### 🔴 ANTES DE PUBLICAR (pendiente Xaviel)
-- **NO** se hizo commit/push/APK/publicar (regla del prompt). Falta: bump de versión (2.14.0) en los 4 sitios + `npm run apk`/`apk:publish` + publicar + commit PWA. **Avisar/decidir con Xaviel.**
-- **Migración ya en prod**: `sql/2026-09-07-bk1-mis-notif-estado.sql` (aditiva, read-only). Rollback si hiciera falta: `drop function if exists sgc.mis_notif_estado();` (la app cae al respaldo). Falta **commitear** este .sql + el código en el repo.
-- **Paridad SGC owed**: (1) adoptar `mis_notif_estado()`/admin-off en la web `ajustes-notificaciones`; (2) el knob `bitacora_min_fotos` sigue debiéndose en el padre.
-- **§F del CONTEXTO-ACTUALIZACION-18.md**: el archivo NO está en el repo (como en rondas previas). Decisiones tomadas en esta sesión: FASE 4 = SÍ (Xaviel), FASE 3.2 = dejar en código (Xaviel). El resto de §F no es consultable desde aquí.
+### 🚀 Release 2.14.0 — PUBLICADA (rolling) — TODO HECHO (07-sep)
+- **Versión bumpeada** en los 4 sitios: `environment.ts`, `environment.prod.ts`, `android/app/build.gradle` (appVersionName), `scripts/release-apk.mjs` (VERSION + TITULO + CAMBIOS_CURADOS BK). versionCode derivado = 2 014 000.
+- **APK 2.14.0** firmado (cert prod `3c5316d8…5065`), **registrado (Y1)** con `CAMBIOS_CURADOS` (3 cambios: Avisos/mejora, Ubicación/mejora, Desempeño/nuevo) y **subido al bucket** (`csd-app-2.14.0.apk` + `latest` + `version.json` + `apk_url`). Descarga: `…/app-releases/csd-app-2.14.0.apk`.
+- **Publicada**: `sql/2026-09-07-publicar-2.14.0.sql` → `publicada=(2.14.0)`. Estado verificado: publicada **2.14.0** / **minima INTACTA en 2.13.0** (gotcha evitado: 2.14.0 minima=false). ⚠️ Ojo: el floor `minima` subió a **2.13.0** en algún momento entre sesiones (el HANDOFF previo decía 2.12.0) — decisión de admin fuera de mis sesiones; NO lo toqué. Si Xaviel quiere relajarlo: `update sgc.app_versiones set minima=(version='2.12.0') where plataforma='movil';`.
+- **Commit pusheado a main**: `30449de` (PWA → Vercel).
+- **Migración aditiva en prod**: `sql/2026-09-07-bk1-mis-notif-estado.sql` (read-only, own-uid) — YA aplicada + commiteada.
+- **Rollback Android**: `update sgc.app_versiones set publicada=(version='2.13.0') where plataforma='movil';` · **Rollback PWA**: `git revert 30449de && git push` · **Rollback RPC**: `drop function if exists sgc.mis_notif_estado();` (la app cae al respaldo).
+
+### 🔴 Verificación device / prod PENDIENTE (no se puede desde aquí)
+- **BK1**: con un tipo apagado por Administración para una cuenta, entrar con ESA cuenta → no ve fila/toast/push + la hoja de Avisos muestra "Desactivado por Administración". Push e2e en teléfono real + confirmar `FCM_SERVICE_ACCOUNT_JSON` (FASE 0 del padre).
+- **BK2**: link de Maps → WhatsApp → copiar mensaje completo → pegar en crear-ruta → resuelve + "Tomé el link del mensaje".
+- **BK3**: marcar a Misael `es_chofer` en `/incentivos/participantes` → su `/mi-rendimiento` se llena.
+
+### 🟡 Paridad SGC owed (regla #5)
+- Adoptar `mis_notif_estado()`/admin-off en la web `ajustes-notificaciones` (hoy no lo muestra).
+- El knob `bitacora_min_fotos` sigue debiéndose en el padre (FASE 3.1 hardcodeada mientras tanto).
+- **§F del CONTEXTO-ACTUALIZACION-18.md**: el archivo NO está en el repo (como en rondas previas). Decisiones de esta sesión: FASE 4 = SÍ, FASE 3.2 = dejar en código (ambas de Xaviel). El resto de §F no es consultable desde aquí.
 
 ---
 
