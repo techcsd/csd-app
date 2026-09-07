@@ -1,6 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 07/09/2026 — PROMPT-35 ronda BJ (app) — **CÓDIGO HECHO · build+guard verdes · release 2.13.0 PREPARADO (versión bumpeada, changelog curado) · SIN commit/push/APK/publicar (esperando GO de Xaviel)**
+## 🟢 SESIÓN 07/09/2026 — PROMPT-35 ronda BJ (app) — **RELEASE 2.13.0 PUBLICADA (rolling) · commit `0613b10` PUSHEADO a main (PWA) · APK 2.13.0 firmado+registrado+SUBIDO · web util 1280/0.72 pusheada a SGC main `4187e43` (redeploy) · build+guard verdes**
+
+> ⚠️ **minima en prod = 2.12.0** (NO 2.10.0 como decía el HANDOFF de la sesión anterior — la corrección `minima-intacta-2.10.0` nunca llegó a prod, o algo re-registró 2.12.0 con minima=true). 2.13.0 quedó minima=false (NO forzado). Publicar 2.13.0 NO tocó minima → floor sigue 2.12.0 (usuarios <2.12.0 forzados; el resto recibe 2.13.0 como opcional). Si Xaviel quiere relajar el floor a 2.10.0: `update sgc.app_versiones set minima=(version='2.10.0') where plataforma='movil';` (decisión suya, no la tomé sola).
 
 > Nota: los `CONTEXTO-ACTUALIZACION-15/16/17.md` **no están en el repo**; se trabajó desde las refs archivo:línea del prompt + los repos hermanos. **Todas las decisiones §F ya estaban resueltas** en `../dev/SGC` (ronda BJ web ya SHIPPED en 1.112.0–1.115.0), así que nada quedó bloqueado.
 
@@ -25,11 +27,12 @@
 - Botón **📋 Duplicar** en `articulo-detalle` (mismo gate que Editar) → `articulo-nuevo` con `history.state.duplicarDe`. Prellena nombre "(copia)"/categoría/unidad/propiedad/nota; **código lo acuña `crear_articulo_app`**, sin heredar foto ni `articulo_imagenes`.
 - **`requiere_talla` visible** como aviso (no persistible: el RPC no lo acepta → es del lado web, como dice #2). Display-only en la app.
 
-### Release 2.13.0 — PREPARADO (sin publicar)
+### 🚀 Release 2.13.0 — PUBLICADA (rolling) — TODO HECHO (07-sep)
 - **Versión bumpeada** en los 4 sitios: `environment.ts`, `environment.prod.ts`, `android/app/build.gradle` (appVersionName), `scripts/release-apk.mjs` (VERSION + RELEASED_AT 2026-09-07). versionCode derivado = 2 013 000.
-- **`CAMBIOS_CURADOS` curado** (3 cambios: arreglo Proyectos, mejora Fotos, nuevo Inventario-Duplicar). TITULO nuevo.
-- `npm run build` + prebuild (verify-tokens) **verdes**.
-- **PENDIENTE (GO de Xaviel)**: (1) `npm run apk` (build firmado + registra Y1, sin publicar) → luego `npm run apk:publish` + publicar en SGC; (2) **redeploy web** por el cambio de `evidencia` en el util; (3) commit/push (PWA). **minima INTACTA en 2.10.0 — no forzar.**
+- **APK 2.13.0** firmado (cert prod `3c5316d8…5065`), **registrado (Y1)** con `CAMBIOS_CURADOS` (3 cambios: arreglo Proyectos, mejora Fotos, nuevo Duplicar) y **subido al bucket** (`csd-app-2.13.0.apk` + `latest` + `version.json` + `apk_url`). Descarga: `…/app-releases/csd-app-2.13.0.apk`.
+- **Publicada:** `sql/2026-09-07-publicar-2.13.0.sql` → `publicada=(2.13.0)`. `version_publicada()` verificado: publicada **2.13.0** / minima **2.12.0** / apk_url OK / notas = changelog. 2.13.0 minima=false (gotcha evitado).
+- **Commits pusheados a main:** csd-app `0613b10` (PWA → Vercel) · SGC web `4187e43` (util evidencia 1280/0.72 → Vercel web redeploy).
+- **Rollback Android:** `update sgc.app_versiones set publicada=(version='2.12.0') where plataforma='movil';` · **Rollback PWA:** `git revert 0613b10 && git push` · **Rollback web util:** `git revert 4187e43 && git push` en SGC.
 
 ### 🔴 Verificación device / prod PENDIENTE (no se puede desde aquí)
 - **BJ1 #9**: medir peso medio de foto ANTES/DESPUÉS en un teléfono real de obra (es el número que justifica la tanda).
