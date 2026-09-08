@@ -26,16 +26,43 @@
       </div>
 
       <label class="field-label tareas__mt">Asignar a</label>
-      <input class="field" type="search" [ngModel]="asignBusqueda()"
-        (ngModelChange)="asignBusqueda.set($event); buscarAsignado()" placeholder="Buscar por nombre o correo…" />
-      @if (buscando()) { <p class="tareas__hint">Buscando…</p> }
-      @for (u of asignResultados(); track u.id) {
-        <button type="button" class="tareas__ures" (click)="pickAsignado(u)">
-          <span class="tareas__ures-nombre">{{ u.nombre }}</span>
-          @if (u.email) { <span class="tareas__ures-email">{{ u.email | emailDisplay }}</span> }
-        </button>
+      <!-- BL10 — roster completo precargado (usuarios_asignables): abre con TODOS,
+           con rol y marca de homónimo; la búsqueda solo filtra lo ya cargado. -->
+      @if (asignSel(); as u) {
+        <div class="tareas__sel">
+          ✓ Se la asignas a <b>{{ u.nombre }}</b>
+          @if (u.roles_label) { <span class="tareas__ures-rol">· {{ u.roles_label }}</span> }
+          <button type="button" class="tareas__cambiar" (click)="cambiarAsignado()">Cambiar</button>
+        </div>
+      } @else {
+        <input class="field" type="search" [ngModel]="asignBusqueda()"
+          (ngModelChange)="asignBusqueda.set($event); filtrarAsignados()" placeholder="Filtrar por nombre o correo…" />
+        @if (buscando()) {
+          <p class="tareas__hint">Cargando lista…</p>
+        } @else if (asignFallo()) {
+          <!-- 8ª regla: no afirmamos "no hay a quién asignar" si la consulta falló. -->
+          <div class="tareas__load-error">
+            <span>⚠️ No pudimos cargar la lista de personas. Revisa tu conexión.</span>
+            <button type="button" class="btn-outline" (click)="cargarRoster()">Reintentar</button>
+          </div>
+        } @else {
+          @for (u of asignResultados(); track u.id) {
+            <button type="button" class="tareas__ures" (click)="pickAsignado(u)">
+              <span class="tareas__ures-nombre">
+                {{ u.nombre }}
+                @if (u.es_duplicado) { <span class="tareas__ures-dup" title="Hay más de una persona con este nombre">⚠️ homónimo</span> }
+                @if (u.es_prueba) { <span class="tareas__ures-prueba">PRUEBA</span> }
+              </span>
+              <span class="tareas__ures-meta">
+                @if (u.roles_label) { <span class="tareas__ures-rol">{{ u.roles_label }}</span> }
+                @if (u.email) { <span class="tareas__ures-email">{{ u.email | emailDisplay }}</span> }
+              </span>
+            </button>
+          } @empty {
+            <p class="tareas__hint">{{ asignBusqueda().trim() ? 'Nadie coincide con la búsqueda.' : 'No hay personas para asignar.' }}</p>
+          }
+        }
       }
-      @if (asignSel(); as u) { <div class="tareas__sel">✓ Se la asignas a <b>{{ u.nombre }}</b></div> }
 
       <label class="field-label tareas__mt">Fecha límite (opcional)</label>
       <input class="field" type="date" [ngModel]="nuevaFechaLimite()" (ngModelChange)="nuevaFechaLimite.set($event)" />

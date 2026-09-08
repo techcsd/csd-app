@@ -8,7 +8,7 @@ import { ClLiberacionService } from '../../../core/services/cl-liberacion.servic
 import { ObraService } from '../../../core/services/obra.service';
 import { BitacoraFull } from '../../../core/models/bitacora.model';
 import { ClPendiente } from '../../../core/models/cl-liberacion.model';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 
 /**
  * BH2 — "Dashboard de bitácora": el pulso de la obra en la app, de solo lectura.
@@ -40,8 +40,10 @@ export class BitacoraDashboardPage {
   ncAbiertas = signal(0);
   viendoTodas = signal(false);
 
-  private hoyStr = new Date().toISOString().slice(0, 10);
-  private hace7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+  // BL9 — día LOCAL, no UTC: `toISOString()` en UTC-4 clasificaba lo capturado
+  // después de las 20:00 como del día siguiente (falseaba "hoy" y "la semana").
+  private hoyStr = fechaLocalISO();
+  private hace7 = fechaLocalISO(new Date(Date.now() - 7 * 864e5));
 
   hoyCount = computed(() => this.bitacoras().filter((b) => (b.fecha ?? '').slice(0, 10) === this.hoyStr).length);
   semanaCount = computed(() => this.bitacoras().filter((b) => (b.fecha ?? '') >= this.hace7).length);

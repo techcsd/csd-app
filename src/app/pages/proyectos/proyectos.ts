@@ -38,6 +38,9 @@ export class ProyectosPage {
   lista = signal<ProyectoApp[]>([]);
   loading = signal(true);
   refrescando = signal(false);
+  // BL2 — la consulta falló y no hay nada cacheado que mostrar → estado de error
+  // con reintento (NO "no tienes obras"). Se distingue del vacío legítimo.
+  error = signal(false);
   query = signal('');
   zonaFiltro = signal(''); // AS23 — filtro por zona
   avisosCount = signal(0); // Y15 (FASE 5)
@@ -83,7 +86,15 @@ export class ProyectosPage {
     if (!silent) this.loading.set(true);
     this.refrescando.set(true);
     try {
-      this.lista.set(await this.proyectos.getProyectos());
+      // BL2 — antes era un try/finally SIN catch: un throw dejaba lista()=[] +
+      // loading=false → idéntico a "no hay obras". Ahora distinguimos el fallo.
+      const res = await this.proyectos.getProyectosDetailed();
+      this.lista.set(res.items);
+      // Solo es "error" si falló Y no hay nada que mostrar; si hay caché, la
+      // mostramos (el banner de "sin conexión" ya avisa que puede estar vieja).
+      this.error.set(res.failed && res.items.length === 0);
+    } catch {
+      this.error.set(this.lista().length === 0);
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);

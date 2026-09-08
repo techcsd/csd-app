@@ -156,6 +156,9 @@ export class ReporteSemanalPage extends GuardedWizard {
   });
 
   loading = signal(true);
+  // BL2 — la consulta del pool falló y no hay nada cacheado → error+reintento (NO
+  // "no hay vehículos en el pool", causa que la query nunca evalúa).
+  error = signal(false);
   /** Q2 — deep-link ?item=<vehiculo_id>: resalta y hace scroll a esa tarjeta. */
   highlightedId = signal<string | null>(null);
   semana = signal<ReporteSemanalVeh[]>([]);
@@ -416,20 +419,23 @@ export class ReporteSemanalPage extends GuardedWizard {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [semana, plantilla, fotoSlots, cond, pool, asignaciones, recepcionesEnCola] = await Promise.all([
+      const [semana, plantilla, fotoSlots, cond, poolRes, asignaciones, recepcionesEnCola] = await Promise.all([
         this.reportes.getSemanaTodas(), // AA3 — estado por vehículo, no solo los míos
         this.reportes.getPlantilla(),
         this.reportes.getFotoSlotsSemanal(), // Z11
         this.conductores.getMiConductor(),
-        this.vehiculos.getVehiculosDisponibles(),
+        this.vehiculos.getVehiculosDisponiblesDetailed(), // BL2
         this.vehiculos.getMisAsignaciones().catch(() => []),
         this.vehiculos.entregasRecepcionPendientes().catch(() => new Set<string>()),
       ]);
+      const pool = poolRes.items;
       this.semana.set(semana);
       this.plantilla.set(plantilla);
       this.fotoSlots.set(fotoSlots); // Z11
       this.conductorId = cond?.id ?? null;
       this.pool.set(pool);
+      // BL2 — solo error si falló Y no hay nada cacheado que mostrar.
+      this.error.set(poolRes.failed && pool.length === 0);
       // W4 — "Tus vehículos" = asignados a mí + recepciones aún en la cola (U12).
       this.misIds.set(new Set([...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola]));
       void this.loadFotos(pool.map((v) => v.vehiculo_id));
@@ -776,6 +782,11 @@ export class ReporteSemanalPage extends GuardedWizard {
 
   irAsignar(): void {
     void this.router.navigate(['/transporte/asignar']);
+  }
+
+  /** BL2 — reintento del listado tras un fallo (botón "Reintentar"). */
+  reintentar(): void {
+    void this.load();
   }
 
   get online(): boolean {

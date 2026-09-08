@@ -9,11 +9,25 @@
 
       @if (loading()) {
         <app-skeleton [rows]="4" />
+      } @else if (error()) {
+        <!-- BL2 — la consulta del pool falló y no hay nada cacheado: NO afirmamos
+             una causa (asignados / fuera de servicio) que no evaluamos. -->
+        <app-empty-state
+          icon="⚠️"
+          title="No pudimos cargar los vehículos"
+          [message]="online ? 'Hubo un problema al consultar el pool. Reintenta en un momento.' : 'Sin conexión. Conéctate y reintenta.'"
+          ctaLabel="Reintentar"
+          (action)="reintentar()"
+          secondaryLabel="Volver"
+          (secondaryAction)="back()"
+        />
       } @else if (!disponibles().length) {
+        <!-- BL2 — vacío legítimo (la consulta respondió con 0): texto neutral, sin
+             afirmar la causa. -->
         <app-empty-state
           icon="🚗"
-          title="No hay vehículos disponibles"
-          message="Todos los vehículos están asignados o fuera de servicio ahora mismo. Vuelve más tarde o consulta con Flota."
+          title="No vemos vehículos para asignarte"
+          message="Ahora mismo no hay vehículos en el pool. Si esperabas alguno, consulta con Flota."
           secondaryLabel="Volver"
           (secondaryAction)="back()"
         />

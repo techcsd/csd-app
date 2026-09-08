@@ -35,6 +35,8 @@ export class VehiculosListaPage {
   fmtHora = formatFechaCortaHora; // AT17
 
   loading = signal(true);
+  // BL2 — la consulta de la flota falló y no hay nada cacheado → error+reintento.
+  error = signal(false);
   private todos = signal<VehiculoDisponible[]>([]);
   fotoUrls = signal<Record<string, string>>({});
   query = signal('');
@@ -79,11 +81,18 @@ export class VehiculosListaPage {
     void this.load();
   }
 
+  /** BL2 — reintento del listado tras un fallo (botón "Reintentar"). */
+  reintentar(): void {
+    void this.load();
+  }
+
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const flota = await this.vehiculos.getFlota();
+      const flotaRes = await this.vehiculos.getFlotaDetailed(); // BL2
+      const flota = flotaRes.items;
       this.todos.set(flota);
+      this.error.set(flotaRes.failed && flota.length === 0); // BL2
       void this.resolveFotos(flota);
     } finally {
       this.loading.set(false);

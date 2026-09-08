@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { UserContextService } from './user-context.service';
-import { CatalogService } from '../sync/catalog.service';
+import { CatalogService, ListaCatalogo } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta } from './audio-notas.service';
 import { db } from '../db/app-db';
@@ -351,7 +351,17 @@ export class VehiculosService {
 
   /** Whole active fleet (any estado) for the browse/profile list, cached. */
   async getFlota(): Promise<VehiculoDisponible[]> {
-    const data = await this.catalog.refresh<VehiculoDisponible[]>('flota_vehiculos', async () => {
+    return (await this.getFlotaDetailed()).items;
+  }
+
+  /**
+   * BL2 — igual que `getFlota`, pero DISTINGUE "no hay vehículos" de "la consulta
+   * falló" (8ª regla). La lista de Vehículos usa `failed` para mostrar
+   * error+reintento en vez de afirmar "no hay vehículos activos en la flota" cuando
+   * en realidad se cayó la red/RLS.
+   */
+  async getFlotaDetailed(): Promise<ListaCatalogo<VehiculoDisponible>> {
+    const res = await this.catalog.refreshDetailed<VehiculoDisponible[]>('flota_vehiculos', async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
         .select('id, placa, marca, modelo, color, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
@@ -371,7 +381,7 @@ export class VehiculosService {
         es_prueba: (v['es_prueba'] as boolean) ?? false,
       }));
     });
-    return data ?? [];
+    return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
   }
 
   /**
@@ -393,7 +403,17 @@ export class VehiculosService {
 
   /** Vehicles available to self-assign (activo + estado disponible), cached. */
   async getVehiculosDisponibles(): Promise<VehiculoDisponible[]> {
-    const data = await this.catalog.refresh<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
+    return (await this.getVehiculosDisponiblesDetailed()).items;
+  }
+
+  /**
+   * BL2 — igual que `getVehiculosDisponibles`, pero DISTINGUE "no hay vehículos"
+   * de "la consulta falló" (8ª regla). El picker usa `failed` para mostrar
+   * error+reintento en vez del texto que afirmaba una causa (asignación / fuera de
+   * servicio) que esta query NUNCA evalúa.
+   */
+  async getVehiculosDisponiblesDetailed(): Promise<ListaCatalogo<VehiculoDisponible>> {
+    const res = await this.catalog.refreshDetailed<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
         .select('id, placa, marca, modelo, color, anio, tipo, medida_uso, kilometraje, estado, activo, fotos, es_prueba')
@@ -419,8 +439,9 @@ export class VehiculosService {
     // "Amarok de prueba en uso por Misael"): se filtra aquí, en la única fuente que
     // alimenta todos los selectores (picker, asignarme, semanal, generar conduce…).
     // El admin (rol) SÍ los ve para QA.
-    const rows = data ?? [];
-    return this.ctx.esAdmin() ? rows : rows.filter((v) => !v.es_prueba);
+    const rows = res.data ?? [];
+    const items = this.ctx.esAdmin() ? rows : rows.filter((v) => !v.es_prueba);
+    return { items, failed: res.failed, fromCache: res.fromCache };
   }
 
   /** U6 — foto_path (primera) por vehículo, para pintar fotos en listas. */

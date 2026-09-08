@@ -88,6 +88,26 @@ export class ConducesPage implements OnDestroy {
     return PARADA_ESTADO_LABEL[e] ?? e;
   }
 
+  /**
+   * BL8 — una ruta está VIVA (acepta navegación/ejecución) solo si está
+   * planificada o en curso. Mismo predicado que la RUTA VIVA de AF25
+   * (conduces.html), extraído aquí para no repetir el `@if` en cada botón.
+   * Una ruta `completada`/`cancelada` no muestra "Cómo llegar" ni acciones.
+   */
+  rutaActiva(r: RutaHoy): boolean {
+    return r.estado === 'planificada' || r.estado === 'en_curso';
+  }
+
+  /**
+   * BL8 — una parada es ACCIONABLE solo si su ruta padre está viva y la parada
+   * no está cerrada (entregada u omitida). Este único helper gatea los SEIS
+   * botones de la parada (Cómo llegar, En camino, Entregar conduce, Completar
+   * parada, Entregar con firma, Adjuntar conduce), así ninguno se queda sin gate.
+   */
+  paradaAccionable(r: RutaHoy, p: RutaParadaEjec): boolean {
+    return this.rutaActiva(r) && p.estado !== 'entregada' && p.estado !== 'omitida';
+  }
+
   conduces = signal<Conduce[]>([]);
   rutas = signal<RutaHoy[]>([]);
   loading = signal(true);

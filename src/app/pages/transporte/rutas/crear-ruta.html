@@ -52,17 +52,26 @@
           @if (esElevado) {
             <label class="field-label cruta__paradas-lbl">¿A quién se la asignas?</label>
             <p class="field-hint">El conductor recibirá un aviso con la ruta.</p>
-            <!-- AK6 — dropdown cerrado por defecto (antes lista abierta). -->
-            <app-collapsible-select
-              label="Conductor asignado"
-              icon="🪪"
-              placeholder="Seleccionar conductor"
-              [options]="conductorOpts()"
-              [selectedId]="conductorId()"
-              [searchable]="true"
-              searchPlaceholder="Buscar conductor…"
-              (picked)="conductorId.set($event)"
-            />
+            @if (conductoresFallo()) {
+              <!-- BL2 — el roster falló (RLS/red): NO mostrar el selector con "No hay
+                   opciones" (afirma que no hay conductores). Mostrar el fallo real. -->
+              <div class="cruta__load-error">
+                <span>⚠️ No pudimos cargar los conductores. Revisa tu conexión.</span>
+                <button type="button" class="btn-outline" (click)="reintentarConductores()">Reintentar</button>
+              </div>
+            } @else {
+              <!-- AK6 — dropdown cerrado por defecto (antes lista abierta). -->
+              <app-collapsible-select
+                label="Conductor asignado"
+                icon="🪪"
+                placeholder="Seleccionar conductor"
+                [options]="conductorOpts()"
+                [selectedId]="conductorId()"
+                [searchable]="true"
+                searchPlaceholder="Buscar conductor…"
+                (picked)="conductorId.set($event)"
+              />
+            }
           }
         }
 

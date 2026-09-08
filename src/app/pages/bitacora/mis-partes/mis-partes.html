@@ -71,10 +71,17 @@
           <div class="bit-row__info">
             <span class="bit-row__tipo">{{ titulo(b) }}</span>
             <span class="bit-row__obra">{{ b.proyecto?.nombre ?? '—' }}</span>
-            <!-- AW2 — autor (en "Todas") + fecha · hora exacta -->
+            <!-- AW2 — autor (en "Todas"). BL9 — se muestra SIEMPRE el día que la
+                 bitácora documenta (`fecha`), no la hora de `created_at` (que era
+                 la de HOY en un parte retrofechado). Si se registró otro día, se
+                 marca + se muestra cuándo se envió. -->
             <span class="bit-row__fecha">
               @if (vista() === 'todas' && b.autor_nombre) { 🧑‍🔧 {{ b.autor_nombre }} · }
-              {{ b.created_at ? fmtHora(b.created_at) : fmtFecha(b.fecha) }}
+              📅 {{ fmtFecha(b.fecha) }}
+              @if (esDeOtraFecha(b)) {
+                <span class="bit-row__otra-fecha" title="La bitácora es de otra fecha">otra fecha</span>
+                @if (b.created_at) { <span class="bit-row__enviada">· enviada {{ fmtHora(b.created_at) }}</span> }
+              }
             </span>
           </div>
           <span class="bit-row__chev">›</span>

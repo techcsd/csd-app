@@ -67,6 +67,15 @@ export function formatHora(ts: string | null | undefined): string {
   return `${h}:${min} ${period}`;
 }
 
+/**
+ * BL9 — `YYYY-MM-DD` del día LOCAL de una fecha (default hoy). Reemplaza el patrón
+ * `new Date().toISOString().slice(0,10)`, que devuelve el día en UTC y en UTC-4
+ * misclasifica todo lo capturado después de las 20:00 como del día siguiente.
+ */
+export function fechaLocalISO(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 /** `YYYY-MM-DD` local de un timestamp (para comparar días calendario, sin UTC). */
 function diaLocal(ts: string | null | undefined): string {
   if (!ts) return '';
@@ -78,6 +87,23 @@ function diaLocal(ts: string | null | undefined): string {
 /** AT14 — true si `a` y `b` caen en días calendario locales distintos (separador de fecha del chat). */
 export function esOtroDia(a: string | null | undefined, b: string | null | undefined): boolean {
   return diaLocal(a) !== diaLocal(b);
+}
+
+/**
+ * BL9 — true si una bitácora está RETROFECHADA: su día (`fecha`, date-only
+ * `YYYY-MM-DD`) es distinto al día LOCAL en que se creó (`createdAt`, timestamptz).
+ * OJO: `fecha` NO se pasa por `new Date` (un date-only se parsea como UTC medianoche
+ * y en UTC-4 se corre al día anterior); se compara como cadena contra el día local
+ * del timestamp de creación. Devuelve false si falta cualquiera de los dos.
+ */
+export function bitacoraRetrofechada(
+  fecha: string | null | undefined,
+  createdAt: string | null | undefined,
+): boolean {
+  if (!fecha || !createdAt) return false;
+  const creado = diaLocal(createdAt);
+  if (!creado) return false;
+  return fecha.slice(0, 10) !== creado;
 }
 
 /** AT14 — etiqueta del separador de día del chat: `Hoy` / `Ayer` / `14 jul 2026`. */

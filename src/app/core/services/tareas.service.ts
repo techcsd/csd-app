@@ -32,6 +32,20 @@ export interface UsuarioBusqueda {
 }
 
 /**
+ * BL10 — usuario asignable del roster completo (RPC `usuarios_asignables`, BH6).
+ * A diferencia de `UsuarioBusqueda`, trae el ROL y la marca de HOMÓNIMO para
+ * desambiguar a quién le asignas (mismo contrato que el selector de la web).
+ */
+export interface UsuarioAsignable {
+  id: string;
+  nombre: string;
+  email: string | null;
+  roles_label: string | null;
+  es_prueba: boolean;
+  es_duplicado: boolean;
+}
+
+/**
  * AF39 — Tareas en la app. Lista (mis_tareas_app), avance de estado por outbox
  * (iniciar_tarea / completar_tarea, offline-first) y creación online para roles
  * con el módulo. Push al ser asignado llega vía `notificar` (per-usuario, AF7).
@@ -158,6 +172,24 @@ export class TareasService {
     const { data, error } = await this.supabase.client.rpc('buscar_usuarios', { p_term: term });
     if (error) throw new Error(error.message);
     return (data as UsuarioBusqueda[]) ?? [];
+  }
+
+  /**
+   * BL10 — roster COMPLETO de usuarios asignables (RPC security-definer
+   * `usuarios_asignables`, BH6, el mismo que usa la web). Devuelve TODO el roster
+   * sin teclear (buscar_usuarios exigía ≥2 chars, topaba en 20 y no traía rol),
+   * con `roles_label` y `es_duplicado` para desambiguar homónimos, y ya oculta
+   * `es_prueba` server-side salvo admin/usuario de prueba. Distingue vacío de
+   * fallo (8ª regla) para que el desplegable muestre error+reintento, no un
+   * falso "no hay a quién asignar". Cacheado online-first para abrir con señal mala.
+   */
+  async usuariosAsignablesDetailed(): Promise<{ items: UsuarioAsignable[]; failed: boolean }> {
+    const res = await this.catalog.refreshDetailed<UsuarioAsignable[]>('usuarios_asignables', async () => {
+      const { data, error } = await this.supabase.client.rpc('usuarios_asignables');
+      if (error) throw new Error(error.message);
+      return (data as UsuarioAsignable[]) ?? [];
+    });
+    return { items: res.data ?? [], failed: res.failed && (res.data?.length ?? 0) === 0 };
   }
 
   private async invalidar(): Promise<void> {

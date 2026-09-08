@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
+import { fechaLocalISO } from '../util/fecha';
 import {
   ActividadEntry,
   BitacoraFull,
@@ -56,6 +57,11 @@ export interface ParteDiarioCaptura {
   sinActividad: boolean;
   motivoSinActividad: string | null;
   motivoSinActividadDetalle: string | null;
+  // BL9 — día que la bitácora documenta (YYYY-MM-DD). Opcional: por defecto HOY
+  // (local). El chofer puede fecharla en un día pasado (parte olvidado). El
+  // outbox congela esta fecha en el payload, así una captura del lunes sincronizada
+  // el miércoles entra con fecha del lunes.
+  fecha?: string | null;
 }
 
 export interface IncidenteCaptura {
@@ -78,6 +84,8 @@ export interface IncidenteCaptura {
   fotos: Blob[];
   // Z23 — notas de voz múltiples (antes una sola). Van a bitacora_archivos.
   voces: Blob[];
+  // BL9 — día que documenta el incidente (YYYY-MM-DD). Opcional: por defecto HOY local.
+  fecha?: string | null;
 }
 
 /**
@@ -201,6 +209,9 @@ export class BitacoraService {
   async enqueueParteDiario(input: ParteDiarioCaptura): Promise<string> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    // BL9 — la fecha que documenta el parte: la elegida (día pasado) o HOY local.
+    // Local, NO `capturado_en.slice(0,10)` (que es UTC y en UTC-4 se corre de día).
+    const fecha = input.fecha || fechaLocalISO();
     // S3/S4 — el "sujeto" ahora vive por actividad (bloque). Para paridad con la
     // web/BD (columna de cabecera bitacoras.bloque_entrepiso) mandamos el resumen
     // de bloques distintos, o el campo suelto si aún no hay actividades con bloque.
@@ -225,7 +236,7 @@ export class BitacoraService {
       payload: {
         id,
         proyecto_id: input.proyectoId,
-        fecha: capturado_en.slice(0, 10),
+        fecha, // BL9 — día elegido o HOY local (congelado en el payload)
         tipo: 'parte_diario',
         comentarios: input.comentarios,
         personal_carpinteria: input.personalCarpinteria,
@@ -323,6 +334,8 @@ export class BitacoraService {
   async enqueueIncidente(input: IncidenteCaptura): Promise<void> {
     const id = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
+    // BL9 — día local (o el elegido), no la fecha UTC de `capturado_en`.
+    const fecha = input.fecha || fechaLocalISO();
     await this.sync.enqueue({
       id,
       tipo_op: 'bitacora',
@@ -330,7 +343,7 @@ export class BitacoraService {
       payload: {
         id,
         proyecto_id: input.proyectoId,
-        fecha: capturado_en.slice(0, 10),
+        fecha, // BL9 — día elegido o HOY local (congelado en el payload)
         tipo: 'incidente',
         incidente_tipo: input.tipo,
         incidente_gravedad: input.gravedad,

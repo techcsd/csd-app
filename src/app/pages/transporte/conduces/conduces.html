@@ -58,15 +58,19 @@
                 </span>
               }
             </div>
-            <!-- AE5 — Iniciar / Cómo llegar como BOTONES claros (no texto suelto) -->
-            <div class="ruta-card__actions">
-              <button type="button" class="btn-outline ruta-card__btn" (click)="comoLlegar(r)">🧭 Cómo llegar</button>
-              @if (r.estado === 'planificada') {
-                <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'en_curso')">▶ Iniciar ruta</button>
-              } @else if (r.estado === 'en_curso') {
-                <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'completada')">🏁 Completar</button>
-              }
-            </div>
+            <!-- AE5 — Iniciar / Cómo llegar como BOTONES claros (no texto suelto).
+                 BL8 — todo el bloque solo en rutas VIVAS: en completada/cancelada
+                 "Cómo llegar" (navegar a un destino ya cerrado) no tiene sentido. -->
+            @if (rutaActiva(r)) {
+              <div class="ruta-card__actions">
+                <button type="button" class="btn-outline ruta-card__btn" (click)="comoLlegar(r)">🧭 Cómo llegar</button>
+                @if (r.estado === 'planificada') {
+                  <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'en_curso')">▶ Iniciar ruta</button>
+                } @else if (r.estado === 'en_curso') {
+                  <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'completada')">🏁 Completar</button>
+                }
+              </div>
+            }
 
             <!-- AF25 — RUTA VIVA: agregar parada / cambiar destino (no "cancelar") -->
             @if (r.estado === 'planificada' || r.estado === 'en_curso') {
@@ -165,8 +169,10 @@
                           </div>
                         }
 
-                        <!-- Acciones por parada (mientras no esté entregada) -->
-                        @if (p.estado !== 'entregada') {
+                        <!-- Acciones por parada — BL8: solo si la ruta padre está
+                             viva y la parada no está cerrada (entregada u omitida).
+                             Un solo predicado gatea los seis botones de abajo. -->
+                        @if (paradaAccionable(r, p)) {
                           <div class="parada__actions">
                             <button type="button" class="btn-outline parada__btn" (click)="comoLlegarParada(p)">🧭 Cómo llegar</button>
                             @if (p.estado === 'pendiente') {

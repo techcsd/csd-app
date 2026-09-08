@@ -59,6 +59,10 @@ export class VehiculoPicker {
   mostrarLista = computed(() => !this.dropdown() || this.abierto());
 
   loading = signal(true);
+  // BL2 — la consulta de vehículos disponibles falló y no hay nada cacheado →
+  // error+reintento, NO el texto que afirma "todos asignados o fuera de servicio"
+  // (esta query nunca mira asignación ni servicio).
+  cargaFallo = signal(false);
   disponibles = signal<VehiculoDisponible[]>([]);
   fotoUrls = signal<Record<string, string>>({});
   /** W4 — ids "míos": asignaciones + recepciones en cola + vehículos que tengo EN USO
@@ -79,17 +83,26 @@ export class VehiculoPicker {
     void this.load();
   }
 
+  /** BL2 — reintenta cargar tras un fallo (botón en el estado de error). */
+  reintentar(): void {
+    void this.load();
+  }
+
   private async load(): Promise<void> {
     this.loading.set(true);
+    this.cargaFallo.set(false);
     try {
       // W4 — cargar disponibles + mis asignaciones/recepciones + mis usos activos.
-      const [disp, asignaciones, recepcionesEnCola, misUsos] = await Promise.all([
-        this.vehiculos.getVehiculosDisponibles(),
+      const [dispRes, asignaciones, recepcionesEnCola, misUsos] = await Promise.all([
+        this.vehiculos.getVehiculosDisponiblesDetailed(),
         this.vehiculos.getMisAsignaciones().catch(() => []),
         this.vehiculos.entregasRecepcionPendientes().catch(() => new Set<string>()),
         this.usoSvc.misUsos().catch(() => []),
       ]);
+      const disp = dispRes.items;
       this.disponibles.set(disp);
+      // BL2 — solo es error si falló Y no hay nada cacheado que ofrecer.
+      this.cargaFallo.set(dispRes.failed && disp.length === 0);
       // "Tus vehículos" = lo que REALMENTE manejas. El "en uso" (uso v2) manda sobre
       // la asignación formal, que puede estar vieja: p. ej. Manolo está asignado a la
       // Nissan (que hoy usa OTRO) pero él maneja la KIA. Si tienes algo EN USO, esos
@@ -113,6 +126,9 @@ export class VehiculoPicker {
           })
           .catch(() => {});
       }
+    } catch {
+      // BL2 — un throw inesperado no debe verse como "no hay vehículos".
+      this.cargaFallo.set(this.disponibles().length === 0);
     } finally {
       this.loading.set(false);
     }

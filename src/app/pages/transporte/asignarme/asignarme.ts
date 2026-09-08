@@ -86,6 +86,8 @@ export class AsignarmeVehiculoPage {
   private hydrated = false;
 
   loading = signal(true);
+  // BL2 — la consulta del pool falló y no hay nada cacheado → error+reintento.
+  error = signal(false);
   disponibles = signal<VehiculoDisponible[]>([]);
   asignadosAOtros = signal<Record<string, string>>({});
   fotoUrls = signal<Record<string, string>>({});
@@ -128,14 +130,21 @@ export class AsignarmeVehiculoPage {
     void this.load();
   }
 
+  /** BL2 — reintento del listado tras un fallo (botón "Reintentar"). */
+  reintentar(): void {
+    void this.load();
+  }
+
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [disp, activas] = await Promise.all([
-        this.vehiculos.getVehiculosDisponibles(),
+      const [dispRes, activas] = await Promise.all([
+        this.vehiculos.getVehiculosDisponiblesDetailed(), // BL2
         this.vehiculos.getAsignacionesActivas().catch(() => ({})),
       ]);
+      const disp = dispRes.items;
       this.disponibles.set(disp);
+      this.error.set(dispRes.failed && disp.length === 0); // BL2
       this.asignadosAOtros.set(activas as Record<string, string>);
       void this.resolveFotos(disp);
       await this.restoreDraft();

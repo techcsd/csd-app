@@ -26,11 +26,24 @@
 
     @if (loading()) {
       <app-skeleton [rows]="6" />
+    } @else if (error()) {
+      <!-- BL2 — la consulta falló y no hay nada cacheado: NO afirmamos "no tienes
+           obras" (no lo sabemos). Mostramos el fallo real + reintento. -->
+      <app-empty-state
+        icon="⚠️"
+        title="No pudimos cargar tus obras"
+        [message]="online ? 'Hubo un problema al consultar tus obras. Reintenta en un momento.' : 'Sin conexión. Conéctate y reintenta.'"
+        ctaLabel="Reintentar"
+        (action)="refrescar()"
+      />
     } @else if (!lista().length) {
+      <!-- BL2 — vacío LEGÍTIMO (la consulta respondió con 0). No afirma la causa:
+           no dice "no estás asignado" (la RLS BJ5/AW1 hace que un cero real sea
+           casi imposible), solo lo que puede probar + a quién pedirle. -->
       <app-empty-state
         icon="🏗️"
-        title="Sin obras asignadas"
-        [message]="online ? 'Todavía no estás asignado a ninguna obra. Si deberías ver alguna, pídele a tu supervisor o a Tecnología que te vincule a la obra.' : 'Conéctate para cargar tus obras.'"
+        title="No vemos obras para mostrarte"
+        [message]="online ? 'Ahora mismo no hay obras que mostrarte. Si deberías ver alguna, pídele a tu supervisor o a Tecnología que te vincule a la obra.' : 'Conéctate para cargar tus obras.'"
       />
     } @else {
       <input

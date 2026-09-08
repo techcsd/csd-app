@@ -4,7 +4,7 @@ import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { BitacoraFull, MOTIVOS_SIN_ACTIVIDAD } from '../../../core/models/bitacora.model';
-import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
+import { formatFecha, formatFechaMedia, bitacoraRetrofechada } from '../../../core/util/fecha';
 
 interface Media {
   url: string;
@@ -41,6 +41,12 @@ export class BitacoraDetallePage {
   titulo = computed(() => {
     const t = this.b()?.tipo;
     return t === 'incidente' ? 'Incidente' : t === 'visita' ? 'Visita' : 'Bitácora del día';
+  });
+
+  /** BL9 — la bitácora documenta un día distinto al de su registro (retrofechada). */
+  esDeOtraFecha = computed(() => {
+    const b = this.b();
+    return b ? bitacoraRetrofechada(b.fecha, b.created_at) : false;
   });
 
   /** Z4 — etiqueta legible del motivo "no se trabajó". */

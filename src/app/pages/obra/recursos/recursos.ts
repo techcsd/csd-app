@@ -44,6 +44,9 @@ export class RecursosPage {
   proyectoId = '';
   tab = signal<'stock' | 'pedido'>('stock');
   loading = signal(true);
+  // BL2 — la consulta del stock falló y no hay nada cacheado → error+reintento (NO
+  // "la bodega no tiene existencias", causa que la query nunca prueba).
+  error = signal(false);
   stock = signal<StockObraItem[]>([]);
   pedidos = signal<PedidoObra[]>([]);
 
@@ -64,12 +67,14 @@ export class RecursosPage {
 
   async cargar(): Promise<void> {
     this.loading.set(true);
+    this.error.set(false);
     try {
-      const [stock, pedidos] = await Promise.all([
-        this.obra.stockDeObra(this.proyectoId),
+      const [stockRes, pedidos] = await Promise.all([
+        this.obra.stockDeObraDetailed(this.proyectoId), // BL2
         this.obra.misPedidosObra(this.proyectoId),
       ]);
-      this.stock.set(stock);
+      this.stock.set(stockRes.items);
+      this.error.set(stockRes.failed && stockRes.items.length === 0); // BL2
       this.pedidos.set(pedidos);
     } finally {
       this.loading.set(false);

@@ -41,6 +41,9 @@ export class PlanDiaPage {
   protected fmtDur = formatearDuracion;
   readonly hoy = new Date().toISOString().slice(0, 10);
   loading = signal(true);
+  // BL2 — la consulta del plan falló y no hay nada cacheado (ni charla ni tareas) →
+  // error+reintento (NO "sin tareas asignadas", causa que la query nunca prueba).
+  error = signal(false);
   plan = signal<PlanDelDia>({ charla: null, tareas: [] });
 
   puedeOperar = computed(() => this.ctx.puedeOperarSubmodulo('obra.plan_dia'));
@@ -68,8 +71,12 @@ export class PlanDiaPage {
 
   async cargar(): Promise<void> {
     this.loading.set(true);
+    this.error.set(false);
     try {
-      this.plan.set(await this.obra.planDelDia(this.proyectoId, this.hoy));
+      const res = await this.obra.planDelDiaDetailed(this.proyectoId, this.hoy); // BL2
+      this.plan.set(res.data);
+      // BL2 — solo error si falló Y no hay nada que mostrar (ni charla ni tareas).
+      this.error.set(res.failed && !res.data.charla && res.data.tareas.length === 0);
     } finally {
       this.loading.set(false);
     }

@@ -35,6 +35,9 @@ export class SubcontratistasPage {
 
   proyectoId = '';
   loading = signal(true);
+  // BL2 — la consulta falló y no hay nada cacheado → error+reintento (NO "no hay
+  // subcontratistas registrados", causa que la query nunca prueba).
+  error = signal(false);
   subs = signal<Subcontratista[]>([]);
   sel = signal<Subcontratista | null>(null);
   frentes = signal<Frente[]>([]);
@@ -59,8 +62,11 @@ export class SubcontratistasPage {
 
   async cargar(): Promise<void> {
     this.loading.set(true);
+    this.error.set(false);
     try {
-      this.subs.set(await this.obra.subcontratistas());
+      const res = await this.obra.subcontratistasDetailed(); // BL2
+      this.subs.set(res.items);
+      this.error.set(res.failed && res.items.length === 0); // BL2
     } finally {
       this.loading.set(false);
     }

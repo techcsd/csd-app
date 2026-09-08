@@ -26,6 +26,7 @@ import { ResponsableProyecto } from '../../../core/models/proyecto.model';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { fechaLocalISO } from '../../../core/util/fecha';
 import {
   ACTIVIDADES,
   ActividadEntry,
@@ -95,6 +96,12 @@ export class PartePage implements OnDestroy {
 
   proyectos = signal<Proyecto[]>([]);
   proyectoId = signal<string>('');
+  // BL9 — día que documenta el parte. Default HOY (local); el chofer puede elegir
+  // un día pasado (parte olvidado). Tope = hoy (como la web: `[max]`, sin `min`).
+  fecha = signal<string>(fechaLocalISO());
+  readonly hoy = fechaLocalISO();
+  /** BL9 — ¿el parte se está fechando en un día distinto a hoy? (aviso en el resumen) */
+  esFechaPasada = computed(() => !!this.fecha() && this.fecha() < this.hoy);
   // AI14 — obra por dropdown estándar (AH10), no listado abierto.
   proyectoOpciones = computed<SelectOption[]>(() =>
     this.proyectos().map((p) => ({ id: p.id, label: p.nombre })),
@@ -295,6 +302,7 @@ export class PartePage implements OnDestroy {
     effect(() => {
       const snap = {
         proyectoId: this.proyectoId(),
+        fecha: this.fecha(), // BL9 — día documentado (persistir en el borrador)
         llovio: this.llovio(),
         lluviaDetalle: this.lluviaDetalle(),
         horasLluvia: this.horasLluvia(),
@@ -386,6 +394,7 @@ export class PartePage implements OnDestroy {
 
     if (draft) {
       this.proyectoId.set(draft.proyectoId);
+      this.fecha.set(draft.fecha || this.hoy); // BL9 — rehidrata el día (o hoy)
       this.llovio.set(draft.llovio ?? null);
       this.lluviaDetalle.set(draft.lluviaDetalle ?? '');
       this.horasLluvia.set(draft.horasLluvia ?? 0);
@@ -1179,6 +1188,7 @@ export class PartePage implements OnDestroy {
       const sinAct = this.sinActividad();
       const bitacoraId = await this.bitacora.enqueueParteDiario({
         proyectoId: this.proyectoId(),
+        fecha: this.fecha() || this.hoy, // BL9 — día documentado (default hoy)
         personalCarpinteria: sinAct ? 0 : this.carpinteria(),
         personalAcero: sinAct ? 0 : this.acero(),
         trabajadoresCasa: sinAct ? 0 : this.casa(),
@@ -1275,6 +1285,7 @@ interface EquipoRow {
 /** Forma persistida del borrador del parte (S5). */
 interface ParteDraft {
   proyectoId: string;
+  fecha?: string; // BL9 — día que documenta el parte (YYYY-MM-DD)
   llovio: boolean | null;
   lluviaDetalle: string;
   horasLluvia?: number; // Z5

@@ -2,6 +2,20 @@ import { Injectable } from '@angular/core';
 import { db } from '../db/app-db';
 
 /**
+ * BL2 — resultado de una lista cacheada que DISTINGUE "no hay datos" de "la
+ * consulta falló". La 8ª regla del checklist: un estado vacío no puede afirmar
+ * una causa que el código no puede distinguir. Los loaders devuelven esto para
+ * que la pantalla muestre error+reintento en vez de un falso "no tienes nada".
+ */
+export interface ListaCatalogo<T> {
+  items: T[];
+  /** El loader falló (offline / RLS / error de red). */
+  failed: boolean;
+  /** Los `items` vienen de caché (no de la red de esta llamada). */
+  fromCache: boolean;
+}
+
+/**
  * Read-through cache for catalogues the app needs offline (materiales,
  * vehículos, proyectos, actividades…). Feature services provide the loader;
  * this service handles caching, freshness (TTL) and offline reads. Writes go

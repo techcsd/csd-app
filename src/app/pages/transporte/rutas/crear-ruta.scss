@@ -264,3 +264,17 @@
   font-size: 14px;
   line-height: 1.4;
 }
+
+// BL2 — error inline al cargar el roster de conductores (no "No hay opciones").
+.cruta__load-error {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.4;
+}

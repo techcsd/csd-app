@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { CatalogService } from '../sync/catalog.service';
+import { CatalogService, ListaCatalogo } from '../sync/catalog.service';
 import { ProyectoApp, ProyectoInput, ResponsableProyecto } from '../models/proyecto.model';
 
 /** AM7 — resultado de resolver un link/coordenadas (edge resolve-maps-link). */
@@ -82,7 +82,16 @@ export class ProyectosService {
 
   /** Listado de proyectos visibles (cache-then-network). */
   async getProyectos(): Promise<ProyectoApp[]> {
-    const data = await this.catalog.refresh<ProyectoApp[]>(CAT_PROYECTOS, async () => {
+    return (await this.getProyectosDetailed()).items;
+  }
+
+  /**
+   * BL2 — igual que `getProyectos`, pero DISTINGUE "no hay obras" de "la consulta
+   * falló" (8ª regla). La pantalla usa `failed` para mostrar error+reintento en vez
+   * de "Todavía no estás asignado a ninguna obra" cuando en realidad la red se cayó.
+   */
+  async getProyectosDetailed(): Promise<ListaCatalogo<ProyectoApp>> {
+    const res = await this.catalog.refreshDetailed<ProyectoApp[]>(CAT_PROYECTOS, async () => {
       const { data, error } = await this.supabase.client
         .from('proyectos')
         .select(SELECT)
@@ -91,7 +100,7 @@ export class ProyectosService {
       if (error) throw new Error(error.message);
       return (data as unknown as ProyectoApp[]) ?? [];
     });
-    return (data ?? []).map(normalizar);
+    return { items: (res.data ?? []).map(normalizar), failed: res.failed, fromCache: res.fromCache };
   }
 
   /**

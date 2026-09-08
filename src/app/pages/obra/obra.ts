@@ -57,6 +57,9 @@ export class ObraPage {
   private router = inject(Router);
 
   loading = signal(true);
+  // BL2 — la consulta de mis obras falló y no hay nada cacheado → error+reintento
+  // (NO "no tienes obras asignadas", causa que la query nunca prueba).
+  error = signal(false);
   obras = signal<ObraProyecto[]>([]);
   seleccionada = signal<ObraProyecto | null>(null);
   resumen = signal<ResumenObra | null>(null);
@@ -90,9 +93,12 @@ export class ObraPage {
 
   async cargar(): Promise<void> {
     this.loading.set(true);
+    this.error.set(false);
     try {
-      const obras = await this.obra.misObras();
+      const res = await this.obra.misObrasDetailed(); // BL2
+      const obras = res.items;
       this.obras.set(obras);
+      this.error.set(res.failed && obras.length === 0); // BL2
       // Recupera la obra activa previa, o auto-selecciona si hay una sola.
       const activa = this.ctx.obraActiva();
       const prev = activa ? obras.find((o) => o.id === activa.id) : null;
@@ -100,6 +106,8 @@ export class ObraPage {
         this.seleccionada.set(prev);
         void this.cargarResumen(prev.id);
       } else if (obras.length === 1) this.pick(obras[0]);
+    } catch {
+      this.error.set(this.obras().length === 0); // BL2
     } finally {
       this.loading.set(false);
     }

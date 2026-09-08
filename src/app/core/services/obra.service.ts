@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { CatalogService } from '../sync/catalog.service';
+import { CatalogService, ListaCatalogo } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import {
   ObraProyecto,
@@ -56,7 +56,16 @@ export class ObraService {
 
   /** Mis obras (proyectos donde soy responsable o estoy asignado). */
   async misObras(): Promise<ObraProyecto[]> {
-    const data = await this.catalog.refresh<ObraProyecto[]>('obra_mis_proyectos', async () => {
+    return (await this.misObrasDetailed()).items;
+  }
+
+  /**
+   * BL2 — igual que `misObras`, pero DISTINGUE "no tienes obras" de "la consulta
+   * falló" (8ª regla). El hub/Mi proyecto usan `failed` para mostrar error+reintento
+   * en vez de afirmar "no tienes obras asignadas" cuando en realidad se cayó la red/RLS.
+   */
+  async misObrasDetailed(): Promise<ListaCatalogo<ObraProyecto>> {
+    const res = await this.catalog.refreshDetailed<ObraProyecto[]>('obra_mis_proyectos', async () => {
       const { data, error } = await this.supabase.client.rpc('mis_proyectos', { p_usuario: null });
       if (error) throw error;
       const arr = (data as Array<Record<string, unknown>>) ?? [];
@@ -67,13 +76,25 @@ export class ObraService {
         estado: (p['estado'] as string) ?? null,
       }));
     });
-    return data ?? [];
+    return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
   }
 
   /** Plan del día de una obra (charla + tareas asignadas). */
   async planDelDia(proyectoId: string, fecha: string): Promise<PlanDelDia> {
+    return (await this.planDelDiaDetailed(proyectoId, fecha)).data;
+  }
+
+  /**
+   * BL2 — igual que `planDelDia`, pero DISTINGUE "no hay plan hoy" de "la consulta
+   * falló" (8ª regla). Devuelve el objeto `data` + `failed`; la pantalla marca error
+   * solo cuando falló Y no hay nada que mostrar (charla null y sin tareas).
+   */
+  async planDelDiaDetailed(
+    proyectoId: string,
+    fecha: string,
+  ): Promise<{ data: PlanDelDia; failed: boolean; fromCache: boolean }> {
     const key = `obra_plan:${proyectoId}:${fecha}`;
-    const data = await this.catalog.refresh<PlanDelDia>(key, async () => {
+    const res = await this.catalog.refreshDetailed<PlanDelDia>(key, async () => {
       const { data, error } = await this.supabase.client.rpc('plan_del_dia', {
         p_proyecto_id: proyectoId,
         p_fecha: fecha,
@@ -82,7 +103,7 @@ export class ObraService {
       const d = (data as { charla: PlanDelDia['charla']; tareas: PlanDelDia['tareas'] }) ?? null;
       return { charla: d?.charla ?? null, tareas: d?.tareas ?? [] };
     });
-    return data ?? { charla: null, tareas: [] };
+    return { data: res.data ?? { charla: null, tareas: [] }, failed: res.failed, fromCache: res.fromCache };
   }
 
   /** Bandeja "Mis no conformidades / acciones" (auto-scoped por auth.uid()). */
@@ -108,13 +129,22 @@ export class ObraService {
 
   /** Stock de la obra (bodega principal), con nombre/unidad. */
   async stockDeObra(proyectoId: string): Promise<StockObraItem[]> {
+    return (await this.stockDeObraDetailed(proyectoId)).items;
+  }
+
+  /**
+   * BL2 — igual que `stockDeObra`, pero DISTINGUE "bodega vacía" de "la consulta
+   * falló" (8ª regla). Recursos usa `failed` para mostrar error+reintento en vez de
+   * afirmar "la bodega no tiene existencias" cuando en realidad se cayó la red/RLS.
+   */
+  async stockDeObraDetailed(proyectoId: string): Promise<ListaCatalogo<StockObraItem>> {
     const key = `obra_stock:${proyectoId}`;
-    const data = await this.catalog.refresh<StockObraItem[]>(key, async () => {
+    const res = await this.catalog.refreshDetailed<StockObraItem[]>(key, async () => {
       const { data, error } = await this.supabase.client.rpc('stock_de_obra', { p_proyecto_id: proyectoId });
       if (error) throw error;
       return (data as StockObraItem[]) ?? [];
     });
-    return data ?? [];
+    return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
   }
 
   /** Plantillas de checklist de calidad (categoria='calidad'). */
@@ -149,7 +179,17 @@ export class ObraService {
 
   /** Subcontratistas activos. */
   async subcontratistas(): Promise<Subcontratista[]> {
-    const data = await this.catalog.refresh<Subcontratista[]>('obra_subcontratistas', async () => {
+    return (await this.subcontratistasDetailed()).items;
+  }
+
+  /**
+   * BL2 — igual que `subcontratistas`, pero DISTINGUE "no hay subcontratistas" de
+   * "la consulta falló" (8ª regla). La pantalla usa `failed` para mostrar
+   * error+reintento en vez de afirmar "no hay subcontratistas registrados" cuando
+   * en realidad se cayó la red/RLS.
+   */
+  async subcontratistasDetailed(): Promise<ListaCatalogo<Subcontratista>> {
+    const res = await this.catalog.refreshDetailed<Subcontratista[]>('obra_subcontratistas', async () => {
       const { data, error } = await this.supabase.client
         .from('obra_subcontratistas')
         .select('id, nombre, especialidad, contacto, telefono, activo')
@@ -158,7 +198,7 @@ export class ObraService {
       if (error) throw error;
       return (data as Subcontratista[]) ?? [];
     });
-    return data ?? [];
+    return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
   }
 
   /** Informes de una obra. */

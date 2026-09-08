@@ -49,6 +49,9 @@ export class AsignarVehiculoPage {
   readonly tiposAutorizado: TipoAutorizado[] = ['Liviano', 'Pesado', 'Ambos'];
 
   loading = signal(true);
+  // BL2 — la consulta del pool falló y no hay nada cacheado → error+reintento (NO
+  // "todos asignados o fuera de servicio", causa que esta query nunca evalúa).
+  error = signal(false);
   disponibles = signal<VehiculoDisponible[]>([]);
   seleccionado = signal<VehiculoDisponible | null>(null);
   // U12 — vehículos ya asignados a mí + su estado de reporte semanal.
@@ -82,18 +85,26 @@ export class AsignarVehiculoPage {
     void this.load();
   }
 
+  /** BL2 — reintento del listado tras un fallo (botón "Reintentar"). */
+  reintentar(): void {
+    void this.load();
+  }
+
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [disp, cond, asignaciones, activas, semana, pendReportes] = await Promise.all([
-        this.vehiculos.getVehiculosDisponibles(),
+      const [dispRes, cond, asignaciones, activas, semana, pendReportes] = await Promise.all([
+        this.vehiculos.getVehiculosDisponiblesDetailed(), // BL2
         this.conductores.getMiConductor(),
         this.vehiculos.getMisAsignaciones().catch(() => []),
         this.vehiculos.getAsignacionesActivas().catch(() => ({})), // AC8
         this.reportes.getSemana().catch(() => []),
         this.sync.reportesSemanalesPendientes().catch(() => new Map<string, string>()),
       ]);
+      const disp = dispRes.items;
       this.disponibles.set(disp);
+      // BL2 — solo es "error" si falló Y no hay nada cacheado que mostrar.
+      this.error.set(dispRes.failed && disp.length === 0);
       this.necesitaConductor.set(!cond);
       // U12 — set de vehículos ya asignados a mí.
       this.misAsignados.set(new Set(asignaciones.map((a) => a.vehiculo_id)));

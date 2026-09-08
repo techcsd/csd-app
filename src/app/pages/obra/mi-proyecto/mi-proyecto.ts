@@ -79,16 +79,21 @@ export class MiProyectoPage {
     this.loading.set(true);
     this.error.set(false);
     try {
-      const obras = await this.obra.misObras();
+      // BL2 — misObrasDetailed distingue "sin obra" de "la consulta falló": la rama
+      // error()/reintento del template (antes muerta, porque misObras nunca lanza)
+      // ahora se enciende con `failed` cuando no hay nada cacheado que mostrar.
+      const res = await this.obra.misObrasDetailed();
+      const obras = res.items;
       this.obras.set(obras);
       if (!obras.length) {
+        this.error.set(res.failed); // BL2 — vacío por fallo ≠ vacío legítimo
         this.loading.set(false);
         return;
       }
       this.obraSel.set(obras[0].id);
       await this.cargarObra(obras[0].id);
     } catch {
-      this.error.set(true);
+      this.error.set(this.obras().length === 0);
     } finally {
       this.loading.set(false);
     }

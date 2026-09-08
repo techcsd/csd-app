@@ -34,6 +34,9 @@ export class ConductoresListaPage {
   esAdmin = () => this.ctx.hasModulo('admin');
 
   loading = signal(true);
+  // BL2 — la consulta falló y no hay nada cacheado → error+reintento (NO "no hay
+  // conductores registrados", causa que la query nunca prueba).
+  error = signal(false);
   private todos = signal<Conductor[]>([]);
   query = signal('');
   // C6 — umbral "por vencer" configurable (flota_config, alineado con la web).
@@ -58,15 +61,21 @@ export class ConductoresListaPage {
     void this.load();
   }
 
+  /** BL2 — reintento del listado tras un fallo (botón "Reintentar"). */
+  reintentar(): void {
+    void this.load();
+  }
+
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [lista, cfg, docs] = await Promise.all([
-        this.conductores.getConductores(),
+      const [listaRes, cfg, docs] = await Promise.all([
+        this.conductores.getConductoresDetailed(), // BL2
         this.conductores.getFlotaConfig().catch(() => null),
         this.conductores.getDocumentosResumen().catch(() => ({})),
       ]);
-      this.todos.set(lista);
+      this.todos.set(listaRes.items);
+      this.error.set(listaRes.failed && listaRes.items.length === 0); // BL2
       if (cfg) this.umbral.set(cfg.licenciaDias);
       this.docsResumen.set(docs);
     } finally {

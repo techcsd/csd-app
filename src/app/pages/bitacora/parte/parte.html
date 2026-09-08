@@ -35,6 +35,21 @@
           }
         </div>
 
+        <!-- BL9 — ¿de qué día es este parte? Default HOY; se puede fechar un día
+             pasado (parte olvidado). Tope = hoy (como la web: [max], sin min). -->
+        <label class="field-label" for="parte-fecha">¿De qué día es este parte?</label>
+        <input
+          id="parte-fecha"
+          class="field"
+          type="date"
+          [max]="hoy"
+          [ngModel]="fecha()"
+          (ngModelChange)="fecha.set($event)"
+        />
+        @if (esFechaPasada()) {
+          <p class="parte__fecha-aviso">📅 Estás registrando una bitácora de una fecha pasada.</p>
+        }
+
         <!-- Z4 — "No se trabajó en obra": vuela el resto del parte -->
         <label class="field-label">¿No se trabajó hoy?</label>
         <app-option-button
@@ -524,6 +539,8 @@
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
           <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <!-- BL9 — el día que documenta el parte (marca si es de una fecha pasada). -->
+          <li><span>Fecha</span><b>{{ fecha() }}@if (esFechaPasada()) { <em class="resumen__otra-fecha"> · fecha pasada</em> }</b></li>
           <li><span>Lluvia</span><b>{{ llovio() ? 'Sí' : 'No' }}</b></li>
           <li><span>Migración</span><b>{{ huboMigracion() ? 'Sí' : 'No' }}</b></li>
           <li><span>Personal</span><b>{{ carpinteria() + acero() + casa() }}</b></li>

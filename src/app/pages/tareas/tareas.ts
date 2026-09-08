@@ -9,7 +9,7 @@ import { PhotoSlot } from '../../shared/ui/photo-slot/photo-slot';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
 import { SelectOption } from '../../shared/ui/select-list/select-list';
 import { EmailDisplayPipe } from '../../shared/ui/pipes/email-display.pipe';
-import { TareasService, UsuarioBusqueda } from '../../core/services/tareas.service';
+import { TareasService, UsuarioAsignable } from '../../core/services/tareas.service';
 import { InventarioService, ObraOrigen } from '../../core/services/inventario.service';
 import { Bodega, Ferreteria } from '../../core/models/inventario.model';
 import { UserContextService } from '../../core/services/user-context.service';
@@ -89,8 +89,14 @@ export class TareasPage {
   nuevaPrioridad = signal<TareaPrioridad>('media');
   nuevaFechaLimite = signal('');
   asignBusqueda = signal('');
-  asignResultados = signal<UsuarioBusqueda[]>([]);
-  asignSel = signal<UsuarioBusqueda | null>(null);
+  // BL10 — roster COMPLETO precargado (usuarios_asignables); el desplegable abre
+  // con todos, sin teclear, con rol + marca de homónimo. La búsqueda solo filtra.
+  asignRoster = signal<UsuarioAsignable[]>([]);
+  asignResultados = signal<UsuarioAsignable[]>([]);
+  asignSel = signal<UsuarioAsignable | null>(null);
+  // BL10 — la carga del roster falló y no hay caché → error+reintento (8ª regla),
+  // no un falso "no hay a quién asignar".
+  asignFallo = signal(false);
 
   // AG15 — vínculo dinámico al crear la tarea (opcional).
   readonly vinculoTipos: { valor: 'ninguno' | TareaLinkedTipo; label: string }[] = [
@@ -262,6 +268,7 @@ export class TareasPage {
   abrirCrear(): void {
     this.hoja.set('crear');
     void this.cargarCatalogosVinculo();
+    void this.cargarRoster(); // BL10 — el desplegable abre con el roster ya cargado
   }
   cerrarCrear(): void {
     this.hoja.set('lista');
@@ -296,25 +303,46 @@ export class TareasPage {
     this.nuevoVinculo.set(v);
   }
 
-  async buscarAsignado(): Promise<void> {
-    const term = this.asignBusqueda().trim();
-    if (term.length < 2) {
-      this.asignResultados.set([]);
-      return;
-    }
+  /**
+   * BL10 — carga (una vez por apertura) el roster completo de asignables y lo
+   * muestra entero. Antes se dependía de buscar_usuarios (≥2 chars) → si no
+   * adivinabas el nombre, no aparecía nadie (caso "Abraham").
+   */
+  async cargarRoster(): Promise<void> {
+    this.asignFallo.set(false);
     this.buscando.set(true);
     try {
-      this.asignResultados.set(await this.tareas.buscarUsuarios(term));
+      const { items, failed } = await this.tareas.usuariosAsignablesDetailed();
+      this.asignRoster.set(items);
+      this.asignFallo.set(failed);
+      this.filtrarAsignados(); // pinta la lista según la búsqueda actual (vacía = todos)
     } catch {
-      /* best-effort */
+      this.asignFallo.set(this.asignRoster().length === 0);
     } finally {
       this.buscando.set(false);
     }
   }
-  pickAsignado(u: UsuarioBusqueda): void {
+
+  /** BL10 — filtra el roster ya cargado (client-side, sin nueva consulta). */
+  filtrarAsignados(): void {
+    const q = this.asignBusqueda().trim().toLowerCase();
+    const roster = this.asignRoster();
+    this.asignResultados.set(
+      q ? roster.filter((u) => u.nombre.toLowerCase().includes(q) || (u.email ?? '').toLowerCase().includes(q)) : roster,
+    );
+  }
+
+  pickAsignado(u: UsuarioAsignable): void {
     this.asignSel.set(u);
     this.asignResultados.set([]);
-    this.asignBusqueda.set(u.nombre);
+    this.asignBusqueda.set('');
+  }
+
+  /** BL10 — deshacer la selección para volver a elegir del roster. */
+  cambiarAsignado(): void {
+    this.asignSel.set(null);
+    this.asignBusqueda.set('');
+    this.filtrarAsignados();
   }
 
   async crear(): Promise<void> {

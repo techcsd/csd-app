@@ -155,3 +155,15 @@
   font-style: italic;
   color: var(--color-warning);
 }
+
+// BL9 — chip "de otra fecha" en la cabecera del detalle (bitácora retrofechada).
+.det__otra-fecha {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  white-space: nowrap;
+}

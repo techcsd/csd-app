@@ -347,13 +347,22 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private pintarGoogle(): void {
     if (!this.gmap) return;
     const vistos = new Set<string>();
+    // BL6 — dos encuadres: `bounds` solo con señales FRESCAS (una posición vieja no
+    // debe arrastrar el auto-fit a donde el chofer estuvo hace horas) y `boundsAll`
+    // como respaldo si TODOS están stale (para no dejar el mapa en el default).
     const bounds = new this.g.LatLngBounds();
-    let n = 0;
+    const boundsAll = new this.g.LatLngBounds();
+    let nFresh = 0;
+    let nAll = 0;
     for (const c of this.conPosicion()) {
       vistos.add(c.usuario_id);
       const pos = { lat: c.lat as number, lng: c.lng as number };
-      bounds.extend(pos);
-      n++;
+      boundsAll.extend(pos);
+      nAll++;
+      if (!this.esStale(c.capturado_en)) {
+        bounds.extend(pos); // BL6 — solo lo fresco encuadra
+        nFresh++;
+      }
       const icon = this.iconoGoogle(c);
       const existing = this.gmarkers.get(c.usuario_id);
       if (existing) {
@@ -372,9 +381,11 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
         this.gmarkers.delete(id);
       }
     }
-    if (n && !this.centrado) {
-      this.gmap.fitBounds(bounds, 48);
-      if (n === 1) this.gmap.setZoom(15);
+    if (!this.centrado && (nFresh || nAll)) {
+      // BL6 — encuadra por lo fresco; si no hay nada fresco, cae a todos.
+      const usarFresco = nFresh > 0;
+      this.gmap.fitBounds(usarFresco ? bounds : boundsAll, 48);
+      if ((usarFresco ? nFresh : nAll) === 1) this.gmap.setZoom(15);
       this.centrado = true;
     }
   }
@@ -396,11 +407,15 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private pintarLeaflet(): void {
     if (!this.map) return;
     const vistos = new Set<string>();
+    // BL6 — igual que en Google: encuadra solo con señales frescas; los stale se
+    // dibujan (gris) pero no arrastran el auto-fit. Respaldo a todos si nada fresco.
     const bounds: L.LatLngTuple[] = [];
+    const boundsAll: L.LatLngTuple[] = [];
     for (const c of this.conPosicion()) {
       vistos.add(c.usuario_id);
       const latlng: L.LatLngTuple = [c.lat as number, c.lng as number];
-      bounds.push(latlng);
+      boundsAll.push(latlng);
+      if (!this.esStale(c.capturado_en)) bounds.push(latlng); // BL6 — solo lo fresco encuadra
       const icon = this.iconoLeaflet(c);
       const existing = this.markers.get(c.usuario_id);
       if (existing) {
@@ -419,8 +434,9 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
         this.markers.delete(id);
       }
     }
-    if (bounds.length && !this.centrado) {
-      this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+    if (!this.centrado && (bounds.length || boundsAll.length)) {
+      // BL6 — encuadra por lo fresco; si no hay nada fresco, cae a todos.
+      this.map.fitBounds(bounds.length ? bounds : boundsAll, { padding: [40, 40], maxZoom: 15 });
       this.centrado = true;
     }
   }

@@ -139,6 +139,9 @@ export class CrearRutaPage implements OnDestroy {
   // S16 — el jefe de flota asigna la ruta a un conductor (dispara la notificación).
   conductorId = signal('');
   conductorOpts = signal<SelectOption[]>([]);
+  // BL2 — la carga de conductores falló (RLS/red) y no hay caché → NO mostrar
+  // "No hay opciones" (afirma ausencia); mostrar error + reintento.
+  conductoresFallo = signal(false);
 
   vehiculoId = signal('');
   vehiculoLabel = signal(''); // B1 — placa/modelo del vehículo elegido del pool
@@ -310,13 +313,17 @@ export class CrearRutaPage implements OnDestroy {
     try {
       // B1 — el vehículo se elige del pool (VehiculoPicker); aquí solo cargamos
       // los lugares (obras/almacenes) para origen/destino + S16 los conductores.
-      const [lugares, conductores, asig] = await Promise.all([
+      const [lugares, conductoresRes, asig] = await Promise.all([
         this.conduces.getLugaresDestino(),
-        this.conductores.getConductores().catch(() => []),
+        // BL2 — solo el elevado necesita el roster; el chofer se auto-asigna.
+        this.esElevado
+          ? this.conductores.getConductoresDetailed().catch(() => ({ items: [], failed: true, fromCache: false }))
+          : Promise.resolve({ items: [], failed: false, fromCache: false }),
         this.esElevado ? Promise.resolve([]) : this.vehiculos.getMisAsignaciones().catch(() => []),
       ]);
       this.lugares.set(lugares);
-      this.conductorOpts.set(conductores.map((c) => ({ id: c.id, label: c.nombre })));
+      this.conductorOpts.set(conductoresRes.items.map((c) => ({ id: c.id, label: c.nombre })));
+      this.conductoresFallo.set(conductoresRes.failed && conductoresRes.items.length === 0);
       this.misAsignados = new Set(asig.map((a) => a.vehiculo_id)); // AI6
       // AY11 — al planificar una solicitud, pre-llena origen/destino desde ella
       // (la obra ancla + el otro extremo) y salta el banner de borrador.
@@ -368,6 +375,16 @@ export class CrearRutaPage implements OnDestroy {
       this.origen.set(origTexto);
     }
     if (notas) this.notas.set(notas);
+  }
+
+  /** BL2 — reintenta cargar el roster de conductores tras un fallo. */
+  async reintentarConductores(): Promise<void> {
+    this.conductoresFallo.set(false);
+    const res = await this.conductores
+      .getConductoresDetailed()
+      .catch(() => ({ items: [], failed: true, fromCache: false }));
+    this.conductorOpts.set(res.items.map((c) => ({ id: c.id, label: c.nombre })));
+    this.conductoresFallo.set(res.failed && res.items.length === 0);
   }
 
   /** B1 — vehículo elegido del pool: continúa creando la ruta con ese vehículo. */

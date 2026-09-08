@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { CatalogService } from '../sync/catalog.service';
+import { CatalogService, ListaCatalogo } from '../sync/catalog.service';
 import { Conductor, ConductorStats, UsuarioVinculable } from '../models/conductor.model';
 
 const CATALOG_MI_CONDUCTOR = 'mi_conductor';
@@ -239,7 +239,16 @@ export class ConductoresService {
 
   /** All active drivers for the browse/profile list (flota-gated), cached. */
   async getConductores(): Promise<Conductor[]> {
-    const data = await this.catalog.refresh<Conductor[]>('conductores_lista', async () => {
+    return (await this.getConductoresDetailed()).items;
+  }
+
+  /**
+   * BL2 — igual que `getConductores`, pero DISTINGUE "no hay conductores" de "la
+   * consulta falló" (8ª regla). El selector "Conductor asignado" de crear-ruta usa
+   * `failed` para no mostrar "No hay opciones" cuando en realidad falló la RLS/red.
+   */
+  async getConductoresDetailed(): Promise<ListaCatalogo<Conductor>> {
+    const res = await this.catalog.refreshDetailed<Conductor[]>('conductores_lista', async () => {
       const { data, error } = await this.supabase.client
         .from('conductores')
         .select(
@@ -250,7 +259,7 @@ export class ConductoresService {
       if (error) throw new Error(error.message);
       return (data as Conductor[]) ?? [];
     });
-    return data ?? [];
+    return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
   }
 
   /** System users that can be linked to a driver (usuarios_vinculables RPC). */

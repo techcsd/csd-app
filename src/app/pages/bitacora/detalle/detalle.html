@@ -2,6 +2,10 @@
   <header class="det__header">
     <button type="button" class="det__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="det__title">{{ titulo() }}</h1>
+    <!-- BL9 — se registró en un día distinto al que documenta (retrofechada). -->
+    @if (esDeOtraFecha()) {
+      <span class="det__otra-fecha" title="Se registró después del día que documenta">📅 de otra fecha</span>
+    }
   </header>
 
   <div class="screen__body">

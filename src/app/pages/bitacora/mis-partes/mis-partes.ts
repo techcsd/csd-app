@@ -9,7 +9,7 @@ import { BitacoraFull } from '../../../core/models/bitacora.model';
 import { EnProcesoService, EnProcesoItem } from '../../../core/services/en-proceso.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { SyncService } from '../../../core/sync/sync.service';
-import { formatFecha, formatFechaCortaHora } from '../../../core/util/fecha';
+import { formatFecha, formatFechaCortaHora, bitacoraRetrofechada } from '../../../core/util/fecha';
 
 /** My bitácoras (server, offline-cached). Tap one to see its details. */
 @Component({
@@ -101,6 +101,11 @@ export class MisPartesPage {
 
   fmtProceso(ms: number): string {
     return formatFechaCortaHora(ms); // Y1 — fecha + hora del último guardado
+  }
+
+  /** BL9 — ¿la bitácora es de una fecha distinta al día en que se envió/creó? */
+  esDeOtraFecha(b: BitacoraFull): boolean {
+    return bitacoraRetrofechada(b.fecha, b.created_at);
   }
 
   titulo(b: BitacoraFull): string {

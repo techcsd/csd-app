@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.14.0';
+const VERSION = '2.15.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,17 +59,20 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-09-07';
+const RELEASED_AT = '2026-09-08';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Elige qué avisos te llegan + pegar el mensaje de WhatsApp para fijar ubicación + Participantes de Desempeño';
+const TITULO = 'Bitácoras de días pasados + listas honestas cuando falla la señal + asignar tareas más fácil';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Avisos', d: 'Ahora eliges qué avisos te llegan (chat, soporte, novedades y más) desde el ⚙️ en la pantalla de Avisos. Apagar uno deja de mandártelo de verdad (aquí y como notificación). Y si Administración apagó un aviso, la app te lo dice claro («Desactivado por Administración») en vez de mostrarte un interruptor que no haría nada.' },
-  { t: 'mejora', m: 'Ubicación', d: 'Al fijar una ubicación por link ya puedes pegar el mensaje COMPLETO de WhatsApp (el nombre del lugar y el link juntos): la app saca la ubicación sola y te avisa que «tomó el link del mensaje». Si el link apunta a un negocio sin coordenadas exactas, te lo ofrece para buscarlo por nombre en vez de dejarte trancado.' },
-  { t: 'nuevo', m: 'Desempeño', d: 'Nueva pantalla de Participantes (logística/gerencia): agrega a alguien al padrón del Desempeño —aunque no tenga el rol de chofer— y marca si «cuenta para el pago». Marcarlo no cambia su rol, solo declara que su actividad puntúa.' },
+  { t: 'arreglo', m: 'Obras y Flota', d: 'Las listas de obras, vehículos y conductores ya no dicen «no tienes nada» cuando en realidad se cayó la conexión: ahora muestran «No pudimos cargar» con un botón para reintentar. Si deberías ver algo y sale vacío, sabes que fue un fallo de señal, no que estás sin asignar.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Ya puedes registrar una bitácora de un día pasado: en el primer paso eliges la fecha (tope: hoy). Queda marcada como «de otra fecha» en la lista y en el detalle, para no confundirla con la de hoy.' },
+  { t: 'arreglo', m: 'Bitácora', d: '«Mis bitácoras» mostraba la hora de hoy en un parte de días atrás; ahora muestra su fecha real. Y el tablero ya no contaba mal lo de «hoy» en la tarde/noche.' },
+  { t: 'mejora', m: 'Tareas', d: 'Al asignar una tarea, la lista de personas abre completa —con el rol de cada quien y un aviso cuando hay nombres repetidos—, sin tener que adivinar el nombre exacto.' },
+  { t: 'arreglo', m: 'Rutas', d: 'En una ruta ya terminada o cancelada dejan de aparecer «Cómo llegar» y las acciones de las paradas. Solo se muestran mientras la ruta está viva.' },
+  { t: 'mejora', m: 'Seguimiento', d: 'En el mapa, un chofer sin señal reciente ya no descuadra el zoom: el mapa se ajusta a quienes sí están reportando su ubicación.' },
 ];
 
 const TIPO_POR_COMMIT = {
