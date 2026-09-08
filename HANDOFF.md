@@ -1,6 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 08/09/2026 — PROMPT-39 ronda BL (app) — **RELEASE 2.15.0 PUBLICADA (rolling) · commit `08c5e4c` PUSHEADO a main (PWA) · APK 2.15.0 firmado+registrado+SUBIDO · minima INTACTA en 2.13.0 · build+guard verdes**
+## 🟢 SESIÓN 08/09/2026 — PROMPT-39 ronda BL (app) — **RELEASE 2.16.0 PUBLICADA (rolling) · commits `08c5e4c`+`fdd318d` PUSHEADOS a main (PWA) · APKs 2.15.0 y 2.16.0 firmados+registrados+SUBIDOS · minima INTACTA en 2.13.0 · build+guard verdes**
+
+> **2.16.0** = seguimiento inmediato de 2.15.0: completa FASE 4 (BL9) con el **selector de fecha en el wizard de INCIDENTE** (mismo patrón que el parte diario: default hoy, `[max]=hoy`, persistido en borrador). 2.15.0 llevó todo lo demás de PROMPT-39. Ambas publicadas rolling (minima=false); floor forzado sigue en 2.13.0.
 
 > Nota: `CONTEXTO-ACTUALIZACION-19.md` (con §E) NO estaba en el repo — trabajé por los file:line del prompt. Las decisiones §E se resolvieron con Xaviel (ver abajo).
 
@@ -17,7 +19,7 @@
 - **Selector de fecha** en el parte (paso 1, default hoy, `[max]=hoy` sin min, como la web §E), persistido en el borrador + en el resumen.
 - `mis-partes.html`: mostraba la hora de `created_at` siempre → ahora **la fecha real** (`b.fecha`) + badge "otra fecha" + "enviada …". Badge también en el detalle.
 - `fecha.ts`: `fechaLocalISO()` (mata el bug UTC de `toISOString().slice(0,10)`) + `bitacoraRetrofechada()`. `dashboard.ts` y el sellado de fecha del outbox (`enqueueParteDiario`/`enqueueIncidente`) usan la fecha LOCAL. El outbox ya congelaba la fecha en el payload → avión sin regresión.
-- Fuera de alcance: UI de fecha en el wizard de **incidente** (solo se corrigió el default local; fácil de replicar).
+- **Incidente** (cerrado en 2.16.0): el wizard de incidente ganó el MISMO selector de fecha (default hoy, `[max]=hoy`, persistido en borrador, `esFechaPasada`). FASE 4 completa en ambos wizards.
 
 ### ✅ FASE 5 (BL10) — picker de tareas → `usuarios_asignables`
 - `tareas.service` migrado de `buscar_usuarios` (≥2 chars, tope 20, sin rol) a **`usuarios_asignables`** (roster completo, `roles_label`, `es_duplicado`, oculta es_prueba server-side). El desplegable abre con TODOS (Abraham aparece), con rol + marca ⚠️ homónimo + pill PRUEBA, búsqueda client-side y rama error+reintento.
@@ -34,8 +36,9 @@
 - **Versión bumpeada** en los 4 sitios: `environment.ts`, `environment.prod.ts`, `build.gradle` (appVersionName), `release-apk.mjs` (VERSION+TITULO+CAMBIOS_CURADOS BL, 6 cambios). versionCode derivado = 2 015 000.
 - **APK 2.15.0** firmado (cert prod `3c5316d8…5065`), **registrado (Y1)** con 6 `CAMBIOS_CURADOS` estructurados y **subido al bucket** (`csd-app-2.15.0.apk` + `latest` + `version.json` + `apk_url`).
 - **Publicada** vía PATCH directo (service_role) `publicada=true` sobre la fila 2.15.0 → `push_notificada_at` se estampó (push de "nueva versión" a la flota). Estado verificado: **publicada 2.15.0 / minima INTACTA 2.13.0** (2.15.0 minima=false, gotcha evitado). ⚠️ `publicada_at`/`publicada_por` quedaron NULL (PATCH directo, no la RPC del admin) — cosmético; si molesta, republicar desde la UI de SGC.
-- **Commit pusheado a main**: `08c5e4c` (PWA → Vercel).
-- **Rollback Android**: `update sgc.app_versiones set publicada=(version='2.14.0') where plataforma='movil';` · **Rollback PWA**: `git revert 08c5e4c && git push`.
+- **Commits pusheados a main**: `08c5e4c` (2.15.0) + `fdd318d` (2.16.0, incidente-fecha) → PWA a Vercel.
+- **Follow-up 2.16.0**: mismo flujo (bump 4 sitios → versionCode 2 016 000, APK firmado+registrado Y1 con 1 cambio curado Bitácora/nuevo, subido, `publicada=true` vía PATCH, push a la flota). Estado: **2.16.0 publicada / 2.15.0 y 2.14.0 también publicada / minima 2.13.0**. `version_publicada()` devuelve la más alta = 2.16.0.
+- **Rollback Android**: `update sgc.app_versiones set publicada=(version='2.15.0') where plataforma='movil';` (o a 2.14.0) · **Rollback PWA**: `git revert fdd318d 08c5e4c && git push`.
 
 ### 🔴 Verificación device / prod PENDIENTE (no se puede desde aquí)
 - **BL2**: con la red cortada, entrar **como Manolo** y **como Wagner** (no admin) → las 3 listas dicen "No pudimos cargar" + Reintentar (no "no tienes nada").
