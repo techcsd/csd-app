@@ -1,5 +1,49 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 08/09/2026 — PROMPT-39 ronda BL (app) — **RELEASE 2.15.0 PUBLICADA (rolling) · commit `08c5e4c` PUSHEADO a main (PWA) · APK 2.15.0 firmado+registrado+SUBIDO · minima INTACTA en 2.13.0 · build+guard verdes**
+
+> Nota: `CONTEXTO-ACTUALIZACION-19.md` (con §E) NO estaba en el repo — trabajé por los file:line del prompt. Las decisiones §E se resolvieron con Xaviel (ver abajo).
+
+### ✅ FASE 1 (BL2) — la 8ª regla: vacíos que NO mienten
+- **Mecanismo**: `CatalogService.refresh()` tragaba el fallo → "no tienes nada" == "la consulta falló". Nuevo `ListaCatalogo<T>` + los loaders pasan a `refreshDetailed` vía métodos `*Detailed()` (el plano delega, retrocompatible).
+- **13 pantallas convertidas** (3 reportadas + 10 del patrón): proyectos, vehiculo-picker, crear-ruta(conductor), obra(mis-obras/recursos/plan-día/subcontratistas/mi-proyecto), transporte(asignar/reporte-semanal/asignarme/conductores/vehículos). Cada una: rama de **error+Reintentar** ANTES del vacío + texto que ya no afirma causa (asignación/servicio/"no registrados"). `proyectos.ts` ganó el `catch` que faltaba; `mi-proyecto` tenía la rama de error MUERTA (misObras nunca lanzaba) → ahora viva.
+- **§E**: elegido **corregir el texto** del vehiculo-picker (no implementar exclusión "en uso") — el picker muestra toda la flota a propósito (U1/V10).
+- Memoria nueva: `bl2-empty-vs-failed-pattern` (aplicar a TODA lista futura fed por CatalogService).
+
+### ✅ FASE 3 (BL8) — "Cómo llegar" en rutas terminadas
+- Helpers `rutaActiva(r)` / `paradaAccionable(r,p)` en `conduces.ts` (incluye `'omitida'` y mira la ruta padre). El bloque de acciones de ruta (`conduces.html:63`, sin `@if`) y los **6** botones de parada quedan gateados con un predicado cada uno. Nada aparece en `completada`/`cancelada`.
+
+### ✅ FASE 4 (BL9) — bitácoras de días pasados
+- **Selector de fecha** en el parte (paso 1, default hoy, `[max]=hoy` sin min, como la web §E), persistido en el borrador + en el resumen.
+- `mis-partes.html`: mostraba la hora de `created_at` siempre → ahora **la fecha real** (`b.fecha`) + badge "otra fecha" + "enviada …". Badge también en el detalle.
+- `fecha.ts`: `fechaLocalISO()` (mata el bug UTC de `toISOString().slice(0,10)`) + `bitacoraRetrofechada()`. `dashboard.ts` y el sellado de fecha del outbox (`enqueueParteDiario`/`enqueueIncidente`) usan la fecha LOCAL. El outbox ya congelaba la fecha en el payload → avión sin regresión.
+- Fuera de alcance: UI de fecha en el wizard de **incidente** (solo se corrigió el default local; fácil de replicar).
+
+### ✅ FASE 5 (BL10) — picker de tareas → `usuarios_asignables`
+- `tareas.service` migrado de `buscar_usuarios` (≥2 chars, tope 20, sin rol) a **`usuarios_asignables`** (roster completo, `roles_label`, `es_duplicado`, oculta es_prueba server-side). El desplegable abre con TODOS (Abraham aparece), con rol + marca ⚠️ homónimo + pill PRUEBA, búsqueda client-side y rama error+reintento.
+- **§E**: el picker NO anuncia quién queda oculto por inactivo/prueba — la app no puede distinguirlo (8ª regla → se queda callada). **Self-assign**: `usuarios_asignables` NO excluye `auth.uid()` (la web tampoco) → ahora SÍ puedes asignarte a ti mismo. Dime si debe excluirse.
+
+### ✅ FASE 6 (BL6) — seguimiento
+- Confirmados y no rotos: `maxZoom:15` (Leaflet) + leyenda cerrada por defecto. Aplicado **excluir choferes stale del auto-encuadre** en Google **y** Leaflet (respaldo a todos si TODOS están stale). Fallback Google→Leaflet intacto.
+- **BL4 (conteo sin-ledger + `p_motivo`)**: NO tocado — bloqueado en el padre (define la cabecera de conteo). Era ⚠️ §E "tras el OK".
+
+### ✅ FASE 2 (BL1) — login por cédula — verificado, SIN cambios de app
+- Confirmado: `soloDigitosCedula` ya normaliza antes de enviar; `login.ts` ya muestra el `r.error` real del server para status ≠401/429; la telemetría de `auth.service.ts:120` ya dispara para no-401/429 ("caso Manolo Duran"). **El bug era del padre (PROMPT-38).** El 401 se queda genérico a propósito (no filtrar si la cédula existe).
+
+### 🚀 Release 2.15.0 — PUBLICADA (rolling) — TODO HECHO (08-sep)
+- **Versión bumpeada** en los 4 sitios: `environment.ts`, `environment.prod.ts`, `build.gradle` (appVersionName), `release-apk.mjs` (VERSION+TITULO+CAMBIOS_CURADOS BL, 6 cambios). versionCode derivado = 2 015 000.
+- **APK 2.15.0** firmado (cert prod `3c5316d8…5065`), **registrado (Y1)** con 6 `CAMBIOS_CURADOS` estructurados y **subido al bucket** (`csd-app-2.15.0.apk` + `latest` + `version.json` + `apk_url`).
+- **Publicada** vía PATCH directo (service_role) `publicada=true` sobre la fila 2.15.0 → `push_notificada_at` se estampó (push de "nueva versión" a la flota). Estado verificado: **publicada 2.15.0 / minima INTACTA 2.13.0** (2.15.0 minima=false, gotcha evitado). ⚠️ `publicada_at`/`publicada_por` quedaron NULL (PATCH directo, no la RPC del admin) — cosmético; si molesta, republicar desde la UI de SGC.
+- **Commit pusheado a main**: `08c5e4c` (PWA → Vercel).
+- **Rollback Android**: `update sgc.app_versiones set publicada=(version='2.14.0') where plataforma='movil';` · **Rollback PWA**: `git revert 08c5e4c && git push`.
+
+### 🔴 Verificación device / prod PENDIENTE (no se puede desde aquí)
+- **BL2**: con la red cortada, entrar **como Manolo** y **como Wagner** (no admin) → las 3 listas dicen "No pudimos cargar" + Reintentar (no "no tienes nada").
+- **BL9**: crear bitácora de fecha pasada → marcada "de otra fecha" en lista+detalle; avión: capturar hoy/enviar mañana → entra con fecha de captura.
+- **BL1**: Manolo entra en teléfono real (tras PROMPT-38 desplegado); fallo no-credenciales NO dice "Cédula o PIN incorrectos".
+
+---
+
 ## 🟢 SESIÓN 07/09/2026 — PROMPT-37 ronda BK (app) — **RELEASE 2.14.0 PUBLICADA (rolling) · commit `30449de` PUSHEADO a main (PWA) · APK 2.14.0 firmado+registrado+SUBIDO · minima INTACTA en 2.13.0 · build+guard verdes**
 
 > El padre **PROMPT-36-SGC (ronda BK)** ya está EN PROD (verificado por agente): `notif_tipo` (catálogo, ~37 tipos activos) + `notif_regla` con nivel usuario + `notif_permitida` cableado en los 7 emisores + trigger de versión; edge `resolve-maps-link` con `suggest_query`/`query=`/extracción de mensaje WhatsApp; padrón `incentivo_participante` (llave en `usuarios`) + `set_incentivo_participante` + `incentivo_participantes`/`incentivo_candidatos`. **Único hueco del padre: NO creó el knob `bitacora_min_fotos`** (FASE 3.1 queda hardcodeada).
