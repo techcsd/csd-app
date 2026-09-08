@@ -20,6 +20,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { fechaLocalISO } from '../../../core/util/fecha';
 import {
   INCIDENTE_GRAVEDADES,
   INCIDENTE_TIPOS,
@@ -76,6 +77,11 @@ export class IncidentePage implements OnDestroy {
   pickProyecto(id: string): void {
     this.proyectoId.set(id);
   }
+  // BL9 — día que documenta el incidente. Default HOY (local); se puede reportar
+  // un incidente de un día pasado. Tope = hoy (como la web: [max], sin min).
+  fecha = signal<string>(fechaLocalISO());
+  readonly hoy = fechaLocalISO();
+  esFechaPasada = computed(() => !!this.fecha() && this.fecha() < this.hoy);
   tipo = signal<IncidenteTipo | null>(null);
   gravedad = signal<string>('');
   lesionados = signal(0);
@@ -126,6 +132,7 @@ export class IncidentePage implements OnDestroy {
     effect(() => {
       const snap = {
         proyectoId: this.proyectoId(),
+        fecha: this.fecha(), // BL9 — día documentado (persistir en el borrador)
         tipo: this.tipo(),
         gravedad: this.gravedad(),
         lesionados: this.lesionados(),
@@ -162,6 +169,7 @@ export class IncidentePage implements OnDestroy {
 
       if (draft) {
         this.proyectoId.set(draft.proyectoId);
+        this.fecha.set(draft.fecha || this.hoy); // BL9 — rehidrata el día (o hoy)
         this.tipo.set(draft.tipo ?? null);
         this.gravedad.set(draft.gravedad ?? '');
         this.lesionados.set(draft.lesionados ?? 0);
@@ -339,6 +347,7 @@ export class IncidentePage implements OnDestroy {
     try {
       await this.bitacora.enqueueIncidente({
         proyectoId: this.proyectoId(),
+        fecha: this.fecha() || this.hoy, // BL9 — día documentado (default hoy)
         tipo: this.tipo()!,
         gravedad: this.gravedad() || (this.esEquipo() ? 'moderado' : ''),
         lesionados: this.esAccidente() ? this.lesionados() : 0,
@@ -408,6 +417,7 @@ export class IncidentePage implements OnDestroy {
 /** Forma persistida del borrador del incidente. */
 interface IncidenteDraft {
   proyectoId: string;
+  fecha?: string; // BL9 — día que documenta el incidente (YYYY-MM-DD)
   tipo: IncidenteTipo | null;
   gravedad: string;
   lesionados: number;

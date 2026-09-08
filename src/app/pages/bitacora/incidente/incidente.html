@@ -34,6 +34,21 @@
         } @else {
           <p class="incidente__or">No hay obras disponibles.</p>
         }
+
+        <!-- BL9 — ¿de qué día es el incidente? Default HOY; se puede reportar uno
+             de un día pasado. Tope = hoy (como la web: [max], sin min). -->
+        <label class="field-label" for="inc-fecha">¿De qué día es el incidente?</label>
+        <input
+          id="inc-fecha"
+          class="field"
+          type="date"
+          [max]="hoy"
+          [ngModel]="fecha()"
+          (ngModelChange)="fecha.set($event)"
+        />
+        @if (esFechaPasada()) {
+          <p class="incidente__fecha-aviso">📅 Estás reportando un incidente de una fecha pasada.</p>
+        }
       }
 
       <!-- 2. Tipo -->

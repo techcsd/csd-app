@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.15.0';
+const VERSION = '2.16.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,17 +62,12 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-09-08';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Bitácoras de días pasados + listas honestas cuando falla la señal + asignar tareas más fácil';
+const TITULO = 'Reportar un incidente de un día pasado';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Obras y Flota', d: 'Las listas de obras, vehículos y conductores ya no dicen «no tienes nada» cuando en realidad se cayó la conexión: ahora muestran «No pudimos cargar» con un botón para reintentar. Si deberías ver algo y sale vacío, sabes que fue un fallo de señal, no que estás sin asignar.' },
-  { t: 'nuevo', m: 'Bitácora', d: 'Ya puedes registrar una bitácora de un día pasado: en el primer paso eliges la fecha (tope: hoy). Queda marcada como «de otra fecha» en la lista y en el detalle, para no confundirla con la de hoy.' },
-  { t: 'arreglo', m: 'Bitácora', d: '«Mis bitácoras» mostraba la hora de hoy en un parte de días atrás; ahora muestra su fecha real. Y el tablero ya no contaba mal lo de «hoy» en la tarde/noche.' },
-  { t: 'mejora', m: 'Tareas', d: 'Al asignar una tarea, la lista de personas abre completa —con el rol de cada quien y un aviso cuando hay nombres repetidos—, sin tener que adivinar el nombre exacto.' },
-  { t: 'arreglo', m: 'Rutas', d: 'En una ruta ya terminada o cancelada dejan de aparecer «Cómo llegar» y las acciones de las paradas. Solo se muestran mientras la ruta está viva.' },
-  { t: 'mejora', m: 'Seguimiento', d: 'En el mapa, un chofer sin señal reciente ya no descuadra el zoom: el mapa se ajusta a quienes sí están reportando su ubicación.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Ahora también puedes reportar un incidente de un día pasado: eliges la fecha (tope: hoy), igual que en la bitácora del día. Queda marcado con su fecha real.' },
 ];
 
 const TIPO_POR_COMMIT = {
