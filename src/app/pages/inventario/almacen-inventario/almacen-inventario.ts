@@ -143,9 +143,12 @@ export class AlmacenInventarioPage {
     if (real == null || real < 0 || isNaN(real)) {
       return;
     }
+    // BL4 — motivo (queda en la auditoría), paridad con AU1·P1 de la web.
+    const motivo = prompt('Motivo del ajuste (queda en la auditoría):');
+    if (motivo === null) return; // canceló
     this.ajustando.set(true);
     try {
-      await this.inventario.ajusteRealStock(it.articulo_id, this.bodegaId(), real);
+      await this.inventario.ajusteRealStock(it.articulo_id, this.bodegaId(), real, motivo.trim() || null);
       this.toast.success('Stock ajustado al valor real (sin movimiento).');
       this.ajusteId.set(null);
       await this.load(true);

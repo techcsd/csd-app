@@ -622,11 +622,13 @@ export class InventarioService {
    * (rebase de la línea base; hermano de AP5). Solo admin — el RPC lo revalida
    * server-side. Online. Invalida la caché del inventario del almacén.
    */
-  async ajusteRealStock(articuloId: string, bodegaId: string, cantidadReal: number): Promise<void> {
+  // BL4 — la web exige motivo (AU1·P1) y queda en la auditoría; la app no lo mandaba.
+  async ajusteRealStock(articuloId: string, bodegaId: string, cantidadReal: number, motivo: string | null = null): Promise<void> {
     const { error } = await this.supabase.client.rpc('ajuste_real_stock', {
       p_articulo_id: articuloId,
       p_bodega_id: bodegaId,
       p_cantidad_real: cantidadReal,
+      p_motivo: motivo,
     });
     if (error) throw new Error(error.message);
     void this.catalog.invalidate(`inv_almacen_${bodegaId}_all`).catch(() => {});
