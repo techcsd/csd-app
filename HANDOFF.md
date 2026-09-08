@@ -1,5 +1,10 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 08/09/2026 — PROMPT-39 FASE 6 (BL4/BL6) — **RELEASE 2.17.0 PUBLICADA (rolling) · commit `300a5ee` push main · APK firmado+subido al bucket · publicada=true · mínima INTACTA 2.13.0**
+- **BL4 (paridad AU1·P1):** `inventario.service.ajusteRealStock` ahora manda `p_motivo`; `almacen-inventario` lo captura (prompt) antes de fijar el stock real. La app ya tenía el camino sin-ledger (rebase de apertura por artículo, sin kardex). El **conteo físico con ciclo de vida completo** (borrador→contado→aplicado) es la versión rica de la web (SGC 1.123.0); la app cubre la capacidad núcleo por artículo. Follow-up opcional: portar la hoja de ciclo de vida al app offline.
+- **BL6 (seguimiento):** verificado — ya estaba en 2.15/2.16 (excluir stale de los bounds, `maxZoom:15`, leyenda cerrada). El `#9ca3af` del pin stale es color de la API de mapas (no token CSS) → se queda.
+- Backend BL4 (SGC 1.123.0): tabla/RPCs `conteo_fisico_*` + `stock_movimientos_sigma` excluye `tipo='conteo_fisico'`. Ya en prod.
+
 ## 🟢 SESIÓN 08/09/2026 — PROMPT-39 ronda BL (app) — **RELEASE 2.16.0 PUBLICADA (rolling) · commits `08c5e4c`+`fdd318d` PUSHEADOS a main (PWA) · APKs 2.15.0 y 2.16.0 firmados+registrados+SUBIDOS · minima INTACTA en 2.13.0 · build+guard verdes**
 
 > **2.16.0** = seguimiento inmediato de 2.15.0: completa FASE 4 (BL9) con el **selector de fecha en el wizard de INCIDENTE** (mismo patrón que el parte diario: default hoy, `[max]=hoy`, persistido en borrador). 2.15.0 llevó todo lo demás de PROMPT-39. Ambas publicadas rolling (minima=false); floor forzado sigue en 2.13.0.
