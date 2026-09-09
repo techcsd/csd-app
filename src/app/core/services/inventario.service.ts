@@ -9,15 +9,26 @@ const CAT_BODEGAS = 'bodegas';
 // V14: bumped to _v2 to invalidate the pre-official-catalog offline cache
 // (articles now carry requiere_talla/nota; categories are the official 8).
 // Z16/Z17: bump a _v3 para traer propiedad + imagen_url.
-const CAT_ARTICULOS = 'articulos_v3';
+// BM5: bump a _v4 para traer factor_paquete + unidad_paquete (empaque atado/paquete).
+const CAT_ARTICULOS = 'articulos_v4';
 const CAT_CATEGORIAS = 'categorias_inventario_v2';
 const BUCKET = 'inventario';
+
+/** BM5 — un renglón de movimiento: `cantidad` SIEMPRE en unidad base; el empaque
+ *  (unidad_capturada/factor_aplicado) es traza para "2 atados (240 PZA)". */
+export interface MovItemPayload {
+  articulo_id: string;
+  cantidad: number;
+  talla?: string | null;
+  unidad_capturada?: string | null;
+  factor_aplicado?: number;
+}
 
 export interface SalidaCaptura {
   bodegaId: string;
   proyectoId: string | null;
   motivo: string | null;
-  items: { articulo_id: string; cantidad: number; talla?: string | null }[];
+  items: MovItemPayload[];
   foto: Blob | null;
   /** AF10 — firma de quien ENTREGA el material. */
   firma?: Blob | null;
@@ -28,7 +39,7 @@ export interface EntradaCaptura {
   referencia: string | null;
   /** B3/U25 — texto libre cuando el origen es "Otro" (se guarda en otros_valores). */
   otroReferencia?: string | null;
-  items: { articulo_id: string; cantidad: number; talla?: string | null }[];
+  items: MovItemPayload[];
   foto: Blob | null;
   /** AF10 — firma de quien RECIBE el material. */
   firma?: Blob | null;
@@ -263,7 +274,7 @@ export class InventarioService {
     const data = await this.catalog.refresh<ArticuloCat[]>(CAT_ARTICULOS, async () => {
       const { data, error } = await this.supabase.client
         .from('articulos')
-        .select('id, nombre, codigo, unidad, categoria_id, requiere_talla, nota, propiedad, imagen_url')
+        .select('id, nombre, codigo, unidad, categoria_id, requiere_talla, nota, propiedad, imagen_url, factor_paquete, unidad_paquete')
         .eq('activo', true)
         .order('nombre');
       if (error) throw new Error(error.message);
@@ -440,6 +451,8 @@ export class InventarioService {
           nota: null,
           propiedad: r.propiedad,
           imagen_url: null,
+          factor_paquete: null,
+          unidad_paquete: null,
         } as ArticuloCat);
       return { ...base, match_por: r.match_por, match_alias: r.match_alias ?? null };
     });

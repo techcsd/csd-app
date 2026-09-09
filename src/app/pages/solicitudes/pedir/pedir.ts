@@ -197,8 +197,10 @@ export class PedirPage implements OnDestroy {
         items: items.map((l) => ({
           articulo_id: this.esCustom(l) ? null : l.articulo_id,
           descripcion: this.descripcionDe(l),
-          cantidad: l.cantidad,
+          cantidad: l.cantidad, // BM5 — SIEMPRE en unidad base
           unidad: l.unidad,
+          unidad_capturada: l.unidad_capturada ?? null,
+          factor_aplicado: l.factor_aplicado ?? 1,
         })),
       });
       this.hoja.set('exito');

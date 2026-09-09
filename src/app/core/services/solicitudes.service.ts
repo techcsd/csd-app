@@ -22,7 +22,15 @@ export interface SolicitudCaptura {
   proyectoId: string;
   urgencia: Urgencia;
   notas: string | null;
-  items: { articulo_id: string | null; descripcion: string; cantidad: number; unidad: string }[];
+  // BM5 — cantidad SIEMPRE en unidad base; unidad_capturada/factor_aplicado = traza del empaque.
+  items: {
+    articulo_id: string | null;
+    descripcion: string;
+    cantidad: number;
+    unidad: string;
+    unidad_capturada?: string | null;
+    factor_aplicado?: number;
+  }[];
 }
 
 /**

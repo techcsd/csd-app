@@ -64,6 +64,17 @@
               } @else if (a.requiere_talla) {
                 <span class="selcat__talla selcat__talla--req">Pide talla</span>
               }
+              <!-- BM5 — captura por empaque (atado/paquete): la cantidad guardada va
+                   SIEMPRE en unidad base; el toggle solo cambia CÓMO se teclea. -->
+              @if (puedeEmpaque(a)) {
+                <div class="selcat__empaque">
+                  <button type="button" class="selcat__empaque-opt" [class.selcat__empaque-opt--on]="!porEmpaqueDe(a.id)" (click)="setEmpaque(a, false)">{{ a.unidad }}</button>
+                  <button type="button" class="selcat__empaque-opt" [class.selcat__empaque-opt--on]="porEmpaqueDe(a.id)" (click)="setEmpaque(a, true)">{{ a.unidad_paquete }} ×{{ a.factor_paquete }}</button>
+                  @if (equivBase(a); as eq) {
+                    <span class="selcat__empaque-eq">= {{ eq }} {{ a.unidad }}</span>
+                  }
+                </div>
+              }
             </div>
             <div class="selcat__item-qty">
               <button type="button" class="selcat__step" (click)="ajustar(a, -1)" aria-label="Menos">−</button>
@@ -71,7 +82,7 @@
                 class="field selcat__qty"
                 type="number"
                 inputmode="decimal"
-                [ngModel]="cantidadDe(a.id)"
+                [ngModel]="cantidadMostrada(a)"
                 (ngModelChange)="setCantidad(a, $event)"
               />
               <button type="button" class="selcat__step selcat__step--add" (click)="ajustar(a, 1)" aria-label="Más">+</button>
@@ -284,6 +295,17 @@
               } @else if (a.requiere_talla) {
                 <span class="selcat__talla selcat__talla--req">Pide talla</span>
               }
+              <!-- BM5 — captura por empaque (atado/paquete): la cantidad guardada va
+                   SIEMPRE en unidad base; el toggle solo cambia CÓMO se teclea. -->
+              @if (puedeEmpaque(a)) {
+                <div class="selcat__empaque">
+                  <button type="button" class="selcat__empaque-opt" [class.selcat__empaque-opt--on]="!porEmpaqueDe(a.id)" (click)="setEmpaque(a, false)">{{ a.unidad }}</button>
+                  <button type="button" class="selcat__empaque-opt" [class.selcat__empaque-opt--on]="porEmpaqueDe(a.id)" (click)="setEmpaque(a, true)">{{ a.unidad_paquete }} ×{{ a.factor_paquete }}</button>
+                  @if (equivBase(a); as eq) {
+                    <span class="selcat__empaque-eq">= {{ eq }} {{ a.unidad }}</span>
+                  }
+                </div>
+              }
             </div>
             <div class="selcat__item-qty">
               <button type="button" class="selcat__step" (click)="ajustar(a, -1)" aria-label="Menos">−</button>
@@ -291,7 +313,7 @@
                 class="field selcat__qty"
                 type="number"
                 inputmode="decimal"
-                [ngModel]="cantidadDe(a.id)"
+                [ngModel]="cantidadMostrada(a)"
                 (ngModelChange)="setCantidad(a, $event)"
               />
               <button type="button" class="selcat__step selcat__step--add" (click)="ajustar(a, 1)" aria-label="Más">+</button>

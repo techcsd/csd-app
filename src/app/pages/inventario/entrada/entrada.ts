@@ -308,7 +308,14 @@ export class EntradaPage implements OnDestroy {
           referencia: this.referenciaEfectiva(),
           // B3/U25 — cuando el origen es "Otro", ese texto libre alimenta otros_valores.
           otroReferencia: this.motivo() === 'Otro' ? this.motivoOtro().trim() || null : null,
-          items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
+          // BM5 — cantidad SIEMPRE en base; unidad_capturada/factor_aplicado = traza del empaque.
+          items: items.map((l) => ({
+            articulo_id: l.articulo_id!,
+            cantidad: l.cantidad,
+            talla: l.talla ?? null,
+            unidad_capturada: l.unidad_capturada ?? null,
+            factor_aplicado: l.factor_aplicado ?? 1,
+          })),
           foto: this.foto()?.blob ?? null,
           firma: this.firmaBlob(), // AF10
         });

@@ -53,6 +53,11 @@ export interface ArticuloCat {
   propiedad: string | null;
   /** Z17 — URL de la foto del artículo (thumbnail + detalle), o null. */
   imagen_url: string | null;
+  /** BM5 — unidades base por empaque (ATADO 120 → 120); null = sólo unidad base.
+   *  Con factor_paquete>1 y unidad_paquete el selector ofrece capturar por empaque. */
+  factor_paquete: number | null;
+  /** BM5 — código/etiqueta del empaque ('atado' | 'paquete' | …); null = sin empaque. */
+  unidad_paquete: string | null;
 }
 
 /** AU12 — resultado de `buscar_articulos` (alias-aware): además del artículo, dice POR
@@ -131,6 +136,11 @@ export interface CartLinea {
   cantidad: number;
   talla?: string | null;
   descripcion?: string | null;
+  /** BM5 — cómo se capturó la cantidad. `cantidad` va SIEMPRE en unidad base; estos
+   *  son traza para persistir y mostrar "2 atados (240 PZA)". factor_aplicado=1 y
+   *  unidad_capturada=null ⇒ capturado en unidad base (idéntico a antes). */
+  unidad_capturada?: string | null;
+  factor_aplicado?: number;
 }
 
 /**

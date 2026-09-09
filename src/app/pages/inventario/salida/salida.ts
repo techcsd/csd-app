@@ -309,7 +309,14 @@ export class SalidaPage implements OnDestroy {
         bodegaId: this.bodegaId(),
         proyectoId: this.destinoId() || null, // W8 — destino (obra) si se eligió
         motivo: this.notas().trim() || 'Consumo en obra',
-        items: items.map((l) => ({ articulo_id: l.articulo_id!, cantidad: l.cantidad, talla: l.talla ?? null })),
+        // BM5 — cantidad SIEMPRE en base; unidad_capturada/factor_aplicado = traza del empaque.
+        items: items.map((l) => ({
+          articulo_id: l.articulo_id!,
+          cantidad: l.cantidad,
+          talla: l.talla ?? null,
+          unidad_capturada: l.unidad_capturada ?? null,
+          factor_aplicado: l.factor_aplicado ?? 1,
+        })),
         foto: this.foto()?.blob ?? null,
         firma: this.firmaBlob(), // AF10
       });

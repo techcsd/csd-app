@@ -260,30 +260,88 @@ export class SelectorCategorias {
     this.catSelId.set(null);
   }
 
-  // ── Stepper (con talla para EPP) ──
-  setCantidad(a: ArticuloCat, valor: number): void {
-    const cant = Math.max(0, Math.floor((valor || 0) * 100) / 100);
-    if (a.requiere_talla && cant > 0 && !this.tallaDe(a.id)) {
-      this.abrirTalla(a, cant); // APP-003: conserva la cantidad tecleada
+  // ── BM5 — captura por EMPAQUE (atado/paquete) ─────────────────────────────
+  // El número que el usuario ve/teclea está en la UNIDAD ACTIVA (empaques si el
+  // toggle está en "atado", unidad base si no); la `cantidad` guardada en el
+  // carrito va SIEMPRE en unidad base (base = mostrado × factor). Así el stock,
+  // el kardex y el costeo no se tocan — solo se ENRIQUECE el renglón con
+  // unidad_capturada + factor_aplicado para poder mostrar "2 atados (240 PZA)".
+  private porPaquete = signal<Set<string>>(new Set());
+
+  /** ¿El artículo trae empaque máquina-legible (factor>1)? → ofrece el toggle. */
+  puedeEmpaque(a: ArticuloCat): boolean {
+    return (a.factor_paquete ?? 0) > 1 && !!a.unidad_paquete;
+  }
+  /** ¿Se está capturando este artículo POR empaque? */
+  porEmpaqueDe(id: string): boolean {
+    return this.porPaquete().has(id);
+  }
+  /** Factor efectivo del artículo según el modo actual (1 = unidad base). */
+  private factorDe(a: ArticuloCat): number {
+    return this.porEmpaqueDe(a.id) && this.puedeEmpaque(a) ? (a.factor_paquete as number) : 1;
+  }
+  /** Cantidad MOSTRADA en la unidad activa (empaques si porEmpaque, si no base). */
+  cantidadMostrada(a: ArticuloCat): number {
+    const f = this.factorDe(a);
+    const base = this.cantidadDe(a.id);
+    return f > 1 ? Math.round((base / f) * 100) / 100 : base;
+  }
+  /** Equivalencia en unidad base para el hint "= 240 PZA" (solo por empaque). */
+  equivBase(a: ArticuloCat): number | null {
+    if (!this.porEmpaqueDe(a.id) || !this.puedeEmpaque(a)) return null;
+    const base = this.cantidadDe(a.id);
+    return base > 0 ? base : null;
+  }
+  /** Alterna unidad base ⇄ empaque conservando la cantidad física (base). */
+  setEmpaque(a: ArticuloCat, on: boolean): void {
+    if (!this.puedeEmpaque(a) || on === this.porEmpaqueDe(a.id)) return;
+    this.porPaquete.update((s) => {
+      const n = new Set(s);
+      if (on) n.add(a.id);
+      else n.delete(a.id);
+      return n;
+    });
+    // Re-aplica la MISMA base con la nueva traza (2 atados ⇄ 240 base = mismo físico).
+    const base = this.cantidadDe(a.id);
+    if (base > 0) this.aplicar(a, base, this.tallaDe(a.id));
+  }
+
+  // ── Stepper (con talla para EPP + empaque BM5) ──
+  // `valor`/`delta` llegan en la UNIDAD ACTIVA; se convierten a base antes de guardar.
+  setCantidad(a: ArticuloCat, valorMostrado: number): void {
+    const f = this.factorDe(a);
+    const shown = Math.max(0, Math.floor((valorMostrado || 0) * 100) / 100);
+    const base = f > 1 ? Math.round(shown * f * 100) / 100 : shown;
+    if (a.requiere_talla && base > 0 && !this.tallaDe(a.id)) {
+      this.abrirTalla(a, base); // APP-003: conserva la cantidad tecleada (en base)
       return;
     }
-    this.aplicar(a, cant, this.tallaDe(a.id));
+    this.aplicar(a, base, this.tallaDe(a.id));
   }
 
   ajustar(a: ArticuloCat, delta: number): void {
-    const next = Math.max(0, this.cantidadDe(a.id) + delta);
-    if (a.requiere_talla && next > 0 && !this.tallaDe(a.id)) {
-      this.abrirTalla(a, next);
+    const f = this.factorDe(a);
+    const shownNext = Math.max(0, this.cantidadMostrada(a) + delta);
+    const base = f > 1 ? Math.round(shownNext * f * 100) / 100 : shownNext;
+    if (a.requiere_talla && base > 0 && !this.tallaDe(a.id)) {
+      this.abrirTalla(a, base);
       return;
     }
-    this.aplicar(a, next, this.tallaDe(a.id));
+    this.aplicar(a, base, this.tallaDe(a.id));
   }
 
+  /** Escribe/actualiza el renglón. `cantidad` SIEMPRE en unidad base; añade la
+   *  traza de empaque (unidad_capturada/factor_aplicado) según el modo actual. */
   private aplicar(a: ArticuloCat, cantidad: number, talla: string | null): void {
+    const f = this.factorDe(a);
+    const unidadCap = f > 1 ? a.unidad_paquete ?? null : null;
     this.cart.update((list) => {
       const idx = list.findIndex((l) => l.articulo_id === a.id);
       if (cantidad <= 0) return idx >= 0 ? list.filter((_, i) => i !== idx) : list;
-      if (idx >= 0) return list.map((l, i) => (i === idx ? { ...l, cantidad, talla } : l));
+      if (idx >= 0)
+        return list.map((l, i) =>
+          i === idx ? { ...l, cantidad, talla, unidad_capturada: unidadCap, factor_aplicado: f } : l,
+        );
       return [
         ...list,
         {
@@ -293,6 +351,8 @@ export class SelectorCategorias {
           categoria_id: a.categoria_id,
           cantidad,
           talla,
+          unidad_capturada: unidadCap,
+          factor_aplicado: f,
         },
       ];
     });
