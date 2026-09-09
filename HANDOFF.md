@@ -20,10 +20,16 @@
 - Rutas combustible: subida `combustible.service.ts:330` (`combustible/<opId>/{recibo|tablero|bomba|evidencia}.jpg`), upload `sync.service.ts:752-754`.
 - **Descartado** para el padre: la compresión BJ (2.13.0) no pudo causar la tarjeta — un 415/413 de Storage no trae código permanente → `throwSyncError` lo deja transitorio, no "Problema del sistema".
 
-### ⏸️ NO construido — bloqueado en el padre / §D (Pending — Claude puede, cuando aterrice el padre)
-1. **FASE 1 item 2 (BM1) — "Corregir" en combustible.** Extender `puedeCorregir` a `combustible` + reconstruir el wizard desde el outbox (patrón AO3: `generar-conduce.ts:570` `cargarCorreccion` + `sync.getOpFotos`) rehidratando las 3 fotos, y reenviar. **Construible** pero su gating final depende de cómo el padre reclasifique (§D) y el smoke exige provocar los 5 rechazos como `dato` → esperar al padre.
-2. **FASE 1 items 5–6 (BM/BM3) — rescate + smoke** de echada de persona (2 fotos) y depósito en obra (1 foto): hoy no insertan por el trigger de BM3 → depende de `PROMPT-40` FASE 2.
-3. **FASE 2 (BM5) — `qty-input` unidad⇄atado.** Mover el selector de cantidad triplicado (`selector-categorias.html` :51-80/:130-160/:269-300, usado por inventario/entrada·salida + solicitudes/pedir) a `app-qty-input` (AX7) + par unidad/factor (cierra el TODO `qty-input.ts:38`). `cantidad` viaja SIEMPRE en unidad base (`adjust_stock` mueve delta sin unidad; `detalle_salidas` sin columna de unidad). **Explícitamente gated en el "OK de §D"** → no tocado.
+### ✅ FASE 1 item 2 (BM1) — "Corregir" en combustible (CONSTRUIDO — data-safe, activable HOY)
+- Extendido tras "continue working": la echada atascada se puede **Corregir** (reabre el wizard prellenado con los datos + **rehidrata las 3 fotos** desde el outbox), se ajusta el campo señalado (odómetro/galones/monto/estación…) y se reenvía.
+- **Data-safe (regla madre):** la op original se **CONSERVA** hasta que la corregida se encola; recién ahí se retira (`submit()` → `cancelarPendiente`). Sin ventana de pérdida. `client_uuid` nuevo evita duplicar (la vieja fue rechazada pre-inserción). Si el usuario abandona la corrección, la echada atascada sigue en Pendientes.
+- **Gate = categoría `dato`** (no `sistema`): en un rechazo de sistema editar el dato no ayuda (lo arregla Tecnología). Esto lo hace **exercitable HOY** sin el padre — un rechazo real del RPC (p. ej. desfase needs-confirm AW3 = `validacion`→`dato`, FK 23503→`referencia`→`dato`) ya lo dispara.
+- Archivos: `pendientes.ts` (`puedeCorregir`/`corregir` enrutan combustible→`/transporte/combustible?corregir=<id>`); `combustible.ts` (`correccionDe` + `cargarCorreccion` + hook en `submit` + guard telehandler); `combustible.service.ts` (`getEchadaPendiente`); `sync.service.ts` (`cancelPending` ahora acepta estado `error`, bloquea solo `syncing`).
+- ⚠️ El **smoke de los 5 rechazos reclasificados** y las variantes persona/depósito por trigger BM3 **siguen** esperando al padre; lo que se probó hoy es la mecánica de reconstrucción sobre un `dato` real.
+
+### ⏸️ NO construido — bloqueado en el padre / §D
+1. **FASE 1 items 5–6 (BM/BM3) — rescate + smoke** de echada de persona (2 fotos) y depósito en obra (1 foto): hoy no insertan por el trigger de BM3 → depende de `PROMPT-40` FASE 2.
+2. **FASE 2 (BM5) — `qty-input` unidad⇄atado.** Mover el selector de cantidad triplicado (`selector-categorias.html` :51-80/:130-160/:269-300, usado por inventario/entrada·salida + solicitudes/pedir) a `app-qty-input` (AX7) + par unidad/factor (cierra el TODO `qty-input.ts:38`). `cantidad` viaja SIEMPRE en unidad base (`adjust_stock` mueve delta sin unidad; `detalle_salidas` sin columna de unidad). **Explícitamente gated en el "OK de §D"** → no tocado.
 
 ### 📌 Pendientes del §D (el doc no existe — inferidos del prompt)
 1. **§D/FASE 1.2** — ¿los 5 rechazos van a `error_campo`/`22023` o a `DRxxx`? **La app ya clasifica AMBOS a `dato`** (`22023`→dato por code; `DR\d`→`validacion`→dato en `outbox-categoria.ts`+`sync.service.ts:classifyKind`). Cualquiera de las dos aterriza sin cambio de cliente.
@@ -33,12 +39,13 @@
 ### Gotchas / notas
 - **Los docs `CONTEXTO-ACTUALIZACION-20.md` y `PROMPT-40-SGC.md` NO están en el repo** (patrón repetido en rondas previas). Se trabajó por los file:line del prompt; las líneas del prompt eran de la versión BL (2.16.0) y se corrieron un poco en 2.17.0 pero la lógica coincide.
 - **El padre está PENDIENTE** (confirmado por Xaviel). Esta tanda del hijo va por delante.
-- 9 archivos tocados + 1 doc nuevo, **sin commit** (esperando revisión de Xaviel). Versión intacta 2.17.0.
+- **Commits (local, NO push):** `52c42b4` (BM1 error_code + provisional + BM2 doc) · `<commit-2>` (BM1 Corregir combustible). Versión intacta 2.17.0. Sin push/APK.
 
 ### 🔴 Verificar device / prod (no se puede desde aquí, y varias esperan al padre)
 - **BM1 error_code**: abrir una tarjeta `sistema` en Pendientes → se ve `🩺 Código: …` sin abrir "Ver detalle técnico".
 - **BM1 provisional**: en avión, capturar echada con galones → aparece la nota `📴 … provisional`.
-- **Tras el padre**: provocar los 5 rechazos → llegan como `dato` con "Revisar dato" + Corregir; echada de la captura se reenvía con sus 3 fotos.
+- **BM1 Corregir combustible (HOY)**: forzar un rechazo `dato` del RPC (p. ej. echada sobre capacidad con needs-confirm-desfase, o FK rota) → en Pendientes aparece **✏️ Corregir** → reabre el wizard prellenado con las 3 fotos → ajustar galones/km → reenviar → la echada corregida sale con sus 3 fotos y la atascada desaparece (una sola vez).
+- **Tras el padre**: provocar los 5 rechazos → llegan como `dato` con "Revisar dato" + Corregir; variantes persona/depósito insertan.
 
 ---
 

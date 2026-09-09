@@ -149,14 +149,22 @@ export class PendientesPage {
     return item.permanente === true || this.esViejo(item);
   }
 
-  /** AO3 — un conduce con error (ej. stock insuficiente) se puede CORREGIR: reabre el
-   *  wizard con los datos y fotos del conduce atascado para ajustar cantidades/almacén. */
+  /** AO3/BM1 — una captura con error se puede CORREGIR reabriendo su wizard con los
+   *  datos y fotos: conduce (stock/almacén) y echada de combustible (odómetro/galones/
+   *  monto/campo señalado). La captura atascada se conserva hasta reenviar la corregida.
+   *  BM1 — la echada solo ofrece Corregir cuando el rechazo es de DATO (corregible):
+   *  en un 'sistema' (RLS/constraint del server) editar el dato no ayudaría, y la copia
+   *  honesta ya dice que lo arregla Tecnología. El conduce mantiene su gate AO3. */
   puedeCorregir(item: OutboxItem): boolean {
-    return item.estado === 'error' && item.tipo_op === 'conduce_simple';
+    if (item.estado !== 'error') return false;
+    if (item.tipo_op === 'conduce_simple') return true;
+    if (item.tipo_op === 'combustible') return this.categoria(item) === 'dato';
+    return false;
   }
-  /** AO3 — abre el wizard de conduce en modo corrección (reconstruye desde el payload). */
+  /** AO3/BM1 — abre el wizard correspondiente en modo corrección (reconstruye desde el payload). */
   corregir(item: OutboxItem): void {
-    void this.router.navigate(['/transporte/generar-conduce'], { queryParams: { corregir: item.id } });
+    const ruta = item.tipo_op === 'combustible' ? '/transporte/combustible' : '/transporte/generar-conduce';
+    void this.router.navigate([ruta], { queryParams: { corregir: item.id } });
   }
 
   /** AV3 — ¿este error es "falta la firma del despachante" (DR456)? */

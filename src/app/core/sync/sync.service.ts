@@ -471,14 +471,18 @@ export class SyncService {
   }
 
   /**
-   * AW2 — cancela por completo una op AÚN pendiente (para "Revisar y corregir"):
-   * borra la op, sus fotos y el registro local. A diferencia de `discard`, NO deja
-   * un registro en 'error' (la echada nunca se envió y se va a re-registrar
-   * corregida). Devuelve false si ya se envió o está en curso (no cancelable).
+   * AW2/BM1 — cancela por completo una op que se va a re-registrar corregida (para
+   * "Revisar y corregir" en sitio, y para "Corregir" una echada ATASCADA desde el
+   * outbox): borra la op, sus fotos y el registro local. A diferencia de `discard`,
+   * NO deja un registro en 'error' (la captura se reemplaza por la corregida, no se
+   * abandona). Acepta 'pending' (AW2, aún sin enviar) y 'error' (BM1, rechazada por
+   * el server); solo bloquea una op EN CURSO ('syncing', en vuelo) para no yancarla
+   * a medio envío. Se llama SIEMPRE después de encolar la corregida → sin ventana de
+   * pérdida de la data real. Devuelve false si no existe o está sincronizando.
    */
   async cancelPending(id: string): Promise<boolean> {
     const op = await db.outbox.get(id);
-    if (!op || op.estado !== 'pending') return false;
+    if (!op || op.estado === 'syncing') return false;
     await db.transaction('rw', db.outbox, db.fotos_pendientes, db.mis_registros, async () => {
       await db.fotos_pendientes.where('op_id').equals(id).delete();
       await db.outbox.delete(id);

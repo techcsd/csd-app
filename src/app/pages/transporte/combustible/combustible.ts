@@ -152,6 +152,12 @@ export class CombustiblePage extends GuardedWizard {
   confirmSoft = signal<string | null>(null);
   /** AW2 — client id de la echada recién registrada (para "Revisar y corregir"). */
   lastId = signal<string | null>(null);
+  /**
+   * BM1 — id de la op ATASCADA que estamos corrigiendo (llegamos con `?corregir=`).
+   * La op original se CONSERVA hasta que la corregida se encola; recién ahí se
+   * retira (`submit()`), sin ventana de pérdida de la data real de obra.
+   */
+  correccionDe = signal<string | null>(null);
   // Z9 — solo "Total Energies" (preseleccionada) + "Otro" (input libre). Se dejó
   // de listar el catálogo completo: en campo casi siempre es Total Energies y lo
   // demás va por "Otro".
@@ -293,6 +299,14 @@ export class CombustiblePage extends GuardedWizard {
     void this.conductores.getFlotaConfig().then((c) => this.umbralKm.set(c.umbralKmEchada));
     // AW3 — umbrales de tanque/precio para el bloqueo/confirmación en vivo.
     void this.combustible.getTanqueConfig().then((c) => this.tanqueCfg.set(c));
+    // BM1 — ¿venimos a CORREGIR una echada atascada en el outbox? Reconstruye el
+    // wizard desde su payload + fotos (sin descartarla) para ajustar el campo
+    // señalado y reenviar. Tiene prioridad sobre el deep-link por vehículo.
+    const corregirId = this.route.snapshot.queryParamMap.get('corregir');
+    if (corregirId) {
+      void this.cargarCorreccion(corregirId);
+      return;
+    }
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
     if (this.vehiculoId) {
@@ -301,6 +315,94 @@ export class CombustiblePage extends GuardedWizard {
       this.necesitaVehiculo.set(true);
       this.loading.set(false);
     }
+  }
+
+  /**
+   * BM1 — reconstruye una echada ATASCADA (op del outbox con error, ej. galones sobre
+   * la capacidad real del tanque, odómetro rechazado) como wizard editable: mapea el
+   * payload a los signals, rehidrata las fotos (recibo/tablero/bomba o evidencia) y
+   * arranca en el paso de digitación para corregir el campo señalado. La op original
+   * se CONSERVA; solo se retira tras reenviar la corregida (submit()). Espeja AO3 de
+   * conduce, pero sin borrador: las fotos viven en los signals hasta reenviar.
+   */
+  private async cargarCorreccion(opId: string): Promise<void> {
+    const data = await this.combustible.getEchadaPendiente(opId);
+    if (!data) {
+      this.toast.error('No se pudo abrir esa echada para corregir.');
+      this.necesitaVehiculo.set(true);
+      this.loading.set(false);
+      return;
+    }
+    const p = data.op.payload as Record<string, unknown>;
+    this.correccionDe.set(opId);
+
+    // Modo (persona / depósito / estación) desde el payload.
+    const persona = p['titular_es_persona'] === true;
+    const origen = (p['origen'] as 'estacion' | 'deposito_obra') ?? 'estacion';
+    this.modoPersona.set(persona);
+    this.origen.set(origen);
+
+    // Números + texto crudo de los inputs de tipo texto (galones/monto).
+    const km = (p['kilometraje'] as number | null) ?? null;
+    this.km.set(km);
+    const galones = (p['galones'] as number | null) ?? null;
+    this.galones.set(galones);
+    if (galones != null) this.galonesRaw.set(String(galones));
+    const monto = (p['monto'] as number | null) ?? null;
+    this.monto.set(monto);
+    if (monto != null) this.montoRaw.set(String(monto));
+
+    // Detalles.
+    this.producto.set((p['producto'] as 'diesel' | 'gasolina') ?? 'diesel');
+    this.subtipo.set((p['subtipo'] as 'regular' | 'premium' | null) ?? null);
+    this.tarjeta.set((p['tarjeta'] as string) ?? '');
+    this.titular.set((p['titular'] as string) ?? '');
+    this.ayudanteId.set((p['ayudante_id'] as string | null) ?? null);
+    this.proyectoId.set((p['proyecto_id'] as string | null) ?? null);
+    this.conductorId = (p['conductor_id'] as string | null) ?? null;
+
+    // Estación: texto libre → "Otro" si no está en el catálogo visible.
+    const estacion = (p['estacion'] as string | null) ?? '';
+    if (estacion) {
+      if (this.estaciones().includes(estacion)) {
+        this.estacion.set(estacion);
+        this.estacionOtro.set(false);
+      } else {
+        this.estacionOtro.set(true);
+        this.estacionOtroTexto.set(estacion);
+      }
+    }
+
+    // Fotos: rehidrata los blobs del outbox en los slots del wizard (no se pierden).
+    for (const f of data.fotos) {
+      const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+      if (f.slot === 'recibo') {
+        if (origen === 'deposito_obra') this.fotoEvidencia.set(photo);
+        else this.fotoRecibo.set(photo);
+      } else if (f.slot === 'tablero') {
+        this.fotoTablero.set(photo);
+      } else if (f.slot === 'bomba') {
+        this.fotoBomba.set(photo);
+      }
+    }
+
+    // Vehículo: rehidrata placa/odómetro/capacidad/última para que la validación en
+    // vivo funcione (y sea contra el valor FRESCO si hay red). En echada de persona
+    // no hay vehículo.
+    const vehId = (p['vehiculo_id'] as string | null) ?? null;
+    if (vehId) {
+      this.vehiculoId = vehId;
+      this.necesitaVehiculo.set(false);
+      this.cargarVehiculo(); // setea placa/detalle + loadUltima/loadCapacidad + loading=false
+    } else {
+      this.necesitaVehiculo.set(false);
+      this.loading.set(false);
+      if (!this.conductorId) void this.loadConductor();
+    }
+
+    // Empezar en el paso de digitación: las fotos ya están; se corrige el dato.
+    const idx = this.steps().indexOf('digits');
+    this.step.set(idx >= 0 ? idx + 1 : 1);
   }
 
   /** B1 — vehículo elegido del pool: continúa el registro con ese vehículo. */
@@ -394,7 +496,10 @@ export class CombustiblePage extends GuardedWizard {
         this.vehDetalle.set(d);
         // AC11 — telehandler (medido por horas): preselecciona "Depósito en obra"
         // y carga las obras para elegir dónde se echó.
-        if (d?.medida_uso === 'horas') {
+        // BM1 — durante una corrección el origen ya viene del payload capturado; no
+        // dejar que la preselección lo pise (una echada de estación no debe volverse
+        // depósito al rehidratar el vehículo).
+        if (d?.medida_uso === 'horas' && !this.correccionDe()) {
           this.origen.set('deposito_obra');
           void this.loadProyectos();
         }
@@ -628,6 +733,15 @@ export class CombustiblePage extends GuardedWizard {
         confirmado: this.confirmado(), // AW3 — echada inusual ya confirmada
       });
       this.lastId.set(nuevoId); // AW2 — para "Revisar y corregir"
+      // BM1 — corrección de una echada atascada: la corregida YA quedó encolada
+      // (enqueue persiste en Dexie antes de sincronizar) → recién ahora retiramos la
+      // op original, sin ventana de pérdida. El client_uuid nuevo evita duplicar (la
+      // vieja fue rechazada pre-inserción: no existe fila en el servidor).
+      const viejo = this.correccionDe();
+      if (viejo) {
+        void this.combustible.cancelarPendiente(viejo);
+        this.correccionDe.set(null);
+      }
       this.resultado.set(this.calc());
       this.registradoEn.set(new Date().toISOString()); // BB6 — hora real de captura
       this.done.set(true);

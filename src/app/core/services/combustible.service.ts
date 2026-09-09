@@ -15,7 +15,7 @@ import {
   TANQUE_CONFIG_DEFAULT,
   UltimaEchada,
 } from '../models/combustible.model';
-import { db } from '../db/app-db';
+import { db, OutboxOp } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
 
@@ -315,6 +315,21 @@ export class CombustibleService {
    */
   async cancelarPendiente(id: string): Promise<boolean> {
     return this.sync.cancelPending(id);
+  }
+
+  /**
+   * BM1 — carga una echada ATASCADA del outbox para corregirla: su payload + las
+   * fotos (blobs reconstruidos, WebKit-safe). NO la descarta — la op original queda
+   * como respaldo hasta que el wizard reenvíe la corregida (la data real de obra
+   * NUNCA se pierde). Devuelve null si la op ya no está o no es una echada.
+   */
+  async getEchadaPendiente(
+    id: string,
+  ): Promise<{ op: OutboxOp; fotos: Array<{ slot: string; blob: Blob }> } | null> {
+    const op = await this.sync.getOp(id);
+    if (!op || op.tipo_op !== 'combustible') return null;
+    const fotos = await this.sync.getOpFotos(id);
+    return { op, fotos };
   }
 
   /** Queue a fuel record. Works fully offline; syncs when there's signal. Returns the client id. */
