@@ -64,6 +64,20 @@
     }
   }
 
+  // BM1 — SQLSTATE crudo visible (diagnóstico por screenshot) para 'sistema'.
+  &__code {
+    margin: 8px 0 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: var(--color-bg, #f4f4f4);
+    color: var(--color-text-soft, #666);
+    font-size: 12px;
+    font-weight: 700;
+    font-family: monospace;
+    letter-spacing: 0.02em;
+    word-break: break-word;
+  }
+
   &__sec {
     font-size: 13px;
     font-weight: 700;

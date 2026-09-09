@@ -223,6 +223,23 @@ export class PendientesPage {
     return categoriaPill(this.categoria(item));
   }
 
+  /**
+   * BM1 (9ª regla) — firma técnica VISIBLE de un error de 'sistema'. La copia al
+   * usuario sigue siendo la tranquilizadora (MENSAJE_SISTEMA, no lo culpa); esto
+   * añade —sin esconderlo tras "Ver detalle técnico"— lo único que Tecnología
+   * necesita para diagnosticar por screenshot: el SQLSTATE crudo (error_code). Si
+   * el item no lo trae (los atascados de agosto lo tienen y tendrán vacío: nació
+   * en 2.10.0 y StorageApiError no da code), cae a la familia del error para no
+   * afirmar más de lo que se sabe (8ª regla) ni esconder lo que sí se sabe.
+   */
+  codigoDiagnostico(item: OutboxItem): string | null {
+    if (!this.esSistema(item)) return null;
+    const code = (item.error_code ?? '').trim();
+    if (code) return code;
+    const kind = item.error_kind ?? '';
+    return kind ? `tipo: ${kind}` : null;
+  }
+
   /** BG3 — tap en la tarjeta → vista de solo-lectura del contenido + duplicar/exportar. */
   abrirContenido(item: OutboxItem): void {
     void this.router.navigate(['/pendientes', item.id]);

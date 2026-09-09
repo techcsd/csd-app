@@ -231,6 +231,16 @@ export class CombustiblePage extends GuardedWizard {
     return validarEchadaCliente(this.galones(), this.calc().precioPorGalon, cap, this.tanqueCfg());
   });
 
+  /**
+   * BM1 (9ª regla) — SIN señal, la comprobación de galones/precio es PROVISIONAL:
+   * corre contra la capacidad y umbrales CACHEADOS (`capacidad`/`tanqueCfg`), no
+   * contra el valor VIVO del servidor (`sgc.cap_tanque_vehiculo` puede resolver,
+   * p. ej., 25 y no el default 80). No prometemos que el envío pasará; avisamos que
+   * el sistema lo revisa al sincronizar y podría pedir una corrección. En depósito
+   * en obra (garrafón) no hay banda que validar, así que no aplica.
+   */
+  validacionProvisional = computed(() => !this.online && !this.esDeposito());
+
   /** AW3 — texto de galones digitado: parsea a prueba de locale (34.118 = 34.118). */
   onGalonesInput(v: string): void {
     this.galonesRaw.set(v);

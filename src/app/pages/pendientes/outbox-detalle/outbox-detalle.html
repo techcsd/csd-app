@@ -22,6 +22,10 @@
 
         @if (enError()) {
           <p class="ob-detalle__msg" [class.ob-detalle__msg--sistema]="esSistema()">{{ mensaje() }}</p>
+          <!-- BM1 (9ª regla) — código técnico visible para 'sistema' (diagnóstico por screenshot) -->
+          @if (codigoDiagnostico(); as cod) {
+            <p class="ob-detalle__code">🩺 Código: {{ cod }}</p>
+          }
         }
       </div>
 

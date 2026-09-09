@@ -90,6 +90,19 @@ export class OutboxDetallePage {
     if (this.esSistema()) return MENSAJE_SISTEMA;
     return this.op()?.error_msg ?? '';
   }
+  /**
+   * BM1 (9ª regla) — código técnico VISIBLE de un 'sistema': la copia al usuario
+   * (mensaje()) es la tranquilizadora, pero el SQLSTATE crudo se muestra igual para
+   * que el reporte a Tecnología llegue con la causa. Cae a la familia si no hay code.
+   */
+  codigoDiagnostico(): string | null {
+    const o = this.op();
+    if (!o || !this.esSistema()) return null;
+    const code = (o.error_code ?? '').trim();
+    if (code) return code;
+    const kind = o.error_kind ?? '';
+    return kind ? `tipo: ${kind}` : null;
+  }
   enError(): boolean {
     return this.op()?.estado === 'error';
   }

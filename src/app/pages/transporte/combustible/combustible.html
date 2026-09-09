@@ -288,6 +288,14 @@
         } @else if (validacion().confirmar; as c) {
           <p class="comb__hint comb__hint--warn">⚠ {{ c }}</p>
         }
+        <!-- BM1 (9ª regla) — sin señal la comprobación es PROVISIONAL: no promete que
+             el envío pasará; el servidor la revalida con datos frescos al sincronizar. -->
+        @if (validacionProvisional() && galones() != null) {
+          <p class="comb__hint comb__prov">
+            📴 Sin señal: esta comprobación es provisional (usa datos guardados en el teléfono).
+            Al enviar, el sistema la revisa con la capacidad y precios actualizados y podría pedir una corrección.
+          </p>
+        }
       }
 
       <!-- AE6 · Paso 3: el resto de fotos (recibo + tablero); la bomba ya se tomó -->

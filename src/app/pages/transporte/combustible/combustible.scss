@@ -116,6 +116,17 @@ app-option-button {
   color: var(--color-warning);
   font-weight: 700;
 }
+// BM1 — aviso de comprobación provisional sin señal (no promete que el envío pasará)
+.comb__prov {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(120, 120, 120, 0.1);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+}
 
 // AW3 — valor interpretado en vivo (a prueba de dedazos)
 .comb__interpreta {

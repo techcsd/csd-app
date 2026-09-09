@@ -193,6 +193,21 @@
   font-weight: 600;
 }
 
+// BM1 — código técnico (SQLSTATE) VISIBLE en la tarjeta de un error de sistema:
+// el screenshot trae el diagnóstico sin abrir "Ver detalle técnico".
+.ob-row__code {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+}
+
 .ob-row__detalle {
   margin: 8px 0 0;
   padding: 10px 12px;

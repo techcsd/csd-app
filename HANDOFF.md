@@ -1,5 +1,47 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 09/09/2026 — PROMPT-41 ronda BM (app) — **SIN RELEASE · versión sigue 2.17.0 · NO commit/push/APK (por regla) · build verde · solo lo parent-independent (decisión de Xaviel)**
+
+> **TL;DR:** La 9ª regla (un rechazo de negocio no puede llevar un SQLSTATE de infraestructura) nace con el **padre `PROMPT-40-SGC` FASE 1**, que **NO existe todavía** (Xaviel confirmó: *pendiente*). Ni ese doc ni `CONTEXTO-ACTUALIZACION-20.md` (§D) están en el repo. Se hizo **solo lo verificable sin el padre**: `error_code` visible en tarjetas `sistema`, validación de echada anunciada como provisional offline, y el diagnóstico de buckets para el auditor del padre. Lo que depende del padre/§D quedó documentado, **no construido** (decisión explícita de Xaviel: "solo lo seguro por ahora").
+
+### ✅ FASE 1 item 3 (🔴 BM1) — el `error_code` ya es visible en la tarjeta
+- Un error de categoría `sistema` mostraba la copia tranquilizadora (`MENSAJE_SISTEMA`) y **escondía** el SQLSTATE tras *"Ver detalle técnico"* → el reporte a Xaviel llegaba sin causa. Ahora el código sale **visible** en la tarjeta y en la vista de contenido.
+- `pendientes.ts` + `pendientes.html` + `pendientes.scss`: nuevo `codigoDiagnostico(item)` → línea `🩺 Código: …` (nueva clase `.ob-row__code`).
+- `outbox-detalle.ts` + `.html` + `.scss`: mismo `codigoDiagnostico()` + `.ob-detalle__code`.
+- Si el item no trae `error_code` (los atascados de agosto lo tendrán vacío — nació en 2.10.0, `StorageApiError` no da code), cae a `tipo: <error_kind>` (8ª regla: no afirmar de más ni esconder lo que sí se sabe). **Ya ayuda a las tarjetas atascadas de HOY.**
+
+### ✅ FASE 1 item 4 (BM1) — validación de echada anunciada provisional offline
+- El cliente valida galones/precio contra la capacidad **cacheada** (`capDefault:80`); el server usa `cap_tanque_vehiculo` vivo (puede ser 25). Sin señal ya **no promete** que el envío pasará.
+- `combustible.ts`: `validacionProvisional = computed(() => !online && !esDeposito())`. `combustible.html` (paso *digits*, solo con galones escritos) + `.scss` (`.comb__prov`): nota `📴 Sin señal: esta comprobación es provisional… el sistema la revisa al sincronizar y podría pedir una corrección.`
+- El *fetch fresco con red* ya ocurre al elegir vehículo (`loadCapacidad`→`catalog.refresh`); el ajuste más agresivo estaba marcado ⚠️§D → fuera.
+
+### ✅ FASE 3 (BM2) — diagnóstico de buckets para el padre (sin código)
+- Nuevo `docs/BM2-buckets-fotos-diagnostico.md`. Confirmado exacto: **19** sitios `bucket:'vehiculos'` + **21** `bucket:'conduces'` (=40), con archivo:línea, para que el padre los declare en `sql/` (creados desde el dashboard = punto ciego; RLS INSERT **y** UPDATE por `upsert:true`).
+- Rutas combustible: subida `combustible.service.ts:330` (`combustible/<opId>/{recibo|tablero|bomba|evidencia}.jpg`), upload `sync.service.ts:752-754`.
+- **Descartado** para el padre: la compresión BJ (2.13.0) no pudo causar la tarjeta — un 415/413 de Storage no trae código permanente → `throwSyncError` lo deja transitorio, no "Problema del sistema".
+
+### ⏸️ NO construido — bloqueado en el padre / §D (Pending — Claude puede, cuando aterrice el padre)
+1. **FASE 1 item 2 (BM1) — "Corregir" en combustible.** Extender `puedeCorregir` a `combustible` + reconstruir el wizard desde el outbox (patrón AO3: `generar-conduce.ts:570` `cargarCorreccion` + `sync.getOpFotos`) rehidratando las 3 fotos, y reenviar. **Construible** pero su gating final depende de cómo el padre reclasifique (§D) y el smoke exige provocar los 5 rechazos como `dato` → esperar al padre.
+2. **FASE 1 items 5–6 (BM/BM3) — rescate + smoke** de echada de persona (2 fotos) y depósito en obra (1 foto): hoy no insertan por el trigger de BM3 → depende de `PROMPT-40` FASE 2.
+3. **FASE 2 (BM5) — `qty-input` unidad⇄atado.** Mover el selector de cantidad triplicado (`selector-categorias.html` :51-80/:130-160/:269-300, usado por inventario/entrada·salida + solicitudes/pedir) a `app-qty-input` (AX7) + par unidad/factor (cierra el TODO `qty-input.ts:38`). `cantidad` viaja SIEMPRE en unidad base (`adjust_stock` mueve delta sin unidad; `detalle_salidas` sin columna de unidad). **Explícitamente gated en el "OK de §D"** → no tocado.
+
+### 📌 Pendientes del §D (el doc no existe — inferidos del prompt)
+1. **§D/FASE 1.2** — ¿los 5 rechazos van a `error_campo`/`22023` o a `DRxxx`? **La app ya clasifica AMBOS a `dato`** (`22023`→dato por code; `DR\d`→`validacion`→dato en `outbox-categoria.ts`+`sync.service.ts:classifyKind`). Cualquiera de las dos aterriza sin cambio de cliente.
+2. **§D/FASE 1.4** — agresividad del fetch fresco al validar con red (no implementado).
+3. **§D/FASE 2** — visto bueno al enfoque unidad/atado antes de tocar el selector triplicado.
+
+### Gotchas / notas
+- **Los docs `CONTEXTO-ACTUALIZACION-20.md` y `PROMPT-40-SGC.md` NO están en el repo** (patrón repetido en rondas previas). Se trabajó por los file:line del prompt; las líneas del prompt eran de la versión BL (2.16.0) y se corrieron un poco en 2.17.0 pero la lógica coincide.
+- **El padre está PENDIENTE** (confirmado por Xaviel). Esta tanda del hijo va por delante.
+- 9 archivos tocados + 1 doc nuevo, **sin commit** (esperando revisión de Xaviel). Versión intacta 2.17.0.
+
+### 🔴 Verificar device / prod (no se puede desde aquí, y varias esperan al padre)
+- **BM1 error_code**: abrir una tarjeta `sistema` en Pendientes → se ve `🩺 Código: …` sin abrir "Ver detalle técnico".
+- **BM1 provisional**: en avión, capturar echada con galones → aparece la nota `📴 … provisional`.
+- **Tras el padre**: provocar los 5 rechazos → llegan como `dato` con "Revisar dato" + Corregir; echada de la captura se reenvía con sus 3 fotos.
+
+---
+
 ## 🟢 SESIÓN 08/09/2026 — PROMPT-39 FASE 6 (BL4/BL6) — **RELEASE 2.17.0 PUBLICADA (rolling) · commit `300a5ee` push main · APK firmado+subido al bucket · publicada=true · mínima INTACTA 2.13.0**
 - **BL4 (paridad AU1·P1):** `inventario.service.ajusteRealStock` ahora manda `p_motivo`; `almacen-inventario` lo captura (prompt) antes de fijar el stock real. La app ya tenía el camino sin-ledger (rebase de apertura por artículo, sin kardex). El **conteo físico con ciclo de vida completo** (borrador→contado→aplicado) es la versión rica de la web (SGC 1.123.0); la app cubre la capacidad núcleo por artículo. Follow-up opcional: portar la hoja de ciclo de vida al app offline.
 - **BL6 (seguimiento):** verificado — ya estaba en 2.15/2.16 (excluir stale de los bounds, `maxZoom:15`, leyenda cerrada). El `#9ca3af` del pin stale es color de la API de mapas (no token CSS) → se queda.

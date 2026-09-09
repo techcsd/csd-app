@@ -70,6 +70,12 @@
               <p class="ob-row__detalle-legible">🔎 {{ det }}</p>
             }
 
+            <!-- BM1 (9ª regla) — para 'sistema', el código técnico VISIBLE (no solo
+                 tras "Ver detalle técnico"): así un screenshot ya trae el diagnóstico. -->
+            @if (codigoDiagnostico(item); as cod) {
+              <p class="ob-row__code">🩺 Código: {{ cod }}</p>
+            }
+
             @if (expandido() === item.id) {
               <p class="ob-row__detalle">{{ item.error_msg || 'Sin detalle técnico.' }}</p>
             }
