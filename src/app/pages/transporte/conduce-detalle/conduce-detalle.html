@@ -96,6 +96,8 @@
                     <td>
                       {{ it.articulo || '—' }}
                       @if (it.codigo) { <span class="doc__cod">{{ it.codigo }}</span> }
+                      <!-- BM5 — cómo se capturó/despachó: "2 atados" (cantidad va en base) -->
+                      @if (empaqueLabel(it); as ep) { <span class="doc__empaque">📦 {{ ep }}</span> }
                     </td>
                     <td class="r">{{ it.cantidad | number: '1.0-2' }}</td>
                     @if (entregado()) {

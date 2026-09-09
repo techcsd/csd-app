@@ -5,7 +5,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
-import { ConducesService, ConduceDetalle } from '../../../core/services/conduces.service';
+import { ConducesService, ConduceDetalle, ConduceDetalleItem } from '../../../core/services/conduces.service';
 import { ConducePdfService } from '../../../core/services/conduce-pdf.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -45,6 +45,15 @@ export class ConduceDetallePage {
   loading = signal(true);
   detalle = signal<ConduceDetalle | null>(null);
   generando = signal(false);
+
+  /** BM5 — "2 atados" cuando el renglón se capturó por empaque (cantidad en base).
+   *  Devuelve null si fue por unidad base (factor 1). */
+  empaqueLabel(it: ConduceDetalleItem): string | null {
+    const f = it.factor_aplicado ?? 1;
+    if (!it.unidad_capturada || f <= 1 || it.cantidad <= 0) return null;
+    const n = Math.round((it.cantidad / f) * 100) / 100;
+    return `${n} ${it.unidad_capturada}${n === 1 ? '' : 's'}`;
+  }
   confirmarEliminar = signal(false);
   eliminando = signal(false);
   /** AT10 — marcar/desmarcar el conduce como dato de prueba (admin). */

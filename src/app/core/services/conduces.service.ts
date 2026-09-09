@@ -504,6 +504,10 @@ export interface ConduceDetalleItem {
   propiedad: string | null;
   cantidad: number;
   cantidad_recibida: number | null;
+  /** BM5 — empaque con que se capturó/despachó (traza). cantidad va en unidad base;
+   *  factor_aplicado>1 ⇒ mostrar "N atado (M base)". */
+  unidad_capturada?: string | null;
+  factor_aplicado?: number | null;
 }
 /** AU4 — item libre (material no catalogado) del detalle del conduce. */
 export interface ConduceItemLibre {
