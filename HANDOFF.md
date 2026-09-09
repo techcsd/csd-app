@@ -39,7 +39,7 @@
 ### Gotchas / notas
 - **Los docs `CONTEXTO-ACTUALIZACION-20.md` y `PROMPT-40-SGC.md` NO están en el repo** (patrón repetido en rondas previas). Se trabajó por los file:line del prompt; las líneas del prompt eran de la versión BL (2.16.0) y se corrieron un poco en 2.17.0 pero la lógica coincide.
 - **El padre está PENDIENTE** (confirmado por Xaviel). Esta tanda del hijo va por delante.
-- **Commits (local, NO push):** `52c42b4` (BM1 error_code + provisional + BM2 doc) · `<commit-2>` (BM1 Corregir combustible). Versión intacta 2.17.0. Sin push/APK.
+- **Commits (local, NO push):** `52c42b4` (BM1 error_code + provisional + BM2 doc) · `67f634d` (BM1 Corregir combustible). Versión intacta 2.17.0. Sin push/APK.
 
 ### 🔴 Verificar device / prod (no se puede desde aquí, y varias esperan al padre)
 - **BM1 error_code**: abrir una tarjeta `sistema` en Pendientes → se ve `🩺 Código: …` sin abrir "Ver detalle técnico".
