@@ -1,8 +1,15 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 09/09/2026 — PROMPT-41 ronda BM (app) — **SIN RELEASE · versión sigue 2.17.0 · commits locales (NO push/APK) · build verde · FASE 1 + FASE 2 + FASE 3 COMPLETAS**
+## 🟢 SESIÓN 09/09/2026 — PROMPT-41 ronda BM (app) — **RELEASE 2.18.0 PUBLICADA (rolling) · pusheada a main (`b9d5b7b`, PWA→Vercel) · APK firmado+registrado+SUBIDO al bucket · publicada=true · minima INTACTA 2.13.0 · FASE 1+2+3 COMPLETAS**
 
-> **TL;DR:** La 9ª regla (un rechazo de negocio no puede llevar un SQLSTATE de infraestructura). **El padre `PROMPT-40-SGC` YA ESTÁ APLICADO A PROD** (SGC commit `512a826` + BM1-BM5d, verificado E2E). **FASE 1** (error_code visible, validación provisional offline, Corregir en echadas `dato`), **FASE 2** (BM5 captura por atado/paquete + "N atados" en el conduce) y **FASE 3** (diagnóstico buckets) están **completas y alineadas al contrato real**. Falta solo: **validar on-device** (no se puede desde aquí) + decidir push/APK.
+> **TL;DR:** La 9ª regla (un rechazo de negocio no puede llevar un SQLSTATE de infraestructura). **El padre `PROMPT-40-SGC` YA ESTÁ APLICADO A PROD** (SGC `512a826` + BM1-BM5d, verificado E2E). **FASE 1** (error_code visible, validación provisional offline, Corregir en echadas `dato`), **FASE 2** (BM5 captura por atado/paquete + "N atados" en el conduce) y **FASE 3** (buckets) **completas, alineadas al contrato real, y PUBLICADAS en 2.18.0**. Falta solo: **validar on-device** (no se puede desde aquí).
+
+### 🚀 Release 2.18.0 — PUBLICADA (rolling) — TODO HECHO (09-sep)
+- **Bump 4 sitios** (`environment.ts`/`.prod.ts`, `build.gradle` appVersionName→versionCode **2018000**, `release-apk.mjs` VERSION+TITULO+CAMBIOS_CURADOS+RELEASED_AT). Commit `b9d5b7b`.
+- **APK 2.18.0** firmado (cert prod `3c5316d8…5065`, v1+v2+v3), **registrado (Y1)** con 4 cambios curados (Combustible corregible/arreglo, validación provisional/mejora, Inventario por atado/nuevo, código de error visible/mejora) y **subido al bucket** (`csd-app-2.18.0.apk` + `latest` + `version.json` + `apk_url`).
+- **Pusheado a main** `77f1d93..b9d5b7b` → PWA a Vercel + auto-registro web.
+- **Publicada** vía PATCH service_role `publicada=true, minima=false`. Estado verificado: **publicada 2.18.0** (rolling 2.14→2.18) / **minima INTACTA en 2.13.0** (gotcha evitado). ⚠️ `publicada_at`/`publicada_por` NULL (PATCH directo) — cosmético; republicar desde la UI de SGC si molesta.
+- **Rollback Android**: `update sgc.app_versiones set publicada=(version='2.17.0') where plataforma='movil';` · **Rollback PWA**: `git revert b9d5b7b && git push`.
 >
 > Contrato real del padre (verificado en `../dev/SGC/sql/2026-09-09-bm1…`): los 4 rechazos corregibles → `sgc.error_campo('galones'|'monto'|'kilometraje', …)` = **22023** {campo,motivo}; el de autorización → **`DR481`** (no 42501); trigger `trg_combustible_requiere_tablero` gateado → persona/depósito **insertan**. La app ya honra todo esto.
 
@@ -44,7 +51,7 @@
 ### Gotchas / notas
 - **El padre `PROMPT-40-SGC` YA ESTÁ EN PROD** (verificado en `../dev/SGC/sql/2026-09-09-bm*` + su HANDOFF). Los docs `CONTEXTO-ACTUALIZACION-20.md`/`PROMPT-40-SGC.md` nunca estuvieron en ESTE repo; se trabajó del SQL real del hermano `../dev/SGC`.
 - **`CAT_ARTICULOS` bumpeado `articulos_v3`→`v4`** — las cachés offline de artículos re-piden con `factor_paquete`/`unidad_paquete` al estrenar. Los artículos-empaque ya tienen factor (`bm5b`: 6 atados + 11 paquetes).
-- **Commits (local, NO push):** `52c42b4` (error_code+provisional+BM2) · `67f634d` (Corregir combustible) · `47961a6` (align FASE1 al contrato: CAMPO_LABEL galones/kilometraje + excluir DR481) · `c197e53` (BM5 captura atado) · `fa429ee` (BM5 "N atados" en conduce). Versión intacta 2.17.0. Sin push/APK.
+- **Commits (pusheados a main):** `52c42b4` (error_code+provisional+BM2) · `67f634d` (Corregir combustible) · `47961a6` (align FASE1: CAMPO_LABEL galones/kilometraje + excluir DR481) · `c197e53` (BM5 captura atado) · `fa429ee` (BM5 "N atados" en conduce) · `b9d5b7b` (release 2.18.0). **PUBLICADO rolling 2.18.0.**
 
 ### 🔴 Verificar device / prod (no se puede desde aquí, y varias esperan al padre)
 - **BM1 error_code**: abrir una tarjeta `sistema` en Pendientes → se ve `🩺 Código: …` sin abrir "Ver detalle técnico".
