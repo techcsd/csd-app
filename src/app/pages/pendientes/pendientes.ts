@@ -158,7 +158,14 @@ export class PendientesPage {
   puedeCorregir(item: OutboxItem): boolean {
     if (item.estado !== 'error') return false;
     if (item.tipo_op === 'conduce_simple') return true;
-    if (item.tipo_op === 'combustible') return this.categoria(item) === 'dato';
+    if (item.tipo_op === 'combustible') {
+      if (this.categoria(item) !== 'dato') return false;
+      // BM1 — DR481 ("ese vehículo no es tuyo") es 'dato' con mensaje accionable pero
+      // NO se corrige tecleando un campo (el padre le da código de dominio, sin
+      // error_campo). Reabrir el wizard no ayudaría → no ofrecer Corregir en DR*.
+      if ((item.error_code ?? '').startsWith('DR')) return false;
+      return true;
+    }
     return false;
   }
   /** AO3/BM1 — abre el wizard correspondiente en modo corrección (reconstruye desde el payload). */
@@ -295,6 +302,12 @@ export class PendientesPage {
     foto_path: 'la foto de evidencia',
     proyecto_id: 'la obra',
     fecha: 'la fecha',
+    // BM1 — la echada manda estos campos exactos vía sgc.error_campo (22023):
+    // 'galones' (supera_capacidad), 'monto' (precio_fuera_banda), 'kilometraje'
+    // (menor_que_actual / salto_excesivo). Mapear los reales; se dejan litros/odometro
+    // como alias inofensivos por si otra RPC los usara.
+    galones: 'los galones',
+    kilometraje: 'el kilometraje',
     litros: 'los litros',
     monto: 'el monto',
     odometro: 'el odómetro',
