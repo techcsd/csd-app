@@ -1,8 +1,10 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 09/09/2026 — PROMPT-41 ronda BM (app) — **SIN RELEASE · versión sigue 2.17.0 · NO commit/push/APK (por regla) · build verde · solo lo parent-independent (decisión de Xaviel)**
+## 🟢 SESIÓN 09/09/2026 — PROMPT-41 ronda BM (app) — **SIN RELEASE · versión sigue 2.17.0 · commits locales (NO push/APK) · build verde · FASE 1 + FASE 2 + FASE 3 COMPLETAS**
 
-> **TL;DR:** La 9ª regla (un rechazo de negocio no puede llevar un SQLSTATE de infraestructura) nace con el **padre `PROMPT-40-SGC` FASE 1**, que **NO existe todavía** (Xaviel confirmó: *pendiente*). Ni ese doc ni `CONTEXTO-ACTUALIZACION-20.md` (§D) están en el repo. Se hizo **solo lo verificable sin el padre**: `error_code` visible en tarjetas `sistema`, validación de echada anunciada como provisional offline, y el diagnóstico de buckets para el auditor del padre. Lo que depende del padre/§D quedó documentado, **no construido** (decisión explícita de Xaviel: "solo lo seguro por ahora").
+> **TL;DR:** La 9ª regla (un rechazo de negocio no puede llevar un SQLSTATE de infraestructura). **El padre `PROMPT-40-SGC` YA ESTÁ APLICADO A PROD** (SGC commit `512a826` + BM1-BM5d, verificado E2E). **FASE 1** (error_code visible, validación provisional offline, Corregir en echadas `dato`), **FASE 2** (BM5 captura por atado/paquete + "N atados" en el conduce) y **FASE 3** (diagnóstico buckets) están **completas y alineadas al contrato real**. Falta solo: **validar on-device** (no se puede desde aquí) + decidir push/APK.
+>
+> Contrato real del padre (verificado en `../dev/SGC/sql/2026-09-09-bm1…`): los 4 rechazos corregibles → `sgc.error_campo('galones'|'monto'|'kilometraje', …)` = **22023** {campo,motivo}; el de autorización → **`DR481`** (no 42501); trigger `trg_combustible_requiere_tablero` gateado → persona/depósito **insertan**. La app ya honra todo esto.
 
 ### ✅ FASE 1 item 3 (🔴 BM1) — el `error_code` ya es visible en la tarjeta
 - Un error de categoría `sistema` mostraba la copia tranquilizadora (`MENSAJE_SISTEMA`) y **escondía** el SQLSTATE tras *"Ver detalle técnico"* → el reporte a Xaviel llegaba sin causa. Ahora el código sale **visible** en la tarjeta y en la vista de contenido.
@@ -27,25 +29,29 @@
 - Archivos: `pendientes.ts` (`puedeCorregir`/`corregir` enrutan combustible→`/transporte/combustible?corregir=<id>`); `combustible.ts` (`correccionDe` + `cargarCorreccion` + hook en `submit` + guard telehandler); `combustible.service.ts` (`getEchadaPendiente`); `sync.service.ts` (`cancelPending` ahora acepta estado `error`, bloquea solo `syncing`).
 - ⚠️ El **smoke de los 5 rechazos reclasificados** y las variantes persona/depósito por trigger BM3 **siguen** esperando al padre; lo que se probó hoy es la mecánica de reconstrucción sobre un `dato` real.
 
-### ⏸️ NO construido — bloqueado en el padre / §D
-1. **FASE 1 items 5–6 (BM/BM3) — rescate + smoke** de echada de persona (2 fotos) y depósito en obra (1 foto): hoy no insertan por el trigger de BM3 → depende de `PROMPT-40` FASE 2.
-2. **FASE 2 (BM5) — `qty-input` unidad⇄atado.** Mover el selector de cantidad triplicado (`selector-categorias.html` :51-80/:130-160/:269-300, usado por inventario/entrada·salida + solicitudes/pedir) a `app-qty-input` (AX7) + par unidad/factor (cierra el TODO `qty-input.ts:38`). `cantidad` viaja SIEMPRE en unidad base (`adjust_stock` mueve delta sin unidad; `detalle_salidas` sin columna de unidad). **Explícitamente gated en el "OK de §D"** → no tocado.
+### ✅ FASE 2 (BM5) — captura por atado/paquete (CONSTRUIDO)
+- **§D aprobado por el padre** (factor + cantidad SIEMPRE en base). Backend `bm5/bm5b/bm5c/bm5d` aplicado a prod.
+- **Decisión de diseño (importante):** NO se movió el control de cantidad a `app-qty-input` como pedía el prompt — `qty-input` (AX7) **nunca emite 0** por diseño, pero el selector usa **"− hasta 0 = quitar"** como única forma de borrar una fila de catálogo → convertirlo rompería el borrado en 3 páginas. En su lugar se **conservó el `−/input/+` y el 0=quitar** y se añadió, **mirroring el patrón `talla`**, un toggle inline **unidad ⇄ atado** por artículo con `factor_paquete`. (El TODO `qty-input.ts:38` queda abierto a propósito.)
+- **Flujo:** `ArticuloCat.factor_paquete/unidad_paquete` (select `articulos_v4`, cache bump) → toggle en la fila (`selector-categorias`: `puedeEmpaque/porEmpaque/setEmpaque/cantidadMostrada/equivBase`; `setCantidad/ajustar` convierten unidad activa→base; `aplicar` guarda `CartLinea.unidad_capturada/factor_aplicado`) → carriers pasan la traza: **salida** (`registrar_salida_app`) + **pedir** (`crear_solicitud_app`) la persisten; **entrada** la manda pero su RPC la ignora (cantidad base igual correcta). **`cantidad` SIEMPRE en base** (base = mostrado × factor).
+- **Conduce:** `conduce_detalle_app` (BM5d) devuelve los 2 campos → el detalle pinta "📦 2 atados" bajo el artículo (también para despachos web).
+- **Entrada NO plumbeada por el padre** (solo salida+requisición) — por eso su traza no persiste; se dejó el toggle igual (base correcto). Devolución-de-obra: sin factor (intacta).
 
-### 📌 Pendientes del §D (el doc no existe — inferidos del prompt)
-1. **§D/FASE 1.2** — ¿los 5 rechazos van a `error_campo`/`22023` o a `DRxxx`? **La app ya clasifica AMBOS a `dato`** (`22023`→dato por code; `DR\d`→`validacion`→dato en `outbox-categoria.ts`+`sync.service.ts:classifyKind`). Cualquiera de las dos aterriza sin cambio de cliente.
-2. **§D/FASE 1.4** — agresividad del fetch fresco al validar con red (no implementado).
-3. **§D/FASE 2** — visto bueno al enfoque unidad/atado antes de tocar el selector triplicado.
+### 📌 §D — resuelto por el padre (ver `../dev/SGC/HANDOFF.md`)
+1. **§D/FASE 1.2** — el padre eligió **22023/error_campo** para los 4 corregibles + **DR481** para autorización. La app honra ambos (→`dato`). ✅
+2. **§D/FASE 1.4** — fetch fresco al validar con red: **no** se hizo más agresivo (el `loadCapacidad` al elegir vehículo ya trae fresco con red). La nota provisional offline cubre el resto.
+3. **§D/FASE 2** — **aprobado** (factor+cantidad base). Construido. ✅
 
 ### Gotchas / notas
-- **Los docs `CONTEXTO-ACTUALIZACION-20.md` y `PROMPT-40-SGC.md` NO están en el repo** (patrón repetido en rondas previas). Se trabajó por los file:line del prompt; las líneas del prompt eran de la versión BL (2.16.0) y se corrieron un poco en 2.17.0 pero la lógica coincide.
-- **El padre está PENDIENTE** (confirmado por Xaviel). Esta tanda del hijo va por delante.
-- **Commits (local, NO push):** `52c42b4` (BM1 error_code + provisional + BM2 doc) · `67f634d` (BM1 Corregir combustible). Versión intacta 2.17.0. Sin push/APK.
+- **El padre `PROMPT-40-SGC` YA ESTÁ EN PROD** (verificado en `../dev/SGC/sql/2026-09-09-bm*` + su HANDOFF). Los docs `CONTEXTO-ACTUALIZACION-20.md`/`PROMPT-40-SGC.md` nunca estuvieron en ESTE repo; se trabajó del SQL real del hermano `../dev/SGC`.
+- **`CAT_ARTICULOS` bumpeado `articulos_v3`→`v4`** — las cachés offline de artículos re-piden con `factor_paquete`/`unidad_paquete` al estrenar. Los artículos-empaque ya tienen factor (`bm5b`: 6 atados + 11 paquetes).
+- **Commits (local, NO push):** `52c42b4` (error_code+provisional+BM2) · `67f634d` (Corregir combustible) · `47961a6` (align FASE1 al contrato: CAMPO_LABEL galones/kilometraje + excluir DR481) · `c197e53` (BM5 captura atado) · `fa429ee` (BM5 "N atados" en conduce). Versión intacta 2.17.0. Sin push/APK.
 
 ### 🔴 Verificar device / prod (no se puede desde aquí, y varias esperan al padre)
 - **BM1 error_code**: abrir una tarjeta `sistema` en Pendientes → se ve `🩺 Código: …` sin abrir "Ver detalle técnico".
 - **BM1 provisional**: en avión, capturar echada con galones → aparece la nota `📴 … provisional`.
-- **BM1 Corregir combustible (HOY)**: forzar un rechazo `dato` del RPC (p. ej. echada sobre capacidad con needs-confirm-desfase, o FK rota) → en Pendientes aparece **✏️ Corregir** → reabre el wizard prellenado con las 3 fotos → ajustar galones/km → reenviar → la echada corregida sale con sus 3 fotos y la atascada desaparece (una sola vez).
-- **Tras el padre**: provocar los 5 rechazos → llegan como `dato` con "Revisar dato" + Corregir; variantes persona/depósito insertan.
+- **BM1 Corregir combustible**: forzar un rechazo `dato` del RPC (galones sobre capacidad = `error_campo('galones',…)` 22023; salto de km 1874>1000 = `error_campo('kilometraje','salto_excesivo')`) → en Pendientes aparece **✏️ Corregir** → reabre el wizard prellenado con las 3 fotos → ajustar → reenviar → sale con sus 3 fotos y la atascada desaparece (una sola vez). Verificar que **DR481** ("no es tu vehículo") NO muestra Corregir.
+- **BM1 5 rechazos + variantes** (parent ya en prod): galones>cap, precio fuera de banda, km<actual, salto km, no-es-tu-vehículo → todos `dato` con "Revisar dato". Echada de **persona** (2 fotos) y **depósito en obra** (1 foto) ahora **insertan** (trigger BM3 gateado).
+- **BM5 atado**: en una **salida** de `CSD-02-001` (u otro artículo con `factor_paquete`), togglear **atado ×N**, poner **2** → el resumen/stock deben moverse **240** (base), una sola vez tras reintentos. En el **conduce** ver "📦 2 atados". Probar también offline (avión) → enviar mañana → 240 una vez.
 
 ---
 
