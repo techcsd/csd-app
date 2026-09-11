@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.19.0';
+const VERSION = '2.19.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -62,13 +62,12 @@ const MIN_VERSION = '1.96.4';
 const RELEASED_AT = '2026-09-11';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Orden de trabajo con dos firmas';
+const TITULO = 'Envíos sin señal más confiables';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Bitácora', d: 'Nueva "Orden de trabajo": registra en obra un trabajo pedido por el cliente (descripción, ubicación, cantidad y monto estimado) y captura en el mismo teléfono la firma del ingeniero y la del cliente. Funciona sin señal: se envía sola cuando vuelve la conexión.' },
-  { t: 'nuevo', m: 'Bitácora', d: 'La orden de trabajo se puede ver con sus dos firmas y compartir o descargar como PDF (por ejemplo por WhatsApp).' },
+  { t: 'arreglo', m: 'Envíos', d: 'Lo que capturas sin señal (fotos, firmas, bitácoras) ahora se envía solo de forma más confiable al volver la conexión. Antes, tras un buen rato sin señal, algunos envíos pedían reintentar a mano.' },
 ];
 
 const TIPO_POR_COMMIT = {
