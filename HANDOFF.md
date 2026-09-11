@@ -1,5 +1,17 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 11/09/2026 (cont.) — **RELEASE 2.19.1 PUBLICADA (fix BN1c) + orden de trabajo PROBADA EN DISPOSITIVO**
+
+### 🚀 Release 2.19.1 — PUBLICADA (mínima forzada a la última) — HECHO (11-sep)
+- **Fix BN1c** (`sync.service.ts` `ensureFreshSession()` antes de `drain()`): al volver la señal tras un rato offline, refresca el JWT antes de subir a Storage → evita el rechazo RLS "new row violates row-level security policy" que pedía Reintentar manual. **Pre-existente y compartido** (toda captura offline con fotos). Hallado probando orden de trabajo offline en device.
+- **Bump 4 sitios** a 2.19.1 (versionCode **2019001**). Commits `151fcdf` (fix) + `970a36e` (release).
+- **APK 2.19.1** firmado (cert prod `3c5316d8…5065`) + **registrado Y1** (1 cambio curado arreglo/Envíos) + **subido al bucket** + **pusheado a main** (`ed4f7ed..970a36e`).
+- **Publicada + mínima=2.19.1** (política: mínima = la última). Gate verificado: `version_publicada()` = `{version_publicada:2.19.1, version_minima:2.19.1, apk_url:…2.19.1.apk}`.
+- **Rollback**: `update sgc.app_versiones set publicada=(version='2.19.0'), minima=(version='2.19.0') where plataforma='movil';` + `git revert 970a36e 151fcdf && git push`.
+- ⚠️ **Verificación en device del fix BN1c pendiente**: reproducir el token vencido exige >1h offline (no práctico en la sesión). El fix es patrón estándar (refresh-before-batch), build limpio, causa confirmada en device (vi el error RLS + confirmé que drain no refrescaba). Cuando reautorices ADB, queda instalar 2.19.1 y un smoke de captura offline→online normal (sin regresión).
+
+---
+
 ## 🟢 SESIÓN 11/09/2026 (cont.) — BN1 Orden de trabajo COMPLETA + **RELEASE 2.19.0 PUBLICADA (mínima forzada a la última)**
 
 ### ✅ PROBADO EN DISPOSITIVO (Redmi Note 10 Pro vía ADB, cuenta admin Xaviel, obra "TEST Proyecto de Prueba" es_prueba) — 11-sep
