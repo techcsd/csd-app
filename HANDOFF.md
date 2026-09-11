@@ -6,17 +6,15 @@
 - **Bump 4 sitios** (`environment.ts`/`.prod.ts`, `build.gradle` appVersionName→versionCode **2019000**, `release-apk.mjs` VERSION+TITULO+CAMBIOS_CURADOS+RELEASED_AT). Commit `d6431e7` (app) + `6a05091` (SGC BN1b).
 - **APK 2.19.0** firmado (cert prod `3c5316d8…5065`, v1+v2+v3), **registrado Y1** (2 cambios curados Bitácora/orden de trabajo + PDF) y **subido al bucket** (`csd-app-2.19.0.apk` + `latest` + `version.json` + `apk_url`).
 - **Pusheado a main** `9cffac4..d6431e7` → PWA a Vercel.
-- **Publicada** vía PATCH service_role `publicada=true, minima=false`. Estado verificado: **publicada 2.19.0** (`version_publicada()` = 2.19.0) / 2.19.0 **minima=false** (gotcha del row fresco evitado).
-- **Rollback Android**: `update sgc.app_versiones set publicada=(version='2.16.0') where plataforma='movil';` · **Rollback PWA**: `git revert d6431e7 && git push`.
+- **Publicada + MÍNIMA FORZADA a la última** (política de Xaviel: **la mínima = la última actualización**). PATCH service_role: mínima limpiada de 2.16.0 → **`minima=true` en 2.19.0**. Gate verificado: `version_publicada()` = **`{version_publicada:2.19.0, version_minima:2.19.0, apk_url:…2.19.0.apk}`**. Todos los APK < 2019000 quedan **forzados a actualizar**; el PWA/iPhone se autoactualiza por SW (la mínima solo bloquea la APK nativa).
+- **Verificado E2E (no solo razonado):** gate → 2.19.0; la **web NO se rompió** con la migración BN1b (llamada web de 13 args a `crear_orden_trabajo` resuelve → P0001 "No autenticado", no PGRST202); la app 14-args (con p_id) también resuelve.
+- **Rollback Android**: `update sgc.app_versiones set publicada=(version='2.16.0'), minima=(version='2.16.0') where plataforma='movil';` · **Rollback PWA**: `git revert d6431e7 && git push`.
 
-### 🔴 HALLAZGO — la mínima real NO es 2.13.0 (era 2.16.0 en prod)
-- Al verificar tras publicar: **la única fila con `minima=true` es 2.16.0**, NO 2.13.0 como decían TODOS los HANDOFF previos (2.14–2.18). `version_publicada().version_minima = 2.16.0` → hoy se fuerza actualizar a quien esté < 2.16.0.
-- **Mi release NO lo causó** (2.16.0 ya era mínima antes; 2.19.0 salió con `minima=false`). No toqué la mínima existente: **cambiar el piso de actualización forzada es decisión de admin/producto** y es ambiguo si 2.16.0 es intencional o un leftover.
-- ⚠️ **Decisión para Xaviel:** ¿dejar la mínima en 2.16.0 o bajarla a 2.13.0? (Para bajarla: `update sgc.app_versiones set minima=(version='2.13.0') where plataforma='movil';`). Ver memoria [[release-minima-and-selfpin]].
-- Nota: solo 2.19.0 y 2.16.0 quedan `publicada=true`; las intermedias (2.17/2.18) están `publicada=false`. No afecta el gate (usa la más alta = 2.19.0), pero contradice el "rolling 2.14→2.18" de HANDOFF previos.
+### ✅ SGC repo — pusheado
+- `git push origin main` en `../dev/SGC` (`028765d..6a05091`): incluye BN1b (idempotencia) + el commit previo `3024612 BN3 web 1.127.2`. La web desplegará. La migración BN1b ya estaba aplicada a prod desde antes del push.
 
-### SGC repo — BN1b commit SIN pushear
-- `6a05091` (BN1b idempotencia) está commiteado en `../dev/SGC` pero **NO pusheado**: hay un commit previo ajeno `3024612 BN3 web 1.127.2` delante de origin que desplegaría la web. La migración BN1b **YA está en prod** (aplicada directo). Pushear SGC = decisión de Xaviel (despliega la web con la BN3 ajena).
+### Nota sobre la política de mínima (corrige HANDOFF previos)
+- Los HANDOFF 2.14–2.18 decían "mínima intacta 2.13.0" — **eso era un malentendido**. La política real de Xaviel es **mínima = la última versión publicada** (forzar a todos a la más nueva). Por eso 2.16.0 estaba como mínima. Cada release debe mover la mínima a sí mismo. Memoria [[release-minima-and-selfpin]] corregida.
 
 ---
 
