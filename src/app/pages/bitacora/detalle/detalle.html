@@ -38,9 +38,48 @@
           @if (bit.incidente_equipo_operativo != null) { <li><span>¿Operativo?</span><b>{{ bit.incidente_equipo_operativo ? 'Sí' : 'No, fuera de servicio' }}</b></li> }
           @if (bit.incidente_equipo_operativo_comentario) { <li><span>Comentario</span><b>{{ bit.incidente_equipo_operativo_comentario }}</b></li> }
         }
+        @if (bit.tipo === 'orden_trabajo' && orden()?.detalle; as d) {
+          @if (d.ubicacion) { <li><span>Ubicación</span><b>{{ d.ubicacion }}</b></li> }
+          @if (d.cantidad != null) { <li><span>Cantidad</span><b>{{ d.cantidad }}{{ d.unidad ? ' ' + d.unidad : '' }}</b></li> }
+          @if (d.monto_estimado != null) { <li><span>Monto estimado</span><b>{{ d.monto_estimado | number:'1.0-2' }}</b></li> }
+          @if (d.solicitado_por) { <li><span>Lo pidió</span><b>{{ d.solicitado_por }}</b></li> }
+        }
         @if (bit.autor_nombre) { <li><span>Hecha por</span><b>{{ bit.autor_nombre }}</b></li> }
         @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
       </ul>
+
+      @if (bit.tipo === 'orden_trabajo') {
+        @if (orden()?.detalle?.descripcion; as desc) {
+          <h2 class="det__section">Trabajo solicitado</h2>
+          <p class="det__desc">{{ desc }}</p>
+        }
+        @if (orden()?.firmas?.length) {
+          <h2 class="det__section">Firmas</h2>
+          <div class="det__firmas">
+            @for (f of orden()!.firmas; track f.rol) {
+              <div class="det__firma">
+                <span class="det__firma-rol">{{ f.rol === 'ingeniero' ? '👷 Ingeniero' : '🤝 Cliente' }}</span>
+                @if (f.firma_url) {
+                  <img class="det__firma-img" [src]="f.firma_url" [alt]="'Firma ' + f.rol" loading="lazy" />
+                }
+                <b class="det__firma-nombre">{{ f.nombre }}</b>
+                @if (f.cedula) { <span class="det__firma-ced">{{ f.cedula }}</span> }
+                @if (f.rol_desc) { <span class="det__firma-desc">{{ f.rol_desc }}</span> }
+              </div>
+            }
+          </div>
+        }
+        @if (orden()) {
+          <div class="det__pdf-actions">
+            <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="compartirPdf()">
+              {{ pdfBusy() ? '⏳…' : '📤 Compartir PDF' }}
+            </button>
+            <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="descargarPdf()">
+              {{ pdfBusy() ? '⏳…' : '⬇️ Descargar PDF' }}
+            </button>
+          </div>
+        }
+      }
 
       @if (bit.tipo === 'parte_diario' && !bit.sin_actividad) {
         <div class="det__personal">

@@ -17,6 +17,29 @@ const BUCKET = 'personal-obra';
 /** Todas las fotos de evidencia que maneja el registro (slots del outbox). */
 const FOTO_TIPOS: FotoTipo[] = ['persona', 'documento', 'pared', 'carnet', 'persona_carnet_cedula'];
 
+/**
+ * Regla 10 — columnas que `personal_editar` puede tocar en un UPDATE directo a
+ * tabla. `cambios` viaja como objeto abierto por el outbox; si un día se colara
+ * una clave que NO es columna (un campo de UI, un `as`), PostgREST rechazaría la
+ * fila ENTERA (42703/PGRST204) y la op moriría permanente al sincronizar, lejos
+ * del usuario. Filtrar contra esta lista degrada ese caso a "se ignora el campo
+ * de más" en vez de "no se guarda nada". Mantener alineado con lo que edita el
+ * expediente (personal-expediente.ts) + enqueueEstado.
+ */
+const EDITABLE_COLS = new Set<string>([
+  'nombre',
+  'apellido',
+  'nacionalidad',
+  'tipo_documento',
+  'documento_numero',
+  'cargo_id',
+  'cuadrilla',
+  'aseguramiento_estado',
+  'telefono',
+  'notas',
+  'estado',
+]);
+
 const PERSONAL_SELECT = '*, cargo:cargos(id, codigo, nombre), proyecto:proyectos(nombre, codigo)';
 
 /** AR1 (app) — datos capturados en el wizard para encolar el registro. */
@@ -266,7 +289,17 @@ export class PersonalObraService {
 
     // Edición de datos / cambio de estado.
     this.sync.register('personal_editar', async (payload) => {
-      const cambios = (payload['cambios'] as Record<string, unknown>) ?? {};
+      const crudo = (payload['cambios'] as Record<string, unknown>) ?? {};
+      // Regla 10 — solo columnas reales llegan al UPDATE directo; una clave
+      // fantasma se descarta aquí en vez de tumbar la fila entera al sincronizar.
+      const cambios: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(crudo)) {
+        if (EDITABLE_COLS.has(k)) cambios[k] = v;
+      }
+      if (!Object.keys(cambios).length) {
+        this.catalog.invalidate('personal_lista');
+        return;
+      }
       const { error } = await this.client.from('personal_obra').update(cambios).eq('id', payload['id']);
       if (error) throwSyncError(error);
       this.catalog.invalidate('personal_lista');

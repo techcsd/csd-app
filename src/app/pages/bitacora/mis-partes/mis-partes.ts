@@ -111,6 +111,9 @@ export class MisPartesPage {
   titulo(b: BitacoraFull): string {
     if (b.tipo === 'incidente') return 'Incidente';
     if (b.tipo === 'visita') return 'Visita';
+    // BN1 — la app lista el tipo aunque no lo cree; sin este caso una orden de
+    // trabajo saldría con el default "Bitácora del día".
+    if (b.tipo === 'orden_trabajo') return 'Orden de trabajo';
     // Z4 — deja claro cuando no se trabajó en obra.
     return b.sin_actividad ? 'Bitácora — No se trabajó' : 'Bitácora del día';
   }

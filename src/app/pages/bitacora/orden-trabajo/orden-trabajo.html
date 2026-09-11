@@ -1,0 +1,180 @@
+@if (done()) {
+  <app-big-confirm
+    [title]="online ? 'Orden registrada' : 'Guardada'"
+    [note]="online ? 'La orden de trabajo quedó registrada con las dos firmas.' : 'Sin señal. Se enviará sola con las firmas.'"
+    [tone]="online ? 'done' : 'pending'"
+    buttonLabel="Listo"
+    (dismissed)="finish()"
+  />
+} @else {
+  <div class="screen ot">
+    <header class="ot__topbar">
+      <button type="button" class="ot__topback" (click)="salir()" aria-label="Salir">←</button>
+      <span class="ot__icon">🧾</span>
+      <span class="ot__topttl">Orden de trabajo</span>
+    </header>
+    <app-step-bar [current]="step()" [total]="total" />
+
+    <div class="screen__body">
+      <!-- 1. Obra + fecha -->
+      @if (step() === 1) {
+        <h1 class="screen__title">¿En qué obra?</h1>
+        @if (loading()) {
+          <app-skeleton [rows]="4" />
+        } @else if (proyectos().length) {
+          <app-collapsible-select
+            label="Obra"
+            icon="🏗️"
+            [options]="proyectoOpciones()"
+            [selectedId]="proyectoId()"
+            [searchable]="true"
+            searchPlaceholder="Buscar obra…"
+            (picked)="pickProyecto($event)"
+          />
+        } @else {
+          <p class="ot__hint">No hay obras disponibles.</p>
+        }
+
+        <label class="field-label" for="ot-fecha">¿De qué día es la orden?</label>
+        <input
+          id="ot-fecha"
+          class="field"
+          type="date"
+          [max]="hoy"
+          [ngModel]="fecha()"
+          (ngModelChange)="fecha.set($event)"
+        />
+        @if (esFechaPasada()) {
+          <p class="ot__fecha-aviso">📅 Estás registrando una orden de una fecha pasada.</p>
+        }
+      }
+
+      <!-- 2. Trabajo -->
+      @if (step() === 2) {
+        <h1 class="screen__title">¿Qué trabajo se pidió?</h1>
+        <p class="screen__subtitle">Describe el trabajo que el cliente solicitó.</p>
+        <textarea class="field ot__textarea" rows="4"
+          [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"
+          placeholder="Ej: resane y pintura de la fachada norte del bloque B"></textarea>
+
+        <label class="field-label">¿Dónde en la obra? (opcional)</label>
+        <input class="field" type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)"
+          placeholder="Ej: Bloque B, nivel 3" />
+      }
+
+      <!-- 3. Detalles (opcionales) -->
+      @if (step() === 3) {
+        <h1 class="screen__title">Detalles (opcional)</h1>
+        <p class="screen__subtitle">Todo esto es opcional. Puedes seguir sin llenarlo.</p>
+
+        <div class="ot__row">
+          <div class="ot__col">
+            <label class="field-label">Cantidad</label>
+            <input class="field" type="number" inputmode="decimal" min="0"
+              [ngModel]="cantidad()" (ngModelChange)="cantidad.set($event === null || $event === '' ? null : +$event)"
+              placeholder="0" />
+          </div>
+          <div class="ot__col">
+            <label class="field-label">Unidad</label>
+            <input class="field" type="text" list="ot-unidades"
+              [ngModel]="unidad()" (ngModelChange)="unidad.set($event)" placeholder="m², ud, ml…" />
+            <datalist id="ot-unidades">
+              @for (u of unidades(); track u) { <option [value]="u"></option> }
+            </datalist>
+          </div>
+        </div>
+
+        <label class="field-label">Monto estimado (opcional)</label>
+        <input class="field" type="number" inputmode="decimal" min="0"
+          [ngModel]="montoEstimado()" (ngModelChange)="montoEstimado.set($event === null || $event === '' ? null : +$event)"
+          placeholder="Sólo registro (no es una factura)" />
+
+        <label class="field-label">¿Quién lo pidió? (del lado del cliente)</label>
+        <input class="field" type="text" [ngModel]="solicitadoPor()" (ngModelChange)="solicitadoPor.set($event)"
+          placeholder="Nombre de quien solicitó" />
+
+        <label class="field-label">Comentarios (opcional)</label>
+        <textarea class="field ot__textarea" rows="3"
+          [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)"
+          placeholder="Cualquier detalle adicional"></textarea>
+      }
+
+      <!-- 4. Firma del ingeniero -->
+      @if (step() === 4) {
+        <h1 class="screen__title">Firma del ingeniero</h1>
+        <p class="screen__subtitle">Tu firma como responsable de la orden.</p>
+        <label class="field-label">Nombre del ingeniero</label>
+        <input class="field" type="text" [ngModel]="ingNombre()" (ngModelChange)="ingNombre.set($event)" placeholder="Nombre y apellido" />
+        <label class="field-label">Cédula (opcional)</label>
+        <input class="field" type="text" inputmode="numeric" [ngModel]="ingCedula()" (ngModelChange)="ingCedula.set($event)" placeholder="000-0000000-0" />
+        <label class="field-label">Cargo / rol (opcional)</label>
+        <input class="field" type="text" [ngModel]="ingRolDesc()" (ngModelChange)="ingRolDesc.set($event)" placeholder="Ej: Ing. residente" />
+
+        <label class="field-label">Firma</label>
+        @if (ingFirmada()) {
+          <p class="ot__firmada">✅ Firma capturada. Vuelve a firmar para reemplazarla.</p>
+        }
+        <app-signature-pad (changed)="padTieneTrazo.set($event)" />
+        <button type="button" class="btn-ghost ot__clear" (click)="limpiarFirmaActual()">🧹 Borrar firma</button>
+      }
+
+      <!-- 5. Firma del cliente -->
+      @if (step() === 5) {
+        <h1 class="screen__title">Firma del cliente</h1>
+        <p class="screen__subtitle">La persona del lado del cliente firma aquí.</p>
+        <label class="field-label">Nombre del cliente</label>
+        <input class="field" type="text" [ngModel]="cliNombre()" (ngModelChange)="cliNombre.set($event)" placeholder="Nombre y apellido" />
+        <label class="field-label">Cédula (opcional)</label>
+        <input class="field" type="text" inputmode="numeric" [ngModel]="cliCedula()" (ngModelChange)="cliCedula.set($event)" placeholder="000-0000000-0" />
+        <label class="field-label">Rol (opcional)</label>
+        <input class="field" type="text" [ngModel]="cliRolDesc()" (ngModelChange)="cliRolDesc.set($event)" placeholder="Ej: Propietario" />
+
+        <label class="field-label">Firma</label>
+        @if (cliFirmada()) {
+          <p class="ot__firmada">✅ Firma capturada. Vuelve a firmar para reemplazarla.</p>
+        }
+        <app-signature-pad (changed)="padTieneTrazo.set($event)" />
+        <button type="button" class="btn-ghost ot__clear" (click)="limpiarFirmaActual()">🧹 Borrar firma</button>
+      }
+
+      <!-- 6. Resumen -->
+      @if (step() === 6) {
+        <h1 class="screen__title">Revisa y envía</h1>
+        <ul class="resumen">
+          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>Fecha</span><b>{{ fecha() }}</b></li>
+          <li><span>Trabajo</span><b>{{ descripcion() }}</b></li>
+          @if (ubicacion().trim()) { <li><span>Ubicación</span><b>{{ ubicacion() }}</b></li> }
+          @if (cantidad() !== null) { <li><span>Cantidad</span><b>{{ cantidad() }} {{ unidad() }}</b></li> }
+          @if (montoEstimado() !== null) { <li><span>Monto estimado</span><b>{{ montoEstimado() | number:'1.0-2' }}</b></li> }
+          @if (solicitadoPor().trim()) { <li><span>Lo pidió</span><b>{{ solicitadoPor() }}</b></li> }
+          @if (comentarios().trim()) { <li><span>Comentarios</span><b>{{ comentarios() }}</b></li> }
+          <li><span>Firma ingeniero</span><b>{{ ingFirmada() ? '✅ ' + ingNombre() : '⚠️ falta' }}</b></li>
+          <li><span>Firma cliente</span><b>{{ cliFirmada() ? '✅ ' + cliNombre() : '⚠️ falta' }}</b></li>
+        </ul>
+        @if (!ingFirmada() || !cliFirmada()) {
+          <p class="ot__warn">⚠️ Las dos firmas son obligatorias. Vuelve atrás para capturarlas.</p>
+        }
+      }
+    </div>
+
+    <app-wizard-footer
+      [backLabel]="backLabel()"
+      [primaryLabel]="primaryLabel()"
+      [primaryDisabled]="primaryDisabled()"
+      (back)="onBack()"
+      (primary)="onPrimary()"
+    />
+  </div>
+
+  <app-confirm-dialog
+    [open]="confirmSalir()"
+    title="¿Salir de la orden?"
+    message="Guardamos el texto para continuar más tarde. Las firmas se recapturan."
+    confirmLabel="Sí, salir"
+    cancelLabel="Seguir aquí"
+    tone="danger"
+    (confirmed)="confirmarSalir()"
+    (cancelled)="cancelarSalir()"
+  />
+}

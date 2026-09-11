@@ -1,5 +1,63 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 11/09/2026 (cont.) — BN1 Orden de trabajo COMPLETA (app+padre) — **flujo offline-first + PDF + idempotencia aplicada a prod · build limpio · NO commit/push/APK**
+
+> El esquema del padre YA EXISTÍA (`../dev/SGC/sql/2026-09-09-bn1-orden-de-trabajo.sql`, verificado). Se construyó el flujo COMPLETO en la app + PDF, y se **cerró el hueco de idempotencia en prod**. Contrato real: `tipo='orden_trabajo'`, bucket `sgc-bitacora`, `crear_orden_trabajo(...+p_id...)`, `orden_trabajo_detalle(id)`.
+
+### ✅ BN1b — idempotencia APLICADA a prod (fix del padre)
+- `../dev/SGC/sql/2026-09-11-bn1b-orden-trabajo-idempotente.sql`: `crear_orden_trabajo` ahora acepta `p_id uuid default null` + `on conflict (id) do nothing` + retorno temprano en reintento. **Aplicado y verificado** (firma con 14 args en prod, `notify pgrst reload`). Retrocompat: la web llama sin p_id (→ server genera id, idéntico). La app pasa `p_id: payload['id']` → **el outbox no duplica** la orden firmada.
+- **Rollback**: recrear la función con la firma de 13 args (SQL original en `2026-09-09-bn1-orden-de-trabajo.sql`). ⚠️ SGC repo tiene el nuevo .sql SIN commit (coordinar commit con Xaviel).
+
+### ✅ PDF de la orden (paridad con la web)
+- `orden-trabajo-pdf.service.ts` (jsPDF, molde de `ConducePdfService`): encabezado + datos + trabajo + comentarios + las 2 firmas. Compartir (share sheet → WhatsApp) + Descargar, nativo y web. Botones "📤 Compartir PDF / ⬇️ Descargar PDF" en la ficha `bitacora/detalle` (solo orden_trabajo).
+
+### ✅ Construido (offline-first, espeja el server)
+- **Wizard** `pages/bitacora/orden-trabajo/` (6 pasos: obra+fecha → trabajo → detalles → firma ingeniero → firma cliente → resumen). Ambas firmas obligatorias en cliente. Borrador de texto + nav-guard + confirm-salir (patrón incidente/liberacion).
+- **Service** `bitacora.service.ts`: `enqueueOrdenTrabajo` (firmas como slots `firma_ing`/`firma_cli` → outbox), handler `orden_trabajo` (sube firmas, arma jsonb **campo por campo** regla 10, llama `crear_orden_trabajo`), `ordenTrabajoDetalle` (lectura para la ficha). Modelo: `OrdenTrabajoDetalle`/`OrdenFirma` en `bitacora.model.ts`.
+- **Handler eager-booted** vía `BitacoraService` (ya en app.config:72) — nuevo `registerOrdenTrabajoHandler()` en el constructor. tipo_op único.
+- **Ficha de lectura:** `bitacora/detalle` detecta `orden_trabajo`, carga detalle+firmas, resuelve `firma_url` y las pinta.
+- **Wiring:** botón "🧾 Orden de trabajo" en el hub, ruta `bitacora/orden-trabajo`, `orden_trabajo` mapeado en `en-proceso.service` (borrador+outbox+labels+resume-por-clave).
+- Archivos nuevos: `pages/bitacora/orden-trabajo/{orden-trabajo.ts,.html,.scss}`. Tocados: `bitacora.service.ts`, `bitacora.model.ts`, `en-proceso.service.ts`, `app.routes.ts`, `bitacora.html`, `detalle.ts/.html/.scss`, `docs/BN1-orden-trabajo-app-contract.md`.
+
+### 🔴 BLOQUEADOR de go-live (fix en el padre) — `crear_orden_trabajo` NO es idempotente
+- El RPC genera el id server-side y **no acepta `p_id`**. El outbox reintenta → si el 200 se pierde tras el COMMIT, **duplica la orden firmada**. La app ya manda `id` (client-UUID) en el payload; falta que el padre añada `p_id uuid` + `on conflict do nothing`. **SQL propuesto en `docs/BN1-orden-trabajo-app-contract.md` §4.** Hasta que se aplique: **NO publicar** (crear/enviar puede duplicar).
+
+### Follow-ups (no bloquean, parity)
+- PDF/impresión de la orden en la app (la web lo tiene) — reusar `conduce-pdf.service`.
+- La app sigue sin capturar `visita` (solo la muestra) — decisión de tipos capturables (Xaviel).
+
+---
+
+## 🟡 SESIÓN 11/09/2026 — PROMPT-43 ronda BN (app) — **auditoría regla 10 + FASE 2.4 + doc padre · build limpio**
+
+> **Realidad de la tanda:** de 6 apuntes BN, 4 son solo-web (BN3/4/5/6). A la app le tocan 2 y **los 2 empiezan en el padre**: **BN1** (orden de trabajo, bloqueado por `PROMPT-42` FASE 6 + §G-9 crear-vs-mostrar) y **BN2** (firma DocuSign, bloqueado por §G-3). Lo construible hoy: FASE 1 + FASE 2.4 + el doc del padre. Todo hecho.
+
+### ✅ FASE 1 (regla 10) — auditoría + blindaje del único punto de riesgo
+- **Barrido completo de escrituras: NO hay BN3 vivo.** Cero `form.value as`/spread en payloads; todos los `.rpc()` con `p_*` explícitos; handlers eligen campos a mano; escrituras directas a tabla son literales tipados (TS excess-check).
+- **Único riesgo estructural (no bug hoy):** `personal-obra.service.ts` — `enqueueEditar` mete `cambios` como `Record` abierto → handler `personal_editar` hacía `.update(cambios)` directo a tabla. Seguro solo porque el caller (`personal-expediente.ts:220`) usa literal tipado.
+- **Blindado:** nuevo `EDITABLE_COLS` (11 columnas) + filtro en el handler `personal_editar`: una clave fantasma se descarta en vez de tumbar la fila entera al sincronizar (evita 42703/PGRST204 permanente lejos del usuario). Aditivo, no toca el motor de sync.
+
+### ✅ FASE 2.4 (BN1) — títulos de tipos que la app muestra pero no crea
+- `detalle/detalle.ts` (`titulo` computed) + `mis-partes/mis-partes.ts` (`titulo(b)`): añadido caso `orden_trabajo → "Orden de trabajo"` (mismo precedente que `visita`, que la app tampoco captura). Sin este caso, una orden en la BD saldría con el default "Bitácora del día".
+- ⚠️ **Asunción:** literal `tipo === 'orden_trabajo'` (snake_case como `parte_diario`). **Confirmar con el padre**; si difiere = 1 palabra en 2 sitios.
+
+### ✅ FASE 3 (aporte al padre) — `docs/BN1-orden-trabajo-app-contract.md`
+- Contrato para SGC: rama A (app solo muestra → no necesita nada del móvil) vs rama B (app crea). Bucket + rutas de firmas (INSERT+UPDATE+SELECT + file_size_limit, recordando BM2), `tipo_op` `orden_trabajo_crear` + forma del payload, 9ª regla en los códigos de error ("falta firma cliente" = 22023/DRxxx, NO 23514), diseño offline (2 firmas como slots + borrador local + enqueue atómico para que la firma del cliente no se pierda).
+
+### 🔴 Decisiones que faltan (de Xaviel / del padre) — desbloquean BN1
+1. **§G-9:** ¿la app **crea** la orden de trabajo (flujo offline más pesado: 2 firmas + fotos + tabla hija) o **solo la muestra** (como `visita`)?
+2. Confirmar el literal `'orden_trabajo'` que usó el padre.
+3. Paridad (FASE 2.8): la app ya no captura `visita`; si `orden_trabajo` va solo al web la brecha crece a 2.
+- **BN2** (DocuSign) sigue bloqueado por §G-3 — nada que hacer en la app.
+
+### Archivos tocados (sin commit — pendiente de aviso a Xaviel)
+- `src/app/pages/bitacora/detalle/detalle.ts`, `src/app/pages/bitacora/mis-partes/mis-partes.ts` (títulos)
+- `src/app/core/services/personal-obra.service.ts` (`EDITABLE_COLS` + filtro handler)
+- `docs/BN1-orden-trabajo-app-contract.md` (nuevo)
+- **Sin bump de versión, sin registro Y1** (no hubo release). Build `npm run build` limpio (solo warnings pre-existentes).
+
+---
+
 ## 🟢 SESIÓN 09/09/2026 — PROMPT-41 ronda BM (app) — **RELEASE 2.18.0 PUBLICADA (rolling) · pusheada a main (`b9d5b7b`, PWA→Vercel) · APK firmado+registrado+SUBIDO al bucket · publicada=true · minima INTACTA 2.13.0 · FASE 1+2+3 COMPLETAS**
 
 > **TL;DR:** La 9ª regla (un rechazo de negocio no puede llevar un SQLSTATE de infraestructura). **El padre `PROMPT-40-SGC` YA ESTÁ APLICADO A PROD** (SGC `512a826` + BM1-BM5d, verificado E2E). **FASE 1** (error_code visible, validación provisional offline, Corregir en echadas `dato`), **FASE 2** (BM5 captura por atado/paquete + "N atados" en el conduce) y **FASE 3** (buckets) **completas, alineadas al contrato real, y PUBLICADAS en 2.18.0**. Falta solo: **validar on-device** (no se puede desde aquí).

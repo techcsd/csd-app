@@ -182,3 +182,49 @@ export interface BitacoraFull {
     transcripcion_estado?: string | null; // AA22
   }[];
 }
+
+// ── BN1 — Orden de trabajo ───────────────────────────────────────────────────
+
+export type OrdenFirmaRol = 'ingeniero' | 'cliente';
+
+/** Datos de una firma de la orden (lo que se estampa en el PDF). */
+export interface OrdenFirmaMeta {
+  nombre: string;
+  cedula: string | null;
+  rol_desc: string | null;
+}
+
+/** Firma leída de sgc.bitacora_orden_firmas (via orden_trabajo_detalle). */
+export interface OrdenFirma extends OrdenFirmaMeta {
+  rol: OrdenFirmaRol;
+  firma_path: string;
+  metodo: string;
+  firmado_en?: string | null;
+  /** Resuelta client-side desde firma_path (URL firmada del bucket sgc-bitacora). */
+  firma_url?: string | null;
+}
+
+/** Detalle + firmas de una orden de trabajo (RPC orden_trabajo_detalle). */
+export interface OrdenTrabajoDetalle {
+  bitacora: {
+    id: string;
+    fecha: string;
+    comentarios: string | null;
+    proyecto_id: string;
+    proyecto: string | null;
+    usuario_id: string | null;
+    autor: string | null;
+    created_at: string;
+    es_prueba: boolean;
+  };
+  detalle: {
+    descripcion: string;
+    ubicacion: string | null;
+    cantidad: number | null;
+    unidad: string | null;
+    monto_estimado: number | null;
+    solicitado_por: string | null;
+    notas: string | null;
+  } | null;
+  firmas: OrdenFirma[];
+}

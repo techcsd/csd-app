@@ -25,13 +25,13 @@ export interface EnProcesoItem {
 
 // Módulo → tipos de borrador (Dexie) y tipos de op del outbox que le pertenecen.
 const BORRADOR_TIPOS: Record<EnProcesoModulo, string[]> = {
-  bitacora: ['parte', 'incidente', 'cl_liberacion'],
+  bitacora: ['parte', 'incidente', 'cl_liberacion', 'orden_trabajo'],
   flota: ['checklist', 'vehiculo', 'conductor', 'conduce'],
   rrhh: [],
   mensajes: [],
 };
 const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
-  bitacora: ['bitacora', 'cl_liberacion'],
+  bitacora: ['bitacora', 'cl_liberacion', 'orden_trabajo'],
   flota: [
     'vehiculo_entrega',
     'combustible',
@@ -74,6 +74,7 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
 const OP_LABEL: Record<string, string> = {
   bitacora: 'Bitácora',
   cl_liberacion: 'Checklist de liberación',
+  orden_trabajo: 'Orden de trabajo',
   vehiculo_entrega: 'Recibir/entregar vehículo',
   combustible: 'Registrar combustible',
   checklist_preuso: 'Uso de vehículo',
@@ -113,12 +114,13 @@ const BORRADOR_LABEL: Record<string, string> = {
   parte: 'Bitácora del día',
   incidente: 'Reporte de incidente',
   cl_liberacion: 'Checklist de liberación',
+  orden_trabajo: 'Orden de trabajo',
   checklist: 'Checklist de vehículo',
   vehiculo: 'Vehículo',
   conductor: 'Conductor',
 };
 
-const RESUME_POR_CLAVE = new Set(['parte', 'incidente', 'cl_liberacion']);
+const RESUME_POR_CLAVE = new Set(['parte', 'incidente', 'cl_liberacion', 'orden_trabajo']);
 
 /**
  * V1 — "Documentación en proceso" reutilizable por módulo: une los borradores de

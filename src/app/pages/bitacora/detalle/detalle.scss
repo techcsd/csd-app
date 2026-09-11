@@ -167,3 +167,45 @@
   color: var(--color-primary);
   white-space: nowrap;
 }
+
+// BN1 — firmas de la orden de trabajo
+.det__firmas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.det__firma {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+  flex: 1;
+}
+.det__firma-rol {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.det__firma-img {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.det__firma-nombre {
+  font-weight: 700;
+}
+.det__firma-ced,
+.det__firma-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.det__pdf-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}

@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.18.0';
+const VERSION = '2.19.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,18 +59,16 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-09-09';
+const RELEASED_AT = '2026-09-11';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Combustible corregible + pedir por atado';
+const TITULO = 'Orden de trabajo con dos firmas';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Combustible', d: 'Cuando una echada se rechaza por un dato (galones, monto o kilometraje), ahora aparece "Corregir": reabre la echada con tus 3 fotos para ajustar el dato y reenviarla. Ya no se muestra como "problema del sistema".' },
-  { t: 'mejora', m: 'Combustible', d: 'Sin señal, la app avisa que la comprobación de galones y precio es provisional y que el sistema la revisa al enviar.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Puedes pedir o sacar material por atado/paquete (por ejemplo "2 atados"), viendo siempre la equivalencia en piezas; el conduce muestra "2 atados".' },
-  { t: 'mejora', m: 'Envíos', d: 'Las tarjetas de "Pendientes de envío" muestran el código técnico del error para que Tecnología lo diagnostique más rápido desde una foto.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Nueva "Orden de trabajo": registra en obra un trabajo pedido por el cliente (descripción, ubicación, cantidad y monto estimado) y captura en el mismo teléfono la firma del ingeniero y la del cliente. Funciona sin señal: se envía sola cuando vuelve la conexión.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'La orden de trabajo se puede ver con sus dos firmas y compartir o descargar como PDF (por ejemplo por WhatsApp).' },
 ];
 
 const TIPO_POR_COMMIT = {

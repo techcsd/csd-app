@@ -9,6 +9,7 @@ import {
   CatOrdenado,
   EquipoAlquilado,
   IncidenteTipo,
+  OrdenTrabajoDetalle,
   Proyecto,
   ProyectoPartida,
   SUCESO_TIPO_POR_INCIDENTE,
@@ -88,6 +89,32 @@ export interface IncidenteCaptura {
   fecha?: string | null;
 }
 
+/** BN1 — captura de una orden de trabajo (bitácora tipo orden_trabajo). Las dos
+ *  firmas son PNG del pad; van al outbox como slots de foto (firma_ing/firma_cli). */
+export interface OrdenTrabajoCaptura {
+  proyectoId: string;
+  fecha: string; // día documentado (YYYY-MM-DD)
+  descripcion: string;
+  ubicacion: string | null;
+  cantidad: number | null;
+  unidad: string | null;
+  montoEstimado: number | null;
+  solicitadoPor: string | null;
+  notas: string | null;
+  comentarios: string | null;
+  // Firma del ingeniero (autor). blob null solo en registro retroactivo de admin.
+  firmaIngNombre: string;
+  firmaIngCedula: string | null;
+  firmaIngRolDesc: string | null;
+  firmaIngBlob: Blob | null;
+  // Firma del cliente.
+  firmaCliNombre: string;
+  firmaCliCedula: string | null;
+  firmaCliRolDesc: string | null;
+  firmaCliBlob: Blob | null;
+  esPrueba: boolean;
+}
+
 /**
  * Bitácora writes (parte diario / incidente) through the offline outbox,
  * committed by sgc.crear_bitacora_app. Photos upload to the existing
@@ -101,6 +128,7 @@ export class BitacoraService {
 
   constructor() {
     this.registerHandler();
+    this.registerOrdenTrabajoHandler();
   }
 
   /** Admin-managed bitácora catalogs (estructuras/actividades/restricciones). */
@@ -365,6 +393,68 @@ export class BitacoraService {
       ],
       resumen: { tipo: 'incidente', proyecto_id: input.proyectoId, capturado_en },
     });
+  }
+
+  /**
+   * BN1 — encola una orden de trabajo. Las dos firmas viajan como slots de foto
+   * (firma_ing/firma_cli) en el outbox; el handler las resuelve a firma_path y
+   * llama crear_orden_trabajo. Devuelve el client-UUID (idempotencia).
+   *
+   * ⚠️ La firma del cliente se captura al final, segundos antes de encolar; una
+   * vez encolada vive en el outbox (Dexie, durable) y sincroniza FIFO con
+   * reintentos. Cliente + ingeniero son obligatorios salvo registro retroactivo.
+   */
+  async enqueueOrdenTrabajo(input: OrdenTrabajoCaptura): Promise<string> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const fecha = input.fecha || fechaLocalISO();
+    const fotos: Array<{ id: string; bucket: string; path: string; slot: string; blob: Blob }> = [];
+    if (input.firmaIngBlob instanceof Blob) {
+      fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/firma_ing.png`, slot: 'firma_ing', blob: input.firmaIngBlob });
+    }
+    if (input.firmaCliBlob instanceof Blob) {
+      fotos.push({ id: crypto.randomUUID(), bucket: BUCKET, path: `${id}/firma_cli.png`, slot: 'firma_cli', blob: input.firmaCliBlob });
+    }
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'orden_trabajo',
+      capturado_en,
+      payload: {
+        id, // client-UUID (para idempotencia cuando el padre añada p_id)
+        proyecto_id: input.proyectoId,
+        fecha,
+        descripcion: input.descripcion,
+        ubicacion: input.ubicacion,
+        cantidad: input.cantidad,
+        unidad: input.unidad,
+        monto_estimado: input.montoEstimado,
+        solicitado_por: input.solicitadoPor,
+        notas: input.notas,
+        comentarios: input.comentarios,
+        // Metadatos de cada firma; el firma_path lo resuelve el handler del slot.
+        firma_ing_meta: input.firmaIngBlob
+          ? { nombre: input.firmaIngNombre, cedula: input.firmaIngCedula, rol_desc: input.firmaIngRolDesc }
+          : null,
+        firma_cli_meta: input.firmaCliBlob
+          ? { nombre: input.firmaCliNombre, cedula: input.firmaCliCedula, rol_desc: input.firmaCliRolDesc }
+          : null,
+        es_prueba: input.esPrueba,
+        capturado_en,
+      },
+      fotos,
+      resumen: { tipo: 'orden_trabajo', proyecto_id: input.proyectoId, capturado_en },
+    });
+    return id;
+  }
+
+  /** BN1 — detalle + firmas de una orden de trabajo (para la ficha). Online; las
+   *  firma_url se resuelven aparte con getArchivoSignedUrl. */
+  async ordenTrabajoDetalle(bitacoraId: string): Promise<OrdenTrabajoDetalle | null> {
+    const { data, error } = await this.supabase.client.rpc('orden_trabajo_detalle', {
+      p_bitacora_id: bitacoraId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as OrdenTrabajoDetalle | null) ?? null;
   }
 
   /** AW2/AW5 — select común (incluye usuario_id para el autor + es_aproximada AW1). */
@@ -677,6 +767,60 @@ export class BitacoraService {
           .invoke('notificar-incidente', { body: { bitacoraId: payload['id'] } })
           .catch(() => {});
       }
+    });
+  }
+
+  /**
+   * BN1 — handler de la orden de trabajo. Las firmas ya subieron (photoPaths trae
+   * sus paths por slot); las combino con sus metadatos y llamo crear_orden_trabajo.
+   * El jsonb de cada firma se arma CAMPO POR CAMPO (regla 10) — nada de spread de
+   * un objeto de formulario. BN1b — el RPC es idempotente por p_id (client-UUID):
+   * un reintento del outbox no duplica la orden (on conflict do nothing).
+   */
+  private registerOrdenTrabajoHandler(): void {
+    this.sync.register('orden_trabajo', async (payload, photoPaths) => {
+      const pathIng = photoPaths['firma_ing'] ?? null;
+      const pathCli = photoPaths['firma_cli'] ?? null;
+      const metaIng = (payload['firma_ing_meta'] as Record<string, unknown> | null) ?? null;
+      const metaCli = (payload['firma_cli_meta'] as Record<string, unknown> | null) ?? null;
+      const firmaIng = pathIng
+        ? {
+            nombre: (metaIng?.['nombre'] as string) || 'Ingeniero',
+            cedula: (metaIng?.['cedula'] as string | null) ?? null,
+            rol_desc: (metaIng?.['rol_desc'] as string | null) ?? null,
+            firma_path: pathIng,
+            metodo: 'pad',
+          }
+        : null;
+      const firmaCli = pathCli
+        ? {
+            nombre: (metaCli?.['nombre'] as string) || 'Cliente',
+            cedula: (metaCli?.['cedula'] as string | null) ?? null,
+            rol_desc: (metaCli?.['rol_desc'] as string | null) ?? null,
+            firma_path: pathCli,
+            metodo: 'pad',
+          }
+        : null;
+      const { error } = await this.supabase.client.rpc('crear_orden_trabajo', {
+        p_proyecto_id: payload['proyecto_id'],
+        p_fecha: payload['fecha'],
+        p_descripcion: payload['descripcion'],
+        p_ubicacion: payload['ubicacion'] ?? null,
+        p_cantidad: payload['cantidad'] ?? null,
+        p_unidad: payload['unidad'] ?? null,
+        p_monto_estimado: payload['monto_estimado'] ?? null,
+        p_solicitado_por: payload['solicitado_por'] ?? null,
+        p_notas: payload['notas'] ?? null,
+        p_comentarios: payload['comentarios'] ?? null,
+        p_firma_ing: firmaIng,
+        p_firma_cli: firmaCli,
+        p_es_prueba: payload['es_prueba'] ?? false,
+        // BN1b — client-UUID: el RPC es idempotente, un reintento del outbox no
+        // duplica la orden (on conflict do nothing server-side).
+        p_id: payload['id'],
+      });
+      if (error) throwSyncError(error);
+      this.catalog.invalidate('mis_bitacoras');
     });
   }
 }

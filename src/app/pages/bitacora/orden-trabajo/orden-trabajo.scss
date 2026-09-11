@@ -1,0 +1,72 @@
+.ot {
+  background: var(--color-bg);
+}
+
+.ot__topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--Hub);
+  color: var(--main);
+}
+.ot__topback {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--main);
+  font-size: 22px;
+  font-weight: 700;
+}
+.ot__icon {
+  font-size: 24px;
+}
+.ot__topttl {
+  font-size: var(--fs-option);
+  font-weight: 700;
+}
+
+.ot__textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.ot__row {
+  display: flex;
+  gap: 12px;
+}
+.ot__col {
+  flex: 1;
+  min-width: 0;
+}
+
+.ot__hint {
+  color: var(--color-text-secondary);
+  margin: 8px 0;
+}
+
+.ot__fecha-aviso {
+  background: var(--color-warning-bg, #fff7e6);
+  color: var(--color-warning, #b26a00);
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  margin: 10px 0 0;
+}
+
+.ot__firmada {
+  color: var(--color-success, #1b8a3a);
+  font-weight: 600;
+  margin: 4px 0 8px;
+}
+
+.ot__clear {
+  margin-top: 10px;
+}
+
+.ot__warn {
+  color: var(--color-error);
+  font-weight: 700;
+  margin-top: 12px;
+}
