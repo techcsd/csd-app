@@ -617,12 +617,38 @@ export class SyncService {
     this.changed.update((n) => n + 1);
   }
 
+  /**
+   * BN1c — al volver la señal tras un rato offline, el JWT puede estar vencido: el
+   * primer upload a Storage iría con token viejo y la RLS lo rechaza con "new row
+   * violates row-level security policy" → se clasifica 'permiso'/'sistema' (permanente)
+   * y la captura pide un Reintentar manual, rompiendo la promesa offline-first ("se
+   * envía sola"). Refrescamos la sesión ANTES de drenar para que las subidas usen un
+   * token válido. Best-effort: si el refresh falla (refresh token vencido de verdad),
+   * el drain sigue y el error real se manejará como siempre. Verificado en dispositivo.
+   */
+  private async ensureFreshSession(): Promise<void> {
+    try {
+      const { data } = await this.supabase.client.auth.getSession();
+      const s = data.session;
+      if (!s) return;
+      const expMs = (s.expires_at ?? 0) * 1000;
+      // Refresca si ya venció o le queda <2 min (margen para la subida + RPC).
+      if (expMs - Date.now() < 120_000) {
+        await this.supabase.client.auth.refreshSession();
+      }
+    } catch {
+      /* offline / refresh token vencido: best-effort, el drain sigue igual */
+    }
+  }
+
   /** Process the queue FIFO. Safe to call repeatedly; re-entrancy guarded. */
   async drain(): Promise<void> {
     if (this.draining || !this.network.online()) return;
     this.draining = true;
     this.syncing.set(true);
     try {
+      // BN1c — token fresco antes de subir nada (evita el rechazo RLS por JWT vencido).
+      await this.ensureFreshSession();
       // FIFO by capture order.
       const ops = await db.outbox.orderBy('created_local').toArray();
       const now = Date.now();

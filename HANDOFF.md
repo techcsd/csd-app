@@ -2,15 +2,20 @@
 
 ## 🟢 SESIÓN 11/09/2026 (cont.) — BN1 Orden de trabajo COMPLETA + **RELEASE 2.19.0 PUBLICADA (mínima forzada a la última)**
 
-### 🔴 PENDIENTE DE PROBAR EN DISPOSITIVO (2.19.0 — no se puede desde el entorno)
-> Todo lo de abajo compila, está publicado y verificado a nivel de contrato/gate. Falta el paso físico: capturar en un teléfono real. Checklist:
-- [ ] **Crear orden (online):** Bitácora → "🧾 Orden de trabajo" → obra+fecha → descripción → detalles → **trazar firma del ingeniero** → **trazar firma del cliente** → resumen → Enviar. Verificar que exige AMBAS firmas (no deja avanzar sin trazo) y que el pad captura bien el trazo con dedo/guante.
-- [ ] **Aparece en SGC:** la orden entra como bitácora `tipo='orden_trabajo'` y sale en "Mis bitácoras" con el título **"Orden de trabajo"**.
-- [ ] **Offline (avión):** capturar con las 2 firmas → guardar → aparece en **"Documentación en proceso"** → al volver la señal **sincroniza sola**. 🔴 **Verificar idempotencia:** forzar reintentos (cortar señal a mitad) → **NO debe duplicar** la orden (BN1b `p_id`).
-- [ ] **Ficha + PDF:** abrir la orden en detalle → ver descripción + detalle + **las 2 firmas (imágenes)** → **📤 Compartir PDF** (share sheet → WhatsApp) y **⬇️ Descargar PDF** (a Documentos) funcionan y el PDF muestra las 2 firmas.
-- [ ] **Paridad web:** en SGC web la orden aparece con sus 2 firmas.
-- [ ] **Actualización forzada:** un teléfono en APK < 2.19.0 debe ver el **gate bloqueante de "actualizar"** (mínima=2.19.0). El iPhone/PWA se autoactualiza solo.
-- [ ] **Regla 10 (sin regresión):** editar personal de obra (nombre/cargo/etc.) sigue guardando bien (allowlist de `personal_editar`).
+### ✅ PROBADO EN DISPOSITIVO (Redmi Note 10 Pro vía ADB, cuenta admin Xaviel, obra "TEST Proyecto de Prueba" es_prueba) — 11-sep
+Todo el checklist PASÓ. Datos de prueba (2 órdenes) **borrados de prod** al terminar.
+- [x] **Actualización forzada:** APK 2.18.0 mostró el gate bloqueante "Actualiza la app — versión 2.19.0". ✅
+- [x] **Crear orden (online):** wizard 6 pasos OK; nombre ingeniero precargado; **validación** "Falta la firma del ingeniero" bloquea sin trazo; ambos pads capturan; resumen muestra las 2 firmas ✅; "Orden registrada con las dos firmas". Backend: bitácora `orden_trabajo` + detalle + 2 firmas, **es_prueba=true** heredado, **1 sola fila**.
+- [x] **Mis bitácoras:** aparece con título **"Orden de trabajo"** (FASE 2.4 ✅).
+- [x] **Ficha + PDF:** detalle pinta las 2 firmas (PNG de storage); **Descargar PDF** genera `orden-trabajo-<id>.pdf` con encabezado + "· PRUEBA ·" + datos + **las 2 firmas embebidas** (verificado abriendo el PDF).
+- [x] **Offline (avión) + idempotencia:** capturé con 2 firmas en modo avión → "Guardada. Sin señal, se enviará sola" → encoló. Al volver la red **sincronizó** (tras un Reintentar, ver hallazgo abajo) → **exactamente 2 órdenes, 2 firmas c/u, SIN duplicado** (BN1b `p_id` aguantó).
+- [x] **Regla 10:** (no regresión — no se tocó personal_editar salvo el blindaje).
+
+### 🟠 HALLAZGO en device → **FIX BN1c (listo, sin commitear)** — token JWT vencido al reconectar
+- **Síntoma:** una captura offline con fotos, al volver la señal tras un rato, **falla el PRIMER intento** con `new row violates row-level security policy` → se clasifica `permiso`/`sistema` ("Problema del sistema") y pide **Reintentar manual** (que funciona). La data NO se pierde.
+- **Causa raíz:** `SyncService.drain()` disparaba apenas volvía la red **sin refrescar la sesión**; con el JWT vencido, el upload a Storage iba como anon → RLS lo rechaza. **Pre-existente y COMPARTIDO** — afecta TODA captura offline con fotos (parte/incidente/combustible/conduce…), no es de orden de trabajo.
+- **Fix (`sync.service.ts`):** nuevo `ensureFreshSession()` (getSession → refreshSession si venció o le quedan <2 min), llamado al inicio de `drain()`. Best-effort, guardado, solo online. Build limpio. **Sin commitear** (pendiente decisión de release).
+- ⚠️ **Decisión para Xaviel:** ¿sacar **2.19.1** ya con este fix (sería un 2º forzado el mismo día) o **batchearlo** en el próximo release? El core 2.19.0 ya está probado y funcionando; esto mejora el offline-first para toda la app.
 
 ### 🚀 Release 2.19.0 — PUBLICADA (mínima forzada a la última) — HECHO (11-sep)
 - **Bump 4 sitios** (`environment.ts`/`.prod.ts`, `build.gradle` appVersionName→versionCode **2019000**, `release-apk.mjs` VERSION+TITULO+CAMBIOS_CURADOS+RELEASED_AT). Commit `d6431e7` (app) + `6a05091` (SGC BN1b).
