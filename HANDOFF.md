@@ -1,8 +1,18 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 11/09/2026 (cont.) — BN1 Orden de trabajo COMPLETA + **RELEASE 2.19.0 PUBLICADA (rolling)**
+## 🟢 SESIÓN 11/09/2026 (cont.) — BN1 Orden de trabajo COMPLETA + **RELEASE 2.19.0 PUBLICADA (mínima forzada a la última)**
 
-### 🚀 Release 2.19.0 — PUBLICADA (rolling) — HECHO (11-sep)
+### 🔴 PENDIENTE DE PROBAR EN DISPOSITIVO (2.19.0 — no se puede desde el entorno)
+> Todo lo de abajo compila, está publicado y verificado a nivel de contrato/gate. Falta el paso físico: capturar en un teléfono real. Checklist:
+- [ ] **Crear orden (online):** Bitácora → "🧾 Orden de trabajo" → obra+fecha → descripción → detalles → **trazar firma del ingeniero** → **trazar firma del cliente** → resumen → Enviar. Verificar que exige AMBAS firmas (no deja avanzar sin trazo) y que el pad captura bien el trazo con dedo/guante.
+- [ ] **Aparece en SGC:** la orden entra como bitácora `tipo='orden_trabajo'` y sale en "Mis bitácoras" con el título **"Orden de trabajo"**.
+- [ ] **Offline (avión):** capturar con las 2 firmas → guardar → aparece en **"Documentación en proceso"** → al volver la señal **sincroniza sola**. 🔴 **Verificar idempotencia:** forzar reintentos (cortar señal a mitad) → **NO debe duplicar** la orden (BN1b `p_id`).
+- [ ] **Ficha + PDF:** abrir la orden en detalle → ver descripción + detalle + **las 2 firmas (imágenes)** → **📤 Compartir PDF** (share sheet → WhatsApp) y **⬇️ Descargar PDF** (a Documentos) funcionan y el PDF muestra las 2 firmas.
+- [ ] **Paridad web:** en SGC web la orden aparece con sus 2 firmas.
+- [ ] **Actualización forzada:** un teléfono en APK < 2.19.0 debe ver el **gate bloqueante de "actualizar"** (mínima=2.19.0). El iPhone/PWA se autoactualiza solo.
+- [ ] **Regla 10 (sin regresión):** editar personal de obra (nombre/cargo/etc.) sigue guardando bien (allowlist de `personal_editar`).
+
+### 🚀 Release 2.19.0 — PUBLICADA (mínima forzada a la última) — HECHO (11-sep)
 - **Bump 4 sitios** (`environment.ts`/`.prod.ts`, `build.gradle` appVersionName→versionCode **2019000**, `release-apk.mjs` VERSION+TITULO+CAMBIOS_CURADOS+RELEASED_AT). Commit `d6431e7` (app) + `6a05091` (SGC BN1b).
 - **APK 2.19.0** firmado (cert prod `3c5316d8…5065`, v1+v2+v3), **registrado Y1** (2 cambios curados Bitácora/orden de trabajo + PDF) y **subido al bucket** (`csd-app-2.19.0.apk` + `latest` + `version.json` + `apk_url`).
 - **Pusheado a main** `9cffac4..d6431e7` → PWA a Vercel.
