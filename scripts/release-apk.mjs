@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.19.1';
+const VERSION = '2.20.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -59,15 +59,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
 const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-09-11';
+const RELEASED_AT = '2026-09-13';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Envíos sin señal más confiables';
+const TITULO = 'Fin del bucle del conduce + fecha en las requisiciones';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Envíos', d: 'Lo que capturas sin señal (fotos, firmas, bitácoras) ahora se envía solo de forma más confiable al volver la conexión. Antes, tras un buen rato sin señal, algunos envíos pedían reintentar a mano.' },
+  { t: 'arreglo', m: 'Transporte', d: 'Al generar un conduce (o crear una ruta) con un vehículo que acabas de recibir, ya no te manda en círculos a «Uso de vehículo». Se acabó el bucle: pasas directo.' },
+  { t: 'arreglo', m: 'Flota', d: 'Logística y los jefes de flota ya pueden registrar combustible de cualquier vehículo y pasar un salto de kilometraje para revisión, no solo el administrador.' },
+  { t: 'nuevo', m: 'Solicitudes', d: 'Al pedir material ahora puedes indicar «¿para cuándo lo necesitas?». La fecha viaja con la requisición y se ve en su detalle, para priorizar por fecha de obra y no solo por urgencia.' },
 ];
 
 const TIPO_POR_COMMIT = {

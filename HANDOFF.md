@@ -32,10 +32,20 @@
 - **Otros espejos de rol desincronizados con el padre:** además de `FLOTA_ELEVADO` (arreglado), revisar `TECNOLOGIA` (`user-context.service.ts:134`) vs `sgc.es_tecnologia()` — no verificado contra el padre esta sesión.
 - **Divergencia cliente/servidor de km (F2.3):** el cliente compara contra `ultima().km` (última *echada*); el servidor contra `max(kilometraje)` de filas no invalidadas (bm1). Con una echada `invalidada` o registros fuera de orden, el cliente puede dar luz verde a un delta que el servidor rechaza. **Reportado, no tapado.** Relacionado: offline valida contra caché (F2.4) — entra en §E-4, no lo arreglé.
 
-### ⏳ Pendiente — device-QA + release (Xaviel)
-- **Sin commit/push/APK** (regla madre). Archivos tocados: `generar-conduce.ts`, `crear-ruta.ts`, `uso-vehiculo.ts`, `combustible.ts`, `user-context.service.ts`.
+### 🚀 Release 2.20.0 — SUBIDA AL BUCKET, **NO forzada** (hold pre-device-QA)
+- **Commit+push** de la ronda BO: csd-app `aecd68b` (+bump `<pendiente>`), SGC `ed4b2ef`. Push a `main` → PWA/web a Vercel.
+- **APK 2.20.0** firmada (cert prod `3c5316d8…5065`, v1+v2+v3), **registrada Y1** (3 cambios curados: conduce/combustible/requisición) y **subida al bucket** (`csd-app-2.20.0.apk` + `latest` + `version.json` + apk_url de la fila 2.20.0).
+- **NO publicada / NO mínima** (decisión de Xaviel: primero device-QA). Verificado en prod: fila 2.20.0 `publicada=false, minima=false`; `version_publicada()` sigue devolviendo **2.19.1** (apk_url + mínima). Los usuarios APK NO son empujados al 2.20.0; solo es descargable por URL directa.
+- **Para publicar cuando pase el device-QA** (política: mínima = la última):
+  ```sql
+  update sgc.app_versiones set publicada=(version='2.20.0'), minima=(version='2.20.0') where plataforma='movil';
+  ```
+  Rollback: `... set publicada=(version='2.19.1'), minima=(version='2.19.1') ...`.
+
+### ⏳ Pendiente — device-QA (Xaviel)
 - **Smoke que hoy no existe (F1.7):** recibir un vehículo → crear conduce con **ese** vehículo → debe pasar directo (sin bucle). Repetir con rol `logistica`. Idem crear-ruta.
-- **Build:** `npm run build` exit 0 (solo warnings pre-existentes).
+- Tras el QA: flip publicada+mínima a 2.20.0 (SQL de arriba) y verificar el gate.
+- **Build:** `npm run build` exit 0 (solo warnings pre-existentes); APK firmada + verificada.
 
 ---
 
