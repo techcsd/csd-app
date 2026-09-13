@@ -36,6 +36,8 @@
         </div>
         <div><dt>Fecha</dt><dd>{{ fmtFecha(r.created_at) }}</dd></div>
         <div><dt>Urgencia</dt><dd>{{ r.urgencia === 'urgente' ? '🔴 Urgente' : 'Normal' }}</dd></div>
+        <!-- BO8 — fecha en que se necesita el material (solo si el RPC la sirve). 'T00:00:00' fuerza parse LOCAL. -->
+        @if (r.fecha_necesidad; as fn) { <div><dt>Necesita para</dt><dd>📅 {{ fmtFecha(fn + 'T00:00:00') }}</dd></div> }
         @if (r.atendido_por_nombre) { <div><dt>Atendida por</dt><dd>{{ r.atendido_por_nombre }}</dd></div> }
         @if (r.cerrada_por_nombre) { <div><dt>Cerrada por</dt><dd>{{ r.cerrada_por_nombre }}</dd></div> }
         @if (r.notas) { <div><dt>Notas</dt><dd>{{ r.notas }}</dd></div> }

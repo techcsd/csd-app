@@ -120,9 +120,12 @@ export class UserContextService {
     await this.loadProfile(id);
   }
 
-  // R14/S15 — roles de flota ELEVADOS (mismo criterio que sgc.es_flota_elevado()).
-  // El chofer (chofer_transportista) NO es elevado: ve solo sus cuadros.
-  private static readonly FLOTA_ELEVADO = ['admin', 'direccion', 'gerencia', 'jefe_flota'];
+  // R14/S15/AS5 — roles de flota ELEVADOS (mismo criterio que sgc.es_flota_elevado()
+  // y UserService.esFlotaElevado de la web). El chofer (chofer_transportista) NO es
+  // elevado: ve solo sus cuadros. BO2 — `logistica` (Raykler/Misael) SÍ es elevado:
+  // faltaba aquí (espejo desincronizado con el padre), por eso caía al bucle del
+  // conduce y al bloqueo de km como un chofer cualquiera.
+  private static readonly FLOTA_ELEVADO = ['admin', 'direccion', 'gerencia', 'jefe_flota', 'logistica'];
   esFlotaElevado = computed(() =>
     this.roles().some((r) => UserContextService.FLOTA_ELEVADO.includes(r)),
   );

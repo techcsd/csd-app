@@ -21,6 +21,7 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ConducesService, LugarDestino, RutaParadaCaptura, RutaTipo } from '../../../core/services/conduces.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { VehiculoUsoService } from '../../../core/services/vehiculo-uso.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
@@ -90,7 +91,10 @@ export class CrearRutaPage implements OnDestroy {
   private conductores = inject(ConductoresService);
   private vehiculos = inject(VehiculosService);
   private ctx = inject(UserContextService);
-  // AI6 — ids de vehículos asignados al chofer actual (para desviar a Uso de vehículo).
+  private usoSvc = inject(VehiculoUsoService);
+  // AI6/BO2 — ids de vehículos que son MÍOS (uso activo v2 ∪ asignación legada), para
+  // NO desviar a "Uso de vehículo" uno que ya recibí. El uso manda: recibir un vehículo
+  // abre sesión de uso sin crear asignación, así que mirar solo asignaciones desviaba en bucle.
   private misAsignados = new Set<string>();
   private geo = inject(GeocodingService);
   private network = inject(NetworkService);
@@ -313,18 +317,24 @@ export class CrearRutaPage implements OnDestroy {
     try {
       // B1 — el vehículo se elige del pool (VehiculoPicker); aquí solo cargamos
       // los lugares (obras/almacenes) para origen/destino + S16 los conductores.
-      const [lugares, conductoresRes, asig] = await Promise.all([
+      const [lugares, conductoresRes, asig, usos] = await Promise.all([
         this.conduces.getLugaresDestino(),
         // BL2 — solo el elevado necesita el roster; el chofer se auto-asigna.
         this.esElevado
           ? this.conductores.getConductoresDetailed().catch(() => ({ items: [], failed: true, fromCache: false }))
           : Promise.resolve({ items: [], failed: false, fromCache: false }),
         this.esElevado ? Promise.resolve([]) : this.vehiculos.getMisAsignaciones().catch(() => []),
+        // BO2 — mis usos activos (uso v2) para no desviar en bucle un vehículo recibido.
+        this.esElevado ? Promise.resolve([]) : this.usoSvc.misUsos().catch(() => []),
       ]);
       this.lugares.set(lugares);
       this.conductorOpts.set(conductoresRes.items.map((c) => ({ id: c.id, label: c.nombre })));
       this.conductoresFallo.set(conductoresRes.failed && conductoresRes.items.length === 0);
-      this.misAsignados = new Set(asig.map((a) => a.vehiculo_id)); // AI6
+      // AI6/BO2 — MÍOS = uso activo (v2) ∪ asignación legada.
+      this.misAsignados = new Set([
+        ...usos.filter((u) => u.activa).map((u) => u.vehiculo_id),
+        ...asig.map((a) => a.vehiculo_id),
+      ]);
       // AY11 — al planificar una solicitud, pre-llena origen/destino desde ella
       // (la obra ancla + el otro extremo) y salta el banner de borrador.
       if (this.solicitudId) {

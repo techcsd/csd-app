@@ -17,7 +17,7 @@ import { ArticuloCat, CartLinea, CategoriaInv, Urgencia } from '../../../core/mo
 import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { combinarUnidades } from '../../../core/util/unidades';
 
 interface GrupoResumen {
@@ -61,6 +61,10 @@ export class PedirPage implements OnDestroy {
   unidades = signal<string[]>([]); // BC2 — dropdown de unidades (AU13) para no catalogados
   urgencia = signal<Urgencia>('normal');
   notas = signal('');
+  // BO8 — fecha en que se NECESITA el material (opcional). [min]=hoy (una requisición
+  // se necesita en el FUTURO, al revés de la bitácora que usa [max] para días pasados).
+  fechaNecesidad = signal('');
+  readonly hoyISO = fechaLocalISO();
   submitting = signal(false);
   confirmSalir = signal(false);
 
@@ -194,6 +198,8 @@ export class PedirPage implements OnDestroy {
         proyectoId: this.proyectoId(),
         urgencia: this.urgencia(),
         notas: this.notas().trim() || null,
+        fechaNecesidad: this.fechaNecesidad() || null, // BO8
+
         items: items.map((l) => ({
           articulo_id: this.esCustom(l) ? null : l.articulo_id,
           descripcion: this.descripcionDe(l),
@@ -220,6 +226,8 @@ export class PedirPage implements OnDestroy {
       { label: 'Obra', value: obra },
       { label: 'Urgencia', value: this.urgencia() === 'urgente' ? 'URGENTE' : 'Normal' },
       { label: 'Fecha', value: formatFechaMedia(new Date().toISOString()) },
+      // BO8 — 'T00:00:00' fuerza parse LOCAL (una fecha date-only en UTC se corre de día en UTC-4).
+      ...(this.fechaNecesidad() ? [{ label: 'Necesita para', value: formatFechaMedia(this.fechaNecesidad() + 'T00:00:00') }] : []),
       ...(this.notas().trim() ? [{ label: 'Nota', value: this.notas().trim() }] : []),
     ];
     const rows = this.grupos().flatMap((g) =>
@@ -246,6 +254,7 @@ export class PedirPage implements OnDestroy {
     this.cart.set([]);
     this.notas.set('');
     this.urgencia.set('normal');
+    this.fechaNecesidad.set(''); // BO8
     this.hoja.set('seleccion');
   }
 

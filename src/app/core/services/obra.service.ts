@@ -668,6 +668,10 @@ export class ObraService {
         p_urgencia: 'urgente',
         p_notas: payload['notas'],
         p_items: payload['items'],
+        // BO8 — el pedido URGENTE de obra es un atajo de un toque ("lo necesito ya"):
+        // no captura una fecha futura, así que va null (default del RPC). La fecha de
+        // necesidad se pide en la requisición deliberada (pedir).
+        p_fecha_necesidad: null,
       });
       if (error) throwSyncError(error);
     });

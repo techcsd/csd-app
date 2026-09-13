@@ -162,6 +162,15 @@ export class UsoVehiculoPage {
     try {
       const e = await this.usoSvc.estadoUso(this.vehiculoId());
       this.estado.set(e);
+      // BO2 — si me DESVIARON aquí (returnUrl, desde conduce/ruta) para poner el
+      // vehículo en uso pero YA lo tengo en uso, no hay nada que registrar: vuelvo
+      // directo al flujo que me trajo. Sin esto el usuario quedaba encerrado con el
+      // único botón "Soltar vehículo" (el contrario al que necesitaba) → bucle.
+      if (this.returnUrl && this.enUsoPorMi() && this.modo() === 'usar') {
+        this.toast.show('Ya tienes este vehículo en uso. Continúa con lo que ibas.', 'info');
+        this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
+        return;
+      }
       // Prefill km con el del inicio si lo tengo (mejor que vacío).
       if (e.km_inicio != null && this.km() == null) this.km.set(e.km_inicio);
     } catch {

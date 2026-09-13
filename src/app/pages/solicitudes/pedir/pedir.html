@@ -36,6 +36,10 @@
         <button type="button" class="chip" [class.chip--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 Urgente</button>
       </div>
 
+      <!-- BO8 — ¿para cuándo se necesita? Opcional; [min]=hoy (se necesita en el futuro). -->
+      <label class="field-label mov__mt">¿Para cuándo la necesitas? (opcional)</label>
+      <input class="field" type="date" [min]="hoyISO" [ngModel]="fechaNecesidad()" (ngModelChange)="fechaNecesidad.set($event)" aria-label="Fecha en que se necesita el material" />
+
       @for (g of grupos(); track g.categoria) {
         <h3 class="mov__grupo">{{ g.categoria }}</h3>
         @for (l of g.lineas; track l.articulo_id) {

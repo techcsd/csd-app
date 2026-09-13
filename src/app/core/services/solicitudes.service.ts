@@ -22,6 +22,9 @@ export interface SolicitudCaptura {
   proyectoId: string;
   urgencia: Urgencia;
   notas: string | null;
+  // BO8 — fecha en que se NECESITA el material (YYYY-MM-DD local, opcional). Es DATO
+  // de negocio: se congela al capturar; el sync NO la toca (≠ capturado_en).
+  fechaNecesidad?: string | null;
   // BM5 — cantidad SIEMPRE en unidad base; unidad_capturada/factor_aplicado = traza del empaque.
   items: {
     articulo_id: string | null;
@@ -255,6 +258,9 @@ export class SolicitudesService {
         urgencia: input.urgencia,
         notas: input.notas,
         items: input.items,
+        // BO8 — congela la fecha elegida (o null si no se especificó). Ya viene como
+        // YYYY-MM-DD local del date input; el sync no la recalcula.
+        fecha_necesidad: input.fechaNecesidad || null,
       },
       resumen: { tipo: 'solicitud', capturado_en, items: input.items.length },
     });
@@ -269,6 +275,7 @@ export class SolicitudesService {
         p_urgencia: payload['urgencia'],
         p_notas: payload['notas'] ?? null,
         p_items: payload['items'],
+        p_fecha_necesidad: payload['fecha_necesidad'] ?? null, // BO8
       });
       if (error) throwSyncError(error);
 

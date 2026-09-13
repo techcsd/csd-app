@@ -23,6 +23,7 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
 import { ConducesService, Despachante, AlmacenDestino, ReceptorDisponible } from '../../../core/services/conduces.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { VehiculoUsoService } from '../../../core/services/vehiculo-uso.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { TrackingService } from '../../../core/services/tracking.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -87,6 +88,7 @@ export class GenerarConducePage implements OnDestroy {
   private inventario = inject(InventarioService);
   private conduces = inject(ConducesService);
   private vehiculos = inject(VehiculosService);
+  private usoSvc = inject(VehiculoUsoService);
   private ctx = inject(UserContextService);
   private tracking = inject(TrackingService);
   private network = inject(NetworkService);
@@ -225,15 +227,21 @@ export class GenerarConducePage implements OnDestroy {
 
   // AF23.4 — vehículo (para que el servidor auto-genere la ruta al emitir).
   misVehiculos = signal<MiAsignacion[]>([]);
+  // BO2 — vehículos que tengo EN USO ahora mismo (uso v2, sgc.vehiculo_usos). Recibir
+  // un vehículo abre una sesión de uso pero NO toca vehiculo_asignaciones, así que sin
+  // esto el vehículo recién recibido daba `false` y desviaba en bucle a "Uso de vehículo".
+  misUsosActivos = signal<Set<string>>(new Set());
   // AI6 — todos los vehículos visibles (para poder elegir uno no asignado → Uso de vehículo).
   todosVehiculos = signal<VehiculoDisponible[]>([]);
   vehiculoId = signal('');
   vehiculoOptions = computed(() =>
     this.todosVehiculos().map((v) => ({ id: v.vehiculo_id, label: `${v.placa} · ${v.marca} ${v.modelo}` })),
   );
-  /** AI6 — ¿el vehículo elegido está asignado al chofer actual? */
+  /** BO2 — ¿el vehículo elegido es MÍO? = uso activo (v2) ∪ asignación legada. El uso
+   *  manda: recibir un vehículo lo pone en uso sin crear asignación (mismo criterio que
+   *  el vehiculo-picker de combustible). */
   private esVehiculoAsignado(id: string): boolean {
-    return this.misVehiculos().some((v) => v.vehiculo_id === id);
+    return this.misUsosActivos().has(id) || this.misVehiculos().some((v) => v.vehiculo_id === id);
   }
   // AI2 — foto de recepción (el chofer CARGA el material del despachante) — solo cámara.
   fotoRecepcion = signal<CapturedPhoto | null>(null);
@@ -677,7 +685,7 @@ export class GenerarConducePage implements OnDestroy {
   private async init(): Promise<void> {
     this.loading.set(true);
     try {
-      const [b, obras, a, cat, asig, todos, ferr, desp] = await Promise.all([
+      const [b, obras, a, cat, asig, todos, ferr, desp, usos] = await Promise.all([
         this.inventario.getBodegas(),
         // AP1 — obras de destino por el directorio de referencia (arregla el "No hay
         // opciones." del chofer: obras_con_bodega le devolvía [] por la RLS de proyectos).
@@ -688,12 +696,15 @@ export class GenerarConducePage implements OnDestroy {
         this.vehiculos.getVehiculosDisponibles().catch(() => [] as VehiculoDisponible[]),
         this.inventario.getFerreterias().catch(() => [] as Ferreteria[]),
         this.conduces.despachantesDisponibles().catch(() => [] as Despachante[]),
+        // BO2 — mis usos activos (uso v2) para no desviar en bucle un vehículo recibido.
+        this.usoSvc.misUsos().catch(() => []),
       ]);
       this.bodegas.set(b);
       this.obras.set(obras);
       this.articulos.set(a);
       this.categorias.set(cat);
       this.misVehiculos.set(asig);
+      this.misUsosActivos.set(new Set(usos.filter((u) => u.activa).map((u) => u.vehiculo_id))); // BO2
       this.todosVehiculos.set(todos);
       this.ferreterias.set(ferr);
       this.despachantes.set(desp);

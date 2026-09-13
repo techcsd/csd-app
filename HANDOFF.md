@@ -1,5 +1,44 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 13/09/2026 — PROMPT-45 ronda BO (app) — **fix bucle del conduce (BO2) + espejo cliente de combustible (BO4/BO5)** — build verde · **SIN commit/push/APK (pendiente decisión de Xaviel)**
+
+**TL;DR:** el bug más molesto (el bucle del conduce) era 100% de la app y quedó arreglado en **tres capas + un espejo de rol**. Combustible ya no bloquea a logística. **BO8 (fecha de necesidad) HECHO** — resultó que el padre YA había aplicado PROMPT-44 FASE 6 (verificado en prod), no estaba bloqueado. BO9/BO10 sin empezar (bloqueados por diseño). Batch de release (decisión de Xaviel: no sacar 2.19.2 suelto). **Falta: device-QA.** Los archivos de contexto que citaba el prompt (`CONTEXTO-ACTUALIZACION-22.md`, `PROMPT-44-SGC.md`) **no existen en este repo** — trabajé de las referencias directas a código, todas verificadas.
+
+### ✅ FASE 1 — BO2: el bucle del conduce (fix en 3 capas + 1 espejo de rol)
+- **Causa raíz:** `esVehiculoAsignado` (generar-conduce) miraba solo `getMisAsignaciones()` → `vehiculo_asignaciones` (modelo LEGADO). Recibir un vehículo llama `iniciar_uso_vehiculo` → inserta en `vehiculo_usos` y NO toca `vehiculo_asignaciones` → el vehículo recién recibido daba `false` → desvío en bucle a "Uso de vehículo", cuya pantalla ofrecía solo "Soltar" (el botón contrario).
+- **Fix 1.1/1.2 (`generar-conduce.ts`):** nuevo signal `misUsosActivos` cargado de `usoSvc.misUsos()` (filtro `activa`) en `init()`; `esVehiculoAsignado` ahora es **uso activo (v2) ∪ asignación legada**. Copia el patrón ya probado del `vehiculo-picker` (combustible).
+- **Fix 1.3 (`uso-vehiculo.ts`):** salida sin salida. En `cargarEstado()`, si me desviaron aquí (`returnUrl`) y **ya tengo el vehículo en uso** (`enUsoPorMi() && modo==='usar'`), **vuelvo directo al flujo que me trajo** (conduce/ruta) con un toast, en vez de encerrar al usuario. Cubre TODAS las fuentes de desvío (conduce + ruta).
+- **Fix 1.4 (`user-context.service.ts`):** `FLOTA_ELEVADO` **le faltaba `'logistica'`** (espejo desincronizado con la web `UserService.esFlotaElevado` y `sgc.es_flota_elevado()`, AS5). Por eso **Raykler (logística) caía al bucle como chofer**. Una línea.
+- **Fix extra (`crear-ruta.ts`):** MISMO bug — `desviarAUsoDeVehiculo` se guardaba con `misAsignados` (solo asignaciones). Unido a usos activos igual que el conduce. (Regla 12, F1.6: era el otro lector-como-gate del modelo muerto.)
+- **F1.5 confirmado:** el trigger `tg_uso_unico_por_chofer` (un uso activo por chofer) hace imposible un duplicado rancio. No es fila colgada.
+
+### ✅ FASE 2 — BO4/BO5: espejo cliente del arreglo de combustible
+- **`combustible.ts`:** `soloMisVehiculos` (picker) y el **bloqueo duro de salto de km** usaban `esAdmin()` → ahora `esFlotaElevado()` (que tras F1.4 incluye `logistica`). Sin esto, aunque el padre destrabe el servidor (PROMPT-44 FASE 1), Raykler ni veía el vehículo ni podía pasar el bloqueo de km. Mensaje del salto de km ya no dice "como admin".
+- ⚠️ **Depende del servidor (PROMPT-44 FASE 1, del padre):** el fix cliente por sí solo no basta; el RPC sigue validando. La verificación E2E (F2.5) queda para cuando el SQL del padre esté aplicado.
+
+### ✅ FASE 3 — BO8: fecha de necesidad en la requisición (DESBLOQUEADO — el padre ya aplicó FASE 6)
+- **Verificado en prod** (introspección Management API): `crear_solicitud_app(uuid,uuid,text,text,jsonb, p_fecha_necesidad date DEFAULT NULL)` + columna `solicitudes_material.fecha_necesidad date`; el body inserta la columna. **No estaba bloqueado: el padre ya lo aplicó.**
+- **App:** campo `type=date` opcional con `[min]=hoy` en el resumen de `pedir` (bajo Urgencia); `fechaNecesidad` signal; se **congela en el payload del outbox** (`fecha_necesidad`) y el handler manda `p_fecha_necesidad`. También sale en el PDF/Excel compartido ("Necesita para", parse local con `T00:00:00`). Archivos: `pedir.ts/.html`, `solicitudes.service.ts`.
+- **`obra_pedido_urgente`** (`obra.service.ts`): pedido urgente = atajo de un toque → `p_fecha_necesidad: null` (no captura fecha futura). Documentado.
+- **Detalle "Mis requisiciones" (app):** muestra "📅 Necesita para" cuando existe (`detalle.html` + `RequisicionDetalle.fecha_necesidad`, parse local `T00:00:00`). Requería que el RPC compartido `requisicion_detalle` sirviera la clave → **migración aditiva APLICADA a prod** (`sql/2026-09-13-bo8-requisicion-detalle-fecha-necesidad.sql`, solo agrega 1 key al jsonb; verificado; web no se rompe). **Espejada en SGC** (regla #5): `dev/SGC/sql/2026-09-13-bo8b-requisicion-detalle-fecha-necesidad.sql` (bo8b = read-path; el bo8 del padre era el write-path). El wiring de la app es forward-compatible (no dependía de la migración para no romperse).
+- **Web (SGC) — detalle:** el padre YA había pintado la fecha en casi todo (form de captura, filas de lista con chip de proximidad, filtro "solo con necesidad", orden por necesidad, export). **Faltaba SOLO el drawer de detalle** (`inventario/requisiciones` → `app-form-drawer`, `<dl class="req-detail__meta">`): no mostraba "Necesidad". **Añadido** (`requisiciones.html`) con el mismo chip de proximidad (vencida / es hoy / faltan N días); `selected()` ya trae la columna (es un item de la lista). **SGC build verde.** Sin commit/push en el repo SGC.
+
+### 🔴 Bloqueado / no empezado
+- **BO9 (medidas de moldes) / BO10 (cartillas):** sin empezar (bloqueadas por diseño §E-8/§E-9). Confirmado: no hay librería de dibujo vectorial en `package.json`; molde de arranque = `retiros.service.ts` (BG4) + fecha elegible BL9.
+- **BO7 (conduce desde requisición):** la app YA es la referencia (`generar-conduce.ts` lee `?requisicion=` + `despacho_marcar`). Hueco es de la web. No se tocó.
+
+### 📋 Listas que pediste
+- **Lectores de `vehiculo_asignaciones` / `getMisAsignaciones()`** (ver reporte al final del chat): 2 eran gates-como-bucle (`generar-conduce` ✅ + `crear-ruta` ✅, ya arreglados); `vehiculo-picker` ya estaba bien; los demás son display/orden ("Tus vehículos" en `transporte`, `reporte-semanal`, `reportar-multa`) o el concepto de asignación en sí (`asignar`/`asignarme`, admin). **Retiro del puente `responsable_id`:** proponer para cuando NO queden lectores de asignación como identidad de tenencia (hoy siguen `asignar`/`asignarme`); no antes.
+- **Otros espejos de rol desincronizados con el padre:** además de `FLOTA_ELEVADO` (arreglado), revisar `TECNOLOGIA` (`user-context.service.ts:134`) vs `sgc.es_tecnologia()` — no verificado contra el padre esta sesión.
+- **Divergencia cliente/servidor de km (F2.3):** el cliente compara contra `ultima().km` (última *echada*); el servidor contra `max(kilometraje)` de filas no invalidadas (bm1). Con una echada `invalidada` o registros fuera de orden, el cliente puede dar luz verde a un delta que el servidor rechaza. **Reportado, no tapado.** Relacionado: offline valida contra caché (F2.4) — entra en §E-4, no lo arreglé.
+
+### ⏳ Pendiente — device-QA + release (Xaviel)
+- **Sin commit/push/APK** (regla madre). Archivos tocados: `generar-conduce.ts`, `crear-ruta.ts`, `uso-vehiculo.ts`, `combustible.ts`, `user-context.service.ts`.
+- **Smoke que hoy no existe (F1.7):** recibir un vehículo → crear conduce con **ese** vehículo → debe pasar directo (sin bucle). Repetir con rol `logistica`. Idem crear-ruta.
+- **Build:** `npm run build` exit 0 (solo warnings pre-existentes).
+
+---
+
 ## 🟢 SESIÓN 11/09/2026 (cont.) — **RELEASE 2.19.1 PUBLICADA (fix BN1c) + orden de trabajo PROBADA EN DISPOSITIVO**
 
 ### 🚀 Release 2.19.1 — PUBLICADA (mínima forzada a la última) — HECHO (11-sep)

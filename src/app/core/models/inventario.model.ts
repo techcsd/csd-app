@@ -287,6 +287,10 @@ export interface RequisicionDetalle {
   atendido_en: string | null;
   proyecto_id: string | null;
   proyecto_nombre: string | null;
+  // BO8 — fecha en que se necesita el material (YYYY-MM-DD local, opcional). La sirve
+  // el RPC requisicion_detalle solo si la migración BO8 está aplicada; hasta entonces
+  // queda undefined y la UI simplemente no la muestra (forward-compatible).
+  fecha_necesidad?: string | null;
   solicitante_id: string | null;
   solicitante_nombre: string | null;
   atendido_por_nombre: string | null;

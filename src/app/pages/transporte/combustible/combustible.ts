@@ -95,8 +95,10 @@ export class CombustiblePage extends GuardedWizard {
 
   vehiculoId = '';
   necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
-  // AF18 — solo el asignado registra en su vehículo; admin (Xaviel) ve todos (QA).
-  soloMisVehiculos = computed(() => !this.ctx.esAdmin());
+  // AF18/BO4 — solo el asignado registra en su vehículo; los roles de flota ELEVADOS
+  // (admin, jefe_flota, LOGÍSTICA…) ven toda la flota. Antes miraba solo `esAdmin`, así
+  // que logística (Raykler) ni siquiera veía el vehículo ajeno para elegirlo.
+  soloMisVehiculos = computed(() => !this.ctx.esFlotaElevado());
   // AF19 — máximo km entre echadas (flota_config.umbral_km_echada, default 1000).
   umbralKm = signal(1000);
   // Z23-app — echada de tarjeta asignada a una PERSONA (sin vehículo ni odómetro).
@@ -606,13 +608,15 @@ export class CombustiblePage extends GuardedWizard {
             this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
             return false;
           }
-          // AF19 — salto de km irreal: bloquea al chofer; el admin puede seguir
-          // (queda marcado km_alerta en el servidor). El server también lo valida.
+          // AF19/BO4 — salto de km irreal: bloquea al chofer; los roles de flota
+          // ELEVADOS (admin, jefe_flota, LOGÍSTICA…) pueden seguir (queda marcado
+          // km_alerta en el servidor). El server también lo valida. Antes solo `esAdmin`
+          // podía continuar → logística quedaba bloqueada como un chofer cualquiera.
           if (this.kmDeltaExcede()) {
             const delta = km! - this.ultima().km!;
-            if (this.ctx.esAdmin()) {
+            if (this.ctx.esFlotaElevado()) {
               this.toast.show(
-                `Salto de ${delta} km (supera el máximo de ${this.umbralKm()} km). Puedes continuar como admin; quedará marcado para revisión.`,
+                `Salto de ${delta} km (supera el máximo de ${this.umbralKm()} km). Puedes continuar; quedará marcado para revisión.`,
                 'info',
                 6000,
               );
