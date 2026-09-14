@@ -1,8 +1,31 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 13/09/2026 — PROMPT-45 ronda BO (app) — **fix bucle del conduce (BO2) + espejo cliente de combustible (BO4/BO5)** — build verde · **SIN commit/push/APK (pendiente decisión de Xaviel)**
+## 🟢 SESIÓN 14/09/2026 — PROMPT-47 auditoría app (BE/BH5, BH→BN) — **todo shipped en 2.20.0; guard de tokens BH5 endurecido** — build verde · commit+push
 
-**TL;DR:** el bug más molesto (el bucle del conduce) era 100% de la app y quedó arreglado en **tres capas + un espejo de rol**. Combustible ya no bloquea a logística. **BO8 (fecha de necesidad) HECHO** — resultó que el padre YA había aplicado PROMPT-44 FASE 6 (verificado en prod), no estaba bloqueado. BO9/BO10 sin empezar (bloqueados por diseño). Batch de release (decisión de Xaviel: no sacar 2.19.2 suelto). **Falta: device-QA.** Los archivos de contexto que citaba el prompt (`CONTEXTO-ACTUALIZACION-22.md`, `PROMPT-44-SGC.md`) **no existen en este repo** — trabajé de las referencias directas a código, todas verificadas.
+**TL;DR:** auditoría del lado app de `imp 01092026` (7 agentes, uno por tanda) contra el código real. **Todo está en prod 2.20.0**; el PLAN estaba stale (BK/BM "por ejecutar" ya shipeadas) y **varias fases marcadas ⏸ se construyeron igual**: BH2/BH3/BH8 (2.11.0), BI6.3 (auto-servicio de PIN, `7b51b2c`), BK3 (participantes), **BN1 orden de trabajo e2e** (idempotente `p_id`, offline 2 firmas). Regla 10 = **0 superficie** en la app (sin `form.value as`; payloads de outbox campo por campo). Todos los contratos de servidor que la app consume están desplegados → sin herencia ⏸. Reporte completo: `C:\developer\improvements\septiembre 2026\imp 11092026\REPORTE-AUDITORIA-01092026-CSD-APP.md`.
+
+**Cerrado esta sesión — el hallazgo grave (BH5 guard):** `scripts/verify-tokens.mjs` se había portado *verbatim* de la web y solo detectaba hex **near-black** como fondo/borde; pero el bug real de BH5 en la app eran **fondos CLAROS quemados** (`#fff7ed`, `#fdeaea`, `#e7f6ec`…) que no themean y salen como **islas claras en tema oscuro** — el guard pasaba con 16 de esos pills presentes. **Fix:** añadido un chequeo de "hex literal como fondo/borde NUEVO" (claro **u** oscuro) con **baseline ratchet** (`scripts/.token-surface-hex-baseline.json`, 88 sitios de deuda congelados). Ahora cualquier hex de superficie nuevo **rompe el build**. Verificado con prueba negativa (`background:#fff7ed` nuevo → EXIT 1) y `npm run build` verde. **Tooling (no entra al APK) → sin bump de versión, sin release a usuarios.**
+
+**BH5 números:** hex en `src/` 1283 → **1127** (−12%); fundación bien portada (`_tokens.scss`, semánticos = web, 3 primitivos tokenizados). Pendiente: **16 status-pills claros** (congelados en el baseline, a tokenizar con verificación en device).
+
+**Abierto (documentado, NO tocado — riesgo o decisión):**
+- ⚠️ **BM5**: el toggle atado/unidad falta en la copia de **búsqueda** del selector (`selector-categorias.html:140-169`, usa `cantidadDe` en vez de `cantidadMostrada`). Data-safe (por defecto captura en base). El fix propio (mover a `app-qty-input`) está ⏸ §D.
+- ⚠️ **BI4(c)**: `detenerTracking` no limpia `watchdogTimer` en `modoContinuo` (`tracking.service.ts:406-411`) — inerte (neutralizado por `watchdogDesistio`).
+- ⚠️ **BL2** textos periféricos que aún afirman causa: `obra/mis-nc` ("Todo al día" sin rama de error), `home` ("Sin módulos asignados"). No son los reportados.
+- ⚠️ **`esChofer` mirror drift** (`user-context.service.ts:146`): la app mira solo el rol; el servidor también honra `incentivo_participante.es_chofer`.
+- ⚠️ Falta pantalla **`visita`** en la app (los 2 ternarios de título sí la cubren) — paridad preexistente rota.
+- ⚠️ **BJ**: perfil `sticker` JPEG sin consumidor; `sticker-editor` usa su propio webp 0.92.
+- ⏸ decisión: BM5 `app-qty-input`, BI6 `must_change_pin` (primer ingreso), BH2 traslado del home (mock BD1), BL4 lote sin-ledger, BL6 rediseño Seguimiento, tokenizar los 16 pills.
+
+**Recomendación de paridad de tooling:** el `verify-tokens.mjs` del padre (web) podría adoptar el mismo chequeo de surface-hex NUEVO (hoy la web solo mira dark). No es brecha de feature.
+
+**Verify on resume:** `node scripts/verify-tokens.mjs` → verde (baseline 88); meter un `background:#xxx` nuevo en cualquier `.scss` y correrlo → debe fallar (EXIT 1). `npm run build` verde. HEAD debe incluir el commit `chore(audit BH5)`.
+
+---
+
+## 🟢 SESIÓN 13/09/2026 — PROMPT-45 ronda BO (app) — **fix bucle del conduce (BO2) + combustible logística (BO4/BO5) + fecha de necesidad (BO8)** — **RELEASE 2.20.0 PUBLICADA (mínima forzada) · device-QA PASADO · commit+push app+SGC**
+
+**TL;DR:** el bug más molesto (el bucle del conduce) era 100% de la app y quedó arreglado en **tres capas + un espejo de rol**. Combustible ya no bloquea a logística. **BO8 (fecha de necesidad) HECHO** de punta a punta (app captura+detalle, web, backend compartido) — el padre YA había aplicado PROMPT-44 FASE 6. BO9/BO10 sin empezar (bloqueados por diseño). **Device-QA PASADO** en Redmi Note 10 Pro (BO2 chofer sin bucle, logística elevada, combustible flota completa). **Commit+push** app (`aecd68b`,`b882d32`) + SGC (`ed4b2ef`). **2.20.0 PUBLICADA + mínima forzada a la última** (gate verificado). Los archivos de contexto que citaba el prompt (`CONTEXTO-ACTUALIZACION-22.md`, `PROMPT-44-SGC.md`) **no existen en este repo** — trabajé de las referencias directas a código, todas verificadas.
 
 ### ✅ FASE 1 — BO2: el bucle del conduce (fix en 3 capas + 1 espejo de rol)
 - **Causa raíz:** `esVehiculoAsignado` (generar-conduce) miraba solo `getMisAsignaciones()` → `vehiculo_asignaciones` (modelo LEGADO). Recibir un vehículo llama `iniciar_uso_vehiculo` → inserta en `vehiculo_usos` y NO toca `vehiculo_asignaciones` → el vehículo recién recibido daba `false` → desvío en bucle a "Uso de vehículo", cuya pantalla ofrecía solo "Soltar" (el botón contrario).
@@ -32,20 +55,23 @@
 - **Otros espejos de rol desincronizados con el padre:** además de `FLOTA_ELEVADO` (arreglado), revisar `TECNOLOGIA` (`user-context.service.ts:134`) vs `sgc.es_tecnologia()` — no verificado contra el padre esta sesión.
 - **Divergencia cliente/servidor de km (F2.3):** el cliente compara contra `ultima().km` (última *echada*); el servidor contra `max(kilometraje)` de filas no invalidadas (bm1). Con una echada `invalidada` o registros fuera de orden, el cliente puede dar luz verde a un delta que el servidor rechaza. **Reportado, no tapado.** Relacionado: offline valida contra caché (F2.4) — entra en §E-4, no lo arreglé.
 
-### 🚀 Release 2.20.0 — SUBIDA AL BUCKET, **NO forzada** (hold pre-device-QA)
-- **Commit+push** de la ronda BO: csd-app `aecd68b` (+bump `<pendiente>`), SGC `ed4b2ef`. Push a `main` → PWA/web a Vercel.
-- **APK 2.20.0** firmada (cert prod `3c5316d8…5065`, v1+v2+v3), **registrada Y1** (3 cambios curados: conduce/combustible/requisición) y **subida al bucket** (`csd-app-2.20.0.apk` + `latest` + `version.json` + apk_url de la fila 2.20.0).
-- **NO publicada / NO mínima** (decisión de Xaviel: primero device-QA). Verificado en prod: fila 2.20.0 `publicada=false, minima=false`; `version_publicada()` sigue devolviendo **2.19.1** (apk_url + mínima). Los usuarios APK NO son empujados al 2.20.0; solo es descargable por URL directa.
-- **Para publicar cuando pase el device-QA** (política: mínima = la última):
-  ```sql
-  update sgc.app_versiones set publicada=(version='2.20.0'), minima=(version='2.20.0') where plataforma='movil';
-  ```
-  Rollback: `... set publicada=(version='2.19.1'), minima=(version='2.19.1') ...`.
+### 🚀 Release 2.20.0 — PUBLICADA + MÍNIMA FORZADA (rolling a todos) — HECHO (13-sep)
+- **Commit+push** de la ronda BO: csd-app `aecd68b` (código) + `b882d32` (bump 2.20.0), SGC `ed4b2ef`. Push a `main` → PWA/web a Vercel.
+- **APK 2.20.0** firmada (cert prod `3c5316d8…5065`, v1+v2+v3), **registrada Y1** (3 cambios curados: conduce/combustible/requisición) y **subida al bucket** (`csd-app-2.20.0.apk` + `latest` + `version.json` + apk_url).
+- **PUBLICADA + MÍNIMA FORZADA a la última** (política de Xaviel: mínima = última). `update sgc.app_versiones set publicada=(version='2.20.0'), minima=(version='2.20.0') where plataforma='movil';` aplicada. **Gate verificado E2E**: `version_publicada()` = `{version_publicada:2.20.0, version_minima:2.20.0, version_code:2020000, apk_url:…2.20.0.apk}`. Higiene de flags OK: **publicada=1, minima=1** (2.19.1/2.19.0/2.18.0 limpias). Todos los APK < 2020000 quedan forzados; PWA/iPhone se autoactualiza por SW.
+- **Rollback**: `update sgc.app_versiones set publicada=(version='2.19.1'), minima=(version='2.19.1') where plataforma='movil';` · **Rollback PWA**: `git revert b882d32 aecd68b && git push` (idem SGC `ed4b2ef`).
 
-### ⏳ Pendiente — device-QA (Xaviel)
-- **Smoke que hoy no existe (F1.7):** recibir un vehículo → crear conduce con **ese** vehículo → debe pasar directo (sin bucle). Repetir con rol `logistica`. Idem crear-ruta.
-- Tras el QA: flip publicada+mínima a 2.20.0 (SQL de arriba) y verificar el gate.
+### ✅ DEVICE-QA HECHO (Redmi Note 10 Pro / Android 13, vía ADB) — 13-sep
+APK 2.20.0 instalada (`adb install -r`, cert prod OK) y **verificada en device** (Perfil → "Versión de la app: 2.20.0"; WebView Android 13 renderiza bien).
+- [x] **BO2 (chofer):** login `qa_chofer_transportista` → **recibí un vehículo** (Nissan Frontier NP300 · L441660) vía Uso de vehículo (uso-v2, SIN asignación) → **crear ruta con ESE vehículo** → salió a **"Ruta creada"** directo, **SIN el bucle** a "Uso de vehículo". Además el vehículo recibido apareció bajo **"Tus vehículos"** en el picker (unión uso∪asignación funcionando). Pre-fix habría desviado en bucle.
+- [x] **BO2 (logística elevado):** login `qa_logistica` → el hub de Transporte muestra la vista **ELEVADA** (Seguimiento, Rutas activas, Vehículos, Conductores, Avisos de flota, Incentivos) → `esFlotaElevado()` ya incluye `logistica` → el desvío hace short-circuit (nunca entra al bucle).
+- [x] **BO4/BO5 (logística combustible):** Registrar combustible → "Elige un vehículo" muestra la **FLOTA COMPLETA** (no solo "mis vehículos"). Raykler ya puede elegir cualquier vehículo. (El bloqueo de salto de km para elevado no se ejecutó en device — requiere cámara para completar la echada; es el MISMO gate `esFlotaElevado`, code-verified.)
+- [x] **Cleanup:** los artefactos de prueba se revirtieron por SQL (cerré el uso de qa_chofer → `fin_at`, liberé `vehiculos.responsable_id`, borré la ruta QA `7f113e4d…`). Verificado: 0 usos abiertos, responsable_id null, ruta borrada. La flota quedó como estaba. (qa_logistica solo VIO el picker; no creó nada.)
+- **Publicación:** HECHA tras el QA — 2.20.0 publicada + mínima forzada, gate verificado (ver sección Release arriba). El device quedó con sesión `qa_logistica` (device PIN 1234).
 - **Build:** `npm run build` exit 0 (solo warnings pre-existentes); APK firmada + verificada.
+
+### ✅ Ronda BO — CERRADA
+Código commiteado+pusheado (app+SGC), backend en prod, device-QA pasado, 2.20.0 publicada+forzada, gate verificado. No queda nada pendiente de esta ronda salvo BO9/BO10 (bloqueadas por diseño, esperan §E-8/§E-9) y, opcional, pintar la fecha de necesidad en el detalle web de la requisición (parity de lectura, no urge).
 
 ---
 
