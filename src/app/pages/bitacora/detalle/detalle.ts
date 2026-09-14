@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { MoldeEsquema, MoldeTramo } from '../../../shared/ui/molde-esquema/molde-esquema';
 import { Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { OrdenTrabajoPdfService } from '../../../core/services/orden-trabajo-pdf.service';
@@ -21,7 +22,7 @@ interface Media {
   selector: 'app-bitacora-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DecimalPipe],
+  imports: [Skeleton, DecimalPipe, MoldeEsquema],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
@@ -29,6 +30,7 @@ export class BitacoraDetallePage {
   private route = inject(ActivatedRoute);
   private bitacora = inject(BitacoraService);
   private location = inject(Location);
+  private router = inject(Router);
   private ordenPdf = inject(OrdenTrabajoPdfService);
   private toast = inject(ToastService);
 
@@ -37,6 +39,11 @@ export class BitacoraDetallePage {
   orden = signal<OrdenTrabajoDetalle | null>(null);
   pdfBusy = signal(false);
   media = signal<Media[]>([]);
+  // BP4 — URLs firmadas de las fotos de cada daño, por índice del arreglo bit.danos.
+  danoFotos = signal<Record<number, string[]>>({});
+  // BO9 — URLs firmadas de las fotos de cada molde, por índice de bit.moldes.
+  moldeFotos = signal<Record<number, string[]>>({});
+  readonly moldeTolerancia = 2; // BO9 — prod parametros.molde_tolerancia_cm
   loading = signal(true);
   fmtFecha = formatFecha; // U9
   fmtFechaHora = formatFechaMedia; // APP-030 — created_at con hora local (sin corrimiento TZ)
@@ -119,6 +126,32 @@ export class BitacoraDetallePage {
         /* offline / sin permiso: se muestran los campos generales igual */
       }
     }
+    // BP4 — resolver las fotos de cada daño a URL firmada (bucket privado).
+    if (b?.danos?.length) {
+      const map: Record<number, string[]> = {};
+      await Promise.all(
+        b.danos.map(async (d, i) => {
+          const urls = await Promise.all(
+            (d.fotos_paths ?? []).map((p) => this.bitacora.getArchivoSignedUrl(p).catch(() => null)),
+          );
+          map[i] = urls.filter((u): u is string => !!u);
+        }),
+      );
+      this.danoFotos.set(map);
+    }
+    // BO9 — fotos de cada molde a URL firmada.
+    if (b?.moldes?.length) {
+      const map: Record<number, string[]> = {};
+      await Promise.all(
+        b.moldes.map(async (m, i) => {
+          const urls = await Promise.all(
+            (m.fotos_paths ?? []).map((p) => this.bitacora.getArchivoSignedUrl(p).catch(() => null)),
+          );
+          map[i] = urls.filter((u): u is string => !!u);
+        }),
+      );
+      this.moldeFotos.set(map);
+    }
     if (b?.archivos?.length) {
       const media = await Promise.all(
         b.archivos.map(async (a) => {
@@ -142,6 +175,23 @@ export class BitacoraDetallePage {
 
   back(): void {
     this.location.back();
+  }
+
+  /** BP4 — abre la lista de retiros (el daño de material generó un RET-…). */
+  irARetiros(): void {
+    void this.router.navigate(['/inventario/retiros']);
+  }
+
+  /** BO9 — tramos/plano de un molde para el esquema (jsonb → MoldeTramo[]). */
+  moldeTramos(m: { tramos?: MoldeTramo[] | null }): MoldeTramo[] {
+    return Array.isArray(m.tramos) ? m.tramos : [];
+  }
+  moldePlano(m: { medida_plano?: MoldeTramo[] | null }): MoldeTramo[] | null {
+    return Array.isArray(m.medida_plano) && m.medida_plano.length ? m.medida_plano : null;
+  }
+  /** BO9 — ¿el molde superó la tolerancia? (badge en el detalle). */
+  moldeFuera(m: { desviacion_max_cm?: number | null }): boolean {
+    return m.desviacion_max_cm != null && m.desviacion_max_cm > this.moldeTolerancia;
   }
 
   /** BN1 — comparte el PDF de la orden por el share sheet (→ WhatsApp). */

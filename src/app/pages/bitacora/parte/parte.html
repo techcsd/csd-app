@@ -482,8 +482,168 @@
         }
       }
 
-      <!-- 9. Datos finales (S8) -->
+      <!-- 9. Daños de material / equipo propio (BP4) -->
       @if (step() === 9) {
+        <h1 class="screen__title">¿Se dañó algún material o equipo propio hoy?</h1>
+        <p class="screen__subtitle">Un molde, una viga, un equipo de la empresa… (el equipo alquilado ya se preguntó antes).</p>
+        <app-option-button icon="🧱" label="Sí" tone="warning" [selected]="huboDanos() === true" (pressed)="onHuboDanosChange(true)" />
+        <app-option-button icon="🚫" label="No" tone="success" [selected]="huboDanos() === false" (pressed)="onHuboDanosChange(false)" />
+
+        @if (huboDanos()) {
+          <!-- Tipo de lo que se dañó -->
+          <label class="field-label">¿Qué se dañó?</label>
+          <div class="parte__dano-tipos">
+            <app-option-button icon="📦" label="Material" [selected]="danoTipoNuevo() === 'material'" (pressed)="setDanoTipoNuevo('material')" />
+            <app-option-button icon="🛠️" label="Equipo propio (CSD)" [selected]="danoTipoNuevo() === 'equipo_propio'" (pressed)="setDanoTipoNuevo('equipo_propio')" />
+          </div>
+
+          <!-- Agregar: material del catálogo (o texto libre) / equipo propio -->
+          @if (danoTipoNuevo() === 'material') {
+            <label class="field-label">Busca el material dañado</label>
+            <app-articulo-picker
+              [articulos]="articulosCat()"
+              [categorias]="categoriasCat()"
+              [exclude]="danoExcludeIds()"
+              [soloBuscador]="true"
+              [buscador]="danoBuscador"
+              (picked)="addDanoMaterial($event)"
+            />
+            <label class="field-label">¿No está en la lista? Escríbelo</label>
+            <div class="parte__addrow">
+              <input class="field" type="text" [ngModel]="danoLibreNombre()" (ngModelChange)="danoLibreNombre.set($event)" placeholder="Material dañado" aria-label="Material dañado no catalogado" />
+              <button type="button" class="btn-ghost" (click)="addDanoLibre()">Agregar</button>
+            </div>
+          } @else {
+            <label class="field-label">¿Qué equipo propio se dañó?</label>
+            <div class="parte__addrow">
+              <input class="field" type="text" [ngModel]="danoEquipoNombre()" (ngModelChange)="danoEquipoNombre.set($event)" placeholder="Ej: Vibrador, andamio, mezcladora" aria-label="Equipo propio dañado" />
+              <button type="button" class="btn-ghost" (click)="addDanoEquipo()">Agregar</button>
+            </div>
+          }
+
+          <!-- Lista de daños agregados -->
+          @for (d of danos(); track d.key) {
+            <div class="parte__dano">
+              <div class="parte__dano-top">
+                <span class="parte__dano-name">
+                  {{ d.nombre }}
+                  <span class="parte__tag" [class.parte__tag--dano]="d.tipo === 'equipo_propio'">
+                    {{ d.tipo === 'material' ? 'Material' : 'Equipo propio' }}
+                  </span>
+                </span>
+                <button type="button" class="parte__act-x" (click)="removeDano(d.key)">Quitar</button>
+              </div>
+
+              <div class="parte__dano-qty">
+                <app-qty-input [value]="d.cantidad" (valueChange)="setDanoCantidad(d.key, $event)" ariaLabel="Cantidad dañada" />
+                <input class="field parte__dano-unidad" type="text" list="unidades-dano" [ngModel]="d.unidad" (ngModelChange)="setDanoUnidad(d.key, $event)" placeholder="Unidad" aria-label="Unidad" />
+              </div>
+
+              <input class="field" type="text" [ngModel]="d.detalle" (ngModelChange)="setDanoItemDetalle(d.key, $event)" placeholder="¿Qué le pasó? (obligatorio)" aria-label="Detalle del daño" />
+
+              <!-- Fotos del daño (mínimo 1 si se solicita retiro) -->
+              @for (p of getDanoFotos(d.key); track $index) {
+                <app-photo-slot class="parte__restr-foto" label="Foto del daño" hint="📷" [foto]="p" (cleared)="removeDanoFoto(d.key, $index)" />
+              }
+              <app-photo-slot class="parte__restr-foto" label="Agregar foto del daño" hint="➕" (captured)="addDanoFoto(d.key, $event)" />
+
+              <!-- Solo material: solicitar retiro a almacén -->
+              @if (d.tipo === 'material') {
+                <app-option-button
+                  icon="🚚"
+                  label="Solicitar retiro a almacén"
+                  [selected]="d.solicita_retiro"
+                  (pressed)="toggleDanoRetiro(d.key)"
+                />
+                @if (d.solicita_retiro) {
+                  <p class="field-hint">Llega a almacén como un retiro (RET-…) para que lo pasen a buscar. Necesita al menos una foto.</p>
+                }
+              }
+            </div>
+          }
+          <datalist id="unidades-dano">
+            @for (u of unidades(); track u) { <option [value]="u"></option> }
+          </datalist>
+        }
+      }
+
+      <!-- 10. Moldes del día (BO9) -->
+      @if (step() === 10) {
+        <h1 class="screen__title">¿Trabajaste moldes hoy?</h1>
+        <p class="screen__subtitle">Captura las medidas reales en cm; el sistema dibuja el esquema y lo compara con el plano.</p>
+        <app-option-button icon="📐" label="Sí" tone="warning" [selected]="huboMoldes() === true" (pressed)="onHuboMoldesChange(true)" />
+        <app-option-button icon="🚫" label="No" tone="success" [selected]="huboMoldes() === false" (pressed)="onHuboMoldesChange(false)" />
+
+        @if (huboMoldes()) {
+          <!-- Molde en edición -->
+          <div class="parte__molde-form">
+            <label class="field-label">Estructura</label>
+            <select class="field" [ngModel]="mEstructura()" (ngModelChange)="mEstructura.set($event)" aria-label="Estructura del molde">
+              <option value="">Elige…</option>
+              @for (e of estructuras(); track e.valor) { <option [value]="e.valor">{{ e.valor }}</option> }
+            </select>
+
+            <label class="field-label">Identificador <span class="parte__req">*</span></label>
+            <input class="field" type="text" [ngModel]="mIdentificador()" (ngModelChange)="mIdentificador.set($event)" placeholder="Ej: C-12, Muro eje 3" aria-label="Identificador del molde" />
+
+            <label class="field-label">Forma</label>
+            <div class="parte__molde-formas">
+              @for (f of moldeFormas; track f.value) {
+                <app-option-button [label]="f.label" [icon]="f.icon" [selected]="mForma() === f.value" (pressed)="setMForma(f.value)" />
+              }
+            </div>
+
+            <label class="field-label">Medidas reales (cm) <span class="parte__req">*</span></label>
+            <div class="parte__molde-dims">
+              <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="mLargo()" (ngModelChange)="mLargo.set($event)" aria-label="Largo real en cm" /></label>
+              <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="mAlto()" (ngModelChange)="mAlto.set($event)" aria-label="Alto real en cm" /></label>
+              <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="mEspesor()" (ngModelChange)="mEspesor.set($event)" aria-label="Espesor real en cm" /></label>
+            </div>
+
+            <label class="field-check">
+              <input type="checkbox" [checked]="mTienePlano()" (change)="mTienePlano.set($any($event.target).checked)" />
+              <span>Tengo la medida del plano</span>
+            </label>
+            @if (mTienePlano()) {
+              <label class="field-label">Medidas del plano (cm)</label>
+              <div class="parte__molde-dims">
+                <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="mpLargo()" (ngModelChange)="mpLargo.set($event)" aria-label="Largo del plano en cm" /></label>
+                <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="mpAlto()" (ngModelChange)="mpAlto.set($event)" aria-label="Alto del plano en cm" /></label>
+                <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="mpEspesor()" (ngModelChange)="mpEspesor.set($event)" aria-label="Espesor del plano en cm" /></label>
+              </div>
+            }
+
+            <!-- Esquema en vivo -->
+            <app-molde-esquema [forma]="mForma()" [tramos]="mTramosPreview()" [medidaPlano]="mPlanoPreview()" [toleranciaCm]="moldeTolerancia" />
+
+            <label class="field-label">Nota (opcional)</label>
+            <input class="field" type="text" [ngModel]="mNotas()" (ngModelChange)="mNotas.set($event)" placeholder="Algo que aclarar del molde" aria-label="Nota del molde" />
+
+            <!-- Foto opcional -->
+            @if (mFoto()) {
+              <app-photo-slot class="parte__restr-foto" label="Foto del molde" hint="📷" [foto]="mFoto()" (cleared)="clearMoldeFoto()" />
+            } @else {
+              <app-photo-slot class="parte__restr-foto" label="Agregar foto del molde (opcional)" hint="➕" (captured)="mFoto.set($event)" />
+            }
+
+            <button type="button" class="btn-ghost" (click)="addMolde()">+ Agregar molde</button>
+          </div>
+
+          <!-- Moldes agregados -->
+          @for (m of moldes(); track m.key) {
+            <div class="parte__molde">
+              <div class="parte__dano-top">
+                <span class="parte__dano-name">{{ m.identificador }}@if (m.estructura) { <small class="parte__molde-estr"> · {{ m.estructura }}</small> }</span>
+                <button type="button" class="parte__act-x" (click)="removeMolde(m.key)">Quitar</button>
+              </div>
+              <app-molde-esquema [forma]="m.forma" [tramos]="moldeTramos(m)" [medidaPlano]="moldePlano(m)" [toleranciaCm]="moldeTolerancia" />
+            </div>
+          }
+        }
+      }
+
+      <!-- 11. Datos finales (S8) -->
+      @if (step() === 11) {
         <h1 class="screen__title">Datos finales</h1>
         <label class="field-label">Ingeniero responsable <span class="parte__req">*</span></label>
         <!-- AV3 — una obra puede tener varios ingenieros: elige entre los de la obra
@@ -534,8 +694,8 @@
         <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
       }
 
-      <!-- 10. Resumen (no editable) -->
-      @if (step() === 10) {
+      <!-- 12. Resumen (no editable) -->
+      @if (step() === 12) {
         <h1 class="screen__title">Revisa y envía</h1>
         <ul class="resumen">
           <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
@@ -577,6 +737,30 @@
                   @if (e.danado) { <span class="parte__tag parte__tag--dano">Dañado: {{ e.dano_detalle }}</span> }
                 </li>
               }
+            }
+          </ul>
+        }
+
+        <!-- Daños de material / equipo propio (BP4) -->
+        @if (huboDanos() && danos().length) {
+          <h2 class="parte__resumen-h">Daños</h2>
+          <ul class="parte__bloque-acts">
+            @for (d of danos(); track d.key) {
+              <li>
+                {{ d.nombre }} — {{ d.cantidad }} {{ d.unidad || '' }}
+                <span class="parte__tag" [class.parte__tag--dano]="d.tipo === 'equipo_propio'">{{ d.tipo === 'material' ? 'Material' : 'Equipo propio' }}</span>
+                @if (d.tipo === 'material' && d.solicita_retiro) { <span class="parte__tag parte__tag--retiro">Retiro</span> }
+              </li>
+            }
+          </ul>
+        }
+
+        <!-- Moldes (BO9) -->
+        @if (huboMoldes() && moldes().length) {
+          <h2 class="parte__resumen-h">Moldes</h2>
+          <ul class="parte__bloque-acts">
+            @for (m of moldes(); track m.key) {
+              <li>{{ m.identificador }}@if (m.estructura) { · {{ m.estructura }} } — {{ m.largo_cm }}×{{ m.espesor_cm }} cm@if (m.tienePlano) { <span class="parte__tag">con plano</span> }</li>
             }
           </ul>
         }

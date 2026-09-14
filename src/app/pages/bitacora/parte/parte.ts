@@ -7,6 +7,9 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
+import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
+import { MoldeEsquema, MoldeTramo } from '../../../shared/ui/molde-esquema/molde-esquema';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -21,6 +24,7 @@ import { CronogramaService } from '../../../core/services/cronograma.service';
 import { ValidacionCampoError } from '../../../core/util/validar';
 import { CronogramaTarea } from '../../../core/models/cronograma.model';
 import { BitacoraService } from '../../../core/services/bitacora.service';
+import { InventarioService } from '../../../core/services/inventario.service';
 import { ProyectosService } from '../../../core/services/proyectos.service';
 import { ResponsableProyecto } from '../../../core/models/proyecto.model';
 import { NetworkService } from '../../../core/services/network.service';
@@ -31,14 +35,26 @@ import {
   ACTIVIDADES,
   ActividadEntry,
   CatOrdenado,
+  DanoEntry,
+  MoldeEntry,
   ESTRUCTURAS,
   MOTIVOS_SIN_ACTIVIDAD,
   Proyecto,
   ProyectoPartida,
   RESTRICCIONES,
 } from '../../../core/models/bitacora.model';
+import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 
-const TOTAL = 10;
+// BP4 daños = paso 9, BO9 moldes = paso 10; ingeniero pasa a 11, resumen a 12.
+const TOTAL = 12;
+// BO9 — formas de molde (5 opciones + el esquema las dibuja como rectángulo base).
+const MOLDE_FORMAS: { value: string; label: string; icon: string }[] = [
+  { value: 'rectangular', label: 'Rectangular', icon: '▭' },
+  { value: 'L', label: 'En L', icon: 'L' },
+  { value: 'T', label: 'En T', icon: 'T' },
+  { value: 'U', label: 'En U', icon: 'U' },
+  { value: 'circular', label: 'Circular', icon: '◯' },
+];
 // S6 — mínimo de fotos por bitácora (espejo del RPC). BK5: el padre NO creó el knob
 // `bitacora_min_fotos`, así que sigue hardcodeado (ver docs/bk5-limites-fotos.md).
 const MIN_FOTOS = 2;
@@ -52,7 +68,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot],
+  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -61,6 +77,7 @@ export class PartePage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private camera = inject(CameraService);
   private bitacora = inject(BitacoraService);
+  private inventario = inject(InventarioService);
   private proyectosSvc = inject(ProyectosService);
   private cronograma = inject(CronogramaService);
   private network = inject(NetworkService);
@@ -175,6 +192,54 @@ export class PartePage implements OnDestroy {
   // Z22/AA10 — fotos (VARIAS) por equipo dañado (nombre → fotos). No se persiste
   // en el borrador (como las demás fotos, se retoman tomándolas de nuevo).
   equipoDanoFotos = signal<Record<string, CapturedPhoto[]>>({});
+
+  // BP4 — daños de material / equipo propio (paso 9). Las fotos van en un mapa
+  // aparte (llave = key de la fila), como los equipos dañados; no se persisten en
+  // el borrador (se retoman), igual que el resto de fotos del parte.
+  huboDanos = signal<boolean | null>(null);
+  danos = signal<DanoRow[]>([]);
+  danoFotos = signal<Record<string, CapturedPhoto[]>>({});
+  danoTipoNuevo = signal<'material' | 'equipo_propio'>('material');
+  danoLibreNombre = signal('');
+  danoEquipoNombre = signal('');
+  // Catálogo de artículos (para el selector del material dañado).
+  articulosCat = signal<ArticuloCat[]>([]);
+  categoriasCat = signal<CategoriaInv[]>([]);
+  danoBuscador = (q: string) => this.inventario.buscarArticulos(q).then((r) => r as ArticuloCat[]);
+  danoExcludeIds = computed(() =>
+    this.danos().map((d) => d.articulo_id).filter((x): x is string => !!x),
+  );
+
+  // BO9 — moldes del día (paso 10). Cada molde se arma en un formulario y se
+  // "Agrega" a la lista; el esquema SVG se dibuja en vivo. Fotos aparte (mapa por
+  // key), no se persisten en el borrador (se retoman), como el resto del parte.
+  readonly moldeFormas = MOLDE_FORMAS;
+  readonly moldeTolerancia = 2; // BO9 — prod: parametros.molde_tolerancia_cm = 2
+  huboMoldes = signal<boolean | null>(null);
+  moldes = signal<MoldeRow[]>([]);
+  moldeFotos = signal<Record<string, CapturedPhoto[]>>({});
+  // Formulario del molde en edición.
+  mEstructura = signal('');
+  mIdentificador = signal('');
+  mForma = signal('rectangular');
+  mLargo = signal<number | null>(null);
+  mAlto = signal<number | null>(null);
+  mEspesor = signal<number | null>(null);
+  mTienePlano = signal(false);
+  mpLargo = signal<number | null>(null);
+  mpAlto = signal<number | null>(null);
+  mpEspesor = signal<number | null>(null);
+  mNotas = signal('');
+  mFoto = signal<CapturedPhoto | null>(null);
+  // Esquema en vivo del molde en edición.
+  mTramosPreview = computed<MoldeTramo[]>(() => [
+    { lado: 'A', largo_cm: this.mLargo(), alto_cm: this.mAlto(), espesor_cm: this.mEspesor() },
+  ]);
+  mPlanoPreview = computed<MoldeTramo[] | null>(() =>
+    this.mTienePlano()
+      ? [{ lado: 'A', largo_cm: this.mpLargo(), alto_cm: this.mpAlto(), espesor_cm: this.mpEspesor() }]
+      : null,
+  );
 
   comentarios = signal('');
 
@@ -325,6 +390,10 @@ export class PartePage implements OnDestroy {
         hayRetirar: this.hayRetirar(),
         hayDanados: this.hayDanados(),
         equiposAlquilados: this.equiposAlquilados(),
+        huboDanos: this.huboDanos(), // BP4
+        danos: this.danos(), // BP4 (sin fotos)
+        huboMoldes: this.huboMoldes(), // BO9
+        moldes: this.moldes(), // BO9 (sin fotos)
         comentarios: this.comentarios(),
         tareaVinculada: this.tareaVinculada(), // Y15.8
         completarTarea: this.completarTarea(), // Y15.8
@@ -382,6 +451,11 @@ export class PartePage implements OnDestroy {
     // Q6 — catálogo de unidades (offline) para el selector del trabajo realizado.
     void this.bitacora.getUnidades().then((u) => this.unidades.set(u));
 
+    // BP4 — catálogo de artículos/categorías para el selector del material dañado
+    // (paso 9). Best-effort/offline: sin catálogo el usuario usa el texto libre.
+    void this.inventario.getArticulos().then((a) => this.articulosCat.set(a)).catch(() => {});
+    void this.inventario.getCategorias().then((c) => this.categoriasCat.set(c)).catch(() => {});
+
     // S5 — resolver la clave del borrador: retomar uno existente (?borrador=)
     // o empezar uno nuevo. Antes migramos el borrador legacy 'parte_diario'.
     await this.borrador.migrateLegacyParte();
@@ -417,6 +491,10 @@ export class PartePage implements OnDestroy {
       this.hayRetirar.set(draft.hayRetirar ?? false);
       this.hayDanados.set(draft.hayDanados ?? false);
       this.equiposAlquilados.set(draft.equiposAlquilados ?? []);
+      this.huboDanos.set(draft.huboDanos ?? null); // BP4
+      this.danos.set(draft.danos ?? []); // BP4 (fotos se retoman)
+      this.huboMoldes.set(draft.huboMoldes ?? null); // BO9
+      this.moldes.set(draft.moldes ?? []); // BO9 (fotos se retoman)
       this.comentarios.set(draft.comentarios ?? '');
       this.tareaVinculada.set(draft.tareaVinculada ?? null); // Y15.8
       this.completarTarea.set(draft.completarTarea ?? false); // Y15.8
@@ -875,6 +953,227 @@ export class PartePage implements OnDestroy {
     this.danoNombre.set('');
   }
 
+  // ── Paso 9 — daños de material / equipo propio (BP4) ───────────────────────
+
+  onHuboDanosChange(v: boolean): void {
+    this.huboDanos.set(v);
+    if (!v) {
+      // Al decir "No", suelta las fotos de todos los daños y limpia la lista.
+      const m = this.danoFotos();
+      for (const k of Object.keys(m)) for (const p of m[k]) URL.revokeObjectURL(p.previewUrl);
+      this.danoFotos.set({});
+      this.danos.set([]);
+    }
+  }
+
+  setDanoTipoNuevo(t: 'material' | 'equipo_propio'): void {
+    this.danoTipoNuevo.set(t);
+  }
+
+  /** Agrega un daño de material del catálogo (desde el selector). */
+  addDanoMaterial(a: ArticuloCat): void {
+    if (this.danos().some((d) => d.articulo_id === a.id)) return;
+    this.danos.update((l) => [
+      {
+        key: crypto.randomUUID(),
+        tipo: 'material',
+        articulo_id: a.id,
+        nombre: a.nombre,
+        cantidad: 1,
+        unidad: a.unidad || 'UND',
+        detalle: '',
+        solicita_retiro: false,
+      },
+      ...l,
+    ]);
+  }
+
+  /** Agrega un daño de material NO catalogado (texto libre). */
+  addDanoLibre(): void {
+    const nombre = this.danoLibreNombre().trim();
+    if (!nombre) return;
+    this.danos.update((l) => [
+      {
+        key: crypto.randomUUID(),
+        tipo: 'material',
+        articulo_id: null,
+        nombre,
+        cantidad: 1,
+        unidad: 'UND',
+        detalle: '',
+        solicita_retiro: false,
+      },
+      ...l,
+    ]);
+    this.danoLibreNombre.set('');
+  }
+
+  /** Agrega un daño de equipo PROPIO (texto libre; no hay catálogo equipo_obra). */
+  addDanoEquipo(): void {
+    const nombre = this.danoEquipoNombre().trim();
+    if (!nombre) return;
+    this.danos.update((l) => [
+      {
+        key: crypto.randomUUID(),
+        tipo: 'equipo_propio',
+        articulo_id: null,
+        nombre,
+        cantidad: 1,
+        unidad: 'UND',
+        detalle: '',
+        solicita_retiro: false,
+      },
+      ...l,
+    ]);
+    this.danoEquipoNombre.set('');
+  }
+
+  setDanoCantidad(key: string, v: number): void {
+    this.danos.update((l) => l.map((d) => (d.key === key ? { ...d, cantidad: Math.max(0.01, v || 0) } : d)));
+  }
+  setDanoUnidad(key: string, u: string): void {
+    this.danos.update((l) => l.map((d) => (d.key === key ? { ...d, unidad: u || null } : d)));
+  }
+  setDanoItemDetalle(key: string, v: string): void {
+    this.danos.update((l) => l.map((d) => (d.key === key ? { ...d, detalle: v } : d)));
+  }
+  toggleDanoRetiro(key: string): void {
+    this.danos.update((l) => l.map((d) => (d.key === key ? { ...d, solicita_retiro: !d.solicita_retiro } : d)));
+  }
+  removeDano(key: string): void {
+    // Suelta las fotos de esa fila.
+    this.danoFotos.update((m) => {
+      const next = { ...m };
+      for (const p of next[key] ?? []) URL.revokeObjectURL(p.previewUrl);
+      delete next[key];
+      return next;
+    });
+    this.danos.update((l) => l.filter((d) => d.key !== key));
+  }
+
+  getDanoFotos(key: string): CapturedPhoto[] {
+    return this.danoFotos()[key] ?? [];
+  }
+  addDanoFoto(key: string, photo: CapturedPhoto): void {
+    this.danoFotos.update((m) => ({ ...m, [key]: [...(m[key] ?? []), photo] }));
+  }
+  removeDanoFoto(key: string, index: number): void {
+    this.danoFotos.update((m) => {
+      const list = m[key] ?? [];
+      const it = list[index];
+      if (it) URL.revokeObjectURL(it.previewUrl);
+      return { ...m, [key]: list.filter((_, i) => i !== index) };
+    });
+  }
+
+  // ── Paso 10 — moldes del día (BO9) ─────────────────────────────────────────
+
+  /** ¿Alguna actividad del parte es ENCOFRADO? (default automático de "trabajé moldes"). */
+  tieneEncofrado(): boolean {
+    return this.actividades().some((a) => (a.actividad ?? '').toUpperCase().includes('ENCOFRADO'));
+  }
+
+  onHuboMoldesChange(v: boolean): void {
+    this.huboMoldes.set(v);
+    if (!v) {
+      const m = this.moldeFotos();
+      for (const k of Object.keys(m)) for (const p of m[k]) URL.revokeObjectURL(p.previewUrl);
+      this.moldeFotos.set({});
+      this.moldes.set([]);
+      this.resetMoldeForm();
+    }
+  }
+
+  setMForma(f: string): void {
+    this.mForma.set(f);
+  }
+
+  async addMoldeFoto(): Promise<void> {
+    if (this.capturing()) return;
+    this.capturing.set(true);
+    try {
+      const photo = await this.camera.takePhoto();
+      if (photo) {
+        const prev = this.mFoto();
+        if (prev) URL.revokeObjectURL(prev.previewUrl);
+        this.mFoto.set(photo);
+      }
+    } finally {
+      this.capturing.set(false);
+    }
+  }
+  clearMoldeFoto(): void {
+    const p = this.mFoto();
+    if (p) URL.revokeObjectURL(p.previewUrl);
+    this.mFoto.set(null);
+  }
+
+  private resetMoldeForm(): void {
+    this.mEstructura.set('');
+    this.mIdentificador.set('');
+    this.mForma.set('rectangular');
+    this.mLargo.set(null);
+    this.mAlto.set(null);
+    this.mEspesor.set(null);
+    this.mTienePlano.set(false);
+    this.mpLargo.set(null);
+    this.mpAlto.set(null);
+    this.mpEspesor.set(null);
+    this.mNotas.set('');
+    this.mFoto.set(null);
+  }
+
+  /** Agrega el molde en edición a la lista (valida identificador + largo/espesor). */
+  addMolde(): void {
+    if (!this.mIdentificador().trim()) {
+      this.toast.error('Ponle un identificador al molde (ej: C-12, Muro eje 3).');
+      return;
+    }
+    if (!this.mLargo() || !this.mEspesor()) {
+      this.toast.error('Captura al menos el largo y el espesor (cm).');
+      return;
+    }
+    const key = crypto.randomUUID();
+    const row: MoldeRow = {
+      key,
+      estructura: this.mEstructura().trim(),
+      identificador: this.mIdentificador().trim(),
+      forma: this.mForma(),
+      largo_cm: this.mLargo(),
+      alto_cm: this.mAlto(),
+      espesor_cm: this.mEspesor(),
+      tienePlano: this.mTienePlano(),
+      p_largo_cm: this.mTienePlano() ? this.mpLargo() : null,
+      p_alto_cm: this.mTienePlano() ? this.mpAlto() : null,
+      p_espesor_cm: this.mTienePlano() ? this.mpEspesor() : null,
+      notas: this.mNotas().trim(),
+    };
+    const foto = this.mFoto();
+    if (foto) this.moldeFotos.update((m) => ({ ...m, [key]: [foto] }));
+    this.moldes.update((l) => [row, ...l]);
+    this.resetMoldeForm();
+  }
+
+  removeMolde(key: string): void {
+    this.moldeFotos.update((m) => {
+      const next = { ...m };
+      for (const p of next[key] ?? []) URL.revokeObjectURL(p.previewUrl);
+      delete next[key];
+      return next;
+    });
+    this.moldes.update((l) => l.filter((m) => m.key !== key));
+  }
+
+  /** Esquema de una fila ya agregada (para el mini-esquema de la lista/resumen). */
+  moldeTramos(m: MoldeRow): MoldeTramo[] {
+    return [{ lado: 'A', largo_cm: m.largo_cm, alto_cm: m.alto_cm, espesor_cm: m.espesor_cm }];
+  }
+  moldePlano(m: MoldeRow): MoldeTramo[] | null {
+    return m.tienePlano
+      ? [{ lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm }]
+      : null;
+  }
+
   // ── Fotos ───────────────────────────────────────────────────────────────
 
   async addFoto(): Promise<void> {
@@ -1071,8 +1370,51 @@ export class PartePage implements OnDestroy {
         // → paso 9.
       }
     }
-    // AA11 — el ingeniero responsable es OBLIGATORIO para pasar del paso 9.
-    if (s === 9 && !this.ingenieroResponsable().trim()) {
+    // BP4 — paso 9: daños de material / equipo propio.
+    if (s === 9) {
+      if (this.huboDanos() === null) {
+        this.toast.error('Dinos si se dañó algún material o equipo propio.');
+        return;
+      }
+      if (this.huboDanos()) {
+        if (!this.danos().length) {
+          this.toast.error('Agrega el material o equipo dañado, o cambia a "No".');
+          return;
+        }
+        const sinDetalle = this.danos().find((d) => !d.detalle.trim());
+        if (sinDetalle) {
+          this.toast.error('Dinos qué le pasó a cada material/equipo dañado.');
+          return;
+        }
+        // material + solicitar retiro ⇒ al menos una foto (espejo del RPC).
+        const retiroSinFoto = this.danos().find(
+          (d) => d.tipo === 'material' && d.solicita_retiro && !this.getDanoFotos(d.key).length,
+        );
+        if (retiroSinFoto) {
+          this.toast.error('Para solicitar el retiro del material dañado, toma al menos una foto.');
+          return;
+        }
+      }
+    }
+    // BO9 — paso 10: moldes del día.
+    if (s === 10) {
+      if (this.huboMoldes() === null) {
+        this.toast.error('Dinos si trabajaste moldes hoy.');
+        return;
+      }
+      if (this.huboMoldes()) {
+        // No perder un molde que quedó lleno en el formulario sin tocar "Agregar".
+        if (this.mIdentificador().trim() && this.mLargo() && this.mEspesor()) {
+          this.addMolde();
+        }
+        if (!this.moldes().length) {
+          this.toast.error('Agrega al menos un molde, o cambia a "No".');
+          return;
+        }
+      }
+    }
+    // AA11 — el ingeniero responsable es OBLIGATORIO para pasar del paso 11.
+    if (s === 11 && !this.ingenieroResponsable().trim()) {
       this.toast.error('Escribe el ingeniero responsable.');
       return;
     }
@@ -1080,6 +1422,10 @@ export class PartePage implements OnDestroy {
     const nextStep = Math.min(this.total(), s + 1);
     if (nextStep === 5) this.paso5.set('sujeto');
     if (nextStep === 8) this.paso8.set('uso');
+    // BO9 — al entrar a moldes, si hubo ENCOFRADO y no se ha respondido, por defecto Sí.
+    if (nextStep === 10 && this.huboMoldes() === null && this.tieneEncofrado()) {
+      this.huboMoldes.set(true);
+    }
     this.step.set(nextStep);
   }
 
@@ -1231,6 +1577,42 @@ export class PartePage implements OnDestroy {
             // Z22/AA10 — fotos (varias) solo para equipos dañados.
             fotos: e.danado ? (this.equipoDanoFotos()[e.equipo.trim()] ?? []).map((p) => p.blob) : [],
           })),
+        // BP4 — daños de material / equipo propio. cantidad SIEMPRE en base:
+        // se captura en la unidad del artículo (unidad_capturada = unidad, factor 1;
+        // el toggle atado/unidad BM5 se puede sumar después, es aditivo).
+        danos:
+          sinAct || !this.huboDanos()
+            ? []
+            : this.danos().map((d) => ({
+                tipo: d.tipo,
+                articulo_id: d.articulo_id,
+                nombre_libre: d.articulo_id ? null : d.nombre.trim() || null,
+                cantidad: d.cantidad,
+                unidad: d.unidad,
+                unidad_capturada: d.unidad,
+                factor_aplicado: 1,
+                detalle: d.detalle.trim(),
+                solicita_retiro: d.tipo === 'material' ? d.solicita_retiro : false,
+                fotos: (this.danoFotos()[d.key] ?? []).map((p) => p.blob),
+              })),
+        // BO9 — moldes del día. Un tramo por molde (largo/alto/espesor en cm); el
+        // server empareja tramos↔plano por posición y calcula la desviación.
+        moldes:
+          sinAct || !this.huboMoldes()
+            ? []
+            : this.moldes().map((m) => ({
+                estructura: m.estructura || null,
+                identificador: m.identificador || null,
+                forma: m.forma,
+                tramos: [
+                  { lado: 'A', largo_cm: m.largo_cm, alto_cm: m.alto_cm, espesor_cm: m.espesor_cm },
+                ],
+                medida_plano: m.tienePlano
+                  ? [{ lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm }]
+                  : null,
+                notas: m.notas.trim() || null,
+                fotos: (this.moldeFotos()[m.key] ?? []).map((p) => p.blob),
+              })),
       });
       // Y15.8 — vincular a la tarea del cronograma (op aparte, espera a que la
       // bitácora se sincronice). Best-effort: nunca bloquea el guardado del parte.
@@ -1282,6 +1664,37 @@ interface EquipoRow {
   otro?: boolean;
 }
 
+/** BP4 — una fila de daño en la UI (material o equipo propio). `key` estable para
+ *  llavear sus fotos en `danoFotos` frente a la recreación del objeto. */
+interface DanoRow {
+  key: string;
+  tipo: 'material' | 'equipo_propio';
+  /** material del catálogo (o null si es libre / equipo propio). */
+  articulo_id: string | null;
+  /** nombre visible (= nombre_libre cuando no hay articulo_id). */
+  nombre: string;
+  cantidad: number;
+  unidad: string | null;
+  detalle: string;
+  solicita_retiro: boolean;
+}
+
+/** BO9 — una fila de molde en la UI. `key` estable para llavear sus fotos. */
+interface MoldeRow {
+  key: string;
+  estructura: string;
+  identificador: string;
+  forma: string;
+  largo_cm: number | null;
+  alto_cm: number | null;
+  espesor_cm: number | null;
+  tienePlano: boolean;
+  p_largo_cm: number | null;
+  p_alto_cm: number | null;
+  p_espesor_cm: number | null;
+  notas: string;
+}
+
 /** Forma persistida del borrador del parte (S5). */
 interface ParteDraft {
   proyectoId: string;
@@ -1308,6 +1721,10 @@ interface ParteDraft {
   hayRetirar?: boolean;
   hayDanados?: boolean;
   equiposAlquilados?: EquipoRow[];
+  huboDanos?: boolean | null; // BP4
+  danos?: DanoRow[]; // BP4 (sin fotos: se retoman)
+  huboMoldes?: boolean | null; // BO9
+  moldes?: MoldeRow[]; // BO9 (sin fotos: se retoman)
   comentarios: string;
   tareaVinculada?: string | null; // Y15.8
   completarTarea?: boolean; // Y15.8

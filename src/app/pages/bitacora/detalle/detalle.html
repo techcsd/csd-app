@@ -142,6 +142,55 @@
         </ul>
       }
 
+      <!-- BP4 — daños de material / equipo propio -->
+      @if (bit.danos?.length) {
+        <h2 class="det__section">Daños</h2>
+        <ul class="det__list">
+          @for (d of bit.danos; track $index) {
+            <li>
+              {{ d.articulo?.nombre || d.nombre_libre || 'Material' }}@if (d.cantidad != null) { — {{ d.cantidad }} {{ d.unidad || '' }} }
+              <b class="det__flag det__flag--dano">{{ d.tipo === 'material' ? 'Material' : 'Equipo propio' }}</b>
+              @if (d.detalle) { <span class="det__dano-detalle">{{ d.detalle }}</span> }
+              @if (d.retiro?.folio) {
+                <button type="button" class="det__ret-link" (click)="irARetiros()">{{ d.retiro?.folio }}</button>
+              } @else if (d.solicita_retiro) {
+                <b class="det__flag det__flag--retiro">Retiro solicitado</b>
+              }
+              @if (danoFotos()[$index]?.length) {
+                <div class="det__media det__media--dano">
+                  @for (u of danoFotos()[$index]; track u) {
+                    <a class="det__foto" [href]="u" target="_blank" rel="noopener"><img [src]="u" alt="foto del daño" loading="lazy" /></a>
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <!-- BO9 — moldes del día -->
+      @if (bit.moldes?.length) {
+        <h2 class="det__section">Moldes</h2>
+        @for (m of bit.moldes; track $index) {
+          <div class="det__molde">
+            <div class="det__molde-top">
+              <span class="det__molde-id">{{ m.identificador || 'Molde' }}@if (m.estructura) { <small>· {{ m.estructura }}</small> }</span>
+              @if (moldeFuera(m)) {
+                <b class="det__flag det__flag--dano">Desvío {{ m.desviacion_max_cm }} cm</b>
+              }
+            </div>
+            <app-molde-esquema [forma]="m.forma || 'rectangular'" [tramos]="moldeTramos(m)" [medidaPlano]="moldePlano(m)" [toleranciaCm]="moldeTolerancia" />
+            @if (moldeFotos()[$index]?.length) {
+              <div class="det__media det__media--dano">
+                @for (u of moldeFotos()[$index]; track u) {
+                  <a class="det__foto" [href]="u" target="_blank" rel="noopener"><img [src]="u" alt="foto del molde" loading="lazy" /></a>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+
       @if (bit.incidente_descripcion) {
         <h2 class="det__section">Descripción</h2>
         <p class="det__desc">{{ bit.incidente_descripcion }}</p>

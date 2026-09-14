@@ -1,0 +1,95 @@
+// BP5 — estilo de la vista Markdown (Dev notes). Tokens BD3 (cero hex nuevo).
+// Legible con el sol: texto ≥15px, bloques de código con scroll horizontal.
+.md {
+  color: var(--color-text);
+  font-size: 15px;
+  line-height: 1.6;
+  word-break: break-word;
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--color-text);
+    line-height: 1.25;
+    margin: 1.1em 0 0.5em;
+  }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.28rem; }
+  h3 { font-size: 1.12rem; }
+  h4 { font-size: 1rem; }
+
+  p { margin: 0.5em 0; }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+
+  ul,
+  ol {
+    margin: 0.5em 0;
+    padding-left: 1.4em;
+  }
+  li { margin: 0.2em 0; }
+
+  blockquote {
+    margin: 0.7em 0;
+    padding: 0.2em 0.9em;
+    border-left: 3px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+
+  // Código en línea.
+  code {
+    font-family: ui-monospace, 'Courier New', monospace;
+    font-size: 0.9em;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0.1em 0.35em;
+  }
+
+  // Bloque de código: SIEMPRE con scroll horizontal (no rompe el layout).
+  pre {
+    margin: 0.7em 0;
+    padding: 0.85em;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow-x: auto;
+
+    code {
+      display: block;
+      background: transparent;
+      border: 0;
+      padding: 0;
+      white-space: pre;
+    }
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 0.7em 0;
+  }
+  th,
+  td {
+    border: 1px solid var(--color-border);
+    padding: 0.4em 0.6em;
+    text-align: left;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 1em 0;
+  }
+}

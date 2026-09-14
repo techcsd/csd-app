@@ -66,6 +66,8 @@ export class NotasPage {
     const arch = this.verArchivadas();
     const mias = this.tab() === 'mias';
     return this.notas().filter((n) => {
+      // BP5 — las Dev notes (ambito='dev') viven en Tecnología, no en la lista general.
+      if (n.ambito === 'dev') return false;
       if (mias ? !n.es_mia : !n.compartida) return false;
       if (!!n.archivada !== arch) return false;
       if (!q) return true;

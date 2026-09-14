@@ -15,6 +15,18 @@
       }
     </div>
 
+    <!-- BP5 — Dev notes: notas técnicas en Markdown, solo para roles de Tecnología. -->
+    @if (esTecnologia()) {
+      <button type="button" class="tec__devnotes" (click)="abrirDevNotes()">
+        <span class="tec__devnotes-icon">🧑‍💻</span>
+        <span class="tec__devnotes-txt">
+          <span class="tec__devnotes-title">Dev notes</span>
+          <span class="tec__devnotes-sub">Notas técnicas en Markdown (lectura)</span>
+        </span>
+        <span class="tec__devnotes-caret">›</span>
+      </button>
+    }
+
     <!-- Tabs — Versiones + Dudas para todos; "Reportes de errores" solo para
          roles de Tecnología (Z26/Z30). -->
     <div class="tec__tabs">

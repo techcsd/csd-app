@@ -209,3 +209,40 @@
   flex-wrap: wrap;
   margin-top: 14px;
 }
+
+// BP4 — daños de material / equipo propio.
+.det__dano-detalle {
+  color: var(--color-text-secondary);
+}
+.det__ret-link {
+  background: none;
+  border: 0;
+  padding: 0 4px;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.det__media--dano {
+  margin-top: 6px;
+}
+
+// BO9 — moldes del día.
+.det__molde {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+}
+.det__molde-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.det__molde-id {
+  font-weight: 700;
+  color: var(--color-text);
+}

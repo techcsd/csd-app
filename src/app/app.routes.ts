@@ -837,6 +837,13 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/tecnologia/tecnologia').then((m) => m.TecnologiaPage),
   },
+  {
+    // BP5 — Dev notes (Tecnología): solo lectura. Gate por rol es_tecnologia()
+    // dentro del componente (la RLS de sgc.notas ambito='dev' lo respalda).
+    path: 'tecnologia/dev-notes',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/tecnologia/dev-notes/dev-notes').then((m) => m.DevNotesPage),
+  },
   // AL2 — Inventario tecnológico (módulo Tecnología real). Gating admin|tecnologia.
   {
     path: 'tecnologia-inventario',

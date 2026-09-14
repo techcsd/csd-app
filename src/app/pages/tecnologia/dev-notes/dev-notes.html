@@ -1,0 +1,90 @@
+<div class="screen dnotes">
+  <header class="dnotes__header">
+    <button type="button" class="dnotes__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="dnotes__icon">🧑‍💻</span>
+    <h1 class="dnotes__title">Dev notes</h1>
+  </header>
+
+  <div class="screen__body">
+    <!-- Tabs -->
+    <div class="dnotes__tabs">
+      <button type="button" class="dnotes__tab" [class.dnotes__tab--on]="tab() === 'mias'" (click)="setTab('mias')">
+        Mis notas
+      </button>
+      <button type="button" class="dnotes__tab" [class.dnotes__tab--on]="tab() === 'compartidas'" (click)="setTab('compartidas')">
+        Compartidas conmigo
+      </button>
+    </div>
+
+    <!-- Búsqueda -->
+    <input
+      class="field dnotes__search"
+      type="search"
+      autocapitalize="off"
+      autocomplete="off"
+      [ngModel]="busqueda()"
+      (ngModelChange)="busqueda.set($event)"
+      placeholder="🔎 Buscar en tus notas técnicas"
+      aria-label="Buscar en Dev notes"
+    />
+
+    <!-- Etiquetas -->
+    @if (tagsDisponibles().length) {
+      <div class="dnotes__tags">
+        @for (t of tagsDisponibles(); track t) {
+          <button type="button" class="dnotes__tag" [class.dnotes__tag--on]="tagFiltro() === t" (click)="toggleTag(t)">
+            #{{ t }}
+          </button>
+        }
+      </div>
+    }
+
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!lista().length) {
+      <app-empty-state
+        icon="🧑‍💻"
+        title="Sin notas"
+        [message]="online ? 'No hay notas técnicas para ver aquí.' : 'Conéctate para ver tus notas técnicas.'"
+      />
+    } @else {
+      <ul class="dnotes__list">
+        @for (n of lista(); track n.id) {
+          <li class="dnotes__item" (click)="abrir(n)">
+            <div class="dnotes__item-top">
+              @if (n.pinned) { <span class="dnotes__pin" aria-label="Fijada">📌</span> }
+              <span class="dnotes__item-title">{{ n.titulo || 'Sin título' }}</span>
+            </div>
+            @if (n.tags?.length) {
+              <div class="dnotes__item-tags">
+                @for (t of n.tags; track t) { <span class="dnotes__item-tag">#{{ t }}</span> }
+              </div>
+            }
+            <span class="dnotes__item-fecha">{{ fechaHora(n.updated_at) }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  <!-- Lector de una nota (solo lectura, Markdown) -->
+  @if (abierta(); as n) {
+    <div class="dnotes__reader">
+      <header class="dnotes__reader-head">
+        <button type="button" class="dnotes__back" (click)="cerrar()" aria-label="Volver">←</button>
+        <h2 class="dnotes__reader-title">{{ n.titulo || 'Sin título' }}</h2>
+      </header>
+      <div class="dnotes__reader-body">
+        @if (n.tags?.length) {
+          <div class="dnotes__item-tags">
+            @for (t of n.tags; track t) { <span class="dnotes__item-tag">#{{ t }}</span> }
+          </div>
+        }
+        <app-markdown-view [source]="n.contenido" />
+      </div>
+      <footer class="dnotes__reader-foot">
+        <button type="button" class="btn-cta" (click)="editarEnWeb(n)">Editar en SGC web</button>
+      </footer>
+    </div>
+  }
+</div>

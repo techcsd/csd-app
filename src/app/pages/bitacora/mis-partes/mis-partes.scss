@@ -189,3 +189,12 @@
   background: var(--Hub-translucid, rgba(255, 179, 0, 0.12));
   color: var(--color-text);
 }
+
+// BP4 — chip de daños en la tarjeta del parte.
+.bit-row__danos {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--color-warning);
+  font-weight: 600;
+}

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { JsonPipe, Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { VersionService, VersionHistorial, CAMBIO_LABEL } from '../../core/services/version.service';
@@ -46,6 +46,7 @@ export class TecnologiaPage {
   private location = inject(Location);
   private ctx = inject(UserContextService);
   private ayuda = inject(AyudaService);
+  private router = inject(Router);
 
   readonly cambioLabel = CAMBIO_LABEL;
   readonly guiaIcono = GUIA_ICONO;
@@ -190,6 +191,11 @@ export class TecnologiaPage {
 
   fmtFecha(iso: string | null): string {
     return iso ? formatFechaMedia(iso) : '—';
+  }
+
+  /** BP5 — abre las Dev notes (solo roles de Tecnología). */
+  abrirDevNotes(): void {
+    void this.router.navigate(['/tecnologia/dev-notes']);
   }
 
   back(): void {

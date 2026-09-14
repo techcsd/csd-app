@@ -16,6 +16,12 @@ export interface Nota {
   archivada: boolean;
   created_at: string;
   updated_at: string;
+  // BP5 — Dev notes: ámbito ('general' para usuarios, 'dev' para Tecnología),
+  // formato del cuerpo ('html' | 'markdown') y etiquetas. Opcionales (retrocompat:
+  // filas viejas llegan sin ellas → 'general'/'html'/[]).
+  ambito?: 'general' | 'dev';
+  formato?: 'html' | 'markdown';
+  tags?: string[];
   // ---- Derivados en el cliente ----
   /** true si el usuario logueado es el dueño. */
   es_mia?: boolean;

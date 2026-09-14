@@ -460,3 +460,97 @@ app-counter {
   font-style: normal;
   font-weight: 700;
 }
+
+// BP4 — daños de material / equipo propio (paso 9). Reusa tokens BD3 (cero hex).
+.parte__dano-tipos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  app-option-button {
+    flex: 1;
+  }
+}
+.parte__dano {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+
+  .field {
+    margin-bottom: 8px;
+  }
+}
+.parte__dano-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.parte__dano-name {
+  font-weight: 700;
+  color: var(--color-text);
+}
+.parte__dano-qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  app-qty-input {
+    flex: 1;
+  }
+}
+.parte__dano-unidad {
+  width: 96px;
+  flex: 0 0 auto;
+}
+
+// BO9 — captura de moldes (paso 10). Tokens BD3 (cero hex).
+.parte__molde-form {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin: 10px 0;
+  background: var(--color-surface);
+}
+.parte__molde-formas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  app-option-button {
+    flex: 1 1 30%;
+  }
+}
+.parte__molde-dims {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  label {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.82rem;
+    color: var(--color-text-secondary);
+  }
+  .field {
+    width: 100%;
+  }
+}
+.parte__molde {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+}
+.parte__molde-estr {
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}

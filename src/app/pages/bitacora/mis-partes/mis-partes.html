@@ -83,6 +83,12 @@
                 @if (b.created_at) { <span class="bit-row__enviada">· enviada {{ fmtHora(b.created_at) }}</span> }
               }
             </span>
+            @if (b.danos?.length) {
+              <span class="bit-row__danos">🧱 {{ b.danos!.length }} {{ b.danos!.length === 1 ? 'daño' : 'daños' }}</span>
+            }
+            @if (b.moldes?.length) {
+              <span class="bit-row__danos">📐 {{ b.moldes!.length }} {{ b.moldes!.length === 1 ? 'molde' : 'moldes' }}</span>
+            }
           </div>
           <span class="bit-row__chev">›</span>
         </button>

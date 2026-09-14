@@ -7,6 +7,8 @@ import {
   ActividadEntry,
   BitacoraFull,
   CatOrdenado,
+  DanoEntry,
+  MoldeEntry,
   EquipoAlquilado,
   IncidenteTipo,
   OrdenTrabajoDetalle,
@@ -54,6 +56,11 @@ export interface ParteDiarioCaptura {
   // Z22/AA10 — cada equipo dañado puede llevar VARIAS fotos, que van a
   // bitacora_equipos_alquilados.fotos_paths[] (+ foto_path = la primera).
   equiposAlquilados: (EquipoAlquilado & { fotos?: Blob[] })[];
+  // BP4 — daños de material / equipo propio (van a sgc.bitacora_danos vía
+  // guardar_bitacora_extra tras crear el parte). Cada uno lleva sus fotos.
+  danos: (DanoEntry & { fotos: Blob[] })[];
+  // BO9 — moldes del día (van a sgc.bitacora_molde_medidas vía la misma RPC).
+  moldes: (MoldeEntry & { fotos: Blob[] })[];
   // Z4 — "No se trabajó en obra": vuela el resto del parte, solo pide el motivo.
   sinActividad: boolean;
   motivoSinActividad: string | null;
@@ -314,6 +321,35 @@ export class BitacoraService {
             .map((f, j) => (f instanceof Blob ? `dano_${i}_${j}` : null))
             .filter((s): s is string => !!s),
         })),
+        // BP4 — daños de material / equipo propio, campo por campo (regla 10). Las
+        // fotos de cada daño viajan por slots `bdano_<i>_<j>`; el handler las
+        // resuelve a fotos_paths y llama guardar_bitacora_extra tras crear el parte.
+        danos: input.danos.map((d, i) => ({
+          tipo: d.tipo,
+          articulo_id: d.articulo_id,
+          nombre_libre: d.nombre_libre,
+          cantidad: d.cantidad,
+          unidad: d.unidad,
+          unidad_capturada: d.unidad_capturada,
+          factor_aplicado: d.factor_aplicado,
+          detalle: d.detalle,
+          solicita_retiro: d.solicita_retiro,
+          fotos_slots: (d.fotos ?? [])
+            .map((f, j) => (f instanceof Blob ? `bdano_${i}_${j}` : null))
+            .filter((s): s is string => !!s),
+        })),
+        // BO9 — moldes del día, campo por campo. Fotos por slots `mfoto_<i>_<j>`.
+        moldes: input.moldes.map((m, i) => ({
+          estructura: m.estructura,
+          identificador: m.identificador,
+          forma: m.forma,
+          tramos: m.tramos,
+          medida_plano: m.medida_plano,
+          notas: m.notas,
+          fotos_slots: (m.fotos ?? [])
+            .map((f, j) => (f instanceof Blob ? `mfoto_${i}_${j}` : null))
+            .filter((s): s is string => !!s),
+        })),
         capturado_en,
       },
       fotos: [
@@ -321,6 +357,8 @@ export class BitacoraService {
         ...this.buildRestriccionFotos(id, input.restricciones),
         ...this.buildRestriccionVoces(id, input.restricciones), // AA9
         ...this.buildEquipoDanoFotos(id, input.equiposAlquilados),
+        ...this.buildDanoBitacoraFotos(id, input.danos), // BP4
+        ...this.buildMoldeFotos(id, input.moldes), // BO9
         ...this.buildVoces(id, input.voces),
       ],
       resumen: { tipo: 'parte_diario', proyecto_id: input.proyectoId, capturado_en },
@@ -459,7 +497,7 @@ export class BitacoraService {
 
   /** AW2/AW5 — select común (incluye usuario_id para el autor + es_aproximada AW1). */
   private readonly BITA_SELECT =
-    'id, fecha, created_at, tipo, usuario_id, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, horas_lluvia, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, sin_actividad, motivo_sin_actividad, motivo_sin_actividad_detalle, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque, es_aproximada), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle, foto_path), archivos:bitacora_archivos(nombre, url, tipo_mime, transcripcion, transcripcion_estado)';
+    'id, fecha, created_at, tipo, usuario_id, comentarios, bloque_entrepiso, ingeniero_responsable, hora_fin_trabajo, personal_carpinteria, personal_acero, trabajadores_casa, otro_personal, incidente_tipo, incidente_gravedad, incidente_subcontratista, incidente_lesionados, incidente_descripcion, incidente_acciones, incidente_suceso, incidente_equipo_nombre, incidente_equipo_alquilado, incidente_equipo_operativo, incidente_equipo_operativo_comentario, llovio, lluvia_detalle, horas_lluvia, hubo_migracion, migracion_obreros, hubo_equipos_alquilados, sin_actividad, motivo_sin_actividad, motivo_sin_actividad_detalle, proyecto:proyectos(nombre), actividades:bitacora_actividades(estructura, actividad, cantidad, unidad, bloque, es_aproximada), restricciones:bitacora_restricciones(tipo_restriccion, descripcion_otro), equipos:bitacora_equipos_alquilados(equipo, uso, proveedor, para_retirar, danado, dano_detalle, foto_path), danos:bitacora_danos(tipo, articulo_id, nombre_libre, cantidad, unidad, detalle, fotos_paths, solicita_retiro, retiro_id, articulo:articulos(nombre), retiro:retiros_material(folio)), moldes:bitacora_molde_medidas(estructura, identificador, forma, tramos, medida_plano, desviacion_max_cm, fotos_paths), archivos:bitacora_archivos(nombre, url, tipo_mime, transcripcion, transcripcion_estado)';
 
   /** AW2 — resuelve el nombre del autor (usuario_id) vía usuarios_por_ids (RLS-safe;
    *  `usuarios` es admin-only). Best-effort: sin red, quedan sin nombre. */
@@ -650,6 +688,44 @@ export class BitacoraService {
     return out;
   }
 
+  /** BP4 — fotos (VARIAS) por daño de material/equipo propio (slots bdano_<i>_<j>).
+   *  El handler las enruta a danos[i].fotos_paths[] (no al montón general). */
+  private buildDanoBitacoraFotos(id: string, danos: { fotos?: Blob[] }[]) {
+    const out: Array<{ id: string; bucket: string; path: string; slot: string; blob: Blob }> = [];
+    danos.forEach((d, i) => {
+      (d.fotos ?? []).forEach((blob, j) => {
+        if (!(blob instanceof Blob)) return;
+        out.push({
+          id: crypto.randomUUID(),
+          bucket: BUCKET,
+          path: `${id}/bdano_${i}_${j}.jpg`,
+          slot: `bdano_${i}_${j}`,
+          blob,
+        });
+      });
+    });
+    return out;
+  }
+
+  /** BO9 — fotos (VARIAS) por molde (slots mfoto_<i>_<j>). El handler las enruta a
+   *  moldes[i].fotos_paths[] (no al montón general). */
+  private buildMoldeFotos(id: string, moldes: { fotos?: Blob[] }[]) {
+    const out: Array<{ id: string; bucket: string; path: string; slot: string; blob: Blob }> = [];
+    moldes.forEach((m, i) => {
+      (m.fotos ?? []).forEach((blob, j) => {
+        if (!(blob instanceof Blob)) return;
+        out.push({
+          id: crypto.randomUUID(),
+          bucket: BUCKET,
+          path: `${id}/mfoto_${i}_${j}.jpg`,
+          slot: `mfoto_${i}_${j}`,
+          blob,
+        });
+      });
+    });
+    return out;
+  }
+
   /** Z23 — N notas de voz como adjuntos de audio (bitacora_archivos). El handler
    *  las reconoce por la extensión .webm y las marca tipo_mime audio/webm. */
   private buildVoces(id: string, blobs: Blob[]) {
@@ -669,7 +745,11 @@ export class BitacoraService {
       const fotos = Object.keys(photoPaths)
         .filter(
           (slot) =>
-            !slot.startsWith('restr_') && !slot.startsWith('dano_') && !slot.startsWith('restraudio_'),
+            !slot.startsWith('restr_') &&
+            !slot.startsWith('dano_') &&
+            !slot.startsWith('bdano_') && // BP4 — fotos de daños de material/equipo propio
+            !slot.startsWith('mfoto_') && // BO9 — fotos de moldes
+            !slot.startsWith('restraudio_'),
         )
         .map((slot) => {
           const path = photoPaths[slot];
@@ -759,6 +839,68 @@ export class BitacoraService {
         p_incidente_subcontratista: payload['incidente_subcontratista'] ?? null,
       });
       if (error) throwSyncError(error);
+
+      // BP4 — daños de material / equipo propio. Se escriben con un SEGUNDO RPC
+      // (guardar_bitacora_extra) DESPUÉS de que el parte exista: crear_bitacora_app
+      // es idempotente por p_id y guardar_bitacora_extra es un REEMPLAZO por
+      // bitacora_id → un reintento del outbox no duplica nada. Los slots bdano_*
+      // ya subieron; se resuelven a fotos_paths[] campo por campo (regla 10).
+      const danos = ((payload['danos'] as
+        | {
+            tipo: string;
+            articulo_id: string | null;
+            nombre_libre: string | null;
+            cantidad: number | null;
+            unidad: string | null;
+            unidad_capturada: string | null;
+            factor_aplicado: number | null;
+            detalle: string;
+            solicita_retiro: boolean;
+            fotos_slots?: string[] | null;
+          }[]
+        | undefined) ?? []).map((d) => ({
+        tipo: d.tipo,
+        articulo_id: d.articulo_id,
+        nombre_libre: d.nombre_libre,
+        cantidad: d.cantidad,
+        unidad: d.unidad,
+        unidad_capturada: d.unidad_capturada,
+        factor_aplicado: d.factor_aplicado,
+        detalle: d.detalle,
+        solicita_retiro: d.solicita_retiro,
+        fotos_paths: (d.fotos_slots ?? [])
+          .map((s) => photoPaths[s])
+          .filter((p): p is string => !!p),
+      }));
+      // BO9 — moldes del día (misma RPC guardar_bitacora_extra). Fotos mfoto_* → paths.
+      const moldes = ((payload['moldes'] as
+        | {
+            estructura: string | null;
+            identificador: string | null;
+            forma: string;
+            tramos: unknown;
+            medida_plano: unknown;
+            notas: string | null;
+            fotos_slots?: string[] | null;
+          }[]
+        | undefined) ?? []).map((m) => ({
+        estructura: m.estructura,
+        identificador: m.identificador,
+        forma: m.forma,
+        tramos: m.tramos,
+        medida_plano: m.medida_plano,
+        notas: m.notas,
+        fotos_paths: (m.fotos_slots ?? [])
+          .map((s) => photoPaths[s])
+          .filter((p): p is string => !!p),
+      }));
+      if (danos.length || moldes.length) {
+        const { error: eExtra } = await this.supabase.client.rpc('guardar_bitacora_extra', {
+          p_bitacora_id: payload['id'],
+          p_extra: { danos, moldes },
+        });
+        if (eExtra) throwSyncError(eExtra);
+      }
 
       // Alert management by email on incidents (fire-and-forget; the incident
       // is already in SGC + on the dashboard regardless).

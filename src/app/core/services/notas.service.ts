@@ -40,6 +40,7 @@ export class NotasService {
         .from('notas')
         .select(
           'id, owner_id, titulo, contenido, color, pinned, archivada, created_at, updated_at, ' +
+            'ambito, formato, tags, ' + // BP5 — Dev notes
             'compartidos:nota_compartidos(usuario_id, permiso)',
         )
         .order('updated_at', { ascending: false });
@@ -83,6 +84,10 @@ export class NotasService {
       archivada: (r['archivada'] as boolean) ?? false,
       created_at: r['created_at'] as string,
       updated_at: r['updated_at'] as string,
+      // BP5 — ámbito/formato/tags (retrocompat: filas viejas → general/html/[]).
+      ambito: ((r['ambito'] as string) ?? 'general') === 'dev' ? 'dev' : 'general',
+      formato: ((r['formato'] as string) ?? 'html') === 'markdown' ? 'markdown' : 'html',
+      tags: (r['tags'] as string[]) ?? [],
       es_mia: esMia,
       compartida: !esMia,
       permiso: esMia ? 'editar' : (miShare?.permiso ?? 'ver'),

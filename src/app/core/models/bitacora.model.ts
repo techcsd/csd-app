@@ -100,6 +100,71 @@ export interface EquipoAlquilado {
   foto_path?: string | null;
 }
 
+/** BP4 — un daño de MATERIAL o EQUIPO PROPIO capturado en el parte diario. El
+ *  equipo ALQUILADO dañado NO va aquí (sigue en EquipoAlquilado). `cantidad` va
+ *  SIEMPRE en unidad base (disciplina BM5); `unidad_capturada`/`factor_aplicado`
+ *  son la traza. Lo consume sgc.guardar_bitacora_extra (p_extra.danos). */
+export interface DanoEntry {
+  tipo: 'material' | 'equipo_propio';
+  /** material del catálogo (o null si es texto libre / equipo propio). */
+  articulo_id: string | null;
+  /** nombre libre: material no catalogado o el nombre del equipo propio. */
+  nombre_libre: string | null;
+  cantidad: number | null;
+  unidad: string | null;
+  unidad_capturada: string | null;
+  factor_aplicado: number | null;
+  detalle: string;
+  /** Solo material: pide el retiro a almacén (crea un RET-…). */
+  solicita_retiro: boolean;
+}
+
+/** BP4 — un daño leído del detalle de la bitácora (sgc.bitacora_danos). */
+export interface BitacoraDano {
+  tipo: string;
+  articulo_id: string | null;
+  nombre_libre: string | null;
+  cantidad: number | null;
+  unidad: string | null;
+  detalle: string | null;
+  fotos_paths: string[] | null;
+  solicita_retiro: boolean | null;
+  retiro_id: string | null;
+  articulo?: { nombre: string } | null;
+  retiro?: { folio: string } | null;
+}
+
+/** BO9 — un tramo (lado) de un molde, en centímetros enteros. */
+export interface MoldeTramoEntry {
+  lado?: string;
+  largo_cm?: number | null;
+  alto_cm?: number | null;
+  espesor_cm?: number | null;
+}
+
+/** BO9 — un molde capturado en el parte (medidas reales + opcional del plano). Lo
+ *  consume sgc.guardar_bitacora_extra (p_extra.moldes); el server calcula la
+ *  desviación real↔plano y avisa si supera la tolerancia. */
+export interface MoldeEntry {
+  estructura: string | null;
+  identificador: string | null;
+  forma: string;
+  tramos: MoldeTramoEntry[];
+  medida_plano: MoldeTramoEntry[] | null;
+  notas: string | null;
+}
+
+/** BO9 — un molde leído del detalle (sgc.bitacora_molde_medidas). */
+export interface BitacoraMolde {
+  estructura: string | null;
+  identificador: string | null;
+  forma: string | null;
+  tramos: MoldeTramoEntry[] | null;
+  medida_plano: MoldeTramoEntry[] | null;
+  desviacion_max_cm: number | null;
+  fotos_paths: string[] | null;
+}
+
 /** S2 — un valor de catálogo ya ordenado por catalogo_ordenado (destacado = de
  *  los ~3 más usados en esa obra, va primero). */
 export interface CatOrdenado {
@@ -174,6 +239,10 @@ export interface BitacoraFull {
   actividades?: { estructura: string; actividad: string; cantidad?: number | null; unidad?: string | null; bloque?: string | null; es_aproximada?: boolean | null }[];
   restricciones?: { tipo_restriccion: string; descripcion_otro: string | null }[];
   equipos?: EquipoAlquilado[];
+  // BP4 — daños de material / equipo propio (tabla hija bitacora_danos).
+  danos?: BitacoraDano[];
+  // BO9 — moldes del día (tabla hija bitacora_molde_medidas).
+  moldes?: BitacoraMolde[];
   archivos?: {
     nombre: string;
     url: string;

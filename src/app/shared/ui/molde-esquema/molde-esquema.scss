@@ -1,0 +1,21 @@
+// BO9 — esquema del molde. Tokens de la app (--color-*, cero hex). Legible con el
+// sol: trazo del real ≥2px, texto de cotas ≥14px.
+.molde-esquema {
+  &__real { stroke: var(--color-text); stroke-width: 2.5; }
+  &__plano { stroke: var(--color-text-secondary); stroke-width: 2; }
+  &__cota { stroke: var(--color-text-secondary); stroke-width: 1.25; }
+  &__bad { stroke: var(--color-danger); stroke-width: 2.5; }
+  &__label {
+    fill: var(--color-text-secondary);
+    font-size: 14px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+  }
+  &__bad-text { fill: var(--color-danger); font-weight: 700; }
+  &__foot {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    &--bad { color: var(--color-danger); font-weight: 700; }
+  }
+  &__empty { color: var(--color-text-secondary); font-size: 14px; margin: 8px 0; }
+}
