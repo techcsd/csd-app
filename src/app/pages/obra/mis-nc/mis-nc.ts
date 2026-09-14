@@ -24,6 +24,9 @@ export class MisNcPage {
   private location = inject(Location);
 
   loading = signal(true);
+  // BL2 — distinguir "sin pendientes" (lista vacía) de "no se pudo cargar" (falló
+  // la consulta / sin señal); sin esto un error mostraba "Todo al día" (falso).
+  error = signal(false);
   items = signal<NcAsignada[]>([]);
   expandido = signal<string | null>(null);
   evidencia = signal<CapturedPhoto | null>(null);
@@ -44,8 +47,12 @@ export class MisNcPage {
 
   async cargar(): Promise<void> {
     this.loading.set(true);
+    this.error.set(false);
     try {
       this.items.set(await this.obra.misNcAsignadas());
+    } catch {
+      // BL2 — la consulta falló (sin señal / error): NO es "todo al día".
+      this.error.set(true);
     } finally {
       this.loading.set(false);
     }
