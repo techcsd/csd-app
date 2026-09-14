@@ -235,8 +235,10 @@ export class PartePage implements OnDestroy {
   mTramosPreview = computed<MoldeTramo[]>(() => [
     { lado: 'A', largo_cm: this.mLargo(), alto_cm: this.mAlto(), espesor_cm: this.mEspesor() },
   ]);
+  // BO9 — el plano solo cuenta si tiene largo Y espesor: un plano a medio llenar
+  // (null) haría que el esquema marque un falso "fuera de tolerancia" (num(null)=0).
   mPlanoPreview = computed<MoldeTramo[] | null>(() =>
-    this.mTienePlano()
+    this.mTienePlano() && this.mpLargo() && this.mpEspesor()
       ? [{ lado: 'A', largo_cm: this.mpLargo(), alto_cm: this.mpAlto(), espesor_cm: this.mpEspesor() }]
       : null,
   );
@@ -1133,6 +1135,12 @@ export class PartePage implements OnDestroy {
       this.toast.error('Captura al menos el largo y el espesor (cm).');
       return;
     }
+    // BO9 — si dijo que tiene el plano, que lo complete (o desmarque); un plano a
+    // medias produce una desviación falsa en el esquema y en el server.
+    if (this.mTienePlano() && (!this.mpLargo() || !this.mpEspesor())) {
+      this.toast.error('Completa el largo y el espesor del plano, o desmarca "Tengo la medida del plano".');
+      return;
+    }
     const key = crypto.randomUUID();
     const row: MoldeRow = {
       key,
@@ -1169,7 +1177,7 @@ export class PartePage implements OnDestroy {
     return [{ lado: 'A', largo_cm: m.largo_cm, alto_cm: m.alto_cm, espesor_cm: m.espesor_cm }];
   }
   moldePlano(m: MoldeRow): MoldeTramo[] | null {
-    return m.tienePlano
+    return m.tienePlano && m.p_largo_cm && m.p_espesor_cm
       ? [{ lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm }]
       : null;
   }
@@ -1524,6 +1532,20 @@ export class PartePage implements OnDestroy {
       this.step.set(7);
       return;
     }
+    // BP4 — un daño material con retiro necesita ≥1 foto (espejo del RPC). Tras
+    // recuperar un borrador las fotos se retoman (danoFotos NO se persiste), así
+    // que revalidamos aquí: sin esto, crear_bitacora_app crea la bitácora pero
+    // guardar_bitacora_extra la rechaza en bucle (bitácora a medias en SGC).
+    if (!this.sinActividad() && this.huboDanos()) {
+      const retiroSinFoto = this.danos().find(
+        (d) => d.tipo === 'material' && d.solicita_retiro && !this.getDanoFotos(d.key).length,
+      );
+      if (retiroSinFoto) {
+        this.toast.error(`Para el retiro de "${retiroSinFoto.nombre}" necesitas al menos una foto. Vuelve a tomarla.`);
+        this.step.set(9);
+        return;
+      }
+    }
     this.submitting.set(true);
     try {
       // Z5 — obreros migrados por CANTIDAD (stepper). La web lee migracion_obreros
@@ -1607,9 +1629,10 @@ export class PartePage implements OnDestroy {
                 tramos: [
                   { lado: 'A', largo_cm: m.largo_cm, alto_cm: m.alto_cm, espesor_cm: m.espesor_cm },
                 ],
-                medida_plano: m.tienePlano
-                  ? [{ lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm }]
-                  : null,
+                medida_plano:
+                  m.tienePlano && m.p_largo_cm && m.p_espesor_cm
+                    ? [{ lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm }]
+                    : null,
                 notas: m.notas.trim() || null,
                 fotos: (this.moldeFotos()[m.key] ?? []).map((p) => p.blob),
               })),
