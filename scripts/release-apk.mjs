@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.20.0';
+const VERSION = '2.21.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,18 +58,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '1.96.4';
-const RELEASED_AT = '2026-09-13';
+const MIN_VERSION = '2.21.0';
+const RELEASED_AT = '2026-09-14';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Fin del bucle del conduce + fecha en las requisiciones';
+const TITULO = 'Daños y moldes en la bitácora del día';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Transporte', d: 'Al generar un conduce (o crear una ruta) con un vehículo que acabas de recibir, ya no te manda en círculos a «Uso de vehículo». Se acabó el bucle: pasas directo.' },
-  { t: 'arreglo', m: 'Flota', d: 'Logística y los jefes de flota ya pueden registrar combustible de cualquier vehículo y pasar un salto de kilometraje para revisión, no solo el administrador.' },
-  { t: 'nuevo', m: 'Solicitudes', d: 'Al pedir material ahora puedes indicar «¿para cuándo lo necesitas?». La fecha viaja con la requisición y se ve en su detalle, para priorizar por fecha de obra y no solo por urgencia.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'En el parte del día ahora puedes reportar si se dañó algún material o equipo propio de la empresa: dices qué fue, cuánto, qué le pasó y le tomas foto. Si es material, en el mismo paso puedes pedir su retiro al almacén.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Puedes registrar las medidas reales de los moldes del día. El sistema dibuja el esquema al instante y lo compara con el plano, avisando si una medida se sale de la tolerancia.' },
+  { t: 'arreglo', m: 'Inventario', d: 'Al buscar un material que viene en atados o paquetes, el botón para capturar por unidad o por atado ahora también aparece en los resultados de la búsqueda.' },
+  { t: 'arreglo', m: 'Obra', d: '«Mis pendientes» ya no dice «Todo al día» cuando en realidad no hubo señal para cargar: ahora te avisa y te deja reintentar.' },
 ];
 
 const TIPO_POR_COMMIT = {
