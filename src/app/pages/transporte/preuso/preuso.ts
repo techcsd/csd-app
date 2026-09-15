@@ -35,7 +35,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { UserContextService } from '../../../core/services/user-context.service';
-import { formatFecha } from '../../../core/util/fecha';
+import { formatFecha, fechaLocalISO } from '../../../core/util/fecha';
 import {
   PreusoReportService,
   PreusoReportData,
@@ -668,7 +668,9 @@ export class PreusoPage extends GuardedWizard {
         plantillaId: this.plantillaId(),
         plantilla: this.plantillaSel()?.nombre ?? '',
         placa: this.placa(),
-        fecha: new Date().toISOString().slice(0, 10),
+        // BL9 — día LOCAL (RD, UTC-4): un pre-uso nocturno no debe fecharse mañana
+        // (misma tabla checklists_vehiculo que la inspección — ver BQ6).
+        fecha: fechaLocalISO(),
         conductorId: this.conductor()?.id ?? null,
         kilometraje: this.km(),
         nivelCombustible: this.nivelCombustible(),

@@ -67,7 +67,9 @@
   <!-- BK1 — hoja de preferencias de avisos: catálogo del servidor + estado de admin -->
   <app-bottom-sheet [open]="prefsAbierto()" titulo="Preferencias de avisos" (closed)="cerrarPrefs()">
     <div class="avisos-prefs">
-      <p class="avisos-prefs__intro">Elige qué avisos quieres recibir en la app. Los que apagues dejan de llegarte (aquí y como notificación). Algunos los gestiona Administración.</p>
+      <!-- BQ2 — tras destinatarios_notificacion (web 1.130.0) el silencio también
+           aplica al correo; el texto ya no dice "solo en la app". -->
+      <p class="avisos-prefs__intro">Elige qué avisos quieres recibir. Los que apagues dejan de llegarte por todas las vías: aquí, como notificación y por correo. Algunos, por ser críticos o de Administración, siguen llegando.</p>
       @for (e of estadosVisibles(); track e.tipo) {
         @if (editable(e)) {
           <app-toggle-switch [checked]="recibe(e)" [label]="e.etiqueta" (checkedChange)="onTogglePref(e, $event)" />

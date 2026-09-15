@@ -28,7 +28,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
-import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { formatFechaCortaHora, fechaLocalISO } from '../../../core/util/fecha';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
@@ -749,7 +749,10 @@ export class ReporteSemanalPage extends GuardedWizard {
         placa: veh.placa,
         plantillaId: plantilla.id,
         conductorId: this.conductorId,
-        fecha: new Date().toISOString().slice(0, 10),
+        // BQ6/BL9 — día LOCAL (RD, UTC-4). `toISOString().slice(0,10)` daba el día
+        // en UTC → una inspección del domingo 21:00 caía al lunes y la vista de
+        // cumplimiento semanal la contaba en la SEMANA SIGUIENTE (o no la veía).
+        fecha: fechaLocalISO(),
         kilometraje: this.km(),
         nivelCombustible: this.nivelCombustible(),
         observacion: this.observacion().trim() || null,

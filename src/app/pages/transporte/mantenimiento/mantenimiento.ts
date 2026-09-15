@@ -26,6 +26,7 @@ import {
 } from '../../../core/services/mantenimientos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { fechaLocalISO } from '../../../core/util/fecha';
 
 interface TipoOpcion {
   valor: MantenimientoTipo;
@@ -313,7 +314,7 @@ export class MantenimientoPage implements OnDestroy {
         // Solo tiene sentido en visitas no preventivas (guarda anti-inconsistencia).
         incluyePreventivo: this.mostrarIncluyePreventivo() && this.incluyePreventivo(),
         descripcion,
-        fecha: new Date().toISOString().slice(0, 10),
+        fecha: fechaLocalISO(), // BL9 — día LOCAL (RD, UTC-4)
         km: this.km(),
         costo: this.costo(), // AL7
         proveedor: this.taller().trim() || null, // AL7

@@ -235,6 +235,18 @@ export function notifAppRoute(n: {
   if (n.tipo === 'version_publicada' || n.referencia_tipo === 'version' || r.startsWith('/actualizar')) {
     return '/actualizar';
   }
+  // BQ10 — "Compa ya puede ayudarte con esto": el padre guarda la ruta WEB
+  // '/asistente?q=<pregunta>'. En la app el asistente vive en /compa; preservamos
+  // la pregunta para precargarla en el composer (CompaPage lee ?q=).
+  if (n.tipo === 'compa_capacidad_nueva' || r.startsWith('/asistente')) {
+    const raw = r.match(/[?&]q=(.+)$/)?.[1];
+    if (raw) {
+      let q = raw;
+      try { q = decodeURIComponent(raw); } catch { /* venía sin codificar */ }
+      return `/compa?q=${encodeURIComponent(q)}`;
+    }
+    return '/compa';
+  }
   // AQ6 — consumo anormal → detalle de LA echada (no la bandeja genérica de avisos).
   // El id viene en referencia_id o embebido en la ruta web (?echada=<uuid>).
   const echadaId =

@@ -138,6 +138,31 @@ export function tipoOpIcon(t: string): string {
   return TIPO_ICON[t] ?? '📄';
 }
 
+/**
+ * BQ7 — sustantivo corto (singular/plural) para la barra de sincronización: "3
+ * echadas de combustible con problema", en vez del genérico "3 con problema". Solo
+ * cubre los tipos de captura de campo que suelen atascarse; el resto cae a un
+ * "envío(s)" neutro para no forzar una gramática rara sobre etiquetas largas.
+ */
+const TIPO_NOUN: Record<string, [string, string]> = {
+  combustible: ['echada de combustible', 'echadas de combustible'],
+  bitacora: ['parte de bitácora', 'partes de bitácora'],
+  reporte_semanal: ['inspección de vehículo', 'inspecciones de vehículo'],
+  checklist_preuso: ['pre-uso de vehículo', 'pre-usos de vehículo'],
+  vehiculo_entrega: ['entrega de vehículo', 'entregas de vehículo'],
+  mantenimiento: ['mantenimiento', 'mantenimientos'],
+  crear_ruta: ['ruta', 'rutas'],
+  solicitud: ['requisición', 'requisiciones'],
+  retiro_material: ['retiro de material', 'retiros de material'],
+  inv_salida: ['salida de inventario', 'salidas de inventario'],
+  inv_entrada: ['entrada de inventario', 'entradas de inventario'],
+};
+export function tipoOpNoun(t: string, n: number): string {
+  const pair = TIPO_NOUN[t];
+  if (pair) return n === 1 ? pair[0] : pair[1];
+  return n === 1 ? 'envío' : 'envíos';
+}
+
 /** BG3 — etiquetas legibles de las claves del payload para la vista de contenido. */
 export const CAMPO_LABEL: Record<string, string> = {
   proyecto_id: 'Obra',

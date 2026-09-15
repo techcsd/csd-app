@@ -203,6 +203,12 @@ export class SyncService {
   pendingCount = signal(0);
   errorCount = signal(0);
   syncing = signal(false);
+  /** BQ7 — id del PRIMER envío en error (orden FIFO de captura), para que la barra
+   *  de sincronización lleve directo al envío con problema (no a la lista genérica). */
+  errorFirstId = signal<string | null>(null);
+  /** BQ7 — conteo de errores por tipo_op, para que la barra diga QUÉ tiene problema
+   *  ("3 echadas de combustible con problema") en vez del genérico "3 con problema". */
+  errorTipos = signal<Map<string, number>>(new Map());
   /** P5 — se incrementa en cada cambio del outbox para que la pantalla
    *  "Pendientes de envío" se refresque sola. */
   changed = signal(0);
@@ -613,7 +619,15 @@ export class SyncService {
     this.pendingCount.set(
       visible.filter((o) => o.estado === 'pending' || o.estado === 'syncing').length,
     );
-    this.errorCount.set(visible.filter((o) => o.estado === 'error').length);
+    const errored = visible
+      .filter((o) => o.estado === 'error')
+      .sort((a, b) => a.created_local - b.created_local); // FIFO: el primero capturado
+    this.errorCount.set(errored.length);
+    // BQ7 — primer error (FIFO) + desglose por tipo, para la barra de sincronización.
+    this.errorFirstId.set(errored.length ? errored[0].id : null);
+    const tipos = new Map<string, number>();
+    for (const o of errored) tipos.set(o.tipo_op, (tipos.get(o.tipo_op) ?? 0) + 1);
+    this.errorTipos.set(tipos);
     this.changed.update((n) => n + 1);
   }
 

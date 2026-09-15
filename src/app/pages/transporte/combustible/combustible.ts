@@ -51,7 +51,7 @@ import {
   validarEchadaCliente,
 } from '../../../core/models/combustible.model';
 import { parseNumeroFlexible } from '../../../core/util/numero';
-import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { formatFechaCortaHora, fechaLocalISO } from '../../../core/util/fecha';
 
 /**
  * AE6 — pasos LÓGICOS del wizard (la cantidad y el contenido dependen del modo:
@@ -713,7 +713,8 @@ export class CombustiblePage extends GuardedWizard {
         // Z23-app — echada de persona: sin vehículo ni odómetro ni foto de tablero.
         vehiculoId: persona ? null : this.vehiculoId,
         conductorId: this.conductorId,
-        fecha: new Date().toISOString().slice(0, 10),
+        // BL9 — día LOCAL (RD, UTC-4): una echada de la noche no debe fecharse mañana.
+        fecha: fechaLocalISO(),
         kilometraje: persona ? null : this.km()!,
         galones: this.galones()!,
         // AC11 — depósito en obra: el costo es opcional (0 si no se conoce).

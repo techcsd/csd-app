@@ -8,6 +8,7 @@ import {
   TareaLinkedTipo,
   TareaLinkedParams,
 } from '../models/tarea.model';
+import { fechaLocalISO } from '../util/fecha';
 
 const CATALOG_TAREAS = 'mis_tareas';
 const BUCKET = 'inventario';
@@ -101,7 +102,7 @@ export class TareasService {
       id: crypto.randomUUID(),
       tipo_op: 'tarea_app_iniciar',
       capturado_en: new Date().toISOString(),
-      payload: { tarea_id: tareaId, fecha_inicio: new Date().toISOString().slice(0, 10) },
+      payload: { tarea_id: tareaId, fecha_inicio: fechaLocalISO() }, // BL9 — día LOCAL
       fotos: [],
       resumen: { tipo: 'tarea_app_iniciar', tarea_id: tareaId },
     });
@@ -118,7 +119,7 @@ export class TareasService {
       payload: {
         tarea_id: tareaId,
         justificacion: justificacion,
-        fecha_fin: new Date().toISOString().slice(0, 10),
+        fecha_fin: fechaLocalISO(), // BL9 — día LOCAL
       },
       fotos: foto
         ? [{ id: crypto.randomUUID(), bucket: BUCKET, path: `tareas/${tareaId}/${id}.jpg`, slot: 'tarea', blob: foto }]

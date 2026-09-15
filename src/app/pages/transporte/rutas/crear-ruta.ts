@@ -35,6 +35,7 @@ import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { formatearDuracion } from '../../../core/util/duracion';
+import { fechaLocalISO } from '../../../core/util/fecha';
 
 /** AF24.5 — estado del borrador de crear-ruta (sin fotos; se re-capturan). */
 interface CrearRutaDraft {
@@ -783,7 +784,7 @@ export class CrearRutaPage implements OnDestroy {
         tipo: this.tipoRuta(), // AD6 — solo aplica en el alta del chofer (self-assign)
         origen: this.origen().trim(),
         destino: this.destinoTexto(),
-        fecha: new Date().toISOString().slice(0, 10),
+        fecha: fechaLocalISO(), // BL9 — día LOCAL (RD, UTC-4)
         destinoProyectoId: lugar?.tipo === 'obra' ? lugar.id : null,
         kmEstimado: this.km(),
         notas: this.notas().trim() || null,

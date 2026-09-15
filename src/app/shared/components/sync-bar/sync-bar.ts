@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { Router } from '@angular/router';
 import { SyncService } from '../../../core/sync/sync.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { tipoOpNoun } from '../../../core/util/outbox-labels';
 
 /**
  * Fixed bottom bar with the global sync status (todo enviado / N pendientes /
@@ -22,6 +23,7 @@ export class SyncBar {
   online = this.network.online;
   pending = this.sync.pendingCount;
   errors = this.sync.errorCount;
+  errorTipos = this.sync.errorTipos;
   syncing = this.sync.syncing;
 
   state = computed<'offline' | 'syncing' | 'pending' | 'error' | 'clear'>(() => {
@@ -39,9 +41,16 @@ export class SyncBar {
         // "1 con problema" que esconde otras dos bitácoras atascadas en pending era
         // el peor mensaje posible.
         const otros = this.pending();
-        return otros > 0
-          ? `${this.errors() + otros} sin enviar · toca para revisar`
-          : `${this.errors()} con problema · toca para revisar`;
+        if (otros > 0) return `${this.errors() + otros} sin enviar · toca para revisar`;
+        // BQ7 — si TODOS los errores son del mismo tipo, decir QUÉ tiene problema
+        // ("3 echadas de combustible con problema") en vez del genérico "3 con problema".
+        const n = this.errors();
+        const tipos = this.errorTipos();
+        if (tipos.size === 1) {
+          const tipo = tipos.keys().next().value as string;
+          return `${n} ${tipoOpNoun(tipo, n)} con problema · toca para revisar`;
+        }
+        return `${n} con problema · toca para revisar`;
       }
       case 'offline':
         return this.pending() > 0
@@ -73,9 +82,16 @@ export class SyncBar {
 
   /** P5 — tocar la barra abre "Pendientes de envío" (diagnóstico + acciones por
    *  item), en vez de reintentar a ciegas. Si no hay nada pendiente ni en error,
-   *  no hace falta abrir la pantalla. */
+   *  no hace falta abrir la pantalla.
+   *  BQ7 — si hay envíos EN ERROR, va directo al PRIMER envío con problema
+   *  (outbox-detalle: contenido + error + Reintentar/Duplicar), no a la lista. */
   abrir(): void {
     if (this.pending() === 0 && this.errors() === 0) return;
+    const primero = this.sync.errorFirstId();
+    if (this.errors() > 0 && primero) {
+      void this.router.navigate(['/pendientes', primero]);
+      return;
+    }
     void this.router.navigate(['/pendientes']);
   }
 }

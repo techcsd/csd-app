@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { BottomSheet } from '../../shared/ui/bottom-sheet/bottom-sheet';
 import { VoiceRecorder } from '../../shared/ui/voice-recorder/voice-recorder';
 import { CompaService } from '../../core/services/compa.service';
@@ -52,6 +53,7 @@ export class CompaPage {
   private net = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private route = inject(ActivatedRoute);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
   private inputEl = viewChild<ElementRef<HTMLInputElement>>('composer');
@@ -98,6 +100,11 @@ export class CompaPage {
     } catch {
       /* localStorage bloqueado (modo privado): sin persistencia, no es crítico */
     }
+    // BQ10 — deep-link "Compa ya puede ayudarte con esto" (?q=<pregunta>): precarga
+    // la pregunta en el composer para que el usuario solo tenga que enviarla. Un q
+    // explícito manda sobre el borrador guardado (es una intención directa).
+    const q = (this.route.snapshot.queryParamMap.get('q') ?? '').trim();
+    if (q) this.texto.set(q);
     effect(() => {
       const t = this.texto();
       try {
