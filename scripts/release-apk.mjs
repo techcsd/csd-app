@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.21.0';
+const VERSION = '2.22.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,19 +58,20 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '2.21.0';
-const RELEASED_AT = '2026-09-14';
+const MIN_VERSION = '2.22.0';
+const RELEASED_AT = '2026-09-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Daños y moldes en la bitácora del día';
+const TITULO = 'Moldes por forma + compositor, y arreglos de fecha y combustible';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Bitácora', d: 'En el parte del día ahora puedes reportar si se dañó algún material o equipo propio de la empresa: dices qué fue, cuánto, qué le pasó y le tomas foto. Si es material, en el mismo paso puedes pedir su retiro al almacén.' },
-  { t: 'nuevo', m: 'Bitácora', d: 'Puedes registrar las medidas reales de los moldes del día. El sistema dibuja el esquema al instante y lo compara con el plano, avisando si una medida se sale de la tolerancia.' },
-  { t: 'arreglo', m: 'Inventario', d: 'Al buscar un material que viene en atados o paquetes, el botón para capturar por unidad o por atado ahora también aparece en los resultados de la búsqueda.' },
-  { t: 'arreglo', m: 'Obra', d: '«Mis pendientes» ya no dice «Todo al día» cuando en realidad no hubo señal para cargar: ahora te avisa y te deja reintentar.' },
+  { t: 'mejora', m: 'Bitácora', d: 'El esquema de los moldes ahora dibuja la forma que elegiste (L, T, U, circular o rectangular) en lugar de siempre un rectángulo.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Nuevo modo «Compositor» para armar los moldes del día colocando figuras en un lienzo y ajustando sus medidas, además de la ficha de siempre.' },
+  { t: 'arreglo', m: 'Flota', d: 'Una inspección o echada capturada de noche ya no queda con la fecha del día siguiente: se guarda con el día correcto (antes una inspección del domingo por la noche caía a la semana siguiente).' },
+  { t: 'mejora', m: 'Envíos', d: 'La barra de abajo ahora dice qué envío tiene problema (por ejemplo «2 echadas de combustible con problema») y al tocarla te lleva directo a ese envío para revisarlo.' },
+  { t: 'mejora', m: 'Compa', d: 'Cuando te avisemos que Compa ya puede con algo que antes no podía, el aviso abre el chat con tu pregunta lista para enviar.' },
 ];
 
 const TIPO_POR_COMMIT = {
