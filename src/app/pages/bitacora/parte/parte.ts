@@ -10,6 +10,7 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { ArticuloPicker } from '../../../shared/ui/articulo-picker/articulo-picker';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import { MoldeEsquema, MoldeTramo } from '../../../shared/ui/molde-esquema/molde-esquema';
+import { MoldeCompositor, CompositorFigura } from '../../../shared/ui/molde-compositor/molde-compositor';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { Counter } from '../../../shared/ui/counter/counter';
 import { OptionButton } from '../../../shared/ui/option-button/option-button';
@@ -68,7 +69,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema],
+  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -218,6 +219,12 @@ export class PartePage implements OnDestroy {
   huboMoldes = signal<boolean | null>(null);
   moldes = signal<MoldeRow[]>([]);
   moldeFotos = signal<Record<string, CapturedPhoto[]>>({});
+  // BQ8(c) — dos modos de captura de moldes: "Ficha" (formulario, default) y
+  // "Compositor" (lienzo con figuras). Ambos escriben la MISMA lista `moldes` → el
+  // payload no cambia. El compositor gestiona las filas con key `fig_*`; las de la
+  // ficha (key UUID) se conservan aparte para no perderlas al alternar.
+  moldeModo = signal<'ficha' | 'compositor'>('ficha');
+  compositorFiguras = signal<CompositorFigura[]>([]);
   // Formulario del molde en edición.
   mEstructura = signal('');
   mIdentificador = signal('');
@@ -396,6 +403,8 @@ export class PartePage implements OnDestroy {
         danos: this.danos(), // BP4 (sin fotos)
         huboMoldes: this.huboMoldes(), // BO9
         moldes: this.moldes(), // BO9 (sin fotos)
+        moldeModo: this.moldeModo(), // BQ8c
+        compositorFiguras: this.compositorFiguras(), // BQ8c
         comentarios: this.comentarios(),
         tareaVinculada: this.tareaVinculada(), // Y15.8
         completarTarea: this.completarTarea(), // Y15.8
@@ -497,6 +506,8 @@ export class PartePage implements OnDestroy {
       this.danos.set(draft.danos ?? []); // BP4 (fotos se retoman)
       this.huboMoldes.set(draft.huboMoldes ?? null); // BO9
       this.moldes.set(draft.moldes ?? []); // BO9 (fotos se retoman)
+      this.moldeModo.set(draft.moldeModo ?? 'ficha'); // BQ8c
+      this.compositorFiguras.set(draft.compositorFiguras ?? []); // BQ8c
       this.comentarios.set(draft.comentarios ?? '');
       this.tareaVinculada.set(draft.tareaVinculada ?? null); // Y15.8
       this.completarTarea.set(draft.completarTarea ?? false); // Y15.8
@@ -1182,6 +1193,46 @@ export class PartePage implements OnDestroy {
       : null;
   }
 
+  // ── BQ8(c) — modo Compositor (lienzo de figuras) ──────────────────────────
+  setMoldeModo(modo: 'ficha' | 'compositor'): void {
+    this.moldeModo.set(modo);
+  }
+
+  /** tipo del compositor → forma del molde (lo que dibuja molde-esquema). */
+  private static readonly FORMA_DE_TIPO: Record<string, string> = {
+    rect: 'rectangular', L: 'L', T: 'T', U: 'U', circle: 'circular',
+  };
+
+  /** Una figura del compositor = un molde (geometría + medidas real/plano). Sin
+   *  estructura/identificador (el compositor es geometría): auto-etiqueta editable
+   *  luego en la ficha si hace falta. */
+  private figuraToMolde(f: CompositorFigura): MoldeRow {
+    const tienePlano = f.plano_largo_cm != null && f.plano_espesor_cm != null;
+    return {
+      key: `fig_${f.id}`,
+      estructura: '',
+      identificador: `Figura ${f.id}`,
+      forma: PartePage.FORMA_DE_TIPO[f.tipo] ?? 'rectangular',
+      largo_cm: f.largo_cm,
+      alto_cm: f.alto_cm,
+      espesor_cm: f.espesor_cm,
+      tienePlano,
+      p_largo_cm: tienePlano ? f.plano_largo_cm ?? null : null,
+      p_alto_cm: tienePlano ? f.plano_alto_cm ?? null : null,
+      p_espesor_cm: tienePlano ? f.plano_espesor_cm ?? null : null,
+      notas: '',
+    };
+  }
+
+  /** El compositor emitió su lista: sincroniza las filas `fig_*` de `moldes`,
+   *  conservando las que se agregaron por la ficha (key UUID). */
+  onCompositorCambio(figuras: CompositorFigura[]): void {
+    this.compositorFiguras.set(figuras);
+    const fichaRows = this.moldes().filter((m) => !m.key.startsWith('fig_'));
+    const figRows = figuras.map((f) => this.figuraToMolde(f));
+    this.moldes.set([...figRows, ...fichaRows]);
+  }
+
   // ── Fotos ───────────────────────────────────────────────────────────────
 
   async addFoto(): Promise<void> {
@@ -1748,6 +1799,8 @@ interface ParteDraft {
   danos?: DanoRow[]; // BP4 (sin fotos: se retoman)
   huboMoldes?: boolean | null; // BO9
   moldes?: MoldeRow[]; // BO9 (sin fotos: se retoman)
+  moldeModo?: 'ficha' | 'compositor'; // BQ8c
+  compositorFiguras?: CompositorFigura[]; // BQ8c
   comentarios: string;
   tareaVinculada?: string | null; // Y15.8
   completarTarea?: boolean; // Y15.8

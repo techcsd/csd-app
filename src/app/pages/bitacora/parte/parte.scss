@@ -509,6 +509,34 @@ app-counter {
 }
 
 // BO9 — captura de moldes (paso 10). Tokens BD3 (cero hex).
+// BQ8c — segmentado Ficha / Compositor
+.parte__molde-modo {
+  display: flex;
+  gap: 6px;
+  margin: 10px 0;
+  padding: 4px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+.parte__seg {
+  flex: 1 1 50%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &--on {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+  }
+}
 .parte__molde-form {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);

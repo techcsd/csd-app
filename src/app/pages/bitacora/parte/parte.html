@@ -575,6 +575,16 @@
         <app-option-button icon="🚫" label="No" tone="success" [selected]="huboMoldes() === false" (pressed)="onHuboMoldesChange(false)" />
 
         @if (huboMoldes()) {
+          <!-- BQ8c — toggle Ficha / Compositor (ambos escriben la misma lista) -->
+          <div class="parte__molde-modo" role="group" aria-label="Modo de captura de moldes">
+            <button type="button" class="parte__seg" [class.parte__seg--on]="moldeModo() === 'ficha'" (click)="setMoldeModo('ficha')">Ficha</button>
+            <button type="button" class="parte__seg" [class.parte__seg--on]="moldeModo() === 'compositor'" (click)="setMoldeModo('compositor')">Compositor</button>
+          </div>
+
+          @if (moldeModo() === 'compositor') {
+            <p class="screen__subtitle">Agrega figuras, muévelas en la rejilla de 5&nbsp;cm y ajusta sus medidas. Cada figura es un molde.</p>
+            <app-molde-compositor [valorInicial]="compositorFiguras()" [toleranciaCm]="moldeTolerancia" (cambio)="onCompositorCambio($event)" />
+          } @else {
           <!-- Molde en edición -->
           <div class="parte__molde-form">
             <label class="field-label">Estructura</label>
@@ -628,8 +638,9 @@
 
             <button type="button" class="btn-ghost" (click)="addMolde()">+ Agregar molde</button>
           </div>
+          }
 
-          <!-- Moldes agregados -->
+          <!-- Moldes agregados (lista compartida entre Ficha y Compositor) -->
           @for (m of moldes(); track m.key) {
             <div class="parte__molde">
               <div class="parte__dano-top">

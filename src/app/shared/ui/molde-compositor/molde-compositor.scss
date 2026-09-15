@@ -1,0 +1,150 @@
+// BQ8(b) — Compositor de moldes. Tokens de la app (--color-*, cero hex). Copia del
+// padre adaptada a móvil: lienzo primero, targets grandes (paleta/tools ≥56px),
+// inputs de propiedades con teclado numérico grande.
+.mc {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: start;
+  outline: none;
+
+  .mc__canvas-wrap { order: -1; }        // móvil-first: el lienzo arriba
+  .mc__palette { flex-direction: row; flex-wrap: wrap; }
+
+  @media (min-width: 901px) {
+    grid-template-columns: 130px 1fr 230px;
+    .mc__canvas-wrap { order: 0; }
+    .mc__palette { flex-direction: column; }
+  }
+}
+
+.mc__palette {
+  display: flex;
+  gap: 8px;
+}
+
+.mc__fig-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;                       // target táctil
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  svg { flex: 0 0 24px; color: var(--color-primary); }
+  &:hover { border-color: var(--color-primary); }
+  &:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+}
+
+.mc__canvas-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.mc__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.mc__tool {
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) { border-color: var(--color-primary); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &--danger:hover:not(:disabled) { border-color: var(--color-danger); color: var(--color-danger); }
+}
+
+.mc__hint { margin-left: auto; color: var(--color-text-secondary); font-size: 12px; }
+
+.mc__canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: var(--color-bg);
+  border-radius: 10px;
+  touch-action: none;                     // el arrastre lo maneja pointer events
+}
+
+.mc__grid { stroke: var(--color-border); stroke-width: 0.5; opacity: 0.5; }
+.mc__grid--major { stroke-width: 1; opacity: 0.8; }
+
+.mc__fig { cursor: move; }
+.mc__shape {
+  fill: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  stroke: var(--color-primary);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+.mc__shape-inner { fill: none; stroke: var(--color-primary); stroke-width: 1; stroke-dasharray: 2 2; }
+.mc__fig--sel .mc__shape { stroke-width: 2.6; }
+.mc__fig--bad .mc__shape { stroke: var(--color-danger); }
+.mc__fig--bad .mc__shape-inner { stroke: var(--color-danger); }
+.mc__handle { fill: var(--color-primary); stroke: var(--color-surface); stroke-width: 1; }
+
+.mc__props { display: flex; flex-direction: column; gap: 10px; }
+.mc__tag {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  border-radius: 6px;
+  padding: 3px 9px;
+}
+.mc__empty { color: var(--color-text-secondary); font-size: 14px; margin: 0; }
+.mc__row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mc__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-secondary); }
+  input {
+    width: 100%;
+    min-height: 48px;                     // teclado numérico grande
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+  }
+  input:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -1px; border-color: var(--color-primary); }
+  &--plano input { border-style: dashed; }
+}
+.mc__desv {
+  margin: 4px 0 0;
+  font-size: 13px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--color-bg);
+  border: 1px solid color-mix(in srgb, var(--color-success) 40%, var(--color-border));
+  color: var(--color-success);
+
+  &--bad { border-color: var(--color-danger); color: var(--color-danger); }
+}
