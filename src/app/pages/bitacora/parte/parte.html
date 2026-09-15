@@ -623,6 +623,30 @@
               </div>
             }
 
+            <!-- BQ8/F3.2 — lados adicionales (molde compuesto L/T/U) -->
+            @for (l of mLados(); track $index) {
+              <div class="parte__molde-lado">
+                <div class="parte__dano-top">
+                  <span class="parte__dano-name">Lado {{ l.lado }}</span>
+                  <button type="button" class="parte__act-x" (click)="removeLado($index)">Quitar</button>
+                </div>
+                <div class="parte__molde-dims">
+                  <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="l.largo_cm" (ngModelChange)="setMLadoCampo($index, 'largo_cm', $event)" aria-label="Largo real del lado en cm" /></label>
+                  <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="l.alto_cm" (ngModelChange)="setMLadoCampo($index, 'alto_cm', $event)" aria-label="Alto real del lado en cm" /></label>
+                  <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="l.espesor_cm" (ngModelChange)="setMLadoCampo($index, 'espesor_cm', $event)" aria-label="Espesor real del lado en cm" /></label>
+                </div>
+                @if (mTienePlano()) {
+                  <label class="field-label">Plano del lado {{ l.lado }} (cm)</label>
+                  <div class="parte__molde-dims">
+                    <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_largo_cm" (ngModelChange)="setMLadoCampo($index, 'p_largo_cm', $event)" aria-label="Largo del plano del lado en cm" /></label>
+                    <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_alto_cm" (ngModelChange)="setMLadoCampo($index, 'p_alto_cm', $event)" aria-label="Alto del plano del lado en cm" /></label>
+                    <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_espesor_cm" (ngModelChange)="setMLadoCampo($index, 'p_espesor_cm', $event)" aria-label="Espesor del plano del lado en cm" /></label>
+                  </div>
+                }
+              </div>
+            }
+            <button type="button" class="btn-ghost parte__molde-add-lado" (click)="addLado()">+ Agregar lado</button>
+
             <!-- Esquema en vivo -->
             <app-molde-esquema [forma]="mForma()" [tramos]="mTramosPreview()" [medidaPlano]="mPlanoPreview()" [toleranciaCm]="moldeTolerancia" />
 

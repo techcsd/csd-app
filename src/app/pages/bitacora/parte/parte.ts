@@ -238,15 +238,28 @@ export class PartePage implements OnDestroy {
   mpEspesor = signal<number | null>(null);
   mNotas = signal('');
   mFoto = signal<CapturedPhoto | null>(null);
-  // Esquema en vivo del molde en edición.
+  // BQ8/F3.2 — lados adicionales (B, C…) del molde en edición.
+  mLados = signal<MoldeLado[]>([]);
+  // Esquema en vivo del molde en edición (lado A + lados adicionales).
   mTramosPreview = computed<MoldeTramo[]>(() => [
     { lado: 'A', largo_cm: this.mLargo(), alto_cm: this.mAlto(), espesor_cm: this.mEspesor() },
+    ...this.mLados().map((l) => ({ lado: l.lado, largo_cm: l.largo_cm, alto_cm: l.alto_cm, espesor_cm: l.espesor_cm })),
   ]);
   // BO9 — el plano solo cuenta si tiene largo Y espesor: un plano a medio llenar
   // (null) haría que el esquema marque un falso "fuera de tolerancia" (num(null)=0).
+  // BQ8/F3.2 — con lados, el plano de cada lado cae a su medida real si se dejó vacío
+  // (desviación 0 en ese lado), manteniendo el pareo posicional tramos↔plano.
   mPlanoPreview = computed<MoldeTramo[] | null>(() =>
     this.mTienePlano() && this.mpLargo() && this.mpEspesor()
-      ? [{ lado: 'A', largo_cm: this.mpLargo(), alto_cm: this.mpAlto(), espesor_cm: this.mpEspesor() }]
+      ? [
+          { lado: 'A', largo_cm: this.mpLargo(), alto_cm: this.mpAlto(), espesor_cm: this.mpEspesor() },
+          ...this.mLados().map((l) => ({
+            lado: l.lado,
+            largo_cm: l.p_largo_cm ?? l.largo_cm,
+            alto_cm: l.p_alto_cm ?? l.alto_cm,
+            espesor_cm: l.p_espesor_cm ?? l.espesor_cm,
+          })),
+        ]
       : null,
   );
 
@@ -1132,8 +1145,32 @@ export class PartePage implements OnDestroy {
     this.mpLargo.set(null);
     this.mpAlto.set(null);
     this.mpEspesor.set(null);
+    this.mLados.set([]); // BQ8/F3.2
     this.mNotas.set('');
     this.mFoto.set(null);
+  }
+
+  // ── BQ8/F3.2 — lados adicionales del molde (multi-tramo) ──────────────────
+  /** Agrega un lado (B, C, …) al molde en edición. */
+  addLado(): void {
+    this.mLados.update((ls) => [
+      ...ls,
+      {
+        lado: String.fromCharCode(66 + ls.length), // B, C, D…
+        largo_cm: null, alto_cm: null, espesor_cm: null,
+        p_largo_cm: null, p_alto_cm: null, p_espesor_cm: null,
+      },
+    ]);
+  }
+  /** Quita un lado y renombra los siguientes para mantener A,B,C… correlativo. */
+  removeLado(i: number): void {
+    this.mLados.update((ls) =>
+      ls.filter((_, idx) => idx !== i).map((l, idx) => ({ ...l, lado: String.fromCharCode(66 + idx) })),
+    );
+  }
+  /** Edita un campo numérico de un lado adicional. */
+  setMLadoCampo(i: number, campo: keyof MoldeLado, valor: number | null): void {
+    this.mLados.update((ls) => ls.map((l, idx) => (idx === i ? { ...l, [campo]: valor } : l)));
   }
 
   /** Agrega el molde en edición a la lista (valida identificador + largo/espesor). */
@@ -1152,6 +1189,8 @@ export class PartePage implements OnDestroy {
       this.toast.error('Completa el largo y el espesor del plano, o desmarca "Tengo la medida del plano".');
       return;
     }
+    // BQ8/F3.2 — lados adicionales válidos (largo + espesor); los vacíos se ignoran.
+    const lados = this.mLados().filter((l) => l.largo_cm && l.espesor_cm);
     const key = crypto.randomUUID();
     const row: MoldeRow = {
       key,
@@ -1165,6 +1204,7 @@ export class PartePage implements OnDestroy {
       p_largo_cm: this.mTienePlano() ? this.mpLargo() : null,
       p_alto_cm: this.mTienePlano() ? this.mpAlto() : null,
       p_espesor_cm: this.mTienePlano() ? this.mpEspesor() : null,
+      lados: lados.length ? lados : undefined,
       notas: this.mNotas().trim(),
     };
     const foto = this.mFoto();
@@ -1185,11 +1225,22 @@ export class PartePage implements OnDestroy {
 
   /** Esquema de una fila ya agregada (para el mini-esquema de la lista/resumen). */
   moldeTramos(m: MoldeRow): MoldeTramo[] {
-    return [{ lado: 'A', largo_cm: m.largo_cm, alto_cm: m.alto_cm, espesor_cm: m.espesor_cm }];
+    return [
+      { lado: 'A', largo_cm: m.largo_cm, alto_cm: m.alto_cm, espesor_cm: m.espesor_cm },
+      ...(m.lados ?? []).map((l) => ({ lado: l.lado, largo_cm: l.largo_cm, alto_cm: l.alto_cm, espesor_cm: l.espesor_cm })),
+    ];
   }
   moldePlano(m: MoldeRow): MoldeTramo[] | null {
     return m.tienePlano && m.p_largo_cm && m.p_espesor_cm
-      ? [{ lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm }]
+      ? [
+          { lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm },
+          ...(m.lados ?? []).map((l) => ({
+            lado: l.lado,
+            largo_cm: l.p_largo_cm ?? l.largo_cm,
+            alto_cm: l.p_alto_cm ?? l.alto_cm,
+            espesor_cm: l.p_espesor_cm ?? l.espesor_cm,
+          })),
+        ]
       : null;
   }
 
@@ -1677,12 +1728,23 @@ export class PartePage implements OnDestroy {
                 estructura: m.estructura || null,
                 identificador: m.identificador || null,
                 forma: m.forma,
+                // BQ8/F3.2 — lado A + lados adicionales; el server empareja tramos↔plano
+                // por posición y calcula la desviación máxima.
                 tramos: [
                   { lado: 'A', largo_cm: m.largo_cm, alto_cm: m.alto_cm, espesor_cm: m.espesor_cm },
+                  ...(m.lados ?? []).map((l) => ({ lado: l.lado, largo_cm: l.largo_cm, alto_cm: l.alto_cm, espesor_cm: l.espesor_cm })),
                 ],
                 medida_plano:
                   m.tienePlano && m.p_largo_cm && m.p_espesor_cm
-                    ? [{ lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm }]
+                    ? [
+                        { lado: 'A', largo_cm: m.p_largo_cm, alto_cm: m.p_alto_cm, espesor_cm: m.p_espesor_cm },
+                        ...(m.lados ?? []).map((l) => ({
+                          lado: l.lado,
+                          largo_cm: l.p_largo_cm ?? l.largo_cm,
+                          alto_cm: l.p_alto_cm ?? l.alto_cm,
+                          espesor_cm: l.p_espesor_cm ?? l.espesor_cm,
+                        })),
+                      ]
                     : null,
                 notas: m.notas.trim() || null,
                 fotos: (this.moldeFotos()[m.key] ?? []).map((p) => p.blob),
@@ -1754,6 +1816,19 @@ interface DanoRow {
 }
 
 /** BO9 — una fila de molde en la UI. `key` estable para llavear sus fotos. */
+/** BQ8/F3.2 — un lado adicional (B, C, …) de un molde compuesto (L/T/U). El lado A
+ *  son los campos planos de MoldeRow; estos son los siguientes. Aditivo: un molde sin
+ *  `lados` se comporta EXACTAMENTE igual que antes (un solo tramo). */
+interface MoldeLado {
+  lado: string;
+  largo_cm: number | null;
+  alto_cm: number | null;
+  espesor_cm: number | null;
+  p_largo_cm: number | null;
+  p_alto_cm: number | null;
+  p_espesor_cm: number | null;
+}
+
 interface MoldeRow {
   key: string;
   estructura: string;
@@ -1766,6 +1841,7 @@ interface MoldeRow {
   p_largo_cm: number | null;
   p_alto_cm: number | null;
   p_espesor_cm: number | null;
+  lados?: MoldeLado[]; // BQ8/F3.2 — lados B, C… (multi-tramo); ausente = un solo tramo
   notas: string;
 }
 

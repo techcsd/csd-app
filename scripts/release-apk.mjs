@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.22.0';
+const VERSION = '2.23.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,20 +58,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '2.22.0';
+const MIN_VERSION = '2.23.0';
 const RELEASED_AT = '2026-09-15';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Moldes por forma + compositor, y arreglos de fecha y combustible';
+const TITULO = 'Moldes con varios lados + combustible de vehículos recibidos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Bitácora', d: 'El esquema de los moldes ahora dibuja la forma que elegiste (L, T, U, circular o rectangular) en lugar de siempre un rectángulo.' },
-  { t: 'nuevo', m: 'Bitácora', d: 'Nuevo modo «Compositor» para armar los moldes del día colocando figuras en un lienzo y ajustando sus medidas, además de la ficha de siempre.' },
-  { t: 'arreglo', m: 'Flota', d: 'Una inspección o echada capturada de noche ya no queda con la fecha del día siguiente: se guarda con el día correcto (antes una inspección del domingo por la noche caía a la semana siguiente).' },
-  { t: 'mejora', m: 'Envíos', d: 'La barra de abajo ahora dice qué envío tiene problema (por ejemplo «2 echadas de combustible con problema») y al tocarla te lleva directo a ese envío para revisarlo.' },
-  { t: 'mejora', m: 'Compa', d: 'Cuando te avisemos que Compa ya puede con algo que antes no podía, el aviso abre el chat con tu pregunta lista para enviar.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'En los moldes del día ahora puedes agregar varios lados (A, B, C…) para describir moldes en L, T o U: cada lado lleva su medida real y la del plano, y el esquema los dibuja juntos.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Si recibiste un vehículo para usarlo, ya puedes registrarle el combustible aunque no sea tu vehículo asignado fijo (antes decía «solo el usuario asignado»).' },
 ];
 
 const TIPO_POR_COMMIT = {

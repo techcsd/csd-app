@@ -554,6 +554,17 @@ app-counter {
     flex: 1 1 30%;
   }
 }
+// BQ8/F3.2 — lado adicional de un molde compuesto
+.parte__molde-lado {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin: 8px 0;
+  background: var(--color-surface-2);
+}
+.parte__molde-add-lado {
+  margin-top: 4px;
+}
 .parte__molde-dims {
   display: flex;
   gap: 8px;
