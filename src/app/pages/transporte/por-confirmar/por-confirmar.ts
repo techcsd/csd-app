@@ -62,6 +62,11 @@ export class PorConfirmarPage {
   llegoTodo = signal<boolean | null>(null);
   notas = signal('');
   enviando = signal(false);
+  // BR4 — rechazo de la entrega (motivo obligatorio + foto opcional).
+  modoRechazo = signal(false);
+  motivoRechazo = signal('');
+  fotoRechazo = signal<CapturedPhoto | null>(null);
+  rechazando = signal(false);
   // QA-13 — cantidades recibidas por item (editables cuando "Faltó algo").
   cantidades = signal<Record<string, number>>({});
   // AU4 — items del conduce traídos del DETALLE al abrir.
@@ -113,6 +118,10 @@ export class PorConfirmarPage {
     this.detalleItems.set([]);
     this.libres.set([]);
     this.cantidades.set({});
+    // BR4 — cerrar/limpiar el modo rechazo al cambiar de fila.
+    this.modoRechazo.set(false);
+    this.motivoRechazo.set('');
+    this.fotoRechazo.set(null);
     if (abriendo) void this.cargarDetalle(id);
   }
 
@@ -219,6 +228,42 @@ export class PorConfirmarPage {
       this.toast.error(err instanceof Error ? err.message : 'No se pudo confirmar. Intenta de nuevo.');
     } finally {
       this.enviando.set(false);
+    }
+  }
+
+  // ── BR4 — rechazar la entrega ("así como confirmo, debo poder rechazar") ────
+  toggleRechazo(): void {
+    this.modoRechazo.update((v) => !v);
+    if (!this.modoRechazo()) {
+      this.motivoRechazo.set('');
+      this.fotoRechazo.set(null);
+    }
+  }
+
+  async rechazar(e: EntregaPorRecibir): Promise<void> {
+    if (this.rechazando()) return;
+    const motivo = this.motivoRechazo().trim();
+    if (!motivo) {
+      this.toast.error('Escribe el motivo del rechazo (es obligatorio).');
+      return;
+    }
+    this.rechazando.set(true);
+    try {
+      // La bandeja del receptor son conduces/salidas; el rechazo va como 'salida'.
+      await this.inventario.enqueueRechazarRecepcion({
+        tipo: 'salida',
+        id: e.salidaId,
+        motivo,
+        foto: this.fotoRechazo()?.blob ?? null,
+      });
+      this.toast.success('Entrega rechazada. Se le avisó a quien la envió para que la corrija.');
+      this.confirmandoId.set('');
+      this.modoRechazo.set(false);
+      this.entregas.update((list) => list.filter((x) => x.salidaId !== e.salidaId));
+    } catch (err) {
+      this.toast.error(err instanceof Error ? err.message : 'No se pudo rechazar. Intenta de nuevo.');
+    } finally {
+      this.rechazando.set(false);
     }
   }
 

@@ -1,0 +1,86 @@
+<div class="screen cart-det">
+  <header class="cart-det__header">
+    <button type="button" class="cart-det__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="cart-det__title">Cartilla</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error() || !cartilla()) {
+      <app-empty-state icon="⚠️" title="No pudimos cargar" message="Revisa tu conexión e intenta de nuevo." />
+      <button type="button" class="btn-cta cart-det__retry" (click)="cargar()">Reintentar</button>
+    } @else if (cartilla(); as c) {
+      <div class="cart-det__top">
+        <span class="cart-det__folio">{{ c.folio }}</span>
+        <span class="cart-det__estado" [attr.data-estado]="c.estado">{{ c.estado }}</span>
+      </div>
+      <div class="cart-det__meta">
+        <div><span>Obra</span><b>{{ c.proyecto_nombre || '—' }}</b></div>
+        <div><span>Fecha</span><b>{{ fmtFecha(c.fecha) }}</b></div>
+        @if (c.ingeniero_nombre) { <div><span>Ingeniero</span><b>{{ c.ingeniero_nombre }}</b></div> }
+        <div><span>Peso total</span><b>{{ (c.peso_total_kg ?? 0) | number:'1.0-1' }} kg</b></div>
+      </div>
+
+      @if (c.estado === 'observada' && c.observacion) {
+        <div class="cart-det__obs">📝 Observación de oficina: {{ c.observacion }}</div>
+      }
+
+      <!-- atados -->
+      @for (a of c.atados; track a.id) {
+        <div class="cart-det__atado">
+          <h3 class="cart-det__atado-t">{{ a.identificador || 'Atado' }} @if (a.elemento) { · {{ a.elemento }} }</h3>
+          @for (p of a.piezas; track p.id) {
+            <div class="cart-det__pieza">
+              <div class="cart-det__fig"><app-figura-acero [codigo]="p.figura_codigo" /></div>
+              <div class="cart-det__pieza-info">
+                <span class="cart-det__pieza-top">{{ p.marca || 'Pieza' }} · Ø {{ p.diametro_codigo }} · {{ p.cantidad }} u</span>
+                <span class="cart-det__pieza-sub">{{ tramosTexto(p.tramos_cm) }} · {{ (p.peso_kg ?? 0) | number:'1.0-1' }} kg</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- fotos -->
+      @if (fotoUrls().length) {
+        <h3 class="cart-det__st">Fotos</h3>
+        <div class="cart-det__fotos">
+          @for (u of fotoUrls(); track u) {
+            <img class="cart-det__foto" [src]="u" alt="Foto de cartilla" />
+          }
+        </div>
+      }
+      @if (planoUrl(); as pu) {
+        <h3 class="cart-det__st">Plano</h3>
+        <img class="cart-det__foto cart-det__foto--wide" [src]="pu" alt="Plano" />
+      }
+
+      <!-- historial -->
+      @if (c.eventos?.length) {
+        <h3 class="cart-det__st">Historial</h3>
+        <div class="cart-det__hist">
+          @for (e of c.eventos; track $index) {
+            <div class="cart-det__evento">
+              <span class="cart-det__evento-est">{{ e.estado_hasta }}</span>
+              <span class="cart-det__evento-fecha">{{ fmtFecha(e.created_at) }}</span>
+              @if (e.nota) { <span class="cart-det__evento-nota">{{ e.nota }}</span> }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- acciones -->
+      <div class="cart-det__acciones">
+        @if (puedeMarcarEjecutada()) {
+          <button type="button" class="btn-cta" [disabled]="marcando()" (click)="marcarEjecutada()">
+            {{ marcando() ? 'Marcando…' : '✅ Marcar ejecutada' }}
+          </button>
+        }
+        <button type="button" class="btn-ghost" [disabled]="generandoPdf()" (click)="descargarPdf()">
+          {{ generandoPdf() ? 'Generando…' : '📄 Descargar PDF' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

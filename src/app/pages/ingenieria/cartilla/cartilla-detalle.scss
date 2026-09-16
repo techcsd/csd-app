@@ -1,0 +1,203 @@
+.cart-det {
+  background: var(--color-bg);
+  min-height: 100%;
+}
+
+.cart-det__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.cart-det__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.cart-det__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.cart-det__retry {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 12px;
+}
+
+.cart-det__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.cart-det__folio {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cart-det__estado {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: capitalize;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.cart-det__estado[data-estado='revisada'],
+.cart-det__estado[data-estado='ejecutada'] {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.cart-det__estado[data-estado='observada'] {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.cart-det__meta {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 4px 14px;
+  margin-bottom: 12px;
+}
+.cart-det__meta div {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.cart-det__meta div:last-child {
+  border-bottom: none;
+}
+.cart-det__meta span {
+  color: var(--color-text-secondary);
+}
+.cart-det__meta b {
+  color: var(--color-text-primary);
+}
+
+.cart-det__obs {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-warning);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.cart-det__atado {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.cart-det__atado-t {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cart-det__pieza {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-border);
+}
+.cart-det__fig {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 34px;
+}
+.cart-det__pieza-info {
+  display: flex;
+  flex-direction: column;
+}
+.cart-det__pieza-top {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.cart-det__pieza-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.cart-det__st {
+  margin: 16px 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cart-det__fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cart-det__foto {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+}
+.cart-det__foto--wide {
+  width: 100%;
+  height: auto;
+  max-height: 260px;
+  object-fit: contain;
+  background: var(--color-surface);
+}
+
+.cart-det__hist {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 4px 14px;
+}
+.cart-det__evento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.cart-det__evento:last-child {
+  border-bottom: none;
+}
+.cart-det__evento-est {
+  font-weight: 800;
+  text-transform: capitalize;
+  color: var(--color-text-primary);
+}
+.cart-det__evento-fecha {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.cart-det__evento-nota {
+  flex-basis: 100%;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.cart-det__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+.cart-det__acciones .btn-cta,
+.cart-det__acciones .btn-ghost {
+  width: 100%;
+  min-height: 56px;
+}

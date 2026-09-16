@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { Router } from '@angular/router';
 import { SyncService } from '../../../core/sync/sync.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { tipoOpNoun } from '../../../core/util/outbox-labels';
 
 /**
@@ -19,6 +20,7 @@ export class SyncBar {
   private sync = inject(SyncService);
   private network = inject(NetworkService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   online = this.network.online;
   pending = this.sync.pendingCount;
@@ -35,33 +37,35 @@ export class SyncBar {
   });
 
   text = computed(() => {
+    const t = (s: string, p?: Record<string, string | number>) => this.i18n.t(s, p);
     switch (this.state()) {
       case 'error': {
         // BI2 — el conteo incluye TODO lo pendiente (error + pending/syncing). Un
         // "1 con problema" que esconde otras dos bitácoras atascadas en pending era
         // el peor mensaje posible.
         const otros = this.pending();
-        if (otros > 0) return `${this.errors() + otros} sin enviar · toca para revisar`;
+        if (otros > 0) return t('{n} sin enviar · toca para revisar', { n: this.errors() + otros });
         // BQ7 — si TODOS los errores son del mismo tipo, decir QUÉ tiene problema
         // ("3 echadas de combustible con problema") en vez del genérico "3 con problema".
+        // El sustantivo (tipoOpNoun) es dato en español; el marco se traduce.
         const n = this.errors();
         const tipos = this.errorTipos();
         if (tipos.size === 1) {
           const tipo = tipos.keys().next().value as string;
-          return `${n} ${tipoOpNoun(tipo, n)} con problema · toca para revisar`;
+          return t('{n} {noun} con problema · toca para revisar', { n, noun: tipoOpNoun(tipo, n) });
         }
-        return `${n} con problema · toca para revisar`;
+        return t('{n} con problema · toca para revisar', { n });
       }
       case 'offline':
         return this.pending() > 0
-          ? `Sin señal · ${this.pending()} se enviarán solos`
-          : 'Sin señal · todo guardado';
+          ? t('Sin señal · {n} se enviarán solos', { n: this.pending() })
+          : t('Sin señal · todo guardado');
       case 'syncing':
-        return 'Enviando…';
+        return t('Enviando…');
       case 'pending':
-        return `${this.pending()} pendientes de enviar`;
+        return t('{n} pendientes de enviar', { n: this.pending() });
       default:
-        return 'Todo enviado';
+        return t('Todo enviado');
     }
   });
 

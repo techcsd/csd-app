@@ -84,6 +84,7 @@
 
 .enp__actions {
   display: flex;
+  flex-wrap: wrap; // BR6 — varias acciones (reintentar/avisar/descartar/ver) sin desbordar
   gap: 10px;
 }
 
@@ -95,4 +96,20 @@
   flex: 0 0 auto;
   width: auto;
   min-width: 110px;
+}
+
+// BR6 — acciones inline de un envío con problema. Targets ≥56px (guantes/sol).
+.enp__retry,
+.enp__avisar {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 120px;
+  min-height: 56px;
+}
+.enp__desc {
+  min-height: 56px;
+}
+.enp__desc--danger {
+  color: var(--color-error);
+  border-color: var(--color-error);
 }

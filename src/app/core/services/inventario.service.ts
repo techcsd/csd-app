@@ -1085,6 +1085,40 @@ export class InventarioService {
     );
   }
 
+  /**
+   * BR4 — rechazar una recepción (entrada o conduce/salida) desde la bandeja del
+   * receptor. "Así como confirmo, debo poder rechazar." Motivo OBLIGATORIO + foto
+   * opcional. Va por el outbox → `rechazar_recepcion(p_tipo, p_id, p_motivo,
+   * p_foto_path)` (no mueve stock; avisa al emisor para corregir y reenviar).
+   */
+  async enqueueRechazarRecepcion(input: {
+    tipo: 'entrada' | 'salida';
+    id: string;
+    motivo: string;
+    foto?: Blob | null;
+  }): Promise<void> {
+    const opId = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const fotos: { id: string; bucket: string; path: string; slot: string; blob: Blob }[] = [];
+    if (input.foto) {
+      fotos.push({
+        id: crypto.randomUUID(),
+        bucket: 'conduces',
+        path: `${input.id}/${opId}-rechazo.jpg`,
+        slot: 'rechazo',
+        blob: input.foto,
+      });
+    }
+    await this.sync.enqueue({
+      id: opId,
+      tipo_op: 'recepcion_rechazar',
+      capturado_en,
+      payload: { id: input.id, tipo: input.tipo, motivo: input.motivo.trim() },
+      fotos,
+      resumen: { tipo: 'recepcion_rechazar', ref_id: input.id, ref_tipo: input.tipo, capturado_en },
+    });
+  }
+
   /** AE — stock del almacén de una obra ({articulo_id: cantidad}) para el preview
    *  de la devolución (avisar si se devuelve más de lo que hay). */
   async existenciasDeObra(proyectoId: string): Promise<Record<string, number>> {
@@ -1163,6 +1197,18 @@ export class InventarioService {
   }
 
   private registerHandlers(): void {
+    // BR4 — rechazo de recepción (entrada|salida) por el receptor. Motivo obligatorio
+    // (el server lo valida con 22023) + foto opcional; no mueve stock.
+    this.sync.register('recepcion_rechazar', async (payload, photoPaths) => {
+      const { error } = await this.supabase.client.rpc('rechazar_recepcion', {
+        p_tipo: payload['tipo'],
+        p_id: payload['id'],
+        p_motivo: payload['motivo'],
+        p_foto_path: photoPaths['rechazo'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
     this.sync.register('inv_salida', async (payload, photoPaths) => {
       const { error } = await this.supabase.client.rpc('registrar_salida_app', {
         p_id: payload['id'],

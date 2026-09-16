@@ -75,6 +75,13 @@
       (checkedChange)="theme.set($event ? 'dark' : 'light')"
     />
 
+    <!-- BR7 — selector de idioma de la app -->
+    <div class="perfil__lang">
+      <span class="perfil__lang-label">{{ 'Idioma de la app' | t }}</span>
+      <app-language-selector />
+      <p class="perfil__lang-note">{{ 'Los catálogos, nombres de obras y mensajes del sistema siguen en español.' | t }}</p>
+    </div>
+
     <button type="button" class="btn-ghost perfil__btn" [disabled]="checking()" (click)="buscarActualizacion()">
       {{ checking() ? 'Buscando…' : '🔄 Buscar actualización' }}
     </button>

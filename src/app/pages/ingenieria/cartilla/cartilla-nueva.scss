@@ -1,0 +1,317 @@
+.cart-nueva {
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.cart-nueva__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.cart-nueva__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.cart-nueva__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.cart-nueva__q {
+  margin: 4px 0 12px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cart-nueva__sub {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.cart-nueva__mt {
+  margin-top: 16px;
+}
+.cart-nueva__vacio {
+  color: var(--color-text-secondary);
+}
+.cart-nueva__aviso {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-warning-soft, var(--color-surface));
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cart-nueva__opts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cart-nueva__fecha {
+  width: 100%;
+}
+
+// ── atados ──
+.cart-atado {
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  overflow: hidden;
+}
+.cart-atado__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 14px;
+  background: transparent;
+  text-align: left;
+}
+.cart-atado__id {
+  flex: 1;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cart-atado__meta {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.cart-atado__arrow {
+  color: var(--color-text-secondary);
+}
+.cart-atado__body {
+  padding: 12px 14px 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+// ── piezas ──
+.cart-pieza {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg);
+}
+.cart-pieza__fig {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 32px;
+}
+.cart-pieza__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.cart-pieza__marca {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.cart-pieza__det {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.cart-pieza__x {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-error);
+  font-size: 18px;
+}
+
+.cart-pieza-form {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.cart-chips,
+.cart-figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.cart-chip {
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+.cart-chip--on {
+  border-color: var(--Hub);
+  background: var(--color-surface);
+}
+.cart-fig {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 84px;
+  min-height: 74px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+}
+.cart-fig--on {
+  border-color: var(--Hub);
+}
+.cart-fig app-figura-acero {
+  display: block;
+  width: 60px;
+  height: 34px;
+}
+.cart-fig__nom {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.cart-tramos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.cart-tramo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cart-tramo__lado {
+  font-weight: 800;
+  color: var(--color-text-secondary);
+}
+.cart-tramo__in {
+  width: 90px;
+}
+.cart-cant {
+  width: 120px;
+}
+.cart-peso-vivo {
+  margin: 10px 0 0;
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.cart-add-pieza {
+  margin-top: 12px;
+}
+.cart-quitar-atado {
+  margin-top: 14px;
+  width: 100%;
+  min-height: 48px;
+  background: transparent;
+  color: var(--color-error);
+  font-weight: 700;
+}
+.cart-add-atado {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 4px;
+}
+
+// ── fotos ──
+.cart-fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cart-foto {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.cart-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cart-foto__x {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-secondary);
+  color: #fff;
+  font-size: 14px;
+}
+
+// ── resumen ──
+.cart-res {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 4px 14px;
+  margin-bottom: 12px;
+}
+.cart-res__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.cart-res__row:last-child {
+  border-bottom: none;
+}
+.cart-res__row span {
+  color: var(--color-text-secondary);
+}
+.cart-res__row b {
+  color: var(--color-text-primary);
+}
+.cart-res__t {
+  margin: 16px 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cart-enviar {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 8px;
+}
+
+// ── footer nav ──
+.cart-nueva__footer {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.cart-nueva__prev {
+  width: auto;
+  min-width: 100px;
+  min-height: 56px;
+}
+.cart-nueva__next {
+  flex: 1;
+  min-height: 56px;
+}

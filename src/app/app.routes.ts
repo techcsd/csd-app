@@ -63,6 +63,22 @@ export const routes: Routes = [
     canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
     loadComponent: () => import('./pages/bitacora/parte/parte').then((m) => m.PartePage),
   },
+  // BO10 — Cartillas de acero (Ingeniería). Mismo gate que el parte (módulo bitacora).
+  {
+    path: 'ingenieria/cartilla',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/ingenieria/cartilla/cartillas-lista').then((m) => m.CartillasListaPage),
+  },
+  {
+    path: 'ingenieria/cartilla/nueva',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/ingenieria/cartilla/cartilla-nueva').then((m) => m.CartillaNuevaPage),
+  },
+  {
+    path: 'ingenieria/cartilla/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () => import('./pages/ingenieria/cartilla/cartilla-detalle').then((m) => m.CartillaDetallePage),
+  },
   {
     path: 'bitacora/incidente',
     canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],

@@ -169,3 +169,38 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+
+// BR4 — rechazar la entrega.
+.porconf__rechazo {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+.porconf__rechazar-link {
+  width: 100%;
+  min-height: 56px;
+  background: transparent;
+  color: var(--color-error);
+  font-weight: 700;
+  font-size: 15px;
+}
+.porconf__rechazo-acciones {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.porconf__rechazo-acciones .btn-ghost {
+  flex: 1;
+  min-height: 56px;
+}
+.btn-danger {
+  flex: 1;
+  min-height: 56px;
+  border-radius: 12px;
+  background: var(--color-error);
+  color: #fff;
+  font-weight: 800;
+}
+.btn-danger:disabled {
+  opacity: 0.6;
+}

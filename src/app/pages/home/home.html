@@ -1,9 +1,9 @@
 <div class="screen home">
   <header class="home__header">
     <div>
-      <p class="home__greeting">Hola, {{ nombre() }} 👷</p>
+      <p class="home__greeting">{{ 'Hola,' | t }} {{ nombre() }} 👷</p>
       @if (obra(); as o) {
-        <p class="home__obra">Obra: {{ o.nombre }}</p>
+        <p class="home__obra">{{ 'Obra:' | t }} {{ o.nombre }}</p>
       }
     </div>
     <div class="home__header-actions">
@@ -13,7 +13,7 @@
           <span class="home__bell-badge">{{ avisosNoLeidos() > 9 ? '9+' : avisosNoLeidos() }}</span>
         }
       </button>
-      <button type="button" class="home__logout" (click)="perfil()" aria-label="Mi perfil" data-tour="perfil">⚙️ Perfil</button>
+      <button type="button" class="home__logout" (click)="perfil()" aria-label="Mi perfil" data-tour="perfil">⚙️ {{ 'Perfil' | t }}</button>
     </div>
   </header>
 
@@ -22,7 +22,7 @@
     <button type="button" class="home__firmar" (click)="irPorRecibir()">
       <span class="home__firmar-icon">📥</span>
       <span class="home__firmar-txt">
-        Tienes {{ porRecibir() }} {{ porRecibir() === 1 ? 'entrega' : 'entregas' }} por recibir
+        {{ (porRecibir() === 1 ? 'Tienes {n} entrega por recibir' : 'Tienes {n} entregas por recibir') | t:{ n: porRecibir() } }}
       </span>
       <span class="home__firmar-go">›</span>
     </button>
@@ -31,9 +31,9 @@
   @if (editMode()) {
     <!-- AF38 — modo edición (admin): arrastrar para reordenar como un launcher -->
     <div class="home__edit-bar">
-      <button type="button" class="btn-ghost" (click)="cancelarOrden()">Cancelar</button>
+      <button type="button" class="btn-ghost" (click)="cancelarOrden()">{{ 'Cancelar' | t }}</button>
       <span class="home__edit-hint">Arrastra para ordenar · toca ⤢ para el tamaño</span>
-      <button type="button" class="btn-cta" (click)="guardarOrden()">Listo</button>
+      <button type="button" class="btn-cta" (click)="guardarOrden()">{{ 'Listo' | t }}</button>
     </div>
     <main class="home__grid home__grid--edit">
       @for (tile of editTiles(); track tile.modulo; let i = $index) {
@@ -49,7 +49,7 @@
           (pointerdown)="onDragStart(i, $event)"
         >
           <span class="home__edit-icon">{{ tile.icon }}</span>
-          <span class="home__edit-label">{{ tile.label }}</span>
+          <span class="home__edit-label">{{ tile.label | t }}</span>
           <button
             type="button"
             class="home__size-btn"
@@ -76,7 +76,7 @@
           <section class="home__group" [class.home__group--collapsed]="grupoColapsado(g.key)">
             <button type="button" class="home__group-hd" [style.--g]="g.color" (click)="toggleGrupo(g.key)">
               <span class="home__group-ic">{{ g.icon }}</span>
-              <span class="home__group-lb">{{ g.label }}</span>
+              <span class="home__group-lb">{{ g.label | t }}</span>
               @if (g.badge) { <span class="home__group-badge">{{ g.badge > 9 ? '9+' : g.badge }}</span> }
               <span class="home__group-chevron" aria-hidden="true">{{ grupoColapsado(g.key) ? '▸' : '▾' }}</span>
             </button>
@@ -85,7 +85,7 @@
                 @for (tile of g.tiles; track tile.modulo) {
                   <app-big-button
                     [icon]="tile.icon"
-                    [label]="tile.label"
+                    [label]="tile.label | t"
                     [tint]="tile.tint"
                     [badge]="badgeFor(tile.modulo)"
                     [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
@@ -100,16 +100,16 @@
       } @else {
         <app-empty-state
           icon="🔑"
-          title="Sin módulos asignados"
-          message="Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso."
-          ctaLabel="Reportar / pedir acceso"
+          [title]="'Sin módulos asignados' | t"
+          [message]="'Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso.' | t"
+          [ctaLabel]="'Reportar / pedir acceso' | t"
           (action)="reportar()"
         />
       }
     </main>
     @if (puedeEditarLayout()) {
       <button type="button" class="home__ordenar" (click)="entrarEdicion()">
-        ✥ Ordenar y redimensionar módulos
+        ✥ {{ 'Ordenar y redimensionar módulos' | t }}
       </button>
     }
   } @else {
@@ -126,7 +126,7 @@
       @for (tile of tiles(); track tile.modulo) {
         <app-big-button
           [icon]="tile.icon"
-          [label]="tile.label"
+          [label]="tile.label | t"
           [tint]="tile.tint"
           [badge]="badgeFor(tile.modulo)"
           [class.home__tile--2x1]="sizeClass(tile.modulo) === '2x1'"
@@ -136,16 +136,16 @@
       } @empty {
         <app-empty-state
           icon="🔑"
-          title="Sin módulos asignados"
-          message="Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso."
-          ctaLabel="Reportar / pedir acceso"
+          [title]="'Sin módulos asignados' | t"
+          [message]="'Tu usuario todavía no tiene módulos habilitados en la app. Escríbenos y administración te dará acceso.' | t"
+          [ctaLabel]="'Reportar / pedir acceso' | t"
           (action)="reportar()"
         />
       }
     </main>
     @if (puedeEditarLayout()) {
       <button type="button" class="home__ordenar" (click)="entrarEdicion()">
-        ✥ Ordenar y redimensionar módulos
+        ✥ {{ 'Ordenar y redimensionar módulos' | t }}
       </button>
     }
   }
@@ -154,11 +154,11 @@
   <footer class="home__footer">
     <!-- AA6/AA7 — Dudas y Visitar web en la misma línea (ocupan menos espacio). -->
     <div class="home__links-row">
-      <button type="button" class="home__link" (click)="dudas()">❓ Dudas y guías</button>
-      <button type="button" class="home__link" (click)="visitarWeb()">🌐 Visitar web</button>
+      <button type="button" class="home__link" (click)="dudas()">❓ {{ 'Dudas y guías' | t }}</button>
+      <button type="button" class="home__link" (click)="visitarWeb()">🌐 {{ 'Visitar web' | t }}</button>
     </div>
     <button type="button" class="home__report" (click)="reportar()" data-tour="reportar">
-      🛟 Reportar un problema o mejora
+      🛟 {{ 'Reportar un problema o mejora' | t }}
     </button>
   </footer>
 

@@ -5,6 +5,7 @@ import { BigButton } from '../../shared/ui/big-button/big-button';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { Onboarding } from '../../shared/components/onboarding/onboarding';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { UserContextService } from '../../core/services/user-context.service';
 import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
@@ -125,7 +126,7 @@ interface HomeGrupoRender extends HomeGroup {
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, EmptyState, SyncBar, Onboarding],
+  imports: [BigButton, EmptyState, SyncBar, Onboarding, TranslatePipe],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })

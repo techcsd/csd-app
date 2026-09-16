@@ -2,7 +2,7 @@
   <header class="enp__header">
     <button type="button" class="enp__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="enp__icon">📝</span>
-    <h1 class="enp__title">Documentación en proceso</h1>
+    <h1 class="enp__title">{{ 'Documentación en proceso' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,13 +11,13 @@
     } @else if (!items().length) {
       <app-empty-state
         icon="✅"
-        title="Nada pendiente"
-        message="Aquí aparecen los formularios que empezaste y los envíos que aún no confirma el servidor."
+        [title]="'Nada pendiente' | t"
+        [message]="'Aquí aparecen los formularios que empezaste y los envíos que aún no confirma el servidor.' | t"
       />
     } @else {
       <!-- Grupo 1: borradores a medio llenar -->
       @if (borradores().length) {
-        <h2 class="enp__group">A medio llenar</h2>
+        <h2 class="enp__group">{{ 'A medio llenar' | t }}</h2>
         @for (b of borradores(); track b.id) {
           <div class="enp__card">
             <div class="enp__info">
@@ -25,8 +25,8 @@
               <span class="enp__fecha">Guardado {{ fmt(b.updated_at) }}</span>
             </div>
             <div class="enp__actions">
-              <button type="button" class="btn-cta enp__retomar" (click)="retomar(b)">Retomar</button>
-              <button type="button" class="btn-ghost enp__desc" (click)="pedirDescartar(b)">Descartar</button>
+              <button type="button" class="btn-cta enp__retomar" (click)="retomar(b)">{{ 'Retomar' | t }}</button>
+              <button type="button" class="btn-ghost enp__desc" (click)="pedirDescartar(b)">{{ 'Descartar' | t }}</button>
             </div>
           </div>
         }
@@ -34,20 +34,38 @@
 
       <!-- Grupo 2: envíos en la cola del outbox -->
       @if (envios().length) {
-        <h2 class="enp__group">Pendientes de envío</h2>
+        <h2 class="enp__group">{{ 'Pendientes de envío' | t }}</h2>
         @for (e of envios(); track e.id) {
           <div class="enp__card">
             <div class="enp__info">
               <span class="enp__label">{{ e.etiqueta }}</span>
               @if (e.estado === 'error') {
-                <span class="enp__estado enp__estado--error">⚠ Con problema al enviar</span>
+                <span class="enp__estado enp__estado--error">⚠ {{ 'Con problema al enviar' | t }}</span>
               } @else {
-                <span class="enp__estado enp__estado--cola">⏳ En cola para enviar</span>
+                <span class="enp__estado enp__estado--cola">⏳ {{ 'En cola para enviar' | t }}</span>
               }
               <span class="enp__fecha">Capturado {{ fmt(e.updated_at) }}</span>
             </div>
+            <!-- BR6 — la tarjeta con problema resuelve DESDE AQUÍ: reintentar,
+                 descartar (con aviso de pérdida) y, si es rechazo de negocio de una
+                 echada, avisarle a Logística para que la registre. -->
             <div class="enp__actions">
-              <button type="button" class="btn-ghost enp__desc" (click)="verPendientes()">Ver envíos</button>
+              @if (e.estado === 'error') {
+                <button type="button" class="btn-cta enp__retry" [disabled]="!online()" (click)="reintentarEnvio(e)">
+                  {{ 'Reintentar' | t }}
+                </button>
+                @if (esCombustibleNegocio(e)) {
+                  <button type="button" class="btn-ghost enp__avisar" [disabled]="avisandoId() === e.id || !online()" (click)="avisarLogistica(e)">
+                    {{ avisandoId() === e.id ? ('Avisando…' | t) : ('📣 Avisar a Logística' | t) }}
+                  </button>
+                }
+                @if (puedeDescartarEnvio(e)) {
+                  <button type="button" class="btn-ghost enp__desc enp__desc--danger" (click)="pedirDescartarEnvio(e)">
+                    {{ 'Descartar' | t }}
+                  </button>
+                }
+              }
+              <button type="button" class="btn-ghost enp__desc" (click)="verEnvio(e)">{{ 'Ver envío' | t }}</button>
             </div>
           </div>
         }
@@ -57,12 +75,24 @@
 
   <app-confirm-dialog
     [open]="!!confirmar()"
-    title="¿Descartar el borrador?"
-    message="Perderás lo que llevas llenado en ese documento."
-    confirmLabel="Sí, descartar"
-    cancelLabel="Cancelar"
+    [title]="'¿Descartar el borrador?' | t"
+    [message]="'Perderás lo que llevas llenado en ese documento.' | t"
+    [confirmLabel]="'Sí, descartar' | t"
+    [cancelLabel]="'Cancelar' | t"
     tone="danger"
     (confirmed)="descartar()"
     (cancelled)="confirmar.set(null)"
+  />
+
+  <!-- BR6 — descartar un envío con problema (confirmación de una línea) -->
+  <app-confirm-dialog
+    [open]="!!confirmarEnvio()"
+    [title]="'¿Descartar este envío?' | t"
+    [message]="'Se pierden las fotos de este envío y no se registrará en el sistema.' | t"
+    [confirmLabel]="'Descartar' | t"
+    [cancelLabel]="'Conservar' | t"
+    tone="danger"
+    (confirmed)="descartarEnvio()"
+    (cancelled)="confirmarEnvio.set(null)"
   />
 </div>

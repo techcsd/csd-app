@@ -87,6 +87,28 @@
                 {{ enviando() ? 'Confirmando…' : 'Confirmar recepción' }}
               </button>
               @if (!online) { <p class="porconf__offline">Sin conexión: se enviará cuando vuelva el internet.</p> }
+
+              <!-- BR4 — "así como confirmo, debo poder rechazar": rechazar la entrega
+                   con motivo obligatorio + foto opcional. No mueve stock; el emisor
+                   recibe el aviso para corregir y reenviar. -->
+              <div class="porconf__rechazo">
+                @if (!modoRechazo()) {
+                  <button type="button" class="porconf__rechazar-link" (click)="toggleRechazo()">
+                    ✖ Hay un problema — rechazar esta entrega
+                  </button>
+                } @else {
+                  <label class="field-label porconf__mt" for="mr-{{ e.salidaId }}">Motivo del rechazo <span class="porconf__req">*</span></label>
+                  <textarea id="mr-{{ e.salidaId }}" class="field" rows="2" [ngModel]="motivoRechazo()" (ngModelChange)="motivoRechazo.set($event)" placeholder="Explica por qué la rechazas (no llegó, viene incompleta, sin artículos…)"></textarea>
+                  <label class="field-label porconf__mt">Foto (opcional)</label>
+                  <app-photo-slot label="Evidencia" hint="📸" [gallery]="false" [foto]="fotoRechazo()" (captured)="fotoRechazo.set($event)" (cleared)="fotoRechazo.set(null)" />
+                  <div class="porconf__rechazo-acciones">
+                    <button type="button" class="btn-ghost" (click)="toggleRechazo()">Cancelar</button>
+                    <button type="button" class="btn-danger porconf__rechazar-btn" [disabled]="rechazando()" (click)="rechazar(e)">
+                      {{ rechazando() ? 'Rechazando…' : 'Rechazar entrega' }}
+                    </button>
+                  </div>
+                }
+              </div>
             </div>
           }
         </div>

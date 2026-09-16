@@ -1,32 +1,35 @@
 <div class="screen pin-screen">
   <div class="pin-screen__body">
-    <h1 class="pin-screen__title">Escribe tu PIN</h1>
-    <p class="pin-screen__hint">Para entrar a la app.</p>
+    <h1 class="pin-screen__title">{{ 'Escribe tu PIN' | t }}</h1>
+    <p class="pin-screen__hint">{{ 'Para entrar a la app.' | t }}</p>
     @if (attemptsLeft() < 5) {
-      <p class="pin-screen__attempts">Te quedan {{ attemptsLeft() }} intento(s).</p>
+      <p class="pin-screen__attempts">{{ 'Te quedan {n} intento(s).' | t:{ n: attemptsLeft() } }}</p>
     }
     <app-pin-pad [(value)]="value" (completed)="onCompleted($event)" />
     @if (biometriaDisponible()) {
       <button type="button" class="pin-screen__bio" (click)="unlockConHuella()">
-        👆 Usar huella / rostro
+        👆 {{ 'Usar huella / rostro' | t }}
       </button>
     }
     @if (faceIdDisponible()) {
       <button type="button" class="pin-screen__bio" (click)="unlockConFaceId()">
-        🙂 Desbloquear con Face ID
+        🙂 {{ 'Desbloquear con Face ID' | t }}
       </button>
     }
     <button type="button" class="pin-screen__forgot" (click)="olvidePin()">
-      ¿Olvidaste tu PIN?
+      {{ '¿Olvidaste tu PIN?' | t }}
     </button>
+
+    <!-- BR7 — selector de idioma ANTES de entrar (un chofer/encargado nuevo lo elige aquí). -->
+    <app-language-selector class="pin-screen__lang" />
   </div>
 
   <app-confirm-dialog
     [open]="confirmReset()"
-    title="Restablecer tu PIN"
-    message="Cerraremos tu sesión y entrarás de nuevo con tu contraseña (o cédula + PIN de acceso). Luego crearás un PIN nuevo. Necesitas internet."
-    confirmLabel="Entrar de nuevo"
-    cancelLabel="Cancelar"
+    [title]="'Restablecer tu PIN' | t"
+    [message]="'Cerraremos tu sesión y entrarás de nuevo con tu contraseña (o cédula + PIN de acceso). Luego crearás un PIN nuevo. Necesitas internet.' | t"
+    [confirmLabel]="'Entrar de nuevo' | t"
+    [cancelLabel]="'Cancelar' | t"
     (confirmed)="confirmarReset()"
     (cancelled)="cancelarReset()"
   />

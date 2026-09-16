@@ -1,5 +1,41 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 16/09/2026 — PROMPT-53 ronda BR (app) — F1/F2/F4/F5/F6 CONSTRUIDOS · build+tokens+i18n verdes · **SIN commit/release (gateado a Xaviel)**
+
+**TL;DR:** el padre (SGC, PROMPT-52) está **desplegado en prod** (web 1.135.0 en main, migraciones BR aplicadas), lo que destrabó todo el lado app. FASE 0 y FASE 3 (BO9 multi-lado) ya estaban en 2.23.0 → no se rehacen. Construido esta sesión, verificado contra prod (`pg_get_functiondef`): **F1 (BR1/BR6 combustible), F2 (BR8 routing El flaco), F4 (BR4 rechazar recepción), F5 (BO10 cartillas v1), F6 (BR7 idioma)**. `npm run build` + `verify-tokens` + `verify-i18n` verdes. **HEAD sin cambios** — commit + release 2.24.0 gateado a Xaviel. Trabajo con un sub-agente en paralelo (F6 i18n) sin colisión.
+
+### ✅ F1 — BR1/BR6 combustible (mitad app)
+- **BR1:** el salto de km ya NO bloquea a NADIE (`combustible.ts:611`, regla 15): aviso no bloqueante *"Han pasado N km… se enviará para revisión de Logística"* en vez de rechazar al chofer. Verificado en prod que `registrar_combustible_app` **acepta** con `sin_asignacion`/`km_alerta` y devuelve `aviso`; los únicos rechazos duros son galones>tanque / precio / km-hacia-atrás.
+- **BR6 (captura 5):** la tarjeta *"Con problema al enviar"* de **Documentación en proceso** (`en-proceso`, antes solo *Ver envíos*) ahora tiene **Reintentar + Descartar** inline (gateado por seguridad como /pendientes: 'sistema'/foto se conservan) + **Avisar a Logística** en rechazos de negocio. Mismo *Avisar a Logística* en /pendientes (paridad).
+- Nuevo `CombustibleAvisoService` → RPC `combustible_avisar_revision` **detrás de comprobación de capacidad** (si el padre no lo tiene, mensaje honesto, no rompe). **Migración owed:** `sql-para-sgc/2026-09-16-br6-combustible-avisar-revision.sql` (aplicar en la próxima sesión del padre).
+
+### ✅ F2 — BR8 El flaco routea por rol (mitad app)
+- El login por cédula+PIN **ya es rol-agnóstico** (login→`/home`, tiles gateados). Verificado en prod: El flaco existe (`encargado_patio`, modulos `inventario` + permisos `proyectos.personal`/`rrhh.asistencia`, encargado de Bodega Central). Sus tiles gatean bien: **Inventario + Personal de obra + Por recibir**, SIN Flota/Transporte.
+- Nuevo: la notificación `conduce_por_confirmar` (trigger bq4, ruta web `/inventario/conduces`) → deep-link a `/transporte/por-confirmar` (bandeja de recepción canónica).
+- **Owed:** la app **no tiene módulo de Asistencia** todavía → el paso "marca asistencia" del smoke no se puede hasta construirlo. La cédula de El flaco es provisional (`00000000000`); 👤 Xaviel la corrige + confirma login + renombra.
+
+### ✅ F4 — BR3/BR4/BR5 (mitad app)
+- **BR4 (nuevo):** *Entregas por recibir* (`por-confirmar`) tiene un panel **Rechazar** (motivo obligatorio + foto opcional) → outbox `recepcion_rechazar` → `rechazar_recepcion(p_tipo,p_id,p_motivo,p_foto_path)` (verificado en prod: acepta entrada|salida, no mueve stock, avisa al emisor). Etiqueta en `outbox-labels`; error 22023 sin motivo → *Revisar dato*. Entrada sin renglones ya bloqueada (`entrada.ts:269`).
+- **BR3 (verify):** la app ya transfiere vía `ofrecer_transferencia_conduce`; el detalle del conduce ya muestra el historial de transferencias (`conduce-detalle.html:164`).
+- **BR5 (verify):** el conduce ferretería lleva `?requisicion=` y muestra el avance (`generar-conduce.ts:779`).
+
+### ✅ F5 — BO10 Cartillas v1 (nuevo, offline-first)
+- Módulo nuevo `pages/ingenieria/cartilla/` (wizard `cartilla-nueva` + lista `cartillas-lista` + detalle `cartilla-detalle`) + `CartillaService` (molde retiros BG4) + `CartillaPdfService` + `shared/ui/figura-acero` (dibuja recta/L/U/estribo/gancho/Z, el catálogo trae svg null). Wizard: obra → fecha (BL9 elegible) → atados/piezas (diámetro chips, figura option-buttons, tramos cm, **peso en vivo** kg/m del catálogo) → fotos (≥1) + plano → resumen (kg por diámetro) → enviar. Outbox `tipo_op:'cartilla'` → `crear_cartilla` (idempotente p_id). Borrador persiste. Tile **Cartillas** en Ingeniería (gate `bitacora`). Rutas `/ingenieria/cartilla*`. Deep-link `cartilla_observada/revisada/nueva` → `/ingenieria/cartilla/<id>`. Bootstrap en app.config.
+- Contratos verificados en prod: `crear_cartilla`, `cartilla_detalle`, `cartillas_listado`, `cartillas_resumen_acero`, `cartilla_cambiar_estado`; catálogos `acero_diametros`/`cartilla_figuras` abiertos a lectura; bucket `sgc-cartillas`.
+
+### ✅ F6 — BR7 selector de idioma (nuevo)
+- `core/i18n/i18n.service.ts` (signals, `t()`), `translate.pipe.ts` (`| t`, impure), `shared/ui/language-selector`. **Clave = texto en español** → `es` funciona sin catálogo (offline). `en` traducido (56/56), `ht` vacío → cae a es. Catálogos en `public/i18n/*.json`. Selector en **PIN, Login y Perfil**. Cableado: pin-unlock, login, home, en-proceso, sync-bar. `scripts/verify-i18n.mjs` en prebuild. Persistencia local (`Preferences`).
+- **Owed:** columna `usuarios.idioma` en el padre (persistencia cross-device) — hoy solo local.
+
+### Release 2.24.0 — GATEADO a Xaviel
+- Bump 4 sitios + `CAMBIOS_CURADOS` (Y1): `nuevo`: cartillas de acero · rechazar recepción · selector de idioma · Descartar/Avisar en la tarjeta de problema; `mejora`: combustible ya no bloquea al chofer (acepta y avisa); `arreglo`: (los de la ronda). Luego `npm run apk` → device-QA → `apk:publish` → publicar + mínima.
+- **Owed padre (SGC):** `combustible_avisar_revision` (sql-para-sgc/), `usuarios.idioma`.
+
+**Verify on resume:** `npm run build` + `verify-tokens` + `verify-i18n` verdes. Device-QA pendiente: cartilla offline→avión→drena→Ramón la ve; rechazar una entrega; combustible con salto de km (no bloquea); cambiar idioma en PIN→home en inglés; El flaco entra por cédula+PIN.
+
+---
+
+
 ## 🟢 SESIÓN 15/09/2026 — PROMPT-51 ronda BQ — **RELEASE 2.23.0 PUBLICADA + MÍNIMA FORZADA** · ronda BQ completa (nada pendiente app-side) + **Felix arreglado server-side (AF18 uso-v2, en SGC)** · pusheado a main (app + SGC)
 
 **RELEASE 2.23.0 (15-sep):** cierre de la ronda. Sobre 2.22.0 se sumó **F3.2 (moldes multi-lado)** — en la ficha del molde ahora "+ Agregar lado" (A, B, C…) para L/T/U, cada lado con real + plano; **aditivo/retrocompat** (sin lados = comportamiento idéntico al de antes; el payload `tramos[]` ya existía, cero cambio de contrato/servidor). Bump 2.22.0→2.23.0. **APK firmado** (cert prod `3c5316d8…5065`), **Y1 registrado** (2 cambios) y **subido al bucket**. **PUBLICADA + MÍNIMA = última**: `app_versiones` 2.23.0 `publicada=true, minima=true`; minima de 2.22.0 limpiada. `version_publicada()` verificado → 2.23.0 / min 2.23.0 / code 2023000.

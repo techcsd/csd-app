@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.23.0';
+const VERSION = '2.24.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,17 +58,20 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '2.23.0';
-const RELEASED_AT = '2026-09-15';
+const MIN_VERSION = '2.24.0';
+const RELEASED_AT = '2026-09-16';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Moldes con varios lados + combustible de vehículos recibidos';
+const TITULO = 'Cartillas de acero, rechazar entregas y selector de idioma';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Bitácora', d: 'En los moldes del día ahora puedes agregar varios lados (A, B, C…) para describir moldes en L, T o U: cada lado lleva su medida real y la del plano, y el esquema los dibuja juntos.' },
-  { t: 'arreglo', m: 'Combustible', d: 'Si recibiste un vehículo para usarlo, ya puedes registrarle el combustible aunque no sea tu vehículo asignado fijo (antes decía «solo el usuario asignado»).' },
+  { t: 'nuevo', m: 'Ingeniería', d: 'Cartillas de acero: registra los atados y sus piezas (marca, diámetro, figura y medidas de cada lado) con el peso calculado en el momento. Funcionan sin internet y oficina las revisa desde la web.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Ahora puedes rechazar una entrega desde «Entregas por recibir»: pones el motivo y una foto, y a quien la envió le llega el aviso para corregirla y reenviarla.' },
+  { t: 'nuevo', m: 'Ajustes', d: 'Selector de idioma dentro de la app (Español / English). Se elige en tu perfil y en la pantalla del PIN; cambia al instante.' },
+  { t: 'mejora', m: 'Combustible', d: 'El salto de kilómetros ya no te impide registrar la echada: se envía igual y Logística la revisa. Nadie se queda sin registrar lo que echó de verdad.' },
+  { t: 'mejora', m: 'Envíos', d: 'La tarjeta de «con problema al enviar» ahora tiene botones para Reintentar, Descartar y avisarle a Logística ahí mismo, sin entrar a otra pantalla.' },
 ];
 
 const TIPO_POR_COMMIT = {

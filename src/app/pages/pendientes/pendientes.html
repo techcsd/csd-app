@@ -98,6 +98,13 @@
                   ✏️ Corregir
                 </button>
               }
+              <!-- BR6 (regla 15) — echada rechazada por negocio: avísale a Logística
+                   (Raykler) para que la registre él si el chofer no puede corregirla. -->
+              @if (esCombustibleNegocio(item)) {
+                <button type="button" class="ob-btn ob-btn--ghost" [disabled]="avisandoId() === item.id || !online()" (click)="avisarLogistica(item)">
+                  {{ avisandoId() === item.id ? 'Avisando…' : '📣 Avisar a Logística' }}
+                </button>
+              }
               <!-- BG1 — 'sistema' SIEMPRE reintentable (post-fix); transitorio también.
                    BI7 — foto (data real) también: reintento sí, borrar no. 'dato' puro
                    no auto-reintenta (se corrige/duplica). -->

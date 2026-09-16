@@ -2,6 +2,9 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router } from '@angular/router';
 import { PinPad } from '../../../shared/ui/pin-pad/pin-pad';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { LanguageSelector } from '../../../shared/ui/language-selector/language-selector';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { PinService, MAX_PIN_ATTEMPTS } from '../../../core/services/pin.service';
 import { SessionService } from '../../../core/services/session.service';
 import { BiometricService } from '../../../core/services/biometric.service';
@@ -18,7 +21,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-pin-unlock',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PinPad, ConfirmDialog],
+  imports: [PinPad, ConfirmDialog, LanguageSelector, TranslatePipe],
   templateUrl: './pin-unlock.html',
   styleUrl: './pin-unlock.scss',
 })
@@ -30,6 +33,7 @@ export class PinUnlockPage {
   private network = inject(NetworkService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   value = signal('');
   attemptsLeft = signal(MAX_PIN_ATTEMPTS);
@@ -74,7 +78,7 @@ export class PinUnlockPage {
       return;
     }
     // Cancelación o credencial inválida → sin drama, se queda en el PIN.
-    this.toast.show('Usa tu PIN para entrar.', 'info', 2500);
+    this.toast.show(this.i18n.t('Usa tu PIN para entrar.'), 'info', 2500);
   }
 
   // --- X10 — ¿Olvidaste tu PIN? ------------------------------------------
@@ -88,7 +92,7 @@ export class PinUnlockPage {
    */
   olvidePin(): void {
     if (!this.network.online()) {
-      this.toast.error('Para restablecer tu PIN necesitas internet. Conéctate e inténtalo de nuevo.');
+      this.toast.error(this.i18n.t('Para restablecer tu PIN necesitas internet. Conéctate e inténtalo de nuevo.'));
       return;
     }
     this.confirmReset.set(true);
@@ -116,10 +120,10 @@ export class PinUnlockPage {
     this.value.set('');
     if (left <= 0) {
       await this.session.logout();
-      this.toast.error('Demasiados intentos. Entra con tu contraseña.');
+      this.toast.error(this.i18n.t('Demasiados intentos. Entra con tu contraseña.'));
       await this.router.navigate(['/auth/login']);
       return;
     }
-    this.toast.error(`PIN incorrecto. Te quedan ${left} intentos.`);
+    this.toast.error(this.i18n.t('PIN incorrecto. Te quedan {n} intentos.', { n: left }));
   }
 }

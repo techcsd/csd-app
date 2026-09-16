@@ -9,6 +9,7 @@ import { SyncService, OutboxFixActivo } from '../../core/sync/sync.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { ToastService } from '../../core/services/toast.service';
+import { CombustibleAvisoService } from '../../core/services/combustible-aviso.service';
 import { OutboxOp } from '../../core/db/app-db';
 import { formatFechaRelativa } from '../../core/util/fecha';
 import { tipoOpLabel, tipoOpIcon } from '../../core/util/outbox-labels';
@@ -44,8 +45,11 @@ export class PendientesPage {
   private router = inject(Router);
   private conduces = inject(ConducesService);
   private toast = inject(ToastService);
+  private combustibleAviso = inject(CombustibleAvisoService);
   // AV3 — id del item cuyo recordatorio al despachante se está enviando.
   recordandoId = signal<string | null>(null);
+  // BR6 — id del item cuya echada se está avisando a Logística.
+  avisandoId = signal<string | null>(null);
 
   items = signal<OutboxItem[]>([]);
   loading = signal(true);
@@ -208,6 +212,32 @@ export class PendientesPage {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el recordatorio.');
     } finally {
       this.recordandoId.set(null);
+    }
+  }
+
+  // ── BR6 (regla 15) — "Avisar a Logística" en un rechazo de NEGOCIO de una echada ──
+  /** ¿Echada de combustible rechazada por dato? Raykler puede registrarla él. */
+  esCombustibleNegocio(item: OutboxItem): boolean {
+    return item.estado === 'error' && item.tipo_op === 'combustible' && this.categoria(item) === 'dato';
+  }
+  async avisarLogistica(item: OutboxItem): Promise<void> {
+    if (this.avisandoId()) return;
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para avisarle a Logística.');
+      return;
+    }
+    this.avisandoId.set(item.id);
+    try {
+      await this.combustibleAviso.avisarRevision(item);
+      this.toast.success('Logística (Raykler) recibió el aviso. Podrá registrar la echada por ti.');
+    } catch (e) {
+      this.toast.error(
+        e instanceof Error && e.message
+          ? e.message
+          : 'No se pudo avisar automáticamente. Coméntale a Logística que registre esta echada.',
+      );
+    } finally {
+      this.avisandoId.set(null);
     }
   }
 

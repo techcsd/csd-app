@@ -1,0 +1,102 @@
+.cart-list {
+  background: var(--color-bg);
+  position: relative;
+  min-height: 100%;
+}
+
+.cart-list__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.cart-list__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.cart-list__icon {
+  font-size: 24px;
+}
+.cart-list__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.cart-list__retry {
+  width: 100%;
+  min-height: 56px;
+  margin-top: 12px;
+}
+
+.cart-list__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+}
+.cart-list__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cart-list__folio {
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.cart-list__sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.cart-list__kg {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.cart-list__estado {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.cart-list__estado[data-estado='revisada'],
+.cart-list__estado[data-estado='ejecutada'] {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.cart-list__estado[data-estado='observada'] {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.cart-list__fab {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--Hub);
+  color: var(--color-secondary);
+  font-size: 30px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}

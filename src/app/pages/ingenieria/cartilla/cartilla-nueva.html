@@ -1,0 +1,171 @@
+<div class="screen cart-nueva">
+  <header class="cart-nueva__header">
+    <button type="button" class="cart-nueva__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="cart-nueva__title">Nueva cartilla</h1>
+  </header>
+
+  <app-step-bar [current]="pasoIndex()" [total]="totalPasos" />
+
+  <div class="screen__body">
+    @if (cargando()) {
+      <app-skeleton [rows]="4" />
+    } @else {
+      <!-- Paso 1 — obra -->
+      @if (paso() === 'obra') {
+        <h2 class="cart-nueva__q">¿En qué obra?</h2>
+        <div class="cart-nueva__opts">
+          @for (p of proyectos(); track p.id) {
+            <app-option-button [label]="p.nombre" [selected]="proyectoId() === p.id" (pressed)="elegirObra(p.id)" />
+          }
+          @if (!proyectos().length) {
+            <p class="cart-nueva__vacio">No hay obras disponibles para ti.</p>
+          }
+        </div>
+      }
+
+      <!-- Paso 2 — fecha (BL9 elegible) -->
+      @if (paso() === 'fecha') {
+        <h2 class="cart-nueva__q">¿De qué fecha es la cartilla?</h2>
+        <input class="field cart-nueva__fecha" type="date" [max]="hoy" [ngModel]="fecha()" (ngModelChange)="fecha.set($event)" />
+        @if (fechaEsPasada()) {
+          <p class="cart-nueva__aviso">📅 Estás registrando una cartilla de una fecha pasada.</p>
+        }
+      }
+
+      <!-- Paso 3 — atados y piezas -->
+      @if (paso() === 'atados') {
+        <h2 class="cart-nueva__q">Atados de acero</h2>
+        <p class="cart-nueva__sub">Agrega cada atado y sus piezas. Peso total en vivo: <b>{{ pesoTotal() | number:'1.0-1' }} kg</b></p>
+
+        @for (a of atados(); track $index; let ai = $index) {
+          <div class="cart-atado">
+            <button type="button" class="cart-atado__head" (click)="abrirAtado(ai)">
+              <span class="cart-atado__id">{{ a.identificador || 'Atado ' + (ai + 1) }}</span>
+              <span class="cart-atado__meta">{{ a.piezas.length }} pieza(s)</span>
+              <span class="cart-atado__arrow">{{ atadoAbierto() === ai ? '▲' : '▾' }}</span>
+            </button>
+
+            @if (atadoAbierto() === ai) {
+              <div class="cart-atado__body">
+                <label class="field-label">Identificador del atado</label>
+                <input class="field" [ngModel]="a.identificador" (ngModelChange)="setAtadoCampo(ai, 'identificador', $event)" placeholder="Ej. A-12, zapata Z1…" />
+                <label class="field-label">Elemento / estructura</label>
+                <input class="field" [ngModel]="a.elemento" (ngModelChange)="setAtadoCampo(ai, 'elemento', $event)" placeholder="Ej. Viga, columna, zapata…" />
+
+                <!-- piezas ya agregadas -->
+                @for (p of a.piezas; track $index; let pi = $index) {
+                  <div class="cart-pieza">
+                    <div class="cart-pieza__fig"><app-figura-acero [codigo]="p.figura_codigo" /></div>
+                    <div class="cart-pieza__info">
+                      <span class="cart-pieza__marca">{{ p.marca || 'Pieza' }} · Ø {{ p.diametro_codigo }}</span>
+                      <span class="cart-pieza__det">{{ p.cantidad }} u · {{ pesoPieza(p) | number:'1.0-1' }} kg</span>
+                    </div>
+                    <button type="button" class="cart-pieza__x" (click)="quitarPieza(ai, pi)" aria-label="Quitar">✕</button>
+                  </div>
+                }
+
+                <!-- nueva pieza -->
+                <div class="cart-pieza-form">
+                  <label class="field-label">Marca (opcional)</label>
+                  <input class="field" [ngModel]="piezaMarca()" (ngModelChange)="piezaMarca.set($event)" placeholder="Ej. M1" />
+
+                  <label class="field-label">Diámetro</label>
+                  <div class="cart-chips">
+                    @for (d of diametros(); track d.codigo) {
+                      <button type="button" class="cart-chip" [class.cart-chip--on]="piezaDiametro() === d.codigo" (click)="elegirDiametro(d.codigo)">{{ d.codigo }}</button>
+                    }
+                  </div>
+
+                  <label class="field-label">Figura</label>
+                  <div class="cart-figs">
+                    @for (f of figuras(); track f.codigo) {
+                      <button type="button" class="cart-fig" [class.cart-fig--on]="piezaFigura() === f.codigo" (click)="elegirFigura(f.codigo)">
+                        <app-figura-acero [codigo]="f.codigo" />
+                        <span class="cart-fig__nom">{{ f.nombre }}</span>
+                      </button>
+                    }
+                  </div>
+
+                  @if (piezaTramos().length) {
+                    <label class="field-label">Medidas por lado (cm)</label>
+                    <div class="cart-tramos">
+                      @for (t of piezaTramos(); track $index) {
+                        <div class="cart-tramo">
+                          <span class="cart-tramo__lado">{{ ladoLabel($index) }}</span>
+                          <input class="field cart-tramo__in" type="number" inputmode="decimal" min="0" [ngModel]="piezaTramos()[$index]" (ngModelChange)="setTramo($index, $event)" />
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <label class="field-label">Cantidad de piezas iguales</label>
+                  <input class="field cart-cant" type="number" inputmode="numeric" min="1" [ngModel]="piezaCantidad()" (ngModelChange)="piezaCantidad.set($event)" />
+
+                  @if (piezaDiametro() && piezaTramos().length) {
+                    <p class="cart-peso-vivo">Peso: <b>{{ pesoPiezaVivo() | number:'1.0-1' }} kg</b></p>
+                  }
+
+                  <button type="button" class="btn-cta cart-add-pieza" (click)="agregarPieza()">+ Agregar pieza</button>
+                </div>
+
+                <button type="button" class="cart-quitar-atado" (click)="quitarAtado($index)">Quitar atado</button>
+              </div>
+            }
+          </div>
+        }
+
+        <button type="button" class="btn-ghost cart-add-atado" (click)="agregarAtado()">+ Agregar atado</button>
+      }
+
+      <!-- Paso 4 — fotos -->
+      @if (paso() === 'fotos') {
+        <h2 class="cart-nueva__q">Fotos de la cartilla física</h2>
+        <p class="cart-nueva__sub">Toma al menos una foto de la cartilla en papel.</p>
+        <div class="cart-fotos">
+          @for (f of fotos(); track $index) {
+            <div class="cart-foto">
+              <img [src]="f.previewUrl" alt="Foto de cartilla" />
+              <button type="button" class="cart-foto__x" (click)="quitarFoto($index)" aria-label="Quitar">✕</button>
+            </div>
+          }
+        </div>
+        <app-photo-slot label="Agregar foto" hint="📸" [gallery]="false" [foto]="null" (captured)="agregarFoto($event)" />
+
+        <label class="field-label cart-nueva__mt">Plano de referencia (opcional)</label>
+        <app-photo-slot label="Plano" hint="📐" [foto]="plano()" (captured)="plano.set($event)" (cleared)="plano.set(null)" />
+
+        <label class="field-label cart-nueva__mt">Notas (opcional)</label>
+        <textarea class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Novedad de la cartilla…"></textarea>
+      }
+
+      <!-- Paso 5 — resumen -->
+      @if (paso() === 'resumen') {
+        <h2 class="cart-nueva__q">Revisa y envía</h2>
+        <div class="cart-res">
+          <div class="cart-res__row"><span>Obra</span><b>{{ obraNombre() }}</b></div>
+          <div class="cart-res__row"><span>Fecha</span><b>{{ fecha() }}</b></div>
+          <div class="cart-res__row"><span>Atados</span><b>{{ atados().length }}</b></div>
+          <div class="cart-res__row"><span>Peso total</span><b>{{ pesoTotal() | number:'1.0-1' }} kg</b></div>
+        </div>
+        <h3 class="cart-res__t">Acero por diámetro</h3>
+        <div class="cart-res">
+          @for (r of resumenPorDiametro(); track r.diametro) {
+            <div class="cart-res__row"><span>Ø {{ r.diametro }}</span><b>{{ r.kg | number:'1.0-1' }} kg</b></div>
+          }
+        </div>
+        <button type="button" class="btn-cta cart-enviar" [disabled]="enviando()" (click)="enviar()">
+          {{ enviando() ? 'Enviando…' : 'Enviar cartilla' }}
+        </button>
+        @if (!online()) { <p class="cart-nueva__aviso">Sin conexión: se enviará cuando vuelva el internet.</p> }
+      }
+    }
+  </div>
+
+  <!-- pie de navegación -->
+  @if (!cargando() && paso() !== 'resumen') {
+    <div class="cart-nueva__footer">
+      <button type="button" class="btn-ghost cart-nueva__prev" (click)="anterior()">Atrás</button>
+      <button type="button" class="btn-cta cart-nueva__next" (click)="siguiente()">Siguiente</button>
+    </div>
+  }
+</div>

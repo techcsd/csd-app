@@ -50,3 +50,9 @@
   font-weight: 600;
   text-decoration: underline;
 }
+
+// BR7 — selector de idioma en la pantalla de PIN.
+.pin-screen__lang {
+  display: block;
+  margin-top: 24px;
+}

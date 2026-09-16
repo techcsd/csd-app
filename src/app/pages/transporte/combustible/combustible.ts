@@ -608,24 +608,18 @@ export class CombustiblePage extends GuardedWizard {
             this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
             return false;
           }
-          // AF19/BO4 — salto de km irreal: bloquea al chofer; los roles de flota
-          // ELEVADOS (admin, jefe_flota, LOGÍSTICA…) pueden seguir (queda marcado
-          // km_alerta en el servidor). El server también lo valida. Antes solo `esAdmin`
-          // podía continuar → logística quedaba bloqueada como un chofer cualquiera.
+          // BR1/AF19 (regla 15) — el salto de km ya NO bloquea a NADIE. El chofer echó
+          // gasolina de verdad; el sistema no le impide registrar lo que hizo. Se envía
+          // con la bandera `km_alerta` (el servidor la marca) y Logística (Raykler) lo
+          // revisa/sanea. Antes esto rechazaba al chofer (solo pasaba flota elevada) y lo
+          // dejaba sin poder registrar hasta que otro corrigiera la echada anterior.
           if (this.kmDeltaExcede()) {
             const delta = km! - this.ultima().km!;
-            if (this.ctx.esFlotaElevado()) {
-              this.toast.show(
-                `Salto de ${delta} km (supera el máximo de ${this.umbralKm()} km). Puedes continuar; quedará marcado para revisión.`,
-                'info',
-                6000,
-              );
-            } else {
-              this.toast.error(
-                `El salto de kilometraje (${delta} km) supera el máximo permitido (${this.umbralKm()} km). Verifica el odómetro.`,
-              );
-              return false;
-            }
+            this.toast.show(
+              `Han pasado ${delta} km desde la última echada registrada; se enviará para revisión de Logística.`,
+              'info',
+              6000,
+            );
           }
         }
         if (!this.galones() || this.galones()! <= 0) {

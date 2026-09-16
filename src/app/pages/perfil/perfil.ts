@@ -17,6 +17,8 @@ import { CameraService } from '../../core/services/camera.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { ToggleSwitch } from '../../shared/ui/toggle-switch/toggle-switch';
+import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ThemeService } from '../../core/services/theme.service';
 import { FormsModule } from '@angular/forms';
 
@@ -25,7 +27,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-perfil',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialog, AvatarEditor, ToggleSwitch, FormsModule],
+  imports: [ConfirmDialog, AvatarEditor, ToggleSwitch, LanguageSelector, TranslatePipe, FormsModule],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })

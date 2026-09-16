@@ -227,6 +227,17 @@ export function notifAppRoute(n: {
   // BD2 — firma de recepción pendiente → bandeja canónica "Entregas por recibir"
   // (antes /transporte/por-firmar, ahora fusionada en por-confirmar).
   if (n.tipo === 'firma') return '/transporte/por-confirmar';
+  // BR8 — "Conduce por confirmar" al encargado de patio (El flaco): el padre
+  // (trg_conduce_por_confirmar) manda la ruta WEB '/inventario/conduces', que en la
+  // app no existe; la recepción canónica vive en "Entregas por recibir". Así el
+  // aviso de la campana aterriza donde el encargado confirma la entrega.
+  if (n.tipo === 'conduce_por_confirmar') return '/transporte/por-confirmar';
+  // BO10 — cartilla observada/revisada/nueva: el padre manda la ruta WEB
+  // '/bitacora/cartillas/<id>'; en la app vive en /ingenieria/cartilla/<id>.
+  if (n.tipo === 'cartilla_observada' || n.tipo === 'cartilla_revisada' || n.tipo === 'cartilla_nueva' || r.startsWith('/bitacora/cartillas')) {
+    const cid = n.referencia_id || r.match(/([0-9a-fA-F-]{36})/)?.[1] || null;
+    return cid ? `/ingenieria/cartilla/${cid}` : '/ingenieria/cartilla';
+  }
   // AU1 — recordatorio al DESPACHANTE (tipo 'conduce_firma') → su bandeja de firma.
   // La web manda ruta '/transporte/por-firmar' (que en la app es la del RECEPTOR),
   // así que aquí se mapea por tipo a la bandeja correcta del despachante.

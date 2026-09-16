@@ -1,5 +1,5 @@
 import { effect, inject, Injectable, signal } from '@angular/core';
-import { db } from '../db/app-db';
+import { db, OutboxOp } from '../db/app-db';
 import { SyncService } from '../sync/sync.service';
 
 /** V1 — módulos que tienen "documentación en proceso" (borradores + envíos). */
@@ -21,17 +21,20 @@ export interface EnProcesoItem {
   /** solo envíos: estado visible. */
   estado?: 'enviando' | 'error';
   error?: string;
+  /** BR6 — solo envíos: la op cruda del outbox, para acciones inline en la
+   *  tarjeta (Reintentar / Descartar / Avisar a Logística) sin ir a Pendientes. */
+  op?: OutboxOp;
 }
 
 // Módulo → tipos de borrador (Dexie) y tipos de op del outbox que le pertenecen.
 const BORRADOR_TIPOS: Record<EnProcesoModulo, string[]> = {
-  bitacora: ['parte', 'incidente', 'cl_liberacion', 'orden_trabajo'],
+  bitacora: ['parte', 'incidente', 'cl_liberacion', 'orden_trabajo', 'cartilla'],
   flota: ['checklist', 'vehiculo', 'conductor', 'conduce'],
   rrhh: [],
   mensajes: [],
 };
 const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
-  bitacora: ['bitacora', 'cl_liberacion', 'orden_trabajo'],
+  bitacora: ['bitacora', 'cl_liberacion', 'orden_trabajo', 'cartilla'],
   flota: [
     'vehiculo_entrega',
     'combustible',
@@ -56,6 +59,7 @@ const OUTBOX_TIPOS: Record<EnProcesoModulo, string[]> = {
     'conduce_firmar_receptor',
     'conduce_recepcion',
     'conduce_transf_aceptar',
+    'recepcion_rechazar',
     'accidente_vehiculo',
     'dano_vehiculo',
     'multa_conductor',
@@ -75,6 +79,7 @@ const OP_LABEL: Record<string, string> = {
   bitacora: 'Bitácora',
   cl_liberacion: 'Checklist de liberación',
   orden_trabajo: 'Orden de trabajo',
+  cartilla: 'Cartilla de acero',
   vehiculo_entrega: 'Recibir/entregar vehículo',
   combustible: 'Registrar combustible',
   checklist_preuso: 'Uso de vehículo',
@@ -99,6 +104,7 @@ const OP_LABEL: Record<string, string> = {
   conduce_firmar_receptor: 'Firma de recepción',
   conduce_recepcion: 'Recepción de conduce',
   conduce_transf_aceptar: 'Aceptar transferencia de conduce',
+  recepcion_rechazar: 'Rechazo de recepción',
   rrhh_asignar_item: 'Asignación de item',
   rrhh_asignacion_estado: 'Cambio de asignación',
   inv_salida: 'Salida de material',
@@ -115,12 +121,13 @@ const BORRADOR_LABEL: Record<string, string> = {
   incidente: 'Reporte de incidente',
   cl_liberacion: 'Checklist de liberación',
   orden_trabajo: 'Orden de trabajo',
+  cartilla: 'Cartilla de acero',
   checklist: 'Checklist de vehículo',
   vehiculo: 'Vehículo',
   conductor: 'Conductor',
 };
 
-const RESUME_POR_CLAVE = new Set(['parte', 'incidente', 'cl_liberacion', 'orden_trabajo']);
+const RESUME_POR_CLAVE = new Set(['parte', 'incidente', 'cl_liberacion', 'orden_trabajo', 'cartilla']);
 
 /**
  * V1 — "Documentación en proceso" reutilizable por módulo: une los borradores de
@@ -205,6 +212,7 @@ export class EnProcesoService {
         updated_at: op.created_local,
         estado: op.estado === 'error' ? 'error' : 'enviando',
         error: op.error_msg,
+        op,
       });
     }
     return items.sort((a, b) => b.updated_at - a.updated_at);

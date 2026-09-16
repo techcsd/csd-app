@@ -4,14 +4,19 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { BorradorService } from '../../core/services/borrador.service';
 import { AutosaveService } from '../../core/services/autosave.service';
 import { SyncService } from '../../core/sync/sync.service';
+import { NetworkService } from '../../core/services/network.service';
+import { ToastService } from '../../core/services/toast.service';
+import { CombustibleAvisoService } from '../../core/services/combustible-aviso.service';
 import {
   EnProcesoService,
   EnProcesoItem,
   EnProcesoModulo,
 } from '../../core/services/en-proceso.service';
+import { outboxCategoria } from '../../core/util/outbox-categoria';
 import { formatFechaCortaHora } from '../../core/util/fecha';
 
 /**
@@ -25,7 +30,7 @@ import { formatFechaCortaHora } from '../../core/util/fecha';
   selector: 'app-en-proceso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EmptyState, Skeleton, ConfirmDialog],
+  imports: [EmptyState, Skeleton, ConfirmDialog, TranslatePipe],
   templateUrl: './en-proceso.html',
   styleUrl: './en-proceso.scss',
 })
@@ -34,6 +39,9 @@ export class EnProcesoPage {
   private borrador = inject(BorradorService);
   private autosave = inject(AutosaveService);
   private sync = inject(SyncService);
+  private network = inject(NetworkService);
+  private toast = inject(ToastService);
+  private combustibleAviso = inject(CombustibleAvisoService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
@@ -41,9 +49,15 @@ export class EnProcesoPage {
   /** Filtro opcional por módulo (?modulo=flota|bitacora) para casar con el badge del cuadro. */
   private modulo: EnProcesoModulo | null = null;
 
+  online = this.network.online;
+
   loading = signal(true);
   items = signal<EnProcesoItem[]>([]);
   confirmar = signal<EnProcesoItem | null>(null);
+  /** BR6 — envío que se está por descartar desde la tarjeta (mensaje distinto al del borrador). */
+  confirmarEnvio = signal<EnProcesoItem | null>(null);
+  /** BR6 — envío al que se le está avisando a Logística (evita doble toque). */
+  avisandoId = signal<string | null>(null);
 
   borradores = computed(() => this.items().filter((i) => i.kind === 'borrador'));
   envios = computed(() => this.items().filter((i) => i.kind === 'envio'));
@@ -91,9 +105,84 @@ export class EnProcesoPage {
     }
   }
 
-  /** Los envíos (outbox) se reintentan/descartan en la pantalla de Pendientes. */
+  /** Abre el detalle de ESTE envío en Pendientes (contenido + reintentar/duplicar/descartar). */
+  verEnvio(e: EnProcesoItem): void {
+    void this.router.navigate(['/pendientes', e.id]);
+  }
+  /** Fallback (sin item): la lista completa de Pendientes. */
   verPendientes(): void {
     void this.router.navigate(['/pendientes']);
+  }
+
+  // ── BR6 — acciones inline en la tarjeta del envío con problema ──────────────
+  // La regla madre (BG1): la data real de obra NUNCA se descarta a la ligera. Un
+  // envío 'sistema' o con foto perdida NO ofrece Descartar en la tarjeta — su
+  // descarte vive en la vista de contenido (doble confirmación). Aquí solo se
+  // descartan los rechazos de DATO y los transitorios (mismo criterio que /pendientes).
+
+  private categoria(e: EnProcesoItem) {
+    return e.op ? outboxCategoria(e.op) : 'transitorio';
+  }
+  /** BI7 — 'sistema' o foto perdida = data real: no se descarta desde la tarjeta. */
+  private esConservable(e: EnProcesoItem): boolean {
+    if (!e.op || e.op.estado !== 'error') return false;
+    return this.categoria(e) === 'sistema' || e.op.error_kind === 'foto';
+  }
+  /** ¿Se puede descartar este envío desde la tarjeta? (no conservable + permanente). */
+  puedeDescartarEnvio(e: EnProcesoItem): boolean {
+    if (!e.op || e.op.estado !== 'error') return false;
+    if (this.esConservable(e)) return false;
+    return e.op.permanente === true;
+  }
+
+  /** BR6 — reintentar este envío ahora (sin ir a Pendientes). */
+  reintentarEnvio(e: EnProcesoItem): void {
+    if (!this.online()) {
+      this.toast.error('Sin señal ahora mismo. Se reintentará solo cuando vuelva.');
+      return;
+    }
+    void this.sync.retry(e.id);
+    this.toast.show('Reintentando el envío…', 'info');
+  }
+
+  pedirDescartarEnvio(e: EnProcesoItem): void {
+    this.confirmarEnvio.set(e);
+  }
+  async descartarEnvio(): Promise<void> {
+    const e = this.confirmarEnvio();
+    this.confirmarEnvio.set(null);
+    if (!e) return;
+    await this.sync.discard(e.id);
+    this.items.update((list) => list.filter((x) => !(x.kind === 'envio' && x.id === e.id)));
+  }
+
+  // ── BR6 corolario (regla 15) — un rechazo de NEGOCIO ofrece "Avisar a Logística" ──
+  /** ¿Es una echada de combustible rechazada por dato (negocio)? Entonces Raykler
+   *  puede registrarla él: le mandamos el resumen del dato. */
+  esCombustibleNegocio(e: EnProcesoItem): boolean {
+    return !!e.op && e.op.estado === 'error' && e.op.tipo_op === 'combustible' && this.categoria(e) === 'dato';
+  }
+  async avisarLogistica(e: EnProcesoItem): Promise<void> {
+    if (!e.op || this.avisandoId()) return;
+    if (!this.online()) {
+      this.toast.error('Necesitas conexión para avisarle a Logística.');
+      return;
+    }
+    this.avisandoId.set(e.id);
+    try {
+      await this.combustibleAviso.avisarRevision(e.op);
+      this.toast.success('Logística (Raykler) recibió el aviso. Podrá registrar la echada por ti.');
+    } catch (err) {
+      // Capability check: si el RPC del padre aún no está desplegado, no rompemos —
+      // le decimos al chofer qué hacer (mensaje honesto).
+      this.toast.error(
+        err instanceof Error && err.message
+          ? err.message
+          : 'No se pudo avisar automáticamente. Coméntale a Logística que registre esta echada.',
+      );
+    } finally {
+      this.avisandoId.set(null);
+    }
   }
 
   pedirDescartar(b: EnProcesoItem): void {

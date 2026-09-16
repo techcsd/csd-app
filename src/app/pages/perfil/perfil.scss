@@ -153,3 +153,19 @@
 .perfil__miperfil-acciones .perfil__foto-btn {
   flex: 1;
 }
+
+// BR7 — sección de idioma en Perfil.
+.perfil__lang {
+  margin: 8px 0;
+}
+.perfil__lang-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.perfil__lang-note {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

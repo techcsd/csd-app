@@ -67,6 +67,8 @@ export class IngenieriaPage {
       t.push({ key: 'bitacora', icon: '📓', label: 'Bitácora', tint: '#1e3a5f', route: '/bitacora' });
       // BH2 — Dashboard de bitácora (hueco de capacidad construido en la app).
       t.push({ key: 'bitacoraDashboard', icon: '📊', label: 'Dashboard de bitácora', tint: '#2563eb', route: '/bitacora/dashboard' });
+      // BO10 — Cartillas de acero (Guilamo captura; Ramón/oficina revisa en la web).
+      t.push({ key: 'cartillas', icon: '🧱', label: 'Cartillas', tint: '#b45309', route: '/ingenieria/cartilla' });
     }
     // Mi obra (producción: plan del día, avance, NC, checklists, subcontratistas…).
     if (c.puedeVerObra()) {
