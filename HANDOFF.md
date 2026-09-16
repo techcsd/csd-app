@@ -31,7 +31,14 @@
 - Bump 4 sitios + `CAMBIOS_CURADOS` (Y1): `nuevo`: cartillas de acero · rechazar recepción · selector de idioma · Descartar/Avisar en la tarjeta de problema; `mejora`: combustible ya no bloquea al chofer (acepta y avisa); `arreglo`: (los de la ronda). Luego `npm run apk` → device-QA → `apk:publish` → publicar + mínima.
 - **Owed padre (SGC):** `combustible_avisar_revision` (sql-para-sgc/), `usuarios.idioma`.
 
-**Verify on resume:** `npm run build` + `verify-tokens` + `verify-i18n` verdes. Device-QA pendiente: cartilla offline→avión→drena→Ramón la ve; rechazar una entrega; combustible con salto de km (no bloquea); cambiar idioma en PIN→home en inglés; El flaco entra por cédula+PIN.
+### ✅ Device-QA (Redmi Note 10 Pro, Android 13, WebView 154, cuenta admin Xaviel) — 16-sep
+APK 2.24.0 instalada (`adb install -r`, cert prod OK), arranca bien (WebView 154 > umbral blanco 111).
+- **F6 idioma:** Perfil muestra 2.24.0 + selector Español/English/Kreyòl. Cambio a English → **home entero en inglés al instante** (Hi / deliveries / Transport / Inventory / Engineering… + sync-bar "All sent") sin recargar; la leyenda "Catalogs… stay in Spanish" también cambió. Reseteado a Español al final. ✅
+- **F5 cartillas E2E:** wizard completo en obra `Riviera Bay TEST` (es_prueba) → fecha hoy (BL9) → atado con pieza Ø1/2" Recta, tramo 1200cm → **peso en vivo 11.9 kg** (0.994×12×1, exacto) → foto por galería → resumen (kg por diámetro) → **Enviar**. Drenó online → **`crear_cartilla` insertó `CAR-000001`** (estado enviada, es_prueba=true heredado, 11.928 kg, 1 atado, 1 foto). "Mis cartillas" lo lista; detalle pinta figura Recta + "A:1200 cm · 11.9 kg" + Historial "Enviada" + foto + Descargar PDF. **Ramón/oficina lo ve en `/bitacora/cartillas` con los kg correctos.** ✅ (Se dejó la cartilla es_prueba como demo; Xaviel puede borrarla.)
+- **Hallazgo cosmético arreglado (`2ddfd69`):** la obra salía en blanco — `cartillas_listado`/`cartilla_detalle` devuelven `proyecto`/`ingeniero`, no `*_nombre`. Ajustado modelo+3 consumidores; viaja con la PWA y el próximo APK (no fuerza update).
+- **No probado interactivamente (code-verified, bajo riesgo):** F4 rechazar recepción (requería mutar un conduce real de admin), F1 combustible salto de km (requería vehículo en uso + km), El flaco cédula+PIN (falta su PIN/cédula real — 👤 Xaviel).
+
+**Verify on resume:** `npm run build` + `verify-tokens` + `verify-i18n` verdes. Pendiente device-QA: F4 rechazar (con un conduce es_prueba), F1 combustible salto de km, El flaco cédula+PIN.
 
 ---
 
