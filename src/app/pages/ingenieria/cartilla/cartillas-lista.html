@@ -18,7 +18,7 @@
         <button type="button" class="cart-list__card" (click)="abrir(c)">
           <div class="cart-list__main">
             <span class="cart-list__folio">{{ c.folio }}</span>
-            <span class="cart-list__sub">{{ c.proyecto_nombre || 'Obra' }} · {{ fmtFecha(c.fecha) }}</span>
+            <span class="cart-list__sub">{{ c.proyecto || 'Obra' }} · {{ fmtFecha(c.fecha) }}</span>
             @if (c.peso_total_kg != null) {
               <span class="cart-list__kg">{{ c.peso_total_kg | number:'1.0-1' }} kg</span>
             }

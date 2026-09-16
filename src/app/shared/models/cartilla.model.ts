@@ -67,11 +67,13 @@ export type CartillaEstado = 'borrador' | 'enviada' | 'revisada' | 'observada' |
 export interface CartillaListado {
   id: string;
   folio: string;
-  proyecto_nombre: string | null;
+  // El servidor (cartillas_listado) devuelve el nombre de la obra como `proyecto`
+  // y el del ingeniero como `ingeniero` (strings), no `*_nombre`.
+  proyecto: string | null;
+  ingeniero?: string | null;
   fecha: string;
   estado: CartillaEstado;
   peso_total_kg: number | null;
-  atados: number | null;
   es_prueba?: boolean;
 }
 
@@ -108,8 +110,9 @@ export interface CartillaDetalle {
   id: string;
   folio: string;
   proyecto_id: string;
-  proyecto_nombre?: string | null;
-  ingeniero_nombre?: string | null;
+  // cartilla_detalle devuelve `proyecto` (obra) e `ingeniero` como strings.
+  proyecto?: string | null;
+  ingeniero?: string | null;
   fecha: string;
   estado: CartillaEstado;
   observacion: string | null;

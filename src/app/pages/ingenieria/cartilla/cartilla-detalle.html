@@ -16,9 +16,9 @@
         <span class="cart-det__estado" [attr.data-estado]="c.estado">{{ c.estado }}</span>
       </div>
       <div class="cart-det__meta">
-        <div><span>Obra</span><b>{{ c.proyecto_nombre || '—' }}</b></div>
+        <div><span>Obra</span><b>{{ c.proyecto || '—' }}</b></div>
         <div><span>Fecha</span><b>{{ fmtFecha(c.fecha) }}</b></div>
-        @if (c.ingeniero_nombre) { <div><span>Ingeniero</span><b>{{ c.ingeniero_nombre }}</b></div> }
+        @if (c.ingeniero) { <div><span>Ingeniero</span><b>{{ c.ingeniero }}</b></div> }
         <div><span>Peso total</span><b>{{ (c.peso_total_kg ?? 0) | number:'1.0-1' }} kg</b></div>
       </div>
 

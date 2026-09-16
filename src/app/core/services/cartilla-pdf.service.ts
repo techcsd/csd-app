@@ -66,10 +66,10 @@ export class CartillaPdfService {
 
     doc.setFontSize(10);
     doc.setTextColor(20);
-    doc.text(`Obra: ${c.proyecto_nombre || '—'}`, this.M, y);
+    doc.text(`Obra: ${c.proyecto || '—'}`, this.M, y);
     y += 5;
-    if (c.ingeniero_nombre) {
-      doc.text(`Ingeniero: ${c.ingeniero_nombre}`, this.M, y);
+    if (c.ingeniero) {
+      doc.text(`Ingeniero: ${c.ingeniero}`, this.M, y);
       y += 5;
     }
     doc.text(`Peso total: ${this.num(c.peso_total_kg ?? 0)} kg`, this.M, y);
