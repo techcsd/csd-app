@@ -7,6 +7,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { ConducesService, RequisicionPorDespachar } from '../../../core/services/conduces.service';
+import { humanizeError } from '../../../shared/util/friendly-error.util';
 
 /**
  * BA/Transporte v3 (FASE 2) — "Por despachar": requisiciones aprobadas que esperan
@@ -41,7 +42,7 @@ export class DespachosPage {
     try {
       this.requisiciones.set(await this.conduces.requisicionesPorDespachar());
     } catch (e) {
-      this.error.set(e instanceof Error ? e.message : 'No se pudieron cargar las requisiciones.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudieron cargar las requisiciones.');
     } finally {
       this.loading.set(false);
     }

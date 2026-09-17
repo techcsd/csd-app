@@ -19,6 +19,8 @@ import {
   OutboxCategoria,
 } from '../../../core/util/outbox-categoria';
 import { formatFechaRelativa } from '../../../core/util/fecha';
+import { UserContextService } from '../../../core/services/user-context.service';
+import { humanizeError } from '../../../shared/util/friendly-error.util';
 
 /**
  * BG3 — vista de SOLO-LECTURA del contenido completo de un pendiente atascado:
@@ -43,6 +45,9 @@ export class OutboxDetallePage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private contenidoSvc = inject(OutboxContenidoService);
+  private ctx = inject(UserContextService);
+  // BS2 — el SQLSTATE crudo (🩺) es SOLO para el desarrollador.
+  esDesarrollador = this.ctx.esDesarrollador;
 
   private id = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -88,7 +93,9 @@ export class OutboxDetallePage {
   }
   mensaje(): string {
     if (this.esSistema()) return MENSAJE_SISTEMA;
-    return this.op()?.error_msg ?? '';
+    // BS2 — un rechazo de negocio ({campo,motivo}) ya es amable y pasa intacto; un
+    // crudo inesperado se traduce para que el trabajador no vea jerga de BD.
+    return this.op()?.error_msg ? humanizeError(this.op()!.error_msg).mensaje : '';
   }
   /**
    * BM1 (9ª regla) — código técnico VISIBLE de un 'sistema': la copia al usuario

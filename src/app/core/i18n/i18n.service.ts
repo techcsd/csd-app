@@ -48,18 +48,48 @@ export class I18nService {
   }
 
   private async init(): Promise<void> {
+    // BS4 — orden de fuentes al arrancar (antes de que haya sesión): local → idioma
+    // del dispositivo → `es`. El servidor manda cuando llega el perfil
+    // (UserContextService → adoptFromServer), así que el orden completo efectivo es
+    // servidor → local → dispositivo → es.
     try {
       const { value } = await Preferences.get({ key: PREF_KEY });
-      const lang = (value as Idioma) || 'es';
+      const lang: Idioma = this.esValido(value ?? '') ? (value as Idioma) : this.deviceLang();
       if (lang !== 'es') await this.cargarCatalogo(lang);
-      this._idioma.set(this.esValido(lang) ? lang : 'es');
+      this._idioma.set(lang);
     } catch {
-      /* sin preferencia guardada → español */
+      /* sin preferencia guardada → idioma del dispositivo o español */
+      const lang = this.deviceLang();
+      if (lang !== 'es') await this.cargarCatalogo(lang).catch(() => {});
+      this._idioma.set(lang);
     }
   }
 
   private esValido(l: string): l is Idioma {
     return l === 'es' || l === 'en' || l === 'ht';
+  }
+
+  /**
+   * BS4 — idioma del DISPOSITIVO si es uno de los soportados, si no `es`. Se usa
+   * como fuente de arranque (cuando no hay preferencia local ni de servidor) y como
+   * PRESELECCIÓN del diálogo de primer ingreso. `ht` cubre `ht` y `ht-HT`; el kreyòl
+   * a veces se reporta como `fr`/`fr-HT` en equipos viejos → NO lo mapeamos a `ht`
+   * (preferimos `es`/preselección explícita antes que adivinar mal).
+   */
+  deviceLang(): Idioma {
+    try {
+      const cands = [
+        ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+        navigator.language || '',
+      ];
+      for (const raw of cands) {
+        const primary = String(raw).toLowerCase().split('-')[0];
+        if (primary === 'es' || primary === 'en' || primary === 'ht') return primary;
+      }
+    } catch {
+      /* sin navigator → es */
+    }
+    return 'es';
   }
 
   /**

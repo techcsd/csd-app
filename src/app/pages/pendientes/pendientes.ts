@@ -10,6 +10,8 @@ import { NetworkService } from '../../core/services/network.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CombustibleAvisoService } from '../../core/services/combustible-aviso.service';
+import { UserContextService } from '../../core/services/user-context.service';
+import { humanizeError } from '../../shared/util/friendly-error.util';
 import { OutboxOp } from '../../core/db/app-db';
 import { formatFechaRelativa } from '../../core/util/fecha';
 import { tipoOpLabel, tipoOpIcon } from '../../core/util/outbox-labels';
@@ -46,6 +48,11 @@ export class PendientesPage {
   private conduces = inject(ConducesService);
   private toast = inject(ToastService);
   private combustibleAviso = inject(CombustibleAvisoService);
+  private ctx = inject(UserContextService);
+  // BS2 — el detalle CRUDO (SQLSTATE 🩺, mensaje sin traducir) es SOLO para el
+  // desarrollador (espejo de es_desarrollador()); el trabajador de campo ve la copia
+  // amable de 'sistema' (MENSAJE_SISTEMA) sin jerga de BD.
+  esDesarrollador = this.ctx.esDesarrollador;
   // AV3 — id del item cuyo recordatorio al despachante se está enviando.
   recordandoId = signal<string | null>(null);
   // BR6 — id del item cuya echada se está avisando a Logística.
@@ -283,6 +290,17 @@ export class PendientesPage {
     if (code) return code;
     const kind = item.error_kind ?? '';
     return kind ? `tipo: ${kind}` : null;
+  }
+
+  /**
+   * BS2 — texto del "Ver detalle técnico" expandible. El desarrollador ve el crudo
+   * (para diagnosticar); el trabajador de campo ve la copia amable (sin SQLSTATE ni
+   * jerga de BD). Los rechazos de negocio ({campo,motivo}) ya son amables y pasan
+   * intactos por humanizeError.
+   */
+  detalleTecnicoTexto(item: OutboxItem): string {
+    if (this.esDesarrollador()) return item.error_msg || 'Sin detalle técnico.';
+    return item.error_msg ? humanizeError(item.error_msg).mensaje : 'Sin detalle técnico.';
   }
 
   /** BG3 — tap en la tarjeta → vista de solo-lectura del contenido + duplicar/exportar. */

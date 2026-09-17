@@ -68,18 +68,30 @@
       }
     </ul>
 
-    <app-toggle-switch
-      [checked]="theme.isDark()"
-      label="Tema oscuro"
-      hint="Se sincroniza con la web"
-      (checkedChange)="theme.set($event ? 'dark' : 'light')"
-    />
+    <!-- BS3 — Apariencia (claro/oscuro/sistema). Nombres/orden como en Configuración web. -->
+    <div class="perfil__seccion">
+      <span class="perfil__seccion-label">{{ 'Apariencia' | t }}</span>
+      <div class="perfil__apariencia">
+        @for (op of aparienciaOpts; track op.pref) {
+          <button
+            type="button"
+            class="perfil__apar-opt"
+            [class.perfil__apar-opt--on]="theme.pref() === op.pref"
+            (click)="setApariencia(op.pref)"
+          >
+            <span class="perfil__apar-icon" aria-hidden="true">{{ op.icon }}</span>
+            <span>{{ op.label | t }}</span>
+          </button>
+        }
+      </div>
+      <p class="perfil__seccion-note">{{ 'Automático sigue el tema de tu teléfono. Se sincroniza con la web.' | t }}</p>
+    </div>
 
-    <!-- BR7 — selector de idioma de la app -->
-    <div class="perfil__lang">
-      <span class="perfil__lang-label">{{ 'Idioma de la app' | t }}</span>
+    <!-- BR7/BS4 — Idioma (el selector salió del PIN; ahora vive solo aquí). -->
+    <div class="perfil__seccion perfil__lang">
+      <span class="perfil__seccion-label">{{ 'Idioma' | t }}</span>
       <app-language-selector />
-      <p class="perfil__lang-note">{{ 'Los catálogos, nombres de obras y mensajes del sistema siguen en español.' | t }}</p>
+      <p class="perfil__seccion-note">{{ 'Los avisos y mensajes del sistema pueden llegar en español.' | t }}</p>
     </div>
 
     <button type="button" class="btn-ghost perfil__btn" [disabled]="checking()" (click)="buscarActualizacion()">

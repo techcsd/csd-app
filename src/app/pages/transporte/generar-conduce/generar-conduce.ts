@@ -257,7 +257,26 @@ export class GenerarConducePage implements OnDestroy {
   onAyudante = (u: AyudanteUsuario | null): void => this.ayudanteId.set(u?.id ?? null);
   firmaDespachante = signal<Blob | null>(null);
 
-  bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
+  // BS1 — el almacén de ORIGEN ofrece TODAS las bodegas legibles (getBodegas no filtra
+  // por obra), con **Central primero** (bodega de despacho canónica) y etiqueta 🏢,
+  // igual que el selector de destino. getBodegas ya viene ordenado por nombre; el sort
+  // es estable → alfabético dentro de cada grupo.
+  private bodegasOrdenadas = computed(() =>
+    [...this.bodegas()].sort((a, b) => this.rankCentral(a) - this.rankCentral(b)),
+  );
+  bodegaOptions = computed(() =>
+    this.bodegasOrdenadas().map((b) => ({
+      id: b.id,
+      label: b.es_central || b.es_principal ? `🏢 ${b.nombre}` : b.nombre,
+    })),
+  );
+  /** BS1 — bodega Central (para preseleccionarla). Central > principal > ninguna. */
+  private bodegaCentral = computed(
+    () => this.bodegas().find((b) => b.es_central) ?? this.bodegas().find((b) => b.es_principal) ?? null,
+  );
+  private rankCentral(b: Bodega): number {
+    return b.es_central ? 0 : b.es_principal ? 1 : 2;
+  }
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
   ferreteriaOptions = computed(() => this.ferreterias().map((f) => ({ id: f.id, label: f.nombre })));
   // AI2 — opciones del despachante (usuario/empleado). El id es namespaced por tipo
@@ -710,7 +729,13 @@ export class GenerarConducePage implements OnDestroy {
       this.despachantes.set(desp);
       // AL10 — almacenes centrales elegibles como destino (best-effort).
       void this.conduces.almacenesDestino().then((al) => this.almacenes.set(al)).catch(() => {});
-      if (b.length === 1) this.bodegaId.set(b[0].id);
+      // BS1 — preselección del almacén de origen (DEFAULT): la bodega Central es el
+      // origen de despacho canónico → se preselecciona. Si no hay Central, y hay una
+      // sola bodega, esa. Un deep-link `bodega`, el despacho de una requisición, un
+      // borrador o una corrección la sobreescriben después (corren tras este punto).
+      const central = this.bodegaCentral();
+      if (central) this.bodegaId.set(central.id);
+      else if (b.length === 1) this.bodegaId.set(b[0].id);
       if (asig.length === 1) this.vehiculoId.set(asig[0].vehiculo_id);
       // AO3 — ¿venimos a CORREGIR un conduce atascado en el outbox? (acceso directo
       // desde el error de "Pendientes de envío"). Reconstruye el borrador desde el

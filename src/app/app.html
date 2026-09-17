@@ -4,6 +4,12 @@
 <app-alarma-host />
 <app-permisos-onboarding />
 
+@if (idiomaOnboarding.mostrar() && !enAuth() && !version.debeActualizar()) {
+  <!-- BS4: diálogo de primer ingreso de idioma (bloqueante, una sola vez). No se
+       muestra sobre el gate de actualización obligatoria. -->
+  <app-language-onboarding />
+}
+
 
 @if (version.debeActualizar()) {
   <!-- R15: blocking gate when the local build is below the published minimum -->

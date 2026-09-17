@@ -1,6 +1,11 @@
 export interface Bodega {
   id: string;
   nombre: string;
+  // BS1 — identifican la bodega Central (para ordenarla primero y preseleccionarla en
+  // el picker de origen del conduce). `proyecto_id` permite el fallback "la de la obra".
+  es_central?: boolean;
+  es_principal?: boolean;
+  proyecto_id?: string | null;
 }
 
 /** Full warehouse row for the management screen (R12). */

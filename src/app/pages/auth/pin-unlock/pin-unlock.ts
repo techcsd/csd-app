@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Router } from '@angular/router';
 import { PinPad } from '../../../shared/ui/pin-pad/pin-pad';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
-import { LanguageSelector } from '../../../shared/ui/language-selector/language-selector';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { PinService, MAX_PIN_ATTEMPTS } from '../../../core/services/pin.service';
@@ -21,7 +20,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-pin-unlock',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PinPad, ConfirmDialog, LanguageSelector, TranslatePipe],
+  imports: [PinPad, ConfirmDialog, TranslatePipe],
   templateUrl: './pin-unlock.html',
   styleUrl: './pin-unlock.scss',
 })

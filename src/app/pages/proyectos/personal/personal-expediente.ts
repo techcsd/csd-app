@@ -15,6 +15,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
+import { humanizeError } from '../../../shared/util/friendly-error.util';
 import {
   Cargo,
   FotoTipo,
@@ -137,7 +138,7 @@ export class PersonalExpedientePage implements OnInit {
       }
       this.fotos.set(urls);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'No se pudo cargar el expediente.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo cargar el expediente.');
     } finally {
       this.loading.set(false);
     }

@@ -8,6 +8,7 @@ import { ToastHost } from './shared/components/toast-host/toast-host';
 import { PermisoHost } from './shared/components/permiso-host/permiso-host';
 import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
 import { PermisosOnboarding } from './shared/components/permisos-onboarding/permisos-onboarding';
+import { LanguageOnboarding } from './shared/ui/language-onboarding/language-onboarding';
 import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
@@ -31,11 +32,12 @@ import { TrackingService } from './core/services/tracking.service';
 import { UserContextService } from './core/services/user-context.service';
 import { ImpersonationService } from './core/services/impersonation.service';
 import { ThemeService } from './core/services/theme.service';
+import { IdiomaOnboardingService } from './core/i18n/idioma-onboarding.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, InAppCamera],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -65,6 +67,8 @@ export class App {
   ctx = inject(UserContextService);
   /** BB — "Entrar como": banner "Estás viendo como X" + salir. */
   imp = inject(ImpersonationService);
+  /** BS4 — diálogo de primer ingreso de idioma (modal bloqueante en el shell). */
+  idiomaOnboarding = inject(IdiomaOnboardingService);
   private router = inject(Router);
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
   private trackingArrancado = false;
@@ -173,6 +177,10 @@ export class App {
       // corre antes del login). Idempotente: no-op tras el primer arranque exitoso.
       if (!this.router.url.startsWith('/auth')) {
         void this.notificaciones.iniciarRealtime();
+        // BS4 — diálogo de primer ingreso de idioma: se evalúa al llegar a una
+        // pantalla fuera de /auth (tras login, antes del home). Idempotente: una vez
+        // decidido/mostrado, no re-consulta.
+        void this.idiomaOnboarding.evaluar();
         // AS1 — arranca el tracking continuo una vez hay sesión (una vez por login;
         // se re-arma tras cada login porque `apagar()` en logout resetea el flag).
         if (!this.trackingArrancado) {

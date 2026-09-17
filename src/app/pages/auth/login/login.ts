@@ -6,7 +6,6 @@ import { SessionService } from '../../../core/services/session.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
-import { LanguageSelector } from '../../../shared/ui/language-selector/language-selector';
 import { formatCedula, soloDigitosCedula } from '../../../core/util/cedula';
 
 type Modo = 'correo' | 'conductor';
@@ -19,7 +18,7 @@ type Modo = 'correo' | 'conductor';
   selector: 'app-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, TranslatePipe, LanguageSelector],
+  imports: [FormsModule, RouterLink, TranslatePipe],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })

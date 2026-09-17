@@ -1,0 +1,32 @@
+<div class="lang-ob" role="dialog" aria-modal="true">
+  <div class="lang-ob__card">
+    <h1 class="lang-ob__title">Idioma · Language · Lang</h1>
+    <p class="lang-ob__hint">{{ 'Elige el idioma de la app.' | t }}</p>
+
+    <div class="lang-ob__opciones">
+      @for (op of opciones; track op.code) {
+        <button
+          type="button"
+          class="lang-ob__opt"
+          [class.lang-ob__opt--on]="seleccion() === op.code"
+          (click)="elegir(op.code)"
+        >
+          <span class="lang-ob__flag" aria-hidden="true">{{ op.bandera }}</span>
+          <span class="lang-ob__nombre">{{ op.nativo }}</span>
+          @if (seleccion() === op.code) {
+            <span class="lang-ob__check" aria-hidden="true">✓</span>
+          }
+        </button>
+      }
+    </div>
+
+    <button
+      type="button"
+      class="lang-ob__confirm"
+      [disabled]="guardando()"
+      (click)="confirmar()"
+    >
+      {{ (guardando() ? 'Guardando…' : 'Continuar') | t }}
+    </button>
+  </div>
+</div>

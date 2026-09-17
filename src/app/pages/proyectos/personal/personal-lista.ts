@@ -11,6 +11,7 @@ import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refre
 import { UserContextService } from '../../../core/services/user-context.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
 import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, CUADRILLAS, ASEGURAMIENTO, ASEGURAMIENTO_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
+import { humanizeError } from '../../../shared/util/friendly-error.util';
 
 /** AR1 (app) — Consulta del personal de obra: conteos + buscador + filtros + rows. */
 @Component({
@@ -148,7 +149,7 @@ export class PersonalListaPage {
       this.obras.set(obras);
       this.cargos.set(cargos);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'No se pudo cargar el personal.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo cargar el personal.');
     } finally {
       this.loading.set(false);
     }

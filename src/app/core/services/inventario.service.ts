@@ -219,7 +219,7 @@ export class InventarioService {
     const data = await this.catalog.refresh<Bodega[]>(CAT_BODEGAS, async () => {
       const { data, error } = await this.supabase.client
         .from('bodegas')
-        .select('id, nombre')
+        .select('id, nombre, es_central, es_principal, proyecto_id')
         .eq('activo', true)
         .order('nombre');
       if (error) throw new Error(error.message);
@@ -570,7 +570,7 @@ export class InventarioService {
     await this.catalog.refresh<Bodega[]>(CAT_BODEGAS, async () => {
       const { data, error } = await this.supabase.client
         .from('bodegas')
-        .select('id, nombre')
+        .select('id, nombre, es_central, es_principal, proyecto_id')
         .eq('activo', true)
         .order('nombre');
       if (error) throw new Error(error.message);

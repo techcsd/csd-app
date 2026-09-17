@@ -21,6 +21,7 @@ import {
   esTareaAtrasada,
 } from '../../../core/models/cronograma.model';
 import { formatFecha } from '../../../core/util/fecha';
+import { humanizeError } from '../../../shared/util/friendly-error.util';
 
 /** Barra de timeline calculada (posición y ancho en % del rango total). */
 interface BarraTimeline {
@@ -116,7 +117,7 @@ export class CronogramaPage {
     } catch (e) {
       // AW1/AS24 #2 — un fallo de carga NO es "sin cronograma": se marca como error
       // para pintar el estado de reintento (nunca el empty-state "Sin tareas").
-      this.error.set(e instanceof Error ? e.message : 'No pudimos cargar el cronograma.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No pudimos cargar el cronograma.');
     } finally {
       this.loading.set(false);
     }

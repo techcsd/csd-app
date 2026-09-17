@@ -16,10 +16,9 @@ import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
-import { ToggleSwitch } from '../../shared/ui/toggle-switch/toggle-switch';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
-import { ThemeService } from '../../core/services/theme.service';
+import { ThemeService, ThemePref } from '../../core/services/theme.service';
 import { FormsModule } from '@angular/forms';
 
 /** Profile / settings: identity, app version, update check, logout. */
@@ -27,7 +26,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-perfil',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialog, AvatarEditor, ToggleSwitch, LanguageSelector, TranslatePipe, FormsModule],
+  imports: [ConfirmDialog, AvatarEditor, LanguageSelector, TranslatePipe, FormsModule],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
@@ -66,6 +65,13 @@ export class PerfilPage {
   agrupado = this.ctx.agruparHome;
   agrupadoBusy = signal(false);
   online = this.network.online;
+  // BS3 — Apariencia (claro/oscuro/sistema). Nombres/orden alineados con el módulo
+  // Configuración de la web. 'sistema' = sigue el tema del teléfono.
+  readonly aparienciaOpts: { pref: ThemePref; label: string; icon: string }[] = [
+    { pref: 'claro', label: 'Claro', icon: '☀️' },
+    { pref: 'oscuro', label: 'Oscuro', icon: '🌙' },
+    { pref: 'sistema', label: 'Automático', icon: '📱' },
+  ];
   version = environment.version;
   versionPublicada = () => this.versionSvc.etiquetaVersion;
   hayNueva = () => this.versionSvc.hayNueva();
@@ -80,6 +86,11 @@ export class PerfilPage {
 
   constructor() {
     void this.loadBiometria();
+  }
+
+  /** BS3 — cambia la apariencia (claro/oscuro/sistema). Sincroniza con la web. */
+  setApariencia(pref: ThemePref): void {
+    void this.theme.setPref(pref);
   }
 
   private async loadBiometria(): Promise<void> {

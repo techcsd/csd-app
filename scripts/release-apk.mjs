@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.24.1';
+const VERSION = '2.25.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,17 +58,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '2.24.1';
+const MIN_VERSION = '2.25.0';
 const RELEASED_AT = '2026-09-17';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Cartillas muestran la obra + tu idioma te sigue entre dispositivos';
+const TITULO = 'Elige tu idioma al entrar · tema Automático · mensajes más claros';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Ingeniería', d: 'Las cartillas ahora muestran la obra y el ingeniero en la lista y en el detalle.' },
-  { t: 'mejora', m: 'Ajustes', d: 'El idioma que eliges ahora se guarda en tu cuenta y te sigue cuando entras desde otro teléfono.' },
+  { t: 'nuevo', m: 'Ajustes', d: 'La primera vez que entras eliges tu idioma (Español, English o Kreyòl). Puedes cambiarlo cuando quieras desde tu Perfil; ya no aparece en la pantalla del PIN.' },
+  { t: 'mejora', m: 'Ajustes', d: 'En tu Perfil puedes elegir el tema Claro, Oscuro o Automático (sigue el de tu teléfono). Se sincroniza con la web.' },
+  { t: 'mejora', m: 'Transporte', d: 'Al generar un conduce, el almacén de origen muestra la Bodega Central de primera y ya viene seleccionada.' },
+  { t: 'arreglo', m: 'General', d: 'Los mensajes de error ahora se explican en palabras claras, sin códigos técnicos.' },
 ];
 
 const TIPO_POR_COMMIT = {

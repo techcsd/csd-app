@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { CedulaPipe } from '../../pipes/cedula-pipe';
+import { humanizeError } from '../../util/friendly-error.util';
 
 /**
  * P8 — modal para generar el acceso a la app de un conductor (usuario = cédula,
@@ -76,7 +77,7 @@ export class GenerarAcceso {
       );
       this.generado.emit({ usuarioId: res.usuarioId, rotated: res.rotated });
     } catch (e) {
-      this.error.set(e instanceof Error ? e.message : 'No se pudo generar el acceso.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo generar el acceso.');
     } finally {
       this.submitting.set(false);
     }

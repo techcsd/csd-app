@@ -10,6 +10,7 @@ import { ConducesService, ProveedorTransporte, ConduceExternoLugar } from '../..
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
+import { humanizeError } from '../../../shared/util/friendly-error.util';
 
 /** Proveedor elegido: del catálogo (id) o texto libre «Otro» (sin registrar aún). */
 interface ProveedorElegido {
@@ -176,7 +177,7 @@ export class ConduceExternoPage {
       });
       this.exito.set(prov.nombre);
     } catch (e) {
-      this.error.set(e instanceof Error ? e.message : 'No se pudo emitir el conduce externo.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo emitir el conduce externo.');
     } finally {
       this.guardando.set(false);
     }

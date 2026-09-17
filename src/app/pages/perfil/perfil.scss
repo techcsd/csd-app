@@ -154,18 +154,51 @@
   flex: 1;
 }
 
-// BR7 — sección de idioma en Perfil.
+// BR7/BS3 — secciones de preferencias en Perfil (Apariencia, Idioma).
 .perfil__lang {
   margin: 8px 0;
 }
-.perfil__lang-label {
+.perfil__seccion {
+  margin: 12px 0;
+}
+.perfil__seccion-label {
   display: block;
   margin-bottom: 8px;
   font-weight: 700;
   color: var(--color-text-primary);
 }
-.perfil__lang-note {
+.perfil__seccion-note {
   margin-top: 8px;
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+
+// BS3 — selector segmentado de Apariencia (claro/oscuro/sistema).
+.perfil__apariencia {
+  display: flex;
+  gap: 8px;
+}
+.perfil__apar-opt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--touch-min);
+  padding: 12px 8px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+.perfil__apar-opt--on {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+.perfil__apar-icon {
+  font-size: 22px;
+  line-height: 1;
 }

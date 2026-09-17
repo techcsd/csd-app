@@ -1,0 +1,94 @@
+// BS4 — modal bloqueante de primer ingreso de idioma. Cubre TODO (z alto, por
+// encima del shell) y no deja salir sin elegir.
+.lang-ob {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(18, 18, 18, 0.72);
+}
+
+.lang-ob__card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 28px 22px 22px;
+  text-align: center;
+  box-shadow: var(--shadow-lift);
+  animation: lang-ob-pop 0.2s ease;
+}
+@keyframes lang-ob-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.lang-ob__title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.lang-ob__hint {
+  margin: 0 0 20px;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+}
+
+.lang-ob__opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.lang-ob__opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px; // ≥56 px (targets grandes, guantes/sol)
+  padding: 12px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.lang-ob__opt--on {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+}
+
+.lang-ob__flag {
+  font-size: 28px;
+  line-height: 1;
+}
+.lang-ob__nombre {
+  flex: 1;
+}
+.lang-ob__check {
+  color: var(--color-primary);
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.lang-ob__confirm {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 15px;
+  border-radius: var(--radius);
+  font-size: 18px;
+  font-weight: 800;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+.lang-ob__confirm:disabled {
+  opacity: 0.6;
+}

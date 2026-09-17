@@ -141,6 +141,15 @@ export class UserContextService {
     this.roles().some((r) => UserContextService.TECNOLOGIA.includes(r)),
   );
 
+  // BS2 — DESARROLLADOR/programador (espejo EXACTO de sgc.es_desarrollador():
+  // admin | tecnologia | encargado_tecnologia). Más estrecho que esTecnologia (no
+  // incluye gerencia/dirección). Es el gate del DETALLE TÉCNICO de un error (SQLSTATE
+  // + crudo): un trabajador de campo nunca ve jerga de BD; el dev sí, para diagnosticar.
+  private static readonly DESARROLLADOR = ['admin', 'tecnologia', 'encargado_tecnologia'];
+  esDesarrollador = computed(() =>
+    this.roles().some((r) => UserContextService.DESARROLLADOR.includes(r)),
+  );
+
   // AC2 — el módulo Tecnología es público para TODOS los usuarios EXCEPTO el
   // rol chofer (experiencia reducida de la app). Espejo de sgc.es_chofer()
   // (rol 'chofer_transportista'); un usuario con ese rol se considera chofer

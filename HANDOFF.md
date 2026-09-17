@@ -1,5 +1,36 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 17/09/2026 (tarde) — PROMPT-55 ronda BS (app) — BS1/BS2/BS3/BS4 CONSTRUIDOS · build + 3 guards verdes · **SIN commit/release (gateado a Xaviel)**
+
+**TL;DR:** el prompt asumía "2.23.0 pub / 2.24.0 sin commit", pero el repo ya está en **2.24.1 PUBLICADA** (esta mañana). Por eso lo de BS es una **release nueva propia** (propongo **2.25.0**) con su **propio** changelog (BS1-BS4), NO el de 2.24.0 (que ya salió). Contrato del padre **PROMPT-54 F3 verificado VIVO en prod** (probe service_role): `mis_preferencias()`, `set_mi_preferencia('idioma'|'tema',…)`, columna `usuario_preferencias.idioma_elegido_at`. La app los consume **detrás de comprobación de capacidad** (degrada a `mi_idioma_set`/`mi_tema`+local). `npm run build` + `verify-tokens` + `verify-i18n` + `verify-dev-strings` verdes. **HEAD sin cambios** — commit + release gateado a Xaviel.
+
+### 🔴 BS4 (FASE 0, pre-release) — idioma FUERA del PIN/Login + diálogo de primer ingreso
+- **Quitado** `app-language-selector` de `pin-unlock` y `login` (era lo que Xaviel NO quería que saliera; 2.24.1 aún lo lleva ahí). Queda **solo en Perfil › Idioma** (nota: "Los avisos y mensajes del sistema pueden llegar en español").
+- Nuevo `shared/ui/language-onboarding` (modal **bloqueante** en el shell, z 500, no sale sobre el gate de update): 3 opciones nombre nativo + bandera, target ≥56 px, **preselección = idioma del dispositivo** (`I18nService.deviceLang()`), sin Cancelar.
+- Nuevo `core/i18n/idioma-onboarding.service.ts`: decide mostrar = marca local (`idioma_elegido`) → `mis_preferencias().idioma_elegido_at` (capacidad) → preguntar. Si la web ya lo eligió (sellado) → **no pregunta**, adopta. Confirma con `i18n.setIdioma` (local + `mi_idioma_set` canónico) + **sella** `set_mi_preferencia('idioma',…)`; si el sello falla offline, queda pendiente y **reintenta** al próximo arranque. Se dispara en `app.ts` (NavigationEnd fuera de `/auth`, idempotente).
+- `I18nService`: orden de fuentes al arrancar = **servidor → local → dispositivo → es** (`init` ahora usa `deviceLang()`; el servidor manda vía `adoptFromServer` al cargar el perfil).
+
+### BS2 (FASE 1) — nada de lenguaje de developer al usuario
+- `shared/util/friendly-error.util.ts` (**puerto del web**: `humanizeError`/`presentarError`/`errorType`, contrato idéntico).
+- **Red central**: `ToastService` humaniza el tono `error` app-wide (mata ~120 pasos de `e.message` crudo a toast sin tocar 120 sitios). 6 bandas de error (`generar-acceso`, `conduce-externo`, `despachos`, `cronograma`, `personal-lista`, `personal-expediente`) migradas a `humanizeError`.
+- `pendientes` + `outbox-detalle`: el **🩺 Código (SQLSTATE crudo)** ahora solo lo ve `esDesarrollador()` (nuevo computed en `UserContextService` = espejo de `es_desarrollador()`: admin|tecnologia|encargado_tecnologia); el "detalle técnico" expandible se **humaniza** para no-devs. Category-1 (jerga hardcodeada en templates) ya estaba **limpia**.
+- `scripts/verify-dev-strings.mjs` en `prebuild` (baseline **VACÍO**, pasa).
+
+### BS3 (FASE 2) — Perfil ⚙ alineado con Configuración web
+- **Apariencia** = selector segmentado claro/oscuro/**sistema** (☀️/🌙/📱). `ThemeService` ahora es **tri-estado**: `setPref` → `set_mi_preferencia('tema',…)` (capacidad; fallback `set_tema` para claro/oscuro); 'sistema' resuelve con `prefers-color-scheme` y **re-resuelve en vivo**; cachea el tema RESUELTO en `csd-theme` (para el anti-parpadeo del index.html) + la pref en `csd-theme-pref`. `syncFromServer` prefiere `mis_preferencias().tema` (server manda) y cae a `mi_tema`. API binaria (`set`/`isDark`/`toggle`) intacta.
+- Idioma (BS4), Notificaciones ("Preferencias de avisos", ya existía) y Acerca (versión instalada/publicada/mínima, ya existía) quedan como secciones. (No se replicó densidad/tamaño/Inicio/Sesión/Privacidad de la web — fuera del alcance BS4/BS3 explícito.)
+
+### BS1 (FASE 3) — picker de almacén de origen en `generar-conduce`
+- Ya ofrecía TODAS las bodegas (sin filtro `proyecto_id`). Añadido: `Bodega` gana `es_central/es_principal/proyecto_id`; `getBodegas` los trae; **Central primero** (🏢) en `bodegaOptions` (sort estable) y **preseleccionada** por DEFAULT (origen de despacho canónico) en modo libre y despacho `?requisicion=` — la sobreescriben deep-link `bodega`/borrador/corrección.
+- **DEFAULT app**: preselecciona Central (hay UNA sola Central real, `es_central=true`); la refinación "Central si cubre ≥1 renglón con stock, si no la de la obra" + badge "n/N con stock" por opción quedó **diferida** (bajo valor con una sola Central; el n/N "solo-si-cacheado" casi nunca pintaría y añade plumbing async).
+
+### Release (GATEADO a Xaviel — pide OK)
+- **Versión propuesta 2.25.0** (bump 4 sitios: `environment.ts`/`.prod.ts`, `release-apk.mjs` VERSION+MIN, `android/app/build.gradle`). CAMBIOS_CURADOS propios BS1-BS4 (ver abajo). NO reusar el changelog de 2.24.0 (ya salió).
+- **Verify on resume:** (1) PIN y Login **sin** selector de idioma; (2) usuario nuevo → login → **diálogo** una vez → home en el idioma elegido; cerrar/abrir → **sin** diálogo; cuenta que eligió en la web → la app **no** pregunta; (3) Perfil › **Apariencia** (claro/oscuro/sistema) e **Idioma**; (4) `generar-conduce` → "Almacén de origen" con **Bodega Central primero y preseleccionada**; (5) que a un no-dev **no** le salga `🩺 Código`/jerga de BD en Pendientes.
+- **Rollback:** `git revert` de los commits de esta ronda; en SGC bajar `minima`/`publicada` de 2.25.0. Los objetos del padre (BS3/BS4) son aditivos y ya vivían en prod → se dejan.
+
+---
+
 ## 🟢 SESIÓN 17/09/2026 — **RELEASE 2.24.1 PUBLICADA + MÍNIMA FORZADA** · cola BR cerrada (2 RPCs del padre aplicados + idioma cross-device)
 Sobre 2.24.0 se cerraron los residuales de la ronda:
 - **Padre (SGC) — 2 migraciones aditivas APLICADAS a prod + espejadas en `SGC/sql` (commit SGC `fcc2b24`):** `combustible_avisar_revision(p_resumen,p_echada_id)` → el botón **"Avisar a Logística"** de la app **ya avisa de verdad** (funciona también en 2.24.0, es server-side); `usuarios.idioma` (text, default es, check es|en|ht) + `mi_idioma_set(text)` self-service. Ambos `has_function_privilege('authenticated')` ✓.
