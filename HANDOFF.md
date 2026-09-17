@@ -1,8 +1,12 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 17/09/2026 (tarde) — PROMPT-55 ronda BS (app) — BS1/BS2/BS3/BS4 CONSTRUIDOS · build + 3 guards verdes · **SIN commit/release (gateado a Xaviel)**
+## 🟢 SESIÓN 17/09/2026 (tarde) — PROMPT-55 ronda BS (app) — **RELEASE 2.25.0 PUBLICADA + MÍNIMA FORZADA** · BS1/BS2/BS3/BS4
 
-**TL;DR:** el prompt asumía "2.23.0 pub / 2.24.0 sin commit", pero el repo ya está en **2.24.1 PUBLICADA** (esta mañana). Por eso lo de BS es una **release nueva propia** (propongo **2.25.0**) con su **propio** changelog (BS1-BS4), NO el de 2.24.0 (que ya salió). Contrato del padre **PROMPT-54 F3 verificado VIVO en prod** (probe service_role): `mis_preferencias()`, `set_mi_preferencia('idioma'|'tema',…)`, columna `usuario_preferencias.idioma_elegido_at`. La app los consume **detrás de comprobación de capacidad** (degrada a `mi_idioma_set`/`mi_tema`+local). `npm run build` + `verify-tokens` + `verify-i18n` + `verify-dev-strings` verdes. **HEAD sin cambios** — commit + release gateado a Xaviel.
+**TL;DR:** el prompt asumía "2.23.0 pub / 2.24.0 sin commit", pero el repo ya estaba en **2.24.1 PUBLICADA** (esa mañana). Por eso BS salió como **release nueva propia = 2.25.0** con su **propio** changelog (BS1-BS4), NO el de 2.24.0 (que ya había salido). Contrato del padre **PROMPT-54 F3 verificado VIVO en prod** (probe service_role): `mis_preferencias()`, `set_mi_preferencia('idioma'|'tema',…)`, columna `usuario_preferencias.idioma_elegido_at`. La app los consume **detrás de comprobación de capacidad** (degrada a `mi_idioma_set`/`mi_tema`+local). Commit `cbd2ecf` en main. `npm run build` + `verify-tokens` + `verify-i18n` + `verify-dev-strings` verdes.
+
+**Release 2.25.0 (con OK de Xaviel):** bump 4 sitios, APK firmado (cert prod, v1+v2+v3), **Y1 registrado** (changelog BS1-BS4 estructurado), subido al bucket (`csd-app-2.25.0.apk` + latest + version.json), `apk_url` actualizado, **PUBLICADA + MÍNIMA = última**. Gate verificado: `version_publicada()` → **pub 2.25.0 / min 2.25.0 / code 2025000**. Higiene de flags OK (solo 2.25.0 con `minima=true`; 2.24.1 sigue `publicada`, minima off).
+
+**⏳ Device-QA de 2.25.0 (OWED — necesita el Redmi de Xaviel):** (1) PIN + Login **sin** selector de idioma; (2) usuario nuevo → login → **diálogo** una vez → home en el idioma elegido; cerrar/abrir → **sin** diálogo; cuenta que ya eligió (web) → **no** pregunta; (3) Perfil › **Apariencia** (claro/oscuro/**sistema** siguiendo el teléfono) e Idioma; (4) `generar-conduce` → "Almacén de origen" con **Bodega Central de primera y preseleccionada**; (5) que a un **no-dev** NO le salga `🩺 Código`/jerga de BD en Pendientes (probar con un pendiente 'sistema'). *La app ya está MÍNIMA — si el device-QA encuentra algo grave, rollback abajo.*
 
 ### 🔴 BS4 (FASE 0, pre-release) — idioma FUERA del PIN/Login + diálogo de primer ingreso
 - **Quitado** `app-language-selector` de `pin-unlock` y `login` (era lo que Xaviel NO quería que saliera; 2.24.1 aún lo lleva ahí). Queda **solo en Perfil › Idioma** (nota: "Los avisos y mensajes del sistema pueden llegar en español").
@@ -24,10 +28,10 @@
 - Ya ofrecía TODAS las bodegas (sin filtro `proyecto_id`). Añadido: `Bodega` gana `es_central/es_principal/proyecto_id`; `getBodegas` los trae; **Central primero** (🏢) en `bodegaOptions` (sort estable) y **preseleccionada** por DEFAULT (origen de despacho canónico) en modo libre y despacho `?requisicion=` — la sobreescriben deep-link `bodega`/borrador/corrección.
 - **DEFAULT app**: preselecciona Central (hay UNA sola Central real, `es_central=true`); la refinación "Central si cubre ≥1 renglón con stock, si no la de la obra" + badge "n/N con stock" por opción quedó **diferida** (bajo valor con una sola Central; el n/N "solo-si-cacheado" casi nunca pintaría y añade plumbing async).
 
-### Release (GATEADO a Xaviel — pide OK)
-- **Versión propuesta 2.25.0** (bump 4 sitios: `environment.ts`/`.prod.ts`, `release-apk.mjs` VERSION+MIN, `android/app/build.gradle`). CAMBIOS_CURADOS propios BS1-BS4 (ver abajo). NO reusar el changelog de 2.24.0 (ya salió).
-- **Verify on resume:** (1) PIN y Login **sin** selector de idioma; (2) usuario nuevo → login → **diálogo** una vez → home en el idioma elegido; cerrar/abrir → **sin** diálogo; cuenta que eligió en la web → la app **no** pregunta; (3) Perfil › **Apariencia** (claro/oscuro/sistema) e **Idioma**; (4) `generar-conduce` → "Almacén de origen" con **Bodega Central primero y preseleccionada**; (5) que a un no-dev **no** le salga `🩺 Código`/jerga de BD en Pendientes.
-- **Rollback:** `git revert` de los commits de esta ronda; en SGC bajar `minima`/`publicada` de 2.25.0. Los objetos del padre (BS3/BS4) son aditivos y ya vivían en prod → se dejan.
+### Release 2.25.0 — PUBLICADA (ver TL;DR arriba)
+- Commit `cbd2ecf` (main). Bump: `environment.ts`/`.prod.ts`, `release-apk.mjs` (VERSION+MIN), `android/app/build.gradle`. CAMBIOS_CURADOS propios BS1-BS4.
+- **Rollback:** en SGC `update sgc.app_versiones set minima=(version='2.24.1'), publicada=(version in ('2.24.1','2.24.0','2.23.0')) where plataforma='movil'` (vuelve la mínima a 2.24.1) + `git revert cbd2ecf && git push`. Los objetos del padre (BS3/BS4: `set_mi_preferencia`/`mis_preferencias`/`idioma_elegido_at`/tema 'sistema') son aditivos y ya vivían en prod → se dejan.
+- **Pendiente NO-app (SGC repo):** `COBERTURA-NOTAS.md` (SGC) editado con el espejo BS de la app — **sin commitear** en SGC (patrón habitual; commitéalo en la próxima sesión del padre).
 
 ---
 
