@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.24.0';
+const VERSION = '2.24.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,20 +58,17 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '2.24.0';
-const RELEASED_AT = '2026-09-16';
+const MIN_VERSION = '2.24.1';
+const RELEASED_AT = '2026-09-17';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Cartillas de acero, rechazar entregas y selector de idioma';
+const TITULO = 'Cartillas muestran la obra + tu idioma te sigue entre dispositivos';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Ingeniería', d: 'Cartillas de acero: registra los atados y sus piezas (marca, diámetro, figura y medidas de cada lado) con el peso calculado en el momento. Funcionan sin internet y oficina las revisa desde la web.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Ahora puedes rechazar una entrega desde «Entregas por recibir»: pones el motivo y una foto, y a quien la envió le llega el aviso para corregirla y reenviarla.' },
-  { t: 'nuevo', m: 'Ajustes', d: 'Selector de idioma dentro de la app (Español / English). Se elige en tu perfil y en la pantalla del PIN; cambia al instante.' },
-  { t: 'mejora', m: 'Combustible', d: 'El salto de kilómetros ya no te impide registrar la echada: se envía igual y Logística la revisa. Nadie se queda sin registrar lo que echó de verdad.' },
-  { t: 'mejora', m: 'Envíos', d: 'La tarjeta de «con problema al enviar» ahora tiene botones para Reintentar, Descartar y avisarle a Logística ahí mismo, sin entrar a otra pantalla.' },
+  { t: 'mejora', m: 'Ingeniería', d: 'Las cartillas ahora muestran la obra y el ingeniero en la lista y en el detalle.' },
+  { t: 'mejora', m: 'Ajustes', d: 'El idioma que eliges ahora se guarda en tu cuenta y te sigue cuando entras desde otro teléfono.' },
 ];
 
 const TIPO_POR_COMMIT = {

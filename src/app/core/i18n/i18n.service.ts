@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
+import { SupabaseService } from '../services/supabase.service';
 
 /** BR7 — idiomas soportados. `es` es el idioma base (las CLAVES de traducción SON
  *  el texto en español, así que `es` nunca necesita catálogo y funciona 100%
@@ -25,12 +26,14 @@ const PREF_KEY = 'idioma';
  * Los textos que vienen del SERVIDOR (catálogos, nombres de obra, mensajes de
  * negocio como DR481) siguen en español — no pasan por aquí (documentado en Perfil).
  *
- * Persistencia: local (`Preferences`). Cuando el padre agregue `usuarios.idioma`
- * (migración aditiva, ver HANDOFF), se sincroniza para que siga al usuario entre
- * dispositivos; mientras tanto es por dispositivo.
+ * Persistencia: local (`Preferences`) para respuesta inmediata/offline, Y en el
+ * servidor (`usuarios.idioma` vía `mi_idioma_set`) para que el idioma siga al
+ * usuario entre dispositivos (UserContextService lo adopta al cargar el perfil).
  */
 @Injectable({ providedIn: 'root' })
 export class I18nService {
+  private supabase = inject(SupabaseService);
+
   /** Idioma activo. Cualquier `t()` que lo lea se vuelve reactivo al cambio. */
   private _idioma = signal<Idioma>('es');
   idioma = this._idioma.asReadonly();
@@ -89,8 +92,28 @@ export class I18nService {
     } catch {
       /* persistencia best-effort */
     }
-    // TODO(padre): cuando exista `usuarios.idioma`, llamar mi_idioma_set(lang) aquí
-    // (best-effort, online) para que el idioma siga al usuario entre dispositivos.
+    // BR7 — sincroniza el idioma en el servidor (usuarios.idioma) para que siga al
+    // usuario entre dispositivos. Best-effort/online: si falla, la preferencia local
+    // ya quedó guardada y se reintenta en el próximo cambio.
+    try {
+      await this.supabase.client.rpc('mi_idioma_set', { p_idioma: lang });
+    } catch {
+      /* offline / RPC aún no desplegado → solo local (degrada bien) */
+    }
+  }
+
+  /** BR7 — adopta el idioma que trae el perfil del servidor (cross-device). NO
+   *  re-escribe el servidor (evita bucle): solo aplica local + persiste en el
+   *  dispositivo. La llama UserContextService al cargar el perfil. */
+  async adoptFromServer(lang: string): Promise<void> {
+    if (!this.esValido(lang) || this._idioma() === lang) return;
+    if (lang !== 'es' && !this.catalogos()[lang]) await this.cargarCatalogo(lang);
+    this._idioma.set(lang);
+    try {
+      await Preferences.set({ key: PREF_KEY, value: lang });
+    } catch {
+      /* best-effort */
+    }
   }
 
   /** Carga `assets/i18n/<lang>.json` (SW-cacheado offline). Best-effort: si falla

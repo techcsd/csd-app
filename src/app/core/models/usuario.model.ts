@@ -23,6 +23,8 @@ export interface Usuario {
   avatar_path?: string | null;
   /** BD1 — bolsa de preferencias por usuario (server-side). P. ej. `agrupar_home`. */
   preferencias?: Record<string, unknown> | null;
+  /** BR7 — idioma preferido (es|en|ht), sincronizado entre dispositivos. */
+  idioma?: string | null;
   roles?: UsuarioRol[];
 }
 

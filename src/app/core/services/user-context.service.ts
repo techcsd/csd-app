@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
+import { I18nService } from '../i18n/i18n.service';
 import { Usuario } from '../models/usuario.model';
 import { environment } from '../../../environments/environment';
 
@@ -9,7 +10,7 @@ const AVATARS_BUCKET = 'sgc-avatars';
 
 // Selección del perfil + roles/módulos (misma forma que usa SGC).
 const PROFILE_SELECT =
-  'id, nombre, email, telefono, activo, es_prueba, avatar_path, preferencias, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
+  'id, nombre, email, telefono, activo, es_prueba, avatar_path, preferencias, idioma, roles:usuarios_roles!usuario_id(rol:roles(codigo, nombre, modulos, permisos))';
 // Prefijo de la caché en disco del perfil (offline-first).
 const PROFILE_CACHE_PREFIX = 'perfil_';
 
@@ -27,6 +28,7 @@ const PROFILE_CACHE_PREFIX = 'perfil_';
 export class UserContextService {
   private supabase = inject(SupabaseService);
   private catalog = inject(CatalogService);
+  private i18n = inject(I18nService);
 
   private _profile = signal<Usuario | null>(null);
   profile = this._profile.asReadonly();
@@ -252,6 +254,11 @@ export class UserContextService {
 
     if (data) this._profile.set(data);
     else if (!cached) this._profile.set(null);
+
+    // BR7 — el idioma del servidor sigue al usuario entre dispositivos: adoptarlo
+    // al cargar el perfil (best-effort; no re-escribe el servidor, solo aplica local).
+    const idioma = (data ?? cached)?.idioma;
+    if (idioma) void this.i18n.adoptFromServer(idioma);
   }
 
   /**
