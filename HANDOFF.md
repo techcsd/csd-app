@@ -1,5 +1,15 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 17/09/2026 — **RELEASE 2.24.1 PUBLICADA + MÍNIMA FORZADA** · cola BR cerrada (2 RPCs del padre aplicados + idioma cross-device)
+Sobre 2.24.0 se cerraron los residuales de la ronda:
+- **Padre (SGC) — 2 migraciones aditivas APLICADAS a prod + espejadas en `SGC/sql` (commit SGC `fcc2b24`):** `combustible_avisar_revision(p_resumen,p_echada_id)` → el botón **"Avisar a Logística"** de la app **ya avisa de verdad** (funciona también en 2.24.0, es server-side); `usuarios.idioma` (text, default es, check es|en|ht) + `mi_idioma_set(text)` self-service. Ambos `has_function_privilege('authenticated')` ✓.
+- **App (`0a72ce6`):** el **idioma se sincroniza al servidor** (`mi_idioma_set` en `setIdioma`) y `UserContextService.loadProfile` lo **adopta** del perfil (`i18n.adoptFromServer`) → el idioma **sigue al usuario entre dispositivos** (antes solo local). `PROFILE_SELECT` trae `idioma`. + el fix cosmético de la obra en cartillas (`2ddfd69`).
+- **Release 2.24.1:** bump 4 sitios, APK firmado (cert prod), **Y1 registrado** (2 mejoras: obra en cartillas · idioma cross-device), subido al bucket, **PUBLICADA + MÍNIMA = última**. Gate verificado: `version_publicada()` → **pub 2.24.1 / min 2.24.1 / code 2024001**. Higiene de flags OK (2.24.0/2.23.0 pub, min off).
+- **Device-QA de 2.24.1:** el teléfono se desconectó del USB antes de poder correr **F4 (rechazar recepción)** y **F1 (combustible salto de km)** — quedan pendientes de device (code-verified + contrato del padre con smoke). El resto de la ronda quedó device-verificado en 2.24.0 (cartillas E2E `CAR-000001`, idioma en vivo).
+- **Rollback:** en SGC `update sgc.app_versiones set minima=(version='2.24.0'), publicada=(version in ('2.24.0','2.23.0')) where plataforma='movil'` + `git revert 0a72ce6 2ddfd69 && git push` (los RPCs del padre son aditivos: se pueden dejar).
+
+---
+
 ## 🟢 SESIÓN 16/09/2026 — PROMPT-53 ronda BR (app) — F1/F2/F4/F5/F6 CONSTRUIDOS · build+tokens+i18n verdes · **SIN commit/release (gateado a Xaviel)**
 
 **TL;DR:** el padre (SGC, PROMPT-52) está **desplegado en prod** (web 1.135.0 en main, migraciones BR aplicadas), lo que destrabó todo el lado app. FASE 0 y FASE 3 (BO9 multi-lado) ya estaban en 2.23.0 → no se rehacen. Construido esta sesión, verificado contra prod (`pg_get_functiondef`): **F1 (BR1/BR6 combustible), F2 (BR8 routing El flaco), F4 (BR4 rechazar recepción), F5 (BO10 cartillas v1), F6 (BR7 idioma)**. `npm run build` + `verify-tokens` + `verify-i18n` verdes. **HEAD sin cambios** — commit + release 2.24.0 gateado a Xaviel. Trabajo con un sub-agente en paralelo (F6 i18n) sin colisión.
