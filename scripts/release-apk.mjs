@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.25.0';
+const VERSION = '2.26.0';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -67,10 +67,13 @@ const TITULO = 'Elige tu idioma al entrar · tema Automático · mensajes más c
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Ajustes', d: 'La primera vez que entras eliges tu idioma (Español, English o Kreyòl). Puedes cambiarlo cuando quieras desde tu Perfil; ya no aparece en la pantalla del PIN.' },
-  { t: 'mejora', m: 'Ajustes', d: 'En tu Perfil puedes elegir el tema Claro, Oscuro o Automático (sigue el de tu teléfono). Se sincroniza con la web.' },
-  { t: 'mejora', m: 'Transporte', d: 'Al generar un conduce, el almacén de origen muestra la Bodega Central de primera y ya viene seleccionada.' },
-  { t: 'arreglo', m: 'General', d: 'Los mensajes de error ahora se explican en palabras claras, sin códigos técnicos.' },
+  { t: 'arreglo', m: 'Transporte', d: 'Tomar fotos al hacer un Conduce externo ya no cierra la app.' },
+  { t: 'nuevo', m: 'General', d: 'Si la app se cierra mientras llenas un Conduce externo, al volver aparece "Tienes un borrador sin enviar" con tus datos y fotos ya guardados.' },
+  { t: 'arreglo', m: 'Transporte', d: 'Transferir/crear un Conduce externo con un proveedor que ya no está en la lista ya no falla: se envía por su nombre y el conduce no se pierde.' },
+  { t: 'arreglo', m: 'Ajustes', d: 'El inglés ahora cubre el inicio, Transporte y tu Perfil; el resto llega poco a poco (se muestra "beta" con el % cubierto). Kreyòl estará disponible pronto.' },
+  { t: 'arreglo', m: 'Ajustes', d: 'Tu foto de perfil ahora se ve en Mi perfil y en Mi detalle.' },
+  { t: 'mejora', m: 'Inventario', d: 'Al despachar una requisición puedes dejar en 0 lo que no despachaste: queda pendiente y se envía el resto.' },
+  { t: 'mejora', m: 'Ajustes', d: 'Las alarmas de reporte e inspección semanal ahora se pueden silenciar para quien tiene permiso.' },
 ];
 
 const TIPO_POR_COMMIT = {

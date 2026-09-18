@@ -1,13 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { IdiomaOnboardingService } from '../../../core/i18n/idioma-onboarding.service';
-import { Idioma } from '../../../core/i18n/i18n.service';
+import { I18nService, Idioma } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface OpcionIdioma {
   code: Idioma;
   nativo: string;
   bandera: string;
+  beta: boolean;
+  pct: number;
 }
+
+const BANDERAS: Record<Idioma, string> = { es: '🇩🇴', en: '🇺🇸', ht: '🇭🇹' };
 
 /**
  * BS4 — diálogo de PRIMER INGRESO de idioma (modal a pantalla completa,
@@ -29,15 +33,21 @@ interface OpcionIdioma {
 })
 export class LanguageOnboarding {
   private onboarding = inject(IdiomaOnboardingService);
+  private i18n = inject(I18nService);
 
-  readonly opciones: OpcionIdioma[] = [
-    { code: 'es', nativo: 'Español', bandera: '🇩🇴' },
-    { code: 'en', nativo: 'English', bandera: '🇺🇸' },
-    { code: 'ht', nativo: 'Kreyòl ayisyen', bandera: '🇭🇹' },
-  ];
+  /** BT2 — solo se ofrecen idiomas HABILITADOS (Kreyòl queda fuera hasta ≥90%). */
+  readonly opciones = computed<OpcionIdioma[]>(() =>
+    this.i18n
+      .estadoIdiomas()
+      .filter((e) => !e.deshabilitado)
+      .map((e) => ({ code: e.code, nativo: e.nativo, bandera: BANDERAS[e.code], beta: e.beta, pct: e.pct })),
+  );
 
-  /** Elegido en el diálogo (arranca en la preselección del dispositivo). */
-  seleccion = signal<Idioma>(this.onboarding.preseleccion());
+  /** Elegido en el diálogo (arranca en la preselección del dispositivo, si está
+   *  habilitada; si no, español). */
+  seleccion = signal<Idioma>(
+    this.i18n.habilitado(this.onboarding.preseleccion()) ? this.onboarding.preseleccion() : 'es',
+  );
   guardando = signal(false);
 
   elegir(code: Idioma): void {

@@ -1,0 +1,8 @@
+{
+  "_comment": "BT2 (regla 17) — pantallas que DEBEN estar 100% en inglés (verify-i18n falla si una regresa). Se amplía a medida que se cablea la app; el % global honesto lo lleva coverage.json y decide si 'en' se ofrece o va como beta.",
+  "pantallas": [
+    "pages/home",
+    "pages/transporte",
+    "pages/perfil"
+  ]
+}

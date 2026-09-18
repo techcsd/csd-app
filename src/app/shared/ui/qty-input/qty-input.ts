@@ -35,6 +35,12 @@ export class QtyInput {
   decimales = input(true);
   /** Piso de los botones ± y valor de reversión si queda vacío (>0). */
   min = input(1);
+  /**
+   * BT8 — permite fijar 0 sin revertir (despacho de requisición: 0 = "no despaché
+   * este renglón" = pendiente). Por defecto false → conserva el anti-0 de los
+   * carritos (0 destruiría el item; borrar es la ✕).
+   */
+  allowZero = input(false);
   /** Muestra los botones ± (por defecto sí). */
   steppers = input(true);
   ariaLabel = input('Cantidad');
@@ -85,29 +91,42 @@ export class QtyInput {
   onBlur(): void {
     this.editing = false;
     const n = parseNumeroFlexible(this.raw(), 'decimal');
-    if (n == null || this.clamp(n) <= 0) {
+    // BT8 — con allowZero, un 0 EXPLÍCITO se conserva (renglón pendiente). El campo
+    // VACÍO (n == null) sí revierte al último válido para no dejarlo en blanco.
+    if (n == null) {
+      const revert = this.lastGood > 0 ? this.lastGood : this.piso();
+      this.value.set(revert);
+      this.raw.set(this.fmt(revert));
+      return;
+    }
+    const v = this.clamp(n);
+    if (v <= 0 && !this.allowZero()) {
       const revert = this.lastGood > 0 ? this.lastGood : this.min();
       this.lastGood = revert;
       this.value.set(revert);
       this.raw.set(this.fmt(revert));
       return;
     }
-    const v = this.clamp(n);
-    this.lastGood = v;
+    if (v > 0) this.lastGood = v;
     this.value.set(v);
     this.raw.set(this.fmt(v));
   }
 
   step(delta: number): void {
-    const base = this.value() || this.lastGood || this.min();
-    const v = this.clamp(Math.max(this.min(), base + delta));
-    this.lastGood = v;
+    const base = this.value() || this.lastGood || this.piso();
+    const v = this.clamp(Math.max(this.piso(), base + delta));
+    if (v > 0) this.lastGood = v;
     this.value.set(v);
     this.raw.set(this.fmt(v));
   }
 
+  /** Piso efectivo de los botones ±: 0 cuando allowZero, si no el `min`. */
+  private piso(): number {
+    return this.allowZero() ? 0 : this.min();
+  }
+
   atMin(): boolean {
-    return this.value() <= this.min();
+    return this.value() <= this.piso();
   }
   atMax(): boolean {
     const mx = this.max();

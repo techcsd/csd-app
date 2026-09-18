@@ -882,6 +882,25 @@ export class GenerarConducePage implements OnDestroy {
   quitar(articuloId: string): void {
     this.cart.update((list) => list.filter((l) => l.articulo_id !== articuloId));
   }
+  /**
+   * BT8 — quitar un renglón. En un DESPACHO de requisición, poner 0 = "pendiente"
+   * (se envía el resto y ese renglón queda por despachar); QUITARLO del todo es otra
+   * cosa → confirmamos para no sacar por error un material de la requisición.
+   */
+  quitarRenglon(articuloId: string): void {
+    if (this.esDespacho()) {
+      this.toast.withAction('¿Quitar este renglón del despacho? Con 0 queda pendiente.', {
+        label: 'Quitar',
+        run: () => this.quitar(articuloId),
+      });
+      return;
+    }
+    this.quitar(articuloId);
+  }
+  /** BT8 — ¿este renglón quedó en 0 (pendiente de despachar)? Solo en modo despacho. */
+  esPendiente(cantidad: number): boolean {
+    return this.esDespacho() && cantidad === 0;
+  }
 
   // ---- AU4 — item libre (material no catalogado) ----
   abrirFormLibre(): void {

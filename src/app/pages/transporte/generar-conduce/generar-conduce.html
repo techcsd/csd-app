@@ -128,11 +128,14 @@
             <div class="gconduce__items">
               @for (l of cart(); track l.articulo_id) {
                 <div class="gconduce__item">
-                  <span class="gconduce__item-name">{{ l.nombre }}</span>
+                  <span class="gconduce__item-name">
+                    {{ l.nombre }}
+                    @if (esPendiente(l.cantidad)) { <span class="gconduce__pend-tag">Pendiente</span> }
+                  </span>
                   <div class="gconduce__item-qty">
-                    <app-qty-input [value]="l.cantidad" [max]="topeStock(l.articulo_id!)" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
+                    <app-qty-input [value]="l.cantidad" [max]="topeStock(l.articulo_id!)" [allowZero]="esDespacho()" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
                     <span class="gconduce__unit">{{ l.unidad }}</span>
-                    <button type="button" class="gconduce__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
+                    <button type="button" class="gconduce__item-x" (click)="quitarRenglon(l.articulo_id!)" aria-label="Quitar">✕</button>
                   </div>
                   @if (origenTipo() === 'almacen') {
                     @let s = stockDe(l.articulo_id);
@@ -148,6 +151,14 @@
             </div>
             @if (hayExceso()) {
               <div class="gconduce__band gconduce__band--warn">⚠ Estás sacando más de lo disponible en algún material. Ajusta la cantidad.</div>
+            }
+            @if (esDespacho()) {
+              <!-- BT8 — 0 = pendiente: se despacha el resto y ese renglón queda por despachar. -->
+              @if (faltaItems()) {
+                <div class="gconduce__band gconduce__band--warn">Pon la cantidad de al menos un renglón. Deja 0 en lo que no despachaste (queda pendiente).</div>
+              } @else {
+                <p class="gconduce__hint">Deja en 0 lo que no despachaste: queda <b>pendiente</b> y se despacha el resto.</p>
+              }
             }
           } @else if (!esFerreteria()) {
             <div class="gconduce__band">🔎 Agrega al menos un material para continuar.</div>

@@ -70,4 +70,34 @@ if (sinTraducir.length) {
   for (const s of sinTraducir.slice(0, 20)) console.log(`    · ${s}`);
   if (sinTraducir.length > 20) console.log(`    … y ${sinTraducir.length - 20} más`);
 }
+
+// 3) BT2 (regla 17) — ALCANCE: las pantallas listadas en `src/app/core/i18n/alcance.json`
+//    DEBEN estar 100% cableadas y traducidas en `en`. Lee el reporte por pantalla que
+//    dejó `i18n-coverage` (corre antes en el prebuild). Si una pantalla del alcance tiene
+//    literales sin t() o no llega a 100% en `en`, FALLA (así el idioma no "se sale" del
+//    alcance sin que nadie lo note).
+const ALCANCE_P = join(ROOT, 'src', 'app', 'core', 'i18n', 'alcance.json');
+const COV_P = join(I18N_DIR, 'coverage.json');
+if (existsSync(ALCANCE_P) && existsSync(COV_P)) {
+  const alcance = JSON.parse(readFileSync(ALCANCE_P, 'utf8'));
+  const pantallas = alcance.pantallas ?? alcance;
+  const cov = JSON.parse(readFileSync(COV_P, 'utf8'));
+  const problemas = [];
+  for (const pant of pantallas) {
+    const c = cov.byScreen?.[pant];
+    if (!c) {
+      problemas.push(`${pant}: no aparece en coverage.json (¿ruta mal escrita?)`);
+      continue;
+    }
+    if (c.sinT > 0) problemas.push(`${pant}: ${c.sinT} literal(es) sin t()`);
+    if (c.en < 100) problemas.push(`${pant}: 'en' cubre ${c.en}% (debe ser 100%)`);
+  }
+  if (problemas.length) {
+    console.error(`\x1b[31m✗ verify-i18n: ${problemas.length} pantalla(s) del ALCANCE incompletas:\x1b[0m`);
+    for (const p of problemas) console.error(`    · ${p}`);
+    console.error(`  Cablea los literales con | t y añade su traducción a en.json, o saca la pantalla del alcance.`);
+    process.exit(1);
+  }
+  console.log(`\x1b[32m✓ verify-i18n:\x1b[0m alcance (${pantallas.length} pantallas) 100% en 'en'.`);
+}
 process.exit(0);

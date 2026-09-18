@@ -1,0 +1,1243 @@
+{
+  "en": 4,
+  "ht": 0,
+  "alcance": true,
+  "byScreen": {
+    "": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/actualizar": {
+      "conT": 0,
+      "sinT": 18,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin": {
+      "conT": 0,
+      "sinT": 11,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/auditoria": {
+      "conT": 0,
+      "sinT": 20,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/catalogos": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/conteos": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/parametros": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/reportes": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/roles": {
+      "conT": 0,
+      "sinT": 11,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/unidades": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/usuarios": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/admin/versiones": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/auth/login": {
+      "conT": 9,
+      "sinT": 2,
+      "en": 82,
+      "ht": 0
+    },
+    "pages/auth/pin-acceso-change": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/auth/pin-change": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "pages/auth/pin-setup": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "pages/auth/pin-unlock": {
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/auth/reset": {
+      "conT": 0,
+      "sinT": 6,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/auth/set-password": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/avisos": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora": {
+      "conT": 0,
+      "sinT": 8,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/cl-detalle": {
+      "conT": 0,
+      "sinT": 22,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/cl-firmas": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/dashboard": {
+      "conT": 0,
+      "sinT": 11,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/detalle": {
+      "conT": 0,
+      "sinT": 48,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/incidente": {
+      "conT": 0,
+      "sinT": 41,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/liberacion": {
+      "conT": 0,
+      "sinT": 49,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/mis-partes": {
+      "conT": 0,
+      "sinT": 12,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/orden-trabajo": {
+      "conT": 0,
+      "sinT": 47,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/bitacora/parte": {
+      "conT": 0,
+      "sinT": 138,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/compa": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/compras-proyecto": {
+      "conT": 0,
+      "sinT": 17,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/compras/solicitud-compra": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/en-proceso": {
+      "conT": 20,
+      "sinT": 2,
+      "en": 91,
+      "ht": 0
+    },
+    "pages/forbidden": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/home": {
+      "conT": 13,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/incentivos": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/incentivos/participantes": {
+      "conT": 0,
+      "sinT": 8,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/ingenieria": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/ingenieria/cartilla": {
+      "conT": 0,
+      "sinT": 44,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario": {
+      "conT": 0,
+      "sinT": 10,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/almacen-inventario": {
+      "conT": 0,
+      "sinT": 9,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/almacenes": {
+      "conT": 0,
+      "sinT": 17,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/articulo-detalle": {
+      "conT": 0,
+      "sinT": 17,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/articulo-editar": {
+      "conT": 0,
+      "sinT": 14,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/articulo-nuevo": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/catalogo": {
+      "conT": 0,
+      "sinT": 9,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/conteo": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/conteos": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/entrada": {
+      "conT": 0,
+      "sinT": 18,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/existencias": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/kardex": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/material-no-catalogado": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/recibir": {
+      "conT": 0,
+      "sinT": 33,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/retiro-detalle": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/retiro-nuevo": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/retiros": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/inventario/salida": {
+      "conT": 0,
+      "sinT": 20,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/mensajes": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/mensajes/grupo-info": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/mensajes/nuevo-grupo": {
+      "conT": 0,
+      "sinT": 10,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/mensajes/thread": {
+      "conT": 0,
+      "sinT": 22,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/mi-rendimiento": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/notas": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/notas/editor": {
+      "conT": 0,
+      "sinT": 20,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra": {
+      "conT": 0,
+      "sinT": 12,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/avance": {
+      "conT": 0,
+      "sinT": 6,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/charla": {
+      "conT": 0,
+      "sinT": 10,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/checklists": {
+      "conT": 0,
+      "sinT": 9,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/incidente": {
+      "conT": 0,
+      "sinT": 12,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/informe": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/logistica": {
+      "conT": 0,
+      "sinT": 14,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/mi-proyecto": {
+      "conT": 0,
+      "sinT": 14,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/mis-nc": {
+      "conT": 0,
+      "sinT": 12,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/no-conformidad": {
+      "conT": 0,
+      "sinT": 14,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/plan-dia": {
+      "conT": 0,
+      "sinT": 20,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/recursos": {
+      "conT": 0,
+      "sinT": 9,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/obra/subcontratistas": {
+      "conT": 0,
+      "sinT": 14,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/pendientes": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/pendientes/outbox-detalle": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/perfil": {
+      "conT": 43,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/perfil/mi-detalle": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/proyectos": {
+      "conT": 0,
+      "sinT": 8,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/proyectos/avisos": {
+      "conT": 0,
+      "sinT": 1,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/proyectos/cronograma": {
+      "conT": 0,
+      "sinT": 53,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/proyectos/detalle": {
+      "conT": 0,
+      "sinT": 26,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/proyectos/form": {
+      "conT": 0,
+      "sinT": 41,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/proyectos/personal": {
+      "conT": 0,
+      "sinT": 49,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/reportar": {
+      "conT": 0,
+      "sinT": 8,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/rrhh/empleado": {
+      "conT": 0,
+      "sinT": 18,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/rrhh/empleados": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/solicitudes": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/solicitudes/bandeja": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/solicitudes/detalle": {
+      "conT": 0,
+      "sinT": 53,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/solicitudes/mis": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/solicitudes/pedir": {
+      "conT": 0,
+      "sinT": 13,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/soporte": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/tareas": {
+      "conT": 0,
+      "sinT": 35,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia": {
+      "conT": 0,
+      "sinT": 12,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia-inventario": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia-inventario/equipo-detalle": {
+      "conT": 0,
+      "sinT": 9,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia-inventario/equipo-form": {
+      "conT": 0,
+      "sinT": 29,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/tecnologia/dev-notes": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte": {
+      "conT": 16,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/transporte/acta-detalle": {
+      "conT": 0,
+      "sinT": 8,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/asignar": {
+      "conT": 0,
+      "sinT": 21,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/asignarme": {
+      "conT": 0,
+      "sinT": 23,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/aviso-vehiculo": {
+      "conT": 0,
+      "sinT": 20,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/avisos": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/checklist": {
+      "conT": 0,
+      "sinT": 39,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/checklists-historial": {
+      "conT": 0,
+      "sinT": 6,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/combustible": {
+      "conT": 0,
+      "sinT": 62,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/combustible-log": {
+      "conT": 0,
+      "sinT": 11,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduce-detalle": {
+      "conT": 0,
+      "sinT": 37,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduce-externo": {
+      "conT": 0,
+      "sinT": 28,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduce-transferencias": {
+      "conT": 0,
+      "sinT": 10,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduces": {
+      "conT": 0,
+      "sinT": 48,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduces-historial": {
+      "conT": 0,
+      "sinT": 21,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduces-hub": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduces-pendientes": {
+      "conT": 0,
+      "sinT": 6,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduces-por-firmar": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduces-por-implementar": {
+      "conT": 0,
+      "sinT": 6,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conduces/entrega": {
+      "conT": 0,
+      "sinT": 23,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/conductores": {
+      "conT": 0,
+      "sinT": 24,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/confirmaciones": {
+      "conT": 0,
+      "sinT": 13,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/despachos": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/devolver-material": {
+      "conT": 0,
+      "sinT": 22,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/echada-detalle": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/estado-chofer": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/ferreteria": {
+      "conT": 0,
+      "sinT": 15,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/generar-conduce": {
+      "conT": 0,
+      "sinT": 71,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/mantenimiento": {
+      "conT": 0,
+      "sinT": 24,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/mantenimiento-cierre": {
+      "conT": 0,
+      "sinT": 8,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/mantenimientos-lista": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/mi-actividad": {
+      "conT": 0,
+      "sinT": 47,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/mi-recorrido": {
+      "conT": 0,
+      "sinT": 9,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/mi-registro": {
+      "conT": 0,
+      "sinT": 29,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/mis-actas": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/perfil-conductor": {
+      "conT": 0,
+      "sinT": 20,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/perfil-vehiculo": {
+      "conT": 0,
+      "sinT": 24,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/por-confirmar": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/preuso": {
+      "conT": 0,
+      "sinT": 54,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/reportar-multa": {
+      "conT": 0,
+      "sinT": 19,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/reportar-vehiculo": {
+      "conT": 0,
+      "sinT": 34,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/reporte-semanal": {
+      "conT": 0,
+      "sinT": 34,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/rutas": {
+      "conT": 0,
+      "sinT": 51,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/rutas-activas": {
+      "conT": 0,
+      "sinT": 16,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/seguimiento": {
+      "conT": 0,
+      "sinT": 6,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/solicitud-movimiento": {
+      "conT": 0,
+      "sinT": 18,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/trayectoria": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/uso-vehiculo": {
+      "conT": 0,
+      "sinT": 10,
+      "en": 0,
+      "ht": 0
+    },
+    "pages/transporte/vehiculos": {
+      "conT": 0,
+      "sinT": 40,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/components/alarma-host": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/components/generar-acceso": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/components/gps-gate-banner": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/components/module-placeholder": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/components/onboarding": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/components/permiso-host": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/components/permisos-onboarding": {
+      "conT": 0,
+      "sinT": 11,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/components/sync-bar": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/components/toast-host": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/articulo-picker": {
+      "conT": 0,
+      "sinT": 6,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/avatar-editor": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/ayudante-picker": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/big-button": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/big-confirm": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/bottom-sheet": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/collapsible-select": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/confirm-dialog": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/counter": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/destino-selector": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/doc-slot": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/draft-banner": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/empty-state": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/figura-acero": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/img": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/in-app-camera": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/km-input": {
+      "conT": 0,
+      "sinT": 7,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/language-onboarding": {
+      "conT": 1,
+      "sinT": 2,
+      "en": 33,
+      "ht": 0
+    },
+    "shared/ui/language-selector": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/location-picker": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/lugar-picker": {
+      "conT": 0,
+      "sinT": 9,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/molde-compositor": {
+      "conT": 0,
+      "sinT": 8,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/molde-esquema": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/option-button": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/pdf-viewer": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/personal-carnet": {
+      "conT": 0,
+      "sinT": 10,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/photo-slot": {
+      "conT": 0,
+      "sinT": 21,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/pin-pad": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/qty-input": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/select-list": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/selector-categorias": {
+      "conT": 0,
+      "sinT": 27,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/share-sheet": {
+      "conT": 0,
+      "sinT": 4,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/signature-pad": {
+      "conT": 0,
+      "sinT": 2,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/skeleton": {
+      "conT": 0,
+      "sinT": 1,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/step-bar": {
+      "conT": 0,
+      "sinT": 1,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/sticker-editor": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/sync-badge": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/toggle-switch": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/vehiculo-card": {
+      "conT": 0,
+      "sinT": 1,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/vehiculo-picker": {
+      "conT": 0,
+      "sinT": 5,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/voice-notes": {
+      "conT": 0,
+      "sinT": 3,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/voice-player": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/voice-recorder": {
+      "conT": 0,
+      "sinT": 1,
+      "en": 0,
+      "ht": 0
+    },
+    "shared/ui/wizard-exit": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
+    "shared/ui/wizard-footer": {
+      "conT": 0,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    }
+  }
+}

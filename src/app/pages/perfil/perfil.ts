@@ -54,6 +54,9 @@ export class PerfilPage {
   guardandoPerfil = signal(false);
   // AW7 — foto de perfil.
   avatarUrl = this.ctx.miAvatarUrl;
+  // BT3 — si la imagen falla al cargar (URL caducada/red), caemos a la inicial en vez
+  // de dejar el ícono roto (que se ve como un "logo genérico"). Se resetea al cambiarla.
+  avatarFallo = signal(false);
   editorImagen = signal<Blob | null>(null);
   subiendoFoto = signal(false);
   obra = this.ctx.obraActiva;
@@ -234,6 +237,7 @@ export class PerfilPage {
     this.subiendoFoto.set(true);
     try {
       await this.ctx.actualizarMiAvatar(blob);
+      this.avatarFallo.set(false); // BT3 — nueva foto: reintenta mostrarla
       this.toast.success('Foto de perfil actualizada.');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar la foto.');

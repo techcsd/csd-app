@@ -21,6 +21,31 @@
   margin: 4px 2px 14px;
 }
 
+// BT4 — aviso de borrador recuperado.
+.ce-draft {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+.ce-draft__ic { font-size: 22px; line-height: 1.1; }
+.ce-draft__txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  color: var(--color-text);
+  font-size: 14px;
+}
+.ce-draft__txt span { color: var(--color-text-secondary); font-size: 13px; }
+.ce-draft__acts { display: flex; flex-direction: column; gap: 6px; }
+.ce-draft__go { padding: 8px 14px; }
+.ce-draft__x { padding: 8px 14px; }
+
 .ce-sec {
   margin-bottom: 20px;
 }

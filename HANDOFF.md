@@ -1,5 +1,44 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 18/09/2026 — PROMPT-57 ronda BT (app) — F0/F1/F2/F3/F4 CONSTRUIDOS · build+verify verdes · **SIN commit/release (gate de Xaviel)** → 2.26.0
+
+**TL;DR:** los docs que citaba el prompt (`CONTEXTO-ACTUALIZACION-27.md`, `PROMPT-56-SGC.md`) **no existen**; pero el padre (SGC) **SÍ ejecutó PROMPT-56 y está en prod** (web 1.138.0/1.139.0) — verificado por introspección (Management API): `crear_conduce_externo` valida `transporta_proveedor_id`→`error_campo` (22023), `mis_preferencias().notif[].silenciable`, `actualizar_mi_avatar`, `set_mi_preferencia` **todos VIVOS**. Así que la app los consume **directo** (aún tras comprobación de capacidad). `npm run build` + `verify-tokens` + `verify-i18n` (con alcance) + `i18n-coverage` + `verify-dev-strings` **verdes**. HEAD sin cambios (release gateada). Nace la **17ª regla** (i18n por pantalla; toda captura con fotos guarda borrador desde la 1ª tecla).
+
+### 🔴 FASE 0 — el chofer no pierde trabajo
+- **BT7 (F0.a)** `conduce-externo`: **valida el proveedor antes de encolar** — refresca `proveedores_transporte` (read-through) y, si el id ya no existe (se borró/fusionó = causa real del FK crudo), **lo envía como TEXTO por su nombre** → el conduce nunca muere. Diccionario `transporta_proveedor_id`→"el proveedor de transporte" en `pendientes`. El servidor ya devuelve 22023 amable ("ese proveedor ya no está disponible…"). *Telemetría confirmó el bug (iPhone PWA, 2.24.1→2.25.0); el id de la captura (`497717a1`=FELIPE VIEJO) SÍ existe en `sgc.proveedores` → un reintento hoy pasa.*
+- **BT4 (F0.b)** `conduce-externo` gana **borrador (formulario + fotos)** vía `BorradorService`/`AutosaveService` (debounce + flush en `visibilitychange`/`pagehide`) + banner **"Tienes un borrador sin enviar — Continuar / Descartar"**. Las fotos se persisten al capturarlas (`saveFoto`) y se recuperan aunque solo se haya tomado una foto sin tocar el formulario. **Auditoría** de las 16 capturas con fotos → `docs/BORRADORES-FOTOS-AUDIT.md`.
+- **BT5 (F0.c)**: `conduce-externo` **NO usa Leaflet** (el `lugar-picker` es buscador de texto) → la hipótesis del mapa no aplica aquí. La cámara ya comprime (1600/0.7, `CameraService`). Fix real = borrador+foto persistida (BT4) + **higiene de object-URLs** (revoke al reemplazar/emitir/descartar) + **telemetría de memoria** (`performance.memory`/`navigator.deviceMemory` en cada reporte, para confirmar cierres por presión de memoria). `App.appRestoredResult` (Android) = **owed** documentado.
+
+### FASE 1 — BT2 idioma real (infra + gate + 3 pantallas)
+- `scripts/i18n-coverage.mjs` (cobertura POR PANTALLA) + `scripts/i18n-whitelist.json` + `src/app/core/i18n/alcance.json`. `verify-i18n` **falla** si una pantalla del alcance tiene literales sin `t()` o una clave sin `en`. `public/i18n/coverage.json` (**en 4 %**, honesto) lo lee la app.
+- **Gate honesto**: `en` se muestra **beta · cubre n%** hasta ≥95 %; `ht` **próximamente** (deshabilitado) hasta ≥90 % (`ht.json` vacío). Si un usuario tenía `ht` (local o servidor) → cae a `es` con aviso una-vez. `I18nService.estadoIdiomas()`; selector + onboarding actualizados.
+- **Cableadas al 100 %** (en alcance): **home/launcher, Transporte (hub + tiles), Perfil**. `en.json` 100→170 claves (111 usados, 111 cubiertos). **Resto de la app = rollout incremental** — el gate mantiene el inglés honesto mientras tanto (esto es el DEFAULT del diseño: ofrecer completo solo a ≥95 %).
+
+### FASE 2 — BT3 foto de perfil
+`UserContextService.miAvatarUrl` usa `getPublicUrl` (bucket público `sgc-avatars`, verificado público + URL 200); `perfil` cae a la inicial con `(error)` (antes ícono roto = "logo genérico"); **`mi-detalle` ahora pinta la foto** (antes SIEMPRE la inicial "X" — omisión pura).
+
+### FASE 3 — BT8 cero = pendiente
+`qty-input` gana `allowZero` (0 no revierte en despacho); `generar-conduce ?requisicion=`: chip **Pendiente** en renglones a 0, error solo si TODOS son 0, X = quitar con confirmación. El servidor ya salta los 0; la app filtra `cantidad>0` al enviar.
+
+### FASE 4 — BT6 alarmas silenciables
+Perfil › Notificaciones (`avisos`): `NotificacionesService.misNotifSilenciables()` lee `mis_preferencias().notif[].silenciable`; switch si el usuario puede silenciar (yo/Gerencia/elegidos), "Siempre activa" si no. `set_notif_pref` como hoy (el gate server `notif_permitida` lo respeta).
+
+### Release 2.26.0 — **GATEADA a Xaviel** (pedir OK)
+- `CAMBIOS_CURADOS` sugeridos: `arreglo` tomar fotos en conduce externo ya no cierra la app · `nuevo` "Tienes un borrador sin enviar" · `arreglo` inglés cubre el inicio/Transporte/Perfil (resto próximamente) · `arreglo` foto de perfil · `arreglo` transferir conduce externo con mensaje claro · `mejora` cero = pendiente al despachar · `mejora` alarmas semanales con interruptor para quien puede.
+- Flujo: OK → bump 4 sitios → `npm run apk` (registra Y1) → device-QA → `apk:publish` → publicar + **mínima = 2.26.0** (el crash de fotos justifica mínima).
+
+### ⏸ Owed (documentado)
+- **App-side** (mismo patrón, incremental): borrador+fotos en **combustible** (807-líneas, prioridad 1) y **retiro-nuevo**; foto-draft en cartilla/checklist/entrada/recibir (ya guardan el formulario). i18n del resto de pantallas (el gate lo cubre honesto). `appRestoredResult` Android. Re-pick de proveedor desde la tarjeta atascada. *(ver `docs/BORRADORES-FOTOS-AUDIT.md`)*
+- **Contratos del padre**: todos VIVOS en prod (nada bloqueado).
+
+### Verify on resume
+`npm run build` + `verify-tokens` + `i18n-coverage` + `verify-i18n` + `verify-dev-strings` verdes. **Device-QA pendiente**: 6 fotos seguidas en conduce externo (iPhone PWA + Android) sin cierre; borrador restaura formulario+fotos tras cierre forzado; recorrido English (home/Transporte/Perfil 100 %, el resto beta); Kreyòl "próximamente"; foto de perfil (web→app y app→web); despacho con renglón en 0.
+
+### Rollback
+`git revert` de los commits de esta sesión (todo es cliente PWA + un APK). Los objetos del padre son aditivos y ya vivían en prod → se dejan. Para la mínima: en SGC `update sgc.app_versiones set minima=(version='2.25.0'), publicada=(version in ('2.25.0','2.24.1')) where plataforma='movil'`.
+
+---
+
 ## 🟢 SESIÓN 17/09/2026 (tarde) — PROMPT-55 ronda BS (app) — **RELEASE 2.25.0 PUBLICADA + MÍNIMA FORZADA** · BS1/BS2/BS3/BS4
 
 **TL;DR:** el prompt asumía "2.23.0 pub / 2.24.0 sin commit", pero el repo ya estaba en **2.24.1 PUBLICADA** (esa mañana). Por eso BS salió como **release nueva propia = 2.25.0** con su **propio** changelog (BS1-BS4), NO el de 2.24.0 (que ya había salido). Contrato del padre **PROMPT-54 F3 verificado VIVO en prod** (probe service_role): `mis_preferencias()`, `set_mi_preferencia('idioma'|'tema',…)`, columna `usuario_preferencias.idioma_elegido_at`. La app los consume **detrás de comprobación de capacidad** (degrada a `mi_idioma_set`/`mi_tema`+local). Commit `cbd2ecf` en main. `npm run build` + `verify-tokens` + `verify-i18n` + `verify-dev-strings` verdes.

@@ -17,6 +17,10 @@ export interface NotifEstado {
   orden: number;
   silenciado_por_mi: boolean;
   deshabilitado_por_admin: boolean;
+  /** BT6 — ¿ESTE usuario puede silenciar este aviso? (aunque sea operativo). Viene de
+   *  `mis_preferencias().notif[].silenciable` (= `puede_silenciar_notif`). Solo yo /
+   *  Gerencia / usuarios elegidos pueden apagar las alarmas semanales. */
+  silenciable?: boolean;
 }
 
 /** AE — un aviso in-app (sgc.notificaciones). */
@@ -99,6 +103,26 @@ export class NotificacionesService {
     const { data, error } = await this.supabase.client.rpc('mis_notif_estado');
     if (error) throw new Error(error.message);
     return (data as NotifEstado[]) ?? [];
+  }
+
+  /**
+   * BT6 — tipos de aviso que ESTE usuario puede silenciar (incluye alarmas operativas
+   * cuando está autorizado). Lee `mis_preferencias().notif[].silenciable`. Detrás de
+   * comprobación de capacidad: si el campo `notif` no viene (RPC vieja), devuelve un
+   * set vacío → la UI cae al comportamiento actual ("Siempre activa" para operativas).
+   */
+  async misNotifSilenciables(): Promise<Set<string>> {
+    const out = new Set<string>();
+    try {
+      const { data, error } = await this.supabase.client.rpc('mis_preferencias');
+      if (error) return out;
+      const notif = (data as { notif?: { tipo: string; silenciable?: boolean }[] } | null)?.notif;
+      if (!Array.isArray(notif)) return out;
+      for (const n of notif) if (n?.silenciable && n.tipo) out.add(n.tipo);
+    } catch {
+      /* capacidad ausente → set vacío (comportamiento actual) */
+    }
+    return out;
   }
 
   /** AT23 — silencia/reactiva un tipo; actualiza la cache y el badge. */

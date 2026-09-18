@@ -1,19 +1,24 @@
 <div class="screen perfil">
   <header class="perfil__header">
     <button type="button" class="perfil__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="perfil__title">Mi perfil</h1>
+    <h1 class="perfil__title">{{ 'Mi perfil' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <button type="button" class="perfil__card" (click)="verMiDetalle()">
-      <!-- AW7 — foto de perfil (imagen si tiene; si no, inicial) -->
-      @if (avatarUrl()) {
-        <img class="perfil__avatar perfil__avatar--img" [src]="avatarUrl()" alt="Foto de perfil" />
+      <!-- AW7/BT3 — foto de perfil (imagen si tiene y carga; si no, inicial) -->
+      @if (avatarUrl() && !avatarFallo()) {
+        <img
+          class="perfil__avatar perfil__avatar--img"
+          [src]="avatarUrl()"
+          alt="Foto de perfil"
+          (error)="avatarFallo.set(true)"
+        />
       } @else {
         <div class="perfil__avatar">{{ (nombre() || '?').charAt(0) }}</div>
       }
       <div class="perfil__card-txt">
-        <p class="perfil__nombre">{{ nombre() || 'Usuario' }}</p>
+        <p class="perfil__nombre">{{ nombre() || ('Usuario' | t) }}</p>
         @if (roles().length) {
           <p class="perfil__roles">{{ roles().join(', ') }}</p>
         }
@@ -24,10 +29,10 @@
     <!-- AW7 — cambiar mi foto de perfil (editor con recorte circular) -->
     <div class="perfil__foto-acciones">
       <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="subiendoFoto()" (click)="cambiarMiFoto('galeria')">
-        {{ subiendoFoto() ? 'Guardando…' : (avatarUrl() ? 'Cambiar mi foto' : 'Poner mi foto') }}
+        {{ subiendoFoto() ? ('Guardando…' | t) : (avatarUrl() ? ('Cambiar mi foto' | t) : ('Poner mi foto' | t)) }}
       </button>
       <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="subiendoFoto()" (click)="cambiarMiFoto('camara')">
-        Tomar foto
+        {{ 'Tomar foto' | t }}
       </button>
     </div>
 
@@ -35,23 +40,23 @@
     @if (!editando()) {
       <div class="perfil__miperfil">
         <div class="perfil__miperfil-row">
-          <span>Nombre</span><b>{{ nombre() || '—' }}</b>
+          <span>{{ 'Nombre' | t }}</span><b>{{ nombre() || '—' }}</b>
         </div>
         <div class="perfil__miperfil-row">
-          <span>Teléfono</span><b>{{ telefono() || 'Sin teléfono' }}</b>
+          <span>{{ 'Teléfono' | t }}</span><b>{{ telefono() || ('Sin teléfono' | t) }}</b>
         </div>
-        <button type="button" class="btn-ghost perfil__btn" (click)="editarPerfil()">✏️ Editar mi perfil</button>
+        <button type="button" class="btn-ghost perfil__btn" (click)="editarPerfil()">✏️ {{ 'Editar mi perfil' | t }}</button>
       </div>
     } @else {
       <div class="perfil__miperfil perfil__miperfil--edit">
-        <label class="field-label">Nombre visible</label>
-        <input class="field" type="text" [ngModel]="nombreEdit()" (ngModelChange)="nombreEdit.set($event)" placeholder="Tu nombre" />
-        <label class="field-label">Teléfono</label>
+        <label class="field-label">{{ 'Nombre visible' | t }}</label>
+        <input class="field" type="text" [ngModel]="nombreEdit()" (ngModelChange)="nombreEdit.set($event)" [placeholder]="'Tu nombre' | t" />
+        <label class="field-label">{{ 'Teléfono' | t }}</label>
         <input class="field" type="tel" inputmode="tel" [ngModel]="telefonoEdit()" (ngModelChange)="telefonoEdit.set($event)" placeholder="Ej: 809-555-1234" />
         <div class="perfil__miperfil-acciones">
-          <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="cancelarEdicion()">Cancelar</button>
+          <button type="button" class="btn-ghost perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="cancelarEdicion()">{{ 'Cancelar' | t }}</button>
           <button type="button" class="btn-cta perfil__foto-btn" [disabled]="guardandoPerfil()" (click)="guardarPerfil()">
-            {{ guardandoPerfil() ? 'Guardando…' : 'Guardar' }}
+            {{ guardandoPerfil() ? ('Guardando…' | t) : ('Guardar' | t) }}
           </button>
         </div>
       </div>
@@ -59,12 +64,12 @@
 
     <ul class="perfil__info">
       @if (obra(); as o) {
-        <li><span>Obra activa</span><b>{{ o.nombre }}</b></li>
+        <li><span>{{ 'Obra activa' | t }}</span><b>{{ o.nombre }}</b></li>
       }
-      <li><span>Conexión</span><b>{{ online() ? 'En línea' : 'Sin señal' }}</b></li>
-      <li><span>Versión de la app</span><b>{{ version }}</b></li>
+      <li><span>{{ 'Conexión' | t }}</span><b>{{ online() ? ('En línea' | t) : ('Sin señal' | t) }}</b></li>
+      <li><span>{{ 'Versión de la app' | t }}</span><b>{{ version }}</b></li>
       @if (hayNueva()) {
-        <li><span>Actualización</span><b class="perfil__nueva">Hay una versión nueva ({{ versionPublicada() }})</b></li>
+        <li><span>{{ 'Actualización' | t }}</span><b class="perfil__nueva">{{ 'Hay una versión nueva' | t }} ({{ versionPublicada() }})</b></li>
       }
     </ul>
 
@@ -95,18 +100,18 @@
     </div>
 
     <button type="button" class="btn-ghost perfil__btn" [disabled]="checking()" (click)="buscarActualizacion()">
-      {{ checking() ? 'Buscando…' : '🔄 Buscar actualización' }}
+      {{ checking() ? ('Buscando…' | t) : ('🔄 ' + ('Buscar actualización' | t)) }}
     </button>
 
     @if (biometriaSoportada()) {
       <button type="button" class="btn-ghost perfil__btn" [disabled]="biometriaBusy()" (click)="toggleBiometria()">
-        {{ biometriaOn() ? '✅ Huella / Face ID activado' : '👆 Usar huella / Face ID' }}
+        {{ biometriaOn() ? ('✅ ' + ('Huella / Face ID activado' | t)) : ('👆 ' + ('Usar huella / Face ID' | t)) }}
       </button>
     }
 
     @if (faceIdSoportado()) {
       <button type="button" class="btn-ghost perfil__btn" [disabled]="faceIdBusy()" (click)="toggleFaceId()">
-        {{ faceIdOn() ? '✅ Face ID activado' : '🙂 Usar Face ID' }}
+        {{ faceIdOn() ? ('✅ ' + ('Face ID activado' | t)) : ('🙂 ' + ('Usar Face ID' | t)) }}
       </button>
     }
 
@@ -114,52 +119,52 @@
          de ACCESO es el de entrar con cédula (6 díg, servidor). Antes ambos se llamaban
          "PIN" y el trabajador solo podía cambiar el que no importa. -->
     <button type="button" class="btn-ghost perfil__btn" (click)="cambiarPin()">
-      🔒 Bloqueo de la app
+      🔒 {{ 'Bloqueo de la app' | t }}
     </button>
 
     @if (esCedula()) {
       <button type="button" class="btn-ghost perfil__btn" (click)="cambiarPinAcceso()">
-        🔑 Cambiar mi PIN de acceso
+        🔑 {{ 'Cambiar mi PIN de acceso' | t }}
       </button>
     }
 
     <!-- BD1 — preferencia de presentación del inicio (off por defecto = cuadrícula) -->
     <button type="button" class="btn-ghost perfil__btn" [disabled]="agrupadoBusy()" (click)="toggleAgrupado()">
-      {{ agrupado() ? '✅ Módulos agrupados por sección' : '🗂️ Agrupar módulos por sección' }}
+      {{ agrupado() ? ('✅ ' + ('Módulos agrupados por sección' | t)) : ('🗂️ ' + ('Agrupar módulos por sección' | t)) }}
     </button>
 
     <!-- BF4 — preferencias de avisos (silenciar los informativos; los operativos no se tocan) -->
     <button type="button" class="btn-ghost perfil__btn" (click)="preferenciasAvisos()">
-      🔔 Preferencias de avisos
+      🔔 {{ 'Preferencias de avisos' | t }}
     </button>
 
     <button type="button" class="btn-ghost perfil__btn" (click)="enProceso()">
-      📝 Documentación en proceso
+      📝 {{ 'Documentación en proceso' | t }}
     </button>
 
     <button type="button" class="btn-ghost perfil__btn" (click)="soporte()">
-      🛟 Soporte y ayuda
+      🛟 {{ 'Soporte y ayuda' | t }}
     </button>
 
     <button type="button" class="btn-ghost perfil__btn" (click)="abrirWeb()">
-      🌐 Visitar página web
+      🌐 {{ 'Visitar página web' | t }}
     </button>
 
     @if (isAdmin()) {
       <button type="button" class="btn-ghost perfil__btn" (click)="admin()">
-        ⚙️ Administración
+        ⚙️ {{ 'Administración' | t }}
       </button>
     }
 
-    <button type="button" class="btn-cta perfil__logout" (click)="pedirCerrarSesion()">Cerrar sesión</button>
+    <button type="button" class="btn-cta perfil__logout" (click)="pedirCerrarSesion()">{{ 'Cerrar sesión' | t }}</button>
   </div>
 
   <app-confirm-dialog
     [open]="confirmLogout()"
-    title="Cerrar sesión"
-    message="¿Seguro que quieres cerrar sesión? Tendrás que volver a entrar con tu contraseña."
-    confirmLabel="Sí, cerrar sesión"
-    cancelLabel="Cancelar"
+    [title]="'Cerrar sesión' | t"
+    [message]="'¿Seguro que quieres cerrar sesión? Tendrás que volver a entrar con tu contraseña.' | t"
+    [confirmLabel]="'Sí, cerrar sesión' | t"
+    [cancelLabel]="'Cancelar' | t"
     tone="danger"
     (confirmed)="logout()"
     (cancelled)="cancelarCerrarSesion()"

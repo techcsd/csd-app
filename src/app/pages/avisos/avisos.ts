@@ -73,7 +73,7 @@ export class AvisosPage {
    *  Administración apagó (para que el usuario lo vea) + las alarmas dominicales. */
   estadosVisibles = computed(() =>
     this.estados().filter(
-      (e) => !e.es_operativa || e.deshabilitado_por_admin || ALARMAS.has(e.tipo),
+      (e) => !e.es_operativa || e.deshabilitado_por_admin || ALARMAS.has(e.tipo) || e.silenciable,
     ),
   );
 
@@ -181,7 +181,13 @@ export class AvisosPage {
   async abrirPrefs(): Promise<void> {
     this.prefsAbierto.set(true);
     try {
-      this.estados.set(await this.service.misNotifEstado());
+      // BT6 — carga el estado + qué puede silenciar ESTE usuario (alarmas semanales
+      // incluidas, si está autorizado) y lo fusiona en cada tipo.
+      const [estados, silenciables] = await Promise.all([
+        this.service.misNotifEstado(),
+        this.service.misNotifSilenciables(),
+      ]);
+      this.estados.set(estados.map((e) => ({ ...e, silenciable: silenciables.has(e.tipo) })));
     } catch {
       // Respaldo: catálogo mínimo + mis prefs (sin poder mostrar estado de admin).
       try {
@@ -206,9 +212,14 @@ export class AvisosPage {
   cerrarPrefs(): void {
     this.prefsAbierto.set(false);
   }
-  /** ¿El usuario controla este tipo? (no operativo y no apagado por Administración). */
+  /**
+   * ¿El usuario controla este tipo? No apagado por Administración y, o bien no es
+   * operativo, o bien ESTE usuario está autorizado a silenciarlo (BT6: alarmas
+   * semanales para mí/Gerencia/usuarios elegidos → interruptor; el resto → "Siempre
+   * activa").
+   */
   editable(e: NotifEstado): boolean {
-    return !e.es_operativa && !e.deshabilitado_por_admin;
+    return !e.deshabilitado_por_admin && (!e.es_operativa || !!e.silenciable);
   }
   /** El toggle muestra "recibir" (ON = NO silenciado por mí). */
   recibe(e: NotifEstado): boolean {

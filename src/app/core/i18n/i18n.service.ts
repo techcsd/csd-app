@@ -14,6 +14,27 @@ export const IDIOMAS: { code: Idioma; nativo: string }[] = [
   { code: 'ht', nativo: 'Kreyòl ayisyen' },
 ];
 
+/** BT2 (regla 17) — un idioma se ofrece "de verdad" cuando cubre su alcance. Debajo
+ *  del umbral se marca **beta** (con el % real); muy debajo se deja "próximamente"
+ *  (deshabilitado). `es` siempre está al 100% (es el idioma base). */
+const UMBRAL_OFRECIDO = { en: 95, ht: 90 } as const;
+/** ht deshabilitado ("próximamente") hasta este %. en nunca se deshabilita: cae a
+ *  español clave a clave, así que se ofrece como beta con expectativa honesta. */
+const UMBRAL_HABILITADO = { en: 0, ht: 90 } as const;
+
+/** BT2 — estado de un idioma para el selector/onboarding. */
+export interface IdiomaEstado {
+  code: Idioma;
+  nativo: string;
+  pct: number;
+  /** Cubre el alcance (≥ umbral) → sin etiqueta beta. */
+  ofrecido: boolean;
+  /** Debajo del umbral pero usable → "beta · cubre n%". */
+  beta: boolean;
+  /** Muy debajo → no seleccionable ("próximamente"). */
+  deshabilitado: boolean;
+}
+
 const PREF_KEY = 'idioma';
 
 /**
@@ -43,26 +64,86 @@ export class I18nService {
 
   private cargando = new Set<Idioma>();
 
+  /** BT2 — cobertura real por idioma (generada por `scripts/i18n-coverage.mjs`). */
+  private _cobertura = signal<{ en: number; ht: number }>({ en: 0, ht: 0 });
+  cobertura = this._cobertura.asReadonly();
+
+  /** BT2 — un aviso, una vez: "Kreyòl estará disponible pronto" (si el usuario tenía
+   *  ht guardado pero aún no está habilitado). Lo consume el shell para el toast. */
+  private _avisoIdiomaDegradado = signal<string | null>(null);
+  avisoIdiomaDegradado = this._avisoIdiomaDegradado.asReadonly();
+  limpiarAvisoIdioma(): void {
+    this._avisoIdiomaDegradado.set(null);
+  }
+
   constructor() {
     void this.init();
   }
 
+  /** BT2 — lee `i18n/coverage.json` (best-effort). Si falta, queda en 0% → los
+   *  idiomas no-base se muestran beta/próximamente (conservador y honesto). */
+  private async cargarCobertura(): Promise<void> {
+    try {
+      const res = await fetch('i18n/coverage.json', { cache: 'no-cache' });
+      if (res.ok) {
+        const c = (await res.json()) as { en?: number; ht?: number };
+        this._cobertura.set({ en: c.en ?? 0, ht: c.ht ?? 0 });
+      }
+    } catch {
+      /* sin coverage.json → 0% (idiomas no-base beta/próximamente) */
+    }
+  }
+
+  /** BT2 — estado de cada idioma para el selector (ofrecido / beta / próximamente). */
+  estadoIdiomas(): IdiomaEstado[] {
+    const cob = this._cobertura();
+    return IDIOMAS.map((i) => {
+      if (i.code === 'es') {
+        return { ...i, pct: 100, ofrecido: true, beta: false, deshabilitado: false };
+      }
+      const pct = cob[i.code] ?? 0;
+      const deshabilitado = pct < UMBRAL_HABILITADO[i.code];
+      const ofrecido = pct >= UMBRAL_OFRECIDO[i.code];
+      return { ...i, pct, ofrecido, beta: !ofrecido && !deshabilitado, deshabilitado };
+    });
+  }
+
+  /** BT2 — ¿este idioma está habilitado (seleccionable)? */
+  habilitado(code: Idioma): boolean {
+    return !this.estadoIdiomas().find((e) => e.code === code)?.deshabilitado;
+  }
+
   private async init(): Promise<void> {
+    // BT2 — la cobertura decide si un idioma guardado sigue disponible.
+    await this.cargarCobertura();
     // BS4 — orden de fuentes al arrancar (antes de que haya sesión): local → idioma
     // del dispositivo → `es`. El servidor manda cuando llega el perfil
     // (UserContextService → adoptFromServer), así que el orden completo efectivo es
     // servidor → local → dispositivo → es.
+    let lang: Idioma = 'es';
     try {
       const { value } = await Preferences.get({ key: PREF_KEY });
-      const lang: Idioma = this.esValido(value ?? '') ? (value as Idioma) : this.deviceLang();
-      if (lang !== 'es') await this.cargarCatalogo(lang);
-      this._idioma.set(lang);
+      lang = this.esValido(value ?? '') ? (value as Idioma) : this.deviceLang();
     } catch {
-      /* sin preferencia guardada → idioma del dispositivo o español */
-      const lang = this.deviceLang();
-      if (lang !== 'es') await this.cargarCatalogo(lang).catch(() => {});
-      this._idioma.set(lang);
+      lang = this.deviceLang();
     }
+    lang = this.degradarSiHaceFalta(lang);
+    if (lang !== 'es') await this.cargarCatalogo(lang).catch(() => {});
+    this._idioma.set(lang);
+  }
+
+  /**
+   * BT2 — si el idioma pedido aún no está habilitado (p. ej. Kreyòl < 90%), cae a
+   * español y deja UN aviso para mostrarlo una vez. Así un usuario que ya tenía `ht`
+   * guardado (local o servidor) no se queda con media app en español sin explicación.
+   */
+  private degradarSiHaceFalta(lang: Idioma): Idioma {
+    if (lang !== 'es' && !this.habilitado(lang)) {
+      const nombre = IDIOMAS.find((i) => i.code === lang)?.nativo ?? lang;
+      this._avisoIdiomaDegradado.set(`${nombre} estará disponible pronto. Seguirás en español por ahora.`);
+      return 'es';
+    }
+    return lang;
   }
 
   private esValido(l: string): l is Idioma {
@@ -115,6 +196,11 @@ export class I18nService {
   /** Cambia el idioma (persistente). Carga el catálogo la primera vez. */
   async setIdioma(lang: Idioma): Promise<void> {
     if (!this.esValido(lang)) return;
+    // BT2 — no dejes elegir un idioma aún deshabilitado (ht < 90%).
+    if (!this.habilitado(lang)) {
+      this.degradarSiHaceFalta(lang);
+      return;
+    }
     if (lang !== 'es' && !this.catalogos()[lang]) await this.cargarCatalogo(lang);
     this._idioma.set(lang);
     try {
@@ -137,6 +223,12 @@ export class I18nService {
    *  dispositivo. La llama UserContextService al cargar el perfil. */
   async adoptFromServer(lang: string): Promise<void> {
     if (!this.esValido(lang) || this._idioma() === lang) return;
+    // BT2 — el servidor puede traer `ht` de la web; si aún no está habilitado en la
+    // app, cae a español con el aviso de una sola vez.
+    if (!this.habilitado(lang)) {
+      this.degradarSiHaceFalta(lang);
+      return;
+    }
     if (lang !== 'es' && !this.catalogos()[lang]) await this.cargarCatalogo(lang);
     this._idioma.set(lang);
     try {

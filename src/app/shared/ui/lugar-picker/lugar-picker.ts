@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LugaresService, LugarSistema } from '../../../core/services/lugares.service';
 import { GeocodingService, LinkResolveError } from '../../../core/services/geocoding.service';
@@ -50,6 +50,9 @@ export class LugarPicker {
 
   label = input<string>('Lugar');
   placeholder = input<string>('Buscar obra, almacén o lugar…');
+  /** BT4 — lugar ya elegido para rehidratar (p. ej. al recuperar un borrador). Se
+   *  siembra UNA sola vez en la UI, sin re-emitir `picked` (el padre ya lo tiene). */
+  initial = input<LugarSel | null>(null);
 
   /** Emite el lugar elegido (o null al limpiar). */
   picked = output<LugarSel | null>();
@@ -72,8 +75,20 @@ export class LugarPicker {
 
   private debounce?: ReturnType<typeof setTimeout>;
   private busquedaSeq = 0;
+  private sembrado = false;
 
   hayTexto = computed(() => this.q().trim().length >= 2);
+
+  constructor() {
+    // BT4 — siembra la selección inicial (recuperación de borrador) una vez, sin
+    // emitir `picked` (evita un bucle con el padre, que ya es dueño del valor).
+    effect(() => {
+      const init = this.initial();
+      if (this.sembrado || !init) return;
+      this.sembrado = true;
+      this.seleccionado.set(init);
+    });
+  }
 
   /** Debounced: busca en paralelo lugares del sistema + mapa (Nominatim). */
   onBuscar(v: string): void {

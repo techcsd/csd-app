@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
+import { I18nService } from './core/i18n/i18n.service';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
@@ -70,10 +71,20 @@ export class App {
   /** BS4 — diálogo de primer ingreso de idioma (modal bloqueante en el shell). */
   idiomaOnboarding = inject(IdiomaOnboardingService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
   private trackingArrancado = false;
 
   constructor() {
+    // BT2 — aviso de una sola vez si un idioma guardado aún no está disponible
+    // (p. ej. Kreyòl "próximamente"): la app cae a español y lo explica.
+    effect(() => {
+      const aviso = this.i18n.avisoIdiomaDegradado();
+      if (aviso) {
+        this.toast.show(aviso, 'info', 5000);
+        this.i18n.limpiarAvisoIdioma();
+      }
+    });
     void this.imp.init(); // BB — rehidrata "entrar como" + auto-salida al vencer (1h)
     void this.catalog.persistStorage();
     this.updates.init();

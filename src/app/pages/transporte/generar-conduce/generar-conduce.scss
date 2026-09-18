@@ -253,6 +253,18 @@
   font-weight: 700;
   vertical-align: middle;
 }
+// BT8 — chip "Pendiente" para un renglón de despacho dejado en 0.
+.gconduce__pend-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--color-text-secondary, #6b7280);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+}
 .gconduce__libre-add {
   width: 100%;
   margin-top: 10px;

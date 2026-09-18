@@ -7,7 +7,17 @@
   <div class="screen__body">
     <!-- Identidad -->
     <section class="midet__id">
-      <div class="midet__avatar">{{ inicial() }}</div>
+      <!-- BT3 — foto de perfil (misma que Mi perfil); si falta o falla, la inicial -->
+      @if (avatarUrl() && !avatarFallo()) {
+        <img
+          class="midet__avatar midet__avatar--img"
+          [src]="avatarUrl()"
+          alt="Foto de perfil"
+          (error)="avatarFallo.set(true)"
+        />
+      } @else {
+        <div class="midet__avatar">{{ inicial() }}</div>
+      }
       <p class="midet__nombre">{{ nombre() || 'Usuario' }}</p>
       @if (email()) {
         <p class="midet__email">{{ email() | emailDisplay }}</p>

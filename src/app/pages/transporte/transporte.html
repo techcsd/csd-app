@@ -2,7 +2,7 @@
   <header class="transporte__header">
     <button type="button" class="transporte__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="transporte__icon">🚚</span>
-    <h1 class="transporte__title">Transporte</h1>
+    <h1 class="transporte__title">{{ 'Transporte' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -19,18 +19,18 @@
       <button type="button" class="transporte__doc-banner" (click)="enProcesoAbrir()">
         <span class="transporte__doc-icon">📄</span>
         <span class="transporte__doc-txt">
-          Doc. en proceso: <b>{{ docEnProceso() }}</b>
+          {{ 'Doc. en proceso:' | t }} <b>{{ docEnProceso() }}</b>
         </span>
-        <span class="transporte__doc-go">Ver ›</span>
+        <span class="transporte__doc-go">{{ 'Ver ›' | t }}</span>
       </button>
     }
 
     @if (editMode()) {
       <!-- AI16 — modo edición (admin): arrastrar para reordenar los submódulos -->
       <div class="transporte__edit-bar">
-        <button type="button" class="btn-ghost" (click)="cancelarOrden()">Cancelar</button>
-        <span class="transporte__edit-hint">Arrastra para reordenar</span>
-        <button type="button" class="btn-cta" (click)="guardarOrden()">Listo</button>
+        <button type="button" class="btn-ghost" (click)="cancelarOrden()">{{ 'Cancelar' | t }}</button>
+        <span class="transporte__edit-hint">{{ 'Arrastra para reordenar' | t }}</span>
+        <button type="button" class="btn-cta" (click)="guardarOrden()">{{ 'Listo' | t }}</button>
       </div>
       <div class="hub-grid hub-grid--compact hub-grid--edit">
         @for (t of editTiles(); track t.key; let i = $index) {
@@ -43,7 +43,7 @@
             (pointerdown)="onDragStart(i, $event)"
           >
             <span class="transporte__edit-icon">{{ t.icon }}</span>
-            <span class="transporte__edit-label">{{ t.label }}</span>
+            <span class="transporte__edit-label">{{ t.label | t }}</span>
           </button>
         }
       </div>
@@ -59,7 +59,7 @@
         @for (t of tiles(); track t.key) {
           <app-big-button
             [icon]="t.icon"
-            [label]="t.label"
+            [label]="t.label | t"
             [tint]="t.tint"
             [compact]="true"
             [badge]="badgeFor(t.key)"
@@ -74,29 +74,29 @@
     } @else {
       <!-- AK14 — vehículo(s) que tengo EN USO (a_cargo). -->
       @if (pendientes().a_cargo.length) {
-        <h2 class="transporte__section">En uso</h2>
+        <h2 class="transporte__section">{{ 'En uso' | t }}</h2>
         @for (v of pendientes().a_cargo; track v.vehiculo_id) {
           <div class="veh-card veh-card--activo">
             <div class="veh-card__info">
               <span class="veh-card__placa">{{ v.marca }} {{ v.modelo }}</span>
               <span class="veh-card__modelo">{{ v.placa }}</span>
-              <span class="veh-card__km">En uso · {{ kmOf(v) | number: '1.0-0' }} km</span>
+              <span class="veh-card__km">{{ 'En uso' | t }} · {{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
             <!-- AS20 — el vehículo YA está en uso por mí: no se muestra "Uso de
                  vehículo" (reaparece en "Para usar" al soltarlo). Solo combustible,
                  mantenimiento, perfil y soltar. -->
             <button type="button" class="btn-ghost veh-card__cta" (click)="combustible(v.vehiculo_id)">
-              ⛽ Registrar combustible
+              ⛽ {{ 'Registrar combustible' | t }}
             </button>
             <button type="button" class="btn-ghost veh-card__cta" (click)="mantenimiento(v.vehiculo_id)">
-              🔧 Mantenimientos
+              🔧 {{ 'Mantenimientos' | t }}
             </button>
             <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
-              📊 Ver perfil
+              📊 {{ 'Ver perfil' | t }}
             </button>
             <!-- AK14/AK15 — Soltar vehículo (pide km + nivel; lo deja libre) -->
             <button type="button" class="btn-cta veh-card__cta" (click)="soltar(v)">
-              Soltar vehículo
+              {{ 'Soltar vehículo' | t }}
             </button>
           </div>
         }
@@ -105,7 +105,7 @@
       <!-- AK14/AK20 — vehículos disponibles para mí (responsable, sin sesión activa):
            "recibir" se absorbe en Uso de vehículo. -->
       @if (pendientes().por_recibir.length) {
-        <h2 class="transporte__section">Para usar</h2>
+        <h2 class="transporte__section">{{ 'Para usar' | t }}</h2>
         @for (v of pendientes().por_recibir; track v.vehiculo_id) {
           <div class="veh-card">
             <div class="veh-card__info">
@@ -114,10 +114,10 @@
               <span class="veh-card__km">{{ kmOf(v) | number: '1.0-0' }} km</span>
             </div>
             <button type="button" class="btn-cta veh-card__cta" (click)="usar(v)">
-              🚗 Uso de vehículo
+              🚗 {{ 'Uso de vehículo' | t }}
             </button>
             <button type="button" class="btn-ghost veh-card__cta" (click)="perfilVehiculo(v.vehiculo_id)">
-              📊 Ver perfil
+              📊 {{ 'Ver perfil' | t }}
             </button>
           </div>
         }
@@ -126,9 +126,9 @@
       @if (vacio()) {
         <app-empty-state
           icon="🚚"
-          title="Aún no tienes vehículos en uso"
-          message="Los vehículos son libres. Elige uno en «Uso de vehículo» para empezar a usarlo; si otro lo tiene, podrás recibirlo."
-          ctaLabel="Usar un vehículo"
+          [title]="'Aún no tienes vehículos en uso' | t"
+          [message]="'Los vehículos son libres. Elige uno en «Uso de vehículo» para empezar a usarlo; si otro lo tiene, podrás recibirlo.' | t"
+          [ctaLabel]="'Usar un vehículo' | t"
           (action)="usoVehiculo()"
         />
       }

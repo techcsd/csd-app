@@ -131,7 +131,10 @@ export class ErrorReportService implements ErrorHandler {
         error_type: String(errorType).slice(0, 40),
         message: cleanMsg.slice(0, 2000) || '(sin mensaje)',
         stack: stack ? this.sanitize(stack).slice(0, 8000) : null,
-        context: { route: this.currentRoute(), ...this.sanitizeContext(context) },
+        // BT5 — adjunta el estado de memoria del dispositivo/pestaña. Un cierre por
+        // presión de memoria (Safari mata la pestaña, Android recrea la Activity) se
+        // reconoce por `mem_used_mb` alto / `device_mem_gb` bajo justo antes del crash.
+        context: { route: this.currentRoute(), ...this.memoryInfo(), ...this.sanitizeContext(context) },
         device_model: d.model,
         device_brand: d.manufacturer,
         os_version: d.osVersion,
@@ -169,6 +172,25 @@ export class ErrorReportService implements ErrorHandler {
     if (this.emitted.length >= ErrorReportService.MAX_PER_HOUR) return false;
     this.emitted.push(now);
     return true;
+  }
+
+  /**
+   * BT5 — instantánea de memoria (best-effort). `performance.memory` es no estándar
+   * (Chromium/Android WebView); `navigator.deviceMemory` da GB de RAM aproximados.
+   * En Safari/iOS ninguno existe → se omiten. Solo números, nunca datos sensibles.
+   */
+  private memoryInfo(): Record<string, number> {
+    const out: Record<string, number> = {};
+    try {
+      const mem = (performance as unknown as { memory?: { usedJSHeapSize?: number; jsHeapSizeLimit?: number } })?.memory;
+      if (mem?.usedJSHeapSize) out['mem_used_mb'] = Math.round(mem.usedJSHeapSize / 1048576);
+      if (mem?.jsHeapSizeLimit) out['mem_limit_mb'] = Math.round(mem.jsHeapSizeLimit / 1048576);
+      const dm = (navigator as unknown as { deviceMemory?: number })?.deviceMemory;
+      if (dm) out['device_mem_gb'] = dm;
+    } catch {
+      /* ignore */
+    }
+    return out;
   }
 
   private currentRoute(): string {

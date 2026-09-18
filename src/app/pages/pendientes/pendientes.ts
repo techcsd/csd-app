@@ -362,6 +362,10 @@ export class PendientesPage {
     origen_id: 'el origen',
     destino_id: 'el destino',
     salida_id: 'el conduce',
+    // BT7 — conduce externo: el servidor señala este campo (22023) cuando el proveedor
+    // de transporte elegido ya no existe/está activo → "Revisa el proveedor de transporte."
+    transporta_proveedor_id: 'el proveedor de transporte',
+    transferido_a_usuario_id: 'a quién transfieres',
   };
   /** BC3 — ¿el fallo señaló un campo concreto a corregir? */
   campoSenalado(item: OutboxItem): string | null {

@@ -1,12 +1,19 @@
 <div class="lang">
-  @for (idioma of idiomas; track idioma.code) {
+  @for (idioma of idiomas(); track idioma.code) {
     <button
       type="button"
       class="lang__opt"
       [class.lang__opt--on]="actual() === idioma.code"
-      (click)="elegir(idioma.code)"
+      [class.lang__opt--off]="idioma.deshabilitado"
+      [disabled]="idioma.deshabilitado"
+      (click)="elegir(idioma.code, idioma.deshabilitado)"
     >
       <span class="lang__nombre">{{ idioma.nativo }}</span>
+      @if (idioma.deshabilitado) {
+        <span class="lang__tag">próximamente</span>
+      } @else if (idioma.beta) {
+        <span class="lang__tag lang__tag--beta">beta · cubre {{ idioma.pct }}%</span>
+      }
       @if (actual() === idioma.code) { <span class="lang__check">✓</span> }
     </button>
   }

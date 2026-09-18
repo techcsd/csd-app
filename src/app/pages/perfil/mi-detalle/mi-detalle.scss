@@ -46,6 +46,11 @@
   font-weight: 800;
   margin-bottom: 6px;
 }
+// BT3 — foto de perfil (imagen recortada en círculo).
+.midet__avatar--img {
+  object-fit: cover;
+  background: var(--color-surface-2);
+}
 .midet__nombre {
   margin: 0;
   font-size: 22px;

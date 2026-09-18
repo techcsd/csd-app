@@ -16,6 +16,20 @@
         <button type="button" class="btn-ghost" (click)="irAlHub()">Volver a Conduces</button>
       </div>
     } @else {
+      @if (borradorPrevio()) {
+        <!-- BT4 — recuperación de un borrador sin enviar -->
+        <div class="ce-draft">
+          <span class="ce-draft__ic">📝</span>
+          <div class="ce-draft__txt">
+            <b>Tienes un borrador sin enviar</b>
+            <span>Recuperamos lo que habías llenado, con sus fotos.</span>
+          </div>
+          <div class="ce-draft__acts">
+            <button type="button" class="btn-cta ce-draft__go" (click)="continuarBorrador()">Continuar</button>
+            <button type="button" class="btn-ghost ce-draft__x" (click)="descartarBorrador()">Descartar</button>
+          </div>
+        </div>
+      }
       <p class="ce-intro">Para cuando un <b>proveedor</b> transporta con su camión. Foto de placa obligatoria.</p>
 
       <!-- 1. Transporta -->
@@ -66,9 +80,9 @@
         <h2 class="ce-sec__title">Fotos del camión</h2>
         <div class="ce-fotos">
           <app-photo-slot label="Placa *" hint="🚙" [gallery]="false"
-            [foto]="placaFoto()" (captured)="placaFoto.set($event)" (cleared)="placaFoto.set(null)" />
+            [foto]="placaFoto()" (captured)="onPlaca($event)" (cleared)="quitarPlaca()" />
           <app-photo-slot label="Carga" hint="📦" [gallery]="false"
-            [foto]="cargaFoto()" (captured)="cargaFoto.set($event)" (cleared)="cargaFoto.set(null)" />
+            [foto]="cargaFoto()" (captured)="onCarga($event)" (cleared)="quitarCarga()" />
         </div>
         <p class="ce-hint">La placa es obligatoria. La carga puede ir en la misma foto si se ve.</p>
       </section>
@@ -84,9 +98,9 @@
       <!-- 4. Origen → destino -->
       <section class="ce-sec">
         <h2 class="ce-sec__title">Origen y destino</h2>
-        <app-lugar-picker label="Origen" placeholder="¿De dónde sale?" (picked)="onOrigen($event)" />
+        <app-lugar-picker label="Origen" placeholder="¿De dónde sale?" [initial]="origen()" (picked)="onOrigen($event)" />
         <div class="ce-arrow" aria-hidden="true">↓</div>
-        <app-lugar-picker label="Destino" placeholder="¿A dónde va?" (picked)="onDestino($event)" />
+        <app-lugar-picker label="Destino" placeholder="¿A dónde va?" [initial]="destino()" (picked)="onDestino($event)" />
       </section>
 
       @if (error()) { <p class="ce-err">{{ error() }}</p> }

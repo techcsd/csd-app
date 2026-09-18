@@ -4,7 +4,7 @@
     <p class="lang-ob__hint">{{ 'Elige el idioma de la app.' | t }}</p>
 
     <div class="lang-ob__opciones">
-      @for (op of opciones; track op.code) {
+      @for (op of opciones(); track op.code) {
         <button
           type="button"
           class="lang-ob__opt"
@@ -13,6 +13,7 @@
         >
           <span class="lang-ob__flag" aria-hidden="true">{{ op.bandera }}</span>
           <span class="lang-ob__nombre">{{ op.nativo }}</span>
+          @if (op.beta) { <span class="lang-ob__beta">beta · {{ op.pct }}%</span> }
           @if (seleccion() === op.code) {
             <span class="lang-ob__check" aria-hidden="true">✓</span>
           }

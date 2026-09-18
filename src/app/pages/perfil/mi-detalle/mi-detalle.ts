@@ -54,6 +54,9 @@ export class MiDetallePage {
     () => this.ctx.profile()?.roles?.map((ur) => ur.rol.nombre).filter(Boolean) ?? [],
   );
   inicial = computed(() => (this.nombre() || '?').charAt(0).toUpperCase());
+  // BT3 — foto de perfil (misma fuente que Mi perfil); con caída a la inicial si falla.
+  avatarUrl = this.ctx.miAvatarUrl;
+  avatarFallo = signal(false);
 
   // Conductor (opcional): licencia + docs + última actividad.
   conductor = signal<Conductor | null>(null);

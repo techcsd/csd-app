@@ -3,7 +3,6 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { I18nService } from '../i18n/i18n.service';
 import { Usuario } from '../models/usuario.model';
-import { environment } from '../../../environments/environment';
 
 /** AW7 — bucket público de fotos de perfil de usuario. */
 const AVATARS_BUCKET = 'sgc-avatars';
@@ -98,10 +97,16 @@ export class UserContextService {
     void this.catalog.optimisticUpdate<Usuario>(`${PROFILE_CACHE_PREFIX}${p.id}`, () => next);
   }
 
-  /** AW7 — URL pública de mi foto de perfil (o null si no tengo). */
+  /**
+   * AW7/BT3 — URL pública de mi foto de perfil (o null si no tengo). Se construye
+   * con el helper del SDK (`getPublicUrl`), igual que la web (regla de paridad),
+   * en vez de concatenar a mano; así el path se codifica bien siempre. El bucket
+   * `sgc-avatars` es público → URL directa (no firma que caduque).
+   */
   miAvatarUrl = computed<string | null>(() => {
     const p = this._profile()?.avatar_path;
-    return p ? `${environment.supabaseUrl}/storage/v1/object/public/${AVATARS_BUCKET}/${p}` : null;
+    if (!p) return null;
+    return this.supabase.client.storage.from(AVATARS_BUCKET).getPublicUrl(p).data.publicUrl;
   });
 
   /**

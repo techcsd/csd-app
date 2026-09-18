@@ -4,6 +4,7 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { BigButton } from '../../shared/ui/big-button/big-button';
 import { EstadoChoferBar } from './estado-chofer/estado-chofer-bar';
 import { GpsGateBanner } from '../../shared/components/gps-gate-banner/gps-gate-banner';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { DecimalPipe, Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
@@ -75,7 +76,7 @@ const TILES: HubTile[] = [
   selector: 'app-transporte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe, BigButton, EstadoChoferBar, GpsGateBanner],
+  imports: [Skeleton, EmptyState, SyncBar, DecimalPipe, BigButton, EstadoChoferBar, GpsGateBanner, TranslatePipe],
   templateUrl: './transporte.html',
   styleUrl: './transporte.scss',
 })
