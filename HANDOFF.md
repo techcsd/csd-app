@@ -36,7 +36,7 @@ Perfil › Notificaciones (`avisos`): `NotificacionesService.misNotifSilenciable
 - **i18n de toda la app** (arriba).
 ### ⏸ Owed (1 item, requiere dispositivo)
 - **`appRestoredResult` (Android)**: reinyectar la foto tomada si el SO recrea la Activity mientras la cámara está abierta. Es el único caso no cubierto por el borrador (que ya salva formulario+fotos y hace flush antes de abrir la cámara). NO se implementó a ciegas: necesita device-QA para hacerlo bien.
-- **generar-conduce i18n**: el último agente no lo alcanzó (límite de gasto de la org); sigue en español (gate honesto). Cablear en la próxima tanda.
+- ✅ **generar-conduce i18n**: CABLEADO (commit `d47e0d5`); cobertura 75%→**77%**; APK 2.26.0 reconstruido y re-subido al bucket con esta pantalla en inglés.
 - **Contratos del padre**: todos VIVOS en prod (nada bloqueado).
 
 ### Verify on resume
