@@ -5,26 +5,26 @@
     <header class="comb__pick-header">
       <button type="button" class="comb__pick-back" (click)="salirPicker()" aria-label="Atrás">←</button>
       <span class="comb__pick-icon">⛽</span>
-      <h1 class="comb__pick-title">Registrar combustible</h1>
+      <h1 class="comb__pick-title">{{ 'Registrar combustible' | t }}</h1>
     </header>
     <div class="screen__body">
       <app-vehiculo-picker
-        subtitulo="Selecciona el vehículo para registrar el combustible."
+        [subtitulo]="'Selecciona el vehículo para registrar el combustible.' | t"
         [soloMios]="soloMisVehiculos()"
         (elegido)="onVehiculoElegido($event)"
       />
       <!-- AS16 — si no tengo un vehículo en uso, atajo directo a "Uso de vehículo"
            (al terminar vuelvo con el vehículo ya en uso). -->
-      <p class="comb__pick-o">o</p>
+      <p class="comb__pick-o">{{ 'o' | t }}</p>
       <app-option-button
         icon="🚗"
-        label="Usar un vehículo"
+        [label]="'Usar un vehículo' | t"
         (pressed)="irAUsarVehiculo()"
       />
       <!-- Z23-app — tarjeta asignada a una persona (sin vehículo) -->
       <app-option-button
         icon="👤"
-        label="Echada de persona (sin vehículo)"
+        [label]="'Echada de persona (sin vehículo)' | t"
         (pressed)="elegirPersona()"
       />
     </div>
@@ -35,11 +35,11 @@
     <div class="screen__body">
       <div class="comb__ok">
         <span class="comb__ok-check">✓</span>
-        <h1 class="comb__ok-title">Combustible registrado</h1>
+        <h1 class="comb__ok-title">{{ 'Combustible registrado' | t }}</h1>
         <div class="comb__veh">
           @if (modoPersona()) {
-            <span class="comb__placa">👤 {{ titular() || 'Tarjeta de persona' }}</span>
-            <span class="comb__modelo">Echada sin vehículo</span>
+            <span class="comb__placa">👤 {{ titular() || ('Tarjeta de persona' | t) }}</span>
+            <span class="comb__modelo">{{ 'Echada sin vehículo' | t }}</span>
           } @else {
             <span class="comb__placa">{{ placa() }}</span>
             <span class="comb__modelo">{{ modelo() }}@if (color()) { · {{ color() }} }</span>
@@ -54,12 +54,12 @@
       <div class="comb__cards">
         @if (!modoPersona()) {
           <div class="comb__card">
-            <span class="comb__card-label">Kilometraje</span>
+            <span class="comb__card-label">{{ 'Kilometraje' | t }}</span>
             <span class="comb__card-value">{{ km() | number: '1.0-0' }} km</span>
           </div>
         }
         <div class="comb__card">
-          <span class="comb__card-label">Echados</span>
+          <span class="comb__card-label">{{ 'Echados' | t }}</span>
           <span class="comb__card-value">{{ galones() | number: '1.0-2' }} gal</span>
           <span class="comb__card-sub">RD$ {{ monto() | number: '1.2-2' }}</span>
         </div>
@@ -67,7 +67,7 @@
              saldría "RD$ " en blanco. Solo se muestra cuando hay precio. -->
         @if (!esDeposito()) {
           <div class="comb__card">
-            <span class="comb__card-label">Precio por galón</span>
+            <span class="comb__card-label">{{ 'Precio por galón' | t }}</span>
             <span class="comb__card-value">RD$ {{ resultado()?.precioPorGalon | number: '1.2-2' }}</span>
           </div>
         }
@@ -75,18 +75,18 @@
         <!-- AE7 — telehandler medido por HORAS: unidades h/gal y "por hora". -->
         @if (!modoPersona()) {
           <div class="comb__card">
-            <span class="comb__card-label">Rendimiento</span>
+            <span class="comb__card-label">{{ 'Rendimiento' | t }}</span>
             @if (resultado()?.rendimiento != null) {
               <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}</span>
               @if (ultima().promedio_rendimiento != null) {
-                <span class="comb__card-sub">Promedio: {{ ultima().promedio_rendimiento | number: '1.2-2' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}</span>
+                <span class="comb__card-sub">{{ 'Promedio' | t }}: {{ ultima().promedio_rendimiento | number: '1.2-2' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}</span>
               }
             } @else {
-              <span class="comb__card-value comb__card-value--muted">Primera echada</span>
+              <span class="comb__card-value comb__card-value--muted">{{ 'Primera echada' | t }}</span>
             }
           </div>
           <div class="comb__card">
-            <span class="comb__card-label">{{ esTelehandler() ? 'Uso' : 'Recorrido' }}</span>
+            <span class="comb__card-label">{{ esTelehandler() ? ('Uso' | t) : ('Recorrido' | t) }}</span>
             @if (resultado()?.kmRecorridos != null) {
               <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} {{ esTelehandler() ? 'h' : 'km' }}</span>
             } @else {
@@ -94,7 +94,7 @@
             }
           </div>
           <div class="comb__card">
-            <span class="comb__card-label">{{ esTelehandler() ? 'Costo por hora' : 'Costo por km' }}</span>
+            <span class="comb__card-label">{{ esTelehandler() ? ('Costo por hora' | t) : ('Costo por km' | t) }}</span>
             @if (resultado()?.costoPorKm != null) {
               <span class="comb__card-value">RD$ {{ resultado()?.costoPorKm | number: '1.2-2' }}</span>
             } @else {
@@ -106,7 +106,7 @@
 
       <!-- AD7 — banda de estado del rendimiento (con el porqué) -->
       @if (modoPersona()) {
-        <div class="comb__band comb__band--ok">✓ Echada de persona registrada.</div>
+        <div class="comb__band comb__band--ok">✓ {{ 'Echada de persona registrada.' | t }}</div>
       } @else if (estadoBand(); as b) {
         <div
           class="comb__band"
@@ -123,47 +123,59 @@
           @if (b.meta.tone === 'error') {
             @if (resultado()?.direccion === 'alto') {
               <span class="comb__band-why">
-                Revisa la lectura (kilometraje y galones): puede que falte una echada anterior por
-                registrar o que el kilometraje esté mal escrito. No se avisa a mantenimiento.
+                {{ 'Revisa la lectura (kilometraje y galones): puede que falte una echada anterior por registrar o que el kilometraje esté mal escrito. No se avisa a mantenimiento.' | t }}
               </span>
             } @else {
-              <span class="comb__band-why">Se avisa a mantenimiento para revisar el vehículo.</span>
+              <span class="comb__band-why">{{ 'Se avisa a mantenimiento para revisar el vehículo.' | t }}</span>
             }
             <!-- AW2 — referencia usada para "lo esperado" (promedio de echadas válidas) -->
             @if (ultima().promedio_rendimiento != null && ultima().n_echadas > 0) {
               <span class="comb__band-ref">
-                Comparado con las últimas {{ ultima().n_echadas }} echadas válidas de este vehículo
-                (promedio {{ ultima().promedio_rendimiento | number: '1.1-1' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}).
+                {{ 'Comparado con las últimas {n} echadas válidas de este vehículo (promedio {avg} {unidad}).' | t: { n: ultima().n_echadas ?? 0, avg: (ultima().promedio_rendimiento | number: '1.1-1') ?? '', unidad: esTelehandler() ? 'h/gal' : 'km/gal' } }}
               </span>
             }
             <!-- AW2 — corregir en el momento, sin buscar dónde se guardó -->
-            <button type="button" class="comb__band-fix" (click)="corregir()">✏️ Revisar y corregir</button>
+            <button type="button" class="comb__band-fix" (click)="corregir()">✏️ {{ 'Revisar y corregir' | t }}</button>
           }
         </div>
       }
 
       @if (!online) {
-        <p class="comb__note">Sin señal. Se enviará solo y se validará al sincronizar.</p>
+        <p class="comb__note">{{ 'Sin señal. Se enviará solo y se validará al sincronizar.' | t }}</p>
       }
     </div>
 
     <footer class="comb__nav">
-      <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+      <button type="button" class="btn-cta" (click)="finish()">{{ 'Listo' | t }}</button>
     </footer>
   </div>
 } @else {
   <div class="screen comb">
-    <app-wizard-exit title="Registrar combustible" (exit)="intentarSalir()" />
+    <app-wizard-exit [title]="'Registrar combustible' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total()" />
 
     <div class="screen__body">
+      @if (borradorPrevio()) {
+        <!-- BT4 — recuperación de una echada sin enviar -->
+        <div class="comb__draft">
+          <span class="comb__draft-ic">📝</span>
+          <div class="comb__draft-txt">
+            <b>{{ 'Tienes un borrador sin enviar' | t }}</b>
+            <span>{{ 'Recuperamos lo que habías llenado, con sus fotos.' | t }}</span>
+          </div>
+          <div class="comb__draft-acts">
+            <button type="button" class="btn-cta comb__draft-go" (click)="continuarBorrador()">{{ 'Continuar' | t }}</button>
+            <button type="button" class="btn-ghost comb__draft-x" (click)="descartarBorrador()">{{ 'Descartar' | t }}</button>
+          </div>
+        </div>
+      }
       @if (loading()) {
         <app-skeleton [rows]="2" />
       } @else if (modoPersona()) {
         <!-- Z23-app — echada de tarjeta-persona (sin vehículo) -->
         <div class="comb__veh">
-          <span class="comb__placa">👤 Tarjeta de persona</span>
-          <span class="comb__modelo">Echada sin vehículo</span>
+          <span class="comb__placa">👤 {{ 'Tarjeta de persona' | t }}</span>
+          <span class="comb__modelo">{{ 'Echada sin vehículo' | t }}</span>
         </div>
       } @else {
         <div class="comb__veh">
@@ -173,7 +185,7 @@
           <span class="comb__placa">{{ placa() || '—' }}</span>
           <span class="comb__modelo">{{ modelo() }}</span>
           @if (ultima().km != null) {
-            <span class="comb__veh-km">Km última echada: {{ ultima().km | number: '1.0-0' }} km</span>
+            <span class="comb__veh-km">{{ 'Km última echada' | t }}: {{ ultima().km | number: '1.0-0' }} km</span>
           }
         </div>
       }
@@ -182,17 +194,17 @@
       @if (stepKey() === 'bomba') {
         <!-- AC11 — telehandler: elegir dónde se echó (depósito en obra por defecto) -->
         @if (esTelehandler()) {
-          <label class="field-label">¿Dónde se echó?</label>
-          <app-option-button icon="🛢️" label="Depósito en obra (garrafón)" [selected]="esDeposito()" (pressed)="setOrigen('deposito_obra')" />
-          <app-option-button icon="⛽" label="Estación" [selected]="!esDeposito()" (pressed)="setOrigen('estacion')" />
+          <label class="field-label">{{ '¿Dónde se echó?' | t }}</label>
+          <app-option-button icon="🛢️" [label]="'Depósito en obra (garrafón)' | t" [selected]="esDeposito()" (pressed)="setOrigen('deposito_obra')" />
+          <app-option-button icon="⛽" [label]="'Estación' | t" [selected]="!esDeposito()" (pressed)="setOrigen('estacion')" />
           <div class="comb__mt"></div>
         }
         @if (esDeposito()) {
-          <h1 class="screen__title">Foto de evidencia</h1>
-          <p class="screen__subtitle">Toma una foto del equipo/garrafón durante la echada (solo cámara).</p>
+          <h1 class="screen__title">{{ 'Foto de evidencia' | t }}</h1>
+          <p class="screen__subtitle">{{ 'Toma una foto del equipo/garrafón durante la echada (solo cámara).' | t }}</p>
           <div class="comb__fotos">
             <app-photo-slot
-              label="Evidencia (equipo/garrafón)"
+              [label]="'Evidencia (equipo/garrafón)' | t"
               hint="📸"
               [gallery]="false"
               [foto]="fotoEvidencia()"
@@ -201,13 +213,13 @@
             />
           </div>
         } @else {
-          <h1 class="screen__title">Bomba en 0</h1>
+          <h1 class="screen__title">{{ 'Bomba en 0' | t }}</h1>
           <p class="screen__subtitle">
-            Antes de echar, toma la foto de la bomba/estación marcando <b>0</b>. Respalda los galones que vas a echar (solo cámara).
+            {{ 'Antes de echar, toma la foto de la bomba/estación marcando' | t }} <b>0</b>. {{ 'Respalda los galones que vas a echar (solo cámara).' | t }}
           </p>
           <div class="comb__fotos">
             <app-photo-slot
-              label="Bomba en 0"
+              [label]="'Bomba en 0' | t"
               hint="⛽"
               [gallery]="false"
               [foto]="fotoBomba()"
@@ -221,14 +233,14 @@
       <!-- Paso 2: km + galones + monto (todo lo que se digita, una hoja) -->
       @if (stepKey() === 'digits') {
         <h1 class="screen__title">
-          @if (modoPersona()) { Galones y monto }
-          @else if (esDeposito()) { Horas y galones }
-          @else { Kilometraje y monto }
+          @if (modoPersona()) { {{ 'Galones y monto' | t }} }
+          @else if (esDeposito()) { {{ 'Horas y galones' | t }} }
+          @else { {{ 'Kilometraje y monto' | t }} }
         </h1>
         <!-- Z23-app — la echada de persona no lleva odómetro -->
         @if (!modoPersona()) {
           <app-km-input
-            [label]="vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso actuales' : 'Kilometraje actual'"
+            [label]="vehDetalle()?.medida_uso === 'horas' ? ('Horas de uso actuales' | t) : ('Kilometraje actual' | t)"
             [sufijo]="vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'"
             [(value)]="km"
             [ultimo]="odometro()"
@@ -236,13 +248,13 @@
             [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
           />
           @if (!kmMenorOdometro() && kmInvalido()) {
-            <p class="comb__warn">Debe ser mayor a la última echada ({{ ultima().km | number: '1.0-0' }} km).</p>
+            <p class="comb__warn">{{ 'Debe ser mayor a la última echada' | t }} ({{ ultima().km | number: '1.0-0' }} km).</p>
           } @else if (ultima().km != null) {
-            <p class="comb__hint">Última echada: {{ ultima().km | number: '1.0-0' }} km</p>
+            <p class="comb__hint">{{ 'Última echada' | t }}: {{ ultima().km | number: '1.0-0' }} km</p>
           }
         }
 
-        <label class="field-label" for="gal">Galones echados</label>
+        <label class="field-label" for="gal">{{ 'Galones echados' | t }}</label>
         <!-- AW3 — texto (no type=number) + inputmode decimal: el parseo respeta el
              punto decimal (34.118 = 34.118 gal, ya no 34118). -->
         <input
@@ -257,7 +269,7 @@
         />
 
         <label class="field-label" for="monto">
-          {{ esDeposito() ? 'Costo (RD$, opcional)' : 'Monto pagado (RD$)' }}
+          {{ esDeposito() ? ('Costo (RD$, opcional)' | t) : ('Monto pagado (RD$)' | t) }}
         </label>
         <input
           id="monto"
@@ -292,25 +304,24 @@
              el envío pasará; el servidor la revalida con datos frescos al sincronizar. -->
         @if (validacionProvisional() && galones() != null) {
           <p class="comb__hint comb__prov">
-            📴 Sin señal: esta comprobación es provisional (usa datos guardados en el teléfono).
-            Al enviar, el sistema la revisa con la capacidad y precios actualizados y podría pedir una corrección.
+            📴 {{ 'Sin señal: esta comprobación es provisional (usa datos guardados en el teléfono). Al enviar, el sistema la revisa con la capacidad y precios actualizados y podría pedir una corrección.' | t }}
           </p>
         }
       }
 
       <!-- AE6 · Paso 3: el resto de fotos (recibo + tablero); la bomba ya se tomó -->
       @if (stepKey() === 'fotos') {
-        <h1 class="screen__title">Fotos del respaldo</h1>
+        <h1 class="screen__title">{{ 'Fotos del respaldo' | t }}</h1>
         <p class="screen__subtitle">
           @if (modoPersona()) {
-            El recibo respalda el monto que pagaste (solo cámara).
+            {{ 'El recibo respalda el monto que pagaste (solo cámara).' | t }}
           } @else {
-            El recibo respalda el monto; el tablero respalda el kilometraje (solo cámara).
+            {{ 'El recibo respalda el monto; el tablero respalda el kilometraje (solo cámara).' | t }}
           }
         </p>
         <div class="comb__fotos">
           <app-photo-slot
-            label="Recibo"
+            [label]="'Recibo' | t"
             hint="🧾"
             [gallery]="false"
             [foto]="fotoRecibo()"
@@ -320,7 +331,7 @@
           <!-- Z23-app — sin tablero en una echada de persona (no hay odómetro) -->
           @if (!modoPersona()) {
             <app-photo-slot
-              label="Tablero (km)"
+              [label]="'Tablero (km)' | t"
               hint="🎛️"
               [gallery]="false"
               [foto]="fotoTablero()"
@@ -334,54 +345,54 @@
       <!-- Paso 4: producto + Regular/Premium + tarjeta/titular/obra -->
       @if (stepKey() === 'detalles') {
         <!-- Z23-app — producto (para conciliar con el reporte del proveedor) -->
-        <label class="field-label">¿Qué combustible?</label>
-        <app-option-button icon="🛢️" label="Diésel" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
-        <app-option-button icon="⛽" label="Gasolina" [selected]="producto() === 'gasolina'" (pressed)="producto.set('gasolina')" />
+        <label class="field-label">{{ '¿Qué combustible?' | t }}</label>
+        <app-option-button icon="🛢️" [label]="'Diésel' | t" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
+        <app-option-button icon="⛽" [label]="'Gasolina' | t" [selected]="producto() === 'gasolina'" (pressed)="producto.set('gasolina')" />
 
         <!-- AC11 — depósito en obra: elegir la obra donde se echó (opcional) -->
         @if (esDeposito()) {
-          <label class="field-label comb__mt">Obra donde se echó (opcional)</label>
+          <label class="field-label comb__mt">{{ 'Obra donde se echó (opcional)' | t }}</label>
           <app-collapsible-select
-            label="Obra"
+            [label]="'Obra' | t"
             icon="🏗️"
             [options]="obraOptions()"
             [selectedId]="proyectoId() ?? ''"
             [searchable]="true"
-            searchPlaceholder="Buscar obra…"
+            [searchPlaceholder]="'Buscar obra…' | t"
             (picked)="proyectoId.set($event || null)"
           />
           <p class="field-hint">
-            La echada de depósito queda como consumo interno (no entra a la conciliación de estación).
+            {{ 'La echada de depósito queda como consumo interno (no entra a la conciliación de estación).' | t }}
           </p>
         } @else {
           <!-- AA20 — subtipo Regular/Premium (obligatorio) -->
-          <label class="field-label comb__mt">¿Regular o Premium?</label>
-          <app-option-button icon="🟢" label="Regular" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
-          <app-option-button icon="⭐" label="Premium" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
+          <label class="field-label comb__mt">{{ '¿Regular o Premium?' | t }}</label>
+          <app-option-button icon="🟢" [label]="'Regular' | t" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
+          <app-option-button icon="⭐" [label]="'Premium' | t" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
           @if (precioRef(); as pr) {
             <p class="field-hint">
-              Precio oficial {{ productoCanonicoLabel[pr.producto] ?? pr.producto }}:
-              <b>RD$ {{ pr.precio | number: '1.2-2' }}/gal</b> ({{ pr.fuente }}, vigente desde {{ pr.vigencia_desde }})
+              {{ 'Precio oficial' | t }} {{ productoCanonicoLabel[pr.producto] ?? pr.producto }}:
+              <b>RD$ {{ pr.precio | number: '1.2-2' }}/gal</b> ({{ pr.fuente }}, {{ 'vigente desde' | t }} {{ pr.vigencia_desde }})
             </p>
           }
         }
 
         <!-- Z23-app — titular de la tarjeta (obligatorio en echada de persona) -->
         @if (modoPersona()) {
-          <label class="field-label comb__mt" for="titular">Titular de la tarjeta</label>
+          <label class="field-label comb__mt" for="titular">{{ 'Titular de la tarjeta' | t }}</label>
           <input
             id="titular"
             class="field"
             type="text"
             [ngModel]="titular()"
             (ngModelChange)="titular.set($event)"
-            placeholder="Nombre de la persona"
+            [placeholder]="'Nombre de la persona' | t"
           />
         }
 
         <!-- Z23-app — tarjeta usada (opcional, para conciliar por tarjeta) -->
         @if (!esDeposito()) {
-          <label class="field-label comb__mt" for="tarjeta">Tarjeta (opcional)</label>
+          <label class="field-label comb__mt" for="tarjeta">{{ 'Tarjeta (opcional)' | t }}</label>
           <input
             id="tarjeta"
             class="field"
@@ -389,55 +400,55 @@
             inputmode="numeric"
             [ngModel]="tarjeta()"
             (ngModelChange)="tarjeta.set($event)"
-            placeholder="N.º o nombre de la tarjeta"
+            [placeholder]="'N.º o nombre de la tarjeta' | t"
           />
         }
       }
 
       <!-- AE6 · Paso 5: ¿En qué estación? + cálculo automático (paso propio, poco scroll) -->
       @if (stepKey() === 'estacion') {
-        <h1 class="screen__title">¿En qué estación?</h1>
+        <h1 class="screen__title">{{ '¿En qué estación?' | t }}</h1>
         @for (e of estacionesVisibles(); track e) {
           <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
         }
-        <app-option-button icon="✏️" label="Otro" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
+        <app-option-button icon="✏️" [label]="'Otro' | t" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
         @if (estacionOtro()) {
           <input
             class="field comb__estacion-otro"
             type="text"
             [ngModel]="estacionOtroTexto()"
             (ngModelChange)="estacionOtroTexto.set($event)"
-            placeholder="Nombre de la estación"
+            [placeholder]="'Nombre de la estación' | t"
           />
         }
 
         <!-- Cálculo automático (en vivo) -->
         <div class="comb__calc">
-          <span class="comb__calc-title">Cálculo automático</span>
+          <span class="comb__calc-title">{{ 'Cálculo automático' | t }}</span>
           <div class="comb__calc-row">
-            <span>Precio por galón</span>
+            <span>{{ 'Precio por galón' | t }}</span>
             <b>@if (calc().precioPorGalon != null) { RD$ {{ calc().precioPorGalon | number: '1.2-2' }} } @else { — }</b>
           </div>
           <!-- Z23-app — km/rendimiento/costo solo aplican a un vehículo -->
           @if (!modoPersona()) {
             <div class="comb__calc-row">
-              <span>Km recorridos</span>
+              <span>{{ 'Km recorridos' | t }}</span>
               <b>
-                @if (primeraEchada()) { Primera echada }
+                @if (primeraEchada()) { {{ 'Primera echada' | t }} }
                 @else if (calc().kmRecorridos != null) { {{ calc().kmRecorridos | number: '1.0-0' }} km }
                 @else { — }
               </b>
             </div>
             <div class="comb__calc-row">
-              <span>Rendimiento</span>
+              <span>{{ 'Rendimiento' | t }}</span>
               <b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { — }</b>
             </div>
             <div class="comb__calc-row">
-              <span>Costo por km</span>
+              <span>{{ 'Costo por km' | t }}</span>
               <b>@if (calc().costoPorKm != null) { RD$ {{ calc().costoPorKm | number: '1.2-2' }} } @else { — }</b>
             </div>
             @if (calc().alertaConsumo) {
-              <div class="comb__calc-alert">⚠ Rendimiento bajo el promedio del vehículo.</div>
+              <div class="comb__calc-alert">⚠ {{ 'Rendimiento bajo el promedio del vehículo.' | t }}</div>
             }
           }
         </div>
@@ -445,27 +456,27 @@
 
       <!-- Paso final: revisa y envía (no editable) -->
       @if (stepKey() === 'revisar') {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
           @if (modoPersona()) {
-            <li><span>Titular</span><b>{{ titular() || '—' }}</b></li>
+            <li><span>{{ 'Titular' | t }}</span><b>{{ titular() || '—' }}</b></li>
           } @else {
-            <li><span>{{ esDeposito() ? 'Horas' : 'Kilometraje' }}</span><b>{{ km() | number: '1.0-0' }} {{ esDeposito() ? 'h' : 'km' }}</b></li>
+            <li><span>{{ esDeposito() ? ('Horas' | t) : ('Kilometraje' | t) }}</span><b>{{ km() | number: '1.0-0' }} {{ esDeposito() ? 'h' : 'km' }}</b></li>
           }
-          <li><span>Galones</span><b>{{ galones() | number: '1.0-2' }} gal</b></li>
-          <li><span>{{ esDeposito() ? 'Costo' : 'Monto' }}</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
-          <li><span>Combustible</span><b>{{ producto() === 'gasolina' ? 'Gasolina' : 'Diésel' }}</b></li>
+          <li><span>{{ 'Galones' | t }}</span><b>{{ galones() | number: '1.0-2' }} gal</b></li>
+          <li><span>{{ esDeposito() ? ('Costo' | t) : ('Monto' | t) }}</span><b>RD$ {{ monto() | number: '1.2-2' }}</b></li>
+          <li><span>{{ 'Combustible' | t }}</span><b>{{ producto() === 'gasolina' ? ('Gasolina' | t) : ('Diésel' | t) }}</b></li>
           <!-- AC11 — depósito en obra: origen + obra en lugar de estación -->
           @if (esDeposito()) {
-            <li><span>Origen</span><b>Depósito en obra</b></li>
-            <li><span>Obra</span><b>{{ obraNombre() || 'Sin especificar' }}</b></li>
+            <li><span>{{ 'Origen' | t }}</span><b>{{ 'Depósito en obra' | t }}</b></li>
+            <li><span>{{ 'Obra' | t }}</span><b>{{ obraNombre() || ('Sin especificar' | t) }}</b></li>
           } @else {
-            <li><span>Estación</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
-            @if (tarjeta().trim()) { <li><span>Tarjeta</span><b>{{ tarjeta() }}</b></li> }
+            <li><span>{{ 'Estación' | t }}</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
+            @if (tarjeta().trim()) { <li><span>{{ 'Tarjeta' | t }}</span><b>{{ tarjeta() }}</b></li> }
           }
-          <li><span>Fotos</span><b>{{ fotosCompletas() ? (esDeposito() ? '1 ✓' : (modoPersona() ? '2 ✓' : '3 ✓')) : 'Faltan' }}</b></li>
+          <li><span>{{ 'Fotos' | t }}</span><b>{{ fotosCompletas() ? (esDeposito() ? '1 ✓' : (modoPersona() ? '2 ✓' : '3 ✓')) : ('Faltan' | t) }}</b></li>
           @if (!modoPersona() && !esDeposito()) {
-            <li><span>Rendimiento</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { Primera echada }</b></li>
+            <li><span>{{ 'Rendimiento' | t }}</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { {{ 'Primera echada' | t }} }</b></li>
           }
         </ul>
         <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma la echada al incentivo) -->
@@ -475,8 +486,8 @@
 
     <!-- Nav -->
     <app-wizard-footer
-      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total() ? 'Siguiente' : (submitting() ? 'Guardando…' : (fotosCompletas() ? 'Guardar registro' : 'Faltan fotos para guardar'))"
+      [backLabel]="step() > 1 ? ('Atrás' | t) : ('Cancelar' | t)"
+      [primaryLabel]="step() < total() ? ('Siguiente' | t) : (submitting() ? ('Guardando…' | t) : (fotosCompletas() ? ('Guardar registro' | t) : ('Faltan fotos para guardar' | t)))"
       [primaryDisabled]="step() >= total() && (submitting() || !fotosCompletas())"
       (back)="step() > 1 ? prev() : intentarSalir()"
       (primary)="step() < total() ? next() : submit()"
@@ -485,10 +496,10 @@
     <!-- U4 — descartar cambios sin guardar -->
     <app-confirm-dialog
       [open]="confirmSalir()"
-      title="¿Descartar el registro?"
-      message="Perderás los datos y fotos de este combustible."
-      confirmLabel="Sí, descartar"
-      cancelLabel="Seguir aquí"
+      [title]="'¿Descartar el registro?' | t"
+      [message]="'Perderás los datos y fotos de este combustible.' | t"
+      [confirmLabel]="'Sí, descartar' | t"
+      [cancelLabel]="'Seguir aquí' | t"
       tone="danger"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"
@@ -497,10 +508,10 @@
     <!-- AW3 — confirmación suave: echada inusualmente grande (needs_confirm) -->
     <app-confirm-dialog
       [open]="!!confirmSoft()"
-      title="¿Confirmas la cantidad?"
+      [title]="'¿Confirmas la cantidad?' | t"
       [message]="confirmSoft() ?? ''"
-      confirmLabel="Sí, es correcto"
-      cancelLabel="Voy a revisar"
+      [confirmLabel]="'Sí, es correcto' | t"
+      [cancelLabel]="'Voy a revisar' | t"
       (confirmed)="confirmarEchadaInusual()"
       (cancelled)="cancelarEchadaInusual()"
     />

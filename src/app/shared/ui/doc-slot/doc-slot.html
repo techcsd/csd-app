@@ -3,13 +3,13 @@
     <span class="doc-slot__label">{{ label() }}</span>
 
     @if (local()) {
-      <span class="doc-slot__badge doc-slot__badge--ok">✓ Listo para subir</span>
+      <span class="doc-slot__badge doc-slot__badge--ok">✓ {{ 'Listo para subir' | t }}</span>
     } @else if (urlExistente()) {
-      <span class="doc-slot__badge doc-slot__badge--ok">✓ Cargado</span>
+      <span class="doc-slot__badge doc-slot__badge--ok">✓ {{ 'Cargado' | t }}</span>
     } @else if (enCola()) {
-      <span class="doc-slot__badge doc-slot__badge--wait">⏳ Pendiente de subir</span>
+      <span class="doc-slot__badge doc-slot__badge--wait">⏳ {{ 'Pendiente de subir' | t }}</span>
     } @else if (requerido()) {
-      <span class="doc-slot__badge doc-slot__badge--falta">Falta</span>
+      <span class="doc-slot__badge doc-slot__badge--falta">{{ 'Falta' | t }}</span>
     }
   </div>
 
@@ -22,7 +22,7 @@
         <span class="doc-slot__file">📄 {{ d.nombre }}</span>
       }
       @if (!soloLectura()) {
-        <button type="button" class="doc-slot__link" (click)="clear()">Cambiar</button>
+        <button type="button" class="doc-slot__link" (click)="clear()">{{ 'Cambiar' | t }}</button>
       }
     </div>
   } @else {
@@ -35,23 +35,23 @@
           </a>
         }
         <a class="doc-slot__view" [href]="url" target="_blank" rel="noopener">
-          {{ esPdfExistente() ? '📄 Ver documento' : '🖼️ Ver en grande' }}
+          {{ esPdfExistente() ? ('📄 ' + ('Ver documento' | t)) : ('🖼️ ' + ('Ver en grande' | t)) }}
         </a>
       </div>
     } @else if (enCola()) {
-      <p class="doc-slot__hint">Se subirá cuando haya conexión.</p>
+      <p class="doc-slot__hint">{{ 'Se subirá cuando haya conexión.' | t }}</p>
     } @else if (soloLectura()) {
-      <p class="doc-slot__hint">Sin documento.</p>
+      <p class="doc-slot__hint">{{ 'Sin documento.' | t }}</p>
     }
 
     <!-- Editable: capture buttons (upload or replace) -->
     @if (!soloLectura()) {
       <div class="doc-slot__actions">
         <button type="button" class="doc-slot__btn" (click)="tomarFoto()" [disabled]="busy()">
-          {{ busy() ? '⏳' : '📷' }} {{ urlExistente() ? 'Reemplazar (foto)' : 'Tomar foto' }}
+          {{ busy() ? '⏳' : '📷' }} {{ urlExistente() ? ('Reemplazar (foto)' | t) : ('Tomar foto' | t) }}
         </button>
         <button type="button" class="doc-slot__btn" (click)="elegirArchivo()" [disabled]="busy()">
-          📎 {{ urlExistente() ? 'Reemplazar (archivo)' : 'Elegir archivo' }}
+          📎 {{ urlExistente() ? ('Reemplazar (archivo)' | t) : ('Elegir archivo' | t) }}
         </button>
       </div>
     }

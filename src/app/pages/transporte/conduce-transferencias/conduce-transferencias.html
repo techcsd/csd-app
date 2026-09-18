@@ -1,8 +1,8 @@
 <div class="screen">
   <header class="tr-header">
-    <button type="button" class="tr-header__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="tr-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="tr-header__icon">↔️</span>
-    <h1 class="tr-header__title">Transferencias de conduce</h1>
+    <h1 class="tr-header__title">{{ 'Transferencias de conduce' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,30 +11,30 @@
     } @else if (!ofertas().length) {
       <app-empty-state
         icon="↔️"
-        title="Sin transferencias"
-        message="Cuando otro chofer te transfiera la responsabilidad de un conduce, aparecerá aquí para que la aceptes con foto y firma."
+        [title]="'Sin transferencias' | t"
+        [message]="'Cuando otro chofer te transfiera la responsabilidad de un conduce, aparecerá aquí para que la aceptes con foto y firma.' | t"
       />
     } @else {
-      <p class="tr-intro">Otro chofer quiere pasarte la responsabilidad de estos conduces. Revísalos y acéptalos con foto + firma, o recházalos.</p>
+      <p class="tr-intro">{{ 'Otro chofer quiere pasarte la responsabilidad de estos conduces. Revísalos y acéptalos con foto + firma, o recházalos.' | t }}</p>
       @for (t of ofertas(); track t.id) {
         <div class="tr-card">
           <div class="tr-card__top">
-            <span class="tr-card__de">De: <strong>{{ t.de_nombre || 'Otro chofer' }}</strong></span>
+            <span class="tr-card__de">{{ 'De:' | t }} <strong>{{ t.de_nombre || ('Otro chofer' | t) }}</strong></span>
             <span class="tr-card__fecha">{{ t.ofrecida_en | date: 'dd/MM HH:mm' }}</span>
           </div>
           <div class="tr-card__ruta">
-            <span>{{ t.conduce_bodega || 'Almacén' }}</span>
+            <span>{{ t.conduce_bodega || ('Almacén' | t) }}</span>
             <span class="tr-card__arrow">→</span>
-            <span>{{ t.conduce_obra || 'Destino' }}</span>
+            <span>{{ t.conduce_obra || ('Destino' | t) }}</span>
           </div>
           <div class="tr-card__meta">
-            <span>{{ t.items_count }} artículo(s)</span>
+            <span>{{ t.items_count }} {{ 'artículo(s)' | t }}</span>
             @if (t.conduce_fecha) { <span>· {{ t.conduce_fecha | date: 'dd/MM/yyyy' }}</span> }
           </div>
           @if (t.notas) { <p class="tr-card__notas">📝 {{ t.notas }}</p> }
           <div class="tr-card__actions">
-            <button type="button" class="btn-cta" (click)="abrir(t)">Aceptar…</button>
-            <button type="button" class="btn-ghost" (click)="pedirRechazo(t)">Rechazar</button>
+            <button type="button" class="btn-cta" (click)="abrir(t)">{{ 'Aceptar…' | t }}</button>
+            <button type="button" class="btn-ghost" (click)="pedirRechazo(t)">{{ 'Rechazar' | t }}</button>
           </div>
         </div>
       }
@@ -46,22 +46,22 @@
     <div class="tr-sheet-backdrop" (click)="cerrar()"></div>
     <div class="tr-sheet">
       <div class="tr-sheet__grip"></div>
-      <h2 class="tr-sheet__title">Aceptar transferencia</h2>
+      <h2 class="tr-sheet__title">{{ 'Aceptar transferencia' | t }}</h2>
       <p class="tr-sheet__sub">
-        {{ t.conduce_bodega || 'Almacén' }} → {{ t.conduce_obra || 'Destino' }} · {{ t.items_count }} artículo(s)
+        {{ t.conduce_bodega || ('Almacén' | t) }} → {{ t.conduce_obra || ('Destino' | t) }} · {{ t.items_count }} {{ 'artículo(s)' | t }}
       </p>
 
-      <label class="field-label tr-mt">Foto de evidencia <span class="tr-req">*</span></label>
-      <app-photo-slot label="Foto" hint="📷" [gallery]="false" [foto]="foto()" (captured)="foto.set($event)" (cleared)="foto.set(null)" />
+      <label class="field-label tr-mt">{{ 'Foto de evidencia' | t }} <span class="tr-req">*</span></label>
+      <app-photo-slot [label]="'Foto' | t" hint="📷" [gallery]="false" [foto]="foto()" (captured)="foto.set($event)" (cleared)="foto.set(null)" />
 
-      <label class="field-label tr-mt">Tu firma <span class="tr-req">*</span></label>
-      <p class="tr-sheet__sub">Firmas que aceptas la responsabilidad de este conduce.</p>
+      <label class="field-label tr-mt">{{ 'Tu firma' | t }} <span class="tr-req">*</span></label>
+      <p class="tr-sheet__sub">{{ 'Firmas que aceptas la responsabilidad de este conduce.' | t }}</p>
       <app-signature-pad #firmaPad (changed)="onFirma($event)" />
 
       <div class="tr-sheet__actions">
-        <button type="button" class="btn-ghost" (click)="cerrar()">Cancelar</button>
+        <button type="button" class="btn-ghost" (click)="cerrar()">{{ 'Cancelar' | t }}</button>
         <button type="button" class="btn-cta" [disabled]="!puedeAceptar()" (click)="aceptar()">
-          {{ enviando() ? 'Guardando…' : 'Aceptar transferencia' }}
+          {{ enviando() ? ('Guardando…' | t) : ('Aceptar transferencia' | t) }}
         </button>
       </div>
     </div>
@@ -69,20 +69,20 @@
 
   @if (hecho()) {
     <app-big-confirm
-      title="Transferencia aceptada"
-      note="El conduce y su ruta pasan a tu responsabilidad. Se registró tu foto y firma."
+      [title]="'Transferencia aceptada' | t"
+      [note]="'El conduce y su ruta pasan a tu responsabilidad. Se registró tu foto y firma.' | t"
       tone="done"
-      buttonLabel="Listo"
+      [buttonLabel]="'Listo' | t"
       (dismissed)="finish()"
     />
   }
 
   <app-confirm-dialog
     [open]="!!confirmRechazo()"
-    title="¿Rechazar la transferencia?"
-    message="El conduce seguirá a cargo del chofer que te lo ofreció."
-    confirmLabel="Sí, rechazar"
-    cancelLabel="Volver"
+    [title]="'¿Rechazar la transferencia?' | t"
+    [message]="'El conduce seguirá a cargo del chofer que te lo ofreció.' | t"
+    [confirmLabel]="'Sí, rechazar' | t"
+    [cancelLabel]="'Volver' | t"
     tone="danger"
     (confirmed)="confirmarRechazo()"
     (cancelled)="cancelarRechazo()"

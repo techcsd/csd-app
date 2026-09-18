@@ -2,12 +2,12 @@
   <header class="clist__header">
     <button type="button" class="clist__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="clist__icon">🪪</span>
-    <h1 class="clist__title">Conductores</h1>
+    <h1 class="clist__title">{{ 'Conductores' | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (esAdmin()) {
-      <button type="button" class="btn-cta clist__add" (click)="nuevo()">➕ Agregar conductor</button>
+      <button type="button" class="btn-cta clist__add" (click)="nuevo()">➕ {{ 'Agregar conductor' | t }}</button>
     }
 
     <input
@@ -15,7 +15,7 @@
       type="text"
       [ngModel]="query()"
       (ngModelChange)="query.set($event)"
-      placeholder="Buscar por nombre o cédula…"
+      [placeholder]="'Buscar por nombre o cédula…' | t"
     />
 
     <!-- C7 — filtro rápido: solo conductores con documentos incompletos -->
@@ -25,7 +25,7 @@
       [class.clist__filter--on]="soloIncompletos()"
       (click)="soloIncompletos.set(!soloIncompletos())"
     >
-      📄 Solo documentos incompletos
+      📄 {{ 'Solo documentos incompletos' | t }}
     </button>
 
     @if (loading()) {
@@ -34,9 +34,9 @@
       <!-- BL2 — la consulta falló y no hay nada cacheado: error+reintento -->
       <app-empty-state
         icon="⚠️"
-        title="No pudimos cargar los conductores"
-        message="Hubo un problema al consultar la lista. Revisa tu conexión y reintenta."
-        ctaLabel="Reintentar"
+        [title]="'No pudimos cargar los conductores' | t"
+        [message]="'Hubo un problema al consultar la lista. Revisa tu conexión y reintenta.' | t"
+        [ctaLabel]="'Reintentar' | t"
         (action)="reintentar()"
       />
     } @else if (!lista().length) {
@@ -44,8 +44,8 @@
            suaviza para no afirmar una causa que no probamos. -->
       <app-empty-state
         icon="🪪"
-        title="Sin conductores"
-        [message]="query() ? 'Ningún conductor coincide con tu búsqueda.' : 'No vemos conductores para mostrarte. Si esperabas alguno, agrégalo o consulta con Flota.'"
+        [title]="'Sin conductores' | t"
+        [message]="query() ? ('Ningún conductor coincide con tu búsqueda.' | t) : ('No vemos conductores para mostrarte. Si esperabas alguno, agrégalo o consulta con Flota.' | t)"
       />
     } @else {
       @for (c of lista(); track c.id) {
@@ -60,7 +60,7 @@
               [class.clist__lic--bad]="licEstado(c) === 'vencida'"
             >{{ licLabel(c) }}</span>
             @if (docsIncompletos(c)) {
-              <span class="clist__docbadge">📄 Documentos incompletos</span>
+              <span class="clist__docbadge">📄 {{ 'Documentos incompletos' | t }}</span>
             }
           </span>
           <span class="clist__chev">›</span>

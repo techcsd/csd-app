@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { InventarioService, InventarioAlmacenItem } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -20,7 +22,7 @@ import { Bodega } from '../../../core/models/inventario.model';
   selector: 'app-almacen-inventario',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective],
+  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
   templateUrl: './almacen-inventario.html',
   styleUrl: './almacen-inventario.scss',
 })
@@ -31,6 +33,7 @@ export class AlmacenInventarioPage {
   private route = inject(ActivatedRoute);
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   /** AS11 — quién puede contar/ajustar el stock de un almacén (permiso Operar). */
   puedeAjustar = computed(() => this.ctx.puedeOperarSubmodulo('inventario.conteos'));
@@ -144,16 +147,16 @@ export class AlmacenInventarioPage {
       return;
     }
     // BL4 — motivo (queda en la auditoría), paridad con AU1·P1 de la web.
-    const motivo = prompt('Motivo del ajuste (queda en la auditoría):');
+    const motivo = prompt(this.i18n.t('Motivo del ajuste (queda en la auditoría):'));
     if (motivo === null) return; // canceló
     this.ajustando.set(true);
     try {
       await this.inventario.ajusteRealStock(it.articulo_id, this.bodegaId(), real, motivo.trim() || null);
-      this.toast.success('Stock ajustado al valor real (sin movimiento).');
+      this.toast.success(this.i18n.t('Stock ajustado al valor real (sin movimiento).'));
       this.ajusteId.set(null);
       await this.load(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo ajustar el stock.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo ajustar el stock.'));
     } finally {
       this.ajustando.set(false);
     }

@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AV4 — editor de sticker previo al upload (estilo WhatsApp): recorte cuadrado
@@ -23,7 +24,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-sticker-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   templateUrl: './sticker-editor.html',
   styleUrl: './sticker-editor.scss',
 })

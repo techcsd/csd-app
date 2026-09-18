@@ -4,10 +4,10 @@
   </div>
   <div class="vcard__info">
     <span class="vcard__placa">
-      {{ titulo() || 'Vehículo' }}@if (anio()) { <span class="vcard__anio">{{ anio() }}</span> }
-      @if (esPrueba()) { <span class="vcard__prueba">PRUEBA</span> }
+      {{ titulo() || ('Vehículo' | t) }}@if (anio()) { <span class="vcard__anio">{{ anio() }}</span> }
+      @if (esPrueba()) { <span class="vcard__prueba">{{ 'PRUEBA' | t }}</span> }
     </span>
-    <span class="vcard__meta">{{ tipoLabel() || 'Vehículo' }} · {{ km() ?? 0 | number: '1.0-0' }} km</span>
+    <span class="vcard__meta">{{ tipoLabel() || ('Vehículo' | t) }} · {{ km() ?? 0 | number: '1.0-0' }} km</span>
     @if (subId()) {
       <span class="vcard__sub">{{ subId() }}</span>
     }

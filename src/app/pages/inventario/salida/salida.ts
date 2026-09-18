@@ -18,6 +18,8 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
 import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia } from '../../../core/util/fecha';
 
@@ -42,7 +44,7 @@ type StockInfo = { cantidad: number; unidad: string } | null;
   selector: 'app-salida',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput, TranslatePipe],
   templateUrl: './salida.html',
   styleUrl: './salida.scss',
 })
@@ -55,6 +57,7 @@ export class SalidaPage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private i18n = inject(I18nService);
 
   private readonly clave = 'inventario:salida';
   private hydrated = false;
@@ -84,10 +87,10 @@ export class SalidaPage implements OnDestroy {
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
   obraOptions = computed(() => [
-    { id: '', label: 'Consumo en obra (sin destino)' },
+    { id: '', label: this.i18n.t('Consumo en obra (sin destino)') },
     ...this.obras().map((o) => ({ id: o.id, label: o.nombre })),
   ]);
-  bodegaNombre = computed(() => this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? 'el almacén');
+  bodegaNombre = computed(() => this.bodegas().find((b) => b.id === this.bodegaId())?.nombre ?? this.i18n.t('el almacén'));
 
   grupos = computed<GrupoResumen[]>(() => {
     const nombre = new Map(this.categorias().map((c) => [c.id, c.nombre]));
@@ -272,22 +275,22 @@ export class SalidaPage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
-      this.toast.error('Elige el almacén.');
+      this.toast.error(this.i18n.t('Elige el almacén.'));
       return;
     }
     const items = this.cart().filter((l) => l.cantidad > 0);
     if (!items.length) {
-      this.toast.error('Agrega al menos un material.');
+      this.toast.error(this.i18n.t('Agrega al menos un material.'));
       return;
     }
     // Z19b — evidencia obligatoria (el server la exige; validamos antes de enviar).
     if (this.faltaFoto()) {
-      this.toast.error('Agrega una foto de evidencia antes de confirmar.');
+      this.toast.error(this.i18n.t('Agrega una foto de evidencia antes de confirmar.'));
       return;
     }
     // AF10 — firma de quien entrega obligatoria.
     if (this.faltaFirma() || !this.firmaBlob()) {
-      this.toast.error('Falta la firma de quien entrega.');
+      this.toast.error(this.i18n.t('Falta la firma de quien entrega.'));
       return;
     }
     this.submitting.set(true);
@@ -300,7 +303,7 @@ export class SalidaPage implements OnDestroy {
         const excedido = this.cart().find((l) => this.excede(l));
         if (excedido) {
           const s = this.stockDe(excedido.articulo_id);
-          this.toast.error(`No hay suficiente "${excedido.nombre}": solo hay ${s?.cantidad ?? 0} ${s?.unidad ?? ''}.`);
+          this.toast.error(this.i18n.t('No hay suficiente "{n}": solo hay {c} {u}.', { n: excedido.nombre, c: s?.cantidad ?? 0, u: s?.unidad ?? '' }));
           this.submitting.set(false);
           return;
         }
@@ -323,7 +326,7 @@ export class SalidaPage implements OnDestroy {
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.hoja.set('exito');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.submitting.set(false);
     }
@@ -356,7 +359,7 @@ export class SalidaPage implements OnDestroy {
 
   compartir(): void {
     if (!this.cart().length) {
-      this.toast.error('No hay material para compartir.');
+      this.toast.error(this.i18n.t('No hay material para compartir.'));
       return;
     }
     this.shareOpen.set(true);

@@ -15,6 +15,8 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { NcTipo, NC_TIPO_META, Severidad, SEVERIDAD_META } from '../../../core/models/obra.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const MAX_FOTOS = 3;
 
@@ -23,7 +25,7 @@ const MAX_FOTOS = 3;
   selector: 'app-obra-nc',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, WizardExit, BigConfirm, ConfirmDialog],
+  imports: [FormsModule, PhotoSlot, OptionButton, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe],
   templateUrl: './no-conformidad.html',
   styleUrl: './no-conformidad.scss',
 })
@@ -37,6 +39,7 @@ export class NoConformidadPage implements OnDestroy {
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
   readonly tipos = (Object.keys(NC_TIPO_META) as NcTipo[]).map((k) => ({ key: k, ...NC_TIPO_META[k] }));
@@ -197,7 +200,7 @@ export class NoConformidadPage implements OnDestroy {
       await this.autosave.discard(this.clave);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la no conformidad.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la no conformidad.'));
     } finally {
       this.submitting.set(false);
     }

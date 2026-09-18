@@ -1,14 +1,14 @@
 <div class="screen ob-detalle">
   <header class="ob-detalle__header">
     <button type="button" class="ob-detalle__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="ob-detalle__title">Contenido del pendiente</h1>
+    <h1 class="ob-detalle__title">{{ 'Contenido del pendiente' | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else if (!op()) {
-      <p class="ob-detalle__empty">Este pendiente ya no está en la cola.</p>
+      <p class="ob-detalle__empty">{{ 'Este pendiente ya no está en la cola.' | t }}</p>
     } @else {
       <!-- Cabecera: tipo + categoría + fecha -->
       <div class="ob-detalle__card ob-detalle__resumen">
@@ -24,7 +24,7 @@
           <p class="ob-detalle__msg" [class.ob-detalle__msg--sistema]="esSistema()">{{ mensaje() }}</p>
           <!-- BM1 (9ª regla) — código técnico visible para 'sistema' (diagnóstico por screenshot) -->
           @if (esDesarrollador() && codigoDiagnostico(); as cod) {
-            <p class="ob-detalle__code">🩺 Código: {{ cod }}</p>
+            <p class="ob-detalle__code">🩺 {{ 'Código:' | t }} {{ cod }}</p>
           }
         }
       </div>
@@ -45,7 +45,7 @@
       <!-- Fotos -->
       @if (contenido()?.fotos?.length) {
         <div class="ob-detalle__card">
-          <h2 class="ob-detalle__sec">Fotos ({{ contenido()!.fotos.length }})</h2>
+          <h2 class="ob-detalle__sec">{{ 'Fotos' | t }} ({{ contenido()!.fotos.length }})</h2>
           <div class="ob-detalle__fotos">
             @for (foto of contenido()!.fotos; track foto.url) {
               <button type="button" class="ob-detalle__foto" (click)="abrirFoto(foto.url)">
@@ -56,30 +56,35 @@
         </div>
       }
       @if (contenido()?.audios) {
-        <p class="ob-detalle__audios">🎙️ {{ contenido()!.audios }} nota(s) de voz guardada(s) en el teléfono.</p>
+        <p class="ob-detalle__audios">🎙️ {{ contenido()!.audios }} {{ 'nota(s) de voz guardada(s) en el teléfono.' | t }}</p>
       }
 
       <!-- Acciones -->
       <div class="ob-detalle__acciones">
         @if (enError()) {
           <button type="button" class="ob-btn ob-btn--primary" [disabled]="!online()" (click)="reintentar()">
-            🔄 Reintentar el envío
+            🔄 {{ 'Reintentar el envío' | t }}
           </button>
         }
         @if (puedeDuplicar()) {
           <button type="button" class="ob-btn" [disabled]="duplicando()" (click)="duplicar()">
-            {{ duplicando() ? 'Duplicando…' : '📄 Duplicar a nueva bitácora' }}
+            {{ duplicando() ? ('Duplicando…' | t) : ('📄 Duplicar a nueva bitácora' | t) }}
+          </button>
+        }
+        @if (puedeCorregirProveedor()) {
+          <button type="button" class="ob-btn ob-btn--primary" [disabled]="corrigiendo()" (click)="corregirProveedor()">
+            {{ corrigiendo() ? ('Abriendo…' | t) : ('🚚 Elegir otro proveedor' | t) }}
           </button>
         }
         <button type="button" class="ob-btn" [disabled]="exportando()" (click)="exportar()">
-          {{ exportando() ? 'Preparando…' : '📤 Compartir / exportar' }}
+          {{ exportando() ? ('Preparando…' | t) : ('📤 Compartir / exportar' | t) }}
         </button>
 
         <!-- Descartar vive SOLO aquí (nunca en la tarjeta); doble confirmación
              para 'sistema' con aviso de pérdida de data real. -->
         @if (enError()) {
           <button type="button" class="ob-detalle__descartar" (click)="pedirDescartar()">
-            Descartar este registro…
+            {{ 'Descartar este registro…' | t }}
           </button>
         }
       </div>
@@ -97,10 +102,10 @@
   <!-- Descarte paso 1 -->
   <app-confirm-dialog
     [open]="descartarPaso() === 1"
-    title="¿Descartar este registro?"
-    [message]="esSistema() ? AVISO_PERDIDA + ' ¿Seguro que quieres borrarlo?' : 'No se enviará y se borrará de la cola. Quedará marcado como no enviado en tus registros. Esta acción no se puede deshacer.'"
-    [confirmLabel]="esSistema() ? 'Sí, continuar' : 'Descartar'"
-    cancelLabel="Conservar"
+    [title]="'¿Descartar este registro?' | t"
+    [message]="esSistema() ? AVISO_PERDIDA + ' ' + ('¿Seguro que quieres borrarlo?' | t) : ('No se enviará y se borrará de la cola. Quedará marcado como no enviado en tus registros. Esta acción no se puede deshacer.' | t)"
+    [confirmLabel]="esSistema() ? ('Sí, continuar' | t) : ('Descartar' | t)"
+    [cancelLabel]="'Conservar' | t"
     tone="danger"
     (confirmed)="siguienteDescarte()"
     (cancelled)="cancelarDescarte()"
@@ -108,10 +113,10 @@
   <!-- Descarte paso 2 (solo 'sistema') -->
   <app-confirm-dialog
     [open]="descartarPaso() === 2"
-    title="Última confirmación"
-    message="Vas a borrar para siempre esta data real de la obra y sus fotos. No hay forma de recuperarla. ¿Continuar?"
-    confirmLabel="Borrar definitivamente"
-    cancelLabel="No, conservar"
+    [title]="'Última confirmación' | t"
+    [message]="'Vas a borrar para siempre esta data real de la obra y sus fotos. No hay forma de recuperarla. ¿Continuar?' | t"
+    [confirmLabel]="'Borrar definitivamente' | t"
+    [cancelLabel]="'No, conservar' | t"
     tone="danger"
     (confirmed)="siguienteDescarte()"
     (cancelled)="cancelarDescarte()"

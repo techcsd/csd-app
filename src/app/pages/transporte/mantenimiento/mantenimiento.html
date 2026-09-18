@@ -1,21 +1,21 @@
 @if (done()) {
   <app-big-confirm
-    [title]="online ? 'Listo, quedó registrado' : 'Guardado'"
+    [title]="online ? ('Listo, quedó registrado' | t) : ('Guardado' | t)"
     [note]="online
-      ? 'El mantenimiento quedó registrado.'
-      : 'Sin señal. Se enviará solo cuando haya conexión.'"
+      ? ('El mantenimiento quedó registrado.' | t)
+      : ('Sin señal. Se enviará solo cuando haya conexión.' | t)"
     [tone]="online ? 'done' : 'pending'"
-    buttonLabel="Listo"
+    [buttonLabel]="'Listo' | t"
     (dismissed)="finish()"
   />
 } @else {
   <div class="screen mantenimiento">
-    <app-wizard-exit title="Reportar mantenimiento" (exit)="intentarSalir()" />
+    <app-wizard-exit [title]="'Reportar mantenimiento' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
       @if (borradorPrevio()) {
-        <div class="mantenimiento__recovery">↩️ Recuperamos lo que habías llenado.</div>
+        <div class="mantenimiento__recovery">↩️ {{ 'Recuperamos lo que habías llenado.' | t }}</div>
       }
       <!-- Vehicle header -->
       @if (loading()) {
@@ -29,13 +29,13 @@
 
       <!-- Step 1: type -->
       @if (step() === 1) {
-        <h1 class="screen__title">Reportar mantenimiento</h1>
-        <p class="screen__subtitle">¿Qué tipo de mantenimiento es?</p>
+        <h1 class="screen__title">{{ 'Reportar mantenimiento' | t }}</h1>
+        <p class="screen__subtitle">{{ '¿Qué tipo de mantenimiento es?' | t }}</p>
         <div class="mantenimiento__tipos">
           @for (t of tipos; track t.valor) {
             <app-option-button
               [icon]="t.icon"
-              [label]="t.label"
+              [label]="t.label | t"
               [tone]="t.tone"
               [selected]="tipo() === t.valor"
               (pressed)="tipo.set(t.valor)"
@@ -50,26 +50,26 @@
               [checked]="incluyePreventivo()"
               (change)="incluyePreventivo.set($any($event.target).checked)"
             />
-            <span>También se hizo mantenimiento preventivo</span>
+            <span>{{ 'También se hizo mantenimiento preventivo' | t }}</span>
           </label>
         }
       }
 
       <!-- Step 2: description + km -->
       @if (step() === 2) {
-        <h1 class="screen__title">Describe el trabajo</h1>
-        <label class="field-label" for="desc">¿Qué se hizo o se necesita?</label>
+        <h1 class="screen__title">{{ 'Describe el trabajo' | t }}</h1>
+        <label class="field-label" for="desc">{{ '¿Qué se hizo o se necesita?' | t }}</label>
         <textarea
           id="desc"
           class="field mantenimiento__desc"
           rows="5"
           [ngModel]="descripcion()"
           (ngModelChange)="descripcion.set($event)"
-          placeholder="Ej. Cambio de aceite y filtros, revisión de frenos…"
+          [placeholder]="'Ej. Cambio de aceite y filtros, revisión de frenos…' | t"
         ></textarea>
 
         <app-km-input
-          [label]="vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso actuales — opcional' : 'Kilometraje actual (km) — opcional'"
+          [label]="(vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso actuales — opcional' : 'Kilometraje actual (km) — opcional') | t"
           [sufijo]="vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'"
           [(value)]="km"
           [ultimo]="odometro()"
@@ -78,21 +78,21 @@
         />
 
         <!-- AL7 — costo (opcional) + taller/lugar -->
-        <label class="field-label mantenimiento__mt" for="taller">¿Dónde lo hiciste? (taller / lugar) — opcional</label>
-        <input id="taller" class="field" type="text" [ngModel]="taller()" (ngModelChange)="taller.set($event)" placeholder="Ej. Taller Pérez, gomera de la esquina…" />
+        <label class="field-label mantenimiento__mt" for="taller">{{ '¿Dónde lo hiciste? (taller / lugar) — opcional' | t }}</label>
+        <input id="taller" class="field" type="text" [ngModel]="taller()" (ngModelChange)="taller.set($event)" [placeholder]="'Ej. Taller Pérez, gomera de la esquina…' | t" />
 
-        <label class="field-label mantenimiento__mt" for="costo">Costo (RD$) — opcional</label>
+        <label class="field-label mantenimiento__mt" for="costo">{{ 'Costo (RD$) — opcional' | t }}</label>
         <input id="costo" class="field" type="number" inputmode="decimal" min="0" [ngModel]="costo()" (ngModelChange)="costo.set($event)" placeholder="0" />
       }
 
       <!-- Step 3: photos (mínimo 1) -->
       @if (step() === 3) {
-        <h1 class="screen__title">Fotos del mantenimiento</h1>
-        <p class="screen__subtitle">Adjunta al menos 1 foto como evidencia (hasta {{ maxFotos }}).</p>
+        <h1 class="screen__title">{{ 'Fotos del mantenimiento' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Adjunta al menos 1 foto como evidencia (hasta {n}).' | t: { n: maxFotos } }}</p>
         <div class="mantenimiento__fotos">
           @for (i of slots; track i) {
             <app-photo-slot
-              [label]="'Foto ' + (i + 1)"
+              [label]="('Foto' | t) + ' ' + (i + 1)"
               hint="📸"
               [foto]="fotos()[i] ?? null"
               (captured)="onFoto(i, $event)"
@@ -106,23 +106,23 @@
 
       <!-- Step 4: summary -->
       @if (step() === 4) {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
-          <li><span>Vehículo</span><b>{{ placa() }}</b></li>
-          <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>
+          <li><span>{{ 'Vehículo' | t }}</span><b>{{ placa() }}</b></li>
+          <li><span>{{ 'Tipo' | t }}</span><b>{{ tipoLabel() | t }}</b></li>
           @if (mostrarIncluyePreventivo() && incluyePreventivo()) {
-            <li><span>Incluyó preventivo</span><b>Sí</b></li>
+            <li><span>{{ 'Incluyó preventivo' | t }}</span><b>{{ 'Sí' | t }}</b></li>
           }
           @if (km() !== null) {
-            <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+            <li><span>{{ 'Kilometraje' | t }}</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           }
           @if (taller().trim()) {
-            <li><span>Taller</span><b>{{ taller() }}</b></li>
+            <li><span>{{ 'Taller' | t }}</span><b>{{ taller() }}</b></li>
           }
           @if ((costo() ?? 0) > 0) {
-            <li><span>Costo</span><b>RD$ {{ costo() | number: '1.0-2' }}</b></li>
+            <li><span>{{ 'Costo' | t }}</span><b>RD$ {{ costo() | number: '1.0-2' }}</b></li>
           }
-          <li><span>Fotos</span><b>{{ fotosCount() }}</b></li>
+          <li><span>{{ 'Fotos' | t }}</span><b>{{ fotosCount() }}</b></li>
         </ul>
         <!-- U15 — miniaturas de las fotos adjuntas -->
         <div class="mantenimiento__thumbs">
@@ -135,15 +135,15 @@
         <p class="mantenimiento__desc-preview">{{ descripcion() }}</p>
 
         <!-- AL7 — notas del trabajo (opcional) -->
-        <label class="field-label mantenimiento__mt" for="notas">Notas (opcional)</label>
-        <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Detalle adicional del trabajo…"></textarea>
+        <label class="field-label mantenimiento__mt" for="notas">{{ 'Notas (opcional)' | t }}</label>
+        <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Detalle adicional del trabajo…' | t"></textarea>
       }
     </div>
 
     <!-- Nav -->
     <app-wizard-footer
-      [backLabel]="step() > 1 ? 'Atrás' : ''"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Confirmar')"
+      [backLabel]="step() > 1 ? ('Atrás' | t) : ''"
+      [primaryLabel]="step() < total ? ('Siguiente' | t) : (submitting() ? ('Guardando…' | t) : ('Confirmar' | t))"
       [primaryDisabled]="step() >= total && submitting()"
       (back)="prev()"
       (primary)="step() < total ? next() : submit()"
@@ -151,10 +151,10 @@
 
     <app-confirm-dialog
       [open]="confirmSalir()"
-      title="¿Salir sin guardar?"
-      message="Perderás lo que llevas de este reporte de mantenimiento."
-      confirmLabel="Sí, salir"
-      cancelLabel="Seguir aquí"
+      [title]="'¿Salir sin guardar?' | t"
+      [message]="'Perderás lo que llevas de este reporte de mantenimiento.' | t"
+      [confirmLabel]="'Sí, salir' | t"
+      [cancelLabel]="'Seguir aquí' | t"
       tone="danger"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"

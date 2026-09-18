@@ -14,6 +14,8 @@ import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { PersonalCarnet } from '../../../shared/ui/personal-carnet/personal-carnet';
 
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
@@ -85,6 +87,7 @@ interface RegistroDraft {
     BigConfirm,
     ConfirmDialog,
     PersonalCarnet,
+    TranslatePipe,
   ],
   templateUrl: './personal-registro.html',
   styleUrl: './personal-registro.scss',
@@ -99,6 +102,7 @@ export class PersonalRegistroPage implements OnDestroy {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   readonly nacionalidades = NACIONALIDADES;
   readonly tiposDocumento = TIPOS_DOCUMENTO;
@@ -143,11 +147,11 @@ export class PersonalRegistroPage implements OnDestroy {
   fotos = signal<Partial<Record<FotoTipo, CapturedPhoto>>>({});
   // ⏸ Firma
   firma = signal<Blob | null>(null);
-  documentoFirmaNombre = signal('Acuerdo de registro de personal de obra');
+  documentoFirmaNombre = signal(this.i18n.t('Acuerdo de registro de personal de obra'));
 
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
   cargoOptions = computed(() => this.cargos().map((c) => ({ id: c.id, label: `${c.nombre} · ${c.codigo}` })));
-  cuadrillaOptions = computed(() => this.cuadrillas.map((c) => ({ id: c.value, label: c.label }))); // AV4
+  cuadrillaOptions = computed(() => this.cuadrillas.map((c) => ({ id: c.value, label: this.i18n.t(c.label) }))); // AV4
   cuadrillaLabel = computed(() => this.cuadrillas.find((c) => c.value === this.cuadrilla())?.label ?? '');
 
   cargoSel = computed<Cargo | null>(() => this.cargos().find((c) => c.id === this.cargoId()) ?? null);
@@ -187,13 +191,13 @@ export class PersonalRegistroPage implements OnDestroy {
 
   pasos = computed<{ key: PasoKey; titulo: string }[]>(() => {
     const p: { key: PasoKey; titulo: string }[] = [
-      { key: 'datos', titulo: 'Datos de la persona' },
-      { key: 'documento', titulo: 'Documento de identidad' },
-      { key: 'fotos', titulo: 'Fotos de evidencia' },
+      { key: 'datos', titulo: this.i18n.t('Datos de la persona') },
+      { key: 'documento', titulo: this.i18n.t('Documento de identidad') },
+      { key: 'fotos', titulo: this.i18n.t('Fotos de evidencia') },
     ];
-    if (FIRMA_HABILITADA) p.push({ key: 'firma', titulo: 'Firma del documento' });
-    p.push({ key: 'carnet', titulo: 'Carnet' });
-    p.push({ key: 'resumen', titulo: 'Revisar y registrar' });
+    if (FIRMA_HABILITADA) p.push({ key: 'firma', titulo: this.i18n.t('Firma del documento') });
+    p.push({ key: 'carnet', titulo: this.i18n.t('Carnet') });
+    p.push({ key: 'resumen', titulo: this.i18n.t('Revisar y registrar') });
     return p;
   });
 
@@ -232,8 +236,8 @@ export class PersonalRegistroPage implements OnDestroy {
   );
 
   primaryBtn = computed(() => {
-    if (this.submitting()) return 'Registrando…';
-    return this.esUltimo() ? 'Registrar' : 'Siguiente';
+    if (this.submitting()) return this.i18n.t('Registrando…');
+    return this.esUltimo() ? this.i18n.t('Registrar') : this.i18n.t('Siguiente');
   });
 
   private readonly backHandler = (): boolean => {
@@ -306,7 +310,7 @@ export class PersonalRegistroPage implements OnDestroy {
     if (!this.tieneDatos()) return;
     this.autosave.queue(this.clave, snap, {
       tipo: 'personal',
-      etiqueta: 'Registro de personal',
+      etiqueta: this.i18n.t('Registro de personal'),
       ruta: this.location.path(),
     });
   }
@@ -459,7 +463,7 @@ export class PersonalRegistroPage implements OnDestroy {
       void this.autosave.discard(this.clave); // AE9 — borrador cumplido
       this.hoja.set('exito');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }

@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VersionService, VersionHistorial, Plataforma, CAMBIO_LABEL } from '../../../core/services/version.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * Historial de versiones (línea de tiempo). Solo admin (ruta gated por
@@ -12,13 +14,14 @@ import { VersionService, VersionHistorial, Plataforma, CAMBIO_LABEL } from '../.
   selector: 'app-admin-versiones',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton],
+  imports: [Skeleton, TranslatePipe],
   templateUrl: './versiones.html',
   styleUrl: './versiones.scss',
 })
 export class AdminVersionesPage {
   private version = inject(VersionService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private todas = signal<VersionHistorial[]>([]);
   loading = signal(true);
@@ -39,7 +42,7 @@ export class AdminVersionesPage {
     try {
       this.todas.set(await this.version.historial());
     } catch (e) {
-      this.error.set(e instanceof Error ? e.message : 'No se pudo cargar el historial.');
+      this.error.set(e instanceof Error ? e.message : this.i18n.t('No se pudo cargar el historial.'));
     } finally {
       this.loading.set(false);
     }

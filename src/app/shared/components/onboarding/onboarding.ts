@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { LocalStore } from '../../../core/services/local-store.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface Step {
   icon?: string;
@@ -74,6 +75,7 @@ const DONE_KEY = 'csd_onboarding_v1_done';
   selector: 'app-onboarding',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './onboarding.html',
   styleUrl: './onboarding.scss',
 })

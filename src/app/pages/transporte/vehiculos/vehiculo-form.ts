@@ -9,6 +9,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
 import { ToggleSwitch } from '../../../shared/ui/toggle-switch/toggle-switch';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { VEHICULO_TIPOS } from '../../../core/models/vehiculo-tipos.model';
 import { VehiculosService, VehiculoEditable } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -58,7 +60,7 @@ const ASEGURADORAS = ['Seguros Universal', 'Seguros Reservas', 'Mapfre BHD', 'La
   selector: 'app-vehiculo-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton, DraftBanner, SelectList, ToggleSwitch],
+  imports: [FormsModule, OptionButton, PhotoSlot, WizardFooter, Skeleton, DraftBanner, SelectList, ToggleSwitch, TranslatePipe],
   templateUrl: './vehiculo-form.html',
   styleUrl: './vehiculo-form.scss',
 })
@@ -72,6 +74,7 @@ export class VehiculoFormPage {
   private autosave = inject(AutosaveService);
   private borradorSvc = inject(BorradorService);
   private ctx = inject(UserContextService);
+  private i18n = inject(I18nService);
 
   readonly estados = ESTADOS;
 
@@ -139,7 +142,7 @@ export class VehiculoFormPage {
       if (!snap.placa && !snap.marca && !snap.modelo && !snap.tipo) return;
       this.autosave.queue(this.clave(), snap, {
         tipo: 'vehiculo',
-        etiqueta: (this.esEdicion() ? 'Editar vehículo' : 'Nuevo vehículo') + (snap.placa ? ' · ' + snap.placa : ''),
+        etiqueta: this.i18n.t(this.esEdicion() ? 'Editar vehículo' : 'Nuevo vehículo') + (snap.placa ? ' · ' + snap.placa : ''),
         ruta: this.ruta(),
       });
     });
@@ -251,7 +254,7 @@ export class VehiculoFormPage {
         void this.loadFotosUrls(v.fotos ?? []);
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el vehículo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cargar el vehículo.'));
     } finally {
       this.loading.set(false);
     }
@@ -326,15 +329,15 @@ export class VehiculoFormPage {
   async guardar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.placa().trim() || !this.marca().trim() || !this.modelo().trim() || !this.tipo().trim()) {
-      this.toast.error('Completa placa, marca, modelo y tipo.');
+      this.toast.error(this.i18n.t('Completa placa, marca, modelo y tipo.'));
       return;
     }
     if (this.anio() == null || this.anio()! < 1950) {
-      this.toast.error('Escribe un año válido.');
+      this.toast.error(this.i18n.t('Escribe un año válido.'));
       return;
     }
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para guardar el vehículo.');
+      this.toast.error(this.i18n.t('Necesitas conexión para guardar el vehículo.'));
       return;
     }
     this.submitting.set(true);
@@ -352,10 +355,10 @@ export class VehiculoFormPage {
       }
       if (nueva || this.esEdicion()) await this.vehiculos.guardarFotosOrden(id, fotosFinal);
       void this.autosave.discard(this.clave());
-      this.toast.success(this.esEdicion() ? 'Vehículo actualizado.' : 'Vehículo creado.');
+      this.toast.success(this.i18n.t(this.esEdicion() ? 'Vehículo actualizado.' : 'Vehículo creado.'));
       void this.router.navigate(['/transporte/vehiculo', id], { replaceUrl: true });
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
       this.submitting.set(false);
     }
   }

@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/location-picker/location-picker';
 import { InventarioService } from '../../../core/services/inventario.service';
@@ -25,7 +27,7 @@ type ModoUbic = 'obra' | 'propia';
   selector: 'app-almacenes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, CollapsibleSelect, LocationPicker],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, CollapsibleSelect, LocationPicker, TranslatePipe],
   templateUrl: './almacenes.html',
   styleUrl: './almacenes.scss',
 })
@@ -33,6 +35,7 @@ export class AlmacenesPage {
   private inventario = inject(InventarioService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
   private location = inject(Location);
   private router = inject(Router);
 
@@ -119,7 +122,7 @@ export class AlmacenesPage {
     try {
       this.bodegas.set(await this.inventario.getBodegasAdmin());
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudieron cargar los almacenes.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudieron cargar los almacenes.'));
     } finally {
       this.loading.set(false);
     }
@@ -127,7 +130,7 @@ export class AlmacenesPage {
 
   nuevo(): void {
     if (!this.online) {
-      this.toast.error('Necesitas conexión para gestionar almacenes.');
+      this.toast.error(this.i18n.t('Necesitas conexión para gestionar almacenes.'));
       return;
     }
     this.editId.set(null);
@@ -144,7 +147,7 @@ export class AlmacenesPage {
 
   editar(b: BodegaAdmin): void {
     if (!this.online) {
-      this.toast.error('Necesitas conexión para gestionar almacenes.');
+      this.toast.error(this.i18n.t('Necesitas conexión para gestionar almacenes.'));
       return;
     }
     this.editId.set(b.id);
@@ -177,7 +180,7 @@ export class AlmacenesPage {
     if (this.saving()) return;
     const nombre = homologarTexto(this.nombre());
     if (!nombre) {
-      this.toast.error('Escribe el nombre del almacén.');
+      this.toast.error(this.i18n.t('Escribe el nombre del almacén.'));
       return;
     }
     this.saving.set(true);
@@ -190,15 +193,15 @@ export class AlmacenesPage {
       };
       if (this.editId()) {
         await this.inventario.actualizarBodega(this.editId()!, payload);
-        this.toast.success('Almacén actualizado.');
+        this.toast.success(this.i18n.t('Almacén actualizado.'));
       } else {
         await this.inventario.crearBodega(payload);
-        this.toast.success('Almacén creado.');
+        this.toast.success(this.i18n.t('Almacén creado.'));
       }
       this.formOpen.set(false);
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.saving.set(false);
     }
@@ -206,7 +209,7 @@ export class AlmacenesPage {
 
   pedirDesactivar(b: BodegaAdmin): void {
     if (!this.online) {
-      this.toast.error('Necesitas conexión para gestionar almacenes.');
+      this.toast.error(this.i18n.t('Necesitas conexión para gestionar almacenes.'));
       return;
     }
     this.confirmId.set(b.id);
@@ -215,14 +218,14 @@ export class AlmacenesPage {
   async toggleActivo(b: BodegaAdmin): Promise<void> {
     this.confirmId.set(null);
     if (!this.online) {
-      this.toast.error('Necesitas conexión para gestionar almacenes.');
+      this.toast.error(this.i18n.t('Necesitas conexión para gestionar almacenes.'));
       return;
     }
     try {
       await this.inventario.setBodegaActivo(b.id, !b.activo);
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo actualizar.'));
     }
   }
 

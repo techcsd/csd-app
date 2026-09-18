@@ -13,7 +13,7 @@
         <!-- W5 — detalle de la multa -->
         <div class="mrd__head">
           <div class="mrd__head-top">
-            <span class="mrd__placa">{{ m.motivo ?? 'Multa' }}</span>
+            <span class="mrd__placa">{{ m.motivo ?? ('Multa' | t) }}</span>
             <span class="mrd__badge mrd__badge--{{ m.estado === 'pagada' ? 'ok' : 'warn' }}">{{ estadoMultaLabel(m.estado) }}</span>
           </div>
           @if (m.vehiculo?.placa) {
@@ -22,45 +22,45 @@
         </div>
 
         <ul class="resumen">
-          <li><span>Motivo</span><b>{{ m.motivo ?? '—' }}</b></li>
-          <li><span>Monto</span><b>{{ m.monto != null ? 'RD$ ' + (m.monto | number: '1.2-2') : '—' }}</b></li>
-          <li><span>Estado</span><b>{{ estadoMultaLabel(m.estado) }}</b></li>
-          <li><span>Fecha</span><b>{{ m.fecha ? fmtFecha(m.fecha) : '—' }}</b></li>
-          <li><span>Vehículo</span><b>{{ m.vehiculo?.placa ?? 'Sin vehículo' }}</b></li>
+          <li><span>{{ 'Motivo' | t }}</span><b>{{ m.motivo ?? '—' }}</b></li>
+          <li><span>{{ 'Monto' | t }}</span><b>{{ m.monto != null ? 'RD$ ' + (m.monto | number: '1.2-2') : '—' }}</b></li>
+          <li><span>{{ 'Estado' | t }}</span><b>{{ estadoMultaLabel(m.estado) }}</b></li>
+          <li><span>{{ 'Fecha' | t }}</span><b>{{ m.fecha ? fmtFecha(m.fecha) : '—' }}</b></li>
+          <li><span>{{ 'Vehículo' | t }}</span><b>{{ m.vehiculo?.placa ?? ('Sin vehículo' | t) }}</b></li>
         </ul>
 
         @if (m.documentoUrl) {
-          <h2 class="mrd__section">Documento</h2>
+          <h2 class="mrd__section">{{ 'Documento' | t }}</h2>
           <a class="mrd__firma" [href]="m.documentoUrl" target="_blank" rel="noopener">
             @if (m.esImagen) {
               <app-img [src]="m.documentoUrl" alt="Documento de la multa" ratio="3 / 2" fallback="📄" />
             } @else {
-              <span class="mrd__pdf">📄 Ver documento (PDF)</span>
+              <span class="mrd__pdf">📄 {{ 'Ver documento (PDF)' | t }}</span>
             }
           </a>
         }
       } @else {
-        <app-empty-state icon="🔍" title="No se encontró la multa" message="Puede que ya no esté disponible o no tengas acceso." />
+        <app-empty-state icon="🔍" [title]="'No se encontró la multa' | t" [message]="'Puede que ya no esté disponible o no tengas acceso.' | t" />
       }
     } @else if (esChecklist()) {
       @if (checklist(); as c) {
         <!-- Cabecera del checklist -->
         <div class="mrd__head">
           <div class="mrd__head-top">
-            <span class="mrd__placa">{{ c.vehiculo?.placa ?? 'Vehículo' }}</span>
+            <span class="mrd__placa">{{ c.vehiculo?.placa ?? ('Vehículo' | t) }}</span>
             <span class="mrd__badge mrd__badge--{{ resultadoBadge(c.resultado) }}">{{ resultadoLabel(c.resultado) }}</span>
           </div>
           <span class="mrd__sub">{{ c.vehiculo?.marca }} {{ c.vehiculo?.modelo }}</span>
           <ul class="resumen">
-            <li><span>Fecha</span><b>{{ (c.capturado_en || c.created_at || c.fecha) ? fmtFechaHora(c.capturado_en || c.created_at || c.fecha) : '—' }}</b></li>
-            @if (c.conductor?.nombre) { <li><span>Conductor</span><b>{{ c.conductor?.nombre }}</b></li> }
-            <li><span>Kilometraje</span><b>{{ c.kilometraje != null ? (c.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>
-            <li><span>Combustible</span><b>{{ nivelLabel(c.nivel_combustible) }}</b></li>
+            <li><span>{{ 'Fecha' | t }}</span><b>{{ (c.capturado_en || c.created_at || c.fecha) ? fmtFechaHora(c.capturado_en || c.created_at || c.fecha) : '—' }}</b></li>
+            @if (c.conductor?.nombre) { <li><span>{{ 'Conductor' | t }}</span><b>{{ c.conductor?.nombre }}</b></li> }
+            <li><span>{{ 'Kilometraje' | t }}</span><b>{{ c.kilometraje != null ? (c.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>
+            <li><span>{{ 'Combustible' | t }}</span><b>{{ nivelLabel(c.nivel_combustible) | t }}</b></li>
           </ul>
         </div>
 
         <!-- Respuestas -->
-        <h2 class="mrd__section">Inspección ({{ c.respuestas.length }})</h2>
+        <h2 class="mrd__section">{{ 'Inspección' | t }} ({{ c.respuestas.length }})</h2>
         @for (r of c.respuestas; track $index) {
           <div class="mrd__resp" [attr.data-r]="r.respuesta">
             <div class="mrd__resp-main">
@@ -70,17 +70,17 @@
             <span class="mrd__resp-val mrd__resp-val--{{ r.respuesta }}">{{ respLabel(r.respuesta) }}</span>
           </div>
         } @empty {
-          <p class="mrd__muted">Sin respuestas registradas.</p>
+          <p class="mrd__muted">{{ 'Sin respuestas registradas.' | t }}</p>
         }
 
         @if (c.observaciones) {
-          <h2 class="mrd__section">Comentario</h2>
+          <h2 class="mrd__section">{{ 'Comentario' | t }}</h2>
           <p class="mrd__obs">{{ c.observaciones }}</p>
         }
 
         <!-- Fotos -->
         @if (c.fotos.length) {
-          <h2 class="mrd__section">Fotos ({{ c.fotos.length }})</h2>
+          <h2 class="mrd__section">{{ 'Fotos' | t }} ({{ c.fotos.length }})</h2>
           <div class="mrd__fotos">
             @for (f of c.fotos; track f.slot) {
               <a class="mrd__foto" [href]="f.url" target="_blank" rel="noopener">
@@ -92,7 +92,7 @@
         }
 
         @if (c.firmaUrl) {
-          <h2 class="mrd__section">Firma</h2>
+          <h2 class="mrd__section">{{ 'Firma' | t }}</h2>
           <a class="mrd__firma" [href]="c.firmaUrl" target="_blank" rel="noopener">
             <app-img [src]="c.firmaUrl" alt="Firma" ratio="3 / 1" fallback="✍️" />
           </a>
@@ -100,7 +100,7 @@
 
         <!-- Z23 — notas de voz -->
         @if (audios().length) {
-          <h2 class="mrd__section">Notas de voz ({{ audios().length }})</h2>
+          <h2 class="mrd__section">{{ 'Notas de voz' | t }} ({{ audios().length }})</h2>
           @for (a of audios(); track a.url) {
             <div class="mrd__voz">
               <audio class="mrd__audio" [src]="a.url" controls></audio>
@@ -108,20 +108,20 @@
               @if (a.transcripcion) {
                 <p class="mrd__transcripcion">“{{ a.transcripcion }}”</p>
               } @else if (a.estado === 'pendiente' || a.estado === 'procesando') {
-                <p class="mrd__transcripcion mrd__transcripcion--pend">Transcribiendo…</p>
+                <p class="mrd__transcripcion mrd__transcripcion--pend">{{ 'Transcribiendo…' | t }}</p>
               }
             </div>
           }
         }
       } @else {
-        <app-empty-state icon="🔍" title="No se encontró el registro" message="Puede que ya no esté disponible o no tengas acceso." />
+        <app-empty-state icon="🔍" [title]="'No se encontró el registro' | t" [message]="'Puede que ya no esté disponible o no tengas acceso.' | t" />
       }
     } @else {
       @if (echada(); as e) {
         <!-- Cabecera de la echada -->
         <div class="mrd__head">
           <div class="mrd__head-top">
-            <span class="mrd__placa">{{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
+            <span class="mrd__placa">{{ e.vehiculo?.placa ?? ('Vehículo' | t) }}</span>
             @if (rendMeta(e.estado); as m) {
               <span
                 class="mrd__badge"
@@ -129,25 +129,25 @@
                 [class.mrd__badge--warn]="m.tone === 'warning'"
                 [class.mrd__badge--error]="m.tone === 'error'"
                 [class.mrd__badge--muted]="m.tone === 'muted'"
-              >{{ m.icon }} {{ m.label }}</span>
+              >{{ m.icon }} {{ m.label | t }}</span>
             } @else if (e.alerta_consumo) {
-              <span class="mrd__badge mrd__badge--error">⚠ Consumo anormal</span>
+              <span class="mrd__badge mrd__badge--error">⚠ {{ 'Consumo anormal' | t }}</span>
             } @else if (e.rendimiento_km_gal != null) {
-              <span class="mrd__badge mrd__badge--ok">✓ Normal</span>
+              <span class="mrd__badge mrd__badge--ok">✓ {{ 'Normal' | t }}</span>
             }
           </div>
           <span class="mrd__sub">{{ e.vehiculo?.marca }} · {{ (e.created_at || e.fecha) ? fmtFechaHora(e.created_at || e.fecha) : '—' }}</span>
         </div>
 
         <ul class="resumen">
-          <li><span>Kilometraje</span><b>{{ e.kilometraje != null ? (e.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>
-          <li><span>Km recorridos</span><b>{{ e.km_recorridos != null ? (e.km_recorridos | number: '1.0-0') + ' km' : '—' }}</b></li>
-          <li><span>Galones</span><b>{{ e.galones != null ? (e.galones | number: '1.0-2') + ' gal' : '—' }}</b></li>
-          <li><span>Monto</span><b>{{ e.monto != null ? 'RD$ ' + (e.monto | number: '1.2-2') : '—' }}</b></li>
-          <li><span>Precio / galón</span><b>{{ e.precio_por_galon != null ? 'RD$ ' + (e.precio_por_galon | number: '1.2-2') : '—' }}</b></li>
-          <li><span>Costo / km</span><b>{{ e.costo_por_km != null ? 'RD$ ' + (e.costo_por_km | number: '1.2-2') : '—' }}</b></li>
-          <li><span>Rendimiento</span><b>{{ e.rendimiento_km_gal != null ? (e.rendimiento_km_gal | number: '1.1-2') + ' km/gal' : 'Primera echada' }}</b></li>
-          <li><span>Estación</span><b>{{ e.estacion ?? '—' }}</b></li>
+          <li><span>{{ 'Kilometraje' | t }}</span><b>{{ e.kilometraje != null ? (e.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>
+          <li><span>{{ 'Km recorridos' | t }}</span><b>{{ e.km_recorridos != null ? (e.km_recorridos | number: '1.0-0') + ' km' : '—' }}</b></li>
+          <li><span>{{ 'Galones' | t }}</span><b>{{ e.galones != null ? (e.galones | number: '1.0-2') + ' gal' : '—' }}</b></li>
+          <li><span>{{ 'Monto' | t }}</span><b>{{ e.monto != null ? 'RD$ ' + (e.monto | number: '1.2-2') : '—' }}</b></li>
+          <li><span>{{ 'Precio / galón' | t }}</span><b>{{ e.precio_por_galon != null ? 'RD$ ' + (e.precio_por_galon | number: '1.2-2') : '—' }}</b></li>
+          <li><span>{{ 'Costo / km' | t }}</span><b>{{ e.costo_por_km != null ? 'RD$ ' + (e.costo_por_km | number: '1.2-2') : '—' }}</b></li>
+          <li><span>{{ 'Rendimiento' | t }}</span><b>{{ e.rendimiento_km_gal != null ? (e.rendimiento_km_gal | number: '1.1-2') + ' km/gal' : ('Primera echada' | t) }}</b></li>
+          <li><span>{{ 'Estación' | t }}</span><b>{{ e.estacion ?? '—' }}</b></li>
         </ul>
 
         <!-- AD7 — el porqué del estado (siempre visible cuando el servidor lo calculó) -->
@@ -159,37 +159,37 @@
               [class.mrd__band--warn]="m.tone === 'warning' || m.tone === 'error'"
               [class.mrd__band--info]="m.tone === 'muted'"
             >
-              <strong>{{ m.icon }} {{ m.label }}.</strong> {{ e.motivo_alerta }}
+              <strong>{{ m.icon }} {{ m.label | t }}.</strong> {{ e.motivo_alerta }}
             </div>
           } @else if (e.alerta_consumo) {
             <div class="mrd__band mrd__band--warn">⚠ {{ e.motivo_alerta }}</div>
           }
         }
         @if (e.notas) {
-          <h2 class="mrd__section">Notas</h2>
+          <h2 class="mrd__section">{{ 'Notas' | t }}</h2>
           <p class="mrd__obs">{{ e.notas }}</p>
         }
 
         <!-- Fotos -->
         @if (e.reciboUrl || e.tableroUrl) {
-          <h2 class="mrd__section">Evidencia</h2>
+          <h2 class="mrd__section">{{ 'Evidencia' | t }}</h2>
           <div class="mrd__fotos">
             @if (e.reciboUrl) {
               <a class="mrd__foto" [href]="e.reciboUrl" target="_blank" rel="noopener">
                 <app-img [src]="e.reciboUrl" alt="Recibo" ratio="1 / 1" fallback="🧾" />
-                <span class="mrd__foto-cap">Recibo</span>
+                <span class="mrd__foto-cap">{{ 'Recibo' | t }}</span>
               </a>
             }
             @if (e.tableroUrl) {
               <a class="mrd__foto" [href]="e.tableroUrl" target="_blank" rel="noopener">
                 <app-img [src]="e.tableroUrl" alt="Tablero" ratio="1 / 1" fallback="🎛️" />
-                <span class="mrd__foto-cap">Tablero</span>
+                <span class="mrd__foto-cap">{{ 'Tablero' | t }}</span>
               </a>
             }
           </div>
         }
       } @else {
-        <app-empty-state icon="🔍" title="No se encontró la echada" message="Puede que ya no esté disponible o no tengas acceso." />
+        <app-empty-state icon="🔍" [title]="'No se encontró la echada' | t" [message]="'Puede que ya no esté disponible o no tengas acceso.' | t" />
       }
     }
   </div>

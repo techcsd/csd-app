@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, input, model, viewChild } from '@angular/core';
 import { VoiceRecorder } from '../voice-recorder/voice-recorder';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /** Z23 — una nota de voz capturada (blob + object-URL para reproducir). */
 export interface VoiceNoteItem {
@@ -17,7 +18,7 @@ export interface VoiceNoteItem {
   selector: 'app-voice-notes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [VoiceRecorder],
+  imports: [VoiceRecorder, TranslatePipe],
   templateUrl: './voice-notes.html',
   styleUrl: './voice-notes.scss',
 })

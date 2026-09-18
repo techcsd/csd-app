@@ -1,11 +1,11 @@
 <div class="screen existencias">
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">Existencias</h1>
+    <h1 class="inv-sub-header__title">{{ 'Existencias' | t }}</h1>
   </header>
 
   <div class="screen__body">
-    <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="onBodega($event)" />
+    <app-collapsible-select [label]="'Almacén' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="onBodega($event)" />
 
     @if (bodegaId()) {
       <input
@@ -13,7 +13,7 @@
         type="search"
         [ngModel]="query()"
         (ngModelChange)="query.set($event)"
-        placeholder="Buscar material…"
+        [placeholder]="'Buscar material…' | t"
       />
 
       @if (loading()) {
@@ -58,9 +58,9 @@
         } @empty {
           <p class="existencias__muted">
             @if (buscando()) {
-              No hay materiales que coincidan con “{{ query() }}”.
+              {{ 'No hay materiales que coincidan con' | t }} “{{ query() }}”.
             } @else {
-              No hay materiales en este almacén.
+              {{ 'No hay materiales en este almacén.' | t }}
             }
           </p>
         }

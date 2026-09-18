@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -24,6 +25,10 @@ import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-pick
 import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { Img } from '../../../shared/ui/img/img';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -78,7 +83,7 @@ type CombStep = 'bomba' | 'digits' | 'fotos' | 'detalles' | 'estacion' | 'revisa
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput, AyudantePicker],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput, AyudantePicker, TranslatePipe],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -92,6 +97,9 @@ export class CombustiblePage extends GuardedWizard {
   private ctx = inject(UserContextService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
+  private i18n = inject(I18nService);
 
   vehiculoId = '';
   necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
@@ -207,6 +215,11 @@ export class CombustiblePage extends GuardedWizard {
 
   submitting = signal(false);
   done = signal(false);
+  // BT4 — borrador (formulario + fotos) para no perder una echada a medias si la app
+  // se cierra ANTES de enviar. NO aplica en modo corrección (esa se recupera del outbox).
+  borradorPrevio = signal(false);
+  private hydrated = false;
+  private readonly claveBorrador = 'combustible';
   registradoEn = signal<string>(''); // BB6 — momento de captura (fecha + hora) en la confirmación
   readonly fmtFechaHora = formatFechaCortaHora;
   /** Snapshot of the live calc shown on the confirmation screen. */
@@ -310,13 +323,143 @@ export class CombustiblePage extends GuardedWizard {
       return;
     }
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
-    // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
-    if (this.vehiculoId) {
-      this.cargarVehiculo();
-    } else {
-      this.necesitaVehiculo.set(true);
-      this.loading.set(false);
+    // BT4 — recupera un borrador a medias (formulario + fotos) si lo hay. Solo aplica
+    // fuera del modo corrección; respeta el deep-link (no restaura otro vehículo).
+    void this.restoreDraft(this.vehiculoId).then(() => {
+      if (this.hydrated) return; // restoreDraft ya arrancó el vehículo desde el borrador
+      // B1 — deep-link por vehículo salta el paso; sin él, se elige del pool.
+      if (this.vehiculoId) {
+        this.cargarVehiculo();
+      } else {
+        this.necesitaVehiculo.set(true);
+        this.loading.set(false);
+      }
+      this.hydrated = true;
+    });
+    // BT4 — autoguardado del formulario (las fotos se guardan al capturarlas).
+    effect(() => {
+      const snap = this.snapshotBorrador();
+      if (!this.hydrated || this.correccionDe() || this.submitting() || this.done()) return;
+      if (!this.tieneDatos()) return;
+      this.autosave.queue(this.claveBorrador, snap, {
+        tipo: 'combustible',
+        etiqueta: 'Registrar combustible',
+        ruta: this.location.path(),
+      });
+    });
+  }
+
+  /** BT4 — foto del formulario para persistir/recuperar. */
+  private snapshotBorrador(): Record<string, unknown> {
+    return {
+      vehiculoId: this.vehiculoId,
+      modoPersona: this.modoPersona(),
+      origen: this.origen(),
+      km: this.km(),
+      galones: this.galones(),
+      galonesRaw: this.galonesRaw(),
+      monto: this.monto(),
+      montoRaw: this.montoRaw(),
+      producto: this.producto(),
+      subtipo: this.subtipo(),
+      tarjeta: this.tarjeta(),
+      titular: this.titular(),
+      ayudanteId: this.ayudanteId(),
+      proyectoId: this.proyectoId(),
+      estacion: this.estacion(),
+      estacionOtro: this.estacionOtro(),
+      estacionOtroTexto: this.estacionOtroTexto(),
+      step: this.step(),
+    };
+  }
+
+  /**
+   * BT4 — recupera el borrador (formulario + fotos). Respeta el deep-link: si se abrió
+   * para un vehículo distinto al del borrador, ignora el borrador (no secuestra el flujo).
+   * Modela cargarCorreccion (misma rehidratación de campos/fotos), pero desde el store.
+   */
+  private async restoreDraft(deepLinkVeh: string): Promise<void> {
+    try {
+      const d = await this.borrador.load<Record<string, unknown>>(this.claveBorrador);
+      if (!d) return;
+      const draftVeh = (d['vehiculoId'] as string) ?? '';
+      // Si el usuario entró por un vehículo concreto distinto al del borrador, no restaura.
+      if (deepLinkVeh && draftVeh && deepLinkVeh !== draftVeh) return;
+
+      this.modoPersona.set(d['modoPersona'] === true);
+      this.origen.set(((d['origen'] as 'estacion' | 'deposito_obra') ?? 'estacion'));
+      this.km.set((d['km'] as number | null) ?? null);
+      this.galones.set((d['galones'] as number | null) ?? null);
+      this.galonesRaw.set((d['galonesRaw'] as string) ?? '');
+      this.monto.set((d['monto'] as number | null) ?? null);
+      this.montoRaw.set((d['montoRaw'] as string) ?? '');
+      this.producto.set((d['producto'] as 'diesel' | 'gasolina') ?? 'diesel');
+      this.subtipo.set((d['subtipo'] as 'regular' | 'premium' | null) ?? 'premium');
+      this.tarjeta.set((d['tarjeta'] as string) ?? '');
+      this.titular.set((d['titular'] as string) ?? '');
+      this.ayudanteId.set((d['ayudanteId'] as string | null) ?? null);
+      this.proyectoId.set((d['proyectoId'] as string | null) ?? null);
+      this.estacion.set((d['estacion'] as string) ?? 'Total Energies');
+      this.estacionOtro.set(d['estacionOtro'] === true);
+      this.estacionOtroTexto.set((d['estacionOtroTexto'] as string) ?? '');
+
+      // Fotos.
+      const fotos = await this.borrador.loadFotos(this.claveBorrador);
+      for (const f of fotos) {
+        const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+        if (f.slot === 'recibo') this.fotoRecibo.set(photo);
+        else if (f.slot === 'tablero') this.fotoTablero.set(photo);
+        else if (f.slot === 'bomba') this.fotoBomba.set(photo);
+        else if (f.slot === 'evidencia') this.fotoEvidencia.set(photo);
+      }
+
+      // Contexto de vehículo (como cargarCorreccion): con vehículo → cárgalo; persona → conductor.
+      if (draftVeh) {
+        this.vehiculoId = draftVeh;
+        this.necesitaVehiculo.set(false);
+        this.cargarVehiculo();
+      } else if (this.modoPersona()) {
+        this.necesitaVehiculo.set(false);
+        this.loading.set(false);
+        void this.loadConductor();
+      } else {
+        this.necesitaVehiculo.set(true);
+        this.loading.set(false);
+      }
+      const paso = (d['step'] as number) ?? 1;
+      this.step.set(Math.min(Math.max(1, paso), this.total()));
+      if (this.tieneDatos()) this.borradorPrevio.set(true);
+      this.hydrated = true;
+    } catch {
+      /* recuperar el borrador nunca debe impedir abrir la pantalla */
     }
+  }
+
+  /** BT4 — descarta el borrador (al enviar OK o al confirmar salir). */
+  private async limpiarBorrador(): Promise<void> {
+    await this.autosave.discard(this.claveBorrador);
+  }
+
+  /** BT4 — descartar el borrador desde el banner de recuperación. */
+  descartarBorrador(): void {
+    this.toast.withAction(this.i18n.t('¿Descartar el borrador sin enviar?'), {
+      label: this.i18n.t('Descartar'),
+      run: () => {
+        void this.limpiarBorrador();
+        this.borradorPrevio.set(false);
+        void this.router.navigate(['/transporte'], { replaceUrl: true });
+      },
+    });
+  }
+  continuarBorrador(): void {
+    this.borradorPrevio.set(false);
+  }
+
+  /** BT4 — salir CONFIRMADO (descartar cambios) también borra el borrador: es una
+   *  abandono deliberado, no un cierre por crash (ese no llama aquí → el borrador vive). */
+  override confirmarSalir(): void {
+    void this.limpiarBorrador();
+    super.confirmarSalir();
   }
 
   /**
@@ -330,7 +473,7 @@ export class CombustiblePage extends GuardedWizard {
   private async cargarCorreccion(opId: string): Promise<void> {
     const data = await this.combustible.getEchadaPendiente(opId);
     if (!data) {
-      this.toast.error('No se pudo abrir esa echada para corregir.');
+      this.toast.error(this.i18n.t('No se pudo abrir esa echada para corregir.'));
       this.necesitaVehiculo.set(true);
       this.loading.set(false);
       return;
@@ -530,9 +673,26 @@ export class CombustiblePage extends GuardedWizard {
 
   onFotoEvidencia(photo: CapturedPhoto): void {
     this.fotoEvidencia.set(photo);
+    this.persistirFoto('evidencia', photo);
   }
   onFotoEvidenciaCleared(): void {
     this.fotoEvidencia.set(null);
+    this.quitarFotoBorrador('evidencia');
+  }
+
+  /** BT4 — persiste la foto en el borrador (salvo en modo corrección) + asegura fila. */
+  private persistirFoto(slot: string, photo: CapturedPhoto): void {
+    if (this.correccionDe()) return;
+    void this.borrador.saveFoto(this.claveBorrador, slot, photo.blob);
+    this.autosave.queue(this.claveBorrador, this.snapshotBorrador(), {
+      tipo: 'combustible',
+      etiqueta: 'Registrar combustible',
+      ruta: this.location.path(),
+    });
+  }
+  private quitarFotoBorrador(slot: string): void {
+    if (this.correccionDe()) return;
+    void this.borrador.removeFoto(this.claveBorrador, slot);
   }
 
   private async loadUltima(): Promise<void> {
@@ -546,21 +706,27 @@ export class CombustiblePage extends GuardedWizard {
 
   onFotoRecibo(photo: CapturedPhoto): void {
     this.fotoRecibo.set(photo);
+    this.persistirFoto('recibo', photo);
   }
   onFotoReciboCleared(): void {
     this.fotoRecibo.set(null);
+    this.quitarFotoBorrador('recibo');
   }
   onFotoTablero(photo: CapturedPhoto): void {
     this.fotoTablero.set(photo);
+    this.persistirFoto('tablero', photo);
   }
   onFotoTableroCleared(): void {
     this.fotoTablero.set(null);
+    this.quitarFotoBorrador('tablero');
   }
   onFotoBomba(photo: CapturedPhoto): void {
     this.fotoBomba.set(photo);
+    this.persistirFoto('bomba', photo);
   }
   onFotoBombaCleared(): void {
     this.fotoBomba.set(null);
+    this.quitarFotoBorrador('bomba');
   }
 
   next(): void {
@@ -586,7 +752,7 @@ export class CombustiblePage extends GuardedWizard {
       case 'bomba': {
         const foto = this.esDeposito() ? this.fotoEvidencia() : this.fotoBomba();
         if (!foto) {
-          this.toast.error(this.esDeposito() ? 'Toma la foto de evidencia.' : 'Toma la foto de la bomba en 0.');
+          this.toast.error(this.esDeposito() ? this.i18n.t('Toma la foto de evidencia.') : this.i18n.t('Toma la foto de la bomba en 0.'));
           return false;
         }
         return true;
@@ -597,15 +763,15 @@ export class CombustiblePage extends GuardedWizard {
         if (!this.modoPersona()) {
           const km = this.km();
           if (km == null || km <= 0) {
-            this.toast.error('Escribe el kilometraje actual.');
+            this.toast.error(this.i18n.t('Escribe el kilometraje actual.'));
             return false;
           }
           if (this.kmMenorOdometro()) {
-            this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
+            this.toast.error(this.i18n.t('El kilometraje no puede ser menor al registrado ({n} km).', { n: this.odometro() ?? 0 }));
             return false;
           }
           if (this.kmInvalido()) {
-            this.toast.error(`El kilometraje debe ser mayor a la última echada (${this.ultima().km} km).`);
+            this.toast.error(this.i18n.t('El kilometraje debe ser mayor a la última echada ({n} km).', { n: this.ultima().km ?? 0 }));
             return false;
           }
           // BR1/AF19 (regla 15) — el salto de km ya NO bloquea a NADIE. El chofer echó
@@ -616,19 +782,19 @@ export class CombustiblePage extends GuardedWizard {
           if (this.kmDeltaExcede()) {
             const delta = km! - this.ultima().km!;
             this.toast.show(
-              `Han pasado ${delta} km desde la última echada registrada; se enviará para revisión de Logística.`,
+              this.i18n.t('Han pasado {delta} km desde la última echada registrada; se enviará para revisión de Logística.', { delta }),
               'info',
               6000,
             );
           }
         }
         if (!this.galones() || this.galones()! <= 0) {
-          this.toast.error('Escribe los galones echados.');
+          this.toast.error(this.i18n.t('Escribe los galones echados.'));
           return false;
         }
         // AC11 — en depósito en obra el monto/costo es opcional (garrafón).
         if (!this.esDeposito() && (!this.monto() || this.monto()! <= 0)) {
-          this.toast.error('Escribe el monto pagado.');
+          this.toast.error(this.i18n.t('Escribe el monto pagado.'));
           return false;
         }
         // AW3 — bloqueo duro espejo del servidor: galones sobre la capacidad del
@@ -644,11 +810,11 @@ export class CombustiblePage extends GuardedWizard {
       // tomó en el paso 1.
       case 'fotos': {
         if (!this.fotoRecibo()) {
-          this.toast.error('Falta la foto del recibo.');
+          this.toast.error(this.i18n.t('Falta la foto del recibo.'));
           return false;
         }
         if (!this.modoPersona() && !this.fotoTablero()) {
-          this.toast.error('Falta la foto del tablero.');
+          this.toast.error(this.i18n.t('Falta la foto del tablero.'));
           return false;
         }
         return true;
@@ -657,12 +823,12 @@ export class CombustiblePage extends GuardedWizard {
       case 'detalles': {
         // AA20 — el subtipo (Regular/Premium) es obligatorio (no aplica al depósito).
         if (!this.esDeposito() && !this.subtipo()) {
-          this.toast.error('Elige Regular o Premium.');
+          this.toast.error(this.i18n.t('Elige Regular o Premium.'));
           return false;
         }
         // Z23-app — el titular es obligatorio en una echada de persona.
         if (this.modoPersona() && !this.titular().trim()) {
-          this.toast.error('Escribe el titular de la tarjeta.');
+          this.toast.error(this.i18n.t('Escribe el titular de la tarjeta.'));
           return false;
         }
         return true;
@@ -670,7 +836,7 @@ export class CombustiblePage extends GuardedWizard {
       // AE6 — paso estación: "¿En qué estación?" + cálculo automático.
       case 'estacion': {
         if (this.estacionOtro() && !this.estacionOtroTexto().trim()) {
-          this.toast.error('Escribe el nombre de la estación.');
+          this.toast.error(this.i18n.t('Escribe el nombre de la estación.'));
           return false;
         }
         return true;
@@ -682,7 +848,7 @@ export class CombustiblePage extends GuardedWizard {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.fotosCompletas()) {
-      this.toast.error('Faltan fotos para guardar.');
+      this.toast.error(this.i18n.t('Faltan fotos para guardar.'));
       return;
     }
     // AW3 — última barrera espejo del servidor antes de encolar.
@@ -744,8 +910,9 @@ export class CombustiblePage extends GuardedWizard {
       this.resultado.set(this.calc());
       this.registradoEn.set(new Date().toISOString()); // BB6 — hora real de captura
       this.done.set(true);
+      void this.limpiarBorrador(); // BT4 — enviado OK: borra el borrador + sus fotos
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }
@@ -773,7 +940,7 @@ export class CombustiblePage extends GuardedWizard {
     if (id) {
       const cancelada = await this.combustible.cancelarPendiente(id);
       if (!cancelada) {
-        this.toast.show('Esta echada ya se envió. Puedes revisarla en tu actividad.', 'info');
+        this.toast.show(this.i18n.t('Esta echada ya se envió. Puedes revisarla en tu actividad.'), 'info');
         void this.router.navigate(['/transporte/mi-actividad']);
         return;
       }

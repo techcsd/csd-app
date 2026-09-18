@@ -3,6 +3,8 @@ import { Location } from '@angular/common';
 import { PinPad } from '../../../shared/ui/pin-pad/pin-pad';
 import { PinService } from '../../../core/services/pin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * X10 — Cambiar el PIN estando ya desbloqueado (desde Ajustes). Pide el PIN
@@ -14,7 +16,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-pin-change',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PinPad],
+  imports: [PinPad, TranslatePipe],
   templateUrl: './pin-change.html',
   styleUrl: './pin-change.scss',
 })
@@ -22,6 +24,7 @@ export class PinChangePage {
   private pin = inject(PinService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   step = signal<'actual' | 'nuevo' | 'repetir'>('actual');
   value = signal('');
@@ -32,7 +35,7 @@ export class PinChangePage {
       const ok = await this.pin.verify(entered);
       this.value.set('');
       if (!ok) {
-        this.toast.error('El bloqueo actual no es correcto.');
+        this.toast.error(this.i18n.t('El bloqueo actual no es correcto.'));
         return;
       }
       this.step.set('nuevo');
@@ -46,7 +49,7 @@ export class PinChangePage {
     }
     // repetir
     if (entered !== this.nuevo()) {
-      this.toast.error('Los PIN no coinciden. Escribe el nuevo otra vez.');
+      this.toast.error(this.i18n.t('Los PIN no coinciden. Escribe el nuevo otra vez.'));
       this.value.set('');
       this.nuevo.set('');
       this.step.set('nuevo');
@@ -54,10 +57,10 @@ export class PinChangePage {
     }
     try {
       await this.pin.setPin(entered);
-      this.toast.success('Bloqueo de la app actualizado.');
+      this.toast.success(this.i18n.t('Bloqueo de la app actualizado.'));
       this.location.back();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el PIN.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el PIN.'));
       this.value.set('');
       this.nuevo.set('');
       this.step.set('nuevo');

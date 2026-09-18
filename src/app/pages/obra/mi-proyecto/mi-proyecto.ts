@@ -9,6 +9,7 @@ import { BitacoraService } from '../../../core/services/bitacora.service';
 import { ObraProyecto, ResumenObra } from '../../../core/models/obra.model';
 import { BitacoraFull, ProyectoPartida } from '../../../core/models/bitacora.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * BH2 — "Mi proyecto": el resumen que un ingeniero mira en obra, de solo lectura.
@@ -20,7 +21,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-mi-proyecto',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, CollapsibleSelect, DecimalPipe],
+  imports: [Skeleton, EmptyState, CollapsibleSelect, DecimalPipe, TranslatePipe],
   templateUrl: './mi-proyecto.html',
   styleUrl: './mi-proyecto.scss',
 })

@@ -34,6 +34,8 @@ import { GpsGateBanner } from '../../../shared/components/gps-gate-banner/gps-ga
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { SelectOption } from '../../../shared/ui/select-list/select-list';
 import { Conduce, RutaHoy } from '../../../core/models/transporte.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const ESTADO_RUTA_LABEL: Record<string, string> = {
   planificada: 'Planificada',
@@ -54,7 +56,7 @@ const PARADA_ESTADO_LABEL: Record<ParadaEstado, string> = {
   selector: 'app-conduces',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner, CollapsibleSelect, DestinoSelector],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, SyncBar, DecimalPipe, SignaturePad, PhotoSlot, NgTemplateOutlet, GpsGateBanner, CollapsibleSelect, DestinoSelector, TranslatePipe],
   templateUrl: './conduces.html',
   styleUrl: './conduces.scss',
 })
@@ -69,6 +71,7 @@ export class ConducesPage implements OnDestroy {
   private permissions = inject(PermissionsService);
   private gate = inject(PermisoGateService);
   private tracking = inject(TrackingService);
+  private i18n = inject(I18nService);
   private primerSync = true;
   readonly fmtDur = formatearDuracion;
   readonly fmtHora = formatFechaCortaHora; // AI3 — H.I/H.F de la ruta
@@ -82,10 +85,10 @@ export class ConducesPage implements OnDestroy {
   calculandoEta = signal<string | null>(null);
 
   estadoLabel(estado: string): string {
-    return ESTADO_RUTA_LABEL[estado] ?? estado;
+    return this.i18n.t(ESTADO_RUTA_LABEL[estado] ?? estado);
   }
   paradaEstadoLabel(e: ParadaEstado): string {
-    return PARADA_ESTADO_LABEL[e] ?? e;
+    return this.i18n.t(PARADA_ESTADO_LABEL[e] ?? e);
   }
 
   /**
@@ -212,12 +215,12 @@ export class ConducesPage implements OnDestroy {
     try {
       const r = await this.permissions.getPosition({ highAccuracy: true, timeout: 10000 });
       if (!r.ok) {
-        this.toast.error('No se pudo obtener tu ubicación. Reintenta en un lugar despejado.');
+        this.toast.error(this.i18n.t('No se pudo obtener tu ubicación. Reintenta en un lugar despejado.'));
         return;
       }
       const ruta = await this.geo.ruta({ lat: r.lat, lng: r.lng }, { lat: np.lat, lng: np.lng });
       this.etaProxima.update((m) => ({ ...m, [rutaId]: ruta ? Math.round(ruta.duracionSeg / 60) : null }));
-      if (!ruta) this.toast.error('No se pudo calcular el tiempo ahora (sin señal o sin ruta).');
+      if (!ruta) this.toast.error(this.i18n.t('No se pudo calcular el tiempo ahora (sin señal o sin ruta).'));
     } finally {
       this.calculandoEta.set(null);
     }
@@ -267,9 +270,9 @@ export class ConducesPage implements OnDestroy {
     this.adjuntando.set(null);
     try {
       await this.service.vincularConduceParada(conduceId, paradaId);
-      this.toast.success('Conduce adjuntado a la parada.');
+      this.toast.success(this.i18n.t('Conduce adjuntado a la parada.'));
     } catch (e) {
-      this.toast.error(this.msgError(e, 'No se pudo adjuntar el conduce.'));
+      this.toast.error(this.msgError(e, this.i18n.t('No se pudo adjuntar el conduce.')));
     } finally {
       this.paradaOcupada.set(null);
     }
@@ -317,18 +320,18 @@ export class ConducesPage implements OnDestroy {
     const ctx = this.entregando();
     if (!ctx || this.entGuardando()) return;
     if (!this.entRecibio().trim()) {
-      this.toast.error('Escribe quién recibió.');
+      this.toast.error(this.i18n.t('Escribe quién recibió.'));
       return;
     }
     // AF26 — marcar una entrega exige GPS activo.
     if (!(await this.tracking.exigirGps('marcar_entrega'))) return;
     // AH7 — la foto de evidencia es OBLIGATORIA en toda confirmación de entrega.
     if (!this.entFoto()) {
-      this.toast.error('Toma la foto de evidencia de la entrega.');
+      this.toast.error(this.i18n.t('Toma la foto de evidencia de la entrega.'));
       return;
     }
     if (!this.entFirmaBlob()) {
-      this.toast.error('Falta la firma de quien recibe.');
+      this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
       return;
     }
     this.entGuardando.set(true);
@@ -350,9 +353,9 @@ export class ConducesPage implements OnDestroy {
         lat: coords?.lat ?? null,
         lng: coords?.lng ?? null,
       });
-      this.toast.success('Parada entregada.');
+      this.toast.success(this.i18n.t('Parada entregada.'));
     } catch (e) {
-      this.toast.error(this.msgError(e, 'No se pudo registrar la entrega.'));
+      this.toast.error(this.msgError(e, this.i18n.t('No se pudo registrar la entrega.')));
     } finally {
       this.entGuardando.set(false);
     }
@@ -375,7 +378,7 @@ export class ConducesPage implements OnDestroy {
       const coords = estado === 'entregada' ? await this.coordsActuales() : null;
       await this.service.avanzarParada(p.id, estado, { lat: coords?.lat ?? null, lng: coords?.lng ?? null });
     } catch (e) {
-      this.toast.error(this.msgError(e, 'No se pudo actualizar la parada.'));
+      this.toast.error(this.msgError(e, this.i18n.t('No se pudo actualizar la parada.')));
     } finally {
       this.paradaOcupada.set(null);
     }
@@ -442,7 +445,7 @@ export class ConducesPage implements OnDestroy {
   }
 
   private msgError(e: unknown, fallback: string): string {
-    if (!this.network.online()) return 'Sin señal. Vuelve a intentarlo cuando tengas conexión.';
+    if (!this.network.online()) return this.i18n.t('Sin señal. Vuelve a intentarlo cuando tengas conexión.');
     return e instanceof Error ? e.message : fallback;
   }
 
@@ -542,8 +545,8 @@ export class ConducesPage implements OnDestroy {
       // AU5 — al completar, ofrece ver la trayectoria recorrida (replay).
       if (estado === 'completada') {
         this.toast.withAction(
-          'Ruta completada.',
-          { label: '🗺️ Ver trayectoria', run: () => void this.router.navigate(['/transporte/trayectoria', rutaId]) },
+          this.i18n.t('Ruta completada.'),
+          { label: '🗺️ ' + this.i18n.t('Ver trayectoria'), run: () => void this.router.navigate(['/transporte/trayectoria', rutaId]) },
           'success',
           8000,
         );
@@ -551,10 +554,10 @@ export class ConducesPage implements OnDestroy {
     } catch (e) {
       this.toast.error(
         !this.network.online()
-          ? 'Sin señal. Vuelve a intentar la ruta cuando tengas conexión.'
+          ? this.i18n.t('Sin señal. Vuelve a intentar la ruta cuando tengas conexión.')
           : e instanceof Error
             ? e.message
-            : 'No se pudo actualizar la ruta.',
+            : this.i18n.t('No se pudo actualizar la ruta.'),
       );
     }
   }
@@ -643,7 +646,7 @@ export class ConducesPage implements OnDestroy {
   lugaresDestino = signal<LugarDestino[]>([]);
   // AI14 — obra por dropdown estándar (opcional: "Elegir obra" = sin obra).
   rvObraOptions = computed<SelectOption[]>(() => [
-    { id: '', label: '— Elegir obra —' },
+    { id: '', label: this.i18n.t('— Elegir obra —') },
     ...this.proyectosOpts().map((p) => ({ id: p.id, label: p.nombre })),
   ]);
 
@@ -698,7 +701,7 @@ export class ConducesPage implements OnDestroy {
     if (!ctx || this.rvGuardando()) return;
     const ubic = this.rvUbicacion().trim();
     if (!ubic) {
-      this.toast.error(ctx.modo === 'parada' ? 'Escribe la parada.' : 'Escribe el nuevo destino.');
+      this.toast.error(ctx.modo === 'parada' ? this.i18n.t('Escribe la parada.') : this.i18n.t('Escribe el nuevo destino.'));
       return;
     }
     this.rvGuardando.set(true);
@@ -706,14 +709,14 @@ export class ConducesPage implements OnDestroy {
     try {
       if (ctx.modo === 'parada') {
         await this.service.agregarParadaRuta(ctx.rutaId, ubic, { proyectoId });
-        this.toast.success('Parada agregada a la ruta.');
+        this.toast.success(this.i18n.t('Parada agregada a la ruta.'));
       } else {
         await this.service.cambiarDestinoRuta(ctx.rutaId, ubic, {
           proyectoId,
           lat: this.rvLat(),
           lng: this.rvLng(),
         });
-        this.toast.success('Destino cambiado. Queda registrado.');
+        this.toast.success(this.i18n.t('Destino cambiado. Queda registrado.'));
         // Optimista: refleja el nuevo destino en el card.
         this.rutas.update((list) =>
           list.map((r) => (r.id === ctx.rutaId ? { ...r, destino: ubic } : r)),
@@ -723,7 +726,7 @@ export class ConducesPage implements OnDestroy {
       // Refresca el detalle si estaba abierto (la parada nueva aparece al reconciliar).
       if (this.expandidas().has(ctx.rutaId)) void this.refrescarDetalle(ctx.rutaId);
     } catch (e) {
-      this.toast.error(this.msgError(e, 'No se pudo actualizar la ruta.'));
+      this.toast.error(this.msgError(e, this.i18n.t('No se pudo actualizar la ruta.')));
     } finally {
       this.rvGuardando.set(false);
     }

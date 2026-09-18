@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * BQ8(b) — Compositor visual de moldes. El ingeniero arma la formación colocando
@@ -48,7 +49,7 @@ const CATALOGO: Record<CompositorTipo, { label: string; largo: number; alto: num
 @Component({
   selector: 'app-molde-compositor',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, TranslatePipe],
   templateUrl: './molde-compositor.html',
   styleUrl: './molde-compositor.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

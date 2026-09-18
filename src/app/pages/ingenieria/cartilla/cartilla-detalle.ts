@@ -5,6 +5,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { FiguraAcero } from '../../../shared/ui/figura-acero/figura-acero';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CartillaService } from '../../../core/services/cartilla.service';
 import { CartillaPdfService } from '../../../core/services/cartilla-pdf.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -20,7 +22,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-cartilla-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, FiguraAcero, DecimalPipe],
+  imports: [Skeleton, EmptyState, FiguraAcero, DecimalPipe, TranslatePipe],
   templateUrl: './cartilla-detalle.html',
   styleUrl: './cartilla-detalle.scss',
 })
@@ -28,6 +30,7 @@ export class CartillaDetallePage {
   private service = inject(CartillaService);
   private pdf = inject(CartillaPdfService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
 
@@ -75,10 +78,10 @@ export class CartillaDetallePage {
     this.marcando.set(true);
     try {
       await this.service.cambiarEstado(c.id, 'ejecutada');
-      this.toast.success('Cartilla marcada como ejecutada.');
+      this.toast.success(this.i18n.t('Cartilla marcada como ejecutada.'));
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo marcar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo marcar. Intenta de nuevo.'));
     } finally {
       this.marcando.set(false);
     }
@@ -91,7 +94,7 @@ export class CartillaDetallePage {
     try {
       await this.pdf.generar(c);
     } catch {
-      this.toast.error('No se pudo generar el PDF.');
+      this.toast.error(this.i18n.t('No se pudo generar el PDF.'));
     } finally {
       this.generandoPdf.set(false);
     }

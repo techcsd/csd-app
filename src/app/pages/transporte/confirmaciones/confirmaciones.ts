@@ -15,6 +15,8 @@ import {
   ConfirmacionDetalle,
 } from '../../../core/services/conduces.service';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 type EstadoFiltro = 'todas' | 'completa' | 'incompleta';
 
@@ -28,7 +30,7 @@ type EstadoFiltro = 'todas' | 'completa' | 'incompleta';
   selector: 'app-confirmaciones',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, OptionButton, CollapsibleSelect, LiveRefreshDirective],
+  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, OptionButton, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
   templateUrl: './confirmaciones.html',
   styleUrl: './confirmaciones.scss',
 })
@@ -36,6 +38,7 @@ export class ConfirmacionesPage {
   private conduces = inject(ConducesService);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   readonly fmtFecha = formatFecha;
   readonly fmtFechaHora = formatFechaHumana;
@@ -59,7 +62,7 @@ export class ConfirmacionesPage {
   centrales = signal<SelectOption[]>([]);
   private centralIds = computed(() => new Set(this.centrales().map((c) => c.id)));
   obraOptions = computed<SelectOption[]>(() => [
-    { id: '', label: 'Todas las obras' },
+    { id: '', label: this.i18n.t('Todas las obras') },
     ...this.centrales(),
     ...this.obras(),
   ]);
@@ -126,7 +129,7 @@ export class ConfirmacionesPage {
         );
       }
     } catch {
-      this.toast.error('No pudimos cargar el historial de confirmaciones.');
+      this.toast.error(this.i18n.t('No pudimos cargar el historial de confirmaciones.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
@@ -153,7 +156,7 @@ export class ConfirmacionesPage {
   }
 
   estadoLabel(estado: string): string {
-    return estado === 'entregado_incompleto' ? 'Incompleta' : estado === 'entregado' ? 'Completa' : estado;
+    return estado === 'entregado_incompleto' ? this.i18n.t('Incompleta') : estado === 'entregado' ? this.i18n.t('Completa') : estado;
   }
 
   async toggleDetalle(row: ConfirmacionHistorialRow): Promise<void> {
@@ -168,7 +171,7 @@ export class ConfirmacionesPage {
     try {
       this.detalle.set(await this.conduces.confirmacionDetalle(row.id));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos abrir el detalle.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos abrir el detalle.'));
       this.expandidaId.set('');
     } finally {
       this.detalleLoading.set(false);

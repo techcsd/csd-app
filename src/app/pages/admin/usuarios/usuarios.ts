@@ -11,6 +11,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ImpersonationService } from '../../../core/services/impersonation.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { SyncService } from '../../../core/sync/sync.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AL2 — Administración › Usuarios: alta (invitación), roles, activar/desactivar,
  *  reset de contraseña. Escrituras vía edge functions + RPCs (gate is_admin). */
@@ -18,7 +20,7 @@ import { SyncService } from '../../../core/sync/sync.service';
   selector: 'app-admin-usuarios',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, EmailDisplayPipe],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, EmailDisplayPipe, TranslatePipe],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss',
 })
@@ -30,6 +32,7 @@ export class AdminUsuariosPage {
   private ctx = inject(UserContextService);
   private sync = inject(SyncService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   entrandoComoId = signal<string>('');
 
@@ -69,7 +72,7 @@ export class AdminUsuariosPage {
       this.usuarios.set(us);
       this.roles.set(rs);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar los usuarios.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar los usuarios.'));
     } finally {
       this.loading.set(false);
     }
@@ -97,7 +100,7 @@ export class AdminUsuariosPage {
     return this.editRoles().has(id);
   }
   rolesLabel(u: UsuarioAdmin): string {
-    return (u.roles ?? []).map((r) => r.rol.nombre).join(', ') || 'Sin rol';
+    return (u.roles ?? []).map((r) => r.rol.nombre).join(', ') || this.i18n.t('Sin rol');
   }
 
   async guardar(u: UsuarioAdmin): Promise<void> {
@@ -108,11 +111,11 @@ export class AdminUsuariosPage {
         await this.admin.actualizarNombre(u.id, this.editNombre());
       }
       await this.admin.asignarRoles(u.id, [...this.editRoles()]);
-      this.toast.success('Usuario actualizado.');
+      this.toast.success(this.i18n.t('Usuario actualizado.'));
       this.expandidoId.set('');
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.guardando.set(false);
     }
@@ -121,32 +124,34 @@ export class AdminUsuariosPage {
   pedirToggleActivo(u: UsuarioAdmin): void {
     const activar = !u.activo;
     this.confirm.set({
-      msg: activar ? `¿Reactivar a ${u.nombre}?` : `¿Desactivar a ${u.nombre}? No podrá iniciar sesión.`,
+      msg: activar
+        ? this.i18n.t('¿Reactivar a {nombre}?', { nombre: u.nombre })
+        : this.i18n.t('¿Desactivar a {nombre}? No podrá iniciar sesión.', { nombre: u.nombre }),
       run: () => void this.doToggleActivo(u, activar),
     });
   }
   private async doToggleActivo(u: UsuarioAdmin, activo: boolean): Promise<void> {
     try {
       await this.admin.toggleActivo(u.id, activo);
-      this.toast.success(activo ? 'Usuario reactivado.' : 'Usuario desactivado.');
+      this.toast.success(activo ? this.i18n.t('Usuario reactivado.') : this.i18n.t('Usuario desactivado.'));
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar el estado.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cambiar el estado.'));
     }
   }
 
   pedirReset(u: UsuarioAdmin): void {
     this.confirm.set({
-      msg: `¿Enviar enlace para restablecer la contraseña de ${u.nombre}?`,
+      msg: this.i18n.t('¿Enviar enlace para restablecer la contraseña de {nombre}?', { nombre: u.nombre }),
       run: () => void this.doReset(u),
     });
   }
   private async doReset(u: UsuarioAdmin): Promise<void> {
     try {
       await this.admin.resetPassword(u.id);
-      this.toast.success('Enlace de restablecimiento enviado.');
+      this.toast.success(this.i18n.t('Enlace de restablecimiento enviado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el enlace.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el enlace.'));
     }
   }
 
@@ -176,43 +181,43 @@ export class AdminUsuariosPage {
   /** BI5 — fija el PIN de un usuario de cédula (paridad con la web). */
   async pedirFijarPin(u: UsuarioAdmin): Promise<void> {
     const sugerido = this.genPin();
-    const pin = (window.prompt(`Fijar PIN de 6 dígitos para ${u.nombre} (entra con su cédula + PIN). Sugerido:`, sugerido) ?? '').trim();
+    const pin = (window.prompt(this.i18n.t('Fijar PIN de 6 dígitos para {nombre} (entra con su cédula + PIN). Sugerido:', { nombre: u.nombre }), sugerido) ?? '').trim();
     if (!pin) return;
-    if (this.pinTrivial(pin)) { this.toast.error('Ese PIN es demasiado fácil (repetido/secuencia). Elige otro.'); return; }
+    if (this.pinTrivial(pin)) { this.toast.error(this.i18n.t('Ese PIN es demasiado fácil (repetido/secuencia). Elige otro.')); return; }
     try {
       await this.admin.fijarPinUsuario(u.id, pin);
-      this.toast.success(`PIN fijado. Entrégaselo a ${u.nombre}: ${pin}`);
+      this.toast.success(this.i18n.t('PIN fijado. Entrégaselo a {nombre}: {pin}', { nombre: u.nombre, pin }));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo fijar el PIN.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo fijar el PIN.'));
     }
   }
 
   async reenviar(u: UsuarioAdmin): Promise<void> {
     try {
       await this.admin.reenviarInvitacion(u.id);
-      this.toast.success('Invitación reenviada.');
+      this.toast.success(this.i18n.t('Invitación reenviada.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo reenviar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo reenviar.'));
     }
   }
 
   async crear(): Promise<void> {
     if (this.enviandoAlta()) return;
     if (!this.nuevoEmail().trim() || !this.nuevoNombre().trim()) {
-      this.toast.error('Escribe el correo y el nombre.');
+      this.toast.error(this.i18n.t('Escribe el correo y el nombre.'));
       return;
     }
     this.enviandoAlta.set(true);
     try {
       await this.admin.crearUsuario(this.nuevoEmail(), this.nuevoNombre(), this.nuevoRol());
-      this.toast.success('Usuario invitado por correo.');
+      this.toast.success(this.i18n.t('Usuario invitado por correo.'));
       this.creando.set(false);
       this.nuevoEmail.set('');
       this.nuevoNombre.set('');
       this.nuevoRol.set(null);
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el usuario.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear el usuario.'));
     } finally {
       this.enviandoAlta.set(false);
     }
@@ -239,21 +244,21 @@ export class AdminUsuariosPage {
   pedirEntrarComo(u: UsuarioAdmin): void {
     if (!this.puedeEntrarComo(u) || this.entrandoComoId()) return;
     this.confirm.set({
-      msg: `¿Entrar como "${u.nombre}"? Verás la app como este usuario. Sal cuando termines con el botón "Salir" del banner superior.`,
+      msg: this.i18n.t('¿Entrar como "{nombre}"? Verás la app como este usuario. Sal cuando termines con el botón "Salir" del banner superior.', { nombre: u.nombre }),
       run: () => void this.doEntrarComo(u),
     });
   }
   private async doEntrarComo(u: UsuarioAdmin): Promise<void> {
     // No arrastrar envíos del admin: se subirían como el otro usuario.
     if (this.sync.pendingCount() > 0) {
-      this.toast.error('Tienes envíos pendientes. Espera a que sincronicen antes de entrar como otro usuario.');
+      this.toast.error(this.i18n.t('Tienes envíos pendientes. Espera a que sincronicen antes de entrar como otro usuario.'));
       return;
     }
     this.entrandoComoId.set(u.id);
     try {
       const r = await this.imp.entrarComo(u.id, u.nombre);
       if (!r.ok) {
-        this.toast.error(r.error ?? 'No se pudo entrar como este usuario.');
+        this.toast.error(r.error ?? this.i18n.t('No se pudo entrar como este usuario.'));
         return;
       }
       await this.router.navigate(['/home']);

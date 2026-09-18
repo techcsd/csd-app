@@ -8,6 +8,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { Conductor, estadoLicencia, LicenciaEstado } from '../../../core/models/conductor.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const LIC_LABEL: Record<LicenciaEstado, string> = {
   vigente: 'Licencia vigente',
@@ -21,7 +23,7 @@ const LIC_LABEL: Record<LicenciaEstado, string> = {
   selector: 'app-conductores-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, EmptyState, Skeleton, CedulaPipe],
+  imports: [FormsModule, EmptyState, Skeleton, CedulaPipe, TranslatePipe],
   templateUrl: './conductores.html',
   styleUrl: './conductores.scss',
 })
@@ -30,6 +32,7 @@ export class ConductoresListaPage {
   private ctx = inject(UserContextService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   esAdmin = () => this.ctx.hasModulo('admin');
 
@@ -87,7 +90,7 @@ export class ConductoresListaPage {
     return estadoLicencia(c.licencia_vencimiento, this.umbral());
   }
   licLabel(c: Conductor): string {
-    return LIC_LABEL[this.licEstado(c)];
+    return this.i18n.t(LIC_LABEL[this.licEstado(c)]);
   }
 
   /** C7 — ¿le falta cédula o licencia? (por defecto ambos obligatorios). */

@@ -3,6 +3,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { CronogramaService } from '../../../core/services/cronograma.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { CronogramaAviso, CRONOGRAMA_AVISO_LABEL } from '../../../core/models/cronograma.model';
@@ -18,7 +19,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-cronograma-avisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, TranslatePipe],
   templateUrl: './cronograma-avisos.html',
   styleUrl: './cronograma-avisos.scss',
 })

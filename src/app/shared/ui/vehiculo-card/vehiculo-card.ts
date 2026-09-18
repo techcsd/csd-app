@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { DecimalPipe } from '@angular/common';
 import { labelTipoVehiculo } from '../../../core/models/vehiculo-tipos.model';
 import { Img } from '../img/img';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * V11 — consistent vehicle card for every selector/list. Photo (or 🚙
@@ -12,7 +13,7 @@ import { Img } from '../img/img';
   selector: 'app-vehiculo-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Img],
+  imports: [DecimalPipe, Img, TranslatePipe],
   templateUrl: './vehiculo-card.html',
   styleUrl: './vehiculo-card.scss',
 })

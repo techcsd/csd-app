@@ -10,6 +10,8 @@ import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface Informe {
   id: string;
@@ -36,7 +38,7 @@ function semanaDe(base: Date): { inicio: string; fin: string } {
   selector: 'app-obra-informe',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './informe.html',
   styleUrl: './informe.scss',
 })
@@ -50,6 +52,7 @@ export class InformePage {
   private borrador = inject(BorradorService);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   proyectoId = '';
   loading = signal(true);
@@ -99,7 +102,7 @@ export class InformePage {
   async generar(): Promise<void> {
     if (this.generando()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para generar el informe.');
+      this.toast.error(this.i18n.t('Necesitas conexión para generar el informe.'));
       return;
     }
     this.generando.set(true);
@@ -109,9 +112,9 @@ export class InformePage {
       await this.cargar();
       const inf = this.informes().find((i) => i.id === id) ?? null;
       if (inf) this.abrir(inf);
-      else this.toast.error('No se pudo abrir el informe generado.');
+      else this.toast.error(this.i18n.t('No se pudo abrir el informe generado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo generar el informe.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo generar el informe.'));
     } finally {
       this.generando.set(false);
     }
@@ -159,9 +162,9 @@ export class InformePage {
       );
       await this.autosave.discard(this.claveDe(inf.id));
       this.borradorPrevio.set(false);
-      this.toast.success('Secciones guardadas.');
+      this.toast.success(this.i18n.t('Secciones guardadas.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.guardando.set(false);
     }
@@ -174,11 +177,11 @@ export class InformePage {
     try {
       await this.guardarManual();
       await this.obra.enviarInforme(inf.id);
-      this.toast.success('Informe enviado a Gerencia.');
+      this.toast.success(this.i18n.t('Informe enviado a Gerencia.'));
       await this.cargar();
       this.volver();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el informe.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el informe.'));
     } finally {
       this.enviando.set(false);
     }

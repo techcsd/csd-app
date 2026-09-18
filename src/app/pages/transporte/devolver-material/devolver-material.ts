@@ -22,6 +22,8 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AE — Devolver material (obra → almacén). El chofer registra y el stock se mueve
@@ -33,7 +35,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-devolver-material',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton, QtyInput],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, SignaturePad, OptionButton, QtyInput, TranslatePipe],
   templateUrl: './devolver-material.html',
   styleUrl: './devolver-material.scss',
 })
@@ -45,6 +47,7 @@ export class DevolverMaterialPage implements OnDestroy {
   private router = inject(Router);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   private emisorPad = viewChild<SignaturePad>('emisorPad');
   private receptorPad = viewChild<SignaturePad>('receptorPad');
@@ -201,12 +204,12 @@ export class DevolverMaterialPage implements OnDestroy {
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
-    if (!this.obraId()) return this.toast.error('Elige la obra de origen.');
-    if (!this.bodegaId()) return this.toast.error('Elige el almacén destino.');
-    if (this.faltaItems()) return this.toast.error('Agrega al menos un material.');
+    if (!this.obraId()) return this.toast.error(this.i18n.t('Elige la obra de origen.'));
+    if (!this.bodegaId()) return this.toast.error(this.i18n.t('Elige el almacén destino.'));
+    if (this.faltaItems()) return this.toast.error(this.i18n.t('Agrega al menos un material.'));
 
     const emisorBlob = await this.emisorPad()?.toBlob();
-    if (!emisorBlob) return this.toast.error('Falta tu firma (quien entrega).');
+    if (!emisorBlob) return this.toast.error(this.i18n.t('Falta tu firma (quien entrega).'));
 
     let receptorNombre: string | null;
     let receptorUsuarioId: string | null;
@@ -223,12 +226,12 @@ export class DevolverMaterialPage implements OnDestroy {
       confirmarPorAlmacen = true;
     } else {
       const u = this.receptorSel();
-      if (!u) return this.toast.error('Elige quién recibe.');
+      if (!u) return this.toast.error(this.i18n.t('Elige quién recibe.'));
       receptorNombre = u.nombre;
       receptorUsuarioId = u.id;
       if (this.receptorPresente()) {
         firmaReceptor = (await this.receptorPad()?.toBlob()) ?? null;
-        if (!firmaReceptor) return this.toast.error('Falta la firma de quien recibe.');
+        if (!firmaReceptor) return this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
       } else {
         firmaReceptor = null; // queda pendiente y se le enruta
       }
@@ -255,7 +258,7 @@ export class DevolverMaterialPage implements OnDestroy {
       this.pendiente.set(confirmarPorAlmacen || (this.receptorModo() === 'otro' && !this.receptorPresente()));
       this.hoja.set('exito');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la devolución.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar la devolución.'));
     } finally {
       this.submitting.set(false);
     }

@@ -1,34 +1,34 @@
 <div class="screen almacen-inv">
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">Inventario del almacén</h1>
+    <h1 class="inv-sub-header__title">{{ 'Inventario del almacén' | t }}</h1>
   </header>
 
   <div class="screen__body" appLiveRefresh (appLiveRefresh)="onRefresh($event)">
-    <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="onBodega($event)" />
+    <app-collapsible-select [label]="'Almacén' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="onBodega($event)" />
 
     @if (bodegaId()) {
       @if (denegado()) {
-        <div class="almacen-inv__band almacen-inv__band--warn">🔒 No tienes acceso al inventario de este almacén. Pídeselo a Tecnología o a un administrador.</div>
+        <div class="almacen-inv__band almacen-inv__band--warn">🔒 {{ 'No tienes acceso al inventario de este almacén. Pídeselo a Tecnología o a un administrador.' | t }}</div>
       } @else {
-        <input class="field almacen-inv__search" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" placeholder="Buscar material…" />
+        <input class="field almacen-inv__search" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" [placeholder]="'Buscar material…' | t" />
 
         <label class="almacen-inv__toggle">
           <input type="checkbox" [ngModel]="ocultarCero()" (ngModelChange)="ocultarCero.set($event)" />
-          Ocultar los que están en cero
+          {{ 'Ocultar los que están en cero' | t }}
         </label>
 
         <!-- AS11 — editar/ajustar stock y agregar artículos (permiso Operar). -->
         @if (puedeAjustar()) {
           <button type="button" class="btn-ghost almacen-inv__ajustar" (click)="contarAjustar()">
-            ✏️ Contar / ajustar stock
+            ✏️ {{ 'Contar / ajustar stock' | t }}
           </button>
         }
 
         @if (loading()) {
           <app-skeleton [rows]="6" />
         } @else {
-          <p class="almacen-inv__count">{{ totalMostrado() }} artículo(s)</p>
+          <p class="almacen-inv__count">{{ totalMostrado() }} {{ 'artículo(s)' | t }}</p>
           @for (it of visibles(); track it.articulo_id) {
             <div class="inv-row" [class.inv-row--cero]="it.es_cero">
               <button type="button" class="inv-row__main" (click)="abrirArticulo(it)">
@@ -40,19 +40,19 @@
                   {{ it.cantidad | number: '1.0-2' }} <small>{{ it.unidad }}</small>
                 </span>
               </button>
-              <button type="button" class="inv-row__kardex" (click)="verKardex(it)" aria-label="Ver histórico de movimientos">📊 Histórico</button>
+              <button type="button" class="inv-row__kardex" (click)="verKardex(it)" [attr.aria-label]="'Ver histórico de movimientos' | t">📊 {{ 'Histórico' | t }}</button>
               <!-- AT12 — Ajuste real (solo admin): rebase de la línea base sin movimiento. -->
               @if (esAdmin()) {
                 <button type="button" class="inv-row__ajuste" (click)="toggleAjuste(it)">
-                  {{ ajusteId() === it.articulo_id ? 'Cancelar' : '⚖️ Ajuste real' }}
+                  {{ ajusteId() === it.articulo_id ? ('Cancelar' | t) : '⚖️ ' + ('Ajuste real' | t) }}
                 </button>
                 @if (ajusteId() === it.articulo_id) {
                   <div class="inv-row__ajuste-panel">
-                    <p class="inv-row__ajuste-hint">Fija el stock real informado. No genera movimiento ni escalón en la gráfica.</p>
+                    <p class="inv-row__ajuste-hint">{{ 'Fija el stock real informado. No genera movimiento ni escalón en la gráfica.' | t }}</p>
                     <div class="inv-row__ajuste-row">
-                      <input class="field" type="number" inputmode="decimal" min="0" [ngModel]="ajusteValor()" (ngModelChange)="ajusteValor.set($event)" placeholder="Cantidad real" />
+                      <input class="field" type="number" inputmode="decimal" min="0" [ngModel]="ajusteValor()" (ngModelChange)="ajusteValor.set($event)" [placeholder]="'Cantidad real' | t" />
                       <button type="button" class="btn-cta" [disabled]="ajustando()" (click)="guardarAjuste(it)">
-                        {{ ajustando() ? 'Guardando…' : 'Guardar' }}
+                        {{ ajustando() ? ('Guardando…' | t) : ('Guardar' | t) }}
                       </button>
                     </div>
                   </div>
@@ -61,8 +61,8 @@
             </div>
           } @empty {
             <p class="almacen-inv__muted">
-              @if (query()) { No hay materiales que coincidan con “{{ query() }}”. }
-              @else { No hay materiales en este almacén. }
+              @if (query()) { {{ 'No hay materiales que coincidan con' | t }} “{{ query() }}”. }
+              @else { {{ 'No hay materiales en este almacén.' | t }} }
             </p>
           }
         }

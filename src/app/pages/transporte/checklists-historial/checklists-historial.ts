@@ -8,6 +8,8 @@ import { FlotaReportesService } from '../../../core/services/flota-reportes.serv
 import { NetworkService } from '../../../core/services/network.service';
 import { ChecklistHistorialRow } from '../../../core/models/flota-reportes.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type TipoFiltro = 'todos' | 'pre_uso' | 'inspeccion';
 
@@ -22,7 +24,7 @@ type TipoFiltro = 'todos' | 'pre_uso' | 'inspeccion';
   selector: 'app-checklists-historial',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './checklists-historial.html',
   styleUrl: './checklists-historial.scss',
 })
@@ -31,6 +33,7 @@ export class ChecklistsHistorialPage {
   private network = inject(NetworkService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   rows = signal<ChecklistHistorialRow[]>([]);
   loading = signal(true);
@@ -87,17 +90,17 @@ export class ChecklistsHistorialPage {
   }
 
   tipoLabel(t: string): string {
-    return t === 'pre_uso' ? 'Pre-uso' : t === 'inspeccion' ? 'Inspección' : t;
+    return t === 'pre_uso' ? this.i18n.t('Pre-uso') : t === 'inspeccion' ? this.i18n.t('Inspección') : t;
   }
 
   resultadoLabel(r: string | null): string {
     switch (r) {
       case 'aprobado':
-        return 'Aprobado';
+        return this.i18n.t('Aprobado');
       case 'con_hallazgos':
-        return 'Con hallazgos';
+        return this.i18n.t('Con hallazgos');
       case 'bloqueado':
-        return 'Bloqueado';
+        return this.i18n.t('Bloqueado');
       default:
         return '—';
     }

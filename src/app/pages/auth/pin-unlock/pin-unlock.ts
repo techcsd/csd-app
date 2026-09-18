@@ -61,7 +61,7 @@ export class PinUnlockPage {
   }
 
   async unlockConHuella(): Promise<void> {
-    const ok = await this.biometric.authenticate('Desbloquea CSD con tu huella o rostro');
+    const ok = await this.biometric.authenticate(this.i18n.t('Desbloquea CSD con tu huella o rostro'));
     if (ok) {
       this.session.markUnlocked();
       await this.router.navigate(['/home']);

@@ -1,12 +1,12 @@
 <div class="screen pin-screen">
   <div class="pin-screen__body">
     <h1 class="pin-screen__title">
-      {{ step() === 'crear' ? 'Crea tu PIN' : 'Repite tu PIN' }}
+      {{ (step() === 'crear' ? 'Crea tu PIN' : 'Repite tu PIN') | t }}
     </h1>
     <p class="pin-screen__hint">
-      {{ step() === 'crear'
+      {{ (step() === 'crear'
         ? 'Elige 4 números para desbloquear la app en este teléfono (distinto de tu PIN de acceso).'
-        : 'Escríbelo otra vez para confirmar.' }}
+        : 'Escríbelo otra vez para confirmar.') | t }}
     </p>
     <app-pin-pad [(value)]="value" (completed)="onCompleted($event)" />
   </div>

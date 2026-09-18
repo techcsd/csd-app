@@ -4,11 +4,11 @@
     <header class="preuso__pick-header">
       <button type="button" class="preuso__pick-back" (click)="salirPicker()" aria-label="Atrás">←</button>
       <span class="preuso__pick-icon">📋</span>
-      <h1 class="preuso__pick-title">Pre-uso del vehículo</h1>
+      <h1 class="preuso__pick-title">{{ 'Pre-uso del vehículo' | t }}</h1>
     </header>
     <div class="screen__body">
       <app-vehiculo-picker
-        subtitulo="Selecciona el vehículo para hacer el pre-uso."
+        [subtitulo]="'Selecciona el vehículo para hacer el pre-uso.' | t"
         (elegido)="onVehiculoElegido($event)"
       />
     </div>
@@ -26,7 +26,7 @@
       <p class="preuso__block-motivo">{{ b.motivo }}</p>
     </div>
     <footer class="preuso__nav">
-      <button type="button" class="btn-cta" (click)="finish()">Entendido</button>
+      <button type="button" class="btn-cta" (click)="finish()">{{ 'Entendido' | t }}</button>
     </footer>
   </div>
 } @else if (done()) {
@@ -36,61 +36,61 @@
       @if (veredicto() === 'aprobado') {
         <div class="veredicto veredicto--ok">
           <span class="veredicto__icon">✓</span>
-          <span class="veredicto__label">APROBADO</span>
-          <span class="veredicto__sub">Puedes salir. Quedó registrado.</span>
+          <span class="veredicto__label">{{ 'APROBADO' | t }}</span>
+          <span class="veredicto__sub">{{ 'Puedes salir. Quedó registrado.' | t }}</span>
         </div>
       } @else if (veredicto() === 'con_hallazgos') {
         <div class="veredicto veredicto--warn">
           <span class="veredicto__icon">!</span>
-          <span class="veredicto__label">APROBADO CON HALLAZGOS</span>
-          <span class="veredicto__sub">Puedes salir. Se generó un aviso a mantenimiento.</span>
+          <span class="veredicto__label">{{ 'APROBADO CON HALLAZGOS' | t }}</span>
+          <span class="veredicto__sub">{{ 'Puedes salir. Se generó un aviso a mantenimiento.' | t }}</span>
         </div>
       } @else {
         <div class="veredicto veredicto--block">
           <span class="veredicto__icon">✕</span>
-          <span class="veredicto__label">VEHÍCULO BLOQUEADO</span>
-          <span class="veredicto__sub">No puedes salir. Se notificó a mantenimiento y al supervisor.</span>
+          <span class="veredicto__label">{{ 'VEHÍCULO BLOQUEADO' | t }}</span>
+          <span class="veredicto__sub">{{ 'No puedes salir. Se notificó a mantenimiento y al supervisor.' | t }}</span>
         </div>
       }
 
       @if (!online) {
-        <p class="preuso__note">Sin señal. Se enviará solo cuando haya conexión.</p>
+        <p class="preuso__note">{{ 'Sin señal. Se enviará solo cuando haya conexión.' | t }}</p>
       }
 
       <!-- Registro -->
       <ul class="resumen">
-        <li><span>Vehículo</span><b>{{ placa() }} · {{ modelo() }}</b></li>
-        <li><span>{{ labelUso() }}</span><b>{{ km() | number: '1.0-0' }} {{ unidadUso() }}</b></li>
-        <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
-        <li><span>Fotos</span><b>7 ✓</b></li>
-        <li><span>Puntos</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
+        <li><span>{{ 'Vehículo' | t }}</span><b>{{ placa() }} · {{ modelo() }}</b></li>
+        <li><span>{{ labelUso() | t }}</span><b>{{ km() | number: '1.0-0' }} {{ unidadUso() }}</b></li>
+        <li><span>{{ 'Combustible' | t }}</span><b>{{ nivelLabel(nivelCombustible()) | t }}</b></li>
+        <li><span>{{ 'Fotos' | t }}</span><b>7 ✓</b></li>
+        <li><span>{{ 'Puntos' | t }}</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
       </ul>
 
       <!-- Mantenimiento -->
       @if (mantenimiento(); as m) {
         <div class="mant-box mant-box--{{ m.estado }}">
           @if (m.estado === 'vencido') {
-            ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} {{ unidadUso() }}.
+            ⚠ {{ 'Mantenimiento VENCIDO — pasado con' | t }} {{ -m.faltan | number: '1.0-0' }} {{ unidadUso() }}.
           } @else if (m.estado === 'pre_cita') {
-            ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} — se envió aviso para la PRE-CITA.
+            ⚠ {{ 'Faltan solo' | t }} {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} — {{ 'se envió aviso para la PRE-CITA.' | t }}
           } @else {
-            Faltan {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} para el mantenimiento (próximo: {{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
+            {{ 'Faltan' | t }} {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} {{ 'para el mantenimiento (próximo:' | t }} {{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
           }
         </div>
       }
 
       <!-- Hallazgos -->
       @if (hallazgos().length) {
-        <h2 class="preuso__section">Hallazgos ({{ hallazgos().length }})</h2>
+        <h2 class="preuso__section">{{ 'Hallazgos' | t }} ({{ hallazgos().length }})</h2>
         @for (h of hallazgos(); track $index) {
           <div class="hallazgo" [class.hallazgo--critico]="h.es_critico">
             <div class="hallazgo__head">
               <span class="hallazgo__num">{{ h.numero || '•' }}</span>
               <span class="hallazgo__label">{{ h.etiqueta }}</span>
-              @if (h.es_critico) { <span class="hallazgo__critico">CRÍTICO</span> }
+              @if (h.es_critico) { <span class="hallazgo__critico">{{ 'CRÍTICO' | t }}</span> }
             </div>
             @if (h.es_critico) {
-              <p class="hallazgo__que-paso"><strong>Qué pasó:</strong> {{ h.comentario || '—' }}</p>
+              <p class="hallazgo__que-paso"><strong>{{ 'Qué pasó:' | t }}</strong> {{ h.comentario || '—' }}</p>
             } @else if (h.comentario) {
               <p class="hallazgo__com">{{ h.comentario }}</p>
             }
@@ -101,17 +101,17 @@
 
     <footer class="preuso__nav preuso__nav--report">
       <button type="button" class="btn-cta" [disabled]="sharing()" (click)="compartir()">
-        📤 {{ sharing() ? 'Generando…' : 'Compartir reporte (WhatsApp)' }}
+        📤 {{ sharing() ? ('Generando…' | t) : ('Compartir reporte (WhatsApp)' | t) }}
       </button>
       <button type="button" class="btn-ghost" [disabled]="sharing()" (click)="descargar()">
-        ⬇ Descargar PDF
+        ⬇ {{ 'Descargar PDF' | t }}
       </button>
-      <button type="button" class="btn-ghost" (click)="finish()">Listo</button>
+      <button type="button" class="btn-ghost" (click)="finish()">{{ 'Listo' | t }}</button>
     </footer>
   </div>
 } @else {
   <div class="screen preuso">
-    <app-wizard-exit title="Pre-uso del vehículo" (exit)="intentarSalir()" />
+    <app-wizard-exit [title]="'Pre-uso del vehículo' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
@@ -128,26 +128,26 @@
         <span class="preuso__placa">{{ placa() || '—' }}</span>
         <span class="preuso__modelo">{{ modelo() }}</span>
         @if (mantResumen(); as mr) {
-          <span class="preuso__veh-km">Último registro: {{ mr.ultimoKm | number: '1.0-0' }} {{ unidadUso() }}</span>
+          <span class="preuso__veh-km">{{ 'Último registro:' | t }} {{ mr.ultimoKm | number: '1.0-0' }} {{ unidadUso() }}</span>
           <span class="preuso__veh-mant">
-            Mantenimiento cada {{ mr.intervalo | number: '1.0-0' }} {{ unidadUso() }} · próx. {{ mr.proximo | number: '1.0-0' }} {{ unidadUso() }}
+            {{ 'Mantenimiento cada' | t }} {{ mr.intervalo | number: '1.0-0' }} {{ unidadUso() }} · {{ 'próx.' | t }} {{ mr.proximo | number: '1.0-0' }} {{ unidadUso() }}
           </span>
         }
       </div>
 
       @if (licenciaEstado() === 'por_vencer') {
         <div class="preuso__lic-warn">
-          ⚠ Tu licencia vence en {{ licenciaDias() }} día(s). Renuévala pronto.
+          ⚠ {{ 'Tu licencia vence en {n} día(s). Renuévala pronto.' | t: { n: licenciaDias() ?? 0 } }}
         </div>
       }
 
       <!-- Step 1: datos de salida -->
       @if (step() === 1) {
-        <h1 class="screen__title">Datos de salida</h1>
+        <h1 class="screen__title">{{ 'Datos de salida' | t }}</h1>
 
-        <label class="field-label" for="km">{{ esHoras() ? 'Horas de uso actuales' : 'Kilometraje actual' }}</label>
+        <label class="field-label" for="km">{{ (esHoras() ? 'Horas de uso actuales' : 'Kilometraje actual') | t }}</label>
         @if (vehiculo()?.kilometraje != null) {
-          <p class="preuso__km-ref">Último registrado: {{ vehiculo()?.kilometraje | number: '1.0-0' }} {{ unidadUso() }}</p>
+          <p class="preuso__km-ref">{{ 'Último registrado:' | t }} {{ vehiculo()?.kilometraje | number: '1.0-0' }} {{ unidadUso() }}</p>
         }
         <input
           id="km"
@@ -157,15 +157,15 @@
           [class.preuso__km--error]="kmInvalido()"
           [ngModel]="km()"
           (ngModelChange)="km.set($event)"
-          [placeholder]="esHoras() ? 'Escribe las horas de hoy' : 'Escribe el km de hoy'"
+          [placeholder]="(esHoras() ? 'Escribe las horas de hoy' : 'Escribe el km de hoy') | t"
         />
         @if (kmInvalido()) {
           <p class="preuso__warn">
-            No puede ser menor al último registrado ({{ vehiculo()?.kilometraje | number: '1.0-0' }} {{ unidadUso() }}).
+            {{ 'No puede ser menor al último registrado' | t }} ({{ vehiculo()?.kilometraje | number: '1.0-0' }} {{ unidadUso() }}).
           </p>
         }
 
-        <label class="field-label">Nivel de combustible</label>
+        <label class="field-label">{{ 'Nivel de combustible' | t }}</label>
         <div class="preuso__fuel">
           @for (n of niveles; track n) {
             <button
@@ -174,45 +174,45 @@
               [class.fuel-btn--on]="nivelCombustible() === n"
               (click)="nivelCombustible.set(n)"
             >
-              {{ n }}
+              {{ n | t }}
             </button>
           }
         </div>
-        <p class="field-hint">{{ nivelAyuda }}</p>
+        <p class="field-hint">{{ nivelAyuda | t }}</p>
 
         @if (mantenimiento(); as m) {
           <div class="mant-box mant-box--{{ m.estado }}">
             @if (m.estado === 'vencido') {
-              ⚠ Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} {{ unidadUso() }}.
+              ⚠ {{ 'Mantenimiento VENCIDO — pasado con' | t }} {{ -m.faltan | number: '1.0-0' }} {{ unidadUso() }}.
             } @else if (m.estado === 'pre_cita') {
-              ⚠ Faltan solo {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} para el mantenimiento ({{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}). Se enviará aviso para agendar la PRE-CITA.
+              ⚠ {{ 'Faltan solo' | t }} {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} {{ 'para el mantenimiento (' | t }}{{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}). {{ 'Se enviará aviso para agendar la PRE-CITA.' | t }}
             } @else {
-              Faltan {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} para el mantenimiento ({{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
+              {{ 'Faltan' | t }} {{ m.faltan | number: '1.0-0' }} {{ unidadUso() }} {{ 'para el mantenimiento (' | t }}{{ m.proximo | number: '1.0-0' }} {{ unidadUso() }}).
             }
           </div>
         }
 
-        <label class="field-label" for="obs">Observación general (opcional)</label>
+        <label class="field-label" for="obs">{{ 'Observación general (opcional)' | t }}</label>
         <textarea
           id="obs"
           class="field preuso__obs"
           rows="3"
           [ngModel]="observacion()"
           (ngModelChange)="observacion.set($event)"
-          placeholder="Cualquier detalle relevante…"
+          [placeholder]="'Cualquier detalle relevante…' | t"
         ></textarea>
       }
 
       <!-- Step 2: checklist — AE8 (pre-uso simplificado): chequeo VISUAL rápido en
            UNA sola hoja (todas las secciones de la plantilla corta a la vez). -->
       @if (step() === 2) {
-        <h1 class="screen__title">Revisa lo que se ve</h1>
+        <h1 class="screen__title">{{ 'Revisa lo que se ve' | t }}</h1>
         <div class="preuso__status preuso__status--{{ semaforo() }}">
           <span class="preuso__status-count">{{ respondidos() }} / {{ totalItems() }}</span>
           <span class="preuso__status-txt">
-            @if (semaforo() === 'critico') { ✕ Falla crítica — bloquea }
-            @else if (semaforo() === 'hallazgos') { ! Con hallazgos }
-            @else { ✓ Sin hallazgos }
+            @if (semaforo() === 'critico') { ✕ {{ 'Falla crítica — bloquea' | t }} }
+            @else if (semaforo() === 'hallazgos') { ! {{ 'Con hallazgos' | t }} }
+            @else { ✓ {{ 'Sin hallazgos' | t }} }
           </span>
         </div>
 
@@ -226,7 +226,7 @@
                   {{ it.etiqueta }}
                 </span>
                 @if (it.es_critico) {
-                  <span class="preuso__critico" title="Punto crítico">CRÍTICO · BLOQUEA</span>
+                  <span class="preuso__critico" [title]="'Punto crítico' | t">{{ 'CRÍTICO · BLOQUEA' | t }}</span>
                 }
               </div>
               @if (it.ayuda) { <p class="preuso__item-ayuda">{{ it.ayuda }}</p> }
@@ -234,7 +234,7 @@
                 @for (o of opciones; track o.valor) {
                   <app-option-button
                     [icon]="o.icon"
-                    [label]="o.label"
+                    [label]="o.label | t"
                     [tone]="o.tone"
                     [selected]="draft(it.id).respuesta === o.valor"
                     (pressed)="setRespuesta(it.id, o.valor)"
@@ -242,7 +242,7 @@
                 }
               </div>
               @if (it.es_critico && draft(it.id).respuesta === 'no') {
-                <p class="preuso__comment-req">Explica qué pasó (obligatorio)</p>
+                <p class="preuso__comment-req">{{ 'Explica qué pasó (obligatorio)' | t }}</p>
               }
               <input
                 class="field preuso__comment"
@@ -250,11 +250,11 @@
                 type="text"
                 [ngModel]="draft(it.id).comentario"
                 (ngModelChange)="setComentario(it.id, $event)"
-                [placeholder]="it.es_critico && draft(it.id).respuesta === 'no' ? '¿Qué pasó con el vehículo?' : 'Comentario (opcional)'"
+                [placeholder]="(it.es_critico && draft(it.id).respuesta === 'no' ? '¿Qué pasó con el vehículo?' : 'Comentario (opcional)') | t"
               />
               @if (draft(it.id).respuesta === 'no') {
                 <app-photo-slot
-                  label="Foto de la falla (opcional)"
+                  [label]="'Foto de la falla (opcional)' | t"
                   hint="📸"
                   [gallery]="false"
                   [foto]="draft(it.id).photo"
@@ -269,16 +269,16 @@
 
       <!-- Step 3: 7 guided photos (EXTERIOR 4 / INTERIOR 3) -->
       @if (step() === 3) {
-        <h1 class="screen__title">Fotos del vehículo</h1>
+        <h1 class="screen__title">{{ 'Fotos del vehículo' | t }}</h1>
         <p class="screen__subtitle">
-          Toca cada recuadro para tomar la foto con la cámara. Las 7 son obligatorias.
+          {{ 'Toca cada recuadro para tomar la foto con la cámara. Las 7 son obligatorias.' | t }}
         </p>
 
-        <h2 class="preuso__fsection">EXTERIOR — 4 FOTOS</h2>
+        <h2 class="preuso__fsection">{{ 'EXTERIOR — 4 FOTOS' | t }}</h2>
         <div class="preuso__fotos">
           @for (f of fotosExterior; track f.slot) {
             <app-photo-slot
-              [label]="f.label"
+              [label]="f.label | t"
               [hint]="f.hint"
               [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
@@ -288,11 +288,11 @@
           }
         </div>
 
-        <h2 class="preuso__fsection">INTERIOR — 3 FOTOS</h2>
+        <h2 class="preuso__fsection">{{ 'INTERIOR — 3 FOTOS' | t }}</h2>
         <div class="preuso__fotos">
           @for (f of fotosInterior; track f.slot) {
             <app-photo-slot
-              [label]="f.label"
+              [label]="f.label | t"
               [hint]="f.hint"
               [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
@@ -305,8 +305,8 @@
 
       <!-- Step 4: signature -->
       @if (step() === 4) {
-        <h1 class="screen__title">Tu firma</h1>
-        <p class="screen__subtitle">Firma para confirmar la revisión de pre-uso.</p>
+        <h1 class="screen__title">{{ 'Tu firma' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Firma para confirmar la revisión de pre-uso.' | t }}</p>
         <app-signature-pad (changed)="onFirmaChanged($event)" />
         <!-- Z23 — notas de voz (opcional) -->
         <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
@@ -316,46 +316,46 @@
 
       <!-- Step 5: verdict preview + confirm -->
       @if (step() === 5) {
-        <h1 class="screen__title">Resultado</h1>
+        <h1 class="screen__title">{{ 'Resultado' | t }}</h1>
         @if (veredicto() === 'aprobado') {
           <div class="veredicto veredicto--ok">
             <span class="veredicto__icon">✓</span>
-            <span class="veredicto__label">APROBADO</span>
-            <span class="veredicto__sub">Puedes salir.</span>
+            <span class="veredicto__label">{{ 'APROBADO' | t }}</span>
+            <span class="veredicto__sub">{{ 'Puedes salir.' | t }}</span>
           </div>
         } @else if (veredicto() === 'con_hallazgos') {
           <div class="veredicto veredicto--warn">
             <span class="veredicto__icon">!</span>
-            <span class="veredicto__label">APROBADO CON HALLAZGOS</span>
-            <span class="veredicto__sub">Puedes salir. Se generará un aviso a mantenimiento.</span>
+            <span class="veredicto__label">{{ 'APROBADO CON HALLAZGOS' | t }}</span>
+            <span class="veredicto__sub">{{ 'Puedes salir. Se generará un aviso a mantenimiento.' | t }}</span>
           </div>
         } @else {
           <div class="veredicto veredicto--block">
             <span class="veredicto__icon">✕</span>
-            <span class="veredicto__label">VEHÍCULO BLOQUEADO</span>
-            <span class="veredicto__sub">No puedes salir. Se notificará a mantenimiento y al supervisor.</span>
+            <span class="veredicto__label">{{ 'VEHÍCULO BLOQUEADO' | t }}</span>
+            <span class="veredicto__sub">{{ 'No puedes salir. Se notificará a mantenimiento y al supervisor.' | t }}</span>
           </div>
         }
 
         <ul class="resumen">
-          <li><span>Vehículo</span><b>{{ placa() }}</b></li>
-          <li><span>{{ labelUso() }}</span><b>{{ km() | number: '1.0-0' }} {{ unidadUso() }}</b></li>
-          <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
-          <li><span>Fotos</span><b>7 ✓</b></li>
-          <li><span>Firma</span><b>{{ firmaLista() ? '✓' : 'Pendiente' }}</b></li>
+          <li><span>{{ 'Vehículo' | t }}</span><b>{{ placa() }}</b></li>
+          <li><span>{{ labelUso() | t }}</span><b>{{ km() | number: '1.0-0' }} {{ unidadUso() }}</b></li>
+          <li><span>{{ 'Combustible' | t }}</span><b>{{ nivelLabel(nivelCombustible()) | t }}</b></li>
+          <li><span>{{ 'Fotos' | t }}</span><b>7 ✓</b></li>
+          <li><span>{{ 'Firma' | t }}</span><b>{{ firmaLista() ? '✓' : ('Pendiente' | t) }}</b></li>
         </ul>
 
         @if (hallazgos().length) {
-          <h2 class="preuso__section">Hallazgos ({{ hallazgos().length }})</h2>
+          <h2 class="preuso__section">{{ 'Hallazgos' | t }} ({{ hallazgos().length }})</h2>
           @for (h of hallazgos(); track $index) {
             <div class="hallazgo" [class.hallazgo--critico]="h.es_critico">
               <div class="hallazgo__head">
                 <span class="hallazgo__num">{{ h.numero || '•' }}</span>
                 <span class="hallazgo__label">{{ h.etiqueta }}</span>
-                @if (h.es_critico) { <span class="hallazgo__critico">CRÍTICO</span> }
+                @if (h.es_critico) { <span class="hallazgo__critico">{{ 'CRÍTICO' | t }}</span> }
               </div>
               @if (h.es_critico) {
-                <p class="hallazgo__que-paso"><strong>Qué pasó:</strong> {{ h.comentario || '—' }}</p>
+                <p class="hallazgo__que-paso"><strong>{{ 'Qué pasó:' | t }}</strong> {{ h.comentario || '—' }}</p>
               } @else if (h.comentario) {
                 <p class="hallazgo__com">{{ h.comentario }}</p>
               }
@@ -368,29 +368,29 @@
     <!-- Nav -->
     <footer class="preuso__nav">
       @if (step() > 1) {
-        <button type="button" class="btn-ghost preuso__back" (click)="prev()">Atrás</button>
+        <button type="button" class="btn-ghost preuso__back" (click)="prev()">{{ 'Atrás' | t }}</button>
       } @else {
-        <button type="button" class="btn-ghost preuso__back" (click)="intentarSalir()">Cancelar</button>
+        <button type="button" class="btn-ghost preuso__back" (click)="intentarSalir()">{{ 'Cancelar' | t }}</button>
       }
       @if (step() < total) {
         @switch (step()) {
           @case (1) {
             <button type="button" class="btn-cta" [disabled]="!datosSalidaCompletos()" (click)="next()">
-              Continuar al checklist
+              {{ 'Continuar al checklist' | t }}
             </button>
           }
           @case (3) {
             <button type="button" class="btn-cta" [disabled]="!fotosCompletas()" (click)="next()">
-              {{ fotosCompletas() ? 'Siguiente' : 'Faltan ' + fotosFaltan() + (fotosFaltan() === 1 ? ' foto' : ' fotos') }}
+              {{ fotosCompletas() ? ('Siguiente' | t) : (('Faltan {n}' | t: { n: fotosFaltan() }) + (fotosFaltan() === 1 ? (' foto' | t) : (' fotos' | t))) }}
             </button>
           }
           @default {
-            <button type="button" class="btn-cta" (click)="next()">Siguiente</button>
+            <button type="button" class="btn-cta" (click)="next()">{{ 'Siguiente' | t }}</button>
           }
         }
       } @else {
         <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
-          {{ submitting() ? 'Guardando…' : 'Confirmar y guardar' }}
+          {{ submitting() ? ('Guardando…' | t) : ('Confirmar y guardar' | t) }}
         </button>
       }
     </footer>
@@ -398,10 +398,10 @@
     <!-- U4 — descartar cambios sin guardar -->
     <app-confirm-dialog
       [open]="confirmSalir()"
-      title="¿Descartar la inspección?"
-      message="Perderás las respuestas y fotos del pre-uso."
-      confirmLabel="Sí, descartar"
-      cancelLabel="Seguir aquí"
+      [title]="'¿Descartar la inspección?' | t"
+      [message]="'Perderás las respuestas y fotos del pre-uso.' | t"
+      [confirmLabel]="'Sí, descartar' | t"
+      [cancelLabel]="'Seguir aquí' | t"
       tone="danger"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"

@@ -9,6 +9,7 @@ import {
 } from '../../../core/services/mantenimientos.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AG9 — hub de mantenimientos de un vehículo desde la app: ver pendientes/en curso
@@ -18,7 +19,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
   selector: 'app-mantenimientos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Skeleton],
+  imports: [DatePipe, DecimalPipe, Skeleton, TranslatePipe],
   templateUrl: './mantenimientos-lista.html',
   styleUrl: './mantenimientos-lista.scss',
 })

@@ -1,9 +1,9 @@
 <div class="screen cpend">
   <header class="cpend__header">
-    <button type="button" class="cpend__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="cpend__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="cpend__icon">🚚</span>
-    <h1 class="cpend__title">Pendiente entrega</h1>
-    <button type="button" class="cpend__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">
+    <h1 class="cpend__title">{{ 'Pendiente entrega' | t }}</h1>
+    <button type="button" class="cpend__refresh" (click)="refrescar()" [disabled]="refrescando()" [attr.aria-label]="'Actualizar' | t">
       {{ refrescando() ? '…' : '🔄' }}
     </button>
   </header>
@@ -16,7 +16,7 @@
     (touchend)="onPullEnd()"
   >
     @if (pullY() > 0) {
-      <div class="cpend__pull" [style.height.px]="pullY()">{{ pullY() > 60 ? 'Suelta para actualizar' : 'Desliza para actualizar' }}</div>
+      <div class="cpend__pull" [style.height.px]="pullY()">{{ pullY() > 60 ? ('Suelta para actualizar' | t) : ('Desliza para actualizar' | t) }}</div>
     }
 
     @if (loading()) {
@@ -24,50 +24,50 @@
     } @else if (!pendientes().length) {
       <app-empty-state
         icon="✅"
-        title="Nada por entregar"
-        message="Cuando emitas un conduce aparecerá aquí hasta que lo entregues al receptor."
+        [title]="'Nada por entregar' | t"
+        [message]="'Cuando emitas un conduce aparecerá aquí hasta que lo entregues al receptor.' | t"
       />
     } @else {
       @for (c of pendientes(); track c.id) {
         <div class="cpend__card">
           <!-- AL9 — el cuerpo abre el detalle del conduce -->
           <button type="button" class="cpend__info" (click)="verDetalle(c.id)">
-            <span class="cpend__destino">🏗️ {{ c.destino || 'Destino' }}</span>
+            <span class="cpend__destino">🏗️ {{ c.destino || ('Destino' | t) }}</span>
             <span class="cpend__meta">
               @if (c.bodega) { {{ c.bodega }} · }
               <!-- AK7 — fecha y hora exacta de emisión -->
               {{ c.created_at ? fmtFechaHora(c.created_at) : fmtFecha(c.fecha) }}
             </span>
-            <span class="cpend__ver">Ver conduce →</span>
+            <span class="cpend__ver">{{ 'Ver conduce' | t }} →</span>
           </button>
           <div class="cpend__actions">
-            <button type="button" class="btn-cta cpend__btn" (click)="entregar(c.id)">📤 Entregar</button>
-            <button type="button" class="btn-ghost cpend__btn" (click)="abrirTransferir(c.id)">↔️ Transferir</button>
+            <button type="button" class="btn-cta cpend__btn" (click)="entregar(c.id)">📤 {{ 'Entregar' | t }}</button>
+            <button type="button" class="btn-ghost cpend__btn" (click)="abrirTransferir(c.id)">↔️ {{ 'Transferir' | t }}</button>
           </div>
 
           <!-- AM5 — ciclo conduce→ruta: arrancar la ruta del conduce (aparece en Mis rutas + Seguimiento) -->
           <div class="cpend__ruta">
             @if (enRuta(c)) {
-              <span class="cpend__enruta">🟢 En ruta</span>
+              <span class="cpend__enruta">🟢 {{ 'En ruta' | t }}</span>
             } @else {
               <button
                 type="button"
                 class="btn-ghost cpend__btn cpend__iniciar"
                 [disabled]="iniciandoId() === c.id"
                 (click)="iniciarRuta(c)"
-              >{{ iniciandoId() === c.id ? 'Iniciando…' : '🚚 Iniciar ruta' }}</button>
+              >@if (iniciandoId() === c.id) { {{ 'Iniciando…' | t }} } @else { 🚚 {{ 'Iniciar ruta' | t }} }</button>
             }
           </div>
 
           @if (vehPickerId() === c.id) {
             <div class="cpend__transfer">
               <app-collapsible-select
-                label="¿Con qué vehículo sales?"
+                [label]="'¿Con qué vehículo sales?' | t"
                 icon="🚙"
                 [options]="vehiculoOptions()"
                 [selectedId]="vehiculoSel()"
                 [searchable]="true"
-                searchPlaceholder="Buscar vehículo…"
+                [searchPlaceholder]="'Buscar vehículo…' | t"
                 (picked)="vehiculoSel.set($event)"
               />
               <button
@@ -75,28 +75,28 @@
                 class="btn-cta cpend__btn"
                 [disabled]="iniciandoId() === c.id || !vehiculoSel()"
                 (click)="confirmarIniciarConVehiculo(c)"
-              >{{ iniciandoId() === c.id ? 'Iniciando…' : 'Iniciar ruta' }}</button>
+              >{{ iniciandoId() === c.id ? ('Iniciando…' | t) : ('Iniciar ruta' | t) }}</button>
             </div>
           }
 
           @if (transfiriendoId() === c.id) {
             <div class="cpend__transfer">
               <app-collapsible-select
-                label="Transferir a"
+                [label]="'Transferir a' | t"
                 icon="🧑‍✈️"
                 [options]="choferOptions()"
                 [selectedId]="transferConductor()"
                 [searchable]="true"
-                searchPlaceholder="Buscar chofer…"
+                [searchPlaceholder]="'Buscar chofer…' | t"
                 (picked)="transferConductor.set($event)"
               />
-              <input class="field cpend__nota" type="text" [ngModel]="transferNota()" (ngModelChange)="transferNota.set($event)" placeholder="Nota (opcional)" />
+              <input class="field cpend__nota" type="text" [ngModel]="transferNota()" (ngModelChange)="transferNota.set($event)" [placeholder]="'Nota (opcional)' | t" />
               <button
                 type="button"
                 class="btn-cta cpend__btn"
                 [disabled]="enviandoTransfer() || !transferConductor()"
                 (click)="confirmarTransferir(c.id)"
-              >{{ enviandoTransfer() ? 'Enviando…' : 'Confirmar transferencia' }}</button>
+              >{{ enviandoTransfer() ? ('Enviando…' | t) : ('Confirmar transferencia' | t) }}</button>
             </div>
           }
         </div>

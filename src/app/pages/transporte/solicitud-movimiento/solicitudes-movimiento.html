@@ -1,7 +1,7 @@
 <div class="screen solm">
   <header class="solm__header">
     <button type="button" class="solm__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="solm__title">Solicitudes de movimiento</h1>
+    <h1 class="solm__title">{{ 'Solicitudes de movimiento' | t }}</h1>
     <button type="button" class="solm__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '↻' }}</button>
   </header>
 
@@ -9,12 +9,12 @@
   @if (esReferente()) {
     <div class="solm__filtros">
       <select class="solm__filtro" [ngModel]="filtroEstado()" (ngModelChange)="aplicarFiltroEstado($event)">
-        <option value="">Todos los estados</option>
-        @for (e of estados; track e) { <option [value]="e">{{ estadoLabel(e) }}</option> }
+        <option value="">{{ 'Todos los estados' | t }}</option>
+        @for (e of estados; track e) { <option [value]="e">{{ estadoLabel(e) | t }}</option> }
       </select>
       <select class="solm__filtro" [ngModel]="filtroPrioridad()" (ngModelChange)="aplicarFiltroPrioridad($event)">
-        <option value="">Toda prioridad</option>
-        @for (p of prioridades; track p) { <option [value]="p">{{ prioridadLabel(p) }}</option> }
+        <option value="">{{ 'Toda prioridad' | t }}</option>
+        @for (p of prioridades; track p) { <option [value]="p">{{ prioridadLabel(p) | t }}</option> }
       </select>
     </div>
   }
@@ -25,16 +25,16 @@
     } @else if (!lista().length) {
       <app-empty-state
         icon="🚚"
-        title="Sin solicitudes"
-        [message]="esReferente() ? 'No hay solicitudes de movimiento con estos filtros.' : 'Aún no has creado solicitudes de movimiento.'"
+        [title]="'Sin solicitudes' | t"
+        [message]="esReferente() ? ('No hay solicitudes de movimiento con estos filtros.' | t) : ('Aún no has creado solicitudes de movimiento.' | t)"
       />
     } @else {
       @for (s of lista(); track s.id) {
         <div class="solm__card" [class.solm__card--prueba]="s.es_prueba">
           <div class="solm__card-top">
-            <span class="solm__prio" [attr.data-prio]="s.prioridad">{{ prioridadLabel(s.prioridad) }}</span>
-            <span class="solm__estado" [attr.data-estado]="s.estado">{{ estadoLabel(s.estado) }}</span>
-            @if (s.es_prueba) { <span class="solm__prueba-tag">PRUEBA</span> }
+            <span class="solm__prio" [attr.data-prio]="s.prioridad">{{ prioridadLabel(s.prioridad) | t }}</span>
+            <span class="solm__estado" [attr.data-estado]="s.estado">{{ estadoLabel(s.estado) | t }}</span>
+            @if (s.es_prueba) { <span class="solm__prueba-tag">{{ 'PRUEBA' | t }}</span> }
           </div>
 
           <p class="solm__que">{{ s.que_se_mueve }}</p>
@@ -64,12 +64,12 @@
             <div class="solm__acciones">
               @if (s.estado === 'pendiente') {
                 <button type="button" class="btn-cta solm__act" [disabled]="planificandoId() === s.id" (click)="planificar(s)">
-                  {{ planificandoId() === s.id ? 'Abriendo…' : 'Planificar' }}
+                  {{ (planificandoId() === s.id ? 'Abriendo…' : 'Planificar') | t }}
                 </button>
-                <button type="button" class="btn-ghost solm__act" (click)="cancelar(s)">Cancelar</button>
+                <button type="button" class="btn-ghost solm__act" (click)="cancelar(s)">{{ 'Cancelar' | t }}</button>
               } @else if (s.estado === 'planificada' || s.estado === 'en_curso') {
-                <button type="button" class="btn-ghost solm__act" (click)="completar(s)">Marcar completada</button>
-                <button type="button" class="btn-ghost solm__act" (click)="cancelar(s)">Cancelar</button>
+                <button type="button" class="btn-ghost solm__act" (click)="completar(s)">{{ 'Marcar completada' | t }}</button>
+                <button type="button" class="btn-ghost solm__act" (click)="cancelar(s)">{{ 'Cancelar' | t }}</button>
               }
             </div>
           }

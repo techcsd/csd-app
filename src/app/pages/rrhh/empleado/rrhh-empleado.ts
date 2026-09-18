@@ -11,13 +11,15 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { AudioNotasService } from '../../../core/services/audio-notas.service';
 import { RrhhService, Empleado, Asignacion, AsignacionEstado, AsignacionItemTipo } from '../../../core/services/rrhh.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /** AH16 — ficha del empleado + asignaciones de items (AF33): registrar / devolver. */
 @Component({
   selector: 'app-rrhh-empleado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog, CedulaPipe],
+  imports: [FormsModule, DatePipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog, CedulaPipe, TranslatePipe],
   templateUrl: './rrhh-empleado.html',
   styleUrl: './rrhh-empleado.scss',
 })
@@ -27,6 +29,7 @@ export class RrhhEmpleadoPage {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   empleado = signal<Empleado | null>(null);
@@ -110,7 +113,7 @@ export class RrhhEmpleadoPage {
     const emp = this.empleado();
     if (!emp || this.guardando()) return;
     if (!this.itemNombre().trim()) {
-      this.toast.error('Escribe qué le asignas.');
+      this.toast.error(this.i18n.t('Escribe qué le asignas.'));
       return;
     }
     this.guardando.set(true);
@@ -141,9 +144,9 @@ export class RrhhEmpleadoPage {
         ...l,
       ]);
       this.registrando.set(false);
-      this.toast.success('Asignación registrada.');
+      this.toast.success(this.i18n.t('Asignación registrada.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la asignación.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar la asignación.'));
     } finally {
       this.guardando.set(false);
     }
@@ -162,9 +165,9 @@ export class RrhhEmpleadoPage {
       this.asignaciones.update((l) =>
         l.map((a) => (a.id === c.asig.id ? { ...a, estado: c.estado, devuelto_en: c.estado === 'devuelto' ? new Date().toISOString() : a.devuelto_en } : a)),
       );
-      this.toast.success('Estado actualizado.');
+      this.toast.success(this.i18n.t('Estado actualizado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo actualizar.'));
     }
   }
   cancelarCambio(): void {

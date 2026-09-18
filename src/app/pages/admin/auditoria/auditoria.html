@@ -1,20 +1,20 @@
 <div class="screen adm-sub">
   <header class="adm-sub__header">
-    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="adm-sub__title">Auditoría</h1>
+    <button type="button" class="adm-sub__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="adm-sub__title">{{ 'Auditoría' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <!-- P13 — toggle Panel / Filas (paridad con la web) -->
     <div class="aud__toggle">
-      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'panel'" (click)="cambiarVista('panel')">📊 Panel</button>
-      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'filas'" (click)="cambiarVista('filas')">📋 Filas</button>
+      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'panel'" (click)="cambiarVista('panel')">📊 {{ 'Panel' | t }}</button>
+      <button type="button" class="aud__tab" [class.aud__tab--on]="vista() === 'filas'" (click)="cambiarVista('filas')">📋 {{ 'Filas' | t }}</button>
     </div>
 
     <!-- ══════════ PANEL analítico ══════════ -->
     @if (vista() === 'panel') {
       @if (!online() && !resumen()) {
-        <p class="adm-sub__muted">El panel necesita conexión. Conéctate para ver las métricas.</p>
+        <p class="adm-sub__muted">{{ 'El panel necesita conexión. Conéctate para ver las métricas.' | t }}</p>
       }
 
       <div class="aud__periodos">
@@ -33,16 +33,16 @@
         <app-skeleton [rows]="6" />
       } @else if (resumen(); as r) {
         <div class="aud__kpis">
-          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.total | number }}</span><span class="aud__kpi-lbl">Acciones</span></div>
-          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.usuarios_activos | number }}</span><span class="aud__kpi-lbl">Usuarios</span></div>
-          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.modulos_activos | number }}</span><span class="aud__kpi-lbl">Áreas</span></div>
-          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.por_dia.length | number }}</span><span class="aud__kpi-lbl">Días activos</span></div>
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.total | number }}</span><span class="aud__kpi-lbl">{{ 'Acciones' | t }}</span></div>
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.usuarios_activos | number }}</span><span class="aud__kpi-lbl">{{ 'Usuarios' | t }}</span></div>
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.modulos_activos | number }}</span><span class="aud__kpi-lbl">{{ 'Áreas' | t }}</span></div>
+          <div class="aud__kpi"><span class="aud__kpi-val">{{ r.por_dia.length | number }}</span><span class="aud__kpi-lbl">{{ 'Días activos' | t }}</span></div>
         </div>
 
         @if (r.total === 0) {
-          <p class="adm-sub__muted">Sin actividad en este período.</p>
+          <p class="adm-sub__muted">{{ 'Sin actividad en este período.' | t }}</p>
         } @else {
-          <h2 class="aud__chart-title">Usuarios más activos</h2>
+          <h2 class="aud__chart-title">{{ 'Usuarios más activos' | t }}</h2>
           <div class="aud__chart">
             @for (b of usuariosTop(); track b.label) {
               <div class="aud__bar-row">
@@ -53,7 +53,7 @@
             }
           </div>
 
-          <h2 class="aud__chart-title">Por acción</h2>
+          <h2 class="aud__chart-title">{{ 'Por acción' | t }}</h2>
           <div class="aud__chart">
             @for (b of porAccion(); track b.label) {
               <div class="aud__bar-row">
@@ -64,7 +64,7 @@
             }
           </div>
 
-          <h2 class="aud__chart-title">Por área</h2>
+          <h2 class="aud__chart-title">{{ 'Por área' | t }}</h2>
           <div class="aud__chart">
             @for (b of porModulo(); track b.label) {
               <div class="aud__bar-row">
@@ -75,7 +75,7 @@
             }
           </div>
 
-          <h2 class="aud__chart-title">Por día</h2>
+          <h2 class="aud__chart-title">{{ 'Por día' | t }}</h2>
           <div class="aud__chart">
             @for (b of porDia(); track b.label) {
               <div class="aud__bar-row">
@@ -86,7 +86,7 @@
             }
           </div>
 
-          <h2 class="aud__chart-title">Por hora</h2>
+          <h2 class="aud__chart-title">{{ 'Por hora' | t }}</h2>
           <div class="aud__chart">
             @for (b of porHora(); track b.label) {
               <div class="aud__bar-row">
@@ -103,10 +103,10 @@
     <!-- ══════════ FILAS (tabla de cambios) ══════════ -->
     @if (vista() === 'filas') {
     <div class="aud__chips">
-      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === ''" (click)="setAccion('')">Todo</button>
-      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'INSERT'" (click)="setAccion('INSERT')">Creó</button>
-      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'UPDATE'" (click)="setAccion('UPDATE')">Modificó</button>
-      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'DELETE'" (click)="setAccion('DELETE')">Eliminó</button>
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === ''" (click)="setAccion('')">{{ 'Todo' | t }}</button>
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'INSERT'" (click)="setAccion('INSERT')">{{ 'Creó' | t }}</button>
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'UPDATE'" (click)="setAccion('UPDATE')">{{ 'Modificó' | t }}</button>
+      <button type="button" class="aud__chip" [class.aud__chip--on]="fAccion() === 'DELETE'" (click)="setAccion('DELETE')">{{ 'Eliminó' | t }}</button>
     </div>
 
     @if (error()) {
@@ -123,7 +123,7 @@
             <span class="aud__area">{{ tablaLabel(r.tabla) }}</span>
           </div>
           <div class="aud__item-meta">
-            <span class="aud__actor">{{ r.actor?.nombre ?? 'Sistema' }}</span>
+            <span class="aud__actor">{{ r.actor?.nombre ?? ('Sistema' | t) }}</span>
             <span class="aud__fecha">{{ fmtFecha(r.creado_en) }}</span>
           </div>
 
@@ -147,19 +147,19 @@
                     <span class="aud__despues">{{ d.valor }}</span>
                   </div>
                 } @empty {
-                  <p class="adm-sub__muted">Sin detalles.</p>
+                  <p class="adm-sub__muted">{{ 'Sin detalles.' | t }}</p>
                 }
               }
             </div>
           }
         </button>
       } @empty {
-        <p class="adm-sub__muted">No hay movimientos registrados.</p>
+        <p class="adm-sub__muted">{{ 'No hay movimientos registrados.' | t }}</p>
       }
 
       @if (canLoadMore()) {
         <button type="button" class="aud__more" [disabled]="loadingMore()" (click)="loadMore()">
-          {{ loadingMore() ? 'Cargando…' : 'Cargar más' }}
+          {{ (loadingMore() ? 'Cargando…' : 'Cargar más') | t }}
         </button>
       }
     }

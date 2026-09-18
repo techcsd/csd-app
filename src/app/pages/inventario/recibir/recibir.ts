@@ -147,10 +147,27 @@ export class RecibirConducePage {
       this.cantidades.set(d.cantidades ?? {});
       this.notas.set(d.notas ?? '');
       this.abrir(c, true);
+      // BT4 — recupera también las fotos ya tomadas (antes se re-tomaban al reabrir).
+      const fotos = await this.borrador.loadFotos(this.clave);
+      if (fotos.length) {
+        const orden = [...fotos].sort((a, b) => Number(a.slot) - Number(b.slot));
+        this.fotos.set(orden.map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) })));
+      }
     } else if (d) {
       void this.autosave.discard(this.clave); // borrador huérfano
     }
     this.hydrated = true;
+  }
+
+  /** BT4 — re-persiste todas las fotos por índice (la lista puede reordenarse). */
+  private async persistFotos(): Promise<void> {
+    try {
+      await this.borrador.clearFotos(this.clave);
+      const fs = this.fotos();
+      for (let i = 0; i < fs.length; i++) await this.borrador.saveFoto(this.clave, String(i), fs[i].blob);
+    } catch {
+      /* persistir la foto nunca debe romper la captura */
+    }
   }
 
   /** Z20 — abre la hoja de detalle de un conduce. `retomando` conserva las
@@ -206,6 +223,7 @@ export class RecibirConducePage {
   onAddFoto(p: CapturedPhoto): void {
     this.fotos.update((list) => [...list, p]);
     this.nuevaFoto.set(null);
+    void this.persistFotos(); // BT4
   }
   quitarFoto(i: number): void {
     this.fotos.update((list) => {
@@ -213,6 +231,7 @@ export class RecibirConducePage {
       if (f) URL.revokeObjectURL(f.previewUrl);
       return list.filter((_, idx) => idx !== i);
     });
+    void this.persistFotos(); // BT4
   }
 
   /** AE — firma del receptor capturada en el pad. */

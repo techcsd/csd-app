@@ -16,6 +16,8 @@ import { CapturedDoc } from '../../../core/services/camera.service';
 import { Conductor, ConductorStats, LicenciaEstado, estadoLicencia, diasHasta } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface DocView {
   label: string;
@@ -40,7 +42,7 @@ const TIPO_LABEL: Record<string, string> = {
   selector: 'app-perfil-conductor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DocSlot, GenerarAcceso],
+  imports: [Skeleton, EmptyState, DocSlot, GenerarAcceso, TranslatePipe],
   templateUrl: './perfil-conductor.html',
   styleUrl: './perfil-conductor.scss',
 })
@@ -54,6 +56,7 @@ export class PerfilConductorPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
   fmtFechaMedia = formatFechaMedia;
@@ -200,9 +203,9 @@ export class PerfilConductorPage {
     try {
       await this.documentos.enqueueDocumento({ entidad: 'conductor', entidadId: this.condId(), tipo, doc });
       await this.loadEnCola(this.condId());
-      this.toast.success('Documento en cola. Se subirá cuando haya conexión.');
+      this.toast.success(this.i18n.t('Documento en cola. Se subirá cuando haya conexión.'));
     } catch {
-      this.toast.error('No se pudo poner el documento en cola. Intenta de nuevo.');
+      this.toast.error(this.i18n.t('No se pudo poner el documento en cola. Intenta de nuevo.'));
     } finally {
       this.subiendo.set(false);
     }
@@ -221,10 +224,10 @@ export class PerfilConductorPage {
       const list = docs.filter((d) => d.tipo === tipo);
       return Promise.all(list.map((d, i) => toView(d, list.length > 1 ? `${base} (${i + 1})` : base)));
     };
-    this.cedulas.set(await porTipo('cedula', 'Cédula'));
-    this.licencias.set(await porTipo('licencia', 'Licencia de conducir'));
+    this.cedulas.set(await porTipo('cedula', this.i18n.t('Cédula')));
+    this.licencias.set(await porTipo('licencia', this.i18n.t('Licencia de conducir')));
     const otros = docs.filter((d) => d.tipo !== 'cedula' && d.tipo !== 'licencia');
-    this.otros.set(await Promise.all(otros.map((d) => toView(d, TIPO_LABEL[d.tipo] ?? d.nombre ?? d.tipo))));
+    this.otros.set(await Promise.all(otros.map((d) => toView(d, (TIPO_LABEL[d.tipo] ? this.i18n.t(TIPO_LABEL[d.tipo]) : null) ?? d.nombre ?? d.tipo))));
   }
 
   abrirAcceso(): void {

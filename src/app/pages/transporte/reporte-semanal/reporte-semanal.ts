@@ -31,6 +31,8 @@ import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { formatFechaCortaHora, fechaLocalISO } from '../../../core/util/fecha';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import {
   ChecklistPlantilla,
   ChecklistPlantillaItem,
@@ -105,7 +107,7 @@ interface ReporteSemanalDraft {
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes, DraftBanner, AyudantePicker],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes, DraftBanner, AyudantePicker, TranslatePipe],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })
@@ -121,6 +123,7 @@ export class ReporteSemanalPage extends GuardedWizard {
   private ctx = inject(UserContextService);
   private autosave = inject(AutosaveService);
   private borradorSvc = inject(BorradorService);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
 
@@ -221,6 +224,10 @@ export class ReporteSemanalPage extends GuardedWizard {
   esKm = computed(() => this.step() === this.nSecciones() + 2);
   esFirma = computed(() => this.step() === this.nSecciones() + 3);
   esResumen = computed(() => this.step() === this.nSecciones() + 4);
+
+  // Footer: etiqueta de "atrás" traducida y reactiva al idioma (evita `>` en el HTML).
+  enPrimerPaso = computed(() => this.step() <= 1);
+  backLabel = computed(() => this.i18n.t(this.enPrimerPaso() ? 'Cancelar' : 'Atrás'));
 
   /** Límites de la semana en curso (de la vista del servidor) para saber si una
    *  op pendiente pertenece a esta semana. Null si aún no hay datos del servidor. */
@@ -359,7 +366,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       if (!this.tieneDatos()) return;
       this.autosave.queue(this.claveBorrador(veh.vehiculo_id), snap, {
         tipo: 'checklist',
-        etiqueta: 'Inspección de vehículo' + (veh.placa ? ' · ' + veh.placa : ''),
+        etiqueta: this.i18n.t('Inspección de vehículo') + (veh.placa ? ' · ' + veh.placa : ''),
         ruta: `/transporte/reporte-semanal?reanudar=${veh.vehiculo_id}`,
       });
     });
@@ -509,7 +516,7 @@ export class ReporteSemanalPage extends GuardedWizard {
     // AC5 — aviso si hoy no es el día programado de este equipo (se permite igual).
     if (!v.tiene_reporte && !v.enviando && this.hoyDow !== diaReporteSemanalDow(v.medida_uso)) {
       this.toast.show(
-        `Hoy no toca el reporte de este equipo (le toca los ${this.diaProgramadoLabel(v)}). Puedes reportarlo igual.`,
+        this.i18n.t('Hoy no toca el reporte de este equipo (le toca los {dia}). Puedes reportarlo igual.', { dia: this.diaProgramadoLabel(v) }),
         'info',
         5000,
       );
@@ -579,7 +586,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       const step = d?.step ?? 1;
       this.step.set(step >= 1 && step <= this.total() ? step : 1);
     } catch {
-      this.toast.error('No se pudo recuperar todo el borrador, pero puedes continuar.');
+      this.toast.error(this.i18n.t('No se pudo recuperar todo el borrador, pero puedes continuar.'));
     }
     this.borradorPrevio.set(null);
   }
@@ -670,43 +677,43 @@ export class ReporteSemanalPage extends GuardedWizard {
     if (sec) {
       const r = this.respuestas();
       if (!sec.items.every((it) => !!r[it.id])) {
-        this.toast.error('Responde todas las preguntas de esta sección.');
+        this.toast.error(this.i18n.t('Responde todas las preguntas de esta sección.'));
         return false;
       }
       // U7 — toda "Falla" exige un comentario que describa la falla.
       const c = this.comentarios();
       if (!sec.items.every((it) => r[it.id] !== 'no' || !!c[it.id]?.trim())) {
-        this.toast.error('Describe la falla en el comentario.');
+        this.toast.error(this.i18n.t('Describe la falla en el comentario.'));
         return false;
       }
       return true;
     }
     if (this.esFotos() && !this.fotosCompletas()) {
-      this.toast.error(`Faltan ${this.fotosFaltan()} foto(s).`);
+      this.toast.error(this.i18n.t('Faltan {n} foto(s).', { n: this.fotosFaltan() }));
       return false;
     }
     if (this.esKm()) {
       const esHoras = this.vehDetalle()?.medida_uso === 'horas';
       if (this.km() == null || this.km()! <= 0) {
-        this.toast.error(esHoras ? 'Escribe las horas de uso actuales.' : 'Escribe el kilometraje actual.');
+        this.toast.error(esHoras ? this.i18n.t('Escribe las horas de uso actuales.') : this.i18n.t('Escribe el kilometraje actual.'));
         return false;
       }
       if (this.kmInvalido()) {
         this.toast.error(
           esHoras
-            ? `Las horas no pueden ser menores a las últimas registradas (${this.odometro()} h).`
-            : `El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`,
+            ? this.i18n.t('Las horas no pueden ser menores a las últimas registradas ({odo} h).', { odo: this.odometro() ?? '' })
+            : this.i18n.t('El kilometraje no puede ser menor al último registrado ({odo} km).', { odo: this.odometro() ?? '' }),
         );
         return false;
       }
       if (!this.nivelCombustible()) {
-        this.toast.error('Elige el nivel de combustible.');
+        this.toast.error(this.i18n.t('Elige el nivel de combustible.'));
         return false;
       }
       return true;
     }
     if (this.esFirma() && !this.firmaLista()) {
-      this.toast.error('Firma antes de continuar.');
+      this.toast.error(this.i18n.t('Firma antes de continuar.'));
       return false;
     }
     return true;
@@ -718,11 +725,11 @@ export class ReporteSemanalPage extends GuardedWizard {
     const plantilla = this.plantilla();
     if (!veh || !plantilla) return;
     if (this.km() == null || this.km()! <= 0 || this.kmInvalido()) {
-      this.toast.error('Revisa el kilometraje.');
+      this.toast.error(this.i18n.t('Revisa el kilometraje.'));
       return;
     }
     if (!this.firmaBlob()) {
-      this.toast.error('Falta la firma.');
+      this.toast.error(this.i18n.t('Falta la firma.'));
       return;
     }
     this.submitting.set(true);
@@ -771,7 +778,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       this.done.set(true);
       this.semana.set(await this.reportes.getSemanaTodas()); // AA3
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }

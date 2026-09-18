@@ -7,14 +7,14 @@
     }
 
     <div #popcard class="tour__pop" [class.tour__pop--center]="!rect()" [style]="rect() ? popStyle() : null">
-      <button type="button" class="tour__skip" (click)="skip()">Saltar</button>
+      <button type="button" class="tour__skip" (click)="skip()">{{ 'Saltar' | t }}</button>
 
       <div class="tour__scroll">
         @if (current().icon; as ic) {
           <div class="tour__icon">{{ ic }}</div>
         }
-        <h2 class="tour__title">{{ current().title }}</h2>
-        <p class="tour__text">{{ current().text }}</p>
+        <h2 class="tour__title">{{ current().title | t }}</h2>
+        <p class="tour__text">{{ current().text | t }}</p>
 
         <div class="tour__dots">
           @for (s of steps; track $index) {
@@ -26,15 +26,15 @@
       <div class="tour__actions">
         @if (current().permission === 'location') {
           <button type="button" class="tour__next" [disabled]="pidiendoPermiso()" (click)="permitirUbicacion()">
-            {{ pidiendoPermiso() ? 'Pidiendo…' : 'Permitir ubicación' }}
+            {{ pidiendoPermiso() ? ('Pidiendo…' | t) : ('Permitir ubicación' | t) }}
           </button>
-          <button type="button" class="tour__back" (click)="next()">Ahora no</button>
+          <button type="button" class="tour__back" (click)="next()">{{ 'Ahora no' | t }}</button>
         } @else {
           <button type="button" class="tour__next" (click)="next()">
-            {{ isLast() ? 'Empezar' : 'Siguiente' }}
+            {{ isLast() ? ('Empezar' | t) : ('Siguiente' | t) }}
           </button>
           @if (index() > 0 && !isLast()) {
-            <button type="button" class="tour__back" (click)="prev()">Atrás</button>
+            <button type="button" class="tour__back" (click)="prev()">{{ 'Atrás' | t }}</button>
           }
         }
       </div>

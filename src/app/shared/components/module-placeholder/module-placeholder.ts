@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Location } from '@angular/common';
 import { SyncBar } from '../sync-bar/sync-bar';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Temporary landing for a module whose flows arrive in a later milestone.
@@ -11,7 +12,7 @@ import { SyncBar } from '../sync-bar/sync-bar';
   selector: 'app-module-placeholder',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SyncBar],
+  imports: [SyncBar, TranslatePipe],
   templateUrl: './module-placeholder.html',
   styleUrl: './module-placeholder.scss',
 })

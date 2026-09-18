@@ -1,9 +1,9 @@
 <div class="screen pdet">
   <header class="pdet__header">
     <button type="button" class="pdet__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="pdet__title">Proyecto</h1>
+    <h1 class="pdet__title">{{ 'Proyecto' | t }}</h1>
     @if (proyecto() && puedeEditar()) {
-      <button type="button" class="pdet__editar" (click)="editar()" aria-label="Editar">✏️ Editar</button>
+      <button type="button" class="pdet__editar" (click)="editar()" aria-label="Editar">✏️ {{ 'Editar' | t }}</button>
     }
   </header>
 
@@ -11,76 +11,76 @@
     @if (loading()) {
       <app-skeleton [rows]="6" />
     } @else if (!proyecto()) {
-      <app-empty-state icon="🏗️" title="Proyecto no disponible" [message]="online ? 'No se encontró el proyecto.' : 'Conéctate para cargarlo.'" />
+      <app-empty-state icon="🏗️" [title]="'Proyecto no disponible' | t" [message]="online ? ('No se encontró el proyecto.' | t) : ('Conéctate para cargarlo.' | t)" />
     } @else {
       <div class="pdet__head">
         <h2 class="pdet__nombre">{{ proyecto()!.nombre }}</h2>
-        <span class="pdet__estado pdet__estado--{{ proyecto()!.estado }}">{{ estadoLabel[proyecto()!.estado] }}</span>
+        <span class="pdet__estado pdet__estado--{{ proyecto()!.estado }}">{{ estadoLabel[proyecto()!.estado] | t }}</span>
       </div>
 
-      <button type="button" class="btn-cta pdet__crono" (click)="cronograma()">📅 Ver cronograma</button>
+      <button type="button" class="btn-cta pdet__crono" (click)="cronograma()">📅 {{ 'Ver cronograma' | t }}</button>
 
       <!-- AS24 — accesos directos a los sub-módulos de esta obra -->
       <div class="pdet__accesos">
-        <button type="button" class="btn-ghost pdet__acceso" (click)="comprasYGastos()">💰 Compras y gastos</button>
+        <button type="button" class="btn-ghost pdet__acceso" (click)="comprasYGastos()">💰 {{ 'Compras y gastos' | t }}</button>
         @if (puedeVerPersonal()) {
-          <button type="button" class="btn-ghost pdet__acceso" (click)="personal()">🧑‍🔧 Personal de obra</button>
+          <button type="button" class="btn-ghost pdet__acceso" (click)="personal()">🧑‍🔧 {{ 'Personal de obra' | t }}</button>
         }
       </div>
 
       <!-- Datos generales -->
       <div class="pdet__card">
-        @if (proyecto()!.codigo) { <div class="pdet__row"><span>Código</span><b>{{ proyecto()!.codigo }}</b></div> }
-        @if (proyecto()!.cliente) { <div class="pdet__row"><span>Cliente</span><b>{{ proyecto()!.cliente }}</b></div> }
-        @if (proyecto()!.tipo) { <div class="pdet__row"><span>Tipo</span><b>{{ proyecto()!.tipo }}</b></div> }
-        @if (proyecto()!.responsable?.nombre) { <div class="pdet__row"><span>Responsable</span><b>{{ proyecto()!.responsable?.nombre }}</b></div> }
-        <div class="pdet__row"><span>Inicio</span><b>{{ fmt(proyecto()!.fecha_inicio) }}</b></div>
-        <div class="pdet__row"><span>Fin estimado</span><b>{{ fmt(proyecto()!.fecha_fin_estimada) }}</b></div>
+        @if (proyecto()!.codigo) { <div class="pdet__row"><span>{{ 'Código' | t }}</span><b>{{ proyecto()!.codigo }}</b></div> }
+        @if (proyecto()!.cliente) { <div class="pdet__row"><span>{{ 'Cliente' | t }}</span><b>{{ proyecto()!.cliente }}</b></div> }
+        @if (proyecto()!.tipo) { <div class="pdet__row"><span>{{ 'Tipo' | t }}</span><b>{{ proyecto()!.tipo }}</b></div> }
+        @if (proyecto()!.responsable?.nombre) { <div class="pdet__row"><span>{{ 'Responsable' | t }}</span><b>{{ proyecto()!.responsable?.nombre }}</b></div> }
+        <div class="pdet__row"><span>{{ 'Inicio' | t }}</span><b>{{ fmt(proyecto()!.fecha_inicio) }}</b></div>
+        <div class="pdet__row"><span>{{ 'Fin estimado' | t }}</span><b>{{ fmt(proyecto()!.fecha_fin_estimada) }}</b></div>
         @if (proyecto()!.fecha_fin_real) {
-          <div class="pdet__row"><span>Fin real</span><b>{{ fmt(proyecto()!.fecha_fin_real) }}</b></div>
+          <div class="pdet__row"><span>{{ 'Fin real' | t }}</span><b>{{ fmt(proyecto()!.fecha_fin_real) }}</b></div>
         }
         @if (proyecto()!.presupuesto != null && puedeVerCostos()) {
-          <div class="pdet__row"><span>Presupuesto</span><b>RD$ {{ proyecto()!.presupuesto | number: '1.0-2' }}</b></div>
+          <div class="pdet__row"><span>{{ 'Presupuesto' | t }}</span><b>RD$ {{ proyecto()!.presupuesto | number: '1.0-2' }}</b></div>
         }
         @if (progreso() !== null) {
-          <div class="pdet__row"><span>Avance (fases)</span><b>{{ progreso() }}%</b></div>
+          <div class="pdet__row"><span>{{ 'Avance (fases)' | t }}</span><b>{{ progreso() }}%</b></div>
         }
       </div>
 
       <!-- AM7 — Ubicación estructurada (pin + Abrir en Maps) -->
       <div class="pdet__card">
         <div class="pdet__row">
-          <span>Ubicación</span>
-          <b>{{ proyecto()!.direccion_geo || proyecto()!.localidad || proyecto()!.ubicacion || (mapsUrl() ? 'Con pin' : 'Sin ubicación') }}</b>
+          <span>{{ 'Ubicación' | t }}</span>
+          <b>{{ proyecto()!.direccion_geo || proyecto()!.localidad || proyecto()!.ubicacion || (mapsUrl() ? ('Con pin' | t) : ('Sin ubicación' | t)) }}</b>
         </div>
         @if (mapsUrl(); as url) {
-          <a class="btn-ghost pdet__maps" [href]="url" target="_blank" rel="noopener">📍 Abrir en Google Maps</a>
+          <a class="btn-ghost pdet__maps" [href]="url" target="_blank" rel="noopener">📍 {{ 'Abrir en Google Maps' | t }}</a>
         } @else if (puedeEditar()) {
-          <button type="button" class="btn-ghost pdet__maps" (click)="editar()">📍 Agregar ubicación</button>
+          <button type="button" class="btn-ghost pdet__maps" (click)="editar()">📍 {{ 'Agregar ubicación' | t }}</button>
         }
       </div>
 
       <!-- AM10 — data estructurada de obra (antes embutida en la descripción) -->
       @if (proyecto()!.ingeniero_obra || proyecto()!.maestro_encargado || proyecto()!.contacto_nombre || proyecto()!.contacto_telefono) {
         <div class="pdet__card">
-          @if (proyecto()!.ingeniero_obra) { <div class="pdet__row"><span>Ing. de obra</span><b>{{ proyecto()!.ingeniero_obra }}</b></div> }
-          @if (proyecto()!.maestro_encargado) { <div class="pdet__row"><span>Maestro encargado</span><b>{{ proyecto()!.maestro_encargado }}</b></div> }
-          @if (proyecto()!.contacto_nombre) { <div class="pdet__row"><span>Contacto</span><b>{{ proyecto()!.contacto_nombre }}</b></div> }
+          @if (proyecto()!.ingeniero_obra) { <div class="pdet__row"><span>{{ 'Ing. de obra' | t }}</span><b>{{ proyecto()!.ingeniero_obra }}</b></div> }
+          @if (proyecto()!.maestro_encargado) { <div class="pdet__row"><span>{{ 'Maestro encargado' | t }}</span><b>{{ proyecto()!.maestro_encargado }}</b></div> }
+          @if (proyecto()!.contacto_nombre) { <div class="pdet__row"><span>{{ 'Contacto' | t }}</span><b>{{ proyecto()!.contacto_nombre }}</b></div> }
           @if (proyecto()!.contacto_telefono; as tel) {
-            <div class="pdet__row"><span>Teléfono</span><a class="pdet__tel" [href]="'tel:' + tel">{{ tel }}</a></div>
+            <div class="pdet__row"><span>{{ 'Teléfono' | t }}</span><a class="pdet__tel" [href]="'tel:' + tel">{{ tel }}</a></div>
           }
         </div>
       }
 
       <!-- AM9 — Equipo y responsables -->
-      <h3 class="pdet__subtitle">Equipo y responsables</h3>
+      <h3 class="pdet__subtitle">{{ 'Equipo y responsables' | t }}</h3>
       @if (!responsables().length) {
-        <p class="pdet__muted">Sin responsables vinculados a esta obra.</p>
+        <p class="pdet__muted">{{ 'Sin responsables vinculados a esta obra.' | t }}</p>
       } @else {
         <div class="pdet__card">
           @for (r of responsables(); track trackResp($index, r)) {
             <div class="pdet__row">
-              <span>{{ r.tipo_responsabilidad || 'Responsable' }}</span>
+              <span>{{ r.tipo_responsabilidad || ('Responsable' | t) }}</span>
               <b>{{ r.nombre }}</b>
             </div>
           }
@@ -88,20 +88,20 @@
       }
 
       @if (proyecto()!.descripcion) {
-        <h3 class="pdet__subtitle">Descripción</h3>
+        <h3 class="pdet__subtitle">{{ 'Descripción' | t }}</h3>
         <p class="pdet__desc">{{ proyecto()!.descripcion }}</p>
       }
 
       <!-- Fases -->
-      <h3 class="pdet__subtitle">Fases</h3>
+      <h3 class="pdet__subtitle">{{ 'Fases' | t }}</h3>
       @if (!proyecto()!.fases.length) {
-        <p class="pdet__muted">Este proyecto no tiene fases registradas.</p>
+        <p class="pdet__muted">{{ 'Este proyecto no tiene fases registradas.' | t }}</p>
       } @else {
         @for (f of proyecto()!.fases; track trackFase($index, f)) {
           <div class="pdet__fase">
             <div class="pdet__fase-top">
               <span class="pdet__fase-nombre">{{ f.orden }}. {{ f.nombre }}</span>
-              <span class="pdet__fase-estado pdet__fase-estado--{{ f.estado }}">{{ faseEstadoLabel[f.estado] }}</span>
+              <span class="pdet__fase-estado pdet__fase-estado--{{ f.estado }}">{{ faseEstadoLabel[f.estado] | t }}</span>
             </div>
             <div class="pdet__bar"><div class="pdet__bar-fill" [style.width.%]="f.progreso"></div></div>
             <span class="pdet__fase-pct">{{ f.progreso }}%</span>

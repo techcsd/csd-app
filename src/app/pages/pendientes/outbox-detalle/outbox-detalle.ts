@@ -3,6 +3,8 @@ import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -33,7 +35,7 @@ import { humanizeError } from '../../../shared/util/friendly-error.util';
   selector: 'app-outbox-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, ConfirmDialog],
+  imports: [Skeleton, ConfirmDialog, TranslatePipe],
   templateUrl: './outbox-detalle.html',
   styleUrl: './outbox-detalle.scss',
 })
@@ -46,6 +48,7 @@ export class OutboxDetallePage {
   private toast = inject(ToastService);
   private contenidoSvc = inject(OutboxContenidoService);
   private ctx = inject(UserContextService);
+  private i18n = inject(I18nService);
   // BS2 — el SQLSTATE crudo (🩺) es SOLO para el desarrollador.
   esDesarrollador = this.ctx.esDesarrollador;
 
@@ -117,13 +120,40 @@ export class OutboxDetallePage {
     const o = this.op();
     return !!o && this.contenidoSvc.puedeDuplicar(o);
   }
+  /** BT7 — ¿es un conduce externo rechazado porque el proveedor ya no existe? */
+  puedeCorregirProveedor(): boolean {
+    const o = this.op();
+    return !!o && this.contenidoSvc.puedeCorregirProveedor(o);
+  }
 
   // ── Acciones ─────────────────────────────────────────────────────────────
 
   reintentar(): void {
     void this.sync.retry(this.id);
-    this.toast.show('Reintentando el envío…', 'info');
+    this.toast.show(this.i18n.t('Reintentando el envío…'), 'info');
     this.back();
+  }
+
+  /**
+   * BT7 — reabre el conduce externo con todo (materia, origen/destino, fotos) menos
+   * el proveedor colgado; el usuario elige otro y reenvía. La op vieja se retira solo
+   * DESPUÉS de copiar todo al borrador → nada se pierde.
+   */
+  corrigiendo = signal(false);
+  async corregirProveedor(): Promise<void> {
+    const o = this.op();
+    if (!o || this.corrigiendo()) return;
+    this.corrigiendo.set(true);
+    try {
+      const ruta = await this.contenidoSvc.corregirConduceExterno(o);
+      void this.sync.discard(this.id); // el borrador ya tiene todo; retira la op inválida
+      this.toast.success(this.i18n.t('Elige otro proveedor y vuelve a enviar. Tus datos y fotos están.'));
+      void this.router.navigate([ruta]);
+    } catch {
+      this.toast.error(this.i18n.t('No se pudo abrir para corregir. Intenta de nuevo.'));
+    } finally {
+      this.corrigiendo.set(false);
+    }
   }
 
   async duplicar(): Promise<void> {
@@ -132,12 +162,12 @@ export class OutboxDetallePage {
     this.duplicando.set(true);
     try {
       const ruta = await this.contenidoSvc.duplicarBitacora(o);
-      this.toast.success('Copiamos tu bitácora a un borrador nuevo. Revísala y envíala.');
+      this.toast.success(this.i18n.t('Copiamos tu bitácora a un borrador nuevo. Revísala y envíala.'));
       const [path, query] = ruta.split('?');
       const borrador = new URLSearchParams(query).get('borrador') ?? undefined;
       void this.router.navigate([path], borrador ? { queryParams: { borrador } } : undefined);
     } catch {
-      this.toast.error('No se pudo duplicar. Intenta exportar el contenido.');
+      this.toast.error(this.i18n.t('No se pudo duplicar. Intenta exportar el contenido.'));
     } finally {
       this.duplicando.set(false);
     }
@@ -149,9 +179,9 @@ export class OutboxDetallePage {
     this.exportando.set(true);
     try {
       const r = await this.contenidoSvc.exportar(o);
-      if (r.fallback) this.toast.show('Se descargó el archivo (no había app para compartir).', 'info');
+      if (r.fallback) this.toast.show(this.i18n.t('Se descargó el archivo (no había app para compartir).'), 'info');
     } catch {
-      this.toast.error('No se pudo exportar el contenido.');
+      this.toast.error(this.i18n.t('No se pudo exportar el contenido.'));
     } finally {
       this.exportando.set(false);
     }
@@ -176,7 +206,7 @@ export class OutboxDetallePage {
   private confirmarDescarte(): void {
     void this.sync.discard(this.id);
     this.descartarPaso.set(0);
-    this.toast.show('Registro descartado.', 'info');
+    this.toast.show(this.i18n.t('Registro descartado.'), 'info');
     this.back();
   }
 

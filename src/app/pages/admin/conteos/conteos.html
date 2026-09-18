@@ -1,7 +1,7 @@
 <div class="screen adm-sub">
   <header class="adm-sub__header">
-    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="adm-sub__title">Historial de conteos</h1>
+    <button type="button" class="adm-sub__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="adm-sub__title">{{ 'Historial de conteos' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -12,7 +12,7 @@
         <div class="cat-row cat-row--block">
           <button type="button" class="cnt-row" (click)="toggle(c.id)">
             <div class="cat-row__info">
-              <span class="cat-row__name">{{ c.bodega?.nombre ?? 'Bodega' }}</span>
+              <span class="cat-row__name">{{ c.bodega?.nombre ?? ('Bodega' | t) }}</span>
               <span class="cat-row__code">{{ c.creado?.nombre ?? '—' }} · {{ fmtFecha(c.created_at) }}{{ c.motivo ? ' · ' + c.motivo : '' }}</span>
             </div>
             <span class="cnt-row__chev">{{ expandedId() === c.id ? '▲' : '▼' }}</span>
@@ -29,7 +29,7 @@
           }
         </div>
       } @empty {
-        <p class="adm-sub__muted">No hay conteos registrados.</p>
+        <p class="adm-sub__muted">{{ 'No hay conteos registrados.' | t }}</p>
       }
     }
   </div>

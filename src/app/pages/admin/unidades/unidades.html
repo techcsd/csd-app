@@ -1,13 +1,13 @@
 <div class="screen adm-sub">
   <header class="adm-sub__header">
-    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="adm-sub__title">Unidades</h1>
+    <button type="button" class="adm-sub__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="adm-sub__title">{{ 'Unidades' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <div class="adm-add">
-      <input class="field" type="text" [ngModel]="nuevo()" (ngModelChange)="nuevo.set($event)" (keyup.enter)="agregar()" placeholder="Nueva unidad (ej: Cubeta)" />
-      <button type="button" class="btn-cta" [disabled]="saving()" (click)="agregar()">Agregar</button>
+      <input class="field" type="text" [ngModel]="nuevo()" (ngModelChange)="nuevo.set($event)" (keyup.enter)="agregar()" [placeholder]="'Nueva unidad (ej: Cubeta)' | t" />
+      <button type="button" class="btn-cta" [disabled]="saving()" (click)="agregar()">{{ 'Agregar' | t }}</button>
     </div>
 
     @if (loading()) {
@@ -20,7 +20,7 @@
             <span class="cat-row__code">{{ u.codigo }}</span>
           </div>
           <button type="button" class="cat-row__btn" (click)="toggle(u)">
-            {{ u.activo ? 'Desactivar' : 'Activar' }}
+            {{ (u.activo ? 'Desactivar' : 'Activar') | t }}
           </button>
         </div>
       }

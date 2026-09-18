@@ -2,12 +2,14 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { UserContextService } from '../../core/services/user-context.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 /** Admin hub (gated by the 'admin' módulo). Mobile mirror of SGC's Administración. */
 @Component({
   selector: 'app-admin',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
 })

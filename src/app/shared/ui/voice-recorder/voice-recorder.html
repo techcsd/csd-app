@@ -29,7 +29,7 @@
   <div class="voice">
     @if (previewUrl(); as url) {
       <audio class="voice__audio" [src]="url" controls></audio>
-      <button type="button" class="btn-ghost voice__clear" (click)="clear()">Repetir nota</button>
+      <button type="button" class="btn-ghost voice__clear" (click)="clear()">{{ 'Repetir nota' | t }}</button>
     } @else {
       <button
         type="button"
@@ -45,7 +45,7 @@
             <path d="M19 12a7 7 0 0 1-6 6.92V22h-2v-3.08A7 7 0 0 1 5 12h2a5 5 0 0 0 10 0h2z"/>
           }
         </svg>
-        {{ recording() ? 'Detener grabación' : 'Grabar nota de voz' }}
+        {{ recording() ? ('Detener grabación' | t) : ('Grabar nota de voz' | t) }}
       </button>
       @if (recording()) {
         <div class="voice__meter" [class.voice__meter--pulse]="sinNivel()" role="status" aria-label="Grabando nota de voz">

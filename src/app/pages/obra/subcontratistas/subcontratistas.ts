@@ -10,6 +10,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { Subcontratista, Frente } from '../../../core/models/obra.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const MAX_SOPORTES = 3;
 
@@ -18,7 +20,7 @@ const MAX_SOPORTES = 3;
   selector: 'app-obra-subcontratistas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState],
+  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './subcontratistas.html',
   styleUrl: './subcontratistas.scss',
 })
@@ -29,6 +31,7 @@ export class SubcontratistasPage {
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   readonly slots = Array.from({ length: MAX_SOPORTES }, (_, i) => i);
   readonly hoy = new Date().toISOString().slice(0, 10);
@@ -97,9 +100,9 @@ export class SubcontratistasPage {
   async guardarFrente(id: string): Promise<void> {
     try {
       await this.obra.actualizarFrenteAvance(id, this.frenteEdit()[id] ?? 0);
-      this.toast.success('Avance del frente actualizado.');
+      this.toast.success(this.i18n.t('Avance del frente actualizado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo actualizar.'));
     }
   }
 
@@ -130,14 +133,14 @@ export class SubcontratistasPage {
         avancePct: this.cubAvance(),
         soportes,
       });
-      this.toast.success(this.network.online() ? 'Cubicación cargada (borrador).' : 'Guardada. Se enviará cuando tengas señal.');
+      this.toast.success(this.network.online() ? this.i18n.t('Cubicación cargada (borrador).') : this.i18n.t('Guardada. Se enviará cuando tengas señal.'));
       this.cubicando.set(false);
       this.cubDescripcion.set('');
       this.cubMonto.set(0);
       this.cubAvance.set(0);
       this.cubFotos.set({});
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar la cubicación.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cargar la cubicación.'));
     } finally {
       this.enviando.set(false);
     }

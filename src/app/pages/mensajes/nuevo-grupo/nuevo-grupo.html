@@ -1,7 +1,7 @@
 <div class="screen ngrupo">
   <header class="ngrupo__header">
-    <button type="button" class="ngrupo__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="ngrupo__title">Nuevo grupo</h1>
+    <button type="button" class="ngrupo__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="ngrupo__title">{{ 'Nuevo grupo' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -9,19 +9,19 @@
     <div class="ngrupo__top">
       <div class="ngrupo__avatar">
         @if (avatarPreview(); as url) {
-          <img [src]="url" alt="Foto del grupo" />
-          <button type="button" class="ngrupo__avatar-x" (click)="quitarFoto()" aria-label="Quitar foto">✕</button>
+          <img [src]="url" [alt]="'Foto del grupo' | t" />
+          <button type="button" class="ngrupo__avatar-x" (click)="quitarFoto()" [attr.aria-label]="'Quitar foto' | t">✕</button>
         } @else {
           <span class="ngrupo__avatar-ph">👥</span>
         }
       </div>
       <div class="ngrupo__foto-btns">
-        <button type="button" class="btn-ghost" (click)="elegirFoto('camara')">📷 Cámara</button>
-        <button type="button" class="btn-ghost" (click)="elegirFoto('galeria')">🖼️ Galería</button>
+        <button type="button" class="btn-ghost" (click)="elegirFoto('camara')">📷 {{ 'Cámara' | t }}</button>
+        <button type="button" class="btn-ghost" (click)="elegirFoto('galeria')">🖼️ {{ 'Galería' | t }}</button>
       </div>
     </div>
 
-    <label class="field-label" for="gnombre">Nombre del grupo <span class="ngrupo__req">*</span></label>
+    <label class="field-label" for="gnombre">{{ 'Nombre del grupo' | t }} <span class="ngrupo__req">*</span></label>
     <input
       id="gnombre"
       class="field"
@@ -29,10 +29,10 @@
       maxlength="60"
       [ngModel]="nombre()"
       (ngModelChange)="nombre.set($event)"
-      placeholder="Ej. Obra Riviera Bay"
+      [placeholder]="'Ej. Obra Riviera Bay' | t"
     />
 
-    <label class="field-label ngrupo__mt" for="gdesc">Descripción <span class="ngrupo__opt">(opcional)</span></label>
+    <label class="field-label ngrupo__mt" for="gdesc">{{ 'Descripción' | t }} <span class="ngrupo__opt">{{ '(opcional)' | t }}</span></label>
     <textarea
       id="gdesc"
       class="field ngrupo__desc"
@@ -40,15 +40,15 @@
       maxlength="200"
       [ngModel]="descripcion()"
       (ngModelChange)="descripcion.set($event)"
-      placeholder="¿De qué trata el grupo?"
+      [placeholder]="'¿De qué trata el grupo?' | t"
     ></textarea>
 
     <!-- Integrantes seleccionados -->
-    <label class="field-label ngrupo__mt">Integrantes ({{ seleccionados().length }})</label>
+    <label class="field-label ngrupo__mt">{{ 'Integrantes' | t }} ({{ seleccionados().length }})</label>
     @if (seleccionados().length) {
       <div class="ngrupo__chips">
         @for (u of seleccionados(); track u.id) {
-          <span class="ngrupo__chip">{{ u.nombre }} <button type="button" (click)="quitar(u)" aria-label="Quitar">✕</button></span>
+          <span class="ngrupo__chip">{{ u.nombre }} <button type="button" (click)="quitar(u)" [attr.aria-label]="'Quitar' | t">✕</button></span>
         }
       </div>
     }
@@ -59,10 +59,10 @@
       type="text"
       [ngModel]="busqueda()"
       (ngModelChange)="busqueda.set($event); buscar()"
-      placeholder="Buscar personas para agregar…"
+      [placeholder]="'Buscar personas para agregar…' | t"
     />
     @if (buscando()) {
-      <p class="ngrupo__hint">Buscando…</p>
+      <p class="ngrupo__hint">{{ 'Buscando…' | t }}</p>
     }
     @for (u of resultados(); track u.id) {
       <button type="button" class="ngrupo__result" (click)="toggle(u)">
@@ -72,7 +72,7 @@
     }
 
     <button type="button" class="btn-cta ngrupo__crear" [disabled]="!puedeCrear() || creando()" (click)="crear()">
-      {{ creando() ? 'Creando…' : 'Crear grupo' }}
+      {{ (creando() ? 'Creando…' : 'Crear grupo') | t }}
     </button>
   </div>
 

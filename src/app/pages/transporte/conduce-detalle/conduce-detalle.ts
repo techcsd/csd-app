@@ -14,6 +14,8 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 // AU15 — etiquetas desde el diccionario central (ya no mapas locales por pantalla).
 import { CONDUCE_MOTIVO_LABELS, humanizarEnum, traducir } from '../../../core/util/dominio-labels';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AL9/AL13/AL4 — Detalle de un conduce (documento). Fuente única abierta desde
@@ -25,7 +27,7 @@ import { CONDUCE_MOTIVO_LABELS, humanizarEnum, traducir } from '../../../core/ut
   selector: 'app-conduce-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad, TranslatePipe],
   templateUrl: './conduce-detalle.html',
   styleUrl: './conduce-detalle.scss',
 })
@@ -37,6 +39,7 @@ export class ConduceDetallePage {
   private toast = inject(ToastService);
   private network = inject(NetworkService);
   private userCtx = inject(UserContextService);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
   fmtFechaHora = formatFechaHumana;
@@ -153,20 +156,20 @@ export class ConduceDetallePage {
     if (this.guardandoFirma()) return;
     const blob = await this.sigPad()?.toBlob();
     if (!blob) {
-      this.toast.error('Firma en el recuadro para continuar.');
+      this.toast.error(this.i18n.t('Firma en el recuadro para continuar.'));
       return;
     }
     this.guardandoFirma.set(true);
     try {
       await this.conduces.firmarComoDespachante(this.salidaId, blob);
-      this.toast.success('Conduce firmado. El chofer ya puede marcar la entrega.');
+      this.toast.success(this.i18n.t('Conduce firmado. El chofer ya puede marcar la entrega.'));
       this.firmandoDespachante.set(false);
       this.firmaLista.set(false);
       await this.load();
     } catch (e) {
       // AV1 — defensa en profundidad: si el servidor rechaza por rol no elegible
       // (DESP_INELEGIBLE), pasar al estado de corrección y mostrar el porqué limpio.
-      const msg = e instanceof Error ? e.message : 'No se pudo firmar el conduce.';
+      const msg = e instanceof Error ? e.message : this.i18n.t('No se pudo firmar el conduce.');
       if (msg.includes('DESP_INELEGIBLE')) {
         this.despachanteElegible.set(false);
         this.firmandoDespachante.set(false);
@@ -200,7 +203,7 @@ export class ConduceDetallePage {
         }
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar el conduce.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar el conduce.'));
     } finally {
       this.loading.set(false);
     }
@@ -211,7 +214,7 @@ export class ConduceDetallePage {
     const d = this.detalle();
     if (!d) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para generar el PDF del conduce.');
+      this.toast.error(this.i18n.t('Necesitas conexión para generar el PDF del conduce.'));
       return;
     }
     if (this.generando()) return;
@@ -219,7 +222,7 @@ export class ConduceDetallePage {
     try {
       await this.pdf.compartir(d);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo compartir el conduce.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo compartir el conduce.'));
     } finally {
       this.generando.set(false);
     }
@@ -230,16 +233,16 @@ export class ConduceDetallePage {
     const d = this.detalle();
     if (!d) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para generar el PDF del conduce.');
+      this.toast.error(this.i18n.t('Necesitas conexión para generar el PDF del conduce.'));
       return;
     }
     if (this.generando()) return;
     this.generando.set(true);
     try {
       const dest = await this.pdf.descargar(d);
-      this.toast.success(`PDF guardado: ${dest}`);
+      this.toast.success(this.i18n.t('PDF guardado: {dest}', { dest }));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo descargar el conduce.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo descargar el conduce.'));
     } finally {
       this.generando.set(false);
     }
@@ -250,17 +253,17 @@ export class ConduceDetallePage {
     const d = this.detalle();
     if (!d || this.marcandoPrueba()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para cambiar esto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cambiar esto.'));
       return;
     }
     const nuevo = !d.es_prueba;
     this.marcandoPrueba.set(true);
     try {
       await this.conduces.marcarConducePrueba(d.id, nuevo);
-      this.toast.success(nuevo ? 'Conduce marcado como prueba.' : 'El conduce ya no es de prueba.');
+      this.toast.success(nuevo ? this.i18n.t('Conduce marcado como prueba.') : this.i18n.t('El conduce ya no es de prueba.'));
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar la marca de prueba.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cambiar la marca de prueba.'));
     } finally {
       this.marcandoPrueba.set(false);
     }
@@ -281,12 +284,12 @@ export class ConduceDetallePage {
       this.confirmarEliminar.set(false);
       this.toast.success(
         this.network.online()
-          ? `Conduce ${d.numero} eliminado. Se repuso su stock.`
-          : 'Se eliminará al reconectar. Ya no aparecerá en tus listados.',
+          ? this.i18n.t('Conduce {numero} eliminado. Se repuso su stock.', { numero: d.numero })
+          : this.i18n.t('Se eliminará al reconectar. Ya no aparecerá en tus listados.'),
       );
       this.navGuard.back('/transporte/conduces-hub');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar el conduce.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo eliminar el conduce.'));
     } finally {
       this.eliminando.set(false);
     }

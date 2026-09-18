@@ -15,6 +15,8 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AI2 — "Pendiente entrega": conduces emitidos que faltan por entregar al receptor.
@@ -30,7 +32,7 @@ import { VehiculoDisponible } from '../../../core/models/transporte.model';
   selector: 'app-conduces-pendientes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, TranslatePipe],
   templateUrl: './conduces-pendientes.html',
   styleUrl: './conduces-pendientes.scss',
 })
@@ -42,6 +44,7 @@ export class ConducesPendientesPage implements OnDestroy {
   private toast = inject(ToastService);
   private router = inject(Router);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
   // AK7 — fecha + hora exacta de emisión (created_at), 12h homologado.
@@ -114,7 +117,7 @@ export class ConducesPendientesPage implements OnDestroy {
     try {
       this.pendientes.set(await this.conduces.misConducesPendientesEntrega());
     } catch {
-      if (!silent) this.toast.error('No pudimos cargar los conduces pendientes.');
+      if (!silent) this.toast.error(this.i18n.t('No pudimos cargar los conduces pendientes.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
@@ -145,18 +148,18 @@ export class ConducesPendientesPage implements OnDestroy {
 
   async confirmarTransferir(id: string): Promise<void> {
     if (!this.transferConductor()) {
-      this.toast.error('Elige a quién transfieres el conduce.');
+      this.toast.error(this.i18n.t('Elige a quién transfieres el conduce.'));
       return;
     }
     if (this.enviandoTransfer()) return;
     this.enviandoTransfer.set(true);
     try {
       await this.conduces.ofrecerTransferencia(id, this.transferConductor(), this.transferNota().trim() || null);
-      this.toast.success('Transferencia ofrecida. El chofer debe aceptarla.');
+      this.toast.success(this.i18n.t('Transferencia ofrecida. El chofer debe aceptarla.'));
       this.transfiriendoId.set('');
       await this.load(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo transferir.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo transferir.'));
     } finally {
       this.enviandoTransfer.set(false);
     }
@@ -182,7 +185,7 @@ export class ConducesPendientesPage implements OnDestroy {
   /** Confirmar "Iniciar ruta" con el vehículo elegido (cuando el conduce no traía uno). */
   confirmarIniciarConVehiculo(c: ConducePendienteEntrega): void {
     if (!this.vehiculoSel()) {
-      this.toast.error('Elige el vehículo con el que sales.');
+      this.toast.error(this.i18n.t('Elige el vehículo con el que sales.'));
       return;
     }
     void this.ejecutarIniciarRuta(c.id, this.vehiculoSel(), this.vehiculoSel());
@@ -197,11 +200,11 @@ export class ConducesPendientesPage implements OnDestroy {
       // volvía aquí y se descartaba: en modo continuo los puntos salían con
       // ruta_id=null hasta visitar "Mis rutas" → "esta ruta no tiene puntos de GPS").
       if (rutaId) this.tracking.resumirSiRutaActiva(vehiculoEfectivo, rutaId);
-      this.toast.success('Ruta iniciada. La verás en Mis rutas y en Seguimiento.');
+      this.toast.success(this.i18n.t('Ruta iniciada. La verás en Mis rutas y en Seguimiento.'));
       this.vehPickerId.set('');
       await this.load(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo iniciar la ruta.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo iniciar la ruta.'));
     } finally {
       this.iniciandoId.set('');
     }

@@ -1,72 +1,72 @@
 <div class="screen inc">
-  <app-wizard-exit title="Incidente de obra" (exit)="pedirSalir()" />
+  <app-wizard-exit [title]="'Incidente de obra' | t" (exit)="pedirSalir()" />
 
   @if (done()) {
     <app-big-confirm
-      title="Incidente registrado"
-      [note]="network.online() ? 'Registrado.' : 'Guardado. Se enviará cuando tengas señal.'"
+      [title]="'Incidente registrado' | t"
+      [note]="network.online() ? ('Registrado.' | t) : ('Guardado. Se enviará cuando tengas señal.' | t)"
       tone="done"
-      buttonLabel="Listo"
+      [buttonLabel]="'Listo' | t"
       (dismissed)="cerrar()"
     />
   } @else {
     <div class="screen__body inc__body">
       @if (borradorPrevio()) {
-        <div class="inc__draft">📝 Recuperamos un borrador sin terminar.</div>
+        <div class="inc__draft">📝 {{ 'Recuperamos un borrador sin terminar.' | t }}</div>
       }
 
-      <label class="field-label">Tipo</label>
+      <label class="field-label">{{ 'Tipo' | t }}</label>
       <div class="inc__opts">
         @for (t of tipos; track t.key) {
-          <app-option-button [icon]="t.icon" [label]="t.label" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
+          <app-option-button [icon]="t.icon" [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
         }
       </div>
 
-      <label class="field-label inc__mt">¿Qué pasó?</label>
+      <label class="field-label inc__mt">{{ '¿Qué pasó?' | t }}</label>
       <textarea class="field" rows="3" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"
-        placeholder="Describe el incidente"></textarea>
+        [placeholder]="'Describe el incidente' | t"></textarea>
 
-      <label class="field-label inc__mt">Gravedad</label>
+      <label class="field-label inc__mt">{{ 'Gravedad' | t }}</label>
       <div class="inc__opts">
         @for (g of gravedades; track g.key) {
-          <app-option-button [label]="g.label" [selected]="gravedad() === g.key" (pressed)="gravedad.set(g.key)" />
+          <app-option-button [label]="g.label | t" [selected]="gravedad() === g.key" (pressed)="gravedad.set(g.key)" />
         }
       </div>
 
-      <label class="field-label inc__mt">Lesionados</label>
-      <app-counter label="Personas" icon="🩹" [(value)]="lesionados" [min]="0" [max]="99" />
+      <label class="field-label inc__mt">{{ 'Lesionados' | t }}</label>
+      <app-counter [label]="'Personas' | t" icon="🩹" [(value)]="lesionados" [min]="0" [max]="99" />
 
-      <label class="field-label inc__mt">Ubicación (opcional)</label>
+      <label class="field-label inc__mt">{{ 'Ubicación (opcional)' | t }}</label>
       <input class="field" type="text" [ngModel]="ubicacion()" (ngModelChange)="ubicacion.set($event)"
-        placeholder="Frente / eje / bloque" />
+        [placeholder]="'Frente / eje / bloque' | t" />
 
-      <label class="field-label inc__mt">Investigación / acción inmediata (opcional)</label>
+      <label class="field-label inc__mt">{{ 'Investigación / acción inmediata (opcional)' | t }}</label>
       <textarea class="field" rows="2" [ngModel]="investigacion()" (ngModelChange)="investigacion.set($event)"
-        placeholder="Causa, medida tomada…"></textarea>
+        [placeholder]="'Causa, medida tomada…' | t"></textarea>
 
-      <label class="field-label inc__mt">Foto(s) (opcional)</label>
+      <label class="field-label inc__mt">{{ 'Foto(s) (opcional)' | t }}</label>
       <div class="inc__fotos">
         @for (i of slots; track i) {
-          <app-photo-slot [label]="'Foto ' + (i + 1)" hint="📸" [gallery]="false"
+          <app-photo-slot [label]="('Foto' | t) + ' ' + (i + 1)" hint="📸" [gallery]="false"
             [foto]="fotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />
         }
       </div>
 
       <button type="button" class="btn-cta inc__guardar" [disabled]="!puedeGuardar() || submitting()" (click)="guardar()">
-        {{ submitting() ? 'Guardando…' : 'Registrar incidente' }}
+        {{ submitting() ? ('Guardando…' | t) : ('Registrar incidente' | t) }}
       </button>
       @if (!puedeGuardar()) {
-        <p class="inc__hint">Elige el tipo y describe qué pasó.</p>
+        <p class="inc__hint">{{ 'Elige el tipo y describe qué pasó.' | t }}</p>
       }
     </div>
   }
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir sin guardar?"
-    message="Tu borrador queda guardado; puedes continuarlo luego."
-    confirmLabel="Salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir sin guardar?' | t"
+    [message]="'Tu borrador queda guardado; puedes continuarlo luego.' | t"
+    [confirmLabel]="'Salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     (confirmed)="salir()"
     (cancelled)="cancelarSalir()"
   />

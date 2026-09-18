@@ -1,5 +1,5 @@
 <div class="vnotes">
-  <label class="field-label">Notas de voz (opcional) · {{ notes().length }}/{{ max() }}</label>
+  <label class="field-label">{{ 'Notas de voz (opcional)' | t }} · {{ notes().length }}/{{ max() }}</label>
 
   @for (n of notes(); track n.url) {
     <div class="vnotes__item">
@@ -11,6 +11,6 @@
   @if (puedeGrabar()) {
     <app-voice-recorder (recorded)="add($event)" />
   } @else {
-    <p class="vnotes__max">Llegaste al máximo de {{ max() }} notas de voz.</p>
+    <p class="vnotes__max">{{ 'Llegaste al máximo de {max} notas de voz.' | t: { max: max() } }}</p>
   }
 </div>

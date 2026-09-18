@@ -2,7 +2,7 @@
   <header class="pl-header">
     <button type="button" class="pl-header__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="pl-header__icon">🧑‍🔧</span>
-    <h1 class="pl-header__title">Personal de obra</h1>
+    <h1 class="pl-header__title">{{ 'Personal de obra' | t }}</h1>
     <button type="button" class="pl-header__refresh" (click)="refrescar()" aria-label="Refrescar">🔄</button>
   </header>
 
@@ -18,7 +18,7 @@
       <div class="pl-conteos">
         <div class="pl-conteos__total">
           <span class="pl-conteos__n">{{ conteos().total }}</span>
-          <span class="pl-conteos__lbl">personal</span>
+          <span class="pl-conteos__lbl">{{ 'personal' | t }}</span>
         </div>
         <div class="pl-chips">
           @for (c of conteos().porNacionalidad; track c.k) {
@@ -37,16 +37,16 @@
       <!-- Buscador + filtros -->
       <div class="pl-search">
         <input class="field" type="search" [ngModel]="q()" (ngModelChange)="q.set($event)"
-          placeholder="Buscar por nombre, cédula, cargo, carnet…" />
+          [placeholder]="'Buscar por nombre, cédula, cargo, carnet…' | t" />
         <button type="button" class="pl-search__filtros" (click)="toggleFiltros()">⚙️</button>
       </div>
 
       @if (mostrarFiltros()) {
         <div class="pl-filtros">
-          <app-collapsible-select label="Obra" icon="🏗" [options]="obraOptions()" [selectedId]="filObra()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="filObra.set($event)" />
-          <app-collapsible-select label="Cargo" icon="🛠" [options]="cargoOptions()" [selectedId]="filCargo()" [searchable]="true" searchPlaceholder="Buscar cargo…" (picked)="filCargo.set($event)" />
+          <app-collapsible-select [label]="'Obra' | t" icon="🏗" [options]="obraOptions()" [selectedId]="filObra()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="filObra.set($event)" />
+          <app-collapsible-select [label]="'Cargo' | t" icon="🛠" [options]="cargoOptions()" [selectedId]="filCargo()" [searchable]="true" [searchPlaceholder]="'Buscar cargo…' | t" (picked)="filCargo.set($event)" />
           <!-- AV4 — filtro por cuadrilla (eje TECNICO) -->
-          <app-collapsible-select label="Cuadrilla" icon="👷" [options]="cuadrillaOptions()" [selectedId]="filCuadrilla()" (picked)="filCuadrilla.set($event)" />
+          <app-collapsible-select [label]="'Cuadrilla' | t" icon="👷" [options]="cuadrillaOptions()" [selectedId]="filCuadrilla()" (picked)="filCuadrilla.set($event)" />
           <!-- AV4 — filtro por aseguramiento (control de portería/supervisión) -->
           <div class="pl-filtro-chips">
             @for (a of aseguramientoOptions(); track a.id) {
@@ -54,17 +54,17 @@
             }
           </div>
           <div class="pl-filtro-chips">
-            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filNacionalidad() === ''" (click)="filNacionalidad.set('')">Todas</button>
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filNacionalidad() === ''" (click)="filNacionalidad.set('')">{{ 'Todas' | t }}</button>
             @for (n of nacionalidades; track n.value) {
-              <button type="button" class="pl-fchip" [class.pl-fchip--on]="filNacionalidad() === n.value" (click)="filNacionalidad.set(n.value)">{{ n.icon }} {{ n.label }}</button>
+              <button type="button" class="pl-fchip" [class.pl-fchip--on]="filNacionalidad() === n.value" (click)="filNacionalidad.set(n.value)">{{ n.icon }} {{ n.label | t }}</button>
             }
           </div>
           <div class="pl-filtro-chips">
-            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === 'activo'" (click)="filEstado.set('activo')">Activos</button>
-            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === 'inactivo'" (click)="filEstado.set('inactivo')">Inactivos</button>
-            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === ''" (click)="filEstado.set('')">Todos</button>
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === 'activo'" (click)="filEstado.set('activo')">{{ 'Activos' | t }}</button>
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === 'inactivo'" (click)="filEstado.set('inactivo')">{{ 'Inactivos' | t }}</button>
+            <button type="button" class="pl-fchip" [class.pl-fchip--on]="filEstado() === ''" (click)="filEstado.set('')">{{ 'Todos' | t }}</button>
           </div>
-          <button type="button" class="pl-limpiar" (click)="limpiarFiltros()">Limpiar filtros</button>
+          <button type="button" class="pl-limpiar" (click)="limpiarFiltros()">{{ 'Limpiar filtros' | t }}</button>
         </div>
       }
 
@@ -74,17 +74,17 @@
           <div class="pl-card__main">
             <span class="pl-card__nombre">
               <!-- AV4 — semáforo de aseguramiento de un vistazo (verde/rojo/gris) -->
-              <span class="pl-card__aseg" [title]="aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido']">{{ aseguramientoIcono(p) }}</span>
+              <span class="pl-card__aseg" [title]="aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido'] | t">{{ aseguramientoIcono(p) }}</span>
               {{ p.nombre }} {{ p.apellido }}
               @if (p.es_prueba) { <span class="pl-card__prueba">PRUEBA</span> }
-              @if (p.estado === 'inactivo') { <span class="pl-card__inact">Inactivo</span> }
+              @if (p.estado === 'inactivo') { <span class="pl-card__inact">{{ 'Inactivo' | t }}</span> }
             </span>
             <span class="pl-card__meta">
-              {{ p.cargo?.nombre || 'Sin cargo' }} · {{ nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad }}
+              {{ p.cargo?.nombre || ('Sin cargo' | t) }} · {{ (nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad) | t }}
               @if (p.cuadrilla) { · 👷 {{ p.cuadrilla }} }
             </span>
             <span class="pl-card__sub">
-              @if (p.carnet_numero) { 🎫 {{ p.carnet_numero }} } @else { ⏳ Carnet pendiente }
+              @if (p.carnet_numero) { 🎫 {{ p.carnet_numero }} } @else { ⏳ {{ 'Carnet pendiente' | t }} }
               @if (p.documento_numero) { · {{ p.documento_numero }} }
             </span>
           </div>
@@ -94,13 +94,13 @@
         <!-- AZ3 — vacío ≠ oculto ≠ error: el estado vacío dice la verdad. -->
         @switch (motivoVacio()) {
           @case ('filtros') {
-            <app-empty-state icon="🔍" title="Sin coincidencias" message="Ningún personal coincide con los filtros. Ajústalos o límpialos." />
+            <app-empty-state icon="🔍" [title]="'Sin coincidencias' | t" [message]="'Ningún personal coincide con los filtros. Ajústalos o límpialos.' | t" />
           }
           @case ('todos_prueba') {
-            <app-empty-state icon="🧪" title="Solo hay personal de prueba" [message]="ocultosPrueba() + ' registro(s) de prueba están ocultos en la vista normal.'" />
+            <app-empty-state icon="🧪" [title]="'Solo hay personal de prueba' | t" [message]="'{n} registro(s) de prueba están ocultos en la vista normal.' | t: { n: ocultosPrueba() }" />
           }
           @default {
-            <app-empty-state icon="🧑‍🔧" title="Aún no hay personal" message="Registra al primero con el botón +." />
+            <app-empty-state icon="🧑‍🔧" [title]="'Aún no hay personal' | t" [message]="'Registra al primero con el botón +.' | t" />
           }
         }
       }

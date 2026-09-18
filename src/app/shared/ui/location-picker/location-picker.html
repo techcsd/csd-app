@@ -4,7 +4,7 @@
     <input
       type="text"
       class="field lp__link-input"
-      placeholder="Pega el link de Maps, las coordenadas o el mensaje de WhatsApp"
+      [placeholder]="'Pega el link de Maps, las coordenadas o el mensaje de WhatsApp' | t"
       [value]="linkTexto()"
       (input)="linkTexto.set($any($event.target).value)"
       (keyup.enter)="fijarLink()"
@@ -20,11 +20,11 @@
       (click)="fijarLink()"
       [disabled]="resolviendo() || !linkTexto().trim()"
     >
-      {{ resolviendo() ? 'Resolviendo…' : 'Fijar' }}
+      {{ resolviendo() ? ('Resolviendo…' | t) : ('Fijar' | t) }}
     </button>
   </div>
   @if (resolviendo()) {
-    <p class="lp__msg">Resolviendo…</p>
+    <p class="lp__msg">{{ 'Resolviendo…' | t }}</p>
   } @else if (linkError()) {
     <p class="lp__msg lp__msg--error">{{ linkError() }}</p>
   }
@@ -33,13 +33,13 @@
     <input
       type="search"
       class="field"
-      placeholder="Buscar dirección o lugar…"
+      [placeholder]="'Buscar dirección o lugar…' | t"
       [value]="busquedaTexto()"
       (input)="onBuscar($any($event.target).value)"
       aria-label="Buscar ubicación"
     />
     @if (buscando()) {
-      <p class="lp__msg">Buscando…</p>
+      <p class="lp__msg">{{ 'Buscando…' | t }}</p>
     } @else if (busquedaError()) {
       <p class="lp__msg lp__msg--error">{{ busquedaError() }}</p>
     }
@@ -53,11 +53,11 @@
   </div>
 
   <button type="button" class="btn-ghost lp__gps" (click)="usarMiUbicacion()" [disabled]="ubicando()">
-    {{ ubicando() ? 'Ubicando…' : '📍 Usar mi ubicación actual' }}
+    {{ ubicando() ? ('Ubicando…' | t) : ('📍 ' + ('Usar mi ubicación actual' | t)) }}
   </button>
 
   @if (buscando()) {
-    <p class="lp__msg">Buscando…</p>
+    <p class="lp__msg">{{ 'Buscando…' | t }}</p>
   } @else if (busquedaError()) {
     <p class="lp__msg lp__msg--error">{{ busquedaError() }}</p>
   }
@@ -65,7 +65,7 @@
   <div #map class="lp__map"></div>
 
   <p class="lp__hint">
-    Toca el mapa para fijar el punto.
+    {{ 'Toca el mapa para fijar el punto.' | t }}
     @if (direccion()) { <br /><strong>{{ direccion() }}</strong> }
   </p>
 </div>

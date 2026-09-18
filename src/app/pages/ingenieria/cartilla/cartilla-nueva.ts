@@ -159,6 +159,31 @@ export class CartillaNuevaPage {
     this.fecha.set(data.fecha || fechaLocalISO());
     this.notas.set(data.notas ?? '');
     this.atados.set(data.atados ?? []);
+    // BT4 — recupera también las fotos + el plano ya tomados (antes se re-tomaban).
+    const fotos = await this.borrador.loadFotos(this.claveBorrador);
+    if (fotos.length) {
+      const planoF = fotos.find((f) => f.slot === 'plano');
+      if (planoF) this.plano.set({ blob: planoF.blob, previewUrl: URL.createObjectURL(planoF.blob) });
+      const arr = fotos
+        .filter((f) => f.slot !== 'plano')
+        .sort((a, b) => Number(a.slot) - Number(b.slot))
+        .map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) }));
+      if (arr.length) this.fotos.set(arr);
+    }
+  }
+
+  /** BT4 — re-persiste todas las fotos (índice) + el plano en el borrador. */
+  private async persistFotos(): Promise<void> {
+    try {
+      await this.borrador.clearFotos(this.claveBorrador);
+      const fs = this.fotos();
+      for (let i = 0; i < fs.length; i++) await this.borrador.saveFoto(this.claveBorrador, String(i), fs[i].blob);
+      const p = this.plano();
+      if (p) await this.borrador.saveFoto(this.claveBorrador, 'plano', p.blob);
+      this.guardarBorrador(); // asegura la fila de datos también
+    } catch {
+      /* persistir la foto nunca debe romper la captura */
+    }
   }
 
   private guardarBorrador(): void {
@@ -334,9 +359,19 @@ export class CartillaNuevaPage {
   // ── fotos ─────────────────────────────────────────────────────────────────
   agregarFoto(foto: CapturedPhoto): void {
     this.fotos.update((f) => [...f, foto]);
+    void this.persistFotos(); // BT4
   }
   quitarFoto(i: number): void {
     this.fotos.update((f) => f.filter((_, k) => k !== i));
+    void this.persistFotos(); // BT4
+  }
+  agregarPlano(foto: CapturedPhoto): void {
+    this.plano.set(foto);
+    void this.persistFotos(); // BT4
+  }
+  quitarPlano(): void {
+    this.plano.set(null);
+    void this.persistFotos(); // BT4
   }
 
   // ── enviar ──────────────────────────────────────────────────────────────────

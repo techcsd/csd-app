@@ -1,7 +1,7 @@
 <div class="screen cimp">
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">Importar cronograma</h1>
+    <h1 class="inv-sub-header__title">{{ 'Importar cronograma' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -9,24 +9,23 @@
       <!-- Éxito -->
       <div class="cimp__exito">
         <span class="cimp__exito-ico">✅</span>
-        <h2>Cronograma importado</h2>
-        <p>Se crearon <b>{{ d.creadas }}</b> actividad(es)@if (d.reemplazadas) { · se reemplazaron {{ d.reemplazadas }} anteriores }.</p>
-        <button type="button" class="btn-cta" (click)="verCronograma()">Ver cronograma</button>
+        <h2>{{ 'Cronograma importado' | t }}</h2>
+        <p>{{ 'Se crearon' | t }} <b>{{ d.creadas }}</b> {{ 'actividad(es)' | t }}@if (d.reemplazadas) { · {{ 'se reemplazaron' | t }} {{ d.reemplazadas }} {{ 'anteriores' | t }} }.</p>
+        <button type="button" class="btn-cta" (click)="verCronograma()">{{ 'Ver cronograma' | t }}</button>
       </div>
     } @else {
       <p class="cimp__intro">
-        Sube el Excel (.xlsx) del cronograma de la obra. Se leen las actividades con sus fechas,
-        responsable, volumetría y avances. Los archivos <b>.mpp</b> (MS Project) deben exportarse a Excel primero.
+        {{ 'Sube el Excel (.xlsx) del cronograma de la obra. Se leen las actividades con sus fechas, responsable, volumetría y avances. Los archivos' | t }} <b>.mpp</b> {{ '(MS Project) deben exportarse a Excel primero.' | t }}
       </p>
 
       <label class="cimp__file">
         <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onArchivo($event)" />
-        <span class="cimp__file-btn">📄 Elegir archivo Excel</span>
+        <span class="cimp__file-btn">📄 {{ 'Elegir archivo Excel' | t }}</span>
       </label>
       @if (archivoNombre()) { <p class="cimp__archivo">{{ archivoNombre() }}</p> }
 
       @if (parseando()) {
-        <p class="cimp__hint">Leyendo el archivo…</p>
+        <p class="cimp__hint">{{ 'Leyendo el archivo…' | t }}</p>
       }
 
       @if (preview(); as p) {
@@ -37,22 +36,22 @@
 
         @if (p.actividades.length) {
           <div class="cimp__resumen">
-            <div class="cimp__res-row"><span>Torre / etapa</span><b>{{ p.faseNombre }}</b></div>
-            @if (p.proyectoNombre) { <div class="cimp__res-row"><span>Proyecto (del archivo)</span><b>{{ p.proyectoNombre }}</b></div> }
-            <div class="cimp__res-row"><span>Actividades</span><b>{{ p.actividades.length }}</b></div>
-            @if (grupos().length) { <div class="cimp__res-row"><span>Secciones</span><b>{{ grupos().join(', ') }}</b></div> }
+            <div class="cimp__res-row"><span>{{ 'Torre / etapa' | t }}</span><b>{{ p.faseNombre }}</b></div>
+            @if (p.proyectoNombre) { <div class="cimp__res-row"><span>{{ 'Proyecto (del archivo)' | t }}</span><b>{{ p.proyectoNombre }}</b></div> }
+            <div class="cimp__res-row"><span>{{ 'Actividades' | t }}</span><b>{{ p.actividades.length }}</b></div>
+            @if (grupos().length) { <div class="cimp__res-row"><span>{{ 'Secciones' | t }}</span><b>{{ grupos().join(', ') }}</b></div> }
           </div>
 
           <label class="cimp__reemplazar">
             <input type="checkbox" [checked]="reemplazar()" (change)="reemplazar.set(!reemplazar())" />
-            Reemplazar el cronograma anterior de esta torre/etapa
+            {{ 'Reemplazar el cronograma anterior de esta torre/etapa' | t }}
           </label>
 
           <!-- Preview de las primeras actividades -->
           <div class="cimp__tabla-wrap">
             <table class="cimp__tabla">
               <thead>
-                <tr><th>#</th><th>Actividad</th><th>Resp.</th><th>Inicio</th><th>Días</th><th>Avance</th></tr>
+                <tr><th>#</th><th>{{ 'Actividad' | t }}</th><th>{{ 'Resp.' | t }}</th><th>{{ 'Inicio' | t }}</th><th>{{ 'Días' | t }}</th><th>{{ 'Avance' | t }}</th></tr>
               </thead>
               <tbody>
                 @for (a of p.actividades.slice(0, 30); track a.orden) {
@@ -68,12 +67,12 @@
               </tbody>
             </table>
             @if (p.actividades.length > 30) {
-              <p class="cimp__mas">… y {{ p.actividades.length - 30 }} más.</p>
+              <p class="cimp__mas">… {{ 'y {n} más.' | t: { n: p.actividades.length - 30 } }}</p>
             }
           </div>
 
           <button type="button" class="btn-cta cimp__importar" [disabled]="importando()" (click)="confirmar()">
-            {{ importando() ? 'Importando…' : 'Importar ' + p.actividades.length + ' actividades' }}
+            {{ importando() ? ('Importando…' | t) : ('Importar {n} actividades' | t: { n: p.actividades.length }) }}
           </button>
         }
       }

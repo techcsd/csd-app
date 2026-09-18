@@ -10,6 +10,8 @@ import { ChecklistDetalle, EchadaDetalle, MultaDetalle } from '../../../core/mod
 import { RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta } from '../../../core/models/combustible.model';
 import { nivelCombustibleLabel } from '../../../core/models/transporte.model';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * V2 (follow-up) — detalle de solo lectura de un registro del historial de "Mi
@@ -21,7 +23,7 @@ import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
   selector: 'app-mi-registro-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, Img],
+  imports: [DecimalPipe, Skeleton, EmptyState, Img, TranslatePipe],
   templateUrl: './mi-registro-detalle.html',
   styleUrl: './mi-registro-detalle.scss',
 })
@@ -30,6 +32,7 @@ export class MiRegistroDetallePage {
   private location = inject(Location);
   private flota = inject(FlotaReportesService);
   private audioNotas = inject(AudioNotasService);
+  private i18n = inject(I18nService);
 
   readonly tipo = this.route.snapshot.paramMap.get('tipo') ?? '';
   private readonly id = this.route.snapshot.paramMap.get('id') ?? '';
@@ -53,9 +56,9 @@ export class MiRegistroDetallePage {
   esMulta = computed(() => this.tipo === 'multa');
   icono = computed(() => (this.esChecklist() ? '📋' : this.esMulta() ? '🚦' : '⛽'));
   titulo = computed(() => {
-    if (this.esMulta()) return 'Multa';
-    if (this.esChecklist()) return this.checklist()?.tipo === 'inspeccion' ? 'Inspección de vehículo' : 'Uso de vehículo';
-    return 'Echada de combustible';
+    if (this.esMulta()) return this.i18n.t('Multa');
+    if (this.esChecklist()) return this.checklist()?.tipo === 'inspeccion' ? this.i18n.t('Inspección de vehículo') : this.i18n.t('Uso de vehículo');
+    return this.i18n.t('Echada de combustible');
   });
 
   constructor() {
@@ -99,17 +102,17 @@ export class MiRegistroDetallePage {
 
   /** W5 — etiqueta legible del estado de la multa. */
   estadoMultaLabel(e: string | null): string {
-    return e === 'pagada' ? '✓ Pagada' : '⏳ Pendiente de pago';
+    return e === 'pagada' ? '✓ ' + this.i18n.t('Pagada') : '⏳ ' + this.i18n.t('Pendiente de pago');
   }
 
   resultadoLabel(r: string | null): string {
-    return r === 'bloqueado' ? '⛔ Bloqueado' : r === 'con_hallazgos' ? '⚠ Con hallazgos' : '✓ Aprobado';
+    return r === 'bloqueado' ? '⛔ ' + this.i18n.t('Bloqueado') : r === 'con_hallazgos' ? '⚠ ' + this.i18n.t('Con hallazgos') : '✓ ' + this.i18n.t('Aprobado');
   }
   resultadoBadge(r: string | null): string {
     return r === 'bloqueado' ? 'error' : r === 'con_hallazgos' ? 'warn' : 'ok';
   }
   respLabel(r: string): string {
-    return r === 'ok' ? 'OK' : r === 'no' ? 'Falla' : 'N/A';
+    return r === 'ok' ? this.i18n.t('OK') : r === 'no' ? this.i18n.t('Falla') : this.i18n.t('N/A');
   }
 
   back(): void {

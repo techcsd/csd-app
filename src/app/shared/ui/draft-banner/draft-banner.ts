@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Aviso no intrusivo de borrador sin enviar: "Tienes un borrador de [fecha].
@@ -9,6 +10,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-draft-banner',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './draft-banner.html',
   styleUrl: './draft-banner.scss',
 })

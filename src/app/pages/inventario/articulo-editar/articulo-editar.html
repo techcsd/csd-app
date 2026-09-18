@@ -1,22 +1,22 @@
 <div class="screen arted">
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">Editar artículo</h1>
+    <h1 class="inv-sub-header__title">{{ 'Editar artículo' | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else if (!articulo()) {
-      <p class="arted__muted">No se encontró el artículo.</p>
+      <p class="arted__muted">{{ 'No se encontró el artículo.' | t }}</p>
     } @else {
       <!-- Galería de fotos (portada + agregar/quitar) -->
-      <label class="field-label">Fotos <span class="arted__opt-txt">(toca una para hacerla portada)</span></label>
+      <label class="field-label">{{ 'Fotos' | t }} <span class="arted__opt-txt">{{ '(toca una para hacerla portada)' | t }}</span></label>
       <div class="arted__fotos">
         @for (img of imagenes(); track img.id) {
           <div class="arted__foto" [class.arted__foto--portada]="img.portada" (click)="hacerPortada(img)">
             <img [src]="img.url" alt="" />
-            @if (img.portada) { <span class="arted__foto-tag">Portada</span> }
+            @if (img.portada) { <span class="arted__foto-tag">{{ 'Portada' | t }}</span> }
             <button type="button" class="arted__foto-x" (click)="$event.stopPropagation(); quitarFoto(img)" aria-label="Quitar">✕</button>
           </div>
         } @empty {
@@ -24,30 +24,30 @@
         }
       </div>
       <div class="arted__foto-acts">
-        <button type="button" class="btn-ghost" [disabled]="subiendoFoto()" (click)="fotoCamara()">📷 Cámara</button>
-        <button type="button" class="btn-ghost" [disabled]="subiendoFoto()" (click)="fotoGaleria()">🖼️ Galería</button>
+        <button type="button" class="btn-ghost" [disabled]="subiendoFoto()" (click)="fotoCamara()">📷 {{ 'Cámara' | t }}</button>
+        <button type="button" class="btn-ghost" [disabled]="subiendoFoto()" (click)="fotoGaleria()">🖼️ {{ 'Galería' | t }}</button>
       </div>
-      @if (subiendoFoto()) { <p class="arted__subiendo">Subiendo foto…</p> }
+      @if (subiendoFoto()) { <p class="arted__subiendo">{{ 'Subiendo foto…' | t }}</p> }
 
-      <label class="field-label arted__mt">Nombre <span class="arted__req">*</span></label>
-      <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" maxlength="120" placeholder="Nombre del artículo" />
+      <label class="field-label arted__mt">{{ 'Nombre' | t }} <span class="arted__req">*</span></label>
+      <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" maxlength="120" [placeholder]="'Nombre del artículo' | t" />
 
       <!-- AU13 — unidad como desplegable del catálogo del sistema (sgc.unidades), no texto libre. -->
-      <label class="field-label arted__mt">Unidad</label>
-      <app-collapsible-select label="Unidad" icon="📏" [options]="unidadOptions()" [selectedId]="unidad()" [searchable]="true" searchPlaceholder="Buscar unidad…" (picked)="onUnidad($event)" />
+      <label class="field-label arted__mt">{{ 'Unidad' | t }}</label>
+      <app-collapsible-select [label]="'Unidad' | t" icon="📏" [options]="unidadOptions()" [selectedId]="unidad()" [searchable]="true" [searchPlaceholder]="'Buscar unidad…' | t" (picked)="onUnidad($event)" />
 
       @if (categoriaOptions().length) {
-        <label class="field-label arted__mt">Categoría</label>
-        <app-collapsible-select label="Categoría" icon="🏷️" [options]="categoriaOptions()" [selectedId]="categoriaSelId()" [searchable]="true" searchPlaceholder="Buscar categoría…" (picked)="onCategoria($event)" />
+        <label class="field-label arted__mt">{{ 'Categoría' | t }}</label>
+        <app-collapsible-select [label]="'Categoría' | t" icon="🏷️" [options]="categoriaOptions()" [selectedId]="categoriaSelId()" [searchable]="true" [searchPlaceholder]="'Buscar categoría…' | t" (picked)="onCategoria($event)" />
       }
 
-      <label class="field-label arted__mt">Nota</label>
-      <textarea class="field arted__nota" [ngModel]="nota()" (ngModelChange)="nota.set($event)" maxlength="240" rows="3" placeholder="Notas del artículo (opcional)"></textarea>
+      <label class="field-label arted__mt">{{ 'Nota' | t }}</label>
+      <textarea class="field arted__nota" [ngModel]="nota()" (ngModelChange)="nota.set($event)" maxlength="240" rows="3" [placeholder]="'Notas del artículo (opcional)' | t"></textarea>
 
-      @if (!online) { <p class="arted__offline">Sin conexión: necesitas internet para guardar cambios del catálogo.</p> }
+      @if (!online) { <p class="arted__offline">{{ 'Sin conexión: necesitas internet para guardar cambios del catálogo.' | t }}</p> }
 
       <button type="button" class="btn-cta arted__save" [disabled]="!puedeGuardar() || guardando() || !online" (click)="guardar()">
-        {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+        {{ guardando() ? ('Guardando…' | t) : ('Guardar cambios' | t) }}
       </button>
     }
   </div>

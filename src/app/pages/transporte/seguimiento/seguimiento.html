@@ -2,7 +2,7 @@
   <header class="seg__header">
     <button type="button" class="seg__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="seg__icon">📍</span>
-    <h1 class="seg__title">Seguimiento</h1>
+    <h1 class="seg__title">{{ 'Seguimiento' | t }}</h1>
   </header>
 
   <!-- El mapa siempre se monta (ngAfterViewInit lo inicializa); se oculta si no autorizado -->
@@ -13,18 +13,18 @@
     @if (autorizado()) {
       <div class="seg__legend" [class.seg__legend--open]="leyendaAbierta()">
         <button type="button" class="seg__legend-toggle" (click)="toggleLeyenda()">
-          {{ leyendaAbierta() ? '✕' : 'ℹ️' }} Leyenda
+          {{ leyendaAbierta() ? '✕' : 'ℹ️' }} {{ 'Leyenda' | t }}
         </button>
         @if (leyendaAbierta()) {
           <ul class="seg__legend-list">
             @for (e of estados; track e.key) {
               <li class="seg__legend-item">
                 <span class="seg__legend-dot" [style.background]="e.tint"></span>
-                {{ e.label }}@if (e.key === 'en_ruta') { <span class="seg__legend-note">(automático)</span> }
+                {{ e.label | t }}@if (e.key === 'en_ruta') { <span class="seg__legend-note">{{ '(automático)' | t }}</span> }
               </li>
             }
             <li class="seg__legend-item seg__legend-item--sep">
-              <span class="seg__legend-ico">🗺️</span> Ruta activa · paradas entregadas/total
+              <span class="seg__legend-ico">🗺️</span> {{ 'Ruta activa · paradas entregadas/total' | t }}
             </li>
           </ul>
         }
@@ -36,20 +36,20 @@
     @if (!autorizado()) {
       <app-empty-state
         icon="🔒"
-        title="Solo para jefe de flota"
-        message="El seguimiento en vivo está disponible para jefe de flota, administración y tecnología."
+        [title]="'Solo para jefe de flota' | t"
+        [message]="'El seguimiento en vivo está disponible para jefe de flota, administración y tecnología.' | t"
       />
     } @else if (loading()) {
       <app-skeleton [rows]="4" />
     } @else if (!choferes().length) {
       <app-empty-state
         icon="📍"
-        title="Sin choferes"
-        message="Aún no hay choferes con estado o posición para mostrar."
+        [title]="'Sin choferes' | t"
+        [message]="'Aún no hay choferes con estado o posición para mostrar.' | t"
       />
     } @else {
-      <h2 class="seg__section">Choferes ({{ choferes().length }})</h2>
-      <p class="seg__hint">Toca un chofer para ver su recorrido en el mapa. Toca de nuevo para ocultarlo.</p>
+      <h2 class="seg__section">{{ 'Choferes' | t }} ({{ choferes().length }})</h2>
+      <p class="seg__hint">{{ 'Toca un chofer para ver su recorrido en el mapa. Toca de nuevo para ocultarlo.' | t }}</p>
       @for (c of choferes(); track c.usuario_id) {
         <button type="button" class="chofer-card" [class.chofer-card--sel]="selectedId() === c.usuario_id"
           [class.chofer-card--stale]="esStale(c.capturado_en)" (click)="seleccionar(c)">
@@ -62,11 +62,11 @@
               {{ c.nombre }}
             </span>
             <span class="chofer-card__estado">
-              {{ metaOf(c.estado).label }}@if (c.estado === 'otros' && c.otros_texto) { · {{ c.otros_texto }} }
+              {{ metaOf(c.estado).label | t }}@if (c.estado === 'otros' && c.otros_texto) { · {{ c.otros_texto }} }
             </span>
             @if (rutaDe(c.nombre); as r) {
               <span class="chofer-card__ruta">
-                🗺️ {{ r.destino || 'Ruta' }} · {{ r.paradas_entregadas }}/{{ r.paradas_total }} paradas
+                🗺️ {{ r.destino || ('Ruta' | t) }} · {{ r.paradas_entregadas }}/{{ r.paradas_total }} {{ 'paradas' | t }}
               </span>
               @if (ident(r); as vid) { <span class="chofer-card__ruta">🚚 {{ vid }}</span> }
             }

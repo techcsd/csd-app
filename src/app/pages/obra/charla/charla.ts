@@ -15,6 +15,8 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const MAX_FOTOS = 2;
 
@@ -23,7 +25,7 @@ const MAX_FOTOS = 2;
   selector: 'app-obra-charla',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, SignaturePad, Counter, WizardExit, BigConfirm, ConfirmDialog],
+  imports: [FormsModule, PhotoSlot, SignaturePad, Counter, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe],
   templateUrl: './charla.html',
   styleUrl: './charla.scss',
 })
@@ -37,6 +39,7 @@ export class CharlaPage implements OnDestroy {
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
@@ -156,7 +159,7 @@ export class CharlaPage implements OnDestroy {
       await this.autosave.discard(this.clave);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la charla.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la charla.'));
     } finally {
       this.submitting.set(false);
     }

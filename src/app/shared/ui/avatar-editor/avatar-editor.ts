@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PERFILES_COMPRESION } from '../../../core/utils/comprimir-imagen.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AW7 — editor de foto de perfil (usuario y grupo): recorte CIRCULAR con zoom y
@@ -25,7 +26,7 @@ import { PERFILES_COMPRESION } from '../../../core/utils/comprimir-imagen.util';
   selector: 'app-avatar-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   templateUrl: './avatar-editor.html',
   styleUrl: './avatar-editor.scss',
 })

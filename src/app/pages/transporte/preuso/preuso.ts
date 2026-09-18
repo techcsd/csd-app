@@ -22,6 +22,8 @@ import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-pick
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-picker';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
@@ -112,7 +114,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes, AyudantePicker],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes, AyudantePicker, TranslatePipe],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -129,6 +131,7 @@ export class PreusoPage extends GuardedWizard {
   private autosave = inject(AutosaveService);
   private borradorSvc = inject(BorradorService);
   private userCtx = inject(UserContextService);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
   borradorPrevio = signal<number | null>(null); // M1 — banner de recuperación
@@ -201,21 +204,21 @@ export class PreusoPage extends GuardedWizard {
   bloqueoPrevio = computed<{ titulo: string; motivo: string } | null>(() => {
     if (this.licenciaEstado() === 'vencida') {
       return {
-        titulo: 'Licencia vencida',
-        motivo: 'Tu licencia de conducir está vencida. No puedes hacer el pre-uso. Contacta a RRHH.',
+        titulo: this.i18n.t('Licencia vencida'),
+        motivo: this.i18n.t('Tu licencia de conducir está vencida. No puedes hacer el pre-uso. Contacta a RRHH.'),
       };
     }
     const v = this.vehiculo();
     if (v?.vencimiento_matricula && new Date(v.vencimiento_matricula + 'T00:00:00') < this.hoy()) {
       return {
-        titulo: 'Matrícula vencida',
-        motivo: `La matrícula del vehículo ${v.placa} está vencida (venció ${formatFecha(v.vencimiento_matricula)}). No puede salir.`,
+        titulo: this.i18n.t('Matrícula vencida'),
+        motivo: this.i18n.t('La matrícula del vehículo {placa} está vencida (venció {fecha}). No puede salir.', { placa: v.placa, fecha: formatFecha(v.vencimiento_matricula) }),
       };
     }
     if (v?.vencimiento_seguro && new Date(v.vencimiento_seguro + 'T00:00:00') < this.hoy()) {
       return {
-        titulo: 'Seguro vencido',
-        motivo: `El seguro del vehículo ${v!.placa} está vencido (venció ${formatFecha(v!.vencimiento_seguro)}). No puede salir.`,
+        titulo: this.i18n.t('Seguro vencido'),
+        motivo: this.i18n.t('El seguro del vehículo {placa} está vencido (venció {fecha}). No puede salir.', { placa: v!.placa, fecha: formatFecha(v!.vencimiento_seguro) }),
       };
     }
     return null;
@@ -357,7 +360,7 @@ export class PreusoPage extends GuardedWizard {
       if (!this.tieneDatos()) return;
       this.autosave.queue(this.claveBorrador(), snap, {
         tipo: 'checklist',
-        etiqueta: 'Pre-uso' + (this.placa() ? ' · ' + this.placa() : ''),
+        etiqueta: this.i18n.t('Pre-uso') + (this.placa() ? ' · ' + this.placa() : ''),
         ruta: `/transporte/preuso/${this.vehiculoId}`,
       });
     });
@@ -419,7 +422,7 @@ export class PreusoPage extends GuardedWizard {
       const step = d?.step ?? 1;
       this.step.set(step >= 1 && step <= this.total ? step : 1);
     } catch {
-      this.toast.error('No se pudo recuperar todo el borrador, pero puedes continuar.');
+      this.toast.error(this.i18n.t('No se pudo recuperar todo el borrador, pero puedes continuar.'));
     }
     this.borradorPrevio.set(null);
   }
@@ -571,29 +574,29 @@ export class PreusoPage extends GuardedWizard {
       case 1:
         if (!this.autorizadoParaVehiculo()) {
           this.toast.error(
-            `No estás autorizado para vehículos ${this.clase()}. Contacta a Flota.`,
+            this.i18n.t('No estás autorizado para vehículos {clase}. Contacta a Flota.', { clase: this.clase() }),
           );
           return false;
         }
         if (this.km() === null || this.km()! <= 0) {
-          this.toast.error(this.esHoras() ? 'Escribe las horas de uso de salida.' : 'Escribe el kilometraje de salida.');
+          this.toast.error(this.i18n.t(this.esHoras() ? 'Escribe las horas de uso de salida.' : 'Escribe el kilometraje de salida.'));
           return false;
         }
         if (this.kmInvalido()) {
           this.toast.error(
-            `No puede ser menor al último registrado (${this.vehiculo()?.kilometraje} ${this.unidadUso()}).`,
+            this.i18n.t('No puede ser menor al último registrado ({km} {unidad}).', { km: this.vehiculo()?.kilometraje ?? '', unidad: this.unidadUso() }),
           );
           return false;
         }
         if (!this.nivelCombustible()) {
-          this.toast.error('Elige el nivel de combustible.');
+          this.toast.error(this.i18n.t('Elige el nivel de combustible.'));
           return false;
         }
         return true;
       case 2: {
         // AE8 — el checklist va en una sola hoja: validar TODOS los puntos.
         if (!this.itemsAplicables().every((it) => this.draft(it.id).respuesta !== null)) {
-          this.toast.error('Responde todos los puntos.');
+          this.toast.error(this.i18n.t('Responde todos los puntos.'));
           return false;
         }
         // P6 — un hallazgo CRÍTICO (bloquea el vehículo) exige explicar qué pasó.
@@ -604,20 +607,20 @@ export class PreusoPage extends GuardedWizard {
             !this.draft(it.id).comentario.trim(),
         );
         if (falta) {
-          this.toast.error(`Explica qué pasó en el punto crítico: "${falta.etiqueta}".`);
+          this.toast.error(this.i18n.t('Explica qué pasó en el punto crítico: "{etiqueta}".', { etiqueta: falta.etiqueta }));
           return false;
         }
         return true;
       }
       case 3:
         if (!this.fotosCompletas()) {
-          this.toast.error('Faltan fotos. Toma las 7 fotos guiadas.');
+          this.toast.error(this.i18n.t('Faltan fotos. Toma las 7 fotos guiadas.'));
           return false;
         }
         return true;
       case 4:
         if (!this.firmaLista()) {
-          this.toast.error('Firma antes de continuar.');
+          this.toast.error(this.i18n.t('Firma antes de continuar.'));
           return false;
         }
         return true;
@@ -639,7 +642,7 @@ export class PreusoPage extends GuardedWizard {
     if (this.submitting()) return;
     const firmaBlob = this.firmaBlob();
     if (!firmaBlob) {
-      this.toast.error('Falta la firma.');
+      this.toast.error(this.i18n.t('Falta la firma.'));
       return;
     }
     this.submitting.set(true);
@@ -686,7 +689,7 @@ export class PreusoPage extends GuardedWizard {
       void this.autosave.discard(this.claveBorrador());
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }
@@ -706,13 +709,13 @@ export class PreusoPage extends GuardedWizard {
       const data = await this.buildReportData();
       if (modo === 'compartir') {
         const r = await this.report.compartir(data);
-        if (r.fallback) this.toast.error('Se descargó el PDF. Adjúntalo manualmente al enviarlo.');
+        if (r.fallback) this.toast.error(this.i18n.t('Se descargó el PDF. Adjúntalo manualmente al enviarlo.'));
       } else {
         await this.report.descargar(data);
-        this.toast.success('Reporte generado.');
+        this.toast.success(this.i18n.t('Reporte generado.'));
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo generar el reporte.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo generar el reporte.'));
     } finally {
       this.sharing.set(false);
     }

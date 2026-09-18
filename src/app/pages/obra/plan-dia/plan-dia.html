@@ -1,8 +1,8 @@
 <div class="screen plan">
   <header class="plan__header">
-    <button type="button" class="plan__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="plan__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="plan__icon">📋</span>
-    <h1 class="plan__title">Plan del día</h1>
+    <h1 class="plan__title">{{ 'Plan del día' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,53 +11,53 @@
     } @else if (error()) {
       <!-- BL2 — la consulta del plan falló y no hay nada cacheado: error+reintento
            (no afirmamos "sin tareas" / "falta la charla" cuando no lo sabemos) -->
-      <app-empty-state icon="⚠️" title="No pudimos cargar el plan del día"
-        message="Hubo un problema al consultar el plan. Revisa tu conexión y reintenta."
-        ctaLabel="Reintentar" (action)="cargar()" />
+      <app-empty-state icon="⚠️" [title]="'No pudimos cargar el plan del día' | t"
+        [message]="'Hubo un problema al consultar el plan. Revisa tu conexión y reintenta.' | t"
+        [ctaLabel]="'Reintentar' | t" (action)="cargar()" />
     } @else {
       <!-- Charla de seguridad -->
-      <h2 class="plan__section">Charla de seguridad</h2>
+      <h2 class="plan__section">{{ 'Charla de seguridad' | t }}</h2>
       @if (plan().charla; as ch) {
         <div class="plan__charla plan__charla--ok">
           <div class="plan__charla-row">
             <span class="plan__charla-ico">✅</span>
-            <span class="plan__charla-tema">{{ ch.tema || 'Charla registrada' }}</span>
+            <span class="plan__charla-tema">{{ ch.tema || ('Charla registrada' | t) }}</span>
           </div>
           <div class="plan__charla-meta">
             @if (ch.duracion_min) { <span>⏱️ {{ fmtDur(ch.duracion_min) }}</span> }
-            @if (ch.asistentes) { <span>👥 {{ ch.asistentes }} asistentes</span> }
+            @if (ch.asistentes) { <span>👥 {{ ch.asistentes }} {{ 'asistentes' | t }}</span> }
             @if (ch.fotos?.length) { <span>📷 {{ ch.fotos!.length }}</span> }
           </div>
         </div>
       } @else {
         <div class="plan__charla plan__charla--pend">
-          <p>Aún no se registró la charla de seguridad de hoy.</p>
+          <p>{{ 'Aún no se registró la charla de seguridad de hoy.' | t }}</p>
           @if (puedeOperar()) {
-            <button type="button" class="btn-cta" (click)="registrarCharla()">🦺 Registrar charla</button>
+            <button type="button" class="btn-cta" (click)="registrarCharla()">🦺 {{ 'Registrar charla' | t }}</button>
           }
         </div>
       }
 
       <!-- Tareas del día -->
       <div class="plan__section-row">
-        <h2 class="plan__section">Tareas de hoy ({{ plan().tareas.length }})</h2>
+        <h2 class="plan__section">{{ 'Tareas de hoy' | t }} ({{ plan().tareas.length }})</h2>
         @if (puedeOperar() && !asignando()) {
-          <button type="button" class="plan__add" (click)="asignando.set(true)">➕ Asignar</button>
+          <button type="button" class="plan__add" (click)="asignando.set(true)">➕ {{ 'Asignar' | t }}</button>
         }
       </div>
 
       @if (asignando()) {
         <div class="plan__form">
-          <label class="field-label">¿Qué hay que hacer?</label>
+          <label class="field-label">{{ '¿Qué hay que hacer?' | t }}</label>
           <input class="field" type="text" [ngModel]="tTitulo()" (ngModelChange)="tTitulo.set($event)"
-            placeholder="Ej.: Vaciar losa nivel 3" />
+            [placeholder]="'Ej.: Vaciar losa nivel 3' | t" />
 
-          <label class="field-label plan__mt">Capataz / responsable (opcional)</label>
+          <label class="field-label plan__mt">{{ 'Capataz / responsable (opcional)' | t }}</label>
           @if (tCapataz(); as c) {
             <div class="plan__pick-sel"><span>🧑 {{ c.nombre }}</span><button type="button" (click)="tCapataz.set(null)">✕</button></div>
           } @else {
             <input class="field" type="text" [ngModel]="tCapatazBusqueda()" (ngModelChange)="tCapatazBusqueda.set($event); buscarCapataz()"
-              placeholder="Buscar por nombre…" />
+              [placeholder]="'Buscar por nombre…' | t" />
             @if (tCapatazRes().length) {
               <div class="plan__pick-list">
                 @for (u of tCapatazRes(); track u.id) {
@@ -67,26 +67,26 @@
             }
           }
 
-          <label class="field-label plan__mt">Brigada (opcional)</label>
-          <input class="field" type="text" [ngModel]="tBrigada()" (ngModelChange)="tBrigada.set($event)" placeholder="Ej.: Brigada A" />
+          <label class="field-label plan__mt">{{ 'Brigada (opcional)' | t }}</label>
+          <input class="field" type="text" [ngModel]="tBrigada()" (ngModelChange)="tBrigada.set($event)" [placeholder]="'Ej.: Brigada A' | t" />
 
           <button type="button" class="btn-cta plan__form-save" [disabled]="!tTitulo().trim() || guardandoTarea()" (click)="guardarTarea()">
-            {{ guardandoTarea() ? 'Asignando…' : 'Asignar tarea' }}
+            {{ guardandoTarea() ? ('Asignando…' | t) : ('Asignar tarea' | t) }}
           </button>
-          <button type="button" class="btn-ghost plan__form-cancel" (click)="cancelarAsignar()">Cancelar</button>
+          <button type="button" class="btn-ghost plan__form-cancel" (click)="cancelarAsignar()">{{ 'Cancelar' | t }}</button>
         </div>
       }
 
       @if (!plan().tareas.length) {
-        <app-empty-state icon="📋" title="Sin tareas asignadas"
-          message="No hay tareas asignadas a esta obra para hoy. Asígnalas con ➕ o desde el cronograma." />
+        <app-empty-state icon="📋" [title]="'Sin tareas asignadas' | t"
+          [message]="'No hay tareas asignadas a esta obra para hoy. Asígnalas con ➕ o desde el cronograma.' | t" />
       } @else {
         @for (t of plan().tareas; track t.id) {
           <div class="plan__tarea">
             <div class="plan__tarea-top">
               <span class="plan__tarea-titulo">{{ t.titulo }}</span>
               <span class="plan__tarea-estado" [style.background]="estadoMeta(t.estado).tint">
-                {{ estadoMeta(t.estado).label }}
+                {{ estadoMeta(t.estado).label | t }}
               </span>
             </div>
             @if (t.descripcion) { <p class="plan__tarea-desc">{{ t.descripcion }}</p> }
@@ -101,21 +101,21 @@
 
       <!-- Parte de mano de obra del día (horas-hombre) -->
       @if (puedeOperar()) {
-        <h2 class="plan__section plan__mt-lg">Mano de obra de hoy</h2>
+        <h2 class="plan__section plan__mt-lg">{{ 'Mano de obra de hoy' | t }}</h2>
         @if (!moAbierto()) {
-          <button type="button" class="btn-ghost plan__mo-open" (click)="moAbierto.set(true)">👷 Registrar parte del día</button>
+          <button type="button" class="btn-ghost plan__mo-open" (click)="moAbierto.set(true)">👷 {{ 'Registrar parte del día' | t }}</button>
         } @else {
           <div class="plan__form">
-            <label class="field-label">Trabajadores</label>
-            <app-counter label="Personas" icon="👥" [(value)]="moTrabajadores" [min]="0" [max]="500" />
-            <label class="field-label plan__mt">Horas por trabajador</label>
-            <app-counter label="Horas" icon="⏱️" [(value)]="moHoras" [min]="1" [max]="24" />
-            <label class="field-label plan__mt">Actividad (opcional)</label>
-            <input class="field" type="text" [ngModel]="moActividad()" (ngModelChange)="moActividad.set($event)" placeholder="Ej.: Encofrado" />
+            <label class="field-label">{{ 'Trabajadores' | t }}</label>
+            <app-counter [label]="'Personas' | t" icon="👥" [(value)]="moTrabajadores" [min]="0" [max]="500" />
+            <label class="field-label plan__mt">{{ 'Horas por trabajador' | t }}</label>
+            <app-counter [label]="'Horas' | t" icon="⏱️" [(value)]="moHoras" [min]="1" [max]="24" />
+            <label class="field-label plan__mt">{{ 'Actividad (opcional)' | t }}</label>
+            <input class="field" type="text" [ngModel]="moActividad()" (ngModelChange)="moActividad.set($event)" [placeholder]="'Ej.: Encofrado' | t" />
             <button type="button" class="btn-cta plan__form-save" [disabled]="moTrabajadores() <= 0 || guardandoMo()" (click)="guardarManoObra()">
-              {{ guardandoMo() ? 'Guardando…' : 'Guardar parte (' + (moTrabajadores() * moHoras()) + ' h-h)' }}
+              {{ guardandoMo() ? ('Guardando…' | t) : ('Guardar parte ({n} h-h)' | t:{ n: moTrabajadores() * moHoras() }) }}
             </button>
-            <button type="button" class="btn-ghost plan__form-cancel" (click)="moAbierto.set(false)">Cancelar</button>
+            <button type="button" class="btn-ghost plan__form-cancel" (click)="moAbierto.set(false)">{{ 'Cancelar' | t }}</button>
           </div>
         }
       }

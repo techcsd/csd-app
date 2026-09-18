@@ -3,18 +3,18 @@
     <div class="screen__body">
       <div class="cruta__ok">
         <span class="cruta__ok-check">✓</span>
-        <h1 class="cruta__ok-title">Ruta creada</h1>
+        <h1 class="cruta__ok-title">{{ 'Ruta creada' | t }}</h1>
         <p class="cruta__ok-sub">{{ origen() }} → {{ destinoModo() === 'lugar' ? (selectedLugar()?.nombre ?? '') : destinoMapaTexto() }}</p>
         @if (duracionMin() != null) {
-          <p class="cruta__ok-eta">🕒 {{ fmtDur(duracionMin()) }} aprox.</p>
+          <p class="cruta__ok-eta">🕒 {{ fmtDur(duracionMin()) }} {{ 'aprox.' | t }}</p>
         }
       </div>
       @if (!online) {
-        <p class="cruta__note">Sin señal. Se creará al reconectar.</p>
+        <p class="cruta__note">{{ 'Sin señal. Se creará al reconectar.' | t }}</p>
       }
     </div>
     <footer class="cruta__nav">
-      <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+      <button type="button" class="btn-cta" (click)="finish()">{{ 'Listo' | t }}</button>
     </footer>
   </div>
 } @else {
@@ -22,7 +22,7 @@
     <header class="cruta__header">
       <button type="button" class="cruta__hback" (click)="back()" aria-label="Atrás">←</button>
       <span class="cruta__hicon">🧭</span>
-      <h1 class="cruta__htitle">Crear ruta</h1>
+      <h1 class="cruta__htitle">{{ 'Crear ruta' | t }}</h1>
     </header>
     <app-step-bar [current]="step()" [total]="total" />
 
@@ -33,42 +33,42 @@
       <!-- AV11 — la ruta se creó/quedó pendiente por el checklist de uso: al continuar
            se REANUDA la MISMA ruta (no se crea otra). -->
       @if (holdChecklist() && draftFecha() === null) {
-        <div class="crear-ruta__hold">📝 Documentación pendiente — termina el checklist de uso y toca <strong>Reanudar ruta</strong>. No se creará una ruta nueva.</div>
+        <div class="crear-ruta__hold">📝 {{ 'Documentación pendiente — termina el checklist de uso y toca' | t }} <strong>{{ 'Reanudar ruta' | t }}</strong>{{ '. No se creará una ruta nueva.' | t }}</div>
       }
       @if (loading()) {
         <app-skeleton [rows]="4" />
       } @else {
         <!-- Paso 1 — Vehículo (+ conductor si es jefe de flota) -->
         @if (step() === 1) {
-          <h1 class="screen__title">¿Qué vehículo?</h1>
+          <h1 class="screen__title">{{ '¿Qué vehículo?' | t }}</h1>
           @if (!vehiculoId()) {
-            <app-vehiculo-picker subtitulo="Selecciona el vehículo para la ruta." (elegido)="onVehiculoElegido($event)" />
+            <app-vehiculo-picker [subtitulo]="'Selecciona el vehículo para la ruta.' | t" (elegido)="onVehiculoElegido($event)" />
           } @else {
             <div class="cruta__veh">
               <span class="cruta__veh-label">🚙 <strong>{{ vehiculoLabel() }}</strong></span>
-              <button type="button" class="cruta__veh-change" (click)="cambiarVehiculo()">Cambiar</button>
+              <button type="button" class="cruta__veh-change" (click)="cambiarVehiculo()">{{ 'Cambiar' | t }}</button>
             </div>
           }
           @if (esElevado) {
-            <label class="field-label cruta__paradas-lbl">¿A quién se la asignas?</label>
-            <p class="field-hint">El conductor recibirá un aviso con la ruta.</p>
+            <label class="field-label cruta__paradas-lbl">{{ '¿A quién se la asignas?' | t }}</label>
+            <p class="field-hint">{{ 'El conductor recibirá un aviso con la ruta.' | t }}</p>
             @if (conductoresFallo()) {
               <!-- BL2 — el roster falló (RLS/red): NO mostrar el selector con "No hay
                    opciones" (afirma que no hay conductores). Mostrar el fallo real. -->
               <div class="cruta__load-error">
-                <span>⚠️ No pudimos cargar los conductores. Revisa tu conexión.</span>
-                <button type="button" class="btn-outline" (click)="reintentarConductores()">Reintentar</button>
+                <span>⚠️ {{ 'No pudimos cargar los conductores. Revisa tu conexión.' | t }}</span>
+                <button type="button" class="btn-outline" (click)="reintentarConductores()">{{ 'Reintentar' | t }}</button>
               </div>
             } @else {
               <!-- AK6 — dropdown cerrado por defecto (antes lista abierta). -->
               <app-collapsible-select
-                label="Conductor asignado"
+                [label]="'Conductor asignado' | t"
                 icon="🪪"
-                placeholder="Seleccionar conductor"
+                [placeholder]="'Seleccionar conductor' | t"
                 [options]="conductorOpts()"
                 [selectedId]="conductorId()"
                 [searchable]="true"
-                searchPlaceholder="Buscar conductor…"
+                [searchPlaceholder]="'Buscar conductor…' | t"
                 (picked)="conductorId.set($event)"
               />
             }
@@ -77,47 +77,47 @@
 
         <!-- Paso 2 — Origen + destino + paradas -->
         @if (step() === 2) {
-          <h1 class="screen__title">¿Desde dónde sale?</h1>
-          <label class="field-label" for="origen">Origen</label>
-          <input id="origen" class="field" type="text" [ngModel]="origen()" (ngModelChange)="onOrigenInput($event)" placeholder="¿Desde dónde sales?" />
-          <button type="button" class="btn-ghost cruta__gps" (click)="usarMiUbicacion()">📍 Usar mi ubicación actual</button>
-          <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">🏗️ {{ origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén' }}</button>
-          <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">🗺️ {{ origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa' }}</button>
+          <h1 class="screen__title">{{ '¿Desde dónde sale?' | t }}</h1>
+          <label class="field-label" for="origen">{{ 'Origen' | t }}</label>
+          <input id="origen" class="field" type="text" [ngModel]="origen()" (ngModelChange)="onOrigenInput($event)" [placeholder]="'¿Desde dónde sales?' | t" />
+          <button type="button" class="btn-ghost cruta__gps" (click)="usarMiUbicacion()">📍 {{ 'Usar mi ubicación actual' | t }}</button>
+          <button type="button" class="btn-ghost cruta__gps" (click)="origenLugar.set(!origenLugar())">🏗️ {{ (origenLugar() ? 'Ocultar obras/almacenes' : 'Elegir una obra o almacén') | t }}</button>
+          <button type="button" class="btn-ghost cruta__gps" (click)="origenMapa.set(!origenMapa())">🗺️ {{ (origenMapa() ? 'Ocultar mapa' : 'Marcar origen en el mapa') | t }}</button>
           @if (origenLugar()) {
-            <app-collapsible-select label="Obra de origen" icon="🏗️" [options]="lugarOpts()" [selectedId]="origenLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onOrigenLugar($event)" />
+            <app-collapsible-select [label]="'Obra de origen' | t" icon="🏗️" [options]="lugarOpts()" [selectedId]="origenLugarId()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="onOrigenLugar($event)" />
             @if (selectedOrigenLugar() && selectedOrigenLugar()!.latitud == null) {
-              <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
+              <p class="cruta__gps-warn">⚠ {{ 'Este lugar no tiene coordenadas guardadas todavía.' | t }}</p>
             }
           }
-          @if (usandoGps()) { <p class="cruta__gps-ok">✓ Origen fijado: {{ origen() }}</p> }
+          @if (usandoGps()) { <p class="cruta__gps-ok">✓ {{ 'Origen fijado:' | t }} {{ origen() }}</p> }
           @if (origenMapa()) { <app-location-picker (ubicacionChange)="onOrigenUbicacion($event)" /> }
 
-          <h1 class="screen__title cruta__paradas-lbl">¿A dónde va?</h1>
+          <h1 class="screen__title cruta__paradas-lbl">{{ '¿A dónde va?' | t }}</h1>
           <div class="cruta__modo">
-            <app-option-button icon="🏗️" label="Obra o almacén" [selected]="destinoModo() === 'lugar'" (pressed)="destinoModo.set('lugar')" />
-            <app-option-button icon="🗺️" label="En el mapa" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
+            <app-option-button icon="🏗️" [label]="'Obra o almacén' | t" [selected]="destinoModo() === 'lugar'" (pressed)="destinoModo.set('lugar')" />
+            <app-option-button icon="🗺️" [label]="'En el mapa' | t" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
           </div>
           @if (destinoModo() === 'lugar') {
-            <app-collapsible-select label="Obra de destino" icon="🏗️" [options]="lugarOpts()" [selectedId]="destinoLugarId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="onDestinoLugar($event)" />
+            <app-collapsible-select [label]="'Obra de destino' | t" icon="🏗️" [options]="lugarOpts()" [selectedId]="destinoLugarId()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="onDestinoLugar($event)" />
             @if (selectedLugar() && selectedLugar()!.latitud == null) {
-              <p class="cruta__gps-warn">⚠ Este lugar no tiene coordenadas guardadas todavía.</p>
+              <p class="cruta__gps-warn">⚠ {{ 'Este lugar no tiene coordenadas guardadas todavía.' | t }}</p>
             }
           } @else {
             <app-location-picker (ubicacionChange)="onDestinoUbicacion($event)" />
-            @if (destinoMapaTexto()) { <p class="cruta__gps-ok">✓ Destino: {{ destinoMapaTexto() }}</p> }
+            @if (destinoMapaTexto()) { <p class="cruta__gps-ok">✓ {{ 'Destino:' | t }} {{ destinoMapaTexto() }}</p> }
           }
           @if (calculandoRuta()) {
-            <p class="cruta__eta">🕒 Calculando tiempo estimado…</p>
+            <p class="cruta__eta">🕒 {{ 'Calculando tiempo estimado…' | t }}</p>
           } @else if (duracionMin() != null) {
-            <p class="cruta__eta">🕒 Tiempo estimado: <strong>{{ fmtDur(duracionMin()) }}</strong></p>
+            <p class="cruta__eta">🕒 {{ 'Tiempo estimado:' | t }} <strong>{{ fmtDur(duracionMin()) }}</strong></p>
           }
 
           <!-- AC13 — paradas intermedias (estilo Uber): entre el origen y el destino -->
-          <label class="field-label cruta__paradas-lbl">Paradas intermedias (opcional)</label>
+          <label class="field-label cruta__paradas-lbl">{{ 'Paradas intermedias (opcional)' | t }}</label>
           @for (p of paradas(); track $index) {
             <div class="cruta__parada">
               <div class="cruta__parada-head">
-                <span class="cruta__parada-n">Parada {{ $index + 1 }}</span>
+                <span class="cruta__parada-n">{{ 'Parada' | t }} {{ $index + 1 }}</span>
                 <div class="cruta__parada-btns">
                   <button type="button" class="cruta__parada-btn" [disabled]="$index === 0" (click)="moverParada($index, -1)" aria-label="Subir">↑</button>
                   <button type="button" class="cruta__parada-btn" [disabled]="$index === paradas().length - 1" (click)="moverParada($index, 1)" aria-label="Bajar">↓</button>
@@ -126,17 +126,17 @@
               </div>
               <!-- AE — la parada se fija por obra/almacén o marcándola en el mapa -->
               <div class="cruta__parada-modo">
-                <button type="button" class="cruta__modo-btn" [class.cruta__modo-btn--on]="p.modo === 'lugar'" (click)="setParadaModo($index, 'lugar')">🏗️ Obra/Almacén</button>
-                <button type="button" class="cruta__modo-btn" [class.cruta__modo-btn--on]="p.modo === 'mapa'" (click)="setParadaModo($index, 'mapa')">📍 En el mapa</button>
+                <button type="button" class="cruta__modo-btn" [class.cruta__modo-btn--on]="p.modo === 'lugar'" (click)="setParadaModo($index, 'lugar')">🏗️ {{ 'Obra/Almacén' | t }}</button>
+                <button type="button" class="cruta__modo-btn" [class.cruta__modo-btn--on]="p.modo === 'mapa'" (click)="setParadaModo($index, 'mapa')">📍 {{ 'En el mapa' | t }}</button>
               </div>
               @if (p.modo === 'lugar') {
                 <app-collapsible-select
-                  label="Obra o almacén"
+                  [label]="'Obra o almacén' | t"
                   icon="🏗️"
                   [options]="lugarOpts()"
                   [selectedId]="p.lugarId || ''"
                   [searchable]="true"
-                  searchPlaceholder="Buscar obra o almacén…"
+                  [searchPlaceholder]="'Buscar obra o almacén…' | t"
                   (picked)="setParadaLugar($index, $event)"
                 />
               } @else {
@@ -149,46 +149,46 @@
                   <p class="cruta__parada-dir">📍 {{ p.ubicacion }}</p>
                 }
               }
-              <input class="field cruta__parada-nota" type="text" [ngModel]="p.notas" (ngModelChange)="setParadaNota($index, $event)" placeholder="Nota de la parada (opcional)" />
+              <input class="field cruta__parada-nota" type="text" [ngModel]="p.notas" (ngModelChange)="setParadaNota($index, $event)" [placeholder]="'Nota de la parada (opcional)' | t" />
             </div>
           }
-          <button type="button" class="btn-ghost cruta__add-parada" (click)="agregarParada()">➕ Agregar parada</button>
+          <button type="button" class="btn-ghost cruta__add-parada" (click)="agregarParada()">➕ {{ 'Agregar parada' | t }}</button>
           @if (tipoRuta() === 'material') {
             <!-- AE5 — el conduce (carga) se adjunta a cada parada DESPUÉS de crear la
                  ruta, desde "Conduces y rutas" (ahí la parada ya existe y se traza). -->
             <p class="field-hint cruta__paradas-hint">
-              📦 Tras crear la ruta podrás adjuntar un conduce a cada parada desde
-              <b>Conduces y rutas</b>, para indicar qué material va a cada punto.
+              📦 {{ 'Tras crear la ruta podrás adjuntar un conduce a cada parada desde' | t }}
+              <b>{{ 'Conduces y rutas' | t }}</b>{{ ', para indicar qué material va a cada punto.' | t }}
             </p>
           }
         }
 
         <!-- Paso 3 — Carga + detalles -->
         @if (step() === 3) {
-          <h1 class="screen__title">Carga y detalles</h1>
+          <h1 class="screen__title">{{ 'Carga y detalles' | t }}</h1>
 
           <!-- AD6 — tipo de ruta (el chofer que se crea su ruta) -->
           @if (!esElevado) {
-            <label class="field-label">Tipo de ruta</label>
+            <label class="field-label">{{ 'Tipo de ruta' | t }}</label>
             <div class="cruta__tipos">
               @for (t of tiposRuta; track t.valor) {
                 <app-option-button
                   [icon]="t.icon"
-                  [label]="t.label"
+                  [label]="t.label | t"
                   [selected]="tipoRuta() === t.valor"
                   (pressed)="tipoRuta.set(t.valor)"
                 />
               }
             </div>
             <p class="cruta__tipo-hint">
-              {{ tipoRuta() === 'material' ? 'Llevas carga/mercancía.' : tipoRuta() === 'personal' ? 'Repartes personal entre obras (no exige carga).' : 'Te mueves sin carga (traslado vacío).' }}
+              {{ (tipoRuta() === 'material' ? 'Llevas carga/mercancía.' : tipoRuta() === 'personal' ? 'Repartes personal entre obras (no exige carga).' : 'Te mueves sin carga (traslado vacío).') | t }}
             </p>
           }
 
-          <label class="field-label" for="km">Kilómetros estimados (opcional)</label>
+          <label class="field-label" for="km">{{ 'Kilómetros estimados (opcional)' | t }}</label>
           <input id="km" class="field" type="number" inputmode="numeric" min="0" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="0" />
-          <label class="field-label" for="notas">Notas (opcional)</label>
-          <textarea id="notas" class="field cruta__notas" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Algo que recordar de la ruta…"></textarea>
+          <label class="field-label" for="notas">{{ 'Notas (opcional)' | t }}</label>
+          <textarea id="notas" class="field cruta__notas" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Algo que recordar de la ruta…' | t"></textarea>
           <!-- Z23 — notas de voz (opcional) -->
           <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
 
@@ -198,13 +198,13 @@
           <!-- AI5 — foto de la ruta OPCIONAL y genérica (la evidencia con peso vive en
                el conduce). AF24.6 — el jefe de flota puede adjuntar un documento (factura). -->
           <label class="field-label">
-            Foto (opcional)
+            {{ 'Foto (opcional)' | t }}
             @if (cargaObligatoria()) { <span class="cruta__req">*</span> }
           </label>
           <div class="cruta__fotos">
-            <app-photo-slot label="Foto" hint="📷" [gallery]="false" [foto]="fotoCarga()" (captured)="capFotoCarga($event)" (cleared)="clrFotoCarga()" />
+            <app-photo-slot [label]="'Foto' | t" hint="📷" [gallery]="false" [foto]="fotoCarga()" (captured)="capFotoCarga($event)" (cleared)="clrFotoCarga()" />
             <app-photo-slot
-              [label]="esElevado ? 'Documento (factura)' : 'Documento'"
+              [label]="(esElevado ? 'Documento (factura)' : 'Documento') | t"
               hint="📄"
               [gallery]="esElevado"
               [foto]="fotoDocumento()"
@@ -216,39 +216,39 @@
 
         <!-- Paso 4 — Resumen -->
         @if (step() === 4) {
-          <h1 class="screen__title">Revisa y crea</h1>
+          <h1 class="screen__title">{{ 'Revisa y crea' | t }}</h1>
           <ul class="resumen">
-            <li><span>Vehículo</span><b>{{ vehiculoLabel() }}</b></li>
+            <li><span>{{ 'Vehículo' | t }}</span><b>{{ vehiculoLabel() }}</b></li>
             @if (!esElevado) {
-              <li><span>Tipo</span><b>{{ tipoRuta() === 'material' ? '📦 Material' : tipoRuta() === 'personal' ? '👷 Personal' : '🚚 Traslado' }}</b></li>
+              <li><span>{{ 'Tipo' | t }}</span><b>{{ (tipoRuta() === 'material' ? '📦' : tipoRuta() === 'personal' ? '👷' : '🚚') }} {{ (tipoRuta() === 'material' ? 'Material' : tipoRuta() === 'personal' ? 'Personal' : 'Traslado') | t }}</b></li>
             }
-            <li><span>Conductor</span><b>{{ esElevado ? conductorNombre() : 'Yo mismo' }}</b></li>
-            <li><span>Origen</span><b>{{ origen() }}</b></li>
-            @if (paradas().length) { <li><span>Paradas</span><b>{{ paradas().length }}</b></li> }
-            <li><span>Destino</span><b>{{ destinoResumen() }}</b></li>
-            @if (km() != null) { <li><span>Km estimados</span><b>{{ km() }}</b></li> }
-            @if (duracionMin() != null) { <li><span>Tiempo</span><b>{{ fmtDur(duracionMin()) }}</b></li> }
-            @if (fotosEvidencia().length) { <li><span>Fotos</span><b>{{ fotosEvidencia().length }} ✓</b></li> }
+            <li><span>{{ 'Conductor' | t }}</span><b>{{ esElevado ? conductorNombre() : ('Yo mismo' | t) }}</b></li>
+            <li><span>{{ 'Origen' | t }}</span><b>{{ origen() }}</b></li>
+            @if (paradas().length) { <li><span>{{ 'Paradas' | t }}</span><b>{{ paradas().length }}</b></li> }
+            <li><span>{{ 'Destino' | t }}</span><b>{{ destinoResumen() }}</b></li>
+            @if (km() != null) { <li><span>{{ 'Km estimados' | t }}</span><b>{{ km() }}</b></li> }
+            @if (duracionMin() != null) { <li><span>{{ 'Tiempo' | t }}</span><b>{{ fmtDur(duracionMin()) }}</b></li> }
+            @if (fotosEvidencia().length) { <li><span>{{ 'Fotos' | t }}</span><b>{{ fotosEvidencia().length }} ✓</b></li> }
           </ul>
         }
       }
     </div>
 
     <app-wizard-footer
-      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : (holdChecklist() ? 'Reanudar ruta' : 'Crear ruta'))"
-      [primaryDisabled]="step() >= total && submitting()"
+      [backLabel]="backLabel()"
+      [primaryLabel]="primaryLabel()"
+      [primaryDisabled]="primaryDisabled()"
       (back)="prev()"
-      (primary)="step() < total ? next() : guardar()"
+      (primary)="esUltimoPaso() ? guardar() : next()"
     />
 
     <!-- U4 — descartar cambios sin guardar -->
     <app-confirm-dialog
       [open]="confirmSalir()"
-      title="¿Descartar la ruta?"
-      message="Perderás lo que llevas escrito de esta ruta."
-      confirmLabel="Sí, descartar"
-      cancelLabel="Seguir aquí"
+      [title]="'¿Descartar la ruta?' | t"
+      [message]="'Perderás lo que llevas escrito de esta ruta.' | t"
+      [confirmLabel]="'Sí, descartar' | t"
+      [cancelLabel]="'Seguir aquí' | t"
       tone="danger"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"

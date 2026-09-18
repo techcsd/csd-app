@@ -3,6 +3,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
 import { ErrorReportService } from '../../../core/services/error-report.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Voice-note recorder — alternative to typing (UI/UX principle #3, incidente
@@ -13,6 +15,7 @@ import { ErrorReportService } from '../../../core/services/error-report.service'
   selector: 'app-voice-recorder',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './voice-recorder.html',
   styleUrl: './voice-recorder.scss',
 })
@@ -21,6 +24,7 @@ export class VoiceRecorder implements OnDestroy {
   private permissions = inject(PermissionsService);
   private gate = inject(PermisoGateService);
   private errors = inject(ErrorReportService);
+  private i18n = inject(I18nService);
 
   /**
    * AX2 — modo de UI:
@@ -213,21 +217,21 @@ export class VoiceRecorder implements OnDestroy {
       native: this.permissions.isNative,
     });
     if (name === 'NotFoundError') {
-      this.toast.error('No hay micrófono disponible en el dispositivo. Puedes escribir la nota.');
+      this.toast.error(this.i18n.t('No hay micrófono disponible en el dispositivo. Puedes escribir la nota.'));
       return;
     }
     if (name === 'NotAllowedError' || name === 'SecurityError') {
       if (this.permissions.isNative) {
-        this.toast.withAction('El micrófono está bloqueado. Actívalo para grabar la nota.', {
-          label: 'Abrir ajustes',
+        this.toast.withAction(this.i18n.t('El micrófono está bloqueado. Actívalo para grabar la nota.'), {
+          label: this.i18n.t('Abrir ajustes'),
           run: () => void this.permissions.openAppSettings(),
         });
       } else {
-        this.toast.error('El micrófono está bloqueado. Actívalo en los ajustes del navegador.');
+        this.toast.error(this.i18n.t('El micrófono está bloqueado. Actívalo en los ajustes del navegador.'));
       }
       return;
     }
-    this.toast.error('No pudimos usar el micrófono. Puedes escribir la nota.');
+    this.toast.error(this.i18n.t('No pudimos usar el micrófono. Puedes escribir la nota.'));
   }
 
   /** Modo 'toggle' — resetea el grabador para la siguiente nota (emite null). */

@@ -1,7 +1,7 @@
 <div class="screen adm-sub">
   <header class="adm-sub__header">
-    <button type="button" class="adm-sub__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="adm-sub__title">Reportes</h1>
+    <button type="button" class="adm-sub__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="adm-sub__title">{{ 'Reportes' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -21,19 +21,19 @@
             <div class="rep-card__detail">
               <p class="rep-card__desc">{{ r.descripcion }}</p>
               @if (r.respuesta_admin) {
-                <p class="rep-card__resp">Respuesta: {{ r.respuesta_admin }}</p>
+                <p class="rep-card__resp">{{ 'Respuesta:' | t }} {{ r.respuesta_admin }}</p>
               }
               @if (r.estado !== 'resuelto') {
-                <textarea class="field rep-card__area" rows="2" [ngModel]="respuesta()" (ngModelChange)="respuesta.set($event)" placeholder="Respuesta (opcional)"></textarea>
+                <textarea class="field rep-card__area" rows="2" [ngModel]="respuesta()" (ngModelChange)="respuesta.set($event)" [placeholder]="'Respuesta (opcional)' | t"></textarea>
                 <button type="button" class="btn-cta" [disabled]="saving()" (click)="resolver(r)">
-                  {{ saving() ? 'Guardando…' : 'Marcar resuelto' }}
+                  {{ (saving() ? 'Guardando…' : 'Marcar resuelto') | t }}
                 </button>
               }
             </div>
           }
         </div>
       } @empty {
-        <p class="adm-sub__muted">No hay reportes.</p>
+        <p class="adm-sub__muted">{{ 'No hay reportes.' | t }}</p>
       }
     }
   </div>

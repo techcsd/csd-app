@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AS10 — visor de PDF INLINE (sin salir de la app, sin descargar).
@@ -38,6 +39,7 @@ async function cargarPdfjs(): Promise<typeof import('pdfjs-dist')> {
   selector: 'app-pdf-viewer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './pdf-viewer.html',
   styleUrl: './pdf-viewer.scss',
 })

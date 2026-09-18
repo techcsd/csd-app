@@ -8,6 +8,8 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { EchadaDetalle, PRODUCTO_CANONICO_LABEL, productoCanonico } from '../../../core/models/combustible.model';
 import { formatFechaHumana } from '../../../core/util/fecha';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AQ13/AQ6 — Detalle de una echada (registro de combustible). Se abre desde el
@@ -19,7 +21,7 @@ import { formatFechaHumana } from '../../../core/util/fecha';
   selector: 'app-echada-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState],
+  imports: [DecimalPipe, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './echada-detalle.html',
   styleUrl: './echada-detalle.scss',
 })
@@ -28,6 +30,7 @@ export class EchadaDetallePage {
   private route = inject(ActivatedRoute);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   fmtFechaHora = formatFechaHumana;
 
@@ -50,9 +53,9 @@ export class EchadaDetallePage {
     const e = this.echada();
     if (!e) return [] as { label: string; url: string }[];
     return [
-      { label: 'Recibo', url: e.foto_recibo_url },
-      { label: 'Tablero', url: e.foto_tablero_url },
-      { label: 'Bomba', url: e.foto_bomba_url },
+      { label: this.i18n.t('Recibo'), url: e.foto_recibo_url },
+      { label: this.i18n.t('Tablero'), url: e.foto_tablero_url },
+      { label: this.i18n.t('Bomba'), url: e.foto_bomba_url },
     ].filter((f): f is { label: string; url: string } => !!f.url);
   });
 
@@ -69,7 +72,7 @@ export class EchadaDetallePage {
     try {
       this.echada.set(await this.combustible.getEchadaDetalle(this.id));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar la echada.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar la echada.'));
     } finally {
       this.loading.set(false);
     }

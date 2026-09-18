@@ -189,6 +189,63 @@ export class OutboxContenidoService {
     return `/bitacora/parte?borrador=${encodeURIComponent(draftKey)}`;
   }
 
+  // ── BT7 — corregir el proveedor de un conduce externo atascado ────────────────
+
+  /** ¿Este pendiente es un conduce externo rechazado por el proveedor (dato)? */
+  puedeCorregirProveedor(op: OutboxOp): boolean {
+    const campo = (op as OutboxOp & { error_campo?: string }).error_campo;
+    return op.tipo_op === 'conduce_externo' && campo === 'transporta_proveedor_id';
+  }
+
+  /**
+   * BT7 — reabre el conduce externo atascado en su propio wizard (borrador clave
+   * `conduce_externo`) con TODO menos el proveedor (que ya no existe): materia,
+   * origen/destino y las fotos ya tomadas. El usuario elige otro proveedor y reenvía.
+   * La op vieja la retira el llamador (outbox-detalle) tras copiar todo → sin pérdida.
+   */
+  async corregirConduceExterno(op: OutboxOp): Promise<string> {
+    const p = op.payload ?? {};
+    const key = 'conduce_externo';
+    const aLugar = (pre: 'origen' | 'destino') => {
+      const nombre = p[pre] as string | null;
+      if (!nombre) return null;
+      const lat = (p[`${pre}_lat`] as number | null) ?? null;
+      const proyecto_id = (p[`${pre}_proyecto_id`] as string | null) ?? null;
+      const bodega_id = (p[`${pre}_bodega_id`] as string | null) ?? null;
+      const tipo = proyecto_id ? 'obra' : bodega_id ? 'almacen' : lat != null ? 'coord' : 'texto';
+      return {
+        tipo,
+        id: proyecto_id ?? bodega_id ?? null,
+        nombre,
+        lat,
+        lng: (p[`${pre}_lng`] as number | null) ?? null,
+        proyecto_id,
+        bodega_id,
+      };
+    };
+    const draft = {
+      prov: null, // fuerza re-elegir el proveedor (el anterior ya no existe)
+      materialDesc: String(p['material_descripcion'] ?? ''),
+      origen: aLugar('origen'),
+      destino: aLugar('destino'),
+    };
+    await this.borrador.save(key, draft, {
+      tipo: 'conduce_externo',
+      etiqueta: 'Conduce externo (corregir)',
+      ruta: '/transporte/conduce-externo',
+      rescate: true, // data real de obra: sobrevive al cierre de sesión
+    });
+    // Copia las fotos ya tomadas (placa/carga) al borrador → no re-tomarlas.
+    await this.borrador.clearFotos(key);
+    const fotos = await db.fotos_pendientes.where('op_id').equals(op.id).toArray();
+    for (const f of fotos) {
+      if (f.slot !== 'placa' && f.slot !== 'carga') continue;
+      const blob = f.data ? new Blob([f.data], { type: f.type || 'image/jpeg' }) : f.blob;
+      if (blob) await this.borrador.saveFoto(key, f.slot, blob);
+    }
+    return '/transporte/conduce-externo';
+  }
+
   // ── Exportar / compartir (texto + fotos) ─────────────────────────────────────
 
   /**

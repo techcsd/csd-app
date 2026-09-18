@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 export interface MoldeTramo {
   lado?: string;
@@ -44,7 +45,7 @@ interface Geom { pts: Pt[]; edges: GeomEdge[]; lens: number[]; }
 @Component({
   selector: 'app-molde-esquema',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './molde-esquema.html',
   styleUrl: './molde-esquema.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -2,7 +2,7 @@
   <header class="cform__header">
     <button type="button" class="cform__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="cform__icon">🪪</span>
-    <h1 class="cform__title">{{ esEdicion() ? 'Editar conductor' : 'Nuevo conductor' }}</h1>
+    <h1 class="cform__title">{{ esEdicion() ? ('Editar conductor' | t) : ('Nuevo conductor' | t) }}</h1>
   </header>
 
   <div class="screen__body">
@@ -17,60 +17,60 @@
         />
       }
 
-      <label class="field-label">Vincular a un usuario del sistema (opcional)</label>
-      <p class="cform__hint">Si lo eliges, se autollenan sus datos. Déjalo vacío si el conductor no tiene usuario.</p>
+      <label class="field-label">{{ 'Vincular a un usuario del sistema (opcional)' | t }}</label>
+      <p class="cform__hint">{{ 'Si lo eliges, se autollenan sus datos. Déjalo vacío si el conductor no tiene usuario.' | t }}</p>
       <!-- QA-38: dropdown colapsado (AH10) — la lista de usuarios es variable y larga -->
       <app-collapsible-select
-        label="Usuario"
+        [label]="'Usuario' | t"
         icon="👤"
         [options]="usuarioOpts()"
         [selectedId]="usuarioId()"
         [searchable]="true"
-        searchPlaceholder="Buscar usuario…"
+        [searchPlaceholder]="'Buscar usuario…' | t"
         (picked)="onUsuario($event)"
       />
       @if (usuarioId()) {
-        <button type="button" class="btn-ghost cform__unlink" (click)="quitarUsuario()">Quitar vínculo</button>
+        <button type="button" class="btn-ghost cform__unlink" (click)="quitarUsuario()">{{ 'Quitar vínculo' | t }}</button>
       }
 
-      <label class="field-label" for="nom">Nombre</label>
-      <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Nombre y apellido" />
+      <label class="field-label" for="nom">{{ 'Nombre' | t }}</label>
+      <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
 
-      <label class="field-label" for="ced">Cédula</label>
+      <label class="field-label" for="ced">{{ 'Cédula' | t }}</label>
       <input id="ced" class="field" type="text" inputmode="numeric" [ngModel]="cedula()" (ngModelChange)="cedula.set($event)" placeholder="000-0000000-0" />
 
-      <label class="field-label">Categoría de licencia</label>
+      <label class="field-label">{{ 'Categoría de licencia' | t }}</label>
       <app-select-list
-        label="Categoría"
+        [label]="'Categoría' | t"
         icon="🪪"
         [options]="categoriaOpts()"
         [selectedId]="licenciaTipo()"
         (picked)="licenciaTipo.set($event)"
       />
 
-      <label class="field-label" for="ln">Número de licencia (opcional)</label>
-      <input id="ln" class="field" type="text" [ngModel]="licenciaNumero()" (ngModelChange)="licenciaNumero.set($event)" placeholder="Número" />
+      <label class="field-label" for="ln">{{ 'Número de licencia (opcional)' | t }}</label>
+      <input id="ln" class="field" type="text" [ngModel]="licenciaNumero()" (ngModelChange)="licenciaNumero.set($event)" [placeholder]="'Número' | t" />
 
-      <label class="field-label" for="lv">Vencimiento de licencia (opcional)</label>
+      <label class="field-label" for="lv">{{ 'Vencimiento de licencia (opcional)' | t }}</label>
       <input id="lv" class="field" type="date" [ngModel]="licenciaVencimiento()" (ngModelChange)="licenciaVencimiento.set($event)" />
 
-      <label class="field-label">¿Qué vehículos maneja?</label>
+      <label class="field-label">{{ '¿Qué vehículos maneja?' | t }}</label>
       @for (t of tiposAutorizado; track t) {
-        <app-option-button [label]="t" [selected]="tipoAutorizado() === t" (pressed)="tipoAutorizado.set(t)" />
+        <app-option-button [label]="t | t" [selected]="tipoAutorizado() === t" (pressed)="tipoAutorizado.set(t)" />
       }
 
       <!-- C3 — nota + tags del conductor -->
-      <label class="field-label" for="nota">Nota / rol (opcional)</label>
+      <label class="field-label" for="nota">{{ 'Nota / rol (opcional)' | t }}</label>
       <textarea
         id="nota"
         class="field cform__nota"
         rows="2"
         [ngModel]="nota()"
         (ngModelChange)="nota.set($event)"
-        placeholder="Ej. Chofer de logística, maneja el telehandler…"
+        [placeholder]="'Ej. Chofer de logística, maneja el telehandler…' | t"
       ></textarea>
 
-      <label class="field-label">Etiquetas (opcional)</label>
+      <label class="field-label">{{ 'Etiquetas (opcional)' | t }}</label>
       @if (tags().length) {
         <div class="cform__chips">
           @for (t of tags(); track t) {
@@ -87,7 +87,7 @@
             class="cform__chip"
             [class.cform__chip--on]="tags().includes(s)"
             (click)="toggleSugerencia(s)"
-          >{{ s }}</button>
+          >{{ s | t }}</button>
         }
       </div>
       <div class="cform__tag-add">
@@ -97,26 +97,26 @@
           [ngModel]="tagInput()"
           (ngModelChange)="tagInput.set($event)"
           (keydown.enter)="$event.preventDefault(); agregarTag(tagInput())"
-          placeholder="Otra etiqueta…"
+          [placeholder]="'Otra etiqueta…' | t"
         />
-        <button type="button" class="btn-ghost cform__tag-btn" (click)="agregarTag(tagInput())">Agregar</button>
+        <button type="button" class="btn-ghost cform__tag-btn" (click)="agregarTag(tagInput())">{{ 'Agregar' | t }}</button>
       </div>
 
       <!-- C4/C5 — documentos opcionales (cédula + licencia frente/dorso) -->
-      <label class="field-label">Documentos (opcional)</label>
-      <p class="cform__hint">Puedes subir la cédula y la licencia ahora. La licencia lleva ambos lados.</p>
+      <label class="field-label">{{ 'Documentos (opcional)' | t }}</label>
+      <p class="cform__hint">{{ 'Puedes subir la cédula y la licencia ahora. La licencia lleva ambos lados.' | t }}</p>
       <app-doc-slot
-        label="Cédula"
+        [label]="'Cédula' | t"
         (captured)="docCedula.set($event)"
         (cleared)="docCedula.set(null)"
       />
       <app-doc-slot
-        label="Licencia (frente)"
+        [label]="'Licencia (frente)' | t"
         (captured)="docLicFrente.set($event)"
         (cleared)="docLicFrente.set(null)"
       />
       <app-doc-slot
-        label="Licencia (dorso)"
+        [label]="'Licencia (dorso)' | t"
         (captured)="docLicDorso.set($event)"
         (cleared)="docLicDorso.set(null)"
       />
@@ -125,8 +125,8 @@
       @if (esAdmin()) {
         <div class="cform__prueba">
           <app-toggle-switch
-            label="Dato de prueba"
-            hint="No cuenta como conductor real. Solo lo ven los administradores."
+            [label]="'Dato de prueba' | t"
+            [hint]="'No cuenta como conductor real. Solo lo ven los administradores.' | t"
             [checked]="esPrueba()"
             (checkedChange)="esPrueba.set($event)"
           />
@@ -135,15 +135,15 @@
 
       @if (esEdicion()) {
         <button type="button" class="btn-ghost cform__desactivar" [disabled]="submitting()" (click)="desactivar()">
-          Desactivar conductor
+          {{ 'Desactivar conductor' | t }}
         </button>
       }
     }
   </div>
 
   <app-wizard-footer
-    backLabel="Cancelar"
-    [primaryLabel]="submitting() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear conductor')"
+    [backLabel]="'Cancelar' | t"
+    [primaryLabel]="submitting() ? ('Guardando…' | t) : (esEdicion() ? ('Guardar cambios' | t) : ('Crear conductor' | t))"
     [primaryDisabled]="submitting()"
     (back)="back()"
     (primary)="guardar()"

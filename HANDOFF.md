@@ -12,7 +12,8 @@
 ### FASE 1 — BT2 idioma real (infra + gate + 3 pantallas)
 - `scripts/i18n-coverage.mjs` (cobertura POR PANTALLA) + `scripts/i18n-whitelist.json` + `src/app/core/i18n/alcance.json`. `verify-i18n` **falla** si una pantalla del alcance tiene literales sin `t()` o una clave sin `en`. `public/i18n/coverage.json` (**en 4 %**, honesto) lo lee la app.
 - **Gate honesto**: `en` se muestra **beta · cubre n%** hasta ≥95 %; `ht` **próximamente** (deshabilitado) hasta ≥90 % (`ht.json` vacío). Si un usuario tenía `ht` (local o servidor) → cae a `es` con aviso una-vez. `I18nService.estadoIdiomas()`; selector + onboarding actualizados.
-- **Cableadas al 100 %** (en alcance): **home/launcher, Transporte (hub + tiles), Perfil**. `en.json` 100→170 claves (111 usados, 111 cubiertos). **Resto de la app = rollout incremental** — el gate mantiene el inglés honesto mientras tanto (esto es el DEFAULT del diseño: ofrecer completo solo a ≥95 %).
+- **Cableadas al 100 %** (en alcance enforced): **home/launcher, Transporte (hub + tiles), Perfil**.
+- **AMPLIACIÓN "haz todo" (2ª tanda):** se cableó **toda la app** con 5 agentes en paralelo + 1 traductor (~280 archivos) + relleno manual de las 3 pantallas reservadas (combustible/generar-conduce/conduce-externo). **`en.json` 100 → 2 770 claves; verify-i18n confirma 2 614/2 614 claves `| t` cubiertas (0 sin traducir); cobertura por-pantalla 4 % → 75 %.** El 25 % restante son literales aún sin `| t` (p. ej. generar-conduce, que el último agente no alcanzó por el límite de gasto de la org) + falsos positivos del detector (unidades). Inglés se ofrece como **beta · cubre 75 %**; a ≥95 % deja de ser beta. Kreyòl **próximamente** (0 %).
 
 ### FASE 2 — BT3 foto de perfil
 `UserContextService.miAvatarUrl` usa `getPublicUrl` (bucket público `sgc-avatars`, verificado público + URL 200); `perfil` cae a la inicial con `(error)` (antes ícono roto = "logo genérico"); **`mi-detalle` ahora pinta la foto** (antes SIEMPRE la inicial "X" — omisión pura).
@@ -27,8 +28,13 @@ Perfil › Notificaciones (`avisos`): `NotificacionesService.misNotifSilenciable
 - `CAMBIOS_CURADOS` sugeridos: `arreglo` tomar fotos en conduce externo ya no cierra la app · `nuevo` "Tienes un borrador sin enviar" · `arreglo` inglés cubre el inicio/Transporte/Perfil (resto próximamente) · `arreglo` foto de perfil · `arreglo` transferir conduce externo con mensaje claro · `mejora` cero = pendiente al despachar · `mejora` alarmas semanales con interruptor para quien puede.
 - Flujo: OK → bump 4 sitios → `npm run apk` (registra Y1) → device-QA → `apk:publish` → publicar + **mínima = 2.26.0** (el crash de fotos justifica mínima).
 
-### ⏸ Owed (documentado)
-- **App-side** (mismo patrón, incremental): borrador+fotos en **combustible** (807-líneas, prioridad 1) y **retiro-nuevo**; foto-draft en cartilla/checklist/entrada/recibir (ya guardan el formulario). i18n del resto de pantallas (el gate lo cubre honesto). `appRestoredResult` Android. Re-pick de proveedor desde la tarjeta atascada. *(ver `docs/BORRADORES-FOTOS-AUDIT.md`)*
+### ✅ 2ª tanda "haz todo" (todo lo owed cerrado salvo 1)
+- **Borradores completos**: combustible (807-líneas, con modo corrección respetado), retiro-nuevo, + **foto-draft** en entrada/recibir/checklist/cartilla-nueva (ya guardaban el formulario; ahora también las fotos). *(ver `docs/BORRADORES-FOTOS-AUDIT.md`)*
+- **BT7 re-pick**: "Elegir otro proveedor" en la tarjeta de un conduce externo atascado (`outbox-detalle` → `OutboxContenidoService.corregirConduceExterno`): reabre el wizard con materia/origen/destino/fotos y descarta la op inválida.
+- **i18n de toda la app** (arriba).
+### ⏸ Owed (1 item, requiere dispositivo)
+- **`appRestoredResult` (Android)**: reinyectar la foto tomada si el SO recrea la Activity mientras la cámara está abierta. Es el único caso no cubierto por el borrador (que ya salva formulario+fotos y hace flush antes de abrir la cámara). NO se implementó a ciegas: necesita device-QA para hacerlo bien.
+- **generar-conduce i18n**: el último agente no lo alcanzó (límite de gasto de la org); sigue en español (gate honesto). Cablear en la próxima tanda.
 - **Contratos del padre**: todos VIVOS en prod (nada bloqueado).
 
 ### Verify on resume

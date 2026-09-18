@@ -3,6 +3,8 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { MaterialNoCatalogado } from '../../../core/models/inventario.model';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
@@ -20,7 +22,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-material-no-catalogado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, LiveRefreshDirective],
+  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
   templateUrl: './material-no-catalogado.html',
   styleUrl: './material-no-catalogado.scss',
 })
@@ -28,6 +30,7 @@ export class MaterialNoCatalogadoPage {
   private inventario = inject(InventarioService);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
 
@@ -60,11 +63,11 @@ export class MaterialNoCatalogadoPage {
     this.enviandoDeclina.set(true);
     try {
       await this.inventario.declinarItemLibre(item.id, motivo);
-      this.toast.success('Material declinado. Se avisó a quien lo reportó.');
+      this.toast.success(this.i18n.t('Material declinado. Se avisó a quien lo reportó.'));
       this.declinandoId.set(null);
       await this.load(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo declinar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo declinar.'));
     } finally {
       this.enviandoDeclina.set(false);
     }
@@ -76,7 +79,7 @@ export class MaterialNoCatalogadoPage {
     try {
       this.items.set(await this.inventario.materialNoCatalogadoPendientes(this.incluirResueltos()));
     } catch {
-      this.toast.error('No pudimos cargar los materiales no catalogados.');
+      this.toast.error(this.i18n.t('No pudimos cargar los materiales no catalogados.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);

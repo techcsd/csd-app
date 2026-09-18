@@ -248,13 +248,23 @@ export class ChecklistPage implements OnDestroy {
   }
 
   continuarBorrador(): void {
-    void this.borradorSvc.load<ChecklistDraft>(this.clave()).then((d) => {
+    void this.borradorSvc.load<ChecklistDraft>(this.clave()).then(async (d) => {
       if (d) {
         this.step.set(d.step ?? 1);
         this.km.set(d.km ?? null);
         this.combustible.set(d.combustible ?? null);
         this.tieneDanos.set(d.tieneDanos ?? null);
         this.danos.set((d.danos ?? []).map((x) => ({ zona: x.zona, descripcion: x.descripcion, photo: null })));
+      }
+      // BT4 — recupera también las fotos requeridas ya tomadas (antes se re-tomaban).
+      const fotos = await this.borradorSvc.loadFotos(this.clave());
+      if (fotos.length) {
+        const map: Record<string, CapturedPhoto> = {};
+        const slots = new Set<string>(this.fotosReq.map((f) => f.slot));
+        for (const f of fotos) {
+          if (slots.has(f.slot)) map[f.slot] = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+        }
+        if (Object.keys(map).length) this.fotos.set(map);
       }
       this.borradorPrevio.set(null);
     });
@@ -384,6 +394,7 @@ export class ChecklistPage implements OnDestroy {
   onFoto(slot: string, photo: CapturedPhoto): void {
     this.revoke(this.fotos()[slot]?.previewUrl); // AQ14 — libera la previa anterior
     this.fotos.update((f) => ({ ...f, [slot]: photo }));
+    void this.borradorSvc.saveFoto(this.clave(), slot, photo.blob); // BT4 — persiste la foto
   }
 
   onFotoCleared(slot: string): void {
@@ -393,6 +404,7 @@ export class ChecklistPage implements OnDestroy {
       delete next[slot];
       return next;
     });
+    void this.borradorSvc.removeFoto(this.clave(), slot); // BT4
   }
 
   /** AQ14 — revoca un object-URL de vista previa (evita acumular blobs en memoria). */

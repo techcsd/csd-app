@@ -8,6 +8,8 @@ import { RecorridoService, RecorridoDia } from '../../../core/services/recorrido
 import { TrackingService } from '../../../core/services/tracking.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 interface DiaChip {
   fecha: string; // YYYY-MM-DD
@@ -24,7 +26,7 @@ interface DiaChip {
   selector: 'app-mi-recorrido',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, TrayectoriaMap],
+  imports: [DecimalPipe, Skeleton, EmptyState, TrayectoriaMap, TranslatePipe],
   templateUrl: './mi-recorrido.html',
   styleUrl: './mi-recorrido.scss',
 })
@@ -33,6 +35,7 @@ export class MiRecorridoPage {
   private tracking = inject(TrackingService);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   data = signal<RecorridoDia | null>(null);
@@ -83,7 +86,7 @@ export class MiRecorridoPage {
     try {
       this.data.set(await this.recorrido.recorridoDia(this.fechaSel()));
     } catch {
-      this.toast.error('No pudimos cargar tu recorrido.');
+      this.toast.error(this.i18n.t('No pudimos cargar tu recorrido.'));
       this.data.set(null);
     } finally {
       this.loading.set(false);
@@ -103,7 +106,7 @@ export class MiRecorridoPage {
   sincronizar(): void {
     // Fuerza la subida del buffer offline y refresca el recorrido.
     void (async () => {
-      this.toast.show('Sincronizando puntos…', 'info');
+      this.toast.show(this.i18n.t('Sincronizando puntos…'), 'info');
       await this.tracking.sincronizarAhora();
       await this.load();
     })();

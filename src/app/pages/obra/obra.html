@@ -1,11 +1,11 @@
 <div class="screen obra">
   <header class="obra__header">
-    <button type="button" class="obra__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="obra__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="obra__icon">🦺</span>
     <div>
-      <h1 class="obra__title">Mi obra</h1>
+      <h1 class="obra__title">{{ 'Mi obra' | t }}</h1>
       @if (seleccionada(); as o) {
-        <button type="button" class="obra__sub" (click)="cambiarObra()">{{ o.nombre }} · cambiar</button>
+        <button type="button" class="obra__sub" (click)="cambiarObra()">{{ o.nombre }} · {{ 'cambiar' | t }}</button>
       }
     </div>
   </header>
@@ -15,23 +15,23 @@
       <app-skeleton [rows]="4" />
     } @else if (error()) {
       <!-- BL2 — la consulta falló y no hay nada cacheado: error+reintento -->
-      <app-empty-state icon="⚠️" title="No pudimos cargar tus obras"
-        message="Hubo un problema al consultar tus obras. Revisa tu conexión y reintenta."
-        ctaLabel="Reintentar" (action)="cargar()" />
+      <app-empty-state icon="⚠️" [title]="'No pudimos cargar tus obras' | t"
+        [message]="'Hubo un problema al consultar tus obras. Revisa tu conexión y reintenta.' | t"
+        [ctaLabel]="'Reintentar' | t" (action)="cargar()" />
     } @else if (!obras().length) {
       <!-- BL2 — vacío legítimo: texto neutral, sin afirmar la causa -->
-      <app-empty-state icon="🏗️" title="No vemos obras asignadas"
-        message="Ahora mismo no hay obras vinculadas a ti. Si deberías tener alguna, pídele al administrador que te asigne al proyecto." />
+      <app-empty-state icon="🏗️" [title]="'No vemos obras asignadas' | t"
+        [message]="'Ahora mismo no hay obras vinculadas a ti. Si deberías tener alguna, pídele al administrador que te asigne al proyecto.' | t" />
     } @else if (!seleccionada()) {
       <!-- AI14 — Selección de obra por dropdown estándar (buscador + colapso) -->
-      <h2 class="obra__section">Elige tu obra</h2>
+      <h2 class="obra__section">{{ 'Elige tu obra' | t }}</h2>
       <app-collapsible-select
-        label="Obra"
+        [label]="'Obra' | t"
         icon="🏗️"
         [options]="obraOptions()"
         [selectedId]="''"
         [searchable]="true"
-        searchPlaceholder="Buscar obra…"
+        [searchPlaceholder]="'Buscar obra…' | t"
         (picked)="pickPorId($event)"
       />
     } @else {
@@ -42,43 +42,43 @@
           <button type="button" class="obra__charla-alert" (click)="irCharla()">
             <span class="obra__charla-ico">🦺</span>
             <span class="obra__charla-body">
-              <span class="obra__charla-title">Charla de seguridad de hoy: pendiente</span>
-              <span class="obra__charla-sub">Tócala para registrarla</span>
+              <span class="obra__charla-title">{{ 'Charla de seguridad de hoy: pendiente' | t }}</span>
+              <span class="obra__charla-sub">{{ 'Tócala para registrarla' | t }}</span>
             </span>
-            <span class="obra__charla-cta">Registrar →</span>
+            <span class="obra__charla-cta">{{ 'Registrar' | t }} →</span>
           </button>
         }
         <div class="obra__resumen">
           @if (puedeCharla() && r.charlaHecha) {
             <div class="obra__res-item">
               <span class="obra__res-ico">✅</span>
-              <span class="obra__res-txt">Charla lista</span>
+              <span class="obra__res-txt">{{ 'Charla lista' | t }}</span>
             </div>
           }
           <div class="obra__res-item">
             <span class="obra__res-num">{{ r.tareasPendientes }}/{{ r.tareasHoy }}</span>
-            <span class="obra__res-txt">Tareas hoy</span>
+            <span class="obra__res-txt">{{ 'Tareas hoy' | t }}</span>
           </div>
           <div class="obra__res-item" [class.obra__res-item--warn]="r.ncAbiertas > 0">
             <span class="obra__res-num">{{ r.ncAbiertas }}</span>
-            <span class="obra__res-txt">NC abiertas</span>
+            <span class="obra__res-txt">{{ 'NC abiertas' | t }}</span>
           </div>
           @if (r.misPendientes > 0) {
             <div class="obra__res-item obra__res-item--warn">
               <span class="obra__res-num">{{ r.misPendientes }}</span>
-              <span class="obra__res-txt">Mis pendientes</span>
+              <span class="obra__res-txt">{{ 'Mis pendientes' | t }}</span>
             </div>
           }
           @if (r.pedidosPendientes > 0) {
             <div class="obra__res-item">
               <span class="obra__res-num">{{ r.pedidosPendientes }}</span>
-              <span class="obra__res-txt">Pedidos</span>
+              <span class="obra__res-txt">{{ 'Pedidos' | t }}</span>
             </div>
           }
           @if (r.avanceReal != null) {
             <div class="obra__res-item">
               <span class="obra__res-num">{{ r.avanceReal }}%</span>
-              <span class="obra__res-txt">Avance real</span>
+              <span class="obra__res-txt">{{ 'Avance real' | t }}</span>
             </div>
           }
         </div>
@@ -87,7 +87,7 @@
       <!-- Acciones de la obra seleccionada -->
       <div class="obra__grid">
         @for (t of tiles(); track t.key) {
-          <app-big-button [icon]="t.icon" [label]="t.label" [tint]="t.tint" (pressed)="abrir(t)" />
+          <app-big-button [icon]="t.icon" [label]="t.label | t" [tint]="t.tint" (pressed)="abrir(t)" />
         }
       </div>
     }

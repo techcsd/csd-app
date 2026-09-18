@@ -4,6 +4,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { PermissionsService, PermState } from '../../../core/services/permissions.service';
 import { NativeAlarmService } from '../../../core/services/native-alarm.service';
 import { LocalStore } from '../../../core/services/local-store.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const FLAG = 'csd_permisos_onboarding_v2';
 
@@ -22,6 +23,7 @@ type Estado = 'idle' | 'ok' | 'no' | 'ajustes';
   selector: 'app-permisos-onboarding',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './permisos-onboarding.html',
   styleUrl: './permisos-onboarding.scss',
 })

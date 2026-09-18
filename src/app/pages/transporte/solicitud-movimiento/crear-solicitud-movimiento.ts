@@ -15,6 +15,8 @@ import {
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const TIPOS_CARGA: Array<{ key: TipoCarga; label: string }> = [
   { key: 'materiales', label: 'Materiales' },
@@ -41,7 +43,7 @@ const PRIORIDADES: Array<{ key: PrioridadSolicitud; label: string; tone: 'defaul
   selector: 'app-crear-solicitud-movimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, OptionButton, WizardFooter],
+  imports: [FormsModule, CollapsibleSelect, OptionButton, WizardFooter, TranslatePipe],
   templateUrl: './crear-solicitud-movimiento.html',
   styleUrl: './crear-solicitud-movimiento.scss',
 })
@@ -51,6 +53,7 @@ export class CrearSolicitudMovimientoPage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   readonly tipos = TIPOS_CARGA;
   readonly direcciones = DIRECCIONES;
@@ -69,7 +72,7 @@ export class CrearSolicitudMovimientoPage {
 
   /** Etiqueta del "otro extremo" según la dirección (para el placeholder/label). */
   otroLabel = computed(() =>
-    this.direccion() === 'a_obra' ? '¿De dónde sale el material?' : '¿A dónde va el material?',
+    this.direccion() === 'a_obra' ? this.i18n.t('¿De dónde sale el material?') : this.i18n.t('¿A dónde va el material?'),
   );
 
   puedeEnviar = computed(
@@ -103,10 +106,10 @@ export class CrearSolicitudMovimientoPage {
         fechaRequerimiento: this.fechaReq() || null,
         notas: this.notas().trim() || null,
       });
-      this.toast.success('Solicitud enviada. Se sincroniza sola al reconectar.');
+      this.toast.success(this.i18n.t('Solicitud enviada. Se sincroniza sola al reconectar.'));
       void this.router.navigate(['/transporte/solicitudes-movimiento']);
     } catch {
-      this.toast.error('No pudimos guardar la solicitud. Inténtalo de nuevo.');
+      this.toast.error(this.i18n.t('No pudimos guardar la solicitud. Inténtalo de nuevo.'));
     } finally {
       this.enviando.set(false);
     }

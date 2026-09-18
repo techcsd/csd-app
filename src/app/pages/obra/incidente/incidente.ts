@@ -16,6 +16,8 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { IncidenteTipo, Severidad, SEVERIDAD_META } from '../../../core/models/obra.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const MAX_FOTOS = 3;
 const TIPOS: { key: IncidenteTipo; label: string; icon: string }[] = [
@@ -29,7 +31,7 @@ const TIPOS: { key: IncidenteTipo; label: string; icon: string }[] = [
   selector: 'app-obra-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, Counter, WizardExit, BigConfirm, ConfirmDialog],
+  imports: [FormsModule, PhotoSlot, OptionButton, Counter, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })
@@ -43,6 +45,7 @@ export class IncidentePage implements OnDestroy {
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
   readonly tipos = TIPOS;
@@ -168,7 +171,7 @@ export class IncidentePage implements OnDestroy {
       await this.autosave.discard(this.clave);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar el incidente.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar el incidente.'));
     } finally {
       this.submitting.set(false);
     }

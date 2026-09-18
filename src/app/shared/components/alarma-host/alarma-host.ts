@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AlarmaService } from '../../../core/services/alarma.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AK10 — overlay a pantalla completa de la alarma dominical del reporte semanal.
@@ -9,6 +10,7 @@ import { AlarmaService } from '../../../core/services/alarma.service';
   selector: 'app-alarma-host',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './alarma-host.html',
   styleUrl: './alarma-host.scss',
 })

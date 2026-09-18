@@ -2,7 +2,7 @@
   <header class="actas__header">
     <button type="button" class="actas__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="actas__icon">🚗</span>
-    <h1 class="actas__title">Recepciones de vehículo</h1>
+    <h1 class="actas__title">{{ 'Recepciones de vehículo' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -13,31 +13,31 @@
         <div class="actas__card actas__card--tap" (click)="abrir(a)">
           <div class="actas__row">
             <span class="actas__placa">
-              {{ a.placa || 'Vehículo' }}
+              {{ a.placa || ('Vehículo' | t) }}
               @if (marcaModelo(a)) { <small class="actas__marca">· {{ marcaModelo(a) }}</small> }
             </span>
             <span class="actas__fecha">{{ fechaHora(a.created_at) }}</span>
           </div>
           <div class="actas__flujo">
             @if (yoRecibi(a)) {
-              <span>📥 Lo recibiste de <b>{{ a.de_nombre || '—' }}</b></span>
+              <span>📥 {{ 'Lo recibiste de' | t }} <b>{{ a.de_nombre || '—' }}</b></span>
             } @else {
-              <span>📤 Lo entregaste a <b>{{ a.a_nombre || '—' }}</b></span>
+              <span>📤 {{ 'Lo entregaste a' | t }} <b>{{ a.a_nombre || '—' }}</b></span>
             }
           </div>
           <div class="actas__meta">
             @if (a.km != null) { <span>🧭 {{ a.km | number: '1.0-0' }} km</span> }
-            @if (a.fotos?.length) { <span>📷 {{ a.fotos!.length }} foto(s)</span> }
+            @if (a.fotos?.length) { <span>📷 {{ a.fotos!.length }} {{ 'foto(s)' | t }}</span> }
             @if (llaveLabel(a.llave1_ubicacion_tipo)) { <span>{{ llaveLabel(a.llave1_ubicacion_tipo) }}</span> }
           </div>
           @if (a.notas) { <p class="actas__notas">📝 {{ a.notas }}</p> }
-          <span class="actas__ver">Ver acta completa →</span>
+          <span class="actas__ver">{{ 'Ver acta completa' | t }} →</span>
         </div>
       } @empty {
         <app-empty-state
           icon="🚗"
-          title="Sin recepciones"
-          message="Aquí aparece el historial de vehículos que recibes o entregas, con sus condiciones y km."
+          [title]="'Sin recepciones' | t"
+          [message]="'Aquí aparece el historial de vehículos que recibes o entregas, con sus condiciones y km.' | t"
         />
       }
     }

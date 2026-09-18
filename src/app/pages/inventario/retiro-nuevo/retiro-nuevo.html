@@ -22,6 +22,20 @@
     } @else if (loadingCat()) {
       <app-skeleton [rows]="5" />
     } @else {
+      @if (borradorPrevio()) {
+        <!-- BT4 — recuperación de un retiro sin enviar -->
+        <div class="retiro__draft">
+          <span class="retiro__draft-ic">📝</span>
+          <div class="retiro__draft-txt">
+            <b>{{ 'Tienes un borrador sin enviar' | t }}</b>
+            <span>{{ 'Recuperamos lo que habías llenado, con sus fotos.' | t }}</span>
+          </div>
+          <div class="retiro__draft-acts">
+            <button type="button" class="btn-cta retiro__draft-go" (click)="continuarBorrador()">{{ 'Continuar' | t }}</button>
+            <button type="button" class="btn-ghost retiro__draft-x" (click)="descartarBorrador()">{{ 'Descartar' | t }}</button>
+          </div>
+        </div>
+      }
       <!-- Obra -->
       <section class="retiro__sec">
         <label class="retiro__label">Obra</label>

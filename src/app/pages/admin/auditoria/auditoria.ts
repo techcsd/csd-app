@@ -4,6 +4,8 @@ import { AdminService, AuditoriaResumen, AuditoriaRow } from '../../../core/serv
 import { NetworkService } from '../../../core/services/network.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { formatFechaHumana } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 interface Barra {
   label: string;
@@ -47,7 +49,7 @@ const ACCION_LABELS: Record<string, string> = {
   selector: 'app-admin-auditoria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DecimalPipe],
+  imports: [Skeleton, DecimalPipe, TranslatePipe],
   templateUrl: './auditoria.html',
   styleUrl: './auditoria.scss',
 })
@@ -55,6 +57,7 @@ export class AdminAuditoriaPage {
   private admin = inject(AdminService);
   private network = inject(NetworkService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   // P13 — vista Panel (KPIs + gráficos) / Filas (tabla de cambios), como la web.
   vista = signal<'panel' | 'filas'>('panel');
@@ -116,7 +119,7 @@ export class AdminAuditoriaPage {
     try {
       this.resumen.set(await this.admin.getAuditoriaResumen({ desde: this.desdeIso() }));
     } catch (e: unknown) {
-      this.resumenError.set(e instanceof Error ? e.message : 'No se pudo cargar el panel.');
+      this.resumenError.set(e instanceof Error ? e.message : this.i18n.t('No se pudo cargar el panel.'));
     } finally {
       this.loadingResumen.set(false);
     }
@@ -142,7 +145,7 @@ export class AdminAuditoriaPage {
       this.rows.update((cur) => (reset ? rows : [...cur, ...rows]));
       this.rowsCargadas = true;
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? e.message : 'Error al cargar la auditoría.');
+      this.error.set(e instanceof Error ? e.message : this.i18n.t('Error al cargar la auditoría.'));
     } finally {
       this.loading.set(false);
       this.loadingMore.set(false);

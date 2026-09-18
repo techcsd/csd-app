@@ -7,6 +7,8 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService, AlertasVehiculo, MiNovedad } from '../../../core/services/vehiculos.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
@@ -28,7 +30,7 @@ const VIDEO_MAX_SEG = 60;
   selector: 'app-aviso-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, VehiculoPicker, VoiceNotes],
+  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, VehiculoPicker, VoiceNotes, TranslatePipe],
   templateUrl: './aviso-vehiculo.html',
   styleUrl: './aviso-vehiculo.scss',
 })
@@ -37,6 +39,7 @@ export class AvisoVehiculoPage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
   fmtFechaHora = formatFechaHumana;
@@ -137,15 +140,15 @@ export class AvisoVehiculoPage {
   async reportar(): Promise<void> {
     const v = this.vehiculo();
     if (!v) {
-      this.toast.error('Elige el vehículo.');
+      this.toast.error(this.i18n.t('Elige el vehículo.'));
       return;
     }
     if (!this.descripcion().trim()) {
-      this.toast.error('Describe la novedad.');
+      this.toast.error(this.i18n.t('Describe la novedad.'));
       return;
     }
     if (!this.fotosValidas().length) {
-      this.toast.error('Toma al menos una foto de la novedad.');
+      this.toast.error(this.i18n.t('Toma al menos una foto de la novedad.'));
       return;
     }
     if (this.enviando()) return;
@@ -160,9 +163,11 @@ export class AvisoVehiculoPage {
         notasVoz: this.notasVoz().map((n) => n.blob), // AK16
       });
       this.toast.success(
-        this.network.online()
-          ? 'Novedad reportada. Flota fue notificada.'
-          : 'Novedad guardada. Se enviará al reconectar.',
+        this.i18n.t(
+          this.network.online()
+            ? 'Novedad reportada. Flota fue notificada.'
+            : 'Novedad guardada. Se enviará al reconectar.',
+        ),
       );
       this.descripcion.set('');
       this.severidad.set('media');
@@ -171,7 +176,7 @@ export class AvisoVehiculoPage {
       this.videos.set([]);
       this.notasVoz.set([]);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo reportar la novedad.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo reportar la novedad.'));
     } finally {
       this.enviando.set(false);
     }

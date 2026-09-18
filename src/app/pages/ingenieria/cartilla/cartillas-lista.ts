@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { CartillaService } from '../../../core/services/cartilla.service';
 import { CartillaEstado, CartillaListado } from '../../../shared/models/cartilla.model';
 import { formatFecha } from '../../../core/util/fecha';
@@ -25,7 +26,7 @@ const ESTADO_LABEL: Record<CartillaEstado, string> = {
   selector: 'app-cartillas-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DecimalPipe],
+  imports: [Skeleton, EmptyState, DecimalPipe, TranslatePipe],
   templateUrl: './cartillas-lista.html',
   styleUrl: './cartillas-lista.scss',
 })

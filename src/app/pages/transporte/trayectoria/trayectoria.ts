@@ -8,6 +8,8 @@ import { TrayectoriaMap } from '../../../shared/ui/trayectoria-map/trayectoria-m
 import { RecorridoService, RutaTrayecto } from '../../../core/services/recorrido.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AU5 — "Ver trayectoria" de UNA ruta (replay estático del recorrido). Se abre al
@@ -18,7 +20,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-trayectoria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, TrayectoriaMap],
+  imports: [DecimalPipe, Skeleton, EmptyState, TrayectoriaMap, TranslatePipe],
   templateUrl: './trayectoria.html',
   styleUrl: './trayectoria.scss',
 })
@@ -27,6 +29,7 @@ export class TrayectoriaPage {
   private recorrido = inject(RecorridoService);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   data = signal<RutaTrayecto | null>(null);
@@ -44,7 +47,7 @@ export class TrayectoriaPage {
       if (!id) return;
       this.data.set(await this.recorrido.rutaTrayecto(id));
     } catch {
-      this.toast.error('No pudimos cargar la trayectoria.');
+      this.toast.error(this.i18n.t('No pudimos cargar la trayectoria.'));
     } finally {
       this.loading.set(false);
     }

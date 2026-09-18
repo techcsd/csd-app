@@ -3,7 +3,7 @@
     <header class="preg__header">
       <button type="button" class="preg__back" (click)="atras()" aria-label="Atrás">←</button>
       <div class="preg__head-txt">
-        <h1 class="preg__title">🧑‍🔧 Registrar personal</h1>
+        <h1 class="preg__title">🧑‍🔧 {{ 'Registrar personal' | t }}</h1>
         <span class="preg__paso-titulo">{{ pasoActual()?.titulo }}</span>
       </div>
     </header>
@@ -17,96 +17,96 @@
       @switch (pasoActual()?.key) {
         <!-- ═══════════ HOJA: DATOS ═══════════ -->
         @case ('datos') {
-          <label class="field-label">Obra <span class="preg__req">*</span></label>
+          <label class="field-label">{{ 'Obra' | t }} <span class="preg__req">*</span></label>
           <app-collapsible-select
-            label="Obra" icon="🏗"
+            [label]="'Obra' | t" icon="🏗"
             [options]="obraOptions()" [selectedId]="proyectoId()"
-            [searchable]="true" searchPlaceholder="Buscar obra…"
+            [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t"
             (picked)="proyectoId.set($event)"
           />
           @if (!obraOptions().length) {
-            <div class="preg__band">🏗 No hay obras disponibles ahora. Verifica tu conexión y vuelve a intentar.</div>
+            <div class="preg__band">🏗 {{ 'No hay obras disponibles ahora. Verifica tu conexión y vuelve a intentar.' | t }}</div>
           }
 
-          <label class="field-label preg__mt" for="nom">Nombre <span class="preg__req">*</span></label>
-          <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Nombre" autocapitalize="words" />
+          <label class="field-label preg__mt" for="nom">{{ 'Nombre' | t }} <span class="preg__req">*</span></label>
+          <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" [placeholder]="'Nombre' | t" autocapitalize="words" />
 
-          <label class="field-label preg__mt" for="ape">Apellido</label>
-          <input id="ape" class="field" type="text" [ngModel]="apellido()" (ngModelChange)="apellido.set($event)" placeholder="Apellido" autocapitalize="words" />
+          <label class="field-label preg__mt" for="ape">{{ 'Apellido' | t }}</label>
+          <input id="ape" class="field" type="text" [ngModel]="apellido()" (ngModelChange)="apellido.set($event)" [placeholder]="'Apellido' | t" autocapitalize="words" />
 
-          <label class="field-label preg__mt">Nacionalidad <span class="preg__req">*</span></label>
+          <label class="field-label preg__mt">{{ 'Nacionalidad' | t }} <span class="preg__req">*</span></label>
           <div class="preg__opts">
             @for (n of nacionalidades; track n.value) {
-              <app-option-button [icon]="n.icon" [label]="n.label" [selected]="nacionalidad() === n.value" (pressed)="nacionalidad.set(n.value)" />
+              <app-option-button [icon]="n.icon" [label]="n.label | t" [selected]="nacionalidad() === n.value" (pressed)="nacionalidad.set(n.value)" />
             }
           </div>
 
-          <label class="field-label preg__mt">Cargo <span class="preg__req">*</span></label>
+          <label class="field-label preg__mt">{{ 'Cargo' | t }} <span class="preg__req">*</span></label>
           <app-collapsible-select
-            label="Cargo" icon="🛠"
+            [label]="'Cargo' | t" icon="🛠"
             [options]="cargoOptions()" [selectedId]="cargoId()"
-            [searchable]="true" searchPlaceholder="Buscar cargo…"
+            [searchable]="true" [searchPlaceholder]="'Buscar cargo…' | t"
             (picked)="cargoId.set($event)"
           />
 
           <!-- AV4 — cuadrilla (eje TECNICO: acero/carpintería/casa) + aseguramiento -->
-          <label class="field-label preg__mt">Cuadrilla (opcional)</label>
+          <label class="field-label preg__mt">{{ 'Cuadrilla (opcional)' | t }}</label>
           <app-collapsible-select
-            label="Cuadrilla" icon="👷"
+            [label]="'Cuadrilla' | t" icon="👷"
             [options]="cuadrillaOptions()" [selectedId]="cuadrilla()"
             (picked)="cuadrilla.set($event)"
           />
 
-          <label class="field-label preg__mt">Aseguramiento</label>
+          <label class="field-label preg__mt">{{ 'Aseguramiento' | t }}</label>
           <div class="preg__opts">
             @for (a of aseguramientos; track a.value) {
-              <app-option-button [icon]="a.icon" [label]="a.label" [selected]="aseguramiento() === a.value" (pressed)="aseguramiento.set(a.value)" />
+              <app-option-button [icon]="a.icon" [label]="a.label | t" [selected]="aseguramiento() === a.value" (pressed)="aseguramiento.set(a.value)" />
             }
           </div>
 
-          <label class="field-label preg__mt" for="tel">Teléfono (opcional)</label>
-          <input id="tel" class="field" type="tel" inputmode="tel" [ngModel]="telefono()" (ngModelChange)="telefono.set($event)" placeholder="Ej. 809-000-0000" />
+          <label class="field-label preg__mt" for="tel">{{ 'Teléfono (opcional)' | t }}</label>
+          <input id="tel" class="field" type="tel" inputmode="tel" [ngModel]="telefono()" (ngModelChange)="telefono.set($event)" [placeholder]="'Ej. 809-000-0000' | t" />
         }
 
         <!-- ═══════════ HOJA: DOCUMENTO ═══════════ -->
         @case ('documento') {
-          <label class="field-label">Tipo de documento <span class="preg__req">*</span></label>
+          <label class="field-label">{{ 'Tipo de documento' | t }} <span class="preg__req">*</span></label>
           <div class="preg__opts">
             @for (t of tiposDocumento; track t.value) {
-              <app-option-button [icon]="t.icon" [label]="t.label" [selected]="tipoDocumento() === t.value" (pressed)="tipoDocumento.set(t.value)" />
+              <app-option-button [icon]="t.icon" [label]="t.label | t" [selected]="tipoDocumento() === t.value" (pressed)="tipoDocumento.set(t.value)" />
             }
           </div>
 
           @if (requiereDocumento()) {
-            <label class="field-label preg__mt" for="doc">Número de documento</label>
-            <input id="doc" class="field" type="text" [ngModel]="documentoNumero()" (ngModelChange)="documentoNumero.set($event)" placeholder="Cédula o pasaporte" />
+            <label class="field-label preg__mt" for="doc">{{ 'Número de documento' | t }}</label>
+            <input id="doc" class="field" type="text" [ngModel]="documentoNumero()" (ngModelChange)="documentoNumero.set($event)" [placeholder]="'Cédula o pasaporte' | t" />
 
-            <label class="field-label preg__mt">{{ guiaDocumento.label }} <span class="preg__req">*</span></label>
-            <p class="preg__sub">{{ guiaDocumento.ayuda }}</p>
+            <label class="field-label preg__mt">{{ guiaDocumento.label | t }} <span class="preg__req">*</span></label>
+            <p class="preg__sub">{{ guiaDocumento.ayuda | t }}</p>
             <div class="preg__fotos">
               <app-photo-slot
-                [label]="guiaDocumento.label" [hint]="guiaDocumento.hint" [gallery]="false"
+                [label]="guiaDocumento.label | t" [hint]="guiaDocumento.hint" [gallery]="false"
                 [foto]="fotoDe('documento')"
                 (captured)="onFoto('documento', $event)" (cleared)="onFotoClear('documento')"
               />
             </div>
           } @else {
-            <div class="preg__band">Sin documento: se registra igual con las fotos de evidencia.</div>
+            <div class="preg__band">{{ 'Sin documento: se registra igual con las fotos de evidencia.' | t }}</div>
           }
         }
 
         <!-- ═══════════ HOJA: FOTOS GUIADAS ═══════════ -->
         @case ('fotos') {
-          <p class="preg__intro">Toma cada foto con la cámara siguiendo la guía. La primera es obligatoria; las demás son muy recomendadas.</p>
+          <p class="preg__intro">{{ 'Toma cada foto con la cámara siguiendo la guía. La primera es obligatoria; las demás son muy recomendadas.' | t }}</p>
           <div class="preg__guia">
             @for (g of guiaFotos; track g.tipo) {
               <div class="preg__guia-item">
                 <div class="preg__guia-txt">
-                  <span class="preg__guia-label">{{ g.label }} @if (g.tipo === 'persona') { <span class="preg__req">*</span> }</span>
-                  <span class="preg__guia-ayuda">{{ g.ayuda }}</span>
+                  <span class="preg__guia-label">{{ g.label | t }} @if (g.tipo === 'persona') { <span class="preg__req">*</span> }</span>
+                  <span class="preg__guia-ayuda">{{ g.ayuda | t }}</span>
                 </div>
                 <app-photo-slot
-                  [label]="g.label" [hint]="g.hint" [gallery]="false"
+                  [label]="g.label | t" [hint]="g.hint" [gallery]="false"
                   [foto]="fotoDe(g.tipo)"
                   (captured)="onFoto(g.tipo, $event)" (cleared)="onFotoClear(g.tipo)"
                 />
@@ -117,43 +117,43 @@
 
         <!-- ═══════════ HOJA: FIRMA (⏸ PAUSA) ═══════════ -->
         @case ('firma') {
-          <label class="field-label" for="docf">Documento a firmar</label>
+          <label class="field-label" for="docf">{{ 'Documento a firmar' | t }}</label>
           <input id="docf" class="field" type="text" [ngModel]="documentoFirmaNombre()" (ngModelChange)="documentoFirmaNombre.set($event)" />
-          <label class="field-label preg__mt">Firma <span class="preg__req">*</span></label>
-          <p class="preg__sub">La persona firma el documento de registro.</p>
+          <label class="field-label preg__mt">{{ 'Firma' | t }} <span class="preg__req">*</span></label>
+          <p class="preg__sub">{{ 'La persona firma el documento de registro.' | t }}</p>
           <app-signature-pad #firmaPad (changed)="onFirma($event)" />
         }
 
         <!-- ═══════════ HOJA: CARNET ═══════════ -->
         @case ('carnet') {
-          <p class="preg__intro">Este es el carnet que se generará. El número se emite en el servidor al sincronizar.</p>
+          <p class="preg__intro">{{ 'Este es el carnet que se generará. El número se emite en el servidor al sincronizar.' | t }}</p>
           <app-personal-carnet [personal]="carnetPreview()" [fotoDataUrl]="fotoPersonaUrl()" [verifyUrl]="verifyUrl()" />
-          <div class="preg__band preg__band--info">🔗 El código QR abre el expediente de esta persona en la web para verificarla.</div>
+          <div class="preg__band preg__band--info">🔗 {{ 'El código QR abre el expediente de esta persona en la web para verificarla.' | t }}</div>
         }
 
         <!-- ═══════════ HOJA: RESUMEN ═══════════ -->
         @case ('resumen') {
-          <p class="preg__intro">Revisa antes de registrar.</p>
+          <p class="preg__intro">{{ 'Revisa antes de registrar.' | t }}</p>
           <div class="preg__resumen">
-            <div class="preg__res-row"><span class="preg__res-k">Obra</span><span class="preg__res-v">{{ obraNombre() || '—' }}</span></div>
-            <div class="preg__res-row"><span class="preg__res-k">Nombre</span><span class="preg__res-v">{{ nombre() }} {{ apellido() }}</span></div>
-            <div class="preg__res-row"><span class="preg__res-k">Cargo</span><span class="preg__res-v">{{ cargoSel() ? cargoSel()!.nombre + ' · ' + cargoSel()!.codigo : '—' }}</span></div>
-            <div class="preg__res-row"><span class="preg__res-k">Nacionalidad</span><span class="preg__res-v">{{ nacionalidadLabel() }}</span></div>
-            <div class="preg__res-row"><span class="preg__res-k">Documento</span><span class="preg__res-v">{{ tipoDocLabel() }}{{ documentoNumero() ? ' · ' + documentoNumero() : '' }}</span></div>
-            <div class="preg__res-row"><span class="preg__res-k">Fotos</span><span class="preg__res-v">{{ fotosTomadas() }} tomada{{ fotosTomadas() === 1 ? '' : 's' }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">{{ 'Obra' | t }}</span><span class="preg__res-v">{{ obraNombre() || '—' }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">{{ 'Nombre' | t }}</span><span class="preg__res-v">{{ nombre() }} {{ apellido() }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">{{ 'Cargo' | t }}</span><span class="preg__res-v">{{ cargoSel() ? cargoSel()!.nombre + ' · ' + cargoSel()!.codigo : '—' }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">{{ 'Nacionalidad' | t }}</span><span class="preg__res-v">{{ nacionalidadLabel() }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">{{ 'Documento' | t }}</span><span class="preg__res-v">{{ tipoDocLabel() }}{{ documentoNumero() ? ' · ' + documentoNumero() : '' }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">{{ 'Fotos' | t }}</span><span class="preg__res-v">{{ fotosTomadas() }} {{ fotosTomadas() === 1 ? ('tomada' | t) : ('tomadas' | t) }}</span></div>
             @if (firmaHabilitada) {
-              <div class="preg__res-row"><span class="preg__res-k">Firma</span><span class="preg__res-v">{{ firma() ? '✓ firmado' : '—' }}</span></div>
+              <div class="preg__res-row"><span class="preg__res-k">{{ 'Firma' | t }}</span><span class="preg__res-v">{{ firma() ? '✓ ' + ('firmado' | t) : '—' }}</span></div>
             }
           </div>
-          <label class="field-label preg__mt" for="notas">Notas (opcional)</label>
-          <textarea id="notas" class="field preg__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Observaciones…"></textarea>
-          <div class="preg__band">Al registrar, se envía por la cola de sincronización y el <b>carnet se emite</b> automáticamente. Funciona sin conexión.</div>
+          <label class="field-label preg__mt" for="notas">{{ 'Notas (opcional)' | t }}</label>
+          <textarea id="notas" class="field preg__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Observaciones…' | t"></textarea>
+          <div class="preg__band">{{ 'Al registrar, se envía por la cola de sincronización y el' | t }} <b>{{ 'carnet se emite' | t }}</b> {{ 'automáticamente. Funciona sin conexión.' | t }}</div>
         }
       }
     </div>
 
     <app-wizard-footer
-      [backLabel]="paso() === 0 ? 'Cancelar' : 'Atrás'"
+      [backLabel]="paso() === 0 ? ('Cancelar' | t) : ('Atrás' | t)"
       [primaryLabel]="primaryBtn()"
       [primaryDisabled]="submitting() || !pasoValido()"
       (back)="atras()"
@@ -163,11 +163,11 @@
 
   @if (hoja() === 'exito') {
     <app-big-confirm
-      title="Personal registrado"
-      note="Se envió a la cola de sincronización. El carnet (CSD-######) se emite al sincronizar y aparecerá en el expediente."
+      [title]="'Personal registrado' | t"
+      [note]="'Se envió a la cola de sincronización. El carnet (CSD-######) se emite al sincronizar y aparecerá en el expediente.' | t"
       tone="done"
-      buttonLabel="Listo"
-      secondaryLabel="Registrar otra persona"
+      [buttonLabel]="'Listo' | t"
+      [secondaryLabel]="'Registrar otra persona' | t"
       (dismissed)="finish()"
       (secondary)="registrarOtro()"
     />
@@ -175,10 +175,10 @@
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir del registro?"
-    message="Se guarda como borrador; podrás continuar después."
-    confirmLabel="Sí, salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir del registro?' | t"
+    [message]="'Se guarda como borrador; podrás continuar después.' | t"
+    [confirmLabel]="'Sí, salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     tone="danger"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"

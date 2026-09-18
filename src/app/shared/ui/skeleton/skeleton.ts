@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Shimmer placeholder shown while a screen loads, so the field user sees the
@@ -9,6 +10,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   selector: 'app-skeleton',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './skeleton.html',
   styleUrl: './skeleton.scss',
 })

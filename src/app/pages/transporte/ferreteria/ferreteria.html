@@ -2,17 +2,17 @@
   @if (hoja() === 'form') {
     <header class="ferr__header">
       <button type="button" class="ferr__back" (click)="intentarSalir()" aria-label="Atrás">←</button>
-      <h1 class="ferr__title">🧾 Compra en ferretería</h1>
+      <h1 class="ferr__title">🧾 {{ 'Compra en ferretería' | t }}</h1>
     </header>
 
     <div class="screen__body">
       <p class="ferr__intro">
-        Registra el recibo de lo que compraste o retiraste. <b>Almacén lo confirma</b>
-        antes de que entre al stock.
+        {{ 'Registra el recibo de lo que compraste o retiraste.' | t }} <b>{{ 'Almacén lo confirma' | t }}</b>
+        {{ 'antes de que entre al stock.' | t }}
       </p>
 
       <app-collapsible-select
-        label="Almacén destino"
+        [label]="'Almacén destino' | t"
         icon="🏬"
         [options]="bodegaOptions()"
         [selectedId]="bodegaId()"
@@ -22,7 +22,7 @@
       @if (obraOptions().length) {
         <div class="ferr__mt">
           <app-collapsible-select
-            label="Obra (opcional)"
+            [label]="'Obra (opcional)' | t"
             icon="🏗"
             [options]="obraOptions()"
             [selectedId]="obraId()"
@@ -33,8 +33,8 @@
 
       <!-- AE — ¿Qué compraste? buscador de materiales, arriba y visible (antes iba
            colapsado al final). Solo buscador (sin categorías) — más rápido en campo. -->
-      <label class="field-label ferr__mt">¿Qué compraste?</label>
-      <p class="ferr__sub">Busca cada material, agrégalo y pon la cantidad.</p>
+      <label class="field-label ferr__mt">{{ '¿Qué compraste?' | t }}</label>
+      <p class="ferr__sub">{{ 'Busca cada material, agrégalo y pon la cantidad.' | t }}</p>
       <app-articulo-picker
         [articulos]="articulos()"
         [categorias]="categorias()"
@@ -59,30 +59,30 @@
         </div>
       }
 
-      <label class="field-label ferr__mt" for="ferreteria">Ferretería / suplidor (opcional)</label>
+      <label class="field-label ferr__mt" for="ferreteria">{{ 'Ferretería / suplidor (opcional)' | t }}</label>
       <input
         id="ferreteria"
         class="field"
         type="text"
         [ngModel]="proveedor()"
         (ngModelChange)="proveedor.set($event)"
-        placeholder="Ej: Ferretería Americana"
+        [placeholder]="'Ej: Ferretería Americana' | t"
       />
 
-      <label class="field-label ferr__mt" for="ref"># de factura / referencia (opcional)</label>
+      <label class="field-label ferr__mt" for="ref">{{ '# de factura / referencia (opcional)' | t }}</label>
       <input
         id="ref"
         class="field"
         type="text"
         [ngModel]="referencia()"
         (ngModelChange)="referencia.set($event)"
-        placeholder="Ej: F-0012345"
+        [placeholder]="'Ej: F-0012345' | t"
       />
 
       <!-- Foto del recibo, solo-cámara, OBLIGATORIA -->
-      <label class="field-label ferr__mt">Foto del recibo <span class="ferr__req">*</span></label>
+      <label class="field-label ferr__mt">{{ 'Foto del recibo' | t }} <span class="ferr__req">*</span></label>
       <app-photo-slot
-        label="Recibo (obligatorio)"
+        [label]="'Recibo (obligatorio)' | t"
         hint="🧾"
         [gallery]="false"
         [foto]="foto()"
@@ -90,14 +90,14 @@
         (cleared)="onFotoCleared()"
       />
       @if (faltaFoto()) {
-        <div class="ferr__band">📷 Toma la foto del recibo para poder registrar.</div>
+        <div class="ferr__band">📷 {{ 'Toma la foto del recibo para poder registrar.' | t }}</div>
       }
 
       <!-- AF12 — foto de la MERCANCÍA recibida (además del recibo), solo-cámara -->
-      <label class="field-label ferr__mt">Foto de la mercancía recibida</label>
-      <p class="ferr__sub">Muestra lo que recibiste (opcional pero recomendado).</p>
+      <label class="field-label ferr__mt">{{ 'Foto de la mercancía recibida' | t }}</label>
+      <p class="ferr__sub">{{ 'Muestra lo que recibiste (opcional pero recomendado).' | t }}</p>
       <app-photo-slot
-        label="Mercancía recibida"
+        [label]="'Mercancía recibida' | t"
         hint="📦"
         [gallery]="false"
         [foto]="fotoMercancia()"
@@ -105,20 +105,20 @@
         (cleared)="onFotoMercanciaCleared()"
       />
 
-      <label class="field-label ferr__mt" for="obs">Observaciones (opcional)</label>
+      <label class="field-label ferr__mt" for="obs">{{ 'Observaciones (opcional)' | t }}</label>
       <textarea
         id="obs"
         class="field ferr__notas"
         rows="2"
         [ngModel]="observaciones()"
         (ngModelChange)="observaciones.set($event)"
-        placeholder="Algo que deba saber Almacén…"
+        [placeholder]="'Algo que deba saber Almacén…' | t"
       ></textarea>
     </div>
 
     <app-wizard-footer
-      backLabel="Cancelar"
-      [primaryLabel]="submitting() ? 'Registrando…' : 'Registrar compra'"
+      [backLabel]="'Cancelar' | t"
+      [primaryLabel]="submitting() ? ('Registrando…' | t) : ('Registrar compra' | t)"
       [primaryDisabled]="submitting() || faltaFoto()"
       (back)="intentarSalir()"
       (primary)="submit()"
@@ -127,20 +127,20 @@
 
   @if (hoja() === 'exito') {
     <app-big-confirm
-      title="Compra registrada"
-      note="Queda pendiente de que Almacén la confirme para entrar al stock."
+      [title]="'Compra registrada' | t"
+      [note]="'Queda pendiente de que Almacén la confirme para entrar al stock.' | t"
       tone="done"
-      buttonLabel="Listo"
+      [buttonLabel]="'Listo' | t"
       (dismissed)="finish()"
     />
   }
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir sin registrar?"
-    message="Se perderá lo que capturaste de la compra."
-    confirmLabel="Sí, salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir sin registrar?' | t"
+    [message]="'Se perderá lo que capturaste de la compra.' | t"
+    [confirmLabel]="'Sí, salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     tone="danger"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"

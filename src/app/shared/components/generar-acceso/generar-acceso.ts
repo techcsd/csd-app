@@ -4,6 +4,8 @@ import { ConductoresService } from '../../../core/services/conductores.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { CedulaPipe } from '../../pipes/cedula-pipe';
 import { humanizeError } from '../../util/friendly-error.util';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * P8 — modal para generar el acceso a la app de un conductor (usuario = cédula,
@@ -14,13 +16,14 @@ import { humanizeError } from '../../util/friendly-error.util';
   selector: 'app-generar-acceso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CedulaPipe],
+  imports: [FormsModule, CedulaPipe, TranslatePipe],
   templateUrl: './generar-acceso.html',
   styleUrl: './generar-acceso.scss',
 })
 export class GenerarAcceso {
   private conductores = inject(ConductoresService);
   private network = inject(NetworkService);
+  private i18n = inject(I18nService);
 
   open = input(false);
   conductorId = input.required<string>();
@@ -59,25 +62,26 @@ export class GenerarAcceso {
   async generar(): Promise<void> {
     if (this.submitting()) return;
     if (!/^\d{6}$/.test(this.pin())) {
-      this.error.set('El PIN debe ser de 6 dígitos.');
+      this.error.set(this.i18n.t('El PIN debe ser de 6 dígitos.'));
       return;
     }
     if (!this.online()) {
-      this.error.set('Necesitas conexión para generar el acceso.');
+      this.error.set(this.i18n.t('Necesitas conexión para generar el acceso.'));
       return;
     }
     this.submitting.set(true);
     this.error.set('');
     try {
       const res = await this.conductores.generarAccesoConductor(this.conductorId(), this.pin());
+      const ced = this.cedula() ? ` (${this.cedula()})` : '';
       this.exito.set(
         res.rotated
-          ? `PIN restablecido. El conductor entra con su cédula${this.cedula() ? ` (${this.cedula()})` : ''} y el nuevo PIN.`
-          : `Acceso generado. El conductor entra con su cédula${this.cedula() ? ` (${this.cedula()})` : ''} y el PIN.`,
+          ? this.i18n.t('PIN restablecido. El conductor entra con su cédula{ced} y el nuevo PIN.', { ced })
+          : this.i18n.t('Acceso generado. El conductor entra con su cédula{ced} y el PIN.', { ced }),
       );
       this.generado.emit({ usuarioId: res.usuarioId, rotated: res.rotated });
     } catch (e) {
-      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo generar el acceso.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : this.i18n.t('No se pudo generar el acceso.'));
     } finally {
       this.submitting.set(false);
     }

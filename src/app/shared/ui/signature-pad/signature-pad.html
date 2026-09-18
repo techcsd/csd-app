@@ -2,10 +2,10 @@
   <div class="signature-pad__frame">
     <canvas #canvas class="signature-pad__canvas"></canvas>
     @if (empty()) {
-      <span class="signature-pad__placeholder">Firme aquí</span>
+      <span class="signature-pad__placeholder">{{ 'Firme aquí' | t }}</span>
     }
   </div>
   <button type="button" class="btn-ghost signature-pad__clear" (click)="clear()">
-    Repetir firma
+    {{ 'Repetir firma' | t }}
   </button>
 </div>

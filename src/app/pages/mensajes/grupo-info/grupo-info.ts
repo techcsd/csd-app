@@ -9,6 +9,8 @@ import { CameraService } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AN6 — Info y gestión de un grupo tipo WhatsApp: foto/nombre/descripción
@@ -22,7 +24,7 @@ import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
   selector: 'app-grupo-info',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, AvatarEditor],
+  imports: [FormsModule, Skeleton, AvatarEditor, TranslatePipe],
   templateUrl: './grupo-info.html',
   styleUrl: './grupo-info.scss',
 })
@@ -35,6 +37,7 @@ export class GrupoInfoPage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   conversacionId = '';
   loading = signal(true);
@@ -73,7 +76,7 @@ export class GrupoInfoPage {
       this.descripcion.set(info.descripcion ?? '');
       this.avatarUrl.set(await this.mensajes.avatarUrl(info.avatar_path));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar el grupo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar el grupo.'));
       this.back();
     } finally {
       this.loading.set(false);
@@ -99,7 +102,7 @@ export class GrupoInfoPage {
   async guardarEdicion(): Promise<void> {
     const n = this.nombre().trim();
     if (!n) {
-      this.toast.error('El grupo necesita un nombre.');
+      this.toast.error(this.i18n.t('El grupo necesita un nombre.'));
       return;
     }
     this.guardando.set(true);
@@ -108,7 +111,7 @@ export class GrupoInfoPage {
       this.editando.set(false);
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.guardando.set(false);
     }
@@ -135,7 +138,7 @@ export class GrupoInfoPage {
       await this.mensajes.cambiarAvatarGrupo(this.conversacionId, blob);
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar la foto.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cambiar la foto.'));
     } finally {
       this.guardando.set(false);
     }
@@ -174,17 +177,17 @@ export class GrupoInfoPage {
       this.agregando.set(false);
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo agregar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo agregar.'));
     }
   }
 
   async quitar(p: GrupoParticipante): Promise<void> {
-    if (!confirm(`¿Quitar a ${p.nombre ?? 'este participante'} del grupo?`)) return;
+    if (!confirm(this.i18n.t('¿Quitar a {nombre} del grupo?', { nombre: p.nombre ?? this.i18n.t('este participante') }))) return;
     try {
       await this.mensajes.grupoQuitar(this.conversacionId, p.usuario_id);
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo quitar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo quitar.'));
     }
   }
 
@@ -193,18 +196,18 @@ export class GrupoInfoPage {
       await this.mensajes.grupoPromover(this.conversacionId, p.usuario_id, admin);
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar el rol.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cambiar el rol.'));
     }
   }
 
   async salir(): Promise<void> {
-    if (!confirm('¿Salir de este grupo? Dejarás de recibir sus mensajes.')) return;
+    if (!confirm(this.i18n.t('¿Salir de este grupo? Dejarás de recibir sus mensajes.'))) return;
     try {
       await this.mensajes.grupoSalir(this.conversacionId);
-      this.toast.success('Saliste del grupo.');
+      this.toast.success(this.i18n.t('Saliste del grupo.'));
       void this.router.navigate(['/mensajes']);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo salir del grupo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo salir del grupo.'));
     }
   }
 

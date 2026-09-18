@@ -13,6 +13,8 @@ import { ErrorReportService } from '../../../core/services/error-report.service'
 import { DeviceInfoService } from '../../../core/services/device-info.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PERFILES_COMPRESION } from '../../../core/utils/comprimir-imagen.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 // BJ1 — mismo perfil 'evidencia' que camera.service/web (fuente única). El overlay
 // dibuja el frame del <video> directo a canvas, así que usa los NÚMEROS del perfil
@@ -30,6 +32,7 @@ const JPEG_QUALITY = PERFILES_COMPRESION.evidencia.calidad;
   selector: 'app-in-app-camera',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './in-app-camera.html',
   styleUrl: './in-app-camera.scss',
 })
@@ -39,6 +42,7 @@ export class InAppCamera {
   private errorReport = inject(ErrorReportService);
   private device = inject(DeviceInfoService);
   private permissions = inject(PermissionsService);
+  private i18n = inject(I18nService);
   private videoRef = viewChild<ElementRef<HTMLVideoElement>>('video');
 
   busy = signal(false);
@@ -128,7 +132,7 @@ export class InAppCamera {
       canvas.height = h;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        this.toast.error('No se pudo procesar la foto. Intenta de nuevo.');
+        this.toast.error(this.i18n.t('No se pudo procesar la foto. Intenta de nuevo.'));
         return;
       }
       ctx.drawImage(v, 0, 0, w, h);
@@ -141,12 +145,12 @@ export class InAppCamera {
       });
       if (!blob) {
         // Compresión fallida (raro): no cerramos, dejamos reintentar.
-        this.toast.error('No se pudo guardar la foto. Intenta de nuevo.');
+        this.toast.error(this.i18n.t('No se pudo guardar la foto. Intenta de nuevo.'));
         return;
       }
       this.cam.finish(blob);
     } catch {
-      this.toast.error('No se pudo tomar la foto. Intenta de nuevo.');
+      this.toast.error(this.i18n.t('No se pudo tomar la foto. Intenta de nuevo.'));
     } finally {
       // Liberar el canvas explícitamente para no acumular memoria entre disparos.
       if (canvas) {

@@ -1,44 +1,44 @@
 <div class="screen entrega">
   <header class="entrega__header">
-    <button type="button" class="entrega__back" (click)="finish()" aria-label="Atrás">←</button>
-    <h1 class="entrega__title">🚚 Entregar conduce</h1>
+    <button type="button" class="entrega__back" (click)="finish()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="entrega__title">🚚 {{ 'Entregar conduce' | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="4" />
     } @else if (!conduce()) {
-      <p class="entrega__empty">No encontramos este conduce.</p>
+      <p class="entrega__empty">{{ 'No encontramos este conduce.' | t }}</p>
     } @else if (done()) {
       <div class="entrega__ok">
         <span class="entrega__ok-ico">✅</span>
-        <h2 class="entrega__ok-title">Entregado</h2>
-        <p class="entrega__ok-sub">El receptor recibió el aviso y confirmará la entrega desde su propio teléfono.</p>
-        <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+        <h2 class="entrega__ok-title">{{ 'Entregado' | t }}</h2>
+        <p class="entrega__ok-sub">{{ 'El receptor recibió el aviso y confirmará la entrega desde su propio teléfono.' | t }}</p>
+        <button type="button" class="btn-cta" (click)="finish()">{{ 'Listo' | t }}</button>
       </div>
     } @else {
       @let c = conduce()!;
       <!-- Cabecera del conduce -->
       <div class="entrega__card">
-        <div class="entrega__row"><span class="entrega__k">Conduce</span><span class="entrega__v">{{ c.codigo }}</span></div>
-        <div class="entrega__row"><span class="entrega__k">Destino</span><span class="entrega__v">{{ c.destino || '—' }}</span></div>
-        <div class="entrega__row"><span class="entrega__k">Origen</span><span class="entrega__v">{{ c.bodega || '—' }}</span></div>
-        <div class="entrega__row"><span class="entrega__k">Estado</span><span class="entrega__chip">{{ faseLabel() }}</span></div>
+        <div class="entrega__row"><span class="entrega__k">{{ 'Conduce' | t }}</span><span class="entrega__v">{{ c.codigo }}</span></div>
+        <div class="entrega__row"><span class="entrega__k">{{ 'Destino' | t }}</span><span class="entrega__v">{{ c.destino || '—' }}</span></div>
+        <div class="entrega__row"><span class="entrega__k">{{ 'Origen' | t }}</span><span class="entrega__v">{{ c.bodega || '—' }}</span></div>
+        <div class="entrega__row"><span class="entrega__k">{{ 'Estado' | t }}</span><span class="entrega__chip">{{ faseLabel() }}</span></div>
       </div>
 
       <!-- AU1/AV3 — bloqueo por firma del despachante pendiente + atajo para recordarle -->
       @if (firmaDespachantePend() && !yaEntregado()) {
         <div class="entrega__band entrega__band--warn">
-          <p>⏳ Falta la firma del despachante. Podrás transitar, pero <strong>no marcar la entrega</strong> hasta que firme el conduce desde su sesión. Ya se le notificó.</p>
+          <p>⏳ {{ 'Falta la firma del despachante. Podrás transitar, pero' | t }} <strong>{{ 'no marcar la entrega' | t }}</strong> {{ 'hasta que firme el conduce desde su sesión. Ya se le notificó.' | t }}</p>
           <button type="button" class="btn-ghost entrega__band-btn" [disabled]="recordando()" (click)="recordarDespachante()">
-            {{ recordando() ? 'Enviando…' : '🔔 Recordarle al despachante' }}
+            @if (recordando()) { {{ 'Enviando…' | t }} } @else { 🔔 {{ 'Recordarle al despachante' | t }} }
           </button>
         </div>
       }
 
       <!-- Materiales -->
       @if (c.items.length) {
-        <h2 class="entrega__section">Materiales</h2>
+        <h2 class="entrega__section">{{ 'Materiales' | t }}</h2>
         <ul class="entrega__items">
           @for (it of c.items; track it.detalle_id) {
             <li class="entrega__item"><span>{{ it.articulo }}</span><span class="entrega__item-qty">{{ it.cantidad }} {{ it.unidad }}</span></li>
@@ -47,33 +47,33 @@
       }
 
       @if (yaEntregado()) {
-        <div class="entrega__band">✅ Ya marcaste este conduce como entregado. El receptor lo confirmará desde su teléfono.</div>
+        <div class="entrega__band">✅ {{ 'Ya marcaste este conduce como entregado. El receptor lo confirmará desde su teléfono.' | t }}</div>
       } @else {
         <!-- Acciones de estado del chofer -->
-        <h2 class="entrega__section">¿En qué vas?</h2>
+        <h2 class="entrega__section">{{ '¿En qué vas?' | t }}</h2>
         <div class="entrega__acciones">
           <button type="button" class="entrega__estado" [disabled]="!puedeIniciarTransito() || submitting()" (click)="iniciarTransito()">
-            🚚 Iniciar ruta
+            🚚 {{ 'Iniciar ruta' | t }}
           </button>
           <button type="button" class="entrega__estado" [disabled]="!puedeEntregando() || submitting() || firmaDespachantePend()" (click)="estoyEntregando()">
-            {{ firmaDespachantePend() ? '📦 Espera la firma del despachante' : '📦 Estoy entregando' }}
+            📦 {{ firmaDespachantePend() ? ('Espera la firma del despachante' | t) : ('Estoy entregando' | t) }}
           </button>
         </div>
 
         @if (mostrarEntrega()) {
           <!-- AK11 — proceso de entrega DIRECTO (lo abre "Estoy entregando"): foto obligatoria + ¿llegó todo? -->
-          <h2 class="entrega__section">Foto de la entrega <span class="entrega__req">*</span></h2>
-          <p class="entrega__sub">Toma la foto del material entregado en destino.</p>
-          <app-photo-slot label="Entrega" hint="📸" [gallery]="false" [foto]="foto()" (captured)="onFoto($event)" (cleared)="foto.set(null)" />
+          <h2 class="entrega__section">{{ 'Foto de la entrega' | t }} <span class="entrega__req">*</span></h2>
+          <p class="entrega__sub">{{ 'Toma la foto del material entregado en destino.' | t }}</p>
+          <app-photo-slot [label]="'Entrega' | t" hint="📸" [gallery]="false" [foto]="foto()" (captured)="onFoto($event)" (cleared)="foto.set(null)" />
 
-          <h2 class="entrega__section">¿Llegó todo el material?</h2>
+          <h2 class="entrega__section">{{ '¿Llegó todo el material?' | t }}</h2>
           <div class="entrega__si-no">
-            <app-option-button icon="✅" label="Sí, todo" [selected]="llegoTodo() === true" (pressed)="setLlegoTodo(true)" />
-            <app-option-button icon="⚠️" label="Faltó algo" [selected]="llegoTodo() === false" (pressed)="setLlegoTodo(false)" />
+            <app-option-button icon="✅" [label]="'Sí, todo' | t" [selected]="llegoTodo() === true" (pressed)="setLlegoTodo(true)" />
+            <app-option-button icon="⚠️" [label]="'Faltó algo' | t" [selected]="llegoTodo() === false" (pressed)="setLlegoTodo(false)" />
           </div>
 
           @if (llegoTodo() === false) {
-            <p class="entrega__sub">Ajusta la cantidad que sí llegó de cada material.</p>
+            <p class="entrega__sub">{{ 'Ajusta la cantidad que sí llegó de cada material.' | t }}</p>
             <div class="entrega__items">
               @for (it of c.items; track it.detalle_id) {
                 <div class="entrega__item">
@@ -85,16 +85,16 @@
             </div>
           }
 
-          <label class="field-label entrega__mt" for="nt">Notas (opcional)</label>
-          <textarea id="nt" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Novedad de la entrega…"></textarea>
+          <label class="field-label entrega__mt" for="nt">{{ 'Notas (opcional)' | t }}</label>
+          <textarea id="nt" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Novedad de la entrega…' | t"></textarea>
 
           <button type="button" class="btn-cta entrega__mt" [disabled]="submitting() || firmaDespachantePend()" (click)="marcarEntregado()">
-            {{ submitting() ? 'Guardando…' : firmaDespachantePend() ? 'Espera la firma del despachante' : 'Confirmar entregado' }}
+            {{ submitting() ? ('Guardando…' | t) : firmaDespachantePend() ? ('Espera la firma del despachante' | t) : ('Confirmar entregado' | t) }}
           </button>
         }
       }
 
-      @if (!online) { <p class="entrega__offline">Sin conexión: se enviará cuando vuelva el internet.</p> }
+      @if (!online) { <p class="entrega__offline">{{ 'Sin conexión: se enviará cuando vuelva el internet.' | t }}</p> }
     }
   </div>
 </div>

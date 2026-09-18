@@ -1,8 +1,8 @@
 <div class="screen sub">
   <header class="sub__header">
-    <button type="button" class="sub__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="sub__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="sub__icon">👷</span>
-    <h1 class="sub__title">Subcontratistas</h1>
+    <h1 class="sub__title">{{ 'Subcontratistas' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -10,13 +10,13 @@
       <app-skeleton [rows]="4" />
     } @else if (error()) {
       <!-- BL2 — la consulta falló y no hay nada cacheado: error+reintento -->
-      <app-empty-state icon="⚠️" title="No pudimos cargar los subcontratistas"
-        message="Hubo un problema al consultar la lista. Revisa tu conexión y reintenta."
-        ctaLabel="Reintentar" (action)="cargar()" />
+      <app-empty-state icon="⚠️" [title]="'No pudimos cargar los subcontratistas' | t"
+        [message]="'Hubo un problema al consultar la lista. Revisa tu conexión y reintenta.' | t"
+        [ctaLabel]="'Reintentar' | t" (action)="cargar()" />
     } @else if (!sel()) {
       @if (!subs().length) {
         <!-- BL2 — vacío legítimo: texto neutral, sin afirmar la causa -->
-        <app-empty-state icon="👷" title="No vemos subcontratistas" message="Ahora mismo no hay subcontratistas activos en esta obra. Si esperabas alguno, regístralo desde la web." />
+        <app-empty-state icon="👷" [title]="'No vemos subcontratistas' | t" [message]="'Ahora mismo no hay subcontratistas activos en esta obra. Si esperabas alguno, regístralo desde la web.' | t" />
       } @else {
         @for (s of subs(); track s.id) {
           <button type="button" class="sub__pick" (click)="elegir(s)">
@@ -30,59 +30,59 @@
       <button type="button" class="sub__volver" (click)="volver()">← {{ sel()!.nombre }}</button>
 
       <!-- Frentes -->
-      <h2 class="sub__section">Frentes asignados</h2>
+      <h2 class="sub__section">{{ 'Frentes asignados' | t }}</h2>
       @if (!frentes().length) {
-        <p class="sub__empty">Sin frentes asignados en esta obra.</p>
+        <p class="sub__empty">{{ 'Sin frentes asignados en esta obra.' | t }}</p>
       } @else {
         @for (f of frentes(); track f.id) {
           <div class="sub__frente">
-            <span class="sub__frente-desc">{{ f.descripcion || 'Frente' }}</span>
+            <span class="sub__frente-desc">{{ f.descripcion || ('Frente' | t) }}</span>
             <div class="sub__frente-avance">
               <input class="field sub__frente-input" type="number" min="0" max="100"
                 [ngModel]="frenteEdit()[f.id]" (ngModelChange)="setFrenteAvance(f.id, +$event)" />
               <span>%</span>
-              <button type="button" class="btn-ghost sub__frente-save" (click)="guardarFrente(f.id)">Guardar</button>
+              <button type="button" class="btn-ghost sub__frente-save" (click)="guardarFrente(f.id)">{{ 'Guardar' | t }}</button>
             </div>
           </div>
         }
       }
 
       <!-- Cubicación -->
-      <h2 class="sub__section">Cubicación</h2>
+      <h2 class="sub__section">{{ 'Cubicación' | t }}</h2>
       @if (!cubicando()) {
-        <button type="button" class="btn-cta sub__nueva" (click)="cubicando.set(true)">➕ Nueva cubicación</button>
+        <button type="button" class="btn-cta sub__nueva" (click)="cubicando.set(true)">➕ {{ 'Nueva cubicación' | t }}</button>
       } @else {
         <div class="sub__cub">
           <div class="sub__cub-fechas">
-            <label class="field-label">Desde
+            <label class="field-label">{{ 'Desde' | t }}
               <input class="field" type="date" [ngModel]="cubInicio()" (ngModelChange)="cubInicio.set($event)" />
             </label>
-            <label class="field-label">Hasta
+            <label class="field-label">{{ 'Hasta' | t }}
               <input class="field" type="date" [ngModel]="cubFin()" (ngModelChange)="cubFin.set($event)" />
             </label>
           </div>
-          <label class="field-label sub__mt">Descripción</label>
+          <label class="field-label sub__mt">{{ 'Descripción' | t }}</label>
           <input class="field" type="text" [ngModel]="cubDescripcion()" (ngModelChange)="cubDescripcion.set($event)"
-            placeholder="Ej.: Vaciado de losa nivel 3" />
+            [placeholder]="'Ej.: Vaciado de losa nivel 3' | t" />
           <div class="sub__cub-nums">
-            <label class="field-label">Monto (RD$)
+            <label class="field-label">{{ 'Monto (RD$)' | t }}
               <input class="field" type="number" min="0" [ngModel]="cubMonto()" (ngModelChange)="cubMonto.set(+$event)" />
             </label>
-            <label class="field-label">Avance %
+            <label class="field-label">{{ 'Avance %' | t }}
               <input class="field" type="number" min="0" max="100" inputmode="numeric" [ngModel]="cubAvance()" (ngModelChange)="setCubAvance(+$event)" />
             </label>
           </div>
-          <label class="field-label sub__mt">Soportes (fotos)</label>
+          <label class="field-label sub__mt">{{ 'Soportes (fotos)' | t }}</label>
           <div class="sub__fotos">
             @for (i of slots; track i) {
-              <app-photo-slot [label]="'Soporte ' + (i + 1)" hint="📷" [gallery]="false"
+              <app-photo-slot [label]="('Soporte' | t) + ' ' + (i + 1)" hint="📷" [gallery]="false"
                 [foto]="cubFotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />
             }
           </div>
           <button type="button" class="btn-cta sub__enviar" [disabled]="!puedeCubicar() || enviando()" (click)="enviarCubicacion()">
-            {{ enviando() ? 'Guardando…' : 'Cargar cubicación' }}
+            {{ enviando() ? ('Guardando…' | t) : ('Cargar cubicación' | t) }}
           </button>
-          <button type="button" class="btn-ghost sub__cancel" (click)="cubicando.set(false)">Cancelar</button>
+          <button type="button" class="btn-ghost sub__cancel" (click)="cubicando.set(false)">{{ 'Cancelar' | t }}</button>
         </div>
       }
     }

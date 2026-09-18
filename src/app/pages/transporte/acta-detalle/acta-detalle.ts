@@ -7,6 +7,8 @@ import { AudioNotasService } from '../../../core/services/audio-notas.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface ActaCondItem {
   etiqueta: string;
@@ -37,7 +39,7 @@ interface ActaDetalle {
   selector: 'app-acta-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton],
+  imports: [DecimalPipe, Skeleton, TranslatePipe],
   templateUrl: './acta-detalle.html',
   styleUrl: './acta-detalle.scss',
 })
@@ -47,6 +49,7 @@ export class ActaDetallePage {
   private route = inject(ActivatedRoute);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   readonly fechaHora = formatFechaCortaHora;
 
@@ -70,7 +73,7 @@ export class ActaDetallePage {
       this.acta.set(d);
       if (d) void this.resolverUrls(d);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el acta.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cargar el acta.'));
     } finally {
       this.loading.set(false);
     }
@@ -108,20 +111,20 @@ export class ActaDetallePage {
   }
   respLabel(r: string | null): string {
     switch (r) {
-      case 'ok': return '✅ Bien';
-      case 'falla': return '⚠️ Falla';
+      case 'ok': return '✅ ' + this.i18n.t('Bien');
+      case 'falla': return '⚠️ ' + this.i18n.t('Falla');
       case 'na': return '➖ N/A';
       default: return '—';
     }
   }
   llaveLabel(t: string | null): string {
     switch (t) {
-      case 'chofer_asignado': return '🧑‍✈️ Llave con el chofer';
-      case 'oficina_central': return '🏢 Llave en oficina';
-      case 'otro': return '📍 Llave en otro lugar';
+      case 'chofer_asignado': return '🧑‍✈️ ' + this.i18n.t('Llave con el chofer');
+      case 'oficina_central': return '🏢 ' + this.i18n.t('Llave en oficina');
+      case 'otro': return '📍 ' + this.i18n.t('Llave en otro lugar');
       // AV10 — sin dato (registros nuevos o históricos sin la pregunta): el
       // default operativo es que la llave queda con el chofer.
-      default: return '🧑‍✈️ Llave con el chofer';
+      default: return '🧑‍✈️ ' + this.i18n.t('Llave con el chofer');
     }
   }
   marcaModelo(): string {

@@ -11,6 +11,8 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { PlanDelDia } from '../../../core/models/obra.model';
 import { formatearDuracion } from '../../../core/util/duracion';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const ESTADO_TAREA: Record<string, { label: string; tint: string }> = {
   pendiente: { label: 'Pendiente', tint: '#ca8a04' },
@@ -24,7 +26,7 @@ const ESTADO_TAREA: Record<string, { label: string; tint: string }> = {
   selector: 'app-obra-plan-dia',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, Counter],
+  imports: [FormsModule, Skeleton, EmptyState, Counter, TranslatePipe],
   templateUrl: './plan-dia.html',
   styleUrl: './plan-dia.scss',
 })
@@ -36,6 +38,7 @@ export class PlanDiaPage {
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   proyectoId = '';
   protected fmtDur = formatearDuracion;
@@ -126,11 +129,11 @@ export class PlanDiaPage {
         prioridad: 'media',
         fechaLimite: this.hoy,
       });
-      this.toast.success('Tarea asignada.');
+      this.toast.success(this.i18n.t('Tarea asignada.'));
       this.cancelarAsignar();
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo asignar la tarea.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo asignar la tarea.'));
     } finally {
       this.guardandoTarea.set(false);
     }
@@ -149,13 +152,13 @@ export class PlanDiaPage {
         horas: this.moHoras(),
         notas: null,
       });
-      this.toast.success(this.network.online() ? 'Parte de mano de obra registrado.' : 'Guardado. Se enviará cuando tengas señal.');
+      this.toast.success(this.network.online() ? this.i18n.t('Parte de mano de obra registrado.') : this.i18n.t('Guardado. Se enviará cuando tengas señal.'));
       this.moAbierto.set(false);
       this.moTrabajadores.set(0);
       this.moHoras.set(8);
       this.moActividad.set('');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar.'));
     } finally {
       this.guardandoMo.set(false);
     }

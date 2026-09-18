@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 export type SyncState = 'pending' | 'syncing' | 'done' | 'error';
 
@@ -7,6 +8,7 @@ export type SyncState = 'pending' | 'syncing' | 'done' | 'error';
   selector: 'app-sync-badge',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './sync-badge.html',
   styleUrl: './sync-badge.scss',
 })

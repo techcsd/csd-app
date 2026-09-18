@@ -6,6 +6,7 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
 import { SelectOption } from '../../shared/ui/select-list/select-list';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ObraService } from '../../core/services/obra.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { ObraProyecto, ResumenObra } from '../../core/models/obra.model';
@@ -46,7 +47,7 @@ const TILES: ObraTile[] = [
   selector: 'app-obra',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, EmptyState, Skeleton, CollapsibleSelect],
+  imports: [BigButton, EmptyState, Skeleton, CollapsibleSelect, TranslatePipe],
   templateUrl: './obra.html',
   styleUrl: './obra.scss',
 })

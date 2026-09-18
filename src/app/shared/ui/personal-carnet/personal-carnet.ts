@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, input, signal } from '@angular/core';
 import QRCode from 'qrcode';
 import { PersonalObra, NACIONALIDAD_LABEL } from '../../../core/models/personal-obra.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AR1 (app) — Carnet del personal de obra: foto, nombre, cargo + ID del cargo,
@@ -12,7 +13,7 @@ import { PersonalObra, NACIONALIDAD_LABEL } from '../../../core/models/personal-
 @Component({
   selector: 'app-personal-carnet',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './personal-carnet.html',
   styleUrl: './personal-carnet.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

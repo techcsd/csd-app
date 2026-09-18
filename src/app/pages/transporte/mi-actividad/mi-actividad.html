@@ -2,7 +2,7 @@
   <header class="mact__header">
     <button type="button" class="mact__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="mact__icon">📈</span>
-    <h1 class="mact__title">Mi actividad</h1>
+    <h1 class="mact__title">{{ 'Mi actividad' | t }}</h1>
     <button type="button" class="mact__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
   </header>
 
@@ -12,9 +12,9 @@
     } @else if (!esConductor()) {
       <app-empty-state
         icon="🪪"
-        title="Aún no eres conductor"
-        message="Cuando uses un vehículo por primera vez te registras como conductor y aquí verás tus rutas, conduces, combustible e inspecciones."
-        ctaLabel="Usar un vehículo"
+        [title]="'Aún no eres conductor' | t"
+        [message]="'Cuando uses un vehículo por primera vez te registras como conductor y aquí verás tus rutas, conduces, combustible e inspecciones.' | t"
+        [ctaLabel]="'Usar un vehículo' | t"
         (action)="irAsignar()"
       />
     } @else {
@@ -23,7 +23,7 @@
         <div class="mact__banner">
           <span class="mact__banner-icon">📄</span>
           <span class="mact__banner-txt">
-            Documentos pendientes: {{ pendientes().join(' · ') }}. Súbelos abajo cuando puedas.
+            {{ 'Documentos pendientes:' | t }} {{ pendientes().join(' · ') }}. {{ 'Súbelos abajo cuando puedas.' | t }}
           </span>
         </div>
       }
@@ -35,20 +35,20 @@
       <!-- AJ11 — perfil propio del conductor (solo lectura), en cuadrículas 2xN -->
       @if (perfil()?.es_conductor) {
         <button type="button" class="mact__perfil-toggle" (click)="togglePerfil()">
-          🪪 {{ verPerfil() ? 'Ocultar mi perfil' : 'Ver mi perfil de conductor' }}
+          🪪 {{ (verPerfil() ? 'Ocultar mi perfil' : 'Ver mi perfil de conductor') | t }}
         </button>
         @if (verPerfil()) {
           @let p = perfil()!;
           <div class="mact__perfil-grid">
-            <div class="mact__perfil-cell"><span class="mact__perfil-k">Nombre</span><span class="mact__perfil-v">{{ p.nombre || '—' }}</span></div>
-            <div class="mact__perfil-cell"><span class="mact__perfil-k">Cédula</span><span class="mact__perfil-v">{{ (p.cedula | cedula) || '—' }}</span></div>
-            <div class="mact__perfil-cell"><span class="mact__perfil-k">Teléfono</span><span class="mact__perfil-v">{{ p.telefono || '—' }}</span></div>
-            <div class="mact__perfil-cell"><span class="mact__perfil-k">Licencia</span><span class="mact__perfil-v">{{ p.licencia?.tipo || '—' }}{{ p.licencia?.numero ? ' · ' + p.licencia?.numero : '' }}</span></div>
-            <div class="mact__perfil-cell"><span class="mact__perfil-k">Vence licencia</span><span class="mact__perfil-v">{{ p.licencia?.vencimiento ? fmtFecha(p.licencia!.vencimiento!) : '—' }}</span></div>
-            <div class="mact__perfil-cell"><span class="mact__perfil-k">Autorizado</span><span class="mact__perfil-v">{{ p.tipo_vehiculo_autorizado || '—' }}</span></div>
-            <div class="mact__perfil-cell mact__perfil-cell--wide"><span class="mact__perfil-k">Vehículo asignado</span><span class="mact__perfil-v">{{ p.vehiculo ? (p.vehiculo.placa + ' · ' + (p.vehiculo.marca || '') + ' ' + (p.vehiculo.modelo || '')) : '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">{{ 'Nombre' | t }}</span><span class="mact__perfil-v">{{ p.nombre || '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">{{ 'Cédula' | t }}</span><span class="mact__perfil-v">{{ (p.cedula | cedula) || '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">{{ 'Teléfono' | t }}</span><span class="mact__perfil-v">{{ p.telefono || '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">{{ 'Licencia' | t }}</span><span class="mact__perfil-v">{{ p.licencia?.tipo || '—' }}{{ p.licencia?.numero ? ' · ' + p.licencia?.numero : '' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">{{ 'Vence licencia' | t }}</span><span class="mact__perfil-v">{{ p.licencia?.vencimiento ? fmtFecha(p.licencia!.vencimiento!) : '—' }}</span></div>
+            <div class="mact__perfil-cell"><span class="mact__perfil-k">{{ 'Autorizado' | t }}</span><span class="mact__perfil-v">{{ p.tipo_vehiculo_autorizado || '—' }}</span></div>
+            <div class="mact__perfil-cell mact__perfil-cell--wide"><span class="mact__perfil-k">{{ 'Vehículo asignado' | t }}</span><span class="mact__perfil-v">{{ p.vehiculo ? (p.vehiculo.placa + ' · ' + (p.vehiculo.marca || '') + ' ' + (p.vehiculo.modelo || '')) : '—' }}</span></div>
           </div>
-          <p class="mact__perfil-nota">Solo lectura. Para cambios, contacta al jefe de flota.</p>
+          <p class="mact__perfil-nota">{{ 'Solo lectura. Para cambios, contacta al jefe de flota.' | t }}</p>
         }
       }
 
@@ -60,7 +60,7 @@
             class="mact__periodo-chip"
             [class.mact__periodo-chip--on]="periodo() === p.id"
             (click)="setPeriodo(p.id)"
-          >{{ p.label }}</button>
+          >{{ p.label | t }}</button>
         }
       </div>
 
@@ -68,53 +68,53 @@
       @if (periodoStats(); as ps) {
         <div class="mact__cards" [class.mact__cards--loading]="cargandoPeriodo()">
           <div class="mact__card">
-            <span class="mact__label">Rutas completadas</span>
+            <span class="mact__label">{{ 'Rutas completadas' | t }}</span>
             <span class="mact__value">{{ ps.rutas_completadas }}</span>
           </div>
           <div class="mact__card">
-            <span class="mact__label">Conduces realizados</span>
+            <span class="mact__label">{{ 'Conduces realizados' | t }}</span>
             <span class="mact__value">{{ ps.conduces_realizados }}</span>
           </div>
           <div class="mact__card">
-            <span class="mact__label">Galones</span>
+            <span class="mact__label">{{ 'Galones' | t }}</span>
             <span class="mact__value">{{ ps.galones }}</span>
-            <span class="mact__sub">GL consumidos</span>
+            <span class="mact__sub">{{ 'GL consumidos' | t }}</span>
           </div>
           <div class="mact__card">
-            <span class="mact__label">Kilómetros</span>
+            <span class="mact__label">{{ 'Kilómetros' | t }}</span>
             <span class="mact__value">{{ ps.km }}</span>
-            <span class="mact__sub">KM totales</span>
+            <span class="mact__sub">{{ 'KM totales' | t }}</span>
           </div>
           <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-semanales')">
-            <span class="mact__label">Inspecciones</span>
+            <span class="mact__label">{{ 'Inspecciones' | t }}</span>
             <span class="mact__value">{{ ps.inspecciones }}</span>
-            <span class="mact__sub">Ver listado ›</span>
+            <span class="mact__sub">{{ 'Ver listado' | t }} ›</span>
           </button>
           <button type="button" class="mact__card mact__card--tap" (click)="irASeccion('sec-multas')">
-            <span class="mact__label">Multas</span>
+            <span class="mact__label">{{ 'Multas' | t }}</span>
             <span class="mact__value">{{ ps.multas }}</span>
-            <span class="mact__sub">Ver listado ›</span>
+            <span class="mact__sub">{{ 'Ver listado' | t }} ›</span>
           </button>
         </div>
       } @else if (cargandoPeriodo()) {
         <app-skeleton [rows]="2" />
       } @else {
-        <p class="mact__vacio">Sin actividad en este periodo.</p>
+        <p class="mact__vacio">{{ 'Sin actividad en este periodo.' | t }}</p>
       }
 
       <!-- S32 — multas -->
       @if (multas().length) {
         <section id="sec-multas" class="mact__docs">
-          <h2 class="mact__docs-title">Multas ({{ multas().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Multas' | t }} ({{ multas().length }})</h2>
           @for (m of lim('multas', multas()); track m.id) {
             <!-- W5 — tap abre el detalle de la multa -->
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verMulta(m.id)">
-              <span class="mact__act-main">🚦 {{ m.motivo ?? 'Multa' }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
-              <span class="mact__act-sub">@if (m.monto != null) { RD$ {{ m.monto }} · }{{ m.estado === 'pagada' ? 'Pagada' : 'Pendiente' }} ›</span>
+              <span class="mact__act-main">🚦 {{ m.motivo ?? ('Multa' | t) }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
+              <span class="mact__act-sub">@if (m.monto != null) { RD$ {{ m.monto }} · }{{ (m.estado === 'pagada' ? 'Pagada' : 'Pendiente') | t }} ›</span>
             </button>
           }
           @if (hayMasLote('multas', multas().length)) {
-            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('multas')">Cargar más</button>
+            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('multas')">{{ 'Cargar más' | t }}</button>
           }
         </section>
       }
@@ -122,23 +122,23 @@
       <!-- S32 — entregas / recepciones (se abren en el sitio: sin página propia) -->
       @if (entregas().length) {
         <section id="sec-entregas" class="mact__docs">
-          <h2 class="mact__docs-title">Entregas y recepciones ({{ entregas().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Entregas y recepciones' | t }} ({{ entregas().length }})</h2>
           @for (e of lim('entregas', entregas()); track e.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="toggleExpandir('entrega:' + e.id)">
-              <span class="mact__act-main">{{ e.tipo === 'recepcion' ? '📥 Recepción' : '📤 Devolución' }} · {{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
+              <span class="mact__act-main">{{ e.tipo === 'recepcion' ? '📥' : '📤' }} {{ (e.tipo === 'recepcion' ? 'Recepción' : 'Devolución') | t }} · {{ e.vehiculo?.placa ?? ('Vehículo' | t) }}</span>
               <span class="mact__act-sub">{{ e.created_at ? fmtFechaHumana(e.created_at) : '—' }} {{ esExpandido('entrega:' + e.id) ? '⌄' : '›' }}</span>
             </button>
             @if (esExpandido('entrega:' + e.id)) {
               <div class="mact__detalle">
-                <p><span>Tipo</span><b>{{ e.tipo === 'recepcion' ? 'Recepción' : 'Devolución' }}</b></p>
-                <p><span>Vehículo</span><b>{{ e.vehiculo?.placa ?? '—' }}</b></p>
-                <p><span>Kilometraje</span><b>{{ e.km != null ? e.km + ' km' : '—' }}</b></p>
-                <p><span>Fecha</span><b>{{ e.created_at ? fmtFechaHumana(e.created_at) : '—' }}</b></p>
+                <p><span>{{ 'Tipo' | t }}</span><b>{{ (e.tipo === 'recepcion' ? 'Recepción' : 'Devolución') | t }}</b></p>
+                <p><span>{{ 'Vehículo' | t }}</span><b>{{ e.vehiculo?.placa ?? '—' }}</b></p>
+                <p><span>{{ 'Kilometraje' | t }}</span><b>{{ e.km != null ? e.km + ' km' : '—' }}</b></p>
+                <p><span>{{ 'Fecha' | t }}</span><b>{{ e.created_at ? fmtFechaHumana(e.created_at) : '—' }}</b></p>
               </div>
             }
           }
           @if (hayMasLote('entregas', entregas().length)) {
-            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('entregas')">Cargar más</button>
+            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('entregas')">{{ 'Cargar más' | t }}</button>
           }
         </section>
       }
@@ -146,10 +146,10 @@
       <!-- V2 — historial navegable: reportes semanales -->
       @if (semanales().length) {
         <section id="sec-semanales" class="mact__docs">
-          <h2 class="mact__docs-title">Mis inspecciones de vehículo ({{ semanales().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Mis inspecciones de vehículo' | t }} ({{ semanales().length }})</h2>
           @for (c of lim('semanales', semanales()); track c.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verChecklist(c.id)">
-              <span class="mact__act-main">📋 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
+              <span class="mact__act-main">📋 {{ c.vehiculo?.placa ?? ('Vehículo' | t) }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 {{ resultadoLabel(c.resultado) }}
                 @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
@@ -158,7 +158,7 @@
             </button>
           }
           @if (hayMasLote('semanales', semanales().length)) {
-            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('semanales')">Cargar más</button>
+            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('semanales')">{{ 'Cargar más' | t }}</button>
           }
         </section>
       }
@@ -166,10 +166,10 @@
       <!-- AK18 — historial de MIS usos de vehículo (sesiones del modelo "en uso" v2) -->
       @if (usos().length) {
         <section id="sec-usos" class="mact__docs">
-          <h2 class="mact__docs-title">Mis usos de vehículo ({{ usos().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Mis usos de vehículo' | t }} ({{ usos().length }})</h2>
           @for (u of lim('usos', usos()); track u.id) {
             <div class="mact__act-row">
-              <span class="mact__act-main">🚗 {{ u.placa }} · {{ u.marca }} {{ u.modelo }}@if (u.activa) { <em class="mact__act-live"> · en uso</em> }</span>
+              <span class="mact__act-main">🚗 {{ u.placa }} · {{ u.marca }} {{ u.modelo }}@if (u.activa) { <em class="mact__act-live"> · {{ 'en uso' | t }}</em> }</span>
               <span class="mact__act-sub">
                 {{ fmtFechaHumana(u.inicio_at) }}@if (u.fin_at) { → {{ fmtFechaHumana(u.fin_at) }} }
                 @if (u.km_inicio != null) { · {{ u.km_inicio }}@if (u.km_fin != null) { → {{ u.km_fin }} } km }
@@ -188,7 +188,7 @@
             </div>
           }
           @if (hayMasLote('usos', usos().length)) {
-            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('usos')">Cargar más</button>
+            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('usos')">{{ 'Cargar más' | t }}</button>
           }
         </section>
       }
@@ -197,10 +197,10 @@
            retiró en AK15 pero sus registros siguen visibles) -->
       @if (preusos().length) {
         <section id="sec-preusos" class="mact__docs">
-          <h2 class="mact__docs-title">Mis pre-usos (historial) ({{ preusos().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Mis pre-usos (historial)' | t }} ({{ preusos().length }})</h2>
           @for (c of lim('preusos', preusos()); track c.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verChecklist(c.id)">
-              <span class="mact__act-main">🚙 {{ c.vehiculo?.placa ?? 'Vehículo' }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
+              <span class="mact__act-main">🚙 {{ c.vehiculo?.placa ?? ('Vehículo' | t) }} · {{ c.fecha ? fmtFecha(c.fecha) : '—' }}</span>
               <span class="mact__act-sub">
                 {{ resultadoLabel(c.resultado) }}
                 @if (c.kilometraje != null) { · {{ c.kilometraje }} km }
@@ -209,7 +209,7 @@
             </button>
           }
           @if (hayMasLote('preusos', preusos().length)) {
-            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('preusos')">Cargar más</button>
+            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('preusos')">{{ 'Cargar más' | t }}</button>
           }
         </section>
       }
@@ -217,25 +217,25 @@
       <!-- V2 — historial navegable: echadas de combustible -->
       @if (echadas().length) {
         <section id="sec-echadas" class="mact__docs">
-          <h2 class="mact__docs-title">Mi combustible ({{ echadas().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Mi combustible' | t }} ({{ echadas().length }})</h2>
           @for (e of lim('echadas', echadas()); track e.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verEchada(e.id)">
-              <span class="mact__act-main">⛽ {{ e.vehiculo?.placa ?? 'Vehículo' }} · {{ e.created_at ? fmtFechaHora(e.created_at) : (e.fecha ? fmtFecha(e.fecha) : '—') }}</span>
+              <span class="mact__act-main">⛽ {{ e.vehiculo?.placa ?? ('Vehículo' | t) }} · {{ e.created_at ? fmtFechaHora(e.created_at) : (e.fecha ? fmtFecha(e.fecha) : '—') }}</span>
               <span class="mact__act-sub">
-                @if (e.galones != null) { {{ e.galones }} gal }
+                @if (e.galones != null) { {{ e.galones }} {{ 'gal' | t }} }
                 @if (e.monto != null) { · RD$ {{ e.monto }} }
-                @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal }} km/gal }
+                @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal }} {{ 'km/gal' | t }} }
                 @if (rendMeta(e.estado); as m) {
-                  · <span class="mact__estado mact__estado--{{ m.tone }}">{{ m.icon }} {{ m.label }}</span>
+                  · <span class="mact__estado mact__estado--{{ m.tone }}">{{ m.icon }} {{ m.label | t }}</span>
                 } @else if (e.alerta_consumo) {
-                  · <span class="mact__alerta">⚠ anormal</span>
+                  · <span class="mact__alerta">⚠ {{ 'anormal' | t }}</span>
                 }
                 ›
               </span>
             </button>
           }
           @if (hayMasLote('echadas', echadas().length)) {
-            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('echadas')">Cargar más</button>
+            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('echadas')">{{ 'Cargar más' | t }}</button>
           }
         </section>
       }
@@ -243,11 +243,11 @@
       <!-- S32 — rutas asignadas (drill-down a Conduces y rutas) -->
       @if (rutas().length) {
         <section id="sec-rutas" class="mact__docs">
-          <h2 class="mact__docs-title">Mis rutas de hoy ({{ rutas().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Mis rutas de hoy' | t }} ({{ rutas().length }})</h2>
           @for (r of rutas(); track r.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="verRutas()">
               <span class="mact__act-main">🗺️ {{ r.origen }} → {{ r.destino }}</span>
-              <span class="mact__act-sub">{{ estadoRutaLabel(r.estado) }} ›</span>
+              <span class="mact__act-sub">{{ estadoRutaLabel(r.estado) | t }} ›</span>
             </button>
           }
         </section>
@@ -256,9 +256,9 @@
       <!-- V3 — rutas que yo creé/asigné (roles elevados) — se abren en el sitio -->
       @if (esElevado()) {
         <section id="sec-rutas-creadas" class="mact__docs">
-          <h2 class="mact__docs-title">Rutas que creé ({{ rutasCreadas().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Rutas que creé' | t }} ({{ rutasCreadas().length }})</h2>
           @if (!rutasCreadas().length) {
-            <p class="mact__vacio">Aún no has creado rutas en este período.</p>
+            <p class="mact__vacio">{{ 'Aún no has creado rutas en este período.' | t }}</p>
           } @else {
             @for (r of lim('rutasCreadas', rutasCreadas()); track r.id) {
               <button type="button" class="mact__act-row mact__act-row--link" (click)="toggleExpandir('ruta:' + r.id)">
@@ -267,17 +267,17 @@
               </button>
               @if (esExpandido('ruta:' + r.id)) {
                 <div class="mact__detalle">
-                  <p><span>Origen</span><b>{{ r.origen || '—' }}</b></p>
-                  <p><span>Destino</span><b>{{ r.destino || '—' }}</b></p>
-                  <p><span>Vehículo</span><b>{{ r.vehiculo?.placa ?? '—' }}</b></p>
-                  <p><span>Conductor</span><b>{{ r.conductor?.nombre ?? '—' }}</b></p>
-                  <p><span>Estado</span><b>{{ r.estado || '—' }}</b></p>
-                  <p><span>Fecha</span><b>{{ r.fecha ? fmtFecha(r.fecha) : '—' }}</b></p>
+                  <p><span>{{ 'Origen' | t }}</span><b>{{ r.origen || '—' }}</b></p>
+                  <p><span>{{ 'Destino' | t }}</span><b>{{ r.destino || '—' }}</b></p>
+                  <p><span>{{ 'Vehículo' | t }}</span><b>{{ r.vehiculo?.placa ?? '—' }}</b></p>
+                  <p><span>{{ 'Conductor' | t }}</span><b>{{ r.conductor?.nombre ?? '—' }}</b></p>
+                  <p><span>{{ 'Estado' | t }}</span><b>{{ r.estado || '—' }}</b></p>
+                  <p><span>{{ 'Fecha' | t }}</span><b>{{ r.fecha ? fmtFecha(r.fecha) : '—' }}</b></p>
                 </div>
               }
             }
             @if (hayMasLote('rutasCreadas', rutasCreadas().length)) {
-              <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('rutasCreadas')">Cargar más</button>
+              <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('rutasCreadas')">{{ 'Cargar más' | t }}</button>
             }
           }
         </section>
@@ -286,18 +286,18 @@
       <!-- S32 — accidentes — se abren en el sitio (sin página de detalle propia) -->
       @if (accidentes().length) {
         <section id="sec-accidentes" class="mact__docs">
-          <h2 class="mact__docs-title">Accidentes ({{ accidentes().length }})</h2>
+          <h2 class="mact__docs-title">{{ 'Accidentes' | t }} ({{ accidentes().length }})</h2>
           @for (a of lim('accidentes', accidentes()); track a.id) {
             <button type="button" class="mact__act-row mact__act-row--link" (click)="toggleExpandir('acc:' + a.id)">
-              <span class="mact__act-main">🚨 {{ a.vehiculo?.placa ?? 'Vehículo' }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
-              <span class="mact__act-sub">{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}@if (a.lesionados) { · {{ a.lesionados }} lesionado(s) } {{ esExpandido('acc:' + a.id) ? '⌄' : '›' }}</span>
+              <span class="mact__act-main">🚨 {{ a.vehiculo?.placa ?? ('Vehículo' | t) }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
+              <span class="mact__act-sub">{{ (a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior') | t }}@if (a.lesionados) { · {{ a.lesionados }} {{ 'lesionado(s)' | t }} } {{ esExpandido('acc:' + a.id) ? '⌄' : '›' }}</span>
             </button>
             @if (esExpandido('acc:' + a.id)) {
               <div class="mact__detalle">
-                <p><span>Vehículo</span><b>{{ a.vehiculo?.placa ?? '—' }}</b></p>
-                <p><span>Fase</span><b>{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}</b></p>
-                <p><span>Lesionados</span><b>{{ a.lesionados ?? 0 }}</b></p>
-                <p><span>Fecha</span><b>{{ a.fecha ? fmtFecha(a.fecha) : '—' }}</b></p>
+                <p><span>{{ 'Vehículo' | t }}</span><b>{{ a.vehiculo?.placa ?? '—' }}</b></p>
+                <p><span>{{ 'Fase' | t }}</span><b>{{ (a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior') | t }}</b></p>
+                <p><span>{{ 'Lesionados' | t }}</span><b>{{ a.lesionados ?? 0 }}</b></p>
+                <p><span>{{ 'Fecha' | t }}</span><b>{{ a.fecha ? fmtFecha(a.fecha) : '—' }}</b></p>
                 @if (a.descripcion) {
                   <p class="mact__detalle-desc">{{ a.descripcion }}</p>
                 }
@@ -305,26 +305,26 @@
             }
           }
           @if (hayMasLote('accidentes', accidentes().length)) {
-            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('accidentes')">Cargar más</button>
+            <button type="button" class="btn-ghost mact__mas" (click)="verMasLote('accidentes')">{{ 'Cargar más' | t }}</button>
           }
         </section>
       }
 
       <!-- V2/V3 — ver todo el historial (por defecto últimos 90 días) -->
       @if (!historialExpandido() && (semanales().length || preusos().length || echadas().length || rutasCreadas().length)) {
-        <button type="button" class="btn-ghost mact__vermas" (click)="verMas()">Ver más (todo el historial)</button>
+        <button type="button" class="btn-ghost mact__vermas" (click)="verMas()">{{ 'Ver más (todo el historial)' | t }}</button>
       }
 
       <!-- S24(c) — el chofer registra una multa que le pusieron -->
       @if (esConductor()) {
-        <button type="button" class="btn-ghost mact__multa" (click)="miMulta()">🚦 Me pusieron una multa</button>
+        <button type="button" class="btn-ghost mact__multa" (click)="miMulta()">🚦 {{ 'Me pusieron una multa' | t }}</button>
       }
 
       <!-- X1 — documentos del conductor -->
       <section class="mact__docs">
-        <h2 class="mact__docs-title">Mis documentos</h2>
+        <h2 class="mact__docs-title">{{ 'Mis documentos' | t }}</h2>
         <app-doc-slot
-          label="Cédula"
+          [label]="'Cédula' | t"
           [requerido]="true"
           [urlExistente]="cedulaUrl()"
           [esPdfExistente]="esPdf(cedulaDoc())"
@@ -332,7 +332,7 @@
           (captured)="onDoc('cedula', $event)"
         />
         <app-doc-slot
-          label="Licencia de conducir"
+          [label]="'Licencia de conducir' | t"
           [requerido]="true"
           [urlExistente]="licenciaUrl()"
           [esPdfExistente]="esPdf(licenciaDoc())"

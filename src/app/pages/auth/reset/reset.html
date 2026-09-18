@@ -1,12 +1,12 @@
 <div class="screen login">
   <div class="login__brand">
-    <h1 class="login__title">Recuperar contraseña</h1>
-    <p class="login__tagline">Te enviaremos un enlace a tu correo.</p>
+    <h1 class="login__title">{{ 'Recuperar contraseña' | t }}</h1>
+    <p class="login__tagline">{{ 'Te enviaremos un enlace a tu correo.' | t }}</p>
   </div>
 
   <form class="login__form" (ngSubmit)="submit()">
     @if (!sent()) {
-      <label class="field-label" for="email">Correo</label>
+      <label class="field-label" for="email">{{ 'Correo' | t }}</label>
       <input
         id="email"
         class="field"
@@ -19,11 +19,11 @@
         placeholder="tucorreo@constructorasd.com"
       />
       <button type="submit" class="btn-cta login__submit" [disabled]="loading()">
-        {{ loading() ? 'Enviando…' : 'Enviar enlace' }}
+        {{ (loading() ? 'Enviando…' : 'Enviar enlace') | t }}
       </button>
     } @else {
-      <p>Revisa tu correo y abre el enlace para crear una nueva contraseña.</p>
+      <p>{{ 'Revisa tu correo y abre el enlace para crear una nueva contraseña.' | t }}</p>
     }
-    <a class="login__forgot" routerLink="/auth/login">Volver a entrar</a>
+    <a class="login__forgot" routerLink="/auth/login">{{ 'Volver a entrar' | t }}</a>
   </form>
 </div>

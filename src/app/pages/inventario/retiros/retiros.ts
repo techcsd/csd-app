@@ -3,6 +3,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { RetirosService } from '../../../core/services/retiros.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { formatFechaRelativa } from '../../../core/util/fecha';
@@ -22,7 +23,7 @@ import {
   selector: 'app-retiros',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, TranslatePipe],
   templateUrl: './retiros.html',
   styleUrl: './retiros.scss',
 })

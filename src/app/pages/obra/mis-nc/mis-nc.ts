@@ -8,13 +8,15 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { NcAsignada, NC_TIPO_META, SEVERIDAD_META } from '../../../core/models/obra.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /** AG16 FASE 2 — Bandeja "Mis pendientes": NC donde soy responsable + acciones correctivas asignadas. */
 @Component({
   selector: 'app-obra-mis-nc',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState],
+  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './mis-nc.html',
   styleUrl: './mis-nc.scss',
 })
@@ -22,6 +24,7 @@ export class MisNcPage {
   private obra = inject(ObraService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   // BL2 — distinguir "sin pendientes" (lista vacía) de "no se pudo cargar" (falló
@@ -108,11 +111,11 @@ export class MisNcPage {
         responsableId: this.accResp()?.id ?? null,
         fechaCompromiso: this.accFecha() || null,
       });
-      this.toast.success('Acción correctiva asignada.');
+      this.toast.success(this.i18n.t('Acción correctiva asignada.'));
       this.cerrarAccion();
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo asignar la acción.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo asignar la acción.'));
     } finally {
       this.guardando.set(false);
     }
@@ -135,10 +138,10 @@ export class MisNcPage {
     try {
       const foto = this.evidencia()?.blob;
       await this.obra.enqueueAccionHecha(it.id, foto ? [foto] : []);
-      this.toast.success('Acción marcada como hecha.');
+      this.toast.success(this.i18n.t('Acción marcada como hecha.'));
       await this.trasAccion(it);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.guardando.set(false);
     }
@@ -150,10 +153,10 @@ export class MisNcPage {
     this.guardando.set(true);
     try {
       await this.obra.enqueueVerificarNc(it.id, this.nota().trim() || null);
-      this.toast.success('No conformidad verificada.');
+      this.toast.success(this.i18n.t('No conformidad verificada.'));
       await this.trasAccion(it);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo verificar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo verificar.'));
     } finally {
       this.guardando.set(false);
     }

@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { RetirosService } from '../../../core/services/retiros.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -22,7 +24,7 @@ import {
   selector: 'app-retiro-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton],
+  imports: [FormsModule, Skeleton, TranslatePipe],
   templateUrl: './retiro-detalle.html',
   styleUrl: './retiro-detalle.scss',
 })
@@ -32,6 +34,7 @@ export class RetiroDetallePage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private id = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -86,21 +89,21 @@ export class RetiroDetallePage {
   async confirmarCancelacion(): Promise<void> {
     const motivo = this.motivoCancelar().trim();
     if (!motivo) {
-      this.toast.error('Escribe el motivo de la cancelación.');
+      this.toast.error(this.i18n.t('Escribe el motivo de la cancelación.'));
       return;
     }
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para cancelar.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cancelar.'));
       return;
     }
     this.cancelando.set(true);
     try {
       await this.retiros.cancelar(this.id, motivo);
       this.confirmarCancelar.set(false);
-      this.toast.success('Retiro cancelado.');
+      this.toast.success(this.i18n.t('Retiro cancelado.'));
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cancelar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cancelar.'));
     } finally {
       this.cancelando.set(false);
     }

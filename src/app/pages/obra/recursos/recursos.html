@@ -1,13 +1,13 @@
 <div class="screen rec">
   <header class="rec__header">
-    <button type="button" class="rec__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="rec__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="rec__icon">📦</span>
-    <h1 class="rec__title">Recursos</h1>
+    <h1 class="rec__title">{{ 'Recursos' | t }}</h1>
   </header>
 
   <div class="rec__tabs">
-    <button type="button" [class.rec__tab--on]="tab() === 'stock'" (click)="tab.set('stock')">Stock</button>
-    <button type="button" [class.rec__tab--on]="tab() === 'pedido'" (click)="tab.set('pedido')">Pedido urgente</button>
+    <button type="button" [class.rec__tab--on]="tab() === 'stock'" (click)="tab.set('stock')">{{ 'Stock' | t }}</button>
+    <button type="button" [class.rec__tab--on]="tab() === 'pedido'" (click)="tab.set('pedido')">{{ 'Pedido urgente' | t }}</button>
   </div>
 
   <div class="screen__body">
@@ -16,12 +16,12 @@
         <app-skeleton [rows]="5" />
       } @else if (error()) {
         <!-- BL2 — la consulta falló y no hay nada cacheado: error+reintento -->
-        <app-empty-state icon="⚠️" title="No pudimos cargar el stock"
-          message="Hubo un problema al consultar la bodega. Revisa tu conexión y reintenta."
-          ctaLabel="Reintentar" (action)="cargar()" />
+        <app-empty-state icon="⚠️" [title]="'No pudimos cargar el stock' | t"
+          [message]="'Hubo un problema al consultar la bodega. Revisa tu conexión y reintenta.' | t"
+          [ctaLabel]="'Reintentar' | t" (action)="cargar()" />
       } @else if (!stock().length) {
         <!-- BL2 — vacío legítimo: texto neutral, sin afirmar la causa -->
-        <app-empty-state icon="📦" title="Sin existencias" message="No vemos existencias registradas en la bodega de esta obra ahora mismo." />
+        <app-empty-state icon="📦" [title]="'Sin existencias' | t" [message]="'No vemos existencias registradas en la bodega de esta obra ahora mismo.' | t" />
       } @else {
         @for (a of stock(); track a.articulo_id) {
           <div class="rec__stock">
@@ -33,10 +33,10 @@
     } @else {
       <!-- Pedido urgente -->
       <div class="rec__add">
-        <input class="field" type="text" placeholder="¿Qué necesitas?" [ngModel]="nuevoDesc()" (ngModelChange)="nuevoDesc.set($event)" />
+        <input class="field" type="text" [placeholder]="'¿Qué necesitas?' | t" [ngModel]="nuevoDesc()" (ngModelChange)="nuevoDesc.set($event)" />
         <div class="rec__add-row">
           <input class="field rec__cant" type="number" min="1" [ngModel]="nuevaCant()" (ngModelChange)="nuevaCant.set(+$event)" />
-          <input class="field rec__unidad" type="text" placeholder="und" [ngModel]="nuevaUnidad()" (ngModelChange)="nuevaUnidad.set($event)" />
+          <input class="field rec__unidad" type="text" [placeholder]="'und' | t" [ngModel]="nuevaUnidad()" (ngModelChange)="nuevaUnidad.set($event)" />
           <button type="button" class="btn-ghost rec__add-btn" (click)="agregarLinea()">➕</button>
         </div>
       </div>
@@ -53,25 +53,25 @@
         </div>
       }
 
-      <label class="field-label rec__mt">Justificación / notas</label>
+      <label class="field-label rec__mt">{{ 'Justificación / notas' | t }}</label>
       <textarea class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"
-        placeholder="¿Por qué es urgente?"></textarea>
+        [placeholder]="'¿Por qué es urgente?' | t"></textarea>
 
       <button type="button" class="btn-cta rec__enviar" [disabled]="!puedeEnviar() || enviando()" (click)="enviarPedido()">
-        {{ enviando() ? 'Enviando…' : '🚨 Enviar pedido urgente' }}
+        @if (enviando()) { {{ 'Enviando…' | t }} } @else { 🚨 {{ 'Enviar pedido urgente' | t }} }
       </button>
       @if (!puedeEnviar()) {
-        <p class="rec__hint">Agrega al menos un material a pedir.</p>
+        <p class="rec__hint">{{ 'Agrega al menos un material a pedir.' | t }}</p>
       }
 
       <!-- Seguimiento del estado de mis pedidos -->
       @if (pedidos().length) {
-        <h2 class="rec__section">Mis pedidos</h2>
+        <h2 class="rec__section">{{ 'Mis pedidos' | t }}</h2>
         @for (p of pedidos(); track p.id) {
           <div class="rec__pedido">
             <div class="rec__pedido-top">
               <span class="rec__pedido-fecha">{{ p.created_at | date: 'dd/MM/yy' }}</span>
-              <span class="rec__pedido-estado" [style.background]="estadoMeta(p.estado).tint">{{ estadoMeta(p.estado).label }}</span>
+              <span class="rec__pedido-estado" [style.background]="estadoMeta(p.estado).tint">{{ estadoMeta(p.estado).label | t }}</span>
             </div>
             @if (p.notas) { <p class="rec__pedido-notas">{{ p.notas }}</p> }
           </div>

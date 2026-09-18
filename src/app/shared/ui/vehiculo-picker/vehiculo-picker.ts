@@ -5,6 +5,7 @@ import { Skeleton } from '../skeleton/skeleton';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoUsoService } from '../../../core/services/vehiculo-uso.service';
 import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * B1 — reusable pool-of-vehicles picker (tarjetas con foto). Loads the shared
@@ -16,7 +17,7 @@ import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/tran
   selector: 'app-vehiculo-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [VehiculoCard, EmptyState, Skeleton],
+  imports: [VehiculoCard, EmptyState, Skeleton, TranslatePipe],
   templateUrl: './vehiculo-picker.html',
   styleUrl: './vehiculo-picker.scss',
 })

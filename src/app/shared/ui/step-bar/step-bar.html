@@ -1,5 +1,5 @@
 <div class="step-bar">
-  <span class="step-bar__text">Paso {{ current() }} de {{ total() }}</span>
+  <span class="step-bar__text">{{ 'Paso {n} de {total}' | t: { n: current(), total: total() } }}</span>
   <div class="step-bar__track">
     <div class="step-bar__fill" [style.width.%]="pct()"></div>
   </div>

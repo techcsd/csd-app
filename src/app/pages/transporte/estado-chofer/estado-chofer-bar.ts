@@ -9,6 +9,8 @@ import {
   estadoMeta,
 } from '../../../core/services/chofer-estado.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AF28 — barra compacta de estado del chofer para el hub de Transporte. Muestra el
@@ -20,13 +22,14 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-estado-chofer-bar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BottomSheet, OptionButton],
+  imports: [FormsModule, BottomSheet, OptionButton, TranslatePipe],
   templateUrl: './estado-chofer-bar.html',
   styleUrl: './estado-chofer-bar.scss',
 })
 export class EstadoChoferBar {
   private svc = inject(ChoferEstadoService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   readonly opciones = ESTADOS_MANUALES;
   estado = this.svc.estado;
@@ -46,8 +49,8 @@ export class EstadoChoferBar {
   private maybePromptMorning(): void {
     if (this.svc.estado() !== 'inactivo') return;
     this.toast.withAction(
-      'Buenos días. ¿Empiezas tu jornada?',
-      { label: 'Estoy disponible', run: () => void this.svc.set('disponible') },
+      this.i18n.t('Buenos días. ¿Empiezas tu jornada?'),
+      { label: this.i18n.t('Estoy disponible'), run: () => void this.svc.set('disponible') },
       'info',
       9000,
     );
@@ -76,7 +79,7 @@ export class EstadoChoferBar {
   async confirmarOtros(): Promise<void> {
     const t = this.otrosInput().trim();
     if (!t) {
-      this.toast.error('Escribe qué estás haciendo.');
+      this.toast.error(this.i18n.t('Escribe qué estás haciendo.'));
       return;
     }
     await this.svc.set('otros', t);
@@ -85,9 +88,9 @@ export class EstadoChoferBar {
   }
 
   private avisoEstado(e: EstadoChofer): void {
-    if (e === 'almuerzo') this.toast.success('Buen provecho — tienes 1 hora.');
-    else if (e === 'inactivo') this.toast.success('Marcaste salida. ¡Hasta mañana!');
-    else this.toast.success(`Estado: ${estadoMeta(e).label}`);
+    if (e === 'almuerzo') this.toast.success(this.i18n.t('Buen provecho — tienes 1 hora.'));
+    else if (e === 'inactivo') this.toast.success(this.i18n.t('Marcaste salida. ¡Hasta mañana!'));
+    else this.toast.success(this.i18n.t('Estado: {estado}', { estado: this.i18n.t(estadoMeta(e).label) }));
   }
 
   metaOf = estadoMeta;

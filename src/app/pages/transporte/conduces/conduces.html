@@ -1,9 +1,9 @@
 <div class="screen conduces">
   <header class="conduces__header">
-    <button type="button" class="conduces__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="conduces__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="conduces__icon">🗺️</span>
-    <h1 class="conduces__title">Mis rutas</h1>
-    <button type="button" class="conduces__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '🔄' }}</button>
+    <h1 class="conduces__title">{{ 'Mis rutas' | t }}</h1>
+    <button type="button" class="conduces__refresh" (click)="refrescar()" [disabled]="refrescando()" [attr.aria-label]="'Actualizar' | t">{{ refrescando() ? '…' : '🔄' }}</button>
   </header>
 
   <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
@@ -11,12 +11,12 @@
     @if (trackingActivo()) {
       <div class="conduces__tracking" role="status">
         <span class="conduces__tracking-dot" aria-hidden="true"></span>
-        Reportando tu ubicación durante la ruta
+        {{ 'Reportando tu ubicación durante la ruta' | t }}
       </div>
     }
     <div class="conduces__acciones">
       <button type="button" class="btn-cta conduces__crear" (click)="crearRuta()">
-        ➕ Crear ruta
+        ➕ {{ 'Crear ruta' | t }}
       </button>
     </div>
 
@@ -25,13 +25,13 @@
     } @else {
       <!-- AF25 — Rutas activas (en curso, arriba) + Rutas de hoy -->
       @if (rutasActivas().length) {
-        <h2 class="conduces__section">Rutas activas</h2>
+        <h2 class="conduces__section">{{ 'Rutas activas' | t }}</h2>
         @for (r of rutasActivas(); track r.id) {
           <ng-container *ngTemplateOutlet="rutaCard; context: { $implicit: r }"></ng-container>
         }
       }
       @if (rutasHoy().length) {
-        <h2 class="conduces__section">Rutas de hoy</h2>
+        <h2 class="conduces__section">{{ 'Rutas de hoy' | t }}</h2>
         @for (r of rutasHoy(); track r.id) {
           <ng-container *ngTemplateOutlet="rutaCard; context: { $implicit: r }"></ng-container>
         }
@@ -41,20 +41,20 @@
           <div class="ruta-card">
             <div class="ruta-card__info">
               <span class="ruta-card__ruta">{{ r.origen }} → {{ r.destino }}
-                @if (r.modificada_at) { <em class="ruta-card__modtag">(modificada {{ fmtHora(r.modificada_at) }})</em> }
+                @if (r.modificada_at) { <em class="ruta-card__modtag">({{ 'modificada' | t }} {{ fmtHora(r.modificada_at) }})</em> }
               </span>
               <span class="ruta-card__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
               <!-- AK22 — fecha y hora en que se planificó/creó la ruta -->
-              @if (r.creado_en) { <span class="ruta-card__fecha">📅 Planificada: {{ fmtFechaHora(r.creado_en) }}</span> }
+              @if (r.creado_en) { <span class="ruta-card__fecha">📅 {{ 'Planificada:' | t }} {{ fmtFechaHora(r.creado_en) }}</span> }
               @if (r.notas) { <span class="ruta-card__notas">📝 {{ r.notas }}</span> }
               <!-- Y4 — contador en vivo mientras la ruta está en curso -->
               @if (cronometro(r); as t) {
-                <span class="ruta-card__cron">⏱️ En curso · {{ t }}</span>
+                <span class="ruta-card__cron">⏱️ {{ 'En curso' | t }} · {{ t }}</span>
               }
               <!-- Y4 — duración real vs estimada al completar -->
               @if (resumenTiempo(r); as rt) {
                 <span class="ruta-card__tiempo">
-                  🏁 Duración {{ fmtDur(rt.real) }}@if (rt.est != null) { · Estimado {{ fmtDur(rt.est) }}@if (rt.pct != null) { ({{ rt.pct > 0 ? '+' : '' }}{{ rt.pct }}%) } }
+                  🏁 {{ 'Duración' | t }} {{ fmtDur(rt.real) }}@if (rt.est != null) { · {{ 'Estimado' | t }} {{ fmtDur(rt.est) }}@if (rt.pct != null) { ({{ rt.pct > 0 ? '+' : '' }}{{ rt.pct }}%) } }
                 </span>
               }
             </div>
@@ -63,11 +63,11 @@
                  "Cómo llegar" (navegar a un destino ya cerrado) no tiene sentido. -->
             @if (rutaActiva(r)) {
               <div class="ruta-card__actions">
-                <button type="button" class="btn-outline ruta-card__btn" (click)="comoLlegar(r)">🧭 Cómo llegar</button>
+                <button type="button" class="btn-outline ruta-card__btn" (click)="comoLlegar(r)">🧭 {{ 'Cómo llegar' | t }}</button>
                 @if (r.estado === 'planificada') {
-                  <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'en_curso')">▶ Iniciar ruta</button>
+                  <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'en_curso')">▶ {{ 'Iniciar ruta' | t }}</button>
                 } @else if (r.estado === 'en_curso') {
-                  <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'completada')">🏁 Completar</button>
+                  <button type="button" class="btn-cta ruta-card__btn" (click)="ruta(r.id, 'completada')">🏁 {{ 'Completar' | t }}</button>
                 }
               </div>
             }
@@ -75,14 +75,14 @@
             <!-- AF25 — RUTA VIVA: agregar parada / cambiar destino (no "cancelar") -->
             @if (r.estado === 'planificada' || r.estado === 'en_curso') {
               <div class="ruta-card__viva">
-                <button type="button" class="btn-outline ruta-card__btn" (click)="abrirRutaViva(r.id, 'parada')">➕ Agregar parada</button>
-                <button type="button" class="btn-outline ruta-card__btn" (click)="abrirRutaViva(r.id, 'destino')">🔀 Cambiar destino</button>
+                <button type="button" class="btn-outline ruta-card__btn" (click)="abrirRutaViva(r.id, 'parada')">➕ {{ 'Agregar parada' | t }}</button>
+                <button type="button" class="btn-outline ruta-card__btn" (click)="abrirRutaViva(r.id, 'destino')">🔀 {{ 'Cambiar destino' | t }}</button>
               </div>
             }
 
             <!-- AE5 — detalle de EJECUCIÓN: paradas con estado + conduce por parada -->
             <button type="button" class="ruta-card__ver" (click)="toggleDetalle(r.id)">
-              {{ estaExpandida(r.id) ? '▲ Ocultar paradas' : '▼ Ver paradas y carga' }}
+              {{ estaExpandida(r.id) ? '▲' : '▼' }} {{ estaExpandida(r.id) ? ('Ocultar paradas' | t) : ('Ver paradas y carga' | t) }}
             </button>
             @if (estaExpandida(r.id)) {
               @if (detalle(r.id); as d) {
@@ -90,22 +90,22 @@
                   <!-- AI3 — ruta informativa: H.I/H.F, duración total, km y trayecto -->
                   @if (d.ruta; as rh) {
                     <div class="ruta-card__info">
-                      @if (rh.iniciada_at) { <span>🟢 Inicio {{ fmtHora(rh.iniciada_at) }}</span> }
-                      @if (rh.finalizada_at) { <span>🏁 Fin {{ fmtHora(rh.finalizada_at) }}</span> }
+                      @if (rh.iniciada_at) { <span>🟢 {{ 'Inicio' | t }} {{ fmtHora(rh.iniciada_at) }}</span> }
+                      @if (rh.finalizada_at) { <span>🏁 {{ 'Fin' | t }} {{ fmtHora(rh.finalizada_at) }}</span> }
                       @if (rh.duracion_min != null) { <span>⏱️ {{ fmtDur(rh.duracion_min) }}</span> }
                       @if (rh.km_real != null) { <span>🛣️ {{ rh.km_real }} km</span> }
-                      @if (d.trayecto?.length) { <span>📍 {{ d.trayecto!.length }} puntos de recorrido</span> }
+                      @if (d.trayecto?.length) { <span>📍 {{ d.trayecto!.length }} {{ 'puntos de recorrido' | t }}</span> }
                     </div>
                     <!-- AV13 — la ruta fue modificada (cambio de destino) -->
                     @if (rh.modificada_at) {
-                      <div class="ruta-card__mod">✏️ Modificada {{ fmtHora(rh.modificada_at) }}</div>
+                      <div class="ruta-card__mod">✏️ {{ 'Modificada' | t }} {{ fmtHora(rh.modificada_at) }}</div>
                     }
                   }
                   <!-- AV13 — historial de cambios de destino (de→a, cuándo, quién) -->
                   @if (cambiosDestino(d.eventos); as evs) {
                     @if (evs.length) {
                       <details class="ruta-card__hist">
-                        <summary>🕘 Historial de cambios de destino</summary>
+                        <summary>🕘 {{ 'Historial de cambios de destino' | t }}</summary>
                         @for (ev of evs; track $index) {
                           <div class="ruta-card__hist-row">
                             <span class="ruta-card__hist-when">{{ fmtHora(ev.created_at) }}</span>
@@ -119,20 +119,26 @@
                   <!-- AE — progreso + ir a la próxima parada -->
                   @if (progreso(r.id); as pr) {
                     <div class="ruta-card__progreso">
-                      <span class="ruta-card__progreso-txt">📍 {{ pr.entregadas }}/{{ pr.total }} paradas entregadas</span>
+                      <span class="ruta-card__progreso-txt">📍 {{ pr.entregadas }}/{{ pr.total }} {{ 'paradas entregadas' | t }}</span>
                       @if (proximaParada(r.id); as np) {
                         <button type="button" class="btn-outline ruta-card__prox" (click)="comoLlegarParada(np)">
-                          🧭 Ir a la parada {{ np.orden }}
+                          🧭 {{ 'Ir a la parada' | t }} {{ np.orden }}
                         </button>
                       }
                     </div>
                     @if (proximaTieneCoords(r.id)) {
                       <div class="ruta-card__eta">
                         @if (etaProxima()[r.id] != null) {
-                          <span class="ruta-card__eta-txt">🕒 A la próxima parada: <b>{{ fmtDur(etaProxima()[r.id]) }}</b></span>
+                          <span class="ruta-card__eta-txt">🕒 {{ 'A la próxima parada:' | t }} <b>{{ fmtDur(etaProxima()[r.id]) }}</b></span>
                         }
                         <button type="button" class="btn-outline ruta-card__eta-btn" [disabled]="calculandoEta() === r.id" (click)="calcularEta(r.id)">
-                          {{ calculandoEta() === r.id ? 'Calculando…' : (etaProxima()[r.id] != null ? 'Recalcular tiempo' : '🕒 Calcular tiempo') }}
+                          @if (calculandoEta() === r.id) {
+                            {{ 'Calculando…' | t }}
+                          } @else if (etaProxima()[r.id] != null) {
+                            {{ 'Recalcular tiempo' | t }}
+                          } @else {
+                            🕒 {{ 'Calcular tiempo' | t }}
+                          }
                         </button>
                       </div>
                     }
@@ -140,7 +146,7 @@
                   <!-- Origen -->
                   <div class="parada parada--extremo">
                     <span class="parada__orden">A</span>
-                    <span class="parada__nombre">{{ r.origen }} <em>(origen)</em></span>
+                    <span class="parada__nombre">{{ r.origen }} <em>({{ 'origen' | t }})</em></span>
                   </div>
 
                   <!-- Paradas intermedias con estado, carga y acciones -->
@@ -154,13 +160,13 @@
                         </div>
                         @if (p.notas) { <span class="parada__notas">📝 {{ p.notas }}</span> }
                         @if (p.estado === 'entregada' && p.entregado_a) {
-                          <span class="parada__recibio">✓ Recibió: {{ p.entregado_a }}</span>
+                          <span class="parada__recibio">✓ {{ 'Recibió:' | t }} {{ p.entregado_a }}</span>
                         }
 
                         <!-- Conduce vinculado a la parada (carga que va ahí) -->
                         @if (conduceDeParada(r.id, p); as c) {
                           <div class="parada__conduce">
-                            <span class="parada__conduce-tit">📦 Conduce{{ c.destino ? ' · ' + c.destino : '' }}</span>
+                            <span class="parada__conduce-tit">📦 {{ 'Conduce' | t }}{{ c.destino ? ' · ' + c.destino : '' }}</span>
                             <ul class="parada__conduce-items">
                               @for (it of c.items; track $index) {
                                 <li>{{ it.cantidad | number: '1.0-2' }} {{ it.unidad }} · {{ it.articulo }}</li>
@@ -174,17 +180,17 @@
                              Un solo predicado gatea los seis botones de abajo. -->
                         @if (paradaAccionable(r, p)) {
                           <div class="parada__actions">
-                            <button type="button" class="btn-outline parada__btn" (click)="comoLlegarParada(p)">🧭 Cómo llegar</button>
+                            <button type="button" class="btn-outline parada__btn" (click)="comoLlegarParada(p)">🧭 {{ 'Cómo llegar' | t }}</button>
                             @if (p.estado === 'pendiente') {
-                              <button type="button" class="btn-outline parada__btn" [disabled]="paradaOcupada() === p.id" (click)="marcarParada(r.id, p, 'en_camino')">🚚 En camino</button>
+                              <button type="button" class="btn-outline parada__btn" [disabled]="paradaOcupada() === p.id" (click)="marcarParada(r.id, p, 'en_camino')">🚚 {{ 'En camino' | t }}</button>
                             }
                             @if (p.conduce_id) {
-                              <button type="button" class="btn-cta parada__btn" (click)="entregarConduceParada(p.conduce_id)">✍️ Entregar conduce</button>
+                              <button type="button" class="btn-cta parada__btn" (click)="entregarConduceParada(p.conduce_id)">✍️ {{ 'Entregar conduce' | t }}</button>
                             } @else {
                               <!-- AH8 — completar la parada (marca "ya fui" con hora + ubicación) -->
-                              <button type="button" class="btn-cta parada__btn" [disabled]="paradaOcupada() === p.id" (click)="marcarParada(r.id, p, 'entregada')">✓ Completar parada</button>
-                              <button type="button" class="btn-outline parada__btn" (click)="abrirEntregarParada(r.id, p)">✍️ Entregar con firma</button>
-                              <button type="button" class="btn-outline parada__btn" (click)="toggleAdjuntar(p.id)">➕ Adjuntar conduce</button>
+                              <button type="button" class="btn-cta parada__btn" [disabled]="paradaOcupada() === p.id" (click)="marcarParada(r.id, p, 'entregada')">✓ {{ 'Completar parada' | t }}</button>
+                              <button type="button" class="btn-outline parada__btn" (click)="abrirEntregarParada(r.id, p)">✍️ {{ 'Entregar con firma' | t }}</button>
+                              <button type="button" class="btn-outline parada__btn" (click)="toggleAdjuntar(p.id)">➕ {{ 'Adjuntar conduce' | t }}</button>
                             }
                           </div>
 
@@ -192,14 +198,14 @@
                           @if (adjuntando() === p.id) {
                             <div class="parada__adjuntar">
                               @if (conducesParaAdjuntar(r.id).length) {
-                                <span class="parada__adjuntar-tit">Elige el conduce que va a esta parada:</span>
+                                <span class="parada__adjuntar-tit">{{ 'Elige el conduce que va a esta parada:' | t }}</span>
                                 @for (c of conducesParaAdjuntar(r.id); track c.id) {
                                   <button type="button" class="parada__adjuntar-opt" [disabled]="paradaOcupada() === p.id" (click)="adjuntarConduce(r.id, p.id, c.id)">
-                                    📦 {{ c.destino ?? 'Conduce' }} — {{ c.items.length }} artículo(s)
+                                    📦 {{ c.destino ?? ('Conduce' | t) }} — {{ c.items.length }} {{ 'artículo(s)' | t }}
                                   </button>
                                 }
                               } @else {
-                                <span class="parada__vacio">No tienes conduces despachados sin asignar a una parada.</span>
+                                <span class="parada__vacio">{{ 'No tienes conduces despachados sin asignar a una parada.' | t }}</span>
                               }
                             </div>
                           }
@@ -211,22 +217,22 @@
                   <!-- Destino -->
                   <div class="parada parada--extremo">
                     <span class="parada__orden">B</span>
-                    <span class="parada__nombre">{{ r.destino }} <em>(destino)</em></span>
+                    <span class="parada__nombre">{{ r.destino }} <em>({{ 'destino' | t }})</em></span>
                   </div>
 
                   @if (fotos(r.id).length) {
                     <div class="ruta-card__fotos">
                       @for (f of fotos(r.id); track f) {
-                        <img class="ruta-card__foto" [src]="f" alt="Evidencia de la ruta" loading="lazy" />
+                        <img class="ruta-card__foto" [src]="f" [attr.alt]="'Evidencia de la ruta' | t" loading="lazy" />
                       }
                     </div>
                   }
                   @if (!d.paradas.length) {
-                    <span class="ruta-card__vacio">Esta ruta no tiene paradas intermedias.</span>
+                    <span class="ruta-card__vacio">{{ 'Esta ruta no tiene paradas intermedias.' | t }}</span>
                   }
                 </div>
               } @else {
-                <p class="ruta-card__vacio">Cargando paradas…</p>
+                <p class="ruta-card__vacio">{{ 'Cargando paradas…' | t }}</p>
               }
             }
           </div>
@@ -235,15 +241,15 @@
       <!-- AK11 — "Conduces por entregar" se mantiene: el chofer inicia una ruta a
            partir de un conduce. Mantiene su propio empty state (abajo). -->
       @if (conduces().length) {
-        <h2 class="conduces__section">Conduces por entregar</h2>
+        <h2 class="conduces__section">{{ 'Conduces por entregar' | t }}</h2>
         @for (c of conduces(); track c.id) {
           <div class="conduce-card">
             <div class="conduce-card__head">
-              <span class="conduce-card__destino">📍 {{ c.destino ?? 'Destino' }}</span>
-              <span class="conduce-card__bodega">Desde: {{ c.bodega ?? '—' }}</span>
+              <span class="conduce-card__destino">📍 {{ c.destino ?? ('Destino' | t) }}</span>
+              <span class="conduce-card__bodega">{{ 'Desde:' | t }} {{ c.bodega ?? '—' }}</span>
             </div>
             <!-- AK7 — fecha y hora exacta de emisión del conduce -->
-            @if (c.creado_en) { <span class="conduce-card__fecha">🕒 Emitido: {{ fmtFechaHora(c.creado_en) }}</span> }
+            @if (c.creado_en) { <span class="conduce-card__fecha">🕒 {{ 'Emitido:' | t }} {{ fmtFechaHora(c.creado_en) }}</span> }
             <ul class="conduce-card__items">
               @for (it of c.items; track it.detalle_id) {
                 <li>{{ it.cantidad | number: '1.0-2' }} {{ it.unidad }} · {{ it.articulo }}</li>
@@ -251,7 +257,7 @@
             </ul>
             <!-- AK11 — "Gestionar entrega" (antes "Marcar entrega"): abre el flujo de
                  estados (Iniciar ruta → Estoy entregando → entregado). -->
-            <button type="button" class="btn-cta" (click)="entregar(c)">Gestionar entrega</button>
+            <button type="button" class="btn-cta" (click)="entregar(c)">{{ 'Gestionar entrega' | t }}</button>
           </div>
         }
       }
@@ -261,16 +267,16 @@
       @if (!rutas().length && !conduces().length) {
         <app-empty-state
           icon="🗺️"
-          title="No tienes rutas activas ahora mismo"
-          message="Aquí verás tus rutas del día y los conduces que el almacén despache para que los lleves a una obra. Puedes crear una ruta cuando la necesites."
-          ctaLabel="Crear ruta"
-          secondaryLabel="Actualizar"
+          [title]="'No tienes rutas activas ahora mismo' | t"
+          [message]="'Aquí verás tus rutas del día y los conduces que el almacén despache para que los lleves a una obra. Puedes crear una ruta cuando la necesites.' | t"
+          [ctaLabel]="'Crear ruta' | t"
+          [secondaryLabel]="'Actualizar' | t"
           (action)="crearRuta()"
           (secondaryAction)="load()"
         />
       } @else if (rutas().length && !conduces().length) {
         <!-- AK3 — empty propio de la sección "Conduces por entregar" (hay rutas). -->
-        <p class="conduces__sub-empty">🧾 No tienes conduces por entregar por ahora.</p>
+        <p class="conduces__sub-empty">🧾 {{ 'No tienes conduces por entregar por ahora.' | t }}</p>
       }
     }
   </div>
@@ -282,20 +288,20 @@
     <div class="parada-sheet-back" (click)="cerrarEntregarParada()"></div>
     <div class="parada-sheet">
       <div class="parada-sheet__head">
-        <h2 class="parada-sheet__title">Entregar parada {{ e.parada.orden }}</h2>
-        <button type="button" class="parada-sheet__x" (click)="cerrarEntregarParada()" aria-label="Cerrar">✕</button>
+        <h2 class="parada-sheet__title">{{ 'Entregar parada' | t }} {{ e.parada.orden }}</h2>
+        <button type="button" class="parada-sheet__x" (click)="cerrarEntregarParada()" [attr.aria-label]="'Cerrar' | t">✕</button>
       </div>
       <p class="parada-sheet__sub">{{ e.parada.ubicacion }}</p>
 
-      <label class="field-label" for="ent-recibio">¿Quién recibió?</label>
-      <input id="ent-recibio" class="field" type="text" [ngModel]="entRecibio()" (ngModelChange)="entRecibio.set($event)" placeholder="Nombre de quien recibe" />
+      <label class="field-label" for="ent-recibio">{{ '¿Quién recibió?' | t }}</label>
+      <input id="ent-recibio" class="field" type="text" [ngModel]="entRecibio()" (ngModelChange)="entRecibio.set($event)" [placeholder]="'Nombre de quien recibe' | t" />
 
-      <label class="field-label parada-sheet__mt">Firma de quien recibe <span class="parada-sheet__req">*</span></label>
+      <label class="field-label parada-sheet__mt">{{ 'Firma de quien recibe' | t }} <span class="parada-sheet__req">*</span></label>
       <app-signature-pad (changed)="onEntFirma($event)" />
 
-      <label class="field-label parada-sheet__mt">Foto de la entrega <span class="parada-sheet__req">*</span></label>
+      <label class="field-label parada-sheet__mt">{{ 'Foto de la entrega' | t }} <span class="parada-sheet__req">*</span></label>
       <app-photo-slot
-        label="Evidencia"
+        [label]="'Evidencia' | t"
         hint="📸"
         [gallery]="false"
         [foto]="entFoto()"
@@ -304,7 +310,7 @@
       />
 
       <button type="button" class="btn-cta parada-sheet__cta" [disabled]="entGuardando() || !entRecibio().trim() || !entFirmaBlob() || !entFoto()" (click)="confirmarEntregarParada()">
-        {{ entGuardando() ? 'Guardando…' : '✓ Confirmar entrega' }}
+        @if (entGuardando()) { {{ 'Guardando…' | t }} } @else { ✓ {{ 'Confirmar entrega' | t }} }
       </button>
     </div>
   }
@@ -315,44 +321,46 @@
     <div class="parada-sheet">
       <div class="parada-sheet__head">
         <h2 class="parada-sheet__title">
-          {{ rv.modo === 'parada' ? 'Agregar parada' : 'Cambiar destino' }}
+          {{ rv.modo === 'parada' ? ('Agregar parada' | t) : ('Cambiar destino' | t) }}
         </h2>
-        <button type="button" class="parada-sheet__x" (click)="cerrarRutaViva()" aria-label="Cerrar">✕</button>
+        <button type="button" class="parada-sheet__x" (click)="cerrarRutaViva()" [attr.aria-label]="'Cerrar' | t">✕</button>
       </div>
       <p class="parada-sheet__sub">
         {{ rv.modo === 'parada'
-          ? 'La parada se agrega a la ruta y queda registrada (quién y cuándo).'
-          : 'No se cancela la ruta: el destino cambia y queda registrado.' }}
+          ? ('La parada se agrega a la ruta y queda registrada (quién y cuándo).' | t)
+          : ('No se cancela la ruta: el destino cambia y queda registrado.' | t) }}
       </p>
 
       @if (rv.modo === 'destino') {
         <!-- AV13 — MISMO selector del wizard de creación: obra / almacén central /
              almacén (dropdown) o pin en el mapa. Nada de "solo obra". -->
-        <label class="field-label parada-sheet__mt">Nuevo destino <span class="parada-sheet__req">*</span></label>
+        <label class="field-label parada-sheet__mt">{{ 'Nuevo destino' | t }} <span class="parada-sheet__req">*</span></label>
         <app-destino-selector [lugares]="lugaresDestino()" (destinoChange)="onDestinoSel($event)" />
-        @if (rvUbicacion()) { <p class="parada-sheet__chosen">✓ Nuevo destino: {{ rvUbicacion() }}</p> }
+        @if (rvUbicacion()) { <p class="parada-sheet__chosen">✓ {{ 'Nuevo destino:' | t }} {{ rvUbicacion() }}</p> }
       } @else {
         @if (proyectosOpts().length) {
-          <label class="field-label">Obra (opcional)</label>
+          <label class="field-label">{{ 'Obra (opcional)' | t }}</label>
           <app-collapsible-select
-            label="Obra"
+            [label]="'Obra' | t"
             icon="🏗️"
             [options]="rvObraOptions()"
             [selectedId]="rvProyectoId()"
             [searchable]="true"
-            searchPlaceholder="Buscar obra…"
+            [searchPlaceholder]="'Buscar obra…' | t"
             (picked)="onRvProyecto($event)"
           />
         }
         <label class="field-label parada-sheet__mt" for="rv-ubic">
-          Nombre de la parada <span class="parada-sheet__req">*</span>
+          {{ 'Nombre de la parada' | t }} <span class="parada-sheet__req">*</span>
         </label>
         <input id="rv-ubic" class="field" type="text" [ngModel]="rvUbicacion()" (ngModelChange)="rvUbicacion.set($event)"
-          placeholder="Ej. Ferretería La Cadena" />
+          [placeholder]="'Ej. Ferretería La Cadena' | t" />
       }
 
       <button type="button" class="btn-cta parada-sheet__cta" [disabled]="rvGuardando()" (click)="confirmarRutaViva()">
-        {{ rvGuardando() ? 'Guardando…' : (rv.modo === 'parada' ? '➕ Agregar parada' : '🔀 Cambiar destino') }}
+        @if (rvGuardando()) { {{ 'Guardando…' | t }} }
+        @else if (rv.modo === 'parada') { ➕ {{ 'Agregar parada' | t }} }
+        @else { 🔀 {{ 'Cambiar destino' | t }} }
       </button>
     </div>
   }

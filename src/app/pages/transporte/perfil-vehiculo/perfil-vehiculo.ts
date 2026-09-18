@@ -6,6 +6,8 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { DocSlot } from '../../../shared/ui/doc-slot/doc-slot';
 import { Img } from '../../../shared/ui/img/img';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
@@ -44,7 +46,7 @@ const TIPO_LABEL: Record<string, string> = {
   selector: 'app-perfil-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot, SelectList, Img],
+  imports: [DecimalPipe, Skeleton, EmptyState, DocSlot, SelectList, Img, TranslatePipe],
   templateUrl: './perfil-vehiculo.html',
   styleUrl: './perfil-vehiculo.scss',
 })
@@ -61,6 +63,7 @@ export class PerfilVehiculoPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   vehiculoId = signal('');
@@ -209,20 +212,20 @@ export class PerfilVehiculoPage {
     if (this.asignando()) return;
     const conductor = this.conductores_().find((c) => c.id === this.conductorSel());
     if (!conductor) {
-      this.toast.error('Elige un conductor.');
+      this.toast.error(this.i18n.t('Elige un conductor.'));
       return;
     }
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para asignar.');
+      this.toast.error(this.i18n.t('Necesitas conexión para asignar.'));
       return;
     }
     this.asignando.set(true);
     try {
       await this.vehiculos.asignarAConductor(this.vehiculoId(), conductor.id, conductor.usuario_id);
-      this.toast.success(`Vehículo asignado a ${conductor.nombre}.`);
+      this.toast.success(this.i18n.t('Vehículo asignado a {nombre}.', { nombre: conductor.nombre }));
       this.conductorSel.set('');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo asignar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo asignar.'));
     } finally {
       this.asignando.set(false);
     }
@@ -256,9 +259,9 @@ export class PerfilVehiculoPage {
     try {
       await this.documentos.enqueueDocumento({ entidad: 'vehiculo', entidadId: id, tipo, doc });
       this.colaTipos.update((t) => (t.includes(tipo) ? t : [...t, tipo]));
-      this.toast.success('Documento guardado. Se subirá cuando haya conexión.');
+      this.toast.success(this.i18n.t('Documento guardado. Se subirá cuando haya conexión.'));
     } catch {
-      this.toast.error('No se pudo guardar el documento.');
+      this.toast.error(this.i18n.t('No se pudo guardar el documento.'));
     }
   }
 

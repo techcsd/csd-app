@@ -22,6 +22,8 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { FOTOS_PREUSO } from '../../../core/models/checklist-preuso.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type Paso = 'vehiculo' | 'condiciones' | 'fotos' | 'firma'; // AV10 — sin 'llave'
 type Respuesta = 'ok' | 'falla' | 'na';
@@ -57,7 +59,7 @@ interface AsignarmeDraft {
   selector: 'app-asignarme-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Skeleton, EmptyState, VehiculoCard, PhotoSlot, SignaturePad, VoiceNotes, KmInput],
+  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Skeleton, EmptyState, VehiculoCard, PhotoSlot, SignaturePad, VoiceNotes, KmInput, TranslatePipe],
   templateUrl: './asignarme.html',
   styleUrl: './asignarme.scss',
 })
@@ -71,6 +73,7 @@ export class AsignarmeVehiculoPage {
   private location = inject(Location);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private i18n = inject(I18nService);
 
   // AI6 — si llegamos aquí desde crear-ruta/conduce (vehículo no asignado), volvemos
   // a ese borrador al terminar el Uso de vehículo.
@@ -207,7 +210,7 @@ export class AsignarmeVehiculoPage {
     };
     this.autosave.queue(this.clave, snap, {
       tipo: 'asignarme',
-      etiqueta: 'Uso de vehículo',
+      etiqueta: this.i18n.t('Uso de vehículo'),
       ruta: this.location.path(),
     });
   }
@@ -299,27 +302,27 @@ export class AsignarmeVehiculoPage {
     switch (this.pasoActual()) {
       case 'vehiculo':
         if (!this.seleccionado()) {
-          this.toast.error('Elige un vehículo.');
+          this.toast.error(this.i18n.t('Elige un vehículo.'));
           return false;
         }
         return true;
       case 'condiciones':
         if (this.km() == null || this.km()! <= 0) {
-          this.toast.error('Escribe el kilometraje actual.');
+          this.toast.error(this.i18n.t('Escribe el kilometraje actual.'));
           return false;
         }
         if (this.kmMenorOdometro()) {
-          this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
+          this.toast.error(this.i18n.t('El kilometraje no puede ser menor al registrado ({km} km).', { km: this.odometro() ?? '' }));
           return false;
         }
         if (this.checkItems.some((it) => !this.checkDe(it))) {
-          this.toast.error('Responde todos los puntos del checklist.');
+          this.toast.error(this.i18n.t('Responde todos los puntos del checklist.'));
           return false;
         }
         return true;
       case 'fotos':
         if (!this.fotosCompletas()) {
-          this.toast.error('Toma todas las fotos del vehículo.');
+          this.toast.error(this.i18n.t('Toma todas las fotos del vehículo.'));
           return false;
         }
         return true;
@@ -339,7 +342,7 @@ export class AsignarmeVehiculoPage {
   async confirmar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.firmaBlob()) {
-      this.toast.error('Falta tu firma.');
+      this.toast.error(this.i18n.t('Falta tu firma.'));
       return;
     }
     const veh = this.seleccionado();
@@ -376,7 +379,7 @@ export class AsignarmeVehiculoPage {
       void this.autosave.discard(this.clave);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar el traspaso.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar el traspaso.'));
     } finally {
       this.submitting.set(false);
     }

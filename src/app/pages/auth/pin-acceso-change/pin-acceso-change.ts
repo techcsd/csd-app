@@ -4,6 +4,8 @@ import { PinPad } from '../../../shared/ui/pin-pad/pin-pad';
 import { AuthService } from '../../../core/services/auth.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * BI6 (FASE 5) — Cambiar el PIN de ACCESO (6 dígitos: el de cédula + PIN que vive en
@@ -16,7 +18,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-pin-acceso-change',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PinPad],
+  imports: [PinPad, TranslatePipe],
   templateUrl: './pin-acceso-change.html',
   styleUrl: './pin-acceso-change.scss',
 })
@@ -25,6 +27,7 @@ export class PinAccesoChangePage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   online = this.network.online;
   step = signal<'actual' | 'nuevo' | 'repetir'>('actual');
@@ -45,7 +48,7 @@ export class PinAccesoChangePage {
       // Rechazo local del PIN igual al actual (el servidor también lo valida, pero
       // avisar aquí evita un viaje de red y un mensaje tardío).
       if (entered === this.actual()) {
-        this.toast.error('El PIN nuevo debe ser distinto del actual.');
+        this.toast.error(this.i18n.t('El PIN nuevo debe ser distinto del actual.'));
         this.value.set('');
         return;
       }
@@ -56,7 +59,7 @@ export class PinAccesoChangePage {
     }
     // repetir
     if (entered !== this.nuevo()) {
-      this.toast.error('Los PIN no coinciden. Escribe el nuevo otra vez.');
+      this.toast.error(this.i18n.t('Los PIN no coinciden. Escribe el nuevo otra vez.'));
       this.reiniciarNuevo();
       return;
     }
@@ -65,18 +68,18 @@ export class PinAccesoChangePage {
 
   private async guardar(): Promise<void> {
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para cambiar tu PIN de acceso.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cambiar tu PIN de acceso.'));
       this.reiniciarNuevo();
       return;
     }
     this.guardando.set(true);
     try {
       await this.auth.cambiarMiPinAcceso(this.actual(), this.nuevo());
-      this.toast.success('PIN de acceso actualizado. Úsalo la próxima vez que entres con tu cédula.');
+      this.toast.success(this.i18n.t('PIN de acceso actualizado. Úsalo la próxima vez que entres con tu cédula.'));
       this.location.back();
     } catch (e) {
       // Un PIN actual incorrecto manda de vuelta al primer paso; el resto reintenta el nuevo.
-      const msg = e instanceof Error ? e.message : 'No se pudo cambiar el PIN de acceso.';
+      const msg = e instanceof Error ? e.message : this.i18n.t('No se pudo cambiar el PIN de acceso.');
       this.toast.error(msg);
       if (/actual/i.test(msg)) {
         this.actual.set('');

@@ -3,6 +3,8 @@ import { DecimalPipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -16,7 +18,7 @@ import { ArticuloAlias, ArticuloCat, Bodega, CategoriaInv, esArticuloExterno, pr
   selector: 'app-articulo-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, FormsModule, Skeleton],
+  imports: [DecimalPipe, FormsModule, Skeleton, TranslatePipe],
   templateUrl: './articulo-detalle.html',
   styleUrl: './articulo-detalle.scss',
 })
@@ -28,6 +30,7 @@ export class ArticuloDetallePage {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   readonly propiedadLabel = propiedadLabel;
 
@@ -96,8 +99,8 @@ export class ArticuloDetallePage {
 
   categoriaNombre = computed(() => {
     const a = this.articulo();
-    if (!a?.categoria_id) return 'Sin categoría';
-    return this.categorias().find((c) => c.id === a.categoria_id)?.nombre ?? 'Sin categoría';
+    if (!a?.categoria_id) return this.i18n.t('Sin categoría');
+    return this.categorias().find((c) => c.id === a.categoria_id)?.nombre ?? this.i18n.t('Sin categoría');
   });
   esExterno = computed(() => esArticuloExterno(this.articulo()?.propiedad));
 
@@ -147,7 +150,7 @@ export class ArticuloDetallePage {
     const a = this.articulo();
     if (!alias || !a || this.aliasBusy()) return;
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para agregar apodos.');
+      this.toast.error(this.i18n.t('Necesitas conexión para agregar apodos.'));
       return;
     }
     this.aliasBusy.set(true);
@@ -155,9 +158,9 @@ export class ArticuloDetallePage {
       await this.inventario.agregarAlias(a.id, alias);
       this.nuevoAlias.set('');
       await this.cargarAlias(a.id);
-      this.toast.success('Apodo agregado.');
+      this.toast.success(this.i18n.t('Apodo agregado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo agregar el apodo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo agregar el apodo.'));
     } finally {
       this.aliasBusy.set(false);
     }
@@ -168,7 +171,7 @@ export class ArticuloDetallePage {
     const a = this.articulo();
     if (!a || this.aliasBusy()) return;
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para quitar apodos.');
+      this.toast.error(this.i18n.t('Necesitas conexión para quitar apodos.'));
       return;
     }
     this.aliasBusy.set(true);
@@ -176,7 +179,7 @@ export class ArticuloDetallePage {
       await this.inventario.eliminarAlias(alias.id);
       await this.cargarAlias(a.id);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo quitar el apodo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo quitar el apodo.'));
     } finally {
       this.aliasBusy.set(false);
     }

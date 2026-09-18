@@ -132,7 +132,7 @@
         <app-photo-slot label="Agregar foto" hint="📸" [gallery]="false" [foto]="null" (captured)="agregarFoto($event)" />
 
         <label class="field-label cart-nueva__mt">Plano de referencia (opcional)</label>
-        <app-photo-slot label="Plano" hint="📐" [foto]="plano()" (captured)="plano.set($event)" (cleared)="plano.set(null)" />
+        <app-photo-slot label="Plano" hint="📐" [foto]="plano()" (captured)="agregarPlano($event)" (cleared)="quitarPlano()" />
 
         <label class="field-label cart-nueva__mt">Notas (opcional)</label>
         <textarea class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Novedad de la cartilla…"></textarea>

@@ -2,9 +2,9 @@
   <header class="crono__header">
     <button type="button" class="crono__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="crono__icon">📅</span>
-    <h1 class="crono__title">Cronograma</h1>
+    <h1 class="crono__title">{{ 'Cronograma' | t }}</h1>
     @if (puedeGestionar()) {
-      <button type="button" class="crono__importar" (click)="importar()" aria-label="Importar Excel">📥 Importar</button>
+      <button type="button" class="crono__importar" (click)="importar()" aria-label="Importar Excel">📥 {{ 'Importar' | t }}</button>
     }
   </header>
 
@@ -13,18 +13,18 @@
       <app-skeleton [rows]="6" />
     } @else if (error()) {
       <!-- AW1 — vacío ≠ error: la carga falló, NO es que no haya cronograma. -->
-      <app-empty-state icon="⚠️" title="No pudimos cargar el cronograma" [message]="error()!" />
-      <button type="button" class="btn-cta crono__importar-vacio" (click)="load()">🔄 Reintentar</button>
+      <app-empty-state icon="⚠️" [title]="'No pudimos cargar el cronograma' | t" [message]="error()!" />
+      <button type="button" class="btn-cta crono__importar-vacio" (click)="load()">🔄 {{ 'Reintentar' | t }}</button>
     } @else if (!tareas().length) {
-      <app-empty-state icon="📅" title="Sin tareas" [message]="online ? 'Este proyecto aún no tiene cronograma.' : 'Conéctate para cargar el cronograma.'" />
+      <app-empty-state icon="📅" [title]="'Sin tareas' | t" [message]="online ? ('Este proyecto aún no tiene cronograma.' | t) : ('Conéctate para cargar el cronograma.' | t)" />
       @if (puedeGestionar()) {
-        <button type="button" class="btn-cta crono__importar-vacio" (click)="importar()">📥 Importar desde Excel</button>
+        <button type="button" class="btn-cta crono__importar-vacio" (click)="importar()">📥 {{ 'Importar desde Excel' | t }}</button>
       }
     } @else {
       <!-- Toggle vista -->
       <div class="crono__tabs">
-        <button type="button" class="crono__tab" [class.crono__tab--on]="vista() === 'lista'" (click)="setVista('lista')">Lista</button>
-        <button type="button" class="crono__tab" [class.crono__tab--on]="vista() === 'timeline'" (click)="setVista('timeline')">Timeline</button>
+        <button type="button" class="crono__tab" [class.crono__tab--on]="vista() === 'lista'" (click)="setVista('lista')">{{ 'Lista' | t }}</button>
+        <button type="button" class="crono__tab" [class.crono__tab--on]="vista() === 'timeline'" (click)="setVista('timeline')">{{ 'Timeline' | t }}</button>
       </div>
 
       @if (vista() === 'lista') {
@@ -32,17 +32,17 @@
           <button type="button" class="crono__card crono__card--{{ t.tipo }}" (click)="abrirDetalle(t)">
             <div class="crono__top">
               <span class="crono__nombre">{{ t.orden }}. {{ t.nombre }}</span>
-              <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] }}</span>
+              <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] | t }}</span>
             </div>
             <div class="crono__badges">
-              <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] }}</span>
-              @if (enviando(t)) { <span class="crono__sending">⏳ Enviando…</span> }
-              @if (atrasada(t)) { <span class="crono__late">⚠ Atrasada</span> }
+              <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] | t }}</span>
+              @if (enviando(t)) { <span class="crono__sending">⏳ {{ 'Enviando…' | t }}</span> }
+              @if (atrasada(t)) { <span class="crono__late">⚠ {{ 'Atrasada' | t }}</span> }
             </div>
             <div class="crono__fechas">
-              <span>Plan: {{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</span>
+              <span>{{ 'Plan:' | t }} {{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</span>
               @if (t.fecha_inicio_real || t.fecha_fin_real) {
-                <span>Real: {{ fmt(t.fecha_inicio_real) }} → {{ fmt(t.fecha_fin_real) }}</span>
+                <span>{{ 'Real:' | t }} {{ fmt(t.fecha_inicio_real) }} → {{ fmt(t.fecha_fin_real) }}</span>
               }
             </div>
           </button>
@@ -51,7 +51,7 @@
         <!-- Timeline simple (barras CSS) -->
         @if (!barras().length) {
           <!-- AS24 #7 — hay tareas pero ninguna tiene fechas de plan → timeline vacío. -->
-          <p class="crono__muted">Las tareas de esta obra aún no tienen fechas planificadas, así que no hay línea de tiempo. Míralas en la lista.</p>
+          <p class="crono__muted">{{ 'Las tareas de esta obra aún no tienen fechas planificadas, así que no hay línea de tiempo. Míralas en la lista.' | t }}</p>
         } @else {
         <div class="crono__timeline">
           @if (hoyLeftPct() !== null) {
@@ -73,23 +73,23 @@
           }
         </div>
         <p class="crono__legend">
-          <span class="crono__dot crono__dot--critica"></span> Crítica
-          <span class="crono__dot crono__dot--importante"></span> Importante
-          <span class="crono__dot crono__dot--ordinaria"></span> Ordinaria
-          <span class="crono__today-legend"></span> Hoy
+          <span class="crono__dot crono__dot--critica"></span> {{ 'Crítica' | t }}
+          <span class="crono__dot crono__dot--importante"></span> {{ 'Importante' | t }}
+          <span class="crono__dot crono__dot--ordinaria"></span> {{ 'Ordinaria' | t }}
+          <span class="crono__today-legend"></span> {{ 'Hoy' | t }}
         </p>
         }
       }
 
       <!-- Historial de recálculos -->
       @if (data().recalculos.length) {
-        <h3 class="crono__subtitle">Ajustes del timeline</h3>
+        <h3 class="crono__subtitle">{{ 'Ajustes del timeline' | t }}</h3>
         @for (r of data().recalculos; track r.id) {
           <div class="crono__recalc">
             <span class="crono__recalc-dias" [class.crono__recalc-dias--neg]="r.dias_movidos < 0">
               {{ r.dias_movidos > 0 ? '+' : '' }}{{ r.dias_movidos }} d
             </span>
-            <span class="crono__recalc-motivo">{{ motivoLabel[r.motivo] }}</span>
+            <span class="crono__recalc-motivo">{{ motivoLabel[r.motivo] | t }}</span>
           </div>
         }
       }
@@ -102,24 +102,24 @@
       @if (modo() === 'detalle') {
         <div class="crono__detalle">
           <div class="crono__badges">
-            <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] }}</span>
-            <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] }}</span>
-            @if (atrasada(t)) { <span class="crono__late">⚠ Atrasada</span> }
+            <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] | t }}</span>
+            <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] | t }}</span>
+            @if (atrasada(t)) { <span class="crono__late">⚠ {{ 'Atrasada' | t }}</span> }
           </div>
           @if (t.descripcion) { <p class="crono__desc">{{ t.descripcion }}</p> }
           <ul class="crono__info">
-            @if (t.grupo) { <li><span>Sección</span><b>{{ t.grupo }}</b></li> }
-            @if (t.responsable) { <li><span>Responsable</span><b>{{ t.responsable }}</b></li> }
-            @if (t.volumetria) { <li><span>Volumetría</span><b>{{ t.volumetria }}</b></li> }
-            <li><span>Plan</span><b>{{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</b></li>
-            <li><span>Duración</span><b>{{ t.duracion_dias_plan }} día(s)</b></li>
-            @if (t.avance_pct != null) { <li><span>Avance</span><b>{{ t.avance_pct }}%</b></li> }
-            @if (t.rendimiento) { <li><span>Rendimiento</span><b>{{ t.rendimiento }}</b></li> }
-            @if (t.fecha_inicio_real) { <li><span>Inicio real</span><b>{{ fmt(t.fecha_inicio_real) }}</b></li> }
-            @if (t.fecha_fin_real) { <li><span>Fin real</span><b>{{ fmt(t.fecha_fin_real) }}</b></li> }
+            @if (t.grupo) { <li><span>{{ 'Sección' | t }}</span><b>{{ t.grupo }}</b></li> }
+            @if (t.responsable) { <li><span>{{ 'Responsable' | t }}</span><b>{{ t.responsable }}</b></li> }
+            @if (t.volumetria) { <li><span>{{ 'Volumetría' | t }}</span><b>{{ t.volumetria }}</b></li> }
+            <li><span>{{ 'Plan' | t }}</span><b>{{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</b></li>
+            <li><span>{{ 'Duración' | t }}</span><b>{{ t.duracion_dias_plan }} {{ 'día(s)' | t }}</b></li>
+            @if (t.avance_pct != null) { <li><span>{{ 'Avance' | t }}</span><b>{{ t.avance_pct }}%</b></li> }
+            @if (t.rendimiento) { <li><span>{{ 'Rendimiento' | t }}</span><b>{{ t.rendimiento }}</b></li> }
+            @if (t.fecha_inicio_real) { <li><span>{{ 'Inicio real' | t }}</span><b>{{ fmt(t.fecha_inicio_real) }}</b></li> }
+            @if (t.fecha_fin_real) { <li><span>{{ 'Fin real' | t }}</span><b>{{ fmt(t.fecha_fin_real) }}</b></li> }
           </ul>
           @if (t.justificacion_retraso) {
-            <div class="crono__justif"><b>Justificación:</b> {{ t.justificacion_retraso }}</div>
+            <div class="crono__justif"><b>{{ 'Justificación:' | t }}</b> {{ t.justificacion_retraso }}</div>
           }
           @if (evidenciaUrl()) {
             <a class="crono__evidencia" [href]="evidenciaUrl()" target="_blank" rel="noopener">
@@ -130,22 +130,22 @@
           @if (puedeGestionar() && !enviando(t)) {
             <div class="crono__acciones">
               @if (estado(t) === 'pendiente') {
-                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="iniciar(t)">▶ Iniciar tarea</button>
+                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="iniciar(t)">▶ {{ 'Iniciar tarea' | t }}</button>
               }
               @if (estado(t) !== 'completada') {
-                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="abrirCompletar()">✓ Completar tarea</button>
+                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="abrirCompletar()">✓ {{ 'Completar tarea' | t }}</button>
               }
             </div>
           } @else if (enviando(t)) {
-            <p class="crono__muted">⏳ Cambio en cola, se enviará al sincronizar.</p>
+            <p class="crono__muted">⏳ {{ 'Cambio en cola, se enviará al sincronizar.' | t }}</p>
           }
         </div>
       } @else {
         <!-- Completar: foto obligatoria + justificación si atrasada -->
         <div class="crono__completar">
-          <p class="crono__hint">Toma la foto de evidencia para completar la tarea.</p>
+          <p class="crono__hint">{{ 'Toma la foto de evidencia para completar la tarea.' | t }}</p>
           <app-photo-slot
-            label="Evidencia"
+            [label]="'Evidencia' | t"
             hint="📷"
             [gallery]="false"
             [foto]="fotoCompletar()"
@@ -153,20 +153,20 @@
             (cleared)="onFotoCleared()"
           />
           @if (selAtrasada()) {
-            <label class="crono__label">Justificación del retraso <span class="crono__req">*</span></label>
+            <label class="crono__label">{{ 'Justificación del retraso' | t }} <span class="crono__req">*</span></label>
             <textarea
               class="crono__textarea"
               rows="3"
-              placeholder="¿Por qué se completó tarde?"
+              [placeholder]="'¿Por qué se completó tarde?' | t"
               [ngModel]="justificacion()"
               (ngModelChange)="justificacion.set($event)"
             ></textarea>
           }
           <div class="crono__acciones">
             <button type="button" class="btn-cta" [disabled]="submitting()" (click)="completar()">
-              {{ submitting() ? 'Guardando…' : 'Confirmar completada' }}
+              {{ submitting() ? ('Guardando…' | t) : ('Confirmar completada' | t) }}
             </button>
-            <button type="button" class="btn-ghost" (click)="modo.set('detalle')">Atrás</button>
+            <button type="button" class="btn-ghost" (click)="modo.set('detalle')">{{ 'Atrás' | t }}</button>
           </div>
         </div>
       }

@@ -1,34 +1,34 @@
 <div class="screen csolm">
   <header class="csolm__header">
     <button type="button" class="csolm__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="csolm__title">Nueva solicitud de movimiento</h1>
+    <h1 class="csolm__title">{{ 'Nueva solicitud de movimiento' | t }}</h1>
   </header>
 
   <div class="screen__body csolm__body">
-    <label class="field-label">Obra <span class="csolm__req">*</span></label>
+    <label class="field-label">{{ 'Obra' | t }} <span class="csolm__req">*</span></label>
     <app-collapsible-select
       icon="🏗️"
-      label="Obra"
+      [label]="'Obra' | t"
       [options]="obraOpts()"
       [selectedId]="proyectoId()"
-      placeholder="Elige la obra"
+      [placeholder]="'Elige la obra' | t"
       [searchable]="true"
       (picked)="proyectoId.set($event)"
     />
 
-    <label class="field-label">¿Qué se mueve? <span class="csolm__req">*</span></label>
+    <label class="field-label">{{ '¿Qué se mueve?' | t }} <span class="csolm__req">*</span></label>
     <input
       class="field"
       type="text"
       [ngModel]="queSeMueve()"
       (ngModelChange)="queSeMueve.set($event)"
-      placeholder="Ej: 20 sacos de cemento, andamios…"
+      [placeholder]="'Ej: 20 sacos de cemento, andamios…' | t"
     />
 
-    <label class="field-label">Dirección del movimiento</label>
+    <label class="field-label">{{ 'Dirección del movimiento' | t }}</label>
     <div class="csolm__opts">
       @for (d of direcciones; track d.key) {
-        <app-option-button [label]="d.label" [selected]="direccion() === d.key" (pressed)="direccion.set(d.key)" />
+        <app-option-button [label]="d.label | t" [selected]="direccion() === d.key" (pressed)="direccion.set(d.key)" />
       }
     </div>
 
@@ -38,21 +38,21 @@
       type="text"
       [ngModel]="otroPunto()"
       (ngModelChange)="otroPunto.set($event)"
-      placeholder="Ej: Bodega Central, proveedor Ferretería X…"
+      [placeholder]="'Ej: Bodega Central, proveedor Ferretería X…' | t"
     />
 
-    <label class="field-label">Tipo de carga</label>
+    <label class="field-label">{{ 'Tipo de carga' | t }}</label>
     <div class="csolm__opts">
       @for (t of tipos; track t.key) {
-        <app-option-button [label]="t.label" [selected]="tipoCarga() === t.key" (pressed)="tipoCarga.set(t.key)" />
+        <app-option-button [label]="t.label | t" [selected]="tipoCarga() === t.key" (pressed)="tipoCarga.set(t.key)" />
       }
     </div>
 
-    <label class="field-label">Prioridad</label>
+    <label class="field-label">{{ 'Prioridad' | t }}</label>
     <div class="csolm__opts">
       @for (p of prioridades; track p.key) {
         <app-option-button
-          [label]="p.label"
+          [label]="p.label | t"
           [selected]="prioridad() === p.key"
           [tone]="p.tone"
           (pressed)="prioridad.set(p.key)"
@@ -60,22 +60,22 @@
       }
     </div>
 
-    <label class="field-label">¿Para cuándo lo necesitas en obra?</label>
+    <label class="field-label">{{ '¿Para cuándo lo necesitas en obra?' | t }}</label>
     <input class="field" type="date" [ngModel]="fechaReq()" (ngModelChange)="fechaReq.set($event)" />
 
-    <label class="field-label">Notas (opcional)</label>
+    <label class="field-label">{{ 'Notas (opcional)' | t }}</label>
     <textarea
       class="field csolm__notas"
       [ngModel]="notas()"
       (ngModelChange)="notas.set($event)"
       rows="3"
-      placeholder="Detalles útiles para transporte…"
+      [placeholder]="'Detalles útiles para transporte…' | t"
     ></textarea>
   </div>
 
   <app-wizard-footer
-    backLabel="Cancelar"
-    primaryLabel="Enviar solicitud"
+    [backLabel]="'Cancelar' | t"
+    [primaryLabel]="'Enviar solicitud' | t"
     [primaryDisabled]="!puedeEnviar()"
     (back)="back()"
     (primary)="enviar()"

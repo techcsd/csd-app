@@ -2,7 +2,7 @@
   <header class="proy__header">
     <button type="button" class="proy__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="proy__icon">🏗️</span>
-    <h1 class="proy__title">Proyectos</h1>
+    <h1 class="proy__title">{{ 'Proyectos' | t }}</h1>
     <button type="button" class="proy__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">
       {{ refrescando() ? '…' : '🔄' }}
     </button>
@@ -10,18 +10,18 @@
 
   <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
     @if (!online) {
-      <div class="proy__offline">📡 Sin conexión — mostrando lo último guardado.</div>
+      <div class="proy__offline">📡 {{ 'Sin conexión — mostrando lo último guardado.' | t }}</div>
     }
 
     @if (avisosCount() > 0) {
       <button type="button" class="proy__avisos" (click)="verAvisos()">
-        🔔 {{ avisosCount() }} aviso(s) de cronograma
-        <span class="proy__avisos-go">Ver →</span>
+        🔔 {{ avisosCount() }} {{ 'aviso(s) de cronograma' | t }}
+        <span class="proy__avisos-go">{{ 'Ver' | t }} →</span>
       </button>
     }
 
     @if (puedeCrear()) {
-      <button type="button" class="btn-cta proy__nuevo" (click)="nuevo()">＋ Nuevo proyecto</button>
+      <button type="button" class="btn-cta proy__nuevo" (click)="nuevo()">＋ {{ 'Nuevo proyecto' | t }}</button>
     }
 
     @if (loading()) {
@@ -31,9 +31,9 @@
            obras" (no lo sabemos). Mostramos el fallo real + reintento. -->
       <app-empty-state
         icon="⚠️"
-        title="No pudimos cargar tus obras"
-        [message]="online ? 'Hubo un problema al consultar tus obras. Reintenta en un momento.' : 'Sin conexión. Conéctate y reintenta.'"
-        ctaLabel="Reintentar"
+        [title]="'No pudimos cargar tus obras' | t"
+        [message]="online ? ('Hubo un problema al consultar tus obras. Reintenta en un momento.' | t) : ('Sin conexión. Conéctate y reintenta.' | t)"
+        [ctaLabel]="'Reintentar' | t"
         (action)="refrescar()"
       />
     } @else if (!lista().length) {
@@ -42,14 +42,14 @@
            casi imposible), solo lo que puede probar + a quién pedirle. -->
       <app-empty-state
         icon="🏗️"
-        title="No vemos obras para mostrarte"
-        [message]="online ? 'Ahora mismo no hay obras que mostrarte. Si deberías ver alguna, pídele a tu supervisor o a Tecnología que te vincule a la obra.' : 'Conéctate para cargar tus obras.'"
+        [title]="'No vemos obras para mostrarte' | t"
+        [message]="online ? ('Ahora mismo no hay obras que mostrarte. Si deberías ver alguna, pídele a tu supervisor o a Tecnología que te vincule a la obra.' | t) : ('Conéctate para cargar tus obras.' | t)"
       />
     } @else {
       <input
         class="proy__search"
         type="search"
-        placeholder="Buscar proyecto…"
+        [placeholder]="'Buscar proyecto…' | t"
         [ngModel]="query()"
         (ngModelChange)="query.set($event)"
       />
@@ -57,7 +57,7 @@
       <!-- AS23 — filtro por zona (derivada de la ubicación). Solo si hay >1 zona. -->
       @if (zonaOpciones().length > 2) {
         <app-collapsible-select
-          label="Zona"
+          [label]="'Zona' | t"
           icon="📍"
           [options]="zonaOpciones()"
           [selectedId]="zonaFiltro()"
@@ -66,14 +66,14 @@
       }
 
       @if (!filtrados().length) {
-        <app-empty-state icon="🔍" title="Sin resultados" message="Ningún proyecto coincide con el filtro." />
+        <app-empty-state icon="🔍" [title]="'Sin resultados' | t" [message]="'Ningún proyecto coincide con el filtro.' | t" />
       }
 
       @for (p of filtrados(); track p.id) {
         <button type="button" class="proy__card" (click)="abrir(p)">
           <div class="proy__top">
             <span class="proy__nombre">{{ p.nombre }}</span>
-            <span class="proy__estado proy__estado--{{ p.estado }}">{{ estadoLabel[p.estado] }}</span>
+            <span class="proy__estado proy__estado--{{ p.estado }}">{{ estadoLabel[p.estado] | t }}</span>
           </div>
           <div class="proy__meta">
             @if (p.codigo) { <span>{{ p.codigo }}</span> }
@@ -84,13 +84,13 @@
             <div class="proy__bar">
               <div class="proy__bar-fill" [style.width.%]="progreso(p)"></div>
             </div>
-            <span class="proy__pct">{{ progreso(p) }}% · {{ p.fases.length }} fase(s)</span>
+            <span class="proy__pct">{{ progreso(p) }}% · {{ p.fases.length }} {{ 'fase(s)' | t }}</span>
           } @else {
-            <span class="proy__pct">Sin fases</span>
+            <span class="proy__pct">{{ 'Sin fases' | t }}</span>
           }
         </button>
       } @empty {
-        <app-empty-state icon="🔍" title="Sin resultados" message="Ningún proyecto coincide con la búsqueda." />
+        <app-empty-state icon="🔍" [title]="'Sin resultados' | t" [message]="'Ningún proyecto coincide con la búsqueda.' | t" />
       }
     }
   </div>

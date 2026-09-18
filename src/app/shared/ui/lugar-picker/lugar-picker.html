@@ -7,7 +7,7 @@
       <span class="lp__chosen-ic">{{ icono(sel.tipo) }}</span>
       <span class="lp__chosen-txt">
         {{ sel.nombre }}
-        @if (sel.tipo === 'texto') { <span class="lp__tag">Sin mapa</span> }
+        @if (sel.tipo === 'texto') { <span class="lp__tag">{{ 'Sin mapa' | t }}</span> }
       </span>
       <button type="button" class="lp__chosen-x" (click)="limpiar()" aria-label="Cambiar lugar">✕</button>
     </div>
@@ -31,27 +31,27 @@
               <span class="lp__row-name">{{ r.nombre }}</span>
               @if (r.detalle) { <span class="lp__row-det">{{ r.detalle }}</span> }
             </span>
-            @if (r.origen === 'sistema') { <span class="lp__row-badge">Registrado</span> }
+            @if (r.origen === 'sistema') { <span class="lp__row-badge">{{ 'Registrado' | t }}</span> }
           </button>
         }
       </div>
     } @else if (hayTexto() && !buscando()) {
-      <p class="lp__empty">Sin coincidencias. Pega un link de Google Maps o usa «Otros».</p>
+      <p class="lp__empty">{{ 'Sin coincidencias. Pega un link de Google Maps o usa «Otros».' | t }}</p>
     }
 
     <!-- Salidas: link de Google Maps + «Otros» (nunca trancado) -->
     <div class="lp__actions">
-      <button type="button" class="lp__act" [class.lp__act--on]="modoLink()" (click)="abrirLink()">🔗 Link de Google Maps</button>
-      <button type="button" class="lp__act" [class.lp__act--on]="modoOtros()" (click)="abrirOtros()">➕ Otros</button>
+      <button type="button" class="lp__act" [class.lp__act--on]="modoLink()" (click)="abrirLink()">🔗 {{ 'Link de Google Maps' | t }}</button>
+      <button type="button" class="lp__act" [class.lp__act--on]="modoOtros()" (click)="abrirOtros()">➕ {{ 'Otros' | t }}</button>
     </div>
 
     @if (modoLink()) {
       <div class="lp__inline">
         <input class="field" type="text" [ngModel]="link()" (ngModelChange)="link.set($event)"
-          placeholder="Pega el link de Maps o el mensaje de WhatsApp" aria-label="Link de Google Maps o mensaje de WhatsApp"
+          [placeholder]="'Pega el link de Maps o el mensaje de WhatsApp' | t" aria-label="Link de Google Maps o mensaje de WhatsApp"
           (keyup.enter)="resolverLink()" />
         <button type="button" class="lp__go" [disabled]="resolviendoLink() || !link().trim()" (click)="resolverLink()">
-          {{ resolviendoLink() ? '…' : 'Usar' }}
+          {{ resolviendoLink() ? '…' : ('Usar' | t) }}
         </button>
       </div>
       @if (errorLink()) { <p class="lp__err">{{ errorLink() }}</p> }
@@ -60,10 +60,10 @@
     @if (modoOtros()) {
       <div class="lp__inline">
         <input class="field" type="text" [ngModel]="otroTexto()" (ngModelChange)="otroTexto.set($event)"
-          placeholder="Escribe el lugar (ej: Bellón)" aria-label="Otro lugar" (keyup.enter)="confirmarOtros()" />
-        <button type="button" class="lp__go" [disabled]="!otroTexto().trim()" (click)="confirmarOtros()">Usar</button>
+          [placeholder]="'Escribe el lugar (ej: Bellón)' | t" aria-label="Otro lugar" (keyup.enter)="confirmarOtros()" />
+        <button type="button" class="lp__go" [disabled]="!otroTexto().trim()" (click)="confirmarOtros()">{{ 'Usar' | t }}</button>
       </div>
-      <p class="lp__hint">Se registrará el nombre tal cual; sin mapa/ETA. Raykler lo agregará al catálogo.</p>
+      <p class="lp__hint">{{ 'Se registrará el nombre tal cual; sin mapa/ETA. Raykler lo agregará al catálogo.' | t }}</p>
     }
   }
 </div>

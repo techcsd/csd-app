@@ -9,6 +9,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { StockObraItem, PedidoObra } from '../../../core/models/obra.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const ESTADO_META: Record<string, { label: string; tint: string }> = {
   pendiente: { label: 'Pendiente', tint: '#ca8a04' },
@@ -29,7 +31,7 @@ interface PedidoLinea {
   selector: 'app-obra-recursos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, EmptyState],
+  imports: [FormsModule, DatePipe, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './recursos.html',
   styleUrl: './recursos.scss',
 })
@@ -40,6 +42,7 @@ export class RecursosPage {
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   proyectoId = '';
   tab = signal<'stock' | 'pedido'>('stock');
@@ -88,7 +91,7 @@ export class RecursosPage {
   agregarLinea(): void {
     const d = this.nuevoDesc().trim();
     if (!d || this.nuevaCant() <= 0) {
-      this.toast.error('Escribe qué necesitas y la cantidad.');
+      this.toast.error(this.i18n.t('Escribe qué necesitas y la cantidad.'));
       return;
     }
     this.lineas.update((l) => [...l, { descripcion: d, cantidad: this.nuevaCant(), unidad: this.nuevaUnidad().trim() || 'und' }]);
@@ -109,12 +112,12 @@ export class RecursosPage {
         notas: this.notas().trim(),
         items: this.lineas().map((l) => ({ articulo_id: '', descripcion: l.descripcion, cantidad: l.cantidad, unidad: l.unidad })),
       });
-      this.toast.success(this.network.online() ? 'Pedido urgente enviado.' : 'Guardado. Se enviará cuando tengas señal.');
+      this.toast.success(this.network.online() ? this.i18n.t('Pedido urgente enviado.') : this.i18n.t('Guardado. Se enviará cuando tengas señal.'));
       this.lineas.set([]);
       this.notas.set('');
       void this.obra.misPedidosObra(this.proyectoId).then((p) => this.pedidos.set(p));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el pedido.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el pedido.'));
     } finally {
       this.enviando.set(false);
     }

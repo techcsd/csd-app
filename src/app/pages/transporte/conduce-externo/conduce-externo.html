@@ -2,7 +2,7 @@
   <header class="ce-header">
     <button type="button" class="ce-header__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="ce-header__icon">🚛</span>
-    <h1 class="ce-header__title">Conduce externo</h1>
+    <h1 class="ce-header__title">{{ 'Conduce externo' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -10,10 +10,10 @@
       <!-- Éxito -->
       <div class="ce-exito">
         <span class="ce-exito__ic">✅</span>
-        <h2 class="ce-exito__title">Viaje registrado a {{ prov }}</h2>
-        <p class="ce-exito__txt">El conduce externo se guardó. Si estás sin señal, se enviará solo al reconectar.</p>
-        <button type="button" class="btn-cta" (click)="nuevo()">Registrar otro</button>
-        <button type="button" class="btn-ghost" (click)="irAlHub()">Volver a Conduces</button>
+        <h2 class="ce-exito__title">{{ 'Viaje registrado a' | t }} {{ prov }}</h2>
+        <p class="ce-exito__txt">{{ 'El conduce externo se guardó. Si estás sin señal, se enviará solo al reconectar.' | t }}</p>
+        <button type="button" class="btn-cta" (click)="nuevo()">{{ 'Registrar otro' | t }}</button>
+        <button type="button" class="btn-ghost" (click)="irAlHub()">{{ 'Volver a Conduces' | t }}</button>
       </div>
     } @else {
       @if (borradorPrevio()) {
@@ -21,54 +21,54 @@
         <div class="ce-draft">
           <span class="ce-draft__ic">📝</span>
           <div class="ce-draft__txt">
-            <b>Tienes un borrador sin enviar</b>
-            <span>Recuperamos lo que habías llenado, con sus fotos.</span>
+            <b>{{ 'Tienes un borrador sin enviar' | t }}</b>
+            <span>{{ 'Recuperamos lo que habías llenado, con sus fotos.' | t }}</span>
           </div>
           <div class="ce-draft__acts">
-            <button type="button" class="btn-cta ce-draft__go" (click)="continuarBorrador()">Continuar</button>
-            <button type="button" class="btn-ghost ce-draft__x" (click)="descartarBorrador()">Descartar</button>
+            <button type="button" class="btn-cta ce-draft__go" (click)="continuarBorrador()">{{ 'Continuar' | t }}</button>
+            <button type="button" class="btn-ghost ce-draft__x" (click)="descartarBorrador()">{{ 'Descartar' | t }}</button>
           </div>
         </div>
       }
-      <p class="ce-intro">Para cuando un <b>proveedor</b> transporta con su camión. Foto de placa obligatoria.</p>
+      <p class="ce-intro">{{ 'Para cuando un' | t }} <b>{{ 'proveedor' | t }}</b> {{ 'transporta con su camión. Foto de placa obligatoria.' | t }}</p>
 
       <!-- 1. Transporta -->
       <section class="ce-sec">
-        <h2 class="ce-sec__title">¿Quién transporta?</h2>
+        <h2 class="ce-sec__title">{{ '¿Quién transporta?' | t }}</h2>
         @if (proveedorSel(); as prov) {
           <div class="ce-chosen">
             <span class="ce-chosen__ic">🚚</span>
             <span class="ce-chosen__txt">
               {{ prov.nombre }}
-              @if (prov.texto) { <span class="ce-tag">sin registrar</span> }
+              @if (prov.texto) { <span class="ce-tag">{{ 'sin registrar' | t }}</span> }
             </span>
             <button type="button" class="ce-chosen__x" (click)="quitarProveedor()" aria-label="Cambiar">✕</button>
           </div>
         } @else {
           <input class="field" type="search" [ngModel]="busquedaProv()" (ngModelChange)="busquedaProv.set($event)"
-            placeholder="Buscar proveedor…" aria-label="Buscar proveedor" />
+            [placeholder]="'Buscar proveedor…' | t" aria-label="Buscar proveedor" />
           @if (proveedoresFiltrados().length) {
             <div class="ce-provlist">
               @for (p of proveedoresFiltrados(); track p.id) {
                 <button type="button" class="ce-provrow" (click)="elegirProveedor(p)">
                   <span class="ce-provrow__name">{{ p.nombre }}</span>
-                  @if (p.estado === 'sin_ratificar') { <span class="ce-tag">por ratificar</span> }
+                  @if (p.estado === 'sin_ratificar') { <span class="ce-tag">{{ 'por ratificar' | t }}</span> }
                 </button>
               }
             </div>
           }
-          <button type="button" class="ce-otro-btn" [class.ce-otro-btn--on]="modoOtroProv()" (click)="abrirOtroProv()">➕ Otro proveedor</button>
+          <button type="button" class="ce-otro-btn" [class.ce-otro-btn--on]="modoOtroProv()" (click)="abrirOtroProv()">➕ {{ 'Otro proveedor' | t }}</button>
           @if (modoOtroProv()) {
             <div class="ce-otro">
               <input class="field" type="text" [ngModel]="nombreOtro()" (ngModelChange)="nombreOtro.set($event)"
-                placeholder="Nombre del proveedor" aria-label="Nombre del proveedor" />
+                [placeholder]="'Nombre del proveedor' | t" aria-label="Nombre del proveedor" />
               <input class="field" type="tel" [ngModel]="telOtro()" (ngModelChange)="telOtro.set($event)"
-                placeholder="Teléfono (opcional)" aria-label="Teléfono" />
+                [placeholder]="'Teléfono (opcional)' | t" aria-label="Teléfono" />
               <div class="ce-otro__acts">
                 <button type="button" class="btn-cta ce-otro__save" [disabled]="!nombreOtro().trim() || creandoProv()" (click)="crearProveedor()">
-                  {{ creandoProv() ? 'Registrando…' : 'Registrar proveedor' }}
+                  {{ creandoProv() ? ('Registrando…' | t) : ('Registrar proveedor' | t) }}
                 </button>
-                <button type="button" class="btn-ghost" [disabled]="!nombreOtro().trim()" (click)="usarOtroTexto()">Usar sin registrar</button>
+                <button type="button" class="btn-ghost" [disabled]="!nombreOtro().trim()" (click)="usarOtroTexto()">{{ 'Usar sin registrar' | t }}</button>
               </div>
             </div>
           }
@@ -77,36 +77,36 @@
 
       <!-- 2. Fotos -->
       <section class="ce-sec">
-        <h2 class="ce-sec__title">Fotos del camión</h2>
+        <h2 class="ce-sec__title">{{ 'Fotos del camión' | t }}</h2>
         <div class="ce-fotos">
-          <app-photo-slot label="Placa *" hint="🚙" [gallery]="false"
+          <app-photo-slot [label]="'Placa *' | t" hint="🚙" [gallery]="false"
             [foto]="placaFoto()" (captured)="onPlaca($event)" (cleared)="quitarPlaca()" />
-          <app-photo-slot label="Carga" hint="📦" [gallery]="false"
+          <app-photo-slot [label]="'Carga' | t" hint="📦" [gallery]="false"
             [foto]="cargaFoto()" (captured)="onCarga($event)" (cleared)="quitarCarga()" />
         </div>
-        <p class="ce-hint">La placa es obligatoria. La carga puede ir en la misma foto si se ve.</p>
+        <p class="ce-hint">{{ 'La placa es obligatoria. La carga puede ir en la misma foto si se ve.' | t }}</p>
       </section>
 
       <!-- 3. Material -->
       <section class="ce-sec">
-        <h2 class="ce-sec__title">¿Qué mueve?</h2>
+        <h2 class="ce-sec__title">{{ '¿Qué mueve?' | t }}</h2>
         <input class="field" type="text" [ngModel]="materialDesc()" (ngModelChange)="materialDesc.set($event)"
-          placeholder="Ej: mueble, nevera, varillas…" aria-label="Qué mueve" />
-        <p class="ce-hint">Descripción libre. No afecta el inventario.</p>
+          [placeholder]="'Ej: mueble, nevera, varillas…' | t" aria-label="Qué mueve" />
+        <p class="ce-hint">{{ 'Descripción libre. No afecta el inventario.' | t }}</p>
       </section>
 
       <!-- 4. Origen → destino -->
       <section class="ce-sec">
-        <h2 class="ce-sec__title">Origen y destino</h2>
-        <app-lugar-picker label="Origen" placeholder="¿De dónde sale?" [initial]="origen()" (picked)="onOrigen($event)" />
+        <h2 class="ce-sec__title">{{ 'Origen y destino' | t }}</h2>
+        <app-lugar-picker [label]="'Origen' | t" [placeholder]="'¿De dónde sale?' | t" [initial]="origen()" (picked)="onOrigen($event)" />
         <div class="ce-arrow" aria-hidden="true">↓</div>
-        <app-lugar-picker label="Destino" placeholder="¿A dónde va?" [initial]="destino()" (picked)="onDestino($event)" />
+        <app-lugar-picker [label]="'Destino' | t" [placeholder]="'¿A dónde va?' | t" [initial]="destino()" (picked)="onDestino($event)" />
       </section>
 
       @if (error()) { <p class="ce-err">{{ error() }}</p> }
 
       <button type="button" class="btn-cta ce-emitir" [disabled]="!puedeEmitir()" (click)="emitir()">
-        {{ guardando() ? 'Emitiendo…' : 'Emitir conduce externo' }}
+        {{ guardando() ? ('Emitiendo…' | t) : ('Emitir conduce externo' | t) }}
       </button>
     }
   </div>

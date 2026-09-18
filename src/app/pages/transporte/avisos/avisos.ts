@@ -5,6 +5,8 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { VehiculosService, FlotaAviso } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -40,7 +42,7 @@ type Filtro = 'todos' | 'criticos' | 'mios';
   selector: 'app-avisos-flota',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EmptyState, Skeleton, LiveRefreshDirective, ConfirmDialog],
+  imports: [EmptyState, Skeleton, LiveRefreshDirective, ConfirmDialog, TranslatePipe],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })
@@ -51,6 +53,7 @@ export class AvisosFlotaPage {
   private location = inject(Location);
   private router = inject(Router);
   private ctx = inject(UserContextService);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFechaCortaHora; // AT17 — fecha + hora
   ident = vehiculoIdentidad; // AT9
@@ -150,21 +153,21 @@ export class AvisosFlotaPage {
   async accion(a: FlotaAviso): Promise<void> {
     if (this.busyId()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para esto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para esto.'));
       return;
     }
     this.busyId.set(a.id);
     try {
       if (this.esBloqueo(a) && a.vehiculo_id) {
         await this.vehiculos.reactivarVehiculo(a.vehiculo_id, null);
-        this.toast.success('Vehículo reactivado.');
+        this.toast.success(this.i18n.t('Vehículo reactivado.'));
       } else {
         await this.vehiculos.atenderAviso(a.id, null);
-        this.toast.success('Aviso marcado como atendido.');
+        this.toast.success(this.i18n.t('Aviso marcado como atendido.'));
       }
       this.avisos.update((list) => list.filter((x) => x.id !== a.id));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo completar la acción.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo completar la acción.'));
     } finally {
       this.busyId.set(null);
     }
@@ -173,7 +176,7 @@ export class AvisosFlotaPage {
   // ── AS15 — marcar todos como atendidos ──────────────────────────────────────
   pedirMarcarTodos(): void {
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para esto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para esto.'));
       return;
     }
     if (!this.marcablesEnLote().length) return;
@@ -189,9 +192,11 @@ export class AvisosFlotaPage {
       const n = await this.vehiculos.atenderAvisos(ids, null);
       const idSet = new Set(ids);
       this.avisos.update((list) => list.filter((x) => !idSet.has(x.id)));
-      this.toast.success(`${n} aviso${n === 1 ? '' : 's'} marcado${n === 1 ? '' : 's'} como atendido${n === 1 ? '' : 's'}.`);
+      this.toast.success(
+        this.i18n.t(n === 1 ? '1 aviso marcado como atendido.' : '{n} avisos marcados como atendidos.', { n }),
+      );
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudieron marcar los avisos.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudieron marcar los avisos.'));
     } finally {
       this.marcandoTodos.set(false);
     }

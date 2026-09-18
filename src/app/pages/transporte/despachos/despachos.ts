@@ -8,6 +8,8 @@ import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { ConducesService, RequisicionPorDespachar } from '../../../core/services/conduces.service';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * BA/Transporte v3 (FASE 2) — "Por despachar": requisiciones aprobadas que esperan
@@ -19,7 +21,7 @@ import { humanizeError } from '../../../shared/util/friendly-error.util';
   selector: 'app-despachos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBar, LiveRefreshDirective],
+  imports: [Skeleton, EmptyState, SyncBar, LiveRefreshDirective, TranslatePipe],
   templateUrl: './despachos.html',
   styleUrl: './despachos.scss',
 })
@@ -27,6 +29,7 @@ export class DespachosPage {
   private conduces = inject(ConducesService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   error = signal('');
@@ -42,7 +45,7 @@ export class DespachosPage {
     try {
       this.requisiciones.set(await this.conduces.requisicionesPorDespachar());
     } catch (e) {
-      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudieron cargar las requisiciones.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : this.i18n.t('No se pudieron cargar las requisiciones.'));
     } finally {
       this.loading.set(false);
     }

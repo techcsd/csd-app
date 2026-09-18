@@ -4,13 +4,15 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, Unidad } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** Manage unidades de medida (same catalog SGC uses). */
 @Component({
   selector: 'app-admin-unidades',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule],
+  imports: [Skeleton, FormsModule, TranslatePipe],
   templateUrl: './unidades.html',
   styleUrl: './unidades.scss',
 })
@@ -18,6 +20,7 @@ export class AdminUnidadesPage {
   private admin = inject(AdminService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   unidades = signal<Unidad[]>([]);
   loading = signal(true);
@@ -46,7 +49,7 @@ export class AdminUnidadesPage {
       this.unidades.update((l) => [...l, u].sort((a, b) => a.nombre.localeCompare(b.nombre)));
       this.nuevo.set('');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'Error.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('Error.'));
     } finally {
       this.saving.set(false);
     }

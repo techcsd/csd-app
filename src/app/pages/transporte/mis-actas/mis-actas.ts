@@ -7,6 +7,8 @@ import { TraspasoService, ActaTraspaso } from '../../../core/services/traspaso.s
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AF36 — Historial de recepciones/traspasos de vehículo (actas). Muestra quién
@@ -17,7 +19,7 @@ import { formatFechaCortaHora } from '../../../core/util/fecha';
   selector: 'app-mis-actas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState],
+  imports: [DecimalPipe, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './mis-actas.html',
   styleUrl: './mis-actas.scss',
 })
@@ -27,6 +29,7 @@ export class MisActasPage {
   private toast = inject(ToastService);
   private location = inject(Location);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   readonly fechaHora = formatFechaCortaHora;
 
@@ -43,7 +46,7 @@ export class MisActasPage {
     try {
       this.actas.set(await this.traspaso.misActas());
     } catch {
-      this.toast.error('No se pudo cargar el historial de recepciones.');
+      this.toast.error(this.i18n.t('No se pudo cargar el historial de recepciones.'));
     } finally {
       this.loading.set(false);
     }
@@ -66,9 +69,9 @@ export class MisActasPage {
 
   llaveLabel(t: string | null): string {
     switch (t) {
-      case 'chofer_asignado': return '🧑‍✈️ Llave con el chofer';
-      case 'oficina_central': return '🏢 Llave en oficina';
-      case 'otro': return '📍 Llave en otro lugar';
+      case 'chofer_asignado': return '🧑‍✈️ ' + this.i18n.t('Llave con el chofer');
+      case 'oficina_central': return '🏢 ' + this.i18n.t('Llave en oficina');
+      case 'otro': return '📍 ' + this.i18n.t('Llave en otro lugar');
       default: return '';
     }
   }

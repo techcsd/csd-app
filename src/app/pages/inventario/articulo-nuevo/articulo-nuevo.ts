@@ -3,6 +3,8 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { CameraService } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -21,7 +23,7 @@ interface FotoNueva {
   selector: 'app-articulo-nuevo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect],
+  imports: [FormsModule, CollapsibleSelect, TranslatePipe],
   templateUrl: './articulo-nuevo.html',
   styleUrl: './articulo-nuevo.scss',
 })
@@ -32,6 +34,7 @@ export class ArticuloNuevoPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   guardando = signal(false);
   categorias = signal<CategoriaInv[]>([]);
@@ -118,9 +121,9 @@ export class ArticuloNuevoPage {
       this.categorias.set(await this.inventario.getCategorias());
       this.categoriaId.set(id);
       this.nuevaCategoria.set('');
-      this.toast.success('Categoría creada.');
+      this.toast.success(this.i18n.t('Categoría creada.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear la categoría.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear la categoría.'));
     } finally {
       this.creandoCategoria.set(false);
     }
@@ -136,9 +139,9 @@ export class ArticuloNuevoPage {
       const nueva = this.unidades().find((u) => u.nombre.toLowerCase() === n.toLowerCase());
       if (nueva) this.unidad.set(nueva.codigo);
       this.nuevaUnidad.set('');
-      this.toast.success('Unidad creada.');
+      this.toast.success(this.i18n.t('Unidad creada.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear la unidad.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear la unidad.'));
     } finally {
       this.creandoUnidad.set(false);
     }
@@ -163,7 +166,7 @@ export class ArticuloNuevoPage {
   async guardar(): Promise<void> {
     if (this.guardando() || !this.puedeGuardar()) return;
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para crear el artículo.');
+      this.toast.error(this.i18n.t('Necesitas conexión para crear el artículo.'));
       return;
     }
     this.guardando.set(true);
@@ -180,10 +183,10 @@ export class ArticuloNuevoPage {
       for (let i = 0; i < fotos.length; i++) {
         await this.inventario.agregarImagenArticulo(id, fotos[i].blob, i === 0);
       }
-      this.toast.success(`Artículo creado (${codigo}).`);
+      this.toast.success(this.i18n.t('Artículo creado ({codigo}).', { codigo }));
       void this.router.navigate(['/inventario/articulo', id]);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el artículo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear el artículo.'));
     } finally {
       this.guardando.set(false);
     }

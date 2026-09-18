@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, model } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /** S19 — estado de mantenimiento derivado del km EN VIVO. */
 export interface KmMantenimiento {
@@ -22,7 +23,7 @@ export interface KmMantenimiento {
   selector: 'app-km-input',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, TranslatePipe],
   templateUrl: './km-input.html',
   styleUrl: './km-input.scss',
 })

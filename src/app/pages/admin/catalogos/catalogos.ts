@@ -4,6 +4,8 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, BCatalogo } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 type Tipo = 'estructura' | 'actividad' | 'restriccion';
 
@@ -12,7 +14,7 @@ type Tipo = 'estructura' | 'actividad' | 'restriccion';
   selector: 'app-admin-catalogos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule],
+  imports: [Skeleton, FormsModule, TranslatePipe],
   templateUrl: './catalogos.html',
   styleUrl: '../unidades/unidades.scss',
 })
@@ -20,6 +22,7 @@ export class AdminCatalogosPage {
   private admin = inject(AdminService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly grupos: { tipo: Tipo; label: string }[] = [
     { tipo: 'estructura', label: 'Estructuras' },
@@ -61,7 +64,7 @@ export class AdminCatalogosPage {
       this.catalogos.update((l) => [...l, c]);
       this.nuevoValor.set('');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'Error.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('Error.'));
     } finally {
       this.saving.set(false);
     }

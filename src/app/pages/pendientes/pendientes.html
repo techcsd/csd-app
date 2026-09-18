@@ -2,7 +2,7 @@
   <header class="pendientes__header">
     <button type="button" class="pendientes__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="pendientes__icon">📤</span>
-    <h1 class="pendientes__title">Pendientes de envío</h1>
+    <h1 class="pendientes__title">{{ 'Pendientes de envío' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,29 +11,29 @@
     } @else if (items().length === 0) {
       <app-empty-state
         icon="✅"
-        title="Todo enviado"
-        message="No tienes nada esperando. Cuando captures algo sin señal, aparecerá aquí hasta que se envíe."
+        [title]="'Todo enviado' | t"
+        [message]="'No tienes nada esperando. Cuando captures algo sin señal, aparecerá aquí hasta que se envíe.' | t"
       />
     } @else {
       <!-- BG1(c) — una corrección publicada puede resolver pendientes atascados. -->
       @if (hayFixSugerido()) {
         <div class="pendientes__fix">
           <p class="pendientes__fix-txt">
-            ✅ Hay una corrección que puede resolver
-            {{ fixSugeridoCount() }} pendiente{{ fixSugeridoCount() === 1 ? '' : 's' }}.
+            ✅ {{ 'Hay una corrección que puede resolver' | t }}
+            {{ fixSugeridoCount() }} {{ (fixSugeridoCount() === 1 ? 'pendiente' : 'pendientes') | t }}.
           </p>
           <button type="button" class="pendientes__fix-btn" [disabled]="!online() || reintentandoFix()" (click)="reintentarConFix()">
-            {{ reintentandoFix() ? 'Reintentando…' : 'Reintentar ahora' }}
+            {{ reintentandoFix() ? ('Reintentando…' | t) : ('Reintentar ahora' | t) }}
           </button>
         </div>
       }
 
       @if (hayReintentables()) {
         <button type="button" class="pendientes__retry-all" [disabled]="!online()" (click)="reintentarTodo()">
-          🔄 Reintentar todos
+          🔄 {{ 'Reintentar todos' | t }}
         </button>
         @if (!online()) {
-          <p class="pendientes__hint">Sin señal ahora mismo. Se reintentará solo cuando vuelva.</p>
+          <p class="pendientes__hint">{{ 'Sin señal ahora mismo. Se reintentará solo cuando vuelva.' | t }}</p>
         }
       }
 
@@ -55,10 +55,10 @@
 
           <div class="ob-row__meta">
             @if (item.fotos > 0) {
-              <span class="ob-row__chip">📷 {{ item.fotos }} foto{{ item.fotos === 1 ? '' : 's' }}</span>
+              <span class="ob-row__chip">📷 {{ item.fotos }} {{ (item.fotos === 1 ? 'foto' : 'fotos') | t }}</span>
             }
             @if (item.intentos > 0) {
-              <span class="ob-row__chip">Intentos: {{ item.intentos }}</span>
+              <span class="ob-row__chip">{{ 'Intentos:' | t }} {{ item.intentos }}</span>
             }
           </div>
 
@@ -74,7 +74,7 @@
                  el desarrollador (screenshot con diagnóstico); el trabajador de campo ve
                  la copia amable de 'sistema', sin jerga de BD. -->
             @if (esDesarrollador() && codigoDiagnostico(item); as cod) {
-              <p class="ob-row__code">🩺 Código: {{ cod }}</p>
+              <p class="ob-row__code">🩺 {{ 'Código:' | t }} {{ cod }}</p>
             }
 
             @if (expandido() === item.id) {
@@ -86,24 +86,24 @@
                    reintentar cuando firme (aunque el error sea "permanente"). -->
               @if (puedeRecordarDespachante(item)) {
                 <button type="button" class="ob-btn ob-btn--retry" [disabled]="recordandoId() === item.id || !online()" (click)="recordarDespachante(item)">
-                  {{ recordandoId() === item.id ? 'Enviando…' : '🔔 Recordarle al despachante' }}
+                  {{ recordandoId() === item.id ? ('Enviando…' | t) : ('🔔 Recordarle al despachante' | t) }}
                 </button>
                 <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
-                  Reintentar
+                  {{ 'Reintentar' | t }}
                 </button>
               }
               <!-- AO3 — corregir un conduce atascado (ej. stock): reabre el wizard con
                    los datos y fotos para ajustar cantidades/almacén y reenviar. -->
               @if (puedeCorregir(item)) {
                 <button type="button" class="ob-btn ob-btn--retry" (click)="corregir(item)">
-                  ✏️ Corregir
+                  ✏️ {{ 'Corregir' | t }}
                 </button>
               }
               <!-- BR6 (regla 15) — echada rechazada por negocio: avísale a Logística
                    (Raykler) para que la registre él si el chofer no puede corregirla. -->
               @if (esCombustibleNegocio(item)) {
                 <button type="button" class="ob-btn ob-btn--ghost" [disabled]="avisandoId() === item.id || !online()" (click)="avisarLogistica(item)">
-                  {{ avisandoId() === item.id ? 'Avisando…' : '📣 Avisar a Logística' }}
+                  {{ avisandoId() === item.id ? ('Avisando…' | t) : ('📣 Avisar a Logística' | t) }}
                 </button>
               }
               <!-- BG1 — 'sistema' SIEMPRE reintentable (post-fix); transitorio también.
@@ -111,20 +111,20 @@
                    no auto-reintenta (se corrige/duplica). -->
               @if (esConservable(item) || !item.permanente) {
                 <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
-                  Reintentar
+                  {{ 'Reintentar' | t }}
                 </button>
               }
               <button type="button" class="ob-btn ob-btn--ghost" (click)="abrirContenido(item)">
-                Ver contenido
+                {{ 'Ver contenido' | t }}
               </button>
               <button type="button" class="ob-btn ob-btn--ghost" (click)="toggleDetalle(item.id)">
-                {{ expandido() === item.id ? 'Ocultar detalle técnico' : 'Ver detalle técnico' }}
+                {{ expandido() === item.id ? ('Ocultar detalle técnico' | t) : ('Ver detalle técnico' | t) }}
               </button>
               <!-- BG1 — Descartar NO aparece para 'sistema' (data real): vive en la
                    vista de contenido tras doble confirmación. Solo dato/atascado. -->
               @if (puedeDescartar(item)) {
                 <button type="button" class="ob-btn ob-btn--danger" (click)="pedirDescartar(item)">
-                  Descartar
+                  {{ 'Descartar' | t }}
                 </button>
               }
             </div>
@@ -132,19 +132,19 @@
             <p class="ob-row__waiting">{{ esperandoTexto(item) }}</p>
             @if (item.error_msg) {
               <!-- P5 — aunque siga reintentando, mostramos el motivo del último fallo -->
-              <p class="ob-row__error ob-row__error--soft">Último aviso: {{ mensajeError(item) }}</p>
+              <p class="ob-row__error ob-row__error--soft">{{ 'Último aviso:' | t }} {{ mensajeError(item) }}</p>
             }
             <!-- BI2 — un pending/syncing atascado también se puede reintentar a mano -->
             @if (puedeForzarEnvio(item) || esViejo(item)) {
               <div class="ob-row__actions">
                 @if (puedeForzarEnvio(item)) {
                   <button type="button" class="ob-btn ob-btn--retry" [disabled]="!online()" (click)="reintentar(item)">
-                    Reintentar ahora
+                    {{ 'Reintentar ahora' | t }}
                   </button>
                 }
                 @if (esViejo(item)) {
                   <button type="button" class="ob-btn ob-btn--danger" (click)="pedirDescartar(item)">
-                    Descartar (atascado)
+                    {{ 'Descartar (atascado)' | t }}
                   </button>
                 }
               </div>
@@ -157,10 +157,10 @@
 
   <app-confirm-dialog
     [open]="confirmarDescartarId() !== null"
-    title="¿Descartar este envío?"
-    message="No se enviará al sistema y se borrará de la cola. Quedará marcado como no enviado en tus registros. Esta acción no se puede deshacer."
-    confirmLabel="Descartar"
-    cancelLabel="Conservar"
+    [title]="'¿Descartar este envío?' | t"
+    [message]="'No se enviará al sistema y se borrará de la cola. Quedará marcado como no enviado en tus registros. Esta acción no se puede deshacer.' | t"
+    [confirmLabel]="'Descartar' | t"
+    [cancelLabel]="'Conservar' | t"
     tone="danger"
     (confirmed)="confirmarDescartar()"
     (cancelled)="cancelarDescartar()"

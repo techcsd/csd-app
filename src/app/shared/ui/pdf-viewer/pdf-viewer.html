@@ -9,9 +9,9 @@
 
   <div class="pdfv__viewport">
     @if (loading()) {
-      <p class="pdfv__msg">Cargando documento…</p>
+      <p class="pdfv__msg">{{ 'Cargando documento…' | t }}</p>
     } @else if (error()) {
-      <p class="pdfv__msg">No pudimos mostrar este PDF. Usa “Descargar” para abrirlo.</p>
+      <p class="pdfv__msg">{{ 'No pudimos mostrar este PDF. Usa “Descargar” para abrirlo.' | t }}</p>
     }
     <canvas #canvas class="pdfv__canvas" [class.pdfv__canvas--hidden]="loading() || error()"></canvas>
   </div>

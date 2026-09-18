@@ -1,8 +1,8 @@
 <div class="screen misnc">
   <header class="misnc__header">
-    <button type="button" class="misnc__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="misnc__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="misnc__icon">✅</span>
-    <h1 class="misnc__title">Mis pendientes</h1>
+    <h1 class="misnc__title">{{ 'Mis pendientes' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -10,23 +10,23 @@
       <app-skeleton [rows]="4" />
     } @else if (error()) {
       <!-- BL2 — la consulta falló: no confundir con "todo al día". -->
-      <app-empty-state icon="📡" title="No pudimos cargar tus pendientes"
-        message="Revisa tu conexión e inténtalo de nuevo." ctaLabel="Reintentar" (action)="cargar()" />
+      <app-empty-state icon="📡" [title]="'No pudimos cargar tus pendientes' | t"
+        [message]="'Revisa tu conexión e inténtalo de nuevo.' | t" [ctaLabel]="'Reintentar' | t" (action)="cargar()" />
     } @else if (!items().length) {
-      <app-empty-state icon="🎉" title="Todo al día"
-        message="No tienes no conformidades ni acciones correctivas pendientes." />
+      <app-empty-state icon="🎉" [title]="'Todo al día' | t"
+        [message]="'No tienes no conformidades ni acciones correctivas pendientes.' | t" />
     } @else {
       @for (it of items(); track it.clase + it.id) {
         <div class="misnc__card" [class.misnc__card--open]="esExpandido(it)">
           <button type="button" class="misnc__card-head" (click)="toggle(it)">
             <div class="misnc__card-main">
               <span class="misnc__badge" [style.background]="it.clase === 'accion' ? '#2563eb' : sevTint(it.severidad)">
-                {{ it.clase === 'accion' ? 'Acción' : tipoLabel(it.tipo) }}
+                {{ it.clase === 'accion' ? ('Acción' | t) : (tipoLabel(it.tipo) | t) }}
               </span>
               <span class="misnc__titulo">{{ it.titulo || it.descripcion }}</span>
             </div>
             @if (it.proyecto_nombre) { <span class="misnc__obra">{{ it.proyecto_nombre }}</span> }
-            @if (it.fecha_compromiso) { <span class="misnc__vence">Vence {{ it.fecha_compromiso }}</span> }
+            @if (it.fecha_compromiso) { <span class="misnc__vence">{{ 'Vence' | t }} {{ it.fecha_compromiso }}</span> }
           </button>
 
           @if (esExpandido(it)) {
@@ -35,35 +35,35 @@
               @if (it.ubicacion) { <p class="misnc__loc">📍 {{ it.ubicacion }}</p> }
 
               @if (it.clase === 'accion') {
-                <label class="field-label">Evidencia (opcional)</label>
-                <app-photo-slot label="Foto" hint="📷" [gallery]="false"
+                <label class="field-label">{{ 'Evidencia (opcional)' | t }}</label>
+                <app-photo-slot [label]="'Foto' | t" hint="📷" [gallery]="false"
                   [foto]="evidencia()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
                 <button type="button" class="btn-cta misnc__cta" [disabled]="guardando()" (click)="marcarHecha(it)">
-                  {{ guardando() ? 'Guardando…' : '✅ Marcar como hecha' }}
+                  @if (guardando()) { {{ 'Guardando…' | t }} } @else { ✅ {{ 'Marcar como hecha' | t }} }
                 </button>
               } @else {
-                <label class="field-label">Nota de verificación (opcional)</label>
+                <label class="field-label">{{ 'Nota de verificación (opcional)' | t }}</label>
                 <textarea class="field" rows="2" [ngModel]="nota()" (ngModelChange)="nota.set($event)"
-                  placeholder="¿Cómo se verificó la corrección?"></textarea>
+                  [placeholder]="'¿Cómo se verificó la corrección?' | t"></textarea>
                 <button type="button" class="btn-cta misnc__cta" [disabled]="guardando()" (click)="verificarNc(it)">
-                  {{ guardando() ? 'Guardando…' : '✅ Verificar y cerrar' }}
+                  @if (guardando()) { {{ 'Guardando…' | t }} } @else { ✅ {{ 'Verificar y cerrar' | t }} }
                 </button>
 
                 <!-- Asignar acción correctiva -->
                 @if (!accionAbierta()) {
-                  <button type="button" class="btn-ghost misnc__cta" (click)="accionAbierta.set(true)">➕ Asignar acción correctiva</button>
+                  <button type="button" class="btn-ghost misnc__cta" (click)="accionAbierta.set(true)">➕ {{ 'Asignar acción correctiva' | t }}</button>
                 } @else {
                   <div class="misnc__accion-form">
-                    <label class="field-label">¿Qué hay que corregir?</label>
+                    <label class="field-label">{{ '¿Qué hay que corregir?' | t }}</label>
                     <textarea class="field" rows="2" [ngModel]="accDesc()" (ngModelChange)="accDesc.set($event)"
-                      placeholder="Descripción de la acción"></textarea>
+                      [placeholder]="'Descripción de la acción' | t"></textarea>
 
-                    <label class="field-label misnc__mt">Responsable (opcional)</label>
+                    <label class="field-label misnc__mt">{{ 'Responsable (opcional)' | t }}</label>
                     @if (accResp(); as r) {
                       <div class="misnc__resp-sel"><span>🧑 {{ r.nombre }}</span><button type="button" (click)="accResp.set(null)">✕</button></div>
                     } @else {
                       <input class="field" type="text" [ngModel]="accRespBusqueda()" (ngModelChange)="accRespBusqueda.set($event); buscarAccResp()"
-                        placeholder="Buscar por nombre…" />
+                        [placeholder]="'Buscar por nombre…' | t" />
                       @if (accRespRes().length) {
                         <div class="misnc__resp-list">
                           @for (u of accRespRes(); track u.id) {
@@ -73,13 +73,13 @@
                       }
                     }
 
-                    <label class="field-label misnc__mt">Fecha compromiso (opcional)</label>
+                    <label class="field-label misnc__mt">{{ 'Fecha compromiso (opcional)' | t }}</label>
                     <input class="field" type="date" [ngModel]="accFecha()" (ngModelChange)="accFecha.set($event)" />
 
                     <button type="button" class="btn-cta misnc__cta" [disabled]="!accDesc().trim() || guardando()" (click)="asignarAccion(it)">
-                      {{ guardando() ? 'Guardando…' : 'Asignar acción' }}
+                      {{ guardando() ? ('Guardando…' | t) : ('Asignar acción' | t) }}
                     </button>
-                    <button type="button" class="btn-ghost misnc__cta" (click)="cerrarAccion()">Cancelar</button>
+                    <button type="button" class="btn-ghost misnc__cta" (click)="cerrarAccion()">{{ 'Cancelar' | t }}</button>
                   </div>
                 }
               }

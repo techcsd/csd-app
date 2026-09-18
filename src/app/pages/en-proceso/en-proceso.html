@@ -22,7 +22,7 @@
           <div class="enp__card">
             <div class="enp__info">
               <span class="enp__label">{{ b.etiqueta }}</span>
-              <span class="enp__fecha">Guardado {{ fmt(b.updated_at) }}</span>
+              <span class="enp__fecha">{{ 'Guardado' | t }} {{ fmt(b.updated_at) }}</span>
             </div>
             <div class="enp__actions">
               <button type="button" class="btn-cta enp__retomar" (click)="retomar(b)">{{ 'Retomar' | t }}</button>
@@ -44,7 +44,7 @@
               } @else {
                 <span class="enp__estado enp__estado--cola">⏳ {{ 'En cola para enviar' | t }}</span>
               }
-              <span class="enp__fecha">Capturado {{ fmt(e.updated_at) }}</span>
+              <span class="enp__fecha">{{ 'Capturado' | t }} {{ fmt(e.updated_at) }}</span>
             </div>
             <!-- BR6 — la tarjeta con problema resuelve DESDE AQUÍ: reintentar,
                  descartar (con aviso de pérdida) y, si es rechazo de negocio de una

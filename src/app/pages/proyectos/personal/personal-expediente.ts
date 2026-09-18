@@ -11,6 +11,8 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { PersonalCarnet } from '../../../shared/ui/personal-carnet/personal-carnet';
 import { PdfViewer } from '../../../shared/ui/pdf-viewer/pdf-viewer';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -41,7 +43,7 @@ const SGC_WEB = 'https://sgcconstructorasd.com';
   selector: 'app-personal-expediente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, PdfViewer, CedulaPipe],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, PdfViewer, CedulaPipe, TranslatePipe],
   templateUrl: './personal-expediente.html',
   styleUrl: './personal-expediente.scss',
 })
@@ -52,6 +54,7 @@ export class PersonalExpedientePage implements OnInit {
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly fmtFecha = formatFechaMedia;
   readonly fotosGuia = FOTOS_GUIA;
@@ -111,7 +114,7 @@ export class PersonalExpedientePage implements OnInit {
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
-      this.error.set('Personal no encontrado.');
+      this.error.set(this.i18n.t('Personal no encontrado.'));
       this.loading.set(false);
       return;
     }
@@ -125,7 +128,7 @@ export class PersonalExpedientePage implements OnInit {
       const [p, cargos] = await Promise.all([this.service.getById(id), this.service.getCargos().catch(() => [] as Cargo[])]);
       this.cargos.set(cargos);
       if (!p) {
-        this.error.set('Personal no encontrado o sin acceso.');
+        this.error.set(this.i18n.t('Personal no encontrado o sin acceso.'));
         return;
       }
       this.personal.set(p);
@@ -138,7 +141,7 @@ export class PersonalExpedientePage implements OnInit {
       }
       this.fotos.set(urls);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo cargar el expediente.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : this.i18n.t('No se pudo cargar el expediente.'));
     } finally {
       this.loading.set(false);
     }
@@ -163,23 +166,23 @@ export class PersonalExpedientePage implements OnInit {
     if (this.abriendoDoc()) return;
     const path = f.documento_path || f.firma_path;
     if (!path) {
-      this.toast.error('Este documento no tiene archivo adjunto.');
+      this.toast.error(this.i18n.t('Este documento no tiene archivo adjunto.'));
       return;
     }
     this.abriendoDoc.set(f.id);
     try {
       const url = await this.service.fotoUrl(path);
       if (!url) {
-        this.toast.error('No se pudo abrir el documento.');
+        this.toast.error(this.i18n.t('No se pudo abrir el documento.'));
         return;
       }
       if (/\.pdf(\?|$)/i.test(path)) {
-        this.docVisor.set({ url, nombre: f.documento_nombre || 'Documento firmado' });
+        this.docVisor.set({ url, nombre: f.documento_nombre || this.i18n.t('Documento firmado') });
       } else {
         this.lightboxUrl.set(url);
       }
     } catch {
-      this.toast.error('No se pudo abrir el documento.');
+      this.toast.error(this.i18n.t('No se pudo abrir el documento.'));
     } finally {
       this.abriendoDoc.set(null);
     }
@@ -213,7 +216,7 @@ export class PersonalExpedientePage implements OnInit {
     const p = this.personal();
     if (!p || this.saving()) return;
     if (!this.eNombre().trim()) {
-      this.toast.error('El nombre es obligatorio.');
+      this.toast.error(this.i18n.t('El nombre es obligatorio.'));
       return;
     }
     this.saving.set(true);
@@ -235,9 +238,9 @@ export class PersonalExpedientePage implements OnInit {
       const cargo = this.cargos().find((c) => c.id === (cambios.cargo_id ?? null)) ?? null;
       this.personal.set({ ...p, ...cambios, cargo });
       this.editando.set(false);
-      this.toast.success('Cambios guardados. Se sincronizarán en segundo plano.');
+      this.toast.success(this.i18n.t('Cambios guardados. Se sincronizarán en segundo plano.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudieron guardar los cambios.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudieron guardar los cambios.'));
     } finally {
       this.saving.set(false);
     }
@@ -259,9 +262,9 @@ export class PersonalExpedientePage implements OnInit {
     try {
       await this.service.enqueueEstado(p.id, nuevo);
       this.personal.set({ ...p, estado: nuevo });
-      this.toast.success(nuevo === 'inactivo' ? 'Personal desactivado.' : 'Personal reactivado.');
+      this.toast.success(nuevo === 'inactivo' ? this.i18n.t('Personal desactivado.') : this.i18n.t('Personal reactivado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar el estado.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cambiar el estado.'));
     } finally {
       this.saving.set(false);
     }

@@ -4,8 +4,8 @@
   <div class="screen__body">
     <!-- Step 1: pick an available vehicle -->
     @if (step() === 1) {
-      <h1 class="screen__title">Asignarme un vehículo</h1>
-      <p class="screen__subtitle">Elige un vehículo disponible para usarlo hoy.</p>
+      <h1 class="screen__title">{{ 'Asignarme un vehículo' | t }}</h1>
+      <p class="screen__subtitle">{{ 'Elige un vehículo disponible para usarlo hoy.' | t }}</p>
 
       @if (loading()) {
         <app-skeleton [rows]="4" />
@@ -14,11 +14,11 @@
              una causa (asignados / fuera de servicio) que no evaluamos. -->
         <app-empty-state
           icon="⚠️"
-          title="No pudimos cargar los vehículos"
-          [message]="online ? 'Hubo un problema al consultar el pool. Reintenta en un momento.' : 'Sin conexión. Conéctate y reintenta.'"
-          ctaLabel="Reintentar"
+          [title]="'No pudimos cargar los vehículos' | t"
+          [message]="online ? ('Hubo un problema al consultar el pool. Reintenta en un momento.' | t) : ('Sin conexión. Conéctate y reintenta.' | t)"
+          [ctaLabel]="'Reintentar' | t"
           (action)="reintentar()"
-          secondaryLabel="Volver"
+          [secondaryLabel]="'Volver' | t"
           (secondaryAction)="back()"
         />
       } @else if (!disponibles().length) {
@@ -26,9 +26,9 @@
              afirmar la causa. -->
         <app-empty-state
           icon="🚗"
-          title="No vemos vehículos para asignarte"
-          message="Ahora mismo no hay vehículos en el pool. Si esperabas alguno, consulta con Flota."
-          secondaryLabel="Volver"
+          [title]="'No vemos vehículos para asignarte' | t"
+          [message]="'Ahora mismo no hay vehículos en el pool. Si esperabas alguno, consulta con Flota.' | t"
+          [secondaryLabel]="'Volver' | t"
           (secondaryAction)="back()"
         />
       } @else {
@@ -46,13 +46,13 @@
               [anio]="v.anio"
               [done]="true"
             >
-              <span class="asignar__ya">✓ Ya asignado</span>
+              <span class="asignar__ya">✓ {{ 'Ya asignado' | t }}</span>
               <div class="asignar__acciones">
                 <button type="button" class="btn-ghost asignar__accion" (click)="irSemanal()">
-                  {{ yaReportado(v.vehiculo_id) ? '🔄 Rehacer inspección' : '📋 Inspección de vehículo' }}
+                  {{ yaReportado(v.vehiculo_id) ? '🔄' : '📋' }} {{ yaReportado(v.vehiculo_id) ? ('Rehacer inspección' | t) : ('Inspección de vehículo' | t) }}
                 </button>
                 <button type="button" class="btn-ghost asignar__accion" (click)="irPreuso(v.vehiculo_id)">
-                  🚙 Checklist de pre-uso
+                  🚙 {{ 'Checklist de pre-uso' | t }}
                 </button>
               </div>
             </app-vehiculo-card>
@@ -69,7 +69,7 @@
               [modelo]="v.modelo"
               [anio]="v.anio"
             >
-              <span class="asignar__tomado">🔒 Asignado a {{ nombreAsignado(v.vehiculo_id) }}</span>
+              <span class="asignar__tomado">🔒 {{ 'Asignado a' | t }} {{ nombreAsignado(v.vehiculo_id) }}</span>
             </app-vehiculo-card>
           } @else {
             <button type="button" class="asignar__vehbtn" (click)="seleccionar(v)">
@@ -92,17 +92,17 @@
           }
         }
         @if (!online) {
-          <p class="asignar__note">Sin señal. Necesitas conexión para asignarte un vehículo.</p>
+          <p class="asignar__note">{{ 'Sin señal. Necesitas conexión para asignarte un vehículo.' | t }}</p>
         }
       }
     }
 
     <!-- Step 2: quick driver self-registration (only if not yet a driver) -->
     @if (step() === 2) {
-      <h1 class="screen__title">Regístrate como conductor</h1>
-      <p class="screen__subtitle">Solo esta vez. Con estos datos podrás usar vehículos.</p>
+      <h1 class="screen__title">{{ 'Regístrate como conductor' | t }}</h1>
+      <p class="screen__subtitle">{{ 'Solo esta vez. Con estos datos podrás usar vehículos.' | t }}</p>
 
-      <label class="field-label" for="ced">Cédula</label>
+      <label class="field-label" for="ced">{{ 'Cédula' | t }}</label>
       <input
         id="ced"
         class="field"
@@ -113,27 +113,27 @@
         placeholder="000-0000000-0"
       />
 
-      <label class="field-label" for="lic-tipo">Tipo / categoría de licencia</label>
+      <label class="field-label" for="lic-tipo">{{ 'Tipo / categoría de licencia' | t }}</label>
       <input
         id="lic-tipo"
         class="field"
         type="text"
         [ngModel]="licenciaTipo()"
         (ngModelChange)="licenciaTipo.set($event)"
-        placeholder="Ej. Categoría 2"
+        [placeholder]="'Ej. Categoría 2' | t"
       />
 
-      <label class="field-label" for="lic-num">Número de licencia (opcional)</label>
+      <label class="field-label" for="lic-num">{{ 'Número de licencia (opcional)' | t }}</label>
       <input
         id="lic-num"
         class="field"
         type="text"
         [ngModel]="licenciaNumero()"
         (ngModelChange)="licenciaNumero.set($event)"
-        placeholder="Número"
+        [placeholder]="'Número' | t"
       />
 
-      <label class="field-label" for="lic-venc">Vencimiento de licencia (opcional)</label>
+      <label class="field-label" for="lic-venc">{{ 'Vencimiento de licencia (opcional)' | t }}</label>
       <input
         id="lic-venc"
         class="field"
@@ -142,30 +142,29 @@
         (ngModelChange)="licenciaVencimiento.set($event)"
       />
 
-      <label class="field-label">¿Qué vehículos manejas?</label>
+      <label class="field-label">{{ '¿Qué vehículos manejas?' | t }}</label>
       @for (t of tiposAutorizado; track t) {
         <app-option-button
-          [label]="t"
+          [label]="t | t"
           [selected]="tipoAutorizado() === t"
           (pressed)="tipoAutorizado.set(t)"
         />
       }
 
       <!-- X1 — documentos del conductor (solicitados, no bloqueantes) -->
-      <label class="field-label">Documentos (opcional, puedes subirlos luego)</label>
+      <label class="field-label">{{ 'Documentos (opcional, puedes subirlos luego)' | t }}</label>
       <p class="asignar__note asignar__note--doc">
-        Toma una foto o adjunta el archivo de tu cédula y licencia. Si no los tienes ahora,
-        podrás subirlos después desde <strong>Mi actividad</strong>.
+        {{ 'Toma una foto o adjunta el archivo de tu cédula y licencia. Si no los tienes ahora, podrás subirlos después desde' | t }} <strong>{{ 'Mi actividad' | t }}</strong>.
       </p>
       <div class="asignar__docs">
         <app-doc-slot
-          label="Cédula"
+          [label]="'Cédula' | t"
           [requerido]="true"
           (captured)="docCedula.set($event)"
           (cleared)="docCedula.set(null)"
         />
         <app-doc-slot
-          label="Licencia de conducir"
+          [label]="'Licencia de conducir' | t"
           [requerido]="true"
           (captured)="docLicencia.set($event)"
           (cleared)="docLicencia.set(null)"
@@ -176,7 +175,7 @@
 
   <footer class="asignar__nav">
     @if (step() === 1) {
-      <button type="button" class="btn-ghost asignar__back" (click)="back()">Cancelar</button>
+      <button type="button" class="btn-ghost asignar__back" (click)="back()">{{ 'Cancelar' | t }}</button>
       @if (disponibles().length) {
         <button
           type="button"
@@ -184,18 +183,18 @@
           [disabled]="submitting() || !seleccionado()"
           (click)="continuar()"
         >
-          {{ submitting() ? 'Asignando…' : necesitaConductor() ? 'Continuar' : 'Asignarme y recibir' }}
+          {{ submitting() ? ('Asignando…' | t) : necesitaConductor() ? ('Continuar' | t) : ('Asignarme y recibir' | t) }}
         </button>
       }
     } @else {
-      <button type="button" class="btn-ghost asignar__back" (click)="prev()">Atrás</button>
+      <button type="button" class="btn-ghost asignar__back" (click)="prev()">{{ 'Atrás' | t }}</button>
       <button
         type="button"
         class="btn-cta"
         [disabled]="submitting()"
         (click)="registrarYAsignar()"
       >
-        {{ submitting() ? 'Guardando…' : 'Registrarme y recibir' }}
+        {{ submitting() ? ('Guardando…' | t) : ('Registrarme y recibir' | t) }}
       </button>
     }
   </footer>

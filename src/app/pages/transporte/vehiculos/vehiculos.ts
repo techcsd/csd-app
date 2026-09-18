@@ -6,6 +6,7 @@ import { VehiculoCard } from '../../../shared/ui/vehiculo-card/vehiculo-card';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ToggleSwitch } from '../../../shared/ui/toggle-switch/toggle-switch';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { VehiculosService, VehiculoEnUso } from '../../../core/services/vehiculos.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
@@ -16,7 +17,7 @@ import { formatFechaCortaHora } from '../../../core/util/fecha';
   selector: 'app-vehiculos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, VehiculoCard, EmptyState, Skeleton, ToggleSwitch],
+  imports: [FormsModule, VehiculoCard, EmptyState, Skeleton, ToggleSwitch, TranslatePipe],
   templateUrl: './vehiculos.html',
   styleUrl: './vehiculos.scss',
 })

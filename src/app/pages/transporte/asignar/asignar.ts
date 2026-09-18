@@ -18,6 +18,8 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CapturedDoc } from '../../../core/services/camera.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
 
@@ -31,7 +33,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-asignar-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, OptionButton, EmptyState, Skeleton, VehiculoCard, DocSlot],
+  imports: [FormsModule, StepBar, OptionButton, EmptyState, Skeleton, VehiculoCard, DocSlot, TranslatePipe],
   templateUrl: './asignar.html',
   styleUrl: './asignar.scss',
 })
@@ -45,6 +47,7 @@ export class AsignarVehiculoPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly tiposAutorizado: TipoAutorizado[] = ['Liviano', 'Pesado', 'Ambos'];
 
@@ -165,7 +168,7 @@ export class AsignarVehiculoPage {
     if (this.yaAsignado(v.vehiculo_id)) return; // U12 — no re-asignar el propio
     // AC8 — un vehículo asignado a otra persona no se puede volver a asignar.
     if (this.asignadoAOtro(v.vehiculo_id)) {
-      this.toast.error(`Ese vehículo está asignado a ${this.nombreAsignado(v.vehiculo_id)}.`);
+      this.toast.error(this.i18n.t('Ese vehículo está asignado a {nombre}.', { nombre: this.nombreAsignado(v.vehiculo_id) }));
       return;
     }
     this.seleccionado.set(v);
@@ -173,11 +176,11 @@ export class AsignarVehiculoPage {
 
   continuar(): void {
     if (!this.seleccionado()) {
-      this.toast.error('Elige un vehículo primero.');
+      this.toast.error(this.i18n.t('Elige un vehículo primero.'));
       return;
     }
     if (!this.online) {
-      this.toast.error('Necesitas conexión para asignarte un vehículo.');
+      this.toast.error(this.i18n.t('Necesitas conexión para asignarte un vehículo.'));
       return;
     }
     if (this.necesitaConductor()) {
@@ -197,11 +200,11 @@ export class AsignarVehiculoPage {
 
   private validarConductor(): boolean {
     if (!this.cedula().trim()) {
-      this.toast.error('Escribe tu cédula.');
+      this.toast.error(this.i18n.t('Escribe tu cédula.'));
       return false;
     }
     if (!this.licenciaTipo().trim()) {
-      this.toast.error('Escribe el tipo/categoría de licencia.');
+      this.toast.error(this.i18n.t('Escribe el tipo/categoría de licencia.'));
       return false;
     }
     return true;
@@ -211,7 +214,7 @@ export class AsignarVehiculoPage {
     if (this.submitting()) return;
     if (!this.validarConductor()) return;
     if (!this.online) {
-      this.toast.error('Necesitas conexión para registrarte.');
+      this.toast.error(this.i18n.t('Necesitas conexión para registrarte.'));
       return;
     }
     this.submitting.set(true);
@@ -227,11 +230,11 @@ export class AsignarVehiculoPage {
       // creado. No bloquea: si faltan, el perfil mostrará "documentos pendientes".
       await this.encolarDocumentos(res.conductor_id);
       if (res.licencia_vencida) {
-        this.toast.error('Tu licencia está vencida: podrás recibir el vehículo, pero el pre-uso quedará bloqueado hasta renovarla.');
+        this.toast.error(this.i18n.t('Tu licencia está vencida: podrás recibir el vehículo, pero el pre-uso quedará bloqueado hasta renovarla.'));
       }
       await this.asignar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar. Intenta de nuevo.'));
       this.submitting.set(false);
     }
   }
@@ -254,10 +257,10 @@ export class AsignarVehiculoPage {
     this.submitting.set(true);
     try {
       const res = await this.vehiculos.asignarme(veh.vehiculo_id);
-      this.toast.success(`Te asignaste ${res.placa}. Ahora completa el recibimiento.`);
+      this.toast.success(this.i18n.t('Te asignaste {placa}. Ahora completa el recibimiento.', { placa: res.placa }));
       void this.router.navigate(['/transporte/recibir', res.vehiculo_id], { replaceUrl: true });
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo asignar el vehículo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo asignar el vehículo.'));
       this.submitting.set(false);
     }
   }

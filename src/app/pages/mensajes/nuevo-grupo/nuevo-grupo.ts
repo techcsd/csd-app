@@ -7,6 +7,8 @@ import { InventarioService, UsuarioBusqueda } from '../../../core/services/inven
 import { CameraService } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AS25 — creación de grupo tipo WhatsApp en una pantalla completa: foto, nombre,
@@ -18,7 +20,7 @@ import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
   selector: 'app-nuevo-grupo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, AvatarEditor],
+  imports: [FormsModule, AvatarEditor, TranslatePipe],
   templateUrl: './nuevo-grupo.html',
   styleUrl: './nuevo-grupo.scss',
 })
@@ -29,6 +31,7 @@ export class NuevoGrupoPage implements OnDestroy {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   nombre = signal('');
   descripcion = signal('');
@@ -134,7 +137,7 @@ export class NuevoGrupoPage implements OnDestroy {
       }
       this.router.navigate(['/mensajes', id]);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el grupo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear el grupo.'));
     } finally {
       this.creando.set(false);
     }

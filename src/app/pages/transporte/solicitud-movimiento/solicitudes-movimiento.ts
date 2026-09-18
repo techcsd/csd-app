@@ -14,6 +14,8 @@ import {
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const PRIORIDAD_LABEL: Record<PrioridadSolicitud, string> = {
   baja: 'Baja',
@@ -38,7 +40,7 @@ const ESTADO_LABEL: Record<EstadoSolicitud, string> = {
   selector: 'app-solicitudes-movimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
   templateUrl: './solicitudes-movimiento.html',
   styleUrl: './solicitudes-movimiento.scss',
 })
@@ -47,6 +49,7 @@ export class SolicitudesMovimientoPage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
   prioridadLabel = (p: PrioridadSolicitud) => PRIORIDAD_LABEL[p] ?? p;
@@ -86,7 +89,7 @@ export class SolicitudesMovimientoPage {
         }),
       );
     } catch {
-      this.toast.error('No pudimos cargar las solicitudes.');
+      this.toast.error(this.i18n.t('No pudimos cargar las solicitudes.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
@@ -123,10 +126,10 @@ export class SolicitudesMovimientoPage {
   urgenciaTexto(s: SolicitudMovimiento): string {
     const d = s.dias_para_requerimiento;
     if (d == null) return '';
-    if (d < 0) return `Vencida hace ${Math.abs(d)} día${Math.abs(d) === 1 ? '' : 's'}`;
-    if (d === 0) return 'Para hoy';
-    if (d === 1) return 'Para mañana';
-    return `En ${d} días`;
+    if (d < 0) return this.i18n.t('Vencida hace {n} día(s)', { n: Math.abs(d) });
+    if (d === 0) return this.i18n.t('Para hoy');
+    if (d === 1) return this.i18n.t('Para mañana');
+    return this.i18n.t('En {n} días', { n: d });
   }
 
   // ── Planificación (referente) → wizard de crear-ruta PRE-LLENADO ─────────────
@@ -151,7 +154,7 @@ export class SolicitudesMovimientoPage {
       if (d?.notas) qp['notas'] = d.notas;
       await this.router.navigate(['/transporte/rutas/crear'], { queryParams: qp });
     } catch {
-      this.toast.error('No pudimos abrir el planificador. Revisa la conexión.');
+      this.toast.error(this.i18n.t('No pudimos abrir el planificador. Revisa la conexión.'));
     } finally {
       this.planificandoId.set('');
     }
@@ -160,20 +163,20 @@ export class SolicitudesMovimientoPage {
   async completar(s: SolicitudMovimiento): Promise<void> {
     try {
       await this.solicitudes.completar(s.id);
-      this.toast.success('Solicitud marcada como completada.');
+      this.toast.success(this.i18n.t('Solicitud marcada como completada.'));
       await this.load(true);
     } catch {
-      this.toast.error('No pudimos completar la solicitud.');
+      this.toast.error(this.i18n.t('No pudimos completar la solicitud.'));
     }
   }
 
   async cancelar(s: SolicitudMovimiento): Promise<void> {
     try {
       await this.solicitudes.cancelar(s.id, 'Cancelada desde la app');
-      this.toast.success('Solicitud cancelada.');
+      this.toast.success(this.i18n.t('Solicitud cancelada.'));
       await this.load(true);
     } catch {
-      this.toast.error('No pudimos cancelar la solicitud.');
+      this.toast.error(this.i18n.t('No pudimos cancelar la solicitud.'));
     }
   }
 

@@ -6,8 +6,8 @@
   </header>
 
   <div class="screen__body">
-    <div class="module__soon">🚧 En construcción</div>
-    <p class="module__lead">Aquí vas a poder:</p>
+    <div class="module__soon">🚧 {{ 'En construcción' | t }}</div>
+    <p class="module__lead">{{ 'Aquí vas a poder:' | t }}</p>
     <ul class="module__actions">
       @for (a of actions(); track a) {
         <li class="module__action">{{ a }}</li>

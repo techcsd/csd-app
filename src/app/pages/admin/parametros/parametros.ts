@@ -5,6 +5,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { AdminService, Parametro } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AL2 — Administración › Parámetros: edición del valor de cada parámetro del
  *  sistema (sgc.parametros). Escritura directa (RLS is_admin). */
@@ -12,7 +14,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-admin-parametros',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './parametros.html',
   styleUrl: './parametros.scss',
 })
@@ -20,6 +22,7 @@ export class AdminParametrosPage {
   private admin = inject(AdminService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   parametros = signal<Parametro[]>([]);
@@ -46,7 +49,7 @@ export class AdminParametrosPage {
       for (const p of ps) v[p.clave] = p.valor ?? '';
       this.valores.set(v);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar los parámetros.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar los parámetros.'));
     } finally {
       this.loading.set(false);
     }
@@ -65,9 +68,9 @@ export class AdminParametrosPage {
     try {
       await this.admin.updateParametro(p.clave, this.valores()[p.clave] ?? '');
       this.parametros.update((list) => list.map((x) => (x.clave === p.clave ? { ...x, valor: this.valores()[p.clave] } : x)));
-      this.toast.success('Parámetro guardado.');
+      this.toast.success(this.i18n.t('Parámetro guardado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.guardando.set('');
     }

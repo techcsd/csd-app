@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { OptionButton } from '../option-button/option-button';
 import { CollapsibleSelect } from '../collapsible-select/collapsible-select';
 import { SelectOption } from '../select-list/select-list';
 import { LocationPicker, UbicacionSeleccionada } from '../location-picker/location-picker';
 import { LugarDestino } from '../../../core/services/conduces.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AV13 — resultado de elegir un destino (paridad total con el wizard de creación). */
 export interface DestinoSeleccion {
@@ -26,11 +28,12 @@ export interface DestinoSeleccion {
   selector: 'app-destino-selector',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [OptionButton, CollapsibleSelect, LocationPicker],
+  imports: [OptionButton, CollapsibleSelect, LocationPicker, TranslatePipe],
   templateUrl: './destino-selector.html',
   styleUrl: './destino-selector.scss',
 })
 export class DestinoSelector {
+  private i18n = inject(I18nService);
   /** Obras + almacenes (con lat/lng) para el dropdown. */
   lugares = input<LugarDestino[]>([]);
 
@@ -69,7 +72,9 @@ export class DestinoSelector {
   }
 
   onUbicacion(u: UbicacionSeleccionada): void {
-    const texto = u.direccion?.trim() || `Ubicación ${u.latitud.toFixed(5)}, ${u.longitud.toFixed(5)}`;
+    const texto =
+      u.direccion?.trim() ||
+      this.i18n.t('Ubicación {lat}, {lng}', { lat: u.latitud.toFixed(5), lng: u.longitud.toFixed(5) });
     this.mapaTexto.set(texto);
     this.destinoChange.emit({ texto, proyectoId: null, lat: u.latitud, lng: u.longitud });
   }

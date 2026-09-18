@@ -11,6 +11,8 @@ import { DatePipe } from '@angular/common';
 import { ObraService } from '../../../core/services/obra.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { EntradaProgramada } from '../../../core/models/obra.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 const MAX_FOTOS = 2;
 const TIPOS: { key: string; label: string }[] = [
@@ -25,7 +27,7 @@ const TIPOS: { key: string; label: string }[] = [
   selector: 'app-obra-logistica',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, PhotoSlot, OptionButton, Skeleton],
+  imports: [FormsModule, DatePipe, PhotoSlot, OptionButton, Skeleton, TranslatePipe],
   templateUrl: './logistica.html',
   styleUrl: './logistica.scss',
 })
@@ -36,6 +38,7 @@ export class LogisticaPage {
   private navGuard = inject(NavGuardService);
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
   readonly tipos = TIPOS;
@@ -101,7 +104,7 @@ export class LogisticaPage {
         notas: this.notas().trim() || null,
         fotos,
       });
-      this.toast.success(this.network.online() ? 'Prueba registrada.' : 'Guardada. Se enviará cuando tengas señal.');
+      this.toast.success(this.network.online() ? this.i18n.t('Prueba registrada.') : this.i18n.t('Guardada. Se enviará cuando tengas señal.'));
       this.registrando.set(false);
       this.tipo.set(null);
       this.resultado.set('');
@@ -109,7 +112,7 @@ export class LogisticaPage {
       this.fotos.set({});
       void this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la prueba.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar la prueba.'));
     } finally {
       this.enviando.set(false);
     }

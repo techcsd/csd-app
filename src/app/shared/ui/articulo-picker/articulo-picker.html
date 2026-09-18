@@ -4,7 +4,7 @@
     type="search"
     [ngModel]="query()"
     (ngModelChange)="query.set($event)"
-    [placeholder]="soloBuscador() ? '🔎 Buscar material por nombre o código' : '🔎 Buscar material (opcional)'"
+    [placeholder]="soloBuscador() ? ('🔎 ' + ('Buscar material por nombre o código' | t)) : ('🔎 ' + ('Buscar material (opcional)' | t))"
   />
 
   <!-- Search results (span all categories) -->
@@ -15,20 +15,20 @@
           <span class="picker__name" [title]="a.nombre">{{ a.nombre }}</span>
           @if (apodoMatch(a); as apodo) {
             <!-- AU12 — por qué coincidió: enseña el nombre oficial al usuario -->
-            <span class="picker__apodo">coincide con el apodo «{{ apodo }}»</span>
+            <span class="picker__apodo">{{ 'coincide con el apodo «{apodo}»' | t: { apodo: apodo } }}</span>
           }
           <span class="picker__meta">
-            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · Sin stock } @else { · {{ stockDe(a.id) | number: '1.0-2' }} disp. }</span>}
+            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin stock' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
           </span>
           <span class="picker__add">+</span>
         </button>
       } @empty {
-        <p class="picker__muted">No se encontró ese material.</p>
+        <p class="picker__muted">{{ 'No se encontró ese material.' | t }}</p>
       }
     </div>
   } @else if (soloBuscador()) {
     <!-- AE — solo-buscador: sin categorías; hint hasta que teclee -->
-    <p class="picker__muted">Escribe el nombre o código del material para agregarlo.</p>
+    <p class="picker__muted">{{ 'Escribe el nombre o código del material para agregarlo.' | t }}</p>
   } @else if (!hasCategorias()) {
     <!-- Flat list (conteo/pedir) -->
     <div class="picker__list">
@@ -36,12 +36,12 @@
         <button type="button" class="picker__item" [class.picker__item--off]="sinStock(a)" [disabled]="sinStock(a)" (click)="pick(a)">
           <span class="picker__name" [title]="a.nombre">{{ a.nombre }}</span>
           <span class="picker__meta">
-            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · Sin stock } @else { · {{ stockDe(a.id) | number: '1.0-2' }} disp. }</span>}
+            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin stock' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
           </span>
           <span class="picker__add">+</span>
         </button>
       } @empty {
-        <p class="picker__muted">No hay materiales.</p>
+        <p class="picker__muted">{{ 'No hay materiales.' | t }}</p>
       }
     </div>
   } @else if (categoriaSel() === null) {
@@ -63,18 +63,18 @@
     </div>
   } @else {
     <!-- Articles of the selected category -->
-    <button type="button" class="picker__crumb" (click)="volverCategorias()">← Categorías · {{ nombreCategoria() }}</button>
+    <button type="button" class="picker__crumb" (click)="volverCategorias()">← {{ 'Categorías' | t }} · {{ nombreCategoria() }}</button>
     <div class="picker__list">
       @for (a of visible(); track a.id) {
         <button type="button" class="picker__item" [class.picker__item--off]="sinStock(a)" [disabled]="sinStock(a)" (click)="pick(a)">
           <span class="picker__name" [title]="a.nombre">{{ a.nombre }}</span>
           <span class="picker__meta">
-            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · Sin stock } @else { · {{ stockDe(a.id) | number: '1.0-2' }} disp. }</span>}
+            {{ a.unidad }}@if (stockDe(a.id) !== null) {<span class="picker__stock" [class.picker__stock--off]="sinStock(a)">@if (sinStock(a)) { · {{ 'Sin stock' | t }} } @else { · {{ stockDe(a.id) | number: '1.0-2' }} {{ 'disp.' | t }} }</span>}
           </span>
           <span class="picker__add">+</span>
         </button>
       } @empty {
-        <p class="picker__muted">No hay materiales en esta categoría.</p>
+        <p class="picker__muted">{{ 'No hay materiales en esta categoría.' | t }}</p>
       }
     </div>
   }

@@ -4,34 +4,34 @@
     <div class="screen__body">
       <div class="rsem__ok">
         <span class="rsem__ok-check">✓</span>
-        <h1 class="rsem__ok-title">Inspección de vehículo enviada</h1>
+        <h1 class="rsem__ok-title">{{ 'Inspección de vehículo enviada' | t }}</h1>
         <p class="rsem__ok-sub">{{ vehiculo()?.placa }}</p>
       </div>
       @if (resultadoEnviado() !== 'aprobado') {
         <div class="rsem__band rsem__band--warn">
-          ⚠ Marcaste hallazgos. Se envió un aviso a mantenimiento para revisar el vehículo.
+          ⚠ {{ 'Marcaste hallazgos. Se envió un aviso a mantenimiento para revisar el vehículo.' | t }}
         </div>
       } @else {
-        <div class="rsem__band rsem__band--ok">✓ Todo en orden.</div>
+        <div class="rsem__band rsem__band--ok">✓ {{ 'Todo en orden.' | t }}</div>
       }
       @if (!online) {
-        <p class="rsem__note">Sin señal. Se enviará solo al reconectar.</p>
+        <p class="rsem__note">{{ 'Sin señal. Se enviará solo al reconectar.' | t }}</p>
       }
     </div>
     <footer class="rsem__nav">
-      <button type="button" class="btn-cta" (click)="finish()">Listo</button>
+      <button type="button" class="btn-cta" (click)="finish()">{{ 'Listo' | t }}</button>
     </footer>
   </div>
 } @else if (vehiculo(); as veh) {
   <!-- Wizard tipo hoja (S17): una sección por pantalla + fotos + km + firma + resumen -->
   <div class="screen rsem">
     <!-- Y9c — título persistente del formulario junto al progreso -->
-    <h1 class="rsem__wiztitle">Inspección de vehículo</h1>
+    <h1 class="rsem__wiztitle">{{ 'Inspección de vehículo' | t }}</h1>
     <app-step-bar [current]="step()" [total]="total()" />
     <div class="screen__body">
       <div class="rsem__veh">
         <span class="rsem__placa">{{ veh.placa }}</span>
-        <span class="rsem__modelo">Reporte de esta semana</span>
+        <span class="rsem__modelo">{{ 'Reporte de esta semana' | t }}</span>
       </div>
 
       <!-- AE9 — recuperar el reporte tras un cierre inesperado / llamada / bloqueo -->
@@ -45,19 +45,19 @@
 
       <!-- Una sección del checklist por pantalla -->
       @if (seccionActual(); as g) {
-        <h1 class="screen__title">{{ g.seccion }}</h1>
-        <p class="screen__subtitle">Toca OK, Falla o N/A en cada punto.</p>
+        <h1 class="screen__title">{{ g.seccion | t }}</h1>
+        <p class="screen__subtitle">{{ 'Toca OK, Falla o N/A en cada punto.' | t }}</p>
         @for (it of g.items; track it.id) {
           <div class="rsem__item">
             <span class="rsem__item-label">
               {{ it.etiqueta }}
-              @if (it.es_critico) { <b class="rsem__crit">· CRÍTICO</b> }
+              @if (it.es_critico) { <b class="rsem__crit">· {{ 'CRÍTICO' | t }}</b> }
             </span>
             <div class="rsem__opts">
               @for (o of opciones; track o.valor) {
                 <app-option-button
                   [icon]="o.icon"
-                  [label]="o.label"
+                  [label]="o.label | t"
                   [tone]="o.tone"
                   [selected]="respuestas()[it.id] === o.valor"
                   (pressed)="setRespuesta(it.id, o.valor)"
@@ -71,12 +71,12 @@
                 rows="2"
                 [ngModel]="comentarios()[it.id] ?? ''"
                 (ngModelChange)="setComentario(it.id, $event)"
-                placeholder="¿Qué falla tiene? (obligatorio)"
+                [placeholder]="'¿Qué falla tiene? (obligatorio)' | t"
                 aria-label="Describe la falla"
               ></textarea>
               <!-- AA13 — foto + nota de voz opcionales de la falla (evidencia en tiempo real → solo cámara) -->
               <app-photo-slot
-                label="Foto de la falla (opcional)"
+                [label]="'Foto de la falla (opcional)' | t"
                 hint="📸"
                 [gallery]="false"
                 [foto]="getFallaFoto(it.id)"
@@ -96,17 +96,17 @@
 
       <!-- S26a — fotos guiadas -->
       @if (esFotos()) {
-        <h1 class="screen__title">Fotos del vehículo</h1>
+        <h1 class="screen__title">{{ 'Fotos del vehículo' | t }}</h1>
         <p class="screen__subtitle">
-          @if (fotosFaltan()) { Faltan {{ fotosFaltan() }}. } @else { ✅ Completas. }
+          @if (fotosFaltan()) { {{ 'Faltan' | t }} {{ fotosFaltan() }}. } @else { ✅ {{ 'Completas.' | t }} }
         </p>
         <!-- Z11 — fotos agrupadas Exterior / Interior, cada slot dice qué foto es -->
         @for (g of fotoGrupos(); track g.seccion) {
-          <h2 class="rsem__foto-grupo">{{ g.seccion }}</h2>
+          <h2 class="rsem__foto-grupo">{{ g.seccion | t }}</h2>
           <div class="rsem__fotos">
             @for (f of g.slots; track f.slot) {
               <app-photo-slot
-                [label]="f.label"
+                [label]="f.label | t"
                 [hint]="f.hint"
                 [gallery]="false"
                 [foto]="fotos()[f.slot] ?? null"
@@ -120,30 +120,30 @@
 
       <!-- S19/S26a — km inteligente + nivel de combustible -->
       @if (esKm()) {
-        <h1 class="screen__title">Kilometraje y combustible</h1>
+        <h1 class="screen__title">{{ 'Kilometraje y combustible' | t }}</h1>
         <app-km-input
-          [label]="vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso actuales' : 'Kilometraje actual (km)'"
+          [label]="(vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso actuales' : 'Kilometraje actual (km)') | t"
           [sufijo]="vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'"
           [(value)]="km"
           [ultimo]="odometro()"
           [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
           [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
-        <label class="field-label">Nivel de combustible</label>
+        <label class="field-label">{{ 'Nivel de combustible' | t }}</label>
         <div class="rsem__niveles">
           @for (n of niveles; track n) {
-            <button type="button" class="chip" [class.chip--on]="nivelCombustible() === n" (click)="nivelCombustible.set(n)">{{ n }}</button>
+            <button type="button" class="chip" [class.chip--on]="nivelCombustible() === n" (click)="nivelCombustible.set(n)">{{ n | t }}</button>
           }
         </div>
-        <p class="field-hint">{{ nivelAyuda }}</p>
-        <label class="field-label" for="obs">Algún comentario (opcional)</label>
-        <textarea id="obs" class="field rsem__obs" rows="3" [ngModel]="observacion()" (ngModelChange)="observacion.set($event)" placeholder="Algo que reportar del vehículo…"></textarea>
+        <p class="field-hint">{{ nivelAyuda | t }}</p>
+        <label class="field-label" for="obs">{{ 'Algún comentario (opcional)' | t }}</label>
+        <textarea id="obs" class="field rsem__obs" rows="3" [ngModel]="observacion()" (ngModelChange)="observacion.set($event)" [placeholder]="'Algo que reportar del vehículo…' | t"></textarea>
       }
 
       <!-- Firma -->
       @if (esFirma()) {
-        <h1 class="screen__title">Tu firma</h1>
-        <p class="screen__subtitle">Firma para confirmar el reporte.</p>
+        <h1 class="screen__title">{{ 'Tu firma' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Firma para confirmar el reporte.' | t }}</p>
         <app-signature-pad (changed)="onFirmaChanged($event)" />
         <!-- Z23 — notas de voz (opcional) -->
         <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
@@ -153,23 +153,23 @@
 
       <!-- Resumen + aviso de mantenimiento (S19) -->
       @if (esResumen()) {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
-          <li><span>Vehículo</span><b>{{ veh.placa }}</b></li>
+          <li><span>{{ 'Vehículo' | t }}</span><b>{{ veh.placa }}</b></li>
           @if (vehDetalle()?.medida_uso === 'horas') {
-            <li><span>Horas de uso</span><b>{{ km() | number: '1.0-0' }} h</b></li>
+            <li><span>{{ 'Horas de uso' | t }}</span><b>{{ km() | number: '1.0-0' }} h</b></li>
           } @else {
-            <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+            <li><span>{{ 'Kilometraje' | t }}</span><b>{{ km() | number: '1.0-0' }} km</b></li>
           }
-          <li><span>Combustible</span><b>{{ nivelLabel(nivelCombustible()) }}</b></li>
-          <li><span>Fotos</span><b>{{ fotoSlots().length }} ✓</b></li>
-          <li><span>Resultado</span><b>{{ resultadoLocal() === 'aprobado' ? 'Todo bien' : resultadoLocal() === 'con_hallazgos' ? 'Con hallazgos' : 'Bloqueado' }}</b></li>
+          <li><span>{{ 'Combustible' | t }}</span><b>{{ nivelLabel(nivelCombustible()) | t }}</b></li>
+          <li><span>{{ 'Fotos' | t }}</span><b>{{ fotoSlots().length }} ✓</b></li>
+          <li><span>{{ 'Resultado' | t }}</span><b>{{ (resultadoLocal() === 'aprobado' ? 'Todo bien' : resultadoLocal() === 'con_hallazgos' ? 'Con hallazgos' : 'Bloqueado') | t }}</b></li>
         </ul>
         @if (mantenimiento(); as m) {
           @if (m.estado !== 'ok') {
             <p class="rsem__band" [class.rsem__band--warn]="m.estado === 'pre_cita'" [class.rsem__band--danger]="m.estado === 'vencido'">
-              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO (pasado con {{ -m.faltan | number: '1.0-0' }} {{ vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km' }}). }
-              @else { 🟠 Cerca del mantenimiento: faltan {{ m.faltan | number: '1.0-0' }} {{ vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km' }}. }
+              @if (m.estado === 'vencido') { 🔴 {{ 'Mantenimiento VENCIDO (pasado con' | t }} {{ -m.faltan | number: '1.0-0' }} {{ vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km' }}). }
+              @else { 🟠 {{ 'Cerca del mantenimiento: faltan' | t }} {{ m.faltan | number: '1.0-0' }} {{ vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km' }}. }
             </p>
           }
         }
@@ -177,20 +177,20 @@
     </div>
 
     <app-wizard-footer
-      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="!esResumen() ? 'Siguiente' : (submitting() ? 'Enviando…' : 'Enviar reporte')"
+      [backLabel]="backLabel()"
+      [primaryLabel]="!esResumen() ? ('Siguiente' | t) : (submitting() ? ('Enviando…' | t) : ('Enviar reporte' | t))"
       [primaryDisabled]="esResumen() && (submitting() || kmInvalido())"
-      (back)="step() > 1 ? prev() : intentarSalir()"
+      (back)="enPrimerPaso() ? intentarSalir() : prev()"
       (primary)="!esResumen() ? next() : submit()"
     />
 
     <!-- U4 — descartar cambios sin guardar -->
     <app-confirm-dialog
       [open]="confirmSalir()"
-      title="¿Descartar el reporte?"
-      message="Perderás las respuestas de este vehículo."
-      confirmLabel="Sí, descartar"
-      cancelLabel="Seguir aquí"
+      [title]="'¿Descartar el reporte?' | t"
+      [message]="'Perderás las respuestas de este vehículo.' | t"
+      [confirmLabel]="'Sí, descartar' | t"
+      [cancelLabel]="'Seguir aquí' | t"
       tone="danger"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"
@@ -202,7 +202,7 @@
     <header class="rsem__header">
       <button type="button" class="rsem__hback" (click)="intentarSalir()" aria-label="Atrás">←</button>
       <span class="rsem__hicon">📋</span>
-      <h1 class="rsem__htitle">Inspección de vehículo</h1>
+      <h1 class="rsem__htitle">{{ 'Inspección de vehículo' | t }}</h1>
     </header>
 
     <div class="screen__body">
@@ -212,29 +212,29 @@
         <!-- BL2 — la consulta del pool falló y no hay nada cacheado: error+reintento -->
         <app-empty-state
           icon="⚠️"
-          title="No pudimos cargar los vehículos"
-          [message]="online ? 'Hubo un problema al consultar el pool. Reintenta en un momento.' : 'Sin conexión. Conéctate y reintenta.'"
-          ctaLabel="Reintentar"
+          [title]="'No pudimos cargar los vehículos' | t"
+          [message]="online ? ('Hubo un problema al consultar el pool. Reintenta en un momento.' | t) : ('Sin conexión. Conéctate y reintenta.' | t)"
+          [ctaLabel]="'Reintentar' | t"
           (action)="reintentar()"
-          secondaryLabel="Volver"
+          [secondaryLabel]="'Volver' | t"
           (secondaryAction)="intentarSalir()"
         />
       } @else if (!lista().length) {
         <!-- BL2 — vacío legítimo: texto neutral, sin afirmar la causa -->
         <app-empty-state
           icon="🚚"
-          title="No vemos vehículos para reportar"
-          message="Ahora mismo no hay vehículos en el pool. Si esperabas alguno, consulta con Flota."
-          secondaryLabel="Volver"
+          [title]="'No vemos vehículos para reportar' | t"
+          [message]="'Ahora mismo no hay vehículos en el pool. Si esperabas alguno, consulta con Flota.' | t"
+          [secondaryLabel]="'Volver' | t"
           (secondaryAction)="intentarSalir()"
         />
       } @else {
         <!-- V10 — cualquier conductor elige un vehículo del pool y lo reporta -->
-        <p class="rsem__intro">Elige el vehículo y envía su reporte de esta semana.</p>
+        <p class="rsem__intro">{{ 'Elige el vehículo y envía su reporte de esta semana.' | t }}</p>
         <!-- W4 — "Tus vehículos" arriba, "Resto de la flota" debajo -->
         @for (g of grupos(); track g.titulo) {
           @if (g.titulo) {
-            <h2 class="rsem__group">{{ g.titulo }}</h2>
+            <h2 class="rsem__group">{{ g.titulo | t }}</h2>
           }
           @for (v of g.items; track v.vehiculo_id) {
             <app-vehiculo-card
@@ -255,27 +255,27 @@
               [done]="v.tiene_reporte || v.enviando"
             >
               @if (v.enviando && !v.tiene_reporte) {
-                <span class="rsem__estado rsem__estado--enviando">⏳ Enviando…</span>
-                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+                <span class="rsem__estado rsem__estado--enviando">⏳ {{ 'Enviando…' | t }}</span>
+                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">{{ 'Rehacer' | t }}</button>
               } @else if (v.reportado_por_otro) {
                 <!-- Z13 — ya lo reportó otra persona esta semana -->
                 <span class="rsem__estado rsem__estado--otro">
-                  Ya reportado por {{ v.reportado_por || 'otro usuario' }}@if (v.reportado_at) { · {{ fechaHora(v.reportado_at) }} }
+                  {{ 'Ya reportado por' | t }} {{ v.reportado_por || ('otro usuario' | t) }}@if (v.reportado_at) { · {{ fechaHora(v.reportado_at) }} }
                 </span>
-                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">{{ 'Rehacer' | t }}</button>
               } @else if (v.tiene_reporte) {
-                <span class="rsem__estado rsem__estado--ok">✓ Ya reportado</span>
-                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">Rehacer</button>
+                <span class="rsem__estado rsem__estado--ok">✓ {{ 'Ya reportado' | t }}</span>
+                <button type="button" class="btn-ghost rsem__recard" (click)="elegir(v)">{{ 'Rehacer' | t }}</button>
               } @else if (tieneBorrador(v.vehiculo_id)) {
                 <!-- AE9 — reporte a medio llenar: retomar donde se quedó -->
-                <span class="rsem__estado rsem__estado--borrador">📝 Reporte a medio llenar</span>
-                <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">Continuar</button>
+                <span class="rsem__estado rsem__estado--borrador">📝 {{ 'Reporte a medio llenar' | t }}</span>
+                <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">{{ 'Continuar' | t }}</button>
               } @else {
                 <!-- AC5 — hoy es el día programado de este equipo (telehandler=sábado, resto=domingo) -->
                 @if (tocaHoy(v)) {
-                  <span class="rsem__estado rsem__estado--hoy">📅 Toca reportar HOY</span>
+                  <span class="rsem__estado rsem__estado--hoy">📅 {{ 'Toca reportar HOY' | t }}</span>
                 }
-                <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">Reportar</button>
+                <button type="button" class="btn-cta rsem__docard" (click)="elegir(v)">{{ 'Reportar' | t }}</button>
               }
             </app-vehiculo-card>
           }

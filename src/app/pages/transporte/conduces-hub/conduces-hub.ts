@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BigButton } from '../../../shared/ui/big-button/big-button';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { ConducesService } from '../../../core/services/conduces.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface ConduceTile {
   key: string;
@@ -40,7 +41,7 @@ const TILES: ConduceTile[] = [
   selector: 'app-conduces-hub',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, SyncBar],
+  imports: [BigButton, SyncBar, TranslatePipe],
   templateUrl: './conduces-hub.html',
   styleUrl: './conduces-hub.scss',
 })

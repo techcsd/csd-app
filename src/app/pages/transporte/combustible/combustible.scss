@@ -333,3 +333,20 @@ app-option-button {
 .comb__back {
   max-width: 120px;
 }
+
+// BT4 — aviso de borrador recuperado.
+.comb__draft {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+.comb__draft-ic { font-size: 22px; line-height: 1.1; }
+.comb__draft-txt { display: flex; flex-direction: column; gap: 2px; flex: 1; color: var(--color-text); font-size: 14px; }
+.comb__draft-txt span { color: var(--color-text-secondary); font-size: 13px; }
+.comb__draft-acts { display: flex; flex-direction: column; gap: 6px; }
+.comb__draft-go, .comb__draft-x { padding: 8px 14px; }

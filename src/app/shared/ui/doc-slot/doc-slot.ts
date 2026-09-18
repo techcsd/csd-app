@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, inject, input, output, signal } from '@angular/core';
 import { CameraService, CapturedDoc } from '../../../core/services/camera.service';
 import { Img } from '../img/img';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * A document slot for X1 (conductor cédula/licencia, vehicle seguro/matrícula…).
@@ -12,7 +13,7 @@ import { Img } from '../img/img';
   selector: 'app-doc-slot',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Img],
+  imports: [Img, TranslatePipe],
   templateUrl: './doc-slot.html',
   styleUrl: './doc-slot.scss',
 })

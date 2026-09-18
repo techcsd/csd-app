@@ -3,6 +3,8 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ConteoHistorial, ConteoItemHist } from '../../../core/models/inventario.model';
@@ -18,7 +20,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-conteos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, TranslatePipe],
   templateUrl: './conteos.html',
   styleUrl: './conteos.scss',
 })
@@ -27,6 +29,7 @@ export class ConteosPage {
   private network = inject(NetworkService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   conteos = signal<ConteoHistorial[]>([]);
   loading = signal(true);
@@ -62,7 +65,7 @@ export class ConteosPage {
   }
 
   tipoLabel(t: string | null): string {
-    return t === 'chequeo_semanal' ? 'Chequeo semanal' : 'Ajuste';
+    return t === 'chequeo_semanal' ? this.i18n.t('Chequeo semanal') : this.i18n.t('Ajuste');
   }
 
   /** Diferencia por línea (contada - antes), normalizando numéricos de PostgREST. */

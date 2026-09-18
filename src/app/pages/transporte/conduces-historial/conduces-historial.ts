@@ -11,6 +11,8 @@ import { ConducesService, ConduceHistorial } from '../../../core/services/conduc
 import { InventarioService } from '../../../core/services/inventario.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 type RolFiltro = '' | 'emisor' | 'chofer' | 'receptor';
 
@@ -34,7 +36,7 @@ const FASE_TINT: Record<string, string> = {
   selector: 'app-conduces-historial',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective],
+  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
   templateUrl: './conduces-historial.html',
   styleUrl: './conduces-historial.scss',
 })
@@ -45,6 +47,7 @@ export class ConducesHistorialPage {
   private location = inject(Location);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   refrescando = signal(false);
@@ -73,7 +76,7 @@ export class ConducesHistorialPage {
   readonly fases = Object.keys(FASE_LABEL);
 
   /** Opciones para los selectores de obra (con "Todas" al inicio). */
-  obraOpciones = computed(() => [{ id: '', label: 'Todas las obras' }, ...this.obras()]);
+  obraOpciones = computed(() => [{ id: '', label: this.i18n.t('Todas las obras') }, ...this.obras()]);
 
   hayFiltroAvanzado = computed(
     () => !!this.obraOrigen() || !!this.obraDestino() || !!this.rol() || !!this.desde() || !!this.hasta(),
@@ -98,7 +101,7 @@ export class ConducesHistorialPage {
   });
 
   faseLabel(f: string | null): string {
-    return f ? (FASE_LABEL[f] ?? f) : '—';
+    return f ? this.i18n.t(FASE_LABEL[f] ?? f) : '—';
   }
   faseTint(f: string | null): string {
     return f ? (FASE_TINT[f] ?? '#6b7280') : '#6b7280';
@@ -188,20 +191,20 @@ export class ConducesHistorialPage {
 
   async ofrecerTransferencia(c: ConduceHistorial): Promise<void> {
     if (!this.choferSel()) {
-      this.toast.error('Elige el chofer al que transfieres.');
+      this.toast.error(this.i18n.t('Elige el chofer al que transfieres.'));
       return;
     }
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para ofrecer una transferencia.');
+      this.toast.error(this.i18n.t('Necesitas conexión para ofrecer una transferencia.'));
       return;
     }
     this.transfiriendo.set(true);
     try {
       await this.service.ofrecerTransferencia(c.id, this.choferSel(), this.notaTransfer().trim() || null);
-      this.toast.success('Transferencia ofrecida. El chofer la verá para aceptarla con foto y firma.');
+      this.toast.success(this.i18n.t('Transferencia ofrecida. El chofer la verá para aceptarla con foto y firma.'));
       this.transferAbierto.set(null);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo ofrecer la transferencia.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo ofrecer la transferencia.'));
     } finally {
       this.transfiriendo.set(false);
     }

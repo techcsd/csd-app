@@ -8,6 +8,8 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
 import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, CUADRILLAS, ASEGURAMIENTO, ASEGURAMIENTO_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
@@ -18,7 +20,7 @@ import { humanizeError } from '../../../shared/util/friendly-error.util';
   selector: 'app-personal-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective],
+  imports: [FormsModule, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
   templateUrl: './personal-lista.html',
   styleUrl: './personal-lista.scss',
 })
@@ -27,6 +29,7 @@ export class PersonalListaPage {
   private ctx = inject(UserContextService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly nacionalidades = NACIONALIDADES;
   readonly nacionalidadLabel = NACIONALIDAD_LABEL;
@@ -49,10 +52,10 @@ export class PersonalListaPage {
   filAseguramiento = signal(''); // AV4
   mostrarFiltros = signal(false);
 
-  obraOptions = computed(() => [{ id: '', label: 'Todas las obras' }, ...this.obras().map((o) => ({ id: o.id, label: o.nombre }))]);
-  cargoOptions = computed(() => [{ id: '', label: 'Todos los cargos' }, ...this.cargos().map((c) => ({ id: c.id, label: c.nombre }))]);
-  cuadrillaOptions = computed(() => [{ id: '', label: 'Todas las cuadrillas' }, ...this.cuadrillas.map((c) => ({ id: c.value, label: c.label }))]); // AV4
-  aseguramientoOptions = computed(() => [{ id: '', label: 'Todos' }, ...this.aseguramientos.map((a) => ({ id: a.value, label: a.label }))]); // AV4
+  obraOptions = computed(() => [{ id: '', label: this.i18n.t('Todas las obras') }, ...this.obras().map((o) => ({ id: o.id, label: o.nombre }))]);
+  cargoOptions = computed(() => [{ id: '', label: this.i18n.t('Todos los cargos') }, ...this.cargos().map((c) => ({ id: c.id, label: c.nombre }))]);
+  cuadrillaOptions = computed(() => [{ id: '', label: this.i18n.t('Todas las cuadrillas') }, ...this.cuadrillas.map((c) => ({ id: c.value, label: this.i18n.t(c.label) }))]); // AV4
+  aseguramientoOptions = computed(() => [{ id: '', label: this.i18n.t('Todos') }, ...this.aseguramientos.map((a) => ({ id: a.value, label: this.i18n.t(a.label) }))]); // AV4
 
   /** AV4 — icono de semáforo del aseguramiento (verde/rojo/gris) para la fila. */
   aseguramientoIcono(p: PersonalObra): string {
@@ -110,9 +113,9 @@ export class PersonalListaPage {
     const porCargo = new Map<string, number>();
     const porNac = new Map<string, number>();
     for (const p of list) {
-      const c = p.cargo?.nombre ?? 'Sin cargo';
+      const c = p.cargo?.nombre ?? this.i18n.t('Sin cargo');
       porCargo.set(c, (porCargo.get(c) ?? 0) + 1);
-      const n = this.nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad;
+      const n = this.i18n.t(this.nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad);
       porNac.set(n, (porNac.get(n) ?? 0) + 1);
     }
     return {
@@ -149,7 +152,7 @@ export class PersonalListaPage {
       this.obras.set(obras);
       this.cargos.set(cargos);
     } catch (e: unknown) {
-      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo cargar el personal.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : this.i18n.t('No se pudo cargar el personal.'));
     } finally {
       this.loading.set(false);
     }

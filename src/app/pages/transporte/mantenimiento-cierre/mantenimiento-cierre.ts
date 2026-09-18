@@ -7,6 +7,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const MAX_FOTOS = 2;
 
@@ -18,7 +20,7 @@ const MAX_FOTOS = 2;
   selector: 'app-mantenimiento-cierre',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, KmInput],
+  imports: [FormsModule, PhotoSlot, KmInput, TranslatePipe],
   templateUrl: './mantenimiento-cierre.html',
   styleUrl: './mantenimiento-cierre.scss',
 })
@@ -28,6 +30,7 @@ export class MantenimientoCierrePage {
   private mantenimientos = inject(MantenimientosService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
 
@@ -79,13 +82,15 @@ export class MantenimientoCierrePage {
         placa: '',
       });
       this.toast.success(
-        this.network.online()
-          ? 'Mantenimiento cerrado.'
-          : 'Guardado. Se cerrará cuando tengas señal.',
+        this.i18n.t(
+          this.network.online()
+            ? 'Mantenimiento cerrado.'
+            : 'Guardado. Se cerrará cuando tengas señal.',
+        ),
       );
       this.back();
     } catch {
-      this.toast.error('No se pudo cerrar el mantenimiento. Intenta de nuevo.');
+      this.toast.error(this.i18n.t('No se pudo cerrar el mantenimiento. Intenta de nuevo.'));
     } finally {
       this.guardando.set(false);
     }

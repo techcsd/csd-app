@@ -21,6 +21,8 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
 import { EntregaPorRecibir, fusionarEntregasPorRecibir } from '../../../core/util/recepcion';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * BD2 — bandeja CANÓNICA del receptor: "Entregas por recibir". Fusiona las dos
@@ -33,7 +35,7 @@ import { EntregaPorRecibir, fusionarEntregasPorRecibir } from '../../../core/uti
   selector: 'app-por-confirmar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, Skeleton, EmptyState, LiveRefreshDirective],
+  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
   templateUrl: './por-confirmar.html',
   styleUrl: './por-confirmar.scss',
 })
@@ -45,6 +47,7 @@ export class PorConfirmarPage {
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   private sigPad = viewChild<SignaturePad>('receptorPad');
 
@@ -92,7 +95,7 @@ export class PorConfirmarPage {
       ]);
       this.entregas.set(fusionarEntregasPorRecibir(confirmar, firmar));
     } catch {
-      this.toast.error('No pudimos cargar las entregas por recibir.');
+      this.toast.error(this.i18n.t('No pudimos cargar las entregas por recibir.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
@@ -177,21 +180,21 @@ export class PorConfirmarPage {
     if (this.enviando()) return;
     const firma = await this.sigPad()?.toBlob();
     if (!firma) {
-      this.toast.error('Falta tu firma de recepción.');
+      this.toast.error(this.i18n.t('Falta tu firma de recepción.'));
       return;
     }
     const foto = this.foto();
     const notas = this.notas().trim();
     // BD2 — foto obligatoria pero NO bloqueante: si no hay foto, se exige una nota.
     if (!foto && !notas) {
-      this.toast.error('Toma la foto de lo recibido; si no puedes, explica por qué en las notas.');
+      this.toast.error(this.i18n.t('Toma la foto de lo recibido; si no puedes, explica por qué en las notas.'));
       return;
     }
     this.enviando.set(true);
     try {
       if (e.fuente === 'confirmar') {
         if (this.llegoTodo() === null) {
-          this.toast.error('Dinos si llegó todo el material.');
+          this.toast.error(this.i18n.t('Dinos si llegó todo el material.'));
           this.enviando.set(false);
           return;
         }
@@ -221,11 +224,11 @@ export class PorConfirmarPage {
           nota: notas || null,
         });
       }
-      this.toast.success('¡Recepción confirmada! Se avisó al chofer.');
+      this.toast.success(this.i18n.t('¡Recepción confirmada! Se avisó al chofer.'));
       this.confirmandoId.set('');
       this.entregas.update((list) => list.filter((x) => x.salidaId !== e.salidaId));
     } catch (err) {
-      this.toast.error(err instanceof Error ? err.message : 'No se pudo confirmar. Intenta de nuevo.');
+      this.toast.error(err instanceof Error ? err.message : this.i18n.t('No se pudo confirmar. Intenta de nuevo.'));
     } finally {
       this.enviando.set(false);
     }
@@ -244,7 +247,7 @@ export class PorConfirmarPage {
     if (this.rechazando()) return;
     const motivo = this.motivoRechazo().trim();
     if (!motivo) {
-      this.toast.error('Escribe el motivo del rechazo (es obligatorio).');
+      this.toast.error(this.i18n.t('Escribe el motivo del rechazo (es obligatorio).'));
       return;
     }
     this.rechazando.set(true);
@@ -256,12 +259,12 @@ export class PorConfirmarPage {
         motivo,
         foto: this.fotoRechazo()?.blob ?? null,
       });
-      this.toast.success('Entrega rechazada. Se le avisó a quien la envió para que la corrija.');
+      this.toast.success(this.i18n.t('Entrega rechazada. Se le avisó a quien la envió para que la corrija.'));
       this.confirmandoId.set('');
       this.modoRechazo.set(false);
       this.entregas.update((list) => list.filter((x) => x.salidaId !== e.salidaId));
     } catch (err) {
-      this.toast.error(err instanceof Error ? err.message : 'No se pudo rechazar. Intenta de nuevo.');
+      this.toast.error(err instanceof Error ? err.message : this.i18n.t('No se pudo rechazar. Intenta de nuevo.'));
     } finally {
       this.rechazando.set(false);
     }

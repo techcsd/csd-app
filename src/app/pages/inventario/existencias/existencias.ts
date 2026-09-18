@@ -4,6 +4,8 @@ import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { Bodega, CategoriaInv, Existencia, esArticuloExterno, propiedadLabel } from '../../../core/models/inventario.model';
 
@@ -23,7 +25,7 @@ const SIN_CATEGORIA_KEY = 'sin';
   selector: 'app-existencias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect],
+  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, TranslatePipe],
   templateUrl: './existencias.html',
   styleUrl: './existencias.scss',
 })
@@ -31,6 +33,7 @@ export class ExistenciasPage {
   private inventario = inject(InventarioService);
   private location = inject(Location);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   readonly propiedadLabel = propiedadLabel; // Z16
   esExterno(e: Existencia): boolean {
@@ -83,7 +86,7 @@ export class ExistenciasPage {
     const sin = porCat.get(SIN_CATEGORIA_KEY);
     if (sin?.length) {
       sin.sort((a, b) => a.nombre.localeCompare(b.nombre));
-      out.push({ key: SIN_CATEGORIA_KEY, nombre: 'Sin categoría', destacada: false, items: sin, total: sin.length });
+      out.push({ key: SIN_CATEGORIA_KEY, nombre: this.i18n.t('Sin categoría'), destacada: false, items: sin, total: sin.length });
     }
     return out;
   });

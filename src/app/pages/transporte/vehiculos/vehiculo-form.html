@@ -2,7 +2,7 @@
   <header class="vform__header">
     <button type="button" class="vform__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="vform__icon">🚙</span>
-    <h1 class="vform__title">{{ esEdicion() ? 'Editar vehículo' : 'Nuevo vehículo' }}</h1>
+    <h1 class="vform__title">{{ esEdicion() ? ('Editar vehículo' | t) : ('Nuevo vehículo' | t) }}</h1>
   </header>
 
   <div class="screen__body">
@@ -17,21 +17,21 @@
         />
       }
 
-      <label class="field-label" for="placa">Placa</label>
+      <label class="field-label" for="placa">{{ 'Placa' | t }}</label>
       <input id="placa" class="field" type="text" [ngModel]="placa()" (ngModelChange)="placa.set($event)" placeholder="A123456" />
 
-      <label class="field-label" for="marca">Marca</label>
+      <label class="field-label" for="marca">{{ 'Marca' | t }}</label>
       <input id="marca" class="field" type="text" [ngModel]="marca()" (ngModelChange)="marca.set($event)" placeholder="Toyota" />
 
-      <label class="field-label" for="modelo">Modelo</label>
+      <label class="field-label" for="modelo">{{ 'Modelo' | t }}</label>
       <input id="modelo" class="field" type="text" [ngModel]="modelo()" (ngModelChange)="modelo.set($event)" placeholder="Hilux" />
 
-      <label class="field-label" for="anio">Año</label>
+      <label class="field-label" for="anio">{{ 'Año' | t }}</label>
       <input id="anio" class="field" type="number" inputmode="numeric" [ngModel]="anio()" (ngModelChange)="anio.set($event)" placeholder="2022" />
 
-      <label class="field-label">Tipo</label>
+      <label class="field-label">{{ 'Tipo' | t }}</label>
       <app-select-list
-        label="Tipo de vehículo"
+        [label]="'Tipo de vehículo' | t"
         icon="🚙"
         [options]="tipoOpts()"
         [selectedId]="tipo()"
@@ -39,81 +39,81 @@
       />
 
       <!-- AA18 — color (select + Otro) -->
-      <label class="field-label" for="color">Color</label>
+      <label class="field-label" for="color">{{ 'Color' | t }}</label>
       <select id="color" class="field" [ngModel]="colorEsOtro() ? '__otro__' : color()" (ngModelChange)="$event === '__otro__' ? color.set(' ') : color.set($event)">
-        <option value="">Elige el color…</option>
+        <option value="">{{ 'Elige el color…' | t }}</option>
         @for (c of colores; track c) { <option [value]="c">{{ c }}</option> }
-        <option value="__otro__">Otro…</option>
+        <option value="__otro__">{{ 'Otro…' | t }}</option>
       </select>
       @if (colorEsOtro()) {
-        <input class="field" type="text" [ngModel]="color().trim()" (ngModelChange)="color.set($event)" placeholder="Escribe el color" aria-label="Otro color" />
+        <input class="field" type="text" [ngModel]="color().trim()" (ngModelChange)="color.set($event)" [placeholder]="'Escribe el color' | t" aria-label="Otro color" />
       }
 
       <!-- AA17 — clasificación obra / oficina -->
-      <label class="field-label">¿De obra o de oficina?</label>
-      <app-option-button icon="🏗️" label="De obra" [selected]="uso() === 'obra'" (pressed)="uso.set('obra')" />
-      <app-option-button icon="🏢" label="De oficina" [selected]="uso() === 'oficina'" (pressed)="uso.set('oficina')" />
+      <label class="field-label">{{ '¿De obra o de oficina?' | t }}</label>
+      <app-option-button icon="🏗️" [label]="'De obra' | t" [selected]="uso() === 'obra'" (pressed)="uso.set('obra')" />
+      <app-option-button icon="🏢" [label]="'De oficina' | t" [selected]="uso() === 'oficina'" (pressed)="uso.set('oficina')" />
 
       <!-- AA18 — medida de uso: km u horómetro -->
-      <label class="field-label">¿Se mide por…?</label>
-      <app-option-button icon="🛣️" label="Kilómetros" [selected]="medidaUso() === 'km'" (pressed)="medidaUso.set('km')" />
-      <app-option-button icon="⏱️" label="Horas de uso (horómetro)" [selected]="medidaUso() === 'horas'" (pressed)="medidaUso.set('horas')" />
+      <label class="field-label">{{ '¿Se mide por…?' | t }}</label>
+      <app-option-button icon="🛣️" [label]="'Kilómetros' | t" [selected]="medidaUso() === 'km'" (pressed)="medidaUso.set('km')" />
+      <app-option-button icon="⏱️" [label]="'Horas de uso (horómetro)' | t" [selected]="medidaUso() === 'horas'" (pressed)="medidaUso.set('horas')" />
 
-      <label class="field-label" for="vin">VIN / número de chasis (opcional)</label>
-      <input id="vin" class="field" type="text" autocapitalize="characters" [ngModel]="vin()" (ngModelChange)="vin.set($event)" placeholder="17 caracteres — identifica el vehículo" />
+      <label class="field-label" for="vin">{{ 'VIN / número de chasis (opcional)' | t }}</label>
+      <input id="vin" class="field" type="text" autocapitalize="characters" [ngModel]="vin()" (ngModelChange)="vin.set($event)" [placeholder]="'17 caracteres — identifica el vehículo' | t" />
 
-      <label class="field-label">Estado</label>
+      <label class="field-label">{{ 'Estado' | t }}</label>
       @for (e of estados; track e.v) {
-        <app-option-button [label]="e.label" [selected]="estado() === e.v" (pressed)="estado.set(e.v)" />
+        <app-option-button [label]="e.label | t" [selected]="estado() === e.v" (pressed)="estado.set(e.v)" />
       }
 
-      <label class="field-label" for="km">{{ medidaLabel() }}</label>
+      <label class="field-label" for="km">{{ medidaLabel() | t }}</label>
       <input id="km" class="field" type="number" inputmode="numeric" min="0" [ngModel]="kilometraje()" (ngModelChange)="kilometraje.set($event)" placeholder="0" />
 
-      <label class="field-label" for="nm">Número de matrícula (opcional)</label>
-      <input id="nm" class="field" type="text" [ngModel]="numeroMatricula()" (ngModelChange)="numeroMatricula.set($event)" placeholder="Número de la matrícula" />
+      <label class="field-label" for="nm">{{ 'Número de matrícula (opcional)' | t }}</label>
+      <input id="nm" class="field" type="text" [ngModel]="numeroMatricula()" (ngModelChange)="numeroMatricula.set($event)" [placeholder]="'Número de la matrícula' | t" />
 
-      <label class="field-label" for="vm">Vencimiento matrícula (opcional)</label>
+      <label class="field-label" for="vm">{{ 'Vencimiento matrícula (opcional)' | t }}</label>
       <input id="vm" class="field" type="date" [ngModel]="vencMatricula()" (ngModelChange)="vencMatricula.set($event)" />
 
-      <label class="field-label" for="ns">Número de seguro / póliza (opcional)</label>
-      <input id="ns" class="field" type="text" [ngModel]="numeroSeguro()" (ngModelChange)="numeroSeguro.set($event)" placeholder="Número de póliza" />
+      <label class="field-label" for="ns">{{ 'Número de seguro / póliza (opcional)' | t }}</label>
+      <input id="ns" class="field" type="text" [ngModel]="numeroSeguro()" (ngModelChange)="numeroSeguro.set($event)" [placeholder]="'Número de póliza' | t" />
 
-      <label class="field-label" for="aseg">Aseguradora (opcional)</label>
+      <label class="field-label" for="aseg">{{ 'Aseguradora (opcional)' | t }}</label>
       <select id="aseg" class="field" [ngModel]="aseguradoraEsOtro() ? '__otro__' : aseguradora()" (ngModelChange)="$event === '__otro__' ? aseguradora.set(' ') : aseguradora.set($event)">
-        <option value="">Elige la aseguradora…</option>
+        <option value="">{{ 'Elige la aseguradora…' | t }}</option>
         @for (a of aseguradoras; track a) { <option [value]="a">{{ a }}</option> }
-        <option value="__otro__">Otro…</option>
+        <option value="__otro__">{{ 'Otro…' | t }}</option>
       </select>
       @if (aseguradoraEsOtro()) {
-        <input class="field" type="text" [ngModel]="aseguradora().trim()" (ngModelChange)="aseguradora.set($event)" placeholder="Compañía de seguro" aria-label="Otra aseguradora" />
+        <input class="field" type="text" [ngModel]="aseguradora().trim()" (ngModelChange)="aseguradora.set($event)" [placeholder]="'Compañía de seguro' | t" aria-label="Otra aseguradora" />
       }
 
-      <label class="field-label" for="vs">Vencimiento seguro (opcional)</label>
+      <label class="field-label" for="vs">{{ 'Vencimiento seguro (opcional)' | t }}</label>
       <input id="vs" class="field" type="date" [ngModel]="vencSeguro()" (ngModelChange)="vencSeguro.set($event)" />
 
-      <p class="vform__doc-hint">La foto de la matrícula y del seguro se sube desde el perfil del vehículo.</p>
+      <p class="vform__doc-hint">{{ 'La foto de la matrícula y del seguro se sube desde el perfil del vehículo.' | t }}</p>
 
-      <label class="field-label" for="kum">{{ medidaUso() === 'horas' ? 'Horas del último mantenimiento' : 'Km del último mantenimiento' }} (opcional)</label>
+      <label class="field-label" for="kum">{{ (medidaUso() === 'horas' ? 'Horas del último mantenimiento' : 'Km del último mantenimiento') | t }} {{ '(opcional)' | t }}</label>
       <input id="kum" class="field" type="number" inputmode="numeric" min="0" [ngModel]="kmUltMant()" (ngModelChange)="kmUltMant.set($event)" placeholder="0" />
 
-      <label class="field-label" for="im">Mantenimiento cada ({{ medidaUso() === 'horas' ? 'horas' : 'km' }})</label>
+      <label class="field-label" for="im">{{ 'Mantenimiento cada' | t }} ({{ medidaUso() === 'horas' ? ('horas' | t) : 'km' }})</label>
       <input id="im" class="field" type="number" inputmode="numeric" min="0" [ngModel]="intervaloMant()" (ngModelChange)="intervaloMant.set($event)" placeholder="5000" />
 
-      <label class="field-label" for="rend">Rendimiento esperado (km/gal) (opcional)</label>
-      <input id="rend" class="field" type="number" inputmode="decimal" min="0" [ngModel]="rendimientoEsperado()" (ngModelChange)="rendimientoEsperado.set($event)" placeholder="Ej. 30 — para las alertas de consumo" />
+      <label class="field-label" for="rend">{{ 'Rendimiento esperado (km/gal) (opcional)' | t }}</label>
+      <input id="rend" class="field" type="number" inputmode="decimal" min="0" [ngModel]="rendimientoEsperado()" (ngModelChange)="rendimientoEsperado.set($event)" [placeholder]="'Ej. 30 — para las alertas de consumo' | t" />
 
-      <label class="field-label" for="notas">Notas (opcional)</label>
+      <label class="field-label" for="notas">{{ 'Notas (opcional)' | t }}</label>
       <textarea id="notas" class="field vform__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
 
       <!-- AA19 — fotos del vehículo: reordenar, elegir portada y quitar -->
       @if (fotosExistentes().length) {
-        <label class="field-label">Fotos del vehículo (la 1ª es la portada)</label>
+        <label class="field-label">{{ 'Fotos del vehículo (la 1ª es la portada)' | t }}</label>
         <div class="vform__fotos">
           @for (p of fotosExistentes(); track p; let i = $index) {
             <div class="vform__foto" [class.vform__foto--portada]="i === 0">
               @if (fotoUrl(p)) { <img [src]="fotoUrl(p)" alt="Foto del vehículo" loading="lazy" /> }
-              @if (i === 0) { <span class="vform__foto-badge">Portada</span> }
+              @if (i === 0) { <span class="vform__foto-badge">{{ 'Portada' | t }}</span> }
               <div class="vform__foto-acc">
                 <button type="button" (click)="moverFoto(i, -1)" [disabled]="i === 0" aria-label="Subir">▲</button>
                 <button type="button" (click)="moverFoto(i, 1)" [disabled]="i === fotosExistentes().length - 1" aria-label="Bajar">▼</button>
@@ -125,15 +125,15 @@
         </div>
       }
 
-      <label class="field-label">Agregar foto (opcional)</label>
-      <app-photo-slot label="Foto del vehículo" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+      <label class="field-label">{{ 'Agregar foto (opcional)' | t }}</label>
+      <app-photo-slot [label]="'Foto del vehículo' | t" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
 
       <!-- W7 — dato de prueba (solo admin): no cuenta como flota real -->
       @if (esAdmin()) {
         <div class="vform__prueba">
           <app-toggle-switch
-            label="Dato de prueba"
-            hint="No cuenta como flota real. Solo lo ven los administradores."
+            [label]="'Dato de prueba' | t"
+            [hint]="'No cuenta como flota real. Solo lo ven los administradores.' | t"
             [checked]="esPrueba()"
             (checkedChange)="esPrueba.set($event)"
           />
@@ -143,8 +143,8 @@
   </div>
 
   <app-wizard-footer
-    backLabel="Cancelar"
-    [primaryLabel]="submitting() ? 'Guardando…' : (esEdicion() ? 'Guardar cambios' : 'Crear vehículo')"
+    [backLabel]="'Cancelar' | t"
+    [primaryLabel]="submitting() ? ('Guardando…' | t) : (esEdicion() ? ('Guardar cambios' | t) : ('Crear vehículo' | t))"
     [primaryDisabled]="submitting()"
     (back)="back()"
     (primary)="guardar()"

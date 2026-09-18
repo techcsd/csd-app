@@ -8,13 +8,15 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CronogramaTarea } from '../../../core/models/obra.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /** AG16 FASE 4 — Avance real vs plan + reporte de % por tarea del cronograma. */
 @Component({
   selector: 'app-obra-avance',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './avance.html',
   styleUrl: './avance.scss',
 })
@@ -25,6 +27,7 @@ export class AvancePage {
   protected network = inject(NetworkService);
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   proyectoId = '';
   loading = signal(true);
@@ -66,9 +69,9 @@ export class AvancePage {
       await this.obra.enqueueAvanceTarea(id, this.edit()[id] ?? 0);
       // Optimista: refleja el nuevo % en la lista.
       this.tareas.update((list) => list.map((t) => (t.id === id ? { ...t, avance_pct: this.edit()[id] } : t)));
-      this.toast.success(this.network.online() ? 'Avance reportado.' : 'Guardado. Se enviará cuando tengas señal.');
+      this.toast.success(this.network.online() ? this.i18n.t('Avance reportado.') : this.i18n.t('Guardado. Se enviará cuando tengas señal.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo reportar el avance.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo reportar el avance.'));
     } finally {
       this.guardando.set(null);
     }

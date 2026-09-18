@@ -5,13 +5,15 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, Reporte } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFechaHumana } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** Admin view of field reports/comments, with resolve. */
 @Component({
   selector: 'app-admin-reportes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule],
+  imports: [Skeleton, FormsModule, TranslatePipe],
   templateUrl: './reportes.html',
   styleUrl: './reportes.scss',
 })
@@ -19,6 +21,7 @@ export class AdminReportesPage {
   private admin = inject(AdminService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   reportes = signal<Reporte[]>([]);
   loading = signal(true);
@@ -36,7 +39,7 @@ export class AdminReportesPage {
     try {
       this.reportes.set(await this.admin.getReportes());
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'Error al cargar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('Error al cargar.'));
     } finally {
       this.loading.set(false);
     }
@@ -60,9 +63,9 @@ export class AdminReportesPage {
         list.map((x) => (x.id === r.id ? { ...x, estado: 'resuelto', respuesta_admin: this.respuesta() } : x)),
       );
       this.expandedId.set(null);
-      this.toast.success('Reporte resuelto.');
+      this.toast.success(this.i18n.t('Reporte resuelto.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'Error.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('Error.'));
     } finally {
       this.saving.set(false);
     }

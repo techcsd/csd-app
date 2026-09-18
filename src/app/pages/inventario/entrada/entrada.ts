@@ -178,6 +178,10 @@ export class EntradaPage implements OnDestroy {
       this.descontarObra.set(d.descontarObra ?? false);
       this.cart.set(d.cart ?? []);
     }
+    // BT4 — recupera también la foto de evidencia ya tomada (antes se re-tomaba).
+    const fotos = await this.borrador.loadFotos(this.clave);
+    const f = fotos.find((x) => x.slot === 'foto');
+    if (f) this.foto.set({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) });
     this.hydrated = true;
   }
 
@@ -248,9 +252,11 @@ export class EntradaPage implements OnDestroy {
   // B5 — foto opcional con el componente PhotoSlot compartido (no botón plano).
   onFoto(photo: CapturedPhoto): void {
     this.foto.set(photo);
+    void this.borrador.saveFoto(this.clave, 'foto', photo.blob); // BT4 — persiste la evidencia
   }
   onFotoCleared(): void {
     this.foto.set(null);
+    void this.borrador.removeFoto(this.clave, 'foto');
   }
 
   /** AF10 — firma de quien recibe capturada en el pad. */

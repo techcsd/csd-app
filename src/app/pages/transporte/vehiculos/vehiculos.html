@@ -2,20 +2,20 @@
   <header class="vlist__header">
     <button type="button" class="vlist__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="vlist__icon">🚙</span>
-    <h1 class="vlist__title">Vehículos</h1>
+    <h1 class="vlist__title">{{ 'Vehículos' | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (esAdmin()) {
-      <button type="button" class="btn-cta vlist__add" (click)="nuevo()">➕ Agregar vehículo</button>
+      <button type="button" class="btn-cta vlist__add" (click)="nuevo()">➕ {{ 'Agregar vehículo' | t }}</button>
     }
 
     <!-- AT14 — mostrar/ocultar datos de prueba (solo admin) -->
     @if (esAdminRol()) {
       <app-toggle-switch
         class="vlist__prueba"
-        label="Mostrar datos de prueba"
-        hint="Incluye vehículos marcados como prueba (solo tú)."
+        [label]="'Mostrar datos de prueba' | t"
+        [hint]="'Incluye vehículos marcados como prueba (solo tú).' | t"
         [checked]="mostrarPrueba()"
         (checkedChange)="mostrarPrueba.set($event)"
       />
@@ -25,7 +25,7 @@
     @if (esFlotaElevado() && enUsoVisible().length) {
       <div class="enuso">
         <button type="button" class="enuso__head" (click)="toggleEnUso()" [attr.aria-expanded]="enUsoAbierto()">
-          <span class="enuso__title">🚗 En uso ahora · {{ enUsoVisible().length }}</span>
+          <span class="enuso__title">🚗 {{ 'En uso ahora' | t }} · {{ enUsoVisible().length }}</span>
           <span class="enuso__chev">{{ enUsoAbierto() ? '▲' : '▼' }}</span>
         </button>
         @if (enUsoAbierto()) {
@@ -34,7 +34,7 @@
               <div class="enuso__card">
                 <div class="enuso__info">
                   <span class="enuso__veh">{{ ident(u) }}</span>
-                  <span class="enuso__quien">👤 {{ u.usuario_nombre || 'Alguien' }} · desde {{ fmtHora(u.desde) }}</span>
+                  <span class="enuso__quien">👤 {{ u.usuario_nombre || ('Alguien' | t) }} · {{ 'desde' | t }} {{ fmtHora(u.desde) }}</span>
                   @if (u.km_inicio != null || u.nivel_inicio) {
                     <span class="enuso__meta">
                       @if (u.km_inicio != null) { {{ u.km_inicio }} km }
@@ -43,8 +43,8 @@
                   }
                 </div>
                 <div class="enuso__actions">
-                  <button type="button" class="btn-ghost enuso__act" (click)="verEnSeguimiento(u)">📍 Ver en el mapa</button>
-                  <button type="button" class="btn-ghost enuso__act" (click)="verPerfil(u)">📊 Perfil</button>
+                  <button type="button" class="btn-ghost enuso__act" (click)="verEnSeguimiento(u)">📍 {{ 'Ver en el mapa' | t }}</button>
+                  <button type="button" class="btn-ghost enuso__act" (click)="verPerfil(u)">📊 {{ 'Perfil' | t }}</button>
                 </div>
               </div>
             }
@@ -58,7 +58,7 @@
       type="text"
       [ngModel]="query()"
       (ngModelChange)="query.set($event)"
-      placeholder="Buscar por placa, marca o tipo…"
+      [placeholder]="'Buscar por placa, marca o tipo…' | t"
     />
 
     @if (loading()) {
@@ -67,9 +67,9 @@
       <!-- BL2 — la consulta falló y no hay nada cacheado: error+reintento -->
       <app-empty-state
         icon="⚠️"
-        title="No pudimos cargar la flota"
-        message="Hubo un problema al consultar los vehículos. Revisa tu conexión y reintenta."
-        ctaLabel="Reintentar"
+        [title]="'No pudimos cargar la flota' | t"
+        [message]="'Hubo un problema al consultar los vehículos. Revisa tu conexión y reintenta.' | t"
+        [ctaLabel]="'Reintentar' | t"
         (action)="reintentar()"
       />
     } @else if (!lista().length) {
@@ -77,8 +77,8 @@
            suaviza para no afirmar una causa que no probamos. -->
       <app-empty-state
         icon="🚙"
-        title="Sin vehículos"
-        [message]="query() ? 'Ningún vehículo coincide con tu búsqueda.' : 'No vemos vehículos para mostrarte. Si esperabas alguno, consulta con Flota.'"
+        [title]="'Sin vehículos' | t"
+        [message]="query() ? ('Ningún vehículo coincide con tu búsqueda.' | t) : ('No vemos vehículos para mostrarte. Si esperabas alguno, consulta con Flota.' | t)"
       />
     } @else {
       @for (v of lista(); track v.vehiculo_id) {

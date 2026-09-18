@@ -13,6 +13,8 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
@@ -65,7 +67,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, VoiceNotes],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, VoiceNotes, TranslatePipe],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })
@@ -80,6 +82,7 @@ export class MantenimientoPage implements OnDestroy {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly total = TOTAL_STEPS;
   readonly maxFotos = MAX_FOTOS;
@@ -149,7 +152,7 @@ export class MantenimientoPage implements OnDestroy {
     effect(() => {
       const snap = { tipo: this.tipo(), incluyePreventivo: this.incluyePreventivo(), descripcion: this.descripcion(), km: this.km(), costo: this.costo(), taller: this.taller(), notas: this.notas(), step: this.step() };
       if (!this.hydrated || this.submitting() || this.done()) return;
-      this.autosave.queue(this.clave, snap, { tipo: 'mantenimiento', etiqueta: 'Mantenimiento', ruta: this.location.path() });
+      this.autosave.queue(this.clave, snap, { tipo: 'mantenimiento', etiqueta: this.i18n.t('Mantenimiento'), ruta: this.location.path() });
     });
   }
 
@@ -257,23 +260,23 @@ export class MantenimientoPage implements OnDestroy {
     switch (this.step()) {
       case 1:
         if (!this.tipo()) {
-          this.toast.error('Elige el tipo de mantenimiento.');
+          this.toast.error(this.i18n.t('Elige el tipo de mantenimiento.'));
           return false;
         }
         return true;
       case 2:
         if (!this.descripcion().trim()) {
-          this.toast.error('Describe el mantenimiento.');
+          this.toast.error(this.i18n.t('Describe el mantenimiento.'));
           return false;
         }
         if (this.kmMenorOdometro()) {
-          this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
+          this.toast.error(this.i18n.t('El kilometraje no puede ser menor al registrado ({km} km).', { km: this.odometro() ?? '' }));
           return false;
         }
         return true;
       case 3:
         if (this.fotosCount() < 1) {
-          this.toast.error('Adjunta al menos 1 foto del mantenimiento.');
+          this.toast.error(this.i18n.t('Adjunta al menos 1 foto del mantenimiento.'));
           return false;
         }
         return true;
@@ -285,20 +288,20 @@ export class MantenimientoPage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.tipo()) {
-      this.toast.error('Elige el tipo de mantenimiento.');
+      this.toast.error(this.i18n.t('Elige el tipo de mantenimiento.'));
       return;
     }
     const descripcion = this.descripcion().trim();
     if (!descripcion) {
-      this.toast.error('Describe el mantenimiento.');
+      this.toast.error(this.i18n.t('Describe el mantenimiento.'));
       return;
     }
     if (this.kmMenorOdometro()) {
-      this.toast.error(`El kilometraje no puede ser menor al registrado (${this.odometro()} km).`);
+      this.toast.error(this.i18n.t('El kilometraje no puede ser menor al registrado ({km} km).', { km: this.odometro() ?? '' }));
       return;
     }
     if (this.fotosCount() < 1) {
-      this.toast.error('Adjunta al menos 1 foto del mantenimiento.');
+      this.toast.error(this.i18n.t('Adjunta al menos 1 foto del mantenimiento.'));
       return;
     }
     this.submitting.set(true);
@@ -327,7 +330,7 @@ export class MantenimientoPage implements OnDestroy {
       await this.autosave.discard(this.clave); // limpia borrador + fotos
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }

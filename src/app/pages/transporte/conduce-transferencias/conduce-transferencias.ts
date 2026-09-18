@@ -11,6 +11,8 @@ import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ConducesService, ConduceTransferencia } from '../../../core/services/conduces.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AH5 — inbox del receptor de transferencias de conduce. Un chofer que se desliga
@@ -22,7 +24,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-conduce-transferencias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, EmptyState, SyncBar, PhotoSlot, SignaturePad, ConfirmDialog, BigConfirm],
+  imports: [FormsModule, DatePipe, Skeleton, EmptyState, SyncBar, PhotoSlot, SignaturePad, ConfirmDialog, BigConfirm, TranslatePipe],
   templateUrl: './conduce-transferencias.html',
   styleUrl: './conduce-transferencias.scss',
 })
@@ -30,6 +32,7 @@ export class ConduceTransferenciasPage {
   private service = inject(ConducesService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private sig = viewChild<SignaturePad>('firmaPad');
 
@@ -78,7 +81,7 @@ export class ConduceTransferenciasPage {
     const foto = this.foto()?.blob;
     const firma = this.firma();
     if (!foto || !firma) {
-      this.toast.error('Toma la foto y firma para aceptar la transferencia.');
+      this.toast.error(this.i18n.t('Toma la foto y firma para aceptar la transferencia.'));
       return;
     }
     this.enviando.set(true);
@@ -88,7 +91,7 @@ export class ConduceTransferenciasPage {
       this.seleccion.set(null);
       this.hecho.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo aceptar la transferencia.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo aceptar la transferencia.'));
     } finally {
       this.enviando.set(false);
     }
@@ -105,9 +108,9 @@ export class ConduceTransferenciasPage {
       await this.service.rechazarTransferencia(t.id, null);
       this.ofertas.update((l) => l.filter((o) => o.id !== t.id));
       this.seleccion.set(null);
-      this.toast.success('Transferencia rechazada.');
+      this.toast.success(this.i18n.t('Transferencia rechazada.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo rechazar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo rechazar.'));
     }
   }
   cancelarRechazo(): void {

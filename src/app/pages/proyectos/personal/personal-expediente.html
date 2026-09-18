@@ -1,7 +1,7 @@
 <div class="screen">
   <header class="pe-header">
     <button type="button" class="pe-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="pe-header__title">Expediente</h1>
+    <h1 class="pe-header__title">{{ 'Expediente' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -23,32 +23,32 @@
               <span class="pe-nombre">
                 {{ p.nombre }} {{ p.apellido }}
                 @if (p.es_prueba) { <span class="pe-prueba">PRUEBA</span> }
-                @if (p.estado === 'inactivo') { <span class="pe-inact">Inactivo</span> }
+                @if (p.estado === 'inactivo') { <span class="pe-inact">{{ 'Inactivo' | t }}</span> }
               </span>
               <span class="pe-cargo">{{ cargoNombre(p.cargo_id) }}</span>
             </div>
           </div>
           <div class="pe-rows">
-            <div class="pe-row"><span class="pe-k">Obra</span><span class="pe-v">{{ p.proyecto?.nombre ?? '—' }}</span></div>
-            <div class="pe-row"><span class="pe-k">Nacionalidad</span><span class="pe-v">{{ nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad }}</span></div>
-            <div class="pe-row"><span class="pe-k">Documento</span><span class="pe-v">{{ (p.documento_numero | cedula) || '—' }}</span></div>
+            <div class="pe-row"><span class="pe-k">{{ 'Obra' | t }}</span><span class="pe-v">{{ p.proyecto?.nombre ?? '—' }}</span></div>
+            <div class="pe-row"><span class="pe-k">{{ 'Nacionalidad' | t }}</span><span class="pe-v">{{ (nacionalidadLabel[p.nacionalidad] ?? p.nacionalidad) | t }}</span></div>
+            <div class="pe-row"><span class="pe-k">{{ 'Documento' | t }}</span><span class="pe-v">{{ (p.documento_numero | cedula) || '—' }}</span></div>
             <!-- AV4 — cuadrilla + aseguramiento en la ficha -->
             @if (p.cuadrilla) {
-              <div class="pe-row"><span class="pe-k">Cuadrilla</span><span class="pe-v">👷 {{ p.cuadrilla }}</span></div>
+              <div class="pe-row"><span class="pe-k">{{ 'Cuadrilla' | t }}</span><span class="pe-v">👷 {{ p.cuadrilla }}</span></div>
             }
-            <div class="pe-row"><span class="pe-k">Aseguramiento</span><span class="pe-v">{{ aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido'] }}</span></div>
+            <div class="pe-row"><span class="pe-k">{{ 'Aseguramiento' | t }}</span><span class="pe-v">{{ aseguramientoLabel[p.aseguramiento_estado ?? 'desconocido'] | t }}</span></div>
             @if (p.telefono) {
-              <div class="pe-row"><span class="pe-k">Teléfono</span><span class="pe-v"><a [href]="'tel:' + p.telefono">{{ p.telefono }}</a></span></div>
+              <div class="pe-row"><span class="pe-k">{{ 'Teléfono' | t }}</span><span class="pe-v"><a [href]="'tel:' + p.telefono">{{ p.telefono }}</a></span></div>
             }
             @if (p.notas) {
-              <div class="pe-row"><span class="pe-k">Notas</span><span class="pe-v">{{ p.notas }}</span></div>
+              <div class="pe-row"><span class="pe-k">{{ 'Notas' | t }}</span><span class="pe-v">{{ p.notas }}</span></div>
             }
           </div>
           @if (puedeGestionar()) {
             <div class="pe-actions">
-              <button type="button" class="pe-btn" (click)="editar()">✏️ Editar</button>
+              <button type="button" class="pe-btn" (click)="editar()">✏️ {{ 'Editar' | t }}</button>
               <button type="button" class="pe-btn pe-btn--ghost" [disabled]="saving()" (click)="pedirCambioEstado()">
-                {{ p.estado === 'activo' ? '🚫 Desactivar' : '✅ Reactivar' }}
+                {{ p.estado === 'activo' ? '🚫' : '✅' }} {{ p.estado === 'activo' ? ('Desactivar' | t) : ('Reactivar' | t) }}
               </button>
             </div>
           }
@@ -56,75 +56,75 @@
       } @else {
         <!-- Edición inline de datos -->
         <div class="pe-card">
-          <label class="field-label" for="en">Nombre <span class="pe-req">*</span></label>
+          <label class="field-label" for="en">{{ 'Nombre' | t }} <span class="pe-req">*</span></label>
           <input id="en" class="field" type="text" [ngModel]="eNombre()" (ngModelChange)="eNombre.set($event)" />
-          <label class="field-label pe-mt" for="ea">Apellido</label>
+          <label class="field-label pe-mt" for="ea">{{ 'Apellido' | t }}</label>
           <input id="ea" class="field" type="text" [ngModel]="eApellido()" (ngModelChange)="eApellido.set($event)" />
-          <label class="field-label pe-mt">Nacionalidad</label>
+          <label class="field-label pe-mt">{{ 'Nacionalidad' | t }}</label>
           <div class="pe-opts">
             @for (n of nacionalidades; track n.value) {
-              <app-option-button [icon]="n.icon" [label]="n.label" [selected]="eNacionalidad() === n.value" (pressed)="eNacionalidad.set(n.value)" />
+              <app-option-button [icon]="n.icon" [label]="n.label | t" [selected]="eNacionalidad() === n.value" (pressed)="eNacionalidad.set(n.value)" />
             }
           </div>
-          <label class="field-label pe-mt">Cargo</label>
-          <app-collapsible-select label="Cargo" icon="🛠" [options]="cargoOptions()" [selectedId]="eCargoId()" [searchable]="true" searchPlaceholder="Buscar cargo…" (picked)="eCargoId.set($event)" />
+          <label class="field-label pe-mt">{{ 'Cargo' | t }}</label>
+          <app-collapsible-select [label]="'Cargo' | t" icon="🛠" [options]="cargoOptions()" [selectedId]="eCargoId()" [searchable]="true" [searchPlaceholder]="'Buscar cargo…' | t" (picked)="eCargoId.set($event)" />
           <!-- AV4 — cuadrilla (eje TECNICO) + aseguramiento manual -->
-          <label class="field-label pe-mt">Cuadrilla</label>
-          <app-collapsible-select label="Cuadrilla" icon="👷" [options]="cuadrillaOptions()" [selectedId]="eCuadrilla()" (picked)="eCuadrilla.set($event)" />
-          <label class="field-label pe-mt">Aseguramiento</label>
+          <label class="field-label pe-mt">{{ 'Cuadrilla' | t }}</label>
+          <app-collapsible-select [label]="'Cuadrilla' | t" icon="👷" [options]="cuadrillaOptions()" [selectedId]="eCuadrilla()" (picked)="eCuadrilla.set($event)" />
+          <label class="field-label pe-mt">{{ 'Aseguramiento' | t }}</label>
           <div class="pe-opts">
             @for (a of aseguramientos; track a.value) {
-              <app-option-button [icon]="a.icon" [label]="a.label" [selected]="eAseguramiento() === a.value" (pressed)="eAseguramiento.set(a.value)" />
+              <app-option-button [icon]="a.icon" [label]="a.label | t" [selected]="eAseguramiento() === a.value" (pressed)="eAseguramiento.set(a.value)" />
             }
           </div>
-          <label class="field-label pe-mt">Tipo de documento</label>
+          <label class="field-label pe-mt">{{ 'Tipo de documento' | t }}</label>
           <div class="pe-opts">
             @for (t of tiposDocumento; track t.value) {
-              <app-option-button [icon]="t.icon" [label]="t.label" [selected]="eTipoDoc() === t.value" (pressed)="eTipoDoc.set(t.value)" />
+              <app-option-button [icon]="t.icon" [label]="t.label | t" [selected]="eTipoDoc() === t.value" (pressed)="eTipoDoc.set(t.value)" />
             }
           </div>
-          <label class="field-label pe-mt" for="ed">Número de documento</label>
+          <label class="field-label pe-mt" for="ed">{{ 'Número de documento' | t }}</label>
           <input id="ed" class="field" type="text" [ngModel]="eDocNumero()" (ngModelChange)="eDocNumero.set($event)" />
-          <label class="field-label pe-mt" for="et">Teléfono</label>
+          <label class="field-label pe-mt" for="et">{{ 'Teléfono' | t }}</label>
           <input id="et" class="field" type="tel" inputmode="tel" [ngModel]="eTelefono()" (ngModelChange)="eTelefono.set($event)" />
-          <label class="field-label pe-mt" for="eno">Notas</label>
+          <label class="field-label pe-mt" for="eno">{{ 'Notas' | t }}</label>
           <textarea id="eno" class="field pe-notas" rows="2" [ngModel]="eNotas()" (ngModelChange)="eNotas.set($event)"></textarea>
           <div class="pe-actions pe-mt">
-            <button type="button" class="pe-btn" [disabled]="saving()" (click)="guardarEdicion()">{{ saving() ? 'Guardando…' : 'Guardar' }}</button>
-            <button type="button" class="pe-btn pe-btn--ghost" (click)="cancelarEdicion()">Cancelar</button>
+            <button type="button" class="pe-btn" [disabled]="saving()" (click)="guardarEdicion()">{{ saving() ? ('Guardando…' | t) : ('Guardar' | t) }}</button>
+            <button type="button" class="pe-btn pe-btn--ghost" (click)="cancelarEdicion()">{{ 'Cancelar' | t }}</button>
           </div>
         </div>
       }
 
       <!-- ── Carnet ── -->
-      <h2 class="pe-sec">Carnet</h2>
+      <h2 class="pe-sec">{{ 'Carnet' | t }}</h2>
       <app-personal-carnet [personal]="p" [fotoDataUrl]="fotoPersonaUrl()" [verifyUrl]="verifyUrl()" />
 
       <!-- ── Galería ── -->
-      <h2 class="pe-sec">Fotos de evidencia</h2>
+      <h2 class="pe-sec">{{ 'Fotos de evidencia' | t }}</h2>
       <div class="pe-galeria">
         @for (g of fotosGuia; track g.tipo) {
           <div class="pe-foto">
             @if (fotos()[g.tipo]; as url) {
-              <img [src]="url" [alt]="g.label" (click)="abrirFoto(url)" />
+              <img [src]="url" [alt]="g.label | t" (click)="abrirFoto(url)" />
             } @else {
               <div class="pe-foto__empty">{{ g.hint }}</div>
             }
-            <span class="pe-foto__lbl">{{ g.label }}</span>
+            <span class="pe-foto__lbl">{{ g.label | t }}</span>
           </div>
         }
       </div>
 
       <!-- ── BF8 — Documentos y contratos firmados (snapshot AZ1) ── -->
       @if (firmas().length) {
-        <h2 class="pe-sec">Documentos y contratos firmados</h2>
+        <h2 class="pe-sec">{{ 'Documentos y contratos firmados' | t }}</h2>
         @for (f of firmas(); track f.id) {
           <button type="button" class="pe-firma" (click)="abrirDocumento(f)" [disabled]="abriendoDoc() === f.id">
             <span class="pe-firma__ico">📄</span>
             <span class="pe-firma__body">
               <span class="pe-firma__nombre">{{ f.documento_nombre }}</span>
               <span class="pe-firma__meta">
-                Firmado {{ fmtFecha(f.firmado_at) }}@if (!f.documento_path) { · solo firma }
+                {{ 'Firmado' | t }} {{ fmtFecha(f.firmado_at) }}@if (!f.documento_path) { · {{ 'solo firma' | t }} }
               </span>
             </span>
             <span class="pe-firma__go">{{ abriendoDoc() === f.id ? '…' : '›' }}</span>
@@ -149,10 +149,10 @@
 
   <app-confirm-dialog
     [open]="confirmEstado()"
-    [title]="personal()?.estado === 'activo' ? '¿Desactivar personal?' : '¿Reactivar personal?'"
-    [message]="personal()?.estado === 'activo' ? 'No aparecerá en la lista de activos. Puedes reactivarlo después.' : 'Volverá a la lista de personal activo.'"
-    confirmLabel="Sí"
-    cancelLabel="Cancelar"
+    [title]="personal()?.estado === 'activo' ? ('¿Desactivar personal?' | t) : ('¿Reactivar personal?' | t)"
+    [message]="personal()?.estado === 'activo' ? ('No aparecerá en la lista de activos. Puedes reactivarlo después.' | t) : ('Volverá a la lista de personal activo.' | t)"
+    [confirmLabel]="'Sí' | t"
+    [cancelLabel]="'Cancelar' | t"
     [tone]="personal()?.estado === 'activo' ? 'danger' : 'default'"
     (confirmed)="confirmarEstado()"
     (cancelled)="cancelarEstado()"

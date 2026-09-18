@@ -1,8 +1,8 @@
 <div class="screen porimpl">
   <header class="porimpl__header">
-    <button type="button" class="porimpl__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="porimpl__title">Conduces por implementar</h1>
-    <button type="button" class="porimpl__refresh" (click)="refrescar()" [disabled]="refrescando()" aria-label="Actualizar">{{ refrescando() ? '…' : '↻' }}</button>
+    <button type="button" class="porimpl__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="porimpl__title">{{ 'Conduces por implementar' | t }}</h1>
+    <button type="button" class="porimpl__refresh" (click)="refrescar()" [disabled]="refrescando()" [attr.aria-label]="'Actualizar' | t">{{ refrescando() ? '…' : '↻' }}</button>
   </header>
 
   <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
@@ -11,27 +11,26 @@
     } @else if (!conduces_().length) {
       <app-empty-state
         icon="🧩"
-        title="Nada por implementar"
-        message="No hay conduces con artículos libres pendientes de vincular."
+        [title]="'Nada por implementar' | t"
+        [message]="'No hay conduces con artículos libres pendientes de vincular.' | t"
       />
     } @else {
       <p class="porimpl__intro">
-        Estos conduces incluyen artículos que aún no existen en el catálogo. Un administrador
-        los vincula desde la web; al hacerlo, el conduce sale de esta lista.
+        {{ 'Estos conduces incluyen artículos que aún no existen en el catálogo. Un administrador los vincula desde la web; al hacerlo, el conduce sale de esta lista.' | t }}
       </p>
       @for (c of conduces_(); track c.salida_id) {
         <button type="button" class="porimpl__card" (click)="abrir(c)">
           <div class="porimpl__main">
             <span class="porimpl__num">
               {{ numero(c) }}
-              @if (c.es_prueba) { <span class="porimpl__prueba">PRUEBA</span> }
+              @if (c.es_prueba) { <span class="porimpl__prueba">{{ 'PRUEBA' | t }}</span> }
             </span>
-            <span class="porimpl__dest">{{ c.proyecto || c.bodega || 'Conduce' }}</span>
+            <span class="porimpl__dest">{{ c.proyecto || c.bodega || ('Conduce' | t) }}</span>
             <span class="porimpl__sub">{{ fmtFecha(c.created_at || c.fecha) }}</span>
           </div>
           <div class="porimpl__side">
-            <span class="porimpl__badge">{{ c.pendientes }} por vincular</span>
-            <span class="porimpl__cta">Ver ▸</span>
+            <span class="porimpl__badge">{{ c.pendientes }} {{ 'por vincular' | t }}</span>
+            <span class="porimpl__cta">{{ 'Ver' | t }} ▸</span>
           </div>
         </button>
       }

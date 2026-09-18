@@ -16,6 +16,8 @@ import { VoiceRecorder } from '../../shared/ui/voice-recorder/voice-recorder';
 import { CompaService } from '../../core/services/compa.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { CompaMensaje, Propuesta } from '../../core/models/compa.model';
 import { formatHora } from '../../core/util/fecha';
 
@@ -44,7 +46,7 @@ const SUBTITULO_DEFAULT = 'Pregúntame por tus tareas, conduces, firmas o pídem
   selector: 'app-compa',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BottomSheet, VoiceRecorder],
+  imports: [FormsModule, BottomSheet, VoiceRecorder, TranslatePipe],
   templateUrl: './compa.html',
   styleUrl: './compa.scss',
 })
@@ -54,6 +56,7 @@ export class CompaPage {
   private toast = inject(ToastService);
   private location = inject(Location);
   private route = inject(ActivatedRoute);
+  private i18n = inject(I18nService);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
   private inputEl = viewChild<ElementRef<HTMLInputElement>>('composer');
@@ -155,7 +158,7 @@ export class CompaPage {
   private async enviarTexto(t: string): Promise<void> {
     if (this.enviando()) return;
     if (!this.online) {
-      this.toast.error('Compa necesita conexión.');
+      this.toast.error(this.i18n.t('Compa necesita conexión.'));
       return;
     }
     this.enviando.set(true);
@@ -208,7 +211,7 @@ export class CompaPage {
   // ── Voz (nota → transcripción → composer) ───────────────────────────────────
   abrirVoz(): void {
     if (!this.online) {
-      this.toast.error('Compa necesita conexión.');
+      this.toast.error(this.i18n.t('Compa necesita conexión.'));
       return;
     }
     this.grabandoVoz.set(true);
@@ -220,7 +223,7 @@ export class CompaPage {
     if (!blob) return; // cancelado (o mic sin permiso: el recorder ya avisó la causa)
     // AZ5 — la transcripción necesita conexión; si se perdió tras grabar, avisa claro.
     if (!this.online) {
-      this.toast.error('Sin conexión: no se pudo transcribir. Intenta con señal o escribe tu mensaje.');
+      this.toast.error(this.i18n.t('Sin conexión: no se pudo transcribir. Intenta con señal o escribe tu mensaje.'));
       return;
     }
     this.transcribiendo.set(true);
@@ -242,13 +245,13 @@ export class CompaPage {
   private mensajeTranscripcion(causa: 'vacio' | 'no_configurado' | 'sin_conexion' | 'servicio'): string {
     switch (causa) {
       case 'vacio':
-        return 'No se entendió. Intenta de nuevo o escribe tu mensaje.';
+        return this.i18n.t('No se entendió. Intenta de nuevo o escribe tu mensaje.');
       case 'no_configurado':
-        return 'El dictado por voz no está disponible ahora. Escribe tu mensaje.';
+        return this.i18n.t('El dictado por voz no está disponible ahora. Escribe tu mensaje.');
       case 'sin_conexion':
-        return 'Sin conexión: no se pudo transcribir. Intenta con señal o escribe tu mensaje.';
+        return this.i18n.t('Sin conexión: no se pudo transcribir. Intenta con señal o escribe tu mensaje.');
       default:
-        return 'No pudimos transcribir ahora. Intenta de nuevo o escribe tu mensaje.';
+        return this.i18n.t('No pudimos transcribir ahora. Intenta de nuevo o escribe tu mensaje.');
     }
   }
 

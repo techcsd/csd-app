@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, model, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   ArticuloCat,
@@ -8,6 +8,8 @@ import {
   propiedadLabel,
 } from '../../../core/models/inventario.model';
 import { Skeleton } from '../skeleton/skeleton';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const SIN_CATEGORIA = -1;
 /** Custom "Otros" lines get a synthetic id so the cart keys stay unique; the
@@ -37,11 +39,12 @@ interface CategoriaChip {
   selector: 'app-selector-categorias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton],
+  imports: [FormsModule, Skeleton, TranslatePipe],
   templateUrl: './selector-categorias.html',
   styleUrl: './selector-categorias.scss',
 })
 export class SelectorCategorias {
+  private i18n = inject(I18nService);
   articulos = input<ArticuloCat[]>([]);
   categorias = input<CategoriaInv[]>([]);
   loading = input(false); // V7: shimmer while the catalog loads (no blank grid)
@@ -117,7 +120,7 @@ export class SelectorCategorias {
     if (this.articulos().some((a) => a.categoria_id == null)) {
       out.push({
         id: SIN_CATEGORIA,
-        nombre: 'Sin categoría',
+        nombre: this.i18n.t('Sin categoría'),
         destacada: false,
         disponibles: this.articulos().filter((a) => a.categoria_id == null).length,
         seleccionados: this.cart().filter((l) => l.categoria_id == null && !this.esCustom(l)).length,
@@ -150,7 +153,7 @@ export class SelectorCategorias {
 
   nombreCategoria = computed(() => {
     const id = this.catSelId();
-    if (id === SIN_CATEGORIA) return 'Sin categoría';
+    if (id === SIN_CATEGORIA) return this.i18n.t('Sin categoría');
     return this.categorias().find((c) => c.id === id)?.nombre ?? '';
   });
 

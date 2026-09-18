@@ -3,7 +3,7 @@
   @if (hoja() !== 'exito') {
     <header class="mov__header mov__header--out">
       <button type="button" class="mov__back" (click)="hoja() === 'resumen' ? volverSeleccion() : intentarSalir()" aria-label="Atrás">←</button>
-      <h1 class="mov__title">➖ Salida de material</h1>
+      <h1 class="mov__title">➖ {{ 'Salida de material' | t }}</h1>
     </header>
   }
 
@@ -24,24 +24,24 @@
   <!-- Hoja 3: resumen / review -->
   @if (hoja() === 'resumen') {
     <div class="screen__body">
-      <h2 class="mov__h2">Revisa el retiro</h2>
+      <h2 class="mov__h2">{{ 'Revisa el retiro' | t }}</h2>
 
-      <app-collapsible-select label="Almacén" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
+      <app-collapsible-select [label]="'Almacén' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
 
       <!-- W8 — destino: ¿hacia dónde va? -->
-      <app-collapsible-select label="¿Hacia dónde va?" icon="📍" [options]="obraOptions()" [selectedId]="destinoId()" (picked)="destinoId.set($event)" />
+      <app-collapsible-select [label]="'¿Hacia dónde va?' | t" icon="📍" [options]="obraOptions()" [selectedId]="destinoId()" (picked)="destinoId.set($event)" />
 
       @if (!online) {
-        <p class="mov__stock-hint">📴 Sin señal: el stock no se puede verificar ahora. Se validará al enviarse.</p>
+        <p class="mov__stock-hint">📴 {{ 'Sin señal: el stock no se puede verificar ahora. Se validará al enviarse.' | t }}</p>
       }
 
       @for (g of grupos(); track g.categoria) {
         <h3 class="mov__grupo">{{ g.categoria }}</h3>
         @for (l of g.lineas; track l.articulo_id) {
           <div class="mov__item" [class.mov__item--exceso]="excede(l)">
-            <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· Talla {{ l.talla }}</small> }</span>
+            <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· {{ 'Talla' | t }} {{ l.talla }}</small> }</span>
             <div class="mov__item-qty">
-              <app-qty-input [value]="l.cantidad" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
+              <app-qty-input [value]="l.cantidad" (valueChange)="setCantidad(l.articulo_id!, $event)" [ariaLabel]="'Cantidad' | t" />
               <span class="mov__item-unit">{{ l.unidad }}</span>
               <button type="button" class="mov__item-x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
             </div>
@@ -49,46 +49,46 @@
             @if (stockDe(l.articulo_id); as s) {
               @if (excede(l)) {
                 <p class="mov__stock mov__stock--bad">
-                  ⚠️ Solo hay {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || l.unidad }} en {{ bodegaNombre() }}.
-                  <button type="button" class="mov__stock-cap" (click)="ajustarAlStock(l)">Ajustar a {{ s.cantidad | number: '1.0-2' }}</button>
+                  ⚠️ {{ 'Solo hay' | t }} {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || l.unidad }} {{ 'en' | t }} {{ bodegaNombre() }}.
+                  <button type="button" class="mov__stock-cap" (click)="ajustarAlStock(l)">{{ 'Ajustar a' | t }} {{ s.cantidad | number: '1.0-2' }}</button>
                 </p>
               } @else {
-                <p class="mov__stock">Hay {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || l.unidad }} en {{ bodegaNombre() }}.</p>
+                <p class="mov__stock">{{ 'Hay' | t }} {{ s.cantidad | number: '1.0-2' }} {{ s.unidad || l.unidad }} {{ 'en' | t }} {{ bodegaNombre() }}.</p>
               }
             } @else if (online && stockLoading()) {
-              <p class="mov__stock mov__stock--muted">Consultando stock…</p>
+              <p class="mov__stock mov__stock--muted">{{ 'Consultando stock…' | t }}</p>
             } @else if (!online) {
-              <p class="mov__stock mov__stock--muted">Stock sin verificar (sin señal).</p>
+              <p class="mov__stock mov__stock--muted">{{ 'Stock sin verificar (sin señal).' | t }}</p>
             }
           </div>
         }
       }
 
-      <label class="field-label mov__mt">Nota / motivo (opcional)</label>
-      <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Ej: Consumo en obra" />
+      <label class="field-label mov__mt">{{ 'Nota / motivo (opcional)' | t }}</label>
+      <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Ej: Consumo en obra' | t" />
 
       <!-- Z19b — evidencia OBLIGATORIA -->
-      <label class="field-label mov__mt">Foto de evidencia <span class="mov__req">*</span></label>
-      <app-photo-slot label="Evidencia (obligatoria)" [foto]="foto()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
+      <label class="field-label mov__mt">{{ 'Foto de evidencia' | t }} <span class="mov__req">*</span></label>
+      <app-photo-slot [label]="'Evidencia (obligatoria)' | t" [foto]="foto()" (captured)="onFoto($event)" (cleared)="onFotoCleared()" />
 
       <!-- AF10 — firma de quien ENTREGA -->
-      <label class="field-label mov__mt">Firma de quien entrega <span class="mov__req">*</span></label>
+      <label class="field-label mov__mt">{{ 'Firma de quien entrega' | t }} <span class="mov__req">*</span></label>
       <app-signature-pad (changed)="onFirmaChanged($event)" />
 
       @if (hayExceso()) {
-        <div class="mov__band-exceso">⚠️ Hay materiales que superan el stock del almacén. Ajústalos antes de confirmar.</div>
+        <div class="mov__band-exceso">⚠️ {{ 'Hay materiales que superan el stock del almacén. Ajústalos antes de confirmar.' | t }}</div>
       }
       @if (faltaFoto()) {
-        <div class="mov__band-exceso">📷 Agrega una foto de evidencia para poder confirmar la salida.</div>
+        <div class="mov__band-exceso">📷 {{ 'Agrega una foto de evidencia para poder confirmar la salida.' | t }}</div>
       }
       @if (faltaFirma()) {
-        <div class="mov__band-exceso">✍️ Falta la firma de quien entrega.</div>
+        <div class="mov__band-exceso">✍️ {{ 'Falta la firma de quien entrega.' | t }}</div>
       }
     </div>
 
     <app-wizard-footer
-      backLabel="Atrás"
-      [primaryLabel]="submitting() ? 'Guardando…' : 'Confirmar salida'"
+      [backLabel]="'Atrás' | t"
+      [primaryLabel]="submitting() ? ('Guardando…' | t) : ('Confirmar salida' | t)"
       [primaryDisabled]="submitting() || hayExceso() || faltaFoto() || faltaFirma()"
       (back)="volverSeleccion()"
       (primary)="submit()"
@@ -100,9 +100,9 @@
     <div class="screen__body">
       <div class="mov__ok">
         <span class="mov__ok-check">✓</span>
-        <h1 class="mov__ok-title">Completado con éxito</h1>
+        <h1 class="mov__ok-title">{{ 'Completado con éxito' | t }}</h1>
         <p class="mov__ok-sub">
-          {{ online ? 'La salida se registró.' : 'Sin señal. Se enviará sola al reconectar.' }}
+          {{ online ? ('La salida se registró.' | t) : ('Sin señal. Se enviará sola al reconectar.' | t) }}
         </p>
       </div>
 
@@ -111,7 +111,7 @@
           <h3 class="mov__grupo">{{ g.categoria }}</h3>
           @for (l of g.lineas; track l.articulo_id) {
             <div class="mov__resumen-row">
-              <span>{{ l.nombre }}@if (l.talla) { <small>· Talla {{ l.talla }}</small> }</span>
+              <span>{{ l.nombre }}@if (l.talla) { <small>· {{ 'Talla' | t }} {{ l.talla }}</small> }</span>
               <b>{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</b>
             </div>
           }
@@ -120,9 +120,9 @@
     </div>
 
     <footer class="mov__nav">
-      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 Compartir (PDF / Excel)</button>
-      <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">Nuevo registro</button>
-      <button type="button" class="btn-ghost" (click)="finish()">Volver a Inventario</button>
+      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
+      <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">{{ 'Nuevo registro' | t }}</button>
+      <button type="button" class="btn-ghost" (click)="finish()">{{ 'Volver a Inventario' | t }}</button>
     </footer>
   }
 
@@ -130,10 +130,10 @@
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir del retiro?"
-    message="Perderás los materiales que llevas seleccionados."
-    confirmLabel="Sí, salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir del retiro?' | t"
+    [message]="'Perderás los materiales que llevas seleccionados.' | t"
+    [confirmLabel]="'Sí, salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     tone="danger"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"

@@ -1,10 +1,10 @@
 <div class="screen arol">
   <header class="arol__header">
-    <button type="button" class="arol__back" (click)="editando() ? cerrar() : back()" aria-label="Atrás">←</button>
+    <button type="button" class="arol__back" (click)="editando() ? cerrar() : back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="arol__icon">🔐</span>
-    <h1 class="arol__title">Roles y permisos</h1>
+    <h1 class="arol__title">{{ 'Roles y permisos' | t }}</h1>
     @if (!editando()) {
-      <button type="button" class="arol__add" (click)="nuevo()" aria-label="Nuevo rol">➕</button>
+      <button type="button" class="arol__add" (click)="nuevo()" [attr.aria-label]="'Nuevo rol' | t">➕</button>
     }
   </header>
 
@@ -13,7 +13,7 @@
       <app-skeleton [rows]="6" />
     } @else if (!editando()) {
       @if (!roles().length) {
-        <app-empty-state icon="🔐" title="Sin roles" message="Crea el primer rol con el botón +." />
+        <app-empty-state icon="🔐" [title]="'Sin roles' | t" [message]="'Crea el primer rol con el botón +.' | t" />
       } @else {
         @for (r of roles(); track r.id) {
           <button type="button" class="arol-card" (click)="editar(r)">
@@ -28,20 +28,20 @@
       }
     } @else {
       <!-- Editor -->
-      <label class="field-label">Nombre del rol</label>
-      <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Ej. Ingeniero de campo" />
+      <label class="field-label">{{ 'Nombre del rol' | t }}</label>
+      <input class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" [attr.placeholder]="'Ej. Ingeniero de campo' | t" />
 
-      <label class="field-label arol__mt">Descripción — opcional</label>
-      <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" placeholder="Para qué sirve este rol" />
+      <label class="field-label arol__mt">{{ 'Descripción — opcional' | t }}</label>
+      <input class="field" type="text" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" [attr.placeholder]="'Para qué sirve este rol' | t" />
 
-      <h2 class="arol__sec">Módulos y permisos</h2>
-      <p class="arol__hint">Marca un módulo para dar acceso completo. Para acceso parcial, deja el módulo sin marcar y elige el nivel por submódulo.</p>
+      <h2 class="arol__sec">{{ 'Módulos y permisos' | t }}</h2>
+      <p class="arol__hint">{{ 'Marca un módulo para dar acceso completo. Para acceso parcial, deja el módulo sin marcar y elige el nivel por submódulo.' | t }}</p>
 
       @for (m of modulos; track m.key) {
         <div class="arol-mod" [class.arol-mod--sens]="m.sensible">
           <label class="arol-mod__head">
             <input type="checkbox" [checked]="tieneMod(m.key)" (change)="toggleMod(m.key)" />
-            <span class="arol-mod__label">{{ m.label }} @if (m.sensible) { <em class="arol-mod__badge">acceso amplio</em> }</span>
+            <span class="arol-mod__label">{{ m.label }} @if (m.sensible) { <em class="arol-mod__badge">{{ 'acceso amplio' | t }}</em> }</span>
           </label>
           <p class="arol-mod__desc">{{ m.desc }}</p>
 
@@ -52,8 +52,8 @@
                   <span class="arol-sub__label">{{ s.label }}</span>
                   <select class="arol-sub__sel" [ngModel]="nivelDe(s.key)" (ngModelChange)="setNivel(s.key, $event)">
                     <option value="">—</option>
-                    <option value="ver">Ver</option>
-                    <option value="operar">Operar</option>
+                    <option value="ver">{{ 'Ver' | t }}</option>
+                    <option value="operar">{{ 'Operar' | t }}</option>
                   </select>
                 </div>
               }
@@ -63,20 +63,20 @@
       }
 
       <button type="button" class="btn-cta arol__mt" [disabled]="guardando()" (click)="guardar()">
-        {{ guardando() ? 'Guardando…' : 'Guardar rol' }}
+        {{ guardando() ? ('Guardando…' | t) : ('Guardar rol' | t) }}
       </button>
       @if (editando() !== 'nuevo') {
-        <button type="button" class="btn-ghost arol__del" (click)="confirmDel.set($any(editando()))">🗑️ Eliminar rol</button>
+        <button type="button" class="btn-ghost arol__del" (click)="confirmDel.set($any(editando()))">🗑️ {{ 'Eliminar rol' | t }}</button>
       }
     }
   </div>
 
   <app-confirm-dialog
     [open]="!!confirmDel()"
-    title="Eliminar rol"
-    [message]="'¿Eliminar el rol ' + (confirmDel()?.nombre ?? '') + '? No se puede si está en uso.'"
-    confirmLabel="Sí, eliminar"
-    cancelLabel="Cancelar"
+    [title]="'Eliminar rol' | t"
+    [message]="'¿Eliminar el rol {nombre}? No se puede si está en uso.' | t:{ nombre: confirmDel()?.nombre ?? '' }"
+    [confirmLabel]="'Sí, eliminar' | t"
+    [cancelLabel]="'Cancelar' | t"
     tone="danger"
     (confirmed)="eliminar()"
     (cancelled)="confirmDel.set(null)"

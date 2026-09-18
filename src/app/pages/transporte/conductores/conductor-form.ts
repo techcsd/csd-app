@@ -21,6 +21,8 @@ import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { UsuarioVinculable, CONDUCTOR_TAGS_SUGERIDOS } from '../../../core/models/conductor.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface ConductorDraft {
   usuarioId: string;
@@ -46,7 +48,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-conductor-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, CollapsibleSelect, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, ToggleSwitch, GenerarAcceso],
+  imports: [FormsModule, SelectList, CollapsibleSelect, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, ToggleSwitch, GenerarAcceso, TranslatePipe],
   templateUrl: './conductor-form.html',
   styleUrl: './conductor-form.scss',
 })
@@ -62,6 +64,7 @@ export class ConductorFormPage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly tiposAutorizado: TipoAutorizado[] = ['Liviano', 'Pesado', 'Ambos'];
 
@@ -135,7 +138,7 @@ export class ConductorFormPage {
       if (!snap.nombre && !snap.cedula && !snap.licenciaTipo && !snap.usuarioId) return;
       this.autosave.queue(this.clave(), snap, {
         tipo: 'conductor',
-        etiqueta: (this.esEdicion() ? 'Editar conductor' : 'Nuevo conductor') + (snap.nombre ? ' · ' + snap.nombre : ''),
+        etiqueta: (this.esEdicion() ? this.i18n.t('Editar conductor') : this.i18n.t('Nuevo conductor')) + (snap.nombre ? ' · ' + snap.nombre : ''),
         ruta: this.ruta(),
       });
     });
@@ -201,7 +204,7 @@ export class ConductorFormPage {
           this.esPrueba.set(c.es_prueba ?? false);
         }
       } catch (e) {
-        this.toast.error(e instanceof Error ? e.message : 'No se pudo cargar el conductor.');
+        this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cargar el conductor.'));
       }
     }
     // ¿Hay un borrador sin enviar? → ofrecer continuar/descartar (Fase 3).
@@ -214,17 +217,17 @@ export class ConductorFormPage {
   async desactivar(): Promise<void> {
     if (this.submitting() || !this.esEdicion()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para esto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para esto.'));
       return;
     }
     this.submitting.set(true);
     try {
       await this.conductores.setConductorActivo(this.conductorId(), false);
       void this.autosave.discard(this.clave());
-      this.toast.success('Conductor desactivado.');
+      this.toast.success(this.i18n.t('Conductor desactivado.'));
       void this.router.navigate(['/transporte/conductores'], { replaceUrl: true });
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo desactivar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo desactivar.'));
       this.submitting.set(false);
     }
   }
@@ -245,19 +248,19 @@ export class ConductorFormPage {
   async guardar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.nombre().trim()) {
-      this.toast.error('Escribe el nombre del conductor.');
+      this.toast.error(this.i18n.t('Escribe el nombre del conductor.'));
       return;
     }
     if (!this.cedula().trim()) {
-      this.toast.error('Escribe la cédula.');
+      this.toast.error(this.i18n.t('Escribe la cédula.'));
       return;
     }
     if (!this.licenciaTipo().trim()) {
-      this.toast.error('Elige la categoría de licencia.');
+      this.toast.error(this.i18n.t('Elige la categoría de licencia.'));
       return;
     }
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para crear el conductor.');
+      this.toast.error(this.i18n.t('Necesitas conexión para crear el conductor.'));
       return;
     }
     this.submitting.set(true);
@@ -283,10 +286,10 @@ export class ConductorFormPage {
       try {
         subioDocs = await this.subirDocs(id);
       } catch {
-        this.toast.error('El conductor se guardó, pero un documento no se pudo encolar. Súbelo desde su perfil.');
+        this.toast.error(this.i18n.t('El conductor se guardó, pero un documento no se pudo encolar. Súbelo desde su perfil.'));
       }
       void this.autosave.discard(this.clave());
-      this.toast.success(this.esEdicion() ? 'Conductor actualizado.' : 'Conductor creado.');
+      this.toast.success(this.esEdicion() ? this.i18n.t('Conductor actualizado.') : this.i18n.t('Conductor creado.'));
       // Si hubo documentos, abre el perfil para verlos; si no, la lista.
       const destino = subioDocs || this.esEdicion() ? ['/transporte/conductor', id] : ['/transporte/conductores'];
       if (this.esEdicion()) {
@@ -300,7 +303,7 @@ export class ConductorFormPage {
         this.submitting.set(false);
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el conductor.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el conductor.'));
       this.submitting.set(false);
     }
   }

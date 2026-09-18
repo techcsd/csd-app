@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ArticuloBusqueda, ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 const SIN_CATEGORIA = -1;
 
@@ -15,11 +17,12 @@ const SIN_CATEGORIA = -1;
   selector: 'app-articulo-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, TranslatePipe],
   templateUrl: './articulo-picker.html',
   styleUrl: './articulo-picker.scss',
 })
 export class ArticuloPicker {
+  private i18n = inject(I18nService);
   articulos = input<ArticuloCat[]>([]);
   categorias = input<CategoriaInv[]>([]);
   exclude = input<string[]>([]);
@@ -101,7 +104,7 @@ export class ArticuloPicker {
     );
     const withCat = cats.map((c) => ({ id: c.id, nombre: c.nombre, destacada: c.destacada }));
     if (this.disponibles().some((a) => a.categoria_id == null)) {
-      withCat.push({ id: SIN_CATEGORIA, nombre: 'Sin categoría', destacada: false });
+      withCat.push({ id: SIN_CATEGORIA, nombre: this.i18n.t('Sin categoría'), destacada: false });
     }
     return withCat;
   });
@@ -112,7 +115,7 @@ export class ArticuloPicker {
 
   nombreCategoria = computed(
     () => this.categorias().find((c) => c.id === this.categoriaSel())?.nombre
-      ?? (this.categoriaSel() === SIN_CATEGORIA ? 'Sin categoría' : ''),
+      ?? (this.categoriaSel() === SIN_CATEGORIA ? this.i18n.t('Sin categoría') : ''),
   );
 
   /** Whether we drive the UI by categories (only when categories were provided). */

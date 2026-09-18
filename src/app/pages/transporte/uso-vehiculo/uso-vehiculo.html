@@ -2,22 +2,22 @@
   <header class="usov__header">
     <button type="button" class="usov__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="usov__icon">🚗</span>
-    <h1 class="usov__title">{{ titulo() }}</h1>
+    <h1 class="usov__title">{{ titulo() | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (!vehiculoId()) {
       <!-- Paso 1 — elegir vehículo -->
       <app-vehiculo-picker
-        titulo="¿Qué vehículo vas a usar?"
-        subtitulo="Elige el vehículo. Si otro lo tiene en uso, podrás recibirlo."
+        [titulo]="'¿Qué vehículo vas a usar?' | t"
+        [subtitulo]="'Elige el vehículo. Si otro lo tiene en uso, podrás recibirlo.' | t"
         (elegido)="onVehiculoElegido($event)"
       />
     } @else {
       <!-- Vehículo elegido -->
       <div class="usov__veh">
-        <span class="usov__veh-name">🚚 {{ etiqueta() || placa() || 'Vehículo' }}</span>
-        <button type="button" class="btn-ghost usov__cambiar" (click)="cambiarVehiculo()">Cambiar</button>
+        <span class="usov__veh-name">🚚 {{ etiqueta() || placa() || ('Vehículo' | t) }}</span>
+        <button type="button" class="btn-ghost usov__cambiar" (click)="cambiarVehiculo()">{{ 'Cambiar' | t }}</button>
       </div>
 
       @if (loading()) {
@@ -26,48 +26,48 @@
         <!-- AW16 — En uso por otro → aviso claro (identidad AT9) + recibir de X -->
         @if (enUsoPorOtro()) {
           <div class="usov__aviso">
-            🔄 <b>{{ identEstado() }}</b> está en uso de <b>{{ estado()?.usuario_nombre || 'otro usuario' }}</b>@if (estado()?.desde) { desde {{ fmtFechaHora(estado()!.desde!) }} }.
-            Confirma con esa persona antes de recibirlo. Al recibirlo, la responsabilidad pasa a ti y se le avisa.
+            🔄 <b>{{ identEstado() }}</b> {{ 'está en uso de' | t }} <b>{{ estado()?.usuario_nombre || ('otro usuario' | t) }}</b>@if (estado()?.desde) { {{ 'desde' | t }} {{ fmtFechaHora(estado()!.desde!) }} }.
+            {{ 'Confirma con esa persona antes de recibirlo. Al recibirlo, la responsabilidad pasa a ti y se le avisa.' | t }}
           </div>
         }
 
         <!-- Ya lo tengo en uso yo (modo usar) → ofrecer soltar -->
         @if (enUsoPorMi() && modo() === 'usar') {
           <div class="usov__aviso usov__aviso--ok">
-            ✅ Ya tienes este vehículo en uso@if (estado()?.desde) { desde {{ fmtFechaHora(estado()!.desde!) }} }.
+            ✅ {{ 'Ya tienes este vehículo en uso' | t }}@if (estado()?.desde) { {{ 'desde' | t }} {{ fmtFechaHora(estado()!.desde!) }} }.
           </div>
-          <button type="button" class="btn-cta usov__cta" (click)="irSoltar()">Soltar vehículo</button>
+          <button type="button" class="btn-cta usov__cta" (click)="irSoltar()">{{ 'Soltar vehículo' | t }}</button>
         }
 
         <!-- Formulario de captura (km + nivel) -->
         @if (mostrarForm()) {
-          <label class="field-label" for="km">Kilometraje actual</label>
+          <label class="field-label" for="km">{{ 'Kilometraje actual' | t }}</label>
           <input id="km" class="field" type="number" inputmode="numeric" [ngModel]="km()" (ngModelChange)="km.set($event)" placeholder="Ej. 125400" />
 
-          <label class="field-label usov__mt">Nivel de gasolina <span class="usov__req">*</span></label>
+          <label class="field-label usov__mt">{{ 'Nivel de gasolina' | t }} <span class="usov__req">*</span></label>
           <div class="usov__niveles">
             @for (n of niveles; track n) {
-              <app-option-button [label]="n" [selected]="nivel() === n" (pressed)="setNivel(n)" />
+              <app-option-button [label]="n | t" [selected]="nivel() === n" (pressed)="setNivel(n)" />
             }
           </div>
 
-          <label class="field-label usov__mt" for="notas">Notas (opcional)</label>
-          <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Alguna novedad del vehículo…"></textarea>
+          <label class="field-label usov__mt" for="notas">{{ 'Notas (opcional)' | t }}</label>
+          <textarea id="notas" class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Alguna novedad del vehículo…' | t"></textarea>
 
           <!-- AS17 — 4 fotos rápidas del vehículo (solo al tomar/recibir). -->
           @if (modo() !== 'soltar') {
-            <label class="field-label usov__mt">Fotos rápidas del vehículo</label>
-            <p class="usov__hint">Toma 4 fotos del estado en que recibes el vehículo.</p>
+            <label class="field-label usov__mt">{{ 'Fotos rápidas del vehículo' | t }}</label>
+            <p class="usov__hint">{{ 'Toma 4 fotos del estado en que recibes el vehículo.' | t }}</p>
             <div class="usov__fotos">
-              <app-photo-slot label="Frente" hint="🚗" [gallery]="false" [foto]="fotoFrente()" (captured)="fotoFrente.set($event)" (cleared)="fotoFrente.set(null)" />
-              <app-photo-slot label="Lateral izq." hint="⬅️" [gallery]="false" [foto]="fotoIzq()" (captured)="fotoIzq.set($event)" (cleared)="fotoIzq.set(null)" />
-              <app-photo-slot label="Lateral der." hint="➡️" [gallery]="false" [foto]="fotoDer()" (captured)="fotoDer.set($event)" (cleared)="fotoDer.set(null)" />
-              <app-photo-slot label="Trasera" hint="🔙" [gallery]="false" [foto]="fotoTrasera()" (captured)="fotoTrasera.set($event)" (cleared)="fotoTrasera.set(null)" />
+              <app-photo-slot [label]="'Frente' | t" hint="🚗" [gallery]="false" [foto]="fotoFrente()" (captured)="fotoFrente.set($event)" (cleared)="fotoFrente.set(null)" />
+              <app-photo-slot [label]="'Lateral izq.' | t" hint="⬅️" [gallery]="false" [foto]="fotoIzq()" (captured)="fotoIzq.set($event)" (cleared)="fotoIzq.set(null)" />
+              <app-photo-slot [label]="'Lateral der.' | t" hint="➡️" [gallery]="false" [foto]="fotoDer()" (captured)="fotoDer.set($event)" (cleared)="fotoDer.set(null)" />
+              <app-photo-slot [label]="'Trasera' | t" hint="🔙" [gallery]="false" [foto]="fotoTrasera()" (captured)="fotoTrasera.set($event)" (cleared)="fotoTrasera.set(null)" />
             </div>
           }
 
           <button type="button" class="btn-cta usov__cta usov__mt" [disabled]="!puedeGuardar()" (click)="onCta()">
-            {{ ctaLabel() }}
+            {{ ctaLabel() | t }}
           </button>
         }
       }
@@ -77,10 +77,10 @@
   <!-- AW16 — confirmación antes de recibir un vehículo que otro tiene en uso -->
   <app-confirm-dialog
     [open]="confirmRecibir()"
-    title="Vehículo en uso de otra persona"
+    [title]="'Vehículo en uso de otra persona' | t"
     [message]="mensajeRecibir()"
-    confirmLabel="Sí, recibirlo"
-    cancelLabel="Cancelar"
+    [confirmLabel]="'Sí, recibirlo' | t"
+    [cancelLabel]="'Cancelar' | t"
     (confirmed)="confirmarRecibir()"
     (cancelled)="confirmRecibir.set(false)"
   />

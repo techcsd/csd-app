@@ -12,6 +12,8 @@ import { InventarioService } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { estadoMeta } from '../../../core/services/chofer-estado.service';
 import { vehiculoIdentidad } from '../../../core/models/transporte.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 type Tab = 'activas' | 'historico';
 
@@ -35,7 +37,7 @@ const ESTADO_RUTA: { key: string; label: string }[] = [
   selector: 'app-rutas-activas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective],
+  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
   templateUrl: './rutas-activas.html',
   styleUrl: './rutas-activas.scss',
 })
@@ -46,6 +48,7 @@ export class RutasActivasPage implements OnDestroy {
   private ctx = inject(UserContextService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly estadoMeta = estadoMeta;
   readonly estadosRuta = ESTADO_RUTA;
@@ -65,10 +68,10 @@ export class RutasActivasPage implements OnDestroy {
   cargandoHist = signal(false);
   obras = signal<{ id: string; label: string }[]>([]);
   choferOpciones = computed(() => [
-    { id: '', label: 'Todos los choferes' },
+    { id: '', label: this.i18n.t('Todos los choferes') },
     ...this.choferes().map((c) => ({ id: c.conductor_id, label: c.nombre })),
   ]);
-  obraOpciones = computed(() => [{ id: '', label: 'Todas las obras' }, ...this.obras()]);
+  obraOpciones = computed(() => [{ id: '', label: this.i18n.t('Todas las obras') }, ...this.obras()]);
   fConductor = signal<string>('');
   fObra = signal<string>('');
   fEstado = signal<string>('');
@@ -168,10 +171,10 @@ export class RutasActivasPage implements OnDestroy {
     const d = new Date(ts).getTime();
     if (isNaN(d)) return '';
     const min = Math.max(0, Math.round((Date.now() - d) / 60000));
-    if (min < 1) return 'ahora';
-    if (min < 60) return `hace ${min} min`;
+    if (min < 1) return this.i18n.t('ahora');
+    if (min < 60) return this.i18n.t('hace {min} min', { min });
     const h = Math.floor(min / 60);
-    return `hace ${h} h ${min % 60} min`;
+    return this.i18n.t('hace {h} h {m} min', { h, m: min % 60 });
   }
 
   /** AV13 — hora corta de la última modificación (chip "(modificada)"). */

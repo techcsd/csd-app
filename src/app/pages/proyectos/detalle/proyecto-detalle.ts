@@ -3,6 +3,7 @@ import { DecimalPipe, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { ProyectosService } from '../../../core/services/proyectos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -21,7 +22,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-proyecto-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DecimalPipe],
+  imports: [Skeleton, EmptyState, DecimalPipe, TranslatePipe],
   templateUrl: './proyecto-detalle.html',
   styleUrl: './proyecto-detalle.scss',
 })

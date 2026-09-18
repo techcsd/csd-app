@@ -1,5 +1,5 @@
 {
-  "en": 4,
+  "en": 75,
   "ht": 0,
   "alcance": true,
   "byScreen": {
@@ -16,63 +16,63 @@
       "ht": 0
     },
     "pages/admin": {
-      "conT": 0,
-      "sinT": 11,
-      "en": 0,
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/auditoria": {
-      "conT": 0,
-      "sinT": 20,
-      "en": 0,
+      "conT": 22,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/catalogos": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 5,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/conteos": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/parametros": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/reportes": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 5,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/roles": {
-      "conT": 0,
-      "sinT": 11,
-      "en": 0,
+      "conT": 20,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/unidades": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/usuarios": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 30,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/admin/versiones": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 8,
+      "sinT": 1,
+      "en": 89,
       "ht": 0
     },
     "pages/auth/login": {
@@ -82,16 +82,16 @@
       "ht": 0
     },
     "pages/auth/pin-acceso-change": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/auth/pin-change": {
-      "conT": 0,
+      "conT": 1,
       "sinT": 0,
       "en": 100,
-      "ht": 100
+      "ht": 0
     },
     "pages/auth/pin-setup": {
       "conT": 0,
@@ -106,15 +106,15 @@
       "ht": 0
     },
     "pages/auth/reset": {
-      "conT": 0,
-      "sinT": 6,
-      "en": 0,
+      "conT": 5,
+      "sinT": 1,
+      "en": 83,
       "ht": 0
     },
     "pages/auth/set-password": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/avisos": {
@@ -184,9 +184,9 @@
       "ht": 0
     },
     "pages/compa": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/compras-proyecto": {
@@ -202,9 +202,9 @@
       "ht": 0
     },
     "pages/en-proceso": {
-      "conT": 20,
-      "sinT": 2,
-      "en": 91,
+      "conT": 22,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/forbidden": {
@@ -232,69 +232,69 @@
       "ht": 0
     },
     "pages/ingenieria": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/ingenieria/cartilla": {
-      "conT": 0,
-      "sinT": 44,
-      "en": 0,
+      "conT": 24,
+      "sinT": 36,
+      "en": 40,
       "ht": 0
     },
     "pages/inventario": {
-      "conT": 0,
-      "sinT": 10,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/almacen-inventario": {
-      "conT": 0,
-      "sinT": 9,
-      "en": 0,
+      "conT": 18,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/almacenes": {
-      "conT": 0,
-      "sinT": 17,
-      "en": 0,
+      "conT": 30,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/articulo-detalle": {
-      "conT": 0,
-      "sinT": 17,
-      "en": 0,
+      "conT": 20,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/articulo-editar": {
-      "conT": 0,
-      "sinT": 14,
-      "en": 0,
+      "conT": 19,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/articulo-nuevo": {
-      "conT": 0,
-      "sinT": 19,
-      "en": 0,
+      "conT": 27,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/catalogo": {
-      "conT": 0,
-      "sinT": 9,
-      "en": 0,
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/conteo": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 23,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/conteos": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/entrada": {
@@ -304,21 +304,21 @@
       "ht": 0
     },
     "pages/inventario/existencias": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/kardex": {
-      "conT": 0,
-      "sinT": 19,
-      "en": 0,
+      "conT": 24,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/material-no-catalogado": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/recibir": {
@@ -328,51 +328,51 @@
       "ht": 0
     },
     "pages/inventario/retiro-detalle": {
-      "conT": 0,
-      "sinT": 19,
-      "en": 0,
+      "conT": 20,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/retiro-nuevo": {
-      "conT": 0,
+      "conT": 4,
       "sinT": 19,
-      "en": 0,
+      "en": 17,
       "ht": 0
     },
     "pages/inventario/retiros": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/salida": {
-      "conT": 0,
-      "sinT": 20,
-      "en": 0,
+      "conT": 34,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/mensajes": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/mensajes/grupo-info": {
-      "conT": 0,
-      "sinT": 19,
-      "en": 0,
+      "conT": 24,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/mensajes/nuevo-grupo": {
-      "conT": 0,
-      "sinT": 10,
-      "en": 0,
+      "conT": 15,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/mensajes/thread": {
-      "conT": 0,
-      "sinT": 22,
-      "en": 0,
+      "conT": 42,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/mi-rendimiento": {
@@ -394,93 +394,93 @@
       "ht": 0
     },
     "pages/obra": {
-      "conT": 0,
-      "sinT": 12,
-      "en": 0,
+      "conT": 20,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/avance": {
-      "conT": 0,
-      "sinT": 6,
-      "en": 0,
+      "conT": 9,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/charla": {
-      "conT": 0,
-      "sinT": 10,
-      "en": 0,
+      "conT": 24,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/checklists": {
-      "conT": 0,
-      "sinT": 9,
-      "en": 0,
+      "conT": 24,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/incidente": {
-      "conT": 0,
-      "sinT": 12,
-      "en": 0,
+      "conT": 25,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/informe": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 26,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/logistica": {
-      "conT": 0,
-      "sinT": 14,
-      "en": 0,
+      "conT": 18,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/mi-proyecto": {
-      "conT": 0,
-      "sinT": 14,
-      "en": 0,
+      "conT": 27,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/mis-nc": {
-      "conT": 0,
-      "sinT": 12,
-      "en": 0,
+      "conT": 24,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/no-conformidad": {
-      "conT": 0,
-      "sinT": 14,
-      "en": 0,
+      "conT": 26,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/plan-dia": {
-      "conT": 0,
-      "sinT": 20,
-      "en": 0,
+      "conT": 33,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/recursos": {
-      "conT": 0,
-      "sinT": 9,
-      "en": 0,
+      "conT": 17,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra/subcontratistas": {
-      "conT": 0,
-      "sinT": 14,
-      "en": 0,
+      "conT": 24,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/pendientes": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 25,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/pendientes/outbox-detalle": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 23,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/perfil": {
@@ -496,39 +496,39 @@
       "ht": 0
     },
     "pages/proyectos": {
-      "conT": 0,
-      "sinT": 8,
-      "en": 0,
+      "conT": 19,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/proyectos/avisos": {
-      "conT": 0,
-      "sinT": 1,
-      "en": 0,
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/proyectos/cronograma": {
-      "conT": 0,
-      "sinT": 53,
-      "en": 0,
+      "conT": 64,
+      "sinT": 1,
+      "en": 98,
       "ht": 0
     },
     "pages/proyectos/detalle": {
-      "conT": 0,
-      "sinT": 26,
-      "en": 0,
+      "conT": 31,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/proyectos/form": {
-      "conT": 0,
-      "sinT": 41,
-      "en": 0,
+      "conT": 48,
+      "sinT": 1,
+      "en": 98,
       "ht": 0
     },
     "pages/proyectos/personal": {
-      "conT": 0,
-      "sinT": 49,
-      "en": 0,
+      "conT": 80,
+      "sinT": 1,
+      "en": 99,
       "ht": 0
     },
     "pages/reportar": {
@@ -538,15 +538,15 @@
       "ht": 0
     },
     "pages/rrhh/empleado": {
-      "conT": 0,
-      "sinT": 18,
-      "en": 0,
+      "conT": 23,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/rrhh/empleados": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/solicitudes": {
@@ -628,33 +628,33 @@
       "ht": 0
     },
     "pages/transporte/acta-detalle": {
-      "conT": 0,
-      "sinT": 8,
-      "en": 0,
+      "conT": 9,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/asignar": {
-      "conT": 0,
-      "sinT": 21,
-      "en": 0,
+      "conT": 35,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/asignarme": {
-      "conT": 0,
-      "sinT": 23,
-      "en": 0,
+      "conT": 36,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/aviso-vehiculo": {
-      "conT": 0,
-      "sinT": 20,
-      "en": 0,
+      "conT": 38,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/avisos": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 15,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/checklist": {
@@ -664,123 +664,123 @@
       "ht": 0
     },
     "pages/transporte/checklists-historial": {
-      "conT": 0,
-      "sinT": 6,
-      "en": 0,
+      "conT": 13,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 0,
-      "sinT": 62,
-      "en": 0,
+      "conT": 103,
+      "sinT": 2,
+      "en": 98,
       "ht": 0
     },
     "pages/transporte/combustible-log": {
-      "conT": 0,
-      "sinT": 11,
-      "en": 0,
+      "conT": 15,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 0,
-      "sinT": 37,
-      "en": 0,
+      "conT": 54,
+      "sinT": 1,
+      "en": 98,
       "ht": 0
     },
     "pages/transporte/conduce-externo": {
-      "conT": 0,
-      "sinT": 28,
-      "en": 0,
+      "conT": 36,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduce-transferencias": {
-      "conT": 0,
-      "sinT": 10,
-      "en": 0,
+      "conT": 26,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduces": {
-      "conT": 0,
-      "sinT": 48,
-      "en": 0,
+      "conT": 71,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduces-historial": {
-      "conT": 0,
-      "sinT": 21,
-      "en": 0,
+      "conT": 37,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduces-hub": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduces-pendientes": {
-      "conT": 0,
-      "sinT": 6,
-      "en": 0,
+      "conT": 21,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduces-por-firmar": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduces-por-implementar": {
-      "conT": 0,
-      "sinT": 6,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conduces/entrega": {
-      "conT": 0,
-      "sinT": 23,
-      "en": 0,
+      "conT": 33,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/conductores": {
-      "conT": 0,
-      "sinT": 24,
-      "en": 0,
+      "conT": 43,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/confirmaciones": {
-      "conT": 0,
-      "sinT": 13,
-      "en": 0,
+      "conT": 28,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/despachos": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/devolver-material": {
-      "conT": 0,
-      "sinT": 22,
-      "en": 0,
+      "conT": 44,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/echada-detalle": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 16,
+      "sinT": 2,
+      "en": 89,
       "ht": 0
     },
     "pages/transporte/estado-chofer": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/ferreteria": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 30,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/generar-conduce": {
@@ -790,159 +790,159 @@
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
-      "conT": 0,
-      "sinT": 24,
-      "en": 0,
+      "conT": 37,
+      "sinT": 1,
+      "en": 97,
       "ht": 0
     },
     "pages/transporte/mantenimiento-cierre": {
-      "conT": 0,
-      "sinT": 8,
-      "en": 0,
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/mantenimientos-lista": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 7,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/mi-actividad": {
-      "conT": 0,
-      "sinT": 47,
-      "en": 0,
+      "conT": 54,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/mi-recorrido": {
-      "conT": 0,
-      "sinT": 9,
-      "en": 0,
+      "conT": 11,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/mi-registro": {
-      "conT": 0,
-      "sinT": 29,
-      "en": 0,
+      "conT": 36,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/mis-actas": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/perfil-conductor": {
-      "conT": 0,
-      "sinT": 20,
-      "en": 0,
+      "conT": 37,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/perfil-vehiculo": {
-      "conT": 0,
-      "sinT": 24,
-      "en": 0,
+      "conT": 32,
+      "sinT": 1,
+      "en": 97,
       "ht": 0
     },
     "pages/transporte/por-confirmar": {
-      "conT": 0,
-      "sinT": 19,
-      "en": 0,
+      "conT": 36,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/preuso": {
-      "conT": 0,
-      "sinT": 54,
-      "en": 0,
+      "conT": 71,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/reportar-multa": {
-      "conT": 0,
-      "sinT": 19,
-      "en": 0,
+      "conT": 33,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/reportar-vehiculo": {
-      "conT": 0,
-      "sinT": 34,
-      "en": 0,
+      "conT": 53,
+      "sinT": 1,
+      "en": 98,
       "ht": 0
     },
     "pages/transporte/reporte-semanal": {
-      "conT": 0,
-      "sinT": 34,
-      "en": 0,
+      "conT": 52,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/rutas": {
-      "conT": 0,
-      "sinT": 51,
-      "en": 0,
+      "conT": 63,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/rutas-activas": {
-      "conT": 0,
-      "sinT": 16,
-      "en": 0,
+      "conT": 23,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/seguimiento": {
-      "conT": 0,
-      "sinT": 6,
-      "en": 0,
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/solicitud-movimiento": {
-      "conT": 0,
-      "sinT": 18,
-      "en": 0,
+      "conT": 22,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/trayectoria": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/uso-vehiculo": {
-      "conT": 0,
-      "sinT": 10,
-      "en": 0,
+      "conT": 23,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/vehiculos": {
-      "conT": 0,
-      "sinT": 40,
-      "en": 0,
+      "conT": 63,
+      "sinT": 2,
+      "en": 97,
       "ht": 0
     },
     "shared/components/alarma-host": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/components/generar-acceso": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 11,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/components/gps-gate-banner": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 2,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/components/module-placeholder": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 2,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/components/onboarding": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 7,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/components/permiso-host": {
@@ -952,9 +952,9 @@
       "ht": 100
     },
     "shared/components/permisos-onboarding": {
-      "conT": 0,
-      "sinT": 11,
-      "en": 0,
+      "conT": 13,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/components/sync-bar": {
@@ -970,21 +970,21 @@
       "ht": 100
     },
     "shared/ui/articulo-picker": {
-      "conT": 0,
-      "sinT": 6,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/avatar-editor": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/ayudante-picker": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/big-button": {
@@ -1024,21 +1024,21 @@
       "ht": 100
     },
     "shared/ui/destino-selector": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 6,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/doc-slot": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 13,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/draft-banner": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/empty-state": {
@@ -1060,15 +1060,15 @@
       "ht": 100
     },
     "shared/ui/in-app-camera": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/km-input": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/language-onboarding": {
@@ -1084,27 +1084,27 @@
       "ht": 0
     },
     "shared/ui/location-picker": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/lugar-picker": {
-      "conT": 0,
-      "sinT": 9,
-      "en": 0,
+      "conT": 9,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/molde-compositor": {
-      "conT": 0,
-      "sinT": 8,
-      "en": 0,
+      "conT": 12,
+      "sinT": 1,
+      "en": 92,
       "ht": 0
     },
     "shared/ui/molde-esquema": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/option-button": {
@@ -1114,15 +1114,15 @@
       "ht": 100
     },
     "shared/ui/pdf-viewer": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 2,
+      "sinT": 1,
+      "en": 67,
       "ht": 0
     },
     "shared/ui/personal-carnet": {
-      "conT": 0,
-      "sinT": 10,
-      "en": 0,
+      "conT": 9,
+      "sinT": 1,
+      "en": 90,
       "ht": 0
     },
     "shared/ui/photo-slot": {
@@ -1150,39 +1150,39 @@
       "ht": 100
     },
     "shared/ui/selector-categorias": {
-      "conT": 0,
-      "sinT": 27,
-      "en": 0,
+      "conT": 28,
+      "sinT": 1,
+      "en": 97,
       "ht": 0
     },
     "shared/ui/share-sheet": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 3,
+      "sinT": 2,
+      "en": 60,
       "ht": 0
     },
     "shared/ui/signature-pad": {
-      "conT": 0,
-      "sinT": 2,
-      "en": 0,
+      "conT": 2,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/skeleton": {
-      "conT": 0,
-      "sinT": 1,
-      "en": 0,
+      "conT": 1,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/step-bar": {
-      "conT": 0,
-      "sinT": 1,
-      "en": 0,
+      "conT": 1,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/sticker-editor": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 7,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/sync-badge": {
@@ -1198,21 +1198,21 @@
       "ht": 100
     },
     "shared/ui/vehiculo-card": {
-      "conT": 0,
-      "sinT": 1,
-      "en": 0,
+      "conT": 2,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/vehiculo-picker": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/voice-notes": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 2,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/voice-player": {
@@ -1222,9 +1222,9 @@
       "ht": 100
     },
     "shared/ui/voice-recorder": {
-      "conT": 0,
-      "sinT": 1,
-      "en": 0,
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "shared/ui/wizard-exit": {

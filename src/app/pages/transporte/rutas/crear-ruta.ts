@@ -36,6 +36,8 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { formatearDuracion } from '../../../core/util/duracion';
 import { fechaLocalISO } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AF24.5 — estado del borrador de crear-ruta (sin fotos; se re-capturan). */
 interface CrearRutaDraft {
@@ -83,7 +85,7 @@ interface ParadaUI {
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner, AyudantePicker],
+  imports: [FormsModule, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner, AyudantePicker, TranslatePipe],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })
@@ -114,6 +116,7 @@ export class CrearRutaPage implements OnDestroy {
   private tareaVinculada: string | null = null;
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   // AF24.5 — borrador persistente (retomar si el teléfono se bloquea / muere la app).
   private readonly clave = 'transporte:crear-ruta';
@@ -438,13 +441,13 @@ export class CrearRutaPage implements OnDestroy {
       const cercana = this.obraCercana(r.lat, r.lng);
       if (cercana) {
         this.toast.withAction(
-          `¿Estás en la obra ${cercana.nombre}? Se registrará como el origen.`,
-          { label: 'Sí, es esa', run: () => this.onOrigenLugar(cercana.id) },
+          this.i18n.t('¿Estás en la obra {obra}? Se registrará como el origen.', { obra: cercana.nombre }),
+          { label: this.i18n.t('Sí, es esa'), run: () => this.onOrigenLugar(cercana.id) },
           'info',
           9000,
         );
       } else {
-        this.toast.success('Ubicación actual fijada como origen.');
+        this.toast.success(this.i18n.t('Ubicación actual fijada como origen.'));
       }
       void this.recalcularRuta();
       return;
@@ -452,19 +455,19 @@ export class CrearRutaPage implements OnDestroy {
     // P2 — mensajes claros por causa; ofrecer ajustes si es denegado permanente.
     if (r.reason === 'denied-permanent') {
       if (this.permissions.isNative) {
-        this.toast.withAction('Ubicación bloqueada para esta app.', {
-          label: 'Abrir ajustes',
+        this.toast.withAction(this.i18n.t('Ubicación bloqueada para esta app.'), {
+          label: this.i18n.t('Abrir ajustes'),
           run: () => void this.permissions.openAppSettings(),
         });
       } else {
-        this.toast.error('Ubicación bloqueada. Actívala en los ajustes del navegador.');
+        this.toast.error(this.i18n.t('Ubicación bloqueada. Actívala en los ajustes del navegador.'));
       }
     } else if (r.reason === 'denied') {
-      this.toast.error('Necesito tu permiso de ubicación para fijar el origen.');
+      this.toast.error(this.i18n.t('Necesito tu permiso de ubicación para fijar el origen.'));
     } else if (r.reason === 'timeout') {
-      this.toast.error('No se pudo obtener la señal GPS. Ve a un lugar despejado y reintenta.');
+      this.toast.error(this.i18n.t('No se pudo obtener la señal GPS. Ve a un lugar despejado y reintenta.'));
     } else {
-      this.toast.error('No se pudo obtener tu ubicación. Escribe el origen o márcalo en el mapa.');
+      this.toast.error(this.i18n.t('No se pudo obtener tu ubicación. Escribe el origen o márcalo en el mapa.'));
     }
   }
 
@@ -674,31 +677,45 @@ export class CrearRutaPage implements OnDestroy {
     this.destinoModo() === 'lugar' ? (this.selectedLugar()?.nombre ?? '') : this.destinoMapaTexto().trim(),
   );
 
+  // AF24 — etiquetas del footer (traducidas y reactivas al idioma vía i18n.t).
+  esUltimoPaso = computed(() => this.step() >= this.total);
+  backLabel = computed(() => this.i18n.t(this.step() > 1 ? 'Atrás' : 'Cancelar'));
+  primaryLabel = computed(() =>
+    !this.esUltimoPaso()
+      ? this.i18n.t('Siguiente')
+      : this.submitting()
+        ? this.i18n.t('Guardando…')
+        : this.holdChecklist()
+          ? this.i18n.t('Reanudar ruta')
+          : this.i18n.t('Crear ruta'),
+  );
+  primaryDisabled = computed(() => this.esUltimoPaso() && this.submitting());
+
   /** AF24 — avanza validando el paso actual (4 pasos). */
   next(): void {
     const s = this.step();
     if (s === 1) {
       if (!this.vehiculoId()) {
-        this.toast.error('Elige el vehículo.');
+        this.toast.error(this.i18n.t('Elige el vehículo.'));
         return;
       }
       if (this.esElevado && !this.conductorId()) {
-        this.toast.error('Elige el conductor al que le asignas la ruta.');
+        this.toast.error(this.i18n.t('Elige el conductor al que le asignas la ruta.'));
         return;
       }
     }
     if (s === 2) {
       if (!this.origen().trim()) {
-        this.toast.error('Indica el origen.');
+        this.toast.error(this.i18n.t('Indica el origen.'));
         return;
       }
       if (!this.destinoResumen()) {
-        this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra de destino.' : 'Marca el destino en el mapa.');
+        this.toast.error(this.destinoModo() === 'lugar' ? this.i18n.t('Elige la obra de destino.') : this.i18n.t('Marca el destino en el mapa.'));
         return;
       }
     }
     if (s === 3 && this.cargaObligatoria() && !this.fotoCarga()) {
-      this.toast.error('Toma la foto de la carga.');
+      this.toast.error(this.i18n.t('Toma la foto de la carga.'));
       return;
     }
     this.step.set(Math.min(this.total, s + 1));
@@ -733,7 +750,7 @@ export class CrearRutaPage implements OnDestroy {
     // se crea una segunda). Ambos viajan en el borrador que flushAll persiste.
     if (!this.rutaId()) this.rutaId.set(crypto.randomUUID());
     this.holdChecklist.set(true);
-    this.toast.show('Primero registra el uso de este vehículo. Tu ruta queda pendiente y la reanudas al terminar.', 'info');
+    this.toast.show(this.i18n.t('Primero registra el uso de este vehículo. Tu ruta queda pendiente y la reanudas al terminar.'), 'info');
     await this.autosave.flushAll(); // AF24.5 — persiste el borrador antes de salir
     // AX10 — desvío a la pantalla CANÓNICA de uso de vehículo (la del menú, v2/AK15),
     // ya NO a la vieja `asignarme` (deprecada). `returnUrl` reanuda ESTA ruta.
@@ -746,24 +763,24 @@ export class CrearRutaPage implements OnDestroy {
   async guardar(): Promise<void> {
     if (this.submitting()) return;
     if (!this.vehiculoId()) {
-      this.toast.error('Elige el vehículo.');
+      this.toast.error(this.i18n.t('Elige el vehículo.'));
       return;
     }
     if (this.esElevado && !this.conductorId()) {
-      this.toast.error('Elige el conductor al que le asignas la ruta.');
+      this.toast.error(this.i18n.t('Elige el conductor al que le asignas la ruta.'));
       return;
     }
     if (!this.origen().trim()) {
-      this.toast.error('Escribe el origen.');
+      this.toast.error(this.i18n.t('Escribe el origen.'));
       return;
     }
     if (!this.destinoTexto()) {
-      this.toast.error(this.destinoModo() === 'lugar' ? 'Elige la obra de destino.' : 'Marca el destino en el mapa.');
+      this.toast.error(this.destinoModo() === 'lugar' ? this.i18n.t('Elige la obra de destino.') : this.i18n.t('Marca el destino en el mapa.'));
       return;
     }
     // AF24.3 — la foto de carga es obligatoria en rutas de material.
     if (this.cargaObligatoria() && !this.fotoCarga()) {
-      this.toast.error('Toma la foto de la carga.');
+      this.toast.error(this.i18n.t('Toma la foto de la carga.'));
       return;
     }
     // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).
@@ -812,7 +829,7 @@ export class CrearRutaPage implements OnDestroy {
       void this.autosave.discard(this.clave); // AF24.5 — borrador cumplido
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear la ruta. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear la ruta. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }

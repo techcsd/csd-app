@@ -1,14 +1,14 @@
 <div class="screen log">
   <header class="log__header">
-    <button type="button" class="log__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="log__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="log__icon">🧪</span>
-    <h1 class="log__title">Logística y pruebas</h1>
+    <h1 class="log__title">{{ 'Logística y pruebas' | t }}</h1>
   </header>
 
   @if (!registrando()) {
     <div class="log__tabs">
-      <button type="button" [class.log__tab--on]="tab() === 'entradas'" (click)="tab.set('entradas')">Entradas</button>
-      <button type="button" [class.log__tab--on]="tab() === 'pruebas'" (click)="tab.set('pruebas')">Pruebas</button>
+      <button type="button" [class.log__tab--on]="tab() === 'entradas'" (click)="tab.set('entradas')">{{ 'Entradas' | t }}</button>
+      <button type="button" [class.log__tab--on]="tab() === 'pruebas'" (click)="tab.set('pruebas')">{{ 'Pruebas' | t }}</button>
     </div>
   }
 
@@ -19,7 +19,7 @@
         @if (loading()) {
           <app-skeleton [rows]="3" />
         } @else if (!entradas().length) {
-          <p class="log__empty">No hay entradas de materiales/equipos programadas para esta obra.</p>
+          <p class="log__empty">{{ 'No hay entradas de materiales/equipos programadas para esta obra.' | t }}</p>
         } @else {
           @for (e of entradas(); track e.id) {
             <div class="log__entrada">
@@ -35,13 +35,13 @@
           }
         }
       } @else {
-        <button type="button" class="btn-cta log__nueva" (click)="registrando.set(true)">➕ Registrar prueba de campo</button>
+        <button type="button" class="btn-cta log__nueva" (click)="registrando.set(true)">➕ {{ 'Registrar prueba de campo' | t }}</button>
 
-        <h2 class="log__section">Pruebas recientes</h2>
+        <h2 class="log__section">{{ 'Pruebas recientes' | t }}</h2>
         @if (loading()) {
           <app-skeleton [rows]="3" />
         } @else if (!pruebas().length) {
-          <p class="log__empty">Aún no hay pruebas de campo registradas.</p>
+          <p class="log__empty">{{ 'Aún no hay pruebas de campo registradas.' | t }}</p>
         } @else {
           @for (p of pruebas(); track p['id']) {
             <div class="log__prueba">
@@ -49,39 +49,39 @@
                 <span class="log__prueba-tipo">{{ p['tipo'] }}</span>
                 <span class="log__prueba-fecha">{{ p['fecha'] }}</span>
               </div>
-              @if (p['resultado']) { <p class="log__prueba-res">Resultado: {{ p['resultado'] }}</p> }
+              @if (p['resultado']) { <p class="log__prueba-res">{{ 'Resultado:' | t }} {{ p['resultado'] }}</p> }
               @if (p['notas']) { <p class="log__prueba-notas">{{ p['notas'] }}</p> }
             </div>
           }
         }
       }
     } @else {
-      <label class="field-label">Tipo de prueba</label>
+      <label class="field-label">{{ 'Tipo de prueba' | t }}</label>
       <div class="log__opts">
         @for (t of tipos; track t.key) {
-          <app-option-button [label]="t.label" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
+          <app-option-button [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
         }
       </div>
 
-      <label class="field-label log__mt">Resultado (opcional)</label>
+      <label class="field-label log__mt">{{ 'Resultado (opcional)' | t }}</label>
       <input class="field" type="text" [ngModel]="resultado()" (ngModelChange)="resultado.set($event)"
-        placeholder="Ej.: 4 pulgadas / 210 kg/cm²" />
+        [placeholder]="'Ej.: 4 pulgadas / 210 kg/cm²' | t" />
 
-      <label class="field-label log__mt">Notas (opcional)</label>
+      <label class="field-label log__mt">{{ 'Notas (opcional)' | t }}</label>
       <textarea class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
 
-      <label class="field-label log__mt">Fotos (opcional)</label>
+      <label class="field-label log__mt">{{ 'Fotos (opcional)' | t }}</label>
       <div class="log__fotos">
         @for (i of slots; track i) {
-          <app-photo-slot [label]="'Foto ' + (i + 1)" hint="📷" [gallery]="false"
+          <app-photo-slot [label]="('Foto' | t) + ' ' + (i + 1)" hint="📷" [gallery]="false"
             [foto]="fotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />
         }
       </div>
 
       <button type="button" class="btn-cta log__guardar" [disabled]="!puedeGuardar() || enviando()" (click)="guardar()">
-        {{ enviando() ? 'Guardando…' : 'Registrar prueba' }}
+        {{ enviando() ? ('Guardando…' | t) : ('Registrar prueba' | t) }}
       </button>
-      <button type="button" class="btn-ghost log__cancel" (click)="registrando.set(false)">Cancelar</button>
+      <button type="button" class="btn-ghost log__cancel" (click)="registrando.set(false)">{{ 'Cancelar' | t }}</button>
     }
   </div>
 </div>

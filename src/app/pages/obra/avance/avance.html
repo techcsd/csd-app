@@ -1,8 +1,8 @@
 <div class="screen av">
   <header class="av__header">
-    <button type="button" class="av__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="av__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <span class="av__icon">📈</span>
-    <h1 class="av__title">Avance de obra</h1>
+    <h1 class="av__title">{{ 'Avance de obra' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -12,24 +12,24 @@
       @if (resumen(); as r) {
         <div class="av__resumen">
           <div class="av__bar">
-            <span class="av__bar-label">Plan</span>
+            <span class="av__bar-label">{{ 'Plan' | t }}</span>
             <div class="av__bar-track"><div class="av__bar-fill av__bar-fill--plan" [style.width.%]="r.plan"></div></div>
             <span class="av__bar-val">{{ r.plan }}%</span>
           </div>
           <div class="av__bar">
-            <span class="av__bar-label">Real</span>
+            <span class="av__bar-label">{{ 'Real' | t }}</span>
             <div class="av__bar-track"><div class="av__bar-fill av__bar-fill--real" [style.width.%]="r.real"></div></div>
             <span class="av__bar-val">{{ r.real }}%</span>
           </div>
           @if (r.real < r.plan) {
-            <p class="av__desv">⚠️ La obra va {{ r.plan - r.real }} puntos por debajo del plan.</p>
+            <p class="av__desv">⚠️ {{ 'La obra va {n} puntos por debajo del plan.' | t:{ n: r.plan - r.real } }}</p>
           }
         </div>
       }
 
-      <h2 class="av__section">Reportar avance por tarea</h2>
+      <h2 class="av__section">{{ 'Reportar avance por tarea' | t }}</h2>
       @if (!tareas().length) {
-        <app-empty-state icon="📋" title="Sin tareas" message="Esta obra no tiene tareas de cronograma." />
+        <app-empty-state icon="📋" [title]="'Sin tareas' | t" [message]="'Esta obra no tiene tareas de cronograma.' | t" />
       } @else {
         @for (t of tareas(); track t.id) {
           <div class="av__tarea">
@@ -39,7 +39,7 @@
                 [ngModel]="edit()[t.id]" (ngModelChange)="set(t.id, +$event)" />
               <span>%</span>
               <button type="button" class="btn-ghost av__tarea-btn" [disabled]="guardando() === t.id" (click)="reportar(t.id)">
-                {{ guardando() === t.id ? '…' : 'Reportar' }}
+                {{ guardando() === t.id ? '…' : ('Reportar' | t) }}
               </button>
             </div>
           </div>

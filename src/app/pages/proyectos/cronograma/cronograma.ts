@@ -6,6 +6,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CronogramaService, TareaAccionPendiente } from '../../../core/services/cronograma.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -49,7 +51,7 @@ function dayNum(iso: string | null): number | null {
   selector: 'app-cronograma',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, BottomSheet, PhotoSlot],
+  imports: [FormsModule, Skeleton, EmptyState, BottomSheet, PhotoSlot, TranslatePipe],
   templateUrl: './cronograma.html',
   styleUrl: './cronograma.scss',
 })
@@ -61,6 +63,7 @@ export class CronogramaPage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly tipoLabel = CRONOGRAMA_TIPO_LABEL;
   readonly estadoLabel = CRONOGRAMA_ESTADO_LABEL;
@@ -111,13 +114,13 @@ export class CronogramaPage {
       if (this.tareaDeep) {
         const t = data.tareas.find((x) => x.id === this.tareaDeep);
         if (t) this.abrirDetalle(t);
-        else this.toast.show('Esa tarea ya no está disponible.', 'info'); // AS24 #12
+        else this.toast.show(this.i18n.t('Esa tarea ya no está disponible.'), 'info'); // AS24 #12
         this.tareaDeep = null;
       }
     } catch (e) {
       // AW1/AS24 #2 — un fallo de carga NO es "sin cronograma": se marca como error
       // para pintar el estado de reintento (nunca el empty-state "Sin tareas").
-      this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No pudimos cargar el cronograma.');
+      this.error.set(e instanceof Error ? humanizeError(e).mensaje : this.i18n.t('No pudimos cargar el cronograma.'));
     } finally {
       this.loading.set(false);
     }
@@ -237,10 +240,10 @@ export class CronogramaPage {
     try {
       await this.cronograma.enqueueIniciar(t.id, this.proyectoId);
       this.pend.update((m) => new Map(m).set(t.id, 'iniciar'));
-      this.toast.success('Tarea iniciada. Se enviará al sincronizar.');
+      this.toast.success(this.i18n.t('Tarea iniciada. Se enviará al sincronizar.'));
       this.cerrarHoja();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo iniciar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo iniciar.'));
     } finally {
       this.submitting.set(false);
     }
@@ -267,11 +270,11 @@ export class CronogramaPage {
     const t = this.selected();
     if (!t || this.submitting()) return;
     if (!this.fotoCompletar()) {
-      this.toast.error('Agrega la foto de evidencia para completar.');
+      this.toast.error(this.i18n.t('Agrega la foto de evidencia para completar.'));
       return;
     }
     if (this.selAtrasada() && !this.justificacion().trim()) {
-      this.toast.error('La tarea está atrasada: escribe la justificación.');
+      this.toast.error(this.i18n.t('La tarea está atrasada: escribe la justificación.'));
       return;
     }
     this.submitting.set(true);
@@ -283,10 +286,10 @@ export class CronogramaPage {
         justificacion: this.justificacion().trim() || null,
       });
       this.pend.update((m) => new Map(m).set(t.id, 'completar'));
-      this.toast.success('Tarea completada. Se enviará al sincronizar.');
+      this.toast.success(this.i18n.t('Tarea completada. Se enviará al sincronizar.'));
       this.cerrarHoja();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo completar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo completar.'));
     } finally {
       this.submitting.set(false);
     }

@@ -16,6 +16,8 @@ import { GeocodingService, LugarBusqueda } from '../../../core/services/geocodin
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /* google.maps sin @types → lo tratamos como any (igual que seguimiento). */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -37,7 +39,7 @@ export interface UbicacionSeleccionada {
 @Component({
   selector: 'app-location-picker',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './location-picker.html',
   styleUrl: './location-picker.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +49,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
   private permissions = inject(PermissionsService);
   private toast = inject(ToastService);
   private mapsLoader = inject(GoogleMapsLoaderService);
+  private i18n = inject(I18nService);
 
   latitud = input<number | null>(null);
   longitud = input<number | null>(null);
@@ -237,7 +240,7 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
     } catch (e) {
       const err = e as { message?: string; suggestQuery?: string };
       this.linkError.set(
-        err?.message || 'No se pudo resolver la ubicación. Revisa el link o las coordenadas.',
+        err?.message || this.i18n.t('No se pudo resolver la ubicación. Revisa el link o las coordenadas.'),
       );
       // AU16 — el link apunta a un lugar sin coordenadas exactas: en vez de dejar al
       // chofer trancado, precargamos el buscador con el nombre sugerido por la edge y
@@ -266,19 +269,19 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
       }
       // P2 — mensajes claros por causa; ofrecer ajustes si es denegado permanente.
       if (r.reason === 'denied-permanent') {
-        this.busquedaError.set('Ubicación bloqueada. Actívala en los ajustes de la app.');
+        this.busquedaError.set(this.i18n.t('Ubicación bloqueada. Actívala en los ajustes de la app.'));
         if (this.permissions.isNative) {
-          this.toast.withAction('Ubicación bloqueada para esta app.', {
-            label: 'Abrir ajustes',
+          this.toast.withAction(this.i18n.t('Ubicación bloqueada para esta app.'), {
+            label: this.i18n.t('Abrir ajustes'),
             run: () => void this.permissions.openAppSettings(),
           });
         }
       } else if (r.reason === 'denied') {
-        this.busquedaError.set('Necesito tu permiso de ubicación para usar tu posición.');
+        this.busquedaError.set(this.i18n.t('Necesito tu permiso de ubicación para usar tu posición.'));
       } else if (r.reason === 'timeout') {
-        this.busquedaError.set('No se pudo obtener la señal GPS. Ve a un lugar despejado y reintenta.');
+        this.busquedaError.set(this.i18n.t('No se pudo obtener la señal GPS. Ve a un lugar despejado y reintenta.'));
       } else {
-        this.busquedaError.set('No se pudo obtener tu ubicación. Marca el punto en el mapa.');
+        this.busquedaError.set(this.i18n.t('No se pudo obtener tu ubicación. Marca el punto en el mapa.'));
       }
     } finally {
       this.ubicando.set(false);
@@ -309,12 +312,12 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
       if (ac.signal.aborted) return;
       this.resultados.set(res);
       if (res.length === 0) {
-        this.busquedaError.set('Sin resultados. Prueba otro nombre o marca el punto en el mapa.');
+        this.busquedaError.set(this.i18n.t('Sin resultados. Prueba otro nombre o marca el punto en el mapa.'));
       }
     } catch (e) {
       if ((e as Error)?.name === 'AbortError') return;
       this.resultados.set([]);
-      this.busquedaError.set('No se pudo buscar ahora. Reintenta o marca el punto en el mapa.');
+      this.busquedaError.set(this.i18n.t('No se pudo buscar ahora. Reintenta o marca el punto en el mapa.'));
     } finally {
       if (!ac.signal.aborted) this.buscando.set(false);
     }

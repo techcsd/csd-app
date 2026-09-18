@@ -8,6 +8,8 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CameraService, CapturedDoc } from '../../../core/services/camera.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -50,7 +52,7 @@ interface MultaDraft {
   selector: 'app-reportar-multa',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, BigConfirm, BottomSheet, VehiculoPicker, CedulaPipe],
+  imports: [FormsModule, OptionButton, BigConfirm, BottomSheet, VehiculoPicker, CedulaPipe, TranslatePipe],
   templateUrl: './reportar-multa.html',
   styleUrl: './reportar-multa.scss',
 })
@@ -64,6 +66,7 @@ export class ReportarMultaPage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   conductorId = '';
   // Y7 — cuando se abre desde el cuadro "Multas" del hub (sin conductor en la
@@ -113,7 +116,7 @@ export class ReportarMultaPage {
       };
       // Y7 — no autosave hasta que haya un conductor (clave estable multa:<id>).
       if (!this.hydrated || this.submitting() || this.done() || !this.conductorId) return;
-      this.autosave.queue(this.clave, snap, { tipo: 'multa', etiqueta: 'Multa de conductor', ruta: this.location.path() });
+      this.autosave.queue(this.clave, snap, { tipo: 'multa', etiqueta: this.i18n.t('Multa de conductor'), ruta: this.location.path() });
     });
   }
 
@@ -250,12 +253,12 @@ export class ReportarMultaPage {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.conductorId) {
-      this.toast.error('Falta el conductor.');
+      this.toast.error(this.i18n.t('Falta el conductor.'));
       return;
     }
     const motivo = this.motivoFinal();
     if (!motivo) {
-      this.toast.error(this.esOtro() ? 'Escribe el motivo de la multa.' : 'Elige un motivo.');
+      this.toast.error(this.i18n.t(this.esOtro() ? 'Escribe el motivo de la multa.' : 'Elige un motivo.'));
       return;
     }
     this.submitting.set(true);
@@ -271,7 +274,7 @@ export class ReportarMultaPage {
       await this.autosave.discard(this.clave); // limpia borrador + fotos
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar.'));
     } finally {
       this.submitting.set(false);
     }

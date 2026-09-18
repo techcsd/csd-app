@@ -6,6 +6,8 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
@@ -34,7 +36,7 @@ type Modo = 'usar' | 'soltar';
   selector: 'app-uso-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot, ConfirmDialog],
+  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot, ConfirmDialog, TranslatePipe],
   templateUrl: './uso-vehiculo.html',
   styleUrl: './uso-vehiculo.scss',
 })
@@ -45,6 +47,7 @@ export class UsoVehiculoPage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
+  private i18n = inject(I18nService);
 
   readonly niveles = NIVELES_COMBUSTIBLE;
   readonly fmtFechaHora = formatFechaHumana;
@@ -106,15 +109,18 @@ export class UsoVehiculoPage {
   identEstado = computed(() => {
     const e = this.estado();
     const s = e ? this.ident({ marca: e.marca, modelo: e.modelo, color: e.color, placa: e.placa }) : '';
-    return s || this.etiqueta() || this.placa() || 'el vehículo';
+    return s || this.etiqueta() || this.placa() || this.i18n.t('el vehículo');
   });
 
   /** AW16 — mensaje del diálogo de confirmación de recibir. */
   mensajeRecibir = computed(() => {
     const e = this.estado();
-    const nombre = e?.usuario_nombre || 'otro usuario';
-    const desde = e?.desde ? ` desde ${this.fmtFechaHora(e.desde)}` : '';
-    return `Este vehículo está en uso de ${nombre}${desde}. ¿Confirmas que lo vas a recibir? Se le avisará a ${nombre} y al jefe de flota, y quedará a tu cargo.`;
+    const nombre = e?.usuario_nombre || this.i18n.t('otro usuario');
+    const desde = e?.desde ? ' ' + this.i18n.t('desde {fecha}', { fecha: this.fmtFechaHora(e.desde) }) : '';
+    return this.i18n.t(
+      'Este vehículo está en uso de {nombre}{desde}. ¿Confirmas que lo vas a recibir? Se le avisará a {nombre} y al jefe de flota, y quedará a tu cargo.',
+      { nombre, desde },
+    );
   });
 
   /** AW16 — el CTA: si es "recibir de X", confirma primero (nunca bloquea, solo avisa). */
@@ -167,14 +173,14 @@ export class UsoVehiculoPage {
       // directo al flujo que me trajo. Sin esto el usuario quedaba encerrado con el
       // único botón "Soltar vehículo" (el contrario al que necesitaba) → bucle.
       if (this.returnUrl && this.enUsoPorMi() && this.modo() === 'usar') {
-        this.toast.show('Ya tienes este vehículo en uso. Continúa con lo que ibas.', 'info');
+        this.toast.show(this.i18n.t('Ya tienes este vehículo en uso. Continúa con lo que ibas.'), 'info');
         this.router.navigateByUrl(this.returnUrl, { replaceUrl: true });
         return;
       }
       // Prefill km con el del inicio si lo tengo (mejor que vacío).
       if (e.km_inicio != null && this.km() == null) this.km.set(e.km_inicio);
     } catch {
-      this.toast.error('No pudimos consultar el estado del vehículo. Revisa tu conexión.');
+      this.toast.error(this.i18n.t('No pudimos consultar el estado del vehículo. Revisa tu conexión.'));
     } finally {
       this.loading.set(false);
     }
@@ -194,7 +200,7 @@ export class UsoVehiculoPage {
   async guardar(): Promise<void> {
     if (!this.puedeGuardar() || !this.vehiculoId()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para registrar el uso del vehículo.');
+      this.toast.error(this.i18n.t('Necesitas conexión para registrar el uso del vehículo.'));
       return;
     }
     this.submitting.set(true);
@@ -206,7 +212,7 @@ export class UsoVehiculoPage {
           nivel: this.nivel()!,
           notas: this.notas().trim() || null,
         });
-        this.toast.success('Vehículo soltado. Queda libre.');
+        this.toast.success(this.i18n.t('Vehículo soltado. Queda libre.'));
       } else {
         const r = await this.usoSvc.iniciarUso({
           vehiculoId: this.vehiculoId(),
@@ -225,10 +231,10 @@ export class UsoVehiculoPage {
               trasera: this.fotoTrasera()?.blob ?? null,
             });
           } catch {
-            this.toast.show('El uso se registró, pero no pudimos subir alguna foto.', 'info');
+            this.toast.show(this.i18n.t('El uso se registró, pero no pudimos subir alguna foto.'), 'info');
           }
         }
-        this.toast.success(this.enUsoPorOtro() ? 'Recibiste el vehículo. Ahora está a tu cargo.' : 'Estás usando el vehículo.');
+        this.toast.success(this.i18n.t(this.enUsoPorOtro() ? 'Recibiste el vehículo. Ahora está a tu cargo.' : 'Estás usando el vehículo.'));
       }
       this.done.set(true);
       // AX10 — si vinimos desviados desde "crear ruta"/"generar conduce" (el
@@ -241,10 +247,10 @@ export class UsoVehiculoPage {
     } catch (e) {
       if (e instanceof VehiculoEnUsoError) {
         // El estado cambió entre la consulta y el submit: re-consulta para ofrecer "recibir de X".
-        this.toast.show(`Ahora lo tiene ${e.nombre ?? 'otro usuario'}. Puedes recibirlo.`, 'info');
+        this.toast.show(this.i18n.t('Ahora lo tiene {nombre}. Puedes recibirlo.', { nombre: e.nombre ?? this.i18n.t('otro usuario') }), 'info');
         await this.cargarEstado();
       } else {
-        this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar. Intenta de nuevo.');
+        this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar. Intenta de nuevo.'));
       }
     } finally {
       this.submitting.set(false);

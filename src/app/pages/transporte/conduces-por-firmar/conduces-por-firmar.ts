@@ -8,6 +8,8 @@ import { ConducesService, ConducePorFirmar } from '../../../core/services/conduc
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AU1 — bandeja del DESPACHANTE: conduces donde YO fui elegido como despachante y
@@ -20,7 +22,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-conduces-por-firmar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, LiveRefreshDirective],
+  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
   templateUrl: './conduces-por-firmar.html',
   styleUrl: './conduces-por-firmar.scss',
 })
@@ -29,6 +31,7 @@ export class ConducesPorFirmarPage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
 
@@ -46,7 +49,7 @@ export class ConducesPorFirmarPage {
     try {
       this.conduces_.set(await this.conduces.misConducesPorFirmar());
     } catch {
-      this.toast.error('No pudimos cargar los conduces por firmar.');
+      this.toast.error(this.i18n.t('No pudimos cargar los conduces por firmar.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);

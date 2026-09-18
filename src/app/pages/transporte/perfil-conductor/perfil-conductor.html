@@ -2,7 +2,7 @@
   <header class="pcon__header">
     <button type="button" class="pcon__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="pcon__icon">🪪</span>
-    <h1 class="pcon__title">Perfil del conductor</h1>
+    <h1 class="pcon__title">{{ 'Perfil del conductor' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,8 +11,8 @@
     } @else if (!stats()) {
       <app-empty-state
         icon="🪪"
-        title="Conductor no encontrado"
-        message="No pudimos cargar los datos de este conductor. Revisa tu conexión e intenta de nuevo."
+        [title]="'Conductor no encontrado' | t"
+        [message]="'No pudimos cargar los datos de este conductor. Revisa tu conexión e intenta de nuevo.' | t"
       />
     } @else {
       <p class="pcon__nombre">{{ stats()!.nombre }}</p>
@@ -30,16 +30,16 @@
       }
 
       @if (esAdmin()) {
-        <button type="button" class="btn-ghost pcon__editar" (click)="editar()">✏️ Editar conductor</button>
+        <button type="button" class="btn-ghost pcon__editar" (click)="editar()">✏️ {{ 'Editar conductor' | t }}</button>
       }
       @if (puedeGestionarAcceso()) {
         <button type="button" class="btn-ghost pcon__editar" (click)="abrirAcceso()">
-          🔐 {{ conductor()?.usuario_id ? 'Restablecer PIN de acceso' : 'Generar acceso a la app' }}
+          🔐 {{ conductor()?.usuario_id ? ('Restablecer PIN de acceso' | t) : ('Generar acceso a la app' | t) }}
         </button>
       }
       @if (puedeGestionarAcceso() && !esMiPerfil()) {
         <!-- S24 — registrarle una multa a este conductor -->
-        <button type="button" class="btn-ghost pcon__editar" (click)="multar()">🚦 Registrar multa</button>
+        <button type="button" class="btn-ghost pcon__editar" (click)="multar()">🚦 {{ 'Registrar multa' | t }}</button>
       }
 
 
@@ -51,53 +51,53 @@
             class="pcon__periodo-chip"
             [class.pcon__periodo-chip--on]="periodo() === p.id"
             (click)="setPeriodo(p.id)"
-          >{{ p.label }}</button>
+          >{{ p.label | t }}</button>
         }
       </div>
 
       <!-- AI11 — tiles homologados (mismas métricas que Mi actividad) + licencia -->
       <div class="pcon__cards" [class.pcon__cards--loading]="cargandoPeriodo()">
         <div class="pcon__card">
-          <span class="pcon__label">Rutas completadas</span>
+          <span class="pcon__label">{{ 'Rutas completadas' | t }}</span>
           <span class="pcon__value">{{ periodoStats()?.rutas_completadas ?? 0 }}</span>
         </div>
         <div class="pcon__card">
-          <span class="pcon__label">Conduces realizados</span>
+          <span class="pcon__label">{{ 'Conduces realizados' | t }}</span>
           <span class="pcon__value">{{ periodoStats()?.conduces_realizados ?? 0 }}</span>
         </div>
         <div class="pcon__card">
-          <span class="pcon__label">Galones</span>
+          <span class="pcon__label">{{ 'Galones' | t }}</span>
           <span class="pcon__value">{{ periodoStats()?.galones ?? 0 }}</span>
-          <span class="pcon__sub">GL consumidos</span>
+          <span class="pcon__sub">{{ 'GL consumidos' | t }}</span>
         </div>
         <div class="pcon__card">
-          <span class="pcon__label">Kilómetros</span>
+          <span class="pcon__label">{{ 'Kilómetros' | t }}</span>
           <span class="pcon__value">{{ periodoStats()?.km ?? 0 }}</span>
-          <span class="pcon__sub">KM totales</span>
+          <span class="pcon__sub">{{ 'KM totales' | t }}</span>
         </div>
         <div class="pcon__card">
-          <span class="pcon__label">Inspecciones</span>
+          <span class="pcon__label">{{ 'Inspecciones' | t }}</span>
           <span class="pcon__value">{{ periodoStats()?.inspecciones ?? 0 }}</span>
         </div>
         <div class="pcon__card">
-          <span class="pcon__label">Multas</span>
+          <span class="pcon__label">{{ 'Multas' | t }}</span>
           <span class="pcon__value">{{ periodoStats()?.multas ?? 0 }}</span>
         </div>
         <div class="pcon__card pcon__card--wide">
-          <span class="pcon__label">Licencia</span>
+          <span class="pcon__label">{{ 'Licencia' | t }}</span>
           @if (licEstado() === 'vencida') {
-            <span class="pcon__badge pcon__badge--bad">Vencida</span>
+            <span class="pcon__badge pcon__badge--bad">{{ 'Vencida' | t }}</span>
           } @else if (licEstado() === 'por_vencer') {
-            <span class="pcon__badge pcon__badge--warn">Por vencer</span>
+            <span class="pcon__badge pcon__badge--warn">{{ 'Por vencer' | t }}</span>
           } @else if (licEstado() === 'vigente') {
-            <span class="pcon__badge pcon__badge--ok">Vigente</span>
+            <span class="pcon__badge pcon__badge--ok">{{ 'Vigente' | t }}</span>
           } @else {
             <span class="pcon__value pcon__value--sm">{{ stats()!.estado_licencia || '—' }}</span>
           }
           @if (stats()!.licencia_vencimiento) {
             <span class="pcon__sub">
-              Vence {{ fmtFecha(stats()!.licencia_vencimiento) }}
-              @if (licDias() !== null && licEstado() === 'por_vencer') { · en {{ licDias() }} día(s) }
+              {{ 'Vence' | t }} {{ fmtFecha(stats()!.licencia_vencimiento) }}
+              @if (licDias() !== null && licEstado() === 'por_vencer') { · {{ 'en {n} día(s)' | t: { n: licDias() ?? 0 } }} }
             </span>
           }
         </div>
@@ -106,11 +106,11 @@
       <!-- S32 — Accidentes del conductor -->
       @if (accidentes().length) {
         <section class="pcon__docs">
-          <h2 class="pcon__docs-title">Accidentes ({{ accidentes().length }})</h2>
+          <h2 class="pcon__docs-title">{{ 'Accidentes' | t }} ({{ accidentes().length }})</h2>
           @for (a of accidentes(); track a.id) {
             <div class="pcon__act-row">
-              <span class="pcon__act-main">🚨 {{ a.vehiculo?.placa ?? 'Vehículo' }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
-              <span class="pcon__act-sub">{{ a.fase === 'en_el_momento' ? 'En el momento' : 'Posterior' }}@if (a.lesionados) { · {{ a.lesionados }} lesionado(s) }@if (a.descripcion) { · {{ a.descripcion }} }</span>
+              <span class="pcon__act-main">🚨 {{ a.vehiculo?.placa ?? ('Vehículo' | t) }} · {{ a.fecha ? fmtFecha(a.fecha) : '—' }}</span>
+              <span class="pcon__act-sub">{{ a.fase === 'en_el_momento' ? ('En el momento' | t) : ('Posterior' | t) }}@if (a.lesionados) { · {{ a.lesionados }} {{ 'lesionado(s)' | t }} }@if (a.descripcion) { · {{ a.descripcion }} }</span>
             </div>
           }
         </section>
@@ -119,13 +119,13 @@
       <!-- S32 — Multas del conductor -->
       @if (multas().length) {
         <section class="pcon__docs">
-          <h2 class="pcon__docs-title">Multas ({{ multas().length }})</h2>
+          <h2 class="pcon__docs-title">{{ 'Multas' | t }} ({{ multas().length }})</h2>
           @for (m of multas(); track m.id) {
             <button type="button" class="pcon__act-row pcon__act-row--link" (click)="verMulta(m.id)">
-              <span class="pcon__act-main">🚦 {{ m.motivo ?? 'Multa' }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
+              <span class="pcon__act-main">🚦 {{ m.motivo ?? ('Multa' | t) }} · {{ m.fecha ? fmtFecha(m.fecha) : '—' }}</span>
               <span class="pcon__act-sub">
                 @if (m.monto != null) { RD$ {{ m.monto }} · }
-                <b [class.pcon__pagada]="m.estado === 'pagada'">{{ m.estado === 'pagada' ? 'Pagada' : 'Pendiente' }}</b>
+                <b [class.pcon__pagada]="m.estado === 'pagada'">{{ m.estado === 'pagada' ? ('Pagada' | t) : ('Pendiente' | t) }}</b>
                 ›
               </span>
             </button>
@@ -136,10 +136,10 @@
       <!-- S32 — Entregas/recepciones -->
       @if (entregas().length) {
         <section class="pcon__docs">
-          <h2 class="pcon__docs-title">Entregas y recepciones ({{ entregas().length }})</h2>
+          <h2 class="pcon__docs-title">{{ 'Entregas y recepciones' | t }} ({{ entregas().length }})</h2>
           @for (e of entregas(); track e.id) {
             <div class="pcon__act-row">
-              <span class="pcon__act-main">{{ e.tipo === 'recepcion' ? '📥 Recepción' : '📤 Devolución' }} · {{ e.vehiculo?.placa ?? 'Vehículo' }}</span>
+              <span class="pcon__act-main">{{ e.tipo === 'recepcion' ? '📥' : '📤' }} {{ e.tipo === 'recepcion' ? ('Recepción' | t) : ('Devolución' | t) }} · {{ e.vehiculo?.placa ?? ('Vehículo' | t) }}</span>
               <span class="pcon__act-sub">{{ e.created_at ? fmtFecha(e.created_at) : '—' }}@if (e.km != null) { · {{ e.km }} km }</span>
             </div>
           }
@@ -149,25 +149,25 @@
       <!-- P3 — Documentos: editables (subir/reemplazar por outbox) si tienes
            permiso; solo lectura si no. -->
       <section class="pcon__docs">
-        <h2 class="pcon__docs-title">Documentos</h2>
+        <h2 class="pcon__docs-title">{{ 'Documentos' | t }}</h2>
 
         @if (puedeEditar()) {
           <app-doc-slot
-            label="Cédula"
+            [label]="'Cédula' | t"
             [urlExistente]="cedulas()[0]?.url ?? null"
             [esPdfExistente]="cedulas()[0]?.esPdf ?? false"
             [enCola]="cedulaEnCola()"
             (captured)="onDoc('cedula', $event)"
           />
           <app-doc-slot
-            label="Licencia (frente)"
+            [label]="'Licencia (frente)' | t"
             [urlExistente]="licencias()[0]?.url ?? null"
             [esPdfExistente]="licencias()[0]?.esPdf ?? false"
             [enCola]="licenciaEnCola()"
             (captured)="onDoc('licencia', $event)"
           />
           <app-doc-slot
-            label="Licencia (dorso)"
+            [label]="'Licencia (dorso)' | t"
             [urlExistente]="licencias()[1]?.url ?? null"
             [esPdfExistente]="licencias()[1]?.esPdf ?? false"
             (captured)="onDoc('licencia', $event)"
@@ -188,14 +188,14 @@
               <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
             }
           } @else {
-            <app-doc-slot label="Cédula" [soloLectura]="true" [urlExistente]="null" />
+            <app-doc-slot [label]="'Cédula' | t" [soloLectura]="true" [urlExistente]="null" />
           }
           @if (licencias().length) {
             @for (d of licencias(); track d.label + $index) {
               <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />
             }
           } @else {
-            <app-doc-slot label="Licencia de conducir" [soloLectura]="true" [urlExistente]="null" />
+            <app-doc-slot [label]="'Licencia de conducir' | t" [soloLectura]="true" [urlExistente]="null" />
           }
           @for (d of otros(); track d.label + $index) {
             <app-doc-slot [label]="d.label" [soloLectura]="true" [urlExistente]="d.url" [esPdfExistente]="d.esPdf" />

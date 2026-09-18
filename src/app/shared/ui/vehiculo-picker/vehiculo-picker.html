@@ -4,12 +4,12 @@
     <div class="vpick__chip">
       <span class="vpick__chip-ico">🚚</span>
       <span class="vpick__chip-name">{{ ident(sv) }}</span>
-      <button type="button" class="vpick__chip-cambiar" (click)="abrir()">Cambiar</button>
+      <button type="button" class="vpick__chip-cambiar" (click)="abrir()">{{ 'Cambiar' | t }}</button>
     </div>
   } @else {
     <button type="button" class="vpick__trigger" (click)="abrir()">
       <span class="vpick__chip-ico">🚚</span>
-      <span class="vpick__trigger-ph">Seleccionar vehículo</span>
+      <span class="vpick__trigger-ph">{{ 'Seleccionar vehículo' | t }}</span>
       <span class="vpick__chevron" aria-hidden="true">▾</span>
     </button>
   }
@@ -30,30 +30,30 @@
        / fuera de servicio); esta query solo mira activo + estado. Error + reintento. -->
   <app-empty-state
     icon="⚠️"
-    title="No pudimos cargar los vehículos"
-    message="Hubo un problema al consultar la flota. Revisa tu conexión y reintenta."
-    ctaLabel="Reintentar"
+    [title]="'No pudimos cargar los vehículos' | t"
+    [message]="'Hubo un problema al consultar la flota. Revisa tu conexión y reintenta.' | t"
+    [ctaLabel]="'Reintentar' | t"
     (action)="reintentar()"
   />
 } @else if (sinAsignado()) {
   <!-- AF18 — solo el asignado registra combustible en su vehículo. -->
   <app-empty-state
     icon="🚗"
-    title="No tienes un vehículo asignado"
-    message="Solo puedes registrar combustible en el vehículo que tienes asignado. Si necesitas otro, pídele a Flota que te lo asigne."
+    [title]="'No tienes un vehículo asignado' | t"
+    [message]="'Solo puedes registrar combustible en el vehículo que tienes asignado. Si necesitas otro, pídele a Flota que te lo asigne.' | t"
   />
 } @else if (!disponibles().length) {
   <!-- BL2 — texto HONESTO: la query (activo + estado ≠ baja/no_disponible) NO mira
        asignación ni "en uso", así que no podemos afirmar por qué está vacía. -->
   <app-empty-state
     icon="🚗"
-    title="No hay vehículos para mostrarte"
-    message="Ahora mismo no vemos vehículos disponibles. Vuelve más tarde o consulta con Flota."
+    [title]="'No hay vehículos para mostrarte' | t"
+    [message]="'Ahora mismo no vemos vehículos disponibles. Vuelve más tarde o consulta con Flota.' | t"
   />
 } @else {
   <!-- W4 — "Tus vehículos" primero, luego el resto de la flota. -->
   @if (mios().length) {
-    <h2 class="vpick__group">Tus vehículos</h2>
+    <h2 class="vpick__group">{{ 'Tus vehículos' | t }}</h2>
     @for (v of mios(); track v.vehiculo_id) {
       <button type="button" class="vpick__btn" (click)="elegir(v)">
         <app-vehiculo-card
@@ -68,7 +68,7 @@
           [esPrueba]="v.es_prueba ?? false"
         >
           @if (enUso()[v.vehiculo_id]; as u) {
-            <span class="vpick__enuso">En uso · {{ u }}</span>
+            <span class="vpick__enuso">{{ 'En uso' | t }} · {{ u }}</span>
           }
         </app-vehiculo-card>
       </button>
@@ -76,7 +76,7 @@
   }
   @if (resto().length) {
     @if (mios().length) {
-      <h2 class="vpick__group">Resto de la flota</h2>
+      <h2 class="vpick__group">{{ 'Resto de la flota' | t }}</h2>
     }
     @for (v of resto(); track v.vehiculo_id) {
       <button type="button" class="vpick__btn" (click)="elegir(v)">
@@ -92,7 +92,7 @@
           [esPrueba]="v.es_prueba ?? false"
         >
           @if (enUso()[v.vehiculo_id]; as u) {
-            <span class="vpick__enuso">En uso · {{ u }}</span>
+            <span class="vpick__enuso">{{ 'En uso' | t }} · {{ u }}</span>
           }
         </app-vehiculo-card>
       </button>

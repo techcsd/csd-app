@@ -2,23 +2,23 @@
 <button type="button" class="estado-bar" [style.--tint]="meta().tint" (click)="abrir()">
   <span class="estado-bar__dot">{{ meta().icon }}</span>
   <span class="estado-bar__txt">
-    <span class="estado-bar__label">{{ meta().label }}</span>
+    <span class="estado-bar__label">{{ meta().label | t }}</span>
     @if (estado() === 'otros' && otrosTexto()) {
       <span class="estado-bar__sub">{{ otrosTexto() }}</span>
     } @else if (estado() === 'almuerzo' && countdown()) {
-      <span class="estado-bar__sub">Vuelve en {{ countdown() }}</span>
+      <span class="estado-bar__sub">{{ 'Vuelve en' | t }} {{ countdown() }}</span>
     }
   </span>
-  <span class="estado-bar__cambiar">Cambiar</span>
+  <span class="estado-bar__cambiar">{{ 'Cambiar' | t }}</span>
 </button>
 
-<app-bottom-sheet [open]="sheetOpen()" titulo="¿Cómo estás ahora?" (closed)="cerrar()">
+<app-bottom-sheet [open]="sheetOpen()" [titulo]="'¿Cómo estás ahora?' | t" (closed)="cerrar()">
   @if (!pidiendoOtros()) {
     <div class="estado-opts">
       @for (o of opciones; track o.key) {
         <app-option-button
           [icon]="o.icon"
-          [label]="o.label"
+          [label]="o.label | t"
           [selected]="estado() === o.key"
           (pressed)="elegir(o.key)"
         />
@@ -26,17 +26,17 @@
     </div>
   } @else {
     <div class="estado-otros">
-      <label class="estado-otros__lbl" for="estado-otros-input">¿Qué estás haciendo?</label>
+      <label class="estado-otros__lbl" for="estado-otros-input">{{ '¿Qué estás haciendo?' | t }}</label>
       <input
         id="estado-otros-input"
         class="estado-otros__input"
         type="text"
         maxlength="80"
-        placeholder="Ej. Cargando combustible…"
+        [placeholder]="'Ej. Cargando combustible…' | t"
         [ngModel]="otrosInput()"
         (ngModelChange)="otrosInput.set($event)"
       />
-      <button type="button" class="btn-cta" (click)="confirmarOtros()">Guardar estado</button>
+      <button type="button" class="btn-cta" (click)="confirmarOtros()">{{ 'Guardar estado' | t }}</button>
     </div>
   }
 </app-bottom-sheet>

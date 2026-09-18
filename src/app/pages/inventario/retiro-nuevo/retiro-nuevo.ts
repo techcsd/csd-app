@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
@@ -16,6 +16,9 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
+import { AutosaveService } from '../../../core/services/autosave.service';
+import { BorradorService } from '../../../core/services/borrador.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Proyecto } from '../../../core/models/bitacora.model';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 import { combinarUnidades } from '../../../core/util/unidades';
@@ -38,7 +41,7 @@ const MOTIVOS: { value: RetiroMotivoDano; icon: string }[] = [
   selector: 'app-retiro-nuevo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, ArticuloPicker, QtyInput, OptionButton, ConfirmDialog, Skeleton],
+  imports: [FormsModule, CollapsibleSelect, ArticuloPicker, QtyInput, OptionButton, ConfirmDialog, Skeleton, TranslatePipe],
   templateUrl: './retiro-nuevo.html',
   styleUrl: './retiro-nuevo.scss',
 })
@@ -52,6 +55,13 @@ export class RetiroNuevoPage implements OnDestroy {
   private router = inject(Router);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private autosave = inject(AutosaveService);
+  private borrador = inject(BorradorService);
+
+  // BT4 — borrador (formulario + fotos) para no perder un retiro a medias si la app cierra.
+  private readonly claveBorrador = 'retiro_material';
+  borradorPrevio = signal(false);
+  private hydrated = false;
 
   readonly motivos = MOTIVOS;
   readonly motivoLabel = RETIRO_MOTIVO_LABEL;
@@ -93,7 +103,102 @@ export class RetiroNuevoPage implements OnDestroy {
 
   constructor() {
     void this.init();
+    void this.restoreDraft();
     this.navGuard.register(this.backHandler);
+    // BT4 — autoguardado del formulario (las fotos se guardan al capturarlas).
+    effect(() => {
+      const snap = {
+        proyectoId: this.proyectoId(),
+        items: this.items(),
+        descripcionLibre: this.descripcionLibre(),
+        motivo: this.motivo(),
+        motivoDetalle: this.motivoDetalle(),
+        notas: this.notas(),
+      };
+      if (!this.hydrated || this.submitting() || this.done()) return;
+      if (!this.tieneDatos()) return;
+      this.autosave.queue(this.claveBorrador, snap, {
+        tipo: 'retiro_material',
+        etiqueta: 'Retiro de material',
+        ruta: this.location.path(),
+      });
+    });
+  }
+
+  /** BT4 — recupera el borrador (formulario + fotos) tras un cierre/kill. */
+  private async restoreDraft(): Promise<void> {
+    try {
+      const d = await this.borrador.load<{
+        proyectoId: string;
+        items: RetiroItemCaptura[];
+        descripcionLibre: string;
+        motivo: RetiroMotivoDano | null;
+        motivoDetalle: string;
+        notas: string;
+      }>(this.claveBorrador);
+      if (d) {
+        if (d.proyectoId) this.proyectoId.set(d.proyectoId);
+        this.items.set(d.items ?? []);
+        this.descripcionLibre.set(d.descripcionLibre ?? '');
+        this.motivo.set(d.motivo ?? null);
+        this.motivoDetalle.set(d.motivoDetalle ?? '');
+        this.notas.set(d.notas ?? '');
+      }
+      const fotos = await this.borrador.loadFotos(this.claveBorrador);
+      if (fotos.length) {
+        const orden = [...fotos].sort((a, b) => Number(a.slot) - Number(b.slot));
+        this.fotos.set(orden.map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) })));
+      }
+      if (this.tieneDatos()) this.borradorPrevio.set(true);
+    } catch {
+      /* recuperar el borrador nunca debe impedir abrir la pantalla */
+    } finally {
+      this.hydrated = true;
+    }
+  }
+
+  /** BT4 — re-persiste TODAS las fotos por índice (el array puede reordenarse). */
+  private async persistFotos(): Promise<void> {
+    try {
+      await this.borrador.clearFotos(this.claveBorrador);
+      const fs = this.fotos();
+      for (let i = 0; i < fs.length; i++) await this.borrador.saveFoto(this.claveBorrador, String(i), fs[i].blob);
+      // asegura que exista fila de datos para que "Documentación en proceso" lo liste
+      this.autosave.queue(
+        this.claveBorrador,
+        {
+          proyectoId: this.proyectoId(),
+          items: this.items(),
+          descripcionLibre: this.descripcionLibre(),
+          motivo: this.motivo(),
+          motivoDetalle: this.motivoDetalle(),
+          notas: this.notas(),
+        },
+        { tipo: 'retiro_material', etiqueta: 'Retiro de material', ruta: this.location.path() },
+      );
+    } catch {
+      /* persistir la foto nunca debe romper la captura */
+    }
+  }
+
+  continuarBorrador(): void {
+    this.borradorPrevio.set(false);
+  }
+  descartarBorrador(): void {
+    this.toast.withAction('¿Descartar el borrador sin enviar?', {
+      label: 'Descartar',
+      run: () => {
+        for (const f of this.fotos()) URL.revokeObjectURL(f.previewUrl);
+        void this.autosave.discard(this.claveBorrador);
+        this.items.set([]);
+        this.fotos.set([]);
+        this.motivo.set(null);
+        this.motivoDetalle.set('');
+        this.notas.set('');
+        this.descripcionLibre.set('');
+        this.borradorPrevio.set(false);
+      },
+    });
   }
 
   private async init(): Promise<void> {
@@ -157,7 +262,10 @@ export class RetiroNuevoPage implements OnDestroy {
     this.capturing.set(true);
     try {
       const photo = await this.camera.takePhoto();
-      if (photo) this.fotos.update((f) => [...f, photo]);
+      if (photo) {
+        this.fotos.update((f) => [...f, photo]);
+        void this.persistFotos();
+      }
     } finally {
       this.capturing.set(false);
     }
@@ -167,7 +275,10 @@ export class RetiroNuevoPage implements OnDestroy {
     this.capturing.set(true);
     try {
       const photos = await this.camera.pickFromGallery();
-      if (photos.length) this.fotos.update((f) => [...f, ...photos]);
+      if (photos.length) {
+        this.fotos.update((f) => [...f, ...photos]);
+        void this.persistFotos();
+      }
     } finally {
       this.capturing.set(false);
     }
@@ -176,6 +287,7 @@ export class RetiroNuevoPage implements OnDestroy {
     const f = this.fotos()[i];
     if (f) URL.revokeObjectURL(f.previewUrl);
     this.fotos.update((l) => l.filter((_, idx) => idx !== i));
+    void this.persistFotos();
   }
 
   // ── Envío ────────────────────────────────────────────────────────────────
@@ -231,6 +343,7 @@ export class RetiroNuevoPage implements OnDestroy {
         fotos: this.fotos().map((f) => f.blob),
         esPrueba: this.ctx.esPrueba(),
       });
+      void this.autosave.discard(this.claveBorrador); // BT4 — enviado OK: limpia borrador+fotos
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el retiro.');
@@ -248,6 +361,9 @@ export class RetiroNuevoPage implements OnDestroy {
     else this.back();
   }
   confirmarSalir(): void {
+    // BT4 — abandono deliberado: borra el borrador (un crash no llama aquí → sí se recupera).
+    for (const f of this.fotos()) URL.revokeObjectURL(f.previewUrl);
+    void this.autosave.discard(this.claveBorrador);
     this.confirmSalir.set(false);
     this.back();
   }

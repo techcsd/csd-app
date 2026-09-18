@@ -5,6 +5,8 @@ import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBadge } from '../../shared/ui/sync-badge/sync-badge';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { SyncService, OutboxFixActivo } from '../../core/sync/sync.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ConducesService } from '../../core/services/conduces.service';
@@ -36,7 +38,7 @@ type OutboxItem = OutboxOp & { fotos: number };
   selector: 'app-pendientes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBadge, ConfirmDialog],
+  imports: [Skeleton, EmptyState, SyncBadge, ConfirmDialog, TranslatePipe],
   templateUrl: './pendientes.html',
   styleUrl: './pendientes.scss',
 })
@@ -49,6 +51,7 @@ export class PendientesPage {
   private toast = inject(ToastService);
   private combustibleAviso = inject(CombustibleAvisoService);
   private ctx = inject(UserContextService);
+  private i18n = inject(I18nService);
   // BS2 — el detalle CRUDO (SQLSTATE 🩺, mensaje sin traducir) es SOLO para el
   // desarrollador (espejo de es_desarrollador()); el trabajador de campo ve la copia
   // amable de 'sistema' (MENSAJE_SISTEMA) sin jerga de BD.
@@ -125,7 +128,7 @@ export class PendientesPage {
     if (!ids.length || this.reintentandoFix()) return;
     this.reintentandoFix.set(true);
     void this.sync.retryVarios(ids).finally(() => this.reintentandoFix.set(false));
-    this.toast.show('Reintentando tus pendientes con la corrección…', 'info');
+    this.toast.show(this.i18n.t('Reintentando tus pendientes con la corrección…'), 'info');
   }
 
   hayReintentables(): boolean {
@@ -202,7 +205,7 @@ export class PendientesPage {
     const salidaId = (item.payload as Record<string, unknown> | null)?.['salida_id'] as string | undefined;
     if (!salidaId || this.recordandoId()) return;
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para recordarle al despachante.');
+      this.toast.error(this.i18n.t('Necesitas conexión para recordarle al despachante.'));
       return;
     }
     this.recordandoId.set(item.id);
@@ -210,13 +213,13 @@ export class PendientesPage {
       const nombre = await this.conduces.recordarDespachante(salidaId);
       if (nombre === null) {
         // Ya firmó → reintenta el envío ahora.
-        this.toast.success('El despachante ya firmó. Reintentando el envío…');
+        this.toast.success(this.i18n.t('El despachante ya firmó. Reintentando el envío…'));
         void this.sync.retry(item.id);
       } else {
-        this.toast.success(`Se le recordó a ${nombre}. Reintenta el envío cuando firme.`);
+        this.toast.success(this.i18n.t('Se le recordó a {nombre}. Reintenta el envío cuando firme.', { nombre }));
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el recordatorio.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el recordatorio.'));
     } finally {
       this.recordandoId.set(null);
     }
@@ -230,18 +233,18 @@ export class PendientesPage {
   async avisarLogistica(item: OutboxItem): Promise<void> {
     if (this.avisandoId()) return;
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para avisarle a Logística.');
+      this.toast.error(this.i18n.t('Necesitas conexión para avisarle a Logística.'));
       return;
     }
     this.avisandoId.set(item.id);
     try {
       await this.combustibleAviso.avisarRevision(item);
-      this.toast.success('Logística (Raykler) recibió el aviso. Podrá registrar la echada por ti.');
+      this.toast.success(this.i18n.t('Logística (Raykler) recibió el aviso. Podrá registrar la echada por ti.'));
     } catch (e) {
       this.toast.error(
         e instanceof Error && e.message
           ? e.message
-          : 'No se pudo avisar automáticamente. Coméntale a Logística que registre esta echada.',
+          : this.i18n.t('No se pudo avisar automáticamente. Coméntale a Logística que registre esta echada.'),
       );
     } finally {
       this.avisandoId.set(null);

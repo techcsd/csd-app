@@ -29,13 +29,15 @@ import { CapturedDoc } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha, formatFechaMedia, formatFechaHumana, formatFechaCortaHora } from '../../../core/util/fecha';
 import { traducir } from '../../../core/util/dominio-labels';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** Read-only driver profile: my flota activity/telemetry (R5) + docs (X1). */
 @Component({
   selector: 'app-mi-actividad',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DocSlot, LiveRefreshDirective, CedulaPipe],
+  imports: [Skeleton, EmptyState, DocSlot, LiveRefreshDirective, CedulaPipe, TranslatePipe],
   templateUrl: './mi-actividad.html',
   styleUrl: './mi-actividad.scss',
 })
@@ -54,6 +56,7 @@ export class MiActividadPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   /** AD7 — meta de un estado de rendimiento para pintar el chip. */
   rendMeta(estado: RendimientoEstado | null | undefined): RendimientoEstadoMeta | null {
@@ -178,8 +181,8 @@ export class MiActividadPage {
   /** Banner: documentos solicitados que aún faltan (ni cargados ni en cola). */
   pendientes = computed(() => {
     const p: string[] = [];
-    if (!this.cedulaDoc() && !this.cedulaEnCola()) p.push('cédula');
-    if (!this.licenciaDoc() && !this.licenciaEnCola()) p.push('licencia');
+    if (!this.cedulaDoc() && !this.cedulaEnCola()) p.push(this.i18n.t('cédula'));
+    if (!this.licenciaDoc() && !this.licenciaEnCola()) p.push(this.i18n.t('licencia'));
     return p;
   });
 
@@ -284,7 +287,7 @@ export class MiActividadPage {
 
   /** Etiqueta legible del veredicto de un checklist. */
   resultadoLabel(r: string | null): string {
-    return r === 'bloqueado' ? '⛔ Bloqueado' : r === 'con_hallazgos' ? '⚠ Con hallazgos' : '✓ Aprobado';
+    return r === 'bloqueado' ? '⛔ ' + this.i18n.t('Bloqueado') : r === 'con_hallazgos' ? '⚠ ' + this.i18n.t('Con hallazgos') : '✓ ' + this.i18n.t('Aprobado');
   }
 
   /** V2 (follow-up) — abrir el detalle de un checklist / echada. */
@@ -322,9 +325,9 @@ export class MiActividadPage {
     try {
       await this.documentos.enqueueDocumento({ entidad: 'conductor', entidadId: id, tipo, doc });
       this.colaTipos.update((t) => (t.includes(tipo) ? t : [...t, tipo]));
-      this.toast.success('Documento guardado. Se subirá cuando haya conexión.');
+      this.toast.success(this.i18n.t('Documento guardado. Se subirá cuando haya conexión.'));
     } catch {
-      this.toast.error('No se pudo guardar el documento.');
+      this.toast.error(this.i18n.t('No se pudo guardar el documento.'));
     }
   }
 

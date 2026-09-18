@@ -2,7 +2,7 @@
   <header class="clog__header">
     <button type="button" class="clog__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="clog__icon">⛽</span>
-    <h1 class="clog__title">Registro de echadas</h1>
+    <h1 class="clog__title">{{ 'Registro de echadas' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -10,15 +10,15 @@
       <!-- QA-25 — backstop de rol en cliente (además del RPC gateado) -->
       <app-empty-state
         icon="🔒"
-        title="Solo para jefe de flota"
-        message="El registro de echadas está disponible para jefe de flota, administración y tecnología."
+        [title]="'Solo para jefe de flota' | t"
+        [message]="'El registro de echadas está disponible para jefe de flota, administración y tecnología.' | t"
       />
     } @else {
     <!-- AQ13 — filtros rápidos de periodo -->
     <div class="clog__chips">
       @for (p of periodos; track p.id) {
         <button type="button" class="clog__chip-p" [class.clog__chip-p--on]="periodo() === p.id" (click)="setPeriodo(p)">
-          {{ p.label }}
+          {{ p.label | t }}
         </button>
       }
     </div>
@@ -26,19 +26,19 @@
     <!-- Filtros: rango de fecha + búsqueda -->
     <div class="clog__filtros">
       <label class="clog__field">
-        <span>Desde</span>
+        <span>{{ 'Desde' | t }}</span>
         <input type="date" [ngModel]="desde()" (ngModelChange)="desde.set($event); periodo.set('')" />
       </label>
       <label class="clog__field">
-        <span>Hasta</span>
+        <span>{{ 'Hasta' | t }}</span>
         <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event); periodo.set('')" />
       </label>
-      <button type="button" class="btn-cta clog__aplicar" (click)="load()">Aplicar</button>
+      <button type="button" class="btn-cta clog__aplicar" (click)="load()">{{ 'Aplicar' | t }}</button>
     </div>
     <input
       class="clog__buscar"
       type="search"
-      placeholder="Buscar por placa, chofer o quién registró…"
+      [placeholder]="'Buscar por placa, chofer o quién registró…' | t"
       [ngModel]="q()"
       (ngModelChange)="q.set($event); resetPag()"
     />
@@ -47,12 +47,12 @@
       <app-skeleton [rows]="6" />
     } @else {
       @if (rows().length && sospechosas()) {
-        <p class="clog__resumen">⚠️ {{ sospechosas() }} echada(s) con salto o consumo sospechoso.</p>
+        <p class="clog__resumen">⚠️ {{ '{n} echada(s) con salto o consumo sospechoso.' | t: { n: sospechosas() } }}</p>
       }
       @for (r of visibles(); track r.id) {
         <button type="button" class="clog__row" [class.clog__row--alerta]="esSospechosa(r)" (click)="abrir(r)">
           <div class="clog__row-top">
-            <span class="clog__placa">{{ r.placa || 'Persona' }}</span>
+            <span class="clog__placa">{{ r.placa || ('Persona' | t) }}</span>
             <span class="clog__fecha">{{ fechaHora(r.created_at || r.fecha) }} ›</span>
           </div>
           <div class="clog__row-km">
@@ -69,21 +69,21 @@
           </div>
           <div class="clog__row-meta">
             @if (r.producto) { <span class="clog__chip">{{ r.producto }}{{ r.subtipo ? ' · ' + r.subtipo : '' }}</span> }
-            @if (r.km_alerta) { <span class="clog__chip clog__chip--alerta">Salto de km</span> }
-            @if (r.alerta_consumo) { <span class="clog__chip clog__chip--alerta">Consumo anormal</span> }
-            <span class="clog__quien">Registró: {{ r.registrado_nombre || '—' }}</span>
+            @if (r.km_alerta) { <span class="clog__chip clog__chip--alerta">{{ 'Salto de km' | t }}</span> }
+            @if (r.alerta_consumo) { <span class="clog__chip clog__chip--alerta">{{ 'Consumo anormal' | t }}</span> }
+            <span class="clog__quien">{{ 'Registró:' | t }} {{ r.registrado_nombre || '—' }}</span>
           </div>
         </button>
       } @empty {
         <app-empty-state
           icon="⛽"
-          title="Sin echadas en este rango"
-          message="No hay registros de combustible para las fechas seleccionadas."
+          [title]="'Sin echadas en este rango' | t"
+          [message]="'No hay registros de combustible para las fechas seleccionadas.' | t"
         />
       }
       @if (hayMas()) {
         <button type="button" class="btn-ghost clog__mas" (click)="cargarMas()">
-          Cargar más ({{ filtradas().length - visibleCount() }} restantes)
+          {{ 'Cargar más ({n} restantes)' | t: { n: filtradas().length - visibleCount() } }}
         </button>
       }
     }

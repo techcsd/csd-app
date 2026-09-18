@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import SignaturePadLib from 'signature_pad';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * On-screen signature capture (driver hand-off, delivery receiver).
@@ -18,6 +19,7 @@ import SignaturePadLib from 'signature_pad';
   selector: 'app-signature-pad',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './signature-pad.html',
   styleUrl: './signature-pad.scss',
 })

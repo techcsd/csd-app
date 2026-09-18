@@ -5,6 +5,7 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { BorradorService } from '../../core/services/borrador.service';
 import { AutosaveService } from '../../core/services/autosave.service';
 import { SyncService } from '../../core/sync/sync.service';
@@ -42,6 +43,7 @@ export class EnProcesoPage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private combustibleAviso = inject(CombustibleAvisoService);
+  private i18n = inject(I18nService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
@@ -138,11 +140,11 @@ export class EnProcesoPage {
   /** BR6 — reintentar este envío ahora (sin ir a Pendientes). */
   reintentarEnvio(e: EnProcesoItem): void {
     if (!this.online()) {
-      this.toast.error('Sin señal ahora mismo. Se reintentará solo cuando vuelva.');
+      this.toast.error(this.i18n.t('Sin señal ahora mismo. Se reintentará solo cuando vuelva.'));
       return;
     }
     void this.sync.retry(e.id);
-    this.toast.show('Reintentando el envío…', 'info');
+    this.toast.show(this.i18n.t('Reintentando el envío…'), 'info');
   }
 
   pedirDescartarEnvio(e: EnProcesoItem): void {
@@ -165,20 +167,20 @@ export class EnProcesoPage {
   async avisarLogistica(e: EnProcesoItem): Promise<void> {
     if (!e.op || this.avisandoId()) return;
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para avisarle a Logística.');
+      this.toast.error(this.i18n.t('Necesitas conexión para avisarle a Logística.'));
       return;
     }
     this.avisandoId.set(e.id);
     try {
       await this.combustibleAviso.avisarRevision(e.op);
-      this.toast.success('Logística (Raykler) recibió el aviso. Podrá registrar la echada por ti.');
+      this.toast.success(this.i18n.t('Logística (Raykler) recibió el aviso. Podrá registrar la echada por ti.'));
     } catch (err) {
       // Capability check: si el RPC del padre aún no está desplegado, no rompemos —
       // le decimos al chofer qué hacer (mensaje honesto).
       this.toast.error(
         err instanceof Error && err.message
           ? err.message
-          : 'No se pudo avisar automáticamente. Coméntale a Logística que registre esta echada.',
+          : this.i18n.t('No se pudo avisar automáticamente. Coméntale a Logística que registre esta echada.'),
       );
     } finally {
       this.avisandoId.set(null);

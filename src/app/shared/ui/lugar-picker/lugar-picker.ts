@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { LugaresService, LugarSistema } from '../../../core/services/lugares.service';
 import { GeocodingService, LinkResolveError } from '../../../core/services/geocoding.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * BA/Transporte v3 (FASE 3) — lugar seleccionado. Forma normalizada que consume
@@ -39,7 +41,7 @@ interface Resultado {
   selector: 'app-lugar-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   templateUrl: './lugar-picker.html',
   styleUrl: './lugar-picker.scss',
 })
@@ -47,6 +49,7 @@ export class LugarPicker {
   private lugares = inject(LugaresService);
   private geo = inject(GeocodingService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   label = input<string>('Lugar');
   placeholder = input<string>('Buscar obra, almacén o lugar…');
@@ -130,7 +133,7 @@ export class LugarPicker {
       }));
       this.resultados.set([...rSistema, ...rMapa]);
     } catch {
-      if (seq === this.busquedaSeq) this.errorBusqueda.set('No se pudo buscar. Usa el link o «Otros».');
+      if (seq === this.busquedaSeq) this.errorBusqueda.set(this.i18n.t('No se pudo buscar. Usa el link o «Otros».'));
     } finally {
       if (seq === this.busquedaSeq) this.buscando.set(false);
     }
@@ -162,7 +165,7 @@ export class LugarPicker {
     this.errorLink.set('');
     try {
       const r = await this.geo.resolverLink(entrada);
-      this.aplicar({ tipo: 'coord', nombre: r.direccion || 'Ubicación del link', lat: r.lat, lng: r.lng });
+      this.aplicar({ tipo: 'coord', nombre: r.direccion || this.i18n.t('Ubicación del link'), lat: r.lat, lng: r.lng });
       // BK2 — si la edge sacó el link de un mensaje completo (WhatsApp), decirlo.
       if (r.note) this.toast.success(r.note);
     } catch (e) {
@@ -172,7 +175,7 @@ export class LugarPicker {
         this.modoLink.set(false);
         this.onBuscar(err.suggestQuery);
       }
-      this.errorLink.set(err.message || 'No se pudo resolver el link. Prueba «Otros».');
+      this.errorLink.set(err.message || this.i18n.t('No se pudo resolver el link. Prueba «Otros».'));
     } finally {
       this.resolviendoLink.set(false);
     }

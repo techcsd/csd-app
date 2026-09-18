@@ -4,6 +4,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CronogramaService } from '../../../core/services/cronograma.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import {
   parseCronogramaXlsx,
   actividadToTareaRpc,
@@ -21,6 +23,7 @@ import {
   selector: 'app-cronograma-importar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './cronograma-importar.html',
   styleUrl: './cronograma-importar.scss',
 })
@@ -31,6 +34,7 @@ export class CronogramaImportarPage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private proyectoId = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -56,9 +60,9 @@ export class CronogramaImportarPage {
     this.done.set(null);
     if (!/\.xlsx$/i.test(file.name)) {
       if (/\.mpp$/i.test(file.name)) {
-        this.toast.error('Los archivos .mpp (MS Project) aún no se pueden leer. Expórtalo a Excel (.xlsx) e impórtalo.');
+        this.toast.error(this.i18n.t('Los archivos .mpp (MS Project) aún no se pueden leer. Expórtalo a Excel (.xlsx) e impórtalo.'));
       } else {
-        this.toast.error('Elige un archivo Excel (.xlsx).');
+        this.toast.error(this.i18n.t('Elige un archivo Excel (.xlsx).'));
       }
       return;
     }
@@ -68,10 +72,10 @@ export class CronogramaImportarPage {
       const preview = parseCronogramaXlsx(buf);
       this.preview.set(preview);
       if (!preview.actividades.length) {
-        this.toast.error('No se detectaron actividades en el Excel.');
+        this.toast.error(this.i18n.t('No se detectaron actividades en el Excel.'));
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo leer el Excel.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo leer el Excel.'));
     } finally {
       this.parseando.set(false);
       input.value = ''; // permitir re-seleccionar el mismo archivo
@@ -82,7 +86,7 @@ export class CronogramaImportarPage {
     const p = this.preview();
     if (!p || !p.actividades.length || this.importando()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para importar el cronograma.');
+      this.toast.error(this.i18n.t('Necesitas conexión para importar el cronograma.'));
       return;
     }
     this.importando.set(true);
@@ -90,9 +94,9 @@ export class CronogramaImportarPage {
       const tareas = p.actividades.map(actividadToTareaRpc);
       const r = await this.cronograma.importar(this.proyectoId, p.faseNombre, tareas, this.reemplazar());
       this.done.set(r);
-      this.toast.success(`Cronograma importado: ${r.creadas} actividad(es).`);
+      this.toast.success(this.i18n.t('Cronograma importado: {n} actividad(es).', { n: r.creadas }));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo importar el cronograma.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo importar el cronograma.'));
     } finally {
       this.importando.set(false);
     }

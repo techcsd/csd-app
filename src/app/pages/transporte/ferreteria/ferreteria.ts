@@ -16,6 +16,8 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/models/inventario.model';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AD6 — Compra/retiro en ferretería (chofer, dentro de Transporte). Registra el
@@ -27,7 +29,7 @@ import { ArticuloCat, Bodega, CartLinea, CategoriaInv } from '../../../core/mode
   selector: 'app-ferreteria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, PhotoSlot, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, QtyInput],
+  imports: [FormsModule, CollapsibleSelect, PhotoSlot, WizardFooter, ArticuloPicker, ConfirmDialog, BigConfirm, QtyInput, TranslatePipe],
   templateUrl: './ferreteria.html',
   styleUrl: './ferreteria.scss',
 })
@@ -40,6 +42,7 @@ export class FerreteriaPage implements OnDestroy {
   private router = inject(Router);
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   hoja = signal<'form' | 'exito'>('form');
   loading = signal(true);
@@ -140,11 +143,11 @@ export class FerreteriaPage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
-      this.toast.error('Elige el almacén destino.');
+      this.toast.error(this.i18n.t('Elige el almacén destino.'));
       return;
     }
     if (this.faltaFoto()) {
-      this.toast.error('Toma la foto del recibo antes de registrar.');
+      this.toast.error(this.i18n.t('Toma la foto del recibo antes de registrar.'));
       return;
     }
     this.submitting.set(true);
@@ -163,7 +166,7 @@ export class FerreteriaPage implements OnDestroy {
       });
       this.hoja.set('exito');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la compra.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar la compra.'));
     } finally {
       this.submitting.set(false);
     }

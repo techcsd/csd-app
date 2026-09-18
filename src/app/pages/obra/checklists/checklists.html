@@ -1,18 +1,18 @@
 <div class="screen cl">
-  <app-wizard-exit [title]="plantillaSel()?.nombre || 'Checklists de calidad'" (exit)="pedirSalir()" />
+  <app-wizard-exit [title]="plantillaSel()?.nombre || ('Checklists de calidad' | t)" (exit)="pedirSalir()" />
 
   @if (done()) {
     <app-big-confirm
-      [title]="hallazgos() ? 'Checklist con ' + hallazgos() + ' hallazgo(s)' : 'Checklist completado'"
-      [note]="network.online() ? 'Guardado.' : 'Guardado. Se enviará cuando tengas señal.'"
+      [title]="hallazgos() ? ('Checklist con {n} hallazgo(s)' | t:{ n: hallazgos() }) : ('Checklist completado' | t)"
+      [note]="network.online() ? ('Guardado.' | t) : ('Guardado. Se enviará cuando tengas señal.' | t)"
       [tone]="hallazgos() ? 'pending' : 'done'"
-      buttonLabel="Listo"
+      [buttonLabel]="'Listo' | t"
       (dismissed)="cerrar()"
     />
     @if (hallazgos()) {
       <div class="cl__hallazgo">
-        <p>Se encontraron {{ hallazgos() }} ítem(s) que no cumplen. ¿Levantar una no conformidad?</p>
-        <button type="button" class="btn-cta" (click)="levantarNc()">⚠️ Levantar no conformidad</button>
+        <p>{{ 'Se encontraron {n} ítem(s) que no cumplen. ¿Levantar una no conformidad?' | t:{ n: hallazgos() } }}</p>
+        <button type="button" class="btn-cta" (click)="levantarNc()">⚠️ {{ 'Levantar no conformidad' | t }}</button>
       </div>
     }
   } @else {
@@ -21,7 +21,7 @@
         <app-skeleton [rows]="4" />
       } @else if (!plantillaSel()) {
         <!-- Selección de plantilla -->
-        <h2 class="cl__section">Elige la actividad</h2>
+        <h2 class="cl__section">{{ 'Elige la actividad' | t }}</h2>
         @for (p of plantillas(); track p.id) {
           <button type="button" class="cl__pick" (click)="elegir(p)">
             <span class="cl__pick-nombre">{{ p.nombre }}</span>
@@ -37,34 +37,34 @@
             }
             <div class="cl__item-etq">{{ it.etiqueta }}</div>
             <div class="cl__item-opts">
-              <app-option-button label="Sí" tone="success" [selected]="cumpleDe(i) === 'si'" (pressed)="setCumple(i, 'si')" />
-              <app-option-button label="No" tone="error" [selected]="cumpleDe(i) === 'no'" (pressed)="setCumple(i, 'no')" />
-              <app-option-button label="N/A" [selected]="cumpleDe(i) === 'na'" (pressed)="setCumple(i, 'na')" />
+              <app-option-button [label]="'Sí' | t" tone="success" [selected]="cumpleDe(i) === 'si'" (pressed)="setCumple(i, 'si')" />
+              <app-option-button [label]="'No' | t" tone="error" [selected]="cumpleDe(i) === 'no'" (pressed)="setCumple(i, 'no')" />
+              <app-option-button [label]="'N/A' | t" [selected]="cumpleDe(i) === 'na'" (pressed)="setCumple(i, 'na')" />
             </div>
             @if (cumpleDe(i) === 'no') {
-              <input class="field cl__item-com" type="text" placeholder="¿Qué falló?"
+              <input class="field cl__item-com" type="text" [placeholder]="'¿Qué falló?' | t"
                 [ngModel]="respuestas()[i]?.comentario ?? ''" (ngModelChange)="setComentario(i, $event)" />
             }
           </div>
         }
 
-        <label class="field-label cl__mt">Observaciones (opcional)</label>
+        <label class="field-label cl__mt">{{ 'Observaciones (opcional)' | t }}</label>
         <textarea class="field" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)"
-          placeholder="Notas generales…"></textarea>
+          [placeholder]="'Notas generales…' | t"></textarea>
 
-        <label class="field-label cl__mt">Fotos (opcional)</label>
+        <label class="field-label cl__mt">{{ 'Fotos (opcional)' | t }}</label>
         <div class="cl__fotos">
           @for (i of slots; track i) {
-            <app-photo-slot [label]="'Foto ' + (i + 1)" hint="📷" [gallery]="false"
+            <app-photo-slot [label]="('Foto' | t) + ' ' + (i + 1)" hint="📷" [gallery]="false"
               [foto]="fotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />
           }
         </div>
 
         <button type="button" class="btn-cta cl__guardar" [disabled]="!completo() || submitting()" (click)="guardar()">
-          {{ submitting() ? 'Guardando…' : 'Guardar checklist' }}
+          {{ submitting() ? ('Guardando…' | t) : ('Guardar checklist' | t) }}
         </button>
         @if (!completo()) {
-          <p class="cl__hint">Responde todos los ítems (Sí / No / N/A).</p>
+          <p class="cl__hint">{{ 'Responde todos los ítems (Sí / No / N/A).' | t }}</p>
         }
       }
     </div>
@@ -72,10 +72,10 @@
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir del checklist?"
-    message="Tu borrador queda guardado; puedes continuarlo luego."
-    confirmLabel="Salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir del checklist?' | t"
+    [message]="'Tu borrador queda guardado; puedes continuarlo luego.' | t"
+    [confirmLabel]="'Salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     (confirmed)="volverLista()"
     (cancelled)="cancelarSalir()"
   />

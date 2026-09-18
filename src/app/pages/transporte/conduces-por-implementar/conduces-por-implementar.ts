@@ -8,6 +8,8 @@ import { ConducesService, ConducePorImplementar } from '../../../core/services/c
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * AY13 — "Conduces por implementar": conduces con ≥1 ítem libre aún SIN vincular a
@@ -19,7 +21,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-conduces-por-implementar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, LiveRefreshDirective],
+  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
   templateUrl: './conduces-por-implementar.html',
   styleUrl: './conduces-por-implementar.scss',
 })
@@ -28,6 +30,7 @@ export class ConducesPorImplementarPage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
 
@@ -45,7 +48,7 @@ export class ConducesPorImplementarPage {
     try {
       this.conduces_.set(await this.conduces.conducesPorImplementar());
     } catch {
-      this.toast.error('No pudimos cargar los conduces por implementar.');
+      this.toast.error(this.i18n.t('No pudimos cargar los conduces por implementar.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);

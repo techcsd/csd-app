@@ -1,17 +1,17 @@
 <div class="screen pin-screen">
   <header class="pin-screen__header">
-    <button type="button" class="pin-screen__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="pin-screen__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
   </header>
   <div class="pin-screen__body">
     <h1 class="pin-screen__title">
-      {{ step() === 'actual' ? 'Bloqueo actual de la app' : step() === 'nuevo' ? 'Nuevo bloqueo de la app' : 'Repite el nuevo bloqueo' }}
+      {{ (step() === 'actual' ? 'Bloqueo actual de la app' : step() === 'nuevo' ? 'Nuevo bloqueo de la app' : 'Repite el nuevo bloqueo') | t }}
     </h1>
     <p class="pin-screen__hint">
-      {{ step() === 'actual'
+      {{ (step() === 'actual'
         ? 'Escribe el bloqueo actual (los 4 números que abren la app en este teléfono) para confirmar que eres tú.'
         : step() === 'nuevo'
           ? 'Elige 4 números nuevos para desbloquear la app en este teléfono.'
-          : 'Escríbelo otra vez para confirmar.' }}
+          : 'Escríbelo otra vez para confirmar.') | t }}
     </p>
     <app-pin-pad [(value)]="value" (completed)="onCompleted($event)" />
   </div>

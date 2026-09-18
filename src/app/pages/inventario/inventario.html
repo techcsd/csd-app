@@ -2,47 +2,47 @@
   <header class="inv-header">
     <button type="button" class="inv-header__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="inv-header__icon">📦</span>
-    <h1 class="inv-header__title">Inventario</h1>
+    <h1 class="inv-header__title">{{ 'Inventario' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <!-- AS20 — catálogo global de artículos (buscar, ver detalle + stock por almacén) -->
     <button type="button" class="inv-action" (click)="go('/inventario/catalogo')">
       <span class="inv-action__icon">📋</span>
-      <span class="inv-action__label">Catálogo de artículos</span>
+      <span class="inv-action__label">{{ 'Catálogo de artículos' | t }}</span>
     </button>
     <button type="button" class="inv-action" (click)="go('/inventario/existencias')">
       <span class="inv-action__icon">🔎</span>
-      <span class="inv-action__label">Ver existencias</span>
+      <span class="inv-action__label">{{ 'Ver existencias' | t }}</span>
     </button>
     <!-- AP2 — inventario por almacén con histórico (kardex) por artículo -->
     <button type="button" class="inv-action" (click)="go('/inventario/almacen')">
       <span class="inv-action__icon">🏭</span>
-      <span class="inv-action__label">Inventario por almacén</span>
+      <span class="inv-action__label">{{ 'Inventario por almacén' | t }}</span>
     </button>
     <button type="button" class="inv-action inv-action--out" (click)="go('/inventario/salida')">
       <span class="inv-action__icon">➖</span>
-      <span class="inv-action__label">Registrar salida</span>
+      <span class="inv-action__label">{{ 'Registrar salida' | t }}</span>
     </button>
     <button type="button" class="inv-action inv-action--in" (click)="go('/inventario/entrada')">
       <span class="inv-action__icon">➕</span>
-      <span class="inv-action__label">Registrar entrada</span>
+      <span class="inv-action__label">{{ 'Registrar entrada' | t }}</span>
     </button>
     <button type="button" class="inv-action" (click)="go('/inventario/recibir')">
       <span class="inv-action__icon">📥</span>
-      <span class="inv-action__label">Recibir conduce</span>
+      <span class="inv-action__label">{{ 'Recibir conduce' | t }}</span>
     </button>
     <button type="button" class="inv-action" (click)="go('/inventario/conteo')">
       <span class="inv-action__icon">🔢</span>
-      <span class="inv-action__label">Conteo rápido</span>
+      <span class="inv-action__label">{{ 'Conteo rápido' | t }}</span>
     </button>
     <button type="button" class="inv-action" (click)="go('/inventario/conteos')">
       <span class="inv-action__icon">📊</span>
-      <span class="inv-action__label">Conteo y ajustes</span>
+      <span class="inv-action__label">{{ 'Conteo y ajustes' | t }}</span>
     </button>
     <button type="button" class="inv-action" (click)="go('/inventario/almacenes')">
       <span class="inv-action__icon">🏬</span>
-      <span class="inv-action__label">Gestionar almacenes</span>
+      <span class="inv-action__label">{{ 'Gestionar almacenes' | t }}</span>
     </button>
   </div>
 

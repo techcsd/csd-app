@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService, Kardex, KardexMovimiento } from '../../../core/services/inventario.service';
 
 type TipoFiltro = 'todos' | 'entrada' | 'salida' | 'ajuste';
@@ -25,7 +27,7 @@ interface PuntoCurva {
   selector: 'app-kardex',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, LiveRefreshDirective],
+  imports: [Skeleton, FormsModule, DecimalPipe, LiveRefreshDirective, TranslatePipe],
   templateUrl: './kardex.html',
   styleUrl: './kardex.scss',
 })
@@ -34,6 +36,7 @@ export class KardexPage {
   private location = inject(Location);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private i18n = inject(I18nService);
 
   private bodegaId = this.route.snapshot.paramMap.get('bodegaId') ?? '';
   private articuloId = this.route.snapshot.paramMap.get('articuloId') ?? '';
@@ -160,7 +163,7 @@ export class KardexPage {
   }
 
   movLabel(m: KardexMovimiento): string {
-    return m.mov === 'entrada' ? 'Entrada' : m.mov === 'salida' ? 'Salida' : 'Ajuste';
+    return m.mov === 'entrada' ? this.i18n.t('Entrada') : m.mov === 'salida' ? this.i18n.t('Salida') : this.i18n.t('Ajuste');
   }
 
   /** Fecha + hora en 12h (RD) para las filas. */

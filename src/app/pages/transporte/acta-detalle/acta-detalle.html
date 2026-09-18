@@ -2,7 +2,7 @@
   <header class="acta__header">
     <button type="button" class="acta__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="acta__icon">🚗</span>
-    <h1 class="acta__title">Acta de recepción</h1>
+    <h1 class="acta__title">{{ 'Acta de recepción' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -12,12 +12,12 @@
       <!-- Vehículo -->
       <div class="acta__card">
         <div class="acta__veh">
-          <span class="acta__placa">{{ a.placa || 'Vehículo' }}</span>
+          <span class="acta__placa">{{ a.placa || ('Vehículo' | t) }}</span>
           @if (marcaModelo()) { <span class="acta__marca">{{ marcaModelo() }}</span> }
         </div>
         <div class="acta__lineas">
-          <p>📤 Dejó: <strong>{{ a.de?.nombre || '—' }}</strong></p>
-          <p>📥 Recibió: <strong>{{ a.a?.nombre || '—' }}</strong></p>
+          <p>📤 {{ 'Dejó:' | t }} <strong>{{ a.de?.nombre || '—' }}</strong></p>
+          <p>📥 {{ 'Recibió:' | t }} <strong>{{ a.a?.nombre || '—' }}</strong></p>
           @if (a.km != null) { <p>🧭 {{ a.km | number: '1.0-0' }} km</p> }
           <p>🕒 {{ fechaHora(a.created_at) }}</p>
           @if (llaveLabel(a.llave1_ubicacion_tipo)) { <p>{{ llaveLabel(a.llave1_ubicacion_tipo) }}</p> }
@@ -27,7 +27,7 @@
 
       <!-- Fallas con evidencia (AH13) -->
       @if (fallas().length) {
-        <h2 class="acta__h2">⚠️ Fallas reportadas</h2>
+        <h2 class="acta__h2">⚠️ {{ 'Fallas reportadas' | t }}</h2>
         @for (f of fallas(); track f.etiqueta) {
           <div class="acta__falla">
             <p class="acta__falla-tit">{{ f.etiqueta }}</p>
@@ -51,7 +51,7 @@
       }
 
       <!-- Checklist completo -->
-      <h2 class="acta__h2">Checklist de condiciones</h2>
+      <h2 class="acta__h2">{{ 'Checklist de condiciones' | t }}</h2>
       <div class="acta__card">
         @for (c of acta()!.condiciones; track c.etiqueta) {
           <div class="acta__check">
@@ -63,7 +63,7 @@
 
       <!-- Notas de voz del acta -->
       @if (a.audios?.length) {
-        <h2 class="acta__h2">🎤 Notas de voz</h2>
+        <h2 class="acta__h2">🎤 {{ 'Notas de voz' | t }}</h2>
         <div class="acta__card">
           @for (au of a.audios; track au.id) {
             <div class="acta__voz">
@@ -76,7 +76,7 @@
 
       <!-- Fotos generales -->
       @if (a.fotos?.length) {
-        <h2 class="acta__h2">📷 Fotos</h2>
+        <h2 class="acta__h2">📷 {{ 'Fotos' | t }}</h2>
         <div class="acta__fotos">
           @for (p of a.fotos; track p) {
             @if (url(p)) { <img class="acta__foto" [src]="url(p)" alt="Foto del acta" loading="lazy" /> }
@@ -84,7 +84,7 @@
         </div>
       }
     } @else {
-      <p class="acta__vacio">No se encontró el acta.</p>
+      <p class="acta__vacio">{{ 'No se encontró el acta.' | t }}</p>
     }
   </div>
 </div>

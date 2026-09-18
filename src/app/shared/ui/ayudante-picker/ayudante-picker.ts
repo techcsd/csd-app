@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from '../toggle-switch/toggle-switch';
 import { AyudanteService, AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * AT4 — selector de AYUDANTE reutilizable para los flujos que puntúan (crear
@@ -17,7 +18,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
   selector: 'app-ayudante-picker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, ToggleSwitch],
+  imports: [FormsModule, ToggleSwitch, TranslatePipe],
   templateUrl: './ayudante-picker.html',
   styleUrl: './ayudante-picker.scss',
 })

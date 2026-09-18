@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -34,7 +36,7 @@ const MAX_CHIPS = 5;
   selector: 'app-catalogo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, CollapsibleSelect],
+  imports: [Skeleton, FormsModule, CollapsibleSelect, TranslatePipe],
   templateUrl: './catalogo.html',
   styleUrl: './catalogo.scss',
 })
@@ -45,6 +47,7 @@ export class CatalogoPage {
   private location = inject(Location);
   private router = inject(Router);
   private store = inject(CatalogoFiltroStore);
+  private i18n = inject(I18nService);
 
   /** AS20 — puede crear artículos (admin o módulo inventario). */
   puedeCrear = this.ctx.puedeOperarSubmodulo.bind(this.ctx);
@@ -78,14 +81,16 @@ export class CatalogoPage {
 
   /** AU11 — opciones del selector en hoja (con "Todas" para quitar el filtro). */
   categoriaOptions = computed(() => [
-    { id: '', label: 'Todas las categorías' },
+    { id: '', label: this.i18n.t('Todas las categorías') },
     ...this.categoriaChips().map((c) => ({ id: String(c.id), label: c.nombre })),
   ]);
   categoriaSelId = computed(() => (this.categoriaSel() != null ? String(this.categoriaSel()) : ''));
   categoriaSelNombre = computed(() => this.nombreCategoria(this.categoriaSel()));
 
   nombreCategoria = (id: number | null): string =>
-    id == null ? 'Sin categoría' : this.categorias().find((c) => c.id === id)?.nombre ?? 'Sin categoría';
+    id == null
+      ? this.i18n.t('Sin categoría')
+      : this.categorias().find((c) => c.id === id)?.nombre ?? this.i18n.t('Sin categoría');
 
   /** AU12 — apodo por el que coincidió un resultado del server (o null). */
   apodoMatch(a: ArticuloCat): string | null {

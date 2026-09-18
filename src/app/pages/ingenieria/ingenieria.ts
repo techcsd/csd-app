@@ -3,6 +3,7 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { BigButton } from '../../shared/ui/big-button/big-button';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SolicitudMovimientoService } from '../../core/services/solicitud-movimiento.service';
 import { UserContextService } from '../../core/services/user-context.service';
 
@@ -29,7 +30,7 @@ interface IngTile {
   selector: 'app-ingenieria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, SyncBar],
+  imports: [BigButton, SyncBar, TranslatePipe],
   templateUrl: './ingenieria.html',
   styleUrl: './ingenieria.scss',
 })

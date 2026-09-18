@@ -10,6 +10,8 @@ import { ConducesService, ConducePendienteEntrega } from '../../../../core/servi
 import { NetworkService } from '../../../../core/services/network.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { Conduce } from '../../../../core/models/transporte.model';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../../core/i18n/i18n.service';
 
 /**
  * AJ8 — el CHOFER avanza el estado de su conduce: Iniciar tránsito → Estoy
@@ -22,7 +24,7 @@ import { Conduce } from '../../../../core/models/transporte.model';
   selector: 'app-conduce-entrega',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, Skeleton],
+  imports: [FormsModule, PhotoSlot, OptionButton, Skeleton, TranslatePipe],
   templateUrl: './entrega.html',
   styleUrl: './entrega.scss',
 })
@@ -32,6 +34,7 @@ export class ConduceEntregaPage {
   private service = inject(ConducesService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   conduce = signal<Conduce | null>(null);
   fase = signal<string>('emitido');
@@ -57,7 +60,7 @@ export class ConduceEntregaPage {
   puedeEntregando = computed(() => this.faseIdx() < this.orden.indexOf('entregando'));
   yaEntregado = computed(() => this.faseIdx() >= this.orden.indexOf('entregado'));
 
-  faseLabel = computed(() => FASE_LABEL[this.fase()] ?? this.fase());
+  faseLabel = computed(() => this.i18n.t(FASE_LABEL[this.fase()] ?? this.fase()));
 
   incompleto = computed(() => {
     const c = this.conduce();
@@ -142,17 +145,17 @@ export class ConduceEntregaPage {
   // ── Acciones de estado ──────────────────────────────────────────────────────
   async iniciarTransito(): Promise<void> {
     // AK11 — término homologado: "tránsito" → "ruta" en toda la UI.
-    await this.avanzar('en_transito', 'En ruta. Buen viaje.');
+    await this.avanzar('en_transito', this.i18n.t('En ruta. Buen viaje.'));
   }
   async estoyEntregando(): Promise<void> {
     // AV3 — bloqueo ANTES del esfuerzo: si falta la firma del despachante, ni
     // siquiera se abre el proceso de entrega (foto/cantidades), para que el
     // chofer no trabaje en vano.
     if (this.firmaDespachantePend()) {
-      this.toast.error('Falta la firma del despachante. Aún no puedes entregar; recuérdaselo desde el aviso de arriba.');
+      this.toast.error(this.i18n.t('Falta la firma del despachante. Aún no puedes entregar; recuérdaselo desde el aviso de arriba.'));
       return;
     }
-    await this.avanzar('entregando', 'Marcado como "entregando".');
+    await this.avanzar('entregando', this.i18n.t('Marcado como "entregando".'));
     // AK11 — "Estoy entregando" abre DIRECTO el proceso de entrega (foto y todo),
     // sin pantalla intermedia ("Marcar entregado" ya no es un paso aparte).
     this.mostrarEntrega.set(true);
@@ -163,7 +166,7 @@ export class ConduceEntregaPage {
     const c = this.conduce();
     if (!c || this.recordando()) return;
     if (!this.online) {
-      this.toast.error('Necesitas conexión para recordarle al despachante.');
+      this.toast.error(this.i18n.t('Necesitas conexión para recordarle al despachante.'));
       return;
     }
     this.recordando.set(true);
@@ -172,12 +175,12 @@ export class ConduceEntregaPage {
       if (nombre === null) {
         // Ya firmó entre medio → desbloquea la entrega.
         this.firmaDespachantePend.set(false);
-        this.toast.success('El despachante ya firmó. Ya puedes marcar la entrega.');
+        this.toast.success(this.i18n.t('El despachante ya firmó. Ya puedes marcar la entrega.'));
       } else {
-        this.toast.success(`Se le recordó a ${nombre}. Te avisaremos cuando firme.`);
+        this.toast.success(this.i18n.t('Se le recordó a {nombre}. Te avisaremos cuando firme.', { nombre }));
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el recordatorio.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el recordatorio.'));
     } finally {
       this.recordando.set(false);
     }
@@ -192,7 +195,7 @@ export class ConduceEntregaPage {
       this.fase.set(estado);
       this.toast.success(ok);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo actualizar. Se reintentará.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo actualizar. Se reintentará.'));
     } finally {
       this.submitting.set(false);
     }
@@ -221,19 +224,19 @@ export class ConduceEntregaPage {
     if (!c) return;
     // AU1 — no dejar marcar la entrega si falta la firma del despachante.
     if (this.firmaDespachantePend()) {
-      this.toast.error('Falta la firma del despachante. No puedes entregar hasta que firme el conduce desde su sesión.');
+      this.toast.error(this.i18n.t('Falta la firma del despachante. No puedes entregar hasta que firme el conduce desde su sesión.'));
       return;
     }
     if (!this.foto()) {
-      this.toast.error('Toma la foto de la entrega.');
+      this.toast.error(this.i18n.t('Toma la foto de la entrega.'));
       return;
     }
     if (this.llegoTodo() === null) {
-      this.toast.error('Dinos si llegó todo el material.');
+      this.toast.error(this.i18n.t('Dinos si llegó todo el material.'));
       return;
     }
     if (this.llegoTodo() === false && !this.incompleto()) {
-      this.toast.error('Dijiste que faltó material: baja la cantidad de al menos un artículo.');
+      this.toast.error(this.i18n.t('Dijiste que faltó material: baja la cantidad de al menos un artículo.'));
       return;
     }
     const items =
@@ -245,7 +248,7 @@ export class ConduceEntregaPage {
       await this.service.conduceMarcarEntregado(c.id, this.foto()!.blob, items, this.notas().trim() || null);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }

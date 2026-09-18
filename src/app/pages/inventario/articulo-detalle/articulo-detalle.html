@@ -1,10 +1,10 @@
 <div class="screen art">
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">Artículo</h1>
+    <h1 class="inv-sub-header__title">{{ 'Artículo' | t }}</h1>
     @if (!loading() && articulo() && puedeEditar('inventario.articulos')) {
       <button type="button" class="art__editar" (click)="duplicar()" aria-label="Duplicar">📋</button>
-      <button type="button" class="art__editar" (click)="editar()">✏️ Editar</button>
+      <button type="button" class="art__editar" (click)="editar()">✏️ {{ 'Editar' | t }}</button>
     }
   </header>
 
@@ -27,19 +27,19 @@
       <span class="art__badge" [class.art__badge--ext]="esExterno()">{{ propiedadLabel(a.propiedad) }}</span>
 
       <dl class="art__facts">
-        <div><dt>Código</dt><dd>{{ a.codigo || '—' }}</dd></div>
-        <div><dt>Categoría</dt><dd>{{ categoriaNombre() }}</dd></div>
-        <div><dt>Unidad</dt><dd>{{ a.unidad || '—' }}</dd></div>
-        <div><dt>Propiedad</dt><dd>{{ esExterno() ? 'Alquilado (externo)' : 'CSD (propio)' }}</dd></div>
-        @if (a.nota) { <div><dt>Nota</dt><dd>{{ a.nota }}</dd></div> }
+        <div><dt>{{ 'Código' | t }}</dt><dd>{{ a.codigo || '—' }}</dd></div>
+        <div><dt>{{ 'Categoría' | t }}</dt><dd>{{ categoriaNombre() }}</dd></div>
+        <div><dt>{{ 'Unidad' | t }}</dt><dd>{{ a.unidad || '—' }}</dd></div>
+        <div><dt>{{ 'Propiedad' | t }}</dt><dd>{{ esExterno() ? ('Alquilado (externo)' | t) : ('CSD (propio)' | t) }}</dd></div>
+        @if (a.nota) { <div><dt>{{ 'Nota' | t }}</dt><dd>{{ a.nota }}</dd></div> }
       </dl>
 
       <!-- AU12 — apodos: nombres no oficiales para encontrar el artículo en las búsquedas
            (admin/inventario). "panel de 24" → resuelve al nombre técnico. -->
       @if (puedeApodos) {
         <section class="art__apodos">
-          <h3 class="art__apodos-title">Apodos</h3>
-          <p class="art__apodos-hint">Nombres no oficiales para encontrar este artículo al buscar (ej. «panel de 24»).</p>
+          <h3 class="art__apodos-title">{{ 'Apodos' | t }}</h3>
+          <p class="art__apodos-hint">{{ 'Nombres no oficiales para encontrar este artículo al buscar (ej. «panel de 24»).' | t }}</p>
           @if (aliases().length) {
             <div class="art__chips">
               @for (al of aliases(); track al.id) {
@@ -50,7 +50,7 @@
               }
             </div>
           } @else {
-            <p class="art__muted">Sin apodos todavía.</p>
+            <p class="art__muted">{{ 'Sin apodos todavía.' | t }}</p>
           }
           <div class="art__apodo-add">
             <input
@@ -60,24 +60,24 @@
               (ngModelChange)="nuevoAlias.set($event)"
               (keyup.enter)="agregarApodo()"
               maxlength="60"
-              placeholder="Agregar apodo…"
+              [placeholder]="'Agregar apodo…' | t"
               autocapitalize="off"
             />
             <button type="button" class="btn-cta" [disabled]="aliasBusy() || !nuevoAlias().trim()" (click)="agregarApodo()">
-              {{ aliasBusy() ? '…' : 'Agregar' }}
+              {{ aliasBusy() ? '…' : ('Agregar' | t) }}
             </button>
           </div>
-          @if (!online) { <p class="art__muted">Sin conexión: necesitas internet para editar apodos.</p> }
+          @if (!online) { <p class="art__muted">{{ 'Sin conexión: necesitas internet para editar apodos.' | t }}</p> }
         </section>
       }
 
       <!-- AS20 — stock por almacén (todos) + kardex por almacén -->
       <section class="art__stock">
-        <h3 class="art__stock-title">Stock por almacén</h3>
+        <h3 class="art__stock-title">{{ 'Stock por almacén' | t }}</h3>
         @if (cargandoStock()) {
-          <p class="art__muted">Consultando existencias…</p>
+          <p class="art__muted">{{ 'Consultando existencias…' | t }}</p>
         } @else if (stockPorAlmacen().length === 0) {
-          <p class="art__muted">Sin existencias registradas.</p>
+          <p class="art__muted">{{ 'Sin existencias registradas.' | t }}</p>
         } @else {
           @for (s of stockPorAlmacen(); track s.bodegaId) {
             <button type="button" class="art__stock-row" [class.art__stock-row--on]="s.destacado" (click)="verKardex(s.bodegaId)">
@@ -86,11 +86,11 @@
               <span class="art__stock-kardex" aria-hidden="true">📊</span>
             </button>
           }
-          <p class="art__stock-hint">Toca un almacén para ver su histórico de movimientos.</p>
+          <p class="art__stock-hint">{{ 'Toca un almacén para ver su histórico de movimientos.' | t }}</p>
         }
       </section>
     } @else {
-      <p class="art__muted">No se encontró el artículo.</p>
+      <p class="art__muted">{{ 'No se encontró el artículo.' | t }}</p>
     }
   </div>
 

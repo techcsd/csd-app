@@ -15,6 +15,8 @@ import { VoicePlayer } from '../../../shared/ui/voice-player/voice-player';
 import { PdfViewer } from '../../../shared/ui/pdf-viewer/pdf-viewer';
 import { StickerEditor } from '../../../shared/ui/sticker-editor/sticker-editor';
 import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { App as CapApp } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 
@@ -31,7 +33,7 @@ interface Segmento {
   selector: 'app-mensajes-thread',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, VoicePlayer, PdfViewer, StickerEditor],
+  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, VoicePlayer, PdfViewer, StickerEditor, TranslatePipe],
   templateUrl: './thread.html',
   styleUrl: './thread.scss',
 })
@@ -46,6 +48,7 @@ export class MensajesThreadPage implements OnDestroy {
   private location = inject(Location);
   private camera = inject(CameraService);
   private fav = inject(StickerFavoritosService);
+  private i18n = inject(I18nService);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
   private recorder = viewChild(VoiceRecorder);
@@ -129,7 +132,7 @@ export class MensajesThreadPage implements OnDestroy {
   });
 
   // AN6 — meta de la conversación para el header (grupo → tappable + avatar).
-  titulo = signal('Conversación');
+  titulo = signal(this.i18n.t('Conversación'));
   esGrupo = signal(false);
   avatarUrl = signal<string | null>(null);
   subtitulo = signal('');
@@ -288,7 +291,7 @@ export class MensajesThreadPage implements OnDestroy {
     return {
       id: p.client_id,
       autor_id: this.yo() ?? '',
-      autor_nombre: 'Tú',
+      autor_nombre: this.i18n.t('Tú'),
       contenido: p.contenido,
       // esImagen/esArchivo se apoyan en el mime; sticker/audio en `tipo`.
       tipo: p.tipo === 'sticker' ? 'sticker' : p.tipo === 'audio' ? 'audio' : 'texto',
@@ -312,7 +315,7 @@ export class MensajesThreadPage implements OnDestroy {
     if (!p) return;
     this.presenciaCh = this.mensajes.presencia(
       this.conversacionId,
-      { id: p.id, nombre: p.nombre ?? 'Alguien' },
+      { id: p.id, nombre: p.nombre ?? this.i18n.t('Alguien') },
       (ev) => this.onPresencia(ev.accion, ev.nombre),
     );
   }
@@ -325,9 +328,9 @@ export class MensajesThreadPage implements OnDestroy {
     }
     const nombreCorto = this.esGrupo() ? (nombre.split(' ')[0] || nombre) + ' ' : '';
     const verbo =
-      accion === 'grabando' ? 'grabando una nota de voz…'
-      : accion === 'sticker' ? 'buscando un sticker…'
-      : 'escribiendo…';
+      accion === 'grabando' ? this.i18n.t('grabando una nota de voz…')
+      : accion === 'sticker' ? this.i18n.t('buscando un sticker…')
+      : this.i18n.t('escribiendo…');
     this.presenciaTexto.set(`${nombreCorto}${verbo}`);
     // Auto-expira si el emisor deja de refrescar (~5s).
     this.presenciaExpira = setTimeout(() => this.presenciaTexto.set(''), 5000);
@@ -346,14 +349,14 @@ export class MensajesThreadPage implements OnDestroy {
     try {
       const conv = (await this.mensajes.listarConversaciones()).find((c) => c.id === this.conversacionId);
       if (conv) {
-        this.titulo.set(conv.nombre || 'Conversación');
+        this.titulo.set(conv.nombre || this.i18n.t('Conversación'));
         this.esGrupo.set(conv.tipo === 'grupo');
         this.noLeidosInicial.set(conv.no_leidos ?? 0);
       }
       if (this.esGrupo()) {
         const info = await this.mensajes.grupoInfo(this.conversacionId);
-        this.titulo.set(info.nombre || 'Grupo');
-        this.subtitulo.set(`${info.participantes.length} participante${info.participantes.length === 1 ? '' : 's'}`);
+        this.titulo.set(info.nombre || this.i18n.t('Grupo'));
+        this.subtitulo.set(`${info.participantes.length} ${this.i18n.t(info.participantes.length === 1 ? 'participante' : 'participantes')}`);
         this.avatarUrl.set(await this.mensajes.avatarUrl(info.avatar_path));
       }
     } catch {
@@ -429,7 +432,7 @@ export class MensajesThreadPage implements OnDestroy {
       void this.resolverAdjuntos(msgs);
       this.posicionar(silencioso);
     } catch {
-      if (!silencioso) this.toast.error('No pudimos cargar el hilo.');
+      if (!silencioso) this.toast.error(this.i18n.t('No pudimos cargar el hilo.'));
     } finally {
       this.loading.set(false);
     }
@@ -510,19 +513,19 @@ export class MensajesThreadPage implements OnDestroy {
   /** Toca un documento: PDF → visor inline; otros tipos → abrir externo. */
   async abrirDoc(m: Mensaje): Promise<void> {
     if (this.archivoPendiente(m) || !m.archivo_path) {
-      this.toast.error('El archivo aún se está enviando…');
+      this.toast.error(this.i18n.t('El archivo aún se está enviando…'));
       return;
     }
     const url = await this.mensajes.adjuntoUrl(m.archivo_path);
     if (!url) {
-      this.toast.error('No pudimos abrir el archivo.');
+      this.toast.error(this.i18n.t('No pudimos abrir el archivo.'));
       return;
     }
     if (this.esPdf(m)) {
-      this.pdfVisor.set({ url, nombre: m.archivo_nombre || 'Documento' });
+      this.pdfVisor.set({ url, nombre: m.archivo_nombre || this.i18n.t('Documento') });
     } else {
       // doc/xls/otros: no se previsualizan → abrir con el visor del sistema.
-      this.toast.show('Este tipo no se previsualiza; se abrirá aparte.', 'info');
+      this.toast.show(this.i18n.t('Este tipo no se previsualiza; se abrirá aparte.'), 'info');
       window.open(url, '_blank');
     }
   }
@@ -530,12 +533,12 @@ export class MensajesThreadPage implements OnDestroy {
   /** Descarga/comparte el documento con el visor del sistema (navegador externo). */
   async descargarDoc(m: Mensaje): Promise<void> {
     if (this.archivoPendiente(m) || !m.archivo_path) {
-      this.toast.error('El archivo aún se está enviando…');
+      this.toast.error(this.i18n.t('El archivo aún se está enviando…'));
       return;
     }
     const url = await this.mensajes.adjuntoUrl(m.archivo_path);
     if (!url) {
-      this.toast.error('No pudimos abrir el archivo.');
+      this.toast.error(this.i18n.t('No pudimos abrir el archivo.'));
       return;
     }
     window.open(url, '_blank');
@@ -605,7 +608,7 @@ export class MensajesThreadPage implements OnDestroy {
       await this.refrescarPendientes();
       this.scrollAlFinal();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar.'));
     } finally {
       this.enviando.set(false);
     }
@@ -642,7 +645,7 @@ export class MensajesThreadPage implements OnDestroy {
       this.scrollAlFinal();
     } catch (e) {
       console.error('[voz] fallo al encolar', e);
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar la nota de voz.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar la nota de voz.'));
     }
   }
 
@@ -685,7 +688,7 @@ export class MensajesThreadPage implements OnDestroy {
       await this.refrescarPendientes();
       this.scrollAlFinal();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el adjunto.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el adjunto.'));
     } finally {
       this.adjuntando.set(false);
     }
@@ -765,7 +768,7 @@ export class MensajesThreadPage implements OnDestroy {
       this.stickerRecientes.set(recientes);
       this.stickersCargados = true;
     } catch {
-      this.toast.error('No pudimos cargar los stickers.');
+      this.toast.error(this.i18n.t('No pudimos cargar los stickers.'));
     } finally {
       this.stickerLoading.set(false);
     }
@@ -780,7 +783,7 @@ export class MensajesThreadPage implements OnDestroy {
       await this.refrescarPendientes();
       this.scrollAlFinal();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el sticker.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el sticker.'));
     }
   }
 
@@ -802,9 +805,9 @@ export class MensajesThreadPage implements OnDestroy {
       const packId = activo && !activo.es_sistema ? activo.id : undefined;
       await this.mensajes.subirSticker(this.yo() ?? '', { blob: webp, nombre: `sticker-${Date.now()}.webp`, mime: 'image/webp' }, packId);
       this.stickerPacks.set(await this.mensajes.getMisStickers());
-      this.toast.success('Sticker agregado.');
+      this.toast.success(this.i18n.t('Sticker agregado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo subir el sticker.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo subir el sticker.'));
     } finally {
       this.stickerUploading.set(false);
     }
@@ -819,7 +822,7 @@ export class MensajesThreadPage implements OnDestroy {
       await this.mensajes.eliminarSticker(stickerId);
       this.stickerPacks.set(await this.mensajes.getMisStickers());
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar el sticker.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo eliminar el sticker.'));
     }
   }
 
@@ -839,9 +842,9 @@ export class MensajesThreadPage implements OnDestroy {
       this.nuevoPackNombre.set('');
       this.stickerPacks.set(await this.mensajes.getMisStickers());
       this.stickerTab.set(id); // abre el pack recién creado
-      this.toast.success('Pack creado.');
+      this.toast.success(this.i18n.t('Pack creado.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el pack.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear el pack.'));
     }
   }
 
@@ -849,7 +852,7 @@ export class MensajesThreadPage implements OnDestroy {
   iniciarMoverSticker(stickerId: string): void {
     this.moverStickerId.set(stickerId);
     this.packMenuOpen.set(true);
-    this.toast.show('Elige el pack destino.', 'info');
+    this.toast.show(this.i18n.t('Elige el pack destino.'), 'info');
   }
   async moverAPack(packId: string): Promise<void> {
     const sid = this.moverStickerId();
@@ -858,9 +861,9 @@ export class MensajesThreadPage implements OnDestroy {
       await this.mensajes.moverSticker(sid, packId);
       this.moverStickerId.set(null);
       this.stickerPacks.set(await this.mensajes.getMisStickers());
-      this.toast.success('Sticker movido.');
+      this.toast.success(this.i18n.t('Sticker movido.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo mover el sticker.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo mover el sticker.'));
     }
   }
 
@@ -880,9 +883,9 @@ export class MensajesThreadPage implements OnDestroy {
     try {
       await this.mensajes.guardarSticker(ctx.ref);
       this.stickersCargados = false;
-      this.toast.success('Sticker guardado en tus stickers.');
+      this.toast.success(this.i18n.t('Sticker guardado en tus stickers.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el sticker.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el sticker.'));
     }
   }
 
@@ -895,7 +898,7 @@ export class MensajesThreadPage implements OnDestroy {
   /** Alterna un sticker en favoritos (desde el selector o la hoja "Guardar"). */
   async toggleFavorito(ref: string): Promise<void> {
     const esFav = await this.fav.toggle(ref);
-    this.toast.show(esFav ? 'Añadido a favoritos.' : 'Quitado de favoritos.', 'info');
+    this.toast.show(this.i18n.t(esFav ? 'Añadido a favoritos.' : 'Quitado de favoritos.'), 'info');
   }
   /** Desde la hoja de un sticker recibido: añadir/quitar de favoritos. */
   async favoritoDesdeCtx(): Promise<void> {

@@ -6,6 +6,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -27,7 +29,7 @@ const SIN_CATEGORIA_KEY = 'sin';
   selector: 'app-conteo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, BigConfirm, ConfirmDialog, CollapsibleSelect],
+  imports: [Skeleton, FormsModule, BigConfirm, ConfirmDialog, CollapsibleSelect, TranslatePipe],
   templateUrl: './conteo.html',
   styleUrl: './conteo.scss',
 })
@@ -35,6 +37,7 @@ export class ConteoPage {
   private inventario = inject(InventarioService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
   private router = inject(Router);
   private location = inject(Location);
   private route = inject(ActivatedRoute);
@@ -97,7 +100,7 @@ export class ConteoPage {
     const sin = porCat.get(SIN_CATEGORIA_KEY);
     if (sin?.length) {
       sin.sort((a, b) => a.nombre.localeCompare(b.nombre));
-      out.push({ key: SIN_CATEGORIA_KEY, nombre: 'Sin categoría', destacada: false, items: sin, total: sin.length });
+      out.push({ key: SIN_CATEGORIA_KEY, nombre: this.i18n.t('Sin categoría'), destacada: false, items: sin, total: sin.length });
     }
     return out;
   });
@@ -166,7 +169,7 @@ export class ConteoPage {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.bodegaId()) {
-      this.toast.error('Elige la bodega.');
+      this.toast.error(this.i18n.t('Elige la bodega.'));
       return;
     }
     // V8: no changes → confirm "todo conforme" instead of blocking the save.
@@ -202,7 +205,7 @@ export class ConteoPage {
       });
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.submitting.set(false);
     }

@@ -14,6 +14,8 @@ import {
   ModuloInfo,
 } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AL2 — Administración › Roles y permisos (matriz AG12): módulos + submódulos
  *  granulares (ver/operar). Lectura/escritura directa en `roles` (RLS is_admin). */
@@ -21,7 +23,7 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-admin-roles',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, TranslatePipe],
   templateUrl: './roles.html',
   styleUrl: './roles.scss',
 })
@@ -29,6 +31,7 @@ export class AdminRolesPage {
   private admin = inject(AdminService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly modulos = MODULOS_DISPONIBLES;
   readonly submodulos = SUBMODULOS;
@@ -54,7 +57,7 @@ export class AdminRolesPage {
     try {
       this.roles.set(await this.admin.getRoles());
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar los roles.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar los roles.'));
     } finally {
       this.loading.set(false);
     }
@@ -79,7 +82,7 @@ export class AdminRolesPage {
   }
 
   modLabel(r: RolAdmin): string {
-    return (r.modulos ?? []).length ? `${r.modulos.length} módulo(s)` : 'Sin módulos';
+    return (r.modulos ?? []).length ? this.i18n.t('{n} módulo(s)', { n: r.modulos.length }) : this.i18n.t('Sin módulos');
   }
 
   tieneMod(key: string): boolean {
@@ -111,7 +114,7 @@ export class AdminRolesPage {
   async guardar(): Promise<void> {
     if (this.guardando()) return;
     if (!this.nombre().trim()) {
-      this.toast.error('Escribe el nombre del rol.');
+      this.toast.error(this.i18n.t('Escribe el nombre del rol.'));
       return;
     }
     this.guardando.set(true);
@@ -124,11 +127,11 @@ export class AdminRolesPage {
         permisos: this.permisos(),
         descripcion: this.descripcion().trim() || null,
       });
-      this.toast.success('Rol guardado.');
+      this.toast.success(this.i18n.t('Rol guardado.'));
       this.editando.set(null);
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el rol.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el rol.'));
     } finally {
       this.guardando.set(false);
     }
@@ -140,11 +143,11 @@ export class AdminRolesPage {
     if (!r) return;
     try {
       await this.admin.eliminarRol(r.id);
-      this.toast.success('Rol eliminado.');
+      this.toast.success(this.i18n.t('Rol eliminado.'));
       this.editando.set(null);
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar el rol.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo eliminar el rol.'));
     }
   }
 

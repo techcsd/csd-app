@@ -2,43 +2,42 @@
   @if (hoja() === 'form') {
     <header class="devol__header">
       <button type="button" class="devol__back" (click)="intentarSalir()" aria-label="Atrás">←</button>
-      <h1 class="devol__title">↩️ Devolver material</h1>
+      <h1 class="devol__title">↩️ {{ 'Devolver material' | t }}</h1>
     </header>
 
     <div class="screen__body">
       <p class="devol__intro">
-        Devuelve material de una obra a un almacén. El stock se mueve al registrar;
-        confirma la entrega con tu firma y la de quien recibe.
+        {{ 'Devuelve material de una obra a un almacén. El stock se mueve al registrar; confirma la entrega con tu firma y la de quien recibe.' | t }}
       </p>
 
       <app-collapsible-select
-        label="Obra de origen"
+        [label]="'Obra de origen' | t"
         icon="🏗"
         [options]="obraOptions()"
         [selectedId]="obraId()"
         [searchable]="true"
-        searchPlaceholder="Buscar obra…"
+        [searchPlaceholder]="'Buscar obra…' | t"
         (picked)="obraId.set($event)"
       />
       @if (!obras().length && !loading()) {
-        <p class="devol__hint">No hay obras con almacén propio para descontar.</p>
+        <p class="devol__hint">{{ 'No hay obras con almacén propio para descontar.' | t }}</p>
       }
 
       <div class="devol__mt">
         <app-collapsible-select
-          label="Almacén destino"
+          [label]="'Almacén destino' | t"
           icon="🏬"
           [options]="bodegaOptions()"
           [selectedId]="bodegaId()"
           [searchable]="true"
-          searchPlaceholder="Buscar almacén…"
+          [searchPlaceholder]="'Buscar almacén…' | t"
           (picked)="bodegaId.set($event)"
         />
       </div>
 
       <!-- Materiales -->
-      <label class="field-label devol__mt">¿Qué material devuelves?</label>
-      <p class="devol__sub">Busca cada material y pon la cantidad.</p>
+      <label class="field-label devol__mt">{{ '¿Qué material devuelves?' | t }}</label>
+      <p class="devol__sub">{{ 'Busca cada material y pon la cantidad.' | t }}</p>
       <app-articulo-picker
         [articulos]="articulos()"
         [categorias]="categorias()"
@@ -59,7 +58,7 @@
               @let s = stockDe(l.articulo_id);
               @if (s !== null) {
                 <span class="devol__stock" [class.devol__stock--warn]="excedeStock(l)">
-                  @if (excedeStock(l)) { ⚠ En la obra solo hay {{ s | number: '1.0-2' }} } @else { En la obra: {{ s | number: '1.0-2' }} }
+                  @if (excedeStock(l)) { ⚠ {{ 'En la obra solo hay' | t }} {{ s | number: '1.0-2' }} } @else { {{ 'En la obra:' | t }} {{ s | number: '1.0-2' }} }
                 </span>
               }
             </div>
@@ -67,32 +66,32 @@
         </div>
         @if (hayExceso()) {
           <div class="devol__band devol__band--warn">
-            ⚠ Estás devolviendo más de lo que hay en la obra en algún material. Ajusta la cantidad (el servidor validará el stock).
+            ⚠ {{ 'Estás devolviendo más de lo que hay en la obra en algún material. Ajusta la cantidad (el servidor validará el stock).' | t }}
           </div>
         }
       } @else {
-        <div class="devol__band">🔎 Agrega al menos un material para devolver.</div>
+        <div class="devol__band">🔎 {{ 'Agrega al menos un material para devolver.' | t }}</div>
       }
 
-      <label class="field-label devol__mt" for="ref">Referencia (opcional)</label>
-      <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" placeholder="Ej: nota de devolución" />
+      <label class="field-label devol__mt" for="ref">{{ 'Referencia (opcional)' | t }}</label>
+      <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" [placeholder]="'Ej: nota de devolución' | t" />
 
-      <label class="field-label devol__mt" for="obs">Observaciones (opcional)</label>
-      <textarea id="obs" class="field devol__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, detalles…"></textarea>
+      <label class="field-label devol__mt" for="obs">{{ 'Observaciones (opcional)' | t }}</label>
+      <textarea id="obs" class="field devol__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" [placeholder]="'Motivo, detalles…' | t"></textarea>
 
       <!-- Firma del emisor (chofer) -->
-      <h2 class="devol__sec">Tu firma (quien entrega)</h2>
+      <h2 class="devol__sec">{{ 'Tu firma (quien entrega)' | t }}</h2>
       <p class="devol__sub">{{ emisorNombre() }}</p>
       <app-signature-pad #emisorPad (changed)="onEmisorFirma()" />
 
       <!-- Receptor -->
-      <h2 class="devol__sec">¿Quién recibe?</h2>
-      <app-option-button icon="🏬" label="Que lo confirme Almacén" [selected]="receptorModo() === 'yo'" (pressed)="setReceptorModo('yo')" />
-      <app-option-button icon="👷" label="Un ingeniero / encargado" [selected]="receptorModo() === 'otro'" (pressed)="setReceptorModo('otro')" />
+      <h2 class="devol__sec">{{ '¿Quién recibe?' | t }}</h2>
+      <app-option-button icon="🏬" [label]="'Que lo confirme Almacén' | t" [selected]="receptorModo() === 'yo'" (pressed)="setReceptorModo('yo')" />
+      <app-option-button icon="👷" [label]="'Un ingeniero / encargado' | t" [selected]="receptorModo() === 'otro'" (pressed)="setReceptorModo('otro')" />
 
       @if (receptorModo() === 'yo') {
         <div class="devol__band devol__band--warn">
-          ⏳ El material vuelve al almacén ahora. La recepción queda <b>pendiente de que Almacén la confirme</b> (le aparece en “Por firmar”).
+          ⏳ {{ 'El material vuelve al almacén ahora. La recepción queda' | t }} <b>{{ 'pendiente de que Almacén la confirme' | t }}</b> {{ '(le aparece en “Por firmar”).' | t }}
         </div>
       }
 
@@ -102,9 +101,9 @@
           type="search"
           [ngModel]="receptorBusqueda()"
           (ngModelChange)="receptorBusqueda.set($event); buscarReceptor()"
-          placeholder="Buscar por nombre o correo…"
+          [placeholder]="'Buscar por nombre o correo…' | t"
         />
-        @if (buscando()) { <p class="devol__hint">Buscando…</p> }
+        @if (buscando()) { <p class="devol__hint">{{ 'Buscando…' | t }}</p> }
         @for (u of receptorResultados(); track u.id) {
           <button type="button" class="devol__ures" (click)="pickReceptor(u)">
             <span class="devol__ures-nombre">{{ u.nombre }}</span>
@@ -112,17 +111,17 @@
           </button>
         }
         @if (receptorSel(); as u) {
-          <div class="devol__sel">✓ Recibe: <b>{{ u.nombre }}</b></div>
+          <div class="devol__sel">✓ {{ 'Recibe:' | t }} <b>{{ u.nombre }}</b></div>
 
-          <app-option-button icon="✍️" label="Está presente y firma ahora" [selected]="receptorPresente()" (pressed)="receptorPresente.set(true)" />
-          <app-option-button icon="⏳" label="No está: dejar su firma pendiente" [selected]="!receptorPresente()" (pressed)="receptorPresente.set(false)" />
+          <app-option-button icon="✍️" [label]="'Está presente y firma ahora' | t" [selected]="receptorPresente()" (pressed)="receptorPresente.set(true)" />
+          <app-option-button icon="⏳" [label]="'No está: dejar su firma pendiente' | t" [selected]="!receptorPresente()" (pressed)="receptorPresente.set(false)" />
 
           @if (receptorPresente()) {
-            <p class="devol__sub devol__mt">Firma de {{ u.nombre }}</p>
+            <p class="devol__sub devol__mt">{{ 'Firma de' | t }} {{ u.nombre }}</p>
             <app-signature-pad #receptorPad (changed)="onReceptorFirma()" />
           } @else {
             <div class="devol__band devol__band--warn">
-              ⏳ Se registrará con la firma de <b>{{ u.nombre }}</b> pendiente. Le llegará un aviso para que la firme.
+              ⏳ {{ 'Se registrará con la firma de' | t }} <b>{{ u.nombre }}</b> {{ 'pendiente. Le llegará un aviso para que la firme.' | t }}
             </div>
           }
         }
@@ -130,8 +129,8 @@
     </div>
 
     <app-wizard-footer
-      backLabel="Cancelar"
-      [primaryLabel]="submitting() ? 'Registrando…' : 'Registrar devolución'"
+      [backLabel]="'Cancelar' | t"
+      [primaryLabel]="submitting() ? ('Registrando…' | t) : ('Registrar devolución' | t)"
       [primaryDisabled]="submitting() || faltaItems() || !obraId() || !bodegaId()"
       (back)="intentarSalir()"
       (primary)="submit()"
@@ -140,20 +139,20 @@
 
   @if (hoja() === 'exito') {
     <app-big-confirm
-      title="Devolución registrada"
-      [note]="pendienteAlmacen() ? 'El material volvió al almacén. Almacén debe confirmar la recepción (le aparece en “Por firmar”).' : pendiente() ? 'El material volvió al almacén. Falta la firma de quien recibe: le llegó un aviso para firmarla.' : 'El material volvió al almacén con las dos firmas.'"
+      [title]="'Devolución registrada' | t"
+      [note]="pendienteAlmacen() ? ('El material volvió al almacén. Almacén debe confirmar la recepción (le aparece en “Por firmar”).' | t) : pendiente() ? ('El material volvió al almacén. Falta la firma de quien recibe: le llegó un aviso para firmarla.' | t) : ('El material volvió al almacén con las dos firmas.' | t)"
       tone="done"
-      buttonLabel="Listo"
+      [buttonLabel]="'Listo' | t"
       (dismissed)="finish()"
     />
   }
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir sin registrar?"
-    message="Se perderá lo que capturaste de la devolución."
-    confirmLabel="Sí, salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir sin registrar?' | t"
+    [message]="'Se perderá lo que capturaste de la devolución.' | t"
+    [confirmLabel]="'Sí, salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     tone="danger"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"

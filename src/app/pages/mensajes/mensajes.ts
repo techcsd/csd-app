@@ -9,13 +9,15 @@ import { InventarioService, UsuarioBusqueda } from '../../core/services/inventar
 import { ToastService } from '../../core/services/toast.service';
 import { formatFechaHumana } from '../../core/util/fecha';
 import { LiveRefreshDirective } from '../../shared/ui/live-refresh/live-refresh.directive';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 /** AJ5 — bandeja de conversaciones (mismo modelo que la web). Realtime + badges. */
 @Component({
   selector: 'app-mensajes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
   templateUrl: './mensajes.html',
   styleUrl: './mensajes.scss',
 })
@@ -25,6 +27,7 @@ export class MensajesPage implements OnDestroy {
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   fmt = formatFechaHumana;
 
@@ -62,7 +65,7 @@ export class MensajesPage implements OnDestroy {
     try {
       this.conversaciones.set(await this.mensajes.listarConversaciones());
     } catch {
-      this.toast.error('No pudimos cargar tus mensajes.');
+      this.toast.error(this.i18n.t('No pudimos cargar tus mensajes.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
@@ -79,7 +82,7 @@ export class MensajesPage implements OnDestroy {
   }
 
   nombreDe(c: Conversacion): string {
-    return c.nombre || 'Conversación';
+    return c.nombre || this.i18n.t('Conversación');
   }
 
   // ── Nueva conversación ──────────────────────────────────────────────────────
@@ -117,11 +120,11 @@ export class MensajesPage implements OnDestroy {
   async crearGrupo(): Promise<void> {
     const nombre = this.grupoNombre().trim();
     if (!nombre) {
-      this.toast.error('Ponle un nombre al grupo.');
+      this.toast.error(this.i18n.t('Ponle un nombre al grupo.'));
       return;
     }
     if (!this.seleccionados().length) {
-      this.toast.error('Agrega al menos un participante.');
+      this.toast.error(this.i18n.t('Agrega al menos un participante.'));
       return;
     }
     this.creando.set(true);
@@ -130,7 +133,7 @@ export class MensajesPage implements OnDestroy {
       this.nuevaAbierta.set(false);
       void this.router.navigate(['/mensajes', id]);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear el grupo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear el grupo.'));
     } finally {
       this.creando.set(false);
     }
@@ -158,7 +161,7 @@ export class MensajesPage implements OnDestroy {
       this.nuevaAbierta.set(false);
       void this.router.navigate(['/mensajes', id]);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo iniciar la conversación.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo iniciar la conversación.'));
     }
   }
 

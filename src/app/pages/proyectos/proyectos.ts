@@ -11,6 +11,8 @@ import { NetworkService } from '../../core/services/network.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { ProyectoApp, PROYECTO_ESTADO_LABEL, progresoProyecto, zonaDeProyecto } from '../../core/models/proyecto.model';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 /**
  * Y14 — Módulo Proyectos en la app: listado de proyectos visibles (la RLS scopea
@@ -21,7 +23,7 @@ import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsibl
   selector: 'app-proyectos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, CollapsibleSelect],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, CollapsibleSelect, TranslatePipe],
   templateUrl: './proyectos.html',
   styleUrl: './proyectos.scss',
 })
@@ -32,6 +34,7 @@ export class ProyectosPage {
   private ctx = inject(UserContextService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly estadoLabel = PROYECTO_ESTADO_LABEL;
 
@@ -53,7 +56,7 @@ export class ProyectosPage {
       if (z) zs.add(z);
     }
     const ops = [...zs].sort().map((z) => ({ id: z, label: z }));
-    return [{ id: '', label: 'Todas las zonas' }, ...ops];
+    return [{ id: '', label: this.i18n.t('Todas las zonas') }, ...ops];
   });
 
   // AM9/AY4c — crear proyecto: solo quien GESTIONA proyectos (no el Ingeniero de

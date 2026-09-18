@@ -9,6 +9,8 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { ToastService } from '../../../core/services/toast.service';
 import { EchadaLog } from '../../../core/models/combustible.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /** AQ13 — chips de periodo rápido (mismo patrón que Mi actividad AJ9). */
 type PeriodoChip = { id: string; label: string; dias: number };
@@ -31,7 +33,7 @@ const PERIODOS: PeriodoChip[] = [
   selector: 'app-combustible-log',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState],
+  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './combustible-log.html',
   styleUrl: './combustible-log.scss',
 })
@@ -41,6 +43,7 @@ export class CombustibleLogPage {
   private toast = inject(ToastService);
   private location = inject(Location);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   readonly fechaHora = formatFechaCortaHora; // BB6 — fecha + hora (la de captura manda)
   readonly periodos = PERIODOS;
@@ -100,7 +103,7 @@ export class CombustibleLogPage {
       this.rows.set(list);
       this.resetPag(); // BB11 — nueva carga arranca en el primer lote
     } catch {
-      this.toast.error('No se pudo cargar el registro de echadas.');
+      this.toast.error(this.i18n.t('No se pudo cargar el registro de echadas.'));
     } finally {
       this.loading.set(false);
     }

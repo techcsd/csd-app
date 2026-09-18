@@ -25,6 +25,8 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
 import { MapMatchingService } from '../../../core/services/map-matching.service';
 import { vehiculoIdentidad } from '../../../core/models/transporte.model';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /* google.maps sin @types → lo tratamos como any. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -37,7 +39,7 @@ type GAny = any;
   selector: 'app-seguimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, TranslatePipe],
   templateUrl: './seguimiento.html',
   styleUrl: './seguimiento.scss',
 })
@@ -48,6 +50,7 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private ctx = inject(UserContextService);
   private mm = inject(MapMatchingService);
+  private i18n = inject(I18nService);
 
   // AT10 — al llegar desde "Vehículos en uso" (?usuario), centra ese chofer 1 vez.
   private focoUsuarioId = this.route.snapshot.queryParamMap.get('usuario');
@@ -463,7 +466,7 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       this.gmap?.setZoom(16);
       const m = this.gmarkers.get(c.usuario_id);
       if (m) {
-        this.ginfo.setContent(`<b>${c.nombre}</b><br>${estadoMeta(c.estado).label}`);
+        this.ginfo.setContent(`<b>${c.nombre}</b><br>${this.i18n.t(estadoMeta(c.estado).label)}`);
         this.ginfo.open(this.gmap, m);
       }
     } else {
@@ -478,14 +481,14 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
   }
 
   actualizadoHace(iso: string | null): string {
-    if (!iso) return 'sin posición';
+    if (!iso) return this.i18n.t('sin posición');
     // AV1 — usa el tick `now()` para refrescar el texto cada minuto.
     const min = Math.round((this.now() - new Date(iso).getTime()) / 60000);
-    if (min < 1) return 'ahora';
-    if (min < 60) return `hace ${min} min`;
+    if (min < 1) return this.i18n.t('ahora');
+    if (min < 60) return this.i18n.t('hace {min} min', { min });
     const h = Math.round(min / 60);
-    if (h < 24) return `hace ${h} h`;
-    return `sin señal hace ${Math.round(h / 24)} d`;
+    if (h < 24) return this.i18n.t('hace {h} h', { h });
+    return this.i18n.t('sin señal hace {d} d', { d: Math.round(h / 24) });
   }
 
   back(): void {

@@ -1,19 +1,19 @@
 <div class="screen conteos">
   <header class="inv-sub-header">
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">Conteos y ajustes</h1>
+    <h1 class="inv-sub-header__title">{{ 'Conteos y ajustes' | t }}</h1>
   </header>
 
   <div class="screen__body">
-    <button type="button" class="btn-cta conteos__nuevo" (click)="nuevo()">🔢 Nuevo conteo o ajuste</button>
+    <button type="button" class="btn-cta conteos__nuevo" (click)="nuevo()">🔢 {{ 'Nuevo conteo o ajuste' | t }}</button>
 
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else if (!conteos().length) {
       @if (!online) {
-        <app-empty-state icon="📡" title="Sin conexión" message="Conéctate a internet para ver el historial de conteos y ajustes." />
+        <app-empty-state icon="📡" [title]="'Sin conexión' | t" [message]="'Conéctate a internet para ver el historial de conteos y ajustes.' | t" />
       } @else {
-        <app-empty-state icon="🔢" title="Sin conteos" message="Todavía no hay conteos ni ajustes registrados." />
+        <app-empty-state icon="🔢" [title]="'Sin conteos' | t" [message]="'Todavía no hay conteos ni ajustes registrados.' | t" />
       }
     } @else {
       @for (c of conteos(); track c.id) {
@@ -21,11 +21,11 @@
           <button type="button" class="conteos__head" (click)="toggle(c.id)">
             <div class="conteos__head-main">
               <div class="conteos__top">
-                <span class="conteos__bodega">{{ c.bodega?.nombre ?? 'Almacén' }}</span>
+                <span class="conteos__bodega">{{ c.bodega?.nombre ?? ('Almacén' | t) }}</span>
                 <span class="conteos__tipo">{{ tipoLabel(c.tipo) }}</span>
               </div>
               <p class="conteos__sub">
-                {{ (c.items?.length ?? 0) }} artículo(s) · {{ diferencias(c) }} con diferencia
+                {{ (c.items?.length ?? 0) }} {{ 'artículo(s)' | t }} · {{ diferencias(c) }} {{ 'con diferencia' | t }}
               </p>
               <p class="conteos__meta">
                 {{ fmtFecha(c.created_at) }}@if (c.creado?.nombre) { · {{ c.creado?.nombre }} }
@@ -41,7 +41,7 @@
               }
               @for (it of c.items ?? []; track it.articulo?.codigo) {
                 <div class="conteos__row" [class.conteos__row--diff]="diff(it) !== 0">
-                  <span class="conteos__art">{{ it.articulo?.nombre ?? it.articulo?.codigo ?? 'Artículo' }}</span>
+                  <span class="conteos__art">{{ it.articulo?.nombre ?? it.articulo?.codigo ?? ('Artículo' | t) }}</span>
                   <span class="conteos__nums">
                     {{ it.cantidad_antes }} → <b>{{ it.cantidad_contada }}</b>
                     @if (diff(it) !== 0) {

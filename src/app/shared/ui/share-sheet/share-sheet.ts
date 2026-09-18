@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, input, output, signal } fro
 import { BottomSheet } from '../bottom-sheet/bottom-sheet';
 import { ExportService, type ExportDoc, type ExportFormat } from '../../../core/services/export.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * Y3 — hoja para elegir el formato al compartir: **PDF** o **Excel**. Genera el
@@ -13,13 +15,14 @@ import { ToastService } from '../../../core/services/toast.service';
   selector: 'app-share-sheet',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BottomSheet],
+  imports: [BottomSheet, TranslatePipe],
   templateUrl: './share-sheet.html',
   styleUrl: './share-sheet.scss',
 })
 export class ShareSheet {
   private exporter = inject(ExportService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   open = input<boolean>(false);
   doc = input<ExportDoc | null>(null);
@@ -33,10 +36,10 @@ export class ShareSheet {
     this.busy.set(format);
     try {
       const res = await this.exporter.share(doc, format);
-      if (res.fallback) this.toast.success('Archivo descargado. Compártelo desde tus descargas.');
+      if (res.fallback) this.toast.success(this.i18n.t('Archivo descargado. Compártelo desde tus descargas.'));
       this.closed.emit();
     } catch {
-      this.toast.error('No se pudo generar el archivo.');
+      this.toast.error(this.i18n.t('No se pudo generar el archivo.'));
     } finally {
       this.busy.set(null);
     }

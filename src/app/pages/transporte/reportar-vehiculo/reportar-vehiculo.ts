@@ -10,6 +10,8 @@ import { Counter } from '../../../shared/ui/counter/counter';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CameraService, CapturedDoc, CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
@@ -52,7 +54,7 @@ interface ReporteVehDraft {
   selector: 'app-reportar-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Counter, PhotoSlot, BigConfirm, ConfirmDialog],
+  imports: [FormsModule, StepBar, WizardFooter, OptionButton, Counter, PhotoSlot, BigConfirm, ConfirmDialog, TranslatePipe],
   templateUrl: './reportar-vehiculo.html',
   styleUrl: './reportar-vehiculo.scss',
 })
@@ -69,6 +71,7 @@ export class ReportarVehiculoPage implements OnDestroy {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly fases = ACCIDENTE_FASES;
   readonly zonas = ZONAS_DANO;
@@ -143,7 +146,7 @@ export class ReportarVehiculoPage implements OnDestroy {
         tieneDanoFoto: !!this.danoFoto(),
       };
       if (!this.hydrated || this.submitting() || this.done()) return;
-      this.autosave.queue(this.clave, snap, { tipo: 'reporte_vehiculo', etiqueta: 'Accidente o daño', ruta: this.location.path() });
+      this.autosave.queue(this.clave, snap, { tipo: 'reporte_vehiculo', etiqueta: this.i18n.t('Accidente o daño'), ruta: this.location.path() });
     });
   }
 
@@ -202,7 +205,7 @@ export class ReportarVehiculoPage implements OnDestroy {
     const activo = await this.vehiculos.estaActivo(this.vehiculoId);
     if (activo === false) {
       this.refInvalida.set(true);
-      this.toast.error('Este vehículo ya no está disponible en el sistema.');
+      this.toast.error(this.i18n.t('Este vehículo ya no está disponible en el sistema.'));
     }
   }
 
@@ -265,19 +268,19 @@ export class ReportarVehiculoPage implements OnDestroy {
   next(): void {
     const s = this.step();
     if (s === 1 && !this.tipo()) {
-      this.toast.error('Elige qué vas a reportar.');
+      this.toast.error(this.i18n.t('Elige qué vas a reportar.'));
       return;
     }
     if (this.esAccidente() && s === 2 && !this.fase()) {
-      this.toast.error('Elige cuándo pasó.');
+      this.toast.error(this.i18n.t('Elige cuándo pasó.'));
       return;
     }
     if (this.esAccidente() && s === 3 && !this.descripcion().trim()) {
-      this.toast.error('Cuéntanos qué pasó.');
+      this.toast.error(this.i18n.t('Cuéntanos qué pasó.'));
       return;
     }
     if (!this.esAccidente() && s === 3 && !this.danoFoto()) {
-      this.toast.error('Toma una foto del daño.');
+      this.toast.error(this.i18n.t('Toma una foto del daño.'));
       return;
     }
     this.step.update((x) => Math.min(this.total(), x + 1));
@@ -299,7 +302,7 @@ export class ReportarVehiculoPage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (this.refInvalida()) {
-      this.toast.error('Este vehículo ya no está disponible. No se puede reportar.');
+      this.toast.error(this.i18n.t('Este vehículo ya no está disponible. No se puede reportar.'));
       return;
     }
     this.submitting.set(true);
@@ -329,7 +332,7 @@ export class ReportarVehiculoPage implements OnDestroy {
       await this.autosave.discard(this.clave); // limpia borrador + fotos
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar.'));
     } finally {
       this.submitting.set(false);
     }

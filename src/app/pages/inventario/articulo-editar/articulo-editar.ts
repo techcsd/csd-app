@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { CameraService } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -23,7 +25,7 @@ interface ImagenArt {
   selector: 'app-articulo-editar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, TranslatePipe],
   templateUrl: './articulo-editar.html',
   styleUrl: './articulo-editar.scss',
 })
@@ -34,6 +36,7 @@ export class ArticuloEditarPage {
   private toast = inject(ToastService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   loading = signal(true);
   guardando = signal(false);
@@ -107,7 +110,7 @@ export class ArticuloEditarPage {
 
   private async subir(blob: Blob): Promise<void> {
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para subir fotos.');
+      this.toast.error(this.i18n.t('Necesitas conexión para subir fotos.'));
       return;
     }
     this.subiendoFoto.set(true);
@@ -115,7 +118,7 @@ export class ArticuloEditarPage {
       await this.inventario.agregarImagenArticulo(this.id, blob, this.imagenes().length === 0);
       await this.recargarImagenes();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo subir la foto.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo subir la foto.'));
     } finally {
       this.subiendoFoto.set(false);
     }
@@ -134,7 +137,7 @@ export class ArticuloEditarPage {
       await this.inventario.setPortadaArticulo(img.id);
       await this.recargarImagenes();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo fijar la portada.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo fijar la portada.'));
     }
   }
   async quitarFoto(img: ImagenArt): Promise<void> {
@@ -142,14 +145,14 @@ export class ArticuloEditarPage {
       await this.inventario.eliminarImagenArticulo(img.id);
       await this.recargarImagenes();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo eliminar la foto.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo eliminar la foto.'));
     }
   }
 
   async guardar(): Promise<void> {
     if (this.guardando() || !this.puedeGuardar()) return;
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para guardar.');
+      this.toast.error(this.i18n.t('Necesitas conexión para guardar.'));
       return;
     }
     this.guardando.set(true);
@@ -160,10 +163,10 @@ export class ArticuloEditarPage {
         categoriaId: this.categoriaId(),
         nota: this.nota().trim() || null,
       });
-      this.toast.success('Artículo actualizado.');
+      this.toast.success(this.i18n.t('Artículo actualizado.'));
       this.location.back();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el artículo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el artículo.'));
     } finally {
       this.guardando.set(false);
     }

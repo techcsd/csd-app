@@ -12,7 +12,7 @@
             @case ('circle') { <circle cx="13" cy="13" r="9"/> }
           }
         </svg>
-        <span>{{ t.label }}</span>
+        <span>{{ t.label | t }}</span>
       </button>
     }
   </div>
@@ -20,9 +20,9 @@
   <!-- Lienzo -->
   <div class="mc__canvas-wrap">
     <div class="mc__tools">
-      <button type="button" class="mc__tool" (click)="rotar()" [disabled]="!seleccionada()" title="Girar 90 grados">Girar 90°</button>
-      <button type="button" class="mc__tool mc__tool--danger" (click)="eliminar()" [disabled]="!seleccionada()">Eliminar</button>
-      <span class="mc__hint">Rejilla 5&nbsp;cm · rojo = fuera de tolerancia</span>
+      <button type="button" class="mc__tool" (click)="rotar()" [disabled]="!seleccionada()" [title]="'Girar 90 grados' | t">{{ 'Girar 90°' | t }}</button>
+      <button type="button" class="mc__tool mc__tool--danger" (click)="eliminar()" [disabled]="!seleccionada()">{{ 'Eliminar' | t }}</button>
+      <span class="mc__hint">{{ 'Rejilla 5 cm · rojo = fuera de tolerancia' | t }}</span>
     </div>
     <svg class="mc__canvas" [attr.viewBox]="'0 0 ' + VW + ' ' + VH" (pointermove)="onPointerMove($event)"
          (pointerup)="onPointerUp()" (pointerleave)="onPointerUp()" role="img" aria-label="Lienzo del compositor de moldes">
@@ -55,46 +55,46 @@
   <!-- Propiedades (teclado numérico grande) -->
   <div class="mc__props">
     @if (seleccionada(); as s) {
-      <span class="mc__tag">{{ labelTipo(s.tipo) }} · #{{ s.id }}</span>
+      <span class="mc__tag">{{ labelTipo(s.tipo) | t }} · #{{ s.id }}</span>
       <div class="mc__row">
         <label class="mc__field">
-          <span>{{ s.tipo === 'circle' ? 'Diámetro real (cm)' : 'Largo real (cm)' }}</span>
+          <span>{{ s.tipo === 'circle' ? ('Diámetro real (cm)' | t) : ('Largo real (cm)' | t) }}</span>
           <input type="number" inputmode="decimal" step="0.5" [value]="s.largo_cm" (input)="editar('largo_cm', $any($event.target).value)" />
         </label>
         <label class="mc__field mc__field--plano">
-          <span>Plano</span>
+          <span>{{ 'Plano' | t }}</span>
           <input type="number" inputmode="decimal" step="0.5" [value]="s.plano_largo_cm ?? s.largo_cm" (input)="editar('plano_largo_cm', $any($event.target).value)" />
         </label>
       </div>
       @if (s.tipo !== 'circle') {
         <div class="mc__row">
           <label class="mc__field">
-            <span>Alto real (cm)</span>
+            <span>{{ 'Alto real (cm)' | t }}</span>
             <input type="number" inputmode="decimal" step="0.5" [value]="s.alto_cm" (input)="editar('alto_cm', $any($event.target).value)" />
           </label>
           <label class="mc__field mc__field--plano">
-            <span>Plano</span>
+            <span>{{ 'Plano' | t }}</span>
             <input type="number" inputmode="decimal" step="0.5" [value]="s.plano_alto_cm ?? s.alto_cm" (input)="editar('plano_alto_cm', $any($event.target).value)" />
           </label>
         </div>
       }
       <div class="mc__row">
         <label class="mc__field">
-          <span>Espesor real (cm)</span>
+          <span>{{ 'Espesor real (cm)' | t }}</span>
           <input type="number" inputmode="decimal" step="0.5" [value]="s.espesor_cm" (input)="editar('espesor_cm', $any($event.target).value)" />
         </label>
         <label class="mc__field mc__field--plano">
-          <span>Plano</span>
+          <span>{{ 'Plano' | t }}</span>
           <input type="number" inputmode="decimal" step="0.5" [value]="s.plano_espesor_cm ?? s.espesor_cm" (input)="editar('plano_espesor_cm', $any($event.target).value)" />
         </label>
       </div>
       <p class="mc__desv" [class.mc__desv--bad]="desviacion(s) > toleranciaCm()">
         {{ desviacion(s) > toleranciaCm()
-            ? 'Fuera de tolerancia — desvío máx ' + (desviacion(s) | number:'1.0-1') + ' cm'
-            : 'Dentro de tolerancia (desvío máx ' + (desviacion(s) | number:'1.0-1') + ' cm)' }}
+            ? (('Fuera de tolerancia — desvío máx' | t) + ' ' + (desviacion(s) | number:'1.0-1') + ' cm')
+            : (('Dentro de tolerancia (desvío máx' | t) + ' ' + (desviacion(s) | number:'1.0-1') + ' cm)') }}
       </p>
     } @else {
-      <p class="mc__empty">Toca una figura de la paleta para agregarla, luego selecciónala para editar sus medidas reales y las del plano.</p>
+      <p class="mc__empty">{{ 'Toca una figura de la paleta para agregarla, luego selecciónala para editar sus medidas reales y las del plano.' | t }}</p>
     }
   </div>
 </div>

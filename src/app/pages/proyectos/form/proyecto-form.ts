@@ -6,6 +6,8 @@ import { StepBar } from '../../../shared/ui/step-bar/step-bar';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { LocationPicker, UbicacionSeleccionada } from '../../../shared/ui/location-picker/location-picker';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { ProyectosService } from '../../../core/services/proyectos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -26,7 +28,7 @@ type PasoKey = 'datos' | 'ubicacion' | 'equipo' | 'revisar';
   selector: 'app-proyecto-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, LocationPicker],
+  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, LocationPicker, TranslatePipe],
   templateUrl: './proyecto-form.html',
   styleUrl: './proyecto-form.scss',
 })
@@ -36,10 +38,11 @@ export class ProyectoFormPage implements OnDestroy {
   private toast = inject(ToastService);
   private navGuard = inject(NavGuardService);
   private route = inject(ActivatedRoute);
+  private i18n = inject(I18nService);
 
   readonly estadoOpciones = (Object.keys(PROYECTO_ESTADO_LABEL) as ProyectoEstado[]).map((id) => ({
     id,
-    label: PROYECTO_ESTADO_LABEL[id],
+    label: this.i18n.t(PROYECTO_ESTADO_LABEL[id]),
   }));
 
   proyectoId = signal<string>(this.route.snapshot.paramMap.get('id') ?? '');
@@ -75,15 +78,15 @@ export class ProyectoFormPage implements OnDestroy {
   ubicacionCambiada = signal(false);
 
   tieneUbicacion = computed(() => this.latSel() != null && this.lngSel() != null);
-  estadoLabel = computed(() => PROYECTO_ESTADO_LABEL[this.estado()]);
+  estadoLabel = computed(() => this.i18n.t(PROYECTO_ESTADO_LABEL[this.estado()]));
 
   // ── Wizard ──
   paso = signal(0);
   pasos: { key: PasoKey; titulo: string }[] = [
-    { key: 'datos', titulo: 'Datos del proyecto' },
-    { key: 'ubicacion', titulo: 'Ubicación de la obra' },
-    { key: 'equipo', titulo: 'Equipo y contacto' },
-    { key: 'revisar', titulo: 'Descripción y revisar' },
+    { key: 'datos', titulo: this.i18n.t('Datos del proyecto') },
+    { key: 'ubicacion', titulo: this.i18n.t('Ubicación de la obra') },
+    { key: 'equipo', titulo: this.i18n.t('Equipo y contacto') },
+    { key: 'revisar', titulo: this.i18n.t('Descripción y revisar') },
   ];
   pasoActual = computed(() => this.pasos[Math.min(this.paso(), this.pasos.length - 1)]);
   esUltimo = computed(() => this.paso() >= this.pasos.length - 1);
@@ -100,7 +103,11 @@ export class ProyectoFormPage implements OnDestroy {
     }
   });
   primaryLabel = computed(() =>
-    this.guardando() ? 'Guardando…' : this.esUltimo() ? (this.esEdicion() ? 'Guardar cambios' : 'Crear proyecto') : 'Siguiente',
+    this.guardando()
+      ? this.i18n.t('Guardando…')
+      : this.esUltimo()
+        ? (this.esEdicion() ? this.i18n.t('Guardar cambios') : this.i18n.t('Crear proyecto'))
+        : this.i18n.t('Siguiente'),
   );
 
   private readonly backHandler = (): boolean => {
@@ -126,7 +133,7 @@ export class ProyectoFormPage implements OnDestroy {
       const p = await this.proyectos.getProyecto(this.proyectoId());
       if (!p) {
         // AS24 — no cargó (borrado / offline sin cache): no dejar un form en blanco mudo.
-        this.toast.error(this.network.online() ? 'No se encontró el proyecto.' : 'Conéctate para editar este proyecto.');
+        this.toast.error(this.network.online() ? this.i18n.t('No se encontró el proyecto.') : this.i18n.t('Conéctate para editar este proyecto.'));
         this.navGuard.back('/proyectos');
         return;
       }
@@ -158,11 +165,11 @@ export class ProyectoFormPage implements OnDestroy {
   async resolver(): Promise<void> {
     const txt = this.ubicacionTexto().trim();
     if (!txt) {
-      this.toast.error('Pega el link de Google Maps o las coordenadas.');
+      this.toast.error(this.i18n.t('Pega el link de Google Maps o las coordenadas.'));
       return;
     }
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para resolver el link de Maps.');
+      this.toast.error(this.i18n.t('Necesitas conexión para resolver el link de Maps.'));
       return;
     }
     if (this.resolviendo()) return;
@@ -173,9 +180,9 @@ export class ProyectoFormPage implements OnDestroy {
       this.lngSel.set(r.lng);
       this.ubicacionMetodo.set(r.source);
       this.ubicacionCambiada.set(true);
-      this.toast.success('Ubicación fijada. Ajústala en el mapa si hace falta.');
+      this.toast.success(this.i18n.t('Ubicación fijada. Ajústala en el mapa si hace falta.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo resolver la ubicación.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo resolver la ubicación.'));
     } finally {
       this.resolviendo.set(false);
     }
@@ -221,24 +228,24 @@ export class ProyectoFormPage implements OnDestroy {
   async guardar(): Promise<void> {
     if (this.guardando()) return;
     if (!this.nombre().trim()) {
-      this.toast.error('Escribe el nombre del proyecto.');
+      this.toast.error(this.i18n.t('Escribe el nombre del proyecto.'));
       return;
     }
     if (!this.esEdicion() && !this.tieneUbicacion()) {
-      this.toast.error('Fija la ubicación de la obra antes de crear el proyecto.');
+      this.toast.error(this.i18n.t('Fija la ubicación de la obra antes de crear el proyecto.'));
       return;
     }
     // AS24 — validaciones de fechas y presupuesto.
     if (this.fechaInicio() && this.fechaFin() && this.fechaFin() < this.fechaInicio()) {
-      this.toast.error('La fecha de fin no puede ser anterior a la de inicio.');
+      this.toast.error(this.i18n.t('La fecha de fin no puede ser anterior a la de inicio.'));
       return;
     }
     if (this.presupuesto() != null && this.presupuesto()! < 0) {
-      this.toast.error('El presupuesto no puede ser negativo.');
+      this.toast.error(this.i18n.t('El presupuesto no puede ser negativo.'));
       return;
     }
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para guardar el proyecto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para guardar el proyecto.'));
       return;
     }
     this.guardando.set(true);
@@ -260,10 +267,10 @@ export class ProyectoFormPage implements OnDestroy {
           this.ubicacionMetodo(),
         );
       }
-      this.toast.success(this.esEdicion() ? 'Proyecto actualizado.' : 'Proyecto creado.');
+      this.toast.success(this.esEdicion() ? this.i18n.t('Proyecto actualizado.') : this.i18n.t('Proyecto creado.'));
       this.hoja.set('exito');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el proyecto.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el proyecto.'));
     } finally {
       this.guardando.set(false);
     }
