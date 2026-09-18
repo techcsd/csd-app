@@ -24,9 +24,11 @@
 ### FASE 4 — BT6 alarmas silenciables
 Perfil › Notificaciones (`avisos`): `NotificacionesService.misNotifSilenciables()` lee `mis_preferencias().notif[].silenciable`; switch si el usuario puede silenciar (yo/Gerencia/elegidos), "Siempre activa" si no. `set_notif_pref` como hoy (el gate server `notif_permitida` lo respeta).
 
-### Release 2.26.0 — **GATEADA a Xaviel** (pedir OK)
-- `CAMBIOS_CURADOS` sugeridos: `arreglo` tomar fotos en conduce externo ya no cierra la app · `nuevo` "Tienes un borrador sin enviar" · `arreglo` inglés cubre el inicio/Transporte/Perfil (resto próximamente) · `arreglo` foto de perfil · `arreglo` transferir conduce externo con mensaje claro · `mejora` cero = pendiente al despachar · `mejora` alarmas semanales con interruptor para quien puede.
-- Flujo: OK → bump 4 sitios → `npm run apk` (registra Y1) → device-QA → `apk:publish` → publicar + **mínima = 2.26.0** (el crash de fotos justifica mínima).
+### Release 2.26.0 — ✅ **PUBLICADA + MÍNIMA FORZADA** (con OK de Xaviel: "haz todo")
+- Bump 4 sitios (commit `fe4c921`) + 2ª tanda (commit `0d17ba9`). APK firmado (cert prod `3c5316d8…5065`, v1+v2+v3), **Y1 registrado** (7 cambios curados), subido al bucket (`csd-app-2.26.0.apk` + latest + version.json), **apk_url actualizado**, **PUBLICADA + MÍNIMA = última**.
+- Gate verificado: `version_publicada()` → **pub 2.26.0 / min 2.26.0 / code 2026000**. Higiene de flags OK (solo 2.26.0 con `minima=true`; 2.25.0/2.24.1 siguen `publicada`, minima off).
+- **Device-QA aún NO hecho** (necesita el iPhone/Android de Xaviel): 6 fotos en conduce externo sin cierre · borrador tras cierre forzado · recorrido English (beta 75%) · foto de perfil · despacho con renglón 0 · alarmas silenciables. Si algo grave sale, rollback abajo.
+- **Rollback:** en SGC `update sgc.app_versiones set minima=(version='2.25.0'), publicada=(version in ('2.25.0','2.24.1')) where plataforma='movil'` (vuelve la mínima a 2.25.0) + `git revert 0d17ba9 fe4c921 && git push`. Objetos del padre son aditivos → se dejan.
 
 ### ✅ 2ª tanda "haz todo" (todo lo owed cerrado salvo 1)
 - **Borradores completos**: combustible (807-líneas, con modo corrección respetado), retiro-nuevo, + **foto-draft** en entrada/recibir/checklist/cartilla-nueva (ya guardaban el formulario; ahora también las fotos). *(ver `docs/BORRADORES-FOTOS-AUDIT.md`)*
