@@ -3,8 +3,8 @@
     <header class="gconduce__header">
       <button type="button" class="gconduce__back" (click)="atras()" aria-label="Atrás">←</button>
       <div class="gconduce__head-txt">
-        <h1 class="gconduce__title">📦 Crear conduce</h1>
-        <span class="gconduce__paso-titulo">{{ pasoActual()?.titulo }}</span>
+        <h1 class="gconduce__title">📦 {{ 'Crear conduce' | t }}</h1>
+        <span class="gconduce__paso-titulo">{{ (pasoActual()?.titulo || '') | t }}</span>
       </div>
     </header>
     <app-step-bar [current]="paso() + 1" [total]="pasos().length" />
@@ -15,10 +15,10 @@
         <div class="gconduce__despacho">
           <span class="gconduce__despacho-tag">CONDUCE (#REQ)</span>
           <span class="gconduce__despacho-txt">
-            Despacho de requisición · {{ despachoRenglones() }} renglón(es) precargados (editables).
+            {{ 'Despacho de requisición · {n} renglón(es) precargados (editables).' | t: { n: despachoRenglones() } }}
           </span>
           @if (despachosPrevios() > 0) {
-            <span class="gconduce__despacho-dup">⚠️ Esta requisición ya tiene {{ despachosPrevios() }} conduce(s) en curso — puedes continuar.</span>
+            <span class="gconduce__despacho-dup">⚠️ {{ 'Esta requisición ya tiene {n} conduce(s) en curso — puedes continuar.' | t: { n: despachosPrevios() } }}</span>
           }
         </div>
       }
@@ -31,50 +31,49 @@
         <!-- ═══════════ HOJA: ORIGEN ═══════════ -->
         @case ('origen') {
           <p class="gconduce__intro">
-            ¿De dónde sale el material? Si es una obra/almacén se descuenta del stock;
-            si es una ferretería se registra como compra.
+            {{ '¿De dónde sale el material? Si es una obra/almacén se descuenta del stock; si es una ferretería se registra como compra.' | t }}
           </p>
           <div class="gconduce__origen">
-            <app-option-button icon="🏬" label="Almacén / obra" [selected]="origenTipo() === 'almacen'" (pressed)="setOrigen('almacen')" />
-            <app-option-button icon="🧾" label="Ferretería (compra)" [selected]="origenTipo() === 'ferreteria'" (pressed)="setOrigen('ferreteria')" />
+            <app-option-button icon="🏬" [label]="'Almacén / obra' | t" [selected]="origenTipo() === 'almacen'" (pressed)="setOrigen('almacen')" />
+            <app-option-button icon="🧾" [label]="'Ferretería (compra)' | t" [selected]="origenTipo() === 'ferreteria'" (pressed)="setOrigen('ferreteria')" />
           </div>
 
           @if (origenTipo() === 'almacen') {
             <div class="gconduce__mt">
-              <app-collapsible-select label="Almacén de origen" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
+              <app-collapsible-select [label]="'Almacén de origen' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="bodegaId.set($event)" />
             </div>
           } @else if (origenTipo() === 'ferreteria') {
             @if (ferreteriaOptions().length) {
-              <app-collapsible-select label="Ferretería" icon="🧾" [options]="ferreteriaOptions()" [selectedId]="ferreteriaId()" [searchable]="true" searchPlaceholder="Buscar ferretería…" (picked)="onFerreteria($event)" />
+              <app-collapsible-select [label]="'Ferretería' | t" icon="🧾" [options]="ferreteriaOptions()" [selectedId]="ferreteriaId()" [searchable]="true" [searchPlaceholder]="'Buscar ferretería…' | t" (picked)="onFerreteria($event)" />
             } @else {
-              <div class="gconduce__band">🧾 No hay ferreterías registradas. Pídele a Compras que agregue una (visible para choferes).</div>
+              <div class="gconduce__band">🧾 {{ 'No hay ferreterías registradas. Pídele a Compras que agregue una (visible para choferes).' | t }}</div>
             }
             <div class="gconduce__mt">
-              <app-collapsible-select label="Almacén donde entra la compra" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
+              <app-collapsible-select [label]="'Almacén donde entra la compra' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="bodegaId.set($event)" />
             </div>
-            <label class="field-label gconduce__mt" for="ref">Referencia / # de factura (opcional)</label>
-            <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" placeholder="Ej. F-00123" />
+            <label class="field-label gconduce__mt" for="ref">{{ 'Referencia / # de factura (opcional)' | t }}</label>
+            <input id="ref" class="field" type="text" [ngModel]="referencia()" (ngModelChange)="referencia.set($event)" [placeholder]="'Ej. F-00123' | t" />
           }
         }
 
         <!-- ═══════════ HOJA: DESTINO ═══════════ -->
         @case ('destino') {
-          <p class="gconduce__intro">¿A dónde llevas el material?</p>
+          <p class="gconduce__intro">{{ '¿A dónde llevas el material?' | t }}</p>
           @if (origenTipo() === 'almacen') {
             <div class="gconduce__origen">
-              <app-option-button icon="🏗" label="Obra" [selected]="destinoTipo() === 'obra'" (pressed)="destinoTipo.set('obra')" />
+              <app-option-button icon="🏗" [label]="'Obra' | t" [selected]="destinoTipo() === 'obra'" (pressed)="destinoTipo.set('obra')" />
               <!-- AL10 — Bodega Central / almacenes principales como destino -->
-              <app-option-button icon="🏢" label="Almacén central" [selected]="destinoTipo() === 'almacen'" (pressed)="destinoTipo.set('almacen')" />
-              <app-option-button icon="🏭" label="Suplidor (devolución)" [selected]="destinoTipo() === 'suplidor'" (pressed)="destinoTipo.set('suplidor')" />
+              <app-option-button icon="🏢" [label]="'Almacén central' | t" [selected]="destinoTipo() === 'almacen'" (pressed)="destinoTipo.set('almacen')" />
+              <app-option-button icon="🏭" [label]="'Suplidor (devolución)' | t" [selected]="destinoTipo() === 'suplidor'" (pressed)="destinoTipo.set('suplidor')" />
             </div>
           }
           @switch (destinoTipo()) {
             @case ('obra') {
               <div class="gconduce__mt">
-                <app-collapsible-select label="Obra destino" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="obraId.set($event)" />
+                <app-collapsible-select [label]="'Obra destino' | t" icon="🏗" [options]="obraOptions()" [selectedId]="obraId()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="obraId.set($event)" />
                 @if (!obraOptions().length) {
                   <!-- AP1 — nunca vacío silencioso: distingue sin-datos/offline de un error. -->
-                  <div class="gconduce__band">🏗 No hay obras disponibles ahora. Verifica tu conexión y vuelve a intentar; si el problema sigue, contacta a Tecnología.</div>
+                  <div class="gconduce__band">🏗 {{ 'No hay obras disponibles ahora. Verifica tu conexión y vuelve a intentar; si el problema sigue, contacta a Tecnología.' | t }}</div>
                 }
               </div>
             }
@@ -85,29 +84,29 @@
               <div class="gconduce__mt">
                 @if (almacenCentral()) {
                   @if (editarAlmacen()) {
-                    <app-collapsible-select label="Almacén central destino" icon="🏢" [options]="almacenOptions()" [selectedId]="almacenId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="onAlmacenElegido($event)" />
+                    <app-collapsible-select [label]="'Almacén central destino' | t" icon="🏢" [options]="almacenOptions()" [selectedId]="almacenId()" [searchable]="true" [searchPlaceholder]="'Buscar almacén…' | t" (picked)="onAlmacenElegido($event)" />
                   } @else {
                     <div class="gconduce__destino-fijo">
-                      <span class="gconduce__destino-fijo-txt">🏢 Se enviará a <b>{{ almacenSelNombre() }}</b></span>
+                      <span class="gconduce__destino-fijo-txt">🏢 {{ 'Se enviará a' | t }} <b>{{ almacenSelNombre() }}</b></span>
                       @if (almacenes().length > 1) {
-                        <button type="button" class="gconduce__destino-cambiar" (click)="editarAlmacen.set(true)">Cambiar</button>
+                        <button type="button" class="gconduce__destino-cambiar" (click)="editarAlmacen.set(true)">{{ 'Cambiar' | t }}</button>
                       }
                     </div>
                   }
                 } @else {
-                  <div class="gconduce__band">No hay un almacén central configurado. Usa "Obra" como destino o contacta a Tecnología.</div>
+                  <div class="gconduce__band">{{ 'No hay un almacén central configurado. Usa "Obra" como destino o contacta a Tecnología.' | t }}</div>
                 }
                 <!-- AS4 — origen = destino no se permite. -->
                 @if (mismoOrigenDestino()) {
                   <div class="gconduce__band gconduce__band--error">
-                    El origen y el destino son el mismo almacén ({{ almacenSelNombre() }}). Elige un destino diferente.
+                    {{ 'El origen y el destino son el mismo almacén ({n}). Elige un destino diferente.' | t: { n: almacenSelNombre() } }}
                   </div>
                 }
               </div>
             }
             @default {
-              <label class="field-label gconduce__mt">Suplidor al que devuelves</label>
-              <input class="field" type="text" [ngModel]="suplidorNombre()" (ngModelChange)="suplidorNombre.set($event)" placeholder="Nombre del suplidor" />
+              <label class="field-label gconduce__mt">{{ 'Suplidor al que devuelves' | t }}</label>
+              <input class="field" type="text" [ngModel]="suplidorNombre()" (ngModelChange)="suplidorNombre.set($event)" [placeholder]="'Nombre del suplidor' | t" />
             }
           }
         }
@@ -115,13 +114,13 @@
         <!-- ═══════════ HOJA: MATERIALES ═══════════ -->
         @case ('materiales') {
           <label class="field-label">
-            {{ esFerreteria() ? '¿Qué compraste?' : '¿Qué material sacas?' }}
-            @if (esFerreteria()) { <span class="gconduce__opt">(opcional)</span> }
+            {{ esFerreteria() ? ('¿Qué compraste?' | t) : ('¿Qué material sacas?' | t) }}
+            @if (esFerreteria()) { <span class="gconduce__opt">{{ '(opcional)' | t }}</span> }
           </label>
           <app-articulo-picker [articulos]="articulos()" [categorias]="categorias()" [soloBuscador]="true" [exclude]="excludeIds()" [stock]="stockParaPicker()" [buscador]="buscarArticulosFuzzy" (picked)="agregar($event)" />
 
           @if (stockSinVerificar()) {
-            <p class="gconduce__hint">ℹ️ Sin conexión: mostrando existencias del último sync. Se verifican al enviar.</p>
+            <p class="gconduce__hint">ℹ️ {{ 'Sin conexión: mostrando existencias del último sync. Se verifican al enviar.' | t }}</p>
           }
 
           @if (cart().length) {
@@ -130,7 +129,7 @@
                 <div class="gconduce__item">
                   <span class="gconduce__item-name">
                     {{ l.nombre }}
-                    @if (esPendiente(l.cantidad)) { <span class="gconduce__pend-tag">Pendiente</span> }
+                    @if (esPendiente(l.cantidad)) { <span class="gconduce__pend-tag">{{ 'Pendiente' | t }}</span> }
                   </span>
                   <div class="gconduce__item-qty">
                     <app-qty-input [value]="l.cantidad" [max]="topeStock(l.articulo_id!)" [allowZero]="esDespacho()" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
@@ -141,8 +140,8 @@
                     @let s = stockDe(l.articulo_id);
                     @if (s !== null) {
                       <span class="gconduce__stock" [class.gconduce__stock--warn]="excedeStock(l)">
-                        @if (excedeStock(l)) { ⚠ Solo hay {{ s | number: '1.0-2' }} en el almacén }
-                        @else { Disponible: {{ s | number: '1.0-2' }} }
+                        @if (excedeStock(l)) { ⚠ {{ 'Solo hay {n} en el almacén' | t: { n: (s | number: '1.0-2') || '' } }} }
+                        @else { {{ 'Disponible' | t }}: {{ s | number: '1.0-2' }} }
                       </span>
                     }
                   }
@@ -150,29 +149,29 @@
               }
             </div>
             @if (hayExceso()) {
-              <div class="gconduce__band gconduce__band--warn">⚠ Estás sacando más de lo disponible en algún material. Ajusta la cantidad.</div>
+              <div class="gconduce__band gconduce__band--warn">⚠ {{ 'Estás sacando más de lo disponible en algún material. Ajusta la cantidad.' | t }}</div>
             }
             @if (esDespacho()) {
               <!-- BT8 — 0 = pendiente: se despacha el resto y ese renglón queda por despachar. -->
               @if (faltaItems()) {
-                <div class="gconduce__band gconduce__band--warn">Pon la cantidad de al menos un renglón. Deja 0 en lo que no despachaste (queda pendiente).</div>
+                <div class="gconduce__band gconduce__band--warn">{{ 'Pon la cantidad de al menos un renglón. Deja 0 en lo que no despachaste (queda pendiente).' | t }}</div>
               } @else {
-                <p class="gconduce__hint">Deja en 0 lo que no despachaste: queda <b>pendiente</b> y se despacha el resto.</p>
+                <p class="gconduce__hint">{{ 'Deja en 0 lo que no despachaste: queda pendiente y se despacha el resto.' | t }}</p>
               }
             }
           } @else if (!esFerreteria()) {
-            <div class="gconduce__band">🔎 Agrega al menos un material para continuar.</div>
+            <div class="gconduce__band">🔎 {{ 'Agrega al menos un material para continuar.' | t }}</div>
           }
 
           <!-- ═══ AU4 — material NO catalogado (nota libre) ═══ -->
           @if (!esFerreteria()) {
             <div class="gconduce__libre">
               @if (itemsLibres().length) {
-                <label class="field-label">Materiales fuera del catálogo</label>
+                <label class="field-label">{{ 'Materiales fuera del catálogo' | t }}</label>
                 <div class="gconduce__items">
                   @for (l of itemsLibres(); track $index) {
                     <div class="gconduce__item gconduce__item--libre">
-                      <span class="gconduce__item-name">{{ l.nombre }} <span class="gconduce__libre-tag">Fuera de catálogo</span></span>
+                      <span class="gconduce__item-name">{{ l.nombre }} <span class="gconduce__libre-tag">{{ 'Fuera de catálogo' | t }}</span></span>
                       <div class="gconduce__item-qty">
                         <span class="gconduce__unit">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
                         <button type="button" class="gconduce__item-x" (click)="quitarItemLibre($index)" aria-label="Quitar">✕</button>
@@ -184,15 +183,15 @@
 
               @if (!mostrarFormLibre()) {
                 <button type="button" class="gconduce__libre-add" (click)="abrirFormLibre()">
-                  ➕ El artículo no está en la lista
+                  ➕ {{ 'El artículo no está en la lista' | t }}
                 </button>
               } @else {
                 <div class="gconduce__libre-form">
-                  <label class="field-label" for="libre-nombre">Nombre del material</label>
-                  <input id="libre-nombre" class="field" type="text" [ngModel]="libreNombre()" (ngModelChange)="onLibreNombre($event)" placeholder="Ej.: Tubo PVC especial" />
+                  <label class="field-label" for="libre-nombre">{{ 'Nombre del material' | t }}</label>
+                  <input id="libre-nombre" class="field" type="text" [ngModel]="libreNombre()" (ngModelChange)="onLibreNombre($event)" [placeholder]="'Ej.: Tubo PVC especial' | t" />
 
                   @if (sugerenciasLibre().length) {
-                    <p class="gconduce__hint">¿Es alguno de estos? Úsalo del catálogo (descuenta stock):</p>
+                    <p class="gconduce__hint">{{ '¿Es alguno de estos? Úsalo del catálogo (descuenta stock):' | t }}</p>
                     <div class="gconduce__sugs">
                       @for (a of sugerenciasLibre(); track a.id) {
                         <button type="button" class="gconduce__sug" (click)="usarSugerencia(a)">{{ a.nombre }}</button>
@@ -202,18 +201,18 @@
 
                   <div class="gconduce__libre-row">
                     <div class="gconduce__libre-col">
-                      <label class="field-label" for="libre-cant">Cantidad</label>
+                      <label class="field-label" for="libre-cant">{{ 'Cantidad' | t }}</label>
                       <input id="libre-cant" class="field" type="number" inputmode="decimal" min="1" [ngModel]="libreCantidad()" (ngModelChange)="libreCantidad.set($event)" />
                     </div>
                     <div class="gconduce__libre-col">
-                      <label class="field-label" for="libre-unidad">Unidad</label>
-                      <input id="libre-unidad" class="field" type="text" [ngModel]="libreUnidad()" (ngModelChange)="libreUnidad.set($event)" placeholder="u, m, saco…" />
+                      <label class="field-label" for="libre-unidad">{{ 'Unidad' | t }}</label>
+                      <input id="libre-unidad" class="field" type="text" [ngModel]="libreUnidad()" (ngModelChange)="libreUnidad.set($event)" [placeholder]="'u, m, saco…' | t" />
                     </div>
                   </div>
-                  <p class="gconduce__hint">No descuenta stock. Se le avisará al admin para crear el artículo.</p>
+                  <p class="gconduce__hint">{{ 'No descuenta stock. Se le avisará al admin para crear el artículo.' | t }}</p>
                   <div class="gconduce__libre-actions">
-                    <button type="button" class="btn-ghost" (click)="cancelarLibre()">Cancelar</button>
-                    <button type="button" class="btn-cta" (click)="agregarItemLibre()">Agregar material</button>
+                    <button type="button" class="btn-ghost" (click)="cancelarLibre()">{{ 'Cancelar' | t }}</button>
+                    <button type="button" class="btn-cta" (click)="agregarItemLibre()">{{ 'Agregar material' | t }}</button>
                   </div>
                 </div>
               }
@@ -223,61 +222,58 @@
 
         <!-- ═══════════ HOJA: FOTOS DE FERRETERÍA ═══════════ -->
         @case ('ferr-fotos') {
-          <label class="field-label">Foto del recibo <span class="gconduce__req">*</span></label>
+          <label class="field-label">{{ 'Foto del recibo' | t }} <span class="gconduce__req">*</span></label>
           <div class="gconduce__fotos">
-            <app-photo-slot label="Recibo" hint="🧾" [gallery]="false" [foto]="fotoRecibo()" (captured)="fotoRecibo.set($event)" (cleared)="fotoRecibo.set(null)" />
-            <app-photo-slot label="Mercancía" hint="📦" [gallery]="false" [foto]="fotoMercancia()" (captured)="fotoMercancia.set($event)" (cleared)="fotoMercancia.set(null)" />
+            <app-photo-slot [label]="'Recibo' | t" hint="🧾" [gallery]="false" [foto]="fotoRecibo()" (captured)="fotoRecibo.set($event)" (cleared)="fotoRecibo.set(null)" />
+            <app-photo-slot [label]="'Mercancía' | t" hint="📦" [gallery]="false" [foto]="fotoMercancia()" (captured)="fotoMercancia.set($event)" (cleared)="fotoMercancia.set(null)" />
           </div>
-          <label class="field-label gconduce__mt" for="obsf">Observaciones (opcional)</label>
-          <textarea id="obsf" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
+          <label class="field-label gconduce__mt" for="obsf">{{ 'Observaciones (opcional)' | t }}</label>
+          <textarea id="obsf" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" [placeholder]="'Motivo, referencia…' | t"></textarea>
         }
 
         <!-- ═══════════ HOJA: FOTO DE RECEPCIÓN ═══════════ -->
         @case ('foto') {
-          <label class="field-label">Foto de recepción <span class="gconduce__req">*</span></label>
-          <p class="gconduce__sub">Toma la foto del material que estás cargando (lo que te entrega el despachante).</p>
+          <label class="field-label">{{ 'Foto de recepción' | t }} <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">{{ 'Toma la foto del material que estás cargando (lo que te entrega el despachante).' | t }}</p>
           <div class="gconduce__fotos">
-            <app-photo-slot label="Recepción" hint="📦" [gallery]="false" [foto]="fotoRecepcion()" (captured)="fotoRecepcion.set($event)" (cleared)="fotoRecepcion.set(null)" />
+            <app-photo-slot [label]="'Recepción' | t" hint="📦" [gallery]="false" [foto]="fotoRecepcion()" (captured)="fotoRecepcion.set($event)" (cleared)="fotoRecepcion.set(null)" />
           </div>
-          <label class="field-label gconduce__mt" for="obs">Observaciones (opcional)</label>
-          <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" placeholder="Motivo, referencia…"></textarea>
+          <label class="field-label gconduce__mt" for="obs">{{ 'Observaciones (opcional)' | t }}</label>
+          <textarea id="obs" class="field gconduce__notas" rows="2" [ngModel]="observaciones()" (ngModelChange)="observaciones.set($event)" [placeholder]="'Motivo, referencia…' | t"></textarea>
         }
 
         <!-- ═══════════ HOJA: DESPACHANTE (+ VEHÍCULO) — AU14 ═══════════ -->
         @case ('despacho') {
-          <label class="field-label">¿Quién despacha? <span class="gconduce__req">*</span></label>
+          <label class="field-label">{{ '¿Quién despacha?' | t }} <span class="gconduce__req">*</span></label>
           @if (despachanteOptions().length) {
-            <app-collapsible-select label="Despachante" icon="🧑‍🔧" [options]="despachanteOptions()" [selectedId]="despachanteId()" [searchable]="true" searchPlaceholder="Buscar persona…" (picked)="despachanteId.set($event)" />
+            <app-collapsible-select [label]="'Despachante' | t" icon="🧑‍🔧" [options]="despachanteOptions()" [selectedId]="despachanteId()" [searchable]="true" [searchPlaceholder]="'Buscar persona…' | t" (picked)="despachanteId.set($event)" />
           }
-          <input class="field gconduce__mt" type="text" [ngModel]="despachanteLibre()" (ngModelChange)="despachanteLibre.set($event)" placeholder="…o escribe el nombre de quien despacha" />
+          <input class="field gconduce__mt" type="text" [ngModel]="despachanteLibre()" (ngModelChange)="despachanteLibre.set($event)" [placeholder]="'…o escribe el nombre de quien despacha' | t" />
 
           @if (vehiculoOptions().length) {
-            <label class="field-label gconduce__mt">¿En qué vehículo lo llevas? <span class="gconduce__opt">(opcional)</span></label>
-            <app-collapsible-select label="Vehículo" icon="🚚" [options]="vehiculoOptions()" [selectedId]="vehiculoId()" [searchable]="true" searchPlaceholder="Buscar vehículo…" (picked)="vehiculoId.set($event)" />
+            <label class="field-label gconduce__mt">{{ '¿En qué vehículo lo llevas?' | t }} <span class="gconduce__opt">{{ '(opcional)' | t }}</span></label>
+            <app-collapsible-select [label]="'Vehículo' | t" icon="🚚" [options]="vehiculoOptions()" [selectedId]="vehiculoId()" [searchable]="true" [searchPlaceholder]="'Buscar vehículo…' | t" (picked)="vehiculoId.set($event)" />
           }
 
-          <!-- AS2 — anti-fraude: el despachante firma desde SU propio teléfono, no aquí.
-               Si es un usuario del sistema, le llega "Conduce por firmar". Si es un
-               nombre libre/empleado, firma EN PERSONA en este teléfono (AS1). -->
+          <!-- AS2 — anti-fraude: el despachante firma desde SU propio teléfono, no aquí. -->
           @if (despachanteEsSistema()) {
             <div class="gconduce__band gconduce__band--info gconduce__mt">
-              🖊️ <b>{{ despachanteNombre() }}</b> firmará el conduce desde su propio teléfono.
-              Le llegará un aviso "Conduce por firmar". Podrás transitar, pero <b>no marcar la entrega</b> hasta que firme.
+              🖊️ {{ '{n} firmará el conduce desde su propio teléfono. Le llegará un aviso "Conduce por firmar". Podrás transitar, pero no marcar la entrega hasta que firme.' | t: { n: despachanteNombre() } }}
             </div>
           } @else if (despachanteOk()) {
-            <label class="field-label gconduce__mt">Firma del despachante <span class="gconduce__opt">(opcional)</span></label>
-            <p class="gconduce__sub">🖊️ <b>{{ despachanteNombre() }}</b> firma aquí, en este teléfono, para dejar constancia de la entrega.</p>
+            <label class="field-label gconduce__mt">{{ 'Firma del despachante' | t }} <span class="gconduce__opt">{{ '(opcional)' | t }}</span></label>
+            <p class="gconduce__sub">🖊️ {{ '{n} firma aquí, en este teléfono, para dejar constancia de la entrega.' | t: { n: despachanteNombre() } }}</p>
             <app-signature-pad #despachantePad (changed)="onFirmaDespachante($event)" />
           }
         }
 
         <!-- ═══════════ HOJA: TU FIRMA (CHOFER) — AU14 (pantalla propia) ═══════════ -->
         @case ('firma') {
-          <label class="field-label">Tu firma (chofer) <span class="gconduce__req">*</span></label>
-          <p class="gconduce__sub">Firma tú, que recibes y transportas el material.</p>
+          <label class="field-label">{{ 'Tu firma (chofer)' | t }} <span class="gconduce__req">*</span></label>
+          <p class="gconduce__sub">{{ 'Firma tú, que recibes y transportas el material.' | t }}</p>
           <app-signature-pad #choferPad (changed)="onFirmaChofer($event)" />
           @if (firmaChofer()) {
-            <p class="gconduce__band gconduce__band--info gconduce__mt">✓ Firma capturada. Si quieres rehacerla, limpia y vuelve a firmar.</p>
+            <p class="gconduce__band gconduce__band--info gconduce__mt">✓ {{ 'Firma capturada. Si quieres rehacerla, limpia y vuelve a firmar.' | t }}</p>
           }
         }
 
@@ -285,11 +281,11 @@
         @case ('receptor') {
           <!-- AT16/AU9 — ¿quién recibe en la obra? (dirige la confirmación; opcional) -->
           @if (destinoTipo() === 'obra' && receptorOptions().length) {
-            <label class="field-label">¿Quién recibe en la obra? <span class="gconduce__opt">(opcional)</span></label>
-            <p class="gconduce__sub">Le llegará el aviso para confirmar la entrega. Cualquier autorizado de la obra puede confirmar igual.</p>
-            <app-collapsible-select label="Receptor" icon="📥" [options]="receptorOptions()" [selectedId]="receptorId()" [searchable]="true" searchPlaceholder="Buscar quién recibe…" (picked)="receptorId.set($event)" />
+            <label class="field-label">{{ '¿Quién recibe en la obra?' | t }} <span class="gconduce__opt">{{ '(opcional)' | t }}</span></label>
+            <p class="gconduce__sub">{{ 'Le llegará el aviso para confirmar la entrega. Cualquier autorizado de la obra puede confirmar igual.' | t }}</p>
+            <app-collapsible-select [label]="'Receptor' | t" icon="📥" [options]="receptorOptions()" [selectedId]="receptorId()" [searchable]="true" [searchPlaceholder]="'Buscar quién recibe…' | t" (picked)="receptorId.set($event)" />
           } @else {
-            <p class="gconduce__sub">La confirmación de entrega la hará quien reciba en el destino. Puedes continuar.</p>
+            <p class="gconduce__sub">{{ 'La confirmación de entrega la hará quien reciba en el destino. Puedes continuar.' | t }}</p>
           }
           <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma el conduce al incentivo) -->
           <app-ayudante-picker (ayudanteChange)="onAyudante($event)" />
@@ -297,11 +293,11 @@
 
         <!-- ═══════════ HOJA: RESUMEN ═══════════ -->
         @case ('resumen') {
-          <p class="gconduce__intro">Revisa antes de {{ esFerreteria() ? 'registrar la compra' : 'emitir el conduce' }}.</p>
+          <p class="gconduce__intro">{{ esFerreteria() ? ('Revisa antes de registrar la compra.' | t) : ('Revisa antes de emitir el conduce.' | t) }}</p>
           <div class="gconduce__resumen">
-            <div class="gconduce__res-row"><span class="gconduce__res-k">Origen</span><span class="gconduce__res-v">{{ origenNombre() || '—' }}</span></div>
-            <div class="gconduce__res-row"><span class="gconduce__res-k">Destino</span><span class="gconduce__res-v">{{ destinoNombre() || '—' }}</span></div>
-            <div class="gconduce__res-row"><span class="gconduce__res-k">Materiales</span><span class="gconduce__res-v">{{ itemsCount() }} {{ itemsCount() === 1 ? 'artículo' : 'artículos' }}</span></div>
+            <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Origen' | t }}</span><span class="gconduce__res-v">{{ origenNombre() || '—' }}</span></div>
+            <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Destino' | t }}</span><span class="gconduce__res-v">{{ destinoNombre() || '—' }}</span></div>
+            <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Materiales' | t }}</span><span class="gconduce__res-v">{{ itemsCount() }} {{ (itemsCount() === 1 ? 'artículo' : 'artículos') | t }}</span></div>
             <!-- AL12 — detalle de materiales (nombre + cantidad + unidad) -->
             @if (itemsResumen().length) {
               <ul class="gconduce__res-items">
@@ -315,41 +311,41 @@
             }
             <!-- AU4 — materiales fuera del catálogo (nota libre) -->
             @if (itemsLibres().length) {
-              <div class="gconduce__res-row"><span class="gconduce__res-k">Fuera de catálogo</span><span class="gconduce__res-v">{{ itemsLibresCount() }} {{ itemsLibresCount() === 1 ? 'material' : 'materiales' }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Fuera de catálogo' | t }}</span><span class="gconduce__res-v">{{ itemsLibresCount() }} {{ (itemsLibresCount() === 1 ? 'material' : 'materiales') | t }}</span></div>
               <ul class="gconduce__res-items">
                 @for (l of itemsLibres(); track $index) {
                   <li class="gconduce__res-item">
-                    <span class="gconduce__res-item-name">{{ l.nombre }} <span class="gconduce__libre-tag">Fuera de catálogo</span></span>
+                    <span class="gconduce__res-item-name">{{ l.nombre }} <span class="gconduce__libre-tag">{{ 'Fuera de catálogo' | t }}</span></span>
                     <span class="gconduce__res-item-qty">{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</span>
                   </li>
                 }
               </ul>
             }
             @if (!esFerreteria()) {
-              <div class="gconduce__res-row"><span class="gconduce__res-k">Foto de recepción</span><span class="gconduce__res-v">{{ fotoRecepcion() ? '✓ tomada' : '—' }}</span></div>
-              <div class="gconduce__res-row"><span class="gconduce__res-k">Despachante</span><span class="gconduce__res-v">{{ despachanteNombre() || '—' }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Foto de recepción' | t }}</span><span class="gconduce__res-v">{{ fotoRecepcion() ? ('✓ tomada' | t) : '—' }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Despachante' | t }}</span><span class="gconduce__res-v">{{ despachanteNombre() || '—' }}</span></div>
               @if (vehiculoNombre()) {
-                <div class="gconduce__res-row"><span class="gconduce__res-k">Vehículo</span><span class="gconduce__res-v">{{ vehiculoNombre() }}</span></div>
+                <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Vehículo' | t }}</span><span class="gconduce__res-v">{{ vehiculoNombre() }}</span></div>
               }
-              <div class="gconduce__res-row"><span class="gconduce__res-k">Tu firma</span><span class="gconduce__res-v">{{ firmaChofer() ? '✓ firmada' : '—' }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Tu firma' | t }}</span><span class="gconduce__res-v">{{ firmaChofer() ? ('✓ firmada' | t) : '—' }}</span></div>
               @if (despachanteEsSistema()) {
-                <div class="gconduce__res-row"><span class="gconduce__res-k">Firma del despachante</span><span class="gconduce__res-v">Pendiente (firma desde su teléfono)</span></div>
+                <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Firma del despachante' | t }}</span><span class="gconduce__res-v">{{ 'Pendiente (firma desde su teléfono)' | t }}</span></div>
               } @else if (despachanteOk()) {
-                <div class="gconduce__res-row"><span class="gconduce__res-k">Firma del despachante</span><span class="gconduce__res-v">{{ firmaDespachante() ? '✓ firmada en persona' : 'Sin firma' }}</span></div>
+                <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Firma del despachante' | t }}</span><span class="gconduce__res-v">{{ firmaDespachante() ? ('✓ firmada en persona' | t) : ('Sin firma' | t) }}</span></div>
               }
             } @else {
-              <div class="gconduce__res-row"><span class="gconduce__res-k">Recibo</span><span class="gconduce__res-v">{{ fotoRecibo() ? '✓ tomado' : '—' }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Recibo' | t }}</span><span class="gconduce__res-v">{{ fotoRecibo() ? ('✓ tomado' | t) : '—' }}</span></div>
             }
           </div>
           @if (!esFerreteria()) {
-            <div class="gconduce__band">Al emitir, el conduce queda <b>Pendiente de entrega</b>. El receptor confirmará desde su propio teléfono.</div>
+            <div class="gconduce__band">{{ 'Al emitir, el conduce queda Pendiente de entrega. El receptor confirmará desde su propio teléfono.' | t }}</div>
           }
         }
       }
     </div>
 
     <app-wizard-footer
-      [backLabel]="paso() === 0 ? 'Cancelar' : 'Atrás'"
+      [backLabel]="paso() === 0 ? ('Cancelar' | t) : ('Atrás' | t)"
       [primaryLabel]="primaryBtn()"
       [primaryDisabled]="submitting() || !pasoValido()"
       (back)="atras()"
@@ -359,24 +355,23 @@
 
   @if (hoja() === 'exito') {
     <app-big-confirm
-      [title]="esFerreteria() ? 'Compra registrada' : 'Conduce generado'"
-      [note]="esFerreteria() ? 'Almacén la confirmará para subir el stock.' : 'Está en Pendiente de entrega. Cuando entregues, el receptor lo confirma desde su teléfono.'"
+      [title]="esFerreteria() ? ('Compra registrada' | t) : ('Conduce generado' | t)"
+      [note]="esFerreteria() ? ('Almacén la confirmará para subir el stock.' | t) : ('Está en Pendiente de entrega. Cuando entregues, el receptor lo confirma desde su teléfono.' | t)"
       tone="done"
-      buttonLabel="Listo"
-      [secondaryLabel]="!esFerreteria() && conduceCreadoId() && online ? '📤 Ver / compartir conduce' : ''"
+      [buttonLabel]="'Listo' | t"
+      [secondaryLabel]="!esFerreteria() && conduceCreadoId() && online ? ('📤 Ver / compartir conduce' | t) : ''"
       (dismissed)="finish()"
       (secondary)="verConduce()"
     />
   }
 
-  <!-- QA-40 — el borrador NO se descarta al salir (confirmarSalir solo navega): la
-       copia refleja que se guarda y se puede continuar después. -->
+  <!-- QA-40 — el borrador NO se descarta al salir (confirmarSalir solo navega). -->
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir del conduce?"
-    message="Se guarda como borrador; podrás continuar después."
-    confirmLabel="Sí, salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir del conduce?' | t"
+    [message]="'Se guarda como borrador; podrás continuar después.' | t"
+    [confirmLabel]="'Sí, salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     tone="danger"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"

@@ -1,5 +1,5 @@
 {
-  "en": 75,
+  "en": 77,
   "ht": 0,
   "alcance": true,
   "byScreen": {
@@ -784,9 +784,9 @@
       "ht": 0
     },
     "pages/transporte/generar-conduce": {
-      "conT": 0,
-      "sinT": 71,
-      "en": 0,
+      "conT": 101,
+      "sinT": 1,
+      "en": 99,
       "ht": 0
     },
     "pages/transporte/mantenimiento": {

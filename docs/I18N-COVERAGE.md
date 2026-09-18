@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 75%** del alcance · **Kreyòl (ht): 0%**
+- **Inglés (en): 77%** del alcance · **Kreyòl (ht): 0%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -137,7 +137,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/echada-detalle | 16 | 2 | 89% | 0% |  |
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
-| pages/transporte/generar-conduce | 0 | 71 | 0% | 0% |  |
+| pages/transporte/generar-conduce | 101 | 1 | 99% | 0% |  |
 | pages/transporte/mantenimiento | 37 | 1 | 97% | 0% |  |
 | pages/transporte/mantenimiento-cierre | 8 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-lista | 7 | 0 | 100% | 0% |  |

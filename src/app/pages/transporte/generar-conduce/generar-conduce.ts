@@ -22,6 +22,8 @@ import { SyncService } from '../../../core/sync/sync.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
 import { ConducesService, Despachante, AlmacenDestino, ReceptorDisponible } from '../../../core/services/conduces.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoUsoService } from '../../../core/services/vehiculo-uso.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -80,7 +82,7 @@ interface ConduceDraft {
   selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, QtyInput, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner, AyudantePicker],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, QtyInput, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner, AyudantePicker, TranslatePipe],
   templateUrl: './generar-conduce.html',
   styleUrl: './generar-conduce.scss',
 })
@@ -88,6 +90,7 @@ export class GenerarConducePage implements OnDestroy {
   private inventario = inject(InventarioService);
   private conduces = inject(ConducesService);
   private vehiculos = inject(VehiculosService);
+  private i18n = inject(I18nService);
   private usoSvc = inject(VehiculoUsoService);
   private ctx = inject(UserContextService);
   private tracking = inject(TrackingService);
@@ -437,7 +440,7 @@ export class GenerarConducePage implements OnDestroy {
   });
 
   /** Etiqueta del botón primario del footer (avanzar u emitir). */
-  primaryBtn = computed(() => (this.esUltimo() ? this.primaryLabel() : 'Siguiente'));
+  primaryBtn = computed(() => this.i18n.t(this.esUltimo() ? this.primaryLabel() : 'Siguiente'));
 
   siguiente(): void {
     if (!this.pasoValido() || this.submitting()) return;
