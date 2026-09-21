@@ -6,6 +6,7 @@ import { SupabaseService } from './supabase.service';
 import { NotificacionesService, notifAppRoute } from './notificaciones.service';
 import { NavGuardService } from './nav-guard.service';
 import { AlarmaService } from './alarma.service';
+import { environment } from '../../../environments/environment';
 
 /**
  * AF7 — Notificaciones push nativas (Android/FCM). La infraestructura vive en
@@ -42,6 +43,15 @@ export class PushService {
   async init(): Promise<void> {
     if (this.started || !Capacitor.isNativePlatform()) return;
     this.started = true;
+
+    // BU1 F2 — el flavor dev puede NO tener Firebase (google-services.json del flavor,
+    // pendiente de Xaviel). `PushNotifications.register()` invoca el nativo
+    // `FirebaseMessaging.getInstance()`, que LANZA si Firebase no está inicializado y
+    // **CRASHEA la app al arrancar** (excepción nativa, no atrapable desde JS). Por eso
+    // en dev NO arrancamos push. "Acerca de" ya muestra "Push: No disponible en este
+    // build". Para habilitar push en dev: bundlea android/app/src/dev/google-services.json
+    // y relaja este guard.
+    if (environment.entorno === 'dev') return;
 
     await PushNotifications.addListener('registration', (t) => {
       this.token = t.value;
