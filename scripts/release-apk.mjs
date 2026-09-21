@@ -58,10 +58,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-// Alineado con la fila `minima=true` en sgc.app_versiones: 2.26.1 NO fuerza mínima
-// (es mejora de i18n, no crítico); la mínima sigue en 2.26.0 (ya forzada por el fix
-// del crash de fotos). version.json.min_version refleja esa mínima real.
-const MIN_VERSION = '2.26.0';
+// Alineado con la fila `minima=true` en sgc.app_versiones. 2.26.1 se FORZÓ como
+// mínima (con OK de Xaviel), así que la mínima real = 2.26.1.
+const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-09-21';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
