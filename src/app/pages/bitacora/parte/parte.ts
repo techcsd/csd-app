@@ -31,6 +31,8 @@ import { ResponsableProyecto } from '../../../core/models/proyecto.model';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { fechaLocalISO } from '../../../core/util/fecha';
 import {
   ACTIVIDADES,
@@ -69,7 +71,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor],
+  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor, TranslatePipe],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -86,6 +88,7 @@ export class PartePage implements OnDestroy {
   private ctx = inject(UserContextService);
   private borrador = inject(BorradorService);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   // S5 — clave de borrador por instancia (varios borradores a la vez).
   private draftKey = '';
@@ -296,7 +299,7 @@ export class PartePage implements OnDestroy {
   // Resumen de problemas: "Ninguno" si solo está NINGUNA (o vacío), si no el conteo.
   problemasResumen = computed(() => {
     const r = this.restricciones().filter((x) => x !== 'NINGUNA');
-    return r.length ? r.length : 'Ninguno';
+    return r.length ? r.length : this.i18n.t('Ninguno');
   });
 
   // S4 — bloques ya registrados (distintos) y el resumen agrupado por bloque.
@@ -306,7 +309,7 @@ export class PartePage implements OnDestroy {
   resumenPorBloque = computed(() => {
     const grupos = new Map<string, ActividadEntry[]>();
     for (const a of this.actividades()) {
-      const b = (a.bloque ?? '').trim() || 'Sin bloque';
+      const b = (a.bloque ?? '').trim() || this.i18n.t('Sin bloque');
       if (!grupos.has(b)) grupos.set(b, []);
       grupos.get(b)!.push(a);
     }
@@ -427,7 +430,7 @@ export class PartePage implements OnDestroy {
       if (!this.hasContent(snap)) return;
       void this.borrador.save(this.draftKey, snap, {
         tipo: 'parte',
-        etiqueta: 'Bitácora del día' + (this.proyectoNombre() ? ' · ' + this.proyectoNombre() : ''),
+        etiqueta: this.i18n.t('Bitácora del día') + (this.proyectoNombre() ? ' · ' + this.proyectoNombre() : ''),
         ruta: '/bitacora/parte',
       });
     });
@@ -533,9 +536,9 @@ export class PartePage implements OnDestroy {
         .sort((a, b) => this.slotIdx(a.slot) - this.slotIdx(b.slot));
       if (fotosDraft.length) {
         this.fotos.set(fotosDraft.map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) })));
-        this.toast.show('Copiamos tu bitácora y sus fotos. Revísala y envíala. (Fotos de restricción/equipo hay que retomarlas.)', 'info', 5000);
+        this.toast.show(this.i18n.t('Copiamos tu bitácora y sus fotos. Revísala y envíala. (Fotos de restricción/equipo hay que retomarlas.)'), 'info', 5000);
       } else {
-        this.toast.show('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.', 'info', 4500);
+        this.toast.show(this.i18n.t('Recuperamos tu bitácora a medio llenar. Las fotos hay que tomarlas de nuevo.'), 'info', 4500);
       }
     } else {
       const obra = this.ctx.obraActiva();
@@ -611,7 +614,7 @@ export class PartePage implements OnDestroy {
   /** Empieza a llenar el sujeto tecleado y pasa a elegir actividades. */
   continuarSujeto(): void {
     if (!this.sujetoActual().trim()) {
-      this.toast.error('Escribe el bloque, piso o edificio.');
+      this.toast.error(this.i18n.t('Escribe el bloque, piso o edificio.'));
       return;
     }
     this.sujetoActual.set(this.sujetoActual().trim());
@@ -674,11 +677,11 @@ export class PartePage implements OnDestroy {
     const parte = this.parteActual().trim();
     const sujeto = this.sujetoActual();
     if (!parte) {
-      this.toast.error('Primero elige en qué parte se trabajó (arriba).');
+      this.toast.error(this.i18n.t('Primero elige en qué parte se trabajó (arriba).'));
       return;
     }
     if (!actividad) {
-      this.toast.error('Escribe qué se hizo (especifica el "Otros").');
+      this.toast.error(this.i18n.t('Escribe qué se hizo (especifica el "Otros").'));
       return;
     }
     const yaEsta = this.actividades().some(
@@ -686,7 +689,7 @@ export class PartePage implements OnDestroy {
         && x.actividad.toLowerCase() === actividad.toLowerCase(),
     );
     if (yaEsta) {
-      this.toast.show('Esa actividad ya está agregada.', 'info');
+      this.toast.show(this.i18n.t('Esa actividad ya está agregada.'), 'info');
     } else {
       const unidad = this.partidaDe(parte)?.unidad ?? null;
       // AI15 — lo recién agregado va al PRINCIPIO (marca la cantidad sin scroll).
@@ -720,7 +723,7 @@ export class PartePage implements OnDestroy {
     if (!parte) {
       // AX6 — "Otros" sin texto: exige especificar qué se trabajó.
       this.toast.error(
-        this.parteOtro() ? 'Escribe qué se trabajó (especifica el "Otros").' : 'Primero elige en qué parte se trabajó (arriba).',
+        this.parteOtro() ? this.i18n.t('Escribe qué se trabajó (especifica el "Otros").') : this.i18n.t('Primero elige en qué parte se trabajó (arriba).'),
       );
       return;
     }
@@ -1176,17 +1179,17 @@ export class PartePage implements OnDestroy {
   /** Agrega el molde en edición a la lista (valida identificador + largo/espesor). */
   addMolde(): void {
     if (!this.mIdentificador().trim()) {
-      this.toast.error('Ponle un identificador al molde (ej: C-12, Muro eje 3).');
+      this.toast.error(this.i18n.t('Ponle un identificador al molde (ej: C-12, Muro eje 3).'));
       return;
     }
     if (!this.mLargo() || !this.mEspesor()) {
-      this.toast.error('Captura al menos el largo y el espesor (cm).');
+      this.toast.error(this.i18n.t('Captura al menos el largo y el espesor (cm).'));
       return;
     }
     // BO9 — si dijo que tiene el plano, que lo complete (o desmarque); un plano a
     // medias produce una desviación falsa en el esquema y en el server.
     if (this.mTienePlano() && (!this.mpLargo() || !this.mpEspesor())) {
-      this.toast.error('Completa el largo y el espesor del plano, o desmarca "Tengo la medida del plano".');
+      this.toast.error(this.i18n.t('Completa el largo y el espesor del plano, o desmarca "Tengo la medida del plano".'));
       return;
     }
     // BQ8/F3.2 — lados adicionales válidos (largo + espesor); los vacíos se ignoran.
@@ -1318,15 +1321,15 @@ export class PartePage implements OnDestroy {
 
   primaryLabel = computed(() => {
     const s = this.step();
-    if (s === this.total()) return this.submitting() ? 'Guardando…' : 'Enviar bitácora';
+    if (s === this.total()) return this.submitting() ? this.i18n.t('Guardando…') : this.i18n.t('Enviar bitácora');
     if (s === 5 && !this.sinActividad()) {
-      if (this.paso5() === 'sujeto') return 'Continuar';
-      if (this.paso5() === 'otro') return 'No, eso es todo';
+      if (this.paso5() === 'sujeto') return this.i18n.t('Continuar');
+      if (this.paso5() === 'otro') return this.i18n.t('No, eso es todo');
     }
-    return 'Siguiente';
+    return this.i18n.t('Siguiente');
   });
 
-  backLabel = computed(() => (this.step() > 1 || this.paso5() !== 'sujeto' ? 'Atrás' : 'Cancelar'));
+  backLabel = computed(() => (this.step() > 1 || this.paso5() !== 'sujeto' ? this.i18n.t('Atrás') : this.i18n.t('Cancelar')));
 
   primaryDisabled = computed(() => this.step() >= this.total() && this.submitting());
 
@@ -1373,7 +1376,7 @@ export class PartePage implements OnDestroy {
     const s = this.step();
     if (s === 1) {
       if (!this.proyectoId()) {
-        this.toast.error('Elige la obra.');
+        this.toast.error(this.i18n.t('Elige la obra.'));
         return;
       }
       // Z4 — el flujo "no se trabajó" no necesita catálogos/partidas/equipos.
@@ -1391,11 +1394,11 @@ export class PartePage implements OnDestroy {
     if (this.sinActividad()) {
       if (s === 2) {
         if (!this.motivoSinActividad()) {
-          this.toast.error('Elige el motivo de por qué no se trabajó.');
+          this.toast.error(this.i18n.t('Elige el motivo de por qué no se trabajó.'));
           return;
         }
         if (this.motivoSinActividad() === 'otro' && !this.motivoDetalle().trim()) {
-          this.toast.error('Describe el motivo.');
+          this.toast.error(this.i18n.t('Describe el motivo.'));
           return;
         }
       }
@@ -1403,11 +1406,11 @@ export class PartePage implements OnDestroy {
       return;
     }
     if (s === 2 && this.llovio() === null) {
-      this.toast.error('Dinos si llovió o está lloviendo.');
+      this.toast.error(this.i18n.t('Dinos si llovió o está lloviendo.'));
       return;
     }
     if (s === 3 && this.huboMigracion() === null) {
-      this.toast.error('Dinos si hubo problemas de migración.');
+      this.toast.error(this.i18n.t('Dinos si hubo problemas de migración.'));
       return;
     }
     // Paso 5 — sub-máquina de sujeto/actividades/otro (S3/S4).
@@ -1418,7 +1421,7 @@ export class PartePage implements OnDestroy {
       }
       if (this.paso5() === 'actividades') {
         if (!this.actividadesDelSujeto().length) {
-          this.toast.error('Agrega al menos un trabajo para este bloque.');
+          this.toast.error(this.i18n.t('Agrega al menos un trabajo para este bloque.'));
           return;
         }
         this.paso5.set('otro');
@@ -1432,13 +1435,13 @@ export class PartePage implements OnDestroy {
         (r) => r !== 'NINGUNA' && !this.getRestriccionDesc(r).trim(),
       );
       if (faltante) {
-        this.toast.error('Describe brevemente cada restricción seleccionada.');
+        this.toast.error(this.i18n.t('Describe brevemente cada restricción seleccionada.'));
         return;
       }
     }
     // S6 — mínimo 2 fotos para avanzar del paso de fotos.
     if (s === 7 && this.fotos().length < MIN_FOTOS) {
-      this.toast.error(`Agrega al menos ${MIN_FOTOS} fotos de la obra.`);
+      this.toast.error(this.i18n.t('Agrega al menos {n} fotos de la obra.', { n: MIN_FOTOS }));
       return;
     }
     // Paso 8 — sub-máquina de equipos (S7).
@@ -1447,11 +1450,11 @@ export class PartePage implements OnDestroy {
         if (this.huboEquipos()) {
           const conNombre = this.equiposEnUso().filter((e) => e.equipo.trim());
           if (!conNombre.length) {
-            this.toast.error('Escribe al menos un equipo o cambia a "No".');
+            this.toast.error(this.i18n.t('Escribe al menos un equipo o cambia a "No".'));
             return;
           }
           if (conNombre.some((e) => !e.uso.trim())) {
-            this.toast.error('Dinos en qué se usó cada equipo.');
+            this.toast.error(this.i18n.t('Dinos en qué se usó cada equipo.'));
             return;
           }
         }
@@ -1460,7 +1463,7 @@ export class PartePage implements OnDestroy {
       }
       if (this.paso8() === 'retirar') {
         if (this.hayRetirar() && !this.equiposParaRetirar().length) {
-          this.toast.error('Marca o escribe el equipo a retirar, o cambia a "No".');
+          this.toast.error(this.i18n.t('Marca o escribe el equipo a retirar, o cambia a "No".'));
           return;
         }
         this.paso8.set('danado');
@@ -1469,11 +1472,11 @@ export class PartePage implements OnDestroy {
       if (this.paso8() === 'danado') {
         if (this.hayDanados()) {
           if (!this.equiposDanados().length) {
-            this.toast.error('Marca o escribe el equipo dañado, o cambia a "No".');
+            this.toast.error(this.i18n.t('Marca o escribe el equipo dañado, o cambia a "No".'));
             return;
           }
           if (this.equiposDanados().some((e) => !(e.dano_detalle ?? '').trim())) {
-            this.toast.error('Dinos qué le pasó a cada equipo dañado.');
+            this.toast.error(this.i18n.t('Dinos qué le pasó a cada equipo dañado.'));
             return;
           }
         }
@@ -1483,17 +1486,17 @@ export class PartePage implements OnDestroy {
     // BP4 — paso 9: daños de material / equipo propio.
     if (s === 9) {
       if (this.huboDanos() === null) {
-        this.toast.error('Dinos si se dañó algún material o equipo propio.');
+        this.toast.error(this.i18n.t('Dinos si se dañó algún material o equipo propio.'));
         return;
       }
       if (this.huboDanos()) {
         if (!this.danos().length) {
-          this.toast.error('Agrega el material o equipo dañado, o cambia a "No".');
+          this.toast.error(this.i18n.t('Agrega el material o equipo dañado, o cambia a "No".'));
           return;
         }
         const sinDetalle = this.danos().find((d) => !d.detalle.trim());
         if (sinDetalle) {
-          this.toast.error('Dinos qué le pasó a cada material/equipo dañado.');
+          this.toast.error(this.i18n.t('Dinos qué le pasó a cada material/equipo dañado.'));
           return;
         }
         // material + solicitar retiro ⇒ al menos una foto (espejo del RPC).
@@ -1501,7 +1504,7 @@ export class PartePage implements OnDestroy {
           (d) => d.tipo === 'material' && d.solicita_retiro && !this.getDanoFotos(d.key).length,
         );
         if (retiroSinFoto) {
-          this.toast.error('Para solicitar el retiro del material dañado, toma al menos una foto.');
+          this.toast.error(this.i18n.t('Para solicitar el retiro del material dañado, toma al menos una foto.'));
           return;
         }
       }
@@ -1509,7 +1512,7 @@ export class PartePage implements OnDestroy {
     // BO9 — paso 10: moldes del día.
     if (s === 10) {
       if (this.huboMoldes() === null) {
-        this.toast.error('Dinos si trabajaste moldes hoy.');
+        this.toast.error(this.i18n.t('Dinos si trabajaste moldes hoy.'));
         return;
       }
       if (this.huboMoldes()) {
@@ -1518,14 +1521,14 @@ export class PartePage implements OnDestroy {
           this.addMolde();
         }
         if (!this.moldes().length) {
-          this.toast.error('Agrega al menos un molde, o cambia a "No".');
+          this.toast.error(this.i18n.t('Agrega al menos un molde, o cambia a "No".'));
           return;
         }
       }
     }
     // AA11 — el ingeniero responsable es OBLIGATORIO para pasar del paso 11.
     if (s === 11 && !this.ingenieroResponsable().trim()) {
-      this.toast.error('Escribe el ingeniero responsable.');
+      this.toast.error(this.i18n.t('Escribe el ingeniero responsable.'));
       return;
     }
 
@@ -1625,12 +1628,12 @@ export class PartePage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.proyectoId()) {
-      this.toast.error('Elige la obra.');
+      this.toast.error(this.i18n.t('Elige la obra.'));
       return;
     }
     // Z4 — el parte "sin actividad" no exige fotos (espejo del RPC).
     if (!this.sinActividad() && this.fotos().length < MIN_FOTOS) {
-      this.toast.error(`Agrega al menos ${MIN_FOTOS} fotos de la obra.`);
+      this.toast.error(this.i18n.t('Agrega al menos {n} fotos de la obra.', { n: MIN_FOTOS }));
       this.step.set(7);
       return;
     }
@@ -1643,7 +1646,7 @@ export class PartePage implements OnDestroy {
         (d) => d.tipo === 'material' && d.solicita_retiro && !this.getDanoFotos(d.key).length,
       );
       if (retiroSinFoto) {
-        this.toast.error(`Para el retiro de "${retiroSinFoto.nombre}" necesitas al menos una foto. Vuelve a tomarla.`);
+        this.toast.error(this.i18n.t('Para el retiro de "{nombre}" necesitas al menos una foto. Vuelve a tomarla.', { nombre: retiroSinFoto.nombre }));
         this.step.set(9);
         return;
       }
@@ -1767,7 +1770,7 @@ export class PartePage implements OnDestroy {
           // BC3 — el vínculo no debe tumbar el parte ya encolado; pero si no se pudo
           // encolar (dato inválido), avisamos suave (no bloqueante) en vez de callar.
           if (e instanceof ValidacionCampoError) {
-            this.toast.error(`El parte se guardó, pero no se pudo enlazar a la tarea: ${e.message}`);
+            this.toast.error(this.i18n.t('El parte se guardó, pero no se pudo enlazar a la tarea: {msg}', { msg: e.message }));
           }
         }
       }
@@ -1775,7 +1778,7 @@ export class PartePage implements OnDestroy {
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.submitting.set(false);
     }

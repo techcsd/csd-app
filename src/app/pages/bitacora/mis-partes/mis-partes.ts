@@ -10,13 +10,15 @@ import { EnProcesoService, EnProcesoItem } from '../../../core/services/en-proce
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { formatFecha, formatFechaCortaHora, bitacoraRetrofechada } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** My bitácoras (server, offline-cached). Tap one to see its details. */
 @Component({
   selector: 'app-mis-bitacoras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, ConfirmDialog],
+  imports: [Skeleton, EmptyState, ConfirmDialog, TranslatePipe],
   templateUrl: './mis-partes.html',
   styleUrl: './mis-partes.scss',
 })
@@ -27,6 +29,7 @@ export class MisPartesPage {
   private sync = inject(SyncService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   bitacoras = signal<BitacoraFull[]>([]);
   loading = signal(true);
@@ -109,13 +112,13 @@ export class MisPartesPage {
   }
 
   titulo(b: BitacoraFull): string {
-    if (b.tipo === 'incidente') return 'Incidente';
-    if (b.tipo === 'visita') return 'Visita';
+    if (b.tipo === 'incidente') return this.i18n.t('Incidente');
+    if (b.tipo === 'visita') return this.i18n.t('Visita');
     // BN1 — la app lista el tipo aunque no lo cree; sin este caso una orden de
     // trabajo saldría con el default "Bitácora del día".
-    if (b.tipo === 'orden_trabajo') return 'Orden de trabajo';
+    if (b.tipo === 'orden_trabajo') return this.i18n.t('Orden de trabajo');
     // Z4 — deja claro cuando no se trabajó en obra.
-    return b.sin_actividad ? 'Bitácora — No se trabajó' : 'Bitácora del día';
+    return b.sin_actividad ? this.i18n.t('Bitácora — No se trabajó') : this.i18n.t('Bitácora del día');
   }
 
   open(b: BitacoraFull): void {

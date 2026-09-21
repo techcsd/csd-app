@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { RequisicionBandeja } from '../../../core/models/inventario.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
@@ -15,7 +16,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-requisiciones-bandeja',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
   templateUrl: './bandeja.html',
   styleUrl: './bandeja.scss',
 })

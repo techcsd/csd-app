@@ -3,13 +3,13 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 77%** del alcance · **Kreyòl (ht): 0%**
+- **Inglés (en): 96%** del alcance · **Kreyòl (ht): 0%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
 |---|---:|---:|---:|---:|:--:|
 |  | 0 | 15 | 0% | 0% |  |
-| pages/actualizar | 0 | 18 | 0% | 0% |  |
+| pages/actualizar | 23 | 1 | 96% | 0% |  |
 | pages/admin | 12 | 0 | 100% | 0% |  |
 | pages/admin/auditoria | 22 | 0 | 100% | 0% |  |
 | pages/admin/catalogos | 5 | 0 | 100% | 0% |  |
@@ -27,26 +27,26 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/auth/reset | 5 | 1 | 83% | 0% |  |
 | pages/auth/set-password | 4 | 0 | 100% | 0% |  |
 | pages/avisos | 0 | 4 | 0% | 0% |  |
-| pages/bitacora | 0 | 8 | 0% | 0% |  |
-| pages/bitacora/cl-detalle | 0 | 22 | 0% | 0% |  |
-| pages/bitacora/cl-firmas | 0 | 3 | 0% | 0% |  |
-| pages/bitacora/dashboard | 0 | 11 | 0% | 0% |  |
-| pages/bitacora/detalle | 0 | 48 | 0% | 0% |  |
-| pages/bitacora/incidente | 0 | 41 | 0% | 0% |  |
-| pages/bitacora/liberacion | 0 | 49 | 0% | 0% |  |
-| pages/bitacora/mis-partes | 0 | 12 | 0% | 0% |  |
-| pages/bitacora/orden-trabajo | 0 | 47 | 0% | 0% |  |
-| pages/bitacora/parte | 0 | 138 | 0% | 0% |  |
+| pages/bitacora | 8 | 0 | 100% | 0% |  |
+| pages/bitacora/cl-detalle | 30 | 0 | 100% | 0% |  |
+| pages/bitacora/cl-firmas | 10 | 0 | 100% | 0% |  |
+| pages/bitacora/dashboard | 15 | 1 | 94% | 0% |  |
+| pages/bitacora/detalle | 66 | 0 | 100% | 0% |  |
+| pages/bitacora/incidente | 66 | 0 | 100% | 0% |  |
+| pages/bitacora/liberacion | 82 | 1 | 99% | 0% |  |
+| pages/bitacora/mis-partes | 27 | 0 | 100% | 0% |  |
+| pages/bitacora/orden-trabajo | 58 | 1 | 98% | 0% |  |
+| pages/bitacora/parte | 186 | 4 | 98% | 0% |  |
 | pages/compa | 10 | 0 | 100% | 0% |  |
-| pages/compras-proyecto | 0 | 17 | 0% | 0% |  |
-| pages/compras/solicitud-compra | 0 | 15 | 0% | 0% |  |
+| pages/compras-proyecto | 28 | 0 | 100% | 0% |  |
+| pages/compras/solicitud-compra | 25 | 1 | 96% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 4 | 0% | 0% |  |
 | pages/home | 13 | 0 | 100% | 0% | ✅ |
-| pages/incentivos | 0 | 15 | 0% | 0% |  |
-| pages/incentivos/participantes | 0 | 8 | 0% | 0% |  |
+| pages/incentivos | 35 | 0 | 100% | 0% |  |
+| pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
-| pages/ingenieria/cartilla | 24 | 36 | 40% | 0% |  |
+| pages/ingenieria/cartilla | 58 | 0 | 100% | 0% |  |
 | pages/inventario | 10 | 0 | 100% | 0% |  |
 | pages/inventario/almacen-inventario | 18 | 0 | 100% | 0% |  |
 | pages/inventario/almacenes | 30 | 0 | 100% | 0% |  |
@@ -56,11 +56,11 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/inventario/catalogo | 12 | 0 | 100% | 0% |  |
 | pages/inventario/conteo | 23 | 0 | 100% | 0% |  |
 | pages/inventario/conteos | 10 | 0 | 100% | 0% |  |
-| pages/inventario/entrada | 0 | 18 | 0% | 0% |  |
+| pages/inventario/entrada | 33 | 0 | 100% | 0% |  |
 | pages/inventario/existencias | 6 | 0 | 100% | 0% |  |
 | pages/inventario/kardex | 24 | 0 | 100% | 0% |  |
 | pages/inventario/material-no-catalogado | 10 | 0 | 100% | 0% |  |
-| pages/inventario/recibir | 0 | 33 | 0% | 0% |  |
+| pages/inventario/recibir | 53 | 0 | 100% | 0% |  |
 | pages/inventario/retiro-detalle | 20 | 0 | 100% | 0% |  |
 | pages/inventario/retiro-nuevo | 4 | 19 | 17% | 0% |  |
 | pages/inventario/retiros | 6 | 0 | 100% | 0% |  |
@@ -69,9 +69,9 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/mensajes/grupo-info | 24 | 0 | 100% | 0% |  |
 | pages/mensajes/nuevo-grupo | 15 | 0 | 100% | 0% |  |
 | pages/mensajes/thread | 42 | 0 | 100% | 0% |  |
-| pages/mi-rendimiento | 0 | 19 | 0% | 0% |  |
-| pages/notas | 0 | 7 | 0% | 0% |  |
-| pages/notas/editor | 0 | 20 | 0% | 0% |  |
+| pages/mi-rendimiento | 25 | 0 | 100% | 0% |  |
+| pages/notas | 18 | 0 | 100% | 0% |  |
+| pages/notas/editor | 26 | 0 | 100% | 0% |  |
 | pages/obra | 20 | 0 | 100% | 0% |  |
 | pages/obra/avance | 9 | 0 | 100% | 0% |  |
 | pages/obra/charla | 24 | 0 | 100% | 0% |  |
@@ -88,7 +88,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 23 | 0 | 100% | 0% |  |
 | pages/perfil | 43 | 0 | 100% | 0% | ✅ |
-| pages/perfil/mi-detalle | 0 | 15 | 0% | 0% |  |
+| pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
 | pages/proyectos/avisos | 4 | 0 | 100% | 0% |  |
 | pages/proyectos/cronograma | 64 | 1 | 98% | 0% |  |
@@ -98,13 +98,13 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/reportar | 0 | 8 | 0% | 0% |  |
 | pages/rrhh/empleado | 23 | 0 | 100% | 0% |  |
 | pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |
-| pages/solicitudes | 0 | 5 | 0% | 0% |  |
-| pages/solicitudes/bandeja | 0 | 7 | 0% | 0% |  |
-| pages/solicitudes/detalle | 0 | 53 | 0% | 0% |  |
-| pages/solicitudes/mis | 0 | 4 | 0% | 0% |  |
-| pages/solicitudes/pedir | 0 | 13 | 0% | 0% |  |
+| pages/solicitudes | 5 | 0 | 100% | 0% |  |
+| pages/solicitudes/bandeja | 12 | 0 | 100% | 0% |  |
+| pages/solicitudes/detalle | 49 | 12 | 80% | 0% |  |
+| pages/solicitudes/mis | 12 | 0 | 100% | 0% |  |
+| pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 0 | 3 | 0% | 0% |  |
-| pages/tareas | 0 | 35 | 0% | 0% |  |
+| pages/tareas | 59 | 0 | 100% | 0% |  |
 | pages/tecnologia | 0 | 12 | 0% | 0% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
@@ -116,7 +116,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/asignarme | 36 | 0 | 100% | 0% |  |
 | pages/transporte/aviso-vehiculo | 38 | 0 | 100% | 0% |  |
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
-| pages/transporte/checklist | 0 | 39 | 0% | 0% |  |
+| pages/transporte/checklist | 64 | 1 | 98% | 0% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 103 | 2 | 98% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
@@ -181,7 +181,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 67% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
-| shared/ui/photo-slot | 0 | 21 | 0% | 0% |  |
+| shared/ui/photo-slot | 16 | 1 | 94% | 0% |  |
 | shared/ui/selector-categorias | 28 | 1 | 97% | 0% |  |
 | shared/ui/share-sheet | 3 | 2 | 60% | 0% |  |
 | shared/ui/signature-pad | 2 | 0 | 100% | 0% |  |

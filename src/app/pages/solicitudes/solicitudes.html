@@ -2,28 +2,28 @@
   <header class="sol-header">
     <button type="button" class="sol-header__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="sol-header__icon">🛒</span>
-    <h1 class="sol-header__title">Requisiciones</h1>
+    <h1 class="sol-header__title">{{ 'Requisiciones' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <button type="button" class="sol-action sol-action--primary" (click)="go('/solicitudes/pedir')">
       <span class="sol-action__icon">🛒</span>
-      <span class="sol-action__label">Nueva requisición</span>
+      <span class="sol-action__label">{{ 'Nueva requisición' | t }}</span>
     </button>
     <button type="button" class="sol-action" (click)="go('/solicitudes/mis')">
       <span class="sol-action__icon">📋</span>
-      <span class="sol-action__label">Mis requisiciones</span>
+      <span class="sol-action__label">{{ 'Mis requisiciones' | t }}</span>
     </button>
     <!-- BG4 — retiro de material dañado (nace en la obra con fotos obligatorias) -->
     <button type="button" class="sol-action" (click)="go('/inventario/retiros')">
       <span class="sol-action__icon">🚮</span>
-      <span class="sol-action__label">Retirar material dañado</span>
+      <span class="sol-action__label">{{ 'Retirar material dañado' | t }}</span>
     </button>
     <!-- AS7 — bandeja de TODAS las requisiciones (solo roles con función de requisición) -->
     @if (puedeVerTodas()) {
       <button type="button" class="sol-action" (click)="go('/solicitudes/bandeja')">
         <span class="sol-action__icon">🗂️</span>
-        <span class="sol-action__label">Requisiciones (todas)</span>
+        <span class="sol-action__label">{{ 'Requisiciones (todas)' | t }}</span>
         @if (pendientes() > 0) { <span class="sol-action__badge">{{ pendientes() }}</span> }
       </button>
     }

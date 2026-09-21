@@ -1,11 +1,11 @@
 @if (done()) {
   <app-big-confirm
-    [title]="online ? 'Listo, quedó registrado' : 'Guardado'"
+    [title]="online ? ('Listo, quedó registrado' | t) : ('Guardado' | t)"
     [note]="tipo === 'recepcion'
-      ? (online ? 'El vehículo quedó a tu cargo.' : 'Sin señal. Se enviará solo y el vehículo queda a tu cargo.')
-      : (online ? 'Entrega cerrada.' : 'Sin señal. Se enviará solo.')"
+      ? (online ? ('El vehículo quedó a tu cargo.' | t) : ('Sin señal. Se enviará solo y el vehículo queda a tu cargo.' | t))
+      : (online ? ('Entrega cerrada.' | t) : ('Sin señal. Se enviará solo.' | t))"
     [tone]="online ? 'done' : 'pending'"
-    buttonLabel="Listo"
+    [buttonLabel]="'Listo' | t"
     (dismissed)="finish()"
   />
 } @else if (bloqueoRecepcion(); as b) {
@@ -16,23 +16,22 @@
       <div class="checklist__bloqueo">
         <span class="checklist__bloqueo-icon">{{ b.mia ? '✅' : '🚫' }}</span>
         @if (b.mia) {
-          <h1 class="checklist__bloqueo-title">Ya tienes este vehículo</h1>
+          <h1 class="checklist__bloqueo-title">{{ 'Ya tienes este vehículo' | t }}</h1>
           <p class="checklist__bloqueo-text">
-            {{ placa() || 'Este vehículo' }} ya figura recibido a tu nombre. No hace falta recibirlo de nuevo.
+            {{ placa() || ('Este vehículo' | t) }} {{ 'ya figura recibido a tu nombre. No hace falta recibirlo de nuevo.' | t }}
           </p>
-          <button type="button" class="btn-cta" (click)="irADevolucion()">Ir a devolución</button>
-          <button type="button" class="btn-ghost" (click)="finish()">Volver</button>
+          <button type="button" class="btn-cta" (click)="irADevolucion()">{{ 'Ir a devolución' | t }}</button>
+          <button type="button" class="btn-ghost" (click)="finish()">{{ 'Volver' | t }}</button>
         } @else {
           <!-- Z14 — aviso confirmable de traspaso (handover), no un muro -->
           <span class="checklist__bloqueo-icon">🔁</span>
-          <h1 class="checklist__bloqueo-title">Lo tiene otra persona</h1>
+          <h1 class="checklist__bloqueo-title">{{ 'Lo tiene otra persona' | t }}</h1>
           <p class="checklist__bloqueo-text">
-            {{ placa() || 'Este vehículo' }} lo tiene <b>{{ b.conductor }}</b> desde
-            <b>{{ fechaCorta(b.desde) }}</b>. Si lo recibes, pasará a tu cargo y se cerrará su entrega.
-            ¿Recibirlo de todas formas?
+            {{ placa() || ('Este vehículo' | t) }} {{ 'lo tiene' | t }} <b>{{ b.conductor }}</b> {{ 'desde' | t }}
+            <b>{{ fechaCorta(b.desde) }}</b>. {{ 'Si lo recibes, pasará a tu cargo y se cerrará su entrega. ¿Recibirlo de todas formas?' | t }}
           </p>
-          <button type="button" class="btn-cta" (click)="confirmarHandover()">Sí, recibirlo</button>
-          <button type="button" class="btn-ghost" (click)="finish()">No, volver</button>
+          <button type="button" class="btn-cta" (click)="confirmarHandover()">{{ 'Sí, recibirlo' | t }}</button>
+          <button type="button" class="btn-ghost" (click)="finish()">{{ 'No, volver' | t }}</button>
         }
       </div>
     </div>
@@ -63,15 +62,14 @@
           </div>
         }
         <p class="screen__subtitle">
-          Vas a {{ tipo === 'recepcion' ? 'recibir' : 'devolver' }} este vehículo. Toma las fotos y
-          firma para dejar constancia del estado.
+          {{ 'Vas a' | t }} {{ tipo === 'recepcion' ? ('recibir' | t) : ('devolver' | t) }} {{ 'este vehículo. Toma las fotos y firma para dejar constancia del estado.' | t }}
         </p>
       }
 
       <!-- Step 2: 6 guided photos -->
       @if (step() === 2) {
-        <h1 class="screen__title">Toma las fotos</h1>
-        <p class="screen__subtitle">Las 6 fotos son obligatorias.</p>
+        <h1 class="screen__title">{{ 'Toma las fotos' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Las 6 fotos son obligatorias.' | t }}</p>
         <div class="checklist__fotos">
           @for (f of fotosReq; track f.slot) {
             <!-- AC9 — entrega/devolución: fotos solo cámara (evidencia en el acto) -->
@@ -89,17 +87,17 @@
 
       <!-- Step 3: km + fuel -->
       @if (step() === 3) {
-        <h1 class="screen__title">Kilometraje y combustible</h1>
+        <h1 class="screen__title">{{ 'Kilometraje y combustible' | t }}</h1>
         <!-- S19 — km inteligente compartido: último registrado + menor en vivo + mantenimiento -->
         <app-km-input
-          [label]="vehDetalle()?.medida_uso === 'horas' ? 'Horas de uso' : 'Kilometraje (km)'"
+          [label]="vehDetalle()?.medida_uso === 'horas' ? ('Horas de uso' | t) : ('Kilometraje (km)' | t)"
           [sufijo]="vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'"
           [(value)]="km"
           [ultimo]="odometro()"
           [ultimoMantenimientoKm]="vehDetalle()?.km_ultimo_mantenimiento ?? null"
           [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
-        <label class="field-label">Nivel de combustible</label>
+        <label class="field-label">{{ 'Nivel de combustible' | t }}</label>
         <div class="checklist__fuel">
           @for (n of niveles; track n) {
             <button
@@ -116,18 +114,18 @@
 
       <!-- Step 4: damages -->
       @if (step() === 4) {
-        <h1 class="screen__title">¿Ves algún daño?</h1>
+        <h1 class="screen__title">{{ '¿Ves algún daño?' | t }}</h1>
         <div class="checklist__yesno">
           <app-option-button
             icon="✅"
-            label="No, todo bien"
+            [label]="'No, todo bien' | t"
             tone="success"
             [selected]="tieneDanos() === false"
             (pressed)="setDanos(false)"
           />
           <app-option-button
             icon="⚠️"
-            label="Sí, hay daños"
+            [label]="'Sí, hay daños' | t"
             tone="error"
             [selected]="tieneDanos() === true"
             (pressed)="setDanos(true)"
@@ -141,10 +139,10 @@
           @for (d of danos(); track $index; let di = $index) {
             <div class="dano">
               <div class="dano__head">
-                <span class="dano__num">Daño {{ di + 1 }}</span>
-                <button type="button" class="dano__remove" (click)="removeDano(di)">Quitar</button>
+                <span class="dano__num">{{ 'Daño' | t }} {{ di + 1 }}</span>
+                <button type="button" class="dano__remove" (click)="removeDano(di)">{{ 'Quitar' | t }}</button>
               </div>
-              <label class="field-label">Zona</label>
+              <label class="field-label">{{ 'Zona' | t }}</label>
               <div class="dano__zonas">
                 @for (z of zonas; track z.zona) {
                   <button
@@ -158,44 +156,44 @@
                 }
               </div>
               <!-- AC9 — daño: foto solo cámara -->
-              <app-photo-slot label="Foto del daño" hint="📸" [gallery]="false" [foto]="d.photo" (captured)="onDanoFoto(di, $event)" />
+              <app-photo-slot [label]="'Foto del daño' | t" hint="📸" [gallery]="false" [foto]="d.photo" (captured)="onDanoFoto(di, $event)" />
               <input
                 class="field dano__desc"
                 type="text"
                 [ngModel]="d.descripcion"
                 (ngModelChange)="setDanoDesc(di, $event)"
-                placeholder="Nota (opcional)"
+                [placeholder]="'Nota (opcional)' | t"
               />
             </div>
           }
-          <button type="button" class="btn-ghost" (click)="addDano()">+ Agregar otro daño</button>
+          <button type="button" class="btn-ghost" (click)="addDano()">+ {{ 'Agregar otro daño' | t }}</button>
         }
       }
 
       <!-- Step 5: signature -->
       @if (step() === 5) {
-        <h1 class="screen__title">Tu firma</h1>
-        <p class="screen__subtitle">Firma para confirmar el estado del vehículo.</p>
+        <h1 class="screen__title">{{ 'Tu firma' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Firma para confirmar el estado del vehículo.' | t }}</p>
         <app-signature-pad (changed)="onFirmaChanged($event)" />
       }
 
       <!-- Step 6: summary -->
       @if (step() === 6) {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
-          <li><span>Vehículo</span><b>{{ placa() }}</b></li>
-          <li><span>Acción</span><b>{{ tipo === 'recepcion' ? 'Recepción' : 'Devolución' }}</b></li>
-          <li><span>Kilometraje</span><b>{{ km() | number: '1.0-0' }} km</b></li>
-          <li><span>Combustible</span><b>{{ combustible() }}</b></li>
-          <li><span>Fotos</span><b>6 ✓</b></li>
-          <li><span>Daños</span><b>{{ tieneDanos() ? danos().length : 'Ninguno' }}</b></li>
+          <li><span>{{ 'Vehículo' | t }}</span><b>{{ placa() }}</b></li>
+          <li><span>{{ 'Acción' | t }}</span><b>{{ tipo === 'recepcion' ? ('Recepción' | t) : ('Devolución' | t) }}</b></li>
+          <li><span>{{ 'Kilometraje' | t }}</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+          <li><span>{{ 'Combustible' | t }}</span><b>{{ combustible() }}</b></li>
+          <li><span>{{ 'Fotos' | t }}</span><b>6 ✓</b></li>
+          <li><span>{{ 'Daños' | t }}</span><b>{{ tieneDanos() ? danos().length : ('Ninguno' | t) }}</b></li>
           <!-- X2 — prueba de ubicación (best-effort, no bloquea) -->
           <li>
-            <span>Ubicación</span>
+            <span>{{ 'Ubicación' | t }}</span>
             @switch (gpsEstado()) {
-              @case ('ok') { <b class="checklist__gps--ok">{{ ubicacionTexto() ?? '📍 Capturada' }}</b> }
-              @case ('capturando') { <b class="checklist__gps--wait">📍 Obteniendo…</b> }
-              @case ('sin-ubicacion') { <b class="checklist__gps--off">Sin ubicación</b> }
+              @case ('ok') { <b class="checklist__gps--ok">{{ ubicacionTexto() ?? ('📍 ' + ('Capturada' | t)) }}</b> }
+              @case ('capturando') { <b class="checklist__gps--wait">📍 {{ 'Obteniendo…' | t }}</b> }
+              @case ('sin-ubicacion') { <b class="checklist__gps--off">{{ 'Sin ubicación' | t }}</b> }
             }
           </li>
         </ul>
@@ -203,15 +201,15 @@
         @if (mantenimiento(); as m) {
           @if (m.estado !== 'ok') {
             <p class="checklist__mant" [class.checklist__mant--venc]="m.estado === 'vencido'">
-              @if (m.estado === 'vencido') { 🔴 Mantenimiento VENCIDO — pasado con {{ -m.faltan | number: '1.0-0' }} km. }
-              @else { 🟠 Cerca del mantenimiento — faltan {{ m.faltan | number: '1.0-0' }} km. }
+              @if (m.estado === 'vencido') { 🔴 {{ 'Mantenimiento VENCIDO — pasado con' | t }} {{ -m.faltan | number: '1.0-0' }} km. }
+              @else { 🟠 {{ 'Cerca del mantenimiento — faltan' | t }} {{ m.faltan | number: '1.0-0' }} km. }
             </p>
           }
         }
         @if (gpsEstado() === 'sin-ubicacion') {
           <p class="checklist__gps-note">
             {{ gpsMensaje() }}
-            <button type="button" class="checklist__gps-retry" (click)="reintentarGps()">Reintentar ubicación</button>
+            <button type="button" class="checklist__gps-retry" (click)="reintentarGps()">{{ 'Reintentar ubicación' | t }}</button>
           </p>
         }
       }
@@ -219,8 +217,8 @@
 
     <!-- Nav -->
     <app-wizard-footer
-      [backLabel]="step() > 1 ? 'Atrás' : ''"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Confirmar')"
+      [backLabel]="step() > 1 ? ('Atrás' | t) : ''"
+      [primaryLabel]="step() < total ? ('Siguiente' | t) : (submitting() ? ('Guardando…' | t) : ('Confirmar' | t))"
       [primaryDisabled]="step() >= total && submitting()"
       (back)="prev()"
       (primary)="step() < total ? next() : submit()"
@@ -228,10 +226,10 @@
 
     <app-confirm-dialog
       [open]="confirmSalir()"
-      title="¿Salir del checklist?"
-      message="Lo que llevas se guarda como borrador y puedes retomarlo después."
-      confirmLabel="Salir"
-      cancelLabel="Seguir aquí"
+      [title]="'¿Salir del checklist?' | t"
+      [message]="'Lo que llevas se guarda como borrador y puedes retomarlo después.' | t"
+      [confirmLabel]="'Salir' | t"
+      [cancelLabel]="'Seguir aquí' | t"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"
     />

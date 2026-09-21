@@ -7,6 +7,8 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { SelectOption } from '../../shared/ui/select-list/select-list';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { ToastService } from '../../core/services/toast.service';
 import {
   IncentivoGestionService,
@@ -27,12 +29,13 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
   selector: 'app-incentivos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, Skeleton, EmptyState, CollapsibleSelect, ConfirmDialog],
+  imports: [FormsModule, RouterLink, Skeleton, EmptyState, CollapsibleSelect, ConfirmDialog, TranslatePipe],
   templateUrl: './incentivos.html',
   styleUrl: './incentivos.scss',
 })
 export class IncentivosPage {
   private service = inject(IncentivoGestionService);
+  private i18n = inject(I18nService);
   private toast = inject(ToastService);
   private location = inject(Location);
 
@@ -62,7 +65,7 @@ export class IncentivosPage {
   semanaOptions = computed<SelectOption[]>(() =>
     this.semanas().map((s) => ({
       id: `${s.anio}-${s.semana}`,
-      label: `Semana ${s.semana} · ${this.rango(s)} (${s.choferes} chofer${s.choferes === 1 ? '' : 'es'} · ${s.cumplieron} cumplieron)`,
+      label: `${this.i18n.t('Semana')} ${s.semana} · ${this.rango(s)} (${s.choferes} ${s.choferes === 1 ? this.i18n.t('chofer') : this.i18n.t('choferes')} · ${s.cumplieron} ${this.i18n.t('cumplieron')})`,
     })),
   );
 
@@ -88,7 +91,7 @@ export class IncentivosPage {
       if (ok) await this.cargarSemanas();
     } catch (e) {
       this.hasAccess.set(false);
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos verificar el acceso.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos verificar el acceso.'));
     } finally {
       this.checkingAccess.set(false);
     }
@@ -105,7 +108,7 @@ export class IncentivosPage {
         await this.cargarListado();
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar las semanas.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar las semanas.'));
     } finally {
       this.loadingSemanas.set(false);
     }
@@ -121,7 +124,7 @@ export class IncentivosPage {
     try {
       this.filas.set(await this.service.listado(s.anio, s.semana));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar el listado.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar el listado.'));
     } finally {
       this.loadingList.set(false);
     }
@@ -152,10 +155,10 @@ export class IncentivosPage {
     this.setSaving(fila.informe_id, true);
     try {
       await this.service.decidir(fila.informe_id, 'aprobado', null);
-      this.toast.success(`Incentivo de ${fila.nombre} aprobado.`);
+      this.toast.success(this.i18n.t('Incentivo de {nombre} aprobado.', { nombre: fila.nombre }));
       await this.cargarListado();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos aprobar el incentivo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos aprobar el incentivo.'));
     } finally {
       this.setSaving(fila.informe_id, false);
     }
@@ -176,17 +179,17 @@ export class IncentivosPage {
     if (!fila) return;
     const motivo = this.declinarMotivo().trim();
     if (!motivo) {
-      this.toast.error('El motivo es obligatorio para declinar.');
+      this.toast.error(this.i18n.t('El motivo es obligatorio para declinar.'));
       return;
     }
     this.setSaving(fila.informe_id, true);
     try {
       await this.service.decidir(fila.informe_id, 'declinado', motivo);
-      this.toast.success(`Incentivo de ${fila.nombre} declinado.`);
+      this.toast.success(this.i18n.t('Incentivo de {nombre} declinado.', { nombre: fila.nombre }));
       this.cerrarDeclinar();
       await this.cargarListado();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos declinar el incentivo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos declinar el incentivo.'));
     } finally {
       this.setSaving(fila.informe_id, false);
     }
@@ -206,10 +209,10 @@ export class IncentivosPage {
     this.savingAll.set(true);
     try {
       await this.service.aprobarCumplieron(s.anio, s.semana);
-      this.toast.success('Se aprobaron todos los que cumplieron el mínimo.');
+      this.toast.success(this.i18n.t('Se aprobaron todos los que cumplieron el mínimo.'));
       await this.cargarListado();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos aprobar en bloque.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos aprobar en bloque.'));
     } finally {
       this.savingAll.set(false);
     }
@@ -229,9 +232,9 @@ export class IncentivosPage {
   }
 
   decisionLabel(f: IncentivoGestionFila): string {
-    if (f.decision === 'aprobado') return 'Aprobado';
-    if (f.decision === 'declinado') return 'Declinado';
-    return 'Pendiente';
+    if (f.decision === 'aprobado') return this.i18n.t('Aprobado');
+    if (f.decision === 'declinado') return this.i18n.t('Declinado');
+    return this.i18n.t('Pendiente');
   }
 
   /** ¿La fila tiene flags anti-inflado que ameritan revisión? */

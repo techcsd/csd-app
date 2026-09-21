@@ -3,6 +3,8 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmailDisplayPipe } from '../../../shared/ui/pipes/email-display.pipe';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { DocumentosService } from '../../../core/services/documentos.service';
@@ -28,7 +30,7 @@ interface DocView {
   selector: 'app-mi-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmailDisplayPipe],
+  imports: [Skeleton, EmailDisplayPipe, TranslatePipe],
   templateUrl: './mi-detalle.html',
   styleUrl: './mi-detalle.scss',
 })
@@ -39,6 +41,7 @@ export class MiDetallePage {
   private network = inject(NetworkService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   fmtFecha = formatFecha;
   fmtFechaHumana = formatFechaHumana;
@@ -74,11 +77,11 @@ export class MiDetallePage {
   licEstadoLabel = computed(() => {
     switch (this.licEstado()) {
       case 'vencida':
-        return '⛔ Vencida';
+        return '⛔ ' + this.i18n.t('Vencida');
       case 'por_vencer':
-        return '⚠ Por vencer';
+        return '⚠ ' + this.i18n.t('Por vencer');
       case 'vigente':
-        return '✓ Vigente';
+        return '✓ ' + this.i18n.t('Vigente');
       default:
         return '—';
     }
@@ -122,8 +125,8 @@ export class MiDetallePage {
       const list = docs.filter((d) => d.tipo === tipo);
       return Promise.all(list.map((d, i) => toView(d, list.length > 1 ? `${base} (${i + 1})` : base)));
     };
-    this.cedulas.set(await porTipo('cedula', 'Cédula'));
-    this.licencias.set(await porTipo('licencia', 'Licencia de conducir'));
+    this.cedulas.set(await porTipo('cedula', this.i18n.t('Cédula')));
+    this.licencias.set(await porTipo('licencia', this.i18n.t('Licencia de conducir')));
   }
 
   ampliar(url: string | null): void {

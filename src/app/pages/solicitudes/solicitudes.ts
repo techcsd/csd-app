@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SolicitudesService } from '../../core/services/solicitudes.service';
 
 /** Solicitudes hub: pedir materiales, mis solicitudes, y (por rol) la bandeja de todas. */
@@ -9,7 +10,7 @@ import { SolicitudesService } from '../../core/services/solicitudes.service';
   selector: 'app-solicitudes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SyncBar],
+  imports: [SyncBar, TranslatePipe],
   templateUrl: './solicitudes.html',
   styleUrl: './solicitudes.scss',
 })

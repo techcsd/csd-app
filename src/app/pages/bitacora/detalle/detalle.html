@@ -1,10 +1,10 @@
 <div class="screen det">
   <header class="det__header">
-    <button type="button" class="det__back" (click)="back()" aria-label="Atrás">←</button>
+    <button type="button" class="det__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <h1 class="det__title">{{ titulo() }}</h1>
     <!-- BL9 — se registró en un día distinto al que documenta (retrofechada). -->
     @if (esDeOtraFecha()) {
-      <span class="det__otra-fecha" title="Se registró después del día que documenta">📅 de otra fecha</span>
+      <span class="det__otra-fecha" [title]="'Se registró después del día que documenta' | t">📅 {{ 'de otra fecha' | t }}</span>
     }
   </header>
 
@@ -13,52 +13,52 @@
       <app-skeleton [rows]="5" />
     } @else if (b(); as bit) {
       <ul class="det__info">
-        <li><span>Obra</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>
-        <li><span>Fecha</span><b>{{ fmtFecha(bit.fecha) }}</b></li>
+        <li><span>{{ 'Obra' | t }}</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>
+        <li><span>{{ 'Fecha' | t }}</span><b>{{ fmtFecha(bit.fecha) }}</b></li>
         @if (bit.tipo === 'parte_diario') {
           @if (bit.sin_actividad) {
-            <li><span>Estado</span><b class="det__no-trabajo">🚫 No se trabajó en obra</b></li>
-            <li><span>Motivo</span><b>{{ motivoLabel(bit.motivo_sin_actividad) }}</b></li>
-            @if (bit.motivo_sin_actividad_detalle) { <li><span>Detalle</span><b>{{ bit.motivo_sin_actividad_detalle }}</b></li> }
+            <li><span>{{ 'Estado' | t }}</span><b class="det__no-trabajo">🚫 {{ 'No se trabajó en obra' | t }}</b></li>
+            <li><span>{{ 'Motivo' | t }}</span><b>{{ motivoLabel(bit.motivo_sin_actividad) }}</b></li>
+            @if (bit.motivo_sin_actividad_detalle) { <li><span>{{ 'Detalle' | t }}</span><b>{{ bit.motivo_sin_actividad_detalle }}</b></li> }
           } @else {
-            @if (bit.bloque_entrepiso) { <li><span>Bloque / entrepiso</span><b>{{ bit.bloque_entrepiso }}</b></li> }
-            @if (bit.ingeniero_responsable) { <li><span>Ing. responsable</span><b>{{ bit.ingeniero_responsable }}</b></li> }
-            @if (bit.hora_fin_trabajo) { <li><span>Fin de jornada</span><b>{{ bit.hora_fin_trabajo }}</b></li> }
-            <li><span>Personal</span><b>{{ totalPersonal() }}</b></li>
+            @if (bit.bloque_entrepiso) { <li><span>{{ 'Bloque / entrepiso' | t }}</span><b>{{ bit.bloque_entrepiso }}</b></li> }
+            @if (bit.ingeniero_responsable) { <li><span>{{ 'Ing. responsable' | t }}</span><b>{{ bit.ingeniero_responsable }}</b></li> }
+            @if (bit.hora_fin_trabajo) { <li><span>{{ 'Fin de jornada' | t }}</span><b>{{ bit.hora_fin_trabajo }}</b></li> }
+            <li><span>{{ 'Personal' | t }}</span><b>{{ totalPersonal() }}</b></li>
           }
         }
         @if (bit.tipo === 'incidente') {
-          <li><span>Tipo</span><b>{{ bit.incidente_tipo }}</b></li>
-          <li><span>Gravedad</span><b>{{ bit.incidente_gravedad }}</b></li>
-          <li><span>Heridos</span><b>{{ bit.incidente_lesionados }}</b></li>
-          @if (bit.incidente_suceso) { <li><span>¿Qué pasó?</span><b>{{ bit.incidente_suceso }}</b></li> }
-          @if (bit.incidente_subcontratista) { <li><span>Subcontratista</span><b>{{ bit.incidente_subcontratista }}</b></li> }
-          @if (bit.incidente_equipo_nombre) { <li><span>Equipo</span><b>{{ bit.incidente_equipo_nombre }}</b></li> }
-          @if (bit.incidente_equipo_alquilado != null) { <li><span>Propiedad</span><b>{{ bit.incidente_equipo_alquilado ? 'Alquilado' : 'Propio' }}</b></li> }
-          @if (bit.incidente_equipo_operativo != null) { <li><span>¿Operativo?</span><b>{{ bit.incidente_equipo_operativo ? 'Sí' : 'No, fuera de servicio' }}</b></li> }
-          @if (bit.incidente_equipo_operativo_comentario) { <li><span>Comentario</span><b>{{ bit.incidente_equipo_operativo_comentario }}</b></li> }
+          <li><span>{{ 'Tipo' | t }}</span><b>{{ bit.incidente_tipo }}</b></li>
+          <li><span>{{ 'Gravedad' | t }}</span><b>{{ bit.incidente_gravedad }}</b></li>
+          <li><span>{{ 'Heridos' | t }}</span><b>{{ bit.incidente_lesionados }}</b></li>
+          @if (bit.incidente_suceso) { <li><span>{{ '¿Qué pasó?' | t }}</span><b>{{ bit.incidente_suceso }}</b></li> }
+          @if (bit.incidente_subcontratista) { <li><span>{{ 'Subcontratista' | t }}</span><b>{{ bit.incidente_subcontratista }}</b></li> }
+          @if (bit.incidente_equipo_nombre) { <li><span>{{ 'Equipo' | t }}</span><b>{{ bit.incidente_equipo_nombre }}</b></li> }
+          @if (bit.incidente_equipo_alquilado != null) { <li><span>{{ 'Propiedad' | t }}</span><b>{{ bit.incidente_equipo_alquilado ? ('Alquilado' | t) : ('Propio' | t) }}</b></li> }
+          @if (bit.incidente_equipo_operativo != null) { <li><span>{{ '¿Operativo?' | t }}</span><b>{{ bit.incidente_equipo_operativo ? ('Sí' | t) : ('No, fuera de servicio' | t) }}</b></li> }
+          @if (bit.incidente_equipo_operativo_comentario) { <li><span>{{ 'Comentario' | t }}</span><b>{{ bit.incidente_equipo_operativo_comentario }}</b></li> }
         }
         @if (bit.tipo === 'orden_trabajo' && orden()?.detalle; as d) {
-          @if (d.ubicacion) { <li><span>Ubicación</span><b>{{ d.ubicacion }}</b></li> }
-          @if (d.cantidad != null) { <li><span>Cantidad</span><b>{{ d.cantidad }}{{ d.unidad ? ' ' + d.unidad : '' }}</b></li> }
-          @if (d.monto_estimado != null) { <li><span>Monto estimado</span><b>{{ d.monto_estimado | number:'1.0-2' }}</b></li> }
-          @if (d.solicitado_por) { <li><span>Lo pidió</span><b>{{ d.solicitado_por }}</b></li> }
+          @if (d.ubicacion) { <li><span>{{ 'Ubicación' | t }}</span><b>{{ d.ubicacion }}</b></li> }
+          @if (d.cantidad != null) { <li><span>{{ 'Cantidad' | t }}</span><b>{{ d.cantidad }}{{ d.unidad ? ' ' + d.unidad : '' }}</b></li> }
+          @if (d.monto_estimado != null) { <li><span>{{ 'Monto estimado' | t }}</span><b>{{ d.monto_estimado | number:'1.0-2' }}</b></li> }
+          @if (d.solicitado_por) { <li><span>{{ 'Lo pidió' | t }}</span><b>{{ d.solicitado_por }}</b></li> }
         }
-        @if (bit.autor_nombre) { <li><span>Hecha por</span><b>{{ bit.autor_nombre }}</b></li> }
-        @if (bit.created_at) { <li><span>Registrada</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
+        @if (bit.autor_nombre) { <li><span>{{ 'Hecha por' | t }}</span><b>{{ bit.autor_nombre }}</b></li> }
+        @if (bit.created_at) { <li><span>{{ 'Registrada' | t }}</span><b>{{ fmtFechaHora(bit.created_at) }}</b></li> }
       </ul>
 
       @if (bit.tipo === 'orden_trabajo') {
         @if (orden()?.detalle?.descripcion; as desc) {
-          <h2 class="det__section">Trabajo solicitado</h2>
+          <h2 class="det__section">{{ 'Trabajo solicitado' | t }}</h2>
           <p class="det__desc">{{ desc }}</p>
         }
         @if (orden()?.firmas?.length) {
-          <h2 class="det__section">Firmas</h2>
+          <h2 class="det__section">{{ 'Firmas' | t }}</h2>
           <div class="det__firmas">
             @for (f of orden()!.firmas; track f.rol) {
               <div class="det__firma">
-                <span class="det__firma-rol">{{ f.rol === 'ingeniero' ? '👷 Ingeniero' : '🤝 Cliente' }}</span>
+                <span class="det__firma-rol">{{ f.rol === 'ingeniero' ? '👷' : '🤝' }} {{ f.rol === 'ingeniero' ? ('Ingeniero' | t) : ('Cliente' | t) }}</span>
                 @if (f.firma_url) {
                   <img class="det__firma-img" [src]="f.firma_url" [alt]="'Firma ' + f.rol" loading="lazy" />
                 }
@@ -72,10 +72,10 @@
         @if (orden()) {
           <div class="det__pdf-actions">
             <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="compartirPdf()">
-              {{ pdfBusy() ? '⏳…' : '📤 Compartir PDF' }}
+              @if (pdfBusy()) { ⏳… } @else { 📤 {{ 'Compartir PDF' | t }} }
             </button>
             <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="descargarPdf()">
-              {{ pdfBusy() ? '⏳…' : '⬇️ Descargar PDF' }}
+              @if (pdfBusy()) { ⏳… } @else { ⬇️ {{ 'Descargar PDF' | t }} }
             </button>
           </div>
         }
@@ -83,45 +83,45 @@
 
       @if (bit.tipo === 'parte_diario' && !bit.sin_actividad) {
         <div class="det__personal">
-          <span>🔨 Carpintería: {{ bit.personal_carpinteria }}</span>
-          <span>🔩 Acero: {{ bit.personal_acero }}</span>
-          <span>👷 Casa: {{ bit.trabajadores_casa }}</span>
-          @if (bit.otro_personal) { <span>Otro: {{ bit.otro_personal }}</span> }
+          <span>🔨 {{ 'Carpintería' | t }}: {{ bit.personal_carpinteria }}</span>
+          <span>🔩 {{ 'Acero' | t }}: {{ bit.personal_acero }}</span>
+          <span>👷 {{ 'Casa' | t }}: {{ bit.trabajadores_casa }}</span>
+          @if (bit.otro_personal) { <span>{{ 'Otro' | t }}: {{ bit.otro_personal }}</span> }
         </div>
 
         <!-- U13 — clima y migración (datos, no incidente) -->
         @if (bit.llovio != null) {
-          <h2 class="det__section">Clima</h2>
+          <h2 class="det__section">{{ 'Clima' | t }}</h2>
           <p class="det__desc">
-            {{ bit.llovio ? '🌧 Llovió' : '☀ Sin lluvia' }}
+            {{ bit.llovio ? '🌧' : '☀' }} {{ bit.llovio ? ('Llovió' | t) : ('Sin lluvia' | t) }}
             @if (bit.llovio && bit.horas_lluvia) { · {{ bit.horas_lluvia }} h }
             @if (bit.llovio && bit.lluvia_detalle) { — {{ bit.lluvia_detalle }} }
           </p>
         }
         @if (bit.hubo_migracion != null) {
-          <h2 class="det__section">Migración</h2>
+          <h2 class="det__section">{{ 'Migración' | t }}</h2>
           <p class="det__desc">
-            {{ bit.hubo_migracion ? 'Hubo problemas de migración' : 'Sin problemas de migración' }}
+            {{ bit.hubo_migracion ? ('Hubo problemas de migración' | t) : ('Sin problemas de migración' | t) }}
             @if (bit.hubo_migracion && obrerosMigracion().length) { · {{ obrerosMigracion().join(', ') }} }
           </p>
         }
       }
 
       @if (bit.actividades?.length) {
-        <h2 class="det__section">Actividades</h2>
+        <h2 class="det__section">{{ 'Actividades' | t }}</h2>
         <!-- S4 — agrupadas por bloque -->
         @for (g of actividadesPorBloque(); track g.bloque) {
           <p class="det__bloque">📍 {{ g.bloque }}</p>
           <ul class="det__list">
             @for (a of g.items; track $index) {
-              <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · @if (a.es_aproximada) { ~ }{{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</b> }@if (a.es_aproximada) { <span class="det__aprox">(aprox.)</span> }</li>
+              <li>{{ a.estructura }} · {{ a.actividad }}@if (a.cantidad != null) { <b> · @if (a.es_aproximada) { ~ }{{ a.cantidad }}{{ a.unidad ? ' ' + a.unidad : '' }}</b> }@if (a.es_aproximada) { <span class="det__aprox">{{ '(aprox.)' | t }}</span> }</li>
             }
           </ul>
         }
       }
 
       @if (bit.restricciones?.length) {
-        <h2 class="det__section">Problemas / restricciones</h2>
+        <h2 class="det__section">{{ 'Problemas / restricciones' | t }}</h2>
         <ul class="det__list">
           @for (r of bit.restricciones; track $index) {
             <li>{{ r.tipo_restriccion }}{{ r.descripcion_otro ? ' — ' + r.descripcion_otro : '' }}</li>
@@ -130,13 +130,13 @@
       }
 
       @if (bit.equipos?.length) {
-        <h2 class="det__section">Equipos alquilados</h2>
+        <h2 class="det__section">{{ 'Equipos alquilados' | t }}</h2>
         <ul class="det__list">
           @for (e of bit.equipos; track $index) {
             <li>
               {{ e.equipo }}@if (e.uso) { — {{ e.uso }} }@if (e.proveedor) { · {{ e.proveedor }} }
-              @if (e.para_retirar) { <b class="det__flag det__flag--retiro">Retirar</b> }
-              @if (e.danado) { <b class="det__flag det__flag--dano">Dañado{{ e.dano_detalle ? ': ' + e.dano_detalle : '' }}</b> }
+              @if (e.para_retirar) { <b class="det__flag det__flag--retiro">{{ 'Retirar' | t }}</b> }
+              @if (e.danado) { <b class="det__flag det__flag--dano">{{ 'Dañado' | t }}{{ e.dano_detalle ? ': ' + e.dano_detalle : '' }}</b> }
             </li>
           }
         </ul>
@@ -144,17 +144,17 @@
 
       <!-- BP4 — daños de material / equipo propio -->
       @if (bit.danos?.length) {
-        <h2 class="det__section">Daños</h2>
+        <h2 class="det__section">{{ 'Daños' | t }}</h2>
         <ul class="det__list">
           @for (d of bit.danos; track $index) {
             <li>
-              {{ d.articulo?.nombre || d.nombre_libre || 'Material' }}@if (d.cantidad != null) { — {{ d.cantidad }} {{ d.unidad || '' }} }
-              <b class="det__flag det__flag--dano">{{ d.tipo === 'material' ? 'Material' : 'Equipo propio' }}</b>
+              {{ d.articulo?.nombre || d.nombre_libre || ('Material' | t) }}@if (d.cantidad != null) { — {{ d.cantidad }} {{ d.unidad || '' }} }
+              <b class="det__flag det__flag--dano">{{ d.tipo === 'material' ? ('Material' | t) : ('Equipo propio' | t) }}</b>
               @if (d.detalle) { <span class="det__dano-detalle">{{ d.detalle }}</span> }
               @if (d.retiro?.folio) {
                 <button type="button" class="det__ret-link" (click)="irARetiros()">{{ d.retiro?.folio }}</button>
               } @else if (d.solicita_retiro) {
-                <b class="det__flag det__flag--retiro">Retiro solicitado</b>
+                <b class="det__flag det__flag--retiro">{{ 'Retiro solicitado' | t }}</b>
               }
               @if (danoFotos()[$index]?.length) {
                 <div class="det__media det__media--dano">
@@ -170,13 +170,13 @@
 
       <!-- BO9 — moldes del día -->
       @if (bit.moldes?.length) {
-        <h2 class="det__section">Moldes</h2>
+        <h2 class="det__section">{{ 'Moldes' | t }}</h2>
         @for (m of bit.moldes; track $index) {
           <div class="det__molde">
             <div class="det__molde-top">
-              <span class="det__molde-id">{{ m.identificador || 'Molde' }}@if (m.estructura) { <small>· {{ m.estructura }}</small> }</span>
+              <span class="det__molde-id">{{ m.identificador || ('Molde' | t) }}@if (m.estructura) { <small>· {{ m.estructura }}</small> }</span>
               @if (moldeFuera(m)) {
-                <b class="det__flag det__flag--dano">Desvío {{ m.desviacion_max_cm }} cm</b>
+                <b class="det__flag det__flag--dano">{{ 'Desvío' | t }} {{ m.desviacion_max_cm }} cm</b>
               }
             </div>
             <app-molde-esquema [forma]="m.forma || 'rectangular'" [tramos]="moldeTramos(m)" [medidaPlano]="moldePlano(m)" [toleranciaCm]="moldeTolerancia" />
@@ -192,20 +192,20 @@
       }
 
       @if (bit.incidente_descripcion) {
-        <h2 class="det__section">Descripción</h2>
+        <h2 class="det__section">{{ 'Descripción' | t }}</h2>
         <p class="det__desc">{{ bit.incidente_descripcion }}</p>
       }
       @if (bit.incidente_acciones) {
-        <h2 class="det__section">Acciones tomadas</h2>
+        <h2 class="det__section">{{ 'Acciones tomadas' | t }}</h2>
         <p class="det__desc">{{ bit.incidente_acciones }}</p>
       }
       @if (bit.comentarios) {
-        <h2 class="det__section">Comentario</h2>
+        <h2 class="det__section">{{ 'Comentario' | t }}</h2>
         <p class="det__desc">{{ bit.comentarios }}</p>
       }
 
       @if (media().length) {
-        <h2 class="det__section">Fotos y notas</h2>
+        <h2 class="det__section">{{ 'Fotos y notas' | t }}</h2>
         <div class="det__media">
           @for (m of media(); track m.url) {
             @if (m.audio) {
@@ -214,7 +214,7 @@
               @if (m.transcripcion) {
                 <p class="det__transcripcion">“{{ m.transcripcion }}”</p>
               } @else if (m.estado === 'pendiente' || m.estado === 'procesando') {
-                <p class="det__transcripcion det__transcripcion--pend">Transcribiendo…</p>
+                <p class="det__transcripcion det__transcripcion--pend">{{ 'Transcribiendo…' | t }}</p>
               }
             } @else {
               <a class="det__foto" [href]="m.url" target="_blank" rel="noopener">
@@ -225,7 +225,7 @@
         </div>
       }
     } @else {
-      <p class="det__muted">No se encontró la bitácora.</p>
+      <p class="det__muted">{{ 'No se encontró la bitácora.' | t }}</p>
     }
   </div>
 </div>

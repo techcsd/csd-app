@@ -14,6 +14,8 @@ import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { UbicacionLabelService } from '../../../core/services/ubicacion-label.service';
@@ -62,7 +64,7 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner, ConfirmDialog, WizardExit, KmInput],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner, ConfirmDialog, WizardExit, KmInput, TranslatePipe],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })
@@ -80,6 +82,7 @@ export class ChecklistPage implements OnDestroy {
   private borradorSvc = inject(BorradorService);
   private ctx = inject(UserContextService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
 
@@ -135,15 +138,15 @@ export class ChecklistPage implements OnDestroy {
   gpsMensaje = computed(() => {
     switch (this.gpsRazon()) {
       case 'gps-off':
-        return 'La ubicación del teléfono está apagada. Actívala (desliza desde arriba → Ubicación) y reintenta.';
+        return this.i18n.t('La ubicación del teléfono está apagada. Actívala (desliza desde arriba → Ubicación) y reintenta.');
       case 'denied-permanent':
-        return 'La app no tiene permiso de ubicación. Ábrelo en ajustes y reintenta.';
+        return this.i18n.t('La app no tiene permiso de ubicación. Ábrelo en ajustes y reintenta.');
       case 'denied':
-        return 'Necesitamos permiso de ubicación. Reintenta y acéptalo.';
+        return this.i18n.t('Necesitamos permiso de ubicación. Reintenta y acéptalo.');
       case 'timeout':
-        return 'No se pudo fijar el GPS a tiempo. Sal a cielo abierto y reintenta. Puedes enviar sin ubicación.';
+        return this.i18n.t('No se pudo fijar el GPS a tiempo. Sal a cielo abierto y reintenta. Puedes enviar sin ubicación.');
       default:
-        return 'No pudimos obtener el GPS (sin señal). Puedes enviar igual: se registrará sin ubicación.';
+        return this.i18n.t('No pudimos obtener el GPS (sin señal). Puedes enviar igual: se registrará sin ubicación.');
     }
   });
 
@@ -158,7 +161,7 @@ export class ChecklistPage implements OnDestroy {
   /** Z14 — fecha legible del "desde" del handover. */
   readonly fechaCorta = formatFechaCortaHora; // AT17 — fecha + hora
 
-  titulo = computed(() => (this.tipo === 'recepcion' ? 'Recibir vehículo' : 'Devolver vehículo'));
+  titulo = computed(() => (this.tipo === 'recepcion' ? this.i18n.t('Recibir vehículo') : this.i18n.t('Devolver vehículo')));
 
   private readonly backHandler = (): boolean => {
     if (!this.done() && this.tieneDatos()) {
@@ -193,7 +196,7 @@ export class ChecklistPage implements OnDestroy {
       if (!hayAlgo) return;
       this.autosave.queue(this.clave(), snap, {
         tipo: 'checklist',
-        etiqueta: `${this.tipo === 'recepcion' ? 'Recibir' : 'Devolver'} · ${this.placa() || 'vehículo'}`,
+        etiqueta: `${this.tipo === 'recepcion' ? this.i18n.t('Recibir') : this.i18n.t('Devolver')} · ${this.placa() || this.i18n.t('vehículo')}`,
         ruta: `/transporte/${this.tipo === 'recepcion' ? 'recibir' : 'devolver'}/${this.vehiculoId}`,
       });
     });
@@ -281,7 +284,7 @@ export class ChecklistPage implements OnDestroy {
       if (this.network.online()) {
         const activo = await this.vehiculos.estaActivo(this.vehiculoId);
         if (activo === false) {
-          this.toast.error('Este vehículo ya no está disponible. Actualizamos tu lista.');
+          this.toast.error(this.i18n.t('Este vehículo ya no está disponible. Actualizamos tu lista.'));
           await this.vehiculos.invalidatePendientes();
           void this.router.navigate(['/transporte'], { replaceUrl: true });
           return;
@@ -382,8 +385,8 @@ export class ChecklistPage implements OnDestroy {
     // Si el permiso quedó bloqueado, reintentar no reabre el diálogo del SO:
     // hay que ir a ajustes. Ofrecemos el atajo.
     if (this.gpsBloqueado() && this.permissions.isNative) {
-      this.toast.withAction('Ubicación bloqueada para esta app.', {
-        label: 'Abrir ajustes',
+      this.toast.withAction(this.i18n.t('Ubicación bloqueada para esta app.'), {
+        label: this.i18n.t('Abrir ajustes'),
         run: () => void this.permissions.openAppSettings(),
       });
       return;
@@ -460,31 +463,31 @@ export class ChecklistPage implements OnDestroy {
     switch (this.step()) {
       case 2:
         if (!this.fotosCompletas()) {
-          this.toast.error('Faltan fotos. Toma las 6 fotos del vehículo.');
+          this.toast.error(this.i18n.t('Faltan fotos. Toma las 6 fotos del vehículo.'));
           return false;
         }
         return true;
       case 3:
         if (this.km() === null || this.km()! < 0) {
-          this.toast.error('Escribe el kilometraje.');
+          this.toast.error(this.i18n.t('Escribe el kilometraje.'));
           return false;
         }
         if (this.kmInvalido()) {
-          this.toast.error(`El kilometraje no puede ser menor al último registrado (${this.odometro()} km).`);
+          this.toast.error(this.i18n.t('El kilometraje no puede ser menor al último registrado ({km} km).', { km: this.odometro() ?? 0 }));
           return false;
         }
         if (!this.combustible()) {
-          this.toast.error('Elige el nivel de combustible.');
+          this.toast.error(this.i18n.t('Elige el nivel de combustible.'));
           return false;
         }
         return true;
       case 4:
         if (this.tieneDanos() === null) {
-          this.toast.error('Dinos si viste algún daño.');
+          this.toast.error(this.i18n.t('Dinos si viste algún daño.'));
           return false;
         }
         if (this.tieneDanos() && this.danos().some((d) => !d.photo)) {
-          this.toast.error('Toma la foto de cada daño.');
+          this.toast.error(this.i18n.t('Toma la foto de cada daño.'));
           return false;
         }
         return true;
@@ -503,7 +506,7 @@ export class ChecklistPage implements OnDestroy {
     if (this.submitting()) return;
     const firmaBlob = this.firmaBlob();
     if (!firmaBlob) {
-      this.toast.error('Falta la firma.');
+      this.toast.error(this.i18n.t('Falta la firma.'));
       return;
     }
     this.submitting.set(true);
@@ -513,7 +516,7 @@ export class ChecklistPage implements OnDestroy {
       if (this.network.online()) {
         const activo = await this.vehiculos.estaActivo(this.vehiculoId);
         if (activo === false) {
-          this.toast.error('Este vehículo ya no está disponible. No se pudo enviar.');
+          this.toast.error(this.i18n.t('Este vehículo ya no está disponible. No se pudo enviar.'));
           await this.vehiculos.invalidatePendientes();
           this.submitting.set(false);
           void this.router.navigate(['/transporte'], { replaceUrl: true });
@@ -545,7 +548,7 @@ export class ChecklistPage implements OnDestroy {
       void this.vehiculos.invalidatePendientes();
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }

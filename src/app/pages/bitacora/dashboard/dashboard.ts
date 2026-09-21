@@ -9,6 +9,8 @@ import { ObraService } from '../../../core/services/obra.service';
 import { BitacoraFull } from '../../../core/models/bitacora.model';
 import { ClPendiente } from '../../../core/models/cl-liberacion.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * BH2 — "Dashboard de bitácora": el pulso de la obra en la app, de solo lectura.
@@ -20,7 +22,7 @@ import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
   selector: 'app-bitacora-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, TranslatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
@@ -30,6 +32,7 @@ export class BitacoraDashboardPage {
   private obra = inject(ObraService);
   private router = inject(Router);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly fmtFecha = formatFechaMedia;
 
@@ -88,7 +91,7 @@ export class BitacoraDashboardPage {
   }
 
   tipoLabel(b: BitacoraFull): string {
-    return b.tipo === 'incidente' ? '⚠️ Incidente' : '📓 Parte diario';
+    return b.tipo === 'incidente' ? '⚠️ ' + this.i18n.t('Incidente') : '📓 ' + this.i18n.t('Parte diario');
   }
 
   irABitacora(): void {

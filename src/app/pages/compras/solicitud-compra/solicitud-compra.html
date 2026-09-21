@@ -1,59 +1,59 @@
 <div class="screen solc">
   <header class="solc__header">
-    <button type="button" class="solc__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="solc__title">Solicitud de compra</h1>
+    <button type="button" class="solc__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="solc__title">{{ 'Solicitud de compra' | t }}</h1>
     @if (hoja() === 'lista') {
-      <button type="button" class="solc__nueva" (click)="abrirCrear()">+ Nueva</button>
+      <button type="button" class="solc__nueva" (click)="abrirCrear()">+ {{ 'Nueva' | t }}</button>
     }
   </header>
 
   <div class="screen__body">
     <!-- ── Crear ── -->
     @if (hoja() === 'crear') {
-      <h2 class="solc__h2">Nueva solicitud</h2>
+      <h2 class="solc__h2">{{ 'Nueva solicitud' | t }}</h2>
 
-      <label class="field-label">Obra</label>
+      <label class="field-label">{{ 'Obra' | t }}</label>
       <app-collapsible-select
-        label="Obra"
+        [label]="'Obra' | t"
         icon="🏗️"
         [options]="proyectoOptions()"
         [selectedId]="proyectoId()"
         [searchable]="true"
-        searchPlaceholder="Buscar obra…"
+        [searchPlaceholder]="'Buscar obra…' | t"
         (picked)="proyectoId.set($event)"
       />
 
-      <label class="field-label solc__mt">Categoría (opcional)</label>
-      <input class="field" type="text" [ngModel]="categoria()" (ngModelChange)="categoria.set($event)" placeholder="Ej: Ferretería, Combustible…" />
+      <label class="field-label solc__mt">{{ 'Categoría (opcional)' | t }}</label>
+      <input class="field" type="text" [ngModel]="categoria()" (ngModelChange)="categoria.set($event)" [placeholder]="'Ej: Ferretería, Combustible…' | t" />
 
-      <label class="field-label solc__mt">Renglones</label>
+      <label class="field-label solc__mt">{{ 'Renglones' | t }}</label>
       @for (it of items(); track it.key) {
         <div class="solc__item">
           <div class="solc__item-top">
-            <input class="field solc__item-desc" type="text" [ngModel]="it.descripcion" (ngModelChange)="setDescripcion(it.key, $event)" placeholder="¿Qué se compra?" />
+            <input class="field solc__item-desc" type="text" [ngModel]="it.descripcion" (ngModelChange)="setDescripcion(it.key, $event)" [placeholder]="'¿Qué se compra?' | t" />
             @if (items().length > 1) {
-              <button type="button" class="solc__item-x" (click)="quitarItem(it.key)" aria-label="Quitar">✕</button>
+              <button type="button" class="solc__item-x" (click)="quitarItem(it.key)" [attr.aria-label]="'Quitar' | t">✕</button>
             }
           </div>
           <div class="solc__item-row">
-            <app-qty-input [value]="it.cantidad" (valueChange)="setCantidad(it.key, $event)" ariaLabel="Cantidad" />
+            <app-qty-input [value]="it.cantidad" (valueChange)="setCantidad(it.key, $event)" [ariaLabel]="'Cantidad' | t" />
             <input class="field solc__item-unit" type="text" [ngModel]="it.unidad" (ngModelChange)="setUnidad(it.key, $event)" placeholder="UND" />
           </div>
-          <input class="field solc__item-prov" type="text" [ngModel]="it.proveedor" (ngModelChange)="setProveedor(it.key, $event)" placeholder="Proveedor sugerido (opcional)" />
+          <input class="field solc__item-prov" type="text" [ngModel]="it.proveedor" (ngModelChange)="setProveedor(it.key, $event)" [placeholder]="'Proveedor sugerido (opcional)' | t" />
         </div>
       }
-      <button type="button" class="solc__add" (click)="agregarItem()">+ Agregar renglón</button>
+      <button type="button" class="solc__add" (click)="agregarItem()">+ {{ 'Agregar renglón' | t }}</button>
 
-      <label class="field-label solc__mt">Notas (opcional)</label>
-      <textarea class="field" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Detalles para Compras…"></textarea>
+      <label class="field-label solc__mt">{{ 'Notas (opcional)' | t }}</label>
+      <textarea class="field" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Detalles para Compras…' | t"></textarea>
 
       <div class="solc__acciones solc__mt">
         <button type="button" class="btn-cta" [disabled]="enviando()" (click)="enviar()">
-          {{ enviando() ? 'Guardando…' : 'Enviar solicitud' }}
+          {{ enviando() ? ('Guardando…' | t) : ('Enviar solicitud' | t) }}
         </button>
-        <button type="button" class="btn-ghost" [disabled]="enviando()" (click)="cerrarCrear()">Cancelar</button>
+        <button type="button" class="btn-ghost" [disabled]="enviando()" (click)="cerrarCrear()">{{ 'Cancelar' | t }}</button>
       </div>
-      @if (!online) { <p class="solc__hint">Sin señal: se guarda y se envía sola al reconectar.</p> }
+      @if (!online) { <p class="solc__hint">{{ 'Sin señal: se guarda y se envía sola al reconectar.' | t }}</p> }
     }
 
     <!-- ── Lista ── -->
@@ -63,16 +63,16 @@
       } @else if (error()) {
         <app-empty-state
           icon="⚠️"
-          title="No pudimos cargar las solicitudes"
-          message="Puede ser la conexión. Toca para reintentar."
-          ctaLabel="Reintentar"
+          [title]="'No pudimos cargar las solicitudes' | t"
+          [message]="'Puede ser la conexión. Toca para reintentar.' | t"
+          [ctaLabel]="'Reintentar' | t"
           (action)="load()"
         />
       } @else {
         @for (s of lista(); track s.id) {
           <div class="solc-card" [attr.data-estado]="s.estado">
             <div class="solc-card__top">
-              <span class="solc-card__obra">🏗️ {{ s.proyecto_nombre ?? 'Obra' }}</span>
+              <span class="solc-card__obra">🏗️ {{ s.proyecto_nombre ?? ('Obra' | t) }}</span>
               <span class="solc-card__estado">{{ estadoMeta[s.estado].icon }} {{ estadoMeta[s.estado].label }}</span>
             </div>
             <div class="solc-card__meta">
@@ -90,9 +90,9 @@
         } @empty {
           <app-empty-state
             icon="🛒"
-            title="No has creado solicitudes de compra"
-            message="Aquí puedes pedir a Compras que compre algo que no está en existencia. Verás el estado de cada solicitud."
-            ctaLabel="Nueva solicitud"
+            [title]="'No has creado solicitudes de compra' | t"
+            [message]="'Aquí puedes pedir a Compras que compre algo que no está en existencia. Verás el estado de cada solicitud.' | t"
+            [ctaLabel]="'Nueva solicitud' | t"
             (action)="abrirCrear()"
           />
         }

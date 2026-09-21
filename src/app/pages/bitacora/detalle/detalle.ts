@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { MoldeEsquema, MoldeTramo } from '../../../shared/ui/molde-esquema/molde-esquema';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
@@ -22,7 +24,7 @@ interface Media {
   selector: 'app-bitacora-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DecimalPipe, MoldeEsquema],
+  imports: [Skeleton, DecimalPipe, MoldeEsquema, TranslatePipe],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
@@ -33,6 +35,7 @@ export class BitacoraDetallePage {
   private router = inject(Router);
   private ordenPdf = inject(OrdenTrabajoPdfService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
 
   b = signal<BitacoraFull | null>(null);
   // BN1 — detalle + firmas de una orden de trabajo (solo cuando tipo=orden_trabajo).
@@ -58,12 +61,12 @@ export class BitacoraDetallePage {
     // BN1 — la app pinta el título aunque no cree el tipo (igual que 'visita'). Sin
     // este caso una orden de trabajo se listaría con el default "Bitácora del día".
     return t === 'incidente'
-      ? 'Incidente'
+      ? this.i18n.t('Incidente')
       : t === 'visita'
-        ? 'Visita'
+        ? this.i18n.t('Visita')
         : t === 'orden_trabajo'
-          ? 'Orden de trabajo'
-          : 'Bitácora del día';
+          ? this.i18n.t('Orden de trabajo')
+          : this.i18n.t('Bitácora del día');
   });
 
   /** BL9 — la bitácora documenta un día distinto al de su registro (retrofechada). */
@@ -89,7 +92,7 @@ export class BitacoraDetallePage {
     const acts = this.b()?.actividades ?? [];
     const grupos = new Map<string, typeof acts>();
     for (const a of acts) {
-      const b = (a.bloque ?? '').trim() || 'Sin bloque';
+      const b = (a.bloque ?? '').trim() || this.i18n.t('Sin bloque');
       if (!grupos.has(b)) grupos.set(b, []);
       grupos.get(b)!.push(a);
     }
@@ -202,7 +205,7 @@ export class BitacoraDetallePage {
     try {
       await this.ordenPdf.compartir(o);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo generar el PDF.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo generar el PDF.'));
     } finally {
       this.pdfBusy.set(false);
     }
@@ -215,9 +218,9 @@ export class BitacoraDetallePage {
     this.pdfBusy.set(true);
     try {
       const dest = await this.ordenPdf.descargar(o);
-      this.toast.success('Orden guardada en ' + dest + '.');
+      this.toast.success(this.i18n.t('Orden guardada en {dest}.', { dest }));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el PDF.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el PDF.'));
     } finally {
       this.pdfBusy.set(false);
     }

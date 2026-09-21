@@ -1,7 +1,7 @@
 <div class="screen recibir">
   <header class="inv-sub-header">
-    <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="inv-sub-header__title">{{ activo() ? 'Detalle del conduce' : 'Recibir conduce' }}</h1>
+    <button type="button" class="inv-sub-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="inv-sub-header__title">{{ activo() ? ('Detalle del conduce' | t) : ('Recibir conduce' | t) }}</h1>
   </header>
 
   <!-- ── Vista LISTA ── -->
@@ -14,13 +14,13 @@
              Almacén/Inventario les da entrada (antifraude). -->
         @if (entradasFerreteria().length) {
           <h2 class="recibir__section">
-            {{ puedeConfirmarEntrada() ? 'Compras de ferretería por confirmar' : 'Tus compras de ferretería' }}
+            {{ puedeConfirmarEntrada() ? ('Compras de ferretería por confirmar' | t) : ('Tus compras de ferretería' | t) }}
           </h2>
           @for (e of entradasFerreteria(); track e.id) {
             <div class="ferr-entrada">
               <div class="ferr-entrada__head">
-                <span class="ferr-entrada__dest">🏬 {{ e.bodega ?? 'Almacén' }}@if (e.obra) { · {{ e.obra }} }</span>
-                @if (e.referencia) { <span class="ferr-entrada__ref">Ref: {{ e.referencia }}</span> }
+                <span class="ferr-entrada__dest">🏬 {{ e.bodega ?? ('Almacén' | t) }}@if (e.obra) { · {{ e.obra }} }</span>
+                @if (e.referencia) { <span class="ferr-entrada__ref">{{ 'Ref:' | t }} {{ e.referencia }}</span> }
               </div>
               @if (e.items.length) {
                 <ul class="ferr-entrada__items">
@@ -29,7 +29,7 @@
                   }
                 </ul>
               } @else {
-                <p class="ferr-entrada__sinitems">Sin materiales detallados (se registró solo el recibo).</p>
+                <p class="ferr-entrada__sinitems">{{ 'Sin materiales detallados (se registró solo el recibo).' | t }}</p>
               }
               @if (puedeConfirmarEntrada()) {
                 <button
@@ -38,13 +38,13 @@
                   [disabled]="confirmandoId() === e.id || !e.items.length"
                   (click)="confirmarEntrada(e)"
                 >
-                  {{ confirmandoId() === e.id ? 'Dando entrada…' : '✓ Dar entrada al almacén' }}
+                  @if (confirmandoId() === e.id) { {{ 'Dando entrada…' | t }} } @else { ✓ {{ 'Dar entrada al almacén' | t }} }
                 </button>
                 @if (!e.items.length) {
-                  <p class="ferr-entrada__nota">Detalla los materiales antes de dar entrada.</p>
+                  <p class="ferr-entrada__nota">{{ 'Detalla los materiales antes de dar entrada.' | t }}</p>
                 }
               } @else {
-                <span class="ferr-entrada__pend">⏳ Pendiente de que Almacén confirme la entrada.</span>
+                <span class="ferr-entrada__pend">⏳ {{ 'Pendiente de que Almacén confirme la entrada.' | t }}</span>
               }
             </div>
           }
@@ -52,23 +52,23 @@
 
         @if (conduces().length) {
           @if (entradasFerreteria().length) {
-            <h2 class="recibir__section">Conduces por recibir</h2>
+            <h2 class="recibir__section">{{ 'Conduces por recibir' | t }}</h2>
           }
           @for (c of conduces(); track c.id) {
             <button type="button" class="con-card" (click)="abrir(c)">
               <div class="con-card__top">
                 <span class="con-card__code">🧾 {{ c.codigo }}</span>
-                <span class="con-card__estado con-card__estado--abierta">Por recibir</span>
+                <span class="con-card__estado con-card__estado--abierta">{{ 'Por recibir' | t }}</span>
               </div>
               <div class="con-card__route">
-                <span class="con-card__from">{{ c.bodega ?? 'Origen' }}</span>
+                <span class="con-card__from">{{ c.bodega ?? ('Origen' | t) }}</span>
                 <span class="con-card__arrow">→</span>
-                <span class="con-card__to">{{ c.destino ?? 'Destino' }}</span>
+                <span class="con-card__to">{{ c.destino ?? ('Destino' | t) }}</span>
               </div>
               <div class="con-card__meta">
                 <span>🕓 {{ fechaHora(c.creado_en ?? c.fecha) }}</span>
                 @if (c.creador) { <span>· 👤 {{ c.creador }}</span> }
-                <span>· 📦 {{ c.items.length }} {{ c.items.length === 1 ? 'artículo' : 'artículos' }}</span>
+                <span>· 📦 {{ c.items.length }} {{ c.items.length === 1 ? ('artículo' | t) : ('artículos' | t) }}</span>
               </div>
             </button>
           }
@@ -77,9 +77,9 @@
         @if (!conduces().length && !entradasFerreteria().length) {
           <app-empty-state
             icon="📦"
-            title="No hay nada por recibir"
-            message="Cuando otra bodega u obra despache material hacia este almacén —o registres una compra de ferretería— aparecerá aquí para confirmar lo que llegó."
-            secondaryLabel="Actualizar"
+            [title]="'No hay nada por recibir' | t"
+            [message]="'Cuando otra bodega u obra despache material hacia este almacén —o registres una compra de ferretería— aparecerá aquí para confirmar lo que llegó.' | t"
+            [secondaryLabel]="'Actualizar' | t"
             (secondaryAction)="load()"
           />
         }
@@ -96,30 +96,30 @@
       <section class="con-head">
         <div class="con-head__top">
           <span class="con-head__code">🧾 {{ c.codigo }}</span>
-          <span class="con-head__estado">Por recibir</span>
+          <span class="con-head__estado">{{ 'Por recibir' | t }}</span>
         </div>
         <div class="con-head__route">
           <div class="con-head__node">
-            <span class="con-head__node-label">Origen</span>
+            <span class="con-head__node-label">{{ 'Origen' | t }}</span>
             <span class="con-head__node-name">{{ c.bodega ?? '—' }}</span>
           </div>
           <span class="con-head__arrow">→</span>
           <div class="con-head__node con-head__node--dest">
-            <span class="con-head__node-label">Destino</span>
+            <span class="con-head__node-label">{{ 'Destino' | t }}</span>
             <span class="con-head__node-name">{{ c.destino ?? '—' }}</span>
           </div>
         </div>
         <dl class="con-head__facts">
-          <div><dt>Fecha y hora</dt><dd>{{ fechaHora(c.creado_en ?? c.fecha) }}</dd></div>
-          @if (c.creador) { <div><dt>Despachado por</dt><dd>{{ c.creador }}</dd></div> }
+          <div><dt>{{ 'Fecha y hora' | t }}</dt><dd>{{ fechaHora(c.creado_en ?? c.fecha) }}</dd></div>
+          @if (c.creador) { <div><dt>{{ 'Despachado por' | t }}</dt><dd>{{ c.creador }}</dd></div> }
         </dl>
         @if (c.observaciones) {
           <p class="con-head__obs">📝 {{ c.observaciones }}</p>
         }
         @if (despachoFotoUrl(); as url) {
           <button type="button" class="con-head__foto" (click)="lightbox.set(true)">
-            <img [src]="url" alt="Foto del despacho" />
-            <span>Foto del despacho — toca para ampliar</span>
+            <img [src]="url" [alt]="'Foto del despacho' | t" />
+            <span>{{ 'Foto del despacho — toca para ampliar' | t }}</span>
           </button>
         }
       </section>
@@ -127,95 +127,94 @@
       <!-- AF16 — alto valor / entrega en mano -->
       @if (altoValor()) {
         <div class="con-band con-band--alto">
-          🖐️ Este conduce lleva un artículo de <b>alto valor (entrega en mano)</b>. Debe recibirlo y
-          firmarlo el <b>responsable en persona</b> — no lo dejes ni lo auto-recibas.
+          🖐️ {{ 'Este conduce lleva un artículo de' | t }} <b>{{ 'alto valor (entrega en mano)' | t }}</b>{{ '. Debe recibirlo y firmarlo el' | t }} <b>{{ 'responsable en persona' | t }}</b> {{ '— no lo dejes ni lo auto-recibas.' | t }}
         </div>
       }
 
       <!-- Ítems: recibido / esperado editable -->
-      <h2 class="con-h2">¿Qué llegó?</h2>
-      <p class="con-hint">Ajusta la cantidad <b>recibida</b> si no coincide con lo esperado.</p>
+      <h2 class="con-h2">{{ '¿Qué llegó?' | t }}</h2>
+      <p class="con-hint">{{ 'Ajusta la cantidad' | t }} <b>{{ 'recibida' | t }}</b> {{ 'si no coincide con lo esperado.' | t }}</p>
 
       @for (it of c.items; track it.detalle_id) {
         <div class="con-item" [class.con-item--dif]="difiere(it)">
           <span class="con-item__name">
             {{ it.articulo }}
-            @if (it.entregaEnMano) { <span class="con-item__alto">🖐️ Entrega en mano</span> }
+            @if (it.entregaEnMano) { <span class="con-item__alto">🖐️ {{ 'Entrega en mano' | t }}</span> }
           </span>
           <div class="con-item__qty">
-            <button type="button" class="con-step" (click)="ajustar(it.detalle_id, -1)" aria-label="Menos">−</button>
+            <button type="button" class="con-step" (click)="ajustar(it.detalle_id, -1)" [attr.aria-label]="'Menos' | t">−</button>
             <input class="field con-item__input" type="number" inputmode="decimal"
               [ngModel]="cantidades()[it.detalle_id]"
               (ngModelChange)="setCantidad(it.detalle_id, $event)" />
-            <button type="button" class="con-step" (click)="ajustar(it.detalle_id, 1)" aria-label="Más">+</button>
+            <button type="button" class="con-step" (click)="ajustar(it.detalle_id, 1)" [attr.aria-label]="'Más' | t">+</button>
             <span class="con-item__exp">/ {{ it.cantidad | number: '1.0-2' }} {{ it.unidad }}</span>
           </div>
           @if (difiere(it)) {
-            <span class="con-item__badge">Distinto de lo esperado</span>
+            <span class="con-item__badge">{{ 'Distinto de lo esperado' | t }}</span>
           }
         </div>
       }
 
       @if (hayDiscrepancia()) {
-        <div class="con-band">⚠️ Hay diferencias con lo despachado. Descríbelas en la nota para dejar constancia.</div>
+        <div class="con-band">⚠️ {{ 'Hay diferencias con lo despachado. Descríbelas en la nota para dejar constancia.' | t }}</div>
       }
 
       <!-- Notas / discrepancias -->
-      <label class="field-label con-mt">Nota / discrepancia (opcional)</label>
+      <label class="field-label con-mt">{{ 'Nota / discrepancia (opcional)' | t }}</label>
       <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)"
-        placeholder="Ej: Llegaron 8 de 10 sacos" />
+        [placeholder]="'Ej: Llegaron 8 de 10 sacos' | t" />
 
       <!-- AF30 — fotos de la mercancía recibida (mínimo 2, solo cámara) -->
       <label class="field-label con-mt">
-        Fotos de lo recibido <span class="con-req">*</span>
-        <small class="con-hint"> (mínimo {{ MIN_FOTOS }})</small>
+        {{ 'Fotos de lo recibido' | t }} <span class="con-req">*</span>
+        <small class="con-hint"> ({{ 'mínimo' | t }} {{ MIN_FOTOS }})</small>
       </label>
       @if (fotos().length) {
         <div class="con-fotos">
           @for (f of fotos(); track $index) {
             <div class="con-foto">
-              <img [src]="f.previewUrl" alt="Evidencia de recepción" />
-              <button type="button" class="con-foto__x" (click)="quitarFoto($index)" aria-label="Quitar foto">✕</button>
+              <img [src]="f.previewUrl" [alt]="'Evidencia de recepción' | t" />
+              <button type="button" class="con-foto__x" (click)="quitarFoto($index)" [attr.aria-label]="'Quitar foto' | t">✕</button>
             </div>
           }
         </div>
       }
       <app-photo-slot
-        label="Agregar foto de la mercancía"
+        [label]="'Agregar foto de la mercancía' | t"
         hint="📦"
         [gallery]="false"
         [foto]="nuevaFoto()"
         (captured)="onAddFoto($event)"
       />
       @if (faltanFotos()) {
-        <div class="con-band">📷 Toma al menos {{ MIN_FOTOS }} fotos de la mercancía recibida.</div>
+        <div class="con-band">📷 {{ 'Toma al menos {n} fotos de la mercancía recibida.' | t: { n: MIN_FOTOS } }}</div>
       }
 
       <!-- AE — firma del receptor (prueba de recepción, AC7) -->
-      <label class="field-label con-mt" for="receptor">¿Quién recibe?</label>
+      <label class="field-label con-mt" for="receptor">{{ '¿Quién recibe?' | t }}</label>
       <input id="receptor" class="field" type="text" [ngModel]="receptorNombre()" (ngModelChange)="receptorNombre.set($event)"
-        placeholder="Nombre de quien recibe" />
-      <label class="field-label con-mt">Firma de quien recibe <span class="con-req">*</span></label>
+        [placeholder]="'Nombre de quien recibe' | t" />
+      <label class="field-label con-mt">{{ 'Firma de quien recibe' | t }} <span class="con-req">*</span></label>
       <app-signature-pad (changed)="onFirmaChanged($event)" />
     </div>
 
     <footer class="con-nav">
-      <button type="button" class="btn-ghost con-nav__back" (click)="cerrarDetalle()">Atrás</button>
+      <button type="button" class="btn-ghost con-nav__back" (click)="cerrarDetalle()">{{ 'Atrás' | t }}</button>
       <button
         type="button"
         class="btn-cta con-nav__cta"
         [disabled]="submitting() || faltanFotos() || !firmaLista() || !receptorNombre().trim()"
         (click)="confirm()"
       >
-        {{ submitting() ? 'Guardando…' : 'Confirmar recepción' }}
+        {{ submitting() ? ('Guardando…' | t) : ('Confirmar recepción' | t) }}
       </button>
     </footer>
 
     <!-- Lightbox de la foto del despacho -->
     @if (lightbox() && despachoFotoUrl(); as url) {
       <div class="con-lightbox" (click)="lightbox.set(false)">
-        <img [src]="url" alt="Foto del despacho" />
-        <button type="button" class="con-lightbox__x" aria-label="Cerrar">✕</button>
+        <img [src]="url" [alt]="'Foto del despacho' | t" />
+        <button type="button" class="con-lightbox__x" [attr.aria-label]="'Cerrar' | t">✕</button>
       </div>
     }
   }

@@ -3,6 +3,7 @@ import { Location } from '@angular/common';
 import { CAMBIO_LABEL, CambioItem, VersionService } from '../../core/services/version.service';
 import { UpdaterService } from '../../core/services/updater.service';
 import { UpdateService } from '../../core/services/update.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 /**
  * V3/V4 — "Nueva versión disponible" screen. Reached from the update banner,
@@ -19,6 +20,7 @@ import { UpdateService } from '../../core/services/update.service';
   selector: 'app-actualizar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslatePipe],
   templateUrl: './actualizar.html',
   styleUrl: './actualizar.scss',
 })

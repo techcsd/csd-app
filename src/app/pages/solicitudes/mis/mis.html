@@ -1,7 +1,7 @@
 <div class="screen mis-sol">
   <header class="mis-sol__header">
     <button type="button" class="mis-sol__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="mis-sol__title">Mis requisiciones</h1>
+    <h1 class="mis-sol__title">{{ 'Mis requisiciones' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,13 +11,13 @@
       @for (s of visibles(); track s.id) {
         <button type="button" class="sol-card" [attr.data-estado]="s.estado" (click)="abrir(s)">
           <div class="sol-card__top">
-            <span class="sol-card__chip">🏗️ {{ s.proyecto?.nombre ?? 'Obra' }}</span>
+            <span class="sol-card__chip">🏗️ {{ s.proyecto?.nombre ?? ('Obra' | t) }}</span>
             <span class="sol-card__estado">{{ estadoLabel(s.estado) }}</span>
           </div>
           <div class="sol-card__meta">
             <span class="sol-card__code">{{ codigo(s.folio) }}</span>
             <span>{{ fmtFecha(s.created_at) }}</span>
-            @if (s.urgencia === 'urgente') { <span class="sol-card__urg">🔴 Urgente</span> }
+            @if (s.urgencia === 'urgente') { <span class="sol-card__urg">🔴 {{ 'Urgente' | t }}</span> }
           </div>
           <ul class="sol-card__items">
             @for (it of s.items ?? []; track $index) {
@@ -29,28 +29,28 @@
             <div class="sol-card__orden">
               <span class="sol-card__orden-ico">🧾</span>
               <span class="sol-card__orden-txt">
-                Orden {{ oc.numero }} · {{ ordenEstadoLabel(oc.orden_estado) }}@if (oc.proveedor) { · {{ oc.proveedor }} }
+                {{ 'Orden' | t }} {{ oc.numero }} · {{ ordenEstadoLabel(oc.orden_estado) }}@if (oc.proveedor) { · {{ oc.proveedor }} }
               </span>
             </div>
           }
-          <span class="sol-card__ver">Ver detalle ›</span>
+          <span class="sol-card__ver">{{ 'Ver detalle' | t }} ›</span>
         </button>
       } @empty {
         @if (canceladasCount() > 0) {
           <!-- BH1 — todas las requisiciones están canceladas: no es "vacío", están ocultas -->
           <app-empty-state
             icon="🚫"
-            title="No hay requisiciones activas"
-            message="Todas tus requisiciones están canceladas. Puedes verlas con el botón de abajo o crear una nueva."
-            ctaLabel="Nueva requisición"
+            [title]="'No hay requisiciones activas' | t"
+            [message]="'Todas tus requisiciones están canceladas. Puedes verlas con el botón de abajo o crear una nueva.' | t"
+            [ctaLabel]="'Nueva requisición' | t"
             (action)="nueva()"
           />
         } @else {
           <app-empty-state
             icon="📝"
-            title="Todavía no has hecho requisiciones"
-            message="Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición: enviada, aprobada y recibida."
-            ctaLabel="Nueva requisición"
+            [title]="'Todavía no has hecho requisiciones' | t"
+            [message]="'Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición: enviada, aprobada y recibida.' | t"
+            [ctaLabel]="'Nueva requisición' | t"
             (action)="nueva()"
           />
         }
@@ -59,7 +59,7 @@
       <!-- BH1 — toggle para ver/ocultar las canceladas (ocultas por defecto) -->
       @if (canceladasCount() > 0) {
         <button type="button" class="mis-sol__toggle" (click)="toggleCanceladas()">
-          {{ mostrarCanceladas() ? 'Ocultar canceladas' : 'Ver canceladas (' + canceladasCount() + ')' }}
+          {{ mostrarCanceladas() ? ('Ocultar canceladas' | t) : (('Ver canceladas' | t) + ' (' + canceladasCount() + ')') }}
         </button>
       }
     }

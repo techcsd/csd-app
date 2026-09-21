@@ -7,6 +7,8 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { PhotoSlot } from '../../shared/ui/photo-slot/photo-slot';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { ProyectosService, CompraProyecto, GastoCategoria, GastoDirecto } from '../../core/services/proyectos.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -24,7 +26,7 @@ type Tab = 'compras' | 'gastos';
   selector: 'app-compras-proyecto',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, CollapsibleSelect, SyncBar, PhotoSlot],
+  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, CollapsibleSelect, SyncBar, PhotoSlot, TranslatePipe],
   templateUrl: './compras-proyecto.html',
   styleUrl: './compras-proyecto.scss',
 })
@@ -35,6 +37,7 @@ export class ComprasProyectoPage {
   private location = inject(Location);
   private network = inject(NetworkService);
   private route = inject(ActivatedRoute);
+  private i18n = inject(I18nService);
 
   loadingObras = signal(true);
   loading = signal(false);
@@ -106,7 +109,7 @@ export class ComprasProyectoPage {
         await this.proyectos.gastosDirectos(this.proyectoId(), this.desde() || null, this.hasta() || null),
       );
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudieron cargar los gastos.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudieron cargar los gastos.'));
     } finally {
       this.cargandoGastos.set(false);
     }
@@ -120,7 +123,7 @@ export class ComprasProyectoPage {
   // para que futuras auditorías no lo marquen como bug. El resto de la app sí es offline.
   abrirFormGasto(): void {
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para registrar un gasto.');
+      this.toast.error(this.i18n.t('Necesitas conexión para registrar un gasto.'));
       return;
     }
     this.gCategoria.set(this.categorias()[0]?.clave ?? 'misc');
@@ -134,11 +137,11 @@ export class ComprasProyectoPage {
   async guardarGasto(): Promise<void> {
     if (this.guardandoGasto()) return;
     if (!this.gConcepto().trim()) {
-      this.toast.error('Escribe el concepto del gasto.');
+      this.toast.error(this.i18n.t('Escribe el concepto del gasto.'));
       return;
     }
     if (!this.gMonto() || this.gMonto()! <= 0) {
-      this.toast.error('El monto debe ser mayor que cero.');
+      this.toast.error(this.i18n.t('El monto debe ser mayor que cero.'));
       return;
     }
     this.guardandoGasto.set(true);
@@ -151,11 +154,11 @@ export class ComprasProyectoPage {
         fecha: this.gFecha() || null,
         recibo: this.gRecibo()?.blob ?? null,
       });
-      this.toast.success('Gasto registrado.');
+      this.toast.success(this.i18n.t('Gasto registrado.'));
       this.gastoForm.set(false);
       await this.cargarGastos();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar el gasto.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar el gasto.'));
     } finally {
       this.guardandoGasto.set(false);
     }
@@ -173,14 +176,14 @@ export class ComprasProyectoPage {
         await this.proyectos.comprasDeProyecto(this.proyectoId(), this.desde() || null, this.hasta() || null),
       );
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudieron cargar las compras.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudieron cargar las compras.'));
     } finally {
       this.loading.set(false);
     }
   }
 
   tipoLabel(t: string): string {
-    return t === 'orden_compra' ? 'Orden de compra' : 'Ferretería';
+    return t === 'orden_compra' ? this.i18n.t('Orden de compra') : this.i18n.t('Ferretería');
   }
   tipoIcon(t: string): string {
     return t === 'orden_compra' ? '📄' : '🧾';

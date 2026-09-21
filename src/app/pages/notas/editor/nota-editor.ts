@@ -13,6 +13,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { NotasService } from '../../../core/services/notas.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -65,7 +67,7 @@ function plainToHtml(s: string): string {
   selector: 'app-nota-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, ConfirmDialog],
+  imports: [FormsModule, Skeleton, ConfirmDialog, TranslatePipe],
   templateUrl: './nota-editor.html',
   styleUrl: './nota-editor.scss',
 })
@@ -76,6 +78,7 @@ export class NotaEditorPage {
   private service = inject(NotasService);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
+  private i18n = inject(I18nService);
 
   readonly colores = NOTA_COLORES;
 
@@ -329,11 +332,11 @@ export class NotaEditorPage {
       this.inicial = this.snapshot();
       this.esNueva = false;
       if (volver) {
-        this.toast.success('Nota guardada.');
+        this.toast.success(this.i18n.t('Nota guardada.'));
         this.location.back();
       }
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la nota.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la nota.'));
     } finally {
       this.guardando.set(false);
     }
@@ -354,7 +357,7 @@ export class NotaEditorPage {
     if (!this.puedeEditar()) return;
     this.archivada.update((v) => !v);
     await this.guardar(false);
-    this.toast.success(this.archivada() ? 'Nota archivada.' : 'Nota restaurada.');
+    this.toast.success(this.archivada() ? this.i18n.t('Nota archivada.') : this.i18n.t('Nota restaurada.'));
   }
 
   pedirBorrar(): void {
@@ -364,15 +367,15 @@ export class NotaEditorPage {
     this.confirmBorrar.set(false);
     if (!this.esMia()) return;
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para borrar la nota.');
+      this.toast.error(this.i18n.t('Necesitas conexión para borrar la nota.'));
       return;
     }
     try {
       await this.service.eliminar(this.id);
-      this.toast.success('Nota borrada.');
+      this.toast.success(this.i18n.t('Nota borrada.'));
       this.location.back();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo borrar la nota.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo borrar la nota.'));
     }
   }
   cancelarBorrar(): void {
@@ -383,7 +386,7 @@ export class NotaEditorPage {
 
   async abrirCompartir(): Promise<void> {
     if (!this.network.online()) {
-      this.toast.error('Necesitas conexión para compartir.');
+      this.toast.error(this.i18n.t('Necesitas conexión para compartir.'));
       return;
     }
     // La nota debe EXISTIR en el servidor antes de compartirla (FK). El guardado
@@ -404,7 +407,7 @@ export class NotaEditorPage {
         this.inicial = this.snapshot();
         this.esNueva = false;
       } catch (e) {
-        this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar antes de compartir.');
+        this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar antes de compartir.'));
         return;
       }
     }
@@ -437,7 +440,7 @@ export class NotaEditorPage {
       const res = await this.service.buscarUsuarios(term);
       this.resultados.set(res.filter((u) => !yaCompartidos.has(u.id)));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo buscar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo buscar.'));
     } finally {
       this.buscando.set(false);
     }
@@ -449,9 +452,9 @@ export class NotaEditorPage {
       this.busqueda.set('');
       this.resultados.set([]);
       await this.cargarCompartidos();
-      this.toast.success(`Compartida con ${u.nombre}.`);
+      this.toast.success(this.i18n.t('Compartida con {nombre}.', { nombre: u.nombre }));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo compartir.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo compartir.'));
     }
   }
 
@@ -461,7 +464,7 @@ export class NotaEditorPage {
       await this.service.compartir(this.id, c.usuario_id, permiso);
       await this.cargarCompartidos();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cambiar el permiso.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cambiar el permiso.'));
     }
   }
 
@@ -470,7 +473,7 @@ export class NotaEditorPage {
       await this.service.quitarCompartido(this.id, c.usuario_id);
       await this.cargarCompartidos();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo quitar el acceso.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo quitar el acceso.'));
     }
   }
 

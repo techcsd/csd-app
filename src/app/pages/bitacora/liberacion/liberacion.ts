@@ -20,6 +20,8 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import {
   ClFirmaCaptura,
   ClFirmaRol,
@@ -67,7 +69,7 @@ const TOTAL_STEPS = 5;
   selector: 'app-liberacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, CollapsibleSelect, ConfirmDialog, Skeleton, WizardFooter, WizardExit],
+  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, CollapsibleSelect, ConfirmDialog, Skeleton, WizardFooter, WizardExit, TranslatePipe],
   templateUrl: './liberacion.html',
   styleUrl: './liberacion.scss',
 })
@@ -81,6 +83,7 @@ export class LiberacionPage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private camera = inject(CameraService);
   private borrador = inject(BorradorService);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
 
@@ -310,10 +313,10 @@ export class LiberacionPage implements OnDestroy {
         if (draft.proyectoId) {
           void this.service.getResponsables(draft.proyectoId).then((r) => this.responsables.set(r)).catch(() => {});
         }
-        this.toast.show('Recuperamos tu checklist a medio llenar. Las fotos y firmas hay que capturarlas de nuevo.', 'info', 4500);
+        this.toast.show(this.i18n.t('Recuperamos tu checklist a medio llenar. Las fotos y firmas hay que capturarlas de nuevo.'), 'info', 4500);
       }
     } catch {
-      this.toast.error('No se pudieron cargar obras/checklists.');
+      this.toast.error(this.i18n.t('No se pudieron cargar obras/checklists.'));
     } finally {
       this.loading.set(false);
       this.hydrated = true; // a partir de aquí el autosave puede correr
@@ -385,7 +388,7 @@ export class LiberacionPage implements OnDestroy {
   agregarFoto(): void {
     const p = this.fotoActual();
     if (!p) {
-      this.toast.error('Toma la foto primero.');
+      this.toast.error(this.i18n.t('Toma la foto primero.'));
       return;
     }
     this.fotos.update((list) => [
@@ -452,7 +455,7 @@ export class LiberacionPage implements OnDestroy {
   async agregarFirma(): Promise<void> {
     const rol = this.firmaRol();
     if (!rol) {
-      this.toast.error('Elige el rol que firma.');
+      this.toast.error(this.i18n.t('Elige el rol que firma.'));
       return;
     }
     // Q5 — el cliente puede haber subido una foto de la firma en vez de trazarla.
@@ -466,7 +469,7 @@ export class LiberacionPage implements OnDestroy {
       blob = await this.sig()?.toBlob();
     }
     if (!blob) {
-      this.toast.error(rol === 'cliente' ? 'Captura la firma o sube su foto.' : 'Captura la firma primero.');
+      this.toast.error(rol === 'cliente' ? this.i18n.t('Captura la firma o sube su foto.') : this.i18n.t('Captura la firma primero.'));
       return;
     }
     const sust = this.firmaSustituyeA();
@@ -490,7 +493,7 @@ export class LiberacionPage implements OnDestroy {
     this.firmaLista.set(false);
     this.sig()?.clear();
     this.quitarFirmaFoto();
-    this.toast.success('Firma agregada.');
+    this.toast.success(this.i18n.t('Firma agregada.'));
   }
   quitarFirma(rol: ClFirmaRol): void {
     this.firmas.update((list) => list.filter((f) => f.rol !== rol));
@@ -530,18 +533,18 @@ export class LiberacionPage implements OnDestroy {
     switch (this.step()) {
       case 1:
         if (!this.proyectoId()) {
-          this.toast.error('Elige la obra.');
+          this.toast.error(this.i18n.t('Elige la obra.'));
           return false;
         }
         if (!this.plantillaId()) {
-          this.toast.error('Elige el tipo de checklist (CL).');
+          this.toast.error(this.i18n.t('Elige el tipo de checklist (CL).'));
           return false;
         }
         return true;
       case 2:
         // Z1 — valida SOLO la sección visible; así se avanza hoja por hoja.
         if (!this.seccionRespondida(this.seccionActual())) {
-          this.toast.error('Responde todos los puntos de esta sección.');
+          this.toast.error(this.i18n.t('Responde todos los puntos de esta sección.'));
           return false;
         }
         return true;
@@ -584,7 +587,7 @@ export class LiberacionPage implements OnDestroy {
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {
       this.submitting.set(false);
     }
@@ -594,16 +597,16 @@ export class LiberacionPage implements OnDestroy {
   async solicitarFirmaCl(): Promise<void> {
     if (this.solicitando() || this.solicitado()) return;
     if (!this.online) {
-      this.toast.error('Necesitas conexión para solicitar la firma.');
+      this.toast.error(this.i18n.t('Necesitas conexión para solicitar la firma.'));
       return;
     }
     this.solicitando.set(true);
     try {
-      await this.service.solicitarFirma(this.clId(), this.proyectoSel()?.nombre ?? 'la obra', this.faltanObligatorias());
+      await this.service.solicitarFirma(this.clId(), this.proyectoSel()?.nombre ?? this.i18n.t('la obra'), this.faltanObligatorias());
       this.solicitado.set(true);
-      this.toast.success('Aviso enviado. Los ingenieros verán el CL pendiente de firma.');
+      this.toast.success(this.i18n.t('Aviso enviado. Los ingenieros verán el CL pendiente de firma.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar el aviso.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar el aviso.'));
     } finally {
       this.solicitando.set(false);
     }

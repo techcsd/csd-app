@@ -12,6 +12,7 @@ import { CameraService, CapturedPhoto } from '../../../core/services/camera.serv
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { BottomSheet } from '../bottom-sheet/bottom-sheet';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * A guided photo slot. Shows the example/silhouette of the required shot;
@@ -30,7 +31,7 @@ import { BottomSheet } from '../bottom-sheet/bottom-sheet';
   selector: 'app-photo-slot',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BottomSheet],
+  imports: [BottomSheet, TranslatePipe],
   templateUrl: './photo-slot.html',
   styleUrl: './photo-slot.scss',
 })

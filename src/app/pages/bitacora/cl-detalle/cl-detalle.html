@@ -2,7 +2,7 @@
   <header class="cld__header">
     <button type="button" class="cld__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="cld__icon">✍️</span>
-    <h1 class="cld__title">Firmar liberación</h1>
+    <h1 class="cld__title">{{ 'Firmar liberación' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -11,33 +11,33 @@
     } @else if (error() || !cl()) {
       <app-empty-state
         icon="⚠️"
-        title="No se pudo cargar el checklist"
-        message="Puede que necesites conexión o que ya no exista. Inténtalo de nuevo."
-        ctaLabel="Reintentar"
+        [title]="'No se pudo cargar el checklist' | t"
+        [message]="'Puede que necesites conexión o que ya no exista. Inténtalo de nuevo.' | t"
+        [ctaLabel]="'Reintentar' | t"
         (action)="load()"
       />
     } @else {
       @if (cl(); as c) {
         @if (firmado()) {
-          <div class="cld__banner cld__banner--ok">✅ Liberación FIRMADA — el vaciado ya se puede liberar.</div>
+          <div class="cld__banner cld__banner--ok">✅ {{ 'Liberación FIRMADA — el vaciado ya se puede liberar.' | t }}</div>
         } @else {
-          <div class="cld__banner">📝 Borrador — pendiente de firmas obligatorias.</div>
+          <div class="cld__banner">📝 {{ 'Borrador — pendiente de firmas obligatorias.' | t }}</div>
         }
 
         <ul class="resumen">
-          <li><span>Obra</span><b>{{ c.proyecto }}</b></li>
-          <li><span>Checklist</span><b>{{ c.plantillaCodigo }} — {{ c.plantilla }}</b></li>
-          @if (c.bloque) { <li><span>Bloque</span><b>{{ c.bloque }}</b></li> }
-          @if (c.eje) { <li><span>Eje</span><b>{{ c.eje }}</b></li> }
-          <li><span>Creado</span><b>{{ fmt(c.created_at) }}</b></li>
+          <li><span>{{ 'Obra' | t }}</span><b>{{ c.proyecto }}</b></li>
+          <li><span>{{ 'Checklist' | t }}</span><b>{{ c.plantillaCodigo }} — {{ c.plantilla }}</b></li>
+          @if (c.bloque) { <li><span>{{ 'Bloque' | t }}</span><b>{{ c.bloque }}</b></li> }
+          @if (c.eje) { <li><span>{{ 'Eje' | t }}</span><b>{{ c.eje }}</b></li> }
+          <li><span>{{ 'Creado' | t }}</span><b>{{ fmt(c.created_at) }}</b></li>
         </ul>
 
         <!-- S14 — Revisión read-only del formulario ANTES de firmar -->
-        <p class="cld__review-note">📋 Revisa todo el checklist antes de firmar.</p>
+        <p class="cld__review-note">📋 {{ 'Revisa todo el checklist antes de firmar.' | t }}</p>
 
         <!-- Ítems verificados (cumple / no cumple + comentarios) -->
         @if (c.items.length) {
-          <h2 class="cld__section">Puntos verificados</h2>
+          <h2 class="cld__section">{{ 'Puntos verificados' | t }}</h2>
           @for (g of gruposItems(); track g.seccion) {
             <p class="cld__grupo">{{ g.seccion }}</p>
             <ul class="cld__items">
@@ -56,18 +56,18 @@
 
         <!-- Contexto / observaciones -->
         @if (c.observaciones) {
-          <h2 class="cld__section">Observaciones</h2>
+          <h2 class="cld__section">{{ 'Observaciones' | t }}</h2>
           <p class="cld__obs">{{ c.observaciones }}</p>
         }
 
         <!-- Plano + fotos -->
         @if (c.planoUrl || c.fotos.length) {
-          <h2 class="cld__section">Fotos</h2>
+          <h2 class="cld__section">{{ 'Fotos' | t }}</h2>
           <div class="cld__fotos">
             @if (c.planoUrl) {
               <a class="cld__foto" [href]="c.planoUrl" target="_blank" rel="noopener">
                 <img [src]="c.planoUrl" alt="Plano" loading="lazy" />
-                <span class="cld__foto-cap">Plano</span>
+                <span class="cld__foto-cap">{{ 'Plano' | t }}</span>
               </a>
             }
             @for (f of c.fotos; track f.url) {
@@ -82,7 +82,7 @@
         }
 
         <!-- Estado de firmas (verde al firmar) + imagen de la firma puesta -->
-        <h2 class="cld__section">Firmas</h2>
+        <h2 class="cld__section">{{ 'Firmas' | t }}</h2>
         <div class="cld__firma-check">
           @for (r of firmaEstados(); track r.value) {
             <div class="cld__firma-row" [class.cld__firma-row--ok]="r.firmada">
@@ -94,36 +94,36 @@
                   @if (fr.firma_url) { <img class="cld__firma-img" [src]="fr.firma_url" alt="firma" loading="lazy" /> }
                 }
               </div>
-              <span class="cld__firma-state">{{ r.firmada ? 'Firmada' : (r.obligatoria ? 'Pendiente' : 'Opcional') }}</span>
+              <span class="cld__firma-state">{{ r.firmada ? ('Firmada' | t) : (r.obligatoria ? ('Pendiente' | t) : ('Opcional' | t)) }}</span>
             </div>
           }
         </div>
 
         <!-- Firmar mi rol (solo si aún es borrador) -->
         @if (!firmado()) {
-          <h2 class="cld__section">Firmar como {{ firmaRol() ? rolLabel(firmaRol()!) : '…' }}</h2>
+          <h2 class="cld__section">{{ 'Firmar como' | t }} {{ firmaRol() ? rolLabel(firmaRol()!) : '…' }}</h2>
           @if (!online()) {
-            <p class="cld__muted">Necesitas conexión para firmar.</p>
+            <p class="cld__muted">{{ 'Necesitas conexión para firmar.' | t }}</p>
           }
-          <label class="field-label">Rol que firma</label>
+          <label class="field-label">{{ 'Rol que firma' | t }}</label>
           <div class="cld__roles">
             @for (r of roles; track r.value) {
               <app-option-button [label]="r.label" [selected]="firmaRol() === r.value" (pressed)="pickRol(r.value)" />
             }
           </div>
 
-          <label class="field-label" for="fnom">Nombre de quien firma</label>
-          <input id="fnom" class="field" type="text" [ngModel]="firmaNombre()" (ngModelChange)="firmaNombre.set($event)" placeholder="Nombre y apellido" />
+          <label class="field-label" for="fnom">{{ 'Nombre de quien firma' | t }}</label>
+          <input id="fnom" class="field" type="text" [ngModel]="firmaNombre()" (ngModelChange)="firmaNombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
 
           <!-- Cliente: firma por foto (alternativa al trazo) -->
           @if (firmaRol() === 'cliente') {
             @if (firmaFoto(); as ff) {
               <img class="cld__foto-preview" [src]="ff.previewUrl" alt="Foto de la firma" />
-              <button type="button" class="btn-ghost" (click)="quitarFirmaFoto()">Quitar foto</button>
+              <button type="button" class="btn-ghost" (click)="quitarFirmaFoto()">{{ 'Quitar foto' | t }}</button>
             } @else {
               <div class="cld__foto-actions">
-                <button type="button" class="btn-ghost" (click)="subirFirmaFoto(false)">📷 Foto de la firma</button>
-                <button type="button" class="btn-ghost" (click)="subirFirmaFoto(true)">🖼️ Galería</button>
+                <button type="button" class="btn-ghost" (click)="subirFirmaFoto(false)">📷 {{ 'Foto de la firma' | t }}</button>
+                <button type="button" class="btn-ghost" (click)="subirFirmaFoto(true)">🖼️ {{ 'Galería' | t }}</button>
               </div>
             }
           }
@@ -132,7 +132,7 @@
             <app-signature-pad (changed)="firmaLista.set($event)" />
           }
           <button type="button" class="btn-cta cld__firmar" [disabled]="firmando() || !online()" (click)="firmar()">
-            {{ firmando() ? 'Registrando…' : '✍️ Firmar' }}
+            {{ firmando() ? ('Registrando…' | t) : '✍️ ' + ('Firmar' | t) }}
           </button>
         }
       }

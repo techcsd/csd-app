@@ -1,43 +1,43 @@
 @if (done()) {
   <app-big-confirm
-    [title]="online ? 'Bitácora enviada' : 'Guardado'"
-    [note]="online ? 'Tu bitácora del día quedó registrada.' : 'Sin señal. Se enviará sola.'"
+    [title]="online ? ('Bitácora enviada' | t) : ('Guardado' | t)"
+    [note]="online ? ('Tu bitácora del día quedó registrada.' | t) : ('Sin señal. Se enviará sola.' | t)"
     [tone]="online ? 'done' : 'pending'"
-    buttonLabel="Listo"
+    [buttonLabel]="'Listo' | t"
     (dismissed)="finish()"
   />
 } @else {
   <div class="screen parte">
     <header class="parte__topbar">
-      <button type="button" class="parte__topback" (click)="salir()" aria-label="Salir">←</button>
-      <span class="parte__topttl">Bitácora del día</span>
+      <button type="button" class="parte__topback" (click)="salir()" [attr.aria-label]="'Salir' | t">←</button>
+      <span class="parte__topttl">{{ 'Bitácora del día' | t }}</span>
     </header>
     <app-step-bar [current]="step()" [total]="total()" />
     <div class="screen__body">
       <!-- 1. Obra -->
       @if (step() === 1) {
-        <h1 class="screen__title">¿En qué obra estás?</h1>
+        <h1 class="screen__title">{{ '¿En qué obra estás?' | t }}</h1>
         <div class="parte__obras">
           @if (loadingObras()) {
             <app-skeleton [rows]="4" />
           } @else if (proyectos().length) {
             <app-collapsible-select
-              label="Obra"
+              [label]="'Obra' | t"
               icon="🏗️"
               [options]="proyectoOpciones()"
               [selectedId]="proyectoId()"
               [searchable]="true"
-              searchPlaceholder="Buscar obra…"
+              [searchPlaceholder]="'Buscar obra…' | t"
               (picked)="pickProyecto($event)"
             />
           } @else {
-            <p class="parte__muted">No hay obras disponibles.</p>
+            <p class="parte__muted">{{ 'No hay obras disponibles.' | t }}</p>
           }
         </div>
 
         <!-- BL9 — ¿de qué día es este parte? Default HOY; se puede fechar un día
              pasado (parte olvidado). Tope = hoy (como la web: [max], sin min). -->
-        <label class="field-label" for="parte-fecha">¿De qué día es este parte?</label>
+        <label class="field-label" for="parte-fecha">{{ '¿De qué día es este parte?' | t }}</label>
         <input
           id="parte-fecha"
           class="field"
@@ -47,40 +47,40 @@
           (ngModelChange)="fecha.set($event)"
         />
         @if (esFechaPasada()) {
-          <p class="parte__fecha-aviso">📅 Estás registrando una bitácora de una fecha pasada.</p>
+          <p class="parte__fecha-aviso">📅 {{ 'Estás registrando una bitácora de una fecha pasada.' | t }}</p>
         }
 
         <!-- Z4 — "No se trabajó en obra": vuela el resto del parte -->
-        <label class="field-label">¿No se trabajó hoy?</label>
+        <label class="field-label">{{ '¿No se trabajó hoy?' | t }}</label>
         <app-option-button
           icon="🚫"
-          label="No se trabajó en obra"
+          [label]="'No se trabajó en obra' | t"
           [tone]="sinActividad() ? 'warning' : 'default'"
           [selected]="sinActividad()"
           (pressed)="toggleSinActividad()"
         />
         @if (sinActividad()) {
-          <p class="screen__subtitle">Solo te pediremos el motivo. Toca de nuevo para volver al parte normal.</p>
+          <p class="screen__subtitle">{{ 'Solo te pediremos el motivo. Toca de nuevo para volver al parte normal.' | t }}</p>
         }
       }
 
       <!-- 2. Z4 — Motivo (solo "no se trabajó") -->
       @if (step() === 2 && sinActividad()) {
-        <h1 class="screen__title">¿Por qué no se trabajó?</h1>
+        <h1 class="screen__title">{{ '¿Por qué no se trabajó?' | t }}</h1>
         @for (m of motivosSinActividad; track m.value) {
           <app-option-button
             [icon]="m.icon"
-            [label]="m.label"
+            [label]="m.label | t"
             [selected]="motivoSinActividad() === m.value"
             (pressed)="motivoSinActividad.set(m.value)"
           />
         }
         @if (motivoSinActividad() === 'otro') {
-          <label class="field-label">Detalle del motivo</label>
-          <input class="field" type="text" [ngModel]="motivoDetalle()" (ngModelChange)="motivoDetalle.set($event)" placeholder="Describe el motivo" />
+          <label class="field-label">{{ 'Detalle del motivo' | t }}</label>
+          <input class="field" type="text" [ngModel]="motivoDetalle()" (ngModelChange)="motivoDetalle.set($event)" [placeholder]="'Describe el motivo' | t" />
         }
-        <label class="field-label">Comentario (opcional)</label>
-        <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
+        <label class="field-label">{{ 'Comentario (opcional)' | t }}</label>
+        <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" [placeholder]="'Algo más que agregar' | t" />
 
         <!-- Foto opcional -->
         @if (fotos().length) {
@@ -93,7 +93,7 @@
             }
           </div>
         }
-        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">📸 Agregar foto (opcional)</button>
+        <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">📸 {{ 'Agregar foto (opcional)' | t }}</button>
 
         <!-- Z23 — notas de voz (múltiples) -->
         <app-voice-notes [(notes)]="voces" [max]="5" [persistUrls]="true" />
@@ -101,72 +101,72 @@
 
       <!-- 2. Clima (lluvia) -->
       @if (step() === 2 && !sinActividad()) {
-        <h1 class="screen__title">¿Está lloviendo o llovió?</h1>
-        <p class="screen__subtitle">Es normal, no es un incidente. Solo lo registramos.</p>
-        <app-option-button icon="🌧️" label="Sí" tone="warning" [selected]="llovio() === true" (pressed)="llovio.set(true)" />
-        <app-option-button icon="☀️" label="No" tone="success" [selected]="llovio() === false" (pressed)="llovio.set(false)" />
+        <h1 class="screen__title">{{ '¿Está lloviendo o llovió?' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Es normal, no es un incidente. Solo lo registramos.' | t }}</p>
+        <app-option-button icon="🌧️" [label]="'Sí' | t" tone="warning" [selected]="llovio() === true" (pressed)="llovio.set(true)" />
+        <app-option-button icon="☀️" [label]="'No' | t" tone="success" [selected]="llovio() === false" (pressed)="llovio.set(false)" />
         @if (llovio()) {
           <!-- Z5 — horas que la lluvia afectó (stepper numérico) -->
-          <app-counter label="¿Cuántas horas afectó?" icon="⏱️" [(value)]="horasLluvia" [min]="0" [max]="24" />
-          <label class="field-label">¿Cómo afectó? (opcional)</label>
-          <input class="field" type="text" [ngModel]="lluviaDetalle()" (ngModelChange)="lluviaDetalle.set($event)" placeholder="Ej: paró el vaciado 2 horas" />
+          <app-counter [label]="'¿Cuántas horas afectó?' | t" icon="⏱️" [(value)]="horasLluvia" [min]="0" [max]="24" />
+          <label class="field-label">{{ '¿Cómo afectó? (opcional)' | t }}</label>
+          <input class="field" type="text" [ngModel]="lluviaDetalle()" (ngModelChange)="lluviaDetalle.set($event)" [placeholder]="'Ej: paró el vaciado 2 horas' | t" />
         }
       }
 
       <!-- 3. Z4 — Resumen (solo "no se trabajó") -->
       @if (step() === 3 && sinActividad()) {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
-          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
-          <li><span>Estado</span><b>No se trabajó en obra</b></li>
-          <li><span>Motivo</span><b>{{ motivoSinActividadLabel() }}</b></li>
+          <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>{{ 'Estado' | t }}</span><b>{{ 'No se trabajó en obra' | t }}</b></li>
+          <li><span>{{ 'Motivo' | t }}</span><b>{{ motivoSinActividadLabel() }}</b></li>
           @if (motivoSinActividad() === 'otro' && motivoDetalle()) {
-            <li><span>Detalle</span><b>{{ motivoDetalle() }}</b></li>
+            <li><span>{{ 'Detalle' | t }}</span><b>{{ motivoDetalle() }}</b></li>
           }
-          @if (comentarios()) { <li><span>Comentario</span><b>{{ comentarios() }}</b></li> }
-          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
+          @if (comentarios()) { <li><span>{{ 'Comentario' | t }}</span><b>{{ comentarios() }}</b></li> }
+          <li><span>{{ 'Fotos' | t }}</span><b>{{ fotos().length }}</b></li>
         </ul>
       }
 
       <!-- 3. Migración -->
       @if (step() === 3 && !sinActividad()) {
-        <h1 class="screen__title">¿Hubo problemas de migración?</h1>
-        <app-option-button icon="⚠️" label="Sí" tone="warning" [selected]="huboMigracion() === true" (pressed)="huboMigracion.set(true)" />
-        <app-option-button icon="✅" label="No" tone="success" [selected]="huboMigracion() === false" (pressed)="huboMigracion.set(false)" />
+        <h1 class="screen__title">{{ '¿Hubo problemas de migración?' | t }}</h1>
+        <app-option-button icon="⚠️" [label]="'Sí' | t" tone="warning" [selected]="huboMigracion() === true" (pressed)="huboMigracion.set(true)" />
+        <app-option-button icon="✅" [label]="'No' | t" tone="success" [selected]="huboMigracion() === false" (pressed)="huboMigracion.set(false)" />
         @if (huboMigracion()) {
           <!-- Z5 — cantidad de obreros (stepper numérico) -->
-          <app-counter label="¿Cuántos obreros?" icon="👷" [(value)]="migracionObrerosCount" [min]="0" />
+          <app-counter [label]="'¿Cuántos obreros?' | t" icon="👷" [(value)]="migracionObrerosCount" [min]="0" />
         }
       }
 
       <!-- 4. Personal -->
       @if (step() === 4) {
-        <h1 class="screen__title">¿Cuánta gente hay hoy?</h1>
-        <app-counter label="Carpintería" icon="🔨" [(value)]="carpinteria" />
-        <app-counter label="Acero" icon="🔩" [(value)]="acero" />
-        <app-counter label="Trabajadores de la casa" icon="👷" [(value)]="casa" />
-        <label class="field-label">Otro personal (opcional)</label>
-        <input class="field" type="text" [ngModel]="otroPersonal()" (ngModelChange)="otroPersonal.set($event)" placeholder="Ej: 2 ayudantes" />
+        <h1 class="screen__title">{{ '¿Cuánta gente hay hoy?' | t }}</h1>
+        <app-counter [label]="'Carpintería' | t" icon="🔨" [(value)]="carpinteria" />
+        <app-counter [label]="'Acero' | t" icon="🔩" [(value)]="acero" />
+        <app-counter [label]="'Trabajadores de la casa' | t" icon="👷" [(value)]="casa" />
+        <label class="field-label">{{ 'Otro personal (opcional)' | t }}</label>
+        <input class="field" type="text" [ngModel]="otroPersonal()" (ngModelChange)="otroPersonal.set($event)" [placeholder]="'Ej: 2 ayudantes' | t" />
       }
 
       <!-- 5. ¿Qué se hizo hoy? — sujeto → actividades → ¿otro bloque? (S3/S4) -->
       @if (step() === 5) {
         <!-- 5a — sujeto (piso/bloque/edificio) ARRIBA -->
         @if (paso5() === 'sujeto') {
-          <h1 class="screen__title">¿En qué bloque, piso o edificio?</h1>
-          <p class="screen__subtitle">Primero dinos de qué parte de la obra vas a hablar.</p>
+          <h1 class="screen__title">{{ '¿En qué bloque, piso o edificio?' | t }}</h1>
+          <p class="screen__subtitle">{{ 'Primero dinos de qué parte de la obra vas a hablar.' | t }}</p>
 
           @if (estructurasObra().length) {
             <!-- Z20 — selector de las estructuras definidas en la obra + "Otro". -->
-            <label class="field-label">Elige la parte de la obra</label>
+            <label class="field-label">{{ 'Elige la parte de la obra' | t }}</label>
             <div class="parte__chips">
               @for (b of estructurasObra(); track b) {
                 <button type="button" class="chip" [class.chip--on]="!sujetoOtro() && sujetoActual() === b" (click)="elegirEstructura(b)">📍 {{ b }}</button>
               }
-              <button type="button" class="chip" [class.chip--on]="sujetoOtro()" (click)="elegirOtroEstructura()">➕ Otro</button>
+              <button type="button" class="chip" [class.chip--on]="sujetoOtro()" (click)="elegirOtroEstructura()">➕ {{ 'Otro' | t }}</button>
             </div>
             @if (sujetoOtro()) {
-              <input class="field" type="text" [maxlength]="maxTexto" [ngModel]="sujetoActual()" (ngModelChange)="sujetoActual.set($event)" placeholder="Ej: Bloque B · 3er nivel" aria-label="Bloque, piso o edificio" />
+              <input class="field" type="text" [maxlength]="maxTexto" [ngModel]="sujetoActual()" (ngModelChange)="sujetoActual.set($event)" [placeholder]="'Ej: Bloque B · 3er nivel' | t" [attr.aria-label]="'Bloque, piso o edificio' | t" />
               <span class="char-count" [class.char-count--warn]="sujetoActual().length >= maxTexto">{{ sujetoActual().length }}/{{ maxTexto }}</span>
             }
           } @else {
@@ -177,8 +177,8 @@
               [maxlength]="maxTexto"
               [ngModel]="sujetoActual()"
               (ngModelChange)="sujetoActual.set($event)"
-              placeholder="Ej: Bloque B · 3er nivel"
-              aria-label="Bloque, piso o edificio"
+              [placeholder]="'Ej: Bloque B · 3er nivel' | t"
+              [attr.aria-label]="'Bloque, piso o edificio' | t"
             />
             <span class="char-count" [class.char-count--warn]="sujetoActual().length >= maxTexto">{{ sujetoActual().length }}/{{ maxTexto }}</span>
             <datalist id="bloques-sugeridos">
@@ -187,7 +187,7 @@
           }
 
           @if (bloques().length) {
-            <label class="field-label">Ya registraste (toca para agregarle más)</label>
+            <label class="field-label">{{ 'Ya registraste (toca para agregarle más)' | t }}</label>
             <div class="parte__chips">
               @for (b of bloques(); track b) {
                 <button type="button" class="chip" (click)="editarBloque(b)">📍 {{ b }}</button>
@@ -198,10 +198,10 @@
 
         <!-- 5b — estructuras + actividades del sujeto (ordenadas, más usadas primero) -->
         @if (paso5() === 'actividades') {
-          <h1 class="screen__title">¿Qué se hizo en {{ sujetoActual() }}?</h1>
-          <p class="screen__subtitle">Elige la parte, toca lo que se hizo y abajo la cantidad. ★ = más usadas aquí.</p>
+          <h1 class="screen__title">{{ '¿Qué se hizo en {sujeto}?' | t: { sujeto: sujetoActual() } }}</h1>
+          <p class="screen__subtitle">{{ 'Elige la parte, toca lo que se hizo y abajo la cantidad. ★ = más usadas aquí.' | t }}</p>
 
-          <label class="field-label">¿En qué parte?</label>
+          <label class="field-label">{{ '¿En qué parte?' | t }}</label>
           <div class="parte__chips">
             @for (e of estructuras(); track e.valor) {
               <button type="button" class="chip" [class.chip--on]="!parteOtro() && parteActual() === e.valor" (click)="toggleEstructura(e.valor)">
@@ -209,17 +209,17 @@
               </button>
             }
             <!-- AX6 — "Otros": salida cuando el elemento no está en el catálogo. -->
-            <button type="button" class="chip" [class.chip--on]="parteOtro()" (click)="elegirOtraParte()">➕ Otros</button>
+            <button type="button" class="chip" [class.chip--on]="parteOtro()" (click)="elegirOtraParte()">➕ {{ 'Otros' | t }}</button>
           </div>
           @if (parteOtro()) {
-            <input class="field" type="text" [maxlength]="maxTexto" [ngModel]="parteActual()" (ngModelChange)="parteActual.set($event)" placeholder="Especifica qué se trabajó (ej: Escalera, Rampa…)" aria-label="Especifica qué se trabajó" />
+            <input class="field" type="text" [maxlength]="maxTexto" [ngModel]="parteActual()" (ngModelChange)="parteActual.set($event)" [placeholder]="'Especifica qué se trabajó (ej: Escalera, Rampa…)' | t" [attr.aria-label]="'Especifica qué se trabajó' | t" />
             <span class="char-count" [class.char-count--warn]="parteActual().length >= maxTexto">{{ parteActual().length }}/{{ maxTexto }}</span>
           }
 
           @if (parteActual()) {
             <!-- Z6 — Seleccionadas arriba (toca para quitar) -->
             @if (actividadesElegidas().length) {
-              <label class="field-label">Seleccionadas (toca para quitar)</label>
+              <label class="field-label">{{ 'Seleccionadas (toca para quitar)' | t }}</label>
               <div class="parte__chips">
                 @for (ac of actividadesElegidas(); track ac.valor) {
                   <button type="button" class="chip chip--on" (click)="toggleActividad(ac.valor)">
@@ -228,9 +228,9 @@
                 }
               </div>
             }
-            <label class="field-label">¿Qué se hizo en {{ parteActual() }}? (toca para agregar)</label>
+            <label class="field-label">{{ '¿Qué se hizo en {parte}? (toca para agregar)' | t: { parte: parteActual() } }}</label>
             <!-- AW6 — buscador de actividades (sin acentos, por palabras) -->
-            <input class="field parte__act-buscar" type="search" [ngModel]="filtroActividad()" (ngModelChange)="filtroActividad.set($event)" placeholder="Buscar actividad…" />
+            <input class="field parte__act-buscar" type="search" [ngModel]="filtroActividad()" (ngModelChange)="filtroActividad.set($event)" [placeholder]="'Buscar actividad…' | t" />
             <div class="parte__chips">
               @for (ac of actividadesDisponibles(); track ac.valor) {
                 <button type="button" class="chip" (click)="toggleActividad(ac.valor)">
@@ -240,41 +240,41 @@
                 <!-- AZ6 — el buscador sin resultados OFRECE agregarlo como "Otros" (nunca mudo). -->
                 @if (filtroActividad().trim()) {
                   <button type="button" class="chip chip--on" (click)="agregarActividadOtro(filtroActividad())">
-                    ➕ Agregar como Otros: “{{ filtroActividad().trim() }}”
+                    ➕ {{ 'Agregar como Otros: “{texto}”' | t: { texto: filtroActividad().trim() } }}
                   </button>
                 } @else {
-                  <span class="parte__act-vacio">Sin coincidencias. Toca “➕ Otros” para escribirla.</span>
+                  <span class="parte__act-vacio">{{ 'Sin coincidencias. Toca “➕ Otros” para escribirla.' | t }}</span>
                 }
               }
               <!-- AZ6 — "Otros": salida cuando la actividad no está en el catálogo. -->
-              <button type="button" class="chip" [class.chip--on]="actividadOtro()" (click)="elegirActividadOtra()">➕ Otros</button>
+              <button type="button" class="chip" [class.chip--on]="actividadOtro()" (click)="elegirActividadOtra()">➕ {{ 'Otros' | t }}</button>
             </div>
             @if (actividadOtro()) {
               <div class="parte__otro-row">
                 <input class="field" type="text" [ngModel]="actividadOtroTexto()" (ngModelChange)="actividadOtroTexto.set($event)"
-                  placeholder="Especifica qué se hizo (ej: Curado, Limpieza…)" aria-label="Especifica qué se hizo"
+                  [placeholder]="'Especifica qué se hizo (ej: Curado, Limpieza…)' | t" [attr.aria-label]="'Especifica qué se hizo' | t"
                   (keyup.enter)="agregarActividadOtro()" />
-                <button type="button" class="parte__otro-add" (click)="agregarActividadOtro()">Agregar</button>
+                <button type="button" class="parte__otro-add" (click)="agregarActividadOtro()">{{ 'Agregar' | t }}</button>
               </div>
             }
           }
 
           <!-- Lista de lo agregado en este bloque, cada uno con su cantidad -->
           @if (actividadesDelSujeto().length) {
-            <label class="field-label">Cantidad de cada trabajo</label>
+            <label class="field-label">{{ 'Cantidad de cada trabajo' | t }}</label>
             @for (row of actividadesDelSujeto(); track row.i) {
               <div class="parte__actrow">
                 <div class="parte__actrow-top">
                   <span class="parte__actrow-name">{{ row.a.estructura }} · {{ row.a.actividad }}</span>
-                  <button type="button" class="parte__act-x" (click)="removeActividad(row.i)">Quitar</button>
+                  <button type="button" class="parte__act-x" (click)="removeActividad(row.i)">{{ 'Quitar' | t }}</button>
                 </div>
                 <div class="parte__actrow-qty">
-                  <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, -1)" aria-label="Menos">−</button>
+                  <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, -1)" [attr.aria-label]="'Menos' | t">−</button>
                   <input class="field parte__qty" type="number" inputmode="decimal" [ngModel]="row.a.cantidad" (ngModelChange)="setCantidadAct(row.i, $event)"
-                    [placeholder]="row.a.es_aproximada ? '~ aprox.' : ''" />
-                  <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, 1)" aria-label="Más">+</button>
+                    [placeholder]="row.a.es_aproximada ? ('~ aprox.' | t) : ''" />
+                  <button type="button" class="parte__step" (click)="ajustarCantidadAct(row.i, 1)" [attr.aria-label]="'Más' | t">+</button>
                   <select class="field parte__unidad" [ngModel]="row.a.unidad ?? ''" (ngModelChange)="setUnidadAct(row.i, $event)">
-                    <option value="">Unidad…</option>
+                    <option value="">{{ 'Unidad…' | t }}</option>
                     @if (row.a.unidad && !unidades().includes(row.a.unidad)) {
                       <option [value]="row.a.unidad">{{ row.a.unidad }}</option>
                     }
@@ -285,10 +285,10 @@
                 </div>
                 <!-- AW1 — marcar la cantidad como aproximada (varillas, encofrado…): "se trabajó" sin número exacto -->
                 <button type="button" class="parte__aprox" [class.parte__aprox--on]="row.a.es_aproximada" (click)="toggleAproximada(row.i)">
-                  {{ row.a.es_aproximada ? '~ Cantidad aproximada (se trabajó)' : '~ Marcar como aproximada' }}
+                  {{ row.a.es_aproximada ? ('~ Cantidad aproximada (se trabajó)' | t) : ('~ Marcar como aproximada' | t) }}
                 </button>
                 @if (partidaDe(row.a.estructura); as p) {
-                  <span class="parte__plan">Plan: {{ p.cantidad_planeada }} {{ p.unidad || '' }}</span>
+                  <span class="parte__plan">{{ 'Plan:' | t }} {{ p.cantidad_planeada }} {{ p.unidad || '' }}</span>
                 }
               </div>
             }
@@ -297,27 +297,27 @@
 
         <!-- 5c — ¿otro bloque? (multi-bloque) -->
         @if (paso5() === 'otro') {
-          <h1 class="screen__title">¿Trabajaste en otro bloque, piso o edificio?</h1>
-          <p class="screen__subtitle">Lo que llevas queda guardado. Puedes agregar otro o continuar.</p>
+          <h1 class="screen__title">{{ '¿Trabajaste en otro bloque, piso o edificio?' | t }}</h1>
+          <p class="screen__subtitle">{{ 'Lo que llevas queda guardado. Puedes agregar otro o continuar.' | t }}</p>
 
-          <label class="field-label">Lo registrado hasta ahora</label>
+          <label class="field-label">{{ 'Lo registrado hasta ahora' | t }}</label>
           <div class="parte__bloques-resumen">
             @for (g of resumenPorBloque(); track g.bloque) {
               <div class="parte__bloque-card">
                 <span class="parte__bloque-name">📍 {{ g.bloque }}</span>
-                <span class="parte__bloque-count">{{ g.items.length }} trabajo(s)</span>
+                <span class="parte__bloque-count">{{ g.items.length }} {{ 'trabajo(s)' | t }}</span>
               </div>
             }
           </div>
 
-          <app-option-button icon="➕" label="Sí, trabajé en otro bloque" (pressed)="otroBloque()" />
+          <app-option-button icon="➕" [label]="'Sí, trabajé en otro bloque' | t" (pressed)="otroBloque()" />
         }
       }
 
       <!-- 6. Restricciones -->
       @if (step() === 6) {
-        <h1 class="screen__title">¿Hubo algún problema?</h1>
-        <p class="screen__subtitle">Marca lo que aplique. Si no hubo, deja "Ninguna".</p>
+        <h1 class="screen__title">{{ '¿Hubo algún problema?' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Marca lo que aplique. Si no hubo, deja "Ninguna".' | t }}</p>
         <div class="parte__restr">
           @for (r of restriccionesCat(); track r) {
             <app-option-button [label]="r" [selected]="restricciones().includes(r)" (pressed)="toggleRestriccion(r)" />
@@ -327,13 +327,13 @@
                 type="text"
                 [ngModel]="getRestriccionDesc(r)"
                 (ngModelChange)="setRestriccionDesc(r, $event)"
-                [placeholder]="'Describa: ' + r.toLowerCase() + '…'"
-                aria-label="Describa la restricción"
+                [placeholder]="'Describa: {r}…' | t: { r: r.toLowerCase() }"
+                [attr.aria-label]="'Describa la restricción' | t"
               />
               <!-- Z21 — foto opcional de esta restricción -->
               <app-photo-slot
                 class="parte__restr-foto"
-                label="Foto (opcional)"
+                [label]="'Foto (opcional)' | t"
                 hint="📷"
                 [foto]="getRestriccionFoto(r)"
                 (captured)="onRestriccionFoto(r, $event)"
@@ -353,10 +353,10 @@
 
       <!-- 7. Fotos (mínimo 2 — S6) -->
       @if (step() === 7) {
-        <h1 class="screen__title">Fotos de la obra</h1>
+        <h1 class="screen__title">{{ 'Fotos de la obra' | t }}</h1>
         <p class="screen__subtitle">
-          Mínimo {{ minFotos }}. Llevas <b>{{ fotos().length }}</b>.
-          @if (fotos().length < minFotos) { <span class="parte__warn">Faltan {{ minFotos - fotos().length }}.</span> }
+          {{ 'Mínimo {n}.' | t: { n: minFotos } }} {{ 'Llevas' | t }} <b>{{ fotos().length }}</b>.
+          @if (fotos().length < minFotos) { <span class="parte__warn">{{ 'Faltan {n}.' | t: { n: minFotos - fotos().length } }}</span> }
         </p>
         <div class="parte__fotos">
           @for (f of fotos(); track f.previewUrl) {
@@ -368,10 +368,10 @@
         </div>
         <div class="parte__foto-actions">
           <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFoto()">
-            {{ capturing() ? '⏳…' : '📷 Cámara' }}
+            @if (capturing()) { ⏳… } @else { 📷 {{ 'Cámara' | t }} }
           </button>
           <button type="button" class="btn-ghost" [disabled]="capturing()" (click)="addFromGallery()">
-            {{ capturing() ? '⏳…' : '🖼️ Galería' }}
+            @if (capturing()) { ⏳… } @else { 🖼️ {{ 'Galería' | t }} }
           </button>
         </div>
       }
@@ -384,81 +384,81 @@
 
         <!-- 8a — en uso -->
         @if (paso8() === 'uso') {
-          <h1 class="screen__title">¿Hay equipos alquilados en uso hoy?</h1>
-          <p class="screen__subtitle">Grúas, retroexcavadoras, plantas eléctricas… lo que esté rentado.</p>
-          <app-option-button icon="🚜" label="Sí" tone="warning" [selected]="huboEquipos() === true" (pressed)="onHuboEquiposChange(true)" />
-          <app-option-button icon="🚫" label="No" tone="success" [selected]="huboEquipos() === false" (pressed)="onHuboEquiposChange(false)" />
+          <h1 class="screen__title">{{ '¿Hay equipos alquilados en uso hoy?' | t }}</h1>
+          <p class="screen__subtitle">{{ 'Grúas, retroexcavadoras, plantas eléctricas… lo que esté rentado.' | t }}</p>
+          <app-option-button icon="🚜" [label]="'Sí' | t" tone="warning" [selected]="huboEquipos() === true" (pressed)="onHuboEquiposChange(true)" />
+          <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="huboEquipos() === false" (pressed)="onHuboEquiposChange(false)" />
 
           @if (huboEquipos()) {
             @for (e of equiposAlquilados(); track $index) {
               @if (!e.soloRetiroDano) {
                 <div class="parte__equipo">
                   <div class="parte__equipo-top">
-                    <span class="parte__equipo-num">Equipo</span>
-                    <button type="button" class="parte__act-x" (click)="removeEquipo(e)">Quitar</button>
+                    <span class="parte__equipo-num">{{ 'Equipo' | t }}</span>
+                    <button type="button" class="parte__act-x" (click)="removeEquipo(e)">{{ 'Quitar' | t }}</button>
                   </div>
                   <!-- Z22 — selector de los equipos de la obra + "Otro"; sin equipos registrados cae a texto libre. -->
                   @if (equiposSugeridos().length) {
-                    <select class="field" [ngModel]="equipoSelectValue(e)" (ngModelChange)="onEquipoSelect(e, $event)" aria-label="Equipo">
-                      <option value="">Elige el equipo…</option>
+                    <select class="field" [ngModel]="equipoSelectValue(e)" (ngModelChange)="onEquipoSelect(e, $event)" [attr.aria-label]="'Equipo' | t">
+                      <option value="">{{ 'Elige el equipo…' | t }}</option>
                       @for (s of equiposSugeridos(); track s) { <option [value]="s">{{ s }}</option> }
-                      <option value="__otro__">Otro (escribir)</option>
+                      <option value="__otro__">{{ 'Otro (escribir)' | t }}</option>
                     </select>
                     @if (esEquipoOtro(e)) {
-                      <input class="field" type="text" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" placeholder="Nombre del equipo" aria-label="Nombre del equipo" />
+                      <input class="field" type="text" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" [placeholder]="'Nombre del equipo' | t" [attr.aria-label]="'Nombre del equipo' | t" />
                     }
                   } @else {
-                    <input class="field" type="text" list="equipos-sugeridos" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" placeholder="Equipo (ej: Retroexcavadora)" aria-label="Equipo" />
+                    <input class="field" type="text" list="equipos-sugeridos" [ngModel]="e.equipo" (ngModelChange)="updateEquipo(e, 'equipo', $event)" [placeholder]="'Equipo (ej: Retroexcavadora)' | t" [attr.aria-label]="'Equipo' | t" />
                   }
-                  <input class="field" type="text" [ngModel]="e.uso" (ngModelChange)="updateEquipo(e, 'uso', $event)" placeholder="¿En qué se usó? (obligatorio)" aria-label="Uso del equipo" />
-                  <input class="field" type="text" [ngModel]="e.proveedor" (ngModelChange)="updateEquipo(e, 'proveedor', $event)" placeholder="Proveedor (opcional)" aria-label="Proveedor del equipo" />
+                  <input class="field" type="text" [ngModel]="e.uso" (ngModelChange)="updateEquipo(e, 'uso', $event)" [placeholder]="'¿En qué se usó? (obligatorio)' | t" [attr.aria-label]="'Uso del equipo' | t" />
+                  <input class="field" type="text" [ngModel]="e.proveedor" (ngModelChange)="updateEquipo(e, 'proveedor', $event)" [placeholder]="'Proveedor (opcional)' | t" [attr.aria-label]="'Proveedor del equipo' | t" />
                 </div>
               }
             }
-            <button type="button" class="btn-ghost" (click)="addEquipo()">+ Agregar otro equipo</button>
+            <button type="button" class="btn-ghost" (click)="addEquipo()">+ {{ 'Agregar otro equipo' | t }}</button>
           }
         }
 
         <!-- 8b — para retirar -->
         @if (paso8() === 'retirar') {
-          <h1 class="screen__title">¿Hay equipos alquilados para retirar?</h1>
-          <p class="screen__subtitle">Se avisará al transportista para que lo pase a buscar.</p>
-          <app-option-button icon="📦" label="Sí" tone="warning" [selected]="hayRetirar() === true" (pressed)="onHayRetirarChange(true)" />
-          <app-option-button icon="🚫" label="No" tone="success" [selected]="hayRetirar() === false" (pressed)="onHayRetirarChange(false)" />
+          <h1 class="screen__title">{{ '¿Hay equipos alquilados para retirar?' | t }}</h1>
+          <p class="screen__subtitle">{{ 'Se avisará al transportista para que lo pase a buscar.' | t }}</p>
+          <app-option-button icon="📦" [label]="'Sí' | t" tone="warning" [selected]="hayRetirar() === true" (pressed)="onHayRetirarChange(true)" />
+          <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="hayRetirar() === false" (pressed)="onHayRetirarChange(false)" />
 
           @if (hayRetirar()) {
-            <label class="field-label">Toca el equipo a retirar</label>
+            <label class="field-label">{{ 'Toca el equipo a retirar' | t }}</label>
             @for (e of equiposAlquilados(); track $index) {
               @if (e.equipo.trim()) {
                 <app-option-button [label]="e.equipo" icon="📦" [selected]="e.para_retirar" (pressed)="toggleRetirar(e)" />
               }
             }
-            <label class="field-label">¿No está en la lista? Escríbelo</label>
+            <label class="field-label">{{ '¿No está en la lista? Escríbelo' | t }}</label>
             <div class="parte__addrow">
-              <input class="field" type="text" list="equipos-sugeridos" [ngModel]="retiroNombre()" (ngModelChange)="retiroNombre.set($event)" placeholder="Equipo a retirar" aria-label="Otro equipo a retirar" />
-              <button type="button" class="btn-ghost" (click)="addEquipoRetirar()">Agregar</button>
+              <input class="field" type="text" list="equipos-sugeridos" [ngModel]="retiroNombre()" (ngModelChange)="retiroNombre.set($event)" [placeholder]="'Equipo a retirar' | t" [attr.aria-label]="'Otro equipo a retirar' | t" />
+              <button type="button" class="btn-ghost" (click)="addEquipoRetirar()">{{ 'Agregar' | t }}</button>
             </div>
           }
         }
 
         <!-- 8c — dañados -->
         @if (paso8() === 'danado') {
-          <h1 class="screen__title">¿Hay equipos dañados?</h1>
-          <app-option-button icon="🛠️" label="Sí" tone="warning" [selected]="hayDanados() === true" (pressed)="onHayDanadosChange(true)" />
-          <app-option-button icon="🚫" label="No" tone="success" [selected]="hayDanados() === false" (pressed)="onHayDanadosChange(false)" />
+          <h1 class="screen__title">{{ '¿Hay equipos dañados?' | t }}</h1>
+          <app-option-button icon="🛠️" [label]="'Sí' | t" tone="warning" [selected]="hayDanados() === true" (pressed)="onHayDanadosChange(true)" />
+          <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="hayDanados() === false" (pressed)="onHayDanadosChange(false)" />
 
           @if (hayDanados()) {
-            <label class="field-label">Toca el equipo dañado y di qué le pasó</label>
+            <label class="field-label">{{ 'Toca el equipo dañado y di qué le pasó' | t }}</label>
             @for (e of equiposAlquilados(); track $index) {
               @if (e.equipo.trim()) {
                 <app-option-button [label]="e.equipo" icon="🛠️" [selected]="e.danado" (pressed)="toggleDanado(e)" />
                 @if (e.danado) {
-                  <input class="field parte__restr-desc" type="text" [ngModel]="e.dano_detalle" (ngModelChange)="setDanoDetalle(e, $event)" placeholder="¿Qué le pasó?" aria-label="Detalle del daño" />
+                  <input class="field parte__restr-desc" type="text" [ngModel]="e.dano_detalle" (ngModelChange)="setDanoDetalle(e, $event)" [placeholder]="'¿Qué le pasó?' | t" [attr.aria-label]="'Detalle del daño' | t" />
                   <!-- Z22/AA10 — fotos (varias) del equipo dañado -->
                   @for (p of getEquipoDanoFotos(e.equipo); track $index) {
                     <app-photo-slot
                       class="parte__restr-foto"
-                      label="Foto del daño"
+                      [label]="'Foto del daño' | t"
                       hint="📷"
                       [foto]="p"
                       (cleared)="removeEquipoDanoFoto(e.equipo, $index)"
@@ -466,17 +466,17 @@
                   }
                   <app-photo-slot
                     class="parte__restr-foto"
-                    label="Agregar foto del daño (opcional)"
+                    [label]="'Agregar foto del daño (opcional)' | t"
                     hint="➕"
                     (captured)="addEquipoDanoFoto(e.equipo, $event)"
                   />
                 }
               }
             }
-            <label class="field-label">¿No está en la lista? Escríbelo</label>
+            <label class="field-label">{{ '¿No está en la lista? Escríbelo' | t }}</label>
             <div class="parte__addrow">
-              <input class="field" type="text" list="equipos-sugeridos" [ngModel]="danoNombre()" (ngModelChange)="danoNombre.set($event)" placeholder="Equipo dañado" aria-label="Otro equipo dañado" />
-              <button type="button" class="btn-ghost" (click)="addEquipoDanado()">Agregar</button>
+              <input class="field" type="text" list="equipos-sugeridos" [ngModel]="danoNombre()" (ngModelChange)="danoNombre.set($event)" [placeholder]="'Equipo dañado' | t" [attr.aria-label]="'Otro equipo dañado' | t" />
+              <button type="button" class="btn-ghost" (click)="addEquipoDanado()">{{ 'Agregar' | t }}</button>
             </div>
           }
         }
@@ -484,22 +484,22 @@
 
       <!-- 9. Daños de material / equipo propio (BP4) -->
       @if (step() === 9) {
-        <h1 class="screen__title">¿Se dañó algún material o equipo propio hoy?</h1>
-        <p class="screen__subtitle">Un molde, una viga, un equipo de la empresa… (el equipo alquilado ya se preguntó antes).</p>
-        <app-option-button icon="🧱" label="Sí" tone="warning" [selected]="huboDanos() === true" (pressed)="onHuboDanosChange(true)" />
-        <app-option-button icon="🚫" label="No" tone="success" [selected]="huboDanos() === false" (pressed)="onHuboDanosChange(false)" />
+        <h1 class="screen__title">{{ '¿Se dañó algún material o equipo propio hoy?' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Un molde, una viga, un equipo de la empresa… (el equipo alquilado ya se preguntó antes).' | t }}</p>
+        <app-option-button icon="🧱" [label]="'Sí' | t" tone="warning" [selected]="huboDanos() === true" (pressed)="onHuboDanosChange(true)" />
+        <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="huboDanos() === false" (pressed)="onHuboDanosChange(false)" />
 
         @if (huboDanos()) {
           <!-- Tipo de lo que se dañó -->
-          <label class="field-label">¿Qué se dañó?</label>
+          <label class="field-label">{{ '¿Qué se dañó?' | t }}</label>
           <div class="parte__dano-tipos">
-            <app-option-button icon="📦" label="Material" [selected]="danoTipoNuevo() === 'material'" (pressed)="setDanoTipoNuevo('material')" />
-            <app-option-button icon="🛠️" label="Equipo propio (CSD)" [selected]="danoTipoNuevo() === 'equipo_propio'" (pressed)="setDanoTipoNuevo('equipo_propio')" />
+            <app-option-button icon="📦" [label]="'Material' | t" [selected]="danoTipoNuevo() === 'material'" (pressed)="setDanoTipoNuevo('material')" />
+            <app-option-button icon="🛠️" [label]="'Equipo propio (CSD)' | t" [selected]="danoTipoNuevo() === 'equipo_propio'" (pressed)="setDanoTipoNuevo('equipo_propio')" />
           </div>
 
           <!-- Agregar: material del catálogo (o texto libre) / equipo propio -->
           @if (danoTipoNuevo() === 'material') {
-            <label class="field-label">Busca el material dañado</label>
+            <label class="field-label">{{ 'Busca el material dañado' | t }}</label>
             <app-articulo-picker
               [articulos]="articulosCat()"
               [categorias]="categoriasCat()"
@@ -508,16 +508,16 @@
               [buscador]="danoBuscador"
               (picked)="addDanoMaterial($event)"
             />
-            <label class="field-label">¿No está en la lista? Escríbelo</label>
+            <label class="field-label">{{ '¿No está en la lista? Escríbelo' | t }}</label>
             <div class="parte__addrow">
-              <input class="field" type="text" [ngModel]="danoLibreNombre()" (ngModelChange)="danoLibreNombre.set($event)" placeholder="Material dañado" aria-label="Material dañado no catalogado" />
-              <button type="button" class="btn-ghost" (click)="addDanoLibre()">Agregar</button>
+              <input class="field" type="text" [ngModel]="danoLibreNombre()" (ngModelChange)="danoLibreNombre.set($event)" [placeholder]="'Material dañado' | t" [attr.aria-label]="'Material dañado no catalogado' | t" />
+              <button type="button" class="btn-ghost" (click)="addDanoLibre()">{{ 'Agregar' | t }}</button>
             </div>
           } @else {
-            <label class="field-label">¿Qué equipo propio se dañó?</label>
+            <label class="field-label">{{ '¿Qué equipo propio se dañó?' | t }}</label>
             <div class="parte__addrow">
-              <input class="field" type="text" [ngModel]="danoEquipoNombre()" (ngModelChange)="danoEquipoNombre.set($event)" placeholder="Ej: Vibrador, andamio, mezcladora" aria-label="Equipo propio dañado" />
-              <button type="button" class="btn-ghost" (click)="addDanoEquipo()">Agregar</button>
+              <input class="field" type="text" [ngModel]="danoEquipoNombre()" (ngModelChange)="danoEquipoNombre.set($event)" [placeholder]="'Ej: Vibrador, andamio, mezcladora' | t" [attr.aria-label]="'Equipo propio dañado' | t" />
+              <button type="button" class="btn-ghost" (click)="addDanoEquipo()">{{ 'Agregar' | t }}</button>
             </div>
           }
 
@@ -528,35 +528,35 @@
                 <span class="parte__dano-name">
                   {{ d.nombre }}
                   <span class="parte__tag" [class.parte__tag--dano]="d.tipo === 'equipo_propio'">
-                    {{ d.tipo === 'material' ? 'Material' : 'Equipo propio' }}
+                    {{ d.tipo === 'material' ? ('Material' | t) : ('Equipo propio' | t) }}
                   </span>
                 </span>
-                <button type="button" class="parte__act-x" (click)="removeDano(d.key)">Quitar</button>
+                <button type="button" class="parte__act-x" (click)="removeDano(d.key)">{{ 'Quitar' | t }}</button>
               </div>
 
               <div class="parte__dano-qty">
-                <app-qty-input [value]="d.cantidad" (valueChange)="setDanoCantidad(d.key, $event)" ariaLabel="Cantidad dañada" />
-                <input class="field parte__dano-unidad" type="text" list="unidades-dano" [ngModel]="d.unidad" (ngModelChange)="setDanoUnidad(d.key, $event)" placeholder="Unidad" aria-label="Unidad" />
+                <app-qty-input [value]="d.cantidad" (valueChange)="setDanoCantidad(d.key, $event)" [ariaLabel]="'Cantidad dañada' | t" />
+                <input class="field parte__dano-unidad" type="text" list="unidades-dano" [ngModel]="d.unidad" (ngModelChange)="setDanoUnidad(d.key, $event)" [placeholder]="'Unidad' | t" [attr.aria-label]="'Unidad' | t" />
               </div>
 
-              <input class="field" type="text" [ngModel]="d.detalle" (ngModelChange)="setDanoItemDetalle(d.key, $event)" placeholder="¿Qué le pasó? (obligatorio)" aria-label="Detalle del daño" />
+              <input class="field" type="text" [ngModel]="d.detalle" (ngModelChange)="setDanoItemDetalle(d.key, $event)" [placeholder]="'¿Qué le pasó? (obligatorio)' | t" [attr.aria-label]="'Detalle del daño' | t" />
 
               <!-- Fotos del daño (mínimo 1 si se solicita retiro) -->
               @for (p of getDanoFotos(d.key); track $index) {
-                <app-photo-slot class="parte__restr-foto" label="Foto del daño" hint="📷" [foto]="p" (cleared)="removeDanoFoto(d.key, $index)" />
+                <app-photo-slot class="parte__restr-foto" [label]="'Foto del daño' | t" hint="📷" [foto]="p" (cleared)="removeDanoFoto(d.key, $index)" />
               }
-              <app-photo-slot class="parte__restr-foto" label="Agregar foto del daño" hint="➕" (captured)="addDanoFoto(d.key, $event)" />
+              <app-photo-slot class="parte__restr-foto" [label]="'Agregar foto del daño' | t" hint="➕" (captured)="addDanoFoto(d.key, $event)" />
 
               <!-- Solo material: solicitar retiro a almacén -->
               @if (d.tipo === 'material') {
                 <app-option-button
                   icon="🚚"
-                  label="Solicitar retiro a almacén"
+                  [label]="'Solicitar retiro a almacén' | t"
                   [selected]="d.solicita_retiro"
                   (pressed)="toggleDanoRetiro(d.key)"
                 />
                 @if (d.solicita_retiro) {
-                  <p class="field-hint">Llega a almacén como un retiro (RET-…) para que lo pasen a buscar. Necesita al menos una foto.</p>
+                  <p class="field-hint">{{ 'Llega a almacén como un retiro (RET-…) para que lo pasen a buscar. Necesita al menos una foto.' | t }}</p>
                 }
               }
             </div>
@@ -569,57 +569,57 @@
 
       <!-- 10. Moldes del día (BO9) -->
       @if (step() === 10) {
-        <h1 class="screen__title">¿Trabajaste moldes hoy?</h1>
-        <p class="screen__subtitle">Captura las medidas reales en cm; el sistema dibuja el esquema y lo compara con el plano.</p>
-        <app-option-button icon="📐" label="Sí" tone="warning" [selected]="huboMoldes() === true" (pressed)="onHuboMoldesChange(true)" />
-        <app-option-button icon="🚫" label="No" tone="success" [selected]="huboMoldes() === false" (pressed)="onHuboMoldesChange(false)" />
+        <h1 class="screen__title">{{ '¿Trabajaste moldes hoy?' | t }}</h1>
+        <p class="screen__subtitle">{{ 'Captura las medidas reales en cm; el sistema dibuja el esquema y lo compara con el plano.' | t }}</p>
+        <app-option-button icon="📐" [label]="'Sí' | t" tone="warning" [selected]="huboMoldes() === true" (pressed)="onHuboMoldesChange(true)" />
+        <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="huboMoldes() === false" (pressed)="onHuboMoldesChange(false)" />
 
         @if (huboMoldes()) {
           <!-- BQ8c — toggle Ficha / Compositor (ambos escriben la misma lista) -->
-          <div class="parte__molde-modo" role="group" aria-label="Modo de captura de moldes">
-            <button type="button" class="parte__seg" [class.parte__seg--on]="moldeModo() === 'ficha'" (click)="setMoldeModo('ficha')">Ficha</button>
-            <button type="button" class="parte__seg" [class.parte__seg--on]="moldeModo() === 'compositor'" (click)="setMoldeModo('compositor')">Compositor</button>
+          <div class="parte__molde-modo" role="group" [attr.aria-label]="'Modo de captura de moldes' | t">
+            <button type="button" class="parte__seg" [class.parte__seg--on]="moldeModo() === 'ficha'" (click)="setMoldeModo('ficha')">{{ 'Ficha' | t }}</button>
+            <button type="button" class="parte__seg" [class.parte__seg--on]="moldeModo() === 'compositor'" (click)="setMoldeModo('compositor')">{{ 'Compositor' | t }}</button>
           </div>
 
           @if (moldeModo() === 'compositor') {
-            <p class="screen__subtitle">Agrega figuras, muévelas en la rejilla de 5&nbsp;cm y ajusta sus medidas. Cada figura es un molde.</p>
+            <p class="screen__subtitle">{{ 'Agrega figuras, muévelas en la rejilla de 5 cm y ajusta sus medidas. Cada figura es un molde.' | t }}</p>
             <app-molde-compositor [valorInicial]="compositorFiguras()" [toleranciaCm]="moldeTolerancia" (cambio)="onCompositorCambio($event)" />
           } @else {
           <!-- Molde en edición -->
           <div class="parte__molde-form">
-            <label class="field-label">Estructura</label>
+            <label class="field-label">{{ 'Estructura' | t }}</label>
             <select class="field" [ngModel]="mEstructura()" (ngModelChange)="mEstructura.set($event)" aria-label="Estructura del molde">
-              <option value="">Elige…</option>
+              <option value="">{{ 'Elige…' | t }}</option>
               @for (e of estructuras(); track e.valor) { <option [value]="e.valor">{{ e.valor }}</option> }
             </select>
 
-            <label class="field-label">Identificador <span class="parte__req">*</span></label>
-            <input class="field" type="text" [ngModel]="mIdentificador()" (ngModelChange)="mIdentificador.set($event)" placeholder="Ej: C-12, Muro eje 3" aria-label="Identificador del molde" />
+            <label class="field-label">{{ 'Identificador' | t }} <span class="parte__req">*</span></label>
+            <input class="field" type="text" [ngModel]="mIdentificador()" (ngModelChange)="mIdentificador.set($event)" [placeholder]="'Ej: C-12, Muro eje 3' | t" aria-label="Identificador del molde" />
 
-            <label class="field-label">Forma</label>
+            <label class="field-label">{{ 'Forma' | t }}</label>
             <div class="parte__molde-formas">
               @for (f of moldeFormas; track f.value) {
-                <app-option-button [label]="f.label" [icon]="f.icon" [selected]="mForma() === f.value" (pressed)="setMForma(f.value)" />
+                <app-option-button [label]="f.label | t" [icon]="f.icon" [selected]="mForma() === f.value" (pressed)="setMForma(f.value)" />
               }
             </div>
 
-            <label class="field-label">Medidas reales (cm) <span class="parte__req">*</span></label>
+            <label class="field-label">{{ 'Medidas reales (cm)' | t }} <span class="parte__req">*</span></label>
             <div class="parte__molde-dims">
-              <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="mLargo()" (ngModelChange)="mLargo.set($event)" aria-label="Largo real en cm" /></label>
-              <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="mAlto()" (ngModelChange)="mAlto.set($event)" aria-label="Alto real en cm" /></label>
-              <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="mEspesor()" (ngModelChange)="mEspesor.set($event)" aria-label="Espesor real en cm" /></label>
+              <label>{{ 'Largo' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="mLargo()" (ngModelChange)="mLargo.set($event)" aria-label="Largo real en cm" /></label>
+              <label>{{ 'Alto' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="mAlto()" (ngModelChange)="mAlto.set($event)" aria-label="Alto real en cm" /></label>
+              <label>{{ 'Espesor' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="mEspesor()" (ngModelChange)="mEspesor.set($event)" aria-label="Espesor real en cm" /></label>
             </div>
 
             <label class="field-check">
               <input type="checkbox" [checked]="mTienePlano()" (change)="mTienePlano.set($any($event.target).checked)" />
-              <span>Tengo la medida del plano</span>
+              <span>{{ 'Tengo la medida del plano' | t }}</span>
             </label>
             @if (mTienePlano()) {
-              <label class="field-label">Medidas del plano (cm)</label>
+              <label class="field-label">{{ 'Medidas del plano (cm)' | t }}</label>
               <div class="parte__molde-dims">
-                <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="mpLargo()" (ngModelChange)="mpLargo.set($event)" aria-label="Largo del plano en cm" /></label>
-                <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="mpAlto()" (ngModelChange)="mpAlto.set($event)" aria-label="Alto del plano en cm" /></label>
-                <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="mpEspesor()" (ngModelChange)="mpEspesor.set($event)" aria-label="Espesor del plano en cm" /></label>
+                <label>{{ 'Largo' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="mpLargo()" (ngModelChange)="mpLargo.set($event)" aria-label="Largo del plano en cm" /></label>
+                <label>{{ 'Alto' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="mpAlto()" (ngModelChange)="mpAlto.set($event)" aria-label="Alto del plano en cm" /></label>
+                <label>{{ 'Espesor' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="mpEspesor()" (ngModelChange)="mpEspesor.set($event)" aria-label="Espesor del plano en cm" /></label>
               </div>
             }
 
@@ -628,39 +628,39 @@
               <div class="parte__molde-lado">
                 <div class="parte__dano-top">
                   <span class="parte__dano-name">Lado {{ l.lado }}</span>
-                  <button type="button" class="parte__act-x" (click)="removeLado($index)">Quitar</button>
+                  <button type="button" class="parte__act-x" (click)="removeLado($index)">{{ 'Quitar' | t }}</button>
                 </div>
                 <div class="parte__molde-dims">
-                  <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="l.largo_cm" (ngModelChange)="setMLadoCampo($index, 'largo_cm', $event)" aria-label="Largo real del lado en cm" /></label>
-                  <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="l.alto_cm" (ngModelChange)="setMLadoCampo($index, 'alto_cm', $event)" aria-label="Alto real del lado en cm" /></label>
-                  <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="l.espesor_cm" (ngModelChange)="setMLadoCampo($index, 'espesor_cm', $event)" aria-label="Espesor real del lado en cm" /></label>
+                  <label>{{ 'Largo' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.largo_cm" (ngModelChange)="setMLadoCampo($index, 'largo_cm', $event)" aria-label="Largo real del lado en cm" /></label>
+                  <label>{{ 'Alto' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.alto_cm" (ngModelChange)="setMLadoCampo($index, 'alto_cm', $event)" aria-label="Alto real del lado en cm" /></label>
+                  <label>{{ 'Espesor' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.espesor_cm" (ngModelChange)="setMLadoCampo($index, 'espesor_cm', $event)" aria-label="Espesor real del lado en cm" /></label>
                 </div>
                 @if (mTienePlano()) {
                   <label class="field-label">Plano del lado {{ l.lado }} (cm)</label>
                   <div class="parte__molde-dims">
-                    <label>Largo<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_largo_cm" (ngModelChange)="setMLadoCampo($index, 'p_largo_cm', $event)" aria-label="Largo del plano del lado en cm" /></label>
-                    <label>Alto<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_alto_cm" (ngModelChange)="setMLadoCampo($index, 'p_alto_cm', $event)" aria-label="Alto del plano del lado en cm" /></label>
-                    <label>Espesor<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_espesor_cm" (ngModelChange)="setMLadoCampo($index, 'p_espesor_cm', $event)" aria-label="Espesor del plano del lado en cm" /></label>
+                    <label>{{ 'Largo' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_largo_cm" (ngModelChange)="setMLadoCampo($index, 'p_largo_cm', $event)" aria-label="Largo del plano del lado en cm" /></label>
+                    <label>{{ 'Alto' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_alto_cm" (ngModelChange)="setMLadoCampo($index, 'p_alto_cm', $event)" aria-label="Alto del plano del lado en cm" /></label>
+                    <label>{{ 'Espesor' | t }}<input class="field" type="number" inputmode="numeric" [ngModel]="l.p_espesor_cm" (ngModelChange)="setMLadoCampo($index, 'p_espesor_cm', $event)" aria-label="Espesor del plano del lado en cm" /></label>
                   </div>
                 }
               </div>
             }
-            <button type="button" class="btn-ghost parte__molde-add-lado" (click)="addLado()">+ Agregar lado</button>
+            <button type="button" class="btn-ghost parte__molde-add-lado" (click)="addLado()">+ {{ 'Agregar lado' | t }}</button>
 
             <!-- Esquema en vivo -->
             <app-molde-esquema [forma]="mForma()" [tramos]="mTramosPreview()" [medidaPlano]="mPlanoPreview()" [toleranciaCm]="moldeTolerancia" />
 
-            <label class="field-label">Nota (opcional)</label>
-            <input class="field" type="text" [ngModel]="mNotas()" (ngModelChange)="mNotas.set($event)" placeholder="Algo que aclarar del molde" aria-label="Nota del molde" />
+            <label class="field-label">{{ 'Nota (opcional)' | t }}</label>
+            <input class="field" type="text" [ngModel]="mNotas()" (ngModelChange)="mNotas.set($event)" [placeholder]="'Algo que aclarar del molde' | t" aria-label="Nota del molde" />
 
             <!-- Foto opcional -->
             @if (mFoto()) {
-              <app-photo-slot class="parte__restr-foto" label="Foto del molde" hint="📷" [foto]="mFoto()" (cleared)="clearMoldeFoto()" />
+              <app-photo-slot class="parte__restr-foto" [label]="'Foto del molde' | t" hint="📷" [foto]="mFoto()" (cleared)="clearMoldeFoto()" />
             } @else {
-              <app-photo-slot class="parte__restr-foto" label="Agregar foto del molde (opcional)" hint="➕" (captured)="mFoto.set($event)" />
+              <app-photo-slot class="parte__restr-foto" [label]="'Agregar foto del molde (opcional)' | t" hint="➕" (captured)="mFoto.set($event)" />
             }
 
-            <button type="button" class="btn-ghost" (click)="addMolde()">+ Agregar molde</button>
+            <button type="button" class="btn-ghost" (click)="addMolde()">+ {{ 'Agregar molde' | t }}</button>
           </div>
           }
 
@@ -669,7 +669,7 @@
             <div class="parte__molde">
               <div class="parte__dano-top">
                 <span class="parte__dano-name">{{ m.identificador }}@if (m.estructura) { <small class="parte__molde-estr"> · {{ m.estructura }}</small> }</span>
-                <button type="button" class="parte__act-x" (click)="removeMolde(m.key)">Quitar</button>
+                <button type="button" class="parte__act-x" (click)="removeMolde(m.key)">{{ 'Quitar' | t }}</button>
               </div>
               <app-molde-esquema [forma]="m.forma" [tramos]="moldeTramos(m)" [medidaPlano]="moldePlano(m)" [toleranciaCm]="moldeTolerancia" />
             </div>
@@ -679,8 +679,8 @@
 
       <!-- 11. Datos finales (S8) -->
       @if (step() === 11) {
-        <h1 class="screen__title">Datos finales</h1>
-        <label class="field-label">Ingeniero responsable <span class="parte__req">*</span></label>
+        <h1 class="screen__title">{{ 'Datos finales' | t }}</h1>
+        <label class="field-label">{{ 'Ingeniero responsable' | t }} <span class="parte__req">*</span></label>
         <!-- AV3 — una obra puede tener varios ingenieros: elige entre los de la obra
              (el principal marcado). Offline o sin lista → escribe el nombre abajo. -->
         @if (ingenierosObra().length) {
@@ -689,25 +689,25 @@
               <button type="button" class="parte__ing-chip"
                       [class.parte__ing-chip--sel]="ingenieroResponsable().trim() === ing.nombre.trim()"
                       (click)="elegirIngeniero(ing.nombre)">
-                {{ ing.nombre }}@if (ing.es_principal) { <span class="parte__ing-principal">principal</span> }
+                {{ ing.nombre }}@if (ing.es_principal) { <span class="parte__ing-principal">{{ 'principal' | t }}</span> }
               </button>
             }
           </div>
         }
-        <input class="field" type="text" [ngModel]="ingenieroResponsable()" (ngModelChange)="ingenieroResponsable.set($event)" placeholder="Nombre del ingeniero" />
-        <p class="field-hint">Elige el ingeniero de la obra o escríbelo; precargado con el principal.</p>
+        <input class="field" type="text" [ngModel]="ingenieroResponsable()" (ngModelChange)="ingenieroResponsable.set($event)" [placeholder]="'Nombre del ingeniero' | t" />
+        <p class="field-hint">{{ 'Elige el ingeniero de la obra o escríbelo; precargado con el principal.' | t }}</p>
 
-        <label class="field-label">Hora de fin de jornada (opcional)</label>
+        <label class="field-label">{{ 'Hora de fin de jornada (opcional)' | t }}</label>
         <input class="field" type="time" [ngModel]="horaFinTrabajo()" (ngModelChange)="horaFinTrabajo.set($event)" />
 
-        <label class="field-label">Comentario (opcional)</label>
-        <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" placeholder="Algo más que agregar" />
+        <label class="field-label">{{ 'Comentario (opcional)' | t }}</label>
+        <input class="field" type="text" [ngModel]="comentarios()" (ngModelChange)="comentarios.set($event)" [placeholder]="'Algo más que agregar' | t" />
 
         <!-- Y15.8 — vincular a una tarea del cronograma (si la obra tiene) -->
         @if (tareasCronograma().length) {
-          <label class="field-label">Tarea del cronograma (opcional)</label>
+          <label class="field-label">{{ 'Tarea del cronograma (opcional)' | t }}</label>
           <select class="field" [ngModel]="tareaVinculada()" (ngModelChange)="tareaVinculada.set($event || null)">
-            <option [ngValue]="null">— Ninguna —</option>
+            <option [ngValue]="null">{{ '— Ninguna —' | t }}</option>
             @for (t of tareasCronograma(); track t.id) {
               <option [ngValue]="t.id">{{ t.orden }}. {{ t.nombre }}</option>
             }
@@ -720,7 +720,7 @@
                 [disabled]="!puedeCompletarTarea()"
                 (change)="completarTarea.set($any($event.target).checked)"
               />
-              <span>Marcar la tarea como completada @if (!puedeCompletarTarea()) { <small>(necesita al menos 1 foto)</small> }</span>
+              <span>{{ 'Marcar la tarea como completada' | t }} @if (!puedeCompletarTarea()) { <small>{{ '(necesita al menos 1 foto)' | t }}</small> }</span>
             </label>
           }
         }
@@ -731,22 +731,22 @@
 
       <!-- 12. Resumen (no editable) -->
       @if (step() === 12) {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
-          <li><span>Obra</span><b>{{ proyectoNombre() }}</b></li>
+          <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoNombre() }}</b></li>
           <!-- BL9 — el día que documenta el parte (marca si es de una fecha pasada). -->
-          <li><span>Fecha</span><b>{{ fecha() }}@if (esFechaPasada()) { <em class="resumen__otra-fecha"> · fecha pasada</em> }</b></li>
-          <li><span>Lluvia</span><b>{{ llovio() ? 'Sí' : 'No' }}</b></li>
-          <li><span>Migración</span><b>{{ huboMigracion() ? 'Sí' : 'No' }}</b></li>
-          <li><span>Personal</span><b>{{ carpinteria() + acero() + casa() }}</b></li>
-          <li><span>Problemas</span><b>{{ problemasResumen() }}</b></li>
-          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
-          @if (ingenieroResponsable()) { <li><span>Ing. responsable</span><b>{{ ingenieroResponsable() }}</b></li> }
-          @if (horaFinTrabajo()) { <li><span>Hora fin</span><b>{{ horaFinTrabajo() }}</b></li> }
+          <li><span>{{ 'Fecha' | t }}</span><b>{{ fecha() }}@if (esFechaPasada()) { <em class="resumen__otra-fecha"> · {{ 'fecha pasada' | t }}</em> }</b></li>
+          <li><span>{{ 'Lluvia' | t }}</span><b>{{ llovio() ? 'Sí' : 'No' }}</b></li>
+          <li><span>{{ 'Migración' | t }}</span><b>{{ huboMigracion() ? 'Sí' : 'No' }}</b></li>
+          <li><span>{{ 'Personal' | t }}</span><b>{{ carpinteria() + acero() + casa() }}</b></li>
+          <li><span>{{ 'Problemas' | t }}</span><b>{{ problemasResumen() }}</b></li>
+          <li><span>{{ 'Fotos' | t }}</span><b>{{ fotos().length }}</b></li>
+          @if (ingenieroResponsable()) { <li><span>{{ 'Ing. responsable' | t }}</span><b>{{ ingenieroResponsable() }}</b></li> }
+          @if (horaFinTrabajo()) { <li><span>{{ 'Hora fin' | t }}</span><b>{{ horaFinTrabajo() }}</b></li> }
         </ul>
 
         <!-- Actividades agrupadas por bloque (S4) -->
-        <h2 class="parte__resumen-h">Trabajo por bloque</h2>
+        <h2 class="parte__resumen-h">{{ 'Trabajo por bloque' | t }}</h2>
         @for (g of resumenPorBloque(); track g.bloque) {
           <div class="parte__bloque-card parte__bloque-card--resumen">
             <span class="parte__bloque-name">📍 {{ g.bloque }}</span>
@@ -757,18 +757,18 @@
             </ul>
           </div>
         } @empty {
-          <p class="parte__muted">No registraste trabajos.</p>
+          <p class="parte__muted">{{ 'No registraste trabajos.' | t }}</p>
         }
 
         <!-- Equipos (S7) -->
         @if (equiposAlquilados().length) {
-          <h2 class="parte__resumen-h">Equipos alquilados</h2>
+          <h2 class="parte__resumen-h">{{ 'Equipos alquilados' | t }}</h2>
           <ul class="parte__bloque-acts">
             @for (e of equiposAlquilados(); track $index) {
               @if (e.equipo.trim()) {
                 <li>
                   {{ e.equipo }}
-                  @if (e.para_retirar) { <span class="parte__tag parte__tag--retiro">Retirar</span> }
+                  @if (e.para_retirar) { <span class="parte__tag parte__tag--retiro">{{ 'Retirar' | t }}</span> }
                   @if (e.danado) { <span class="parte__tag parte__tag--dano">Dañado: {{ e.dano_detalle }}</span> }
                 </li>
               }
@@ -778,13 +778,13 @@
 
         <!-- Daños de material / equipo propio (BP4) -->
         @if (huboDanos() && danos().length) {
-          <h2 class="parte__resumen-h">Daños</h2>
+          <h2 class="parte__resumen-h">{{ 'Daños' | t }}</h2>
           <ul class="parte__bloque-acts">
             @for (d of danos(); track d.key) {
               <li>
                 {{ d.nombre }} — {{ d.cantidad }} {{ d.unidad || '' }}
                 <span class="parte__tag" [class.parte__tag--dano]="d.tipo === 'equipo_propio'">{{ d.tipo === 'material' ? 'Material' : 'Equipo propio' }}</span>
-                @if (d.tipo === 'material' && d.solicita_retiro) { <span class="parte__tag parte__tag--retiro">Retiro</span> }
+                @if (d.tipo === 'material' && d.solicita_retiro) { <span class="parte__tag parte__tag--retiro">{{ 'Retiro' | t }}</span> }
               </li>
             }
           </ul>
@@ -792,10 +792,10 @@
 
         <!-- Moldes (BO9) -->
         @if (huboMoldes() && moldes().length) {
-          <h2 class="parte__resumen-h">Moldes</h2>
+          <h2 class="parte__resumen-h">{{ 'Moldes' | t }}</h2>
           <ul class="parte__bloque-acts">
             @for (m of moldes(); track m.key) {
-              <li>{{ m.identificador }}@if (m.estructura) { · {{ m.estructura }} } — {{ m.largo_cm }}×{{ m.espesor_cm }} cm@if (m.tienePlano) { <span class="parte__tag">con plano</span> }</li>
+              <li>{{ m.identificador }}@if (m.estructura) { · {{ m.estructura }} } — {{ m.largo_cm }}×{{ m.espesor_cm }} cm@if (m.tienePlano) { <span class="parte__tag">{{ 'con plano' | t }}</span> }</li>
             }
           </ul>
         }
@@ -813,10 +813,10 @@
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir de la bitácora?"
-    message="Guardamos lo que llevas para que puedas continuar más tarde."
-    confirmLabel="Sí, salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir de la bitácora?' | t"
+    [message]="'Guardamos lo que llevas para que puedas continuar más tarde.' | t"
+    [confirmLabel]="'Sí, salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"
   />

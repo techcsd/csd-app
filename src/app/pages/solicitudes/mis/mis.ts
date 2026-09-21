@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
@@ -12,7 +13,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-mis-solicitudes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, TranslatePipe],
   templateUrl: './mis.html',
   styleUrl: './mis.scss',
 })

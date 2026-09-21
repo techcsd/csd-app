@@ -8,6 +8,8 @@ import { OptionButton } from '../../../shared/ui/option-button/option-button';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { FiguraAcero } from '../../../shared/ui/figura-acero/figura-acero';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { CartillaService } from '../../../core/services/cartilla.service';
 import { BorradorService } from '../../../core/services/borrador.service';
@@ -46,7 +48,7 @@ const TRAMOS_POR_FIGURA: Record<string, number> = {
   selector: 'app-cartilla-nueva',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, Skeleton, FiguraAcero],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, Skeleton, FiguraAcero, TranslatePipe],
   templateUrl: './cartilla-nueva.html',
   styleUrl: './cartilla-nueva.scss',
 })
@@ -59,6 +61,7 @@ export class CartillaNuevaPage {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private readonly claveBorrador: string;
 
@@ -144,7 +147,7 @@ export class CartillaNuevaPage {
       this.figuras.set(figuras);
       await this.rehidratarBorrador();
     } catch {
-      this.toast.error('No pudimos cargar los catálogos. Revisa tu conexión.');
+      this.toast.error(this.i18n.t('No pudimos cargar los catálogos. Revisa tu conexión.'));
     } finally {
       this.cargando.set(false);
     }
@@ -197,7 +200,7 @@ export class CartillaNuevaPage {
       },
       {
         tipo: 'cartilla',
-        etiqueta: `Cartilla · ${this.obraNombre() || 'sin obra'}`,
+        etiqueta: `${this.i18n.t('Cartilla')} · ${this.obraNombre() || this.i18n.t('sin obra')}`,
         ruta: '/ingenieria/cartilla/nueva',
       },
     );
@@ -227,25 +230,25 @@ export class CartillaNuevaPage {
     switch (this.paso()) {
       case 'obra':
         if (!this.proyectoId()) {
-          this.toast.error('Elige la obra.');
+          this.toast.error(this.i18n.t('Elige la obra.'));
           return false;
         }
         return true;
       case 'fecha':
         if (!this.fecha()) {
-          this.toast.error('Elige la fecha.');
+          this.toast.error(this.i18n.t('Elige la fecha.'));
           return false;
         }
         return true;
       case 'atados':
         if (!this.atados().length || this.atados().every((a) => !a.piezas.length)) {
-          this.toast.error('Agrega al menos un atado con una pieza.');
+          this.toast.error(this.i18n.t('Agrega al menos un atado con una pieza.'));
           return false;
         }
         return true;
       case 'fotos':
         if (!this.fotos().length) {
-          this.toast.error('Toma al menos una foto de la cartilla.');
+          this.toast.error(this.i18n.t('Toma al menos una foto de la cartilla.'));
           return false;
         }
         return true;
@@ -314,15 +317,15 @@ export class CartillaNuevaPage {
     const atadoIdx = this.atadoAbierto();
     if (atadoIdx === null) return;
     if (!this.piezaDiametro()) {
-      this.toast.error('Elige el diámetro.');
+      this.toast.error(this.i18n.t('Elige el diámetro.'));
       return;
     }
     if (!this.piezaFigura()) {
-      this.toast.error('Elige la figura.');
+      this.toast.error(this.i18n.t('Elige la figura.'));
       return;
     }
     if (this.piezaTramos().some((t) => !t || t <= 0)) {
-      this.toast.error('Escribe la medida de cada lado (cm).');
+      this.toast.error(this.i18n.t('Escribe la medida de cada lado (cm).'));
       return;
     }
     const pieza: CartillaPiezaCaptura = {
@@ -392,12 +395,12 @@ export class CartillaNuevaPage {
       await this.borrador.clear(this.claveBorrador);
       this.toast.success(
         this.online()
-          ? '¡Cartilla enviada! Oficina la revisará.'
-          : 'Guardada. Sin señal, se enviará sola.',
+          ? this.i18n.t('¡Cartilla enviada! Oficina la revisará.')
+          : this.i18n.t('Guardada. Sin señal, se enviará sola.'),
       );
       void this.router.navigate(['/ingenieria/cartilla']);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar. Intenta de nuevo.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar. Intenta de nuevo.'));
     } finally {
       this.enviando.set(false);
     }

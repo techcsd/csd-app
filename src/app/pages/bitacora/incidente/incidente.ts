@@ -13,6 +13,8 @@ import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -43,7 +45,7 @@ const MIN_FOTOS = 1;
   selector: 'app-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, WizardFooter, OptionButton, CollapsibleSelect, Counter, BigConfirm, ConfirmDialog, VoiceNotes, Skeleton],
+  imports: [FormsModule, StepBar, WizardFooter, OptionButton, CollapsibleSelect, Counter, BigConfirm, ConfirmDialog, VoiceNotes, Skeleton, TranslatePipe],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })
@@ -57,6 +59,7 @@ export class IncidentePage implements OnDestroy {
   private ctx = inject(UserContextService);
   private navGuard = inject(NavGuardService);
   private borrador = inject(BorradorService);
+  private i18n = inject(I18nService);
 
   readonly total = TOTAL;
   readonly minFotos = MIN_FOTOS;
@@ -151,7 +154,7 @@ export class IncidentePage implements OnDestroy {
       if (!this.tieneDatos()) return;
       void this.borrador.save(this.draftKey, snap, {
         tipo: 'incidente',
-        etiqueta: 'Reporte de incidente' + (this.proyectoNombre() ? ' · ' + this.proyectoNombre() : ''),
+        etiqueta: this.i18n.t('Reporte de incidente') + (this.proyectoNombre() ? ' · ' + this.proyectoNombre() : ''),
         ruta: '/bitacora/incidente',
       });
     });
@@ -185,7 +188,7 @@ export class IncidentePage implements OnDestroy {
         this.step.set(draft.step ?? 1);
         if (draft.tipo) void this.loadSucesos(draft.tipo);
         if (draft.tipo === 'incidente_equipo') void this.loadEquiposObra();
-        this.toast.show('Recuperamos tu reporte a medio llenar. Las fotos y la nota de voz hay que tomarlas de nuevo.', 'info', 4500);
+        this.toast.show(this.i18n.t('Recuperamos tu reporte a medio llenar. Las fotos y la nota de voz hay que tomarlas de nuevo.'), 'info', 4500);
       } else {
         const obra = this.ctx.obraActiva();
         if (obra) this.proyectoId.set(obra.id);
@@ -268,9 +271,11 @@ export class IncidentePage implements OnDestroy {
   // ── Navegación (footer) ────────────────────────────────────────────────────
 
   primaryLabel = computed(() =>
-    this.step() >= this.total ? (this.submitting() ? 'Guardando…' : 'Enviar reporte') : 'Siguiente',
+    this.step() >= this.total
+      ? (this.submitting() ? this.i18n.t('Guardando…') : this.i18n.t('Enviar reporte'))
+      : this.i18n.t('Siguiente'),
   );
-  backLabel = computed(() => (this.step() > 1 ? 'Atrás' : 'Cancelar'));
+  backLabel = computed(() => (this.step() > 1 ? this.i18n.t('Atrás') : this.i18n.t('Cancelar')));
   primaryDisabled = computed(() => this.step() >= this.total && this.submitting());
 
   onPrimary(): void {
@@ -289,43 +294,43 @@ export class IncidentePage implements OnDestroy {
   private next(): void {
     const s = this.step();
     if (s === 1 && !this.proyectoId()) {
-      this.toast.error('Elige la obra.');
+      this.toast.error(this.i18n.t('Elige la obra.'));
       return;
     }
     if (s === 2 && !this.tipo()) {
-      this.toast.error('Elige el tipo de reporte.');
+      this.toast.error(this.i18n.t('Elige el tipo de reporte.'));
       return;
     }
     if (s === 3) {
       if (this.esEquipo()) {
         if (!this.equipoNombre().trim()) {
-          this.toast.error('Dinos cuál equipo.');
+          this.toast.error(this.i18n.t('Dinos cuál equipo.'));
           return;
         }
         if (this.equipoAlquilado() === null) {
-          this.toast.error('Dinos si el equipo es alquilado o propio.');
+          this.toast.error(this.i18n.t('Dinos si el equipo es alquilado o propio.'));
           return;
         }
         if (this.equipoOperativo() === null) {
-          this.toast.error('Dinos si el equipo queda operativo.');
+          this.toast.error(this.i18n.t('Dinos si el equipo queda operativo.'));
           return;
         }
         // T19 — comentario obligatorio si quedó fuera de servicio.
         if (this.equipoOperativo() === false && !this.equipoOperativoComentario().trim()) {
-          this.toast.error('Explica qué pasó: el equipo quedó fuera de servicio.');
+          this.toast.error(this.i18n.t('Explica qué pasó: el equipo quedó fuera de servicio.'));
           return;
         }
       } else if (!this.gravedad()) {
-        this.toast.error('Elige la gravedad.');
+        this.toast.error(this.i18n.t('Elige la gravedad.'));
         return;
       }
     }
     if (s === 4 && !this.suceso() && !(this.otroActivo() && this.sucesoOtro().trim())) {
-      this.toast.error('Dinos qué pasó (elige una opción u "Otro").');
+      this.toast.error(this.i18n.t('Dinos qué pasó (elige una opción u "Otro").'));
       return;
     }
     if (s === 5 && this.fotos().length < MIN_FOTOS) {
-      this.toast.error(`Agrega al menos ${MIN_FOTOS} foto.`);
+      this.toast.error(this.i18n.t('Agrega al menos {n} foto.', { n: MIN_FOTOS }));
       return;
     }
     this.step.update((x) => Math.min(this.total, x + 1));
@@ -334,11 +339,11 @@ export class IncidentePage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.proyectoId() || !this.tipo()) {
-      this.toast.error('Faltan datos del reporte.');
+      this.toast.error(this.i18n.t('Faltan datos del reporte.'));
       return;
     }
     if (this.fotos().length < MIN_FOTOS) {
-      this.toast.error(`Agrega al menos ${MIN_FOTOS} foto.`);
+      this.toast.error(this.i18n.t('Agrega al menos {n} foto.', { n: MIN_FOTOS }));
       this.step.set(5);
       return;
     }
@@ -368,7 +373,7 @@ export class IncidentePage implements OnDestroy {
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.submitting.set(false);
     }

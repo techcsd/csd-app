@@ -2,9 +2,9 @@
   <div class="screen liber liber__done">
     <div class="screen__body">
       <span class="liber__done-check">✓</span>
-      <h1 class="screen__title">{{ online ? 'Listo, quedó registrado' : 'Guardado' }}</h1>
+      <h1 class="screen__title">{{ online ? ('Listo, quedó registrado' | t) : ('Guardado' | t) }}</h1>
       <p class="screen__subtitle">
-        {{ online ? 'El checklist de liberación quedó guardado.' : 'Sin señal. Se enviará solo cuando haya conexión.' }}
+        {{ online ? ('El checklist de liberación quedó guardado.' | t) : ('Sin señal. Se enviará solo cuando haya conexión.' | t) }}
       </p>
 
       <!-- Q5 — checklist visual de firmas -->
@@ -13,53 +13,53 @@
           <div class="liber__firma-row" [class.liber__firma-row--ok]="r.firmada">
             <span class="liber__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
             <span class="liber__firma-name">{{ r.label }}</span>
-            <span class="liber__firma-state">{{ r.firmada ? 'Firmada' : (r.obligatoria ? 'Pendiente' : 'Opcional') }}</span>
+            <span class="liber__firma-state">{{ r.firmada ? ('Firmada' | t) : (r.obligatoria ? ('Pendiente' | t) : ('Opcional' | t)) }}</span>
           </div>
         }
       </div>
 
       @if (faltanObligatorias().length) {
-        <p class="liber__warn">Faltan firmas obligatorias: {{ faltanObligatorias().join(', ') }}.</p>
+        <p class="liber__warn">{{ 'Faltan firmas obligatorias:' | t }} {{ faltanObligatorias().join(', ') }}.</p>
         @if (solicitado()) {
-          <p class="liber__ok-note">✓ Aviso de firma enviado a los ingenieros.</p>
+          <p class="liber__ok-note">✓ {{ 'Aviso de firma enviado a los ingenieros.' | t }}</p>
         } @else if (online) {
           <button type="button" class="btn-cta" [disabled]="solicitando()" (click)="solicitarFirmaCl()">
-            {{ solicitando() ? 'Enviando…' : '✍️ Solicitar firma' }}
+            {{ solicitando() ? ('Enviando…' | t) : ('✍️ ' + ('Solicitar firma' | t)) }}
           </button>
         } @else {
-          <p class="liber__muted">Conéctate para solicitar la firma a los ingenieros.</p>
+          <p class="liber__muted">{{ 'Conéctate para solicitar la firma a los ingenieros.' | t }}</p>
         }
       }
 
-      <button type="button" class="btn-ghost liber__done-listo" (click)="finish()">Listo</button>
+      <button type="button" class="btn-ghost liber__done-listo" (click)="finish()">{{ 'Listo' | t }}</button>
     </div>
   </div>
 } @else {
   <div class="screen liber">
-    <app-wizard-exit title="Checklist de liberación" (exit)="intentarSalir()" />
+    <app-wizard-exit [title]="'Checklist de liberación' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
     <div class="screen__body">
       <!-- Step 1: obra + tipo de CL -->
       @if (step() === 1) {
-        <h1 class="screen__title">Checklist de liberación</h1>
+        <h1 class="screen__title">{{ 'Checklist de liberación' | t }}</h1>
         <p class="screen__subtitle">
-          Ningún vaciado se libera sin este checklist firmado. Elige la obra y el tipo de CL.
+          {{ 'Ningún vaciado se libera sin este checklist firmado. Elige la obra y el tipo de CL.' | t }}
         </p>
         @if (loading()) {
           <app-skeleton [rows]="4" />
         } @else {
           <app-collapsible-select
-            label="Obra"
+            [label]="'Obra' | t"
             icon="🏗️"
             [options]="proyectoOpciones()"
             [selectedId]="proyectoId()"
             [searchable]="true"
-            searchPlaceholder="Buscar obra…"
+            [searchPlaceholder]="'Buscar obra…' | t"
             (picked)="pickProyecto($event)"
           />
           <app-select-list
-            label="Tipo de checklist (CL)"
+            [label]="'Tipo de checklist (CL)' | t"
             icon="📋"
             [options]="plantillaOpciones()"
             [selectedId]="plantillaId()"
@@ -73,7 +73,7 @@
         @if (seccionActual(); as g) {
           <h1 class="screen__title">{{ g.seccion }}</h1>
           <p class="screen__subtitle">
-            Sección {{ seccionIdx() + 1 }} de {{ totalSecciones() }} · {{ respondidos() }}/{{ totalItems() }} en todo el checklist
+            {{ 'Sección {a} de {b} · {c}/{d} en todo el checklist' | t: { a: seccionIdx() + 1, b: totalSecciones(), c: respondidos(), d: totalItems() } }}
           </p>
 
           @for (it of g.items; track it.id) {
@@ -82,14 +82,14 @@
               <div class="liber__opts">
                 <app-option-button
                   icon="✓"
-                  label="Cumple"
+                  [label]="'Cumple' | t"
                   tone="success"
                   [selected]="draft(it.id).cumple === true"
                   (pressed)="setCumple(it.id, true)"
                 />
                 <app-option-button
                   icon="✗"
-                  label="No cumple"
+                  [label]="'No cumple' | t"
                   tone="error"
                   [selected]="draft(it.id).cumple === false"
                   (pressed)="setCumple(it.id, false)"
@@ -101,7 +101,7 @@
                   type="text"
                   [ngModel]="draft(it.id).comentario"
                   (ngModelChange)="setComentario(it.id, $event)"
-                  placeholder="Observación / acción correctiva"
+                  [placeholder]="'Observación / acción correctiva' | t"
                 />
               }
             </div>
@@ -111,37 +111,37 @@
 
       <!-- Step 3: contexto + plano + fotos -->
       @if (step() === 3) {
-        <h1 class="screen__title">Ubicación y evidencia</h1>
+        <h1 class="screen__title">{{ 'Ubicación y evidencia' | t }}</h1>
         <div class="liber__grid">
           <div>
-            <label class="field-label" for="bloque">Bloque / edificio</label>
-            <input id="bloque" class="field" type="text" [ngModel]="bloque()" (ngModelChange)="bloque.set($event)" placeholder="Edificio A" />
+            <label class="field-label" for="bloque">{{ 'Bloque / edificio' | t }}</label>
+            <input id="bloque" class="field" type="text" [ngModel]="bloque()" (ngModelChange)="bloque.set($event)" [placeholder]="'Edificio A' | t" />
           </div>
           <div>
-            <label class="field-label" for="eje">Eje</label>
+            <label class="field-label" for="eje">{{ 'Eje' | t }}</label>
             <input id="eje" class="field" type="text" [ngModel]="eje()" (ngModelChange)="eje.set($event)" placeholder="A-1" />
           </div>
         </div>
 
         <app-photo-slot
-          label="Plano mapeado (opcional)"
+          [label]="'Plano mapeado (opcional)' | t"
           hint="🗺️"
           [foto]="plano()"
           (captured)="onPlano($event)"
           (cleared)="onPlanoCleared()"
         />
 
-        <h2 class="liber__section">Fotos del elemento</h2>
+        <h2 class="liber__section">{{ 'Fotos del elemento' | t }}</h2>
 
         <!-- Q4 — fotos ya tomadas, en grid de miniaturas -->
         @if (fotos().length > 0) {
-          <p class="liber__foto-count">{{ fotos().length }} foto{{ fotos().length === 1 ? '' : 's' }} agregada{{ fotos().length === 1 ? '' : 's' }}</p>
+          <p class="liber__foto-count">{{ fotos().length }} {{ fotos().length === 1 ? ('foto agregada' | t) : ('fotos agregadas' | t) }}</p>
           <div class="liber__foto-grid">
             @for (f of fotos(); track $index) {
               <div class="liber__foto-cell" [class.liber__foto-cell--no]="!f.correcto">
-                <img class="liber__foto-thumb" [src]="f.previewUrl" alt="Foto del elemento" />
+                <img class="liber__foto-thumb" [src]="f.previewUrl" [alt]="'Foto del elemento' | t" />
                 <span class="liber__foto-badge">{{ f.correcto ? '✓' : '✗' }}</span>
-                <button type="button" class="liber__foto-del" (click)="quitarFoto($index)" aria-label="Quitar">✕</button>
+                <button type="button" class="liber__foto-del" (click)="quitarFoto($index)" [attr.aria-label]="'Quitar' | t">✕</button>
                 @if (f.descripcion) { <span class="liber__foto-desc">{{ f.descripcion }}</span> }
               </div>
             }
@@ -151,35 +151,35 @@
         <!-- Q4 — captura de la siguiente foto: marca correcto/incorrecto + descripción -->
         <div class="liber__foto-add">
           <div class="liber__opts">
-            <app-option-button icon="✓" label="Correcto" tone="success" [selected]="fotoCorrecto()" (pressed)="fotoCorrecto.set(true)" />
-            <app-option-button icon="✗" label="Incorrecto" tone="error" [selected]="!fotoCorrecto()" (pressed)="fotoCorrecto.set(false)" />
+            <app-option-button icon="✓" [label]="'Correcto' | t" tone="success" [selected]="fotoCorrecto()" (pressed)="fotoCorrecto.set(true)" />
+            <app-option-button icon="✗" [label]="'Incorrecto' | t" tone="error" [selected]="!fotoCorrecto()" (pressed)="fotoCorrecto.set(false)" />
           </div>
-          <input class="field" type="text" [ngModel]="fotoDesc()" (ngModelChange)="fotoDesc.set($event)" placeholder="Descripción (opcional)" />
+          <input class="field" type="text" [ngModel]="fotoDesc()" (ngModelChange)="fotoDesc.set($event)" [placeholder]="'Descripción (opcional)' | t" />
 
           @if (fotoActual(); as fa) {
-            <img class="liber__foto-preview" [src]="fa.previewUrl" alt="Foto recién tomada" />
+            <img class="liber__foto-preview" [src]="fa.previewUrl" [alt]="'Foto recién tomada' | t" />
             <!-- "Repetir foto" JUNTO a "Agregar foto" (misma fila), fuera de la miniatura -->
             <div class="liber__foto-actions">
-              <button type="button" class="btn-ghost" [disabled]="capturando()" (click)="tomarFoto()">🔁 Repetir foto</button>
-              <button type="button" class="btn-cta" (click)="agregarFoto()">+ Agregar foto</button>
+              <button type="button" class="btn-ghost" [disabled]="capturando()" (click)="tomarFoto()">🔁 {{ 'Repetir foto' | t }}</button>
+              <button type="button" class="btn-cta" (click)="agregarFoto()">+ {{ 'Agregar foto' | t }}</button>
             </div>
           } @else {
             <button type="button" class="btn-cta liber__add-btn" [disabled]="capturando()" (click)="tomarFoto()">
-              {{ capturando() ? '⏳ Abriendo cámara…' : (fotos().length ? '📸 Tomar otra foto' : '📸 Tomar foto') }}
+              {{ capturando() ? ('⏳ ' + ('Abriendo cámara…' | t)) : (fotos().length ? ('📸 ' + ('Tomar otra foto' | t)) : ('📸 ' + ('Tomar foto' | t))) }}
             </button>
           }
         </div>
 
-        <label class="field-label" for="obs">Observaciones (opcional)</label>
-        <textarea id="obs" class="field liber__obs" rows="3" [ngModel]="observacion()" (ngModelChange)="observacion.set($event)" placeholder="Notas generales…"></textarea>
+        <label class="field-label" for="obs">{{ 'Observaciones (opcional)' | t }}</label>
+        <textarea id="obs" class="field liber__obs" rows="3" [ngModel]="observacion()" (ngModelChange)="observacion.set($event)" [placeholder]="'Notas generales…' | t"></textarea>
       }
 
       <!-- Step 4: firmas -->
       @if (step() === 4) {
-        <h1 class="screen__title">Ciclo de firmas</h1>
+        <h1 class="screen__title">{{ 'Ciclo de firmas' | t }}</h1>
         <p class="screen__subtitle">
-          Con la firma del <b>Residente</b> <b>o</b> el <b>Responsable</b> se libera el vaciado.
-          Cliente y MIVHED son opcionales. Puedes guardar y <b>solicitar</b> las firmas que falten.
+          {{ 'Con la firma del' | t }} <b>{{ 'Residente' | t }}</b> <b>{{ 'o' | t }}</b> {{ 'el' | t }} <b>{{ 'Responsable' | t }}</b> {{ 'se libera el vaciado.' | t }}
+          {{ 'Cliente y MIVHED son opcionales. Puedes guardar y' | t }} <b>{{ 'solicitar' | t }}</b> {{ 'las firmas que falten.' | t }}
         </p>
 
         <!-- Q5 — checklist visual: verde al firmar -->
@@ -189,15 +189,15 @@
               <span class="liber__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
               <span class="liber__firma-name">{{ r.label }}</span>
               @if (r.firmada) {
-                <button type="button" class="liber__foto-del" (click)="quitarFirma(r.value)" aria-label="Quitar">✕</button>
+                <button type="button" class="liber__foto-del" (click)="quitarFirma(r.value)" [attr.aria-label]="'Quitar' | t">✕</button>
               } @else {
-                <span class="liber__firma-state">{{ r.obligatoria ? 'Pendiente' : 'Opcional' }}</span>
+                <span class="liber__firma-state">{{ r.obligatoria ? ('Pendiente' | t) : ('Opcional' | t) }}</span>
               }
             </div>
           }
         </div>
 
-        <label class="field-label">¿En calidad de qué firma?</label>
+        <label class="field-label">{{ '¿En calidad de qué firma?' | t }}</label>
         <div class="liber__roles">
           @for (r of roles; track r.value) {
             <app-option-button
@@ -210,7 +210,7 @@
 
         <!-- Z2 — preseleccionar el firmante entre los responsables del proyecto -->
         @if (responsablesDelRol().length) {
-          <label class="field-label">Persona del proyecto (toca para elegir)</label>
+          <label class="field-label">{{ 'Persona del proyecto (toca para elegir)' | t }}</label>
           <div class="liber__roles">
             @for (p of responsablesDelRol(); track p.usuario_id) {
               <app-option-button
@@ -223,21 +223,21 @@
           </div>
         }
 
-        <label class="field-label" for="fnom">Nombre de quien firma</label>
-        <input id="fnom" class="field" type="text" [ngModel]="firmaNombre()" (ngModelChange)="firmaNombre.set($event)" placeholder="Nombre y apellido" />
+        <label class="field-label" for="fnom">{{ 'Nombre de quien firma' | t }}</label>
+        <input id="fnom" class="field" type="text" [ngModel]="firmaNombre()" (ngModelChange)="firmaNombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
 
         <!-- Z3 — firmar EN SUSTITUCIÓN de otro responsable -->
         @if (sustituibles().length) {
-          <label class="field-label">¿Firma en sustitución de alguien? (opcional)</label>
+          <label class="field-label">{{ '¿Firma en sustitución de alguien? (opcional)' | t }}</label>
           <div class="liber__roles">
             <app-option-button
-              label="No, firmo por mí"
+              [label]="'No, firmo por mí' | t"
               [selected]="!firmaSustituyeA()"
               (pressed)="pickSustituto(null)"
             />
             @for (p of sustituibles(); track p.usuario_id) {
               <app-option-button
-                [label]="'En sustitución de ' + p.nombre"
+                [label]="('En sustitución de ' | t) + p.nombre"
                 [selected]="firmaSustituyeA()?.usuario_id === p.usuario_id"
                 (pressed)="pickSustituto(p)"
               />
@@ -248,14 +248,14 @@
         <!-- Q5 — el CLIENTE puede firmar subiendo una foto de la firma en papel -->
         @if (firmaRol() === 'cliente') {
           @if (firmaFoto(); as ff) {
-            <img class="liber__foto-preview" [src]="ff.previewUrl" alt="Foto de la firma" />
+            <img class="liber__foto-preview" [src]="ff.previewUrl" [alt]="'Foto de la firma' | t" />
             <div class="liber__foto-actions">
-              <button type="button" class="btn-ghost" (click)="quitarFirmaFoto()">Quitar foto</button>
+              <button type="button" class="btn-ghost" (click)="quitarFirmaFoto()">{{ 'Quitar foto' | t }}</button>
             </div>
           } @else {
             <div class="liber__foto-actions">
-              <button type="button" class="btn-ghost" (click)="subirFirmaFoto(false)">📷 Foto de la firma</button>
-              <button type="button" class="btn-ghost" (click)="subirFirmaFoto(true)">🖼️ Galería</button>
+              <button type="button" class="btn-ghost" (click)="subirFirmaFoto(false)">📷 {{ 'Foto de la firma' | t }}</button>
+              <button type="button" class="btn-ghost" (click)="subirFirmaFoto(true)">🖼️ {{ 'Galería' | t }}</button>
             </div>
           }
         }
@@ -264,37 +264,37 @@
         @if (!(firmaRol() === 'cliente' && firmaFoto())) {
           <app-signature-pad (changed)="firmaLista.set($event)" />
         }
-        <button type="button" class="btn-cta liber__add-btn" (click)="agregarFirma()">+ Agregar firma</button>
+        <button type="button" class="btn-cta liber__add-btn" (click)="agregarFirma()">+ {{ 'Agregar firma' | t }}</button>
       }
 
       <!-- Step 5: resumen -->
       @if (step() === 5) {
-        <h1 class="screen__title">Revisa y envía</h1>
+        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
-          <li><span>Obra</span><b>{{ proyectoSel()?.nombre }}</b></li>
-          <li><span>Checklist</span><b>{{ plantillaSel()?.nombre }}</b></li>
-          <li><span>Puntos</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
-          @if (bloque()) { <li><span>Bloque</span><b>{{ bloque() }}</b></li> }
-          @if (eje()) { <li><span>Eje</span><b>{{ eje() }}</b></li> }
-          <li><span>Fotos</span><b>{{ fotos().length }}</b></li>
+          <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoSel()?.nombre }}</b></li>
+          <li><span>{{ 'Checklist' | t }}</span><b>{{ plantillaSel()?.nombre }}</b></li>
+          <li><span>{{ 'Puntos' | t }}</span><b>{{ respondidos() }} / {{ totalItems() }}</b></li>
+          @if (bloque()) { <li><span>{{ 'Bloque' | t }}</span><b>{{ bloque() }}</b></li> }
+          @if (eje()) { <li><span>{{ 'Eje' | t }}</span><b>{{ eje() }}</b></li> }
+          <li><span>{{ 'Fotos' | t }}</span><b>{{ fotos().length }}</b></li>
         </ul>
 
         <!-- Q5 — estado de firmas (verde al firmar) -->
-        <h2 class="liber__section">Firmas</h2>
+        <h2 class="liber__section">{{ 'Firmas' | t }}</h2>
         <div class="liber__firma-check">
           @for (r of firmaEstados(); track r.value) {
             <div class="liber__firma-row" [class.liber__firma-row--ok]="r.firmada">
               <span class="liber__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
               <span class="liber__firma-name">{{ r.label }}</span>
-              <span class="liber__firma-state">{{ r.firmada ? 'Firmada' : (r.obligatoria ? 'Pendiente' : 'Opcional') }}</span>
+              <span class="liber__firma-state">{{ r.firmada ? ('Firmada' | t) : (r.obligatoria ? ('Pendiente' | t) : ('Opcional' | t)) }}</span>
             </div>
           }
         </div>
 
         @if (faltanObligatorias().length) {
           <p class="liber__warn">
-            Puedes guardarlo como borrador; el vaciado no se liberará hasta que firmen
-            <b>Residente</b> y <b>Responsable</b>. Podrás solicitar las firmas faltantes al guardar.
+            {{ 'Puedes guardarlo como borrador; el vaciado no se liberará hasta que firmen' | t }}
+            <b>{{ 'Residente' | t }}</b> {{ 'y' | t }} <b>{{ 'Responsable' | t }}</b>. {{ 'Podrás solicitar las firmas faltantes al guardar.' | t }}
           </p>
         }
       }
@@ -302,8 +302,8 @@
 
     <!-- Nav -->
     <app-wizard-footer
-      [backLabel]="step() > 1 ? 'Atrás' : 'Cancelar'"
-      [primaryLabel]="step() < total ? 'Siguiente' : (submitting() ? 'Guardando…' : 'Confirmar')"
+      [backLabel]="step() > 1 ? ('Atrás' | t) : ('Cancelar' | t)"
+      [primaryLabel]="step() < total ? ('Siguiente' | t) : (submitting() ? ('Guardando…' | t) : ('Confirmar' | t))"
       [primaryDisabled]="step() >= total && submitting()"
       (back)="step() > 1 ? prev() : intentarSalir()"
       (primary)="step() < total ? next() : submit()"
@@ -311,10 +311,10 @@
 
     <app-confirm-dialog
       [open]="confirmSalir()"
-      title="¿Salir de la liberación?"
-      message="Perderás lo que llevas del checklist (respuestas, fotos y firmas)."
-      confirmLabel="Sí, salir"
-      cancelLabel="Seguir aquí"
+      [title]="'¿Salir de la liberación?' | t"
+      [message]="'Perderás lo que llevas del checklist (respuestas, fotos y firmas).' | t"
+      [confirmLabel]="'Sí, salir' | t"
+      [cancelLabel]="'Seguir aquí' | t"
       tone="danger"
       (confirmed)="confirmarSalir()"
       (cancelled)="cancelarSalir()"

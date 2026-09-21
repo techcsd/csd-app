@@ -2,7 +2,7 @@
   @if (hoja() !== 'exito') {
     <header class="mov__header">
       <button type="button" class="mov__back" (click)="hoja() === 'resumen' ? volverSeleccion() : intentarSalir()" aria-label="Atrás">←</button>
-      <h1 class="mov__title">📝 Nueva requisición</h1>
+      <h1 class="mov__title">📝 {{ 'Nueva requisición' | t }}</h1>
     </header>
   }
 
@@ -26,25 +26,25 @@
   <!-- Hoja 3: resumen / review -->
   @if (hoja() === 'resumen') {
     <div class="screen__body">
-      <h2 class="mov__h2">Revisa tu requisición</h2>
+      <h2 class="mov__h2">{{ 'Revisa tu requisición' | t }}</h2>
 
-      <app-collapsible-select label="Obra" icon="🏗️" [options]="obraOptions()" [selectedId]="proyectoId()" [searchable]="true" searchPlaceholder="Buscar obra…" (picked)="proyectoId.set($event)" />
+      <app-collapsible-select [label]="'Obra' | t" icon="🏗️" [options]="obraOptions()" [selectedId]="proyectoId()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="proyectoId.set($event)" />
 
-      <label class="field-label mov__mt">Urgencia</label>
+      <label class="field-label mov__mt">{{ 'Urgencia' | t }}</label>
       <div class="mov__motivos">
-        <button type="button" class="chip" [class.chip--on]="urgencia() === 'normal'" (click)="urgencia.set('normal')">Normal</button>
-        <button type="button" class="chip" [class.chip--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 Urgente</button>
+        <button type="button" class="chip" [class.chip--on]="urgencia() === 'normal'" (click)="urgencia.set('normal')">{{ 'Normal' | t }}</button>
+        <button type="button" class="chip" [class.chip--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 {{ 'Urgente' | t }}</button>
       </div>
 
       <!-- BO8 — ¿para cuándo se necesita? Opcional; [min]=hoy (se necesita en el futuro). -->
-      <label class="field-label mov__mt">¿Para cuándo la necesitas? (opcional)</label>
+      <label class="field-label mov__mt">{{ '¿Para cuándo la necesitas? (opcional)' | t }}</label>
       <input class="field" type="date" [min]="hoyISO" [ngModel]="fechaNecesidad()" (ngModelChange)="fechaNecesidad.set($event)" aria-label="Fecha en que se necesita el material" />
 
       @for (g of grupos(); track g.categoria) {
         <h3 class="mov__grupo">{{ g.categoria }}</h3>
         @for (l of g.lineas; track l.articulo_id) {
           <div class="mov__item">
-            <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· Talla {{ l.talla }}</small> }</span>
+            <span class="mov__item-name">{{ l.nombre }}@if (l.talla) { <small class="mov__talla">· {{ 'Talla' | t }} {{ l.talla }}</small> }</span>
             <div class="mov__item-qty">
               <app-qty-input [value]="l.cantidad" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
               @if (esCustomLinea(l)) {
@@ -62,13 +62,13 @@
         }
       }
 
-      <label class="field-label mov__mt">Nota (opcional)</label>
-      <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" placeholder="Ej: Para el vaciado del lunes" />
+      <label class="field-label mov__mt">{{ 'Nota (opcional)' | t }}</label>
+      <input class="field" type="text" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Ej: Para el vaciado del lunes' | t" />
     </div>
 
     <app-wizard-footer
-      backLabel="Atrás"
-      [primaryLabel]="submitting() ? 'Enviando…' : 'Enviar requisición'"
+      [backLabel]="'Atrás' | t"
+      [primaryLabel]="submitting() ? ('Enviando…' | t) : ('Enviar requisición' | t)"
       [primaryDisabled]="submitting()"
       (back)="volverSeleccion()"
       (primary)="submit()"
@@ -80,9 +80,9 @@
     <div class="screen__body">
       <div class="mov__ok">
         <span class="mov__ok-check">✓</span>
-        <h1 class="mov__ok-title">Requisición enviada</h1>
+        <h1 class="mov__ok-title">{{ 'Requisición enviada' | t }}</h1>
         <p class="mov__ok-sub">
-          {{ online ? 'Llegó al módulo de Solicitudes.' : 'Sin señal. Se enviará sola al reconectar.' }}
+          {{ online ? ('Llegó al módulo de Solicitudes.' | t) : ('Sin señal. Se enviará sola al reconectar.' | t) }}
         </p>
       </div>
 
@@ -91,7 +91,7 @@
           <h3 class="mov__grupo">{{ g.categoria }}</h3>
           @for (l of g.lineas; track l.articulo_id) {
             <div class="mov__resumen-row">
-              <span>{{ l.nombre }}@if (l.talla) { <small>· Talla {{ l.talla }}</small> }</span>
+              <span>{{ l.nombre }}@if (l.talla) { <small>· {{ 'Talla' | t }} {{ l.talla }}</small> }</span>
               <b>{{ l.cantidad | number: '1.0-2' }} {{ l.unidad }}</b>
             </div>
           }
@@ -100,9 +100,9 @@
     </div>
 
     <footer class="mov__nav">
-      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 Compartir (PDF / Excel)</button>
-      <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">Nueva requisición</button>
-      <button type="button" class="btn-ghost" (click)="finish()">Volver a Requisición</button>
+      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
+      <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">{{ 'Nueva requisición' | t }}</button>
+      <button type="button" class="btn-ghost" (click)="finish()">{{ 'Volver a Requisición' | t }}</button>
     </footer>
   }
 
@@ -110,10 +110,10 @@
 
   <app-confirm-dialog
     [open]="confirmSalir()"
-    title="¿Salir de la requisición?"
-    message="Perderás los materiales que llevas seleccionados."
-    confirmLabel="Sí, salir"
-    cancelLabel="Seguir aquí"
+    [title]="'¿Salir de la requisición?' | t"
+    [message]="'Perderás los materiales que llevas seleccionados.' | t"
+    [confirmLabel]="'Sí, salir' | t"
+    [cancelLabel]="'Seguir aquí' | t"
     tone="danger"
     (confirmed)="confirmarSalir()"
     (cancelled)="cancelarSalir()"

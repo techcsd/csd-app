@@ -5,6 +5,8 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ToggleSwitch } from '../../../shared/ui/toggle-switch/toggle-switch';
 import { SelectOption } from '../../../shared/ui/select-list/select-list';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
   IncentivoGestionService,
@@ -24,12 +26,13 @@ import {
   selector: 'app-incentivo-participantes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, CollapsibleSelect, ToggleSwitch],
+  imports: [Skeleton, EmptyState, CollapsibleSelect, ToggleSwitch, TranslatePipe],
   templateUrl: './participantes.html',
   styleUrl: './participantes.scss',
 })
 export class IncentivoParticipantesPage {
   private service = inject(IncentivoGestionService);
+  private i18n = inject(I18nService);
   private toast = inject(ToastService);
   private location = inject(Location);
 
@@ -67,7 +70,7 @@ export class IncentivoParticipantesPage {
       if (ok) await this.cargar();
     } catch (e) {
       this.hasAccess.set(false);
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos verificar el acceso.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos verificar el acceso.'));
     } finally {
       this.checkingAccess.set(false);
     }
@@ -83,7 +86,7 @@ export class IncentivoParticipantesPage {
       this.participantes.set(padron);
       this.candidatos.set(cands);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar el padrón.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar el padrón.'));
     } finally {
       this.loading.set(false);
     }
@@ -132,7 +135,7 @@ export class IncentivoParticipantesPage {
             : x,
         ),
       );
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar el cambio.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el cambio.'));
     } finally {
       this.setSaving(p.usuario_id, false);
     }
@@ -144,11 +147,11 @@ export class IncentivoParticipantesPage {
     this.agregandoId.set(usuarioId);
     try {
       await this.service.setParticipante(usuarioId, true, false, null);
-      const nombre = this.candidatos().find((c) => c.usuario_id === usuarioId)?.nombre ?? 'La persona';
-      this.toast.success(`${nombre} entró al padrón. Marca "cuenta para el pago" si es chofer.`);
+      const nombre = this.candidatos().find((c) => c.usuario_id === usuarioId)?.nombre ?? this.i18n.t('La persona');
+      this.toast.success(this.i18n.t('{nombre} entró al padrón. Marca "cuenta para el pago" si es chofer.', { nombre }));
       await this.cargar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo agregar la persona.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo agregar la persona.'));
     } finally {
       this.agregandoId.set('');
     }

@@ -2,17 +2,17 @@
   <header class="notas__header">
     <button type="button" class="notas__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="notas__icon">🗒️</span>
-    <h1 class="notas__title">Notas</h1>
+    <h1 class="notas__title">{{ 'Notas' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <!-- Tabs: Mis notas / Compartidas conmigo -->
     <div class="notas__tabs">
       <button type="button" class="notas__tab" [class.notas__tab--on]="tab() === 'mias'" (click)="setTab('mias')">
-        Mis notas
+        {{ 'Mis notas' | t }}
       </button>
       <button type="button" class="notas__tab" [class.notas__tab--on]="tab() === 'compartidas'" (click)="setTab('compartidas')">
-        Compartidas conmigo
+        {{ 'Compartidas conmigo' | t }}
       </button>
     </div>
 
@@ -22,14 +22,14 @@
       type="search"
       [ngModel]="busqueda()"
       (ngModelChange)="busqueda.set($event); resetPag()"
-      placeholder="Buscar en tus notas…"
+      [placeholder]="'Buscar en tus notas…' | t"
       aria-label="Buscar notas"
     />
 
     <!-- Ver archivadas (solo en Mis notas) -->
     @if (tab() === 'mias' && (hayArchivadasMias() || verArchivadas())) {
       <button type="button" class="notas__arch-toggle" (click)="verArchivadas.set(!verArchivadas()); resetPag()">
-        {{ verArchivadas() ? '← Volver a las activas' : '🗄️ Ver archivadas' }}
+        {{ verArchivadas() ? '←' : '🗄️' }} {{ verArchivadas() ? ('Volver a las activas' | t) : ('Ver archivadas' | t) }}
       </button>
     }
 
@@ -38,11 +38,11 @@
     } @else if (!filtradas().length) {
       <app-empty-state
         icon="🗒️"
-        [title]="tab() === 'mias' ? (verArchivadas() ? 'Sin notas archivadas' : 'No tienes notas') : 'Nadie te ha compartido notas'"
+        [title]="tab() === 'mias' ? (verArchivadas() ? ('Sin notas archivadas' | t) : ('No tienes notas' | t)) : ('Nadie te ha compartido notas' | t)"
         [message]="tab() === 'mias'
-          ? 'Crea una nota para recordar pendientes, listas o ideas. Puedes compartirla después.'
-          : 'Cuando alguien te comparta una nota, aparecerá aquí.'"
-        [ctaLabel]="tab() === 'mias' && !verArchivadas() ? 'Nueva nota' : ''"
+          ? ('Crea una nota para recordar pendientes, listas o ideas. Puedes compartirla después.' | t)
+          : ('Cuando alguien te comparta una nota, aparecerá aquí.' | t)"
+        [ctaLabel]="tab() === 'mias' && !verArchivadas() ? ('Nueva nota' | t) : ''"
         (action)="nueva()"
       />
     } @else {
@@ -56,23 +56,23 @@
           >
             <div class="nota-card__top">
               @if (n.pinned) { <span class="nota-card__pin">📌</span> }
-              <span class="nota-card__titulo">{{ n.titulo || '(Sin título)' }}</span>
+              <span class="nota-card__titulo">{{ n.titulo || ('(Sin título)' | t) }}</span>
             </div>
             @if (snippet(n); as s) { <span class="nota-card__snippet">{{ s }}</span> }
             <div class="nota-card__meta">
               <span>{{ fechaHora(n.updated_at) }}</span>
               @if (n.fallo) {
-                <span class="nota-card__badge nota-card__badge--err">⚠️ No se envió</span>
+                <span class="nota-card__badge nota-card__badge--err">⚠️ {{ 'No se envió' | t }}</span>
               } @else if (n.enviando) {
-                <span class="nota-card__badge nota-card__badge--env">⏳ Enviando…</span>
+                <span class="nota-card__badge nota-card__badge--env">⏳ {{ 'Enviando…' | t }}</span>
               } @else if (n.compartida) {
-                <span class="nota-card__badge">{{ n.permiso === 'editar' ? '✏️ Puedes editar' : '👁️ Solo lectura' }}</span>
+                <span class="nota-card__badge">{{ n.permiso === 'editar' ? '✏️' : '👁️' }} {{ n.permiso === 'editar' ? ('Puedes editar' | t) : ('Solo lectura' | t) }}</span>
               }
             </div>
           </button>
         }
         @if (hayMas()) {
-          <button type="button" class="btn-ghost notas__mas" (click)="cargarMas()">Cargar más</button>
+          <button type="button" class="btn-ghost notas__mas" (click)="cargarMas()">{{ 'Cargar más' | t }}</button>
         }
       </div>
     }

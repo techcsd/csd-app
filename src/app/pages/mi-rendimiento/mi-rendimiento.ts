@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { LiveRefreshDirective } from '../../shared/ui/live-refresh/live-refresh.directive';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { IncentivoService, IncentivoSemana, IncentivoRef } from '../../core/services/incentivo.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFecha, formatFechaHumana } from '../../core/util/fecha';
@@ -38,12 +40,13 @@ interface RenglonView {
   selector: 'app-mi-rendimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, LiveRefreshDirective],
+  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
   templateUrl: './mi-rendimiento.html',
   styleUrl: './mi-rendimiento.scss',
 })
 export class MiRendimientoPage {
   private incentivo = inject(IncentivoService);
+  private i18n = inject(I18nService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private location = inject(Location);
@@ -116,7 +119,7 @@ export class MiRendimientoPage {
     try {
       this.semanas.set(await this.incentivo.miRendimiento());
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No pudimos cargar tu rendimiento.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cargar tu rendimiento.'));
     } finally {
       this.loading.set(false);
     }
@@ -133,9 +136,9 @@ export class MiRendimientoPage {
 
   /** Etiqueta de la decisión del incentivo de una semana. */
   decisionLabel(s: IncentivoSemana): string {
-    if (s.decision === 'aprobado') return 'Aprobado';
-    if (s.decision === 'declinado') return 'Declinado';
-    return 'Pendiente';
+    if (s.decision === 'aprobado') return this.i18n.t('Aprobado');
+    if (s.decision === 'declinado') return this.i18n.t('Declinado');
+    return this.i18n.t('Pendiente');
   }
 
   /** AQ6 — navega al registro que compone el puntaje (deep-link por tipo). */

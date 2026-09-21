@@ -12,6 +12,8 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ClFirmaRol, ClItemRevision, ClRegistroDetalle, CL_FIRMA_ROLES } from '../../../core/models/cl-liberacion.model';
 import { formatFechaHumana } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
  * Q5 (3b) — detalle de un CL de liberación para revisarlo y FIRMAR el rol propio.
@@ -24,7 +26,7 @@ import { formatFechaHumana } from '../../../core/util/fecha';
   selector: 'app-cl-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, OptionButton, SignaturePad],
+  imports: [FormsModule, Skeleton, EmptyState, OptionButton, SignaturePad, TranslatePipe],
   templateUrl: './cl-detalle.html',
   styleUrl: './cl-detalle.scss',
 })
@@ -35,6 +37,7 @@ export class ClDetallePage {
   private toast = inject(ToastService);
   private camera = inject(CameraService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
 
@@ -119,11 +122,11 @@ export class ClDetallePage {
     if (this.firmando()) return;
     const rol = this.firmaRol();
     if (!rol) {
-      this.toast.error('Elige el rol que firma.');
+      this.toast.error(this.i18n.t('Elige el rol que firma.'));
       return;
     }
     if (!this.online()) {
-      this.toast.error('Necesitas conexión para firmar.');
+      this.toast.error(this.i18n.t('Necesitas conexión para firmar.'));
       return;
     }
     const foto = this.firmaFoto();
@@ -136,13 +139,13 @@ export class ClDetallePage {
       blob = await this.sig()?.toBlob();
     }
     if (!blob) {
-      this.toast.error(rol === 'cliente' ? 'Captura la firma o sube su foto.' : 'Captura la firma primero.');
+      this.toast.error(rol === 'cliente' ? this.i18n.t('Captura la firma o sube su foto.') : this.i18n.t('Captura la firma primero.'));
       return;
     }
     this.firmando.set(true);
     try {
       await this.service.firmarCl({ clId: this.id, rol, nombre: this.firmaNombre().trim() || null, blob, metodo });
-      this.toast.success('Firma registrada.');
+      this.toast.success(this.i18n.t('Firma registrada.'));
       this.firmaRol.set(null);
       this.firmaNombre.set('');
       this.firmaLista.set(false);
@@ -150,7 +153,7 @@ export class ClDetallePage {
       this.quitarFirmaFoto();
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la firma.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar la firma.'));
     } finally {
       this.firmando.set(false);
     }

@@ -1,5 +1,16 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 21/09/2026 — PROMPT-57 (cont.) — **Inglés cubre la app de verdad (96%, sale de beta)** · WIP i18n arreglado + commit · **release 2.26.1 gateada a Xaviel**
+
+**TL;DR (con OK de Xaviel: "Finish English + commit"):** el árbol traía WIP i18n sin commitear (cobertura 77→78%) que **NO compilaba** — `entrada.html` estaba cableada con `| t` pero `EntradaPage` **nunca importó `TranslatePipe`** (la sesión anterior corrió solo los verify scripts, nunca `ng build`). Arreglado. Además se **completó el inglés**: se tradujeron las **808 claves** que caían a español (6 agentes en paralelo + glosario) → `en.json` 2839→3647 claves; **cada string cableado (3577/3577) tiene inglés, 0 fallback**. Para cruzar el gate del 95% se cablearon 2 pantallas de campo reales más (**bitácora/parte** +61, **solicitudes/detalle** +70, con `| t` + traducción). **Cobertura 78% → 96%.** Como `UMBRAL_OFRECIDO.en = 95`, **el inglés se ofrece SIN etiqueta beta** (`ofrecido:true`). `npm run build` **exit 0** + verify-tokens + i18n-coverage + verify-i18n + verify-dev-strings **verdes**.
+
+- **La 2.26.0 publicada NO salió rota:** en HEAD (`100ae34`) `entrada.html` no está cableada (0 `| t`) — la rotura vivía solo en el working tree sin commitear. El APK 2.26.0 se construyó de un estado limpio.
+- **Commit** en rama `bt-round-2.26.0` (no main): WIP i18n de ~28 pantallas + inglés completo + fix del pipe + parte/detalle + coverage/docs regenerados.
+- **⏸ Release 2.26.1 (gateada a OK):** el inglés al 96% (sin beta) llega a usuarios solo con (a) deploy PWA a main [Vercel, iPhone] y (b) APK 2.26.1 [Android]. Ambos = decisión de release de Xaviel. La 2.26.0 sigue publicada+mínima con inglés beta 78% hasta entonces.
+- **Restante i18n (no bloquea el gate):** ~145 literales sin `| t` repartidos, la mayoría en pantallas dev/admin (`tecnologia*`, `equipo-form/detalle`, `dev-notes`) + `inventario/retiro-nuevo` (19) + `reportar` (8). Bajo valor para el usuario de campo; el gate ya está en 96%.
+- **Verify on resume:** `npm run build` exit 0; `node scripts/i18n-coverage.mjs` → en 96%; selector de idioma muestra **English sin "beta"**; recorrido English (home/Transporte/Perfil/combustible/parte/solicitudes) 100%. Device-QA de 2.26.0 sigue pendiente (ver sección 18/09).
+- **Rollback:** `git revert` del commit de esta sesión (solo cliente PWA + en.json + docs). No toca APK ni flags del servidor.
+
 ## 🟡 SESIÓN 18/09/2026 — PROMPT-57 ronda BT (app) — F0/F1/F2/F3/F4 CONSTRUIDOS · build+verify verdes · **SIN commit/release (gate de Xaviel)** → 2.26.0
 
 **TL;DR:** los docs que citaba el prompt (`CONTEXTO-ACTUALIZACION-27.md`, `PROMPT-56-SGC.md`) **no existen**; pero el padre (SGC) **SÍ ejecutó PROMPT-56 y está en prod** (web 1.138.0/1.139.0) — verificado por introspección (Management API): `crear_conduce_externo` valida `transporta_proveedor_id`→`error_campo` (22023), `mis_preferencias().notif[].silenciable`, `actualizar_mi_avatar`, `set_mi_preferencia` **todos VIVOS**. Así que la app los consume **directo** (aún tras comprobación de capacidad). `npm run build` + `verify-tokens` + `verify-i18n` (con alcance) + `i18n-coverage` + `verify-dev-strings` **verdes**. HEAD sin cambios (release gateada). Nace la **17ª regla** (i18n por pantalla; toda captura con fotos guarda borrador desde la 1ª tecla).

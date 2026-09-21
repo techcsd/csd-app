@@ -7,6 +7,7 @@ import { ClLiberacionService } from '../../../core/services/cl-liberacion.servic
 import { NetworkService } from '../../../core/services/network.service';
 import { ClPendiente } from '../../../core/models/cl-liberacion.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Q5 (3b) — bandeja "Liberaciones por firmar": CLs en borrador pendientes de
@@ -17,7 +18,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-cl-firmas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState],
+  imports: [Skeleton, EmptyState, TranslatePipe],
   templateUrl: './cl-firmas.html',
   styleUrl: './cl-firmas.scss',
 })

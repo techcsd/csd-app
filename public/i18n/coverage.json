@@ -1,5 +1,5 @@
 {
-  "en": 77,
+  "en": 96,
   "ht": 0,
   "alcance": true,
   "byScreen": {
@@ -10,9 +10,9 @@
       "ht": 0
     },
     "pages/actualizar": {
-      "conT": 0,
-      "sinT": 18,
-      "en": 0,
+      "conT": 23,
+      "sinT": 1,
+      "en": 96,
       "ht": 0
     },
     "pages/admin": {
@@ -124,63 +124,63 @@
       "ht": 0
     },
     "pages/bitacora": {
-      "conT": 0,
-      "sinT": 8,
-      "en": 0,
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/bitacora/cl-detalle": {
-      "conT": 0,
-      "sinT": 22,
-      "en": 0,
+      "conT": 30,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/bitacora/cl-firmas": {
-      "conT": 0,
-      "sinT": 3,
-      "en": 0,
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/bitacora/dashboard": {
-      "conT": 0,
-      "sinT": 11,
-      "en": 0,
+      "conT": 15,
+      "sinT": 1,
+      "en": 94,
       "ht": 0
     },
     "pages/bitacora/detalle": {
-      "conT": 0,
-      "sinT": 48,
-      "en": 0,
+      "conT": 66,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/bitacora/incidente": {
-      "conT": 0,
-      "sinT": 41,
-      "en": 0,
+      "conT": 66,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/bitacora/liberacion": {
-      "conT": 0,
-      "sinT": 49,
-      "en": 0,
+      "conT": 82,
+      "sinT": 1,
+      "en": 99,
       "ht": 0
     },
     "pages/bitacora/mis-partes": {
-      "conT": 0,
-      "sinT": 12,
-      "en": 0,
+      "conT": 27,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/bitacora/orden-trabajo": {
-      "conT": 0,
-      "sinT": 47,
-      "en": 0,
+      "conT": 58,
+      "sinT": 1,
+      "en": 98,
       "ht": 0
     },
     "pages/bitacora/parte": {
-      "conT": 0,
-      "sinT": 138,
-      "en": 0,
+      "conT": 186,
+      "sinT": 4,
+      "en": 98,
       "ht": 0
     },
     "pages/compa": {
@@ -190,15 +190,15 @@
       "ht": 0
     },
     "pages/compras-proyecto": {
-      "conT": 0,
-      "sinT": 17,
-      "en": 0,
+      "conT": 28,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/compras/solicitud-compra": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 25,
+      "sinT": 1,
+      "en": 96,
       "ht": 0
     },
     "pages/en-proceso": {
@@ -220,15 +220,15 @@
       "ht": 0
     },
     "pages/incentivos": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 35,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/incentivos/participantes": {
-      "conT": 0,
-      "sinT": 8,
-      "en": 0,
+      "conT": 16,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/ingenieria": {
@@ -238,9 +238,9 @@
       "ht": 0
     },
     "pages/ingenieria/cartilla": {
-      "conT": 24,
-      "sinT": 36,
-      "en": 40,
+      "conT": 58,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario": {
@@ -298,9 +298,9 @@
       "ht": 0
     },
     "pages/inventario/entrada": {
-      "conT": 0,
-      "sinT": 18,
-      "en": 0,
+      "conT": 33,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/existencias": {
@@ -322,9 +322,9 @@
       "ht": 0
     },
     "pages/inventario/recibir": {
-      "conT": 0,
-      "sinT": 33,
-      "en": 0,
+      "conT": 53,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/inventario/retiro-detalle": {
@@ -376,21 +376,21 @@
       "ht": 0
     },
     "pages/mi-rendimiento": {
-      "conT": 0,
-      "sinT": 19,
-      "en": 0,
+      "conT": 25,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/notas": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 18,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/notas/editor": {
-      "conT": 0,
-      "sinT": 20,
-      "en": 0,
+      "conT": 26,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/obra": {
@@ -490,9 +490,9 @@
       "ht": 0
     },
     "pages/perfil/mi-detalle": {
-      "conT": 0,
-      "sinT": 15,
-      "en": 0,
+      "conT": 16,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/proyectos": {
@@ -550,33 +550,33 @@
       "ht": 0
     },
     "pages/solicitudes": {
-      "conT": 0,
-      "sinT": 5,
-      "en": 0,
+      "conT": 5,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/solicitudes/bandeja": {
-      "conT": 0,
-      "sinT": 7,
-      "en": 0,
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/solicitudes/detalle": {
-      "conT": 0,
-      "sinT": 53,
-      "en": 0,
+      "conT": 49,
+      "sinT": 12,
+      "en": 80,
       "ht": 0
     },
     "pages/solicitudes/mis": {
-      "conT": 0,
-      "sinT": 4,
-      "en": 0,
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/solicitudes/pedir": {
-      "conT": 0,
-      "sinT": 13,
-      "en": 0,
+      "conT": 23,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/soporte": {
@@ -586,9 +586,9 @@
       "ht": 0
     },
     "pages/tareas": {
-      "conT": 0,
-      "sinT": 35,
-      "en": 0,
+      "conT": 59,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/tecnologia": {
@@ -658,9 +658,9 @@
       "ht": 0
     },
     "pages/transporte/checklist": {
-      "conT": 0,
-      "sinT": 39,
-      "en": 0,
+      "conT": 64,
+      "sinT": 1,
+      "en": 98,
       "ht": 0
     },
     "pages/transporte/checklists-historial": {
@@ -1126,9 +1126,9 @@
       "ht": 0
     },
     "shared/ui/photo-slot": {
-      "conT": 0,
-      "sinT": 21,
-      "en": 0,
+      "conT": 16,
+      "sinT": 1,
+      "en": 94,
       "ht": 0
     },
     "shared/ui/pin-pad": {

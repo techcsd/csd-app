@@ -5,6 +5,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { SolicitudesCompraService } from '../../../core/services/solicitudes-compra.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -34,7 +36,7 @@ interface DraftItem {
   selector: 'app-solicitud-compra',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, QtyInput],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, QtyInput, TranslatePipe],
   templateUrl: './solicitud-compra.html',
   styleUrl: './solicitud-compra.scss',
 })
@@ -43,6 +45,7 @@ export class SolicitudCompraPage {
   private net = inject(NetworkService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private i18n = inject(I18nService);
 
   readonly fmtFecha = formatFechaMedia;
   readonly estadoMeta = SOLICITUD_COMPRA_ESTADO_META;
@@ -133,11 +136,11 @@ export class SolicitudCompraPage {
         proveedor_sugerido: it.proveedor.trim() || null,
       }));
     if (!this.proyectoId()) {
-      this.toast.error('Elige la obra para la que se compra.');
+      this.toast.error(this.i18n.t('Elige la obra para la que se compra.'));
       return;
     }
     if (!items.length) {
-      this.toast.error('Agrega al menos un renglón con descripción y cantidad.');
+      this.toast.error(this.i18n.t('Agrega al menos un renglón con descripción y cantidad.'));
       return;
     }
     this.enviando.set(true);
@@ -149,11 +152,11 @@ export class SolicitudCompraPage {
         items,
       });
       // Offline-first: se encoló; si hay red, sincroniza sola. Mensaje honesto.
-      this.toast.success(this.online ? 'Solicitud de compra enviada.' : 'Guardada. Se enviará al recuperar señal.');
+      this.toast.success(this.online ? this.i18n.t('Solicitud de compra enviada.') : this.i18n.t('Guardada. Se enviará al recuperar señal.'));
       this.cerrarCrear();
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la solicitud.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la solicitud.'));
     } finally {
       this.enviando.set(false);
     }

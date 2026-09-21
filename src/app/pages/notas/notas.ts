@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { NotasService } from '../../core/services/notas.service';
 import { SyncService } from '../../core/sync/sync.service';
 import { Nota } from '../../core/models/nota.model';
@@ -21,7 +22,7 @@ type Tab = 'mias' | 'compartidas';
   selector: 'app-notas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, SyncBar],
+  imports: [FormsModule, Skeleton, EmptyState, SyncBar, TranslatePipe],
   templateUrl: './notas.html',
   styleUrl: './notas.scss',
 })

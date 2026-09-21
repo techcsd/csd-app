@@ -3,20 +3,20 @@
     <span class="actu__icon">⬆️</span>
 
     @if (esNativo && hayNueva()) {
-      <h1 class="actu__title">Nueva versión {{ nueva() }} disponible</h1>
-      <p class="actu__sub">Tienes la {{ local }}. Actualiza para tener las últimas mejoras y arreglos.</p>
+      <h1 class="actu__title">{{ 'Nueva versión' | t }} {{ nueva() }} {{ 'disponible' | t }}</h1>
+      <p class="actu__sub">{{ 'Tienes la' | t }} {{ local }}. {{ 'Actualiza para tener las últimas mejoras y arreglos.' | t }}</p>
     } @else if (!esNativo) {
       <!-- AU10 — la PWA se actualiza sola; nunca un botón "Actualizar". -->
-      <h1 class="actu__title">{{ buscandoPwa() ? 'Buscando la última versión…' : 'Ya tienes la última versión' }}</h1>
-      <p class="actu__sub">Estás en la {{ local }}. Esta app se actualiza sola: al refrescar verás la versión nueva.</p>
+      <h1 class="actu__title">{{ buscandoPwa() ? ('Buscando la última versión…' | t) : ('Ya tienes la última versión' | t) }}</h1>
+      <p class="actu__sub">{{ 'Estás en la' | t }} {{ local }}. {{ 'Esta app se actualiza sola: al refrescar verás la versión nueva.' | t }}</p>
     } @else {
-      <h1 class="actu__title">Ya tienes la última versión</h1>
-      <p class="actu__sub">Estás en la {{ local }}.</p>
+      <h1 class="actu__title">{{ 'Ya tienes la última versión' | t }}</h1>
+      <p class="actu__sub">{{ 'Estás en la' | t }} {{ local }}.</p>
     }
 
     @if (hayChangelog()) {
       <div class="actu__notas">
-        <h2 class="actu__notas-title">Qué trae esta versión</h2>
+        <h2 class="actu__notas-title">{{ 'Qué trae esta versión' | t }}</h2>
         <div class="actu__notas-scroll">
           @if (grupos().length) {
             @for (g of grupos(); track g.modulo) {
@@ -27,7 +27,7 @@
                 <ul class="actu__lista">
                   @for (c of g.items; track $index) {
                     <li class="actu__item">
-                      <span class="actu__chip actu__chip--{{ c.t }}">{{ chipLabel(c.t) }}</span>
+                      <span class="actu__chip actu__chip--{{ c.t }}">{{ chipLabel(c.t) | t }}</span>
                       <span class="actu__item-txt">{{ c.d }}</span>
                     </li>
                   }
@@ -49,30 +49,30 @@
       <div class="actu__progress">
         <div class="actu__progress-bar" [style.width.%]="progreso()"></div>
       </div>
-      <p class="actu__progress-txt">Descargando… {{ progreso() }}%</p>
+      <p class="actu__progress-txt">{{ 'Descargando…' | t }} {{ progreso() }}%</p>
     }
 
     @if (estado() === 'instalando') {
-      <p class="actu__progress-txt">Abriendo el instalador de Android…</p>
+      <p class="actu__progress-txt">{{ 'Abriendo el instalador de Android…' | t }}</p>
     }
 
     @if (estado() === 'permiso') {
       <div class="actu__perm">
         <p>
-          Solo la primera vez: activa <b>“Permitir de esta fuente”</b> para <b>CSD App</b>.
-          Al volver, la instalación continúa sola (no hay que descargar de nuevo).
+          {{ 'Solo la primera vez: activa' | t }} <b>{{ '“Permitir de esta fuente”' | t }}</b> {{ 'para' | t }} <b>CSD App</b>.
+          {{ 'Al volver, la instalación continúa sola (no hay que descargar de nuevo).' | t }}
         </p>
-        <button type="button" class="btn-ghost" (click)="abrirAjustes()">Abrir ajustes de permiso</button>
+        <button type="button" class="btn-ghost" (click)="abrirAjustes()">{{ 'Abrir ajustes de permiso' | t }}</button>
       </div>
     }
 
     @if (estado() === 'error') {
-      <p class="actu__error">No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.</p>
+      <p class="actu__error">{{ 'No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.' | t }}</p>
     }
   </div>
 
   <footer class="actu__nav">
-    <button type="button" class="btn-ghost actu__back" (click)="volver()">Ahora no</button>
+    <button type="button" class="btn-ghost actu__back" (click)="volver()">{{ 'Ahora no' | t }}</button>
     <!-- AU10 — el botón de descarga/instalación es SOLO para la APK nativa. En la
          PWA no hay botón: el service worker ya activó el build nuevo y recarga solo. -->
     @if (esNativo && (hayNueva() || apkUrl())) {
@@ -83,11 +83,11 @@
         (click)="actualizar()"
       >
         @switch (estado()) {
-          @case ('descargando') { Descargando… }
-          @case ('instalando') { Instalando… }
-          @case ('error') { Reintentar }
-          @case ('permiso') { Actualizar }
-          @default { {{ esNativo ? '⬇️ Actualizar ahora' : '⬇️ Descargar' }} }
+          @case ('descargando') { {{ 'Descargando…' | t }} }
+          @case ('instalando') { {{ 'Instalando…' | t }} }
+          @case ('error') { {{ 'Reintentar' | t }} }
+          @case ('permiso') { {{ 'Actualizar' | t }} }
+          @default { ⬇️ {{ esNativo ? ('Actualizar ahora' | t) : ('Descargar' | t) }} }
         }
       </button>
     }

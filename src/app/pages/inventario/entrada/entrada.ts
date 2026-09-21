@@ -20,6 +20,7 @@ import { ShareSheet } from '../../../shared/ui/share-sheet/share-sheet';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface GrupoResumen {
   categoria: string;
@@ -41,7 +42,7 @@ interface EntradaDraft {
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput, TranslatePipe],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })

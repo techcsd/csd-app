@@ -18,7 +18,7 @@
   } @else {
     <div class="screen__body">
       @if (!puedeEditar()) {
-        <p class="neditor__ro">👁️ Solo lectura — te la compartieron sin permiso de editar.</p>
+        <p class="neditor__ro">👁️ {{ 'Solo lectura — te la compartieron sin permiso de editar.' | t }}</p>
       }
 
       <input
@@ -27,7 +27,7 @@
         [ngModel]="titulo()"
         (ngModelChange)="titulo.set($event)"
         [readonly]="!puedeEditar()"
-        placeholder="Título"
+        [placeholder]="'Título' | t"
         aria-label="Título de la nota"
       />
 
@@ -37,9 +37,9 @@
           <button type="button" class="neditor__tool" (click)="cmdBold()" aria-label="Negrita"><b>B</b></button>
           <button type="button" class="neditor__tool" (click)="cmdItalic()" aria-label="Cursiva"><i>I</i></button>
           <button type="button" class="neditor__tool" (click)="cmdSubrayado()" aria-label="Subrayado"><u>U</u></button>
-          <button type="button" class="neditor__tool" (click)="cmdTitulo()" aria-label="Título">Título</button>
-          <button type="button" class="neditor__tool" (click)="cmdVineta()" aria-label="Lista con viñetas">• Lista</button>
-          <button type="button" class="neditor__tool" (click)="cmdNumerada()" aria-label="Lista numerada">1. Lista</button>
+          <button type="button" class="neditor__tool" (click)="cmdTitulo()" aria-label="Título">{{ 'Título' | t }}</button>
+          <button type="button" class="neditor__tool" (click)="cmdVineta()" aria-label="Lista con viñetas">• {{ 'Lista' | t }}</button>
+          <button type="button" class="neditor__tool" (click)="cmdNumerada()" aria-label="Lista numerada">1. {{ 'Lista' | t }}</button>
         </div>
       }
       <div
@@ -47,14 +47,14 @@
         class="neditor__contenido"
         [attr.contenteditable]="puedeEditar()"
         (input)="onBodyInput(bodyRef)"
-        data-placeholder="Escribe aquí…"
+        [attr.data-placeholder]="'Escribe aquí…' | t"
         aria-label="Contenido de la nota"
       ></div>
 
       <!-- AD9 — checklist estructurado: táctil, Enter agrega, reordenar -->
       @if (puedeEditar() || checklist().length) {
         <div class="neditor__check">
-          <span class="neditor__lbl">Lista de tareas</span>
+          <span class="neditor__lbl">{{ 'Lista de tareas' | t }}</span>
           @for (item of checklist(); track item.id; let i = $index) {
             <div
               class="neditor__item"
@@ -71,8 +71,8 @@
 
               @if (item.ref_tipo) {
                 <span class="neditor__item-ro">{{ item.texto }}</span>
-                <span class="neditor__chip" title="Vinculada a una tarea de la plataforma">
-                  🔗 Tarea{{ item.done_auto ? ' · hecha' : '' }}
+                <span class="neditor__chip" [title]="'Vinculada a una tarea de la plataforma' | t">
+                  🔗 {{ 'Tarea' | t }}@if (item.done_auto) { · {{ 'hecha' | t }} }
                 </span>
               } @else {
                 <input
@@ -83,7 +83,7 @@
                   (input)="setItemTexto(item, $any($event.target).value)"
                   (keydown.enter)="onItemEnter(i)"
                   [readonly]="!puedeEditar()"
-                  placeholder="Escribe una tarea…"
+                  [placeholder]="'Escribe una tarea…' | t"
                   aria-label="Tarea"
                 />
                 @if (puedeEditar()) {
@@ -96,14 +96,14 @@
           }
           @if (puedeEditar()) {
             <button type="button" class="neditor__add-list" (click)="agregarItem()">
-              {{ checklist().length ? '➕ Agregar tarea' : '➕ Lista de tareas' }}
+              ➕ {{ checklist().length ? ('Agregar tarea' | t) : ('Lista de tareas' | t) }}
             </button>
           }
         </div>
       }
 
       @if (puedeEditar()) {
-        <label class="neditor__lbl">Color</label>
+        <label class="neditor__lbl">{{ 'Color' | t }}</label>
         <div class="neditor__colores">
           @for (c of colores; track c.label) {
             <button
@@ -111,7 +111,7 @@
               class="neditor__color"
               [class.neditor__color--on]="color() === c.valor"
               [style.background]="c.valor ?? '#ffffff'"
-              [title]="c.label"
+              [title]="c.label | t"
               [attr.aria-label]="c.label"
               (click)="setColor(c.valor)"
             >@if (!c.valor) { 🚫 }</button>
@@ -123,10 +123,10 @@
     <footer class="neditor__nav">
       @if (puedeEditar()) {
         <button type="button" class="btn-cta" [disabled]="guardando()" (click)="guardar()">
-          {{ guardando() ? 'Guardando…' : 'Guardar' }}
+          {{ guardando() ? ('Guardando…' | t) : ('Guardar' | t) }}
         </button>
       } @else {
-        <button type="button" class="btn-ghost" (click)="back()">Volver</button>
+        <button type="button" class="btn-ghost" (click)="back()">{{ 'Volver' | t }}</button>
       }
     </footer>
   }
@@ -136,7 +136,7 @@
     <div class="neditor__sheet-back" (click)="cerrarCompartir()"></div>
     <div class="neditor__sheet">
       <div class="neditor__sheet-head">
-        <h2 class="neditor__sheet-title">Compartir nota</h2>
+        <h2 class="neditor__sheet-title">{{ 'Compartir nota' | t }}</h2>
         <button type="button" class="neditor__sheet-x" (click)="cerrarCompartir()" aria-label="Cerrar">✕</button>
       </div>
 
@@ -145,14 +145,14 @@
         type="search"
         [ngModel]="busqueda()"
         (ngModelChange)="busqueda.set($event); buscar()"
-        placeholder="Buscar usuario por nombre o correo…"
+        [placeholder]="'Buscar usuario por nombre o correo…' | t"
         aria-label="Buscar usuario"
       />
 
       @if (buscando()) {
-        <p class="neditor__hint">Buscando…</p>
+        <p class="neditor__hint">{{ 'Buscando…' | t }}</p>
       } @else if (busqueda().trim().length >= 2 && !resultados().length) {
-        <p class="neditor__hint">Sin resultados.</p>
+        <p class="neditor__hint">{{ 'Sin resultados.' | t }}</p>
       }
       @for (u of resultados(); track u.id) {
         <div class="neditor__ures">
@@ -161,15 +161,15 @@
             @if (u.email) { <span class="neditor__ures-email">{{ u.email }}</span> }
           </div>
           <div class="neditor__ures-btns">
-            <button type="button" class="btn-ghost neditor__mini" (click)="agregar(u, 'ver')">👁️ Ver</button>
-            <button type="button" class="btn-ghost neditor__mini" (click)="agregar(u, 'editar')">✏️ Editar</button>
+            <button type="button" class="btn-ghost neditor__mini" (click)="agregar(u, 'ver')">👁️ {{ 'Ver' | t }}</button>
+            <button type="button" class="btn-ghost neditor__mini" (click)="agregar(u, 'editar')">✏️ {{ 'Editar' | t }}</button>
           </div>
         </div>
       }
 
-      <h3 class="neditor__sheet-sub">Con acceso</h3>
+      <h3 class="neditor__sheet-sub">{{ 'Con acceso' | t }}</h3>
       @if (!compartidos().length) {
-        <p class="neditor__hint">Todavía no la has compartido con nadie.</p>
+        <p class="neditor__hint">{{ 'Todavía no la has compartido con nadie.' | t }}</p>
       }
       @for (c of compartidos(); track c.usuario_id) {
         <div class="neditor__comp">
@@ -183,13 +183,13 @@
               class="neditor__perm"
               [class.neditor__perm--on]="c.permiso === 'ver'"
               (click)="cambiarPermiso(c, 'ver')"
-            >Ver</button>
+            >{{ 'Ver' | t }}</button>
             <button
               type="button"
               class="neditor__perm"
               [class.neditor__perm--on]="c.permiso === 'editar'"
               (click)="cambiarPermiso(c, 'editar')"
-            >Editar</button>
+            >{{ 'Editar' | t }}</button>
             <button type="button" class="neditor__perm neditor__perm--del" (click)="quitar(c)" aria-label="Quitar">✕</button>
           </div>
         </div>
@@ -199,10 +199,10 @@
 
   <app-confirm-dialog
     [open]="confirmBorrar()"
-    title="¿Borrar esta nota?"
-    message="Se borrará para ti y para quienes la tengan compartida. No se puede deshacer."
-    confirmLabel="Sí, borrar"
-    cancelLabel="Cancelar"
+    [title]="'¿Borrar esta nota?' | t"
+    [message]="'Se borrará para ti y para quienes la tengan compartida. No se puede deshacer.' | t"
+    [confirmLabel]="'Sí, borrar' | t"
+    [cancelLabel]="'Cancelar' | t"
     tone="danger"
     (confirmed)="confirmarBorrar()"
     (cancelled)="cancelarBorrar()"

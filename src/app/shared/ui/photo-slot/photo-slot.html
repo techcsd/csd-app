@@ -5,7 +5,7 @@
       <span class="photo-slot__check">✓</span>
       <span class="photo-slot__label">{{ label() }}</span>
     </div>
-    <button type="button" class="photo-slot__retake" (click)="clear()">Repetir foto</button>
+    <button type="button" class="photo-slot__retake" (click)="clear()">{{ 'Repetir foto' | t }}</button>
   </div>
 } @else {
   <div class="photo-slot">
@@ -13,45 +13,43 @@
     <span class="photo-slot__label">{{ label() }}</span>
     <div class="photo-slot__actions">
       <button type="button" class="photo-slot__cta photo-slot__cta--primary" (click)="capture()" [disabled]="busy()">
-        📷 Tomar foto
+        📷 {{ 'Tomar foto' | t }}
       </button>
       @if (showGallery()) {
         <button type="button" class="photo-slot__cta" (click)="pickFromGallery()" [disabled]="busy()">
-          🖼️ Galería
+          🖼️ {{ 'Galería' | t }}
         </button>
       }
     </div>
     <!-- AT9 — ayuda/fallback en web (PWA/iOS): la cámara puede no abrir por permisos. -->
     @if (esWeb) {
       <button type="button" class="photo-slot__help" (click)="abrirAyuda()" [disabled]="busy()">
-        ¿No abre la cámara?
+        {{ '¿No abre la cámara?' | t }}
       </button>
     }
   </div>
 }
 
 <!-- AT9 — hoja de ayuda de permisos de cámara (iOS/PWA) + fallback "Subir foto" -->
-<app-bottom-sheet [open]="ayudaAbierta()" titulo="¿No abre la cámara?" (closed)="cerrarAyuda()">
+<app-bottom-sheet [open]="ayudaAbierta()" [titulo]="'¿No abre la cámara?' | t" (closed)="cerrarAyuda()">
   <div class="cam-ayuda">
     @if (esIOS) {
       <p class="cam-ayuda__intro">
-        En iPhone/iPad la cámara se abre desde el sistema. Si te pide permiso y no abre,
-        actívalo así:
+        {{ 'En iPhone/iPad la cámara se abre desde el sistema. Si te pide permiso y no abre, actívalo así:' | t }}
       </p>
       <ol class="cam-ayuda__pasos">
-        <li>Abre <b>Ajustes</b> del iPhone.</li>
-        <li>Busca <b>Safari</b> → <b>Cámara</b> y ponlo en <b>Permitir</b>.</li>
-        <li>Si usas la app desde la pantalla de inicio, ciérrala y vuelve a abrirla.</li>
+        <li>{{ 'Abre' | t }} <b>{{ 'Ajustes' | t }}</b> {{ 'del iPhone.' | t }}</li>
+        <li>{{ 'Busca' | t }} <b>Safari</b> → <b>{{ 'Cámara' | t }}</b> {{ 'y ponlo en' | t }} <b>{{ 'Permitir' | t }}</b>.</li>
+        <li>{{ 'Si usas la app desde la pantalla de inicio, ciérrala y vuelve a abrirla.' | t }}</li>
       </ol>
     } @else {
       <p class="cam-ayuda__intro">
-        Revisa que le hayas dado permiso de <b>cámara</b> a este sitio en los ajustes del
-        navegador. Mientras tanto, puedes subir una foto:
+        {{ 'Revisa que le hayas dado permiso de cámara a este sitio en los ajustes del navegador. Mientras tanto, puedes subir una foto:' | t }}
       </p>
     }
-    <p class="cam-ayuda__intro">¿Sigue sin abrir? Sube la foto desde tu teléfono:</p>
+    <p class="cam-ayuda__intro">{{ '¿Sigue sin abrir? Sube la foto desde tu teléfono:' | t }}</p>
     <button type="button" class="photo-slot__cta photo-slot__cta--primary" (click)="subirFoto()" [disabled]="busy()">
-      ⬆️ Subir foto
+      ⬆️ {{ 'Subir foto' | t }}
     </button>
   </div>
 </app-bottom-sheet>

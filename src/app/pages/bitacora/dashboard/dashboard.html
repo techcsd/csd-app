@@ -2,44 +2,44 @@
   <header class="bdash__header">
     <button type="button" class="bdash__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="bdash__icon">📊</span>
-    <h1 class="bdash__title">Dashboard de bitácora</h1>
+    <h1 class="bdash__title">{{ 'Dashboard de bitácora' | t }}</h1>
   </header>
 
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="6" />
     } @else if (error()) {
-      <app-empty-state icon="⚠️" title="No pudimos cargar el dashboard" message="Puede ser la conexión. Toca para reintentar." ctaLabel="Reintentar" (action)="load()" />
+      <app-empty-state icon="⚠️" [title]="'No pudimos cargar el dashboard' | t" [message]="'Puede ser la conexión. Toca para reintentar.' | t" [ctaLabel]="'Reintentar' | t" (action)="load()" />
     } @else {
       @if (viendoTodas()) {
-        <p class="bdash__scope">Vista de todas las obras.</p>
+        <p class="bdash__scope">{{ 'Vista de todas las obras.' | t }}</p>
       } @else {
-        <p class="bdash__scope">Tus bitácoras.</p>
+        <p class="bdash__scope">{{ 'Tus bitácoras.' | t }}</p>
       }
 
       <!-- Stats -->
       <div class="bdash__stats">
         <div class="bdash__stat">
           <span class="bdash__stat-n">{{ hoyCount() }}</span>
-          <span class="bdash__stat-l">Bitácoras hoy</span>
+          <span class="bdash__stat-l">{{ 'Bitácoras hoy' | t }}</span>
         </div>
         <div class="bdash__stat">
           <span class="bdash__stat-n">{{ semanaCount() }}</span>
-          <span class="bdash__stat-l">Esta semana</span>
+          <span class="bdash__stat-l">{{ 'Esta semana' | t }}</span>
         </div>
         <button type="button" class="bdash__stat bdash__stat--btn" [class.bdash__stat--alert]="liberacionesPend() > 0" (click)="irALiberaciones()">
           <span class="bdash__stat-n">{{ liberacionesPend() }}</span>
-          <span class="bdash__stat-l">Liberaciones por firmar ›</span>
+          <span class="bdash__stat-l">{{ 'Liberaciones por firmar' | t }} ›</span>
         </button>
         <div class="bdash__stat" [class.bdash__stat--alert]="ncAbiertas() > 0">
           <span class="bdash__stat-n">{{ ncAbiertas() }}</span>
-          <span class="bdash__stat-l">No conformidades abiertas</span>
+          <span class="bdash__stat-l">{{ 'No conformidades abiertas' | t }}</span>
         </div>
       </div>
 
       <!-- Actividad por obra (semana) -->
       @if (porObra().length) {
-        <h3 class="bdash__sec">Actividad por obra (7 días)</h3>
+        <h3 class="bdash__sec">{{ 'Actividad por obra (7 días)' | t }}</h3>
         <ul class="bdash__obras">
           @for (o of porObra(); track o.obra) {
             <li class="bdash__obra">
@@ -51,7 +51,7 @@
       }
 
       <!-- Recientes -->
-      <h3 class="bdash__sec">Bitácoras recientes</h3>
+      <h3 class="bdash__sec">{{ 'Bitácoras recientes' | t }}</h3>
       @if (recientes().length) {
         <ul class="bdash__list">
           @for (b of recientes(); track b.id) {
@@ -66,10 +66,10 @@
           }
         </ul>
       } @else {
-        <app-empty-state icon="📓" title="Sin bitácoras" message="Cuando se registren partes diarios e incidentes, aquí verás el pulso de la obra." />
+        <app-empty-state icon="📓" [title]="'Sin bitácoras' | t" [message]="'Cuando se registren partes diarios e incidentes, aquí verás el pulso de la obra.' | t" />
       }
 
-      <button type="button" class="btn-ghost bdash__ir" (click)="irABitacora()">Ir a Bitácora ›</button>
+      <button type="button" class="btn-ghost bdash__ir" (click)="irABitacora()">{{ 'Ir a Bitácora' | t }} ›</button>
     }
   </div>
 </div>

@@ -1,7 +1,7 @@
 <div class="screen midet">
   <header class="midet__header">
     <button type="button" class="midet__back" (click)="back()" aria-label="Atrás">←</button>
-    <h1 class="midet__title">Mi detalle</h1>
+    <h1 class="midet__title">{{ 'Mi detalle' | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -18,7 +18,7 @@
       } @else {
         <div class="midet__avatar">{{ inicial() }}</div>
       }
-      <p class="midet__nombre">{{ nombre() || 'Usuario' }}</p>
+      <p class="midet__nombre">{{ nombre() || ('Usuario' | t) }}</p>
       @if (email()) {
         <p class="midet__email">{{ email() | emailDisplay }}</p>
       }
@@ -34,10 +34,10 @@
     <!-- Datos generales -->
     <ul class="midet__info">
       @if (obra(); as o) {
-        <li><span>Obra activa</span><b>{{ o.nombre }}</b></li>
+        <li><span>{{ 'Obra activa' | t }}</span><b>{{ o.nombre }}</b></li>
       }
       @if (esConductor() && stats()?.ultima_actividad) {
-        <li><span>Última actividad</span><b>{{ fmtFechaHumana(stats()!.ultima_actividad) }}</b></li>
+        <li><span>{{ 'Última actividad' | t }}</span><b>{{ fmtFechaHumana(stats()!.ultima_actividad) }}</b></li>
       }
     </ul>
 
@@ -46,42 +46,42 @@
     } @else if (esConductor()) {
       <!-- Licencia -->
       <section class="midet__block">
-        <h2 class="midet__block-ttl">Licencia de conducir</h2>
+        <h2 class="midet__block-ttl">{{ 'Licencia de conducir' | t }}</h2>
         <ul class="midet__info">
-          <li><span>Categoría</span><b>{{ conductor()!.licencia_tipo || '—' }}</b></li>
+          <li><span>{{ 'Categoría' | t }}</span><b>{{ conductor()!.licencia_tipo || '—' }}</b></li>
           @if (conductor()!.licencia_numero) {
-            <li><span>Número</span><b>{{ conductor()!.licencia_numero }}</b></li>
+            <li><span>{{ 'Número' | t }}</span><b>{{ conductor()!.licencia_numero }}</b></li>
           }
-          <li><span>Vencimiento</span><b>{{ fmtFecha(conductor()!.licencia_vencimiento) }}</b></li>
+          <li><span>{{ 'Vencimiento' | t }}</span><b>{{ fmtFecha(conductor()!.licencia_vencimiento) }}</b></li>
           <li>
-            <span>Estado</span>
+            <span>{{ 'Estado' | t }}</span>
             <b class="midet__lic" [class.midet__lic--venc]="licEstado() === 'vencida'"
                [class.midet__lic--pv]="licEstado() === 'por_vencer'">{{ licEstadoLabel() }}</b>
           </li>
-          <li><span>Autorizado</span><b>{{ conductor()!.tipo_vehiculo_autorizado || '—' }}</b></li>
+          <li><span>{{ 'Autorizado' | t }}</span><b>{{ conductor()!.tipo_vehiculo_autorizado || '—' }}</b></li>
         </ul>
       </section>
 
       <!-- Documentos (foto ampliable) -->
       <section class="midet__block">
-        <h2 class="midet__block-ttl">Mis documentos</h2>
+        <h2 class="midet__block-ttl">{{ 'Mis documentos' | t }}</h2>
         @if (!online() && !cedulas().length && !licencias().length) {
-          <p class="midet__muted">Conéctate para ver tus documentos.</p>
+          <p class="midet__muted">{{ 'Conéctate para ver tus documentos.' | t }}</p>
         } @else if (!cedulas().length && !licencias().length) {
-          <p class="midet__muted">No hay documentos cargados.</p>
+          <p class="midet__muted">{{ 'No hay documentos cargados.' | t }}</p>
         } @else {
           <div class="midet__docs">
             @for (d of cedulas().concat(licencias()); track d.label) {
               <div class="midet__doc">
                 <span class="midet__doc-lbl">{{ d.label }}</span>
                 @if (d.esPdf) {
-                  <a class="midet__doc-pdf" [href]="d.url" target="_blank" rel="noopener">📄 Ver PDF</a>
+                  <a class="midet__doc-pdf" [href]="d.url" target="_blank" rel="noopener">📄 {{ 'Ver PDF' | t }}</a>
                 } @else if (d.url) {
                   <button type="button" class="midet__doc-img" (click)="ampliar(d.url)">
                     <img [src]="d.url" [alt]="d.label" />
                   </button>
                 } @else {
-                  <span class="midet__muted">No disponible sin conexión</span>
+                  <span class="midet__muted">{{ 'No disponible sin conexión' | t }}</span>
                 }
               </div>
             }
@@ -91,7 +91,7 @@
 
       @if (puedeVerActividad()) {
         <button type="button" class="btn-ghost midet__btn" (click)="verMiActividad()">
-          📊 Ver mi actividad completa
+          📊 {{ 'Ver mi actividad completa' | t }}
         </button>
       }
     }

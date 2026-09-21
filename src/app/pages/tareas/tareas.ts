@@ -9,6 +9,8 @@ import { PhotoSlot } from '../../shared/ui/photo-slot/photo-slot';
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
 import { SelectOption } from '../../shared/ui/select-list/select-list';
 import { EmailDisplayPipe } from '../../shared/ui/pipes/email-display.pipe';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { TareasService, UsuarioAsignable } from '../../core/services/tareas.service';
 import { InventarioService, ObraOrigen } from '../../core/services/inventario.service';
 import { Bodega, Ferreteria } from '../../core/models/inventario.model';
@@ -35,12 +37,13 @@ import { formatFechaMedia } from '../../core/util/fecha';
   selector: 'app-tareas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, CollapsibleSelect, EmailDisplayPipe],
+  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, CollapsibleSelect, EmailDisplayPipe, TranslatePipe],
   templateUrl: './tareas.html',
   styleUrl: './tareas.scss',
 })
 export class TareasPage {
   private tareas = inject(TareasService);
+  private i18n = inject(I18nService);
   private inventario = inject(InventarioService);
   private ctx = inject(UserContextService);
   private toast = inject(ToastService);
@@ -113,15 +116,15 @@ export class TareasPage {
   bodegasVinc = signal<Bodega[]>([]);
   // AI14 — vínculo por dropdowns estándar (opcionales; primera opción = ninguna).
   ferreteriaVincOptions = computed<SelectOption[]>(() => [
-    { id: '', label: '— Ninguna (sale de un almacén) —' },
+    { id: '', label: this.i18n.t('— Ninguna (sale de un almacén) —') },
     ...this.ferreteriasVinc().map((f) => ({ id: f.id, label: f.nombre })),
   ]);
   bodegaVincOptions = computed<SelectOption[]>(() => [
-    { id: '', label: '— Sin especificar —' },
+    { id: '', label: this.i18n.t('— Sin especificar —') },
     ...this.bodegasVinc().map((b) => ({ id: b.id, label: b.nombre })),
   ]);
   obraVincOptions = computed<SelectOption[]>(() => [
-    { id: '', label: '— Sin especificar —' },
+    { id: '', label: this.i18n.t('— Sin especificar —') },
     ...this.obrasVinc().map((o) => ({ id: o.id, label: o.nombre })),
   ]);
   private catalogosVincCargados = false;
@@ -181,11 +184,11 @@ export class TareasPage {
     this.submitting.set(true);
     try {
       await this.tareas.iniciar(t.id);
-      this.toast.success('Tarea iniciada.');
+      this.toast.success(this.i18n.t('Tarea iniciada.'));
       this.cerrar();
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo iniciar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo iniciar.'));
     } finally {
       this.submitting.set(false);
     }
@@ -215,7 +218,7 @@ export class TareasPage {
     try {
       await this.tareas.iniciar(t.id);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo iniciar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo iniciar.'));
       this.submitting.set(false);
       return;
     }
@@ -254,11 +257,11 @@ export class TareasPage {
     this.submitting.set(true);
     try {
       await this.tareas.completar(t.id, this.justificacion().trim() || null, this.fotoCompletar()?.blob ?? null);
-      this.toast.success('Tarea completada.');
+      this.toast.success(this.i18n.t('Tarea completada.'));
       this.cerrar();
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo completar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo completar.'));
     } finally {
       this.submitting.set(false);
     }
@@ -348,11 +351,11 @@ export class TareasPage {
   async crear(): Promise<void> {
     if (this.submitting()) return;
     if (!this.nuevoTitulo().trim()) {
-      this.toast.error('Escribe el título de la tarea.');
+      this.toast.error(this.i18n.t('Escribe el título de la tarea.'));
       return;
     }
     if (!this.asignSel()) {
-      this.toast.error('Elige a quién se la asignas.');
+      this.toast.error(this.i18n.t('Elige a quién se la asignas.'));
       return;
     }
     // AG15 — arma el vínculo si se eligió uno.
@@ -383,11 +386,11 @@ export class TareasPage {
         linkedTipo,
         linkedParams,
       });
-      this.toast.success('Tarea creada.');
+      this.toast.success(this.i18n.t('Tarea creada.'));
       this.cerrarCrear();
       await this.load();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo crear la tarea.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear la tarea.'));
     } finally {
       this.submitting.set(false);
     }

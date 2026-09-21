@@ -18,6 +18,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { fechaLocalISO } from '../../../core/util/fecha';
 import { Proyecto } from '../../../core/models/bitacora.model';
 
@@ -34,7 +36,7 @@ const TOTAL = 6;
   selector: 'app-orden-trabajo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, BigConfirm, ConfirmDialog, SignaturePad, Skeleton],
+  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, BigConfirm, ConfirmDialog, SignaturePad, Skeleton, TranslatePipe],
   templateUrl: './orden-trabajo.html',
   styleUrl: './orden-trabajo.scss',
 })
@@ -47,6 +49,7 @@ export class OrdenTrabajoPage implements OnDestroy {
   private ctx = inject(UserContextService);
   private navGuard = inject(NavGuardService);
   private borrador = inject(BorradorService);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
 
@@ -173,14 +176,14 @@ export class OrdenTrabajoPage implements OnDestroy {
         this.cliCedula.set(draft.cliCedula ?? '');
         this.cliRolDesc.set(draft.cliRolDesc ?? 'Cliente');
         this.step.set(draft.step ?? 1);
-        this.toast.show('Recuperamos tu orden a medio llenar. Las firmas hay que capturarlas de nuevo.', 'info', 4500);
+        this.toast.show(this.i18n.t('Recuperamos tu orden a medio llenar. Las firmas hay que capturarlas de nuevo.'), 'info', 4500);
       } else {
         const obra = this.ctx.obraActiva();
         if (obra) this.proyectoId.set(obra.id);
         else if (proyectos.length === 1) this.proyectoId.set(proyectos[0].id);
       }
     } catch {
-      this.toast.error('No se pudieron cargar las obras.');
+      this.toast.error(this.i18n.t('No se pudieron cargar las obras.'));
     } finally {
       this.loading.set(false);
       this.hydrated = true;
@@ -214,9 +217,11 @@ export class OrdenTrabajoPage implements OnDestroy {
   // ── Navegación ─────────────────────────────────────────────────────────────
 
   primaryLabel = computed(() =>
-    this.step() >= this.total ? (this.submitting() ? 'Guardando…' : 'Enviar orden') : 'Siguiente',
+    this.step() >= this.total
+      ? (this.submitting() ? this.i18n.t('Guardando…') : this.i18n.t('Enviar orden'))
+      : this.i18n.t('Siguiente'),
   );
-  backLabel = computed(() => (this.step() > 1 ? 'Atrás' : 'Cancelar'));
+  backLabel = computed(() => (this.step() > 1 ? this.i18n.t('Atrás') : this.i18n.t('Cancelar')));
   primaryDisabled = computed(() => this.step() >= this.total && this.submitting());
 
   onPrimary(): void {
@@ -227,32 +232,32 @@ export class OrdenTrabajoPage implements OnDestroy {
     const s = this.step();
     // Validaciones por paso.
     if (s === 1 && !this.proyectoId()) {
-      this.toast.error('Elige la obra.');
+      this.toast.error(this.i18n.t('Elige la obra.'));
       return;
     }
     if (s === 2 && !this.descripcion().trim()) {
-      this.toast.error('Describe el trabajo que se pidió.');
+      this.toast.error(this.i18n.t('Describe el trabajo que se pidió.'));
       return;
     }
     if (s === 4) {
       await this.capturarFirmaPaso();
       if (!this.ingFirmada()) {
-        this.toast.error('Falta la firma del ingeniero.');
+        this.toast.error(this.i18n.t('Falta la firma del ingeniero.'));
         return;
       }
       if (!this.ingNombre().trim()) {
-        this.toast.error('Escribe el nombre del ingeniero.');
+        this.toast.error(this.i18n.t('Escribe el nombre del ingeniero.'));
         return;
       }
     }
     if (s === 5) {
       await this.capturarFirmaPaso();
       if (!this.cliFirmada()) {
-        this.toast.error('Falta la firma del cliente.');
+        this.toast.error(this.i18n.t('Falta la firma del cliente.'));
         return;
       }
       if (!this.cliNombre().trim()) {
-        this.toast.error('Escribe el nombre del cliente.');
+        this.toast.error(this.i18n.t('Escribe el nombre del cliente.'));
         return;
       }
     }
@@ -282,11 +287,11 @@ export class OrdenTrabajoPage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.proyectoId() || !this.descripcion().trim()) {
-      this.toast.error('Faltan datos de la orden.');
+      this.toast.error(this.i18n.t('Faltan datos de la orden.'));
       return;
     }
     if (!this.ingFirmada() || !this.cliFirmada()) {
-      this.toast.error('Faltan las firmas. Ambas son obligatorias.');
+      this.toast.error(this.i18n.t('Faltan las firmas. Ambas son obligatorias.'));
       this.step.set(this.ingFirmada() ? 5 : 4);
       return;
     }
@@ -317,7 +322,7 @@ export class OrdenTrabajoPage implements OnDestroy {
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar la orden.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la orden.'));
     } finally {
       this.submitting.set(false);
     }

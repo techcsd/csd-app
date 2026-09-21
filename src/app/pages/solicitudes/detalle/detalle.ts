@@ -6,6 +6,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -40,7 +42,7 @@ interface EditItem {
   selector: 'app-requisicion-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, TranslatePipe],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
@@ -50,6 +52,7 @@ export class RequisicionDetallePage {
   private ctx = inject(UserContextService);
   private net = inject(NetworkService);
   private toast = inject(ToastService);
+  private i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
@@ -173,7 +176,7 @@ export class RequisicionDetallePage {
   async refrescar(): Promise<void> {
     if (this.refreshing()) return;
     if (!this.net.online()) {
-      this.toast.error('Sin conexión. Se muestra la última versión guardada.');
+      this.toast.error(this.i18n.t('Sin conexión. Se muestra la última versión guardada.'));
       return;
     }
     this.refreshing.set(true);
@@ -218,11 +221,11 @@ export class RequisicionDetallePage {
     const r = this.req();
     if (!r || this.procesando()) return;
     if (!this.bodegaId()) {
-      this.toast.error('Elige el almacén de despacho.');
+      this.toast.error(this.i18n.t('Elige el almacén de despacho.'));
       return;
     }
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para aprobar.');
+      this.toast.error(this.i18n.t('Necesitas conexión para aprobar.'));
       return;
     }
     this.procesando.set(true);
@@ -241,11 +244,11 @@ export class RequisicionDetallePage {
           talla: i.talla,
         })),
       });
-      this.toast.success('Requisición aprobada. Se despachó lo disponible; el faltante generó una compra.');
+      this.toast.success(this.i18n.t('Requisición aprobada. Se despachó lo disponible; el faltante generó una compra.'));
       this.modo.set('none');
       await this.refrescar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo aprobar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo aprobar.'));
     } finally {
       this.procesando.set(false);
     }
@@ -255,17 +258,17 @@ export class RequisicionDetallePage {
     const r = this.req();
     if (!r || this.procesando()) return;
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para rechazar.');
+      this.toast.error(this.i18n.t('Necesitas conexión para rechazar.'));
       return;
     }
     this.procesando.set(true);
     try {
       await this.service.rechazarRequisicion(r.id, this.rechazoNota().trim() || null);
-      this.toast.success('Requisición rechazada.');
+      this.toast.success(this.i18n.t('Requisición rechazada.'));
       this.modo.set('none');
       await this.refrescar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo rechazar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo rechazar.'));
     } finally {
       this.procesando.set(false);
     }
@@ -327,11 +330,11 @@ export class RequisicionDetallePage {
     if (!r || this.procesando()) return;
     const items = this.editItems().filter((it) => it.cantidad > 0);
     if (!items.length) {
-      this.toast.error('Deja al menos un renglón con cantidad.');
+      this.toast.error(this.i18n.t('Deja al menos un renglón con cantidad.'));
       return;
     }
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para guardar los cambios.');
+      this.toast.error(this.i18n.t('Necesitas conexión para guardar los cambios.'));
       return;
     }
     this.procesando.set(true);
@@ -349,11 +352,11 @@ export class RequisicionDetallePage {
           talla: it.talla,
         })),
       });
-      this.toast.success(reenviada ? 'Requisición corregida y reenviada para aprobación.' : 'Requisición actualizada.');
+      this.toast.success(reenviada ? this.i18n.t('Requisición corregida y reenviada para aprobación.') : this.i18n.t('Requisición actualizada.'));
       this.modo.set('none');
       await this.refrescar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.procesando.set(false);
     }
@@ -391,21 +394,21 @@ export class RequisicionDetallePage {
     if (!r || this.procesando()) return;
     const motivo = this.rechazoNota().trim();
     if (!motivo) {
-      this.toast.error('Escribe el motivo de la cancelación.');
+      this.toast.error(this.i18n.t('Escribe el motivo de la cancelación.'));
       return;
     }
     if (!this.net.online()) {
-      this.toast.error('Necesitas conexión para cancelar.');
+      this.toast.error(this.i18n.t('Necesitas conexión para cancelar.'));
       return;
     }
     this.procesando.set(true);
     try {
       await this.service.cancelar(r.id, motivo);
-      this.toast.success('Requisición cancelada.');
+      this.toast.success(this.i18n.t('Requisición cancelada.'));
       this.modo.set('none');
       await this.refrescar();
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo cancelar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo cancelar.'));
     } finally {
       this.procesando.set(false);
     }
@@ -423,14 +426,14 @@ export class RequisicionDetallePage {
 
   estadoLabel(e: string): string {
     switch (e) {
-      case 'pendiente': return 'Pendiente';
-      case 'aprobada': return 'Aprobada';
-      case 'por_despachar': return 'Por despachar';
-      case 'entregada': return 'Entregada';
+      case 'pendiente': return this.i18n.t('Pendiente');
+      case 'aprobada': return this.i18n.t('Aprobada');
+      case 'por_despachar': return this.i18n.t('Por despachar');
+      case 'entregada': return this.i18n.t('Entregada');
       case 'completada':
-      case 'cerrada': return 'Completada';
-      case 'rechazada': return 'Rechazada';
-      case 'cancelada': return 'Cancelada';
+      case 'cerrada': return this.i18n.t('Completada');
+      case 'rechazada': return this.i18n.t('Rechazada');
+      case 'cancelada': return this.i18n.t('Cancelada');
       default: return e;
     }
   }

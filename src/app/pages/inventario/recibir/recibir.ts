@@ -6,6 +6,8 @@ import { DecimalPipe, Location } from '@angular/common';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService, EntradaFerreteriaPendiente } from '../../../core/services/inventario.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -30,7 +32,7 @@ interface RecibirDraft {
   selector: 'app-recibir-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, FormsModule, DecimalPipe, SyncBar, PhotoSlot, SignaturePad],
+  imports: [Skeleton, EmptyState, FormsModule, DecimalPipe, SyncBar, PhotoSlot, SignaturePad, TranslatePipe],
   templateUrl: './recibir.html',
   styleUrl: './recibir.scss',
 })
@@ -41,6 +43,7 @@ export class RecibirConducePage {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private ctx = inject(UserContextService);
+  private i18n = inject(I18nService);
 
   private sig = viewChild(SignaturePad);
 
@@ -100,7 +103,7 @@ export class RecibirConducePage {
       if (!this.hydrated || this.submitting() || !snap.expandedId) return;
       this.autosave.queue(this.clave, snap, {
         tipo: 'recibir',
-        etiqueta: 'Recepción de conduce',
+        etiqueta: this.i18n.t('Recepción de conduce'),
         ruta: this.location.path(),
       });
     });
@@ -131,9 +134,9 @@ export class RecibirConducePage {
         e.items.map((i) => ({ articulo_id: i.articulo_id, cantidad: i.cantidad })),
       );
       this.entradasFerreteria.update((list) => list.filter((x) => x.id !== e.id));
-      this.toast.success('Entrada registrada. Se sube al stock al sincronizar.');
+      this.toast.success(this.i18n.t('Entrada registrada. Se sube al stock al sincronizar.'));
     } catch (err) {
-      this.toast.error(err instanceof Error ? err.message : 'No se pudo dar entrada.');
+      this.toast.error(err instanceof Error ? err.message : this.i18n.t('No se pudo dar entrada.'));
     } finally {
       this.confirmandoId.set(null);
     }
@@ -245,15 +248,15 @@ export class RecibirConducePage {
     if (!c || this.submitting()) return;
     // AE — el receptor debe firmar la recepción (prueba de entrega, AC7).
     if (!this.receptorNombre().trim()) {
-      this.toast.error('Escribe el nombre de quien recibe.');
+      this.toast.error(this.i18n.t('Escribe el nombre de quien recibe.'));
       return;
     }
     if (this.faltanFotos()) {
-      this.toast.error(`Toma al menos ${this.MIN_FOTOS} fotos de la mercancía recibida.`);
+      this.toast.error(this.i18n.t('Toma al menos {n} fotos de la mercancía recibida.', { n: this.MIN_FOTOS }));
       return;
     }
     if (!this.firmaBlob()) {
-      this.toast.error('Falta la firma de quien recibe.');
+      this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
       return;
     }
     this.submitting.set(true);
@@ -283,9 +286,9 @@ export class RecibirConducePage {
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.conduces.update((list) => list.filter((x) => x.id !== c.id));
       this.cerrarDetalle();
-      this.toast.success('Recepción guardada.');
+      this.toast.success(this.i18n.t('Recepción guardada.'));
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {
       this.submitting.set(false);
     }

@@ -2,32 +2,32 @@
   <header class="mis-partes__header">
     <button type="button" class="mis-partes__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="mis-partes__icon">📋</span>
-    <h1 class="mis-partes__title">Mis bitácoras</h1>
+    <h1 class="mis-partes__title">{{ 'Mis bitácoras' | t }}</h1>
   </header>
 
   <div class="screen__body">
     <!-- V1 — En proceso / Pendientes de envío (borradores + envíos en cola) -->
     @if (proceso().length) {
       <section class="mis-partes__proceso">
-        <h2 class="mis-partes__proceso-title">En proceso / Pendientes de envío ({{ proceso().length }})</h2>
+        <h2 class="mis-partes__proceso-title">{{ 'En proceso / Pendientes de envío' | t }} ({{ proceso().length }})</h2>
         @for (p of proceso(); track p.id) {
           <div class="proc-row" [attr.data-kind]="p.kind">
             <div class="proc-row__info">
               <span class="proc-row__label">{{ p.etiqueta }}</span>
               @if (p.kind === 'borrador') {
-                <span class="proc-row__meta">Sin enviar · guardado {{ fmtProceso(p.updated_at) }}</span>
+                <span class="proc-row__meta">{{ 'Sin enviar · guardado' | t }} {{ fmtProceso(p.updated_at) }}</span>
               } @else if (p.estado === 'error') {
-                <span class="proc-row__meta proc-row__meta--error">⚠ Con problema al enviar</span>
+                <span class="proc-row__meta proc-row__meta--error">⚠ {{ 'Con problema al enviar' | t }}</span>
               } @else {
-                <span class="proc-row__meta proc-row__meta--sending">🔄 Enviando…</span>
+                <span class="proc-row__meta proc-row__meta--sending">🔄 {{ 'Enviando…' | t }}</span>
               }
             </div>
             <div class="proc-row__actions">
               @if (p.kind === 'borrador') {
-                <button type="button" class="btn-cta proc-row__btn" (click)="retomar(p)">Retomar</button>
-                <button type="button" class="btn-ghost proc-row__btn" (click)="pedirDescartar(p)">Descartar</button>
+                <button type="button" class="btn-cta proc-row__btn" (click)="retomar(p)">{{ 'Retomar' | t }}</button>
+                <button type="button" class="btn-ghost proc-row__btn" (click)="pedirDescartar(p)">{{ 'Descartar' | t }}</button>
               } @else {
-                <button type="button" class="btn-ghost proc-row__btn" (click)="irPendientes()">Ver envío</button>
+                <button type="button" class="btn-ghost proc-row__btn" (click)="irPendientes()">{{ 'Ver envío' | t }}</button>
               }
             </div>
           </div>
@@ -40,24 +40,24 @@
     } @else if (error()) {
       <app-empty-state
         icon="⚠️"
-        title="No se pudieron cargar tus bitácoras"
-        message="Revisa tu conexión e inténtalo de nuevo."
-        ctaLabel="Reintentar"
+        [title]="'No se pudieron cargar tus bitácoras' | t"
+        [message]="'Revisa tu conexión e inténtalo de nuevo.' | t"
+        [ctaLabel]="'Reintentar' | t"
         (action)="load()"
       />
     } @else {
       <!-- AW5 — Mis bitácoras vs Todas (solo roles con permiso) -->
       @if (puedeVerTodas()) {
         <div class="mis-partes__tabs">
-          <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'mias'" (click)="setVista('mias')">Mis bitácoras</button>
-          <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'todas'" (click)="setVista('todas')">Todas las bitácoras</button>
+          <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'mias'" (click)="setVista('mias')">{{ 'Mis bitácoras' | t }}</button>
+          <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'todas'" (click)="setVista('todas')">{{ 'Todas las bitácoras' | t }}</button>
         </div>
       }
       <!-- Q9 — filtro por obra (segmentar) con conteo -->
       @if (obras().length > 1) {
         <div class="mis-partes__filtros">
           <button type="button" class="mis-partes__chip" [class.mis-partes__chip--on]="filtroObra() === ''" (click)="setFiltroObra('')">
-            Todas ({{ bitacoras().length }})
+            {{ 'Todas' | t }} ({{ bitacoras().length }})
           </button>
           @for (o of obras(); track o.nombre) {
             <button type="button" class="mis-partes__chip" [class.mis-partes__chip--on]="filtroObra() === o.nombre" (click)="setFiltroObra(o.nombre)">
@@ -79,15 +79,15 @@
               @if (vista() === 'todas' && b.autor_nombre) { 🧑‍🔧 {{ b.autor_nombre }} · }
               📅 {{ fmtFecha(b.fecha) }}
               @if (esDeOtraFecha(b)) {
-                <span class="bit-row__otra-fecha" title="La bitácora es de otra fecha">otra fecha</span>
-                @if (b.created_at) { <span class="bit-row__enviada">· enviada {{ fmtHora(b.created_at) }}</span> }
+                <span class="bit-row__otra-fecha" [title]="'La bitácora es de otra fecha' | t">{{ 'otra fecha' | t }}</span>
+                @if (b.created_at) { <span class="bit-row__enviada">· {{ 'enviada' | t }} {{ fmtHora(b.created_at) }}</span> }
               }
             </span>
             @if (b.danos?.length) {
-              <span class="bit-row__danos">🧱 {{ b.danos!.length }} {{ b.danos!.length === 1 ? 'daño' : 'daños' }}</span>
+              <span class="bit-row__danos">🧱 {{ b.danos!.length }} {{ b.danos!.length === 1 ? ('daño' | t) : ('daños' | t) }}</span>
             }
             @if (b.moldes?.length) {
-              <span class="bit-row__danos">📐 {{ b.moldes!.length }} {{ b.moldes!.length === 1 ? 'molde' : 'moldes' }}</span>
+              <span class="bit-row__danos">📐 {{ b.moldes!.length }} {{ b.moldes!.length === 1 ? ('molde' | t) : ('moldes' | t) }}</span>
             }
           </div>
           <span class="bit-row__chev">›</span>
@@ -95,9 +95,9 @@
       } @empty {
         <app-empty-state
           icon="📋"
-          title="Todavía no tienes bitácoras"
-          message="Cada día registras una bitácora de tu obra (personal, actividades, problemas y fotos). Aquí verás el historial de las que envíes."
-          ctaLabel="Nueva bitácora"
+          [title]="'Todavía no tienes bitácoras' | t"
+          [message]="'Cada día registras una bitácora de tu obra (personal, actividades, problemas y fotos). Aquí verás el historial de las que envíes.' | t"
+          [ctaLabel]="'Nueva bitácora' | t"
           (action)="nueva()"
         />
       }
@@ -106,10 +106,10 @@
 
   <app-confirm-dialog
     [open]="!!confirmar()"
-    title="¿Descartar el borrador?"
-    message="Perderás lo que llevas llenado en ese documento."
-    confirmLabel="Sí, descartar"
-    cancelLabel="Cancelar"
+    [title]="'¿Descartar el borrador?' | t"
+    [message]="'Perderás lo que llevas llenado en ese documento.' | t"
+    [confirmLabel]="'Sí, descartar' | t"
+    [cancelLabel]="'Cancelar' | t"
     tone="danger"
     (confirmed)="descartar()"
     (cancelled)="confirmar.set(null)"

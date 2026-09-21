@@ -6,6 +6,8 @@ import { SelectorCategorias } from '../../../shared/ui/selector-categorias/selec
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardFooter } from '../../../shared/ui/wizard-footer/wizard-footer';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -36,7 +38,7 @@ interface GrupoResumen {
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet, QtyInput],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet, QtyInput, TranslatePipe],
   templateUrl: './pedir.html',
   styleUrl: '../../inventario/salida/salida.scss',
 })
@@ -49,6 +51,7 @@ export class PedirPage implements OnDestroy {
   private location = inject(Location);
   private ctx = inject(UserContextService);
   private navGuard = inject(NavGuardService);
+  private i18n = inject(I18nService);
 
   hoja = signal<'seleccion' | 'resumen' | 'exito'>('seleccion');
 
@@ -184,12 +187,12 @@ export class PedirPage implements OnDestroy {
   async submit(): Promise<void> {
     if (this.submitting()) return;
     if (!this.proyectoId()) {
-      this.toast.error('Elige la obra.');
+      this.toast.error(this.i18n.t('Elige la obra.'));
       return;
     }
     const items = this.cart().filter((l) => l.cantidad > 0);
     if (!items.length) {
-      this.toast.error('Agrega al menos un material.');
+      this.toast.error(this.i18n.t('Agrega al menos un material.'));
       return;
     }
     this.submitting.set(true);
@@ -211,7 +214,7 @@ export class PedirPage implements OnDestroy {
       });
       this.hoja.set('exito');
     } catch (e) {
-      this.toast.error(e instanceof Error ? e.message : 'No se pudo enviar.');
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar.'));
     } finally {
       this.submitting.set(false);
     }
@@ -223,28 +226,28 @@ export class PedirPage implements OnDestroy {
   shareDoc = computed<ExportDoc>(() => {
     const obra = this.proyectos().find((p) => p.id === this.proyectoId())?.nombre ?? '—';
     const meta = [
-      { label: 'Obra', value: obra },
-      { label: 'Urgencia', value: this.urgencia() === 'urgente' ? 'URGENTE' : 'Normal' },
-      { label: 'Fecha', value: formatFechaMedia(new Date().toISOString()) },
+      { label: this.i18n.t('Obra'), value: obra },
+      { label: this.i18n.t('Urgencia'), value: this.urgencia() === 'urgente' ? this.i18n.t('URGENTE') : this.i18n.t('Normal') },
+      { label: this.i18n.t('Fecha'), value: formatFechaMedia(new Date().toISOString()) },
       // BO8 — 'T00:00:00' fuerza parse LOCAL (una fecha date-only en UTC se corre de día en UTC-4).
-      ...(this.fechaNecesidad() ? [{ label: 'Necesita para', value: formatFechaMedia(this.fechaNecesidad() + 'T00:00:00') }] : []),
-      ...(this.notas().trim() ? [{ label: 'Nota', value: this.notas().trim() }] : []),
+      ...(this.fechaNecesidad() ? [{ label: this.i18n.t('Necesita para'), value: formatFechaMedia(this.fechaNecesidad() + 'T00:00:00') }] : []),
+      ...(this.notas().trim() ? [{ label: this.i18n.t('Nota'), value: this.notas().trim() }] : []),
     ];
     const rows = this.grupos().flatMap((g) =>
       g.lineas.map((l) => [g.categoria, this.descripcionDe(l), l.cantidad, l.unidad]),
     );
     return {
-      title: 'Requisición de material',
+      title: this.i18n.t('Requisición de material'),
       filenameBase: 'requisicion-material',
       meta,
-      table: { columns: ['Categoría', 'Artículo', 'Cantidad', 'Unidad'], rows, colWeights: [3, 5, 1.5, 1.5] },
-      footer: `Total: ${this.totalItems()} artículo(s)`,
+      table: { columns: [this.i18n.t('Categoría'), this.i18n.t('Artículo'), this.i18n.t('Cantidad'), this.i18n.t('Unidad')], rows, colWeights: [3, 5, 1.5, 1.5] },
+      footer: this.i18n.t('Total: {n} artículo(s)', { n: this.totalItems() }),
     };
   });
 
   compartir(): void {
     if (!this.cart().length) {
-      this.toast.error('No hay material para compartir.');
+      this.toast.error(this.i18n.t('No hay material para compartir.'));
       return;
     }
     this.shareOpen.set(true);
