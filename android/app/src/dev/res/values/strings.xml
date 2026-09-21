@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- BU1 F2 — overrides del flavor dev: nombre "CSD App DEV" en el launcher + esquema
+     propio para no chocar con la app de prod instalada al lado. El applicationId ya
+     lleva sufijo .dev (build.gradle); estos strings alinean el nombre visible. -->
+<resources>
+    <string name="app_name">CSD App DEV</string>
+    <string name="title_activity_main">CSD App DEV</string>
+    <string name="package_name">com.constructorasd.csdapp.dev</string>
+    <string name="custom_url_scheme">com.constructorasd.csdapp.dev</string>
+</resources>

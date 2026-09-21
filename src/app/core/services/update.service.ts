@@ -7,8 +7,10 @@ import { NavGuardService } from './nav-guard.service';
 import { SyncService } from '../sync/sync.service';
 import { environment } from '../../../environments/environment';
 
-const VERSION_URL =
-  'https://jeeqhgccqefbqilntcpu.supabase.co/storage/v1/object/public/app-releases/version.json';
+// BU1 — el version.json vive en el bucket app-releases del proyecto del ENTORNO
+// (dev tiene su propio historial/APK). Se deriva de environment.supabaseUrl; nunca
+// se hardcodea el ref de prod. Una app dev jamás mira el version.json de prod.
+const VERSION_URL = `${environment.supabaseUrl}/storage/v1/object/public/app-releases/version.json`;
 
 /**
  * PWA update handling (Deployment doc §3 / AU10). Una PWA es una página web: cuando
@@ -130,7 +132,11 @@ export class UpdateService {
     try {
       const res = await fetch(VERSION_URL, { cache: 'no-store' });
       if (!res.ok) return;
-      const info = (await res.json()) as { versionName: string };
+      const info = (await res.json()) as { versionName: string; entorno?: string };
+      // BU1 F2.4 — solo aceptamos el version.json de NUESTRO propio entorno: una app
+      // prod jamás ofrece instalar un APK dev y viceversa (el bucket es por proyecto,
+      // pero esto lo blinda por si alguien apunta mal la URL).
+      if (info.entorno && info.entorno !== environment.entorno) return;
       if (this.isNewer(info.versionName, environment.version)) {
         this.toast.show(
           `Hay una versión nueva (${info.versionName}). Descárgala desde "CSD App" en el sistema.`,

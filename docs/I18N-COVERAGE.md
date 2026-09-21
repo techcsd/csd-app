@@ -8,7 +8,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
 |---|---:|---:|---:|---:|:--:|
-|  | 0 | 15 | 0% | 0% |  |
+|  | 0 | 22 | 0% | 0% |  |
 | pages/actualizar | 23 | 1 | 96% | 0% |  |
 | pages/admin | 12 | 0 | 100% | 0% |  |
 | pages/admin/auditoria | 22 | 0 | 100% | 0% |  |
@@ -87,7 +87,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 23 | 0 | 100% | 0% |  |
-| pages/perfil | 43 | 0 | 100% | 0% | ✅ |
+| pages/perfil | 46 | 0 | 100% | 0% | ✅ |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
 | pages/proyectos/avisos | 4 | 0 | 100% | 0% |  |

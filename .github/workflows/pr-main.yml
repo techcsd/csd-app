@@ -1,0 +1,23 @@
+# BU1 — verifica que un PR hacia `main` construye en PROD (con los guards de la regla
+# 18). No publica nada: solo build + guards. La publicación real (APK/PWA) es un paso
+# aparte de Xaviel con OK. environment.prod.ts trae la anon key pública → no hacen falta
+# secrets para construir.
+name: pr-main
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  build-prod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      # build-env prod = guards (verify-sin-ref-hardcodeado + tokens + i18n + dev-strings)
+      # + ng build --configuration production. Rompe el PR si algo no cumple.
+      - run: node scripts/build-env.mjs --env prod
+        env:
+          SGC_ENV: prod

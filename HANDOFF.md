@@ -1,5 +1,27 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 21/09/2026 — PROMPT-59 (BU1 hijo) — **Entorno de desarrollo (dev/prod) construido** · rama `feature/bu1-entorno-dev` · release gateado
+
+**TL;DR:** el padre (SGC) ya entregó BU1 (web 1.140.0 + `sgc-dev` + regla 18 vivos), así que el hijo se cableó **de verdad** contra `sgc-dev` (`fzfrnrvndzrjwyvdpkgg`), no en placebo. **La app ahora tiene dos entornos** con separación total y **regla 18** (nada a prod sin pasar por dev; scripts `--env` obligatorio; prod pide confirmación). **Verificado:** `npm run build` verde con `SGC_ENV=dev` y `prod`; guards verdes (nuevo `verify-sin-ref-hardcodeado` + tokens + i18n + dev-strings); **APK dev firmado OK** (`app-dev-release.apk`, `com.constructorasd.csdapp.dev`, `2.26.1-dev`, cert de prod `3c5316d8…`) y **v2.26.1 registrada en dev**; **regla 18 probada** (`release-apk --env prod` consulta el `app_versiones` de dev). Guía nueva: `docs/ENTORNOS.md`. **Nace la regla 18** en `CLAUDE.md`.
+
+### ✅ En dev (ya vive / probado)
+- Código del entorno dev completo en `feature/bu1-entorno-dev`; **APK dev construido y firmado**; **v2.26.1 registrada en el `app_versiones` de dev**. `npm run build:dev` verde (PWA "CSD App DEV", título `[DEV]`, cinta DEV, iconos naranja).
+- Local: `npm run env:dev` apunta el `ng serve` a `sgc-dev`; sin config → pantalla "Sin proyecto configurado".
+- **Falta (físico Xaviel):** DNS `app-dev.` + Vercel Preview `dev` para que `app-dev.sgcconstructorasd.com` sirva la PWA dev; instalar PWA dev + APK `.dev` en el teléfono; **device-QA en dev** (6 fotos conduce externo, borradores, English, despacho renglón 0, transferir conduce). Firebase app `.dev` para push (opcional; hoy APK dev sin push, avisado en "Acerca de").
+
+### ⏳ En prod (gateado — espera OK de Xaviel)
+- **Nada nuevo en prod aún.** El estreno por el flujo nuevo: merge `feature/bu1-entorno-dev` → `dev` (push con OK) → device-QA → **con OK**: PR `dev → main` → `npm run apk -- --env prod` → `npm run apk:publish -- --env prod` (pasa la regla 18 porque ya salió en dev).
+- El repo ya está en **2.26.1 PUBLICADA + MÍNIMA** (sesión anterior); el estreno del flujo arranca desde 2.26.1. La **infra dev** (cinta/flavor/build-env) puede ir en un bump **2.27.0** siguiendo el mismo camino.
+- **Pendiente físico prod:** proteger `main` de `techcsd/csd-app` (`gh api -X PUT repos/techcsd/csd-app/branches/main/protection --input .github/branch-protection-main.json`, con OK).
+
+### Verify on resume
+`SGC_ENV=prod node scripts/build-env.mjs` y `SGC_ENV=dev node scripts/build-env.mjs` → ambos verde; `node scripts/verify-sin-ref-hardcodeado.mjs` verde; APK dev en `android/app/build/outputs/apk/dev/release/app-dev-release.apk`.
+
+### Rollback
+Desinstalar el flavor `.dev` no toca prod; `environment.ts` se regenera con `npm run env:dev|prod`; Vercel: quitar el dominio `app-dev.`; código: `git revert`. Detalle en `docs/ENTORNOS.md` §Rollback.
+
+---
+
 ## 🟢 SESIÓN 21/09/2026 — PROMPT-57 (cont.) — **Inglés cubre la app (96%, sale de beta)** · **RELEASE 2.26.1 PUBLICADA + MÍNIMA FORZADA** · PWA→main desplegada
 
 **RELEASE 2.26.1 — ✅ PUBLICADA + MÍNIMA (con OK de Xaviel: "do all the stuff" → "yes, do it" para forzar):** bump 4 sitios (`environment(.prod).ts`, `android build.gradle`, `release-apk VERSION`), APK firmado (cert prod `3c5316d8…5065`, v1+v2+v3), **Y1 registrado** (1 mejora curada: inglés completo), subido al bucket (`csd-app-2.26.1.apk` + latest + version.json con `min_version=2.26.1`), **apk_url actualizado**. **PUBLICADA = 2.26.1 · MÍNIMA = 2.26.1** (Xaviel pidió forzar tras publicar). Gate verificado: `version_publicada()` → **pub 2.26.1 / min 2.26.1 / code 2026001 / min_code 2026001**. Higiene de flags OK (solo 2.26.1 `minima=true`; 2.26.0 quedó `publicada`, minima off). **PWA:** `main` estaba en 2.25.0 (todo el round BT vivía solo en `bt-round-2.26.0`); se hizo **fast-forward de main + push → Vercel** para que el iPhone reciba 2.26.1. **Device-QA de 2.26.0 sigue pendiente** (ver 18/09); si algo grave, rollback abajo.

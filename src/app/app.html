@@ -1,8 +1,29 @@
-<app-toast-host />
-<app-permiso-host />
-<app-in-app-camera />
-<app-alarma-host />
-<app-permisos-onboarding />
+@if (sinProyecto) {
+  <!-- BU1 F0: `ng serve` sin proyecto configurado. La app NO se conecta a nada. -->
+  <div class="no-project">
+    <div class="no-project__card">
+      <span class="no-project__icon">🧩</span>
+      <h1 class="no-project__title">Sin proyecto configurado</h1>
+      <p class="no-project__msg">
+        Corre <code>npm run env:dev</code> para apuntar el <code>ng serve</code> al
+        entorno de desarrollo (nunca a producción por defecto — regla 18).
+      </p>
+    </div>
+  </div>
+} @else {
+  <!-- BU1 F1: cinta DEV (esquina superior). Se ve sobre TODO el shell, incluidos
+       login/PIN. Solo en entorno dev; en prod no existe. -->
+  @if (esDev) {
+    <div class="dev-ribbon" role="status" aria-label="Entorno de desarrollo">
+      DEV · {{ refCorto }}
+    </div>
+  }
+
+  <app-toast-host />
+  <app-permiso-host />
+  <app-in-app-camera />
+  <app-alarma-host />
+  <app-permisos-onboarding />
 
 @if (idiomaOnboarding.mostrar() && !enAuth() && !version.debeActualizar()) {
   <!-- BS4: diálogo de primer ingreso de idioma (bloqueante, una sola vez). No se
@@ -78,4 +99,5 @@
     </div>
   }
   <router-outlet />
+  }
 }

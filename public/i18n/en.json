@@ -1,4 +1,7 @@
 {
+  "Entorno": "Environment",
+  "Push": "Push",
+  "No disponible en este build": "Not available in this build",
   "Escribe tu PIN": "Enter your PIN",
   "Para entrar a la app.": "To enter the app.",
   "Te quedan {n} intento(s).": "{n} attempt(s) left.",

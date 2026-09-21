@@ -27,6 +27,17 @@ export class PushService {
   private started = false;
   private token: string | null = null;
 
+  /** BU1 F2.1 — ¿la plataforma soporta push? (nativo). En web/PWA no aplica. */
+  get soportado(): boolean {
+    return Capacitor.isNativePlatform();
+  }
+  /** ¿Hay push REAL disponible? Requiere FCM configurado (google-services.json).
+   *  El flavor dev sin el JSON de Firebase nunca obtiene token → false; "Acerca de"
+   *  lo muestra para que se sepa que ese build no recibe push. */
+  get disponible(): boolean {
+    return !!this.token;
+  }
+
   /** Se llama una vez al arrancar la app (App). No-op en web/PWA. */
   async init(): Promise<void> {
     if (this.started || !Capacitor.isNativePlatform()) return;

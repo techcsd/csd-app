@@ -1,5 +1,6 @@
 import Dexie, { Table } from 'dexie';
 import { SyncState } from '../../shared/ui/sync-badge/sync-badge';
+import { environment } from '../../../environments/environment';
 
 /** Cached catalogue (materiales, vehículos, proyectos, actividades…). */
 export interface CatalogoEntry {
@@ -144,7 +145,11 @@ export class AppDb extends Dexie {
   posiciones!: Table<PosicionBuffer, number>;
 
   constructor() {
-    super('csd-app');
+    // BU1 F1.3 — base separada por entorno: dev usa `csd-dev` para que instalar prod
+    // y dev en el mismo navegador no mezcle caché ni outbox. PROD conserva el nombre
+    // histórico `csd-app` (renombrarlo orfanaría el outbox/borradores ya en disco de
+    // la flota — capturas offline sin sincronizar; el contrato offline-first manda).
+    super(environment.entorno === 'dev' ? 'csd-dev' : 'csd-app');
     this.version(1).stores({
       catalogos: 'tipo, fetched_at',
       outbox: 'id, estado, created_local',

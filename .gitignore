@@ -48,10 +48,17 @@ Thumbs.db
 *.local
 !*.example
 
+# BU1 — environment.ts es GENERADO (npm run env:dev|prod). La plantilla versionada
+# es environment.example.ts; los committed por entorno son environment.dev.ts /
+# environment.prod.ts (anon keys públicas). El de serve local nunca se commitea.
+/src/environments/environment.ts
+
 # Capacitor / Android build artifacts
 /android/app/build
 /android/build
 /android/.gradle
+# `cap sync` copies the web dist here — generated, never committed.
+/android/app/src/main/assets/public
 *.keystore
 *.jks
 keystore.properties

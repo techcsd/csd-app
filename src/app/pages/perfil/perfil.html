@@ -71,6 +71,12 @@
       @if (hayNueva()) {
         <li><span>{{ 'Actualización' | t }}</span><b class="perfil__nueva">{{ 'Hay una versión nueva' | t }} ({{ versionPublicada() }})</b></li>
       }
+      <!-- BU1 F1.2 — Acerca de: entorno actual + ref corto del proyecto. En dev se
+           resalta; en prod es informativo. -->
+      <li><span>{{ 'Entorno' | t }}</span><b [class.perfil__entorno-dev]="esDev">{{ entorno }} · {{ refCorto }}</b></li>
+      @if (esDev && !pushDisponible()) {
+        <li><span>{{ 'Push' | t }}</span><b>{{ 'No disponible en este build' | t }}</b></li>
+      }
     </ul>
 
     <!-- BS3 — Apariencia (claro/oscuro/sistema). Nombres/orden como en Configuración web. -->

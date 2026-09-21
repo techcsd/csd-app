@@ -5,7 +5,7 @@
   "byScreen": {
     "": {
       "conT": 0,
-      "sinT": 15,
+      "sinT": 22,
       "en": 0,
       "ht": 0
     },
@@ -484,7 +484,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 43,
+      "conT": 46,
       "sinT": 0,
       "en": 100,
       "ht": 0

@@ -34,6 +34,8 @@ import { UserContextService } from './core/services/user-context.service';
 import { ImpersonationService } from './core/services/impersonation.service';
 import { ThemeService } from './core/services/theme.service';
 import { IdiomaOnboardingService } from './core/i18n/idioma-onboarding.service';
+import { hasSupabaseProject } from './core/services/supabase.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -75,7 +77,21 @@ export class App {
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
   private trackingArrancado = false;
 
+  /** BU1 F0 — sin proyecto configurado el shell muestra "Sin proyecto configurado"
+   *  y NO arranca nada (no toca Supabase). Solo pasa en `ng serve` sin env:dev. */
+  readonly sinProyecto = !hasSupabaseProject;
+  /** BU1 F1 — cinta DEV: se pinta en dev (esquina superior, sobre todo el shell). */
+  readonly entorno = environment.entorno;
+  readonly esDev = environment.entorno === 'dev';
+  /** Ref corto del proyecto (para la cinta y "Acerca de"). */
+  readonly refCorto = (() => {
+    try { return new URL(environment.supabaseUrl).hostname.split('.')[0].slice(0, 8); }
+    catch { return '—'; }
+  })();
+
   constructor() {
+    // BU1 F0 — cortocircuito: sin proyecto no se instancia nada de la app real.
+    if (this.sinProyecto) return;
     // BT2 — aviso de una sola vez si un idioma guardado aún no está disponible
     // (p. ej. Kreyòl "próximamente"): la app cae a español y lo explica.
     effect(() => {

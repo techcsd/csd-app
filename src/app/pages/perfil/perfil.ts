@@ -14,6 +14,7 @@ import { WebauthnService } from '../../core/services/webauthn.service';
 import { VersionService } from '../../core/services/version.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
+import { PushService } from '../../core/services/push.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
@@ -41,6 +42,7 @@ export class PerfilPage {
   private versionSvc = inject(VersionService);
   private toast = inject(ToastService);
   private camera = inject(CameraService);
+  private push = inject(PushService);
   private router = inject(Router);
   private location = inject(Location);
 
@@ -78,6 +80,14 @@ export class PerfilPage {
   version = environment.version;
   versionPublicada = () => this.versionSvc.etiquetaVersion;
   hayNueva = () => this.versionSvc.hayNueva();
+  // BU1 F1.2 — Acerca de: entorno + ref corto (+ aviso de push en el build dev).
+  entorno = environment.entorno;
+  esDev = environment.entorno === 'dev';
+  refCorto = (() => {
+    try { return new URL(environment.supabaseUrl).hostname.split('.')[0].slice(0, 8); }
+    catch { return '—'; }
+  })();
+  pushDisponible = () => !this.push.soportado || this.push.disponible;
   checking = signal(false);
   confirmLogout = signal(false);
   biometriaSoportada = signal(false);
