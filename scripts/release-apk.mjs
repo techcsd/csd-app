@@ -45,7 +45,7 @@ if (!URL || !KEY) {
 }
 
 // Keep in sync with src/environments + android versionName.
-const VERSION = '2.26.0';
+const VERSION = '2.26.1';
 // V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
 // matching android/app/build.gradle and the backend version_code scheme.
 const codeFromVersion = (v) => {
@@ -58,22 +58,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
 // más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
 // Mantener alineado con la fila `minima=true`.
-const MIN_VERSION = '2.25.0';
-const RELEASED_AT = '2026-09-17';
+// Alineado con la fila `minima=true` en sgc.app_versiones: 2.26.1 NO fuerza mínima
+// (es mejora de i18n, no crítico); la mínima sigue en 2.26.0 (ya forzada por el fix
+// del crash de fotos). version.json.min_version refleja esa mínima real.
+const MIN_VERSION = '2.26.0';
+const RELEASED_AT = '2026-09-21';
 
 // Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'Elige tu idioma al entrar · tema Automático · mensajes más claros';
+const TITULO = 'La app completa en inglés (sale de beta)';
 // Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
 // y agrupados por módulo (m) para la pantalla de actualización.
 // Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Transporte', d: 'Tomar fotos al hacer un Conduce externo ya no cierra la app.' },
-  { t: 'nuevo', m: 'General', d: 'Si la app se cierra mientras llenas un Conduce externo, al volver aparece "Tienes un borrador sin enviar" con tus datos y fotos ya guardados.' },
-  { t: 'arreglo', m: 'Transporte', d: 'Transferir/crear un Conduce externo con un proveedor que ya no está en la lista ya no falla: se envía por su nombre y el conduce no se pierde.' },
-  { t: 'arreglo', m: 'Ajustes', d: 'El inglés ahora cubre el inicio, Transporte y tu Perfil; el resto llega poco a poco (se muestra "beta" con el % cubierto). Kreyòl estará disponible pronto.' },
-  { t: 'arreglo', m: 'Ajustes', d: 'Tu foto de perfil ahora se ve en Mi perfil y en Mi detalle.' },
-  { t: 'mejora', m: 'Inventario', d: 'Al despachar una requisición puedes dejar en 0 lo que no despachaste: queda pendiente y se envía el resto.' },
-  { t: 'mejora', m: 'Ajustes', d: 'Las alarmas de reporte e inspección semanal ahora se pueden silenciar para quien tiene permiso.' },
+  { t: 'mejora', m: 'Ajustes', d: 'El inglés ahora cubre TODA la app: inicio, todos los hubs y sus pantallas (Registrar combustible, Conduces, Pendientes, Bitácora, Solicitudes, Inventario…). Ya no aparece "beta". Kreyòl estará disponible pronto.' },
 ];
 
 const TIPO_POR_COMMIT = {
