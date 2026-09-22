@@ -14,7 +14,7 @@
 
 ### 📤 En dev (owed físico de Xaviel — no ejecutado en esta sesión)
 - **Falta correr** `npm run apk -- --env dev` + `npm run apk:publish -- --env dev` (registra 2.27.0 en `app_versiones` de dev + sube APK dev al bucket) y **merge `feature/bv-ronda` → `dev`** (Vercel construye `app-dev.`). *(No se ejecutó el build/publish del APK en esta sesión — ver "Siguiente paso".)*
-- **SQL para el padre:** `sql-para-sgc/2026-09-22-bv1b-mis-permisos-retro.sql` (`mis_permisos_retro()` — NO existe aún en dev/prod; el padre debe aplicarlo con su ledger `--env dev` → `prod`). Hasta entonces el campo Fecha de F4 **no aparece** (degrada limpio).
+- **SQL `mis_permisos_retro()`:** ✅ **APLICADA en dev** (`sgc-dev`, vía pooler + ledger `sgc.migraciones_aplicadas` archivo `sql/2026-09-22-bv1b-mis-permisos-retro.sql`, checksum `513ecb31…`, `aplicada_por=claude-code`). Copiada a `SGC/sql/` (canónica del padre) y a `csd-app/sql-para-sgc/`. **Pendiente prod:** el padre corre `node scripts/apply-migration.mjs sql/2026-09-22-bv1b-mis-permisos-retro.sql --env prod` (pasa el ledger porque salió en dev). El campo Fecha de F4 ya funciona en dev cuando Flota otorga un permiso.
 
 ### ⏳ En prod (gateado — espera OK de Xaviel)
 - **Nada en prod.** Tras "probado en dev, OK": PR `dev → main` → `npm run apk -- --env prod` → `apk:publish -- --env prod` (pasa el ledger porque salió en dev). Publicar/mínima = paso aparte del admin; **DEFAULT: publicada, mínima se queda en 2.26.1**.
