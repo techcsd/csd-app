@@ -42,13 +42,13 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/compras/solicitud-compra | 25 | 1 | 96% | 0% |  |
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 4 | 0% | 0% |  |
-| pages/home | 13 | 0 | 100% | 0% | ✅ |
+| pages/home | 14 | 0 | 100% | 0% | ✅ |
 | pages/incentivos | 35 | 0 | 100% | 0% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
 | pages/ingenieria/cartilla | 58 | 0 | 100% | 0% |  |
 | pages/inventario | 10 | 0 | 100% | 0% |  |
-| pages/inventario/almacen-inventario | 18 | 0 | 100% | 0% |  |
+| pages/inventario/almacen-inventario | 23 | 0 | 100% | 0% |  |
 | pages/inventario/almacenes | 30 | 0 | 100% | 0% |  |
 | pages/inventario/articulo-detalle | 20 | 0 | 100% | 0% |  |
 | pages/inventario/articulo-editar | 19 | 0 | 100% | 0% |  |
@@ -87,7 +87,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 23 | 0 | 100% | 0% |  |
-| pages/perfil | 46 | 0 | 100% | 0% | ✅ |
+| pages/perfil | 47 | 0 | 100% | 0% | ✅ |
+| pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
 | pages/proyectos/avisos | 4 | 0 | 100% | 0% |  |
@@ -99,9 +100,9 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/rrhh/empleado | 23 | 0 | 100% | 0% |  |
 | pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |
 | pages/solicitudes | 5 | 0 | 100% | 0% |  |
-| pages/solicitudes/bandeja | 12 | 0 | 100% | 0% |  |
-| pages/solicitudes/detalle | 49 | 12 | 80% | 0% |  |
-| pages/solicitudes/mis | 12 | 0 | 100% | 0% |  |
+| pages/solicitudes/bandeja | 16 | 0 | 100% | 0% |  |
+| pages/solicitudes/detalle | 62 | 12 | 84% | 0% |  |
+| pages/solicitudes/mis | 12 | 0 | 92% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 0 | 3 | 0% | 0% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
@@ -118,15 +119,15 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 0% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 103 | 2 | 98% | 0% |  |
+| pages/transporte/combustible | 108 | 2 | 98% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 54 | 1 | 98% | 0% |  |
-| pages/transporte/conduce-externo | 36 | 0 | 100% | 0% |  |
+| pages/transporte/conduce-externo | 45 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 0% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-hub | 3 | 0 | 100% | 0% |  |
-| pages/transporte/conduces-pendientes | 21 | 0 | 100% | 0% |  |
+| pages/transporte/conduces-pendientes | 24 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-por-firmar | 10 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-por-implementar | 10 | 0 | 100% | 0% |  |
 | pages/transporte/conduces/entrega | 33 | 0 | 100% | 0% |  |

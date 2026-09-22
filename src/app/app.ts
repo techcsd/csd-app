@@ -33,6 +33,7 @@ import { TrackingService } from './core/services/tracking.service';
 import { UserContextService } from './core/services/user-context.service';
 import { ImpersonationService } from './core/services/impersonation.service';
 import { ThemeService } from './core/services/theme.service';
+import { CameraService } from './core/services/camera.service';
 import { IdiomaOnboardingService } from './core/i18n/idioma-onboarding.service';
 import { hasSupabaseProject } from './core/services/supabase.service';
 import { environment } from '../environments/environment';
@@ -66,6 +67,8 @@ export class App {
   private notificaciones = inject(NotificacionesService);
   private deviceInfo = inject(DeviceInfoService);
   private tracking = inject(TrackingService);
+  /** BV5/BT5 — listener de `appRestoredResult` (recupera una foto tras recrear la Activity). */
+  private camera = inject(CameraService);
   /** AY7 — banner "USUARIO DE PRUEBA" en el shell (esPrueba del perfil). */
   ctx = inject(UserContextService);
   /** BB — "Entrar como": banner "Estás viendo como X" + salir. */
@@ -116,6 +119,7 @@ export class App {
     // AL6 — re-evaluar al volver a primer plano (por si completó la inspección o
     // se le asignó un vehículo). Best-effort, nativo.
     if (Capacitor.isNativePlatform()) {
+      this.camera.init(); // BV5/BT5 — recupera la foto si el SO recreó la Activity con la cámara abierta
       void CapApp.addListener('resume', () => {
         void this.syncAlarmaNativa();
         void this.notificaciones.iniciarRealtime(); // AM4 — reasegura el canal tras dormir

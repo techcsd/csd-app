@@ -208,6 +208,7 @@
               hint="📸"
               [gallery]="false"
               [foto]="fotoEvidencia()"
+              [restore]="{ clave: 'combustible', slot: 'evidencia' }"
               (captured)="onFotoEvidencia($event)"
               (cleared)="onFotoEvidenciaCleared()"
             />
@@ -223,6 +224,7 @@
               hint="⛽"
               [gallery]="false"
               [foto]="fotoBomba()"
+              [restore]="{ clave: 'combustible', slot: 'bomba' }"
               (captured)="onFotoBomba($event)"
               (cleared)="onFotoBombaCleared()"
             />
@@ -237,6 +239,27 @@
           @else if (esDeposito()) { {{ 'Horas y galones' | t }} }
           @else { {{ 'Kilometraje y monto' | t }} }
         </h1>
+        <!-- BV1 — Fecha SOLO si Flota otorgó un permiso vigente de registro retroactivo.
+             Sin permiso el campo no existe (la echada se registra con la fecha de hoy). -->
+        @if (permisoRetro(); as pr) {
+          <label class="field-label" for="fecha-echada">{{ 'Fecha de la echada' | t }}</label>
+          <input
+            id="fecha-echada"
+            class="field"
+            type="date"
+            [min]="pr.desde"
+            [max]="hoyISO"
+            [ngModel]="fechaRetro() ?? hoyISO"
+            (ngModelChange)="fechaRetro.set($event)"
+          />
+          <p class="field-hint">
+            @if (esRetroactiva()) {
+              🕓 {{ 'Echada de fecha pasada (tu permiso vence el {vence}).' | t: { vence: pr.vence } }}
+            } @else {
+              {{ 'Tienes permiso para registrar echadas desde el {desde}.' | t: { desde: pr.desde } }}
+            }
+          </p>
+        }
         <!-- Z23-app — la echada de persona no lleva odómetro -->
         @if (!modoPersona()) {
           <app-km-input
@@ -325,6 +348,7 @@
             hint="🧾"
             [gallery]="false"
             [foto]="fotoRecibo()"
+            [restore]="{ clave: 'combustible', slot: 'recibo' }"
             (captured)="onFotoRecibo($event)"
             (cleared)="onFotoReciboCleared()"
           />
@@ -335,6 +359,7 @@
               hint="🎛️"
               [gallery]="false"
               [foto]="fotoTablero()"
+              [restore]="{ clave: 'combustible', slot: 'tablero' }"
               (captured)="onFotoTablero($event)"
               (cleared)="onFotoTableroCleared()"
             />
@@ -458,6 +483,13 @@
       @if (stepKey() === 'revisar') {
         <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
+          <!-- BV1 — fecha de la echada + distintivo RETROACTIVA cuando es una fecha pasada -->
+          @if (esRetroactiva()) {
+            <li>
+              <span>{{ 'Fecha' | t }}</span>
+              <b>{{ fechaRetro() }} <span class="comb__chip-retro">{{ 'RETROACTIVA' | t }}</span></b>
+            </li>
+          }
           @if (modoPersona()) {
             <li><span>{{ 'Titular' | t }}</span><b>{{ titular() || '—' }}</b></li>
           } @else {

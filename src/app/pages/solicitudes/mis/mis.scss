@@ -172,3 +172,53 @@
   font-size: var(--fs-body);
   font-weight: 600;
 }
+
+// BV9 — tabs por fase.
+.mis-sol__tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 16px 0;
+}
+.mis-sol__tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mis-sol__tab--on {
+  background: var(--Hub, #ffb300);
+  color: var(--main, #121212);
+  border-color: var(--Hub, #ffb300);
+}
+.mis-sol__tab-n {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.15);
+  font-size: 11px;
+  text-align: center;
+}
+// BV10 — fecha de necesidad como 1ª línea.
+.sol-card__nec {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.sol-card__nec--venc {
+  color: #c0392b;
+}
+.sol-card__nec--none {
+  color: var(--text-2);
+}

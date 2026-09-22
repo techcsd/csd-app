@@ -43,6 +43,10 @@
           <div class="cpend__actions">
             <button type="button" class="btn-cta cpend__btn" (click)="entregar(c.id)">📤 {{ 'Entregar' | t }}</button>
             <button type="button" class="btn-ghost cpend__btn" (click)="abrirTransferir(c.id)">↔️ {{ 'Transferir' | t }}</button>
+            <!-- BV7 — asignar chofer directo (logística/flota-elevado): dispara la auto-ruta -->
+            @if (esElevado()) {
+              <button type="button" class="btn-ghost cpend__btn" (click)="abrirAsignar(c.id)">🧑‍✈️ {{ 'Asignar chofer' | t }}</button>
+            }
           </div>
 
           <!-- AM5 — ciclo conduce→ruta: arrancar la ruta del conduce (aparece en Mis rutas + Seguimiento) -->
@@ -76,6 +80,26 @@
                 [disabled]="iniciandoId() === c.id || !vehiculoSel()"
                 (click)="confirmarIniciarConVehiculo(c)"
               >{{ iniciandoId() === c.id ? ('Iniciando…' | t) : ('Iniciar ruta' | t) }}</button>
+            </div>
+          }
+
+          @if (asignandoId() === c.id) {
+            <div class="cpend__transfer">
+              <app-collapsible-select
+                [label]="'Asignar a un chofer' | t"
+                icon="🧑‍✈️"
+                [options]="choferOptions()"
+                [selectedId]="asignarConductor()"
+                [searchable]="true"
+                [searchPlaceholder]="'Buscar chofer…' | t"
+                (picked)="asignarConductor.set($event)"
+              />
+              <button
+                type="button"
+                class="btn-cta cpend__btn"
+                [disabled]="enviandoAsignar() || !asignarConductor()"
+                (click)="confirmarAsignar(c.id)"
+              >{{ enviandoAsignar() ? ('Asignando…' | t) : ('Asignar chofer' | t) }}</button>
             </div>
           }
 

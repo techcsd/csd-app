@@ -37,11 +37,19 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-21';
+const RELEASED_AT = '2026-09-22';
 
-const TITULO = 'La app completa en inglés (sale de beta)';
+const TITULO = 'Requisiciones por fase, conduce externo con inventario y más';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Ajustes', d: 'El inglés ahora cubre TODA la app: inicio, todos los hubs y sus pantallas (Registrar combustible, Conduces, Pendientes, Bitácora, Solicitudes, Inventario…). Ya no aparece "beta". Kreyòl estará disponible pronto.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Si la app se cierra o se cae mientras registras una echada, la retomas: se guarda lo que llevabas con su foto y aparece en el inicio como "Pendiente de terminar" (también recupera la foto en Android si el equipo cierra la cámara).' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Las requisiciones se organizan por fase (Pendientes / En proceso / Completadas / Rechazadas) y se ordenan por la fecha en que se necesitan; cada tarjeta muestra "se necesita en N días / vencida" arriba.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'El ingeniero puede editar la fecha de necesidad de una requisición desde su detalle (con motivo), incluso sin señal.' },
+  { t: 'nuevo', m: 'Conduce externo', d: 'El conduce externo ahora puede mover materiales del inventario de verdad: eliges el almacén de origen y los renglones del catálogo, y el stock se mueve.' },
+  { t: 'mejora', m: 'Conduces', d: 'Logística puede asignar un chofer a un conduce directamente desde la lista (le crea la ruta).' },
+  { t: 'nuevo', m: 'Inventario', d: 'Cada almacén muestra sus "Pendientes": entradas por confirmar y salidas sin recibir, con acceso directo.' },
+  { t: 'nuevo', m: 'Combustible', d: 'Se puede registrar una echada de una fecha pasada solo cuando Flota te da permiso; el campo Fecha aparece solo entonces.' },
+  { t: 'nuevo', m: 'Perfil', d: '"Materiales a mi cargo": los ingenieros/encargados ven lo recibido en sus obras que aún no se ha devuelto.' },
+  { t: 'mejora', m: 'Flota', d: 'Los vehículos se muestran por nombre · placa (con el alias que ponga Logística) en selectores y listas, no solo por placa.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

@@ -282,6 +282,12 @@ export function notifAppRoute(n: {
     }
     return '/compa';
   }
+  // BV1 — "tienes permiso para registrar una echada del <fecha>" → pantalla Registrar
+  // combustible con la fecha ya preseleccionada (?fecha=YYYY-MM-DD embebido en la ruta).
+  if (n.tipo === 'combustible_permiso_retro') {
+    const fecha = r.match(/[?&]fecha=(\d{4}-\d{2}-\d{2})/)?.[1] ?? null;
+    return fecha ? `/transporte/combustible?fecha=${fecha}` : '/transporte/combustible';
+  }
   // AQ6 — consumo anormal → detalle de LA echada (no la bandeja genérica de avisos).
   // El id viene en referencia_id o embebido en la ruta web (?echada=<uuid>).
   const echadaId =

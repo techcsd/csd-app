@@ -6,8 +6,17 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
-import { RequisicionBandeja } from '../../../core/models/inventario.model';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import {
+  RequisicionBandeja,
+  faseRequisicion,
+  necesidadInfo,
+  necesidadOrden,
+  FASE_ORDEN,
+  FASE_LABEL,
+  RequisicionFase,
+  NecesidadInfo,
+} from '../../../core/models/inventario.model';
+import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 
 /** AS7 — Bandeja de TODAS las requisiciones para roles con función de requisición:
  *  filtro por estado/urgencia + búsqueda, fila → detalle. Solo lectura (v1); la
@@ -29,28 +38,32 @@ export class RequisicionesBandejaPage {
 
   loading = signal(true);
   filas = signal<RequisicionBandeja[]>([]);
-  estado = signal<string | null>(null); // null = todas
   urgencia = signal<string | null>(null);
   busqueda = signal('');
   noAutorizado = signal(false);
 
-  readonly estados = [
-    { key: null, label: 'Todas' },
-    { key: 'pendiente', label: 'Pendientes' },
-    { key: 'aprobada', label: 'Aprobadas' },
-    { key: 'por_despachar', label: 'Por despachar' },
-    { key: 'entregada', label: 'Entregadas' },
-    { key: 'completada', label: 'Completadas' },
-    { key: 'rechazada', label: 'Rechazadas' },
-    { key: 'cancelada', label: 'Canceladas' },
-  ];
+  // BV9 — tabs por fase (client-side sobre TODAS las cargadas). Arranca en Pendientes.
+  readonly FASES = FASE_ORDEN;
+  faseLabel = (f: RequisicionFase): string => FASE_LABEL[f];
+  tab = signal<RequisicionFase>('pendiente');
+  setTab(f: RequisicionFase): void {
+    this.tab.set(f);
+  }
+  private readonly hoyISO = fechaLocalISO();
+  faseDe = (f: RequisicionBandeja): RequisicionFase => faseRequisicion(f.estado, f.fase);
+  necesidad = (f: RequisicionBandeja): NecesidadInfo => necesidadInfo(f.fecha_necesidad, this.hoyISO);
 
-  pendientesCount = computed(() => this.filas().filter((f) => f.estado === 'pendiente').length);
+  conteos = computed<Record<RequisicionFase, number>>(() => {
+    const c: Record<RequisicionFase, number> = { pendiente: 0, en_proceso: 0, completada: 0, rechazada: 0 };
+    for (const f of this.filas()) c[this.faseDe(f)]++;
+    return c;
+  });
 
-  // BH1 — en "Todas", las canceladas (a menudo pruebas) no deben estorbar. Se ocultan
-  // salvo que el usuario elija explícitamente el filtro "Canceladas".
+  // BV10 — la fase elegida, ORDENADA por fecha de necesidad (sin fecha al final).
   filasVisibles = computed(() =>
-    this.estado() === 'cancelada' ? this.filas() : this.filas().filter((f) => f.estado !== 'cancelada'),
+    this.filas()
+      .filter((f) => this.faseDe(f) === this.tab())
+      .sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad)),
   );
 
   private debounce: ReturnType<typeof setTimeout> | null = null;
@@ -62,8 +75,10 @@ export class RequisicionesBandejaPage {
   async cargar(): Promise<void> {
     this.loading.set(true);
     try {
+      // BV9 — carga TODAS (sin filtro server de estado) para poder tabular por fase en
+      // cliente; urgencia/búsqueda siguen filtrando en el server.
       const filas = await this.service.bandeja({
-        estado: this.estado(),
+        estado: null,
         urgencia: this.urgencia(),
         busqueda: this.busqueda().trim() || null,
       });
@@ -75,10 +90,6 @@ export class RequisicionesBandejaPage {
     }
   }
 
-  setEstado(e: string | null): void {
-    this.estado.set(e);
-    void this.cargar();
-  }
   toggleUrgente(): void {
     this.urgencia.set(this.urgencia() === 'urgente' ? null : 'urgente');
     void this.cargar();

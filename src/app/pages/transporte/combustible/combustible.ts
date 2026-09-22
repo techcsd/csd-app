@@ -33,7 +33,7 @@ import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
-import { CombustibleService } from '../../../core/services/combustible.service';
+import { CombustibleService, PermisoRetro } from '../../../core/services/combustible.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -147,6 +147,24 @@ export class CombustiblePage extends GuardedWizard {
   km = signal<number | null>(null);
   galones = signal<number | null>(null);
   monto = signal<number | null>(null);
+  // BV1 — echada RETROACTIVA (fecha pasada). El campo Fecha SOLO aparece si Flota le
+  // otorgó un permiso vigente (mis_permisos_retro, detrás de capacidad). Sin permiso el
+  // campo no existe y la echada se registra con la fecha de hoy.
+  permisoRetro = signal<PermisoRetro | null>(null);
+  fechaRetro = signal<string | null>(null); // YYYY-MM-DD elegido; null = hoy
+  hoyISO = fechaLocalISO();
+  /** ¿La fecha elegida es anterior a hoy? (dispara el chip RETROACTIVA + valida rango) */
+  esRetroactiva = computed(() => {
+    const f = this.fechaRetro();
+    return !!f && f < this.hoyISO;
+  });
+  /** Fecha fuera del rango permitido por el permiso (antes de `desde` o futura). */
+  fechaFueraDeRango = computed(() => {
+    const f = this.fechaRetro();
+    const p = this.permisoRetro();
+    if (!f || !p) return false;
+    return f < p.desde || f > this.hoyISO;
+  });
   // AW3 — texto crudo de galones/monto (input tipo texto, parseo a prueba de
   // locale). El valor numérico (galones/monto) se deriva con parseNumeroFlexible.
   galonesRaw = signal('');
@@ -314,6 +332,14 @@ export class CombustiblePage extends GuardedWizard {
     void this.conductores.getFlotaConfig().then((c) => this.umbralKm.set(c.umbralKmEchada));
     // AW3 — umbrales de tanque/precio para el bloqueo/confirmación en vivo.
     void this.combustible.getTanqueConfig().then((c) => this.tanqueCfg.set(c));
+    // BV1 — ¿tengo permiso vigente para una echada de fecha pasada? (capacidad).
+    // Si lo hay y llegó ?fecha= por deep-link (aviso "tienes permiso"), la preselecciona.
+    void this.combustible.misPermisosRetro().then((p) => {
+      this.permisoRetro.set(p);
+      if (!p) return;
+      const pedida = this.route.snapshot.queryParamMap.get('fecha');
+      if (pedida && pedida >= p.desde && pedida <= this.hoyISO) this.fechaRetro.set(pedida);
+    });
     // BM1 — ¿venimos a CORREGIR una echada atascada en el outbox? Reconstruye el
     // wizard desde su payload + fotos (sin descartarla) para ajustar el campo
     // señalado y reenviar. Tiene prioridad sobre el deep-link por vehículo.
@@ -369,6 +395,7 @@ export class CombustiblePage extends GuardedWizard {
       estacion: this.estacion(),
       estacionOtro: this.estacionOtro(),
       estacionOtroTexto: this.estacionOtroTexto(),
+      fechaRetro: this.fechaRetro(), // BV1
       step: this.step(),
     };
   }
@@ -402,6 +429,7 @@ export class CombustiblePage extends GuardedWizard {
       this.estacion.set((d['estacion'] as string) ?? 'Total Energies');
       this.estacionOtro.set(d['estacionOtro'] === true);
       this.estacionOtroTexto.set((d['estacionOtroTexto'] as string) ?? '');
+      this.fechaRetro.set((d['fechaRetro'] as string | null) ?? null); // BV1
 
       // Fotos.
       const fotos = await this.borrador.loadFotos(this.claveBorrador);
@@ -797,6 +825,15 @@ export class CombustiblePage extends GuardedWizard {
           this.toast.error(this.i18n.t('Escribe el monto pagado.'));
           return false;
         }
+        // BV1 — la fecha retroactiva debe caer dentro del rango del permiso (no futura,
+        // no anterior a `desde`). El servidor revalida al drenar.
+        if (this.fechaFueraDeRango()) {
+          const p = this.permisoRetro();
+          this.toast.error(
+            this.i18n.t('La fecha debe estar entre {desde} y hoy (tu permiso).', { desde: p?.desde ?? '' }),
+          );
+          return false;
+        }
         // AW3 — bloqueo duro espejo del servidor: galones sobre la capacidad del
         // tanque o precio fuera de la banda. Impide avanzar con un dedazo (34118).
         const bloqueo = this.validacion().bloqueo;
@@ -874,7 +911,9 @@ export class CombustiblePage extends GuardedWizard {
         vehiculoId: persona ? null : this.vehiculoId,
         conductorId: this.conductorId,
         // BL9 — día LOCAL (RD, UTC-4): una echada de la noche no debe fecharse mañana.
-        fecha: fechaLocalISO(),
+        // BV1 — si hay permiso y el chofer eligió una fecha pasada, se envía esa (p_fecha);
+        // el servidor revalida el permiso al drenar (si caducó → "Revisar dato").
+        fecha: this.fechaRetro() ?? fechaLocalISO(),
         kilometraje: persona ? null : this.km()!,
         galones: this.galones()!,
         // AC11 — depósito en obra: el costo es opcional (0 si no se conoce).

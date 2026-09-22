@@ -63,6 +63,16 @@ export class PerfilPage {
   subiendoFoto = signal(false);
   obra = this.ctx.obraActiva;
   isAdmin = () => this.ctx.hasModulo('admin');
+  // BV8 — "A mi cargo": ingenieros/encargados (responsables de obra). Gating amplio como
+  // Personal de obra; el RPC materiales_a_cargo acota los datos a las obras del usuario.
+  puedeVerACargo = computed(
+    () =>
+      this.ctx.esAdmin() ||
+      this.ctx.hasModulo('ingenieria') ||
+      this.ctx.hasModulo('proyectos') ||
+      this.ctx.puedeVerSubmodulo('proyectos.obras') ||
+      this.ctx.puedeVerObra(),
+  );
   // BI6 (FASE 5) — un usuario de acceso por cédula (email sintético) puede cambiar su
   // PIN de acceso él mismo. Los de correo real usan el restablecimiento por correo.
   esCedula = computed(() => esEmailSintetico(this.ctx.profile()?.email));
@@ -232,6 +242,11 @@ export class PerfilPage {
   /** Z26 — el encabezado (avatar + nombre + rol) abre el detalle de mi propio usuario. */
   verMiDetalle(): void {
     void this.router.navigate(['/perfil/mi-detalle']);
+  }
+
+  /** BV8 — "Materiales a mi cargo" (ingenieros/encargados). */
+  aMiCargo(): void {
+    void this.router.navigate(['/perfil/a-mi-cargo']);
   }
 
   /** AW7 — elegir una foto de perfil → editor (recorte circular) → subir. */

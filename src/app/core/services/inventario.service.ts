@@ -24,6 +24,26 @@ export interface MovItemPayload {
   factor_aplicado?: number;
 }
 
+/** BV3 — un pendiente accionable de un almacén (entrada por confirmar / salida sin recibir). */
+export interface BodegaPendiente {
+  tipo: 'entrada' | 'salida';
+  id: string;
+  fecha: string;
+  referencia: string;
+  renglones: number;
+  dias: number;
+}
+
+/** BV8 — un renglón de "Materiales a mi cargo" (recibido − devuelto por obra+artículo). */
+export interface MaterialACargo {
+  proyecto_id: string;
+  proyecto: string;
+  articulo_id: string;
+  articulo: string;
+  unidad: string | null;
+  cantidad: number;
+}
+
 export interface SalidaCaptura {
   bodegaId: string;
   proyectoId: string | null;
@@ -213,6 +233,47 @@ export class InventarioService {
 
   constructor() {
     this.registerHandlers();
+  }
+
+  /**
+   * BV8 — "Materiales a mi cargo": lo recibido en MIS obras que aún no se devolvió,
+   * agrupado por obra + artículo. Read-through (offline) detrás de comprobación de
+   * capacidad: si el RPC del padre `materiales_a_cargo` no está desplegado, devuelve
+   * `null` → la pantalla muestra el estado "aún no disponible" sin romperse.
+   */
+  async materialesACargo(): Promise<MaterialACargo[] | null> {
+    try {
+      const data = await this.catalog.refresh<MaterialACargo[] | null>('materiales_a_cargo', async () => {
+        const { data, error } = await this.supabase.client.rpc('materiales_a_cargo');
+        if (error) {
+          // capacidad ausente (RPC no desplegado) → distinguible de "sin datos".
+          if (/function .* does not exist|not find the function|PGRST202/i.test(error.message || '')) {
+            return null;
+          }
+          throw new Error(error.message);
+        }
+        return (data as MaterialACargo[]) ?? [];
+      });
+      return data ?? null;
+    } catch {
+      // error de red sin cache: null = "no pudimos cargar" (la pantalla lo distingue).
+      return null;
+    }
+  }
+
+  /**
+   * BV3 — "Pendientes de este almacén": entradas por confirmar + salidas sin recibir.
+   * Detrás de comprobación de capacidad: si el RPC `bodega_pendientes` no está
+   * desplegado, devuelve `null` (la sección no se muestra) en vez de romperse.
+   */
+  async bodegaPendientes(bodegaId: string): Promise<BodegaPendiente[] | null> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('bodega_pendientes', { p_bodega_id: bodegaId });
+      if (error) return null; // capacidad ausente / RLS → sin sección de pendientes
+      return (data as BodegaPendiente[]) ?? [];
+    } catch {
+      return null;
+    }
   }
 
   async getBodegas(): Promise<Bodega[]> {

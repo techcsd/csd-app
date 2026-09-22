@@ -19,6 +19,15 @@ import { db, OutboxOp } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
 
+/** BV1 — permiso vigente del usuario para registrar una echada de fecha pasada. */
+export interface PermisoRetro {
+  id: string;
+  dias_max: number;
+  vence: string; // YYYY-MM-DD
+  desde: string; // YYYY-MM-DD — límite hacia atrás (current_date - dias_max)
+  motivo: string | null;
+}
+
 /**
  * Fuel-log data + write path. The previous fill-up (for live km/rendimiento
  * validation) is read through the catalog cache (offline-friendly); the write
@@ -330,6 +339,23 @@ export class CombustibleService {
     if (!op || op.tipo_op !== 'combustible') return null;
     const fotos = await this.sync.getOpFotos(id);
     return { op, fotos };
+  }
+
+  /**
+   * BV1 — ¿tengo un permiso VIGENTE para registrar una echada de fecha pasada?
+   * Detrás de comprobación de capacidad: si el RPC del padre (`mis_permisos_retro`)
+   * aún no está desplegado, devuelve null → el campo Fecha no aparece (hoy = ahora).
+   * Retorna el permiso vigente más reciente con su rango (desde…vence).
+   */
+  async misPermisosRetro(): Promise<PermisoRetro | null> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('mis_permisos_retro');
+      if (error) return null; // capacidad ausente o sin permiso → sin campo Fecha
+      const rows = (data ?? []) as PermisoRetro[];
+      return rows[0] ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /** Queue a fuel record. Works fully offline; syncs when there's signal. Returns the client id. */

@@ -29,6 +29,44 @@
         @if ((r.version ?? 1) > 1) { <span class="reqd__code-ver">v{{ r.version }}</span> }
       </div>
 
+      <!-- BV10/BV11 — Fecha de necesidad DESTACADA, arriba de Fecha, editable -->
+      @let ni = necesidad();
+      <div class="reqd__nec" [class.reqd__nec--venc]="ni.estado === 'vencida'">
+        <div class="reqd__nec-main">
+          <span class="reqd__nec-ic">🗓️</span>
+          <div class="reqd__nec-txt">
+            <span class="reqd__nec-lb">{{ 'Fecha de necesidad' | t }}</span>
+            <span class="reqd__nec-val">
+              @if (r.fecha_necesidad) { {{ fmtFecha(r.fecha_necesidad + 'T00:00:00') }} · }
+              @switch (ni.estado) {
+                @case ('vencida') { {{ 'Necesidad vencida' | t }} }
+                @case ('hoy') { {{ 'Se necesita hoy' | t }} }
+                @case ('futura') { {{ 'Se necesita en {n} días' | t: { n: ni.dias ?? 0 } }} }
+                @case ('sin_fecha') { {{ 'Sin fecha de necesidad' | t }} }
+              }
+            </span>
+          </div>
+        </div>
+        @if (puedeEditarFecha() && modo() === 'none') {
+          <button type="button" class="btn-ghost reqd__nec-edit" (click)="abrirEditarFecha()">✏️ {{ 'Editar' | t }}</button>
+        }
+      </div>
+
+      <!-- BV11 — editar la fecha de necesidad (con motivo, offline-safe) -->
+      @if (modo() === 'fecha') {
+        <div class="reqd__edit-fecha">
+          <h3 class="reqd__sec">{{ 'Editar fecha de necesidad' | t }}</h3>
+          <label class="field-label" for="fn-edit">{{ 'Fecha de necesidad' | t }}</label>
+          <input id="fn-edit" class="field" type="date" [min]="hoyISO" [ngModel]="fechaNecesidadEdit()" (ngModelChange)="fechaNecesidadEdit.set($event)" />
+          <label class="field-label" for="fn-motivo">{{ 'Motivo del cambio (opcional)' | t }}</label>
+          <input id="fn-motivo" class="field" type="text" [ngModel]="fechaMotivo()" (ngModelChange)="fechaMotivo.set($event)" [placeholder]="'Motivo del cambio (opcional)' | t" />
+          <div class="reqd__acciones reqd__mt">
+            <button type="button" class="btn-cta" [disabled]="procesando() || !fechaNecesidadEdit()" (click)="guardarFecha()">{{ procesando() ? ('Guardando…' | t) : ('Guardar fecha' | t) }}</button>
+            <button type="button" class="btn-ghost" (click)="cancelarAccion()">{{ 'Cancelar' | t }}</button>
+          </div>
+        </div>
+      }
+
       <dl class="reqd__facts">
         <div>
           <dt>{{ 'Solicitante' | t }}</dt>
@@ -36,8 +74,6 @@
         </div>
         <div><dt>{{ 'Fecha' | t }}</dt><dd>{{ fmtFecha(r.created_at) }}</dd></div>
         <div><dt>{{ 'Urgencia' | t }}</dt><dd>{{ r.urgencia === 'urgente' ? '🔴 Urgente' : 'Normal' }}</dd></div>
-        <!-- BO8 — fecha en que se necesita el material (solo si el RPC la sirve). 'T00:00:00' fuerza parse LOCAL. -->
-        @if (r.fecha_necesidad; as fn) { <div><dt>{{ 'Necesita para' | t }}</dt><dd>📅 {{ fmtFecha(fn + 'T00:00:00') }}</dd></div> }
         @if (r.atendido_por_nombre) { <div><dt>{{ 'Atendida por' | t }}</dt><dd>{{ r.atendido_por_nombre }}</dd></div> }
         @if (r.cerrada_por_nombre) { <div><dt>{{ 'Cerrada por' | t }}</dt><dd>{{ r.cerrada_por_nombre }}</dd></div> }
         @if (r.notas) { <div><dt>{{ 'Notas' | t }}</dt><dd>{{ r.notas }}</dd></div> }
@@ -69,6 +105,30 @@
                   @if (a.pendiente > 0) { <em class="reqd__avance-pend">faltan {{ a.pendiente }}</em> }
                   @else { <span class="reqd__avance-ok">✓</span> }
                 </span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      <!-- BV4 — material que cubre esta requisición (aprobador puede quitar un match dudoso) -->
+      @if (coberturas().length) {
+        <div class="reqd__cobertura">
+          <h3 class="reqd__sec">{{ 'Material que cubre esta requisición' | t }}</h3>
+          <ul class="reqd__cob-list">
+            @for (c of coberturas(); track c.id) {
+              <li class="reqd__cob-row" [class.reqd__cob-row--rev]="c.revisar">
+                <div class="reqd__cob-info">
+                  <span class="reqd__cob-name">{{ c.renglon }}</span>
+                  <span class="reqd__cob-meta">{{ c.cantidad }}@if (c.via) { · {{ c.via }} }</span>
+                </div>
+                @if (c.revisar && (puedeGestionar() || puedeGestionarSig())) {
+                  <div class="reqd__cob-rev">
+                    <span class="reqd__cob-q">{{ '¿Revisar?' | t }}</span>
+                    <button type="button" class="btn-ghost reqd__cob-si" disabled>{{ 'Sí' | t }}</button>
+                    <button type="button" class="btn-ghost reqd__cob-no" (click)="quitarCobertura(c)">{{ 'No' | t }}</button>
+                  </div>
+                }
               </li>
             }
           </ul>

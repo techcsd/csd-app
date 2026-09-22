@@ -17,6 +17,18 @@
     </div>
   </header>
 
+  <!-- BV5 — tarjeta "Pendiente de terminar": una captura a medias (p. ej. una echada
+       de combustible sin enviar) se retoma con un toque. Abre la pantalla con el borrador. -->
+  @if (pendienteTerminar(); as p) {
+    <button type="button" class="home__firmar home__firmar--draft" (click)="abrirPendiente()">
+      <span class="home__firmar-icon">📝</span>
+      <span class="home__firmar-txt">
+        {{ 'Pendiente de terminar:' | t }} {{ p.etiqueta | t }}
+      </span>
+      <span class="home__firmar-go">›</span>
+    </button>
+  }
+
   <!-- BD2 — banner ÚNICO: entregas por recibir (fusión firmar + confirmar) -->
   @if (porRecibir() > 0) {
     <button type="button" class="home__firmar" (click)="irPorRecibir()">

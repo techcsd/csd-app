@@ -24,6 +24,7 @@ export class VehiculoCard {
   km = input<number | null>(null);
   marca = input('');
   modelo = input('');
+  alias = input<string | null | undefined>(null); // BV2 — nombre legible (Raykler)
   color = input<string | null | undefined>(null); // AT9
   anio = input<number | null | undefined>(null); // Z10
   selected = input(false);
@@ -34,14 +35,17 @@ export class VehiculoCard {
   /** P4 — etiqueta RD del tipo (automovil → "Automóvil / Sedán"). */
   tipoLabel = computed(() => (this.tipo() ? labelTipoVehiculo(this.tipo()) : ''));
 
-  /** AT9 — titular = Marca Modelo (cae a placa si no hay nombre). */
-  tieneNombre = computed(() => !!(this.marca()?.trim() || this.modelo()?.trim()));
-  titulo = computed(() =>
-    this.tieneNombre() ? [this.marca()?.trim(), this.modelo()?.trim()].filter(Boolean).join(' ') : this.placa(),
-  );
-  /** AT9 — subtítulo = Color · Placa (solo las partes presentes; placa solo si ya
-   *  hubo titular con nombre, para no repetirla). */
+  /** BV2/AT9 — titular = Alias (si Raykler lo puso) o Marca Modelo (cae a placa). */
+  tieneNombre = computed(() => !!(this.alias()?.trim() || this.marca()?.trim() || this.modelo()?.trim()));
+  titulo = computed(() => {
+    const a = this.alias()?.trim();
+    if (a) return a;
+    return this.tieneNombre() ? [this.marca()?.trim(), this.modelo()?.trim()].filter(Boolean).join(' ') : this.placa();
+  });
+  /** BV2/AT9 — subtítulo. Con alias: solo la placa (el color no aporta a la identidad).
+   *  Sin alias: Color · Placa (placa solo si ya hubo titular con nombre, para no repetirla). */
   subId = computed(() => {
+    if (this.alias()?.trim()) return this.placa()?.trim() ?? '';
     const partes: string[] = [];
     if (this.color()?.trim()) partes.push(this.color()!.trim());
     if (this.tieneNombre() && this.placa()?.trim()) partes.push(this.placa().trim());

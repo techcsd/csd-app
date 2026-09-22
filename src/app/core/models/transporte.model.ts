@@ -8,17 +8,20 @@ export function vehiculoLabel(
 }
 
 /**
- * AT9 — identificación homologada del vehículo: `Marca Modelo · Color · Placa`
- * (p.ej. "Hyundai Cantus · Gris · G675571"). No se conocen las placas de memoria,
- * pero sí marca/modelo/color → esta es la etiqueta única para listados, selectores,
- * cards y avisos. Omite con elegancia lo que falte (color/placa) sin dejar huecos.
+ * AT9/BV2 — identificación homologada del vehículo. Si Raykler le puso un **alias**
+ * (nombre legible, BV2), manda: `Alias · Placa` (Eduardo: "por placa no sé cuál es
+ * cuál"). Sin alias, cae a `Marca Modelo · Color · Placa`. Omite con elegancia lo que
+ * falte. `alias` es opcional en la fuente: si el select/RPC no lo trae, se ignora.
  */
 export function vehiculoIdentidad(
-  v: { marca?: string | null; modelo?: string | null; color?: string | null; placa?: string | null } | null | undefined,
+  v: { alias?: string | null; marca?: string | null; modelo?: string | null; color?: string | null; placa?: string | null } | null | undefined,
 ): string {
   if (!v) return '';
+  const placa = v.placa?.trim() || null;
+  const alias = v.alias?.trim() || null;
+  if (alias) return [alias, placa].filter(Boolean).join(' · ');
   const mm = [v.marca?.trim(), v.modelo?.trim()].filter(Boolean).join(' ');
-  const partes = [mm || null, v.color?.trim() || null, v.placa?.trim() || null].filter(Boolean);
+  const partes = [mm || null, v.color?.trim() || null, placa].filter(Boolean);
   return partes.join(' · ');
 }
 
@@ -68,6 +71,7 @@ export interface VehiculoDetalle {
   placa: string;
   marca: string;
   modelo: string;
+  alias?: string | null; // BV2 — nombre legible del vehículo (Raykler); manda en vehiculoIdentidad
   color?: string | null; // AT9
   anio?: number | null; // Z10
   tipo: string;
@@ -90,6 +94,7 @@ export interface VehiculoACargo {
   placa: string;
   marca: string;
   modelo: string;
+  alias?: string | null; // BV2 — nombre legible del vehículo (Raykler); manda en vehiculoIdentidad
   color?: string | null; // AT9
   anio?: number | null; // Z10
   km: number;
@@ -101,6 +106,7 @@ export interface VehiculoPorRecibir {
   placa: string;
   marca: string;
   modelo: string;
+  alias?: string | null; // BV2 — nombre legible del vehículo (Raykler); manda en vehiculoIdentidad
   color?: string | null; // AT9
   anio?: number | null; // Z10
   km: number;
@@ -117,6 +123,7 @@ export interface VehiculoDisponible {
   placa: string;
   marca: string;
   modelo: string;
+  alias?: string | null; // BV2 — nombre legible del vehículo (Raykler); manda en vehiculoIdentidad
   color?: string | null; // AT9
   anio?: number | null; // Z10
   tipo: string;
@@ -137,6 +144,7 @@ export interface MiAsignacion {
   placa: string;
   marca: string;
   modelo: string;
+  alias?: string | null; // BV2 — nombre legible del vehículo (Raykler); manda en vehiculoIdentidad
   color?: string | null; // AT9
   anio?: number | null; // Z10
   tipo: string;
@@ -153,6 +161,7 @@ export interface AsignacionResultado {
   placa: string;
   marca: string;
   modelo: string;
+  alias?: string | null; // BV2 — nombre legible del vehículo (Raykler); manda en vehiculoIdentidad
   color?: string | null; // AT9
   tipo: string;
   kilometraje: number;

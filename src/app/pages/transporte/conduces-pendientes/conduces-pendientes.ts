@@ -9,6 +9,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConducesService, ConducePendienteEntrega } from '../../../core/services/conduces.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { TrackingService } from '../../../core/services/tracking.service';
 import { NotificacionesService } from '../../../core/services/notificaciones.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
@@ -39,7 +40,10 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 export class ConducesPendientesPage implements OnDestroy {
   private conduces = inject(ConducesService);
   private vehiculos = inject(VehiculosService);
+  private ctx = inject(UserContextService);
   private tracking = inject(TrackingService);
+  /** BV7 — solo logística/flota-elevado asigna un chofer directo a un conduce. */
+  esElevado = this.ctx.esFlotaElevado;
   private notificaciones = inject(NotificacionesService);
   private toast = inject(ToastService);
   private router = inject(Router);
@@ -66,6 +70,11 @@ export class ConducesPendientesPage implements OnDestroy {
   transferConductor = signal('');
   transferNota = signal('');
   enviandoTransfer = signal(false);
+
+  // BV7 — asignar chofer directo (elevado): setear conductor dispara la auto-ruta.
+  asignandoId = signal(''); // salida_id de la fila con el picker de asignación abierto
+  asignarConductor = signal('');
+  enviandoAsignar = signal(false);
 
   // AM5 — iniciar ruta del conduce (+ picker de vehículo si el conduce no lo trae).
   iniciandoId = signal(''); // salida_id de la fila arrancando
@@ -162,6 +171,31 @@ export class ConducesPendientesPage implements OnDestroy {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo transferir.'));
     } finally {
       this.enviandoTransfer.set(false);
+    }
+  }
+
+  // ── BV7 — asignar chofer directo (logística/flota-elevado) ──────────────────
+  abrirAsignar(id: string): void {
+    this.asignandoId.set(this.asignandoId() === id ? '' : id);
+    this.asignarConductor.set('');
+  }
+
+  async confirmarAsignar(id: string): Promise<void> {
+    if (!this.asignarConductor()) {
+      this.toast.error(this.i18n.t('Elige el chofer que se hará cargo.'));
+      return;
+    }
+    if (this.enviandoAsignar()) return;
+    this.enviandoAsignar.set(true);
+    try {
+      await this.conduces.asignarChoferConduce(id, this.asignarConductor());
+      this.toast.success(this.i18n.t('Chofer asignado. Se le creó la ruta.'));
+      this.asignandoId.set('');
+      await this.load(true);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo asignar el chofer.'));
+    } finally {
+      this.enviandoAsignar.set(false);
     }
   }
 

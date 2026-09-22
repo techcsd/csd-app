@@ -8,7 +8,7 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
+import { CameraService, CapturedPhoto, CameraRestore } from '../../../core/services/camera.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { BottomSheet } from '../bottom-sheet/bottom-sheet';
@@ -45,6 +45,9 @@ export class PhotoSlot implements OnDestroy {
   /** W6 — ofrecer también "Galería" además de la cámara (activo por defecto).
    *  En los flujos solo-cámara el padre pasa `[gallery]="false"`; ver `showGallery`. */
   gallery = input<boolean>(true);
+  /** BV5/BT5 — {clave, slot} del borrador para re-inyectar la foto si el SO destruye
+   *  la Activity durante la captura (Android). Opcional; solo aplica en nativo. */
+  restore = input<CameraRestore | null>(null);
 
   captured = output<CapturedPhoto>();
   cleared = output<void>();
@@ -80,14 +83,14 @@ export class PhotoSlot implements OnDestroy {
     // (best-effort) y abrimos la cámara de forma síncrona.
     if (this.esWeb) {
       void this.autosave.flushAll();
-      return this.run(() => this.camera.takePhoto());
+      return this.run(() => this.camera.takePhoto(this.restore() ?? undefined));
     }
     // AE7 — nativo (Android): la cámara del sistema saca la app a primer plano y
     // el SO puede matar el proceso (MIUI/OUKITEL/low-mem); hacemos FLUSH del
     // autosave ANTES de abrirla para no perder lo capturado.
     return this.run(async () => {
       await this.autosave.flushAll();
-      return this.camera.takePhoto();
+      return this.camera.takePhoto(this.restore() ?? undefined);
     });
   }
 

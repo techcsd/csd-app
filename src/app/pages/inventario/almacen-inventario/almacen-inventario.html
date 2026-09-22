@@ -11,6 +11,32 @@
       @if (denegado()) {
         <div class="almacen-inv__band almacen-inv__band--warn">🔒 {{ 'No tienes acceso al inventario de este almacén. Pídeselo a Tecnología o a un administrador.' | t }}</div>
       } @else {
+        <!-- BV3 — Pendientes de este almacén: lo accionable en un solo lugar. -->
+        @if (pendientes()?.length) {
+          <section class="almacen-inv__pend">
+            <h2 class="almacen-inv__pend-title">📌 {{ 'Pendientes de este almacén' | t }}</h2>
+            <div class="almacen-inv__pend-cards">
+              <button type="button" class="almacen-inv__pend-card" (click)="verEntradasPend()">
+                <span class="almacen-inv__pend-n">{{ entradasPend().length }}</span>
+                <span class="almacen-inv__pend-lb">{{ 'Entradas por confirmar' | t }}</span>
+              </button>
+              <div class="almacen-inv__pend-card almacen-inv__pend-card--info">
+                <span class="almacen-inv__pend-n">{{ salidasPend().length }}</span>
+                <span class="almacen-inv__pend-lb">{{ 'Salidas sin recibir' | t }}</span>
+              </div>
+            </div>
+            <ul class="almacen-inv__pend-list">
+              @for (p of pendientes(); track p.id) {
+                <li class="almacen-inv__pend-row">
+                  <span class="almacen-inv__pend-ic">{{ p.tipo === 'entrada' ? '📥' : '📤' }}</span>
+                  <span class="almacen-inv__pend-ref">{{ p.referencia }} · {{ p.renglones }} {{ 'reng.' | t }}</span>
+                  <span class="almacen-inv__pend-dias">{{ p.dias }} {{ 'días' | t }}</span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
         <input class="field almacen-inv__search" type="search" [ngModel]="query()" (ngModelChange)="query.set($event)" [placeholder]="'Buscar material…' | t" />
 
         <label class="almacen-inv__toggle">

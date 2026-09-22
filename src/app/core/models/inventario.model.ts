@@ -228,6 +228,55 @@ export interface Solicitud {
   folio?: number | null;
   proyecto?: { nombre: string } | null;
   items?: SolicitudItem[];
+  // BV9/BV10 — fecha de necesidad + fase derivada (si el server las trae; si no, se
+  // deriva en cliente con `faseRequisicion`).
+  fecha_necesidad?: string | null;
+  fase?: string | null;
+}
+
+/** BV9 — fase de la requisición para las tabs (pendiente/en_proceso/completada/rechazada). */
+export type RequisicionFase = 'pendiente' | 'en_proceso' | 'completada' | 'rechazada';
+
+/**
+ * BV9 — deriva la fase de una requisición. Si el server manda `fase` (columna
+ * computada `requisicion_fase`), manda; si no, se deriva del estado con la MISMA
+ * regla del padre (aproximación: 'aprobada' → en_proceso sin poder mirar pendientes).
+ */
+export function faseRequisicion(estado: string | null | undefined, fase?: string | null): RequisicionFase {
+  if (fase === 'pendiente' || fase === 'en_proceso' || fase === 'completada' || fase === 'rechazada') return fase;
+  const e = (estado ?? '').toLowerCase();
+  if (['rechazada', 'cancelada'].includes(e)) return 'rechazada';
+  if (['completada', 'entregada', 'cerrada'].includes(e)) return 'completada';
+  if (['aprobada', 'parcial', 'por_despachar'].includes(e)) return 'en_proceso';
+  return 'pendiente';
+}
+
+export const FASE_ORDEN: RequisicionFase[] = ['pendiente', 'en_proceso', 'completada', 'rechazada'];
+export const FASE_LABEL: Record<RequisicionFase, string> = {
+  pendiente: 'Pendientes',
+  en_proceso: 'En proceso',
+  completada: 'Completadas',
+  rechazada: 'Rechazadas',
+};
+
+/** BV10 — estado legible de la fecha de necesidad (para la 1ª línea de la tarjeta). */
+export interface NecesidadInfo {
+  estado: 'vencida' | 'hoy' | 'futura' | 'sin_fecha';
+  dias: number | null;
+}
+export function necesidadInfo(fecha: string | null | undefined, hoyISO: string): NecesidadInfo {
+  if (!fecha) return { estado: 'sin_fecha', dias: null };
+  const d = Math.round((Date.parse(fecha + 'T00:00:00') - Date.parse(hoyISO + 'T00:00:00')) / 86400000);
+  if (Number.isNaN(d)) return { estado: 'sin_fecha', dias: null };
+  if (d < 0) return { estado: 'vencida', dias: d };
+  if (d === 0) return { estado: 'hoy', dias: 0 };
+  return { estado: 'futura', dias: d };
+}
+/** BV10 — clave de orden por fecha de necesidad: sin fecha al final (Infinity). */
+export function necesidadOrden(fecha: string | null | undefined): number {
+  if (!fecha) return Number.POSITIVE_INFINITY;
+  const t = Date.parse(fecha + 'T00:00:00');
+  return Number.isNaN(t) ? Number.POSITIVE_INFINITY : t;
 }
 
 /** BC4 — código citable de la requisición (REQ-XXXXXX) a partir del folio.
@@ -267,6 +316,24 @@ export interface RequisicionBandeja {
   items_count: number;
   tiene_conduce: boolean;
   tiene_compra: boolean;
+  // BV9/BV10 — si el RPC de la bandeja las trae (forward-compatible); si no, la fase
+  // se deriva del estado y el orden por necesidad cae al created_at.
+  fecha_necesidad?: string | null;
+  fase?: string | null;
+}
+
+/** BV4 — una cobertura de un renglón de requisición por un movimiento (conduce/entrada). */
+export interface RequisicionCobertura {
+  id: string;
+  requisicion_item_id: string;
+  renglon: string;
+  movimiento_tipo: string;
+  movimiento_id: string;
+  cantidad: number;
+  via: string | null;
+  score: number | null;
+  revisar: boolean;
+  created_at: string;
 }
 
 /** AS7 — ítem del detalle de una requisición. */
@@ -296,6 +363,8 @@ export interface RequisicionDetalle {
   // el RPC requisicion_detalle solo si la migración BO8 está aplicada; hasta entonces
   // queda undefined y la UI simplemente no la muestra (forward-compatible).
   fecha_necesidad?: string | null;
+  // BV9 — fase derivada si el RPC la trae (si no, se deriva del estado en cliente).
+  fase?: string | null;
   solicitante_id: string | null;
   solicitante_nombre: string | null;
   atendido_por_nombre: string | null;
