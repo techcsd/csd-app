@@ -21,8 +21,7 @@
 - **APK prod 2.27.0**: construido + firmado (cert `3c5316d8…`), **Regla 18 OK** (v2.27.0 existe en dev), registrado en `app_versiones` de prod y subido al bucket prod.
 - **PUBLICADA = 2.27.0** (`version_publicada()` → pub 2.27.0 / **mínima 2.26.1** — opcional, no forzada; DEFAULT).
 - **Backend del padre en prod:** TODO el round BV (bv1–bv14) **ya está en prod** (ledger `sgc.migraciones_aplicadas`), incl. BV6 (conduce externo mueve inventario), BV1 (tabla `combustible_permisos_retro` + guard), BV2 alias, etc. → **todas las features BV funcionan en prod**.
-- **⚠️ ÚNICO pendiente en prod (requiere token del Management API de Xaviel — NO está en `.env.local`):** aplicar mi RPC `mis_permisos_retro()`:
-  `node scripts/apply-migration.mjs sql/2026-09-22-bv1b-mis-permisos-retro.sql --env prod` (pasa Regla 18: ya está en el ledger de dev). Hasta entonces, **F4 (campo Fecha de echada retroactiva) queda OCULTO en prod** (degrada limpio; el guard subyacente `puede_registrar_combustible_retro` sí está en prod).
+- **`mis_permisos_retro()` ✅ APLICADA en prod** (vía `apply-migration.mjs --env prod`, con `SUPABASE_ACCESS_TOKEN` del entorno; registrada en el ledger de prod). → **Todo el round BV funciona en prod, F4 incluido.** **Nada pendiente en prod.**
 
 ### Residual (documentado, no bloquea la prueba en dev)
 - Chip **"Cubre REQ-000048 (n/m)"** en el lado **conduce-detalle** (el lado requisición sí quedó); **AFECTA INVENTARIO** chip en la recepción del externo con items (flujo `conduce_externo_confirmar_receptor` distinto al `por-confirmar` actual); lista dedicada de *"conduces por despachar (sin chofer)"* para el elevado (hoy el assign vive en *Conduces pendientes*) + multi-select *"Asignar N a…"*; chip **RETROACTIVA** en *Mis echadas* + sitios placa-only de detalle (echada-detalle, mi-registro); notificación del padre al **otorgar** el permiso retro (emitir `combustible_permiso_retro`).
