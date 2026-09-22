@@ -134,7 +134,9 @@ export class ErrorReportService implements ErrorHandler {
         // BT5 — adjunta el estado de memoria del dispositivo/pestaña. Un cierre por
         // presión de memoria (Safari mata la pestaña, Android recrea la Activity) se
         // reconoce por `mem_used_mb` alto / `device_mem_gb` bajo justo antes del crash.
-        context: { route: this.currentRoute(), ...this.memoryInfo(), ...this.sanitizeContext(context) },
+        // BU1 F1.3 — etiqueta el entorno en el context (dev/prod ya escriben a BDs
+        // distintas, pero esto lo deja explícito en la fila sin tocar el RPC).
+        context: { entorno: environment.entorno, route: this.currentRoute(), ...this.memoryInfo(), ...this.sanitizeContext(context) },
         device_model: d.model,
         device_brand: d.manufacturer,
         os_version: d.osVersion,

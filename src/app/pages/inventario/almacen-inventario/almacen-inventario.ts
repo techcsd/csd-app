@@ -7,7 +7,7 @@ import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collaps
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
-import { InventarioService, InventarioAlmacenItem } from '../../../core/services/inventario.service';
+import { InventarioService, InventarioAlmacenItem, BodegaPendiente } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Bodega } from '../../../core/models/inventario.model';
@@ -55,6 +55,11 @@ export class AlmacenInventarioPage {
   loading = signal(false);
   denegado = signal(false);
 
+  // BV3 — "Pendientes de este almacén" (entradas por confirmar + salidas sin recibir).
+  pendientes = signal<BodegaPendiente[] | null>(null);
+  entradasPend = computed(() => (this.pendientes() ?? []).filter((p) => p.tipo === 'entrada'));
+  salidasPend = computed(() => (this.pendientes() ?? []).filter((p) => p.tipo === 'salida'));
+
   visibles = computed(() => {
     const q = this.query().toLowerCase().trim();
     return this.items().filter((it) => {
@@ -101,6 +106,17 @@ export class AlmacenInventarioPage {
     } finally {
       this.loading.set(false);
     }
+    void this.loadPendientes(); // BV3 — best-effort, no bloquea el inventario
+  }
+
+  /** BV3 — carga los pendientes accionables de este almacén (detrás de capacidad). */
+  private async loadPendientes(): Promise<void> {
+    this.pendientes.set(await this.inventario.bodegaPendientes(this.bodegaId()));
+  }
+
+  /** BV3 — deep-link a las entradas por confirmar (bandeja "Por recibir"). */
+  verEntradasPend(): void {
+    void this.router.navigate(['/transporte/por-confirmar']);
   }
 
   /** Refresco vivo (foreground/pull): silencioso si es automático. */

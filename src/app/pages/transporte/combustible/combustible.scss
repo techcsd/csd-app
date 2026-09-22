@@ -350,3 +350,17 @@ app-option-button {
 .comb__draft-txt span { color: var(--color-text-secondary); font-size: 13px; }
 .comb__draft-acts { display: flex; flex-direction: column; gap: 6px; }
 .comb__draft-go, .comb__draft-x { padding: 8px 14px; }
+
+// BV1 — distintivo RETROACTIVA en el resumen de una echada de fecha pasada.
+.comb__chip-retro {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--Hub, #ffb300);
+  color: var(--main, #121212);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}

@@ -16,13 +16,17 @@ import { ToastService } from '../../../core/services/toast.service';
 import {
   Bodega,
   RequisicionAvanceItem,
+  RequisicionCobertura,
   RequisicionDetalle,
   RequisicionDetalleItem,
   RequisicionEdicion,
   requisicionCodigo,
+  faseRequisicion,
+  necesidadInfo,
+  NecesidadInfo,
 } from '../../../core/models/inventario.model';
 import { Proyecto } from '../../../core/models/bitacora.model';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { combinarUnidades } from '../../../core/util/unidades';
 
 /** Una línea en edición (BB10). Conserva el id del renglón + si es no catalogado. */
@@ -70,7 +74,15 @@ export class RequisicionDetallePage {
   fetchedAt = signal<number | null>(null);
 
   // AS7 — gestión (aprobar/rechazar) solo para admin/módulo inventario.
-  modo = signal<'none' | 'aprobar' | 'rechazar' | 'editar' | 'cancelar'>('none');
+  // BV11 — 'fecha' = editar la fecha de necesidad.
+  modo = signal<'none' | 'aprobar' | 'rechazar' | 'editar' | 'cancelar' | 'fecha'>('none');
+
+  // BV11 — edición de la fecha de necesidad (offline-safe por outbox).
+  fechaNecesidadEdit = signal('');
+  fechaMotivo = signal('');
+  readonly hoyISO = fechaLocalISO();
+  // BV4 — material que cubre esta requisición (para el aprobador).
+  coberturas = signal<RequisicionCobertura[]>([]);
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
   responsable = signal('');
@@ -118,6 +130,18 @@ export class RequisicionDetallePage {
   );
   puedeVerObra = computed(() => this.ctx.esAdmin() || this.ctx.hasModulo('proyectos') || this.ctx.puedeVerSubmodulo('proyectos.obras'));
 
+  // BV10 — info de la fecha de necesidad (para el bloque destacado del detalle).
+  necesidad = computed<NecesidadInfo>(() => necesidadInfo(this.req()?.fecha_necesidad, this.hoyISO));
+  // BV11 — ¿puede editar la fecha? solicitante (mientras no esté completada/rechazada) o
+  // inventario/flota-elevado. Espeja el gate del RPC requisicion_set_fecha_necesidad.
+  puedeEditarFecha = computed(() => {
+    const r = this.req();
+    if (!r) return false;
+    const fase = faseRequisicion(r.estado, r.fase);
+    const autorEditable = this.esAutor() && (fase === 'pendiente' || fase === 'en_proceso');
+    return autorEditable || this.ctx.esFlotaElevado() || this.ctx.hasModulo('inventario') || this.ctx.esAdmin();
+  });
+
   /** BA6 — resumen del avance: "N de M renglones despachados". */
   avanceResumen = computed(() => {
     const a = this.avance();
@@ -154,6 +178,8 @@ export class RequisicionDetallePage {
       this.avance.set(av);
       this.ediciones.set(eds);
       this.puedeGestionarSig.set(gestion);
+      // BV4 — coberturas (best-effort, detrás de capacidad).
+      this.service.cobertura(this.id).then((c) => this.coberturas.set(c)).catch(() => {});
       this.fetchedAt.set(at);
       // BC1 — si estamos offline y la data viene de caché, avisar que puede estar vieja.
       this.desincronizado.set(!this.net.online() && at != null);
@@ -382,6 +408,50 @@ export class RequisicionDetallePage {
     if (na !== null && nd !== null && na !== nd) out.push(`Renglones: ${na} → ${nd}`);
     if ((a['notas'] ?? '') !== (d['notas'] ?? '')) out.push('Notas actualizadas');
     return out;
+  }
+
+  // ── BV11 — editar la fecha de necesidad (offline-safe por outbox) ──
+  abrirEditarFecha(): void {
+    this.fechaNecesidadEdit.set(this.req()?.fecha_necesidad ?? '');
+    this.fechaMotivo.set('');
+    this.modo.set('fecha');
+  }
+  async guardarFecha(): Promise<void> {
+    const r = this.req();
+    if (!r || this.procesando()) return;
+    const fecha = this.fechaNecesidadEdit();
+    if (!fecha) {
+      this.toast.error(this.i18n.t('Elige la fecha de necesidad.'));
+      return;
+    }
+    this.procesando.set(true);
+    try {
+      await this.service.setFechaNecesidad(r.id, fecha, this.fechaMotivo().trim() || null);
+      // Optimista: refleja la fecha ya (el outbox la confirmará al drenar).
+      this.req.update((cur) => (cur ? { ...cur, fecha_necesidad: fecha } : cur));
+      this.toast.success(this.i18n.t('Fecha de necesidad actualizada.'));
+      this.modo.set('none');
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo actualizar la fecha.'));
+    } finally {
+      this.procesando.set(false);
+    }
+  }
+
+  // ── BV4 — quitar una cobertura dudosa (aprobador) ──
+  async quitarCobertura(c: RequisicionCobertura): Promise<void> {
+    if (!this.net.online()) {
+      this.toast.error(this.i18n.t('Necesitas conexión para quitar la cobertura.'));
+      return;
+    }
+    try {
+      await this.service.desvincularCobertura(c.id);
+      this.coberturas.update((list) => list.filter((x) => x.id !== c.id));
+      this.toast.success(this.i18n.t('Cobertura quitada.'));
+      await this.refrescar();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo quitar la cobertura.'));
+    }
   }
 
   // ── BA6 — cancelar con motivo ──

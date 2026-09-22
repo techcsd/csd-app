@@ -14,6 +14,7 @@ import { WebauthnService } from '../../core/services/webauthn.service';
 import { VersionService } from '../../core/services/version.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
+import { PushService } from '../../core/services/push.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
@@ -41,6 +42,7 @@ export class PerfilPage {
   private versionSvc = inject(VersionService);
   private toast = inject(ToastService);
   private camera = inject(CameraService);
+  private push = inject(PushService);
   private router = inject(Router);
   private location = inject(Location);
 
@@ -61,6 +63,16 @@ export class PerfilPage {
   subiendoFoto = signal(false);
   obra = this.ctx.obraActiva;
   isAdmin = () => this.ctx.hasModulo('admin');
+  // BV8 — "A mi cargo": ingenieros/encargados (responsables de obra). Gating amplio como
+  // Personal de obra; el RPC materiales_a_cargo acota los datos a las obras del usuario.
+  puedeVerACargo = computed(
+    () =>
+      this.ctx.esAdmin() ||
+      this.ctx.hasModulo('ingenieria') ||
+      this.ctx.hasModulo('proyectos') ||
+      this.ctx.puedeVerSubmodulo('proyectos.obras') ||
+      this.ctx.puedeVerObra(),
+  );
   // BI6 (FASE 5) — un usuario de acceso por cédula (email sintético) puede cambiar su
   // PIN de acceso él mismo. Los de correo real usan el restablecimiento por correo.
   esCedula = computed(() => esEmailSintetico(this.ctx.profile()?.email));
@@ -78,6 +90,14 @@ export class PerfilPage {
   version = environment.version;
   versionPublicada = () => this.versionSvc.etiquetaVersion;
   hayNueva = () => this.versionSvc.hayNueva();
+  // BU1 F1.2 — Acerca de: entorno + ref corto (+ aviso de push en el build dev).
+  entorno = environment.entorno;
+  esDev = environment.entorno === 'dev';
+  refCorto = (() => {
+    try { return new URL(environment.supabaseUrl).hostname.split('.')[0].slice(0, 8); }
+    catch { return '—'; }
+  })();
+  pushDisponible = () => !this.push.soportado || this.push.disponible;
   checking = signal(false);
   confirmLogout = signal(false);
   biometriaSoportada = signal(false);
@@ -222,6 +242,11 @@ export class PerfilPage {
   /** Z26 — el encabezado (avatar + nombre + rol) abre el detalle de mi propio usuario. */
   verMiDetalle(): void {
     void this.router.navigate(['/perfil/mi-detalle']);
+  }
+
+  /** BV8 — "Materiales a mi cargo" (ingenieros/encargados). */
+  aMiCargo(): void {
+    void this.router.navigate(['/perfil/a-mi-cargo']);
   }
 
   /** AW7 — elegir una foto de perfil → editor (recorte circular) → subir. */

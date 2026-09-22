@@ -5,8 +5,19 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
-import { MiOrdenCompra, Solicitud, requisicionCodigo } from '../../../core/models/inventario.model';
-import { formatFechaMedia } from '../../../core/util/fecha';
+import {
+  MiOrdenCompra,
+  Solicitud,
+  requisicionCodigo,
+  faseRequisicion,
+  necesidadInfo,
+  necesidadOrden,
+  FASE_ORDEN,
+  FASE_LABEL,
+  RequisicionFase,
+  NecesidadInfo,
+} from '../../../core/models/inventario.model';
+import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 
 /** Track my material requests: Enviada → Aprobada → Entregada. */
 @Component({
@@ -39,16 +50,30 @@ export class MisSolicitudesPage {
   loading = signal(true);
   fmtFecha = formatFechaMedia; // U9
 
-  // BH1 — las canceladas (a menudo pruebas) no deben parecer trabajo pendiente:
-  // ocultas por defecto, con un toggle para verlas.
-  mostrarCanceladas = signal(false);
-  canceladasCount = computed(() => this.solicitudes().filter((s) => s.estado === 'cancelada').length);
-  visibles = computed(() =>
-    this.mostrarCanceladas() ? this.solicitudes() : this.solicitudes().filter((s) => s.estado !== 'cancelada'),
-  );
-  toggleCanceladas(): void {
-    this.mostrarCanceladas.update((v) => !v);
+  // BV9 — tabs por fase (pendiente/en_proceso/completada/rechazada). Arranca en la
+  // fase con trabajo activo (pendiente) para no esconder lo urgente.
+  readonly FASES = FASE_ORDEN;
+  faseLabel = (f: RequisicionFase): string => FASE_LABEL[f];
+  tab = signal<RequisicionFase>('pendiente');
+  setTab(f: RequisicionFase): void {
+    this.tab.set(f);
   }
+  private readonly hoyISO = fechaLocalISO();
+  faseDe = (s: Solicitud): RequisicionFase => faseRequisicion(s.estado, s.fase);
+  /** BV10 — info de la fecha de necesidad de una requisición (para la 1ª línea). */
+  necesidad = (s: Solicitud): NecesidadInfo => necesidadInfo(s.fecha_necesidad, this.hoyISO);
+  /** Conteo por fase (para los badges de las tabs). */
+  conteos = computed<Record<RequisicionFase, number>>(() => {
+    const c: Record<RequisicionFase, number> = { pendiente: 0, en_proceso: 0, completada: 0, rechazada: 0 };
+    for (const s of this.solicitudes()) c[this.faseDe(s)]++;
+    return c;
+  });
+  // BV10 — la fase elegida, ORDENADA por fecha de necesidad (sin fecha al final).
+  visibles = computed(() =>
+    this.solicitudes()
+      .filter((s) => this.faseDe(s) === this.tab())
+      .sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad)),
+  );
 
   constructor() {
     void this.load();

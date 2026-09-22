@@ -1,106 +1,64 @@
 /**
- * Publish the signed release APK + version.json to the public `app-releases`
- * Supabase bucket, AND register the version in `sgc.app_versiones` so the SGC
- * web "Historial de versiones" / "Versiones de la app" stay up to date on their
- * own (no manual entry). The register step is idempotent and never touches the
- * publicada/minima flags of an existing row (the admin controls those in SGC).
+ * BU1 F2/F3 — publica el APK firmado + version.json al bucket `app-releases` DEL
+ * PROYECTO DEL ENTORNO y registra la versión en SU `sgc.app_versiones` (mismo Y1).
+ * `--env dev|prod` es OBLIGATORIO (regla 18: prod nunca es el destino por defecto).
  *
- * Y1 (REGLA — historial confiable): cada release registra la versión SIEMPRE con
- * notas ESTRUCTURADAS (titulo + cambios[] tipados: nuevo|mejora|arreglo|seguridad),
- * el MISMO formato que la web, y **el release FALLA (exit 1) si no se pudo
- * registrar** — así ninguna versión se escapa sin quedar en el historial. Los
- * cambios se toman de CAMBIOS_CURADOS; si está vacío, se generan de los commits
- * (feat→nuevo, fix→arreglo, perf/refactor→mejora, sec→seguridad). Ver CLAUDE.md.
+ *   node scripts/release-apk.mjs --env dev                 # sube al bucket de dev + registra en dev
+ *   node scripts/release-apk.mjs --env prod --yes          # sube a prod + registra (exige haber salido en dev)
+ *   node scripts/release-apk.mjs --env <env> --register-only  # SOLO registra (no sube, no publica)
  *
- * Prereq: android/app/build/outputs/apk/release/app-release.apk exists
- * (see scripts/build-apk.md). Reads SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
- * from .env.local.
+ * REGLA 18 (gate): `--env prod` consulta el app_versiones de DEV; si esa misma
+ * `version` no salió en dev → RECHAZA. Excepción explícita: `--force-prod --motivo "…"`.
  *
- * Usage:
- *   node scripts/release-apk.mjs                 # sube el APK al bucket + registra en el historial
- *   node scripts/release-apk.mjs --register-only # SOLO registra en el historial (no sube nada, no publica)
+ * Y1 (historial confiable): registra SIEMPRE con notas ESTRUCTURADAS (titulo +
+ * cambios[] tipados) y FALLA (exit 1) si no pudo registrar.
  */
 import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { resolverEnv } from './lib/entorno.mjs';
 
-function loadEnvLocal() {
-  const env = {};
-  try {
-    for (const line of readFileSync('.env.local', 'utf8').split(/\r?\n/)) {
-      const m = line.match(/^([A-Z_]+)=(.*)$/);
-      if (m) env[m[1]] = m[2].replace(/^"|"$/g, '');
-    }
-  } catch {
-    /* ignore */
-  }
-  return env;
-}
-
-const env = loadEnvLocal();
-const URL = env.SUPABASE_URL;
-const KEY = env.SUPABASE_SERVICE_ROLE_KEY;
+const env = await resolverEnv(process.argv.slice(2));
+const ENV = env.entorno; // 'dev' | 'prod'
+const URL = env.url;
+const KEY = env.serviceKey;
 if (!URL || !KEY) {
-  console.error('Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in .env.local');
+  console.error(`✗ Faltan SUPABASE_URL_${ENV.toUpperCase()} / SUPABASE_SERVICE_ROLE_KEY_${ENV.toUpperCase()} en .env.local`);
   process.exit(1);
 }
 
-// Keep in sync with src/environments + android versionName.
-const VERSION = '2.26.1';
-// V5: versionCode is DERIVED from the version (major*1e6 + minor*1e3 + patch),
-// matching android/app/build.gradle and the backend version_code scheme.
-const codeFromVersion = (v) => {
-  const [maj = 0, min = 0, pat = 0] = v.split('.').map((n) => Number(n) || 0);
-  return maj * 1000000 + min * 1000 + pat;
-};
+// Fuente única de la versión: environment.prod.ts (alineada con build.gradle).
+const VERSION = (() => {
+  const m = readFileSync('src/environments/environment.prod.ts', 'utf8').match(/version:\s*'([^']+)'/);
+  if (!m) { console.error('✗ no pude leer la versión de environment.prod.ts'); process.exit(1); }
+  return m[1];
+})();
+const codeFromVersion = (v) => { const [maj = 0, min = 0, pat = 0] = v.split('.').map((n) => Number(n) || 0); return maj * 1000000 + min * 1000 + pat; };
 const VERSION_CODE = codeFromVersion(VERSION);
-// Rollout escalonado (R15): el mínimo forzado se controla en SGC → app-versiones
-// (sgc.app_versiones.minima → version_publicada().version_minima, que alimenta el
-// gate bloqueante). 1.42.0 quedó como mínimo forzado (2026-07-31: actualizaciones
-// más fáciles —descarga única + reanudar solo tras el permiso, firma v3—).
-// Mantener alineado con la fila `minima=true`.
-// Alineado con la fila `minima=true` en sgc.app_versiones. 2.26.1 se FORZÓ como
-// mínima (con OK de Xaviel), así que la mínima real = 2.26.1.
+// Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
+// como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-21';
+const RELEASED_AT = '2026-09-22';
 
-// Título corto de la entrada del historial (opcional pero recomendado).
-const TITULO = 'La app completa en inglés (sale de beta)';
-// Cambios CURADOS (copy para el usuario), etiquetados nuevo|mejora|arreglo|seguridad
-// y agrupados por módulo (m) para la pantalla de actualización.
-// Si se deja vacío, se generan de los commits (ver cambiosDesdeCommits()).
+const TITULO = 'Requisiciones por fase, conduce externo con inventario y más';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Ajustes', d: 'El inglés ahora cubre TODA la app: inicio, todos los hubs y sus pantallas (Registrar combustible, Conduces, Pendientes, Bitácora, Solicitudes, Inventario…). Ya no aparece "beta". Kreyòl estará disponible pronto.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Si la app se cierra o se cae mientras registras una echada, la retomas: se guarda lo que llevabas con su foto y aparece en el inicio como "Pendiente de terminar" (también recupera la foto en Android si el equipo cierra la cámara).' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Las requisiciones se organizan por fase (Pendientes / En proceso / Completadas / Rechazadas) y se ordenan por la fecha en que se necesitan; cada tarjeta muestra "se necesita en N días / vencida" arriba.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'El ingeniero puede editar la fecha de necesidad de una requisición desde su detalle (con motivo), incluso sin señal.' },
+  { t: 'nuevo', m: 'Conduce externo', d: 'El conduce externo ahora puede mover materiales del inventario de verdad: eliges el almacén de origen y los renglones del catálogo, y el stock se mueve.' },
+  { t: 'mejora', m: 'Conduces', d: 'Logística puede asignar un chofer a un conduce directamente desde la lista (le crea la ruta).' },
+  { t: 'nuevo', m: 'Inventario', d: 'Cada almacén muestra sus "Pendientes": entradas por confirmar y salidas sin recibir, con acceso directo.' },
+  { t: 'nuevo', m: 'Combustible', d: 'Se puede registrar una echada de una fecha pasada solo cuando Flota te da permiso; el campo Fecha aparece solo entonces.' },
+  { t: 'nuevo', m: 'Perfil', d: '"Materiales a mi cargo": los ingenieros/encargados ven lo recibido en sus obras que aún no se ha devuelto.' },
+  { t: 'mejora', m: 'Flota', d: 'Los vehículos se muestran por nombre · placa (con el alias que ponga Logística) en selectores y listas, no solo por placa.' },
 ];
 
-const TIPO_POR_COMMIT = {
-  feat: 'nuevo',
-  fix: 'arreglo',
-  perf: 'mejora',
-  refactor: 'mejora',
-  style: 'mejora',
-  sec: 'seguridad',
-  security: 'seguridad',
-};
-
-/**
- * Y1 — genera cambios[] tipados desde los commits (convención feat/fix/…) del
- * rango desde el último tag hasta HEAD. Se usa como respaldo cuando CAMBIOS_CURADOS
- * está vacío para que NUNCA se registre una versión sin notas estructuradas.
- */
+const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
 function cambiosDesdeCommits() {
   let range;
-  try {
-    const tag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
-    range = `${tag}..HEAD`;
-  } catch {
-    range = '-30'; // sin tags: últimos 30 commits
-  }
+  try { const tag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim(); range = `${tag}..HEAD`; }
+  catch { range = '-30'; }
   let log = '';
-  try {
-    log = execSync(`git log ${range} --pretty=format:%s`, { encoding: 'utf8' });
-  } catch {
-    return [];
-  }
+  try { log = execSync(`git log ${range} --pretty=format:%s`, { encoding: 'utf8' }); } catch { return []; }
   const out = [];
   for (const line of log.split('\n')) {
     const m = line.match(/^(\w+)(?:\(.+?\))?!?:\s*(.+)$/);
@@ -111,94 +69,100 @@ function cambiosDesdeCommits() {
   }
   return out;
 }
-
 const CAMBIOS = CAMBIOS_CURADOS.length ? CAMBIOS_CURADOS : cambiosDesdeCommits();
-if (!CAMBIOS.length) {
-  console.error(
-    '✗ Y1: no hay cambios tipados. El historial exige notas estructuradas.\n' +
-      '  Edita CAMBIOS_CURADOS en este script o usa commits convencionales (feat/fix/perf/…).',
-  );
-  process.exit(1);
-}
+if (!CAMBIOS.length) { console.error('✗ Y1: no hay cambios tipados. Edita CAMBIOS_CURADOS o usa commits convencionales.'); process.exit(1); }
 const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
 
-const APK_PATH = 'android/app/build/outputs/apk/release/app-release.apk';
+// APK del flavor del entorno.
+const APK_PATH = `android/app/build/outputs/apk/${ENV}/release/app-${ENV}-release.apk`;
 const bucket = 'app-releases';
 const registerOnly = process.argv.includes('--register-only');
 const versionedName = `csd-app-${VERSION}.apk`;
 const publicUrl = `${URL}/storage/v1/object/public/${bucket}/${versionedName}`;
 
+// ── REGLA 18: prod exige que la versión haya salido en dev ────────────────────
+async function gateReglaDieciocho() {
+  if (ENV !== 'prod') return; // dev no está gateado
+  if (env.forceProd) {
+    console.warn(`\n⚠️  --force-prod: se SALTA la regla 18 (v${VERSION} directo a prod). Motivo: ${env.motivo}\n`);
+    return;
+  }
+  const devUrl = process.env.SUPABASE_URL_DEV;
+  const devKey = process.env.SUPABASE_SERVICE_ROLE_KEY_DEV;
+  if (!devUrl || !devKey) { console.error('✗ Regla 18: faltan SUPABASE_URL_DEV / SUPABASE_SERVICE_ROLE_KEY_DEV para verificar dev.'); process.exit(1); }
+  const res = await fetch(
+    `${devUrl.replace(/\/$/, '')}/rest/v1/app_versiones?plataforma=eq.movil&version=eq.${encodeURIComponent(VERSION)}&select=version`,
+    { headers: { apikey: devKey, Authorization: `Bearer ${devKey}`, 'Accept-Profile': 'sgc' } },
+  );
+  if (!res.ok) { console.error(`✗ Regla 18: no pude consultar dev (${res.status} ${await res.text()}).`); process.exit(1); }
+  const rows = await res.json();
+  if (!Array.isArray(rows) || rows.length === 0) {
+    console.error(
+      `\n🔴 REGLA 18: ${VERSION} no ha salido en dev.\n` +
+        `   Primero:  npm run apk:publish -- --env dev\n` +
+        `   Si de verdad debe ir directo a prod:  npm run apk:publish -- --env prod --force-prod --motivo "…"\n`,
+    );
+    process.exit(1);
+  }
+  console.log(`✓ Regla 18: v${VERSION} existe en dev — prod permitido.`);
+}
+
 async function upload(objectName, body, contentType) {
   const res = await fetch(`${URL}/storage/v1/object/${bucket}/${objectName}`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${KEY}`,
-      apikey: KEY,
-      'Content-Type': contentType,
-      'x-upsert': 'true',
-      'cache-control': '3600',
-    },
+    headers: { Authorization: `Bearer ${KEY}`, apikey: KEY, 'Content-Type': contentType, 'x-upsert': 'true', 'cache-control': '3600' },
     body,
   });
   if (!res.ok) throw new Error(`upload ${objectName}: ${res.status} ${await res.text()}`);
   console.log(`✓ uploaded ${objectName}`);
 }
 
-/**
- * Registra (o actualiza) la versión en sgc.app_versiones vía el RPC idempotente
- * sgc.registrar_version(plataforma, version, notas, titulo, cambios) — con las
- * notas ESTRUCTURADAS (titulo + cambios[]), mismo formato que la web (Y1). El RPC
- * hace UPSERT por (plataforma, version), solo rellena lo vacío y NO toca
- * publicada/minima (las controla el admin). Lanza si el registro falla → el
- * caller aborta el release con exit 1.
- */
 async function registrarEnHistorial() {
   const base = URL.replace(/\/$/, '');
   const auth = { apikey: KEY, Authorization: `Bearer ${KEY}` };
-
   const res = await fetch(`${base}/rest/v1/rpc/registrar_version`, {
     method: 'POST',
     headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc' },
-    body: JSON.stringify({
-      p_plataforma: 'movil',
-      p_version: VERSION,
-      p_notas: CHANGELOG,
-      p_titulo: TITULO,
-      p_cambios: CAMBIOS, // jsonb [{ t, d }] — mismo shape que pinta la web
-      // Incluir p_url SIEMPRE: la BD tiene dos overloads de registrar_version
-      // (5 y 6 args); mandar p_url desambigua a la de 6 args (PGRST203 si no) y
-      // además deja la URL del APK en la fila cuando publicamos al bucket.
-      p_url: registerOnly ? null : publicUrl,
-    }),
+    body: JSON.stringify({ p_plataforma: 'movil', p_version: VERSION, p_notas: CHANGELOG, p_titulo: TITULO, p_cambios: CAMBIOS, p_url: registerOnly ? null : publicUrl }),
   });
   if (!res.ok) throw new Error(`registrar_version: ${res.status} ${await res.text()}`);
-  console.log(`✓ historial registrado (estructurado) vía RPC (v${VERSION})`);
+  console.log(`✓ historial (${ENV}) registrado vía RPC (v${VERSION})`);
 
-  // registrar_version() no maneja apk_url; cuando subimos el APK, dejamos la URL
-  // en la fila para que version_publicada().apk_url alimente la actualización
-  // in-app (V3). No toca publicada/minima (eso lo controla el admin en SGC).
   if (!registerOnly) {
-    const patch = await fetch(
-      `${base}/rest/v1/app_versiones?plataforma=eq.movil&version=eq.${encodeURIComponent(VERSION)}`,
-      {
+    const patch = await fetch(`${base}/rest/v1/app_versiones?plataforma=eq.movil&version=eq.${encodeURIComponent(VERSION)}`, {
+      method: 'PATCH',
+      headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc', Prefer: 'return=minimal' },
+      body: JSON.stringify({ apk_url: publicUrl }),
+    });
+    if (!patch.ok) throw new Error(`set apk_url: ${patch.status} ${await patch.text()}`);
+    console.log(`✓ apk_url actualizado (${ENV}, v${VERSION})`);
+  }
+
+  // --force-prod: intento best-effort de dejar rastro en la fila (columnas opcionales).
+  if (ENV === 'prod' && env.forceProd) {
+    try {
+      const patch = await fetch(`${base}/rest/v1/app_versiones?plataforma=eq.movil&version=eq.${encodeURIComponent(VERSION)}`, {
         method: 'PATCH',
         headers: { ...auth, 'Content-Type': 'application/json', 'Content-Profile': 'sgc', Prefer: 'return=minimal' },
-        body: JSON.stringify({ apk_url: publicUrl }),
-      },
-    );
-    if (!patch.ok) throw new Error(`set apk_url: ${patch.status} ${await patch.text()}`);
-    console.log(`✓ apk_url actualizado (v${VERSION})`);
+        body: JSON.stringify({ forzada: true, motivo: env.motivo }),
+      });
+      if (patch.ok) console.log('✓ fila marcada forzada/motivo (--force-prod)');
+      else console.warn(`⚠️  no pude marcar forzada/motivo (columnas ausentes?): ${patch.status}. Motivo queda solo en consola: ${env.motivo}`);
+    } catch (e) { console.warn(`⚠️  forzada/motivo best-effort falló: ${e}. Motivo: ${env.motivo}`); }
   }
 }
+
+// ── main ──────────────────────────────────────────────────────────────────────
+await gateReglaDieciocho();
 
 if (!registerOnly) {
   const apk = readFileSync(APK_PATH);
   await upload(versionedName, apk, 'application/vnd.android.package-archive');
   await upload('csd-app-latest.apk', apk, 'application/vnd.android.package-archive');
-
   const versionJson = {
     versionName: VERSION,
     versionCode: VERSION_CODE,
+    entorno: ENV, // BU1 F2.4 — la app solo acepta el version.json de su propio entorno
     min_version: MIN_VERSION,
     url: publicUrl,
     changelog: CHANGELOG,
@@ -206,22 +170,15 @@ if (!registerOnly) {
     size_bytes: apk.length,
   };
   await upload('version.json', JSON.stringify(versionJson, null, 2), 'application/json');
-
   console.log('\nAPK download URL:\n  ' + publicUrl);
   console.log('version.json:\n  ' + `${URL}/storage/v1/object/public/${bucket}/version.json`);
 } else {
-  console.log('Modo --register-only: no se sube nada al bucket (no se publica).');
+  console.log(`Modo --register-only (${ENV}): no se sube nada al bucket (no se publica).`);
 }
 
-// Y1 — el historial DEBE quedar registrado; si falla, el release falla (exit 1)
-// para que ninguna versión se escape sin registrar.
 try {
   await registrarEnHistorial();
 } catch (e) {
-  console.error(
-    `\n✗ RELEASE FALLÓ: no se pudo registrar la versión en el historial.\n` +
-      `  ${e instanceof Error ? e.message : e}\n` +
-      `  Regla Y1: ninguna versión debe quedar sin registrar. Corrige y reintenta.`,
-  );
+  console.error(`\n✗ RELEASE FALLÓ: no se pudo registrar la versión en el historial (${ENV}).\n  ${e instanceof Error ? e.message : e}\n  Regla Y1: ninguna versión debe quedar sin registrar. Corrige y reintenta.`);
   process.exit(1);
 }

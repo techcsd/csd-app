@@ -1,5 +1,57 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 22/09/2026 — PROMPT-61 (ronda BV, hijo) — **2.27.0** · rama `feature/bv-ronda` → `dev`
+
+**TL;DR:** implementadas las 6 fases de la ronda BV en la app, consumiendo los contratos del padre (todos **vivos en dev** `fzfrnrvndzrjwyvdpkgg`) **detrás de comprobación de capacidad** (degradan solos si un contrato aún no está desplegado). `npm run build` (SGC_ENV=dev) **verde con todos los guards** (sin-ref-hardcodeado, tokens, i18n **en 96 %** ≥ gate 95 %, dev-strings). Versión **2.27.0** (4 sitios + CAMBIOS_CURADOS). **Mínima se queda en 2.26.1** (no hay crash que la justifique — DEFAULT).
+
+### ✅ Construido (código + build verdes) — por fase
+- **F0 · BV5** — la echada a medias se retoma: borrador+foto ya existían (BT4); **nuevo** tarjeta *"Pendiente de terminar"* en el home (surtida por `EnProcesoService`, ahora incluye `combustible`/`conduce_externo`) + **`appRestoredResult`** central en `CameraService` (persiste `{clave,slot}` antes de abrir la cámara nativa; re-inyecta la foto al borrador si el SO recreó la Activity) cableado en las 4 fotos de combustible vía `[restore]` del `photo-slot`. *(La recuperación por Activity-kill necesita device-QA en Android.)*
+- **F1 · BV9/BV10/BV11/BV4** — requisiciones: **tabs por fase** (derivada en cliente con `faseRequisicion`, o del server si la trae) en *Mis requisiciones* y *Bandeja*; **orden por fecha de necesidad** (sin fecha al final) + 1ª línea *"se necesita en N días / vencida / sin fecha"*; detalle con **Fecha de necesidad destacada arriba de Fecha** + **editar** (outbox `requisicion_fecha` → `requisicion_set_fecha_necesidad`, offline-safe); **BV4 cobertura** en el detalle (`requisicion_cobertura` + *¿Revisar? No* → `desvincular_cobertura`).
+- **F2 · BV6** — conduce externo con inventario: toggle **"Con materiales del inventario"** → almacén de origen (Central primero) + picker de artículos con stock + renglones; `items[]` → `crear_conduce_externo(p_items)` (el servicio/outbox ya lo enviaban); texto de ayuda condicional; borrador incluye los renglones.
+- **F3 · BV7/BV3** — **Asignar chofer** directo (logística/flota-elevado) inline en *Conduces pendientes* (`asignar_chofer_conduce`, dispara auto-ruta); **Pendientes de este almacén** en `almacen-inventario` (`bodega_pendientes` → contadores entradas por confirmar / salidas sin recibir + deep-link a *Por recibir*).
+- **F4 · BV1** — echada de fecha pasada con permiso: campo **Fecha** solo si `mis_permisos_retro()` devuelve permiso vigente (rango preseleccionado, valida `desde…hoy`), envía `p_fecha`; chip **RETROACTIVA** en la revisión; deep-link `combustible_permiso_retro` → `/transporte/combustible?fecha=`.
+- **F5 · BV8/BV2** — **A mi cargo** (`/perfil/a-mi-cargo`, `materiales_a_cargo()`, solo lectura, entrada gateada en Perfil) + **vehículos por nombre·placa** (`vehiculos.alias` en selects directos + `vehiculoIdentidad` alias-aware + `vehiculo-card [alias]` + picker).
+
+### 📤 En dev (owed físico de Xaviel — no ejecutado en esta sesión)
+- **Falta correr** `npm run apk -- --env dev` + `npm run apk:publish -- --env dev` (registra 2.27.0 en `app_versiones` de dev + sube APK dev al bucket) y **merge `feature/bv-ronda` → `dev`** (Vercel construye `app-dev.`). *(No se ejecutó el build/publish del APK en esta sesión — ver "Siguiente paso".)*
+- **SQL `mis_permisos_retro()`:** ✅ **APLICADA en dev** (`sgc-dev`, vía pooler + ledger `sgc.migraciones_aplicadas` archivo `sql/2026-09-22-bv1b-mis-permisos-retro.sql`, checksum `513ecb31…`, `aplicada_por=claude-code`). Copiada a `SGC/sql/` (canónica del padre) y a `csd-app/sql-para-sgc/`. **Pendiente prod:** el padre corre `node scripts/apply-migration.mjs sql/2026-09-22-bv1b-mis-permisos-retro.sql --env prod` (pasa el ledger porque salió en dev). El campo Fecha de F4 ya funciona en dev cuando Flota otorga un permiso.
+
+### ⏳ En prod (gateado — espera OK de Xaviel)
+- **Nada en prod.** Tras "probado en dev, OK": PR `dev → main` → `npm run apk -- --env prod` → `apk:publish -- --env prod` (pasa el ledger porque salió en dev). Publicar/mínima = paso aparte del admin; **DEFAULT: publicada, mínima se queda en 2.26.1**.
+- Antes del prod del padre: aplicar en prod los objetos BV (ya en dev) + `mis_permisos_retro` (nuevo).
+
+### Residual (documentado, no bloquea la prueba en dev)
+- Chip **"Cubre REQ-000048 (n/m)"** en el lado **conduce-detalle** (el lado requisición sí quedó); **AFECTA INVENTARIO** chip en la recepción del externo con items (flujo `conduce_externo_confirmar_receptor` distinto al `por-confirmar` actual); lista dedicada de *"conduces por despachar (sin chofer)"* para el elevado (hoy el assign vive en *Conduces pendientes*) + multi-select *"Asignar N a…"*; chip **RETROACTIVA** en *Mis echadas* + sitios placa-only de detalle (echada-detalle, mi-registro); notificación del padre al **otorgar** el permiso retro (emitir `combustible_permiso_retro`).
+
+### Verify on resume
+`SGC_ENV=dev npm run build` → guards verdes + `Output location …/dist/csd-app`. i18n `en 96 %` (alcance 3 pantallas 100 %).
+
+---
+
+## 🟢 SESIÓN 21/09/2026 — PROMPT-59 (BU1 hijo) — **Entorno de desarrollo (dev/prod) construido** · rama `feature/bu1-entorno-dev` · release gateado
+
+**TL;DR:** el padre (SGC) ya entregó BU1 (web 1.140.0 + `sgc-dev` + regla 18 vivos), así que el hijo se cableó **de verdad** contra `sgc-dev` (`fzfrnrvndzrjwyvdpkgg`), no en placebo. **La app ahora tiene dos entornos** con separación total y **regla 18** (nada a prod sin pasar por dev; scripts `--env` obligatorio; prod pide confirmación). **Verificado:** `npm run build` verde con `SGC_ENV=dev` y `prod`; guards verdes (nuevo `verify-sin-ref-hardcodeado` + tokens + i18n + dev-strings); **APK dev firmado OK** (`app-dev-release.apk`, `com.constructorasd.csdapp.dev`, `2.26.1-dev`, cert de prod `3c5316d8…`) y **v2.26.1 registrada en dev**; **regla 18 probada** (`release-apk --env prod` consulta el `app_versiones` de dev). Guía nueva: `docs/ENTORNOS.md`. **Nace la regla 18** en `CLAUDE.md`.
+
+### ✅ En dev (ya vive / probado)
+- Código del entorno dev completo en `feature/bu1-entorno-dev` = `dev` (`f6fa995`, pusheadas); **APK dev construido y firmado**; **v2.26.1 registrada en el `app_versiones` de dev**. `npm run build:dev` verde (PWA "CSD App DEV", título `[DEV]`, cinta DEV, iconos naranja).
+- **✅ Device-QA de coexistencia (Redmi Note 10 Pro, MIUI):** el APK dev instala **junto** al de prod (`com.constructorasd.csdapp.dev` + `com.constructorasd.csdapp`; **prod intacto 2.24.1**, sin tocarse), **arranca sin crash** y muestra la cinta **"DEV · fzfrnrvn"** (sgc-dev). 
+- **🐛 Bug encontrado y arreglado en device (`f6fa995`):** el APK dev **crasheaba al abrir** — `PushService` llamaba `PushNotifications.register()` → `FirebaseMessaging.getInstance()` nativo LANZA sin google-services (excepción no atrapable desde JS). Fix: `PushService.init()` no arranca push en entorno dev. (El guard de *build* no bastaba: era un crash de *runtime*.) MIUI además exige confirmar el "Install via USB" en el teléfono.
+- Local: `npm run env:dev` apunta el `ng serve` a `sgc-dev`; sin config → pantalla "Sin proyecto configurado".
+- **Falta (físico Xaviel):** DNS `app-dev.` + Vercel Preview `dev` para que `app-dev.sgcconstructorasd.com` sirva la PWA dev; instalar PWA dev + APK `.dev` en el teléfono; **device-QA en dev** (6 fotos conduce externo, borradores, English, despacho renglón 0, transferir conduce). Firebase app `.dev` para push (opcional; hoy APK dev sin push, avisado en "Acerca de").
+
+### ⏳ En prod (gateado — espera OK de Xaviel)
+- **Nada nuevo en prod aún.** El estreno por el flujo nuevo: merge `feature/bu1-entorno-dev` → `dev` (push con OK) → device-QA → **con OK**: PR `dev → main` → `npm run apk -- --env prod` → `npm run apk:publish -- --env prod` (pasa la regla 18 porque ya salió en dev).
+- El repo ya está en **2.26.1 PUBLICADA + MÍNIMA** (sesión anterior); el estreno del flujo arranca desde 2.26.1. La **infra dev** (cinta/flavor/build-env) puede ir en un bump **2.27.0** siguiendo el mismo camino.
+- **Pendiente físico prod:** proteger `main` de `techcsd/csd-app` (`gh api -X PUT repos/techcsd/csd-app/branches/main/protection --input .github/branch-protection-main.json`, con OK).
+
+### Verify on resume
+`SGC_ENV=prod node scripts/build-env.mjs` y `SGC_ENV=dev node scripts/build-env.mjs` → ambos verde; `node scripts/verify-sin-ref-hardcodeado.mjs` verde; APK dev en `android/app/build/outputs/apk/dev/release/app-dev-release.apk`.
+
+### Rollback
+Desinstalar el flavor `.dev` no toca prod; `environment.ts` se regenera con `npm run env:dev|prod`; Vercel: quitar el dominio `app-dev.`; código: `git revert`. Detalle en `docs/ENTORNOS.md` §Rollback.
+
+---
+
 ## 🟢 SESIÓN 21/09/2026 — PROMPT-57 (cont.) — **Inglés cubre la app (96%, sale de beta)** · **RELEASE 2.26.1 PUBLICADA + MÍNIMA FORZADA** · PWA→main desplegada
 
 **RELEASE 2.26.1 — ✅ PUBLICADA + MÍNIMA (con OK de Xaviel: "do all the stuff" → "yes, do it" para forzar):** bump 4 sitios (`environment(.prod).ts`, `android build.gradle`, `release-apk VERSION`), APK firmado (cert prod `3c5316d8…5065`, v1+v2+v3), **Y1 registrado** (1 mejora curada: inglés completo), subido al bucket (`csd-app-2.26.1.apk` + latest + version.json con `min_version=2.26.1`), **apk_url actualizado**. **PUBLICADA = 2.26.1 · MÍNIMA = 2.26.1** (Xaviel pidió forzar tras publicar). Gate verificado: `version_publicada()` → **pub 2.26.1 / min 2.26.1 / code 2026001 / min_code 2026001**. Higiene de flags OK (solo 2.26.1 `minima=true`; 2.26.0 quedó `publicada`, minima off). **PWA:** `main` estaba en 2.25.0 (todo el round BT vivía solo en `bt-round-2.26.0`); se hizo **fast-forward de main + push → Vercel** para que el iPhone reciba 2.26.1. **Device-QA de 2.26.0 sigue pendiente** (ver 18/09); si algo grave, rollback abajo.

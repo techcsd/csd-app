@@ -1,0 +1,12 @@
+{
+  "_comment": "BU1 — protección de `main` en techcsd/csd-app. APLICAR SOLO CON OK DE XAVIEL. Igual que el padre: PR obligatorio + check pr-main; enforce_admins:false para que Xaviel pueda saltarla en un hotfix. Aplicar con:  gh api -X PUT repos/techcsd/csd-app/branches/main/protection --input .github/branch-protection-main.json  (o el equivalente en la UI de GitHub). Quitar:  gh api -X DELETE repos/techcsd/csd-app/branches/main/protection",
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["build-prod"]
+  },
+  "enforce_admins": false,
+  "required_pull_request_reviews": {
+    "required_approving_review_count": 0
+  },
+  "restrictions": null
+}

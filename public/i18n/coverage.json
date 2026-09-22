@@ -5,7 +5,7 @@
   "byScreen": {
     "": {
       "conT": 0,
-      "sinT": 15,
+      "sinT": 22,
       "en": 0,
       "ht": 0
     },
@@ -214,7 +214,7 @@
       "ht": 0
     },
     "pages/home": {
-      "conT": 13,
+      "conT": 14,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -250,7 +250,7 @@
       "ht": 0
     },
     "pages/inventario/almacen-inventario": {
-      "conT": 18,
+      "conT": 23,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -484,7 +484,13 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 43,
+      "conT": 47,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/perfil/a-mi-cargo": {
+      "conT": 7,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -556,21 +562,21 @@
       "ht": 0
     },
     "pages/solicitudes/bandeja": {
-      "conT": 12,
+      "conT": 16,
       "sinT": 0,
       "en": 100,
       "ht": 0
     },
     "pages/solicitudes/detalle": {
-      "conT": 49,
+      "conT": 62,
       "sinT": 12,
-      "en": 80,
+      "en": 84,
       "ht": 0
     },
     "pages/solicitudes/mis": {
       "conT": 12,
       "sinT": 0,
-      "en": 100,
+      "en": 92,
       "ht": 0
     },
     "pages/solicitudes/pedir": {
@@ -670,7 +676,7 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 103,
+      "conT": 108,
       "sinT": 2,
       "en": 98,
       "ht": 0
@@ -688,7 +694,7 @@
       "ht": 0
     },
     "pages/transporte/conduce-externo": {
-      "conT": 36,
+      "conT": 45,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -718,7 +724,7 @@
       "ht": 0
     },
     "pages/transporte/conduces-pendientes": {
-      "conT": 21,
+      "conT": 24,
       "sinT": 0,
       "en": 100,
       "ht": 0

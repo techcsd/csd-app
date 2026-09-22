@@ -5,6 +5,14 @@ import { Preferences } from '@capacitor/preferences';
 import { environment } from '../../../environments/environment';
 
 /**
+ * BU1 F0 — ¿hay un proyecto Supabase configurado? Cuando `environment.ts` es el
+ * placeholder generado (supabaseUrl vacío), la app NO intenta conectarse: arranca
+ * en la pantalla fija "Sin proyecto configurado — corre `npm run env:dev`". Así
+ * `ng serve` local nunca habla con prod por defecto (regla 18).
+ */
+export const hasSupabaseProject = !!environment.supabaseUrl;
+
+/**
  * On native Android we keep the Supabase session in Capacitor Preferences
  * (backed by encrypted SharedPreferences) instead of localStorage, so the
  * refresh token survives WebView storage purges. On the PWA we fall back to
@@ -25,22 +33,31 @@ const nativeStorage: SupportedStorage = {
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
-  readonly client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
-    db: { schema: 'sgc' },
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storage: Capacitor.isNativePlatform() ? nativeStorage : undefined,
+  // BU1 F0 — sin proyecto configurado usamos una URL placeholder para no romper el
+  // arranque (createClient/new URL fallan con cadena vacía). El cliente nunca se usa:
+  // el shell muestra la pantalla "Sin proyecto configurado" (hasSupabaseProject=false).
+  readonly client = createClient(
+    environment.supabaseUrl || 'https://placeholder.supabase.co',
+    environment.supabaseAnonKey || 'placeholder-anon-key',
+    {
+      db: { schema: 'sgc' },
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: Capacitor.isNativePlatform() ? nativeStorage : undefined,
+      },
     },
-  });
+  );
 
   /**
    * Storage key supabase-js writes the session under. Derived EXACTLY like
    * supabase-js does (`sb-${hostname.split('.')[0]}-auth-token`) so we read the
    * same blob it wrote — do not hardcode/override it or existing sessions break.
    */
-  private readonly authStorageKey = `sb-${new URL(environment.supabaseUrl).hostname.split('.')[0]}-auth-token`;
+  private readonly authStorageKey = environment.supabaseUrl
+    ? `sb-${new URL(environment.supabaseUrl).hostname.split('.')[0]}-auth-token`
+    : 'sb-none-auth-token';
 
   /**
    * AY9 — reads the persisted session STRAIGHT FROM DISK, offline-safe: no

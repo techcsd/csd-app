@@ -3,6 +3,62 @@
   height: 100dvh;
 }
 
+// BU1 F0 — pantalla "Sin proyecto configurado" (solo `ng serve` sin env:dev).
+.no-project {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--color-secondary);
+}
+.no-project__card {
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 380px;
+}
+.no-project__icon {
+  font-size: 56px;
+}
+.no-project__title {
+  margin: 12px 0 8px;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+.no-project__msg {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--fs-option);
+  line-height: 1.5;
+  code {
+    background: var(--color-secondary);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+}
+
+// BU1 F1 — cinta DEV: esquina superior derecha, naranja, sobre todo el shell.
+.dev-ribbon {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 10001;
+  padding: 3px 10px;
+  border-bottom-left-radius: 10px;
+  background: #f97316; // tokens-allow-dark — cinta DEV: naranja fija en ambos temas (marcador, no superficie)
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
 .version-gate {
   position: fixed;
   inset: 0;

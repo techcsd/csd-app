@@ -33,7 +33,10 @@ import { TrackingService } from './core/services/tracking.service';
 import { UserContextService } from './core/services/user-context.service';
 import { ImpersonationService } from './core/services/impersonation.service';
 import { ThemeService } from './core/services/theme.service';
+import { CameraService } from './core/services/camera.service';
 import { IdiomaOnboardingService } from './core/i18n/idioma-onboarding.service';
+import { hasSupabaseProject } from './core/services/supabase.service';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -64,6 +67,8 @@ export class App {
   private notificaciones = inject(NotificacionesService);
   private deviceInfo = inject(DeviceInfoService);
   private tracking = inject(TrackingService);
+  /** BV5/BT5 — listener de `appRestoredResult` (recupera una foto tras recrear la Activity). */
+  private camera = inject(CameraService);
   /** AY7 — banner "USUARIO DE PRUEBA" en el shell (esPrueba del perfil). */
   ctx = inject(UserContextService);
   /** BB — "Entrar como": banner "Estás viendo como X" + salir. */
@@ -75,7 +80,21 @@ export class App {
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
   private trackingArrancado = false;
 
+  /** BU1 F0 — sin proyecto configurado el shell muestra "Sin proyecto configurado"
+   *  y NO arranca nada (no toca Supabase). Solo pasa en `ng serve` sin env:dev. */
+  readonly sinProyecto = !hasSupabaseProject;
+  /** BU1 F1 — cinta DEV: se pinta en dev (esquina superior, sobre todo el shell). */
+  readonly entorno = environment.entorno;
+  readonly esDev = environment.entorno === 'dev';
+  /** Ref corto del proyecto (para la cinta y "Acerca de"). */
+  readonly refCorto = (() => {
+    try { return new URL(environment.supabaseUrl).hostname.split('.')[0].slice(0, 8); }
+    catch { return '—'; }
+  })();
+
   constructor() {
+    // BU1 F0 — cortocircuito: sin proyecto no se instancia nada de la app real.
+    if (this.sinProyecto) return;
     // BT2 — aviso de una sola vez si un idioma guardado aún no está disponible
     // (p. ej. Kreyòl "próximamente"): la app cae a español y lo explica.
     effect(() => {
@@ -100,6 +119,7 @@ export class App {
     // AL6 — re-evaluar al volver a primer plano (por si completó la inspección o
     // se le asignó un vehículo). Best-effort, nativo.
     if (Capacitor.isNativePlatform()) {
+      this.camera.init(); // BV5/BT5 — recupera la foto si el SO recreó la Activity con la cámara abierta
       void CapApp.addListener('resume', () => {
         void this.syncAlarmaNativa();
         void this.notificaciones.iniciarRealtime(); // AM4 — reasegura el canal tras dormir

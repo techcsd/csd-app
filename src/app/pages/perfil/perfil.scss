@@ -108,6 +108,11 @@
 .perfil__info span {
   color: var(--color-text-secondary);
 }
+// BU1 F1.2 — entorno dev resaltado en naranja en "Acerca de".
+.perfil__entorno-dev {
+  color: #f97316; // tokens-allow-dark — marcador de entorno dev
+  text-transform: uppercase;
+}
 .perfil__btn {
   margin-bottom: 14px;
 }

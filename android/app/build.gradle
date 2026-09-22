@@ -13,7 +13,7 @@ if (hasKeystore) {
 // name (major*1_000_000 + minor*1_000 + patch) so it always increments with the
 // version and matches the backend's version_code scheme (e.g. 1.5.0 -> 1005000).
 // Keep appVersionName in sync with src/environments/* and scripts/release-apk.mjs.
-def appVersionName = "2.26.1"
+def appVersionName = "2.27.0"
 def computeVersionCode = { String name ->
     def p = name.tokenize('.')
     def major = (p.size() > 0 ? p[0] : "0").toInteger()
@@ -24,6 +24,22 @@ def computeVersionCode = { String name ->
 
 android {
     namespace = "com.constructorasd.csdapp"
+    // BU1 F2 — dos flavors por entorno: `prod` y `dev`. El dev instala JUNTO al de
+    // prod (applicationId distinto `…​.dev`), muestra "CSD App DEV" (strings.xml del
+    // flavor en src/dev/res) e icono con banda DEV (src/dev/res/mipmap-*). Misma
+    // keystore (interno). El nombre app_name/custom_url_scheme se sobreescriben en
+    // el strings.xml del flavor dev (evita el conflicto de recurso de resValue).
+    flavorDimensions "entorno"
+    productFlavors {
+        prod {
+            dimension "entorno"
+        }
+        dev {
+            dimension "entorno"
+            applicationIdSuffix ".dev"
+            versionNameSuffix "-dev"
+        }
+    }
     compileSdk = rootProject.ext.compileSdkVersion
     signingConfigs {
         release {
@@ -93,9 +109,23 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// BU1 F2 — google-services es FLAVOR-AWARE. El flavor dev usa el applicationId
+// `com.constructorasd.csdapp.dev`; si NO existe un google-services.json propio de dev
+// (src/dev/google-services.json — app Android dev en Firebase, pendiente de Xaviel),
+// aplicar el plugin ROMPERÍA el build ("No matching client for package …dev"). Por eso,
+// para builds dev sin ese JSON, NO se aplica el plugin: el APK dev compila SIN push
+// (PushService lo detecta y lo dice en "Acerca de"). Cuando Xaviel agregue
+// src/dev/google-services.json, el plugin lo toma solo (ubicación por flavor) y hay push.
 try {
+    def isDevBuild = gradle.startParameter.taskNames.any { it.toLowerCase().contains('dev') }
+    def devServices = file('src/dev/google-services.json')
     def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
+    def applyGoogle = servicesJSON.exists() && servicesJSON.text
+    if (isDevBuild && !devServices.exists()) {
+        applyGoogle = false
+        logger.warn("Flavor dev sin src/dev/google-services.json → APK dev SIN push (esperado hasta crear la app Firebase .dev).")
+    }
+    if (applyGoogle) {
         apply plugin: 'com.google.gms.google-services'
     }
 } catch(Exception e) {

@@ -1,40 +1,19 @@
 /**
- * Apply a .sql migration to the shared SGC Supabase project via the Management
- * API (runs as postgres, so DDL works). Reads SUPABASE_ACCESS_TOKEN from the
- * environment; project ref defaults to the SGC project.
+ * BU1 F3.1 — RETIRADO en el hijo (regla 11 / AU1).
  *
- * Usage: node scripts/apply-migration.mjs sql/<file>.sql
+ * El hijo (app móvil) ya NO aplica DDL directo. Los SQL del hijo se dejan en
+ * `sql-para-sgc/` y **los aplica el PADRE (SGC)** con su ledger y `--env`:
+ *
+ *   # en el repo del padre (C:\Users\xavie\Desktop\X Dev\dev\SGC)
+ *   node scripts/apply-migration.mjs sql/<archivo>.sql --env dev     # probar en dev
+ *   node scripts/apply-migration.mjs sql/<archivo>.sql --env prod --yes   # con OK (exige ledger dev)
+ *
+ * Así se cumple la regla 18 (nada llega a prod sin pasar por dev + ledger) y no
+ * hay dos caminos de DDL. Este wrapper solo lo recuerda y sale con error.
  */
-import { readFileSync } from 'node:fs';
-
-const REF = process.env.SUPABASE_PROJECT_REF || 'jeeqhgccqefbqilntcpu';
-const TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
-const file = process.argv[2];
-
-if (!TOKEN) {
-  console.error('Missing SUPABASE_ACCESS_TOKEN in the environment.');
-  process.exit(1);
-}
-if (!file) {
-  console.error('Usage: node scripts/apply-migration.mjs <path-to.sql>');
-  process.exit(1);
-}
-
-const query = readFileSync(file, 'utf8');
-
-const res = await fetch(`https://api.supabase.com/v1/projects/${REF}/database/query`, {
-  method: 'POST',
-  headers: {
-    Authorization: `Bearer ${TOKEN}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({ query }),
-});
-
-const text = await res.text();
-if (!res.ok) {
-  console.error(`❌ ${res.status} ${res.statusText}\n${text}`);
-  process.exit(1);
-}
-console.log(`✅ Applied ${file}`);
-console.log(text.slice(0, 500));
+console.error(
+  '\n🔴 apply-migration.mjs está RETIRADO en el hijo (BU1 F3.1).\n' +
+    '   Deja el SQL en sql-para-sgc/ y aplícalo desde el PADRE (SGC) con --env dev|prod\n' +
+    '   (su ledger gatea prod). Ver docs/ENTORNOS.md y CLAUDE.md (regla 11 + regla 18).\n',
+);
+process.exit(1);

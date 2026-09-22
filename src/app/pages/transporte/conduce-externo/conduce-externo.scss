@@ -156,3 +156,78 @@
 .ce-exito__title { font-size: 20px; font-weight: 800; color: var(--color-text); margin: 0; }
 .ce-exito__txt { color: var(--color-text-secondary); font-size: 14px; margin: 0 0 12px; }
 .ce-exito .btn-cta, .ce-exito .btn-ghost { width: 100%; max-width: 320px; }
+
+// BV6 — "Con materiales del inventario": toggle + renglones de stock.
+.ce-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.ce-toggle input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--Hub, #ffb300);
+}
+.ce-toggle__txt {
+  font-weight: 700;
+  color: var(--text);
+}
+.ce-mt {
+  margin-top: 12px;
+}
+.ce-items {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ce-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.ce-item__name {
+  flex: 1 1 100%;
+  font-weight: 700;
+  color: var(--text);
+}
+.ce-item__qty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ce-item__unit {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.ce-item__x {
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.ce-item__stock {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.ce-band {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  color: var(--text-2);
+  font-size: 14px;
+}

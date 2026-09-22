@@ -280,6 +280,13 @@
   text-align: left;
   cursor: pointer;
 }
+// BV5 — variante "Pendiente de terminar": tono neutro con acento Hub para
+// distinguirla del banner de "por recibir" (que es Hub sólido).
+.home__firmar--draft {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--Hub, #ffb300);
+}
 .home__firmar-icon {
   font-size: 24px;
 }

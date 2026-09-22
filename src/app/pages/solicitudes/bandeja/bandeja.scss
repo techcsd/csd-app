@@ -136,3 +136,23 @@
   font-size: 22px;
   color: var(--color-text-secondary);
 }
+
+// BV9/BV10 — badge de conteo en las tabs + fecha de necesidad como 1ª línea.
+.bandeja__chip-n {
+  margin-left: 5px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.15);
+  font-size: 11px;
+}
+.req-card__nec {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.req-card__nec--venc {
+  color: #c0392b;
+}

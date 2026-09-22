@@ -90,17 +90,84 @@
       <!-- 3. Material -->
       <section class="ce-sec">
         <h2 class="ce-sec__title">{{ '¿Qué mueve?' | t }}</h2>
+
+        <!-- BV6 — el conduce externo PUEDE mover inventario nuestro de verdad -->
+        <label class="ce-toggle">
+          <input type="checkbox" [ngModel]="conMateriales()" (ngModelChange)="toggleMateriales($event)" />
+          <span class="ce-toggle__txt">{{ 'Con materiales del inventario' | t }}</span>
+        </label>
+
         <input class="field" type="text" [ngModel]="materialDesc()" (ngModelChange)="materialDesc.set($event)"
           [placeholder]="'Ej: mueble, nevera, varillas…' | t" aria-label="Qué mueve" />
-        <p class="ce-hint">{{ 'Descripción libre. No afecta el inventario.' | t }}</p>
+        <p class="ce-hint">
+          @if (conMateriales()) {
+            {{ 'Descripción libre para lo que no es inventario; con materiales, el inventario se mueve.' | t }}
+          } @else {
+            {{ 'Descripción libre. No afecta el inventario.' | t }}
+          }
+        </p>
+
+        @if (conMateriales()) {
+          <!-- BS1 — almacén de origen (nuestro), Central primero 🏢 -->
+          <label class="field-label ce-mt">{{ 'Almacén de origen' | t }}</label>
+          <app-collapsible-select
+            [label]="'Almacén de origen' | t"
+            icon="🏢"
+            [options]="bodegaOptions()"
+            [selectedId]="origenBodegaId()"
+            [searchable]="true"
+            [searchPlaceholder]="'Buscar almacén…' | t"
+            (picked)="onOrigenBodega($event)"
+          />
+
+          @if (origenBodegaId()) {
+            <label class="field-label ce-mt">{{ '¿Qué material sacas?' | t }}</label>
+            <app-articulo-picker
+              [articulos]="articulos()"
+              [categorias]="categorias()"
+              [soloBuscador]="true"
+              [exclude]="excludeIds()"
+              [stock]="stockParaPicker()"
+              [buscador]="buscarArticulosFuzzy"
+              (picked)="agregar($event)"
+            />
+            @if (cart().length) {
+              <div class="ce-items">
+                @for (l of cart(); track l.articulo_id) {
+                  <div class="ce-item">
+                    <span class="ce-item__name">{{ l.nombre }}</span>
+                    <div class="ce-item__qty">
+                      <app-qty-input [value]="l.cantidad" [max]="topeDe(l.articulo_id!)" (valueChange)="setCantidad(l.articulo_id!, $event)" ariaLabel="Cantidad" />
+                      <span class="ce-item__unit">{{ l.unidad }}</span>
+                      <button type="button" class="ce-item__x" (click)="quitar(l.articulo_id!)" aria-label="Quitar">✕</button>
+                    </div>
+                    @let s = stockDe(l.articulo_id);
+                    @if (s !== null) {
+                      <span class="ce-item__stock">{{ 'Disponible' | t }}: {{ s | number: '1.0-2' }}</span>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="ce-band">🔎 {{ 'Agrega al menos un material.' | t }}</div>
+            }
+          }
+        }
       </section>
 
       <!-- 4. Origen → destino -->
       <section class="ce-sec">
         <h2 class="ce-sec__title">{{ 'Origen y destino' | t }}</h2>
-        <app-lugar-picker [label]="'Origen' | t" [placeholder]="'¿De dónde sale?' | t" [initial]="origen()" (picked)="onOrigen($event)" />
-        <div class="ce-arrow" aria-hidden="true">↓</div>
+        @if (!conMateriales()) {
+          <app-lugar-picker [label]="'Origen' | t" [placeholder]="'¿De dónde sale?' | t" [initial]="origen()" (picked)="onOrigen($event)" />
+          <div class="ce-arrow" aria-hidden="true">↓</div>
+        } @else {
+          <p class="ce-hint">{{ 'Sale del almacén que elegiste arriba.' | t }}</p>
+        }
         <app-lugar-picker [label]="'Destino' | t" [placeholder]="'¿A dónde va?' | t" [initial]="destino()" (picked)="onDestino($event)" />
+        @if (conMateriales()) {
+          <p class="ce-hint">{{ 'Si el destino es un almacén u obra nuestra, la entrada queda por confirmar al recibir.' | t }}</p>
+        }
       </section>
 
       @if (error()) { <p class="ce-err">{{ error() }}</p> }

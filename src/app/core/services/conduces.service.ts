@@ -1819,6 +1819,26 @@ export class ConducesService {
       .map((c) => ({ id: c.conductor_id, label: c.nombre }));
   }
 
+  /**
+   * BV7 — asigna un chofer (+ vehículo opcional) a un conduce desde la bandeja de
+   * despacho (setear conductor+vehículo dispara la auto-ruta en el servidor). Gate:
+   * logística / flota-elevado / admin (server-side). Acción online. Si el RPC del
+   * padre aún no está desplegado, lanza un mensaje honesto (capacidad ausente).
+   */
+  async asignarChoferConduce(salidaId: string, conductorId: string, vehiculoId: string | null = null): Promise<void> {
+    const { error } = await this.supabase.client.rpc('asignar_chofer_conduce', {
+      p_salida_id: salidaId,
+      p_conductor_id: conductorId,
+      p_vehiculo_id: vehiculoId,
+    });
+    if (error) {
+      if (/function .* does not exist|not find the function|PGRST202/i.test(error.message || '')) {
+        throw new Error('Asignar chofer desde la lista aún no está disponible. Actualiza o inténtalo desde el detalle.');
+      }
+      throwSyncError(error);
+    }
+  }
+
   /** Ofertas de transferencia ABIERTAS dirigidas a mí (inbox del receptor). */
   async misTransferenciasPendientes(): Promise<ConduceTransferencia[]> {
     const r = await this.catalog.refresh('mis_transferencias', async () => {

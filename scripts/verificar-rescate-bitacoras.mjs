@@ -8,20 +8,19 @@
 //      release — no debería aparecer ninguna (BI4 dejó de emitir + filtro server-side).
 //      Si aparece una de un cliente 2.12.0 = regresión; de un cliente viejo = fuga del filtro.
 //
-// Corre cuando quieras: `node scripts/verificar-rescate-bitacoras.mjs`
+// Corre cuando quieras (BU1: --env obligatorio):
+//   node scripts/verificar-rescate-bitacoras.mjs --env dev
+//   node scripts/verificar-rescate-bitacoras.mjs --env prod --yes
 // Imprime al final `VERDICTO: SILENCIO` o `VERDICTO: ALERTA — <motivos>`.
-import { readFileSync } from 'fs';
 import { createClient } from '@supabase/supabase-js';
+import { resolverEnv } from './lib/entorno.mjs';
 
 const UMBRAL_CAPTURA = '2026-09-01'; // fecha de captura ANTERIOR a esto = vieja
 const UMBRAL_RELEASE = '2026-09-03T20:00:00Z'; // insertado/reportado DESPUÉS = post-release 2.12.0
 
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n').filter((l) => l.includes('='))
-    .map((l) => [l.slice(0, l.indexOf('=')).trim(), l.slice(l.indexOf('=') + 1).trim()]),
-);
-const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { db: { schema: 'sgc' }, auth: { persistSession: false } });
+const env = await resolverEnv(process.argv.slice(2));
+if (!env.serviceKey) { console.error(`✗ falta SUPABASE_SERVICE_ROLE_KEY_${env.entorno.toUpperCase()} en .env.local`); process.exit(1); }
+const admin = createClient(env.url, env.serviceKey, { db: { schema: 'sgc' }, auth: { persistSession: false } });
 
 const nombreUsuario = async (id) => {
   if (!id) return '(sin usuario)';
