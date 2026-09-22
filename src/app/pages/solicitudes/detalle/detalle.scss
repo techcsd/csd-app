@@ -424,3 +424,83 @@
   color: var(--color-danger, #d32f2f);
   font-size: 13px;
 }
+
+// BV10/BV11 — fecha de necesidad destacada + edición.
+.reqd__nec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.reqd__nec--venc {
+  color: #c0392b;
+}
+.reqd__nec-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reqd__nec-ic {
+  font-size: 22px;
+}
+.reqd__nec-txt {
+  display: flex;
+  flex-direction: column;
+}
+.reqd__nec-lb {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.reqd__nec-val {
+  font-weight: 800;
+  color: var(--text);
+}
+.reqd__nec-edit {
+  flex: 0 0 auto;
+}
+.reqd__edit-fecha {
+  margin-bottom: 12px;
+}
+// BV4 — cobertura.
+.reqd__cobertura {
+  margin-bottom: 12px;
+}
+.reqd__cob-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.reqd__cob-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-soft);
+}
+.reqd__cob-row--rev {
+  background: rgba(255, 179, 0, 0.08);
+}
+.reqd__cob-name {
+  font-weight: 700;
+  color: var(--text);
+}
+.reqd__cob-meta {
+  display: block;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.reqd__cob-rev {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.reqd__cob-q {
+  font-size: 12px;
+  color: var(--text-2);
+}

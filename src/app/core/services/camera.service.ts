@@ -1,12 +1,30 @@
 import { inject, Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { App as CapApp } from '@capacitor/app';
 import { PermisoGateService } from './permiso-gate.service';
 import { ErrorReportService } from './error-report.service';
 import { DeviceInfoService } from './device-info.service';
 import { PermissionsService } from './permissions.service';
 import { ToastService } from './toast.service';
+import { LocalStore } from './local-store.service';
+import { BorradorService } from './borrador.service';
 import { comprimirImagen, perfilNativo, PerfilCompresion } from '../utils/comprimir-imagen.util';
+
+/**
+ * BV5/BT5 — a dónde re-inyectar una foto que el usuario TOMÓ pero cuya Activity el
+ * SO destruyó mientras la cámara estaba abierta (Android, low-mem / "No mantener
+ * actividades"). Cuando la captura declara su `restore` {clave, slot}, lo
+ * persistimos ANTES de abrir la cámara; si vuelve por `appRestoredResult` en vez de
+ * por la promesa, guardamos la foto directo en el borrador correspondiente para que
+ * la pantalla la recupere al reabrirse. Una sola implementación aquí.
+ */
+export interface CameraRestore {
+  /** clave del borrador (BorradorService), p. ej. 'combustible'. */
+  clave: string;
+  /** slot de la foto dentro del borrador, p. ej. 'bomba' | 'recibo'. */
+  slot: string;
+}
 
 /** W1 — practical cap for a single multi-pick batch (configurable, kept high). */
 const GALLERY_LIMIT = 40;
@@ -66,9 +84,65 @@ export class CameraService {
   private device = inject(DeviceInfoService);
   private permissions = inject(PermissionsService);
   private toast = inject(ToastService);
+  private store = inject(LocalStore);
+  private borrador = inject(BorradorService);
+
+  /** BV5 — clave persistida del contexto de restauración de la última captura nativa. */
+  private static readonly RESTORE_KEY = 'camera_restore_ctx';
+  private restoreInited = false;
 
   get isNative(): boolean {
     return Capacitor.isNativePlatform();
+  }
+
+  /**
+   * BV5/BT5 — registra (una sola vez, solo nativo) el listener de `appRestoredResult`.
+   * Se llama desde app.ts al arrancar. Si el SO recreó la Activity mientras la cámara
+   * estaba abierta, la foto no vuelve por la promesa de `getPhoto` sino por este
+   * evento: la re-inyectamos en el borrador que declaró su `restore`.
+   */
+  init(): void {
+    if (this.restoreInited || !this.isNative) return;
+    this.restoreInited = true;
+    void CapApp.addListener('appRestoredResult', (res) => {
+      void this.onAppRestoredResult(res);
+    });
+  }
+
+  private async onAppRestoredResult(res: {
+    pluginId?: string;
+    methodName?: string;
+    success?: boolean;
+    data?: unknown;
+  }): Promise<void> {
+    try {
+      if (res?.pluginId !== 'Camera' || res?.success !== true) return;
+      const raw = await this.store.get(CameraService.RESTORE_KEY);
+      if (!raw) return;
+      await this.store.remove(CameraService.RESTORE_KEY);
+      const ctx = JSON.parse(raw) as CameraRestore;
+      const blob = await this.blobFromRestoredPhoto(res.data);
+      if (!blob || !ctx?.clave || !ctx?.slot) return;
+      // Capacitor ya comprimió en el dispositivo (perfil evidencia) → se guarda tal cual.
+      await this.borrador.saveFoto(ctx.clave, ctx.slot, blob);
+      this.toast.show('Recuperamos la foto que tomaste. Abre la pantalla para terminar.', 'info', 6000);
+    } catch (e) {
+      void this.errorReport.report('camera', `appRestoredResult: ${(e as Error)?.message ?? e}`, {
+        point: 'appRestoredResult',
+      });
+    }
+  }
+
+  /** BV5 — reconstruye el blob desde el resultado restaurado de Camera.getPhoto (Uri). */
+  private async blobFromRestoredPhoto(data: unknown): Promise<Blob | null> {
+    const p = (data ?? {}) as { webPath?: string; path?: string };
+    const src = p.webPath || (p.path ? Capacitor.convertFileSrc(p.path) : null);
+    if (!src) return null;
+    try {
+      return await (await fetch(src)).blob();
+    } catch {
+      return null;
+    }
   }
 
   /** AT9 — ¿PWA sobre iOS (Safari/WKWebView)? La cámara aquí es terreno de
@@ -80,7 +154,7 @@ export class CameraService {
     return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
   }
 
-  async takePhoto(): Promise<CapturedPhoto | null> {
+  async takePhoto(restore?: CameraRestore): Promise<CapturedPhoto | null> {
     // AT9 — PWA/iOS y web en general: NO pasamos por la puerta de permisos.
     // `<input type=file capture>` usa el permiso de cámara DEL SISTEMA (el que
     // pide iOS al abrir su cámara), no el permiso de sitio de Safari — y sondear
@@ -105,13 +179,26 @@ export class CameraService {
     // el usuario no lo concede, degradamos a null (sin crash ni spinner colgado).
     // El plugin nativo gestiona su propio prompt del SO (sin doble prompt, AA16).
     if (!(await this.gate.asegurar('camera'))) return null;
+    // BV5/BT5 — deja rastro de a dónde va la foto ANTES de abrir la cámara: si el SO
+    // destruye la Activity durante la captura, `appRestoredResult` la re-inyecta.
+    if (restore) {
+      try {
+        await this.store.set(CameraService.RESTORE_KEY, JSON.stringify(restore));
+      } catch {
+        /* best-effort */
+      }
+    }
     // AE7 — cámara NATIVA del sistema (Capacitor Camera, `CameraSource.Camera`):
     // es la que espera el usuario y resuelve el caso del OUKITEL de Y5, donde
     // getUserMedia del WebView fallaba. M1 — blindaje total: cualquier fallo real
     // avisa con causa+acción y se reporta (Y5/Y6), devolviendo null. Cancelar no reporta.
     try {
-      return await this.takeConSistema();
+      const photo = await this.takeConSistema();
+      // Volvió por la promesa (Activity viva) → el borrador ya lo maneja; limpia el rastro.
+      if (restore) await this.store.remove(CameraService.RESTORE_KEY).catch(() => {});
+      return photo;
     } catch (e) {
+      if (restore) await this.store.remove(CameraService.RESTORE_KEY).catch(() => {});
       if (!this.isCancel(e)) await this.handleCameraFailure(e, 'takePhoto');
       return null;
     }

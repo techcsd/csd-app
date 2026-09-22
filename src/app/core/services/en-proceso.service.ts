@@ -29,7 +29,9 @@ export interface EnProcesoItem {
 // Módulo → tipos de borrador (Dexie) y tipos de op del outbox que le pertenecen.
 const BORRADOR_TIPOS: Record<EnProcesoModulo, string[]> = {
   bitacora: ['parte', 'incidente', 'cl_liberacion', 'orden_trabajo', 'cartilla'],
-  flota: ['checklist', 'vehiculo', 'conductor', 'conduce'],
+  // BV5 — la echada a medias (borrador 'combustible', con foto ya tomada) también
+  // cuenta como "en proceso": alimenta la tarjeta "Pendiente de terminar" del home.
+  flota: ['checklist', 'vehiculo', 'conductor', 'conduce', 'combustible', 'conduce_externo'],
   rrhh: [],
   mensajes: [],
 };
@@ -125,6 +127,8 @@ const BORRADOR_LABEL: Record<string, string> = {
   checklist: 'Checklist de vehículo',
   vehiculo: 'Vehículo',
   conductor: 'Conductor',
+  combustible: 'Registrar combustible',
+  conduce_externo: 'Conduce externo',
 };
 
 const RESUME_POR_CLAVE = new Set(['parte', 'incidente', 'cl_liberacion', 'orden_trabajo', 'cartilla']);

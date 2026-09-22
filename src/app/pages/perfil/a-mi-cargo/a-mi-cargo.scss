@@ -1,0 +1,65 @@
+.amc__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.amc__back {
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  color: var(--text);
+  cursor: pointer;
+}
+.amc__icon {
+  font-size: 22px;
+}
+.amc__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.amc__intro {
+  margin: 0 0 12px;
+  color: var(--text-2);
+  font-size: 14px;
+}
+.amc__obra {
+  margin-bottom: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.amc__obra-nombre {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+.amc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.amc__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-soft);
+}
+.amc__item:first-child {
+  border-top: none;
+}
+.amc__art {
+  color: var(--text);
+  font-size: 14px;
+}
+.amc__cant {
+  color: var(--text);
+  font-weight: 800;
+  white-space: nowrap;
+}

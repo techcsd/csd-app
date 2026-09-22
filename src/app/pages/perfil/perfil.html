@@ -148,6 +148,12 @@
       📝 {{ 'Documentación en proceso' | t }}
     </button>
 
+    @if (puedeVerACargo()) {
+      <button type="button" class="btn-ghost perfil__btn" (click)="aMiCargo()">
+        📦 {{ 'Materiales a mi cargo' | t }}
+      </button>
+    }
+
     <button type="button" class="btn-ghost perfil__btn" (click)="soporte()">
       🛟 {{ 'Soporte y ayuda' | t }}
     </button>

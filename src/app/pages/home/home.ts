@@ -8,7 +8,7 @@ import { Onboarding } from '../../shared/components/onboarding/onboarding';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { UserContextService } from '../../core/services/user-context.service';
 import { BadgesService } from '../../core/services/badges.service';
-import { EnProcesoService } from '../../core/services/en-proceso.service';
+import { EnProcesoService, EnProcesoItem } from '../../core/services/en-proceso.service';
 import { InventarioService } from '../../core/services/inventario.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { MensajesService } from '../../core/services/mensajes.service';
@@ -167,6 +167,9 @@ export class HomePage implements OnDestroy {
   // confirmar" AJ8, deduplicado). El receptor puede ser un ingeniero/obra sin
   // módulo flota → banner de descubrimiento.
   porRecibir = signal(0);
+  // BV5 — captura a medias (borrador con datos/foto sin enviar). Tarjeta "Pendiente
+  // de terminar" que reabre la pantalla con el borrador. Muestra el más reciente.
+  pendienteTerminar = signal<EnProcesoItem | null>(null);
   // AJ5 — mensajes no leídos (badge del tile de Mensajes).
   mensajesNoLeidos = signal(0);
   private primerSync = true;
@@ -355,6 +358,8 @@ export class HomePage implements OnDestroy {
     void this.badges.load();
     // V1 — contador de documentación en proceso (local, offline).
     void this.enProceso.refresh();
+    // BV5 — la captura a medias más reciente (borrador) para la tarjeta "Pendiente de terminar".
+    void this.cargarPendienteTerminar();
     // BD2 — cuántas entregas me quedan por recibir (fusión firmar+confirmar).
     void this.cargarPorRecibir();
     // AJ5 — mensajes no leídos (badge del tile de Mensajes).
@@ -377,7 +382,33 @@ export class HomePage implements OnDestroy {
       if (this.sync.pendingCount() === 0) {
         void this.cargarPorRecibir();
       }
+      void this.cargarPendienteTerminar(); // BV5 — refresca al drenar/encolar/descartar
     });
+  }
+
+  /** BV5 — carga el borrador (captura a medias) más reciente para la tarjeta del home. */
+  private async cargarPendienteTerminar(): Promise<void> {
+    try {
+      const all = await this.enProceso.listAll();
+      this.pendienteTerminar.set(all.find((i) => i.kind === 'borrador') ?? null);
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  /** BV5 — reabre la pantalla con el borrador (mirror de EnProcesoPage.retomar). */
+  abrirPendiente(): void {
+    const b = this.pendienteTerminar();
+    if (!b?.ruta) {
+      void this.router.navigate(['/en-proceso']);
+      return;
+    }
+    const [path] = b.ruta.split('?');
+    if (b.resumePorClave) {
+      void this.router.navigate([path], { queryParams: { borrador: b.id } });
+    } else {
+      void this.router.navigateByUrl(b.ruta);
+    }
   }
 
   ngOnDestroy(): void {

@@ -63,6 +63,7 @@ export interface VehiculoEditable {
 export interface VehiculoEnUso {
   vehiculo_id: string;
   placa: string;
+  alias?: string | null; // BV2 — si el RPC lo trae, manda en vehiculoIdentidad
   marca: string | null;
   modelo: string | null;
   color: string | null; // AT9 — identificación completa "Marca Modelo · Color · Placa"
@@ -249,7 +250,7 @@ export class VehiculosService {
         const { data, error } = await this.supabase.client
           .from('vehiculos')
           .select(
-            'id, placa, marca, modelo, color, anio, uso, medida_uso, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
+            'id, placa, alias, marca, modelo, color, anio, uso, medida_uso, tipo, kilometraje, vencimiento_matricula, vencimiento_seguro, km_ultimo_mantenimiento, intervalo_mantenimiento_km, rendimiento_esperado_km_gal',
           )
           .eq('id', id)
           .single();
@@ -364,13 +365,14 @@ export class VehiculosService {
     const res = await this.catalog.refreshDetailed<VehiculoDisponible[]>('flota_vehiculos', async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, color, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
+        .select('id, placa, alias, marca, modelo, color, anio, tipo, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .order('placa', { ascending: true });
       if (error) throw new Error(error.message);
       return ((data as Array<Record<string, unknown>>) ?? []).map((v) => ({
         vehiculo_id: v['id'] as string,
         placa: v['placa'] as string,
+        alias: (v['alias'] as string) ?? null, // BV2
         marca: (v['marca'] as string) ?? '',
         modelo: (v['modelo'] as string) ?? '',
         color: (v['color'] as string) ?? null, // AT9
@@ -416,7 +418,7 @@ export class VehiculosService {
     const res = await this.catalog.refreshDetailed<VehiculoDisponible[]>(CATALOG_DISPONIBLES, async () => {
       const { data, error } = await this.supabase.client
         .from('vehiculos')
-        .select('id, placa, marca, modelo, color, anio, tipo, medida_uso, kilometraje, estado, activo, fotos, es_prueba')
+        .select('id, placa, alias, marca, modelo, color, anio, tipo, medida_uso, kilometraje, estado, activo, fotos, es_prueba')
         .eq('activo', true)
         .not('estado', 'in', '(baja,no_disponible)')
         .order('placa', { ascending: true });
@@ -424,6 +426,7 @@ export class VehiculosService {
       return ((data as Array<Record<string, unknown>>) ?? []).map((v) => ({
         vehiculo_id: v['id'] as string,
         placa: v['placa'] as string,
+        alias: (v['alias'] as string) ?? null, // BV2
         marca: (v['marca'] as string) ?? '',
         modelo: (v['modelo'] as string) ?? '',
         color: (v['color'] as string) ?? null, // AT9
@@ -478,7 +481,7 @@ export class VehiculosService {
       const { data, error } = await this.supabase.client
         .from('vehiculo_asignaciones')
         .select(
-          'id, desde, origen, vehiculo:vehiculos(id, placa, marca, modelo, color, anio, tipo, kilometraje)',
+          'id, desde, origen, vehiculo:vehiculos(id, placa, alias, marca, modelo, color, anio, tipo, kilometraje)',
         )
         .eq('usuario_id', uid)
         .eq('activa', true)
@@ -492,9 +495,10 @@ export class VehiculosService {
             asignacion_id: r['id'] as string,
             vehiculo_id: v['id'] as string,
             placa: v['placa'] as string,
+            alias: (v['alias'] as string) ?? null, // BV2
             marca: (v['marca'] as string) ?? '',
             modelo: (v['modelo'] as string) ?? '',
-        color: (v['color'] as string) ?? null, // AT9
+            color: (v['color'] as string) ?? null, // AT9
             anio: (v['anio'] as number) ?? null, // Z10
             tipo: (v['tipo'] as string) ?? '',
             km: (v['kilometraje'] as number) ?? 0,

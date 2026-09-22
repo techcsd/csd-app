@@ -12,9 +12,12 @@
       (ngModelChange)="onBusqueda($event)"
       [placeholder]="'🔎 ' + ('Buscar por obra, solicitante o artículo' | t)"
     />
+    <!-- BV9 — tabs por fase -->
     <div class="bandeja__chips">
-      @for (e of estados; track e.label) {
-        <button type="button" class="bandeja__chip" [class.bandeja__chip--on]="estado() === e.key" (click)="setEstado(e.key)">{{ e.label }}</button>
+      @for (f of FASES; track f) {
+        <button type="button" class="bandeja__chip" [class.bandeja__chip--on]="tab() === f" (click)="setTab(f)">
+          {{ faseLabel(f) | t }}@if (conteos()[f]) { <span class="bandeja__chip-n">{{ conteos()[f] }}</span> }
+        </button>
       }
       <button type="button" class="bandeja__chip bandeja__chip--urg" [class.bandeja__chip--on]="urgencia() === 'urgente'" (click)="toggleUrgente()">🔴 {{ 'Urgentes' | t }}</button>
     </div>
@@ -28,6 +31,17 @@
     } @else {
       @for (f of filasVisibles(); track f.id) {
         <button type="button" class="req-card" [attr.data-estado]="f.estado" (click)="abrir(f)">
+          <!-- BV10 — fecha de necesidad como 1ª línea -->
+          @let ni = necesidad(f);
+          <div class="req-card__nec" [class.req-card__nec--venc]="ni.estado === 'vencida'">
+            🗓️
+            @switch (ni.estado) {
+              @case ('vencida') { <b>{{ 'Necesidad vencida' | t }}</b> }
+              @case ('hoy') { <b>{{ 'Se necesita hoy' | t }}</b> }
+              @case ('futura') { <b>{{ 'Se necesita en {n} días' | t: { n: ni.dias ?? 0 } }}</b> }
+              @case ('sin_fecha') { {{ 'Sin fecha de necesidad' | t }} }
+            }
+          </div>
           <div class="req-card__top">
             <span class="req-card__obra">🏗️ {{ f.proyecto_nombre ?? ('Obra' | t) }}</span>
             <span class="req-card__estado" [attr.data-estado]="f.estado">{{ estadoLabel(f.estado) }}</span>

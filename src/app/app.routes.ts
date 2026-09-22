@@ -815,6 +815,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/perfil/mi-detalle/mi-detalle').then((m) => m.MiDetallePage),
   },
   {
+    // BV8 — "Materiales a mi cargo" (ingenieros/encargados): solo lectura, offline.
+    path: 'perfil/a-mi-cargo',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/perfil/a-mi-cargo/a-mi-cargo').then((m) => m.AMiCargoPage),
+  },
+  {
     path: 'pendientes',
     canActivate: [authGuard, pinGuard],
     loadComponent: () => import('./pages/pendientes/pendientes').then((m) => m.PendientesPage),

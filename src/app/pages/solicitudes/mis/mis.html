@@ -4,12 +4,38 @@
     <h1 class="mis-sol__title">{{ 'Mis requisiciones' | t }}</h1>
   </header>
 
+  <!-- BV9 — tabs por fase -->
+  <div class="mis-sol__tabs">
+    @for (f of FASES; track f) {
+      <button
+        type="button"
+        class="mis-sol__tab"
+        [class.mis-sol__tab--on]="tab() === f"
+        (click)="setTab(f)"
+      >
+        {{ faseLabel(f) | t }}
+        @if (conteos()[f]) { <span class="mis-sol__tab-n">{{ conteos()[f] }}</span> }
+      </button>
+    }
+  </div>
+
   <div class="screen__body">
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
       @for (s of visibles(); track s.id) {
         <button type="button" class="sol-card" [attr.data-estado]="s.estado" (click)="abrir(s)">
+          <!-- BV10 — la fecha de necesidad es la PRIMERA línea de la tarjeta -->
+          @let ni = necesidad(s);
+          <div class="sol-card__nec" [class.sol-card__nec--venc]="ni.estado === 'vencida'" [class.sol-card__nec--none]="ni.estado === 'sin_fecha'">
+            🗓️
+            @switch (ni.estado) {
+              @case ('vencida') { <b>{{ 'Necesidad vencida' | t }}</b> }
+              @case ('hoy') { <b>{{ 'Se necesita hoy' | t }}</b> }
+              @case ('futura') { <b>{{ 'Se necesita en {n} días' | t: { n: ni.dias ?? 0 } }}</b> }
+              @case ('sin_fecha') { {{ 'Sin fecha de necesidad' | t }} }
+            }
+          </div>
           <div class="sol-card__top">
             <span class="sol-card__chip">🏗️ {{ s.proyecto?.nombre ?? ('Obra' | t) }}</span>
             <span class="sol-card__estado">{{ estadoLabel(s.estado) }}</span>
@@ -36,31 +62,13 @@
           <span class="sol-card__ver">{{ 'Ver detalle' | t }} ›</span>
         </button>
       } @empty {
-        @if (canceladasCount() > 0) {
-          <!-- BH1 — todas las requisiciones están canceladas: no es "vacío", están ocultas -->
-          <app-empty-state
-            icon="🚫"
-            [title]="'No hay requisiciones activas' | t"
-            [message]="'Todas tus requisiciones están canceladas. Puedes verlas con el botón de abajo o crear una nueva.' | t"
-            [ctaLabel]="'Nueva requisición' | t"
-            (action)="nueva()"
-          />
-        } @else {
-          <app-empty-state
-            icon="📝"
-            [title]="'Todavía no has hecho requisiciones' | t"
-            [message]="'Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición: enviada, aprobada y recibida.' | t"
-            [ctaLabel]="'Nueva requisición' | t"
-            (action)="nueva()"
-          />
-        }
-      }
-
-      <!-- BH1 — toggle para ver/ocultar las canceladas (ocultas por defecto) -->
-      @if (canceladasCount() > 0) {
-        <button type="button" class="mis-sol__toggle" (click)="toggleCanceladas()">
-          {{ mostrarCanceladas() ? ('Ocultar canceladas' | t) : (('Ver canceladas' | t) + ' (' + canceladasCount() + ')') }}
-        </button>
+        <app-empty-state
+          icon="📝"
+          [title]="'Nada en esta fase' | t"
+          [message]="'Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición por fase.' | t"
+          [ctaLabel]="'Nueva requisición' | t"
+          (action)="nueva()"
+        />
       }
     }
   </div>

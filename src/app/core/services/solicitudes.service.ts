@@ -3,7 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { Proyecto } from '../models/bitacora.model';
-import { MiOrdenCompra, RequisicionAvanceItem, RequisicionBandeja, RequisicionDetalle, RequisicionEdicion, RequisicionEditar, Solicitud, Urgencia } from '../models/inventario.model';
+import { MiOrdenCompra, RequisicionAvanceItem, RequisicionBandeja, RequisicionCobertura, RequisicionDetalle, RequisicionEdicion, RequisicionEditar, Solicitud, Urgencia } from '../models/inventario.model';
 
 /** AS7 — filtros de la bandeja de requisiciones. */
 export interface RequisicionFiltros {
@@ -67,7 +67,7 @@ export class SolicitudesService {
     const data = await this.catalog.refresh<Solicitud[]>(CAT_SOLICITUDES, async () => {
       const { data, error } = await this.supabase.client
         .from('solicitudes_material')
-        .select('id, estado, urgencia, notas, created_at, folio, proyecto:proyectos(nombre), items:solicitud_material_items(descripcion, cantidad, unidad)')
+        .select('id, estado, urgencia, notas, created_at, folio, fecha_necesidad, proyecto:proyectos(nombre), items:solicitud_material_items(descripcion, cantidad, unidad)')
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw new Error(error.message);
@@ -234,6 +234,46 @@ export class SolicitudesService {
     if (error) throw new Error(error.message);
   }
 
+  /**
+   * BV11 — el ingeniero (solicitante) o inventario/flota-elevado edita la FECHA DE
+   * NECESIDAD desde el detalle. Offline-safe por outbox (tipo_op 'requisicion_fecha'):
+   * se guarda la fecha + motivo y el handler llama `requisicion_set_fecha_necesidad`.
+   */
+  async setFechaNecesidad(id: string, fecha: string, motivo: string | null): Promise<void> {
+    const opId = crypto.randomUUID();
+    await this.sync.enqueue({
+      id: opId,
+      tipo_op: 'requisicion_fecha',
+      capturado_en: new Date().toISOString(),
+      payload: { requisicion_id: id, fecha, motivo: motivo || null },
+      resumen: { tipo: 'requisicion_fecha', requisicion_id: id, fecha },
+    });
+    await this.invalidarCache(id);
+  }
+
+  /** BV4 — coberturas de una requisición: qué movimiento cubrió qué renglón (para el
+   *  aprobador). Detrás de comprobación de capacidad → [] si el RPC no está desplegado. */
+  async cobertura(id: string): Promise<RequisicionCobertura[]> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('requisicion_cobertura', { p_solicitud_id: id });
+      if (error) return [];
+      return (data as RequisicionCobertura[]) ?? [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** BV4 — el aprobador deshace un match dudoso ("¿revisar? No"). Online. */
+  async desvincularCobertura(coberturaId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('desvincular_cobertura', { p_id: coberturaId });
+    if (error) {
+      if (/function .* does not exist|not find the function|PGRST202/i.test(error.message || '')) {
+        throw new Error('Desvincular la cobertura aún no está disponible.');
+      }
+      throw new Error(error.message);
+    }
+  }
+
   /** Conteo de requisiciones pendientes para el badge de la bandeja. */
   async bandejaCount(): Promise<number> {
     try {
@@ -268,6 +308,16 @@ export class SolicitudesService {
   }
 
   private registerHandler(): void {
+    // BV11 — editar la fecha de necesidad (offline-safe).
+    this.sync.register('requisicion_fecha', async (payload) => {
+      const { error } = await this.supabase.client.rpc('requisicion_set_fecha_necesidad', {
+        p_id: payload['requisicion_id'],
+        p_fecha: payload['fecha'],
+        p_motivo: payload['motivo'] ?? null,
+      });
+      if (error) throwSyncError(error);
+    });
+
     this.sync.register('solicitud', async (payload) => {
       const { error } = await this.supabase.client.rpc('crear_solicitud_app', {
         p_id: payload['id'],

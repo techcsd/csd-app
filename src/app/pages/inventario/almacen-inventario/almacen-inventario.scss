@@ -178,3 +178,71 @@
   font-size: 14px;
   cursor: pointer;
 }
+
+// BV3 — "Pendientes de este almacén".
+.almacen-inv__pend {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.almacen-inv__pend-title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+.almacen-inv__pend-cards {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.almacen-inv__pend-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border: 1px solid var(--Hub, #ffb300);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.almacen-inv__pend-card--info {
+  border-color: var(--border);
+  cursor: default;
+}
+.almacen-inv__pend-n {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+}
+.almacen-inv__pend-lb {
+  font-size: 12px;
+  color: var(--text-2);
+  text-align: center;
+}
+.almacen-inv__pend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.almacen-inv__pend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border-soft);
+  font-size: 13px;
+  color: var(--text);
+}
+.almacen-inv__pend-ref {
+  flex: 1;
+}
+.almacen-inv__pend-dias {
+  color: var(--text-2);
+  white-space: nowrap;
+}
