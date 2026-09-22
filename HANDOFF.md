@@ -16,9 +16,13 @@
 - **Falta correr** `npm run apk -- --env dev` + `npm run apk:publish -- --env dev` (registra 2.27.0 en `app_versiones` de dev + sube APK dev al bucket) y **merge `feature/bv-ronda` → `dev`** (Vercel construye `app-dev.`). *(No se ejecutó el build/publish del APK en esta sesión — ver "Siguiente paso".)*
 - **SQL `mis_permisos_retro()`:** ✅ **APLICADA en dev** (`sgc-dev`, vía pooler + ledger `sgc.migraciones_aplicadas` archivo `sql/2026-09-22-bv1b-mis-permisos-retro.sql`, checksum `513ecb31…`, `aplicada_por=claude-code`). Copiada a `SGC/sql/` (canónica del padre) y a `csd-app/sql-para-sgc/`. **Pendiente prod:** el padre corre `node scripts/apply-migration.mjs sql/2026-09-22-bv1b-mis-permisos-retro.sql --env prod` (pasa el ledger porque salió en dev). El campo Fecha de F4 ya funciona en dev cuando Flota otorga un permiso.
 
-### ⏳ En prod (gateado — espera OK de Xaviel)
-- **Nada en prod.** Tras "probado en dev, OK": PR `dev → main` → `npm run apk -- --env prod` → `apk:publish -- --env prod` (pasa el ledger porque salió en dev). Publicar/mínima = paso aparte del admin; **DEFAULT: publicada, mínima se queda en 2.26.1**.
-- Antes del prod del padre: aplicar en prod los objetos BV (ya en dev) + `mis_permisos_retro` (nuevo).
+### ✅ En prod (RELEASE 2.27.0 — con OK de Xaviel "pushea todo a main")
+- **`dev → main` mergeado y pusheado** (`7e1047a`) → Vercel construye la PWA prod (`app.sgcconstructorasd.com`).
+- **APK prod 2.27.0**: construido + firmado (cert `3c5316d8…`), **Regla 18 OK** (v2.27.0 existe en dev), registrado en `app_versiones` de prod y subido al bucket prod.
+- **PUBLICADA = 2.27.0** (`version_publicada()` → pub 2.27.0 / **mínima 2.26.1** — opcional, no forzada; DEFAULT).
+- **Backend del padre en prod:** TODO el round BV (bv1–bv14) **ya está en prod** (ledger `sgc.migraciones_aplicadas`), incl. BV6 (conduce externo mueve inventario), BV1 (tabla `combustible_permisos_retro` + guard), BV2 alias, etc. → **todas las features BV funcionan en prod**.
+- **⚠️ ÚNICO pendiente en prod (requiere token del Management API de Xaviel — NO está en `.env.local`):** aplicar mi RPC `mis_permisos_retro()`:
+  `node scripts/apply-migration.mjs sql/2026-09-22-bv1b-mis-permisos-retro.sql --env prod` (pasa Regla 18: ya está en el ledger de dev). Hasta entonces, **F4 (campo Fecha de echada retroactiva) queda OCULTO en prod** (degrada limpio; el guard subyacente `puede_registrar_combustible_retro` sí está en prod).
 
 ### Residual (documentado, no bloquea la prueba en dev)
 - Chip **"Cubre REQ-000048 (n/m)"** en el lado **conduce-detalle** (el lado requisición sí quedó); **AFECTA INVENTARIO** chip en la recepción del externo con items (flujo `conduce_externo_confirmar_receptor` distinto al `por-confirmar` actual); lista dedicada de *"conduces por despachar (sin chofer)"* para el elevado (hoy el assign vive en *Conduces pendientes*) + multi-select *"Asignar N a…"*; chip **RETROACTIVA** en *Mis echadas* + sitios placa-only de detalle (echada-detalle, mi-registro); notificación del padre al **otorgar** el permiso retro (emitir `combustible_permiso_retro`).
