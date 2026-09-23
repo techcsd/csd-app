@@ -17,7 +17,13 @@
     } @else if (!items().length) {
       <app-empty-state icon="✅" [title]="'Catálogo al día' | t" [message]="'No hay materiales fuera del catálogo por revisar.' | t" />
     } @else {
-      <p class="mnc__intro">{{ 'Materiales que los choferes movieron sin estar en el catálogo. Crea el artículo desde la web SGC para vincularlos.' | t }}</p>
+      <p class="mnc__intro">
+        @if (puedeGestionar()) {
+          {{ 'Materiales que los choferes movieron sin estar en el catálogo. Vincúlalos a un artículo o crea el artículo aquí.' | t }}
+        } @else {
+          {{ 'Materiales que los choferes movieron sin estar en el catálogo. Crea el artículo desde la web SGC para vincularlos.' | t }}
+        }
+      </p>
       @for (m of items(); track m.id) {
         <div class="mnc__card" [class.mnc__card--done]="m.articulo_vinculado_id">
           <div class="mnc__card-top">
@@ -33,17 +39,75 @@
           @if (m.articulo_vinculado_id) {
             <div class="mnc__linked">✓ {{ 'Vinculado a:' | t }} {{ m.articulo_vinculado || ('artículo' | t) }}</div>
           } @else {
-            <!-- AT11 — declinar: no hace falta crear el artículo / ya existe / duplicado -->
+            <!-- BW2 — acciones: vincular / crear (solo elevados/inventario) + AT11 declinar -->
             <div class="mnc__acciones">
+              @if (puedeGestionar()) {
+                <button type="button" class="mnc__accion mnc__accion--primary" [class.mnc__accion--on]="esAccion(m.id, 'vincular')" (click)="abrirVincular(m)">
+                  🔗 {{ 'Vincular a un artículo' | t }}
+                </button>
+                <button type="button" class="mnc__accion" [class.mnc__accion--on]="esAccion(m.id, 'crear')" (click)="abrirCrear(m)">
+                  ➕ {{ 'Crear artículo' | t }}
+                </button>
+              }
               <button type="button" class="mnc__declinar" (click)="toggleDeclinar(m.id)">
-                @if (declinandoId() === m.id) { {{ 'Cancelar' | t }} } @else { ✕ {{ 'Declinar' | t }} }
+                @if (esAccion(m.id, 'declinar')) { {{ 'Cancelar' | t }} } @else { ✕ {{ 'Declinar' | t }} }
               </button>
             </div>
-            @if (declinandoId() === m.id) {
+
+            <!-- BW2 — panel VINCULAR -->
+            @if (esAccion(m.id, 'vincular')) {
+              <div class="mnc__panel">
+                <p class="mnc__panel-h">{{ '¿A qué artículo del catálogo corresponde?' | t }}</p>
+                <app-articulo-picker [soloBuscador]="true" [buscador]="buscador" (picked)="onVincularPick($event)" />
+                <label class="mnc__switch">
+                  <input type="checkbox" [ngModel]="genMov()" (ngModelChange)="genMov.set($event)" />
+                  <span>{{ 'Generar el movimiento de inventario' | t }}</span>
+                </label>
+                <button type="button" class="btn-cta mnc__submit" [disabled]="!vinSel() || enviando()" (click)="confirmarVincular(m)">
+                  @if (enviando()) { {{ 'Vinculando…' | t }} }
+                  @else if (vinSel(); as art) { {{ 'Vincular a {art}' | t: { art: art.nombre } }} }
+                  @else { {{ 'Elige un artículo' | t }} }
+                </button>
+              </div>
+            }
+
+            <!-- BW2 — panel CREAR -->
+            @if (esAccion(m.id, 'crear')) {
+              <div class="mnc__panel">
+                <p class="mnc__panel-h">{{ 'Crear el artículo en el catálogo' | t }}</p>
+                <label class="mnc__field">
+                  <span>{{ 'Nombre' | t }}</span>
+                  <input type="text" [ngModel]="crNombre()" (ngModelChange)="crNombre.set($event)" [placeholder]="'Nombre del artículo' | t" />
+                </label>
+                <label class="mnc__field">
+                  <span>{{ 'Categoría' | t }}</span>
+                  <select [ngModel]="crCategoriaId()" (ngModelChange)="crCategoriaId.set($event)">
+                    <option [ngValue]="null" disabled>{{ 'Elige una categoría…' | t }}</option>
+                    @for (c of categorias(); track c.id) {
+                      <option [ngValue]="c.id">{{ c.nombre }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="mnc__field">
+                  <span>{{ 'Unidad' | t }}</span>
+                  <input type="text" [ngModel]="crUnidad()" (ngModelChange)="crUnidad.set($event)" [placeholder]="'ej. u, m, kg' | t" />
+                </label>
+                <label class="mnc__switch">
+                  <input type="checkbox" [ngModel]="genMov()" (ngModelChange)="genMov.set($event)" />
+                  <span>{{ 'Generar el movimiento de inventario' | t }}</span>
+                </label>
+                <button type="button" class="btn-cta mnc__submit" [disabled]="enviando()" (click)="confirmarCrear(m)">
+                  @if (enviando()) { {{ 'Creando…' | t }} } @else { {{ 'Crear y vincular' | t }} }
+                </button>
+              </div>
+            }
+
+            <!-- AT11 — panel DECLINAR -->
+            @if (esAccion(m.id, 'declinar')) {
               <div class="mnc__motivos">
                 <p class="mnc__motivos-h">{{ '¿Por qué se declina?' | t }}</p>
                 @for (mo of motivos; track mo) {
-                  <button type="button" class="mnc__motivo" [disabled]="enviandoDeclina()" (click)="declinar(m, mo)">{{ mo | t }}</button>
+                  <button type="button" class="mnc__motivo" [disabled]="enviando()" (click)="declinar(m, mo)">{{ mo | t }}</button>
                 }
               </div>
             }

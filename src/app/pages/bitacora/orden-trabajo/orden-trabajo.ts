@@ -13,6 +13,7 @@ import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { BitacoraService } from '../../../core/services/bitacora.service';
+import { OrdenTrabajoPdfService } from '../../../core/services/orden-trabajo-pdf.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -21,7 +22,7 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { fechaLocalISO } from '../../../core/util/fecha';
-import { Proyecto } from '../../../core/models/bitacora.model';
+import { Proyecto, OrdenTrabajoDetalle } from '../../../core/models/bitacora.model';
 
 const TOTAL = 6;
 
@@ -44,6 +45,7 @@ export class OrdenTrabajoPage implements OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private bitacora = inject(BitacoraService);
+  private ordenPdf = inject(OrdenTrabajoPdfService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private ctx = inject(UserContextService);
@@ -101,6 +103,8 @@ export class OrdenTrabajoPage implements OnDestroy {
 
   submitting = signal(false);
   done = signal(false);
+  createdId = signal<string | null>(null); // BW1 — id de la orden recién creada
+  sharingCreated = signal(false);
   confirmSalir = signal(false);
 
   private readonly backHandler = (): boolean => {
@@ -297,7 +301,7 @@ export class OrdenTrabajoPage implements OnDestroy {
     }
     this.submitting.set(true);
     try {
-      await this.bitacora.enqueueOrdenTrabajo({
+      const otId = await this.bitacora.enqueueOrdenTrabajo({
         proyectoId: this.proyectoId(),
         fecha: this.fecha() || this.hoy,
         descripcion: this.descripcion().trim(),
@@ -319,12 +323,74 @@ export class OrdenTrabajoPage implements OnDestroy {
         esPrueba: false, // el trigger trg_heredar_es_prueba lo coalescea desde la obra
       });
       this.hydrated = false;
+      this.createdId.set(otId);
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la orden.'));
     } finally {
       this.submitting.set(false);
+    }
+  }
+
+  /** BW1 — ir a la lista de órdenes (donde se ve/compartir la ficha una vez enviada). */
+  verMisOrdenes(): void {
+    void this.router.navigate(['/bitacora/mis-ordenes'], { replaceUrl: true });
+  }
+
+  /**
+   * BW1 — compartir el PDF de la orden recién creada SIN esperar el sync: se arma
+   * el detalle desde lo capturado (incl. las dos firmas como object-URL local), así
+   * funciona también sin señal. Las firmas ya están en memoria (los blobs del pad).
+   */
+  async compartirCreada(): Promise<void> {
+    if (this.sharingCreated()) return;
+    const id = this.createdId();
+    const ing = this.ingBlob();
+    const cli = this.cliBlob();
+    if (!id) return;
+    this.sharingCreated.set(true);
+    const urls: string[] = [];
+    const objUrl = (b: Blob | null): string | null => {
+      if (!b) return null;
+      const u = URL.createObjectURL(b);
+      urls.push(u);
+      return u;
+    };
+    try {
+      const detalle: OrdenTrabajoDetalle = {
+        bitacora: {
+          id,
+          fecha: this.fecha() || this.hoy,
+          comentarios: this.comentarios().trim() || null,
+          proyecto_id: this.proyectoId(),
+          proyecto: this.proyectoNombre() || null,
+          usuario_id: null,
+          autor: this.ingNombre().trim() || 'Ingeniero',
+          created_at: new Date().toISOString(),
+          es_prueba: false,
+        },
+        detalle: {
+          descripcion: this.descripcion().trim(),
+          ubicacion: this.ubicacion().trim() || null,
+          cantidad: this.cantidad(),
+          unidad: this.unidad().trim() || null,
+          monto_estimado: this.montoEstimado(),
+          solicitado_por: this.solicitadoPor().trim() || null,
+          notas: null,
+          numero: null,
+        },
+        firmas: [
+          { rol: 'ingeniero', nombre: this.ingNombre().trim() || 'Ingeniero', cedula: this.ingCedula().trim() || null, rol_desc: this.ingRolDesc().trim() || null, firma_path: '', metodo: 'pad', firma_url: objUrl(ing) },
+          { rol: 'cliente', nombre: this.cliNombre().trim() || 'Cliente', cedula: this.cliCedula().trim() || null, rol_desc: this.cliRolDesc().trim() || null, firma_path: '', metodo: 'pad', firma_url: objUrl(cli) },
+        ],
+      };
+      await this.ordenPdf.compartir(detalle);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo generar el PDF.'));
+    } finally {
+      urls.forEach((u) => URL.revokeObjectURL(u));
+      this.sharingCreated.set(false);
     }
   }
 

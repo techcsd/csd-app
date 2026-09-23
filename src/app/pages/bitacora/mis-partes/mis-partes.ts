@@ -122,6 +122,11 @@ export class MisPartesPage {
   }
 
   open(b: BitacoraFull): void {
+    // BW1 — la orden de trabajo tiene su propia ficha (nº, estado, ver/compartir/enviar).
+    if (b.tipo === 'orden_trabajo') {
+      void this.router.navigate(['/bitacora/orden-trabajo', b.id]);
+      return;
+    }
     void this.router.navigate(['/bitacora/detalle', b.id]);
   }
 

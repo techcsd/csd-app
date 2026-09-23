@@ -262,6 +262,13 @@ export function notifAppRoute(n: {
     const cid = n.referencia_id || r.match(/([0-9a-fA-F-]{36})/)?.[1] || null;
     return cid ? `/ingenieria/cartilla/${cid}` : '/ingenieria/cartilla';
   }
+  // BW1 — orden de trabajo creada/compartida → su ficha. La web manda la ruta
+  // '/bitacora/orden-trabajo/<uuid>' (que en la app también existe), pero si viene
+  // solo el referencia_id lo reconstruimos igual.
+  if (n.tipo === 'orden_trabajo_creada' || n.tipo === 'orden_trabajo_compartida' || n.referencia_tipo === 'bitacora_orden' || r.startsWith('/bitacora/orden-trabajo/')) {
+    const oid = n.referencia_id || r.match(/orden-trabajo\/([0-9a-fA-F-]{36})/)?.[1] || r.match(/([0-9a-fA-F-]{36})/)?.[1] || null;
+    if (oid) return `/bitacora/orden-trabajo/${oid}`;
+  }
   // AU1 — recordatorio al DESPACHANTE (tipo 'conduce_firma') → su bandeja de firma.
   // La web manda ruta '/transporte/por-firmar' (que en la app es la del RECEPTOR),
   // así que aquí se mapea por tipo a la bandeja correcta del despachante.

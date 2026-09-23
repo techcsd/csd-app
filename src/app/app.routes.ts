@@ -96,6 +96,19 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/bitacora/orden-trabajo/orden-trabajo').then((m) => m.OrdenTrabajoPage),
   },
+  // BW1 — lista y ficha de órdenes de trabajo (ver / compartir / enviar).
+  {
+    path: 'bitacora/mis-ordenes',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () =>
+      import('./pages/bitacora/mis-ordenes/mis-ordenes').then((m) => m.MisOrdenesPage),
+  },
+  {
+    path: 'bitacora/orden-trabajo/:id',
+    canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],
+    loadComponent: () =>
+      import('./pages/bitacora/orden-trabajo-ficha/orden-trabajo-ficha').then((m) => m.OrdenTrabajoFichaPage),
+  },
   {
     path: 'bitacora/mis-partes',
     canActivate: [authGuard, pinGuard, moduleGuard('bitacora')],

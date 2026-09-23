@@ -6,7 +6,7 @@
     "start": "node scripts/gen-environment.mjs --ensure && ng serve",
     "env:dev": "node scripts/gen-environment.mjs --env dev",
     "env:prod": "node scripts/gen-environment.mjs --env prod",
-    "prebuild": "node scripts/verify-sin-ref-hardcodeado.mjs && node scripts/verify-tokens.mjs && node scripts/i18n-coverage.mjs && node scripts/verify-i18n.mjs && node scripts/verify-dev-strings.mjs",
+    "prebuild": "node scripts/verify-sin-ref-hardcodeado.mjs && node scripts/verify-tokens.mjs && node scripts/verify-pickers.mjs && node scripts/i18n-coverage.mjs && node scripts/verify-i18n.mjs && node scripts/verify-dev-strings.mjs",
     "build": "ng build",
     "build:dev": "node scripts/build-env.mjs --env dev",
     "build:prod": "node scripts/build-env.mjs --env prod",

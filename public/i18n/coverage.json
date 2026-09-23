@@ -124,7 +124,7 @@
       "ht": 0
     },
     "pages/bitacora": {
-      "conT": 8,
+      "conT": 9,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -165,6 +165,12 @@
       "en": 99,
       "ht": 0
     },
+    "pages/bitacora/mis-ordenes": {
+      "conT": 12,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
     "pages/bitacora/mis-partes": {
       "conT": 27,
       "sinT": 0,
@@ -172,9 +178,15 @@
       "ht": 0
     },
     "pages/bitacora/orden-trabajo": {
-      "conT": 58,
+      "conT": 60,
       "sinT": 1,
       "en": 98,
+      "ht": 0
+    },
+    "pages/bitacora/orden-trabajo-ficha": {
+      "conT": 30,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/bitacora/parte": {
@@ -316,7 +328,7 @@
       "ht": 0
     },
     "pages/inventario/material-no-catalogado": {
-      "conT": 10,
+      "conT": 27,
       "sinT": 0,
       "en": 100,
       "ht": 0
