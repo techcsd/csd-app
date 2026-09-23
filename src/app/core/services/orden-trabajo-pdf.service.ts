@@ -5,6 +5,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { OrdenTrabajoDetalle } from '../models/bitacora.model';
 import { formatFecha, formatFechaHumana } from '../util/fecha';
+import { environment } from '../../../environments/environment';
 
 /**
  * BN1 — PDF de la orden de trabajo, mismo criterio que ConducePdfService (jsPDF
@@ -137,21 +138,34 @@ export class OrdenTrabajoPdfService {
     return doc.output('blob');
   }
 
-  /** Compartir por el share sheet nativo (→ WhatsApp). Web: navigator.share o descarga. */
+  /** BW1 — enlace WEB a la ficha de la orden (deep-link) para incluir en el share.
+   *  Deriva el dominio del entorno desde appUrl (app.→'', app-dev.→'dev.') para no
+   *  hardcodear el ref de prod: prod → sgcconstructorasd.com, dev → dev.sgc… */
+  private enlace(o: OrdenTrabajoDetalle): string {
+    const webBase = (environment.appUrl || 'https://app.sgcconstructorasd.com')
+      .replace('//app-dev.', '//dev.')
+      .replace('//app.', '//');
+    return `${webBase}/bitacora/orden-trabajo/${o.bitacora.id}`;
+  }
+
+  /** Compartir por el share sheet nativo (→ WhatsApp): el PDF como archivo + el
+   *  enlace a la ficha en el texto. Web: navigator.share o descarga. */
   async compartir(o: OrdenTrabajoDetalle): Promise<void> {
     const filename = this.filename(o);
+    const enlace = this.enlace(o);
+    const texto = `Orden de trabajo\n${enlace}`;
     if (Capacitor.isNativePlatform()) {
       const doc = await this.build(o);
       const base64 = this.stripDataUrl(doc.output('datauristring'));
       const w = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
-      await Share.share({ title: 'Orden de trabajo', text: 'Orden de trabajo', url: w.uri, dialogTitle: 'Compartir orden' });
+      await Share.share({ title: 'Orden de trabajo', text: texto, url: w.uri, dialogTitle: 'Compartir orden' });
       return;
     }
     const blob = await this.blob(o);
     const file = new File([blob], filename, { type: 'application/pdf' });
     const navAny = navigator as Navigator & { canShare?: (d: unknown) => boolean };
     if (navAny.canShare?.({ files: [file] }) && navigator.share) {
-      await navigator.share({ files: [file], title: 'Orden de trabajo' } as ShareData);
+      await navigator.share({ files: [file], title: 'Orden de trabajo', text: texto } as ShareData);
       return;
     }
     this.webDownload(blob, filename);
