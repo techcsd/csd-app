@@ -22,6 +22,11 @@
       <span class="bit-action__icon">🧾</span>
       <span class="bit-action__label">{{ 'Orden de trabajo' | t }}</span>
     </button>
+    <!-- BW1 — ver / compartir las órdenes creadas -->
+    <button type="button" class="bit-action" (click)="go('/bitacora/mis-ordenes')">
+      <span class="bit-action__icon">🗂️</span>
+      <span class="bit-action__label">{{ 'Mis órdenes de trabajo' | t }}</span>
+    </button>
     <button type="button" class="bit-action" (click)="go('/bitacora/cl')">
       <span class="bit-action__icon">✍️</span>
       <span class="bit-action__label">{{ 'Liberaciones por firmar' | t }}</span>

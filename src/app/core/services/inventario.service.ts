@@ -691,6 +691,50 @@ export class InventarioService {
   }
 
   /**
+   * BW2 — encola VINCULAR un material no catalogado a un artículo del catálogo
+   * (para elevados de flota / inventario; el RPC revalida el gate server-side).
+   * Offline-safe: el handler llama `vincular_item_libre_articulo` al sincronizar.
+   * `generarMovimiento` = AY13: además descuenta el stock del almacén de la salida
+   * (movimiento retroactivo). Idempotente por item_id (un reintento del outbox no
+   * re-vincula si el item ya quedó resuelto).
+   */
+  async enqueueVincularItemLibre(itemId: string, articuloId: string, generarMovimiento = false): Promise<void> {
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'vincular_item_libre',
+      payload: { item_id: itemId, articulo_id: articuloId, generar_movimiento: generarMovimiento },
+      resumen: { tipo: 'vincular_item_libre', item_id: itemId },
+    });
+  }
+
+  /**
+   * BW2 — encola CREAR un artículo nuevo desde un material no catalogado y
+   * vincularlos en un solo paso (RPC atómico `crear_articulo_desde_libre` →
+   * {id, codigo}). Mismo gate/movimiento que vincular. Idempotente por item_id
+   * (el handler no re-crea el artículo si el item ya quedó vinculado).
+   */
+  async enqueueCrearArticuloLibre(itemId: string, nombre: string, categoriaId: number, unidad: string | null, generarMovimiento = false): Promise<void> {
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'crear_articulo_libre',
+      payload: { item_id: itemId, nombre, categoria_id: categoriaId, unidad, generar_movimiento: generarMovimiento },
+      resumen: { tipo: 'crear_articulo_libre', item_id: itemId, nombre },
+    });
+  }
+
+  /** BW2 — ¿el material no catalogado ya quedó vinculado? Da la idempotencia por
+   *  item_id a los handlers de vincular/crear (un ack perdido no debe duplicar el
+   *  artículo ni fallar el reintento). Best-effort: sin red, deja decidir al RPC. */
+  private async itemLibreYaVinculado(itemId: string): Promise<boolean> {
+    try {
+      const rows = await this.materialNoCatalogadoPendientes(true);
+      return !!rows.find((r) => r.id === itemId)?.articulo_vinculado_id;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * AT12 — "Ajuste real": fija el stock de un artículo/almacén al valor REAL
    * informado, SIN generar un movimiento en el kardex ni un escalón en la gráfica
    * (rebase de la línea base; hermano de AP5). Solo admin — el RPC lo revalida
@@ -1258,6 +1302,34 @@ export class InventarioService {
   }
 
   private registerHandlers(): void {
+    // BW2 — vincular un material no catalogado a un artículo del catálogo.
+    this.sync.register('vincular_item_libre', async (payload) => {
+      const itemId = payload['item_id'] as string;
+      if (await this.itemLibreYaVinculado(itemId)) return; // idempotencia por item_id
+      const { error } = await this.supabase.client.rpc('vincular_item_libre_articulo', {
+        p_item_libre_id: itemId,
+        p_articulo_id: payload['articulo_id'],
+        p_generar_movimiento: payload['generar_movimiento'] ?? false,
+      });
+      if (error) throwSyncError(error);
+    });
+
+    // BW2 — crear el artículo desde el material no catalogado (crea + vincula atómico).
+    this.sync.register('crear_articulo_libre', async (payload) => {
+      const itemId = payload['item_id'] as string;
+      if (await this.itemLibreYaVinculado(itemId)) return; // idempotencia por item_id (no duplica el artículo)
+      const { error } = await this.supabase.client.rpc('crear_articulo_desde_libre', {
+        p_item_libre_id: itemId,
+        p_nombre: payload['nombre'],
+        p_categoria_id: payload['categoria_id'],
+        p_unidad: payload['unidad'] ?? null,
+        p_generar_movimiento: payload['generar_movimiento'] ?? false,
+      });
+      if (error) throwSyncError(error);
+      await this.catalog.invalidatePrefix(CAT_ARTICULOS); // el nuevo artículo entra al catálogo
+      await this.getArticulos();
+    });
+
     // BR4 — rechazo de recepción (entrada|salida) por el receptor. Motivo obligatorio
     // (el server lo valida con 22023) + foto opcional; no mueve stock.
     this.sync.register('recepcion_rechazar', async (payload, photoPaths) => {

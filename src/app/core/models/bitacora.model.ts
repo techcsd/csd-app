@@ -294,6 +294,28 @@ export interface OrdenTrabajoDetalle {
     monto_estimado: number | null;
     solicitado_por: string | null;
     notas: string | null;
+    /** BW1 — número correlativo de la orden (→ OT-000123). */
+    numero?: number | null;
   } | null;
   firmas: OrdenFirma[];
+}
+
+/** BW1 — fila de la lista "Mis órdenes de trabajo" (RPC listar_ordenes_trabajo).
+ *  `estado` derivado server-side de las firmas: borrador (sin firmas) / emitida
+ *  (firma del ingeniero) / firmada (ambas). */
+export interface OrdenTrabajoResumen {
+  bitacora_id: string;
+  numero: number | null;
+  codigo: string; // OT-000123
+  fecha: string;
+  proyecto_id: string | null;
+  proyecto: string | null;
+  descripcion: string | null;
+  ubicacion: string | null;
+  responsable: string | null;
+  creado_por: string | null;
+  created_at: string;
+  estado: 'borrador' | 'emitida' | 'firmada' | string;
+  fotos: number;
+  es_prueba: boolean;
 }

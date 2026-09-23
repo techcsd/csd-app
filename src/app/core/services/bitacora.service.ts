@@ -12,6 +12,7 @@ import {
   EquipoAlquilado,
   IncidenteTipo,
   OrdenTrabajoDetalle,
+  OrdenTrabajoResumen,
   Proyecto,
   ProyectoPartida,
   SUCESO_TIPO_POR_INCIDENTE,
@@ -493,6 +494,47 @@ export class BitacoraService {
     });
     if (error) throw new Error(error.message);
     return (data as OrdenTrabajoDetalle | null) ?? null;
+  }
+
+  /**
+   * BW1 — lista de órdenes de trabajo (mías, o de mis obras si soy elevado). Read-
+   * through cacheada para verla offline; DISTINGUE vacío de falló (BL2). `soloMias`
+   * = !elevado (`p_solo_mias`). Cada fila trae nº (OT-000123), obra, fecha,
+   * responsable y estado (derivado de las firmas server-side).
+   */
+  async listarOrdenesTrabajo(
+    soloMias: boolean,
+  ): Promise<{ data: OrdenTrabajoResumen[]; failed: boolean; fromCache: boolean }> {
+    const key = soloMias ? 'ordenes_trabajo_mias' : 'ordenes_trabajo_todas';
+    const res = await this.catalog.refreshDetailed<OrdenTrabajoResumen[]>(key, async () => {
+      const { data, error } = await this.supabase.client.rpc('listar_ordenes_trabajo', {
+        p_solo_mias: soloMias,
+      });
+      if (error) throw new Error(error.message);
+      return (data as OrdenTrabajoResumen[]) ?? [];
+    });
+    return { data: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
+  }
+
+  /** BW1 — comparte una orden con usuarios del sistema: les llega la notificación
+   *  `orden_trabajo_compartida` con deep-link a la ficha. Online. */
+  async compartirOrdenTrabajo(bitacoraId: string, usuarios: string[]): Promise<void> {
+    if (!usuarios.length) return;
+    const { error } = await this.supabase.client.rpc('compartir_orden_trabajo', {
+      p_bitacora_id: bitacoraId,
+      p_usuarios: usuarios,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** BW1 — busca usuarios del sistema para "Enviar a…" (buscar_usuarios,
+   *  security-definer; `usuarios` es admin-only RLS). Requiere ≥2 caracteres. */
+  async buscarUsuarios(term: string): Promise<{ id: string; nombre: string; email?: string | null }[]> {
+    const t = term.trim();
+    if (t.length < 2) return [];
+    const { data, error } = await this.supabase.client.rpc('buscar_usuarios', { p_term: t });
+    if (error) return [];
+    return (data as { id: string; nombre: string; email?: string | null }[]) ?? [];
   }
 
   /** AW2/AW5 — select común (incluye usuario_id para el autor + es_aproximada AW1). */
