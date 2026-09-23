@@ -15,15 +15,17 @@ El prompt F2.2 pedía **portar el `orden-trabajo-pdf.service.ts` del padre** (qu
 ### 🧪 Reporte AW12 (no bloqueante, no tocado aquí)
 Los tiles del hub Bitácora usan **emoji**, no SVG (`bitacora.html`: 📝🚨✅🧾✍️📋). El tile nuevo *Mis órdenes de trabajo* usa 🗂️ **para no romper la consistencia** (introducir un SVG suelto entre emojis sería peor). Migrar todo el hub a SVG = tarea AW12 aparte (reportado, no ejecutado, como pidió el prompt).
 
-### 📤 En dev
-- `feature/bw-ronda` **mergeado → `dev`** (`352b79a`). *(Push + APK dev + publish: ver "Siguiente paso" — se ejecutan al cierre de esta sesión.)*
+### 📤 En dev — YA PUBLICADO
+- `feature/bw-ronda` **mergeado → `dev`** + **pusheado** (Vercel construye `app-dev.`). Fix follow-up `1cf55ed`: Compartir incluye el **enlace** a la ficha (F2.2).
+- **APK dev 2.28.0 construido + firmado** (cert `3c5316d8…`) + **2.28.0 registrada en `app_versiones` de dev** + **subido al bucket dev** (`csd-app-2.28.0.apk` + latest + version.json; `apk_url` dev actualizado).
 - **Contratos del padre**: `listar_ordenes_trabajo`, `compartir_orden_trabajo`, `orden_trabajo_detalle`, `vincular_item_libre_articulo`, `crear_articulo_desde_libre` → **LIVE en dev** (probados por RPC; los 403 confirman el gate `es_flota_elevado()/inventario`).
+- **COBERTURA-NOTAS.md filas 65-66** actualizadas con el estado app (🧪 2.28.0-dev).
 
 ### ⏳ En prod (gateado — espera OK de Xaviel)
 - **Nada nuevo en prod.** Estreno por el flujo: **push `dev`** → app-dev./APK dev → *"está en dev 2.28.0-dev"* → **Xaviel prueba y da OK** → PR `dev → main` → `apk --env prod` → `apk:publish --env prod` (pasa regla 18 porque salió en dev) → publicada (mínima sigue 2.26.1). El backend BW ya está en prod (padre 1.142.0).
 
 ### Siguiente paso (owed físico de Xaviel: probar en dev y OK)
-- Push `dev` (Vercel app-dev), `npm run apk -- --env dev`, `npm run apk:publish -- --env dev`.
+- Ya está todo en dev (PWA app-dev + APK dev 2.28.0). Falta que Xaviel pruebe y dé OK → prod.
 - **Lista de prueba en dev:** (1) Bitácora → Orden de trabajo → crear → éxito → *Compartir PDF* (WhatsApp) + *Ver mis órdenes*; (2) *Mis órdenes de trabajo* → buscar/filtrar → ficha → *Enviar a…* un usuario → le llega notif con deep-link; (3) como elevado/inventario: Inventario → Material no catalogado → *Ties 20CM* → **Vincular** (aparece "Vincular a …", desaparece de la lista) y **Crear artículo** (entra al catálogo); probar con switch *Generar movimiento* on/off.
 - **Device-QA BV5 (owed):** Android real con "No mantener actividades" → foto de combustible → la echada se retoma (código `appRestoredResult` en `CameraService` revisado, correcto; falta la prueba física).
 
