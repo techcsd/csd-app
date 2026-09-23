@@ -1,5 +1,37 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 23/09/2026 — PROMPT-63 (ronda BW, hijo) — **2.28.0** · rama `feature/bw-ronda` → `dev`
+
+**TL;DR:** implementadas las 2 notas BW en la app consumiendo los contratos del padre (BW web ya en prod 1.142.0; los 5 RPCs **verificados vivos en dev** por introspección). `npm run build:dev` **verde con todos los guards** (nuevo `verify-pickers`, tokens baseline 88, i18n **en 96%** alcance 100%, dev-strings). Versión **2.28.0** (4 sitios + `CAMBIOS_CURADOS`). Mínima se queda **2.26.1**.
+
+### ✅ Construido (código + build verdes)
+- **BW1 · Mis órdenes de trabajo** (nota #65): tile en el hub Bitácora + lista offline read-through (`listar_ordenes_trabajo`, `p_solo_mias=!elevado`) con OT-000123, obra, fecha, responsable, chip de estado, buscador y filtro por obra (BL2 empty-vs-failed). **Ficha** `/bitacora/orden-trabajo/:id` (`orden_trabajo_detalle`): nº + estado derivado de firmas + detalle + firmas + **Ver/Guardar PDF** + **Compartir** (share nativo, jsPDF ya existente) + **Enviar a…** (`buscar_usuarios` → `compartir_orden_trabajo`). Notif `orden_trabajo_creada/compartida` → deep-link a la ficha (`notifAppRoute`). Pantalla de éxito al crear: **Ver mis órdenes** + **Compartir PDF** (armado local desde la captura, funciona offline). Las OT de "Mis bitácoras" abren la ficha.
+- **BW2 · vincular/crear artículo desde Material no catalogado** (nota #66): para `esFlotaElevado()`/inventario → **Vincular a un artículo** (picker) y **Crear artículo** (nombre prellenado, categoría, unidad) + switch **Generar el movimiento de inventario** (AY13). Offline outbox `tipo_op` `vincular_item_libre` / `crear_articulo_libre`, **idempotente por item_id** (el handler no re-vincula/duplica si ya quedó resuelto). RPCs del padre `vincular_item_libre_articulo` / `crear_articulo_desde_libre`.
+- **Lint `verify-pickers.mjs`** (espejo del `verify-regresiones` del padre, F1.2): todo control con `(selectionChange)`/`(valueChange)` debe bindear `[value]`; pickers nombrados (`app-articulo-picker/user-picker/filter-select`) idem. **Baseline limpio** (los pickers de la app emiten `(picked)`, no son controlados). Cableado en `prebuild`.
+
+### 📌 Decisión de diseño (divergencia deliberada del prompt) — PDF
+El prompt F2.2 pedía **portar el `orden-trabajo-pdf.service.ts` del padre** (que usa `window.open`+`print`, sin librería). La app **ya tiene** un `orden-trabajo-pdf.service.ts` con **jsPDF** que genera un **Blob compartible** y usa `@capacitor/share` (funciona en Android nativo; `window.print` NO). Se **conservó el de la app** (romper el share nativo sería peor). AU1 "una sola plantilla" queda como parity **visual**, no de implementación (el padre imprime, el hijo genera PDF real para WhatsApp). Sin acción pendiente.
+
+### 🧪 Reporte AW12 (no bloqueante, no tocado aquí)
+Los tiles del hub Bitácora usan **emoji**, no SVG (`bitacora.html`: 📝🚨✅🧾✍️📋). El tile nuevo *Mis órdenes de trabajo* usa 🗂️ **para no romper la consistencia** (introducir un SVG suelto entre emojis sería peor). Migrar todo el hub a SVG = tarea AW12 aparte (reportado, no ejecutado, como pidió el prompt).
+
+### 📤 En dev
+- `feature/bw-ronda` **mergeado → `dev`** (`352b79a`). *(Push + APK dev + publish: ver "Siguiente paso" — se ejecutan al cierre de esta sesión.)*
+- **Contratos del padre**: `listar_ordenes_trabajo`, `compartir_orden_trabajo`, `orden_trabajo_detalle`, `vincular_item_libre_articulo`, `crear_articulo_desde_libre` → **LIVE en dev** (probados por RPC; los 403 confirman el gate `es_flota_elevado()/inventario`).
+
+### ⏳ En prod (gateado — espera OK de Xaviel)
+- **Nada nuevo en prod.** Estreno por el flujo: **push `dev`** → app-dev./APK dev → *"está en dev 2.28.0-dev"* → **Xaviel prueba y da OK** → PR `dev → main` → `apk --env prod` → `apk:publish --env prod` (pasa regla 18 porque salió en dev) → publicada (mínima sigue 2.26.1). El backend BW ya está en prod (padre 1.142.0).
+
+### Siguiente paso (owed físico de Xaviel: probar en dev y OK)
+- Push `dev` (Vercel app-dev), `npm run apk -- --env dev`, `npm run apk:publish -- --env dev`.
+- **Lista de prueba en dev:** (1) Bitácora → Orden de trabajo → crear → éxito → *Compartir PDF* (WhatsApp) + *Ver mis órdenes*; (2) *Mis órdenes de trabajo* → buscar/filtrar → ficha → *Enviar a…* un usuario → le llega notif con deep-link; (3) como elevado/inventario: Inventario → Material no catalogado → *Ties 20CM* → **Vincular** (aparece "Vincular a …", desaparece de la lista) y **Crear artículo** (entra al catálogo); probar con switch *Generar movimiento* on/off.
+- **Device-QA BV5 (owed):** Android real con "No mantener actividades" → foto de combustible → la echada se retoma (código `appRestoredResult` en `CameraService` revisado, correcto; falta la prueba física).
+
+### Verify on resume
+`npm run build:dev` verde; `node scripts/verify-pickers.mjs` ✓; i18n `en 96%` alcance 100%.
+
+---
+
 ## 🟢 SESIÓN 22/09/2026 — PROMPT-61 (ronda BV, hijo) — **2.27.0** · rama `feature/bv-ronda` → `dev`
 
 **TL;DR:** implementadas las 6 fases de la ronda BV en la app, consumiendo los contratos del padre (todos **vivos en dev** `fzfrnrvndzrjwyvdpkgg`) **detrás de comprobación de capacidad** (degradan solos si un contrato aún no está desplegado). `npm run build` (SGC_ENV=dev) **verde con todos los guards** (sin-ref-hardcodeado, tokens, i18n **en 96 %** ≥ gate 95 %, dev-strings). Versión **2.27.0** (4 sitios + CAMBIOS_CURADOS). **Mínima se queda en 2.26.1** (no hay crash que la justifique — DEFAULT).
