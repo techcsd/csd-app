@@ -1,0 +1,120 @@
+<div class="screen otf">
+  <header class="otf__header">
+    <button type="button" class="otf__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="otf__title">{{ 'Orden de trabajo' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error() || !orden()) {
+      <app-empty-state
+        icon="🧾"
+        [title]="'No pudimos abrir la orden' | t"
+        [message]="'Puede que aún se esté enviando o que no tengas acceso. Revisa tu conexión e inténtalo de nuevo.' | t"
+        [ctaLabel]="'Reintentar' | t"
+        (action)="reintentar()"
+      />
+    } @else if (orden(); as o) {
+      <!-- Encabezado: nº OT-000123 + estado -->
+      <div class="otf__cod-row">
+        <span class="otf__cod">{{ codigo() }}</span>
+        <span class="otf__estado" [attr.data-estado]="estado()">{{ estadoLabel() }}</span>
+        @if (o.bitacora.es_prueba) { <span class="otf__prueba">{{ 'PRUEBA' | t }}</span> }
+      </div>
+
+      <ul class="otf__info">
+        <li><span>{{ 'Obra' | t }}</span><b>{{ o.bitacora.proyecto ?? '—' }}</b></li>
+        <li><span>{{ 'Fecha' | t }}</span><b>{{ fmtFecha(o.bitacora.fecha) }}</b></li>
+        @if (o.detalle?.ubicacion; as u) { <li><span>{{ 'Ubicación' | t }}</span><b>{{ u }}</b></li> }
+        @if (o.detalle?.cantidad != null) {
+          <li><span>{{ 'Cantidad' | t }}</span><b>{{ o.detalle!.cantidad }}{{ o.detalle!.unidad ? ' ' + o.detalle!.unidad : '' }}</b></li>
+        }
+        @if (o.detalle?.monto_estimado != null) {
+          <li><span>{{ 'Monto estimado' | t }}</span><b>{{ o.detalle!.monto_estimado | number:'1.0-2' }}</b></li>
+        }
+        @if (o.detalle?.solicitado_por; as s) { <li><span>{{ 'Lo pidió' | t }}</span><b>{{ s }}</b></li> }
+        @if (o.bitacora.autor; as a) { <li><span>{{ 'Registrada por' | t }}</span><b>{{ a }}</b></li> }
+        @if (o.bitacora.created_at) { <li><span>{{ 'Registrada' | t }}</span><b>{{ fmtFechaHora(o.bitacora.created_at) }}</b></li> }
+      </ul>
+
+      @if (o.detalle?.descripcion; as desc) {
+        <h2 class="otf__section">{{ 'Trabajo solicitado' | t }}</h2>
+        <p class="otf__desc">{{ desc }}</p>
+      }
+      @if (o.bitacora.comentarios; as c) {
+        <h2 class="otf__section">{{ 'Comentarios' | t }}</h2>
+        <p class="otf__desc">{{ c }}</p>
+      }
+
+      @if (o.firmas.length) {
+        <h2 class="otf__section">{{ 'Firmas' | t }}</h2>
+        <div class="otf__firmas">
+          @for (f of o.firmas; track f.rol) {
+            <div class="otf__firma">
+              <span class="otf__firma-rol">{{ f.rol === 'ingeniero' ? '👷' : '🤝' }} {{ f.rol === 'ingeniero' ? ('Ingeniero' | t) : ('Cliente' | t) }}</span>
+              @if (f.firma_url) {
+                <img class="otf__firma-img" [src]="f.firma_url" [alt]="'Firma ' + f.rol" loading="lazy" />
+              }
+              <b class="otf__firma-nombre">{{ f.nombre }}</b>
+              @if (f.cedula) { <span class="otf__firma-ced">{{ f.cedula }}</span> }
+              @if (f.rol_desc) { <span class="otf__firma-desc">{{ f.rol_desc }}</span> }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Acciones -->
+      <div class="otf__actions">
+        <button type="button" class="btn-cta" [disabled]="pdfBusy()" (click)="compartirPdf()">
+          @if (pdfBusy()) { ⏳… } @else { 📤 {{ 'Compartir PDF' | t }} }
+        </button>
+        <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="descargarPdf()">
+          @if (pdfBusy()) { ⏳… } @else { ⬇️ {{ 'Ver / Guardar PDF' | t }} }
+        </button>
+        <button type="button" class="btn-ghost" [class.otf__act--on]="enviarAbierto()" (click)="toggleEnviar()">
+          👥 {{ 'Enviar a…' | t }}
+        </button>
+      </div>
+
+      <!-- Enviar a… (usuarios del sistema) -->
+      @if (enviarAbierto()) {
+        <div class="otf__enviar">
+          <p class="otf__enviar-h">{{ 'Enviar la orden a usuarios del sistema' | t }}</p>
+          @if (destinatarios().length) {
+            <div class="otf__chips">
+              @for (u of destinatarios(); track u.id) {
+                <span class="otf__chip">{{ u.nombre }} <button type="button" (click)="quitar(u)" aria-label="Quitar">✕</button></span>
+              }
+            </div>
+          }
+          <input
+            type="text"
+            class="otf__search"
+            [ngModel]="term()"
+            (ngModelChange)="onTerm($event)"
+            [placeholder]="'Busca por nombre…' | t"
+          />
+          @if (buscando()) {
+            <p class="otf__hint">{{ 'Buscando…' | t }}</p>
+          } @else if (resultados().length) {
+            <ul class="otf__result">
+              @for (u of resultados(); track u.id) {
+                <li><button type="button" (click)="agregar(u)">{{ u.nombre }}@if (u.email) { <small>{{ u.email }}</small> }</button></li>
+              }
+            </ul>
+          } @else if (term().trim().length >= 2) {
+            <p class="otf__hint">{{ 'Sin resultados.' | t }}</p>
+          } @else {
+            <p class="otf__hint">{{ 'Escribe al menos 2 letras.' | t }}</p>
+          }
+          <button type="button" class="btn-cta otf__enviar-btn" [disabled]="!destinatarios().length || enviando()" (click)="enviar()">
+            @if (enviando()) { {{ 'Enviando…' | t }} }
+            @else if (destinatarios().length) { {{ 'Enviar a {n}' | t: { n: destinatarios().length } }} }
+            @else { {{ 'Elige a quién enviar' | t }} }
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

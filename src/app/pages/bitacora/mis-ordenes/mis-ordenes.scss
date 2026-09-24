@@ -1,0 +1,136 @@
+.mo {
+  background: var(--color-bg);
+}
+.mo__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.mo__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.mo__icon {
+  font-size: 22px;
+}
+.mo__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.mo__search {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 15px;
+}
+.mo__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mo__chip {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+.mo__chip--on {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.ot-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.ot-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ot-row__cod {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.ot-row__estado {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.ot-row__estado[data-estado='emitida'] {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+.ot-row__estado[data-estado='firmada'] {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.ot-row__prueba {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+.ot-row__obra {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ot-row__meta {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+.ot-row__desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ot-row__chev {
+  flex: 0 0 auto;
+  font-size: 22px;
+  color: var(--color-text-secondary);
+}

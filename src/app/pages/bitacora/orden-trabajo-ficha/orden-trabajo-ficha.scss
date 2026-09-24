@@ -1,0 +1,243 @@
+.otf {
+  background: var(--color-bg);
+}
+.otf__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.otf__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.otf__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.otf__cod-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.otf__cod {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.5px;
+}
+.otf__estado {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+.otf__estado[data-estado='emitida'] {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+}
+.otf__estado[data-estado='firmada'] {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.otf__prueba {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.otf__info {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.otf__info li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14.5px;
+}
+.otf__info li:last-child {
+  border-bottom: 0;
+}
+.otf__info li span {
+  color: var(--color-text-secondary);
+  flex: 0 0 auto;
+}
+.otf__info li b {
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+.otf__section {
+  margin: 18px 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.otf__desc {
+  margin: 0;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+}
+
+.otf__firmas {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.otf__firma {
+  flex: 1 1 45%;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.otf__firma-rol {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.otf__firma-img {
+  height: 64px;
+  object-fit: contain;
+  align-self: flex-start;
+  max-width: 100%;
+}
+.otf__firma-nombre {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+.otf__firma-ced,
+.otf__firma-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.otf__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+.otf__actions button {
+  width: 100%;
+  min-height: 52px;
+}
+.otf__act--on {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+
+.otf__enviar {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--color-surface);
+}
+.otf__enviar-h {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.otf__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.otf__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--color-primary-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--primary);
+}
+.otf__chip button {
+  color: var(--color-danger);
+  font-weight: 800;
+  background: transparent;
+}
+.otf__search {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: 15px;
+}
+.otf__hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.otf__result {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.otf__result button {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  min-height: 48px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.otf__result button small {
+  display: block;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.otf__enviar-btn {
+  width: 100%;
+  min-height: 52px;
+}

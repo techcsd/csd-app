@@ -1,10 +1,12 @@
 @if (done()) {
   <app-big-confirm
     [title]="online ? ('Orden registrada' | t) : ('Guardada' | t)"
-    [note]="online ? ('La orden de trabajo quedó registrada con las dos firmas.' | t) : ('Sin señal. Se enviará sola con las firmas.' | t)"
+    [note]="online ? ('La orden de trabajo quedó registrada con las dos firmas. Puedes verla o compartirla.' | t) : ('Sin señal. Se enviará sola con las firmas. Ya puedes compartir el PDF.' | t)"
     [tone]="online ? 'done' : 'pending'"
-    [buttonLabel]="'Listo' | t"
-    (dismissed)="finish()"
+    [buttonLabel]="'Ver mis órdenes' | t"
+    [secondaryLabel]="sharingCreated() ? ('Compartiendo…' | t) : ('Compartir PDF' | t)"
+    (dismissed)="verMisOrdenes()"
+    (secondary)="compartirCreada()"
   />
 } @else {
   <div class="screen ot">

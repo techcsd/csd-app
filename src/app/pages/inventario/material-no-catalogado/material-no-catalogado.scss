@@ -2,11 +2,84 @@
   background: var(--color-bg);
 }
 
-// AT11 — declinar material no catalogado.
+// AT11 / BW2 — acciones del material no catalogado (vincular / crear / declinar).
 .mnc__acciones {
   margin-top: 10px;
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: flex-end;
+}
+.mnc__accion {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  min-height: 40px;
+}
+.mnc__accion--primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.mnc__accion--on {
+  background: var(--color-primary-bg);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+// BW2 — panel de vincular / crear.
+.mnc__panel {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px dashed var(--color-border);
+  padding-top: 10px;
+}
+.mnc__panel-h {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.mnc__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.mnc__field input,
+.mnc__field select {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 500;
+}
+.mnc__switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.mnc__switch input {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+.mnc__submit {
+  width: 100%;
+  min-height: 52px;
 }
 .mnc__declinar {
   font-size: 14px;

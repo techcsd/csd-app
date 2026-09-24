@@ -37,19 +37,13 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-22';
+const RELEASED_AT = '2026-09-23';
 
-const TITULO = 'Requisiciones por fase, conduce externo con inventario y más';
+const TITULO = 'Mis órdenes de trabajo y vincular material no catalogado';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Combustible', d: 'Si la app se cierra o se cae mientras registras una echada, la retomas: se guarda lo que llevabas con su foto y aparece en el inicio como "Pendiente de terminar" (también recupera la foto en Android si el equipo cierra la cámara).' },
-  { t: 'nuevo', m: 'Requisiciones', d: 'Las requisiciones se organizan por fase (Pendientes / En proceso / Completadas / Rechazadas) y se ordenan por la fecha en que se necesitan; cada tarjeta muestra "se necesita en N días / vencida" arriba.' },
-  { t: 'nuevo', m: 'Requisiciones', d: 'El ingeniero puede editar la fecha de necesidad de una requisición desde su detalle (con motivo), incluso sin señal.' },
-  { t: 'nuevo', m: 'Conduce externo', d: 'El conduce externo ahora puede mover materiales del inventario de verdad: eliges el almacén de origen y los renglones del catálogo, y el stock se mueve.' },
-  { t: 'mejora', m: 'Conduces', d: 'Logística puede asignar un chofer a un conduce directamente desde la lista (le crea la ruta).' },
-  { t: 'nuevo', m: 'Inventario', d: 'Cada almacén muestra sus "Pendientes": entradas por confirmar y salidas sin recibir, con acceso directo.' },
-  { t: 'nuevo', m: 'Combustible', d: 'Se puede registrar una echada de una fecha pasada solo cuando Flota te da permiso; el campo Fecha aparece solo entonces.' },
-  { t: 'nuevo', m: 'Perfil', d: '"Materiales a mi cargo": los ingenieros/encargados ven lo recibido en sus obras que aún no se ha devuelto.' },
-  { t: 'mejora', m: 'Flota', d: 'Los vehículos se muestran por nombre · placa (con el alias que ponga Logística) en selectores y listas, no solo por placa.' },
+  { t: 'nuevo', m: 'Órdenes de trabajo', d: '"Mis órdenes de trabajo": ves y buscas las órdenes que creas (con su número OT-000123 y estado), abres la ficha con las firmas, compartes el PDF por WhatsApp y la envías a otros usuarios del sistema.' },
+  { t: 'nuevo', m: 'Inventario', d: 'Desde "Material no catalogado" ya puedes vincular un material a un artículo del catálogo o crear el artículo desde ahí (con la opción de generar el movimiento de inventario), sin ir a la web.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Si Android cierra la cámara al tomar la foto de una echada, la foto se reinyecta al borrador y retomas la echada donde ibas.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

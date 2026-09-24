@@ -1,0 +1,76 @@
+<div class="screen mo">
+  <header class="mo__header">
+    <button type="button" class="mo__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mo__icon">🧾</span>
+    <h1 class="mo__title">{{ 'Mis órdenes de trabajo' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error()) {
+      <app-empty-state
+        icon="⚠️"
+        [title]="'No se pudieron cargar las órdenes' | t"
+        [message]="'Revisa tu conexión e inténtalo de nuevo.' | t"
+        [ctaLabel]="'Reintentar' | t"
+        (action)="load()"
+      />
+    } @else {
+      <!-- Buscador por nº / obra / responsable -->
+      @if (ordenes().length) {
+        <input
+          type="text"
+          class="mo__search"
+          [ngModel]="term()"
+          (ngModelChange)="term.set($event)"
+          [placeholder]="'Buscar por nº, obra o responsable…' | t"
+        />
+      }
+      <!-- Filtro por obra -->
+      @if (obras().length > 1) {
+        <div class="mo__filtros">
+          <button type="button" class="mo__chip" [class.mo__chip--on]="filtroObra() === ''" (click)="setFiltroObra('')">
+            {{ 'Todas' | t }} ({{ ordenes().length }})
+          </button>
+          @for (o of obras(); track o.nombre) {
+            <button type="button" class="mo__chip" [class.mo__chip--on]="filtroObra() === o.nombre" (click)="setFiltroObra(o.nombre)">
+              {{ o.nombre }} ({{ o.count }})
+            </button>
+          }
+        </div>
+      }
+
+      @for (o of filtradas(); track o.bitacora_id) {
+        <button type="button" class="ot-row" (click)="open(o)">
+          <div class="ot-row__info">
+            <span class="ot-row__cod">
+              {{ o.codigo }}
+              <span class="ot-row__estado" [attr.data-estado]="o.estado">{{ estadoLabel(o.estado) }}</span>
+              @if (o.es_prueba) { <span class="ot-row__prueba">{{ 'PRUEBA' | t }}</span> }
+            </span>
+            <span class="ot-row__obra">{{ o.proyecto ?? '—' }}</span>
+            <span class="ot-row__meta">
+              📅 {{ fmtFecha(o.fecha) }}
+              @if (o.responsable) { · 🧑‍🔧 {{ o.responsable }} }
+            </span>
+            @if (o.descripcion) { <span class="ot-row__desc">{{ o.descripcion }}</span> }
+          </div>
+          <span class="ot-row__chev">›</span>
+        </button>
+      } @empty {
+        @if (ordenes().length) {
+          <app-empty-state icon="🔍" [title]="'Sin coincidencias' | t" [message]="'Ninguna orden coincide con tu búsqueda o filtro.' | t" />
+        } @else {
+          <app-empty-state
+            icon="🧾"
+            [title]="'Todavía no hay órdenes de trabajo' | t"
+            [message]="'Crea una orden de trabajo con las firmas del ingeniero y el cliente. Aquí verás las que crees y podrás verlas y compartirlas.' | t"
+            [ctaLabel]="'Nueva orden de trabajo' | t"
+            (action)="nueva()"
+          />
+        }
+      }
+    }
+  </div>
+</div>
