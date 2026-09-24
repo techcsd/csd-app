@@ -37,13 +37,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-23';
+const RELEASED_AT = '2026-09-24';
 
-const TITULO = 'Mis órdenes de trabajo y vincular material no catalogado';
+const TITULO = 'Rol Developer';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Órdenes de trabajo', d: '"Mis órdenes de trabajo": ves y buscas las órdenes que creas (con su número OT-000123 y estado), abres la ficha con las firmas, compartes el PDF por WhatsApp y la envías a otros usuarios del sistema.' },
-  { t: 'nuevo', m: 'Inventario', d: 'Desde "Material no catalogado" ya puedes vincular un material a un artículo del catálogo o crear el artículo desde ahí (con la opción de generar el movimiento de inventario), sin ir a la web.' },
-  { t: 'arreglo', m: 'Combustible', d: 'Si Android cierra la cámara al tomar la foto de una echada, la foto se reinyecta al borrador y retomas la echada donde ibas.' },
+  { t: 'nuevo', m: 'Tecnología', d: 'Nuevo rol Developer: acceso a Tecnología (Dev notes y historial de versiones) y consulta de los módulos, para reproducir y depurar. No registra echadas ni capturas de campo.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

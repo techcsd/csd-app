@@ -15,8 +15,9 @@
       }
     </div>
 
-    <!-- BP5 — Dev notes: notas técnicas en Markdown, solo para roles de Tecnología. -->
-    @if (esTecnologia()) {
+    <!-- BP5/BX1 — Dev notes: notas técnicas en Markdown, solo para desarrollo
+         (es_rol_desarrollador: admin/tecnología/encargado/Developer). -->
+    @if (esDesarrollador()) {
       <button type="button" class="tec__devnotes" (click)="abrirDevNotes()">
         <span class="tec__devnotes-icon">🧑‍💻</span>
         <span class="tec__devnotes-txt">
