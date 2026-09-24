@@ -1,5 +1,18 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 24/09/2026 (cont.) — **BX1b: es_tecnologia() + app 2.30.0** — todo en PROD
+
+**TL;DR:** aplicada `bx1b` (SGC) en **dev y prod** vía `apply-migration.mjs` ledgered → `sgc.es_tecnologia()` ahora incluye `'desarrollador'` (verificado: `es_tecnologia()=true`, app_error_reports legible). Con eso desbloqueado, **app 2.30.0** activa la pestaña *Reportes de errores* para el rol Developer (1 línea: `'desarrollador'` en `UserContextService.TECNOLOGIA`) y **salió a PROD**: `dev→main` (`3983ac5`) + APK prod firmado/registrado/subido + **publicada=2.30.0** (mínima 2.26.1). SGC commit `293eef4` (dev). **Nada pendiente de release.**
+
+### Cierre del rol Developer (todo en PROD, verificado por Xaviel)
+- **`bx1` (creación del rol) aplicada a PROD** (estaba solo en dev) vía `apply-migration.mjs --env prod --yes`, ledgered. Ahora el rol `desarrollador` (id 35) existe en prod con `es_rol_desarrollador()`/RLS.
+- **Rol Developer asignado al usuario de Xaviel** (`tecnologia@constructorasd.com`): roles = [admin, desarrollador]. (Nota: como ya es admin — superconjunto — no cambia lo que ve; solo lo añade al directorio de desarrolladores.)
+- **`qa_desarrollador@constructorasd.com` creado en PROD** (pw `QaCsd2026!`, es_prueba=false, rol 35). Canario: es_desarrollador=true, es_tecnologia=true, es_flota_elevado=false. **Xaviel probó en prod con ese usuario → funciona bien** (ve Tecnología/Sistema con Dev notes + Reportes de errores; NO ve Transporte/Registrar combustible ni Nueva requisición). En `QA-USERS.local`.
+- **`CLAUDE.md`** (proyecto) gana una sección **`## Roles / gating (app)`** (commit `93bea6d`): los 3 predicados que espejan al servidor (`esDesarrollador`/`esTecnologia`/`esFlotaElevado`), el gotcha "es_tecnologia() es por rol, no por módulo", y el rol Developer (módulos/permisos, qué ve, qué no, QA users, backend bx1/bx1b).
+- **Nada pendiente.** El rol Developer está completo y verificado en dev y prod (web app 2.30.0 + backend bx1/bx1b + CLAUDE.md documentado).
+
+---
+
 ## 🟢 SESIÓN 24/09/2026 — PROMPT-65 (ronda BX, hijo) — **2.29.0** · rama `feature/bx-ronda` → `dev` · **2.28.0 PUBLICADA a prod**
 
 **TL;DR:** (1) Con OK de Xaviel, **2.28.0 (BW) salió a PROD**. (2) Ronda **BX** en la app: **F1 no-op** (la app no muestra historial de edición de echada), **F2 = rol Developer** (routing por rol). `npm run build:dev` **verde**. (3) Con OK ("probé en dev, ok"), **2.29.0 (BX) TAMBIÉN salió a PROD**: merge `dev→main` (PWA) + APK prod firmado/registrado/subido + **publicada=2.29.0** (mínima sigue 2.26.1). ✅ **Sesión cerrada — nada pendiente de release.**
