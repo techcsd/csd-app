@@ -8,7 +8,8 @@
 - **`bx1` (creación del rol) aplicada a PROD** (estaba solo en dev) vía `apply-migration.mjs --env prod --yes`, ledgered. Ahora el rol `desarrollador` (id 35) existe en prod con `es_rol_desarrollador()`/RLS.
 - **Rol Developer asignado al usuario de Xaviel** (`tecnologia@constructorasd.com`): roles = [admin, desarrollador]. (Nota: como ya es admin — superconjunto — no cambia lo que ve; solo lo añade al directorio de desarrolladores.)
 - **`qa_desarrollador@constructorasd.com` creado en PROD** (pw `QaCsd2026!`, es_prueba=false, rol 35). Canario: es_desarrollador=true, es_tecnologia=true, es_flota_elevado=false. **Xaviel probó en prod con ese usuario → funciona bien** (ve Tecnología/Sistema con Dev notes + Reportes de errores; NO ve Transporte/Registrar combustible ni Nueva requisición). En `QA-USERS.local`.
-- **Nada pendiente.** El rol Developer está completo y verificado en dev y prod (web app 2.30.0 + backend bx1/bx1b).
+- **`CLAUDE.md`** (proyecto) gana una sección **`## Roles / gating (app)`** (commit `93bea6d`): los 3 predicados que espejan al servidor (`esDesarrollador`/`esTecnologia`/`esFlotaElevado`), el gotcha "es_tecnologia() es por rol, no por módulo", y el rol Developer (módulos/permisos, qué ve, qué no, QA users, backend bx1/bx1b).
+- **Nada pendiente.** El rol Developer está completo y verificado en dev y prod (web app 2.30.0 + backend bx1/bx1b + CLAUDE.md documentado).
 
 ---
 
