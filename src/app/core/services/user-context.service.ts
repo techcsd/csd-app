@@ -141,12 +141,12 @@ export class UserContextService {
   // de errores"): visibles solo para estos roles (mismo criterio que
   // sgc.es_tecnologia()). El resto de Tecnología (Historial de versiones, Guía,
   // Dudas) lo ve TODO usuario.
-  // BX1 — NO incluye `desarrollador`: sgc.es_tecnologia() es POR ROL (admin|tecnologia|
-  // gerencia|direccion), NO por módulo (verificado en dev: es_tecnologia()=false para el
-  // rol Developer pese a tener el módulo). Por eso los "Reportes de errores" (RLS
-  // es_tecnologia()) NO se le pintan al desarrollador: serían un panel vacío/bloqueado.
-  // Las Dev notes van por otro gate (esDesarrollador ↔ es_rol_desarrollador). Ver reporte.
-  private static readonly TECNOLOGIA = ['admin', 'tecnologia', 'gerencia', 'direccion'];
+  // BX1b — incluye `desarrollador`: tras aplicar bx1b (es_tecnologia() añade
+  // 'desarrollador') en dev Y prod, la RLS de `app_error_reports` ya deja leer al rol
+  // Developer, así que la pestaña "Reportes de errores" SÍ se le pinta. Espejo exacto de
+  // sgc.es_tecnologia() (admin|tecnologia|gerencia|direccion|desarrollador). Las Dev notes
+  // van por otro gate (esDesarrollador ↔ es_rol_desarrollador).
+  private static readonly TECNOLOGIA = ['admin', 'tecnologia', 'gerencia', 'direccion', 'desarrollador'];
   esTecnologia = computed(() =>
     this.roles().some((r) => UserContextService.TECNOLOGIA.includes(r)),
   );
