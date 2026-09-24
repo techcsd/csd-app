@@ -39,9 +39,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-09-24';
 
-const TITULO = 'Rol Developer';
+const TITULO = 'Reportes de errores para el rol Developer';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Tecnología', d: 'Nuevo rol Developer: acceso a Tecnología (Dev notes y historial de versiones) y consulta de los módulos, para reproducir y depurar. No registra echadas ni capturas de campo.' },
+  { t: 'mejora', m: 'Tecnología', d: 'El rol Developer ya puede ver los "Reportes de errores" de la app dentro de Sistema, para diagnosticar sin pedir accesos extra.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
