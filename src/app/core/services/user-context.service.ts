@@ -141,16 +141,23 @@ export class UserContextService {
   // de errores"): visibles solo para estos roles (mismo criterio que
   // sgc.es_tecnologia()). El resto de Tecnología (Historial de versiones, Guía,
   // Dudas) lo ve TODO usuario.
+  // BX1 — NO incluye `desarrollador`: sgc.es_tecnologia() es POR ROL (admin|tecnologia|
+  // gerencia|direccion), NO por módulo (verificado en dev: es_tecnologia()=false para el
+  // rol Developer pese a tener el módulo). Por eso los "Reportes de errores" (RLS
+  // es_tecnologia()) NO se le pintan al desarrollador: serían un panel vacío/bloqueado.
+  // Las Dev notes van por otro gate (esDesarrollador ↔ es_rol_desarrollador). Ver reporte.
   private static readonly TECNOLOGIA = ['admin', 'tecnologia', 'gerencia', 'direccion'];
   esTecnologia = computed(() =>
     this.roles().some((r) => UserContextService.TECNOLOGIA.includes(r)),
   );
 
-  // BS2 — DESARROLLADOR/programador (espejo EXACTO de sgc.es_desarrollador():
-  // admin | tecnologia | encargado_tecnologia). Más estrecho que esTecnologia (no
-  // incluye gerencia/dirección). Es el gate del DETALLE TÉCNICO de un error (SQLSTATE
-  // + crudo): un trabajador de campo nunca ve jerga de BD; el dev sí, para diagnosticar.
-  private static readonly DESARROLLADOR = ['admin', 'tecnologia', 'encargado_tecnologia'];
+  // BS2 — DESARROLLADOR/programador (espejo EXACTO de sgc.es_desarrollador()).
+  // BX1 — la fuente única del padre es sgc.es_rol_desarrollador(): admin | tecnologia
+  // | encargado_tecnologia | **desarrollador** (rol Developer nuevo). Más estrecho que
+  // esTecnologia (no incluye gerencia/dirección). Es el gate del DETALLE TÉCNICO de un
+  // error (SQLSTATE + crudo) y del 🩺 Código: un trabajador de campo nunca ve jerga de
+  // BD; el dev sí, para diagnosticar.
+  private static readonly DESARROLLADOR = ['admin', 'tecnologia', 'encargado_tecnologia', 'desarrollador'];
   esDesarrollador = computed(() =>
     this.roles().some((r) => UserContextService.DESARROLLADOR.includes(r)),
   );

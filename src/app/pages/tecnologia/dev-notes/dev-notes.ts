@@ -47,8 +47,10 @@ export class DevNotesPage {
   abierta = signal<Nota | null>(null);
 
   constructor() {
-    // Gate cliente: sin rol de Tecnología no hay Dev notes (la RLS ya lo respalda).
-    if (!this.ctx.esTecnologia()) {
+    // BX1 — Gate cliente = es_rol_desarrollador (la RLS de notas ambito='dev' lo
+    // respalda): admin/tecnología/encargado/Developer. NO gerencia/direccion (verían
+    // una lista vacía). Antes era esTecnologia, que excluía al Developer y al encargado.
+    if (!this.ctx.esDesarrollador()) {
       void this.router.navigate(['/home'], { replaceUrl: true });
       return;
     }
