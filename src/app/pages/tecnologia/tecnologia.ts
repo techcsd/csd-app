@@ -52,9 +52,14 @@ export class TecnologiaPage {
   readonly guiaIcono = GUIA_ICONO;
   readonly instalada = environment.version;
 
-  // Z26 — "Reportes de errores" solo para admin/tecnologia/gerencia/direccion.
-  // El resto de Tecnología (Historial de versiones + Dudas) lo ve todo usuario.
+  // Z26 — "Reportes de errores" solo para admin/tecnologia/gerencia/direccion
+  // (RLS es_tecnologia()). El resto de Tecnología (Historial de versiones + Dudas)
+  // lo ve todo usuario.
   esTecnologia = this.ctx.esTecnologia;
+  // BX1 — Dev notes van por es_rol_desarrollador (incluye el rol Developer y
+  // encargado_tecnologia; NO gerencia/direccion). Espejo del gate del padre: la RLS
+  // de notas ambito='dev' usa es_rol_desarrollador, no es_tecnologia.
+  esDesarrollador = this.ctx.esDesarrollador;
 
   // Z30 — Dudas (mismo contenido que la web, desde sgc.ayuda_contenido).
   private dudasCargadas = false;

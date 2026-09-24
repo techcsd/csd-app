@@ -1,5 +1,38 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 24/09/2026 — PROMPT-65 (ronda BX, hijo) — **2.29.0** · rama `feature/bx-ronda` → `dev` · **2.28.0 PUBLICADA a prod**
+
+**TL;DR:** (1) Con OK de Xaviel, **2.28.0 (BW) salió a PROD**: merge `dev→main` (PWA Vercel) + APK prod firmado/registrado/subido + **publicada=2.28.0** (mínima sigue 2.26.1). (2) Ronda **BX** en la app: **F1 no-op** (la app no muestra historial de edición de echada), **F2 = rol Developer** (routing por rol). `npm run build:dev` **verde con todos los guards**. **2.29.0** en dev (PWA app-dev + APK dev). **Para** → espera OK de Xaviel.
+
+### ✅ En PROD (RELEASE 2.28.0 — con OK "publícala a prod ahora")
+- **`dev→main`** mergeado + pusheado (`d55700c`, el git-user tiene bypass de main) → Vercel construye la PWA prod.
+- **APK prod 2.28.0**: firmado (cert `3c5316d8…`), **regla 18 OK** (existe en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.28.0.apk` + latest + version.json).
+- **PUBLICADA = 2.28.0 · MÍNIMA = 2.26.1** (verificado: `version_publicada()` → pub 2.28.0 / min 2.26.1 / apk_url ok). El backend BW ya estaba en prod (padre 1.142.0).
+
+### ✅ En dev (RELEASE 2.29.0 — construido + verde, esperando OK)
+- **F2 · BX1 — rol Developer (`desarrollador`, id 35)** en la app (consume el rol del padre, verificado vivo en dev):
+  - `esDesarrollador()` ahora incluye `'desarrollador'` (espejo de `sgc.es_rol_desarrollador`, canario dev `es_desarrollador()=true`). Wire automático: 🩺 Código, detalle técnico de errores.
+  - **Dev notes** pasan de `esTecnologia()` → **`esDesarrollador()`** (mirror real de la RLS `notas.ambito='dev'` = es_rol_desarrollador): el Developer y `encargado_tecnologia` ahora SÍ las ven; gerencia/direccion ya no (recibían lista vacía). Canario: dev notes readable (RLS OK).
+  - `esTecnologia()` **se mantiene** = `sgc.es_tecnologia()` (admin|tecnologia|gerencia|direccion, POR ROL). El Developer **NO** ve "Reportes de errores" (RLS es_tecnologia() → panel vacío). Canario: `es_tecnologia()=false`, app_error_reports rows=0.
+  - **Regla 4/AU8**: "Nueva requisición" (`/solicitudes/pedir` exige `operar`) ya **no se pinta** a quien solo tiene `compras.solicitudes:ver` (el Developer). Combustible/Transporte quedan fuera de su alcance (sin módulo `flota` → tile+hub ocultos; FAB de personal ya gateado por `operar`). **No ve Registrar combustible.**
+  - **qa-desarrollador creado en dev**: `qa-desarrollador@dev.constructorasd.local` (pw `QA_DEV_PASSWORD`), es_prueba=false, rol 35. En `QA-USERS.local`. Smoke server-side ✓ (roles/modulos/permisos correctos).
+- **F1 · BX2 — no-op**: la app **no** muestra historial de edición de echada (`echada-detalle` solo pinta valores actuales, sin diff). Nada crudo (uuid/ISO/`[object Object]`) que sanear. No se toca.
+- **2.29.0**: 4 sitios (environment(.prod).ts, build.gradle, MIN 2.26.1, released 2026-09-24) + `CAMBIOS_CURADOS` = **un `nuevo` (rol Developer)**. NO se lista "historial de echadas legible" (sería changelog falso: es no-op en la app).
+- `feature/bx-ronda` **mergeado → `dev`** (`5c2209d`) + pusheado (Vercel app-dev). APK dev 2.29.0 firmado + registrado + subido al bucket dev.
+
+### ⚠️ HALLAZGO para el PADRE (sql-para-sgc/2026-09-23-bx1b)
+`sgc.es_tecnologia()` es **POR ROL** (admin|tecnologia|gerencia|direccion), **NO por módulo** — el comentario de `bx1-rol-desarrollador.sql` ("Como TIENE el módulo, es_tecnologia() es verdadero") es **incorrecto** (canario dev: `es_tecnologia()=false` para el Developer). Consecuencia (web **y** app): el rol Developer **NO** puede leer `app_error_reports` ni marcar versión/mínima, pese a que BX1 lo pide. Arreglo propuesto en `sql-para-sgc/2026-09-23-bx1b-es-tecnologia-incluye-desarrollador.sql` (añadir `'desarrollador'` a `es_tecnologia()`). **Cuando viva en dev, el hijo activa la pestaña de errores para el Developer (1 línea en `esTecnologia`).**
+
+### ⏳ Owed físico de Xaviel
+- **OK a 2.29.0** (probar en dev: login `qa-desarrollador@dev.constructorasd.local` → ve Tecnología/Sistema con Dev notes; NO ve Transporte ni Registrar combustible; en Requisición no ve Nueva requisición) → PR/merge `dev→main` + `apk --env prod` + `apk:publish --env prod` + publicada 2.29.0.
+- **Aplicar `sql-para-sgc/2026-09-23-bx1b`** (padre, dev→prod) para que el Developer vea errores/marque versión.
+- Asignar el rol Developer a quien corresponda (👤).
+
+### Verify on resume
+`npm run build:dev` verde (guards: sin-ref, tokens 88, pickers, i18n en 96%, dev-strings). Canario dev: `node scratchpad/smoke-dev-app.mjs`.
+
+---
+
 ## 🟢 SESIÓN 23/09/2026 — PROMPT-63 (ronda BW, hijo) — **2.28.0** · rama `feature/bw-ronda` → `dev`
 
 **TL;DR:** implementadas las 2 notas BW en la app consumiendo los contratos del padre (BW web ya en prod 1.142.0; los 5 RPCs **verificados vivos en dev** por introspección). `npm run build:dev` **verde con todos los guards** (nuevo `verify-pickers`, tokens baseline 88, i18n **en 96%** alcance 100%, dev-strings). Versión **2.28.0** (4 sitios + `CAMBIOS_CURADOS`). Mínima se queda **2.26.1**.
