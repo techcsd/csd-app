@@ -105,8 +105,18 @@ export class BitacoraDetallePage {
 
   private async load(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
+    // Primero el cache offline de las propias; si no está (bitácora de otra obra,
+    // BY4), se pide por id (RLS permite verla). Así el detalle abre CUALQUIER
+    // bitácora visible, no solo las mías.
     const list = await this.bitacora.misBitacoras();
-    const b = list.find((x) => x.id === id) ?? null;
+    let b = list.find((x) => x.id === id) ?? null;
+    if (!b && id) {
+      try {
+        b = await this.bitacora.getBitacora(id);
+      } catch {
+        b = null;
+      }
+    }
     this.b.set(b);
     // BN1 — una orden de trabajo trae su detalle + firmas en tablas hijas: se leen
     // aparte (online, best-effort) y las firmas se resuelven a URL firmada.

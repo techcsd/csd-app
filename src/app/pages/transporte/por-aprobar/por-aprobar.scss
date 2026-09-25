@@ -1,0 +1,191 @@
+.pa__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+.pa__back {
+  border: 0;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-text, #0f172a);
+}
+.pa__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text, #0f172a);
+}
+
+.pa__intro {
+  margin: 4px 0 12px;
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+}
+.pa__retry {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.pa__card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+  background: var(--color-card, #fff);
+  border: 1px solid var(--color-border, #e2e8f0);
+  border-left: 4px solid var(--color-warning, #d97706);
+  border-radius: var(--radius, 14px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.pa__card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.pa__veh {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--color-text, #0f172a);
+}
+.pa__fecha {
+  font-size: 13px;
+  color: var(--color-text-secondary, #64748b);
+}
+.pa__quien {
+  font-size: 14px;
+  color: var(--color-text-secondary, #475569);
+}
+.pa__motivo {
+  padding: 10px 12px;
+  border-radius: var(--radius, 12px);
+  background: var(--color-warning-bg, #fef3c7);
+  color: var(--color-warning, #b45309);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pa__datos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pa__dato {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.pa__dato-lbl {
+  color: var(--color-text-secondary, #64748b);
+}
+.pa__dato-val {
+  font-weight: 600;
+  color: var(--color-text, #0f172a);
+  text-align: right;
+}
+.pa__delta {
+  color: var(--color-warning, #d97706);
+  font-weight: 700;
+}
+
+.pa__fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px;
+}
+.pa__foto {
+  display: block;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pa__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.pa__acciones .btn-cta,
+.pa__acciones .btn-ghost {
+  width: 100%;
+  min-height: 52px;
+}
+.pa__ok {
+  background: var(--color-success, #16a34a);
+}
+.pa__reject {
+  color: var(--color-danger, #dc2626);
+  border-color: var(--color-danger, #dc2626);
+}
+.btn-cta.pa__reject {
+  background: var(--color-danger, #dc2626);
+  color: #fff;
+}
+
+// ── Modales ──────────────────────────────────────────────────────────────────
+.pa__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0;
+}
+.pa__modal {
+  width: 100%;
+  max-width: 520px;
+  background: var(--color-card, #fff);
+  border-radius: 18px 18px 0 0;
+  padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pa__modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text, #0f172a);
+}
+.pa__modal-sub {
+  margin: -6px 0 0;
+  font-size: 14px;
+  color: var(--color-text-secondary, #64748b);
+}
+.pa__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary, #475569);
+}
+.pa__field input,
+.pa__field textarea {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid var(--color-border, #cbd5e1);
+  border-radius: 12px;
+  background: var(--color-input-bg, #fff);
+  color: var(--color-text, #0f172a);
+  font-family: inherit;
+}
+.pa__modal-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.pa__modal-nav .btn-ghost,
+.pa__modal-nav .btn-cta {
+  flex: 1;
+  min-height: 52px;
+}

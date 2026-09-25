@@ -35,7 +35,7 @@
     <div class="screen__body">
       <div class="comb__ok">
         <span class="comb__ok-check">✓</span>
-        <h1 class="comb__ok-title">{{ 'Combustible registrado' | t }}</h1>
+        <h1 class="comb__ok-title">{{ (reenvioDe() ? 'Echada reenviada' : 'Combustible registrado') | t }}</h1>
         <div class="comb__veh">
           @if (modoPersona()) {
             <span class="comb__placa">👤 {{ titular() || ('Tarjeta de persona' | t) }}</span>
@@ -50,6 +50,20 @@
           <span class="comb__fecha">🕑 {{ fmtFechaHora(registradoEn()) }}</span>
         }
       </div>
+
+      <!-- BY1/BY5 — zona de espera: la echada NO se pierde; queda esperando el visto
+           bueno de Logística. Mensaje honesto (el servidor decide el estado final). -->
+      @if (reenvioDe()) {
+        <div class="comb__band comb__band--info">
+          <strong>⏳ {{ 'Enviada para revisión' | t }}</strong>
+          <span class="comb__band-why">{{ 'Logística revisará tu corrección. Verás el resultado en Mi actividad.' | t }}</span>
+        </div>
+      } @else if (avisoEspera()) {
+        <div class="comb__band comb__band--warn">
+          <strong>⏳ {{ 'En espera de aprobación' | t }}</strong>
+          <span class="comb__band-why">{{ 'Quedó registrada — por el aviso pasa a espera de aprobación de Logística. No se pierde; la verás en Mi actividad con su estado.' | t }}</span>
+        </div>
+      }
 
       <div class="comb__cards">
         @if (!modoPersona()) {

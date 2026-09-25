@@ -588,6 +588,25 @@ export class BitacoraService {
     return this.resolverAutores((data as unknown as BitacoraFull[]) ?? []);
   }
 
+  /**
+   * BY4 — una bitácora por id (para el detalle de CUALQUIER obra que el usuario
+   * pueda ver: la RLS `puede_ver_bitacora_de` abre las filas base y las tablas
+   * hijas). Antes el detalle solo resolvía desde `misBitacoras()`, así que Sócrates
+   * veía la lista "Todas" pero al abrir una ajena salía en blanco. Online.
+   */
+  async getBitacora(id: string): Promise<BitacoraFull | null> {
+    if (!id) return null;
+    const { data, error } = await this.supabase.client
+      .from('bitacoras')
+      .select(this.BITA_SELECT)
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    const [row] = await this.resolverAutores([data as unknown as BitacoraFull]);
+    return row ?? null;
+  }
+
   /** AW5 — ¿puedo ver bitácoras de otros? (gate server-side; conmuta el tab "Todas"). */
   async puedeVerOtrasBitacoras(): Promise<boolean> {
     const { data, error } = await this.supabase.client.rpc('puede_ver_otras_bitacoras');

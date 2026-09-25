@@ -1,0 +1,157 @@
+<div class="screen pa">
+  <header class="pa__header">
+    <button type="button" class="pa__back" (click)="back()" aria-label="Atrás">←</button>
+    <h1 class="pa__title">{{ 'Por aprobar' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (error()) {
+      <!-- 8ª regla — la consulta falló (distinto de "no hay nada") -->
+      <app-empty-state
+        icon="⚠️"
+        [title]="'No se pudo cargar' | t"
+        [message]="'Revisa tu conexión e inténtalo de nuevo.' | t"
+      />
+      <button type="button" class="btn-ghost pa__retry" (click)="reintentar()">{{ 'Reintentar' | t }}</button>
+    } @else if (vacio()) {
+      <app-empty-state
+        icon="✅"
+        [title]="'Todo al día' | t"
+        [message]="'No hay echadas en espera de aprobación.' | t"
+      />
+    } @else {
+      <p class="pa__intro">
+        {{ 'Estas echadas quedaron en espera por un aviso. Apruébalas, corrígelas o recházalas.' | t }}
+      </p>
+
+      @for (e of visibles(); track e.id) {
+        <article class="pa__card">
+          <div class="pa__card-top">
+            <span class="pa__veh">🚚 {{ vehLabel(e) }}</span>
+            <span class="pa__fecha">{{ e.fecha ?? '—' }}</span>
+          </div>
+
+          <span class="pa__quien">
+            👤 {{ e.conductor_nombre || e.registrado_nombre || ('Registrada por alguien' | t) }}
+          </span>
+
+          <!-- Motivo del aviso, en humano (servidor) -->
+          @if (e.motivo) {
+            <div class="pa__motivo">⚠️ {{ e.motivo }}</div>
+          }
+
+          <!-- km anterior → actual + galones/monto -->
+          <div class="pa__datos">
+            @if (e.km_anterior != null || e.kilometraje != null) {
+              <div class="pa__dato">
+                <span class="pa__dato-lbl">{{ 'Kilometraje' | t }}</span>
+                <span class="pa__dato-val">
+                  {{ e.km_anterior != null ? (e.km_anterior | number: '1.0-0') : '—' }}
+                  →
+                  {{ e.kilometraje != null ? (e.kilometraje | number: '1.0-0') : '—' }} km
+                  @if (e.km_recorridos != null) {
+                    <span class="pa__delta">(+{{ e.km_recorridos | number: '1.0-0' }})</span>
+                  }
+                </span>
+              </div>
+            }
+            <div class="pa__dato">
+              <span class="pa__dato-lbl">{{ 'Echados' | t }}</span>
+              <span class="pa__dato-val">
+                {{ e.galones != null ? (e.galones | number: '1.0-2') : '—' }} gal
+                @if (e.monto != null) { · RD$ {{ e.monto | number: '1.2-2' }} }
+              </span>
+            </div>
+          </div>
+
+          <!-- Fotos (recibo / tablero / bomba) -->
+          @if (e.fotoReciboUrl || e.fotoTableroUrl || e.fotoBombaUrl) {
+            <div class="pa__fotos">
+              @if (e.fotoReciboUrl) {
+                <a class="pa__foto" [href]="e.fotoReciboUrl" target="_blank" rel="noopener">
+                  <app-img [src]="e.fotoReciboUrl" alt="Recibo" ratio="1 / 1" fallback="🧾" />
+                </a>
+              }
+              @if (e.fotoTableroUrl) {
+                <a class="pa__foto" [href]="e.fotoTableroUrl" target="_blank" rel="noopener">
+                  <app-img [src]="e.fotoTableroUrl" alt="Tablero" ratio="1 / 1" fallback="🎛️" />
+                </a>
+              }
+              @if (e.fotoBombaUrl) {
+                <a class="pa__foto" [href]="e.fotoBombaUrl" target="_blank" rel="noopener">
+                  <app-img [src]="e.fotoBombaUrl" alt="Bomba" ratio="1 / 1" fallback="⛽" />
+                </a>
+              }
+            </div>
+          }
+
+          <!-- Regla 15 — las tres salidas -->
+          <div class="pa__acciones">
+            <button type="button" class="btn-cta pa__ok" (click)="aprobar(e)">✅ {{ 'Aprobar' | t }}</button>
+            <button type="button" class="btn-ghost" (click)="abrirCorreccion(e)">✏️ {{ 'Aprobar con corrección' | t }}</button>
+            <button type="button" class="btn-ghost pa__reject" (click)="abrirRechazo(e)">⛔ {{ 'Rechazar' | t }}</button>
+          </div>
+        </article>
+      }
+    }
+  </div>
+
+  <!-- Modal: aprobar con corrección -->
+  @if (corrigiendo(); as e) {
+    <div class="pa__overlay" (click)="cerrarCorreccion()">
+      <div class="pa__modal" (click)="$event.stopPropagation()">
+        <h2 class="pa__modal-title">{{ 'Aprobar con corrección' | t }}</h2>
+        <p class="pa__modal-sub">{{ vehLabel(e) }}</p>
+
+        <label class="pa__field">
+          <span>{{ 'Kilometraje' | t }}</span>
+          <input type="text" inputmode="numeric" [ngModel]="kmCorr()" (ngModelChange)="kmCorr.set($event)" />
+        </label>
+        <label class="pa__field">
+          <span>{{ 'Galones' | t }}</span>
+          <input type="text" inputmode="decimal" [ngModel]="galonesCorr()" (ngModelChange)="galonesCorr.set($event)" />
+        </label>
+        <label class="pa__field">
+          <span>{{ 'Monto' | t }} (RD$)</span>
+          <input type="text" inputmode="decimal" [ngModel]="montoCorr()" (ngModelChange)="montoCorr.set($event)" />
+        </label>
+
+        <div class="pa__modal-nav">
+          <button type="button" class="btn-ghost" (click)="cerrarCorreccion()">{{ 'Cancelar' | t }}</button>
+          <button type="button" class="btn-cta" [disabled]="guardando()" (click)="guardarCorreccion()">
+            {{ 'Aprobar' | t }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal: rechazar (motivo obligatorio) -->
+  @if (rechazando(); as e) {
+    <div class="pa__overlay" (click)="cerrarRechazo()">
+      <div class="pa__modal" (click)="$event.stopPropagation()">
+        <h2 class="pa__modal-title">{{ 'Rechazar echada' | t }}</h2>
+        <p class="pa__modal-sub">{{ vehLabel(e) }}</p>
+
+        <label class="pa__field">
+          <span>{{ 'Motivo del rechazo' | t }}</span>
+          <textarea
+            rows="3"
+            [ngModel]="motivo()"
+            (ngModelChange)="motivo.set($event)"
+            [placeholder]="'El chofer verá este motivo para corregir y reenviar.' | t"
+          ></textarea>
+        </label>
+
+        <div class="pa__modal-nav">
+          <button type="button" class="btn-ghost" (click)="cerrarRechazo()">{{ 'Cancelar' | t }}</button>
+          <button type="button" class="btn-cta pa__reject" [disabled]="guardando()" (click)="confirmarRechazo()">
+            {{ 'Rechazar' | t }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

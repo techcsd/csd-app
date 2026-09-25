@@ -7,6 +7,7 @@ import {
   CombustibleCaptura,
   EchadaDetalle,
   EchadaLog,
+  EchadaPorAprobar,
   NeedsConfirmResp,
   PrecioCombustibleVigente,
   REND_MAX_KM_GAL,
@@ -55,7 +56,7 @@ export class CombustibleService {
     const data = await this.catalog.refresh<UltimaEchada>(key, async () => {
       const { data, error } = await this.supabase.client
         .from('registros_combustible')
-        .select('kilometraje, fecha, rendimiento_km_gal, estado')
+        .select('kilometraje, fecha, rendimiento_km_gal, estado, revision')
         .eq('vehiculo_id', vehiculoId)
         .not('kilometraje', 'is', null)
         .order('kilometraje', { ascending: false });
@@ -65,12 +66,15 @@ export class CombustibleService {
         fecha: string | null;
         rendimiento_km_gal: number | null;
         estado: string | null;
+        revision: string | null;
       }>;
       // AW2 — el promedio "esperado" solo usa echadas VÁLIDAS: excluye las
       // marcadas anómalas y los outliers de piso/techo (rendimiento imposible),
       // para que el número que muestra la app cuadre con el del servidor.
+      // BY1 — y las que están EN ESPERA o RECHAZADAS no cuentan (el servidor las
+      // excluye de recalcular_estados; el baseline local debe hacer lo mismo).
       const rends = rows
-        .filter((r) => r.estado !== 'anormal')
+        .filter((r) => r.estado !== 'anormal' && r.revision !== 'en_espera' && r.revision !== 'rechazada')
         .map((r) => r.rendimiento_km_gal)
         .filter((x): x is number => x != null && x >= REND_MIN_KM_GAL && x <= REND_MAX_KM_GAL);
       const promedio = rends.length ? rends.reduce((a, b) => a + b, 0) / rends.length : null;
@@ -128,7 +132,7 @@ export class CombustibleService {
     const { data, error } = await this.supabase.client
       .from('registros_combustible')
       .select(
-        'id, fecha, created_at, vehiculo_id, conductor_id, registrado_por, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, rendimiento_km_gal, costo_por_km, producto, subtipo, estacion, estado, alerta_consumo, km_alerta, motivo_alerta, origen, foto_recibo_path, foto_tablero_path, foto_bomba_path',
+        'id, fecha, created_at, vehiculo_id, conductor_id, registrado_por, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, rendimiento_km_gal, costo_por_km, producto, subtipo, estacion, estado, alerta_consumo, km_alerta, motivo_alerta, origen, revision, revision_motivo, reenvio_de, foto_recibo_path, foto_tablero_path, foto_bomba_path',
       )
       .eq('id', id)
       .maybeSingle();
@@ -197,6 +201,9 @@ export class CombustibleService {
       km_alerta: (row['km_alerta'] as boolean | null) ?? null,
       motivo_alerta: (row['motivo_alerta'] as string | null) ?? null,
       origen: (row['origen'] as string | null) ?? null,
+      revision: (row['revision'] as EchadaDetalle['revision']) ?? null,
+      revision_motivo: (row['revision_motivo'] as string | null) ?? null,
+      reenvio_de: (row['reenvio_de'] as string | null) ?? null,
       foto_recibo_url: await this.signVehiculoFoto(row['foto_recibo_path'] as string | null),
       foto_tablero_url: await this.signVehiculoFoto(row['foto_tablero_path'] as string | null),
       foto_bomba_url: await this.signVehiculoFoto(row['foto_bomba_path'] as string | null),
@@ -358,6 +365,111 @@ export class CombustibleService {
     }
   }
 
+  /**
+   * BY1 — bandeja "Por aprobar": echadas que nacieron EN ESPERA por una bandera
+   * (salto de km, consumo anormal, sin asignación, retroactiva, galones > tanque).
+   * Solo roles elevados (el RPC gatea; devuelve [] a los demás). Firma las fotos
+   * del bucket `vehiculos` para el lightbox. Detrás de capacidad: si el RPC del
+   * padre no está desplegado, propaga el error para que la pantalla lo muestre.
+   */
+  async echadasPorAprobar(
+    filtros: { vehiculoId?: string | null; usuarioId?: string | null } = {},
+  ): Promise<EchadaPorAprobar[]> {
+    const { data, error } = await this.supabase.client.rpc('echadas_por_aprobar', {
+      p_vehiculo_id: filtros.vehiculoId ?? null,
+      p_usuario_id: filtros.usuarioId ?? null,
+    });
+    if (error) throw new Error(error.message);
+    const rows = (data as EchadaPorAprobar[]) ?? [];
+    await Promise.all(
+      rows.map(async (r) => {
+        const [recibo, tablero, bomba] = await Promise.all([
+          this.signVehiculoFoto(r.foto_recibo_path),
+          this.signVehiculoFoto(r.foto_tablero_path),
+          this.signVehiculoFoto(r.foto_bomba_path),
+        ]);
+        r.fotoReciboUrl = recibo;
+        r.fotoTableroUrl = tablero;
+        r.fotoBombaUrl = bomba;
+      }),
+    );
+    return rows;
+  }
+
+  /** BY1 — cuántas echadas hay en espera (badge del tile "Por aprobar"). 0 si no aplica. */
+  async contarEchadasPorAprobar(): Promise<number> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('echadas_por_aprobar', {
+        p_vehiculo_id: null,
+        p_usuario_id: null,
+      });
+      if (error) return 0;
+      return ((data as unknown[]) ?? []).length;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * BY1 — decisión de un elevado sobre una echada en espera (aprobar / rechazar),
+   * por outbox (funciona offline). Idempotente por la echada: si al drenar ya no
+   * está en espera (otro la decidió), el handler lo trata como hecho. `correccion`
+   * (opcional, solo al aprobar) reutiliza editar_echada en el servidor (historial).
+   */
+  async decidirEchada(
+    echadaId: string,
+    accion: 'aprobar' | 'rechazar',
+    opts: { nota?: string | null; motivo?: string | null; correccion?: Record<string, unknown> | null } = {},
+  ): Promise<void> {
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'revision_echada',
+      capturado_en,
+      payload: {
+        echada_id: echadaId,
+        accion,
+        nota: opts.nota ?? null,
+        motivo: opts.motivo ?? null,
+        correccion: opts.correccion ?? null,
+        capturado_en,
+      },
+      fotos: [],
+      resumen: { tipo: 'revision_echada', echada_id: echadaId, accion, capturado_en },
+    });
+  }
+
+  /**
+   * BY1/BY5 — el chofer corrige y REENVÍA una echada rechazada: crea una nueva
+   * echada vinculada (reenvio_de); la rechazada NO se borra (dato real). Por outbox
+   * (offline). Las fotos del original se reutilizan en el servidor. Devuelve el
+   * client id de la op.
+   */
+  async reenviarEchada(
+    originalId: string,
+    datos: {
+      vehiculo_id?: string | null;
+      fecha?: string | null;
+      kilometraje?: number | null;
+      galones?: number | null;
+      monto?: number | null;
+      estacion?: string | null;
+      notas?: string | null;
+    },
+  ): Promise<string> {
+    const id = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id,
+      tipo_op: 'reenvio_echada',
+      capturado_en,
+      payload: { id, original_id: originalId, ...datos, capturado_en },
+      fotos: [],
+      resumen: { tipo: 'reenvio_echada', original_id: originalId, capturado_en },
+    });
+    return id;
+  }
+
   /** Queue a fuel record. Works fully offline; syncs when there's signal. Returns the client id. */
   async registrar(input: CombustibleCaptura): Promise<string> {
     const id = crypto.randomUUID();
@@ -496,6 +608,62 @@ export class CombustibleService {
         await this.catalog.invalidate('flota_vehiculos');
         await this.catalog.invalidate('mis_asignaciones'); // AF21
       }
+    });
+
+    // BY1 — decisión de un elevado (aprobar/rechazar) por outbox. Idempotente: si al
+    // drenar la echada ya no está en espera (otro la decidió, o un reintento previo
+    // sí llegó), el 22023 "no está en espera" se trata como HECHO, no como error.
+    this.sync.register('revision_echada', async (payload) => {
+      const echadaId = payload['echada_id'] as string;
+      const accion = payload['accion'] as 'aprobar' | 'rechazar';
+      const { error } =
+        accion === 'aprobar'
+          ? await this.supabase.client.rpc('aprobar_echada', {
+              p_id: echadaId,
+              p_nota: (payload['nota'] as string | null) ?? null,
+              p_correccion: (payload['correccion'] as Record<string, unknown> | null) ?? null,
+            })
+          : await this.supabase.client.rpc('rechazar_echada', {
+              p_id: echadaId,
+              p_motivo: (payload['motivo'] as string | null) ?? '',
+            });
+      if (error) {
+        const yaDecidida =
+          (error as { code?: string }).code === '22023' &&
+          /no est[áa] en espera/i.test(error.message ?? '');
+        if (!yaDecidida) throwSyncError(error);
+      }
+    });
+
+    // BY1/BY5 — reenvío de una echada rechazada (chofer). reenviar_echada genera un
+    // id nuevo internamente, así que NO es idempotente por client_uuid: guardamos
+    // contra duplicados comprobando si ya existe un reenvío de este original antes de
+    // llamar (cubre el "commit ok pero respuesta perdida" que reintenta el outbox).
+    this.sync.register('reenvio_echada', async (payload) => {
+      const originalId = payload['original_id'] as string;
+      try {
+        const { data: prev } = await this.supabase.client
+          .from('registros_combustible')
+          .select('id')
+          .eq('reenvio_de', originalId)
+          .limit(1);
+        if (prev && prev.length) return; // ya reenviada → idempotente
+      } catch {
+        /* si la comprobación falla, seguimos e intentamos el reenvío */
+      }
+      const { error } = await this.supabase.client.rpc('reenviar_echada', {
+        p_original: originalId,
+        p_datos: {
+          vehiculo_id: payload['vehiculo_id'] ?? null,
+          fecha: payload['fecha'] ?? null,
+          kilometraje: payload['kilometraje'] ?? null,
+          galones: payload['galones'] ?? null,
+          monto: payload['monto'] ?? null,
+          estacion: payload['estacion'] ?? null,
+          notas: payload['notas'] ?? null,
+        },
+      });
+      if (error) throwSyncError(error);
     });
   }
 }

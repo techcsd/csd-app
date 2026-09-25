@@ -2,7 +2,7 @@
   <header class="mis-partes__header">
     <button type="button" class="mis-partes__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="mis-partes__icon">📋</span>
-    <h1 class="mis-partes__title">{{ 'Mis bitácoras' | t }}</h1>
+    <h1 class="mis-partes__title">{{ (vista() === 'todas' ? 'Bitácoras de las obras' : 'Mis bitácoras') | t }}</h1>
   </header>
 
   <div class="screen__body">
@@ -51,6 +51,26 @@
         <div class="mis-partes__tabs">
           <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'mias'" (click)="setVista('mias')">{{ 'Mis bitácoras' | t }}</button>
           <button type="button" class="mis-partes__tab" [class.mis-partes__tab--on]="vista() === 'todas'" (click)="setVista('todas')">{{ 'Todas las bitácoras' | t }}</button>
+        </div>
+      }
+      <!-- BY4 — filtros de la vista "Todas": fecha + ingeniero -->
+      @if (vista() === 'todas') {
+        <div class="mis-partes__todas-filtros">
+          <label class="mis-partes__ff">
+            <span>{{ 'Fecha' | t }}</span>
+            <input type="date" [ngModel]="filtroFecha()" (ngModelChange)="filtroFecha.set($event)" />
+          </label>
+          @if (ingenieros().length > 1) {
+            <label class="mis-partes__ff">
+              <span>{{ 'Ingeniero' | t }}</span>
+              <select [ngModel]="filtroIngeniero()" (ngModelChange)="filtroIngeniero.set($event)">
+                <option value="">{{ 'Todos' | t }}</option>
+                @for (ing of ingenieros(); track ing) {
+                  <option [value]="ing">{{ ing }}</option>
+                }
+              </select>
+            </label>
+          }
         </div>
       }
       <!-- Q9 — filtro por obra (segmentar) con conteo -->

@@ -1,13 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe, Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Img } from '../../../shared/ui/img/img';
 import { FlotaReportesService } from '../../../core/services/flota-reportes.service';
 import { AudioNotasService, AudioEntidadTipo } from '../../../core/services/audio-notas.service';
 import { ChecklistDetalle, EchadaDetalle, MultaDetalle } from '../../../core/models/flota-reportes.model';
-import { RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta } from '../../../core/models/combustible.model';
+import { EchadaRevision, RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta, revisionMeta } from '../../../core/models/combustible.model';
 import { nivelCombustibleLabel } from '../../../core/models/transporte.model';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -29,6 +29,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 })
 export class MiRegistroDetallePage {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private location = inject(Location);
   private flota = inject(FlotaReportesService);
   private audioNotas = inject(AudioNotasService);
@@ -41,6 +42,24 @@ export class MiRegistroDetallePage {
   /** AD7 — meta del estado de rendimiento (badge + banda del porqué). */
   rendMeta(estado: RendimientoEstado | null | undefined): RendimientoEstadoMeta | null {
     return estado ? (RENDIMIENTO_ESTADO_META[estado] ?? null) : null;
+  }
+
+  /** BY1 — meta del chip de revisión (En espera / Aprobada / Rechazada) o null. */
+  revMeta(r: EchadaRevision | null | undefined): RendimientoEstadoMeta | null {
+    return revisionMeta(r);
+  }
+
+  /** BY1/BY5 — ¿esta echada fue rechazada? (habilita "Corregir y reenviar"). */
+  esRechazada = computed(() => this.echada()?.revision === 'rechazada');
+
+  /**
+   * BY5 — corrige y reenvía una echada rechazada: abre el wizard de combustible
+   * prellenado (?reenviar=id). Crea una NUEVA echada vinculada; la rechazada queda.
+   */
+  corregirYReenviar(): void {
+    const e = this.echada();
+    if (!e) return;
+    void this.router.navigate(['/transporte/combustible'], { queryParams: { reenviar: e.id } });
   }
 
   loading = signal(true);

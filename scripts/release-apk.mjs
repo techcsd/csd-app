@@ -37,11 +37,13 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-24';
+const RELEASED_AT = '2026-09-25';
 
-const TITULO = 'Reportes de errores para el rol Developer';
+const TITULO = 'Aprobación de echadas y bitácoras de las obras';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Tecnología', d: 'El rol Developer ya puede ver los "Reportes de errores" de la app dentro de Sistema, para diagnosticar sin pedir accesos extra.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Las echadas con aviso (salto de km, consumo raro, etc.) ya no se pierden: quedan "En espera" y Logística las aprueba o rechaza desde el teléfono. Si te la rechazan, la corriges y la reenvías.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'Quien puede verlas ahora entra a "Bitácoras de las obras" y abre el detalle de cualquier obra (filtrando por obra, fecha o ingeniero).' },
+  { t: 'mejora', m: 'Requisiciones', d: 'Las requisiciones se separan en Activas (por la entrega más cercana) e Historial; las completadas ya no quedan mezcladas arriba.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

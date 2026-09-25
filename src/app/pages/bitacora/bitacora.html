@@ -35,6 +35,13 @@
       <span class="bit-action__icon">📋</span>
       <span class="bit-action__label">{{ 'Mis bitácoras' | t }}</span>
     </button>
+    <!-- BY4 — Sócrates y demás con permiso: revisar las bitácoras de TODAS las obras -->
+    @if (puedeVerTodas()) {
+      <button type="button" class="bit-action" (click)="verBitacorasDeLasObras()">
+        <span class="bit-action__icon">🏗️</span>
+        <span class="bit-action__label">{{ 'Bitácoras de las obras' | t }}</span>
+      </button>
+    }
     @if (enProcesoCount()['bitacora']; as n) {
       <button type="button" class="bit-action" (click)="go('/en-proceso')">
         <span class="bit-action__icon">📥</span>

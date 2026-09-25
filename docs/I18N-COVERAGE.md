@@ -27,7 +27,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/auth/reset | 5 | 1 | 83% | 0% |  |
 | pages/auth/set-password | 4 | 0 | 100% | 0% |  |
 | pages/avisos | 0 | 4 | 0% | 0% |  |
-| pages/bitacora | 9 | 0 | 100% | 0% |  |
+| pages/bitacora | 10 | 0 | 100% | 0% |  |
 | pages/bitacora/cl-detalle | 30 | 0 | 100% | 0% |  |
 | pages/bitacora/cl-firmas | 10 | 0 | 100% | 0% |  |
 | pages/bitacora/dashboard | 15 | 1 | 94% | 0% |  |
@@ -35,7 +35,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/incidente | 66 | 0 | 100% | 0% |  |
 | pages/bitacora/liberacion | 82 | 1 | 99% | 0% |  |
 | pages/bitacora/mis-ordenes | 12 | 0 | 100% | 0% |  |
-| pages/bitacora/mis-partes | 27 | 0 | 100% | 0% |  |
+| pages/bitacora/mis-partes | 30 | 0 | 100% | 0% |  |
 | pages/bitacora/orden-trabajo | 60 | 1 | 98% | 0% |  |
 | pages/bitacora/orden-trabajo-ficha | 30 | 0 | 100% | 0% |  |
 | pages/bitacora/parte | 186 | 4 | 98% | 0% |  |
@@ -104,7 +104,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes | 5 | 0 | 100% | 0% |  |
 | pages/solicitudes/bandeja | 16 | 0 | 100% | 0% |  |
 | pages/solicitudes/detalle | 62 | 12 | 84% | 0% |  |
-| pages/solicitudes/mis | 12 | 0 | 92% | 0% |  |
+| pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 0 | 3 | 0% | 0% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
@@ -121,7 +121,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 0% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 108 | 2 | 98% | 0% |  |
+| pages/transporte/combustible | 111 | 2 | 98% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 54 | 1 | 98% | 0% |  |
 | pages/transporte/conduce-externo | 45 | 0 | 100% | 0% |  |
@@ -146,10 +146,11 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/mantenimientos-lista | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mi-actividad | 54 | 0 | 100% | 0% |  |
 | pages/transporte/mi-recorrido | 11 | 0 | 100% | 0% |  |
-| pages/transporte/mi-registro | 36 | 0 | 100% | 0% |  |
+| pages/transporte/mi-registro | 40 | 0 | 100% | 0% |  |
 | pages/transporte/mis-actas | 8 | 0 | 100% | 0% |  |
 | pages/transporte/perfil-conductor | 37 | 0 | 100% | 0% |  |
 | pages/transporte/perfil-vehiculo | 32 | 1 | 97% | 0% |  |
+| pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |
 | pages/transporte/por-confirmar | 36 | 0 | 100% | 0% |  |
 | pages/transporte/preuso | 71 | 0 | 100% | 0% |  |
 | pages/transporte/reportar-multa | 33 | 0 | 100% | 0% |  |

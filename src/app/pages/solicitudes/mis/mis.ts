@@ -9,12 +9,12 @@ import {
   MiOrdenCompra,
   Solicitud,
   requisicionCodigo,
-  faseRequisicion,
+  grupoRequisicion,
   necesidadInfo,
   necesidadOrden,
-  FASE_ORDEN,
-  FASE_LABEL,
-  RequisicionFase,
+  GRUPO_ORDEN,
+  GRUPO_LABEL,
+  RequisicionGrupo,
   NecesidadInfo,
 } from '../../../core/models/inventario.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
@@ -50,30 +50,44 @@ export class MisSolicitudesPage {
   loading = signal(true);
   fmtFecha = formatFechaMedia; // U9
 
-  // BV9 — tabs por fase (pendiente/en_proceso/completada/rechazada). Arranca en la
-  // fase con trabajo activo (pendiente) para no esconder lo urgente.
-  readonly FASES = FASE_ORDEN;
-  faseLabel = (f: RequisicionFase): string => FASE_LABEL[f];
-  tab = signal<RequisicionFase>('pendiente');
-  setTab(f: RequisicionFase): void {
-    this.tab.set(f);
+  // BY3 — dos grupos: Activas (pendiente+en_proceso) e Historial (completada/rechazada).
+  // Las completadas salen de arriba y van al Historial. Arranca en Activas (lo que
+  // tiene trabajo pendiente); la preferencia se recuerda por dispositivo.
+  private static readonly TAB_KEY = 'requis_tab_mis';
+  readonly GRUPOS = GRUPO_ORDEN;
+  grupoLabel = (g: RequisicionGrupo): string => GRUPO_LABEL[g];
+  tab = signal<RequisicionGrupo>(
+    (localStorage.getItem(MisSolicitudesPage.TAB_KEY) as RequisicionGrupo) || 'activas',
+  );
+  setTab(g: RequisicionGrupo): void {
+    this.tab.set(g);
+    try {
+      localStorage.setItem(MisSolicitudesPage.TAB_KEY, g);
+    } catch {
+      /* best-effort: si no hay storage, solo no se recuerda */
+    }
   }
   private readonly hoyISO = fechaLocalISO();
-  faseDe = (s: Solicitud): RequisicionFase => faseRequisicion(s.estado, s.fase);
+  grupoDe = (s: Solicitud): RequisicionGrupo => grupoRequisicion(s.estado, s.fase);
   /** BV10 — info de la fecha de necesidad de una requisición (para la 1ª línea). */
   necesidad = (s: Solicitud): NecesidadInfo => necesidadInfo(s.fecha_necesidad, this.hoyISO);
-  /** Conteo por fase (para los badges de las tabs). */
-  conteos = computed<Record<RequisicionFase, number>>(() => {
-    const c: Record<RequisicionFase, number> = { pendiente: 0, en_proceso: 0, completada: 0, rechazada: 0 };
-    for (const s of this.solicitudes()) c[this.faseDe(s)]++;
+  /** Conteo por grupo (para los badges de las tabs). */
+  conteos = computed<Record<RequisicionGrupo, number>>(() => {
+    const c: Record<RequisicionGrupo, number> = { activas: 0, historial: 0 };
+    for (const s of this.solicitudes()) c[this.grupoDe(s)]++;
     return c;
   });
-  // BV10 — la fase elegida, ORDENADA por fecha de necesidad (sin fecha al final).
-  visibles = computed(() =>
-    this.solicitudes()
-      .filter((s) => this.faseDe(s) === this.tab())
-      .sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad)),
-  );
+  // BY3 — el grupo elegido, ordenado: Activas por entrega más cercana (necesidad asc,
+  // vencidas arriba, sin fecha al final); Historial por cierre más reciente (created_at
+  // desc como proxy — la lista no expone `cerrada_en`).
+  visibles = computed(() => {
+    const g = this.tab();
+    const rows = this.solicitudes().filter((s) => this.grupoDe(s) === g);
+    if (g === 'activas') {
+      return rows.sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad));
+    }
+    return rows.sort((a, b) => (Date.parse(b.created_at ?? '') || 0) - (Date.parse(a.created_at ?? '') || 0));
+  });
 
   constructor() {
     void this.load();

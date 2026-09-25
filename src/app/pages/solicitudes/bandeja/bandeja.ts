@@ -8,12 +8,12 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
 import {
   RequisicionBandeja,
-  faseRequisicion,
+  grupoRequisicion,
   necesidadInfo,
   necesidadOrden,
-  FASE_ORDEN,
-  FASE_LABEL,
-  RequisicionFase,
+  GRUPO_ORDEN,
+  GRUPO_LABEL,
+  RequisicionGrupo,
   NecesidadInfo,
 } from '../../../core/models/inventario.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
@@ -42,29 +42,42 @@ export class RequisicionesBandejaPage {
   busqueda = signal('');
   noAutorizado = signal(false);
 
-  // BV9 — tabs por fase (client-side sobre TODAS las cargadas). Arranca en Pendientes.
-  readonly FASES = FASE_ORDEN;
-  faseLabel = (f: RequisicionFase): string => FASE_LABEL[f];
-  tab = signal<RequisicionFase>('pendiente');
-  setTab(f: RequisicionFase): void {
-    this.tab.set(f);
+  // BY3 — dos grupos (client-side sobre TODAS las cargadas): Activas / Historial.
+  // Arranca en Activas; la preferencia se recuerda por dispositivo.
+  private static readonly TAB_KEY = 'requis_tab_bandeja';
+  readonly GRUPOS = GRUPO_ORDEN;
+  grupoLabel = (g: RequisicionGrupo): string => GRUPO_LABEL[g];
+  tab = signal<RequisicionGrupo>(
+    (localStorage.getItem(RequisicionesBandejaPage.TAB_KEY) as RequisicionGrupo) || 'activas',
+  );
+  setTab(g: RequisicionGrupo): void {
+    this.tab.set(g);
+    try {
+      localStorage.setItem(RequisicionesBandejaPage.TAB_KEY, g);
+    } catch {
+      /* best-effort */
+    }
   }
   private readonly hoyISO = fechaLocalISO();
-  faseDe = (f: RequisicionBandeja): RequisicionFase => faseRequisicion(f.estado, f.fase);
+  grupoDe = (f: RequisicionBandeja): RequisicionGrupo => grupoRequisicion(f.estado, f.fase);
   necesidad = (f: RequisicionBandeja): NecesidadInfo => necesidadInfo(f.fecha_necesidad, this.hoyISO);
 
-  conteos = computed<Record<RequisicionFase, number>>(() => {
-    const c: Record<RequisicionFase, number> = { pendiente: 0, en_proceso: 0, completada: 0, rechazada: 0 };
-    for (const f of this.filas()) c[this.faseDe(f)]++;
+  conteos = computed<Record<RequisicionGrupo, number>>(() => {
+    const c: Record<RequisicionGrupo, number> = { activas: 0, historial: 0 };
+    for (const f of this.filas()) c[this.grupoDe(f)]++;
     return c;
   });
 
-  // BV10 — la fase elegida, ORDENADA por fecha de necesidad (sin fecha al final).
-  filasVisibles = computed(() =>
-    this.filas()
-      .filter((f) => this.faseDe(f) === this.tab())
-      .sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad)),
-  );
+  // BY3 — el grupo elegido: Activas por entrega más cercana (necesidad asc); Historial
+  // por cierre más reciente (created_at desc como proxy, la lista no expone cerrada_en).
+  filasVisibles = computed(() => {
+    const g = this.tab();
+    const rows = this.filas().filter((f) => this.grupoDe(f) === g);
+    if (g === 'activas') {
+      return rows.sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad));
+    }
+    return rows.sort((a, b) => (Date.parse(b.created_at ?? '') || 0) - (Date.parse(a.created_at ?? '') || 0));
+  });
 
   private debounce: ReturnType<typeof setTimeout> | null = null;
 
