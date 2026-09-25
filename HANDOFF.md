@@ -26,6 +26,9 @@
 - **`reenviar_echada` no es idempotente por client_uuid** (genera `gen_random_uuid()` internamente y la original queda `rechazada`, así que un reintento crearía un duplicado). Mitigado en el cliente: el handler comprueba si ya existe una echada con `reenvio_de=original` antes de llamar. Ideal: que el padre acepte un `p_client_uuid`.
 - **Historial de requisiciones por "cierre desc"**: la lista (`Solicitud`/`RequisicionBandeja`) no expone `cerrada_en`; se ordena por `created_at desc` como proxy. Si el padre lo añade a la lista, cambiar la clave de orden.
 
+### 📋 Matriz de cobertura — ahora versionada en el repo SGC
+La matriz completa (`COBERTURA-NOTAS.md`, filas 1-76) ya se versiona en la **raíz del repo SGC** (`C:\Users\xavie\Desktop\X Dev\dev\SGC\COBERTURA-NOTAS.md`, commit `4fbb411`) y es la **fuente de verdad a editar de aquí en adelante** — antes solo vivía la copia fuera del repo (`C:\developer\improvements\septiembre 2026\imp 14092026\COBERTURA-NOTAS.md`). En próximas rondas, al marcar las filas de la app: edita la copia **del repo SGC** y commitea ahí; si la de la carpeta `imp` sigue como borrador, sincronízala hacia el repo al cerrar (no al revés). Mismo aviso en `SGC/HANDOFF.md`.
+
 ### 🩺 Rollback
 - Cliente (revertir el merge). Objetos del padre son aditivos; `revision` tiene default `normal` y el interruptor `flota_config.revision_echadas=0` apaga el mecanismo server-side.
 
