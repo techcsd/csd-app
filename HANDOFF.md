@@ -1,8 +1,14 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 25/09/2026 — PROMPT-67 (ronda BY, hijo) — **2.31.0-dev** · rama `feature/by-ronda` → `dev` · **EN DEV, esperando OK de Xaviel**
+## 🟢 SESIÓN 25/09/2026 — PROMPT-67 (ronda BY, hijo) — **2.31.0 PUBLICADA a prod** · `feature/by-ronda` → `dev` → `main`
 
-**TL;DR:** ronda **BY** en la app (mitad hijo de las notas 72/74/75/76). Construida sobre contratos del padre YA vivos en **dev** (verificados: `aprobar_echada`/`rechazar_echada`/`reenviar_echada`/`echadas_por_aprobar`, columnas `revision*`, `puede_ver_bitacora_de`). Build + guards + i18n (en 100%) verdes. **2.31.0-dev** construida, APK dev firmado+registrado+subido, `dev` pusheado (Vercel construye `app-dev.`). **Para** — Xaviel prueba y da OK antes de prod.
+**TL;DR:** ronda **BY** en la app (mitad hijo de las notas 72/74/75/76). Construida sobre contratos del padre YA vivos en **dev y prod** (verificados en ambos: `aprobar_echada`/`rechazar_echada`/`reenviar_echada`/`echadas_por_aprobar`, columnas `revision*`, `puede_ver_bitacora_de`). Build + guards + i18n (en 100%) verdes. Salió a **dev** (APK dev + `app-dev.`), Xaviel probó y dio OK ("ya probé, publica"), y **salió a PROD**: `dev→main` (`2bbc0d1`) + APK prod firmado (cert `3c5316d8…`, regla 18 OK) registrado+subido + **publicada=2.31.0** (mínima sigue 2.26.1). ✅ **Sesión cerrada — nada pendiente de release.**
+
+### ✅ En PROD (RELEASE 2.31.0 — con OK "ya probé, publica")
+- **`dev→main`** mergeado + pusheado (`2bbc0d1`) → Vercel construye la PWA prod (`app.sgcconstructorasd.com` / `app-dev.` ya tenía dev).
+- **APK prod 2.31.0**: firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.31.0 existía en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.31.0.apk` + latest + version.json).
+- **PUBLICADA = 2.31.0 · MÍNIMA = 2.26.1** (verificado: `version_publicada()` → pub 2.31.0 / min 2.26.1 / apk_url ok; solo 2.31.0 con `publicada=true`).
+- Backend BY del padre confirmado vivo en prod antes de publicar.
 
 ### 🧪 En dev (2.31.0-dev — pendiente OK → prod)
 - **BY1+BY5 — zona de espera de echadas (regla 15):**
@@ -13,8 +19,7 @@
 - **BY3 — requisiciones Activas/Historial:** `mis` y `bandeja` pasan de 4 tabs de fase a **Activas** (pendiente+en_proceso, por entrega más cercana) / **Historial** (completada/rechazada/cancelada, por cierre desc ≈ `created_at`); sin tab *Todas*; preferencia en `localStorage`. Helper `grupoRequisicion` en el modelo.
 - **Release dev:** `environment.prod.ts` + `build.gradle` → **2.31.0**; `CAMBIOS_CURADOS` (Y1). `npm run apk -- --env dev` (registrado en dev `app_versiones`) + `apk:publish -- --env dev` (bucket dev) + `git push origin dev` (Vercel `app-dev.`).
 
-### 👤 Pendiente físico de Xaviel
-- Probar **2.31.0-dev** en `app-dev.` / APK dev vX: como **chofer** (registrar con salto de km → "en espera" → ver chip; rechazada → corregir y reenviar) y como **Raykler** (Por aprobar → aprobar/rechazar/corregir, offline y drenando); como **Sócrates** (Bitácoras de las obras → abrir una de un proyecto ajeno). Con OK → `dev→main` + APK prod + publicar 2.31.0 (mínima sigue 2.26.1).
+### 👤 Pendiente físico de Xaviel — ninguno (ya probó en dev y aprobó; 2.31.0 publicada)
 
 ### ⚠️ Contratos del padre (reportar al SGC)
 - **`listar_bitacoras(p_todas)` no desplegado** (PROMPT-67 lo asumía). La app usa el read directo con la RLS de BY4; si el padre lo agrega, migrar `todasBitacoras`/`getBitacora` a él.
