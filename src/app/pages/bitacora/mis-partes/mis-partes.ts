@@ -1,9 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { BitacoraFull } from '../../../core/models/bitacora.model';
 import { EnProcesoService, EnProcesoItem } from '../../../core/services/en-proceso.service';
@@ -18,7 +19,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-mis-bitacoras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, TranslatePipe],
   templateUrl: './mis-partes.html',
   styleUrl: './mis-partes.scss',
 })
@@ -28,6 +29,7 @@ export class MisPartesPage {
   private autosave = inject(AutosaveService);
   private sync = inject(SyncService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private location = inject(Location);
   private i18n = inject(I18nService);
 
@@ -47,6 +49,9 @@ export class MisPartesPage {
 
   // Q9 — segmentar por obra: filtro + conteo por proyecto.
   filtroObra = signal(''); // '' = todas
+  // BY4 — en la vista "Todas": filtrar por fecha e ingeniero (además de la obra).
+  filtroFecha = signal(''); // '' = todas (YYYY-MM-DD)
+  filtroIngeniero = signal(''); // '' = todos (autor_nombre)
   obras = computed(() => {
     const m = new Map<string, number>();
     for (const b of this.bitacoras()) {
@@ -55,16 +60,38 @@ export class MisPartesPage {
     }
     return [...m.entries()].map(([nombre, count]) => ({ nombre, count })).sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
+  /** BY4 — ingenieros presentes en la lista (para el filtro de la vista "Todas"). */
+  ingenieros = computed(() => {
+    const s = new Set<string>();
+    for (const b of this.bitacoras()) if (b.autor_nombre) s.add(b.autor_nombre);
+    return [...s].sort((a, b) => a.localeCompare(b));
+  });
   filtradas = computed(() => {
-    const f = this.filtroObra();
-    if (!f) return this.bitacoras();
-    return this.bitacoras().filter((b) => (b.proyecto?.nombre ?? '—') === f);
+    const fObra = this.filtroObra();
+    const fFecha = this.filtroFecha();
+    const fIng = this.filtroIngeniero();
+    return this.bitacoras().filter(
+      (b) =>
+        (!fObra || (b.proyecto?.nombre ?? '—') === fObra) &&
+        (!fFecha || b.fecha === fFecha) &&
+        (!fIng || (b.autor_nombre ?? '') === fIng),
+    );
   });
 
   constructor() {
+    // BY4 — se puede llegar con ?vista=todas (tile "Bitácoras de las obras").
+    const wantsTodas = this.route.snapshot.queryParamMap.get('vista') === 'todas';
+    if (wantsTodas) this.vista.set('todas');
     void this.load();
     // AW5 — ¿puede ver bitácoras de otros? (conmuta el tab "Todas").
-    void this.bitacora.puedeVerOtrasBitacoras().then((p) => this.puedeVerTodas.set(p));
+    void this.bitacora.puedeVerOtrasBitacoras().then((p) => {
+      this.puedeVerTodas.set(p);
+      // Pidió "todas" sin permiso → vuelve a "mias" (y recarga las propias).
+      if (wantsTodas && !p) {
+        this.vista.set('mias');
+        void this.load();
+      }
+    });
     // V1 — refresca la sección "en proceso" al entrar y tras cada cambio del outbox.
     effect(() => {
       this.sync.changed();
@@ -81,6 +108,8 @@ export class MisPartesPage {
     if (this.vista() === v) return;
     this.vista.set(v);
     this.filtroObra.set('');
+    this.filtroFecha.set('');
+    this.filtroIngeniero.set('');
     void this.load();
   }
 

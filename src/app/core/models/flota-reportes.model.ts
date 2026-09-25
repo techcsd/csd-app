@@ -1,7 +1,7 @@
 // S22/S24 — reportes de flota desde la app (accidente, daño, multa). Contratos
 // de PROMPT-9 (RPCs *_app security-definer, idempotentes por p_id).
 
-import { RendimientoEstado } from './combustible.model';
+import { EchadaRevision, RendimientoEstado } from './combustible.model';
 
 /** Fase del accidente: en el momento del suceso o un reporte posterior. */
 export type AccidenteFase = 'en_el_momento' | 'posterior';
@@ -112,6 +112,10 @@ export interface HistorialEchada {
   alerta_consumo: boolean | null;
   estado: RendimientoEstado | null; // AD7 — estado calibrado (servidor)
   motivo_alerta: string | null; // AD7 — porqué del estado (tooltip)
+  // BY1 — zona de espera: la echada con aviso queda pendiente del visto bueno de
+  // Logística. El chip En espera / Aprobada / Rechazada se pinta en Mis echadas.
+  revision?: EchadaRevision | null;
+  revision_motivo?: string | null; // motivo del rechazo (o nota de aprobación)
   vehiculo?: { placa: string } | null;
 }
 
@@ -172,6 +176,11 @@ export interface EchadaDetalle {
   motivo_alerta: string | null;
   estacion: string | null;
   notas: string | null;
+  // BY1 — revisión (zona de espera). En una rechazada, el chofer puede corregir y
+  // reenviar (crea una nueva echada vinculada; la rechazada queda como respaldo).
+  revision?: EchadaRevision | null;
+  revision_motivo?: string | null;
+  reenvio_de?: string | null; // si esta echada nació de reenviar una rechazada
   vehiculo?: { placa: string; marca?: string } | null;
   reciboUrl: string | null;
   tableroUrl: string | null;

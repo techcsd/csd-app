@@ -60,6 +60,10 @@ export interface EchadaDetalle {
   km_alerta: boolean | null;
   motivo_alerta: string | null;
   origen: string | null;
+  // BY1 — zona de espera / aprobación.
+  revision?: EchadaRevision | null;
+  revision_motivo?: string | null;
+  reenvio_de?: string | null;
   foto_recibo_url: string | null;
   foto_tablero_url: string | null;
   foto_bomba_url: string | null;
@@ -87,6 +91,62 @@ export const RENDIMIENTO_ESTADO_META: Record<RendimientoEstado, RendimientoEstad
   anormal: { label: 'Anormal', icon: '⚠️', tone: 'error' },
   datos_insuficientes: { label: 'Datos insuficientes', icon: 'ℹ️', tone: 'muted' },
 };
+
+// BY1/BY5 (regla 15) — estado de revisión de una echada con aviso: nace en espera,
+// Logística (Raykler) o el admin la aprueban o la rechazan. Espeja
+// registros_combustible.revision del servidor. 'normal' = no requiere visto bueno.
+export type EchadaRevision = 'normal' | 'en_espera' | 'aprobada' | 'rechazada';
+
+/** BY1 — meta del chip de revisión (icono + tono; nunca color solo). */
+export const REVISION_META: Record<Exclude<EchadaRevision, 'normal'>, RendimientoEstadoMeta> = {
+  en_espera: { label: 'En espera', icon: '⏳', tone: 'warning' },
+  aprobada: { label: 'Aprobada', icon: '✅', tone: 'success' },
+  rechazada: { label: 'Rechazada', icon: '⛔', tone: 'error' },
+};
+
+/** BY1 — meta del chip para un valor de revisión (null si es 'normal' o desconocido). */
+export function revisionMeta(r: EchadaRevision | null | undefined): RendimientoEstadoMeta | null {
+  if (!r || r === 'normal') return null;
+  return REVISION_META[r] ?? null;
+}
+
+/**
+ * BY1 — una echada en la bandeja "Por aprobar" para roles elevados
+ * (RPC sgc.echadas_por_aprobar). `motivo` es el porqué del aviso en humano
+ * (servidor). Las fotos llegan como paths del bucket `vehiculos`; el cliente
+ * las firma (foto*Url) para el lightbox.
+ */
+export interface EchadaPorAprobar {
+  id: string;
+  fecha: string | null;
+  created_at: string | null;
+  vehiculo_id: string | null;
+  placa: string | null;
+  vehiculo_label: string | null;
+  km_anterior: number | null;
+  kilometraje: number | null;
+  km_recorridos: number | null;
+  galones: number | null;
+  monto: number | null;
+  producto: string | null;
+  estacion: string | null;
+  registrado_por: string | null;
+  registrado_nombre: string | null;
+  conductor_nombre: string | null;
+  km_alerta: boolean;
+  alerta_consumo: boolean;
+  sin_asignacion: boolean;
+  retroactiva: boolean;
+  motivo: string | null;
+  foto_recibo_path: string | null;
+  foto_tablero_path: string | null;
+  foto_bomba_path: string | null;
+  reenvio_de: string | null;
+  // Enriquecido en el cliente (URLs firmadas del bucket `vehiculos`).
+  fotoReciboUrl?: string | null;
+  fotoTableroUrl?: string | null;
+  fotoBombaUrl?: string | null;
+}
 
 /** Umbrales por defecto de sgc.flota_config (para el preview offline del flujo). */
 export const DIST_MIN_KM = 50; // dist_min_km

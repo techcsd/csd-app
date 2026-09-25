@@ -259,6 +259,23 @@ export const FASE_LABEL: Record<RequisicionFase, string> = {
   rechazada: 'Rechazadas',
 };
 
+/**
+ * BY3 — dos grupos en vez de 4 tabs: **Activas** (pendiente + en_proceso) y
+ * **Historial** (completada + rechazada/cancelada). Las completadas ya NO quedan
+ * arriba mezcladas con las activas. Activas se ordenan por entrega más cercana
+ * (fecha de necesidad asc); Historial por cierre (más reciente primero).
+ */
+export type RequisicionGrupo = 'activas' | 'historial';
+export const GRUPO_ORDEN: RequisicionGrupo[] = ['activas', 'historial'];
+export const GRUPO_LABEL: Record<RequisicionGrupo, string> = {
+  activas: 'Activas',
+  historial: 'Historial',
+};
+export function grupoRequisicion(estado: string | null | undefined, fase?: string | null): RequisicionGrupo {
+  const f = faseRequisicion(estado, fase);
+  return f === 'pendiente' || f === 'en_proceso' ? 'activas' : 'historial';
+}
+
 /** BV10 — estado legible de la fecha de necesidad (para la 1ª línea de la tarjeta). */
 export interface NecesidadInfo {
   estado: 'vencida' | 'hoy' | 'futura' | 'sin_fecha';

@@ -16,6 +16,7 @@ import { BadgesService } from '../../core/services/badges.service';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { InventarioService } from '../../core/services/inventario.service';
+import { CombustibleService } from '../../core/services/combustible.service';
 import { ModuleOrderService } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
 import { MiAsignacion, PendientesTransporte, vehiculoIdentidad } from '../../core/models/transporte.model';
@@ -63,6 +64,8 @@ const TILES: HubTile[] = [
   // AP6 — Rutas activas (lista por chofer + histórico) para roles elevados.
   { key: 'rutasActivas', icon: '🛰️', label: 'Rutas activas', tint: '#0ea5e9', elevado: true },
   { key: 'combustibleLog', icon: '📊', label: 'Registro de echadas', tint: '#dc2626', elevado: true },
+  // BY1/BY5 — bandeja "Por aprobar": echadas con aviso en espera del visto bueno.
+  { key: 'porAprobar', icon: '✅', label: 'Por aprobar', tint: '#16a34a', elevado: true },
   { key: 'vehiculos', icon: '🚙', label: 'Vehículos', tint: '#0891b2', elevado: true },
   { key: 'conductores', icon: '🪪', label: 'Conductores', tint: '#7c3aed', elevado: true },
   { key: 'avisos', icon: '🔔', label: 'Avisos de flota', tint: '#ca8a04', elevado: true },
@@ -91,6 +94,7 @@ export class TransportePage {
   private enProceso = inject(EnProcesoService);
   private conducesSvc = inject(ConducesService);
   private inventario = inject(InventarioService);
+  private combustibleSvc = inject(CombustibleService);
   private moduleOrder = inject(ModuleOrderService);
   private toast = inject(ToastService);
 
@@ -140,6 +144,7 @@ export class TransportePage {
   conducesNuevas = signal(0); // Y3 — rutas planificadas asignadas no vistas
   firmasPendientes = signal(0); // AE — firmas de recepción por firmar
   pendienteEntrega = signal(0); // AI2 — conduces emitidos pendientes de entrega
+  porAprobarCount = signal(0); // BY1 — echadas en espera de aprobación (elevados)
   loading = signal(true);
   /** P4 — vehículos con una recepción encolada (se marcan "Enviando…"). */
   enviandoIds = signal<Set<string>>(new Set());
@@ -250,6 +255,7 @@ export class TransportePage {
     if (key === 'misRutas') return this.conducesNuevas() || null; // Y3 — rutas nuevas
     if (key === 'conducesHub') return this.pendienteEntrega() || this.firmasPendientes() || null;
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
+    if (key === 'porAprobar') return this.porAprobarCount() || null; // BY1
     return null;
   }
 
@@ -266,6 +272,7 @@ export class TransportePage {
       case 'rutasActivas': return this.rutasActivas();
       case 'combustible': return this.combustibleTop();
       case 'combustibleLog': return this.combustibleLog();
+      case 'porAprobar': return void this.router.navigate(['/transporte/por-aprobar']);
       case 'semanal': return this.reporteSemanal();
       case 'actividad': return this.miActividad();
       case 'miRendimiento': return void this.router.navigate(['/mi-rendimiento']);
@@ -393,6 +400,15 @@ export class TransportePage {
         .pendientesEntregaCount()
         .then((n) => this.pendienteEntrega.set(n))
         .catch(() => {});
+
+      // BY1 — echadas en espera de aprobación (badge del tile "Por aprobar"). Solo
+      // elevados: el RPC devuelve 0 a los demás. Best-effort (no bloquea el hub).
+      if (this.ctx.esFlotaElevado()) {
+        void this.combustibleSvc
+          .contarEchadasPorAprobar()
+          .then((n) => this.porAprobarCount.set(n))
+          .catch(() => {});
+      }
     } finally {
       this.loading.set(false);
     }

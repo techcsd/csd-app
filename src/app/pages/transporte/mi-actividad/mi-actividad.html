@@ -225,7 +225,9 @@
                 @if (e.galones != null) { {{ e.galones }} {{ 'gal' | t }} }
                 @if (e.monto != null) { · RD$ {{ e.monto }} }
                 @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal }} {{ 'km/gal' | t }} }
-                @if (rendMeta(e.estado); as m) {
+                @if (revMeta(e.revision); as rm) {
+                  · <span class="mact__estado mact__estado--{{ rm.tone }}">{{ rm.icon }} {{ rm.label | t }}</span>
+                } @else if (rendMeta(e.estado); as m) {
                   · <span class="mact__estado mact__estado--{{ m.tone }}">{{ m.icon }} {{ m.label | t }}</span>
                 } @else if (e.alerta_consumo) {
                   · <span class="mact__alerta">⚠ {{ 'anormal' | t }}</span>

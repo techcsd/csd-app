@@ -4,17 +4,17 @@
     <h1 class="mis-sol__title">{{ 'Mis requisiciones' | t }}</h1>
   </header>
 
-  <!-- BV9 — tabs por fase -->
+  <!-- BY3 — dos grupos: Activas / Historial -->
   <div class="mis-sol__tabs">
-    @for (f of FASES; track f) {
+    @for (g of GRUPOS; track g) {
       <button
         type="button"
         class="mis-sol__tab"
-        [class.mis-sol__tab--on]="tab() === f"
-        (click)="setTab(f)"
+        [class.mis-sol__tab--on]="tab() === g"
+        (click)="setTab(g)"
       >
-        {{ faseLabel(f) | t }}
-        @if (conteos()[f]) { <span class="mis-sol__tab-n">{{ conteos()[f] }}</span> }
+        {{ grupoLabel(g) | t }}
+        @if (conteos()[g]) { <span class="mis-sol__tab-n">{{ conteos()[g] }}</span> }
       </button>
     }
   </div>
@@ -64,8 +64,8 @@
       } @empty {
         <app-empty-state
           icon="📝"
-          [title]="'Nada en esta fase' | t"
-          [message]="'Cuando necesites materiales para la obra, pídelos aquí. Verás el estado de cada requisición por fase.' | t"
+          [title]="(tab() === 'activas' ? 'No tienes requisiciones activas' : 'No hay nada en el historial') | t"
+          [message]="'Cuando necesites materiales para la obra, pídelos aquí. Las activas se ordenan por la entrega más cercana; las cerradas pasan al Historial.' | t"
           [ctaLabel]="'Nueva requisición' | t"
           (action)="nueva()"
         />
