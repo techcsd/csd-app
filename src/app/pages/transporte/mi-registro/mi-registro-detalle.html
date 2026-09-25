@@ -122,7 +122,15 @@
         <div class="mrd__head">
           <div class="mrd__head-top">
             <span class="mrd__placa">{{ e.vehiculo?.placa ?? ('Vehículo' | t) }}</span>
-            @if (rendMeta(e.estado); as m) {
+            @if (revMeta(e.revision); as rm) {
+              <span
+                class="mrd__badge"
+                [class.mrd__badge--ok]="rm.tone === 'success'"
+                [class.mrd__badge--warn]="rm.tone === 'warning'"
+                [class.mrd__badge--error]="rm.tone === 'error'"
+                [class.mrd__badge--muted]="rm.tone === 'muted'"
+              >{{ rm.icon }} {{ rm.label | t }}</span>
+            } @else if (rendMeta(e.estado); as m) {
               <span
                 class="mrd__badge"
                 [class.mrd__badge--ok]="m.tone === 'success'"
@@ -138,6 +146,29 @@
           </div>
           <span class="mrd__sub">{{ e.vehiculo?.marca }} · {{ (e.created_at || e.fecha) ? fmtFechaHora(e.created_at || e.fecha) : '—' }}</span>
         </div>
+
+        <!-- BY1/BY5 — zona de espera: estado de la revisión + corregir y reenviar -->
+        @if (revMeta(e.revision); as rm) {
+          <div
+            class="mrd__band"
+            [class.mrd__band--ok]="rm.tone === 'success'"
+            [class.mrd__band--warn]="rm.tone === 'warning' || rm.tone === 'error'"
+          >
+            <strong>{{ rm.icon }} {{ rm.label | t }}.</strong>
+            @if (e.revision === 'en_espera') {
+              {{ 'Queda en espera de aprobación de Logística. No cuenta en tu rendimiento hasta que la aprueben.' | t }}
+            } @else if (e.revision === 'rechazada') {
+              {{ e.revision_motivo || ('Fue rechazada por Logística.' | t) }}
+            } @else if (e.revision === 'aprobada') {
+              {{ e.revision_motivo || ('Fue aprobada por Logística.' | t) }}
+            }
+          </div>
+          @if (esRechazada()) {
+            <button type="button" class="btn-cta mrd__reenviar" (click)="corregirYReenviar()">
+              {{ 'Corregir y reenviar' | t }}
+            </button>
+          }
+        }
 
         <ul class="resumen">
           <li><span>{{ 'Kilometraje' | t }}</span><b>{{ e.kilometraje != null ? (e.kilometraje | number: '1.0-0') + ' km' : '—' }}</b></li>

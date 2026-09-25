@@ -532,6 +532,14 @@ export const routes: Routes = [
       import('./pages/transporte/echada-detalle/echada-detalle').then((m) => m.EchadaDetallePage),
   },
   {
+    // BY1/BY5 — bandeja "Por aprobar" (echadas en espera; roles elevados). El RPC
+    // echadas_por_aprobar gatea por rol (devuelve [] a los demás).
+    path: 'transporte/por-aprobar',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/por-aprobar/por-aprobar').then((m) => m.PorAprobarPage),
+  },
+  {
     path: 'transporte/conduces',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
     loadComponent: () => import('./pages/transporte/conduces/conduces').then((m) => m.ConducesPage),

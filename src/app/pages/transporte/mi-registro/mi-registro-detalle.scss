@@ -144,6 +144,12 @@
   color: var(--color-text-secondary, #475569);
 }
 
+// BY5 — botón "Corregir y reenviar" (echada rechazada).
+.mrd__reenviar {
+  width: 100%;
+  margin: 0 0 12px;
+}
+
 .mrd__fotos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));

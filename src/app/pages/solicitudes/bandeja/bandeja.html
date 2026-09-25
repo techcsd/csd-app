@@ -12,11 +12,11 @@
       (ngModelChange)="onBusqueda($event)"
       [placeholder]="'🔎 ' + ('Buscar por obra, solicitante o artículo' | t)"
     />
-    <!-- BV9 — tabs por fase -->
+    <!-- BY3 — dos grupos: Activas / Historial -->
     <div class="bandeja__chips">
-      @for (f of FASES; track f) {
-        <button type="button" class="bandeja__chip" [class.bandeja__chip--on]="tab() === f" (click)="setTab(f)">
-          {{ faseLabel(f) | t }}@if (conteos()[f]) { <span class="bandeja__chip-n">{{ conteos()[f] }}</span> }
+      @for (g of GRUPOS; track g) {
+        <button type="button" class="bandeja__chip" [class.bandeja__chip--on]="tab() === g" (click)="setTab(g)">
+          {{ grupoLabel(g) | t }}@if (conteos()[g]) { <span class="bandeja__chip-n">{{ conteos()[g] }}</span> }
         </button>
       }
       <button type="button" class="bandeja__chip bandeja__chip--urg" [class.bandeja__chip--on]="urgencia() === 'urgente'" (click)="toggleUrgente()">🔴 {{ 'Urgentes' | t }}</button>

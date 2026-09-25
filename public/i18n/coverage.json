@@ -124,7 +124,7 @@
       "ht": 0
     },
     "pages/bitacora": {
-      "conT": 9,
+      "conT": 10,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -172,7 +172,7 @@
       "ht": 0
     },
     "pages/bitacora/mis-partes": {
-      "conT": 27,
+      "conT": 30,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -586,9 +586,9 @@
       "ht": 0
     },
     "pages/solicitudes/mis": {
-      "conT": 12,
+      "conT": 11,
       "sinT": 0,
-      "en": 92,
+      "en": 100,
       "ht": 0
     },
     "pages/solicitudes/pedir": {
@@ -688,7 +688,7 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 108,
+      "conT": 111,
       "sinT": 2,
       "en": 98,
       "ht": 0
@@ -838,7 +838,7 @@
       "ht": 0
     },
     "pages/transporte/mi-registro": {
-      "conT": 36,
+      "conT": 40,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -859,6 +859,12 @@
       "conT": 32,
       "sinT": 1,
       "en": 97,
+      "ht": 0
+    },
+    "pages/transporte/por-aprobar": {
+      "conT": 19,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/por-confirmar": {

@@ -22,7 +22,7 @@ import {
   RutaCreada,
 } from '../../../core/models/flota-reportes.model';
 import { RutaHoy } from '../../../core/models/transporte.model';
-import { RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta } from '../../../core/models/combustible.model';
+import { EchadaRevision, RENDIMIENTO_ESTADO_META, RendimientoEstado, RendimientoEstadoMeta, revisionMeta } from '../../../core/models/combustible.model';
 import { ConductorStats } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
@@ -61,6 +61,11 @@ export class MiActividadPage {
   /** AD7 — meta de un estado de rendimiento para pintar el chip. */
   rendMeta(estado: RendimientoEstado | null | undefined): RendimientoEstadoMeta | null {
     return estado ? (RENDIMIENTO_ESTADO_META[estado] ?? null) : null;
+  }
+
+  /** BY1 — meta del chip de revisión (En espera / Aprobada / Rechazada) o null. */
+  revMeta(r: EchadaRevision | null | undefined): RendimientoEstadoMeta | null {
+    return revisionMeta(r);
   }
 
   loading = signal(true);

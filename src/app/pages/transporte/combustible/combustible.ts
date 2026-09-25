@@ -135,11 +135,18 @@ export class CombustiblePage extends GuardedWizard {
    * fotos de recibo/tablero ni estación (garrafón), así que esos pasos se omiten.
    * La bomba/evidencia siempre es el primer paso.
    */
-  steps = computed<CombStep[]>(() =>
-    this.esDeposito()
+  steps = computed<CombStep[]>(() => {
+    // BY5 — reenvío de una rechazada: las fotos del original se reutilizan en el
+    // servidor, así que se omiten los pasos de foto; solo se corrigen los números.
+    if (this.reenvioDe()) {
+      return this.esDeposito()
+        ? ['digits', 'detalles', 'revisar']
+        : ['digits', 'detalles', 'estacion', 'revisar'];
+    }
+    return this.esDeposito()
       ? ['bomba', 'digits', 'detalles', 'revisar']
-      : ['bomba', 'digits', 'fotos', 'detalles', 'estacion', 'revisar'],
-  );
+      : ['bomba', 'digits', 'fotos', 'detalles', 'estacion', 'revisar'];
+  });
   total = computed(() => this.steps().length);
   /** Clave lógica del paso actual (1-based → índice del array). */
   stepKey = computed<CombStep>(() => this.steps()[this.step() - 1] ?? 'revisar');
@@ -186,6 +193,13 @@ export class CombustiblePage extends GuardedWizard {
    * retira (`submit()`), sin ventana de pérdida de la data real de obra.
    */
   correccionDe = signal<string | null>(null);
+  /**
+   * BY5 — id de la echada RECHAZADA que estamos corrigiendo y REENVIANDO (llegamos
+   * con `?reenviar=`). Crea una echada NUEVA vinculada (reenvio_de); la rechazada
+   * queda como respaldo. Las fotos del original se reutilizan en el servidor, así
+   * que en este modo el wizard omite los pasos de foto.
+   */
+  reenvioDe = signal<string | null>(null);
   // Z9 — solo "Total Energies" (preseleccionada) + "Otro" (input libre). Se dejó
   // de listar el catálogo completo: en campo casi siempre es Total Energies y lo
   // demás va por "Otro".
@@ -253,6 +267,22 @@ export class CombustiblePage extends GuardedWizard {
     return { meta: RENDIMIENTO_ESTADO_META[r.estado], motivo: r.estadoMotivo };
   });
 
+  /**
+   * BY1/BY5 — ¿esta echada quedará EN ESPERA de aprobación? (predictor cliente para
+   * el mensaje de la confirmación). El servidor decide (trigger); aquí anticipamos
+   * las banderas que el cliente sí conoce: salto de km, fecha retroactiva y consumo
+   * anormal. Si no acierta, el chip "En espera" en Mis echadas lo aclara igual.
+   */
+  avisoEspera = computed<boolean>(() => {
+    const r = this.resultado() ?? this.calc();
+    return (
+      this.kmDeltaExcede() ||
+      this.esRetroactiva() ||
+      r.alertaConsumo ||
+      r.estado === 'anormal'
+    );
+  });
+
   /** Live derivation shown in the dark box (mirrors the server). */
   calc = computed(() =>
     calcularCombustible(this.km(), this.galones(), this.monto(), this.ultima(), this.esTelehandler()),
@@ -314,6 +344,8 @@ export class CombustiblePage extends GuardedWizard {
   // Z23-app — en una echada de persona no hay tablero (odómetro): recibo + bomba.
   // AC11 — en depósito en obra solo la foto de evidencia del garrafón/equipo.
   fotosCompletas = computed(() => {
+    // BY5 — reenvío: las fotos del original se reutilizan en el servidor.
+    if (this.reenvioDe()) return true;
     if (this.esDeposito()) return !!this.fotoEvidencia();
     return this.modoPersona()
       ? !!this.fotoRecibo() && !!this.fotoBomba()
@@ -346,6 +378,13 @@ export class CombustiblePage extends GuardedWizard {
     const corregirId = this.route.snapshot.queryParamMap.get('corregir');
     if (corregirId) {
       void this.cargarCorreccion(corregirId);
+      return;
+    }
+    // BY5 — ¿venimos a CORREGIR Y REENVIAR una echada rechazada? Prellena desde el
+    // servidor (números + estación + vehículo) y salta las fotos (se reutilizan).
+    const reenviarId = this.route.snapshot.queryParamMap.get('reenviar');
+    if (reenviarId) {
+      void this.cargarReenvio(reenviarId);
       return;
     }
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
@@ -574,6 +613,62 @@ export class CombustiblePage extends GuardedWizard {
     }
 
     // Empezar en el paso de digitación: las fotos ya están; se corrige el dato.
+    const idx = this.steps().indexOf('digits');
+    this.step.set(idx >= 0 ? idx + 1 : 1);
+  }
+
+  /**
+   * BY5 — reconstruye una echada RECHAZADA para corregir y reenviar. Prellena los
+   * números y la estación desde el servidor (RLS: el chofer lee las suyas), rehidrata
+   * el vehículo (para la validación en vivo) y arranca en el paso de digitación. Las
+   * fotos del original se reutilizan en el servidor (reenviar_echada), así que este
+   * modo no pide fotos. La rechazada NO se toca: el reenvío crea una nueva vinculada.
+   */
+  private async cargarReenvio(echadaId: string): Promise<void> {
+    this.reenvioDe.set(echadaId);
+    const det = await this.combustible.getEchadaDetalle(echadaId);
+    if (!det) {
+      this.toast.error(this.i18n.t('No se pudo abrir esa echada para reenviar.'));
+      this.reenvioDe.set(null);
+      this.necesitaVehiculo.set(true);
+      this.loading.set(false);
+      return;
+    }
+    // Números + texto crudo de los inputs de tipo texto.
+    this.km.set(det.kilometraje);
+    this.galones.set(det.galones);
+    if (det.galones != null) this.galonesRaw.set(String(det.galones));
+    this.monto.set(det.monto);
+    if (det.monto != null) this.montoRaw.set(String(det.monto));
+    this.producto.set((det.producto as 'diesel' | 'gasolina') ?? 'diesel');
+    this.subtipo.set((det.subtipo as 'regular' | 'premium' | null) ?? 'premium');
+    this.conductorId = det.conductor_id;
+
+    // Estación: texto libre → "Otro" si no está en el catálogo visible.
+    const estacion = det.estacion ?? '';
+    if (estacion) {
+      if (this.estaciones().includes(estacion)) {
+        this.estacion.set(estacion);
+        this.estacionOtro.set(false);
+      } else {
+        this.estacionOtro.set(true);
+        this.estacionOtroTexto.set(estacion);
+      }
+    }
+
+    // Vehículo (o echada de persona) para que la validación en vivo funcione.
+    if (det.vehiculo_id) {
+      this.vehiculoId = det.vehiculo_id;
+      this.necesitaVehiculo.set(false);
+      this.cargarVehiculo();
+    } else {
+      this.modoPersona.set(true);
+      this.necesitaVehiculo.set(false);
+      this.loading.set(false);
+      if (!this.conductorId) void this.loadConductor();
+    }
+    this.hydrated = true;
+    // Empezar en el paso de digitación: se corrige el número señalado.
     const idx = this.steps().indexOf('digits');
     this.step.set(idx >= 0 ? idx + 1 : 1);
   }
@@ -906,6 +1001,28 @@ export class CombustiblePage extends GuardedWizard {
       const estacion = this.estacionFinal();
       const persona = this.modoPersona();
       const deposito = this.esDeposito(); // AC11
+
+      // BY5 — reenvío de una echada rechazada: no crea una echada "normal" por el
+      // outbox de combustible, sino que llama a reenviar_echada (nueva vinculada; la
+      // rechazada queda). Reutiliza toda la validación en vivo de arriba.
+      const original = this.reenvioDe();
+      if (original) {
+        const nuevoId = await this.combustible.reenviarEchada(original, {
+          vehiculo_id: persona ? null : this.vehiculoId,
+          fecha: this.fechaRetro() ?? fechaLocalISO(),
+          kilometraje: persona ? null : this.km(),
+          galones: this.galones(),
+          monto: this.monto() ?? 0,
+          estacion: deposito ? null : estacion || null,
+          notas: null,
+        });
+        this.lastId.set(nuevoId);
+        this.resultado.set(this.calc());
+        this.registradoEn.set(new Date().toISOString());
+        this.done.set(true);
+        return;
+      }
+
       const nuevoId = await this.combustible.registrar({
         // Z23-app — echada de persona: sin vehículo ni odómetro ni foto de tablero.
         vehiculoId: persona ? null : this.vehiculoId,
