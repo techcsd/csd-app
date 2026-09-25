@@ -1,5 +1,31 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 25/09/2026 — PROMPT-67 (ronda BY, hijo) — **2.31.0-dev** · rama `feature/by-ronda` → `dev` · **EN DEV, esperando OK de Xaviel**
+
+**TL;DR:** ronda **BY** en la app (mitad hijo de las notas 72/74/75/76). Construida sobre contratos del padre YA vivos en **dev** (verificados: `aprobar_echada`/`rechazar_echada`/`reenviar_echada`/`echadas_por_aprobar`, columnas `revision*`, `puede_ver_bitacora_de`). Build + guards + i18n (en 100%) verdes. **2.31.0-dev** construida, APK dev firmado+registrado+subido, `dev` pusheado (Vercel construye `app-dev.`). **Para** — Xaviel prueba y da OK antes de prod.
+
+### 🧪 En dev (2.31.0-dev — pendiente OK → prod)
+- **BY1+BY5 — zona de espera de echadas (regla 15):**
+  - *Chofer:* en *Mi combustible* (Mi actividad) cada echada muestra chip **En espera / Aprobada / Rechazada**; el detalle (`mi-registro-detalle`) gana banda de estado + **Corregir y reenviar** en una rechazada → reabre el wizard de combustible en modo `?reenviar=` (prellena números, omite fotos —el server reutiliza las del original—, outbox `reenvio_echada` → `reenviar_echada`). La pantalla de éxito avisa "queda en espera de aprobación" cuando el cliente predice bandera.
+  - *Elevado (Raykler/admin):* tile **Por aprobar (n)** en Transporte → nueva pantalla `pages/transporte/por-aprobar/*` (`echadas_por_aprobar`, fotos firmadas): tarjeta con motivo humano, fotos, km ant→act, y **Aprobar · Aprobar con corrección · Rechazar (motivo)** por outbox `revision_echada` (idempotente: el 22023 "no está en espera" del server = hecho; ocultado local + semilla desde el outbox para offline).
+  - En espera excluida del baseline local de rendimiento (`getUltimaEchada`). Handlers `revision_echada`/`reenvio_echada` en `CombustibleService` (ya eager-booted).
+- **BY4 — Sócrates ve todas las bitácoras:** tile **Bitácoras de las obras** (gate `puede_ver_otras_bitacoras`) → `mis-partes` en vista *Todas* con filtros **obra/fecha/ingeniero**. **Fix del bug real:** el detalle (`detalle.ts`) ahora abre CUALQUIER bitácora visible vía `bitacora.getBitacora(id)` + RLS BY4 (antes `misBitacoras().find` → ajena en blanco). `listar_bitacoras(p_todas)` **NO está desplegado** → se usa el read directo con la RLS de BY4.
+- **BY3 — requisiciones Activas/Historial:** `mis` y `bandeja` pasan de 4 tabs de fase a **Activas** (pendiente+en_proceso, por entrega más cercana) / **Historial** (completada/rechazada/cancelada, por cierre desc ≈ `created_at`); sin tab *Todas*; preferencia en `localStorage`. Helper `grupoRequisicion` en el modelo.
+- **Release dev:** `environment.prod.ts` + `build.gradle` → **2.31.0**; `CAMBIOS_CURADOS` (Y1). `npm run apk -- --env dev` (registrado en dev `app_versiones`) + `apk:publish -- --env dev` (bucket dev) + `git push origin dev` (Vercel `app-dev.`).
+
+### 👤 Pendiente físico de Xaviel
+- Probar **2.31.0-dev** en `app-dev.` / APK dev vX: como **chofer** (registrar con salto de km → "en espera" → ver chip; rechazada → corregir y reenviar) y como **Raykler** (Por aprobar → aprobar/rechazar/corregir, offline y drenando); como **Sócrates** (Bitácoras de las obras → abrir una de un proyecto ajeno). Con OK → `dev→main` + APK prod + publicar 2.31.0 (mínima sigue 2.26.1).
+
+### ⚠️ Contratos del padre (reportar al SGC)
+- **`listar_bitacoras(p_todas)` no desplegado** (PROMPT-67 lo asumía). La app usa el read directo con la RLS de BY4; si el padre lo agrega, migrar `todasBitacoras`/`getBitacora` a él.
+- **`reenviar_echada` no es idempotente por client_uuid** (genera `gen_random_uuid()` internamente y la original queda `rechazada`, así que un reintento crearía un duplicado). Mitigado en el cliente: el handler comprueba si ya existe una echada con `reenvio_de=original` antes de llamar. Ideal: que el padre acepte un `p_client_uuid`.
+- **Historial de requisiciones por "cierre desc"**: la lista (`Solicitud`/`RequisicionBandeja`) no expone `cerrada_en`; se ordena por `created_at desc` como proxy. Si el padre lo añade a la lista, cambiar la clave de orden.
+
+### 🩺 Rollback
+- Cliente (revertir el merge). Objetos del padre son aditivos; `revision` tiene default `normal` y el interruptor `flota_config.revision_echadas=0` apaga el mecanismo server-side.
+
+---
+
 ## 🟢 SESIÓN 24/09/2026 (cont.) — **BX1b: es_tecnologia() + app 2.30.0** — todo en PROD
 
 **TL;DR:** aplicada `bx1b` (SGC) en **dev y prod** vía `apply-migration.mjs` ledgered → `sgc.es_tecnologia()` ahora incluye `'desarrollador'` (verificado: `es_tecnologia()=true`, app_error_reports legible). Con eso desbloqueado, **app 2.30.0** activa la pestaña *Reportes de errores* para el rol Developer (1 línea: `'desarrollador'` en `UserContextService.TECNOLOGIA`) y **salió a PROD**: `dev→main` (`3983ac5`) + APK prod firmado/registrado/subido + **publicada=2.30.0** (mínima 2.26.1). SGC commit `293eef4` (dev). **Nada pendiente de release.**
