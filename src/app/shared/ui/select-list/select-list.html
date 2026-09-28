@@ -10,25 +10,48 @@
     [placeholder]="searchPlaceholder()"
   />
 }
-<div class="select-list">
-  @for (o of visibles(); track o.id) {
-    <button
-      type="button"
-      class="select-list__opt"
-      [class.select-list__opt--on]="selectedId() === o.id"
-      (click)="onPick(o.id)"
-    >
-      @if (o.image) {
-        <img class="select-list__thumb" [src]="o.image" alt="" />
-      } @else {
-        <span class="select-list__icon">{{ o.icon ?? icon() }}</span>
-      }
-      <span class="select-list__label">{{ o.label }}</span>
-      @if (selectedId() === o.id) {
-        <span class="select-list__check">✓</span>
-      }
-    </button>
-  } @empty {
-    <p class="select-list__muted">{{ query() ? 'Sin resultados.' : 'No hay opciones.' }}</p>
+@if (visibles().length) {
+  <!-- CA2 — render agrupado: un grupo sin nombre = lista plana (comportamiento previo);
+       el primer grupo con nombre va abierto y los siguientes ("Otras obras") plegables. -->
+  @for (g of grupos(); track g.name; let gi = $index) {
+    @if (g.name) {
+      <button
+        type="button"
+        class="select-list__group"
+        [class.select-list__group--collapsible]="gi > 0 && !query().trim()"
+        [attr.aria-expanded]="!estaColapsado(g.name, gi)"
+        (click)="toggle(g.name, gi)"
+      >
+        <span class="select-list__group-name">{{ g.name }}</span>
+        <span class="select-list__group-count">{{ g.options.length }}</span>
+        @if (gi > 0 && !query().trim()) {
+          <span class="select-list__group-caret">{{ estaColapsado(g.name, gi) ? '▸' : '▾' }}</span>
+        }
+      </button>
+    }
+    @if (!estaColapsado(g.name, gi)) {
+      <div class="select-list">
+        @for (o of g.options; track o.id) {
+          <button
+            type="button"
+            class="select-list__opt"
+            [class.select-list__opt--on]="selectedId() === o.id"
+            (click)="onPick(o.id)"
+          >
+            @if (o.image) {
+              <img class="select-list__thumb" [src]="o.image" alt="" />
+            } @else {
+              <span class="select-list__icon">{{ o.icon ?? icon() }}</span>
+            }
+            <span class="select-list__label">{{ o.label }}</span>
+            @if (selectedId() === o.id) {
+              <span class="select-list__check">✓</span>
+            }
+          </button>
+        }
+      </div>
+    }
   }
-</div>
+} @else {
+  <p class="select-list__muted">{{ query() ? 'Sin resultados.' : 'No hay opciones.' }}</p>
+}

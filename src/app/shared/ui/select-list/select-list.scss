@@ -50,3 +50,43 @@
   color: var(--color-text-secondary);
   padding: 12px 0;
 }
+
+// CA2 — encabezado de grupo ("Mis obras" / "Otras obras"). El primero es un rótulo;
+// los siguientes son plegables (con contador + chevron).
+.select-list__group {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 6px 4px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+// El primer grupo (rótulo, no plegable) no necesita separación superior.
+.select-list__group:first-child {
+  margin-top: 0;
+}
+.select-list__group--collapsible {
+  cursor: pointer;
+}
+.select-list__group-name {
+  flex: 1;
+}
+.select-list__group-count {
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.select-list__group-caret {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}

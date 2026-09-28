@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { Preferences } from '@capacitor/preferences';
 import { SupabaseService } from './supabase.service';
 import { NotifSoundService } from './notif-sound.service';
 
@@ -21,6 +22,24 @@ export interface NotifEstado {
    *  `mis_preferencias().notif[].silenciable` (= `puede_silenciar_notif`). Solo yo /
    *  Gerencia / usuarios elegidos pueden apagar las alarmas semanales. */
   silenciable?: boolean;
+  /** CA1 — Tecnología/Administración silenció este aviso PARA este usuario (pref escrita
+   *  por un admin con `set_notif_pref_de`). Se muestra "Silenciada por Tecnología" y el
+   *  interruptor queda bloqueado. Viene de `mis_notif_operativas().silenciada_por_admin`. */
+  silenciada_por_admin?: boolean;
+}
+
+/**
+ * CA1 — estado operativo de un aviso desde `mis_notif_operativas()`: si el usuario lo
+ * tiene ACTIVO y si Tecnología lo silenció para él. Lo usa el gate de alarmas nativas
+ * (no sonar si `activa=false` o `silenciada_por_admin`) y el panel de Notificaciones.
+ */
+export interface NotifOperativa {
+  tipo: string;
+  activa: boolean;
+  etiqueta: string;
+  descripcion: string | null;
+  silenciable: boolean;
+  silenciada_por_admin: boolean;
 }
 
 /** AE — un aviso in-app (sgc.notificaciones). */
@@ -125,6 +144,66 @@ export class NotificacionesService {
     return out;
   }
 
+  // ── CA1 — estado operativo de avisos + gate de alarmas nativas ───────────────
+  private static readonly OPERATIVAS_PREF = 'notif_operativas_v1';
+  private _operativas = signal<NotifOperativa[] | null>(null);
+  private operativasCargadas = false;
+
+  /**
+   * CA1 — `mis_notif_operativas()` (catálogo + `activa` + `silenciada_por_admin`) con
+   * cache local: memoria durante la sesión y `Preferences` para el arranque offline
+   * (la alarma dominical se evalúa al abrir la app, a veces sin señal). Refresco: al
+   * login (`iniciarRealtime`) y cuando se fuerza. Best-effort: sin red, se queda con la
+   * última cache; sin nada, lista vacía → el gate NO suprime (no silenciar de más).
+   */
+  async misNotifOperativas(force = false): Promise<NotifOperativa[]> {
+    if (!force && this.operativasCargadas && this._operativas()) return this._operativas()!;
+    // 1) siembra desde Preferences (offline / primer arranque) si aún no hay nada.
+    if (!this._operativas()) {
+      try {
+        const { value } = await Preferences.get({ key: NotificacionesService.OPERATIVAS_PREF });
+        if (value) this._operativas.set(JSON.parse(value) as NotifOperativa[]);
+      } catch {
+        /* sin cache local */
+      }
+    }
+    // 2) refresca de red (best-effort).
+    try {
+      const { data, error } = await this.supabase.client.rpc('mis_notif_operativas');
+      if (!error && Array.isArray(data)) {
+        const rows = data as NotifOperativa[];
+        this._operativas.set(rows);
+        this.operativasCargadas = true;
+        try {
+          await Preferences.set({ key: NotificacionesService.OPERATIVAS_PREF, value: JSON.stringify(rows) });
+        } catch {
+          /* persistencia best-effort */
+        }
+      }
+    } catch {
+      /* offline / sin sesión: nos quedamos con la cache (o vacío) */
+    }
+    return this._operativas() ?? [];
+  }
+
+  /** CA1 — refresca la cache de estado operativo (login / semanal). Best-effort. */
+  async refreshOperativas(): Promise<void> {
+    await this.misNotifOperativas(true).catch(() => {});
+  }
+
+  /**
+   * CA1 — ¿la alarma nativa de este tipo debe SUPRIMIRSE para el usuario? True si él la
+   * tiene apagada (`activa=false`) o Tecnología lo silenció (`silenciada_por_admin`).
+   * Tipo desconocido / sin cache → false (no suprimir: la alarma sigue el comportamiento
+   * actual). Cinturón-y-tirantes del filtro del servidor (PROMPT-70 F2).
+   */
+  async alarmaSuprimida(tipo: string): Promise<boolean> {
+    const rows = await this.misNotifOperativas();
+    const r = rows.find((x) => x.tipo === tipo);
+    if (!r) return false;
+    return r.activa === false || r.silenciada_por_admin === true;
+  }
+
   /** AT23 — silencia/reactiva un tipo; actualiza la cache y el badge. */
   async setNotifPref(tipo: string, silenciado: boolean): Promise<void> {
     const { error } = await this.supabase.client.rpc('set_notif_pref', { p_tipo: tipo, p_silenciado: silenciado });
@@ -203,6 +282,9 @@ export class NotificacionesService {
     const { data } = await this.supabase.client.auth.getUser();
     const uid = data.user?.id;
     if (!uid) return;
+    // CA1 — con sesión confirmada, refresca el estado operativo (activa/silenciada por
+    // admin) que usa el gate de alarmas nativas. Best-effort, una vez por login.
+    void this.refreshOperativas();
     const channel = this.supabase.client
       .channel(`notificaciones-app-${uid}`)
       .on(
