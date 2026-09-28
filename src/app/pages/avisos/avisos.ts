@@ -183,11 +183,22 @@ export class AvisosPage {
     try {
       // BT6 — carga el estado + qué puede silenciar ESTE usuario (alarmas semanales
       // incluidas, si está autorizado) y lo fusiona en cada tipo.
-      const [estados, silenciables] = await Promise.all([
+      // CA1 — además, `mis_notif_operativas()` trae `silenciada_por_admin`: qué avisos
+      // apagó Tecnología PARA este usuario (p. ej. las alarmas de Eduardo), para pintar
+      // "Silenciada por Tecnología" y bloquear el interruptor.
+      const [estados, silenciables, operativas] = await Promise.all([
         this.service.misNotifEstado(),
         this.service.misNotifSilenciables(),
+        this.service.misNotifOperativas().catch(() => []),
       ]);
-      this.estados.set(estados.map((e) => ({ ...e, silenciable: silenciables.has(e.tipo) })));
+      const silenciadaAdmin = new Set(operativas.filter((o) => o.silenciada_por_admin).map((o) => o.tipo));
+      this.estados.set(
+        estados.map((e) => ({
+          ...e,
+          silenciable: silenciables.has(e.tipo),
+          silenciada_por_admin: silenciadaAdmin.has(e.tipo),
+        })),
+      );
     } catch {
       // Respaldo: catálogo mínimo + mis prefs (sin poder mostrar estado de admin).
       try {
@@ -219,7 +230,8 @@ export class AvisosPage {
    * activa").
    */
   editable(e: NotifEstado): boolean {
-    return !e.deshabilitado_por_admin && (!e.es_operativa || !!e.silenciable);
+    // CA1 — lo que Tecnología silenció para este usuario no lo puede reactivar él.
+    return !e.deshabilitado_por_admin && !e.silenciada_por_admin && (!e.es_operativa || !!e.silenciable);
   }
   /** El toggle muestra "recibir" (ON = NO silenciado por mí). */
   recibe(e: NotifEstado): boolean {
@@ -227,6 +239,7 @@ export class AvisosPage {
   }
   /** Texto para los tipos que el usuario NO controla. */
   estadoLabel(e: NotifEstado): string {
+    if (e.silenciada_por_admin) return 'Silenciada por Tecnología'; // CA1
     return e.deshabilitado_por_admin ? 'Desactivado por Administración' : 'Siempre activa';
   }
   async onTogglePref(e: NotifEstado, recibir: boolean): Promise<void> {

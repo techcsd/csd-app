@@ -1,11 +1,16 @@
 // AG16 — Gestión de Producción de Obra (app). Tipos del módulo "Mi obra".
 
-/** Una obra/proyecto donde el usuario puede actuar (de `mis_proyectos`). */
+/** Una obra/proyecto VISIBLE para el usuario (de `mis_proyectos`). */
 export interface ObraProyecto {
   id: string;
   nombre: string;
   codigo?: string | null;
   estado?: string | null;
+  /** CA2 — ¿es una obra "mía" (responsable/residente/empleado) vs una que solo veo
+   *  por el módulo `proyectos`? El padre la marca por fila; el selector agrupa
+   *  "Mis obras" primero y "Otras obras" (plegable) para quien ve todas. Ausente
+   *  (contrato viejo) ⇒ se trata como propia (lista plana, sin agrupar). */
+  es_mia?: boolean;
 }
 
 /** Tarea del plan del día (de `plan_del_dia`). */

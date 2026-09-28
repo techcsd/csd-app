@@ -6,6 +6,7 @@ import { SupabaseService } from './supabase.service';
 import { NotificacionesService, notifAppRoute } from './notificaciones.service';
 import { NavGuardService } from './nav-guard.service';
 import { AlarmaService } from './alarma.service';
+import { ErrorReportService } from './error-report.service';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -24,6 +25,7 @@ export class PushService {
   private notifs = inject(NotificacionesService);
   private navGuard = inject(NavGuardService);
   private alarma = inject(AlarmaService);
+  private errorReport = inject(ErrorReportService);
 
   private started = false;
   private token: string | null = null;
@@ -72,7 +74,23 @@ export class PushService {
         data.alarma === true ||
         data.alarma === 'true'
       ) {
-        this.alarma.disparar({ vehiculoId: data.vehiculo_id ?? null, ruta: data.ruta ?? '/transporte/reporte-semanal' });
+        // CA1 — cinturón-y-tirantes del filtro del servidor: antes de sonar la alarma a
+        // pantalla completa, verifica la preferencia local (mis_notif_operativas). Si el
+        // usuario la tiene apagada o Tecnología lo silenció, NO suena; y se registra
+        // (nivel info) que llegó igual, para saber si el emisor la mandó de más.
+        const alarmaTipo = data.tipo === 'alarm-weekly-inspection' ? 'alarm-weekly-inspection' : 'alarma-reporte-semanal';
+        const disparar = () =>
+          this.alarma.disparar({ vehiculoId: data.vehiculo_id ?? null, ruta: data.ruta ?? '/transporte/reporte-semanal' });
+        void this.notifs
+          .alarmaSuprimida(alarmaTipo)
+          .then((suprimida) => {
+            if (suprimida) {
+              void this.errorReport.report('info', 'alarma suprimida por preferencia', { tipo: alarmaTipo, origen: 'push' });
+              return;
+            }
+            disparar();
+          })
+          .catch(() => disparar()); // ante fallo del gate, comportamiento actual (sonar)
       }
     });
     // Tap en la push → deep-link (mismo mapa que la bandeja de avisos, AF6).

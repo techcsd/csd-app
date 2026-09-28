@@ -6,7 +6,9 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ObraService } from '../../../core/services/obra.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { ObraProyecto, ResumenObra } from '../../../core/models/obra.model';
+import { obrasComoOpciones } from '../../../core/util/obra-opciones';
 import { BitacoraFull, ProyectoPartida } from '../../../core/models/bitacora.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -28,6 +30,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 export class MiProyectoPage {
   private obra = inject(ObraService);
   private bitacora = inject(BitacoraService);
+  private i18n = inject(I18nService);
   private router = inject(Router);
   private location = inject(Location);
 
@@ -42,7 +45,8 @@ export class MiProyectoPage {
   bitacoras = signal<BitacoraFull[]>([]);
 
   obraActual = computed(() => this.obras().find((o) => o.id === this.obraSel()) ?? null);
-  obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
+  // CA2 — "Mis obras" primero y "Otras obras" (plegable) para quien ve todas.
+  obraOptions = computed(() => obrasComoOpciones(this.obras(), this.i18n));
 
   /** Partidas con trabajo pendiente (ejecutada < planeada), las de mayor faltante. */
   partidasProximas = computed(() =>
