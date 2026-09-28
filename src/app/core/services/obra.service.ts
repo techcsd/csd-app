@@ -36,6 +36,18 @@ function pathsFrom(photoPaths: Record<string, string>, prefix?: string): string[
     .map(([, path]) => path);
 }
 
+/** CA2 — mapea una fila de `mis_proyectos` a `ObraProyecto`. `es_mia` ausente
+ *  (contrato viejo) ⇒ se trata como propia → lista plana sin agrupar. */
+function mapObra(p: Record<string, unknown>): ObraProyecto {
+  return {
+    id: p['id'] as string,
+    nombre: p['nombre'] as string,
+    codigo: (p['codigo'] as string) ?? null,
+    estado: (p['estado'] as string) ?? null,
+    es_mia: p['es_mia'] === undefined ? true : !!p['es_mia'],
+  };
+}
+
 /**
  * AG16 — Gestión de Producción de Obra en la app (offline-first). Lecturas
  * cacheadas + capturas por outbox contra los RPCs de GESTION-OBRA.md §6.1. Todas
@@ -63,20 +75,52 @@ export class ObraService {
    * BL2 — igual que `misObras`, pero DISTINGUE "no tienes obras" de "la consulta
    * falló" (8ª regla). El hub/Mi proyecto usan `failed` para mostrar error+reintento
    * en vez de afirmar "no tienes obras asignadas" cuando en realidad se cayó la red/RLS.
+   *
+   * CA2 — clave de caché bumpeada a `_v2` al cambiar el contrato: ahora la lista trae
+   * TODAS las obras visibles (no solo las propias) con `es_mia`; una caché vieja
+   * (solo-propias, sin `es_mia`) no debe quedar pegada tras actualizar.
    */
   async misObrasDetailed(): Promise<ListaCatalogo<ObraProyecto>> {
-    const res = await this.catalog.refreshDetailed<ObraProyecto[]>('obra_mis_proyectos', async () => {
-      const { data, error } = await this.supabase.client.rpc('mis_proyectos', { p_usuario: null });
-      if (error) throw error;
-      const arr = (data as Array<Record<string, unknown>>) ?? [];
-      return arr.map((p) => ({
-        id: p['id'] as string,
-        nombre: p['nombre'] as string,
-        codigo: (p['codigo'] as string) ?? null,
-        estado: (p['estado'] as string) ?? null,
-      }));
-    });
+    const res = await this.catalog.refreshDetailed<ObraProyecto[]>('obra_mis_proyectos_v2', () =>
+      this.fetchObrasVisibles(),
+    );
     return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
+  }
+
+  /**
+   * CA2 — obras VISIBLES (las mismas que la web), no solo las propias. Antes se
+   * llamaba a `mis_proyectos()` a secas, que devuelve SOLO las obras donde el usuario
+   * es responsable/residente/empleado e IGNORA el módulo `proyectos` → un gerente de
+   * proyectos (Sócrates) veía la pantalla "Mi obra" vacía aunque la web se las listaba
+   * (y de ahí también BY4: sin obras no hay bitácoras que abrir). El padre corrigió
+   * `mis_proyectos(p_usuario, p_todos)`: con `p_todos=null` devuelve todo lo que el
+   * usuario `puede_ver_proyecto` y marca `es_mia` por fila. Si el padre AÚN no expone
+   * `p_todos` en este entorno (rechaza el parámetro), degradamos al respaldo por RLS
+   * (`.from('proyectos')` = misma visibilidad que la web) + `mis_proyectos()` viejo
+   * para marcar `es_mia`.
+   */
+  private async fetchObrasVisibles(): Promise<ObraProyecto[]> {
+    const nuevo = await this.supabase.client.rpc('mis_proyectos', { p_usuario: null, p_todos: null });
+    if (!nuevo.error) {
+      return ((nuevo.data as Array<Record<string, unknown>>) ?? []).map(mapObra);
+    }
+    return this.fetchObrasRespaldo();
+  }
+
+  /** CA2 — respaldo cuando el padre no tiene el contrato nuevo: la RLS de `proyectos`
+   *  ya da la visibilidad completa (igual que la web); marcamos `es_mia` con el
+   *  `mis_proyectos()` viejo (solo las propias). */
+  private async fetchObrasRespaldo(): Promise<ObraProyecto[]> {
+    const [full, mine] = await Promise.all([
+      this.supabase.client.from('proyectos').select('id, nombre, codigo, estado').order('nombre'),
+      this.supabase.client.rpc('mis_proyectos', { p_usuario: null }),
+    ]);
+    if (full.error) throw full.error;
+    const mineIds = new Set(((mine.data as Array<{ id: string }>) ?? []).map((p) => p.id));
+    return ((full.data as Array<Record<string, unknown>>) ?? []).map((p) => ({
+      ...mapObra(p),
+      es_mia: mineIds.has(p['id'] as string),
+    }));
   }
 
   /** Plan del día de una obra (charla + tareas asignadas). */

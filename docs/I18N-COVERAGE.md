@@ -186,6 +186,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/pdf-viewer | 2 | 1 | 67% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
 | shared/ui/photo-slot | 16 | 1 | 94% | 0% |  |
+| shared/ui/select-list | 0 | 1 | 0% | 0% |  |
 | shared/ui/selector-categorias | 28 | 1 | 97% | 0% |  |
 | shared/ui/share-sheet | 3 | 2 | 60% | 0% |  |
 | shared/ui/signature-pad | 2 | 0 | 100% | 0% |  |

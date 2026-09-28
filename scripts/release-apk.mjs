@@ -37,12 +37,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-27';
+const RELEASED_AT = '2026-09-28';
 
-const TITULO = 'Detalle de echada y material no catalogado';
+const TITULO = 'Obras visibles para gerentes y alarmas que respetan el silencio';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Transporte', d: 'Logística ya puede abrir el "Detalle de la echada" de cualquier chofer (antes a algunos les salía "No se pudo cargar el detalle").' },
-  { t: 'arreglo', m: 'Inventario', d: 'El material no catalogado ya gestionado (vinculado o declinado) ya no aparece como pendiente; desde el conduce se ve qué pasó con cada material.' },
+  { t: 'arreglo', m: 'Obra', d: 'Las obras ya se ven completas en "Mi obra" para gerentes/ingenieros con acceso al módulo de proyectos (antes la pantalla salía vacía aunque la web sí las listaba); se agrupan "Mis obras" primero y "Otras obras" debajo.' },
+  { t: 'mejora', m: 'Flota', d: 'Las alarmas dominicales (inspección / reporte semanal) respetan el silencio: si eres un usuario no operativo o Tecnología te las silenció, ya no suenan.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

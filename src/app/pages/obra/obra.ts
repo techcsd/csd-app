@@ -9,7 +9,9 @@ import { SelectOption } from '../../shared/ui/select-list/select-list';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ObraService } from '../../core/services/obra.service';
 import { UserContextService } from '../../core/services/user-context.service';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { ObraProyecto, ResumenObra } from '../../core/models/obra.model';
+import { obrasComoOpciones } from '../../core/util/obra-opciones';
 
 interface ObraTile {
   key: string;
@@ -54,6 +56,7 @@ const TILES: ObraTile[] = [
 export class ObraPage {
   private obra = inject(ObraService);
   private ctx = inject(UserContextService);
+  private i18n = inject(I18nService);
   private location = inject(Location);
   private router = inject(Router);
 
@@ -82,7 +85,8 @@ export class ObraPage {
   puedeCharla = computed(() => this.ctx.puedeOperarSubmodulo('obra.plan_dia'));
 
   // AI14 — obra por dropdown estándar (no listado abierto de todas las obras).
-  obraOptions = computed<SelectOption[]>(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
+  // CA2 — "Mis obras" primero y "Otras obras" (plegable) para quien ve todas.
+  obraOptions = computed<SelectOption[]>(() => obrasComoOpciones(this.obras(), this.i18n));
   pickPorId(id: string): void {
     const o = this.obras().find((x) => x.id === id);
     if (o) this.pick(o);

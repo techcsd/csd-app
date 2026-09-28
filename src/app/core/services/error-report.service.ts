@@ -26,7 +26,11 @@ export type AppErrorType =
   | 'sync'
   | 'permission'
   | 'tracking'
-  | 'login';
+  | 'login'
+  // CA1 — evento informativo (no un error): p. ej. "alarma suprimida por preferencia"
+  // desde el cliente, para contrastar con lo que el servidor mandó. Si el CHECK del
+  // servidor aún no lo acepta, coacciona a 'other' (inofensivo); paridad owed en SGC.
+  | 'info';
 
 /** Y11 — una fila de la vista compacta de reportes (Tecnología). */
 export interface AppErrorReportRow {

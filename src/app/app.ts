@@ -171,6 +171,12 @@ export class App {
   private async syncAlarmaNativa(): Promise<void> {
     if (!this.nativeAlarm.disponible) return;
     try {
+      // CA1 — si el usuario no es operativo o Tecnología lo silenció, CANCELA la alarma
+      // autónoma sin importar los pendientes (no debe sonar el domingo con la app cerrada).
+      if (await this.notificaciones.alarmaSuprimida('alarm-weekly-inspection')) {
+        await this.nativeAlarm.disable();
+        return;
+      }
       const pend = await this.reportes.pendientesCount();
       if (pend > 0) await this.nativeAlarm.enable();
       else await this.nativeAlarm.disable();
@@ -188,6 +194,9 @@ export class App {
   private async checkAlarmaDominical(): Promise<void> {
     if (new Date().getDay() !== 0) return; // 0 = domingo
     try {
+      // CA1 — respeta el silencio (pref propia o silenciado por Tecnología) antes de
+      // disparar la alarma del reporte semanal.
+      if (await this.notificaciones.alarmaSuprimida('alarma-reporte-semanal')) return;
       const pend = await this.reportes.pendientesCount();
       if (pend > 0) {
         this.alarma.disparar({ vehiculoId: null, ruta: '/transporte/reporte-semanal' });

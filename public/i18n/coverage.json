@@ -1169,9 +1169,9 @@
     },
     "shared/ui/select-list": {
       "conT": 0,
-      "sinT": 0,
-      "en": 100,
-      "ht": 100
+      "sinT": 1,
+      "en": 0,
+      "ht": 0
     },
     "shared/ui/selector-categorias": {
       "conT": 28,
