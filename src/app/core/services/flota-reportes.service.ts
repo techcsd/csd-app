@@ -341,26 +341,50 @@ export class FlotaReportesService {
     };
   }
 
-  /** V2 (follow-up) — detalle de una echada + URLs firmadas de recibo/tablero. */
+  /**
+   * V2 (follow-up) / BZ1 — detalle de una echada para "Mis echadas" por el MISMO
+   * camino que "Registro de echadas": el RPC `echada_detalle` (SECURITY DEFINER, gate
+   * flota-elevado/admin/dueño), no un select directo a la tabla bajo RLS. Comparte el
+   * read-through de CombustibleService (caché `echada_detalle:${id}`, jsonb crudo) para
+   * que abra offline; aquí solo se mapea a la forma de "Mi actividad" y se firman fotos.
+   */
   async getMiEchadaDetalle(id: string): Promise<EchadaDetalle | null> {
     if (!id) return null;
-    const { data, error } = await this.supabase.client
-      .from('registros_combustible')
-      .select(
-        'id, fecha, created_at, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, ' +
-          'costo_por_km, rendimiento_km_gal, alerta_consumo, estado, motivo_alerta, estacion, notas, ' +
-          'revision, revision_motivo, reenvio_de, ' +
-          'foto_recibo_path, foto_tablero_path, vehiculo:vehiculos(placa, marca)',
-      )
-      .eq('id', id)
-      .maybeSingle();
-    if (error || !data) return null;
-    const row = data as unknown as EchadaDetalle & { foto_recibo_path: string | null; foto_tablero_path: string | null };
+    const raw = await this.catalog.refresh<Record<string, unknown> | null>(`echada_detalle:${id}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('echada_detalle', { p_id: id });
+      if (error) throw new Error(error.message);
+      return (data as Record<string, unknown>) ?? null;
+    });
+    if (!raw) return null;
+    const veh = raw['vehiculo'] as { placa?: string; marca?: string } | null;
     const [reciboUrl, tableroUrl] = await Promise.all([
-      this.signedVehiculos(row.foto_recibo_path),
-      this.signedVehiculos(row.foto_tablero_path),
+      this.signedVehiculos(raw['foto_recibo_path'] as string | null),
+      this.signedVehiculos(raw['foto_tablero_path'] as string | null),
     ]);
-    return { ...row, reciboUrl, tableroUrl };
+    return {
+      id: raw['id'] as string,
+      fecha: (raw['fecha'] as string | null) ?? null,
+      created_at: (raw['created_at'] as string | null) ?? null,
+      kilometraje: (raw['kilometraje'] as number | null) ?? null,
+      km_anterior: (raw['km_anterior'] as number | null) ?? null,
+      km_recorridos: (raw['km_recorridos'] as number | null) ?? null,
+      galones: (raw['galones'] as number | null) ?? null,
+      monto: (raw['monto'] as number | null) ?? null,
+      precio_por_galon: (raw['precio_por_galon'] as number | null) ?? null,
+      costo_por_km: (raw['costo_por_km'] as number | null) ?? null,
+      rendimiento_km_gal: (raw['rendimiento_km_gal'] as number | null) ?? null,
+      alerta_consumo: (raw['alerta_consumo'] as boolean | null) ?? null,
+      estado: (raw['estado'] as EchadaDetalle['estado']) ?? null,
+      motivo_alerta: (raw['motivo_alerta'] as string | null) ?? null,
+      estacion: (raw['estacion'] as string | null) ?? null,
+      notas: (raw['notas'] as string | null) ?? null,
+      revision: (raw['revision'] as EchadaDetalle['revision']) ?? null,
+      revision_motivo: (raw['revision_motivo'] as string | null) ?? null,
+      reenvio_de: (raw['reenvio_de'] as string | null) ?? null,
+      vehiculo: veh ? { placa: veh.placa ?? '', marca: veh.marca } : null,
+      reciboUrl,
+      tableroUrl,
+    };
   }
 
   /** S22 — reporta un accidente del vehículo (con acta AMET opcional). */

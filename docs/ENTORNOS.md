@@ -67,11 +67,28 @@ la trata como **otra PWA** (no pisa la de prod). Se ve "CSD App DEV".
 `…​.dev`, así que **convive** con la app de prod (dos iconos: "CSD App" y "CSD App DEV").
 Misma keystore → sin conflicto de firma.
 
-## Login en dev
+## Login en dev (§ Cómo entrar)
 
-Usuarios = los reales **anonimizados** del seed de `sgc-dev`. Contraseña única =
-`QA_DEV_PASSWORD`. PIN de choferes = `000000`. Detalle en `QA-USERS.local` y en el
-`docs/ENTORNOS.md` del padre (SGC). Nada real se toca en dev.
+El seed de `sgc-dev` **anonimiza** la mayoría de los usuarios (email → `u-<hex>@dev.constructorasd.local`),
+pero **conserva el email real** para `admin`, el módulo `tecnologia` y el rol `desarrollador`
+(lista `emails_reales` en `scripts/seed-dev.tablas.json` del padre). En todos los casos la
+contraseña en dev es la **QA** (`QA_DEV_PASSWORD` de `.env.local`), nunca la de prod.
+
+- **Xaviel (Tecnología):** entra en `dev.` / `app-dev.` con **tu email real**
+  (`tecnologia@constructorasd.com`) + la **contraseña QA** (no tu contraseña de prod: en dev
+  no existe, las contraseñas no se copian).
+- **QA por rol:** en el **login de dev** (build `dev`, no en prod) aparece el panel
+  *"Entorno de desarrollo — usuarios de prueba"* (BZ3): lista las cuentas QA con su rol y un
+  botón **Entrar como…** que rellena el email; la contraseña QA se escribe a mano (no va en el
+  bundle). La lista la sirve el RPC `usuarios_qa_dev()`, que **solo devuelve datos en dev**
+  (en prod devuelve `[]` y el panel no se pinta).
+- **Choferes/capataces:** por **cédula + PIN** (PIN de acceso en dev = `000000`).
+
+Detalle de cuentas en `QA-USERS.local` y en el `docs/ENTORNOS.md` del padre (SGC). Nada real
+se toca en dev.
+
+> **Lista de prueba de cada ronda — empieza siempre por:** *entra en `dev.` con tu email real
+> + contraseña QA* (si eso falla, nada más se puede probar en dev).
 
 ## Rollback
 

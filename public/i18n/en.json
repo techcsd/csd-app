@@ -3842,5 +3842,15 @@
   "Bitácoras de las obras": "Site logs",
   "Cuando necesites materiales para la obra, pídelos aquí. Las activas se ordenan por la entrega más cercana; las cerradas pasan al Historial.": "When you need materials for the site, request them here. Active ones are sorted by the nearest delivery; closed ones move to History.",
   "No tienes requisiciones activas": "You have no active requisitions",
-  "No hay nada en el historial": "There is nothing in the history"
+  "No hay nada en el historial": "There is nothing in the history",
+  "1 material sin catalogar → ver": "1 uncataloged material → view",
+  "{n} materiales sin catalogar → ver": "{n} uncataloged materials → view",
+  "Materiales del conduce": "Delivery-note materials",
+  "Ver toda la bandeja": "View full tray",
+  "Sin materiales fuera del catálogo": "No off-catalog materials",
+  "Este conduce no tiene materiales sin catalogar.": "This delivery note has no uncataloged materials.",
+  "ya existe como": "already exists as",
+  "Entorno de desarrollo — usuarios de prueba": "Development environment — test users",
+  "Toca \"Entrar como\" para rellenar el correo. La contraseña es la QA de .env.local / la que te dio Tecnología (no está en la app).": "Tap \"Log in as\" to fill in the email. The password is the QA one from .env.local / the one IT gave you (it is not in the app).",
+  "Entrar como": "Log in as"
 }

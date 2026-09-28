@@ -68,15 +68,16 @@ export class RequisicionesBandejaPage {
     return c;
   });
 
-  // BY3 — el grupo elegido: Activas por entrega más cercana (necesidad asc); Historial
-  // por cierre más reciente (created_at desc como proxy, la lista no expone cerrada_en).
+  // BY3/BZ0 — el grupo elegido: Activas por entrega más cercana (necesidad asc); Historial
+  // por cierre más reciente (cerrada_en, ya expuesto por requisiciones_bandeja; created_at
+  // de respaldo para filas viejas sin cierre).
   filasVisibles = computed(() => {
     const g = this.tab();
     const rows = this.filas().filter((f) => this.grupoDe(f) === g);
     if (g === 'activas') {
       return rows.sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad));
     }
-    return rows.sort((a, b) => (Date.parse(b.created_at ?? '') || 0) - (Date.parse(a.created_at ?? '') || 0));
+    return rows.sort((a, b) => (Date.parse(b.cerrada_en ?? b.created_at ?? '') || 0) - (Date.parse(a.cerrada_en ?? a.created_at ?? '') || 0));
   });
 
   private debounce: ReturnType<typeof setTimeout> | null = null;

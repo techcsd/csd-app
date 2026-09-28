@@ -1,12 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService, QaUserDev } from '../../../core/services/auth.service';
 import { SessionService } from '../../../core/services/session.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { formatCedula, soloDigitosCedula } from '../../../core/util/cedula';
+import { environment } from '../../../../environments/environment';
 
 type Modo = 'correo' | 'conductor';
 
@@ -43,6 +44,30 @@ export class LoginPage {
   pin = signal('');
 
   loading = signal(false);
+
+  // BZ3 — panel "usuarios de prueba" solo en builds de dev (nunca en prod). El RPC
+  // usuarios_qa_dev() devuelve [] en prod, pero también se gatea en cliente para no
+  // pedirlo siquiera fuera de dev. "Entrar como" rellena el email; la contraseña QA se
+  // escribe a mano (nunca va en el bundle).
+  readonly esDev = environment.entorno !== 'prod';
+  qaUsers = signal<QaUserDev[]>([]);
+  mostrarQa = signal(false);
+  hayQa = computed(() => this.qaUsers().length > 0);
+
+  constructor() {
+    if (this.esDev) void this.cargarQaUsers();
+  }
+
+  private async cargarQaUsers(): Promise<void> {
+    this.qaUsers.set(await this.auth.usuariosQaDev());
+  }
+
+  /** BZ3 — rellena el correo con el de una cuenta QA (la contraseña se escribe aparte). */
+  entrarComo(email: string): void {
+    this.modo.set('correo');
+    this.email.set(email);
+    this.password.set('');
+  }
 
   setModo(m: Modo): void {
     this.modo.set(m);

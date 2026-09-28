@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
@@ -39,6 +40,7 @@ export class MaterialNoCatalogadoPage {
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
+  private route = inject(ActivatedRoute);
 
   fmtFecha = formatFecha;
 
@@ -46,6 +48,15 @@ export class MaterialNoCatalogadoPage {
   refrescando = signal(false);
   incluirResueltos = signal(false);
   items = signal<MaterialNoCatalogado[]>([]);
+
+  // BZ2 — filtrado por conduce (llegando desde "Implementar" en el detalle del conduce).
+  // Con filtro, el RPC devuelve también los resueltos/declinados de ese conduce con su
+  // estado, para ver qué pasó con cada material; el número del conduce rotula la vista.
+  conduceFilter = signal<string | null>(this.route.snapshot.queryParamMap.get('conduce'));
+  conduceLabel = computed(() => {
+    const c = this.conduceFilter();
+    return c ? 'CND-' + c.slice(0, 8).toUpperCase() : null;
+  });
 
   // BW2 — ¿puede vincular/crear? (mismo gate que el RPC: elevado de flota o inventario).
   puedeGestionar = computed(() => this.ctx.esFlotaElevado() || this.ctx.hasModulo('inventario'));
@@ -184,8 +195,13 @@ export class MaterialNoCatalogadoPage {
   }
 
   /** Quita el item de la lista al encolar la acción (optimista; el read-through
-   *  refleja la verdad en el próximo refresco). */
+   *  refleja la verdad en el próximo refresco). BZ2 — en vista filtrada por conduce
+   *  no se quita: se recarga para que aparezca con su nuevo estado (vinculado). */
   private quitarItem(id: string): void {
+    if (this.conduceFilter()) {
+      void this.load(true);
+      return;
+    }
     this.items.update((list) => list.filter((m) => m.id !== id));
   }
 
@@ -193,13 +209,26 @@ export class MaterialNoCatalogadoPage {
     if (!silent) this.loading.set(true);
     this.refrescando.set(true);
     try {
-      this.items.set(await this.inventario.materialNoCatalogadoPendientes(this.incluirResueltos()));
+      // BZ2 — con filtro por conduce el RPC ya trae también resueltos/declinados.
+      this.items.set(await this.inventario.materialNoCatalogadoPendientes(this.incluirResueltos(), this.conduceFilter()));
     } catch {
       this.toast.error(this.i18n.t('No pudimos cargar los materiales no catalogados.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
     }
+  }
+
+  /** BZ2 — quita el filtro por conduce y vuelve a la bandeja completa. */
+  limpiarFiltroConduce(): void {
+    this.conduceFilter.set(null);
+    this.cerrar();
+    void this.load();
+  }
+
+  /** BZ2 — estado de un item para la vista filtrada por conduce. */
+  esDeclinado(m: MaterialNoCatalogado): boolean {
+    return !m.articulo_vinculado_id && !!m.declinado_at;
   }
 
   refrescar(silent = false): void {

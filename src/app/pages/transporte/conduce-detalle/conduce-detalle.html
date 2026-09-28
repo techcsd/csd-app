@@ -126,6 +126,12 @@
               </li>
             }
           </ul>
+          <!-- BZ2 — enlace a la bandeja filtrada por este conduce (gestionar/ver estado). -->
+          @if (puedeGestionarLibres() && sinCatalogarCount() > 0) {
+            <button type="button" class="cdet__libres-ver" (click)="verMaterialNoCatalogado()">
+              {{ sinCatalogarCount() === 1 ? ('1 material sin catalogar → ver' | t) : ('{n} materiales sin catalogar → ver' | t: { n: sinCatalogarCount() }) }}
+            </button>
+          }
         }
 
         @if (d.notas_recepcion) {

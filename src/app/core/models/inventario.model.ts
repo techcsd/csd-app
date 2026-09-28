@@ -174,6 +174,11 @@ export interface MaterialNoCatalogado {
   proyecto: string | null;
   created_at: string;
   vinculado_at: string | null;
+  // BZ2 — al filtrar por conduce se muestran también los declinados con su estado.
+  declinado_at?: string | null;
+  declinado_por?: string | null;
+  declinar_motivo?: string | null;
+  sugerido_articulo?: string | null;
 }
 
 /**
@@ -224,6 +229,8 @@ export interface Solicitud {
   urgencia: string;
   notas: string | null;
   created_at: string;
+  /** BZ0/BY3 — cuándo se cerró (completada/rechazada); ordena el Historial. */
+  cerrada_en?: string | null;
   /** BC4 — folio secuencial legible; se muestra como REQ-XXXXXX. */
   folio?: number | null;
   proyecto?: { nombre: string } | null;
@@ -326,6 +333,8 @@ export interface RequisicionBandeja {
   urgencia: string;
   notas: string | null;
   created_at: string;
+  /** BZ0/BY3 — cuándo se cerró; ordena el Historial (ya la trae requisiciones_bandeja). */
+  cerrada_en?: string | null;
   proyecto_id: string | null;
   proyecto_nombre: string | null;
   solicitante_id: string | null;

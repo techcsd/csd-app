@@ -1,5 +1,26 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 27/09/2026 — PROMPT-69 (ronda BZ, hijo) — **2.32.0 en dev, esperando OK para prod** · `feature/bz-ronda` → `dev`
+
+**TL;DR:** ronda **BZ** en la app (mitad hijo de las notas 77-79). Espeja los contratos del padre **ya vivos en dev y prod** (web 1.146.0): `echada_detalle(p_id)`, `item_libre_pendiente()`/`material_no_catalogado_pendientes(p_incluir_resueltos, p_salida_id)`, `usuarios_qa_dev()`, y los 3 huecos que la app pidió (`listar_bitacoras`, `reenviar_echada` idempotente, `cerrada_en`). Build + guards + i18n (en 100% en el alcance) verdes. **Salió a dev** (APK dev 2.32.0 firmado + `app-dev.` por push a `dev`). **PARA aquí** hasta el OK de Xaviel para prod. `echada_detalle` verificado en dev autenticado como Raykler (jefe_flota) → 200 con el jsonb esperado.
+
+### 🧪 En dev (2.32.0-dev — pendiente OK → prod)
+- **BZ1 (F1) — detalle de echada por un solo camino:** `combustible.getEchadaDetalle` y `flota.getMiEchadaDetalle` ("Mis echadas") cargan por el RPC `echada_detalle(p_id)` (SECURITY DEFINER, gate flota-elevado/admin/dueño) en vez de leer `registros_combustible` directo bajo RLS — arregla que a Raykler le fallara *"No se pudo cargar el detalle"* (la lista iba por RPC definer pero el detalle por la tabla). **Read-through offline:** se cachea el jsonb crudo (`echada_detalle:${id}`, rutas de foto; las URLs firmadas se generan después). "Por aprobar" ya iba por su RPC definer (sin cambios de datos). Modelo: `revisada_por_nombre` añadido.
+- **BZ2 (F2) — un solo "pendiente" de material no catalogado:** la bandeja usa `material_no_catalogado_pendientes(p_incluir_resueltos, p_salida_id)` (predicado único del padre: sin vincular **y** sin declinar → los declinados ya no cuentan). Nuevo filtro **`?conduce=`** desde el detalle del conduce (*"n materiales sin catalogar → ver"*, gate elevado/inventario): muestra también resueltos/declinados con su estado (chip *Declinado: motivo*). Count vía `material_no_catalogado_pendientes_count()`.
+- **BZ3 (F3) — login de dev con ayuda:** cuando `environment.entorno !== 'prod'`, el login pinta el panel *"Entorno de desarrollo — usuarios de prueba"* (`usuarios_qa_dev()` + **Entrar como…** que rellena el email; la contraseña QA se escribe a mano, nunca en el bundle). En prod el RPC devuelve `[]` y el panel no existe. `docs/ENTORNOS § Cómo entrar` reescrito (email real + QA; QA por rol; choferes cédula+PIN).
+- **FASE 0 — huecos del padre cerrados** (ya desplegados en dev/prod): `todasBitacoras()` → `listar_bitacoras(p_todas=true)` (contrato estable, autor/proyecto resueltos; se conserva `misBitacoras`/`getBitacora` con el select rico para daños/moldes en el detalle); reenvío de echada **idempotente server-side** por `(reenvio_de, client_uuid)` → se pasa `client_uuid` y se quita el pre-check de duplicado; Historial de requisiciones (`mis` + `bandeja`) ordena por **`cerrada_en`** (fallback `created_at`).
+- **Release dev:** `environment.prod.ts` + `build.gradle` → **2.32.0**; `CAMBIOS_CURADOS` (Y1: arreglo detalle de echada · arreglo material no catalogado). `apk -- --env dev` (registrado en dev `app_versiones`, `publicada=false`/`minima=false`) + `apk:publish -- --env dev` (bucket dev, cert `3c5316d8…5065`) + `git push origin dev` (Vercel `app-dev.`).
+
+### 👤 Pendiente físico de Xaviel (para pasar a prod)
+- **Entrar en `app-dev.` / `dev.` con tu email real + contraseña QA** y probar: (1) Raykler abre el *Detalle de la echada* de una propia, de otro chofer y de una en espera; (2) un conduce con material no catalogado → *Implementar/ver* muestra pendientes + declinados; los ya gestionados no salen como pendientes; (3) el panel *usuarios de prueba* aparece en el login de dev y *Entrar como* rellena el correo. **Con OK → PR `dev → main` + APK/PWA prod 2.32.0.**
+
+### ⚠️ Contratos del padre — los 3 huecos BY quedaron CERRADOS en 1.146.0 (ya no hay deuda abierta de esta ronda)
+
+### 🩺 Rollback
+- Cliente (revertir el merge en `dev`). Los objetos del padre son aditivos; el detalle de echada cae a la caché offline si el RPC falla.
+
+---
+
 ## 🟢 SESIÓN 25/09/2026 — PROMPT-67 (ronda BY, hijo) — **2.31.0 PUBLICADA a prod** · `feature/by-ronda` → `dev` → `main`
 
 **TL;DR:** ronda **BY** en la app (mitad hijo de las notas 72/74/75/76). Construida sobre contratos del padre YA vivos en **dev y prod** (verificados en ambos: `aprobar_echada`/`rechazar_echada`/`reenviar_echada`/`echadas_por_aprobar`, columnas `revision*`, `puede_ver_bitacora_de`). Build + guards + i18n (en 100%) verdes. Salió a **dev** (APK dev + `app-dev.`), Xaviel probó y dio OK ("ya probé, publica"), y **salió a PROD**: `dev→main` (`2bbc0d1`) + APK prod firmado (cert `3c5316d8…`, regla 18 OK) registrado+subido + **publicada=2.31.0** (mínima sigue 2.26.1). ✅ **Sesión cerrada — nada pendiente de release.**
@@ -25,6 +46,9 @@
 - **`listar_bitacoras(p_todas)` no desplegado** (PROMPT-67 lo asumía). La app usa el read directo con la RLS de BY4; si el padre lo agrega, migrar `todasBitacoras`/`getBitacora` a él.
 - **`reenviar_echada` no es idempotente por client_uuid** (genera `gen_random_uuid()` internamente y la original queda `rechazada`, así que un reintento crearía un duplicado). Mitigado en el cliente: el handler comprueba si ya existe una echada con `reenvio_de=original` antes de llamar. Ideal: que el padre acepte un `p_client_uuid`.
 - **Historial de requisiciones por "cierre desc"**: la lista (`Solicitud`/`RequisicionBandeja`) no expone `cerrada_en`; se ordena por `created_at desc` como proxy. Si el padre lo añade a la lista, cambiar la clave de orden.
+
+### 📋 Matriz de cobertura — ahora versionada en el repo SGC
+La matriz completa (`COBERTURA-NOTAS.md`, filas 1-76) ya se versiona en la **raíz del repo SGC** (`C:\Users\xavie\Desktop\X Dev\dev\SGC\COBERTURA-NOTAS.md`, commit `4fbb411`) y es la **fuente de verdad a editar de aquí en adelante** — antes solo vivía la copia fuera del repo (`C:\developer\improvements\septiembre 2026\imp 14092026\COBERTURA-NOTAS.md`). En próximas rondas, al marcar las filas de la app: edita la copia **del repo SGC** y commitea ahí; si la de la carpeta `imp` sigue como borrador, sincronízala hacia el repo al cerrar (no al revés). Mismo aviso en `SGC/HANDOFF.md`.
 
 ### 🩺 Rollback
 - Cliente (revertir el merge). Objetos del padre son aditivos; `revision` tiene default `normal` y el interruptor `flota_config.revision_echadas=0` apaga el mecanismo server-side.
