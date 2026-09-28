@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -35,6 +35,7 @@ export class ConduceDetallePage {
   private conduces = inject(ConducesService);
   private pdf = inject(ConducePdfService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private navGuard = inject(NavGuardService);
   private toast = inject(ToastService);
   private network = inject(NetworkService);
@@ -48,6 +49,19 @@ export class ConduceDetallePage {
   loading = signal(true);
   detalle = signal<ConduceDetalle | null>(null);
   generando = signal(false);
+
+  // BZ2 — ¿puede gestionar la bandeja de material no catalogado? (mismo gate que el RPC).
+  puedeGestionarLibres = computed(() => this.userCtx.esFlotaElevado() || this.userCtx.hasModulo('inventario'));
+  /** BZ2 — materiales de este conduce aún sin catalogar (sin artículo vinculado). No
+   *  distingue declinados de pendientes (eso lo resuelve la bandeja server-side); es
+   *  solo el rótulo del enlace "→ ver". */
+  sinCatalogarCount = computed(() => (this.detalle()?.items_libres ?? []).filter((l) => !l.articulo_vinculado_id).length);
+
+  /** BZ2 — abre la bandeja de material no catalogado filtrada por ESTE conduce, donde
+   *  se ve cada material con su estado (pendiente / vinculado / declinado). */
+  verMaterialNoCatalogado(): void {
+    void this.router.navigate(['/inventario/material-no-catalogado'], { queryParams: { conduce: this.salidaId } });
+  }
 
   /** BM5 — "2 atados" cuando el renglón se capturó por empaque (cantidad en base).
    *  Devuelve null si fue por unidad base (factor 1). */

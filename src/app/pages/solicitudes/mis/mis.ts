@@ -77,16 +77,16 @@ export class MisSolicitudesPage {
     for (const s of this.solicitudes()) c[this.grupoDe(s)]++;
     return c;
   });
-  // BY3 — el grupo elegido, ordenado: Activas por entrega más cercana (necesidad asc,
-  // vencidas arriba, sin fecha al final); Historial por cierre más reciente (created_at
-  // desc como proxy — la lista no expone `cerrada_en`).
+  // BY3/BZ0 — el grupo elegido, ordenado: Activas por entrega más cercana (necesidad asc,
+  // vencidas arriba, sin fecha al final); Historial por cierre más reciente (cerrada_en,
+  // con created_at de respaldo para filas viejas sin cierre).
   visibles = computed(() => {
     const g = this.tab();
     const rows = this.solicitudes().filter((s) => this.grupoDe(s) === g);
     if (g === 'activas') {
       return rows.sort((a, b) => necesidadOrden(a.fecha_necesidad) - necesidadOrden(b.fecha_necesidad));
     }
-    return rows.sort((a, b) => (Date.parse(b.created_at ?? '') || 0) - (Date.parse(a.created_at ?? '') || 0));
+    return rows.sort((a, b) => (Date.parse(b.cerrada_en ?? b.created_at ?? '') || 0) - (Date.parse(a.cerrada_en ?? a.created_at ?? '') || 0));
   });
 
   constructor() {

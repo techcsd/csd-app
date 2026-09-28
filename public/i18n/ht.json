@@ -1,2 +1,13 @@
 {
+  "1 material sin catalogar → ver": "1 materyèl san katalòg → wè",
+  "{n} materiales sin catalogar → ver": "{n} materyèl san katalòg → wè",
+  "Materiales del conduce": "Materyèl bon livrezon an",
+  "Ver toda la bandeja": "Wè tout kazye a",
+  "Sin materiales fuera del catálogo": "Pa gen materyèl andeyò katalòg la",
+  "Este conduce no tiene materiales sin catalogar.": "Bon livrezon sa a pa gen materyèl san katalòg.",
+  "Declinado": "Refize",
+  "ya existe como": "deja egziste kòm",
+  "Entorno de desarrollo — usuarios de prueba": "Anviwònman devlopman — itilizatè tès",
+  "Toca \"Entrar como\" para rellenar el correo. La contraseña es la QA de .env.local / la que te dio Tecnología (no está en la app).": "Peze \"Konekte kòm\" pou ranpli imel la. Modpas la se sa QA nan .env.local / sa Teknoloji ba ou (li pa nan aplikasyon an).",
+  "Entrar como": "Konekte kòm"
 }

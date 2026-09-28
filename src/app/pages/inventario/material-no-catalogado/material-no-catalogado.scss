@@ -211,3 +211,40 @@
   font-weight: 700;
   color: var(--color-success);
 }
+
+// BZ2 — item declinado (visible al filtrar por conduce): motivo + sugerencia.
+.mnc__declinado {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.mnc__declinado-sug {
+  font-weight: 500;
+  font-style: italic;
+}
+
+// BZ2 — barra de filtro por conduce (desde "Implementar").
+.mnc__filtro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--color-primary-bg);
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+.mnc__filtro-x {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}

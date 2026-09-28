@@ -20,7 +20,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/admin/unidades | 4 | 0 | 100% | 0% |  |
 | pages/admin/usuarios | 30 | 0 | 100% | 0% |  |
 | pages/admin/versiones | 8 | 1 | 89% | 0% |  |
-| pages/auth/login | 9 | 2 | 82% | 0% |  |
+| pages/auth/login | 12 | 2 | 86% | 21% |  |
 | pages/auth/pin-acceso-change | 3 | 0 | 100% | 0% |  |
 | pages/auth/pin-change | 1 | 0 | 100% | 0% |  |
 | pages/auth/pin-unlock | 10 | 0 | 100% | 0% |  |
@@ -45,7 +45,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 4 | 0% | 0% |  |
 | pages/home | 14 | 0 | 100% | 0% | ✅ |
-| pages/incentivos | 35 | 0 | 100% | 0% |  |
+| pages/incentivos | 35 | 0 | 100% | 3% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
 | pages/ingenieria/cartilla | 58 | 0 | 100% | 0% |  |
@@ -61,7 +61,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/inventario/entrada | 33 | 0 | 100% | 0% |  |
 | pages/inventario/existencias | 6 | 0 | 100% | 0% |  |
 | pages/inventario/kardex | 24 | 0 | 100% | 0% |  |
-| pages/inventario/material-no-catalogado | 27 | 0 | 100% | 0% |  |
+| pages/inventario/material-no-catalogado | 33 | 0 | 100% | 18% |  |
 | pages/inventario/recibir | 53 | 0 | 100% | 0% |  |
 | pages/inventario/retiro-detalle | 20 | 0 | 100% | 0% |  |
 | pages/inventario/retiro-nuevo | 4 | 19 | 17% | 0% |  |
@@ -123,7 +123,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 111 | 2 | 98% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 54 | 1 | 98% | 0% |  |
+| pages/transporte/conduce-detalle | 56 | 1 | 98% | 4% |  |
 | pages/transporte/conduce-externo | 45 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 0% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |

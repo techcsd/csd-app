@@ -219,4 +219,28 @@ export class AuthService {
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return this.supabase.client.auth.onAuthStateChange(callback);
   }
+
+  /**
+   * BZ3 — cuentas QA por rol para el panel "usuarios de prueba" del login de DEV.
+   * El RPC `usuarios_qa_dev()` solo devuelve filas cuando el entorno del proyecto es
+   * `dev` (en prod devuelve []), y nunca expone contraseñas (la QA se escribe a mano).
+   * Ejecutable por `anon` (el login es pre-auth). Best-effort: si falla, [] → el panel
+   * no se pinta.
+   */
+  async usuariosQaDev(): Promise<QaUserDev[]> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('usuarios_qa_dev');
+      if (error) return [];
+      return (data as QaUserDev[]) ?? [];
+    } catch {
+      return [];
+    }
+  }
+}
+
+/** BZ3 — una cuenta QA del panel de login de dev (sin contraseña). */
+export interface QaUserDev {
+  email: string;
+  nombre: string;
+  rol: string;
 }

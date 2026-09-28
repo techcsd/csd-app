@@ -19,6 +19,7 @@ import {
 import { db, OutboxOp } from '../db/app-db';
 
 const CATALOG_ULTIMA = 'combustible_ultima'; // + `:${vehiculoId}`
+const CATALOG_DETALLE = 'echada_detalle'; // BZ1 — read-through del detalle, + `:${id}`
 
 /** BV1 — permiso vigente del usuario para registrar una echada de fecha pasada. */
 export interface PermisoRetro {
@@ -123,91 +124,70 @@ export class CombustibleService {
   }
 
   /**
-   * AQ13/AQ6 — detalle de UNA echada por id. Lee registros_combustible directo
-   * (RLS: elevado ve todas; el chofer ve las de sus vehículos). Enriquece placa +
-   * nombres (usuarios via RPC) y firma las fotos (bucket vehiculos) para el lightbox.
-   * Devuelve null si no existe o el usuario no tiene acceso (RLS).
+   * BZ1/AQ13 — detalle de UNA echada por UN SOLO camino: el RPC `echada_detalle`
+   * (SECURITY DEFINER, mismo gate que la lista/aprobación: flota-elevado, admin o
+   * dueño). Antes leía `registros_combustible` directo con embeds bajo RLS, que
+   * fallaba para quien LISTA por RPC pero no SELECT-ea la tabla en toda fila (Raykler
+   * → `maybeSingle()` null → "No se pudo cargar el detalle"). El RPC ya trae vehículo,
+   * conductor, registrador y revisor por nombre. Read-through: se cachea el jsonb crudo
+   * (rutas de foto, no URLs firmadas que caducan) para que el detalle abra offline con
+   * lo último visto; las fotos se firman después de leer (caché o red). Null = no existe
+   * o sin acceso.
    */
   async getEchadaDetalle(id: string): Promise<EchadaDetalle | null> {
-    const { data, error } = await this.supabase.client
-      .from('registros_combustible')
-      .select(
-        'id, fecha, created_at, vehiculo_id, conductor_id, registrado_por, kilometraje, km_anterior, km_recorridos, galones, monto, precio_por_galon, rendimiento_km_gal, costo_por_km, producto, subtipo, estacion, estado, alerta_consumo, km_alerta, motivo_alerta, origen, revision, revision_motivo, reenvio_de, foto_recibo_path, foto_tablero_path, foto_bomba_path',
-      )
-      .eq('id', id)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!data) return null;
-    const row = data as Record<string, unknown>;
-
-    // Nombres (usuarios es admin-only RLS → resolver por RPC seguro).
-    const ids = [row['conductor_id'], row['registrado_por']].filter(Boolean) as string[];
-    const nombres: Record<string, string> = {};
-    if (ids.length) {
-      try {
-        const { data: us } = await this.supabase.client.rpc('usuarios_por_ids', { p_ids: ids });
-        for (const u of (us as Array<{ id: string; nombre: string }>) ?? []) nombres[u.id] = u.nombre;
-      } catch {
-        /* best-effort: sin nombres, el detalle sigue */
-      }
-    }
-
-    // Placa/descripción del vehículo (best-effort).
-    let placa: string | null = null;
-    let vehiculoDesc: string | null = null;
-    if (row['vehiculo_id']) {
-      try {
-        const { data: v } = await this.supabase.client
-          .from('vehiculos')
-          .select('placa, marca, modelo')
-          .eq('id', row['vehiculo_id'] as string)
-          .maybeSingle();
-        if (v) {
-          const vv = v as { placa?: string; marca?: string; modelo?: string };
-          placa = vv.placa ?? null;
-          vehiculoDesc = [vv.marca, vv.modelo].filter(Boolean).join(' ') || null;
-        }
-      } catch {
-        /* best-effort */
-      }
-    }
-
-    const conductorId = (row['conductor_id'] as string | null) ?? null;
-    const registradoPor = (row['registrado_por'] as string | null) ?? null;
+    const raw = await this.getEchadaDetalleRaw(id);
+    if (!raw) return null;
+    const veh = raw['vehiculo'] as { placa?: string; marca?: string } | null;
     return {
-      id: row['id'] as string,
-      fecha: row['fecha'] as string,
-      created_at: row['created_at'] as string,
-      vehiculo_id: (row['vehiculo_id'] as string | null) ?? null,
-      placa,
-      vehiculo_desc: vehiculoDesc,
-      conductor_id: conductorId,
-      conductor_nombre: conductorId ? nombres[conductorId] ?? null : null,
-      registrado_por: registradoPor,
-      registrado_nombre: registradoPor ? nombres[registradoPor] ?? null : null,
-      kilometraje: (row['kilometraje'] as number | null) ?? null,
-      km_anterior: (row['km_anterior'] as number | null) ?? null,
-      km_recorridos: (row['km_recorridos'] as number | null) ?? null,
-      galones: (row['galones'] as number | null) ?? null,
-      monto: (row['monto'] as number | null) ?? null,
-      precio_por_galon: (row['precio_por_galon'] as number | null) ?? null,
-      rendimiento_km_gal: (row['rendimiento_km_gal'] as number | null) ?? null,
-      costo_por_km: (row['costo_por_km'] as number | null) ?? null,
-      producto: (row['producto'] as string | null) ?? null,
-      subtipo: (row['subtipo'] as string | null) ?? null,
-      estacion: (row['estacion'] as string | null) ?? null,
-      estado: (row['estado'] as string | null) ?? null,
-      alerta_consumo: (row['alerta_consumo'] as boolean | null) ?? null,
-      km_alerta: (row['km_alerta'] as boolean | null) ?? null,
-      motivo_alerta: (row['motivo_alerta'] as string | null) ?? null,
-      origen: (row['origen'] as string | null) ?? null,
-      revision: (row['revision'] as EchadaDetalle['revision']) ?? null,
-      revision_motivo: (row['revision_motivo'] as string | null) ?? null,
-      reenvio_de: (row['reenvio_de'] as string | null) ?? null,
-      foto_recibo_url: await this.signVehiculoFoto(row['foto_recibo_path'] as string | null),
-      foto_tablero_url: await this.signVehiculoFoto(row['foto_tablero_path'] as string | null),
-      foto_bomba_url: await this.signVehiculoFoto(row['foto_bomba_path'] as string | null),
+      id: raw['id'] as string,
+      fecha: raw['fecha'] as string,
+      created_at: raw['created_at'] as string,
+      vehiculo_id: (raw['vehiculo_id'] as string | null) ?? null,
+      placa: veh?.placa ?? null,
+      vehiculo_desc: veh?.marca ?? null,
+      conductor_id: (raw['conductor_id'] as string | null) ?? null,
+      conductor_nombre: (raw['conductor_nombre'] as string | null) ?? null,
+      registrado_por: (raw['registrado_por'] as string | null) ?? null,
+      registrado_nombre: (raw['registrador_nombre'] as string | null) ?? null,
+      kilometraje: (raw['kilometraje'] as number | null) ?? null,
+      km_anterior: (raw['km_anterior'] as number | null) ?? null,
+      km_recorridos: (raw['km_recorridos'] as number | null) ?? null,
+      galones: (raw['galones'] as number | null) ?? null,
+      monto: (raw['monto'] as number | null) ?? null,
+      precio_por_galon: (raw['precio_por_galon'] as number | null) ?? null,
+      rendimiento_km_gal: (raw['rendimiento_km_gal'] as number | null) ?? null,
+      costo_por_km: (raw['costo_por_km'] as number | null) ?? null,
+      producto: (raw['producto'] as string | null) ?? null,
+      subtipo: (raw['subtipo'] as string | null) ?? null,
+      estacion: (raw['estacion'] as string | null) ?? null,
+      estado: (raw['estado'] as string | null) ?? null,
+      alerta_consumo: (raw['alerta_consumo'] as boolean | null) ?? null,
+      km_alerta: (raw['km_alerta'] as boolean | null) ?? null,
+      motivo_alerta: (raw['motivo_alerta'] as string | null) ?? null,
+      origen: (raw['origen'] as string | null) ?? null,
+      revision: (raw['revision'] as EchadaDetalle['revision']) ?? null,
+      revision_motivo: (raw['revision_motivo'] as string | null) ?? null,
+      reenvio_de: (raw['reenvio_de'] as string | null) ?? null,
+      revisada_por_nombre: (raw['revisada_por_nombre'] as string | null) ?? null,
+      foto_recibo_url: await this.signVehiculoFoto(raw['foto_recibo_path'] as string | null),
+      foto_tablero_url: await this.signVehiculoFoto(raw['foto_tablero_path'] as string | null),
+      foto_bomba_url: await this.signVehiculoFoto(raw['foto_bomba_path'] as string | null),
     };
+  }
+
+  /**
+   * BZ1 — el jsonb crudo del detalle de una echada, cacheado (read-through) por id.
+   * Un solo camino de servidor (`echada_detalle`) y una sola entrada de caché, que
+   * comparten "Registro de echadas" y "Mis echadas" (flota-reportes lo mapea a su
+   * forma). Cachea rutas de foto, nunca URLs firmadas (caducan). Null = no existe/sin
+   * acceso, o caché vacía offline.
+   */
+  async getEchadaDetalleRaw(id: string): Promise<Record<string, unknown> | null> {
+    return this.catalog.refresh<Record<string, unknown> | null>(`${CATALOG_DETALLE}:${id}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('echada_detalle', { p_id: id });
+      if (error) throw new Error(error.message);
+      return (data as Record<string, unknown>) ?? null;
+    });
   }
 
   /** URL firmada de una foto de echada (bucket vehiculos, privado). Best-effort. */
@@ -635,25 +615,16 @@ export class CombustibleService {
       }
     });
 
-    // BY1/BY5 — reenvío de una echada rechazada (chofer). reenviar_echada genera un
-    // id nuevo internamente, así que NO es idempotente por client_uuid: guardamos
-    // contra duplicados comprobando si ya existe un reenvío de este original antes de
-    // llamar (cubre el "commit ok pero respuesta perdida" que reintenta el outbox).
+    // BY1/BY5/BZ0 — reenvío de una echada rechazada (chofer). `reenviar_echada` ya es
+    // IDEMPOTENTE por (reenvio_de, client_uuid): un reintento del outbox con el mismo
+    // client_uuid (= id estable de esta op) devuelve el reenvío ya creado en vez de
+    // duplicarlo. Ya no hace falta el pre-check contra la tabla (que además fallaba
+    // bajo la RLS de quien no SELECT-ea toda fila y bloqueaba reenvíos legítimos).
     this.sync.register('reenvio_echada', async (payload) => {
-      const originalId = payload['original_id'] as string;
-      try {
-        const { data: prev } = await this.supabase.client
-          .from('registros_combustible')
-          .select('id')
-          .eq('reenvio_de', originalId)
-          .limit(1);
-        if (prev && prev.length) return; // ya reenviada → idempotente
-      } catch {
-        /* si la comprobación falla, seguimos e intentamos el reenvío */
-      }
       const { error } = await this.supabase.client.rpc('reenviar_echada', {
-        p_original: originalId,
+        p_original: payload['original_id'] as string,
         p_datos: {
+          client_uuid: payload['id'] ?? null,
           vehiculo_id: payload['vehiculo_id'] ?? null,
           fecha: payload['fecha'] ?? null,
           kilometraje: payload['kilometraje'] ?? null,
