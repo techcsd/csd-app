@@ -575,17 +575,42 @@ export class BitacoraService {
     return data ?? [];
   }
 
-  /** AW5 — TODAS las bitácoras (de todos los ingenieros). Solo para roles con
-   *  permiso (la RLS abre las filas server-side); online. */
+  /**
+   * AW5/BY4/BZ0 — TODAS las bitácoras visibles (de todos los ingenieros), por el
+   * contrato estable del padre: el RPC `listar_bitacoras(p_todas=true)` (SECURITY
+   * DEFINER con la MISMA RLS `puede_ver_bitacora_de` del web) en vez de un select
+   * directo que dependía de que la política de la tabla estuviera abierta. Trae el
+   * nombre del autor y del proyecto ya resueltos (sin round-trip a usuarios_por_ids).
+   * Es el resumen de la lista "Bitácoras de las obras"; el detalle (con daños/moldes/
+   * actividades) se re-consulta por `getBitacora`. Online.
+   */
   async todasBitacoras(): Promise<BitacoraFull[]> {
-    const { data, error } = await this.supabase.client
-      .from('bitacoras')
-      .select(this.BITA_SELECT)
-      .order('fecha', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(100);
+    const { data, error } = await this.supabase.client.rpc('listar_bitacoras', {
+      p_todas: true,
+      p_proyecto: null,
+      p_desde: null,
+      p_hasta: null,
+      p_ingeniero: null,
+    });
     if (error) throw new Error(error.message);
-    return this.resolverAutores((data as unknown as BitacoraFull[]) ?? []);
+    type Row = {
+      id: string; fecha: string; tipo: string; proyecto_id: string | null;
+      proyecto_nombre: string | null; usuario_id: string | null; autor_nombre: string | null;
+      ingeniero_responsable: string | null; comentarios: string | null;
+      sin_actividad: boolean | null; created_at: string;
+    };
+    return ((data as Row[]) ?? []).map((r) => ({
+      id: r.id,
+      fecha: r.fecha,
+      created_at: r.created_at,
+      tipo: r.tipo,
+      usuario_id: r.usuario_id,
+      autor_nombre: r.autor_nombre,
+      comentarios: r.comentarios,
+      ingeniero_responsable: r.ingeniero_responsable,
+      sin_actividad: r.sin_actividad ?? false,
+      proyecto: r.proyecto_nombre ? { nombre: r.proyecto_nombre } : null,
+    }) as unknown as BitacoraFull);
   }
 
   /**

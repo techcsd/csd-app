@@ -364,3 +364,17 @@
   font-weight: 700;
   color: var(--color-text-secondary);
 }
+
+// BZ2 — enlace a la bandeja de material no catalogado filtrada por este conduce.
+.cdet__libres-ver {
+  margin-top: 8px;
+  padding: 10px 14px;
+  width: 100%;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--color-primary-bg);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}

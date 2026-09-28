@@ -67,7 +67,7 @@ export class SolicitudesService {
     const data = await this.catalog.refresh<Solicitud[]>(CAT_SOLICITUDES, async () => {
       const { data, error } = await this.supabase.client
         .from('solicitudes_material')
-        .select('id, estado, urgencia, notas, created_at, folio, fecha_necesidad, proyecto:proyectos(nombre), items:solicitud_material_items(descripcion, cantidad, unidad)')
+        .select('id, estado, urgencia, notas, created_at, cerrada_en, folio, fecha_necesidad, proyecto:proyectos(nombre), items:solicitud_material_items(descripcion, cantidad, unidad)')
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw new Error(error.message);

@@ -64,6 +64,8 @@ export interface EchadaDetalle {
   revision?: EchadaRevision | null;
   revision_motivo?: string | null;
   reenvio_de?: string | null;
+  // BZ1 — quién revisó (aprobó/rechazó) la echada, ya resuelto por el RPC echada_detalle.
+  revisada_por_nombre?: string | null;
   foto_recibo_url: string | null;
   foto_tablero_url: string | null;
   foto_bomba_url: string | null;

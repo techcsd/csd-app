@@ -37,13 +37,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-25';
+const RELEASED_AT = '2026-09-27';
 
-const TITULO = 'Aprobación de echadas y bitácoras de las obras';
+const TITULO = 'Detalle de echada y material no catalogado';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Transporte', d: 'Las echadas con aviso (salto de km, consumo raro, etc.) ya no se pierden: quedan "En espera" y Logística las aprueba o rechaza desde el teléfono. Si te la rechazan, la corriges y la reenvías.' },
-  { t: 'nuevo', m: 'Bitácora', d: 'Quien puede verlas ahora entra a "Bitácoras de las obras" y abre el detalle de cualquier obra (filtrando por obra, fecha o ingeniero).' },
-  { t: 'mejora', m: 'Requisiciones', d: 'Las requisiciones se separan en Activas (por la entrega más cercana) e Historial; las completadas ya no quedan mezcladas arriba.' },
+  { t: 'arreglo', m: 'Transporte', d: 'Logística ya puede abrir el "Detalle de la echada" de cualquier chofer (antes a algunos les salía "No se pudo cargar el detalle").' },
+  { t: 'arreglo', m: 'Inventario', d: 'El material no catalogado ya gestionado (vinculado o declinado) ya no aparece como pendiente; desde el conduce se ve qué pasó con cada material.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

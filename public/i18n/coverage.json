@@ -76,10 +76,10 @@
       "ht": 0
     },
     "pages/auth/login": {
-      "conT": 9,
+      "conT": 12,
       "sinT": 2,
-      "en": 82,
-      "ht": 0
+      "en": 86,
+      "ht": 21
     },
     "pages/auth/pin-acceso-change": {
       "conT": 3,
@@ -235,7 +235,7 @@
       "conT": 35,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/incentivos/participantes": {
       "conT": 16,
@@ -328,10 +328,10 @@
       "ht": 0
     },
     "pages/inventario/material-no-catalogado": {
-      "conT": 27,
+      "conT": 33,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 18
     },
     "pages/inventario/recibir": {
       "conT": 53,
@@ -700,10 +700,10 @@
       "ht": 0
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 54,
+      "conT": 56,
       "sinT": 1,
       "en": 98,
-      "ht": 0
+      "ht": 4
     },
     "pages/transporte/conduce-externo": {
       "conT": 45,

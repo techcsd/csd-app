@@ -664,13 +664,17 @@ export class InventarioService {
   }
 
   /**
-   * AU4 — bandeja de material NO catalogado: items libres reportados en conduces
-   * pendientes de crear/vincular su artículo (regla AT11 — visibles para depurar el
-   * catálogo). El RPC gatea por admin/inventario (devuelve [] a otros roles).
+   * AU4/BZ2 — bandeja de material NO catalogado: items libres reportados en conduces
+   * pendientes de crear/vincular su artículo. "Pendiente" = sin vincular Y sin declinar
+   * (predicado único `item_libre_pendiente` del padre; un declinado ya NO cuenta). El
+   * RPC gatea por admin/inventario/flota/elevado (devuelve [] a otros roles).
+   * `salidaId` (BZ2): al abrir "Implementar" desde un conduce, filtra por ese conduce y
+   * MUESTRA también sus resueltos/declinados con estado, para ver qué pasó con cada uno.
    */
-  async materialNoCatalogadoPendientes(incluirResueltos = false): Promise<MaterialNoCatalogado[]> {
+  async materialNoCatalogadoPendientes(incluirResueltos = false, salidaId: string | null = null): Promise<MaterialNoCatalogado[]> {
     const { data, error } = await this.supabase.client.rpc('material_no_catalogado_pendientes', {
       p_incluir_resueltos: incluirResueltos,
+      p_salida_id: salidaId,
     });
     if (error) throw new Error(error.message);
     return (data as MaterialNoCatalogado[]) ?? [];
