@@ -1,8 +1,17 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 28/09/2026 — PROMPT-71 (ronda CA, hijo) — **2.33.0-dev listo, ESPERANDO OK para prod** · `feature/ca-ronda` → `dev`
+## 🟢 SESIÓN 28/09/2026 — PROMPT-71 (ronda CA, hijo) — **2.33.0 PUBLICADA a prod** · `feature/ca-ronda` → `dev` → `main`
 
-**TL;DR:** ronda **CA** en la app (2 bugs vivos, ambos con causa en el repo del hijo). El padre ya cerró su parte en **dev+prod** (PROMPT-70, web 1.147.0): `mis_proyectos(p_usuario, p_todos)` con `es_mia`, `es_usuario_operativo_flota()`, `mis_notif_operativas().silenciada_por_admin`. **Ojo con las versiones:** los docs asumían que BZ era esta ronda (2.32.0), pero **BZ ya se publicó como 2.32.0 la semana pasada** → **FASE 0 (mitad app de BZ) ya está en prod, no había nada que hacer** → esta ronda CA es **2.33.0**. Build + guards + i18n verdes. Salió a **dev** (APK dev 2.33.0 + `app-dev.`). **Regla 18: PARADO esperando el OK de Xaviel para prod.**
+**TL;DR:** ronda **CA** en la app (2 bugs vivos, ambos con causa en el repo del hijo). El padre ya cerró su parte en **dev+prod** (PROMPT-70, web 1.147.0): `mis_proyectos(p_usuario, p_todos)` con `es_mia`, `es_usuario_operativo_flota()`, `mis_notif_operativas().silenciada_por_admin`. **Ojo con las versiones:** los docs asumían que BZ era esta ronda (2.32.0), pero **BZ ya se publicó como 2.32.0 la semana pasada** → FASE 0 (mitad app de BZ) ya estaba en prod → esta ronda CA es **2.33.0**. Build + guards + i18n verdes. Salió a **dev** (APK dev 2.33.0 + `app-dev.`), Xaviel dio OK ("dale, haz todo por tu cuenta"), y **salió a PROD**: `dev→main` (`2c8b673`) + APK prod firmado (cert `3c5316d8…5065`, regla 18 OK) registrado+subido + **publicada=2.33.0** (mínima sigue 2.26.1; 2.32.0 despublicada). ✅ **Sesión cerrada.**
+
+### ✅ En PROD (RELEASE 2.33.0 — con OK "dale, haz todo por tu cuenta")
+- **`dev→main`** mergeado + pusheado (`2c8b673`) → Vercel construyó la PWA prod. **Verificado live:** `app.sgcconstructorasd.com` sirve 2.33.0 (bundle `chunk-AJP5RYVY.js` contiene `version:"2.33.0"`; `main-UCAGINJU.js` hash idéntico al build local prod).
+- **APK prod 2.33.0**: firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.33.0 existía en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.33.0.apk` + latest + version.json 2.33.0/min 2.26.1).
+- **PUBLICADA = 2.33.0 (única) · MÍNIMA = 2.26.1** (verificado por query directa; 2.32.0 despublicada; **sin gotcha de `minima`**). Publicación vía service_role direct UPDATE (el RPC `marcar_version_publicada` gatea en `es_tecnologia()`; se replicó flag + `publicada_at` + `publicada_por`=Tecnología `4b19cc4b…`). El trigger de versión-publicada disparó el push a los usuarios (`push_notificada_at` seteado).
+
+### 👤 Pendiente físico de Xaviel — solo confirmación de campo (no bloquea el release)
+- Pedir a **Sócrates** que actualice a 2.33.0 y confirme que ve las obras en "Mi obra".
+- Confirmar con **Eduardo** el próximo domingo que ya no le suena la alarma.
 
 ### 🎯 Qué se hizo (CA1 + CA2)
 - **CA2 — Sócrates ya ve las obras en "Mi obra".** Causa: `obra.service.ts` llamaba `mis_proyectos()` a secas, que devolvía SOLO las propias (ignoraba el módulo `proyectos`) → gerente de proyectos veía la pantalla vacía (y de ahí BY4: sin obras no hay bitácoras). Fix: consume `mis_proyectos(p_usuario:null, p_todos:null)` del padre → **todas las que `puede_ver_proyecto`, con `es_mia` por fila**; respaldo por RLS (`.from('proyectos')`) + `mis_proyectos()` viejo para `es_mia` si el padre no expone `p_todos`. Clave de caché → `obra_mis_proyectos_v2`. `select-list` gana agrupación opcional (`SelectOption.group`) con "Otras obras" **plegable**; `obra.ts` y `mi-proyecto.ts` agrupan **Mis obras** / **Otras obras** (util `obrasComoOpciones`) solo cuando hay mezcla. **Nota:** como el padre cambió el DEFAULT (`p_todos` default null → todas), incluso el `mis_proyectos()` viejo de 2.32.0 ya devolvía todas una vez desplegado el padre; el cambio del hijo aporta `es_mia`+agrupación+respaldo.
@@ -13,16 +22,14 @@
 - **CA1 como Eduardo NG** (`u-1e90efdf@dev…`, gerente): `es_usuario_operativo_flota=false` y **ambas alarmas** `activa=false / silenciada_por_admin=true` (el padre lo sembró silenciado en dev) → `alarmaSuprimida()` = true → no suena + "Silenciada por Tecnología". Contraste: QA gerente_proyectos → `activa=true / silenciada_por_admin=false`.
 - Build web OK (solo warnings preexistentes); APK dev 2.33.0 firmado (cert `3c5316d8…5065`), registrado en dev `app_versiones` (`publicada=false`/`minima=false`, sin gotcha) + subido al bucket dev + `git push origin dev` (Vercel `app-dev.`).
 
-### 👤 Pendiente físico de Xaviel (antes de prod)
-1. **Entrar como Sócrates** en `app-dev.` → confirmar que "Mi obra" ya lista las obras (y abrir bitácora / crear OT en una ajena — BY4).
-2. **Entrar como Eduardo** (o `qa` gerente) → recibir push de alarma de prueba → **no** suena; `qa_chofer` → sí suena.
-3. Dar el **OK** para prod. Tras OK: PR `dev → main` → prod 2.33.0 (APK prod + publicar) → pedir a Sócrates/Eduardo que actualicen.
-
 ### 🩺 Rollback
-Cliente (revertir el merge de `feature/ca-ronda`). Objetos del padre aditivos; obras caen a la caché/RLS si el RPC falla; el gate de alarma default = "no suprimir" ante fallo (no silencia de más).
+Cliente (revertir el merge). Objetos del padre aditivos; obras caen a la caché/RLS si el RPC falla; el gate de alarma default = "no suprimir" ante fallo (no silencia de más). Despublicar: `marcar_version_publicada(2.32.0, true)` + `(2.33.0, false)` (o service_role UPDATE).
 
 ### ⚠️ Estado de release
-**`dev` = 2.33.0-dev, `main` sigue en 2.32.0.** NADA en prod esta ronda todavía. FASE 0 (BZ mitad app) ya estaba en prod desde la semana pasada.
+**`main` == `dev` = 2.33.0, PUBLICADA en prod.** FASE 0 (BZ mitad app) ya estaba en prod desde la semana pasada. Sin deuda abierta de la ronda CA.
+
+### ⚠️ Hueco del padre detectado (no bloquea al hijo)
+Como Sócrates en dev: `mis_proyectos(p_todos:null)` = **12** vs RLS `.from(proyectos)` = **13** → `puede_ver_proyecto` y la política `proyectos:select` no están 100% alineadas (justo el lint `verify-regresiones` que pide PROMPT-70 F1.3). Anotar para SGC.
 
 ---
 
