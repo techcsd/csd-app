@@ -19,10 +19,22 @@
 
 ### 👤 Pendiente físico de Xaviel — ninguno (ya probó en dev y aprobó; 2.32.0 publicada)
 
+### 🔎 Verificación post-deploy (autenticada, datos reales en dev) — todo verde
+- **PWA prod:** `app.sgcconstructorasd.com` sirve el commit `3bb4e8f` (2.32.0), deployment `READY` + aliasado (verificado por API de Vercel).
+- **BZ4 `listar_bitacoras`:** como Raykler (jefe_flota) devuelve **92 bitácoras de 5+ ingenieros** con todos los campos que mapea la app → visibilidad cross-obra OK (era la migración de más riesgo).
+- **BZ1 `echada_detalle`:** carga 200 con el jsonb esperado como flota-elevado y como admin/dueño.
+- **BZ0 `cerrada_en`:** poblado y distinto de `created_at` en requisiciones cerradas → Historial ordena por cierre real.
+- **BZ0 `reenviar_echada`:** idempotente por construcción (server deduplica por `(reenvio_de, client_uuid)`; cliente pasa el id estable de la op).
+- **BZ3 `usuarios_qa_dev()`:** rows en dev, `[]` en prod.
+- **BZ2 material no catalogado:** verificado E2E con un **seed temporal** en dev (3 `salida_items_libres` sobre el conduce `aa1c5276…`: pendiente + declinado c/sugerencia + vinculado). Confirmado: bandeja por defecto solo el pendiente; filtrado por conduce los 3 con su estado; count=1; `conduces_por_implementar` con `pendientes=1/total=3`. **El seed se BORRÓ después** (`delete … where nombre like '%(seed dev BZ2)%'`, 0 filas restantes) — dev quedó limpio, prod nunca se tocó. *(Follow-up opcional: dev no trae datos de material-no-catalogado en el seed base; si se quiere QA recurrente, añadirlo al `seed-dev` del padre.)*
+
 ### ⚠️ Contratos del padre — los 3 huecos BY quedaron CERRADOS en 1.146.0 (ya no hay deuda abierta de esta ronda)
 
 ### 🩺 Rollback
 - Cliente (revertir el merge). Los objetos del padre son aditivos; el detalle de echada cae a la caché offline si el RPC falla. Despublicar: `marcar_version_publicada(2.31.0, true)` + `(2.32.0, false)`.
+
+### ✅ Cierre — sesión cerrada, nada pendiente
+2.32.0 publicada y verificada en prod (PWA + APK); flujos BZ1/BZ2/BZ3 + huecos del padre verificados E2E en dev; dev limpio (seed borrado); `main` == `dev` (`3bb4e8f` + este commit de HANDOFF). Sin deuda abierta de la ronda BZ.
 
 ---
 
