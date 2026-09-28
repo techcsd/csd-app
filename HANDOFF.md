@@ -1,5 +1,31 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 28/09/2026 — PROMPT-71 (ronda CA, hijo) — **2.33.0-dev listo, ESPERANDO OK para prod** · `feature/ca-ronda` → `dev`
+
+**TL;DR:** ronda **CA** en la app (2 bugs vivos, ambos con causa en el repo del hijo). El padre ya cerró su parte en **dev+prod** (PROMPT-70, web 1.147.0): `mis_proyectos(p_usuario, p_todos)` con `es_mia`, `es_usuario_operativo_flota()`, `mis_notif_operativas().silenciada_por_admin`. **Ojo con las versiones:** los docs asumían que BZ era esta ronda (2.32.0), pero **BZ ya se publicó como 2.32.0 la semana pasada** → **FASE 0 (mitad app de BZ) ya está en prod, no había nada que hacer** → esta ronda CA es **2.33.0**. Build + guards + i18n verdes. Salió a **dev** (APK dev 2.33.0 + `app-dev.`). **Regla 18: PARADO esperando el OK de Xaviel para prod.**
+
+### 🎯 Qué se hizo (CA1 + CA2)
+- **CA2 — Sócrates ya ve las obras en "Mi obra".** Causa: `obra.service.ts` llamaba `mis_proyectos()` a secas, que devolvía SOLO las propias (ignoraba el módulo `proyectos`) → gerente de proyectos veía la pantalla vacía (y de ahí BY4: sin obras no hay bitácoras). Fix: consume `mis_proyectos(p_usuario:null, p_todos:null)` del padre → **todas las que `puede_ver_proyecto`, con `es_mia` por fila**; respaldo por RLS (`.from('proyectos')`) + `mis_proyectos()` viejo para `es_mia` si el padre no expone `p_todos`. Clave de caché → `obra_mis_proyectos_v2`. `select-list` gana agrupación opcional (`SelectOption.group`) con "Otras obras" **plegable**; `obra.ts` y `mi-proyecto.ts` agrupan **Mis obras** / **Otras obras** (util `obrasComoOpciones`) solo cuando hay mezcla. **Nota:** como el padre cambió el DEFAULT (`p_todos` default null → todas), incluso el `mis_proyectos()` viejo de 2.32.0 ya devolvía todas una vez desplegado el padre; el cambio del hijo aporta `es_mia`+agrupación+respaldo.
+- **CA1 — las alarmas dominicales respetan el silencio.** `NotificacionesService`: `mis_notif_operativas()` cacheado (memoria + `Preferences` para arranque offline) + `alarmaSuprimida(tipo)` (`activa=false || silenciada_por_admin`). El gate se consulta en `push.service` (received), `app.checkAlarmaDominical` (reporte semanal) y `app.syncAlarmaNativa` (inspección; **cancela** la alarma autónoma si aplica). El push suprimido registra `report_app_error` **nivel info** ("alarma suprimida por preferencia") para saber si el emisor la mandó igual. `AppErrorType` gana `'info'` (si el CHECK del padre aún no lo acepta → coacciona a `other`, inofensivo; paridad menor owed en SGC). **Avisos › Notificaciones** muestra *"Silenciada por Tecnología"* y bloquea el interruptor cuando `silenciada_por_admin`.
+
+### 🧪 Verificado en dev (sesión REAL autenticada, no solo service_role)
+- **CA2 como Sócrates** (`u-b41eb1cd@dev…`, gerente_proyectos): `mis_proyectos(p_todos:null)` → **12 obras** con `es_mia` (1 suya → "Mis obras", 11 → "Otras obras"). *(RLS `.from(proyectos)` = 13; discrepancia de 1 fila RPC vs RLS → **hueco del padre**: `puede_ver_proyecto` vs política `select` no 100% alineadas, lint `verify-regresiones` de PROMPT-70 F1.3. No bloquea al hijo.)*
+- **CA1 como Eduardo NG** (`u-1e90efdf@dev…`, gerente): `es_usuario_operativo_flota=false` y **ambas alarmas** `activa=false / silenciada_por_admin=true` (el padre lo sembró silenciado en dev) → `alarmaSuprimida()` = true → no suena + "Silenciada por Tecnología". Contraste: QA gerente_proyectos → `activa=true / silenciada_por_admin=false`.
+- Build web OK (solo warnings preexistentes); APK dev 2.33.0 firmado (cert `3c5316d8…5065`), registrado en dev `app_versiones` (`publicada=false`/`minima=false`, sin gotcha) + subido al bucket dev + `git push origin dev` (Vercel `app-dev.`).
+
+### 👤 Pendiente físico de Xaviel (antes de prod)
+1. **Entrar como Sócrates** en `app-dev.` → confirmar que "Mi obra" ya lista las obras (y abrir bitácora / crear OT en una ajena — BY4).
+2. **Entrar como Eduardo** (o `qa` gerente) → recibir push de alarma de prueba → **no** suena; `qa_chofer` → sí suena.
+3. Dar el **OK** para prod. Tras OK: PR `dev → main` → prod 2.33.0 (APK prod + publicar) → pedir a Sócrates/Eduardo que actualicen.
+
+### 🩺 Rollback
+Cliente (revertir el merge de `feature/ca-ronda`). Objetos del padre aditivos; obras caen a la caché/RLS si el RPC falla; el gate de alarma default = "no suprimir" ante fallo (no silencia de más).
+
+### ⚠️ Estado de release
+**`dev` = 2.33.0-dev, `main` sigue en 2.32.0.** NADA en prod esta ronda todavía. FASE 0 (BZ mitad app) ya estaba en prod desde la semana pasada.
+
+---
+
 ## 🟢 SESIÓN 27/09/2026 — PROMPT-69 (ronda BZ, hijo) — **2.32.0 PUBLICADA a prod** · `feature/bz-ronda` → `dev` → `main`
 
 **TL;DR:** ronda **BZ** en la app (mitad hijo de las notas 77-79). Espeja los contratos del padre **vivos en dev y prod** (web 1.146.0): `echada_detalle(p_id)`, `item_libre_pendiente()`/`material_no_catalogado_pendientes(p_incluir_resueltos, p_salida_id)`, `usuarios_qa_dev()`, y los 3 huecos que la app pidió (`listar_bitacoras`, `reenviar_echada` idempotente, `cerrada_en`). Build + guards + i18n (en 100% en el alcance) verdes. Salió a **dev** (APK dev + `app-dev.`), Xaviel probó y dio OK ("probé en dev, publica a prod"), y **salió a PROD**: `dev→main` (`20bb521`) + APK prod firmado (cert `3c5316d8…5065`, regla 18 OK) registrado+subido + **publicada=2.32.0** (mínima sigue 2.26.1). `echada_detalle` verificado en dev autenticado como Raykler (jefe_flota) → 200; RPCs BZ confirmados en prod antes de publicar. ✅ **Sesión cerrada — nada pendiente de release.**
