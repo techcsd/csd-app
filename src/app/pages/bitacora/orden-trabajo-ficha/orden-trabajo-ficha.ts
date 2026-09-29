@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { DecimalPipe } from '@angular/common';
@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
+import { PdfViewer } from '../../../shared/ui/pdf-viewer/pdf-viewer';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
@@ -32,11 +33,11 @@ interface UsuarioBusqueda {
   selector: 'app-orden-trabajo-ficha',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, PdfViewer, TranslatePipe],
   templateUrl: './orden-trabajo-ficha.html',
   styleUrl: './orden-trabajo-ficha.scss',
 })
-export class OrdenTrabajoFichaPage {
+export class OrdenTrabajoFichaPage implements OnDestroy {
   private route = inject(ActivatedRoute);
   private bitacora = inject(BitacoraService);
   private ordenPdf = inject(OrdenTrabajoPdfService);
@@ -51,6 +52,9 @@ export class OrdenTrabajoFichaPage {
   error = signal(false);
   orden = signal<OrdenTrabajoDetalle | null>(null);
   pdfBusy = signal(false);
+  // BW1 — visor de PDF inline (pdf.js): { url objeto-blob, nombre }. Se genera el PDF
+  // localmente (con las firmas embebidas) y se muestra sin salir de la app ni descargar.
+  visor = signal<{ url: string; nombre: string } | null>(null);
 
   // BW1 — número visible OT-000123 (del correlativo de la orden).
   codigo = computed(() => 'OT-' + String(this.orden()?.detalle?.numero ?? 0).padStart(6, '0'));
@@ -118,6 +122,35 @@ export class OrdenTrabajoFichaPage {
   }
 
   // ── PDF ─────────────────────────────────────────────────────────────────────
+  /** BW1 — vista previa del PDF INLINE (pdf.js), sin descargar ni salir de la app.
+   *  Genera el PDF (con detalles + firmas) a un blob y lo abre en el visor. */
+  async verPdf(): Promise<void> {
+    const o = this.orden();
+    if (!o || this.pdfBusy() || this.visor()) return;
+    this.pdfBusy.set(true);
+    try {
+      const blob = await this.ordenPdf.blob(o);
+      this.visor.set({ url: URL.createObjectURL(blob), nombre: this.codigo() });
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo generar el PDF.'));
+    } finally {
+      this.pdfBusy.set(false);
+    }
+  }
+
+  /** Cierra el visor y libera el object-URL del blob (no acumular memoria). */
+  cerrarVisor(): void {
+    const v = this.visor();
+    if (v) {
+      try { URL.revokeObjectURL(v.url); } catch { /* noop */ }
+    }
+    this.visor.set(null);
+  }
+
+  ngOnDestroy(): void {
+    this.cerrarVisor();
+  }
+
   async compartirPdf(): Promise<void> {
     const o = this.orden();
     if (!o || this.pdfBusy()) return;
