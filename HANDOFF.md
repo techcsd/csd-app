@@ -1,15 +1,24 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 29/09/2026 (tarde) — PROMPT-73 · Rediseño visual **CB v2** (navy+naranja, Inter, vidrio) — **EN PROGRESO en `feature/cb-rediseno`** (no en dev/prod aún)
+## 🟡 SESIÓN 29/09/2026 (tarde) — PROMPT-73 · Rediseño visual **CB v2** (navy+naranja, Inter, vidrio) — **EN DEV (2.35.0-dev) · esperando OK para prod**
 
-**TL;DR:** arranca el rediseño CB (fila 83, canvas aprobado por Xaviel el 28-sep). La **web ya salió (SGC 1.148.0 a prod)**; esto es la mitad app. Se completó la **fundación (FASE 1)** + **shell/home/componentes base (FASE 2)** + **barridos de rollout (parte de FASE 3-6)**, todo con **build verde** (3 guards de token + tropos + ng build). **Rama `feature/cb-rediseno` desde `dev`; NO mergeado, NO publicado, versión SIN tocar (sigue 2.34.0 en el archivo).** Falta el rollout fino por módulo, oscuro/a11y/device-QA y el release. **Para** para revisión de Xaviel.
+**TL;DR:** rediseño CB (fila 83, canvas aprobado 28-sep). La **web ya salió (SGC 1.148.0 a prod)**; esto es la mitad app. **Mergeado a `dev` (`f040d38`) + APK dev 2.35.0 firmado y publicado + versión registrada en dev (pub=false/min=false).** FASE 1 (fundación) + FASE 2 (shell/home/componentes) + FASE 3-6 (cascada + 4 barridos) + FASE 6 (login a lienzo gris), todo con **build + guards verdes**. Falta el rollout fino por artboard (map-glass), oscuro/a11y/device-QA físico, y el **release a prod (gateado por OK de Xaviel)**. **Para.**
+
+### ✅ EN DEV (2.35.0-dev)
+- **Mergeado `feature/cb-rediseno` → `dev`** (`f040d38`) + `git push origin dev` → Vercel construye **app-dev.sgcconstructorasd.com** (PWA de prueba).
+- **APK dev 2.35.0** firmado (cert `3c5316d8…5065`) + **publicado al bucket dev** (`csd-app-2.35.0.apk` + latest + version.json) + `apk_url` dev actualizado.
+- **Registrado en dev `app_versiones`**: `2.35.0 movil pub=false min=false` (verificado por query directa — **sin gotcha de mínima**; mínima sigue 2.26.1).
+- **Preview visual** (sistema CB, claro+oscuro, fuentes reales, incl. login): https://claude.ai/code/artifact/c37fc154-459f-4cb0-96f5-f5c3fb135208
+
+### 👤 Pendiente físico de Xaviel (device-QA)
+Instalar el **APK dev 2.35.0** en el teléfono más viejo disponible + iPhone (PWA app-dev): vidrio a 60fps (scroll home / hub conduces / parte), que `.no-glass` caiga a sólido donde deba, legibilidad al sol, primera pintura con la fuente (sin salto). Con **OK** → release a prod.
 
 **Commits (5):** `7b6f3a7` fundación + shell/home/componentes · `78fc170` pulido (steppers 52px, draft verde, títulos Inter Tight) · `21ce900` footers/compose flotantes → superficie · `349247b` docs · `38402f4` **login a lienzo gris + tarjeta blanca flotante (FASE 6 auth)** (PIN/reset/set-password ya correctos por tokens).
 
 **👀 Preview visual (claro+oscuro, fuentes Inter reales):** https://claude.ai/code/artifact/c37fc154-459f-4cb0-96f5-f5c3fb135208 — referencia del sistema CB con los valores exactos de `_tokens.scss`. No es captura del app; sirve para aprobar la dirección.
 
 ### ⚠️ GOTCHA de versión (importante)
-El prompt pide cerrar como **2.34.0**, pero **2.34.0 ya se publicó a prod** (feature "Ver PDF", sesión anterior — ver bloque abajo). Por tanto este rediseño debe salir como **2.35.0**, NO 2.34.0. **Versión aún no tocada** (se bumpea en el release final, 4 sitios + `CAMBIOS_CURADOS`).
+El prompt pide cerrar como **2.34.0**, pero **2.34.0 ya se publicó a prod** (feature "Ver PDF", sesión anterior — ver bloque abajo). Por eso este rediseño salió como **2.35.0** (NO 2.34.0). **Ya bumpeado** en `environment.prod.ts` + `android/app/build.gradle` + `CAMBIOS_CURADOS` (release-apk.mjs); `environment.ts` es gitignored y lo regenera el build. Mínima **sigue 2.26.1**.
 
 ### ✅ Hecho y build-verificado (en `feature/cb-rediseno`)
 - **FASE 1 — Fundación (CB1):**
@@ -25,9 +34,11 @@ El prompt pide cerrar como **2.34.0**, pero **2.34.0 ya se publicó a prod** (fe
   - Barrido `background: var(--color-bg)` → `--surface` **solo en selectores de "cara"** (49 cambios / 35 archivos en `pages/`); raíces de página se dejan grises. Codemod conservador (una cara olvidada = gris a 3% ≈ inocuo; una raíz mal blanqueada = pierde el lienzo → por eso conservador).
   - Barrido **tinta navy sobre naranja** (30 cambios): en bloques con fondo naranja, `color:#fff` → `var(--text-on-accent)` (nunca toca navy). Ahora el guard lo prohíbe hacia adelante.
 
-### ⏳ Falta (rollout restante — la mayoría ya "se ve" por cascada de tokens, esto es pulido)
-- **FASE 3-6 fino por artboard**: controles de vidrio 48px sobre mapas (`trayectoria-map`/`location-picker`/`lugar-picker`), `km-input`/combustible con `.tnum` grande, detalles de conduce-en-ruta y parte-de-bitácora tal cual el canvas; repasar caras `--color-bg` que el barrido conservador dejó grises donde deban ser blancas.
-- **FASE 7**: capturas en oscuro OK, tabla de pares AA (mismo script que la web), **device-QA en APK dev** (vidrio a 60fps en teléfono viejo, `.no-glass`, peso APK, primera pintura con fuente) — **físico de Xaviel**.
+### ⏳ Falta (tras OK de Xaviel; la mayoría ya "se ve" por cascada de tokens)
+- **RELEASE A PROD (gateado por OK):** `dev→main` (PR plantilla, Action pr-main) → `npm run apk -- --env prod` → `npm run apk:publish -- --env prod` (pasa regla 18: 2.35.0 ya salió en dev) → publicar (flags publicada/minima). Mínima NO cambia (2.26.1).
+- **FASE 3-6 fino por artboard**: controles de vidrio 48px sobre mapas (`trayectoria-map`/`location-picker`/`lugar-picker`), `km-input`/combustible con `.tnum` grande, conduce-en-ruta y parte-de-bitácora tal cual el canvas; repasar caras `--color-bg` que el barrido conservador dejó grises donde deban ser blancas. (Todo por cascada ya se ve moderno; esto es pulido — mejor con device-QA a la vista.)
+- **FASE 7**: tabla de pares AA (script de la web), **device-QA en APK dev** — **físico de Xaviel** (ver arriba).
+- **FASE 0/8 — capturas Playwright** antes/después de todas las rutas: Playwright NO instalado (descarga pesada); pendiente decidir si se corre. En su lugar quedó el **preview** (link arriba) como verificación del sistema.
 - **FASE 0/8 — capturas Playwright** antes/después de todas las rutas (claro+oscuro, 3 roles) + `qa/visual/cb/index.html`: **Playwright NO está instalado** (descarga pesada, offline-first); pendiente decidir si se corre.
 - **Release**: bump a **2.35.0** (4 sitios + `CAMBIOS_CURADOS` "Nuevo diseño…") → `apk --env dev` → merge a `dev` → OK Xaviel → `dev→main` → prod. **Mínima NO cambia (2.26.1).**
 - **Propuestas CB-P2** (barra inferior + buscador home): DEFAULT §D = **no** construidas (cambiarían navegación).
