@@ -96,8 +96,47 @@ if (UPDATE_BASELINE) {
 const newSurface = surfaceHex.filter((v) => !baselineSet.has(v.id));
 const resolvedDebt = baseline.filter((b) => !currentSet.has(b));
 
+// ── (3) BLANCO SOBRE ACENTO (estricto, sin baseline) ─────────────────────────
+// CB: la acción naranja SIEMPRE lleva tinta navy (var(--text-on-accent) #14243a,
+// AA 5.6:1); texto blanco sobre naranja falla AA (2.8:1). Se escanea por bloque:
+// si el fondo del bloque MÁS INTERNO es un token naranja y el color es blanco →
+// error. (Navy NO entra en el regex naranja: blanco sobre navy es correcto.)
+const ORANGE_BG =
+  /background(?:-color)?:\s*var\(--(?:primary|color-primary|color-primary-dark|accent|accent-hover|Hub)\b/;
+const WHITE_TEXT = /(?:^|\s)color:\s*(?:#fff(?:fff)?|white)\s*;/i;
+const whiteOnAccent = [];
+for (const file of walk(SRC_DIR)) {
+  const rel = relative(ROOT, file).replace(/\\/g, '/');
+  const lines = readFileSync(file, 'utf8').split('\n');
+  const stack = [];
+  lines.forEach((line, i) => {
+    for (const ch of line) {
+      if (ch === '{') stack.push({ orange: false });
+      else if (ch === '}') stack.pop();
+    }
+    const top = stack[stack.length - 1];
+    if (!top) return;
+    if (ORANGE_BG.test(line)) top.orange = true;
+    if (top.orange && WHITE_TEXT.test(line) && !ALLOW.test(line)) {
+      whiteOnAccent.push({ file: rel, line: i + 1, text: line.trim() });
+    }
+  });
+}
+
 // ── Reporte ──────────────────────────────────────────────────────────────────
 let failed = false;
+
+if (whiteOnAccent.length) {
+  failed = true;
+  console.error(
+    `\n[verify-tokens] ✗ ${whiteOnAccent.length} texto BLANCO sobre fondo NARANJA (falla AA 2.8:1) — ` +
+      `usa color: var(--text-on-accent) (tinta navy #14243a, 5.6:1).\n`,
+  );
+  for (const v of whiteOnAccent) console.error(`  ${v.file}:${v.line}  ${v.text}`);
+  console.error('');
+} else {
+  console.log('[verify-tokens] ✓ sin texto blanco sobre naranja (acento = tinta navy).');
+}
 
 if (nearBlack.length) {
   failed = true;

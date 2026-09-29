@@ -1,120 +1,182 @@
 // ════════════════════════════════════════════════════════════════════════════
-//  CSD App — Design tokens (BH5 / paridad BE con la web)
+//  CSD App — Design tokens — v2 (CB / rediseño visual v2, tanda 28/09/2026)
 //  ---------------------------------------------------------------------------
-//  Fuente única de color, tipografía, radios y sombras del campo-app. Portado del
-//  sistema de la web (SGC/src/styles/_tokens.scss) para paridad real del tema oscuro.
+//  Fuente única de color, tipografía, radios, sombras y vidrio del campo-app.
+//  Paridad real con la web (SGC/src/styles/_tokens.scss): MISMOS nombres y MISMOS
+//  valores semánticos. Solo divergen, a propósito (BH5), los radios de campo
+//  (guantes) y `--transition` (fragmento 0.15s, no `all`).
 //
-//  DOS CAPAS:
-//   1. --color-* : la familia histórica de la app (usada en 194 componentes) — SIGUE
-//      siendo la FUENTE de valores. Aquí viven los hex de cada tema.
+//  DOS CAPAS (shim inverso al de la web — la app NO migró sus 194 componentes):
+//   1. --color-* : la familia histórica de la app — SIGUE siendo la FUENTE de
+//      valores. Aquí viven los hex de cada tema. v2 solo cambia los VALORES.
 //   2. Nombres SEMÁNTICOS de la web (--bg, --surface, --border, --text, --brand,
-//      --accent, --success/-bg, --danger/-bg, --warning/-bg, --info/-bg…) como ALIAS
-//      que apuntan a --color-*, así themean solos y le dan a la app el MISMO
-//      vocabulario que la web (código nuevo/migrado + resuelve las 10 refs muertas
-//      var(--border)/var(--surface-2)/var(--border-soft) que sobrevivían por fallback).
-//      Es la dirección de shim inversa a la web (allá el semántico es fuente y --sgc-*
-//      el alias; acá --color-* es fuente y el semántico el alias) porque la app NO
-//      migró sus componentes — se documenta a propósito.
+//      --accent, --success/-bg…) como ALIAS que apuntan a --color-*, así themean
+//      solos y le dan a la app el MISMO vocabulario y los MISMOS valores que la web.
+//
+//  CAMBIOS CLAVE v2 (CONTEXTO-35 §B):
+//   • Paleta UNIFICADA navy `#1e3a5f` + naranja `#f97316` (el ámbar `--Hub` pasa a
+//     ser alias del acento naranja para no romper 131 referencias).
+//   • Lienzo GRIS (`--bg #f5f6f8`) + tarjetas BLANCAS (`--surface #ffffff`): antes
+//     era al revés (página blanca, tarjetas grises → look "plano"). El rollout por
+//     módulos reapunta los `var(--color-bg)` que eran "cara blanca" a `--surface`.
+//   • Neutros fríos de baja croma (look atemporal), texto `#101828`.
+//   • Acento naranja SIEMPRE con tinta navy (`--text-on-accent #14243a`), nunca
+//     texto blanco sobre naranja (falla AA — el guard lo prueba).
+//   • Nuevos: --surface-3, --border-strong, --brand-hover(navy), --accent-hover,
+//     --accent-soft, --text-on-accent, --dot-*, --nav-bg, --glass-*, --font-display,
+//     --radius-lg/-xl, --shadow-sm/--shadow/--shadow-pop, --focus-ring, escala fs.
 //
 //  DIVERGENCIAS DE VALOR con la web, DELIBERADAS (no "corregir"):
-//    --radius      16px (app, targets con guantes)   vs 10px (web)
-//    --radius-sm   10px (app)                         vs 6px  (web)
-//    --transition  0.15s ease (app) — y se usa como FRAGMENTO, p. ej.
-//      `transition: transform var(--transition)` (option-button/pin-pad/big-button/
-//      step-bar). Por eso NO puede llevar el `all` que la web mete en su --transition:
-//      quedaría `transition: transform all 0.2s ease`, inválido. Se conserva 0.15s ease.
-//
-//  El bloque oscuro COMPLETA lo que 2.8.x dejó a medias (redefinía 16 de 39): ahora
-//  también themean --color-secondary (azul de headers, antes ≈ indistinguible del
-//  fondo) y aparecen --color-info-bg y --color-primary-bg (tinte de "seleccionado").
-//  --color-primary/-dark, --color-accent y --Hub se dejan a propósito heredando el
-//  valor claro: naranja/ámbar/amarillo leen bien sobre fondo oscuro (marca).
+//    radios de campo 10 / 14 / 18 / 24 (guantes)   vs web 8 / 10 / 16 / 24
+//    --transition 0.15s ease (fragmento, se usa como `transition: transform var(--transition)`)
 //
 //  Default = CLARO (decisión BE6, mejor para el sol); dark es opt-in [data-theme='dark'].
 // ════════════════════════════════════════════════════════════════════════════
 
 :root {
-  /* Brand */
-  --color-primary: #f97316; /* naranja construcción — CTAs */
-  --color-primary-dark: #c2570c; /* pressed */
-  --color-secondary: #1e3a5f; /* azul CSD — headers/marca */
-  --color-accent: #facc15; /* badges de pendientes */
+  /* ── Brand navy + accent naranja (la identidad, unificada con la web) ── */
+  --color-primary: #f97316; /* naranja construcción — acción principal (--accent) */
+  --color-primary-dark: #ea580c; /* accent hover / pressed */
+  --color-primary-bg: #fff4ec; /* accent soft — tinte "seleccionado" naranja */
+  --color-secondary: #1e3a5f; /* navy CSD — marca, headers (--brand) */
+  --color-secondary-dark: #17304f; /* brand hover */
+  --color-brand-soft: #eef3f9; /* tinte navy suave (cabeceras de tabla, chips) */
+  --color-accent: #facc15; /* legacy: badges puntuales (no en la capa semántica) */
 
-  /* Surfaces (max luminance for sunlight) */
-  --color-bg: #ffffff;
-  --color-surface: #f4f4f5;
-  --color-surface-2: #e9e9ec;
-  --color-border: #d4d4d8;
+  /* Ámbar histórico (ex --Hub): alias del acento naranja para no romper refs. */
+  --Hub: var(--color-primary);
 
-  /* Text (>= 7:1 contrast, never light grey on white) */
-  --color-text-primary: #18181b;
-  --color-text-secondary: #3f3f46;
-  --color-text-on-primary: #ffffff;
-  --color-text-on-secondary: #ffffff;
+  /* ── Superficies — lienzo GRIS, tarjetas BLANCAS ── */
+  --color-bg: #f5f6f8; /* lienzo de la app (--bg) */
+  --color-surface: #ffffff; /* tarjetas, paneles, inputs (--surface) */
+  --color-surface-2: #f8f9fb; /* hover / relleno sutil (--surface-2) */
+  --color-surface-3: #f2f4f7; /* inset más profundo (--surface-3) */
+  --color-border: #e4e7ec; /* líneas finas (--border) */
+  --color-border-strong: #d0d5dd; /* divisores fuertes (--border-strong) */
 
-  /* Dark "panel" accents (Tecnología/Proyectos/Auditoría dark cards + amber highlights). */
-  --Hub: #ffb300; /* amber accent (active borders, dark-card highlights) */
-  --main-ultra-light: #a8a8b2; /* muted light-grey text on dark panels */
+  /* ── Texto (neutros fríos; secundario 5.4:1, nunca gris claro sobre blanco) ── */
+  --color-text-primary: #101828;
+  --color-text-secondary: #5b6b80;
+  --color-text-on-primary: #14243a; /* tinta NAVY sobre naranja (AA 5.6:1) — NO blanco */
+  --color-text-on-secondary: #ffffff; /* blanco sobre navy */
+  --main-ultra-light: #7a8799; /* texto atenuado / placeholder (--text-3) */
 
-  /* QA-AJ15 — aliases de tokens sueltos heredados del otro proyecto X-Dev. */
-  --primary: var(--color-primary); /* accent / CTA orange */
-  --main: var(--color-text-primary); /* primary dark text */
-  --color-text: var(--color-text-primary); /* primary dark text (alt spelling) */
-  /* AN — alias al error real para recuperar el rojo peligro/borrar/obligatorio. */
+  /* ── Estados (fg + bg suave). Color SIEMPRE con icono/palabra (daltónico-safe) ── */
+  --color-success: #067647;
+  --color-success-bg: #ecfdf3;
+  --color-warning: #b54708;
+  --color-warning-bg: #fffaeb;
+  --color-error: #b42318;
+  --color-error-bg: #fef3f2;
+  --color-info: #175cd3;
+  --color-info-bg: #eff8ff;
+
+  /* Sidebar / header navy 900 (para la barra flotante / cabeceras de vidrio). */
+  --color-nav-bg: #0f1f33;
+
+  /* ── QA-AJ15 / AN — alias sueltos heredados (no romper). ── */
+  --primary: var(--color-primary);
+  --main: var(--color-text-primary);
+  --color-text: var(--color-text-primary);
   --color-danger: var(--color-error);
 
-  /* Semantic status — color always paired with an icon (colorblind-safe) */
-  --color-success: #16a34a; /* guardado / sincronizado / entregado */
-  --color-warning: #d97706; /* pendiente de envío */
-  --color-error: #dc2626; /* error / daño / incidente */
-  --color-info: #2563eb;
-  --color-success-bg: #dcfce7;
-  --color-warning-bg: #fef3c7;
-  --color-error-bg: #fee2e2;
-  --color-info-bg: #dbeafe; /* BH5 — faltaba (la web lo tiene); lo usan los tintes info */
+  /* ── Puntos de estado (un punto sólido y saturado precede la palabra — Regla 2). ── */
+  --dot-success: #12b76a;
+  --dot-warning: #f79009;
+  --dot-danger: #f04438;
+  --dot-info: #2e90fa;
+  --dot-neutral: #98a2b3;
 
-  /* BH5 — tinte "seleccionado" naranja: antes iba quemado como #fff7ed en los
-     primitivos (option-button/select-list) y en ~36 pantallas → en oscuro daba
-     texto claro sobre crema (1.10:1). Token para que themee. */
-  --color-primary-bg: #fff7ed;
-
-  /* Typography */
-  --font-body: system-ui, 'Roboto', 'Segoe UI', sans-serif;
+  /* ── Tipografía — Inter (cuerpo) + Inter Tight (display), auto-hospedadas ── */
+  --font-body: 'Inter', 'Inter Fallback', system-ui, 'Segoe UI', 'Roboto', sans-serif;
+  --font-display: 'Inter Tight', 'Inter', 'Inter Fallback', system-ui, sans-serif;
+  /* Legacy (usados en pantallas) */
   --fs-home-btn: 22px;
   --fs-title: 24px;
   --fs-option: 18px;
-  --fs-body: 16px; /* absolute minimum */
+  --fs-body: 16px; /* mínimo absoluto (evita zoom de iOS en inputs) */
+  /* Escala paridad-web (código nuevo/migrado) */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 28px;
+  --fs-3xl: 32px;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --lh-tight: 1.2;
+  --lh-normal: 1.5;
 
-  /* Touch & spacing — gloves-friendly */
-  --touch-min: 56px;
+  /* ── Espaciado ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
   --gap: 12px;
-  --radius: 16px;
+
+  /* ── Objetivos táctiles (guantes / sol) ── */
+  --touch-min: 56px;
+
+  /* ── Radios — escala de campo 10 / 14 / 18 / 24 (divergencia BH5 vs web 8/10/16/24) ── */
   --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
 
   /* Safe areas (notches / gesture bars) */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12);
-  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --transition: 0.15s ease;
+  /* ── Sombras — 1-2 capas suaves (Regla 6: sin sombras gigantes) ── */
+  --shadow-sm: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(16 24 40 / 0.08), 0 1px 2px -1px rgb(16 24 40 / 0.06);
+  --shadow-md: 0 4px 10px -2px rgb(16 24 40 / 0.1), 0 2px 4px -2px rgb(16 24 40 / 0.06);
+  --shadow-lg: 0 12px 24px -6px rgb(16 24 40 / 0.14), 0 4px 8px -4px rgb(16 24 40 / 0.08);
+  --shadow-pop: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 2px 6px 0 rgb(16 24 40 / 0.06);
+  /* Legacy (usados en pantallas): re-apuntados a las sombras nuevas para que themeen. */
+  --shadow-card: var(--shadow);
+  --shadow-lift: var(--shadow-md);
 
-  /* ── Capa SEMÁNTICA (vocabulario de la web). Alias sobre --color-*, themea sola. ── */
+  /* ── Foco — halo navy 4px (Regla 7) ── */
+  --focus-ring: 0 0 0 4px rgb(30 58 95 / 0.18);
+  --focus-ring-danger: 0 0 0 4px rgb(180 35 24 / 0.18);
+
+  /* ── Movimiento ── */
+  --transition: 0.15s ease; /* fragmento (transform var(--transition)) — sin `all` (BH5) */
+
+  /* ── Vidrio — SOLO capa flotante (wizard-footer, sync-bar, controles sobre mapa/foto) ── */
+  --glass-bg: rgba(255, 255, 255, 0.68);
+  --glass-border: rgba(255, 255, 255, 0.8);
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 12px 32px rgba(16, 24, 40, 0.14);
+  --glass-blur: blur(20px) saturate(180%);
+
+  /* ── Capa SEMÁNTICA (vocabulario + valores de la web). Alias sobre --color-*. ── */
   --bg: var(--color-bg);
   --surface: var(--color-surface);
   --surface-2: var(--color-surface-2);
-  --surface-3: var(--color-surface-2); /* la app no tiene 3ª superficie: reusa la 2ª */
+  --surface-3: var(--color-surface-3);
   --border: var(--color-border);
-  --border-strong: var(--color-border);
+  --border-strong: var(--color-border-strong);
   --border-soft: var(--color-border);
   --text: var(--color-text-primary);
   --text-2: var(--color-text-secondary);
   --text-3: var(--main-ultra-light);
-  --brand: var(--color-secondary); /* la "marca" visible de la app es el azul de headers */
-  --brand-hover: var(--color-primary);
-  --brand-soft: var(--color-surface-2);
-  --accent: var(--Hub);
-  --accent-soft: var(--color-warning-bg);
+  --brand: var(--color-secondary);
+  --brand-hover: var(--color-secondary-dark);
+  --brand-soft: var(--color-brand-soft);
+  --text-on-brand: var(--color-text-on-secondary);
+  --accent: var(--color-primary);
+  --accent-hover: var(--color-primary-dark);
+  --accent-soft: var(--color-primary-bg);
+  --text-on-accent: var(--color-text-on-primary);
+  --nav-bg: var(--color-nav-bg);
   --success: var(--color-success);
   --success-bg: var(--color-success-bg);
   --danger: var(--color-error);
@@ -126,37 +188,58 @@
 }
 
 // ── Tema OSCURO (opt-in por usuario, sincronizado con la web vía mi_tema/set_tema).
-//    Redefine SOLO --color-* (los semánticos son alias y siguen solos). Default claro.
+//    Redefine SOLO --color-* + vidrio/sombra/foco (los semánticos son alias y siguen
+//    solos). Valores de paridad con la web (CONTEXTO-35 §B, columna oscuro).
 [data-theme='dark'] {
-  --color-bg: #0f1720;
-  --color-surface: #17222e;
-  --color-surface-2: #1f2d3b;
-  --color-border: #30404f;
+  --color-bg: #0b121c;
+  --color-surface: #111a26;
+  --color-surface-2: #172231;
+  --color-surface-3: #1b2736;
+  --color-border: #1e2b3c;
+  --color-border-strong: #2b3a4c;
 
-  --color-text-primary: #e8eef4;
-  --color-text-secondary: #aebccd;
-  /* --color-text-on-primary / -on-secondary siguen blancos (texto sobre relleno
-     naranja/azul de marca): decisión escrita, se mantienen. */
+  --color-text-primary: #e6ebf1;
+  --color-text-secondary: #9aa8ba;
+  --main-ultra-light: #6f8194;
+  /* --color-text-on-primary (tinta navy sobre naranja) y -on-secondary (blanco
+     sobre navy) se mantienen: leen bien en ambos temas. */
 
-  /* BH5 — el azul de headers antes NO themeaba (#1e3a5f ≈ #0f1720 del fondo →
-     header indistinguible). Se sube a un azul legible que separa del fondo y
-     mantiene el texto blanco por encima de AA. */
-  --color-secondary: #2e5586;
-  /* --color-primary / -dark, --color-accent y --Hub se dejan heredando el valor
-     claro a propósito: naranja/amarillo/ámbar leen bien sobre oscuro (marca). */
+  /* Marca: en oscuro `--color-secondary` funciona como RELLENO (texto blanco encima:
+     headers/botones) Y como texto de énfasis. #2e75b6 es el balance (blanco encima
+     = AA 5:1, legible como texto sobre el fondo oscuro) — mismo que la web. */
+  --color-secondary: #2e75b6;
+  --color-secondary-dark: #4a90d0;
+  --color-brand-soft: rgba(46, 117, 182, 0.2);
 
-  --color-success: #3faa63;
-  --color-warning: #e0952f;
-  --color-error: #e05a4c;
-  --color-info: #4a90d0;
-  --color-success-bg: rgba(22, 163, 74, 0.22);
-  --color-warning-bg: rgba(217, 119, 6, 0.24);
-  --color-error-bg: rgba(220, 38, 38, 0.26);
-  --color-info-bg: rgba(37, 99, 235, 0.28);
-  --color-primary-bg: rgba(249, 115, 22, 0.20); /* tinte naranja translúcido para "seleccionado" */
+  /* Acento naranja: más claro en oscuro (mismo que la web). */
+  --color-primary: #fb923c;
+  --color-primary-dark: #f97316;
+  --color-primary-bg: rgba(251, 146, 60, 0.16);
 
-  --main-ultra-light: #8fa0b3;
+  --color-success: #6ce9a6;
+  --color-success-bg: rgba(18, 183, 106, 0.14);
+  --color-warning: #fec84b;
+  --color-warning-bg: rgba(247, 144, 9, 0.16);
+  --color-error: #fda29b;
+  --color-error-bg: rgba(240, 68, 56, 0.16);
+  --color-info: #84caff;
+  --color-info-bg: rgba(46, 144, 250, 0.16);
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --color-nav-bg: #0e1826;
+
+  /* Puntos de estado siguen saturados en oscuro (idénticos). */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 10px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 12px 24px -6px rgb(0 0 0 / 0.6), 0 4px 8px -4px rgb(0 0 0 / 0.5);
+  --shadow-pop: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 2px 6px 0 rgb(0 0 0 / 0.4);
+
+  --focus-ring: 0 0 0 4px rgb(156 192 236 / 0.3);
+  --focus-ring-danger: 0 0 0 4px rgb(253 162 155 / 0.3);
+
+  --glass-bg: rgba(17, 26, 38, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 32px rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(20px) saturate(180%);
 }

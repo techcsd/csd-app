@@ -1,0 +1,39 @@
+// ════════════════════════════════════════════════════════════════════════════
+//  CSD App — SCSS mixins (CB / rediseño visual v2 — paridad con la web)
+//  Side-effect free: emits NO CSS on its own. Import with `@use` where needed:
+//     @use '../../../styles/mixins' as m;   .wizard-footer { @include m.glass; }
+//  o usa la clase global `.glass` (definida en styles.scss).
+// ════════════════════════════════════════════════════════════════════════════
+
+// glass() — material esmerilado SOLO para la capa que FLOTA sobre el contenido
+// (barra inferior/wizard-footer, sync-bar flotante, controles sobre mapa/foto/
+// visor). NN/g + Apple: nunca en tarjetas, tablas ni formularios. Trae sus
+// propios respaldos sólidos para que el consumidor no los pueda olvidar:
+//   • `@supports not backdrop-filter`  → superficie sólida
+//   • `prefers-reduced-transparency`   → superficie sólida (accesibilidad)
+//   • ancestro `html.no-glass`         → superficie sólida (Android viejo / poca RAM / perf)
+@mixin glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  :where(html.no-glass) & {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

@@ -260,7 +260,7 @@
 }
 .con-step:active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-on-accent);
 }
 .con-item__exp {
   font-size: 14px;
@@ -379,7 +379,7 @@
 }
 .ferr-entrada__items li {
   padding: 8px 12px;
-  background: var(--color-bg);
+  background: var(--color-surface);
   border-radius: var(--radius-sm);
 }
 .ferr-entrada__sinitems {

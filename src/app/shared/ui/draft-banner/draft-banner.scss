@@ -1,9 +1,9 @@
 .draft-banner {
   margin-bottom: 14px;
   padding: 12px 14px;
-  border: 1px solid var(--color-warning);
+  border: 1px solid var(--color-success); // CB — "Borrador guardado" en verde
   border-radius: var(--radius-sm);
-  background: var(--color-warning-bg);
+  background: var(--color-success-bg);
 }
 
 .draft-banner__txt {

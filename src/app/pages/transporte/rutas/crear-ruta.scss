@@ -117,7 +117,7 @@
   gap: 10px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 
 .cruta__nav .btn-cta {
@@ -245,7 +245,7 @@
 .cruta__modo-btn--on {
   border-color: var(--primary);
   color: var(--primary);
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 .cruta__parada-dir {
   font-size: 13px;
