@@ -1,17 +1,22 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 29/09/2026 (tarde) — PROMPT-73 · Rediseño visual **CB v2** (navy+naranja, Inter, vidrio) — **EN DEV (2.35.0-dev) · esperando OK para prod**
+## 🟢 SESIÓN 29/09/2026 (tarde) — PROMPT-73 · Rediseño visual **CB v2** (navy+naranja, Inter, vidrio) — **2.35.0 PUBLICADA a prod**
 
-**TL;DR:** rediseño CB (fila 83, canvas aprobado 28-sep). La **web ya salió (SGC 1.148.0 a prod)**; esto es la mitad app. **Mergeado a `dev` (`f040d38`) + APK dev 2.35.0 firmado y publicado + versión registrada en dev (pub=false/min=false).** FASE 1 (fundación) + FASE 2 (shell/home/componentes) + FASE 3-6 (cascada + 4 barridos) + FASE 6 (login a lienzo gris), todo con **build + guards verdes**. Falta el rollout fino por artboard (map-glass), oscuro/a11y/device-QA físico, y el **release a prod (gateado por OK de Xaviel)**. **Para.**
+**TL;DR:** rediseño CB (fila 83, canvas aprobado 28-sep). La **web ya salió (SGC 1.148.0)**; esto es la mitad app. **Salió a dev (2.35.0-dev, APK firmado+publicado) → Xaviel dio OK ("ok, do it, do all the stuff") → RELEASE A PROD 2.35.0.** FASE 1 (fundación) + FASE 2 (shell/home/componentes) + FASE 3-6 (cascada + 4 barridos) + FASE 6 (login a lienzo gris). Solo piel (regla 1); build + guards verdes. ✅ **Sesión cerrada.**
 
-### ✅ EN DEV (2.35.0-dev)
-- **Mergeado `feature/cb-rediseno` → `dev`** (`f040d38`) + `git push origin dev` → Vercel construye **app-dev.sgcconstructorasd.com** (PWA de prueba).
-- **APK dev 2.35.0** firmado (cert `3c5316d8…5065`) + **publicado al bucket dev** (`csd-app-2.35.0.apk` + latest + version.json) + `apk_url` dev actualizado.
-- **Registrado en dev `app_versiones`**: `2.35.0 movil pub=false min=false` (verificado por query directa — **sin gotcha de mínima**; mínima sigue 2.26.1).
-- **Preview visual** (sistema CB, claro+oscuro, fuentes reales, incl. login): https://claude.ai/code/artifact/c37fc154-459f-4cb0-96f5-f5c3fb135208
+### ✅ EN PROD (RELEASE 2.35.0)
+- **`dev→main`** mergeado (`c991cfd`) + push → Vercel construyó la PWA prod. **Verificado live:** `app.sgcconstructorasd.com` sirve el rediseño (styles `styles-O5W6QLXM.css` contiene `Inter Tight` + `f5f6f8` + `glass-bg`).
+- **APK prod 2.35.0** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.35.0 existía en dev), registrado en `app_versiones` prod + **subido al bucket prod** (`csd-app-2.35.0.apk` + latest + version.json 2.35.0/min 2.26.1) + `apk_url` prod actualizado.
+- **PUBLICADA = 2.35.0 (única) · MÍNIMA = 2.26.1** (verificado por query directa; 2.34.0 despublicada; **sin gotcha de mínima**). Publicación vía service_role UPDATE (publicada+publicada_at+publicada_por=Tecnología `4b19cc4b…`); el trigger de versión-publicada disparó el push a usuarios.
 
-### 👤 Pendiente físico de Xaviel (device-QA)
-Instalar el **APK dev 2.35.0** en el teléfono más viejo disponible + iPhone (PWA app-dev): vidrio a 60fps (scroll home / hub conduces / parte), que `.no-glass` caiga a sólido donde deba, legibilidad al sol, primera pintura con la fuente (sin salto). Con **OK** → release a prod.
+### ✅ EN DEV (previo)
+- `feature/cb-rediseno` → `dev` (`f040d38`) + APK dev 2.35.0 firmado + publicado (bucket dev) + registrado (pub=false/min=false). PWA app-dev.
+
+### 📎 Preview visual (referencia del sistema CB, claro+oscuro, fuentes reales, incl. login)
+https://claude.ai/code/artifact/c37fc154-459f-4cb0-96f5-f5c3fb135208
+
+### 👤 Pendiente físico de Xaviel (post-release, no bloquea)
+Device-QA en el **APK 2.35.0** (teléfono viejo + iPhone PWA): vidrio a 60fps, `.no-glass` cae a sólido donde deba, legibilidad al sol, primera pintura con la fuente. Si algo se ve raro en una pantalla concreta → reportar para pulido puntual (map-glass fino y repaso de caras `--color-bg` residuales quedan como refinamiento).
 
 **Commits (5):** `7b6f3a7` fundación + shell/home/componentes · `78fc170` pulido (steppers 52px, draft verde, títulos Inter Tight) · `21ce900` footers/compose flotantes → superficie · `349247b` docs · `38402f4` **login a lienzo gris + tarjeta blanca flotante (FASE 6 auth)** (PIN/reset/set-password ya correctos por tokens).
 
