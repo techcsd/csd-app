@@ -28,8 +28,8 @@ Cliente (revertir el merge). Objetos del padre aditivos; obras caen a la caché/
 ### ⚠️ Estado de release
 **`main` == `dev` = 2.33.0, PUBLICADA en prod.** FASE 0 (BZ mitad app) ya estaba en prod desde la semana pasada. Sin deuda abierta de la ronda CA.
 
-### ⚠️ Hueco del padre detectado (no bloquea al hijo)
-Como Sócrates en dev: `mis_proyectos(p_todos:null)` = **12** vs RLS `.from(proyectos)` = **13** → `puede_ver_proyecto` y la política `proyectos:select` no están 100% alineadas (justo el lint `verify-regresiones` que pide PROMPT-70 F1.3). Anotar para SGC.
+### ℹ️ RLS 13 vs RPC 12 — ESPERADO, no es bug
+Como Sócrates en dev: `mis_proyectos(p_todos:null)` = **12** vs RLS `.from(proyectos)` = **13**. La fila extra en RLS es **"BRISAS CITY CENTER" (`activo=false`, `estado=terminada`)**: `mis_proyectos` excluye a propósito las obras terminadas/inactivas del listado de trabajo de campo ("Mi obra"), mientras la web muestra todas para gestión. Diferencia intencional en el filtro `activo`, **no** una desalineación de visibilidad. Nada que arreglar.
 
 ---
 
