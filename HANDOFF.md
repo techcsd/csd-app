@@ -4,7 +4,7 @@
 
 **TL;DR:** arranca el rediseño CB (fila 83, canvas aprobado por Xaviel el 28-sep). La **web ya salió (SGC 1.148.0 a prod)**; esto es la mitad app. Se completó la **fundación (FASE 1)** + **shell/home/componentes base (FASE 2)** + **barridos de rollout (parte de FASE 3-6)**, todo con **build verde** (3 guards de token + tropos + ng build). **Rama `feature/cb-rediseno` desde `dev`; NO mergeado, NO publicado, versión SIN tocar (sigue 2.34.0 en el archivo).** Falta el rollout fino por módulo, oscuro/a11y/device-QA y el release. **Para** para revisión de Xaviel.
 
-**Commits (3):** `7b6f3a7` fundación + shell/home/componentes · `78fc170` pulido (steppers 52px, draft verde, títulos Inter Tight) · `21ce900` footers/compose flotantes → superficie.
+**Commits (5):** `7b6f3a7` fundación + shell/home/componentes · `78fc170` pulido (steppers 52px, draft verde, títulos Inter Tight) · `21ce900` footers/compose flotantes → superficie · `349247b` docs · `38402f4` **login a lienzo gris + tarjeta blanca flotante (FASE 6 auth)** (PIN/reset/set-password ya correctos por tokens).
 
 **👀 Preview visual (claro+oscuro, fuentes Inter reales):** https://claude.ai/code/artifact/c37fc154-459f-4cb0-96f5-f5c3fb135208 — referencia del sistema CB con los valores exactos de `_tokens.scss`. No es captura del app; sirve para aprobar la dirección.
 
