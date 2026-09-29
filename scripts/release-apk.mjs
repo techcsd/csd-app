@@ -37,12 +37,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-28';
+const RELEASED_AT = '2026-09-29';
 
-const TITULO = 'Obras visibles para gerentes y alarmas que respetan el silencio';
+const TITULO = 'Vista previa del PDF de la orden de trabajo';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Obra', d: 'Las obras ya se ven completas en "Mi obra" para gerentes/ingenieros con acceso al módulo de proyectos (antes la pantalla salía vacía aunque la web sí las listaba); se agrupan "Mis obras" primero y "Otras obras" debajo.' },
-  { t: 'mejora', m: 'Flota', d: 'Las alarmas dominicales (inspección / reporte semanal) respetan el silencio: si eres un usuario no operativo o Tecnología te las silenció, ya no suenan.' },
+  { t: 'nuevo', m: 'Bitácora', d: 'En la ficha de una orden de trabajo ya puedes tocar "Ver PDF" para previsualizar el documento (con los detalles y las firmas) dentro de la app, sin descargarlo.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
