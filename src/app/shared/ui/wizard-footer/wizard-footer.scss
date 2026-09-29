@@ -1,3 +1,5 @@
+@use '../../../../styles/mixins' as m;
+
 .wizard-footer {
   flex: 0 0 auto; // la barra nunca se encoge → el CTA siempre visible
   position: sticky;
@@ -6,8 +8,11 @@
   display: flex;
   gap: 10px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  // CB — capa flotante de vidrio (con respaldos sólidos incorporados: sin
+  // backdrop-filter / reduce-transparency / html.no-glass → superficie sólida).
+  @include m.glass;
+  border: none;
+  border-top: 1px solid var(--glass-border);
 }
 
 .wizard-footer__primary {

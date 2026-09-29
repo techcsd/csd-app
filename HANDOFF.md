@@ -1,5 +1,56 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 29/09/2026 (tarde) — PROMPT-73 · Rediseño visual **CB v2** (navy+naranja, Inter, vidrio) — **EN DEV (2.35.0-dev) · esperando OK para prod**
+
+**TL;DR:** rediseño CB (fila 83, canvas aprobado 28-sep). La **web ya salió (SGC 1.148.0 a prod)**; esto es la mitad app. **Mergeado a `dev` (`f040d38`) + APK dev 2.35.0 firmado y publicado + versión registrada en dev (pub=false/min=false).** FASE 1 (fundación) + FASE 2 (shell/home/componentes) + FASE 3-6 (cascada + 4 barridos) + FASE 6 (login a lienzo gris), todo con **build + guards verdes**. Falta el rollout fino por artboard (map-glass), oscuro/a11y/device-QA físico, y el **release a prod (gateado por OK de Xaviel)**. **Para.**
+
+### ✅ EN DEV (2.35.0-dev)
+- **Mergeado `feature/cb-rediseno` → `dev`** (`f040d38`) + `git push origin dev` → Vercel construye **app-dev.sgcconstructorasd.com** (PWA de prueba).
+- **APK dev 2.35.0** firmado (cert `3c5316d8…5065`) + **publicado al bucket dev** (`csd-app-2.35.0.apk` + latest + version.json) + `apk_url` dev actualizado.
+- **Registrado en dev `app_versiones`**: `2.35.0 movil pub=false min=false` (verificado por query directa — **sin gotcha de mínima**; mínima sigue 2.26.1).
+- **Preview visual** (sistema CB, claro+oscuro, fuentes reales, incl. login): https://claude.ai/code/artifact/c37fc154-459f-4cb0-96f5-f5c3fb135208
+
+### 👤 Pendiente físico de Xaviel (device-QA)
+Instalar el **APK dev 2.35.0** en el teléfono más viejo disponible + iPhone (PWA app-dev): vidrio a 60fps (scroll home / hub conduces / parte), que `.no-glass` caiga a sólido donde deba, legibilidad al sol, primera pintura con la fuente (sin salto). Con **OK** → release a prod.
+
+**Commits (5):** `7b6f3a7` fundación + shell/home/componentes · `78fc170` pulido (steppers 52px, draft verde, títulos Inter Tight) · `21ce900` footers/compose flotantes → superficie · `349247b` docs · `38402f4` **login a lienzo gris + tarjeta blanca flotante (FASE 6 auth)** (PIN/reset/set-password ya correctos por tokens).
+
+**👀 Preview visual (claro+oscuro, fuentes Inter reales):** https://claude.ai/code/artifact/c37fc154-459f-4cb0-96f5-f5c3fb135208 — referencia del sistema CB con los valores exactos de `_tokens.scss`. No es captura del app; sirve para aprobar la dirección.
+
+### ⚠️ GOTCHA de versión (importante)
+El prompt pide cerrar como **2.34.0**, pero **2.34.0 ya se publicó a prod** (feature "Ver PDF", sesión anterior — ver bloque abajo). Por eso este rediseño salió como **2.35.0** (NO 2.34.0). **Ya bumpeado** en `environment.prod.ts` + `android/app/build.gradle` + `CAMBIOS_CURADOS` (release-apk.mjs); `environment.ts` es gitignored y lo regenera el build. Mínima **sigue 2.26.1**.
+
+### ✅ Hecho y build-verificado (en `feature/cb-rediseno`)
+- **FASE 1 — Fundación (CB1):**
+  - `src/styles/_tokens.scss` reescrito a **v2**: paleta unificada **navy `#1e3a5f` + naranja `#f97316`**, **lienzo gris `--bg #f5f6f8` + superficies blancas `--surface #ffffff`** (antes al revés → look "plano"), neutros fríos, texto `#101828`. Se mantiene el **shim inverso BH5** (`--color-*` = fuente, semántico = alias). Nuevos tokens: `--surface-3`, `--border-strong`, `--brand-hover`(navy), `--accent-hover/-soft`, **`--text-on-accent #14243a`** (tinta navy sobre naranja, AA 5.6:1), `--dot-*`, `--nav-bg`, `--glass-*`, `--font-display`, radios **10/14/18/24**, `--shadow-sm/--shadow/--shadow-pop`, `--focus-ring`, escala fs 12→32. Oscuro v2 (paridad web). `--Hub` (ámbar) → **alias de `--accent`** (§E). `--color-text-on-primary` → navy (arregla todos los CTA naranjas de golpe).
+  - **Inter + Inter Tight auto-hospedadas** (`public/assets/fonts/*.woff2`, mismos que la web; `src/styles/_fonts.scss` con `unicode-range` subset + fallback métrico anti-CLS). **264 KB en disco / ~93 KB efectivos** (solo `latin` carga para español; `latin-ext` on-demand). `font-feature-settings: cv11, ss01` global + utilidad `.tnum`.
+  - **Vidrio**: `src/styles/_mixins.scss` (`@mixin glass` con respaldos sólidos) + clase global `.glass`. Detección **`.no-glass`** en `index.html` (antes del render): Android < 10 o `deviceMemory <= 2` → superficie sólida.
+  - **Guards**: `verify-tokens.mjs` gana chequeo **blanco-sobre-naranja** (estricto, 0 ahora) + baseline surface-hex regenerado (88). Portado **`verify-no-ai-tropes.mjs`** (baseline 954 grandfathered) → añadido a `prebuild`.
+- **FASE 2 — Shell/home/componentes (CB5):**
+  - `styles.scss`: `input.field`/chips → cara blanca `--surface`, foco navy+halo; `.btn-cta` (tinta navy vía token), `.btn-ghost` con borde, `.screen__title` en Inter Tight, utilidades `.glass`/`.tnum`.
+  - `wizard-footer` → **vidrio**. `step-bar` → **segmentos** (hechos navy / actual naranja / pendientes gris, 6px). `big-button` badge naranja+tinta navy. `bottom-sheet` radio 28 + asa 40×5. `pin-pad` teclas 72px radio 18. `home` lienzo gris + header navy + `.home__report`/badges arreglados.
+  - **shared/ui + shared/components (15 archivos)**: `background: var(--color-bg)` que era "cara blanca" → `--surface` (option-button, select-list, qty-input, doc-slot, confirm/big-confirm, lugar/vehiculo/selector-categorias-pickers, cards de modales…). `module-placeholder` queda **gris** (raíz de página, correcto).
+- **FASE 3-6 (barridos aplicados, cascada por tokens):**
+  - Barrido `background: var(--color-bg)` → `--surface` **solo en selectores de "cara"** (49 cambios / 35 archivos en `pages/`); raíces de página se dejan grises. Codemod conservador (una cara olvidada = gris a 3% ≈ inocuo; una raíz mal blanqueada = pierde el lienzo → por eso conservador).
+  - Barrido **tinta navy sobre naranja** (30 cambios): en bloques con fondo naranja, `color:#fff` → `var(--text-on-accent)` (nunca toca navy). Ahora el guard lo prohíbe hacia adelante.
+
+### ⏳ Falta (tras OK de Xaviel; la mayoría ya "se ve" por cascada de tokens)
+- **RELEASE A PROD (gateado por OK):** `dev→main` (PR plantilla, Action pr-main) → `npm run apk -- --env prod` → `npm run apk:publish -- --env prod` (pasa regla 18: 2.35.0 ya salió en dev) → publicar (flags publicada/minima). Mínima NO cambia (2.26.1).
+- **FASE 3-6 fino por artboard**: controles de vidrio 48px sobre mapas (`trayectoria-map`/`location-picker`/`lugar-picker`), `km-input`/combustible con `.tnum` grande, conduce-en-ruta y parte-de-bitácora tal cual el canvas; repasar caras `--color-bg` que el barrido conservador dejó grises donde deban ser blancas. (Todo por cascada ya se ve moderno; esto es pulido — mejor con device-QA a la vista.)
+- **FASE 7**: tabla de pares AA (script de la web), **device-QA en APK dev** — **físico de Xaviel** (ver arriba).
+- **FASE 0/8 — capturas Playwright** antes/después de todas las rutas: Playwright NO instalado (descarga pesada); pendiente decidir si se corre. En su lugar quedó el **preview** (link arriba) como verificación del sistema.
+- **FASE 0/8 — capturas Playwright** antes/después de todas las rutas (claro+oscuro, 3 roles) + `qa/visual/cb/index.html`: **Playwright NO está instalado** (descarga pesada, offline-first); pendiente decidir si se corre.
+- **Release**: bump a **2.35.0** (4 sitios + `CAMBIOS_CURADOS` "Nuevo diseño…") → `apk --env dev` → merge a `dev` → OK Xaviel → `dev→main` → prod. **Mínima NO cambia (2.26.1).**
+- **Propuestas CB-P2** (barra inferior + buscador home): DEFAULT §D = **no** construidas (cambiarían navegación).
+
+### 📁 Archivos clave nuevos/tocados
+`src/styles/_tokens.scss` (reescrito), `src/styles/_fonts.scss` (nuevo), `src/styles/_mixins.scss` (nuevo), `src/styles.scss`, `src/index.html`, `public/assets/fonts/*.woff2` (4), `scripts/verify-no-ai-tropes.mjs` (+baseline) + `verify-tokens.mjs` (chequeo naranja), `package.json` (prebuild), `theme.service.ts` (theme-color oscuro `#2e75b6`), `PARIDAD.md` (nuevo), + ~50 componentes/páginas (barridos). **Cero cambios en `*.routes.ts`, servicios, RPC o SQL** (regla 1 / §E: solo piel).
+
+### Rollback
+Revert del merge (cuando se haga); los tokens v1 quedan en el historial. Nada tocó datos ni backend.
+
+---
+
 ## 🟢 SESIÓN 29/09/2026 — "Ver PDF" en la ficha de orden de trabajo — **2.34.0 PUBLICADA a prod** · `feature/ver-pdf-ot` → `dev` → `main`
 
 **TL;DR:** pedido suelto de Xaviel: añadir un botón **"Ver PDF"** de vista previa a la ficha de la orden de trabajo (el comentario del componente ya lo prometía pero solo existían Compartir/Descargar). Ahora `verPdf()` genera el PDF (detalles + 2 firmas embebidas) a un blob y lo abre en el **visor pdf.js inline** (`app-pdf-viewer`, AS10 — el mismo del chat/expediente), sin descargar ni salir de la app; el object-URL se libera al cerrar y en `ngOnDestroy`. El botón de descarga pasó de "Ver / Guardar PDF" a **"Guardar PDF"**. Acciones de la ficha ahora: **Ver PDF** (primario) · Compartir PDF · Guardar PDF · Enviar a… Build verde. Salió a dev (APK dev 2.34.0), Xaviel probó y dio OK ("ya probé, publica"), y **salió a PROD**: `dev→main` (`4accb84`) + APK prod firmado (cert `3c5316d8…5065`, regla 18 OK) + **publicada=2.34.0** (mínima 2.26.1; 2.33.0 despublicada). ✅ **Sesión cerrada.**

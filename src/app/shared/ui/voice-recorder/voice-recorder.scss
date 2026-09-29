@@ -54,7 +54,7 @@
 }
 .voice__send {
   background: var(--color-primary, var(--primary));
-  color: #fff;
+  color: var(--text-on-accent);
 }
 
 // Y11 — medidor de nivel del micrófono (tipo WhatsApp).

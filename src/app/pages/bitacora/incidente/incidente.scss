@@ -50,7 +50,7 @@ app-option-button {
   padding: 12px 18px;
   border-radius: 999px;
   border: 2px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-surface);
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -122,7 +122,7 @@ app-option-button {
   padding: 16px;
   padding-bottom: calc(16px + var(--safe-bottom));
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 
 // BL9 — aviso de incidente retrofechado (fecha pasada) en el paso 1.

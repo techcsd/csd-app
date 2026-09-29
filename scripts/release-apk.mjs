@@ -41,7 +41,7 @@ const RELEASED_AT = '2026-09-29';
 
 const TITULO = 'Vista previa del PDF de la orden de trabajo';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Bitácora', d: 'En la ficha de una orden de trabajo ya puedes tocar "Ver PDF" para previsualizar el documento (con los detalles y las firmas) dentro de la app, sin descargarlo.' },
+  { t: 'nuevo', m: 'Diseño', d: 'Nuevo diseño de toda la app: colores azul marino y naranja unificados, tipografía Inter más clara, tarjetas blancas sobre fondo gris y toques de vidrio esmerilado. La organización, los pasos y las funciones son los mismos de siempre — solo se ve más moderna y limpia.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

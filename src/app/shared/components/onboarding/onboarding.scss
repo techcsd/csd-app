@@ -29,7 +29,7 @@
   // AQ4 — nunca más alto que el área segura → los botones no se cortan; si el
   // contenido no cabe (font-scale grande), el texto scrollea y los botones quedan.
   max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px);
-  background: var(--color-bg);
+  background: var(--color-surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lift);
   padding: 22px 20px 18px;

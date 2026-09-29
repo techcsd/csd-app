@@ -85,6 +85,6 @@
   "src/styles.scss::background: #e11d48",
   "src/styles.scss::border: 2px solid #fff",
   "src/styles.scss::border: 3px solid #fff",
-  "src/styles/_tokens.scss::border: #30404f",
-  "src/styles/_tokens.scss::border: #d4d4d8"
+  "src/styles/_tokens.scss::border: #1e2b3c",
+  "src/styles/_tokens.scss::border: #e4e7ec"
 ]

@@ -1,5 +1,5 @@
 .vform {
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 
 .vform__header {
@@ -87,7 +87,7 @@
     height: 38px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
-    background: var(--color-bg);
+    background: var(--color-surface);
     font-size: 15px;
   }
   button:disabled {

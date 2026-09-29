@@ -26,15 +26,15 @@
 
 .pin-pad__keys {
   display: grid;
-  grid-template-columns: repeat(3, 84px);
+  grid-template-columns: repeat(3, 72px); // CB — teclas 72px
   justify-content: center;
   gap: 22px 28px;
 }
 
 .pin-pad__key {
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-lg); // CB — cuadro redondeado (18px), no círculo
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
@@ -48,7 +48,7 @@
 }
 .pin-pad__key:active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-on-accent);
   transform: scale(0.94);
 }
 .pin-pad__key--empty {

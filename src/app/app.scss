@@ -94,7 +94,7 @@
   padding: 16px;
   border-radius: var(--radius);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-on-accent);
   font-size: var(--fs-option);
   font-weight: 700;
 }
@@ -141,7 +141,7 @@
   padding-top: calc(10px + var(--safe-top));
   border: none;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-on-accent);
   text-align: left;
   font-weight: 700;
 }

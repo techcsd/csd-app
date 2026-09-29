@@ -10,7 +10,7 @@
   padding: 32px 24px;
   text-align: center;
   background: var(--primary, #ff5f00);
-  color: #fff;
+  color: var(--text-on-accent);
 }
 .alarma__pulse {
   font-size: 72px;

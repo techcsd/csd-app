@@ -109,7 +109,7 @@
   cursor: pointer;
 }
 .clog__row:active {
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 
 // AQ13 — chips de periodo rápido
@@ -180,7 +180,7 @@
 .clog__chip {
   padding: 3px 8px;
   border-radius: 999px;
-  background: var(--color-bg);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   font-size: 11px;
   font-weight: 700;
