@@ -9,8 +9,13 @@
 - **APK prod 2.33.0**: firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.33.0 existía en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.33.0.apk` + latest + version.json 2.33.0/min 2.26.1).
 - **PUBLICADA = 2.33.0 (única) · MÍNIMA = 2.26.1** (verificado por query directa; 2.32.0 despublicada; **sin gotcha de `minima`**). Publicación vía service_role direct UPDATE (el RPC `marcar_version_publicada` gatea en `es_tecnologia()`; se replicó flag + `publicada_at` + `publicada_por`=Tecnología `4b19cc4b…`). El trigger de versión-publicada disparó el push a los usuarios (`push_notificada_at` seteado).
 
-### 👤 Pendiente físico de Xaviel — solo confirmación de campo (no bloquea el release)
-- Pedir a **Sócrates** que actualice a 2.33.0 y confirme que ve las obras en "Mi obra".
+### ✅ Verificación "Entrar como" Sócrates (29-sep) — Sócrates ya confirmó en campo + verificado headless
+Sócrates confirmó que ya ve las obras. Además se verificó impersonando su sesión (mecanismo de "Entrar como" = admin `generate_link`+`verify`):
+- **PROD (solo lectura, como el Sócrates real `srodriguez@`):** `mis_proyectos(p_todos:null)` = **12 obras** (es_mia 1 "Torre Alpha" / 11 otras); `puede_ver_otras_bitacoras=true`; `listar_bitacoras(todas)` = **121 bitácoras** de obras ajenas; abrir una ajena (autor Abraham Mercedes) → detalle visible; pickers `directorio_proyectos`=12 / `proyectos_pickables`=12.
+- **DEV (escritura, como Sócrates):** `crear_orden_trabajo` en una obra AJENA (ASA - Residencial Romo, Cap Cana) → **200 OK** (el gate de visibilidad pasa; solo pidió la firma del ingeniero = regla de negocio legítima, se satisfizo). OT de prueba borrada después (dev limpio).
+- **CA1 (Eduardo, dev):** `es_usuario_operativo_flota=false` + ambas alarmas `activa=false/silenciada_por_admin=true` → gate suprime.
+
+### 👤 Pendiente físico de Xaviel — solo confirmación de campo (no bloquea; Sócrates ya confirmó)
 - Confirmar con **Eduardo** el próximo domingo que ya no le suena la alarma.
 
 ### 🎯 Qué se hizo (CA1 + CA2)
