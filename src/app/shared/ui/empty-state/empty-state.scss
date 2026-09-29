@@ -15,8 +15,10 @@
 
 .empty-state__title {
   margin: 0;
+  font-family: var(--font-display); // CB — Inter Tight
   font-size: var(--fs-title);
   font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
 }
 

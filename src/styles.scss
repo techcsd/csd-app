@@ -40,6 +40,16 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* CB — títulos en Inter Tight (display). Cambio solo de fuente: seguro app-wide.
+   Cubre encabezados semánticos y las clases `*__title` de las cabeceras. */
+h1,
+h2,
+h3,
+[class$='__title'] {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
 button {
   font-family: inherit;
   cursor: pointer;

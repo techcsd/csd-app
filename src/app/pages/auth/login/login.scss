@@ -26,8 +26,10 @@
 }
 
 .login__title {
+  font-family: var(--font-display); // CB — Inter Tight
   font-size: 30px;
   font-weight: 800;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 .login__tagline {
