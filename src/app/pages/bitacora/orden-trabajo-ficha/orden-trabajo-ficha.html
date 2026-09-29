@@ -66,11 +66,14 @@
 
       <!-- Acciones -->
       <div class="otf__actions">
-        <button type="button" class="btn-cta" [disabled]="pdfBusy()" (click)="compartirPdf()">
+        <button type="button" class="btn-cta" [disabled]="pdfBusy()" (click)="verPdf()">
+          @if (pdfBusy()) { ⏳… } @else { 📄 {{ 'Ver PDF' | t }} }
+        </button>
+        <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="compartirPdf()">
           @if (pdfBusy()) { ⏳… } @else { 📤 {{ 'Compartir PDF' | t }} }
         </button>
         <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="descargarPdf()">
-          @if (pdfBusy()) { ⏳… } @else { ⬇️ {{ 'Ver / Guardar PDF' | t }} }
+          @if (pdfBusy()) { ⏳… } @else { ⬇️ {{ 'Guardar PDF' | t }} }
         </button>
         <button type="button" class="btn-ghost" [class.otf__act--on]="enviarAbierto()" (click)="toggleEnviar()">
           👥 {{ 'Enviar a…' | t }}
@@ -117,4 +120,9 @@
       }
     }
   </div>
+
+  <!-- BW1 — visor de PDF inline (pdf.js): vista previa con detalles + firmas -->
+  @if (visor(); as v) {
+    <app-pdf-viewer [src]="v.url" [nombre]="v.nombre" (cerrado)="cerrarVisor()" />
+  }
 </div>

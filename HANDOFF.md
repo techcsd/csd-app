@@ -1,5 +1,16 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 29/09/2026 — "Ver PDF" en la ficha de orden de trabajo — **2.34.0-dev, ESPERANDO OK para prod** · `feature/ver-pdf-ot` → `dev`
+
+**TL;DR:** pedido suelto de Xaviel: añadir un botón **"Ver PDF"** de vista previa a la ficha de la orden de trabajo (el comentario del componente ya lo prometía pero solo existían Compartir/Descargar). Ahora `verPdf()` genera el PDF (detalles + 2 firmas embebidas) a un blob y lo abre en el **visor pdf.js inline** (`app-pdf-viewer`, AS10 — el mismo del chat/expediente), sin descargar ni salir de la app; el object-URL se libera al cerrar y en `ngOnDestroy`. El botón de descarga pasó de "Ver / Guardar PDF" a **"Guardar PDF"**. Acciones de la ficha ahora: **Ver PDF** (primario) · Compartir PDF · Guardar PDF · Enviar a… Build verde. Salió a **dev** (APK dev 2.34.0 + `app-dev.`). **Regla 18: PARADO esperando OK de Xaviel para prod.**
+
+- **Archivos:** `pages/bitacora/orden-trabajo-ficha/orden-trabajo-ficha.ts` (+`PdfViewer`, signal `visor`, `verPdf()`/`cerrarVisor()`/`OnDestroy`) + `.html` (botón + overlay `<app-pdf-viewer>`); `public/i18n/en.json` (+"Guardar PDF"). Reutiliza `OrdenTrabajoPdfService.blob()` (ya existía) y `shared/ui/pdf-viewer`.
+- **Contexto verificado antes (29-sep):** el PDF de la OT ya incluía detalles + ambas firmas (probado E2E creando una OT con firmas y generando el PDF; render 2/2 firmas embebidas). Este cambio solo añade la **vista previa inline**; en nativo antes solo se podía Guardar (sin preview).
+- **👤 Pendiente de Xaviel:** probar "Ver PDF" en `app-dev.`/APK dev y dar OK → PR `dev→main` + APK prod + publicar 2.34.0.
+- **Rollback:** cliente (revertir el merge); es puramente aditivo.
+
+---
+
 ## 🟢 SESIÓN 28/09/2026 — PROMPT-71 (ronda CA, hijo) — **2.33.0 PUBLICADA a prod** · `feature/ca-ronda` → `dev` → `main`
 
 **TL;DR:** ronda **CA** en la app (2 bugs vivos, ambos con causa en el repo del hijo). El padre ya cerró su parte en **dev+prod** (PROMPT-70, web 1.147.0): `mis_proyectos(p_usuario, p_todos)` con `es_mia`, `es_usuario_operativo_flota()`, `mis_notif_operativas().silenciada_por_admin`. **Ojo con las versiones:** los docs asumían que BZ era esta ronda (2.32.0), pero **BZ ya se publicó como 2.32.0 la semana pasada** → FASE 0 (mitad app de BZ) ya estaba en prod → esta ronda CA es **2.33.0**. Build + guards + i18n verdes. Salió a **dev** (APK dev 2.33.0 + `app-dev.`), Xaviel dio OK ("dale, haz todo por tu cuenta"), y **salió a PROD**: `dev→main` (`2c8b673`) + APK prod firmado (cert `3c5316d8…5065`, regla 18 OK) registrado+subido + **publicada=2.33.0** (mínima sigue 2.26.1; 2.32.0 despublicada). ✅ **Sesión cerrada.**
