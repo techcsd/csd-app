@@ -15,4 +15,6 @@ export class StepBar {
   total = input.required<number>();
 
   pct = computed(() => Math.round((this.current() / this.total()) * 100));
+  // CB — segmentos (hechos navy, actual naranja, pendientes gris). Solo piel.
+  steps = computed(() => Array.from({ length: this.total() }, (_, i) => i + 1));
 }

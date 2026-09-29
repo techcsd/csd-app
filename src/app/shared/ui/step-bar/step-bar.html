@@ -1,6 +1,12 @@
 <div class="step-bar">
   <span class="step-bar__text">{{ 'Paso {n} de {total}' | t: { n: current(), total: total() } }}</span>
   <div class="step-bar__track">
-    <div class="step-bar__fill" [style.width.%]="pct()"></div>
+    @for (s of steps(); track s) {
+      <span
+        class="step-bar__seg"
+        [class.step-bar__seg--done]="s < current()"
+        [class.step-bar__seg--current]="s === current()"
+      ></span>
+    }
   </div>
 </div>

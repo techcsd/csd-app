@@ -73,7 +73,7 @@
   padding: 0 7px;
   border-radius: 13px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-on-accent);
   font-size: 14px;
   font-weight: 800;
   display: inline-flex;
@@ -308,7 +308,7 @@
 .selcat__modal-card {
   width: 100%;
   max-width: 440px;
-  background: var(--color-bg);
+  background: var(--color-surface);
   border-radius: var(--radius);
   padding: 20px 18px calc(18px + env(safe-area-inset-bottom));
   display: flex;
@@ -377,7 +377,7 @@
 
 .selcat__step--add {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--text-on-accent);
 }
 
 .selcat__qty {
@@ -397,7 +397,7 @@
   gap: 10px;
   padding: 12px 4px calc(12px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-surface);
 }
 
 .selcat__bar-total {

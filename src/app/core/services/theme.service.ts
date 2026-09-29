@@ -97,7 +97,7 @@ export class ThemeService {
     document.documentElement.setAttribute('data-theme', t);
     // BH5 — el theme-color (barra de estado / chrome del PWA) sigue al tema.
     const meta = document.getElementById('theme-color-meta');
-    if (meta) meta.setAttribute('content', t === 'dark' ? '#2e5586' : '#1e3a5f');
+    if (meta) meta.setAttribute('content', t === 'dark' ? '#2e75b6' : '#1e3a5f');
   }
 
   /** Recalcula el tema resuelto desde la preferencia actual y lo aplica/cachea. */

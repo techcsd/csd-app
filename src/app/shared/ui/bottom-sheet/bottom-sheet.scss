@@ -15,8 +15,8 @@
   max-height: 88vh;
   display: flex;
   flex-direction: column;
-  background: var(--color-surface, var(--secondary));
-  border-radius: 20px 20px 0 0;
+  background: var(--color-surface); // CB — hoja sólida
+  border-radius: 28px 28px 0 0; // CB — radio superior grande
   box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.4);
   animation: sheet-up 0.25s ease;
 }
@@ -30,7 +30,7 @@
 
 .sheet__handle {
   display: block;
-  width: 44px;
+  width: 40px;
   height: 5px;
   margin: 0 auto 10px;
   border-radius: 999px;

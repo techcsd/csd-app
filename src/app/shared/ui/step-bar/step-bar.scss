@@ -1,6 +1,6 @@
 .step-bar {
   padding: 12px 16px;
-  background: var(--color-bg);
+  background: var(--color-surface); // CB — cabecera blanca de wizard
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -12,16 +12,24 @@
   margin-bottom: 8px;
 }
 
+// CB — segmentos: hechos navy, actual naranja, pendientes gris (6px de alto).
 .step-bar__track {
-  height: 10px;
-  border-radius: 5px;
-  background: var(--color-surface-2);
-  overflow: hidden;
+  display: flex;
+  gap: 6px;
 }
 
-.step-bar__fill {
-  height: 100%;
-  background: var(--color-primary);
-  border-radius: 5px;
-  transition: width var(--transition);
+.step-bar__seg {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--color-surface-2);
+  transition: background var(--transition);
+}
+
+.step-bar__seg--done {
+  background: var(--brand); // navy — pasos completados
+}
+
+.step-bar__seg--current {
+  background: var(--accent); // naranja — paso actual
 }

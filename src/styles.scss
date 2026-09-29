@@ -8,6 +8,7 @@
    ./styles/_tokens.scss (BH5 — paridad BE con la web). Aquí solo helpers de layout.
    ============================================================ */
 
+@use './styles/fonts';
 @use './styles/tokens';
 
 * {
@@ -25,6 +26,8 @@ body {
   font-family: var(--font-body);
   font-size: var(--fs-body);
   line-height: 1.4;
+  /* Inter: alt tildes/ojales, cifras tabulares por defecto para números de campo. */
+  font-feature-settings: 'cv11', 'ss01';
   /* Prevent iOS auto-zoom on inputs (< 16px triggers it). */
   -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: none;
@@ -77,8 +80,10 @@ button {
 }
 
 .screen__title {
+  font-family: var(--font-display); /* CB — Inter Tight en títulos */
   font-size: var(--fs-title);
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--color-text-primary);
   margin: 0 0 4px;
 }
@@ -118,6 +123,7 @@ button {
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text-primary);
+  border: 1px solid var(--color-border); /* CB — secundario = blanco con borde */
   font-size: var(--fs-option);
   font-weight: 600;
   display: inline-flex;
@@ -153,8 +159,9 @@ select.field {
   padding: 0 16px;
   font-size: var(--fs-option);
   font-family: inherit;
-  background: var(--color-bg);
+  background: var(--color-surface); /* CB — cara blanca sobre lienzo gris */
   color: var(--color-text-primary);
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
 textarea.field {
   // El textarea necesita padding vertical y una altura mínima cómoda.
@@ -170,7 +177,8 @@ input.field:focus,
 textarea.field:focus,
 select.field:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--brand); /* CB — foco navy + halo (Regla 7) */
+  box-shadow: var(--focus-ring);
 }
 input.field::placeholder,
 textarea.field::placeholder {
@@ -335,7 +343,7 @@ textarea.field::placeholder {
   padding: 10px 16px;
   border-radius: 999px;
   border: 2px solid var(--color-border);
-  background: var(--color-bg);
+  background: var(--color-surface); /* CB — cara blanca */
   font-size: 15px;
   font-weight: 600;
   color: var(--color-text-primary);
@@ -414,4 +422,45 @@ textarea.field::placeholder {
   font-size: 13px;
   color: var(--color-text-secondary);
   transition: height 0.1s ease;
+}
+
+/* ── CB — Utilidades del rediseño v2 ────────────────────────────────────────
+
+   .tnum — cifras tabulares: montos, galones, km, cantidades, nº de conduce/
+   requisición. Alinea columnas de números y evita el "baile" al teclear. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum', 'cv11', 'ss01';
+}
+
+/* .glass — material esmerilado SOLO para la capa que flota sobre el contenido
+   (wizard-footer, sync-bar flotante, controles sobre mapa/foto/visor). Trae sus
+   respaldos sólidos: sin backdrop-filter, prefers-reduced-transparency, o
+   html.no-glass (Android viejo / poca RAM) → superficie sólida. Nunca en
+   tarjetas, tablas ni formularios (NN/g + Apple). */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+html.no-glass .glass {
+  background: var(--surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
