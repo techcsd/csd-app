@@ -1,13 +1,13 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 29/09/2026 — "Ver PDF" en la ficha de orden de trabajo — **2.34.0-dev, ESPERANDO OK para prod** · `feature/ver-pdf-ot` → `dev`
+## 🟢 SESIÓN 29/09/2026 — "Ver PDF" en la ficha de orden de trabajo — **2.34.0 PUBLICADA a prod** · `feature/ver-pdf-ot` → `dev` → `main`
 
-**TL;DR:** pedido suelto de Xaviel: añadir un botón **"Ver PDF"** de vista previa a la ficha de la orden de trabajo (el comentario del componente ya lo prometía pero solo existían Compartir/Descargar). Ahora `verPdf()` genera el PDF (detalles + 2 firmas embebidas) a un blob y lo abre en el **visor pdf.js inline** (`app-pdf-viewer`, AS10 — el mismo del chat/expediente), sin descargar ni salir de la app; el object-URL se libera al cerrar y en `ngOnDestroy`. El botón de descarga pasó de "Ver / Guardar PDF" a **"Guardar PDF"**. Acciones de la ficha ahora: **Ver PDF** (primario) · Compartir PDF · Guardar PDF · Enviar a… Build verde. Salió a **dev** (APK dev 2.34.0 + `app-dev.`). **Regla 18: PARADO esperando OK de Xaviel para prod.**
+**TL;DR:** pedido suelto de Xaviel: añadir un botón **"Ver PDF"** de vista previa a la ficha de la orden de trabajo (el comentario del componente ya lo prometía pero solo existían Compartir/Descargar). Ahora `verPdf()` genera el PDF (detalles + 2 firmas embebidas) a un blob y lo abre en el **visor pdf.js inline** (`app-pdf-viewer`, AS10 — el mismo del chat/expediente), sin descargar ni salir de la app; el object-URL se libera al cerrar y en `ngOnDestroy`. El botón de descarga pasó de "Ver / Guardar PDF" a **"Guardar PDF"**. Acciones de la ficha ahora: **Ver PDF** (primario) · Compartir PDF · Guardar PDF · Enviar a… Build verde. Salió a dev (APK dev 2.34.0), Xaviel probó y dio OK ("ya probé, publica"), y **salió a PROD**: `dev→main` (`4accb84`) + APK prod firmado (cert `3c5316d8…5065`, regla 18 OK) + **publicada=2.34.0** (mínima 2.26.1; 2.33.0 despublicada). ✅ **Sesión cerrada.**
 
 - **Archivos:** `pages/bitacora/orden-trabajo-ficha/orden-trabajo-ficha.ts` (+`PdfViewer`, signal `visor`, `verPdf()`/`cerrarVisor()`/`OnDestroy`) + `.html` (botón + overlay `<app-pdf-viewer>`); `public/i18n/en.json` (+"Guardar PDF"). Reutiliza `OrdenTrabajoPdfService.blob()` (ya existía) y `shared/ui/pdf-viewer`.
-- **Contexto verificado antes (29-sep):** el PDF de la OT ya incluía detalles + ambas firmas (probado E2E creando una OT con firmas y generando el PDF; render 2/2 firmas embebidas). Este cambio solo añade la **vista previa inline**; en nativo antes solo se podía Guardar (sin preview).
-- **👤 Pendiente de Xaviel:** probar "Ver PDF" en `app-dev.`/APK dev y dar OK → PR `dev→main` + APK prod + publicar 2.34.0.
-- **Rollback:** cliente (revertir el merge); es puramente aditivo.
+- **En PROD:** PWA verificada live (chunk `chunk-QLCYHPMN.js` contiene `version:"2.34.0"`); APK prod subido (version.json 2.34.0/min 2.26.1); **PUBLICADA=2.34.0 (única) · MÍNIMA=2.26.1** (sin gotcha), vía service_role UPDATE (publicada_por=Tecnología). El trigger de versión disparó el push a usuarios.
+- **Contexto verificado (29-sep):** el PDF de la OT ya incluía detalles + ambas firmas (probado E2E creando una OT con firmas → render 2/2 embebidas). Este cambio añade la **vista previa inline**; en nativo antes solo se podía Guardar (sin preview).
+- **Rollback:** cliente (revertir el merge); es puramente aditivo. Despublicar: `(2.33.0,true)`+`(2.34.0,false)`.
 
 ---
 
