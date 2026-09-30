@@ -3,6 +3,8 @@
     <button type="button" class="ce-header__back" (click)="back()" aria-label="Atrás">←</button>
     <span class="ce-header__icon">🚛</span>
     <h1 class="ce-header__title">{{ 'Conduce externo' | t }}</h1>
+    <!-- CC5 — ir a "Mis conduces externos" (lista con ficha + PDF). -->
+    <button type="button" class="ce-header__link" (click)="verMisExternos()">{{ 'Mis conduces' | t }}</button>
   </header>
 
   <div class="screen__body">

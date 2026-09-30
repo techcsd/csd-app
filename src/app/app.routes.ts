@@ -321,6 +321,20 @@ export const routes: Routes = [
       import('./pages/transporte/conduce-externo/conduce-externo').then((m) => m.ConduceExternoPage),
   },
   {
+    // CC5 — "Mis conduces externos" (lista: servidor + pendientes del outbox).
+    path: 'transporte/conduces-externos',
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    loadComponent: () =>
+      import('./pages/transporte/conduce-externo/conduce-externo-lista').then((m) => m.ConduceExternoListaPage),
+  },
+  {
+    // CC5 — ficha del conduce externo (server por :id, o pendiente del outbox).
+    path: 'transporte/conduce-externo/:id',
+    canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],
+    loadComponent: () =>
+      import('./pages/transporte/conduce-externo/conduce-externo-detalle').then((m) => m.ConduceExternoDetallePage),
+  },
+  {
     // BA/Transporte v3 (FASE 2) — requisiciones "por despachar" (el chofer jala).
     path: 'transporte/despachos',
     canActivate: [authGuard, pinGuard, moduleAnyGuard(['flota', 'inventario'])],

@@ -64,9 +64,9 @@
       "ht": 0
     },
     "pages/admin/usuarios": {
-      "conT": 30,
+      "conT": 38,
       "sinT": 0,
-      "en": 100,
+      "en": 82,
       "ht": 0
     },
     "pages/admin/versiones": {
@@ -76,10 +76,10 @@
       "ht": 0
     },
     "pages/auth/login": {
-      "conT": 12,
+      "conT": 9,
       "sinT": 2,
-      "en": 86,
-      "ht": 21
+      "en": 82,
+      "ht": 0
     },
     "pages/auth/pin-acceso-change": {
       "conT": 3,
@@ -184,7 +184,7 @@
       "ht": 0
     },
     "pages/bitacora/orden-trabajo-ficha": {
-      "conT": 30,
+      "conT": 31,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -298,9 +298,9 @@
       "ht": 0
     },
     "pages/inventario/conteo": {
-      "conT": 23,
+      "conT": 29,
       "sinT": 0,
-      "en": 100,
+      "en": 83,
       "ht": 0
     },
     "pages/inventario/conteos": {
@@ -490,9 +490,9 @@
       "ht": 0
     },
     "pages/pendientes/outbox-detalle": {
-      "conT": 23,
+      "conT": 24,
       "sinT": 0,
-      "en": 100,
+      "en": 96,
       "ht": 0
     },
     "pages/perfil": {
@@ -688,9 +688,9 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 111,
+      "conT": 114,
       "sinT": 2,
-      "en": 98,
+      "en": 96,
       "ht": 0
     },
     "pages/transporte/combustible-log": {
@@ -706,9 +706,9 @@
       "ht": 4
     },
     "pages/transporte/conduce-externo": {
-      "conT": 45,
-      "sinT": 0,
-      "en": 100,
+      "conT": 76,
+      "sinT": 1,
+      "en": 83,
       "ht": 0
     },
     "pages/transporte/conduce-transferencias": {
@@ -784,9 +784,9 @@
       "ht": 0
     },
     "pages/transporte/echada-detalle": {
-      "conT": 16,
+      "conT": 17,
       "sinT": 2,
-      "en": 89,
+      "en": 84,
       "ht": 0
     },
     "pages/transporte/estado-chofer": {

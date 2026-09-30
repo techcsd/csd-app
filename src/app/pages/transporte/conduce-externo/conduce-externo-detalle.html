@@ -1,0 +1,131 @@
+<div class="screen ced">
+  <header class="ced__header">
+    <button type="button" class="ced__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="ced__title">{{ 'Conduce externo' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="6" />
+    } @else if (!ficha()) {
+      <p class="ced__empty">{{ 'No encontramos este conduce.' | t }}</p>
+    } @else {
+      @let f = ficha()!;
+
+      <!-- Cabecera -->
+      <div class="ced__head">
+        <span class="ced__codigo">{{ f.codigo }}</span>
+        <span
+          class="ced__estado"
+          [class.ced__estado--pend]="f.pendiente"
+          [class.ced__estado--anulado]="f.anulado"
+          >{{ estadoLabel() }}</span
+        >
+      </div>
+      @if (f.es_prueba) { <p class="ced__prueba">🧪 {{ 'Dato de prueba' | t }}</p> }
+      @if (f.anulado && f.motivo_anulacion) {
+        <p class="ced__anulado">{{ 'Anulado:' | t }} {{ f.motivo_anulacion }}</p>
+      }
+
+      <!-- Datos -->
+      <div class="ced__card">
+        <div class="ced__kv"><span>{{ 'Transporta' | t }}</span><b>🚛 {{ f.transporta || '—' }}</b></div>
+        <div class="ced__kv"><span>{{ 'Origen' | t }}</span><b>{{ f.origen_bodega || f.origen || '—' }}</b></div>
+        <div class="ced__kv"><span>{{ 'Destino' | t }}</span><b>{{ f.destino_bodega || f.destino || '—' }}</b></div>
+        @if (f.fecha) { <div class="ced__kv"><span>{{ 'Fecha' | t }}</span><b>{{ fmt(f.fecha) }}</b></div> }
+        @if (f.emisor) { <div class="ced__kv"><span>{{ 'Emisor' | t }}</span><b>{{ f.emisor }}</b></div> }
+        @if (f.receptor) { <div class="ced__kv"><span>{{ 'Recibido por' | t }}</span><b>{{ f.receptor }}</b></div> }
+      </div>
+
+      <!-- Material -->
+      <div class="ced__card">
+        <h2 class="ced__sec">{{ 'Material' | t }}</h2>
+        @if (f.renglones.length) {
+          @for (r of f.renglones; track $index) {
+            <div class="ced__reng">
+              <span class="ced__reng-nom">{{ r.articulo || '—' }}</span>
+              <span class="ced__reng-cant">
+                {{ r.enviado ?? 0 }}@if (r.recibido != null) { <span class="ced__reng-rec"> · rec. {{ r.recibido }}</span> } {{ r.unidad || '' }}
+              </span>
+            </div>
+          }
+        } @else if (f.material) {
+          <p class="ced__material">{{ f.material }}</p>
+        } @else {
+          <p class="ced__material ced__material--empty">{{ 'Sin detalle de material.' | t }}</p>
+        }
+      </div>
+
+      <!-- Fotos -->
+      @if (fotos().length) {
+        <div class="ced__card">
+          <h2 class="ced__sec">{{ 'Fotos' | t }}</h2>
+          <div class="ced__fotos">
+            @for (ft of fotos(); track ft.url) {
+              <button type="button" class="ced__foto" (click)="abrirFoto(ft.url)">
+                <img [src]="ft.url" [alt]="ft.label" loading="lazy" />
+                <span>{{ ft.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Historial -->
+      @if (f.historial.length) {
+        <div class="ced__card">
+          <h2 class="ced__sec">{{ 'Historial' | t }}</h2>
+          @for (h of f.historial; track $index) {
+            <div class="ced__hist"><span>{{ h.estado }}</span><b>{{ fmt(h.at) }}</b></div>
+          }
+        </div>
+      }
+
+      <!-- Acciones -->
+      <div class="ced__acciones">
+        <button type="button" class="btn-cta" [disabled]="generandoPdf()" (click)="verPdf()">
+          {{ generandoPdf() ? ('Generando…' | t) : ('📄 ' + ('Ver PDF' | t)) }}
+        </button>
+        <button type="button" class="btn-ghost" [disabled]="compartiendo()" (click)="compartir()">
+          {{ compartiendo() ? ('Compartiendo…' | t) : ('🔗 ' + ('Compartir' | t)) }}
+        </button>
+        @if (puedeAnular()) {
+          <button type="button" class="btn-ghost ced__danger" (click)="pedirAnular()">🚫 {{ 'Anular' | t }}</button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Visor de PDF -->
+  @if (pdfSrc(); as src) {
+    <app-pdf-viewer [src]="src" [nombre]="(ficha()?.codigo ?? 'Conduce externo')" (cerrado)="cerrarPdf()" />
+  }
+
+  <!-- Foto ampliada -->
+  @if (fotoAbierta(); as url) {
+    <div class="ced__lightbox" (click)="cerrarFoto()">
+      <img [src]="url" alt="" />
+    </div>
+  }
+
+  <!-- Anular con motivo -->
+  @if (anularPaso()) {
+    <div class="ced__modal" (click)="cancelarAnular()">
+      <div class="ced__modal-box" (click)="$event.stopPropagation()">
+        <h2 class="ced__modal-t">{{ 'Anular conduce externo' | t }}</h2>
+        <p class="ced__modal-sub">{{ 'Esta acción no borra: deja el conduce como anulado con tu motivo.' | t }}</p>
+        <textarea
+          class="field"
+          rows="3"
+          [value]="motivoAnular()"
+          (input)="motivoAnular.set($any($event.target).value)"
+          [attr.placeholder]="'Motivo de la anulación' | t"
+        ></textarea>
+        <button type="button" class="btn-cta ced__modal-mt" [disabled]="anulando()" (click)="confirmarAnular()">
+          {{ anulando() ? ('Anulando…' | t) : ('Anular' | t) }}
+        </button>
+        <button type="button" class="btn-ghost" (click)="cancelarAnular()">{{ 'Cancelar' | t }}</button>
+      </div>
+    </div>
+  }
+</div>

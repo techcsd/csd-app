@@ -132,83 +132,20 @@
   margin-top: 24px;
 }
 
-// BZ3 — panel de usuarios de prueba (solo en dev). Banda naranja como la cinta DEV.
-.login__qa {
-  margin-top: 20px;
-  border: 1px solid #f97316; // tokens-allow-dark — naranja DEV a propósito (cinta DEV), solo en dev
-  border-radius: var(--radius);
-  background: rgba(249, 115, 22, 0.08);
-  overflow: hidden;
-}
-.login__qa-head {
+// CC2 — enlace mágico (solo dev). Discreto, bajo el enlace de "olvidé mi contraseña".
+.login__magic {
+  display: block;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 14px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
   background: transparent;
-  color: #f97316;
+  color: var(--color-secondary);
   font-size: 14px;
-  font-weight: 700;
-  text-align: left;
-}
-.login__qa-note {
-  margin: 0;
-  padding: 0 14px 10px;
-  font-size: 12.5px;
-  color: var(--color-text-secondary); // CB — sobre lienzo claro
-}
-.login__qa-list {
-  list-style: none;
-  margin: 0;
-  padding: 0 8px 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 320px;
-  overflow-y: auto;
-}
-.login__qa-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--color-surface); // CB — item blanco con borde
-  border: 1px solid var(--color-border);
-}
-.login__qa-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-.login__qa-name {
-  color: var(--color-text-primary);
-  font-size: 14px;
-  font-weight: 700;
-}
-.login__qa-rol {
-  color: var(--accent-hover); // CB — naranja legible sobre blanco
-  font-size: 12px;
   font-weight: 600;
-}
-.login__qa-email {
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.login__qa-btn {
-  flex: 0 0 auto;
-  padding: 8px 12px;
-  border: 1px solid #f97316; // tokens-allow-dark — naranja DEV a propósito, solo en dev
-  border-radius: 999px;
-  background: #f97316; // tokens-allow-dark — naranja DEV a propósito, solo en dev
-  color: #121212;
-  font-size: 13px;
-  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.6;
+  }
 }

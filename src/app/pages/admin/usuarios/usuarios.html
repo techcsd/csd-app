@@ -69,7 +69,19 @@
                 @if (esSintetico(u)) {
                   <button type="button" class="btn-ghost" (click)="pedirFijarPin(u)">🔑 {{ 'Fijar PIN' | t }}</button>
                 } @else {
-                  <button type="button" class="btn-ghost" (click)="pedirReset(u)">🔑 {{ 'Restablecer contraseña' | t }}</button>
+                  <!-- CC3 — reset por correo: deshabilitado con motivo cuando el correo no recibe. -->
+                  <button
+                    type="button"
+                    class="btn-ghost"
+                    [disabled]="correoNoRecibe(u)"
+                    [attr.title]="correoNoRecibe(u) ? motivoResetDeshabilitado(u) : null"
+                    (click)="pedirReset(u)"
+                  >🔑 {{ 'Restablecer contraseña' | t }}</button>
+                  @if (correoNoRecibe(u)) {
+                    <p class="ausr__hint">{{ motivoResetDeshabilitado(u) }}</p>
+                  }
+                  <!-- CC3 — el admin fija la contraseña directamente. -->
+                  <button type="button" class="btn-ghost" (click)="abrirSetPassword(u)">🔐 {{ 'Establecer contraseña' | t }}</button>
                 }
                 @if (u.pendiente) {
                   <button type="button" class="btn-ghost" (click)="reenviar(u)">✉️ {{ 'Reenviar invitación' | t }}</button>
@@ -84,6 +96,48 @@
       }
     }
   </div>
+
+  <!-- CC3 — modal Establecer contraseña -->
+  @if (setPwFor(); as u) {
+    <div class="ausr-modal" (click)="cerrarSetPassword()">
+      <div class="ausr-modal__box" (click)="$event.stopPropagation()">
+        <h2 class="ausr-modal__t">{{ 'Establecer contraseña' | t }}</h2>
+        <p class="ausr-modal__sub">{{ u.nombre }}</p>
+
+        @if (setPwResult(); as r) {
+          <!-- Resultado: mostrar UNA sola vez -->
+          <p class="ausr-modal__note">{{ 'Copia esta contraseña ahora — no se volverá a mostrar.' | t }}</p>
+          <div class="ausr-modal__pw">
+            <code class="ausr-modal__pwval">{{ r.password }}</code>
+            <button type="button" class="btn-ghost" (click)="copiarPassword()">📋 {{ 'Copiar' | t }}</button>
+          </div>
+          @if (r.debeCambiar) {
+            <p class="ausr__hint">{{ 'Es una cuenta real: deberá cambiarla al entrar.' | t }}</p>
+          }
+          <button type="button" class="btn-cta ausr__mt" (click)="cerrarSetPassword()">{{ 'Listo' | t }}</button>
+        } @else {
+          <label class="field-label">{{ 'Contraseña (mínimo 10, con un número)' | t }}</label>
+          <div class="ausr-modal__field">
+            <input
+              class="field"
+              [type]="setPwVer() ? 'text' : 'password'"
+              autocomplete="new-password"
+              [ngModel]="setPwValue()"
+              (ngModelChange)="setPwValue.set($event)"
+            />
+            <button type="button" class="btn-ghost" (click)="setPwVer.set(!setPwVer())">{{ setPwVer() ? '🙈' : '👁️' }}</button>
+          </div>
+          <button type="button" class="btn-cta ausr__mt" [disabled]="setPwLoading()" (click)="establecerPassword(false)">
+            {{ setPwLoading() ? ('Guardando…' | t) : ('Establecer' | t) }}
+          </button>
+          <button type="button" class="btn-ghost ausr__mt" [disabled]="setPwLoading()" (click)="establecerPassword(true)">
+            🎲 {{ 'Generar una segura' | t }}
+          </button>
+          <button type="button" class="btn-ghost" (click)="cerrarSetPassword()">{{ 'Cancelar' | t }}</button>
+        }
+      </div>
+    </div>
+  }
 
   <app-confirm-dialog
     [open]="!!confirm()"

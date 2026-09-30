@@ -216,31 +216,31 @@ export class AuthService {
     return { error };
   }
 
+  /** CC3 — limpia la marca `debe_cambiar_password` tras cambiarla el propio usuario. */
+  async limpiarDebeCambiarPassword(): Promise<void> {
+    try {
+      await this.supabase.client.rpc('limpiar_debe_cambiar_password');
+    } catch {
+      /* best-effort: si falla, el guard reintentará en el próximo login */
+    }
+  }
+
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return this.supabase.client.auth.onAuthStateChange(callback);
   }
 
   /**
-   * BZ3 — cuentas QA por rol para el panel "usuarios de prueba" del login de DEV.
-   * El RPC `usuarios_qa_dev()` solo devuelve filas cuando el entorno del proyecto es
-   * `dev` (en prod devuelve []), y nunca expone contraseñas (la QA se escribe a mano).
-   * Ejecutable por `anon` (el login es pre-auth). Best-effort: si falla, [] → el panel
-   * no se pinta.
+   * CC2 — enlace mágico (OTP por correo) para entrar a DEV sin contraseña. Solo se
+   * ofrece en builds de dev; el candado del padre (dev_token_hook + lista blanca)
+   * decide quién obtiene sesión. El enlace vuelve a la app/PWA (mismo patrón que el
+   * reset de contraseña: detectSessionInUrl consume los tokens al abrirlo).
+   * `shouldCreateUser:false` para no crear cuentas al vuelo.
    */
-  async usuariosQaDev(): Promise<QaUserDev[]> {
-    try {
-      const { data, error } = await this.supabase.client.rpc('usuarios_qa_dev');
-      if (error) return [];
-      return (data as QaUserDev[]) ?? [];
-    } catch {
-      return [];
-    }
+  async enviarEnlaceMagico(email: string): Promise<{ error: AuthError | null }> {
+    const { error } = await this.supabase.client.auth.signInWithOtp({
+      email: email.trim(),
+      options: { emailRedirectTo: `${environment.appUrl}/`, shouldCreateUser: false },
+    });
+    return { error };
   }
-}
-
-/** BZ3 — una cuenta QA del panel de login de dev (sin contraseña). */
-export interface QaUserDev {
-  email: string;
-  nombre: string;
-  rol: string;
 }

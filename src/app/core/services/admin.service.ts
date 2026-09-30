@@ -239,6 +239,38 @@ export class AdminService {
     if (error) throw new Error(this.fnError(error));
   }
 
+  /**
+   * CC3 — el admin FIJA la contraseña de un usuario (los QA/sintéticos no tienen
+   * buzón para el reset por correo). Edge `admin-set-password` (service_role solo
+   * allí, gate is_admin). Si `generar`, la edge devuelve la contraseña una vez para
+   * mostrarla con Copiar; si el admin la escribe, no la devuelve. Para cuentas reales
+   * marca debe_cambiar_password → el usuario la cambia al entrar.
+   */
+  async setPassword(
+    userId: string,
+    opts: { password?: string; generar?: boolean },
+  ): Promise<{ password?: string; debeCambiar: boolean }> {
+    const { data, error } = await this.supabase.client.functions.invoke('admin-set-password', {
+      body: { userId, password: opts.password, generate: opts.generar === true },
+    });
+    if (error) {
+      // El cuerpo de error de la edge trae el motivo real (fuerza, no autorizado…).
+      const ctx = (error as { context?: Response }).context;
+      if (ctx && typeof ctx.json === 'function') {
+        try {
+          const b = (await ctx.json()) as { error?: string };
+          if (b?.error) throw new Error(b.error);
+        } catch (inner) {
+          if (inner instanceof Error && inner.message) throw inner;
+        }
+      }
+      throw new Error(this.fnError(error));
+    }
+    const b = (data ?? {}) as { ok?: boolean; password?: string; debeCambiar?: boolean; error?: string };
+    if (b.error) throw new Error(b.error);
+    return { password: b.password, debeCambiar: b.debeCambiar === true };
+  }
+
   /** BI5 — fija/rota el PIN de un usuario de cédula (email sintético) por usuarioId.
    *  Reutiliza la edge acceso-cedula (modo usuarioId, audit_log). Paridad con la web. */
   async fijarPinUsuario(usuarioId: string, pin: string): Promise<void> {

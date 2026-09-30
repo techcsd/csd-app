@@ -27,6 +27,7 @@ export class SyncBar {
   errors = this.sync.errorCount;
   errorTipos = this.sync.errorTipos;
   syncing = this.sync.syncing;
+  revisionTecnologia = this.sync.revisionTecnologia;
 
   state = computed<'offline' | 'syncing' | 'pending' | 'error' | 'clear'>(() => {
     if (this.errors() > 0) return 'error';
@@ -40,6 +41,11 @@ export class SyncBar {
     const t = (s: string, p?: Record<string, string | number>) => this.i18n.t(s, p);
     switch (this.state()) {
       case 'error': {
+        // CC7 — si la evidencia ya subió, Tecnología puede verlo: díselo (deja de ser
+        // "revísalo tú" a "ya lo están viendo").
+        if (this.revisionTecnologia()) {
+          return t('{n} con problema · Tecnología ya lo revisa', { n: this.errors() + this.pending() });
+        }
         // BI2 — el conteo incluye TODO lo pendiente (error + pending/syncing). Un
         // "1 con problema" que esconde otras dos bitácoras atascadas en pending era
         // el peor mensaje posible.

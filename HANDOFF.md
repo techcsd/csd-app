@@ -1,5 +1,34 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 30/09/2026 — PROMPT-75 · Ronda **CC** (lógica, no piel) — **2.36.0 EN DEV, esperando OK**
+
+**TL;DR:** ronda CC (filas 84-91, mitad app). Consume los contratos de PROMPT-74 (ya vivos en dev+prod — la ronda CC del padre está cerrada). **Salió a dev: APK dev 2.36.0 firmado+publicado + merge `feature/cc-ronda`→`dev` (push `438ec17`) → Vercel construye app-dev.** `npm run build` verde (guards incl. tropes/i18n). **Para** — falta el OK de Xaviel para prod.
+
+### 🧪 EN DEV (2.36.0-dev — probar)
+- **APK dev 2.36.0** firmado (cert `3c5316d8…5065`) + publicado al bucket dev (`csd-app-2.36.0.apk` + latest + version.json) + registrado en `app_versiones` dev + `apk_url` dev actualizado. Regla Y1 OK.
+- **PWA app-dev.** vía merge a `dev` (push `438ec17`).
+- **Mínima sin cambios: 2.26.1.** No se publica ni se fuerza mínima en dev.
+
+### ✅ Hecho (build-verificado)
+- **CC5 · Conduce externo = conduce de verdad.** `Mis conduces externos` (lista server + pendientes del outbox) → **ficha** (`conduce_externo_detalle`) con cabecera, transportista, origen→destino, renglones/texto, fotos, firmas, estado e historial; **Ver PDF** (reusa `ConducePdfService` con rótulo "Conduce externo") + **Compartir** + **Anular con motivo** (`conduce_externo_anular`). Tras crear, abre la ficha ("Pendiente de enviar" mientras esté en el outbox; CE-000123 cuando el server lo asigne). Rutas `transporte/conduces-externos` (lista) y `transporte/conduce-externo/:id` (ficha); enlace "Mis conduces" en el form de nuevo. **Gotcha:** `crear_conduce_externo` NO tiene idempotencia por client-id → la ficha post-sync se abre desde la lista; pre-sync desde el outbox (fallback).
+- **CC7 · Evidencia + reintento de atascados.** Al pasar a *error de sistema*: sube payload.json + fotos a `outbox-atascados/<uid>/<opId>/` + registra en `outbox_atascado_evidencia` (idempotente, background, reintenta sin red). `reportar_outbox_atascado` **devuelve el atascado_id** → se guarda en la op para enlazar. Pushes `outbox_reintentar`/`outbox_subir_evidencia` (push.service). **Tras actualizar** reintenta 1 vez los errores de sistema (gate por versión). Barra roja + `pendientes/:id` dicen **"Tecnología ya lo está revisando"** cuando hay evidencia subida. (Push está deshabilitado en el flavor dev → los pushes son de prod; el reintento-tras-actualizar destraba en ambos.)
+- **CC6 · N.º de recibo en la echada.** Campo opcional (solo dígitos) en el paso Detalles + borrador + payload + revisar/detalle. **Hueco del padre:** `registrar_combustible_app` aún no tiene `p_numero_recibo` → se manda **detrás de comprobación de capacidad** (si el RPC no lo conoce, reintenta sin él; la echada nunca se traba). Se persistirá solo cuando el padre añada el parámetro.
+- **CC1 · Conteos: buscar + agregar.** Buscador NFD (sin acentos, nombre/código) + contador "n de N" + chip **Solo con diferencia** + **+ Agregar artículo** (`ArticuloPicker` sobre el catálogo oficial cacheado, offline) → fila con *Sistema 0* + chip *Agregado*. `registrar_conteo_app` ya acepta artículos sin existencia (`coalesce(cantidad,0)`).
+- **CC2 · Login dev.** Quitado el panel "usuarios de prueba" + `usuariosQaDev` (era pre-auth e inseguro). En dev: **Enviarme un enlace mágico** (`signInWithOtp`, redirect a app-dev). Mensaje claro si el candado de dev niega el token ("Este entorno es solo para el equipo de Tecnología.").
+- **CC3 · Contraseña por admin.** Admin › Usuarios: **Establecer contraseña** (edge `admin-set-password`, escribir o Generar, se muestra una vez con Copiar) + *Restablecer* deshabilitado con motivo cuando el correo no recibe (qa_*/sintético/es_prueba). `debe_cambiar_password` en PROFILE_SELECT → al entrar va a `/auth/set-password?forzado=1` → `limpiar_debe_cambiar_password()`.
+- **CC8 · Verificado:** la app usa `orden_trabajo_detalle` (RPC definer); sin acceso directo a `bitacora_orden_detalle`. El fix fue de grants en la web (padre). Sin cambios app.
+- **CC4:** solo web (Importar Odoo = escritorio); anotado en `PARIDAD.md` + matriz fila 87.
+
+### 👤 Pendientes físicos de Xaviel
+- **Probar en el APK dev 2.36.0 / app-dev.:** enlace mágico (dev), conteo con artículo agregado, echada con N.º de recibo, conduce externo con ficha + PDF, Establecer contraseña.
+- Pedir a **Jonathan y Guilamo** que actualicen a **2.36.0** (sus conduces atascados 18-22/09 se reintentan solos al abrir la nueva versión, si el hotfix `traslado_almacen` ya está en prod — lo está).
+- **OK a 2.36.0** → release a prod: `npm run apk -- --env prod` → `npm run apk:publish -- --env prod` (pasa regla 18: ya salió en dev) → PR `dev→main` → matriz ✅.
+
+### ⚠️ Hueco anotado para PROMPT-74 (padre)
+`registrar_combustible_app` necesita `p_numero_recibo text default null` (backward-compatible) para persistir el recibo que la app ya captura (CC6). Hoy la app degrada sin él.
+
+---
+
 ## 🟢 SESIÓN 29/09/2026 (tarde) — PROMPT-73 · Rediseño visual **CB v2** (navy+naranja, Inter, vidrio) — **2.35.0 PUBLICADA a prod**
 
 **TL;DR:** rediseño CB (fila 83, canvas aprobado 28-sep). La **web ya salió (SGC 1.148.0)**; esto es la mitad app. **Salió a dev (2.35.0-dev, APK firmado+publicado) → Xaviel dio OK ("ok, do it, do all the stuff") → RELEASE A PROD 2.35.0.** FASE 1 (fundación) + FASE 2 (shell/home/componentes) + FASE 3-6 (cascada + 4 barridos) + FASE 6 (login a lienzo gris). Solo piel (regla 1); build + guards verdes. ✅ **Sesión cerrada.**

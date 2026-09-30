@@ -22,15 +22,28 @@
         @if (loading()) {
           <app-skeleton [rows]="5" />
         } @else {
-          <!-- Y9 — buscador a través de todas las categorías -->
+          <!-- Y9/CC1 — buscador (sin acentos) a través de todas las categorías -->
           @if (existencias().length) {
             <input
               class="field conteo__search"
               type="search"
-              [placeholder]="'Buscar material…' | t"
+              [placeholder]="'Buscar material (nombre o código)…' | t"
               [ngModel]="query()"
               (ngModelChange)="query.set($event)"
             />
+            <!-- CC1 — contador + chip "Solo con diferencia" + agregar del catálogo -->
+            <div class="conteo__tools">
+              <span class="conteo__count">{{ nMostrados() }} {{ 'de' | t }} {{ nTotal() }}</span>
+              <button
+                type="button"
+                class="conteo__chip"
+                [class.conteo__chip--on]="soloDiferencia()"
+                (click)="soloDiferencia.set(!soloDiferencia())"
+              >
+                {{ 'Solo con diferencia' | t }}
+              </button>
+              <button type="button" class="conteo__add" (click)="abrirPicker()">➕ {{ 'Agregar artículo' | t }}</button>
+            </div>
           }
 
           <!-- Y9 — artículos agrupados por categoría (secciones colapsables) -->
@@ -45,7 +58,10 @@
                   @for (e of g.items; track e.articulo_id) {
                     <div class="conteo__row">
                       <div class="conteo__info">
-                        <span class="conteo__name">{{ e.nombre }}</span>
+                        <span class="conteo__name">
+                          {{ e.nombre }}
+                          @if (esAgregado(e.articulo_id)) { <em class="conteo__added">{{ 'Agregado' | t }}</em> }
+                        </span>
                         <span class="conteo__sys">{{ 'Sistema:' | t }} {{ e.cantidad }} {{ e.unidad }}</span>
                       </div>
                       <input
@@ -88,4 +104,22 @@
     (confirmed)="confirmarSinDiferencias()"
     (cancelled)="cancelarConforme()"
   />
+
+  <!-- CC1 — agregar artículo del catálogo oficial (offline: catálogo cacheado) -->
+  @if (pickerAbierto()) {
+    <div class="conteo__picker">
+      <header class="conteo__picker-head">
+        <button type="button" class="conteo__picker-close" (click)="cerrarPicker()" [attr.aria-label]="'Cerrar' | t">✕</button>
+        <h2 class="conteo__picker-title">{{ 'Agregar artículo' | t }}</h2>
+      </header>
+      <p class="conteo__picker-hint">{{ 'Elige del catálogo oficial. Entrará al conteo con Sistema 0.' | t }}</p>
+      <app-articulo-picker
+        [articulos]="articulosCat()"
+        [categorias]="categorias()"
+        [exclude]="excludeIds()"
+        [buscador]="buscarFuzzy"
+        (picked)="agregarArticulo($event)"
+      />
+    </div>
+  }
 }

@@ -175,6 +175,8 @@ export interface EchadaDetalle {
   estado: RendimientoEstado | null; // AD7 — estado calibrado (servidor)
   motivo_alerta: string | null;
   estacion: string | null;
+  /** CC6 — nº de recibo del ticket (aparece cuando el padre lo incluya en echada_detalle). */
+  numero_recibo?: string | null;
   notas: string | null;
   // BY1 — revisión (zona de espera). En una rechazada, el chofer puede corregir y
   // reenviar (crea una nueva echada vinculada; la rechazada queda como respaldo).
