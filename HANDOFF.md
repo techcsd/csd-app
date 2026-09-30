@@ -1,13 +1,17 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 30/09/2026 — PROMPT-75 · Ronda **CC** (lógica, no piel) — **2.36.0 EN DEV, esperando OK**
+## 🟢 SESIÓN 30/09/2026 — PROMPT-75 · Ronda **CC** (lógica, no piel) — **2.36.0 PUBLICADA a prod**
 
-**TL;DR:** ronda CC (filas 84-91, mitad app). Consume los contratos de PROMPT-74 (ya vivos en dev+prod — la ronda CC del padre está cerrada). **Salió a dev: APK dev 2.36.0 firmado+publicado + merge `feature/cc-ronda`→`dev` (push `438ec17`) → Vercel construye app-dev.** `npm run build` verde (guards incl. tropes/i18n). **Para** — falta el OK de Xaviel para prod.
+**TL;DR:** ronda CC (filas 84-91, mitad app). Consume los contratos de PROMPT-74 (ya vivos en dev+prod). **Salió a dev (APK dev 2.36.0 + merge→dev) → Xaviel dio OK ("ok, si dale continua") → RELEASE A PROD 2.36.0:** `dev→main` (`b5714e4`) → Vercel construye app. + APK prod 2.36.0 firmado/publicado + **PUBLICADA (no forzada)** en `app_versiones` prod. ✅ Sesión cerrada.
 
-### 🧪 EN DEV (2.36.0-dev — probar)
-- **APK dev 2.36.0** firmado (cert `3c5316d8…5065`) + publicado al bucket dev (`csd-app-2.36.0.apk` + latest + version.json) + registrado en `app_versiones` dev + `apk_url` dev actualizado. Regla Y1 OK.
-- **PWA app-dev.** vía merge a `dev` (push `438ec17`).
-- **Mínima sin cambios: 2.26.1.** No se publica ni se fuerza mínima en dev.
+### ✅ EN PROD (RELEASE 2.36.0)
+- **`dev→main`** mergeado (`b5714e4`) + push → Vercel construye la PWA prod (`app.sgcconstructorasd.com`).
+- **APK prod 2.36.0** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.36.0 salió antes en dev), registrado + subido al bucket prod (`csd-app-2.36.0.apk` + latest + version.json) + `apk_url` prod actualizado.
+- **PUBLICADA = 2.36.0** (`publicada=true`, `publicada_por`=Tecnología `4b19cc4b…`; el trigger de versión-publicada disparó el **push a usuarios**). 2.35.0 despublicada. **Update NO forzado** (2.36.0 `minima=false`).
+- ⚠️ **MÍNIMA = 2.35.0** (sin tocar, per "la mínima no cambia"). Nota: la mínima efectiva la dejó el **CB round en 2.35.0** (NO 2.26.1 como decían docs viejas). Si quieres bajarla a 2.26.1, es una decisión aparte (afecta a toda la flota) — **no la cambié**.
+
+### 🧪 EN DEV (previo)
+- **APK dev 2.36.0** firmado + publicado al bucket dev + registrado en `app_versiones` dev + `apk_url` dev. `feature/cc-ronda`→`dev` (push `438ec17`/`f830dd8`). PWA app-dev.
 
 ### ✅ Hecho (build-verificado)
 - **CC5 · Conduce externo = conduce de verdad.** `Mis conduces externos` (lista server + pendientes del outbox) → **ficha** (`conduce_externo_detalle`) con cabecera, transportista, origen→destino, renglones/texto, fotos, firmas, estado e historial; **Ver PDF** (reusa `ConducePdfService` con rótulo "Conduce externo") + **Compartir** + **Anular con motivo** (`conduce_externo_anular`). Tras crear, abre la ficha ("Pendiente de enviar" mientras esté en el outbox; CE-000123 cuando el server lo asigne). Rutas `transporte/conduces-externos` (lista) y `transporte/conduce-externo/:id` (ficha); enlace "Mis conduces" en el form de nuevo. **Gotcha:** `crear_conduce_externo` NO tiene idempotencia por client-id → la ficha post-sync se abre desde la lista; pre-sync desde el outbox (fallback).
@@ -19,10 +23,11 @@
 - **CC8 · Verificado:** la app usa `orden_trabajo_detalle` (RPC definer); sin acceso directo a `bitacora_orden_detalle`. El fix fue de grants en la web (padre). Sin cambios app.
 - **CC4:** solo web (Importar Odoo = escritorio); anotado en `PARIDAD.md` + matriz fila 87.
 
-### 👤 Pendientes físicos de Xaviel
-- **Probar en el APK dev 2.36.0 / app-dev.:** enlace mágico (dev), conteo con artículo agregado, echada con N.º de recibo, conduce externo con ficha + PDF, Establecer contraseña.
-- Pedir a **Jonathan y Guilamo** que actualicen a **2.36.0** (sus conduces atascados 18-22/09 se reintentan solos al abrir la nueva versión, si el hotfix `traslado_almacen` ya está en prod — lo está).
-- **OK a 2.36.0** → release a prod: `npm run apk -- --env prod` → `npm run apk:publish -- --env prod` (pasa regla 18: ya salió en dev) → PR `dev→main` → matriz ✅.
+### 👤 Pendientes físicos de Xaviel (post-release, no bloquean)
+- Pedir a **Jonathan y Guilamo** que actualicen a **2.36.0** (sus conduces atascados 18-22/09 se reintentan solos al abrir la nueva versión; el hotfix `traslado_almacen` ya está en prod).
+- Device-QA del APK prod 2.36.0: conduce externo con ficha+PDF, echada con recibo, conteo con artículo agregado, Establecer contraseña.
+- (Opcional, de la ronda del padre) activar **Vercel Deployment Protection** de `dev.` si no se pudo por API.
+- **Decisión abierta:** ¿bajar la **mínima** de 2.35.0 → 2.26.1? (Hoy fuerza a todos a ≥2.35.0; la dejé como estaba.)
 
 ### ⚠️ Hueco anotado para PROMPT-74 (padre)
 `registrar_combustible_app` necesita `p_numero_recibo text default null` (backward-compatible) para persistir el recibo que la app ya captura (CC6). Hoy la app degrada sin él.
