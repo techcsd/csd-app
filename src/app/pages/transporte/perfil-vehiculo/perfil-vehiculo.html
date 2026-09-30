@@ -118,6 +118,34 @@
       </div>
     }
 
+    <!-- CD5 — Echadas del vehículo: el chofer ve las echadas del vehículo que tiene
+         asignado (no solo las suyas); la RLS (puede_ver_echada+vehiculo) decide qué
+         trae. Cada fila abre el detalle de la echada. -->
+    @if (!loading() && echadasVehiculo().length) {
+      <section class="pveh__echadas">
+        <h3 class="pveh__sec">⛽ {{ 'Echadas del vehículo' | t }}</h3>
+        <ul class="pveh__echlist">
+          @for (e of echadasVehiculo(); track e.id) {
+            <li>
+              <button type="button" class="pveh__echrow" (click)="verEchada(e.id)">
+                <span class="pveh__echfecha">{{ e.fecha }}</span>
+                <span class="pveh__echdatos">
+                  @if (e.galones != null) { {{ e.galones | number: '1.0-1' }} gal }
+                  @if (e.monto != null) { · RD$ {{ e.monto | number: '1.0-0' }} }
+                  @if (e.rendimiento_km_gal != null) { · {{ e.rendimiento_km_gal | number: '1.1-1' }} {{ rendUnidad() }} }
+                </span>
+                @if (e.revision === 'en_espera') {
+                  <span class="pveh__echchip pveh__echchip--warn">{{ 'En espera' | t }}</span>
+                } @else if (e.revision === 'rechazada') {
+                  <span class="pveh__echchip pveh__echchip--danger">{{ 'Rechazada' | t }}</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
     <!-- X1/B2 — documentos del vehículo. Seguro/matrícula: subir si el rol lo
          permite (flota/admin), si no solo-lectura. Otros: solo-lectura. -->
     @if (!loading()) {

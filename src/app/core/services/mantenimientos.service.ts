@@ -114,19 +114,73 @@ export class MantenimientosService {
   }
 
   /**
-   * AG9 — historial de mantenimientos de un vehículo (próximos/en curso/historial se
+   * AG9/CD4 — historial de mantenimientos de un vehículo (próximos/en curso/historial se
    * derivan en la UI de estado+fecha). Cacheado (read-through) para verse offline.
+   *
+   * CD4 (nota #95): la lectura pasa al RPC definir `listar_mantenimientos` (predicado
+   * único `puede_ver_vehiculo` + índices + paginado servidor) en vez de `mantenimientos_
+   * por_vehiculo` — arregla el `statement timeout` que sufría el chofer al leer bajo RLS.
+   * Nada de lecturas directas a la tabla. Pedimos la primera página (200, el tope del
+   * servidor) porque el historial de UN vehículo es pequeño; si un vehículo superara ese
+   * tope, `listarMantenimientosPagina()` continúa por cursor (fecha,id).
    */
   async mantenimientosPorVehiculo(vehiculoId: string): Promise<MantenimientoItem[]> {
     const key = `mant_veh:${vehiculoId}`;
     const data = await this.catalog.refresh<MantenimientoItem[]>(key, async () => {
-      const { data, error } = await this.supabase.client.rpc('mantenimientos_por_vehiculo', {
-        p_vehiculo_id: vehiculoId,
-      });
-      if (error) throw error;
-      return (data as MantenimientoItem[]) ?? [];
+      const filas = await this.listarMantenimientosPagina(vehiculoId, 200, null, null);
+      return filas;
     });
     return data ?? [];
+  }
+
+  /**
+   * CD4 — una página del historial vía `listar_mantenimientos(p_vehiculo, p_limite,
+   * p_cursor_fecha, p_cursor_id)`. Devuelve `setof jsonb`; aquí se normaliza al
+   * `MantenimientoItem` de la app (el servidor usa `kilometraje_al_mantenimiento`).
+   * Sin caché propia (la envuelve `mantenimientosPorVehiculo`); expuesto para poder
+   * paginar por cursor si algún vehículo supera las 200 filas.
+   */
+  async listarMantenimientosPagina(
+    vehiculoId: string,
+    limite = 50,
+    cursorFecha: string | null = null,
+    cursorId: string | null = null,
+  ): Promise<MantenimientoItem[]> {
+    const { data, error } = await this.supabase.client.rpc('listar_mantenimientos', {
+      p_vehiculo: vehiculoId,
+      p_limite: limite,
+      p_cursor_fecha: cursorFecha,
+      p_cursor_id: cursorId,
+    });
+    if (error) throw error;
+    const filas = (data as Record<string, unknown>[]) ?? [];
+    return filas.map((m) => this.mapMantenimiento(m));
+  }
+
+  /** CD4 — normaliza una fila jsonb de `listar_mantenimientos` al modelo de la app. */
+  private mapMantenimiento(m: Record<string, unknown>): MantenimientoItem {
+    const km = m['kilometraje_al_mantenimiento'] ?? m['kilometraje'];
+    // AL7 — el nombre de quien registró: el RPC nuevo lo anida en creado_por_usuario.nombre
+    // (el viejo lo traía plano en registrado_por). `registrado_por` en el modelo = NOMBRE
+    // (lo pinta la ficha: 🧑 {{ m.registrado_por }}); `creado_por` = uuid.
+    const usuario = m['creado_por_usuario'] as { nombre?: string } | null;
+    const nombre = usuario?.nombre ?? (m['registrado_por'] as string | null) ?? null;
+    return {
+      id: String(m['id']),
+      tipo: (m['tipo'] as MantenimientoTipo) ?? 'preventivo',
+      descripcion: (m['descripcion'] as string | null) ?? null,
+      fecha: String(m['fecha']),
+      estado: (m['estado'] as MantenimientoItem['estado']) ?? 'pendiente',
+      costo: (m['costo'] as number | null) ?? null,
+      proveedor: (m['proveedor'] as string | null) ?? null,
+      kilometraje: km == null ? null : Number(km),
+      notas: (m['notas'] as string | null) ?? null,
+      fotos: (m['fotos'] as string[] | null) ?? null,
+      incluye_preventivo: !!m['incluye_preventivo'],
+      created_at: String(m['created_at'] ?? ''),
+      creado_por: (m['creado_por'] as string | null) ?? null,
+      registrado_por: nombre,
+    };
   }
 
   /** AG9 — encola el CIERRE de un mantenimiento (costo/proveedor/notas + evidencia). */

@@ -99,7 +99,13 @@
           <ul class="reqd__avance-list">
             @for (a of avance(); track a.descripcion) {
               <li class="reqd__avance-row" [class.reqd__avance-row--done]="a.pendiente <= 0">
-                <span class="reqd__avance-name">{{ a.descripcion }}</span>
+                <span class="reqd__avance-name">
+                  {{ a.descripcion }}
+                  <!-- CD7 — material llegado a la obra que descuenta del pendiente -->
+                  @if ((a.cubierto ?? 0) > 0) {
+                    <span class="reqd__avance-cubierto">{{ 'Cubierto por llegada' | t }} · {{ a.cubierto }}</span>
+                  }
+                </span>
                 <span class="reqd__avance-cant">
                   {{ a.despachado }} / {{ a.solicitado }} {{ a.unidad || '' }}
                   @if (a.pendiente > 0) { <em class="reqd__avance-pend">faltan {{ a.pendiente }}</em> }

@@ -54,3 +54,36 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
 - **CC8 · Órdenes de trabajo:** la app ya usaba el RPC definer `orden_trabajo_detalle`
   (no toca `bitacora_orden_detalle` directo); el bug era de grants en la web (lo arregló
   el padre). Sin cambios en la app.
+
+## CD (ronda 30/09/2026) — decisiones de paridad app↔web
+- **CD3/CD4/CD5 · Flota del chofer (app 2.37.0):** *Mi vehículo* ya usa el criterio
+  correcto (asignación vigente ∪ uso abierto; el uso-v2 manda) y el padre cierra los usos
+  huérfanos > 24 h → la app lo **refleja** solo (el vehículo desaparece de "en uso") y
+  **avisa** por la notificación `flota_uso_cerrado` del padre (deep-link nuevo → `/transporte`).
+  *Mantenimientos* pasa a `listar_mantenimientos` (definer/paginado/índices) en vez de
+  lectura bajo RLS (arregla el timeout, CD4). *Combustible*: el chofer ve *Echadas del
+  vehículo* asignado (no solo las suyas) gracias a la política CD5 del padre; el KPI de la
+  ficha se llena por la misma vía. No se creó RPC nuevo de KPI: el padre lo resolvió por
+  **política RLS** (regla 14, un solo predicado `puede_ver_vehiculo`).
+- **CD7 · Requisición (pendiente único):** la app ya leía `pendiente` del servidor
+  (`requisicion_avance`, nunca cálculo local). Ahora el RPC expone `cubierto` e `item_id`
+  y `pendiente = solicitado − despachado − cubierto`; la app añade el chip **"Cubierto por
+  llegada · n"** y cuenta como completado el renglón cubierto. *Deshacer* = quitar la
+  cobertura (RPC `desvincular_cobertura`) si el usuario puede gestionar.
+- **CD8 · Idempotencia del reenvío:** `client_uuid` estable (`uuidV5('reenvio:<id>')`) en
+  todos los envíos de la misma echada rechazada → el servidor nunca duplica el reenvío.
+  Aviso suave de posible duplicado (recibo repetido / echada casi igual ±2 h · ±0.5 %),
+  online, que **no bloquea offline**. Ver `docs/REVISION-COMBUSTIBLE-2026-09.md` (lado app).
+- **CD1 · Tarjetas de *Flota de Vehículos*: DIVERGENCIA DELIBERADA.** El bug de la web
+  (fila *Ver perfil · Editar · switch* a alturas distintas, sin pie fijo) **no existe en
+  la app**: la app **no** replica ese patrón de tarjeta con pie de acciones. Su lista de
+  flota (`transporte/vehiculos`, `shared/ui/vehiculo-card`) es una **fila tocable** (un
+  tap = abrir la ficha; una regla del proyecto), sin *Editar*/switch por tarjeta —
+  `vehiculo-card` es un row flex (`align-items:center`) con slot `trailing` para un badge/
+  CTA, ya alineado. El rediseño de tarjetas de CD1 es **solo web**. — *A propósito.*
+- **CD2 · Auditoría: SOLO WEB.** La app no tiene pantalla de *Auditoría* (filtros/tabla/
+  date-picker). — *Sin equivalente en la app.*
+- **CD6 · Historial de versiones → GitHub: SOLO WEB.** La app tiene su historial de
+  versiones (admin → *Versiones*, `pages/admin/versiones`, lee `app_versiones`) pero
+  **no enlaza a GitHub** ni abre deployments antiguos (0 referencias a `github` en `src/`).
+  El bug de "Abrir esta versión → GitHub" y la galería/`deploy_url` son **solo web**. — *A propósito.*

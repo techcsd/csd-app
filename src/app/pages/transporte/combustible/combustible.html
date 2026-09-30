@@ -574,5 +574,16 @@
       (confirmed)="confirmarEchadaInusual()"
       (cancelled)="cancelarEchadaInusual()"
     />
+
+    <!-- CD8 — aviso suave de posible duplicado (recibo repetido o echada casi igual) -->
+    <app-confirm-dialog
+      [open]="!!confirmDup()"
+      [title]="'¿Posible echada repetida?' | t"
+      [message]="confirmDup() ?? ''"
+      [confirmLabel]="'No, es otra echada' | t"
+      [cancelLabel]="'Es la misma' | t"
+      (confirmed)="confirmarNoEsDuplicado()"
+      (cancelled)="cancelarPorDuplicado()"
+    />
   </div>
 }

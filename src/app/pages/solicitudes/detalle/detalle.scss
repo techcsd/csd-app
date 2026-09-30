@@ -166,6 +166,22 @@
 .reqd__avance-name {
   min-width: 0;
   font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+// CD7 — chip "Cubierto por llegada · n": material que llegó a la obra y descuenta del pendiente.
+.reqd__avance-cubierto {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  font-size: var(--fs-12, 12px);
+  font-weight: 700;
+  line-height: 1.5;
 }
 .reqd__avance-cant {
   flex: 0 0 auto;

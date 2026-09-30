@@ -39,14 +39,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-09-30';
 
-const TITULO = 'Conduces externos con ficha y PDF, recibo en la echada y más';
+const TITULO = 'Flota más rápida, echadas del vehículo y requisiciones que descuentan lo que llegó';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Transporte', d: 'Los conduces externos ahora son un conduce de verdad: tienen su número (CE-000123), su ficha con todo (transportista, origen→destino, material, fotos, firmas e historial), y puedes Ver el PDF y Compartirlo por WhatsApp. Se puede anular con motivo (nunca se borra). Entra desde "Mis conduces externos".' },
-  { t: 'nuevo', m: 'Combustible', d: 'Al registrar una echada puedes anotar el N.º de recibo del ticket (el número que dice RECIBO). Ayuda a cuadrar el combustible con el reporte de la estación.' },
-  { t: 'mejora', m: 'Inventario', d: 'En "Conteos y ajustes" ahora hay un buscador (por nombre o código, sin importar acentos) y un filtro "Solo con diferencia". Si un artículo no aparece, puedes agregarlo desde el catálogo oficial y contarlo (entra con Sistema 0).' },
-  { t: 'mejora', m: 'Envíos', d: 'Cuando un envío se traba por un problema del sistema, la app sube automáticamente sus datos y fotos para que Tecnología pueda revisarlo desde la web — aunque la foto solo estuviera en tu teléfono. Verás "Tecnología ya lo está revisando". Al actualizar la app, los envíos trabados se reintentan solos una vez.' },
-  { t: 'nuevo', m: 'Administración', d: 'Un administrador ya puede establecer la contraseña de un usuario directamente (útil para cuentas sin correo). Si es una cuenta real, la persona deberá cambiarla al entrar.' },
-  { t: 'seguridad', m: 'Acceso', d: 'Quitamos del inicio de sesión el panel de "usuarios de prueba" del entorno de desarrollo (exponía la lista de cuentas). En desarrollo ahora se entra con "Enviarme un enlace mágico".' },
+  { t: 'arreglo', m: 'Flota', d: 'Mantenimientos del vehículo: arreglamos el "tiempo de espera agotado" que salía al abrir la lista. Ahora carga al instante, también para los choferes.' },
+  { t: 'nuevo', m: 'Combustible', d: 'Los choferes ahora ven las echadas del vehículo que tienen asignado (no solo las suyas), con su consumo y rendimiento en la ficha del vehículo.' },
+  { t: 'mejora', m: 'Flota', d: 'Si dejas un uso de vehículo abierto más de 24 horas, lo cerramos solo y te avisamos — así el vehículo no queda "pegado" a ti por error. Si lo sigues usando, ábrelo de nuevo.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Reenviar una echada rechazada ya nunca la duplica, aunque toques dos veces o se corte la red.' },
+  { t: 'nuevo', m: 'Combustible', d: 'Antes de guardar te avisamos si parece que repites una echada: mismo N.º de recibo, o una echada casi igual del mismo vehículo el mismo día. Sin conexión no molesta.' },
+  { t: 'mejora', m: 'Solicitudes', d: 'En una requisición, el material que ya llegó a la obra se marca con "Cubierto por llegada · n" y descuenta del pendiente — el renglón cubierto queda con su check.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

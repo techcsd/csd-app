@@ -385,6 +385,11 @@ export function notifAppRoute(n: {
       : r.match(/[?&]echada=([0-9a-fA-F-]{36})/)?.[1] ?? null;
   if (echadaId) return `/transporte/echada/${echadaId}`;
   if (!r) return '/home';
+  // CD3 — "Cerramos tu uso de <placa> porque quedó abierto más de 24 h": el cron
+  // sgc-cerrar-usos-huerfanos avisa con ruta web '/flota/mi-vehiculo'. En la app
+  // aterriza en el hub de Transporte (en-uso/disponibles) para que el chofer lo
+  // vuelva a abrir si lo sigue usando — no en la bandeja genérica de avisos.
+  if (n.tipo === 'flota_uso_cerrado' || r.startsWith('/flota/mi-vehiculo')) return '/transporte';
   // Reporte semanal: web /flota/reporte-semanal → app /transporte/reporte-semanal.
   if (r.startsWith('/flota/reporte-semanal')) return '/transporte/reporte-semanal';
   // Resto de alertas de flota (consumo, mantenimiento, odómetro) → bandeja de avisos.
