@@ -114,6 +114,10 @@ export class App {
     this.activityPing.init(); // W12 — ping de actividad (open + resume, throttled)
     this.platformReport.init(); // AP7 — reporta la plataforma del dispositivo (android|ios-pwa|web)
     void this.push.init(); // AF7 — push nativo (no-op en web/PWA)
+    // CC7 — tras actualizar a una versión nueva, reintenta UNA vez los envíos atascados
+    // por error de SISTEMA (los conduces de Jonathan/Guilamo se destraban solos si el
+    // padre ya arregló el CHECK). Gate por versión → corre solo una vez por versión.
+    void this.sync.reintentarSistemaTrasActualizar(environment.version);
     void this.checkAlarmaDominical(); // AK10 — alarma del reporte semanal (domingo)
     void this.syncAlarmaNativa(); // AL6 — arma/cancela la alarma AUTÓNOMA (app cerrada)
     // AL6 — re-evaluar al volver a primer plano (por si completó la inspección o

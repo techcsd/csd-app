@@ -116,6 +116,11 @@ export class OutboxDetallePage {
   enError(): boolean {
     return this.op()?.estado === 'error';
   }
+  /** CC7 — la evidencia (payload+fotos) ya subió al bucket privado → Tecnología puede
+   *  verla desde la web. Se lo decimos al usuario para que sepa que no está solo. */
+  enRevisionTecnologia(): boolean {
+    return this.esSistema() && this.op()?.evidencia_subida === true;
+  }
   puedeDuplicar(): boolean {
     const o = this.op();
     return !!o && this.contenidoSvc.puedeDuplicar(o);

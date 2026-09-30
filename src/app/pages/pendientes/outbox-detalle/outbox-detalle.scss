@@ -223,3 +223,14 @@
     cursor: pointer;
   }
 }
+
+// CC7 — aviso de que Tecnología ya está revisando (evidencia subida).
+.ob-detalle__revision {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-info-soft, rgba(37, 99, 235, 0.1));
+  color: var(--color-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}

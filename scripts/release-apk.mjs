@@ -37,11 +37,16 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-29';
+const RELEASED_AT = '2026-09-30';
 
-const TITULO = 'Vista previa del PDF de la orden de trabajo';
+const TITULO = 'Conduces externos con ficha y PDF, recibo en la echada y más';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Diseño', d: 'Nuevo diseño de toda la app: colores azul marino y naranja unificados, tipografía Inter más clara, tarjetas blancas sobre fondo gris y toques de vidrio esmerilado. La organización, los pasos y las funciones son los mismos de siempre — solo se ve más moderna y limpia.' },
+  { t: 'nuevo', m: 'Transporte', d: 'Los conduces externos ahora son un conduce de verdad: tienen su número (CE-000123), su ficha con todo (transportista, origen→destino, material, fotos, firmas e historial), y puedes Ver el PDF y Compartirlo por WhatsApp. Se puede anular con motivo (nunca se borra). Entra desde "Mis conduces externos".' },
+  { t: 'nuevo', m: 'Combustible', d: 'Al registrar una echada puedes anotar el N.º de recibo del ticket (el número que dice RECIBO). Ayuda a cuadrar el combustible con el reporte de la estación.' },
+  { t: 'mejora', m: 'Inventario', d: 'En "Conteos y ajustes" ahora hay un buscador (por nombre o código, sin importar acentos) y un filtro "Solo con diferencia". Si un artículo no aparece, puedes agregarlo desde el catálogo oficial y contarlo (entra con Sistema 0).' },
+  { t: 'mejora', m: 'Envíos', d: 'Cuando un envío se traba por un problema del sistema, la app sube automáticamente sus datos y fotos para que Tecnología pueda revisarlo desde la web — aunque la foto solo estuviera en tu teléfono. Verás "Tecnología ya lo está revisando". Al actualizar la app, los envíos trabados se reintentan solos una vez.' },
+  { t: 'nuevo', m: 'Administración', d: 'Un administrador ya puede establecer la contraseña de un usuario directamente (útil para cuentas sin correo). Si es una cuenta real, la persona deberá cambiarla al entrar.' },
+  { t: 'seguridad', m: 'Acceso', d: 'Quitamos del inicio de sesión el panel de "usuarios de prueba" del entorno de desarrollo (exponía la lista de cuentas). En desarrollo ahora se entra con "Enviarme un enlace mágico".' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

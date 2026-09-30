@@ -65,6 +65,13 @@ export interface OutboxOp {
    *  atascado de categoría 'sistema'. Evita re-reportar en cada tick (el RPC es
    *  idempotente igualmente, pero esto ahorra la llamada de red). */
   reportado_sistema?: boolean;
+  /** CC7 — id de la fila de `outbox_atascados` en el servidor (lo devuelve
+   *  `reportar_outbox_atascado`). Enlaza la evidencia (payload+fotos) que sube la app
+   *  con la ficha que ve Tecnología en la web. */
+  atascado_id?: string;
+  /** CC7 — ya se subió la evidencia (payload legible + fotos) al bucket privado
+   *  `outbox-atascados` y se registró en `outbox_atascado_evidencia`. Idempotente. */
+  evidencia_subida?: boolean;
   /** BI7 — nº de fotos/adjuntos que la captura declaró al encolar. En el envío se
    *  compara contra los que realmente subieron: si faltan (pérdida post-encolado en
    *  Dexie), NO se envía la bitácora incompleta en silencio — se marca error visible. */

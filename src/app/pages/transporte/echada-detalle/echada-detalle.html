@@ -48,6 +48,7 @@
           }
           <div class="ech__kv"><span class="ech__k">{{ 'Combustible' | t }}</span><span class="ech__v">{{ tipoLabel() }}</span></div>
           @if (e.estacion) { <div class="ech__kv"><span class="ech__k">{{ 'Estación' | t }}</span><span class="ech__v">{{ e.estacion }}</span></div> }
+          @if (e.numero_recibo) { <div class="ech__kv"><span class="ech__k">{{ 'N.º de recibo' | t }}</span><span class="ech__v">{{ e.numero_recibo }}</span></div> }
           <div class="ech__kv"><span class="ech__k">{{ 'Chofer' | t }}</span><span class="ech__v">{{ e.conductor_nombre || '—' }}</span></div>
           <div class="ech__kv"><span class="ech__k">{{ 'Registró' | t }}</span><span class="ech__v">{{ e.registrado_nombre || '—' }}</span></div>
         </div>

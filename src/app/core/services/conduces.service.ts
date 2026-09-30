@@ -10,6 +10,7 @@ import { Proyecto } from '../models/bitacora.model';
 import { ItemLibre } from '../models/inventario.model';
 
 const CATALOG_CONDUCES = 'mis_conduces';
+const CATALOG_EXTERNOS = 'mis_conduces_externos'; // CC5 — lista de conduces externos
 const CATALOG_RUTAS = 'mis_rutas';
 const CATALOG_PROYECTOS = 'proyectos';
 // QA-6 — claves de caché read-through para que "Pendiente entrega" y "Por
@@ -575,6 +576,74 @@ export interface ConduceDetalle {
   items_libres?: ConduceItemLibre[];
   firmas: ConduceDetalleFirma[];
   transferencias: ConduceDetalleTransferencia[];
+}
+
+/** CC5 — fila de "Mis conduces externos" (RPC conduces_externos_listado). Un conduce
+ *  externo es un conduce de verdad: número CE-000123, ficha y PDF. */
+export interface ConduceExternoRow {
+  id: string;
+  numero: number | null;
+  /** CE-000123 (o "Pendiente de enviar" si aún está en el outbox). */
+  codigo: string;
+  transporta: string | null;
+  es_proveedor_formal: boolean;
+  estado: string | null;
+  origen: string | null;
+  destino: string | null;
+  material: string | null;
+  afecta_inventario: boolean;
+  recibido_por_nombre: string | null;
+  recibido_en: string | null;
+  created_at: string | null;
+  es_prueba: boolean;
+  /** CC5 — true cuando la fila viene del outbox (aún sin enviar) → sin id de servidor. */
+  pendiente?: boolean;
+}
+
+/** CC5 — un renglón estructurado del conduce externo (si afecta inventario). */
+export interface ConduceExternoRenglon {
+  articulo: string | null;
+  enviado: number | null;
+  recibido: number | null;
+  unidad: string | null;
+}
+
+/** CC5 — ficha completa del conduce externo (RPC conduce_externo_detalle). */
+export interface ConduceExternoFicha {
+  id: string;
+  numero: number | null;
+  codigo: string;
+  estado: string | null;
+  fecha: string | null;
+  transporta: string | null;
+  es_proveedor_formal: boolean;
+  material: string | null;
+  afecta_inventario: boolean;
+  salida_id: string | null;
+  entrada_id: string | null;
+  origen: string | null;
+  destino: string | null;
+  origen_proyecto: string | null;
+  origen_bodega: string | null;
+  destino_proyecto: string | null;
+  destino_bodega: string | null;
+  emisor: string | null;
+  emisor_firma_url: string | null;
+  receptor: string | null;
+  receptor_firma_url: string | null;
+  recibido_en: string | null;
+  notas: string | null;
+  notas_recepcion: string | null;
+  placa_foto_url: string | null;
+  carga_foto_url: string | null;
+  recepcion_foto_url: string | null;
+  anulado: boolean;
+  motivo_anulacion: string | null;
+  es_prueba: boolean;
+  renglones: ConduceExternoRenglon[];
+  historial: { estado: string; at: string }[];
+  /** CC5 — true si la ficha se armó desde el outbox (aún sin enviar). */
+  pendiente?: boolean;
 }
 
 /** AS2 — fila de "Conduces por firmar" (el despachante firma desde su teléfono). */
@@ -1717,6 +1786,227 @@ export class ConducesService {
     d.recepcion_foto_url = await this.signConduce(d.recepcion_foto_path);
     for (const fm of d.firmas) fm.firma_url = await this.signConduce(fm.firma_path);
     return d;
+  }
+
+  // ── CC5 — Conduce externo: un conduce de verdad (lista + ficha + PDF + anular) ──
+
+  /**
+   * CC5 — "Mis conduces externos": los del servidor (con número CE-000123, vía
+   * `conduces_externos_listado`) + los que aún están en el outbox (Pendiente de
+   * enviar). Read-through cache para el servidor; los pendientes se leen del outbox.
+   */
+  async conducesExternos(): Promise<ConduceExternoRow[]> {
+    const server = await this.catalog.refresh<ConduceExternoRow[]>(CATALOG_EXTERNOS, async () => {
+      const { data, error } = await this.supabase.client.rpc('conduces_externos_listado', {});
+      if (error) throw new Error(error.message);
+      return ((data as Record<string, unknown>[]) ?? []).map((r) => ({
+        id: r['id'] as string,
+        numero: (r['numero'] as number | null) ?? null,
+        codigo: (r['codigo'] as string) ?? '',
+        transporta: (r['transporta'] as string | null) ?? null,
+        es_proveedor_formal: r['es_proveedor_formal'] === true,
+        estado: (r['estado'] as string | null) ?? null,
+        origen: (r['origen'] as string | null) ?? null,
+        destino: (r['destino'] as string | null) ?? null,
+        material: (r['material'] as string | null) ?? null,
+        afecta_inventario: r['afecta_inventario'] === true,
+        recibido_por_nombre: (r['recibido_por_nombre'] as string | null) ?? null,
+        recibido_en: (r['recibido_en'] as string | null) ?? null,
+        created_at: (r['created_at'] as string | null) ?? null,
+        es_prueba: r['es_prueba'] === true,
+      }));
+    });
+    const pend = await this.pendientesExternos();
+    return [...pend, ...(server ?? [])];
+  }
+
+  /** CC5 — conduces externos aún en el outbox (Pendiente de enviar), recientes primero. */
+  private async pendientesExternos(): Promise<ConduceExternoRow[]> {
+    try {
+      const ops = await this.sync.listOutbox();
+      return ops
+        .filter((o) => o.tipo_op === 'conduce_externo')
+        .sort((a, b) => b.created_local - a.created_local)
+        .map((o) => ({
+          id: o.id,
+          numero: null,
+          codigo: 'Pendiente de enviar',
+          transporta: (o.payload['transporta_texto'] as string) ?? 'Proveedor',
+          es_proveedor_formal: !!o.payload['transporta_proveedor_id'],
+          estado: o.estado === 'error' ? 'error' : 'pendiente',
+          origen: (o.payload['origen'] as string | null) ?? null,
+          destino: (o.payload['destino'] as string | null) ?? null,
+          material: (o.payload['material_descripcion'] as string | null) ?? null,
+          afecta_inventario: !!o.payload['items'],
+          recibido_por_nombre: null,
+          recibido_en: null,
+          created_at: new Date(o.created_local).toISOString(),
+          es_prueba: false,
+          pendiente: true,
+        }));
+    } catch {
+      return [];
+    }
+  }
+
+  /** CC5 — ficha completa de un conduce externo del SERVIDOR (fotos/firmas firmadas). */
+  async conduceExternoFicha(id: string): Promise<ConduceExternoFicha> {
+    const { data, error } = await this.supabase.client.rpc('conduce_externo_detalle', { p_id: id });
+    if (error) throw new Error(error.message);
+    const d = (data ?? {}) as Record<string, unknown>;
+    return {
+      id: d['id'] as string,
+      numero: (d['numero'] as number | null) ?? null,
+      codigo: (d['codigo'] as string) ?? this.codigoExterno(d['numero'] as number | null),
+      estado: (d['estado'] as string | null) ?? null,
+      fecha: (d['fecha'] as string | null) ?? null,
+      transporta: (d['transporta'] as string | null) ?? null,
+      es_proveedor_formal: d['es_proveedor_formal'] === true,
+      material: (d['material'] as string | null) ?? null,
+      afecta_inventario: d['afecta_inventario'] === true,
+      salida_id: (d['salida_id'] as string | null) ?? null,
+      entrada_id: (d['entrada_id'] as string | null) ?? null,
+      origen: (d['origen'] as string | null) ?? null,
+      destino: (d['destino'] as string | null) ?? null,
+      origen_proyecto: (d['origen_proyecto'] as string | null) ?? null,
+      origen_bodega: (d['origen_bodega'] as string | null) ?? null,
+      destino_proyecto: (d['destino_proyecto'] as string | null) ?? null,
+      destino_bodega: (d['destino_bodega'] as string | null) ?? null,
+      emisor: (d['emisor'] as string | null) ?? null,
+      emisor_firma_url: await this.signConduce(d['emisor_firma_path'] as string | null),
+      receptor: (d['receptor'] as string | null) ?? null,
+      receptor_firma_url: await this.signConduce(d['receptor_firma_path'] as string | null),
+      recibido_en: (d['recibido_en'] as string | null) ?? null,
+      notas: (d['notas'] as string | null) ?? null,
+      notas_recepcion: (d['notas_recepcion'] as string | null) ?? null,
+      placa_foto_url: await this.signConduce(d['placa_foto_path'] as string | null),
+      carga_foto_url: await this.signConduce(d['carga_foto_path'] as string | null),
+      recepcion_foto_url: await this.signConduce(d['recepcion_foto_path'] as string | null),
+      anulado: d['anulado'] === true,
+      motivo_anulacion: (d['motivo_anulacion'] as string | null) ?? null,
+      es_prueba: d['es_prueba'] === true,
+      renglones: ((d['renglones'] as ConduceExternoRenglon[]) ?? []),
+      historial: ((d['historial'] as { estado: string; at: string }[]) ?? []),
+    };
+  }
+
+  /** CC5 — ficha "Pendiente de enviar" armada desde el outbox (aún sin sincronizar). */
+  async conduceExternoFichaPendiente(opId: string): Promise<ConduceExternoFicha | null> {
+    const op = await this.sync.getOp(opId);
+    if (!op || op.tipo_op !== 'conduce_externo') return null;
+    const fotos = await this.sync.getOpFotos(opId);
+    const url = (slot: string): string | null => {
+      const f = fotos.find((x) => x.slot === slot);
+      return f ? URL.createObjectURL(f.blob) : null;
+    };
+    const items = (op.payload['items'] as { articulo_id: string; cantidad: number }[] | null) ?? null;
+    const fecha = new Date(op.created_local).toISOString();
+    return {
+      id: op.id,
+      numero: null,
+      codigo: 'Pendiente de enviar',
+      estado: op.estado === 'error' ? 'error' : 'pendiente',
+      fecha,
+      transporta: (op.payload['transporta_texto'] as string) ?? 'Proveedor',
+      es_proveedor_formal: !!op.payload['transporta_proveedor_id'],
+      material: (op.payload['material_descripcion'] as string | null) ?? null,
+      afecta_inventario: !!items,
+      salida_id: null,
+      entrada_id: null,
+      origen: (op.payload['origen'] as string | null) ?? null,
+      destino: (op.payload['destino'] as string | null) ?? null,
+      origen_proyecto: null,
+      origen_bodega: null,
+      destino_proyecto: null,
+      destino_bodega: null,
+      emisor: null,
+      emisor_firma_url: null,
+      receptor: null,
+      receptor_firma_url: null,
+      recibido_en: null,
+      notas: null,
+      notas_recepcion: null,
+      placa_foto_url: url('placa'),
+      carga_foto_url: url('carga'),
+      recepcion_foto_url: null,
+      anulado: false,
+      motivo_anulacion: null,
+      es_prueba: false,
+      renglones: items
+        ? items.map((it) => ({ articulo: it.articulo_id, enviado: it.cantidad, recibido: null, unidad: null }))
+        : [],
+      historial: [{ estado: 'pendiente', at: fecha }],
+      pendiente: true,
+    };
+  }
+
+  /** CC5 — anular un conduce externo con motivo (mismo gate que la web). */
+  async anularConduceExterno(id: string, motivo: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('conduce_externo_anular', { p_id: id, p_motivo: motivo });
+    if (error) throw new Error(error.message);
+    void this.catalog.invalidate(CATALOG_EXTERNOS).catch(() => {});
+  }
+
+  private codigoExterno(numero: number | null): string {
+    return 'CE-' + String(numero ?? 0).padStart(6, '0');
+  }
+
+  /**
+   * CC5 — mapea la ficha externa a la forma `ConduceDetalle` para reutilizar EXACTAMENTE
+   * la plantilla del PDF del conduce normal (ConducePdfService), con el rótulo
+   * "Conduce externo". Las URLs ya vienen firmadas desde `conduceExternoFicha`.
+   */
+  fichaExternaAConduceDetalle(f: ConduceExternoFicha): ConduceDetalle {
+    const firmas: ConduceDetalleFirma[] = [];
+    if (f.emisor_firma_url) firmas.push({ rol: 'emisor', nombre: f.emisor, firma_path: null, firma_url: f.emisor_firma_url, firmado_en: null });
+    if (f.receptor_firma_url) firmas.push({ rol: 'receptor', nombre: f.receptor, firma_path: null, firma_url: f.receptor_firma_url, firmado_en: f.recibido_en });
+    return {
+      id: f.id,
+      numero: f.codigo,
+      fecha: f.fecha ?? '',
+      created_at: f.fecha ?? '',
+      estado: f.estado ?? '',
+      fase: f.estado,
+      motivo: null,
+      motivo_label: 'Conduce externo',
+      despachante: f.emisor,
+      proyecto_id: null,
+      proyecto: f.destino_proyecto,
+      bodega_id: null,
+      bodega: f.origen_bodega ?? f.origen,
+      destino_almacen_id: null,
+      destino_almacen: f.destino_bodega ?? f.destino,
+      conductor_id: null,
+      conductor: f.transporta,
+      creado_por: null,
+      creado_por_nombre: f.emisor,
+      entregado_por: null,
+      entregado_por_nombre: f.emisor,
+      entregado_en: null,
+      entrega_foto_path: null,
+      entrega_foto_url: f.carga_foto_url ?? f.placa_foto_url,
+      recibido_por: null,
+      recibido_por_nombre: f.receptor,
+      recibido_en: f.recibido_en,
+      recepcion_foto_path: null,
+      recepcion_foto_url: f.recepcion_foto_url,
+      notas_recepcion: f.notas_recepcion ?? f.notas,
+      ruta_id: null,
+      es_prueba: f.es_prueba,
+      items: f.renglones.map((r) => ({
+        detalle_id: '',
+        articulo_id: '',
+        articulo: r.articulo,
+        codigo: null,
+        unidad: r.unidad,
+        propiedad: null,
+        cantidad: r.enviado ?? 0,
+        cantidad_recibida: r.recibido,
+      })),
+      items_libres: [],
+      firmas,
+      transferencias: [],
+    };
   }
 
   /**

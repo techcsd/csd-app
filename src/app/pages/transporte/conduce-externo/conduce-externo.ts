@@ -484,7 +484,7 @@ export class ConduceExternoPage {
         conMat && bodega
           ? { nombre: bodega.nombre, lat: null, lng: null, proyecto_id: bodega.proyecto_id ?? null, bodega_id: bodega.id }
           : null;
-      await this.conduces.crearConduceExterno({
+      const nuevoId = await this.conduces.crearConduceExterno({
         transportaProveedorId: provId,
         transportaTexto: provTexto,
         placaFoto: placa.blob,
@@ -496,7 +496,10 @@ export class ConduceExternoPage {
       });
       await this.autosave.discard(this.clave); // limpia formulario + fotos del borrador
       this.borradorPrevio.set(false);
-      this.exito.set(prov.nombre);
+      // CC5 — abrir la ficha del conduce recién creado ("Pendiente de enviar" mientras
+      // esté en el outbox; muestra número CE-000123 cuando el servidor lo asigne).
+      this.resetCampos();
+      void this.router.navigate(['/transporte/conduce-externo', nuevoId], { queryParams: { pendiente: 1 } });
     } catch (e) {
       this.error.set(e instanceof Error ? humanizeError(e).mensaje : 'No se pudo emitir el conduce externo.');
     } finally {
@@ -547,5 +550,10 @@ export class ConduceExternoPage {
 
   irAlHub(): void {
     void this.router.navigate(['/transporte/conduces-hub']);
+  }
+
+  /** CC5 — "Mis conduces externos" (lista con ficha + PDF). */
+  verMisExternos(): void {
+    void this.router.navigate(['/transporte/conduces-externos']);
   }
 }

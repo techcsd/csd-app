@@ -55,6 +55,14 @@ export class AdminUsuariosPage {
 
   confirm = signal<{ msg: string; run: () => void } | null>(null);
 
+  // CC3 — modal "Establecer contraseña".
+  setPwFor = signal<UsuarioAdmin | null>(null);
+  setPwValue = signal('');
+  setPwVer = signal(false);
+  setPwLoading = signal(false);
+  /** Resultado a mostrar UNA vez (contraseña generada + si debe cambiarla). */
+  setPwResult = signal<{ password?: string; debeCambiar: boolean } | null>(null);
+
   filtrados = computed(() => {
     const q = this.busqueda().trim().toLowerCase();
     if (!q) return this.usuarios();
@@ -159,6 +167,69 @@ export class AdminUsuariosPage {
    *  es "Fijar PIN", no "Restablecer contraseña" (que mandaría un correo inexistente). */
   esSintetico(u: UsuarioAdmin): boolean {
     return /@(conductores|personal|test)\.constructorasd\.local$/i.test(u.email ?? '');
+  }
+
+  /** CC3 — ¿el correo NO recibe? (qa_*, sintético, o cuenta de prueba). En ese caso el
+   *  reset por correo rebota → se deshabilita y se ofrece "Establecer contraseña". */
+  correoNoRecibe(u: UsuarioAdmin): boolean {
+    const email = (u.email ?? '').toLowerCase();
+    return this.esSintetico(u) || email.startsWith('qa_') || u.es_prueba === true;
+  }
+  motivoResetDeshabilitado(u: UsuarioAdmin): string {
+    if (u.es_prueba) return this.i18n.t('Cuenta de prueba: el correo no recibe. Usa "Establecer contraseña".');
+    if ((u.email ?? '').toLowerCase().startsWith('qa_'))
+      return this.i18n.t('Cuenta QA: el correo no recibe. Usa "Establecer contraseña".');
+    return this.i18n.t('Este correo no recibe. Usa "Establecer contraseña".');
+  }
+
+  // ── CC3 — Establecer contraseña ──────────────────────────────────────────────
+  abrirSetPassword(u: UsuarioAdmin): void {
+    this.setPwFor.set(u);
+    this.setPwValue.set('');
+    this.setPwVer.set(false);
+    this.setPwResult.set(null);
+  }
+  cerrarSetPassword(): void {
+    this.setPwFor.set(null);
+    this.setPwValue.set('');
+    this.setPwResult.set(null);
+  }
+  async establecerPassword(generar: boolean): Promise<void> {
+    const u = this.setPwFor();
+    if (!u || this.setPwLoading()) return;
+    if (!generar && this.setPwValue().trim().length < 10) {
+      this.toast.error(this.i18n.t('La contraseña debe tener al menos 10 caracteres e incluir un número.'));
+      return;
+    }
+    this.setPwLoading.set(true);
+    try {
+      const r = await this.admin.setPassword(u.id, generar ? { generar: true } : { password: this.setPwValue().trim() });
+      if (generar && r.password) {
+        // Contraseña generada: mostrar UNA vez con Copiar.
+        this.setPwResult.set(r);
+      } else {
+        this.toast.success(
+          r.debeCambiar
+            ? this.i18n.t('Contraseña establecida. {nombre} deberá cambiarla al entrar.', { nombre: u.nombre })
+            : this.i18n.t('Contraseña establecida.'),
+        );
+        this.cerrarSetPassword();
+      }
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo establecer la contraseña.'));
+    } finally {
+      this.setPwLoading.set(false);
+    }
+  }
+  async copiarPassword(): Promise<void> {
+    const pw = this.setPwResult()?.password;
+    if (!pw) return;
+    try {
+      await navigator.clipboard.writeText(pw);
+      this.toast.success(this.i18n.t('Contraseña copiada.'));
+    } catch {
+      this.toast.error(this.i18n.t('No se pudo copiar. Cópiala manualmente.'));
+    }
   }
 
   private pinTrivial(pin: string): boolean {

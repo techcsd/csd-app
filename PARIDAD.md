@@ -40,3 +40,17 @@ Oscuro: brand `#2e75b6` (relleno con texto blanco AA 5:1), accent `#fb923c`, etc
 ## Amber histórico
 `--Hub` (#ffb300, ex-marca) ahora es **alias de `--accent`** (naranja) para no romper
 sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
+
+## CC (ronda 29-30/09/2026) — decisiones de paridad app↔web
+- **CC4 · Importar datos desde Odoo (proveedores/vehículos/artículos): SOLO WEB.** Es
+  trabajo de escritorio (subir un `.xlsx`/`.csv` exportado de Odoo, mapear columnas,
+  previsualizar transformaciones, deshacer). La app de campo **no lo lleva** (regla del
+  proyecto: la app no es un mini-SGC). El asistente vive en la web (Compras/Flota/
+  Inventario, según el gate de entidad). — *Sin equivalente en la app, a propósito.*
+- **CC6 · N.º de recibo en la echada:** la app **captura** `numero_recibo` y lo guarda
+  en el borrador y el registro local; el envío lo manda **detrás de comprobación de
+  capacidad** (el `registrar_combustible_app` del padre aún **no** tiene el parámetro
+  `p_numero_recibo` — hueco anotado). Cuando el padre lo añada, se persiste solo.
+- **CC8 · Órdenes de trabajo:** la app ya usaba el RPC definer `orden_trabajo_detalle`
+  (no toca `bitacora_orden_detalle` directo); el bug era de grants en la web (lo arregló
+  el padre). Sin cambios en la app.

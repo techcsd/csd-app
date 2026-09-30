@@ -160,6 +160,7 @@ export class CombustibleService {
       producto: (raw['producto'] as string | null) ?? null,
       subtipo: (raw['subtipo'] as string | null) ?? null,
       estacion: (raw['estacion'] as string | null) ?? null,
+      numero_recibo: (raw['numero_recibo'] as string | null) ?? null, // CC6 — si el padre lo devuelve
       estado: (raw['estado'] as string | null) ?? null,
       alerta_consumo: (raw['alerta_consumo'] as boolean | null) ?? null,
       km_alerta: (raw['km_alerta'] as boolean | null) ?? null,
@@ -491,6 +492,7 @@ export class CombustibleService {
         tarjeta: input.tarjeta, // Z23-app
         titular: input.titular, // Z23-app
         titular_es_persona: input.titularEsPersona, // Z23-app
+        numero_recibo: input.numeroRecibo ?? null, // CC6 — nº de recibo del ticket
         ayudante_id: input.ayudanteId ?? null, // AT4
         confirmado: input.confirmado ?? false, // AW3 — echada inusual ya confirmada
         capturado_en, // BB6 — hora REAL de captura (para corregir created_at si se sincroniza tarde)
@@ -500,6 +502,7 @@ export class CombustibleService {
         placa: input.placa,
         galones: input.galones,
         monto: input.monto,
+        numero_recibo: input.numeroRecibo ?? null, // CC6 — visible en "Mis echadas"
         capturado_en,
       },
     });
@@ -510,9 +513,21 @@ export class CombustibleService {
     return id;
   }
 
+  /** CC6 — ¿el error del RPC es "firma/función no encontrada" (PGRST202)? Indica que
+   *  el padre aún no expone `p_numero_recibo` → degradar sin ese parámetro. */
+  private esFirmaNoEncontrada(err: { message?: string; code?: string }): boolean {
+    const code = err.code ?? '';
+    const msg = (err.message ?? '').toLowerCase();
+    return (
+      code === 'PGRST202' ||
+      msg.includes('could not find the function') ||
+      msg.includes('schema cache')
+    );
+  }
+
   private registerHandler(): void {
     this.sync.register('combustible', async (payload, photoPaths) => {
-      const { data, error } = await this.supabase.client.rpc('registrar_combustible_app', {
+      const baseArgs: Record<string, unknown> = {
         p_client_uuid: payload['id'],
         p_vehiculo_id: payload['vehiculo_id'],
         p_conductor_id: payload['conductor_id'] ?? null,
@@ -533,7 +548,35 @@ export class CombustibleService {
         p_origen: payload['origen'] ?? 'estacion', // AC11
         p_proyecto_id: payload['proyecto_id'] ?? null, // AC11
         p_confirmado: payload['confirmado'] === true, // AW3 — echada inusual ya confirmada por el chofer
-      });
+      };
+      // CC6 — nº de recibo detrás de COMPROBACIÓN DE CAPACIDAD: el padre añadió la
+      // columna `registros_combustible.numero_recibo` pero AÚN no el parámetro
+      // `p_numero_recibo` en `registrar_combustible_app`. Si lo mandamos y el RPC no
+      // lo conoce, PostgREST responde PGRST202 (firma no encontrada) → reintentamos
+      // SIN el parámetro para que la echada SIEMPRE se envíe (offline-first intacto).
+      // El recibo se conserva en el registro local; cuando el padre añada el param,
+      // esto lo persiste solo sin cambios en la app.
+      const recibo = (payload['numero_recibo'] as string | null) ?? null;
+      let data: unknown;
+      let error: { message?: string; code?: string } | null;
+      if (recibo) {
+        const r = await this.supabase.client.rpc('registrar_combustible_app', {
+          ...baseArgs,
+          p_numero_recibo: recibo,
+        });
+        if (r.error && this.esFirmaNoEncontrada(r.error)) {
+          const r2 = await this.supabase.client.rpc('registrar_combustible_app', baseArgs);
+          data = r2.data;
+          error = r2.error;
+        } else {
+          data = r.data;
+          error = r.error;
+        }
+      } else {
+        const r = await this.supabase.client.rpc('registrar_combustible_app', baseArgs);
+        data = r.data;
+        error = r.error;
+      }
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
 

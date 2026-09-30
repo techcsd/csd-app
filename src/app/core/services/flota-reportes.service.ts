@@ -377,6 +377,7 @@ export class FlotaReportesService {
       estado: (raw['estado'] as EchadaDetalle['estado']) ?? null,
       motivo_alerta: (raw['motivo_alerta'] as string | null) ?? null,
       estacion: (raw['estacion'] as string | null) ?? null,
+      numero_recibo: (raw['numero_recibo'] as string | null) ?? null, // CC6 — si el padre lo devuelve
       notas: (raw['notas'] as string | null) ?? null,
       revision: (raw['revision'] as EchadaDetalle['revision']) ?? null,
       revision_motivo: (raw['revision_motivo'] as string | null) ?? null,

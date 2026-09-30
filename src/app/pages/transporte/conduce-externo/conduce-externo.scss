@@ -13,7 +13,16 @@
   height: 40px;
 }
 .ce-header__icon { font-size: 22px; }
-.ce-header__title { font-size: 18px; font-weight: 800; color: var(--color-text); }
+.ce-header__title { flex: 1; font-size: 18px; font-weight: 800; color: var(--color-text); }
+// CC5 — enlace a "Mis conduces externos".
+.ce-header__link {
+  background: transparent;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-secondary);
+  white-space: nowrap;
+}
 
 .ce-intro {
   color: var(--color-text-secondary);

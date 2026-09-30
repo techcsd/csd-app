@@ -52,8 +52,9 @@ export class ConducePdfService {
   private readonly PW = 210; // A4 width mm
   private readonly PH = 297; // A4 height mm
 
-  /** Construye el PDF y devuelve el documento jsPDF. */
-  async build(d: ConduceDetalle): Promise<jsPDF> {
+  /** Construye el PDF y devuelve el documento jsPDF. `rotulo` cambia el subtítulo
+   *  (CC5 — "Conduce externo" reutiliza esta MISMA plantilla). */
+  async build(d: ConduceDetalle, rotulo = 'Conduce de Materiales y Equipos'): Promise<jsPDF> {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     let y = this.M;
 
@@ -64,7 +65,7 @@ export class ConducePdfService {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     y += 6;
-    doc.text('Conduce de Materiales y Equipos', this.M, y);
+    doc.text(rotulo, this.M, y);
     // Meta a la derecha
     doc.setFontSize(9);
     doc.text(`No. Conduce: ${d.numero}`, this.PW - this.M, this.M, { align: 'right' });
@@ -212,23 +213,23 @@ export class ConducePdfService {
     return doc;
   }
 
-  async blob(d: ConduceDetalle): Promise<Blob> {
-    const doc = await this.build(d);
+  async blob(d: ConduceDetalle, rotulo?: string): Promise<Blob> {
+    const doc = await this.build(d, rotulo);
     return doc.output('blob');
   }
 
   /** Compartir el PDF por el share sheet nativo (→ WhatsApp). Web: navigator.share o descarga. */
-  async compartir(d: ConduceDetalle): Promise<void> {
+  async compartir(d: ConduceDetalle, rotulo?: string): Promise<void> {
     const filename = `${d.numero}.pdf`;
     if (Capacitor.isNativePlatform()) {
-      const doc = await this.build(d);
+      const doc = await this.build(d, rotulo);
       const base64 = this.stripDataUrl(doc.output('datauristring'));
       const w = await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Cache });
       await Share.share({ title: d.numero, text: `Conduce ${d.numero}`, url: w.uri, dialogTitle: 'Compartir conduce' });
       return;
     }
     // Web/PWA
-    const blob = await this.blob(d);
+    const blob = await this.blob(d, rotulo);
     const file = new File([blob], filename, { type: 'application/pdf' });
     const navAny = navigator as Navigator & { canShare?: (d: unknown) => boolean };
     if (navAny.canShare?.({ files: [file] }) && navigator.share) {
@@ -239,15 +240,15 @@ export class ConducePdfService {
   }
 
   /** Descargar/guardar el PDF. Native: Documents; Web: descarga del navegador. */
-  async descargar(d: ConduceDetalle): Promise<string> {
+  async descargar(d: ConduceDetalle, rotulo?: string): Promise<string> {
     const filename = `${d.numero}.pdf`;
     if (Capacitor.isNativePlatform()) {
-      const doc = await this.build(d);
+      const doc = await this.build(d, rotulo);
       const base64 = this.stripDataUrl(doc.output('datauristring'));
       await Filesystem.writeFile({ path: filename, data: base64, directory: Directory.Documents });
       return `Documentos/${filename}`;
     }
-    const blob = await this.blob(d);
+    const blob = await this.blob(d, rotulo);
     this.webDownload(blob, filename);
     return filename;
   }
