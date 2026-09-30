@@ -1,5 +1,39 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 30/09/2026 — PROMPT-77 · Ronda **CD** (IDs CD) — **2.37.0 EN DEV, esperando OK**
+
+**TL;DR:** ronda CD (filas 92-101, mitad app). Consume los contratos de PROMPT-76 (verificados vivos en `sgc-dev`). **Salió a dev** (APK dev 2.37.0 firmado + publicado + `feature/cd-ronda`→`dev` push `ccc3aa1` → Vercel construye app-dev.). **PARADO antes de prod: espera el OK de Xaviel.** Mínima NO cambia.
+
+### 🧪 EN DEV (2.37.0)
+- **APK dev 2.37.0** firmado (cert `3c5316d8…5065`) + publicado al bucket dev (`csd-app-2.37.0.apk` + latest + version.json) + registrado en `app_versiones` dev + `apk_url` dev. `feature/cd-ronda`→`dev` (`ccc3aa1`). PWA app-dev en construcción.
+
+### ✅ Hecho (build-verificado — `npm run build` pasa, guards incl.)
+- **CD3/CD4/CD5 · Flota del chofer.**
+  - **CD4:** *Mantenimientos* pasa de `mantenimientos_por_vehiculo` a **`listar_mantenimientos`** (definer/paginado/índices del padre) — arregla el *statement timeout*; sin lectura bajo RLS; caché por vehículo intacta. `mapMantenimiento` normaliza `kilometraje_al_mantenimiento`→`kilometraje` y `creado_por_usuario.nombre`→`registrado_por` (el nombre que pinta la ficha). Página expone `listarMantenimientosPagina` para cursor si un vehículo supera 200.
+  - **CD5:** el chofer ve **Echadas del vehículo** asignado en la ficha (`getEchadasVehiculo` por `vehiculo_id`, RLS-gated) + su KPI, gracias a la **política** que arregló el padre (overload `puede_ver_echada(registrado_por, conductor_id, vehiculo_id)` que reusa `puede_ver_vehiculo`). **No** hubo RPC nuevo de KPI: el padre lo resolvió por RLS (regla 14). `log_combustible` sigue siendo elevado → la lista del chofer es lectura directa por `vehiculo_id`.
+  - **CD3:** el cierre del uso huérfano (>24 h) lo hace el **cron del padre** (`cerrar_usos_huerfanos`); la app lo **refleja** solo (el uso desaparece de "en uso" → *Mi vehículo* ya no lo muestra) y **avisa** por la notificación `flota_uso_cerrado` del padre. Nuevo deep-link en `notifAppRoute`: `flota_uso_cerrado`/`/flota/mi-vehiculo` → **`/transporte`** (para reabrir el uso si lo sigue usando).
+- **CD7 · Requisición (pendiente único).** `requisicion_avance` ahora trae `cubierto` + `item_id` + `pendiente = solicitado−despachado−cubierto`; la app añade `RequisicionAvanceItem.cubierto/item_id` y pinta el chip **"Cubierto por llegada · n"** (verde); el renglón cubierto cuenta como completado (check). *Deshacer* = quitar la cobertura (`desvincular_cobertura`, ya existía, gateado). **Nunca** recalcula pendiente en cliente.
+- **CD8 · Combustible.**
+  - **Idempotencia total del reenvío:** `reenviarEchada` usa `client_uuid = uuidV5('reenvio:<originalId>')` (estable) en vez de `randomUUID()` por llamada → doble pulsación/reabrir no duplica (servidor idempotente por `(reenvio_de, client_uuid)`). Nuevo `src/app/core/util/uuid.ts` (UUIDv5 SHA-1, `crypto.subtle`).
+  - **Aviso suave de posible duplicado** antes de enviar: `posibleDuplicado()` (recibo repetido / misma fecha + galones ±0.5 %) → confirm-dialog *"¿Es la misma echada que registraste a las HH:MM?"*. **Solo online; no bloquea offline.**
+  - **`docs/REVISION-COMBUSTIBLE-2026-09.md`** (lado app): 9 hallazgos con severidad + arreglo.
+- **CD10 · regla 19** añadida a `CLAUDE.md` (nada escrito en prod fuera de archivos versionados).
+- **CD1/CD2/CD6:** divergencias deliberadas / solo-web, anotadas en `PARIDAD.md` (la flota de la app es por filas tocables sin pie de tarjeta; no hay Auditoría; Versiones no enlaza a GitHub — 0 refs a `github` en `src/`).
+
+### 🔴 CD9 — AVISO DE SEGURIDAD (físico de Xaviel)
+- **Ambos repos son PÚBLICOS** (confirmado por API GitHub: `techcsd/SGC` y `techcsd/csd-app`, `visibility=public`). Cualquiera lee el código, migraciones (mapa de RLS/definer), edge functions y docs con nombres/correos. 👤 **Cambiar los dos a privado** (*Settings › General › Danger Zone*); Vercel sigue desplegando por la integración de GitHub. No vi `.env`/claves versionadas en el árbol de la app (el histórico ya se purgó con BFG, memoria `ag1-secret-audit-and-purge`).
+
+### 👤 Pendientes físicos de Xaviel (antes/para prod)
+- 🔴 **Poner privados** `techcsd/SGC` y `techcsd/csd-app` (CD9).
+- **OK a 2.37.0** para release a prod (yo hago: `dev→main` + APK prod + publicar).
+- (Padre) revisar la lista de asignaciones AUTO a retirar (CD3) + confirmar el responsable real de MT 03 con Raykler; poner el Excel de Raykler en `adjuntos\` (CD8).
+- Device-QA del APK dev 2.37.0: chofer con vehículo asignado → Mantenimientos carga rápido, Echadas del vehículo + KPI se ven; reenviar echada 2× = 1 sola; requisición con material llegado muestra "Cubierto por llegada".
+
+### ⏭️ Release a prod (tras OK)
+`dev→main` (PR, Action pr-main) → `npm run apk -- --env prod` (pasa regla 18: 2.37.0 ya salió en dev) → `npm run apk:publish -- --env prod` → matriz filas 92-101 ✅. **Mínima NO cambia.**
+
+---
+
 ## 🟢 SESIÓN 30/09/2026 — PROMPT-75 · Ronda **CC** (lógica, no piel) — **2.36.0 PUBLICADA a prod**
 
 **TL;DR:** ronda CC (filas 84-91, mitad app). Consume los contratos de PROMPT-74 (ya vivos en dev+prod). **Salió a dev (APK dev 2.36.0 + merge→dev) → Xaviel dio OK ("ok, si dale continua") → RELEASE A PROD 2.36.0:** `dev→main` (`b5714e4`) → Vercel construye app. + APK prod 2.36.0 firmado/publicado + **PUBLICADA (no forzada)** en `app_versiones` prod. ✅ Sesión cerrada.
