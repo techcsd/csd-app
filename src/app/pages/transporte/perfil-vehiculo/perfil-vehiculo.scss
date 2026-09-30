@@ -183,6 +183,62 @@
   border: 1px solid var(--color-border);
   font-size: 14px;
 }
+// CD5 — Echadas del vehículo.
+.pveh__echadas {
+  margin-top: 20px;
+}
+.pveh__sec {
+  margin: 0 0 10px;
+  font-size: var(--fs-16, 16px);
+  font-weight: 800;
+}
+.pveh__echlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pveh__echrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+.pveh__echrow:active {
+  background: var(--color-surface-2, #212121);
+}
+.pveh__echfecha {
+  font-weight: 700;
+}
+.pveh__echdatos {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--color-text-2, var(--color-text));
+  font-size: var(--fs-14, 14px);
+}
+.pveh__echchip {
+  padding: 1px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-12, 12px);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pveh__echchip--warn {
+  background: var(--color-warning-bg, rgba(181, 71, 8, 0.12));
+  color: var(--color-warning);
+}
+.pveh__echchip--danger {
+  background: var(--color-danger-bg, rgba(180, 35, 24, 0.12));
+  color: var(--color-danger);
+}
+
 .pveh__multas {
   margin-top: 20px;
 }

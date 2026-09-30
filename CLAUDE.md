@@ -52,8 +52,11 @@ Los roles/módulos vienen de la BD (`usuarios_roles → roles(codigo, modulos, p
 4. `main` protegida (PR obligatorio); Xaviel puede saltarla.
 - **HANDOFF**: cada sesión cierra con un bloque **"En dev / En prod"** (qué quedó en cada entorno).
 
+## Regla 19 — nada escrito en prod fuera de archivos versionados (CD10, no negociable)
+**Toda escritura en prod —migración DDL o corrección de datos— vive en un archivo versionado antes de aplicarse: `sql/` (SGC) / `sql-para-sgc/` (app) o `scripts/data-fixes/` con fecha, y en el ledger del padre. Nada desde el scratchpad.** El hijo no aplica nada: deja el SQL fechado en `sql-para-sgc/` y lo aplica el PADRE (regla 18/AU1). Ningún `.rpc()`/`.from().update()` de service_role fuera de un script versionado y revisable cuenta como "aplicado"; una escritura en prod sin archivo es un incidente (origen de CD3: la realineación del 29-08 se corrió sin dejar archivo). Los comentarios que citan `sql/*.sql` deben apuntar a archivos que existen.
+
 ## Backend / migrations
-El hijo (app) **ya no aplica DDL directo** (`apply-migration.mjs` está retirado). Los SQL del hijo se dejan en `sql-para-sgc/` y **los aplica el PADRE (SGC)** con su ledger y `--env dev|prod` (regla 11/AU1 + regla 18). Data API keys en `.env.local` (anon / service_role) son para acceso a filas desde la app, NO DDL. Toda migración: RLS + schema grants + sequence grants; RPCs backward-compatible ≥2 versiones.
+El hijo (app) **ya no aplica DDL directo** (`apply-migration.mjs` está retirado). Los SQL del hijo se dejan en `sql-para-sgc/` y **los aplica el PADRE (SGC)** con su ledger y `--env dev|prod` (regla 11/AU1 + regla 18 + regla 19). Data API keys en `.env.local` (anon / service_role) son para acceso a filas desde la app, NO DDL. Toda migración: RLS + schema grants + sequence grants; RPCs backward-compatible ≥2 versiones.
 
 ## Versionado / historial (REGLA Y1 — no negociable)
 **Cada actualización enviada (web o app móvil) DEBE registrarse en el historial de versiones (`sgc.app_versiones`), automáticamente y SIEMPRE con el mismo formato estructurado.** Formato estándar de una entrada: `version` (semver), `plataforma` (web|movil), `fecha`, `titulo` (corto, opcional) y `cambios[]` donde cada cambio = `{ t: nuevo|mejora|arreglo|seguridad, d: texto }`. La UI del historial pinta chips por tipo para ambas plataformas.

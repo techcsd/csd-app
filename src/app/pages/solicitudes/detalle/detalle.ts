@@ -142,14 +142,17 @@ export class RequisicionDetallePage {
     return autorEditable || this.ctx.esFlotaElevado() || this.ctx.hasModulo('inventario') || this.ctx.esAdmin();
   });
 
-  /** BA6 — resumen del avance: "N de M renglones despachados". */
+  /** BA6/CD7 — resumen del avance: "N de M renglones completados". Un renglón cuenta
+   *  como completado si su pendiente (server: solicitado − despachado − cubierto) llegó
+   *  a 0, ya sea por despacho o por material llegado a la obra (cubierto). */
   avanceResumen = computed(() => {
     const a = this.avance();
     if (!a.length) return null;
-    const despachados = a.filter((i) => i.despachado > 0 && i.pendiente <= 0).length;
+    const despachados = a.filter((i) => (i.despachado > 0 || (i.cubierto ?? 0) > 0) && i.pendiente <= 0).length;
     return { despachados, total: a.length };
   });
-  hayDespachos = computed(() => this.avance().some((i) => i.despachado > 0));
+  /** CD7 — hay algo que mostrar en "Avance": un despacho o una cobertura por llegada. */
+  hayDespachos = computed(() => this.avance().some((i) => i.despachado > 0 || (i.cubierto ?? 0) > 0));
 
   get online(): boolean {
     return this.net.online();

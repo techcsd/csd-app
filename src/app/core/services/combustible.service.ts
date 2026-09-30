@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, PermanentSyncError, SyncService } from '../sync/sync.service';
 import { AyudanteService } from './ayudante.service';
+import { uuidV5 } from '../util/uuid';
 import {
   CombustibleCaptura,
   EchadaDetalle,
@@ -347,6 +348,59 @@ export class CombustibleService {
   }
 
   /**
+   * CD8 — ¿hay una posible echada duplicada del MISMO vehículo? Aviso SUAVE previo al
+   * envío (no bloquea; nunca corre offline). Dos señales:
+   *   1) Recibo repetido (CC6): ya existe una echada de ese vehículo con el mismo
+   *      `numero_recibo` → "Ya registraste el recibo N.º … en este vehículo".
+   *   2) Casi igual: misma fecha y galones dentro de ±0.5 % (o ±0.3 gal) → "¿Es la
+   *      misma echada que registraste a las HH:MM?" (hora local de la existente).
+   * Lectura directa gateada por RLS (el chofer ve las echadas de su vehículo, CD5).
+   * Best-effort: cualquier fallo → null (no molestar). Ignora su propia fila al
+   * corregir/reenviar (excluye `p_excluir_id`).
+   */
+  async posibleDuplicado(input: {
+    vehiculoId: string | null;
+    fecha: string;
+    galones: number | null;
+    numeroRecibo: string | null;
+    excluirId?: string | null;
+  }): Promise<{ tipo: 'recibo' | 'similar'; mensaje: string } | null> {
+    if (!input.vehiculoId || input.galones == null) return null;
+    try {
+      const { data, error } = await this.supabase.client
+        .from('registros_combustible')
+        .select('id, created_at, galones, numero_recibo')
+        .eq('vehiculo_id', input.vehiculoId)
+        .eq('fecha', input.fecha)
+        .not('es_prueba', 'is', true)
+        .limit(50);
+      if (error) return null;
+      const rows = ((data as { id: string; created_at: string | null; galones: number | null; numero_recibo: string | null }[]) ?? []).filter(
+        (r) => r.id !== input.excluirId,
+      );
+      if (!rows.length) return null;
+      // 1) recibo repetido (CC6).
+      const recibo = (input.numeroRecibo ?? '').replace(/\D/g, '');
+      if (recibo) {
+        const hit = rows.find((r) => (r.numero_recibo ?? '').replace(/\D/g, '') === recibo);
+        if (hit) return { tipo: 'recibo', mensaje: `Ya registraste el recibo N.º ${recibo} en este vehículo.` };
+      }
+      // 2) galones casi iguales (±0.5 %, mínimo ±0.3 gal).
+      const tol = Math.max(0.3, input.galones * 0.005);
+      const casi = rows.find((r) => r.galones != null && Math.abs(r.galones - input.galones!) <= tol);
+      if (casi) {
+        const hora = casi.created_at
+          ? new Date(casi.created_at).toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit', hour12: true })
+          : null;
+        return { tipo: 'similar', mensaje: hora ? `¿Es la misma echada que registraste a las ${hora}?` : '¿Es la misma echada que ya registraste hoy en este vehículo?' };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * BY1 — bandeja "Por aprobar": echadas que nacieron EN ESPERA por una bandera
    * (salto de km, consumo anormal, sin asignación, retroactiva, galones > tanque).
    * Solo roles elevados (el RPC gatea; devuelve [] a los demás). Firma las fotos
@@ -421,10 +475,17 @@ export class CombustibleService {
   }
 
   /**
-   * BY1/BY5 — el chofer corrige y REENVÍA una echada rechazada: crea una nueva
+   * BY1/BY5/CD8 — el chofer corrige y REENVÍA una echada rechazada: crea una nueva
    * echada vinculada (reenvio_de); la rechazada NO se borra (dato real). Por outbox
    * (offline). Las fotos del original se reutilizan en el servidor. Devuelve el
    * client id de la op.
+   *
+   * CD8 (idempotencia total del reenvío): el `client_uuid` es ESTABLE por echada
+   * reenviada — `uuidV5(reenvio:<originalId>)` — NO un `randomUUID()` nuevo por llamada.
+   * Así, si el chofer pulsa "reenviar" dos veces o reabre la pantalla, se encola la
+   * MISMA op (mismo id → el outbox la sobrescribe) y el servidor, idempotente por
+   * `(reenvio_de, client_uuid)`, devuelve el reenvío ya creado en vez de duplicarlo.
+   * Antes, dos envíos del mismo rechazo generaban dos reenvíos (CD8 hipótesis #2).
    */
   async reenviarEchada(
     originalId: string,
@@ -438,7 +499,8 @@ export class CombustibleService {
       notas?: string | null;
     },
   ): Promise<string> {
-    const id = crypto.randomUUID();
+    // CD8 — id determinista por echada reenviada (idempotencia estable en todos los envíos).
+    const id = await uuidV5(`reenvio:${originalId}`);
     const capturado_en = new Date().toISOString();
     await this.sync.enqueue({
       id,

@@ -408,7 +408,12 @@ export interface RequisicionDetalle {
   motivo_rechazo?: string | null;
 }
 
-/** BA6 — avance de un renglón: solicitado vs despachado vs pendiente. */
+/** BA6 — avance de un renglón: solicitado vs despachado vs pendiente.
+ *  CD7 — el servidor (requisicion_avance) ahora expone `cubierto` (material llegado
+ *  a la obra que casa con el renglón) e `item_id`; `pendiente` = greatest(solicitado −
+ *  despachado − cubierto, 0), calculado por sgc.requisicion_item_pendiente(). La app
+ *  NUNCA recalcula pendiente localmente: lo toma tal cual del servidor. Ambos campos
+ *  son forward-compatible (si el RPC viejo aún no los trae, quedan undefined). */
 export interface RequisicionAvanceItem {
   articulo_id: string | null;
   descripcion: string;
@@ -417,6 +422,10 @@ export interface RequisicionAvanceItem {
   solicitado: number;
   despachado: number;
   pendiente: number;
+  // CD7 — cantidad cubierta por material llegado a la obra (≥ 0).
+  cubierto?: number;
+  // CD7 — id del renglón (solicitud_material_items.id), para enlazar coberturas.
+  item_id?: string | null;
 }
 
 /** BB10 — una edición del autor sobre su requisición (para el historial). */
