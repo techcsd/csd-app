@@ -55,6 +55,8 @@ export interface EchadaDetalle {
   producto: string | null;
   subtipo: string | null;
   estacion: string | null;
+  /** CC6 — nº de recibo del ticket (aparece cuando el padre lo incluya en echada_detalle). */
+  numero_recibo?: string | null;
   estado: string | null;
   alerta_consumo: boolean | null;
   km_alerta: boolean | null;
@@ -295,6 +297,9 @@ export interface CombustibleCaptura {
   fotoBomba: Blob | null; // Y4 — bomba/estación en 0
   fotoEvidencia: Blob | null; // AC11 — evidencia del equipo/garrafón (depósito en obra)
   placa: string;
+  /** CC6 — número del RECIBO del ticket (opcional; para cruzar con el informe de la
+   *  estación en la conciliación). Se captura como texto de solo dígitos. */
+  numeroRecibo?: string | null;
   /** AT4 — usuario_id del ayudante (opcional); le suma la echada al incentivo. */
   ayudanteId?: string | null;
   /**

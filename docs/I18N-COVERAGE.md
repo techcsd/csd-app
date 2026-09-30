@@ -18,9 +18,9 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/admin/reportes | 5 | 0 | 100% | 0% |  |
 | pages/admin/roles | 20 | 0 | 100% | 0% |  |
 | pages/admin/unidades | 4 | 0 | 100% | 0% |  |
-| pages/admin/usuarios | 30 | 0 | 100% | 0% |  |
+| pages/admin/usuarios | 38 | 0 | 82% | 0% |  |
 | pages/admin/versiones | 8 | 1 | 89% | 0% |  |
-| pages/auth/login | 12 | 2 | 86% | 21% |  |
+| pages/auth/login | 9 | 2 | 82% | 0% |  |
 | pages/auth/pin-acceso-change | 3 | 0 | 100% | 0% |  |
 | pages/auth/pin-change | 1 | 0 | 100% | 0% |  |
 | pages/auth/pin-unlock | 10 | 0 | 100% | 0% |  |
@@ -37,7 +37,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/bitacora/mis-ordenes | 12 | 0 | 100% | 0% |  |
 | pages/bitacora/mis-partes | 30 | 0 | 100% | 0% |  |
 | pages/bitacora/orden-trabajo | 60 | 1 | 98% | 0% |  |
-| pages/bitacora/orden-trabajo-ficha | 30 | 0 | 100% | 0% |  |
+| pages/bitacora/orden-trabajo-ficha | 31 | 0 | 100% | 0% |  |
 | pages/bitacora/parte | 186 | 4 | 98% | 0% |  |
 | pages/compa | 10 | 0 | 100% | 0% |  |
 | pages/compras-proyecto | 28 | 0 | 100% | 0% |  |
@@ -56,7 +56,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/inventario/articulo-editar | 19 | 0 | 100% | 0% |  |
 | pages/inventario/articulo-nuevo | 27 | 0 | 100% | 0% |  |
 | pages/inventario/catalogo | 12 | 0 | 100% | 0% |  |
-| pages/inventario/conteo | 23 | 0 | 100% | 0% |  |
+| pages/inventario/conteo | 29 | 0 | 83% | 0% |  |
 | pages/inventario/conteos | 10 | 0 | 100% | 0% |  |
 | pages/inventario/entrada | 33 | 0 | 100% | 0% |  |
 | pages/inventario/existencias | 6 | 0 | 100% | 0% |  |
@@ -88,7 +88,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/recursos | 17 | 0 | 100% | 0% |  |
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
-| pages/pendientes/outbox-detalle | 23 | 0 | 100% | 0% |  |
+| pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
 | pages/perfil | 47 | 0 | 100% | 0% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
@@ -121,10 +121,10 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 0% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 111 | 2 | 98% | 0% |  |
+| pages/transporte/combustible | 114 | 2 | 96% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 56 | 1 | 98% | 4% |  |
-| pages/transporte/conduce-externo | 45 | 0 | 100% | 0% |  |
+| pages/transporte/conduce-externo | 76 | 1 | 83% | 0% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 0% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
@@ -137,7 +137,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/confirmaciones | 28 | 0 | 100% | 0% |  |
 | pages/transporte/despachos | 8 | 0 | 100% | 0% |  |
 | pages/transporte/devolver-material | 44 | 0 | 100% | 0% |  |
-| pages/transporte/echada-detalle | 16 | 2 | 89% | 0% |  |
+| pages/transporte/echada-detalle | 17 | 2 | 84% | 0% |  |
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
 | pages/transporte/generar-conduce | 101 | 1 | 99% | 0% |  |

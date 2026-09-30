@@ -221,6 +221,8 @@ export class CombustiblePage extends GuardedWizard {
     return this.precios().find((p) => p.producto === canon) ?? null;
   });
   tarjeta = signal('');
+  /** CC6 — nº de recibo del ticket (opcional; solo dígitos) para la conciliación. */
+  numeroRecibo = signal('');
   estacionesVisibles = computed(() =>
     this.estaciones().filter((e) => e.trim().toLowerCase() !== 'otro'),
   );
@@ -429,6 +431,7 @@ export class CombustiblePage extends GuardedWizard {
       subtipo: this.subtipo(),
       tarjeta: this.tarjeta(),
       titular: this.titular(),
+      numeroRecibo: this.numeroRecibo(), // CC6
       ayudanteId: this.ayudanteId(),
       proyectoId: this.proyectoId(),
       estacion: this.estacion(),
@@ -463,6 +466,7 @@ export class CombustiblePage extends GuardedWizard {
       this.subtipo.set((d['subtipo'] as 'regular' | 'premium' | null) ?? 'premium');
       this.tarjeta.set((d['tarjeta'] as string) ?? '');
       this.titular.set((d['titular'] as string) ?? '');
+      this.numeroRecibo.set((d['numeroRecibo'] as string) ?? ''); // CC6
       this.ayudanteId.set((d['ayudanteId'] as string | null) ?? null);
       this.proyectoId.set((d['proyectoId'] as string | null) ?? null);
       this.estacion.set((d['estacion'] as string) ?? 'Total Energies');
@@ -1044,6 +1048,8 @@ export class CombustiblePage extends GuardedWizard {
         tarjeta: deposito ? null : this.tarjeta().trim() || null, // Z23-app
         titular: persona ? this.titular().trim() || null : null, // Z23-app
         titularEsPersona: persona, // Z23-app
+        // CC6 — nº de recibo (solo estación; el depósito en obra no tiene ticket).
+        numeroRecibo: deposito ? null : this.numeroRecibo().replace(/\D/g, '') || null,
         // AC11 — fotos según el origen: depósito=evidencia; estación=recibo/tablero/bomba.
         fotoRecibo: deposito ? null : this.fotoRecibo()!.blob,
         fotoTablero: persona || deposito ? null : this.fotoTablero()!.blob,

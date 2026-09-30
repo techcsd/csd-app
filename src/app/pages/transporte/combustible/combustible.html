@@ -441,6 +441,18 @@
             (ngModelChange)="tarjeta.set($event)"
             [placeholder]="'N.º o nombre de la tarjeta' | t"
           />
+
+          <!-- CC6 — nº de recibo del ticket (para cruzar con el informe de la estación) -->
+          <label class="field-label comb__mt" for="recibo">{{ 'N.º de recibo (opcional)' | t }}</label>
+          <input
+            id="recibo"
+            class="field"
+            type="text"
+            inputmode="numeric"
+            [ngModel]="numeroRecibo()"
+            (ngModelChange)="numeroRecibo.set($event)"
+            [placeholder]="'El número que dice RECIBO en el ticket' | t"
+          />
         }
       }
 
@@ -519,6 +531,7 @@
           } @else {
             <li><span>{{ 'Estación' | t }}</span><b>{{ estacionOtro() ? estacionOtroTexto() : estacion() }}</b></li>
             @if (tarjeta().trim()) { <li><span>{{ 'Tarjeta' | t }}</span><b>{{ tarjeta() }}</b></li> }
+            @if (numeroRecibo().trim()) { <li><span>{{ 'N.º de recibo' | t }}</span><b>{{ numeroRecibo() }}</b></li> }
           }
           <li><span>{{ 'Fotos' | t }}</span><b>{{ fotosCompletas() ? (esDeposito() ? '1 ✓' : (modoPersona() ? '2 ✓' : '3 ✓')) : ('Faltan' | t) }}</b></li>
           @if (!modoPersona() && !esDeposito()) {

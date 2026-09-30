@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService, QaUserDev } from '../../../core/services/auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { SessionService } from '../../../core/services/session.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -45,29 +45,12 @@ export class LoginPage {
 
   loading = signal(false);
 
-  // BZ3 — panel "usuarios de prueba" solo en builds de dev (nunca en prod). El RPC
-  // usuarios_qa_dev() devuelve [] en prod, pero también se gatea en cliente para no
-  // pedirlo siquiera fuera de dev. "Entrar como" rellena el email; la contraseña QA se
-  // escribe a mano (nunca va en el bundle).
+  // CC2 — el panel "usuarios de prueba" del login se ELIMINÓ (era pre-auth y filtraba
+  // la lista de cuentas de dev a cualquiera con el enlace). En dev el login solo muestra
+  // el badge DEV (en el shell) y, para correos reales de la lista blanca, "Enviarme un
+  // enlace mágico" (el padre gatea con dev_token_hook + SMTP de dev).
   readonly esDev = environment.entorno !== 'prod';
-  qaUsers = signal<QaUserDev[]>([]);
-  mostrarQa = signal(false);
-  hayQa = computed(() => this.qaUsers().length > 0);
-
-  constructor() {
-    if (this.esDev) void this.cargarQaUsers();
-  }
-
-  private async cargarQaUsers(): Promise<void> {
-    this.qaUsers.set(await this.auth.usuariosQaDev());
-  }
-
-  /** BZ3 — rellena el correo con el de una cuenta QA (la contraseña se escribe aparte). */
-  entrarComo(email: string): void {
-    this.modo.set('correo');
-    this.email.set(email);
-    this.password.set('');
-  }
+  enviandoEnlace = signal(false);
 
   setModo(m: Modo): void {
     this.modo.set(m);
@@ -95,7 +78,13 @@ export class LoginPage {
         return;
       }
       if (error || !user) {
-        this.toast.error('Correo o contraseña incorrectos.');
+        // CC2 — el candado de dev (dev_token_hook) niega el token con un 403 y un
+        // mensaje claro; propágalo tal cual en vez del genérico de credenciales.
+        if (error && this.esGateDev(error)) {
+          this.toast.error('Este entorno es solo para el equipo de Tecnología.');
+        } else {
+          this.toast.error('Correo o contraseña incorrectos.');
+        }
         return;
       }
       await this.afterAuth(user.id);
@@ -174,7 +163,51 @@ export class LoginPage {
         7000,
       );
     }
+    // CC3 — si un admin fijó la contraseña de esta cuenta real, obligar a cambiarla
+    // ahora (nadie queda conociendo la contraseña de otro). La pantalla set-password
+    // en modo forzado limpia la marca y sigue al PIN sin cerrar sesión.
+    if (profile?.debe_cambiar_password) {
+      await this.router.navigate(['/auth/set-password'], { queryParams: { forzado: 1 } });
+      return;
+    }
     // Fresh login → set up the local PIN next (desbloqueo local, distinto del PIN de acceso).
     await this.router.navigate(['/auth/pin-setup']);
+  }
+
+  /** CC2 — ¿el error de login es el candado de dev (403 del dev_token_hook)? */
+  private esGateDev(error: { status?: number; message?: string }): boolean {
+    const msg = (error.message ?? '').toLowerCase();
+    return error.status === 403 || msg.includes('solo para el equipo de tecnología');
+  }
+
+  /**
+   * CC2 — enlace mágico (solo dev): para correos reales de la lista blanca que no
+   * tienen contraseña de dev a mano. El padre expone SMTP de dev + dev_token_hook;
+   * si no está configurado el redirect, la llamada falla y avisamos suave.
+   */
+  async enviarEnlaceMagico(): Promise<void> {
+    if (this.enviandoEnlace()) return;
+    const email = this.email().trim();
+    if (!email) {
+      this.toast.error('Escribe tu correo primero.');
+      return;
+    }
+    this.enviandoEnlace.set(true);
+    try {
+      const { error } = await this.auth.enviarEnlaceMagico(email);
+      if (error) {
+        this.toast.error('No pudimos enviar el enlace. Verifica el correo o usa tu contraseña.');
+        return;
+      }
+      this.toast.show(
+        `Te enviamos un enlace a ${email}. Ábrelo en este dispositivo para entrar.`,
+        'success',
+        7000,
+      );
+    } catch {
+      this.toast.error('No pudimos enviar el enlace. Revisa tu conexión.');
+    } finally {
+      this.enviandoEnlace.set(false);
+    }
   }
 }

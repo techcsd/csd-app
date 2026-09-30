@@ -7,6 +7,7 @@ import { NotificacionesService, notifAppRoute } from './notificaciones.service';
 import { NavGuardService } from './nav-guard.service';
 import { AlarmaService } from './alarma.service';
 import { ErrorReportService } from './error-report.service';
+import { SyncService } from '../sync/sync.service';
 import { environment } from '../../../environments/environment';
 
 /**
@@ -26,6 +27,7 @@ export class PushService {
   private navGuard = inject(NavGuardService);
   private alarma = inject(AlarmaService);
   private errorReport = inject(ErrorReportService);
+  private sync = inject(SyncService);
 
   private started = false;
   private token: string | null = null;
@@ -66,6 +68,9 @@ export class PushService {
     // AK10 — si es la push de alarma dominical, dispara la alarma tipo despertador.
     await PushNotifications.addListener('pushNotificationReceived', (n) => {
       void this.notifs.refreshNoLeidas().catch(() => {});
+      const raw = (n?.data ?? {}) as Record<string, string>;
+      // CC7 — Tecnología pidió reintentar / subir evidencia de un envío atascado.
+      if (this.manejarPushOutbox(raw)) return;
       const data = (n?.data ?? {}) as { tipo?: string; alarma?: string | boolean; ruta?: string; vehiculo_id?: string };
       // AK10 legacy + AL6 canónico (alarm-weekly-inspection) + flag genérico alarma.
       if (
@@ -97,6 +102,9 @@ export class PushService {
     // AJ7 — el deep-link pasa por el gate de navegación: si el usuario está en un
     // formulario en curso, se difiere hasta que lo cierre (nunca lo saca del form).
     await PushNotifications.addListener('pushNotificationActionPerformed', (a) => {
+      const raw = (a.notification?.data ?? {}) as Record<string, string>;
+      // CC7 — al tocar la push de reintento/evidencia, actuar (no hay ruta a la que ir).
+      if (this.manejarPushOutbox(raw)) return;
       const data = (a.notification?.data ?? {}) as {
         tipo?: string;
         ruta?: string;
@@ -121,6 +129,22 @@ export class PushService {
     }
     if (perm.receive !== 'granted') return;
     await PushNotifications.register();
+  }
+
+  /**
+   * CC7 — pushes de "Outbox atascado" (Tecnología desde la web): `outbox_reintentar`
+   * reintenta ese envío YA; `outbox_subir_evidencia` fuerza subir payload+fotos al
+   * bucket privado. El match del envío se hace por `atascado_id` (guardado al reportar)
+   * o por `salida_id`. Devuelve true si la push era de outbox (para no seguir al
+   * deep-link genérico). Best-effort: si no encuentra el envío, no rompe nada.
+   */
+  private manejarPushOutbox(data: Record<string, string>): boolean {
+    const tipo = data['type'] ?? data['tipo'];
+    if (tipo !== 'outbox_reintentar' && tipo !== 'outbox_subir_evidencia') return false;
+    const info = { atascado_id: data['atascado_id'], salida_id: data['salida_id'] };
+    if (tipo === 'outbox_reintentar') void this.sync.reintentarAtascadoRemoto(info).catch(() => {});
+    else void this.sync.forzarSubirEvidencia(info).catch(() => {});
+    return true;
   }
 
   /**

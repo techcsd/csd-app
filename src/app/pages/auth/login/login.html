@@ -77,6 +77,18 @@
       </button>
 
       <a class="login__forgot" routerLink="/auth/reset">{{ 'Olvidé mi contraseña' | t }}</a>
+
+      <!-- CC2 — solo dev: enlace mágico para correos reales de la lista blanca. -->
+      @if (esDev) {
+        <button
+          type="button"
+          class="login__magic"
+          (click)="enviarEnlaceMagico()"
+          [disabled]="enviandoEnlace()"
+        >
+          {{ (enviandoEnlace() ? 'Enviando…' : '✉️ Enviarme un enlace mágico') | t }}
+        </button>
+      }
     </form>
   } @else {
     <form class="login__form" (ngSubmit)="submitConductor()">
@@ -119,31 +131,4 @@
     </form>
   }
 
-  <!-- BZ3 — panel de ayuda del login de DEV: cuentas de prueba por rol. Solo en builds
-       de dev (esDev) y solo si el RPC usuarios_qa_dev() devolvió cuentas (en prod, []). -->
-  @if (esDev && hayQa()) {
-    <div class="login__qa">
-      <button type="button" class="login__qa-head" (click)="mostrarQa.set(!mostrarQa())">
-        <span>🧪 {{ 'Entorno de desarrollo — usuarios de prueba' | t }}</span>
-        <span>{{ mostrarQa() ? '▲' : '▼' }}</span>
-      </button>
-      @if (mostrarQa()) {
-        <p class="login__qa-note">
-          {{ 'Toca "Entrar como" para rellenar el correo. La contraseña es la QA de .env.local / la que te dio Tecnología (no está en la app).' | t }}
-        </p>
-        <ul class="login__qa-list">
-          @for (u of qaUsers(); track u.email) {
-            <li class="login__qa-item">
-              <div class="login__qa-info">
-                <span class="login__qa-name">{{ u.nombre }}</span>
-                <span class="login__qa-rol">{{ u.rol }}</span>
-                <span class="login__qa-email">{{ u.email }}</span>
-              </div>
-              <button type="button" class="login__qa-btn" (click)="entrarComo(u.email)">{{ 'Entrar como' | t }}</button>
-            </li>
-          }
-        </ul>
-      }
-    </div>
-  }
 </div>

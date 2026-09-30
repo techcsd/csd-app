@@ -25,6 +25,9 @@ export interface Usuario {
   preferencias?: Record<string, unknown> | null;
   /** BR7 — idioma preferido (es|en|ht), sincronizado entre dispositivos. */
   idioma?: string | null;
+  /** CC3 — true cuando un admin fijó la contraseña de esta cuenta real; obliga a
+   *  cambiarla al entrar (guard → /auth/set-password?forzado=1). */
+  debe_cambiar_password?: boolean;
   roles?: UsuarioRol[];
 }
 

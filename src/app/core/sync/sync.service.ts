@@ -212,6 +212,9 @@ export class SyncService {
   /** P5 — se incrementa en cada cambio del outbox para que la pantalla
    *  "Pendientes de envío" se refresque sola. */
   changed = signal(0);
+  /** CC7 — hay ≥1 envío en error cuya evidencia (payload+fotos) ya subió al bucket
+   *  privado → Tecnología puede verlo. La barra lo usa para decir "ya lo está revisando". */
+  revisionTecnologia = signal(false);
 
   constructor() {
     // AA1 — limpieza one-shot: purga cualquier op silenciosa (error_report)
@@ -628,6 +631,8 @@ export class SyncService {
     const tipos = new Map<string, number>();
     for (const o of errored) tipos.set(o.tipo_op, (tipos.get(o.tipo_op) ?? 0) + 1);
     this.errorTipos.set(tipos);
+    // CC7 — ¿alguno en error ya tiene su evidencia subida? (Tecnología puede verlo).
+    this.revisionTecnologia.set(errored.some((o) => o.evidencia_subida === true));
     this.changed.update((n) => n + 1);
   }
 
@@ -879,7 +884,7 @@ export class SyncService {
       const fotos = await db.fotos_pendientes.where('op_id').equals(op.id).count();
       const edadHoras = Math.max(0, Math.round((Date.now() - op.created_local) / 3_600_000));
       const resumen = this.payloadResumen(op);
-      const { error } = await this.supabase.client.rpc('reportar_outbox_atascado', {
+      const { data, error } = await this.supabase.client.rpc('reportar_outbox_atascado', {
         p_dedup_key: op.id,
         p_tipo_op: op.tipo_op,
         p_categoria: 'sistema',
@@ -891,9 +896,164 @@ export class SyncService {
         p_edad_horas: edadHoras,
         p_payload_resumen: resumen,
       });
-      if (!error) await db.outbox.update(op.id, { reportado_sistema: true });
+      if (!error) {
+        // CC7 — `reportar_outbox_atascado` devuelve el id de la fila server (uuid).
+        // Guardarlo enlaza la evidencia (payload+fotos) que subimos con la ficha que
+        // ve Tecnología en la web.
+        const atascadoId = typeof data === 'string' ? data : undefined;
+        await db.outbox.update(op.id, { reportado_sistema: true, atascado_id: atascadoId });
+        // CC7 — sube la evidencia (payload legible + fotos) al bucket privado para que
+        // la web SIEMPRE pueda ver el conduce y su foto, aunque vivan solo en el teléfono.
+        void this.subirEvidenciaAtascado({ ...op, atascado_id: atascadoId });
+      }
     } catch {
       /* telemetría best-effort: nunca romper el drain */
+    }
+  }
+
+  /**
+   * CC7 — sube la EVIDENCIA de un envío atascado por error de SISTEMA: el payload
+   * legible (JSON, sin tokens — el payload de captura no los tiene) + las fotos, al
+   * bucket privado `outbox-atascados/<uid>/<opId>/` (lectura solo Tecnología/admin),
+   * y registra las rutas en `outbox_atascado_evidencia`. Así la web ve el conduce y
+   * su foto aunque estén solo en el teléfono. Idempotente (flag `evidencia_subida`);
+   * las fotos NO se borran del teléfono (siguen hasta que el envío salga). Best-effort:
+   * sin red o si falla, se reintenta en el próximo fallo / drain / push.
+   */
+  private async subirEvidenciaAtascado(op: OutboxOp): Promise<void> {
+    try {
+      if (SyncService.isSilent(op.tipo_op)) return;
+      if (op.evidencia_subida) return;
+      if (!this.network.online()) return;
+      // Necesitamos el uid para la carpeta (la política de escritura exige <uid>/…).
+      const sess = await this.supabase.readStoredSession();
+      const uid = sess?.user?.id;
+      if (!uid) return;
+      const base = `${uid}/${op.id}`;
+      const paths: string[] = [];
+
+      // 1) Payload legible como JSON (lista blanca = todo el payload de captura, que
+      //    son datos de obra, nunca secretos). Se sube upsert (idempotente).
+      const payloadJson = new Blob([JSON.stringify(op.payload ?? {}, null, 2)], {
+        type: 'application/json',
+      });
+      const payloadPath = `${base}/payload.json`;
+      const up1 = await this.supabase.client.storage
+        .from('outbox-atascados')
+        .upload(payloadPath, payloadJson, { upsert: true, contentType: 'application/json' });
+      if (!up1.error || /exists/i.test(up1.error.message)) paths.push(payloadPath);
+      else return; // sin permiso/otra falla: reintentar luego
+
+      // 2) Fotos/firmas del envío (reconstruidas desde Dexie, WebKit-safe).
+      const fotos = await db.fotos_pendientes.where('op_id').equals(op.id).toArray();
+      for (const foto of fotos) {
+        const type = (foto.type || foto.blob?.type || 'application/octet-stream').split(';')[0].trim();
+        const body = foto.data ? new Blob([foto.data], { type }) : foto.blob;
+        if (!body) continue;
+        const ext = type.split('/')[1]?.replace('jpeg', 'jpg') || 'bin';
+        const fpath = `${base}/${foto.slot.replace(/[^a-z0-9_-]/gi, '_')}.${ext}`;
+        const up = await this.supabase.client.storage
+          .from('outbox-atascados')
+          .upload(fpath, body, { upsert: true, contentType: type });
+        if (!up.error || /exists/i.test(up.error.message)) paths.push(fpath);
+      }
+
+      // 3) Registrar la evidencia (enlaza con la ficha de la web por atascado_id).
+      const salidaId = (op.payload?.['salida_id'] as string | undefined) ?? null;
+      const { error: insErr } = await this.supabase.client
+        .from('outbox_atascado_evidencia')
+        .insert({
+          atascado_id: op.atascado_id ?? null,
+          salida_id: salidaId,
+          paths,
+          subido_por: uid,
+        });
+      if (insErr) return; // reintentar luego (no marcar subida)
+      await db.outbox.update(op.id, { evidencia_subida: true });
+      this.changed.update((n) => n + 1);
+    } catch {
+      /* best-effort: nunca romper el drain */
+    }
+  }
+
+  /**
+   * CC7 — push `outbox_reintentar` (Tecnología pidió reintentar): busca el envío por
+   * `atascado_id` (guardado al reportar) o por `salida_id` del payload, y lo reintenta
+   * YA. Devuelve true si encontró y reencoló uno.
+   */
+  async reintentarAtascadoRemoto(info: { atascado_id?: string; salida_id?: string }): Promise<boolean> {
+    const op = await this.buscarOpAtascado(info);
+    if (!op) return false;
+    await this.retry(op.id);
+    return true;
+  }
+
+  /** CC7 — push `outbox_subir_evidencia`: fuerza subir el payload+fotos de ese envío. */
+  async forzarSubirEvidencia(info: { atascado_id?: string; salida_id?: string }): Promise<boolean> {
+    const op = await this.buscarOpAtascado(info);
+    if (!op) return false;
+    await this.subirEvidenciaAtascado(op);
+    return true;
+  }
+
+  /** CC7 — localiza el op atascado que corresponde a un push (por atascado_id o salida_id). */
+  private async buscarOpAtascado(info: { atascado_id?: string; salida_id?: string }): Promise<OutboxOp | null> {
+    const all = await db.outbox.toArray();
+    if (info.atascado_id) {
+      const byId = all.find((o) => o.atascado_id === info.atascado_id);
+      if (byId) return byId;
+    }
+    if (info.salida_id) {
+      const bySalida = all.find((o) => o.payload?.['salida_id'] === info.salida_id);
+      if (bySalida) return bySalida;
+    }
+    return null;
+  }
+
+  /**
+   * CC7 — tras actualizar a una versión nueva, reintenta UNA vez todos los envíos en
+   * `error` de categoría 'sistema' (p. ej. los conduces atascados por un CHECK que el
+   * padre ya arregló). Gate por versión en Preferences para que corra solo una vez por
+   * versión. Los que sigan fallando vuelven a error sin bucle.
+   */
+  async reintentarSistemaTrasActualizar(version: string): Promise<void> {
+    try {
+      const KEY = 'sync.sistemaRetrySweep.version';
+      const { value } = await Preferences.get({ key: KEY });
+      if (value === version) return;
+      const errored = (await db.outbox.toArray()).filter(
+        (o) => o.estado === 'error' && outboxCategoria(o) === 'sistema',
+      );
+      if (errored.length) {
+        await db.transaction('rw', db.outbox, db.mis_registros, async () => {
+          for (const o of errored) {
+            await db.outbox.update(o.id, {
+              estado: 'pending',
+              intentos: 0,
+              proximo_intento: 0,
+              permanente: false,
+              reportado_sistema: false,
+            });
+            await db.mis_registros.update(o.id, { estado: 'pending' });
+          }
+        });
+        await this.refreshCounts();
+        void this.drain();
+      }
+      await Preferences.set({ key: KEY, value: version });
+    } catch {
+      /* nunca romper el arranque */
+    }
+  }
+
+  /** CC7 — ¿hay al menos un envío atascado cuya evidencia YA subió Tecnología puede
+   *  verla? La barra/pantalla lo usan para decir "Tecnología ya lo está revisando". */
+  async hayEvidenciaEnRevision(): Promise<boolean> {
+    try {
+      const errs = await db.outbox.where('estado').equals('error').toArray();
+      return errs.some((o) => o.evidencia_subida === true);
+    } catch {
+      return false;
     }
   }
 
