@@ -1,11 +1,17 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 30/09/2026 — PROMPT-77 · Ronda **CD** (IDs CD) — **2.37.0 EN DEV, esperando OK**
+## 🟢 SESIÓN 30/09/2026 — PROMPT-77 · Ronda **CD** (IDs CD) — **2.37.0 RELEASE A PROD** (falta 1 clic: publicar)
 
-**TL;DR:** ronda CD (filas 92-101, mitad app). Consume los contratos de PROMPT-76 (verificados vivos en `sgc-dev`). **Salió a dev** (APK dev 2.37.0 firmado + publicado + `feature/cd-ronda`→`dev` push `ccc3aa1` → Vercel construye app-dev.). **PARADO antes de prod: espera el OK de Xaviel.** Mínima NO cambia.
+**TL;DR:** ronda CD (filas 92-101, mitad app). Consume los contratos de PROMPT-76 (verificados vivos en `sgc-dev`). Salió a dev → **Xaviel dio OK ("do it, do all the stuff")** → **RELEASE A PROD 2.37.0**: `dev→main` (`f22e61a`) → Vercel construye app. + APK prod 2.37.0 firmado/publicado al bucket prod + registrado en `app_versiones` prod (regla 18 OK). **Mínima NO cambió** (sigue 2.35.0). **Falta el paso de admin: PUBLICAR 2.37.0** (ver abajo).
 
-### 🧪 EN DEV (2.37.0)
-- **APK dev 2.37.0** firmado (cert `3c5316d8…5065`) + publicado al bucket dev (`csd-app-2.37.0.apk` + latest + version.json) + registrado en `app_versiones` dev + `apk_url` dev. `feature/cd-ronda`→`dev` (`ccc3aa1`). PWA app-dev en construcción.
+### ✅ EN PROD (RELEASE 2.37.0)
+- **`dev→main`** mergeado (`f22e61a`) + push → Vercel construye la PWA prod (`app.sgcconstructorasd.com`).
+- **APK prod 2.37.0** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.37.0 salió antes en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.37.0.apk` + latest + version.json) + `apk_url` prod actualizado.
+- **MÍNIMA sin cambios = 2.35.0** (`min=true`); 2.37.0 `min=false`. Verificado por API.
+- ⏳ **PENDIENTE — PUBLICAR 2.37.0 (1 clic de Xaviel):** hoy `publicada` sigue en **2.36.0**; hasta publicar 2.37.0, `version_publicada()` devuelve 2.36.0 y los usuarios NO reciben el update. **Yo NO lo hice a propósito:** `marcar_version_publicada` gatea por `es_tecnologia()` (necesita TU sesión de Tecnología; service_role está bloqueado) y un `UPDATE` crudo con service_role saltaría ese gate → violaría la **regla 19** (recién creada esta ronda). 👤 **Publícalo tú en SGC › Tecnología › Versiones → Publicar 2.37.0** (despublica 2.36.0; dispara el push a usuarios). *Nota: el update NO es forzado — 2.37.0 `min=false`.*
+
+### 🧪 Previo en DEV (2.37.0)
+- **APK dev 2.37.0** firmado + publicado al bucket dev + registrado en `app_versiones` dev + `apk_url` dev. `feature/cd-ronda`→`dev` (`ccc3aa1`). PWA app-dev.
 
 ### ✅ Hecho (build-verificado — `npm run build` pasa, guards incl.)
 - **CD3/CD4/CD5 · Flota del chofer.**
@@ -23,14 +29,11 @@
 ### 🔴 CD9 — AVISO DE SEGURIDAD (físico de Xaviel)
 - **Ambos repos son PÚBLICOS** (confirmado por API GitHub: `techcsd/SGC` y `techcsd/csd-app`, `visibility=public`). Cualquiera lee el código, migraciones (mapa de RLS/definer), edge functions y docs con nombres/correos. 👤 **Cambiar los dos a privado** (*Settings › General › Danger Zone*); Vercel sigue desplegando por la integración de GitHub. No vi `.env`/claves versionadas en el árbol de la app (el histórico ya se purgó con BFG, memoria `ag1-secret-audit-and-purge`).
 
-### 👤 Pendientes físicos de Xaviel (antes/para prod)
-- 🔴 **Poner privados** `techcsd/SGC` y `techcsd/csd-app` (CD9).
-- **OK a 2.37.0** para release a prod (yo hago: `dev→main` + APK prod + publicar).
+### 👤 Pendientes físicos de Xaviel (post-release)
+- ⏳ **PUBLICAR 2.37.0** en SGC › Tecnología › Versiones (1 clic; despublica 2.36.0 + push a usuarios). Sin esto, los usuarios siguen en 2.36.0. (Update NO forzado — 2.37.0 `min=false`.)
+- 🔴 **Poner privados** `techcsd/SGC` y `techcsd/csd-app` (CD9 — ambos `visibility=public`).
 - (Padre) revisar la lista de asignaciones AUTO a retirar (CD3) + confirmar el responsable real de MT 03 con Raykler; poner el Excel de Raykler en `adjuntos\` (CD8).
-- Device-QA del APK dev 2.37.0: chofer con vehículo asignado → Mantenimientos carga rápido, Echadas del vehículo + KPI se ven; reenviar echada 2× = 1 sola; requisición con material llegado muestra "Cubierto por llegada".
-
-### ⏭️ Release a prod (tras OK)
-`dev→main` (PR, Action pr-main) → `npm run apk -- --env prod` (pasa regla 18: 2.37.0 ya salió en dev) → `npm run apk:publish -- --env prod` → matriz filas 92-101 ✅. **Mínima NO cambia.**
+- Device-QA del APK prod 2.37.0: chofer con vehículo asignado → Mantenimientos carga rápido, Echadas del vehículo + KPI se ven; reenviar echada 2× = 1 sola; requisición con material llegado muestra "Cubierto por llegada".
 
 ---
 
