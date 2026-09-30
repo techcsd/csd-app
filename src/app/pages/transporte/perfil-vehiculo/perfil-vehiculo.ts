@@ -18,7 +18,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { VehiculoDetalle, VehiculoStats } from '../../../core/models/transporte.model';
-import { FlotaMulta } from '../../../core/models/flota-reportes.model';
+import { FlotaMulta, HistorialEchada } from '../../../core/models/flota-reportes.model';
 import { Documento } from '../../../core/models/documento.model';
 import { Conductor } from '../../../core/models/conductor.model';
 import { CapturedDoc } from '../../../core/services/camera.service';
@@ -78,6 +78,8 @@ export class PerfilVehiculoPage {
   vehDetalle = signal<VehiculoDetalle | null>(null);
   nivelCombustible = signal<string | null>(null);
   multas = signal<FlotaMulta[]>([]);
+  // CD5 — echadas del vehículo (no solo las mías); la RLS decide qué trae.
+  echadasVehiculo = signal<HistorialEchada[]>([]);
 
   /** U11 — alerta de mantenimiento comparando km efectivo vs próximo. */
   mantAlerta = computed<{ estado: 'ok' | 'pre_cita' | 'vencido'; faltan: number; proximo: number } | null>(() => {
@@ -180,6 +182,8 @@ export class PerfilVehiculoPage {
       // U11 — último nivel de combustible + multas del vehículo (mejor esfuerzo).
       void this.flotaReportes.getUltimoNivelCombustible(id).then((n) => this.nivelCombustible.set(n));
       void this.flotaReportes.getMultasVehiculo(id).then((m) => this.multas.set(m));
+      // CD5 — echadas del vehículo (mejor esfuerzo; RLS acota a lo que el usuario puede ver).
+      void this.flotaReportes.getEchadasVehiculo(id).then((e) => this.echadasVehiculo.set(e)).catch(() => {});
       await this.loadDocs(id);
       if (this.esAdmin()) {
         try {
@@ -205,6 +209,11 @@ export class PerfilVehiculoPage {
   /** W5 — abrir el detalle de una multa del vehículo. */
   verMulta(id: string): void {
     void this.router.navigate(['/transporte/mi-registro', 'multa', id]);
+  }
+
+  /** CD5 — abrir el detalle de una echada del vehículo. */
+  verEchada(id: string): void {
+    void this.router.navigate(['/transporte/echada', id]);
   }
 
   /** Asignar este vehículo a un conductor (admin). */

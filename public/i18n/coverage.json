@@ -1,5 +1,5 @@
 {
-  "en": 96,
+  "en": 95,
   "ht": 0,
   "alcance": true,
   "byScreen": {
@@ -580,9 +580,9 @@
       "ht": 0
     },
     "pages/solicitudes/detalle": {
-      "conT": 62,
+      "conT": 63,
       "sinT": 12,
-      "en": 84,
+      "en": 83,
       "ht": 0
     },
     "pages/solicitudes/mis": {
@@ -688,9 +688,9 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 114,
+      "conT": 117,
       "sinT": 2,
-      "en": 96,
+      "en": 93,
       "ht": 0
     },
     "pages/transporte/combustible-log": {
@@ -856,9 +856,9 @@
       "ht": 0
     },
     "pages/transporte/perfil-vehiculo": {
-      "conT": 32,
+      "conT": 35,
       "sinT": 1,
-      "en": 97,
+      "en": 92,
       "ht": 0
     },
     "pages/transporte/por-aprobar": {

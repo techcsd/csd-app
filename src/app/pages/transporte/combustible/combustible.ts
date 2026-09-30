@@ -185,6 +185,10 @@ export class CombustiblePage extends GuardedWizard {
   confirmado = signal(false);
   /** AW3 — mensaje de confirmación suave en curso (abre la hoja). null = cerrada. */
   confirmSoft = signal<string | null>(null);
+  /** CD8 — aviso suave de posible duplicado (recibo repetido o echada casi igual). */
+  confirmDup = signal<string | null>(null);
+  /** CD8 — ya se avisó/confirmó el posible duplicado (no volver a chequear en este envío). */
+  private dupChequeado = signal(false);
   /** AW2 — client id de la echada recién registrada (para "Revisar y corregir"). */
   lastId = signal<string | null>(null);
   /**
@@ -1000,6 +1004,22 @@ export class CombustiblePage extends GuardedWizard {
       this.confirmSoft.set(v.confirmar);
       return;
     }
+    // CD8 — aviso suave de posible duplicado (recibo repetido o echada casi igual del
+    // mismo vehículo). Solo online (offline no bloquea: el servidor dedupe por recibo/
+    // client_uuid). No aplica a echada de persona (sin vehículo). Se chequea una vez.
+    if (!this.dupChequeado() && !this.modoPersona() && this.vehiculoId && this.network.online()) {
+      const dup = await this.combustible.posibleDuplicado({
+        vehiculoId: this.vehiculoId,
+        fecha: this.fechaRetro() ?? fechaLocalISO(),
+        galones: this.galones(),
+        numeroRecibo: this.esDeposito() ? null : this.numeroRecibo().replace(/\D/g, '') || null,
+        excluirId: this.reenvioDe() ?? this.correccionDe() ?? null,
+      });
+      if (dup) {
+        this.confirmDup.set(dup.mensaje);
+        return;
+      }
+    }
     this.submitting.set(true);
     try {
       const estacion = this.estacionFinal();
@@ -1089,6 +1109,17 @@ export class CombustiblePage extends GuardedWizard {
   /** AW3 — canceló la confirmación: vuelve a la revisión para corregir la cantidad. */
   cancelarEchadaInusual(): void {
     this.confirmSoft.set(null);
+  }
+
+  /** CD8 — "Sí, es otra echada": ignora el aviso de duplicado y envía. */
+  confirmarNoEsDuplicado(): void {
+    this.confirmDup.set(null);
+    this.dupChequeado.set(true);
+    void this.submit();
+  }
+  /** CD8 — "Es la misma": cierra el aviso y vuelve a la revisión (no envía). */
+  cancelarPorDuplicado(): void {
+    this.confirmDup.set(null);
   }
 
   /**

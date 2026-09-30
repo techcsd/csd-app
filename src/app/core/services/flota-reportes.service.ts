@@ -267,6 +267,29 @@ export class FlotaReportesService {
   }
 
   /**
+   * CD5 — historial de echadas DEL VEHÍCULO (no solo las mías), últimos `dias` días.
+   * El chofer ve las echadas del vehículo que tiene asignado mientras lo tenga
+   * (asignación vigente ∪ uso abierto ∪ responsable): la política de lectura de
+   * `registros_combustible` la arregló el padre (CD5, overload puede_ver_echada con
+   * vehiculo_id que reusa puede_ver_vehiculo). Aquí filtramos por `vehiculo_id` y la
+   * RLS decide qué filas devuelve; si el vehículo NO es suyo, solo verá las que
+   * registró él (honesto, no un bloqueo). Lectura directa gateada por RLS, online.
+   */
+  async getEchadasVehiculo(vehiculoId: string, dias = 90): Promise<HistorialEchada[]> {
+    if (!vehiculoId) return [];
+    const { data, error } = await this.supabase.client
+      .from('registros_combustible')
+      .select('id, fecha, created_at, kilometraje, galones, monto, rendimiento_km_gal, alerta_consumo, estado, motivo_alerta, revision, revision_motivo, vehiculo:vehiculos(placa)')
+      .eq('vehiculo_id', vehiculoId)
+      .not('es_prueba', 'is', true)
+      .gte('fecha', this.desdeISO(dias))
+      .order('fecha', { ascending: false })
+      .limit(100);
+    if (error) return [];
+    return (data as unknown as HistorialEchada[]) ?? [];
+  }
+
+  /**
    * V3 — rutas creadas por el usuario actual (roles elevados). La RLS de `rutas`
    * permite ver las propias por `creado_por`; se filtra por el uid del usuario.
    */
