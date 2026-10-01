@@ -43,6 +43,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import {
   CombustibleCalculo,
   calcularCombustible,
+  SpecCombustible,
+  RANGO_ORIGEN_LABEL,
   UltimaEchada,
   PrecioCombustibleVigente,
   PRODUCTO_CANONICO_LABEL,
@@ -127,6 +129,9 @@ export class CombustiblePage extends GuardedWizard {
     promedio_rendimiento: null,
     n_echadas: 0,
   });
+
+  /** CE12 — spec de combustible del vehículo (rango propio/clase/global + unidad). */
+  spec = signal<SpecCombustible | null>(null);
 
   step = signal(1);
 
@@ -266,6 +271,17 @@ export class CombustiblePage extends GuardedWizard {
   ayudanteId = signal<string | null>(null);
   onAyudante = (u: AyudanteUsuario | null): void => this.ayudanteId.set(u?.id ?? null);
 
+  /** CE12 — unidad de rendimiento efectiva (de la spec del vehículo o, si falta,
+   *  del tipo de medida). Fuente única para toda la UI de la echada. */
+  unidadRend = computed(() => this.resultado()?.unidad ?? this.calc().unidad);
+  /** CE12 — true si el equipo se mide por horas (unidad h/gal). */
+  porHoras = computed(() => this.unidadRend() === 'h/gal');
+  /** CE12 — procedencia del rango evaluado ("rango del vehículo/de la clase/global"). */
+  rangoOrigenLabel = computed(() => {
+    const o = this.resultado()?.rangoOrigen ?? this.spec()?.min?.origen ?? null;
+    return o ? RANGO_ORIGEN_LABEL[o] : null;
+  });
+
   /** AD7 — banda de estado del rendimiento en la confirmación (preview local). */
   estadoBand = computed<{ meta: RendimientoEstadoMeta; motivo: string } | null>(() => {
     const r = this.resultado();
@@ -291,7 +307,7 @@ export class CombustiblePage extends GuardedWizard {
 
   /** Live derivation shown in the dark box (mirrors the server). */
   calc = computed(() =>
-    calcularCombustible(this.km(), this.galones(), this.monto(), this.ultima(), this.esTelehandler()),
+    calcularCombustible(this.km(), this.galones(), this.monto(), this.ultima(), this.esTelehandler(), this.spec()),
   );
 
   /**
@@ -712,6 +728,16 @@ export class CombustiblePage extends GuardedWizard {
     void this.loadUltima();
     void this.loadConductor();
     void this.loadCapacidad(); // AW3
+    void this.loadSpec(); // CE12
+  }
+
+  /** CE12 — spec de combustible del vehículo (rango propio → clase → global). */
+  private async loadSpec(): Promise<void> {
+    try {
+      this.spec.set(await this.combustible.getSpecCombustible(this.vehiculoId));
+    } catch {
+      /* best-effort: sin spec, la clasificación usa el rango global */
+    }
   }
 
   /** AW3 — capacidad efectiva del tanque de este vehículo (para el bloqueo en vivo). */

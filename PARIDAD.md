@@ -87,3 +87,46 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
   versiones (admin → *Versiones*, `pages/admin/versiones`, lee `app_versiones`) pero
   **no enlaza a GitHub** ni abre deployments antiguos (0 referencias a `github` en `src/`).
   El bug de "Abrir esta versión → GitHub" y la galería/`deploy_url` son **solo web**. — *A propósito.*
+
+## Ronda CE (01/10/2026) — app 2.38.0
+- **CE14 · Aprobar echadas desde la app (arreglo).** La causa NO era el gate del servidor
+  (Raykler tiene rol `logistica`; `aprobar_echada`/`rechazar_echada` aceptan "Logística o
+  admin" y él pasa). Era **layout en Safari/iPhone**: las fotos de *Por aprobar* usaban
+  `app-img ratio 1/1` dentro de un grid, y iOS **no honraba el aspect-ratio** → se
+  renderizaban a su alto natural (verticales), desbordaban la tarjeta y tapaban el pie de
+  acciones. Fix: **tira horizontal de miniaturas de alto FIJO (80 px, object-fit cover)**
+  con toque → visor a pantalla completa; el pie *Aprobar · Aprobar con corrección ·
+  Rechazar* (52 px) siempre visible. La decisión sigue por outbox (offline). — *Igual que
+  la intención de la web; el bug era solo del cliente móvil.*
+- **CE12/CE13 · Spec de combustible por vehículo (mejora).** La alerta de rendimiento usa
+  `spec_combustible(p_vehiculo)` del padre (rango propio → clase → global + unidad) y
+  **dice de dónde viene el rango** ("rango del vehículo / de la clase / global"). Unidad
+  **h/gal** para equipos por horas. **Detrás de comprobación de capacidad**: si el RPC no
+  está, cae al rango global (constantes `REND_MIN/MAX_KM_GAL`) — comportamiento previo
+  intacto. **Los umbrales se EDITAN EN LA WEB**; la app solo los lee (sin pantalla de
+  umbrales ni de spec por vehículo en el móvil). — *Divergencia deliberada: edición = web.*
+- **CE2 · "Registró" visible (arreglo).** La lista usa el RPC definer
+  `listar_personal_obra()` que resuelve `registrado_por_nombre` para cualquier rol (antes
+  el embed a `usuarios` bajo RLS volvía null para Legal). Fallback al select directo si el
+  RPC no está. El expediente enriquece el nombre desde el cache de la lista.
+- **CE4 · Registrar sin foto (mejora).** Las 5 fotos son opcionales en el wizard; chip
+  *Falta foto* en el resumen y en el expediente; **añadir foto después** desde el
+  expediente (cámara → outbox `personal_foto`).
+- **CE6 · Foto negra (arreglo).** `comprimir-imagen.util` ahora: HEIC→JPEG con `heic2any`,
+  **fondo blanco antes de exportar** (transparencia → blanco, no negro) y **validación de
+  monocromo** (no se guarda un cuadro negro). Misma función para las 5 fotos (paridad web).
+- **CE11 · Fecha legible (arreglo).** La lista usa `formatFechaHumana` para `created_at`;
+  `formatFecha` se volvió defensiva (si llega un timestamp con `T`/`Z`/`+`, delega a
+  `formatFechaHumana`).
+- **CE16 · Duplicado por documento (nuevo).** Aviso suave al registrar vía
+  `personal_obra_doc_existe(p_tipo, p_numero, p_exclude)` (no bloquea; best-effort).
+- **CE3/CE5 · Carnet (nuevo).** Logo **blanco** en la banda navy del carnet en pantalla
+  (asset `csd-no-bg-logo-white.png`, copiado del padre). **Compartir / Imprimir carnet**:
+  PDF **CR80 real (85.6×53.98 mm), frente y dorso** con jsPDF, QR a la MISMA URL pública
+  de la web (`/verificar/<carnet>`), compartido por el share-sheet (nativo/PWA). Registra
+  la reimpresión (`registrar_reimpresion_carnet`, best-effort). *A4 con 8 = diferido
+  (igual que la web).* — *Paridad de diseño; el móvil genera el PDF con jsPDF porque no
+  tiene ventana de impresión.*
+- **CE10 · Avisos de requisición a miembros de la obra: SERVIDOR (padre).** El emisor usa
+  `sgc.es_miembro_obra()` (verificado vivo en dev); la app solo **recibe** la notificación.
+  Sin cambio de cliente. — *Owned by SGC.*

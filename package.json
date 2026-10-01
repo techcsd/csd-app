@@ -45,6 +45,7 @@
     "dexie": "^4.4.4",
     "dompurify": "^3.4.15",
     "fflate": "^0.8.3",
+    "heic2any": "^0.0.4",
     "jspdf": "^3.0.4",
     "leaflet": "^1.9.4",
     "marked": "^18.0.13",

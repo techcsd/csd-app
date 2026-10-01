@@ -217,6 +217,37 @@
   font-size: 12px;
   color: var(--color-text-secondary);
 }
+// CE1 — chips de pendientes ("Sin carnet", "Sin asegurar") con acción rápida.
+.pl-pend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.pl-pend__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  min-height: 40px;
+  border: 1px solid var(--color-warning, #d97706);
+  border-radius: 999px;
+  background: var(--color-warning-bg, #fff7ed);
+  color: var(--color-warning, #b45309);
+  font-size: 13px;
+  cursor: pointer;
+  &--on {
+    background: var(--color-warning, #d97706);
+    color: #fff;
+  }
+}
+
+// CE2/CE11 — línea de "Registró … · fecha" (más tenue que el resto).
+.pl-card__reg {
+  font-size: 11px;
+  color: var(--color-text-tertiary, var(--color-text-secondary));
+  opacity: 0.85;
+}
 .pl-card__chev {
   font-size: 24px;
   color: var(--color-text-secondary);

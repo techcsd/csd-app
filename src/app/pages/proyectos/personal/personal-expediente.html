@@ -43,6 +43,8 @@
             @if (p.notas) {
               <div class="pe-row"><span class="pe-k">{{ 'Notas' | t }}</span><span class="pe-v">{{ p.notas }}</span></div>
             }
+            <!-- CE2/CE11 — quién registró (visible para cualquier rol) + fecha legible -->
+            <div class="pe-row"><span class="pe-k">{{ 'Registró' | t }}</span><span class="pe-v">{{ p.registrado_por_nombre || '—' }} · {{ fmtFecha(p.created_at) }}</span></div>
           </div>
           @if (puedeGestionar()) {
             <div class="pe-actions">
@@ -99,14 +101,29 @@
       <!-- ── Carnet ── -->
       <h2 class="pe-sec">{{ 'Carnet' | t }}</h2>
       <app-personal-carnet [personal]="p" [fotoDataUrl]="fotoPersonaUrl()" [verifyUrl]="verifyUrl()" />
+      <!-- CE5 — Compartir / Imprimir el carnet CR80 (frente/dorso) por el share-sheet -->
+      @if (p.carnet_numero) {
+        <button type="button" class="pe-btn pe-carnet-share" [disabled]="compartiendo()" (click)="compartirCarnet()">
+          {{ compartiendo() ? ('Generando…' | t) : ('Compartir / Imprimir carnet' | t) }}
+        </button>
+      }
 
       <!-- ── Galería ── -->
       <h2 class="pe-sec">{{ 'Fotos de evidencia' | t }}</h2>
+      <!-- CE4 — aviso suave si faltan fotos (el registro ya no exige fotos) -->
+      @if (fotosFaltantes() > 0) {
+        <div class="pe-band pe-band--info">📷 {{ 'Faltan fotos' | t }} ({{ fotosFaltantes() }}). @if (puedeGestionar()) { {{ 'Tócalas abajo para añadirlas.' | t }} }</div>
+      }
       <div class="pe-galeria">
         @for (g of fotosGuia; track g.tipo) {
           <div class="pe-foto">
             @if (fotos()[g.tipo]; as url) {
               <img [src]="url" [alt]="g.label | t" (click)="abrirFoto(url)" />
+            } @else if (puedeGestionar()) {
+              <!-- CE4 — slot vacío = añadir foto desde el expediente (cámara) -->
+              <button type="button" class="pe-foto__add" [disabled]="subiendoFoto() !== null" (click)="agregarFoto(g.tipo)">
+                @if (subiendoFoto() === g.tipo) { ⏳ } @else { <span class="pe-foto__add-ico">{{ g.hint }}</span><span class="pe-foto__add-txt">+ {{ 'Falta foto' | t }}</span> }
+              </button>
             } @else {
               <div class="pe-foto__empty">{{ g.hint }}</div>
             }

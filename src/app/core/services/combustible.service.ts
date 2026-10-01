@@ -13,6 +13,7 @@ import {
   PrecioCombustibleVigente,
   REND_MAX_KM_GAL,
   REND_MIN_KM_GAL,
+  SpecCombustible,
   TanqueConfig,
   TANQUE_CONFIG_DEFAULT,
   UltimaEchada,
@@ -304,6 +305,24 @@ export class CombustibleService {
       },
     );
     return data ?? { capacidad: null, tipo: null };
+  }
+
+  /**
+   * CE12 — especificación de combustible del vehículo (rango propio → clase →
+   * global + unidad km/gal|h/gal). Cacheada por vehículo (offline-friendly).
+   * Detrás de COMPROBACIÓN DE CAPACIDAD: si el padre aún no expone
+   * `spec_combustible`, devuelve null → la clasificación cae al rango global
+   * (comportamiento previo intacto).
+   */
+  async getSpecCombustible(vehiculoId: string): Promise<SpecCombustible | null> {
+    const data = await this.catalog.refresh<SpecCombustible | null>(`spec_comb:${vehiculoId}`, async () => {
+      const { data, error } = await this.supabase.client.rpc('spec_combustible', { p_vehiculo: vehiculoId });
+      if (error) return null; // capacidad ausente → fallback global
+      const obj = data as SpecCombustible | null;
+      if (!obj || !obj.unidad) return null; // vehículo sin fila / {} → sin spec
+      return obj;
+    });
+    return data ?? null;
   }
 
   /**

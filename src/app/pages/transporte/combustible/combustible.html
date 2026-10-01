@@ -91,24 +91,24 @@
           <div class="comb__card">
             <span class="comb__card-label">{{ 'Rendimiento' | t }}</span>
             @if (resultado()?.rendimiento != null) {
-              <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}</span>
+              <span class="comb__card-value">{{ resultado()?.rendimiento | number: '1.2-2' }} {{ unidadRend() }}</span>
               @if (ultima().promedio_rendimiento != null) {
-                <span class="comb__card-sub">{{ 'Promedio' | t }}: {{ ultima().promedio_rendimiento | number: '1.2-2' }} {{ esTelehandler() ? 'h/gal' : 'km/gal' }}</span>
+                <span class="comb__card-sub">{{ 'Promedio' | t }}: {{ ultima().promedio_rendimiento | number: '1.2-2' }} {{ unidadRend() }}</span>
               }
             } @else {
               <span class="comb__card-value comb__card-value--muted">{{ 'Primera echada' | t }}</span>
             }
           </div>
           <div class="comb__card">
-            <span class="comb__card-label">{{ esTelehandler() ? ('Uso' | t) : ('Recorrido' | t) }}</span>
+            <span class="comb__card-label">{{ porHoras() ? ('Uso' | t) : ('Recorrido' | t) }}</span>
             @if (resultado()?.kmRecorridos != null) {
-              <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} {{ esTelehandler() ? 'h' : 'km' }}</span>
+              <span class="comb__card-value">{{ resultado()?.kmRecorridos | number: '1.0-0' }} {{ porHoras() ? 'h' : 'km' }}</span>
             } @else {
               <span class="comb__card-value comb__card-value--muted">—</span>
             }
           </div>
           <div class="comb__card">
-            <span class="comb__card-label">{{ esTelehandler() ? ('Costo por hora' | t) : ('Costo por km' | t) }}</span>
+            <span class="comb__card-label">{{ porHoras() ? ('Costo por hora' | t) : ('Costo por km' | t) }}</span>
             @if (resultado()?.costoPorKm != null) {
               <span class="comb__card-value">RD$ {{ resultado()?.costoPorKm | number: '1.2-2' }}</span>
             } @else {
@@ -145,8 +145,12 @@
             <!-- AW2 — referencia usada para "lo esperado" (promedio de echadas válidas) -->
             @if (ultima().promedio_rendimiento != null && ultima().n_echadas > 0) {
               <span class="comb__band-ref">
-                {{ 'Comparado con las últimas {n} echadas válidas de este vehículo (promedio {avg} {unidad}).' | t: { n: ultima().n_echadas ?? 0, avg: (ultima().promedio_rendimiento | number: '1.1-1') ?? '', unidad: esTelehandler() ? 'h/gal' : 'km/gal' } }}
+                {{ 'Comparado con las últimas {n} echadas válidas de este vehículo (promedio {avg} {unidad}).' | t: { n: ultima().n_echadas ?? 0, avg: (ultima().promedio_rendimiento | number: '1.1-1') ?? '', unidad: unidadRend() } }}
               </span>
+            }
+            <!-- CE12 — de dónde salió el rango evaluado (vehículo / clase / global) -->
+            @if (rangoOrigenLabel(); as ro) {
+              <span class="comb__band-ref">{{ 'Evaluado con el {rango}.' | t: { rango: ro } }}</span>
             }
             <!-- AW2 — corregir en el momento, sin buscar dónde se guardó -->
             <button type="button" class="comb__band-fix" (click)="corregir()">✏️ {{ 'Revisar y corregir' | t }}</button>
@@ -483,19 +487,19 @@
           <!-- Z23-app — km/rendimiento/costo solo aplican a un vehículo -->
           @if (!modoPersona()) {
             <div class="comb__calc-row">
-              <span>{{ 'Km recorridos' | t }}</span>
+              <span>{{ porHoras() ? ('Horas de uso' | t) : ('Km recorridos' | t) }}</span>
               <b>
                 @if (primeraEchada()) { {{ 'Primera echada' | t }} }
-                @else if (calc().kmRecorridos != null) { {{ calc().kmRecorridos | number: '1.0-0' }} km }
+                @else if (calc().kmRecorridos != null) { {{ calc().kmRecorridos | number: '1.0-0' }} {{ porHoras() ? 'h' : 'km' }} }
                 @else { — }
               </b>
             </div>
             <div class="comb__calc-row">
               <span>{{ 'Rendimiento' | t }}</span>
-              <b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { — }</b>
+              <b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} {{ calc().unidad }} } @else { — }</b>
             </div>
             <div class="comb__calc-row">
-              <span>{{ 'Costo por km' | t }}</span>
+              <span>{{ porHoras() ? ('Costo por hora' | t) : ('Costo por km' | t) }}</span>
               <b>@if (calc().costoPorKm != null) { RD$ {{ calc().costoPorKm | number: '1.2-2' }} } @else { — }</b>
             </div>
             @if (calc().alertaConsumo) {
@@ -535,7 +539,7 @@
           }
           <li><span>{{ 'Fotos' | t }}</span><b>{{ fotosCompletas() ? (esDeposito() ? '1 ✓' : (modoPersona() ? '2 ✓' : '3 ✓')) : ('Faltan' | t) }}</b></li>
           @if (!modoPersona() && !esDeposito()) {
-            <li><span>{{ 'Rendimiento' | t }}</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} km/gal } @else { {{ 'Primera echada' | t }} }</b></li>
+            <li><span>{{ 'Rendimiento' | t }}</span><b>@if (calc().rendimiento != null) { {{ calc().rendimiento | number: '1.2-2' }} {{ calc().unidad }} } @else { {{ 'Primera echada' | t }} }</b></li>
           }
         </ul>
         <!-- AT4 — ¿fuiste con ayudante? (opcional; le suma la echada al incentivo) -->

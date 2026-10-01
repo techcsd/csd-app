@@ -34,6 +34,22 @@
         </div>
       }
 
+      <!-- CE1 — "Mi personal hoy": pendientes con acción rápida (toca para filtrar) -->
+      @if (pendientes().sinCarnet || pendientes().sinAsegurar) {
+        <div class="pl-pend">
+          @if (pendientes().sinCarnet) {
+            <button type="button" class="pl-pend__chip" [class.pl-pend__chip--on]="filPendiente() === 'sin_carnet'" (click)="togglePendiente('sin_carnet')">
+              🎫 {{ 'Sin carnet' | t }}: <b>{{ pendientes().sinCarnet }}</b>
+            </button>
+          }
+          @if (pendientes().sinAsegurar) {
+            <button type="button" class="pl-pend__chip" [class.pl-pend__chip--on]="filPendiente() === 'sin_asegurar'" (click)="togglePendiente('sin_asegurar')">
+              🛡️ {{ 'Sin asegurar' | t }}: <b>{{ pendientes().sinAsegurar }}</b>
+            </button>
+          }
+        </div>
+      }
+
       <!-- Buscador + filtros -->
       <div class="pl-search">
         <input class="field" type="search" [ngModel]="q()" (ngModelChange)="q.set($event)"
@@ -86,6 +102,10 @@
             <span class="pl-card__sub">
               @if (p.carnet_numero) { 🎫 {{ p.carnet_numero }} } @else { ⏳ {{ 'Carnet pendiente' | t }} }
               @if (p.documento_numero) { · {{ p.documento_numero }} }
+            </span>
+            <!-- CE2/CE11 — quién registró (RPC definer, visible para cualquier rol) + fecha legible -->
+            <span class="pl-card__reg">
+              📝 {{ 'Registró' | t }}: {{ p.registrado_por_nombre || ('—' ) }} · {{ fmtFecha(p.created_at) }}
             </span>
           </div>
           <span class="pl-card__chev">›</span>

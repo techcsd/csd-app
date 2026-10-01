@@ -49,6 +49,15 @@ export class ExportService {
     return this.shareBlob(blob, filename, mime, doc.title);
   }
 
+  /**
+   * CE5 — comparte un Blob YA generado (p. ej. el PDF del carnet hecho con jsPDF),
+   * reutilizando el mismo camino nativo/PWA que el export de reportes. Devuelve
+   * `fallback: true` si no hubo share nativo y se descargó.
+   */
+  async shareRaw(blob: Blob, filename: string, mime: string, title: string): Promise<{ ok: boolean; fallback: boolean }> {
+    return this.shareBlob(blob, filename, mime, title);
+  }
+
   /** Descarga/guarda el documento localmente. */
   async download(doc: ExportDoc, format: ExportFormat): Promise<void> {
     const { blob, filename } = await this.render(doc, format);

@@ -33,6 +33,12 @@
     border-color: var(--color-danger, #e11d48);
     color: var(--color-danger, #e11d48);
   }
+  &--info {
+    border-style: solid;
+    border-color: var(--color-warning, #d97706);
+    color: var(--color-warning, #b45309);
+    background: var(--color-warning-bg, #fef3c7);
+  }
 }
 
 .pe-card {
@@ -158,6 +164,13 @@
   }
 }
 
+// CE5 — botón "Compartir / Imprimir carnet" (ancho completo, bajo el carnet).
+.pe-carnet-share {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 48px;
+}
+
 .pe-req {
   color: var(--color-danger, #e11d48);
 }
@@ -208,6 +221,30 @@
     border: 1px dashed var(--color-border);
     background: var(--color-bg);
     opacity: 0.6;
+  }
+  // CE4 — slot vacío accionable: toca para añadir la foto desde el expediente.
+  &__add {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 10px;
+    border: 1px dashed var(--color-warning, #d97706);
+    background: var(--color-warning-bg, #fff7ed);
+    color: var(--color-warning, #b45309);
+    cursor: pointer;
+    padding: 4px;
+  }
+  &__add-ico {
+    font-size: 26px;
+  }
+  &__add-txt {
+    font-size: 10px;
+    font-weight: 600;
+    text-align: center;
   }
   &__lbl {
     font-size: 11px;
