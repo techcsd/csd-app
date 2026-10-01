@@ -66,6 +66,9 @@ export interface PersonalObra {
   estado: EstadoPersonal;
   es_prueba?: boolean;
   registrado_por?: string | null;
+  /** CE2 — nombre de quien registró, resuelto por el RPC definer `listar_personal_obra`
+   *  (el embed a `usuarios` bajo RLS volvía null para roles sin lectura de usuarios). */
+  registrado_por_nombre?: string | null;
   created_at: string;
   updated_at: string;
   // joins

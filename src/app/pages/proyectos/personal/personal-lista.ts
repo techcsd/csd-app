@@ -14,6 +14,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
 import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, CUADRILLAS, ASEGURAMIENTO, ASEGURAMIENTO_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
+import { formatFechaHumana } from '../../../core/util/fecha';
 
 /** AR1 (app) — Consulta del personal de obra: conteos + buscador + filtros + rows. */
 @Component({
@@ -33,6 +34,8 @@ export class PersonalListaPage {
 
   readonly nacionalidades = NACIONALIDADES;
   readonly nacionalidadLabel = NACIONALIDAD_LABEL;
+  /** CE11 — fecha + hora legible (es-DO) para la fila (created_at es timestamp). */
+  readonly fmtFecha = formatFechaHumana;
   readonly cuadrillas = CUADRILLAS; // AV4
   readonly aseguramientos = ASEGURAMIENTO; // AV4
   readonly aseguramientoLabel = ASEGURAMIENTO_LABEL; // AV4
@@ -51,6 +54,8 @@ export class PersonalListaPage {
   filCuadrilla = signal(''); // AV4
   filAseguramiento = signal(''); // AV4
   mostrarFiltros = signal(false);
+  /** CE1 — "Mi personal hoy": filtro rápido de pendientes (sin carnet / sin asegurar). */
+  filPendiente = signal<'' | 'sin_carnet' | 'sin_asegurar'>('');
 
   obraOptions = computed(() => [{ id: '', label: this.i18n.t('Todas las obras') }, ...this.obras().map((o) => ({ id: o.id, label: o.nombre }))]);
   cargoOptions = computed(() => [{ id: '', label: this.i18n.t('Todos los cargos') }, ...this.cargos().map((c) => ({ id: c.id, label: c.nombre }))]);
@@ -84,6 +89,15 @@ export class PersonalListaPage {
     return 'sin_datos';
   });
 
+  /** CE1 — contadores de pendientes sobre lo visible (activos) para el ingeniero. */
+  pendientes = computed(() => {
+    const act = this.visibles().filter((p) => p.estado === 'activo');
+    return {
+      sinCarnet: act.filter((p) => !p.carnet_numero).length,
+      sinAsegurar: act.filter((p) => (p.aseguramiento_estado ?? 'desconocido') !== 'asegurado').length,
+    };
+  });
+
   filtrados = computed(() => {
     const cargo = this.filCargo();
     const nac = this.filNacionalidad();
@@ -91,6 +105,7 @@ export class PersonalListaPage {
     const obra = this.filObra();
     const cuad = this.filCuadrilla(); // AV4
     const aseg = this.filAseguramiento(); // AV4
+    const pend = this.filPendiente(); // CE1
     const term = this.q().trim().toLowerCase();
     return this.visibles().filter((p) => {
       if (obra && p.proyecto_id !== obra) return false;
@@ -99,6 +114,9 @@ export class PersonalListaPage {
       if (est && p.estado !== est) return false;
       if (cuad && (p.cuadrilla ?? '') !== cuad) return false; // AV4
       if (aseg && (p.aseguramiento_estado ?? 'desconocido') !== aseg) return false; // AV4
+      // CE1 — pendientes (solo sobre activos).
+      if (pend === 'sin_carnet' && (p.estado !== 'activo' || !!p.carnet_numero)) return false;
+      if (pend === 'sin_asegurar' && (p.estado !== 'activo' || (p.aseguramiento_estado ?? 'desconocido') === 'asegurado')) return false;
       if (term) {
         const hay = `${p.nombre} ${p.apellido ?? ''} ${p.documento_numero ?? ''} ${p.cargo?.nombre ?? ''} ${p.carnet_numero ?? ''}`.toLowerCase();
         if (!hay.includes(term)) return false;
@@ -173,7 +191,13 @@ export class PersonalListaPage {
     this.filEstado.set('activo');
     this.filCuadrilla.set(''); // AV4
     this.filAseguramiento.set(''); // AV4
+    this.filPendiente.set(''); // CE1
     this.q.set('');
+  }
+
+  /** CE1 — alterna un filtro de pendientes (toca de nuevo para quitarlo). */
+  togglePendiente(p: 'sin_carnet' | 'sin_asegurar'): void {
+    this.filPendiente.update((cur) => (cur === p ? '' : p));
   }
 
   registrar(): void {

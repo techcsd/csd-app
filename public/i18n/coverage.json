@@ -544,9 +544,9 @@
       "ht": 0
     },
     "pages/proyectos/personal": {
-      "conT": 80,
+      "conT": 92,
       "sinT": 1,
-      "en": 99,
+      "en": 87,
       "ht": 0
     },
     "pages/reportar": {
@@ -688,7 +688,7 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 117,
+      "conT": 119,
       "sinT": 2,
       "en": 93,
       "ht": 0

@@ -109,14 +109,24 @@ export class PersonalObraService {
   }
 
   // ── Listado del personal (RLS por obra) — cache-then-network ────────────────
+  /**
+   * CE2 — usa el RPC definer `listar_personal_obra()` que resuelve
+   * `registrado_por_nombre` para CUALQUIER rol (antes el embed a `usuarios` bajo
+   * RLS volvía null y la columna "Registró" salía "—" para Sonia/Legal). Detrás de
+   * COMPROBACIÓN DE CAPACIDAD: si el padre aún no expone el RPC, cae al select
+   * directo (sin el nombre de quien registró, pero la lista funciona).
+   */
   async listar(): Promise<PersonalObra[]> {
     const data = await this.catalog.refresh<PersonalObra[]>('personal_lista', async () => {
-      const { data, error } = await this.client
+      const { data, error } = await this.client.rpc('listar_personal_obra', { p_proyecto: null });
+      if (!error) return ((data as unknown as PersonalObra[]) ?? []);
+      // Fallback: RPC ausente → select directo (sin registrado_por_nombre).
+      const r = await this.client
         .from('personal_obra')
         .select(PERSONAL_SELECT)
         .order('created_at', { ascending: false });
-      if (error) throw new Error(error.message);
-      return (data ?? []) as unknown as PersonalObra[];
+      if (r.error) throw new Error(r.error.message);
+      return (r.data ?? []) as unknown as PersonalObra[];
     });
     return data ?? [];
   }
@@ -127,7 +137,15 @@ export class PersonalObraService {
       const cached = (await this.catalog.read<PersonalObra[]>('personal_lista')) ?? [];
       return cached.find((p) => p.id === id) ?? null;
     }
-    return data as unknown as PersonalObra;
+    const row = data as unknown as PersonalObra;
+    // CE2 — el select directo no trae registrado_por_nombre (embed a usuarios bajo
+    // RLS); lo tomamos del cache de la lista (que viene del RPC definer).
+    if (row.registrado_por_nombre == null) {
+      const cached = (await this.catalog.read<PersonalObra[]>('personal_lista')) ?? [];
+      const hit = cached.find((p) => p.id === id);
+      if (hit?.registrado_por_nombre) row.registrado_por_nombre = hit.registrado_por_nombre;
+    }
+    return row;
   }
 
   async getFotos(personalId: string): Promise<PersonalFoto[]> {
@@ -146,12 +164,50 @@ export class PersonalObraService {
     return (data ?? []) as PersonalFirma[];
   }
 
+  /**
+   * CE16 — ¿ya existe un trabajador ACTIVO con este documento? (aviso suave al
+   * registrar; nunca bloquea). Usa el RPC definer `personal_obra_doc_existe`, que
+   * normaliza el documento (dígitos para cédula, alfanum para pasaporte). Detrás de
+   * COMPROBACIÓN DE CAPACIDAD + best-effort (nunca corre offline): cualquier fallo
+   * devuelve [] (no molestar).
+   */
+  async docExiste(
+    tipo: string,
+    numero: string,
+    excluirId?: string | null,
+  ): Promise<{ id: string; nombre: string; proyecto: string | null }[]> {
+    if (!numero?.trim()) return [];
+    try {
+      const { data, error } = await this.client.rpc('personal_obra_doc_existe', {
+        p_tipo: tipo,
+        p_numero: numero,
+        p_exclude: excluirId ?? null,
+      });
+      if (error) return [];
+      return (data as { id: string; nombre: string; proyecto: string | null }[]) ?? [];
+    } catch {
+      return [];
+    }
+  }
+
   /** Conteos por obra (total, por cargo, por nacionalidad) — espejo de la web. */
   async conteos(proyectoId: string): Promise<PersonalConteos | null> {
     const { data, error } = await this.client.rpc('personal_obra_conteos', { p_proyecto_id: proyectoId });
     if (error) return null;
     if (!data || Object.keys(data).length === 0) return null;
     return data as PersonalConteos;
+  }
+
+  /**
+   * CE5 — registra una reimpresión del carnet (auditoría, espejo de la web). Best-effort
+   * + detrás de capacidad: si el padre no expone el RPC, no bloquea el compartir.
+   */
+  async registrarReimpresion(personalId: string): Promise<void> {
+    try {
+      await this.client.rpc('registrar_reimpresion_carnet', { p_id: personalId });
+    } catch {
+      /* best-effort: la reimpresión no se audita, pero el carnet se comparte igual */
+    }
   }
 
   /** URL firmada de una foto del bucket privado (thumbnail opcional). */
@@ -223,6 +279,31 @@ export class PersonalObraService {
   /** Activa/desactiva al personal (soft, por outbox). */
   async enqueueEstado(id: string, estado: PersonalObra['estado']): Promise<void> {
     await this.enqueueEditar(id, { estado });
+  }
+
+  /**
+   * CE4 — añadir (o reemplazar) UNA foto de evidencia de un registro ya creado,
+   * desde el expediente. Offline-first por outbox: sube la foto al bucket y hace
+   * upsert de la fila `personal_obra_fotos` (idempotente por personal_id+tipo).
+   */
+  async enqueueAgregarFoto(
+    personalId: string,
+    proyectoId: string,
+    tipo: FotoTipo,
+    blob: Blob,
+  ): Promise<void> {
+    const opId = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    await this.sync.enqueue({
+      id: opId,
+      tipo_op: 'personal_foto',
+      capturado_en,
+      payload: { personal_id: personalId, tipo, capturado_en },
+      fotos: [
+        { id: crypto.randomUUID(), bucket: BUCKET, path: `${proyectoId}/${personalId}/${tipo}.jpg`, slot: tipo, blob },
+      ],
+      resumen: { tipo: 'personal_foto', personal_id: personalId, foto: tipo, capturado_en },
+    });
   }
 
   private registerHandlers(): void {
@@ -301,6 +382,18 @@ export class PersonalObraService {
         return;
       }
       const { error } = await this.client.from('personal_obra').update(cambios).eq('id', payload['id']);
+      if (error) throwSyncError(error);
+      this.catalog.invalidate('personal_lista');
+    });
+
+    // CE4 — añadir/reemplazar una foto de evidencia de un registro existente.
+    this.sync.register('personal_foto', async (payload, photoPaths) => {
+      const tipo = payload['tipo'] as string;
+      const path = photoPaths[tipo];
+      if (!path) return; // sin foto subida: nada que hacer (no es error)
+      const { error } = await this.client
+        .from('personal_obra_fotos')
+        .upsert({ personal_id: payload['personal_id'], tipo, foto_path: path }, { onConflict: 'personal_id,tipo' });
       if (error) throwSyncError(error);
       this.catalog.invalidate('personal_lista');
     });

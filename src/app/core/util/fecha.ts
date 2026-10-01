@@ -6,9 +6,16 @@
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
-/** `YYYY-MM-DD` (date-only) → `02/07/2026`. Parte local, sin corrimiento UTC. */
+/**
+ * `YYYY-MM-DD` (date-only) → `02/07/2026`. Parte local, sin corrimiento UTC.
+ * CE11 — DEFENSIVA: si recibe un timestamp (trae `T` u `+`, p. ej. `created_at`),
+ * delega a `formatFechaHumana` (fecha + hora) en vez de trocear la cadena y pintar
+ * algo como `31T17:21:11…/08/2026`. El llamador correcto para timestamps es
+ * `formatFechaHumana`; esto solo evita el estropicio si alguien pasa el tipo que no es.
+ */
 export function formatFecha(fecha: string | null | undefined): string {
   if (!fecha) return '—';
+  if (fecha.includes('T') || fecha.includes('+') || fecha.includes('Z')) return formatFechaHumana(fecha);
   const [y, m, d] = fecha.slice(0, 10).split('-');
   if (!y || !m || !d) return fecha;
   return `${d}/${m}/${y}`;

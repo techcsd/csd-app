@@ -16,7 +16,10 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { CameraService } from '../../../core/services/camera.service';
+import { ExportService } from '../../../core/services/export.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
+import { generarCarnetPdf } from '../../../core/utils/carnet-pdf.util';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
 import {
   Cargo,
@@ -52,6 +55,8 @@ export class PersonalExpedientePage implements OnInit {
   private ctx = inject(UserContextService);
   private network = inject(NetworkService);
   private toast = inject(ToastService);
+  private camera = inject(CameraService);
+  private exporter = inject(ExportService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private i18n = inject(I18nService);
@@ -74,6 +79,8 @@ export class PersonalExpedientePage implements OnInit {
   saving = signal(false);
   lightboxUrl = signal<string | null>(null);
   confirmEstado = signal(false);
+  /** CE4 — tipo de foto que se está subiendo ahora (para el spinner del slot). */
+  subiendoFoto = signal<FotoTipo | null>(null);
   // BF8 — visor del documento/contrato firmado (snapshot AZ1).
   docVisor = signal<{ url: string; nombre: string } | null>(null);
   abriendoDoc = signal<string | null>(null);
@@ -106,10 +113,15 @@ export class PersonalExpedientePage implements OnInit {
   );
 
   fotoPersonaUrl = computed(() => this.fotos()['persona'] ?? null);
+  /** CE4 — cuántas de las 5 fotos faltan (para el aviso de "falta foto"). */
+  fotosFaltantes = computed(() => this.fotosGuia.filter((g) => !this.fotos()[g.tipo]).length);
+  /** CE5 — QR = MISMA URL pública de verificación que la web (`/verificar/<carnet>`). */
   verifyUrl = computed(() => {
     const p = this.personal();
-    return p ? `${SGC_WEB}/proyectos/personal/${p.id}` : '';
+    return p?.carnet_numero ? `${SGC_WEB}/verificar/${p.carnet_numero}` : '';
   });
+  /** CE5 — generando/compartiendo el PDF del carnet. */
+  compartiendo = signal(false);
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
@@ -155,8 +167,60 @@ export class PersonalExpedientePage implements OnInit {
   abrirFoto(url: string | undefined): void {
     if (url) this.lightboxUrl.set(url);
   }
+
+  /**
+   * CE4 — añadir/reemplazar una foto desde el expediente (cámara). La compresión
+   * aplica el arreglo CE6 (fondo blanco / HEIC / validación de monocromo). Se
+   * encola por outbox y se refleja al momento (preview optimista).
+   */
+  async agregarFoto(tipo: FotoTipo): Promise<void> {
+    const p = this.personal();
+    if (!p || this.subiendoFoto()) return;
+    this.subiendoFoto.set(tipo);
+    try {
+      const photo = await this.camera.takePhoto();
+      if (!photo) return;
+      await this.service.enqueueAgregarFoto(p.id, p.proyecto_id, tipo, photo.blob);
+      // Optimista: muestra la foto recién tomada sin esperar al sync.
+      this.fotos.update((m) => ({ ...m, [tipo]: photo.previewUrl }));
+      this.toast.success(this.online ? this.i18n.t('Foto añadida.') : this.i18n.t('Foto guardada — se subirá al reconectar.'));
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo añadir la foto.'));
+    } finally {
+      this.subiendoFoto.set(null);
+    }
+  }
   cerrarFoto(): void {
     this.lightboxUrl.set(null);
+  }
+
+  /**
+   * CE5 — Compartir / Imprimir el carnet: genera el PDF CR80 (frente/dorso) con el
+   * mismo diseño de la web y lo manda por el share-sheet (WhatsApp, imprimir, etc.).
+   * Registra la reimpresión (auditoría). Requiere carnet emitido (número).
+   */
+  async compartirCarnet(): Promise<void> {
+    const p = this.personal();
+    if (!p || this.compartiendo()) return;
+    if (!p.carnet_numero) {
+      this.toast.error(this.i18n.t('El carnet aún no se ha emitido. Se emite al sincronizar.'));
+      return;
+    }
+    this.compartiendo.set(true);
+    try {
+      const blob = await generarCarnetPdf(p, {
+        fotoUrl: this.fotoPersonaUrl(),
+        verifyUrl: this.verifyUrl(),
+      });
+      void this.service.registrarReimpresion(p.id); // auditoría (best-effort)
+      const nombre = `carnet-${p.carnet_numero}`.replace(/[^a-z0-9-]/gi, '');
+      const res = await this.exporter.shareRaw(blob, `${nombre}.pdf`, 'application/pdf', this.i18n.t('Carnet de personal'));
+      if (res.fallback) this.toast.success(this.i18n.t('Carnet descargado. Compártelo o imprímelo desde tus descargas.'));
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo generar el carnet.'));
+    } finally {
+      this.compartiendo.set(false);
+    }
   }
 
   // ── BF8 — ver el documento/contrato firmado (PDF inline o imagen) ────────────

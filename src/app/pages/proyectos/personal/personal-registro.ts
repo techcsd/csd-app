@@ -208,10 +208,12 @@ export class PersonalRegistroPage implements OnDestroy {
     switch (this.pasoActual()?.key) {
       case 'datos':
         return !!(this.proyectoId() && this.nombre().trim() && this.nacionalidad() && this.cargoId());
+      // CE4 — las 5 fotos son OPCIONALES: ni el documento ni la foto de la persona
+      // son un muro. Se marcan como "Falta foto" en el expediente y se añaden luego.
       case 'documento':
-        return !this.requiereDocumento() || !!this.fotos()['documento'];
+        return true;
       case 'fotos':
-        return !!this.fotos()['persona'];
+        return true;
       case 'firma':
         return !!this.firma();
       case 'carnet':
@@ -223,17 +225,19 @@ export class PersonalRegistroPage implements OnDestroy {
     }
   });
 
+  // CE4 — registrar sin foto: solo los DATOS son obligatorios (obra, nombre,
+  // nacionalidad, cargo). Las fotos ya no bloquean el registro.
   puedeRegistrar = computed(
     () =>
-      !!(
-        this.proyectoId() &&
-        this.nombre().trim() &&
-        this.nacionalidad() &&
-        this.cargoId() &&
-        this.fotos()['persona'] &&
-        (!this.requiereDocumento() || this.fotos()['documento'])
-      ),
+      !!(this.proyectoId() && this.nombre().trim() && this.nacionalidad() && this.cargoId()),
   );
+
+  /** CE4 — tipos de foto que faltan (para el aviso suave en el resumen). */
+  fotosFaltantes = computed(() => FOTOS_GUIA.filter((g) => !this.fotos()[g.tipo]).length);
+
+  // ── CE16 — aviso de documento duplicado (suave, no bloquea) ──────────────────
+  dupAviso = signal<{ id: string; nombre: string; proyecto: string | null }[]>([]);
+  private dupCheckToken = 0;
 
   primaryBtn = computed(() => {
     if (this.submitting()) return this.i18n.t('Registrando…');
@@ -392,9 +396,27 @@ export class PersonalRegistroPage implements OnDestroy {
     if (blob) void this.borrador.saveFoto(this.clave, 'firma', blob);
   }
 
+  /**
+   * CE16 — comprueba si ya existe un trabajador ACTIVO con este documento (aviso
+   * suave, nunca bloquea). Best-effort + anti-carrera (token): el último resultado
+   * manda. Se dispara al salir del paso de documento y al llegar al resumen.
+   */
+  async verificarDuplicado(): Promise<void> {
+    const numero = this.documentoNumero().trim();
+    if (!numero || !this.requiereDocumento()) {
+      this.dupAviso.set([]);
+      return;
+    }
+    const token = ++this.dupCheckToken;
+    const hits = await this.service.docExiste(this.tipoDocumento(), numero, this.registroId());
+    if (token === this.dupCheckToken) this.dupAviso.set(hits);
+  }
+
   // ── Navegación ─────────────────────────────────────────────────────────────
   siguiente(): void {
     if (!this.pasoValido() || this.submitting()) return;
+    // CE16 — al salir del paso de documento, revisa duplicados (no bloquea el avance).
+    if (this.pasoActual()?.key === 'documento') void this.verificarDuplicado();
     if (this.esUltimo()) return void this.submit();
     this.paso.update((p) => Math.min(p + 1, this.pasos().length - 1));
   }

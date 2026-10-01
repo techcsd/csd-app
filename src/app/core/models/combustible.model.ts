@@ -159,6 +159,70 @@ export const REND_MAX_KM_GAL = 35; // rendimiento_maximo_km_gal
 export const UMBRAL_ANORMAL_PCT = 40; // umbral_anormal_pct
 
 /**
+ * CE12/CE13 — especificación de combustible POR VEHÍCULO (RPC `spec_combustible`).
+ * Cada valor trae su `origen` (de dónde salió el número: del propio vehículo, de
+ * su clase, o del global) para que la UI lo diga en claro. `unidad` = km/gal para
+ * vehículos por distancia y h/gal para equipos por horas (Manitou, etc.). Los
+ * umbrales se EDITAN EN LA WEB (la app solo los lee).
+ */
+export type RangoOrigen = 'vehiculo' | 'clase' | 'global' | 'sin_definir';
+export interface SpecValor {
+  valor: number | null;
+  origen: RangoOrigen;
+}
+export interface SpecCombustible {
+  unidad: 'km_gal' | 'h_gal';
+  medida_uso: string;
+  combustible_tipo?: string | null;
+  esperado: SpecValor;
+  min: SpecValor;
+  max: SpecValor;
+  tolerancia_pct: SpecValor;
+  capacidad: SpecValor;
+}
+
+/** Rango efectivo usado por la clasificación (spec del vehículo o, si falta, global). */
+export interface RangoEfectivo {
+  min: number;
+  max: number;
+  tolPct: number;
+  esHoras: boolean;
+  unidad: 'km/gal' | 'h/gal';
+  /** Origen del rango (para el aviso "rango del vehículo / de la clase / global").
+   *  null = no hay spec (capacidad ausente) → no se pinta la procedencia. */
+  origen: RangoOrigen | null;
+  /** Valor esperado de fábrica/aprendido (si el vehículo lo tiene). */
+  esperado: number | null;
+}
+
+/** CE12 — resuelve el rango efectivo: usa la spec del vehículo; si no hay, cae al
+ *  global (comportamiento previo). `esHorasFallback` cubre el caso sin spec
+ *  (comprobación de capacidad: el padre aún no expone `spec_combustible`). */
+export function rangoEfectivo(
+  spec: SpecCombustible | null | undefined,
+  esHorasFallback = false,
+): RangoEfectivo {
+  const esHoras = spec ? spec.unidad === 'h_gal' : esHorasFallback;
+  return {
+    min: spec?.min?.valor ?? REND_MIN_KM_GAL,
+    max: spec?.max?.valor ?? REND_MAX_KM_GAL,
+    tolPct: spec?.tolerancia_pct?.valor ?? UMBRAL_ANORMAL_PCT,
+    esHoras,
+    unidad: esHoras ? 'h/gal' : 'km/gal',
+    origen: spec ? spec.min?.origen ?? 'global' : null,
+    esperado: spec?.esperado?.valor ?? null,
+  };
+}
+
+/** CE12 — etiqueta humana de la procedencia del rango. */
+export const RANGO_ORIGEN_LABEL: Record<RangoOrigen, string> = {
+  vehiculo: 'rango del vehículo',
+  clase: 'rango de la clase',
+  global: 'rango global',
+  sin_definir: 'rango global',
+};
+
+/**
  * AD7 — clasificación local de rendimiento (preview del flujo). Espeja la lógica
  * de sgc.clasificar_rendimiento con los umbrales por defecto. El caso real de
  * Xaviel (echada a ~10 km) cae determinísticamente en 'datos_insuficientes'.
@@ -168,8 +232,16 @@ export function clasificarRendimientoLocal(
   galones: number | null,
   rendimiento: number | null,
   baseline: number | null,
-  esHoras = false,
+  rango: RangoEfectivo = rangoEfectivo(null),
 ): { estado: RendimientoEstado; motivo: string } {
+  // CE12 — todos los umbrales salen del rango efectivo (spec del vehículo o global).
+  const esHoras = rango.esHoras;
+  const min = rango.min;
+  const max = rango.max;
+  const tolPct = rango.tolPct;
+  const u = rango.unidad;
+  // Si el vehículo no tiene histórico propio, compara contra el esperado de la spec.
+  const base = baseline ?? rango.esperado;
   if (kmRecorridos == null) {
     return {
       estado: 'datos_insuficientes',
@@ -189,28 +261,28 @@ export function clasificarRendimientoLocal(
   // "posible fuga" falso. Para horas solo comparamos contra su PROPIO histórico
   // (unidad-agnóstico): sin baseline suficiente, se registra sin alarmar.
   if (esHoras) {
-    if (baseline != null && baseline > 0) {
-      const dev = Math.abs(rendimiento - baseline) / baseline;
-      if (dev > UMBRAL_ANORMAL_PCT / 100) {
+    if (base != null && base > 0) {
+      const dev = Math.abs(rendimiento - base) / base;
+      if (dev > tolPct / 100) {
         return {
           estado: 'anormal',
-          motivo: `Consumo fuera de rango: ${rendimiento.toFixed(1)} vs. lo esperado ≈ ${baseline.toFixed(1)} h/gal (desviación mayor al ${UMBRAL_ANORMAL_PCT}%). Revisar el equipo o la lectura.`,
+          motivo: `Consumo fuera de rango: ${rendimiento.toFixed(1)} vs. lo esperado ≈ ${base.toFixed(1)} ${u} (desviación mayor al ${tolPct}%). Revisar el equipo o la lectura.`,
         };
       }
-      if (rendimiento < baseline * (1 - CONSUMO_ANORMAL_PCT / 100)) {
+      if (rendimiento < base * (1 - CONSUMO_ANORMAL_PCT / 100)) {
         return {
           estado: 'bajo',
-          motivo: `Rinde ${rendimiento.toFixed(1)} h/gal, por debajo de lo normal (≈ ${baseline.toFixed(1)}) pero dentro de un margen explicable. Vale la pena vigilarlo.`,
+          motivo: `Rinde ${rendimiento.toFixed(1)} ${u}, por debajo de lo normal (≈ ${base.toFixed(1)}) pero dentro de un margen explicable. Vale la pena vigilarlo.`,
         };
       }
       return {
         estado: 'optimo',
-        motivo: `Consumo dentro de lo esperado para este equipo (≈ ${baseline.toFixed(1)} h/gal).`,
+        motivo: `Consumo dentro de lo esperado para este equipo (≈ ${base.toFixed(1)} ${u}).`,
       };
     }
     return {
       estado: 'datos_insuficientes',
-      motivo: `Consumo de ${rendimiento.toFixed(1)} h/gal registrado. Aún sin histórico propio suficiente para comparar (el rendimiento por hora se evalúa contra su promedio).`,
+      motivo: `Consumo de ${rendimiento.toFixed(1)} ${u} registrado. Aún sin histórico propio suficiente para comparar (el rendimiento por hora se evalúa contra su promedio).`,
     };
   }
   if (kmRecorridos < DIST_MIN_KM) {
@@ -219,39 +291,39 @@ export function clasificarRendimientoLocal(
       motivo: `Solo ${Math.round(kmRecorridos)} km desde la última echada (se necesitan al menos ${DIST_MIN_KM} km entre tanques llenos). El rendimiento real solo es medible de tanque lleno a tanque lleno.`,
     };
   }
-  if (rendimiento < REND_MIN_KM_GAL) {
+  if (rendimiento < min) {
     return {
       estado: 'anormal',
-      motivo: `Rendimiento imposiblemente bajo: ${rendimiento.toFixed(1)} km/gal. Posible fuga, falla mecánica, combustible desviado o error de lectura.`,
+      motivo: `Rendimiento imposiblemente bajo: ${rendimiento.toFixed(1)} ${u} (mínimo del ${RANGO_ORIGEN_LABEL[rango.origen ?? 'global']}: ${min.toFixed(1)}). Posible fuga, falla mecánica, combustible desviado o error de lectura.`,
     };
   }
-  if (rendimiento > REND_MAX_KM_GAL) {
+  if (rendimiento > max) {
     return {
       estado: 'anormal',
-      motivo: `Rendimiento imposiblemente alto: ${rendimiento.toFixed(1)} km/gal. Probable error de odómetro o una echada anterior sin registrar.`,
+      motivo: `Rendimiento imposiblemente alto: ${rendimiento.toFixed(1)} ${u} (máximo del ${RANGO_ORIGEN_LABEL[rango.origen ?? 'global']}: ${max.toFixed(1)}). Probable error de odómetro o una echada anterior sin registrar.`,
     };
   }
-  if (baseline != null && baseline > 0) {
-    const dev = Math.abs(rendimiento - baseline) / baseline;
-    if (dev > UMBRAL_ANORMAL_PCT / 100) {
+  if (base != null && base > 0) {
+    const dev = Math.abs(rendimiento - base) / base;
+    if (dev > tolPct / 100) {
       return {
         estado: 'anormal',
-        motivo: `Rendimiento fuera de rango: ${rendimiento.toFixed(1)} vs. lo esperado ≈ ${baseline.toFixed(1)} km/gal (desviación mayor al ${UMBRAL_ANORMAL_PCT}%). Revisar el vehículo o la lectura.`,
+        motivo: `Rendimiento fuera de rango: ${rendimiento.toFixed(1)} vs. lo esperado ≈ ${base.toFixed(1)} ${u} (desviación mayor al ${tolPct}%). Revisar el vehículo o la lectura.`,
       };
     }
-    if (rendimiento < baseline * (1 - CONSUMO_ANORMAL_PCT / 100)) {
+    if (rendimiento < base * (1 - CONSUMO_ANORMAL_PCT / 100)) {
       return {
         estado: 'bajo',
-        motivo: `Rinde ${rendimiento.toFixed(1)} km/gal, por debajo de lo normal (≈ ${baseline.toFixed(1)}) pero dentro de un margen explicable. Vale la pena vigilarlo.`,
+        motivo: `Rinde ${rendimiento.toFixed(1)} ${u}, por debajo de lo normal (≈ ${base.toFixed(1)}) pero dentro de un margen explicable. Vale la pena vigilarlo.`,
       };
     }
   }
   return {
     estado: 'optimo',
     motivo:
-      baseline != null && baseline > 0
-        ? `Rendimiento dentro de lo esperado para este vehículo (≈ ${baseline.toFixed(1)} km/gal). Consumo normal.`
-        : `Rendimiento de ${rendimiento.toFixed(1)} km/gal dentro de rangos coherentes. Aún sin baseline propio suficiente para comparar.`,
+      base != null && base > 0
+        ? `Rendimiento dentro de lo esperado para este vehículo (≈ ${base.toFixed(1)} ${u}). Consumo normal.`
+        : `Rendimiento de ${rendimiento.toFixed(1)} ${u} dentro de rangos coherentes. Aún sin baseline propio suficiente para comparar.`,
   };
 }
 
@@ -457,6 +529,10 @@ export interface CombustibleCalculo {
    *  · null   = sin anomalía.
    */
   direccion: 'alto' | 'bajo' | null;
+  /** CE12 — unidad de la medida (km/gal o h/gal para equipos por horas). */
+  unidad: 'km/gal' | 'h/gal';
+  /** CE12 — de dónde salió el rango evaluado (vehículo/clase/global); null = sin spec. */
+  rangoOrigen: RangoOrigen | null;
 }
 
 /**
@@ -470,7 +546,11 @@ export function calcularCombustible(
   monto: number | null,
   ultima: UltimaEchada,
   esHoras = false,
+  spec: SpecCombustible | null = null,
 ): CombustibleCalculo {
+  // CE12 — rango efectivo del vehículo (spec); si falta, cae al global con el
+  // flag esHoras heredado del tipo de medida del vehículo.
+  const rango = rangoEfectivo(spec, esHoras);
   const g = galones && galones > 0 ? galones : null;
   const m = monto && monto > 0 ? monto : null;
   const precioPorGalon = g && m ? m / g : null;
@@ -493,27 +573,39 @@ export function calcularCombustible(
     alertaConsumo = rendimiento < (1 - CONSUMO_ANORMAL_PCT / 100) * baseline;
   }
 
-  const { estado, motivo } = clasificarRendimientoLocal(kmRecorridos, g, rendimiento, baseline, esHoras);
+  const { estado, motivo } = clasificarRendimientoLocal(kmRecorridos, g, rendimiento, baseline, rango);
 
   // AW2 — dirección de la anomalía (para el texto del aviso). Espeja la lógica del
   // servidor: rinde imposiblemente ALTO = error de dato (revisar lectura); rinde
   // BAJO (o imposiblemente bajo) = posible problema del vehículo (mantenimiento).
+  const baseDir = baseline ?? rango.esperado;
   let direccion: 'alto' | 'bajo' | null = null;
   if (estado === 'anormal' || estado === 'bajo') {
     if (rendimiento == null) {
       direccion = 'bajo';
-    } else if (esHoras) {
-      direccion = baseline != null && baseline > 0 && rendimiento > baseline ? 'alto' : 'bajo';
-    } else if (rendimiento > REND_MAX_KM_GAL) {
+    } else if (rango.esHoras) {
+      direccion = baseDir != null && baseDir > 0 && rendimiento > baseDir ? 'alto' : 'bajo';
+    } else if (rendimiento > rango.max) {
       direccion = 'alto';
-    } else if (rendimiento < REND_MIN_KM_GAL) {
+    } else if (rendimiento < rango.min) {
       direccion = 'bajo';
-    } else if (baseline != null && baseline > 0) {
-      direccion = rendimiento > baseline ? 'alto' : 'bajo';
+    } else if (baseDir != null && baseDir > 0) {
+      direccion = rendimiento > baseDir ? 'alto' : 'bajo';
     } else {
       direccion = 'bajo';
     }
   }
 
-  return { precioPorGalon, kmRecorridos, rendimiento, costoPorKm, alertaConsumo, estado, estadoMotivo: motivo, direccion };
+  return {
+    precioPorGalon,
+    kmRecorridos,
+    rendimiento,
+    costoPorKm,
+    alertaConsumo,
+    estado,
+    estadoMotivo: motivo,
+    direccion,
+    unidad: rango.unidad,
+    rangoOrigen: rango.origen,
+  };
 }

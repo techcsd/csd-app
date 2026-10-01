@@ -66,23 +66,14 @@
             </div>
           </div>
 
-          <!-- Fotos (recibo / tablero / bomba) -->
-          @if (e.fotoReciboUrl || e.fotoTableroUrl || e.fotoBombaUrl) {
+          <!-- CE14 — fotos en tira de miniaturas de ALTO FIJO (80 px): no desbordan
+               la tarjeta ni tapan el pie de acciones; toque = visor a pantalla completa. -->
+          @if (fotos(e).length) {
             <div class="pa__fotos">
-              @if (e.fotoReciboUrl) {
-                <a class="pa__foto" [href]="e.fotoReciboUrl" target="_blank" rel="noopener">
-                  <app-img [src]="e.fotoReciboUrl" alt="Recibo" ratio="1 / 1" fallback="🧾" />
-                </a>
-              }
-              @if (e.fotoTableroUrl) {
-                <a class="pa__foto" [href]="e.fotoTableroUrl" target="_blank" rel="noopener">
-                  <app-img [src]="e.fotoTableroUrl" alt="Tablero" ratio="1 / 1" fallback="🎛️" />
-                </a>
-              }
-              @if (e.fotoBombaUrl) {
-                <a class="pa__foto" [href]="e.fotoBombaUrl" target="_blank" rel="noopener">
-                  <app-img [src]="e.fotoBombaUrl" alt="Bomba" ratio="1 / 1" fallback="⛽" />
-                </a>
+              @for (f of fotos(e); track f.url) {
+                <button type="button" class="pa__foto" (click)="verFoto(f.url)" [attr.aria-label]="f.label">
+                  <app-img [src]="f.url" [alt]="f.label" [fallback]="f.glifo" />
+                </button>
               }
             </div>
           }
@@ -152,6 +143,14 @@
           </button>
         </div>
       </div>
+    </div>
+  }
+
+  <!-- CE14 — visor de foto a pantalla completa -->
+  @if (viendo(); as url) {
+    <div class="pa__visor" (click)="cerrarFoto()">
+      <button type="button" class="pa__visor-x" (click)="cerrarFoto()" aria-label="Cerrar">✕</button>
+      <img class="pa__visor-img" [src]="url" alt="Foto de la echada" />
     </div>
   }
 </div>
