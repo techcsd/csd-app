@@ -53,6 +53,8 @@ export class PorAprobarPage {
   });
   vacio = computed(() => !this.loading() && !this.error() && !this.visibles().length);
 
+  // ── CE14 — visor de foto a pantalla completa (toque en la miniatura) ─────────
+  viendo = signal<string | null>(null);
   // ── Modal: rechazar (motivo obligatorio) ────────────────────────────────────
   rechazando = signal<EchadaPorAprobar | null>(null);
   motivo = signal('');
@@ -116,6 +118,23 @@ export class PorAprobarPage {
   /** Etiqueta corta del vehículo (o "Sin vehículo" para una echada de persona). */
   vehLabel(e: EchadaPorAprobar): string {
     return e.vehiculo_label || e.placa || this.i18n.t('Sin vehículo');
+  }
+
+  /** CE14 — fotos de la echada (recibo/tablero/bomba) presentes, para la tira. */
+  fotos(e: EchadaPorAprobar): { url: string; label: string; glifo: string }[] {
+    const out: { url: string; label: string; glifo: string }[] = [];
+    if (e.fotoReciboUrl) out.push({ url: e.fotoReciboUrl, label: this.i18n.t('Recibo'), glifo: '🧾' });
+    if (e.fotoTableroUrl) out.push({ url: e.fotoTableroUrl, label: this.i18n.t('Tablero'), glifo: '🎛️' });
+    if (e.fotoBombaUrl) out.push({ url: e.fotoBombaUrl, label: this.i18n.t('Bomba'), glifo: '⛽' });
+    return out;
+  }
+
+  /** CE14 — abre/cierra el visor de foto a pantalla completa. */
+  verFoto(url: string): void {
+    this.viendo.set(url);
+  }
+  cerrarFoto(): void {
+    this.viendo.set(null);
   }
 
   // ── Aprobar (sin corrección) ────────────────────────────────────────────────

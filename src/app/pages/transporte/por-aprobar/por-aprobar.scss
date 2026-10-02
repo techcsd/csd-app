@@ -94,15 +94,65 @@
   font-weight: 700;
 }
 
+// CE14 — tira horizontal de miniaturas de ALTO FIJO. Antes era un grid con
+// app-img ratio 1/1; en Safari (iPhone de Raykler) el aspect-ratio no se honraba
+// y las fotos se renderizaban a su alto natural (verticales), desbordaban la
+// tarjeta y tapaban el pie de acciones. Un alto fijo en px no depende de
+// aspect-ratio → robusto en todos los WebView.
 .pa__fotos {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  display: flex;
   gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
 }
 .pa__foto {
-  display: block;
+  flex: 0 0 auto;
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  border: 1px solid var(--color-border, #e2e8f0);
   border-radius: 10px;
   overflow: hidden;
+  background: var(--color-surface, #f1f5f9);
+  cursor: pointer;
+}
+.pa__foto app-img {
+  display: block;
+  width: 80px;
+  height: 80px;
+}
+
+// CE14 — visor a pantalla completa
+.pa__visor {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.92);
+  padding: 16px;
+}
+.pa__visor-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.pa__visor-x {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .pa__acciones {

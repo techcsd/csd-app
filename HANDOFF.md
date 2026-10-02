@@ -1,5 +1,35 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 01/10/2026 — PROMPT-79 · Ronda **CE** (IDs CE) — **2.38.0 EN DEV, esperando OK**
+
+**TL;DR:** ronda CE, mitad app (filas 102-117). Consume contratos de PROMPT-78 (verificados vivos en `sgc-dev`). `feature/ce-ronda` → `dev` (`dcf22c2`, push hecho → Vercel construye `app-dev.`). APK **dev 2.38.0** firmado + publicado al bucket dev + registrado en `app_versiones` dev. **`npm run build` verde.** **Mínima NO cambia.** **PARA aquí: falta OK de Xaviel para release a prod.**
+
+### 🧪 EN DEV (2.38.0-dev)
+- **`feature/ce-ronda` → `dev`** (`dcf22c2`) + push → Vercel PWA `app-dev.sgcconstructorasd.com`.
+- **APK dev 2.38.0** firmado (cert `3c5316d8…5065`) + publicado (`csd-app-2.38.0.apk` + latest + version.json) + registrado en `app_versiones` dev + `apk_url` dev. Título + `CAMBIOS_CURADOS` curados (8 entradas).
+
+### ✅ Hecho (build-verificado — `npm run build` pasa, guards incl.)
+- **CE14 · Aprobar echadas desde la app (🔴).** Causa real diagnosticada: **NO era el gate** (Raykler tiene rol `logistica`; `aprobar_echada`/`rechazar_echada` aceptan "Logística o admin" — probado en dev). Era **Safari/iPhone no honraba `aspect-ratio`** en las fotos (grid `app-img ratio 1/1`) → se renderizaban verticales, desbordaban la tarjeta y tapaban el pie. Fix en `por-aprobar`: **tira horizontal de miniaturas de alto FIJO 80 px** (object-fit cover) + **visor a pantalla completa** al tocar; pie *Aprobar · Aprobar con corrección · Rechazar* (52 px) siempre visible. Decisión sigue por outbox.
+- **CE12/CE13 · Spec de combustible por vehículo.** `combustible.model` (calc + clasificación) ahora es **spec-aware**: nuevo `SpecCombustible` + `rangoEfectivo()`; `getSpecCombustible(vehiculoId)` llama al RPC `spec_combustible(p_vehiculo)` (cacheado). La alerta usa el rango del vehículo→clase→global y **dice de dónde viene** ("rango del vehículo/de la clase/global"); unidad **h/gal** para equipos por horas. **Detrás de capacidad** (sin RPC → rango global, comportamiento previo). Umbrales se editan en la web (anotado en `PARIDAD.md`).
+- **CE2 · "Registró" visible.** `PersonalObraService.listar()` usa el RPC definer `listar_personal_obra()` (resuelve `registrado_por_nombre` para cualquier rol); fallback al select directo. `getById` enriquece el nombre desde el cache de la lista. Lista + expediente muestran "Registró: … · fecha".
+- **CE4 · Registrar sin foto.** Wizard: las 5 fotos opcionales (`pasoValido`/`puedeRegistrar` ya no las exigen); chip *Falta foto* en resumen y expediente; **añadir foto después** desde el expediente (cámara → outbox `personal_foto` → upsert `personal_obra_fotos`).
+- **CE6 · Foto negra.** `comprimir-imagen.util`: HEIC→JPEG (`heic2any`, carga perezosa, dep añadida), **fondo blanco antes de exportar** (transparencia→blanco, no negro) y **validación de monocromo** (no guarda cuadro negro). Misma función para las 5 fotos (paridad web).
+- **CE11 · Fecha legible.** Lista usa `formatFechaHumana(created_at)`; `formatFecha` defensiva (timestamp con `T`/`Z`/`+` → `formatFechaHumana`).
+- **CE16 · Duplicado por documento.** Aviso suave al registrar (`docExiste` → RPC `personal_obra_doc_existe`), en el paso de documento y en el resumen. No bloquea.
+- **CE1 · "Mi personal hoy" (lean).** Chips de pendientes *Sin carnet / Sin asegurar* (sobre activos) con filtro rápido en la lista.
+- **CE3/CE5 · Carnet.** Logo **blanco** (`csd-no-bg-logo-white.png`, copiado del padre) en la banda navy del carnet en pantalla. **Compartir / Imprimir carnet** = PDF **CR80 (85.6×53.98 mm) frente/dorso** con jsPDF (`carnet-pdf.util.ts`) + `qrcode`, compartido por el share-sheet (nuevo `ExportService.shareRaw`); QR a `/verificar/<carnet>` (= web); registra reimpresión. **A4 con 8 = diferido** (igual que la web).
+- **CE10 · Avisos de requisición.** Servidor (padre): `es_miembro_obra()` verificado vivo en dev; la app solo **recibe** (sin cambio de cliente).
+
+### ⚠️ Notas de la sesión
+- Rebaseline de `no-ai-tropes.baseline.json` (emojis del módulo personal, consistentes con el estilo del archivo; por-aprobar movió sus glifos a `.ts`).
+- `heic2any@^0.0.4` añadido (CommonJS → warning benigno de bundle; va en su propio chunk por `import()` dinámico).
+
+### 👤 Pendientes físicos de Xaviel (para OK → prod)
+- **Probar en dev** (`app-dev.` / APK dev 2.38.0): Raykler aprueba/corrige/rechaza una echada desde el teléfono; echada con spec de vehículo muestra el origen del rango; personal: registrar sin foto + añadir luego, foto HEIC/PNG del iPhone (no negra), duplicado avisa, "Registró" visible como Sonia; carnet: compartir/imprimir PDF CR80 (probar en la Epson L14150, escala 100%).
+- Con **OK** → PR `dev → main` → APK prod 2.38.0 + publicar + (opcional) publicar flag. **Mínima no cambia.**
+
+---
+
 ## 🟢 SESIÓN 30/09/2026 — PROMPT-77 · Ronda **CD** (IDs CD) — **2.37.0 PUBLICADA a prod**
 
 **TL;DR:** ronda CD (filas 92-101, mitad app). Consume los contratos de PROMPT-76 (verificados vivos en `sgc-dev`). Salió a dev → **Xaviel dio OK ("do it, do all the stuff")** → **RELEASE A PROD 2.37.0**: `dev→main` (`f22e61a`) → Vercel construye app. + APK prod 2.37.0 firmado/publicado al bucket prod + registrado en `app_versiones` prod (regla 18 OK). **Xaviel pidió publicar** → **PUBLICADA 2.37.0** (`publicada=true`, 2.36.0 despublicada, `publicada_por`=Tecnología `4b19cc4b…`; el trigger disparó el push a usuarios). **Mínima NO cambió** (2.35.0). Update **NO forzado** (2.37.0 `min=false`). `version_publicada()` = 2.37.0 + apk_url 2.37.0. ✅ Sesión cerrada.

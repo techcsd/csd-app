@@ -37,16 +37,18 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-09-30';
+const RELEASED_AT = '2026-10-01';
 
-const TITULO = 'Flota más rápida, echadas del vehículo y requisiciones que descuentan lo que llegó';
+const TITULO = 'Aprobar echadas desde el teléfono, personal de obra más completo y carnet imprimible';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Flota', d: 'Mantenimientos del vehículo: arreglamos el "tiempo de espera agotado" que salía al abrir la lista. Ahora carga al instante, también para los choferes.' },
-  { t: 'nuevo', m: 'Combustible', d: 'Los choferes ahora ven las echadas del vehículo que tienen asignado (no solo las suyas), con su consumo y rendimiento en la ficha del vehículo.' },
-  { t: 'mejora', m: 'Flota', d: 'Si dejas un uso de vehículo abierto más de 24 horas, lo cerramos solo y te avisamos — así el vehículo no queda "pegado" a ti por error. Si lo sigues usando, ábrelo de nuevo.' },
-  { t: 'arreglo', m: 'Combustible', d: 'Reenviar una echada rechazada ya nunca la duplica, aunque toques dos veces o se corte la red.' },
-  { t: 'nuevo', m: 'Combustible', d: 'Antes de guardar te avisamos si parece que repites una echada: mismo N.º de recibo, o una echada casi igual del mismo vehículo el mismo día. Sin conexión no molesta.' },
-  { t: 'mejora', m: 'Solicitudes', d: 'En una requisición, el material que ya llegó a la obra se marca con "Cubierto por llegada · n" y descuenta del pendiente — el renglón cubierto queda con su check.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Aprobar echadas desde el teléfono: las fotos de "Por aprobar" tapaban los botones Aprobar / Aprobar con corrección / Rechazar. Ahora van en una tira de miniaturas (toca para ampliar) y el pie de acciones siempre se ve.' },
+  { t: 'mejora', m: 'Combustible', d: 'La alerta de rendimiento usa ahora la especificación de cada vehículo y te dice de dónde viene el rango (del vehículo, de su clase o global). Los equipos por horas se miden en h/gal.' },
+  { t: 'arreglo', m: 'Personal de obra', d: 'La lista y el expediente muestran quién registró a cada trabajador, para cualquier rol (antes salía "—" para Legal).' },
+  { t: 'mejora', m: 'Personal de obra', d: 'Registrar sin foto ya no es un muro: puedes guardar y añadir las fotos después desde el expediente. Se avisa qué foto falta.' },
+  { t: 'arreglo', m: 'Personal de obra', d: 'Fotos que salían en negro (HEIC del iPhone o PNG transparente) ahora se procesan con fondo blanco y validación — nunca se guarda un cuadro negro.' },
+  { t: 'nuevo', m: 'Personal de obra', d: 'Aviso al registrar si ya existe un trabajador con el mismo documento (evita duplicados).' },
+  { t: 'nuevo', m: 'Personal de obra', d: 'Carnet con logo blanco (legible) y botón para Compartir / Imprimir el carnet (frente y dorso, tamaño real) desde el teléfono.' },
+  { t: 'arreglo', m: 'Personal de obra', d: 'La fecha y la hora en las filas se ven legibles (antes salía el texto crudo).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

@@ -51,20 +51,81 @@ export function perfilNativo(perfil: PerfilCompresion = 'evidencia'): {
   return { quality: Math.round(calidad * 100), width: maxLado, height: maxLado };
 }
 
+/** CE6 — ¿el archivo es HEIC/HEIF (iPhone)? Por mime o por extensión del nombre. */
+function esHeic(source: Blob): boolean {
+  const t = (source.type || '').toLowerCase();
+  const n = ((source as File).name || '').toLowerCase();
+  return t.includes('heic') || t.includes('heif') || n.endsWith('.heic') || n.endsWith('.heif');
+}
+
+/**
+ * CE6 — convierte un HEIC/HEIF a JPEG con `heic2any` (carga perezosa: solo pesa
+ * cuando de verdad llega un HEIC). Si falla, propaga para que el llamador siga con
+ * el original (y la validación de monocromo decida).
+ */
+async function convertirHeic(source: Blob): Promise<Blob> {
+  const mod = await import('heic2any');
+  const heic2any = (mod as unknown as {
+    default: (o: { blob: Blob; toType?: string; quality?: number }) => Promise<Blob | Blob[]>;
+  }).default;
+  const out = await heic2any({ blob: source, toType: 'image/jpeg', quality: 0.92 });
+  return Array.isArray(out) ? out[0] : out;
+}
+
+/**
+ * CE6 — ¿el canvas quedó MONOCROMO (todo del mismo color, típicamente negro)? Es la
+ * firma de una decodificación fallida (HEIC que el WebView no leyó, o un alpha que
+ * se aplanó mal). Muestreamos ~2000 píxeles; si todos son (casi) iguales → true.
+ */
+function esMonocromo(ctx: CanvasRenderingContext2D, w: number, h: number): boolean {
+  try {
+    const data = ctx.getImageData(0, 0, w, h).data;
+    const step = Math.max(4, Math.floor(data.length / 4 / 2000) * 4);
+    let r0 = -1, g0 = -1, b0 = -1;
+    for (let i = 0; i < data.length; i += step) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      if (r0 < 0) { r0 = r; g0 = g; b0 = b; continue; }
+      if (Math.abs(r - r0) > 6 || Math.abs(g - g0) > 6 || Math.abs(b - b0) > 6) return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Comprime una imagen (Blob/File) según el perfil de destino (por defecto
  * 'evidencia'). Devuelve el original si no es imagen, si falla la recodificación,
  * o si la "compresión" salió más pesada (imágenes ya muy optimizadas) — nunca
  * subir más bytes de los que llegaron.
+ *
+ * CE6 — robustez de la foto de personal (caso Sonia "primera foto toda negra"):
+ *  1) HEIC/HEIF del iPhone → se convierte a JPEG con `heic2any` antes de dibujar.
+ *  2) **Fondo blanco ANTES de `drawImage`**: un PNG con transparencia aplanado a
+ *     JPEG dejaba los píxeles transparentes en NEGRO. Pintamos blanco primero.
+ *  3) Si el resultado queda MONOCROMO (negro) y el origen no era HEIC, se descarta
+ *     la recodificación y se conserva el original (nunca guardar un cuadro negro).
+ *  Misma función para las 5 fotos del expediente (paridad con la web, CE6).
  */
 export async function comprimirImagen(
   source: Blob,
   perfil: PerfilCompresion = 'evidencia',
 ): Promise<Blob> {
-  if (!source.type.startsWith('image/')) return source;
+  const esImagen = source.type.startsWith('image/') || esHeic(source);
+  if (!esImagen) return source;
   const { maxLado, calidad } = PERFILES_COMPRESION[perfil] ?? PERFILES_COMPRESION.evidencia;
+  const heic = esHeic(source);
   try {
-    const bitmap = await createImageBitmap(source);
+    let fuente: Blob = source;
+    if (heic) {
+      try {
+        fuente = await convertirHeic(source);
+      } catch {
+        /* sigue con el original: la validación de monocromo decide */
+      }
+    }
+
+    const bitmap = await createImageBitmap(fuente);
     const escala = Math.min(1, maxLado / Math.max(bitmap.width, bitmap.height));
     const w = Math.round(bitmap.width * escala);
     const h = Math.round(bitmap.height * escala);
@@ -77,8 +138,19 @@ export async function comprimirImagen(
       bitmap.close();
       return source;
     }
+    // CE6 — fondo blanco ANTES de dibujar (transparencia → blanco, no negro).
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
     ctx.drawImage(bitmap, 0, 0, w, h);
     bitmap.close();
+
+    // CE6 — si salió todo negro/monocromo (decodificación fallida) y no era HEIC,
+    // conserva el original en vez de subir un cuadro negro.
+    if (!heic && esMonocromo(ctx, w, h)) {
+      canvas.width = 0;
+      canvas.height = 0;
+      return source;
+    }
 
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob((b) => resolve(b), 'image/jpeg', calidad),
@@ -87,7 +159,9 @@ export async function comprimirImagen(
     canvas.width = 0;
     canvas.height = 0;
     if (!blob) return source;
-    if (blob.size >= source.size) return source;
+    // Un HEIC convertido SIEMPRE se queda (el original no lo renderiza Android);
+    // para el resto, nunca subir más bytes de los que llegaron.
+    if (!heic && blob.size >= source.size) return source;
     return blob;
   } catch {
     return source;

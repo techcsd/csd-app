@@ -79,9 +79,19 @@
 
           @if (requiereDocumento()) {
             <label class="field-label preg__mt" for="doc">{{ 'Número de documento' | t }}</label>
-            <input id="doc" class="field" type="text" [ngModel]="documentoNumero()" (ngModelChange)="documentoNumero.set($event)" [placeholder]="'Cédula o pasaporte' | t" />
+            <input id="doc" class="field" type="text" [ngModel]="documentoNumero()" (ngModelChange)="documentoNumero.set($event)" (blur)="verificarDuplicado()" [placeholder]="'Cédula o pasaporte' | t" />
 
-            <label class="field-label preg__mt">{{ guiaDocumento.label | t }} <span class="preg__req">*</span></label>
+            <!-- CE16 — aviso suave: ya existe un trabajador con este documento -->
+            @if (dupAviso().length) {
+              <div class="preg__band preg__band--warn">
+                ⚠️ {{ 'Ya existe un trabajador con este documento' | t }}:
+                @for (d of dupAviso(); track d.id) {
+                  <b>{{ d.nombre }}</b>{{ d.proyecto ? ' (' + d.proyecto + ')' : '' }}@if (!$last) { · }
+                }. {{ 'Verifica que no sea un duplicado antes de continuar.' | t }}
+              </div>
+            }
+
+            <label class="field-label preg__mt">{{ guiaDocumento.label | t }}</label>
             <p class="preg__sub">{{ guiaDocumento.ayuda | t }}</p>
             <div class="preg__fotos">
               <app-photo-slot
@@ -97,12 +107,12 @@
 
         <!-- ═══════════ HOJA: FOTOS GUIADAS ═══════════ -->
         @case ('fotos') {
-          <p class="preg__intro">{{ 'Toma cada foto con la cámara siguiendo la guía. La primera es obligatoria; las demás son muy recomendadas.' | t }}</p>
+          <p class="preg__intro">{{ 'Toma cada foto con la cámara siguiendo la guía. Todas son opcionales: puedes registrar sin fotos y añadirlas después desde el expediente.' | t }}</p>
           <div class="preg__guia">
             @for (g of guiaFotos; track g.tipo) {
               <div class="preg__guia-item">
                 <div class="preg__guia-txt">
-                  <span class="preg__guia-label">{{ g.label | t }} @if (g.tipo === 'persona') { <span class="preg__req">*</span> }</span>
+                  <span class="preg__guia-label">{{ g.label | t }}</span>
                   <span class="preg__guia-ayuda">{{ g.ayuda | t }}</span>
                 </div>
                 <app-photo-slot
@@ -145,6 +155,16 @@
               <div class="preg__res-row"><span class="preg__res-k">{{ 'Firma' | t }}</span><span class="preg__res-v">{{ firma() ? '✓ ' + ('firmado' | t) : '—' }}</span></div>
             }
           </div>
+          <!-- CE4 — registrar sin foto no es un muro; se avisa qué falta para añadir luego -->
+          @if (fotosFaltantes() > 0) {
+            <div class="preg__band preg__band--info">📷 {{ 'Faltan fotos' | t }} ({{ fotosFaltantes() }}). {{ 'Puedes registrar igual y añadirlas después desde el expediente.' | t }}</div>
+          }
+          <!-- CE16 — recordatorio del duplicado en el último paso -->
+          @if (dupAviso().length) {
+            <div class="preg__band preg__band--warn">
+              ⚠️ {{ 'Ya existe un trabajador con este documento' | t }}. {{ 'Verifica que no sea un duplicado antes de registrar.' | t }}
+            </div>
+          }
           <label class="field-label preg__mt" for="notas">{{ 'Notas (opcional)' | t }}</label>
           <textarea id="notas" class="field preg__notas" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Observaciones…' | t"></textarea>
           <div class="preg__band">{{ 'Al registrar, se envía por la cola de sincronización y el' | t }} <b>{{ 'carnet se emite' | t }}</b> {{ 'automáticamente. Funciona sin conexión.' | t }}</div>
