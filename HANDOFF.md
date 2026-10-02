@@ -1,12 +1,17 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 01/10/2026 — PROMPT-79 · Ronda **CE** (IDs CE) — **2.38.0 EN DEV, esperando OK**
+## 🟢 SESIÓN 01-02/10/2026 — PROMPT-79 · Ronda **CE** (IDs CE) — **2.38.0 RELEASE A PROD (falta publicar flag)**
 
-**TL;DR:** ronda CE, mitad app (filas 102-117). Consume contratos de PROMPT-78 (verificados vivos en `sgc-dev`). `feature/ce-ronda` → `dev` (`dcf22c2`, push hecho → Vercel construye `app-dev.`). APK **dev 2.38.0** firmado + publicado al bucket dev + registrado en `app_versiones` dev. **`npm run build` verde.** **Mínima NO cambia.** **PARA aquí: falta OK de Xaviel para release a prod.**
+**TL;DR:** ronda CE, mitad app (filas 102-117). Consume contratos de PROMPT-78 (verificados vivos en `sgc-dev`). Salió a dev → **Xaviel dio OK** → **RELEASE A PROD 2.38.0**: `dev→main` (`061243d`) → Vercel construye PWA prod + APK prod 2.38.0 firmado/publicado al bucket prod + registrado en `app_versiones` prod (**regla 18 OK**: 2.38.0 salió antes en dev). **Mínima NO cambió** (2.35.0). **Falta 1 clic**: publicar flag (`publicada=true` 2.38.0) — se deja a Xaviel en SGC → Versiones (regla 19 prohíbe UPDATE service_role desde script; el RPC gatea por `es_tecnologia`).
 
-### 🧪 EN DEV (2.38.0-dev)
+### ✅ EN PROD (RELEASE 2.38.0)
+- **`dev→main`** (`061243d`) + push → Vercel construye la PWA prod (`app.sgcconstructorasd.com`).
+- **APK prod 2.38.0** firmado (cert `3c5316d8…5065`), **regla 18 OK**, registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.38.0.apk` + latest + version.json) + `apk_url` prod actualizado.
+- **Publicada actual = 2.37.0** (2.38.0 `publicada=false` hasta el clic de Xaviel). **Mínima = 2.35.0** (sin cambios). 👤 **Xaviel: publicar 2.38.0** en SGC → Versiones (dispara el push a usuarios).
+
+### 🧪 Previo en DEV (2.38.0-dev)
 - **`feature/ce-ronda` → `dev`** (`dcf22c2`) + push → Vercel PWA `app-dev.sgcconstructorasd.com`.
-- **APK dev 2.38.0** firmado (cert `3c5316d8…5065`) + publicado (`csd-app-2.38.0.apk` + latest + version.json) + registrado en `app_versiones` dev + `apk_url` dev. Título + `CAMBIOS_CURADOS` curados (8 entradas).
+- **APK dev 2.38.0** firmado + publicado (`csd-app-2.38.0.apk` + latest + version.json) + registrado en `app_versiones` dev + `apk_url` dev. Título + `CAMBIOS_CURADOS` curados (8 entradas).
 
 ### ✅ Hecho (build-verificado — `npm run build` pasa, guards incl.)
 - **CE14 · Aprobar echadas desde la app (🔴).** Causa real diagnosticada: **NO era el gate** (Raykler tiene rol `logistica`; `aprobar_echada`/`rechazar_echada` aceptan "Logística o admin" — probado en dev). Era **Safari/iPhone no honraba `aspect-ratio`** en las fotos (grid `app-img ratio 1/1`) → se renderizaban verticales, desbordaban la tarjeta y tapaban el pie. Fix en `por-aprobar`: **tira horizontal de miniaturas de alto FIJO 80 px** (object-fit cover) + **visor a pantalla completa** al tocar; pie *Aprobar · Aprobar con corrección · Rechazar* (52 px) siempre visible. Decisión sigue por outbox.
