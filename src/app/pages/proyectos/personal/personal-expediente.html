@@ -204,9 +204,22 @@
     </div>
   }
 
-  <!-- BF8 — visor inline del documento/contrato firmado -->
+  <!-- BF8 — visor inline del documento/contrato firmado (PDF/imagen) -->
   @if (docVisor(); as dv) {
     <app-pdf-viewer [src]="dv.url" [nombre]="dv.nombre" (cerrado)="cerrarDoc()" />
+  }
+
+  <!-- CF7 — visor del contrato generado (HTML) con el estado de las firmas -->
+  @if (docHtmlVisor(); as dh) {
+    <div class="pe-dochtml-overlay" (click)="cerrarDocHtml()">
+      <div class="pe-dochtml" (click)="$event.stopPropagation()">
+        <div class="pe-dochtml__bar">
+          <span class="pe-dochtml__nom">{{ dh.nombre }}</span>
+          <button type="button" class="pe-dochtml__x" (click)="cerrarDocHtml()" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="pe-dochtml__body" [innerHTML]="dh.html"></div>
+      </div>
+    </div>
   }
 
   <!-- Lightbox -->

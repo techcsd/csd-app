@@ -23,6 +23,9 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
+import { PlantillasDocumentoService } from '../../../core/services/plantillas-documento.service';
+import { PlantillaDocumento, EmpresaLite } from '../../../core/models/plantilla-documento.model';
+import { construirValoresAuto } from '../../../core/utils/plantilla-merge.util';
 import {
   Cargo,
   FotoTipo,
@@ -94,6 +97,7 @@ interface RegistroDraft {
 })
 export class PersonalRegistroPage implements OnDestroy {
   private service = inject(PersonalObraService);
+  private plantillas = inject(PlantillasDocumentoService);
   private ctx = inject(UserContextService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -145,9 +149,31 @@ export class PersonalRegistroPage implements OnDestroy {
 
   // Fotos (mapa tipo → foto capturada). El padre es dueño de las object-URL.
   fotos = signal<Partial<Record<FotoTipo, CapturedPhoto>>>({});
-  // ⏸ Firma
+  // Firma
   firma = signal<Blob | null>(null);
   documentoFirmaNombre = signal(this.i18n.t('Acuerdo de registro de personal de obra'));
+  // CF7 — plantilla por defecto (contrato) + empresa, para generar el documento real.
+  plantillaContrato = signal<PlantillaDocumento | null>(null);
+  empresa = signal<EmpresaLite | null>(null);
+  /** Valores resueltos (empresa/trabajador/obra + letras) para el merge. */
+  valoresContrato = computed<Record<string, string>>(() =>
+    construirValoresAuto({
+      empresa: this.empresa(),
+      persona: {
+        nombre: this.nombre(), apellido: this.apellido(), documento_numero: this.documentoNumero(),
+        cargo: this.cargoSel()?.nombre ?? null, telefono: this.telefono(),
+        nacionalidad: this.nacionalidadLabel(),
+      },
+      obra: { nombre: this.obraNombre() },
+      hoyIso: new Date().toISOString().slice(0, 10),
+    }),
+  );
+  /** HTML del contrato ya resuelto (snapshot que se firma), o '' si no hay plantilla. */
+  contratoHtml = computed(() => {
+    const pl = this.plantillaContrato();
+    if (!pl) return '';
+    return this.plantillas.renderizar(pl.contenido_html, this.valoresContrato(), pl.campos ?? []);
+  });
 
   obraOptions = computed(() => this.obras().map((o) => ({ id: o.id, label: o.nombre })));
   cargoOptions = computed(() => this.cargos().map((c) => ({ id: c.id, label: `${c.nombre} · ${c.codigo}` })));
@@ -282,6 +308,15 @@ export class PersonalRegistroPage implements OnDestroy {
       ]);
       this.obras.set(obras);
       this.cargos.set(cargos);
+      // CF7 — plantilla por defecto de contrato + empresa (para generar el documento real).
+      // Best-effort/cacheado: si no hay red ni caché, se firma con el nombre libre de siempre.
+      void Promise.all([
+        this.plantillas.plantillaDefault('contrato').catch(() => null),
+        this.plantillas.getEmpresa().catch(() => null),
+      ]).then(([pl, emp]) => {
+        this.empresa.set(emp);
+        if (pl) { this.plantillaContrato.set(pl); this.documentoFirmaNombre.set(pl.nombre); }
+      });
       // Preselección de obra: query ?obra= o la obra activa del usuario (capataz/ingeniero).
       const preObra = this.route.snapshot.queryParamMap.get('obra') ?? this.ctx.obraActiva()?.id ?? '';
       if (preObra && obras.some((o) => o.id === preObra)) this.proyectoId.set(preObra);
@@ -481,6 +516,10 @@ export class PersonalRegistroPage implements OnDestroy {
         fotos: fotosBlobs,
         firma: FIRMA_HABILITADA ? this.firma() : null,
         firmaDocumentoNombre: FIRMA_HABILITADA ? this.documentoFirmaNombre().trim() : null,
+        // CF7 — snapshot del contrato generado con la plantilla por defecto (si la hay).
+        firmaPlantillaId: FIRMA_HABILITADA ? (this.plantillaContrato()?.id ?? null) : null,
+        firmaDocumentoHtml: FIRMA_HABILITADA ? (this.contratoHtml() || null) : null,
+        firmaValores: FIRMA_HABILITADA && this.plantillaContrato() ? this.valoresContrato() : null,
       });
       void this.autosave.discard(this.clave); // AE9 — borrador cumplido
       this.hoja.set('exito');

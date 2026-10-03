@@ -125,12 +125,19 @@
           </div>
         }
 
-        <!-- ═══════════ HOJA: FIRMA (⏸ PAUSA) ═══════════ -->
+        <!-- ═══════════ HOJA: FIRMA ═══════════ -->
         @case ('firma') {
-          <label class="field-label" for="docf">{{ 'Documento a firmar' | t }}</label>
-          <input id="docf" class="field" type="text" [ngModel]="documentoFirmaNombre()" (ngModelChange)="documentoFirmaNombre.set($event)" />
+          @if (plantillaContrato(); as pl) {
+            <!-- CF7 — contrato generado con la plantilla por defecto (motor portado). -->
+            <label class="field-label">{{ pl.nombre }}</label>
+            <p class="preg__sub">{{ 'La persona firma este documento.' | t }}</p>
+            <div class="preg__contrato" [innerHTML]="contratoHtml()"></div>
+          } @else {
+            <label class="field-label" for="docf">{{ 'Documento a firmar' | t }}</label>
+            <input id="docf" class="field" type="text" [ngModel]="documentoFirmaNombre()" (ngModelChange)="documentoFirmaNombre.set($event)" />
+            <p class="preg__sub">{{ 'La persona firma el documento de registro.' | t }}</p>
+          }
           <label class="field-label preg__mt">{{ 'Firma' | t }} <span class="preg__req">*</span></label>
-          <p class="preg__sub">{{ 'La persona firma el documento de registro.' | t }}</p>
           <app-signature-pad #firmaPad (changed)="onFirma($event)" />
         }
 

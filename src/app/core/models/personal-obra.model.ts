@@ -39,6 +39,7 @@ export interface PersonalFirma {
   documento_nombre: string;
   firma_path: string;
   documento_path?: string | null;
+  documento_html?: string | null; // CF7 — snapshot del contrato generado con la plantilla
   metodo: 'pad' | 'foto';
   firmado_at: string;
 }
