@@ -1,7 +1,7 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 03/10/2026 — PROMPT-81b · Motor de plantillas en la app — **2.40.0 EN DEV**
-`feature/cf-ronda`/`dev` + push → app-dev 2.40.0. `npm run build` + guards verdes. **NO prod** (nuevo; para OK).
+## 🟢 SESIÓN 03/10/2026 — PROMPT-81b · Motor de plantillas en la app — **2.40.0 PUBLICADA a prod** (Xaviel: "dale, promueve")
+`dev → main` (`9bfcb68`) + push → app. prod 2.40.0 · APK prod firmado/publicado (regla 18 OK) · `version_publicada()` prod = 2.40.0 (data-fix `scripts/data-fixes/2026-10-03-cf7-publicar-2.40.0.mjs`, regla 19; mínima 2.35.0). `npm run build` + guards verdes.
 - **CF7 (app) — motor de plantillas portado del padre.** Nuevos en la app: `core/utils/numero-a-letras.util.ts` + `core/utils/plantilla-merge.util.ts` (construirValoresAuto) + `core/models/plantilla-documento.model.ts` + `core/services/plantillas-documento.service.ts` (`getAll`/`plantillaDefault`/`getEmpresa` cacheados offline + `renderizar`).
 - **Firma = contrato real.** El paso de firma del registro usa la **plantilla por defecto de contrato** (si existe): renderiza el HTML con empresa+trabajador+obra y **número/fecha en letras**, lo muestra como vista previa y lo firma. Guarda `plantilla_id`+`documento_html`+`valores` en `personal_obra_firmas` (payload del outbox → handler). Sin plantilla/caché → cae al nombre libre de antes.
 - **Ver documento.** En el expediente, los contratos generados se abren en un **visor HTML** con el documento + el **estado de cada firma** (empleador/trabajador/testigos). Los firmados en papel/imagen siguen con el visor PDF/lightbox.
