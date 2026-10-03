@@ -1,5 +1,14 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 03/10/2026 — PROMPT-81b · Motor de plantillas en la app — **2.40.0 EN DEV**
+`feature/cf-ronda`/`dev` + push → app-dev 2.40.0. `npm run build` + guards verdes. **NO prod** (nuevo; para OK).
+- **CF7 (app) — motor de plantillas portado del padre.** Nuevos en la app: `core/utils/numero-a-letras.util.ts` + `core/utils/plantilla-merge.util.ts` (construirValoresAuto) + `core/models/plantilla-documento.model.ts` + `core/services/plantillas-documento.service.ts` (`getAll`/`plantillaDefault`/`getEmpresa` cacheados offline + `renderizar`).
+- **Firma = contrato real.** El paso de firma del registro usa la **plantilla por defecto de contrato** (si existe): renderiza el HTML con empresa+trabajador+obra y **número/fecha en letras**, lo muestra como vista previa y lo firma. Guarda `plantilla_id`+`documento_html`+`valores` en `personal_obra_firmas` (payload del outbox → handler). Sin plantilla/caché → cae al nombre libre de antes.
+- **Ver documento.** En el expediente, los contratos generados se abren en un **visor HTML** con el documento + el **estado de cada firma** (empleador/trabajador/testigos). Los firmados en papel/imagen siguen con el visor PDF/lightbox.
+- Bump **2.40.0** (4 sitios + CAMBIOS_CURADOS). Baseline de `verify-tokens` regenerado (3 superficies blancas de documento, como `.pob-docview__body` de la web).
+- **Pendiente Xaviel:** probar en app-dev 2.40.0 (registrar → firma muestra el contrato real; firmar empleador/testigo; ver documento con estados). OK → prod.
+
+
 ## 🟢 SESIÓN 03/10/2026 — PROMPT-81 · Ronda **CF** — **2.39.0 PUBLICADA a prod** (Xaviel: "dale, promueve")
 `dev → main` (`8687685`) + push → Vercel **app.** prod 2.39.0 · **APK prod firmado + publicado** (bucket prod, regla 18 OK: 2.39.0 ya estaba en dev) · **`version_publicada()` prod = 2.39.0** (data-fix versionado `scripts/data-fixes/2026-10-03-cf-publicar-2.39.0.mjs`, regla 19; mínima sigue 2.35.0). `npm run build` + guards verdes. Backend del padre (PROMPT-80) vivo en prod+dev.
 - **Pendiente físico Xaviel:** los choferes/usuarios actualizan a 2.39.0; probar CF4 (recibos reales), CF5, CF1 (firmas empleador/testigo) en el teléfono.

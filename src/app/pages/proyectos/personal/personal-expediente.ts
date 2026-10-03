@@ -323,7 +323,23 @@ export class PersonalExpedientePage implements OnInit {
   // ── BF8 — ver el documento/contrato firmado (PDF inline o imagen) ────────────
   /** El documento firmado congelado (documento_path, snapshot AZ1); si no lo hay,
    *  cae a la firma sola (firma_path). PDF → visor inline; imagen → lightbox. */
+  // CF7 — visor del documento HTML (snapshot del contrato) con el estado de las firmas.
+  docHtmlVisor = signal<{ nombre: string; html: string } | null>(null);
+  verDocumentoHtml(f: PersonalFirma): void {
+    const lineas = this.lineasDe(f.id);
+    const filas = (lineas.length ? lineas : [{ rol: 'trabajador', estado: 'firmado', firmante_nombre: null } as FirmaLinea])
+      .map((l) => {
+        const nom = this.esTestigo(l.rol) && l.firmante_nombre ? ` — ${l.firmante_nombre}` : '';
+        return `<tr><td style="padding:4px 10px;font-weight:600;">${this.rolLabel[l.rol]}${nom}</td><td style="padding:4px 10px;color:#555;">${this.estadoLineaTxt(l)}</td></tr>`;
+      }).join('');
+    const bloque = `<div style="margin-top:24px;border-top:1px solid #333;padding-top:8px;"><strong>Firmas</strong><table style="width:100%;border-collapse:collapse;font-size:13px;">${filas}</table></div>`;
+    this.docHtmlVisor.set({ nombre: f.documento_nombre, html: (f.documento_html ?? '') + bloque });
+  }
+  cerrarDocHtml(): void { this.docHtmlVisor.set(null); }
+
   async abrirDocumento(f: PersonalFirma): Promise<void> {
+    // CF7 — si es un contrato generado (tiene HTML), se muestra el documento + firmas.
+    if (f.documento_html) { this.verDocumentoHtml(f); return; }
     if (this.abriendoDoc()) return;
     const path = f.documento_path || f.firma_path;
     if (!path) {

@@ -65,6 +65,10 @@ export interface RegistroCaptura {
   /** ⏸ Firma del documento (paso PAUSA): PNG del pad + nombre del documento. */
   firma?: Blob | null;
   firmaDocumentoNombre?: string | null;
+  // CF7 — snapshot del contrato generado con la plantilla por defecto.
+  firmaPlantillaId?: string | null;
+  firmaDocumentoHtml?: string | null;
+  firmaValores?: Record<string, string> | null;
 }
 
 /**
@@ -306,6 +310,10 @@ export class PersonalObraService {
         notas: input.notas,
         registrado_por: this.ctx.profile()?.id ?? null,
         firma_documento_nombre: input.firmaDocumentoNombre ?? null,
+        // CF7 — snapshot del contrato (plantilla por defecto renderizada).
+        firma_plantilla_id: input.firmaPlantillaId ?? null,
+        firma_documento_html: input.firmaDocumentoHtml ?? null,
+        firma_valores: input.firmaValores ?? null,
       },
       fotos,
       resumen: { tipo: 'personal_registro', nombre: `${input.nombre} ${input.apellido ?? ''}`.trim(), capturado_en },
@@ -410,6 +418,10 @@ export class PersonalObraService {
             documento_nombre: (payload['firma_documento_nombre'] as string) ?? 'Documento firmado',
             firma_path: photoPaths['firma'],
             metodo: 'pad',
+            // CF7 — snapshot del contrato generado con la plantilla (si la hubo).
+            plantilla_id: (payload['firma_plantilla_id'] as string) ?? null,
+            documento_html: (payload['firma_documento_html'] as string) ?? null,
+            valores: (payload['firma_valores'] as Record<string, unknown>) ?? null,
           }).select('id').single();
           if (error) throwSyncError(error);
           // CF1 — siembra las líneas de firma (empleador + 2 testigos) para que Legal las

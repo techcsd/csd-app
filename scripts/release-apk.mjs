@@ -39,10 +39,10 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-03';
 
-const TITULO = 'Lectura automática del recibo de combustible y solicitud de movimiento con almacenes y catálogo';
+const TITULO = 'Contrato real al firmar desde el teléfono (plantilla de Legal) y firmas del empleador y testigos';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Combustible', d: 'Al tomar la foto del recibo, el teléfono lee solo el monto, los galones, la estación y más, y rellena los campos para que solo tengas que confirmar. Si no coincide con lo que escribes, te avisa. Funciona con red; sin red registras a mano como siempre.' },
-  { t: 'mejora', m: 'Transporte', d: 'Solicitud de movimiento: ahora eliges el Almacén Central (o cualquier almacén/obra) como origen o destino, y agregas los artículos del catálogo con cantidad y unidad (o algo "no catalogado"), en vez de un texto suelto. Todo funciona offline.' },
+  { t: 'nuevo', m: 'Personal de obra', d: 'Al registrar a un trabajador, el documento que firma ahora es el contrato real de Legal (la plantilla por defecto), con los datos de la empresa, el trabajador y la obra ya puestos, y los montos y la fecha en letras. Funciona también sin red (usa la última plantilla guardada).' },
+  { t: 'nuevo', m: 'Personal de obra', d: 'En el expediente puedes registrar la firma del empleador y de los testigos (ahora con el dedo, o marcarla como firmada en papel con una foto o PDF) y ver el documento con el estado de cada firma.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

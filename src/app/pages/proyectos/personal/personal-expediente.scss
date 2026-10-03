@@ -341,3 +341,11 @@
 .pe-firmar__hint { color: var(--text-muted, #6b7280); font-size: 14px; margin: 0; }
 .pe-firmar__err { color: var(--error, #dc2626); font-size: 14px; margin: 0; }
 .pe-firmar__acc { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+
+/* CF7 — visor del contrato generado (HTML) */
+.pe-dochtml-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: 12px; }
+.pe-dochtml { background: #fff; color: #111; width: 100%; max-width: 640px; max-height: 90vh; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+.pe-dochtml__bar { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #e5e7eb; }
+.pe-dochtml__nom { font-weight: 700; flex: 1; }
+.pe-dochtml__x { border: none; background: none; font-size: 18px; cursor: pointer; color: #6b7280; }
+.pe-dochtml__body { overflow-y: auto; padding: 18px; font-size: 13px; line-height: 1.5; }
