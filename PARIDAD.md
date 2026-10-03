@@ -130,3 +130,25 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
 - **CE10 · Avisos de requisición a miembros de la obra: SERVIDOR (padre).** El emisor usa
   `sgc.es_miembro_obra()` (verificado vivo en dev); la app solo **recibe** la notificación.
   Sin cambio de cliente. — *Owned by SGC.*
+
+## Ronda CF (02-03/10/2026) — app 2.39.0
+- **CF4 · Lectura automática del recibo (nuevo).** Al tomar/subir la foto del recibo (y
+  tablero), con red la app llama a la edge `leer-recibo` (visión, misma API key que Compa),
+  comprime a ~1600 px y rellena monto/galones/producto/estación/Nº recibo/km/tarjeta con
+  confianza ≥ 0.9 (chip *Leído del recibo*); el chofer confirma/corrige, nunca se envía
+  solo. Banda *No coincide con el recibo* si lo confirmado difiere > 2 %. *Volver a leer*.
+  Sin red no se lee (la foto queda en el borrador). `CombustibleService.leerRecibo()`.
+- **CF5 · Solicitud de movimiento con almacenes y catálogo (mejora).** Origen/destino con
+  selector de **almacén (Central primero)** u obra, y **renglones del catálogo cacheado**
+  (offline) con cantidad y unidad + *no catalogado*. El outbox llama a
+  `crear_solicitud_movimiento_v2` (p_items + bodega/proyecto; compatible con payloads
+  viejos del outbox). — *Contrato del padre (PROMPT-80), vivo en dev+prod.*
+- **CF2 · Lista de personal.** Ya cumplía desde CE (fecha+hora legibles en una línea con
+  `formatFechaHumana`, pendientes como chips con filtro rápido). Sin cambios. — *Paridad OK.*
+- **CF3 / CF6 · Web-only.** Modales compartidos y aprobaciones legales viven en el padre. — *Owned by SGC.*
+- **CF1 / CF7 · Firmas empleador/testigos + plantilla Word: BLOQUEADO en la app.** El paso
+  de firma de documentos de la app está **en PAUSA por diseño** (`FIRMA_HABILITADA=false`,
+  Xaviel lo define). Todo el firmado legal (trabajador/empleador/testigos, plantillas de
+  Sonia) vive y está **en prod en la web**. Cuando Xaviel active la firma en la app, se
+  porta el modelo de líneas por rol (RPCs `sembrar_lineas_firma`/`firmar_linea_documento`
+  ya vivos en prod). — *Diferido por el flag existente.*

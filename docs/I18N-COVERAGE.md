@@ -121,7 +121,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 0% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 119 | 2 | 93% | 0% |  |
+| pages/transporte/combustible | 124 | 2 | 89% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 56 | 1 | 98% | 4% |  |
 | pages/transporte/conduce-externo | 76 | 1 | 83% | 0% |  |
@@ -159,7 +159,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/rutas | 63 | 0 | 100% | 0% |  |
 | pages/transporte/rutas-activas | 23 | 0 | 100% | 0% |  |
 | pages/transporte/seguimiento | 12 | 0 | 100% | 0% |  |
-| pages/transporte/solicitud-movimiento | 22 | 0 | 100% | 0% |  |
+| pages/transporte/solicitud-movimiento | 33 | 0 | 70% | 0% |  |
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
 | pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |
 | pages/transporte/vehiculos | 63 | 2 | 97% | 0% |  |

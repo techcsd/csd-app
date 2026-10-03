@@ -37,18 +37,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-01';
+const RELEASED_AT = '2026-10-03';
 
-const TITULO = 'Aprobar echadas desde el teléfono, personal de obra más completo y carnet imprimible';
+const TITULO = 'Lectura automática del recibo de combustible y solicitud de movimiento con almacenes y catálogo';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Combustible', d: 'Aprobar echadas desde el teléfono: las fotos de "Por aprobar" tapaban los botones Aprobar / Aprobar con corrección / Rechazar. Ahora van en una tira de miniaturas (toca para ampliar) y el pie de acciones siempre se ve.' },
-  { t: 'mejora', m: 'Combustible', d: 'La alerta de rendimiento usa ahora la especificación de cada vehículo y te dice de dónde viene el rango (del vehículo, de su clase o global). Los equipos por horas se miden en h/gal.' },
-  { t: 'arreglo', m: 'Personal de obra', d: 'La lista y el expediente muestran quién registró a cada trabajador, para cualquier rol (antes salía "—" para Legal).' },
-  { t: 'mejora', m: 'Personal de obra', d: 'Registrar sin foto ya no es un muro: puedes guardar y añadir las fotos después desde el expediente. Se avisa qué foto falta.' },
-  { t: 'arreglo', m: 'Personal de obra', d: 'Fotos que salían en negro (HEIC del iPhone o PNG transparente) ahora se procesan con fondo blanco y validación — nunca se guarda un cuadro negro.' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'Aviso al registrar si ya existe un trabajador con el mismo documento (evita duplicados).' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'Carnet con logo blanco (legible) y botón para Compartir / Imprimir el carnet (frente y dorso, tamaño real) desde el teléfono.' },
-  { t: 'arreglo', m: 'Personal de obra', d: 'La fecha y la hora en las filas se ven legibles (antes salía el texto crudo).' },
+  { t: 'nuevo', m: 'Combustible', d: 'Al tomar la foto del recibo, el teléfono lee solo el monto, los galones, la estación y más, y rellena los campos para que solo tengas que confirmar. Si no coincide con lo que escribes, te avisa. Funciona con red; sin red registras a mano como siempre.' },
+  { t: 'mejora', m: 'Transporte', d: 'Solicitud de movimiento: ahora eliges el Almacén Central (o cualquier almacén/obra) como origen o destino, y agregas los artículos del catálogo con cantidad y unidad (o algo "no catalogado"), en vez de un texto suelto. Todo funciona offline.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

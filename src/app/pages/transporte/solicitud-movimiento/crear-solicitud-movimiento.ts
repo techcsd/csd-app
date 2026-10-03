@@ -11,8 +11,10 @@ import {
   PrioridadSolicitud,
   TipoCarga,
   DireccionMovimiento,
+  MovimientoItem,
 } from '../../../core/services/solicitud-movimiento.service';
 import { InventarioService } from '../../../core/services/inventario.service';
+import { ArticuloCat } from '../../../core/models/inventario.model';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -27,6 +29,14 @@ const DIRECCIONES: Array<{ key: DireccionMovimiento; label: string }> = [
   { key: 'a_obra', label: 'Llevar a la obra' },
   { key: 'de_obra', label: 'Sacar de la obra' },
 ];
+interface RenglonUI {
+  articuloId: string;       // uuid o '' (no catalogado)
+  descripcion: string;
+  cantidad: number | null;
+  unidad: string;
+  noCat: boolean;           // modo "no está en el catálogo"
+}
+
 const PRIORIDADES: Array<{ key: PrioridadSolicitud; label: string; tone: 'default' | 'success' | 'warning' | 'error' }> = [
   { key: 'baja', label: 'Baja', tone: 'success' },
   { key: 'media', label: 'Media', tone: 'default' },
@@ -62,13 +72,53 @@ export class CrearSolicitudMovimientoPage {
   obraOpts = signal<SelectOption[]>([]);
   proyectoId = signal('');
   direccion = signal<DireccionMovimiento>('a_obra');
+  // CF5 — el "otro extremo" como ALMACÉN (Central primero) o, si no, texto libre.
+  bodegaOpts = signal<SelectOption[]>([]);
+  otroBodegaId = signal('');
+  otroEsTexto = signal(false);
   otroPunto = signal('');
-  queSeMueve = signal('');
+  // CF5 — renglones del catálogo (cacheado offline) o "no catalogado".
+  articulos = signal<ArticuloCat[]>([]);
+  renglones = signal<RenglonUI[]>([{ articuloId: '', descripcion: '', cantidad: null, unidad: '', noCat: false }]);
   tipoCarga = signal<TipoCarga>('materiales');
   prioridad = signal<PrioridadSolicitud>('media');
   fechaReq = signal('');
   notas = signal('');
   enviando = signal(false);
+
+  // Opciones del picker de artículos (nombre + código).
+  articuloOpts = computed<SelectOption[]>(() =>
+    this.articulos().map((a) => ({ id: a.id, label: a.codigo ? `${a.nombre} (${a.codigo})` : a.nombre })),
+  );
+
+  // Renglones válidos (con artículo o con descripción escrita).
+  renglonesValidos = computed(() =>
+    this.renglones().filter((r) => r.articuloId || r.descripcion.trim()),
+  );
+
+  agregarRenglon(): void {
+    this.renglones.update((r) => [...r, { articuloId: '', descripcion: '', cantidad: null, unidad: '', noCat: false }]);
+  }
+  quitarRenglon(i: number): void {
+    this.renglones.update((r) => (r.length > 1 ? r.filter((_, idx) => idx !== i) : r));
+  }
+  pickArticulo(i: number, id: string): void {
+    const art = this.articulos().find((a) => a.id === id);
+    this.renglones.update((r) => r.map((it, idx) => idx === i
+      ? { ...it, articuloId: id, descripcion: art?.nombre ?? it.descripcion, unidad: art?.unidad ?? it.unidad }
+      : it));
+  }
+  toggleNoCat(i: number): void {
+    this.renglones.update((r) => r.map((it, idx) => idx === i
+      ? { ...it, noCat: !it.noCat, articuloId: '' } : it));
+  }
+  setRenglon(i: number, campo: 'descripcion' | 'unidad', v: string): void {
+    this.renglones.update((r) => r.map((it, idx) => idx === i ? { ...it, [campo]: v } : it));
+  }
+  setCantidad(i: number, v: string): void {
+    const n = v === '' ? null : Number(v);
+    this.renglones.update((r) => r.map((it, idx) => idx === i ? { ...it, cantidad: Number.isFinite(n as number) ? n : null } : it));
+  }
 
   /** Etiqueta del "otro extremo" según la dirección (para el placeholder/label). */
   otroLabel = computed(() =>
@@ -76,31 +126,55 @@ export class CrearSolicitudMovimientoPage {
   );
 
   puedeEnviar = computed(
-    () => !!this.proyectoId() && this.queSeMueve().trim().length > 0 && !this.enviando(),
+    () => !!this.proyectoId() && this.renglonesValidos().length > 0 && !this.enviando(),
   );
 
   constructor() {
-    void this.cargarObras();
+    void this.cargarCatalogos();
   }
 
-  private async cargarObras(): Promise<void> {
+  private async cargarCatalogos(): Promise<void> {
     try {
       const obras = await this.inventario.getObrasDestino();
       this.obraOpts.set(obras.map((o) => ({ id: o.id, label: o.nombre })));
-    } catch {
-      /* sin red: el selector queda vacío; el ingeniero puede reintentar */
-    }
+    } catch { /* sin red: el selector queda vacío; reintentar luego */ }
+    try {
+      // CF5 — almacenes con el Central primero (luego por nombre).
+      const bodegas = await this.inventario.getBodegas();
+      const ord = [...bodegas].sort((a, b) =>
+        (b.es_central ? 1 : 0) - (a.es_central ? 1 : 0) || a.nombre.localeCompare(b.nombre));
+      this.bodegaOpts.set(ord.map((b) => ({ id: b.id, label: (b.es_central ? 'Central — ' : '') + b.nombre })));
+    } catch { /* offline: sin almacenes; usa texto libre */ }
+    try {
+      this.articulos.set(await this.inventario.getArticulos());
+    } catch { /* offline sin caché: renglón "no catalogado" por texto */ }
+  }
+
+  /** CF5 — resumen legible de los renglones (fallback de que_se_mueve). */
+  private resumenItems(items: MovimientoItem[]): string {
+    return items
+      .map((r) => [r.cantidad ?? '', r.unidad ?? '', r.descripcion].filter(Boolean).join(' ').trim())
+      .filter(Boolean)
+      .join(', ');
   }
 
   async enviar(): Promise<void> {
     if (!this.puedeEnviar()) return;
     this.enviando.set(true);
     try {
+      const items: MovimientoItem[] = this.renglonesValidos().map((r) => ({
+        articulo_id: r.noCat ? null : (r.articuloId || null),
+        descripcion: r.descripcion.trim(),
+        cantidad: r.cantidad,
+        unidad: r.unidad.trim() || null,
+      }));
       await this.solicitudes.crear({
         proyectoId: this.proyectoId(),
         direccion: this.direccion(),
-        otroPunto: this.otroPunto().trim(),
-        queSeMueve: this.queSeMueve().trim(),
+        otroPunto: this.otroEsTexto() ? this.otroPunto().trim() : '',
+        otroBodegaId: this.otroEsTexto() ? null : (this.otroBodegaId() || null),
+        items,
+        queSeMueve: this.resumenItems(items),
         tipoCarga: this.tipoCarga(),
         prioridad: this.prioridad(),
         fechaRequerimiento: this.fechaReq() || null,

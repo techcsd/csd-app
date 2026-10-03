@@ -364,3 +364,17 @@ app-option-button {
   letter-spacing: 0.03em;
   vertical-align: middle;
 }
+
+/* CF4 — lectura automática del recibo */
+.comb__lectura {
+  margin: 8px 0; padding: 10px 12px; border-radius: 12px; font-size: 14px;
+  background: var(--surface-2, #f0f1f4); border: 1px solid var(--border, #d9dce1);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.comb__lectura--ok { border-color: var(--brand, #2e75b6); }
+.comb__lectura--muted { color: var(--text-muted, #6b7280); }
+.comb__lectura--warn { border-color: var(--warning, #ffb300); background: rgba(255,179,0,.08); }
+.comb__lectura-btn {
+  flex: 0 0 auto; border: none; background: none; cursor: pointer;
+  color: var(--brand, #2e75b6); font-weight: 700; font-size: 14px; padding: 4px 6px;
+}
