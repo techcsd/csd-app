@@ -1,5 +1,20 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 03/10/2026 — PROMPT-81 · Ronda **CF** — **2.39.0 EN DEV** (pendiente OK → prod)
+`feature/cf-ronda` → `dev` (`fe83ee0`) + push → Vercel construye **app-dev** 2.39.0. `npm run build` + guards verdes. **NADA en prod** (regla 18: para tras OK de Xaviel). Backend lo consumió del padre (PROMPT-80, vivo en dev+prod).
+
+### En dev
+- **CF4 🔴 — lectura automática del recibo.** `CombustibleService.leerRecibo()` → edge `leer-recibo` (visión). En `combustible.ts`: al subir la foto del recibo (y tablero), con red, lee en segundo plano (imagen ~1600 px), rellena galones/monto/producto/estación/Nº recibo/km/tarjeta con confianza ≥ 0.9 (chip *Leído del recibo*), el chofer confirma; banda *No coincide con el recibo* (>2 %); *Volver a leer*. Sin red: no lee (foto en el borrador). No bloquea; si falla, se sigue a mano.
+- **CF5 — solicitud de movimiento con almacenes + catálogo.** `crear-solicitud-movimiento`: selector de almacén (Central primero) u obra para el otro extremo + renglones del catálogo cacheado (offline) con cantidad/unidad + *no catalogado*. `SolicitudMovimientoService.crear` lleva `items`/bodega; el outbox llama `crear_solicitud_movimiento_v2` (compatible con payloads viejos). Bodegas/artículos vía `InventarioService.getBodegas/getArticulos` (caché offline).
+- **CF2** — la lista ya cumplía desde CE (fecha+hora en una línea, pendientes como chips). Sin cambios.
+- **Versión 2.39.0** en 4 sitios (environment.{prod,dev,ts}, build.gradle) + `CAMBIOS_CURADOS`/`TITULO`/`RELEASED_AT` en release-apk.mjs. PARIDAD.md actualizado.
+
+### Bloqueado / diferido
+- **CF1/CF7 (firma empleador/testigos + plantilla Word en la app):** el paso de firma de la app está **en PAUSA por diseño** (`FIRMA_HABILITADA=false`, Xaviel lo define). Todo el firmado legal está **en prod en la web**. Cuando se active la firma en la app, portar el modelo de líneas por rol (RPCs `sembrar_lineas_firma`/`firmar_linea_documento`, ya vivos en prod).
+
+### Pendiente — Xaviel
+- Probar en **app-dev** 2.39.0 (y APK dev si se generó): CF4 con 5 recibos reales de Total (incl. L542136), CF5 crear una solicitud con renglones. **OK → prod:** `release-apk --env prod` + merge `dev→main`, matriz filas 118-124 (mitad app) → ✅.
+
 ## 🟢 SESIÓN 01-02/10/2026 — PROMPT-79 · Ronda **CE** (IDs CE) — **2.38.0 PUBLICADA a prod**
 
 **TL;DR:** ronda CE, mitad app (filas 102-117). Consume contratos de PROMPT-78 (verificados vivos en prod). Salió a dev → **Xaviel dio OK** → **RELEASE + PUBLICADA 2.38.0**: `dev→main` (`061243d`) → Vercel PWA prod + APK prod 2.38.0 firmado/publicado/registrado (**regla 18 OK**) + **PUBLICADA** vía **data-fix versionado** (`scripts/data-fixes/2026-10-02-ce-publicar-2.38.0.mjs`, regla 19 — no desde scratchpad). `version_publicada()` = **2.38.0**. **Mínima = 2.35.0** → update **NO forzado**. ✅ Sesión cerrada.
