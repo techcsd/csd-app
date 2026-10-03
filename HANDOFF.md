@@ -1,7 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 03/10/2026 — PROMPT-81 · Ronda **CF** — **2.39.0 EN DEV** (pendiente OK → prod)
-`feature/cf-ronda` → `dev` (`fe83ee0`) + push → Vercel construye **app-dev** 2.39.0. `npm run build` + guards verdes. **NADA en prod** (regla 18: para tras OK de Xaviel). Backend lo consumió del padre (PROMPT-80, vivo en dev+prod).
+## 🟢 SESIÓN 03/10/2026 — PROMPT-81 · Ronda **CF** — **2.39.0 PUBLICADA a prod** (Xaviel: "dale, promueve")
+`dev → main` (`8687685`) + push → Vercel **app.** prod 2.39.0 · **APK prod firmado + publicado** (bucket prod, regla 18 OK: 2.39.0 ya estaba en dev) · **`version_publicada()` prod = 2.39.0** (data-fix versionado `scripts/data-fixes/2026-10-03-cf-publicar-2.39.0.mjs`, regla 19; mínima sigue 2.35.0). `npm run build` + guards verdes. Backend del padre (PROMPT-80) vivo en prod+dev.
+- **Pendiente físico Xaviel:** los choferes/usuarios actualizan a 2.39.0; probar CF4 (recibos reales), CF5, CF1 (firmas empleador/testigo) en el teléfono.
 
 ### En dev
 - **CF4 🔴 — lectura automática del recibo.** `CombustibleService.leerRecibo()` → edge `leer-recibo` (visión). En `combustible.ts`: al subir la foto del recibo (y tablero), con red, lee en segundo plano (imagen ~1600 px), rellena galones/monto/producto/estación/Nº recibo/km/tarjeta con confianza ≥ 0.9 (chip *Leído del recibo*), el chofer confirma; banda *No coincide con el recibo* (>2 %); *Volver a leer*. Sin red: no lee (foto en el borrador). No bloquea; si falla, se sigue a mano.
