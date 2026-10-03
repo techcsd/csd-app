@@ -50,3 +50,21 @@
   resize: vertical;
   min-height: 72px;
 }
+
+/* CF5 — renglones del catálogo + selector de almacén */
+.csolm__renglon {
+  border: 1px solid var(--border, #d9dce1); border-radius: 12px; padding: 10px; margin-bottom: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.csolm__ren-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.csolm__ren-cant { width: 80px; }
+.csolm__ren-und { width: 96px; }
+.csolm__ren-nocat, .csolm__otro-toggle, .csolm__add {
+  border: none; background: none; cursor: pointer; padding: 6px 2px;
+  color: var(--brand, #2e75b6); font-weight: 700; font-size: 14px;
+}
+.csolm__ren-del {
+  margin-left: auto; border: none; background: none; cursor: pointer;
+  font-size: 18px; color: var(--text-muted, #6b7280); padding: 4px 8px;
+}
+.csolm__add { display: block; margin: 2px 0 8px; }

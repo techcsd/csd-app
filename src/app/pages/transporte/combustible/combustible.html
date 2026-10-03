@@ -323,6 +323,11 @@
           placeholder="0"
         />
 
+        <!-- CF4 — bandera si lo confirmado difiere > 2% de lo leído del recibo -->
+        @if (discrepanciaRecibo()) {
+          <p class="comb__lectura comb__lectura--warn">{{ discrepanciaRecibo() }}</p>
+        }
+
         <!-- AW3 — valor INTERPRETADO en vivo: el chofer ve exactamente lo que se
              guardará antes de guardar (a prueba de dedazos). -->
         @if (galones() != null) {
@@ -383,6 +388,21 @@
             />
           }
         </div>
+
+        <!-- CF4 — lectura automática del recibo -->
+        @if (leyendoRecibo()) {
+          <p class="comb__lectura">{{ 'Leyendo el recibo…' | t }}</p>
+        } @else if (leidoCampos().length) {
+          <div class="comb__lectura comb__lectura--ok">
+            <span>{{ 'Leído del recibo:' | t }} {{ leidoCampos().join(' · ') }}. {{ 'Revisa y confirma.' | t }}</span>
+            <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()">{{ 'Volver a leer' | t }}</button>
+          </div>
+        } @else if (lecturaError() && fotoRecibo()) {
+          <div class="comb__lectura comb__lectura--muted">
+            <span>{{ lecturaError() }} {{ 'Escríbelo a mano.' | t }}</span>
+            <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()">{{ 'Volver a leer' | t }}</button>
+          </div>
+        }
       }
 
       <!-- Paso 4: producto + Regular/Premium + tarjeta/titular/obra -->
