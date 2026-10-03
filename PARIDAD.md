@@ -146,9 +146,14 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
 - **CF2 · Lista de personal.** Ya cumplía desde CE (fecha+hora legibles en una línea con
   `formatFechaHumana`, pendientes como chips con filtro rápido). Sin cambios. — *Paridad OK.*
 - **CF3 / CF6 · Web-only.** Modales compartidos y aprobaciones legales viven en el padre. — *Owned by SGC.*
-- **CF1 / CF7 · Firmas empleador/testigos + plantilla Word: BLOQUEADO en la app.** El paso
-  de firma de documentos de la app está **en PAUSA por diseño** (`FIRMA_HABILITADA=false`,
-  Xaviel lo define). Todo el firmado legal (trabajador/empleador/testigos, plantillas de
-  Sonia) vive y está **en prod en la web**. Cuando Xaviel active la firma en la app, se
-  porta el modelo de líneas por rol (RPCs `sembrar_lineas_firma`/`firmar_linea_documento`
-  ya vivos en prod). — *Diferido por el flag existente.*
+- **CF1 · Firma empleador/testigos ACTIVADA en la app (nuevo).** Xaviel activó la firma
+  (`FIRMA_HABILITADA=true`). El trabajador firma en el wizard (outbox); al crear
+  `personal_obra_firmas` el handler **siembra** las líneas (empleador + 2 testigos,
+  `sembrar_lineas_firma`). En el **expediente**, por documento se ven las líneas por rol
+  con su estado y, para legal/gestión, **Registrar firma** (*ahora* pad / *en papel* foto o
+  PDF; testigos con nombre+cédula) vía `firmar_linea_documento`, y **Subir documento
+  firmado** (`camera.pickDocument`). Online. — *Paridad con la web (prod).*
+- **CF7 · Plantilla por defecto en la app = diferido.** La app firma por **nombre libre**;
+  no renderiza la plantilla Word. Los contratos formales de Sonia se generan/renderizan en
+  la **web** (prod). Follow-up: portar `plantillas-documento.service` (getAll+renderizar)
+  a la app si se quiere generar el contrato desde el teléfono. — *Diferido.*

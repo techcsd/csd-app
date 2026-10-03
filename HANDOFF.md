@@ -9,8 +9,11 @@
 - **CF2** — la lista ya cumplía desde CE (fecha+hora en una línea, pendientes como chips). Sin cambios.
 - **Versión 2.39.0** en 4 sitios (environment.{prod,dev,ts}, build.gradle) + `CAMBIOS_CURADOS`/`TITULO`/`RELEASED_AT` en release-apk.mjs. PARIDAD.md actualizado.
 
-### Bloqueado / diferido
-- **CF1/CF7 (firma empleador/testigos + plantilla Word en la app):** el paso de firma de la app está **en PAUSA por diseño** (`FIRMA_HABILITADA=false`, Xaviel lo define). Todo el firmado legal está **en prod en la web**. Cuando se active la firma en la app, portar el modelo de líneas por rol (RPCs `sembrar_lineas_firma`/`firmar_linea_documento`, ya vivos en prod).
+### CF1/CF7 — firma ACTIVADA en la app (Xaviel: "dale")
+- `FIRMA_HABILITADA=true` (personal-registro.ts): el paso de firma del **trabajador** vuelve al wizard (ya subía por outbox).
+- Al crear `personal_obra_firmas`, el handler **siembra las líneas** empleador + 2 testigos (`sembrar_lineas_firma`).
+- **Expediente:** cada documento muestra sus líneas por rol con estado; para legal/gestión, panel **Registrar firma** (*Firmar ahora* con pad / *Firmado en papel* con foto o PDF; testigos con nombre+cédula) vía `firmar_linea_documento`. **Subir documento firmado** (`camera.pickDocument` → `subirDocumentoFirmado`). Online (la firma de legal se hace con red; la firma del trabajador sigue offline por outbox).
+- **CF7 plantilla por defecto = diferido:** la app firma por **nombre libre** (no renderiza la plantilla Word). Los contratos formales de Sonia se generan/renderizan en la **web** (en prod). Portar `getAll`+`renderizar` de plantillas a la app es el follow-up si se quiere generar el contrato desde el teléfono.
 
 ### Pendiente — Xaviel
 - Probar en **app-dev** 2.39.0 (y APK dev si se generó): CF4 con 5 recibos reales de Total (incl. L542136), CF5 crear una solicitud con renglones. **OK → prod:** `release-apk --env prod` + merge `dev→main`, matriz filas 118-124 (mitad app) → ✅.
