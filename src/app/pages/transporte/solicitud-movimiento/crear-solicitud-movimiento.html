@@ -17,13 +17,41 @@
     />
 
     <label class="field-label">{{ '¿Qué se mueve?' | t }} <span class="csolm__req">*</span></label>
-    <input
-      class="field"
-      type="text"
-      [ngModel]="queSeMueve()"
-      (ngModelChange)="queSeMueve.set($event)"
-      [placeholder]="'Ej: 20 sacos de cemento, andamios…' | t"
-    />
+    @for (r of renglones(); track $index) {
+      <div class="csolm__renglon">
+        @if (r.noCat) {
+          <input
+            class="field csolm__ren-desc"
+            type="text"
+            [ngModel]="r.descripcion"
+            (ngModelChange)="setRenglon($index, 'descripcion', $event)"
+            [placeholder]="'Describe el artículo (no catalogado)' | t"
+          />
+        } @else {
+          <app-collapsible-select
+            [label]="'Artículo' | t"
+            [options]="articuloOpts()"
+            [selectedId]="r.articuloId"
+            [placeholder]="'Elige del catálogo' | t"
+            [searchable]="true"
+            (picked)="pickArticulo($index, $event)"
+          />
+        }
+        <div class="csolm__ren-row">
+          <input class="field csolm__ren-cant" type="number" inputmode="decimal" min="0"
+            [ngModel]="r.cantidad" (ngModelChange)="setCantidad($index, $event)" [placeholder]="'Cant.' | t" />
+          <input class="field csolm__ren-und" type="text"
+            [ngModel]="r.unidad" (ngModelChange)="setRenglon($index, 'unidad', $event)" [placeholder]="'Unidad' | t" />
+          <button type="button" class="csolm__ren-nocat" (click)="toggleNoCat($index)">
+            {{ r.noCat ? ('Del catálogo' | t) : ('No está en el catálogo' | t) }}
+          </button>
+          @if (renglones().length > 1) {
+            <button type="button" class="csolm__ren-del" (click)="quitarRenglon($index)" aria-label="Quitar">✕</button>
+          }
+        </div>
+      </div>
+    }
+    <button type="button" class="csolm__add" (click)="agregarRenglon()">+ {{ 'Agregar artículo' | t }}</button>
 
     <label class="field-label">{{ 'Dirección del movimiento' | t }}</label>
     <div class="csolm__opts">
@@ -33,13 +61,30 @@
     </div>
 
     <label class="field-label">{{ otroLabel() }}</label>
-    <input
-      class="field"
-      type="text"
-      [ngModel]="otroPunto()"
-      (ngModelChange)="otroPunto.set($event)"
-      [placeholder]="'Ej: Bodega Central, proveedor Ferretería X…' | t"
-    />
+    @if (!otroEsTexto()) {
+      <app-collapsible-select
+        [label]="'Almacén' | t"
+        [options]="bodegaOpts()"
+        [selectedId]="otroBodegaId()"
+        [placeholder]="'Elige el almacén (Central primero)' | t"
+        [searchable]="true"
+        (picked)="otroBodegaId.set($event)"
+      />
+      <button type="button" class="csolm__otro-toggle" (click)="otroEsTexto.set(true)">
+        {{ 'Es otro lugar (proveedor, etc.)' | t }}
+      </button>
+    } @else {
+      <input
+        class="field"
+        type="text"
+        [ngModel]="otroPunto()"
+        (ngModelChange)="otroPunto.set($event)"
+        [placeholder]="'Ej: proveedor Ferretería X…' | t"
+      />
+      <button type="button" class="csolm__otro-toggle" (click)="otroEsTexto.set(false)">
+        {{ 'Elegir un almacén' | t }}
+      </button>
+    }
 
     <label class="field-label">{{ 'Tipo de carga' | t }}</label>
     <div class="csolm__opts">

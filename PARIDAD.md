@@ -130,3 +130,30 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
 - **CE10 · Avisos de requisición a miembros de la obra: SERVIDOR (padre).** El emisor usa
   `sgc.es_miembro_obra()` (verificado vivo en dev); la app solo **recibe** la notificación.
   Sin cambio de cliente. — *Owned by SGC.*
+
+## Ronda CF (02-03/10/2026) — app 2.39.0
+- **CF4 · Lectura automática del recibo (nuevo).** Al tomar/subir la foto del recibo (y
+  tablero), con red la app llama a la edge `leer-recibo` (visión, misma API key que Compa),
+  comprime a ~1600 px y rellena monto/galones/producto/estación/Nº recibo/km/tarjeta con
+  confianza ≥ 0.9 (chip *Leído del recibo*); el chofer confirma/corrige, nunca se envía
+  solo. Banda *No coincide con el recibo* si lo confirmado difiere > 2 %. *Volver a leer*.
+  Sin red no se lee (la foto queda en el borrador). `CombustibleService.leerRecibo()`.
+- **CF5 · Solicitud de movimiento con almacenes y catálogo (mejora).** Origen/destino con
+  selector de **almacén (Central primero)** u obra, y **renglones del catálogo cacheado**
+  (offline) con cantidad y unidad + *no catalogado*. El outbox llama a
+  `crear_solicitud_movimiento_v2` (p_items + bodega/proyecto; compatible con payloads
+  viejos del outbox). — *Contrato del padre (PROMPT-80), vivo en dev+prod.*
+- **CF2 · Lista de personal.** Ya cumplía desde CE (fecha+hora legibles en una línea con
+  `formatFechaHumana`, pendientes como chips con filtro rápido). Sin cambios. — *Paridad OK.*
+- **CF3 / CF6 · Web-only.** Modales compartidos y aprobaciones legales viven en el padre. — *Owned by SGC.*
+- **CF1 · Firma empleador/testigos ACTIVADA en la app (nuevo).** Xaviel activó la firma
+  (`FIRMA_HABILITADA=true`). El trabajador firma en el wizard (outbox); al crear
+  `personal_obra_firmas` el handler **siembra** las líneas (empleador + 2 testigos,
+  `sembrar_lineas_firma`). En el **expediente**, por documento se ven las líneas por rol
+  con su estado y, para legal/gestión, **Registrar firma** (*ahora* pad / *en papel* foto o
+  PDF; testigos con nombre+cédula) vía `firmar_linea_documento`, y **Subir documento
+  firmado** (`camera.pickDocument`). Online. — *Paridad con la web (prod).*
+- **CF7 · Plantilla por defecto en la app = diferido.** La app firma por **nombre libre**;
+  no renderiza la plantilla Word. Los contratos formales de Sonia se generan/renderizan en
+  la **web** (prod). Follow-up: portar `plantillas-documento.service` (getAll+renderizar)
+  a la app si se quiere generar el contrato desde el teléfono. — *Diferido.*

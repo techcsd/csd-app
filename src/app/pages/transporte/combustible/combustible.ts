@@ -33,7 +33,7 @@ import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
-import { CombustibleService, PermisoRetro } from '../../../core/services/combustible.service';
+import { CombustibleService, PermisoRetro, LecturaRecibo } from '../../../core/services/combustible.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -238,6 +238,11 @@ export class CombustiblePage extends GuardedWizard {
   fotoRecibo = signal<CapturedPhoto | null>(null);
   fotoTablero = signal<CapturedPhoto | null>(null);
   fotoBomba = signal<CapturedPhoto | null>(null); // Y4 — bomba/estación en 0
+  // CF4 — lectura automática del recibo (visión). Solo online; el chofer confirma.
+  leyendoRecibo = signal(false);
+  lecturaError = signal('');
+  leidoCampos = signal<string[]>([]);     // campos auto-rellenados (chip "Leído del recibo")
+  lecturaCruda = signal<LecturaRecibo | null>(null); // para comparar al enviar (>2%)
 
   // AC11 — depósito en obra (telehandler): se echa desde garrafón, sin estación
   // ni precio de bomba; galones + obra + horas del equipo + foto de evidencia.
@@ -864,14 +869,21 @@ export class CombustiblePage extends GuardedWizard {
   onFotoRecibo(photo: CapturedPhoto): void {
     this.fotoRecibo.set(photo);
     this.persistirFoto('recibo', photo);
+    // CF4 — leer el recibo en segundo plano (solo online; no al reenviar una rechazada).
+    if (this.network.online() && !this.reenvioDe()) void this.leerReciboAuto();
   }
   onFotoReciboCleared(): void {
     this.fotoRecibo.set(null);
     this.quitarFotoBorrador('recibo');
+    this.leidoCampos.set([]);
+    this.lecturaCruda.set(null);
+    this.lecturaError.set('');
   }
   onFotoTablero(photo: CapturedPhoto): void {
     this.fotoTablero.set(photo);
     this.persistirFoto('tablero', photo);
+    // CF4 — si ya hay recibo, re-leer incluyendo el tablero (km/horas).
+    if (this.fotoRecibo() && this.network.online() && !this.reenvioDe()) void this.leerReciboAuto();
   }
   onFotoTableroCleared(): void {
     this.fotoTablero.set(null);
@@ -885,6 +897,74 @@ export class CombustiblePage extends GuardedWizard {
     this.fotoBomba.set(null);
     this.quitarFotoBorrador('bomba');
   }
+
+  // ── CF4 — lectura automática del recibo ─────────────────────────────────────
+  /** Reduce una imagen a ~1600 px y devuelve base64 (sin prefijo data:). */
+  private async imagenBase64(blob: Blob, max = 1600): Promise<{ data: string; mime: string }> {
+    const bitmap = await createImageBitmap(blob);
+    const escala = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * escala), h = Math.round(bitmap.height * escala);
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    return { data: dataUrl.split(',')[1] ?? '', mime: 'image/jpeg' };
+  }
+
+  async leerReciboAuto(): Promise<void> {
+    const recibo = this.fotoRecibo();
+    if (!recibo || this.leyendoRecibo()) return;
+    this.leyendoRecibo.set(true);
+    this.lecturaError.set('');
+    try {
+      const imgs: { tipo: 'recibo' | 'tablero' | 'bomba'; data: string; mime: string }[] = [];
+      imgs.push({ tipo: 'recibo', ...(await this.imagenBase64(recibo.blob)) });
+      const tablero = this.fotoTablero();
+      if (tablero) imgs.push({ tipo: 'tablero', ...(await this.imagenBase64(tablero.blob)) });
+      const res = await this.combustible.leerRecibo(imgs);
+      if (!res.ok || !res.lectura) { this.lecturaError.set(res.error ?? 'No se pudo leer el recibo.'); return; }
+      this.aplicarLectura(res.lectura, res.confianza ?? {});
+    } catch {
+      this.lecturaError.set('No se pudo leer el recibo.');
+    } finally {
+      this.leyendoRecibo.set(false);
+    }
+  }
+
+  /** Rellena los campos con confianza ≥ 0.9; el chofer confirma o corrige. */
+  private aplicarLectura(l: LecturaRecibo, conf: Record<string, number>): void {
+    const UMBRAL = 0.9;
+    this.lecturaCruda.set(l);
+    const llenados: string[] = [];
+    const ok = (campo: keyof LecturaRecibo) => {
+      const v = l[campo];
+      return v !== null && v !== undefined && v !== '' && (conf[campo as string] ?? 0) >= UMBRAL;
+    };
+    if (ok('galones')) { this.galones.set(Number(l.galones)); this.galonesRaw.set(String(l.galones)); llenados.push('Galones'); }
+    if (ok('monto')) { this.monto.set(Number(l.monto)); this.montoRaw.set(String(l.monto)); llenados.push('Monto'); }
+    if (ok('km') && l.km != null) { this.km.set(Number(l.km)); llenados.push('Kilometraje'); }
+    if (ok('producto') && (l.producto === 'diesel' || l.producto === 'gasolina')) { this.producto.set(l.producto); llenados.push('Producto'); }
+    if (ok('estacion')) { this.estacionOtro.set(true); this.estacionOtroTexto.set(String(l.estacion)); llenados.push('Estación'); }
+    if (ok('numero_recibo')) { this.numeroRecibo.set(String(l.numero_recibo).replace(/\D/g, '')); llenados.push('N° recibo'); }
+    if (ok('tarjeta_ult4')) { this.tarjeta.set(String(l.tarjeta_ult4)); llenados.push('Tarjeta'); }
+    if (ok('fecha') && this.permisoRetro()) { this.fechaRetro.set(String(l.fecha)); llenados.push('Fecha'); }
+    this.leidoCampos.set(llenados);
+  }
+
+  /** CF4 — bandera "No coincide con el recibo": lo confirmado difiere > 2% de lo leído. */
+  discrepanciaRecibo = computed(() => {
+    const l = this.lecturaCruda();
+    if (!l) return '';
+    const dif: string[] = [];
+    const chk = (leido: number | null, actual: number | null, etq: string) => {
+      if (leido == null || actual == null || leido === 0) return;
+      if (Math.abs(actual - leido) / Math.abs(leido) > 0.02) dif.push(`${etq} (recibo ${leido}, tú ${actual})`);
+    };
+    chk(l.galones, this.galones(), 'galones');
+    chk(l.monto, this.monto(), 'monto');
+    return dif.length ? 'No coincide con el recibo: ' + dif.join(' · ') : '';
+  });
 
   next(): void {
     if (!this.canAdvance()) return;

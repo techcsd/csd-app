@@ -544,9 +544,9 @@
       "ht": 0
     },
     "pages/proyectos/personal": {
-      "conT": 92,
+      "conT": 102,
       "sinT": 1,
-      "en": 87,
+      "en": 81,
       "ht": 0
     },
     "pages/reportar": {
@@ -688,9 +688,9 @@
       "ht": 0
     },
     "pages/transporte/combustible": {
-      "conT": 119,
+      "conT": 124,
       "sinT": 2,
-      "en": 93,
+      "en": 89,
       "ht": 0
     },
     "pages/transporte/combustible-log": {
@@ -916,9 +916,9 @@
       "ht": 0
     },
     "pages/transporte/solicitud-movimiento": {
-      "conT": 22,
+      "conT": 33,
       "sinT": 0,
-      "en": 100,
+      "en": 70,
       "ht": 0
     },
     "pages/transporte/trayectoria": {

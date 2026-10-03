@@ -40,10 +40,10 @@ import {
 /** URL base de la web SGC (verificación del carnet por QR → expediente web). */
 const SGC_WEB = 'https://sgcconstructorasd.com';
 
-/** ⏸ AR1 — el paso de firma de documentos está en PAUSA (Xaviel lo define). Cuando
- *  se active, poner en true: el wizard inserta el paso y el servicio ya sube la
- *  firma por outbox (sin rehacer nada). */
-const FIRMA_HABILITADA = false;
+/** AR1/CF1 — firma del documento ACTIVADA (Xaviel: "dale"). El wizard inserta el paso de
+ *  firma del trabajador; el servicio la sube por outbox y siembra las líneas del empleador
+ *  y testigos, que Legal completa desde el expediente (ahora / en papel / después). */
+const FIRMA_HABILITADA = true;
 
 /** AR1 — hojas del wizard de registro de personal (una pregunta por pantalla). */
 type PasoKey = 'datos' | 'documento' | 'fotos' | 'firma' | 'carnet' | 'resumen';

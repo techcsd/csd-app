@@ -49,11 +49,20 @@ export type DireccionMovimiento = 'a_obra' | 'de_obra';
 /** AY11 — input del formulario de creación (ingeniero). La obra es el punto ancla:
  *  'a_obra' = llevar material HACIA la obra (obra = destino); 'de_obra' = sacar DE la
  *  obra (obra = origen). El otro extremo va como texto. */
+export interface MovimientoItem {
+  articulo_id: string | null;
+  descripcion: string;
+  cantidad: number | null;
+  unidad: string | null;
+}
+
 export interface CrearSolicitudInput {
   proyectoId: string;
   direccion: DireccionMovimiento;
-  otroPunto: string; // el otro extremo (de dónde sale / a dónde va)
-  queSeMueve: string;
+  otroPunto: string; // el otro extremo como texto (si no es un almacén)
+  otroBodegaId?: string | null; // CF5 — el otro extremo como ALMACÉN (Central u obra)
+  items?: MovimientoItem[]; // CF5 — renglones del catálogo (o "no catalogado")
+  queSeMueve: string; // resumen (fallback / compatibilidad)
   tipoCarga: TipoCarga;
   prioridad: PrioridadSolicitud;
   fechaRequerimiento: string | null;
@@ -157,20 +166,27 @@ export class SolicitudMovimientoService {
   async crear(input: CrearSolicitudInput): Promise<void> {
     const id = crypto.randomUUID();
     const aObra = input.direccion === 'a_obra';
-    // La obra es destino ('a_obra') u origen ('de_obra'); el otro extremo es texto.
-    // Los tipos DEBEN ser valores del CHECK (obra|otro), NUNCA 'texto'.
+    // La obra es destino ('a_obra') u origen ('de_obra'). El OTRO extremo puede ser un
+    // ALMACÉN (CF5: tipo 'almacen' + bodega_id) o texto libre (tipo 'otro' + texto).
+    const otroEsBodega = !!input.otroBodegaId;
+    const otroTipo = otroEsBodega ? 'almacen' : 'otro';
+    const otroBodega = input.otroBodegaId ?? null;
+    const otroTexto = otroEsBodega ? null : (input.otroPunto || null);
     await this.sync.enqueue({
       id,
       tipo_op: OP_CREAR,
       payload: {
         proyecto_id: input.proyectoId,
         que_se_mueve: input.queSeMueve,
+        items: input.items ?? null, // CF5 — renglones del catálogo
         tipo_carga: input.tipoCarga,
-        origen_tipo: aObra ? 'otro' : 'obra',
-        origen_texto: aObra ? input.otroPunto : null,
+        origen_tipo: aObra ? otroTipo : 'obra',
+        origen_texto: aObra ? otroTexto : null,
+        origen_bodega_id: aObra ? otroBodega : null,
         origen_proyecto_id: aObra ? null : input.proyectoId,
-        destino_tipo: aObra ? 'obra' : 'otro',
-        destino_texto: aObra ? null : input.otroPunto,
+        destino_tipo: aObra ? 'obra' : otroTipo,
+        destino_texto: aObra ? null : otroTexto,
+        destino_bodega_id: aObra ? null : otroBodega,
         destino_proyecto_id: aObra ? input.proyectoId : null,
         prioridad: input.prioridad,
         fecha_requerimiento: input.fechaRequerimiento,
@@ -236,21 +252,24 @@ export class SolicitudMovimientoService {
   /** AY11 — registra el handler de outbox de la creación (idempotente por UUID de op). */
   private registerHandler(): void {
     this.sync.register(OP_CREAR, async (payload) => {
-      const { error } = await this.supabase.client.rpc('crear_solicitud_movimiento', {
+      // CF5 — v2 acepta renglones (p_items) y bodega de origen/destino. Compatible con
+      // payloads viejos del outbox (sin items → usa p_que_se_mueve como resumen).
+      const { error } = await this.supabase.client.rpc('crear_solicitud_movimiento_v2', {
         p_proyecto_id: payload['proyecto_id'] ?? null,
-        p_que_se_mueve: payload['que_se_mueve'] ?? '',
+        p_items: payload['items'] ?? null,
         p_tipo_carga: payload['tipo_carga'] ?? 'materiales',
         p_origen_tipo: payload['origen_tipo'] ?? 'otro',
         p_origen_texto: payload['origen_texto'] ?? null,
-        p_origen_bodega_id: null,
+        p_origen_bodega_id: payload['origen_bodega_id'] ?? null,
         p_origen_proyecto_id: payload['origen_proyecto_id'] ?? null,
         p_destino_tipo: payload['destino_tipo'] ?? 'otro',
         p_destino_texto: payload['destino_texto'] ?? null,
-        p_destino_bodega_id: null,
+        p_destino_bodega_id: payload['destino_bodega_id'] ?? null,
         p_destino_proyecto_id: payload['destino_proyecto_id'] ?? null,
         p_prioridad: payload['prioridad'] ?? 'media',
         p_fecha_requerimiento: payload['fecha_requerimiento'] ?? null,
         p_notas: payload['notas'] ?? null,
+        p_que_se_mueve: payload['que_se_mueve'] ?? null,
       });
       if (error) throw new Error(error.message);
     });

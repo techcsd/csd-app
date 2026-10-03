@@ -132,24 +132,77 @@
         }
       </div>
 
-      <!-- ── BF8 — Documentos y contratos firmados (snapshot AZ1) ── -->
-      @if (firmas().length) {
+      <!-- ── BF8/CF1 — Documentos y contratos firmados (snapshot AZ1) ── -->
+      @if (firmas().length || puedeGestionar()) {
         <h2 class="pe-sec">{{ 'Documentos y contratos firmados' | t }}</h2>
         @for (f of firmas(); track f.id) {
-          <button type="button" class="pe-firma" (click)="abrirDocumento(f)" [disabled]="abriendoDoc() === f.id">
-            <span class="pe-firma__ico">📄</span>
-            <span class="pe-firma__body">
-              <span class="pe-firma__nombre">{{ f.documento_nombre }}</span>
-              <span class="pe-firma__meta">
-                {{ 'Firmado' | t }} {{ fmtFecha(f.firmado_at) }}@if (!f.documento_path) { · {{ 'solo firma' | t }} }
+          <div class="pe-firma-card">
+            <button type="button" class="pe-firma" (click)="abrirDocumento(f)" [disabled]="abriendoDoc() === f.id">
+              <span class="pe-firma__ico">📄</span>
+              <span class="pe-firma__body">
+                <span class="pe-firma__nombre">{{ f.documento_nombre }}</span>
+                <span class="pe-firma__meta">
+                  {{ 'Firmado' | t }} {{ fmtFecha(f.firmado_at) }}@if (!f.documento_path) { · {{ 'solo firma' | t }} }
+                </span>
               </span>
-            </span>
-            <span class="pe-firma__go">{{ abriendoDoc() === f.id ? '…' : '›' }}</span>
+              <span class="pe-firma__go">{{ abriendoDoc() === f.id ? '…' : '›' }}</span>
+            </button>
+            <!-- CF1 — líneas de firma por rol -->
+            @if (lineasDe(f.id).length) {
+              <ul class="pe-lineas">
+                @for (l of lineasDe(f.id); track l.id) {
+                  <li class="pe-linea">
+                    <span class="pe-linea__rol">{{ rolLabel[l.rol] }}</span>
+                    @if (esTestigo(l.rol) && l.firmante_nombre) {
+                      <span class="pe-linea__nom">{{ l.firmante_nombre }}</span>
+                    }
+                    <span class="pe-linea__estado pe-linea__estado--{{ l.estado }}">{{ estadoLineaTxt(l) }}</span>
+                    @if (l.estado === 'pendiente' && l.rol !== 'trabajador' && esLegal()) {
+                      <button type="button" class="pe-linea__btn" (click)="abrirFirmarLinea(f, l.rol)">{{ 'Registrar firma' | t }}</button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        }
+        @if (puedeGestionar()) {
+          <button type="button" class="pe-subir-doc" (click)="subirDocFirmado()" [disabled]="subiendoDocFirmado()">
+            {{ subiendoDocFirmado() ? ('Subiendo…' | t) : ('+ Subir documento firmado' | t) }}
           </button>
         }
       }
     }
   </div>
+
+  <!-- CF1 — panel para registrar la firma del empleador/testigo -->
+  @if (firmarCtx(); as ctx) {
+    <div class="pe-firmar-overlay" (click)="cerrarFirmarLinea()">
+      <div class="pe-firmar" (click)="$event.stopPropagation()">
+        <h3 class="pe-firmar__title">{{ 'Firma de' | t }} {{ rolLabel[ctx.rol] }}</h3>
+        @if (esTestigo(ctx.rol)) {
+          <input class="field" type="text" [ngModel]="firmanteNombre()" (ngModelChange)="firmanteNombre.set($event)" [placeholder]="'Nombre del testigo' | t" />
+          <input class="field" type="text" [ngModel]="firmanteCedula()" (ngModelChange)="firmanteCedula.set($event)" [placeholder]="'Cédula del testigo' | t" />
+        }
+        <div class="pe-firmar__metodo">
+          <app-option-button [label]="'Firmar ahora' | t" [selected]="firmarMetodo() === 'pad'" (pressed)="firmarMetodo.set('pad')" />
+          <app-option-button [label]="'Firmado en papel' | t" [selected]="firmarMetodo() === 'fisico'" (pressed)="firmarMetodo.set('fisico')" />
+        </div>
+        @if (firmarMetodo() === 'pad') {
+          <app-signature-pad #linePad />
+        } @else {
+          <p class="pe-firmar__hint">{{ 'Toca Guardar y elige la foto o el PDF de la página firmada.' | t }}</p>
+        }
+        @if (firmarError()) { <p class="pe-firmar__err">{{ firmarError() }}</p> }
+        <div class="pe-firmar__acc">
+          <button type="button" class="btn-ghost" (click)="cerrarFirmarLinea()">{{ 'Cancelar' | t }}</button>
+          <button type="button" class="btn-primary" [disabled]="firmarBusy()" (click)="guardarFirmarLinea()">
+            {{ firmarBusy() ? ('Guardando…' | t) : ('Guardar firma' | t) }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- BF8 — visor inline del documento/contrato firmado -->
   @if (docVisor(); as dv) {
