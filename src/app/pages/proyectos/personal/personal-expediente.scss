@@ -311,3 +311,33 @@
     font-size: 22px;
   }
 }
+
+/* CF1 — líneas de firma por rol + panel de firma */
+.pe-firma-card { border: 1px solid var(--border, #d9dce1); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.pe-firma-card .pe-firma { width: 100%; border: none; border-radius: 0; }
+.pe-lineas { list-style: none; margin: 0; padding: 0 12px 8px; }
+.pe-linea {
+  display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 14px;
+  border-top: 1px solid var(--border, #eceef1); flex-wrap: wrap;
+}
+.pe-linea__rol { font-weight: 700; min-width: 96px; }
+.pe-linea__nom { color: var(--text-muted, #6b7280); }
+.pe-linea__estado { margin-left: auto; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--surface-2, #f0f1f4); }
+.pe-linea__estado--firmado { color: #166534; }
+.pe-linea__estado--papel { color: #334155; }
+.pe-linea__estado--pendiente { color: #92400e; }
+.pe-linea__btn, .pe-subir-doc {
+  border: none; background: none; cursor: pointer; color: var(--brand, #2e75b6); font-weight: 700; font-size: 14px; padding: 6px 2px;
+}
+.pe-subir-doc { display: block; margin: 4px 0 12px; }
+
+.pe-firmar-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.5); display: flex; align-items: flex-end; justify-content: center; }
+.pe-firmar {
+  background: var(--surface, #fff); width: 100%; max-width: 560px; border-radius: 16px 16px 0 0; padding: 18px;
+  display: flex; flex-direction: column; gap: 12px; max-height: 90vh; overflow-y: auto;
+}
+.pe-firmar__title { margin: 0; font-size: 17px; }
+.pe-firmar__metodo { display: flex; gap: 8px; flex-wrap: wrap; }
+.pe-firmar__hint { color: var(--text-muted, #6b7280); font-size: 14px; margin: 0; }
+.pe-firmar__err { color: var(--error, #dc2626); font-size: 14px; margin: 0; }
+.pe-firmar__acc { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }

@@ -97,7 +97,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/proyectos/cronograma | 64 | 1 | 98% | 0% |  |
 | pages/proyectos/detalle | 31 | 0 | 100% | 0% |  |
 | pages/proyectos/form | 48 | 1 | 98% | 0% |  |
-| pages/proyectos/personal | 92 | 1 | 87% | 0% |  |
+| pages/proyectos/personal | 102 | 1 | 81% | 0% |  |
 | pages/reportar | 0 | 8 | 0% | 0% |  |
 | pages/rrhh/empleado | 23 | 0 | 100% | 0% |  |
 | pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |

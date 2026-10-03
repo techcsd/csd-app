@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { CedulaPipe } from '../../../shared/pipes/cedula-pipe';
@@ -36,7 +36,11 @@ import {
   AseguramientoEstado,
   PersonalObra,
   PersonalFirma,
+  FirmaLinea,
+  FirmaRol,
+  FIRMA_ROL_LABEL,
 } from '../../../core/models/personal-obra.model';
+import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 
 const SGC_WEB = 'https://sgcconstructorasd.com';
 
@@ -46,7 +50,7 @@ const SGC_WEB = 'https://sgcconstructorasd.com';
   selector: 'app-personal-expediente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, PdfViewer, CedulaPipe, TranslatePipe],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, PdfViewer, CedulaPipe, TranslatePipe, SignaturePad],
   templateUrl: './personal-expediente.html',
   styleUrl: './personal-expediente.scss',
 })
@@ -84,6 +88,20 @@ export class PersonalExpedientePage implements OnInit {
   // BF8 — visor del documento/contrato firmado (snapshot AZ1).
   docVisor = signal<{ url: string; nombre: string } | null>(null);
   abriendoDoc = signal<string | null>(null);
+
+  // CF1 — líneas de firma por rol (empleador/testigos) + panel de firma.
+  readonly rolLabel = FIRMA_ROL_LABEL;
+  readonly ordenRoles: FirmaRol[] = ['empleador', 'trabajador', 'testigo_1', 'testigo_2'];
+  lineas = signal<Record<string, FirmaLinea[]>>({});
+  esLegal = computed(() => this.ctx.esAdmin() || this.ctx.hasModulo('legal') || this.puedeGestionar());
+  firmarCtx = signal<{ firma: PersonalFirma; rol: FirmaRol } | null>(null);
+  firmarMetodo = signal<'pad' | 'fisico'>('pad');
+  firmanteNombre = signal('');
+  firmanteCedula = signal('');
+  firmarBusy = signal(false);
+  firmarError = signal('');
+  private linePad = viewChild<SignaturePad>('linePad');
+  subiendoDocFirmado = signal(false);
 
   // Edición inline
   editando = signal(false);
@@ -146,6 +164,7 @@ export class PersonalExpedientePage implements OnInit {
       this.personal.set(p);
       const [fotos, firmas] = await Promise.all([this.service.getFotos(id), this.service.getFirmas(id)]);
       this.firmas.set(firmas);
+      await this.cargarLineas(firmas); // CF1
       const urls: Partial<Record<FotoTipo, string>> = {};
       for (const f of fotos) {
         const url = await this.service.fotoUrl(f.foto_path);
@@ -162,6 +181,84 @@ export class PersonalExpedientePage implements OnInit {
   cargoNombre(id: string | null | undefined): string {
     const c = this.cargos().find((x) => x.id === id);
     return c ? `${c.nombre} · ${c.codigo}` : '—';
+  }
+
+  // ── CF1 — líneas de firma por rol (empleador/testigos) ──────────────────────
+  private async cargarLineas(firmas: PersonalFirma[]): Promise<void> {
+    if (!this.online) return; // RPC online; sin red se muestran solo los documentos
+    const map: Record<string, FirmaLinea[]> = {};
+    for (const f of firmas) map[f.id] = await this.service.lineasFirma(f.id);
+    this.lineas.set(map);
+  }
+  lineasDe(firmaId: string): FirmaLinea[] {
+    const ls = this.lineas()[firmaId] ?? [];
+    return [...ls].sort((a, b) => this.ordenRoles.indexOf(a.rol) - this.ordenRoles.indexOf(b.rol));
+  }
+  estadoLineaTxt(l: FirmaLinea): string {
+    return l.estado === 'firmado' ? this.i18n.t('Firmada') : l.estado === 'papel' ? this.i18n.t('En papel') : this.i18n.t('Pendiente');
+  }
+  esTestigo(rol: FirmaRol | undefined): boolean { return rol === 'testigo_1' || rol === 'testigo_2'; }
+
+  abrirFirmarLinea(f: PersonalFirma, rol: FirmaRol): void {
+    this.firmarCtx.set({ firma: f, rol });
+    this.firmarMetodo.set('pad');
+    this.firmanteNombre.set('');
+    this.firmanteCedula.set('');
+    this.firmarError.set('');
+  }
+  cerrarFirmarLinea(): void { this.firmarCtx.set(null); }
+
+  async guardarFirmarLinea(): Promise<void> {
+    const ctx = this.firmarCtx();
+    const p = this.personal();
+    if (!ctx || !p || this.firmarBusy()) return;
+    if (!this.online) { this.firmarError.set(this.i18n.t('Necesitas conexión para registrar la firma.')); return; }
+    const metodo = this.firmarMetodo();
+    let blob: Blob | null = null;
+    if (metodo === 'pad') {
+      const pad = this.linePad();
+      blob = pad ? await pad.toBlob() : null;
+      if (!blob) { this.firmarError.set(this.i18n.t('Dibuja la firma antes de continuar.')); return; }
+    } else {
+      const doc = await this.camera.pickDocument();
+      if (!doc) return;
+      blob = doc.blob;
+    }
+    this.firmarBusy.set(true);
+    this.firmarError.set('');
+    try {
+      await this.service.firmarLinea(ctx.firma, p, ctx.rol, metodo, {
+        firma: blob,
+        nombre: this.esTestigo(ctx.rol) ? this.firmanteNombre().trim() || null : null,
+        cedula: this.esTestigo(ctx.rol) ? this.firmanteCedula().trim() || null : null,
+      });
+      await this.cargarLineas(this.firmas());
+      this.firmarCtx.set(null);
+      this.toast.success(this.i18n.t('Firma registrada.'));
+    } catch (e: unknown) {
+      this.firmarError.set(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar la firma.'));
+    } finally {
+      this.firmarBusy.set(false);
+    }
+  }
+
+  /** CF7 — subir el escaneo/foto de un documento firmado en papel al expediente. */
+  async subirDocFirmado(): Promise<void> {
+    const p = this.personal();
+    if (!p || this.subiendoDocFirmado()) return;
+    if (!this.online) { this.toast.error(this.i18n.t('Necesitas conexión para subir el documento.')); return; }
+    this.subiendoDocFirmado.set(true);
+    try {
+      const doc = await this.camera.pickDocument();
+      if (!doc) return;
+      await this.service.subirDocumentoFirmado(p, doc.nombre || this.i18n.t('Documento firmado'), doc.blob, doc.ext);
+      await this.load(p.id);
+      this.toast.success(this.i18n.t('Documento subido.'));
+    } catch (e: unknown) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo subir el documento.'));
+    } finally {
+      this.subiendoDocFirmado.set(false);
+    }
   }
 
   abrirFoto(url: string | undefined): void {

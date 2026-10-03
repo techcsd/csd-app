@@ -5,6 +5,8 @@ import { CatalogService } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import {
   Cargo,
+  FirmaLinea,
+  FirmaRol,
   FotoTipo,
   PersonalConteos,
   PersonalFirma,
@@ -162,6 +164,58 @@ export class PersonalObraService {
       .order('firmado_at', { ascending: false });
     if (error) return [];
     return (data ?? []) as PersonalFirma[];
+  }
+
+  // ── CF1 — líneas de firma por rol (empleador / testigos). Online (legal firma con red). ──
+  async lineasFirma(firmaId: string): Promise<FirmaLinea[]> {
+    const { data, error } = await this.client.rpc('lineas_firma_documento', { p_firma_id: firmaId });
+    if (error) return [];
+    return (data ?? []) as FirmaLinea[];
+  }
+
+  /** Registra la firma de una línea (empleador/testigo): pad/foto = digital, fisico = en papel. */
+  async firmarLinea(
+    firma: PersonalFirma,
+    personal: PersonalObra,
+    rol: FirmaRol,
+    metodo: 'pad' | 'foto' | 'fisico',
+    opts: { firma?: Blob | null; nombre?: string | null; cedula?: string | null } = {},
+  ): Promise<void> {
+    let path: string | null = null;
+    if (opts.firma) {
+      const ext = metodo === 'fisico' ? (opts.firma.type.includes('pdf') ? 'pdf' : 'jpg') : 'png';
+      path = `${personal.proyecto_id}/${personal.id}/firma-${rol}-${Date.now()}.${ext}`;
+      const { error: upErr } = await this.client.storage
+        .from(BUCKET)
+        .upload(path, opts.firma, { upsert: true, contentType: opts.firma.type || 'image/png' });
+      if (upErr) throw new Error(upErr.message);
+    }
+    const { error } = await this.client.rpc('firmar_linea_documento', {
+      p_firma_id: firma.id,
+      p_rol: rol,
+      p_metodo: metodo,
+      p_firma_path: path,
+      p_firmante_nombre: opts.nombre ?? null,
+      p_firmante_cedula: opts.cedula ?? null,
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  /** CF7 — sube el escaneo/foto de un documento firmado en papel al expediente. */
+  async subirDocumentoFirmado(personal: PersonalObra, documentoNombre: string, archivo: Blob, ext: string): Promise<void> {
+    const path = `${personal.proyecto_id}/${personal.id}/doc-firmado-${Date.now()}.${ext}`;
+    const { error: upErr } = await this.client.storage
+      .from(BUCKET)
+      .upload(path, archivo, { upsert: true, contentType: archivo.type || 'application/octet-stream' });
+    if (upErr) throw new Error(upErr.message);
+    const { error } = await this.client.from('personal_obra_firmas').insert({
+      personal_id: personal.id,
+      documento_nombre: documentoNombre,
+      firma_path: path,
+      documento_path: path,
+      metodo: 'foto',
+    });
+    if (error) throw new Error(error.message);
   }
 
   /**
@@ -351,13 +405,21 @@ export class PersonalObraService {
           .select('id', { count: 'exact', head: true })
           .eq('personal_id', id);
         if (!count) {
-          const { error } = await this.client.from('personal_obra_firmas').insert({
+          const { data: ins, error } = await this.client.from('personal_obra_firmas').insert({
             personal_id: id,
             documento_nombre: (payload['firma_documento_nombre'] as string) ?? 'Documento firmado',
             firma_path: photoPaths['firma'],
             metodo: 'pad',
-          });
+          }).select('id').single();
           if (error) throwSyncError(error);
+          // CF1 — siembra las líneas de firma (empleador + 2 testigos) para que Legal las
+          // complete después desde el expediente (ahora / en papel / después).
+          if (ins?.id) {
+            await this.client.rpc('sembrar_lineas_firma', {
+              p_firma_id: ins.id,
+              p_roles: ['empleador', 'testigo_1', 'testigo_2'],
+            }).then(() => {}, () => {}); // best-effort: no tumbar el registro si falla
+          }
         }
       }
 

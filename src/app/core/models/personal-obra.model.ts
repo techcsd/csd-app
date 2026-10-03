@@ -43,6 +43,29 @@ export interface PersonalFirma {
   firmado_at: string;
 }
 
+// CF1 — líneas de firma por rol de un documento (empleador/testigos además del trabajador).
+export type FirmaRol = 'trabajador' | 'empleador' | 'testigo_1' | 'testigo_2';
+export type FirmaLineaEstado = 'pendiente' | 'firmado' | 'papel';
+
+export interface FirmaLinea {
+  id: string;
+  firma_id: string;
+  rol: FirmaRol;
+  estado: FirmaLineaEstado;
+  metodo: 'pad' | 'foto' | 'fisico' | null;
+  firma_path: string | null;
+  firmante_nombre: string | null;
+  firmante_cedula: string | null;
+  firmado_at: string | null;
+}
+
+export const FIRMA_ROL_LABEL: Record<FirmaRol, string> = {
+  trabajador: 'El trabajador',
+  empleador: 'El empleador',
+  testigo_1: 'Testigo 1',
+  testigo_2: 'Testigo 2',
+};
+
 export interface PersonalObra {
   id: string;
   proyecto_id: string;
