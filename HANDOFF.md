@@ -8,6 +8,8 @@
 - **APK prod 2.41.0** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.41.0 ya en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.41.0.apk` + latest + version.json) + `apk_url` prod.
 - **PUBLICADA = 2.41.0** (2.40.0 despublicada) vía data-fix versionado `scripts/data-fixes/2026-10-05-cf4-publicar-2.41.0.mjs` (regla 19; commiteado ANTES de aplicar). `version_publicada()` prod = 2.41.0 (version_code 2041000) + apk_url + notas. El trigger dispara el push.
 - **MÍNIMA = 2.35.0** (sin cambios) → 2.41.0 `min=false` → update **NO forzado**.
+- **Notificación entregada:** el trigger `app_version_push` creó la notif in-app + push FCM a **13 usuarios android** (`push_notificada_at` 14:29:13). **iPhone (PWA): notificados aparte** — el trigger solo cubre tokens android y iOS no tiene tokens; data-fix `scripts/data-fixes/2026-10-05-cf4-notificar-ios-2.41.0.mjs` insertó la MISMA notif in-app a los **10 usuarios `plataforma=ios-pwa`** (idempotente, respeta `notif_permitida`). Total 2.41.0 = **23** notifs in-app. Push real a iOS = N/A (sin Web Push montado; ven el banner al abrir la PWA).
+- **Hueco del padre (permanente):** `sql-para-sgc/2026-10-05-cf4b-version-push-incluir-ios.sql` — que `trg_app_version_push` inserte el inbox también para `usuarios.plataforma ILIKE 'ios%'` (push sigue android-only). **Lo aplica el PADRE** (regla 18/19); hasta entonces cada release móvil necesita el data-fix de iOS.
 
 ### 🧪 Previo en dev (2.41.0)
 - **Reconexión:** `reciboPendienteDeLeer` + un `effect` sobre `network.online()` disparan `leerReciboAuto(false)` al volver la red (y al recuperar un borrador con foto sin datos). `onFotoRecibo`/`onFotoTablero` marcan pendiente si están offline.
