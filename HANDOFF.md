@@ -1,17 +1,23 @@
 # HANDOFF — CSD App
 
-## 🟡 SESIÓN 05/10/2026 — CF4 F1.2 · Lectura del recibo al reconectar — **2.41.0 EN DEV, esperando OK**
-**TL;DR:** Xaviel pidió *"verificá que CF4 funciona, y continúa trabajando"*. **CF4 verificado vivo** (edge `leer-recibo` desplegada en sgc-dev; smoke autenticado con un **recibo real de Total** → 200 OK, modelo `claude-haiku-4-5`, leyó galones/monto/estación/km/Nº recibo con confianza ≥0.9 cuadrando con los valores registrados; los 502 iniciales eran por imágenes degeneradas 1×1/placeholder 0 KB de dev). **Hueco encontrado y cerrado:** la spec F1.2 pedía *"sin red… al recuperar red se lee"*, pero 2.40.0 solo leía al **capturar con red**; si el chofer fotografía el recibo **sin señal** (caso común en obra), al volver el internet no pasaba nada (ni lectura ni botón). **Arreglado en 2.41.0.**
+## 🟢 SESIÓN 05/10/2026 — CF4 F1.2 · Lectura del recibo al reconectar — **2.41.0 PUBLICADA a prod** (Xaviel: "dale, promueve")
+**TL;DR:** Xaviel pidió *"verificá que CF4 funciona, y continúa trabajando"*. **CF4 verificado vivo** (edge `leer-recibo` desplegada en sgc-dev; smoke autenticado con un **recibo real de Total** → 200 OK, modelo `claude-haiku-4-5`, leyó galones/monto/estación/km/Nº recibo con confianza ≥0.9 cuadrando con los valores registrados; los 502 iniciales eran por imágenes degeneradas 1×1/placeholder 0 KB de dev). **Hueco encontrado y cerrado:** la spec F1.2 pedía *"sin red… al recuperar red se lee"*, pero 2.40.0 solo leía al **capturar con red**; si el chofer fotografía el recibo **sin señal** (caso común en obra), al volver el internet no pasaba nada (ni lectura ni botón). **Arreglado + RELEASED + PUBLICADA 2.41.0.**
 
-### En dev (pendiente de probar + OK para prod)
+### ✅ En prod (PUBLICADA 2.41.0)
+- **`dev → main`** (`93de84e`) + push → Vercel construye app. prod (`app.sgcconstructorasd.com`).
+- **APK prod 2.41.0** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.41.0 ya en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.41.0.apk` + latest + version.json) + `apk_url` prod.
+- **PUBLICADA = 2.41.0** (2.40.0 despublicada) vía data-fix versionado `scripts/data-fixes/2026-10-05-cf4-publicar-2.41.0.mjs` (regla 19; commiteado ANTES de aplicar). `version_publicada()` prod = 2.41.0 (version_code 2041000) + apk_url + notas. El trigger dispara el push.
+- **MÍNIMA = 2.35.0** (sin cambios) → 2.41.0 `min=false` → update **NO forzado**.
+
+### 🧪 Previo en dev (2.41.0)
 - **Reconexión:** `reciboPendienteDeLeer` + un `effect` sobre `network.online()` disparan `leerReciboAuto(false)` al volver la red (y al recuperar un borrador con foto sin datos). `onFotoRecibo`/`onFotoTablero` marcan pendiente si están offline.
 - **No pisa lo escrito a mano:** `leerReciboAuto(sobrescribir)` → `aplicarLectura` con `sobrescribir=false` solo rellena campos vacíos (la acción del chofer — capturar o *Volver a leer* — sí sobrescribe). Loop-safe: el flag se limpia antes de leer.
 - **UX offline:** pista *"Leeremos el recibo cuando vuelva la señal"* (sin señal) y botón *Leer recibo* (foto sin leer, p. ej. borrador recuperado). Solo cuando no hay galones/monto aún.
 - Archivos: `combustible.ts` (+signal, +effect, handlers, `leerReciboAuto`/`aplicarLectura`, `restoreDraft`), `combustible.html` (2 ramas nuevas). **Versión 2.41.0** (4 sitios + `CAMBIOS_CURADOS`/`TITULO`/`RELEASED_AT`). `PARIDAD.md` actualizado. `npm run build` + guards verdes.
 - Rama `feature/cf4-reconexion-lectura` → `dev`. **Mínima NO cambia** (2.35.0 en prod).
 
-### Pendiente — Xaviel
-- Probar en **app-dev** 2.41.0: tomar la foto del recibo en **modo avión** → activar red → debe leer sola y rellenar sin borrar lo tipeado; ver la pista offline y el botón *Leer recibo*. **OK → prod:** `npm run apk -- --env prod` + `apk:publish --env prod` + PR `dev → main`.
+### Pendiente físico — Xaviel
+- Los choferes/usuarios actualizan a **2.41.0**. Smoke en el teléfono: tomar la foto del recibo en **modo avión** → activar red → debe leer sola y rellenar sin borrar lo tipeado; ver la pista *"Leeremos el recibo cuando vuelva la señal"* y el botón *Leer recibo*. (Prueba de precisión con los 5 recibos reales de Total sigue pendiente.)
 
 ## 🟢 SESIÓN 03/10/2026 — PROMPT-81b · Motor de plantillas en la app — **2.40.0 PUBLICADA a prod** (Xaviel: "dale, promueve")
 `dev → main` (`9bfcb68`) + push → app. prod 2.40.0 · APK prod firmado/publicado (regla 18 OK) · `version_publicada()` prod = 2.40.0 (data-fix `scripts/data-fixes/2026-10-03-cf7-publicar-2.40.0.mjs`, regla 19; mínima 2.35.0). `npm run build` + guards verdes.
