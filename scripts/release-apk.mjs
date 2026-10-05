@@ -37,12 +37,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-03';
+const RELEASED_AT = '2026-10-05';
 
-const TITULO = 'Contrato real al firmar desde el teléfono (plantilla de Legal) y firmas del empleador y testigos';
+const TITULO = 'El recibo se lee también cuando vuelve la señal';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Personal de obra', d: 'Al registrar a un trabajador, el documento que firma ahora es el contrato real de Legal (la plantilla por defecto), con los datos de la empresa, el trabajador y la obra ya puestos, y los montos y la fecha en letras. Funciona también sin red (usa la última plantilla guardada).' },
-  { t: 'nuevo', m: 'Personal de obra', d: 'En el expediente puedes registrar la firma del empleador y de los testigos (ahora con el dedo, o marcarla como firmada en papel con una foto o PDF) y ver el documento con el estado de cada firma.' },
+  { t: 'mejora', m: 'Combustible', d: 'Si tomas la foto del recibo sin señal, la app la lee sola en cuanto vuelve el internet y te rellena los datos (galones, monto, estación, kilometraje…) sin borrar lo que ya hayas escrito a mano. Mientras no hay señal te avisa que lo leerá al reconectar, y siempre puedes tocar "Leer recibo" para hacerlo al momento.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

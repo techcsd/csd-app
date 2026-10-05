@@ -243,6 +243,10 @@ export class CombustiblePage extends GuardedWizard {
   lecturaError = signal('');
   leidoCampos = signal<string[]>([]);     // campos auto-rellenados (chip "Leído del recibo")
   lecturaCruda = signal<LecturaRecibo | null>(null); // para comparar al enviar (>2%)
+  // CF4 (spec F1.2) — la foto del recibo se tomó SIN señal: queda pendiente de leer
+  // y se lee automáticamente en cuanto vuelva la red (ver effect de reconexión), sin
+  // pisar lo que el chofer ya haya escrito a mano. true solo mientras no se haya leído.
+  reciboPendienteDeLeer = signal(false);
 
   // AC11 — depósito en obra (telehandler): se echa desde garrafón, sin estación
   // ni precio de bomba; galones + obra + horas del equipo + foto de evidencia.
@@ -439,6 +443,17 @@ export class CombustiblePage extends GuardedWizard {
         ruta: this.location.path(),
       });
     });
+    // CF4 (spec F1.2) — si el recibo se fotografió sin señal, leerlo en cuanto
+    // vuelva la red (mientras el borrador siga abierto y la echada no se haya
+    // enviado). Se limpia el flag ANTES de leer para no re-disparar en loop, y la
+    // lectura NO sobrescribe lo que el chofer ya haya escrito a mano.
+    effect(() => {
+      if (!this.network.online()) return;        // dep: se re-evalúa al volver la red
+      if (!this.reciboPendienteDeLeer()) return; // dep: nada que leer
+      if (this.reenvioDe() || this.submitting() || this.done()) return;
+      this.reciboPendienteDeLeer.set(false);
+      void this.leerReciboAuto(false); // false = no pisar campos ya llenos
+    });
   }
 
   /** BT4 — foto del formulario para persistir/recuperar. */
@@ -507,6 +522,12 @@ export class CombustiblePage extends GuardedWizard {
         else if (f.slot === 'tablero') this.fotoTablero.set(photo);
         else if (f.slot === 'bomba') this.fotoBomba.set(photo);
         else if (f.slot === 'evidencia') this.fotoEvidencia.set(photo);
+      }
+      // CF4 F1.2 — borrador con foto de recibo pero sin datos leídos (galones/monto
+      // vacíos): léelo al reconectar (el effect dispara) o deja el botón manual. Si
+      // ya trae los números, no se re-lee (evita un llamado de IA innecesario).
+      if (!this.reenvioDe() && this.fotoRecibo() && this.galones() == null && this.monto() == null) {
+        this.reciboPendienteDeLeer.set(true);
       }
 
       // Contexto de vehículo (como cargarCorreccion): con vehículo → cárgalo; persona → conductor.
@@ -870,7 +891,10 @@ export class CombustiblePage extends GuardedWizard {
     this.fotoRecibo.set(photo);
     this.persistirFoto('recibo', photo);
     // CF4 — leer el recibo en segundo plano (solo online; no al reenviar una rechazada).
-    if (this.network.online() && !this.reenvioDe()) void this.leerReciboAuto();
+    if (this.reenvioDe()) return;
+    if (this.network.online()) void this.leerReciboAuto();
+    // Sin señal: queda pendiente; el effect de reconexión la lee al volver la red.
+    else this.reciboPendienteDeLeer.set(true);
   }
   onFotoReciboCleared(): void {
     this.fotoRecibo.set(null);
@@ -878,12 +902,15 @@ export class CombustiblePage extends GuardedWizard {
     this.leidoCampos.set([]);
     this.lecturaCruda.set(null);
     this.lecturaError.set('');
+    this.reciboPendienteDeLeer.set(false);
   }
   onFotoTablero(photo: CapturedPhoto): void {
     this.fotoTablero.set(photo);
     this.persistirFoto('tablero', photo);
     // CF4 — si ya hay recibo, re-leer incluyendo el tablero (km/horas).
-    if (this.fotoRecibo() && this.network.online() && !this.reenvioDe()) void this.leerReciboAuto();
+    if (this.reenvioDe() || !this.fotoRecibo()) return;
+    if (this.network.online()) void this.leerReciboAuto();
+    else this.reciboPendienteDeLeer.set(true); // sin señal: leer al reconectar
   }
   onFotoTableroCleared(): void {
     this.fotoTablero.set(null);
@@ -912,7 +939,13 @@ export class CombustiblePage extends GuardedWizard {
     return { data: dataUrl.split(',')[1] ?? '', mime: 'image/jpeg' };
   }
 
-  async leerReciboAuto(): Promise<void> {
+  /**
+   * CF4 — lee el recibo (+ tablero si lo hay). `sobrescribir=true` (acción del
+   * chofer: capturar la foto o *Volver a leer*) pisa los campos; `false` (lectura
+   * automática al reconectar) solo rellena los que estén vacíos, para no borrar lo
+   * que el chofer escribió a mano sin señal (spec F1.2 "se ofrece rellenar").
+   */
+  async leerReciboAuto(sobrescribir = true): Promise<void> {
     const recibo = this.fotoRecibo();
     if (!recibo || this.leyendoRecibo()) return;
     this.leyendoRecibo.set(true);
@@ -924,7 +957,7 @@ export class CombustiblePage extends GuardedWizard {
       if (tablero) imgs.push({ tipo: 'tablero', ...(await this.imagenBase64(tablero.blob)) });
       const res = await this.combustible.leerRecibo(imgs);
       if (!res.ok || !res.lectura) { this.lecturaError.set(res.error ?? 'No se pudo leer el recibo.'); return; }
-      this.aplicarLectura(res.lectura, res.confianza ?? {});
+      this.aplicarLectura(res.lectura, res.confianza ?? {}, sobrescribir);
     } catch {
       this.lecturaError.set('No se pudo leer el recibo.');
     } finally {
@@ -932,8 +965,11 @@ export class CombustiblePage extends GuardedWizard {
     }
   }
 
-  /** Rellena los campos con confianza ≥ 0.9; el chofer confirma o corrige. */
-  private aplicarLectura(l: LecturaRecibo, conf: Record<string, number>): void {
+  /**
+   * Rellena los campos con confianza ≥ 0.9; el chofer confirma o corrige. Con
+   * `sobrescribir=false` solo toca los campos vacíos (lectura al reconectar).
+   */
+  private aplicarLectura(l: LecturaRecibo, conf: Record<string, number>, sobrescribir = true): void {
     const UMBRAL = 0.9;
     this.lecturaCruda.set(l);
     const llenados: string[] = [];
@@ -941,14 +977,14 @@ export class CombustiblePage extends GuardedWizard {
       const v = l[campo];
       return v !== null && v !== undefined && v !== '' && (conf[campo as string] ?? 0) >= UMBRAL;
     };
-    if (ok('galones')) { this.galones.set(Number(l.galones)); this.galonesRaw.set(String(l.galones)); llenados.push('Galones'); }
-    if (ok('monto')) { this.monto.set(Number(l.monto)); this.montoRaw.set(String(l.monto)); llenados.push('Monto'); }
-    if (ok('km') && l.km != null) { this.km.set(Number(l.km)); llenados.push('Kilometraje'); }
+    if (ok('galones') && (sobrescribir || this.galones() == null)) { this.galones.set(Number(l.galones)); this.galonesRaw.set(String(l.galones)); llenados.push('Galones'); }
+    if (ok('monto') && (sobrescribir || this.monto() == null)) { this.monto.set(Number(l.monto)); this.montoRaw.set(String(l.monto)); llenados.push('Monto'); }
+    if (ok('km') && l.km != null && (sobrescribir || this.km() == null)) { this.km.set(Number(l.km)); llenados.push('Kilometraje'); }
     if (ok('producto') && (l.producto === 'diesel' || l.producto === 'gasolina')) { this.producto.set(l.producto); llenados.push('Producto'); }
-    if (ok('estacion')) { this.estacionOtro.set(true); this.estacionOtroTexto.set(String(l.estacion)); llenados.push('Estación'); }
-    if (ok('numero_recibo')) { this.numeroRecibo.set(String(l.numero_recibo).replace(/\D/g, '')); llenados.push('N° recibo'); }
-    if (ok('tarjeta_ult4')) { this.tarjeta.set(String(l.tarjeta_ult4)); llenados.push('Tarjeta'); }
-    if (ok('fecha') && this.permisoRetro()) { this.fechaRetro.set(String(l.fecha)); llenados.push('Fecha'); }
+    if (ok('estacion') && (sobrescribir || !this.estacionOtro())) { this.estacionOtro.set(true); this.estacionOtroTexto.set(String(l.estacion)); llenados.push('Estación'); }
+    if (ok('numero_recibo') && (sobrescribir || !this.numeroRecibo())) { this.numeroRecibo.set(String(l.numero_recibo).replace(/\D/g, '')); llenados.push('N° recibo'); }
+    if (ok('tarjeta_ult4') && (sobrescribir || !this.tarjeta())) { this.tarjeta.set(String(l.tarjeta_ult4)); llenados.push('Tarjeta'); }
+    if (ok('fecha') && this.permisoRetro() && (sobrescribir || !this.fechaRetro())) { this.fechaRetro.set(String(l.fecha)); llenados.push('Fecha'); }
     this.leidoCampos.set(llenados);
   }
 
