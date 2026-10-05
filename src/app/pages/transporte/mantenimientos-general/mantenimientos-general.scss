@@ -1,0 +1,150 @@
+// CG13 — módulo de mantenimientos (lista general + filtros + adjuntos).
+.mant-gen {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  }
+  &__back {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    font-size: 1.4rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+  &__icon { font-size: 1.6rem; }
+  &__title { margin: 0; font-size: 1.25rem; color: var(--text); }
+  &__sub { margin: 0; font-size: 0.85rem; color: var(--text-2); }
+
+  &__nuevo {
+    width: 100%;
+    margin-bottom: 14px;
+  }
+
+  &__filtros {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  &__frow {
+    display: flex;
+    gap: 10px;
+    > * { flex: 1 1 0; min-width: 0; }
+  }
+  &__flabel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-2);
+  }
+  &__limpiar {
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  &__count {
+    margin: 0 0 10px;
+    font-size: 0.82rem;
+    color: var(--text-2);
+  }
+}
+
+// Campos (select/input/date) — alineados con el design system.
+.field {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font: inherit;
+  color: var(--text);
+}
+
+// Tarjeta de mantenimiento (misma piel que la lista por vehículo).
+.mant-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease;
+
+  &:active { box-shadow: 0 0 0 2px var(--accent); }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  &__tipo { font-weight: 700; color: var(--text); }
+  &__estado {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--border);
+    color: var(--text-2);
+    &--ok {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+  }
+  &__veh { margin: 8px 0 2px; font-size: 0.9rem; color: var(--text); }
+  &__desc { margin: 4px 0; font-size: 0.88rem; color: var(--text-2); }
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--text-2);
+  }
+  &__cerrar { width: 100%; margin-top: 12px; }
+}
+
+// Modal para elegir vehículo al crear.
+.mant-gen__picker {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+
+  &-box {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    min-height: 100%;
+    background: var(--bg);
+    padding: calc(48px + env(safe-area-inset-top)) 16px 24px;
+  }
+  &-close {
+    position: absolute;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+}

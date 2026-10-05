@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 95%** del alcance · **Kreyòl (ht): 0%**
+- **Inglés (en): 94%** del alcance · **Kreyòl (ht): 0%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -20,7 +20,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/admin/unidades | 4 | 0 | 100% | 0% |  |
 | pages/admin/usuarios | 38 | 0 | 82% | 0% |  |
 | pages/admin/versiones | 8 | 1 | 89% | 0% |  |
-| pages/auth/login | 9 | 2 | 82% | 0% |  |
+| pages/auth/login | 9 | 2 | 73% | 0% |  |
 | pages/auth/pin-acceso-change | 3 | 0 | 100% | 0% |  |
 | pages/auth/pin-change | 1 | 0 | 100% | 0% |  |
 | pages/auth/pin-unlock | 10 | 0 | 100% | 0% |  |
@@ -141,8 +141,9 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
 | pages/transporte/generar-conduce | 101 | 1 | 99% | 0% |  |
-| pages/transporte/mantenimiento | 37 | 1 | 97% | 0% |  |
+| pages/transporte/mantenimiento | 42 | 1 | 91% | 0% |  |
 | pages/transporte/mantenimiento-cierre | 8 | 0 | 100% | 0% |  |
+| pages/transporte/mantenimientos-general | 20 | 0 | 50% | 0% |  |
 | pages/transporte/mantenimientos-lista | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mi-actividad | 54 | 0 | 100% | 0% |  |
 | pages/transporte/mi-recorrido | 11 | 0 | 100% | 0% |  |
@@ -181,6 +182,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/language-selector | 0 | 2 | 0% | 0% |  |
 | shared/ui/location-picker | 8 | 0 | 100% | 0% |  |
 | shared/ui/lugar-picker | 9 | 0 | 100% | 0% |  |
+| shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 67% | 0% |  |
@@ -194,6 +196,6 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/step-bar | 1 | 0 | 100% | 0% |  |
 | shared/ui/sticker-editor | 7 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-card | 2 | 0 | 100% | 0% |  |
-| shared/ui/vehiculo-picker | 12 | 0 | 100% | 0% |  |
+| shared/ui/vehiculo-picker | 14 | 0 | 86% | 0% |  |
 | shared/ui/voice-notes | 2 | 0 | 100% | 0% |  |
 | shared/ui/voice-recorder | 3 | 0 | 100% | 0% |  |

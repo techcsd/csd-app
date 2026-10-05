@@ -79,7 +79,7 @@
 
           @if (requiereDocumento()) {
             <label class="field-label preg__mt" for="doc">{{ 'Número de documento' | t }}</label>
-            <input id="doc" class="field" type="text" [ngModel]="documentoNumero()" (ngModelChange)="documentoNumero.set($event)" (blur)="verificarDuplicado()" [placeholder]="'Cédula o pasaporte' | t" />
+            <input id="doc" class="field" type="text" [appCedulaMask]="tipoDocumento() === 'cedula'" [ngModel]="documentoNumero()" (ngModelChange)="documentoNumero.set($event)" (blur)="verificarDuplicado()" [placeholder]="'Cédula o pasaporte' | t" />
 
             <!-- CE16 — aviso suave: ya existe un trabajador con este documento -->
             @if (dupAviso().length) {

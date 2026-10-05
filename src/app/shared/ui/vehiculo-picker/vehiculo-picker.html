@@ -42,6 +42,13 @@
     [title]="'No tienes un vehículo asignado' | t"
     [message]="'Solo puedes registrar combustible en el vehículo que tienes asignado. Si necesitas otro, pídele a Flota que te lo asigne.' | t"
   />
+} @else if (privadoSinAutorizados()) {
+  <!-- CG7 — chofer privado: solo ve los vehículos que le autoricen. -->
+  <app-empty-state
+    icon="🔑"
+    [title]="'Aún no tienes vehículos autorizados' | t"
+    [message]="'Pídele a Flota que te autorice el vehículo que vas a usar.' | t"
+  />
 } @else if (!disponibles().length) {
   <!-- BL2 — texto HONESTO: la query (activo + estado ≠ baja/no_disponible) NO mira
        asignación ni "en uso", así que no podemos afirmar por qué está vacía. -->

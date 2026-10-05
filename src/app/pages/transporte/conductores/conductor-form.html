@@ -37,7 +37,7 @@
       <input id="nom" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
 
       <label class="field-label" for="ced">{{ 'Cédula' | t }}</label>
-      <input id="ced" class="field" type="text" inputmode="numeric" [ngModel]="cedula()" (ngModelChange)="cedula.set($event)" placeholder="000-0000000-0" />
+      <input id="ced" class="field" type="text" inputmode="numeric" appCedulaMask [ngModel]="cedula()" (ngModelChange)="cedula.set($event)" placeholder="000-0000000-0" />
 
       <label class="field-label">{{ 'Categoría de licencia' | t }}</label>
       <app-select-list

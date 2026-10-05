@@ -1,0 +1,129 @@
+// CG13 — chips de adjuntos + hoja de tipo + lightbox de imagen.
+.madj {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 6px 10px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #d9dee5);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--text, #1b2430);
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:active { transform: scale(0.97); }
+    &:disabled { opacity: 0.6; }
+
+    &--add {
+      border-style: dashed;
+      color: var(--accent, #f97316);
+    }
+  }
+
+  &__ico { font-size: 0.95rem; }
+  &__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+}
+
+// Hoja inferior para elegir el tipo de documento.
+.madj__sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+
+  &-box {
+    width: 100%;
+    max-width: 520px;
+    background: var(--bg, #f4f6f9);
+    border-radius: 18px 18px 0 0;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  }
+  &-title { margin: 0 0 2px; font-size: 1.05rem; color: var(--text, #1b2430); }
+  &-sub {
+    margin: 0 0 14px;
+    font-size: 0.85rem;
+    color: var(--text-2, #5b6b80);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.madj__tipos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.madj__tipo {
+  min-height: 56px;
+  padding: 10px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #d9dee5);
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text, #1b2430);
+  cursor: pointer;
+
+  &:active { transform: scale(0.98); }
+  &:disabled { opacity: 0.6; }
+}
+.madj__cancel {
+  width: 100%;
+  margin-top: 14px;
+  min-height: 52px;
+  background: transparent;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-2, #5b6b80);
+  cursor: pointer;
+}
+
+// Lightbox de imagen.
+.madj__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.92);
+  padding: 16px;
+
+  &-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  &-close {
+    position: absolute;
+    top: calc(12px + env(safe-area-inset-top));
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+}

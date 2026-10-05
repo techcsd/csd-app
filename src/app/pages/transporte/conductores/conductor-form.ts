@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CedulaMask } from '../../../shared/ui/cedula-mask.directive';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
@@ -48,7 +49,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-conductor-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, SelectList, CollapsibleSelect, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, ToggleSwitch, GenerarAcceso, TranslatePipe],
+  imports: [FormsModule, CedulaMask, SelectList, CollapsibleSelect, OptionButton, WizardFooter, Skeleton, DraftBanner, DocSlot, ToggleSwitch, GenerarAcceso, TranslatePipe],
   templateUrl: './conductor-form.html',
   styleUrl: './conductor-form.scss',
 })

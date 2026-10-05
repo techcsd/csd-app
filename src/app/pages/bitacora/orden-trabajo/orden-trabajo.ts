@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CedulaMask } from '../../../shared/ui/cedula-mask.directive';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { StepBar } from '../../../shared/ui/step-bar/step-bar';
@@ -37,7 +38,7 @@ const TOTAL = 6;
   selector: 'app-orden-trabajo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, BigConfirm, ConfirmDialog, SignaturePad, Skeleton, TranslatePipe],
+  imports: [FormsModule, CedulaMask, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, BigConfirm, ConfirmDialog, SignaturePad, Skeleton, TranslatePipe],
   templateUrl: './orden-trabajo.html',
   styleUrl: './orden-trabajo.scss',
 })

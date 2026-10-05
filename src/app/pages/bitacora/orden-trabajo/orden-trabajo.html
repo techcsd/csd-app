@@ -108,7 +108,7 @@
         <label class="field-label">{{ 'Nombre del ingeniero' | t }}</label>
         <input class="field" type="text" [ngModel]="ingNombre()" (ngModelChange)="ingNombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
         <label class="field-label">{{ 'Cédula (opcional)' | t }}</label>
-        <input class="field" type="text" inputmode="numeric" [ngModel]="ingCedula()" (ngModelChange)="ingCedula.set($event)" placeholder="000-0000000-0" />
+        <input class="field" type="text" inputmode="numeric" appCedulaMask [ngModel]="ingCedula()" (ngModelChange)="ingCedula.set($event)" placeholder="000-0000000-0" />
         <label class="field-label">{{ 'Cargo / rol (opcional)' | t }}</label>
         <input class="field" type="text" [ngModel]="ingRolDesc()" (ngModelChange)="ingRolDesc.set($event)" [placeholder]="'Ej: Ing. residente' | t" />
 
@@ -127,7 +127,7 @@
         <label class="field-label">{{ 'Nombre del cliente' | t }}</label>
         <input class="field" type="text" [ngModel]="cliNombre()" (ngModelChange)="cliNombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
         <label class="field-label">{{ 'Cédula (opcional)' | t }}</label>
-        <input class="field" type="text" inputmode="numeric" [ngModel]="cliCedula()" (ngModelChange)="cliCedula.set($event)" placeholder="000-0000000-0" />
+        <input class="field" type="text" inputmode="numeric" appCedulaMask [ngModel]="cliCedula()" (ngModelChange)="cliCedula.set($event)" placeholder="000-0000000-0" />
         <label class="field-label">{{ 'Rol (opcional)' | t }}</label>
         <input class="field" type="text" [ngModel]="cliRolDesc()" (ngModelChange)="cliRolDesc.set($event)" [placeholder]="'Ej: Propietario' | t" />
 

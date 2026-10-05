@@ -124,9 +124,10 @@
         {{ (loading() ? 'Entrando…' : 'Entrar') | t }}
       </button>
 
-      <!-- AX2 — el acceso por cédula sirve a chofer Y capataz (rol resuelto por el backend). -->
+      <!-- CG4 — el acceso por cédula sirve a varios roles (no solo "conductor"); el
+           rol lo resuelve el backend. Texto sin la palabra "conductor" (nota #128). -->
       <p class="login__hint">
-        {{ '¿No tienes acceso? Pídele a administración que te lo genere desde tu ficha (conductor o capataz).' | t }}
+        {{ '¿No tienes acceso? Pídele a administración que te lo genere desde tu ficha.' | t }}
       </p>
     </form>
   }

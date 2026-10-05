@@ -163,3 +163,59 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
   no renderiza la plantilla Word. Los contratos formales de Sonia se generan/renderizan en
   la **web** (prod). Follow-up: portar `plantillas-documento.service` (getAll+renderizar)
   a la app si se quiere generar el contrato desde el teléfono. — *Diferido.*
+
+## Ronda CG (05-oct) — app 2.42.0
+
+- **CG6/CG7 · Chofer privado (nuevo).** El rol `chofer_privado` se separa del de flota
+  (`esChoferFlota` vs `esChoferPrivado` en `user-context.service`). En Transporte el privado
+  ve SOLO su lista blanca (uso de vehículo, combustible, inspección, aviso y mantenimientos);
+  **no** ve conduces, despachos, rutas, incentivo ni *Mi rendimiento*. Los RPC `mis_*` del
+  chofer ya son self-scoped (el servidor no le devuelve conduces/rutas), y los avisos los
+  decide el servidor. El **selector de vehículo** (uso/combustible/inspección) sale de la
+  única fuente `getVehiculosDisponiblesDetailed()`, que ahora **recorta a los autorizados**
+  (`vehiculo_autorizaciones`, RLS propia, cacheado offline, vigencia en cliente) cuando es
+  privado; si no tiene ninguno → *"Aún no tienes vehículos autorizados — pídeselo a Flota"*.
+  — *Contratos del padre (PROMPT-82) vivos en dev: `puede_ver_vehiculo(p_vehiculo,p_usuario)`,
+  `vehiculo_autorizaciones`, `autorizar_vehiculo_privado`, `listar_autorizaciones_vehiculo`.*
+  **Autorizar/retirar un vehículo a un privado se hace en la WEB** (ficha del vehículo/conductor,
+  admin/flota-elevado) — web-only; la app solo consume. — *Paridad: app consume, web gestiona.*
+
+- **CG13 · Mantenimientos en la app + PDF (nuevo).** Tile *Mantenimientos* (flota elevado +
+  privado scopeado) → módulo general (`transporte/mantenimientos-general`): lista de toda la
+  flota (`listar_mantenimientos` sin vehículo, cacheada), filtros (vehículo, tipo, estado,
+  taller, fecha) en cliente, *Nuevo* (elige vehículo → registrar) y *Cerrar*. **Adjuntos
+  imagen + PDF** (`mantenimiento_adjuntos`, bucket `vehiculos`): se adjuntan al **crear** (paso
+  de evidencia del wizard, con tipo de documento) y **después** desde el historial/lista;
+  offline por outbox (`tipo_op: mantenimiento_adjunto`, idempotente). Se **abren dentro del
+  sistema** con el `pdf-viewer` (PDF) o lightbox (imagen) vía `app-mant-adjuntos`, desde el
+  historial por vehículo y la lista general. **Tope 15 MB** (límite real del bucket; la spec
+  pedía 20 MB → *pendiente del padre: subir `file_size_limit` del bucket `vehiculos` a 20 MB*).
+  — *Contratos del padre vivos en dev: `mantenimiento_adjuntos` + `listar_mantenimientos` con
+  `adjuntos[]`.* **`editar_mantenimiento_app` NO existe** → la app no edita un mantenimiento
+  (solo crear/cerrar/adjuntar); editar queda **web-only** hasta que el padre publique el RPC.
+
+- **CG4 · Login "Con cédula" (ya cumplía).** El login de la app ya tenía pestañas *Con correo*
+  / *Con cédula* (sin "Soy conductor"). Se quitó la palabra "conductor" del texto de ayuda. — *OK.*
+
+- **CG3 · Máscara de cédula (nuevo).** Directiva `appCedulaMask` (`shared/ui/cedula-mask.directive`)
+  formatea `000-0000000-0` mientras se escribe (re-dispara `input` para no pelear con
+  `[ngModel]` de una vía). Aplicada en: login (ya lo hacía a mano), conductor, asignar acceso,
+  orden de trabajo (ingeniero + cliente) y personal de obra (solo cuando el tipo es cédula;
+  pasaporte/extranjera sin máscara). El servidor normaliza, así que el guion es solo visual. — *Paridad con la web.*
+
+- **CG5 · Alta por cédula (sin pantalla en la app).** La app NO crea usuarios por cédula (eso
+  es web); solo **otorga acceso** a una ficha existente (`conductor-crear-acceso` / `acceso-cedula`,
+  con mensajes humanos) e inicia sesión por cédula (`conductor-login`, fetch propio que ya
+  degrada: 401 "Cédula o PIN incorrectos", 429 rate-limit, red → reintento; nunca el crudo
+  "Failed to send a request…"). — *Web-only la creación; app ya robusta en errores.*
+
+- **CG2 · Importar personal con cargos (web-only).** El import masivo con alias de cargo
+  (`cargo_alias`) y la detección de `permiso_vencimiento` son de **escritorio** (Excel, drag &
+  drop). La app registra personal **uno por uno** eligiendo el cargo de un selector (ya manda el
+  `cargo_id` correcto, sin necesidad de alias). Capturar `permiso_vencimiento` en el registro de
+  la app queda como follow-up. — *Web-only (import); app OK con cargo por selector.*
+
+- **CG8/CG9/CG10/CG11/CG12 · Gestión de conductores/usuarios (web-only).** "Hacer conductor",
+  el `user-picker` con búsqueda, autollenado desde el perfil, arrastrar y soltar en adjuntos y la
+  fusión de usuarios duplicados son features de **Admin en la web** (escritorio). En móvil los
+  adjuntos siguen con cámara/galería/archivo. — *Web-only; anotado.*

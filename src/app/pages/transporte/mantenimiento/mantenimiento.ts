@@ -17,7 +17,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
-import { CapturedPhoto } from '../../../core/services/camera.service';
+import { CapturedPhoto, CameraService } from '../../../core/services/camera.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
@@ -25,6 +25,8 @@ import { VehiculoDetalle } from '../../../core/models/transporte.model';
 import {
   MantenimientosService,
   MantenimientoTipo,
+  ADJUNTO_TIPO_LABEL,
+  AdjuntoTipoDocumento,
 } from '../../../core/services/mantenimientos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -83,6 +85,7 @@ export class MantenimientoPage implements OnDestroy {
   private borrador = inject(BorradorService);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private camera = inject(CameraService);
 
   readonly total = TOTAL_STEPS;
   readonly maxFotos = MAX_FOTOS;
@@ -108,6 +111,14 @@ export class MantenimientoPage implements OnDestroy {
   notas = signal(''); // AL7 — notas del trabajo
   fotos = signal<Record<number, CapturedPhoto>>({});
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
+
+  // CG13 — documentos del taller (PDF o foto) con tipo de documento; se encolan como
+  // adjuntos tras crear el mantenimiento. El flujo típico de Raykler: un correctivo
+  // con la factura/informe del taller en PDF.
+  readonly docTipos: AdjuntoTipoDocumento[] = ['factura', 'informe', 'cotizacion', 'garantia', 'otro'];
+  docTipoLabel = (t: string): string => ADJUNTO_TIPO_LABEL[t as AdjuntoTipoDocumento] ?? t;
+  documentos = signal<Array<{ blob: Blob; nombre: string; mime: string; tipoDocumento: string }>>([]);
+  docPendiente = signal<{ blob: Blob; nombre: string; mime: string } | null>(null);
 
   /** X6-app — el checkbox "incluyó preventivo" solo aplica si NO es preventivo. */
   mostrarIncluyePreventivo = computed(() => {
@@ -246,6 +257,30 @@ export class MantenimientoPage implements OnDestroy {
     void this.borrador.removeFoto(this.clave, String(idx));
   }
 
+  // ── CG13 — documentos del taller (PDF/foto) ──────────────────────────────────
+  async elegirDocumento(): Promise<void> {
+    const doc = await this.camera.pickDocument();
+    if (!doc) return;
+    if (doc.blob.size > 15 * 1024 * 1024) {
+      this.toast.error(this.i18n.t('El archivo supera el máximo de 15 MB.'));
+      return;
+    }
+    const mime = doc.esImagen ? 'image/jpeg' : 'application/pdf';
+    this.docPendiente.set({ blob: doc.blob, nombre: doc.nombre, mime });
+  }
+  cancelarDocumento(): void {
+    this.docPendiente.set(null);
+  }
+  confirmarDocumento(tipo: AdjuntoTipoDocumento): void {
+    const p = this.docPendiente();
+    if (!p) return;
+    this.documentos.update((l) => [...l, { ...p, tipoDocumento: tipo }]);
+    this.docPendiente.set(null);
+  }
+  quitarDocumento(i: number): void {
+    this.documentos.update((l) => l.filter((_, idx) => idx !== i));
+  }
+
   next(): void {
     if (!this.canAdvance()) return;
     this.step.update((s) => Math.min(this.total, s + 1));
@@ -323,6 +358,7 @@ export class MantenimientoPage implements OnDestroy {
         proveedor: this.taller().trim() || null, // AL7
         notas: this.notas().trim() || null, // AL7
         fotos,
+        adjuntos: this.documentos(), // CG13 — PDF/foto del taller
         voces: this.voces().map((n) => n.blob),
         placa: this.placa(),
         tareaVinculada: this.tareaVinculada, // AG15

@@ -39,9 +39,13 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-05';
 
-const TITULO = 'El recibo se lee también cuando vuelve la señal';
+const TITULO = 'Mantenimientos con PDF, chofer privado y cédula con formato';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Combustible', d: 'Si tomas la foto del recibo sin señal, la app la lee sola en cuanto vuelve el internet y te rellena los datos (galones, monto, estación, kilometraje…) sin borrar lo que ya hayas escrito a mano. Mientras no hay señal te avisa que lo leerá al reconectar, y siempre puedes tocar "Leer recibo" para hacerlo al momento.' },
+  { t: 'nuevo', m: 'Mantenimientos', d: 'Ya puedes ver y manejar los mantenimientos de toda la flota desde la app: lista general con filtros (vehículo, tipo, estado, taller, fecha), registrar y cerrar, e historial por vehículo.' },
+  { t: 'nuevo', m: 'Mantenimientos', d: 'Adjunta el PDF o la foto del taller (factura, informe, cotización, garantía…) y ábrelo dentro del sistema cuando quieras, desde el mantenimiento y desde el historial. Funciona sin señal: se sube cuando vuelve el internet.' },
+  { t: 'mejora', m: 'Chofer privado', d: 'El chofer privado ahora ve solo lo suyo: su vehículo, inspección, combustible y mantenimiento. Ya no ve conduces, rutas ni despachos que no le tocan.' },
+  { t: 'mejora', m: 'Chofer privado', d: 'El chofer privado solo ve y usa los vehículos que Flota le autoriza; si no tiene ninguno, la app se lo dice claro.' },
+  { t: 'mejora', m: 'Cédula', d: 'Al escribir una cédula, la app le da formato solo (000-0000000-0) mientras tecleas, en todos los campos de cédula.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

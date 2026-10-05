@@ -41,6 +41,33 @@ export const MANTENIMIENTO_TIPO_LABEL: Record<MantenimientoTipo, string> = {
   otros: 'Otros servicios',
 };
 
+/** CG13 — tipo de documento de un adjunto de mantenimiento (coincide con el servidor). */
+export type AdjuntoTipoDocumento = 'factura' | 'informe' | 'cotizacion' | 'garantia' | 'foto' | 'otro';
+
+/** CG13 — etiqueta en español RD por tipo de documento del adjunto. */
+export const ADJUNTO_TIPO_LABEL: Record<AdjuntoTipoDocumento, string> = {
+  factura: 'Factura',
+  informe: 'Informe del taller',
+  cotizacion: 'Cotización',
+  garantia: 'Garantía',
+  foto: 'Foto',
+  otro: 'Otro',
+};
+
+/** CG13 — un adjunto (imagen o PDF del taller) de un mantenimiento (tabla mantenimiento_adjuntos). */
+export interface MantenimientoAdjunto {
+  id: string;
+  path: string;
+  nombre: string | null;
+  mime: string | null;
+  tipo_documento: string;
+}
+
+/** CG13 — ¿el adjunto es un PDF? (para pintar el chip 📄 y abrir el visor de PDF). */
+export function adjuntoEsPdf(a: MantenimientoAdjunto): boolean {
+  return (a.mime ?? '').includes('pdf') || /\.pdf$/i.test(a.nombre ?? '') || /\.pdf$/i.test(a.path);
+}
+
 /** AG9 — una fila del historial de mantenimientos de un vehículo (mantenimientos_por_vehiculo). */
 export interface MantenimientoItem {
   id: string;
@@ -58,6 +85,13 @@ export interface MantenimientoItem {
   /** AL7 — quién registró el mantenimiento (chofer o flota). */
   creado_por?: string | null;
   registrado_por?: string | null;
+  /** CG13 — adjuntos (imágenes + PDF del taller) con tipo de documento. */
+  adjuntos?: MantenimientoAdjunto[];
+  /** CG13 — placa/marca/modelo del vehículo (lista general; el RPC los anida en `vehiculo`). */
+  vehiculo_id?: string | null;
+  placa?: string | null;
+  marca?: string | null;
+  modelo?: string | null;
 }
 
 /** AG9 — input del cierre de mantenimiento (costo + evidencia) desde la app. */
@@ -89,6 +123,8 @@ export interface MantenimientoCaptura {
   notas?: string | null;
   /** Up to 3 optional evidence photos, in capture order. */
   fotos: Blob[];
+  /** CG13 — documentos del taller (PDF o imagen) con tipo, encolados como adjuntos. */
+  adjuntos?: Array<{ blob: Blob; nombre: string; mime: string; tipoDocumento: string }>;
   /** Z23 — notas de voz múltiples (opcional). */
   voces?: Blob[];
   placa: string;
@@ -111,6 +147,7 @@ export class MantenimientosService {
   constructor() {
     this.registerHandler();
     this.registerCierreHandler();
+    this.registerAdjuntoHandler(); // CG13
   }
 
   /**
@@ -141,7 +178,7 @@ export class MantenimientosService {
    * paginar por cursor si algún vehículo supera las 200 filas.
    */
   async listarMantenimientosPagina(
-    vehiculoId: string,
+    vehiculoId: string | null,
     limite = 50,
     cursorFecha: string | null = null,
     cursorId: string | null = null,
@@ -165,6 +202,7 @@ export class MantenimientosService {
     // (lo pinta la ficha: 🧑 {{ m.registrado_por }}); `creado_por` = uuid.
     const usuario = m['creado_por_usuario'] as { nombre?: string } | null;
     const nombre = usuario?.nombre ?? (m['registrado_por'] as string | null) ?? null;
+    const veh = m['vehiculo'] as { placa?: string; marca?: string; modelo?: string } | null; // CG13
     return {
       id: String(m['id']),
       tipo: (m['tipo'] as MantenimientoTipo) ?? 'preventivo',
@@ -180,7 +218,69 @@ export class MantenimientosService {
       created_at: String(m['created_at'] ?? ''),
       creado_por: (m['creado_por'] as string | null) ?? null,
       registrado_por: nombre,
+      adjuntos: (m['adjuntos'] as MantenimientoAdjunto[] | null) ?? [], // CG13
+      vehiculo_id: (m['vehiculo_id'] as string | null) ?? null,
+      placa: veh?.placa ?? null,
+      marca: veh?.marca ?? null,
+      modelo: veh?.modelo ?? null,
     };
+  }
+
+  /**
+   * CG13 — lista GENERAL de mantenimientos (todos los vehículos que el usuario
+   * puede ver; el servidor filtra por `puede_ver_vehiculo`/submódulo flota). Una
+   * sola página (200, el tope del servidor) + filtros en cliente: para la flota de
+   * CSD cabe de sobra. Cacheada (read-through) para verse offline.
+   */
+  async listarMantenimientosGeneral(): Promise<MantenimientoItem[]> {
+    const data = await this.catalog.refresh<MantenimientoItem[]>('mant_general', async () => {
+      return this.listarMantenimientosPagina(null, 200, null, null);
+    });
+    return data ?? [];
+  }
+
+  /** CG13 — URL firmada (1 h) de un adjunto en el bucket `vehiculos` (privado). */
+  async signedUrlAdjunto(path: string): Promise<string | null> {
+    const { data } = await this.supabase.client.storage.from('vehiculos').createSignedUrl(path, 3600);
+    return data?.signedUrl ?? null;
+  }
+
+  /**
+   * CG13 — encola un ADJUNTO (imagen o PDF del taller) de un mantenimiento. Funciona
+   * offline: el archivo sube al bucket `vehiculos` y el handler inserta la fila en
+   * `mantenimiento_adjuntos`. Idempotente por `adjunto_id`. El mantenimiento debe
+   * existir (FK): como el outbox es FIFO, si se encola DESPUÉS del alta (misma sesión
+   * offline), el alta corre primero.
+   */
+  async enqueueAdjunto(input: {
+    mantenimientoId: string;
+    vehiculoId: string;
+    blob: Blob;
+    nombre: string;
+    mime: string;
+    tipoDocumento: string;
+  }): Promise<void> {
+    const adjId = crypto.randomUUID();
+    const capturado_en = new Date().toISOString();
+    const ext = input.mime.includes('pdf')
+      ? 'pdf'
+      : (input.nombre.split('.').pop() ?? '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = `mantenimiento/${input.mantenimientoId}/adjuntos/${adjId}.${ext}`;
+    await this.sync.enqueue({
+      id: `mant_adj_${adjId}`,
+      tipo_op: 'mantenimiento_adjunto',
+      capturado_en,
+      payload: {
+        adjunto_id: adjId,
+        mantenimiento_id: input.mantenimientoId,
+        vehiculo_id: input.vehiculoId,
+        nombre: input.nombre,
+        mime: input.mime,
+        tipo_documento: input.tipoDocumento,
+      },
+      fotos: [{ id: adjId, bucket: 'vehiculos', path, slot: 'archivo', blob: input.blob }],
+      resumen: { nombre: input.nombre, capturado_en },
+    });
   }
 
   /** AG9 — encola el CIERRE de un mantenimiento (costo/proveedor/notas + evidencia). */
@@ -247,6 +347,18 @@ export class MantenimientosService {
       fotos,
       resumen: { placa: input.placa, tipo: input.tipo, capturado_en },
     });
+
+    // CG13 — documentos del taller (PDF/imagen) → adjuntos (tras el alta; FIFO).
+    for (const a of input.adjuntos ?? []) {
+      await this.enqueueAdjunto({
+        mantenimientoId: id,
+        vehiculoId: input.vehiculoId,
+        blob: a.blob,
+        nombre: a.nombre,
+        mime: a.mime,
+        tipoDocumento: a.tipoDocumento,
+      });
+    }
   }
 
   private registerHandler(): void {
@@ -317,6 +429,35 @@ export class MantenimientosService {
       await this.catalog.invalidate('pendientes_transporte');
       await this.catalog.invalidate('flota_vehiculos');
       await this.catalog.invalidate('mis_asignaciones');
+    });
+  }
+
+  /**
+   * CG13 — handler del adjunto: inserta la fila en `mantenimiento_adjuntos` con el
+   * path ya subido por el motor del outbox. Idempotente (upsert por id → si el envío
+   * se reintenta tras subir el archivo, no duplica). La RLS deja escribir a flota /
+   * a quien puede ver el vehículo del mantenimiento.
+   */
+  private registerAdjuntoHandler(): void {
+    this.sync.register('mantenimiento_adjunto', async (payload, photoPaths) => {
+      const path = photoPaths['archivo'];
+      if (!path) throw new Error('Falta el archivo del adjunto.');
+      const { error } = await this.supabase.client.from('mantenimiento_adjuntos').upsert(
+        {
+          id: payload['adjunto_id'],
+          mantenimiento_id: payload['mantenimiento_id'],
+          path,
+          nombre: payload['nombre'] ?? null,
+          mime: payload['mime'] ?? null,
+          tipo_documento: payload['tipo_documento'] ?? 'otro',
+        },
+        { onConflict: 'id', ignoreDuplicates: true },
+      );
+      if (error) throwSyncError(error);
+
+      const vehId = payload['vehiculo_id'] as string;
+      await this.catalog.invalidate(`mant_veh:${vehId}`);
+      await this.catalog.invalidate('mant_general');
     });
   }
 }
