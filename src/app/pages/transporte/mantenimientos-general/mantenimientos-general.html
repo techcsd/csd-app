@@ -1,0 +1,127 @@
+<div class="screen mant-gen">
+  <header class="mant-gen__header">
+    <button type="button" class="mant-gen__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mant-gen__icon">🔧</span>
+    <div>
+      <h1 class="mant-gen__title">{{ 'Mantenimientos' | t }}</h1>
+      <p class="mant-gen__sub">{{ 'Toda la flota' | t }}</p>
+    </div>
+  </header>
+
+  <div class="screen__body">
+    <button type="button" class="btn-cta mant-gen__nuevo" (click)="nuevo()">
+      ➕ {{ 'Nuevo mantenimiento' | t }}
+    </button>
+
+    <!-- Filtros -->
+    <div class="mant-gen__filtros">
+      <div class="mant-gen__frow">
+        <select class="field" [ngModel]="fVehiculo()" (ngModelChange)="fVehiculo.set($event)">
+          <option value="">{{ 'Todos los vehículos' | t }}</option>
+          @for (v of vehiculosFiltro(); track v.id) {
+            <option [value]="v.id">{{ v.placa }}</option>
+          }
+        </select>
+        <select class="field" [ngModel]="fTipo()" (ngModelChange)="fTipo.set($event)">
+          <option value="">{{ 'Todo tipo' | t }}</option>
+          @for (t of tipoLabels | keyvalue; track t.key) {
+            <option [value]="t.key">{{ t.value | t }}</option>
+          }
+        </select>
+      </div>
+      <div class="mant-gen__frow">
+        <select class="field" [ngModel]="fEstado()" (ngModelChange)="fEstado.set($event)">
+          <option value="">{{ 'Todo estado' | t }}</option>
+          <option value="pendiente">{{ 'Pendiente' | t }}</option>
+          <option value="en_proceso">{{ 'En proceso' | t }}</option>
+          <option value="completado">{{ 'Completado' | t }}</option>
+        </select>
+        <input class="field" type="text" [ngModel]="fTaller()" (ngModelChange)="fTaller.set($event)"
+          [placeholder]="'Taller…' | t" />
+      </div>
+      <div class="mant-gen__frow">
+        <label class="mant-gen__flabel">{{ 'Desde' | t }}
+          <input class="field" type="date" [ngModel]="fDesde()" (ngModelChange)="fDesde.set($event)" />
+        </label>
+        <label class="mant-gen__flabel">{{ 'Hasta' | t }}
+          <input class="field" type="date" [ngModel]="fHasta()" (ngModelChange)="fHasta.set($event)" />
+        </label>
+      </div>
+      @if (hayFiltros()) {
+        <button type="button" class="mant-gen__limpiar" (click)="limpiarFiltros()">
+          {{ 'Limpiar filtros' | t }}
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (fallo()) {
+      <app-empty-state
+        icon="⚠️"
+        [title]="'No pudimos cargar los mantenimientos' | t"
+        [message]="'Revisa tu conexión y reintenta.' | t"
+        [ctaLabel]="'Reintentar' | t"
+        (action)="cargar()"
+      />
+    } @else if (!filtrados().length) {
+      <app-empty-state
+        icon="🔧"
+        [title]="(hayFiltros() ? 'Sin resultados con esos filtros' : 'Aún no hay mantenimientos') | t"
+        [message]="(hayFiltros() ? 'Prueba a quitar algún filtro.' : 'Registra el primero con el botón de arriba.') | t"
+      />
+    } @else {
+      <p class="mant-gen__count">{{ filtrados().length }} {{ 'resultado(s)' | t }}</p>
+      @for (m of filtrados(); track m.id) {
+        <div class="mant-card" (click)="abrirHistorial(m)">
+          <div class="mant-card__row">
+            <span class="mant-card__tipo">{{ tipoLabel(m.tipo) | t }}</span>
+            <span class="mant-card__estado" [class.mant-card__estado--ok]="m.estado === 'completado'">
+              {{ estadoLabel(m.estado) | t }}
+            </span>
+          </div>
+          <p class="mant-card__veh">🚚 {{ vehiculoLabel(m) }}</p>
+          @if (m.descripcion) {
+            <p class="mant-card__desc">{{ m.descripcion }}</p>
+          }
+          <div class="mant-card__meta">
+            <span>📅 {{ fecha(m.fecha) }}</span>
+            @if (m.proveedor) { <span>🏭 {{ m.proveedor }}</span> }
+            @if (m.costo != null) { <span>💵 {{ m.costo | number: '1.0-2' }}</span> }
+            @if (m.registrado_por) { <span>🧑 {{ m.registrado_por }}</span> }
+          </div>
+
+          <!-- CG13 — adjuntos (imagen/PDF) + adjuntar. stopPropagation lo maneja el chip. -->
+          <div (click)="$event.stopPropagation()">
+            <app-mant-adjuntos
+              [adjuntos]="m.adjuntos ?? []"
+              [mantenimientoId]="m.id"
+              [vehiculoId]="m.vehiculo_id ?? null"
+              [puedeAdjuntar]="true"
+            />
+          </div>
+
+          @if (m.estado !== 'completado') {
+            <button type="button" class="btn-cta mant-card__cerrar" (click)="cerrarMant(m, $event)">
+              ✅ {{ 'Cerrar con evidencia' | t }}
+            </button>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Nuevo: elegir vehículo -->
+@if (eligiendoVehiculo()) {
+  <div class="mant-gen__picker" role="dialog" aria-modal="true">
+    <div class="mant-gen__picker-box">
+      <button type="button" class="mant-gen__picker-close" (click)="cancelarNuevo()" aria-label="Cerrar">✕</button>
+      <app-vehiculo-picker
+        [titulo]="'¿Qué vehículo?' | t"
+        [subtitulo]="'Elige el vehículo para registrar el mantenimiento.' | t"
+        (elegido)="onVehiculoElegido($event)"
+      />
+    </div>
+  </div>
+}

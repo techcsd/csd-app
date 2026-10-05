@@ -1,5 +1,5 @@
 {
-  "en": 95,
+  "en": 94,
   "ht": 0,
   "alcance": true,
   "byScreen": {
@@ -78,7 +78,7 @@
     "pages/auth/login": {
       "conT": 9,
       "sinT": 2,
-      "en": 82,
+      "en": 73,
       "ht": 0
     },
     "pages/auth/pin-acceso-change": {
@@ -808,15 +808,21 @@
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
-      "conT": 37,
+      "conT": 42,
       "sinT": 1,
-      "en": 97,
+      "en": 91,
       "ht": 0
     },
     "pages/transporte/mantenimiento-cierre": {
       "conT": 8,
       "sinT": 0,
       "en": 100,
+      "ht": 0
+    },
+    "pages/transporte/mantenimientos-general": {
+      "conT": 20,
+      "sinT": 0,
+      "en": 50,
       "ht": 0
     },
     "pages/transporte/mantenimientos-lista": {
@@ -1119,6 +1125,12 @@
       "en": 100,
       "ht": 0
     },
+    "shared/ui/mant-adjuntos": {
+      "conT": 3,
+      "sinT": 0,
+      "en": 67,
+      "ht": 0
+    },
     "shared/ui/molde-compositor": {
       "conT": 12,
       "sinT": 1,
@@ -1228,9 +1240,9 @@
       "ht": 0
     },
     "shared/ui/vehiculo-picker": {
-      "conT": 12,
+      "conT": 14,
       "sinT": 0,
-      "en": 100,
+      "en": 86,
       "ht": 0
     },
     "shared/ui/voice-notes": {

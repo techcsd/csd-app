@@ -5,6 +5,7 @@ import { CatalogService, ListaCatalogo } from '../sync/catalog.service';
 import { throwSyncError, SyncService } from '../sync/sync.service';
 import { AudioNotasService, AudioNotaMeta } from './audio-notas.service';
 import { db } from '../db/app-db';
+import { fechaLocalISO } from '../util/fecha';
 import {
   AsignacionResultado,
   CombustibleNivel,
@@ -443,8 +444,44 @@ export class VehiculosService {
     // alimenta todos los selectores (picker, asignarme, semanal, generar conduce…).
     // El admin (rol) SÍ los ve para QA.
     const rows = res.data ?? [];
-    const items = this.ctx.esAdmin() ? rows : rows.filter((v) => !v.es_prueba);
+    let items = this.ctx.esAdmin() ? rows : rows.filter((v) => !v.es_prueba);
+    // CG7 — el CHOFER PRIVADO solo puede ver/usar los vehículos que admin o un rol
+    // elevado (Raykler) le AUTORICE. Esta es la única fuente de los selectores (uso,
+    // combustible, inspección), así que el recorte vive aquí. Un elevado que además
+    // tenga el rol privado NO se recorta (ve toda la flota).
+    if (this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado() && !this.ctx.esAdmin()) {
+      const ids = await this.misVehiculosAutorizadosIds();
+      items = items.filter((v) => ids.has(v.vehiculo_id));
+    }
     return { items, failed: res.failed, fromCache: res.fromCache };
+  }
+
+  /**
+   * CG7 — IDs de los vehículos que el usuario tiene AUTORIZADOS y vigentes
+   * (`vehiculo_autorizaciones`; la RLS deja leer solo las propias). Cacheado
+   * (read-through) para que el selector del chofer privado funcione OFFLINE con la
+   * última autorización conocida. La vigencia (desde/hasta) se evalúa en cliente.
+   */
+  async misVehiculosAutorizadosIds(): Promise<Set<string>> {
+    const uid = this.ctx.profile()?.id;
+    if (!uid) return new Set();
+    const rows = await this.catalog.refresh<Array<{ vehiculo_id: string; desde: string | null; hasta: string | null }>>(
+      `veh_autorizados:${uid}`,
+      async () => {
+        const { data, error } = await this.supabase.client
+          .from('vehiculo_autorizaciones')
+          .select('vehiculo_id, desde, hasta')
+          .eq('usuario_id', uid)
+          .eq('activa', true);
+        if (error) throw new Error(error.message);
+        return (data as Array<{ vehiculo_id: string; desde: string | null; hasta: string | null }>) ?? [];
+      },
+    );
+    const hoy = fechaLocalISO(); // día LOCAL (RD, UTC-4)
+    const vigentes = (rows ?? []).filter(
+      (a) => (!a.desde || a.desde <= hoy) && (!a.hasta || a.hasta >= hoy),
+    );
+    return new Set(vigentes.map((a) => a.vehiculo_id));
   }
 
   /** U6 — foto_path (primera) por vehículo, para pintar fotos en listas. */

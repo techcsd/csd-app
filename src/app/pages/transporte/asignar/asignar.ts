@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CedulaMask } from '../../../shared/ui/cedula-mask.directive';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -33,7 +34,7 @@ type TipoAutorizado = 'Liviano' | 'Pesado' | 'Ambos';
   selector: 'app-asignar-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, OptionButton, EmptyState, Skeleton, VehiculoCard, DocSlot, TranslatePipe],
+  imports: [FormsModule, CedulaMask, StepBar, OptionButton, EmptyState, Skeleton, VehiculoCard, DocSlot, TranslatePipe],
   templateUrl: './asignar.html',
   styleUrl: './asignar.scss',
 })

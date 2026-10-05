@@ -34,6 +34,9 @@ interface HubTile {
   elevado?: boolean;
   /** AV2 — true = incentivo PERSONAL ("Mi rendimiento"): solo Chofer y Jefe de flota. */
   incentivoPersonal?: boolean;
+  /** CG6 — true = visible para el CHOFER PRIVADO (lista blanca: su vehículo, inspección,
+   *  combustible, aviso y mantenimiento). El privado NO ve nada más del hub. */
+  privado?: boolean;
 }
 
 // AI1 — Transporte v3: menú "10 botones", 3 por fila (iconos pequeños), según el
@@ -44,14 +47,17 @@ const TILES: HubTile[] = [
   // ── Botones principales (sketch AI1) ─────────────────────────────────────────
   { key: 'misRutas', icon: '🗺️', label: 'Rutas', tint: '#0d9488' },
   { key: 'conducesHub', icon: '🧾', label: 'Conduce', tint: '#1e3a5f' },
-  { key: 'combustible', icon: '⛽', label: 'Registro Combustible', tint: '#dc2626' },
+  { key: 'combustible', icon: '⛽', label: 'Registro Combustible', tint: '#dc2626', privado: true },
   // AI7 — "Uso de vehículo" (ex "Asignarme vehículo"): flujo unificado AF34.
-  { key: 'usoVehiculo', icon: '🚗', label: 'Uso de Vehículo', tint: '#2563eb' },
+  { key: 'usoVehiculo', icon: '🚗', label: 'Uso de Vehículo', tint: '#2563eb', privado: true },
   { key: 'multas', icon: '🚦', label: 'Multas', tint: '#b91c1c' },
   // AI13 — Aviso de vehículo (reportar novedad + ver alertas).
-  { key: 'avisoVehiculo', icon: '📣', label: 'Aviso de Vehículo', tint: '#ca8a04' },
+  { key: 'avisoVehiculo', icon: '📣', label: 'Aviso de Vehículo', tint: '#ca8a04', privado: true },
   // AI8 — "Inspección Vehículo" (ex "Reporte semanal").
-  { key: 'semanal', icon: '📋', label: 'Inspección Vehículo', tint: '#f97316' },
+  { key: 'semanal', icon: '📋', label: 'Inspección Vehículo', tint: '#f97316', privado: true },
+  // CG13 — Mantenimientos (lista general + crear/cerrar + PDF). Gestión (flota elevado);
+  // el chofer PRIVADO también lo ve, scopeado por el servidor a su(s) vehículo(s).
+  { key: 'mantenimientos', icon: '🔧', label: 'Mantenimientos', tint: '#0891b2', elevado: true, privado: true },
   { key: 'actividad', icon: '📈', label: 'Mi Actividad', tint: '#16a34a' },
   // AT2 — "Mi rendimiento": informe de incentivo propio (puntaje semanal + badge).
   // AV2 — solo Chofer y Jefe de flota (incentivoPersonal); no admin/gerencia.
@@ -115,6 +121,11 @@ export class TransportePage {
   // AI1 — cuadros del hub gated por rol (R14): el chofer ve solo los suyos.
   // El banner "Doc. en proceso" ya no es un tile: va arriba (ver template).
   tiles = computed(() => {
+    // CG6 — el chofer PRIVADO ve SOLO su lista blanca (privado:true): nada de
+    // conduces, rutas, despachos, incentivo ni desempeño.
+    if (this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado()) {
+      return this.aplicarOrden(TILES.filter((t) => t.privado === true));
+    }
     const base = TILES.filter((t) => {
       // AV2 — "Mi rendimiento": solo Chofer y Jefe de flota (fuente única en ctx).
       if (t.incentivoPersonal) return this.ctx.puedeVerMiRendimiento();
@@ -284,6 +295,7 @@ export class TransportePage {
       case 'multas': return this.multas();
       case 'avisos': return this.avisos();
       case 'incentivos': return void this.router.navigate(['/incentivos']);
+      case 'mantenimientos': return void this.router.navigate(['/transporte/mantenimientos-general']);
     }
   }
 

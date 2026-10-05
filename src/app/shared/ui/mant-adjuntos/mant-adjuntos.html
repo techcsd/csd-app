@@ -1,0 +1,49 @@
+<!-- CG13 — chips de adjuntos: imagen 🖼️ / PDF 📄 → abren el documento en el sistema. -->
+@if (adjuntos().length || puedeAdjuntar()) {
+  <div class="madj">
+    @for (a of adjuntos(); track a.id) {
+      <button type="button" class="madj__chip" [disabled]="abriendo()" (click)="abrir(a)">
+        <span class="madj__ico" aria-hidden="true">{{ esPdf(a) ? '📄' : '🖼️' }}</span>
+        <span class="madj__label">{{ a.nombre || tipoLabel(a.tipo_documento) }}</span>
+      </button>
+    }
+    @if (puedeAdjuntar() && mantenimientoId()) {
+      <button type="button" class="madj__chip madj__chip--add" (click)="elegirArchivo()">
+        <span class="madj__ico" aria-hidden="true">➕</span>
+        <span class="madj__label">{{ 'Adjuntar PDF o foto' | t }}</span>
+      </button>
+    }
+  </div>
+}
+
+<!-- Paso 2 — elegir el tipo de documento del archivo recién tomado. -->
+@if (pendiente(); as p) {
+  <div class="madj__sheet" role="dialog" aria-modal="true">
+    <div class="madj__sheet-box">
+      <h3 class="madj__sheet-title">{{ 'Tipo de documento' | t }}</h3>
+      <p class="madj__sheet-sub">{{ p.nombre }}</p>
+      <div class="madj__tipos">
+        @for (t of tipos; track t) {
+          <button type="button" class="madj__tipo" [disabled]="subiendo()" (click)="confirmarTipo(t)">
+            {{ tipoLabel(t) }}
+          </button>
+        }
+      </div>
+      <button type="button" class="madj__cancel" [disabled]="subiendo()" (click)="cancelarPendiente()">
+        {{ 'Cancelar' | t }}
+      </button>
+    </div>
+  </div>
+}
+
+<!-- Visor: PDF inline o imagen a pantalla completa. -->
+@if (visor(); as v) {
+  @if (v.esPdf) {
+    <app-pdf-viewer [src]="v.url" [nombre]="v.nombre" (cerrado)="cerrarVisor()" />
+  } @else {
+    <div class="madj__lightbox" (click)="cerrarVisor()">
+      <button type="button" class="madj__lightbox-close" (click)="cerrarVisor()" aria-label="Cerrar">✕</button>
+      <img class="madj__lightbox-img" [src]="v.url" [alt]="v.nombre" />
+    </div>
+  }
+}

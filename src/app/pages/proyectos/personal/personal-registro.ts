@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CedulaMask } from '../../../shared/ui/cedula-mask.directive';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -80,6 +81,7 @@ interface RegistroDraft {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     FormsModule,
+    CedulaMask,
     CollapsibleSelect,
     OptionButton,
     WizardFooter,

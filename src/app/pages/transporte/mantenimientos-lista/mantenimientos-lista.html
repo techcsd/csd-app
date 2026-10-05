@@ -41,6 +41,13 @@
                 <span>🧑 {{ m.registrado_por }}</span>
               }
             </div>
+            <!-- CG13 — adjuntos (imagen/PDF del taller) + adjuntar -->
+            <app-mant-adjuntos
+              [adjuntos]="m.adjuntos ?? []"
+              [mantenimientoId]="m.id"
+              [vehiculoId]="vehiculoId"
+              [puedeAdjuntar]="true"
+            />
             <button type="button" class="btn-cta mant-card__cerrar" (click)="cerrar(m)">
               ✅ {{ 'Cerrar con evidencia' | t }}
             </button>
@@ -77,6 +84,13 @@
                 <span>📷 {{ m.fotos!.length }}</span>
               }
             </div>
+            <!-- CG13 — adjuntos (imagen/PDF del taller) + adjuntar -->
+            <app-mant-adjuntos
+              [adjuntos]="m.adjuntos ?? []"
+              [mantenimientoId]="m.id"
+              [vehiculoId]="vehiculoId"
+              [puedeAdjuntar]="true"
+            />
           </div>
         }
       }

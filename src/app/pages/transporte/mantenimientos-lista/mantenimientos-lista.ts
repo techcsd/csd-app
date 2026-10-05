@@ -9,6 +9,7 @@ import {
 } from '../../../core/services/mantenimientos.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { MantAdjuntos } from '../../../shared/ui/mant-adjuntos/mant-adjuntos';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
@@ -19,7 +20,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
   selector: 'app-mantenimientos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Skeleton, TranslatePipe],
+  imports: [DatePipe, DecimalPipe, Skeleton, MantAdjuntos, TranslatePipe],
   templateUrl: './mantenimientos-lista.html',
   styleUrl: './mantenimientos-lista.scss',
 })

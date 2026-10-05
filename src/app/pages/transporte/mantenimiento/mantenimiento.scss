@@ -116,3 +116,113 @@
     accent-color: var(--color-primary);
   }
 }
+
+// CG13 — documentos del taller (PDF/foto) en el paso de evidencia.
+.mant-docs {
+  margin-top: 18px;
+
+  &__title { margin: 0 0 2px; font-size: 0.95rem; color: var(--text); }
+  &__hint { margin: 0 0 10px; font-size: 0.82rem; color: var(--text-2); }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  &__ico { font-size: 1.05rem; }
+  &__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text);
+    font-size: 0.86rem;
+  }
+  &__tipo {
+    font-size: 0.72rem;
+    color: var(--text-2);
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+  &__del {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  &__add {
+    width: 100%;
+    min-height: 48px;
+    background: var(--surface);
+    border: 1px dashed var(--accent);
+    border-radius: 12px;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  // Hoja para elegir el tipo del documento.
+  &__sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  &__sheet-box {
+    width: 100%;
+    max-width: 520px;
+    background: var(--bg);
+    border-radius: 18px 18px 0 0;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  }
+  &__sheet-title { margin: 0 0 2px; font-size: 1.05rem; color: var(--text); }
+  &__sheet-sub {
+    margin: 0 0 14px;
+    font-size: 0.85rem;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__tipos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  &__tipo {
+    min-height: 56px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    font: inherit;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+  }
+  &__cancel {
+    width: 100%;
+    margin-top: 14px;
+    min-height: 52px;
+    background: transparent;
+    border: none;
+    font: inherit;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+  }
+}

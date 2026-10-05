@@ -4,6 +4,7 @@ import { EmptyState } from '../empty-state/empty-state';
 import { Skeleton } from '../skeleton/skeleton';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoUsoService } from '../../../core/services/vehiculo-uso.service';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
@@ -24,6 +25,13 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 export class VehiculoPicker {
   private vehiculos = inject(VehiculosService);
   private usoSvc = inject(VehiculoUsoService);
+  private ctx = inject(UserContextService);
+
+  /** CG7 — chofer privado SIN vehículos autorizados vigentes → mensaje propio
+   *  ("pídeselo a Flota"), no el genérico "no hay vehículos disponibles". */
+  privadoSinAutorizados = computed(
+    () => this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado() && !this.loading() && !this.cargaFallo() && !this.disponibles().length,
+  );
 
   /** AT9 — identificación homologada Marca Modelo · Color · Placa (para el chip). */
   ident = vehiculoIdentidad;

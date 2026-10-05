@@ -493,6 +493,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/transporte/preuso/preuso').then((m) => m.PreusoPage),
   },
   {
+    // CG13 — módulo GENERAL de mantenimientos (toda la flota): lista + filtros +
+    // adjuntos (imagen/PDF) + nuevo. Gate flota (el servidor scopea al privado).
+    path: 'transporte/mantenimientos-general',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mantenimientos-general/mantenimientos-general').then(
+        (m) => m.MantenimientosGeneralPage,
+      ),
+  },
+  {
     // AG9 — hub de mantenimientos del vehículo (historial + registrar + cerrar).
     path: 'transporte/mantenimientos/:vehiculoId',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

@@ -162,18 +162,28 @@ export class UserContextService {
     this.roles().some((r) => UserContextService.DESARROLLADOR.includes(r)),
   );
 
+  // CG6 — CHOFER DE FLOTA (transportista): el que mueve conduces/rutas/despachos.
+  // Espejo de sgc.es_chofer() (rol 'chofer_transportista').
+  esChoferFlota = computed(() => this.hasRol('chofer_transportista'));
+
+  // CG6/CG7 — CHOFER PRIVADO (rol 'chofer_privado', nuevo 03-oct): conduce un
+  // vehículo que se le AUTORIZA; NO participa en conduces/rutas/despachos/incentivo.
+  // Ve solo: su vehículo autorizado, inspección, combustible, mantenimiento/avisos del
+  // vehículo, mensajes, notas y perfil. Causa raíz del bug (nota #130): antes `esChofer`
+  // miraba solo transportista, así que el privado (módulo `flota`) veía TODO el hub.
+  esChoferPrivado = computed(() => this.hasRol('chofer_privado'));
+
   // AC2 — el módulo Tecnología es público para TODOS los usuarios EXCEPTO el
-  // rol chofer (experiencia reducida de la app). Espejo de sgc.es_chofer()
-  // (rol 'chofer_transportista'); un usuario con ese rol se considera chofer
-  // aunque tenga otros roles, igual que el helper del servidor.
-  esChofer = computed(() => this.hasRol('chofer_transportista'));
+  // rol chofer (experiencia reducida de la app). CG6 — incluye ahora al chofer
+  // PRIVADO: él también tiene la experiencia reducida (sin Sistema/Inventario). El
+  // gating fino de conduces/rutas/incentivo lo hace `esChoferPrivado` por separado.
+  esChofer = computed(() => this.esChoferFlota() || this.esChoferPrivado());
 
   // AV2 — "Mi rendimiento" (informe de incentivo PERSONAL) participa SOLO el
-  // Chofer y el Jefe de flota. Fuente ÚNICA del gating (menú de Transporte + guard
-  // de ruta), espejo del gating por rol de la web: NO lo ven admin/gerencia/
-  // dirección (esos conservan las vistas ADMINISTRATIVAS del incentivo — /incentivos
-  // —, no la personal). Un `if` suelto por pantalla es justo lo que AV2 prohíbe.
-  puedeVerMiRendimiento = computed(() => this.esChofer() || this.hasRol('jefe_flota'));
+  // Chofer de FLOTA y el Jefe de flota. Fuente ÚNICA del gating (menú de Transporte +
+  // guard de ruta). CG6 — el chofer PRIVADO queda FUERA (no corre echadas ni ruta →
+  // no tiene desempeño). Por eso se mira `esChoferFlota`, no `esChofer`.
+  puedeVerMiRendimiento = computed(() => this.esChoferFlota() || this.hasRol('jefe_flota'));
 
   // AE6 — el rol admin (Xaviel) mantiene la opción de GALERÍA en los flujos
   // solo-cámara (combustible, reporte semanal, pre-uso, entrega/devolución) para
