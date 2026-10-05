@@ -1,7 +1,17 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 05/10/2026 — PROMPT-83 · Ronda **CG** (IDs CG) — **2.42.0 en dev (feature branch), PARA → OK → prod**
-**TL;DR:** ronda CG, mitad app (filas 125-137). Consume contratos de **PROMPT-82**, **verificados vivos en sgc-dev** (`puede_ver_vehiculo(p_vehiculo,p_usuario)`, `vehiculo_autorizaciones`, `autorizar_vehiculo_privado`/`listar_autorizaciones_vehiculo`, `mantenimiento_adjuntos`, `listar_mantenimientos` con `adjuntos[]`). **EN DEV:** `feature/cg-ronda` → **`dev` mergeado (`cc92c9c`) + push** → app-dev. construye; **APK dev 2.42.0** firmado + **publicado al bucket dev** + registrado en `app_versiones` dev (`apk_url` dev actualizado). `npm run build` OK (guards verdes; tropes rebaselined; tokens OK). **Mínima NO cambia (2.35.0). PARA → OK de Xaviel → prod.**
+## 🟢 SESIÓN 05/10/2026 — PROMPT-83 · Ronda **CG** (IDs CG) — **2.42.0 PUBLICADA a prod** (Xaviel: "dale, promueve a prod")
+**TL;DR:** ronda CG, mitad app (filas 125-137). Consume contratos de **PROMPT-82**, verificados vivos en sgc-dev+prod. Salió a dev → **OK de Xaviel** → **RELEASE + PUBLICADA 2.42.0**. ✅ Sesión cerrada.
+
+### ✅ EN PROD (PUBLICADA 2.42.0)
+- **`dev → main`** (`af5f2dc`) + push → Vercel app. prod (`app.sgcconstructorasd.com`). *(Sin `gh` → merge local ff con credenciales de Xaviel.)* La rama `feature/cf4c-web-push-ios` quedó FUERA (sin mergear).
+- **APK prod 2.42.0** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.42.0 ya en dev), registrado en `app_versiones` prod + subido al bucket prod (`csd-app-2.42.0.apk` + latest + version.json) + `apk_url` prod.
+- **PUBLICADA = 2.42.0** (2.41.0 despublicada) vía data-fix versionado `scripts/data-fixes/2026-10-05-cg-publicar-2.42.0.mjs` (regla 19; commiteado `c34beaf` ANTES de aplicar). `version_publicada()` prod = 2.42.0. El trigger disparó el push FCM a android.
+- **iPhone (PWA): 10 usuarios `ios-pwa` notificados in-app** vía `scripts/data-fixes/2026-10-05-cg-notificar-ios-2.42.0.mjs` (el trigger es android-only; hueco CF4b permanente del padre).
+- **MÍNIMA = 2.35.0** (sin cambios) → 2.42.0 `min=false` → update **NO forzado**.
+
+### 🧪 Previo en DEV (2.42.0)
+- `feature/cg-ronda` → `dev` (`cc92c9c`) + push → app-dev. · **APK dev 2.42.0** firmado + publicado al bucket dev + registrado. `npm run build` OK (guards verdes; tropes rebaselined; tokens OK).
 
 ### ✅ Hecho (build-verificado)
 - **CG6/CG7 · Chofer privado.** `user-context`: `esChoferFlota` vs `esChoferPrivado` (y `esChofer` = ambos; *Mi rendimiento* solo flota). En Transporte el privado ve SOLO su lista blanca (uso, combustible, inspección, aviso, **mantenimientos**); sin conduces/rutas/despachos/incentivo. **CG7**: el selector de vehículo (uso/combustible/inspección) sale de la única fuente `getVehiculosDisponiblesDetailed()`, que ahora **recorta a los autorizados** (`vehiculo_autorizaciones`, RLS propia, **cacheado offline** `veh_autorizados:<uid>`, vigencia en cliente) para el privado; empty-state *"Aún no tienes vehículos autorizados — pídeselo a Flota"* en el `vehiculo-picker`. Autorizar/retirar = **web** (admin/flota-elevado).
@@ -11,9 +21,9 @@
 - **CG5 · Alta por cédula.** La app NO crea usuarios por cédula (web); el login por cédula (`conductor-login`, fetch propio) ya degrada con mensajes humanos (401/429/red), nunca el crudo "Failed to send a request…". Sin cambios de código.
 - Versión **2.42.0** (environment.{prod,dev}, build.gradle, release-apk `CAMBIOS_CURADOS`/`TITULO`). `PARIDAD.md` + matriz de cobertura (mitad app) actualizadas.
 
-### 🔜 Pendiente — Claude (tras OK de Xaviel)
-- Dev YA está (merge `cc92c9c` + APK dev publicado). Con **OK** → PR `dev → main` → `release-apk --env prod` + `apk:publish --env prod` + publicar (data-fix versionado, regla 19) + notificar iOS (data-fix `notificar-ios-2.42.0.mjs`, como CF4 — hasta que el padre aplique `cf4b` version-push-incluir-ios). Matriz → ✅.
-- **Ojo:** `feature/cf4c-web-push-ios` sigue SIN mergear (su backend lo despliega el padre); no arrastrarla al PR de prod de CG.
+### 🔜 Pendiente — Claude
+- Nada abierto de esta ronda: 2.42.0 está PUBLICADA y el árbol está limpio. Próxima ronda = nuevo PROMPT/notas.
+- **Ojo:** `feature/cf4c-web-push-ios` sigue SIN mergear (su backend lo despliega el padre); no arrastrarla a prod.
 
 ### 👤 Pendiente físico — Xaviel
 - Probar en **app-dev / APK dev 2.42.0**: (1) como **chofer privado** (*Entrar como*): solo ve su lista blanca en Transporte, y el selector de vehículo solo muestra los **autorizados** (autorízale uno desde la web primero); (2) como **Raykler**: crear un correctivo **con el PDF del taller**, cerrarlo, abrir el PDF desde el historial del vehículo y desde la lista general; repetir **sin red** (sale al reconectar); (3) escribir una cédula en conductor/personal y ver el formato en vivo.
