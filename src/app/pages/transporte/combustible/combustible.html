@@ -402,6 +402,15 @@
             <span>{{ lecturaError() }} {{ 'Escríbelo a mano.' | t }}</span>
             <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()">{{ 'Volver a leer' | t }}</button>
           </div>
+        } @else if (fotoRecibo() && galones() === null && monto() === null && !online) {
+          <!-- CF4 F1.2 — foto del recibo sin leer y sin señal: se leerá al reconectar -->
+          <p class="comb__lectura comb__lectura--muted">{{ 'Leeremos el recibo cuando vuelva la señal.' | t }}</p>
+        } @else if (fotoRecibo() && galones() === null && monto() === null) {
+          <!-- CF4 — foto del recibo sin leer (p. ej. borrador recuperado): leer a mano -->
+          <div class="comb__lectura comb__lectura--muted">
+            <span>{{ '¿Leer los datos del recibo?' | t }}</span>
+            <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()">{{ 'Leer recibo' | t }}</button>
+          </div>
         }
       }
 

@@ -121,7 +121,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/avisos | 15 | 0 | 100% | 0% |  |
 | pages/transporte/checklist | 64 | 1 | 98% | 0% |  |
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
-| pages/transporte/combustible | 124 | 2 | 89% | 0% |  |
+| pages/transporte/combustible | 127 | 2 | 87% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 56 | 1 | 98% | 4% |  |
 | pages/transporte/conduce-externo | 76 | 1 | 83% | 0% |  |
