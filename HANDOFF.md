@@ -1,5 +1,30 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 05/10/2026 — CF4c · Web Push REAL para iOS/PWA — **cliente listo (feature branch); backend lo despliega el PADRE**
+**TL;DR:** Xaviel pidió *"montá Web Push real para iOS"*. Hoy el push es solo FCM/Android; los iPhone (PWA) no recibían push (0 tokens). **Montado Web Push estándar (VAPID)** — sirve a iPhone (iOS 16.4+ instalado) y a cualquier navegador. **Cliente (hijo) completo y build-verificado** en `feature/cf4c-web-push-ios` (pusheada, **NO mergeada a dev** — el toggle no debe quedar a medias en app-dev hasta que el backend exista). **Backend autorado como paquete para el PADRE** (regla 18/19): él aplica migración + despliega el edge + pone el secreto VAPID.
+
+### Arquitectura
+VAPID nativo (llaves generadas por el hijo, sin consola Firebase) + Angular `SwPush` (ngsw ya maneja el evento `push`). Reutiliza `device_tokens`: sub web = `(token=endpoint, p256dh, auth)`. `send_push` rutea por canal: FCM (`p256dh NULL`→`send-push`) / web (`p256dh NOT NULL`→`send-web-push`). Aditivo: Android intacto.
+
+### Hecho (cliente, hijo) — build + guards verdes
+- `core/services/web-push.service.ts`: Push API + clave VAPID, `registrar_web_push`, deep-link en el tap, limpia en logout. `init()`/post-login NO piden permiso (iOS exige gesto); el botón sí.
+- Perfil → **"Notificaciones en este dispositivo"**: Activar notificaciones + estados + pista "agregar a inicio" (iOS sin instalar). Enganchado en `app.ts`/`home.ts`/`session.service.ts`.
+- `vapidPublicKey` (pública) en environment vía `gen-environment.mjs`. 6 strings nuevos traducidos en `en.json` (perfil está en el alcance i18n).
+
+### Pendiente — PADRE/Xaviel (deploy; el hijo no aplica DDL/edges)
+Paquete: **`sql-para-sgc/2026-10-05-cf4c-web-push-ios/`** (migration.sql + send-web-push.index.ts + README runbook).
+1. **Secreto VAPID** (Xaviel, consola/CLI Supabase): `supabase secrets set VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY/VAPID_SUBJECT` en **dev y prod**. La privada está en `.env.local` (`VAPID_PRIVATE_KEY`, gitignored).
+2. **migration.sql** (reemplazar `{{PROJECT_REF}}` por el ref del entorno) — la aplica el padre `--env dev` primero. Supersede `cf4b`.
+3. **Edge `send-web-push`** → `supabase/functions/` + `config.toml` + `functions deploy`.
+4. **Editar `send-push`** (1 línea): `.is('p256dh', null)` para que NO toque las subs web.
+5. Con backend en dev → **mergear `feature/cf4c-web-push-ios` → dev**, bump 2.42.0, APK/PWA, probar en un iPhone (instalar PWA → Activar → recibir push con app cerrada). OK → prod.
+
+### Gotchas
+- iOS Web Push **exige la PWA instalada** (home screen) + permiso en gesto de usuario. En Safari sin instalar, `PushManager` no existe → el cliente muestra la pista de instalar.
+- `applicationServerKey` con `Uint8Array<ArrayBufferLike>` NO compila (TS 5.7+ estricto) → pasar un `ArrayBuffer` plano.
+- `pages/perfil` está en el **alcance i18n** (3 pantallas 100% `en`) → strings nuevos ahí necesitan traducción EN o `ng build` falla (verify-i18n).
+- `device_tokens` solo tenía tokens FCM/Android; `send-push` selecciona TODOS los tokens del usuario → sin el filtro `p256dh is null`, mandaría FCM a un endpoint web y lo mataría.
+
 ## 🟢 SESIÓN 05/10/2026 — CF4 F1.2 · Lectura del recibo al reconectar — **2.41.0 PUBLICADA a prod** (Xaviel: "dale, promueve")
 **TL;DR:** Xaviel pidió *"verificá que CF4 funciona, y continúa trabajando"*. **CF4 verificado vivo** (edge `leer-recibo` desplegada en sgc-dev; smoke autenticado con un **recibo real de Total** → 200 OK, modelo `claude-haiku-4-5`, leyó galones/monto/estación/km/Nº recibo con confianza ≥0.9 cuadrando con los valores registrados; los 502 iniciales eran por imágenes degeneradas 1×1/placeholder 0 KB de dev). **Hueco encontrado y cerrado:** la spec F1.2 pedía *"sin red… al recuperar red se lee"*, pero 2.40.0 solo leía al **capturar con red**; si el chofer fotografía el recibo **sin señal** (caso común en obra), al volver el internet no pasaba nada (ni lectura ni botón). **Arreglado + RELEASED + PUBLICADA 2.41.0.**
 
