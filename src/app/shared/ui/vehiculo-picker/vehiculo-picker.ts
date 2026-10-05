@@ -122,6 +122,12 @@ export class VehiculoPicker {
       const idsMios = enUsoMios.length
         ? [...enUsoMios, ...recep]
         : [...asignaciones.map((a) => a.vehiculo_id), ...recep];
+      // CG7 — para el CHOFER PRIVADO el pool YA viene recortado a sus vehículos
+      // AUTORIZADOS (getVehiculosDisponiblesDetailed): todos son "suyos". Así el
+      // combustible (soloMios) los ofrece y no cae al "no tienes vehículo asignado".
+      if (this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado()) {
+        for (const v of disp) idsMios.push(v.vehiculo_id);
+      }
       this.misIds.set(new Set(idsMios));
       void this.resolveFotos(disp);
       // AW16 — quién tiene cada vehículo EN USO ahora (best-effort; requiere permiso).
