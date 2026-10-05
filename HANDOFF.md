@@ -1,7 +1,13 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 05/10/2026 — PROMPT-83 · Ronda **CG** (IDs CG) — **2.42.0 PUBLICADA a prod** (Xaviel: "dale, promueve a prod")
-**TL;DR:** ronda CG, mitad app (filas 125-137). Consume contratos de **PROMPT-82**, verificados vivos en sgc-dev+prod. Salió a dev → **OK de Xaviel** → **RELEASE + PUBLICADA 2.42.0**. ✅ Sesión cerrada.
+## 🟢 SESIÓN 05/10/2026 — PROMPT-83 · Ronda **CG** (IDs CG) — **2.42.1 PUBLICADA a prod** (Xaviel: "manda todo a main, todo debe estar al día")
+**TL;DR:** ronda CG, mitad app (filas 125-137). Consume contratos de **PROMPT-82**, verificados vivos en sgc-dev+prod. Salió a dev → OK → **2.42.0 PUBLICADA**; luego, seguí trabajando y encontré/cerré un hueco de CG7 (el privado no podía echar combustible/inspeccionar su autorizado) + consolidé el gating → **2.42.1 PUBLICADA** (Xaviel pidió subir todo a main y dejar prod al día). `dev` y `main` en `5607e2c`. ✅ Sesión cerrada.
+
+### ✅ EN PROD (PUBLICADA 2.42.1 — reemplaza 2.42.0)
+- **`dev → main`** (`5607e2c`, ff) + push → Vercel app. prod. **APK prod 2.42.1** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.42.1 ya en dev), subido al bucket prod + registrado + `apk_url` prod.
+- **PUBLICADA = 2.42.1** (2.42.0 despublicada) vía `scripts/data-fixes/2026-10-05-cg-publicar-2.42.1.mjs` (regla 19; commiteado antes). Trigger → push FCM android + **10 iPhone (ios-pwa) notificados in-app** vía `2026-10-05-cg-notificar-ios-2.42.1.mjs`. **Mínima = 2.35.0** (update NO forzado).
+- **2.42.1 = 2.42.0 + 2 arreglos:** (1) `fix(CG7)` el chofer privado ya puede **echar combustible e inspeccionar** su vehículo autorizado (antes combustible decía "no tienes vehículo asignado"); (2) `refactor` `esChoferPrivadoRestringido` como fuente única del gating del privado (robusto ante combos de roles). Todo lo de 2.42.0 (mantenimientos+PDF, chofer privado, máscara de cédula, login) sigue vivo.
+- **Para el PADRE (sql-para-sgc/):** `2026-10-05-cg13-bucket-vehiculos-20mb.sql` (bucket 15→20 MB) · `2026-10-05-cf4b-version-push-incluir-ios.sql` (trigger de versión incluya iOS).
 
 ### ✅ EN PROD (PUBLICADA 2.42.0)
 - **`dev → main`** (`af5f2dc`) + push → Vercel app. prod (`app.sgcconstructorasd.com`). *(Sin `gh` → merge local ff con credenciales de Xaviel.)* La rama `feature/cf4c-web-push-ios` quedó FUERA (sin mergear).
@@ -22,8 +28,7 @@
 - Versión **2.42.0** (environment.{prod,dev}, build.gradle, release-apk `CAMBIOS_CURADOS`/`TITULO`). `PARIDAD.md` + matriz de cobertura (mitad app) actualizadas.
 
 ### 🔜 Pendiente — Claude
-- **Follow-up en dev (`b4bf65b`, NO en prod 2.42.0):** fix CG7 — el chofer privado ya puede **echar combustible / inspeccionar** su vehículo autorizado (el picker `soloMios` y reporte-semanal marcan los autorizados como "Tus vehículos"; antes combustible caía a "no tienes vehículo asignado"). **No es urgente**: en prod aún no hay ningún vehículo autorizado, así que ningún privado lo alcanza todavía. Riega en la próxima release (o pide un **2.42.1** si quieres que salga ya).
-- Dejado para el PADRE: `sql-para-sgc/2026-10-05-cg13-bucket-vehiculos-20mb.sql` (bucket `vehiculos` 15→20 MB).
+- Nada abierto: **2.42.1 PUBLICADA**, `dev`=`main`=`5607e2c`, árbol limpio. Próxima ronda = nuevo PROMPT/notas.
 - **Ojo:** `feature/cf4c-web-push-ios` sigue SIN mergear (su backend lo despliega el padre); no arrastrarla a prod.
 
 ### 👤 Pendiente físico — Xaviel
