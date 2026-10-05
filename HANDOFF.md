@@ -1,5 +1,35 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 05/10/2026 — PROMPT-83 · Ronda **CG** (IDs CG) — **2.42.0 en dev (feature branch), PARA → OK → prod**
+**TL;DR:** ronda CG, mitad app (filas 125-137). Consume contratos de **PROMPT-82**, **verificados vivos en sgc-dev** (`puede_ver_vehiculo(p_vehiculo,p_usuario)`, `vehiculo_autorizaciones`, `autorizar_vehiculo_privado`/`listar_autorizaciones_vehiculo`, `mantenimiento_adjuntos`, `listar_mantenimientos` con `adjuntos[]`). **EN DEV:** `feature/cg-ronda` → **`dev` mergeado (`cc92c9c`) + push** → app-dev. construye; **APK dev 2.42.0** firmado + **publicado al bucket dev** + registrado en `app_versiones` dev (`apk_url` dev actualizado). `npm run build` OK (guards verdes; tropes rebaselined; tokens OK). **Mínima NO cambia (2.35.0). PARA → OK de Xaviel → prod.**
+
+### ✅ Hecho (build-verificado)
+- **CG6/CG7 · Chofer privado.** `user-context`: `esChoferFlota` vs `esChoferPrivado` (y `esChofer` = ambos; *Mi rendimiento* solo flota). En Transporte el privado ve SOLO su lista blanca (uso, combustible, inspección, aviso, **mantenimientos**); sin conduces/rutas/despachos/incentivo. **CG7**: el selector de vehículo (uso/combustible/inspección) sale de la única fuente `getVehiculosDisponiblesDetailed()`, que ahora **recorta a los autorizados** (`vehiculo_autorizaciones`, RLS propia, **cacheado offline** `veh_autorizados:<uid>`, vigencia en cliente) para el privado; empty-state *"Aún no tienes vehículos autorizados — pídeselo a Flota"* en el `vehiculo-picker`. Autorizar/retirar = **web** (admin/flota-elevado).
+- **CG13 · Mantenimientos + PDF.** Tile *Mantenimientos* (flota elevado + privado scopeado por servidor) → nueva pantalla **`transporte/mantenimientos-general`**: lista de toda la flota (`listar_mantenimientos` sin vehículo, cacheada `mant_general`), filtros en cliente (vehículo/tipo/estado/taller/fecha), *Nuevo* (elige vehículo → registrar) y *Cerrar*. **Adjuntos imagen + PDF** (`mantenimiento_adjuntos`, bucket `vehiculos`): se adjuntan **al crear** (paso de evidencia del wizard, con tipo de documento) y **después** desde el historial/lista; **offline** por outbox (`tipo_op: mantenimiento_adjunto`, idempotente upsert por id; handler eager-booted). Se **abren dentro del sistema** con `pdf-viewer` (PDF) / lightbox (imagen) vía el nuevo `shared/ui/mant-adjuntos`. Nuevo `shared/ui/mant-adjuntos` + service: `listarMantenimientosGeneral`, `signedUrlAdjunto`, `enqueueAdjunto`, `MantenimientoAdjunto`/`adjuntos` en el modelo. **Tope 15 MB** (límite del bucket).
+- **CG3 · Máscara de cédula.** Directiva `shared/ui/cedula-mask.directive` (`appCedulaMask`, re-dispara `input` para no pelear con `[ngModel]` de una vía) en: conductor, asignar, orden de trabajo (×2), personal de obra (solo tipo cédula). Login ya enmascaraba a mano.
+- **CG4 · Login.** Ya tenía *Con correo*/*Con cédula*; quitada la palabra "conductor" del texto de ayuda.
+- **CG5 · Alta por cédula.** La app NO crea usuarios por cédula (web); el login por cédula (`conductor-login`, fetch propio) ya degrada con mensajes humanos (401/429/red), nunca el crudo "Failed to send a request…". Sin cambios de código.
+- Versión **2.42.0** (environment.{prod,dev}, build.gradle, release-apk `CAMBIOS_CURADOS`/`TITULO`). `PARIDAD.md` + matriz de cobertura (mitad app) actualizadas.
+
+### 🔜 Pendiente — Claude (tras OK de Xaviel)
+- Dev YA está (merge `cc92c9c` + APK dev publicado). Con **OK** → PR `dev → main` → `release-apk --env prod` + `apk:publish --env prod` + publicar (data-fix versionado, regla 19) + notificar iOS (data-fix `notificar-ios-2.42.0.mjs`, como CF4 — hasta que el padre aplique `cf4b` version-push-incluir-ios). Matriz → ✅.
+- **Ojo:** `feature/cf4c-web-push-ios` sigue SIN mergear (su backend lo despliega el padre); no arrastrarla al PR de prod de CG.
+
+### 👤 Pendiente físico — Xaviel
+- Probar en **app-dev / APK dev 2.42.0**: (1) como **chofer privado** (*Entrar como*): solo ve su lista blanca en Transporte, y el selector de vehículo solo muestra los **autorizados** (autorízale uno desde la web primero); (2) como **Raykler**: crear un correctivo **con el PDF del taller**, cerrarlo, abrir el PDF desde el historial del vehículo y desde la lista general; repetir **sin red** (sale al reconectar); (3) escribir una cédula en conductor/personal y ver el formato en vivo.
+- **Decir qué vehículos autoriza** a cada chofer privado (la gestión es en la web).
+
+### ⚠️ Pendientes del PADRE (de esta mitad)
+- **Bucket `vehiculos`: subir `file_size_limit` a 20 MB** (CG13 pedía 20; hoy 15 → la app valida 15).
+- **`editar_mantenimiento_app`**: no existe → la app no edita un mantenimiento (solo crear/cerrar/adjuntar). Publicarlo si se quiere editar desde la app.
+- **`trg_app_version_push` incluir iOS** (hueco CF4b permanente): hasta entonces cada release móvil necesita el data-fix de notificación a iOS.
+
+### Gotchas de esta sesión
+- **`puede_ver_vehiculo` cambió de firma**: CD4 era `(p_usuario, p_vehiculo)`; CG7 la reconstruyó a **`(p_vehiculo, p_usuario)`** + rama de autorización. Un probe con el orden viejo da PGRST202 engañoso; el nuevo orden responde 200.
+- **El bucket `vehiculos` acepta cualquier mime** (`allowed_mime_types: null`) → el PDF sube bien; el límite real es **15 MB** (`file_size_limit`), no 20.
+- **`mantenimiento_adjuntos` se inserta directo** (`.from(...).upsert`, RLS `authenticated`) — no hay RPC; el cliente ya usa schema `sgc` por defecto.
+- **verify-no-ai-tropes** marcó los emojis de las pantallas nuevas (consistentes con `mantenimientos-lista`); rebaseline con `CSD_TROPES_UPDATE=1` (precedente CE).
+
 ## 🟡 SESIÓN 05/10/2026 — CF4c · Web Push REAL para iOS/PWA — **cliente listo (feature branch); backend lo despliega el PADRE**
 **TL;DR:** Xaviel pidió *"montá Web Push real para iOS"*. Hoy el push es solo FCM/Android; los iPhone (PWA) no recibían push (0 tokens). **Montado Web Push estándar (VAPID)** — sirve a iPhone (iOS 16.4+ instalado) y a cualquier navegador. **Cliente (hijo) completo y build-verificado** en `feature/cf4c-web-push-ios` (pusheada, **NO mergeada a dev** — el toggle no debe quedar a medias en app-dev hasta que el backend exista). **Backend autorado como paquete para el PADRE** (regla 18/19): él aplica migración + despliega el edge + pone el secreto VAPID.
 
