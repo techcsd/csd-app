@@ -449,7 +449,7 @@ export class VehiculosService {
     // elevado (Raykler) le AUTORICE. Esta es la única fuente de los selectores (uso,
     // combustible, inspección), así que el recorte vive aquí. Un elevado que además
     // tenga el rol privado NO se recorta (ve toda la flota).
-    if (this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado() && !this.ctx.esAdmin()) {
+    if (this.ctx.esChoferPrivadoRestringido()) {
       const ids = await this.misVehiculosAutorizadosIds();
       items = items.filter((v) => ids.has(v.vehiculo_id));
     }

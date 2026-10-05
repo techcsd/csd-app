@@ -173,6 +173,15 @@ export class UserContextService {
   // miraba solo transportista, así que el privado (módulo `flota`) veía TODO el hub.
   esChoferPrivado = computed(() => this.hasRol('chofer_privado'));
 
+  // CG6/CG7 — ¿aplicarle la experiencia RESTRINGIDA de chofer privado? Solo si es
+  // privado y NO es además chofer de flota, elevado ni admin (si tiene cualquiera de
+  // esos, ve de más a propósito). Fuente ÚNICA del gating del privado (tiles de
+  // Transporte + recorte del selector de vehículos): así un combo de roles mal
+  // configurado no lo deja encerrado en la lista blanca.
+  esChoferPrivadoRestringido = computed(
+    () => this.esChoferPrivado() && !this.esChoferFlota() && !this.esFlotaElevado() && !this.esAdmin(),
+  );
+
   // AC2 — el módulo Tecnología es público para TODOS los usuarios EXCEPTO el
   // rol chofer (experiencia reducida de la app). CG6 — incluye ahora al chofer
   // PRIVADO: él también tiene la experiencia reducida (sin Sistema/Inventario). El

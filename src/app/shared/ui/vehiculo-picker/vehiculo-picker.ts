@@ -30,7 +30,7 @@ export class VehiculoPicker {
   /** CG7 — chofer privado SIN vehículos autorizados vigentes → mensaje propio
    *  ("pídeselo a Flota"), no el genérico "no hay vehículos disponibles". */
   privadoSinAutorizados = computed(
-    () => this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado() && !this.loading() && !this.cargaFallo() && !this.disponibles().length,
+    () => this.ctx.esChoferPrivadoRestringido() && !this.loading() && !this.cargaFallo() && !this.disponibles().length,
   );
 
   /** AT9 — identificación homologada Marca Modelo · Color · Placa (para el chip). */
@@ -125,7 +125,7 @@ export class VehiculoPicker {
       // CG7 — para el CHOFER PRIVADO el pool YA viene recortado a sus vehículos
       // AUTORIZADOS (getVehiculosDisponiblesDetailed): todos son "suyos". Así el
       // combustible (soloMios) los ofrece y no cae al "no tienes vehículo asignado".
-      if (this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado()) {
+      if (this.ctx.esChoferPrivadoRestringido()) {
         for (const v of disp) idsMios.push(v.vehiculo_id);
       }
       this.misIds.set(new Set(idsMios));

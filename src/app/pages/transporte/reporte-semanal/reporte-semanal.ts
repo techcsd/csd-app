@@ -447,7 +447,7 @@ export class ReporteSemanalPage extends GuardedWizard {
       // CG7 — para el chofer PRIVADO el pool ya viene recortado a sus autorizados →
       // todos son "suyos" (aparecen bajo "Tus vehículos", no en "Resto de la flota").
       const mios = [...asignaciones.map((a) => a.vehiculo_id), ...recepcionesEnCola];
-      if (this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado()) {
+      if (this.ctx.esChoferPrivadoRestringido()) {
         for (const v of pool) mios.push(v.vehiculo_id);
       }
       this.misIds.set(new Set(mios));

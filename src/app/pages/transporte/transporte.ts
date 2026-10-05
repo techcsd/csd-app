@@ -123,7 +123,7 @@ export class TransportePage {
   tiles = computed(() => {
     // CG6 — el chofer PRIVADO ve SOLO su lista blanca (privado:true): nada de
     // conduces, rutas, despachos, incentivo ni desempeño.
-    if (this.ctx.esChoferPrivado() && !this.ctx.esFlotaElevado()) {
+    if (this.ctx.esChoferPrivadoRestringido()) {
       return this.aplicarOrden(TILES.filter((t) => t.privado === true));
     }
     const base = TILES.filter((t) => {
