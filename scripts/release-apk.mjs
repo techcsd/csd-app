@@ -39,13 +39,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-05';
 
-const TITULO = 'Mantenimientos con PDF, chofer privado y cédula con formato';
+const TITULO = 'Arreglo: el chofer privado ya puede echar combustible e inspeccionar su vehículo';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Mantenimientos', d: 'Ya puedes ver y manejar los mantenimientos de toda la flota desde la app: lista general con filtros (vehículo, tipo, estado, taller, fecha), registrar y cerrar, e historial por vehículo.' },
-  { t: 'nuevo', m: 'Mantenimientos', d: 'Adjunta el PDF o la foto del taller (factura, informe, cotización, garantía…) y ábrelo dentro del sistema cuando quieras, desde el mantenimiento y desde el historial. Funciona sin señal: se sube cuando vuelve el internet.' },
-  { t: 'mejora', m: 'Chofer privado', d: 'El chofer privado ahora ve solo lo suyo: su vehículo, inspección, combustible y mantenimiento. Ya no ve conduces, rutas ni despachos que no le tocan.' },
-  { t: 'mejora', m: 'Chofer privado', d: 'El chofer privado solo ve y usa los vehículos que Flota le autoriza; si no tiene ninguno, la app se lo dice claro.' },
-  { t: 'mejora', m: 'Cédula', d: 'Al escribir una cédula, la app le da formato solo (000-0000000-0) mientras tecleas, en todos los campos de cédula.' },
+  { t: 'arreglo', m: 'Chofer privado', d: 'El chofer privado ya puede registrar combustible e inspeccionar el vehículo que Flota le autorizó (antes la pantalla de combustible le decía que no tenía un vehículo asignado).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
