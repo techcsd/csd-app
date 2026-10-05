@@ -22,7 +22,8 @@
 - Versión **2.42.0** (environment.{prod,dev}, build.gradle, release-apk `CAMBIOS_CURADOS`/`TITULO`). `PARIDAD.md` + matriz de cobertura (mitad app) actualizadas.
 
 ### 🔜 Pendiente — Claude
-- Nada abierto de esta ronda: 2.42.0 está PUBLICADA y el árbol está limpio. Próxima ronda = nuevo PROMPT/notas.
+- **Follow-up en dev (`b4bf65b`, NO en prod 2.42.0):** fix CG7 — el chofer privado ya puede **echar combustible / inspeccionar** su vehículo autorizado (el picker `soloMios` y reporte-semanal marcan los autorizados como "Tus vehículos"; antes combustible caía a "no tienes vehículo asignado"). **No es urgente**: en prod aún no hay ningún vehículo autorizado, así que ningún privado lo alcanza todavía. Riega en la próxima release (o pide un **2.42.1** si quieres que salga ya).
+- Dejado para el PADRE: `sql-para-sgc/2026-10-05-cg13-bucket-vehiculos-20mb.sql` (bucket `vehiculos` 15→20 MB).
 - **Ojo:** `feature/cf4c-web-push-ios` sigue SIN mergear (su backend lo despliega el padre); no arrastrarla a prod.
 
 ### 👤 Pendiente físico — Xaviel
