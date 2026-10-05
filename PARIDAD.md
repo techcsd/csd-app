@@ -138,6 +138,12 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
   confianza ≥ 0.9 (chip *Leído del recibo*); el chofer confirma/corrige, nunca se envía
   solo. Banda *No coincide con el recibo* si lo confirmado difiere > 2 %. *Volver a leer*.
   Sin red no se lee (la foto queda en el borrador). `CombustibleService.leerRecibo()`.
+  - **CF4 F1.2 · Lectura al reconectar (2.41.0).** Si la foto del recibo se toma **sin
+    señal**, queda *pendiente de leer*: un `effect` sobre `network.online()` dispara la
+    lectura en cuanto vuelve la red (también al recuperar un borrador sin datos), y
+    **solo rellena los campos vacíos** (no pisa lo escrito a mano). Mientras no hay señal,
+    pista *"Leeremos el recibo cuando vuelva la señal"*; con foto sin leer, botón *Leer
+    recibo*. Cierra el punto 2 de la spec (antes solo se leía al capturar con red).
 - **CF5 · Solicitud de movimiento con almacenes y catálogo (mejora).** Origen/destino con
   selector de **almacén (Central primero)** u obra, y **renglones del catálogo cacheado**
   (offline) con cantidad y unidad + *no catalogado*. El outbox llama a
