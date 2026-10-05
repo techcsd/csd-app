@@ -24,6 +24,7 @@ import { NavGuardService } from './core/services/nav-guard.service';
 import { ActivityPingService } from './core/services/activity-ping.service';
 import { PlatformReportService } from './core/services/platform-report.service';
 import { PushService } from './core/services/push.service';
+import { WebPushService } from './core/services/web-push.service';
 import { AlarmaService } from './core/services/alarma.service';
 import { NativeAlarmService } from './core/services/native-alarm.service';
 import { ReporteSemanalService } from './core/services/reporte-semanal.service';
@@ -61,6 +62,7 @@ export class App {
   private activityPing = inject(ActivityPingService);
   private platformReport = inject(PlatformReportService);
   private push = inject(PushService);
+  private webPush = inject(WebPushService);
   private alarma = inject(AlarmaService);
   private nativeAlarm = inject(NativeAlarmService);
   private reportes = inject(ReporteSemanalService);
@@ -114,6 +116,7 @@ export class App {
     this.activityPing.init(); // W12 — ping de actividad (open + resume, throttled)
     this.platformReport.init(); // AP7 — reporta la plataforma del dispositivo (android|ios-pwa|web)
     void this.push.init(); // AF7 — push nativo (no-op en web/PWA)
+    void this.webPush.init(); // CF4c — Web Push PWA (iOS/web); no-op en el APK nativo
     // CC7 — tras actualizar a una versión nueva, reintenta UNA vez los envíos atascados
     // por error de SISTEMA (los conduces de Jonathan/Guilamo se destraban solos si el
     // padre ya arregló el CHECK). Gate por versión → corre solo una vez por versión.

@@ -43,6 +43,10 @@ const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? undefined : (
 const TARGET = typeof flag('--target') === 'string' ? flag('--target') : 'src/environments/environment.ts';
 
 const APP_URL = { dev: 'https://app-dev.sgcconstructorasd.com', prod: 'https://app.sgcconstructorasd.com' };
+// CF4c — clave PÚBLICA VAPID para Web Push (iOS/PWA). Pública por diseño (va en el
+// cliente). La PRIVADA es secreto del edge send-web-push (VAPID_PRIVATE_KEY en Supabase).
+// Mismo par para dev y prod (identidad del app server; las subs viven en DBs separadas).
+const VAPID_PUBLIC_KEY = 'BPW0Blr5HEElDCEF4nKV3BEKjcQjUhwNC0ufTZJwp0htDx6dGswTxIFb9w-C1xn_OHCeTFNzCUwr7gkPcg8M7aY';
 const V = version();
 
 function render({ production, entorno, url, anon }) {
@@ -56,6 +60,7 @@ function render({ production, entorno, url, anon }) {
     `  appUrl: '${APP_URL[entorno]}',\n` +
     `  supabaseUrl: '${url}',\n` +
     `  supabaseAnonKey: '${anon}',\n` +
+    `  vapidPublicKey: '${VAPID_PUBLIC_KEY}',\n` +
     '};\n'
   );
 }

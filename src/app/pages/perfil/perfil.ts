@@ -15,6 +15,7 @@ import { VersionService } from '../../core/services/version.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
 import { PushService } from '../../core/services/push.service';
+import { WebPushService } from '../../core/services/web-push.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
@@ -43,8 +44,37 @@ export class PerfilPage {
   private toast = inject(ToastService);
   private camera = inject(CameraService);
   private push = inject(PushService);
+  private webPush = inject(WebPushService);
   private router = inject(Router);
   private location = inject(Location);
+
+  // CF4c — Web Push en la PWA (iPhone/web). Solo aparece donde aplica (no en el APK
+  // nativo, que usa el push de FCM). En iOS Safari sin instalar, la Push API no existe
+  // → se muestra la pista de "agregar a la pantalla de inicio".
+  webPushSoportado = signal(this.webPush.soportado);
+  webPushEstado = signal(this.webPush.estado);
+  necesitaInstalarIOS = signal(this.calcNecesitaInstalarIOS());
+
+  /** Botón "Activar notificaciones" — pide permiso (gesto iOS) y suscribe. */
+  async activarNotificaciones(): Promise<void> {
+    const r = await this.webPush.enable();
+    this.webPushEstado.set(this.webPush.estado);
+    if (r === 'ok') this.toast.success('Notificaciones activadas en este dispositivo.');
+    else if (r === 'denegado') this.toast.error('No se concedió el permiso de notificaciones.');
+    else if (r === 'no-soportado') this.toast.error('Este dispositivo no admite notificaciones push.');
+    else this.toast.error('No se pudieron activar. Intenta de nuevo.');
+  }
+
+  /** iPhone/iPad en el navegador SIN instalar la app (sin Push API aún). */
+  private calcNecesitaInstalarIOS(): boolean {
+    if (Capacitor.isNativePlatform()) return false;
+    const ua = navigator.userAgent || '';
+    const esIOS = /iphone|ipad|ipod/i.test(ua);
+    const standalone =
+      (navigator as unknown as { standalone?: boolean }).standalone === true ||
+      window.matchMedia?.('(display-mode: standalone)').matches === true;
+    return esIOS && !standalone && !this.webPush.soportado;
+  }
 
   nombre = this.ctx.nombre;
   telefono = this.ctx.telefono; // AY1

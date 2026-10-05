@@ -144,6 +144,28 @@
       🔔 {{ 'Preferencias de avisos' | t }}
     </button>
 
+    <!-- CF4c — Web Push en la PWA (iPhone/web): activar notificaciones reales -->
+    @if (webPushSoportado()) {
+      <div class="perfil__seccion">
+        <span class="perfil__seccion-label">{{ 'Notificaciones en este dispositivo' | t }}</span>
+        @if (webPushEstado() === 'activas') {
+          <p class="perfil__seccion-note perfil__seccion-note--ok">{{ 'Las notificaciones están activas en este dispositivo.' | t }}</p>
+        } @else if (webPushEstado() === 'bloqueadas') {
+          <p class="perfil__seccion-note">{{ 'Las notificaciones están bloqueadas. Actívalas para este sitio desde los ajustes de tu navegador.' | t }}</p>
+        } @else {
+          <button type="button" class="btn-ghost perfil__btn" (click)="activarNotificaciones()">
+            🔔 {{ 'Activar notificaciones' | t }}
+          </button>
+          <p class="perfil__seccion-note">{{ 'Para recibir avisos aunque la app esté cerrada.' | t }}</p>
+        }
+      </div>
+    } @else if (necesitaInstalarIOS()) {
+      <div class="perfil__seccion">
+        <span class="perfil__seccion-label">{{ 'Notificaciones en este dispositivo' | t }}</span>
+        <p class="perfil__seccion-note">{{ 'Para recibir notificaciones en iPhone, primero agrega la app a tu pantalla de inicio: toca Compartir y luego "Agregar a inicio". Ábrela desde ahí y vuelve aquí para activarlas.' | t }}</p>
+      </div>
+    }
+
     <button type="button" class="btn-ghost perfil__btn" (click)="enProceso()">
       📝 {{ 'Documentación en proceso' | t }}
     </button>

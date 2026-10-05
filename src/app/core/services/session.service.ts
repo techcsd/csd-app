@@ -4,6 +4,7 @@ import { PinService } from './pin.service';
 import { WebauthnService } from './webauthn.service';
 import { UserContextService } from './user-context.service';
 import { PushService } from './push.service';
+import { WebPushService } from './web-push.service';
 import { BorradorService } from './borrador.service';
 import { NotificacionesService } from './notificaciones.service';
 import { TrackingService } from './tracking.service';
@@ -20,6 +21,7 @@ export class SessionService {
   private webauthn = inject(WebauthnService);
   private ctx = inject(UserContextService);
   private push = inject(PushService);
+  private webPush = inject(WebPushService);
   private borradores = inject(BorradorService);
   private notificaciones = inject(NotificacionesService);
   private tracking = inject(TrackingService);
@@ -73,6 +75,7 @@ export class SessionService {
     await this.tracking.apagar(); // AS1 — deja de rastrear al usuario saliente
     this.notificaciones.detenerRealtime(); // AM4 — cierra el canal del usuario saliente
     await this.push.clearToken(); // AF7 — desactiva el token antes de cerrar sesión
+    await this.webPush.clear(); // CF4c — desactiva la suscripción Web Push (PWA/iOS)
     await this.auth.signOut();
     await this.pin.clear();
     // X8 — la credencial de Face ID (PWA) es local a este usuario/dispositivo;

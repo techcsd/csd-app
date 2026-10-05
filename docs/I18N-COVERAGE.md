@@ -89,7 +89,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 47 | 0 | 100% | 0% | ✅ |
+| pages/perfil | 53 | 0 | 100% | 0% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |

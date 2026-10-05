@@ -15,6 +15,7 @@ import { MensajesService } from '../../core/services/mensajes.service';
 import { SyncService } from '../../core/sync/sync.service';
 import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { PushService } from '../../core/services/push.service';
+import { WebPushService } from '../../core/services/web-push.service';
 import { ModuleOrderService, ModuleSize } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
 import { fusionarEntregasPorRecibir } from '../../core/util/recepcion';
@@ -141,6 +142,7 @@ export class HomePage implements OnDestroy {
   private sync = inject(SyncService);
   private notificaciones = inject(NotificacionesService);
   private push = inject(PushService);
+  private webPush = inject(WebPushService);
   private moduleOrder = inject(ModuleOrderService);
   private toast = inject(ToastService);
   avisosNoLeidos = this.notificaciones.noLeidas;
@@ -371,6 +373,7 @@ export class HomePage implements OnDestroy {
     void this.notificaciones.refreshNoLeidas();
     // AF7 — ya hay sesión: registra/renueva el token push del usuario (native only).
     void this.push.syncToken();
+    void this.webPush.syncAfterLogin(); // CF4c — (re)registra la suscripción Web Push si ya hay permiso
     // AF38 — orden de módulos configurado (cache-then-network).
     void this.cargarOrden();
     effect(() => {
