@@ -16,8 +16,26 @@
 - Archivos: `combustible.ts` (+signal, +effect, handlers, `leerReciboAuto`/`aplicarLectura`, `restoreDraft`), `combustible.html` (2 ramas nuevas). **Versión 2.41.0** (4 sitios + `CAMBIOS_CURADOS`/`TITULO`/`RELEASED_AT`). `PARIDAD.md` actualizado. `npm run build` + guards verdes.
 - Rama `feature/cf4-reconexion-lectura` → `dev`. **Mínima NO cambia** (2.35.0 en prod).
 
+### Pendiente — Claude puede hacer
+- Nada abierto de esta ronda: 2.41.0 está PUBLICADA y git limpio. Próxima ronda = nuevo PROMPT/notas (filas de `COBERTURA-NOTAS.md`).
+
 ### Pendiente físico — Xaviel
 - Los choferes/usuarios actualizan a **2.41.0**. Smoke en el teléfono: tomar la foto del recibo en **modo avión** → activar red → debe leer sola y rellenar sin borrar lo tipeado; ver la pista *"Leeremos el recibo cuando vuelva la señal"* y el botón *Leer recibo*. (Prueba de precisión con los 5 recibos reales de Total sigue pendiente.)
+
+### Gotchas de esta sesión (lo que costó tiempo)
+- **La edge `leer-recibo` responde 502 `"El lector de recibos no está disponible ahora."` ante imágenes degeneradas** (1×1 sintética, placeholder 0 KB). NO es que esté caída ni falte la key: `assistant`/Compa da 200 (la `ANTHROPIC_API_KEY` está). Para probarla hace falta una **foto real de tamaño normal**.
+- **Dev tiene recibos placeholder de 0 KB** (datos anonimizados) → para un smoke real hay que bajar un recibo real del **storage de PROD** (read-only) y alimentarlo a la edge de dev. `registros_combustible.foto_recibo_path` → bucket `vehiculos` (privado).
+- **`error.context` de supabase-js `functions.invoke` es un `Response`**, no un objeto plano → leer el cuerpo con `await error.context.text()` (si no, sale `{}`).
+- **`version_publicada()` es no-arg y vive en schema `sgc`** → llamarla por REST necesita header `Content-Profile: sgc` (no `Accept-Profile`); pasarle `p_plataforma` da PGRST202 (es el paso best-effort del data-fix; el UPDATE real sí publica).
+- **El build/APK regenera `public/i18n/coverage.json` + `docs/I18N-COVERAGE.md` con solo cambio CRLF** → ensucia el árbol; `git checkout --` esos dos si el diff (ignorando espacios) está vacío. El gate i18n solo cubre **3 pantallas** (auth); combustible no cuenta, por eso sus strings `| t` no necesitan traducción EN.
+
+### Verify on resume
+```bash
+git -C "C:/Users/xavie/Desktop/X Dev/dev2/csd-app" log --oneline -3   # main/dev en 682927b
+grep version src/environments/environment.prod.ts                      # 2.41.0
+# version_publicada() prod (debe decir 2.41.0): POST /rest/v1/rpc/version_publicada
+#   con header Content-Profile: sgc y body {}  (keys en .env.local *_PROD)
+```
 
 ## 🟢 SESIÓN 03/10/2026 — PROMPT-81b · Motor de plantillas en la app — **2.40.0 PUBLICADA a prod** (Xaviel: "dale, promueve")
 `dev → main` (`9bfcb68`) + push → app. prod 2.40.0 · APK prod firmado/publicado (regla 18 OK) · `version_publicada()` prod = 2.40.0 (data-fix `scripts/data-fixes/2026-10-03-cf7-publicar-2.40.0.mjs`, regla 19; mínima 2.35.0). `npm run build` + guards verdes.
