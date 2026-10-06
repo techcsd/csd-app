@@ -1,0 +1,41 @@
+<!-- CH2 — campo que abre la hoja de selección de taller / proveedor. -->
+<div class="taller-field">
+  <button type="button" class="taller-field__btn" (click)="abrir()">
+    <span class="taller-field__val" [class.taller-field__val--ph]="!display()">
+      {{ display() || ('Elegir taller / proveedor' | t) }}
+    </span>
+    <span class="taller-field__caret" aria-hidden="true">▾</span>
+  </button>
+  @if (display()) {
+    <button type="button" class="taller-field__clear" (click)="limpiar()" [attr.aria-label]="'Quitar' | t">✕</button>
+  }
+</div>
+
+<app-bottom-sheet [open]="open()" [titulo]="label() | t" (closed)="cerrar()">
+  @if (!modoOtro()) {
+    <app-select-list
+      [options]="opciones()"
+      [selectedId]="selectedId() ?? ''"
+      [searchable]="true"
+      [searchPlaceholder]="'Buscar taller o proveedor…' | t"
+      icon="🔧"
+      (picked)="onPick($event)"
+    />
+    <button type="button" class="taller-otro" (click)="abrirOtro()">
+      <span aria-hidden="true">✏️</span> {{ 'Otro… (escribir uno que no está en la lista)' | t }}
+    </button>
+  } @else {
+    <label class="field-label">{{ 'Nombre del taller / proveedor' | t }}</label>
+    <input
+      class="field"
+      type="text"
+      [ngModel]="otroTexto()"
+      (ngModelChange)="otroTexto.set($event)"
+      [placeholder]="'Ej. Taller Pérez, gomera de la esquina…' | t"
+    />
+    <div class="taller-otro-actions">
+      <button type="button" class="taller-otro-actions__back" (click)="modoOtro.set(false)">{{ 'Volver a la lista' | t }}</button>
+      <button type="button" class="taller-otro-actions__ok" [disabled]="!otroTexto().trim()" (click)="confirmarOtro()">{{ 'Usar este' | t }}</button>
+    </div>
+  }
+</app-bottom-sheet>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { PdfViewer } from '../pdf-viewer/pdf-viewer';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { CameraService } from '../../../core/services/camera.service';
@@ -41,6 +41,19 @@ export class MantAdjuntos {
   mantenimientoId = input<string | null>(null);
   vehiculoId = input<string | null>(null);
   puedeAdjuntar = input(false);
+  /** CH3 — agrupar los adjuntos por tipo con conteo (detalle/historial). */
+  agrupar = input(false);
+
+  /** CH3 — adjuntos agrupados por tipo de documento (orden de primera aparición). */
+  grupos = computed(() => {
+    const by = new Map<string, MantenimientoAdjunto[]>();
+    for (const a of this.adjuntos()) {
+      const k = a.tipo_documento || 'otro';
+      const arr = by.get(k) ?? by.set(k, []).get(k)!;
+      arr.push(a);
+    }
+    return [...by.entries()].map(([tipo, items]) => ({ tipo, label: this.tipoLabel(tipo), items }));
+  });
 
   readonly tipos: AdjuntoTipoDocumento[] = ['factura', 'informe', 'cotizacion', 'garantia', 'foto', 'otro'];
   tipoLabel = (t: string): string => ADJUNTO_TIPO_LABEL[t as AdjuntoTipoDocumento] ?? t;

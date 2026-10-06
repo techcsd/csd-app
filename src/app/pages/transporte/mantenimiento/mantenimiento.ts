@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DecimalPipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { TallerPicker, TallerSel } from '../../../shared/ui/taller-picker/taller-picker';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -27,6 +28,8 @@ import {
   MantenimientoTipo,
   ADJUNTO_TIPO_LABEL,
   AdjuntoTipoDocumento,
+  ProveedorFlota,
+  ValidacionKm,
 } from '../../../core/services/mantenimientos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -69,7 +72,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, VoiceNotes, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, TallerPicker, VoiceNotes, TranslatePipe],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })
@@ -107,7 +110,8 @@ export class MantenimientoPage implements OnDestroy {
   descripcion = signal('');
   km = signal<number | null>(null);
   costo = signal<number | null>(null); // AL7 — opcional
-  taller = signal(''); // AL7 — taller/proveedor
+  taller = signal(''); // AL7/CH2 — nombre del taller/proveedor (del maestro o libre)
+  tallerId = signal<string | null>(null); // CH2 — id del maestro (null = "Otro")
   notas = signal(''); // AL7 — notas del trabajo
   fotos = signal<Record<number, CapturedPhoto>>({});
   voces = signal<VoiceNoteItem[]>([]); // Z23 — notas de voz
@@ -115,10 +119,20 @@ export class MantenimientoPage implements OnDestroy {
   // CG13 — documentos del taller (PDF o foto) con tipo de documento; se encolan como
   // adjuntos tras crear el mantenimiento. El flujo típico de Raykler: un correctivo
   // con la factura/informe del taller en PDF.
-  readonly docTipos: AdjuntoTipoDocumento[] = ['factura', 'informe', 'cotizacion', 'garantia', 'otro'];
+  readonly docTipos: AdjuntoTipoDocumento[] = ['factura', 'informe', 'cotizacion', 'garantia', 'foto', 'otro'];
   docTipoLabel = (t: string): string => ADJUNTO_TIPO_LABEL[t as AdjuntoTipoDocumento] ?? t;
-  documentos = signal<Array<{ blob: Blob; nombre: string; mime: string; tipoDocumento: string }>>([]);
-  docPendiente = signal<{ blob: Blob; nombre: string; mime: string } | null>(null);
+  // CH3 — cada documento lleva su tipo (editable) y, si es "otro", una descripción.
+  documentos = signal<Array<{ blob: Blob; nombre: string; mime: string; tipoDocumento: string; descripcion?: string }>>([]);
+  // CH3 — índice del documento cuyo tipo se está cambiando (hoja de tipos).
+  editandoDocIdx = signal<number | null>(null);
+
+  // ── CH2 — taller / proveedor del maestro (cacheado offline) ──────────────────
+  talleres = signal<ProveedorFlota[]>([]);
+
+  // ── CH1 — validación del km contra las lecturas del vehículo (online) ────────
+  kmValidacion = signal<ValidacionKm | null>(null);
+  kmConfirmado = signal(false);
+  private kmValTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** X6-app — el checkbox "incluyó preventivo" solo aplica si NO es preventivo. */
   mostrarIncluyePreventivo = computed(() => {
@@ -132,12 +146,26 @@ export class MantenimientoPage implements OnDestroy {
   borradorPrevio = signal(false);
   private hydrated = false;
 
-  /** U15 — km opcional, pero si se llena NO puede ser menor al odómetro. */
+  /** CH1 — fallback offline: solo bloquea si el km es MENOR al odómetro cacheado
+   *  (el mantenimiento de la app es siempre de hoy). Online manda `validar_km_vehiculo`. */
   kmMenorOdometro = computed(() => {
     const km = this.km();
     const odo = this.odometro();
     return km != null && odo != null && km < odo;
   });
+
+  /** CH1 — ¿el servidor bloquea el km? (retroceso/exceso). Solo cuando hay veredicto. */
+  kmBloqueado = computed(() => {
+    if (this.online) return this.kmValidacion()?.nivel === 'error';
+    return this.kmMenorOdometro(); // offline: regla local
+  });
+
+  /** CH1 — mensaje a mostrar al bloquear el avance. */
+  kmMensajeBloqueo(): string {
+    const v = this.kmValidacion();
+    if (this.online && v?.nivel === 'error' && v.mensaje) return v.mensaje;
+    return this.i18n.t('El kilometraje no puede ser menor al registrado ({km} km).', { km: this.odometro() ?? '' });
+  }
 
   private get clave(): string {
     return `mantenimiento:${this.vehiculoId}`;
@@ -157,14 +185,51 @@ export class MantenimientoPage implements OnDestroy {
     // AG15 — si se abrió desde una tarea vinculada, recuérdala para enlazar al crear.
     this.tareaVinculada = this.route.snapshot.queryParamMap.get('tarea');
     void this.loadVehiculo();
+    void this.loadTalleres(); // CH2 — lista de talleres (cacheada offline)
     void this.restoreDraft();
     this.navGuard.register(this.backHandler); // Q7 — botón físico Android
     // U15 — autosave (regla: todo formulario lo tiene).
     effect(() => {
-      const snap = { tipo: this.tipo(), incluyePreventivo: this.incluyePreventivo(), descripcion: this.descripcion(), km: this.km(), costo: this.costo(), taller: this.taller(), notas: this.notas(), step: this.step() };
+      const snap = { tipo: this.tipo(), incluyePreventivo: this.incluyePreventivo(), descripcion: this.descripcion(), km: this.km(), costo: this.costo(), taller: this.taller(), tallerId: this.tallerId(), notas: this.notas(), step: this.step() };
       if (!this.hydrated || this.submitting() || this.done()) return;
       this.autosave.queue(this.clave, snap, { tipo: 'mantenimiento', etiqueta: this.i18n.t('Mantenimiento'), ruta: this.location.path() });
     });
+    // CH1 — valida el km contra las lecturas del vehículo (online, con debounce).
+    // Reinicia la confirmación del salto cuando cambia el km/vehículo.
+    effect(() => {
+      const km = this.km();
+      const on = this.network.online();
+      untracked(() => this.kmConfirmado.set(false));
+      if (this.kmValTimer) clearTimeout(this.kmValTimer);
+      if (!on || km == null || !this.vehiculoId) {
+        untracked(() => this.kmValidacion.set(null));
+        return;
+      }
+      this.kmValTimer = setTimeout(() => void this.validarKm(km), 400);
+    });
+  }
+
+  private async loadTalleres(): Promise<void> {
+    try {
+      this.talleres.set(await this.mantenimientos.talleresYProveedores());
+    } catch {
+      this.talleres.set([]); // offline sin caché: el picker solo ofrece "Otro"
+    }
+  }
+
+  /** CH1 — pide el veredicto del km al servidor (ignora fallos: cae a la regla local). */
+  private async validarKm(km: number): Promise<void> {
+    try {
+      this.kmValidacion.set(await this.mantenimientos.validarKm(this.vehiculoId, km, fechaLocalISO()));
+    } catch {
+      this.kmValidacion.set(null);
+    }
+  }
+
+  /** CH2 — el picker eligió un taller del maestro o escribió uno libre ("Otro"). */
+  onTallerChanged(sel: TallerSel): void {
+    this.tallerId.set(sel.id);
+    this.taller.set(sel.nombre ?? '');
   }
 
   ngOnDestroy(): void {
@@ -172,7 +237,7 @@ export class MantenimientoPage implements OnDestroy {
   }
 
   private async restoreDraft(): Promise<void> {
-    const draft = await this.borrador.load<{ tipo: MantenimientoTipo | null; incluyePreventivo?: boolean; descripcion: string; km: number | null; costo?: number | null; taller?: string; notas?: string; step: number }>(this.clave);
+    const draft = await this.borrador.load<{ tipo: MantenimientoTipo | null; incluyePreventivo?: boolean; descripcion: string; km: number | null; costo?: number | null; taller?: string; tallerId?: string | null; notas?: string; step: number }>(this.clave);
     if (draft) {
       this.tipo.set(draft.tipo ?? null);
       this.incluyePreventivo.set(draft.incluyePreventivo ?? false);
@@ -180,6 +245,7 @@ export class MantenimientoPage implements OnDestroy {
       this.km.set(draft.km ?? null);
       this.costo.set(draft.costo ?? null);
       this.taller.set(draft.taller ?? '');
+      this.tallerId.set(draft.tallerId ?? null);
       this.notas.set(draft.notas ?? '');
       const fotos = await this.borrador.loadFotos(this.clave);
       if (fotos.length) {
@@ -257,7 +323,17 @@ export class MantenimientoPage implements OnDestroy {
     void this.borrador.removeFoto(this.clave, String(idx));
   }
 
-  // ── CG13 — documentos del taller (PDF/foto) ──────────────────────────────────
+  // ── CG13/CH3 — documentos del taller (PDF/foto), tipo POR documento ──────────
+  /** CH3 — infiere el tipo inicial por mime/nombre (igual que la web). */
+  private inferirTipoDoc(nombre: string, mime: string): AdjuntoTipoDocumento {
+    if (mime.startsWith('image/')) return 'foto';
+    const n = (nombre || '').toLowerCase();
+    if (/fact|fac|invoice|ncf/.test(n)) return 'factura';
+    if (/cot/.test(n)) return 'cotizacion';
+    if (/inf|reporte/.test(n)) return 'informe';
+    return 'factura';
+  }
+
   async elegirDocumento(): Promise<void> {
     const doc = await this.camera.pickDocument();
     if (!doc) return;
@@ -266,19 +342,29 @@ export class MantenimientoPage implements OnDestroy {
       return;
     }
     const mime = doc.esImagen ? 'image/jpeg' : 'application/pdf';
-    this.docPendiente.set({ blob: doc.blob, nombre: doc.nombre, mime });
-  }
-  cancelarDocumento(): void {
-    this.docPendiente.set(null);
-  }
-  confirmarDocumento(tipo: AdjuntoTipoDocumento): void {
-    const p = this.docPendiente();
-    if (!p) return;
-    this.documentos.update((l) => [...l, { ...p, tipoDocumento: tipo }]);
-    this.docPendiente.set(null);
+    // CH3 — se agrega directo con el tipo inferido; se puede cambiar en la lista.
+    this.documentos.update((l) => [...l, { blob: doc.blob, nombre: doc.nombre, mime, tipoDocumento: this.inferirTipoDoc(doc.nombre, mime), descripcion: '' }]);
   }
   quitarDocumento(i: number): void {
     this.documentos.update((l) => l.filter((_, idx) => idx !== i));
+  }
+  /** CH3 — abre la hoja para cambiar el tipo del documento `i`. */
+  editarTipoDoc(i: number): void {
+    this.editandoDocIdx.set(i);
+  }
+  cancelarEditarTipo(): void {
+    this.editandoDocIdx.set(null);
+  }
+  /** CH3 — fija el tipo del documento en edición (limpia la descripción si deja de ser "otro"). */
+  setTipoDoc(tipo: AdjuntoTipoDocumento): void {
+    const i = this.editandoDocIdx();
+    if (i == null) return;
+    this.documentos.update((l) => l.map((d, idx) => (idx === i ? { ...d, tipoDocumento: tipo, descripcion: tipo === 'otro' ? d.descripcion : '' } : d)));
+    this.editandoDocIdx.set(null);
+  }
+  /** CH3 — descripción del documento cuando el tipo es "otro". */
+  setDocDescripcion(i: number, desc: string): void {
+    this.documentos.update((l) => l.map((d, idx) => (idx === i ? { ...d, descripcion: desc } : d)));
   }
 
   next(): void {
@@ -304,8 +390,12 @@ export class MantenimientoPage implements OnDestroy {
           this.toast.error(this.i18n.t('Describe el mantenimiento.'));
           return false;
         }
-        if (this.kmMenorOdometro()) {
-          this.toast.error(this.i18n.t('El kilometraje no puede ser menor al registrado ({km} km).', { km: this.odometro() ?? '' }));
+        if (this.kmBloqueado()) {
+          this.toast.error(this.kmMensajeBloqueo());
+          return false;
+        }
+        if (this.online && this.kmValidacion()?.nivel === 'aviso' && !this.kmConfirmado()) {
+          this.toast.error(this.i18n.t('Confirma el kilometraje marcado o corrígelo.'));
           return false;
         }
         return true;
@@ -331,8 +421,12 @@ export class MantenimientoPage implements OnDestroy {
       this.toast.error(this.i18n.t('Describe el mantenimiento.'));
       return;
     }
-    if (this.kmMenorOdometro()) {
-      this.toast.error(this.i18n.t('El kilometraje no puede ser menor al registrado ({km} km).', { km: this.odometro() ?? '' }));
+    if (this.kmBloqueado()) {
+      this.toast.error(this.kmMensajeBloqueo());
+      return;
+    }
+    if (this.online && this.kmValidacion()?.nivel === 'aviso' && !this.kmConfirmado()) {
+      this.toast.error(this.i18n.t('Confirma el kilometraje marcado o corrígelo.'));
       return;
     }
     if (this.fotosCount() < 1) {
@@ -355,10 +449,11 @@ export class MantenimientoPage implements OnDestroy {
         fecha: fechaLocalISO(), // BL9 — día LOCAL (RD, UTC-4)
         km: this.km(),
         costo: this.costo(), // AL7
-        proveedor: this.taller().trim() || null, // AL7
+        proveedor: this.taller().trim() || null, // AL7/CH2 (nombre)
+        proveedorId: this.tallerId(), // CH2 (id del maestro; null = "Otro")
         notas: this.notas().trim() || null, // AL7
         fotos,
-        adjuntos: this.documentos(), // CG13 — PDF/foto del taller
+        adjuntos: this.documentos(), // CG13/CH3 — PDF/foto del taller (con tipo + descripción)
         voces: this.voces().map((n) => n.blob),
         placa: this.placa(),
         tareaVinculada: this.tareaVinculada, // AG15

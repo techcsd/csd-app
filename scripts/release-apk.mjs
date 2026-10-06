@@ -37,11 +37,13 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-05';
+const RELEASED_AT = '2026-10-06';
 
-const TITULO = 'Arreglo: el chofer privado ya puede echar combustible e inspeccionar su vehículo';
+const TITULO = 'Mantenimientos: el aviso de kilometraje ya no molesta sin razón, el taller se elige de una lista y cada documento lleva su tipo';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Chofer privado', d: 'El chofer privado ya puede registrar combustible e inspeccionar el vehículo que Flota le autorizó (antes la pantalla de combustible le decía que no tenía un vehículo asignado).' },
+  { t: 'arreglo', m: 'Mantenimientos', d: 'El kilometraje ya no marca error solo por ser mayor al último registrado (llegar al taller con más km es lo normal). Debajo del campo se ve la última lectura real del vehículo y, si hay un salto enorme, pide confirmación.' },
+  { t: 'mejora', m: 'Mantenimientos', d: 'Taller / proveedor ahora se elige de una lista con buscador (talleres primero) con opción «Otro…» para escribir uno que no esté; la lista funciona sin señal.' },
+  { t: 'mejora', m: 'Mantenimientos', d: 'Al adjuntar documentos del taller, cada archivo lleva su propio tipo (factura, informe, cotización, garantía, foto u otro), editable antes de enviar; en el historial se agrupan por tipo con su conteo.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
