@@ -49,7 +49,6 @@ export class TallerPicker {
       id: p.id,
       label: p.nombre,
       group: p.es_taller ? this.i18n.t('Talleres') : this.i18n.t('Otros proveedores'),
-      icon: p.es_taller ? '🔧' : '🏪',
     })),
   );
 

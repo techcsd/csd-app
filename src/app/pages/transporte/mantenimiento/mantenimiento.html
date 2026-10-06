@@ -82,7 +82,7 @@
           <p class="mant-km-hint">{{ 'Última lectura' | t }}: {{ kmValidacion()!.km_antes | number: '1.0-0' }} {{ kmValidacion()!.unidad }} ({{ kmValidacion()!.fuente_antes }}, {{ kmValidacion()!.fecha_antes }})</p>
         }
         @if (online && kmValidacion()?.nivel === 'error') {
-          <p class="mant-km-error">⚠️ {{ kmValidacion()!.mensaje }}</p>
+          <p class="mant-km-error">{{ kmValidacion()!.mensaje }}</p>
         }
         @if (online && kmValidacion()?.nivel === 'aviso') {
           <div class="mant-km-aviso">

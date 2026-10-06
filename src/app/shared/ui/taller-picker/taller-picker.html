@@ -18,11 +18,10 @@
       [selectedId]="selectedId() ?? ''"
       [searchable]="true"
       [searchPlaceholder]="'Buscar taller o proveedor…' | t"
-      icon="🔧"
       (picked)="onPick($event)"
     />
     <button type="button" class="taller-otro" (click)="abrirOtro()">
-      <span aria-hidden="true">✏️</span> {{ 'Otro… (escribir uno que no está en la lista)' | t }}
+      {{ 'Otro… (escribir uno que no está en la lista)' | t }}
     </button>
   } @else {
     <label class="field-label">{{ 'Nombre del taller / proveedor' | t }}</label>
