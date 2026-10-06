@@ -156,7 +156,7 @@
             <li><span>{{ 'Incluyó preventivo' | t }}</span><b>{{ 'Sí' | t }}</b></li>
           }
           @if (km() !== null) {
-            <li><span>{{ 'Kilometraje' | t }}</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+            <li><span>{{ (vehDetalle()?.medida_uso === 'horas' ? 'Horómetro' : 'Kilometraje') | t }}</span><b>{{ km() | number: '1.0-0' }} {{ unidad() }}</b></li>
           }
           @if (taller().trim()) {
             <li><span>{{ 'Taller' | t }}</span><b>{{ taller() }}</b></li>

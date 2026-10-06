@@ -11,7 +11,7 @@
     @if (loading()) {
       <p class="pdfv__msg">{{ 'Cargando documento…' | t }}</p>
     } @else if (error()) {
-      <p class="pdfv__msg">{{ 'No pudimos mostrar este PDF. Usa “Descargar” para abrirlo.' | t }}</p>
+      <p class="pdfv__msg">{{ 'No pudimos mostrar este PDF. Revisa tu conexión e inténtalo de nuevo.' | t }}</p>
     }
     <canvas #canvas class="pdfv__canvas" [class.pdfv__canvas--hidden]="loading() || error()"></canvas>
   </div>

@@ -187,12 +187,22 @@ export class MantenimientosService {
    * tope, `listarMantenimientosPagina()` continúa por cursor (fecha,id).
    */
   async mantenimientosPorVehiculo(vehiculoId: string): Promise<MantenimientoItem[]> {
+    return (await this.mantenimientosPorVehiculoDetailed(vehiculoId)).items;
+  }
+
+  /**
+   * BL2/8ª regla — igual que `mantenimientosPorVehiculo` pero DISTINGUE "no hay
+   * mantenimientos" de "la consulta falló": la pantalla usa `failed` para mostrar
+   * error+reintento en vez de un falso "este vehículo no tiene mantenimientos".
+   */
+  async mantenimientosPorVehiculoDetailed(
+    vehiculoId: string,
+  ): Promise<{ items: MantenimientoItem[]; failed: boolean; fromCache: boolean }> {
     const key = `mant_veh:${vehiculoId}`;
-    const data = await this.catalog.refresh<MantenimientoItem[]>(key, async () => {
-      const filas = await this.listarMantenimientosPagina(vehiculoId, 200, null, null);
-      return filas;
-    });
-    return data ?? [];
+    const res = await this.catalog.refreshDetailed<MantenimientoItem[]>(key, async () =>
+      this.listarMantenimientosPagina(vehiculoId, 200, null, null),
+    );
+    return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
   }
 
   /**
@@ -258,10 +268,23 @@ export class MantenimientosService {
    * CSD cabe de sobra. Cacheada (read-through) para verse offline.
    */
   async listarMantenimientosGeneral(): Promise<MantenimientoItem[]> {
-    const data = await this.catalog.refresh<MantenimientoItem[]>('mant_general', async () => {
-      return this.listarMantenimientosPagina(null, 200, null, null);
-    });
-    return data ?? [];
+    return (await this.listarMantenimientosGeneralDetailed()).items;
+  }
+
+  /**
+   * BL2/8ª regla — variante que DISTINGUE vacío de fallo (la lista general usa
+   * `failed` para el estado de error+reintento; sin esto, un arranque offline en
+   * frío mostraba "Aún no hay mantenimientos" en vez de "no pudimos cargar").
+   */
+  async listarMantenimientosGeneralDetailed(): Promise<{
+    items: MantenimientoItem[];
+    failed: boolean;
+    fromCache: boolean;
+  }> {
+    const res = await this.catalog.refreshDetailed<MantenimientoItem[]>('mant_general', async () =>
+      this.listarMantenimientosPagina(null, 200, null, null),
+    );
+    return { items: res.data ?? [], failed: res.failed, fromCache: res.fromCache };
   }
 
   /**
@@ -319,9 +342,9 @@ export class MantenimientosService {
   }): Promise<void> {
     const adjId = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
-    const ext = input.mime.includes('pdf')
-      ? 'pdf'
-      : (input.nombre.split('.').pop() ?? '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    // La imagen siempre viaja como JPEG (camera.pickDocument la comprime); solo el PDF
+    // conserva su extensión. Evita rutas basura cuando el archivo no tiene punto en el nombre.
+    const ext = input.mime.includes('pdf') ? 'pdf' : 'jpg';
     const path = `mantenimiento/${input.mantenimientoId}/adjuntos/${adjId}.${ext}`;
     await this.sync.enqueue({
       id: `mant_adj_${adjId}`,
@@ -515,7 +538,17 @@ export class MantenimientosService {
         },
         { onConflict: 'id', ignoreDuplicates: true },
       );
-      if (error) throwSyncError(error);
+      if (error) {
+        // CH-QA — el adjunto se encola DESPUÉS del alta del mantenimiento (FIFO). Si el
+        // alta aún no commiteó en el servidor (falló transitoriamente y está en backoff),
+        // el FK (23503) a `mantenimientos` todavía no existe. Eso NO es un error permanente:
+        // hay que REINTENTAR cuando el alta drene. throwSyncError marcaría 23503 como
+        // 'referencia' (permanente) y perdería la factura → lo tratamos como transitorio.
+        if ((error as { code?: string }).code === '23503') {
+          throw new Error('El mantenimiento aún no se ha sincronizado; reintento el adjunto.');
+        }
+        throwSyncError(error);
+      }
 
       const vehId = payload['vehiculo_id'] as string;
       await this.catalog.invalidate(`mant_veh:${vehId}`);

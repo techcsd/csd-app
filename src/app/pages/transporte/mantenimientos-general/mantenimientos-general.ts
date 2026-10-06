@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { DecimalPipe, KeyValuePipe, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,6 +8,7 @@ import {
   MANTENIMIENTO_TIPO_LABEL,
   MantenimientoTipo,
 } from '../../../core/services/mantenimientos.service';
+import { SyncService } from '../../../core/sync/sync.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { MantAdjuntos } from '../../../shared/ui/mant-adjuntos/mant-adjuntos';
@@ -35,6 +36,7 @@ export class MantenimientosGeneralPage {
   private mant = inject(MantenimientosService);
   private router = inject(Router);
   private location = inject(Location);
+  private sync = inject(SyncService);
 
   loading = signal(true);
   fallo = signal(false);
@@ -85,15 +87,24 @@ export class MantenimientosGeneralPage {
   );
 
   constructor() {
-    void this.cargar();
+    // Recarga al entrar Y tras cada cambio del outbox (drain): así un mantenimiento
+    // o un adjunto recién encolado aparece en la lista cuando el servidor confirma.
+    effect(() => {
+      this.sync.changed();
+      void this.cargar();
+    });
   }
 
   async cargar(): Promise<void> {
     this.loading.set(true);
     this.fallo.set(false);
     try {
-      const list = await this.mant.listarMantenimientosGeneral();
-      this.items.set(list);
+      // 8ª regla — DISTINGUE vacío de fallo: `catalog.refresh` nunca lanza (devuelve
+      // caché/null), así que el `catch` era código muerto y un fallo en frío se veía
+      // como "aún no hay mantenimientos". La variante Detailed expone `failed`.
+      const res = await this.mant.listarMantenimientosGeneralDetailed();
+      this.items.set(res.items);
+      this.fallo.set(res.failed && res.items.length === 0);
     } catch {
       this.fallo.set(this.items().length === 0);
     } finally {
