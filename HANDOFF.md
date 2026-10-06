@@ -1,5 +1,32 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 06/10/2026 — PROMPT-85 · Ronda **CH** (IDs CH) — **2.43.0 PUBLICADA a prod** · verificada y CERRADA
+**TL;DR:** ronda CH (mantenimientos), mitad app (filas 138-140). Consume contratos de **PROMPT-84** (`validar_km_vehiculo`, tipo `taller`/`proveedor_id`, `mantenimiento_adjuntos.descripcion`), verificados vivos en sgc-dev+prod. Se construyó, salió a dev, OK y **RELEASE + PUBLICADA 2.43.0** en su sesión; esta sesión **re-verificó** la implementación (estática, extremo a extremo) y **cerró** la ronda. `dev` = `main` (`b3fa863`), árbol limpio. ✅ Sesión cerrada.
+
+### ✅ EN PROD (PUBLICADA 2.43.0 — reemplaza 2.42.1)
+- **`dev → main`** (`b3fa863`) · **APK prod 2.43.0** firmado (cert `3c5316d8…5065`), **regla 18 OK** (2.43.0 ya en dev), bucket prod + registrado + `apk_url` prod · **PUBLICADA = 2.43.0** (2.42.1 despublicada) vía `scripts/data-fixes/2026-10-06-ch-publicar-2.43.0.mjs` (regla 19) · trigger → push FCM android + **9 iPhone (ios-pwa) notificados in-app** (`2026-10-06-ch-notificar-ios-2.43.0.mjs`) · **Mínima = 2.35.0** (update NO forzado). Verificado por objeto en prod (`app_versiones` 2.43.0 `publicada=true`).
+- Commits de la ronda: `e2e2896` (CH1-3) · `c7bb936` (merge) · `f87e65e` (quitar emojis-icono nuevos, AW12) · `9071104` (i18n artifacts) · `576dfa7` (data-fix publicar + iOS).
+
+### ✅ Hecho (CH1/CH2/CH3)
+- **CH1 · Misma regla de km que la web (falso positivo).** `kmMenorOdometro`/bloqueo → `MantenimientosService.validarKm()` → RPC **`validar_km_vehiculo(p_vehiculo,p_km,p_fecha,p_excluir_mant)`** con la fecha del registro. Online: bloquea solo `nivel==='error'` (retroceso vs. lectura anterior / exceso vs. posterior) con el mensaje del servidor; `nivel==='aviso'` (salto inverosímil, umbral `flota_config` 800 km·día / 24 h·día) NO bloquea, pide confirmar; pista *"Última lectura: X (fuente, fecha)"*; horómetro si el vehículo mide en horas. **Offline**: fallback local `km < odómetro cacheado` (el registro del app es siempre de hoy); el servidor revalida al sincronizar y el outbox muestra su mensaje.
+- **CH2 · Dropdown real de taller + "Otro".** Nuevo `shared/ui/taller-picker` (hoja inferior con búsqueda, agrupa **Talleres** / **Otros proveedores** / **Otro…**) en *Nuevo mantenimiento* (`mantenimiento.html`) y *Cerrar* (`mantenimiento-cierre.html`); lista cacheada offline (`talleresYProveedores()` → `listar_proveedores_para_flota`); "Otro" siempre disponible. El **alta** envía `proveedor_id` + `proveedor`; el **cierre** envía solo el nombre (ver PARIDAD).
+- **CH3 · Varios tipos de documento.** Tipo **por documento editable** en la lista pendiente (antes solo al agregar) + inferencia inicial (imagen→Foto; PDF `fact/ncf`→Factura, `cot`→Cotización, `inf`→Informe) + *Otro*→descripción (`mantenimiento_adjuntos.descripcion`). Detalle/historial **agrupa por tipo con conteo** (`app-mant-adjuntos [agrupar]`); PDF en el visor del sistema.
+
+### 🔎 Verificación de esta sesión (estática, extremo a extremo)
+- **Forma del RPC ↔ interfaz `ValidacionKm`**: idéntica (`ok, nivel, unidad, medida_uso, km_antes/despues, fecha_*, fuente_*, mensaje`). Parámetros del `.rpc()` ↔ firma: coinciden. Gating de submit correcto (error bloquea / aviso confirma / fallback offline). RPC vivo (403 a service_role = existe + gateado; CH2b amplía el gate a conductores). Trigger `trg_mant_avanzar_odometro` sube odómetro solo si el km es mayor (retroactivo no toca).
+- **No se pudo** la llamada autenticada en vivo: los `qa_*` documentados no existen en `sgc.usuarios` de dev (dataset anonimizado; dev usa el panel `usuarios_qa_dev`). Harness, no producto.
+
+### 👤 Pendiente físico — Xaviel
+- **Raykler marca qué proveedores existentes son talleres** (para el grupo "Talleres" del dropdown) — lista sugerida en el reporte del padre. Hasta entonces el grupo "Talleres" sale vacío y todo cae en "Otros proveedores"/"Otro".
+
+### ⚠️ PARIDAD / pendiente del PADRE
+- `completar_mantenimiento_app` **no acepta `proveedor_id`** aún → el **cierre** manda solo el nombre del taller (el **alta** sí manda `proveedor_id`). Anotado en `PARIDAD.md`; si se quiere paridad en el cierre, es un RPC del padre.
+- Contratos del padre aplicados a dev+prod: `sql/2026-10-06-ch1-validar-km-vehiculo.sql`, `…-ch2-proveedor-taller.sql`, `…-ch2b-flota-rpcs-chofer.sql`, `…-ch3-adjunto-descripcion.sql`.
+
+### 🔜 Pendiente — Claude
+- Nada abierto de CH: **2.43.0 PUBLICADA**, matriz ✅ (filas 138-140 + sección mitad app), git limpio. Próxima ronda = nuevo PROMPT/notas.
+- **Ojo:** `feature/cf4c-web-push-ios` sigue SIN mergear (backend del padre); no arrastrarla a prod.
+
 ## 🟢 SESIÓN 05/10/2026 — PROMPT-83 · Ronda **CG** (IDs CG) — **2.42.1 PUBLICADA a prod** (Xaviel: "manda todo a main, todo debe estar al día")
 **TL;DR:** ronda CG, mitad app (filas 125-137). Consume contratos de **PROMPT-82**, verificados vivos en sgc-dev+prod. Salió a dev → OK → **2.42.0 PUBLICADA**; luego, seguí trabajando y encontré/cerré un hueco de CG7 (el privado no podía echar combustible/inspeccionar su autorizado) + consolidé el gating → **2.42.1 PUBLICADA** (Xaviel pidió subir todo a main y dejar prod al día). `dev` y `main` en `5607e2c`. ✅ Sesión cerrada.
 
