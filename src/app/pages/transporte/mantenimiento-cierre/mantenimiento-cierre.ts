@@ -7,8 +7,10 @@ import { ToastService } from '../../../core/services/toast.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { TallerPicker, TallerSel } from '../../../shared/ui/taller-picker/taller-picker';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { ProveedorFlota } from '../../../core/services/mantenimientos.service';
 
 const MAX_FOTOS = 2;
 
@@ -20,7 +22,7 @@ const MAX_FOTOS = 2;
   selector: 'app-mantenimiento-cierre',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, KmInput, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, KmInput, TallerPicker, TranslatePipe],
   templateUrl: './mantenimiento-cierre.html',
   styleUrl: './mantenimiento-cierre.scss',
 })
@@ -38,14 +40,32 @@ export class MantenimientoCierrePage {
   mantenimientoId = '';
   km = signal<number | null>(null);
   costo = signal<number | null>(null);
-  proveedor = signal('');
+  proveedor = signal(''); // CH2 — nombre del taller (del maestro o libre)
+  tallerId = signal<string | null>(null); // CH2 — id del maestro (no lo consume el cierre aún)
   notas = signal('');
   fotos = signal<Record<number, CapturedPhoto>>({});
   guardando = signal(false);
+  talleres = signal<ProveedorFlota[]>([]); // CH2 — lista cacheada
 
   constructor() {
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
     this.mantenimientoId = this.route.snapshot.paramMap.get('id') ?? '';
+    void this.loadTalleres();
+  }
+
+  private async loadTalleres(): Promise<void> {
+    try {
+      this.talleres.set(await this.mantenimientos.talleresYProveedores());
+    } catch {
+      this.talleres.set([]);
+    }
+  }
+
+  /** CH2 — el picker eligió un taller del maestro o escribió uno libre. El cierre
+   *  (completar_mantenimiento_app) guarda el NOMBRE; el id queda para una próxima ronda. */
+  onTallerChanged(sel: TallerSel): void {
+    this.tallerId.set(sel.id);
+    this.proveedor.set(sel.nombre ?? '');
   }
 
   onFoto(idx: number, photo: CapturedPhoto): void {

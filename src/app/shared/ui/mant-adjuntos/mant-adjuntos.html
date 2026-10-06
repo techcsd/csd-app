@@ -1,19 +1,44 @@
-<!-- CG13 — chips de adjuntos: imagen 🖼️ / PDF 📄 → abren el documento en el sistema. -->
+<!-- CG13/CH3 — chips de adjuntos: imagen 🖼️ / PDF 📄 → abren el documento en el sistema. -->
 @if (adjuntos().length || puedeAdjuntar()) {
-  <div class="madj">
-    @for (a of adjuntos(); track a.id) {
-      <button type="button" class="madj__chip" [disabled]="abriendo()" (click)="abrir(a)">
-        <span class="madj__ico" aria-hidden="true">{{ esPdf(a) ? '📄' : '🖼️' }}</span>
-        <span class="madj__label">{{ a.nombre || tipoLabel(a.tipo_documento) }}</span>
-      </button>
+  @if (agrupar() && adjuntos().length) {
+    <!-- CH3 — agrupados por tipo con conteo (detalle/historial). -->
+    @for (g of grupos(); track g.tipo) {
+      <div class="madj-group">
+        <span class="madj-group__title">{{ g.label | t }} ({{ g.items.length }})</span>
+        <div class="madj">
+          @for (a of g.items; track a.id) {
+            <button type="button" class="madj__chip" [disabled]="abriendo()" (click)="abrir(a)">
+              <span class="madj__ico" aria-hidden="true">{{ esPdf(a) ? '📄' : '🖼️' }}</span>
+              <span class="madj__label">{{ a.nombre || tipoLabel(a.tipo_documento) }}</span>
+            </button>
+          }
+        </div>
+      </div>
     }
     @if (puedeAdjuntar() && mantenimientoId()) {
-      <button type="button" class="madj__chip madj__chip--add" (click)="elegirArchivo()">
-        <span class="madj__ico" aria-hidden="true">➕</span>
-        <span class="madj__label">{{ 'Adjuntar PDF o foto' | t }}</span>
-      </button>
+      <div class="madj">
+        <button type="button" class="madj__chip madj__chip--add" (click)="elegirArchivo()">
+          <span class="madj__ico" aria-hidden="true">➕</span>
+          <span class="madj__label">{{ 'Adjuntar PDF o foto' | t }}</span>
+        </button>
+      </div>
     }
-  </div>
+  } @else {
+    <div class="madj">
+      @for (a of adjuntos(); track a.id) {
+        <button type="button" class="madj__chip" [disabled]="abriendo()" (click)="abrir(a)">
+          <span class="madj__ico" aria-hidden="true">{{ esPdf(a) ? '📄' : '🖼️' }}</span>
+          <span class="madj__label">{{ a.nombre || tipoLabel(a.tipo_documento) }}</span>
+        </button>
+      }
+      @if (puedeAdjuntar() && mantenimientoId()) {
+        <button type="button" class="madj__chip madj__chip--add" (click)="elegirArchivo()">
+          <span class="madj__ico" aria-hidden="true">➕</span>
+          <span class="madj__label">{{ 'Adjuntar PDF o foto' | t }}</span>
+        </button>
+      }
+    </div>
+  }
 }
 
 <!-- Paso 2 — elegir el tipo de documento del archivo recién tomado. -->

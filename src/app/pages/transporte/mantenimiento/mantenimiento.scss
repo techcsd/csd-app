@@ -118,11 +118,38 @@
 }
 
 // CG13 — documentos del taller (PDF/foto) en el paso de evidencia.
+// CH1 — veredicto del km bajo el KmInput.
+.mant-km-hint { margin: 6px 0 0; font-size: 0.82rem; color: var(--text-2); }
+.mant-km-error { margin: 6px 0 0; font-size: 0.85rem; color: var(--color-error, #d12); font-weight: 600; }
+.mant-km-aviso {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--warning, #d97706);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--warning, #d97706) 12%, var(--surface));
+  &__msg { margin: 0 0 6px; font-size: 0.85rem; color: var(--text); }
+}
+
 .mant-docs {
   margin-top: 18px;
 
   &__title { margin: 0 0 2px; font-size: 0.95rem; color: var(--text); }
   &__hint { margin: 0 0 10px; font-size: 0.82rem; color: var(--text-2); }
+
+  // CH3 — botón para cambiar el tipo del documento (chip tappable, 36px alto).
+  &__tipo-pick {
+    flex: none;
+    min-height: 36px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.76rem;
+    cursor: pointer;
+  }
+  // CH3 — descripción cuando el tipo es "otro".
+  &__desc { margin: 0 0 8px; }
 
   &__item {
     display: flex;

@@ -1,0 +1,83 @@
+:host { display: block; }
+
+.taller-field {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+
+  &__btn {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 52px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-primary, var(--color-text));
+    font-size: var(--fs-option, 16px);
+    text-align: left;
+    cursor: pointer;
+  }
+  &__val {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &--ph { color: var(--color-text-secondary); }
+  }
+  &__caret { flex: none; color: var(--color-text-secondary); }
+
+  &__clear {
+    flex: none;
+    width: 52px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: 18px;
+    cursor: pointer;
+  }
+}
+
+// Botón "Otro…" dentro de la hoja.
+.taller-otro {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 52px;
+  padding: 14px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2, var(--color-surface));
+  color: var(--color-text-primary, var(--color-text));
+  font-size: var(--fs-option, 16px);
+  cursor: pointer;
+}
+
+.taller-otro-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+
+  &__back,
+  &__ok {
+    flex: 1;
+    min-height: 52px;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-option, 16px);
+    cursor: pointer;
+  }
+  &__back {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-primary, var(--color-text));
+  }
+  &__ok {
+    border: none;
+    background: var(--color-primary);
+    color: var(--text-on-accent, #fff);
+    &:disabled { opacity: .5; }
+  }
+}

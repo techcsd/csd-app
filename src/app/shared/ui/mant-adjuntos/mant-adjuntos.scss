@@ -1,3 +1,17 @@
+// CH3 — grupo de adjuntos por tipo (detalle/historial).
+.madj-group {
+  margin-top: 8px;
+  &__title {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-2, #68727f);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .madj { margin-top: 4px; }
+}
+
 // CG13 — chips de adjuntos + hoja de tipo + lightbox de imagen.
 .madj {
   display: flex;
