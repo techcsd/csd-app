@@ -141,8 +141,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
 | pages/transporte/generar-conduce | 101 | 1 | 99% | 0% |  |
-| pages/transporte/mantenimiento | 42 | 1 | 91% | 0% |  |
-| pages/transporte/mantenimiento-cierre | 8 | 0 | 100% | 0% |  |
+| pages/transporte/mantenimiento | 44 | 1 | 91% | 0% |  |
+| pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-general | 20 | 0 | 50% | 0% |  |
 | pages/transporte/mantenimientos-lista | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mi-actividad | 54 | 0 | 100% | 0% |  |
@@ -195,6 +195,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/skeleton | 1 | 0 | 100% | 0% |  |
 | shared/ui/step-bar | 1 | 0 | 100% | 0% |  |
 | shared/ui/sticker-editor | 7 | 0 | 100% | 0% |  |
+| shared/ui/taller-picker | 8 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-card | 2 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-picker | 14 | 0 | 86% | 0% |  |
 | shared/ui/voice-notes | 2 | 0 | 100% | 0% |  |
