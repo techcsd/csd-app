@@ -808,13 +808,13 @@
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
-      "conT": 42,
+      "conT": 44,
       "sinT": 1,
       "en": 91,
       "ht": 0
     },
     "pages/transporte/mantenimiento-cierre": {
-      "conT": 8,
+      "conT": 7,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -1226,6 +1226,12 @@
       "sinT": 0,
       "en": 100,
       "ht": 100
+    },
+    "shared/ui/taller-picker": {
+      "conT": 8,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
     },
     "shared/ui/toggle-switch": {
       "conT": 0,

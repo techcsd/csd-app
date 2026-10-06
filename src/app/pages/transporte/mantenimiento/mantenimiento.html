@@ -77,9 +77,31 @@
           [intervaloMantenimientoKm]="vehDetalle()?.intervalo_mantenimiento_km ?? 5000"
         />
 
-        <!-- AL7 — costo (opcional) + taller/lugar -->
-        <label class="field-label mantenimiento__mt" for="taller">{{ '¿Dónde lo hiciste? (taller / lugar) — opcional' | t }}</label>
-        <input id="taller" class="field" type="text" [ngModel]="taller()" (ngModelChange)="taller.set($event)" [placeholder]="'Ej. Taller Pérez, gomera de la esquina…' | t" />
+        <!-- CH1 — veredicto del km contra las lecturas del vehículo (online) -->
+        @if (online && kmValidacion()?.km_antes != null && kmValidacion()?.nivel !== 'error') {
+          <p class="mant-km-hint">{{ 'Última lectura' | t }}: {{ kmValidacion()!.km_antes | number: '1.0-0' }} {{ kmValidacion()!.unidad }} ({{ kmValidacion()!.fuente_antes }}, {{ kmValidacion()!.fecha_antes }})</p>
+        }
+        @if (online && kmValidacion()?.nivel === 'error') {
+          <p class="mant-km-error">{{ kmValidacion()!.mensaje }}</p>
+        }
+        @if (online && kmValidacion()?.nivel === 'aviso') {
+          <div class="mant-km-aviso">
+            <p class="mant-km-aviso__msg">{{ kmValidacion()!.mensaje }}</p>
+            <label class="mantenimiento__check">
+              <input type="checkbox" [checked]="kmConfirmado()" (change)="kmConfirmado.set($any($event.target).checked)" />
+              <span>{{ 'Sí, es correcto' | t }}</span>
+            </label>
+          </div>
+        }
+
+        <!-- AL7/CH2 — taller/proveedor (selector del maestro + "Otro") + costo -->
+        <label class="field-label mantenimiento__mt">{{ '¿Dónde lo hiciste? (taller / proveedor) — opcional' | t }}</label>
+        <app-taller-picker
+          [talleres]="talleres()"
+          [selectedId]="tallerId()"
+          [selectedNombre]="taller()"
+          (changed)="onTallerChanged($event)"
+        />
 
         <label class="field-label mantenimiento__mt" for="costo">{{ 'Costo (RD$) — opcional' | t }}</label>
         <input id="costo" class="field" type="number" inputmode="decimal" min="0" [ngModel]="costo()" (ngModelChange)="costo.set($event)" placeholder="0" />
@@ -111,9 +133,12 @@
             <div class="mant-docs__item">
               <span class="mant-docs__ico">{{ d.mime.includes('pdf') ? '📄' : '🖼️' }}</span>
               <span class="mant-docs__name">{{ d.nombre }}</span>
-              <span class="mant-docs__tipo">{{ docTipoLabel(d.tipoDocumento) | t }}</span>
+              <button type="button" class="mant-docs__tipo-pick" (click)="editarTipoDoc($index)">{{ docTipoLabel(d.tipoDocumento) | t }} ▾</button>
               <button type="button" class="mant-docs__del" (click)="quitarDocumento($index)" aria-label="Quitar">✕</button>
             </div>
+            @if (d.tipoDocumento === 'otro') {
+              <input class="field mant-docs__desc" type="text" [ngModel]="d.descripcion ?? ''" (ngModelChange)="setDocDescripcion($index, $event)" [placeholder]="'¿Qué documento es?' | t" />
+            }
           }
           <button type="button" class="mant-docs__add" (click)="elegirDocumento()">
             ➕ {{ 'Adjuntar PDF o foto' | t }}
@@ -179,18 +204,17 @@
   </div>
 }
 
-<!-- CG13 — elegir el tipo del documento recién adjuntado -->
-@if (docPendiente(); as p) {
+<!-- CH3 — cambiar el tipo de un documento ya agregado -->
+@if (editandoDocIdx() !== null) {
   <div class="mant-docs__sheet" role="dialog" aria-modal="true">
     <div class="mant-docs__sheet-box">
       <h3 class="mant-docs__sheet-title">{{ 'Tipo de documento' | t }}</h3>
-      <p class="mant-docs__sheet-sub">{{ p.nombre }}</p>
       <div class="mant-docs__tipos">
         @for (t of docTipos; track t) {
-          <button type="button" class="mant-docs__tipo" (click)="confirmarDocumento(t)">{{ docTipoLabel(t) | t }}</button>
+          <button type="button" class="mant-docs__tipo" (click)="setTipoDoc(t)">{{ docTipoLabel(t) | t }}</button>
         }
       </div>
-      <button type="button" class="mant-docs__cancel" (click)="cancelarDocumento()">{{ 'Cancelar' | t }}</button>
+      <button type="button" class="mant-docs__cancel" (click)="cancelarEditarTipo()">{{ 'Cancelar' | t }}</button>
     </div>
   </div>
 }

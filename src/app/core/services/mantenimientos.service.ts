@@ -63,6 +63,29 @@ export interface MantenimientoAdjunto {
   tipo_documento: string;
 }
 
+/** CH1 — veredicto del km del mantenimiento contra las lecturas del vehículo (RPC validar_km_vehiculo). */
+export interface ValidacionKm {
+  ok: boolean;
+  nivel: 'ok' | 'aviso' | 'error';
+  unidad: string;
+  medida_uso: string;
+  km_antes: number | null;
+  fecha_antes: string | null;
+  fuente_antes: string | null;
+  km_despues: number | null;
+  fecha_despues: string | null;
+  fuente_despues: string | null;
+  mensaje: string | null;
+}
+
+/** CH2 — taller/proveedor del maestro para el selector (RPC listar_proveedores_para_flota). */
+export interface ProveedorFlota {
+  id: string;
+  nombre: string;
+  tipos: string[];
+  es_taller: boolean;
+}
+
 /** CG13 — ¿el adjunto es un PDF? (para pintar el chip 📄 y abrir el visor de PDF). */
 export function adjuntoEsPdf(a: MantenimientoAdjunto): boolean {
   return (a.mime ?? '').includes('pdf') || /\.pdf$/i.test(a.nombre ?? '') || /\.pdf$/i.test(a.path);
@@ -117,14 +140,16 @@ export interface MantenimientoCaptura {
   incluyePreventivo: boolean;
   /** AL7 — costo opcional del trabajo. */
   costo?: number | null;
-  /** AL7 — taller/proveedor donde se hizo. */
+  /** AL7 — taller/proveedor donde se hizo (texto; nombre del maestro o libre "Otro"). */
   proveedor?: string | null;
+  /** CH2 — id del taller/proveedor del maestro (null si es texto libre "Otro"). */
+  proveedorId?: string | null;
   /** AL7 — notas del trabajo (aparte de la descripción). */
   notas?: string | null;
   /** Up to 3 optional evidence photos, in capture order. */
   fotos: Blob[];
-  /** CG13 — documentos del taller (PDF o imagen) con tipo, encolados como adjuntos. */
-  adjuntos?: Array<{ blob: Blob; nombre: string; mime: string; tipoDocumento: string }>;
+  /** CG13/CH3 — documentos del taller (PDF o imagen) con tipo (+ descripción si "otro"), encolados como adjuntos. */
+  adjuntos?: Array<{ blob: Blob; nombre: string; mime: string; tipoDocumento: string; descripcion?: string | null }>;
   /** Z23 — notas de voz múltiples (opcional). */
   voces?: Blob[];
   placa: string;
@@ -239,6 +264,37 @@ export class MantenimientosService {
     return data ?? [];
   }
 
+  /**
+   * CH1 — valida el km del mantenimiento contra TODAS las lecturas con fecha del
+   * vehículo (echadas, inspecciones, entregas, mantenimientos). Devuelve nivel
+   * ok|aviso|error + la lectura que choca. Solo online (lo llama el wizard con
+   * debounce); offline el wizard cae a la regla local (km < odómetro cacheado).
+   */
+  async validarKm(vehiculoId: string, km: number, fecha: string, excluir: string | null = null): Promise<ValidacionKm | null> {
+    const { data, error } = await this.supabase.client.rpc('validar_km_vehiculo', {
+      p_vehiculo: vehiculoId,
+      p_km: km,
+      p_fecha: fecha,
+      p_excluir_mant: excluir,
+    });
+    if (error) throw error;
+    return (data ?? null) as ValidacionKm | null;
+  }
+
+  /**
+   * CH2 — talleres + proveedores del maestro visibles para flota/chofer (RPC
+   * listar_proveedores_para_flota, talleres primero). Cacheado (read-through) para
+   * que el selector funcione offline con la última lista descargada.
+   */
+  async talleresYProveedores(): Promise<ProveedorFlota[]> {
+    const data = await this.catalog.refresh<ProveedorFlota[]>('proveedores_flota', async () => {
+      const { data, error } = await this.supabase.client.rpc('listar_proveedores_para_flota');
+      if (error) throw error;
+      return (data ?? []) as ProveedorFlota[];
+    });
+    return data ?? [];
+  }
+
   /** CG13 — URL firmada (1 h) de un adjunto en el bucket `vehiculos` (privado). */
   async signedUrlAdjunto(path: string): Promise<string | null> {
     const { data } = await this.supabase.client.storage.from('vehiculos').createSignedUrl(path, 3600);
@@ -259,6 +315,7 @@ export class MantenimientosService {
     nombre: string;
     mime: string;
     tipoDocumento: string;
+    descripcion?: string | null;
   }): Promise<void> {
     const adjId = crypto.randomUUID();
     const capturado_en = new Date().toISOString();
@@ -277,6 +334,7 @@ export class MantenimientosService {
         nombre: input.nombre,
         mime: input.mime,
         tipo_documento: input.tipoDocumento,
+        descripcion: input.tipoDocumento === 'otro' ? (input.descripcion ?? null) : null,
       },
       fotos: [{ id: adjId, bucket: 'vehiculos', path, slot: 'archivo', blob: input.blob }],
       resumen: { nombre: input.nombre, capturado_en },
@@ -340,6 +398,7 @@ export class MantenimientosService {
         incluye_preventivo: input.incluyePreventivo,
         costo: input.costo ?? null, // AL7
         proveedor: input.proveedor ?? null, // AL7 (taller)
+        proveedor_id: input.proveedorId ?? null, // CH2 (taller del maestro)
         notas: input.notas ?? null, // AL7
         audios: audio.audios, // Z23
         tarea_vinculada: input.tareaVinculada ?? null, // AG15
@@ -357,6 +416,7 @@ export class MantenimientosService {
         nombre: a.nombre,
         mime: a.mime,
         tipoDocumento: a.tipoDocumento,
+        descripcion: a.descripcion ?? null,
       });
     }
   }
@@ -380,6 +440,7 @@ export class MantenimientosService {
         p_costo: payload['costo'] ?? null, // AL7
         p_proveedor: payload['proveedor'] ?? null, // AL7
         p_notas: payload['notas'] ?? null, // AL7
+        p_proveedor_id: payload['proveedor_id'] ?? null, // CH2
       });
       // A returned error is a server rejection (validation) → don't retry forever.
       if (error) throwSyncError(error);
@@ -450,6 +511,7 @@ export class MantenimientosService {
           nombre: payload['nombre'] ?? null,
           mime: payload['mime'] ?? null,
           tipo_documento: payload['tipo_documento'] ?? 'otro',
+          descripcion: payload['descripcion'] ?? null,
         },
         { onConflict: 'id', ignoreDuplicates: true },
       );

@@ -24,16 +24,15 @@
       />
     </label>
 
-    <label class="mant-cierre__field">
+    <div class="mant-cierre__field">
       <span class="mant-cierre__label">{{ 'Taller / proveedor — opcional' | t }}</span>
-      <input
-        class="mant-cierre__input"
-        type="text"
-        [placeholder]="'Nombre del taller' | t"
-        [ngModel]="proveedor()"
-        (ngModelChange)="proveedor.set($event)"
+      <app-taller-picker
+        [talleres]="talleres()"
+        [selectedId]="tallerId()"
+        [selectedNombre]="proveedor()"
+        (changed)="onTallerChanged($event)"
       />
-    </label>
+    </div>
 
     <label class="mant-cierre__field">
       <span class="mant-cierre__label">{{ 'Notas — opcional' | t }}</span>

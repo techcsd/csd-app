@@ -3855,5 +3855,18 @@
   "ya existe como": "already exists as",
   "Entorno de desarrollo — usuarios de prueba": "Development environment — test users",
   "Toca \"Entrar como\" para rellenar el correo. La contraseña es la QA de .env.local / la que te dio Tecnología (no está en la app).": "Tap \"Log in as\" to fill in the email. The password is the QA one from .env.local / the one IT gave you (it is not in the app).",
-  "Entrar como": "Log in as"
+  "Entrar como": "Log in as",
+  "Última lectura": "Last reading",
+  "Confirma el kilometraje marcado o corrígelo.": "Confirm the flagged mileage or correct it.",
+  "¿Dónde lo hiciste? (taller / proveedor) — opcional": "Where did you do it? (shop / supplier) — optional",
+  "¿Qué documento es?": "What document is it?",
+  "Elegir taller / proveedor": "Choose shop / supplier",
+  "Talleres": "Shops",
+  "Otros proveedores": "Other suppliers",
+  "Buscar taller o proveedor…": "Search shop or supplier…",
+  "Otro… (escribir uno que no está en la lista)": "Other… (type one not in the list)",
+  "Nombre del taller / proveedor": "Shop / supplier name",
+  "Volver a la lista": "Back to list",
+  "Usar este": "Use this",
+  "Taller / proveedor": "Shop / supplier"
 }
