@@ -580,9 +580,9 @@
       "ht": 0
     },
     "pages/solicitudes/detalle": {
-      "conT": 63,
+      "conT": 72,
       "sinT": 12,
-      "en": 83,
+      "en": 77,
       "ht": 0
     },
     "pages/solicitudes/mis": {
@@ -706,9 +706,9 @@
       "ht": 4
     },
     "pages/transporte/conduce-externo": {
-      "conT": 76,
+      "conT": 79,
       "sinT": 1,
-      "en": 83,
+      "en": 80,
       "ht": 0
     },
     "pages/transporte/conduce-transferencias": {
