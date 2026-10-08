@@ -6,11 +6,12 @@ import {
   isDevMode,
   inject,
 } from '@angular/core';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 import { ErrorReportService } from './core/services/error-report.service';
+import { MotionService } from './core/services/motion.service';
 import { VehiculosService } from './core/services/vehiculos.service';
 import { MantenimientosService } from './core/services/mantenimientos.service';
 import { ChecklistPreusoService } from './core/services/checklist-preuso.service';
@@ -51,7 +52,14 @@ export const appConfig: ApplicationConfig = {
     // P9 — toda pantalla abre arriba (y respeta anclas). Además, en app.ts se
     // resetea el scroll de los contenedores internos (.screen/.screen__body),
     // que Angular no restaura por sí solo.
-    provideRouter(routes, withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })),
+    // CJ1 — crossfade entre pantallas (View Transitions API). skipInitialTransition:
+    // no anima el primer render. Navegadores sin soporte: sin animación (nada se
+    // rompe). El estilo del crossfade vive en styles.scss (::view-transition-*).
+    provideRouter(
+      routes,
+      withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' }),
+      withViewTransitions({ skipInitialTransition: true }),
+    ),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
@@ -62,6 +70,9 @@ export const appConfig: ApplicationConfig = {
       // Y6 — instanciar primero la telemetría: registra su handler de outbox y
       // engancha el sink de fallos permanentes del SyncService desde el arranque.
       inject(ErrorReportService);
+      // CJ1 — aplica la clase `motion-reduced` en <html> desde el arranque según el
+      // ajuste del usuario (antes del primer crossfade).
+      inject(MotionService);
       inject(VehiculosService);
       inject(MantenimientosService);
       inject(ChecklistPreusoService);

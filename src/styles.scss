@@ -65,6 +65,46 @@ button {
   }
 }
 
+/* CJ1 — ajuste del usuario "Animaciones: reducidas" (Perfil › Ajustes, por
+   dispositivo). Mismo efecto que prefers-reduced-motion pero por elección en la app;
+   lo aplica MotionService poniendo .motion-reduced en <html>. */
+html.motion-reduced * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* CJ1 — crossfade entre pantallas (View Transitions API). Fundido + subida de 8px,
+   220ms. Navegadores sin soporte ignoran estas reglas (nada se rompe). Solo
+   transform/opacity. Reduce-motion (SO o ajuste) lo anula más abajo. */
+::view-transition-old(root) {
+  animation: cj-vt-out var(--motion-base) var(--ease-in) both;
+}
+::view-transition-new(root) {
+  animation: cj-vt-in var(--motion-base) var(--ease-out) both;
+}
+@keyframes cj-vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes cj-vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+html.motion-reduced::view-transition-old(root),
+html.motion-reduced::view-transition-new(root) {
+  animation: none;
+}
+
 /* App-wide layout helpers ---------------------------------- */
 
 .screen {

@@ -196,9 +196,45 @@
             <button type="button" class="btn-cta reqd__aprobar" (click)="abrirAprobar()">✓ Aprobar</button>
             <button type="button" class="btn-ghost reqd__rechazar" (click)="abrirRechazar()">✕ Rechazar</button>
           }
+          @if (puedeConduceExterno()) {
+            <button type="button" class="btn-ghost reqd__ce" (click)="abrirConduceExterno()">🚛 {{ 'Conduce externo' | t }}</button><!-- tropes-allow: emoji en botón = estilo local del bloque de acciones (🚫/✏️/✓) -->
+          }
           @if (puedeCancelar()) {
             <button type="button" class="btn-ghost reqd__cancelar" (click)="abrirCancelar()">🚫 Cancelar requisición</button>
           }
+        </div>
+      }
+
+      <!-- CJ5 — Conduce externo (camión de tercero) desde la requisición -->
+      @if (modoCE()) {
+        <div class="reqd__panel">
+          <h3 class="reqd__sec">{{ 'Conduce externo' | t }}</h3>
+          <p class="reqd__panel-sub">{{ 'Manda el despacho con un camión de tercero, o liga uno ya emitido.' | t }}</p>
+          <button type="button" class="btn-cta" (click)="nuevoConduceExterno()">🚛 {{ 'Nuevo conduce externo' | t }}</button><!-- tropes-allow: emoji en botón = estilo local del bloque de acciones -->
+
+          <h4 class="reqd__sec reqd__mt">{{ 'Vincular uno ya emitido' | t }}</h4>
+          @if (ceCargando()) {
+            <p class="reqd__panel-sub">{{ 'Buscando…' | t }}</p>
+          } @else if (!online) {
+            <p class="reqd__off">{{ 'Necesitas conexión para ver los conduces emitidos.' | t }}</p>
+          } @else if (!ceSinVincular().length) {
+            <p class="reqd__panel-sub">{{ 'No hay conduces externos sin vincular.' | t }}</p>
+          } @else {
+            <ul class="reqd__ce-list">
+              @for (ce of ceSinVincular(); track ce.id) {
+                <li>
+                  <button type="button" class="reqd__ce-item" [disabled]="ceVinculando()" (click)="vincularConduceExterno(ce)">
+                    <span class="reqd__ce-name">{{ ceNombre(ce) }}</span>
+                    @if (ce.destino) { <span class="reqd__ce-meta">→ {{ ce.destino }}</span> }
+                    @if (ce.mismo_proyecto) { <span class="reqd__ce-tag">{{ 'de esta obra' | t }}</span> }
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+          <div class="reqd__acciones reqd__mt">
+            <button type="button" class="btn-ghost" [disabled]="ceVinculando()" (click)="cerrarConduceExterno()">{{ 'Cerrar' | t }}</button>
+          </div>
         </div>
       }
 

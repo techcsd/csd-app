@@ -39,10 +39,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-08';
 
-const TITULO = 'Arreglo urgente: la foto del recibo de combustible y aviso claro a choferes privados';
+const TITULO = 'Conduce externo desde la requisición, materiales más fáciles de leer y una app más viva';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Combustible', d: 'Si el teléfono cierra la app mientras tomas la foto del recibo (equipos de poca memoria), la foto ya no se pierde: vuelve sola al paso correcto, incluso en las echadas sin vehículo.' },
-  { t: 'mejora', m: 'Vehículos', d: 'Si no tienes un vehículo autorizado, al intentar usarlo verás un mensaje claro («Pídeselo a Flota») en vez de un error técnico.' },
+  { t: 'nuevo', m: 'Requisiciones', d: 'Desde una requisición ya puedes mandar el despacho con un camión de tercero (conduce externo) o ligar uno ya emitido. Si la requisición ya tenía un despacho, el material no sale dos veces.' },
+  { t: 'mejora', m: 'Materiales', d: 'El selector de materiales muestra el nombre completo en dos líneas, más grande, con el código debajo y el stock a la derecha — más fácil de identificar con guantes.' },
+  { t: 'nuevo', m: 'Animaciones', d: 'La app se siente más viva: transiciones suaves entre pantallas y una pequeña celebración al crear un conduce o una ruta. Si tu teléfono va lento, cámbialas a "Reducidas" en Perfil › Animaciones.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

@@ -1,0 +1,91 @@
+@if (cel(); as c) {
+  <div class="cel" role="status" aria-live="polite" (click)="skip()">
+    @if (!c.corta && !reducida()) {
+      <div class="cel__dim"></div>
+    }
+
+    @if (reducida()) {
+      <!-- Reduce-motion: solo el check + mensaje -->
+      <div class="cel__msg cel__msg--static">
+        <span class="cel__check">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </span>
+        <span class="cel__title">{{ titulo(c) }}</span>
+        <span class="cel__sub">{{ subtitulo(c) }}</span>
+        @if (c.accionUrl) {
+          <button type="button" class="cel__btn" (click)="accion(c); $event.stopPropagation()">{{ c.accionLabel || ('Ver' | t) }}</button>
+        }
+      </div>
+    } @else if (c.corta) {
+      <!-- Corta (encolado offline): tarjeta simple 0,8s -->
+      <div class="cel__card">
+        <span class="cel__card-check">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+        </span>
+        <span>{{ c.mensajeCorto || ('Guardado, se enviará' | t) }}</span>
+      </div>
+    } @else {
+      <div class="cel__stage">
+        @if (c.tipo === 'conduce') {
+          <!-- CJ2 — conduce creado -->
+          <div class="cel__folder">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1e3a5f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+          </div>
+          <div class="cel__paper">
+            <div class="cel__paper-head">
+              <span class="cel__paper-ttl">CONDUCE</span>
+              <span class="cel__paper-num">{{ c.numero || '' }}</span>
+            </div>
+            <div class="cel__paper-accent"></div>
+            <div class="cel__line cel__line--1"></div>
+            <div class="cel__line cel__line--2"></div>
+            <div class="cel__line cel__line--3"></div>
+            <div class="cel__line cel__line--4"></div>
+            <div class="cel__paper-sign">
+              <span>{{ 'Entrega' | t }}</span><span>{{ 'Recibe' | t }}</span>
+            </div>
+            <div class="cel__stamp">{{ 'EMITIDO' | t }}</div>
+          </div>
+          <div class="cel__msg">
+            <span class="cel__check">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+            </span>
+            <span class="cel__title">{{ titulo(c) }}</span>
+            <span class="cel__sub">{{ subtitulo(c) }}</span>
+            @if (c.accionUrl) {
+              <button type="button" class="cel__btn" (click)="accion(c); $event.stopPropagation()">{{ c.accionLabel || ('Ver conduce' | t) }}</button>
+            }
+          </div>
+        } @else {
+          <!-- CJ3 — ruta creada -->
+          <div class="cel__roadwrap">
+            <div class="cel__pin cel__pin--1"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fdba74"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path></svg></div>
+            <div class="cel__pin cel__pin--2"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fdba74"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path></svg></div>
+            <div class="cel__pin cel__pin--3"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fdba74"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zm0-9a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"></path></svg></div>
+            <div class="cel__road"><div class="cel__dashes"></div></div>
+            <div class="cel__truck">
+              <span class="cel__puff"></span>
+              <svg class="cel__truck-body" width="150" height="76" viewBox="0 0 150 76" fill="none">
+                <rect x="4" y="8" width="90" height="48" rx="6" fill="#ffffff"></rect>
+                <rect x="4" y="40" width="90" height="6" fill="#f97316"></rect>
+                <text x="16" y="32" fill="#1e3a5f" font-family="Inter Tight, Inter, sans-serif" font-weight="700" font-size="15">CSD</text>
+                <path d="M96 20h26l18 18v18H96z" fill="#1e3a5f"></path>
+                <path d="M103 26h17l11 11h-28z" fill="#9cc0ec"></path>
+                <rect x="138" y="44" width="6" height="6" rx="1" fill="#fdba74"></rect>
+                <g class="cel__wheel"><circle cx="28" cy="60" r="11" fill="#14243a"></circle><circle cx="28" cy="60" r="4" fill="#98a2b3"></circle><rect x="27" y="51" width="2" height="5" fill="#98a2b3"></rect></g>
+                <g class="cel__wheel"><circle cx="118" cy="60" r="11" fill="#14243a"></circle><circle cx="118" cy="60" r="4" fill="#98a2b3"></circle><rect x="117" y="51" width="2" height="5" fill="#98a2b3"></rect></g>
+              </svg>
+            </div>
+          </div>
+          <div class="cel__msg cel__msg--ruta">
+            <span class="cel__title">{{ titulo(c) }}</span>
+            <span class="cel__sub">{{ subtitulo(c) }}</span>
+            @if (c.accionUrl) {
+              <button type="button" class="cel__btn" (click)="accion(c); $event.stopPropagation()">{{ c.accionLabel || ('Ir a mi ruta' | t) }}</button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
