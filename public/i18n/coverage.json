@@ -1059,6 +1059,12 @@
       "en": 100,
       "ht": 100
     },
+    "shared/ui/celebracion": {
+      "conT": 7,
+      "sinT": 1,
+      "en": 50,
+      "ht": 0
+    },
     "shared/ui/collapsible-select": {
       "conT": 0,
       "sinT": 0,

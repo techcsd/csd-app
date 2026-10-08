@@ -17,6 +17,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
@@ -69,6 +70,7 @@ export class ConduceExternoPage {
   private location = inject(Location);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private motion = inject(MotionService);
 
   /** Una sola captura activa a la vez → clave fija. */
   private readonly clave = 'conduce_externo';
@@ -533,6 +535,15 @@ export class ConduceExternoPage {
       });
       await this.autosave.discard(this.clave); // limpia formulario + fotos del borrador
       this.borradorPrevio.set(false);
+      // CJ2 — celebración "conduce creado". El número CE-xxxx lo asigna el server al
+      // sincronizar, así que aquí va solo el destino. Offline = variante corta.
+      this.motion.celebrar({
+        tipo: 'conduce',
+        numero: null,
+        destino: this.destino()?.nombre ?? null,
+        corta: !this.online,
+        mensajeCorto: 'Conduce guardado, se enviará',
+      });
       // CC5 — abrir la ficha del conduce recién creado ("Pendiente de enviar" mientras
       // esté en el outbox; muestra número CE-000123 cuando el servidor lo asigne).
       this.resetCampos();

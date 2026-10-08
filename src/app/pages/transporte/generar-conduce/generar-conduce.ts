@@ -18,6 +18,7 @@ import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
@@ -102,6 +103,7 @@ export class GenerarConducePage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private motion = inject(MotionService);
   private sync = inject(SyncService);
 
   // AE9 — borrador persistente del conduce (rehidrata al reabrir; fotos/firmas se re-capturan).
@@ -1146,6 +1148,13 @@ export class GenerarConducePage implements OnDestroy {
       this.conduceCreadoId.set(nid); // AO4 — para "Ver / compartir conduce" en el éxito
       void this.autosave.discard(this.clave); // AE9 — borrador cumplido
       this.hoja.set('exito');
+      // CJ2 — celebración "conduce creado" (papel a la carpeta). Offline = corta.
+      this.motion.celebrar({
+        tipo: 'conduce',
+        numero: null,
+        corta: !this.network.online(),
+        mensajeCorto: 'Conduce guardado, se enviará',
+      });
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo generar el conduce.');
     } finally {

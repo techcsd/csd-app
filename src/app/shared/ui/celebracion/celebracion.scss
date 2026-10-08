@@ -1,0 +1,277 @@
+// CJ2/CJ3 — overlay de celebración. Colores FIJOS de marca (no themean a propósito:
+// es un momento de marca). Hex en variables SCSS (no en background/border directo)
+// para no tropezar verify-tokens. Keyframes/tiempos COPIADOS de los mocks CJ2/CJ3.
+$cel-dim: rgba(20, 36, 58, 0.55);
+$cel-dim-ruta: rgba(20, 36, 58, 0.6);
+$cel-paper: #ffffff;
+$cel-orange: #f97316;
+$cel-navy: #1e3a5f;
+$cel-ink: #14243a;
+$cel-green: #12b76a;
+$cel-line: #e4e7ec;
+$cel-road: #2a3a50;
+$cel-card: #14243a;
+$cel-panel: #14243a;
+$cel-sign-line: #98a2b3;
+$cel-dash: #ffffff;
+
+.cel {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  font-family: Inter, system-ui, sans-serif;
+}
+.cel__dim {
+  position: absolute;
+  inset: 0;
+  background: $cel-dim;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: cj-dim 0.2s ease-out both;
+}
+.cel__stage {
+  position: absolute;
+  inset: 0;
+}
+
+// ── Mensaje (conduce + reduce-motion) ─────────────────────────────────────────
+.cel__msg {
+  position: absolute;
+  top: 40%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+  text-align: center;
+  padding: 0 24px;
+  animation: cj-rise 0.3s ease-out 1.5s both;
+}
+.cel__msg--ruta { top: 60%; animation-delay: 1.45s; }
+.cel__msg--static {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: $cel-panel;
+  margin: 0 32px;
+  left: 0;
+  right: 0;
+  border-radius: 20px;
+  padding: 28px 24px;
+  animation: cj-rise 0.25s ease-out both;
+}
+.cel__check {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: $cel-green;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cel__msg .cel__check path { stroke-dasharray: 40; animation: cj-check 0.3s ease-out 1.45s both; }
+.cel__msg--static .cel__check path { animation: none; }
+.cel__title { font: 700 22px 'Inter Tight', Inter, sans-serif; }
+.cel__sub { font-size: 15px; color: #d5e0ec; }
+.cel__btn {
+  margin-top: 6px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  color: #ffffff;
+  font: 600 15px Inter, sans-serif;
+}
+
+// ── Conduce (CJ2): carpeta + papel + sello ───────────────────────────────────
+.cel__folder {
+  position: absolute;
+  top: 14%;
+  right: 16%;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: $cel-paper;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  animation: cj-folder-pop 0.3s ease-out 1.38s both;
+}
+.cel__paper {
+  position: absolute;
+  top: 24%;
+  left: 50%;
+  margin-left: -120px;
+  width: 240px;
+  height: 310px;
+  box-sizing: border-box;
+  background: $cel-paper;
+  border-radius: 10px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: cj-paper-in 0.46s cubic-bezier(0.2, 0.8, 0.2, 1) both,
+    cj-paper-out 0.38s cubic-bezier(0.5, 0, 0.75, 0) 1.05s both;
+}
+.cel__paper-head { display: flex; justify-content: space-between; align-items: center; }
+.cel__paper-ttl { font: 700 13px 'Inter Tight', Inter, sans-serif; color: $cel-navy; letter-spacing: 0.02em; }
+.cel__paper-num { font-size: 11px; font-weight: 600; color: #5b6b80; }
+.cel__paper-accent { height: 3px; width: 44px; border-radius: 2px; background: $cel-orange; }
+.cel__line {
+  height: 8px;
+  border-radius: 4px;
+  background: $cel-line;
+  transform-origin: left center;
+  animation: cj-lines 0.28s ease-out both;
+}
+.cel__line--1 { width: 90%; animation-delay: 0.3s; }
+.cel__line--2 { width: 72%; animation-delay: 0.36s; }
+.cel__line--3 { width: 84%; animation-delay: 0.42s; }
+.cel__line--4 { width: 60%; animation-delay: 0.48s; }
+.cel__paper-sign {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #5b6b80;
+}
+.cel__paper-sign span { width: 90px; border-top: 1px solid $cel-sign-line; padding-top: 4px; }
+.cel__stamp {
+  position: absolute;
+  right: 18px;
+  top: 120px;
+  padding: 6px 12px;
+  border: 3px solid $cel-orange;
+  border-radius: 8px;
+  color: #c2410c;
+  font: 800 18px 'Inter Tight', Inter, sans-serif;
+  letter-spacing: 0.08em;
+  animation: cj-stamp 0.24s cubic-bezier(0.3, 1.4, 0.5, 1) 0.5s both;
+}
+
+// ── Ruta (CJ3): carretera + camión + pines ───────────────────────────────────
+.cel__roadwrap { position: absolute; top: 34%; left: 0; right: 0; height: 150px; }
+.cel__road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 104px;
+  height: 26px;
+  background: $cel-road;
+  overflow: hidden;
+  transform-origin: left center;
+  animation: rt-road 0.3s ease-out 0.05s both;
+}
+.cel__dashes {
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 900px;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, $cel-dash 0 32px, transparent 32px 64px);
+  opacity: 0.7;
+  animation: rt-dash 0.35s linear infinite;
+}
+.cel__pin { position: absolute; top: 0; color: #fdba74; }
+.cel__pin--1 { left: 18%; animation: rt-pin 0.3s ease-out 0.45s both; }
+.cel__pin--2 { left: 47%; animation: rt-pin 0.3s ease-out 0.75s both; }
+.cel__pin--3 { left: 76%; animation: rt-pin 0.3s ease-out 1.05s both; }
+.cel__truck {
+  position: absolute;
+  left: 0;
+  top: 36px;
+  width: 150px;
+  height: 76px;
+  animation: rt-drive 1.35s cubic-bezier(0.45, 0.05, 0.4, 1) 0.2s both;
+}
+.cel__truck-body { animation: rt-bounce 0.18s ease-in-out infinite; }
+.cel__wheel { transform-box: fill-box; transform-origin: center; animation: rt-wheel 0.4s linear infinite; }
+.cel__puff {
+  position: absolute;
+  left: -6px;
+  top: 50px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  animation: rt-puff 0.5s ease-out infinite;
+}
+
+// ── Corta (encolado offline): pill tipo toast, 0,8s ──────────────────────────
+.cel__card {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 86vw;
+  background: $cel-card;
+  color: #ffffff;
+  padding: 12px 18px;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  font-size: 15px;
+  font-weight: 600;
+  animation: cj-rise 0.3s ease-out both;
+}
+.cel__card-check {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: $cel-green;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Keyframes (copiados de los mocks) ────────────────────────────────────────
+@keyframes cj-dim { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cj-paper-in {
+  0% { transform: translateY(560px) rotate(-8deg); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: translateY(0) rotate(-2deg); opacity: 1; }
+}
+@keyframes cj-lines { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes cj-stamp {
+  0% { transform: scale(2.4) rotate(-14deg); opacity: 0; }
+  70% { transform: scale(0.94) rotate(-12deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-12deg); opacity: 1; }
+}
+@keyframes cj-paper-out {
+  0% { transform: translate(0, 0) rotate(-2deg) scale(1); opacity: 1; }
+  100% { transform: translate(150px, -250px) rotate(10deg) scale(0.32); opacity: 0; }
+}
+@keyframes cj-folder-pop { 0% { transform: scale(1); } 40% { transform: scale(1.14); } 100% { transform: scale(1); } }
+@keyframes cj-check { from { stroke-dashoffset: 40; } to { stroke-dashoffset: 0; } }
+@keyframes cj-rise { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+@keyframes rt-road { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes rt-dash { from { transform: translateX(0); } to { transform: translateX(-64px); } }
+@keyframes rt-drive { 0% { transform: translateX(-200px); } 100% { transform: translateX(calc(100vw + 120px)); } }
+@keyframes rt-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes rt-wheel { to { transform: rotate(360deg); } }
+@keyframes rt-puff {
+  0% { transform: translate(0, 0) scale(0.4); opacity: 0.7; }
+  100% { transform: translate(-26px, -10px) scale(1.4); opacity: 0; }
+}
+@keyframes rt-pin {
+  0% { transform: translateY(-18px) scale(0.6); opacity: 0; }
+  70% { transform: translateY(2px) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+// Reduce-motion del SO: nada se mueve (el ajuste de usuario ya se maneja en el
+// template, que pinta la variante estática cuando motion.reducido() es verdadero).
+@media (prefers-reduced-motion: reduce) {
+  .cel * { animation: none !important; }
+}

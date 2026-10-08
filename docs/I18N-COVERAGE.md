@@ -177,6 +177,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/articulo-picker | 10 | 0 | 100% | 0% |  |
 | shared/ui/avatar-editor | 6 | 0 | 100% | 0% |  |
 | shared/ui/ayudante-picker | 6 | 0 | 100% | 0% |  |
+| shared/ui/celebracion | 7 | 1 | 50% | 0% |  |
 | shared/ui/destino-selector | 6 | 0 | 100% | 0% |  |
 | shared/ui/doc-slot | 13 | 0 | 100% | 0% |  |
 | shared/ui/draft-banner | 4 | 0 | 100% | 0% |  |

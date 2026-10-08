@@ -12,7 +12,7 @@
 ## Infraestructura
 - **Crossfade entre pantallas (CJ1):** `withViewTransitions({ skipInitialTransition:true })` en `app.config.ts` + `::view-transition-*(root)` en `styles.scss` (fundido + subida 8px, 220ms). Sin soporte = sin animación.
 - **Ajuste de usuario (CJ1):** `MotionService` (`core/services/motion.service.ts`) guarda `completas|reducidas` por dispositivo y pone `.motion-reduced` en `<html>`. Selector en **Perfil › Animaciones**. `motion.reducido()` = la fuente única para que las celebraciones se salten.
-- **Celebración (CJ2/CJ3) — PENDIENTE:** componente global `app-celebracion` + `MotionService.celebrar('conduce'|'ruta', datos)`. Copia exacta de los mocks `CJ2-conduce-creado.dc.html` / `CJ3-ruta-creada.dc.html`. ≤1,6s, no bloquea, se salta tocando, `aria-live`, reduce-motion = solo el check, vibración corta (`@capacitor/haptics`, solo nativo).
+- **Celebración (CJ2/CJ3) — HECHO:** componente global `app-celebracion` (`shared/ui/celebracion`, montado en `app.html`) + `MotionService.celebrar(Celebracion)`. Copia de los mocks `CJ2-conduce-creado.dc.html` / `CJ3-ruta-creada.dc.html` (keyframes/tiempos idénticos). No bloquea, se salta tocando el velo, `aria-live`, reduce-motion (SO o ajuste) = solo el check, variante **corta** 0,8s al encolar offline, vibración corta (`@capacitor/haptics`, solo nativo).
 
 ## Niveles
 - **Grande** (≤1,6s, overlay `app-celebracion`): solo **conduce creado** y **ruta creada**.
@@ -24,7 +24,7 @@
 |---|---|---|---|
 | Conduce interno creado/emitido | `pages/transporte/generar-conduce/generar-conduce.ts` (éxito de enviar) | **grande** | papel que sube → sello EMITIDO → carpeta (CJ2) |
 | Conduce externo creado | `pages/transporte/conduce-externo/conduce-externo.ts` (éxito de crear) | **grande** | CJ2 |
-| Conduce de ferretería creado | `pages/transporte/ferreteria/*` (éxito) | **grande** | CJ2 |
+| Comprar en ferretería | `pages/transporte/ferreteria/ferreteria.ts:167` | mediano | es una COMPRA, no un conduce → check (no CJ2) |
 | Ruta creada | `pages/transporte/rutas/crear-ruta.ts:830` (`done.set(true)` tras `crear_ruta_app`) | **grande** | camión CSD cruzando + pines (CJ3) |
 | Ruta iniciada / terminada | `pages/transporte/conduces-pendientes/conduces-pendientes.ts:237`; fin de ruta | **grande (corto 0,8s)** | variante corta del camión, sin velo (CJ3) |
 | Recepción de material confirmada | `pages/inventario/recibir/recibir.ts:137,289` | mediano | caja con check |
@@ -41,5 +41,5 @@
 **Offline:** al **encolar** (sin señal), la celebración grande se degrada a la versión corta *"Guardado, se enviará"* (mediano); la grande **no se repite** al sincronizar después.
 
 ## Estado
-- ✅ CJ1 (tokens, View Transitions, ajuste de usuario) y CJ4 (esta tabla) — 2.45.0.
-- ⏳ CJ2/CJ3 (`app-celebracion` + `celebrar()`) y los medianos con check — pendientes en esta tanda.
+- ✅ CJ1 (tokens, View Transitions, ajuste de usuario), CJ4 (esta tabla), CJ2/CJ3 (`app-celebracion` + `celebrar()`, disparadores en generar-conduce/conduce-externo/crear-ruta) — 2.45.0.
+- ⏳ Los **medianos con check** (recepción/requisición/combustible/"todo enviado") usan hoy el toast; subirlos a la caja/gota con check es refinamiento futuro.

@@ -6,6 +6,25 @@ export type MotionPref = 'completas' | 'reducidas';
 /** localStorage (por dispositivo, default 'completas'). */
 const PREF_KEY = 'csd-motion-pref';
 
+/** CJ2/CJ3 — datos de una celebración grande. `corta` = variante 0,8s sin velo
+ *  (p.ej. encolado offline "Guardado, se enviará"). */
+export interface Celebracion {
+  tipo: 'conduce' | 'ruta';
+  corta?: boolean;
+  /** Conduce creado. */
+  numero?: string | null;
+  destino?: string | null;
+  /** Ruta creada. */
+  paradas?: number | null;
+  /** Botón de acción del overlay ("Ver conduce" / "Ir a mi ruta"). */
+  accionUrl?: string | null;
+  accionLabel?: string | null;
+  /** Mensaje de la variante corta (offline). */
+  mensajeCorto?: string | null;
+  /** Token para que el overlay distinga celebraciones sucesivas. */
+  at?: number;
+}
+
 /**
  * MotionService (CJ1) — gestiona el ajuste de usuario "Animaciones: completas /
  * reducidas" (Perfil › Ajustes). Aplica la clase `motion-reduced` en <html>, que el
@@ -21,8 +40,26 @@ export class MotionService {
   /** Preferencia elegida (para pintar el selector). */
   readonly pref = this._pref.asReadonly();
 
+  /** CJ2/CJ3 — celebración activa (el componente global app-celebracion la observa). */
+  private _celebracion = signal<Celebracion | null>(null);
+  readonly celebracion = this._celebracion.asReadonly();
+
   constructor() {
     this.applyToDom(this._pref());
+  }
+
+  /**
+   * CJ2/CJ3 — dispara una celebración grande (una por acción, no bloquea). El
+   * componente global la pinta; con reduce-motion se degrada a solo el check. Pasa
+   * `corta:true` al ENCOLAR offline (variante 0,8s "Guardado, se enviará").
+   */
+  celebrar(c: Celebracion): void {
+    this._celebracion.set({ ...c, at: Date.now() });
+  }
+
+  /** Cierra la celebración (auto-dismiss o al tocar). */
+  cerrarCelebracion(): void {
+    this._celebracion.set(null);
   }
 
   private readCached(): MotionPref {
