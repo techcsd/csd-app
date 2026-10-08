@@ -18,6 +18,20 @@
         <button type="button" class="btn-ghost" (click)="irAlHub()">{{ 'Volver a Conduces' | t }}</button>
       </div>
     } @else {
+      @if (desdeRequisicion()) {
+        <!-- CJ5 — contexto: este conduce despacha una requisición. -->
+        <div class="ce-reqctx">
+          <span class="ce-reqctx__ic">📦</span>
+          <div class="ce-reqctx__txt">
+            <b>{{ 'Despacha la requisición' | t }} {{ reqCodigo() }}</b>
+            @if (salidaId()) {
+              <span>{{ 'Lleva el despacho ya hecho — no sale material dos veces.' | t }}</span>
+            } @else {
+              <span>{{ 'Se registrará la salida al emitir.' | t }}</span>
+            }
+          </div>
+        </div>
+      }
       @if (borradorPrevio()) {
         <!-- BT4 — recuperación de un borrador sin enviar -->
         <div class="ce-draft">

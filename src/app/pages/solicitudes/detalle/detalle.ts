@@ -9,6 +9,7 @@ import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog'
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SolicitudesService } from '../../../core/services/solicitudes.service';
+import { ConducesService, ConduceExternoSinVincular } from '../../../core/services/conduces.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -52,6 +53,7 @@ interface EditItem {
 })
 export class RequisicionDetallePage {
   private service = inject(SolicitudesService);
+  private conduces = inject(ConducesService);
   private inventario = inject(InventarioService);
   private ctx = inject(UserContextService);
   private net = inject(NetworkService);
@@ -157,6 +159,19 @@ export class RequisicionDetallePage {
   get online(): boolean {
     return this.net.online();
   }
+
+  // ── CJ5 — conduce externo desde la requisición ──
+  modoCE = signal(false);
+  ceSinVincular = signal<ConduceExternoSinVincular[]>([]);
+  ceCargando = signal(false);
+  ceVinculando = signal(false);
+  /** Visible para quien gestiona la requisición, cuando ya es despachable (hay un
+   *  despacho o renglones por salir). No en pendiente/rechazada/cancelada. */
+  puedeConduceExterno = computed(() => {
+    const e = this.req()?.estado;
+    if (!e || !(this.puedeGestionar() || this.puedeGestionarSig())) return false;
+    return ['aprobada', 'por_despachar', 'en_proceso', 'entregada'].includes(e);
+  });
 
   constructor() {
     void this.load();
@@ -485,6 +500,63 @@ export class RequisicionDetallePage {
     } finally {
       this.procesando.set(false);
     }
+  }
+
+  // ── CJ5 — conduce externo (camión de tercero) desde la requisición ──
+  async abrirConduceExterno(): Promise<void> {
+    this.modoCE.set(true);
+    // Carga la lista de conduces externos emitidos sin requisición (para "Vincular").
+    if (!this.net.online()) return;
+    this.ceCargando.set(true);
+    try {
+      this.ceSinVincular.set(await this.conduces.conducesExternosSinVincular(this.req()?.proyecto_id ?? null));
+    } catch {
+      this.ceSinVincular.set([]);
+    } finally {
+      this.ceCargando.set(false);
+    }
+  }
+  cerrarConduceExterno(): void {
+    this.modoCE.set(false);
+  }
+  /** "Nuevo": abre el formulario de conduce externo prellenado con la obra + el
+   *  despacho existente (si lo hay → no sale material dos veces). */
+  nuevoConduceExterno(): void {
+    const r = this.req();
+    if (!r) return;
+    this.modoCE.set(false);
+    void this.router.navigate(['/transporte/conduce-externo'], {
+      queryParams: {
+        requisicion: r.id,
+        salida: r.salida_id ?? null,
+        destinoProyecto: r.proyecto_id ?? null,
+        destinoNombre: r.proyecto_nombre ?? null,
+        reqCodigo: this.codigo(r.folio),
+      },
+    });
+  }
+  /** "Vincular existente": liga un conduce externo ya emitido a esta requisición. */
+  async vincularConduceExterno(ce: ConduceExternoSinVincular): Promise<void> {
+    const r = this.req();
+    if (!r || this.ceVinculando()) return;
+    if (!this.net.online()) {
+      this.toast.error(this.i18n.t('Necesitas conexión para vincular.'));
+      return;
+    }
+    this.ceVinculando.set(true);
+    try {
+      await this.conduces.vincularConduceExterno(r.id, ce.id);
+      this.toast.success(this.i18n.t('Conduce externo vinculado a la requisición.'));
+      this.modoCE.set(false);
+      await this.refrescar();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo vincular.'));
+    } finally {
+      this.ceVinculando.set(false);
+    }
+  }
+  ceNombre(ce: ConduceExternoSinVincular): string {
+    return ce.numero || ce.transporta || ce.transporta_texto || this.i18n.t('Conduce externo');
   }
 
   // ── Navegación a documentos vinculados ──

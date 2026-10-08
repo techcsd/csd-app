@@ -98,6 +98,25 @@
       <p class="perfil__seccion-note">{{ 'Automático sigue el tema de tu teléfono. Se sincroniza con la web.' | t }}</p>
     </div>
 
+    <!-- CJ1 — Animaciones (completas / reducidas). Por dispositivo. -->
+    <div class="perfil__seccion">
+      <span class="perfil__seccion-label">{{ 'Animaciones' | t }}</span>
+      <div class="perfil__apariencia">
+        @for (op of animacionOpts; track op.pref) {
+          <button
+            type="button"
+            class="perfil__apar-opt"
+            [class.perfil__apar-opt--on]="motion.pref() === op.pref"
+            (click)="setAnimacion(op.pref)"
+          >
+            <span class="perfil__apar-icon" aria-hidden="true">{{ op.icon }}</span>
+            <span>{{ op.label | t }}</span>
+          </button>
+        }
+      </div>
+      <p class="perfil__seccion-note">{{ 'Reducidas quita los efectos de movimiento. Útil en teléfonos lentos.' | t }}</p>
+    </div>
+
     <!-- BR7/BS4 — Idioma (el selector salió del PIN; ahora vive solo aquí). -->
     <div class="perfil__seccion perfil__lang">
       <span class="perfil__seccion-label">{{ 'Idioma' | t }}</span>

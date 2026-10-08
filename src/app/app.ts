@@ -15,6 +15,7 @@ import { ConsentimientoIa } from './shared/components/consentimiento-ia/consenti
 import { ConsentimientoUbicacion } from './shared/components/consentimiento-ubicacion/consentimiento-ubicacion';
 import { AceptacionPoliticas } from './shared/components/aceptacion-politicas/aceptacion-politicas';
 import { TiendaAviso } from './shared/components/tienda-aviso/tienda-aviso';
+import { CelebracionOverlay } from './shared/ui/celebracion/celebracion';
 import { PoliticasService } from './core/services/politicas.service';
 import { TiendasService } from './core/services/tiendas.service';
 import { SyncService } from './core/sync/sync.service';
@@ -47,7 +48,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

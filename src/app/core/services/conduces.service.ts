@@ -176,12 +176,32 @@ export interface ConduceExternoCaptura {
   /** Foto de la carga (opcional; puede ir en la misma toma de la placa). */
   cargaFoto: Blob | null;
   materialDescripcion: string | null;
-  /** Items del catálogo (afectan inventario si tocan un almacén nuestro); null si carga libre. */
-  items: { articulo_id: string; cantidad: number }[] | null;
+  /** Items del catálogo (afectan inventario si tocan un almacén nuestro); null si carga libre.
+   *  CJ7 — `origen_item_id` (renglón de la requisición de donde sale la línea) cuando
+   *  viene de una requisición sin despacho previo; el server cuenta el avance por él. */
+  items: { articulo_id: string; cantidad: number; origen_item_id?: string | null }[] | null;
   origen: ConduceExternoLugar | null;
   destino: ConduceExternoLugar | null;
   /** BA/FASE 2 — despacho de una requisición vía conduce externo (opcional). */
   origenRequisicionId?: string | null;
+  /** CJ6 — despacho (salida) YA existente que lleva el camión: el server NO crea otra
+   *  salida (evita el doble descuento); enlaza la existente. */
+  salidaId?: string | null;
+}
+
+/** CJ5 — fila de la lista "Vincular conduce externo existente" (campos defensivos:
+ *  el RPC puede nombrarlos distinto; la UI lee con fallback). */
+export interface ConduceExternoSinVincular {
+  id: string;
+  numero?: string | null;
+  transporta?: string | null;
+  transporta_texto?: string | null;
+  destino?: string | null;
+  estado?: string | null;
+  creado_en?: string | null;
+  proyecto_id?: string | null;
+  /** El RPC pone primero los de la obra pedida; úsalo para separar visualmente. */
+  mismo_proyecto?: boolean | null;
 }
 
 /**
@@ -1399,11 +1419,34 @@ export class ConducesService {
         destino_proyecto_id: input.destino?.proyecto_id ?? null,
         destino_bodega_id: input.destino?.bodega_id ?? null,
         origen_requisicion_id: input.origenRequisicionId ?? null,
+        salida_id: input.salidaId ?? null, // CJ6 — despacho existente a enlazar
       },
       fotos,
       resumen: { transporta: input.transportaTexto ?? 'proveedor', capturado_en },
     });
     return id;
+  }
+
+  /**
+   * CJ5 — conduces externos EMITIDOS que aún no están ligados a una requisición
+   * (para "Vincular existente" desde la requisición). El RPC ordena primero los de la
+   * obra pasada. Online (el que vincula está online: es una acción de gestión).
+   */
+  async conducesExternosSinVincular(proyectoId: string | null): Promise<ConduceExternoSinVincular[]> {
+    const { data, error } = await this.supabase.client.rpc('conduces_externos_sin_vincular', {
+      p_proyecto_id: proyectoId,
+    });
+    if (error) throw new Error(error.message);
+    return (data as ConduceExternoSinVincular[]) ?? [];
+  }
+
+  /** CJ5 — liga un conduce externo ya emitido a una requisición. */
+  async vincularConduceExterno(solicitudId: string, conduceExternoId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('requisicion_vincular_conduce_externo', {
+      p_solicitud_id: solicitudId,
+      p_conduce_externo_id: conduceExternoId,
+    });
+    if (error) throw new Error(error.message);
   }
 
   // ── BA/Transporte v3 (FASE 2) — Despachos ──────────────────────────────────
@@ -2581,6 +2624,7 @@ export class ConducesService {
         p_destino_bodega_id: payload['destino_bodega_id'] ?? null,
         p_emisor_firma_path: null,
         p_origen_requisicion_id: payload['origen_requisicion_id'] ?? null,
+        p_salida_id: payload['salida_id'] ?? null, // CJ6 — enlaza el despacho existente
       });
       if (error) throwSyncError(error);
     });

@@ -17,18 +17,24 @@
 .picker__item {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  padding: 16px;
+  gap: 12px;
+  padding: 12px 14px;
+  min-height: 56px; // CJ8 — objetivo táctil (dedos con guantes)
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   text-align: left;
 }
-// AU12 — "coincide con el apodo «X»": línea completa debajo del nombre.
+// CJ8 — nombre (hasta 2 líneas) + código apilados a la izquierda; el stock va a la derecha.
+.picker__info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+// AU12 — "coincide con el apodo «X»": línea completa debajo del código.
 .picker__apodo {
-  order: 9;
-  flex-basis: 100%;
   font-size: 12px;
   color: var(--Hub);
   font-style: italic;
@@ -52,20 +58,30 @@
 .picker__stock--off {
   color: var(--color-danger);
 }
-// AS8 — nombre largo NO debe empujar el botón "+" fuera: min-width:0 + ellipsis.
+// CJ8 — el nombre se lee entero hasta 2 líneas (Raykler no podía identificar
+// "[CSD] PANEL FILLER 1…" idénticos a la vista). 16px semibold; el `title` lleva el
+// nombre completo. min-width:0 para no empujar el "+" fuera (AS8).
 .picker__name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--fs-option);
+  font-size: 16px;
   font-weight: 600;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+// CJ8 — código debajo del nombre, monoespaciado (identificación inequívoca).
+.picker__code {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--color-text-secondary);
 }
 .picker__meta {
   flex: 0 0 auto;
   font-size: 13px;
   color: var(--color-text-secondary);
+  text-align: right;
 }
 .picker__add {
   flex: 0 0 auto;

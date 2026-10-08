@@ -26,6 +26,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
 import { NetworkService } from '../../../core/services/network.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
@@ -116,6 +117,7 @@ export class CrearRutaPage implements OnDestroy {
   private tareaVinculada: string | null = null;
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
+  private motion = inject(MotionService);
   private i18n = inject(I18nService);
 
   // AF24.5 — borrador persistente (retomar si el teléfono se bloquea / muere la app).
@@ -828,6 +830,16 @@ export class CrearRutaPage implements OnDestroy {
       });
       void this.autosave.discard(this.clave); // AF24.5 — borrador cumplido
       this.done.set(true);
+      // CJ3 — celebración "ruta creada" (camión cruzando). Offline = variante corta.
+      const nParadas = this.paradas().filter((p) => p.ubicacion.trim()).length + 1;
+      this.motion.celebrar({
+        tipo: 'ruta',
+        paradas: nParadas,
+        corta: !this.network.online(),
+        accionUrl: '/transporte/conduces',
+        accionLabel: this.i18n.t('Ir a mis rutas'),
+        mensajeCorto: this.i18n.t('Ruta guardada, se enviará'),
+      });
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo crear la ruta. Intenta de nuevo.'));
     } finally {

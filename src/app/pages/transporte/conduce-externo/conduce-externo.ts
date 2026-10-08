@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe, Location } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { LugarPicker, LugarSel } from '../../../shared/ui/lugar-picker/lugar-picker';
@@ -17,6 +17,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
@@ -65,9 +66,11 @@ export class ConduceExternoPage {
   private net = inject(NetworkService);
   private toast = inject(ToastService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private location = inject(Location);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private motion = inject(MotionService);
 
   /** Una sola captura activa a la vez → clave fija. */
   private readonly clave = 'conduce_externo';
@@ -108,6 +111,15 @@ export class ConduceExternoPage {
   error = signal('');
   exito = signal<string | null>(null);
 
+  // CJ5 — contexto de requisición: cuando se abre desde una requisición, el conduce
+  // DESPACHA esa requisición. Si trae un despacho (salida) ya existente, el server lo
+  // enlaza en vez de crear otra salida (evita el doble descuento). El destino se
+  // prellena con la obra de la requisición.
+  requisicionId = signal<string | null>(null);
+  salidaId = signal<string | null>(null);
+  reqCodigo = signal<string>('');
+  desdeRequisicion = computed(() => !!this.requisicionId());
+
   // BS1 — bodegas ordenadas con la Central primero (🏢) + preseleccionada.
   private rankCentral(b: Bodega): number {
     return b.es_central ? 0 : b.es_principal ? 1 : 2;
@@ -146,6 +158,7 @@ export class ConduceExternoPage {
   });
 
   constructor() {
+    this.leerContextoRequisicion();
     void this.cargarProveedores();
     void this.cargarInventario();
     void this.restoreDraft();
@@ -169,6 +182,29 @@ export class ConduceExternoPage {
         ruta: this.location.path(),
       });
     });
+  }
+
+  /** CJ5 — lee el contexto de requisición de los query params y prellena el destino. */
+  private leerContextoRequisicion(): void {
+    const q = this.route.snapshot.queryParamMap;
+    const reqId = q.get('requisicion');
+    if (!reqId) return;
+    this.requisicionId.set(reqId);
+    this.salidaId.set(q.get('salida'));
+    this.reqCodigo.set(q.get('reqCodigo') ?? '');
+    const destProy = q.get('destinoProyecto');
+    const destNombre = q.get('destinoNombre');
+    if (destNombre) {
+      this.destino.set({
+        tipo: 'obra',
+        id: destProy,
+        nombre: destNombre,
+        lat: null,
+        lng: null,
+        proyecto_id: destProy,
+        bodega_id: null,
+      });
+    }
   }
 
   private async cargarProveedores(): Promise<void> {
@@ -493,9 +529,21 @@ export class ConduceExternoPage {
         items,
         origen: conMat ? origenInv : this.aLugar(this.origen()),
         destino: this.aLugar(this.destino()),
+        // CJ5/CJ6 — despacho de una requisición (enlaza el despacho existente si lo hay).
+        origenRequisicionId: this.requisicionId(),
+        salidaId: this.salidaId(),
       });
       await this.autosave.discard(this.clave); // limpia formulario + fotos del borrador
       this.borradorPrevio.set(false);
+      // CJ2 — celebración "conduce creado". El número CE-xxxx lo asigna el server al
+      // sincronizar, así que aquí va solo el destino. Offline = variante corta.
+      this.motion.celebrar({
+        tipo: 'conduce',
+        numero: null,
+        destino: this.destino()?.nombre ?? null,
+        corta: !this.online,
+        mensajeCorto: 'Conduce guardado, se enviará',
+      });
       // CC5 — abrir la ficha del conduce recién creado ("Pendiente de enviar" mientras
       // esté en el outbox; muestra número CE-000123 cuando el servidor lo asigne).
       this.resetCampos();

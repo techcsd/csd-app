@@ -89,7 +89,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 58 | 0 | 100% | 0% | ✅ |
+| pages/perfil | 60 | 0 | 100% | 0% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
@@ -103,7 +103,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |
 | pages/solicitudes | 5 | 0 | 100% | 0% |  |
 | pages/solicitudes/bandeja | 16 | 0 | 100% | 0% |  |
-| pages/solicitudes/detalle | 63 | 12 | 83% | 0% |  |
+| pages/solicitudes/detalle | 72 | 12 | 77% | 0% |  |
 | pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 0 | 3 | 0% | 0% |  |
@@ -124,7 +124,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/combustible | 127 | 2 | 87% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
 | pages/transporte/conduce-detalle | 56 | 1 | 98% | 4% |  |
-| pages/transporte/conduce-externo | 76 | 1 | 83% | 0% |  |
+| pages/transporte/conduce-externo | 79 | 1 | 80% | 0% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 0% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
@@ -177,6 +177,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/articulo-picker | 10 | 0 | 100% | 0% |  |
 | shared/ui/avatar-editor | 6 | 0 | 100% | 0% |  |
 | shared/ui/ayudante-picker | 6 | 0 | 100% | 0% |  |
+| shared/ui/celebracion | 7 | 1 | 50% | 0% |  |
 | shared/ui/destino-selector | 6 | 0 | 100% | 0% |  |
 | shared/ui/doc-slot | 13 | 0 | 100% | 0% |  |
 | shared/ui/draft-banner | 4 | 0 | 100% | 0% |  |
