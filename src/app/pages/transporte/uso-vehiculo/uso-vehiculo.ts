@@ -250,7 +250,16 @@ export class UsoVehiculoPage {
         this.toast.show(this.i18n.t('Ahora lo tiene {nombre}. Puedes recibirlo.', { nombre: e.nombre ?? this.i18n.t('otro usuario') }), 'info');
         await this.cargarEstado();
       } else {
-        this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar. Intenta de nuevo.'));
+        // CJ11 — un chofer privado sin autorización vigente recibe un rechazo del
+        // servidor ("Tu usuario no puede tomar vehículos en uso." hoy, o "Este
+        // vehículo no está autorizado para ti." tras el SQL del padre). Lo traducimos
+        // a un mensaje de campo con la salida clara (pedírselo a Flota).
+        const msg = e instanceof Error ? e.message : '';
+        if (/no (puede|puedes) tomar veh|no est[aá] autorizad|no autorizad|sin autorizaci/i.test(msg)) {
+          this.toast.error(this.i18n.t('Este vehículo no está autorizado para ti. Pídeselo a Flota.'));
+        } else {
+          this.toast.error(msg || this.i18n.t('No se pudo registrar. Intenta de nuevo.'));
+        }
       }
     } finally {
       this.submitting.set(false);
