@@ -37,13 +37,15 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-06';
+const RELEASED_AT = '2026-10-07';
 
-const TITULO = 'Mantenimientos: el aviso de kilometraje ya no molesta sin razón, el taller se elige de una lista y cada documento lleva su tipo';
+const TITULO = 'Lista para Google Play y App Store: privacidad, consentimiento de IA y el GPS que respeta tu estado';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Mantenimientos', d: 'El kilometraje ya no marca error solo por ser mayor al último registrado (llegar al taller con más km es lo normal). Debajo del campo se ve la última lectura real del vehículo y, si hay un salto enorme, pide confirmación.' },
-  { t: 'mejora', m: 'Mantenimientos', d: 'Taller / proveedor ahora se elige de una lista con buscador (talleres primero) con opción «Otro…» para escribir uno que no esté; la lista funciona sin señal.' },
-  { t: 'mejora', m: 'Mantenimientos', d: 'Al adjuntar documentos del taller, cada archivo lleva su propio tipo (factura, informe, cotización, garantía, foto u otro), editable antes de enviar; en el historial se agrupan por tipo con su conteo.' },
+  { t: 'nuevo', m: 'Privacidad', d: 'Política de privacidad, Términos y Soporte accesibles desde el login y desde Perfil. Al entrar, se pide aceptar la versión vigente una sola vez.' },
+  { t: 'nuevo', m: 'Privacidad', d: 'Nueva sección Perfil › Privacidad: puedes solicitar la eliminación de tu cuenta, permitir o no el asistente con IA, y revisar el permiso de ubicación en segundo plano.' },
+  { t: 'arreglo', m: 'Ubicación', d: 'El GPS ahora sigue tu estado de chofer: comparte ubicación solo mientras estás en jornada (Disponible, En ruta, Descanso, Almuerzo, Otros) y se apaga al marcar Inactivo o cerrar sesión. Antes de activarlo verás un aviso claro.' },
+  { t: 'nuevo', m: 'Asistente IA', d: 'Antes de usar Compa, transcribir una nota de voz o leer un recibo, se pide tu permiso una vez (los datos los procesan Anthropic y Groq/OpenAI). Puedes decir «Ahora no» y el resto de la app sigue igual.' },
+  { t: 'mejora', m: 'Actualizaciones', d: 'Cuando la app venga de Google Play, se actualizará sola desde Play. El instalador por APK se mantiene para teléfonos sin Google Play.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
@@ -67,8 +69,9 @@ const CAMBIOS = CAMBIOS_CURADOS.length ? CAMBIOS_CURADOS : cambiosDesdeCommits()
 if (!CAMBIOS.length) { console.error('✗ Y1: no hay cambios tipados. Edita CAMBIOS_CURADOS o usa commits convencionales.'); process.exit(1); }
 const CHANGELOG = CAMBIOS.map((c) => c.d).join(' ');
 
-// APK del flavor del entorno.
-const APK_PATH = `android/app/build/outputs/apk/${ENV}/release/app-${ENV}-release.apk`;
+// APK del flavor del entorno, canal `apk` (CI7: el bucket distribuye el canal apk
+// para teléfonos sin Google Play; Play recibe el AAB aparte vía `npm run aab`).
+const APK_PATH = `android/app/build/outputs/apk/${ENV}Apk/release/app-${ENV}-apk-release.apk`;
 const bucket = 'app-releases';
 const registerOnly = process.argv.includes('--register-only');
 const versionedName = `csd-app-${VERSION}.apk`;

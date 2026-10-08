@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CI6 — Android 11 y anteriores (fullBackupContent). Deshabilitamos el respaldo
+     completo: no se copia nada de la app al respaldo de Google (sesión, cola
+     offline, PIN, datos operativos). Complementa allowBackup=false. -->
+<full-backup-content>
+    <exclude domain="root" />
+    <exclude domain="file" />
+    <exclude domain="database" />
+    <exclude domain="sharedpref" />
+    <exclude domain="external" />
+</full-backup-content>

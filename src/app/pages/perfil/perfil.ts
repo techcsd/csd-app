@@ -16,6 +16,10 @@ import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
 import { PushService } from '../../core/services/push.service';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
+import { PoliticasService, DocLegal } from '../../core/services/politicas.service';
+import { ConsentService } from '../../core/services/consent.service';
+import { PermissionsService } from '../../core/services/permissions.service';
+import { I18nService } from '../../core/i18n/i18n.service';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -43,6 +47,10 @@ export class PerfilPage {
   private toast = inject(ToastService);
   private camera = inject(CameraService);
   private push = inject(PushService);
+  private politicas = inject(PoliticasService);
+  private consent = inject(ConsentService);
+  private permissions = inject(PermissionsService);
+  private i18n = inject(I18nService);
   private router = inject(Router);
   private location = inject(Location);
 
@@ -100,6 +108,13 @@ export class PerfilPage {
   pushDisponible = () => !this.push.soportado || this.push.disponible;
   checking = signal(false);
   confirmLogout = signal(false);
+  // CI3/CI4/CI10 — Privacidad. Consentimiento de IA, ubicación en segundo plano y
+  // solicitud de eliminación de cuenta.
+  esNativo = Capacitor.isNativePlatform();
+  iaPermitida = this.consent.ia;
+  ubicacionFondo = this.consent.ubicacionFondo;
+  confirmEliminar = signal(false);
+  eliminando = signal(false);
   biometriaSoportada = signal(false);
   biometriaOn = signal(false);
   biometriaBusy = signal(false);
@@ -109,6 +124,54 @@ export class PerfilPage {
 
   constructor() {
     void this.loadBiometria();
+    // CI10/CI5 — refresca el estado de los consentimientos para la sección Privacidad.
+    void this.consent.refrescar('ia');
+    void this.consent.refrescar('ubicacion_fondo');
+  }
+
+  // ── CI3/CI4/CI10 — Privacidad ───────────────────────────────────────────────
+  /** Abre una página legal pública (/politicas/*) en el navegador del sistema. */
+  abrirPolitica(doc: DocLegal): void {
+    void this.politicas.abrir(doc);
+  }
+
+  /** CI10 — alterna el permiso del asistente con IA (otorga/revoca). */
+  async toggleIa(): Promise<void> {
+    if (this.consent.ia() === true) {
+      await this.consent.revocar('ia');
+      this.toast.success(this.i18n.t('Asistente con IA desactivado.'));
+    } else {
+      await this.consent.otorgar('ia');
+      this.toast.success(this.i18n.t('Asistente con IA activado.'));
+    }
+  }
+
+  /** CI5 — abre los ajustes de la app para revisar el permiso de ubicación. */
+  abrirAjustesUbicacion(): void {
+    void this.permissions.openAppSettings();
+  }
+
+  pedirEliminarCuenta(): void {
+    this.confirmEliminar.set(true);
+  }
+
+  cancelarEliminarCuenta(): void {
+    this.confirmEliminar.set(false);
+  }
+
+  /** CI4 — crea la solicitud de eliminación (la decide administración en ≤30 días). */
+  async confirmarEliminarCuenta(): Promise<void> {
+    this.confirmEliminar.set(false);
+    this.eliminando.set(true);
+    const ok = await this.politicas.solicitarEliminacion('Solicitud desde la app móvil');
+    this.eliminando.set(false);
+    if (ok) {
+      this.toast.success(
+        this.i18n.t('Solicitud enviada. Administración la revisará en un máximo de 30 días.'),
+      );
+    } else {
+      this.toast.error(this.i18n.t('No se pudo enviar la solicitud. Revisa tu conexión e inténtalo otra vez.'));
+    }
   }
 
   /** BS3 — cambia la apariencia (claro/oscuro/sistema). Sincroniza con la web. */

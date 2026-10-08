@@ -1,0 +1,82 @@
+# CI9 — Compila la app iOS en la nube (sin Mac) y la sube a TestFlight.
+# Disparo MANUAL (workflow_dispatch). Los minutos de macOS en repos privados cuestan
+# 10× → NO corre en cada push. Requiere Xcode 26 (obligatorio para subir desde abr-2026).
+#
+# ⚠️ UNTESTED hasta que exista la cuenta Apple Developer + los secretos. Si falta un
+# secreto, el job falla con un mensaje claro diciendo cuál. Ver docs/TIENDAS-IOS.md.
+name: iOS → TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Entorno (dev|prod)"
+        required: true
+        default: "prod"
+        type: choice
+        options: [dev, prod]
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Seleccionar Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode_26.app || sudo xcode-select -s "$(ls -d /Applications/Xcode_26*.app | head -1)"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verificar secretos
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          missing=""
+          [ -z "$ASC_KEY_ID" ] && missing="$missing ASC_KEY_ID"
+          [ -z "$ASC_ISSUER_ID" ] && missing="$missing ASC_ISSUER_ID"
+          [ -z "$ASC_KEY_P8" ] && missing="$missing ASC_KEY_P8"
+          [ -z "$GOOGLE_SERVICE_INFO_PLIST" ] && missing="$missing GOOGLE_SERVICE_INFO_PLIST"
+          if [ -n "$missing" ]; then
+            echo "::error::Faltan secretos de GitHub:$missing (ver docs/TIENDAS-IOS.md)"; exit 1
+          fi
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Plugins iOS (push FCM)
+        run: npm i @capacitor-firebase/messaging@^8 firebase@^12.6.0
+
+      - name: Build web (${{ inputs.env }})
+        run: npm run build:${{ inputs.env }}
+
+      - name: Añadir plataforma iOS
+        run: npx cap add ios || echo "ios/ ya existe"
+
+      - name: GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/App/App/GoogleService-Info.plist
+
+      - name: Aplicar Info.plist + PrivacyInfo.xcprivacy
+        run: node scripts/ios-prepare.mjs
+
+      - name: cap sync ios
+        run: npx cap sync ios
+
+      - name: Fastlane → TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+        run: |
+          cd ios/App
+          gem install fastlane --no-document
+          fastlane beta

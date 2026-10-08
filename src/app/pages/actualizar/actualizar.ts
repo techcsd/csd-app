@@ -31,6 +31,9 @@ export class ActualizarPage {
   private location = inject(Location);
 
   esNativo = this.updater.esNativo;
+  // CI7 — el canal decide qué textos se muestran (sin mencionar "APK" en play/appstore).
+  canal = this.updater.canal;
+  esApk = this.updater.canal === 'apk';
   estado = this.updater.estado;
   progreso = this.updater.progreso;
 

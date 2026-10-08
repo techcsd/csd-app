@@ -24,6 +24,12 @@
   <app-in-app-camera />
   <app-alarma-host />
   <app-permisos-onboarding />
+  <app-consentimiento-ia />
+  <app-consentimiento-ubicacion />
+  @if (!enAuth()) {
+    <app-aceptacion-politicas />
+    <app-tienda-aviso />
+  }
 
 @if (idiomaOnboarding.mostrar() && !enAuth() && !version.debeActualizar()) {
   <!-- BS4: diálogo de primer ingreso de idioma (bloqueante, una sola vez). No se

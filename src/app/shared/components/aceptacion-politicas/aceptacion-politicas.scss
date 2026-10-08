@@ -1,0 +1,71 @@
+// CI3 — pantalla de aceptación. Sin CSS de diseño nuevo: overlay + tarjeta con
+// tokens y botones globales, como las demás hojas CB.
+.acep {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.65);
+
+  &__card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--color-surface, #fff);
+    border-radius: 16px;
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--color-text);
+  }
+
+  &__body {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-text);
+  }
+
+  &__links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__link {
+    background: none;
+    border: none;
+    padding: 0.35rem 0;
+    text-align: left;
+    font-size: 1rem;
+    color: var(--color-accent, var(--primary));
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #dc2626;
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.3rem;
+
+    .btn-ghost {
+      width: auto;
+    }
+  }
+}

@@ -12,6 +12,7 @@ import {
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as L from 'leaflet';
+import { OSM_TILE_URL, OSM_TILE_OPTS, avisoTilesOffline } from '../../../shared/ui/osm-tiles';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import {
@@ -257,10 +258,8 @@ export class SeguimientoPage implements AfterViewInit, OnDestroy {
       center: [this.DEFAULT.lat, this.DEFAULT.lng],
       zoom: 11,
     });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap',
-    }).addTo(this.map);
+    L.tileLayer(OSM_TILE_URL, OSM_TILE_OPTS).addTo(this.map); // CI15
+    avisoTilesOffline(L, this.map);
     requestAnimationFrame(() => this.map?.invalidateSize());
     setTimeout(() => this.map?.invalidateSize(), 320);
     setTimeout(() => this.map?.invalidateSize(), 700);

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { SyncService } from '../../../core/sync/sync.service';
 import {
   MantenimientosService,
   MantenimientoItem,
@@ -9,6 +10,7 @@ import {
 } from '../../../core/services/mantenimientos.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { MantAdjuntos } from '../../../shared/ui/mant-adjuntos/mant-adjuntos';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
@@ -20,7 +22,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
   selector: 'app-mantenimientos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Skeleton, MantAdjuntos, TranslatePipe],
+  imports: [DatePipe, DecimalPipe, Skeleton, EmptyState, MantAdjuntos, TranslatePipe],
   templateUrl: './mantenimientos-lista.html',
   styleUrl: './mantenimientos-lista.scss',
 })
@@ -29,10 +31,12 @@ export class MantenimientosListaPage {
   private router = inject(Router);
   private mantenimientos = inject(MantenimientosService);
   private vehiculos = inject(VehiculosService);
+  private sync = inject(SyncService);
 
   vehiculoId = '';
   placa = signal('');
   loading = signal(true);
+  fallo = signal(false); // 8ª regla — "la consulta falló" ≠ "no hay mantenimientos"
   items = signal<MantenimientoItem[]>([]);
 
   /** Pendientes / en proceso arriba (accionables), historial (completados) abajo. */
@@ -41,18 +45,27 @@ export class MantenimientosListaPage {
 
   constructor() {
     this.vehiculoId = this.route.snapshot.paramMap.get('vehiculoId') ?? '';
-    void this.cargar();
+    // Recarga al entrar Y tras cada drain del outbox: un adjunto/mantenimiento recién
+    // encolado aparece en el historial cuando el servidor confirma.
+    effect(() => {
+      this.sync.changed();
+      void this.cargar();
+    });
   }
 
   async cargar(): Promise<void> {
     this.loading.set(true);
+    this.fallo.set(false);
     try {
-      const [veh, list] = await Promise.all([
+      const [veh, res] = await Promise.all([
         this.vehiculos.getVehiculo(this.vehiculoId).catch(() => null),
-        this.mantenimientos.mantenimientosPorVehiculo(this.vehiculoId),
+        this.mantenimientos.mantenimientosPorVehiculoDetailed(this.vehiculoId),
       ]);
       if (veh?.placa) this.placa.set(veh.placa);
-      this.items.set(list);
+      this.items.set(res.items);
+      // 8ª regla — solo "vacío" si de verdad no hay nada; si la consulta falló y no
+      // hay caché, es ERROR con reintento (no el falso "no tiene mantenimientos").
+      this.fallo.set(res.failed && res.items.length === 0);
     } finally {
       this.loading.set(false);
     }

@@ -1,0 +1,33 @@
+<app-bottom-sheet
+  [open]="gate.visible()"
+  [titulo]="'Asistente con inteligencia artificial' | t"
+  (closed)="gate.ahoraNo()">
+
+  <div class="ia-consent">
+    <p class="ia-consent__lead">
+      {{ 'Para responderte, esta función envía lo que escribes o dictas (y la foto del recibo, cuando aplica) junto con los datos de la empresa necesarios a proveedores de inteligencia artificial.' | t }}
+    </p>
+
+    <ul class="ia-consent__provs">
+      <li><b>Anthropic (Claude)</b> — {{ 'asistente Compa y lectura de recibos' | t }}</li>
+      <li><b>Groq / OpenAI</b> — {{ 'transcripción de notas de voz' | t }}</li>
+    </ul>
+
+    <p class="ia-consent__note">
+      {{ 'Tus datos no se usan para publicidad. Puedes cambiar esto cuando quieras en Perfil › Privacidad.' | t }}
+    </p>
+
+    <p class="ia-consent__note ia-consent__note--muted">
+      {{ 'Si eliges «Ahora no», esta función no se usará y el resto de la app seguirá funcionando igual (la nota de voz se guarda sin transcribir).' | t }}
+    </p>
+
+    <div class="ia-consent__acciones">
+      <button type="button" class="btn-cta" (click)="gate.permitir()">
+        {{ 'Permitir' | t }}
+      </button>
+      <button type="button" class="btn-ghost" (click)="gate.ahoraNo()">
+        {{ 'Ahora no' | t }}
+      </button>
+    </div>
+  </div>
+</app-bottom-sheet>

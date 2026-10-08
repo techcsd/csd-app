@@ -102,6 +102,8 @@ export class MantenimientoPage implements OnDestroy {
   modelo = signal('');
   vehDetalle = signal<VehiculoDetalle | null>(null); // U15 — odómetro + mantenimiento
   odometro = computed(() => this.vehDetalle()?.kilometraje ?? null);
+  /** CH1 — unidad del vehículo (h para horómetro, km para el resto). */
+  unidad = computed(() => (this.vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'));
   loading = signal(true); // APP-038 — skeleton mientras carga el vehículo
 
   step = signal(1);
@@ -164,7 +166,7 @@ export class MantenimientoPage implements OnDestroy {
   kmMensajeBloqueo(): string {
     const v = this.kmValidacion();
     if (this.online && v?.nivel === 'error' && v.mensaje) return v.mensaje;
-    return this.i18n.t('El kilometraje no puede ser menor al registrado ({km} km).', { km: this.odometro() ?? '' });
+    return this.i18n.t('La lectura no puede ser menor a la registrada ({km} {u}).', { km: this.odometro() ?? '', u: this.unidad() });
   }
 
   private get clave(): string {
@@ -433,6 +435,11 @@ export class MantenimientoPage implements OnDestroy {
       this.toast.error(this.i18n.t('Adjunta al menos 1 foto del mantenimiento.'));
       return;
     }
+    // CH3 — un documento tipo "Otro" necesita decir QUÉ es (paridad con el taller "Otro").
+    if (this.documentos().some((d) => d.tipoDocumento === 'otro' && !(d.descripcion ?? '').trim())) {
+      this.toast.error(this.i18n.t('Escribe qué documento es el que marcaste como "Otro".'));
+      return;
+    }
     this.submitting.set(true);
     try {
       const fotosMap = this.fotos();
@@ -448,7 +455,7 @@ export class MantenimientoPage implements OnDestroy {
         descripcion,
         fecha: fechaLocalISO(), // BL9 — día LOCAL (RD, UTC-4)
         km: this.km(),
-        costo: this.costo(), // AL7
+        costo: this.costo() != null ? Math.max(0, this.costo()!) : null, // AL7 (QA-23: sin negativos, igual que el cierre)
         proveedor: this.taller().trim() || null, // AL7/CH2 (nombre)
         proveedorId: this.tallerId(), // CH2 (id del maestro; null = "Otro")
         notas: this.notas().trim() || null, // AL7

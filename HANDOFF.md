@@ -1,5 +1,40 @@
 # HANDOFF — CSD App
 
+## 🟡 SESIÓN 07-08/10/2026 — PROMPT-87 · Ronda **CI** (CI1-CI15) — **app lista para Google Play y App Store** · 2.44.0 EN DEV, esperando prueba de Xaviel
+**TL;DR:** tanda CI, mitad app (filas 141-156). Consume los contratos de **PROMPT-86** (`politicas_pendientes`/`aceptar_politica`, `solicitar_eliminacion_cuenta`, `mi_consentimiento`/`set_consentimiento` + 403 `sin_consentimiento_ia`, `mi_config_tracking.estado/rastrear`, `parametros.play_store_url/app_store_url`, rol `revisor_tiendas`, páginas `/politicas/*`), **verificados vivos en sgc-dev**. Rama `feature/ci-tiendas` → `dev` (merge `2d71746`, push). `npm run build` ✅. **APK dev (canal apk) PUBLICADO al bucket dev** (`csd-app-2.44.0.apk`, apk_url seteado en dev) + **AAB dev (canal play) construido** (no se sube).
+
+**🛑 PROD EN ESPERA (decisión de Xaviel, 08-10):** **el backend de PROMPT-86 NO está en prod** (solo dev): en prod `politicas_pendientes`/`mi_consentimiento`/`set_consentimiento`/`solicitar_eliminacion_cuenta` = **404**, `mi_config_tracking` = versión vieja (sin estado/rastrear), `parametros` de tienda + versión de políticas **vacíos**, rol `revisor_tiendas` **ausente**, y `/politicas/*` no existe en la web prod. La app degrada con gracia PERO en prod los enlaces legales darían 404, "eliminar cuenta" fallaría y la aceptación/consentimiento no se aplicarían. → **Primero sale PROMPT-86 a prod; luego, con OK, `dev→main` + APK/AAB prod.** NO se hizo el release a prod.
+
+### ✅ Hecho y verificado (build verde + builds nativos)
+- **CI6 (FASE 1) — permisos Android que Play no acepta.** `allowBackup=false` + `data_extraction_rules.xml`/`backup_rules.xml` (excluyen todo). **`USE_EXACT_ALARM` eliminado** (WeeklyAlarm ya cae a `setAndAllowWhileIdle` sin alarma exacta). `allowMixedContent=false` (grep http:// = 0). FG service `location` ya lo declara el plugin de geolocalización. **16 KB:** `zipalign -c -P 16` sobre el APK = **todas las 12 .so OK** (androidx datastore + camera).
+- **CI7/CI8 (FASE 2) — canal play/apk + AAB.** 2ª dimensión de flavor `canal`; mismo appId + MISMA llave. `src/play/AndroidManifest.xml` quita (tools:node=remove) REQUEST_INSTALL_PACKAGES / USE_FULL_SCREEN_INTENT / IGNORE_BATTERY. ApkInstaller movido a `src/apk/java` + `ChannelInstaller` (no-op en play). `npm run aab -- --env <env>` → `bundle<Env>PlayRelease` → `dist-store/*.aab` (no se sube). `UpdaterService` actualiza por canal (Play In-App Updates `@capawesome/capacitor-app-update` 8.1.0 / App Store / APK / PWA). `environment.canal` (fijado por build-env --canal).
+  - **Manifest fusionado verificado:** apk = 22 permisos (mantiene los 3 apk-only + SCHEDULE_EXACT_ALARM, sin USE_EXACT_ALARM); **play = 19 (los 3 removidos + USE_EXACT_ALARM fuera)**. ACCESS_BACKGROUND_LOCATION en ambos.
+- **CI5 (FASE 3) — el estado del chofer manda sobre el GPS.** `TrackingService` depende de `ChoferEstadoService` + `ConsentService`: rastrea solo si `comparte` **y** estado ∈ jornada **y** consentimiento `ubicacion_fondo`. **Inactivo → apaga de inmediato (effect, offline)**; cerrar sesión = apagado; abrir en Inactivo = no arranca. Offline decide con espejo local + `comparte` cacheado. Notificación persistente: "CSD App — ubicación activa · Estado: {estado}". **Aviso previo (prominent disclosure)** a pantalla completa la 1ª vez que elige estado de jornada (texto §CI5.3 con "ubicación"/"app cerrada o en segundo plano") → "Aceptar y continuar" (permiso + set_consentimiento) / "Ahora no" (sin rastreo). Reemplaza el botón suelto de permisos-onboarding.
+- **CI3/CI4 (FASE 4) — políticas + eliminación.** Enlaces Privacidad·Términos·Soporte en el pie del login y en Perfil›Privacidad (abren `/politicas/*` de la web en el navegador). **Pantalla de aceptación bloqueante** tras login si `politicas_pendientes()` (único escape = cerrar sesión; offline no bloquea). **Perfil›Privacidad:** solicitar eliminación de cuenta (confirm → `solicitar_eliminacion_cuenta`), toggle Asistente IA, estado de ubicación en segundo plano.
+- **CI10 (FASE 5) — consentimiento de IA.** `ConsentService` + `IaConsentGate` + hoja en el shell. Gatea ANTES del 1er uso de Compa (enviar/ejecutar), transcripción de voz y lectura de recibos; "Ahora no" no re-pregunta en la sesión. Cachea offline. (403 `sin_consentimiento_ia`: se gatea antes; degrada legible.)
+- **CI15 (FASE 8) — OSM.** `shared/ui/osm-tiles.ts` (URL sin `{s}`, "© OpenStreetMap contributors", aviso amable si fallan las teselas) en location-picker, trayectoria-map, seguimiento.
+- **CI12 (FASE 7) — ficha/datos/capturas.** `docs/TIENDAS.md` (pasos + tabla quién-hace-qué + PEPK), `TIENDAS-FICHA.md`, `TIENDAS-DATOS.md` (Seguridad de datos Play + Privacidad Apple), `TIENDAS-REVISION.md` (inglés + guion del video ≤30 s), `TIENDAS-IOS.md`. Gráfico destacado **A** copiado a `dist-store/graficos/` + `docs/tienda/` (1024×500 RGB sin alfa ✓). Iconos generados: `icono-play-512.png` (RGBA) + `icono-appstore-1024.png` (RGB sin alfa). Script `scripts/store/capturas.mjs` (Playwright, pendiente de instalar + credenciales revisor).
+
+### 🟠 CI9 (FASE 6) — iOS: **scaffold listo, BLOQUEADO en la cuenta Apple de Xaviel**
+`@capacitor/ios` instalado. `.github/workflows/ios-testflight.yml` (manual, Xcode 26 → fastlane → TestFlight, verifica secretos). `scripts/ios-prepare.mjs` (Info.plist ES + UIBackgroundModes + orientación + cifrado NO), `ios-templates/` (PrivacyInfo.xcprivacy, Fastfile, GoogleService-Info.plist.example). Compat verificada: `@capacitor/ios@8.5.3`, `@capacitor-firebase/messaging@8.5.2` (FCM iOS), `@capawesome/capacitor-app-update@8.1.0` — **todos OK con Cap 8**. `ios/` NO se versiona (lo genera cap add ios en el runner). Equivalentes de plugins solo-Android documentados (alarma dominical iOS = TODO con local-notifications). Ver `docs/TIENDAS-IOS.md`.
+
+### 👤 PENDIENTE — solo Xaviel (físico, bloqueante para tiendas)
+1. **D-U-N-S** (pídelo YA, lo que más tarda) → **cuenta Google Play org** (25 USD) + **Apple Developer org** (99 USD/año).
+2. **Play App Signing con PEPK** (misma llave `csd-release.keystore`) + **respaldar la keystore fuera del PC**.
+3. Apple: App Store Connect API key, APNs .p8 → Firebase, app iOS en Firebase, **secretos de GitHub** → disparar `iOS → TestFlight`.
+4. Tras aprobar iOS: **pedir Unlisted**. Pegar `play_store_url`/`app_store_url` en SGC›Admin›Configuración.
+5. **Credenciales del revisor demo** (`revision.tiendas@` / `revision.chofer@`) en las consolas (el padre crea el rol+obra demo).
+6. Elegir gráfico destacado **A (default)** o B. Grabar el **video ≤30 s** de ubicación (guion en TIENDAS-REVISION.md).
+
+### ⚠️ GAPS del padre (ver PARIDAD.md)
+1. **Lectura de `parametros.play_store_url`/`app_store_url` por `authenticated`**: `anon` no puede (42501). La app lee autenticada y degrada a null si no hay grant (cero regresión hoy; verificar al poblar URLs).
+2. iOS `transcribe-now` con `audio/mp4` (al activar iOS). 3. Alarma dominical iOS (local-notifications).
+
+### Verify on resume
+- `git log --oneline -3`; rama `dev`. `npm run build` → exit 0.
+- `npm run apk -- --env dev` / `npm run aab -- --env dev` → BUILD SUCCESSFUL (verificado 07-10).
+- Versión 2.44.0 en environment.{prod,dev}.ts + build.gradle; registrada en `app_versiones` de **dev** (2.44.0). Mínima NO cambió.
+
 ## 🟢 SESIÓN 06/10/2026 — PROMPT-85 · Ronda **CH** (IDs CH) — **2.43.0 PUBLICADA a prod** · verificada y CERRADA
 **TL;DR:** ronda CH (mantenimientos), mitad app (filas 138-140). Consume contratos de **PROMPT-84** (`validar_km_vehiculo`, tipo `taller`/`proveedor_id`, `mantenimiento_adjuntos.descripcion`), verificados vivos en sgc-dev+prod. Se construyó, salió a dev, OK y **RELEASE + PUBLICADA 2.43.0** en su sesión; esta sesión **re-verificó** la implementación (estática, extremo a extremo) y **cerró** la ronda. `dev` = `main` (`b3fa863`), árbol limpio. ✅ Sesión cerrada.
 

@@ -1,0 +1,50 @@
+// CI5 — prominent disclosure. Sin CSS de diseño nuevo: overlay + tarjeta con tokens
+// y botones globales (.btn-cta / .btn-ghost), al estilo de las hojas CB.
+.ubi-disc {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(0, 0, 0, 0.6);
+
+  &__card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--color-surface, #fff);
+    border-radius: 16px;
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--color-text);
+  }
+
+  &__body {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    text-align: left;
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+
+    .btn-ghost {
+      width: auto;
+    }
+  }
+}

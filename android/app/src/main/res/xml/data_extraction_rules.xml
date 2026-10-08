@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CI6 — Android 12+ (allowBackup=false + reglas vacías). Excluimos TODO del
+     respaldo en la nube y de la transferencia dispositivo→dispositivo: la app
+     guarda la sesión de Supabase, la cola offline (Dexie/IndexedDB), el PIN y
+     datos operativos; copiarlos a otro teléfono o a la nube de Google sería una
+     fuga de datos de empleados. El usuario inicia sesión de nuevo en cada equipo. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

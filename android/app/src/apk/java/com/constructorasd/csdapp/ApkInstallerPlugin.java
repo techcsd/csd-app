@@ -20,6 +20,10 @@ import java.io.File;
  * installer (ACTION_VIEW + FileProvider content:// URI). On Android O+ the app
  * must hold "install unknown apps"; if it doesn't, we deep-link the user to that
  * settings screen and report {needsPermission:true} so the UI can guide them.
+ *
+ * CI7 — este plugin vive SOLO en el source set `apk` (canal apk). El canal `play`
+ * no lo incluye (Play prohíbe la auto-actualización por fuera de Play) y su
+ * ChannelInstaller es un no-op; el UpdaterService nunca lo invoca en canal play.
  */
 @CapacitorPlugin(name = "ApkInstaller")
 public class ApkInstallerPlugin extends Plugin {

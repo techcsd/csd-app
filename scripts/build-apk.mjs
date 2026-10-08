@@ -48,17 +48,21 @@ function run(cmd, args, opts = {}) {
   if (res.status !== 0) { console.error(`✗ command failed (${res.status}): ${cmd} ${args.join(' ')}`); process.exit(res.status || 1); }
 }
 
+// CI7 — build-apk SIEMPRE usa el canal `apk` (auto-actualización por descarga de
+// APK, para teléfonos sin Google Play). El AAB para Play lo hace `npm run aab`.
 // environment + guards + ng build (+ patch dev del dist). build-env corre el prebuild.
-run('node', ['scripts/build-env.mjs', '--env', ENV]);
+run('node', ['scripts/build-env.mjs', '--env', ENV, '--canal', 'apk']);
 run('npx', ['cap', 'sync', 'android']);
 
 // cmd.exe no busca en el cwd — prefijo .\ para el launcher batch en android/.
+// Con la 2ª dimensión `canal`, la task es assemble<Entorno>Apk Release (p. ej.
+// assembleProdApkRelease) y el flavor fusionado es `<env>Apk`.
 const gradlew = isWin ? '.\\gradlew.bat' : './gradlew';
-run(gradlew, [`assemble${CAP}Release`, '--no-daemon'], { cwd: 'android' });
+run(gradlew, [`assemble${CAP}ApkRelease`, '--no-daemon'], { cwd: 'android' });
 
-const apk = `android/app/build/outputs/apk/${ENV}/release/app-${ENV}-release.apk`;
+const apk = `android/app/build/outputs/apk/${ENV}Apk/release/app-${ENV}-apk-release.apk`;
 if (!existsSync(apk)) { console.error(`✗ no se encontró el APK esperado: ${apk}`); process.exit(1); }
-console.log(`\n✓ Signed APK (${ENV}): ${apk}`);
+console.log(`\n✓ Signed APK (${ENV}, canal apk): ${apk}`);
 
 // Imprime el certificado de firma (misma keystore que prod para instalar/actualizar).
 const apksigner = firstExisting(['36.0.0', '35.0.0', '34.0.0'].map((v) => `${ANDROID_HOME}/build-tools/${v}/apksigner.bat`));

@@ -14,6 +14,7 @@ import { ActivatedRoute } from '@angular/router';
 import { BottomSheet } from '../../shared/ui/bottom-sheet/bottom-sheet';
 import { VoiceRecorder } from '../../shared/ui/voice-recorder/voice-recorder';
 import { CompaService } from '../../core/services/compa.service';
+import { IaConsentGate } from '../../core/services/ia-consent-gate.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -57,6 +58,7 @@ export class CompaPage {
   private location = inject(Location);
   private route = inject(ActivatedRoute);
   private i18n = inject(I18nService);
+  private iaGate = inject(IaConsentGate);
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
   private inputEl = viewChild<ElementRef<HTMLInputElement>>('composer');
@@ -161,6 +163,7 @@ export class CompaPage {
       this.toast.error(this.i18n.t('Compa necesita conexión.'));
       return;
     }
+    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA
     this.enviando.set(true);
     this.pensando.set(true);
     this.mensajes.update((list) => [
@@ -189,6 +192,7 @@ export class CompaPage {
   async confirmarPropuesta(): Promise<void> {
     const p = this.propuesta();
     if (!p || this.ejecutando()) return;
+    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA
     this.ejecutando.set(true);
     try {
       const r = await this.compa.ejecutar(p, this.conversacionId);
@@ -226,6 +230,7 @@ export class CompaPage {
       this.toast.error(this.i18n.t('Sin conexión: no se pudo transcribir. Intenta con señal o escribe tu mensaje.'));
       return;
     }
+    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA (nota queda sin transcribir)
     this.transcribiendo.set(true);
     try {
       const r = await this.compa.transcribir(blob);

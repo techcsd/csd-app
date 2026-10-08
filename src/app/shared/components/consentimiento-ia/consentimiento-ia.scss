@@ -1,0 +1,47 @@
+// CI10 — hoja de consentimiento de IA. Sin CSS de diseño nuevo: usa tokens y los
+// botones globales (.btn-cta / .btn-ghost) como el resto de la piel CB.
+.ia-consent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-bottom: 0.5rem;
+
+  &__lead {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.45;
+    color: var(--color-text);
+  }
+
+  &__provs {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    color: var(--color-text);
+    font-size: 0.95rem;
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: var(--color-text);
+
+    &--muted {
+      color: var(--color-text-muted, var(--main-ultra-light));
+    }
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+
+    .btn-ghost {
+      width: auto;
+    }
+  }
+}
