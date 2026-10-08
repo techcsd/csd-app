@@ -24,6 +24,7 @@ import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ThemeService, ThemePref } from '../../core/services/theme.service';
+import { MotionService, MotionPref } from '../../core/services/motion.service';
 import { FormsModule } from '@angular/forms';
 
 /** Profile / settings: identity, app version, update check, logout. */
@@ -37,6 +38,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class PerfilPage {
   protected theme = inject(ThemeService);
+  protected motion = inject(MotionService);
   private ctx = inject(UserContextService);
   private session = inject(SessionService);
   private updates = inject(UpdateService);
@@ -94,6 +96,11 @@ export class PerfilPage {
     { pref: 'claro', label: 'Claro', icon: '☀️' },
     { pref: 'oscuro', label: 'Oscuro', icon: '🌙' },
     { pref: 'sistema', label: 'Automático', icon: '📱' },
+  ];
+  // CJ1 — Animaciones (por dispositivo). Default 'completas'.
+  readonly animacionOpts: { pref: MotionPref; label: string; icon: string }[] = [
+    { pref: 'completas', label: 'Completas', icon: '✨' },
+    { pref: 'reducidas', label: 'Reducidas', icon: '🐢' },
   ];
   version = environment.version;
   versionPublicada = () => this.versionSvc.etiquetaVersion;
@@ -172,6 +179,11 @@ export class PerfilPage {
     } else {
       this.toast.error(this.i18n.t('No se pudo enviar la solicitud. Revisa tu conexión e inténtalo otra vez.'));
     }
+  }
+
+  /** CJ1 — cambia la preferencia de animaciones (por dispositivo). */
+  setAnimacion(pref: MotionPref): void {
+    this.motion.setPref(pref);
   }
 
   /** BS3 — cambia la apariencia (claro/oscuro/sistema). Sincroniza con la web. */

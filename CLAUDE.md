@@ -59,6 +59,9 @@ Los roles/módulos vienen de la BD (`usuarios_roles → roles(codigo, modulos, p
 ## Regla 19 — nada escrito en prod fuera de archivos versionados (CD10, no negociable)
 **Toda escritura en prod —migración DDL o corrección de datos— vive en un archivo versionado antes de aplicarse: `sql/` (SGC) / `sql-para-sgc/` (app) o `scripts/data-fixes/` con fecha, y en el ledger del padre. Nada desde el scratchpad.** El hijo no aplica nada: deja el SQL fechado en `sql-para-sgc/` y lo aplica el PADRE (regla 18/AU1). Ningún `.rpc()`/`.from().update()` de service_role fuera de un script versionado y revisable cuenta como "aplicado"; una escritura en prod sin archivo es un incidente (origen de CD3: la realineación del 29-08 se corrió sin dejar archivo). Los comentarios que citan `sql/*.sql` deben apuntar a archivos que existen.
 
+## Regla de movimiento (CJ1-CJ4)
+Todo "éxito" de la app (cada `toast.success`, fin de wizard, cola offline vaciada) vive en **`docs/MOVIMIENTO.md`** con su nivel (**grande** = conduce/ruta creados; **mediano** = recepción/requisición/combustible/"todo enviado"; **simple** = toast con check). No se añade movimiento que no esté en esa tabla. Todo es `transform`/`opacity`; reduce-motion (SO o ajuste "Animaciones: reducidas", `MotionService`) lo anula. Paridad con el `docs/MOVIMIENTO.md` de la web (mismo contrato `MotionService.celebrar(tipo, datos)`).
+
 ## Backend / migrations
 El hijo (app) **ya no aplica DDL directo** (`apply-migration.mjs` está retirado). Los SQL del hijo se dejan en `sql-para-sgc/` y **los aplica el PADRE (SGC)** con su ledger y `--env dev|prod` (regla 11/AU1 + regla 18 + regla 19). Data API keys en `.env.local` (anon / service_role) son para acceso a filas desde la app, NO DDL. Toda migración: RLS + schema grants + sequence grants; RPCs backward-compatible ≥2 versiones.
 
