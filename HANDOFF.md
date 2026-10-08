@@ -16,7 +16,7 @@
 ### 🟢 2.44.1 EN PROD (08-10) — hotfix publicado
 `hotfix/cj-urgente`→`main` (`62e9ea3`, push → Vercel PWA prod). APK prod firmado + subido al bucket prod + `apk_url`. `cj-publicar-2.44.1.mjs --env prod` (publicada=true; 2.44.0 despublicada; **minima sigue 2.44.0**). `cj-notificar-ios-2.44.1.mjs --env prod` (9 iPhone PWA, incl. Mendez y Carlos). Android por el trigger. `main`→`dev` mergeado.
 
-### 🟢 2.45.0 EN DEV — APK dev + PWA dev listos (falta OK → prod). Rama `feature/cj-ronda` mergeada a `dev` (`919e066`), build ✅
+### 🟢 2.45.0 EN PROD (08-10) — `dev`→`main` (`42eaeb6`, push → Vercel PWA prod); APK prod subido + `apk_url`; `cj-publicar-2.45.0.mjs` (publicada; 2.44.1 despublicada; **minima sigue 2.44.0**); `cj-notificar-ios-2.45.0.mjs` (9 iPhone PWA); android por trigger; `main`→`dev` sincronizado.
 Todas las fases de la app de PROMPT-89 hechas:
 - **CJ8:** `articulo-picker` nombre hasta 2 líneas (16px), código monoespaciado debajo, stock a la derecha, filas ≥56px. (CJ9 N/A: la requisición de la app ya es pantalla completa.)
 - **CJ1/CJ4:** tokens `--motion-*`/`--ease-*`; `withViewTransitions` (crossfade 220ms, degradable); `MotionService` + ajuste **Perfil › Animaciones** (completas/reducidas → clase `.motion-reduced`); `docs/MOVIMIENTO.md` + regla en CLAUDE.md.
