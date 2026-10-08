@@ -1,5 +1,23 @@
 # HANDOFF — CSD App
 
+## 🟠 SESIÓN 08/10/2026 — PROMPT-89 · Ronda **CJ** — HOTFIX **2.44.1** (en dev, falta OK → prod)
+**Descubrimiento clave:** el prompt asumía prod=2.43.0 / dev=2.44.0 sin salir, pero **CI 2.44.0 YA está en prod** (`main`=2.44.0, `version_publicada(movil)`=2.44.0 publicada, **minima=true**). Así que el hotfix NO es 2.43.1 desde un main viejo, sino **2.44.1 desde el main actual** (no arrastra ni revierte CI). Rama `hotfix/cj-urgente` (commit `71cb53a`).
+
+### En dev (listo para probar) — APK dev 2.44.1 publicado al bucket dev
+- **CJ13 (Misael — foto del recibo en Android gama baja).** Diagnóstico prod (solo lectura): **0 reportes de cámara** de Misael (`transporte@`, equipo ITEL C671L, Android 14) → fallo **silencioso** = la carrera de restauración. Fix: `CameraService` expone signal `restored`; cuando `appRestoredResult` recupera la foto (el SO mató la Activity durante la captura) la guarda en el borrador Y anuncia por el signal → la pantalla de combustible la **re-ata al slot** aunque ya hubiera cargado sus fotos (modo persona = clave fija 'combustible'). Además telemetría cuando el permiso no se asegura (denied/unavailable) para no quedar ciegos. (`camera.service.ts`, `combustible.ts`.)
+- **CJ11 (Mendez/Carlos — chofer privado).** El rechazo del servidor al tomar un vehículo no autorizado se traduce a *"Este vehículo no está autorizado para ti. Pídeselo a Flota."* (`uso-vehiculo.ts`). **El desbloqueo real NO es de la app:** ambos tienen fila en `conductores` pero **CERO `vehiculo_autorizaciones`** → el selector les sale vacío. Falta: (1) SQL padre CJ11 (`es_conductor_ampliado` incluye privado + gate por autorización), (2) **Flota los autoriza** (web CJ12).
+- **Contratos PROMPT-88 verificados vivos en dev:** `crear_conduce_externo(+p_salida_id)`, `conduces_externos_sin_vincular`, `requisicion_vincular_conduce_externo`, `requisicion_avance`, `despacho_marcar`, cols `detalle_salidas.origen_item_id` + `solicitud_material_items.articulo_despacho_id`. **FALTA** `registros_combustible.foto_origen` (galería último recurso de CJ13 → 2.45.0 + SQL padre).
+
+### 👤 Para Xaviel
+1. **Probar 2.44.1 en dev**, idealmente en un **Android gama baja con "No mantener actividades"** (Opciones de desarrollador): echada de combustible **modo persona** (sin vehículo) → foto del recibo → dejar que el SO mate la app → confirmar que la foto vuelve sola al paso. Con **OK → prod** (PR `dev→main` o merge directo de `hotfix/cj-urgente`→main + `npm run apk -- --env prod` + publicar flag 2.44.1).
+2. **minima=true en 2.44.0** (prod): fuerza a TODOS a actualizar. Si no era intencional, bajar la mínima.
+3. **CJ11 real:** autorizar vehículos a Mendez/Carlos (y el padre aplica el SQL CJ11).
+
+### Pendiente (2.45.0, rama `feature/cj-ronda` — NO empezado)
+FASE 1 (CJ6/CJ7 leer avance del server), FASE 2 (CJ5 conduce externo desde requisición), FASE 3 (CJ8 picker 2 líneas), FASE 4 (CJ1/CJ4 motion + MOVIMIENTO.md), FASE 5 (CJ2/CJ3 celebración conduce/ruta). SQL owed al padre: `sql-para-sgc/2026-10-08-cj13-foto-origen.sql`.
+
+---
+
 ## 🟢 SESIÓN 07-08/10/2026 — PROMPT-87 · Ronda **CI** (CI1-CI15) — **app lista para tiendas · 2.44.0 PUBLICADA a prod**
 **TL;DR:** tanda CI, mitad app (filas 141-156). Consume los contratos de **PROMPT-86** (`politicas_pendientes`/`aceptar_politica`, `solicitar_eliminacion_cuenta`, `mi_consentimiento`/`set_consentimiento` + 403 `sin_consentimiento_ia`, `mi_config_tracking.estado/rastrear`, `parametros.play_store_url/app_store_url`, rol `revisor_tiendas`, páginas `/politicas/*`), **verificados vivos en sgc-dev**. Rama `feature/ci-tiendas` → `dev` (merge `2d71746`, push). `npm run build` ✅. **APK dev (canal apk) PUBLICADO al bucket dev** (`csd-app-2.44.0.apk`, apk_url seteado en dev) + **AAB dev (canal play) construido** (no se sube).
 
