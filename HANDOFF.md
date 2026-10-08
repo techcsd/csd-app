@@ -13,8 +13,18 @@
 2. **minima=true en 2.44.0** (prod): fuerza a TODOS a actualizar. Si no era intencional, bajar la mínima.
 3. **CJ11 real:** autorizar vehículos a Mendez/Carlos (y el padre aplica el SQL CJ11).
 
-### Pendiente (2.45.0, rama `feature/cj-ronda` — NO empezado)
-FASE 1 (CJ6/CJ7 leer avance del server), FASE 2 (CJ5 conduce externo desde requisición), FASE 3 (CJ8 picker 2 líneas), FASE 4 (CJ1/CJ4 motion + MOVIMIENTO.md), FASE 5 (CJ2/CJ3 celebración conduce/ruta). SQL owed al padre: `sql-para-sgc/2026-10-08-cj13-foto-origen.sql`.
+### 🟢 2.44.1 EN PROD (08-10) — hotfix publicado
+`hotfix/cj-urgente`→`main` (`62e9ea3`, push → Vercel PWA prod). APK prod firmado + subido al bucket prod + `apk_url`. `cj-publicar-2.44.1.mjs --env prod` (publicada=true; 2.44.0 despublicada; **minima sigue 2.44.0**). `cj-notificar-ios-2.44.1.mjs --env prod` (9 iPhone PWA, incl. Mendez y Carlos). Android por el trigger. `main`→`dev` mergeado.
+
+### 🟠 2.45.0 EN CURSO — rama `feature/cj-ronda` (commit `97e8069`, build ✅, NO liberado)
+- **CJ8 hecho:** `articulo-picker` nombre hasta 2 líneas (16px), código monoespaciado debajo, stock a la derecha, filas ≥56px. (CJ9 no aplica: la requisición de la app ya es pantalla completa.)
+- **CJ1/CJ4 hecho:** tokens `--motion-*`/`--ease-*`; `withViewTransitions` (crossfade 220ms, degradable); `MotionService` + ajuste **Perfil › Animaciones** (completas/reducidas, clase `.motion-reduced`); `docs/MOVIMIENTO.md` + regla en CLAUDE.md.
+- **FASE 1 (CJ6/CJ7) — ya satisfecho en gran parte:** `solicitudes/detalle` **ya lee `requisicion_avance`** del server (no recalcula por artículo); el fix del padre fluye solo. Pendiente menor: enviar `origen_item_id` por línea al crear despachos desde la app (va con CJ5) + invalidar la caché `req_avance:<id>` al confirmar un conduce externo.
+- **PENDIENTE (lo grande):**
+  - **CJ5** conduce externo desde la requisición (`pages/solicitudes/detalle` acción → `transporte/conduce-externo` prellenado con `p_salida_id`/`origen_item_id`, o "Vincular existente" con `conduces_externos_sin_vincular`/`requisicion_vincular_conduce_externo`). **Contratos vivos en dev.**
+  - **CJ2/CJ3** `app-celebracion` + `MotionService.celebrar('conduce'|'ruta', datos)` — **copiar exacto** los mocks `movimiento-mock/CJ2-conduce-creado.dc.html` y `CJ3-ruta-creada.dc.html`; instalar `@capacitor/haptics`; disparadores en generar-conduce/conduce-externo/ferreteria (conduce) y crear-ruta (ruta) + variante corta al iniciar/terminar ruta. Medianos con check (recepción/requisición/combustible/"todo enviado").
+  - Antes de liberar 2.45.0: actualizar `CAMBIOS_CURADOS` en `release-apk.mjs`, `npm run apk --env dev` → probar → OK → prod.
+- **SQL owed al padre:** `sql-para-sgc/2026-10-08-cj13-foto-origen.sql` (`registros_combustible.foto_origen` para la galería último-recurso de CJ13; la columna NO existe en dev).
 
 ---
 
