@@ -30,7 +30,7 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
-import { CapturedPhoto } from '../../../core/services/camera.service';
+import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
 import { CombustibleService, PermisoRetro, LecturaRecibo } from '../../../core/services/combustible.service';
@@ -103,6 +103,7 @@ export class CombustiblePage extends GuardedWizard {
   private toast = inject(ToastService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private camera = inject(CameraService);
   private i18n = inject(I18nService);
 
   vehiculoId = '';
@@ -445,6 +446,18 @@ export class CombustiblePage extends GuardedWizard {
         ruta: this.location.path(),
       });
     });
+    // CJ13 — si el SO destruyó la Activity durante la captura (equipos de poca
+    // memoria), la foto vuelve por `appRestoredResult` y se guarda en el borrador,
+    // a veces DESPUÉS de que `restoreDraft` ya cargó las fotos → en modo persona la
+    // foto del recibo se "perdía" de la pantalla. Este effect la re-ata al slot en
+    // cuanto el servicio de cámara anuncia la recuperación (misma clave 'combustible'
+    // en todos los modos). Cierra la carrera y cubre la pantalla ya abierta.
+    effect(() => {
+      const r = this.camera.restored();
+      if (!r || r.clave !== this.claveBorrador || r.at <= this.ultimaRestauracion) return;
+      this.ultimaRestauracion = r.at;
+      void this.reatachFotoRestaurada(r.slot);
+    });
     // CF4 (spec F1.2) — si el recibo se fotografió sin señal, leerlo en cuanto
     // vuelva la red (mientras el borrador siga abierto y la echada no se haya
     // enviado). Se limpia el flag ANTES de leer para no re-disparar en loop, y la
@@ -551,6 +564,29 @@ export class CombustiblePage extends GuardedWizard {
       this.hydrated = true;
     } catch {
       /* recuperar el borrador nunca debe impedir abrir la pantalla */
+    }
+  }
+
+  /** CJ13 — `at` de la última recuperación ya atada, para no repetir trabajo. */
+  private ultimaRestauracion = 0;
+
+  /**
+   * CJ13 — re-ata al slot una foto recuperada por `appRestoredResult` (ver el effect
+   * del constructor). Lee la foto directo del borrador (fuente única) y la coloca en
+   * el signal del slot correspondiente, incluso si la pantalla ya estaba abierta.
+   */
+  private async reatachFotoRestaurada(slot: string): Promise<void> {
+    try {
+      const fotos = await this.borrador.loadFotos(this.claveBorrador);
+      const f = fotos.find((x) => x.slot === slot);
+      if (!f) return;
+      const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+      if (slot === 'recibo') this.fotoRecibo.set(photo);
+      else if (slot === 'tablero') this.fotoTablero.set(photo);
+      else if (slot === 'bomba') this.fotoBomba.set(photo);
+      else if (slot === 'evidencia') this.fotoEvidencia.set(photo);
+    } catch {
+      /* best-effort: recuperar la foto nunca debe tumbar la pantalla */
     }
   }
 

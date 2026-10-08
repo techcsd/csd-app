@@ -3,7 +3,7 @@
 export const environment = {
   production: true,
   entorno: 'prod' as 'dev' | 'prod',
-  version: '2.44.0',
+  version: '2.44.1',
   // CI7 — canal de distribución. Default 'pwa' (Vercel + serve local). Los builds
   // nativos lo sobreescriben: build-apk→'apk', aab→'play', iOS→'appstore'. Decide
   // cómo actualiza UpdaterService y qué textos/avisos de tienda se muestran.
