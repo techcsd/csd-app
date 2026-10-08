@@ -219,3 +219,24 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
   el `user-picker` con búsqueda, autollenado desde el perfil, arrastrar y soltar en adjuntos y la
   fusión de usuarios duplicados son features de **Admin en la web** (escritorio). En móvil los
   adjuntos siguen con cámara/galería/archivo. — *Web-only; anotado.*
+
+---
+
+## Tanda CI (07/10/2026) — app lista para tiendas (PROMPT-87)
+
+### Contratos del padre que la app CONSUME (verificados vivos en sgc-dev)
+- `politicas_pendientes()` → filas `{documento, version}` · `aceptar_politica(p_documento, p_version, p_plataforma)` → `PoliticasService` (CI3; pantalla de aceptación bloqueante en el shell).
+- `solicitar_eliminacion_cuenta(p_motivo, p_plataforma)` → `PoliticasService.solicitarEliminacion` (CI4; Perfil › Privacidad).
+- `mi_consentimiento(p_tipo)` / `set_consentimiento(p_tipo, p_otorgado, p_plataforma)` → `ConsentService` (CI10 ia / CI5 ubicacion_fondo). Las edges `assistant`/`leer-recibo`/`transcribe-now` responden **403 `sin_consentimiento_ia`**; la app gatea ANTES (IaConsentGate) y degrada legible.
+- `mi_config_tracking()` ahora devuelve `estado` + `rastrear` (= comparte && estado≠inactivo). `TrackingService` prefiere el estado LOCAL (offline-first) y usa `rastrear` de respaldo.
+- `sgc.parametros.play_store_url` / `app_store_url` → `TiendasService` (CI7/CI8).
+- Rol `revisor_tiendas` (id 39) → cuenta demo del revisor (CI11, data-fix del padre).
+
+### Divergencias / notas de paridad CI
+- **Canal de actualización** (app): flavors `play`/`apk` (+ `appstore`/`pwa` en environment.canal). La web no tiene canal (siempre PWA). `UpdaterService` ramifica por canal.
+- **Prominent disclosure de ubicación** (CI5): existe solo en la app (es requisito de las tiendas de apps nativas). La web no rastrea en segundo plano.
+
+### GAPS del padre pendientes (reportar / confirmar)
+1. **Lectura de `parametros.play_store_url`/`app_store_url` por usuario autenticado.** El `anon` NO puede leer `sgc.parametros` (42501). La app lee **autenticada**; si el rol `authenticated` tampoco tiene grant/RLS para esas claves, `TiendasService` degrada a null (sin avisos) — **cero regresión hoy** (URLs vacías). Si al poblar las URLs la app no las ve → el padre debe dar `GRANT SELECT` + RLS para esas claves, o exponer un RPC público. (Verificar cuando Xaviel pegue las URLs.)
+2. **iOS `transcribe-now` con `audio/mp4`** (WKWebView graba mp4): verificar que la edge lo acepte al activar iOS; si no, convertir en cliente o ajuste del padre.
+3. **Alarma dominical en iOS**: pendiente `@capacitor/local-notifications` semanal (equivalente de AL6) al activar iOS (`docs/TIENDAS-IOS.md`).

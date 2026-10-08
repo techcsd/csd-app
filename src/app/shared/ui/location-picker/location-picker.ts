@@ -12,6 +12,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import * as L from 'leaflet';
+import { OSM_TILE_URL, OSM_TILE_OPTS, avisoTilesOffline } from '../osm-tiles';
 import { GeocodingService, LugarBusqueda } from '../../../core/services/geocoding.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -136,10 +137,8 @@ export class LocationPicker implements AfterViewInit, OnDestroy {
 
   private initLeaflet(center: { lat: number; lng: number }, zoom: number): void {
     this.map = L.map(this.mapEl().nativeElement, { center: [center.lat, center.lng], zoom });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap',
-    }).addTo(this.map);
+    L.tileLayer(OSM_TILE_URL, OSM_TILE_OPTS).addTo(this.map); // CI15
+    avisoTilesOffline(L, this.map);
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       void this.setMarker(e.latlng.lat, e.latlng.lng, true);
     });

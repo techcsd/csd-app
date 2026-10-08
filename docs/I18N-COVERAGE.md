@@ -20,7 +20,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/admin/unidades | 4 | 0 | 100% | 0% |  |
 | pages/admin/usuarios | 38 | 0 | 82% | 0% |  |
 | pages/admin/versiones | 8 | 1 | 89% | 0% |  |
-| pages/auth/login | 9 | 2 | 73% | 0% |  |
+| pages/auth/login | 12 | 2 | 71% | 0% |  |
 | pages/auth/pin-acceso-change | 3 | 0 | 100% | 0% |  |
 | pages/auth/pin-change | 1 | 0 | 100% | 0% |  |
 | pages/auth/pin-unlock | 10 | 0 | 100% | 0% |  |
@@ -89,7 +89,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 47 | 0 | 100% | 0% | ✅ |
+| pages/perfil | 58 | 0 | 100% | 0% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
@@ -141,10 +141,10 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
 | pages/transporte/generar-conduce | 101 | 1 | 99% | 0% |  |
-| pages/transporte/mantenimiento | 44 | 1 | 91% | 0% |  |
+| pages/transporte/mantenimiento | 43 | 1 | 91% | 0% |  |
 | pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-general | 20 | 0 | 50% | 0% |  |
-| pages/transporte/mantenimientos-lista | 7 | 0 | 100% | 0% |  |
+| pages/transporte/mantenimientos-lista | 10 | 0 | 80% | 0% |  |
 | pages/transporte/mi-actividad | 54 | 0 | 100% | 0% |  |
 | pages/transporte/mi-recorrido | 11 | 0 | 100% | 0% |  |
 | pages/transporte/mi-registro | 40 | 0 | 100% | 0% |  |
@@ -164,12 +164,16 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
 | pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |
 | pages/transporte/vehiculos | 63 | 2 | 97% | 0% |  |
+| shared/components/aceptacion-politicas | 9 | 0 | 56% | 0% |  |
 | shared/components/alarma-host | 4 | 0 | 100% | 0% |  |
+| shared/components/consentimiento-ia | 8 | 2 | 20% | 0% |  |
+| shared/components/consentimiento-ubicacion | 4 | 0 | 25% | 0% |  |
 | shared/components/generar-acceso | 11 | 0 | 100% | 0% |  |
 | shared/components/gps-gate-banner | 2 | 0 | 100% | 0% |  |
 | shared/components/module-placeholder | 2 | 0 | 100% | 0% |  |
 | shared/components/onboarding | 7 | 0 | 100% | 0% |  |
 | shared/components/permisos-onboarding | 13 | 0 | 100% | 0% |  |
+| shared/components/tienda-aviso | 3 | 0 | 0% | 0% |  |
 | shared/ui/articulo-picker | 10 | 0 | 100% | 0% |  |
 | shared/ui/avatar-editor | 6 | 0 | 100% | 0% |  |
 | shared/ui/ayudante-picker | 6 | 0 | 100% | 0% |  |
@@ -185,7 +189,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
-| shared/ui/pdf-viewer | 2 | 1 | 67% | 0% |  |
+| shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
 | shared/ui/photo-slot | 16 | 1 | 94% | 0% |  |
 | shared/ui/select-list | 0 | 1 | 0% | 0% |  |

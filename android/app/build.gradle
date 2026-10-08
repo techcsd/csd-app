@@ -13,7 +13,7 @@ if (hasKeystore) {
 // name (major*1_000_000 + minor*1_000 + patch) so it always increments with the
 // version and matches the backend's version_code scheme (e.g. 1.5.0 -> 1005000).
 // Keep appVersionName in sync with src/environments/* and scripts/release-apk.mjs.
-def appVersionName = "2.43.0"
+def appVersionName = "2.44.0"
 def computeVersionCode = { String name ->
     def p = name.tokenize('.')
     def major = (p.size() > 0 ? p[0] : "0").toInteger()
@@ -29,7 +29,14 @@ android {
     // flavor en src/dev/res) e icono con banda DEV (src/dev/res/mipmap-*). Misma
     // keystore (interno). El nombre app_name/custom_url_scheme se sobreescriben en
     // el strings.xml del flavor dev (evita el conflicto de recurso de resValue).
-    flavorDimensions "entorno"
+    // BU1 F2 — dimensión `entorno` (prod/dev). CI7 — segunda dimensión `canal`
+    // (play/apk): MISMO applicationId y MISMA llave; cambian solo el manifest
+    // (el canal `play` quita REQUEST_INSTALL_PACKAGES / USE_FULL_SCREEN_INTENT /
+    // IGNORE_BATTERY vía src/play/AndroidManifest.xml) y el registro del
+    // ApkInstallerPlugin (solo en src/apk/java → ChannelInstaller). Combinaciones:
+    // prodPlay / prodApk / devPlay / devApk → tasks assemble<Entorno><Canal>Release
+    // y bundle<Entorno><Canal>Release (p. ej. bundleProdPlayRelease para el AAB).
+    flavorDimensions "entorno", "canal"
     productFlavors {
         prod {
             dimension "entorno"
@@ -38,6 +45,12 @@ android {
             dimension "entorno"
             applicationIdSuffix ".dev"
             versionNameSuffix "-dev"
+        }
+        play {
+            dimension "canal"
+        }
+        apk {
+            dimension "canal"
         }
     }
     compileSdk = rootProject.ext.compileSdkVersion

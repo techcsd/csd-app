@@ -132,4 +132,12 @@
     </form>
   }
 
+  <!-- CI3 — enlaces legales (requisito de tienda: accesibles desde el login). -->
+  <footer class="login__legal">
+    <button type="button" (click)="abrirPolitica('privacidad')">{{ 'Política de privacidad' | t }}</button>
+    <span aria-hidden="true">·</span>
+    <button type="button" (click)="abrirPolitica('terminos')">{{ 'Términos' | t }}</button>
+    <span aria-hidden="true">·</span>
+    <button type="button" (click)="abrirPolitica('soporte')">{{ 'Soporte' | t }}</button>
+  </footer>
 </div>

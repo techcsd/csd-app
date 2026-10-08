@@ -11,6 +11,7 @@ import {
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { UbicacionDisclosureGate } from '../../../core/services/ubicacion-disclosure-gate.service';
 
 /**
  * AF28 — barra compacta de estado del chofer para el hub de Transporte. Muestra el
@@ -30,6 +31,7 @@ export class EstadoChoferBar {
   private svc = inject(ChoferEstadoService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
+  private disclosure = inject(UbicacionDisclosureGate);
 
   readonly opciones = ESTADOS_MANUALES;
   estado = this.svc.estado;
@@ -74,6 +76,9 @@ export class EstadoChoferBar {
     await this.svc.set(e);
     this.sheetOpen.set(false);
     this.avisoEstado(e);
+    // CI5 — al elegir un estado de jornada, muestra el aviso previo de ubicación en
+    // segundo plano la primera vez (y antes de pedir "Permitir todo el tiempo").
+    if (e !== 'inactivo') void this.disclosure.pedir();
   }
 
   async confirmarOtros(): Promise<void> {
@@ -85,6 +90,7 @@ export class EstadoChoferBar {
     await this.svc.set('otros', t);
     this.sheetOpen.set(false);
     this.pidiendoOtros.set(false);
+    if (await this.disclosure.pedir()) { /* CI5 — aviso previo de ubicación */ }
   }
 
   private avisoEstado(e: EstadoChofer): void {

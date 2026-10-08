@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import * as L from 'leaflet';
+import { OSM_TILE_URL, OSM_TILE_OPTS, avisoTilesOffline } from '../osm-tiles';
 import { GoogleMapsLoaderService } from '../../../core/services/google-maps-loader.service';
 import { MapMatchingService } from '../../../core/services/map-matching.service';
 
@@ -90,7 +91,8 @@ export class TrayectoriaMap implements AfterViewInit, OnDestroy {
       this.ginfo = new this.g.InfoWindow();
     } else {
       this.map = L.map(this.mapEl().nativeElement, { center: [this.DEFAULT.lat, this.DEFAULT.lng], zoom: 12 });
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(this.map);
+      L.tileLayer(OSM_TILE_URL, OSM_TILE_OPTS).addTo(this.map); // CI15
+      avisoTilesOffline(L, this.map);
       requestAnimationFrame(() => this.map?.invalidateSize());
       setTimeout(() => this.map?.invalidateSize(), 320);
       setTimeout(() => this.map?.invalidateSize(), 700);

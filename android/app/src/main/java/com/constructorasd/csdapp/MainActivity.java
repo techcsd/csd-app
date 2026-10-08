@@ -54,8 +54,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // V3: register the APK self-installer plugin before the bridge boots.
-        registerPlugin(ApkInstallerPlugin.class);
+        // V3/CI7: register the APK self-installer ONLY on the `apk` channel. The
+        // flavor-specific ChannelInstaller (src/apk/java registers it; src/play/java
+        // is a no-op) keeps the ApkInstallerPlugin out of the Play build entirely.
+        ChannelInstaller.register(this);
         // P1/P2: deep-link a los ajustes de la app (permiso denegado permanente).
         registerPlugin(AppSettingsPlugin.class);
         // AL6: alarma dominical autónoma (AlarmManager exacto + full-screen).

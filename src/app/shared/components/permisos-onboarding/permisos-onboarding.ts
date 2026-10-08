@@ -5,6 +5,7 @@ import { PermissionsService, PermState } from '../../../core/services/permission
 import { NativeAlarmService } from '../../../core/services/native-alarm.service';
 import { LocalStore } from '../../../core/services/local-store.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { UbicacionDisclosureGate } from '../../../core/services/ubicacion-disclosure-gate.service';
 
 const FLAG = 'csd_permisos_onboarding_v2';
 
@@ -31,6 +32,7 @@ export class PermisosOnboarding {
   private permissions = inject(PermissionsService);
   private nativeAlarm = inject(NativeAlarmService);
   private store = inject(LocalStore);
+  private disclosure = inject(UbicacionDisclosureGate);
 
   visible = signal(false);
   corriendo = signal(false);
@@ -96,10 +98,12 @@ export class PermisosOnboarding {
     }
   }
 
-  /** Ubicación "todo el tiempo": Android exige hacerlo desde Ajustes. */
+  /** CI5 — Ubicación en segundo plano: muestra el aviso previo (prominent disclosure)
+   *  y, al aceptar, pide el permiso (Android exige "todo el tiempo" desde Ajustes).
+   *  Reemplaza el botón suelto que iba directo a Ajustes sin aviso. */
   async ubicacionSiempre(): Promise<void> {
-    await this.permissions.openAppSettings();
-    this.ubicacion.set('ajustes');
+    const ok = await this.disclosure.forzar();
+    this.ubicacion.set(ok ? 'ajustes' : 'no');
   }
 
   async pedirAlarma(): Promise<void> {

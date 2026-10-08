@@ -9,7 +9,9 @@ export const environment = {
   production: false,
   entorno: 'dev' as 'dev' | 'prod',
   version: '2.26.1',
+  canal: 'pwa' as 'play' | 'apk' | 'appstore' | 'pwa',
   appUrl: 'https://app-dev.sgcconstructorasd.com',
+  webUrl: 'https://dev.sgcconstructorasd.com',
   supabaseUrl: '',
   supabaseAnonKey: '',
 };

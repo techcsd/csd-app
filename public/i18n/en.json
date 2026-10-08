@@ -3868,5 +3868,20 @@
   "Nombre del taller / proveedor": "Shop / supplier name",
   "Volver a la lista": "Back to list",
   "Usar este": "Use this",
-  "Taller / proveedor": "Shop / supplier"
+  "Taller / proveedor": "Shop / supplier",
+  "Privacidad y datos": "Privacy & data",
+  "Política de privacidad": "Privacy policy",
+  "Términos de uso": "Terms of use",
+  "Asistente con IA: permitido": "AI assistant: allowed",
+  "Asistente con IA: no permitido": "AI assistant: not allowed",
+  "Ubicación en segundo plano: permitida": "Background location: allowed",
+  "Ubicación en segundo plano: no permitida": "Background location: not allowed",
+  "Solicitar eliminación de mi cuenta": "Request deletion of my account",
+  "Solicitar eliminación de cuenta": "Request account deletion",
+  "Pediremos a administración eliminar tu cuenta. Se borran tus datos personales (nombre, correo, teléfono, cédula, foto). Los registros de obra (conduces, inventario, combustible) se conservan anonimizados por obligación legal. Puede tardar hasta 30 días. Si sigues trabajando en la empresa, administración lo decide.": "We will ask administration to delete your account. Your personal data (name, email, phone, national ID, photo) is erased. Work records (delivery notes, inventory, fuel) are kept anonymized as legally required. It may take up to 30 days. If you still work at the company, administration decides.",
+  "Sí, solicitar": "Yes, request it",
+  "Asistente con IA desactivado.": "AI assistant turned off.",
+  "Asistente con IA activado.": "AI assistant turned on.",
+  "Solicitud enviada. Administración la revisará en un máximo de 30 días.": "Request sent. Administration will review it within 30 days.",
+  "No se pudo enviar la solicitud. Revisa tu conexión e inténtalo otra vez.": "Could not send the request. Check your connection and try again."
 }

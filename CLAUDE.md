@@ -7,7 +7,10 @@ Angular 21 (standalone + signals, zoneless) · Capacitor 8 (Android + camera/fil
 
 ## Commands
 - Dev/PWA: `npm start` · Build: `npm run build` (must pass before "done" — SGC rule #4)
-- Android: `npm run apk` (build APK firmado + registra versión) → `npm run apk:publish` (sube al bucket). Toolchain instalado: Android Studio JBR (JDK 21) en `C:\Program Files\Android\Android Studio\jbr` + SDK en `%LOCALAPPDATA%\Android\Sdk` (autodetectados por `scripts/build-apk.mjs`). Para abrir en el IDE: `npx cap sync android` → `npx cap open android`.
+- Android: `npm run apk -- --env dev|prod` (build APK **canal apk** firmado + registra versión) → `npm run apk:publish -- --env <env>` (sube al bucket). Toolchain instalado: Android Studio JBR (JDK 21) en `C:\Program Files\Android\Android Studio\jbr` + SDK en `%LOCALAPPDATA%\Android\Sdk` (autodetectados por `scripts/build-apk.mjs`). Para abrir en el IDE: `npx cap sync android` → `npx cap open android`.
+- **Google Play AAB (CI8):** `npm run aab -- --env dev|prod` → `bundle<Env>PlayRelease` firmado (MISMA llave) → `dist-store/csd-app-<ver>-play.aab` + resumen de permisos del manifest fusionado. **NO se sube** (lo sube 👤 Xaviel a Play Console). Registra versión igual que el APK (regla Y1).
+- **Canales (CI7):** 2ª dimensión de flavor `canal` = `play` / `apk` (además de `entorno` prod/dev). Mismo `applicationId` + MISMA llave. `play` quita `REQUEST_INSTALL_PACKAGES`/`USE_FULL_SCREEN_INTENT`/`IGNORE_BATTERY` (src/play/AndroidManifest.xml) y el ApkInstaller (solo en src/apk/java). `environment.canal` ∈ `play|apk|appstore|pwa` lo fija el build (`build-env --canal`); `UpdaterService` actualiza por canal (Play In-App Updates / App Store / APK / recarga PWA). Pasos de tienda: `docs/TIENDAS*.md`.
+- **iOS (CI9):** compila en la nube (`.github/workflows/ios-testflight.yml`, manual, Xcode 26 → fastlane → TestFlight). `ios/` NO se versiona (lo genera `cap add ios` en el runner). **Bloqueado en la cuenta Apple + secretos de Xaviel** — ver `docs/TIENDAS-IOS.md`.
 - Secrets in `.env.local` (gitignored): Supabase URL, anon key, and admin keys.
 
 ## The one rule that shapes everything
@@ -31,6 +34,7 @@ Every capture: save to Dexie + enqueue in outbox with a **client UUID** (idempot
 4. **Verify before done**: `npm run build` passes + flow tested offline AND online (airplane mode) + verified in SGC web.
 5. **Keep SGC in sync**: if a feature here implies a web view (e.g. vehicle-responsibility history in Flota), build it there too.
 6. **Migrations**: the DB is shared with SGC production — coordinate; never break the web.
+7. **Datos y terceros (CI13)**: toda función que recoja un **dato nuevo** o use un **tercero nuevo** (API externa, procesador) DEBE actualizar `docs/TIENDAS-DATOS.md` (y avisar que `DATOS-Y-TERCEROS.md` del padre + la política + los formularios de Seguridad de datos / Privacidad de la app deben revisarse). Un dato/tercero sin declarar es un rechazo de tienda esperando.
 
 ## Roles / gating (app)
 Los roles/módulos vienen de la BD (`usuarios_roles → roles(codigo, modulos, permisos)`); el gating es **data-driven** (`hasModulo`/`puedeVerSubmodulo`/`puedeOperarSubmodulo`) + unos predicados en `core/services/user-context.service.ts` que **espejan funciones del servidor** (nunca inventar la lista; copiarla del SGC):

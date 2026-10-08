@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- CI7 — Manifest del canal `play`. Google Play NO acepta estos permisos para
+     esta app, así que el flavor `play` los ELIMINA del manifest fusionado con
+     tools:node="remove" (quedan intactos en el canal `apk`, para teléfonos sin
+     Play tipo Huawei):
+       · REQUEST_INSTALL_PACKAGES  → una app de Play no puede auto-actualizarse
+         por fuera de Play (answer/9888379); en play se usa Play In-App Updates.
+       · USE_FULL_SCREEN_INTENT    → Android 14+ solo para alarmas/llamadas; la
+         alarma dominical cae a notificación de alta importancia (full-screen solo
+         si NotificationManager.canUseFullScreenIntent()).
+       · REQUEST_IGNORE_BATTERY_OPTIMIZATIONS → en play se abre la pantalla de
+         ajustes de batería (ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS, sin
+         permiso) con la guía existente.
+     USE_EXACT_ALARM ya se quitó del manifest principal para ambos canales. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
+        tools:node="remove" />
+
+</manifest>
