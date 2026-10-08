@@ -37,15 +37,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-07';
+const RELEASED_AT = '2026-10-08';
 
-const TITULO = 'Lista para Google Play y App Store: privacidad, consentimiento de IA y el GPS que respeta tu estado';
+const TITULO = 'Arreglo urgente: la foto del recibo de combustible y aviso claro a choferes privados';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Privacidad', d: 'Política de privacidad, Términos y Soporte accesibles desde el login y desde Perfil. Al entrar, se pide aceptar la versión vigente una sola vez.' },
-  { t: 'nuevo', m: 'Privacidad', d: 'Nueva sección Perfil › Privacidad: puedes solicitar la eliminación de tu cuenta, permitir o no el asistente con IA, y revisar el permiso de ubicación en segundo plano.' },
-  { t: 'arreglo', m: 'Ubicación', d: 'El GPS ahora sigue tu estado de chofer: comparte ubicación solo mientras estás en jornada (Disponible, En ruta, Descanso, Almuerzo, Otros) y se apaga al marcar Inactivo o cerrar sesión. Antes de activarlo verás un aviso claro.' },
-  { t: 'nuevo', m: 'Asistente IA', d: 'Antes de usar Compa, transcribir una nota de voz o leer un recibo, se pide tu permiso una vez (los datos los procesan Anthropic y Groq/OpenAI). Puedes decir «Ahora no» y el resto de la app sigue igual.' },
-  { t: 'mejora', m: 'Actualizaciones', d: 'Cuando la app venga de Google Play, se actualizará sola desde Play. El instalador por APK se mantiene para teléfonos sin Google Play.' },
+  { t: 'arreglo', m: 'Combustible', d: 'Si el teléfono cierra la app mientras tomas la foto del recibo (equipos de poca memoria), la foto ya no se pierde: vuelve sola al paso correcto, incluso en las echadas sin vehículo.' },
+  { t: 'mejora', m: 'Vehículos', d: 'Si no tienes un vehículo autorizado, al intentar usarlo verás un mensaje claro («Pídeselo a Flota») en vez de un error técnico.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

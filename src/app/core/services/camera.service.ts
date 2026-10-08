@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { App as CapApp } from '@capacitor/app';
@@ -91,6 +91,16 @@ export class CameraService {
   private static readonly RESTORE_KEY = 'camera_restore_ctx';
   private restoreInited = false;
 
+  /**
+   * CJ13 — anuncio reactivo de una foto RECUPERADA por `appRestoredResult` (el SO
+   * destruyó la Activity durante la captura, típico de equipos de poca memoria). La
+   * foto ya se guardó en el borrador, pero la pantalla pudo haber cargado sus fotos
+   * ANTES (carrera) y no mostrarla. La pantalla abierta observa este signal y re-ata
+   * la foto al slot. `at` permite distinguir recuperaciones sucesivas.
+   */
+  private _restored = signal<{ clave: string; slot: string; at: number } | null>(null);
+  restored = this._restored.asReadonly();
+
   get isNative(): boolean {
     return Capacitor.isNativePlatform();
   }
@@ -125,6 +135,10 @@ export class CameraService {
       if (!blob || !ctx?.clave || !ctx?.slot) return;
       // Capacitor ya comprimió en el dispositivo (perfil evidencia) → se guarda tal cual.
       await this.borrador.saveFoto(ctx.clave, ctx.slot, blob);
+      // CJ13 — avisa a la pantalla abierta para que re-ate la foto al slot aunque ya
+      // hubiera cargado sus fotos (cierra la carrera que perdía la foto del recibo en
+      // modo persona / equipos de poca memoria). También sirve si la pantalla sigue viva.
+      this._restored.set({ clave: ctx.clave, slot: ctx.slot, at: Date.now() });
       this.toast.show('Recuperamos la foto que tomaste. Abre la pantalla para terminar.', 'info', 6000);
     } catch (e) {
       void this.errorReport.report('camera', `appRestoredResult: ${(e as Error)?.message ?? e}`, {
@@ -178,7 +192,22 @@ export class CameraService {
     // X4 — nativo (Android): aseguramos el permiso con su explicación; si falta y
     // el usuario no lo concede, degradamos a null (sin crash ni spinner colgado).
     // El plugin nativo gestiona su propio prompt del SO (sin doble prompt, AA16).
-    if (!(await this.gate.asegurar('camera'))) return null;
+    if (!(await this.gate.asegurar('camera'))) {
+      // CJ13 — el permiso no se pudo asegurar. En 'denied' la tarjeta ya guía al
+      // usuario a Ajustes; en 'denied'/'unavailable' dejamos rastro en telemetría
+      // para NO quedarnos ciegos (antes: 0 reportes de cámara aunque el usuario
+      // "no podía tomar la foto"). No instrumentamos el "Ahora no" normal del prompt.
+      let perm = 'desconocido';
+      try { perm = await this.permissions.checkCamera(); } catch { /* ignore */ }
+      if (perm === 'denied' || perm === 'unavailable') {
+        void this.errorReport.report('info', `Cámara no disponible (permiso=${perm})`, {
+          point: 'takePhoto.gate',
+          permiso: perm,
+          native: true,
+        });
+      }
+      return null;
+    }
     // BV5/BT5 — deja rastro de a dónde va la foto ANTES de abrir la cámara: si el SO
     // destruye la Activity durante la captura, `appRestoredResult` la re-inyecta.
     if (restore) {
