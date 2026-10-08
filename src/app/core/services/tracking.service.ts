@@ -12,6 +12,8 @@ import { LocalStore } from './local-store.service';
 import { NetworkService } from './network.service';
 import { ToastService } from './toast.service';
 import { ErrorReportService } from './error-report.service';
+import { ChoferEstadoService, estadoMeta } from './chofer-estado.service';
+import { ConsentService } from './consent.service';
 import { db, PosicionBuffer } from '../db/app-db';
 
 const LEGACY_BUFFER_KEY = 'tracking_buffer'; // AU7 — buffer viejo en LocalStore (se migra a Dexie)
@@ -27,6 +29,10 @@ const STALE_FIX_MS = 5 * 60_000; // AG11 — sin fix en 5 min con ruta activa = 
 // También sirve de segunda vía de captura si el watcher nativo se estanca.
 const HEARTBEAT_MS = 150_000;
 const DEFAULT_DISTANCE_FILTER = 25; // m — override por mi_config_tracking()
+// CI5 — último `comparte` conocido (rol/flag) cacheado para decidir offline, cuando
+// mi_config_tracking() no responde. El estado del chofer vive en su propio espejo
+// local (ChoferEstadoService); juntos deciden si se rastrea sin señal.
+const COMPARTE_CACHE_KEY = 'tracking_comparte';
 
 /**
  * AF26/AF27 — ubicación siempre activa + tracking en primer plano.
@@ -52,6 +58,8 @@ export class TrackingService {
   private net = inject(NetworkService);
   private toast = inject(ToastService);
   private errors = inject(ErrorReportService);
+  private choferEstado = inject(ChoferEstadoService);
+  private consent = inject(ConsentService);
 
   /** true = GPS apagado o permiso revocado → funciones de transporte bloqueadas. */
   gpsBloqueado = signal(false);
@@ -76,6 +84,10 @@ export class TrackingService {
    *  CONTINUO (todo el turno), no solo durante una ruta formal. Es la raíz del
    *  "dura días para actualizar": antes solo se capturaba dentro de una ruta. */
   private modoContinuo = false;
+  /** CI5 — último `comparte` conocido (de mi_config_tracking), cacheado para decidir
+   *  offline. Combinado con el estado del chofer: se rastrea solo si comparte Y el
+   *  estado está en jornada (≠ inactivo). */
+  private comparteCache = false;
   /** AS1 — distanceFilter efectivo (m), configurable desde mi_config_tracking(). */
   private distanceFilter = DEFAULT_DISTANCE_FILTER;
   /** AS1 — periodo de flush efectivo (ms), configurable desde el servidor. */
@@ -102,6 +114,27 @@ export class TrackingService {
     effect(() => {
       if (this.net.online()) void this.flush();
     });
+    // CI5 — EL ESTADO DEL CHOFER MANDA SOBRE EL GPS. Reacciona a cada cambio de
+    // estado: Inactivo apaga el rastreo de inmediato (funciona offline, es lo que
+    // exigen las tiendas); volver a un estado de jornada lo re-evalúa (arranca si
+    // comparte). No arranca nada por sí solo si nunca se compartió.
+    effect(() => {
+      const e = this.choferEstado.estado();
+      const consentido = this.consent.ubicacionFondo(); // re-evalúa al conceder/revocar
+      if (e === 'inactivo' || consentido === false) {
+        if (this.modoContinuo || this.rastreando()) {
+          this.modoContinuo = false;
+          void this.detenerTracking();
+        }
+      } else if (this.comparteCache) {
+        void this.evaluarModoContinuo();
+      }
+    });
+  }
+
+  /** CI5 — ¿el chofer está en jornada? (cualquier estado menos Inactivo). */
+  private estadoEnJornada(): boolean {
+    return this.choferEstado.estado() !== 'inactivo';
   }
 
   /**
@@ -111,6 +144,7 @@ export class TrackingService {
    */
   private async bootBuffer(): Promise<void> {
     try {
+      this.comparteCache = (await this.store.get(COMPARTE_CACHE_KEY)) === '1'; // CI5
       await this.migrarBufferLegacy();
       await this.purgarViejos();
       await this.refrescarPendientes();
@@ -231,11 +265,32 @@ export class TrackingService {
     try {
       const { data, error } = await this.supabase.client.rpc('mi_config_tracking');
       const cfg = (data as Array<Record<string, unknown>> | null)?.[0];
-      if (error || !cfg) return; // sin sesión / offline: reintenta en el próximo resume
-      if (!cfg['comparte']) {
-        // No comparte ubicación (rol de oficina). Si venía en continuo (cambio de
-        // sesión), apágalo.
-        if (this.modoContinuo) {
+      if (error || !cfg) {
+        // CI5 — OFFLINE / sin sesión: decide con el espejo local (estado del chofer)
+        // + el último `comparte` conocido + el consentimiento de ubicación en fondo.
+        // Es lo que permite apagar el GPS sin señal.
+        const debe = this.comparteCache && this.estadoEnJornada() && this.consent.ubicacionFondo() === true;
+        if (debe && !this.rastreando()) {
+          this.modoContinuo = true;
+          await this.iniciarTracking(this.vehiculoActual, undefined);
+        } else if (!debe && (this.modoContinuo || this.rastreando())) {
+          this.modoContinuo = false;
+          await this.detenerTracking();
+        }
+        return;
+      }
+      // CI5 — cachea `comparte` (rol/flag) para las decisiones offline.
+      this.comparteCache = !!cfg['comparte'];
+      void this.store.set(COMPARTE_CACHE_KEY, this.comparteCache ? '1' : '0');
+      // CI5 — EL ESTADO MANDA: rastrea solo si comparte Y está en jornada (≠ Inactivo)
+      // Y el chofer aceptó el aviso de ubicación en segundo plano (prominent
+      // disclosure, Play). Preferimos el estado LOCAL (inmediato, offline-first) sobre
+      // el `estado` del servidor; `cfg['rastrear']` (= comparte && estado≠inactivo del
+      // server) queda como respaldo cuando el espejo local aún no cargó.
+      const debeRastrear =
+        this.comparteCache && this.estadoEnJornada() && this.consent.ubicacionFondo() === true;
+      if (!debeRastrear) {
+        if (this.modoContinuo || this.rastreando()) {
           this.modoContinuo = false;
           await this.detenerTracking();
         }
@@ -268,8 +323,9 @@ export class TrackingService {
         // Foreground service con notificación persistente (Android).
         this.bgWatcherId = await BackgroundGeolocation.addWatcher(
           {
-            // AS1 — el tracking corre en continuo (todo el turno), no solo en ruta.
-            backgroundMessage: 'Compartiendo tu ubicación con la empresa durante el trabajo.',
+            // CI5 — la notificación persistente del foreground service nombra el
+            // estado actual del chofer (transparencia: el GPS sigue su jornada).
+            backgroundMessage: `Estado: ${estadoMeta(this.choferEstado.estado()).label}. Toca para cambiarlo.`,
             backgroundTitle: 'CSD App — ubicación activa',
             requestPermissions: true,
             stale: false,

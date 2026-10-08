@@ -2,8 +2,12 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Directory, Filesystem } from '@capacitor/filesystem';
+import { AppUpdate } from '@capawesome/capacitor-app-update';
+import { environment } from '../../../environments/environment';
 import { VersionService } from './version.service';
+import { TiendasService } from './tiendas.service';
 import { ToastService } from './toast.service';
+import { abrirUrlExterna } from '../utils/abrir-url.util';
 
 /** Native bridge to ApkInstallerPlugin (android/.../ApkInstallerPlugin.java). */
 interface ApkInstallerPlugin {
@@ -30,9 +34,11 @@ export type EstadoActualizacion = 'idle' | 'descargando' | 'instalando' | 'permi
 @Injectable({ providedIn: 'root' })
 export class UpdaterService {
   private version = inject(VersionService);
+  private tiendas = inject(TiendasService);
   private toast = inject(ToastService);
 
   readonly esNativo = Capacitor.isNativePlatform();
+  readonly canal = environment.canal;
   readonly estado = signal<EstadoActualizacion>('idle');
   readonly progreso = signal(0); // 0..100 while downloading
 
@@ -41,15 +47,24 @@ export class UpdaterService {
   /** 'resume' listener that auto-continues the install after the settings trip. */
   private resumeHandle?: PluginListenerHandle;
 
-  /** Kick off the update. Returns false when there's nothing to install. */
+  /** CI7 — Arranca la actualización POR CANAL. Returns false cuando no hay nada que hacer.
+   *  · pwa → recarga (el service worker activa el build nuevo).
+   *  · play → Play In-App Updates (inmediata si < mínima; flexible si hay nueva).
+   *  · appstore → abre la ficha del App Store.
+   *  · apk → descarga e instala el APK (teléfonos sin Google Play). */
   async actualizar(): Promise<boolean> {
-    // APP-022: en la PWA/web NO se descarga un APK (inservible en web). La versión
-    // nueva del bundle se toma al recargar (el service worker activa el build nuevo).
-    if (!this.esNativo) {
+    if (!this.esNativo || this.canal === 'pwa') {
       this.toast.show('Actualizando la app web…', 'info', 2000);
       setTimeout(() => document.location.reload(), 800);
       return true;
     }
+    if (this.canal === 'play') return this.actualizarPlay();
+    if (this.canal === 'appstore') return this.actualizarAppStore();
+    return this.actualizarApk();
+  }
+
+  /** Canal apk: flujo histórico (descarga + instala vía ApkInstaller). */
+  private async actualizarApk(): Promise<boolean> {
     const url = this.version.apkUrl;
     if (!url) {
       this.toast.error('Aún no hay un archivo de instalación disponible. Inténtalo más tarde.');
@@ -59,6 +74,52 @@ export class UpdaterService {
     // vuelve a bajar 8 MB, va directo a instalar.
     if (!this.apkUri && !(await this.descargar(url))) return false;
     return this.instalar();
+  }
+
+  /** CI7 — Canal play: Play In-App Updates. Inmediata si la instalada < mínima; si
+   *  no, flexible. Si el plugin no está disponible (p. ej. QA con APK de canal play),
+   *  cae a abrir la ficha de Google Play. */
+  private async actualizarPlay(): Promise<boolean> {
+    try {
+      const info = await AppUpdate.getAppUpdateInfo();
+      // 2 = UPDATE_AVAILABLE (Play Core AppUpdateAvailability).
+      if (String(info.updateAvailability) !== '2') {
+        this.toast.show('Ya tienes la última versión.', 'info', 2500);
+        return true;
+      }
+      if (this.version.debeActualizar() && info.immediateUpdateAllowed) {
+        await AppUpdate.performImmediateUpdate();
+        return true;
+      }
+      if (info.flexibleUpdateAllowed) {
+        await AppUpdate.startFlexibleUpdate();
+        await AppUpdate.completeFlexibleUpdate();
+        return true;
+      }
+      await AppUpdate.openAppStore();
+      return true;
+    } catch {
+      // Plugin no disponible / "no instalada desde Play" → abre la ficha de Play.
+      const url = this.tiendas.playUrl();
+      if (url) {
+        await abrirUrlExterna(url);
+        return true;
+      }
+      this.toast.error('No se pudo abrir Google Play. Inténtalo más tarde.');
+      return false;
+    }
+  }
+
+  /** CI7 — Canal appstore (iOS): abre la ficha del App Store (iOS no permite instalar
+   *  binarios desde la app). */
+  private async actualizarAppStore(): Promise<boolean> {
+    const url = this.tiendas.appStoreUrl();
+    if (!url) {
+      this.toast.error('Aún no está disponible en el App Store.');
+      return false;
+    }
+    await abrirUrlExterna(url);
+    return true;
   }
 
   /** Abre los ajustes de "instalar apps desconocidas" para esta app. */

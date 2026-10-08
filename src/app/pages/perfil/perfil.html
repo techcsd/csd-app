@@ -168,6 +168,32 @@
       </button>
     }
 
+    <!-- CI3/CI4/CI10 — Privacidad y datos -->
+    <div class="perfil__seccion">
+      <span class="perfil__seccion-label">{{ 'Privacidad y datos' | t }}</span>
+
+      <button type="button" class="btn-ghost perfil__btn" (click)="abrirPolitica('privacidad')">
+        {{ 'Política de privacidad' | t }}
+      </button>
+      <button type="button" class="btn-ghost perfil__btn" (click)="abrirPolitica('terminos')">
+        {{ 'Términos de uso' | t }}
+      </button>
+
+      <button type="button" class="btn-ghost perfil__btn" (click)="toggleIa()">
+        {{ iaPermitida() ? ('Asistente con IA: permitido' | t) : ('Asistente con IA: no permitido' | t) }}
+      </button>
+
+      @if (esNativo && ubicacionFondo() !== null) {
+        <button type="button" class="btn-ghost perfil__btn" (click)="abrirAjustesUbicacion()">
+          {{ ubicacionFondo() ? ('Ubicación en segundo plano: permitida' | t) : ('Ubicación en segundo plano: no permitida' | t) }}
+        </button>
+      }
+
+      <button type="button" class="btn-ghost perfil__btn" [disabled]="eliminando()" (click)="pedirEliminarCuenta()">
+        {{ 'Solicitar eliminación de mi cuenta' | t }}
+      </button>
+    </div>
+
     <button type="button" class="btn-cta perfil__logout" (click)="pedirCerrarSesion()">{{ 'Cerrar sesión' | t }}</button>
   </div>
 
@@ -180,6 +206,18 @@
     tone="danger"
     (confirmed)="logout()"
     (cancelled)="cancelarCerrarSesion()"
+  />
+
+  <!-- CI4 — confirmación de solicitud de eliminación de cuenta -->
+  <app-confirm-dialog
+    [open]="confirmEliminar()"
+    [title]="'Solicitar eliminación de cuenta' | t"
+    [message]="'Pediremos a administración eliminar tu cuenta. Se borran tus datos personales (nombre, correo, teléfono, cédula, foto). Los registros de obra (conduces, inventario, combustible) se conservan anonimizados por obligación legal. Puede tardar hasta 30 días. Si sigues trabajando en la empresa, administración lo decide.' | t"
+    [confirmLabel]="'Sí, solicitar' | t"
+    [cancelLabel]="'Cancelar' | t"
+    tone="danger"
+    (confirmed)="confirmarEliminarCuenta()"
+    (cancelled)="cancelarEliminarCuenta()"
   />
 
   <!-- AW7 — editor de foto de perfil (recorte circular) antes de subir -->

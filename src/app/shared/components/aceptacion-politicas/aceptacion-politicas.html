@@ -1,0 +1,37 @@
+<!-- CI3 — aceptación versionada de políticas (bloqueante; único escape = cerrar sesión). -->
+@if (politicas.hayPendientes()) {
+  <div class="acep" role="alertdialog" aria-modal="true">
+    <div class="acep__card">
+      <h2 class="acep__title">{{ 'Antes de continuar' | t }}</h2>
+
+      <p class="acep__body">
+        {{ 'Para usar la CSD App necesitamos que aceptes nuestra Política de privacidad y los Términos de uso. Explican qué datos recogemos (incluida tu ubicación durante la jornada), para qué, y tus derechos.' | t }}
+      </p>
+
+      <div class="acep__links">
+        <button type="button" class="acep__link" (click)="abrir('privacidad')">
+          {{ 'Política de privacidad' | t }}
+        </button>
+        <button type="button" class="acep__link" (click)="abrir('terminos')">
+          {{ 'Términos de uso' | t }}
+        </button>
+        <button type="button" class="acep__link" (click)="abrir('soporte')">
+          {{ 'Soporte' | t }}
+        </button>
+      </div>
+
+      @if (error()) {
+        <p class="acep__error">{{ 'No se pudo registrar tu aceptación. Revisa tu conexión e inténtalo otra vez.' | t }}</p>
+      }
+
+      <div class="acep__acciones">
+        <button type="button" class="btn-cta" [disabled]="procesando()" (click)="aceptar()">
+          {{ procesando() ? ('Guardando…' | t) : ('Acepto' | t) }}
+        </button>
+        <button type="button" class="btn-ghost" (click)="cerrarSesion()">
+          {{ 'Cerrar sesión' | t }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

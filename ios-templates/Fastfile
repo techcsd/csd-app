@@ -1,0 +1,31 @@
+# CI9 — Fastlane lane para subir a TestFlight. Lo copia scripts/ios-prepare.mjs a
+# ios/App/fastlane/Fastfile. UNTESTED hasta tener la cuenta Apple + secretos.
+# Firma: usa `match` (si configuras MATCH_GIT_URL/MATCH_PASSWORD) o firma automática.
+default_platform(:ios)
+
+platform :ios do
+  desc "Build y subida a TestFlight"
+  lane :beta do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY_P8"],
+      is_key_content_base64: true
+    )
+
+    # Firma: descomenta match si lo usas (repo privado de certificados).
+    # match(type: "appstore", readonly: true, api_key: api_key) if ENV["MATCH_GIT_URL"]
+
+    build_app(
+      workspace: "App.xcworkspace",
+      scheme: "App",
+      export_method: "app-store",
+      configuration: "Release"
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+  end
+end

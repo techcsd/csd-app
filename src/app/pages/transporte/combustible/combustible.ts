@@ -34,6 +34,7 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { VehiculoDetalle, VehiculoDisponible } from '../../../core/models/transporte.model';
 import { CombustibleService, PermisoRetro, LecturaRecibo } from '../../../core/services/combustible.service';
+import { IaConsentGate } from '../../../core/services/ia-consent-gate.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
 import { ConducesService } from '../../../core/services/conduces.service';
 import { UserContextService } from '../../../core/services/user-context.service';
@@ -94,6 +95,7 @@ export class CombustiblePage extends GuardedWizard {
   private router = inject(Router);
   private vehiculos = inject(VehiculosService);
   private combustible = inject(CombustibleService);
+  private iaGate = inject(IaConsentGate);
   private conductores = inject(ConductoresService);
   private conduces = inject(ConducesService);
   private ctx = inject(UserContextService);
@@ -948,6 +950,7 @@ export class CombustiblePage extends GuardedWizard {
   async leerReciboAuto(sobrescribir = true): Promise<void> {
     const recibo = this.fotoRecibo();
     if (!recibo || this.leyendoRecibo()) return;
+    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA (lectura de recibos)
     this.leyendoRecibo.set(true);
     this.lecturaError.set('');
     try {

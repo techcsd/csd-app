@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -103,9 +105,16 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
-    <!-- AL6 — alarma dominical AUTÓNOMA de inspección (suena con la app cerrada). -->
+    <!-- AL6 — alarma dominical AUTÓNOMA de inspección (suena con la app cerrada).
+         CI6: USE_EXACT_ALARM se ELIMINÓ por completo (Play solo lo acepta en apps de
+         alarma/calendario). Queda SCHEDULE_EXACT_ALARM, que WeeklyAlarm consulta con
+         canScheduleExactAlarms(); si no está concedido cae a setAndAllowWhileIdle
+         (inexacta) y la alarma dominical igual suena dentro de la ventana 9-20h.
+         USE_FULL_SCREEN_INTENT se queda aquí (canal apk) y el canal `play` lo quita
+         con tools:node="remove" (src/play/AndroidManifest.xml) — Play (Android 14+)
+         solo lo da a alarmas/llamadas; en play la alarma usa notificación de alta
+         importancia (canal alarma_inspeccion) + full-screen solo si canUseFullScreenIntent(). -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />

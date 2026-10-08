@@ -1,0 +1,14 @@
+<!-- CI7/CI9 — aviso único para migrar a la tienda oficial. -->
+@if (tipo(); as t) {
+  <div class="tienda-aviso" role="status">
+    <span class="tienda-aviso__txt">
+      @if (t === 'play') {
+        {{ 'La CSD App ya está en Google Play. Instálala desde ahí para recibir actualizaciones automáticas.' | t }}
+      } @else {
+        {{ 'La CSD App ya está en el App Store. Instálala desde ahí para recibir actualizaciones automáticas.' | t }}
+      }
+    </span>
+    <button type="button" class="tienda-aviso__btn" (click)="abrir()">{{ 'Instalar' | t }}</button>
+    <button type="button" class="tienda-aviso__x" (click)="descartar()" aria-label="Descartar">✕</button>
+  </div>
+}

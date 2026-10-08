@@ -1,0 +1,21 @@
+<!-- CI5 — prominent disclosure a pantalla completa. Texto literal requerido por Play. -->
+@if (gate.visible()) {
+  <div class="ubi-disc" role="alertdialog" aria-modal="true">
+    <div class="ubi-disc__card">
+      <h2 class="ubi-disc__title">{{ 'Ubicación durante tu jornada' | t }}</h2>
+
+      <p class="ubi-disc__body">
+        {{ 'CSD App usa tu ubicación para que Flota vea dónde está el vehículo y registrar tus rutas, también cuando la app está cerrada o en segundo plano, mientras tu estado sea Disponible, En ruta, Descanso, Almuerzo u Otros. Se apaga cuando marcas Inactivo o cierras sesión.' | t }}
+      </p>
+
+      <div class="ubi-disc__acciones">
+        <button type="button" class="btn-cta" (click)="gate.aceptar()">
+          {{ 'Aceptar y continuar' | t }}
+        </button>
+        <button type="button" class="btn-ghost" (click)="gate.ahoraNo()">
+          {{ 'Ahora no' | t }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

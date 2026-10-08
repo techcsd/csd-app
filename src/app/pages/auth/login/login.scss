@@ -149,3 +149,28 @@
     opacity: 0.6;
   }
 }
+
+// CI3 — enlaces legales en el pie del login.
+.login__legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 1.5rem;
+
+  button {
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    font-size: 0.82rem;
+    color: var(--color-text-muted, var(--main-ultra-light));
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  span {
+    color: var(--color-text-muted, var(--main-ultra-light));
+    opacity: 0.6;
+  }
+}

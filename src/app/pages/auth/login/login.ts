@@ -7,6 +7,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { formatCedula, soloDigitosCedula } from '../../../core/util/cedula';
+import { PoliticasService, DocLegal } from '../../../core/services/politicas.service';
 import { environment } from '../../../../environments/environment';
 
 type Modo = 'correo' | 'conductor';
@@ -29,6 +30,7 @@ export class LoginPage {
   private ctx = inject(UserContextService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  private politicas = inject(PoliticasService);
 
   modo = signal<Modo>('correo');
 
@@ -51,6 +53,11 @@ export class LoginPage {
   // enlace mágico" (el padre gatea con dev_token_hook + SMTP de dev).
   readonly esDev = environment.entorno !== 'prod';
   enviandoEnlace = signal(false);
+
+  /** CI3 — abre una página legal pública (/politicas/*) en el navegador del sistema. */
+  abrirPolitica(doc: DocLegal): void {
+    void this.politicas.abrir(doc);
+  }
 
   setModo(m: Modo): void {
     this.modo.set(m);

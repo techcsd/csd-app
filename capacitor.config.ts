@@ -12,9 +12,10 @@ const config: CapacitorConfig = {
   // Angular's application builder emits the browser bundle here.
   webDir: 'dist/csd-app/browser',
   android: {
-    // Field devices are often on flaky networks; allow mixed content so the
-    // WebView can talk to Supabase without odd cleartext edge cases.
-    allowMixedContent: true,
+    // CI6 — allowMixedContent=false: el informe previo al lanzamiento de Play
+    // marca el contenido mixto como señal de inseguridad. Todo el tráfico de la
+    // app es HTTPS (Supabase, Vercel, edges); no hay ninguna URL http:// (grep=0).
+    allowMixedContent: false,
   },
 };
 

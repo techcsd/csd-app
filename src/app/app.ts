@@ -11,6 +11,12 @@ import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
 import { PermisosOnboarding } from './shared/components/permisos-onboarding/permisos-onboarding';
 import { LanguageOnboarding } from './shared/ui/language-onboarding/language-onboarding';
 import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
+import { ConsentimientoIa } from './shared/components/consentimiento-ia/consentimiento-ia';
+import { ConsentimientoUbicacion } from './shared/components/consentimiento-ubicacion/consentimiento-ubicacion';
+import { AceptacionPoliticas } from './shared/components/aceptacion-politicas/aceptacion-politicas';
+import { TiendaAviso } from './shared/components/tienda-aviso/tienda-aviso';
+import { PoliticasService } from './core/services/politicas.service';
+import { TiendasService } from './core/services/tiendas.service';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
 import { CatalogService } from './core/sync/catalog.service';
@@ -41,7 +47,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -67,6 +73,10 @@ export class App {
   private notificaciones = inject(NotificacionesService);
   private deviceInfo = inject(DeviceInfoService);
   private tracking = inject(TrackingService);
+  /** CI3 — aceptación de políticas pendientes (pantalla bloqueante en el shell). */
+  private politicas = inject(PoliticasService);
+  /** CI7 — URLs de tienda (Play/App Store) para actualizar por canal oficial + avisos. */
+  private tiendas = inject(TiendasService);
   /** BV5/BT5 — listener de `appRestoredResult` (recupera una foto tras recrear la Activity). */
   private camera = inject(CameraService);
   /** AY7 — banner "USUARIO DE PRUEBA" en el shell (esPrueba del perfil). */
@@ -79,6 +89,8 @@ export class App {
   private i18n = inject(I18nService);
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
   private trackingArrancado = false;
+  /** CI3 — revisa las políticas pendientes una vez por sesión (se resetea en /auth). */
+  private politicasRevisadas = false;
 
   /** BU1 F0 — sin proyecto configurado el shell muestra "Sin proyecto configurado"
    *  y NO arranca nada (no toca Supabase). Solo pasa en `ng serve` sin env:dev. */
@@ -225,6 +237,12 @@ export class App {
         // pantalla fuera de /auth (tras login, antes del home). Idempotente: una vez
         // decidido/mostrado, no re-consulta.
         void this.idiomaOnboarding.evaluar();
+        // CI3 — tras login, revisa si hay políticas por aceptar (una vez por sesión).
+        if (!this.politicasRevisadas) {
+          this.politicasRevisadas = true;
+          void this.politicas.revisarPendientes();
+          void this.tiendas.refrescar(); // CI7 — carga las URLs de tienda
+        }
         // AS1 — arranca el tracking continuo una vez hay sesión (una vez por login;
         // se re-arma tras cada login porque `apagar()` en logout resetea el flag).
         if (!this.trackingArrancado) {
@@ -233,6 +251,7 @@ export class App {
         }
       } else {
         this.trackingArrancado = false;
+        this.politicasRevisadas = false;
       }
       // Doble rAF: esperar a que el router-outlet monte la pantalla nueva.
       requestAnimationFrame(() =>

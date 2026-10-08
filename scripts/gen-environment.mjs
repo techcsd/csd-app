@@ -43,6 +43,8 @@ const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? undefined : (
 const TARGET = typeof flag('--target') === 'string' ? flag('--target') : 'src/environments/environment.ts';
 
 const APP_URL = { dev: 'https://app-dev.sgcconstructorasd.com', prod: 'https://app.sgcconstructorasd.com' };
+// CI2/CI4 — web del SGC (padre) donde viven las páginas públicas /politicas/*.
+const WEB_URL = { dev: 'https://dev.sgcconstructorasd.com', prod: 'https://sgcconstructorasd.com' };
 const V = version();
 
 function render({ production, entorno, url, anon }) {
@@ -53,7 +55,11 @@ function render({ production, entorno, url, anon }) {
     `  production: ${production},\n` +
     `  entorno: '${entorno}' as 'dev' | 'prod',\n` +
     `  version: '${V}',\n` +
+    // CI7 — canal por defecto 'pwa' (serve local). build-env.mjs lo sobreescribe
+    // en los builds nativos (--canal apk|play|appstore). No se toca aquí.
+    `  canal: 'pwa' as 'play' | 'apk' | 'appstore' | 'pwa',\n` +
     `  appUrl: '${APP_URL[entorno]}',\n` +
+    `  webUrl: '${WEB_URL[entorno]}',\n` +
     `  supabaseUrl: '${url}',\n` +
     `  supabaseAnonKey: '${anon}',\n` +
     '};\n'

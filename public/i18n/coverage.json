@@ -76,9 +76,9 @@
       "ht": 0
     },
     "pages/auth/login": {
-      "conT": 9,
+      "conT": 12,
       "sinT": 2,
-      "en": 73,
+      "en": 71,
       "ht": 0
     },
     "pages/auth/pin-acceso-change": {
@@ -496,7 +496,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 47,
+      "conT": 58,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -808,7 +808,7 @@
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
-      "conT": 44,
+      "conT": 43,
       "sinT": 1,
       "en": 91,
       "ht": 0
@@ -826,9 +826,9 @@
       "ht": 0
     },
     "pages/transporte/mantenimientos-lista": {
-      "conT": 7,
+      "conT": 10,
       "sinT": 0,
-      "en": 100,
+      "en": 80,
       "ht": 0
     },
     "pages/transporte/mi-actividad": {
@@ -945,10 +945,28 @@
       "en": 97,
       "ht": 0
     },
+    "shared/components/aceptacion-politicas": {
+      "conT": 9,
+      "sinT": 0,
+      "en": 56,
+      "ht": 0
+    },
     "shared/components/alarma-host": {
       "conT": 4,
       "sinT": 0,
       "en": 100,
+      "ht": 0
+    },
+    "shared/components/consentimiento-ia": {
+      "conT": 8,
+      "sinT": 2,
+      "en": 20,
+      "ht": 0
+    },
+    "shared/components/consentimiento-ubicacion": {
+      "conT": 4,
+      "sinT": 0,
+      "en": 25,
       "ht": 0
     },
     "shared/components/generar-acceso": {
@@ -992,6 +1010,12 @@
       "sinT": 0,
       "en": 100,
       "ht": 100
+    },
+    "shared/components/tienda-aviso": {
+      "conT": 3,
+      "sinT": 0,
+      "en": 0,
+      "ht": 0
     },
     "shared/components/toast-host": {
       "conT": 0,
@@ -1152,7 +1176,7 @@
     "shared/ui/pdf-viewer": {
       "conT": 2,
       "sinT": 1,
-      "en": 67,
+      "en": 33,
       "ht": 0
     },
     "shared/ui/personal-carnet": {

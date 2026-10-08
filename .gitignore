@@ -74,3 +74,6 @@ keystore.properties
 
 # Session scratchpad (temp introspection scripts, QA screenshots)
 scratchpad/
+
+# CI — store build artifacts (AAB, capturas, iconos). El gráfico versionado vive en docs/tienda/.
+dist-store/
