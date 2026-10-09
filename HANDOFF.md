@@ -1,7 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟠 SESIÓN 09/10/2026 — PROMPT-91 · Ronda **CK** — app **2.46.0** (en rama, falta merge→dev + APK + decisión canal)
-**TL;DR:** ronda CK completa en código: **13 commits en `feature/ck-ronda`** (desde `dev`=2.45.0), `npm run build` ✅ en cada uno. **NO mergeado a dev todavía.** Consume contratos de PROMPT-90 (SGC 1.159.1/1.160.0/1.161.0, vivos en dev/prod). Toda la ronda se bundleó en **una sola versión 2.46.0** (environment.prod.ts + build.gradle + CAMBIOS_CURADOS en release-apk.mjs).
+## 🟢 SESIÓN 09/10/2026 — PROMPT-91 · Ronda **CK** — app **2.46.0 EN DEV** (falta probar + 2 SQL padre + OK→prod)
+**TL;DR:** ronda CK completa + **mergeada a `dev`** (`b1a7a46`, push → Vercel app-dev.) + **APK dev 2.46.0 construido, candado CL4 verde (`canal:"apk"`), publicado al bucket dev + registrado**. 17 commits en `feature/ck-ronda`, `npm run build` ✅. **Falta: Xaviel prueba → OK → PR dev→main→prod; y el padre aplica los 2 SQL en dev.**
+- **CL4 (canal) RESUELTO en esta rama:** el canal se inyecta por `src/environments/canal.generated.ts` (gitignored, fuera de fileReplacements) + candado de build (`scripts/lib/canal.mjs`, aborta si el binario no trae `canal:"<esperado>"`+`version:"<v>"`) + fallback runtime en `UpdaterService`. **Gotcha:** `environment.dev.ts` también lleva `version` a mano (estaba en 2.44.0 → el candado lo atrapó); mantener los 3 alineados cada ronda (prod+dev+build.gradle). Consume contratos de PROMPT-90 (SGC 1.159.1/1.160.0/1.161.0, vivos en dev/prod). Toda la ronda se bundleó en **una sola versión 2.46.0** (environment.prod.ts + build.gradle + CAMBIOS_CURADOS en release-apk.mjs).
 
 ### ✅ Hecho (código, build-verde) — `feature/ck-ronda`
 - **F1 CK3** (`bbb6253`): re-atado de foto restaurada (patrón CJ13) a preuso/checklist/mantenimiento/recibir.
@@ -21,14 +22,13 @@
 2. **`sql-para-sgc/2026-10-09-ck15-misael-acciones.sql`** — "Ordenar" + "Nota para el chofer" sin hogar. Añade `orden`/`trabajo_ordenar` + `nota_chofer`/`trabajo_asignar` 6-arg. La app no pinta esos botones (capability).
 - (También sigue owed el `sql-para-sgc/2026-10-08-cj13-foto-origen` de CJ si no se aplicó.)
 
-### 👤 PENDIENTE — Xaviel (decisiones de release)
-1. **🔴 Hotfix 2.45.1 del canal (PROMPT-93 F0-1) ANTES del APK:** todo APK desde 2.44.0 sale con `environment.canal:"pwa"` → el botón Actualizar no instala (hace reload). NO lo hice (es scope de PROMPT-93 + decisión de estrategia). ¿Lo meto yo en esta rama antes de buildear, o lo maneja otra sesión? Para un APK dev de PRUEBA no bloquea (se instala manual), pero sí para el update real.
-2. **Merge `feature/ck-ronda` → `dev`** (despliega app-dev. PWA — no gateado por regla 18). Luego `npm run apk -- --env dev` + `apk:publish --env dev` para el APK dev. **Para** → probar → OK → PR dev→main → prod.
-3. **El padre aplica los 2 SQL en dev** para que "Mis trabajos" (chofer) y la nota/orden de Misael funcionen de verdad.
-4. **Mínima en prod = 2.45.0** (confirmado, NO 2.44.0 como decía el HANDOFF viejo). No la cambié.
+### 👤 PENDIENTE — Xaviel
+1. **Probar 2.46.0 en dev** (app-dev. PWA + **APK dev 2.46.0** del bucket; ideal Android gama baja + modo avión): notificaciones que suenan (mensaje con app cerrada/2º plano/abierta → suena las 3), Apoyo de transporte (los 3 tipos + dañado), "Mis trabajos" del chofer, bandeja + "Mis choferes" de Misael, "Entregar a". Con **OK → PR dev→main → prod** (`npm run apk --env prod` + `apk:publish --env prod` pasa la regla 18 porque 2.46.0 ya salió en dev; + data-fix publicar + notificar iOS).
+2. **🔴 El PADRE aplica los 2 SQL en dev** (si no, "Mis trabajos" sale vacío y Misael no tiene ordenar/nota): `sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql` + `2026-10-09-ck15-misael-acciones.sql`.
+3. **Mínima en prod = 2.45.0** (confirmado, NO 2.44.0). No la cambié.
 
 ### Verify on resume
-- `git log --oneline -14`; rama `feature/ck-ronda`; `npm run build` → exit 0. Versión 2.46.0 en environment.prod.ts + build.gradle.
+- `git log --oneline -18`; rama `dev` (=`b1a7a46`); `npm run build` → exit 0; `npm run test:canal` → verde. Versión 2.46.0 en environment.{prod,dev}.ts + build.gradle. APK dev en el bucket (`csd-app-2.46.0.apk`), registrado en `app_versiones` de dev (NO publicado a usuarios).
 
 ---
 
