@@ -372,6 +372,9 @@ export interface CombustibleCaptura {
   /** CC6 — número del RECIBO del ticket (opcional; para cruzar con el informe de la
    *  estación en la conciliación). Se captura como texto de solo dígitos. */
   numeroRecibo?: string | null;
+  /** CK3 — origen de la(s) foto(s): 'galeria' si alguna se subió desde la galería como
+   *  último recurso (tras 2 fallos de cámara) → Logística la revisa. Default 'camara'. */
+  fotoOrigen?: 'camara' | 'galeria';
   /** AT4 — usuario_id del ayudante (opcional); le suma la echada al incentivo. */
   ayudanteId?: string | null;
   /**

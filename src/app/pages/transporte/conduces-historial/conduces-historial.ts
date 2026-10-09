@@ -13,6 +13,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { esUuid } from '../../../core/util/validar';
 
 type RolFiltro = '' | 'emisor' | 'chofer' | 'receptor';
 
@@ -190,7 +191,8 @@ export class ConducesHistorialPage {
   }
 
   async ofrecerTransferencia(c: ConduceHistorial): Promise<void> {
-    if (!this.choferSel()) {
+    // CK6 — guard UUID (no solo "vacío"): evita mandar "undefined"/id malformado al RPC.
+    if (!esUuid(this.choferSel())) {
       this.toast.error(this.i18n.t('Elige el chofer al que transfieres.'));
       return;
     }

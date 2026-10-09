@@ -241,6 +241,9 @@ export class CombustiblePage extends GuardedWizard {
   fotoRecibo = signal<CapturedPhoto | null>(null);
   fotoTablero = signal<CapturedPhoto | null>(null);
   fotoBomba = signal<CapturedPhoto | null>(null); // Y4 — bomba/estación en 0
+  /** CK3 — alguna foto se subió desde la galería (último recurso tras 2 fallos de
+   *  cámara) → la echada viaja con foto_origen='galeria' para que Logística la revise. */
+  fotoOrigenGaleria = signal(false);
   // CF4 — lectura automática del recibo (visión). Solo online; el chofer confirma.
   leyendoRecibo = signal(false);
   lecturaError = signal('');
@@ -1259,6 +1262,7 @@ export class CombustiblePage extends GuardedWizard {
         placa: persona ? '' : this.placa(),
         ayudanteId: this.ayudanteId(), // AT4
         confirmado: this.confirmado(), // AW3 — echada inusual ya confirmada
+        fotoOrigen: this.fotoOrigenGaleria() ? 'galeria' : 'camara', // CK3
       });
       this.lastId.set(nuevoId); // AW2 — para "Revisar y corregir"
       // BM1 — corrección de una echada atascada: la corregida YA quedó encolada
