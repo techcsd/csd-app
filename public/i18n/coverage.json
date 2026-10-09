@@ -496,7 +496,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 67,
+      "conT": 71,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -1198,9 +1198,9 @@
       "ht": 0
     },
     "shared/ui/photo-slot": {
-      "conT": 16,
+      "conT": 18,
       "sinT": 1,
-      "en": 94,
+      "en": 95,
       "ht": 0
     },
     "shared/ui/pin-pad": {

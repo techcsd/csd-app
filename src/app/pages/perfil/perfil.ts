@@ -15,6 +15,8 @@ import { VersionService } from '../../core/services/version.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
 import { PushService } from '../../core/services/push.service';
+import { VehiculosService, VehiculoAutorizado } from '../../core/services/vehiculos.service';
+import { formatFecha } from '../../core/util/fecha';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { PoliticasService, DocLegal } from '../../core/services/politicas.service';
 import { ConsentService } from '../../core/services/consent.service';
@@ -51,6 +53,7 @@ export class PerfilPage {
   private toast = inject(ToastService);
   private camera = inject(CameraService);
   private push = inject(PushService);
+  private vehiculos = inject(VehiculosService);
   private politicas = inject(PoliticasService);
   private consent = inject(ConsentService);
   private permissions = inject(PermissionsService);
@@ -126,6 +129,12 @@ export class PerfilPage {
   // CI3/CI4/CI10 — Privacidad. Consentimiento de IA, ubicación en segundo plano y
   // solicitud de eliminación de cuenta.
   esNativo = Capacitor.isNativePlatform();
+  // CK1/F4 — "Mis vehículos autorizados" (solo chofer privado). Lista cacheada
+  // (read-through), renderiza offline con la última autorización conocida.
+  esChoferPrivado = computed(() => this.ctx.esChoferPrivado());
+  autorizados = signal<VehiculoAutorizado[]>([]);
+  autorizadosCargados = signal(false);
+  fmtFecha = formatFecha;
   iaPermitida = this.consent.ia;
   ubicacionFondo = this.consent.ubicacionFondo;
   confirmEliminar = signal(false);
@@ -145,6 +154,22 @@ export class PerfilPage {
     // CK10 — re-evalúa la salud de notificaciones al entrar (el usuario pudo cambiar
     // ajustes del SO desde la última vez).
     void this.notifHealth.evaluar();
+    // CK1/F4 — carga la lista de vehículos autorizados (solo chofer privado). El
+    // loader es read-through: al abrir Perfil con señal se re-consulta el servidor,
+    // así una autorización/retiro reciente de Flota se refleja al reabrir la pantalla
+    // (no hay un tipo de aviso específico para invalidar una pantalla ya abierta).
+    if (this.ctx.esChoferPrivado()) void this.cargarAutorizados();
+  }
+
+  /** CK1/F4 — carga las autorizaciones vigentes del chofer privado. Best-effort. */
+  private async cargarAutorizados(): Promise<void> {
+    try {
+      this.autorizados.set(await this.vehiculos.misVehiculosAutorizados());
+    } catch {
+      /* best-effort: sin datos, la sección muestra su estado vacío */
+    } finally {
+      this.autorizadosCargados.set(true);
+    }
   }
 
   // ── CI3/CI4/CI10 — Privacidad ───────────────────────────────────────────────

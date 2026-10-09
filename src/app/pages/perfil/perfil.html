@@ -79,6 +79,34 @@
       }
     </ul>
 
+    <!-- CK1/F4 — Mis vehículos autorizados (solo chofer privado). Lista cacheada
+         (read-through): renderiza offline con la última autorización conocida y se
+         re-consulta al abrir Perfil con señal. "Pedir autorización" queda pendiente
+         del RPC del padre (PROMPT-90 F5.3); por ahora solo guía a pedírselo a Flota. -->
+    @if (esChoferPrivado()) {
+      <div class="perfil__seccion">
+        <span class="perfil__seccion-label">{{ 'Mis vehículos autorizados' | t }}</span>
+        @if (autorizados().length) {
+          <ul class="perfil__autorizados">
+            @for (v of autorizados(); track v.vehiculoId) {
+              <li class="perfil__autorizado">
+                <b class="perfil__autorizado-nombre">{{ v.etiqueta }}</b>
+                <span class="perfil__autorizado-vig">
+                  @if (v.hasta) {
+                    {{ 'Vence:' | t }} {{ fmtFecha(v.hasta) }}
+                  } @else {
+                    {{ 'Sin vencimiento' | t }}
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="perfil__seccion-note">{{ 'Flota aún no te autorizó vehículos. Pídeselo a Flota.' | t }}</p>
+        }
+      </div>
+    }
+
     <!-- BS3 — Apariencia (claro/oscuro/sistema). Nombres/orden como en Configuración web. -->
     <div class="perfil__seccion">
       <span class="perfil__seccion-label">{{ 'Apariencia' | t }}</span>

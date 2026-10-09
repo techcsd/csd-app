@@ -178,6 +178,34 @@
   color: var(--color-text-secondary);
 }
 
+// CK1/F4 — lista de vehículos autorizados del chofer privado.
+.perfil__autorizados {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.perfil__autorizado {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+.perfil__autorizado:last-child {
+  border-bottom: none;
+}
+.perfil__autorizado-nombre {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.perfil__autorizado-vig {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
 // CK10 — aviso ámbar dentro de la sección Notificaciones + botón "Activar".
 .perfil__notif-aviso {
   display: flex;
