@@ -333,12 +333,20 @@
               } @else if (despachanteOk()) {
                 <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Firma del despachante' | t }}</span><span class="gconduce__res-v">{{ firmaDespachante() ? ('✓ firmada en persona' | t) : ('Sin firma' | t) }}</span></div>
               }
+              <!-- CK4 — "Entregar a": receptor designado (opcional; asignable después) -->
+              @if (destinoTipo() === 'obra') {
+                <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Entregar a' | t }}</span><span class="gconduce__res-v">{{ receptorNombre() || ('Sin asignar' | t) }}</span></div>
+              }
             } @else {
               <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Recibo' | t }}</span><span class="gconduce__res-v">{{ fotoRecibo() ? ('✓ tomado' | t) : '—' }}</span></div>
             }
           </div>
           @if (!esFerreteria()) {
             <div class="gconduce__band">{{ 'Al emitir, el conduce queda Pendiente de entrega. El receptor confirmará desde su propio teléfono.' | t }}</div>
+            <!-- CK4 — aviso cuando se emite sin receptor asignado -->
+            @if (destinoTipo() === 'obra' && !receptorId()) {
+              <div class="gconduce__band gconduce__band--info gconduce__mt">{{ 'Sin receptor asignado: Logística puede asignarlo después.' | t }}</div>
+            }
           }
         }
       }
