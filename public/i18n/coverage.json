@@ -1,5 +1,5 @@
 {
-  "en": 94,
+  "en": 93,
   "ht": 0,
   "alcance": true,
   "byScreen": {
@@ -496,7 +496,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 60,
+      "conT": 67,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -599,7 +599,7 @@
     },
     "pages/soporte": {
       "conT": 0,
-      "sinT": 3,
+      "sinT": 21,
       "en": 0,
       "ht": 0
     },
@@ -700,10 +700,10 @@
       "ht": 0
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 56,
+      "conT": 71,
       "sinT": 1,
-      "en": 98,
-      "ht": 4
+      "en": 83,
+      "ht": 3
     },
     "pages/transporte/conduce-externo": {
       "conT": 79,
@@ -802,9 +802,9 @@
       "ht": 0
     },
     "pages/transporte/generar-conduce": {
-      "conT": 101,
+      "conT": 104,
       "sinT": 1,
-      "en": 99,
+      "en": 96,
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
@@ -1169,6 +1169,12 @@
     },
     "shared/ui/molde-esquema": {
       "conT": 3,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "shared/ui/notif-health-band": {
+      "conT": 4,
       "sinT": 0,
       "en": 100,
       "ht": 0

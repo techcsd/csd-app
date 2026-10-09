@@ -105,6 +105,10 @@
       <button type="button" class="imp-banner__salir" (click)="salirImpersonacion()">Salir</button>
     </div>
   }
+  @if (!enAuth()) {
+    <!-- CK10 — cinta global: notificaciones apagadas/sin sonido (no cerrable para choferes). -->
+    <app-notif-health-band />
+  }
   <router-outlet />
   }
 }

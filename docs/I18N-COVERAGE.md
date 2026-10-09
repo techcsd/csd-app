@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 94%** del alcance · **Kreyòl (ht): 0%**
+- **Inglés (en): 93%** del alcance · **Kreyòl (ht): 0%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -89,7 +89,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 60 | 0 | 100% | 0% | ✅ |
+| pages/perfil | 67 | 0 | 100% | 0% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
@@ -106,7 +106,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/detalle | 72 | 12 | 77% | 0% |  |
 | pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
-| pages/soporte | 0 | 3 | 0% | 0% |  |
+| pages/soporte | 0 | 21 | 0% | 0% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
 | pages/tecnologia | 0 | 12 | 0% | 0% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
@@ -123,7 +123,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 127 | 2 | 87% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 56 | 1 | 98% | 4% |  |
+| pages/transporte/conduce-detalle | 71 | 1 | 83% | 3% |  |
 | pages/transporte/conduce-externo | 79 | 1 | 80% | 0% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 0% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
@@ -140,7 +140,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/echada-detalle | 17 | 2 | 84% | 0% |  |
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
-| pages/transporte/generar-conduce | 101 | 1 | 99% | 0% |  |
+| pages/transporte/generar-conduce | 104 | 1 | 96% | 0% |  |
 | pages/transporte/mantenimiento | 43 | 1 | 91% | 0% |  |
 | pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-general | 20 | 0 | 50% | 0% |  |
@@ -190,6 +190,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
+| shared/ui/notif-health-band | 4 | 0 | 100% | 0% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
 | shared/ui/photo-slot | 16 | 1 | 94% | 0% |  |
