@@ -429,22 +429,37 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/ingenieria/ingenieria').then((m) => m.IngenieriaPage),
   },
   {
-    // AY11 — Solicitudes de movimiento (bandeja: propias del ingeniero / todas del referente).
-    path: 'transporte/solicitudes-movimiento',
+    // CK12 — "Apoyo de transporte" (bandeja): evoluciona solicitudes_movimiento.
+    path: 'transporte/apoyo',
     canActivate: [authGuard, pinGuard],
     loadComponent: () =>
-      import('./pages/transporte/solicitud-movimiento/solicitudes-movimiento').then(
-        (m) => m.SolicitudesMovimientoPage,
-      ),
+      import('./pages/transporte/apoyo-transporte/apoyo-listado').then((m) => m.ApoyoListadoPage),
   },
   {
-    // AY11 — crear solicitud de movimiento (ingeniero, offline por outbox).
-    path: 'transporte/crear-solicitud-movimiento',
+    // CK12 — crear un apoyo de transporte (ingeniero, offline por outbox).
+    path: 'transporte/apoyo/nuevo',
     canActivate: [authGuard, pinGuard],
     loadComponent: () =>
-      import('./pages/transporte/solicitud-movimiento/crear-solicitud-movimiento').then(
-        (m) => m.CrearSolicitudMovimientoPage,
-      ),
+      import('./pages/transporte/apoyo-transporte/crear-apoyo').then((m) => m.CrearApoyoPage),
+  },
+  {
+    // CK13 — ficha de un apoyo (línea de tiempo + botones de estado del solicitante).
+    path: 'transporte/apoyo/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/apoyo-transporte/apoyo-detalle').then((m) => m.ApoyoDetallePage),
+  },
+  {
+    // CK12 — la ruta vieja "Solicitudes de movimiento" redirige al nuevo módulo.
+    path: 'transporte/solicitudes-movimiento',
+    redirectTo: 'transporte/apoyo',
+    pathMatch: 'full',
+  },
+  {
+    // CK12 — la ruta vieja "crear solicitud de movimiento" redirige al nuevo formulario.
+    path: 'transporte/crear-solicitud-movimiento',
+    redirectTo: 'transporte/apoyo/nuevo',
+    pathMatch: 'full',
   },
   {
     // AU5 — "Ver trayectoria" (replay estático) de una ruta finalizada.

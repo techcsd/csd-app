@@ -115,6 +115,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/tecnologia/dev-notes | 0 | 5 | 0% | 0% |  |
 | pages/transporte | 16 | 0 | 100% | 0% | ✅ |
 | pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |
+| pages/transporte/apoyo-transporte | 47 | 0 | 100% | 0% |  |
 | pages/transporte/asignar | 35 | 0 | 100% | 0% |  |
 | pages/transporte/asignarme | 36 | 0 | 100% | 0% |  |
 | pages/transporte/aviso-vehiculo | 38 | 0 | 100% | 0% |  |
@@ -160,7 +161,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/rutas | 63 | 0 | 100% | 0% |  |
 | pages/transporte/rutas-activas | 23 | 0 | 100% | 0% |  |
 | pages/transporte/seguimiento | 12 | 0 | 100% | 0% |  |
-| pages/transporte/solicitud-movimiento | 33 | 0 | 70% | 0% |  |
+| pages/transporte/solicitud-movimiento | 33 | 0 | 73% | 0% |  |
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
 | pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |
 | pages/transporte/vehiculos | 63 | 2 | 97% | 0% |  |

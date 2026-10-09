@@ -1,0 +1,147 @@
+<div class="screen capo">
+  <header class="capo__header">
+    <button type="button" class="capo__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="capo__title">{{ 'Apoyo de transporte' | t }}</h1>
+  </header>
+
+  <div class="screen__body capo__body">
+    <!-- Tipo -->
+    <label class="field-label">{{ '¿Qué necesitas?' | t }} <span class="capo__req">*</span></label>
+    @for (t of tipos; track t.key) {
+      <app-option-button
+        [icon]="t.icon"
+        [label]="t.label | t"
+        [selected]="tipo() === t.key"
+        (pressed)="pickTipo(t.key)"
+      />
+      <p class="capo__glosa">{{ t.glosa | t }}</p>
+    }
+
+    <!-- Obra -->
+    <label class="field-label">{{ 'Obra' | t }} <span class="capo__req">*</span></label>
+    <app-collapsible-select
+      [icon]="obraIcon"
+      [label]="'Obra' | t"
+      [options]="obraOpts()"
+      [selectedId]="proyectoId()"
+      [placeholder]="'Elige la obra' | t"
+      [searchable]="true"
+      (picked)="proyectoId.set($event)"
+    />
+
+    <!-- Día -->
+    <label class="field-label">{{ '¿Para cuándo?' | t }} <span class="capo__req">*</span></label>
+    <input class="field" type="date" [min]="hoy" [ngModel]="dia()" (ngModelChange)="dia.set($event)" />
+
+    <!-- ¿Qué hay que mover? -->
+    <label class="field-label">{{ '¿Qué hay que mover?' | t }} <span class="capo__req">*</span></label>
+    <textarea
+      class="field capo__desc"
+      [ngModel]="descripcion()"
+      (ngModelChange)="descripcion.set($event)"
+      rows="3"
+      maxlength="1000"
+      [placeholder]="'Describe qué hay que mover, cuánto y cualquier detalle útil…' | t"
+    ></textarea>
+    <span class="capo__count">{{ descripcion().length }}/1000</span>
+
+    <!-- Fotos -->
+    <label class="field-label">{{ 'Foto(s)' | t }} <span class="capo__req">*</span></label>
+    <p class="capo__hint">{{ 'Al menos una foto de lo que hay que mover (hasta 4).' | t }}</p>
+    <div class="capo__fotos">
+      @for (f of fotos(); track $index) {
+        <div class="capo__foto">
+          <img [src]="f.previewUrl" alt="" />
+          <button type="button" class="capo__foto-del" (click)="removeFoto($index)" [attr.aria-label]="'Quitar' | t">×</button>
+        </div>
+      }
+      @if (fotos().length < maxFotos) {
+        <button type="button" class="capo__foto-add" [disabled]="capturing()" (click)="addFoto()">
+          <span class="capo__foto-add-plus">＋</span>
+          <span>{{ 'Tomar foto' | t }}</span>
+        </button>
+      }
+    </div>
+    @if (fotos().length < maxFotos) {
+      <button type="button" class="capo__galeria" [disabled]="capturing()" (click)="addDeGaleria()">
+        {{ 'Elegir de la galería' | t }}
+      </button>
+    }
+
+    <!-- Destino (solo movimiento interno) -->
+    @if (mostrarDestino()) {
+      <label class="field-label">{{ '¿A dónde va?' | t }}</label>
+      @for (m of destinoModos; track m.key) {
+        <app-option-button
+          [icon]="m.icon"
+          [label]="m.label | t"
+          [selected]="destinoModo() === m.key"
+          (pressed)="pickDestinoModo(m.key)"
+        />
+      }
+      @if (destinoModo() === 'obra') {
+        <app-collapsible-select
+          [icon]="obraIcon"
+          [label]="'Obra destino' | t"
+          [options]="obraOpts()"
+          [selectedId]="destinoProyectoId()"
+          [placeholder]="'Elige la obra destino' | t"
+          [searchable]="true"
+          (picked)="destinoProyectoId.set($event)"
+        />
+      } @else if (destinoModo() === 'almacen') {
+        <app-collapsible-select
+          [icon]="almacenIcon"
+          [label]="'Almacén' | t"
+          [options]="bodegaOpts()"
+          [selectedId]="destinoBodegaId()"
+          [placeholder]="'Elige el almacén (Central primero)' | t"
+          [searchable]="true"
+          (picked)="destinoBodegaId.set($event)"
+        />
+      } @else if (destinoModo() === 'otro') {
+        <input
+          class="field"
+          type="text"
+          [ngModel]="destinoTexto()"
+          (ngModelChange)="destinoTexto.set($event)"
+          [placeholder]="'Ej: proveedor, taller, otro punto…' | t"
+        />
+      }
+    }
+
+    <!-- Bote: destino fijo -->
+    @if (tipo() === 'bote') {
+      <p class="capo__fijo">{{ 'Destino: Bote (vertedero).' | t }}</p>
+    }
+
+    <!-- Retiro de material: almacén destino + casilla dañado -->
+    @if (mostrarDanado()) {
+      <label class="field-label">{{ 'Almacén destino (opcional)' | t }}</label>
+      <app-collapsible-select
+        [icon]="almacenIcon"
+        [label]="'Almacén' | t"
+        [options]="bodegaOpts()"
+        [selectedId]="destinoBodegaId()"
+        [placeholder]="'Por defecto, el almacén' | t"
+        [searchable]="true"
+        (picked)="destinoBodegaId.set($event)"
+      />
+      <label class="capo__check">
+        <input type="checkbox" [ngModel]="esDanado()" (ngModelChange)="esDanado.set($event)" />
+        <span>{{ 'Es material dañado que vuelve al almacén (cuarentena).' | t }}</span>
+      </label>
+      @if (esDanado()) {
+        <p class="capo__hint">{{ 'Se generará un borrador de retiro para que almacén lo complete.' | t }}</p>
+      }
+    }
+  </div>
+
+  <app-wizard-footer
+    [backLabel]="'Cancelar' | t"
+    [primaryLabel]="'Enviar' | t"
+    [primaryDisabled]="!puedeEnviar()"
+    (back)="back()"
+    (primary)="enviar()"
+  />
+</div>

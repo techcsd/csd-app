@@ -66,6 +66,9 @@ const TILES: HubTile[] = [
   { key: 'miRecorrido', icon: '🗺️', label: 'Mi Recorrido', tint: '#0ea5e9' },
 
   // ── Gestión (solo roles elevados) ────────────────────────────────────────────
+  // CK12 — Apoyo de transporte (bandeja de movimientos/retiros/bote; el referente
+  // la ve completa). Los ingenieros lo crean desde su hub de Ingeniería.
+  { key: 'apoyoTransporte', icon: '🚚', label: 'Apoyo de transporte', tint: '#9333ea', elevado: true },
   { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
   // AP6 — Rutas activas (lista por chofer + histórico) para roles elevados.
   { key: 'rutasActivas', icon: '🛰️', label: 'Rutas activas', tint: '#0ea5e9', elevado: true },
@@ -279,6 +282,7 @@ export class TransportePage {
     switch (t.key) {
       case 'misRutas': return this.misRutas();
       case 'conducesHub': return this.conducesHub();
+      case 'apoyoTransporte': return void this.router.navigate(['/transporte/apoyo']);
       case 'seguimiento': return this.seguimiento();
       case 'rutasActivas': return this.rutasActivas();
       case 'combustible': return this.combustibleTop();

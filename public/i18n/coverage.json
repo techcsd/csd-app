@@ -651,6 +651,12 @@
       "en": 100,
       "ht": 0
     },
+    "pages/transporte/apoyo-transporte": {
+      "conT": 47,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
     "pages/transporte/asignar": {
       "conT": 35,
       "sinT": 0,
@@ -924,7 +930,7 @@
     "pages/transporte/solicitud-movimiento": {
       "conT": 33,
       "sinT": 0,
-      "en": 70,
+      "en": 73,
       "ht": 0
     },
     "pages/transporte/trayectoria": {
