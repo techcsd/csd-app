@@ -1,5 +1,37 @@
 # HANDOFF — CSD App
 
+## 🟠 SESIÓN 09/10/2026 — PROMPT-91 · Ronda **CK** — app **2.46.0** (en rama, falta merge→dev + APK + decisión canal)
+**TL;DR:** ronda CK completa en código: **13 commits en `feature/ck-ronda`** (desde `dev`=2.45.0), `npm run build` ✅ en cada uno. **NO mergeado a dev todavía.** Consume contratos de PROMPT-90 (SGC 1.159.1/1.160.0/1.161.0, vivos en dev/prod). Toda la ronda se bundleó en **una sola versión 2.46.0** (environment.prod.ts + build.gradle + CAMBIOS_CURADOS en release-apk.mjs).
+
+### ✅ Hecho (código, build-verde) — `feature/ck-ronda`
+- **F1 CK3** (`bbb6253`): re-atado de foto restaurada (patrón CJ13) a preuso/checklist/mantenimiento/recibir.
+- **F2 CK4** (`4e9478b`): "Entregar a" — asignar/cambiar receptor de un conduce emitido (outbox, permiso=server, picker receptores+buscar otro/forzar).
+- **CK10** (`5eb20e5`+`1e8a721`): canal nativo `avisos_csd_v2` (sonido+pantalla bloqueada+badge, borra el viejo) + `@capacitor/local-notifications` (suena con app abierta) + token on-resume; banda de salud "Activar" (no cerrable para choferes) + Perfil›Notificaciones "Probar notificación" + guía OEM en Soporte.
+- **F3 CK6 + F5 CK3** (`be16a84`): guard `esUuid` en los 3 puntos de transferir/asignar; galería último recurso tras 2 fallos (`foto_origen='galeria'`).
+- **F4 CK1** (`bfb1085`): chofer privado — "Mis vehículos autorizados" en Perfil (caché read-through; "Pedir autorización" = gap del padre, sin botón muerto).
+- **F6B CK9** (`04f0255`): filtro por rol en Admin›Usuarios.
+- **CK11-13 Apoyo** (`ba81682`): módulo "Apoyo de transporte" (Tipo/Obra/Día/descripción/fotos/destino + dañado→cuarentena) + estados del ingeniero; ApoyoService outbox; reemplaza "Solicitud de movimiento"; rutas viejas redirigen.
+- **CK14** (`d36aad8`): "Mis trabajos" del chofer (reporta avance con hora/GPS/foto, offline).
+- **CK15/16** (`f29596c`): bandeja "Trabajos de transporte" de Misael (asignar/reasignar/cancelar/nueva actividad) + "Mis choferes" (monitoreo, última señal, timeline, polling visible-only).
+- **CK5 F6** (`d0ce2fd`): reproductor de videos en Tecnología›Dudas (bucket `tutoriales`, sin autoplay, offline-safe; campos opcionales = no-op hasta que el padre suba) + **data-testid** estables en 14 pantallas.
+- **F7** (`d3107a3`+`bbf03ff`): bump **2.46.0** + changelog curado (Y1) + PARIDAD (contratos CK + testids + gaps).
+
+### ⚠️ 2 SQL para el PADRE (regla 18/19 — el hijo NO aplica; verificados contra cuerpos vivos, sin drift)
+1. **`sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql`** — el chofer NO podía LEER sus tickets (todo gateaba a `es_flota_elevado`/`puede_ver_apoyo`). Añade `mis_trabajos_chofer(p_dia)` + extiende `puede_ver_apoyo` al chofer asignado. **Sin esto "Mis trabajos" sale vacío + la foto de Terminé reintenta en outbox** (degrada, no rompe).
+2. **`sql-para-sgc/2026-10-09-ck15-misael-acciones.sql`** — "Ordenar" + "Nota para el chofer" sin hogar. Añade `orden`/`trabajo_ordenar` + `nota_chofer`/`trabajo_asignar` 6-arg. La app no pinta esos botones (capability).
+- (También sigue owed el `sql-para-sgc/2026-10-08-cj13-foto-origen` de CJ si no se aplicó.)
+
+### 👤 PENDIENTE — Xaviel (decisiones de release)
+1. **🔴 Hotfix 2.45.1 del canal (PROMPT-93 F0-1) ANTES del APK:** todo APK desde 2.44.0 sale con `environment.canal:"pwa"` → el botón Actualizar no instala (hace reload). NO lo hice (es scope de PROMPT-93 + decisión de estrategia). ¿Lo meto yo en esta rama antes de buildear, o lo maneja otra sesión? Para un APK dev de PRUEBA no bloquea (se instala manual), pero sí para el update real.
+2. **Merge `feature/ck-ronda` → `dev`** (despliega app-dev. PWA — no gateado por regla 18). Luego `npm run apk -- --env dev` + `apk:publish --env dev` para el APK dev. **Para** → probar → OK → PR dev→main → prod.
+3. **El padre aplica los 2 SQL en dev** para que "Mis trabajos" (chofer) y la nota/orden de Misael funcionen de verdad.
+4. **Mínima en prod = 2.45.0** (confirmado, NO 2.44.0 como decía el HANDOFF viejo). No la cambié.
+
+### Verify on resume
+- `git log --oneline -14`; rama `feature/ck-ronda`; `npm run build` → exit 0. Versión 2.46.0 en environment.prod.ts + build.gradle.
+
+---
+
 ## 🟠 SESIÓN 08/10/2026 — PROMPT-89 · Ronda **CJ** — HOTFIX **2.44.1** (en dev, falta OK → prod)
 **Descubrimiento clave:** el prompt asumía prod=2.43.0 / dev=2.44.0 sin salir, pero **CI 2.44.0 YA está en prod** (`main`=2.44.0, `version_publicada(movil)`=2.44.0 publicada, **minima=true**). Así que el hotfix NO es 2.43.1 desde un main viejo, sino **2.44.1 desde el main actual** (no arrastra ni revierte CI). Rama `hotfix/cj-urgente` (commit `71cb53a`).
 

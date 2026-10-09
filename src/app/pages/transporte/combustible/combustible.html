@@ -168,7 +168,7 @@
     </footer>
   </div>
 } @else {
-  <div class="screen comb">
+  <div class="screen comb" data-testid="combustible-wizard">
     <app-wizard-exit [title]="'Registrar combustible' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total()" />
 
@@ -229,6 +229,7 @@
               [restore]="{ clave: 'combustible', slot: 'evidencia' }"
               (captured)="onFotoEvidencia($event)"
               (cleared)="onFotoEvidenciaCleared()"
+              (galeriaFallback)="fotoOrigenGaleria.set(true)"
             />
           </div>
         } @else {
@@ -245,6 +246,7 @@
               [restore]="{ clave: 'combustible', slot: 'bomba' }"
               (captured)="onFotoBomba($event)"
               (cleared)="onFotoBombaCleared()"
+              (galeriaFallback)="fotoOrigenGaleria.set(true)"
             />
           </div>
         }
@@ -374,6 +376,7 @@
             [restore]="{ clave: 'combustible', slot: 'recibo' }"
             (captured)="onFotoRecibo($event)"
             (cleared)="onFotoReciboCleared()"
+            (galeriaFallback)="fotoOrigenGaleria.set(true)"
           />
           <!-- Z23-app — sin tablero en una echada de persona (no hay odómetro) -->
           @if (!modoPersona()) {
@@ -385,6 +388,7 @@
               [restore]="{ clave: 'combustible', slot: 'tablero' }"
               (captured)="onFotoTablero($event)"
               (cleared)="onFotoTableroCleared()"
+              (galeriaFallback)="fotoOrigenGaleria.set(true)"
             />
           }
         </div>

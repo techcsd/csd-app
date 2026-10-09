@@ -1,0 +1,14 @@
+@if (visible()) {
+  <div class="notif-band" role="status">
+    <span class="notif-band__txt">{{ 'Tus notificaciones están apagadas o sin sonido' | t }}</span>
+    <div class="notif-band__actions">
+      <button type="button" class="notif-band__btn" (click)="activar()">{{ 'Activar' | t }}</button>
+      @if (salud()?.fabricanteAgresivo) {
+        <button type="button" class="notif-band__ghost" (click)="verGuia()">{{ 'Ver guía' | t }}</button>
+      }
+      @if (!esChofer()) {
+        <button type="button" class="notif-band__close" (click)="cerrar()" [attr.aria-label]="'Cerrar' | t">✕</button>
+      }
+    </div>
+  </div>
+}

@@ -1,5 +1,5 @@
 {
-  "en": 94,
+  "en": 93,
   "ht": 0,
   "alcance": true,
   "byScreen": {
@@ -64,9 +64,9 @@
       "ht": 0
     },
     "pages/admin/usuarios": {
-      "conT": 38,
+      "conT": 40,
       "sinT": 0,
-      "en": 82,
+      "en": 83,
       "ht": 0
     },
     "pages/admin/versiones": {
@@ -496,7 +496,7 @@
       "ht": 0
     },
     "pages/perfil": {
-      "conT": 60,
+      "conT": 71,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -599,7 +599,7 @@
     },
     "pages/soporte": {
       "conT": 0,
-      "sinT": 3,
+      "sinT": 21,
       "en": 0,
       "ht": 0
     },
@@ -610,9 +610,9 @@
       "ht": 0
     },
     "pages/tecnologia": {
-      "conT": 0,
+      "conT": 5,
       "sinT": 12,
-      "en": 0,
+      "en": 29,
       "ht": 0
     },
     "pages/tecnologia-inventario": {
@@ -647,6 +647,12 @@
     },
     "pages/transporte/acta-detalle": {
       "conT": 9,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/transporte/apoyo-transporte": {
+      "conT": 47,
       "sinT": 0,
       "en": 100,
       "ht": 0
@@ -700,10 +706,10 @@
       "ht": 0
     },
     "pages/transporte/conduce-detalle": {
-      "conT": 56,
+      "conT": 71,
       "sinT": 1,
-      "en": 98,
-      "ht": 4
+      "en": 85,
+      "ht": 3
     },
     "pages/transporte/conduce-externo": {
       "conT": 79,
@@ -802,9 +808,9 @@
       "ht": 0
     },
     "pages/transporte/generar-conduce": {
-      "conT": 101,
+      "conT": 104,
       "sinT": 1,
-      "en": 99,
+      "en": 97,
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
@@ -853,6 +859,18 @@
       "conT": 8,
       "sinT": 0,
       "en": 100,
+      "ht": 0
+    },
+    "pages/transporte/mis-choferes": {
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
+    "pages/transporte/mis-trabajos": {
+      "conT": 14,
+      "sinT": 0,
+      "en": 43,
       "ht": 0
     },
     "pages/transporte/perfil-conductor": {
@@ -924,7 +942,13 @@
     "pages/transporte/solicitud-movimiento": {
       "conT": 33,
       "sinT": 0,
-      "en": 70,
+      "en": 73,
+      "ht": 0
+    },
+    "pages/transporte/trabajos-transporte": {
+      "conT": 31,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/trayectoria": {
@@ -1173,6 +1197,12 @@
       "en": 100,
       "ht": 0
     },
+    "shared/ui/notif-health-band": {
+      "conT": 4,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
     "shared/ui/option-button": {
       "conT": 0,
       "sinT": 0,
@@ -1192,9 +1222,9 @@
       "ht": 0
     },
     "shared/ui/photo-slot": {
-      "conT": 16,
+      "conT": 18,
       "sinT": 1,
-      "en": 94,
+      "en": 95,
       "ht": 0
     },
     "shared/ui/pin-pad": {

@@ -79,6 +79,34 @@
       }
     </ul>
 
+    <!-- CK1/F4 — Mis vehículos autorizados (solo chofer privado). Lista cacheada
+         (read-through): renderiza offline con la última autorización conocida y se
+         re-consulta al abrir Perfil con señal. "Pedir autorización" queda pendiente
+         del RPC del padre (PROMPT-90 F5.3); por ahora solo guía a pedírselo a Flota. -->
+    @if (esChoferPrivado()) {
+      <div class="perfil__seccion">
+        <span class="perfil__seccion-label">{{ 'Mis vehículos autorizados' | t }}</span>
+        @if (autorizados().length) {
+          <ul class="perfil__autorizados">
+            @for (v of autorizados(); track v.vehiculoId) {
+              <li class="perfil__autorizado">
+                <b class="perfil__autorizado-nombre">{{ v.etiqueta }}</b>
+                <span class="perfil__autorizado-vig">
+                  @if (v.hasta) {
+                    {{ 'Vence:' | t }} {{ fmtFecha(v.hasta) }}
+                  } @else {
+                    {{ 'Sin vencimiento' | t }}
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="perfil__seccion-note">{{ 'Flota aún no te autorizó vehículos. Pídeselo a Flota.' | t }}</p>
+        }
+      </div>
+    }
+
     <!-- BS3 — Apariencia (claro/oscuro/sistema). Nombres/orden como en Configuración web. -->
     <div class="perfil__seccion">
       <span class="perfil__seccion-label">{{ 'Apariencia' | t }}</span>
@@ -122,6 +150,32 @@
       <span class="perfil__seccion-label">{{ 'Idioma' | t }}</span>
       <app-language-selector />
       <p class="perfil__seccion-note">{{ 'Los avisos y mensajes del sistema pueden llegar en español.' | t }}</p>
+    </div>
+
+    <!-- CK10 — Notificaciones: salud (permiso + canal) + prueba de entrega. -->
+    <div class="perfil__seccion">
+      <span class="perfil__seccion-label">{{ 'Notificaciones' | t }}</span>
+
+      @if (notifSalud(); as s) {
+        @if (!s.ok) {
+          <div class="perfil__notif-aviso" role="status">
+            <span class="perfil__notif-aviso-txt">{{ 'Tus notificaciones están apagadas o sin sonido' | t }}</span>
+            <button type="button" class="perfil__notif-activar" (click)="activarNotif()">{{ 'Activar' | t }}</button>
+          </div>
+        } @else {
+          <p class="perfil__seccion-note">{{ 'Las notificaciones están activas.' | t }}</p>
+        }
+      }
+
+      <button type="button" class="btn-ghost perfil__btn" [disabled]="probando()" (click)="probarNotificacion()">
+        {{ probando() ? ('Enviando…' | t) : ('Probar notificación' | t) }}
+      </button>
+
+      @if (notifSalud()?.fabricanteAgresivo) {
+        <button type="button" class="perfil__notif-guia" (click)="verGuiaNotif()">
+          {{ 'Si no te llegan las notificaciones' | t }}
+        </button>
+      }
     </div>
 
     <button type="button" class="btn-ghost perfil__btn" [disabled]="checking()" (click)="buscarActualizacion()">

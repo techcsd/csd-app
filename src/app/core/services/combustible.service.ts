@@ -618,6 +618,7 @@ export class CombustibleService {
         titular: input.titular, // Z23-app
         titular_es_persona: input.titularEsPersona, // Z23-app
         numero_recibo: input.numeroRecibo ?? null, // CC6 — nº de recibo del ticket
+        foto_origen: input.fotoOrigen ?? 'camara', // CK3 — 'galeria' = último recurso
         ayudante_id: input.ayudanteId ?? null, // AT4
         confirmado: input.confirmado ?? false, // AW3 — echada inusual ya confirmada
         capturado_en, // BB6 — hora REAL de captura (para corregir created_at si se sincroniza tarde)
@@ -673,6 +674,7 @@ export class CombustibleService {
         p_origen: payload['origen'] ?? 'estacion', // AC11
         p_proyecto_id: payload['proyecto_id'] ?? null, // AC11
         p_confirmado: payload['confirmado'] === true, // AW3 — echada inusual ya confirmada por el chofer
+        p_foto_origen: payload['foto_origen'] ?? 'camara', // CK3 — 22-arg (LIVE dev+prod 1.160.0)
       };
       // CC6 — nº de recibo detrás de COMPROBACIÓN DE CAPACIDAD: el padre añadió la
       // columna `registros_combustible.numero_recibo` pero AÚN no el parámetro

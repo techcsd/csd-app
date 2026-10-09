@@ -355,6 +355,11 @@ export function notifAppRoute(n: {
   // La web manda ruta '/transporte/por-firmar' (que en la app es la del RECEPTOR),
   // así que aquí se mapea por tipo a la bandeja correcta del despachante.
   if (n.tipo === 'conduce_firma') return '/transporte/conduces-por-firmar';
+  // CK14 — "Nuevo trabajo asignado" al chofer (actividad/apoyo/conduce). El servidor
+  // notifica con ruta '/transporte/mis-trabajos'; aterriza en "Mis trabajos" del chofer.
+  // Se mapea por RUTA (no por tipo 'solicitud_movimiento', que también usa el flujo del
+  // ingeniero) para no secuestrar otros avisos de solicitud de movimiento.
+  if (r.startsWith('/transporte/mis-trabajos')) return '/transporte/mis-trabajos';
   // AQ1 — versión publicada → pantalla de actualización (deep-link del push de versión).
   if (n.tipo === 'version_publicada' || n.referencia_tipo === 'version' || r.startsWith('/actualizar')) {
     return '/actualizar';

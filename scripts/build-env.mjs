@@ -10,6 +10,7 @@
 // `ng build --configuration <dev|production>`.
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+import { writeCanalGenerated } from './lib/canal.mjs';
 
 // BU1 F1.1/F1.2 — la PWA dev tiene IDENTIDAD propia para que iPhone instale DOS
 // PWAs (prod y dev) sin pisarse: distinto `name`/título/favicon/iconos. El dominio
@@ -58,22 +59,19 @@ const src = `src/environments/environment.${target}.ts`;
 if (!existsSync(src)) { console.error(`no existe ${src}`); process.exit(1); }
 copyFileSync(src, 'src/environments/environment.ts');
 
-// CI7 — canal de distribución. Default 'pwa' (Vercel/serve). Los builds nativos
-// lo pasan: build-apk→apk, aab→play, iOS→appstore. Parcheamos environment.ts tras
-// copiarlo (los environment.<env>.ts versionados quedan intactos = 'pwa').
-const CANALES = ['play', 'apk', 'appstore', 'pwa'];
+// CI7/CL4 — canal de distribución. Default 'pwa' (Vercel/serve). Los builds nativos
+// lo pasan: build-apk→apk, aab→play, iOS→appstore. YA NO se parchea environment.ts
+// (el fileReplacements lo pisaba con environment.prod.ts → todo APK salía 'pwa').
+// Ahora se escribe canal.generated.ts, que NO está en fileReplacements y por eso
+// sobrevive al build. Se escribe DESPUÉS del prebuild (que lo deja en 'pwa') y ANTES
+// de ng build, para que el canal real sea el que entra al bundle.
 const argCanal = (() => { const i = process.argv.indexOf('--canal'); return i !== -1 ? process.argv[i + 1] : null; })();
-const canal = CANALES.includes(argCanal) ? argCanal : 'pwa';
-if (canal !== 'pwa') {
-  const envPath = 'src/environments/environment.ts';
-  const patched = readFileSync(envPath, 'utf8').replace(/canal:\s*'[^']*'/, `canal: '${canal}'`);
-  writeFileSync(envPath, patched, 'utf8');
-  console.log(`▶ canal = ${canal}`);
-}
 const config = target === 'dev' ? 'dev' : 'production';
 console.log(`▶ build ${target} (ng build --configuration ${config})`);
 // Vercel llama a este script como buildCommand (salta el ciclo npm de prebuild),
 // así que corremos aquí los guards (prebuild) → build.
 execSync('npm run prebuild', { stdio: 'inherit' });
+const canal = writeCanalGenerated(argCanal); // normaliza; default 'pwa'
+console.log(`▶ canal = ${canal} (canal.generated.ts)`);
 execSync(`npx ng build --configuration ${config}`, { stdio: 'inherit' });
 if (target === 'dev') patchDistForDev();

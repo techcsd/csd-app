@@ -9,9 +9,10 @@ import { ErrorReportService, AppErrorReportRow } from '../../core/services/error
 import { NetworkService } from '../../core/services/network.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { AyudaService } from '../../core/services/ayuda.service';
-import { DudaCategoria, GuiaVisual } from '../../core/models/ayuda.model';
+import { DudaCategoria, GuiaVisual, GuiaVideoFirmado } from '../../core/models/ayuda.model';
 import { environment } from '../../../environments/environment';
 import { formatFechaMedia } from '../../core/util/fecha';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 type Tab = 'versiones' | 'dudas' | 'errores';
 
@@ -35,7 +36,7 @@ const GUIA_ICONO: Record<GuiaVisual['icono'], string> = {
   selector: 'app-tecnologia',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, JsonPipe],
+  imports: [FormsModule, Skeleton, EmptyState, JsonPipe, TranslatePipe],
   templateUrl: './tecnologia.html',
   styleUrl: './tecnologia.scss',
 })
@@ -67,6 +68,9 @@ export class TecnologiaPage {
   categorias = signal<DudaCategoria[]>([]);
   dudasQuery = signal('');
   expandidaDuda = signal<string | null>(null);
+  // CK5 — URLs firmadas del video de cada guía (por id). La clave presente con
+  // valor null = "se intentó firmar y falló" (para no quedar en "Cargando…").
+  private videos = signal<Record<string, GuiaVideoFirmado | null>>({});
 
   private canVerModulo(modulo?: string): boolean {
     if (this.ctx.hasRol('admin')) return true;
@@ -140,9 +144,41 @@ export class TecnologiaPage {
       const { guias, categorias } = await this.ayuda.getContenido();
       this.guias.set(guias);
       this.categorias.set(categorias);
+      void this.cargarVideos(guias);
     } finally {
       this.loading.set(false);
     }
+  }
+
+  /**
+   * CK5 — Firma los videos de las guías que lo traen. SOLO online (nunca firma ni
+   * streamea offline) y NO precachea: deja listo el signed URL para que el `<video>`
+   * lo pida al reproducir. Best-effort por guía.
+   */
+  private async cargarVideos(guias: GuiaVisual[]): Promise<void> {
+    if (!this.network.online()) return;
+    for (const g of guias) {
+      if (!this.ayuda.pathVideo(g)) continue;
+      const firmado = await this.ayuda.firmarVideoGuia(g);
+      this.videos.update((m) => ({ ...m, [g.id]: firmado }));
+    }
+  }
+
+  /** CK5 — ¿la guía declara un video (haya o no conexión)? */
+  guiaTieneVideo(g: GuiaVisual): boolean {
+    return !!this.ayuda.pathVideo(g);
+  }
+
+  /** CK5 — estado del player de una guía con video declarado. */
+  estadoVideo(g: GuiaVisual): 'offline' | 'cargando' | 'listo' | 'error' {
+    if (!this.network.online()) return 'offline';
+    const map = this.videos();
+    if (!(g.id in map)) return 'cargando';
+    return map[g.id] ? 'listo' : 'error';
+  }
+
+  videoDe(g: GuiaVisual): GuiaVideoFirmado | null {
+    return this.videos()[g.id] ?? null;
   }
 
   toggleDuda(key: string): void {

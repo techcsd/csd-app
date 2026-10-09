@@ -1,0 +1,92 @@
+<div class="screen mis-choferes" data-testid="mis-choferes">
+  <header class="mis-choferes__header">
+    <button type="button" class="mis-choferes__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="mis-choferes__icon">{{ glyph.header }}</span>
+    <h1 class="mis-choferes__title">{{ 'Mis choferes' | t }}</h1>
+    <button
+      type="button"
+      class="mis-choferes__refresh"
+      (click)="refrescar()"
+      [disabled]="refrescando()"
+      aria-label="Actualizar"
+    >{{ refrescando() ? '…' : glyph.refresh }}</button>
+  </header>
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar()">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!choferes().length) {
+      <app-empty-state
+        [icon]="glyph.empty"
+        [title]="'No hay choferes activos' | t"
+        [message]="'Cuando un chofer esté activo, aparecerá aquí con su estado y señal.' | t"
+      />
+    } @else {
+      @for (c of choferes(); track c.conductorId) {
+        <div class="chofer" [class.is-open]="abiertoId() === c.conductorId">
+          <!-- Encabezado tocable -->
+          <button type="button" class="chofer__head" (click)="toggle(c)">
+            <span class="chofer__senal" [attr.data-nivel]="nivelSenal(c)" [attr.aria-label]="'Señal' | t"></span>
+            <span class="chofer__id">
+              <span class="chofer__nombre">{{ c.nombre }}</span>
+              <span class="chofer__estado" [attr.data-estado]="c.estado">
+                {{ estadoLabel(c.estado) | t }}
+                @if (c.estadoDesde) { · {{ fmtRel(c.estadoDesde) }} }
+              </span>
+            </span>
+            <span class="chofer__contadores">
+              <span class="chofer__hoy">{{ c.enProceso }}/{{ c.trabajosHoy }}</span>
+              <span class="chofer__hoy-lbl">{{ 'hoy' | t }}</span>
+            </span>
+          </button>
+
+          <!-- Alerta (computable del panel) -->
+          @if (sinSenalConTrabajo(c)) {
+            <p class="chofer__alerta">{{ glyph.alerta }} {{ 'Con trabajo y sin señal hace rato' | t }}</p>
+          }
+
+          <!-- Meta: vehículo + señal + batería -->
+          <div class="chofer__meta">
+            @if (c.vehiculoEnUso) { <span>{{ glyph.vehiculo }} {{ c.vehiculoEnUso }}</span> }
+            <span>{{ glyph.senal }} {{ senalTexto(c) }}</span>
+            @if (c.bateria != null) { <span>{{ glyph.bateria }} {{ c.bateria }}%</span> }
+          </div>
+
+          <!-- Acciones de contacto -->
+          <div class="chofer__acciones">
+            @if (c.telefono) {
+              <button type="button" class="btn-cta chofer__btn" (click)="llamar(c.telefono)">
+                {{ glyph.llamar }} {{ 'Llamar' | t }}
+              </button>
+            }
+            <button type="button" class="btn-ghost chofer__btn" (click)="mensaje(c)">
+              {{ glyph.mensaje }} {{ 'Mensaje' | t }}
+            </button>
+            <button type="button" class="btn-ghost chofer__btn" (click)="verEnMapa(c)">
+              {{ glyph.mapa }} {{ 'Ver en mapa' | t }}
+            </button>
+          </div>
+
+          <!-- Línea de tiempo del día (al expandir) -->
+          @if (abiertoId() === c.conductorId) {
+            <div class="chofer__timeline">
+              @if (cargandoEventos()) {
+                <app-skeleton [rows]="2" />
+              } @else if (!eventos().length) {
+                <p class="chofer__timeline-empty">{{ 'Sin eventos de trabajo hoy.' | t }}</p>
+              } @else {
+                @for (e of eventos(); track $index) {
+                  <div class="evento">
+                    <span class="evento__hora">{{ glyph.reloj }} {{ fmtRel(e.cuando) }}</span>
+                    <span class="evento__que">{{ eventoLabel(e.evento) | t }}</span>
+                    @if (e.nota) { <span class="evento__nota">{{ e.nota }}</span> }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

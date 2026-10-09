@@ -30,7 +30,7 @@
              de notificación (heads-up + sonido). El canal se crea en MainActivity. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="avisos_csd" />
+            android:value="avisos_csd_v2" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

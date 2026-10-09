@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 94%** del alcance · **Kreyòl (ht): 0%**
+- **Inglés (en): 93%** del alcance · **Kreyòl (ht): 0%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -18,7 +18,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/admin/reportes | 5 | 0 | 100% | 0% |  |
 | pages/admin/roles | 20 | 0 | 100% | 0% |  |
 | pages/admin/unidades | 4 | 0 | 100% | 0% |  |
-| pages/admin/usuarios | 38 | 0 | 82% | 0% |  |
+| pages/admin/usuarios | 40 | 0 | 83% | 0% |  |
 | pages/admin/versiones | 8 | 1 | 89% | 0% |  |
 | pages/auth/login | 12 | 2 | 71% | 0% |  |
 | pages/auth/pin-acceso-change | 3 | 0 | 100% | 0% |  |
@@ -89,7 +89,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/obra/subcontratistas | 24 | 0 | 100% | 0% |  |
 | pages/pendientes | 25 | 0 | 100% | 0% |  |
 | pages/pendientes/outbox-detalle | 24 | 0 | 96% | 0% |  |
-| pages/perfil | 60 | 0 | 100% | 0% | ✅ |
+| pages/perfil | 71 | 0 | 100% | 0% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
@@ -106,15 +106,16 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/detalle | 72 | 12 | 77% | 0% |  |
 | pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
-| pages/soporte | 0 | 3 | 0% | 0% |  |
+| pages/soporte | 0 | 21 | 0% | 0% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 0 | 12 | 0% | 0% |  |
+| pages/tecnologia | 5 | 12 | 29% | 0% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |
 | pages/tecnologia/dev-notes | 0 | 5 | 0% | 0% |  |
 | pages/transporte | 16 | 0 | 100% | 0% | ✅ |
 | pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |
+| pages/transporte/apoyo-transporte | 47 | 0 | 100% | 0% |  |
 | pages/transporte/asignar | 35 | 0 | 100% | 0% |  |
 | pages/transporte/asignarme | 36 | 0 | 100% | 0% |  |
 | pages/transporte/aviso-vehiculo | 38 | 0 | 100% | 0% |  |
@@ -123,7 +124,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 127 | 2 | 87% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 56 | 1 | 98% | 4% |  |
+| pages/transporte/conduce-detalle | 71 | 1 | 85% | 3% |  |
 | pages/transporte/conduce-externo | 79 | 1 | 80% | 0% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 0% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
@@ -140,7 +141,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/echada-detalle | 17 | 2 | 84% | 0% |  |
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
-| pages/transporte/generar-conduce | 101 | 1 | 99% | 0% |  |
+| pages/transporte/generar-conduce | 104 | 1 | 97% | 0% |  |
 | pages/transporte/mantenimiento | 43 | 1 | 91% | 0% |  |
 | pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-general | 20 | 0 | 50% | 0% |  |
@@ -149,6 +150,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/mi-recorrido | 11 | 0 | 100% | 0% |  |
 | pages/transporte/mi-registro | 40 | 0 | 100% | 0% |  |
 | pages/transporte/mis-actas | 8 | 0 | 100% | 0% |  |
+| pages/transporte/mis-choferes | 10 | 0 | 100% | 0% |  |
+| pages/transporte/mis-trabajos | 14 | 0 | 43% | 0% |  |
 | pages/transporte/perfil-conductor | 37 | 0 | 100% | 0% |  |
 | pages/transporte/perfil-vehiculo | 35 | 1 | 92% | 0% |  |
 | pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |
@@ -160,7 +163,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/rutas | 63 | 0 | 100% | 0% |  |
 | pages/transporte/rutas-activas | 23 | 0 | 100% | 0% |  |
 | pages/transporte/seguimiento | 12 | 0 | 100% | 0% |  |
-| pages/transporte/solicitud-movimiento | 33 | 0 | 70% | 0% |  |
+| pages/transporte/solicitud-movimiento | 33 | 0 | 73% | 0% |  |
+| pages/transporte/trabajos-transporte | 31 | 0 | 100% | 0% |  |
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
 | pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |
 | pages/transporte/vehiculos | 63 | 2 | 97% | 0% |  |
@@ -190,9 +194,10 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
+| shared/ui/notif-health-band | 4 | 0 | 100% | 0% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
-| shared/ui/photo-slot | 16 | 1 | 94% | 0% |  |
+| shared/ui/photo-slot | 18 | 1 | 95% | 0% |  |
 | shared/ui/select-list | 0 | 1 | 0% | 0% |  |
 | shared/ui/selector-categorias | 28 | 1 | 97% | 0% |  |
 | shared/ui/share-sheet | 3 | 2 | 60% | 0% |  |

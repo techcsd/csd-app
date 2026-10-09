@@ -15,10 +15,14 @@ import { VersionService } from '../../core/services/version.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CameraService } from '../../core/services/camera.service';
 import { PushService } from '../../core/services/push.service';
+import { VehiculosService, VehiculoAutorizado } from '../../core/services/vehiculos.service';
+import { formatFecha } from '../../core/util/fecha';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { PoliticasService, DocLegal } from '../../core/services/politicas.service';
 import { ConsentService } from '../../core/services/consent.service';
 import { PermissionsService } from '../../core/services/permissions.service';
+import { NotifHealthService } from '../../core/services/notif-health.service';
+import { SupabaseService } from '../../core/services/supabase.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
@@ -49,9 +53,12 @@ export class PerfilPage {
   private toast = inject(ToastService);
   private camera = inject(CameraService);
   private push = inject(PushService);
+  private vehiculos = inject(VehiculosService);
   private politicas = inject(PoliticasService);
   private consent = inject(ConsentService);
   private permissions = inject(PermissionsService);
+  private notifHealth = inject(NotifHealthService);
+  private supabase = inject(SupabaseService);
   private i18n = inject(I18nService);
   private router = inject(Router);
   private location = inject(Location);
@@ -113,11 +120,21 @@ export class PerfilPage {
     catch { return '—'; }
   })();
   pushDisponible = () => !this.push.soportado || this.push.disponible;
+  // CK10 — salud de notificaciones (permiso + canal). Comparte la señal del servicio con
+  // la cinta global; aquí la refrescamos al abrir Perfil.
+  notifSalud = this.notifHealth.salud;
+  probando = signal(false);
   checking = signal(false);
   confirmLogout = signal(false);
   // CI3/CI4/CI10 — Privacidad. Consentimiento de IA, ubicación en segundo plano y
   // solicitud de eliminación de cuenta.
   esNativo = Capacitor.isNativePlatform();
+  // CK1/F4 — "Mis vehículos autorizados" (solo chofer privado). Lista cacheada
+  // (read-through), renderiza offline con la última autorización conocida.
+  esChoferPrivado = computed(() => this.ctx.esChoferPrivado());
+  autorizados = signal<VehiculoAutorizado[]>([]);
+  autorizadosCargados = signal(false);
+  fmtFecha = formatFecha;
   iaPermitida = this.consent.ia;
   ubicacionFondo = this.consent.ubicacionFondo;
   confirmEliminar = signal(false);
@@ -134,6 +151,25 @@ export class PerfilPage {
     // CI10/CI5 — refresca el estado de los consentimientos para la sección Privacidad.
     void this.consent.refrescar('ia');
     void this.consent.refrescar('ubicacion_fondo');
+    // CK10 — re-evalúa la salud de notificaciones al entrar (el usuario pudo cambiar
+    // ajustes del SO desde la última vez).
+    void this.notifHealth.evaluar();
+    // CK1/F4 — carga la lista de vehículos autorizados (solo chofer privado). El
+    // loader es read-through: al abrir Perfil con señal se re-consulta el servidor,
+    // así una autorización/retiro reciente de Flota se refleja al reabrir la pantalla
+    // (no hay un tipo de aviso específico para invalidar una pantalla ya abierta).
+    if (this.ctx.esChoferPrivado()) void this.cargarAutorizados();
+  }
+
+  /** CK1/F4 — carga las autorizaciones vigentes del chofer privado. Best-effort. */
+  private async cargarAutorizados(): Promise<void> {
+    try {
+      this.autorizados.set(await this.vehiculos.misVehiculosAutorizados());
+    } catch {
+      /* best-effort: sin datos, la sección muestra su estado vacío */
+    } finally {
+      this.autorizadosCargados.set(true);
+    }
   }
 
   // ── CI3/CI4/CI10 — Privacidad ───────────────────────────────────────────────
@@ -156,6 +192,90 @@ export class PerfilPage {
   /** CI5 — abre los ajustes de la app para revisar el permiso de ubicación. */
   abrirAjustesUbicacion(): void {
     void this.permissions.openAppSettings();
+  }
+
+  // ── CK10 — Notificaciones ─────────────────────────────────────────────────────
+  /** Abre los ajustes de la app para activar notificaciones / subir el canal a sonido. */
+  activarNotif(): void {
+    void this.permissions.openAppSettings();
+  }
+
+  /** Lleva a la guía de Soporte con los pasos para teléfonos que matan apps. */
+  verGuiaNotif(): void {
+    void this.router.navigate(['/soporte'], { queryParams: { seccion: 'notificaciones' } });
+  }
+
+  /**
+   * CK10 — envía una push de prueba al usuario (`probar_notificacion`) y luego lee la
+   * última entrega (`mis_notif_entregas`) para decir en claro si salió. Requiere conexión.
+   */
+  async probarNotificacion(): Promise<void> {
+    if (this.probando()) return;
+    if (!this.online()) {
+      this.toast.error(this.i18n.t('Necesitas conexión para probar las notificaciones.'));
+      return;
+    }
+    this.probando.set(true);
+    try {
+      const { data, error } = await this.supabase.client.rpc('probar_notificacion');
+      if (error) throw new Error(error.message);
+      const dispositivos = Number((data as { dispositivos?: number } | null)?.dispositivos ?? 0);
+      if (dispositivos === 0) {
+        this.toast.show(
+          this.i18n.t('No hay un dispositivo registrado para recibir notificaciones.'),
+          'info',
+          5000,
+        );
+        return;
+      }
+      // Dale ~1.2s al servidor para registrar el resultado del envío antes de leerlo.
+      await new Promise((r) => setTimeout(r, 1200));
+      const { data: entregas } = await this.supabase.client.rpc('mis_notif_entregas', { p_limite: 3 });
+      const row = (Array.isArray(entregas) ? entregas[0] : null) as
+        | { estado?: string; motivo?: string }
+        | null;
+      const estado = this.humanEstadoEntrega(row?.estado ?? null);
+      const motivo = row?.motivo ? ` — ${this.humanMotivoEntrega(row.motivo)}` : '';
+      this.toast.show(`${estado}${motivo}. ${this.i18n.t('Si no sonó, toca Activar.')}`, 'info', 6000);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar la notificación de prueba.'));
+    } finally {
+      this.probando.set(false);
+    }
+  }
+
+  /** Traduce el `estado` crudo de `mis_notif_entregas` a algo legible en campo. */
+  private humanEstadoEntrega(estado: string | null): string {
+    switch ((estado ?? '').toLowerCase()) {
+      case 'entregada':
+      case 'delivered':
+        return this.i18n.t('Entregada');
+      case 'fallida':
+      case 'failed':
+      case 'error':
+        return this.i18n.t('Falló el envío');
+      case 'pendiente':
+      case 'pending':
+        return this.i18n.t('Pendiente');
+      case 'omitida':
+      case 'skipped':
+        return this.i18n.t('No se envió');
+      case 'enviada':
+      case 'sent':
+      default:
+        return this.i18n.t('Enviada');
+    }
+  }
+
+  /** CK10 — traduce el `motivo` crudo de la traza de `send-push` a algo legible. */
+  private humanMotivoEntrega(motivo: string): string {
+    const m = motivo.toLowerCase();
+    if (m === 'sin_dispositivo') return this.i18n.t('no hay un dispositivo registrado');
+    if (m === 'fcm_apagado') return this.i18n.t('las notificaciones están desactivadas en el servidor');
+    if (m === 'dev_push_off') return this.i18n.t('este build no envía push');
+    if (m === 'token_vencido') return this.i18n.t('el registro del teléfono venció — vuelve a abrir la app');
+    if (m.startsWith('error:')) return this.i18n.t('error del servicio de notificaciones');
+    return motivo;
   }
 
   pedirEliminarCuenta(): void {

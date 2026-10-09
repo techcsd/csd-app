@@ -87,6 +87,44 @@
               <ol class="tec__guia-pasos">
                 @for (p of g.pasos; track $index) { <li>{{ p }}</li> }
               </ol>
+              <!-- CK5 — Video tutorial (si la guía lo trae). Los pasos de arriba
+                   siguen visibles offline; el video exige conexión y nunca se
+                   precachea (preload="metadata", sin autoplay). -->
+              @if (guiaTieneVideo(g)) {
+                @switch (estadoVideo(g)) {
+                  @case ('offline') {
+                    <p class="tec__guia-video-off">{{ 'Necesitas conexión para ver el video' | t }}</p>
+                  }
+                  @case ('cargando') {
+                    <p class="tec__guia-video-off">{{ 'Cargando video…' | t }}</p>
+                  }
+                  @case ('error') {
+                    <p class="tec__guia-video-off">{{ 'No pudimos cargar el video. Revisa tu conexión.' | t }}</p>
+                  }
+                  @case ('listo') {
+                    @if (videoDe(g); as v) {
+                      <div class="tec__guia-video">
+                        <video
+                          class="tec__guia-player"
+                          controls
+                          preload="metadata"
+                          playsinline
+                          [poster]="v.poster ?? undefined"
+                          [attr.data-testid]="'guia-video-' + g.id"
+                        >
+                          <source [src]="v.url" />
+                          @if (v.subtitulos) {
+                            <track kind="subtitles" [src]="v.subtitulos" srclang="es" [label]="'Español' | t" default />
+                          }
+                        </video>
+                        @if (v.duracion) {
+                          <span class="tec__guia-dur">{{ 'Duración' | t }}: {{ v.duracion }}</span>
+                        }
+                      </div>
+                    }
+                  }
+                }
+              }
             </div>
           }
         }

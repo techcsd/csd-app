@@ -1,0 +1,199 @@
+<div class="screen trabajos-tt" data-testid="trabajos-transporte">
+  <header class="trabajos-tt__header">
+    <button type="button" class="trabajos-tt__back" (click)="back()" aria-label="Atrás">←</button>
+    <span class="trabajos-tt__icon">{{ glyph.header }}</span>
+    <h1 class="trabajos-tt__title">{{ 'Trabajos de transporte' | t }}</h1>
+    <button
+      type="button"
+      class="trabajos-tt__refresh"
+      (click)="refrescar()"
+      [disabled]="refrescando()"
+      aria-label="Actualizar"
+    >{{ refrescando() ? '…' : glyph.refresh }}</button>
+  </header>
+
+  <!-- Pestañas -->
+  <nav class="trabajos-tt__tabs">
+    @for (tb of tabs; track tb.key) {
+      <button
+        type="button"
+        class="trabajos-tt__tab"
+        [class.is-active]="tab() === tb.key"
+        (click)="tab.set(tb.key)"
+      >
+        <span class="trabajos-tt__tab-label">{{ tb.label | t }}</span>
+        @if (conteo(tb.key)) { <span class="trabajos-tt__tab-count">{{ conteo(tb.key) }}</span> }
+      </button>
+    }
+  </nav>
+
+  <!-- Barra de acciones: filtros + Nueva actividad -->
+  <div class="trabajos-tt__bar">
+    <button type="button" class="btn-ghost trabajos-tt__filtros-btn" (click)="filtrosAbiertos.set(!filtrosAbiertos())">
+      {{ glyph.filtro }} {{ 'Filtros' | t }}
+    </button>
+    <button type="button" class="btn-cta trabajos-tt__nueva-btn" (click)="abrirNueva()">
+      {{ glyph.nueva }} {{ 'Nueva actividad' | t }}
+    </button>
+  </div>
+
+  @if (filtrosAbiertos()) {
+    <div class="trabajos-tt__filtros">
+      <label class="trabajos-tt__f">
+        <span>{{ 'Día' | t }}</span>
+        <input type="date" [value]="diaFiltro()" (change)="onDiaFiltro($any($event.target).value)" />
+      </label>
+      <label class="trabajos-tt__f">
+        <span>{{ 'Obra' | t }}</span>
+        <select [value]="filtroObra()" (change)="filtroObra.set($any($event.target).value)">
+          <option value="">{{ 'Todas' | t }}</option>
+          @for (o of obraOpciones(); track o.id) { <option [value]="o.id">{{ o.nombre }}</option> }
+        </select>
+      </label>
+      <label class="trabajos-tt__f">
+        <span>{{ 'Tipo' | t }}</span>
+        <select [value]="filtroTipo()" (change)="filtroTipo.set($any($event.target).value)">
+          <option value="">{{ 'Todos' | t }}</option>
+          @for (t of tipoOpciones(); track t.id) { <option [value]="t.id">{{ t.nombre | t }}</option> }
+        </select>
+      </label>
+      <label class="trabajos-tt__f">
+        <span>{{ 'Chofer' | t }}</span>
+        <select [value]="filtroChofer()" (change)="filtroChofer.set($any($event.target).value)">
+          <option value="">{{ 'Todos' | t }}</option>
+          @for (c of choferOpciones(); track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+        </select>
+      </label>
+      <button type="button" class="btn-ghost trabajos-tt__limpiar" (click)="limpiarFiltros()">{{ 'Limpiar' | t }}</button>
+    </div>
+  }
+
+  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar()">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!visibles().length) {
+      <app-empty-state
+        [icon]="glyph.empty"
+        [title]="'No hay trabajos aquí' | t"
+        [message]="'Prueba otra pestaña o ajusta los filtros.' | t"
+      />
+    } @else {
+      @for (t of visibles(); track t.origen + t.origenId) {
+        <div class="ticket">
+          <div class="ticket__top">
+            <span class="ticket__tipo">{{ tipoLabel(t) | t }}</span>
+            <span class="ticket__estado" [attr.data-estado]="t.estado">{{ estadoLabel(t) | t }}</span>
+          </div>
+
+          <div class="ticket__meta">
+            @if (t.proyecto) { <span>{{ glyph.obra }} {{ t.proyecto }}</span> }
+            @if (t.dia) { <span>{{ glyph.dia }} {{ fmtDia(t.dia) }}</span> }
+          </div>
+
+          @if (t.descripcion) { <p class="ticket__desc">{{ t.descripcion }}</p> }
+
+          @if (t.conductor) {
+            <p class="ticket__chofer">{{ glyph.chofer }} {{ t.conductor }}</p>
+          }
+
+          <div class="ticket__acciones">
+            @if (t.conductorId) {
+              <button type="button" class="btn-ghost ticket__btn" [disabled]="enviando()" (click)="abrirAsignar(t)">
+                {{ glyph.reasignar }} {{ 'Reasignar' | t }}
+              </button>
+            } @else {
+              <button type="button" class="btn-cta ticket__btn" [disabled]="enviando()" (click)="abrirAsignar(t)">
+                {{ glyph.asignar }} {{ 'Asignar chofer' | t }}
+              </button>
+            }
+            @if (puedeCancelar(t)) {
+              <button type="button" class="ticket__cancelar" [disabled]="enviando()" (click)="abrirCancelar(t)">
+                {{ glyph.cancelar }} {{ 'Cancelar' | t }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Hoja "Asignar / Reasignar" -->
+  <app-bottom-sheet
+    [open]="!!asignando()"
+    [titulo]="(asignando()?.conductorId ? 'Reasignar chofer' : 'Asignar chofer') | t"
+    (closed)="asignando.set(null)"
+  >
+    <div class="sheet">
+      <p class="sheet__hint">{{ 'Elige un chofer. El vehículo lo toma de su uso activo.' | t }}</p>
+      @if (cargandoChoferes()) {
+        <app-skeleton [rows]="3" />
+      } @else if (!choferes().length) {
+        <app-empty-state [icon]="glyph.chofer" [title]="'No hay choferes activos' | t" />
+      } @else {
+        <div class="sheet__choferes">
+          @for (c of choferes(); track c.id) {
+            <button type="button" class="chofer-opt" [disabled]="enviando()" (click)="asignarA(c)">
+              <span class="chofer-opt__nombre">{{ c.label }}</span>
+              <span class="chofer-opt__meta">
+                <span class="chofer-opt__estado" [attr.data-estado]="c.estado">{{ estadoChoferLabel(c.estado) | t }}</span>
+                <span class="chofer-opt__carga">{{ c.trabajosHoy }} {{ 'hoy' | t }}</span>
+              </span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </app-bottom-sheet>
+
+  <!-- Hoja "Cancelar" -->
+  <app-bottom-sheet [open]="!!cancelando()" [titulo]="'Cancelar ticket' | t" (closed)="cancelando.set(null)">
+    <div class="sheet">
+      <p class="sheet__hint">{{ 'Escribe por qué se cancela. Se le avisará al solicitante.' | t }}</p>
+      <textarea
+        class="sheet__texto"
+        rows="3"
+        [value]="motivoCancelar()"
+        (input)="motivoCancelar.set($any($event.target).value)"
+        [placeholder]="'Motivo de la cancelación' | t"
+      ></textarea>
+      <button type="button" class="btn-cta sheet__enviar sheet__enviar--warn" [disabled]="enviando()" (click)="confirmarCancelar()">
+        {{ enviando() ? ('Enviando…' | t) : ('Cancelar ticket' | t) }}
+      </button>
+    </div>
+  </app-bottom-sheet>
+
+  <!-- Hoja "Nueva actividad" -->
+  <app-bottom-sheet [open]="nuevaAbierta()" [titulo]="'Nueva actividad' | t" (closed)="nuevaAbierta.set(false)">
+    <div class="sheet">
+      <p class="sheet__hint">{{ 'Un trabajo que no viene de una solicitud (texto libre).' | t }}</p>
+      <textarea
+        class="sheet__texto"
+        rows="3"
+        [value]="nuevaDesc()"
+        (input)="nuevaDesc.set($any($event.target).value)"
+        [placeholder]="'¿Qué hay que hacer?' | t"
+      ></textarea>
+      <label class="sheet__f">
+        <span>{{ 'Obra (opcional)' | t }}</span>
+        <select [value]="nuevaObra()" (change)="nuevaObra.set($any($event.target).value)">
+          <option value="">{{ 'Sin obra' | t }}</option>
+          @for (o of obras(); track o.id) { <option [value]="o.id">{{ o.nombre }}</option> }
+        </select>
+      </label>
+      <label class="sheet__f">
+        <span>{{ 'Día (opcional)' | t }}</span>
+        <input type="date" [value]="nuevaDia()" (change)="nuevaDia.set($any($event.target).value)" />
+      </label>
+      <label class="sheet__f">
+        <span>{{ 'Chofer (opcional)' | t }}</span>
+        <select [value]="nuevaChofer()" (change)="nuevaChofer.set($any($event.target).value)">
+          <option value="">{{ 'Sin asignar' | t }}</option>
+          @for (c of choferes(); track c.id) { <option [value]="c.id">{{ c.label }}</option> }
+        </select>
+      </label>
+      <button type="button" class="btn-cta sheet__enviar" [disabled]="creando()" (click)="crearActividad()">
+        {{ creando() ? ('Creando…' | t) : (glyph.nueva + ' ' + ('Crear actividad' | t)) }}
+      </button>
+    </div>
+  </app-bottom-sheet>
+</div>

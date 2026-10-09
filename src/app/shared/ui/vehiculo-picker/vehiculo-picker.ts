@@ -28,7 +28,10 @@ export class VehiculoPicker {
   private ctx = inject(UserContextService);
 
   /** CG7 — chofer privado SIN vehículos autorizados vigentes → mensaje propio
-   *  ("pídeselo a Flota"), no el genérico "no hay vehículos disponibles". */
+   *  ("pídeselo a Flota"), no el genérico "no hay vehículos disponibles".
+   *  CK1/F4 — "Pedir autorización" queda pendiente del RPC del padre (PROMPT-90
+   *  F5.3, no entregado); por ahora solo guía al chofer a pedírselo a Flota (no se
+   *  pinta un botón que llame a un RPC inexistente). */
   privadoSinAutorizados = computed(
     () => this.ctx.esChoferPrivadoRestringido() && !this.loading() && !this.cargaFallo() && !this.disponibles().length,
   );

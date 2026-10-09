@@ -27,7 +27,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { AyudanteUsuario } from '../../../core/services/ayudante.service';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
-import { CapturedPhoto } from '../../../core/services/camera.service';
+import { CapturedPhoto, CameraService } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { ChecklistPreusoService } from '../../../core/services/checklist-preuso.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
@@ -132,10 +132,13 @@ export class PreusoPage extends GuardedWizard {
   private borradorSvc = inject(BorradorService);
   private userCtx = inject(UserContextService);
   private i18n = inject(I18nService);
+  private camera = inject(CameraService);
 
   private sig = viewChild(SignaturePad);
   borradorPrevio = signal<number | null>(null); // M1 — banner de recuperación
   private hydrated = false;
+  /** CK — `at` de la última foto recuperada ya re-atada (no repetir trabajo). */
+  private ultimaRestauracion = 0;
 
   readonly total = TOTAL_STEPS;
   readonly opciones = RESPUESTA_OPCIONES;
@@ -364,11 +367,47 @@ export class PreusoPage extends GuardedWizard {
         ruta: `/transporte/preuso/${this.vehiculoId}`,
       });
     });
+    // CK (patrón CJ13 de combustible) — si el SO destruyó la Activity durante la
+    // captura (equipos de poca memoria), la foto vuelve por `appRestoredResult` y se
+    // guarda en el borrador, a veces DESPUÉS de que `continuarBorrador` ya cargó las
+    // fotos. Este effect la re-ata al slot en cuanto el servicio de cámara anuncia la
+    // recuperación. Cierra la carrera y cubre la pantalla ya abierta.
+    effect(() => {
+      const r = this.camera.restored();
+      if (!r || r.clave !== this.claveBorrador() || r.at <= this.ultimaRestauracion) return;
+      this.ultimaRestauracion = r.at;
+      void this.reatachFotoRestaurada(r.slot);
+    });
   }
 
-  private claveBorrador(): string {
+  claveBorrador(): string {
     const uid = this.userCtx.profile()?.id ?? 'anon';
     return `preuso:${this.vehiculoId || 'nuevo'}:${uid}`;
+  }
+
+  /**
+   * CK — re-ata una foto recuperada por `appRestoredResult` al slot que la guardó.
+   * Lee la foto directo del borrador (fuente única) y la coloca en el estado con la
+   * MISMA forma que `onFoto`/`onItemFoto`, incluso si la pantalla ya estaba abierta.
+   */
+  private async reatachFotoRestaurada(slot: string): Promise<void> {
+    try {
+      const fotos = await this.borradorSvc.loadFotos(this.claveBorrador());
+      const f = fotos.find((x) => x.slot === slot);
+      if (!f) return;
+      const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+      if (slot.startsWith('item:')) {
+        const id = slot.slice('item:'.length);
+        this.respuestas.update((cur) => {
+          const base = cur[id] ?? { respuesta: null, comentario: '', photo: null };
+          return { ...cur, [id]: { ...base, photo } };
+        });
+      } else {
+        this.fotos.update((cur) => ({ ...cur, [slot]: photo }));
+      }
+    } catch {
+      /* best-effort: recuperar la foto nunca debe tumbar la pantalla */
+    }
   }
 
   /** M1 — persiste una foto del borrador (no debe romper nunca la captura). */
