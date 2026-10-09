@@ -150,6 +150,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/mi-recorrido | 11 | 0 | 100% | 0% |  |
 | pages/transporte/mi-registro | 40 | 0 | 100% | 0% |  |
 | pages/transporte/mis-actas | 8 | 0 | 100% | 0% |  |
+| pages/transporte/mis-trabajos | 14 | 0 | 14% | 0% |  |
 | pages/transporte/perfil-conductor | 37 | 0 | 100% | 0% |  |
 | pages/transporte/perfil-vehiculo | 35 | 1 | 92% | 0% |  |
 | pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |

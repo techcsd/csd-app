@@ -230,6 +230,13 @@ export const routes: Routes = [
       import('./pages/transporte/mi-actividad/mi-actividad').then((m) => m.MiActividadPage),
   },
   {
+    // CK14 — "Mis trabajos" del chofer: tickets asignados + reporte de avance.
+    path: 'transporte/mis-trabajos',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mis-trabajos/mis-trabajos').then((m) => m.MisTrabajosPage),
+  },
+  {
     // V2 (follow-up) — detalle de un registro del historial (checklist | echada).
     path: 'transporte/mi-registro/:tipo/:id',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

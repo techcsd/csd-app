@@ -46,6 +46,9 @@ interface HubTile {
 const TILES: HubTile[] = [
   // ── Botones principales (sketch AI1) ─────────────────────────────────────────
   { key: 'misRutas', icon: '🗺️', label: 'Rutas', tint: '#0d9488' },
+  // CK14 — "Mis trabajos": tickets que Misael le asignó al chofer (apoyos/actividades/
+  // conduces) con reporte de avance. Visible a todo chofer (no elevado).
+  { key: 'misTrabajos', icon: '🚚', label: 'Mis trabajos', tint: '#9333ea' },
   { key: 'conducesHub', icon: '🧾', label: 'Conduce', tint: '#1e3a5f' },
   { key: 'combustible', icon: '⛽', label: 'Registro Combustible', tint: '#dc2626', privado: true },
   // AI7 — "Uso de vehículo" (ex "Asignarme vehículo"): flujo unificado AF34.
@@ -281,6 +284,7 @@ export class TransportePage {
     if (this.editMode()) return; // AI16 — en modo edición no se navega
     switch (t.key) {
       case 'misRutas': return this.misRutas();
+      case 'misTrabajos': return void this.router.navigate(['/transporte/mis-trabajos']);
       case 'conducesHub': return this.conducesHub();
       case 'apoyoTransporte': return void this.router.navigate(['/transporte/apoyo']);
       case 'seguimiento': return this.seguimiento();

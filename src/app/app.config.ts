@@ -36,6 +36,7 @@ import { TecnologiaService } from './core/services/tecnologia.service';
 import { PersonalObraService } from './core/services/personal-obra.service';
 import { SolicitudMovimientoService } from './core/services/solicitud-movimiento.service';
 import { ApoyoService } from './core/services/apoyo.service';
+import { TrabajosService } from './core/services/trabajos.service';
 import { RetirosService } from './core/services/retiros.service';
 import { CartillaService } from './core/services/cartilla.service';
 import { SolicitudesCompraService } from './core/services/solicitudes-compra.service';
@@ -112,6 +113,7 @@ export const appConfig: ApplicationConfig = {
       inject(PersonalObraService); // AR1 — personal_registro / personal_editar
       inject(SolicitudMovimientoService); // AY11 — solicitud_movimiento_crear (offline)
       inject(ApoyoService); // CK12/CK13 — apoyo_crear + apoyo_estado (offline, idempotente)
+      inject(TrabajosService); // CK14 — trabajo_evento (chofer reporta avance, offline+foto)
       inject(RetirosService); // BG4 — retiro_material (retiro de material dañado, offline)
       inject(CartillaService); // BO10 — cartilla (cartillas de acero, offline)
       inject(SolicitudesCompraService); // BH8 — solicitud_compra_crear (offline, idempotente)
