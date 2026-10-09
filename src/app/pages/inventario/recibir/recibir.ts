@@ -9,7 +9,7 @@ import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService, EntradaFerreteriaPendiente } from '../../../core/services/inventario.service';
-import { CapturedPhoto } from '../../../core/services/camera.service';
+import { CapturedPhoto, CameraService } from '../../../core/services/camera.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
@@ -44,11 +44,14 @@ export class RecibirConducePage {
   private borrador = inject(BorradorService);
   private ctx = inject(UserContextService);
   private i18n = inject(I18nService);
+  private camera = inject(CameraService);
 
   private sig = viewChild(SignaturePad);
 
-  private readonly clave = 'inventario:recibir';
+  readonly clave = 'inventario:recibir';
   private hydrated = false;
+  /** CK — `at` de la última foto recuperada ya re-atada (no repetir trabajo). */
+  private ultimaRestauracion = 0;
 
   readonly fechaHora = formatFechaCortaHora;
 
@@ -107,6 +110,37 @@ export class RecibirConducePage {
         ruta: this.location.path(),
       });
     });
+    // CK (patrón CJ13 de combustible) — si el SO destruyó la Activity durante la
+    // captura (equipos de poca memoria), la foto vuelve por `appRestoredResult` y se
+    // guarda en el borrador (por índice), a veces DESPUÉS de que `restoreDraft` ya
+    // cargó las fotos. Este effect re-sincroniza el arreglo de fotos desde el borrador
+    // en cuanto el servicio de cámara anuncia la recuperación. Cierra la carrera.
+    effect(() => {
+      const r = this.camera.restored();
+      if (!r || r.clave !== this.clave || r.at <= this.ultimaRestauracion) return;
+      this.ultimaRestauracion = r.at;
+      void this.reatachFotoRestaurada();
+    });
+  }
+
+  /**
+   * CK — re-sincroniza el arreglo de fotos desde el borrador (fuente única) tras una
+   * recuperación por `appRestoredResult`. Como las fotos se persisten por índice y
+   * `onAddFoto` siempre re-persiste todas, basta con recargar el arreglo ordenado —
+   * la MISMA forma que `restoreDraft`. Revoca las previews previas para no filtrarlas.
+   */
+  private async reatachFotoRestaurada(): Promise<void> {
+    try {
+      const fotos = await this.borrador.loadFotos(this.clave);
+      if (!fotos.length) return;
+      const orden = [...fotos].sort((a, b) => Number(a.slot) - Number(b.slot));
+      for (const f of this.fotos()) {
+        if (f.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(f.previewUrl);
+      }
+      this.fotos.set(orden.map((f) => ({ blob: f.blob, previewUrl: URL.createObjectURL(f.blob) })));
+    } catch {
+      /* best-effort: recuperar la foto nunca debe tumbar la pantalla */
+    }
   }
 
   async load(): Promise<void> {

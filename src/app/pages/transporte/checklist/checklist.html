@@ -78,6 +78,7 @@
               [hint]="f.hint"
               [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
+              [restore]="{ clave: clave(), slot: f.slot }"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
             />

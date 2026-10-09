@@ -184,6 +184,7 @@
         hint="📦"
         [gallery]="false"
         [foto]="nuevaFoto()"
+        [restore]="{ clave: clave, slot: fotos().length.toString() }"
         (captured)="onAddFoto($event)"
       />
       @if (faltanFotos()) {
