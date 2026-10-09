@@ -18,7 +18,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/admin/reportes | 5 | 0 | 100% | 0% |  |
 | pages/admin/roles | 20 | 0 | 100% | 0% |  |
 | pages/admin/unidades | 4 | 0 | 100% | 0% |  |
-| pages/admin/usuarios | 38 | 0 | 82% | 0% |  |
+| pages/admin/usuarios | 40 | 0 | 83% | 0% |  |
 | pages/admin/versiones | 8 | 1 | 89% | 0% |  |
 | pages/auth/login | 12 | 2 | 71% | 0% |  |
 | pages/auth/pin-acceso-change | 3 | 0 | 100% | 0% |  |

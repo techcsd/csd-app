@@ -40,6 +40,8 @@ export class AdminUsuariosPage {
   usuarios = signal<UsuarioAdmin[]>([]);
   roles = signal<RolAdmin[]>([]);
   busqueda = signal('');
+  /** CK9 — filtro por rol (null = todos). */
+  filtroRol = signal<number | null>(null);
 
   expandidoId = signal('');
   editNombre = signal('');
@@ -65,8 +67,12 @@ export class AdminUsuariosPage {
 
   filtrados = computed(() => {
     const q = this.busqueda().trim().toLowerCase();
-    if (!q) return this.usuarios();
-    return this.usuarios().filter((u) => `${u.nombre} ${u.email ?? ''}`.toLowerCase().includes(q));
+    const rolId = this.filtroRol();
+    return this.usuarios().filter((u) => {
+      if (q && !`${u.nombre} ${u.email ?? ''}`.toLowerCase().includes(q)) return false;
+      if (rolId != null && !(u.roles ?? []).some((r) => r.rol.id === rolId)) return false; // CK9
+      return true;
+    });
   });
 
   constructor() {
