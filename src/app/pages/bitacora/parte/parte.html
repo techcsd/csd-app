@@ -7,7 +7,7 @@
     (dismissed)="finish()"
   />
 } @else {
-  <div class="screen parte">
+  <div class="screen parte" data-testid="bitacora-parte">
     <header class="parte__topbar">
       <button type="button" class="parte__topback" (click)="salir()" [attr.aria-label]="'Salir' | t">←</button>
       <span class="parte__topttl">{{ 'Bitácora del día' | t }}</span>

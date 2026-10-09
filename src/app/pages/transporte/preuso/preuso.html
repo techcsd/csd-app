@@ -110,7 +110,7 @@
     </footer>
   </div>
 } @else {
-  <div class="screen preuso">
+  <div class="screen preuso" data-testid="preuso-checklist">
     <app-wizard-exit [title]="'Pre-uso del vehículo' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 

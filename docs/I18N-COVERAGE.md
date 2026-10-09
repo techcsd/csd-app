@@ -108,7 +108,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 0 | 21 | 0% | 0% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 0 | 12 | 0% | 0% |  |
+| pages/tecnologia | 5 | 12 | 29% | 0% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |

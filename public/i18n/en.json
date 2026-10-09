@@ -1,4 +1,8 @@
 {
+  "Necesitas conexión para ver el video": "You need a connection to watch the video",
+  "Cargando video…": "Loading video…",
+  "No pudimos cargar el video. Revisa tu conexión.": "We couldn't load the video. Check your connection.",
+  "Español": "Spanish",
   "Entorno": "Environment",
   "Push": "Push",
   "No disponible en este build": "Not available in this build",

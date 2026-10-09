@@ -168,7 +168,7 @@
     </footer>
   </div>
 } @else {
-  <div class="screen comb">
+  <div class="screen comb" data-testid="combustible-wizard">
     <app-wizard-exit [title]="'Registrar combustible' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total()" />
 
