@@ -14,6 +14,7 @@
  *   node scripts/gen-environment.mjs --env prod --target src/environments/environment.prod.ts --production
  */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { writeCanalGenerated } from './lib/canal.mjs';
 
 function loadEnvLocal() {
   const env = {};
@@ -51,13 +52,14 @@ function render({ production, entorno, url, anon }) {
   return (
     '// GENERADO por scripts/gen-environment.mjs — no editar a mano.\n' +
     `// entorno: ${entorno}. Regla 18: ng serve local jamás apunta a prod por defecto.\n` +
+    "import { CANAL_BUILD } from './canal.generated';\n" +
     'export const environment = {\n' +
     `  production: ${production},\n` +
     `  entorno: '${entorno}' as 'dev' | 'prod',\n` +
     `  version: '${V}',\n` +
-    // CI7 — canal por defecto 'pwa' (serve local). build-env.mjs lo sobreescribe
-    // en los builds nativos (--canal apk|play|appstore). No se toca aquí.
-    `  canal: 'pwa' as 'play' | 'apk' | 'appstore' | 'pwa',\n` +
+    // CI7/CL4 — canal desde canal.generated.ts (NO está en fileReplacements → su valor
+    // sobrevive al build nativo). build-env/build-apk/aab lo escriben; serve = 'pwa'.
+    `  canal: CANAL_BUILD,\n` +
     `  appUrl: '${APP_URL[entorno]}',\n` +
     `  webUrl: '${WEB_URL[entorno]}',\n` +
     `  supabaseUrl: '${url}',\n` +
@@ -66,8 +68,20 @@ function render({ production, entorno, url, anon }) {
   );
 }
 
+// CL4 — --ensure-canal: garantiza canal.generated.ts con 'pwa' (lo corre el prebuild
+// para que `npm run build`/serve nunca fallen por el import ausente; build-env lo
+// reescribe con el canal real DESPUÉS del prebuild en los builds nativos).
+if (flag('--ensure-canal')) {
+  const c = writeCanalGenerated('pwa');
+  console.log(`✓ canal.generated.ts → '${c}' (prebuild; build-env lo ajusta si es nativo).`);
+  process.exit(0);
+}
+
 // --ensure: crea SOLO si falta (placeholder vacío → pantalla "Sin proyecto configurado").
 if (flag('--ensure')) {
+  // El serve local siempre es canal 'pwa'; garantizamos el archivo para que ng serve
+  // no falle por el import ausente de canal.generated.ts.
+  writeCanalGenerated('pwa');
   if (existsSync(TARGET)) { console.log(`✓ ${TARGET} ya existe (--ensure no lo toca).`); process.exit(0); }
   writeFileSync(TARGET, render({ production: false, entorno: 'dev', url: '', anon: '' }), 'utf8');
   console.log(`✓ ${TARGET} creado como placeholder (Sin proyecto configurado). Corre \`npm run env:dev\`.`);
@@ -92,4 +106,7 @@ if (!url || !anon) {
 // Sin él: environment.ts de serve local (production:false).
 const production = !!flag('--production');
 writeFileSync(TARGET, render({ production, entorno, url, anon }), 'utf8');
+// Serve local (env:dev/env:prod) siempre es canal 'pwa'. Garantiza el archivo para
+// que ng serve no falle por el import ausente.
+writeCanalGenerated('pwa');
 console.log(`✓ ${TARGET} → entorno ${entorno} (${url}), production:${production}, v${V}.`);

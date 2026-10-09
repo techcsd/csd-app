@@ -16,6 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { resolverEnv } from './lib/entorno.mjs';
+import { verificarCanalEnZip } from './lib/canal.mjs';
 
 const env = await resolverEnv(process.argv.slice(2));
 const ENV = env.entorno; // 'dev' | 'prod'
@@ -37,9 +38,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-08';
+const RELEASED_AT = '2026-10-09';
 
-const TITULO = 'Conduce externo desde la requisición, materiales más fáciles de leer y una app más viva';
+const TITULO = 'Apoyo de transporte, trabajos de los choferes y notificaciones que suenan';
 const CAMBIOS_CURADOS = [
   { t: 'nuevo', m: 'Apoyo de transporte', d: 'Un solo lugar para pedir mover material, retirar lo que sobra o botar escombros: eliges tipo, obra, día y una foto. Los ingenieros piden y cierran sus solicitudes; el líder de transporte las asigna a los choferes y los monitorea.' },
   { t: 'nuevo', m: 'Mis trabajos', d: 'Los choferes ven los trabajos que les asignaron y reportan su avance con un toque: Voy en camino, Llegué, Cargando, Terminé (con foto) o Tengo un problema.' },
@@ -155,6 +156,15 @@ async function registrarEnHistorial() {
 await gateReglaDieciocho();
 
 if (!registerOnly) {
+  // CL4 — CANDADO antes de subir: el APK que se publica DEBE traer canal:"apk" + la
+  // versión esperada. Evita que un APK mal construido (canal 'pwa') llegue al bucket.
+  try {
+    await verificarCanalEnZip(APK_PATH, 'apk', VERSION);
+    console.log(`✓ candado: el APK a publicar trae canal:"apk" + version:"${VERSION}".`);
+  } catch (e) {
+    console.error('\n' + (e instanceof Error ? e.message : String(e)));
+    process.exit(1);
+  }
   const apk = readFileSync(APK_PATH);
   await upload(versionedName, apk, 'application/vnd.android.package-archive');
   await upload('csd-app-latest.apk', apk, 'application/vnd.android.package-archive');

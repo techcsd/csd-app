@@ -17,6 +17,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, copyFileSync, statSync, readFileSync, readdirSync } from 'node:fs';
 import { resolverEnv } from './lib/entorno.mjs';
+import { writeCanalGenerated, verificarCanalEnZip } from './lib/canal.mjs';
 
 const isWin = process.platform === 'win32';
 const env = await resolverEnv(process.argv.slice(2));
@@ -48,6 +49,9 @@ const VERSION = (() => {
   return m[1];
 })();
 
+// CL4 — canal.generated.ts='play' ANTES del build; build-env lo reafirma tras su
+// prebuild (quien lo escribe en el bundle es build-env, justo antes de ng build).
+writeCanalGenerated('play');
 // environment + guards + ng build (canal play) → cap sync → bundle<Env>PlayRelease.
 run('node', ['scripts/build-env.mjs', '--env', ENV, '--canal', 'play']);
 run('npx', ['cap', 'sync', 'android']);
@@ -57,6 +61,15 @@ run(gradlew, [`bundle${CAP}PlayRelease`, '--no-daemon'], { cwd: 'android' });
 
 const aab = `android/app/build/outputs/bundle/${ENV}PlayRelease/app-${ENV}-play-release.aab`;
 if (!existsSync(aab)) { console.error(`✗ no se encontró el AAB esperado: ${aab}`); process.exit(1); }
+
+// CL4 — CANDADO: el AAB debe traer canal:"play" + la versión esperada. Si no, ABORTA.
+try {
+  await verificarCanalEnZip(aab, 'play', VERSION);
+  console.log(`✓ candado: el AAB trae canal:"play" + version:"${VERSION}".`);
+} catch (e) {
+  console.error('\n' + (e instanceof Error ? e.message : String(e)));
+  process.exit(1);
+}
 
 mkdirSync('dist-store', { recursive: true });
 const out = `dist-store/csd-app-${VERSION}${ENV === 'dev' ? '-dev' : ''}-play.aab`;

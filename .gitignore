@@ -52,6 +52,9 @@ Thumbs.db
 # es environment.example.ts; los committed por entorno son environment.dev.ts /
 # environment.prod.ts (anon keys públicas). El de serve local nunca se commitea.
 /src/environments/environment.ts
+# CL4 — canal.generated.ts es GENERADO por los scripts de build (canal de distribución
+# que sobrevive al fileReplacements). Default 'pwa'; nativos lo escriben apk/play.
+/src/environments/canal.generated.ts
 
 # Capacitor / Android build artifacts
 /android/app/build
