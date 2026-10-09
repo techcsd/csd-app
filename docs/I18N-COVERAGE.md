@@ -124,7 +124,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 127 | 2 | 87% | 0% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 71 | 1 | 83% | 3% |  |
+| pages/transporte/conduce-detalle | 71 | 1 | 85% | 3% |  |
 | pages/transporte/conduce-externo | 79 | 1 | 80% | 0% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 0% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
@@ -141,7 +141,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/echada-detalle | 17 | 2 | 84% | 0% |  |
 | pages/transporte/estado-chofer | 6 | 0 | 100% | 0% |  |
 | pages/transporte/ferreteria | 30 | 0 | 100% | 0% |  |
-| pages/transporte/generar-conduce | 104 | 1 | 96% | 0% |  |
+| pages/transporte/generar-conduce | 104 | 1 | 97% | 0% |  |
 | pages/transporte/mantenimiento | 43 | 1 | 91% | 0% |  |
 | pages/transporte/mantenimiento-cierre | 7 | 0 | 100% | 0% |  |
 | pages/transporte/mantenimientos-general | 20 | 0 | 50% | 0% |  |
@@ -150,7 +150,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/mi-recorrido | 11 | 0 | 100% | 0% |  |
 | pages/transporte/mi-registro | 40 | 0 | 100% | 0% |  |
 | pages/transporte/mis-actas | 8 | 0 | 100% | 0% |  |
-| pages/transporte/mis-trabajos | 14 | 0 | 14% | 0% |  |
+| pages/transporte/mis-choferes | 10 | 0 | 100% | 0% |  |
+| pages/transporte/mis-trabajos | 14 | 0 | 43% | 0% |  |
 | pages/transporte/perfil-conductor | 37 | 0 | 100% | 0% |  |
 | pages/transporte/perfil-vehiculo | 35 | 1 | 92% | 0% |  |
 | pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |
@@ -163,6 +164,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/rutas-activas | 23 | 0 | 100% | 0% |  |
 | pages/transporte/seguimiento | 12 | 0 | 100% | 0% |  |
 | pages/transporte/solicitud-movimiento | 33 | 0 | 73% | 0% |  |
+| pages/transporte/trabajos-transporte | 31 | 0 | 100% | 0% |  |
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
 | pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |
 | pages/transporte/vehiculos | 63 | 2 | 97% | 0% |  |

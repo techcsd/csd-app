@@ -237,6 +237,21 @@ export const routes: Routes = [
       import('./pages/transporte/mis-trabajos/mis-trabajos').then((m) => m.MisTrabajosPage),
   },
   {
+    // CK15 — "Trabajos de transporte": bandeja de Misael (gate es_flota_elevado en el
+    // RPC; el tile del hub la pinta solo a elevados). Asignar/Reasignar/Cancelar/Nueva.
+    path: 'transporte/trabajos',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/trabajos-transporte/trabajos-transporte').then((m) => m.TrabajosTransportePage),
+  },
+  {
+    // CK16 — "Mis choferes": monitor de choferes activos (gate es_flota_elevado).
+    path: 'transporte/mis-choferes',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mis-choferes/mis-choferes').then((m) => m.MisChoferesPage),
+  },
+  {
     // V2 (follow-up) — detalle de un registro del historial (checklist | echada).
     path: 'transporte/mi-registro/:tipo/:id',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],

@@ -17,6 +17,7 @@ import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { ConducesService } from '../../core/services/conduces.service';
 import { InventarioService } from '../../core/services/inventario.service';
 import { CombustibleService } from '../../core/services/combustible.service';
+import { TrabajosService } from '../../core/services/trabajos.service';
 import { ModuleOrderService } from '../../core/services/module-order.service';
 import { ToastService } from '../../core/services/toast.service';
 import { MiAsignacion, PendientesTransporte, vehiculoIdentidad } from '../../core/models/transporte.model';
@@ -72,6 +73,11 @@ const TILES: HubTile[] = [
   // CK12 — Apoyo de transporte (bandeja de movimientos/retiros/bote; el referente
   // la ve completa). Los ingenieros lo crean desde su hub de Ingeniería.
   { key: 'apoyoTransporte', icon: '🚚', label: 'Apoyo de transporte', tint: '#9333ea', elevado: true },
+  // CK15 — "Trabajos de transporte": bandeja de Misael (apoyos + requisiciones sin
+  // chofer + actividades manuales). Badge = tickets "sin asignar".
+  { key: 'trabajosTransporte', icon: '📋', label: 'Trabajos de transporte', tint: '#9333ea', elevado: true },
+  // CK16 — "Mis choferes": monitor (estado, señal, llamar/mensaje) de los choferes.
+  { key: 'misChoferes', icon: '🧑‍✈️', label: 'Mis choferes', tint: '#7c3aed', elevado: true },
   { key: 'seguimiento', icon: '📍', label: 'Seguimiento', tint: '#7c3aed', elevado: true },
   // AP6 — Rutas activas (lista por chofer + histórico) para roles elevados.
   { key: 'rutasActivas', icon: '🛰️', label: 'Rutas activas', tint: '#0ea5e9', elevado: true },
@@ -107,6 +113,7 @@ export class TransportePage {
   private conducesSvc = inject(ConducesService);
   private inventario = inject(InventarioService);
   private combustibleSvc = inject(CombustibleService);
+  private trabajosSvc = inject(TrabajosService);
   private moduleOrder = inject(ModuleOrderService);
   private toast = inject(ToastService);
 
@@ -162,6 +169,7 @@ export class TransportePage {
   firmasPendientes = signal(0); // AE — firmas de recepción por firmar
   pendienteEntrega = signal(0); // AI2 — conduces emitidos pendientes de entrega
   porAprobarCount = signal(0); // BY1 — echadas en espera de aprobación (elevados)
+  trabajosSinAsignar = signal(0); // CK15 — tickets de transporte sin chofer (elevados)
   loading = signal(true);
   /** P4 — vehículos con una recepción encolada (se marcan "Enviando…"). */
   enviandoIds = signal<Set<string>>(new Set());
@@ -273,6 +281,7 @@ export class TransportePage {
     if (key === 'conducesHub') return this.pendienteEntrega() || this.firmasPendientes() || null;
     if (key === 'avisos') return this.badges.counts()['flota'] || null;
     if (key === 'porAprobar') return this.porAprobarCount() || null; // BY1
+    if (key === 'trabajosTransporte') return this.trabajosSinAsignar() || null; // CK15
     return null;
   }
 
@@ -287,6 +296,8 @@ export class TransportePage {
       case 'misTrabajos': return void this.router.navigate(['/transporte/mis-trabajos']);
       case 'conducesHub': return this.conducesHub();
       case 'apoyoTransporte': return void this.router.navigate(['/transporte/apoyo']);
+      case 'trabajosTransporte': return void this.router.navigate(['/transporte/trabajos']);
+      case 'misChoferes': return void this.router.navigate(['/transporte/mis-choferes']);
       case 'seguimiento': return this.seguimiento();
       case 'rutasActivas': return this.rutasActivas();
       case 'combustible': return this.combustibleTop();
@@ -427,6 +438,15 @@ export class TransportePage {
         void this.combustibleSvc
           .contarEchadasPorAprobar()
           .then((n) => this.porAprobarCount.set(n))
+          .catch(() => {});
+        // CK15 — tickets de transporte sin chofer (badge del tile "Trabajos de transporte").
+        void this.trabajosSvc
+          .bandeja()
+          .then((rows) =>
+            this.trabajosSinAsignar.set(
+              rows.filter((r) => !r.conductorId && r.estado !== 'completada' && r.estado !== 'cancelada').length,
+            ),
+          )
           .catch(() => {});
       }
     } finally {

@@ -708,7 +708,7 @@
     "pages/transporte/conduce-detalle": {
       "conT": 71,
       "sinT": 1,
-      "en": 83,
+      "en": 85,
       "ht": 3
     },
     "pages/transporte/conduce-externo": {
@@ -810,7 +810,7 @@
     "pages/transporte/generar-conduce": {
       "conT": 104,
       "sinT": 1,
-      "en": 96,
+      "en": 97,
       "ht": 0
     },
     "pages/transporte/mantenimiento": {
@@ -861,10 +861,16 @@
       "en": 100,
       "ht": 0
     },
+    "pages/transporte/mis-choferes": {
+      "conT": 10,
+      "sinT": 0,
+      "en": 100,
+      "ht": 0
+    },
     "pages/transporte/mis-trabajos": {
       "conT": 14,
       "sinT": 0,
-      "en": 14,
+      "en": 43,
       "ht": 0
     },
     "pages/transporte/perfil-conductor": {
@@ -937,6 +943,12 @@
       "conT": 33,
       "sinT": 0,
       "en": 73,
+      "ht": 0
+    },
+    "pages/transporte/trabajos-transporte": {
+      "conT": 31,
+      "sinT": 0,
+      "en": 100,
       "ht": 0
     },
     "pages/transporte/trayectoria": {
