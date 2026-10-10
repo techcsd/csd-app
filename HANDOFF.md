@@ -1,7 +1,7 @@
 # HANDOFF — CSD App
 
-## 🟠 SESIÓN 10/10/2026 — PROMPT-93 · Ronda **CL** — app **2.47.0 EN DEV** (falta probar → prod)
-**TL;DR:** ronda CL (motion + bienvenida) completa en `feature/cl-ronda`, `npm run build` ✅ + `test:canal`/catálogo verdes. **APK dev 2.47.0 construido (candado CL4 `canal:"apk"`+`2.47.0` verde) + publicado al bucket dev + registrado.** Falta: merge→dev (en este commit) → Xaviel prueba → OK → prod. Consume PROMPT-92 (padre, parcialmente shippeado).
+## 🟢 SESIÓN 10/10/2026 — PROMPT-93 · Ronda **CL** — app **2.47.0 PUBLICADA A PROD** ✅
+**TL;DR:** ronda CL (motion + bienvenida) completa y **RELEASE A PROD**. `dev`=`main`=`2c4d687`. APK prod 2.47.0 firmado (cert `3c5316d8…5065`), candado CL4 verde (`canal:"apk"`+`2.47.0`), regla 18 OK, bucket prod + `apk_url` + registrado. **PUBLICADA** (`cl-publicar-2.47.0.mjs`: 2.47.0 publicada, 2.46.0 despublicada, **mínima sigue 2.45.0**, push android por trigger) + **11 iPhone ios-pwa notificados** (`cl-notificar-ios-2.47.0.mjs`). Vercel app. + app-dev. construidos. Consume PROMPT-92 (padre, parcialmente shippeado).
 
 ### ✅ Hecho (feature/cl-ronda)
 - **F1 CL4 (canal)** — ya venía de CK; residuos: rescate de actualización ("Descargar desde el navegador" + aviso a 8s) + canal resuelto en tienda-aviso. **F2 CL6** conduce externo "marcar como prueba" (admin; `p_es_prueba` vivo en dev).
@@ -11,12 +11,12 @@
 - **F7** — bump **2.47.0** (environment.{prod,dev}.ts + build.gradle; **recordar alinear los 3**) + changelog CL + PARIDAD (sección CL).
 
 ### 👤 PENDIENTE
-1. **Probar 2.47.0 en dev** (APK dev + app-dev.; gama baja + Samsung + modo avión + **actualización in-app desde la versión anterior**): bienvenida nueva (instalación limpia), motion en toda la app sin tirones, que el botón Actualizar instale. Con **OK → prod** (lo hago yo: PR dev→main + APK prod + publicar + notificar iOS).
-2. **🔴 El PADRE aún debe aplicar los 2 SQL de CK** (`mis_trabajos_chofer`/`trabajo_ordenar` siguen 404 en dev/prod) — "Mis trabajos" del chofer sigue vacío hasta entonces. Ya se le pasó a la ventana de SGC (ver PARIDAD §CL huecos).
+1. **Probar 2.47.0 en prod** (ya publicada): bienvenida nueva (instalación limpia), motion en toda la app sin tirones, que el botón Actualizar instale (lo clave del CL4). Ideal gama baja + Samsung + **actualización in-app desde 2.46.0**.
+2. **🔴 El PADRE aún debe aplicar los 2 SQL de CK** (`mis_trabajos_chofer`/`trabajo_ordenar` siguen 404 en dev/prod) — "Mis trabajos" del chofer sigue vacío hasta entonces (independiente del CL). Ya se le pasó a la ventana de SGC.
 3. La **web** (PROMPT-92) debe publicar sus filas 'web'/'web-app' en `movimiento_catalogo` + espejar `momento()`.
 
 ### Verify on resume
-- `git log --oneline -14`; rama `feature/cl-ronda` (→ mergeada a `dev`); `npm run build` exit 0; `npm run test:canal` verde. Versión 2.47.0 en environment.{prod,dev}.ts + build.gradle. APK dev en bucket (`csd-app-2.47.0.apk`).
+- `git log --oneline -16`; `dev`=`main`=`2c4d687`; `npm run build` exit 0; `npm run test:canal` verde. `app_versiones` prod: 2.47.0 publicada=true, minima sigue 2.45.0. APK prod en bucket (`csd-app-2.47.0.apk`).
 
 ---
 
