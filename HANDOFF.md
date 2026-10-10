@@ -10,6 +10,10 @@
 - **F6 CL5 (catálogo)** — `scripts/data-fixes/2026-10-10-cl5-movimiento-catalogo-app.mjs` **aplicado en dev** (4 filas sistema='app'; mapea taxonomía app→padre nivel simple/sistema→base).
 - **F7** — bump **2.47.0** (environment.{prod,dev}.ts + build.gradle; **recordar alinear los 3**) + changelog CL + PARIDAD (sección CL).
 
+### 🟡 EN DEV (batcheado, sin shipear) — sale con la próxima ronda
+- **"Nota para el chofer" al asignar** (CK15 follow-up, `379d702`): ahora que el padre creó `trabajo_asignar` 6-arg (`p_nota`) + ck16 (`mis_trabajos_chofer` devuelve `nota_chofer`), se cableó el textarea en la hoja Asignar/Reasignar de Misael → el chofer la ve en "Mis trabajos". **No se shippeó a prod** (decisión de Xaviel: batchear, evitar re-notificar por un campo).
+- **"Ordenar el día" NO cableado** → `sql-para-sgc/2026-10-10-ck15b-listado-orden.sql`: el padre debe recrear `trabajos_transporte_listado` para devolver/ordenar por `orden` (hoy no lo hace → sería no-op). Cuando esté, se cablea el botón.
+
 ### 👤 PENDIENTE
 1. **Probar 2.47.0 en prod** (ya publicada): bienvenida nueva (instalación limpia), motion en toda la app sin tirones, que el botón Actualizar instale (lo clave del CL4). Ideal gama baja + Samsung + **actualización in-app desde 2.46.0**.
 2. **🔴 El PADRE aún debe aplicar los 2 SQL de CK** (`mis_trabajos_chofer`/`trabajo_ordenar` siguen 404 en dev/prod) — "Mis trabajos" del chofer sigue vacío hasta entonces (independiente del CL). Ya se le pasó a la ventana de SGC.

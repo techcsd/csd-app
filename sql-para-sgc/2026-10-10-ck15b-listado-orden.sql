@@ -1,0 +1,24 @@
+-- 2026-10-10-ck15b-listado-orden.sql   ⚠️ LO APLICA EL PADRE (SGC) — regla 18/19
+-- CK15 "Ordenar el día" de Misael — HUECO: `sgc.trabajo_ordenar(origen,id,orden)` YA
+-- existe (escribe `orden`/`orden_transporte`/`trabajos_manual.orden`), PERO la última
+-- recreación de `sgc.trabajos_transporte_listado` (en 2026-10-09-ck-demo-visibilidad.sql)
+-- NO devuelve la columna `orden` ni ORDERNA por ella → la app puede FIJAR el orden pero
+-- no puede REFLEJARLO (la bandeja no se reordena). Por eso el app 2.47.0 NO pinta el
+-- botón "ordenar" (sería un no-op visual).
+--
+-- FIX (aditivo, lo hace el padre): recrear `trabajos_transporte_listado` con el cuerpo
+-- VIVO + exponer `orden` por rama y ordenar por él:
+--   returns table(..., orden int, ...)            -- añadir la columna al final del table()
+--   -- por rama del UNION:
+--   coalesce(s.orden, 0)             as orden      -- apoyos (solicitudes_movimiento.orden)
+--   coalesce(si.orden_transporte, 0) as orden      -- requisiciones (salidas_inventario.orden_transporte)
+--   coalesce(m.orden, 0)             as orden      -- manual (trabajos_manual.orden)
+--   ...
+--   order by t.orden asc, t.created_at desc;        -- el orden de Misael manda; luego recientes
+--
+-- (Mantener el resto del SELECT idéntico — incluida la visibilidad demo de
+-- ck-demo-visibilidad.) Cuando esto esté vivo, la app cablea el botón "ordenar"
+-- (flechas) detrás de una comprobación de capacidad, como el resto.
+--
+-- Nota: la "Nota para el chofer" (p_nota de trabajo_asignar 6-arg + ck16) YA está vivo
+-- y YA está cableado en el app (dev, 379d702) — esto es SOLO lo de "ordenar".
