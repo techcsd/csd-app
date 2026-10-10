@@ -4017,5 +4017,9 @@
   "Firma registrada": "Signature recorded",
   "Mantenimiento cerrado": "Maintenance closed",
   "Documento generado": "Document generated",
-  "APROBADA": "APPROVED"
+  "APROBADA": "APPROVED",
+  "¿No apareció el instalador? Descárgala desde el navegador e instálala a mano.": "Installer didn't show up? Download it from the browser and install it manually.",
+  "Descargar desde el navegador": "Download from the browser",
+  "¿No se instala? Descargar desde el navegador": "Won't install? Download from the browser",
+  "Este conduce se guardará como PRUEBA (no cuenta para operaciones reales).": "This delivery will be saved as a TEST (it doesn't count toward real operations)."
 }

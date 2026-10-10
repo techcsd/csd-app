@@ -10,10 +10,10 @@
       "ht": 0
     },
     "pages/actualizar": {
-      "conT": 23,
+      "conT": 26,
       "sinT": 1,
       "en": 96,
-      "ht": 0
+      "ht": 11
     },
     "pages/admin": {
       "conT": 12,
@@ -709,13 +709,13 @@
       "conT": 71,
       "sinT": 1,
       "en": 85,
-      "ht": 3
+      "ht": 4
     },
     "pages/transporte/conduce-externo": {
-      "conT": 79,
+      "conT": 81,
       "sinT": 1,
       "en": 80,
-      "ht": 0
+      "ht": 2
     },
     "pages/transporte/conduce-transferencias": {
       "conT": 26,

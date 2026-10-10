@@ -9,7 +9,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
 |---|---:|---:|---:|---:|:--:|
 |  | 0 | 22 | 0% | 0% |  |
-| pages/actualizar | 23 | 1 | 96% | 0% |  |
+| pages/actualizar | 26 | 1 | 96% | 11% |  |
 | pages/admin | 12 | 0 | 100% | 0% |  |
 | pages/admin/auditoria | 22 | 0 | 100% | 0% |  |
 | pages/admin/catalogos | 5 | 0 | 100% | 0% |  |
@@ -124,8 +124,8 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 127 | 2 | 87% | 1% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 71 | 1 | 85% | 3% |  |
-| pages/transporte/conduce-externo | 79 | 1 | 80% | 0% |  |
+| pages/transporte/conduce-detalle | 71 | 1 | 85% | 4% |  |
+| pages/transporte/conduce-externo | 81 | 1 | 80% | 2% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 4% |  |
 | pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |

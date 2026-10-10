@@ -69,6 +69,16 @@
     @if (estado() === 'error') {
       <p class="actu__error">{{ 'No se pudo descargar la actualización. Revisa tu conexión e inténtalo de nuevo.' | t }}</p>
     }
+
+    <!-- CL4 (F1.4) — rescate: el instalador del sistema no apareció a los ~8s. -->
+    @if (esApk && instaladorNoAbrio() && apkUrl()) {
+      <div class="actu__rescate">
+        <p>{{ '¿No apareció el instalador? Descárgala desde el navegador e instálala a mano.' | t }}</p>
+        <button type="button" class="btn-cta" (click)="descargarNavegador()">
+          {{ 'Descargar desde el navegador' | t }}
+        </button>
+      </div>
+    }
   </div>
 
   <footer class="actu__nav">
@@ -92,4 +102,13 @@
       </button>
     }
   </footer>
+
+  <!-- CL4 (F1.4) — enlace de rescate SIEMPRE disponible en el canal APK: si la
+       instalación in-app no arranca, se baja el APK desde el navegador. Degradable:
+       sin apkUrl no se pinta. -->
+  @if (esApk && apkUrl()) {
+    <button type="button" class="actu__rescate-link" (click)="descargarNavegador()">
+      {{ '¿No se instala? Descargar desde el navegador' | t }}
+    </button>
+  }
 </div>

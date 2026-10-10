@@ -48,6 +48,20 @@
       }
       <p class="ce-intro">{{ 'Para cuando un' | t }} <b>{{ 'proveedor' | t }}</b> {{ 'transporta con su camión. Foto de placa obligatoria.' | t }}</p>
 
+      <!-- CL6 (Nota #186) — "Marcar como prueba": SOLO admin. Banda naranja mientras
+           esté activo para que no pase inadvertido. El flag viaja en el mismo envío. -->
+      @if (esAdmin()) {
+        <label class="ce-prueba-toggle" [class.ce-prueba-toggle--on]="esPrueba()">
+          <input type="checkbox" [ngModel]="esPrueba()" (ngModelChange)="esPrueba.set($event)" />
+          <span class="ce-prueba-toggle__txt">{{ 'Marcar como prueba' | t }}</span>
+        </label>
+        @if (esPrueba()) {
+          <div class="ce-prueba-band">
+            <span>{{ 'Este conduce se guardará como PRUEBA (no cuenta para operaciones reales).' | t }}</span>
+          </div>
+        }
+      }
+
       <!-- 1. Transporta -->
       <section class="ce-sec">
         <h2 class="ce-sec__title">{{ '¿Quién transporta?' | t }}</h2>

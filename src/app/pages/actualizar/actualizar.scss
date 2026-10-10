@@ -149,6 +149,41 @@
   font-weight: 600;
 }
 
+// CL4 (F1.4) — bloque de rescate (instalador no apareció): visible y accionable.
+.actu__rescate {
+  align-self: stretch;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius);
+  background: var(--color-warning-bg, #fff7ed);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.actu__rescate p {
+  margin: 0;
+  color: var(--color-text);
+}
+.actu__rescate .btn-cta {
+  width: 100%;
+}
+
+// CL4 (F1.4) — enlace discreto de rescate SIEMPRE disponible en el canal APK.
+.actu__rescate-link {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .actu__nav {
   flex: 0 0 auto;
   position: sticky;
