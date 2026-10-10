@@ -18,6 +18,8 @@ import { ObraService } from '../../../core/services/obra.service';
 import { ChecklistPlantilla, ChecklistItem, ChecklistRespuesta } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const MAX_FOTOS = 3;
 type Cumple = 'si' | 'no' | 'na';
@@ -27,7 +29,7 @@ type Cumple = 'si' | 'no' | 'na';
   selector: 'app-obra-checklists',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, WizardExit, BigConfirm, ConfirmDialog, Skeleton, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, OptionButton, WizardExit, BigConfirm, ConfirmDialog, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './checklists.html',
   styleUrl: './checklists.scss',
 })
@@ -42,6 +44,7 @@ export class ChecklistsPage implements OnDestroy {
   private toast = inject(ToastService);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
 
@@ -190,6 +193,7 @@ export class ChecklistsPage implements OnDestroy {
       await this.autosave.discard(this.clave);
       this.hallazgos.set(noCumple);
       this.done.set(true);
+      this.motion.momento('checklist'); // CL2 F4 — checklist de calidad enviado/encolado (corre igual offline)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar el checklist.'));
     } finally {

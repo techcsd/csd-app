@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { formatFechaHumana } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * CC5 — ficha del conduce externo: un conduce de verdad (cabecera, transportista,
@@ -22,7 +23,7 @@ import { formatFechaHumana } from '../../../core/util/fecha';
   selector: 'app-conduce-externo-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, PdfViewer, TranslatePipe],
+  imports: [Skeleton, PdfViewer, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduce-externo-detalle.html',
   styleUrl: './conduce-externo-detalle.scss',
 })

@@ -10,13 +10,14 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CronogramaTarea } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AG16 FASE 4 — Avance real vs plan + reporte de % por tarea del cronograma. */
 @Component({
   selector: 'app-obra-avance',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './avance.html',
   styleUrl: './avance.scss',
 })

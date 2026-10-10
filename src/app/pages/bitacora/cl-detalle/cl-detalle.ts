@@ -14,6 +14,8 @@ import { ClFirmaRol, ClItemRevision, ClRegistroDetalle, CL_FIRMA_ROLES } from '.
 import { formatFechaHumana } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * Q5 (3b) — detalle de un CL de liberación para revisarlo y FIRMAR el rol propio.
@@ -26,7 +28,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-cl-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, OptionButton, SignaturePad, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, OptionButton, SignaturePad, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cl-detalle.html',
   styleUrl: './cl-detalle.scss',
 })
@@ -38,6 +40,7 @@ export class ClDetallePage {
   private camera = inject(CameraService);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   private sig = viewChild(SignaturePad);
 
@@ -146,6 +149,7 @@ export class ClDetallePage {
     try {
       await this.service.firmarCl({ clId: this.id, rol, nombre: this.firmaNombre().trim() || null, blob, metodo });
       this.toast.success(this.i18n.t('Firma registrada.'));
+      this.motion.momento('firma'); // CL2 F4 — firma del CL registrada
       this.firmaRol.set(null);
       this.firmaNombre.set('');
       this.firmaLista.set(false);

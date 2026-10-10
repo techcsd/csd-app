@@ -10,7 +10,7 @@
     </div>
   </header>
 
-  <div class="screen__body" appLiveRefresh (appLiveRefresh)="refrescar($event)">
+  <div class="screen__body" appStagger appLiveRefresh (appLiveRefresh)="refrescar($event)">
     @if (loading()) {
       <app-skeleton [rows]="3" />
     } @else if (!entregas().length) {
@@ -19,7 +19,7 @@
       <p class="porconf__intro">{{ 'Estas entregas te esperan. Ábrelas para ver el conduce, ponle foto a lo recibido y firma.' | t }}</p>
       @for (e of entregas(); track e.salidaId) {
         <div class="porconf__card">
-          <button type="button" class="porconf__row" (click)="abrir(e.salidaId)">
+          <button type="button" class="porconf__row" appTapScale (click)="abrir(e.salidaId)">
             <div class="porconf__row-main">
               <span class="porconf__row-dest">{{ e.titulo }}</span>
               <span class="porconf__row-sub">

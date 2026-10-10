@@ -33,7 +33,7 @@
         <div class="plan__charla plan__charla--pend">
           <p>{{ 'Aún no se registró la charla de seguridad de hoy.' | t }}</p>
           @if (puedeOperar()) {
-            <button type="button" class="btn-cta" (click)="registrarCharla()">🦺 {{ 'Registrar charla' | t }}</button>
+            <button type="button" class="btn-cta" appTapScale (click)="registrarCharla()">🦺 {{ 'Registrar charla' | t }}</button>
           }
         </div>
       }
@@ -81,11 +81,12 @@
         <app-empty-state icon="📋" [title]="'Sin tareas asignadas' | t"
           [message]="'No hay tareas asignadas a esta obra para hoy. Asígnalas con ➕ o desde el cronograma.' | t" />
       } @else {
+        <div appStagger style="display:contents">
         @for (t of plan().tareas; track t.id) {
           <div class="plan__tarea">
             <div class="plan__tarea-top">
               <span class="plan__tarea-titulo">{{ t.titulo }}</span>
-              <span class="plan__tarea-estado" [style.background]="estadoMeta(t.estado).tint">
+              <span class="plan__tarea-estado" [appEstadoPulse]="t.estado" [style.background]="estadoMeta(t.estado).tint">
                 {{ estadoMeta(t.estado).label | t }}
               </span>
             </div>
@@ -97,6 +98,7 @@
             </div>
           </div>
         }
+        </div>
       }
 
       <!-- Parte de mano de obra del día (horas-hombre) -->

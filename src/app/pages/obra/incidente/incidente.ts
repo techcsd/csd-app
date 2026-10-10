@@ -18,6 +18,7 @@ import { ObraService } from '../../../core/services/obra.service';
 import { IncidenteTipo, Severidad, SEVERIDAD_META } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const MAX_FOTOS = 3;
 const TIPOS: { key: IncidenteTipo; label: string; icon: string }[] = [
@@ -31,7 +32,7 @@ const TIPOS: { key: IncidenteTipo; label: string; icon: string }[] = [
   selector: 'app-obra-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, Counter, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, OptionButton, Counter, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })

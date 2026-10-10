@@ -16,13 +16,14 @@ import {
   progresoProyecto,
 } from '../../../core/models/proyecto.model';
 import { formatFecha } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Y14 — detalle de un proyecto: datos generales, fases y acceso al cronograma. */
 @Component({
   selector: 'app-proyecto-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DecimalPipe, TranslatePipe],
+  imports: [Skeleton, EmptyState, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './proyecto-detalle.html',
   styleUrl: './proyecto-detalle.scss',
 })

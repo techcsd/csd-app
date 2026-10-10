@@ -18,6 +18,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { UserContextService } from '../../../core/services/user-context.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
@@ -39,6 +41,8 @@ interface ConduceExternoBorrador {
   conMateriales?: boolean;
   origenBodegaId?: string;
   cart?: CartLinea[];
+  // CL6 — marcado como prueba (solo admin).
+  esPrueba?: boolean;
 }
 
 /**
@@ -56,7 +60,7 @@ interface ConduceExternoBorrador {
   selector: 'app-conduce-externo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, PhotoSlot, LugarPicker, CollapsibleSelect, ArticuloPicker, QtyInput, SyncBar, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, PhotoSlot, LugarPicker, CollapsibleSelect, ArticuloPicker, QtyInput, SyncBar, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduce-externo.html',
   styleUrl: './conduce-externo.scss',
 })
@@ -71,9 +75,17 @@ export class ConduceExternoPage {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private motion = inject(MotionService);
+  private userCtx = inject(UserContextService);
 
   /** Una sola captura activa a la vez → clave fija. */
   private readonly clave = 'conduce_externo';
+
+  // CL6 (Nota #186) — "Marcar como prueba": SOLO admin. El flag viaja en el mismo
+  // payload del conduce externo; el server (crear_conduce_externo p_es_prueba) lo
+  // valida por rol. Si el padre aún no expone el parámetro, el handler reintenta sin
+  // él (comprobación de capacidad) para no trancar el envío.
+  esAdmin = this.userCtx.esAdmin;
+  esPrueba = signal(false);
 
   // Proveedores
   proveedores = signal<ProveedorTransporte[]>([]);
@@ -172,6 +184,7 @@ export class ConduceExternoPage {
         conMateriales: this.conMateriales(),
         origenBodegaId: this.origenBodegaId(),
         cart: this.cart(),
+        esPrueba: this.esPrueba(),
       };
       if (!this.hydrated || this.guardando() || this.exito()) return;
       // Solo guarda si hay algo que valga la pena recuperar.
@@ -310,6 +323,8 @@ export class ConduceExternoPage {
         this.conMateriales.set(d.conMateriales === true);
         this.origenBodegaId.set(d.origenBodegaId ?? '');
         this.cart.set(d.cart ?? []);
+        // CL6 — restaura el marcado de prueba solo si sigue siendo admin.
+        this.esPrueba.set(this.esAdmin() && d.esPrueba === true);
         if (this.origenBodegaId()) void this.loadExistencias(this.origenBodegaId());
       }
       // BT4 — las fotos se cargan SIEMPRE (aunque no haya fila de datos): el usuario
@@ -341,6 +356,7 @@ export class ConduceExternoPage {
         conMateriales: this.conMateriales(),
         origenBodegaId: this.origenBodegaId(),
         cart: this.cart(),
+        esPrueba: this.esPrueba(),
       },
       { tipo: 'conduce_externo', etiqueta: 'Conduce externo', ruta: this.location.path() },
     );
@@ -532,6 +548,8 @@ export class ConduceExternoPage {
         // CJ5/CJ6 — despacho de una requisición (enlaza el despacho existente si lo hay).
         origenRequisicionId: this.requisicionId(),
         salidaId: this.salidaId(),
+        // CL6 — marcado de prueba (solo admin; el server lo valida por rol).
+        esPrueba: this.esAdmin() && this.esPrueba(),
       });
       await this.autosave.discard(this.clave); // limpia formulario + fotos del borrador
       this.borradorPrevio.set(false);
@@ -569,6 +587,7 @@ export class ConduceExternoPage {
     this.origenBodegaId.set('');
     this.cart.set([]);
     this.existencias.set({});
+    this.esPrueba.set(false);
     this.error.set('');
   }
 

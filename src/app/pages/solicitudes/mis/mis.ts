@@ -18,13 +18,14 @@ import {
   NecesidadInfo,
 } from '../../../core/models/inventario.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Track my material requests: Enviada → Aprobada → Entregada. */
 @Component({
   selector: 'app-mis-solicitudes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe],
+  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mis.html',
   styleUrl: './mis.scss',
 })

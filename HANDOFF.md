@@ -1,5 +1,25 @@
 # HANDOFF — CSD App
 
+## 🟠 SESIÓN 10/10/2026 — PROMPT-93 · Ronda **CL** — app **2.47.0 EN DEV** (falta probar → prod)
+**TL;DR:** ronda CL (motion + bienvenida) completa en `feature/cl-ronda`, `npm run build` ✅ + `test:canal`/catálogo verdes. **APK dev 2.47.0 construido (candado CL4 `canal:"apk"`+`2.47.0` verde) + publicado al bucket dev + registrado.** Falta: merge→dev (en este commit) → Xaviel prueba → OK → prod. Consume PROMPT-92 (padre, parcialmente shippeado).
+
+### ✅ Hecho (feature/cl-ronda)
+- **F1 CL4 (canal)** — ya venía de CK; residuos: rescate de actualización ("Descargar desde el navegador" + aviso a 8s) + canal resuelto en tienda-aviso. **F2 CL6** conduce externo "marcar como prueba" (admin; `p_es_prueba` vivo en dev).
+- **F3/F4 CL2 (motion)** — fundación (8 directivas + catálogo + `momento()` + `app-momento`) aplicada a **TODA la app** (transporte 26 pantallas + inventario/solicitudes/bitácora/obra/admin/proyectos/mensajes/RRHH…, ~188 archivos). Momentos cableados: combustible(gota)/uso/entrada/salida/aprobado/firma/documento/checklist/mantenimiento → catálogo `en_uso`. `mensaje`+`todo-enviado` quedan `pendiente` (no cableados).
+- **F5 CL3 (bienvenida)** — `BienvenidaService` unifica idioma/políticas/ubicación/notificaciones (conserva registros); gate local+servidor (capability); "ver otra vez" en Soporte; IA en contexto.
+- **F6 CL5 (catálogo)** — `scripts/data-fixes/2026-10-10-cl5-movimiento-catalogo-app.mjs` **aplicado en dev** (4 filas sistema='app'; mapea taxonomía app→padre nivel simple/sistema→base).
+- **F7** — bump **2.47.0** (environment.{prod,dev}.ts + build.gradle; **recordar alinear los 3**) + changelog CL + PARIDAD (sección CL).
+
+### 👤 PENDIENTE
+1. **Probar 2.47.0 en dev** (APK dev + app-dev.; gama baja + Samsung + modo avión + **actualización in-app desde la versión anterior**): bienvenida nueva (instalación limpia), motion en toda la app sin tirones, que el botón Actualizar instale. Con **OK → prod** (lo hago yo: PR dev→main + APK prod + publicar + notificar iOS).
+2. **🔴 El PADRE aún debe aplicar los 2 SQL de CK** (`mis_trabajos_chofer`/`trabajo_ordenar` siguen 404 en dev/prod) — "Mis trabajos" del chofer sigue vacío hasta entonces. Ya se le pasó a la ventana de SGC (ver PARIDAD §CL huecos).
+3. La **web** (PROMPT-92) debe publicar sus filas 'web'/'web-app' en `movimiento_catalogo` + espejar `momento()`.
+
+### Verify on resume
+- `git log --oneline -14`; rama `feature/cl-ronda` (→ mergeada a `dev`); `npm run build` exit 0; `npm run test:canal` verde. Versión 2.47.0 en environment.{prod,dev}.ts + build.gradle. APK dev en bucket (`csd-app-2.47.0.apk`).
+
+---
+
 ## 🟢 SESIÓN 09-10/10/2026 — PROMPT-91 · Ronda **CK** — app **2.46.0 PUBLICADA A PROD** ✅
 **TL;DR:** ronda CK completa y **RELEASE A PROD**. `dev`=`main`=`8d75fcb`. **APK prod 2.46.0** firmado (cert `3c5316d8…5065`), candado CL4 verde (`canal:"apk"`+`version:"2.46.0"`), **regla 18 OK** (2.46.0 salió antes en dev), subido al bucket prod + `apk_url` + registrado. **PUBLICADA a usuarios** (`ck-publicar-2.46.0.mjs`: 2.46.0 publicada, 2.45.0 despublicada; **mínima sigue 2.45.0**; push android por el trigger) + **9... 11 iPhone (ios-pwa) notificados in-app** (`ck-notificar-ios-2.46.0.mjs`). Vercel: push a `main` → app. (prod PWA) + push a `dev` → app-dev. 17 commits CK.
 - **⚠️ ÚNICO PENDIENTE (del PADRE):** aplicar en **prod** (y dev) los 2 SQL `sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql` + `2026-10-09-ck15-misael-acciones.sql`. **Hasta entonces "Mis trabajos" del chofer sale VACÍO en prod** (degrada, no rompe) y Misael no tiene ordenar/nota. Lo demás (notificaciones, Apoyo de transporte crear/estados, Entregar a, chofer privado, etc.) **funciona ya en prod**.

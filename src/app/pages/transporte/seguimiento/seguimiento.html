@@ -32,7 +32,7 @@
     }
   </div>
 
-  <div class="screen__body seg__body">
+  <div class="screen__body seg__body" appStagger>
     @if (!autorizado()) {
       <app-empty-state
         icon="🔒"
@@ -51,7 +51,7 @@
       <h2 class="seg__section">{{ 'Choferes' | t }} ({{ choferes().length }})</h2>
       <p class="seg__hint">{{ 'Toca un chofer para ver su recorrido en el mapa. Toca de nuevo para ocultarlo.' | t }}</p>
       @for (c of choferes(); track c.usuario_id) {
-        <button type="button" class="chofer-card" [class.chofer-card--sel]="selectedId() === c.usuario_id"
+        <button type="button" class="chofer-card" appTapScale [class.chofer-card--sel]="selectedId() === c.usuario_id"
           [class.chofer-card--stale]="esStale(c.capturado_en)" (click)="seleccionar(c)">
           <span class="chofer-card__dot" [style.background]="esStale(c.capturado_en) ? '#9ca3af' : metaOf(c.estado).tint">
             {{ esStale(c.capturado_en) ? '📴' : metaOf(c.estado).icon }}
@@ -61,7 +61,7 @@
               @if (selectedId() === c.usuario_id) { <span class="chofer-card__trace-dot" [style.background]="colorDe(c.usuario_id)"></span> }
               {{ c.nombre }}
             </span>
-            <span class="chofer-card__estado">
+            <span class="chofer-card__estado" [appEstadoPulse]="c.estado">
               {{ metaOf(c.estado).label | t }}@if (c.estado === 'otros' && c.otros_texto) { · {{ c.otros_texto }} }
             </span>
             @if (rutaDe(c.nombre); as r) {

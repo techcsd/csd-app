@@ -15,7 +15,7 @@
         <div class="ob-detalle__resumen-top">
           <span class="ob-detalle__tipo">{{ contenido()?.tipoLabel }}</span>
           @if (pill(); as p) {
-            <span class="ob-pill" [attr.data-tone]="p.tone">{{ p.label }}</span>
+            <span class="ob-pill" [appEstadoPulse]="p.tone" [attr.data-tone]="p.tone">{{ p.label }}</span>
           }
         </div>
         <span class="ob-detalle__fecha">{{ fmt(op()!.capturado_en) }}</span>
@@ -34,6 +34,7 @@
       </div>
 
       <!-- Contenido (solo lectura) -->
+      <div appStagger style="display:contents">
       @for (sec of contenido()?.secciones; track sec.titulo) {
         <div class="ob-detalle__card">
           <h2 class="ob-detalle__sec">{{ sec.titulo }}</h2>
@@ -45,14 +46,15 @@
           }
         </div>
       }
+      </div>
 
       <!-- Fotos -->
       @if (contenido()?.fotos?.length) {
         <div class="ob-detalle__card">
           <h2 class="ob-detalle__sec">{{ 'Fotos' | t }} ({{ contenido()!.fotos.length }})</h2>
-          <div class="ob-detalle__fotos">
+          <div class="ob-detalle__fotos" appStagger>
             @for (foto of contenido()!.fotos; track foto.url) {
-              <button type="button" class="ob-detalle__foto" (click)="abrirFoto(foto.url)">
+              <button type="button" class="ob-detalle__foto" appTapScale (click)="abrirFoto(foto.url)">
                 <img [src]="foto.url" [alt]="foto.nombre" loading="lazy" />
               </button>
             }

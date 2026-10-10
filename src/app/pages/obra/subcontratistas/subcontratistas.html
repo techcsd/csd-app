@@ -18,13 +18,15 @@
         <!-- BL2 — vacío legítimo: texto neutral, sin afirmar la causa -->
         <app-empty-state icon="👷" [title]="'No vemos subcontratistas' | t" [message]="'Ahora mismo no hay subcontratistas activos en esta obra. Si esperabas alguno, regístralo desde la web.' | t" />
       } @else {
+        <div appStagger style="display:contents">
         @for (s of subs(); track s.id) {
-          <button type="button" class="sub__pick" (click)="elegir(s)">
+          <button type="button" class="sub__pick" appTapScale (click)="elegir(s)">
             <span class="sub__pick-nombre">{{ s.nombre }}</span>
             @if (s.especialidad) { <span class="sub__pick-esp">{{ s.especialidad }}</span> }
             <span class="sub__pick-chevron">›</span>
           </button>
         }
+        </div>
       }
     } @else {
       <button type="button" class="sub__volver" (click)="volver()">← {{ sel()!.nombre }}</button>
@@ -34,6 +36,7 @@
       @if (!frentes().length) {
         <p class="sub__empty">{{ 'Sin frentes asignados en esta obra.' | t }}</p>
       } @else {
+        <div appStagger style="display:contents">
         @for (f of frentes(); track f.id) {
           <div class="sub__frente">
             <span class="sub__frente-desc">{{ f.descripcion || ('Frente' | t) }}</span>
@@ -41,10 +44,11 @@
               <input class="field sub__frente-input" type="number" min="0" max="100"
                 [ngModel]="frenteEdit()[f.id]" (ngModelChange)="setFrenteAvance(f.id, +$event)" />
               <span>%</span>
-              <button type="button" class="btn-ghost sub__frente-save" (click)="guardarFrente(f.id)">{{ 'Guardar' | t }}</button>
+              <button type="button" class="btn-ghost sub__frente-save" appTapScale (click)="guardarFrente(f.id)">{{ 'Guardar' | t }}</button>
             </div>
           </div>
         }
+        </div>
       }
 
       <!-- Cubicación -->
@@ -73,7 +77,7 @@
             </label>
           </div>
           <label class="field-label sub__mt">{{ 'Soportes (fotos)' | t }}</label>
-          <div class="sub__fotos">
+          <div class="sub__fotos" appStagger>
             @for (i of slots; track i) {
               <app-photo-slot [label]="('Soporte' | t) + ' ' + (i + 1)" hint="📷" [gallery]="false"
                 [foto]="cubFotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />

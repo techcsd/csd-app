@@ -12,7 +12,7 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else if (b(); as bit) {
-      <ul class="det__info">
+      <ul class="det__info" appFadeIn>
         <li><span>{{ 'Obra' | t }}</span><b>{{ bit.proyecto?.nombre ?? '—' }}</b></li>
         <li><span>{{ 'Fecha' | t }}</span><b>{{ fmtFecha(bit.fecha) }}</b></li>
         @if (bit.tipo === 'parte_diario') {

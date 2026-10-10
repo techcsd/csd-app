@@ -5,12 +5,14 @@
   </header>
 
   <div class="screen__body">
+    <div appStagger style="display:contents">
     @for (f of faqs; track f.q) {
       <div class="faq">
         <p class="faq__q">{{ f.q }}</p>
         <p class="faq__a">{{ f.a }}</p>
       </div>
     }
+    </div>
 
     <!-- CK10 — guía para teléfonos que "matan" apps (no llegan las notificaciones). -->
     <section id="guia-notificaciones" class="faq soporte__guia">
@@ -28,11 +30,15 @@
       </ol>
     </section>
 
-    <button type="button" class="soporte__tutorial" (click)="verTutorial()">
-      ▶️ Ver tutorial de nuevo
+    <button type="button" class="soporte__tutorial" appTapScale (click)="verBienvenida()">
+      {{ 'Ver la bienvenida otra vez' | t }}
     </button>
 
-    <button type="button" class="btn-cta soporte__report" (click)="reportar()">
+    <button type="button" class="soporte__tutorial" appTapScale (click)="verTutorial()">
+      ▶️ {{ 'Ver tutorial de nuevo' | t }}
+    </button>
+
+    <button type="button" class="btn-cta soporte__report" appTapScale (click)="reportar()">
       🛟 Reportar un problema
     </button>
   </div>

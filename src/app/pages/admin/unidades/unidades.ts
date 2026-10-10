@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, Unidad } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** Manage unidades de medida (same catalog SGC uses). */
@@ -12,7 +13,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-admin-unidades',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, TranslatePipe],
+  imports: [Skeleton, FormsModule, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './unidades.html',
   styleUrl: './unidades.scss',
 })

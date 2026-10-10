@@ -13,6 +13,7 @@ import { DudaCategoria, GuiaVisual, GuiaVideoFirmado } from '../../core/models/a
 import { environment } from '../../../environments/environment';
 import { formatFechaMedia } from '../../core/util/fecha';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 type Tab = 'versiones' | 'dudas' | 'errores';
 
@@ -36,7 +37,7 @@ const GUIA_ICONO: Record<GuiaVisual['icono'], string> = {
   selector: 'app-tecnologia',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, JsonPipe, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, JsonPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './tecnologia.html',
   styleUrl: './tecnologia.scss',
 })

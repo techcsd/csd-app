@@ -13,6 +13,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ProyectoEstado, PROYECTO_ESTADO_LABEL, ProyectoInput } from '../../../core/models/proyecto.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type PasoKey = 'datos' | 'ubicacion' | 'equipo' | 'revisar';
 
@@ -28,7 +29,7 @@ type PasoKey = 'datos' | 'ubicacion' | 'equipo' | 'revisar';
   selector: 'app-proyecto-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, LocationPicker, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, LocationPicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './proyecto-form.html',
   styleUrl: './proyecto-form.scss',
 })

@@ -12,6 +12,7 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { Subcontratista, Frente } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const MAX_SOPORTES = 3;
 
@@ -20,7 +21,7 @@ const MAX_SOPORTES = 3;
   selector: 'app-obra-subcontratistas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './subcontratistas.html',
   styleUrl: './subcontratistas.scss',
 })

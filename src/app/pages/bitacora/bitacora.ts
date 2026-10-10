@@ -5,13 +5,14 @@ import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { EnProcesoService } from '../../core/services/en-proceso.service';
 import { BitacoraService } from '../../core/services/bitacora.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /** Bitácora hub: parte diario, incidente, mis partes. */
 @Component({
   selector: 'app-bitacora',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SyncBar, TranslatePipe],
+  imports: [SyncBar, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './bitacora.html',
   styleUrl: './bitacora.scss',
 })

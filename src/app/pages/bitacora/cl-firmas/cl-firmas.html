@@ -13,8 +13,9 @@
     } @else if (error()) {
       <app-empty-state icon="⚠️" [title]="'No se pudieron cargar' | t" [message]="'Revisa tu conexión e inténtalo de nuevo.' | t" [ctaLabel]="'Reintentar' | t" (action)="load()" />
     } @else {
+      <div appStagger style="display:contents">
       @for (c of items(); track c.id) {
-        <button type="button" class="clf-row" (click)="abrir(c.id)">
+        <button type="button" class="clf-row" appTapScale (click)="abrir(c.id)">
           <div class="clf-row__info">
             <span class="clf-row__obra">{{ c.proyecto }}</span>
             <span class="clf-row__pl">{{ c.plantilla }}</span>
@@ -30,6 +31,7 @@
       } @empty {
         <app-empty-state icon="✅" [title]="'Sin liberaciones pendientes' | t" [message]="'No hay checklists de liberación esperando firma ahora mismo.' | t" />
       }
+      </div>
     }
   </div>
 </div>

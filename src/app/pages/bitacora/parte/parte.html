@@ -16,7 +16,7 @@
     <div class="screen__body">
       <!-- 1. Obra -->
       @if (step() === 1) {
-        <h1 class="screen__title">{{ '¿En qué obra estás?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿En qué obra estás?' | t }}</h1>
         <div class="parte__obras">
           @if (loadingObras()) {
             <app-skeleton [rows]="4" />
@@ -66,7 +66,7 @@
 
       <!-- 2. Z4 — Motivo (solo "no se trabajó") -->
       @if (step() === 2 && sinActividad()) {
-        <h1 class="screen__title">{{ '¿Por qué no se trabajó?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Por qué no se trabajó?' | t }}</h1>
         @for (m of motivosSinActividad; track m.value) {
           <app-option-button
             [icon]="m.icon"
@@ -101,7 +101,7 @@
 
       <!-- 2. Clima (lluvia) -->
       @if (step() === 2 && !sinActividad()) {
-        <h1 class="screen__title">{{ '¿Está lloviendo o llovió?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Está lloviendo o llovió?' | t }}</h1>
         <p class="screen__subtitle">{{ 'Es normal, no es un incidente. Solo lo registramos.' | t }}</p>
         <app-option-button icon="🌧️" [label]="'Sí' | t" tone="warning" [selected]="llovio() === true" (pressed)="llovio.set(true)" />
         <app-option-button icon="☀️" [label]="'No' | t" tone="success" [selected]="llovio() === false" (pressed)="llovio.set(false)" />
@@ -115,7 +115,7 @@
 
       <!-- 3. Z4 — Resumen (solo "no se trabajó") -->
       @if (step() === 3 && sinActividad()) {
-        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
           <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoNombre() }}</b></li>
           <li><span>{{ 'Estado' | t }}</span><b>{{ 'No se trabajó en obra' | t }}</b></li>
@@ -130,7 +130,7 @@
 
       <!-- 3. Migración -->
       @if (step() === 3 && !sinActividad()) {
-        <h1 class="screen__title">{{ '¿Hubo problemas de migración?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Hubo problemas de migración?' | t }}</h1>
         <app-option-button icon="⚠️" [label]="'Sí' | t" tone="warning" [selected]="huboMigracion() === true" (pressed)="huboMigracion.set(true)" />
         <app-option-button icon="✅" [label]="'No' | t" tone="success" [selected]="huboMigracion() === false" (pressed)="huboMigracion.set(false)" />
         @if (huboMigracion()) {
@@ -141,7 +141,7 @@
 
       <!-- 4. Personal -->
       @if (step() === 4) {
-        <h1 class="screen__title">{{ '¿Cuánta gente hay hoy?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Cuánta gente hay hoy?' | t }}</h1>
         <app-counter [label]="'Carpintería' | t" icon="🔨" [(value)]="carpinteria" />
         <app-counter [label]="'Acero' | t" icon="🔩" [(value)]="acero" />
         <app-counter [label]="'Trabajadores de la casa' | t" icon="👷" [(value)]="casa" />
@@ -153,7 +153,7 @@
       @if (step() === 5) {
         <!-- 5a — sujeto (piso/bloque/edificio) ARRIBA -->
         @if (paso5() === 'sujeto') {
-          <h1 class="screen__title">{{ '¿En qué bloque, piso o edificio?' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ '¿En qué bloque, piso o edificio?' | t }}</h1>
           <p class="screen__subtitle">{{ 'Primero dinos de qué parte de la obra vas a hablar.' | t }}</p>
 
           @if (estructurasObra().length) {
@@ -198,7 +198,7 @@
 
         <!-- 5b — estructuras + actividades del sujeto (ordenadas, más usadas primero) -->
         @if (paso5() === 'actividades') {
-          <h1 class="screen__title">{{ '¿Qué se hizo en {sujeto}?' | t: { sujeto: sujetoActual() } }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ '¿Qué se hizo en {sujeto}?' | t: { sujeto: sujetoActual() } }}</h1>
           <p class="screen__subtitle">{{ 'Elige la parte, toca lo que se hizo y abajo la cantidad. ★ = más usadas aquí.' | t }}</p>
 
           <label class="field-label">{{ '¿En qué parte?' | t }}</label>
@@ -297,7 +297,7 @@
 
         <!-- 5c — ¿otro bloque? (multi-bloque) -->
         @if (paso5() === 'otro') {
-          <h1 class="screen__title">{{ '¿Trabajaste en otro bloque, piso o edificio?' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ '¿Trabajaste en otro bloque, piso o edificio?' | t }}</h1>
           <p class="screen__subtitle">{{ 'Lo que llevas queda guardado. Puedes agregar otro o continuar.' | t }}</p>
 
           <label class="field-label">{{ 'Lo registrado hasta ahora' | t }}</label>
@@ -316,7 +316,7 @@
 
       <!-- 6. Restricciones -->
       @if (step() === 6) {
-        <h1 class="screen__title">{{ '¿Hubo algún problema?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Hubo algún problema?' | t }}</h1>
         <p class="screen__subtitle">{{ 'Marca lo que aplique. Si no hubo, deja "Ninguna".' | t }}</p>
         <div class="parte__restr">
           @for (r of restriccionesCat(); track r) {
@@ -353,7 +353,7 @@
 
       <!-- 7. Fotos (mínimo 2 — S6) -->
       @if (step() === 7) {
-        <h1 class="screen__title">{{ 'Fotos de la obra' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Fotos de la obra' | t }}</h1>
         <p class="screen__subtitle">
           {{ 'Mínimo {n}.' | t: { n: minFotos } }} {{ 'Llevas' | t }} <b>{{ fotos().length }}</b>.
           @if (fotos().length < minFotos) { <span class="parte__warn">{{ 'Faltan {n}.' | t: { n: minFotos - fotos().length } }}</span> }
@@ -384,7 +384,7 @@
 
         <!-- 8a — en uso -->
         @if (paso8() === 'uso') {
-          <h1 class="screen__title">{{ '¿Hay equipos alquilados en uso hoy?' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ '¿Hay equipos alquilados en uso hoy?' | t }}</h1>
           <p class="screen__subtitle">{{ 'Grúas, retroexcavadoras, plantas eléctricas… lo que esté rentado.' | t }}</p>
           <app-option-button icon="🚜" [label]="'Sí' | t" tone="warning" [selected]="huboEquipos() === true" (pressed)="onHuboEquiposChange(true)" />
           <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="huboEquipos() === false" (pressed)="onHuboEquiposChange(false)" />
@@ -421,7 +421,7 @@
 
         <!-- 8b — para retirar -->
         @if (paso8() === 'retirar') {
-          <h1 class="screen__title">{{ '¿Hay equipos alquilados para retirar?' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ '¿Hay equipos alquilados para retirar?' | t }}</h1>
           <p class="screen__subtitle">{{ 'Se avisará al transportista para que lo pase a buscar.' | t }}</p>
           <app-option-button icon="📦" [label]="'Sí' | t" tone="warning" [selected]="hayRetirar() === true" (pressed)="onHayRetirarChange(true)" />
           <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="hayRetirar() === false" (pressed)="onHayRetirarChange(false)" />
@@ -443,7 +443,7 @@
 
         <!-- 8c — dañados -->
         @if (paso8() === 'danado') {
-          <h1 class="screen__title">{{ '¿Hay equipos dañados?' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ '¿Hay equipos dañados?' | t }}</h1>
           <app-option-button icon="🛠️" [label]="'Sí' | t" tone="warning" [selected]="hayDanados() === true" (pressed)="onHayDanadosChange(true)" />
           <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="hayDanados() === false" (pressed)="onHayDanadosChange(false)" />
 
@@ -484,7 +484,7 @@
 
       <!-- 9. Daños de material / equipo propio (BP4) -->
       @if (step() === 9) {
-        <h1 class="screen__title">{{ '¿Se dañó algún material o equipo propio hoy?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Se dañó algún material o equipo propio hoy?' | t }}</h1>
         <p class="screen__subtitle">{{ 'Un molde, una viga, un equipo de la empresa… (el equipo alquilado ya se preguntó antes).' | t }}</p>
         <app-option-button icon="🧱" [label]="'Sí' | t" tone="warning" [selected]="huboDanos() === true" (pressed)="onHuboDanosChange(true)" />
         <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="huboDanos() === false" (pressed)="onHuboDanosChange(false)" />
@@ -569,7 +569,7 @@
 
       <!-- 10. Moldes del día (BO9) -->
       @if (step() === 10) {
-        <h1 class="screen__title">{{ '¿Trabajaste moldes hoy?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Trabajaste moldes hoy?' | t }}</h1>
         <p class="screen__subtitle">{{ 'Captura las medidas reales en cm; el sistema dibuja el esquema y lo compara con el plano.' | t }}</p>
         <app-option-button icon="📐" [label]="'Sí' | t" tone="warning" [selected]="huboMoldes() === true" (pressed)="onHuboMoldesChange(true)" />
         <app-option-button icon="🚫" [label]="'No' | t" tone="success" [selected]="huboMoldes() === false" (pressed)="onHuboMoldesChange(false)" />
@@ -679,7 +679,7 @@
 
       <!-- 11. Datos finales (S8) -->
       @if (step() === 11) {
-        <h1 class="screen__title">{{ 'Datos finales' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Datos finales' | t }}</h1>
         <label class="field-label">{{ 'Ingeniero responsable' | t }} <span class="parte__req">*</span></label>
         <!-- AV3 — una obra puede tener varios ingenieros: elige entre los de la obra
              (el principal marcado). Offline o sin lista → escribe el nombre abajo. -->
@@ -731,7 +731,7 @@
 
       <!-- 12. Resumen (no editable) -->
       @if (step() === 12) {
-        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
           <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoNombre() }}</b></li>
           <!-- BL9 — el día que documenta el parte (marca si es de una fecha pasada). -->

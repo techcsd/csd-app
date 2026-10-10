@@ -17,6 +17,8 @@ import {
   SOLICITUD_COMPRA_ESTADO_META,
 } from '../../../core/models/solicitud-compra.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Un renglón en edición en el formulario. */
 interface DraftItem {
@@ -36,7 +38,7 @@ interface DraftItem {
   selector: 'app-solicitud-compra',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, QtyInput, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, QtyInput, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './solicitud-compra.html',
   styleUrl: './solicitud-compra.scss',
 })
@@ -46,6 +48,7 @@ export class SolicitudCompraPage {
   private toast = inject(ToastService);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   readonly fmtFecha = formatFechaMedia;
   readonly estadoMeta = SOLICITUD_COMPRA_ESTADO_META;
@@ -153,6 +156,7 @@ export class SolicitudCompraPage {
       });
       // Offline-first: se encoló; si hay red, sincroniza sola. Mensaje honesto.
       this.toast.success(this.online ? this.i18n.t('Solicitud de compra enviada.') : this.i18n.t('Guardada. Se enviará al recuperar señal.'));
+      this.motion.momento('entrada'); // CL2 F4 — solicitud de compra enviada (también offline, ya encolada)
       this.cerrarCrear();
       await this.load();
     } catch (e) {

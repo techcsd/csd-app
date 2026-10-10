@@ -5,13 +5,14 @@ import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SolicitudesService } from '../../core/services/solicitudes.service';
 import { UserContextService } from '../../core/services/user-context.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /** Solicitudes hub: pedir materiales, mis solicitudes, y (por rol) la bandeja de todas. */
 @Component({
   selector: 'app-solicitudes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SyncBar, TranslatePipe],
+  imports: [SyncBar, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './solicitudes.html',
   styleUrl: './solicitudes.scss',
 })

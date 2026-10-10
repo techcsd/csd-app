@@ -14,7 +14,7 @@
     <div class="screen__body">
       <!-- 1: datos -->
       @if (step() === 1) {
-        <h1 class="screen__title">Datos del equipo</h1>
+        <h1 class="screen__title" appWizardStep>Datos del equipo</h1>
         <label class="field-label" for="nombre">Nombre <span class="tecform__req">*</span></label>
         <input id="nombre" class="field" type="text" [ngModel]="nombre()" (ngModelChange)="nombre.set($event)" placeholder="Ej. Walkie-talkie Motorola" />
 
@@ -26,16 +26,16 @@
         <input id="serie" class="field" type="text" [ngModel]="serie()" (ngModelChange)="serie.set($event)" placeholder="Número de serie" />
 
         <label class="field-label tecform__mt">Estado</label>
-        <div class="tecform__estados">
+        <div class="tecform__estados" appStagger>
           @for (e of estados; track e[0]) {
-            <app-option-button [label]="e[1]" [selected]="estado() === e[0]" (pressed)="estado.set(e[0])" />
+            <app-option-button appTapScale [label]="e[1]" [selected]="estado() === e[0]" (pressed)="estado.set(e[0])" />
           }
         </div>
       }
 
       <!-- 2: tipo -->
       @if (step() === 2) {
-        <h1 class="screen__title">Tipo de equipo</h1>
+        <h1 class="screen__title" appWizardStep>Tipo de equipo</h1>
         <app-collapsible-select label="Tipo" icon="🏷️" [options]="tipoOptions()" [selectedId]="tipoId()" [searchable]="true" searchPlaceholder="Buscar tipo…" (picked)="tipoId.set($event)" />
         <label class="field-label tecform__mt">¿No está en la lista? Agrégalo</label>
         <div class="tecform__nuevo-tipo">
@@ -46,14 +46,14 @@
 
       <!-- 3: ubicación -->
       @if (step() === 3) {
-        <h1 class="screen__title">Ubicación</h1>
+        <h1 class="screen__title" appWizardStep>Ubicación</h1>
         <p class="screen__subtitle">¿Dónde está el equipo? (almacén u Oficina Central)</p>
         <app-collapsible-select label="Ubicación" icon="📍" [options]="bodegaOptions()" [selectedId]="bodegaId()" [searchable]="true" searchPlaceholder="Buscar almacén…" (picked)="bodegaId.set($event)" />
       }
 
       <!-- 4: precio -->
       @if (step() === 4) {
-        <h1 class="screen__title">Precio</h1>
+        <h1 class="screen__title" appWizardStep>Precio</h1>
         <label class="field-label">Moneda</label>
         <div class="tecform__moneda">
           <app-option-button label="RD$ (DOP)" [selected]="moneda() === 'DOP'" (pressed)="moneda.set('DOP')" />
@@ -68,14 +68,14 @@
 
       <!-- 5: fotos -->
       @if (step() === 5) {
-        <h1 class="screen__title">Fotos</h1>
+        <h1 class="screen__title" appWizardStep>Fotos</h1>
         <p class="screen__subtitle">Agrega varias fotos y elige la portada (★).</p>
         <div class="tecform__foto-acciones">
           <button type="button" class="btn-cta" (click)="tomarFoto()">📷 Tomar foto</button>
           <button type="button" class="btn-ghost" (click)="elegirFotos()">🖼️ De la galería</button>
         </div>
         @if (fotos().length) {
-          <div class="tecform__galeria">
+          <div class="tecform__galeria" appStagger>
             @for (f of fotos(); track f.key) {
               <div class="tecform__foto" [class.tecform__foto--portada]="esPortada(f.key)">
                 <img [src]="f.previewUrl" alt="Foto del equipo" />
@@ -94,7 +94,7 @@
 
       <!-- 6: resumen -->
       @if (step() === 6) {
-        <h1 class="screen__title">Revisa y guarda</h1>
+        <h1 class="screen__title" appWizardStep>Revisa y guarda</h1>
         <ul class="resumen">
           <li><span>Nombre</span><b>{{ nombre() }}</b></li>
           <li><span>Tipo</span><b>{{ tipoLabel() }}</b></li>

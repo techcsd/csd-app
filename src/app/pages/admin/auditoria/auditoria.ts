@@ -5,6 +5,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { formatFechaHumana } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 interface Barra {
@@ -49,7 +50,7 @@ const ACCION_LABELS: Record<string, string> = {
   selector: 'app-admin-auditoria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DecimalPipe, TranslatePipe],
+  imports: [Skeleton, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './auditoria.html',
   styleUrl: './auditoria.scss',
 })

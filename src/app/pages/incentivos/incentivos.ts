@@ -15,6 +15,8 @@ import {
   IncentivoGestionFila,
   IncentivoGestionSemana,
 } from '../../core/services/incentivo-gestion.service';
+import { MotionService } from '../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -29,7 +31,7 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
   selector: 'app-incentivos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, Skeleton, EmptyState, CollapsibleSelect, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, RouterLink, Skeleton, EmptyState, CollapsibleSelect, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './incentivos.html',
   styleUrl: './incentivos.scss',
 })
@@ -38,6 +40,7 @@ export class IncentivosPage {
   private i18n = inject(I18nService);
   private toast = inject(ToastService);
   private location = inject(Location);
+  private motion = inject(MotionService);
 
   /** Gate. */
   checkingAccess = signal(true);
@@ -210,6 +213,7 @@ export class IncentivosPage {
     try {
       await this.service.aprobarCumplieron(s.anio, s.semana);
       this.toast.success(this.i18n.t('Se aprobaron todos los que cumplieron el mínimo.'));
+      this.motion.momento('aprobado'); // CL2 F4 — una sola celebración al aprobar en bloque (no por fila, evita ruido)
       await this.cargarListado();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos aprobar en bloque.'));

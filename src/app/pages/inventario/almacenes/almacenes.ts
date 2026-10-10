@@ -14,6 +14,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { BodegaAdmin, BodegaUbicacion } from '../../../core/models/inventario.model';
 import { homologarTexto } from '../../../core/util/texto';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type ModoUbic = 'obra' | 'propia';
 
@@ -27,7 +28,7 @@ type ModoUbic = 'obra' | 'propia';
   selector: 'app-almacenes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, CollapsibleSelect, LocationPicker, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, CollapsibleSelect, LocationPicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './almacenes.html',
   styleUrl: './almacenes.scss',
 })

@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const TIPO_LABEL: Record<TipoApoyo, string> = {
   movimiento_interno: 'Movimiento interno',
@@ -35,7 +36,7 @@ const ESTADO_LABEL: Record<EstadoApoyo, string> = {
   selector: 'app-apoyo-listado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './apoyo-listado.html',
   styleUrl: './apoyo-listado.scss',
 })

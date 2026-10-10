@@ -10,6 +10,7 @@ import { EchadaDetalle, PRODUCTO_CANONICO_LABEL, productoCanonico } from '../../
 import { formatFechaHumana } from '../../../core/util/fecha';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AQ13/AQ6 — Detalle de una echada (registro de combustible). Se abre desde el
@@ -21,7 +22,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
   selector: 'app-echada-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, TranslatePipe],
+  imports: [DecimalPipe, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './echada-detalle.html',
   styleUrl: './echada-detalle.scss',
 })

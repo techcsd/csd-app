@@ -39,7 +39,7 @@
       @if (resumen(); as r) {
         <!-- AJ3 — charla de seguridad del día: acción clara para quien la registra -->
         @if (puedeCharla() && !r.charlaHecha) {
-          <button type="button" class="obra__charla-alert" (click)="irCharla()">
+          <button type="button" class="obra__charla-alert" appTapScale (click)="irCharla()">
             <span class="obra__charla-ico">🦺</span>
             <span class="obra__charla-body">
               <span class="obra__charla-title">{{ 'Charla de seguridad de hoy: pendiente' | t }}</span>
@@ -48,7 +48,7 @@
             <span class="obra__charla-cta">{{ 'Registrar' | t }} →</span>
           </button>
         }
-        <div class="obra__resumen">
+        <div class="obra__resumen" appFadeIn appStagger>
           @if (puedeCharla() && r.charlaHecha) {
             <div class="obra__res-item">
               <span class="obra__res-ico">✅</span>
@@ -60,7 +60,7 @@
             <span class="obra__res-txt">{{ 'Tareas hoy' | t }}</span>
           </div>
           <div class="obra__res-item" [class.obra__res-item--warn]="r.ncAbiertas > 0">
-            <span class="obra__res-num">{{ r.ncAbiertas }}</span>
+            <span class="obra__res-num"><span [appCountUp]="r.ncAbiertas"></span></span>
             <span class="obra__res-txt">{{ 'NC abiertas' | t }}</span>
           </div>
           @if (r.misPendientes > 0) {
@@ -85,9 +85,9 @@
       }
 
       <!-- Acciones de la obra seleccionada -->
-      <div class="obra__grid">
+      <div class="obra__grid" appStagger>
         @for (t of tiles(); track t.key) {
-          <app-big-button [icon]="t.icon" [label]="t.label | t" [tint]="t.tint" (pressed)="abrir(t)" />
+          <app-big-button appTapScale [icon]="t.icon" [label]="t.label | t" [tint]="t.tint" (pressed)="abrir(t)" />
         }
       </div>
     }

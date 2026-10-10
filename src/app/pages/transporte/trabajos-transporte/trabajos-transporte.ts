@@ -13,6 +13,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { formatFecha } from '../../../core/util/fecha';
 import { esUuid } from '../../../core/util/validar';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** CK15 — llave de cada pestaña de la bandeja. */
 type TabKey = 'sin_asignar' | 'asignados' | 'en_proceso' | 'por_confirmar' | 'completados';
@@ -63,7 +64,7 @@ const ESTADO_CHOFER_LABEL: Record<string, string> = {
   selector: 'app-trabajos-transporte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, BottomSheet, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, EmptyState, BottomSheet, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './trabajos-transporte.html',
   styleUrl: './trabajos-transporte.scss',
 })

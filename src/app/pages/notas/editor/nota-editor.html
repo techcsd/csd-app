@@ -64,6 +64,7 @@
               <button
                 type="button"
                 class="neditor__box"
+                appTapScale
                 (click)="toggleItem(item)"
                 [disabled]="!!item.ref_tipo || !puedeEditar()"
                 aria-label="Marcar tarea"
@@ -109,6 +110,7 @@
             <button
               type="button"
               class="neditor__color"
+              appTapScale
               [class.neditor__color--on]="color() === c.valor"
               [style.background]="c.valor ?? '#ffffff'"
               [title]="c.label | t"

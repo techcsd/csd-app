@@ -3,8 +3,8 @@
     <button type="button" class="inv-sub-header__back" (click)="back()" aria-label="Atrás">←</button>
     <h1 class="inv-sub-header__title">{{ 'Artículo' | t }}</h1>
     @if (!loading() && articulo() && puedeEditar('inventario.articulos')) {
-      <button type="button" class="art__editar" (click)="duplicar()" aria-label="Duplicar">📋</button>
-      <button type="button" class="art__editar" (click)="editar()">✏️ {{ 'Editar' | t }}</button>
+      <button type="button" class="art__editar" appTapScale (click)="duplicar()" aria-label="Duplicar">📋</button>
+      <button type="button" class="art__editar" appTapScale (click)="editar()">✏️ {{ 'Editar' | t }}</button>
     }
   </header>
 
@@ -13,9 +13,9 @@
       <app-skeleton [rows]="4" />
     } @else if (articulo(); as a) {
       <!-- Foto grande -->
-      <div class="art__foto">
+      <div class="art__foto" appFadeIn>
         @if (a.imagen_url) {
-          <button type="button" class="art__foto-btn" (click)="lightbox.set(true)">
+          <button type="button" class="art__foto-btn" appTapScale (click)="lightbox.set(true)">
             <img [src]="a.imagen_url" [alt]="a.nombre" />
           </button>
         } @else {
@@ -41,7 +41,7 @@
           <h3 class="art__apodos-title">{{ 'Apodos' | t }}</h3>
           <p class="art__apodos-hint">{{ 'Nombres no oficiales para encontrar este artículo al buscar (ej. «panel de 24»).' | t }}</p>
           @if (aliases().length) {
-            <div class="art__chips">
+            <div class="art__chips" appStagger>
               @for (al of aliases(); track al.id) {
                 <span class="art__chip">
                   {{ al.alias }}
@@ -79,13 +79,15 @@
         } @else if (stockPorAlmacen().length === 0) {
           <p class="art__muted">{{ 'Sin existencias registradas.' | t }}</p>
         } @else {
+          <div appStagger style="display:contents">
           @for (s of stockPorAlmacen(); track s.bodegaId) {
-            <button type="button" class="art__stock-row" [class.art__stock-row--on]="s.destacado" (click)="verKardex(s.bodegaId)">
+            <button type="button" class="art__stock-row" appTapScale [class.art__stock-row--on]="s.destacado" (click)="verKardex(s.bodegaId)">
               <span class="art__stock-bodega">{{ s.nombre }}</span>
               <span class="art__stock-cant">{{ s.cantidad | number: '1.0-2' }} {{ s.unidad }}</span>
               <span class="art__stock-kardex" aria-hidden="true">📊</span>
             </button>
           }
+          </div>
           <p class="art__stock-hint">{{ 'Toca un almacén para ver su histórico de movimientos.' | t }}</p>
         }
       </section>

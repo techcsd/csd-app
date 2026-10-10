@@ -25,14 +25,15 @@
         [message]="'Aún no hay apoyos de transporte con estos filtros.' | t"
       />
     } @else {
+      <div appStagger style="display:contents">
       @for (s of lista(); track s.id) {
-        <button type="button" class="apl__card" [class.apl__card--pend]="s.pendiente" (click)="abrir(s)">
+        <button type="button" class="apl__card" appTapScale [class.apl__card--pend]="s.pendiente" (click)="abrir(s)">
           <div class="apl__card-top">
             <span class="apl__tipo" [attr.data-tipo]="s.tipo_apoyo">{{ tipoLabel(s.tipo_apoyo) | t }}</span>
             @if (s.pendiente) {
               <span class="apl__estado" data-estado="pendiente">{{ 'Pendiente de enviar' | t }}</span>
             } @else {
-              <span class="apl__estado" [attr.data-estado]="s.estado">{{ estadoLabel(s.estado) | t }}</span>
+              <span class="apl__estado" [appEstadoPulse]="s.estado" [attr.data-estado]="s.estado">{{ estadoLabel(s.estado) | t }}</span>
             }
           </div>
 
@@ -51,6 +52,7 @@
           </div>
         </button>
       }
+      </div>
     }
   </div>
 

@@ -8,6 +8,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { CartillaService } from '../../../core/services/cartilla.service';
 import { CartillaEstado, CartillaListado } from '../../../shared/models/cartilla.model';
 import { formatFecha } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const ESTADO_LABEL: Record<CartillaEstado, string> = {
   borrador: 'Borrador',
@@ -26,7 +27,7 @@ const ESTADO_LABEL: Record<CartillaEstado, string> = {
   selector: 'app-cartillas-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, DecimalPipe, TranslatePipe],
+  imports: [Skeleton, EmptyState, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cartillas-lista.html',
   styleUrl: './cartillas-lista.scss',
 })

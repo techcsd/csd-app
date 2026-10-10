@@ -21,6 +21,8 @@ import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { combinarUnidades } from '../../../core/util/unidades';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface GrupoResumen {
   categoria: string;
@@ -38,7 +40,7 @@ interface GrupoResumen {
   selector: 'app-pedir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet, QtyInput, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, WizardFooter, ShareSheet, QtyInput, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './pedir.html',
   styleUrl: '../../inventario/salida/salida.scss',
 })
@@ -52,6 +54,7 @@ export class PedirPage implements OnDestroy {
   private ctx = inject(UserContextService);
   private navGuard = inject(NavGuardService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   hoja = signal<'seleccion' | 'resumen' | 'exito'>('seleccion');
 
@@ -213,6 +216,7 @@ export class PedirPage implements OnDestroy {
         })),
       });
       this.hoja.set('exito');
+      this.motion.momento('entrada'); // CL2 F4 — requisición enviada (también offline, ya encolada)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo enviar.'));
     } finally {

@@ -28,9 +28,9 @@
       <app-collapsible-select [label]="'Almacén' | t" icon="🏬" [options]="bodegaOptions()" [selectedId]="bodegaId()" (picked)="setBodega($event)" />
 
       <label class="field-label mov__mt">{{ '¿De dónde viene el material?' | t }}</label>
-      <div class="mov__motivos">
+      <div class="mov__motivos" appStagger>
         @for (m of motivos; track m) {
-          <button type="button" class="chip" [class.chip--on]="motivo() === m" (click)="motivo.set(m)">{{ m | t }}</button>
+          <button type="button" class="chip" appTapScale [class.chip--on]="motivo() === m" (click)="motivo.set(m)">{{ m | t }}</button>
         }
       </div>
       <!-- U25 — "Otro": captura del valor libre (no se pierde; llega al backend) -->
@@ -118,7 +118,7 @@
   <!-- Hoja 4: éxito -->
   @if (hoja() === 'exito') {
     <div class="screen__body">
-      <div class="mov__ok">
+      <div class="mov__ok" appFadeIn>
         <span class="mov__ok-check">✓</span>
         <h1 class="mov__ok-title">{{ 'Completado con éxito' | t }}</h1>
         <p class="mov__ok-sub">
@@ -140,7 +140,7 @@
     </div>
 
     <footer class="mov__nav">
-      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
+      <button type="button" class="btn-cta mov__wa" appTapScale (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
       <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">{{ 'Nuevo registro' | t }}</button>
       <button type="button" class="btn-ghost" (click)="finish()">{{ 'Volver a Inventario' | t }}</button>
     </footer>

@@ -37,6 +37,7 @@
           {{ 'Materiales que los choferes movieron sin estar en el catálogo. Crea el artículo desde la web SGC para vincularlos.' | t }}
         }
       </p>
+      <div appStagger style="display:contents">
       @for (m of items(); track m.id) {
         <div class="mnc__card" [class.mnc__card--done]="m.articulo_vinculado_id">
           <div class="mnc__card-top">
@@ -61,14 +62,14 @@
             <!-- BW2 — acciones: vincular / crear (solo elevados/inventario) + AT11 declinar -->
             <div class="mnc__acciones">
               @if (puedeGestionar()) {
-                <button type="button" class="mnc__accion mnc__accion--primary" [class.mnc__accion--on]="esAccion(m.id, 'vincular')" (click)="abrirVincular(m)">
+                <button type="button" class="mnc__accion mnc__accion--primary" appTapScale [class.mnc__accion--on]="esAccion(m.id, 'vincular')" (click)="abrirVincular(m)">
                   🔗 {{ 'Vincular a un artículo' | t }}
                 </button>
-                <button type="button" class="mnc__accion" [class.mnc__accion--on]="esAccion(m.id, 'crear')" (click)="abrirCrear(m)">
+                <button type="button" class="mnc__accion" appTapScale [class.mnc__accion--on]="esAccion(m.id, 'crear')" (click)="abrirCrear(m)">
                   ➕ {{ 'Crear artículo' | t }}
                 </button>
               }
-              <button type="button" class="mnc__declinar" (click)="toggleDeclinar(m.id)">
+              <button type="button" class="mnc__declinar" appTapScale (click)="toggleDeclinar(m.id)">
                 @if (esAccion(m.id, 'declinar')) { {{ 'Cancelar' | t }} } @else { ✕ {{ 'Declinar' | t }} }
               </button>
             </div>
@@ -133,6 +134,7 @@
           }
         </div>
       }
+      </div>
     }
   </div>
 </div>

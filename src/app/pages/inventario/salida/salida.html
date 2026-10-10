@@ -98,7 +98,7 @@
   <!-- Hoja 4: éxito -->
   @if (hoja() === 'exito') {
     <div class="screen__body">
-      <div class="mov__ok">
+      <div class="mov__ok" appFadeIn>
         <span class="mov__ok-check">✓</span>
         <h1 class="mov__ok-title">{{ 'Completado con éxito' | t }}</h1>
         <p class="mov__ok-sub">
@@ -120,7 +120,7 @@
     </div>
 
     <footer class="mov__nav">
-      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
+      <button type="button" class="btn-cta mov__wa" appTapScale (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
       <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">{{ 'Nuevo registro' | t }}</button>
       <button type="button" class="btn-ghost" (click)="finish()">{{ 'Volver a Inventario' | t }}</button>
     </footer>

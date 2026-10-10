@@ -13,6 +13,8 @@ import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ArticuloCat, Bodega, CategoriaInv, Existencia } from '../../../core/models/inventario.model';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** CC1 — normaliza texto para búsqueda sin acentos ni mayúsculas (NFD + strip). */
 function norm(s: string): string {
@@ -39,7 +41,7 @@ const SIN_CATEGORIA_KEY = 'sin';
   selector: 'app-conteo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, BigConfirm, ConfirmDialog, CollapsibleSelect, ArticuloPicker, TranslatePipe],
+  imports: [Skeleton, FormsModule, BigConfirm, ConfirmDialog, CollapsibleSelect, ArticuloPicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conteo.html',
   styleUrl: './conteo.scss',
 })
@@ -51,6 +53,7 @@ export class ConteoPage {
   private router = inject(Router);
   private location = inject(Location);
   private route = inject(ActivatedRoute);
+  private motion = inject(MotionService);
 
   bodegas = signal<Bodega[]>([]);
   bodegaId = signal('');
@@ -276,6 +279,7 @@ export class ConteoPage {
         items,
       });
       this.done.set(true);
+      this.motion.momento('aprobado'); // CL2 F4 — sello del conteo guardado (también offline)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {

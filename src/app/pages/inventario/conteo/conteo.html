@@ -37,19 +37,21 @@
               <button
                 type="button"
                 class="conteo__chip"
+                appTapScale
                 [class.conteo__chip--on]="soloDiferencia()"
                 (click)="soloDiferencia.set(!soloDiferencia())"
               >
                 {{ 'Solo con diferencia' | t }}
               </button>
-              <button type="button" class="conteo__add" (click)="abrirPicker()">➕ {{ 'Agregar artículo' | t }}</button>
+              <button type="button" class="conteo__add" appTapScale (click)="abrirPicker()">➕ {{ 'Agregar artículo' | t }}</button>
             </div>
           }
 
           <!-- Y9 — artículos agrupados por categoría (secciones colapsables) -->
+          <div appStagger style="display:contents">
           @for (g of grupos(); track g.key) {
             <div class="cat-group">
-              <button type="button" class="cat-group__head" (click)="toggle(g.key)">
+              <button type="button" class="cat-group__head" appTapScale (click)="toggle(g.key)">
                 <span class="cat-group__name">@if (g.destacada) { ★ }{{ g.nombre }}</span>
                 <span class="cat-group__meta">{{ g.total }} <span class="cat-group__caret">{{ abierto(g.key) ? '▾' : '▸' }}</span></span>
               </button>
@@ -81,6 +83,7 @@
               {{ existencias().length ? ('Ningún material coincide con la búsqueda.' | t) : ('Este almacén no tiene materiales.' | t) }}
             </p>
           }
+          </div>
 
           <label class="field-label conteo__mt">{{ 'Motivo (opcional)' | t }}</label>
           <input class="field" type="text" [ngModel]="motivo()" (ngModelChange)="motivo.set($event)" [placeholder]="'Ej: conteo mensual' | t" />
@@ -89,7 +92,7 @@
     </div>
 
     <footer class="conteo__nav">
-      <button type="button" class="btn-cta" [disabled]="submitting() || !puedeGuardar()" (click)="submit()">
+      <button type="button" class="btn-cta" appTapScale [disabled]="submitting() || !puedeGuardar()" (click)="submit()">
         {{ submitting() ? ('Guardando…' | t) : (hayCambios() ? ('Guardar conteo' | t) : ('Guardar (sin diferencias)' | t)) }}
       </button>
     </footer>

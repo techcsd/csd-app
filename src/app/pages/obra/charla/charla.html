@@ -30,7 +30,7 @@
         [placeholder]="'Puntos tratados…' | t"></textarea>
 
       <label class="field-label charla__mt">{{ 'Foto del grupo' | t }}</label>
-      <div class="charla__fotos">
+      <div class="charla__fotos" appStagger>
         @for (i of slots; track i) {
           <app-photo-slot [label]="('Foto' | t) + ' ' + (i + 1)" hint="📸" [gallery]="false"
             [foto]="fotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />

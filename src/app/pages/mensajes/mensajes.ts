@@ -11,13 +11,14 @@ import { formatFechaHumana } from '../../core/util/fecha';
 import { LiveRefreshDirective } from '../../shared/ui/live-refresh/live-refresh.directive';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /** AJ5 — bandeja de conversaciones (mismo modelo que la web). Realtime + badges. */
 @Component({
   selector: 'app-mensajes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mensajes.html',
   styleUrl: './mensajes.scss',
 })

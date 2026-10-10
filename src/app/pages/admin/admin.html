@@ -5,47 +5,47 @@
     <h1 class="admin__title">{{ 'Administración' | t }}</h1>
   </header>
 
-  <div class="screen__body">
+  <div class="screen__body" appStagger>
     <!-- AL2 — gestión completa: usuarios, roles/permisos, empleados, parámetros -->
-    <button type="button" class="adm-action" (click)="go('/admin/usuarios')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/usuarios')">
       <span class="adm-action__icon">👥</span>
       <span class="adm-action__label">{{ 'Usuarios' | t }}</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/admin/roles')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/roles')">
       <span class="adm-action__icon">🔐</span>
       <span class="adm-action__label">{{ 'Roles y permisos' | t }}</span>
     </button>
     @if (hasModulo('rrhh')) {
-      <button type="button" class="adm-action" (click)="go('/rrhh/empleados')">
+      <button type="button" class="adm-action" appTapScale (click)="go('/rrhh/empleados')">
         <span class="adm-action__icon">🧑‍💼</span>
         <span class="adm-action__label">{{ 'Empleados y asignaciones' | t }}</span>
       </button>
     }
-    <button type="button" class="adm-action" (click)="go('/admin/parametros')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/parametros')">
       <span class="adm-action__icon">🎚️</span>
       <span class="adm-action__label">{{ 'Parámetros del sistema' | t }}</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/admin/reportes')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/reportes')">
       <span class="adm-action__icon">📨</span>
       <span class="adm-action__label">{{ 'Reportes y comentarios' | t }}</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/admin/catalogos')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/catalogos')">
       <span class="adm-action__icon">🏗️</span>
       <span class="adm-action__label">{{ 'Catálogos de bitácora' | t }}</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/admin/unidades')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/unidades')">
       <span class="adm-action__icon">📏</span>
       <span class="adm-action__label">{{ 'Unidades de medida' | t }}</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/admin/conteos')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/conteos')">
       <span class="adm-action__icon">🔢</span>
       <span class="adm-action__label">{{ 'Historial de conteos' | t }}</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/admin/auditoria')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/auditoria')">
       <span class="adm-action__icon">🕵️</span>
       <span class="adm-action__label">{{ 'Auditoría' | t }}</span>
     </button>
-    <button type="button" class="adm-action" (click)="go('/admin/versiones')">
+    <button type="button" class="adm-action" appTapScale (click)="go('/admin/versiones')">
       <span class="adm-action__icon">🗂️</span>
       <span class="adm-action__label">{{ 'Historial de versiones' | t }}</span>
     </button>

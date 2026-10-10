@@ -13,6 +13,7 @@ import { PlanDelDia } from '../../../core/models/obra.model';
 import { formatearDuracion } from '../../../core/util/duracion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const ESTADO_TAREA: Record<string, { label: string; tint: string }> = {
   pendiente: { label: 'Pendiente', tint: '#ca8a04' },
@@ -26,7 +27,7 @@ const ESTADO_TAREA: Record<string, { label: string; tint: string }> = {
   selector: 'app-obra-plan-dia',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, Counter, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, Counter, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './plan-dia.html',
   styleUrl: './plan-dia.scss',
 })

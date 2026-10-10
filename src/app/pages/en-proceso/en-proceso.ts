@@ -5,6 +5,7 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { BorradorService } from '../../core/services/borrador.service';
 import { AutosaveService } from '../../core/services/autosave.service';
@@ -31,7 +32,7 @@ import { formatFechaCortaHora } from '../../core/util/fecha';
   selector: 'app-en-proceso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [EmptyState, Skeleton, ConfirmDialog, TranslatePipe],
+  imports: [EmptyState, Skeleton, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './en-proceso.html',
   styleUrl: './en-proceso.scss',
 })

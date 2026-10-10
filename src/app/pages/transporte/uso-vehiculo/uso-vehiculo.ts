@@ -22,6 +22,8 @@ import {
 } from '../../../core/services/vehiculo-uso.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { formatFechaHumana } from '../../../core/util/fecha';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type Modo = 'usar' | 'soltar';
 
@@ -36,7 +38,7 @@ type Modo = 'usar' | 'soltar';
   selector: 'app-uso-vehiculo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, Skeleton, OptionButton, VehiculoPicker, PhotoSlot, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './uso-vehiculo.html',
   styleUrl: './uso-vehiculo.scss',
 })
@@ -48,6 +50,7 @@ export class UsoVehiculoPage {
   private toast = inject(ToastService);
   private network = inject(NetworkService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   readonly niveles = NIVELES_COMBUSTIBLE;
   readonly fmtFechaHora = formatFechaHumana;
@@ -237,6 +240,7 @@ export class UsoVehiculoPage {
         this.toast.success(this.i18n.t(this.enUsoPorOtro() ? 'Recibiste el vehículo. Ahora está a tu cargo.' : 'Estás usando el vehículo.'));
       }
       this.done.set(true);
+      this.motion.momento('uso'); // CL2 F4 — la llave pasa de mano (tomar/recibir/soltar OK)
       // AX10 — si vinimos desviados desde "crear ruta"/"generar conduce" (el
       // vehículo no estaba en uso), volvemos allí con el borrador intacto.
       if (this.returnUrl) {

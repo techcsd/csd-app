@@ -7,9 +7,10 @@
 
   <div class="screen__body">
     <p class="hub-intro">{{ 'Herramientas de ingeniería y producción en obra.' | t }}</p>
-    <div class="hub-grid">
+    <div class="hub-grid" appStagger>
       @for (t of tiles(); track t.key) {
         <app-big-button
+          appTapScale
           [icon]="t.icon"
           [label]="t.label | t"
           [tint]="t.tint"

@@ -7,7 +7,7 @@
   </header>
 
   <div class="screen__body">
-    <button type="button" class="retiros__nuevo" (click)="nuevo()">➕ {{ 'Retirar material dañado' | t }}</button>
+    <button type="button" class="retiros__nuevo" appTapScale (click)="nuevo()">➕ {{ 'Retirar material dañado' | t }}</button>
 
     @if (loading()) {
       <app-skeleton [rows]="4" />
@@ -18,11 +18,12 @@
         [message]="'Cuando reportes material dañado para retiro, aparecerá aquí con su estado.' | t"
       />
     } @else {
+      <div appStagger style="display:contents">
       @for (it of items(); track it.id) {
-        <button type="button" class="ret-card" [attr.data-estado]="it.estado" (click)="abrir(it)">
+        <button type="button" class="ret-card" appTapScale [attr.data-estado]="it.estado" (click)="abrir(it)">
           <div class="ret-card__top">
             <span class="ret-card__folio">{{ codigo(it.folio) }}</span>
-            <span class="ret-card__estado" [attr.data-estado]="it.estado">{{ estadoLabel[it.estado] }}</span>
+            <span class="ret-card__estado" [appEstadoPulse]="it.estado" [attr.data-estado]="it.estado">{{ estadoLabel[it.estado] }}</span>
           </div>
           <div class="ret-card__body">
             <span class="ret-card__obra">🏗️ {{ it.proyecto_nombre || ('Obra' | t) }}</span>
@@ -31,6 +32,7 @@
           <span class="ret-card__fecha">{{ fmt(it.created_at) }}</span>
         </button>
       }
+      </div>
     }
   </div>
 </div>

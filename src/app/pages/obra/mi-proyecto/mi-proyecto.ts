@@ -12,6 +12,7 @@ import { obrasComoOpciones } from '../../../core/util/obra-opciones';
 import { BitacoraFull, ProyectoPartida } from '../../../core/models/bitacora.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * BH2 — "Mi proyecto": el resumen que un ingeniero mira en obra, de solo lectura.
@@ -23,7 +24,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
   selector: 'app-mi-proyecto',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, CollapsibleSelect, DecimalPipe, TranslatePipe],
+  imports: [Skeleton, EmptyState, CollapsibleSelect, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mi-proyecto.html',
   styleUrl: './mi-proyecto.scss',
 })

@@ -27,6 +27,7 @@ import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { GeocodingService } from '../../../core/services/geocoding.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { ToastService } from '../../../core/services/toast.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
 import { PermisoGateService } from '../../../core/services/permiso-gate.service';
@@ -86,7 +87,7 @@ interface ParadaUI {
   selector: 'app-crear-ruta',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner, AyudantePicker, TranslatePipe],
+  imports: [FormsModule, CollapsibleSelect, OptionButton, StepBar, WizardFooter, Skeleton, LocationPicker, ConfirmDialog, VehiculoPicker, VoiceNotes, PhotoSlot, DraftBanner, AyudantePicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './crear-ruta.html',
   styleUrl: './crear-ruta.scss',
 })

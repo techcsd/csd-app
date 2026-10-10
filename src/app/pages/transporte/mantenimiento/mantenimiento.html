@@ -31,9 +31,10 @@
       @if (step() === 1) {
         <h1 class="screen__title">{{ 'Reportar mantenimiento' | t }}</h1>
         <p class="screen__subtitle">{{ '¿Qué tipo de mantenimiento es?' | t }}</p>
-        <div class="mantenimiento__tipos">
+        <div class="mantenimiento__tipos" appStagger>
           @for (t of tipos; track t.valor) {
             <app-option-button
+              appTapScale
               [icon]="t.icon"
               [label]="t.label | t"
               [tone]="t.tone"
@@ -111,7 +112,7 @@
       @if (step() === 3) {
         <h1 class="screen__title">{{ 'Fotos del mantenimiento' | t }}</h1>
         <p class="screen__subtitle">{{ 'Adjunta al menos 1 foto como evidencia (hasta {n}).' | t: { n: maxFotos } }}</p>
-        <div class="mantenimiento__fotos">
+        <div class="mantenimiento__fotos" appStagger>
           @for (i of slots; track i) {
             <app-photo-slot
               [label]="('Foto' | t) + ' ' + (i + 1)"

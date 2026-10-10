@@ -10,7 +10,7 @@
       <app-skeleton [rows]="6" />
     } @else if (empleado(); as e) {
       <!-- Datos -->
-      <div class="re-card">
+      <div class="re-card" appFadeIn>
         <h2 class="re-nombre">{{ nombreCompleto() }}</h2>
         <p class="re-cargo">{{ e.cargo || ('Sin cargo' | t) }}@if (e.departamento) { · {{ e.departamento }} }</p>
         <div class="re-datos">
@@ -25,9 +25,10 @@
       <!-- Asignaciones -->
       <div class="re-asig-head">
         <h2 class="re-h2">{{ 'Asignaciones' | t }}</h2>
-        <button type="button" class="btn-cta re-add" (click)="abrirRegistrar()">➕ {{ 'Asignar' | t }}</button>
+        <button type="button" class="btn-cta re-add" appTapScale (click)="abrirRegistrar()">➕ {{ 'Asignar' | t }}</button>
       </div>
 
+      <div appStagger style="display:contents">
       @for (a of asignaciones(); track a.id) {
         <div class="re-asig re-asig--{{ a.estado }}">
           <div class="re-asig__row">
@@ -35,21 +36,22 @@
             <div class="re-asig__body">
               <span class="re-asig__nombre">{{ a.item_nombre }}</span>
               @if (a.categoria) { <span class="re-asig__cat">{{ a.categoria }}</span> }
-              <span class="re-asig__estado re-asig__estado--{{ a.estado }}">{{ estadoLabel(a.estado) }}</span>
+              <span class="re-asig__estado re-asig__estado--{{ a.estado }}" [appEstadoPulse]="a.estado">{{ estadoLabel(a.estado) }}</span>
             </div>
           </div>
           @if (a.notas) { <p class="re-asig__notas">📝 {{ a.notas }}</p> }
           @if (a.estado === 'asignado') {
             <div class="re-asig__actions">
-              <button type="button" class="btn-cta" (click)="pedirCambio(a, 'devuelto')">↩️ {{ 'Devolver' | t }}</button>
-              <button type="button" class="btn-ghost" (click)="pedirCambio(a, 'perdido')">{{ 'Perdido' | t }}</button>
-              <button type="button" class="btn-ghost" (click)="pedirCambio(a, 'dañado')">{{ 'Dañado' | t }}</button>
+              <button type="button" class="btn-cta" appTapScale (click)="pedirCambio(a, 'devuelto')">↩️ {{ 'Devolver' | t }}</button>
+              <button type="button" class="btn-ghost" appTapScale (click)="pedirCambio(a, 'perdido')">{{ 'Perdido' | t }}</button>
+              <button type="button" class="btn-ghost" appTapScale (click)="pedirCambio(a, 'dañado')">{{ 'Dañado' | t }}</button>
             </div>
           }
         </div>
       } @empty {
         <p class="re-vacio">{{ 'Sin items asignados.' | t }}</p>
       }
+      </div>
     } @else {
       <p class="re-vacio">{{ 'No se encontró el empleado.' | t }}</p>
     }

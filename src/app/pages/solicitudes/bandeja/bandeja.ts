@@ -17,6 +17,7 @@ import {
   NecesidadInfo,
 } from '../../../core/models/inventario.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AS7 — Bandeja de TODAS las requisiciones para roles con función de requisición:
  *  filtro por estado/urgencia + búsqueda, fila → detalle. Solo lectura (v1); la
@@ -25,7 +26,7 @@ import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
   selector: 'app-requisiciones-bandeja',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './bandeja.html',
   styleUrl: './bandeja.scss',
 })

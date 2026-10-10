@@ -6,6 +6,7 @@ import { EmptyState } from '../../shared/ui/empty-state/empty-state';
 import { SyncBadge } from '../../shared/ui/sync-badge/sync-badge';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { SyncService, OutboxFixActivo } from '../../core/sync/sync.service';
 import { NetworkService } from '../../core/services/network.service';
@@ -38,7 +39,7 @@ type OutboxItem = OutboxOp & { fotos: number };
   selector: 'app-pendientes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, SyncBadge, ConfirmDialog, TranslatePipe],
+  imports: [Skeleton, EmptyState, SyncBadge, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './pendientes.html',
   styleUrl: './pendientes.scss',
 })

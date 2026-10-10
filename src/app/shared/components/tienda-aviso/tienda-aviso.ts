@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { environment } from '../../../../environments/environment';
 import { TiendasService } from '../../../core/services/tiendas.service';
 import { LocalStore } from '../../../core/services/local-store.service';
+import { UpdaterService } from '../../../core/services/updater.service';
 import { abrirUrlExterna } from '../../../core/utils/abrir-url.util';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
@@ -23,6 +23,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 export class TiendaAviso {
   private tiendas = inject(TiendasService);
   private store = inject(LocalStore);
+  private updater = inject(UpdaterService);
 
   private descartado = signal(false);
 
@@ -33,8 +34,12 @@ export class TiendaAviso {
   /** 'play' | 'appstore' | null — qué aviso corresponde a este canal. */
   tipo = computed<'play' | 'appstore' | null>(() => {
     if (this.descartado()) return null;
-    if (environment.canal === 'apk' && this.tiendas.playUrl()) return 'play';
-    if (environment.canal === 'pwa' && this.esIosPwa && this.tiendas.appStoreUrl()) return 'appstore';
+    // CL4 — canal DEFENSIVO (resuelto): un binario nativo mal construido con canal
+    // 'pwa' igual enruta a su tienda real (Android→apk, iOS→appstore) en vez de
+    // ocultar el aviso por un canal incoherente.
+    const canal = this.updater.canal;
+    if (canal === 'apk' && this.tiendas.playUrl()) return 'play';
+    if (canal === 'pwa' && this.esIosPwa && this.tiendas.appStoreUrl()) return 'appstore';
     return null;
   });
 

@@ -29,6 +29,8 @@ import {
 import { Proyecto } from '../../../core/models/bitacora.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { combinarUnidades } from '../../../core/util/unidades';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Una línea en edición (BB10). Conserva el id del renglón + si es no catalogado. */
 interface EditItem {
@@ -47,7 +49,7 @@ interface EditItem {
   selector: 'app-requisicion-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, QtyInput, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })
@@ -62,6 +64,7 @@ export class RequisicionDetallePage {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private location = inject(Location);
+  private motion = inject(MotionService);
 
   fmtFecha = formatFechaMedia;
   codigo = requisicionCodigo;
@@ -289,6 +292,7 @@ export class RequisicionDetallePage {
         })),
       });
       this.toast.success(this.i18n.t('Requisición aprobada. Se despachó lo disponible; el faltante generó una compra.'));
+      this.motion.momento('aprobado'); // CL2 F4 — aprobación de requisición
       this.modo.set('none');
       await this.refrescar();
     } catch (e) {

@@ -11,7 +11,7 @@
   </header>
 
   <div class="screen__body">
-    <button type="button" class="btn-cta mant-lista__crear" (click)="registrar()">
+    <button type="button" class="btn-cta mant-lista__crear" appTapScale (click)="registrar()">
       ➕ {{ 'Registrar mantenimiento' | t }}
     </button>
 
@@ -58,7 +58,7 @@
               [agrupar]="true"
               [puedeAdjuntar]="true"
             />
-            <button type="button" class="btn-cta mant-card__cerrar" (click)="cerrar(m)">
+            <button type="button" class="btn-cta mant-card__cerrar" appTapScale (click)="cerrar(m)">
               ✅ {{ 'Cerrar con evidencia' | t }}
             </button>
           </div>

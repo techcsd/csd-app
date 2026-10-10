@@ -70,7 +70,7 @@
       @if (step() === 2) {
         <h1 class="screen__title">{{ 'Toma las fotos' | t }}</h1>
         <p class="screen__subtitle">{{ 'Las 6 fotos son obligatorias.' | t }}</p>
-        <div class="checklist__fotos">
+        <div class="checklist__fotos" appStagger>
           @for (f of fotosReq; track f.slot) {
             <!-- AC9 — entrega/devolución: fotos solo cámara (evidencia en el acto) -->
             <app-photo-slot
@@ -104,6 +104,7 @@
             <button
               type="button"
               class="fuel-btn"
+              appTapScale
               [class.fuel-btn--on]="combustible() === n"
               (click)="combustible.set(n)"
             >
@@ -118,6 +119,7 @@
         <h1 class="screen__title">{{ '¿Ves algún daño?' | t }}</h1>
         <div class="checklist__yesno">
           <app-option-button
+            appTapScale
             icon="✅"
             [label]="'No, todo bien' | t"
             tone="success"
@@ -125,6 +127,7 @@
             (pressed)="setDanos(false)"
           />
           <app-option-button
+            appTapScale
             icon="⚠️"
             [label]="'Sí, hay daños' | t"
             tone="error"
@@ -149,6 +152,7 @@
                   <button
                     type="button"
                     class="chip"
+                    appTapScale
                     [class.chip--on]="d.zona === z.zona"
                     (click)="setDanoZona(di, z.zona)"
                   >

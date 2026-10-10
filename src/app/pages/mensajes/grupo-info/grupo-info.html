@@ -47,7 +47,7 @@
       <!-- Participantes -->
       <section class="ginfo__parts">
         <div class="ginfo__parts-head">
-          <h3 class="ginfo__parts-title">{{ g.participantes.length }} {{ (g.participantes.length === 1 ? 'participante' : 'participantes') | t }}</h3>
+          <h3 class="ginfo__parts-title"><span [appCountUp]="g.participantes.length"></span> {{ (g.participantes.length === 1 ? 'participante' : 'participantes') | t }}</h3>
           @if (soyAdmin()) {
             <button type="button" class="ginfo__add" (click)="toggleAgregar()">{{ agregando() ? '✕' : '＋ ' + ('Agregar' | t) }}</button>
           }
@@ -58,7 +58,7 @@
             <input class="field" type="text" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); buscar()" [placeholder]="'Buscar persona…' | t" />
             @if (buscando()) { <p class="ginfo__hint">{{ 'Buscando…' | t }}</p> }
             @for (u of resultados(); track u.id) {
-              <button type="button" class="ginfo__result" (click)="agregar(u)">
+              <button type="button" class="ginfo__result" appTapScale (click)="agregar(u)">
                 <span class="ginfo__pic ginfo__pic--letra">{{ inicial(u.nombre) }}</span>
                 <span class="ginfo__result-name">{{ u.nombre }}</span>
                 <span class="ginfo__result-add">{{ 'Agregar' | t }}</span>
@@ -70,6 +70,7 @@
           </div>
         }
 
+        <div appStagger style="display:contents">
         @for (p of g.participantes; track p.usuario_id) {
           <div class="ginfo__part">
             <span class="ginfo__pic ginfo__pic--letra">{{ inicial(p.nombre) }}</span>
@@ -93,6 +94,7 @@
             }
           </div>
         }
+        </div>
       </section>
 
       <button type="button" class="ginfo__salir" (click)="salir()">🚪 {{ 'Salir del grupo' | t }}</button>

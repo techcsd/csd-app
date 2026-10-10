@@ -24,7 +24,7 @@
         @if (seleccionados().length) {
           <div class="msgs__chips">
             @for (s of seleccionados(); track s.id) {
-              <button type="button" class="msgs__chip" (click)="toggleSeleccion(s)">{{ s.nombre }} ✕</button>
+              <button type="button" class="msgs__chip" appTapScale (click)="toggleSeleccion(s)">{{ s.nombre }} ✕</button>
             }
           </div>
         }
@@ -40,12 +40,12 @@
       @if (buscando()) { <p class="msgs__hint">{{ 'Buscando…' | t }}</p> }
       @for (u of resultados(); track u.id) {
         @if (modo() === 'persona') {
-          <button type="button" class="msgs__result" (click)="iniciarCon(u)">
+          <button type="button" class="msgs__result" appTapScale (click)="iniciarCon(u)">
             <span class="msgs__avatar">{{ u.nombre.charAt(0) }}</span>
             <span class="msgs__result-name">{{ u.nombre }}</span>
           </button>
         } @else {
-          <button type="button" class="msgs__result" (click)="toggleSeleccion(u)">
+          <button type="button" class="msgs__result" appTapScale (click)="toggleSeleccion(u)">
             <span class="msgs__avatar">{{ u.nombre.charAt(0) }}</span>
             <span class="msgs__result-name">{{ u.nombre }}</span>
             <span class="msgs__result-pick">{{ estaSeleccionado(u) ? '✓' : '＋' }}</span>
@@ -67,8 +67,9 @@
     } @else if (!conversaciones().length) {
       <app-empty-state icon="💬" [title]="'Sin conversaciones' | t" [message]="'Toca ＋ para empezar una conversación.' | t" />
     } @else {
+      <div appStagger style="display:contents">
       @for (c of conversaciones(); track c.id) {
-        <button type="button" class="msgs__row" (click)="abrir(c)">
+        <button type="button" class="msgs__row" appTapScale (click)="abrir(c)">
           <span class="msgs__avatar">{{ nombreDe(c).charAt(0) }}</span>
           <span class="msgs__row-main">
             <span class="msgs__row-top">
@@ -82,6 +83,7 @@
           }
         </button>
       }
+      </div>
     }
   </div>
 </div>

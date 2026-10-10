@@ -9,6 +9,7 @@ import { InventarioService } from '../../../core/services/inventario.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ConteoHistorial, ConteoItemHist } from '../../../core/models/inventario.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * Y10 — "Conteo y ajustes" en la app (parity con la web). Historial de conteos/
@@ -20,7 +21,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-conteos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe],
+  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conteos.html',
   styleUrl: './conteos.scss',
 })

@@ -13,6 +13,7 @@ import { ProyectoApp, PROYECTO_ESTADO_LABEL, progresoProyecto, zonaDeProyecto } 
 import { CollapsibleSelect } from '../../shared/ui/collapsible-select/collapsible-select';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /**
  * Y14 — Módulo Proyectos en la app: listado de proyectos visibles (la RLS scopea
@@ -23,7 +24,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
   selector: 'app-proyectos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, CollapsibleSelect, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './proyectos.html',
   styleUrl: './proyectos.scss',
 })

@@ -14,6 +14,7 @@ import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { BigConfirm } from '../../../shared/ui/big-confirm/big-confirm';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { PersonalCarnet } from '../../../shared/ui/personal-carnet/personal-carnet';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -23,6 +24,7 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { PersonalObraService } from '../../../core/services/personal-obra.service';
 import { PlantillasDocumentoService } from '../../../core/services/plantillas-documento.service';
 import { PlantillaDocumento, EmpresaLite } from '../../../core/models/plantilla-documento.model';
@@ -93,6 +95,7 @@ interface RegistroDraft {
     ConfirmDialog,
     PersonalCarnet,
     TranslatePipe,
+    ...MOTION_DIRECTIVES,
   ],
   templateUrl: './personal-registro.html',
   styleUrl: './personal-registro.scss',
@@ -109,6 +112,7 @@ export class PersonalRegistroPage implements OnDestroy {
   private borrador = inject(BorradorService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   readonly nacionalidades = NACIONALIDADES;
   readonly tiposDocumento = TIPOS_DOCUMENTO;
@@ -525,6 +529,7 @@ export class PersonalRegistroPage implements OnDestroy {
       });
       void this.autosave.discard(this.clave); // AE9 — borrador cumplido
       this.hoja.set('exito');
+      this.motion.momento('entrada'); // CL2 F4 — una persona entró al padrón (corre igual offline; ya quedó encolado)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo registrar. Intenta de nuevo.'));
     } finally {

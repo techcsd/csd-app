@@ -14,9 +14,9 @@
     } @else if (equipo(); as e) {
       <!-- Galería -->
       @if (urls().length) {
-        <div class="tecdet__galeria">
+        <div class="tecdet__galeria" appStagger>
           @for (u of urls(); track u; let i = $index) {
-            <button type="button" class="tecdet__thumb" (click)="abrirLightbox(i)">
+            <button type="button" class="tecdet__thumb" appTapScale (click)="abrirLightbox(i)">
               <img [src]="u" alt="Foto del equipo" loading="lazy" />
             </button>
           }
@@ -24,7 +24,7 @@
       }
 
       <h2 class="tecdet__nombre">{{ e.nombre }}</h2>
-      <span class="tecdet__estado tecdet__estado--{{ e.estado }}">{{ estadoDe() }}</span>
+      <span class="tecdet__estado tecdet__estado--{{ e.estado }}" [appEstadoPulse]="e.estado">{{ estadoDe() }}</span>
 
       <div class="tecdet__grid">
         @if (e.codigo) { <div class="tecdet__kv"><span>Código</span><b>{{ e.codigo }}</b></div> }

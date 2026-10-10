@@ -14,6 +14,7 @@ import { UserContextService } from '../../core/services/user-context.service';
 import { ToastService } from '../../core/services/toast.service';
 import { NetworkService } from '../../core/services/network.service';
 import { CapturedPhoto } from '../../core/services/camera.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 type Tab = 'compras' | 'gastos';
 
@@ -26,7 +27,7 @@ type Tab = 'compras' | 'gastos';
   selector: 'app-compras-proyecto',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, CollapsibleSelect, SyncBar, PhotoSlot, TranslatePipe],
+  imports: [FormsModule, DatePipe, DecimalPipe, Skeleton, EmptyState, CollapsibleSelect, SyncBar, PhotoSlot, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './compras-proyecto.html',
   styleUrl: './compras-proyecto.scss',
 })

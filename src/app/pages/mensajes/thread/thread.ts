@@ -17,6 +17,7 @@ import { StickerEditor } from '../../../shared/ui/sticker-editor/sticker-editor'
 import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { App as CapApp } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 
@@ -33,7 +34,7 @@ interface Segmento {
   selector: 'app-mensajes-thread',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, VoicePlayer, PdfViewer, StickerEditor, TranslatePipe],
+  imports: [FormsModule, NgTemplateOutlet, Skeleton, VoiceRecorder, VoicePlayer, PdfViewer, StickerEditor, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './thread.html',
   styleUrl: './thread.scss',
 })

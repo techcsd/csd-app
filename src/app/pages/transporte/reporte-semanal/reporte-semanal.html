@@ -2,7 +2,7 @@
   <!-- Confirmation -->
   <div class="screen rsem">
     <div class="screen__body">
-      <div class="rsem__ok">
+      <div class="rsem__ok" appFadeIn>
         <span class="rsem__ok-check">✓</span>
         <h1 class="rsem__ok-title">{{ 'Inspección de vehículo enviada' | t }}</h1>
         <p class="rsem__ok-sub">{{ vehiculo()?.placa }}</p>
@@ -157,9 +157,9 @@
         <ul class="resumen">
           <li><span>{{ 'Vehículo' | t }}</span><b>{{ veh.placa }}</b></li>
           @if (vehDetalle()?.medida_uso === 'horas') {
-            <li><span>{{ 'Horas de uso' | t }}</span><b>{{ km() | number: '1.0-0' }} h</b></li>
+            <li><span>{{ 'Horas de uso' | t }}</span><b><span [appCountUp]="km() ?? 0"></span> h</b></li>
           } @else {
-            <li><span>{{ 'Kilometraje' | t }}</span><b>{{ km() | number: '1.0-0' }} km</b></li>
+            <li><span>{{ 'Kilometraje' | t }}</span><b><span [appCountUp]="km() ?? 0"></span> km</b></li>
           }
           <li><span>{{ 'Combustible' | t }}</span><b>{{ nivelLabel(nivelCombustible()) | t }}</b></li>
           <li><span>{{ 'Fotos' | t }}</span><b>{{ fotoSlots().length }} ✓</b></li>
@@ -205,7 +205,7 @@
       <h1 class="rsem__htitle">{{ 'Inspección de vehículo' | t }}</h1>
     </header>
 
-    <div class="screen__body">
+    <div class="screen__body" appStagger>
       @if (loading()) {
         <app-skeleton [rows]="4" />
       } @else if (error()) {

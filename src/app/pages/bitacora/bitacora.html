@@ -5,45 +5,45 @@
     <h1 class="bitacora__title">{{ 'Bitácora' | t }}</h1>
   </header>
 
-  <div class="screen__body">
-    <button type="button" class="bit-action bit-action--primary" (click)="go('/bitacora/parte')">
+  <div class="screen__body" appStagger>
+    <button type="button" class="bit-action bit-action--primary" appTapScale (click)="go('/bitacora/parte')">
       <span class="bit-action__icon">📝</span>
       <span class="bit-action__label">{{ 'Nueva bitácora del día' | t }}</span>
     </button>
-    <button type="button" class="bit-action bit-action--danger" (click)="go('/bitacora/incidente')">
+    <button type="button" class="bit-action bit-action--danger" appTapScale (click)="go('/bitacora/incidente')">
       <span class="bit-action__icon">🚨</span>
       <span class="bit-action__label">{{ 'Reportar incidente' | t }}</span>
     </button>
-    <button type="button" class="bit-action bit-action--primary" (click)="go('/bitacora/liberacion')">
+    <button type="button" class="bit-action bit-action--primary" appTapScale (click)="go('/bitacora/liberacion')">
       <span class="bit-action__icon">✅</span>
       <span class="bit-action__label">{{ 'Checklist de liberación (CL)' | t }}</span>
     </button>
-    <button type="button" class="bit-action" (click)="go('/bitacora/orden-trabajo')">
+    <button type="button" class="bit-action" appTapScale (click)="go('/bitacora/orden-trabajo')">
       <span class="bit-action__icon">🧾</span>
       <span class="bit-action__label">{{ 'Orden de trabajo' | t }}</span>
     </button>
     <!-- BW1 — ver / compartir las órdenes creadas -->
-    <button type="button" class="bit-action" (click)="go('/bitacora/mis-ordenes')">
+    <button type="button" class="bit-action" appTapScale (click)="go('/bitacora/mis-ordenes')">
       <span class="bit-action__icon">🗂️</span>
       <span class="bit-action__label">{{ 'Mis órdenes de trabajo' | t }}</span>
     </button>
-    <button type="button" class="bit-action" (click)="go('/bitacora/cl')">
+    <button type="button" class="bit-action" appTapScale (click)="go('/bitacora/cl')">
       <span class="bit-action__icon">✍️</span>
       <span class="bit-action__label">{{ 'Liberaciones por firmar' | t }}</span>
     </button>
-    <button type="button" class="bit-action" (click)="go('/bitacora/mis-partes')">
+    <button type="button" class="bit-action" appTapScale (click)="go('/bitacora/mis-partes')">
       <span class="bit-action__icon">📋</span>
       <span class="bit-action__label">{{ 'Mis bitácoras' | t }}</span>
     </button>
     <!-- BY4 — Sócrates y demás con permiso: revisar las bitácoras de TODAS las obras -->
     @if (puedeVerTodas()) {
-      <button type="button" class="bit-action" (click)="verBitacorasDeLasObras()">
+      <button type="button" class="bit-action" appTapScale (click)="verBitacorasDeLasObras()">
         <span class="bit-action__icon">🏗️</span>
         <span class="bit-action__label">{{ 'Bitácoras de las obras' | t }}</span>
       </button>
     }
     @if (enProcesoCount()['bitacora']; as n) {
-      <button type="button" class="bit-action" (click)="go('/en-proceso')">
+      <button type="button" class="bit-action" appTapScale (click)="go('/en-proceso')">
         <span class="bit-action__icon">📥</span>
         <span class="bit-action__label">{{ 'Documentación en proceso' | t }} ({{ n }})</span>
       </button>

@@ -21,6 +21,7 @@
         } @else if (!entradas().length) {
           <p class="log__empty">{{ 'No hay entradas de materiales/equipos programadas para esta obra.' | t }}</p>
         } @else {
+          <div appStagger style="display:contents">
           @for (e of entradas(); track e.id) {
             <div class="log__entrada">
               <div class="log__entrada-top">
@@ -33,9 +34,10 @@
               </div>
             </div>
           }
+          </div>
         }
       } @else {
-        <button type="button" class="btn-cta log__nueva" (click)="registrando.set(true)">➕ {{ 'Registrar prueba de campo' | t }}</button>
+        <button type="button" class="btn-cta log__nueva" appTapScale (click)="registrando.set(true)">➕ {{ 'Registrar prueba de campo' | t }}</button>
 
         <h2 class="log__section">{{ 'Pruebas recientes' | t }}</h2>
         @if (loading()) {
@@ -43,6 +45,7 @@
         } @else if (!pruebas().length) {
           <p class="log__empty">{{ 'Aún no hay pruebas de campo registradas.' | t }}</p>
         } @else {
+          <div appStagger style="display:contents">
           @for (p of pruebas(); track p['id']) {
             <div class="log__prueba">
               <div class="log__prueba-top">
@@ -53,13 +56,14 @@
               @if (p['notas']) { <p class="log__prueba-notas">{{ p['notas'] }}</p> }
             </div>
           }
+          </div>
         }
       }
     } @else {
       <label class="field-label">{{ 'Tipo de prueba' | t }}</label>
-      <div class="log__opts">
+      <div class="log__opts" appStagger>
         @for (t of tipos; track t.key) {
-          <app-option-button [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
+          <app-option-button appTapScale [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
         }
       </div>
 
@@ -71,7 +75,7 @@
       <textarea class="field" rows="2" [ngModel]="notas()" (ngModelChange)="notas.set($event)"></textarea>
 
       <label class="field-label log__mt">{{ 'Fotos (opcional)' | t }}</label>
-      <div class="log__fotos">
+      <div class="log__fotos" appStagger>
         @for (i of slots; track i) {
           <app-photo-slot [label]="('Foto' | t) + ' ' + (i + 1)" hint="📷" [gallery]="false"
             [foto]="fotos()[i] ?? null" (captured)="onFoto(i, $event)" (cleared)="onFotoCleared(i)" />

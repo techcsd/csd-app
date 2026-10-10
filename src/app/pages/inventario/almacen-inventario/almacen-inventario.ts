@@ -11,6 +11,7 @@ import { InventarioService, InventarioAlmacenItem, BodegaPendiente } from '../..
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Bodega } from '../../../core/models/inventario.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AP2 — Inventario de un almacén: artículos con existencia + apertura, buscador, y
@@ -22,7 +23,7 @@ import { Bodega } from '../../../core/models/inventario.model';
   selector: 'app-almacen-inventario',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './almacen-inventario.html',
   styleUrl: './almacen-inventario.scss',
 })

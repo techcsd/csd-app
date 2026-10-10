@@ -25,11 +25,11 @@
     @if (esFlotaElevado() && enUsoVisible().length) {
       <div class="enuso">
         <button type="button" class="enuso__head" (click)="toggleEnUso()" [attr.aria-expanded]="enUsoAbierto()">
-          <span class="enuso__title">🚗 {{ 'En uso ahora' | t }} · {{ enUsoVisible().length }}</span>
+          <span class="enuso__title">🚗 {{ 'En uso ahora' | t }} · <span [appCountUp]="enUsoVisible().length"></span></span>
           <span class="enuso__chev">{{ enUsoAbierto() ? '▲' : '▼' }}</span>
         </button>
         @if (enUsoAbierto()) {
-          <div class="enuso__list">
+          <div class="enuso__list" appStagger>
             @for (u of enUsoVisible(); track u.vehiculo_id) {
               <div class="enuso__card">
                 <div class="enuso__info">
@@ -81,8 +81,9 @@
         [message]="query() ? ('Ningún vehículo coincide con tu búsqueda.' | t) : ('No vemos vehículos para mostrarte. Si esperabas alguno, consulta con Flota.' | t)"
       />
     } @else {
+      <div appStagger style="display:contents">
       @for (v of lista(); track v.vehiculo_id) {
-        <button type="button" class="vlist__btn" (click)="ver(v)">
+        <button type="button" class="vlist__btn" appTapScale (click)="ver(v)">
           <app-vehiculo-card
             [fotoUrl]="fotoUrls()[v.vehiculo_id]"
             [placa]="v.placa"
@@ -95,6 +96,7 @@
           />
         </button>
       }
+      </div>
     }
   </div>
 </div>

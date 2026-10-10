@@ -37,10 +37,11 @@
         }
       }
 
+      <div appStagger style="display:contents">
       @for (item of items(); track item.id) {
         <div class="ob-row" [attr.data-estado]="item.estado" [attr.data-cat]="categoria(item)">
           <!-- BG3 — tap en la cabecera abre el contenido completo (solo lectura). -->
-          <button type="button" class="ob-row__top ob-row__top--tap" (click)="abrirContenido(item)">
+          <button type="button" class="ob-row__top ob-row__top--tap" appTapScale (click)="abrirContenido(item)">
             <span class="ob-row__icon">{{ tipoIcon(item.tipo_op) }}</span>
             <div class="ob-row__info">
               <span class="ob-row__tipo">{{ tipoLabel(item.tipo_op) }}</span>
@@ -49,7 +50,7 @@
             @if (item.estado === 'error') {
               <span class="ob-pill" [attr.data-tone]="pill(item).tone">{{ pill(item).label }}</span>
             } @else {
-              <app-sync-badge [state]="item.estado" />
+              <app-sync-badge [state]="item.estado" [appEstadoPulse]="item.estado" />
             }
           </button>
 
@@ -152,6 +153,7 @@
           }
         </div>
       }
+      </div>
     }
   </div>
 

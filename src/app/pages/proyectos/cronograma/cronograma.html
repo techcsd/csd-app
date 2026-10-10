@@ -4,7 +4,7 @@
     <span class="crono__icon">📅</span>
     <h1 class="crono__title">{{ 'Cronograma' | t }}</h1>
     @if (puedeGestionar()) {
-      <button type="button" class="crono__importar" (click)="importar()" aria-label="Importar Excel">📥 {{ 'Importar' | t }}</button>
+      <button type="button" class="crono__importar" appTapScale (click)="importar()" aria-label="Importar Excel">📥 {{ 'Importar' | t }}</button>
     }
   </header>
 
@@ -28,14 +28,15 @@
       </div>
 
       @if (vista() === 'lista') {
+        <div appStagger style="display:contents">
         @for (t of tareas(); track t.id) {
-          <button type="button" class="crono__card crono__card--{{ t.tipo }}" (click)="abrirDetalle(t)">
+          <button type="button" class="crono__card crono__card--{{ t.tipo }}" appTapScale (click)="abrirDetalle(t)">
             <div class="crono__top">
               <span class="crono__nombre">{{ t.orden }}. {{ t.nombre }}</span>
               <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] | t }}</span>
             </div>
             <div class="crono__badges">
-              <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] | t }}</span>
+              <span class="crono__estado crono__estado--{{ estado(t) }}" [appEstadoPulse]="estado(t)">{{ estadoLabel[estado(t)] | t }}</span>
               @if (enviando(t)) { <span class="crono__sending">⏳ {{ 'Enviando…' | t }}</span> }
               @if (atrasada(t)) { <span class="crono__late">⚠ {{ 'Atrasada' | t }}</span> }
             </div>
@@ -47,18 +48,19 @@
             </div>
           </button>
         }
+        </div>
       } @else {
         <!-- Timeline simple (barras CSS) -->
         @if (!barras().length) {
           <!-- AS24 #7 — hay tareas pero ninguna tiene fechas de plan → timeline vacío. -->
           <p class="crono__muted">{{ 'Las tareas de esta obra aún no tienen fechas planificadas, así que no hay línea de tiempo. Míralas en la lista.' | t }}</p>
         } @else {
-        <div class="crono__timeline">
+        <div class="crono__timeline" appStagger>
           @if (hoyLeftPct() !== null) {
             <div class="crono__today" [style.left.%]="hoyLeftPct()"></div>
           }
           @for (b of barras(); track b.tarea.id) {
-            <div class="crono__row" (click)="abrirDetalle(b.tarea)">
+            <div class="crono__row" appTapScale (click)="abrirDetalle(b.tarea)">
               <span class="crono__row-name">{{ b.tarea.orden }}. {{ b.tarea.nombre }}</span>
               <div class="crono__track">
                 <div
@@ -103,7 +105,7 @@
         <div class="crono__detalle">
           <div class="crono__badges">
             <span class="crono__tipo crono__tipo--{{ t.tipo }}">{{ tipoLabel[t.tipo] | t }}</span>
-            <span class="crono__estado crono__estado--{{ estado(t) }}">{{ estadoLabel[estado(t)] | t }}</span>
+            <span class="crono__estado crono__estado--{{ estado(t) }}" [appEstadoPulse]="estado(t)">{{ estadoLabel[estado(t)] | t }}</span>
             @if (atrasada(t)) { <span class="crono__late">⚠ {{ 'Atrasada' | t }}</span> }
           </div>
           @if (t.descripcion) { <p class="crono__desc">{{ t.descripcion }}</p> }
@@ -113,7 +115,7 @@
             @if (t.volumetria) { <li><span>{{ 'Volumetría' | t }}</span><b>{{ t.volumetria }}</b></li> }
             <li><span>{{ 'Plan' | t }}</span><b>{{ fmt(t.fecha_inicio_plan) }} → {{ fmt(t.fecha_fin_plan) }}</b></li>
             <li><span>{{ 'Duración' | t }}</span><b>{{ t.duracion_dias_plan }} {{ 'día(s)' | t }}</b></li>
-            @if (t.avance_pct != null) { <li><span>{{ 'Avance' | t }}</span><b>{{ t.avance_pct }}%</b></li> }
+            @if (t.avance_pct != null) { <li><span>{{ 'Avance' | t }}</span><b><span [appCountUp]="t.avance_pct"></span>%</b></li> }
             @if (t.rendimiento) { <li><span>{{ 'Rendimiento' | t }}</span><b>{{ t.rendimiento }}</b></li> }
             @if (t.fecha_inicio_real) { <li><span>{{ 'Inicio real' | t }}</span><b>{{ fmt(t.fecha_inicio_real) }}</b></li> }
             @if (t.fecha_fin_real) { <li><span>{{ 'Fin real' | t }}</span><b>{{ fmt(t.fecha_fin_real) }}</b></li> }
@@ -130,10 +132,10 @@
           @if (puedeGestionar() && !enviando(t)) {
             <div class="crono__acciones">
               @if (estado(t) === 'pendiente') {
-                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="iniciar(t)">▶ {{ 'Iniciar tarea' | t }}</button>
+                <button type="button" class="btn-cta" appTapScale [disabled]="submitting()" (click)="iniciar(t)">▶ {{ 'Iniciar tarea' | t }}</button>
               }
               @if (estado(t) !== 'completada') {
-                <button type="button" class="btn-cta" [disabled]="submitting()" (click)="abrirCompletar()">✓ {{ 'Completar tarea' | t }}</button>
+                <button type="button" class="btn-cta" appTapScale [disabled]="submitting()" (click)="abrirCompletar()">✓ {{ 'Completar tarea' | t }}</button>
               }
             </div>
           } @else if (enviando(t)) {
@@ -163,10 +165,10 @@
             ></textarea>
           }
           <div class="crono__acciones">
-            <button type="button" class="btn-cta" [disabled]="submitting()" (click)="completar()">
+            <button type="button" class="btn-cta" appTapScale [disabled]="submitting()" (click)="completar()">
               {{ submitting() ? ('Guardando…' | t) : ('Confirmar completada' | t) }}
             </button>
-            <button type="button" class="btn-ghost" (click)="modo.set('detalle')">{{ 'Atrás' | t }}</button>
+            <button type="button" class="btn-ghost" appTapScale (click)="modo.set('detalle')">{{ 'Atrás' | t }}</button>
           </div>
         </div>
       }

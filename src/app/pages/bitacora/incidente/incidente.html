@@ -18,7 +18,7 @@
     <div class="screen__body">
       <!-- 1. Obra -->
       @if (step() === 1) {
-        <h1 class="screen__title">{{ '¿En qué obra?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿En qué obra?' | t }}</h1>
         @if (loading()) {
           <app-skeleton [rows]="4" />
         } @else if (proyectos().length) {
@@ -53,7 +53,7 @@
 
       <!-- 2. Tipo -->
       @if (step() === 2) {
-        <h1 class="screen__title">{{ '¿Qué tipo de reporte es?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Qué tipo de reporte es?' | t }}</h1>
         @for (t of tipos; track t.value) {
           <app-option-button [label]="t.label" [icon]="t.icon" tone="error" [selected]="tipo() === t.value" (pressed)="pickTipo(t.value)" />
         }
@@ -62,7 +62,7 @@
       <!-- 3. Preguntas del tipo -->
       @if (step() === 3) {
         @if (esEquipo()) {
-          <h1 class="screen__title">{{ 'Cuéntanos del equipo' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ 'Cuéntanos del equipo' | t }}</h1>
           <label class="field-label">{{ '¿Cuál equipo?' | t }}</label>
           @if (equiposObra().length) {
             <p class="incidente__hint">{{ 'Toca uno de la obra o escribe otro abajo.' | t }}</p>
@@ -89,7 +89,7 @@
               [placeholder]="equipoOperativo() === false ? ('Ej: se fundió el motor, no arranca…' | t) : ('Detalle opcional del estado del equipo' | t)"></textarea>
           }
         } @else {
-          <h1 class="screen__title">{{ '¿Qué tan grave?' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ '¿Qué tan grave?' | t }}</h1>
           <div class="incidente__grav">
             @for (g of gravedades; track g.value) {
               <button type="button" class="chip" [class.chip--on]="gravedad() === g.value" (click)="gravedad.set(g.value)">{{ g.label }}</button>
@@ -110,7 +110,7 @@
 
       <!-- 4. ¿Qué pasó? — sucesos + Otro (S13) -->
       @if (step() === 4) {
-        <h1 class="screen__title">{{ '¿Qué pasó?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Qué pasó?' | t }}</h1>
         <p class="screen__subtitle">{{ 'Elige lo más parecido. Si no está, toca "Otro".' | t }}</p>
         @for (s of sucesos(); track s) {
           <app-option-button [label]="s" [selected]="suceso() === s" (pressed)="pickSuceso(s)" />
@@ -124,7 +124,7 @@
 
       <!-- 5. Fotos + nota de voz (mínimo 1 foto) -->
       @if (step() === 5) {
-        <h1 class="screen__title">{{ 'Fotos y nota de voz' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Fotos y nota de voz' | t }}</h1>
         <p class="screen__subtitle">
           {{ 'Mínimo {n} foto.' | t: { n: minFotos } }} {{ 'Llevas' | t }} <b>{{ fotos().length }}</b>.
           @if (fotos().length < minFotos) { <span class="incidente__warn">{{ 'Falta {n}.' | t: { n: minFotos - fotos().length } }}</span> }
@@ -146,14 +146,14 @@
 
       <!-- 6. Acciones tomadas -->
       @if (step() === 6) {
-        <h1 class="screen__title">{{ '¿Qué se hizo?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Qué se hizo?' | t }}</h1>
         <p class="screen__subtitle">{{ 'Acciones o medidas que se tomaron (opcional).' | t }}</p>
         <textarea class="field incidente__textarea" rows="4" [ngModel]="acciones()" (ngModelChange)="acciones.set($event)" [placeholder]="'Ej: se detuvo el trabajo, se atendió al herido…' | t"></textarea>
       }
 
       <!-- 7. Resumen -->
       @if (step() === 7) {
-        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
           <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoNombre() }}</b></li>
           <li><span>{{ 'Tipo' | t }}</span><b>{{ tipoLabel() }}</b></li>

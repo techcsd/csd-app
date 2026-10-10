@@ -24,7 +24,7 @@
           <div class="cld__banner">📝 {{ 'Borrador — pendiente de firmas obligatorias.' | t }}</div>
         }
 
-        <ul class="resumen">
+        <ul class="resumen" appFadeIn>
           <li><span>{{ 'Obra' | t }}</span><b>{{ c.proyecto }}</b></li>
           <li><span>{{ 'Checklist' | t }}</span><b>{{ c.plantillaCodigo }} — {{ c.plantilla }}</b></li>
           @if (c.bloque) { <li><span>{{ 'Bloque' | t }}</span><b>{{ c.bloque }}</b></li> }
@@ -83,9 +83,9 @@
 
         <!-- Estado de firmas (verde al firmar) + imagen de la firma puesta -->
         <h2 class="cld__section">{{ 'Firmas' | t }}</h2>
-        <div class="cld__firma-check">
+        <div class="cld__firma-check" appStagger>
           @for (r of firmaEstados(); track r.value) {
-            <div class="cld__firma-row" [class.cld__firma-row--ok]="r.firmada">
+            <div class="cld__firma-row" [appEstadoPulse]="r.firmada" [class.cld__firma-row--ok]="r.firmada">
               <span class="cld__firma-icon">{{ r.firmada ? '✅' : '⬜' }}</span>
               <div class="cld__firma-body">
                 <span class="cld__firma-name">{{ r.label }}</span>
@@ -106,9 +106,9 @@
             <p class="cld__muted">{{ 'Necesitas conexión para firmar.' | t }}</p>
           }
           <label class="field-label">{{ 'Rol que firma' | t }}</label>
-          <div class="cld__roles">
+          <div class="cld__roles" appStagger>
             @for (r of roles; track r.value) {
-              <app-option-button [label]="r.label" [selected]="firmaRol() === r.value" (pressed)="pickRol(r.value)" />
+              <app-option-button appTapScale [label]="r.label" [selected]="firmaRol() === r.value" (pressed)="pickRol(r.value)" />
             }
           </div>
 

@@ -19,6 +19,7 @@ import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AI2 — "Pendiente entrega": conduces emitidos que faltan por entregar al receptor.
@@ -34,7 +35,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-conduces-pendientes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduces-pendientes.html',
   styleUrl: './conduces-pendientes.scss',
 })

@@ -40,15 +40,12 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-09';
 
-const TITULO = 'Apoyo de transporte, trabajos de los choferes y notificaciones que suenan';
+const TITULO = 'Una app más viva: animaciones en toda la app y una bienvenida nueva';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Apoyo de transporte', d: 'Un solo lugar para pedir mover material, retirar lo que sobra o botar escombros: eliges tipo, obra, día y una foto. Los ingenieros piden y cierran sus solicitudes; el líder de transporte las asigna a los choferes y los monitorea.' },
-  { t: 'nuevo', m: 'Mis trabajos', d: 'Los choferes ven los trabajos que les asignaron y reportan su avance con un toque: Voy en camino, Llegué, Cargando, Terminé (con foto) o Tengo un problema.' },
-  { t: 'mejora', m: 'Notificaciones', d: 'Ahora los avisos SUENAN y aparecen en la barra del teléfono. En Perfil › Notificaciones puedes mandarte una de prueba, y hay una guía si tu teléfono las está bloqueando.' },
-  { t: 'nuevo', m: 'Conduces', d: 'Entregar a: puedes elegir quién recibe un conduce después de emitirlo (o cambiarlo), tú o Logística.' },
-  { t: 'arreglo', m: 'Conduces', d: 'Corregido el error al transferir un conduce a otro chofer.' },
-  { t: 'mejora', m: 'Chofer privado', d: 'En tu perfil ves "Mis vehículos autorizados" con su vigencia.' },
-  { t: 'arreglo', m: 'Cámara', d: 'Las fotos ya no se pierden si el teléfono cierra la app mientras tomas la foto; y en Registrar combustible, si la cámara falla puedes subir la foto del recibo desde la galería.' },
+  { t: 'mejora', m: 'Toda la app', d: 'La app se siente más viva: transiciones suaves, listas que entran escalonadas, números que cuentan y una pequeña confirmación con movimiento cuando guardas algo (echar combustible, recibir, enviar, firmar…). Si tu teléfono va lento, ponlo en "Animaciones: reducidas" en Perfil.' },
+  { t: 'nuevo', m: 'Bienvenida', d: 'Al instalar o entrar por primera vez verás una bienvenida nueva, más moderna: elige idioma, saludo según tu rol, y te pedimos los permisos (notificaciones y ubicación) explicando para qué. Siempre la puedes saltar, y verla otra vez desde Soporte.' },
+  { t: 'arreglo', m: 'Actualizaciones', d: 'Arreglado: el botón "Actualizar" ahora sí instala la nueva versión (antes se quedaba cargando y no hacía nada). Si no se instala, puedes descargarla desde el navegador.' },
+  { t: 'mejora', m: 'Conduces externos', d: 'Un admin puede marcar un conduce externo como prueba.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

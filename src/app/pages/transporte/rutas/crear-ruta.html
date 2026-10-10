@@ -40,7 +40,7 @@
       } @else {
         <!-- Paso 1 — Vehículo (+ conductor si es jefe de flota) -->
         @if (step() === 1) {
-          <h1 class="screen__title">{{ '¿Qué vehículo?' | t }}</h1>
+          <h1 appWizardStep class="screen__title">{{ '¿Qué vehículo?' | t }}</h1>
           @if (!vehiculoId()) {
             <app-vehiculo-picker [subtitulo]="'Selecciona el vehículo para la ruta.' | t" (elegido)="onVehiculoElegido($event)" />
           } @else {
@@ -77,7 +77,7 @@
 
         <!-- Paso 2 — Origen + destino + paradas -->
         @if (step() === 2) {
-          <h1 class="screen__title">{{ '¿Desde dónde sale?' | t }}</h1>
+          <h1 appWizardStep class="screen__title">{{ '¿Desde dónde sale?' | t }}</h1>
           <label class="field-label" for="origen">{{ 'Origen' | t }}</label>
           <input id="origen" class="field" type="text" [ngModel]="origen()" (ngModelChange)="onOrigenInput($event)" [placeholder]="'¿Desde dónde sales?' | t" />
           <button type="button" class="btn-ghost cruta__gps" (click)="usarMiUbicacion()">📍 {{ 'Usar mi ubicación actual' | t }}</button>
@@ -94,8 +94,8 @@
 
           <h1 class="screen__title cruta__paradas-lbl">{{ '¿A dónde va?' | t }}</h1>
           <div class="cruta__modo">
-            <app-option-button icon="🏗️" [label]="'Obra o almacén' | t" [selected]="destinoModo() === 'lugar'" (pressed)="destinoModo.set('lugar')" />
-            <app-option-button icon="🗺️" [label]="'En el mapa' | t" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
+            <app-option-button appTapScale icon="🏗️" [label]="'Obra o almacén' | t" [selected]="destinoModo() === 'lugar'" (pressed)="destinoModo.set('lugar')" />
+            <app-option-button appTapScale icon="🗺️" [label]="'En el mapa' | t" [selected]="destinoModo() === 'mapa'" (pressed)="destinoModo.set('mapa')" />
           </div>
           @if (destinoModo() === 'lugar') {
             <app-collapsible-select [label]="'Obra de destino' | t" icon="🏗️" [options]="lugarOpts()" [selectedId]="destinoLugarId()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="onDestinoLugar($event)" />
@@ -165,7 +165,7 @@
 
         <!-- Paso 3 — Carga + detalles -->
         @if (step() === 3) {
-          <h1 class="screen__title">{{ 'Carga y detalles' | t }}</h1>
+          <h1 appWizardStep class="screen__title">{{ 'Carga y detalles' | t }}</h1>
 
           <!-- AD6 — tipo de ruta (el chofer que se crea su ruta) -->
           @if (!esElevado) {
@@ -173,6 +173,7 @@
             <div class="cruta__tipos">
               @for (t of tiposRuta; track t.valor) {
                 <app-option-button
+                  appTapScale
                   [icon]="t.icon"
                   [label]="t.label | t"
                   [selected]="tipoRuta() === t.valor"
@@ -216,7 +217,7 @@
 
         <!-- Paso 4 — Resumen -->
         @if (step() === 4) {
-          <h1 class="screen__title">{{ 'Revisa y crea' | t }}</h1>
+          <h1 appWizardStep class="screen__title">{{ 'Revisa y crea' | t }}</h1>
           <ul class="resumen">
             <li><span>{{ 'Vehículo' | t }}</span><b>{{ vehiculoLabel() }}</b></li>
             @if (!esElevado) {
@@ -224,11 +225,11 @@
             }
             <li><span>{{ 'Conductor' | t }}</span><b>{{ esElevado ? conductorNombre() : ('Yo mismo' | t) }}</b></li>
             <li><span>{{ 'Origen' | t }}</span><b>{{ origen() }}</b></li>
-            @if (paradas().length) { <li><span>{{ 'Paradas' | t }}</span><b>{{ paradas().length }}</b></li> }
+            @if (paradas().length) { <li><span>{{ 'Paradas' | t }}</span><b [appCountUp]="paradas().length"></b></li> }
             <li><span>{{ 'Destino' | t }}</span><b>{{ destinoResumen() }}</b></li>
-            @if (km() != null) { <li><span>{{ 'Km estimados' | t }}</span><b>{{ km() }}</b></li> }
+            @if (km() != null) { <li><span>{{ 'Km estimados' | t }}</span><b [appCountUp]="km() ?? 0"></b></li> }
             @if (duracionMin() != null) { <li><span>{{ 'Tiempo' | t }}</span><b>{{ fmtDur(duracionMin()) }}</b></li> }
-            @if (fotosEvidencia().length) { <li><span>{{ 'Fotos' | t }}</span><b>{{ fotosEvidencia().length }} ✓</b></li> }
+            @if (fotosEvidencia().length) { <li><span>{{ 'Fotos' | t }}</span><b><span [appCountUp]="fotosEvidencia().length"></span> ✓</b></li> }
           </ul>
         }
       }
