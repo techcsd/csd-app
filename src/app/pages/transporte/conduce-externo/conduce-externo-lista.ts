@@ -8,6 +8,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { formatFechaRelativa } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * CC5 — "Mis conduces externos": el conduce externo ahora es un conduce de verdad
@@ -19,7 +20,7 @@ import { formatFechaRelativa } from '../../../core/util/fecha';
   selector: 'app-conduce-externo-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe],
+  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduce-externo-lista.html',
   styleUrl: './conduce-externo-lista.scss',
 })

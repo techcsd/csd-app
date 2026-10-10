@@ -25,6 +25,8 @@ import { AyudantePicker } from '../../../shared/ui/ayudante-picker/ayudante-pick
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { AyudanteUsuario } from '../../../core/services/ayudante.service';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { GuardedWizard } from '../../../shared/guarded-wizard';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { CapturedPhoto, CameraService } from '../../../core/services/camera.service';
@@ -114,7 +116,7 @@ const PRECITA_KM = 500; // sgc.flota_config → umbral_precita_km
   selector: 'app-preuso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes, AyudantePicker, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, ConfirmDialog, Skeleton, VehiculoPicker, DraftBanner, WizardExit, VoiceNotes, AyudantePicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './preuso.html',
   styleUrl: './preuso.scss',
 })
@@ -133,6 +135,7 @@ export class PreusoPage extends GuardedWizard {
   private userCtx = inject(UserContextService);
   private i18n = inject(I18nService);
   private camera = inject(CameraService);
+  private motion = inject(MotionService);
 
   private sig = viewChild(SignaturePad);
   borradorPrevio = signal<number | null>(null); // M1 — banner de recuperación
@@ -727,6 +730,9 @@ export class PreusoPage extends GuardedWizard {
       // M1 — enviado: limpia el borrador (estado + fotos) para no reofrecerlo.
       void this.autosave.discard(this.claveBorrador());
       this.done.set(true);
+      // CL2 F4 — momento mediano "checklist" (puntos tachados en cascada); fuera de
+      // red igual (es un aviso local; el pre-uso ya quedó encolado en el outbox).
+      this.motion.momento('checklist');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {

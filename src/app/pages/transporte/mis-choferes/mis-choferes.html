@@ -22,14 +22,15 @@
         [message]="'Cuando un chofer esté activo, aparecerá aquí con su estado y señal.' | t"
       />
     } @else {
+      <div appStagger style="display:contents">
       @for (c of choferes(); track c.conductorId) {
         <div class="chofer" [class.is-open]="abiertoId() === c.conductorId">
           <!-- Encabezado tocable -->
-          <button type="button" class="chofer__head" (click)="toggle(c)">
+          <button type="button" class="chofer__head" appTapScale (click)="toggle(c)">
             <span class="chofer__senal" [attr.data-nivel]="nivelSenal(c)" [attr.aria-label]="'Señal' | t"></span>
             <span class="chofer__id">
               <span class="chofer__nombre">{{ c.nombre }}</span>
-              <span class="chofer__estado" [attr.data-estado]="c.estado">
+              <span class="chofer__estado" [appEstadoPulse]="c.estado" [attr.data-estado]="c.estado">
                 {{ estadoLabel(c.estado) | t }}
                 @if (c.estadoDesde) { · {{ fmtRel(c.estadoDesde) }} }
               </span>
@@ -87,6 +88,7 @@
           }
         </div>
       }
+      </div>
     }
   </div>
 </div>

@@ -9,6 +9,7 @@
     <label class="field-label">{{ '¿Qué necesitas?' | t }} <span class="capo__req">*</span></label>
     @for (t of tipos; track t.key) {
       <app-option-button
+        appTapScale
         [icon]="t.icon"
         [label]="t.label | t"
         [selected]="tipo() === t.key"
@@ -73,6 +74,7 @@
       <label class="field-label">{{ '¿A dónde va?' | t }}</label>
       @for (m of destinoModos; track m.key) {
         <app-option-button
+          appTapScale
           [icon]="m.icon"
           [label]="m.label | t"
           [selected]="destinoModo() === m.key"

@@ -16,13 +16,13 @@
       <!-- AS16 — si no tengo un vehículo en uso, atajo directo a "Uso de vehículo"
            (al terminar vuelvo con el vehículo ya en uso). -->
       <p class="comb__pick-o">{{ 'o' | t }}</p>
-      <app-option-button
+      <app-option-button appTapScale
         icon="🚗"
         [label]="'Usar un vehículo' | t"
         (pressed)="irAUsarVehiculo()"
       />
       <!-- Z23-app — tarjeta asignada a una persona (sin vehículo) -->
-      <app-option-button
+      <app-option-button appTapScale
         icon="👤"
         [label]="'Echada de persona (sin vehículo)' | t"
         (pressed)="elegirPersona()"
@@ -33,7 +33,7 @@
   <!-- Confirmation: "Combustible registrado" -->
   <div class="screen comb">
     <div class="screen__body">
-      <div class="comb__ok">
+      <div class="comb__ok" appFadeIn>
         <span class="comb__ok-check">✓</span>
         <h1 class="comb__ok-title">{{ (reenvioDe() ? 'Echada reenviada' : 'Combustible registrado') | t }}</h1>
         <div class="comb__veh">
@@ -69,12 +69,12 @@
         @if (!modoPersona()) {
           <div class="comb__card">
             <span class="comb__card-label">{{ 'Kilometraje' | t }}</span>
-            <span class="comb__card-value">{{ km() | number: '1.0-0' }} km</span>
+            <span class="comb__card-value"><span [appCountUp]="km() ?? 0"></span> km</span>
           </div>
         }
         <div class="comb__card">
           <span class="comb__card-label">{{ 'Echados' | t }}</span>
-          <span class="comb__card-value">{{ galones() | number: '1.0-2' }} gal</span>
+          <span class="comb__card-value"><span [appCountUp]="galones() ?? 0" [decimales]="2"></span> gal</span>
           <span class="comb__card-sub">RD$ {{ monto() | number: '1.2-2' }}</span>
         </div>
         <!-- AE7 — en depósito en obra (garrafón) no hay precio de bomba: el card
@@ -213,12 +213,12 @@
         <!-- AC11 — telehandler: elegir dónde se echó (depósito en obra por defecto) -->
         @if (esTelehandler()) {
           <label class="field-label">{{ '¿Dónde se echó?' | t }}</label>
-          <app-option-button icon="🛢️" [label]="'Depósito en obra (garrafón)' | t" [selected]="esDeposito()" (pressed)="setOrigen('deposito_obra')" />
-          <app-option-button icon="⛽" [label]="'Estación' | t" [selected]="!esDeposito()" (pressed)="setOrigen('estacion')" />
+          <app-option-button appTapScale icon="🛢️" [label]="'Depósito en obra (garrafón)' | t" [selected]="esDeposito()" (pressed)="setOrigen('deposito_obra')" />
+          <app-option-button appTapScale icon="⛽" [label]="'Estación' | t" [selected]="!esDeposito()" (pressed)="setOrigen('estacion')" />
           <div class="comb__mt"></div>
         }
         @if (esDeposito()) {
-          <h1 class="screen__title">{{ 'Foto de evidencia' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ 'Foto de evidencia' | t }}</h1>
           <p class="screen__subtitle">{{ 'Toma una foto del equipo/garrafón durante la echada (solo cámara).' | t }}</p>
           <div class="comb__fotos">
             <app-photo-slot
@@ -233,7 +233,7 @@
             />
           </div>
         } @else {
-          <h1 class="screen__title">{{ 'Bomba en 0' | t }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ 'Bomba en 0' | t }}</h1>
           <p class="screen__subtitle">
             {{ 'Antes de echar, toma la foto de la bomba/estación marcando' | t }} <b>0</b>. {{ 'Respalda los galones que vas a echar (solo cámara).' | t }}
           </p>
@@ -254,7 +254,7 @@
 
       <!-- Paso 2: km + galones + monto (todo lo que se digita, una hoja) -->
       @if (stepKey() === 'digits') {
-        <h1 class="screen__title">
+        <h1 class="screen__title" appWizardStep>
           @if (modoPersona()) { {{ 'Galones y monto' | t }} }
           @else if (esDeposito()) { {{ 'Horas y galones' | t }} }
           @else { {{ 'Kilometraje y monto' | t }} }
@@ -359,7 +359,7 @@
 
       <!-- AE6 · Paso 3: el resto de fotos (recibo + tablero); la bomba ya se tomó -->
       @if (stepKey() === 'fotos') {
-        <h1 class="screen__title">{{ 'Fotos del respaldo' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Fotos del respaldo' | t }}</h1>
         <p class="screen__subtitle">
           @if (modoPersona()) {
             {{ 'El recibo respalda el monto que pagaste (solo cámara).' | t }}
@@ -422,8 +422,8 @@
       @if (stepKey() === 'detalles') {
         <!-- Z23-app — producto (para conciliar con el reporte del proveedor) -->
         <label class="field-label">{{ '¿Qué combustible?' | t }}</label>
-        <app-option-button icon="🛢️" [label]="'Diésel' | t" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
-        <app-option-button icon="⛽" [label]="'Gasolina' | t" [selected]="producto() === 'gasolina'" (pressed)="producto.set('gasolina')" />
+        <app-option-button appTapScale icon="🛢️" [label]="'Diésel' | t" [selected]="producto() === 'diesel'" (pressed)="producto.set('diesel')" />
+        <app-option-button appTapScale icon="⛽" [label]="'Gasolina' | t" [selected]="producto() === 'gasolina'" (pressed)="producto.set('gasolina')" />
 
         <!-- AC11 — depósito en obra: elegir la obra donde se echó (opcional) -->
         @if (esDeposito()) {
@@ -443,8 +443,8 @@
         } @else {
           <!-- AA20 — subtipo Regular/Premium (obligatorio) -->
           <label class="field-label comb__mt">{{ '¿Regular o Premium?' | t }}</label>
-          <app-option-button icon="🟢" [label]="'Regular' | t" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
-          <app-option-button icon="⭐" [label]="'Premium' | t" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
+          <app-option-button appTapScale icon="🟢" [label]="'Regular' | t" [selected]="subtipo() === 'regular'" (pressed)="subtipo.set('regular')" />
+          <app-option-button appTapScale icon="⭐" [label]="'Premium' | t" [selected]="subtipo() === 'premium'" (pressed)="subtipo.set('premium')" />
           @if (precioRef(); as pr) {
             <p class="field-hint">
               {{ 'Precio oficial' | t }} {{ productoCanonicoLabel[pr.producto] ?? pr.producto }}:
@@ -495,11 +495,11 @@
 
       <!-- AE6 · Paso 5: ¿En qué estación? + cálculo automático (paso propio, poco scroll) -->
       @if (stepKey() === 'estacion') {
-        <h1 class="screen__title">{{ '¿En qué estación?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿En qué estación?' | t }}</h1>
         @for (e of estacionesVisibles(); track e) {
-          <app-option-button icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
+          <app-option-button appTapScale icon="⛽" [label]="e" [selected]="!estacionOtro() && estacion() === e" (pressed)="pickEstacion(e)" />
         }
-        <app-option-button icon="✏️" [label]="'Otro' | t" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
+        <app-option-button appTapScale icon="✏️" [label]="'Otro' | t" [selected]="estacionOtro()" (pressed)="pickEstacionOtro()" />
         @if (estacionOtro()) {
           <input
             class="field comb__estacion-otro"
@@ -544,7 +544,7 @@
 
       <!-- Paso final: revisa y envía (no editable) -->
       @if (stepKey() === 'revisar') {
-        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
           <!-- BV1 — fecha de la echada + distintivo RETROACTIVA cuando es una fecha pasada -->
           @if (esRetroactiva()) {

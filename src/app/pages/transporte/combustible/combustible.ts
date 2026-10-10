@@ -60,6 +60,8 @@ import {
 } from '../../../core/models/combustible.model';
 import { parseNumeroFlexible } from '../../../core/util/numero';
 import { formatFechaCortaHora, fechaLocalISO } from '../../../core/util/fecha';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AE6 — pasos LÓGICOS del wizard (la cantidad y el contenido dependen del modo:
@@ -86,7 +88,7 @@ type CombStep = 'bomba' | 'digits' | 'fotos' | 'detalles' | 'estacion' | 'revisa
   selector: 'app-combustible',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput, AyudantePicker, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, CollapsibleSelect, ConfirmDialog, Skeleton, VehiculoPicker, WizardFooter, Img, WizardExit, KmInput, AyudantePicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './combustible.html',
   styleUrl: './combustible.scss',
 })
@@ -105,6 +107,7 @@ export class CombustiblePage extends GuardedWizard {
   private borrador = inject(BorradorService);
   private camera = inject(CameraService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   vehiculoId = '';
   necesitaVehiculo = signal(false); // B1 — elegir del pool cuando no llega por ruta
@@ -1228,6 +1231,7 @@ export class CombustiblePage extends GuardedWizard {
         this.resultado.set(this.calc());
         this.registradoEn.set(new Date().toISOString());
         this.done.set(true);
+        this.motion.momento('combustible'); // CL2 F4 — la gota se llena (reenvío OK, también offline)
         return;
       }
 
@@ -1277,6 +1281,7 @@ export class CombustiblePage extends GuardedWizard {
       this.resultado.set(this.calc());
       this.registradoEn.set(new Date().toISOString()); // BB6 — hora real de captura
       this.done.set(true);
+      this.motion.momento('combustible'); // CL2 F4 — la gota se llena (echada encolada OK, también offline)
       void this.limpiarBorrador(); // BT4 — enviado OK: borra el borrador + sus fotos
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));

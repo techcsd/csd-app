@@ -14,8 +14,10 @@ import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { TallerPicker, TallerSel } from '../../../shared/ui/taller-picker/taller-picker';
 import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-notes';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { CapturedPhoto, CameraService } from '../../../core/services/camera.service';
@@ -72,7 +74,7 @@ const MAX_FOTOS = 3;
   selector: 'app-mantenimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, TallerPicker, VoiceNotes, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, BigConfirm, Skeleton, WizardFooter, ConfirmDialog, WizardExit, KmInput, TallerPicker, VoiceNotes, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mantenimiento.html',
   styleUrl: './mantenimiento.scss',
 })
@@ -89,6 +91,7 @@ export class MantenimientoPage implements OnDestroy {
   private location = inject(Location);
   private i18n = inject(I18nService);
   private camera = inject(CameraService);
+  private motion = inject(MotionService);
 
   readonly total = TOTAL_STEPS;
   readonly maxFotos = MAX_FOTOS;
@@ -500,6 +503,9 @@ export class MantenimientoPage implements OnDestroy {
       });
       await this.autosave.discard(this.clave); // limpia borrador + fotos
       this.done.set(true);
+      // CL2 F4 — momento mediano "mantenimiento" (la llave gira); corre igual offline
+      // (aviso local; el mantenimiento ya quedó encolado en el outbox).
+      this.motion.momento('mantenimiento');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {

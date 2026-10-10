@@ -14,6 +14,7 @@ import { estadoMeta } from '../../../core/services/chofer-estado.service';
 import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type Tab = 'activas' | 'historico';
 
@@ -37,7 +38,7 @@ const ESTADO_RUTA: { key: string; label: string }[] = [
   selector: 'app-rutas-activas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './rutas-activas.html',
   styleUrl: './rutas-activas.scss',
 })

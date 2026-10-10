@@ -50,7 +50,7 @@
         <p class="clog__resumen">⚠️ {{ '{n} echada(s) con salto o consumo sospechoso.' | t: { n: sospechosas() } }}</p>
       }
       @for (r of visibles(); track r.id) {
-        <button type="button" class="clog__row" [class.clog__row--alerta]="esSospechosa(r)" (click)="abrir(r)">
+        <button type="button" class="clog__row" appTapScale [class.clog__row--alerta]="esSospechosa(r)" (click)="abrir(r)">
           <div class="clog__row-top">
             <span class="clog__placa">{{ r.placa || ('Persona' | t) }}</span>
             <span class="clog__fecha">{{ fechaHora(r.created_at || r.fecha) }} ›</span>

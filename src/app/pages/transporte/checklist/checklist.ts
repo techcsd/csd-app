@@ -14,8 +14,10 @@ import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { WizardExit } from '../../../shared/ui/wizard-exit/wizard-exit';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { resetScrollOnStep } from '../../../shared/util/scroll';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { UbicacionLabelService } from '../../../core/services/ubicacion-label.service';
@@ -64,7 +66,7 @@ const TOTAL_STEPS = 6;
   selector: 'app-checklist',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner, ConfirmDialog, WizardExit, KmInput, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, PhotoSlot, OptionButton, SignaturePad, BigConfirm, Skeleton, WizardFooter, DraftBanner, ConfirmDialog, WizardExit, KmInput, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './checklist.html',
   styleUrl: './checklist.scss',
 })
@@ -84,6 +86,7 @@ export class ChecklistPage implements OnDestroy {
   private location = inject(Location);
   private i18n = inject(I18nService);
   private camera = inject(CameraService);
+  private motion = inject(MotionService);
 
   private sig = viewChild(SignaturePad);
 
@@ -580,6 +583,9 @@ export class ChecklistPage implements OnDestroy {
       // S29 — refrescar el pool para que el vehículo recibido salga de "por recibir".
       void this.vehiculos.invalidatePendientes();
       this.done.set(true);
+      // CL2 F4 — momento mediano "checklist" (puntos tachados en cascada); corre
+      // igual offline (aviso local; la entrega ya quedó encolada en el outbox).
+      this.motion.momento('checklist');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {

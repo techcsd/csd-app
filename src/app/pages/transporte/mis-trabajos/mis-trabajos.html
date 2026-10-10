@@ -22,13 +22,14 @@
         [message]="'Cuando el encargado de transporte te asigne un trabajo, aparecerá aquí.' | t"
       />
     } @else {
+      <div appStagger style="display:contents">
       @for (t of trabajos(); track t.origen + t.origenId) {
         <div class="trabajo">
           <!-- Cabecera: tipo + estado -->
           <div class="trabajo__top">
             <span class="trabajo__ticon">{{ tipoIcon(t) }}</span>
             <span class="trabajo__tipo">{{ tipoLabel(t) | t }}</span>
-            <span class="trabajo__estado" [attr.data-estado]="t.estado">{{ estadoLabel(t) | t }}</span>
+            <span class="trabajo__estado" [appEstadoPulse]="t.estado" [attr.data-estado]="t.estado">{{ estadoLabel(t) | t }}</span>
           </div>
 
           <!-- Obra + día -->
@@ -80,6 +81,7 @@
               <button
                 type="button"
                 class="btn-cta trabajo__avanzar"
+                appTapScale
                 [disabled]="enviando()"
                 (click)="avanzar(t)"
               >{{ eventoIcon(ev) }} {{ eventoLabel(ev) | t }}</button>
@@ -93,6 +95,7 @@
           }
         </div>
       }
+      </div>
     }
   </div>
 

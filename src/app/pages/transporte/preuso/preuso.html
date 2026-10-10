@@ -171,6 +171,7 @@
             <button
               type="button"
               class="fuel-btn"
+              appTapScale
               [class.fuel-btn--on]="nivelCombustible() === n"
               (click)="nivelCombustible.set(n)"
             >
@@ -233,6 +234,7 @@
               <div class="preuso__opts">
                 @for (o of opciones; track o.valor) {
                   <app-option-button
+                    appTapScale
                     [icon]="o.icon"
                     [label]="o.label | t"
                     [tone]="o.tone"
@@ -276,7 +278,7 @@
         </p>
 
         <h2 class="preuso__fsection">{{ 'EXTERIOR — 4 FOTOS' | t }}</h2>
-        <div class="preuso__fotos">
+        <div class="preuso__fotos" appStagger>
           @for (f of fotosExterior; track f.slot) {
             <app-photo-slot
               [label]="f.label | t"
@@ -291,7 +293,7 @@
         </div>
 
         <h2 class="preuso__fsection">{{ 'INTERIOR — 3 FOTOS' | t }}</h2>
-        <div class="preuso__fotos">
+        <div class="preuso__fotos" appStagger>
           @for (f of fotosInterior; track f.slot) {
             <app-photo-slot
               [label]="f.label | t"

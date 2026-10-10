@@ -23,7 +23,7 @@
           <!-- Rutas en curso -->
           <h2 class="rutas-act__section">🚚 {{ 'En ruta ahora' | t }} ({{ activas().length }})</h2>
           @for (r of activas(); track r.id) {
-            <button type="button" class="ruta-card" (click)="verEnMapa()">
+            <button type="button" class="ruta-card" appTapScale (click)="verEnMapa()">
               <div class="ruta-card__top">
                 <span class="ruta-card__chofer">{{ r.conductor_nombre || ('Sin chofer' | t) }}</span>
                 @if (ident(r); as vid) { <span class="ruta-card__placa">{{ vid }}</span> }
@@ -77,10 +77,10 @@
           <app-skeleton [rows]="5" />
         } @else {
           @for (r of historial(); track r.id) {
-            <button type="button" class="ruta-hist" (click)="verTrayectoria(r.id)">
+            <button type="button" class="ruta-hist" appTapScale (click)="verTrayectoria(r.id)">
               <div class="ruta-hist__top">
                 <span class="ruta-hist__chofer">{{ r.conductor_nombre || ('Sin chofer' | t) }}</span>
-                <span class="ruta-hist__estado" [class.ruta-hist__estado--done]="r.estado === 'completada'">{{ estadoRutaLabel(r.estado) | t }}</span>
+                <span class="ruta-hist__estado" [appEstadoPulse]="r.estado" [class.ruta-hist__estado--done]="r.estado === 'completada'">{{ estadoRutaLabel(r.estado) | t }}</span>
               </div>
               <div class="ruta-hist__ruta">{{ r.origen || '—' }} → {{ r.destino || '—' }}</div>
               <div class="ruta-hist__meta">

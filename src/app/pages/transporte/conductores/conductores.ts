@@ -10,6 +10,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { Conductor, estadoLicencia, LicenciaEstado } from '../../../core/models/conductor.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const LIC_LABEL: Record<LicenciaEstado, string> = {
   vigente: 'Licencia vigente',
@@ -23,7 +24,7 @@ const LIC_LABEL: Record<LicenciaEstado, string> = {
   selector: 'app-conductores-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, EmptyState, Skeleton, CedulaPipe, TranslatePipe],
+  imports: [FormsModule, EmptyState, Skeleton, CedulaPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conductores.html',
   styleUrl: './conductores.scss',
 })

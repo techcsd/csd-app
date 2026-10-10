@@ -15,7 +15,7 @@
     } @else if (detalle(); as d) {
       <div class="apd__chips">
         <span class="apd__tipo" [attr.data-tipo]="d.tipo_apoyo">{{ tipoLabel(d.tipo_apoyo) | t }}</span>
-        <span class="apd__estado" [attr.data-estado]="d.estado">{{ estadoLabel(d.estado) | t }}</span>
+        <span class="apd__estado" [appEstadoPulse]="d.estado" [attr.data-estado]="d.estado">{{ estadoLabel(d.estado) | t }}</span>
       </div>
 
       <p class="apd__desc">{{ d.descripcion }}</p>
@@ -77,6 +77,7 @@
               <button
                 type="button"
                 class="apd__act"
+                appTapScale
                 [class.btn-cta]="a.tone === 'primary'"
                 [class.btn-ghost]="a.tone === 'ghost'"
                 [disabled]="guardando()"
@@ -92,7 +93,7 @@
       <!-- Línea de tiempo -->
       @if (d.eventos.length) {
         <h2 class="apd__section">{{ 'Historial' | t }}</h2>
-        <ul class="apd__timeline">
+        <ul class="apd__timeline" appStagger>
           @for (e of d.eventos; track $index) {
             <li class="apd__evento">
               <span class="apd__evento-dot"></span>

@@ -11,13 +11,14 @@ import { VehiculosService, VehiculoEnUso } from '../../../core/services/vehiculo
 import { UserContextService } from '../../../core/services/user-context.service';
 import { VehiculoDisponible, vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Browse the whole fleet → tap a vehicle to open its profile (R4). */
 @Component({
   selector: 'app-vehiculos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, VehiculoCard, EmptyState, Skeleton, ToggleSwitch, TranslatePipe],
+  imports: [FormsModule, VehiculoCard, EmptyState, Skeleton, ToggleSwitch, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './vehiculos.html',
   styleUrl: './vehiculos.scss',
 })

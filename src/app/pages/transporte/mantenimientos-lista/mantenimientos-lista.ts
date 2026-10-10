@@ -12,6 +12,7 @@ import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { MantAdjuntos } from '../../../shared/ui/mant-adjuntos/mant-adjuntos';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
@@ -22,7 +23,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
   selector: 'app-mantenimientos-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, DecimalPipe, Skeleton, EmptyState, MantAdjuntos, TranslatePipe],
+  imports: [DatePipe, DecimalPipe, Skeleton, EmptyState, MantAdjuntos, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mantenimientos-lista.html',
   styleUrl: './mantenimientos-lista.scss',
 })

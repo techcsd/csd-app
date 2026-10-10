@@ -19,7 +19,7 @@
         </div>
       }
 
-      <div class="ech__card">
+      <div class="ech__card" appFadeIn>
         <div class="ech__veh">
           <span class="ech__placa">{{ e.placa || ('Persona' | t) }}</span>
           @if (e.vehiculo_desc) { <span class="ech__veh-desc">{{ e.vehiculo_desc }}</span> }
@@ -28,12 +28,12 @@
 
         <div class="ech__grid">
           @if (e.kilometraje != null) {
-            <div class="ech__kv"><span class="ech__k">{{ 'Odómetro' | t }}</span><span class="ech__v">{{ e.kilometraje | number: '1.0-0' }} km</span></div>
+            <div class="ech__kv"><span class="ech__k">{{ 'Odómetro' | t }}</span><span class="ech__v"><span [appCountUp]="e.kilometraje"></span> km</span></div>
           }
           @if (e.km_recorridos != null) {
             <div class="ech__kv"><span class="ech__k">{{ 'Recorrido' | t }}</span><span class="ech__v" [class.ech__v--alerta]="e.km_alerta">+{{ e.km_recorridos | number: '1.0-0' }} km</span></div>
           }
-          <div class="ech__kv"><span class="ech__k">{{ 'Galones' | t }}</span><span class="ech__v">{{ e.galones | number: '1.0-1' }} gal</span></div>
+          <div class="ech__kv"><span class="ech__k">{{ 'Galones' | t }}</span><span class="ech__v"><span [appCountUp]="e.galones ?? 0" [decimales]="1"></span> gal</span></div>
           @if (e.monto != null) {
             <div class="ech__kv"><span class="ech__k">{{ 'Monto' | t }}</span><span class="ech__v">RD$ {{ e.monto | number: '1.0-2' }}</span></div>
           }
@@ -58,7 +58,7 @@
         <h3 class="ech__sec">{{ 'Fotos' | t }}</h3>
         <div class="ech__fotos">
           @for (f of fotos(); track f.label) {
-            <button type="button" class="ech__foto" (click)="verFoto(f.url)">
+            <button type="button" class="ech__foto" appTapScale (click)="verFoto(f.url)">
               <img [src]="f.url" [alt]="f.label" loading="lazy" />
               <span class="ech__foto-cap">{{ f.label }}</span>
             </button>

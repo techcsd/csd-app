@@ -7,6 +7,7 @@ import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refresh.directive';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { TrabajosService, TrabajoRow, TrabajoEvento } from '../../../core/services/trabajos.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { ToastService } from '../../../core/services/toast.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { formatFecha } from '../../../core/util/fecha';
@@ -62,7 +63,7 @@ const ESTADO_LABEL: Record<string, string> = {
   selector: 'app-mis-trabajos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, BottomSheet, PhotoSlot, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, EmptyState, BottomSheet, PhotoSlot, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mis-trabajos.html',
   styleUrl: './mis-trabajos.scss',
 })

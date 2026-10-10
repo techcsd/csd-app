@@ -48,14 +48,16 @@
         [message]="query() ? ('Ningún conductor coincide con tu búsqueda.' | t) : ('No vemos conductores para mostrarte. Si esperabas alguno, agrégalo o consulta con Flota.' | t)"
       />
     } @else {
+      <div appStagger style="display:contents">
       @for (c of lista(); track c.id) {
-        <button type="button" class="clist__row" (click)="ver(c)">
+        <button type="button" class="clist__row" appTapScale (click)="ver(c)">
           <span class="clist__avatar">{{ (c.nombre || '?').charAt(0) }}</span>
           <span class="clist__info">
             <span class="clist__name">{{ c.nombre }}</span>
             @if (c.cedula) { <span class="clist__ced">{{ c.cedula | cedula }}</span> }
             <span
               class="clist__lic"
+              [appEstadoPulse]="licEstado(c)"
               [class.clist__lic--warn]="licEstado(c) === 'por_vencer'"
               [class.clist__lic--bad]="licEstado(c) === 'vencida'"
             >{{ licLabel(c) }}</span>
@@ -66,6 +68,7 @@
           <span class="clist__chev">›</span>
         </button>
       }
+      </div>
     }
   </div>
 </div>

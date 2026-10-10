@@ -31,7 +31,7 @@
       @for (c of pendientes(); track c.id) {
         <div class="cpend__card">
           <!-- AL9 — el cuerpo abre el detalle del conduce -->
-          <button type="button" class="cpend__info" (click)="verDetalle(c.id)">
+          <button type="button" class="cpend__info" appTapScale (click)="verDetalle(c.id)">
             <span class="cpend__destino">🏗️ {{ c.destino || ('Destino' | t) }}</span>
             <span class="cpend__meta">
               @if (c.bodega) { {{ c.bodega }} · }

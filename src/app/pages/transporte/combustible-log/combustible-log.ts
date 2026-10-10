@@ -11,6 +11,7 @@ import { EchadaLog } from '../../../core/models/combustible.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AQ13 — chips de periodo rápido (mismo patrón que Mi actividad AJ9). */
 type PeriodoChip = { id: string; label: string; dias: number };
@@ -33,7 +34,7 @@ const PERIODOS: PeriodoChip[] = [
   selector: 'app-combustible-log',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './combustible-log.html',
   styleUrl: './combustible-log.scss',
 })

@@ -19,6 +19,7 @@ import { DraftBanner } from '../../../shared/ui/draft-banner/draft-banner';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { SyncService } from '../../../core/sync/sync.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { InventarioService, ObraOrigen } from '../../../core/services/inventario.service';
@@ -83,7 +84,7 @@ interface ConduceDraft {
   selector: 'app-generar-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, QtyInput, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner, AyudantePicker, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, CollapsibleSelect, OptionButton, WizardFooter, StepBar, ArticuloPicker, QtyInput, ConfirmDialog, BigConfirm, PhotoSlot, SignaturePad, DraftBanner, AyudantePicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './generar-conduce.html',
   styleUrl: './generar-conduce.scss',
 })

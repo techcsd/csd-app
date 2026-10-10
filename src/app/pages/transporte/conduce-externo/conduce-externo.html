@@ -80,7 +80,7 @@
           @if (proveedoresFiltrados().length) {
             <div class="ce-provlist">
               @for (p of proveedoresFiltrados(); track p.id) {
-                <button type="button" class="ce-provrow" (click)="elegirProveedor(p)">
+                <button type="button" appTapScale class="ce-provrow" (click)="elegirProveedor(p)">
                   <span class="ce-provrow__name">{{ p.nombre }}</span>
                   @if (p.estado === 'sin_ratificar') { <span class="ce-tag">{{ 'por ratificar' | t }}</span> }
                 </button>
@@ -202,7 +202,7 @@
 
       @if (error()) { <p class="ce-err">{{ error() }}</p> }
 
-      <button type="button" class="btn-cta ce-emitir" [disabled]="!puedeEmitir()" (click)="emitir()">
+      <button type="button" class="btn-cta ce-emitir" [appShake]="error()" [disabled]="!puedeEmitir()" (click)="emitir()">
         {{ guardando() ? ('Emitiendo…' | t) : ('Emitir conduce externo' | t) }}
       </button>
     }

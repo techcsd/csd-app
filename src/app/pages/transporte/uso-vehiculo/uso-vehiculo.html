@@ -36,7 +36,7 @@
           <div class="usov__aviso usov__aviso--ok">
             ✅ {{ 'Ya tienes este vehículo en uso' | t }}@if (estado()?.desde) { {{ 'desde' | t }} {{ fmtFechaHora(estado()!.desde!) }} }.
           </div>
-          <button type="button" class="btn-cta usov__cta" (click)="irSoltar()">{{ 'Soltar vehículo' | t }}</button>
+          <button type="button" class="btn-cta usov__cta" appTapScale (click)="irSoltar()">{{ 'Soltar vehículo' | t }}</button>
         }
 
         <!-- Formulario de captura (km + nivel) -->
@@ -47,7 +47,7 @@
           <label class="field-label usov__mt">{{ 'Nivel de gasolina' | t }} <span class="usov__req">*</span></label>
           <div class="usov__niveles">
             @for (n of niveles; track n) {
-              <app-option-button [label]="n | t" [selected]="nivel() === n" (pressed)="setNivel(n)" />
+              <app-option-button appTapScale [label]="n | t" [selected]="nivel() === n" (pressed)="setNivel(n)" />
             }
           </div>
 
@@ -66,7 +66,7 @@
             </div>
           }
 
-          <button type="button" class="btn-cta usov__cta usov__mt" [disabled]="!puedeGuardar()" (click)="onCta()">
+          <button type="button" class="btn-cta usov__cta usov__mt" appTapScale [disabled]="!puedeGuardar()" (click)="onCta()">
             {{ ctaLabel() | t }}
           </button>
         }

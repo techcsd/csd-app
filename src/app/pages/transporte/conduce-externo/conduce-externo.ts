@@ -18,6 +18,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -59,7 +60,7 @@ interface ConduceExternoBorrador {
   selector: 'app-conduce-externo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, PhotoSlot, LugarPicker, CollapsibleSelect, ArticuloPicker, QtyInput, SyncBar, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, PhotoSlot, LugarPicker, CollapsibleSelect, ArticuloPicker, QtyInput, SyncBar, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduce-externo.html',
   styleUrl: './conduce-externo.scss',
 })

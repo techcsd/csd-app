@@ -34,8 +34,8 @@
             {{ '¿De dónde sale el material? Si es una obra/almacén se descuenta del stock; si es una ferretería se registra como compra.' | t }}
           </p>
           <div class="gconduce__origen">
-            <app-option-button icon="🏬" [label]="'Almacén / obra' | t" [selected]="origenTipo() === 'almacen'" (pressed)="setOrigen('almacen')" />
-            <app-option-button icon="🧾" [label]="'Ferretería (compra)' | t" [selected]="origenTipo() === 'ferreteria'" (pressed)="setOrigen('ferreteria')" />
+            <app-option-button appTapScale icon="🏬" [label]="'Almacén / obra' | t" [selected]="origenTipo() === 'almacen'" (pressed)="setOrigen('almacen')" />
+            <app-option-button appTapScale icon="🧾" [label]="'Ferretería (compra)' | t" [selected]="origenTipo() === 'ferreteria'" (pressed)="setOrigen('ferreteria')" />
           </div>
 
           @if (origenTipo() === 'almacen') {
@@ -61,10 +61,10 @@
           <p class="gconduce__intro">{{ '¿A dónde llevas el material?' | t }}</p>
           @if (origenTipo() === 'almacen') {
             <div class="gconduce__origen">
-              <app-option-button icon="🏗" [label]="'Obra' | t" [selected]="destinoTipo() === 'obra'" (pressed)="destinoTipo.set('obra')" />
+              <app-option-button appTapScale icon="🏗" [label]="'Obra' | t" [selected]="destinoTipo() === 'obra'" (pressed)="destinoTipo.set('obra')" />
               <!-- AL10 — Bodega Central / almacenes principales como destino -->
-              <app-option-button icon="🏢" [label]="'Almacén central' | t" [selected]="destinoTipo() === 'almacen'" (pressed)="destinoTipo.set('almacen')" />
-              <app-option-button icon="🏭" [label]="'Suplidor (devolución)' | t" [selected]="destinoTipo() === 'suplidor'" (pressed)="destinoTipo.set('suplidor')" />
+              <app-option-button appTapScale icon="🏢" [label]="'Almacén central' | t" [selected]="destinoTipo() === 'almacen'" (pressed)="destinoTipo.set('almacen')" />
+              <app-option-button appTapScale icon="🏭" [label]="'Suplidor (devolución)' | t" [selected]="destinoTipo() === 'suplidor'" (pressed)="destinoTipo.set('suplidor')" />
             </div>
           }
           @switch (destinoTipo()) {
@@ -297,7 +297,7 @@
           <div class="gconduce__resumen">
             <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Origen' | t }}</span><span class="gconduce__res-v">{{ origenNombre() || '—' }}</span></div>
             <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Destino' | t }}</span><span class="gconduce__res-v">{{ destinoNombre() || '—' }}</span></div>
-            <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Materiales' | t }}</span><span class="gconduce__res-v">{{ itemsCount() }} {{ (itemsCount() === 1 ? 'artículo' : 'artículos') | t }}</span></div>
+            <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Materiales' | t }}</span><span class="gconduce__res-v"><span [appCountUp]="itemsCount()"></span> {{ (itemsCount() === 1 ? 'artículo' : 'artículos') | t }}</span></div>
             <!-- AL12 — detalle de materiales (nombre + cantidad + unidad) -->
             @if (itemsResumen().length) {
               <ul class="gconduce__res-items">
@@ -311,7 +311,7 @@
             }
             <!-- AU4 — materiales fuera del catálogo (nota libre) -->
             @if (itemsLibres().length) {
-              <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Fuera de catálogo' | t }}</span><span class="gconduce__res-v">{{ itemsLibresCount() }} {{ (itemsLibresCount() === 1 ? 'material' : 'materiales') | t }}</span></div>
+              <div class="gconduce__res-row"><span class="gconduce__res-k">{{ 'Fuera de catálogo' | t }}</span><span class="gconduce__res-v"><span [appCountUp]="itemsLibresCount()"></span> {{ (itemsLibresCount() === 1 ? 'material' : 'materiales') | t }}</span></div>
               <ul class="gconduce__res-items">
                 @for (l of itemsLibres(); track $index) {
                   <li class="gconduce__res-item">
