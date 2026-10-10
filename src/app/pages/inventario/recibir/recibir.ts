@@ -16,6 +16,8 @@ import { BorradorService } from '../../../core/services/borrador.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { Conduce } from '../../../core/models/transporte.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Estado serializable de la recepción abierta (regla 4 — autosave/borrador). */
 interface RecibirDraft {
@@ -32,7 +34,7 @@ interface RecibirDraft {
   selector: 'app-recibir-conduce',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, FormsModule, DecimalPipe, SyncBar, PhotoSlot, SignaturePad, TranslatePipe],
+  imports: [Skeleton, EmptyState, FormsModule, DecimalPipe, SyncBar, PhotoSlot, SignaturePad, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './recibir.html',
   styleUrl: './recibir.scss',
 })
@@ -45,6 +47,7 @@ export class RecibirConducePage {
   private ctx = inject(UserContextService);
   private i18n = inject(I18nService);
   private camera = inject(CameraService);
+  private motion = inject(MotionService);
 
   private sig = viewChild(SignaturePad);
 
@@ -168,6 +171,7 @@ export class RecibirConducePage {
         e.items.map((i) => ({ articulo_id: i.articulo_id, cantidad: i.cantidad })),
       );
       this.entradasFerreteria.update((list) => list.filter((x) => x.id !== e.id));
+      this.motion.momento('entrada'); // CL2 F4 — caja entra al almacén (también offline)
       this.toast.success(this.i18n.t('Entrada registrada. Se sube al stock al sincronizar.'));
     } catch (err) {
       this.toast.error(err instanceof Error ? err.message : this.i18n.t('No se pudo dar entrada.'));
@@ -320,6 +324,7 @@ export class RecibirConducePage {
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.conduces.update((list) => list.filter((x) => x.id !== c.id));
       this.cerrarDetalle();
+      this.motion.momento('entrada'); // CL2 F4 — caja entra al almacén (recepción OK, también offline)
       this.toast.success(this.i18n.t('Recepción guardada.'));
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));

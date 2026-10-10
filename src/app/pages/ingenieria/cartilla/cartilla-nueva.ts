@@ -10,6 +10,8 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { FiguraAcero } from '../../../shared/ui/figura-acero/figura-acero';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { CapturedPhoto } from '../../../core/services/camera.service';
 import { CartillaService } from '../../../core/services/cartilla.service';
 import { BorradorService } from '../../../core/services/borrador.service';
@@ -48,7 +50,7 @@ const TRAMOS_POR_FIGURA: Record<string, number> = {
   selector: 'app-cartilla-nueva',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, Skeleton, FiguraAcero, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, Skeleton, FiguraAcero, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cartilla-nueva.html',
   styleUrl: './cartilla-nueva.scss',
 })
@@ -62,6 +64,7 @@ export class CartillaNuevaPage {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   private readonly claveBorrador: string;
 
@@ -393,6 +396,7 @@ export class CartillaNuevaPage {
         esPrueba: this.ctx.esPrueba(),
       });
       await this.borrador.clear(this.claveBorrador);
+      this.motion.momento('documento'); // CL2 F4 — cartilla de acero enviada/encolada (corre igual offline)
       this.toast.success(
         this.online()
           ? this.i18n.t('¡Cartilla enviada! Oficina la revisará.')

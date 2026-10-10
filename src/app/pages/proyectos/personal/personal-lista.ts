@@ -15,13 +15,14 @@ import { PersonalObraService } from '../../../core/services/personal-obra.servic
 import { Cargo, NACIONALIDADES, NACIONALIDAD_LABEL, CUADRILLAS, ASEGURAMIENTO, ASEGURAMIENTO_LABEL, PersonalObra } from '../../../core/models/personal-obra.model';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
 import { formatFechaHumana } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AR1 (app) — Consulta del personal de obra: conteos + buscador + filtros + rows. */
 @Component({
   selector: 'app-personal-lista',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, SyncBar, CollapsibleSelect, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './personal-lista.html',
   styleUrl: './personal-lista.scss',
 })

@@ -28,6 +28,7 @@ import { AvatarEditor } from '../../shared/ui/avatar-editor/avatar-editor';
 import { LanguageSelector } from '../../shared/ui/language-selector/language-selector';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ThemeService, ThemePref } from '../../core/services/theme.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 import { MotionService, MotionPref } from '../../core/services/motion.service';
 import { FormsModule } from '@angular/forms';
 
@@ -36,7 +37,7 @@ import { FormsModule } from '@angular/forms';
   selector: 'app-perfil',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialog, AvatarEditor, LanguageSelector, TranslatePipe, FormsModule],
+  imports: [ConfirmDialog, AvatarEditor, LanguageSelector, TranslatePipe, FormsModule, ...MOTION_DIRECTIVES],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })

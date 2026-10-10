@@ -16,6 +16,7 @@
           <h2 class="recibir__section">
             {{ puedeConfirmarEntrada() ? ('Compras de ferretería por confirmar' | t) : ('Tus compras de ferretería' | t) }}
           </h2>
+          <div appStagger style="display:contents">
           @for (e of entradasFerreteria(); track e.id) {
             <div class="ferr-entrada">
               <div class="ferr-entrada__head">
@@ -35,6 +36,7 @@
                 <button
                   type="button"
                   class="btn-cta ferr-entrada__cta"
+                  appTapScale
                   [disabled]="confirmandoId() === e.id || !e.items.length"
                   (click)="confirmarEntrada(e)"
                 >
@@ -48,14 +50,16 @@
               }
             </div>
           }
+          </div>
         }
 
         @if (conduces().length) {
           @if (entradasFerreteria().length) {
             <h2 class="recibir__section">{{ 'Conduces por recibir' | t }}</h2>
           }
+          <div appStagger style="display:contents">
           @for (c of conduces(); track c.id) {
-            <button type="button" class="con-card" (click)="abrir(c)">
+            <button type="button" class="con-card" appTapScale (click)="abrir(c)">
               <div class="con-card__top">
                 <span class="con-card__code">🧾 {{ c.codigo }}</span>
                 <span class="con-card__estado con-card__estado--abierta">{{ 'Por recibir' | t }}</span>
@@ -72,6 +76,7 @@
               </div>
             </button>
           }
+          </div>
         }
 
         @if (!conduces().length && !entradasFerreteria().length) {
@@ -204,6 +209,7 @@
       <button
         type="button"
         class="btn-cta con-nav__cta"
+        appTapScale
         [disabled]="submitting() || faltanFotos() || !firmaLista() || !receptorNombre().trim()"
         (click)="confirm()"
       >

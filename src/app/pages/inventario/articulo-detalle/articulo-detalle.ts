@@ -10,6 +10,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ArticuloAlias, ArticuloCat, Bodega, CategoriaInv, esArticuloExterno, propiedadLabel } from '../../../core/models/inventario.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Z17 — detalle de un artículo: foto grande, código, categoría, propiedad,
  *  unidad y stock del almacén elegido. Se abre al tocar un artículo en
@@ -18,7 +19,7 @@ import { ArticuloAlias, ArticuloCat, Bodega, CategoriaInv, esArticuloExterno, pr
   selector: 'app-articulo-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, FormsModule, Skeleton, TranslatePipe],
+  imports: [DecimalPipe, FormsModule, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './articulo-detalle.html',
   styleUrl: './articulo-detalle.scss',
 })

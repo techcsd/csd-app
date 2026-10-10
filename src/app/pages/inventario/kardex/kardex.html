@@ -13,11 +13,11 @@
       </div>
       <div class="kardex__saldos">
         <div class="kardex__saldo">
-          <span class="kardex__saldo-n">{{ saldoActual() | number: '1.0-2' }}</span>
+          <span class="kardex__saldo-n"><span [appCountUp]="saldoActual()" [decimales]="2"></span></span>
           <span class="kardex__saldo-l">{{ 'Existencia' | t }}</span>
         </div>
         <div class="kardex__saldo kardex__saldo--soft">
-          <span class="kardex__saldo-n">{{ apertura() | number: '1.0-2' }}</span>
+          <span class="kardex__saldo-n"><span [appCountUp]="apertura()" [decimales]="2"></span></span>
           <span class="kardex__saldo-l">{{ 'Apertura' | t }}</span>
         </div>
       </div>
@@ -38,10 +38,10 @@
       <!-- Filtros -->
       <section class="kardex__filtros">
         <div class="kardex__chips">
-          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'todos'" (click)="tipo.set('todos')">{{ 'Todos' | t }}</button>
-          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'entrada'" (click)="tipo.set('entrada')">{{ 'Entradas' | t }}</button>
-          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'salida'" (click)="tipo.set('salida')">{{ 'Salidas' | t }}</button>
-          <button type="button" class="kx-chip" [class.kx-chip--on]="tipo() === 'ajuste'" (click)="tipo.set('ajuste')">{{ 'Ajustes' | t }}</button>
+          <button type="button" class="kx-chip" appTapScale [class.kx-chip--on]="tipo() === 'todos'" (click)="tipo.set('todos')">{{ 'Todos' | t }}</button>
+          <button type="button" class="kx-chip" appTapScale [class.kx-chip--on]="tipo() === 'entrada'" (click)="tipo.set('entrada')">{{ 'Entradas' | t }}</button>
+          <button type="button" class="kx-chip" appTapScale [class.kx-chip--on]="tipo() === 'salida'" (click)="tipo.set('salida')">{{ 'Salidas' | t }}</button>
+          <button type="button" class="kx-chip" appTapScale [class.kx-chip--on]="tipo() === 'ajuste'" (click)="tipo.set('ajuste')">{{ 'Ajustes' | t }}</button>
         </div>
 
         <div class="kardex__filtro-row">
@@ -70,7 +70,7 @@
       </section>
 
       <!-- Movimientos (tabla → tarjetas en móvil) -->
-      <section class="kardex__movs">
+      <section class="kardex__movs" appStagger>
         @for (m of movsFiltrados(); track m.referencia_id) {
           <article class="mov" [class.mov--in]="m.mov === 'entrada'" [class.mov--out]="m.mov === 'salida'" [class.mov--adj]="m.mov === 'ajuste'">
             <div class="mov__top">
@@ -102,7 +102,7 @@
                 </span>
               }
               @if (m.conduce_id) {
-                <button type="button" class="mov__conduce" (click)="verConduce(m)">{{ m.conduce_numero || ('Ver conduce' | t) }} →</button>
+                <button type="button" class="mov__conduce" appTapScale (click)="verConduce(m)">{{ m.conduce_numero || ('Ver conduce' | t) }} →</button>
               }
             </div>
           </article>

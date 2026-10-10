@@ -11,6 +11,7 @@ import { ClPendiente } from '../../../core/models/cl-liberacion.model';
 import { formatFechaMedia, fechaLocalISO } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * BH2 — "Dashboard de bitácora": el pulso de la obra en la app, de solo lectura.
@@ -22,7 +23,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-bitacora-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe],
+  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })

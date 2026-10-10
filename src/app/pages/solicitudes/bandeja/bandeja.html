@@ -15,11 +15,11 @@
     <!-- BY3 — dos grupos: Activas / Historial -->
     <div class="bandeja__chips">
       @for (g of GRUPOS; track g) {
-        <button type="button" class="bandeja__chip" [class.bandeja__chip--on]="tab() === g" (click)="setTab(g)">
+        <button type="button" class="bandeja__chip" appTapScale [class.bandeja__chip--on]="tab() === g" (click)="setTab(g)">
           {{ grupoLabel(g) | t }}@if (conteos()[g]) { <span class="bandeja__chip-n">{{ conteos()[g] }}</span> }
         </button>
       }
-      <button type="button" class="bandeja__chip bandeja__chip--urg" [class.bandeja__chip--on]="urgencia() === 'urgente'" (click)="toggleUrgente()">🔴 {{ 'Urgentes' | t }}</button>
+      <button type="button" class="bandeja__chip bandeja__chip--urg" appTapScale [class.bandeja__chip--on]="urgencia() === 'urgente'" (click)="toggleUrgente()">🔴 {{ 'Urgentes' | t }}</button>
     </div>
   </div>
 
@@ -29,8 +29,9 @@
     } @else if (noAutorizado()) {
       <app-empty-state icon="🔒" [title]="'Sin acceso' | t" [message]="'No tienes permiso para ver todas las requisiciones.' | t" />
     } @else {
+      <div appStagger style="display:contents">
       @for (f of filasVisibles(); track f.id) {
-        <button type="button" class="req-card" [attr.data-estado]="f.estado" (click)="abrir(f)">
+        <button type="button" class="req-card" appTapScale [attr.data-estado]="f.estado" (click)="abrir(f)">
           <!-- BV10 — fecha de necesidad como 1ª línea -->
           @let ni = necesidad(f);
           <div class="req-card__nec" [class.req-card__nec--venc]="ni.estado === 'vencida'">
@@ -44,7 +45,7 @@
           </div>
           <div class="req-card__top">
             <span class="req-card__obra">🏗️ {{ f.proyecto_nombre ?? ('Obra' | t) }}</span>
-            <span class="req-card__estado" [attr.data-estado]="f.estado">{{ estadoLabel(f.estado) }}</span>
+            <span class="req-card__estado" [appEstadoPulse]="f.estado" [attr.data-estado]="f.estado">{{ estadoLabel(f.estado) }}</span>
           </div>
           <div class="req-card__meta">
             <span>{{ fmtFecha(f.created_at) }}</span>
@@ -61,6 +62,7 @@
       } @empty {
         <app-empty-state icon="🗂️" [title]="'No hay requisiciones' | t" [message]="'No se encontraron requisiciones con esos filtros.' | t" />
       }
+      </div>
     }
   </div>
 </div>

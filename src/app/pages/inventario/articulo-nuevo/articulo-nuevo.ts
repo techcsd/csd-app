@@ -10,6 +10,7 @@ import { CameraService } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CategoriaInv } from '../../../core/models/inventario.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface FotoNueva {
   blob: Blob;
@@ -23,7 +24,7 @@ interface FotoNueva {
   selector: 'app-articulo-nuevo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, TranslatePipe],
+  imports: [FormsModule, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './articulo-nuevo.html',
   styleUrl: './articulo-nuevo.scss',
 })

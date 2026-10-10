@@ -7,6 +7,7 @@ import { LiveRefreshDirective } from '../../../shared/ui/live-refresh/live-refre
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService, Kardex, KardexMovimiento } from '../../../core/services/inventario.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type TipoFiltro = 'todos' | 'entrada' | 'salida' | 'ajuste';
 
@@ -27,7 +28,7 @@ interface PuntoCurva {
   selector: 'app-kardex',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, FormsModule, DecimalPipe, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './kardex.html',
   styleUrl: './kardex.scss',
 })

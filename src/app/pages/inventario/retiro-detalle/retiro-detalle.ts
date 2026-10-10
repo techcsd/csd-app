@@ -15,6 +15,7 @@ import {
   RETIRO_MOTIVO_LABEL,
   retiroCodigo,
 } from '../../../core/models/retiro.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * BG4 — detalle de un retiro: estado, artículos, fotos del daño, y —si aún es
@@ -24,7 +25,7 @@ import {
   selector: 'app-retiro-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, TranslatePipe],
+  imports: [FormsModule, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './retiro-detalle.html',
   styleUrl: './retiro-detalle.scss',
 })

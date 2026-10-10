@@ -14,6 +14,7 @@ import { OrdenTrabajoPdfService } from '../../../core/services/orden-trabajo-pdf
 import { ToastService } from '../../../core/services/toast.service';
 import { OrdenTrabajoDetalle } from '../../../core/models/bitacora.model';
 import { formatFecha, formatFechaMedia } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface UsuarioBusqueda {
   id: string;
@@ -33,7 +34,7 @@ interface UsuarioBusqueda {
   selector: 'app-orden-trabajo-ficha',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, PdfViewer, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, Skeleton, EmptyState, PdfViewer, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './orden-trabajo-ficha.html',
   styleUrl: './orden-trabajo-ficha.scss',
 })

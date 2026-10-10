@@ -23,6 +23,7 @@ import { Proyecto } from '../../../core/models/bitacora.model';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 import { combinarUnidades } from '../../../core/util/unidades';
 import { RetiroItemCaptura, RetiroMotivoDano, RETIRO_MOTIVO_LABEL } from '../../../core/models/retiro.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const MOTIVOS: { value: RetiroMotivoDano; icon: string }[] = [
   { value: 'danado_obra', icon: '🏗️' },
@@ -41,7 +42,7 @@ const MOTIVOS: { value: RetiroMotivoDano; icon: string }[] = [
   selector: 'app-retiro-nuevo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, ArticuloPicker, QtyInput, OptionButton, ConfirmDialog, Skeleton, TranslatePipe],
+  imports: [FormsModule, CollapsibleSelect, ArticuloPicker, QtyInput, OptionButton, ConfirmDialog, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './retiro-nuevo.html',
   styleUrl: './retiro-nuevo.scss',
 })

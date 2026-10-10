@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AS25 — creación de grupo tipo WhatsApp en una pantalla completa: foto, nombre,
@@ -20,7 +21,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-nuevo-grupo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, AvatarEditor, TranslatePipe],
+  imports: [FormsModule, AvatarEditor, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './nuevo-grupo.html',
   styleUrl: './nuevo-grupo.scss',
 })

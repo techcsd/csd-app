@@ -20,7 +20,7 @@
     <div class="screen__body">
       <!-- 1. Obra + fecha -->
       @if (step() === 1) {
-        <h1 class="screen__title">{{ '¿En qué obra?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿En qué obra?' | t }}</h1>
         @if (loading()) {
           <app-skeleton [rows]="4" />
         } @else if (proyectos().length) {
@@ -53,7 +53,7 @@
 
       <!-- 2. Trabajo -->
       @if (step() === 2) {
-        <h1 class="screen__title">{{ '¿Qué trabajo se pidió?' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ '¿Qué trabajo se pidió?' | t }}</h1>
         <p class="screen__subtitle">{{ 'Describe el trabajo que el cliente solicitó.' | t }}</p>
         <textarea class="field ot__textarea" rows="4"
           [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)"
@@ -66,7 +66,7 @@
 
       <!-- 3. Detalles (opcionales) -->
       @if (step() === 3) {
-        <h1 class="screen__title">{{ 'Detalles (opcional)' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Detalles (opcional)' | t }}</h1>
         <p class="screen__subtitle">{{ 'Todo esto es opcional. Puedes seguir sin llenarlo.' | t }}</p>
 
         <div class="ot__row">
@@ -103,7 +103,7 @@
 
       <!-- 4. Firma del ingeniero -->
       @if (step() === 4) {
-        <h1 class="screen__title">{{ 'Firma del ingeniero' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Firma del ingeniero' | t }}</h1>
         <p class="screen__subtitle">{{ 'Tu firma como responsable de la orden.' | t }}</p>
         <label class="field-label">{{ 'Nombre del ingeniero' | t }}</label>
         <input class="field" type="text" [ngModel]="ingNombre()" (ngModelChange)="ingNombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
@@ -122,7 +122,7 @@
 
       <!-- 5. Firma del cliente -->
       @if (step() === 5) {
-        <h1 class="screen__title">{{ 'Firma del cliente' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Firma del cliente' | t }}</h1>
         <p class="screen__subtitle">{{ 'La persona del lado del cliente firma aquí.' | t }}</p>
         <label class="field-label">{{ 'Nombre del cliente' | t }}</label>
         <input class="field" type="text" [ngModel]="cliNombre()" (ngModelChange)="cliNombre.set($event)" [placeholder]="'Nombre y apellido' | t" />
@@ -141,7 +141,7 @@
 
       <!-- 6. Resumen -->
       @if (step() === 6) {
-        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
           <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoNombre() }}</b></li>
           <li><span>{{ 'Fecha' | t }}</span><b>{{ fecha() }}</b></li>

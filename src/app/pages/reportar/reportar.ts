@@ -9,6 +9,7 @@ import { CameraService, CapturedPhoto } from '../../core/services/camera.service
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
 import { GuardedWizard } from '../../shared/guarded-wizard';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /**
  * Reportar problema/mejora: any authenticated pilot user (driver/engineer) sends
@@ -19,7 +20,7 @@ import { GuardedWizard } from '../../shared/guarded-wizard';
   selector: 'app-reportar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, BigConfirm, ConfirmDialog],
+  imports: [FormsModule, OptionButton, BigConfirm, ConfirmDialog, ...MOTION_DIRECTIVES],
   templateUrl: './reportar.html',
   styleUrl: './reportar.scss',
 })

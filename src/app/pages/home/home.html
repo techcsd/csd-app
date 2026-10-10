@@ -20,7 +20,7 @@
   <!-- BV5 — tarjeta "Pendiente de terminar": una captura a medias (p. ej. una echada
        de combustible sin enviar) se retoma con un toque. Abre la pantalla con el borrador. -->
   @if (pendienteTerminar(); as p) {
-    <button type="button" class="home__firmar home__firmar--draft" (click)="abrirPendiente()">
+    <button type="button" class="home__firmar home__firmar--draft" appTapScale (click)="abrirPendiente()">
       <span class="home__firmar-icon">📝</span>
       <span class="home__firmar-txt">
         {{ 'Pendiente de terminar:' | t }} {{ p.etiqueta | t }}
@@ -31,7 +31,7 @@
 
   <!-- BD2 — banner ÚNICO: entregas por recibir (fusión firmar + confirmar) -->
   @if (porRecibir() > 0) {
-    <button type="button" class="home__firmar" (click)="irPorRecibir()">
+    <button type="button" class="home__firmar" appTapScale (click)="irPorRecibir()">
       <span class="home__firmar-icon">📥</span>
       <span class="home__firmar-txt">
         {{ (porRecibir() === 1 ? 'Tienes {n} entrega por recibir' : 'Tienes {n} entregas por recibir') | t:{ n: porRecibir() } }}
@@ -76,7 +76,7 @@
     <!-- BD1 — vista AGRUPADA por dominio (OPCIONAL, se activa en Perfil). Secciones
          colapsables; cada módulo aparece una sola vez. Long-press → editar. -->
     <main
-      class="home__groups"
+      class="home__groups" appStagger
       data-tour="tiles"
       (pointerdown)="onTilePointerDown()"
       (pointerup)="onTilePointerUp()"
@@ -86,7 +86,7 @@
       @if (tiles().length) {
         @for (g of grupos(); track g.key) {
           <section class="home__group" [class.home__group--collapsed]="grupoColapsado(g.key)">
-            <button type="button" class="home__group-hd" [style.--g]="g.color" (click)="toggleGrupo(g.key)">
+            <button type="button" class="home__group-hd" appTapScale [style.--g]="g.color" (click)="toggleGrupo(g.key)">
               <span class="home__group-ic">{{ g.icon }}</span>
               <span class="home__group-lb">{{ g.label | t }}</span>
               @if (g.badge) { <span class="home__group-badge">{{ g.badge > 9 ? '9+' : g.badge }}</span> }
@@ -95,7 +95,7 @@
             @if (!grupoColapsado(g.key)) {
               <div class="home__grid">
                 @for (tile of g.tiles; track tile.modulo) {
-                  <app-big-button
+                  <app-big-button appTapScale
                     [icon]="tile.icon"
                     [label]="tile.label | t"
                     [tint]="tile.tint"
@@ -128,7 +128,7 @@
     <!-- BD1 — vista por defecto: grid plano (todo a la vista, orden por rol). El home
          agrupado quedó como preferencia opcional (Perfil → "Agrupar módulos"). -->
     <main
-      class="home__grid"
+      class="home__grid" appStagger
       data-tour="tiles"
       (pointerdown)="onTilePointerDown()"
       (pointerup)="onTilePointerUp()"
@@ -137,6 +137,7 @@
     >
       @for (tile of tiles(); track tile.modulo) {
         <app-big-button
+          appTapScale
           [icon]="tile.icon"
           [label]="tile.label | t"
           [tint]="tile.tint"

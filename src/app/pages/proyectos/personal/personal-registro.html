@@ -35,9 +35,9 @@
           <input id="ape" class="field" type="text" [ngModel]="apellido()" (ngModelChange)="apellido.set($event)" [placeholder]="'Apellido' | t" autocapitalize="words" />
 
           <label class="field-label preg__mt">{{ 'Nacionalidad' | t }} <span class="preg__req">*</span></label>
-          <div class="preg__opts">
+          <div class="preg__opts" appStagger>
             @for (n of nacionalidades; track n.value) {
-              <app-option-button [icon]="n.icon" [label]="n.label | t" [selected]="nacionalidad() === n.value" (pressed)="nacionalidad.set(n.value)" />
+              <app-option-button appTapScale [icon]="n.icon" [label]="n.label | t" [selected]="nacionalidad() === n.value" (pressed)="nacionalidad.set(n.value)" />
             }
           </div>
 
@@ -58,9 +58,9 @@
           />
 
           <label class="field-label preg__mt">{{ 'Aseguramiento' | t }}</label>
-          <div class="preg__opts">
+          <div class="preg__opts" appStagger>
             @for (a of aseguramientos; track a.value) {
-              <app-option-button [icon]="a.icon" [label]="a.label | t" [selected]="aseguramiento() === a.value" (pressed)="aseguramiento.set(a.value)" />
+              <app-option-button appTapScale [icon]="a.icon" [label]="a.label | t" [selected]="aseguramiento() === a.value" (pressed)="aseguramiento.set(a.value)" />
             }
           </div>
 
@@ -71,9 +71,9 @@
         <!-- ═══════════ HOJA: DOCUMENTO ═══════════ -->
         @case ('documento') {
           <label class="field-label">{{ 'Tipo de documento' | t }} <span class="preg__req">*</span></label>
-          <div class="preg__opts">
+          <div class="preg__opts" appStagger>
             @for (t of tiposDocumento; track t.value) {
-              <app-option-button [icon]="t.icon" [label]="t.label | t" [selected]="tipoDocumento() === t.value" (pressed)="tipoDocumento.set(t.value)" />
+              <app-option-button appTapScale [icon]="t.icon" [label]="t.label | t" [selected]="tipoDocumento() === t.value" (pressed)="tipoDocumento.set(t.value)" />
             }
           </div>
 
@@ -108,7 +108,7 @@
         <!-- ═══════════ HOJA: FOTOS GUIADAS ═══════════ -->
         @case ('fotos') {
           <p class="preg__intro">{{ 'Toma cada foto con la cámara siguiendo la guía. Todas son opcionales: puedes registrar sin fotos y añadirlas después desde el expediente.' | t }}</p>
-          <div class="preg__guia">
+          <div class="preg__guia" appStagger>
             @for (g of guiaFotos; track g.tipo) {
               <div class="preg__guia-item">
                 <div class="preg__guia-txt">
@@ -157,7 +157,7 @@
             <div class="preg__res-row"><span class="preg__res-k">{{ 'Cargo' | t }}</span><span class="preg__res-v">{{ cargoSel() ? cargoSel()!.nombre + ' · ' + cargoSel()!.codigo : '—' }}</span></div>
             <div class="preg__res-row"><span class="preg__res-k">{{ 'Nacionalidad' | t }}</span><span class="preg__res-v">{{ nacionalidadLabel() }}</span></div>
             <div class="preg__res-row"><span class="preg__res-k">{{ 'Documento' | t }}</span><span class="preg__res-v">{{ tipoDocLabel() }}{{ documentoNumero() ? ' · ' + documentoNumero() : '' }}</span></div>
-            <div class="preg__res-row"><span class="preg__res-k">{{ 'Fotos' | t }}</span><span class="preg__res-v">{{ fotosTomadas() }} {{ fotosTomadas() === 1 ? ('tomada' | t) : ('tomadas' | t) }}</span></div>
+            <div class="preg__res-row"><span class="preg__res-k">{{ 'Fotos' | t }}</span><span class="preg__res-v"><span [appCountUp]="fotosTomadas()"></span> {{ fotosTomadas() === 1 ? ('tomada' | t) : ('tomadas' | t) }}</span></div>
             @if (firmaHabilitada) {
               <div class="preg__res-row"><span class="preg__res-k">{{ 'Firma' | t }}</span><span class="preg__res-v">{{ firma() ? '✓ ' + ('firmado' | t) : '—' }}</span></div>
             }

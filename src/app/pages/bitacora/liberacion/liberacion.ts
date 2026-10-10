@@ -22,6 +22,8 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import {
   ClFirmaCaptura,
   ClFirmaRol,
@@ -69,7 +71,7 @@ const TOTAL_STEPS = 5;
   selector: 'app-liberacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, CollapsibleSelect, ConfirmDialog, Skeleton, WizardFooter, WizardExit, TranslatePipe],
+  imports: [FormsModule, StepBar, PhotoSlot, OptionButton, SignaturePad, SelectList, CollapsibleSelect, ConfirmDialog, Skeleton, WizardFooter, WizardExit, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './liberacion.html',
   styleUrl: './liberacion.scss',
 })
@@ -84,6 +86,7 @@ export class LiberacionPage implements OnDestroy {
   private camera = inject(CameraService);
   private borrador = inject(BorradorService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   private sig = viewChild(SignaturePad);
 
@@ -586,6 +589,7 @@ export class LiberacionPage implements OnDestroy {
       this.hydrated = false; // evita que el autosave re-cree el borrador ya enviado
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
+      this.motion.momento('firma'); // CL2 F4 — el CL de liberación quedó guardado/encolado (firmas son el cierre)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar. Intenta de nuevo.'));
     } finally {

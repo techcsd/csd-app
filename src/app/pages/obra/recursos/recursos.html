@@ -23,12 +23,14 @@
         <!-- BL2 — vacío legítimo: texto neutral, sin afirmar la causa -->
         <app-empty-state icon="📦" [title]="'Sin existencias' | t" [message]="'No vemos existencias registradas en la bodega de esta obra ahora mismo.' | t" />
       } @else {
+        <div appStagger style="display:contents">
         @for (a of stock(); track a.articulo_id) {
           <div class="rec__stock">
             <span class="rec__stock-nombre">{{ a.nombre }}</span>
             <span class="rec__stock-cant">{{ a.cantidad }} {{ a.unidad || 'und' }}</span>
           </div>
         }
+        </div>
       }
     } @else {
       <!-- Pedido urgente -->
@@ -42,7 +44,7 @@
       </div>
 
       @if (lineas().length) {
-        <div class="rec__lineas">
+        <div class="rec__lineas" appStagger>
           @for (l of lineas(); track $index) {
             <div class="rec__linea">
               <span class="rec__linea-desc">{{ l.descripcion }}</span>
@@ -67,15 +69,17 @@
       <!-- Seguimiento del estado de mis pedidos -->
       @if (pedidos().length) {
         <h2 class="rec__section">{{ 'Mis pedidos' | t }}</h2>
+        <div appStagger style="display:contents">
         @for (p of pedidos(); track p.id) {
           <div class="rec__pedido">
             <div class="rec__pedido-top">
               <span class="rec__pedido-fecha">{{ p.created_at | date: 'dd/MM/yy' }}</span>
-              <span class="rec__pedido-estado" [style.background]="estadoMeta(p.estado).tint">{{ estadoMeta(p.estado).label | t }}</span>
+              <span class="rec__pedido-estado" [appEstadoPulse]="p.estado" [style.background]="estadoMeta(p.estado).tint">{{ estadoMeta(p.estado).label | t }}</span>
             </div>
             @if (p.notas) { <p class="rec__pedido-notas">{{ p.notas }}</p> }
           </div>
         }
+        </div>
       }
     }
   </div>

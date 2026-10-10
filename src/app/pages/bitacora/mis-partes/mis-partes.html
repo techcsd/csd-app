@@ -10,6 +10,7 @@
     @if (proceso().length) {
       <section class="mis-partes__proceso">
         <h2 class="mis-partes__proceso-title">{{ 'En proceso / Pendientes de envío' | t }} ({{ proceso().length }})</h2>
+        <div appStagger style="display:contents">
         @for (p of proceso(); track p.id) {
           <div class="proc-row" [attr.data-kind]="p.kind">
             <div class="proc-row__info">
@@ -32,6 +33,7 @@
             </div>
           </div>
         }
+        </div>
       </section>
     }
 
@@ -86,8 +88,9 @@
           }
         </div>
       }
+      <div appStagger style="display:contents">
       @for (b of filtradas(); track b.id) {
-        <button type="button" class="bit-row" [attr.data-tipo]="b.tipo" (click)="open(b)">
+        <button type="button" class="bit-row" appTapScale [attr.data-tipo]="b.tipo" (click)="open(b)">
           <div class="bit-row__info">
             <span class="bit-row__tipo">{{ titulo(b) }}</span>
             <span class="bit-row__obra">{{ b.proyecto?.nombre ?? '—' }}</span>
@@ -121,6 +124,7 @@
           (action)="nueva()"
         />
       }
+      </div>
     }
   </div>
 

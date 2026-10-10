@@ -11,6 +11,7 @@ import {
   actividadToTareaRpc,
   CronogramaImportPreview,
 } from '../../../core/util/cronograma-xlsx';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AS21 — importar el cronograma de una obra desde un Excel (.xlsx) con el formato
@@ -23,7 +24,7 @@ import {
   selector: 'app-cronograma-importar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cronograma-importar.html',
   styleUrl: './cronograma-importar.scss',
 })

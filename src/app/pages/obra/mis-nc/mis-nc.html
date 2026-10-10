@@ -16,9 +16,10 @@
       <app-empty-state icon="🎉" [title]="'Todo al día' | t"
         [message]="'No tienes no conformidades ni acciones correctivas pendientes.' | t" />
     } @else {
+      <div appStagger style="display:contents">
       @for (it of items(); track it.clase + it.id) {
         <div class="misnc__card" [class.misnc__card--open]="esExpandido(it)">
-          <button type="button" class="misnc__card-head" (click)="toggle(it)">
+          <button type="button" class="misnc__card-head" appTapScale (click)="toggle(it)">
             <div class="misnc__card-main">
               <span class="misnc__badge" [style.background]="it.clase === 'accion' ? '#2563eb' : sevTint(it.severidad)">
                 {{ it.clase === 'accion' ? ('Acción' | t) : (tipoLabel(it.tipo) | t) }}
@@ -87,6 +88,7 @@
           }
         </div>
       }
+      </div>
     }
   </div>
 </div>

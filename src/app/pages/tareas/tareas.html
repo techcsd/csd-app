@@ -19,9 +19,9 @@
       <textarea class="field" rows="3" [ngModel]="nuevoDesc()" (ngModelChange)="nuevoDesc.set($event)" [placeholder]="'Detalles…' | t"></textarea>
 
       <label class="field-label tareas__mt">{{ 'Prioridad' | t }}</label>
-      <div class="tareas__prio">
+      <div class="tareas__prio" appStagger>
         @for (p of prioridades; track p) {
-          <app-option-button [label]="prioridadMeta[p].label | t" [selected]="nuevaPrioridad() === p" (pressed)="nuevaPrioridad.set(p)" />
+          <app-option-button appTapScale [label]="prioridadMeta[p].label | t" [selected]="nuevaPrioridad() === p" (pressed)="nuevaPrioridad.set(p)" />
         }
       </div>
 
@@ -46,8 +46,9 @@
             <button type="button" class="btn-outline" (click)="cargarRoster()">{{ 'Reintentar' | t }}</button>
           </div>
         } @else {
+          <div appStagger style="display:contents">
           @for (u of asignResultados(); track u.id) {
-            <button type="button" class="tareas__ures" (click)="pickAsignado(u)">
+            <button type="button" class="tareas__ures" appTapScale (click)="pickAsignado(u)">
               <span class="tareas__ures-nombre">
                 {{ u.nombre }}
                 @if (u.es_duplicado) { <span class="tareas__ures-dup" [title]="'Hay más de una persona con este nombre' | t">⚠️ {{ 'homónimo' | t }}</span> }
@@ -61,6 +62,7 @@
           } @empty {
             <p class="tareas__hint">{{ asignBusqueda().trim() ? ('Nadie coincide con la búsqueda.' | t) : ('No hay personas para asignar.' | t) }}</p>
           }
+          </div>
         }
       }
 
@@ -69,9 +71,9 @@
 
       <!-- AG15 — vincular la tarea a una acción del sistema (se auto-completa sola). -->
       <label class="field-label tareas__mt">{{ 'Vincular a una acción (opcional)' | t }}</label>
-      <div class="tareas__prio">
+      <div class="tareas__prio" appStagger>
         @for (v of vinculoTipos; track v.valor) {
-          <app-option-button [label]="v.label" [selected]="nuevoVinculo() === v.valor" (pressed)="setVinculo(v.valor)" />
+          <app-option-button appTapScale [label]="v.label" [selected]="nuevoVinculo() === v.valor" (pressed)="setVinculo(v.valor)" />
         }
       </div>
       @if (nuevoVinculo() === 'conduce') {
@@ -206,12 +208,13 @@
         />
       } @else if (vista() === 'todas') {
         <!-- BH6 — gestión: tareas agrupadas por usuario, con su estado. -->
+        <div appStagger style="display:contents">
         @for (g of gruposPorUsuario(); track g.usuario) {
           <div class="tareas__grupo">
             <h3 class="tareas__grupo-tit">👤 {{ g.usuario }} <span class="tareas__grupo-n">{{ g.tareas.length }}</span></h3>
             @for (t of g.tareas; track t.id) {
-              <button type="button" class="tareas__card" (click)="abrir(t)">
-                <span class="tareas__card-chip" [style.background]="estadoMeta[t.estado].tone">{{ estadoMeta[t.estado].icon }}</span>
+              <button type="button" class="tareas__card" appTapScale (click)="abrir(t)">
+                <span class="tareas__card-chip" [appEstadoPulse]="t.estado" [style.background]="estadoMeta[t.estado].tone">{{ estadoMeta[t.estado].icon }}</span>
                 <span class="tareas__card-body">
                   <span class="tareas__card-title">{{ t.titulo }}</span>
                   <span class="tareas__card-sub">
@@ -227,10 +230,12 @@
         } @empty {
           <app-empty-state icon="📋" [title]="'No hay tareas' | t" [message]="'Aún no hay tareas asignadas en el sistema.' | t" />
         }
+        </div>
       } @else {
+        <div appStagger style="display:contents">
         @for (t of lista(); track t.id) {
-          <button type="button" class="tareas__card" (click)="abrir(t)">
-            <span class="tareas__card-chip" [style.background]="estadoMeta[t.estado].tone">{{ estadoMeta[t.estado].icon }}</span>
+          <button type="button" class="tareas__card" appTapScale (click)="abrir(t)">
+            <span class="tareas__card-chip" [appEstadoPulse]="t.estado" [style.background]="estadoMeta[t.estado].tone">{{ estadoMeta[t.estado].icon }}</span>
             <span class="tareas__card-body">
               <span class="tareas__card-title">{{ t.titulo }}</span>
               <span class="tareas__card-sub">
@@ -243,6 +248,7 @@
         } @empty {
           <app-empty-state icon="✅" [title]="'No tienes tareas' | t" [message]="'Aquí aparecen las tareas que te asignan y las que creas.' | t" />
         }
+        </div>
       }
     }
   </div>

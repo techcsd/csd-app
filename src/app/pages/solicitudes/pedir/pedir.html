@@ -26,14 +26,14 @@
   <!-- Hoja 3: resumen / review -->
   @if (hoja() === 'resumen') {
     <div class="screen__body">
-      <h2 class="mov__h2">{{ 'Revisa tu requisición' | t }}</h2>
+      <h2 class="mov__h2" appWizardStep>{{ 'Revisa tu requisición' | t }}</h2>
 
       <app-collapsible-select [label]="'Obra' | t" icon="🏗️" [options]="obraOptions()" [selectedId]="proyectoId()" [searchable]="true" [searchPlaceholder]="'Buscar obra…' | t" (picked)="proyectoId.set($event)" />
 
       <label class="field-label mov__mt">{{ 'Urgencia' | t }}</label>
       <div class="mov__motivos">
-        <button type="button" class="chip" [class.chip--on]="urgencia() === 'normal'" (click)="urgencia.set('normal')">{{ 'Normal' | t }}</button>
-        <button type="button" class="chip" [class.chip--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 {{ 'Urgente' | t }}</button>
+        <button type="button" class="chip" appTapScale [class.chip--on]="urgencia() === 'normal'" (click)="urgencia.set('normal')">{{ 'Normal' | t }}</button>
+        <button type="button" class="chip" appTapScale [class.chip--on]="urgencia() === 'urgente'" (click)="urgencia.set('urgente')">🔴 {{ 'Urgente' | t }}</button>
       </div>
 
       <!-- BO8 — ¿para cuándo se necesita? Opcional; [min]=hoy (se necesita en el futuro). -->
@@ -78,7 +78,7 @@
   <!-- Hoja 4: éxito -->
   @if (hoja() === 'exito') {
     <div class="screen__body">
-      <div class="mov__ok">
+      <div class="mov__ok" appFadeIn>
         <span class="mov__ok-check">✓</span>
         <h1 class="mov__ok-title">{{ 'Requisición enviada' | t }}</h1>
         <p class="mov__ok-sub">
@@ -86,7 +86,7 @@
         </p>
       </div>
 
-      <div class="mov__resumen">
+      <div class="mov__resumen" appStagger>
         @for (g of grupos(); track g.categoria) {
           <h3 class="mov__grupo">{{ g.categoria }}</h3>
           @for (l of g.lineas; track l.articulo_id) {
@@ -100,8 +100,8 @@
     </div>
 
     <footer class="mov__nav">
-      <button type="button" class="btn-cta mov__wa" (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
-      <button type="button" class="btn-ghost mov__mt" (click)="nuevoRegistro()">{{ 'Nueva requisición' | t }}</button>
+      <button type="button" class="btn-cta mov__wa" appTapScale (click)="compartir()">📲 {{ 'Compartir (PDF / Excel)' | t }}</button>
+      <button type="button" class="btn-ghost mov__mt" appTapScale (click)="nuevoRegistro()">{{ 'Nueva requisición' | t }}</button>
       <button type="button" class="btn-ghost" (click)="finish()">{{ 'Volver a Requisición' | t }}</button>
     </footer>
   }

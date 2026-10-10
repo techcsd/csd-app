@@ -48,10 +48,11 @@
         <button
           type="button"
           class="inc__bulk"
+          appTapScale
           (click)="pedirAprobarTodos()"
           [disabled]="savingAll() || loadingList() || cumplieronPendientes() === 0">
           @if (savingAll()) { {{ 'Aprobando…' | t }} }
-          @else { ✅ {{ 'Aprobar todos los que cumplieron' | t }} ({{ cumplieronPendientes() }}) }
+          @else { ✅ {{ 'Aprobar todos los que cumplieron' | t }} (<span [appCountUp]="cumplieronPendientes()"></span>) }
         </button>
       }
 
@@ -64,7 +65,7 @@
           [title]="'Sin choferes esta semana' | t"
           [message]="'No hay informes de incentivo para la semana seleccionada.' | t" />
       } @else {
-        <ul class="inc__list">
+        <ul class="inc__list" appStagger>
           @for (f of filas(); track f.informe_id) {
             <li class="inc__row" [class.inc__row--saving]="saving(f.informe_id)">
               <div class="inc__row-top">
@@ -75,11 +76,11 @@
               </div>
 
               <div class="inc__row-mid">
-                <span class="inc__pts" [class.inc__pts--ok]="f.cumplio">{{ f.puntaje }}/{{ f.minimo }}</span>
+                <span class="inc__pts" [class.inc__pts--ok]="f.cumplio"><span [appCountUp]="f.puntaje"></span>/{{ f.minimo }}</span>
                 <span class="inc__badge" [class.inc__badge--ok]="f.cumplio" [class.inc__badge--bajo]="!f.cumplio">
                   {{ f.cumplio ? ('Cumplió' | t) : ('Rendimiento bajo' | t) }}
                 </span>
-                <span class="inc__dec inc__dec--{{ f.decision || 'pendiente' }}">{{ decisionLabel(f) }}</span>
+                <span class="inc__dec inc__dec--{{ f.decision || 'pendiente' }}" [appEstadoPulse]="f.decision || 'pendiente'">{{ decisionLabel(f) }}</span>
               </div>
 
               @if (f.decision && f.decidido_por_nombre) {
@@ -97,6 +98,7 @@
                   <button
                     type="button"
                     class="inc__act inc__act--aprobar"
+                    appTapScale
                     (click)="aprobar(f)"
                     [disabled]="saving(f.informe_id)">
                     {{ saving(f.informe_id) ? ('Guardando…' | t) : ('Aprobar' | t) }}
@@ -104,6 +106,7 @@
                   <button
                     type="button"
                     class="inc__act inc__act--declinar"
+                    appTapScale
                     (click)="abrirDeclinar(f)"
                     [disabled]="saving(f.informe_id)">
                     {{ 'Declinar' | t }}

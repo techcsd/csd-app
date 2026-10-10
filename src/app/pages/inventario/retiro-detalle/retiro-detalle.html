@@ -11,10 +11,10 @@
       <p class="ret-det__empty">{{ 'No se pudo cargar este retiro.' | t }}</p>
     } @else {
       @let r = detalle()!.retiro;
-      <div class="ret-det__card">
+      <div class="ret-det__card" appFadeIn>
         <div class="ret-det__top">
           <span class="ret-det__folio">{{ codigo(r.folio) }}</span>
-          <span class="ret-det__estado" [attr.data-estado]="r.estado">{{ estadoLabel[r.estado] }}</span>
+          <span class="ret-det__estado" [appEstadoPulse]="r.estado" [attr.data-estado]="r.estado">{{ estadoLabel[r.estado] }}</span>
         </div>
         <div class="ret-det__fila"><span>{{ 'Obra' | t }}</span><b>{{ r.proyecto_nombre || '—' }}</b></div>
         <div class="ret-det__fila"><span>{{ 'Motivo del daño' | t }}</span><b>{{ motivoLabel[r.motivo_dano] }}</b></div>
@@ -55,9 +55,9 @@
       @if (fotoUrls().length) {
         <div class="ret-det__card">
           <h2 class="ret-det__sec">{{ 'Fotos del daño' | t }} ({{ fotoUrls().length }})</h2>
-          <div class="ret-det__fotos">
+          <div class="ret-det__fotos" appStagger>
             @for (u of fotoUrls(); track u) {
-              <button type="button" class="ret-det__foto" (click)="abrirFoto(u)">
+              <button type="button" class="ret-det__foto" appTapScale (click)="abrirFoto(u)">
                 <img [src]="u" alt="Material dañado" loading="lazy" />
               </button>
             }

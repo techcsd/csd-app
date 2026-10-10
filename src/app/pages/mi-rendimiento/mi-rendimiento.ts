@@ -9,6 +9,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { IncentivoService, IncentivoSemana, IncentivoRef } from '../../core/services/incentivo.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFecha, formatFechaHumana } from '../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /** AT2 — orden y etiquetas de los renglones del informe (v1). */
 const RENGLONES: { key: string; label: string; icono: string }[] = [
@@ -40,7 +41,7 @@ interface RenglonView {
   selector: 'app-mi-rendimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mi-rendimiento.html',
   styleUrl: './mi-rendimiento.scss',
 })

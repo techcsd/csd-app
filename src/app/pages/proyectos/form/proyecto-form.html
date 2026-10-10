@@ -64,7 +64,7 @@
                 (ngModelChange)="ubicacionTexto.set($event)"
                 [placeholder]="'Link de Maps o coordenadas' | t"
               />
-              <button type="button" class="btn-cta pform__resolver" [disabled]="resolviendo()" (click)="resolver()">
+              <button type="button" class="btn-cta pform__resolver" appTapScale [disabled]="resolviendo()" (click)="resolver()">
                 {{ resolviendo() ? '…' : ('Resolver' | t) }}
               </button>
             </div>
@@ -103,7 +103,7 @@
             <label class="field-label" for="desc">{{ 'Descripción (solo descripción real)' | t }}</label>
             <textarea id="desc" class="field pform__desc" rows="4" [ngModel]="descripcion()" (ngModelChange)="descripcion.set($event)" [placeholder]="'Notas generales de la obra' | t"></textarea>
 
-            <div class="pform__resumen">
+            <div class="pform__resumen" appStagger>
               <div class="pform__res-row"><span>{{ 'Nombre' | t }}</span><b>{{ nombre() || '—' }}</b></div>
               <div class="pform__res-row"><span>{{ 'Estado' | t }}</span><b>{{ estadoLabel() }}</b></div>
               @if (cliente()) { <div class="pform__res-row"><span>{{ 'Cliente' | t }}</span><b>{{ cliente() }}</b></div> }
@@ -132,12 +132,12 @@
     />
   } @else {
     <!-- ÉXITO -->
-    <div class="screen__body pform__exito">
+    <div class="screen__body pform__exito" appFadeIn>
       <span class="pform__exito-icon">✅</span>
       <h2 class="pform__exito-title">{{ esEdicion() ? ('Proyecto actualizado' | t) : ('Proyecto creado' | t) }}</h2>
       <p class="pform__muted">{{ 'Los cambios ya están en el sistema (web y app).' | t }}</p>
-      <button type="button" class="btn-cta" (click)="verProyecto()">{{ 'Ver proyecto' | t }}</button>
-      <button type="button" class="btn-ghost pform__mt" (click)="salir()">{{ 'Volver a Proyectos' | t }}</button>
+      <button type="button" class="btn-cta" appTapScale (click)="verProyecto()">{{ 'Ver proyecto' | t }}</button>
+      <button type="button" class="btn-ghost pform__mt" appTapScale (click)="salir()">{{ 'Volver a Proyectos' | t }}</button>
     </div>
   }
 </div>

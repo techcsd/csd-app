@@ -13,6 +13,7 @@ import {
   RETIRO_MOTIVO_LABEL,
   retiroCodigo,
 } from '../../../core/models/retiro.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * BG4 — "Mis retiros": el ingeniero ve el estado de sus solicitudes de retiro
@@ -23,7 +24,7 @@ import {
   selector: 'app-retiros',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe],
+  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './retiros.html',
   styleUrl: './retiros.scss',
 })

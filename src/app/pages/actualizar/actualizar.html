@@ -17,7 +17,7 @@
     @if (hayChangelog()) {
       <div class="actu__notas">
         <h2 class="actu__notas-title">{{ 'Qué trae esta versión' | t }}</h2>
-        <div class="actu__notas-scroll">
+        <div class="actu__notas-scroll" appStagger>
           @if (grupos().length) {
             @for (g of grupos(); track g.modulo) {
               <div class="actu__grupo">
@@ -89,6 +89,7 @@
       <button
         type="button"
         class="btn-cta"
+        appTapScale
         [disabled]="estado() === 'descargando' || estado() === 'instalando'"
         (click)="actualizar()"
       >

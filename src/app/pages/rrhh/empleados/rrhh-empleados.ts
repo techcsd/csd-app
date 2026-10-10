@@ -7,13 +7,14 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { SyncBar } from '../../../shared/components/sync-bar/sync-bar';
 import { RrhhService, Empleado } from '../../../core/services/rrhh.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AH16 — listado de empleados (consulta) para el jefe de RRHH. */
 @Component({
   selector: 'app-rrhh-empleados',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, SyncBar, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, SyncBar, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './rrhh-empleados.html',
   styleUrl: './rrhh-empleados.scss',
 })

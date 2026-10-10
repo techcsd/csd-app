@@ -10,6 +10,7 @@
       <button
         type="button"
         class="mis-sol__tab"
+        appTapScale
         [class.mis-sol__tab--on]="tab() === g"
         (click)="setTab(g)"
       >
@@ -23,8 +24,9 @@
     @if (loading()) {
       <app-skeleton [rows]="5" />
     } @else {
+      <div appStagger style="display:contents">
       @for (s of visibles(); track s.id) {
-        <button type="button" class="sol-card" [attr.data-estado]="s.estado" (click)="abrir(s)">
+        <button type="button" class="sol-card" appTapScale [attr.data-estado]="s.estado" (click)="abrir(s)">
           <!-- BV10 — la fecha de necesidad es la PRIMERA línea de la tarjeta -->
           @let ni = necesidad(s);
           <div class="sol-card__nec" [class.sol-card__nec--venc]="ni.estado === 'vencida'" [class.sol-card__nec--none]="ni.estado === 'sin_fecha'">
@@ -38,7 +40,7 @@
           </div>
           <div class="sol-card__top">
             <span class="sol-card__chip">🏗️ {{ s.proyecto?.nombre ?? ('Obra' | t) }}</span>
-            <span class="sol-card__estado">{{ estadoLabel(s.estado) }}</span>
+            <span class="sol-card__estado" [appEstadoPulse]="s.estado">{{ estadoLabel(s.estado) }}</span>
           </div>
           <div class="sol-card__meta">
             <span class="sol-card__code">{{ codigo(s.folio) }}</span>
@@ -70,6 +72,7 @@
           (action)="nueva()"
         />
       }
+      </div>
     }
   </div>
 </div>

@@ -6,6 +6,7 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { AdminService, Parametro } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AL2 — Administración › Parámetros: edición del valor de cada parámetro del
@@ -14,7 +15,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-admin-parametros',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './parametros.html',
   styleUrl: './parametros.scss',
 })

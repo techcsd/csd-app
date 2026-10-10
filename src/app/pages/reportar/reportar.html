@@ -17,14 +17,17 @@
 
     <div class="screen__body">
       <h2 class="reportar__q">¿Qué quieres reportar?</h2>
+      <div appStagger style="display:contents">
       @for (t of tipos; track t.value) {
         <app-option-button
+          appTapScale
           [icon]="t.icon"
           [label]="t.label"
           [selected]="tipo() === t.value"
           (pressed)="tipo.set(t.value)"
         />
       }
+      </div>
 
       <label class="field-label reportar__mt">Título</label>
       <input class="field" type="text" [ngModel]="asunto()" (ngModelChange)="asunto.set($event)" placeholder="En pocas palabras" />
@@ -34,7 +37,7 @@
 
       <label class="field-label reportar__mt">Fotos (opcional)</label>
       <p class="reportar__hint">Una imagen ayuda a entender el problema.</p>
-      <div class="reportar__fotos">
+      <div class="reportar__fotos" appStagger>
         @for (f of fotos(); track f.previewUrl) {
           <div class="reportar__foto">
             <img [src]="f.previewUrl" alt="foto" />
@@ -48,7 +51,7 @@
     </div>
 
     <footer class="reportar__nav">
-      <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+      <button type="button" class="btn-cta" appTapScale [disabled]="submitting()" (click)="submit()">
         {{ submitting() ? 'Enviando…' : 'Enviar reporte' }}
       </button>
     </footer>

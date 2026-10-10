@@ -23,7 +23,7 @@
         <p class="midet__email">{{ email() | emailDisplay }}</p>
       }
       @if (rolesNombres().length) {
-        <div class="midet__roles">
+        <div class="midet__roles" appStagger>
           @for (r of rolesNombres(); track r) {
             <span class="midet__rol-chip">{{ r }}</span>
           }
@@ -45,7 +45,7 @@
       <app-skeleton [rows]="4" />
     } @else if (esConductor()) {
       <!-- Licencia -->
-      <section class="midet__block">
+      <section class="midet__block" appFadeIn>
         <h2 class="midet__block-ttl">{{ 'Licencia de conducir' | t }}</h2>
         <ul class="midet__info">
           <li><span>{{ 'Categoría' | t }}</span><b>{{ conductor()!.licencia_tipo || '—' }}</b></li>
@@ -70,14 +70,14 @@
         } @else if (!cedulas().length && !licencias().length) {
           <p class="midet__muted">{{ 'No hay documentos cargados.' | t }}</p>
         } @else {
-          <div class="midet__docs">
+          <div class="midet__docs" appStagger>
             @for (d of cedulas().concat(licencias()); track d.label) {
               <div class="midet__doc">
                 <span class="midet__doc-lbl">{{ d.label }}</span>
                 @if (d.esPdf) {
                   <a class="midet__doc-pdf" [href]="d.url" target="_blank" rel="noopener">📄 {{ 'Ver PDF' | t }}</a>
                 } @else if (d.url) {
-                  <button type="button" class="midet__doc-img" (click)="ampliar(d.url)">
+                  <button type="button" class="midet__doc-img" appTapScale (click)="ampliar(d.url)">
                     <img [src]="d.url" [alt]="d.label" />
                   </button>
                 } @else {

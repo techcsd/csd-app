@@ -47,21 +47,21 @@
         </div>
 
         <!-- Mis pendientes -->
-        <div class="mp__stats">
+        <div class="mp__stats" appFadeIn appStagger>
           <div class="mp__stat">
-            <span class="mp__stat-n">{{ r.tareasPendientes }}</span>
+            <span class="mp__stat-n"><span [appCountUp]="r.tareasPendientes"></span></span>
             <span class="mp__stat-l">{{ 'Tareas pendientes' | t }}</span>
           </div>
           <div class="mp__stat" [class.mp__stat--alert]="r.ncAbiertas > 0">
-            <span class="mp__stat-n">{{ r.ncAbiertas }}</span>
+            <span class="mp__stat-n"><span [appCountUp]="r.ncAbiertas"></span></span>
             <span class="mp__stat-l">{{ 'No conformidades abiertas' | t }}</span>
           </div>
           <div class="mp__stat">
-            <span class="mp__stat-n">{{ r.misPendientes }}</span>
+            <span class="mp__stat-n"><span [appCountUp]="r.misPendientes"></span></span>
             <span class="mp__stat-l">{{ 'Míos por atender' | t }}</span>
           </div>
           <div class="mp__stat">
-            <span class="mp__stat-n">{{ r.pedidosPendientes }}</span>
+            <span class="mp__stat-n"><span [appCountUp]="r.pedidosPendientes"></span></span>
             <span class="mp__stat-l">{{ 'Pedidos en curso' | t }}</span>
           </div>
         </div>
@@ -73,7 +73,7 @@
       <!-- Partidas próximas -->
       @if (partidasProximas().length) {
         <h3 class="mp__sec">{{ 'Partidas con trabajo pendiente' | t }}</h3>
-        <ul class="mp__partidas">
+        <ul class="mp__partidas" appStagger>
           @for (p of partidasProximas(); track p.id) {
             <li class="mp__partida">
               <div class="mp__partida-top">
@@ -90,7 +90,7 @@
       <!-- Últimas bitácoras -->
       <h3 class="mp__sec">{{ 'Últimas bitácoras' | t }}</h3>
       @if (ultimasBitacoras().length) {
-        <ul class="mp__bitas">
+        <ul class="mp__bitas" appStagger>
           @for (b of ultimasBitacoras(); track b.id) {
             <li class="mp__bita">
               <span class="mp__bita-fecha">{{ fmtFecha(b.fecha) }}</span>

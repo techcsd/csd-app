@@ -7,6 +7,7 @@ import { UpdaterService } from '../../core/services/updater.service';
 import { UpdateService } from '../../core/services/update.service';
 import { abrirUrlExterna } from '../../core/utils/abrir-url.util';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /**
  * V3/V4 — "Nueva versión disponible" screen. Reached from the update banner,
@@ -23,7 +24,7 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
   selector: 'app-actualizar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './actualizar.html',
   styleUrl: './actualizar.scss',
 })

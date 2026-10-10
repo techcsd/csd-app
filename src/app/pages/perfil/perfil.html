@@ -5,7 +5,7 @@
   </header>
 
   <div class="screen__body">
-    <button type="button" class="perfil__card" (click)="verMiDetalle()">
+    <button type="button" class="perfil__card" appTapScale (click)="verMiDetalle()">
       <!-- AW7/BT3 — foto de perfil (imagen si tiene y carga; si no, inicial) -->
       @if (avatarUrl() && !avatarFallo()) {
         <img
@@ -87,7 +87,7 @@
       <div class="perfil__seccion">
         <span class="perfil__seccion-label">{{ 'Mis vehículos autorizados' | t }}</span>
         @if (autorizados().length) {
-          <ul class="perfil__autorizados">
+          <ul class="perfil__autorizados" appStagger>
             @for (v of autorizados(); track v.vehiculoId) {
               <li class="perfil__autorizado">
                 <b class="perfil__autorizado-nombre">{{ v.etiqueta }}</b>
@@ -110,11 +110,12 @@
     <!-- BS3 — Apariencia (claro/oscuro/sistema). Nombres/orden como en Configuración web. -->
     <div class="perfil__seccion">
       <span class="perfil__seccion-label">{{ 'Apariencia' | t }}</span>
-      <div class="perfil__apariencia">
+      <div class="perfil__apariencia" appStagger>
         @for (op of aparienciaOpts; track op.pref) {
           <button
             type="button"
             class="perfil__apar-opt"
+            appTapScale
             [class.perfil__apar-opt--on]="theme.pref() === op.pref"
             (click)="setApariencia(op.pref)"
           >
@@ -129,11 +130,12 @@
     <!-- CJ1 — Animaciones (completas / reducidas). Por dispositivo. -->
     <div class="perfil__seccion">
       <span class="perfil__seccion-label">{{ 'Animaciones' | t }}</span>
-      <div class="perfil__apariencia">
+      <div class="perfil__apariencia" appStagger>
         @for (op of animacionOpts; track op.pref) {
           <button
             type="button"
             class="perfil__apar-opt"
+            appTapScale
             [class.perfil__apar-opt--on]="motion.pref() === op.pref"
             (click)="setAnimacion(op.pref)"
           >

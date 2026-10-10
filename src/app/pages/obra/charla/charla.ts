@@ -17,6 +17,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { ObraService } from '../../../core/services/obra.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const MAX_FOTOS = 2;
 
@@ -25,7 +27,7 @@ const MAX_FOTOS = 2;
   selector: 'app-obra-charla',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, SignaturePad, Counter, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, SignaturePad, Counter, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './charla.html',
   styleUrl: './charla.scss',
 })
@@ -40,6 +42,7 @@ export class CharlaPage implements OnDestroy {
   private toast = inject(ToastService);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   private sig = viewChild(SignaturePad);
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
@@ -158,6 +161,7 @@ export class CharlaPage implements OnDestroy {
       });
       await this.autosave.discard(this.clave);
       this.done.set(true);
+      this.motion.momento('documento'); // CL2 F4 — charla de seguridad registrada/encolada (corre igual offline)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la charla.'));
     } finally {

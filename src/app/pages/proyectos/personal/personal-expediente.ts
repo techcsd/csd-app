@@ -41,6 +41,7 @@ import {
   FIRMA_ROL_LABEL,
 } from '../../../core/models/personal-obra.model';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const SGC_WEB = 'https://sgcconstructorasd.com';
 
@@ -50,7 +51,7 @@ const SGC_WEB = 'https://sgcconstructorasd.com';
   selector: 'app-personal-expediente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, PdfViewer, CedulaPipe, TranslatePipe, SignaturePad],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, OptionButton, ConfirmDialog, PersonalCarnet, PdfViewer, CedulaPipe, TranslatePipe, SignaturePad, ...MOTION_DIRECTIVES],
   templateUrl: './personal-expediente.html',
   styleUrl: './personal-expediente.scss',
 })

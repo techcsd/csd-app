@@ -17,14 +17,16 @@
       } @else if (!informes().length) {
         <app-empty-state icon="📄" [title]="'Sin informes' | t" [message]="'Aún no se ha generado ningún informe de esta obra.' | t" />
       } @else {
+        <div appStagger style="display:contents">
         @for (i of informes(); track i.id) {
-          <button type="button" class="inf__row" (click)="abrir(i)">
+          <button type="button" class="inf__row" appTapScale (click)="abrir(i)">
             <span class="inf__row-periodo">{{ i.periodo_inicio }} → {{ i.periodo_fin }}</span>
-            <span class="inf__row-estado" [class.inf__row-estado--env]="i.estado === 'enviado'">
+            <span class="inf__row-estado" [appEstadoPulse]="i.estado" [class.inf__row-estado--env]="i.estado === 'enviado'">
               {{ i.estado === 'enviado' ? ('Enviado' | t) : ('Borrador' | t) }}
             </span>
           </button>
         }
+        </div>
       }
     } @else if (activo(); as inf) {
       <div class="inf__periodo">{{ inf.periodo_inicio }} → {{ inf.periodo_fin }}</div>
@@ -34,7 +36,7 @@
 
       <!-- Auto-compilado -->
       <h2 class="inf__section">{{ 'Resumen automático' | t }}</h2>
-      <div class="inf__kpis">
+      <div class="inf__kpis" appFadeIn appStagger>
         <div class="inf__kpi"><span>{{ 'Avance real' | t }}</span><b>{{ sec('avance_real_pct') ?? '—' }}%</b></div>
         <div class="inf__kpi"><span>{{ 'Avance plan' | t }}</span><b>{{ sec('avance_plan_pct') ?? '—' }}%</b></div>
         <div class="inf__kpi"><span>{{ 'NC abiertas' | t }}</span><b>{{ sec('nc_abiertas') ?? 0 }}</b></div>

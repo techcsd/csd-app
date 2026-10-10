@@ -24,6 +24,7 @@ import {
 } from '../../../core/models/cronograma.model';
 import { formatFecha } from '../../../core/util/fecha';
 import { humanizeError } from '../../../shared/util/friendly-error.util';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Barra de timeline calculada (posición y ancho en % del rango total). */
 interface BarraTimeline {
@@ -51,7 +52,7 @@ function dayNum(iso: string | null): number | null {
   selector: 'app-cronograma',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, BottomSheet, PhotoSlot, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, BottomSheet, PhotoSlot, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cronograma.html',
   styleUrl: './cronograma.scss',
 })

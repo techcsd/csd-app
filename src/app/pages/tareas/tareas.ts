@@ -27,6 +27,7 @@ import {
   TAREA_LINKED_META,
 } from '../../core/models/tarea.model';
 import { formatFechaMedia } from '../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /**
  * AF39 — Módulo Tareas en la app. Mis tareas (asignadas a mí o creadas por mí),
@@ -37,7 +38,7 @@ import { formatFechaMedia } from '../../core/util/fecha';
   selector: 'app-tareas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, CollapsibleSelect, EmailDisplayPipe, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, OptionButton, PhotoSlot, CollapsibleSelect, EmailDisplayPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './tareas.html',
   styleUrl: './tareas.scss',
 })

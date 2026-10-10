@@ -14,14 +14,14 @@
     }
 
     @if (avisosCount() > 0) {
-      <button type="button" class="proy__avisos" (click)="verAvisos()">
-        🔔 {{ avisosCount() }} {{ 'aviso(s) de cronograma' | t }}
+      <button type="button" class="proy__avisos" appTapScale (click)="verAvisos()">
+        🔔 <span [appCountUp]="avisosCount()"></span> {{ 'aviso(s) de cronograma' | t }}
         <span class="proy__avisos-go">{{ 'Ver' | t }} →</span>
       </button>
     }
 
     @if (puedeCrear()) {
-      <button type="button" class="btn-cta proy__nuevo" (click)="nuevo()">＋ {{ 'Nuevo proyecto' | t }}</button>
+      <button type="button" class="btn-cta proy__nuevo" appTapScale (click)="nuevo()">＋ {{ 'Nuevo proyecto' | t }}</button>
     }
 
     @if (loading()) {
@@ -69,11 +69,12 @@
         <app-empty-state icon="🔍" [title]="'Sin resultados' | t" [message]="'Ningún proyecto coincide con el filtro.' | t" />
       }
 
+      <div appStagger style="display:contents">
       @for (p of filtrados(); track p.id) {
-        <button type="button" class="proy__card" (click)="abrir(p)">
+        <button type="button" class="proy__card" appTapScale (click)="abrir(p)">
           <div class="proy__top">
             <span class="proy__nombre">{{ p.nombre }}</span>
-            <span class="proy__estado proy__estado--{{ p.estado }}">{{ estadoLabel[p.estado] | t }}</span>
+            <span class="proy__estado proy__estado--{{ p.estado }}" [appEstadoPulse]="p.estado">{{ estadoLabel[p.estado] | t }}</span>
           </div>
           <div class="proy__meta">
             @if (p.codigo) { <span>{{ p.codigo }}</span> }
@@ -92,6 +93,7 @@
       } @empty {
         <app-empty-state icon="🔍" [title]="'Sin resultados' | t" [message]="'Ningún proyecto coincide con la búsqueda.' | t" />
       }
+      </div>
     }
   </div>
 </div>

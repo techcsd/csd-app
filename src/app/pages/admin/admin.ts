@@ -3,13 +3,14 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { UserContextService } from '../../core/services/user-context.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /** Admin hub (gated by the 'admin' módulo). Mobile mirror of SGC's Administración. */
 @Component({
   selector: 'app-admin',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
 })

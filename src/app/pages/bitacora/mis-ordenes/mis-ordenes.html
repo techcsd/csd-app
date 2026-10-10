@@ -41,12 +41,13 @@
         </div>
       }
 
+      <div appStagger style="display:contents">
       @for (o of filtradas(); track o.bitacora_id) {
-        <button type="button" class="ot-row" (click)="open(o)">
+        <button type="button" class="ot-row" appTapScale (click)="open(o)">
           <div class="ot-row__info">
             <span class="ot-row__cod">
               {{ o.codigo }}
-              <span class="ot-row__estado" [attr.data-estado]="o.estado">{{ estadoLabel(o.estado) }}</span>
+              <span class="ot-row__estado" [appEstadoPulse]="o.estado" [attr.data-estado]="o.estado">{{ estadoLabel(o.estado) }}</span>
               @if (o.es_prueba) { <span class="ot-row__prueba">{{ 'PRUEBA' | t }}</span> }
             </span>
             <span class="ot-row__obra">{{ o.proyecto ?? '—' }}</span>
@@ -71,6 +72,7 @@
           />
         }
       }
+      </div>
     }
   </div>
 </div>

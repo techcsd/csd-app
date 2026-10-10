@@ -17,9 +17,9 @@
       />
     } @else if (orden(); as o) {
       <!-- Encabezado: nº OT-000123 + estado -->
-      <div class="otf__cod-row">
+      <div class="otf__cod-row" appFadeIn>
         <span class="otf__cod">{{ codigo() }}</span>
-        <span class="otf__estado" [attr.data-estado]="estado()">{{ estadoLabel() }}</span>
+        <span class="otf__estado" [appEstadoPulse]="estado()" [attr.data-estado]="estado()">{{ estadoLabel() }}</span>
         @if (o.bitacora.es_prueba) { <span class="otf__prueba">{{ 'PRUEBA' | t }}</span> }
       </div>
 
@@ -49,7 +49,7 @@
 
       @if (o.firmas.length) {
         <h2 class="otf__section">{{ 'Firmas' | t }}</h2>
-        <div class="otf__firmas">
+        <div class="otf__firmas" appStagger>
           @for (f of o.firmas; track f.rol) {
             <div class="otf__firma">
               <span class="otf__firma-rol">{{ f.rol === 'ingeniero' ? '👷' : '🤝' }} {{ f.rol === 'ingeniero' ? ('Ingeniero' | t) : ('Cliente' | t) }}</span>
@@ -65,8 +65,8 @@
       }
 
       <!-- Acciones -->
-      <div class="otf__actions">
-        <button type="button" class="btn-cta" [disabled]="pdfBusy()" (click)="verPdf()">
+      <div class="otf__actions" appStagger>
+        <button type="button" class="btn-cta" appTapScale [disabled]="pdfBusy()" (click)="verPdf()">
           @if (pdfBusy()) { ⏳… } @else { 📄 {{ 'Ver PDF' | t }} }
         </button>
         <button type="button" class="btn-ghost" [disabled]="pdfBusy()" (click)="compartirPdf()">
@@ -101,9 +101,9 @@
           @if (buscando()) {
             <p class="otf__hint">{{ 'Buscando…' | t }}</p>
           } @else if (resultados().length) {
-            <ul class="otf__result">
+            <ul class="otf__result" appStagger>
               @for (u of resultados(); track u.id) {
-                <li><button type="button" (click)="agregar(u)">{{ u.nombre }}@if (u.email) { <small>{{ u.email }}</small> }</button></li>
+                <li><button type="button" appTapScale (click)="agregar(u)">{{ u.nombre }}@if (u.email) { <small>{{ u.email }}</small> }</button></li>
               }
             </ul>
           } @else if (term().trim().length >= 2) {

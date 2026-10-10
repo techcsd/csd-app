@@ -2,12 +2,14 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, inject } from '@angu
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LocalStore } from '../../core/services/local-store.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /** Help / support: how the app works + how to get help (mirror of SGC Soporte). */
 @Component({
   selector: 'app-soporte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [...MOTION_DIRECTIVES],
   templateUrl: './soporte.html',
   styleUrl: './soporte.scss',
 })

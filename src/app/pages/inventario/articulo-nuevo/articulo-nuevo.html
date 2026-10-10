@@ -30,15 +30,15 @@
 
     <label class="field-label artn__mt">{{ 'Propiedad' | t }}</label>
     <div class="artn__toggle">
-      <button type="button" class="artn__opt" [class.artn__opt--on]="propiedad() === 'propio_csd'" (click)="propiedad.set('propio_csd')">{{ 'CSD (propio)' | t }}</button>
-      <button type="button" class="artn__opt" [class.artn__opt--on]="propiedad() === 'alquilado'" (click)="propiedad.set('alquilado')">{{ 'Alquilado' | t }}</button>
+      <button type="button" class="artn__opt" appTapScale [class.artn__opt--on]="propiedad() === 'propio_csd'" (click)="propiedad.set('propio_csd')">{{ 'CSD (propio)' | t }}</button>
+      <button type="button" class="artn__opt" appTapScale [class.artn__opt--on]="propiedad() === 'alquilado'" (click)="propiedad.set('alquilado')">{{ 'Alquilado' | t }}</button>
     </div>
 
     <label class="field-label artn__mt">{{ 'Nota' | t }}</label>
     <textarea class="field artn__nota" [ngModel]="nota()" (ngModelChange)="nota.set($event)" maxlength="240" rows="2" [placeholder]="'Notas (opcional)' | t"></textarea>
 
     <label class="field-label artn__mt">{{ 'Fotos' | t }} <span class="artn__opt-txt">{{ '(la primera es la portada)' | t }}</span></label>
-    <div class="artn__fotos">
+    <div class="artn__fotos" appStagger>
       @for (f of fotos(); track f.preview; let i = $index) {
         <div class="artn__foto">
           <img [src]="f.preview" alt="" />
@@ -54,7 +54,7 @@
 
     @if (!online) { <p class="artn__offline">{{ 'Sin conexión: necesitas internet para crear el artículo.' | t }}</p> }
 
-    <button type="button" class="btn-cta artn__save" [disabled]="!puedeGuardar() || guardando() || !online" (click)="guardar()">
+    <button type="button" class="btn-cta artn__save" appTapScale [disabled]="!puedeGuardar() || guardando() || !online" (click)="guardar()">
       {{ guardando() ? ('Creando…' | t) : ('Crear artículo' | t) }}
     </button>
   </div>

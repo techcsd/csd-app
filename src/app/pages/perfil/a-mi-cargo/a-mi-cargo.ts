@@ -4,6 +4,7 @@ import { DecimalPipe } from '@angular/common';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { InventarioService, MaterialACargo } from '../../../core/services/inventario.service';
 
 /** BV8 — un grupo de materiales por obra (para la vista "A mi cargo"). */
@@ -24,7 +25,7 @@ interface GrupoObra {
   selector: 'app-a-mi-cargo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, EmptyState, Skeleton, TranslatePipe],
+  imports: [DecimalPipe, EmptyState, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './a-mi-cargo.html',
   styleUrl: './a-mi-cargo.scss',
 })

@@ -19,7 +19,7 @@
         <p class="compa__intro-text">{{ subtitulo() }}</p>
         <div class="compa__chips">
           @for (s of sugerencias(); track s) {
-            <button type="button" class="compa__chip" [disabled]="enviando()" (click)="usarSugerencia(s)">
+            <button type="button" class="compa__chip" appTapScale [disabled]="enviando()" (click)="usarSugerencia(s)">
               {{ s }}
             </button>
           }

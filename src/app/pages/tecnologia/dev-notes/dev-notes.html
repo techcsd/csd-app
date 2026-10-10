@@ -32,7 +32,7 @@
     @if (tagsDisponibles().length) {
       <div class="dnotes__tags">
         @for (t of tagsDisponibles(); track t) {
-          <button type="button" class="dnotes__tag" [class.dnotes__tag--on]="tagFiltro() === t" (click)="toggleTag(t)">
+          <button type="button" class="dnotes__tag" appTapScale [class.dnotes__tag--on]="tagFiltro() === t" (click)="toggleTag(t)">
             #{{ t }}
           </button>
         }
@@ -48,9 +48,9 @@
         [message]="online ? 'No hay notas técnicas para ver aquí.' : 'Conéctate para ver tus notas técnicas.'"
       />
     } @else {
-      <ul class="dnotes__list">
+      <ul class="dnotes__list" appStagger>
         @for (n of lista(); track n.id) {
-          <li class="dnotes__item" (click)="abrir(n)">
+          <li class="dnotes__item" appTapScale (click)="abrir(n)">
             <div class="dnotes__item-top">
               @if (n.pinned) { <span class="dnotes__pin" aria-label="Fijada">📌</span> }
               <span class="dnotes__item-title">{{ n.titulo || 'Sin título' }}</span>

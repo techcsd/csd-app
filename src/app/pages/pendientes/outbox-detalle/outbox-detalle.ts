@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -35,7 +36,7 @@ import { humanizeError } from '../../../shared/util/friendly-error.util';
   selector: 'app-outbox-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, ConfirmDialog, TranslatePipe],
+  imports: [Skeleton, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './outbox-detalle.html',
   styleUrl: './outbox-detalle.scss',
 })

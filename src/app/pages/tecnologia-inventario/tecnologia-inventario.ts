@@ -9,6 +9,7 @@ import { Img } from '../../shared/ui/img/img';
 import { TecnologiaService } from '../../core/services/tecnologia.service';
 import { TecEquipo, TecTipo, TEC_ESTADO_LABEL, TecEstado } from '../../core/models/tecnologia.model';
 import { ToastService } from '../../core/services/toast.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /**
  * AL2 — Inventario tecnológico (listado). Buscador + filtros (tipo, estado),
@@ -19,7 +20,7 @@ import { ToastService } from '../../core/services/toast.service';
   selector: 'app-tecnologia-inventario',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, Img],
+  imports: [FormsModule, Skeleton, EmptyState, CollapsibleSelect, Img, ...MOTION_DIRECTIVES],
   templateUrl: './tecnologia-inventario.html',
   styleUrl: './tecnologia-inventario.scss',
 })

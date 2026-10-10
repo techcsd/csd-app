@@ -7,18 +7,18 @@
   <div class="screen__body">
     @if (done(); as d) {
       <!-- Éxito -->
-      <div class="cimp__exito">
+      <div class="cimp__exito" appFadeIn>
         <span class="cimp__exito-ico">✅</span>
         <h2>{{ 'Cronograma importado' | t }}</h2>
-        <p>{{ 'Se crearon' | t }} <b>{{ d.creadas }}</b> {{ 'actividad(es)' | t }}@if (d.reemplazadas) { · {{ 'se reemplazaron' | t }} {{ d.reemplazadas }} {{ 'anteriores' | t }} }.</p>
-        <button type="button" class="btn-cta" (click)="verCronograma()">{{ 'Ver cronograma' | t }}</button>
+        <p>{{ 'Se crearon' | t }} <b><span [appCountUp]="d.creadas"></span></b> {{ 'actividad(es)' | t }}@if (d.reemplazadas) { · {{ 'se reemplazaron' | t }} <span [appCountUp]="d.reemplazadas"></span> {{ 'anteriores' | t }} }.</p>
+        <button type="button" class="btn-cta" appTapScale (click)="verCronograma()">{{ 'Ver cronograma' | t }}</button>
       </div>
     } @else {
       <p class="cimp__intro">
         {{ 'Sube el Excel (.xlsx) del cronograma de la obra. Se leen las actividades con sus fechas, responsable, volumetría y avances. Los archivos' | t }} <b>.mpp</b> {{ '(MS Project) deben exportarse a Excel primero.' | t }}
       </p>
 
-      <label class="cimp__file">
+      <label class="cimp__file" appTapScale>
         <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="onArchivo($event)" />
         <span class="cimp__file-btn">📄 {{ 'Elegir archivo Excel' | t }}</span>
       </label>
@@ -38,7 +38,7 @@
           <div class="cimp__resumen">
             <div class="cimp__res-row"><span>{{ 'Torre / etapa' | t }}</span><b>{{ p.faseNombre }}</b></div>
             @if (p.proyectoNombre) { <div class="cimp__res-row"><span>{{ 'Proyecto (del archivo)' | t }}</span><b>{{ p.proyectoNombre }}</b></div> }
-            <div class="cimp__res-row"><span>{{ 'Actividades' | t }}</span><b>{{ p.actividades.length }}</b></div>
+            <div class="cimp__res-row"><span>{{ 'Actividades' | t }}</span><b><span [appCountUp]="p.actividades.length"></span></b></div>
             @if (grupos().length) { <div class="cimp__res-row"><span>{{ 'Secciones' | t }}</span><b>{{ grupos().join(', ') }}</b></div> }
           </div>
 
@@ -71,7 +71,7 @@
             }
           </div>
 
-          <button type="button" class="btn-cta cimp__importar" [disabled]="importando()" (click)="confirmar()">
+          <button type="button" class="btn-cta cimp__importar" appTapScale [disabled]="importando()" (click)="confirmar()">
             {{ importando() ? ('Importando…' | t) : ('Importar {n} actividades' | t: { n: p.actividades.length }) }}
           </button>
         }

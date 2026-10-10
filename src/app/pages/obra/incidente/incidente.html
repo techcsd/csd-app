@@ -16,9 +16,9 @@
       }
 
       <label class="field-label">{{ 'Tipo' | t }}</label>
-      <div class="inc__opts">
+      <div class="inc__opts" appStagger>
         @for (t of tipos; track t.key) {
-          <app-option-button [icon]="t.icon" [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
+          <app-option-button appTapScale [icon]="t.icon" [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
         }
       </div>
 
@@ -27,9 +27,9 @@
         [placeholder]="'Describe el incidente' | t"></textarea>
 
       <label class="field-label inc__mt">{{ 'Gravedad' | t }}</label>
-      <div class="inc__opts">
+      <div class="inc__opts" appStagger>
         @for (g of gravedades; track g.key) {
-          <app-option-button [label]="g.label | t" [selected]="gravedad() === g.key" (pressed)="gravedad.set(g.key)" />
+          <app-option-button appTapScale [label]="g.label | t" [selected]="gravedad() === g.key" (pressed)="gravedad.set(g.key)" />
         }
       </div>
 

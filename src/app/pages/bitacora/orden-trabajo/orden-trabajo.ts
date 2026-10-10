@@ -22,6 +22,8 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { fechaLocalISO } from '../../../core/util/fecha';
 import { Proyecto, OrdenTrabajoDetalle } from '../../../core/models/bitacora.model';
 
@@ -38,7 +40,7 @@ const TOTAL = 6;
   selector: 'app-orden-trabajo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CedulaMask, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, BigConfirm, ConfirmDialog, SignaturePad, Skeleton, TranslatePipe],
+  imports: [FormsModule, CedulaMask, DecimalPipe, StepBar, WizardFooter, CollapsibleSelect, BigConfirm, ConfirmDialog, SignaturePad, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './orden-trabajo.html',
   styleUrl: './orden-trabajo.scss',
 })
@@ -53,6 +55,7 @@ export class OrdenTrabajoPage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private borrador = inject(BorradorService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   private sig = viewChild(SignaturePad);
 
@@ -327,6 +330,7 @@ export class OrdenTrabajoPage implements OnDestroy {
       this.createdId.set(otId);
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
+      this.motion.momento('firma'); // CL2 F4 — orden de trabajo firmada (2 firmas) y encolada; corre igual offline
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar la orden.'));
     } finally {

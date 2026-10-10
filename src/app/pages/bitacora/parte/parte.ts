@@ -33,6 +33,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { fechaLocalISO } from '../../../core/util/fecha';
 import {
   ACTIVIDADES,
@@ -71,7 +73,7 @@ type Paso8 = 'uso' | 'retirar' | 'danado';
   selector: 'app-parte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor, TranslatePipe],
+  imports: [FormsModule, StepBar, Counter, OptionButton, CollapsibleSelect, BigConfirm, ConfirmDialog, Skeleton, WizardFooter, VoiceNotes, PhotoSlot, ArticuloPicker, QtyInput, MoldeEsquema, MoldeCompositor, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './parte.html',
   styleUrl: './parte.scss',
 })
@@ -89,6 +91,7 @@ export class PartePage implements OnDestroy {
   private borrador = inject(BorradorService);
   private navGuard = inject(NavGuardService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   // S5 — clave de borrador por instancia (varios borradores a la vez).
   private draftKey = '';
@@ -1777,6 +1780,7 @@ export class PartePage implements OnDestroy {
       this.hydrated = false; // stop autosave; discard the draft
       await this.borrador.clear(this.draftKey);
       this.done.set(true);
+      this.motion.momento('documento'); // CL2 F4 — la bitácora del día quedó enviada/encolada (corre igual offline)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {

@@ -11,6 +11,7 @@ import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { StockObraItem, PedidoObra } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const ESTADO_META: Record<string, { label: string; tint: string }> = {
   pendiente: { label: 'Pendiente', tint: '#ca8a04' },
@@ -31,7 +32,7 @@ interface PedidoLinea {
   selector: 'app-obra-recursos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, DatePipe, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './recursos.html',
   styleUrl: './recursos.scss',
 })
