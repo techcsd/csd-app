@@ -48,6 +48,12 @@ try {
 }
 console.log(`• filas sistema='app' en el registro: ${filas.length}`);
 
+// 1b) Normalizar la taxonomía del app a la de la tabla del padre
+// (sql/2026-10-08-cl5-movimiento-catalogo.sql): nivel ∈ grande|mediano|base;
+// sistema ∈ web|app. El app usa 'simple'/'sistema' → 'base'. Paridad de valores.
+const NIVEL_MAP = { simple: 'base', sistema: 'base', base: 'base', mediano: 'mediano', grande: 'grande' };
+filas = filas.map((r) => ({ ...r, sistema: r.sistema === 'web-app' ? 'app' : r.sistema, nivel: NIVEL_MAP[r.nivel] ?? 'base' }));
+
 // 2) ¿Existe la tabla en este entorno? (PROMPT-92 F7)
 const probe = await fetch(URL + '/rest/v1/movimiento_catalogo?select=id&limit=1', { headers: H });
 if (probe.status === 404 || probe.status === 400) {
