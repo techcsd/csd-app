@@ -1,0 +1,202 @@
+<!-- CL3 — Bienvenida animada de la app. Copia exacta del mock CL3-bienvenida-app.dc.html.
+     Todo transform/opacity; con reduce-motion las clases .in/.logo-path/etc. caen a su
+     estado final sin movimiento (ver SCSS). -->
+<div class="bv" role="dialog" aria-modal="true" aria-label="Bienvenida">
+  <div class="bv__glow" aria-hidden="true"></div>
+
+  <!-- Chrome: barra de 5 segmentos + Saltar (pasos 1..4) -->
+  @if (showChrome()) {
+    <div class="bv__chrome">
+      <div class="bv__segs">
+        @for (on of segs(); track $index) {
+          <span class="bv__seg" [class.bv__seg--on]="on"></span>
+        }
+      </div>
+      <button type="button" class="bv__skip" (click)="bv.saltar()">{{ 'Saltar' | t }}</button>
+    </div>
+  }
+
+  <!-- Paso 0 — logo que se dibuja -->
+  @if (bv.paso() === 0) {
+    <div class="bv__center">
+      <svg class="bv__logo" width="132" height="84" viewBox="0 0 132 84" fill="none" aria-hidden="true">
+        <path class="bv__logo-path" d="M10 60 C 30 70, 60 66, 70 50 S 52 22, 78 16 S 118 20, 122 30" stroke="#ffffff" stroke-width="9" stroke-linecap="round"/>
+        <path class="bv__logo-path bv__logo-path--2" d="M18 74 H 108" stroke="#f97316" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div class="bv__brand in s4">CSD App</div>
+      <div class="bv__tagline in s5">{{ 'Constructora SD · en la obra y en la calle' | t }}</div>
+    </div>
+    <button type="button" class="bv__cta late" (click)="bv.siguiente()">{{ 'Empezar' | t }}</button>
+  }
+
+  <!-- Paso 1 — idioma -->
+  @if (bv.paso() === 1) {
+    <div class="bv__body">
+      <h1 class="bv__h1 in">{{ '¿En qué idioma te hablamos?' | t }}</h1>
+      <p class="bv__p in s1">{{ 'Lo puedes cambiar luego en tu perfil.' | t }}</p>
+      @for (i of bv.idiomas(); track i.code) {
+        <button
+          type="button"
+          class="bv__opt in s2"
+          [class.bv__opt--on]="bv.idiomaSel() === i.code"
+          (click)="elegir(i.code)"
+        >
+          {{ i.nativo }}
+          <span class="bv__radio" [class.bv__radio--on]="bv.idiomaSel() === i.code"></span>
+        </button>
+      }
+    </div>
+    <button type="button" class="bv__cta" (click)="bv.siguiente()">{{ 'Continuar' | t }}</button>
+  }
+
+  <!-- Paso 2 — saludo por rol -->
+  @if (bv.paso() === 2) {
+    <div class="bv__body">
+      <div class="bv__scene in">
+        @switch (bv.saludo().anim) {
+          @case ('camion') {
+            <div class="bv__road" aria-hidden="true"></div>
+            <div class="bv__ground" aria-hidden="true"></div>
+            <svg class="bv__truck" width="150" height="80" viewBox="0 0 150 80" aria-hidden="true">
+              <rect x="4" y="10" width="88" height="46" rx="6" fill="#f97316"/>
+              <text x="48" y="40" text-anchor="middle" font-family="Inter Tight, Inter, sans-serif" font-weight="700" font-size="16" fill="#14243a">CSD</text>
+              <path d="M92 24 h28 l18 18 v14 H92 z" fill="#ffffff"/>
+              <rect x="100" y="28" width="16" height="12" rx="2" fill="#9cc0ec"/>
+              <g class="bv__wheel"><circle cx="28" cy="60" r="11" fill="#101828"/><rect x="26" y="51" width="4" height="18" fill="#5b6b80"/></g>
+              <g class="bv__wheel"><circle cx="116" cy="60" r="11" fill="#101828"/><rect x="114" y="51" width="4" height="18" fill="#5b6b80"/></g>
+            </svg>
+          }
+          @case ('obra') {
+            <svg class="bv__crane" width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+              <rect x="20" y="30" width="6" height="96" fill="#9cc0ec"/>
+              <rect x="20" y="30" width="96" height="6" fill="#9cc0ec"/>
+              <line class="bv__cable" x1="104" y1="36" x2="104" y2="70" stroke="#c9d4e3" stroke-width="2"/>
+              <g class="bv__hook"><rect x="96" y="70" width="18" height="14" rx="2" fill="#f97316"/></g>
+              <rect class="bv__blk bv__blk--1" x="60" y="110" width="26" height="16" rx="2" fill="#fb923c"/>
+              <rect class="bv__blk bv__blk--2" x="60" y="94" width="26" height="16" rx="2" fill="#f97316"/>
+              <rect class="bv__blk bv__blk--3" x="88" y="110" width="26" height="16" rx="2" fill="#fdba74"/>
+            </svg>
+          }
+          @case ('cajas') {
+            <svg class="bv__boxes" width="160" height="150" viewBox="0 0 160 150" aria-hidden="true">
+              <rect x="24" y="118" width="112" height="8" rx="2" fill="#5b6b80"/>
+              <g class="bv__box bv__box--1"><rect x="40" y="86" width="30" height="30" rx="3" fill="#f97316"/><path d="M40 96 h30" stroke="#14243a" stroke-width="2"/></g>
+              <g class="bv__box bv__box--2"><rect x="74" y="86" width="30" height="30" rx="3" fill="#fb923c"/><path d="M74 96 h30" stroke="#14243a" stroke-width="2"/></g>
+              <g class="bv__box bv__box--3"><rect x="57" y="54" width="30" height="30" rx="3" fill="#fdba74"/><path d="M57 64 h30" stroke="#14243a" stroke-width="2"/></g>
+            </svg>
+          }
+          @case ('tablero') {
+            <svg class="bv__dash" width="170" height="150" viewBox="0 0 170 150" aria-hidden="true">
+              <rect x="20" y="22" width="130" height="106" rx="10" fill="rgba(255,255,255,.06)" stroke="rgba(255,255,255,.12)"/>
+              <rect class="bv__bar bv__bar--1" x="40" y="60" width="18" height="48" rx="3" fill="#f97316"/>
+              <rect class="bv__bar bv__bar--2" x="70" y="46" width="18" height="62" rx="3" fill="#fb923c"/>
+              <rect class="bv__bar bv__bar--3" x="100" y="74" width="18" height="34" rx="3" fill="#9cc0ec"/>
+              <circle class="bv__dot" cx="128" cy="44" r="6" fill="#4ade80"/>
+            </svg>
+          }
+          @default {
+            <svg class="bv__generic" width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+              <circle cx="75" cy="75" r="46" fill="rgba(249,115,22,.14)"/>
+              <path class="bv__chk" d="M54 76 l14 14 l30 -34" fill="none" stroke="#f97316" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          }
+        }
+      </div>
+      <h1 class="bv__h1 in s1">{{ 'Hola,' | t }} {{ bv.nombreCorto() }}</h1>
+      <p class="bv__p in s2">{{ 'Como' | t }} <strong>{{ bv.saludo().rol | t }}</strong>{{ ', aquí haces tu día completo:' | t }}</p>
+      <div class="bv__list">
+        @for (c of bv.saludo().cosas; track c; let idx = $index) {
+          <div class="bv__item in" [class.s2]="idx === 0" [class.s3]="idx === 1" [class.s4]="idx === 2">
+            <span class="bv__item-ic" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+            </span>
+            {{ c | t }}
+          </div>
+        }
+      </div>
+    </div>
+    <button type="button" class="bv__cta" (click)="bv.siguiente()">{{ 'Continuar' | t }}</button>
+  }
+
+  <!-- Paso 3 — trabaja sin señal -->
+  @if (bv.paso() === 3) {
+    <div class="bv__body">
+      <div class="bv__scene bv__scene--offline in" aria-hidden="true">
+        <svg class="bv__cloud" width="60" height="44" viewBox="0 0 60 44"><path d="M16 38h30a12 12 0 0 0 0-24 16 16 0 0 0-30-2A12 12 0 0 0 16 38z" fill="#9cc0ec"/></svg>
+        <span class="bv__pkt"></span>
+        <span class="bv__pkt bv__pkt--2"></span>
+        <span class="bv__pkt bv__pkt--3"></span>
+        <div class="bv__phone">
+          <span class="bv__phone-line bv__phone-line--ok"></span>
+          <span class="bv__phone-line"></span>
+          <span class="bv__phone-line"></span>
+        </div>
+      </div>
+      <h1 class="bv__h1 in s1">{{ 'Trabaja aunque no haya señal' | t }}</h1>
+      <p class="bv__p in s2">{{ 'Lo que registres se guarda en el teléfono y se envía solo cuando vuelve el internet. La barra de arriba te dice si falta algo por enviar.' | t }}</p>
+    </div>
+    <button type="button" class="bv__cta" (click)="bv.siguiente()">{{ 'Entendido' | t }}</button>
+  }
+
+  <!-- Paso 4 — permisos en contexto + aceptación -->
+  @if (bv.paso() === 4) {
+    <div class="bv__body">
+      <h1 class="bv__h1 in">{{ 'Dos permisos y listo' | t }}</h1>
+      <p class="bv__p in s1">{{ 'Te explicamos para qué es cada uno.' | t }}</p>
+
+      <div class="bv__perm in s2">
+        <div class="bv__perm-hd">
+          <span class="bv__perm-t">{{ 'Notificaciones' | t }}</span>
+          <button
+            type="button"
+            class="bv__perm-btn"
+            [class.bv__perm-btn--on]="bv.notif() === 'ok'"
+            (click)="bv.pedirNotificaciones()"
+          >{{ (bv.notif() === 'ok' ? 'Permitido' : 'Permitir') | t }}</button>
+        </div>
+        <span class="bv__perm-tx">{{ 'Para que suene cuando te asignen un trabajo o te escriban.' | t }}</span>
+      </div>
+
+      <div class="bv__perm in s2">
+        <div class="bv__perm-hd">
+          <span class="bv__perm-t">{{ 'Ubicación' | t }}</span>
+          <button
+            type="button"
+            class="bv__perm-btn"
+            [class.bv__perm-btn--on]="bv.ubic() === 'ok'"
+            (click)="bv.pedirUbicacion()"
+          >{{ (bv.ubic() === 'ok' ? 'Permitido' : 'Permitir') | t }}</button>
+        </div>
+        <span class="bv__perm-tx">{{ 'Solo mientras estás Disponible o en ruta. Si te pones Inactivo, se apaga.' | t }}</span>
+      </div>
+
+      <label class="bv__accept in s3">
+        <input type="checkbox" [checked]="bv.aceptaPoliticas()" (change)="onPoliticas($event)" />
+        <span>
+          {{ 'Acepto la' | t }}
+          <button type="button" class="bv__link" (click)="bv.abrirPolitica('privacidad')">{{ 'política de privacidad' | t }}</button>
+          {{ 'y los' | t }}
+          <button type="button" class="bv__link" (click)="bv.abrirPolitica('terminos')">{{ 'términos de uso' | t }}</button>.
+        </span>
+      </label>
+    </div>
+    <button type="button" class="bv__cta" (click)="bv.siguiente()">{{ 'Continuar' | t }}</button>
+  }
+
+  <!-- Paso 5 — ¡todo listo! -->
+  @if (bv.paso() === 5) {
+    <div class="bv__center">
+      <div class="bv__burst">
+        @for (b of bv.bits; track $index) {
+          <span class="bv__bit" [style.background]="b.c" [style.--bx]="b.x" [style.--by]="b.y"></span>
+        }
+        <div class="bv__pop">
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#14243a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="bv__pop-chk" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </div>
+      </div>
+      <h1 class="bv__h1 bv__h1--big in s3">{{ '¡Todo listo!' | t }}</h1>
+      <p class="bv__p in s4">{{ 'Te enseño dónde está cada cosa en tu inicio. Toma 20 segundos.' | t }}</p>
+    </div>
+    <button type="button" class="bv__cta in s5" (click)="bv.terminar()">{{ 'Ir a mi inicio' | t }}</button>
+  }
+</div>

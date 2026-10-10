@@ -4,6 +4,7 @@ import { PushNotifications } from '@capacitor/push-notifications';
 import { PermissionsService, PermState } from '../../../core/services/permissions.service';
 import { NativeAlarmService } from '../../../core/services/native-alarm.service';
 import { LocalStore } from '../../../core/services/local-store.service';
+import { BienvenidaService } from '../../../core/services/bienvenida.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { UbicacionDisclosureGate } from '../../../core/services/ubicacion-disclosure-gate.service';
 
@@ -33,6 +34,7 @@ export class PermisosOnboarding {
   private nativeAlarm = inject(NativeAlarmService);
   private store = inject(LocalStore);
   private disclosure = inject(UbicacionDisclosureGate);
+  private bienvenida = inject(BienvenidaService);
 
   visible = signal(false);
   corriendo = signal(false);
@@ -57,6 +59,13 @@ export class PermisosOnboarding {
    * viejo de `localStorage` para no re-mostrarlo a quien ya lo completó.
    */
   private async evaluarVisibilidad(): Promise<void> {
+    // CL3 — si la bienvenida se mostrará en este arranque, ELLA cubre los permisos en
+    // contexto (notificaciones + ubicación); no salimos como una 2ª ventana.
+    try {
+      if (await this.bienvenida.decision) return;
+    } catch {
+      /* best-effort: seguimos con el flag propio */
+    }
     try {
       if (await this.store.get(FLAG)) return;
     } catch {

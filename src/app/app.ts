@@ -10,6 +10,7 @@ import { PermisoHost } from './shared/components/permiso-host/permiso-host';
 import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
 import { PermisosOnboarding } from './shared/components/permisos-onboarding/permisos-onboarding';
 import { LanguageOnboarding } from './shared/ui/language-onboarding/language-onboarding';
+import { Bienvenida } from './shared/components/bienvenida/bienvenida';
 import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
 import { ConsentimientoIa } from './shared/components/consentimiento-ia/consentimiento-ia';
 import { ConsentimientoUbicacion } from './shared/components/consentimiento-ubicacion/consentimiento-ubicacion';
@@ -45,13 +46,14 @@ import { ImpersonationService } from './core/services/impersonation.service';
 import { ThemeService } from './core/services/theme.service';
 import { CameraService } from './core/services/camera.service';
 import { IdiomaOnboardingService } from './core/i18n/idioma-onboarding.service';
+import { BienvenidaService } from './core/services/bienvenida.service';
 import { hasSupabaseProject } from './core/services/supabase.service';
 import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, NotifHealthBand],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, NotifHealthBand],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -91,6 +93,8 @@ export class App {
   imp = inject(ImpersonationService);
   /** BS4 — diálogo de primer ingreso de idioma (modal bloqueante en el shell). */
   idiomaOnboarding = inject(IdiomaOnboardingService);
+  /** CL3 — bienvenida animada unificada (orquesta idioma/permisos/aceptación + tour). */
+  bienvenida = inject(BienvenidaService);
   private router = inject(Router);
   private i18n = inject(I18nService);
   /** AS1 — evita re-evaluar el tracking en cada navegación (se resetea en /auth). */
@@ -251,6 +255,10 @@ export class App {
           void this.politicas.revisarPendientes();
           void this.tiendas.refrescar(); // CI7 — carga las URLs de tienda
         }
+        // CL3 — evalúa la bienvenida animada unificada (primera instalación / primer
+        // login en el teléfono). Idempotente: decide una sola vez por arranque. Corre
+        // tras revisarPendientes para que el paso de políticas tenga el set cargado.
+        void this.bienvenida.evaluar();
         // AS1 — arranca el tracking continuo una vez hay sesión (una vez por login;
         // se re-arma tras cada login porque `apagar()` en logout resetea el flag).
         if (!this.trackingArrancado) {

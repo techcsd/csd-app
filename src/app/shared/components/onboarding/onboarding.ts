@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  effect,
   ElementRef,
   HostListener,
   inject,
@@ -9,6 +10,7 @@ import {
 } from '@angular/core';
 import { LocalStore } from '../../../core/services/local-store.service';
 import { PermissionsService } from '../../../core/services/permissions.service';
+import { BienvenidaService } from '../../../core/services/bienvenida.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 interface Step {
@@ -82,6 +84,7 @@ const DONE_KEY = 'csd_onboarding_v1_done';
 export class Onboarding {
   private store = inject(LocalStore);
   private permissions = inject(PermissionsService);
+  private bienvenida = inject(BienvenidaService);
 
   readonly steps = STEPS;
   visible = signal(false);
@@ -89,18 +92,33 @@ export class Onboarding {
   rect = signal<Rect | null>(null);
   pop = signal<{ top: number; left: number } | null>(null);
   pidiendoPermiso = signal(false);
+  private started = false;
 
   // AQ4 — referencia al tooltip para medir su altura REAL y recolocarlo (antes se
   // asumía 210px fijos → decidía mal si iba arriba/abajo y se cortaba).
   private popCard = viewChild<ElementRef<HTMLElement>>('popcard');
 
   constructor() {
-    void this.store.get(DONE_KEY).then((v) => {
-      if (!v) this.start();
+    // CL3 — relevo desde la bienvenida: cuando termina (token > 0), arranca el tour.
+    effect(() => {
+      if (this.bienvenida.tourSolicitado() > 0 && !this.started && !this.visible()) {
+        this.start();
+      }
     });
+    // Arranque automático (usuarios existentes / sin bienvenida). Si la bienvenida se
+    // mostrará en este arranque, NO auto-arrancamos: esperamos su relevo (evita el tour
+    // pintándose debajo del overlay de bienvenida).
+    void this.initAuto();
+  }
+
+  private async initAuto(): Promise<void> {
+    if (await this.store.get(DONE_KEY)) return;
+    if (await this.bienvenida.decision) return; // la bienvenida hará el relevo
+    this.start();
   }
 
   start(): void {
+    this.started = true;
     this.visible.set(true);
     setTimeout(() => this.goTo(0), 80);
   }

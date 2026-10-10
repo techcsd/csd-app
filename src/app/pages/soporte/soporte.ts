@@ -2,14 +2,16 @@ import { AfterViewInit, ChangeDetectionStrategy, Component, inject } from '@angu
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LocalStore } from '../../core/services/local-store.service';
+import { BienvenidaService } from '../../core/services/bienvenida.service';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 /** Help / support: how the app works + how to get help (mirror of SGC Soporte). */
 @Component({
   selector: 'app-soporte',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [...MOTION_DIRECTIVES],
+  imports: [...MOTION_DIRECTIVES, TranslatePipe],
   templateUrl: './soporte.html',
   styleUrl: './soporte.scss',
 })
@@ -18,6 +20,7 @@ export class SoportePage implements AfterViewInit {
   private location = inject(Location);
   private store = inject(LocalStore);
   private route = inject(ActivatedRoute);
+  private bienvenida = inject(BienvenidaService);
 
   readonly faqs = [
     {
@@ -55,6 +58,10 @@ export class SoportePage implements AfterViewInit {
     void this.store.remove('csd_onboarding_v1_done').then(() => {
       void this.router.navigate(['/home']);
     });
+  }
+  /** CL3 — "Ver la bienvenida otra vez": reabre el flujo animado de bienvenida. */
+  verBienvenida(): void {
+    void this.bienvenida.verOtraVez();
   }
   back(): void {
     this.location.back();

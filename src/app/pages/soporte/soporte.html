@@ -30,8 +30,12 @@
       </ol>
     </section>
 
+    <button type="button" class="soporte__tutorial" appTapScale (click)="verBienvenida()">
+      {{ 'Ver la bienvenida otra vez' | t }}
+    </button>
+
     <button type="button" class="soporte__tutorial" appTapScale (click)="verTutorial()">
-      ▶️ Ver tutorial de nuevo
+      ▶️ {{ 'Ver tutorial de nuevo' | t }}
     </button>
 
     <button type="button" class="btn-cta soporte__report" appTapScale (click)="reportar()">
