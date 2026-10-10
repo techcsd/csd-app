@@ -4011,5 +4011,11 @@
   "Llegué": "Arrived",
   "Cargando / trabajando": "Loading / working",
   "Terminé": "Finished",
-  "Tengo un problema": "I have a problem"
+  "Tengo un problema": "I have a problem",
+  "Entrada registrada": "Entry recorded",
+  "Salida registrada": "Dispatch recorded",
+  "Firma registrada": "Signature recorded",
+  "Mantenimiento cerrado": "Maintenance closed",
+  "Documento generado": "Document generated",
+  "APROBADA": "APPROVED"
 }

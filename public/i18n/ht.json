@@ -9,5 +9,17 @@
   "ya existe como": "deja egziste kòm",
   "Entorno de desarrollo — usuarios de prueba": "Anviwònman devlopman — itilizatè tès",
   "Toca \"Entrar como\" para rellenar el correo. La contraseña es la QA de .env.local / la que te dio Tecnología (no está en la app).": "Peze \"Konekte kòm\" pou ranpli imel la. Modpas la se sa QA nan .env.local / sa Teknoloji ba ou (li pa nan aplikasyon an).",
-  "Entrar como": "Konekte kòm"
+  "Entrar como": "Konekte kòm",
+  "Entrada registrada": "Antre anrejistre",
+  "Salida registrada": "Sòti anrejistre",
+  "Aprobado": "Apwouve",
+  "Firma registrada": "Siyati anrejistre",
+  "Combustible registrado": "Gazolin anrejistre",
+  "Completado": "Fini",
+  "Mantenimiento cerrado": "Antretyen fèmen",
+  "Enviado": "Voye",
+  "Documento generado": "Dokiman jenere",
+  "Listo": "Pare",
+  "Todo enviado": "Tout voye",
+  "APROBADA": "APWOUVE"
 }

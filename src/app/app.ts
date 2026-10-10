@@ -16,6 +16,7 @@ import { ConsentimientoUbicacion } from './shared/components/consentimiento-ubic
 import { AceptacionPoliticas } from './shared/components/aceptacion-politicas/aceptacion-politicas';
 import { TiendaAviso } from './shared/components/tienda-aviso/tienda-aviso';
 import { CelebracionOverlay } from './shared/ui/celebracion/celebracion';
+import { MomentoOverlay } from './shared/ui/momento/momento';
 import { NotifHealthBand } from './shared/ui/notif-health-band/notif-health-band';
 import { PoliticasService } from './core/services/politicas.service';
 import { TiendasService } from './core/services/tiendas.service';
@@ -50,7 +51,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, NotifHealthBand],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, NotifHealthBand],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
