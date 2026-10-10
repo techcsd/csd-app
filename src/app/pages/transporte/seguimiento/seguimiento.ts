@@ -28,6 +28,7 @@ import { MapMatchingService } from '../../../core/services/map-matching.service'
 import { vehiculoIdentidad } from '../../../core/models/transporte.model';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /* google.maps sin @types → lo tratamos como any. */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -40,7 +41,7 @@ type GAny = any;
   selector: 'app-seguimiento',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe],
+  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './seguimiento.html',
   styleUrl: './seguimiento.scss',
 })

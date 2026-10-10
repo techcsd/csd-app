@@ -8,8 +8,10 @@ import { CapturedPhoto } from '../../../core/services/camera.service';
 import { PhotoSlot } from '../../../shared/ui/photo-slot/photo-slot';
 import { KmInput } from '../../../shared/ui/km-input/km-input';
 import { TallerPicker, TallerSel } from '../../../shared/ui/taller-picker/taller-picker';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MotionService } from '../../../core/services/motion.service';
 import { ProveedorFlota } from '../../../core/services/mantenimientos.service';
 
 const MAX_FOTOS = 2;
@@ -22,7 +24,7 @@ const MAX_FOTOS = 2;
   selector: 'app-mantenimiento-cierre',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, KmInput, TallerPicker, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, KmInput, TallerPicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mantenimiento-cierre.html',
   styleUrl: './mantenimiento-cierre.scss',
 })
@@ -33,6 +35,7 @@ export class MantenimientoCierrePage {
   private network = inject(NetworkService);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   readonly slots = Array.from({ length: MAX_FOTOS }, (_, i) => i);
 
@@ -108,6 +111,9 @@ export class MantenimientoCierrePage {
             : 'Guardado. Se cerrará cuando tengas señal.',
         ),
       );
+      // CL2 F4 — momento mediano "mantenimiento" (la llave gira); corre igual offline
+      // (aviso local; el cierre ya quedó encolado en el outbox).
+      this.motion.momento('mantenimiento');
       this.back();
     } catch {
       this.toast.error(this.i18n.t('No se pudo cerrar el mantenimiento. Intenta de nuevo.'));

@@ -20,6 +20,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
 import { ConductorMulta } from '../../../core/services/flota-reportes.service';
 import { MotivoMulta } from '../../../core/models/flota-reportes.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Vehículo elegido, lo mínimo para pintarlo en el botón (W5). */
 interface VehSel {
@@ -52,7 +53,7 @@ interface MultaDraft {
   selector: 'app-reportar-multa',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, OptionButton, BigConfirm, BottomSheet, VehiculoPicker, CedulaPipe, TranslatePipe],
+  imports: [FormsModule, OptionButton, BigConfirm, BottomSheet, VehiculoPicker, CedulaPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './reportar-multa.html',
   styleUrl: './reportar-multa.scss',
 })

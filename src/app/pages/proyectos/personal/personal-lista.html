@@ -17,7 +17,7 @@
       <!-- Conteos rápidos -->
       <div class="pl-conteos">
         <div class="pl-conteos__total">
-          <span class="pl-conteos__n">{{ conteos().total }}</span>
+          <span class="pl-conteos__n"><span [appCountUp]="conteos().total"></span></span>
           <span class="pl-conteos__lbl">{{ 'personal' | t }}</span>
         </div>
         <div class="pl-chips">
@@ -38,13 +38,13 @@
       @if (pendientes().sinCarnet || pendientes().sinAsegurar) {
         <div class="pl-pend">
           @if (pendientes().sinCarnet) {
-            <button type="button" class="pl-pend__chip" [class.pl-pend__chip--on]="filPendiente() === 'sin_carnet'" (click)="togglePendiente('sin_carnet')">
-              🎫 {{ 'Sin carnet' | t }}: <b>{{ pendientes().sinCarnet }}</b>
+            <button type="button" class="pl-pend__chip" appTapScale [class.pl-pend__chip--on]="filPendiente() === 'sin_carnet'" (click)="togglePendiente('sin_carnet')">
+              🎫 {{ 'Sin carnet' | t }}: <b><span [appCountUp]="pendientes().sinCarnet"></span></b>
             </button>
           }
           @if (pendientes().sinAsegurar) {
-            <button type="button" class="pl-pend__chip" [class.pl-pend__chip--on]="filPendiente() === 'sin_asegurar'" (click)="togglePendiente('sin_asegurar')">
-              🛡️ {{ 'Sin asegurar' | t }}: <b>{{ pendientes().sinAsegurar }}</b>
+            <button type="button" class="pl-pend__chip" appTapScale [class.pl-pend__chip--on]="filPendiente() === 'sin_asegurar'" (click)="togglePendiente('sin_asegurar')">
+              🛡️ {{ 'Sin asegurar' | t }}: <b><span [appCountUp]="pendientes().sinAsegurar"></span></b>
             </button>
           }
         </div>
@@ -85,8 +85,9 @@
       }
 
       <!-- Listado -->
+      <div appStagger style="display:contents">
       @for (p of filtrados(); track p.id) {
-        <div class="pl-card" (click)="abrir(p)">
+        <div class="pl-card" appTapScale (click)="abrir(p)">
           <div class="pl-card__main">
             <span class="pl-card__nombre">
               <!-- AV4 — semáforo de aseguramiento de un vistazo (verde/rojo/gris) -->
@@ -124,11 +125,12 @@
           }
         }
       }
+      </div>
     }
   </div>
 
   @if (puedeRegistrar()) {
-    <button type="button" class="pl-fab" (click)="registrar()" aria-label="Registrar personal">＋</button>
+    <button type="button" class="pl-fab" appTapScale (click)="registrar()" aria-label="Registrar personal">＋</button>
   }
 
   <app-sync-bar />

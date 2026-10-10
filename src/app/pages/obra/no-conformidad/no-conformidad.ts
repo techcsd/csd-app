@@ -17,6 +17,7 @@ import { ObraService } from '../../../core/services/obra.service';
 import { NcTipo, NC_TIPO_META, Severidad, SEVERIDAD_META } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const MAX_FOTOS = 3;
 
@@ -25,7 +26,7 @@ const MAX_FOTOS = 3;
   selector: 'app-obra-nc',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, OptionButton, WizardExit, BigConfirm, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './no-conformidad.html',
   styleUrl: './no-conformidad.scss',
 })

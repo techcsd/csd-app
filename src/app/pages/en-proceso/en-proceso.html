@@ -18,6 +18,7 @@
       <!-- Grupo 1: borradores a medio llenar -->
       @if (borradores().length) {
         <h2 class="enp__group">{{ 'A medio llenar' | t }}</h2>
+        <div appStagger style="display:contents">
         @for (b of borradores(); track b.id) {
           <div class="enp__card">
             <div class="enp__info">
@@ -25,24 +26,26 @@
               <span class="enp__fecha">{{ 'Guardado' | t }} {{ fmt(b.updated_at) }}</span>
             </div>
             <div class="enp__actions">
-              <button type="button" class="btn-cta enp__retomar" (click)="retomar(b)">{{ 'Retomar' | t }}</button>
+              <button type="button" class="btn-cta enp__retomar" appTapScale (click)="retomar(b)">{{ 'Retomar' | t }}</button>
               <button type="button" class="btn-ghost enp__desc" (click)="pedirDescartar(b)">{{ 'Descartar' | t }}</button>
             </div>
           </div>
         }
+        </div>
       }
 
       <!-- Grupo 2: envíos en la cola del outbox -->
       @if (envios().length) {
         <h2 class="enp__group">{{ 'Pendientes de envío' | t }}</h2>
+        <div appStagger style="display:contents">
         @for (e of envios(); track e.id) {
           <div class="enp__card">
             <div class="enp__info">
               <span class="enp__label">{{ e.etiqueta }}</span>
               @if (e.estado === 'error') {
-                <span class="enp__estado enp__estado--error">⚠ {{ 'Con problema al enviar' | t }}</span>
+                <span class="enp__estado enp__estado--error" [appEstadoPulse]="e.estado">⚠ {{ 'Con problema al enviar' | t }}</span>
               } @else {
-                <span class="enp__estado enp__estado--cola">⏳ {{ 'En cola para enviar' | t }}</span>
+                <span class="enp__estado enp__estado--cola" [appEstadoPulse]="e.estado">⏳ {{ 'En cola para enviar' | t }}</span>
               }
               <span class="enp__fecha">{{ 'Capturado' | t }} {{ fmt(e.updated_at) }}</span>
             </div>
@@ -51,7 +54,7 @@
                  echada, avisarle a Logística para que la registre. -->
             <div class="enp__actions">
               @if (e.estado === 'error') {
-                <button type="button" class="btn-cta enp__retry" [disabled]="!online()" (click)="reintentarEnvio(e)">
+                <button type="button" class="btn-cta enp__retry" appTapScale [disabled]="!online()" (click)="reintentarEnvio(e)">
                   {{ 'Reintentar' | t }}
                 </button>
                 @if (esCombustibleNegocio(e)) {
@@ -69,6 +72,7 @@
             </div>
           </div>
         }
+        </div>
       }
     }
   </div>

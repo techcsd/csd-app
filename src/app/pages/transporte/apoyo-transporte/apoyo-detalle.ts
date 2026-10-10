@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha, formatFechaCortaHora } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const TIPO_LABEL: Record<TipoApoyo, string> = {
   movimiento_interno: 'Movimiento interno',
@@ -45,7 +46,7 @@ interface AccionEstado {
   selector: 'app-apoyo-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './apoyo-detalle.html',
   styleUrl: './apoyo-detalle.scss',
 })

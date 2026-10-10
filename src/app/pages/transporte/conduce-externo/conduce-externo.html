@@ -48,6 +48,20 @@
       }
       <p class="ce-intro">{{ 'Para cuando un' | t }} <b>{{ 'proveedor' | t }}</b> {{ 'transporta con su camión. Foto de placa obligatoria.' | t }}</p>
 
+      <!-- CL6 (Nota #186) — "Marcar como prueba": SOLO admin. Banda naranja mientras
+           esté activo para que no pase inadvertido. El flag viaja en el mismo envío. -->
+      @if (esAdmin()) {
+        <label class="ce-prueba-toggle" [class.ce-prueba-toggle--on]="esPrueba()">
+          <input type="checkbox" [ngModel]="esPrueba()" (ngModelChange)="esPrueba.set($event)" />
+          <span class="ce-prueba-toggle__txt">{{ 'Marcar como prueba' | t }}</span>
+        </label>
+        @if (esPrueba()) {
+          <div class="ce-prueba-band">
+            <span>{{ 'Este conduce se guardará como PRUEBA (no cuenta para operaciones reales).' | t }}</span>
+          </div>
+        }
+      }
+
       <!-- 1. Transporta -->
       <section class="ce-sec">
         <h2 class="ce-sec__title">{{ '¿Quién transporta?' | t }}</h2>
@@ -66,7 +80,7 @@
           @if (proveedoresFiltrados().length) {
             <div class="ce-provlist">
               @for (p of proveedoresFiltrados(); track p.id) {
-                <button type="button" class="ce-provrow" (click)="elegirProveedor(p)">
+                <button type="button" appTapScale class="ce-provrow" (click)="elegirProveedor(p)">
                   <span class="ce-provrow__name">{{ p.nombre }}</span>
                   @if (p.estado === 'sin_ratificar') { <span class="ce-tag">{{ 'por ratificar' | t }}</span> }
                 </button>
@@ -188,7 +202,7 @@
 
       @if (error()) { <p class="ce-err">{{ error() }}</p> }
 
-      <button type="button" class="btn-cta ce-emitir" [disabled]="!puedeEmitir()" (click)="emitir()">
+      <button type="button" class="btn-cta ce-emitir" [appShake]="error()" [disabled]="!puedeEmitir()" (click)="emitir()">
         {{ guardando() ? ('Emitiendo…' | t) : ('Emitir conduce externo' | t) }}
       </button>
     }

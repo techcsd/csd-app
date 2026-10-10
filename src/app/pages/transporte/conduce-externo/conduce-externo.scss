@@ -30,6 +30,45 @@
   margin: 4px 2px 14px;
 }
 
+// CL6 (Nota #186) — "Marcar como prueba" (solo admin): toggle + banda naranja de aviso.
+.ce-prueba-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.ce-prueba-toggle--on {
+  border: 1px solid var(--color-warning);
+  background: var(--color-warning-bg, #fff7ed);
+}
+.ce-prueba-toggle input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--color-warning);
+}
+.ce-prueba-toggle__txt {
+  font-weight: 700;
+  color: var(--color-text);
+}
+.ce-prueba-band {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  background: var(--color-warning-bg, #fff7ed);
+  border: 1px solid var(--color-warning);
+  border-radius: 12px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 // BT4 — aviso de borrador recuperado.
 .ce-draft {
   display: flex;

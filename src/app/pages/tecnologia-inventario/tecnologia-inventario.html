@@ -24,14 +24,14 @@
     } @else if (!filtrados().length) {
       <app-empty-state icon="💻" title="Sin equipos" message="Agrega el primer equipo tecnológico con el botón +." />
     } @else {
-      <div class="tecinv__list">
+      <div class="tecinv__list" appStagger>
         @for (e of filtrados(); track e.id) {
-          <button type="button" class="tecinv-card" (click)="abrir(e)">
+          <button type="button" class="tecinv-card" appTapScale (click)="abrir(e)">
             <app-img class="tecinv-card__img" [src]="portadaOf(e)" ratio="1 / 1" fallback="💻" fit="cover" [alt]="e.nombre" />
             <div class="tecinv-card__info">
               <span class="tecinv-card__nombre">{{ e.nombre }}</span>
               <span class="tecinv-card__meta">{{ tipoLabel(e.tipo_id) }} @if (e.codigo) { · {{ e.codigo }} }</span>
-              <span class="tecinv-card__estado tecinv-card__estado--{{ e.estado }}">{{ estadoDe(e) }}</span>
+              <span class="tecinv-card__estado tecinv-card__estado--{{ e.estado }}" [appEstadoPulse]="e.estado">{{ estadoDe(e) }}</span>
             </div>
           </button>
         }
@@ -39,5 +39,5 @@
     }
   </div>
 
-  <button type="button" class="tecinv__fab" (click)="nuevo()" aria-label="Nuevo equipo">➕</button>
+  <button type="button" class="tecinv__fab" appTapScale (click)="nuevo()" aria-label="Nuevo equipo">➕</button>
 </div>

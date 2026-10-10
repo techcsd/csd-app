@@ -11,6 +11,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { Nota } from '../../../core/models/nota.model';
 import { formatFechaCortaHora } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type Tab = 'mias' | 'compartidas';
 
@@ -26,7 +27,7 @@ const SGC_WEB = 'https://sgcconstructorasd.com';
   selector: 'app-dev-notes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, MarkdownView],
+  imports: [FormsModule, Skeleton, EmptyState, MarkdownView, ...MOTION_DIRECTIVES],
   templateUrl: './dev-notes.html',
   styleUrl: './dev-notes.scss',
 })

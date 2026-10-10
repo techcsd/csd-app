@@ -16,9 +16,9 @@
       }
 
       <label class="field-label">{{ 'Tipo' | t }}</label>
-      <div class="nc__opts">
+      <div class="nc__opts" appStagger>
         @for (t of tipos; track t.key) {
-          <app-option-button [icon]="t.icon" [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
+          <app-option-button appTapScale [icon]="t.icon" [label]="t.label | t" [selected]="tipo() === t.key" (pressed)="tipo.set(t.key)" />
         }
       </div>
 
@@ -31,9 +31,9 @@
         [placeholder]="'¿Qué se encontró?' | t"></textarea>
 
       <label class="field-label nc__mt">{{ 'Severidad' | t }}</label>
-      <div class="nc__opts">
+      <div class="nc__opts" appStagger>
         @for (s of severidades; track s.key) {
-          <app-option-button [label]="s.label | t" [selected]="severidad() === s.key" (pressed)="severidad.set(s.key)" />
+          <app-option-button appTapScale [label]="s.label | t" [selected]="severidad() === s.key" (pressed)="severidad.set(s.key)" />
         }
       </div>
 

@@ -3,6 +3,7 @@ import { Location } from '@angular/common';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { VersionService, VersionHistorial, Plataforma, CAMBIO_LABEL } from '../../../core/services/version.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /**
@@ -14,7 +15,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-admin-versiones',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, TranslatePipe],
+  imports: [Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './versiones.html',
   styleUrl: './versiones.scss',
 })

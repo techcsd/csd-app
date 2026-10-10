@@ -11,6 +11,7 @@ import { CameraService } from '../../../core/services/camera.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface ImagenArt {
   id: string;
@@ -25,7 +26,7 @@ interface ImagenArt {
   selector: 'app-articulo-editar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, CollapsibleSelect, TranslatePipe],
+  imports: [FormsModule, Skeleton, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './articulo-editar.html',
   styleUrl: './articulo-editar.scss',
 })

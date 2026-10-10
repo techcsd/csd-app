@@ -4,13 +4,14 @@ import { Location } from '@angular/common';
 import { AdminService, ConteoRow } from '../../../core/services/admin.service';
 import { formatFechaHumana } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Read-only history of physical counts / stock adjustments. */
 @Component({
   selector: 'app-admin-conteos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, TranslatePipe],
+  imports: [Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conteos.html',
   styleUrl: '../unidades/unidades.scss',
 })

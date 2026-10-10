@@ -19,6 +19,7 @@ import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 import { CompaMensaje, Propuesta } from '../../core/models/compa.model';
 import { formatHora } from '../../core/util/fecha';
 
@@ -47,7 +48,7 @@ const SUBTITULO_DEFAULT = 'Pregúntame por tus tareas, conduces, firmas o pídem
   selector: 'app-compa',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BottomSheet, VoiceRecorder, TranslatePipe],
+  imports: [FormsModule, BottomSheet, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './compa.html',
   styleUrl: './compa.scss',
 })

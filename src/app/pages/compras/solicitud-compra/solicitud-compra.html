@@ -3,14 +3,14 @@
     <button type="button" class="solc__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
     <h1 class="solc__title">{{ 'Solicitud de compra' | t }}</h1>
     @if (hoja() === 'lista') {
-      <button type="button" class="solc__nueva" (click)="abrirCrear()">+ {{ 'Nueva' | t }}</button>
+      <button type="button" class="solc__nueva" appTapScale (click)="abrirCrear()">+ {{ 'Nueva' | t }}</button>
     }
   </header>
 
   <div class="screen__body">
     <!-- ── Crear ── -->
     @if (hoja() === 'crear') {
-      <h2 class="solc__h2">{{ 'Nueva solicitud' | t }}</h2>
+      <h2 class="solc__h2" appWizardStep>{{ 'Nueva solicitud' | t }}</h2>
 
       <label class="field-label">{{ 'Obra' | t }}</label>
       <app-collapsible-select
@@ -42,16 +42,16 @@
           <input class="field solc__item-prov" type="text" [ngModel]="it.proveedor" (ngModelChange)="setProveedor(it.key, $event)" [placeholder]="'Proveedor sugerido (opcional)' | t" />
         </div>
       }
-      <button type="button" class="solc__add" (click)="agregarItem()">+ {{ 'Agregar renglón' | t }}</button>
+      <button type="button" class="solc__add" appTapScale (click)="agregarItem()">+ {{ 'Agregar renglón' | t }}</button>
 
       <label class="field-label solc__mt">{{ 'Notas (opcional)' | t }}</label>
       <textarea class="field" rows="3" [ngModel]="notas()" (ngModelChange)="notas.set($event)" [placeholder]="'Detalles para Compras…' | t"></textarea>
 
       <div class="solc__acciones solc__mt">
-        <button type="button" class="btn-cta" [disabled]="enviando()" (click)="enviar()">
+        <button type="button" class="btn-cta" appTapScale [disabled]="enviando()" (click)="enviar()">
           {{ enviando() ? ('Guardando…' | t) : ('Enviar solicitud' | t) }}
         </button>
-        <button type="button" class="btn-ghost" [disabled]="enviando()" (click)="cerrarCrear()">{{ 'Cancelar' | t }}</button>
+        <button type="button" class="btn-ghost" appTapScale [disabled]="enviando()" (click)="cerrarCrear()">{{ 'Cancelar' | t }}</button>
       </div>
       @if (!online) { <p class="solc__hint">{{ 'Sin señal: se guarda y se envía sola al reconectar.' | t }}</p> }
     }
@@ -69,11 +69,12 @@
           (action)="load()"
         />
       } @else {
+        <div appStagger style="display:contents">
         @for (s of lista(); track s.id) {
           <div class="solc-card" [attr.data-estado]="s.estado">
             <div class="solc-card__top">
               <span class="solc-card__obra">🏗️ {{ s.proyecto_nombre ?? ('Obra' | t) }}</span>
-              <span class="solc-card__estado">{{ estadoMeta[s.estado].icon }} {{ estadoMeta[s.estado].label }}</span>
+              <span class="solc-card__estado" [appEstadoPulse]="s.estado">{{ estadoMeta[s.estado].icon }} {{ estadoMeta[s.estado].label }}</span>
             </div>
             <div class="solc-card__meta">
               <span>{{ fmtFecha(s.created_at) }}</span>
@@ -96,6 +97,7 @@
             (action)="abrirCrear()"
           />
         }
+        </div>
       }
     }
   </div>

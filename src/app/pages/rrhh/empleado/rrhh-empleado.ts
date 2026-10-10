@@ -13,13 +13,14 @@ import { RrhhService, Empleado, Asignacion, AsignacionEstado, AsignacionItemTipo
 import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AH16 — ficha del empleado + asignaciones de items (AF33): registrar / devolver. */
 @Component({
   selector: 'app-rrhh-empleado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DatePipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog, CedulaPipe, TranslatePipe],
+  imports: [FormsModule, DatePipe, Skeleton, SyncBar, PhotoSlot, ConfirmDialog, CedulaPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './rrhh-empleado.html',
   styleUrl: './rrhh-empleado.scss',
 })

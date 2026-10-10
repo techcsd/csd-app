@@ -10,6 +10,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { OrdenTrabajoResumen } from '../../../core/models/bitacora.model';
 import { formatFecha } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * BW1 — "Mis órdenes de trabajo" (nota #65). Lista offline read-through de las
@@ -21,7 +22,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-mis-ordenes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mis-ordenes.html',
   styleUrl: './mis-ordenes.scss',
 })

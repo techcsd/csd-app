@@ -12,10 +12,10 @@
     } @else {
       <!-- Paso 1 — obra -->
       @if (paso() === 'obra') {
-        <h2 class="cart-nueva__q">{{ '¿En qué obra?' | t }}</h2>
-        <div class="cart-nueva__opts">
+        <h2 class="cart-nueva__q" appWizardStep>{{ '¿En qué obra?' | t }}</h2>
+        <div class="cart-nueva__opts" appStagger>
           @for (p of proyectos(); track p.id) {
-            <app-option-button [label]="p.nombre" [selected]="proyectoId() === p.id" (pressed)="elegirObra(p.id)" />
+            <app-option-button appTapScale [label]="p.nombre" [selected]="proyectoId() === p.id" (pressed)="elegirObra(p.id)" />
           }
           @if (!proyectos().length) {
             <p class="cart-nueva__vacio">{{ 'No hay obras disponibles para ti.' | t }}</p>
@@ -25,7 +25,7 @@
 
       <!-- Paso 2 — fecha (BL9 elegible) -->
       @if (paso() === 'fecha') {
-        <h2 class="cart-nueva__q">{{ '¿De qué fecha es la cartilla?' | t }}</h2>
+        <h2 class="cart-nueva__q" appWizardStep>{{ '¿De qué fecha es la cartilla?' | t }}</h2>
         <input class="field cart-nueva__fecha" type="date" [max]="hoy" [ngModel]="fecha()" (ngModelChange)="fecha.set($event)" />
         @if (fechaEsPasada()) {
           <p class="cart-nueva__aviso">📅 {{ 'Estás registrando una cartilla de una fecha pasada.' | t }}</p>
@@ -34,12 +34,13 @@
 
       <!-- Paso 3 — atados y piezas -->
       @if (paso() === 'atados') {
-        <h2 class="cart-nueva__q">{{ 'Atados de acero' | t }}</h2>
+        <h2 class="cart-nueva__q" appWizardStep>{{ 'Atados de acero' | t }}</h2>
         <p class="cart-nueva__sub">{{ 'Agrega cada atado y sus piezas. Peso total en vivo:' | t }} <b>{{ pesoTotal() | number:'1.0-1' }} kg</b></p>
 
+        <div appStagger style="display:contents">
         @for (a of atados(); track $index; let ai = $index) {
           <div class="cart-atado">
-            <button type="button" class="cart-atado__head" (click)="abrirAtado(ai)">
+            <button type="button" class="cart-atado__head" appTapScale (click)="abrirAtado(ai)">
               <span class="cart-atado__id">{{ a.identificador || (('Atado' | t) + ' ' + (ai + 1)) }}</span>
               <span class="cart-atado__meta">{{ a.piezas.length }} {{ 'pieza(s)' | t }}</span>
               <span class="cart-atado__arrow">{{ atadoAbierto() === ai ? '▲' : '▾' }}</span>
@@ -113,13 +114,14 @@
             }
           </div>
         }
+        </div>
 
         <button type="button" class="btn-ghost cart-add-atado" (click)="agregarAtado()">+ {{ 'Agregar atado' | t }}</button>
       }
 
       <!-- Paso 4 — fotos -->
       @if (paso() === 'fotos') {
-        <h2 class="cart-nueva__q">{{ 'Fotos de la cartilla física' | t }}</h2>
+        <h2 class="cart-nueva__q" appWizardStep>{{ 'Fotos de la cartilla física' | t }}</h2>
         <p class="cart-nueva__sub">{{ 'Toma al menos una foto de la cartilla en papel.' | t }}</p>
         <div class="cart-fotos">
           @for (f of fotos(); track $index) {
@@ -140,7 +142,7 @@
 
       <!-- Paso 5 — resumen -->
       @if (paso() === 'resumen') {
-        <h2 class="cart-nueva__q">{{ 'Revisa y envía' | t }}</h2>
+        <h2 class="cart-nueva__q" appWizardStep>{{ 'Revisa y envía' | t }}</h2>
         <div class="cart-res">
           <div class="cart-res__row"><span>{{ 'Obra' | t }}</span><b>{{ obraNombre() }}</b></div>
           <div class="cart-res__row"><span>{{ 'Fecha' | t }}</span><b>{{ fecha() }}</b></div>

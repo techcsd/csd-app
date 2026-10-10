@@ -20,9 +20,10 @@
           🗑️ Borrar todas
         </button>
       }
+      <div appStagger style="display:contents">
       @for (n of avisos(); track n.id) {
         <div class="aviso" [class.aviso--unread]="!n.leida">
-          <button type="button" class="aviso__main" (click)="abrir(n)">
+          <button type="button" class="aviso__main" appTapScale (click)="abrir(n)">
             @if (!n.leida) { <span class="aviso__dot"></span> }
             <span class="aviso__icon">{{ iconFor(n.tipo) }}</span>
             <span class="aviso__body">
@@ -50,6 +51,7 @@
           (secondaryAction)="load()"
         />
       }
+      </div>
     }
   </div>
 

@@ -15,7 +15,7 @@
         [attr.aria-selected]="plataforma() === 'movil'"
         (click)="setPlataforma('movil')"
       >
-        📱 {{ 'App móvil' | t }} <span class="hv-tab__count">{{ totalMovil() }}</span>
+        📱 {{ 'App móvil' | t }} <span class="hv-tab__count" [appCountUp]="totalMovil()"></span>
       </button>
       <button
         type="button"
@@ -25,7 +25,7 @@
         [attr.aria-selected]="plataforma() === 'web'"
         (click)="setPlataforma('web')"
       >
-        🖥️ Web <span class="hv-tab__count">{{ totalWeb() }}</span>
+        🖥️ Web <span class="hv-tab__count" [appCountUp]="totalWeb()"></span>
       </button>
     </div>
 
@@ -36,7 +36,7 @@
     } @else if (versiones().length === 0) {
       <p class="adm-sub__muted">{{ 'Aún no hay versiones para esta plataforma.' | t }}</p>
     } @else {
-      <ol class="hv-timeline">
+      <ol class="hv-timeline" appStagger>
         @for (v of versiones(); track v.id; let first = $first) {
           <li class="hv-item">
             <div class="hv-item__rail" aria-hidden="true">

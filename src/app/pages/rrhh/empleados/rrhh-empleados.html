@@ -12,8 +12,9 @@
       <input class="field rh-buscar" type="search" [ngModel]="q()" (ngModelChange)="q.set($event)"
         [placeholder]="'Buscar por nombre, cargo, cédula…' | t" />
 
+      <div appStagger style="display:contents">
       @for (e of lista(); track e.id) {
-        <div class="rh-card" (click)="abrir(e)">
+        <div class="rh-card" appTapScale (click)="abrir(e)">
           <div class="rh-card__main">
             <span class="rh-card__nombre">{{ nombreCompleto(e) }}</span>
             <span class="rh-card__cargo">{{ e.cargo || ('Sin cargo' | t) }}@if (e.departamento) { · {{ e.departamento }} }</span>
@@ -23,6 +24,7 @@
       } @empty {
         <app-empty-state icon="🧑‍💼" [title]="'Sin empleados' | t" [message]="'No hay empleados que coincidan con la búsqueda.' | t" />
       }
+      </div>
     }
   </div>
 

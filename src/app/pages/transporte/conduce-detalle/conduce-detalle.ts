@@ -18,6 +18,7 @@ import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
 import { CONDUCE_MOTIVO_LABELS, humanizarEnum, traducir } from '../../../core/util/dominio-labels';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AL9/AL13/AL4 — Detalle de un conduce (documento). Fuente única abierta desde
@@ -29,7 +30,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-conduce-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad, BottomSheet, SelectList, TranslatePipe],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad, BottomSheet, SelectList, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './conduce-detalle.html',
   styleUrl: './conduce-detalle.scss',
 })

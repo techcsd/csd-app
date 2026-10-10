@@ -15,6 +15,7 @@ import {
 } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AL2 — Administración › Roles y permisos (matriz AG12): módulos + submódulos
@@ -23,7 +24,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-admin-roles',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './roles.html',
   styleUrl: './roles.scss',
 })

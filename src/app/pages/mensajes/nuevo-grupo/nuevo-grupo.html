@@ -16,8 +16,8 @@
         }
       </div>
       <div class="ngrupo__foto-btns">
-        <button type="button" class="btn-ghost" (click)="elegirFoto('camara')">📷 {{ 'Cámara' | t }}</button>
-        <button type="button" class="btn-ghost" (click)="elegirFoto('galeria')">🖼️ {{ 'Galería' | t }}</button>
+        <button type="button" class="btn-ghost" appTapScale (click)="elegirFoto('camara')">📷 {{ 'Cámara' | t }}</button>
+        <button type="button" class="btn-ghost" appTapScale (click)="elegirFoto('galeria')">🖼️ {{ 'Galería' | t }}</button>
       </div>
     </div>
 
@@ -44,7 +44,7 @@
     ></textarea>
 
     <!-- Integrantes seleccionados -->
-    <label class="field-label ngrupo__mt">{{ 'Integrantes' | t }} ({{ seleccionados().length }})</label>
+    <label class="field-label ngrupo__mt">{{ 'Integrantes' | t }} (<span [appCountUp]="seleccionados().length"></span>)</label>
     @if (seleccionados().length) {
       <div class="ngrupo__chips">
         @for (u of seleccionados(); track u.id) {
@@ -65,7 +65,7 @@
       <p class="ngrupo__hint">{{ 'Buscando…' | t }}</p>
     }
     @for (u of resultados(); track u.id) {
-      <button type="button" class="ngrupo__result" (click)="toggle(u)">
+      <button type="button" class="ngrupo__result" appTapScale (click)="toggle(u)">
         <span class="ngrupo__result-name">{{ u.nombre }}</span>
         <span class="ngrupo__result-check">{{ estaSeleccionado(u) ? '✓' : '+' }}</span>
       </button>

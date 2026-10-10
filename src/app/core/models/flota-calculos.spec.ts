@@ -86,6 +86,7 @@ describe('vehicle class + item applicability', () => {
     es_critico: true,
     orden: 30,
     numero: 'P1',
+    ayuda: null,
     aplica_a,
   });
 

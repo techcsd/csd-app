@@ -259,3 +259,16 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
 
 ### data-testid estables (guiones de video CK5)
 combustible-wizard · uso-vehiculo · crear-ruta · preuso-checklist · bitacora-parte · recibir-conduce · requisicion-pedir · compa · crear-apoyo · apoyo-listado · apoyo-detalle · mis-trabajos · trabajos-transporte · mis-choferes · (+ `guia-video-<id>` por video).
+
+## Ronda CL (PROMPT-93, 09-10/10/2026) — app 2.47.0
+Ronda de motion + bienvenida (consume PROMPT-92 del padre, parcialmente shippeado).
+
+### Nuevo en el app (contrato a espejar / notas)
+- **Canal (CL4):** se inyecta por `src/environments/canal.generated.ts` (gitignored, FUERA de `fileReplacements`); candado de build `scripts/lib/canal.mjs` aborta si el binario no trae `canal:"<esperado>"`+`version:"<v>"`; fallback runtime en `UpdaterService.resolverCanal()`. **Recordar: `environment.prod.ts` + `environment.dev.ts` + `build.gradle` llevan la versión a mano — alinear los 3 cada ronda.**
+- **Motion (CL2):** 8 directivas en `src/app/shared/motion/` (appStagger/appCountUp/appFadeIn/appTabIndicator/appEstadoPulse/appWizardStep/appShake/appTapScale) + `MotionService.momento(tipo)` + `app-momento` (sin velo) + `celebrar()` (de CJ). Registro `src/app/core/motion/catalogo-movimiento.ts` (misma forma que `sgc.movimiento_catalogo`). Aplicado en TODA la app. La **web (PROMPT-92) debe espejar** el contrato `momento()` + ids/tiempos del catálogo.
+- **Bienvenida (CL3):** `BienvenidaService` unifica idioma/políticas/ubicación/notificaciones en un flujo (conserva sus registros); gate local `bienvenida_v2:<u>` + servidor `bienvenida_app_v2_vista` (capability). "Ver otra vez" en Soporte; hatch `?bienvenida=1`.
+- **Catálogo (CL5/F6):** `scripts/data-fixes/2026-10-10-cl5-movimiento-catalogo-app.mjs` upsertea las 4 filas `sistema='app'` (exclusivas) en `movimiento_catalogo` (aplicado en dev). **Mapeo de taxonomía:** el app usa nivel 'simple'/'sistema' + sistema 'web-app'; la tabla del padre exige nivel ∈ grande|mediano|base y sistema ∈ web|app → el script mapea (simple/sistema→base, web-app→app). Las filas 'web-app' compartidas las publica la **web** (padre).
+
+### Huecos del padre (pendientes)
+- **🔴 CK (ronda anterior):** `mis_trabajos_chofer` + `trabajo_ordenar` + extensión de `puede_ver_apoyo` al chofer + `nota_chofer`/`trabajo_asignar` 6-arg — **siguen 404 en dev/prod** (`sql-para-sgc/2026-10-09-ck14*/ck15*`). Hasta aplicarlos, "Mis trabajos" del chofer sale vacío.
+- **CL:** la web debe publicar sus filas ('web' + 'web-app') en `movimiento_catalogo` y espejar el contrato de `momento()`.

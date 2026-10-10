@@ -33,6 +33,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import {
   ChecklistPlantilla,
   ChecklistPlantillaItem,
@@ -107,7 +108,7 @@ interface ReporteSemanalDraft {
   selector: 'app-reporte-semanal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes, DraftBanner, AyudantePicker, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, StepBar, OptionButton, PhotoSlot, SignaturePad, KmInput, EmptyState, Skeleton, SyncBar, ConfirmDialog, VehiculoCard, WizardFooter, VoiceNotes, DraftBanner, AyudantePicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './reporte-semanal.html',
   styleUrl: './reporte-semanal.scss',
 })

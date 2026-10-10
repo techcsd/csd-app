@@ -16,14 +16,14 @@
         [message]="'Tu rendimiento de la semana aparecerá aquí cuando empieces a registrar actividad (rutas, conduces, combustible, inspecciones y tu reporte semanal).' | t" />
     } @else if (actual(); as a) {
       <!-- Semana en curso -->
-      <section class="mirend__actual" [class.mirend__actual--ok]="a.cumplio" [class.mirend__actual--bajo]="!a.cumplio">
+      <section class="mirend__actual" appFadeIn [class.mirend__actual--ok]="a.cumplio" [class.mirend__actual--bajo]="!a.cumplio">
         <p class="mirend__semana">{{ 'Semana' | t }} {{ a.semana }} · {{ rango(a) }}</p>
-        <div class="mirend__badge" [class.mirend__badge--ok]="a.cumplio" [class.mirend__badge--bajo]="!a.cumplio">
+        <div class="mirend__badge" [appEstadoPulse]="a.cumplio" [class.mirend__badge--ok]="a.cumplio" [class.mirend__badge--bajo]="!a.cumplio">
           {{ a.cumplio ? '✅' : '⚠️' }} {{ a.cumplio ? ('Cumpliste' | t) : ('Rendimiento bajo' | t) }}
         </div>
 
         <div class="mirend__puntaje">
-          <span class="mirend__puntaje-num">{{ a.puntaje }}</span>
+          <span class="mirend__puntaje-num"><span [appCountUp]="a.puntaje"></span></span>
           <span class="mirend__puntaje-de">{{ 'de' | t }} {{ a.minimo }} {{ 'mín.' | t }}</span>
         </div>
 
@@ -38,13 +38,13 @@
 
       <!-- Desglose por renglón -->
       <h2 class="mirend__sec">{{ '¿De dónde sale tu puntaje?' | t }}</h2>
-      <ul class="mirend__renglones">
+      <ul class="mirend__renglones" appStagger>
         @for (r of renglones(); track r.key) {
           <li class="mirend__renglon">
-            <button type="button" class="mirend__renglon-head" (click)="toggle(r.key)" [disabled]="!r.refs.length">
+            <button type="button" class="mirend__renglon-head" appTapScale (click)="toggle(r.key)" [disabled]="!r.refs.length">
               <span class="mirend__renglon-ico">{{ r.icono }}</span>
               <span class="mirend__renglon-label">{{ r.label | t }}</span>
-              <span class="mirend__renglon-pts">{{ r.puntos }} pt{{ r.puntos === 1 ? '' : 's' }}</span>
+              <span class="mirend__renglon-pts"><span [appCountUp]="r.puntos"></span> pt{{ r.puntos === 1 ? '' : 's' }}</span>
               @if (r.refs.length) { <span class="mirend__renglon-caret">{{ abierto() === r.key ? '▾' : '▸' }}</span> }
             </button>
             <p class="mirend__renglon-sub">
@@ -54,7 +54,7 @@
             @if (abierto() === r.key) {
               <ul class="mirend__refs">
                 @for (ref of r.refs; track ref.id) {
-                  <li class="mirend__ref" [class.mirend__ref--link]="esClickable(ref)" (click)="abrirRef(ref)">
+                  <li class="mirend__ref" appTapScale [class.mirend__ref--link]="esClickable(ref)" (click)="abrirRef(ref)">
                     <span class="mirend__ref-fecha">{{ fmtFecha(ref.fecha) }}</span>
                     @if (ref.ayudante) { <span class="mirend__ref-tag">{{ 'ayudante' | t }}</span> }
                     @if (esClickable(ref)) { <span class="mirend__ref-go">{{ 'Ver' | t }} ›</span> }
@@ -104,14 +104,14 @@
       <!-- Histórico -->
       @if (historico().length) {
         <h2 class="mirend__sec">{{ 'Semanas anteriores' | t }}</h2>
-        <ul class="mirend__hist">
+        <ul class="mirend__hist" appStagger>
           @for (s of historico(); track s.informe_id) {
             <li class="mirend__hist-row">
               <div class="mirend__hist-main">
                 <span class="mirend__hist-semana">{{ 'Sem.' | t }} {{ s.semana }}</span>
                 <span class="mirend__hist-rango">{{ rango(s) }}</span>
               </div>
-              <span class="mirend__hist-pts" [class.mirend__hist-pts--ok]="s.cumplio">{{ s.puntaje }}/{{ s.minimo }}</span>
+              <span class="mirend__hist-pts" [class.mirend__hist-pts--ok]="s.cumplio"><span [appCountUp]="s.puntaje"></span>/{{ s.minimo }}</span>
               <span class="mirend__hist-dec mirend__hist-dec--{{ s.decision || 'pendiente' }}">{{ decisionLabel(s) }}</span>
             </li>
           }

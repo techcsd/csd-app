@@ -6,6 +6,7 @@ import { SyncBar } from '../../shared/components/sync-bar/sync-bar';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SolicitudMovimientoService } from '../../core/services/solicitud-movimiento.service';
 import { UserContextService } from '../../core/services/user-context.service';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 interface IngTile {
   key: string;
@@ -30,7 +31,7 @@ interface IngTile {
   selector: 'app-ingenieria',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, SyncBar, TranslatePipe],
+  imports: [BigButton, SyncBar, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './ingenieria.html',
   styleUrl: './ingenieria.scss',
 })

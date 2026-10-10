@@ -24,10 +24,10 @@
       />
     } @else {
       @for (r of rows(); track r.id) {
-        <button type="button" class="cel-card" [class.cel-card--pend]="r.pendiente" (click)="abrir(r)">
+        <button type="button" class="cel-card" appTapScale [class.cel-card--pend]="r.pendiente" (click)="abrir(r)">
           <div class="cel-card__top">
             <span class="cel-card__codigo">{{ r.codigo }}</span>
-            <span class="cel-card__estado" [class.cel-card__estado--pend]="r.pendiente">{{ estadoLabel(r) }}</span>
+            <span class="cel-card__estado" [appEstadoPulse]="estadoLabel(r)" [class.cel-card__estado--pend]="r.pendiente">{{ estadoLabel(r) }}</span>
           </div>
           <div class="cel-card__transporta">🚛 {{ r.transporta || ('Proveedor' | t) }}</div>
           <div class="cel-card__ruta">{{ r.origen || '—' }} → {{ r.destino || '—' }}</div>

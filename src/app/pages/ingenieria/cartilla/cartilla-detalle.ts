@@ -12,6 +12,8 @@ import { CartillaPdfService } from '../../../core/services/cartilla-pdf.service'
 import { ToastService } from '../../../core/services/toast.service';
 import { CartillaDetalle } from '../../../shared/models/cartilla.model';
 import { formatFecha } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { MotionService } from '../../../core/services/motion.service';
 
 /**
  * BO10 — detalle de una cartilla: atados → piezas (figura + tramos + peso), fotos,
@@ -22,7 +24,7 @@ import { formatFecha } from '../../../core/util/fecha';
   selector: 'app-cartilla-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, FiguraAcero, DecimalPipe, TranslatePipe],
+  imports: [Skeleton, EmptyState, FiguraAcero, DecimalPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cartilla-detalle.html',
   styleUrl: './cartilla-detalle.scss',
 })
@@ -33,6 +35,7 @@ export class CartillaDetallePage {
   private i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
+  private motion = inject(MotionService);
 
   private id = this.route.snapshot.paramMap.get('id') ?? '';
 
@@ -79,6 +82,7 @@ export class CartillaDetallePage {
     try {
       await this.service.cambiarEstado(c.id, 'ejecutada');
       this.toast.success(this.i18n.t('Cartilla marcada como ejecutada.'));
+      this.motion.momento('aprobado'); // CL2 F4 — la cartilla quedó confirmada como ejecutada
       await this.cargar();
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo marcar. Intenta de nuevo.'));

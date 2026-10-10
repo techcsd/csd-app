@@ -7,7 +7,7 @@
 
   <div class="screen__body">
     @if (done()) {
-      <div class="retiro__done">
+      <div class="retiro__done" appFadeIn>
         <span class="retiro__done-icon">✅</span>
         <h2 class="retiro__done-title">Solicitud guardada</h2>
         <p class="retiro__done-msg">
@@ -17,7 +17,7 @@
             Se enviará sola cuando vuelva la señal. Puedes seguir trabajando.
           }
         </p>
-        <button type="button" class="retiro__cta" (click)="irAMisRetiros()">Ver mis retiros</button>
+        <button type="button" class="retiro__cta" appTapScale (click)="irAMisRetiros()">Ver mis retiros</button>
       </div>
     } @else if (loadingCat()) {
       <app-skeleton [rows]="5" />
@@ -73,7 +73,7 @@
         </div>
 
         @if (items().length) {
-          <ul class="retiro__items">
+          <ul class="retiro__items" appStagger>
             @for (it of items(); track $index) {
               <li class="retiro__item">
                 <div class="retiro__item-top">
@@ -98,9 +98,9 @@
       <!-- Motivo del daño -->
       <section class="retiro__sec">
         <label class="retiro__label">Motivo del daño</label>
-        <div class="retiro__motivos">
+        <div class="retiro__motivos" appStagger>
           @for (m of motivos; track m.value) {
-            <app-option-button [icon]="m.icon" [label]="motivoLabel[m.value]" [selected]="motivo() === m.value" (pressed)="pickMotivo(m.value)" />
+            <app-option-button appTapScale [icon]="m.icon" [label]="motivoLabel[m.value]" [selected]="motivo() === m.value" (pressed)="pickMotivo(m.value)" />
           }
         </div>
         @if (motivo() === 'otro') {
@@ -113,7 +113,7 @@
       <section class="retiro__sec">
         <label class="retiro__label">Fotos del material dañado <span class="retiro__req">(obligatorio)</span></label>
         <p class="retiro__hint">La foto es la evidencia del retiro. Toma al menos una.</p>
-        <div class="retiro__fotos">
+        <div class="retiro__fotos" appStagger>
           @for (f of fotos(); track f.previewUrl) {
             <div class="retiro__foto">
               <img [src]="f.previewUrl" alt="Material dañado" />
@@ -133,7 +133,7 @@
         <textarea class="field retiro__notas" [ngModel]="notas()" (ngModelChange)="notas.set($event)" rows="2" placeholder="Algo más que agregar"></textarea>
       </section>
 
-      <button type="button" class="retiro__cta" [disabled]="!puedeEnviar() || submitting()" (click)="enviar()">
+      <button type="button" class="retiro__cta" appTapScale [disabled]="!puedeEnviar() || submitting()" (click)="enviar()">
         {{ submitting() ? 'Guardando…' : 'Enviar solicitud de retiro' }}
       </button>
     }

@@ -18,21 +18,21 @@
       }
 
       <!-- Stats -->
-      <div class="bdash__stats">
+      <div class="bdash__stats" appFadeIn appStagger>
         <div class="bdash__stat">
-          <span class="bdash__stat-n">{{ hoyCount() }}</span>
+          <span class="bdash__stat-n"><span [appCountUp]="hoyCount()"></span></span>
           <span class="bdash__stat-l">{{ 'Bitácoras hoy' | t }}</span>
         </div>
         <div class="bdash__stat">
-          <span class="bdash__stat-n">{{ semanaCount() }}</span>
+          <span class="bdash__stat-n"><span [appCountUp]="semanaCount()"></span></span>
           <span class="bdash__stat-l">{{ 'Esta semana' | t }}</span>
         </div>
-        <button type="button" class="bdash__stat bdash__stat--btn" [class.bdash__stat--alert]="liberacionesPend() > 0" (click)="irALiberaciones()">
-          <span class="bdash__stat-n">{{ liberacionesPend() }}</span>
+        <button type="button" class="bdash__stat bdash__stat--btn" appTapScale [class.bdash__stat--alert]="liberacionesPend() > 0" (click)="irALiberaciones()">
+          <span class="bdash__stat-n"><span [appCountUp]="liberacionesPend()"></span></span>
           <span class="bdash__stat-l">{{ 'Liberaciones por firmar' | t }} ›</span>
         </button>
         <div class="bdash__stat" [class.bdash__stat--alert]="ncAbiertas() > 0">
-          <span class="bdash__stat-n">{{ ncAbiertas() }}</span>
+          <span class="bdash__stat-n"><span [appCountUp]="ncAbiertas()"></span></span>
           <span class="bdash__stat-l">{{ 'No conformidades abiertas' | t }}</span>
         </div>
       </div>
@@ -40,7 +40,7 @@
       <!-- Actividad por obra (semana) -->
       @if (porObra().length) {
         <h3 class="bdash__sec">{{ 'Actividad por obra (7 días)' | t }}</h3>
-        <ul class="bdash__obras">
+        <ul class="bdash__obras" appStagger>
           @for (o of porObra(); track o.obra) {
             <li class="bdash__obra">
               <span class="bdash__obra-nom">🏗️ {{ o.obra }}</span>
@@ -53,7 +53,7 @@
       <!-- Recientes -->
       <h3 class="bdash__sec">{{ 'Bitácoras recientes' | t }}</h3>
       @if (recientes().length) {
-        <ul class="bdash__list">
+        <ul class="bdash__list" appStagger>
           @for (b of recientes(); track b.id) {
             <li class="bdash__row">
               <span class="bdash__row-fecha">{{ fmtFecha(b.fecha) }}</span>

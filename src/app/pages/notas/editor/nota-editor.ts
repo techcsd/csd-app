@@ -15,6 +15,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { NotasService } from '../../../core/services/notas.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -67,7 +68,7 @@ function plainToHtml(s: string): string {
   selector: 'app-nota-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, Skeleton, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './nota-editor.html',
   styleUrl: './nota-editor.scss',
 })

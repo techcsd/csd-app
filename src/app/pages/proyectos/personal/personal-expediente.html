@@ -12,7 +12,7 @@
     } @else if (personal(); as p) {
       <!-- ── Datos ── -->
       @if (!editando()) {
-        <div class="pe-card">
+        <div class="pe-card" appFadeIn>
           <div class="pe-card__top">
             <div class="pe-avatar">
               @if (fotoPersonaUrl()) {
@@ -48,8 +48,8 @@
           </div>
           @if (puedeGestionar()) {
             <div class="pe-actions">
-              <button type="button" class="pe-btn" (click)="editar()">✏️ {{ 'Editar' | t }}</button>
-              <button type="button" class="pe-btn pe-btn--ghost" [disabled]="saving()" (click)="pedirCambioEstado()">
+              <button type="button" class="pe-btn" appTapScale (click)="editar()">✏️ {{ 'Editar' | t }}</button>
+              <button type="button" class="pe-btn pe-btn--ghost" appTapScale [disabled]="saving()" (click)="pedirCambioEstado()">
                 {{ p.estado === 'activo' ? '🚫' : '✅' }} {{ p.estado === 'activo' ? ('Desactivar' | t) : ('Reactivar' | t) }}
               </button>
             </div>
@@ -63,9 +63,9 @@
           <label class="field-label pe-mt" for="ea">{{ 'Apellido' | t }}</label>
           <input id="ea" class="field" type="text" [ngModel]="eApellido()" (ngModelChange)="eApellido.set($event)" />
           <label class="field-label pe-mt">{{ 'Nacionalidad' | t }}</label>
-          <div class="pe-opts">
+          <div class="pe-opts" appStagger>
             @for (n of nacionalidades; track n.value) {
-              <app-option-button [icon]="n.icon" [label]="n.label | t" [selected]="eNacionalidad() === n.value" (pressed)="eNacionalidad.set(n.value)" />
+              <app-option-button appTapScale [icon]="n.icon" [label]="n.label | t" [selected]="eNacionalidad() === n.value" (pressed)="eNacionalidad.set(n.value)" />
             }
           </div>
           <label class="field-label pe-mt">{{ 'Cargo' | t }}</label>
@@ -74,15 +74,15 @@
           <label class="field-label pe-mt">{{ 'Cuadrilla' | t }}</label>
           <app-collapsible-select [label]="'Cuadrilla' | t" icon="👷" [options]="cuadrillaOptions()" [selectedId]="eCuadrilla()" (picked)="eCuadrilla.set($event)" />
           <label class="field-label pe-mt">{{ 'Aseguramiento' | t }}</label>
-          <div class="pe-opts">
+          <div class="pe-opts" appStagger>
             @for (a of aseguramientos; track a.value) {
-              <app-option-button [icon]="a.icon" [label]="a.label | t" [selected]="eAseguramiento() === a.value" (pressed)="eAseguramiento.set(a.value)" />
+              <app-option-button appTapScale [icon]="a.icon" [label]="a.label | t" [selected]="eAseguramiento() === a.value" (pressed)="eAseguramiento.set(a.value)" />
             }
           </div>
           <label class="field-label pe-mt">{{ 'Tipo de documento' | t }}</label>
-          <div class="pe-opts">
+          <div class="pe-opts" appStagger>
             @for (t of tiposDocumento; track t.value) {
-              <app-option-button [icon]="t.icon" [label]="t.label | t" [selected]="eTipoDoc() === t.value" (pressed)="eTipoDoc.set(t.value)" />
+              <app-option-button appTapScale [icon]="t.icon" [label]="t.label | t" [selected]="eTipoDoc() === t.value" (pressed)="eTipoDoc.set(t.value)" />
             }
           </div>
           <label class="field-label pe-mt" for="ed">{{ 'Número de documento' | t }}</label>
@@ -92,8 +92,8 @@
           <label class="field-label pe-mt" for="eno">{{ 'Notas' | t }}</label>
           <textarea id="eno" class="field pe-notas" rows="2" [ngModel]="eNotas()" (ngModelChange)="eNotas.set($event)"></textarea>
           <div class="pe-actions pe-mt">
-            <button type="button" class="pe-btn" [disabled]="saving()" (click)="guardarEdicion()">{{ saving() ? ('Guardando…' | t) : ('Guardar' | t) }}</button>
-            <button type="button" class="pe-btn pe-btn--ghost" (click)="cancelarEdicion()">{{ 'Cancelar' | t }}</button>
+            <button type="button" class="pe-btn" appTapScale [disabled]="saving()" (click)="guardarEdicion()">{{ saving() ? ('Guardando…' | t) : ('Guardar' | t) }}</button>
+            <button type="button" class="pe-btn pe-btn--ghost" appTapScale (click)="cancelarEdicion()">{{ 'Cancelar' | t }}</button>
           </div>
         </div>
       }
@@ -103,7 +103,7 @@
       <app-personal-carnet [personal]="p" [fotoDataUrl]="fotoPersonaUrl()" [verifyUrl]="verifyUrl()" />
       <!-- CE5 — Compartir / Imprimir el carnet CR80 (frente/dorso) por el share-sheet -->
       @if (p.carnet_numero) {
-        <button type="button" class="pe-btn pe-carnet-share" [disabled]="compartiendo()" (click)="compartirCarnet()">
+        <button type="button" class="pe-btn pe-carnet-share" appTapScale [disabled]="compartiendo()" (click)="compartirCarnet()">
           {{ compartiendo() ? ('Generando…' | t) : ('Compartir / Imprimir carnet' | t) }}
         </button>
       }
@@ -112,16 +112,16 @@
       <h2 class="pe-sec">{{ 'Fotos de evidencia' | t }}</h2>
       <!-- CE4 — aviso suave si faltan fotos (el registro ya no exige fotos) -->
       @if (fotosFaltantes() > 0) {
-        <div class="pe-band pe-band--info">📷 {{ 'Faltan fotos' | t }} ({{ fotosFaltantes() }}). @if (puedeGestionar()) { {{ 'Tócalas abajo para añadirlas.' | t }} }</div>
+        <div class="pe-band pe-band--info">📷 {{ 'Faltan fotos' | t }} (<span [appCountUp]="fotosFaltantes()"></span>). @if (puedeGestionar()) { {{ 'Tócalas abajo para añadirlas.' | t }} }</div>
       }
-      <div class="pe-galeria">
+      <div class="pe-galeria" appStagger>
         @for (g of fotosGuia; track g.tipo) {
           <div class="pe-foto">
             @if (fotos()[g.tipo]; as url) {
               <img [src]="url" [alt]="g.label | t" (click)="abrirFoto(url)" />
             } @else if (puedeGestionar()) {
               <!-- CE4 — slot vacío = añadir foto desde el expediente (cámara) -->
-              <button type="button" class="pe-foto__add" [disabled]="subiendoFoto() !== null" (click)="agregarFoto(g.tipo)">
+              <button type="button" class="pe-foto__add" appTapScale [disabled]="subiendoFoto() !== null" (click)="agregarFoto(g.tipo)">
                 @if (subiendoFoto() === g.tipo) { ⏳ } @else { <span class="pe-foto__add-ico">{{ g.hint }}</span><span class="pe-foto__add-txt">+ {{ 'Falta foto' | t }}</span> }
               </button>
             } @else {
@@ -135,9 +135,10 @@
       <!-- ── BF8/CF1 — Documentos y contratos firmados (snapshot AZ1) ── -->
       @if (firmas().length || puedeGestionar()) {
         <h2 class="pe-sec">{{ 'Documentos y contratos firmados' | t }}</h2>
+        <div appStagger style="display:contents">
         @for (f of firmas(); track f.id) {
           <div class="pe-firma-card">
-            <button type="button" class="pe-firma" (click)="abrirDocumento(f)" [disabled]="abriendoDoc() === f.id">
+            <button type="button" class="pe-firma" appTapScale (click)="abrirDocumento(f)" [disabled]="abriendoDoc() === f.id">
               <span class="pe-firma__ico">📄</span>
               <span class="pe-firma__body">
                 <span class="pe-firma__nombre">{{ f.documento_nombre }}</span>
@@ -156,9 +157,9 @@
                     @if (esTestigo(l.rol) && l.firmante_nombre) {
                       <span class="pe-linea__nom">{{ l.firmante_nombre }}</span>
                     }
-                    <span class="pe-linea__estado pe-linea__estado--{{ l.estado }}">{{ estadoLineaTxt(l) }}</span>
+                    <span class="pe-linea__estado pe-linea__estado--{{ l.estado }}" [appEstadoPulse]="l.estado">{{ estadoLineaTxt(l) }}</span>
                     @if (l.estado === 'pendiente' && l.rol !== 'trabajador' && esLegal()) {
-                      <button type="button" class="pe-linea__btn" (click)="abrirFirmarLinea(f, l.rol)">{{ 'Registrar firma' | t }}</button>
+                      <button type="button" class="pe-linea__btn" appTapScale (click)="abrirFirmarLinea(f, l.rol)">{{ 'Registrar firma' | t }}</button>
                     }
                   </li>
                 }
@@ -166,8 +167,9 @@
             }
           </div>
         }
+        </div>
         @if (puedeGestionar()) {
-          <button type="button" class="pe-subir-doc" (click)="subirDocFirmado()" [disabled]="subiendoDocFirmado()">
+          <button type="button" class="pe-subir-doc" appTapScale (click)="subirDocFirmado()" [disabled]="subiendoDocFirmado()">
             {{ subiendoDocFirmado() ? ('Subiendo…' | t) : ('+ Subir documento firmado' | t) }}
           </button>
         }

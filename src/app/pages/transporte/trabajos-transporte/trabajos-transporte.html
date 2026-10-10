@@ -78,11 +78,12 @@
         [message]="'Prueba otra pestaña o ajusta los filtros.' | t"
       />
     } @else {
+      <div appStagger style="display:contents">
       @for (t of visibles(); track t.origen + t.origenId) {
         <div class="ticket">
           <div class="ticket__top">
             <span class="ticket__tipo">{{ tipoLabel(t) | t }}</span>
-            <span class="ticket__estado" [attr.data-estado]="t.estado">{{ estadoLabel(t) | t }}</span>
+            <span class="ticket__estado" [appEstadoPulse]="t.estado" [attr.data-estado]="t.estado">{{ estadoLabel(t) | t }}</span>
           </div>
 
           <div class="ticket__meta">
@@ -98,11 +99,11 @@
 
           <div class="ticket__acciones">
             @if (t.conductorId) {
-              <button type="button" class="btn-ghost ticket__btn" [disabled]="enviando()" (click)="abrirAsignar(t)">
+              <button type="button" class="btn-ghost ticket__btn" appTapScale [disabled]="enviando()" (click)="abrirAsignar(t)">
                 {{ glyph.reasignar }} {{ 'Reasignar' | t }}
               </button>
             } @else {
-              <button type="button" class="btn-cta ticket__btn" [disabled]="enviando()" (click)="abrirAsignar(t)">
+              <button type="button" class="btn-cta ticket__btn" appTapScale [disabled]="enviando()" (click)="abrirAsignar(t)">
                 {{ glyph.asignar }} {{ 'Asignar chofer' | t }}
               </button>
             }
@@ -114,6 +115,7 @@
           </div>
         </div>
       }
+      </div>
     }
   </div>
 
@@ -130,12 +132,12 @@
       } @else if (!choferes().length) {
         <app-empty-state [icon]="glyph.chofer" [title]="'No hay choferes activos' | t" />
       } @else {
-        <div class="sheet__choferes">
+        <div class="sheet__choferes" appStagger>
           @for (c of choferes(); track c.id) {
-            <button type="button" class="chofer-opt" [disabled]="enviando()" (click)="asignarA(c)">
+            <button type="button" class="chofer-opt" appTapScale [disabled]="enviando()" (click)="asignarA(c)">
               <span class="chofer-opt__nombre">{{ c.label }}</span>
               <span class="chofer-opt__meta">
-                <span class="chofer-opt__estado" [attr.data-estado]="c.estado">{{ estadoChoferLabel(c.estado) | t }}</span>
+                <span class="chofer-opt__estado" [appEstadoPulse]="c.estado" [attr.data-estado]="c.estado">{{ estadoChoferLabel(c.estado) | t }}</span>
                 <span class="chofer-opt__carga">{{ c.trabajosHoy }} {{ 'hoy' | t }}</span>
               </span>
             </button>

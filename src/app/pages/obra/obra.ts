@@ -12,6 +12,7 @@ import { UserContextService } from '../../core/services/user-context.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ObraProyecto, ResumenObra } from '../../core/models/obra.model';
 import { obrasComoOpciones } from '../../core/util/obra-opciones';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 interface ObraTile {
   key: string;
@@ -49,7 +50,7 @@ const TILES: ObraTile[] = [
   selector: 'app-obra',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [BigButton, EmptyState, Skeleton, CollapsibleSelect, TranslatePipe],
+  imports: [BigButton, EmptyState, Skeleton, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './obra.html',
   styleUrl: './obra.scss',
 })

@@ -11,6 +11,7 @@ import { OrdenTrabajoPdfService } from '../../../core/services/orden-trabajo-pdf
 import { ToastService } from '../../../core/services/toast.service';
 import { BitacoraFull, MOTIVOS_SIN_ACTIVIDAD, OrdenTrabajoDetalle } from '../../../core/models/bitacora.model';
 import { formatFecha, formatFechaMedia, bitacoraRetrofechada } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface Media {
   url: string;
@@ -24,7 +25,7 @@ interface Media {
   selector: 'app-bitacora-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, DecimalPipe, MoldeEsquema, TranslatePipe],
+  imports: [Skeleton, DecimalPipe, MoldeEsquema, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './detalle.html',
   styleUrl: './detalle.scss',
 })

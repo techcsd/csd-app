@@ -15,6 +15,7 @@ import { VoiceNotes, VoiceNoteItem } from '../../../shared/ui/voice-notes/voice-
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { CameraService, CapturedPhoto } from '../../../core/services/camera.service';
 import { BitacoraService } from '../../../core/services/bitacora.service';
 import { NetworkService } from '../../../core/services/network.service';
@@ -45,7 +46,7 @@ const MIN_FOTOS = 1;
   selector: 'app-incidente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, StepBar, WizardFooter, OptionButton, CollapsibleSelect, Counter, BigConfirm, ConfirmDialog, VoiceNotes, Skeleton, TranslatePipe],
+  imports: [FormsModule, StepBar, WizardFooter, OptionButton, CollapsibleSelect, Counter, BigConfirm, ConfirmDialog, VoiceNotes, Skeleton, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './incidente.html',
   styleUrl: './incidente.scss',
 })

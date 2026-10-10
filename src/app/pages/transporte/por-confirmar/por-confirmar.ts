@@ -23,6 +23,8 @@ import { formatFecha } from '../../../core/util/fecha';
 import { EntregaPorRecibir, fusionarEntregasPorRecibir } from '../../../core/util/recepcion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * BD2 — bandeja CANÓNICA del receptor: "Entregas por recibir". Fusiona las dos
@@ -35,7 +37,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-por-confirmar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, OptionButton, SignaturePad, Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './por-confirmar.html',
   styleUrl: './por-confirmar.scss',
 })
@@ -48,6 +50,7 @@ export class PorConfirmarPage {
   private navGuard = inject(NavGuardService);
   private router = inject(Router);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   private sigPad = viewChild<SignaturePad>('receptorPad');
 
@@ -225,6 +228,9 @@ export class PorConfirmarPage {
         });
       }
       this.toast.success(this.i18n.t('¡Recepción confirmada! Se avisó al chofer.'));
+      // CL2 F4 — momento mediano "entrada" (la caja entra al almacén). Es un aviso
+      // local: dispara igual offline (la op ya quedó encolada en el outbox).
+      this.motion.momento('entrada');
       this.confirmandoId.set('');
       this.entregas.update((list) => list.filter((x) => x.salidaId !== e.salidaId));
     } catch (err) {

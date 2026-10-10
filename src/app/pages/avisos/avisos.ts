@@ -15,6 +15,7 @@ import {
 } from '../../core/services/notificaciones.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFechaCortaHora } from '../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /**
  * BK1 — lista de respaldo si `mis_notif_estado()` falla (sin red / RPC vieja). El
@@ -46,7 +47,7 @@ const ALARMAS = new Set(['alarma-reporte-semanal', 'alarm-weekly-inspection']);
   selector: 'app-avisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, ConfirmDialog, LiveRefreshDirective, BottomSheet, ToggleSwitch],
+  imports: [Skeleton, EmptyState, ConfirmDialog, LiveRefreshDirective, BottomSheet, ToggleSwitch, ...MOTION_DIRECTIVES],
   templateUrl: './avisos.html',
   styleUrl: './avisos.scss',
 })

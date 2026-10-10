@@ -8,6 +8,7 @@ import { CronogramaService } from '../../../core/services/cronograma.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { CronogramaAviso, CRONOGRAMA_AVISO_LABEL } from '../../../core/models/cronograma.model';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * Y15 (FASE 5) — bandeja in-app de avisos de cronograma (por iniciar/vencer/
@@ -19,7 +20,7 @@ import { formatFechaMedia } from '../../../core/util/fecha';
   selector: 'app-cronograma-avisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, TranslatePipe],
+  imports: [Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './cronograma-avisos.html',
   styleUrl: './cronograma-avisos.scss',
 })

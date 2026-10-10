@@ -13,6 +13,7 @@
     } @else if (!filtrados().length) {
       <app-empty-state icon="⚙️" [title]="'Sin parámetros' | t" [message]="'No hay parámetros que coincidan.' | t" />
     } @else {
+      <div appStagger style="display:contents">
       @for (p of filtrados(); track p.clave) {
         <div class="aparam-card">
           <span class="aparam-card__clave">{{ p.clave }}</span>
@@ -27,6 +28,7 @@
           </div>
         </div>
       }
+      </div>
     }
   </div>
 </div>

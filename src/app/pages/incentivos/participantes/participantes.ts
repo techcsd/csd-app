@@ -13,6 +13,7 @@ import {
   IncentivoParticipante,
   IncentivoCandidato,
 } from '../../../core/services/incentivo-gestion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * BK3 — "Participantes del Desempeño" (Raykler/logística + gerencia + admin). El
@@ -26,7 +27,7 @@ import {
   selector: 'app-incentivo-participantes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, CollapsibleSelect, ToggleSwitch, TranslatePipe],
+  imports: [Skeleton, EmptyState, CollapsibleSelect, ToggleSwitch, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './participantes.html',
   styleUrl: './participantes.scss',
 })

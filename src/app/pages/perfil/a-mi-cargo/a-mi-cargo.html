@@ -25,6 +25,7 @@
       />
     } @else {
       <p class="amc__intro">{{ 'Lo que se recibió en tus obras y aún no se ha devuelto.' | t }}</p>
+      <div appStagger style="display:contents">
       @for (g of grupos(); track g.proyecto_id) {
         <section class="amc__obra">
           <h2 class="amc__obra-nombre">🏗️ {{ g.proyecto }}</h2>
@@ -38,6 +39,7 @@
           </ul>
         </section>
       }
+      </div>
     }
   </div>
 </div>

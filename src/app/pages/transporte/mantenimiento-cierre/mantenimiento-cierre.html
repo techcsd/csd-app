@@ -46,7 +46,7 @@
     </label>
 
     <span class="mant-cierre__label">{{ 'Evidencia (factura / foto) — opcional' | t }}</span>
-    <div class="mant-cierre__fotos">
+    <div class="mant-cierre__fotos" appStagger>
       @for (i of slots; track i) {
         <app-photo-slot
           [label]="(i === 0 ? 'Factura' : 'Foto') | t"
@@ -58,7 +58,7 @@
       }
     </div>
 
-    <button type="button" class="btn-cta mant-cierre__confirmar" [disabled]="guardando()" (click)="confirmar()">
+    <button type="button" class="btn-cta mant-cierre__confirmar" appTapScale [disabled]="guardando()" (click)="confirmar()">
       ✅ {{ 'Cerrar mantenimiento' | t }}
     </button>
   </div>

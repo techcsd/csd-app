@@ -14,6 +14,7 @@ import { MaterialNoCatalogado, ArticuloCat, CategoriaInv } from '../../../core/m
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatFecha } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 type Modo = 'declinar' | 'vincular' | 'crear';
 
@@ -30,7 +31,7 @@ type Modo = 'declinar' | 'vincular' | 'crear';
   selector: 'app-material-no-catalogado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, ArticuloPicker, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, LiveRefreshDirective, ArticuloPicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './material-no-catalogado.html',
   styleUrl: './material-no-catalogado.scss',
 })

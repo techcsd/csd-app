@@ -11,6 +11,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /**
  * AN6 — Info y gestión de un grupo tipo WhatsApp: foto/nombre/descripción
@@ -24,7 +25,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-grupo-info',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, AvatarEditor, TranslatePipe],
+  imports: [FormsModule, Skeleton, AvatarEditor, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './grupo-info.html',
   styleUrl: './grupo-info.scss',
 })

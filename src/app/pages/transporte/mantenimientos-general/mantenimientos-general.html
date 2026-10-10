@@ -9,7 +9,7 @@
   </header>
 
   <div class="screen__body">
-    <button type="button" class="btn-cta mant-gen__nuevo" (click)="nuevo()">
+    <button type="button" class="btn-cta mant-gen__nuevo" appTapScale (click)="nuevo()">
       ➕ {{ 'Nuevo mantenimiento' | t }}
     </button>
 
@@ -71,9 +71,9 @@
         [message]="(hayFiltros() ? 'Prueba a quitar algún filtro.' : 'Registra el primero con el botón de arriba.') | t"
       />
     } @else {
-      <p class="mant-gen__count">{{ filtrados().length }} {{ 'resultado(s)' | t }}</p>
+      <p class="mant-gen__count"><span [appCountUp]="filtrados().length"></span> {{ 'resultado(s)' | t }}</p>
       @for (m of filtrados(); track m.id) {
-        <div class="mant-card" (click)="abrirHistorial(m)">
+        <div class="mant-card" appTapScale (click)="abrirHistorial(m)">
           <div class="mant-card__row">
             <span class="mant-card__tipo">{{ tipoLabel(m.tipo) | t }}</span>
             <span class="mant-card__estado" [class.mant-card__estado--ok]="m.estado === 'completado'">

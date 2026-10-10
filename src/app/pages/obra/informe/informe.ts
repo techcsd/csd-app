@@ -12,6 +12,8 @@ import { ObraService } from '../../../core/services/obra.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface Informe {
   id: string;
@@ -38,7 +40,7 @@ function semanaDe(base: Date): { inicio: string; fin: string } {
   selector: 'app-obra-informe',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './informe.html',
   styleUrl: './informe.scss',
 })
@@ -53,6 +55,7 @@ export class InformePage {
   private location = inject(Location);
   private navGuard = inject(NavGuardService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   proyectoId = '';
   loading = signal(true);
@@ -178,6 +181,7 @@ export class InformePage {
       await this.guardarManual();
       await this.obra.enviarInforme(inf.id);
       this.toast.success(this.i18n.t('Informe enviado a Gerencia.'));
+      this.motion.momento('documento'); // CL2 F4 — informe semanal enviado a Gerencia
       await this.cargar();
       this.volver();
     } catch (e) {

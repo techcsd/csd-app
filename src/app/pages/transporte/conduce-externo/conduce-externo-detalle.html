@@ -17,6 +17,7 @@
         <span class="ced__codigo">{{ f.codigo }}</span>
         <span
           class="ced__estado"
+          [appEstadoPulse]="estadoLabel()"
           [class.ced__estado--pend]="f.pendiente"
           [class.ced__estado--anulado]="f.anulado"
           >{{ estadoLabel() }}</span
@@ -62,7 +63,7 @@
           <h2 class="ced__sec">{{ 'Fotos' | t }}</h2>
           <div class="ced__fotos">
             @for (ft of fotos(); track ft.url) {
-              <button type="button" class="ced__foto" (click)="abrirFoto(ft.url)">
+              <button type="button" class="ced__foto" appTapScale (click)="abrirFoto(ft.url)">
                 <img [src]="ft.url" [alt]="ft.label" loading="lazy" />
                 <span>{{ ft.label }}</span>
               </button>

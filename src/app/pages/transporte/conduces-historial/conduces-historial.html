@@ -81,10 +81,10 @@
       />
     } @else {
       @for (c of lista(); track c.id) {
-        <div class="conduce-card" (click)="toggle(c.id)">
+        <div class="conduce-card" appTapScale (click)="toggle(c.id)">
           <div class="conduce-card__top">
             <span class="conduce-card__fecha">{{ c.fecha | date: 'dd/MM/yyyy' }}</span>
-            <span class="conduce-card__fase" [style.background]="faseTint(c.fase)">
+            <span class="conduce-card__fase" [appEstadoPulse]="c.fase" [style.background]="faseTint(c.fase)">
               {{ faseLabel(c.fase) }}
             </span>
           </div>

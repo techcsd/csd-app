@@ -46,11 +46,12 @@
         (action)="nueva()"
       />
     } @else {
-      <div class="notas__list">
+      <div class="notas__list" appStagger>
         @for (n of visibles(); track n.id) {
           <button
             type="button"
             class="nota-card"
+            appTapScale
             [style.background]="n.color ?? 'var(--color-surface)'"
             (click)="abrir(n)"
           >

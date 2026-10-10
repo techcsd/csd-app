@@ -17,6 +17,7 @@ import { AutosaveService } from '../../../core/services/autosave.service';
 import { BorradorService } from '../../../core/services/borrador.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const TIPOS: Array<{ key: TipoApoyo; icon: string; label: string; glosa: string }> = [
   { key: 'movimiento_interno', icon: '🔀', label: 'Movimiento interno', glosa: 'Mover algo entre obras o al almacén.' },
@@ -46,7 +47,7 @@ const CLAVE_BORRADOR = 'apoyo_transporte';
   selector: 'app-crear-apoyo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, CollapsibleSelect, OptionButton, WizardFooter, TranslatePipe],
+  imports: [FormsModule, CollapsibleSelect, OptionButton, WizardFooter, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './crear-apoyo.html',
   styleUrl: './crear-apoyo.scss',
 })

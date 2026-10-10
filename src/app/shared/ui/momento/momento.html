@@ -1,0 +1,62 @@
+@if (mom(); as m) {
+  <div class="mv" role="status" aria-live="polite">
+    <div class="mv__card" [class.mv__card--reduced]="reducida()">
+      <div class="mv__icon">
+        @if (reducida()) {
+          <!-- Reduce-motion: solo el check -->
+          <span class="mv__check">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+          </span>
+        } @else {
+          @switch (m.tipo) {
+            @case ('entrada') {
+              <span class="mv__warehouse"></span>
+              <span class="mv__box mv__box--in"></span>
+            }
+            @case ('salida') {
+              <span class="mv__warehouse"></span>
+              <span class="mv__box mv__box--out"></span>
+            }
+            @case ('aprobado') {
+              <span class="mv__paper">
+                <span class="mv__stamp">{{ 'APROBADA' | t }}</span>
+              </span>
+            }
+            @case ('firma') {
+              <svg class="mv__sign" width="80" height="34" viewBox="0 0 160 60" fill="none"><path d="M6 44 C 24 10, 34 52, 50 30 S 72 18, 80 40 S 110 20, 120 34 S 146 40, 154 22" stroke="#f97316" stroke-width="4" stroke-linecap="round"/><path d="M6 54 H 154" stroke="#2a3a50"/></svg>
+            }
+            @case ('combustible') {
+              <span class="mv__fuel"><span class="mv__fuel-fill"></span></span>
+            }
+            @case ('checklist') {
+              <span class="mv__checklist">
+                <span class="mv__cl-line"><span class="mv__cl-strike"></span></span>
+                <span class="mv__cl-line"><span class="mv__cl-strike mv__cl-strike--2"></span></span>
+                <span class="mv__cl-line"><span class="mv__cl-strike mv__cl-strike--3"></span></span>
+              </span>
+            }
+            @case ('mantenimiento') {
+              <svg class="mv__wrench" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg>
+            }
+            @case ('mensaje') {
+              <svg class="mv__plane" width="38" height="38" viewBox="0 0 24 24" fill="#f97316"><path d="M2 12 22 3l-6 18-4-7-10-2z"/></svg>
+            }
+            @case ('documento') {
+              <span class="mv__sheet"></span>
+            }
+            @case ('uso') {
+              <svg class="mv__key" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5 20 3"/><path d="M16 7l3 3"/><path d="M13 10l3 3"/></svg>
+            }
+            @default {
+              <!-- todo-enviado + cualquier otro: check dibujado -->
+              <span class="mv__check">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path class="mv__check-path" d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+              </span>
+            }
+          }
+        }
+      </div>
+      <span class="mv__text">{{ texto(m) }}</span>
+    </div>
+  </div>
+}

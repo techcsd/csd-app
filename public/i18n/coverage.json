@@ -1,19 +1,19 @@
 {
   "en": 93,
-  "ht": 0,
+  "ht": 2,
   "alcance": true,
   "byScreen": {
     "": {
       "conT": 0,
-      "sinT": 22,
+      "sinT": 21,
       "en": 0,
       "ht": 0
     },
     "pages/actualizar": {
-      "conT": 23,
-      "sinT": 1,
-      "en": 96,
-      "ht": 0
+      "conT": 26,
+      "sinT": 0,
+      "en": 100,
+      "ht": 12
     },
     "pages/admin": {
       "conT": 12,
@@ -67,7 +67,7 @@
       "conT": 40,
       "sinT": 0,
       "en": 83,
-      "ht": 0
+      "ht": 3
     },
     "pages/admin/versiones": {
       "conT": 8,
@@ -77,8 +77,8 @@
     },
     "pages/auth/login": {
       "conT": 12,
-      "sinT": 2,
-      "en": 71,
+      "sinT": 1,
+      "en": 77,
       "ht": 0
     },
     "pages/auth/pin-acceso-change": {
@@ -151,19 +151,19 @@
       "conT": 66,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 2
     },
     "pages/bitacora/incidente": {
       "conT": 66,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 2
     },
     "pages/bitacora/liberacion": {
       "conT": 82,
       "sinT": 1,
       "en": 99,
-      "ht": 0
+      "ht": 1
     },
     "pages/bitacora/mis-ordenes": {
       "conT": 12,
@@ -181,19 +181,19 @@
       "conT": 60,
       "sinT": 1,
       "en": 98,
-      "ht": 0
+      "ht": 2
     },
     "pages/bitacora/orden-trabajo-ficha": {
       "conT": 31,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/bitacora/parte": {
       "conT": 186,
       "sinT": 4,
       "en": 98,
-      "ht": 0
+      "ht": 1
     },
     "pages/compa": {
       "conT": 10,
@@ -229,13 +229,13 @@
       "conT": 14,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 14
     },
     "pages/incentivos": {
       "conT": 35,
       "sinT": 0,
       "en": 100,
-      "ht": 3
+      "ht": 6
     },
     "pages/incentivos/participantes": {
       "conT": 16,
@@ -271,7 +271,7 @@
       "conT": 30,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/inventario/articulo-detalle": {
       "conT": 20,
@@ -301,7 +301,7 @@
       "conT": 29,
       "sinT": 0,
       "en": 83,
-      "ht": 0
+      "ht": 3
     },
     "pages/inventario/conteos": {
       "conT": 10,
@@ -349,7 +349,7 @@
       "conT": 4,
       "sinT": 19,
       "en": 17,
-      "ht": 0
+      "ht": 4
     },
     "pages/inventario/retiros": {
       "conT": 6,
@@ -421,25 +421,25 @@
       "conT": 24,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/obra/checklists": {
       "conT": 24,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/obra/incidente": {
       "conT": 25,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/obra/informe": {
       "conT": 26,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/obra/logistica": {
       "conT": 18,
@@ -463,7 +463,7 @@
       "conT": 26,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/obra/plan-dia": {
       "conT": 33,
@@ -487,7 +487,7 @@
       "conT": 25,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/pendientes/outbox-detalle": {
       "conT": 24,
@@ -499,7 +499,7 @@
       "conT": 71,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 1
     },
     "pages/perfil/a-mi-cargo": {
       "conT": 7,
@@ -535,19 +535,19 @@
       "conT": 31,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/proyectos/form": {
       "conT": 48,
       "sinT": 1,
       "en": 98,
-      "ht": 0
+      "ht": 2
     },
     "pages/proyectos/personal": {
       "conT": 103,
       "sinT": 1,
       "en": 80,
-      "ht": 0
+      "ht": 1
     },
     "pages/reportar": {
       "conT": 0,
@@ -598,10 +598,10 @@
       "ht": 0
     },
     "pages/soporte": {
-      "conT": 0,
-      "sinT": 21,
-      "en": 0,
-      "ht": 0
+      "conT": 2,
+      "sinT": 20,
+      "en": 9,
+      "ht": 9
     },
     "pages/tareas": {
       "conT": 59,
@@ -643,7 +643,7 @@
       "conT": 16,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 6
     },
     "pages/transporte/acta-detalle": {
       "conT": 9,
@@ -661,7 +661,7 @@
       "conT": 35,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/transporte/asignarme": {
       "conT": 36,
@@ -685,7 +685,7 @@
       "conT": 64,
       "sinT": 1,
       "en": 98,
-      "ht": 0
+      "ht": 3
     },
     "pages/transporte/checklists-historial": {
       "conT": 13,
@@ -697,7 +697,7 @@
       "conT": 127,
       "sinT": 2,
       "en": 87,
-      "ht": 0
+      "ht": 2
     },
     "pages/transporte/combustible-log": {
       "conT": 15,
@@ -709,19 +709,19 @@
       "conT": 71,
       "sinT": 1,
       "en": 85,
-      "ht": 3
+      "ht": 4
     },
     "pages/transporte/conduce-externo": {
-      "conT": 79,
+      "conT": 81,
       "sinT": 1,
       "en": 80,
-      "ht": 0
+      "ht": 4
     },
     "pages/transporte/conduce-transferencias": {
       "conT": 26,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/transporte/conduces": {
       "conT": 71,
@@ -763,7 +763,7 @@
       "conT": 33,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/transporte/conductores": {
       "conT": 43,
@@ -787,7 +787,7 @@
       "conT": 44,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 2
     },
     "pages/transporte/echada-detalle": {
       "conT": 17,
@@ -805,19 +805,19 @@
       "conT": 30,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/transporte/generar-conduce": {
       "conT": 104,
       "sinT": 1,
       "en": 97,
-      "ht": 0
+      "ht": 1
     },
     "pages/transporte/mantenimiento": {
       "conT": 43,
       "sinT": 1,
       "en": 91,
-      "ht": 0
+      "ht": 2
     },
     "pages/transporte/mantenimiento-cierre": {
       "conT": 7,
@@ -829,13 +829,13 @@
       "conT": 20,
       "sinT": 0,
       "en": 50,
-      "ht": 0
+      "ht": 5
     },
     "pages/transporte/mantenimientos-lista": {
       "conT": 10,
       "sinT": 0,
       "en": 80,
-      "ht": 0
+      "ht": 10
     },
     "pages/transporte/mi-actividad": {
       "conT": 54,
@@ -901,31 +901,31 @@
       "conT": 71,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/transporte/reportar-multa": {
       "conT": 33,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/transporte/reportar-vehiculo": {
       "conT": 53,
       "sinT": 1,
       "en": 98,
-      "ht": 0
+      "ht": 2
     },
     "pages/transporte/reporte-semanal": {
       "conT": 52,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/transporte/rutas": {
       "conT": 63,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 2
     },
     "pages/transporte/rutas-activas": {
       "conT": 23,
@@ -981,11 +981,17 @@
       "en": 100,
       "ht": 0
     },
+    "shared/components/bienvenida": {
+      "conT": 25,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
     "shared/components/consentimiento-ia": {
       "conT": 8,
       "sinT": 2,
       "en": 20,
-      "ht": 0
+      "ht": 10
     },
     "shared/components/consentimiento-ubicacion": {
       "conT": 4,
@@ -997,7 +1003,7 @@
       "conT": 11,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 9
     },
     "shared/components/gps-gate-banner": {
       "conT": 2,
@@ -1015,7 +1021,7 @@
       "conT": 7,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 29
     },
     "shared/components/permiso-host": {
       "conT": 0,
@@ -1027,7 +1033,7 @@
       "conT": 13,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 15
     },
     "shared/components/sync-bar": {
       "conT": 0,
@@ -1123,7 +1129,7 @@
       "conT": 4,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 25
     },
     "shared/ui/empty-state": {
       "conT": 0,
@@ -1197,6 +1203,12 @@
       "en": 100,
       "ht": 0
     },
+    "shared/ui/momento": {
+      "conT": 1,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
     "shared/ui/notif-health-band": {
       "conT": 4,
       "sinT": 0,
@@ -1225,7 +1237,7 @@
       "conT": 18,
       "sinT": 1,
       "en": 95,
-      "ht": 0
+      "ht": 5
     },
     "shared/ui/pin-pad": {
       "conT": 0,
@@ -1249,7 +1261,7 @@
       "conT": 28,
       "sinT": 1,
       "en": 97,
-      "ht": 0
+      "ht": 3
     },
     "shared/ui/share-sheet": {
       "conT": 3,

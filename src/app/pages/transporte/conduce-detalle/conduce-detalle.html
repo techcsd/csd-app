@@ -13,7 +13,7 @@
       <app-empty-state icon="📄" [title]="'No pudimos abrir el conduce' | t" [message]="'Revisa tu conexión y vuelve a intentar.' | t" />
     } @else if (detalle(); as d) {
       <!-- Documento (mismo formato que la web) -->
-      <article class="doc">
+      <article class="doc" appFadeIn>
         <header class="doc__head">
           <div>
             <h2 class="doc__empresa">Constructora Scheker & Domínguez</h2>
@@ -26,7 +26,7 @@
         </header>
 
         <div class="doc__estado">
-          <span class="doc__chip" [class.doc__chip--inc]="incompleto()">{{ faseLabel() }}</span>
+          <span class="doc__chip" [appEstadoPulse]="faseLabel()" [class.doc__chip--inc]="incompleto()">{{ faseLabel() }}</span>
           @if (d.es_prueba) { <span class="doc__chip doc__chip--test">{{ 'PRUEBA' | t }}</span> }
         </div>
 

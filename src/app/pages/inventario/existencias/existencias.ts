@@ -8,6 +8,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { InventarioService } from '../../../core/services/inventario.service';
 import { Bodega, CategoriaInv, Existencia, esArticuloExterno, propiedadLabel } from '../../../core/models/inventario.model';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Z18 — un grupo de existencias por categoría (sección colapsable). */
 interface GrupoExistencia {
@@ -25,7 +26,7 @@ const SIN_CATEGORIA_KEY = 'sin';
   selector: 'app-existencias',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, TranslatePipe],
+  imports: [Skeleton, FormsModule, DecimalPipe, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './existencias.html',
   styleUrl: './existencias.scss',
 })

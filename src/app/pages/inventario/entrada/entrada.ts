@@ -21,6 +21,8 @@ import { QtyInput } from '../../../shared/ui/qty-input/qty-input';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface GrupoResumen {
   categoria: string;
@@ -42,7 +44,7 @@ interface EntradaDraft {
   selector: 'app-entrada',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './entrada.html',
   styleUrl: '../salida/salida.scss',
 })
@@ -55,6 +57,7 @@ export class EntradaPage implements OnDestroy {
   private navGuard = inject(NavGuardService);
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
+  private motion = inject(MotionService);
 
   private readonly clave = 'inventario:entrada';
   private hydrated = false;
@@ -329,6 +332,7 @@ export class EntradaPage implements OnDestroy {
       }
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.hoja.set('exito');
+      this.motion.momento('entrada'); // CL2 F4 — caja entra al almacén (también offline)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo guardar.');
     } finally {

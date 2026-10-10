@@ -2,7 +2,7 @@
   <div class="screen liber liber__done">
     <div class="screen__body">
       <span class="liber__done-check">✓</span>
-      <h1 class="screen__title">{{ online ? ('Listo, quedó registrado' | t) : ('Guardado' | t) }}</h1>
+      <h1 class="screen__title" appWizardStep>{{ online ? ('Listo, quedó registrado' | t) : ('Guardado' | t) }}</h1>
       <p class="screen__subtitle">
         {{ online ? ('El checklist de liberación quedó guardado.' | t) : ('Sin señal. Se enviará solo cuando haya conexión.' | t) }}
       </p>
@@ -42,7 +42,7 @@
     <div class="screen__body">
       <!-- Step 1: obra + tipo de CL -->
       @if (step() === 1) {
-        <h1 class="screen__title">{{ 'Checklist de liberación' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Checklist de liberación' | t }}</h1>
         <p class="screen__subtitle">
           {{ 'Ningún vaciado se libera sin este checklist firmado. Elige la obra y el tipo de CL.' | t }}
         </p>
@@ -71,7 +71,7 @@
       <!-- Step 2: verificar ítems — UNA SECCIÓN POR PANTALLA (Z1, patrón hoja) -->
       @if (step() === 2) {
         @if (seccionActual(); as g) {
-          <h1 class="screen__title">{{ g.seccion }}</h1>
+          <h1 class="screen__title" appWizardStep>{{ g.seccion }}</h1>
           <p class="screen__subtitle">
             {{ 'Sección {a} de {b} · {c}/{d} en todo el checklist' | t: { a: seccionIdx() + 1, b: totalSecciones(), c: respondidos(), d: totalItems() } }}
           </p>
@@ -111,7 +111,7 @@
 
       <!-- Step 3: contexto + plano + fotos -->
       @if (step() === 3) {
-        <h1 class="screen__title">{{ 'Ubicación y evidencia' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Ubicación y evidencia' | t }}</h1>
         <div class="liber__grid">
           <div>
             <label class="field-label" for="bloque">{{ 'Bloque / edificio' | t }}</label>
@@ -176,7 +176,7 @@
 
       <!-- Step 4: firmas -->
       @if (step() === 4) {
-        <h1 class="screen__title">{{ 'Ciclo de firmas' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Ciclo de firmas' | t }}</h1>
         <p class="screen__subtitle">
           {{ 'Con la firma del' | t }} <b>{{ 'Residente' | t }}</b> <b>{{ 'o' | t }}</b> {{ 'el' | t }} <b>{{ 'Responsable' | t }}</b> {{ 'se libera el vaciado.' | t }}
           {{ 'Cliente y MIVHED son opcionales. Puedes guardar y' | t }} <b>{{ 'solicitar' | t }}</b> {{ 'las firmas que falten.' | t }}
@@ -269,7 +269,7 @@
 
       <!-- Step 5: resumen -->
       @if (step() === 5) {
-        <h1 class="screen__title">{{ 'Revisa y envía' | t }}</h1>
+        <h1 class="screen__title" appWizardStep>{{ 'Revisa y envía' | t }}</h1>
         <ul class="resumen">
           <li><span>{{ 'Obra' | t }}</span><b>{{ proyectoSel()?.nombre }}</b></li>
           <li><span>{{ 'Checklist' | t }}</span><b>{{ plantillaSel()?.nombre }}</b></li>

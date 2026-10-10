@@ -17,11 +17,11 @@
         <div class="reqd__offbanner">{{ '📴 Sin conexión — mostrando la última versión sincronizada.' | t }}</div>
       }
 
-      <div class="reqd__top">
-        <button type="button" class="reqd__obra" [class.reqd__obra--link]="puedeVerObra()" (click)="verObra()">
+      <div class="reqd__top" appFadeIn>
+        <button type="button" class="reqd__obra" appTapScale [class.reqd__obra--link]="puedeVerObra()" (click)="verObra()">
           🏗️ {{ r.proyecto_nombre ?? 'Obra' }}@if (puedeVerObra()) { <span class="reqd__obra-go">›</span> }
         </button>
-        <span class="reqd__estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
+        <span class="reqd__estado" [appEstadoPulse]="r.estado" [attr.data-estado]="r.estado">{{ estadoLabel(r.estado) }}</span>
       </div>
 
       <div class="reqd__code">
@@ -96,7 +96,7 @@
         <div class="reqd__avance">
           <h3 class="reqd__sec">{{ 'Avance de despacho' | t }}</h3>
           <p class="reqd__avance-sub">{{ res.despachados }} de {{ res.total }} renglones despachados</p>
-          <ul class="reqd__avance-list">
+          <ul class="reqd__avance-list" appStagger>
             @for (a of avance(); track a.descripcion) {
               <li class="reqd__avance-row" [class.reqd__avance-row--done]="a.pendiente <= 0">
                 <span class="reqd__avance-name">
@@ -121,7 +121,7 @@
       @if (coberturas().length) {
         <div class="reqd__cobertura">
           <h3 class="reqd__sec">{{ 'Material que cubre esta requisición' | t }}</h3>
-          <ul class="reqd__cob-list">
+          <ul class="reqd__cob-list" appStagger>
             @for (c of coberturas(); track c.id) {
               <li class="reqd__cob-row" [class.reqd__cob-row--rev]="c.revisar">
                 <div class="reqd__cob-info">
@@ -142,7 +142,7 @@
       }
 
       <h3 class="reqd__sec">Artículos ({{ r.items.length }})</h3>
-      <ul class="reqd__items">
+      <ul class="reqd__items" appStagger>
         @for (it of r.items; track it.id) {
           <li class="reqd__item">
             <span class="reqd__item-cant">{{ it.cantidad }} {{ it.unidad || '' }}</span>
@@ -168,7 +168,7 @@
       <!-- BB10 — historial de ediciones -->
       @if (ediciones().length) {
         <h3 class="reqd__sec">{{ 'Historial' | t }}</h3>
-        <ul class="reqd__hist">
+        <ul class="reqd__hist" appStagger>
           @for (e of ediciones(); track e.editado_at) {
             <li class="reqd__hist-row">
               <span class="reqd__hist-ico">✏️</span>
@@ -188,19 +188,19 @@
       @if (modo() === 'none') {
         <div class="reqd__acciones">
           @if (puedeEditar()) {
-            <button type="button" class="btn-cta reqd__editar" (click)="abrirEditar()">
+            <button type="button" class="btn-cta reqd__editar" appTapScale (click)="abrirEditar()">
               {{ esRechazada() ? '🔧 Corregir y reenviar' : '✏️ Editar' }}
             </button>
           }
           @if (puedeAprobarORechazar()) {
-            <button type="button" class="btn-cta reqd__aprobar" (click)="abrirAprobar()">✓ Aprobar</button>
-            <button type="button" class="btn-ghost reqd__rechazar" (click)="abrirRechazar()">✕ Rechazar</button>
+            <button type="button" class="btn-cta reqd__aprobar" appTapScale (click)="abrirAprobar()">✓ Aprobar</button>
+            <button type="button" class="btn-ghost reqd__rechazar" appTapScale (click)="abrirRechazar()">✕ Rechazar</button>
           }
           @if (puedeConduceExterno()) {
-            <button type="button" class="btn-ghost reqd__ce" (click)="abrirConduceExterno()">🚛 {{ 'Conduce externo' | t }}</button><!-- tropes-allow: emoji en botón = estilo local del bloque de acciones (🚫/✏️/✓) -->
+            <button type="button" class="btn-ghost reqd__ce" appTapScale (click)="abrirConduceExterno()">🚛 {{ 'Conduce externo' | t }}</button><!-- tropes-allow: emoji en botón = estilo local del bloque de acciones (🚫/✏️/✓) -->
           }
           @if (puedeCancelar()) {
-            <button type="button" class="btn-ghost reqd__cancelar" (click)="abrirCancelar()">🚫 Cancelar requisición</button>
+            <button type="button" class="btn-ghost reqd__cancelar" appTapScale (click)="abrirCancelar()">🚫 Cancelar requisición</button>
           }
         </div>
       }
@@ -220,10 +220,10 @@
           } @else if (!ceSinVincular().length) {
             <p class="reqd__panel-sub">{{ 'No hay conduces externos sin vincular.' | t }}</p>
           } @else {
-            <ul class="reqd__ce-list">
+            <ul class="reqd__ce-list" appStagger>
               @for (ce of ceSinVincular(); track ce.id) {
                 <li>
-                  <button type="button" class="reqd__ce-item" [disabled]="ceVinculando()" (click)="vincularConduceExterno(ce)">
+                  <button type="button" class="reqd__ce-item" appTapScale [disabled]="ceVinculando()" (click)="vincularConduceExterno(ce)">
                     <span class="reqd__ce-name">{{ ceNombre(ce) }}</span>
                     @if (ce.destino) { <span class="reqd__ce-meta">→ {{ ce.destino }}</span> }
                     @if (ce.mismo_proyecto) { <span class="reqd__ce-tag">{{ 'de esta obra' | t }}</span> }

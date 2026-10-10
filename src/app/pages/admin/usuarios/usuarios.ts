@@ -12,6 +12,7 @@ import { ImpersonationService } from '../../../core/services/impersonation.servi
 import { UserContextService } from '../../../core/services/user-context.service';
 import { SyncService } from '../../../core/sync/sync.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 /** AL2 — Administración › Usuarios: alta (invitación), roles, activar/desactivar,
@@ -20,7 +21,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-admin-usuarios',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, EmailDisplayPipe, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, EmailDisplayPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './usuarios.html',
   styleUrl: './usuarios.scss',
 })

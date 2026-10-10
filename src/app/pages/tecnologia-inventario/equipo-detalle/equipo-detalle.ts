@@ -6,13 +6,14 @@ import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { TecnologiaService } from '../../../core/services/tecnologia.service';
 import { TecEquipo, TecTipo, TEC_ESTADO_LABEL, TecEstado } from '../../../core/models/tecnologia.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AL2 — Detalle de un equipo tecnológico + galería con lightbox. */
 @Component({
   selector: 'app-tec-equipo-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState],
+  imports: [DecimalPipe, Skeleton, EmptyState, ...MOTION_DIRECTIVES],
   templateUrl: './equipo-detalle.html',
   styleUrl: './equipo-detalle.scss',
 })

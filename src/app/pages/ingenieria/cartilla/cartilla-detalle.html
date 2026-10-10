@@ -11,15 +11,15 @@
       <app-empty-state icon="⚠️" [title]="'No pudimos cargar' | t" [message]="'Revisa tu conexión e intenta de nuevo.' | t" />
       <button type="button" class="btn-cta cart-det__retry" (click)="cargar()">{{ 'Reintentar' | t }}</button>
     } @else if (cartilla(); as c) {
-      <div class="cart-det__top">
+      <div class="cart-det__top" appFadeIn>
         <span class="cart-det__folio">{{ c.folio }}</span>
-        <span class="cart-det__estado" [attr.data-estado]="c.estado">{{ c.estado }}</span>
+        <span class="cart-det__estado" [appEstadoPulse]="c.estado" [attr.data-estado]="c.estado">{{ c.estado }}</span>
       </div>
       <div class="cart-det__meta">
         <div><span>{{ 'Obra' | t }}</span><b>{{ c.proyecto || '—' }}</b></div>
         <div><span>{{ 'Fecha' | t }}</span><b>{{ fmtFecha(c.fecha) }}</b></div>
         @if (c.ingeniero) { <div><span>{{ 'Ingeniero' | t }}</span><b>{{ c.ingeniero }}</b></div> }
-        <div><span>{{ 'Peso total' | t }}</span><b>{{ (c.peso_total_kg ?? 0) | number:'1.0-1' }} kg</b></div>
+        <div><span>{{ 'Peso total' | t }}</span><b><span [appCountUp]="c.peso_total_kg ?? 0" [decimales]="1"></span> kg</b></div>
       </div>
 
       @if (c.estado === 'observada' && c.observacion) {
@@ -27,6 +27,7 @@
       }
 
       <!-- atados -->
+      <div appStagger style="display:contents">
       @for (a of c.atados; track a.id) {
         <div class="cart-det__atado">
           <h3 class="cart-det__atado-t">{{ a.identificador || ('Atado' | t) }} @if (a.elemento) { · {{ a.elemento }} }</h3>
@@ -41,6 +42,7 @@
           }
         </div>
       }
+      </div>
 
       <!-- fotos -->
       @if (fotoUrls().length) {
@@ -73,11 +75,11 @@
       <!-- acciones -->
       <div class="cart-det__acciones">
         @if (puedeMarcarEjecutada()) {
-          <button type="button" class="btn-cta" [disabled]="marcando()" (click)="marcarEjecutada()">
+          <button type="button" class="btn-cta" appTapScale [disabled]="marcando()" (click)="marcarEjecutada()">
             @if (marcando()) { {{ 'Marcando…' | t }} } @else { ✅ {{ 'Marcar ejecutada' | t }} }
           </button>
         }
-        <button type="button" class="btn-ghost" [disabled]="generandoPdf()" (click)="descargarPdf()">
+        <button type="button" class="btn-ghost" appTapScale [disabled]="generandoPdf()" (click)="descargarPdf()">
           @if (generandoPdf()) { {{ 'Generando…' | t }} } @else { 📄 {{ 'Descargar PDF' | t }} }
         </button>
       </div>

@@ -17,7 +17,7 @@
       <app-skeleton [rows]="6" />
     } @else {
       <p class="inc-part__intro">
-        {{ 'Quiénes participan del Desempeño. Marcar' | t }} <b>{{ '«cuenta para el pago»' | t }}</b> {{ 'no cambia el rol de la persona: solo declara que su actividad puntúa. Hoy cuentan' | t }} <b>{{ cuentanPago() }}</b>.
+        {{ 'Quiénes participan del Desempeño. Marcar' | t }} <b>{{ '«cuenta para el pago»' | t }}</b> {{ 'no cambia el rol de la persona: solo declara que su actividad puntúa. Hoy cuentan' | t }} <b><span [appCountUp]="cuentanPago()"></span></b>.
       </p>
 
       <!-- Agregar persona (usuarios que aún no están en el padrón) -->
@@ -38,7 +38,7 @@
           [title]="'Padrón vacío' | t"
           [message]="'Agrega personas para que participen del Desempeño.' | t" />
       } @else {
-        <ul class="inc-part__list">
+        <ul class="inc-part__list" appStagger>
           @for (p of participantes(); track p.usuario_id) {
             <li class="inc-part__row" [class.inc-part__row--saving]="saving(p.usuario_id)">
               <div class="inc-part__row-top">

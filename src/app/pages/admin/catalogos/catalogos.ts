@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, BCatalogo } from '../../../core/services/admin.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 
 type Tipo = 'estructura' | 'actividad' | 'restriccion';
@@ -14,7 +15,7 @@ type Tipo = 'estructura' | 'actividad' | 'restriccion';
   selector: 'app-admin-catalogos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, TranslatePipe],
+  imports: [Skeleton, FormsModule, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './catalogos.html',
   styleUrl: '../unidades/unidades.scss',
 })

@@ -11,6 +11,7 @@ import { UserContextService } from '../../../core/services/user-context.service'
 import { NetworkService } from '../../../core/services/network.service';
 import { ArticuloBusqueda, ArticuloCat, CategoriaInv } from '../../../core/models/inventario.model';
 import { CatalogoFiltroStore } from './catalogo-filtro.store';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** Normaliza para búsqueda tolerante a acentos/mayúsculas. */
 function norm(s: string): string {
@@ -36,7 +37,7 @@ const MAX_CHIPS = 5;
   selector: 'app-catalogo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, FormsModule, CollapsibleSelect, TranslatePipe],
+  imports: [Skeleton, FormsModule, CollapsibleSelect, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './catalogo.html',
   styleUrl: './catalogo.scss',
 })

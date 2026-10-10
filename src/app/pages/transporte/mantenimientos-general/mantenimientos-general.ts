@@ -13,6 +13,7 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { MantAdjuntos } from '../../../shared/ui/mant-adjuntos/mant-adjuntos';
 import { VehiculoPicker } from '../../../shared/ui/vehiculo-picker/vehiculo-picker';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { formatFecha } from '../../../core/util/fecha';
 import { VehiculoDisponible } from '../../../core/models/transporte.model';
@@ -28,7 +29,7 @@ import { VehiculoDisponible } from '../../../core/models/transporte.model';
   selector: 'app-mantenimientos-general',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, KeyValuePipe, Skeleton, EmptyState, MantAdjuntos, VehiculoPicker, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, KeyValuePipe, Skeleton, EmptyState, MantAdjuntos, VehiculoPicker, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mantenimientos-general.html',
   styleUrl: './mantenimientos-general.scss',
 })

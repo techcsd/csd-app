@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmailDisplayPipe } from '../../../shared/ui/pipes/email-display.pipe';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ConductoresService } from '../../../core/services/conductores.service';
@@ -30,7 +31,7 @@ interface DocView {
   selector: 'app-mi-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmailDisplayPipe, TranslatePipe],
+  imports: [Skeleton, EmailDisplayPipe, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mi-detalle.html',
   styleUrl: './mi-detalle.scss',
 })

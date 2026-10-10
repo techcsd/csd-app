@@ -22,8 +22,8 @@
       @if (proyectoId()) {
         <!-- AS14 — Compras formales (requisiciones) vs Gastos directos -->
         <div class="cp-tabs">
-          <button type="button" class="cp-tab" [class.cp-tab--on]="tab() === 'compras'" (click)="setTab('compras')">📄 {{ 'Compras' | t }}</button>
-          <button type="button" class="cp-tab" [class.cp-tab--on]="tab() === 'gastos'" (click)="setTab('gastos')">🧾 {{ 'Gastos directos' | t }}</button>
+          <button type="button" class="cp-tab" appTapScale [class.cp-tab--on]="tab() === 'compras'" (click)="setTab('compras')">📄 {{ 'Compras' | t }}</button>
+          <button type="button" class="cp-tab" appTapScale [class.cp-tab--on]="tab() === 'gastos'" (click)="setTab('gastos')">🧾 {{ 'Gastos directos' | t }}</button>
         </div>
 
         <div class="cp-filtros">
@@ -32,7 +32,7 @@
           <label class="cp-field"><span>{{ 'Hasta' | t }}</span>
             <input type="date" [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" /></label>
         </div>
-        <button type="button" class="btn-cta cp-aplicar" (click)="tab() === 'compras' ? cargar() : cargarGastos()">{{ 'Aplicar fechas' | t }}</button>
+        <button type="button" class="btn-cta cp-aplicar" appTapScale (click)="tab() === 'compras' ? cargar() : cargarGastos()">{{ 'Aplicar fechas' | t }}</button>
 
         @if (tab() === 'compras') {
           @if (loading()) {
@@ -42,8 +42,9 @@
           } @else {
             <div class="cp-total">
               <span>{{ 'Total del período' | t }}</span>
-              <strong>RD$ {{ total() | number: '1.2-2' }}</strong>
+              <strong>RD$ <span [appCountUp]="total()" [decimales]="2"></span></strong>
             </div>
+            <div appStagger style="display:contents">
             @for (c of compras(); track c.id) {
               <div class="cp-card">
                 <div class="cp-card__top">
@@ -53,16 +54,17 @@
                 <div class="cp-card__prov">{{ c.proveedor || ('Sin proveedor' | t) }}</div>
                 <div class="cp-card__meta">
                   @if (c.referencia) { <span>{{ 'Ref:' | t }} {{ c.referencia }}</span> }
-                  @if (c.estado) { <span class="cp-card__estado">{{ c.estado }}</span> }
+                  @if (c.estado) { <span class="cp-card__estado" [appEstadoPulse]="c.estado">{{ c.estado }}</span> }
                   <span class="cp-card__total">RD$ {{ (c.total ?? 0) | number: '1.2-2' }}</span>
                 </div>
               </div>
             }
+            </div>
           }
         } @else {
           <!-- ═══ Gastos directos (fuera de requisición) ═══ -->
           @if (puedeRegistrar()) {
-            <button type="button" class="btn-cta cp-nuevo-gasto" (click)="abrirFormGasto()">➕ {{ 'Registrar gasto' | t }}</button>
+            <button type="button" class="btn-cta cp-nuevo-gasto" appTapScale (click)="abrirFormGasto()">➕ {{ 'Registrar gasto' | t }}</button>
           }
 
           @if (gastoForm()) {
@@ -87,8 +89,8 @@
               <app-photo-slot [label]="'Foto del recibo' | t" hint="🧾" [foto]="gRecibo()" (captured)="gRecibo.set($event)" (cleared)="gRecibo.set(null)" />
 
               <div class="cp-gasto-acciones">
-                <button type="button" class="btn-ghost" (click)="gastoForm.set(false)">{{ 'Cancelar' | t }}</button>
-                <button type="button" class="btn-cta" [disabled]="guardandoGasto()" (click)="guardarGasto()">
+                <button type="button" class="btn-ghost" appTapScale (click)="gastoForm.set(false)">{{ 'Cancelar' | t }}</button>
+                <button type="button" class="btn-cta" appTapScale [disabled]="guardandoGasto()" (click)="guardarGasto()">
                   {{ guardandoGasto() ? ('Guardando…' | t) : ('Guardar gasto' | t) }}
                 </button>
               </div>
@@ -102,8 +104,9 @@
           } @else {
             <div class="cp-total">
               <span>{{ 'Total gastos directos' | t }}</span>
-              <strong>RD$ {{ totalGastos() | number: '1.2-2' }}</strong>
+              <strong>RD$ <span [appCountUp]="totalGastos()" [decimales]="2"></span></strong>
             </div>
+            <div appStagger style="display:contents">
             @for (g of gastos(); track g.id) {
               <div class="cp-card">
                 <div class="cp-card__top">
@@ -117,6 +120,7 @@
                 </div>
               </div>
             }
+            </div>
           }
         }
       }

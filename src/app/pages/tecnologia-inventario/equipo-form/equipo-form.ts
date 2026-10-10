@@ -16,6 +16,7 @@ import { Bodega } from '../../../core/models/inventario.model';
 import { TecnologiaService } from '../../../core/services/tecnologia.service';
 import { TecTipo, TecEstado, TEC_ESTADO_LABEL } from '../../../core/models/tecnologia.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface FotoItem {
   key: string; // path (existente) o uuid (nueva)
@@ -34,7 +35,7 @@ const TOTAL = 6;
   selector: 'app-tec-equipo-form',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, WizardExit, ConfirmDialog, OptionButton, CollapsibleSelect, BigConfirm],
+  imports: [FormsModule, DecimalPipe, StepBar, WizardFooter, WizardExit, ConfirmDialog, OptionButton, CollapsibleSelect, BigConfirm, ...MOTION_DIRECTIVES],
   templateUrl: './equipo-form.html',
   styleUrl: './equipo-form.scss',
 })

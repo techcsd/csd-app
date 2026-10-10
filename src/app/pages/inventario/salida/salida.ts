@@ -22,6 +22,8 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import type { ExportDoc } from '../../../core/services/export.service';
 import { formatFechaMedia } from '../../../core/util/fecha';
+import { MotionService } from '../../../core/services/motion.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface GrupoResumen {
   categoria: string;
@@ -44,7 +46,7 @@ type StockInfo = { cantidad: number; unidad: string } | null;
   selector: 'app-salida',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput, TranslatePipe],
+  imports: [FormsModule, DecimalPipe, SelectorCategorias, CollapsibleSelect, ConfirmDialog, PhotoSlot, SignaturePad, WizardFooter, ShareSheet, QtyInput, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './salida.html',
   styleUrl: './salida.scss',
 })
@@ -58,6 +60,7 @@ export class SalidaPage implements OnDestroy {
   private autosave = inject(AutosaveService);
   private borrador = inject(BorradorService);
   private i18n = inject(I18nService);
+  private motion = inject(MotionService);
 
   private readonly clave = 'inventario:salida';
   private hydrated = false;
@@ -325,6 +328,7 @@ export class SalidaPage implements OnDestroy {
       });
       void this.autosave.discard(this.clave); // borrador enviado → limpiar
       this.hoja.set('exito');
+      this.motion.momento('salida'); // CL2 F4 — caja sale hacia la obra (también offline)
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo guardar.'));
     } finally {

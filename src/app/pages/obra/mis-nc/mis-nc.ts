@@ -10,13 +10,14 @@ import { ObraService } from '../../../core/services/obra.service';
 import { NcAsignada, NC_TIPO_META, SEVERIDAD_META } from '../../../core/models/obra.model';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** AG16 FASE 2 — Bandeja "Mis pendientes": NC donde soy responsable + acciones correctivas asignadas. */
 @Component({
   selector: 'app-obra-mis-nc',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState, TranslatePipe],
+  imports: [FormsModule, PhotoSlot, Skeleton, EmptyState, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mis-nc.html',
   styleUrl: './mis-nc.scss',
 })

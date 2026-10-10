@@ -182,6 +182,8 @@ export interface ConduceExternoCaptura {
   items: { articulo_id: string; cantidad: number; origen_item_id?: string | null }[] | null;
   origen: ConduceExternoLugar | null;
   destino: ConduceExternoLugar | null;
+  /** CL6 — marcar el conduce como PRUEBA (solo admin; el server valida por rol). */
+  esPrueba?: boolean;
   /** BA/FASE 2 — despacho de una requisición vía conduce externo (opcional). */
   origenRequisicionId?: string | null;
   /** CJ6 — despacho (salida) YA existente que lleva el camión: el server NO crea otra
@@ -1423,6 +1425,7 @@ export class ConducesService {
         destino_bodega_id: input.destino?.bodega_id ?? null,
         origen_requisicion_id: input.origenRequisicionId ?? null,
         salida_id: input.salidaId ?? null, // CJ6 — despacho existente a enlazar
+        es_prueba: input.esPrueba === true, // CL6 — solo admin; validado por el server
       },
       fotos,
       resumen: { transporta: input.transportaTexto ?? 'proveedor', capturado_en },
@@ -2336,6 +2339,19 @@ export class ConducesService {
     return /ya tiene.*recepci[oó]n confirmada|recepci[oó]n ya (fue )?confirmada|ya (fue )?confirmad[ao]/i.test(msg);
   }
 
+  /** CL6 — ¿el error del RPC es "firma/función no encontrada" (PGRST202)? Señal de que
+   *  el padre aún no expone un parámetro nuevo (p. ej. `p_es_prueba`) → degradar sin él. */
+  private esFirmaNoEncontrada(err: { message?: string; code?: string }): boolean {
+    const code = err.code ?? '';
+    const msg = (err.message ?? '').toLowerCase();
+    return (
+      code === 'PGRST202' ||
+      msg.includes('could not find the function') ||
+      msg.includes('not find the function') ||
+      msg.includes('schema cache')
+    );
+  }
+
   private registerHandler(): void {
     // AQ10 — eliminar/anular conduce (soft-delete server-side; repone stock + cancela ruta).
     this.sync.register('conduce_eliminar', async (payload) => {
@@ -2658,7 +2674,7 @@ export class ConducesService {
       if (!photoPaths['placa']) {
         throwSyncError(new Error('Falta la foto de la placa del camión.'));
       }
-      const { error } = await this.supabase.client.rpc('crear_conduce_externo', {
+      const baseArgs: Record<string, unknown> = {
         p_transporta_proveedor_id: payload['transporta_proveedor_id'] ?? null,
         p_transporta_texto: payload['transporta_texto'] ?? null,
         p_placa_foto_path: photoPaths['placa'],
@@ -2678,7 +2694,24 @@ export class ConducesService {
         p_emisor_firma_path: null,
         p_origen_requisicion_id: payload['origen_requisicion_id'] ?? null,
         p_salida_id: payload['salida_id'] ?? null, // CJ6 — enlaza el despacho existente
-      });
+      };
+      // CL6 — "marcar como prueba" detrás de COMPROBACIÓN DE CAPACIDAD: el padre
+      // añadirá `p_es_prueba` a `crear_conduce_externo` (PROMPT-92 F3). Hasta entonces,
+      // mandarlo da PGRST202 (firma no encontrada) → reintentamos SIN el parámetro para
+      // que el conduce SIEMPRE se envíe (offline-first intacto). Cuando el padre agregue
+      // el param, el flag se persiste solo sin tocar la app. (Patrón = p_numero_recibo.)
+      const esPrueba = payload['es_prueba'] === true;
+      let error: { message?: string; code?: string } | null;
+      if (esPrueba) {
+        const r = await this.supabase.client.rpc('crear_conduce_externo', { ...baseArgs, p_es_prueba: true });
+        if (r.error && this.esFirmaNoEncontrada(r.error)) {
+          error = (await this.supabase.client.rpc('crear_conduce_externo', baseArgs)).error;
+        } else {
+          error = r.error;
+        }
+      } else {
+        error = (await this.supabase.client.rpc('crear_conduce_externo', baseArgs)).error;
+      }
       if (error) throwSyncError(error);
     });
 

@@ -10,6 +10,7 @@ import { MensajesService } from '../../../core/services/mensajes.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { formatFechaRelativa } from '../../../core/util/fecha';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 const ESTADO_CHOFER_LABEL: Record<string, string> = {
   disponible: 'Disponible',
@@ -49,7 +50,7 @@ const POLL_MS = 30_000;
   selector: 'app-mis-choferes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe],
+  imports: [Skeleton, EmptyState, LiveRefreshDirective, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mis-choferes.html',
   styleUrl: './mis-choferes.scss',
 })

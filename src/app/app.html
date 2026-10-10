@@ -21,21 +21,31 @@
 
   <app-toast-host />
   <app-celebracion />
+  <app-momento />
   <app-permiso-host />
   <app-in-app-camera />
   <app-alarma-host />
   <app-permisos-onboarding />
   <app-consentimiento-ia />
   <app-consentimiento-ubicacion />
-  @if (!enAuth()) {
+  @if (!enAuth() && !bienvenida.mostrar()) {
+    <!-- CL3: durante la bienvenida, su propio paso maneja la aceptación de políticas
+         (mismo registro). Fuera de ella, este gate sigue siendo el de respaldo. -->
     <app-aceptacion-politicas />
     <app-tienda-aviso />
   }
 
-@if (idiomaOnboarding.mostrar() && !enAuth() && !version.debeActualizar()) {
+@if (idiomaOnboarding.mostrar() && !enAuth() && !version.debeActualizar() && !bienvenida.mostrar()) {
   <!-- BS4: diálogo de primer ingreso de idioma (bloqueante, una sola vez). No se
-       muestra sobre el gate de actualización obligatoria. -->
+       muestra sobre el gate de actualización obligatoria NI sobre la bienvenida
+       (CL3 — su paso 1 cubre el idioma con el mismo registro). -->
   <app-language-onboarding />
+}
+
+@if (bienvenida.mostrar() && !enAuth() && !version.debeActualizar()) {
+  <!-- CL3: bienvenida animada unificada. Encima del shell; bajo el gate de
+       actualización obligatoria y las hojas de consentimiento (que puede disparar). -->
+  <app-bienvenida />
 }
 
 

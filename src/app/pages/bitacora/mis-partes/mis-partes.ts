@@ -13,13 +13,14 @@ import { SyncService } from '../../../core/sync/sync.service';
 import { formatFecha, formatFechaCortaHora, bitacoraRetrofechada } from '../../../core/util/fecha';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
+import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 /** My bitácoras (server, offline-cached). Tap one to see its details. */
 @Component({
   selector: 'app-mis-bitacoras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, TranslatePipe],
+  imports: [FormsModule, Skeleton, EmptyState, ConfirmDialog, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './mis-partes.html',
   styleUrl: './mis-partes.scss',
 })

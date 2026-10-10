@@ -145,13 +145,13 @@
   @if (menuAdjuntar()) {
     <div class="thread__adj-backdrop" (click)="toggleMenuAdjuntar()"></div>
     <div class="thread__adj-menu">
-      <button type="button" class="thread__adj-op" [disabled]="adjuntando()" (click)="adjuntarCamara()">
+      <button type="button" class="thread__adj-op" appTapScale [disabled]="adjuntando()" (click)="adjuntarCamara()">
         <span class="thread__adj-emoji">📷</span> {{ 'Cámara' | t }}
       </button>
-      <button type="button" class="thread__adj-op" [disabled]="adjuntando()" (click)="adjuntarGaleria()">
+      <button type="button" class="thread__adj-op" appTapScale [disabled]="adjuntando()" (click)="adjuntarGaleria()">
         <span class="thread__adj-emoji">🖼️</span> {{ 'Galería' | t }}
       </button>
-      <button type="button" class="thread__adj-op" [disabled]="adjuntando()" (click)="adjuntarArchivo()">
+      <button type="button" class="thread__adj-op" appTapScale [disabled]="adjuntando()" (click)="adjuntarArchivo()">
         <span class="thread__adj-emoji">📎</span> {{ 'Archivo' | t }}
       </button>
     </div>
@@ -194,7 +194,7 @@
             <div class="thread__stk-grid">
               @for (ref of favoritos(); track ref) {
                 <div class="thread__stk-wrap">
-                  <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(ref)" [attr.aria-label]="'Enviar sticker' | t">
+                  <button type="button" class="thread__stk-cell" appTapScale (click)="enviarStickerMsg(ref)" [attr.aria-label]="'Enviar sticker' | t">
                     <img [src]="stickerUrl(ref)" [alt]="'Sticker' | t" loading="lazy" />
                   </button>
                   <button type="button" class="thread__stk-fav thread__stk-fav--on" (click)="toggleFavorito(ref)" [attr.aria-label]="'Quitar de favoritos' | t">★</button>
@@ -209,7 +209,7 @@
             <div class="thread__stk-grid">
               @for (ref of stickerRecientes(); track ref) {
                 <div class="thread__stk-wrap">
-                  <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(ref)" [attr.aria-label]="'Enviar sticker' | t">
+                  <button type="button" class="thread__stk-cell" appTapScale (click)="enviarStickerMsg(ref)" [attr.aria-label]="'Enviar sticker' | t">
                     <img [src]="stickerUrl(ref)" [alt]="'Sticker' | t" loading="lazy" />
                   </button>
                   <button type="button" class="thread__stk-fav" [class.thread__stk-fav--on]="esFavorito(ref)" (click)="toggleFavorito(ref)" [attr.aria-label]="(esFavorito(ref) ? 'Quitar de favoritos' : 'Añadir a favoritos') | t">{{ esFavorito(ref) ? '★' : '☆' }}</button>
@@ -224,7 +224,7 @@
             <div class="thread__stk-grid">
               @for (s of pack.stickers; track s.id) {
                 <div class="thread__stk-wrap">
-                  <button type="button" class="thread__stk-cell" (click)="enviarStickerMsg(s.ref)" [attr.aria-label]="'Enviar sticker' | t">
+                  <button type="button" class="thread__stk-cell" appTapScale (click)="enviarStickerMsg(s.ref)" [attr.aria-label]="'Enviar sticker' | t">
                     <img [src]="stickerUrl(s.ref)" [alt]="'Sticker' | t" loading="lazy" />
                   </button>
                   <button type="button" class="thread__stk-fav" [class.thread__stk-fav--on]="esFavorito(s.ref)" (click)="toggleFavorito(s.ref)" [attr.aria-label]="(esFavorito(s.ref) ? 'Quitar de favoritos' : 'Añadir a favoritos') | t">{{ esFavorito(s.ref) ? '★' : '☆' }}</button>
