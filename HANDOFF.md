@@ -1,7 +1,9 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 09/10/2026 — PROMPT-91 · Ronda **CK** — app **2.46.0 EN DEV** (falta probar + 2 SQL padre + OK→prod)
-**TL;DR:** ronda CK completa + **mergeada a `dev`** (`b1a7a46`, push → Vercel app-dev.) + **APK dev 2.46.0 construido, candado CL4 verde (`canal:"apk"`), publicado al bucket dev + registrado**. 17 commits en `feature/ck-ronda`, `npm run build` ✅. **Falta: Xaviel prueba → OK → PR dev→main→prod; y el padre aplica los 2 SQL en dev.**
+## 🟢 SESIÓN 09-10/10/2026 — PROMPT-91 · Ronda **CK** — app **2.46.0 PUBLICADA A PROD** ✅
+**TL;DR:** ronda CK completa y **RELEASE A PROD**. `dev`=`main`=`8d75fcb`. **APK prod 2.46.0** firmado (cert `3c5316d8…5065`), candado CL4 verde (`canal:"apk"`+`version:"2.46.0"`), **regla 18 OK** (2.46.0 salió antes en dev), subido al bucket prod + `apk_url` + registrado. **PUBLICADA a usuarios** (`ck-publicar-2.46.0.mjs`: 2.46.0 publicada, 2.45.0 despublicada; **mínima sigue 2.45.0**; push android por el trigger) + **9... 11 iPhone (ios-pwa) notificados in-app** (`ck-notificar-ios-2.46.0.mjs`). Vercel: push a `main` → app. (prod PWA) + push a `dev` → app-dev. 17 commits CK.
+- **⚠️ ÚNICO PENDIENTE (del PADRE):** aplicar en **prod** (y dev) los 2 SQL `sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql` + `2026-10-09-ck15-misael-acciones.sql`. **Hasta entonces "Mis trabajos" del chofer sale VACÍO en prod** (degrada, no rompe) y Misael no tiene ordenar/nota. Lo demás (notificaciones, Apoyo de transporte crear/estados, Entregar a, chofer privado, etc.) **funciona ya en prod**.
+- **CL4 (canal) RESUELTO:** canal inyectado por `src/environments/canal.generated.ts` (gitignored, fuera de fileReplacements) + candado de build (`scripts/lib/canal.mjs`) + fallback runtime. **Gotcha:** `environment.dev.ts` también lleva `version` a mano (estaba en 2.44.0 → candado lo atrapó); alinear prod+dev+build.gradle cada ronda.
 - **CL4 (canal) RESUELTO en esta rama:** el canal se inyecta por `src/environments/canal.generated.ts` (gitignored, fuera de fileReplacements) + candado de build (`scripts/lib/canal.mjs`, aborta si el binario no trae `canal:"<esperado>"`+`version:"<v>"`) + fallback runtime en `UpdaterService`. **Gotcha:** `environment.dev.ts` también lleva `version` a mano (estaba en 2.44.0 → el candado lo atrapó); mantener los 3 alineados cada ronda (prod+dev+build.gradle). Consume contratos de PROMPT-90 (SGC 1.159.1/1.160.0/1.161.0, vivos en dev/prod). Toda la ronda se bundleó en **una sola versión 2.46.0** (environment.prod.ts + build.gradle + CAMBIOS_CURADOS en release-apk.mjs).
 
 ### ✅ Hecho (código, build-verde) — `feature/ck-ronda`
@@ -22,13 +24,13 @@
 2. **`sql-para-sgc/2026-10-09-ck15-misael-acciones.sql`** — "Ordenar" + "Nota para el chofer" sin hogar. Añade `orden`/`trabajo_ordenar` + `nota_chofer`/`trabajo_asignar` 6-arg. La app no pinta esos botones (capability).
 - (También sigue owed el `sql-para-sgc/2026-10-08-cj13-foto-origen` de CJ si no se aplicó.)
 
-### 👤 PENDIENTE — Xaviel
-1. **Probar 2.46.0 en dev** (app-dev. PWA + **APK dev 2.46.0** del bucket; ideal Android gama baja + modo avión): notificaciones que suenan (mensaje con app cerrada/2º plano/abierta → suena las 3), Apoyo de transporte (los 3 tipos + dañado), "Mis trabajos" del chofer, bandeja + "Mis choferes" de Misael, "Entregar a". Con **OK → PR dev→main → prod** (`npm run apk --env prod` + `apk:publish --env prod` pasa la regla 18 porque 2.46.0 ya salió en dev; + data-fix publicar + notificar iOS).
-2. **🔴 El PADRE aplica los 2 SQL en dev** (si no, "Mis trabajos" sale vacío y Misael no tiene ordenar/nota): `sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql` + `2026-10-09-ck15-misael-acciones.sql`.
-3. **Mínima en prod = 2.45.0** (confirmado, NO 2.44.0). No la cambié.
+### 👤 PENDIENTE
+1. **🔴 El PADRE aplica los 2 SQL en PROD (y dev)** — único pendiente real: `sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql` + `2026-10-09-ck15-misael-acciones.sql`. Sin ellos "Mis trabajos" del chofer sale vacío en prod. Xaviel lo coordina con la sesión del padre.
+2. **Probar en prod** (ya publicada): notificaciones que suenan (mensaje app cerrada/2º plano/abierta), Apoyo de transporte, Entregar a. Reportar a Raykler/Misael/choferes/ingenieros.
+3. **Mínima en prod = 2.45.0** (no 2.46.0) → el update a 2.46.0 NO es forzado.
 
 ### Verify on resume
-- `git log --oneline -18`; rama `dev` (=`b1a7a46`); `npm run build` → exit 0; `npm run test:canal` → verde. Versión 2.46.0 en environment.{prod,dev}.ts + build.gradle. APK dev en el bucket (`csd-app-2.46.0.apk`), registrado en `app_versiones` de dev (NO publicado a usuarios).
+- `git log --oneline -20`; `dev`=`main`=`8d75fcb`; `npm run build` → exit 0; `npm run test:canal` → verde. `app_versiones` prod: 2.46.0 publicada=true, minima sigue 2.45.0. APK prod en el bucket (`csd-app-2.46.0.apk`).
 
 ---
 
