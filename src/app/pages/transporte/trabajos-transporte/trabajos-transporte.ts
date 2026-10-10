@@ -120,6 +120,8 @@ export class TrabajosTransportePage {
   choferes = signal<ChoferOpcion[]>([]);
   cargandoChoferes = signal(false);
   enviando = signal(false);
+  /** CL (CK15) — nota para el chofer al asignar (opcional; la ve en "Mis trabajos"). */
+  notaAsignar = signal('');
 
   // Hoja "Nueva actividad".
   nuevaAbierta = signal(false);
@@ -236,6 +238,7 @@ export class TrabajosTransportePage {
   // ── Asignar / Reasignar ──────────────────────────────────────────────────────
   async abrirAsignar(r: BandejaRow): Promise<void> {
     this.asignando.set(r);
+    this.notaAsignar.set(''); // CL — hoja limpia por cada apertura
     if (this.choferes().length) return; // ya cargados
     this.cargandoChoferes.set(true);
     try {
@@ -275,6 +278,7 @@ export class TrabajosTransportePage {
         origenId: r.origenId,
         conductorId: c.id,
         dia: r.dia,
+        nota: this.notaAsignar(), // CL (CK15)
       });
       this.toast.success(this.i18n.t('Asignado a') + ' ' + c.label + '.');
       this.asignando.set(null);
