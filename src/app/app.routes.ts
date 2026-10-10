@@ -230,6 +230,28 @@ export const routes: Routes = [
       import('./pages/transporte/mi-actividad/mi-actividad').then((m) => m.MiActividadPage),
   },
   {
+    // CK14 — "Mis trabajos" del chofer: tickets asignados + reporte de avance.
+    path: 'transporte/mis-trabajos',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mis-trabajos/mis-trabajos').then((m) => m.MisTrabajosPage),
+  },
+  {
+    // CK15 — "Trabajos de transporte": bandeja de Misael (gate es_flota_elevado en el
+    // RPC; el tile del hub la pinta solo a elevados). Asignar/Reasignar/Cancelar/Nueva.
+    path: 'transporte/trabajos',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/trabajos-transporte/trabajos-transporte').then((m) => m.TrabajosTransportePage),
+  },
+  {
+    // CK16 — "Mis choferes": monitor de choferes activos (gate es_flota_elevado).
+    path: 'transporte/mis-choferes',
+    canActivate: [authGuard, pinGuard, moduleGuard('flota')],
+    loadComponent: () =>
+      import('./pages/transporte/mis-choferes/mis-choferes').then((m) => m.MisChoferesPage),
+  },
+  {
     // V2 (follow-up) — detalle de un registro del historial (checklist | echada).
     path: 'transporte/mi-registro/:tipo/:id',
     canActivate: [authGuard, pinGuard, moduleGuard('flota')],
@@ -429,22 +451,37 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/ingenieria/ingenieria').then((m) => m.IngenieriaPage),
   },
   {
-    // AY11 — Solicitudes de movimiento (bandeja: propias del ingeniero / todas del referente).
-    path: 'transporte/solicitudes-movimiento',
+    // CK12 — "Apoyo de transporte" (bandeja): evoluciona solicitudes_movimiento.
+    path: 'transporte/apoyo',
     canActivate: [authGuard, pinGuard],
     loadComponent: () =>
-      import('./pages/transporte/solicitud-movimiento/solicitudes-movimiento').then(
-        (m) => m.SolicitudesMovimientoPage,
-      ),
+      import('./pages/transporte/apoyo-transporte/apoyo-listado').then((m) => m.ApoyoListadoPage),
   },
   {
-    // AY11 — crear solicitud de movimiento (ingeniero, offline por outbox).
-    path: 'transporte/crear-solicitud-movimiento',
+    // CK12 — crear un apoyo de transporte (ingeniero, offline por outbox).
+    path: 'transporte/apoyo/nuevo',
     canActivate: [authGuard, pinGuard],
     loadComponent: () =>
-      import('./pages/transporte/solicitud-movimiento/crear-solicitud-movimiento').then(
-        (m) => m.CrearSolicitudMovimientoPage,
-      ),
+      import('./pages/transporte/apoyo-transporte/crear-apoyo').then((m) => m.CrearApoyoPage),
+  },
+  {
+    // CK13 — ficha de un apoyo (línea de tiempo + botones de estado del solicitante).
+    path: 'transporte/apoyo/:id',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () =>
+      import('./pages/transporte/apoyo-transporte/apoyo-detalle').then((m) => m.ApoyoDetallePage),
+  },
+  {
+    // CK12 — la ruta vieja "Solicitudes de movimiento" redirige al nuevo módulo.
+    path: 'transporte/solicitudes-movimiento',
+    redirectTo: 'transporte/apoyo',
+    pathMatch: 'full',
+  },
+  {
+    // CK12 — la ruta vieja "crear solicitud de movimiento" redirige al nuevo formulario.
+    path: 'transporte/crear-solicitud-movimiento',
+    redirectTo: 'transporte/apoyo/nuevo',
+    pathMatch: 'full',
   },
   {
     // AU5 — "Ver trayectoria" (replay estático) de una ruta finalizada.

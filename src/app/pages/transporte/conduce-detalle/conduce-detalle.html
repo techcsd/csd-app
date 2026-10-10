@@ -48,6 +48,25 @@
           <div class="doc__kv"><span class="doc__k">{{ 'Recibido por' | t }}</span><span class="doc__v">{{ d.recibido_por_nombre || '—' }}</span></div>
         </div>
 
+        <!-- CK4 — "Entregar a": receptor designado (asignable después de crear) -->
+        @if (!d.recibido_por) {
+          <div class="cdet__entregar">
+            <div class="cdet__entregar-info">
+              <span class="doc__k">{{ 'Entregar a' | t }}</span>
+              @if (receptorDesignado(); as rn) {
+                <span class="doc__v">{{ rn }}</span>
+              } @else {
+                <span class="doc__chip doc__chip--inc">{{ 'Sin asignar' | t }}</span>
+              }
+            </div>
+            @if (puedeAsignarReceptor()) {
+              <button type="button" class="btn-ghost cdet__entregar-btn" [disabled]="asignandoReceptor()" (click)="abrirAsignarReceptor()">
+                {{ receptorDesignado() ? ('Cambiar' | t) : ('Asignar' | t) }}
+              </button>
+            }
+          </div>
+        }
+
         <!-- AS2 — firma remota del despachante (solo el despachante designado, desde su sesión). -->
         @if (puedeFirmarDespachante()) {
           <div class="cdet__firmar">
@@ -213,6 +232,43 @@
     tone="danger"
     (confirmed)="eliminar()"
     (cancelled)="confirmarEliminar.set(false)" />
+
+  <!-- CK4 — hoja "¿Quién recibe este conduce?" (asignar/cambiar receptor) -->
+  <app-bottom-sheet [open]="receptorSheet()" [titulo]="'¿Quién recibe este conduce?' | t" (closed)="cerrarReceptorSheet()">
+    @if (cargandoReceptores()) {
+      <app-skeleton [rows]="4" />
+    } @else if (!buscarOtros()) {
+      @if (receptorOpciones().length) {
+        <app-select-list [options]="receptorOpciones()" [searchable]="true" [searchPlaceholder]="'Buscar quién recibe…' | t" (picked)="onReceptorPicked($event)" />
+      } @else {
+        <p class="doc__sub cdet__receptor-vacio">{{ 'No hay personas vinculadas a la obra para recibir.' | t }}</p>
+      }
+      @if (esElevado()) {
+        <button type="button" class="btn-ghost cdet__otros-btn" (click)="buscarOtros.set(true)">{{ 'Buscar otra persona (fuera de la obra)' | t }}</button>
+      }
+    } @else {
+      <button type="button" class="cdet__otros-volver" (click)="buscarOtros.set(false)">← {{ 'Volver a la obra' | t }}</button>
+      <input class="cdet__otros-input" type="search" [value]="otrosQuery()" (input)="buscarOtrosUsuarios($any($event.target).value)"
+             [attr.placeholder]="'Nombre o correo…' | t" [attr.aria-label]="'Buscar usuario' | t" />
+      @if (otrosOpciones().length) {
+        <app-select-list [options]="otrosOpciones()" (picked)="onOtroPicked($event)" />
+      } @else if (otrosQuery().trim().length >= 2) {
+        <p class="doc__sub cdet__receptor-vacio">{{ 'Sin resultados.' | t }}</p>
+      }
+    }
+  </app-bottom-sheet>
+
+  <!-- CK4 — confirmar asignación fuera de la obra (forzar, solo elevados) -->
+  @if (confirmForzar(); as cf) {
+    <app-confirm-dialog
+      [open]="true"
+      [title]="'¿Asignar fuera de la obra?' | t"
+      [message]="'{nombre} no está vinculada a la obra de este conduce. Como rol elevado puedes asignarla igual.' | t: { nombre: cf.nombre }"
+      [confirmLabel]="'Sí, asignar' | t"
+      [cancelLabel]="'Cancelar' | t"
+      (confirmed)="asignarReceptor(cf.id, cf.nombre, true)"
+      (cancelled)="confirmForzar.set(null)" />
+  }
 
   <!-- AS5 — lightbox de evidencia -->
   @if (lightboxUrl(); as url) {

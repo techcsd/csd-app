@@ -33,3 +33,17 @@
 .soporte__report {
   margin-top: 12px;
 }
+
+// CK10 — guía de notificaciones (pasos para OEMs agresivos).
+.soporte__pasos {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.soporte__pasos li {
+  margin-bottom: 8px;
+}
+.soporte__pasos b {
+  color: var(--color-text-primary);
+}

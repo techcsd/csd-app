@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
+import { esUuid } from '../../../core/util/validar';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { CollapsibleSelect } from '../../../shared/ui/collapsible-select/collapsible-select';
 import { ConducesService, ConducePendienteEntrega } from '../../../core/services/conduces.service';
@@ -156,7 +157,8 @@ export class ConducesPendientesPage implements OnDestroy {
   }
 
   async confirmarTransferir(id: string): Promise<void> {
-    if (!this.transferConductor()) {
+    // CK6 — guard UUID (no solo "vacío"): evita mandar "undefined"/id malformado al RPC.
+    if (!esUuid(this.transferConductor())) {
       this.toast.error(this.i18n.t('Elige a quién transfieres el conduce.'));
       return;
     }
@@ -181,7 +183,8 @@ export class ConducesPendientesPage implements OnDestroy {
   }
 
   async confirmarAsignar(id: string): Promise<void> {
-    if (!this.asignarConductor()) {
+    // CK6 — guard UUID (no solo "vacío").
+    if (!esUuid(this.asignarConductor())) {
       this.toast.error(this.i18n.t('Elige el chofer que se hará cargo.'));
       return;
     }

@@ -21,7 +21,7 @@ import { formatFechaCortaHora } from '../../../core/util/fecha';
 import { UbicacionLabelService } from '../../../core/services/ubicacion-label.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { VehiculoDetalle } from '../../../core/models/transporte.model';
-import { CapturedPhoto } from '../../../core/services/camera.service';
+import { CapturedPhoto, CameraService } from '../../../core/services/camera.service';
 import { VehiculosService } from '../../../core/services/vehiculos.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -83,8 +83,12 @@ export class ChecklistPage implements OnDestroy {
   private ctx = inject(UserContextService);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private camera = inject(CameraService);
 
   private sig = viewChild(SignaturePad);
+
+  /** CK — `at` de la última foto recuperada ya re-atada (no repetir trabajo). */
+  private ultimaRestauracion = 0;
 
   borradorPrevio = signal<number | null>(null);
   private hydrated = false;
@@ -201,10 +205,39 @@ export class ChecklistPage implements OnDestroy {
       });
     });
     this.navGuard.register(this.backHandler); // Q7 — botón físico Android
+    // CK (patrón CJ13 de combustible) — si el SO destruyó la Activity durante la
+    // captura (equipos de poca memoria), la foto vuelve por `appRestoredResult` y se
+    // guarda en el borrador, a veces DESPUÉS de que `continuarBorrador` ya cargó las
+    // fotos. Este effect la re-ata al slot en cuanto el servicio de cámara anuncia la
+    // recuperación. Cierra la carrera y cubre la pantalla ya abierta.
+    effect(() => {
+      const r = this.camera.restored();
+      if (!r || r.clave !== this.clave() || r.at <= this.ultimaRestauracion) return;
+      this.ultimaRestauracion = r.at;
+      void this.reatachFotoRestaurada(r.slot);
+    });
   }
 
   ngOnDestroy(): void {
     this.navGuard.clear(this.backHandler);
+  }
+
+  /**
+   * CK — re-ata al slot una foto recuperada por `appRestoredResult`. Lee la foto
+   * directo del borrador (fuente única) y la coloca en el mapa de fotos con la MISMA
+   * forma que `onFoto`, solo si el slot es una de las fotos requeridas.
+   */
+  private async reatachFotoRestaurada(slot: string): Promise<void> {
+    try {
+      if (!this.fotosReq.some((f) => f.slot === slot)) return;
+      const fotos = await this.borradorSvc.loadFotos(this.clave());
+      const f = fotos.find((x) => x.slot === slot);
+      if (!f) return;
+      const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+      this.fotos.update((m) => ({ ...m, [slot]: photo }));
+    } catch {
+      /* best-effort: recuperar la foto nunca debe tumbar la pantalla */
+    }
   }
 
   /** Q7 — ¿hay algo capturado? (el estado se autoguarda como borrador). */
@@ -239,7 +272,7 @@ export class ChecklistPage implements OnDestroy {
     this.location.back();
   }
 
-  private clave(): string {
+  clave(): string {
     const uid = this.ctx.profile()?.id ?? 'anon';
     return `checklist-${this.tipo}:${this.vehiculoId}:${uid}`;
   }

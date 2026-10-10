@@ -110,7 +110,7 @@
     </footer>
   </div>
 } @else {
-  <div class="screen preuso">
+  <div class="screen preuso" data-testid="preuso-checklist">
     <app-wizard-exit [title]="'Pre-uso del vehículo' | t" (exit)="intentarSalir()" />
     <app-step-bar [current]="step()" [total]="total" />
 
@@ -258,6 +258,7 @@
                   hint="📸"
                   [gallery]="false"
                   [foto]="draft(it.id).photo"
+                  [restore]="{ clave: claveBorrador(), slot: 'item:' + it.id }"
                   (captured)="onItemFoto(it.id, $event)"
                   (cleared)="onItemFotoCleared(it.id)"
                 />
@@ -282,6 +283,7 @@
               [hint]="f.hint"
               [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
+              [restore]="{ clave: claveBorrador(), slot: f.slot }"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
             />
@@ -296,6 +298,7 @@
               [hint]="f.hint"
               [gallery]="false"
               [foto]="fotos()[f.slot] ?? null"
+              [restore]="{ clave: claveBorrador(), slot: f.slot }"
               (captured)="onFoto(f.slot, $event)"
               (cleared)="onFotoCleared(f.slot)"
             />

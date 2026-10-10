@@ -16,11 +16,13 @@ import { ConsentimientoUbicacion } from './shared/components/consentimiento-ubic
 import { AceptacionPoliticas } from './shared/components/aceptacion-politicas/aceptacion-politicas';
 import { TiendaAviso } from './shared/components/tienda-aviso/tienda-aviso';
 import { CelebracionOverlay } from './shared/ui/celebracion/celebracion';
+import { NotifHealthBand } from './shared/ui/notif-health-band/notif-health-band';
 import { PoliticasService } from './core/services/politicas.service';
 import { TiendasService } from './core/services/tiendas.service';
 import { SyncService } from './core/sync/sync.service';
 import { NetworkService } from './core/services/network.service';
 import { CatalogService } from './core/sync/catalog.service';
+import { NotifHealthService } from './core/services/notif-health.service';
 import { UpdateService } from './core/services/update.service';
 import { UpdaterService } from './core/services/updater.service';
 import { SessionService } from './core/services/session.service';
@@ -48,7 +50,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, NotifHealthBand],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -74,6 +76,8 @@ export class App {
   private notificaciones = inject(NotificacionesService);
   private deviceInfo = inject(DeviceInfoService);
   private tracking = inject(TrackingService);
+  /** CK10 — salud de notificaciones (permiso + canal); alimenta la cinta global. */
+  private notifHealth = inject(NotifHealthService);
   /** CI3 — aceptación de políticas pendientes (pantalla bloqueante en el shell). */
   private politicas = inject(PoliticasService);
   /** CI7 — URLs de tienda (Play/App Store) para actualizar por canal oficial + avisos. */
@@ -141,11 +145,13 @@ export class App {
         void this.syncAlarmaNativa();
         void this.notificaciones.iniciarRealtime(); // AM4 — reasegura el canal tras dormir
         void this.tracking.evaluarModoContinuo(); // AS1 — re-arma el tracking continuo
+        void this.notifHealth.evaluar(); // CK10 — re-evalúa por si tocó ajustes del SO
         this.imp.checkExpiracion(); // BB — sal de "entrar como" si venció el tope de 1h
       });
     }
     void this.notificaciones.iniciarRealtime(); // AM4 — realtime de avisos (idempotente)
     void this.checkWebView(); // AO7 — aviso in-app si el WebView es muy viejo
+    void this.notifHealth.evaluar(); // CK10 — salud de notificaciones (cinta global)
   }
 
   /**

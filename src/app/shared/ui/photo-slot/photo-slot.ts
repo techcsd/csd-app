@@ -51,6 +51,9 @@ export class PhotoSlot implements OnDestroy {
 
   captured = output<CapturedPhoto>();
   cleared = output<void>();
+  /** CK3 — se usó el "último recurso" galería tras 2 fallos de cámara (el padre marca
+   *  el origen de la foto = 'galeria' para que Logística lo revise). */
+  galeriaFallback = output<void>();
 
   private camera = inject(CameraService);
   private autosave = inject(AutosaveService);
@@ -59,6 +62,9 @@ export class PhotoSlot implements OnDestroy {
   busy = signal(false);
   /** AT9 — hoja de ayuda "la cámara no abre" (iOS/PWA). */
   ayudaAbierta = signal(false);
+  /** CK3 — intentos de cámara que no produjeron foto (fallo/cierre), para ofrecer la
+   *  galería como último recurso en las casillas solo-cámara nativas. */
+  private fallosCamara = signal(0);
 
   /** URL a mostrar: la recién capturada localmente o la rehidratada del padre. */
   displayUrl = computed(() => this.preview() ?? this.foto()?.previewUrl ?? null);
@@ -75,22 +81,49 @@ export class PhotoSlot implements OnDestroy {
    */
   showGallery = computed(() => this.gallery() || this.ctx.esAdmin());
 
+  /**
+   * CK3 — en una casilla SOLO-cámara nativa (combustible), tras 2 intentos de cámara
+   * sin foto, ofrece "Subir foto desde la galería" como último recurso. No aplica si la
+   * galería ya se ofrece (showGallery) ni en web (ahí ya está la ayuda "¿No abre?").
+   */
+  mostrarGaleriaFallback = computed(
+    () => this.fallosCamara() >= 2 && this.camera.isNative && !this.showGallery(),
+  );
+
   /** W6 — tomar con la cámara (nativa del sistema en Android, `<input capture>` en web). */
-  capture(): Promise<void> {
+  async capture(): Promise<void> {
     // AT9 — en web/iOS el `<input capture>` DEBE abrirse dentro del gesto de
     // usuario: NO se puede `await` nada antes (ni el flush), o iOS ignora el
     // click y "pide permiso pero nunca abre". Disparamos el flush en paralelo
     // (best-effort) y abrimos la cámara de forma síncrona.
     if (this.esWeb) {
       void this.autosave.flushAll();
-      return this.run(() => this.camera.takePhoto(this.restore() ?? undefined));
+      await this.run(() => this.camera.takePhoto(this.restore() ?? undefined));
+    } else {
+      // AE7 — nativo (Android): la cámara del sistema saca la app a primer plano y
+      // el SO puede matar el proceso (MIUI/OUKITEL/low-mem); hacemos FLUSH del
+      // autosave ANTES de abrirla para no perder lo capturado.
+      await this.run(async () => {
+        await this.autosave.flushAll();
+        return this.camera.takePhoto(this.restore() ?? undefined);
+      });
     }
-    // AE7 — nativo (Android): la cámara del sistema saca la app a primer plano y
-    // el SO puede matar el proceso (MIUI/OUKITEL/low-mem); hacemos FLUSH del
-    // autosave ANTES de abrirla para no perder lo capturado.
+    // CK3 — si la cámara no produjo foto (fallo real o cierre), cuenta el intento:
+    // tras 2, una casilla solo-cámara nativa ofrece la galería (último recurso).
+    if (!this.preview() && !this.foto()) this.fallosCamara.update((n) => n + 1);
+  }
+
+  /**
+   * CK3 — último recurso tras 2 fallos de cámara: sube la foto desde la galería/archivos
+   * del teléfono. Avisa al padre (`galeriaFallback`) para que marque el origen de la foto
+   * como 'galeria' (la echada viaja con foto_origen='galeria' y Logística la revisa).
+   */
+  subirDesdeGaleria(): Promise<void> {
     return this.run(async () => {
       await this.autosave.flushAll();
-      return this.camera.takePhoto(this.restore() ?? undefined);
+      const [photo] = await this.camera.pickFromGallery(1);
+      if (photo) this.galeriaFallback.emit();
+      return photo ?? null;
     });
   }
 

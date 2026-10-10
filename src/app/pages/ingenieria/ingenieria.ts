@@ -57,8 +57,10 @@ export class IngenieriaPage {
     if (c.esAdmin() || c.hasModulo('compras') || c.puedeVerSubmodulo('compras.solicitudes')) {
       t.push({ key: 'requisicion', icon: '🛒', label: 'Requisición', tint: '#2563eb', route: '/solicitudes' });
     }
-    // Solicitud de movimiento (el corazón original del hub, AY11).
-    t.push({ key: 'solicitudMovimiento', icon: '🚚', label: 'Solicitud de movimiento', tint: '#9333ea', route: '/transporte/solicitudes-movimiento' });
+    // CK12 — Apoyo de transporte (ex "Solicitud de movimiento"): movimientos internos,
+    // retiro de material y bote en un solo flujo. Reemplaza la entrada de "Retiro de
+    // material" del ingeniero (las pantallas inventario/retiro-* siguen para almacén).
+    t.push({ key: 'apoyoTransporte', icon: '🚚', label: 'Apoyo de transporte', tint: '#9333ea', route: '/transporte/apoyo' });
     // Confirmar entregas ("Por recibir") — receptores sin módulo flota (inventario/obra).
     if (c.esAdmin() || c.hasModulo('inventario') || c.puedeVerObra()) {
       t.push({ key: 'porRecibir', icon: '📥', label: 'Confirmar entregas', tint: '#ca8a04', route: '/transporte/por-confirmar' });
@@ -97,7 +99,7 @@ export class IngenieriaPage {
   }
 
   badgeFor(key: string): number | null {
-    if (key === 'solicitudMovimiento') return this.solicitudesPend() || null;
+    if (key === 'apoyoTransporte') return this.solicitudesPend() || null;
     return null;
   }
 

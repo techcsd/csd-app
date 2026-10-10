@@ -7,7 +7,10 @@ import { environment } from '../../../environments/environment';
 import { VersionService } from './version.service';
 import { TiendasService } from './tiendas.service';
 import { ToastService } from './toast.service';
+import { ErrorReportService } from './error-report.service';
 import { abrirUrlExterna } from '../utils/abrir-url.util';
+
+type Canal = 'play' | 'apk' | 'appstore' | 'pwa';
 
 /** Native bridge to ApkInstallerPlugin (android/.../ApkInstallerPlugin.java). */
 interface ApkInstallerPlugin {
@@ -36,9 +39,27 @@ export class UpdaterService {
   private version = inject(VersionService);
   private tiendas = inject(TiendasService);
   private toast = inject(ToastService);
+  private errores = inject(ErrorReportService);
 
   readonly esNativo = Capacitor.isNativePlatform();
-  readonly canal = environment.canal;
+  // CL4 — fallback defensivo: si un binario nativo se construyó mal con canal 'pwa'
+  // (el bug que arreglamos), `actualizar()` solo recargaría la web en vez de instalar.
+  // Lo tratamos como Android→'apk' / iOS→'appstore' y dejamos telemetría.
+  readonly canal: Canal = this.resolverCanal();
+
+  private resolverCanal(): Canal {
+    const c = environment.canal as Canal;
+    if (this.esNativo && c === 'pwa') {
+      const fallback: Canal = Capacitor.getPlatform() === 'ios' ? 'appstore' : 'apk';
+      void this.errores.report('info', `canal_incoherente: binario nativo con canal 'pwa' → ${fallback}`, {
+        canal_env: c,
+        plataforma: Capacitor.getPlatform(),
+        fallback,
+      });
+      return fallback;
+    }
+    return c;
+  }
   readonly estado = signal<EstadoActualizacion>('idle');
   readonly progreso = signal(0); // 0..100 while downloading
 

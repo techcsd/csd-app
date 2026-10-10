@@ -1,5 +1,37 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 09/10/2026 — PROMPT-91 · Ronda **CK** — app **2.46.0 EN DEV** (falta probar + 2 SQL padre + OK→prod)
+**TL;DR:** ronda CK completa + **mergeada a `dev`** (`b1a7a46`, push → Vercel app-dev.) + **APK dev 2.46.0 construido, candado CL4 verde (`canal:"apk"`), publicado al bucket dev + registrado**. 17 commits en `feature/ck-ronda`, `npm run build` ✅. **Falta: Xaviel prueba → OK → PR dev→main→prod; y el padre aplica los 2 SQL en dev.**
+- **CL4 (canal) RESUELTO en esta rama:** el canal se inyecta por `src/environments/canal.generated.ts` (gitignored, fuera de fileReplacements) + candado de build (`scripts/lib/canal.mjs`, aborta si el binario no trae `canal:"<esperado>"`+`version:"<v>"`) + fallback runtime en `UpdaterService`. **Gotcha:** `environment.dev.ts` también lleva `version` a mano (estaba en 2.44.0 → el candado lo atrapó); mantener los 3 alineados cada ronda (prod+dev+build.gradle). Consume contratos de PROMPT-90 (SGC 1.159.1/1.160.0/1.161.0, vivos en dev/prod). Toda la ronda se bundleó en **una sola versión 2.46.0** (environment.prod.ts + build.gradle + CAMBIOS_CURADOS en release-apk.mjs).
+
+### ✅ Hecho (código, build-verde) — `feature/ck-ronda`
+- **F1 CK3** (`bbb6253`): re-atado de foto restaurada (patrón CJ13) a preuso/checklist/mantenimiento/recibir.
+- **F2 CK4** (`4e9478b`): "Entregar a" — asignar/cambiar receptor de un conduce emitido (outbox, permiso=server, picker receptores+buscar otro/forzar).
+- **CK10** (`5eb20e5`+`1e8a721`): canal nativo `avisos_csd_v2` (sonido+pantalla bloqueada+badge, borra el viejo) + `@capacitor/local-notifications` (suena con app abierta) + token on-resume; banda de salud "Activar" (no cerrable para choferes) + Perfil›Notificaciones "Probar notificación" + guía OEM en Soporte.
+- **F3 CK6 + F5 CK3** (`be16a84`): guard `esUuid` en los 3 puntos de transferir/asignar; galería último recurso tras 2 fallos (`foto_origen='galeria'`).
+- **F4 CK1** (`bfb1085`): chofer privado — "Mis vehículos autorizados" en Perfil (caché read-through; "Pedir autorización" = gap del padre, sin botón muerto).
+- **F6B CK9** (`04f0255`): filtro por rol en Admin›Usuarios.
+- **CK11-13 Apoyo** (`ba81682`): módulo "Apoyo de transporte" (Tipo/Obra/Día/descripción/fotos/destino + dañado→cuarentena) + estados del ingeniero; ApoyoService outbox; reemplaza "Solicitud de movimiento"; rutas viejas redirigen.
+- **CK14** (`d36aad8`): "Mis trabajos" del chofer (reporta avance con hora/GPS/foto, offline).
+- **CK15/16** (`f29596c`): bandeja "Trabajos de transporte" de Misael (asignar/reasignar/cancelar/nueva actividad) + "Mis choferes" (monitoreo, última señal, timeline, polling visible-only).
+- **CK5 F6** (`d0ce2fd`): reproductor de videos en Tecnología›Dudas (bucket `tutoriales`, sin autoplay, offline-safe; campos opcionales = no-op hasta que el padre suba) + **data-testid** estables en 14 pantallas.
+- **F7** (`d3107a3`+`bbf03ff`): bump **2.46.0** + changelog curado (Y1) + PARIDAD (contratos CK + testids + gaps).
+
+### ⚠️ 2 SQL para el PADRE (regla 18/19 — el hijo NO aplica; verificados contra cuerpos vivos, sin drift)
+1. **`sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql`** — el chofer NO podía LEER sus tickets (todo gateaba a `es_flota_elevado`/`puede_ver_apoyo`). Añade `mis_trabajos_chofer(p_dia)` + extiende `puede_ver_apoyo` al chofer asignado. **Sin esto "Mis trabajos" sale vacío + la foto de Terminé reintenta en outbox** (degrada, no rompe).
+2. **`sql-para-sgc/2026-10-09-ck15-misael-acciones.sql`** — "Ordenar" + "Nota para el chofer" sin hogar. Añade `orden`/`trabajo_ordenar` + `nota_chofer`/`trabajo_asignar` 6-arg. La app no pinta esos botones (capability).
+- (También sigue owed el `sql-para-sgc/2026-10-08-cj13-foto-origen` de CJ si no se aplicó.)
+
+### 👤 PENDIENTE — Xaviel
+1. **Probar 2.46.0 en dev** (app-dev. PWA + **APK dev 2.46.0** del bucket; ideal Android gama baja + modo avión): notificaciones que suenan (mensaje con app cerrada/2º plano/abierta → suena las 3), Apoyo de transporte (los 3 tipos + dañado), "Mis trabajos" del chofer, bandeja + "Mis choferes" de Misael, "Entregar a". Con **OK → PR dev→main → prod** (`npm run apk --env prod` + `apk:publish --env prod` pasa la regla 18 porque 2.46.0 ya salió en dev; + data-fix publicar + notificar iOS).
+2. **🔴 El PADRE aplica los 2 SQL en dev** (si no, "Mis trabajos" sale vacío y Misael no tiene ordenar/nota): `sql-para-sgc/2026-10-09-ck14-mis-trabajos-chofer.sql` + `2026-10-09-ck15-misael-acciones.sql`.
+3. **Mínima en prod = 2.45.0** (confirmado, NO 2.44.0). No la cambié.
+
+### Verify on resume
+- `git log --oneline -18`; rama `dev` (=`b1a7a46`); `npm run build` → exit 0; `npm run test:canal` → verde. Versión 2.46.0 en environment.{prod,dev}.ts + build.gradle. APK dev en el bucket (`csd-app-2.46.0.apk`), registrado en `app_versiones` de dev (NO publicado a usuarios).
+
+---
+
 ## 🟠 SESIÓN 08/10/2026 — PROMPT-89 · Ronda **CJ** — HOTFIX **2.44.1** (en dev, falta OK → prod)
 **Descubrimiento clave:** el prompt asumía prod=2.43.0 / dev=2.44.0 sin salir, pero **CI 2.44.0 YA está en prod** (`main`=2.44.0, `version_publicada(movil)`=2.44.0 publicada, **minima=true**). Así que el hotfix NO es 2.43.1 desde un main viejo, sino **2.44.1 desde el main actual** (no arrastra ni revierte CI). Rama `hotfix/cj-urgente` (commit `71cb53a`).
 
@@ -16,7 +48,7 @@
 ### 🟢 2.44.1 EN PROD (08-10) — hotfix publicado
 `hotfix/cj-urgente`→`main` (`62e9ea3`, push → Vercel PWA prod). APK prod firmado + subido al bucket prod + `apk_url`. `cj-publicar-2.44.1.mjs --env prod` (publicada=true; 2.44.0 despublicada; **minima sigue 2.44.0**). `cj-notificar-ios-2.44.1.mjs --env prod` (9 iPhone PWA, incl. Mendez y Carlos). Android por el trigger. `main`→`dev` mergeado.
 
-### 🟢 2.45.0 EN DEV — APK dev + PWA dev listos (falta OK → prod). Rama `feature/cj-ronda` mergeada a `dev` (`919e066`), build ✅
+### 🟢 2.45.0 EN PROD (08-10) — `dev`→`main` (`42eaeb6`, push → Vercel PWA prod); APK prod subido + `apk_url`; `cj-publicar-2.45.0.mjs` (publicada; 2.44.1 despublicada; **minima sigue 2.44.0**); `cj-notificar-ios-2.45.0.mjs` (9 iPhone PWA); android por trigger; `main`→`dev` sincronizado.
 Todas las fases de la app de PROMPT-89 hechas:
 - **CJ8:** `articulo-picker` nombre hasta 2 líneas (16px), código monoespaciado debajo, stock a la derecha, filas ≥56px. (CJ9 N/A: la requisición de la app ya es pantalla completa.)
 - **CJ1/CJ4:** tokens `--motion-*`/`--ease-*`; `withViewTransitions` (crossfade 220ms, degradable); `MotionService` + ajuste **Perfil › Animaciones** (completas/reducidas → clase `.motion-reduced`); `docs/MOVIMIENTO.md` + regla en CLAUDE.md.

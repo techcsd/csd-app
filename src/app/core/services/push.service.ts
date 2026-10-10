@@ -2,8 +2,11 @@ import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { App as CapApp } from '@capacitor/app';
 import { SupabaseService } from './supabase.service';
 import { NotificacionesService, notifAppRoute } from './notificaciones.service';
+import { AVISOS_CHANNEL_ID } from '../constants/notif';
 import { NavGuardService } from './nav-guard.service';
 import { AlarmaService } from './alarma.service';
 import { ErrorReportService } from './error-report.service';
@@ -73,12 +76,17 @@ export class PushService {
       if (this.manejarPushOutbox(raw)) return;
       const data = (n?.data ?? {}) as { tipo?: string; alarma?: string | boolean; ruta?: string; vehiculo_id?: string };
       // AK10 legacy + AL6 canónico (alarm-weekly-inspection) + flag genérico alarma.
-      if (
+      const esAlarma =
         data.tipo === 'alarm-weekly-inspection' ||
         data.tipo === 'alarma-reporte-semanal' ||
         data.alarma === true ||
-        data.alarma === 'true'
-      ) {
+        data.alarma === 'true';
+      // CK10 — push normal (mensaje/trabajo) con la app en primer plano: Android NO
+      // muestra banner ni suena cuando la app está abierta. Posteamos una notificación
+      // LOCAL sobre el canal de alta importancia para que se vea/oiga igual. Alarma y
+      // outbox ya se manejan arriba y NO deben duplicarse como notif local.
+      if (!esAlarma) void this.notificarLocal(raw, n?.title ?? null, n?.body ?? null);
+      if (esAlarma) {
         // CA1 — cinturón-y-tirantes del filtro del servidor: antes de sonar la alarma a
         // pantalla completa, verifica la preferencia local (mis_notif_operativas). Si el
         // usuario la tiene apagada o Tecnología lo silenció, NO suena; y se registra
@@ -105,22 +113,14 @@ export class PushService {
       const raw = (a.notification?.data ?? {}) as Record<string, string>;
       // CC7 — al tocar la push de reintento/evidencia, actuar (no hay ruta a la que ir).
       if (this.manejarPushOutbox(raw)) return;
-      const data = (a.notification?.data ?? {}) as {
-        tipo?: string;
-        ruta?: string;
-        referencia_id?: string;
-        referencia_tipo?: string;
-      };
-      // AQ1/AQ6 — el deep-link usa la entidad asociada (echada, versión, conduce…).
-      const dest = notifAppRoute({
-        tipo: data.tipo ?? 'info',
-        ruta: data.ruta ?? null,
-        referencia_id: data.referencia_id ?? null,
-        referencia_tipo: data.referencia_tipo ?? null,
-      });
-      if (dest && dest !== '/home') {
-        this.navGuard.requestNav(() => void this.router.navigateByUrl(dest).catch(() => {}));
-      }
+      this.deepLinkFromData(raw);
+    });
+
+    // CK10 — tap en la notificación LOCAL (la que posteamos en primer plano): el
+    // deep-link sale del `extra` que adjuntamos = los mismos `data` de la push.
+    await LocalNotifications.addListener('localNotificationActionPerformed', (a) => {
+      const raw = (a.notification?.extra ?? {}) as Record<string, string>;
+      this.deepLinkFromData(raw);
     });
 
     let perm = await PushNotifications.checkPermissions();
@@ -129,6 +129,59 @@ export class PushService {
     }
     if (perm.receive !== 'granted') return;
     await PushNotifications.register();
+
+    // CK10 — al volver a primer plano, re-registra: FCM puede haber rotado el token;
+    // `register()` re-dispara `registration` con el token vigente → syncToken() hace
+    // upsert solo si cambió. Best-effort (nunca romper el resume).
+    CapApp.addListener('resume', () => {
+      void PushNotifications.register().catch(() => {});
+    }).catch(() => {});
+  }
+
+  /**
+   * CK10 — deep-link compartido por el tap de la push remota y el de la notif local.
+   * AQ1/AQ6 — usa la entidad asociada (echada, versión, conduce…). AJ7 — pasa por el
+   * gate de navegación (no saca al usuario de un formulario en curso).
+   */
+  private deepLinkFromData(data: Record<string, string>): void {
+    const dest = notifAppRoute({
+      tipo: data['tipo'] ?? 'info',
+      ruta: data['ruta'] ?? null,
+      referencia_id: data['referencia_id'] ?? null,
+      referencia_tipo: data['referencia_tipo'] ?? null,
+    });
+    if (dest && dest !== '/home') {
+      this.navGuard.requestNav(() => void this.router.navigateByUrl(dest).catch(() => {}));
+    }
+  }
+
+  /**
+   * CK10 — postea una notificación LOCAL sobre el canal de alta importancia para que
+   * una push normal suene/aparezca aunque la app esté abierta (Android silencia las
+   * push en primer plano). El `extra` lleva los `data` de la push → el tap deep-linkea.
+   */
+  private async notificarLocal(
+    data: Record<string, string>,
+    title: string | null,
+    body: string | null,
+  ): Promise<void> {
+    const titulo = title || data['title'] || data['titulo'] || 'CSD App';
+    const cuerpo = body || data['body'] || data['mensaje'] || '';
+    try {
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: Date.now() % 2147483647, // id efímero (int32) — no reutilizable
+            channelId: AVISOS_CHANNEL_ID,
+            title: titulo,
+            body: cuerpo,
+            extra: data,
+          },
+        ],
+      });
+    } catch {
+      /* best-effort: si falla el schedule, la in-app + badge ya quedaron. */
+    }
   }
 
   /**

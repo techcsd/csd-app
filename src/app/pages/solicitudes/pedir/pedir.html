@@ -1,4 +1,4 @@
-<div class="screen mov">
+<div class="screen mov" data-testid="requisicion-pedir">
   @if (hoja() !== 'exito') {
     <header class="mov__header">
       <button type="button" class="mov__back" (click)="hoja() === 'resumen' ? volverSeleccion() : intentarSalir()" aria-label="Atrás">←</button>

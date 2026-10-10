@@ -1,0 +1,198 @@
+.mis-choferes {
+  background: var(--color-bg);
+}
+
+.mis-choferes__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.mis-choferes__back,
+.mis-choferes__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.mis-choferes__icon {
+  font-size: 26px;
+}
+
+.mis-choferes__title {
+  margin: 0;
+  flex: 1;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+// ── Tarjeta de chofer ─────────────────────────────────────────────────────────
+.chofer {
+  margin: 0 12px 12px;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+
+  &.is-open {
+    border-color: var(--color-primary);
+  }
+}
+
+.chofer__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  text-align: left;
+}
+
+.chofer__senal {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-text-secondary);
+
+  &[data-nivel='verde'] {
+    background: var(--color-success);
+  }
+  &[data-nivel='ambar'] {
+    background: var(--color-warning);
+  }
+  &[data-nivel='rojo'] {
+    background: var(--color-danger);
+  }
+  &[data-nivel='sin'] {
+    background: var(--color-text-secondary);
+    opacity: 0.5;
+  }
+}
+
+.chofer__id {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chofer__nombre {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.chofer__estado {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+
+  &[data-estado='en_ruta'] {
+    color: var(--color-primary);
+  }
+  &[data-estado='disponible'] {
+    color: var(--color-success);
+  }
+}
+
+.chofer__contadores {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.chofer__hoy {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.chofer__hoy-lbl {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.chofer__alerta {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chofer__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.chofer__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.chofer__btn {
+  width: auto;
+  flex: 1;
+  min-height: 46px;
+  min-width: 96px;
+}
+
+// ── Línea de tiempo ───────────────────────────────────────────────────────────
+.chofer__timeline {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chofer__timeline-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.evento {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--color-bg);
+}
+
+.evento__hora {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.evento__que {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.evento__nota {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

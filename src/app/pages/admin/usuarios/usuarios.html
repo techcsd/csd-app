@@ -24,6 +24,11 @@
     }
 
     <input class="field ausr__buscar" type="search" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)" [attr.placeholder]="'Buscar usuario…' | t" />
+    <!-- CK9 — filtrar por rol -->
+    <select class="field ausr__mt" [ngModel]="filtroRol()" (ngModelChange)="filtroRol.set($event)" [attr.aria-label]="'Filtrar por rol' | t">
+      <option [ngValue]="null">{{ 'Todos los roles' | t }}</option>
+      @for (r of roles(); track r.id) { <option [ngValue]="r.id">{{ r.nombre }}</option> }
+    </select>
 
     @if (loading()) {
       <app-skeleton [rows]="6" />

@@ -240,3 +240,22 @@ sus 131 referencias (§E). Paridad de intención: una sola marca + un acento.
 1. **Lectura de `parametros.play_store_url`/`app_store_url` por usuario autenticado.** El `anon` NO puede leer `sgc.parametros` (42501). La app lee **autenticada**; si el rol `authenticated` tampoco tiene grant/RLS para esas claves, `TiendasService` degrada a null (sin avisos) — **cero regresión hoy** (URLs vacías). Si al poblar las URLs la app no las ve → el padre debe dar `GRANT SELECT` + RLS para esas claves, o exponer un RPC público. (Verificar cuando Xaviel pegue las URLs.)
 2. **iOS `transcribe-now` con `audio/mp4`** (WKWebView graba mp4): verificar que la edge lo acepte al activar iOS; si no, convertir en cliente o ajuste del padre.
 3. **Alarma dominical en iOS**: pendiente `@capacitor/local-notifications` semanal (equivalente de AL6) al activar iOS (`docs/TIENDAS-IOS.md`).
+
+## Ronda CK (PROMPT-91, 09/10/2026) — contratos + paridad + huecos del padre
+**App 2.46.0.** Consume contratos de PROMPT-90 (SGC 1.159.1/1.160.0/1.161.0, vivos en dev/prod).
+
+### Contratos consumidos (servidor = fuente de verdad)
+- **Notificaciones (CK10):** canal nativo único **`avisos_csd_v2`** (constante en `src/app/core/constants/notif.ts` = `MainActivity.PUSH_CHANNEL_ID` = manifest `default_notification_channel_id` = `send-push android.notification.channel_id`). "Probar notificación" = `probar_notificacion()` → `{dispositivos}`, resultado por `mis_notif_entregas(p_limite)` (estados `enviada|omitida|fallida`, motivos `sin_dispositivo|fcm_apagado|dev_push_off|token_vencido|error:<n>`).
+- **Entregar a (CK4):** `conduce_asignar_receptor(p_salida_id,p_usuario_id,p_forzar)`; receptor designado = `conduce_detalle_app().firma_pendiente_nombre`; picker = `receptores_disponibles` + `buscar_usuarios` (forzar, elevados).
+- **Echada galería (CK3):** `registrar_combustible_app(... p_foto_origen)` 22-arg; `registros_combustible.foto_origen ∈ camara|galeria`.
+- **Apoyo de transporte (CK11-13):** `apoyo_transporte_crear/_agregar_foto/_cambiar_estado/_listado/_detalle`, `puede_ver_apoyo`; cols `solicitudes_movimiento.{tipo_apoyo,dia,descripcion,retiro_material_id}`; bucket `apoyo-transporte`. Estados `pendiente→asignada→en_proceso→por_confirmar→completada|cancelada`.
+- **Trabajos (CK14-16):** `trabajo_evento_chofer(p_origen,p_origen_id,p_evento,...)` eventos `en_camino|llegue|trabajando|termine|problema`; `trabajos_transporte_listado`, `trabajo_asignar`, `actividad_crear`, `mis_choferes_panel`. `chofer_estado` lo gobierna el server dentro de `trabajo_evento_chofer` (la app NO lo re-setea).
+
+### Huecos del padre (la app degrada / no pinta; SQL dejado en `sql-para-sgc/`)
+1. **`2026-10-09-ck14-mis-trabajos-chofer.sql`** — el chofer NO tenía lectura (`trabajos_transporte_listado`/`puede_ver_apoyo` gatean a elevado). Añade `mis_trabajos_chofer(p_dia)` + extiende `puede_ver_apoyo` al chofer asignado (cuerpo vivo verificado idéntico + 1 cláusula). **Sin esto, "Mis trabajos" sale vacío y la foto de "Terminé" reintenta en el outbox.**
+2. **`2026-10-09-ck15-misael-acciones.sql`** — "Ordenar" (col `orden`/`orden_transporte` + `trabajo_ordenar`) y "Nota para el chofer" (`solicitudes_movimiento.nota_chofer` + `trabajo_asignar` 6-arg) no tienen hogar. La app no pinta esos botones (capability). `trabajo_asignar` recreado = cuerpo vivo idéntico + adiciones.
+3. Alertas §CK16.4 #2/#3 (en-camino >2h, problema sin atender) y cancelar no-apoyo: `mis_choferes_panel` no expone `ultimo_evento`/`problema_pendiente` → pendiente del contrato.
+4. Renglones cf5 de solicitudes viejas: `apoyo_transporte_detalle` no los expone → no se ven en el detalle nuevo.
+
+### data-testid estables (guiones de video CK5)
+combustible-wizard · uso-vehiculo · crear-ruta · preuso-checklist · bitacora-parte · recibir-conduce · requisicion-pedir · compa · crear-apoyo · apoyo-listado · apoyo-detalle · mis-trabajos · trabajos-transporte · mis-choferes · (+ `guia-video-<id>` por video).

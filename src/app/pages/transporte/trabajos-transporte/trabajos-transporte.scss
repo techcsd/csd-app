@@ -1,0 +1,339 @@
+.trabajos-tt {
+  background: var(--color-bg);
+}
+
+.trabajos-tt__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+
+.trabajos-tt__back,
+.trabajos-tt__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.trabajos-tt__icon {
+  font-size: 26px;
+}
+
+.trabajos-tt__title {
+  margin: 0;
+  flex: 1;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+// ── Pestañas ──────────────────────────────────────────────────────────────────
+.trabajos-tt__tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.trabajos-tt__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &.is-active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--text-on-accent);
+  }
+}
+
+.trabajos-tt__tab-count {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  font-size: 12px;
+  text-align: center;
+}
+
+// ── Barra de acciones ─────────────────────────────────────────────────────────
+.trabajos-tt__bar {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+}
+
+.trabajos-tt__filtros-btn {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.trabajos-tt__nueva-btn {
+  width: auto;
+  flex: 1;
+  min-height: 48px;
+}
+
+// ── Filtros ───────────────────────────────────────────────────────────────────
+.trabajos-tt__filtros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
+.trabajos-tt__f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+
+  input,
+  select {
+    padding: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 15px;
+    font-family: inherit;
+  }
+}
+
+.trabajos-tt__limpiar {
+  grid-column: 1 / -1;
+  width: auto;
+}
+
+// ── Tarjeta de ticket ─────────────────────────────────────────────────────────
+.ticket {
+  margin: 0 12px 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.ticket__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ticket__tipo {
+  font-size: 16px;
+  font-weight: 800;
+  flex: 1;
+}
+
+.ticket__estado {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+
+  &[data-estado='en_proceso'] {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  &[data-estado='por_confirmar'] {
+    border-color: var(--color-warning);
+    color: var(--color-warning);
+  }
+  &[data-estado='completada'] {
+    border-color: var(--color-success);
+    color: var(--color-success);
+  }
+}
+
+.ticket__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.ticket__desc {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.ticket__chofer {
+  margin: 10px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ticket__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ticket__btn {
+  width: auto;
+  flex: 1;
+  min-height: 48px;
+}
+
+.ticket__cancelar {
+  width: auto;
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  background: transparent;
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
+  font-size: 14px;
+  font-weight: 700;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+// ── Hojas inferiores ──────────────────────────────────────────────────────────
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 2px 8px;
+}
+
+.sheet__hint {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.sheet__f {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+
+  input,
+  select {
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 15px;
+    font-family: inherit;
+  }
+}
+
+.sheet__texto {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.sheet__enviar {
+  width: 100%;
+  min-height: 56px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.sheet__enviar--warn {
+  background: var(--color-warning);
+}
+
+// ── Opciones de chofer en la hoja de asignar ──────────────────────────────────
+.sheet__choferes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chofer-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  text-align: left;
+
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+.chofer-opt__nombre {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.chofer-opt__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chofer-opt__estado {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+
+  &[data-estado='en_ruta'] {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+  &[data-estado='disponible'] {
+    border-color: var(--color-success);
+    color: var(--color-success);
+  }
+}
+
+.chofer-opt__carga {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

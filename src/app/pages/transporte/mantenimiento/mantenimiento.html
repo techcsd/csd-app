@@ -117,6 +117,7 @@
               [label]="('Foto' | t) + ' ' + (i + 1)"
               hint="📸"
               [foto]="fotos()[i] ?? null"
+              [restore]="{ clave: clave, slot: i.toString() }"
               (captured)="onFoto(i, $event)"
               (cleared)="onFotoCleared(i)"
             />

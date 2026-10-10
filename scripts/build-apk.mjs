@@ -14,8 +14,9 @@
  * ANDROID_HOME (auto-detectados si no están).
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolverEnv } from './lib/entorno.mjs';
+import { writeCanalGenerated, verificarCanalEnZip } from './lib/canal.mjs';
 
 const isWin = process.platform === 'win32';
 const env = await resolverEnv(process.argv.slice(2));
@@ -48,11 +49,21 @@ function run(cmd, args, opts = {}) {
   if (res.status !== 0) { console.error(`✗ command failed (${res.status}): ${cmd} ${args.join(' ')}`); process.exit(res.status || 1); }
 }
 
-// CI7 — build-apk SIEMPRE usa el canal `apk` (auto-actualización por descarga de
+// CI7/CL4 — build-apk SIEMPRE usa el canal `apk` (auto-actualización por descarga de
 // APK, para teléfonos sin Google Play). El AAB para Play lo hace `npm run aab`.
+// Escribimos canal.generated.ts='apk' ANTES del build; build-env lo reafirma tras su
+// prebuild (quien lo escribe en el bundle es build-env, justo antes de ng build).
+writeCanalGenerated('apk');
 // environment + guards + ng build (+ patch dev del dist). build-env corre el prebuild.
 run('node', ['scripts/build-env.mjs', '--env', ENV, '--canal', 'apk']);
 run('npx', ['cap', 'sync', 'android']);
+
+// Versión esperada (fuente única: environment.prod.ts) para el candado de build.
+const VERSION = (() => {
+  const m = readFileSync('src/environments/environment.prod.ts', 'utf8').match(/version:\s*'([^']+)'/);
+  if (!m) { console.error('✗ no pude leer la versión de environment.prod.ts'); process.exit(1); }
+  return m[1];
+})();
 
 // cmd.exe no busca en el cwd — prefijo .\ para el launcher batch en android/.
 // Con la 2ª dimensión `canal`, la task es assemble<Entorno>Apk Release (p. ej.
@@ -68,6 +79,17 @@ console.log(`\n✓ Signed APK (${ENV}, canal apk): ${apk}`);
 const apksigner = firstExisting(['36.0.0', '35.0.0', '34.0.0'].map((v) => `${ANDROID_HOME}/build-tools/${v}/apksigner.bat`));
 if (apksigner) run(apksigner, ['verify', '--print-certs', apk]);
 else console.log('(apksigner not auto-found; verify manually per scripts/build-apk.md)');
+
+// CL4 — CANDADO: abre el APK y verifica que el bundle traiga canal:"apk" + la versión
+// esperada. Si no (p. ej. salió 'pwa'), ABORTA: un APK 'pwa' deja al updater solo
+// recargando en vez de instalar.
+try {
+  await verificarCanalEnZip(apk, 'apk', VERSION);
+  console.log(`✓ candado: el APK trae canal:"apk" + version:"${VERSION}".`);
+} catch (e) {
+  console.error('\n' + (e instanceof Error ? e.message : String(e)));
+  process.exit(1);
+}
 
 // Y1 — registrar SIEMPRE la versión al generar el APK, en el app_versiones del
 // ENTORNO. --register-only no sube nada ni toca publicada/minima. Falla (exit 1) si

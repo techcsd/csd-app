@@ -1,5 +1,6 @@
 package com.constructorasd.csdapp;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
@@ -114,27 +115,38 @@ public class MainActivity extends BridgeActivity {
         capTextZoom();
     }
 
-    /** AQ1 — id del canal de avisos de alta importancia (heads-up + sonido). */
-    private static final String PUSH_CHANNEL_ID = "avisos_csd";
+    /** AQ1/CK10 — id del canal de avisos de alta importancia (heads-up + sonido).
+     *  v2: la importancia de un canal NO se puede subir tras crearlo, así que
+     *  versionamos el id (avisos_csd → avisos_csd_v2) y borramos el viejo. */
+    private static final String PUSH_CHANNEL_ID = "avisos_csd_v2";
+    /** CK10 — id del canal v1 a borrar (reemplazado por avisos_csd_v2). */
+    private static final String PUSH_CHANNEL_ID_LEGACY = "avisos_csd";
 
     /**
-     * AQ1 — crea (idempotente) el canal de notificaciones de la app con importancia
-     * ALTA: sonido de notificación del sistema, vibración y heads-up. En Android 8+
-     * el canal manda sobre la importancia; sin esto las push llegaban silenciosas y
-     * sin banner emergente. El sonido/vibración respeta los ajustes del sistema y
-     * del propio canal (el usuario puede bajarlos desde Ajustes de la app).
+     * AQ1/CK10 — crea (idempotente) el canal de notificaciones de la app con
+     * importancia ALTA: sonido de notificación del sistema, vibración, luces,
+     * visible en pantalla de bloqueo y con badge. En Android 8+ el canal manda
+     * sobre la importancia; sin esto las push llegaban silenciosas y sin banner
+     * emergente. El sonido/vibración respeta los ajustes del sistema y del propio
+     * canal (el usuario puede bajarlos desde Ajustes de la app).
      */
     private void ensurePushChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
         try {
             NotificationManager nm = getSystemService(NotificationManager.class);
-            if (nm == null || nm.getNotificationChannel(PUSH_CHANNEL_ID) != null) return;
+            if (nm == null) return;
+            // CK10 — borra el canal v1 (su importancia ya no se puede elevar). Una vez
+            // creado el v2 esto es no-op (el v1 ya no existe).
+            try { nm.deleteNotificationChannel(PUSH_CHANNEL_ID_LEGACY); } catch (Exception ignored2) {}
+            if (nm.getNotificationChannel(PUSH_CHANNEL_ID) != null) return;
             NotificationChannel ch = new NotificationChannel(
-                PUSH_CHANNEL_ID, "Avisos", NotificationManager.IMPORTANCE_HIGH);
+                PUSH_CHANNEL_ID, "Avisos y mensajes", NotificationManager.IMPORTANCE_HIGH);
             ch.setDescription("Mensajes, entregas, rutas y alertas de la app.");
             ch.enableVibration(true);
             ch.setVibrationPattern(new long[] {0, 250, 150, 250});
             ch.enableLights(true);
+            ch.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            ch.setShowBadge(true);
             Uri sound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             AudioAttributes attrs = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION)

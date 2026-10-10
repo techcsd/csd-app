@@ -1,0 +1,195 @@
+.apd {
+  background: var(--color-bg);
+  min-height: 100%;
+}
+
+.apd__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.apd__back {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.apd__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+}
+
+.apd__body {
+  padding-bottom: 28px;
+}
+
+.apd__chips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.apd__tipo {
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 3px 9px;
+  background: rgba(37, 99, 235, 0.14);
+  color: var(--color-info);
+}
+.apd__tipo[data-tipo='retiro_material'] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+}
+.apd__tipo[data-tipo='bote'] {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+}
+.apd__estado {
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 3px 9px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+}
+.apd__estado[data-estado='en_proceso'],
+.apd__estado[data-estado='asignada'] {
+  background: rgba(2, 132, 199, 0.14);
+  color: var(--color-info);
+}
+.apd__estado[data-estado='por_confirmar'] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+}
+.apd__estado[data-estado='completada'] {
+  background: rgba(22, 163, 74, 0.14);
+  color: var(--color-success);
+}
+.apd__estado[data-estado='cancelada'] {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--main-ultra-light);
+}
+
+.apd__desc {
+  margin: 0 0 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.apd__meta {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 4px 12px;
+}
+.apd__meta-row {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+}
+.apd__meta-row:last-child {
+  border-bottom: none;
+}
+.apd__meta-k {
+  flex: 0 0 90px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.apd__section {
+  margin: 20px 0 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.apd__fotos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.apd__foto {
+  width: 104px;
+  height: 104px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+}
+
+.apd__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.apd__act {
+  flex: 1;
+  min-width: 46%;
+  width: auto;
+}
+
+.apd__panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 14px;
+}
+.apd__nota {
+  width: 100%;
+  resize: vertical;
+}
+.apd__panel-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.apd__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.apd__evento {
+  display: flex;
+  gap: 12px;
+  padding: 0 0 14px;
+  position: relative;
+}
+.apd__evento-dot {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+.apd__evento-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.apd__evento-a {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.apd__evento-meta {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.apd__evento-nota {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}

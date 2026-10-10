@@ -1,10 +1,12 @@
 // GENERADO por scripts/gen-environment.mjs — no editar a mano.
 // entorno: dev. Regla 18: ng serve local jamás apunta a prod por defecto.
+import { CANAL_BUILD } from './canal.generated';
 export const environment = {
   production: true,
   entorno: 'dev' as 'dev' | 'prod',
-  version: '2.44.0',
-  canal: 'pwa' as 'play' | 'apk' | 'appstore' | 'pwa',
+  version: '2.46.0',
+  // CI7/CL4 — canal desde canal.generated.ts (sobrevive al fileReplacements).
+  canal: CANAL_BUILD,
   appUrl: 'https://app-dev.sgcconstructorasd.com',
   webUrl: 'https://dev.sgcconstructorasd.com',
   supabaseUrl: 'https://fzfrnrvndzrjwyvdpkgg.supabase.co',

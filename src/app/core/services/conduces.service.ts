@@ -585,6 +585,9 @@ export interface ConduceDetalle {
   entrega_foto_url?: string | null;
   recibido_por: string | null;
   recibido_por_nombre: string | null;
+  /** CK4 — "Entregar a": receptor DESIGNADO (aún sin confirmar) = firma_pendiente.
+   *  El servidor (conduce_detalle_app) lo devuelve; null = "Sin asignar". */
+  firma_pendiente_nombre?: string | null;
   recibido_en: string | null;
   recepcion_foto_path: string | null;
   recepcion_foto_url?: string | null;
@@ -2067,6 +2070,44 @@ export class ConducesService {
   }
 
   /**
+   * CK4 — "Entregar a": busca cualquier usuario del sistema para asignarlo como
+   * receptor FUERA de la obra (solo elevados, con `forzar`). `buscar_usuarios`
+   * devuelve `{id, nombre}`. Online best-effort.
+   */
+  async buscarUsuariosReceptor(term: string): Promise<{ id: string; nombre: string }[]> {
+    const t = term.trim();
+    if (t.length < 2) return [];
+    const { data, error } = await this.supabase.client.rpc('buscar_usuarios', { p_term: t });
+    if (error) throw new Error(error.message);
+    return ((data as Record<string, unknown>[]) ?? []).map((r) => ({
+      id: (r['id'] as string) ?? (r['usuario_id'] as string),
+      nombre: (r['nombre'] as string) ?? '',
+    }));
+  }
+
+  /**
+   * CK4 — asigna/cambia quién RECIBE (confirma) un conduce ya emitido, después de
+   * crearlo (nota #170 de Raykler). Pasa por el outbox (idempotente, offline-safe);
+   * el servidor (`conduce_asignar_receptor`) revalida permiso (flota elevada o el
+   * creador), estado (sin recepción confirmada ni anulación), que el receptor esté
+   * activo y sea confirmador de la obra —o `forzar` para elevados fuera de la obra—,
+   * la regla de alto valor, y avisa al nuevo y al receptor anterior. Un rechazo al
+   * sincronizar aparece en el outbox con el mensaje del servidor en humano.
+   */
+  async asignarReceptorConduce(salidaId: string, usuarioId: string, forzar = false): Promise<void> {
+    await this.sync.enqueue({
+      id: crypto.randomUUID(),
+      tipo_op: 'conduce_asignar_receptor',
+      capturado_en: new Date().toISOString(),
+      payload: { salida_id: salidaId, usuario_id: usuarioId, forzar },
+      fotos: [],
+      resumen: { salida_id: salidaId },
+    });
+    void this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+    void this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+  }
+
+  /**
    * AT10 — marca/desmarca un conduce como dato de PRUEBA (solo admin, online).
    * RPC genérico `marcar_movimiento_inventario_prueba('salidas_inventario', id,
    * valor)`. Un conduce de prueba no suma al inventario/KPIs, no notifica y queda
@@ -2301,6 +2342,18 @@ export class ConducesService {
       const { error } = await this.supabase.client.rpc('anular_conduce', {
         p_salida_id: payload['salida_id'],
         p_motivo: payload['motivo'] ?? null,
+      });
+      if (error) throwSyncError(error);
+      await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});
+      await this.catalog.invalidate(CATALOG_CONDUCES).catch(() => {});
+    });
+
+    // CK4 — "Entregar a": asignar/cambiar el receptor de un conduce ya emitido.
+    this.sync.register('conduce_asignar_receptor', async (payload) => {
+      const { error } = await this.supabase.client.rpc('conduce_asignar_receptor', {
+        p_salida_id: payload['salida_id'],
+        p_usuario_id: payload['usuario_id'],
+        p_forzar: payload['forzar'] ?? false,
       });
       if (error) throwSyncError(error);
       await this.catalog.invalidate(CATALOG_PENDIENTES_ENTREGA).catch(() => {});

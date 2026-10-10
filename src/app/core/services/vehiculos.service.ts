@@ -18,7 +18,16 @@ import {
   VehiculoDetalle,
   VehiculoDisponible,
   VehiculoStats,
+  vehiculoIdentidad,
 } from '../models/transporte.model';
+
+/** CK1/F4 — un vehículo AUTORIZADO al chofer privado, con etiqueta + vigencia. */
+export interface VehiculoAutorizado {
+  vehiculoId: string;
+  etiqueta: string;
+  desde: string | null;
+  hasta: string | null;
+}
 
 const REQUIRED_SLOTS = FOTOS_REQUERIDAS.map((f) => f.slot);
 const CATALOG_PENDIENTES = 'pendientes_transporte';
@@ -463,8 +472,23 @@ export class VehiculosService {
    * última autorización conocida. La vigencia (desde/hasta) se evalúa en cliente.
    */
   async misVehiculosAutorizadosIds(): Promise<Set<string>> {
+    const vigentes = await this.autorizacionesVigentes();
+    return new Set(vigentes.map((a) => a.vehiculo_id));
+  }
+
+  /**
+   * CG7/CK1 — lee las autorizaciones del usuario (`vehiculo_autorizaciones`, RLS
+   * deja ver solo las propias), cacheado read-through bajo `veh_autorizados:<uid>`
+   * (funciona OFFLINE con la última autorización conocida), y devuelve SOLO las
+   * vigentes (vigencia desde/hasta evaluada en el día LOCAL de RD). Fuente única
+   * compartida por `misVehiculosAutorizadosIds()` (selector) y
+   * `misVehiculosAutorizados()` (lista de Perfil).
+   */
+  private async autorizacionesVigentes(): Promise<
+    Array<{ vehiculo_id: string; desde: string | null; hasta: string | null }>
+  > {
     const uid = this.ctx.profile()?.id;
-    if (!uid) return new Set();
+    if (!uid) return [];
     const rows = await this.catalog.refresh<Array<{ vehiculo_id: string; desde: string | null; hasta: string | null }>>(
       `veh_autorizados:${uid}`,
       async () => {
@@ -478,10 +502,35 @@ export class VehiculosService {
       },
     );
     const hoy = fechaLocalISO(); // día LOCAL (RD, UTC-4)
-    const vigentes = (rows ?? []).filter(
+    return (rows ?? []).filter(
       (a) => (!a.desde || a.desde <= hoy) && (!a.hasta || a.hasta >= hoy),
     );
-    return new Set(vigentes.map((a) => a.vehiculo_id));
+  }
+
+  /**
+   * CK1/F4 — autorizaciones vigentes del CHOFER PRIVADO con etiqueta legible
+   * (Marca Modelo · Color · Placa), para la sección "Mis vehículos autorizados"
+   * de Perfil. La etiqueta se resuelve del MISMO pool que alimenta el selector de
+   * vehículos (`getVehiculosDisponiblesDetailed`, cacheado offline; para el privado
+   * ya viene recortado a SUS autorizados). Si una etiqueta no se puede resolver
+   * (vehículo fuera de servicio / offline sin caché), cae a la placa conocida o al
+   * id para que la lista SIEMPRE renderice. Comparte el fetch + la vigencia con
+   * `misVehiculosAutorizadosIds()` (misma caché `veh_autorizados:<uid>`).
+   */
+  async misVehiculosAutorizados(): Promise<VehiculoAutorizado[]> {
+    const vigentes = await this.autorizacionesVigentes();
+    if (!vigentes.length) return [];
+    // Mapa id→vehículo del pool del picker (best-effort: si falla, caemos al id).
+    const pool = await this.getVehiculosDisponiblesDetailed().catch(
+      () => ({ items: [] as VehiculoDisponible[], failed: true, fromCache: false }),
+    );
+    const porId = new Map<string, VehiculoDisponible>();
+    for (const v of pool.items) porId.set(v.vehiculo_id, v);
+    return vigentes.map((a) => {
+      const v = porId.get(a.vehiculo_id);
+      const etiqueta = (v ? vehiculoIdentidad(v) || v.placa : '') || a.vehiculo_id;
+      return { vehiculoId: a.vehiculo_id, etiqueta, desde: a.desde, hasta: a.hasta };
+    });
   }
 
   /** U6 — foto_path (primera) por vehículo, para pintar fotos en listas. */

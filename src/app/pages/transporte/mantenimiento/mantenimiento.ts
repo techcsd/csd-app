@@ -169,9 +169,12 @@ export class MantenimientoPage implements OnDestroy {
     return this.i18n.t('La lectura no puede ser menor a la registrada ({km} {u}).', { km: this.odometro() ?? '', u: this.unidad() });
   }
 
-  private get clave(): string {
+  get clave(): string {
     return `mantenimiento:${this.vehiculoId}`;
   }
+
+  /** CK — `at` de la última foto recuperada ya re-atada (no repetir trabajo). */
+  private ultimaRestauracion = 0;
 
   private readonly backHandler = (): boolean => {
     if (!this.done() && this.tieneDatos()) {
@@ -209,6 +212,36 @@ export class MantenimientoPage implements OnDestroy {
       }
       this.kmValTimer = setTimeout(() => void this.validarKm(km), 400);
     });
+    // CK (patrón CJ13 de combustible) — si el SO destruyó la Activity durante la
+    // captura (equipos de poca memoria), la foto vuelve por `appRestoredResult` y se
+    // guarda en el borrador, a veces DESPUÉS de que `restoreDraft` ya cargó las fotos.
+    // Este effect la re-ata al slot (= índice) en cuanto el servicio de cámara anuncia
+    // la recuperación. Cierra la carrera y cubre la pantalla ya abierta.
+    effect(() => {
+      const r = this.camera.restored();
+      if (!r || r.clave !== this.clave || r.at <= this.ultimaRestauracion) return;
+      this.ultimaRestauracion = r.at;
+      void this.reatachFotoRestaurada(r.slot);
+    });
+  }
+
+  /**
+   * CK — re-ata una foto recuperada por `appRestoredResult` al slot (índice) que la
+   * guardó. Lee la foto directo del borrador (fuente única) y la coloca en el mapa de
+   * fotos con la MISMA forma que `onFoto`, incluso si la pantalla ya estaba abierta.
+   */
+  private async reatachFotoRestaurada(slot: string): Promise<void> {
+    try {
+      const idx = Number(slot);
+      if (!Number.isFinite(idx)) return;
+      const fotos = await this.borrador.loadFotos(this.clave);
+      const f = fotos.find((x) => x.slot === slot);
+      if (!f) return;
+      const photo: CapturedPhoto = { blob: f.blob, previewUrl: URL.createObjectURL(f.blob) };
+      this.fotos.update((m) => ({ ...m, [idx]: photo }));
+    } catch {
+      /* best-effort: recuperar la foto nunca debe tumbar la pantalla */
+    }
   }
 
   private async loadTalleres(): Promise<void> {

@@ -5,7 +5,9 @@ import { Skeleton } from '../../../shared/ui/skeleton/skeleton';
 import { EmptyState } from '../../../shared/ui/empty-state/empty-state';
 import { ConfirmDialog } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
-import { ConducesService, ConduceDetalle, ConduceDetalleItem } from '../../../core/services/conduces.service';
+import { BottomSheet } from '../../../shared/ui/bottom-sheet/bottom-sheet';
+import { SelectList, SelectOption } from '../../../shared/ui/select-list/select-list';
+import { ConducesService, ConduceDetalle, ConduceDetalleItem, ReceptorDisponible } from '../../../core/services/conduces.service';
 import { ConducePdfService } from '../../../core/services/conduce-pdf.service';
 import { NavGuardService } from '../../../core/services/nav-guard.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -27,7 +29,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
   selector: 'app-conduce-detalle',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad, TranslatePipe],
+  imports: [DecimalPipe, Skeleton, EmptyState, ConfirmDialog, SignaturePad, BottomSheet, SelectList, TranslatePipe],
   templateUrl: './conduce-detalle.html',
   styleUrl: './conduce-detalle.scss',
 })
@@ -157,8 +159,108 @@ export class ConduceDetallePage {
     return pendiente && (soyEmisor || this.userCtx.esAdmin());
   });
 
+  // ── CK4 — "Entregar a": asignar/cambiar quién recibe (confirma) el conduce ──────
+  /** Receptor designado optimista tras asignar (antes de que el server recargue). */
+  private receptorOptimista = signal<string | null>(null);
+  /** "Entregar a" actual: receptor designado (firma pendiente) o null = Sin asignar. */
+  receptorDesignado = computed(() => this.receptorOptimista() ?? this.detalle()?.firma_pendiente_nombre ?? null);
+  /** ¿Puede asignar/cambiar quién recibe? Mismo predicado que el servidor: flota
+   *  elevada o el creador, mientras no se haya confirmado la recepción ni anulado. */
+  puedeAsignarReceptor = computed(() => {
+    const d = this.detalle();
+    if (!d) return false;
+    const abierto = d.estado !== 'anulado' && !d.recibido_por;
+    const soyCreador = !!d.creado_por && d.creado_por === this.userCtx.profile()?.id;
+    return abierto && (this.userCtx.esFlotaElevado() || soyCreador);
+  });
+  /** ¿Rol elevado? Habilita "Buscar otra persona" fuera de la obra (→ forzar). */
+  esElevado = computed(() => this.userCtx.esFlotaElevado());
+
+  receptorSheet = signal(false);
+  cargandoReceptores = signal(false);
+  asignandoReceptor = signal(false);
+  private receptores = signal<ReceptorDisponible[]>([]);
+  /** Opciones del picker: receptores vinculados a la obra (receptores_disponibles). */
+  receptorOpciones = computed<SelectOption[]>(() =>
+    this.receptores().map((r) => ({ id: r.id, label: r.detalle ? `${r.nombre} · ${r.detalle}` : r.nombre, icon: '📥' })),
+  );
+  /** "Buscar otra persona" (solo elevados → forzar): búsqueda server-side de usuarios. */
+  buscarOtros = signal(false);
+  otrosQuery = signal('');
+  private otros = signal<{ id: string; nombre: string }[]>([]);
+  otrosOpciones = computed<SelectOption[]>(() => this.otros().map((u) => ({ id: u.id, label: u.nombre, icon: '🔎' })));
+  /** Confirmación pendiente de asignar a alguien fuera de la obra (forzar). */
+  confirmForzar = signal<{ id: string; nombre: string } | null>(null);
+
   constructor() {
     void this.load();
+  }
+
+  // ── CK4 — acciones "Entregar a" ─────────────────────────────────────────────
+  async abrirAsignarReceptor(): Promise<void> {
+    const d = this.detalle();
+    if (!d) return;
+    this.buscarOtros.set(false);
+    this.otrosQuery.set('');
+    this.otros.set([]);
+    this.receptorSheet.set(true);
+    this.cargandoReceptores.set(true);
+    try {
+      this.receptores.set(await this.conduces.receptoresDisponibles(d.proyecto_id, d.bodega_id));
+    } catch {
+      this.receptores.set([]);
+    } finally {
+      this.cargandoReceptores.set(false);
+    }
+  }
+
+  cerrarReceptorSheet(): void {
+    this.receptorSheet.set(false);
+    this.confirmForzar.set(null);
+  }
+
+  onReceptorPicked(id: string): void {
+    const r = this.receptores().find((x) => x.id === id);
+    if (r) void this.asignarReceptor(r.id, r.nombre, false);
+  }
+
+  async buscarOtrosUsuarios(q: string): Promise<void> {
+    this.otrosQuery.set(q);
+    if (q.trim().length < 2) {
+      this.otros.set([]);
+      return;
+    }
+    try {
+      this.otros.set(await this.conduces.buscarUsuariosReceptor(q));
+    } catch {
+      this.otros.set([]);
+    }
+  }
+
+  onOtroPicked(id: string): void {
+    const u = this.otros().find((x) => x.id === id);
+    if (u) this.confirmForzar.set(u); // fuera de la obra → pide confirmación antes de forzar
+  }
+
+  /** Encola la asignación (outbox, idempotente); optimista en UI, errores en el outbox. */
+  async asignarReceptor(usuarioId: string, nombre: string, forzar: boolean): Promise<void> {
+    if (this.asignandoReceptor()) return;
+    this.asignandoReceptor.set(true);
+    try {
+      await this.conduces.asignarReceptorConduce(this.salidaId, usuarioId, forzar);
+      this.receptorOptimista.set(nombre);
+      this.cerrarReceptorSheet();
+      this.toast.success(
+        this.network.online()
+          ? this.i18n.t('Entrega asignada a {nombre}.', { nombre })
+          : this.i18n.t('Se asignará al reconectar: {nombre}.', { nombre }),
+      );
+      void this.load();
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo asignar quién recibe.'));
+    } finally {
+      this.asignandoReceptor.set(false);
+    }
   }
 
   // ── AS2 — firmar como despachante ───────────────────────────────────────────
@@ -206,6 +308,9 @@ export class ConduceDetallePage {
     try {
       const d = await this.conduces.conduceDetalleApp(this.salidaId);
       this.detalle.set(d);
+      // CK4 — si el server ya refleja el receptor designado, suelta el optimista
+      // (fuente única = server); offline aún en null → se conserva lo elegido.
+      if (d.firma_pendiente_nombre) this.receptorOptimista.set(null);
       // AV1 — si soy el despachante designado y falta mi firma, resolver la
       // elegibilidad desde la matriz única server-side antes de ofrecer el pad.
       this.despachanteElegible.set(null);

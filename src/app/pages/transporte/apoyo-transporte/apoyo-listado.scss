@@ -1,0 +1,166 @@
+.apl {
+  background: var(--color-bg);
+  position: relative;
+  min-height: 100%;
+}
+
+.apl__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-secondary);
+  color: #fff;
+}
+.apl__back,
+.apl__refresh {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.apl__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apl__filtros {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.apl__filtro {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.apl__card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.apl__card--pend {
+  border-style: dashed;
+  opacity: 0.92;
+}
+
+.apl__card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.apl__tipo {
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 2px 8px;
+  background: rgba(37, 99, 235, 0.14);
+  color: var(--color-info);
+}
+.apl__tipo[data-tipo='retiro_material'] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+}
+.apl__tipo[data-tipo='bote'] {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+}
+
+.apl__estado {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 2px 8px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+}
+.apl__estado[data-estado='en_proceso'],
+.apl__estado[data-estado='asignada'] {
+  background: rgba(2, 132, 199, 0.14);
+  color: var(--color-info);
+}
+.apl__estado[data-estado='por_confirmar'] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+}
+.apl__estado[data-estado='completada'] {
+  background: rgba(22, 163, 74, 0.14);
+  color: var(--color-success);
+}
+.apl__estado[data-estado='cancelada'] {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--main-ultra-light);
+}
+
+.apl__card-main {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.apl__thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-border);
+}
+.apl__card-text {
+  flex: 1;
+  min-width: 0;
+}
+.apl__desc {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.apl__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.apl__fab {
+  position: fixed;
+  right: 18px;
+  bottom: 22px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--text-on-accent);
+  font-size: 30px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+}
