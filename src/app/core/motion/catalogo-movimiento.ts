@@ -208,7 +208,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el check',
     desde_version: 'app 2.47',
     preview_key: 'entrada',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'salida',
@@ -222,7 +222,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el check',
     desde_version: 'app 2.47',
     preview_key: 'salida',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'aprobado',
@@ -236,7 +236,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el sello fijo',
     desde_version: 'app 2.47',
     preview_key: 'aprobado',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'firma',
@@ -250,7 +250,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el trazo fijo',
     desde_version: 'app 2.47',
     preview_key: 'firma',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'combustible',
@@ -264,7 +264,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el check',
     desde_version: 'app 2.47',
     preview_key: 'combustible',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'checklist',
@@ -278,7 +278,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el check',
     desde_version: 'app 2.47',
     preview_key: 'checklist',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'mantenimiento',
@@ -292,7 +292,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el check',
     desde_version: 'app 2.47',
     preview_key: 'mantenimiento',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'mensaje',
@@ -320,7 +320,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el check',
     desde_version: 'app 2.47',
     preview_key: 'documento',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'uso',
@@ -334,7 +334,7 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     reducido: 'solo el check',
     desde_version: 'app 2.47',
     preview_key: 'uso',
-    estado: 'pendiente',
+    estado: 'en_uso',
   },
   {
     id: 'todo-enviado',
