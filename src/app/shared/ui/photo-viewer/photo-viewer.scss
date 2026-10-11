@@ -1,0 +1,64 @@
+// CM5 — visor de foto a pantalla completa. Fondo negro sólido (no degradado), gestos
+// con transform/opacity. z-index por encima de las celebraciones (9999).
+.pv {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  touch-action: none; // los gestos los maneja el componente (pinch/pan/swipe)
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+// Velo sólido detrás de la imagen (su opacidad se anima: entrada + deslizar-cerrar).
+.pv__backdrop {
+  position: absolute;
+  inset: 0;
+  background: #000; // tokens-allow-dark — visor de foto a pantalla completa: negro en ambos temas
+  z-index: 0;
+}
+
+.pv__img {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transform-origin: center center;
+  will-change: transform;
+  -webkit-user-drag: none;
+  pointer-events: none; // los punteros los captura el contenedor .pv
+}
+
+.pv__close {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 14px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.14);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pv__hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+  z-index: 1;
+  text-align: center;
+  color: rgb(255 255 255 / 0.7);
+  font-size: 12px;
+  pointer-events: none;
+  padding: 0 24px;
+}

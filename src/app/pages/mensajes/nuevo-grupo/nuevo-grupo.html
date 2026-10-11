@@ -9,7 +9,7 @@
     <div class="ngrupo__top">
       <div class="ngrupo__avatar">
         @if (avatarPreview(); as url) {
-          <img [src]="url" [alt]="'Foto del grupo' | t" />
+          <img [src]="url" [alt]="'Foto del grupo' | t" (click)="verFotoGrande($event, url)" />
           <button type="button" class="ngrupo__avatar-x" (click)="quitarFoto()" [attr.aria-label]="'Quitar foto' | t">✕</button>
         } @else {
           <span class="ngrupo__avatar-ph">👥</span>

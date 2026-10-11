@@ -42,6 +42,7 @@ import {
 } from '../../../core/models/personal-obra.model';
 import { SignaturePad } from '../../../shared/ui/signature-pad/signature-pad';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { PhotoViewerService } from '../../../shared/ui/photo-viewer/photo-viewer.service';
 
 const SGC_WEB = 'https://sgcconstructorasd.com';
 
@@ -65,6 +66,12 @@ export class PersonalExpedientePage implements OnInit {
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private photoViewer = inject(PhotoViewerService);
+
+  /** CM5 — abre la foto de la persona en el visor a pantalla completa (crece desde el avatar). */
+  verFotoGrande(ev: Event, url: string | null | undefined): void {
+    this.photoViewer.open(url, ev.currentTarget as HTMLElement);
+  }
 
   readonly fmtFecha = formatFechaMedia;
   readonly fotosGuia = FOTOS_GUIA;
