@@ -127,10 +127,10 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/conduce-detalle | 71 | 1 | 85% | 6% |  |
 | pages/transporte/conduce-externo | 81 | 1 | 80% | 4% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 4% |  |
-| pages/transporte/conduces | 71 | 0 | 100% | 1% |  |
+| pages/transporte/conduces | 71 | 0 | 100% | 3% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-hub | 3 | 0 | 100% | 0% |  |
-| pages/transporte/conduces-pendientes | 24 | 0 | 100% | 0% |  |
+| pages/transporte/conduces-pendientes | 26 | 0 | 100% | 8% |  |
 | pages/transporte/conduces-por-firmar | 10 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-por-implementar | 10 | 0 | 100% | 0% |  |
 | pages/transporte/conduces/entrega | 33 | 0 | 100% | 3% |  |
@@ -155,7 +155,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/perfil-conductor | 37 | 0 | 100% | 0% |  |
 | pages/transporte/perfil-vehiculo | 35 | 1 | 92% | 0% |  |
 | pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |
-| pages/transporte/por-confirmar | 36 | 0 | 100% | 0% |  |
+| pages/transporte/por-confirmar | 38 | 0 | 100% | 5% |  |
 | pages/transporte/preuso | 71 | 0 | 100% | 3% |  |
 | pages/transporte/reportar-multa | 33 | 0 | 100% | 3% |  |
 | pages/transporte/reportar-vehiculo | 53 | 1 | 98% | 2% |  |

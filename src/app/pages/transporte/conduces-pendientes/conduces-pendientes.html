@@ -105,22 +105,30 @@
 
           @if (transfiriendoId() === c.id) {
             <div class="cpend__transfer">
-              <app-collapsible-select
-                [label]="'Transferir a' | t"
-                icon="🧑‍✈️"
-                [options]="choferOptions()"
-                [selectedId]="transferConductor()"
-                [searchable]="true"
-                [searchPlaceholder]="'Buscar chofer…' | t"
-                (picked)="transferConductor.set($event)"
-              />
-              <input class="field cpend__nota" type="text" [ngModel]="transferNota()" (ngModelChange)="transferNota.set($event)" [placeholder]="'Nota (opcional)' | t" />
-              <button
-                type="button"
-                class="btn-cta cpend__btn"
-                [disabled]="enviandoTransfer() || !transferConductor()"
-                (click)="confirmarTransferir(c.id)"
-              >{{ enviandoTransfer() ? ('Enviando…' | t) : ('Confirmar transferencia' | t) }}</button>
+              <!-- CM4 — verifica contra el servidor si este conduce aún se transfiere -->
+              @if (transferGate() === null) {
+                <p class="cpend__transfer-check">{{ 'Verificando si se puede transferir…' | t }}</p>
+              } @else if (!transferGate()!.puede) {
+                <!-- Nota #197 — botón apagado con el motivo del servidor debajo (sin toast rojo) -->
+                <p class="cpend__transfer-bloqueado">{{ transferGate()!.motivo || ('Este conduce no se puede transferir ahora.' | t) }}</p>
+              } @else {
+                <app-collapsible-select
+                  [label]="'Transferir a' | t"
+                  icon="🧑‍✈️"
+                  [options]="choferOptions()"
+                  [selectedId]="transferConductor()"
+                  [searchable]="true"
+                  [searchPlaceholder]="'Buscar chofer…' | t"
+                  (picked)="transferConductor.set($event)"
+                />
+                <input class="field cpend__nota" type="text" [ngModel]="transferNota()" (ngModelChange)="transferNota.set($event)" [placeholder]="'Nota (opcional)' | t" />
+                <button
+                  type="button"
+                  class="btn-cta cpend__btn"
+                  [disabled]="enviandoTransfer() || !transferConductor()"
+                  (click)="confirmarTransferir(c.id)"
+                >{{ enviandoTransfer() ? ('Enviando…' | t) : ('Confirmar transferencia' | t) }}</button>
+              }
             </div>
           }
         </div>

@@ -19,15 +19,23 @@
       <p class="porconf__intro">{{ 'Estas entregas te esperan. Ábrelas para ver el conduce, ponle foto a lo recibido y firma.' | t }}</p>
       @for (e of entregas(); track e.salidaId) {
         <div class="porconf__card">
-          <button type="button" class="porconf__row" appTapScale (click)="abrir(e.salidaId)">
+          <button type="button" class="porconf__row" appTapScale [disabled]="enCamino(e)" (click)="abrir(e.salidaId)">
             <div class="porconf__row-main">
               <span class="porconf__row-dest">{{ e.titulo }}</span>
               <span class="porconf__row-sub">
                 {{ fmtFecha(e.fecha) }}@if (e.emisor) { · {{ 'Entregó:' | t }} {{ e.emisor }} }
                 @if (e.pendienteAlmacen) { · 🏬 {{ 'Confirmación de Almacén' | t }} }
               </span>
+              <!-- CM4 — receptor designado antes de que salga: aún no se firma (Nota #197) -->
+              @if (enCamino(e)) {
+                <span class="porconf__row-encamino">{{ 'En camino — podrás firmar cuando el chofer lo entregue' | t }}</span>
+              }
             </div>
-            <span class="porconf__row-arrow">@if (confirmandoId() === e.salidaId) { ▲ } @else { {{ 'Recibir' | t }} ▾ }</span>
+            <span class="porconf__row-arrow">
+              @if (enCamino(e)) { {{ 'En camino' | t }} }
+              @else if (confirmandoId() === e.salidaId) { ▲ }
+              @else { {{ 'Recibir' | t }} ▾ }
+            </span>
           </button>
 
           @if (confirmandoId() === e.salidaId) {

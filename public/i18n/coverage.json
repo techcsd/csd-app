@@ -727,7 +727,7 @@
       "conT": 71,
       "sinT": 0,
       "en": 100,
-      "ht": 1
+      "ht": 3
     },
     "pages/transporte/conduces-historial": {
       "conT": 37,
@@ -742,10 +742,10 @@
       "ht": 0
     },
     "pages/transporte/conduces-pendientes": {
-      "conT": 24,
+      "conT": 26,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 8
     },
     "pages/transporte/conduces-por-firmar": {
       "conT": 10,
@@ -892,10 +892,10 @@
       "ht": 0
     },
     "pages/transporte/por-confirmar": {
-      "conT": 36,
+      "conT": 38,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 5
     },
     "pages/transporte/preuso": {
       "conT": 71,
