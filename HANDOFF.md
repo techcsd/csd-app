@@ -1,5 +1,12 @@
 # HANDOFF — CSD App
 
+## 🟠 SESIÓN 10/10/2026 — PROMPT-95 · Ronda **CM** — **BLOQUEADA en PROMPT-94 (padre)** · solo F2 hecha
+**TL;DR:** ronda CM arrancada en `feature/cm-ronda` (desde `dev`). **Solo F2 es independiente del padre y está hecha** (`d22bdb9`, build ✅). **El resto (F1/F3/F4/F5/F6) está BLOQUEADO: PROMPT-94 (SGC) NO está empezado** — `conduce_puede_transferir`/`conduce_fase`/`practica_guardar_intento` dan 404 y los SVGs del logo (CM2) no existen. Versión CM = **2.48.0** (siguiente libre tras CL). No se mergeó a dev (la ronda espera a desbloquearse).
+- **✅ F2 CM5 (hecho):** `shared/ui/photo-viewer` global (pantalla completa, pellizcar/doble-toque/pan/deslizar-cerrar/atrás-Android vía NavGuard overlay/✕/Esc; FLIP desde el avatar; reduce-motion=fundido). Cableado a perfil/mi-detalle/mensajes(hilo,grupo-info,nuevo-grupo)/personal-expediente. `comprimir-imagen` avatar 512→1080 + `AvatarEditor` SIZE desde la constante.
+- **⛔ Bloqueado por PROMPT-94 (padre):** F1 CM4 (transferir — `conduce_puede_transferir`+`conduce_fase`), F3 CM6 (incentivos con tope), F4 CM2 (logo reveal — faltan `csd-logo-simbolo.svg`/`csd-logo-texto.svg` del padre), F5 CM3 (videos — contenido del padre), F6 CM7 (modo práctica — `practica_guardar_intento` + diseño del cliente de práctica F7a). **👤 Xaviel: pedir a la ventana SGC que haga PROMPT-94; con eso se retoma CM.**
+
+---
+
 ## 🟢 SESIÓN 10/10/2026 — PROMPT-93 · Ronda **CL** — app **2.47.0 PUBLICADA A PROD** ✅
 **TL;DR:** ronda CL (motion + bienvenida) completa y **RELEASE A PROD**. `dev`=`main`=`2c4d687`. APK prod 2.47.0 firmado (cert `3c5316d8…5065`), candado CL4 verde (`canal:"apk"`+`2.47.0`), regla 18 OK, bucket prod + `apk_url` + registrado. **PUBLICADA** (`cl-publicar-2.47.0.mjs`: 2.47.0 publicada, 2.46.0 despublicada, **mínima sigue 2.45.0**, push android por trigger) + **11 iPhone ios-pwa notificados** (`cl-notificar-ios-2.47.0.mjs`). Vercel app. + app-dev. construidos. Consume PROMPT-92 (padre, parcialmente shippeado).
 
