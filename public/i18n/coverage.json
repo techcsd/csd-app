@@ -513,6 +513,12 @@
       "en": 100,
       "ht": 0
     },
+    "pages/practica": {
+      "conT": 18,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
     "pages/proyectos": {
       "conT": 19,
       "sinT": 0,
@@ -598,10 +604,10 @@
       "ht": 0
     },
     "pages/soporte": {
-      "conT": 2,
+      "conT": 4,
       "sinT": 20,
-      "en": 9,
-      "ht": 9
+      "en": 17,
+      "ht": 17
     },
     "pages/tareas": {
       "conT": 59,

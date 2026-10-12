@@ -5,6 +5,15 @@
   </header>
 
   <div class="screen__body">
+    <!-- CM7 (F6a) — modo práctica: ensaya los flujos sin tocar datos reales. -->
+    <button type="button" class="soporte__practica" appTapScale (click)="irPractica()" data-testid="soporte-practica">
+      <span class="soporte__practica-txt">
+        <span class="soporte__practica-tit">{{ 'Modo práctica' | t }}</span>
+        <span class="soporte__practica-sub">{{ 'Ensaya los flujos de la app sin miedo. Nada es real: solo se guarda tu nota.' | t }}</span>
+      </span>
+      <span class="soporte__practica-go">›</span>
+    </button>
+
     <div appStagger style="display:contents">
     @for (f of faqs; track f.q) {
       <div class="faq">

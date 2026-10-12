@@ -1,0 +1,376 @@
+// CM7 (PROMPT-95 F6a) — modo práctica. Copia del mock CM7-demo-app con tokens CB.
+
+.prac {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--color-bg);
+}
+
+.prac__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.prac__back {
+  border: 0;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--color-text-primary);
+}
+.prac__title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.prac__kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
+}
+
+// ── Inicio ────────────────────────────────────────────────────────────────────
+.prac__home {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 16px 32px;
+}
+.prac__home-h {
+  margin: 2px 0 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.prac__home-sub {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.prac__misiones {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.prac__mis {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  min-height: 64px;
+}
+.prac__mis-n {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--color-brand-soft);
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.prac__mis-txt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.prac__mis-titulo {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.prac__mis-sub {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+.prac__mis-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.prac__vacio {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+.prac__resultados-link {
+  margin-top: 8px;
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--color-secondary);
+}
+
+// ── Misión ────────────────────────────────────────────────────────────────────
+.prac__run {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100%;
+}
+.prac__banda {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-between;
+}
+.prac__obj-wrap {
+  padding: 14px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.prac__mis-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+.prac__objs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.prac__obj {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+}
+.prac__obj--ok {
+  background: var(--color-success-soft, #ecfdf3); // tokens-allow-dark — chip verde "objetivo hecho"
+  color: var(--color-success);
+}
+.prac__campos {
+  flex: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.prac__field-lbl {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.prac__field {
+  margin-top: 6px;
+  height: 50px;
+  border-radius: 12px;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 17px;
+  color: var(--color-text-primary);
+}
+.prac__field--on {
+  border-color: var(--color-secondary);
+}
+.prac__field--err {
+  border-color: var(--color-danger, #d92d20);
+}
+.prac__error {
+  background: var(--color-danger-soft, #fef3f2); // tokens-allow-dark — aviso de error (rojo suave)
+  color: var(--color-danger, #b42318);
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+.prac__slot {
+  aspect-ratio: 2.4;
+  border-radius: 12px;
+  border: 2px dashed var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.prac__slot--on {
+  border-color: var(--color-secondary);
+}
+.prac__slot--ok {
+  border-style: solid;
+  border-color: var(--color-success);
+  background: var(--color-success-soft, #ecfdf3); // tokens-allow-dark — slot de foto tomada
+  color: var(--color-success);
+}
+.prac__run-footer {
+  padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 18px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.prac__cta {
+  border: 0;
+  border-radius: 14px;
+  min-height: 52px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  background: var(--color-secondary);
+  color: var(--color-text-on-secondary);
+}
+.prac__cta--ghost {
+  background: var(--color-surface);
+  color: var(--color-secondary);
+  border: 1px solid var(--color-border);
+}
+.prac__salir {
+  border: 0;
+  background: none;
+  min-height: 40px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+// ── Resultado ─────────────────────────────────────────────────────────────────
+.prac__res {
+  position: relative;
+  padding: 26px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+.prac__ring {
+  position: relative;
+  width: 170px;
+  height: 170px;
+}
+.prac__ring-fill {
+  stroke-dasharray: 1;
+  transition: stroke-dashoffset 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.prac__ring-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.prac__nota {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.prac__nota-de {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.prac__stars {
+  display: flex;
+  gap: 8px;
+  font-size: 30px;
+  line-height: 1;
+}
+.prac__star {
+  color: var(--color-border);
+}
+.prac__star--on {
+  color: var(--color-primary);
+}
+.prac__res-titulo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.prac__lineas {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13.5px;
+}
+.prac__linea {
+  display: flex;
+  gap: 8px;
+
+  span {
+    color: var(--color-text-primary);
+  }
+}
+.prac__linea--ok b {
+  color: var(--color-success);
+}
+.prac__linea--no b {
+  color: var(--color-danger, #b42318);
+}
+.prac__res-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.prac__res-footer .prac__cta:first-child {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+// Confeti (solo al aprobar).
+.prac__conf-wrap {
+  position: absolute;
+  left: 50%;
+  top: 150px;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.prac__conf {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: prac-conf 1.4s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes prac-conf {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(260deg);
+  }
+}

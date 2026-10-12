@@ -92,6 +92,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/perfil | 71 | 0 | 100% | 1% | ✅ |
 | pages/perfil/a-mi-cargo | 7 | 0 | 100% | 0% |  |
 | pages/perfil/mi-detalle | 16 | 0 | 100% | 0% |  |
+| pages/practica | 18 | 0 | 100% | 100% |  |
 | pages/proyectos | 19 | 0 | 100% | 0% |  |
 | pages/proyectos/avisos | 4 | 0 | 100% | 0% |  |
 | pages/proyectos/cronograma | 64 | 1 | 98% | 0% |  |
@@ -106,7 +107,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/detalle | 72 | 12 | 77% | 1% |  |
 | pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
-| pages/soporte | 2 | 20 | 9% | 9% |  |
+| pages/soporte | 4 | 20 | 17% | 17% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
 | pages/tecnologia | 9 | 12 | 43% | 29% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
