@@ -259,6 +259,19 @@ export class BienvenidaService {
     this._tourSolicitado.update((n) => n + 1);
   }
 
+  /** CM7 — "Practicar primero": cierra la bienvenida (marca vista) y abre el modo
+   *  práctica en vez del tour. No obligatorio: es una invitación al final del flujo. */
+  async practicar(): Promise<void> {
+    await this.marcarVista();
+    this._mostrar.set(false);
+    this._paso.set(0);
+    try {
+      await this.router.navigateByUrl('/practica');
+    } catch {
+      /* best-effort */
+    }
+  }
+
   // ── Gate ──────────────────────────────────────────────────────────────────
 
   /**

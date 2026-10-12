@@ -171,7 +171,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/vehiculos | 63 | 2 | 97% | 0% |  |
 | shared/components/aceptacion-politicas | 9 | 0 | 56% | 0% |  |
 | shared/components/alarma-host | 4 | 0 | 100% | 0% |  |
-| shared/components/bienvenida | 25 | 0 | 100% | 100% |  |
+| shared/components/bienvenida | 26 | 0 | 100% | 100% |  |
 | shared/components/consentimiento-ia | 8 | 2 | 20% | 10% |  |
 | shared/components/consentimiento-ubicacion | 4 | 0 | 25% | 0% |  |
 | shared/components/generar-acceso | 11 | 0 | 100% | 18% |  |
