@@ -18,6 +18,7 @@ import { formatHora, etiquetaDiaChat, esOtroDia } from '../../../core/util/fecha
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { PhotoViewerService } from '../../../shared/ui/photo-viewer/photo-viewer.service';
 import { App as CapApp } from '@capacitor/app';
 import type { PluginListenerHandle } from '@capacitor/core';
 
@@ -50,6 +51,13 @@ export class MensajesThreadPage implements OnDestroy {
   private camera = inject(CameraService);
   private fav = inject(StickerFavoritosService);
   private i18n = inject(I18nService);
+  private photoViewer = inject(PhotoViewerService);
+
+  /** CM5 — abre la foto del grupo en el visor (sin abrir "Info del grupo"). */
+  verFotoGrande(ev: Event, url: string | null | undefined): void {
+    ev.stopPropagation();
+    this.photoViewer.open(url, ev.currentTarget as HTMLElement);
+  }
 
   private scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
   private recorder = viewChild(VoiceRecorder);

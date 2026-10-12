@@ -72,6 +72,10 @@ export class ConducesPendientesPage implements OnDestroy {
   transferConductor = signal('');
   transferNota = signal('');
   enviandoTransfer = signal(false);
+  // CM4 — ¿se puede transferir la fila abierta? (espejo de conduce_puede_transferir).
+  // null = aún verificando; luego {puede, motivo}. Si !puede, se apaga el picker y se
+  // muestra el motivo del servidor debajo (nunca un toast rojo tras el diálogo).
+  transferGate = signal<{ puede: boolean; motivo: string | null } | null>(null);
 
   // BV7 — asignar chofer directo (elevado): setear conductor dispara la auto-ruta.
   asignandoId = signal(''); // salida_id de la fila con el picker de asignación abierto
@@ -152,12 +156,23 @@ export class ConducesPendientesPage implements OnDestroy {
 
   // ── AH5 — transferir a otro chofer (inline) ────────────────────────────────
   abrirTransferir(id: string): void {
-    this.transfiriendoId.set(this.transfiriendoId() === id ? '' : id);
+    const abriendo = this.transfiriendoId() !== id;
+    this.transfiriendoId.set(abriendo ? id : '');
     this.transferConductor.set('');
     this.transferNota.set('');
+    // CM4 — al abrir, verifica contra el servidor si este conduce se puede transferir
+    // ahora (ya entregado = no). Mientras tanto transferGate()=null (verificando…).
+    this.transferGate.set(null);
+    if (abriendo) {
+      void this.conduces.puedeTransferir(id).then((g) => {
+        if (this.transfiriendoId() === id) this.transferGate.set(g);
+      });
+    }
   }
 
   async confirmarTransferir(id: string): Promise<void> {
+    // CM4 — si el servidor ya dijo que no se puede, no intentes (el motivo ya está a la vista).
+    if (this.transferGate()?.puede === false) return;
     // CK6 — guard UUID (no solo "vacío"): evita mandar "undefined"/id malformado al RPC.
     if (!esUuid(this.transferConductor())) {
       this.toast.error(this.i18n.t('Elige a quién transfieres el conduce.'));

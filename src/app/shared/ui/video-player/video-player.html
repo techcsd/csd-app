@@ -1,0 +1,108 @@
+@if (vm(); as st) {
+  <div class="vpl" #root>
+    <!-- Lienzo: video + portada. Toque muestra/oculta controles. -->
+    <div class="vpl__stage" (click)="tocarLienzo()">
+      <video
+        #video
+        class="vpl__video"
+        [src]="st.url"
+        [poster]="st.poster || null"
+        playsinline
+        preload="metadata"
+        data-testid="video-player-el"
+        (loadedmetadata)="onLoaded()"
+        (timeupdate)="onTime()"
+        (play)="onPlay()"
+        (pause)="onPause()"
+        (ended)="onEnded()"
+      >
+        @if (st.subtitulos) {
+          <track kind="subtitles" [src]="st.subtitulos" srclang="es" default />
+        }
+      </video>
+
+      <!-- Botón grande de play cuando está pausado (p. ej. autoplay bloqueado) -->
+      @if (!playing()) {
+        <button type="button" class="vpl__bigplay" (click)="togglePlay($event)" [attr.aria-label]="'Reproducir' | t">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4 L20 12 L7 20 Z"></path></svg>
+        </button>
+      }
+
+      <!-- Encabezado (kicker + título) sobre la portada -->
+      @if (st.titulo && !playing()) {
+        <div class="vpl__head">
+          @if (st.kicker) { <span class="vpl__kicker">{{ st.kicker }}</span> }
+          <span class="vpl__title">{{ st.titulo }}</span>
+          <span class="vpl__rule"></span>
+        </div>
+      }
+    </div>
+
+    <!-- Cerrar (siempre visible) -->
+    <button type="button" class="vpl__close" (click)="close()" [attr.aria-label]="'Cerrar' | t">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+    </button>
+
+    <!-- Barra de controles -->
+    <div class="vpl__bar" [class.vpl__bar--hidden]="!controles()" (click)="$event.stopPropagation()">
+      <input
+        class="vpl__scrub"
+        type="range"
+        min="0"
+        max="100"
+        step="0.1"
+        [value]="pct()"
+        (input)="seek($event)"
+        [attr.aria-label]="'Avanzar el video' | t"
+      />
+      <div class="vpl__ctrls">
+        <button type="button" class="vpl__ctl" (click)="togglePlay($event)" [attr.aria-label]="(playing() ? 'Pausar' : 'Reproducir') | t">
+          @if (playing()) {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+          } @else {
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4 L20 12 L7 20 Z"></path></svg>
+          }
+        </button>
+        <button type="button" class="vpl__ctl" (click)="toggleMute($event)" [attr.aria-label]="(muted() ? 'Activar sonido' : 'Silenciar') | t">
+          @if (muted()) {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>
+          } @else {
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+          }
+        </button>
+        <span class="vpl__time">{{ tiempo() }}</span>
+        <span class="vpl__spacer"></span>
+        @if (tieneCC()) {
+          <button type="button" class="vpl__ctl vpl__ctl--text" [class.vpl__ctl--on]="ccOn()" (click)="toggleCC($event)" [attr.aria-label]="'Subtítulos' | t">CC</button>
+        }
+        <button type="button" class="vpl__ctl vpl__ctl--text" (click)="ciclarVelocidad($event)" [attr.aria-label]="'Velocidad' | t">{{ rate() }}×</button>
+        @if (capitulos().length) {
+          <button type="button" class="vpl__ctl" [class.vpl__ctl--on]="capsAbiertos()" (click)="toggleCapitulos($event)" [attr.aria-label]="'Capítulos' | t">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </button>
+        }
+        <button type="button" class="vpl__ctl" (click)="toggleFullscreen($event)" [attr.aria-label]="'Pantalla completa' | t">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hoja inferior de capítulos -->
+    @if (capsAbiertos()) {
+      <div class="vpl__sheet" (click)="$event.stopPropagation()">
+        <div class="vpl__sheet-head">
+          <span>{{ 'Capítulos' | t }}</span>
+          <button type="button" class="vpl__ctl" (click)="toggleCapitulos($event)" [attr.aria-label]="'Cerrar' | t">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        @for (c of capitulos(); track c.segundo; let i = $index) {
+          <button type="button" class="vpl__cap" [class.vpl__cap--on]="capActivo() === i" (click)="irACapitulo(c.segundo, $event)">
+            <span class="vpl__cap-t">{{ fmt(c.segundo) }}</span>
+            <span class="vpl__cap-l">{{ c.label }}</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+}

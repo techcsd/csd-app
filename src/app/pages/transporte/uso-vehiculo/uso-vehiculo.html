@@ -36,7 +36,7 @@
           <div class="usov__aviso usov__aviso--ok">
             ✅ {{ 'Ya tienes este vehículo en uso' | t }}@if (estado()?.desde) { {{ 'desde' | t }} {{ fmtFechaHora(estado()!.desde!) }} }.
           </div>
-          <button type="button" class="btn-cta usov__cta" appTapScale (click)="irSoltar()">{{ 'Soltar vehículo' | t }}</button>
+          <button type="button" class="btn-cta usov__cta" appTapScale (click)="irSoltar()" data-testid="uso-soltar">{{ 'Soltar vehículo' | t }}</button>
         }
 
         <!-- Formulario de captura (km + nivel) -->
@@ -66,7 +66,7 @@
             </div>
           }
 
-          <button type="button" class="btn-cta usov__cta usov__mt" appTapScale [disabled]="!puedeGuardar()" (click)="onCta()">
+          <button type="button" class="btn-cta usov__cta usov__mt" appTapScale [disabled]="!puedeGuardar()" (click)="onCta()" data-testid="uso-cta">
             {{ ctaLabel() | t }}
           </button>
         }

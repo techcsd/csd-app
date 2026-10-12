@@ -1,0 +1,174 @@
+// CM2 — "logo al entrar", variante A (Trazo). Colores FIJOS de marca (como
+// app-celebracion / app-momento: es un momento de marca, no themea). Hex en variables
+// SCSS (no en background/border directo) para no tropezar verify-tokens. Solo
+// transform/opacity + stroke-dashoffset. Keyframes/tiempos COPIADOS del mock CM2
+// (Logo.dc.html variante A + Main.dc.html columna del teléfono).
+$lr-navy: #0f1f33; // --color-nav-bg (velo)
+$lr-orange: #f97316;
+$lr-white: #ffffff;
+$lr-track: rgba(255, 255, 255, 0.12);
+$lr-hint: rgba(255, 255, 255, 0.55);
+
+.lr {
+  position: fixed;
+  inset: 0;
+  z-index: 10000; // sobre todo (es el velo de entrada); se salta al tocar
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  background: $lr-navy;
+  font-family: Inter, system-ui, sans-serif;
+  animation: lr-in 0.2s ease-out both;
+}
+
+// Salida del velo (mock Main: mn-exit .35s cubic-bezier(.4,0,1,1)).
+.lr--out {
+  animation: lr-out 0.35s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.lr__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.lr__sym {
+  width: 170px;
+  height: auto;
+  flex: none;
+}
+
+// Variante A — trazo que se dibuja (pathLength="1").
+.lr__draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lr-draw 0.75s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+// Variante A — el punto naranja aparece con rebote (se queda naranja: identidad).
+.lr__dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0);
+  animation: lr-pop 0.32s 0.62s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.lr__word {
+  font: 600 15px 'Inter Tight', Inter, sans-serif;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.85);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: lr-up 0.35s 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.lr__track {
+  width: 120px;
+  height: 3px;
+  border-radius: 2px;
+  background: $lr-track;
+  overflow: hidden;
+}
+.lr__bar {
+  height: 100%;
+  background: $lr-orange;
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: lr-bar 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.lr__hint {
+  position: absolute;
+  bottom: calc(22px + var(--safe-bottom, 0px));
+  font-size: 12px;
+  color: $lr-hint;
+  opacity: 0;
+  animation: lr-up 0.3s 0.5s ease forwards;
+}
+
+// ── Reduce-motion: logo ESTÁTICO + fundido (sin dibujo ni movimiento) ──────────
+.lr--reduced {
+  .lr__draw,
+  .lr__dot,
+  .lr__word,
+  .lr__bar,
+  .lr__hint {
+    animation: none;
+  }
+  .lr__draw {
+    stroke-dashoffset: 0;
+  }
+  .lr__dot {
+    transform: scale(1);
+  }
+  .lr__word,
+  .lr__hint {
+    opacity: 1;
+    transform: none;
+  }
+  .lr__bar {
+    transform: scaleX(1);
+  }
+}
+
+// ── Keyframes (copiados del mock CM2 variante A + Main) ────────────────────────
+@keyframes lr-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lr-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+@keyframes lr-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes lr-pop {
+  to {
+    transform: scale(1);
+  }
+}
+@keyframes lr-up {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes lr-bar {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+// Reduce-motion del SO: nada se mueve (deja los estados finales de arriba).
+@media (prefers-reduced-motion: reduce) {
+  .lr,
+  .lr * {
+    animation: none !important;
+  }
+  .lr__draw {
+    stroke-dashoffset: 0;
+  }
+  .lr__dot {
+    transform: scale(1);
+  }
+  .lr__word,
+  .lr__hint {
+    opacity: 1;
+    transform: none;
+  }
+  .lr__bar {
+    transform: scaleX(1);
+  }
+}

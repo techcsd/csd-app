@@ -98,7 +98,9 @@
             @if (c.alto_valor) {
               <span class="conduce-card__hv">🖐️ {{ 'Alto valor' | t }}</span>
             }
-            @if (c.firma_pendiente) {
+            <!-- CM4 — "Firma pendiente" SOLO tras la entrega: se lee de la fase del
+                 servidor (ya corregida), no de firma_pendiente (receptor designado antes de salir) -->
+            @if (c.fase === 'pendiente_firma') {
               <span class="conduce-card__pend">✍️ {{ 'Firma pendiente' | t }}</span>
             }
           </div>
@@ -128,7 +130,8 @@
                 <p class="conduce-det__linea conduce-det__ok">
                   ✅ {{ 'Confirmado' | t }} {{ c.recibido_en | date: 'dd/MM/yyyy HH:mm' }}
                 </p>
-              } @else if (c.firma_pendiente) {
+              } @else if (c.fase === 'pendiente_firma') {
+                <!-- CM4 — solo cuando el servidor marca la fase 'pendiente_firma' (post-entrega) -->
                 <p class="conduce-det__linea conduce-det__pend">
                   ⏳ {{ 'Pendiente de que firme' | t }} {{ c.firma_pendiente_nombre || ('el responsable' | t) }}
                 </p>

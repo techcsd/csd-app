@@ -18,6 +18,9 @@ import { AceptacionPoliticas } from './shared/components/aceptacion-politicas/ac
 import { TiendaAviso } from './shared/components/tienda-aviso/tienda-aviso';
 import { CelebracionOverlay } from './shared/ui/celebracion/celebracion';
 import { MomentoOverlay } from './shared/ui/momento/momento';
+import { LogoReveal } from './shared/ui/logo-reveal/logo-reveal';
+import { PhotoViewer } from './shared/ui/photo-viewer/photo-viewer';
+import { VideoPlayer } from './shared/ui/video-player/video-player';
 import { NotifHealthBand } from './shared/ui/notif-health-band/notif-health-band';
 import { PoliticasService } from './core/services/politicas.service';
 import { TiendasService } from './core/services/tiendas.service';
@@ -53,7 +56,7 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, NotifHealthBand],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

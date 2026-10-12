@@ -49,6 +49,29 @@ export interface GuiaVisual {
   duracion?: string | number;
   /** Bandera opcional del padre (no requerida: basta con `video_path`). */
   con_video?: boolean;
+
+  // ── CM3 (PROMPT-95 F5) — upgrade del reproductor ───────────────────────────
+  // Campos OPCIONALES que el padre rellena al subir los videos v2. Si faltan, el
+  // player sigue funcionando (sin capítulos, sin kicker): patrón de capacidad.
+  /** Antetítulo corto del video ("CSD APP · FLOTA"). Solo estético. */
+  kicker?: string;
+  /**
+   * Capítulos para la hoja inferior: tiempo (segundos o "m:ss") + etiqueta.
+   * Tocar un capítulo salta el `<video>` a ese segundo.
+   */
+  capitulos?: { t: number | string; label: string }[];
+  /**
+   * CM1 — si está presente, es uno de los 2 VIDEOS DE INSTALACIÓN: se muestra
+   * arriba en "Primeros pasos" con "Compartir por WhatsApp" y NO se gatea por
+   * módulo (lo ve todo usuario). El valor dice para qué público es.
+   */
+  instalacion?: 'android' | 'iphone';
+  /**
+   * CM1 — enlace PÚBLICO (versión vertical) para "Compartir por WhatsApp". Si el
+   * padre no lo pone, se comparte el enlace de la app. Nunca se comparte el signed
+   * URL del bucket privado (expira en 1h).
+   */
+  compartir_url?: string;
 }
 
 /** CK5 — URLs firmadas de un video de guía, listas para el elemento `<video>`. */
@@ -57,4 +80,9 @@ export interface GuiaVideoFirmado {
   poster: string | null;
   subtitulos: string | null;
   duracion: string | null;
+  /** CM3 — título/antetítulo para la portada del reproductor a pantalla completa. */
+  titulo?: string;
+  kicker?: string;
+  /** CM3 — capítulos normalizados a segundos (etiqueta + segundo de salto). */
+  capitulos?: { segundo: number; label: string }[];
 }

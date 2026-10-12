@@ -1,0 +1,44 @@
+@if (activo()) {
+  <div
+    class="lr"
+    [class.lr--reduced]="reducida()"
+    [class.lr--out]="saliendo()"
+    role="status"
+    aria-live="polite"
+    [attr.aria-label]="'CSD App' | t"
+    (click)="skip()"
+  >
+    <div class="lr__stage">
+      <!-- Símbolo SD (SVG del padre: trazo blanco 21 + punto naranja). Variante A:
+           el trazo se dibuja (stroke-dashoffset) y el punto aparece con rebote. -->
+      <svg
+        class="lr__sym"
+        viewBox="0 0 206 108"
+        width="206"
+        height="108"
+        fill="none"
+        overflow="visible"
+        aria-hidden="true"
+      >
+        <path
+          class="lr__draw"
+          pathLength="1"
+          d="M50.5,97.5 L151.4,97.5 A43.5,43.5 0 0 0 151.4,10.5 L67,10.5 A25,21.5 0 0 0 67,53.5 L100,53.5 A25,22 0 0 1 100,97.5"
+          stroke="#ffffff"
+          stroke-width="21"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></path>
+        <circle class="lr__dot" cx="14" cy="97" r="11" fill="#f97316"></circle>
+      </svg>
+
+      <!-- "CSD APP" (texto de marca; el logo-texto.svg del padre aún no existe). -->
+      <span class="lr__word">CSD APP</span>
+
+      <!-- Barra naranja que se llena. -->
+      <div class="lr__track"><div class="lr__bar"></div></div>
+    </div>
+
+    <span class="lr__hint">{{ 'Toca para saltar' | t }}</span>
+  </div>
+}

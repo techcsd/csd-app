@@ -10,6 +10,7 @@ import { AvatarEditor } from '../../../shared/ui/avatar-editor/avatar-editor';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
+import { PhotoViewerService } from '../../../shared/ui/photo-viewer/photo-viewer.service';
 
 /**
  * AS25 — creación de grupo tipo WhatsApp en una pantalla completa: foto, nombre,
@@ -33,6 +34,12 @@ export class NuevoGrupoPage implements OnDestroy {
   private router = inject(Router);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private photoViewer = inject(PhotoViewerService);
+
+  /** CM5 — abre la foto elegida del grupo en el visor a pantalla completa. */
+  verFotoGrande(ev: Event, url: string | null | undefined): void {
+    this.photoViewer.open(url, ev.currentTarget as HTMLElement);
+  }
 
   nombre = signal('');
   descripcion = signal('');

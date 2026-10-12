@@ -79,6 +79,9 @@ export interface AsignarInput {
   conductorId: string;
   vehiculoId?: string | null;
   dia?: string | null;
+  /** CL (CK15) — nota para el chofer (apoyos → nota_chofer; manual → nota). El chofer
+   *  la ve en "Mis trabajos". Requiere trabajo_asignar de 6 args (vivo en dev+prod). */
+  nota?: string | null;
 }
 
 /** CK16 — una tarjeta del panel "Mis choferes" (`mis_choferes_panel`). */
@@ -386,6 +389,7 @@ export class TrabajosService {
       p_conductor_id: input.conductorId,
       p_vehiculo_id: input.vehiculoId ?? null,
       p_dia: input.dia ?? null,
+      p_nota: input.nota?.trim() || null, // CL (CK15) — 6º arg, vivo en dev+prod
     });
     if (error) throw new Error(error.message);
     await this.invalidarBandeja();

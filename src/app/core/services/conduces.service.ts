@@ -2197,6 +2197,27 @@ export class ConducesService {
   }
 
   /**
+   * CM4 — ¿se puede transferir ESTE conduce ahora mismo? Espejo del gate del
+   * servidor (`conduce_puede_transferir` → {puede, motivo}): tras PROMPT-94 F1 un
+   * conduce con receptor designado pero AÚN sin salir sigue "emitido" y SÍ se
+   * transfiere; ya entregado, no (motivo humano). Best-effort online: sin señal
+   * devuelve {puede:true} para NO bloquear el intento (el servidor lo rechaza al
+   * ofrecer, con el MISMO texto). Nota #197 (Raykler): el botón se apaga con el
+   * motivo debajo, nunca un toast rojo después del diálogo.
+   */
+  async puedeTransferir(salidaId: string): Promise<{ puede: boolean; motivo: string | null }> {
+    try {
+      const { data, error } = await this.supabase.client.rpc('conduce_puede_transferir', { p_salida_id: salidaId });
+      if (error) throw error;
+      const r = (data ?? {}) as { puede?: boolean; motivo?: string | null };
+      return { puede: r.puede !== false, motivo: r.motivo ?? null };
+    } catch {
+      // Offline / RPC viejo: permite el intento; el servidor sigue siendo la verdad.
+      return { puede: true, motivo: null };
+    }
+  }
+
+  /**
    * BV7 — asigna un chofer (+ vehículo opcional) a un conduce desde la bandeja de
    * despacho (setear conductor+vehículo dispara la auto-ruta en el servidor). Gate:
    * logística / flota-elevado / admin (server-side). Acción online. Si el RPC del

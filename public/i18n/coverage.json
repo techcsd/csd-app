@@ -1,6 +1,6 @@
 {
   "en": 93,
-  "ht": 2,
+  "ht": 3,
   "alcance": true,
   "byScreen": {
     "": {
@@ -301,7 +301,7 @@
       "conT": 29,
       "sinT": 0,
       "en": 83,
-      "ht": 3
+      "ht": 7
     },
     "pages/inventario/conteos": {
       "conT": 10,
@@ -337,7 +337,7 @@
       "conT": 53,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 2
     },
     "pages/inventario/retiro-detalle": {
       "conT": 20,
@@ -373,19 +373,19 @@
       "conT": 24,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 4
     },
     "pages/mensajes/nuevo-grupo": {
       "conT": 15,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 7
     },
     "pages/mensajes/thread": {
       "conT": 42,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 2
     },
     "pages/mi-rendimiento": {
       "conT": 25,
@@ -421,7 +421,7 @@
       "conT": 24,
       "sinT": 0,
       "en": 100,
-      "ht": 4
+      "ht": 8
     },
     "pages/obra/checklists": {
       "conT": 24,
@@ -583,7 +583,7 @@
       "conT": 72,
       "sinT": 12,
       "en": 77,
-      "ht": 0
+      "ht": 1
     },
     "pages/solicitudes/mis": {
       "conT": 11,
@@ -610,10 +610,10 @@
       "ht": 0
     },
     "pages/tecnologia": {
-      "conT": 5,
+      "conT": 9,
       "sinT": 12,
-      "en": 29,
-      "ht": 0
+      "en": 43,
+      "ht": 29
     },
     "pages/tecnologia-inventario": {
       "conT": 0,
@@ -709,7 +709,7 @@
       "conT": 71,
       "sinT": 1,
       "en": 85,
-      "ht": 4
+      "ht": 6
     },
     "pages/transporte/conduce-externo": {
       "conT": 81,
@@ -727,7 +727,7 @@
       "conT": 71,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 3
     },
     "pages/transporte/conduces-historial": {
       "conT": 37,
@@ -742,10 +742,10 @@
       "ht": 0
     },
     "pages/transporte/conduces-pendientes": {
-      "conT": 24,
+      "conT": 26,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 8
     },
     "pages/transporte/conduces-por-firmar": {
       "conT": 10,
@@ -892,10 +892,10 @@
       "ht": 0
     },
     "pages/transporte/por-confirmar": {
-      "conT": 36,
+      "conT": 38,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 5
     },
     "pages/transporte/preuso": {
       "conT": 71,
@@ -946,9 +946,9 @@
       "ht": 0
     },
     "pages/transporte/trabajos-transporte": {
-      "conT": 31,
+      "conT": 32,
       "sinT": 0,
-      "en": 100,
+      "en": 97,
       "ht": 0
     },
     "pages/transporte/trayectoria": {
@@ -1003,7 +1003,7 @@
       "conT": 11,
       "sinT": 0,
       "en": 100,
-      "ht": 9
+      "ht": 18
     },
     "shared/components/gps-gate-banner": {
       "conT": 2,
@@ -1179,6 +1179,12 @@
       "en": 100,
       "ht": 0
     },
+    "shared/ui/logo-reveal": {
+      "conT": 2,
+      "sinT": 1,
+      "en": 67,
+      "ht": 33
+    },
     "shared/ui/lugar-picker": {
       "conT": 9,
       "sinT": 0,
@@ -1213,7 +1219,7 @@
       "conT": 4,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 25
     },
     "shared/ui/option-button": {
       "conT": 0,
@@ -1238,6 +1244,12 @@
       "sinT": 1,
       "en": 95,
       "ht": 5
+    },
+    "shared/ui/photo-viewer": {
+      "conT": 3,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/pin-pad": {
       "conT": 0,
@@ -1322,6 +1334,12 @@
       "sinT": 0,
       "en": 86,
       "ht": 0
+    },
+    "shared/ui/video-player": {
+      "conT": 7,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/voice-notes": {
       "conT": 2,

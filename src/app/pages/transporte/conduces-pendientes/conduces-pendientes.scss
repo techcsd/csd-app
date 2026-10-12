@@ -131,3 +131,20 @@
 .cpend__nota {
   width: 100%;
 }
+
+// CM4 — verificación y bloqueo honesto de la transferencia (Nota #197).
+.cpend__transfer-check {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.cpend__transfer-bloqueado {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+  background: var(--color-surface-muted, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}

@@ -1,7 +1,22 @@
 # HANDOFF — CSD App
 
-## 🟠 SESIÓN 10/10/2026 — PROMPT-93 · Ronda **CL** — app **2.47.0 EN DEV** (falta probar → prod)
-**TL;DR:** ronda CL (motion + bienvenida) completa en `feature/cl-ronda`, `npm run build` ✅ + `test:canal`/catálogo verdes. **APK dev 2.47.0 construido (candado CL4 `canal:"apk"`+`2.47.0` verde) + publicado al bucket dev + registrado.** Falta: merge→dev (en este commit) → Xaviel prueba → OK → prod. Consume PROMPT-92 (padre, parcialmente shippeado).
+## 🟢 SESIÓN 11-12/10/2026 — PROMPT-95 · Ronda **CM** — **F1/F2/F4/F5 LISTAS en código (build ✅), falta APK dev + prueba de actualización + OK de Xaviel → prod**
+> ⚠️ El round de la APP es **PROMPT-95** (`C:\developer\improvements\octubre 2026\imp 09102026\`). **PROMPT-94 es el del PADRE (SGC)**. Rama **`feature/cm-ronda`** (NO mergeada). Versión CM = **2.48.0** (ya bumpeada en environment.{prod,dev}.ts + build.gradle, alineados).
+
+**TL;DR:** las 4 fases enviables (F1/F2/F4/**F5**) están en código con **build verde** y `test:canal` verde. **F3 y F6 siguen BLOQUEADAS por el padre** (re-verificado hoy en sgc-dev: `practica_guardar_intento` 404; los RPC de lectura de incentivos no exponen el tope). Deciden shipear F1/F2/F4/F5 como 2.48.0 y dejar F3/F6 de follow-up.
+- **✅ F2 CM5** (`d22bdb9`): `shared/ui/photo-viewer` global (pantalla completa, pellizcar/zoom/pan/deslizar-cerrar/atrás-Android/✕/Esc; FLIP desde avatar; reduce-motion=fundido) en perfil/mi-detalle/mensajes/personal-expediente/compa/conductores. avatar 512→1080.
+- **✅ F1 CM4** (`35d81ad`): transferir/firmar por la fase del server (`conduce_puede_transferir`; "En camino…" en por-confirmar; sin lógica local de pendiente_firma).
+- **✅ F4 CM2** (`6774972`+`9d5f2a7`): logo-reveal variante A tras login + pin-unlock, 1 vez por arranque, tap-saltar, haptic, reduce-motion estático; `csd-logo-simbolo.svg` copiado; "CSD APP" texto (falta `texto.svg`).
+- **✅ F5 CM3 (ESTA SESIÓN):** `shared/ui/video-player` nuevo (teatro pantalla completa: play/sonido/scrub/**CC**/**velocidad 1×→2×**/**pantalla completa**/**capítulos** en hoja; offline=no abre; NavGuard+Esc; host en app.html). **"Aprende viendo"** (rejilla + chips por módulo) + **videos de instalación** arriba en "Primeros pasos" con **"Compartir por WhatsApp"** (@capacitor/share) — todo en **Tecnología › Dudas**. Modelo `ayuda` extendido (`kicker`/`capitulos`/`instalacion`/`compartir_url`, capacidad: no-op hasta que el padre suba). **Modo grabación** `TutorialModeService` + `?tutorial=1` → foto demo (canvas), 🔒 candado prod. **data-testid** de acción añadidos a preuso/combustible/uso-vehiculo (ver PARIDAD). i18n es/en/ht de las 15 claves nuevas.
+- **⛔ F3 CM6 (bloqueado, gap padre):** `sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql` — el padre debe recrear `incentivo_listado`/`incentivo_mi_rendimiento`/`incentivo_semanas` exponiendo `maximo`/`puntaje_bruto`. F3 NO cableado.
+- **⛔ F6 CM7 (bloqueado):** modo práctica — `practica_guardar_intento` 404 + cliente de práctica (PROMPT-94 F7a) no entregado. NO empezado.
+
+**👤 Para cerrar CM 2.48.0:** (1) `npm run apk -- --env dev` → `npm run apk:publish -- --env dev`; merge `feature/cm-ronda`→`dev`. (2) **Probar la actualización in-app desde 2.47.0 en el Samsung** (regla CL4) + F1/F2/F4/F5. (3) Con OK → PR `dev→main` + `npm run apk -- --env prod` + `apk:publish --env prod` + publicar flag + notificar iOS. (4) **Pedir al padre:** `cm6b` (F3), `practica_guardar_intento`+F7a (F6), `csd-logo-texto.svg` (F4) → luego F3/F6 como follow-up.
+
+---
+
+## 🟢 SESIÓN 10/10/2026 — PROMPT-93 · Ronda **CL** — app **2.47.0 PUBLICADA A PROD** ✅
+**TL;DR:** ronda CL (motion + bienvenida) completa y **RELEASE A PROD**. `dev`=`main`=`2c4d687`. APK prod 2.47.0 firmado (cert `3c5316d8…5065`), candado CL4 verde (`canal:"apk"`+`2.47.0`), regla 18 OK, bucket prod + `apk_url` + registrado. **PUBLICADA** (`cl-publicar-2.47.0.mjs`: 2.47.0 publicada, 2.46.0 despublicada, **mínima sigue 2.45.0**, push android por trigger) + **11 iPhone ios-pwa notificados** (`cl-notificar-ios-2.47.0.mjs`). Vercel app. + app-dev. construidos. Consume PROMPT-92 (padre, parcialmente shippeado).
 
 ### ✅ Hecho (feature/cl-ronda)
 - **F1 CL4 (canal)** — ya venía de CK; residuos: rescate de actualización ("Descargar desde el navegador" + aviso a 8s) + canal resuelto en tienda-aviso. **F2 CL6** conduce externo "marcar como prueba" (admin; `p_es_prueba` vivo en dev).
@@ -10,13 +25,17 @@
 - **F6 CL5 (catálogo)** — `scripts/data-fixes/2026-10-10-cl5-movimiento-catalogo-app.mjs` **aplicado en dev** (4 filas sistema='app'; mapea taxonomía app→padre nivel simple/sistema→base).
 - **F7** — bump **2.47.0** (environment.{prod,dev}.ts + build.gradle; **recordar alinear los 3**) + changelog CL + PARIDAD (sección CL).
 
+### 🟡 EN DEV (batcheado, sin shipear) — sale con la próxima ronda
+- **"Nota para el chofer" al asignar** (CK15 follow-up, `379d702`): ahora que el padre creó `trabajo_asignar` 6-arg (`p_nota`) + ck16 (`mis_trabajos_chofer` devuelve `nota_chofer`), se cableó el textarea en la hoja Asignar/Reasignar de Misael → el chofer la ve en "Mis trabajos". **No se shippeó a prod** (decisión de Xaviel: batchear, evitar re-notificar por un campo).
+- **"Ordenar el día" NO cableado** → `sql-para-sgc/2026-10-10-ck15b-listado-orden.sql`: el padre debe recrear `trabajos_transporte_listado` para devolver/ordenar por `orden` (hoy no lo hace → sería no-op). Cuando esté, se cablea el botón.
+
 ### 👤 PENDIENTE
-1. **Probar 2.47.0 en dev** (APK dev + app-dev.; gama baja + Samsung + modo avión + **actualización in-app desde la versión anterior**): bienvenida nueva (instalación limpia), motion en toda la app sin tirones, que el botón Actualizar instale. Con **OK → prod** (lo hago yo: PR dev→main + APK prod + publicar + notificar iOS).
-2. **🔴 El PADRE aún debe aplicar los 2 SQL de CK** (`mis_trabajos_chofer`/`trabajo_ordenar` siguen 404 en dev/prod) — "Mis trabajos" del chofer sigue vacío hasta entonces. Ya se le pasó a la ventana de SGC (ver PARIDAD §CL huecos).
+1. **Probar 2.47.0 en prod** (ya publicada): bienvenida nueva (instalación limpia), motion en toda la app sin tirones, que el botón Actualizar instale (lo clave del CL4). Ideal gama baja + Samsung + **actualización in-app desde 2.46.0**.
+2. **🔴 El PADRE aún debe aplicar los 2 SQL de CK** (`mis_trabajos_chofer`/`trabajo_ordenar` siguen 404 en dev/prod) — "Mis trabajos" del chofer sigue vacío hasta entonces (independiente del CL). Ya se le pasó a la ventana de SGC.
 3. La **web** (PROMPT-92) debe publicar sus filas 'web'/'web-app' en `movimiento_catalogo` + espejar `momento()`.
 
 ### Verify on resume
-- `git log --oneline -14`; rama `feature/cl-ronda` (→ mergeada a `dev`); `npm run build` exit 0; `npm run test:canal` verde. Versión 2.47.0 en environment.{prod,dev}.ts + build.gradle. APK dev en bucket (`csd-app-2.47.0.apk`).
+- `git log --oneline -16`; `dev`=`main`=`2c4d687`; `npm run build` exit 0; `npm run test:canal` verde. `app_versiones` prod: 2.47.0 publicada=true, minima sigue 2.45.0. APK prod en bucket (`csd-app-2.47.0.apk`).
 
 ---
 

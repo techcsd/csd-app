@@ -127,6 +127,14 @@
   >
     <div class="sheet">
       <p class="sheet__hint">{{ 'Elige un chofer. El vehículo lo toma de su uso activo.' | t }}</p>
+      <!-- CL (CK15) — nota opcional para el chofer (la ve en "Mis trabajos") -->
+      <textarea
+        class="sheet__texto"
+        rows="2"
+        [value]="notaAsignar()"
+        (input)="notaAsignar.set($any($event.target).value)"
+        [placeholder]="'Nota para el chofer (opcional) — ej. pásalo primero por el almacén central' | t"
+      ></textarea>
       @if (cargandoChoferes()) {
         <app-skeleton [rows]="3" />
       } @else if (!choferes().length) {

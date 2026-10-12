@@ -29,6 +29,7 @@ import { LanguageSelector } from '../../shared/ui/language-selector/language-sel
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ThemeService, ThemePref } from '../../core/services/theme.service';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
+import { PhotoViewerService } from '../../shared/ui/photo-viewer/photo-viewer.service';
 import { MotionService, MotionPref } from '../../core/services/motion.service';
 import { FormsModule } from '@angular/forms';
 
@@ -63,6 +64,13 @@ export class PerfilPage {
   private i18n = inject(I18nService);
   private router = inject(Router);
   private location = inject(Location);
+  private photoViewer = inject(PhotoViewerService);
+
+  /** CM5 — abre la foto de perfil en el visor a pantalla completa (crece desde el avatar). */
+  verFotoGrande(ev: Event, url: string | null | undefined): void {
+    ev.stopPropagation(); // no navegar a "Mi detalle" al tocar la foto
+    this.photoViewer.open(url, ev.currentTarget as HTMLElement);
+  }
 
   nombre = this.ctx.nombre;
   telefono = this.ctx.telefono; // AY1

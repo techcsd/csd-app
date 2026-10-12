@@ -13,6 +13,7 @@
           [src]="avatarUrl()"
           alt="Foto de perfil"
           (error)="avatarFallo.set(true)"
+          (click)="verFotoGrande($event, avatarUrl())"
         />
       } @else {
         <div class="perfil__avatar">{{ (nombre() || '?').charAt(0) }}</div>

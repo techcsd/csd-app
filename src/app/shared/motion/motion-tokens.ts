@@ -70,5 +70,5 @@ export const COUNTUP_MS = 600;
  * el crossfade de navegación (CJ1) y la entrada de hojas/diálogos. Se listan aquí para
  * que la prueba unitaria del catálogo cuadre id-usado ↔ registrado sin inventar.
  */
-export const SISTEMA_MOTION_IDS = ['xfade', 'hoja'] as const;
+export const SISTEMA_MOTION_IDS = ['xfade', 'hoja', 'login-reveal'] as const;
 export type SistemaMotionId = (typeof SISTEMA_MOTION_IDS)[number];

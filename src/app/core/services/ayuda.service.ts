@@ -63,7 +63,28 @@ export class AyudaService {
       poster: posterRaw ? await this.firmarOUrl(posterRaw) : null,
       subtitulos: subsRaw ? await this.firmar(subsRaw) : null,
       duracion: this.fmtDuracion(g.duracion),
+      titulo: g.titulo,
+      kicker: g.kicker,
+      capitulos: this.normalizarCapitulos(g.capitulos),
     };
+  }
+
+  /** CM3 — pasa los capítulos del padre (segundos o "m:ss") a segundos para el seek. */
+  private normalizarCapitulos(
+    caps: { t: number | string; label: string }[] | undefined,
+  ): { segundo: number; label: string }[] | undefined {
+    if (!caps?.length) return undefined;
+    return caps
+      .map((c) => ({ segundo: this.aSegundos(c.t), label: c.label }))
+      .filter((c) => Number.isFinite(c.segundo) && !!c.label);
+  }
+
+  private aSegundos(t: number | string): number {
+    if (typeof t === 'number') return t;
+    const partes = String(t).split(':').map((n) => parseInt(n, 10));
+    if (partes.some((n) => Number.isNaN(n))) return NaN;
+    // "m:ss" o "h:mm:ss"
+    return partes.reduce((acc, n) => acc * 60 + n, 0);
   }
 
   private async firmar(path: string): Promise<string | null> {
