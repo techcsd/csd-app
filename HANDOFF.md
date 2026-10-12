@@ -1,7 +1,8 @@
 # HANDOFF — CSD App
 
-## 🟠 SESIÓN 12/10/2026 — PROMPT-95 · Ronda **CM** (2ª parte) — **F3 + F6a en código (build ✅), falta APK dev + prueba Samsung → prod** · versión **2.49.0**
-> El padre (PROMPT-94 F3+F7a) **ya aplicó sus contratos** (verificado vivo en **dev y prod**). Rama **`feature/cm-ronda`**. Versión bumpeada a **2.49.0** (environment.{prod,dev}.ts + build.gradle alineados).
+## 🟢 SESIÓN 12/10/2026 — PROMPT-95 · Ronda **CM** (2ª parte) — app **2.49.0 PUBLICADA A PROD** ✅ (F3 + F6 completo)
+> `main`=`dev`=`feature/cm-ronda`=`3a8dec4`. **En prod (12-10):** `dev→main` (`a65d4e7`) → Vercel PWA prod; **APK prod 2.49.0** firmado (cert `3c5316d8…5065`), candado `apk`+`2.49.0`, regla 18 OK, bucket prod + `apk_url` + registrado; **seed de práctica aplicado en prod** (`cm7-seed-misiones-app`, 9 misiones); **PUBLICADA** (`cm-publicar-2.49.0`: 2.49.0 publicada, 2.48.0 despub, **mínima sigue 2.45.0** → no forzado; push android por trigger) + **12 iPhone (ios-pwa) notificados** (`cm-notificar-ios-2.49.0`). El padre ya aplicó PROMPT-94 F3+F7a (vivo dev+prod).
+> **👤 Probar en prod:** incentivos con tope + modo práctica (9 misiones, offline→cero syncs) + actualización in-app desde 2.48.0. Pendiente opcional: cablear `csd-logo-texto.svg` (F4) + "Modo práctica" en la bienvenida CL3.
 
 **TL;DR:** desbloqueadas y cableadas **F3 (incentivos con tope)** + **F6 completo (modo práctica: motor + 9 misiones, F6a piloto y F6b resto)**. Build + `test:canal` verdes. Toda la ronda CM queda enviada salvo detalles menores (F4 logo-texto sin cablear, "Modo práctica" en la bienvenida). Gotcha de probe: `conduce_puede_transferir`/`conduce_fase` usan param **`p_salida_id`** (no `p_conduce_id`).
 - **✅ F3 CM6** (`4935e2c`): incentivos con tope. Gestión: resumen read-only ("Tope semanal: N · … · se configura en la web") + por chofer puntos hechos/cuentan/"N sobre tope". Mi rendimiento: barra vs tope + "Llegaste al tope…". `incentivo_config_actual()` + `incentivo_semana.{maximo,puntaje_bruto}` (vivos dev+prod). Campos opcionales (capability).
