@@ -191,6 +191,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/language-onboarding | 1 | 2 | 33% | 0% |  |
 | shared/ui/language-selector | 0 | 2 | 0% | 0% |  |
 | shared/ui/location-picker | 8 | 0 | 100% | 0% |  |
+| shared/ui/logo-reveal | 2 | 1 | 67% | 33% |  |
 | shared/ui/lugar-picker | 9 | 0 | 100% | 0% |  |
 | shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |

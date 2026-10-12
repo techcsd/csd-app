@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { SessionService } from '../../../core/services/session.service';
 import { UserContextService } from '../../../core/services/user-context.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { LogoRevealService } from '../../../core/services/logo-reveal.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { formatCedula, soloDigitosCedula } from '../../../core/util/cedula';
 import { PoliticasService, DocLegal } from '../../../core/services/politicas.service';
@@ -31,6 +32,7 @@ export class LoginPage {
   private router = inject(Router);
   private toast = inject(ToastService);
   private politicas = inject(PoliticasService);
+  private logoReveal = inject(LogoRevealService);
 
   modo = signal<Modo>('correo');
 
@@ -177,6 +179,9 @@ export class LoginPage {
       await this.router.navigate(['/auth/set-password'], { queryParams: { forzado: 1 } });
       return;
     }
+    // CM2 — "logo al entrar": velo del logo una vez por arranque, sin bloquear la
+    // navegación (fire-and-forget; el overlay global se monta sobre lo que venga).
+    this.logoReveal.disparar();
     // Fresh login → set up the local PIN next (desbloqueo local, distinto del PIN de acceso).
     await this.router.navigate(['/auth/pin-setup']);
   }

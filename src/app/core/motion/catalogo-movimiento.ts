@@ -80,6 +80,20 @@ export const MOVIMIENTO_CATALOGO: MovimientoRegistro[] = [
     preview_key: 'hoja',
     estado: 'en_uso',
   },
+  {
+    id: 'login-reveal',
+    sistema: 'web-app',
+    nombre: 'Logo al entrar',
+    nivel: 'sistema',
+    donde: 'Al autenticar (login / PIN), mientras carga el home',
+    pantallas: ['auth/login', 'auth/pin-unlock'],
+    duracion_ms: 1900,
+    curva: 'cubic-bezier(0.65, 0, 0.35, 1)',
+    reducido: 'logo estático + fundido',
+    desde_version: 'app 2.48',
+    preview_key: 'login-reveal',
+    estado: 'en_uso',
+  },
 
   // ── Base en todas las pantallas (directivas CL2) ───────────────────────────
   {

@@ -10,6 +10,7 @@ import { BiometricService } from '../../../core/services/biometric.service';
 import { WebauthnService } from '../../../core/services/webauthn.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { LogoRevealService } from '../../../core/services/logo-reveal.service';
 
 /**
  * Daily re-entry. PIN, plus optional biometric unlock (R10) that only confirms
@@ -33,6 +34,14 @@ export class PinUnlockPage {
   private router = inject(Router);
   private toast = inject(ToastService);
   private i18n = inject(I18nService);
+  private logoReveal = inject(LogoRevealService);
+
+  /** CM2 — velo del logo (una vez por arranque) y navega al home sin esperar. */
+  private async entrarAlHome(): Promise<void> {
+    this.session.markUnlocked();
+    this.logoReveal.disparar();
+    await this.router.navigate(['/home']);
+  }
 
   value = signal('');
   attemptsLeft = signal(MAX_PIN_ATTEMPTS);
@@ -63,8 +72,7 @@ export class PinUnlockPage {
   async unlockConHuella(): Promise<void> {
     const ok = await this.biometric.authenticate(this.i18n.t('Desbloquea CSD con tu huella o rostro'));
     if (ok) {
-      this.session.markUnlocked();
-      await this.router.navigate(['/home']);
+      await this.entrarAlHome();
     }
   }
 
@@ -72,8 +80,7 @@ export class PinUnlockPage {
   async unlockConFaceId(): Promise<void> {
     const ok = await this.webauthn.authenticate();
     if (ok) {
-      this.session.markUnlocked();
-      await this.router.navigate(['/home']);
+      await this.entrarAlHome();
       return;
     }
     // Cancelación o credencial inválida → sin drama, se queda en el PIN.
@@ -110,8 +117,7 @@ export class PinUnlockPage {
   async onCompleted(entered: string): Promise<void> {
     const ok = await this.pin.verify(entered);
     if (ok) {
-      this.session.markUnlocked();
-      await this.router.navigate(['/home']);
+      await this.entrarAlHome();
       return;
     }
     const left = await this.pin.attemptsLeft();

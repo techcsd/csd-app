@@ -16,13 +16,17 @@
   height: 88px;
   margin: 0 auto 16px;
   border-radius: 24px;
-  background: var(--color-primary);
-  color: var(--text-on-accent);
-  font-size: 34px;
-  font-weight: 800;
+  // CM2 — caja navy (--color-nav-bg) para que el trazo blanco + punto naranja del
+  // símbolo lean bien (igual que el velo "logo al entrar").
+  background: var(--color-nav-bg);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.login__logo-img {
+  width: 58px;
+  height: auto;
+  display: block;
 }
 
 .login__title {
