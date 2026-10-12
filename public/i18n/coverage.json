@@ -1,6 +1,6 @@
 {
   "en": 93,
-  "ht": 2,
+  "ht": 3,
   "alcance": true,
   "byScreen": {
     "": {
@@ -610,10 +610,10 @@
       "ht": 0
     },
     "pages/tecnologia": {
-      "conT": 5,
+      "conT": 9,
       "sinT": 12,
-      "en": 29,
-      "ht": 0
+      "en": 43,
+      "ht": 29
     },
     "pages/tecnologia-inventario": {
       "conT": 0,
@@ -1334,6 +1334,12 @@
       "sinT": 0,
       "en": 86,
       "ht": 0
+    },
+    "shared/ui/video-player": {
+      "conT": 7,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
     },
     "shared/ui/voice-notes": {
       "conT": 2,

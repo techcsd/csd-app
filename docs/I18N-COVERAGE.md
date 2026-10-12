@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 93%** del alcance · **Kreyòl (ht): 2%**
+- **Inglés (en): 93%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -108,7 +108,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 2 | 20 | 9% | 9% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 5 | 12 | 29% | 0% |  |
+| pages/tecnologia | 9 | 12 | 43% | 29% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |
@@ -212,5 +212,6 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/taller-picker | 8 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-card | 2 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-picker | 14 | 0 | 86% | 0% |  |
+| shared/ui/video-player | 7 | 0 | 100% | 100% |  |
 | shared/ui/voice-notes | 2 | 0 | 100% | 0% |  |
 | shared/ui/voice-recorder | 3 | 0 | 100% | 0% |  |

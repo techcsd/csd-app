@@ -380,21 +380,21 @@
       @if (step() < total) {
         @switch (step()) {
           @case (1) {
-            <button type="button" class="btn-cta" [disabled]="!datosSalidaCompletos()" (click)="next()">
+            <button type="button" class="btn-cta" [disabled]="!datosSalidaCompletos()" (click)="next()" data-testid="preuso-next-datos">
               {{ 'Continuar al checklist' | t }}
             </button>
           }
           @case (3) {
-            <button type="button" class="btn-cta" [disabled]="!fotosCompletas()" (click)="next()">
+            <button type="button" class="btn-cta" [disabled]="!fotosCompletas()" (click)="next()" data-testid="preuso-next-fotos">
               {{ fotosCompletas() ? ('Siguiente' | t) : (('Faltan {n}' | t: { n: fotosFaltan() }) + (fotosFaltan() === 1 ? (' foto' | t) : (' fotos' | t))) }}
             </button>
           }
           @default {
-            <button type="button" class="btn-cta" (click)="next()">{{ 'Siguiente' | t }}</button>
+            <button type="button" class="btn-cta" (click)="next()" data-testid="preuso-next">{{ 'Siguiente' | t }}</button>
           }
         }
       } @else {
-        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()">
+        <button type="button" class="btn-cta" [disabled]="submitting()" (click)="submit()" data-testid="preuso-submit">
           {{ submitting() ? ('Guardando…' | t) : ('Confirmar y guardar' | t) }}
         </button>
       }

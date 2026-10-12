@@ -272,3 +272,28 @@ Ronda de motion + bienvenida (consume PROMPT-92 del padre, parcialmente shippead
 ### Huecos del padre (pendientes)
 - **🔴 CK (ronda anterior):** `mis_trabajos_chofer` + `trabajo_ordenar` + extensión de `puede_ver_apoyo` al chofer + `nota_chofer`/`trabajo_asignar` 6-arg — **siguen 404 en dev/prod** (`sql-para-sgc/2026-10-09-ck14*/ck15*`). Hasta aplicarlos, "Mis trabajos" del chofer sale vacío.
 - **CL:** la web debe publicar sus filas ('web' + 'web-app') en `movimiento_catalogo` y espejar el contrato de `momento()`.
+
+## Ronda CM (PROMPT-95, 11-12/10/2026) — app 2.48.0
+Consume PROMPT-94 del padre. **Envía F1/F2/F4/F5** (F3/F6 quedan como follow-up — ver huecos).
+
+### Contratos del padre consumidos (verificados vivos en sgc-dev)
+- **Transferir/firmar por fase (F1 CM4):** `conduce_puede_transferir(p_conduce_id)` → `{puede,motivo}` + `conduce_fase` en `conduce_detalle_app()`. La app ya **no** deduce `pendiente_firma` de `firma_pendiente_usuario_id`: usa la fase del server. "En camino — podrás firmar cuando el chofer lo entregue" con botón apagado en conduces-pendientes/por-confirmar.
+- **Logo (F4 CM2):** `src/assets/imgs/logos/csd-logo-simbolo.svg` (copiado idéntico del padre). `csd-logo-texto.svg` **aún no existe** → el texto "CSD APP" se pinta como texto (no bloquea).
+
+### Nuevo en el app (F2/F5)
+- **Visor de foto de perfil (F2 CM5):** `shared/ui/photo-viewer` global (service + host en app.html). Avatares CON foto en conductores/perfil-conductor/perfil/mi-detalle/mensajes/personal-expediente/compa la abren. `comprimir-imagen.util.ts` avatar.maxLado 512→**1080** (paridad web).
+- **Reproductor de video (F5 CM3):** `shared/ui/video-player` global (service + host en app.html) — teatro a pantalla completa: play/pausa, sonido, barra arrastrable, **CC** (si hay .vtt), **velocidad** (1×→2×), **pantalla completa** (Fullscreen API → gira a horizontal en Android), **capítulos** en hoja inferior. Offline = no abre (avisa). "Aprende viendo" (rejilla con chips por módulo) + videos de instalación arriba en "Primeros pasos" con "Compartir por WhatsApp" — todo en **Tecnología › Dudas** (`/tecnologia?tab=dudas`). Datos de `sgc.ayuda_contenido`; campos nuevos OPCIONALES del padre: `kicker`, `capitulos[]`, `instalacion ∈ android|iphone`, `compartir_url`.
+- **Modo grabación (F5):** `TutorialModeService` + `?tutorial=1` → `CameraService.takePhoto` devuelve una foto demo (canvas). 🔒 **Candado:** nunca activo en prod (`environment.entorno==='prod'` lo apaga aunque venga la bandera).
+
+### data-testid estables (guiones de video, F5 §1)
+Guiones `app-preuso`/`app-combustible`/`app-uso-vehiculo`:
+- **preuso:** `preuso-checklist` (contenedor) · `preuso-next-datos` · `preuso-next-fotos` · `preuso-next` · `preuso-submit`.
+- **combustible:** `combustible-wizard` (contenedor) · `combustible-km` · `combustible-leer-recibo` · botón primario del pie = `[data-testid="combustible-wizard"] .wizard-footer__primary`.
+- **uso-vehiculo:** `uso-vehiculo` (contenedor) · `uso-soltar` · `uso-cta` (tomar/guardar).
+- **videos:** `guia-video-<id>` (card de "Aprende viendo") · `instala-video-<id>` · `guia-vbtn-<id>` · `video-player-el` (el `<video>` del reproductor).
+- Los de CK5 siguen: crear-ruta · bitacora-parte · recibir-conduce · requisicion-pedir · compa · crear-apoyo · apoyo-listado · apoyo-detalle · mis-trabajos · trabajos-transporte · mis-choferes.
+
+### Huecos del padre (CM — F3/F6 BLOQUEADAS)
+1. **🔴 Incentivos con tope (F3 CM6):** `sql/2026-10-09-cm6-incentivo-topes.sql` añadió columnas (`incentivo_config.{maximo_semanal,topes}`, `incentivo_semana.{maximo,topes,puntaje_bruto}`) pero **NO recreó** los RPC de lectura → el app no ve el tope. Fix dejado en `sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql` (recrear `incentivo_listado`/`incentivo_mi_rendimiento`/`incentivo_semanas` exponiendo `maximo`/`puntaje_bruto`). **F3 del app NO cableado** hasta que esté vivo.
+2. **🔴 Modo práctica (F6 CM7):** `practica_guardar_intento` **404** en dev + cliente de práctica (PROMPT-94 F7a) no entregado. **F6 del app NO empezado.**
+3. **Logo texto (F4):** falta `csd-logo-texto.svg` (hoy texto plano).
