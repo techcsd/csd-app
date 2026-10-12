@@ -51,8 +51,8 @@ export class PracticaPage {
     return 'inicio';
   });
 
-  /** Misiones que el usuario puede practicar (según su rol). */
-  readonly misiones = computed<PracticaMision[]>(() => this.practica.misionesPara(this.practica.misRoles()));
+  /** Misiones que el usuario puede practicar (según su rol; admin ve todas). */
+  readonly misiones = computed<PracticaMision[]>(() => this.practica.misionesVisibles());
 
   /** Pasos "de formulario" (sin el confirmar final) para pintar los campos. */
   readonly camposPasos = computed(() => (this.mision()?.pasos ?? []).filter((p) => p.tipo !== 'confirmar'));

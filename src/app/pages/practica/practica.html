@@ -74,6 +74,11 @@
                 <div class="prac__slot" [class.prac__slot--ok]="fotoHecha(p.foto.objetivo)" [class.prac__slot--on]="pasoActual()?.id === p.id">
                   {{ fotoHecha(p.foto.objetivo) ? ('✓ ' + p.foto.label) : p.foto.label }}
                 </div>
+              } @else if (p.tipo === 'accion' && p.accion) {
+                <div class="prac__accion" [class.prac__accion--ok]="objetivoHecho(p.accion.objetivo)" [class.prac__accion--on]="pasoActual()?.id === p.id">
+                  <span class="prac__accion-mark">{{ objetivoHecho(p.accion.objetivo) ? '✓' : '○' }}</span>
+                  <span>{{ p.accion.label }}</span>
+                </div>
               }
             }
           </div>

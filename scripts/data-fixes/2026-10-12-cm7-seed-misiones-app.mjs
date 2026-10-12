@@ -12,11 +12,21 @@
  */
 import { resolverEnv } from '../lib/entorno.mjs';
 
+const CHOFER = ['chofer'];
+const CAMPO = ['ingeniero_campo', 'ingeniero_oficina', 'capataz'];
 const MISIONES = [
+  // Piloto (intro, sin rol = todos).
   { id: 'app-combustible', plataforma: 'app', roles: [], titulo: 'Registrar combustible', version: 1, activa: true },
-  // F6b (pendiente de implementar en el cliente): pre-uso, tomar/soltar, entregar
-  // conduce, reportar estado; ingeniero: parte diario, pedir material, recibir
-  // conduce, apoyo. Se añaden aquí cuando se cableen.
+  // Chofer.
+  { id: 'app-preuso', plataforma: 'app', roles: CHOFER, titulo: 'Pre-uso de vehículo', version: 1, activa: true },
+  { id: 'app-uso-vehiculo', plataforma: 'app', roles: CHOFER, titulo: 'Tomar y soltar vehículo', version: 1, activa: true },
+  { id: 'app-conduce', plataforma: 'app', roles: CHOFER, titulo: 'Entregar un conduce', version: 1, activa: true },
+  { id: 'app-reporte-estado', plataforma: 'app', roles: CHOFER, titulo: 'Reportar estado del trabajo', version: 1, activa: true },
+  // Ingeniero / capataz.
+  { id: 'app-parte-diario', plataforma: 'app', roles: CAMPO, titulo: 'Parte diario de bitácora', version: 1, activa: true },
+  { id: 'app-pedir-material', plataforma: 'app', roles: CAMPO, titulo: 'Pedir material', version: 1, activa: true },
+  { id: 'app-recibir-conduce', plataforma: 'app', roles: CAMPO, titulo: 'Recibir un conduce', version: 1, activa: true },
+  { id: 'app-apoyo-transporte', plataforma: 'app', roles: CAMPO, titulo: 'Pedir apoyo de transporte', version: 1, activa: true },
 ];
 
 const env = await resolverEnv(process.argv.slice(2));

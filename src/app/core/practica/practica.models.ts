@@ -13,7 +13,7 @@ export interface PracticaObjetivo {
 }
 
 /** Tipo de paso del guion de una misión. */
-export type PasoTipo = 'valor' | 'foto' | 'confirmar';
+export type PasoTipo = 'valor' | 'foto' | 'accion' | 'confirmar';
 
 /** Un paso del guion de la misión (una acción del usuario). */
 export interface PracticaPaso {
@@ -37,6 +37,8 @@ export interface PracticaPaso {
   };
   /** Para `tipo='foto'`: etiqueta del slot + objetivo que completa. */
   foto?: { label: string; objetivo: string };
+  /** Para `tipo='accion'`: una acción simulada (firmar, marcar estado, elegir…). */
+  accion?: { label: string; objetivo: string };
 }
 
 /** Una regla de puntos (positiva) o penalización (negativa). */
@@ -60,13 +62,14 @@ export interface PracticaMision {
   version: number;
   objetivos: PracticaObjetivo[];
   pasos: PracticaPaso[];
-  /** Reglas base de puntos (se otorgan si se cumplen; ver `evaluar`). */
+  /** Reglas de puntos (se otorgan si se cumplen; ver `evaluar`). */
   reglas: {
-    /** Puntos por completar TODAS las fotos. */
-    fotos?: PracticaRegla;
-    /** Puntos por datos correctos (siempre, en el simulador). */
-    datos?: PracticaRegla;
-    /** Puntos por terminar bajo `tiempoBonoSegundos`. */
+    /**
+     * Puntos positivos. Cada regla se gana si TODOS sus `objetivos` quedaron hechos
+     * (o siempre, si no lista objetivos). Así cada misión reparte sus puntos.
+     */
+    puntos: Array<PracticaRegla & { objetivos?: string[] }>;
+    /** Bono por terminar bajo `tiempoBonoSegundos`. */
     tiempo?: PracticaRegla & { tiempoBonoSegundos: number };
     /** Penalizaciones posibles (por id, disparadas por trampas). */
     penalizaciones: PracticaRegla[];

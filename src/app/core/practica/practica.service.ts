@@ -42,9 +42,11 @@ export class PracticaService {
   private fotosTomadas = new Set<string>();
   private valores = new Map<string, string>();
 
-  /** Misiones que ve un usuario según sus roles (vacío en la misión = todos). */
-  misionesPara(roles: string[]): PracticaMision[] {
-    const set = new Set(roles);
+  /** Misiones visibles para el usuario actual: admin ve todas; el resto, las de su
+   *  rol (o las sin rol = para todos). */
+  misionesVisibles(): PracticaMision[] {
+    if (this.ctx.hasRol('admin')) return MISIONES_APP;
+    const set = new Set(this.ctx.roles());
     return MISIONES_APP.filter((m) => !m.roles.length || m.roles.some((r) => set.has(r)));
   }
 
@@ -108,6 +110,8 @@ export class PracticaService {
     } else if (paso.tipo === 'foto' && paso.foto) {
       this.fotosTomadas.add(paso.foto.objetivo);
       this.marcarObjetivo(paso.foto.objetivo);
+    } else if (paso.tipo === 'accion' && paso.accion) {
+      this.marcarObjetivo(paso.accion.objetivo);
     }
 
     const next = this.pasoIdx() + 1;
@@ -135,19 +139,15 @@ export class PracticaService {
     });
   }
 
-  /** Reglas del mock: fotos (+40), datos (+30), tiempo<2min (+25), km menor (−10). */
+  /** Puntos por reglas cumplidas (objetivos hechos) + bono de tiempo − penalizaciones. */
   private evaluar(m: PracticaMision, durS: number): PracticaResultado {
     const lineas: PracticaResultadoLinea[] = [];
     const r = m.reglas;
+    const hechos = this.objetivosHechos();
 
-    if (r.fotos) {
-      const todas = m.pasos
-        .filter((p) => p.tipo === 'foto' && p.foto)
-        .every((p) => this.fotosTomadas.has(p.foto!.objetivo));
-      lineas.push({ ok: todas, label: r.fotos.label, puntos: todas ? r.fotos.puntos : 0 });
-    }
-    if (r.datos) {
-      lineas.push({ ok: true, label: r.datos.label, puntos: r.datos.puntos });
+    for (const regla of r.puntos) {
+      const ok = !regla.objetivos?.length || regla.objetivos.every((o) => hechos.has(o));
+      lineas.push({ ok, label: regla.label, puntos: ok ? regla.puntos : 0 });
     }
     if (r.tiempo) {
       const aTiempo = durS <= r.tiempo.tiempoBonoSegundos;

@@ -42,7 +42,7 @@ const RELEASED_AT = '2026-10-12';
 
 const TITULO = 'Modo práctica para ensayar sin miedo e incentivos con tope';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Modo práctica', d: 'Nuevo "Modo práctica" (en Soporte y ayuda): ensaya los flujos de la app con datos de mentira, sin que nada llegue a inventario, a Flota ni a nadie. Te ponemos objetivos, un cronómetro y una nota, con animación al terminar. Empieza con "Registrar combustible". Solo se guarda tu nota.' },
+  { t: 'nuevo', m: 'Modo práctica', d: 'Nuevo "Modo práctica" (en Soporte y ayuda): ensaya los flujos de la app con datos de mentira, sin que nada llegue a inventario, a Flota ni a nadie. Te ponemos objetivos, un cronómetro y una nota, con animación al terminar. Hay misiones para cada rol (combustible, pre-uso, tomar/soltar vehículo, entregar conduce, reportar estado; y para ingeniería: parte diario, pedir material, recibir conduce, apoyo de transporte). Solo se guarda tu nota.' },
   { t: 'nuevo', m: 'Incentivos', d: 'Ahora el incentivo puede tener un TOPE: en "Mi rendimiento" ves cuánto cuenta contra el tope de la semana y, al llegar, "lo que hagas de más no suma". Logística ve los puntos hechos, lo que cuenta y cuánto pasó del tope. Los topes se configuran en la web.' },
 ];
 

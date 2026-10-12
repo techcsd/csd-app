@@ -225,6 +225,28 @@
   background: var(--color-success-soft, #ecfdf3); // tokens-allow-dark — slot de foto tomada
   color: var(--color-success);
 }
+.prac__accion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  font-size: 15px;
+  color: var(--color-text-primary);
+}
+.prac__accion--on {
+  border-color: var(--color-secondary);
+}
+.prac__accion--ok {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.prac__accion-mark {
+  font-weight: 800;
+}
 .prac__run-footer {
   padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 18px);
   display: flex;
