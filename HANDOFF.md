@@ -1,9 +1,15 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 11-12/10/2026 — PROMPT-95 · Ronda **CM** — **F1/F2/F4/F5 LISTAS en código (build ✅), falta APK dev + prueba de actualización + OK de Xaviel → prod**
-> ⚠️ El round de la APP es **PROMPT-95** (`C:\developer\improvements\octubre 2026\imp 09102026\`). **PROMPT-94 es el del PADRE (SGC)**. Rama **`feature/cm-ronda`** (NO mergeada). Versión CM = **2.48.0** (ya bumpeada en environment.{prod,dev}.ts + build.gradle, alineados).
+## 🟢 SESIÓN 11-12/10/2026 — PROMPT-95 · Ronda **CM** — app **2.48.0 PUBLICADA A PROD** ✅
+> ⚠️ El round de la APP es **PROMPT-95** (`C:\developer\improvements\octubre 2026\imp 09102026\`). **PROMPT-94 es el del PADRE (SGC)**. `main`=`dev`=`feature/cm-ronda`=`b54797a`. Versión **2.48.0** alineada (environment.{prod,dev}.ts + build.gradle).
 
-**TL;DR:** las 4 fases enviables (F1/F2/F4/**F5**) están en código con **build verde** y `test:canal` verde. **F3 y F6 siguen BLOQUEADAS por el padre** (re-verificado hoy en sgc-dev: `practica_guardar_intento` 404; los RPC de lectura de incentivos no exponen el tope). Deciden shipear F1/F2/F4/F5 como 2.48.0 y dejar F3/F6 de follow-up.
+**En prod (12-10):** `dev→main` (`a5245cb`, push → Vercel PWA prod). **APK prod 2.48.0** firmado (cert `3c5316d8…5065`), candado canal `apk`+`2.48.0` ✅, regla 18 OK (2.48.0 salió antes en dev), subido al bucket prod + `apk_url` + registrado. **PUBLICADA** (`scripts/data-fixes/2026-10-12-cm-publicar-2.48.0.mjs`: 2.48.0 publicada, 2.47.0 despublicada, **mínima sigue 2.45.0** → update NO forzado; push android por el trigger) + **12 iPhone (ios-pwa) notificados in-app** (`2026-10-12-cm-notificar-ios-2.48.0.mjs`).
+**En dev:** mismo commit; APK dev 2.48.0 en bucket dev; app-dev. construido.
+
+**TL;DR:** las 4 fases enviables (F1/F2/F4/**F5**) están en prod con **build verde** + `test:canal` verde. **F3 y F6 siguen BLOQUEADAS por el padre** (re-verificado hoy en sgc-dev: `practica_guardar_intento` 404; los RPC de lectura de incentivos no exponen el tope) → follow-up.
+
+### 🔴 OJO — F1 y Raykler (#197): el fix REAL es del PADRE y aún NO está en prod
+`conduce_puede_transferir` da **404 en prod** (PROMPT-94 F1 no aplicado a prod). El app 2.48.0 **degrada sin romper** (`puedeTransferir` cae a `{puede:true}`, el server sigue siendo la verdad), pero **el problema de Raykler NO queda resuelto en prod** hasta que el padre aplique su SQL de F1 (`conduce_fase` + `conduce_puede_transferir` + corrección de la fase prematura). Cuando lo aplique, F1 **se activa solo** (el app ya llama al RPC, sin APK nuevo). F2/F4/F5 funcionan en prod ya.
 - **✅ F2 CM5** (`d22bdb9`): `shared/ui/photo-viewer` global (pantalla completa, pellizcar/zoom/pan/deslizar-cerrar/atrás-Android/✕/Esc; FLIP desde avatar; reduce-motion=fundido) en perfil/mi-detalle/mensajes/personal-expediente/compa/conductores. avatar 512→1080.
 - **✅ F1 CM4** (`35d81ad`): transferir/firmar por la fase del server (`conduce_puede_transferir`; "En camino…" en por-confirmar; sin lógica local de pendiente_firma).
 - **✅ F4 CM2** (`6774972`+`9d5f2a7`): logo-reveal variante A tras login + pin-unlock, 1 vez por arranque, tap-saltar, haptic, reduce-motion estático; `csd-logo-simbolo.svg` copiado; "CSD APP" texto (falta `texto.svg`).
@@ -11,7 +17,10 @@
 - **⛔ F3 CM6 (bloqueado, gap padre):** `sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql` — el padre debe recrear `incentivo_listado`/`incentivo_mi_rendimiento`/`incentivo_semanas` exponiendo `maximo`/`puntaje_bruto`. F3 NO cableado.
 - **⛔ F6 CM7 (bloqueado):** modo práctica — `practica_guardar_intento` 404 + cliente de práctica (PROMPT-94 F7a) no entregado. NO empezado.
 
-**👤 Para cerrar CM 2.48.0:** (1) `npm run apk -- --env dev` → `npm run apk:publish -- --env dev`; merge `feature/cm-ronda`→`dev`. (2) **Probar la actualización in-app desde 2.47.0 en el Samsung** (regla CL4) + F1/F2/F4/F5. (3) Con OK → PR `dev→main` + `npm run apk -- --env prod` + `apk:publish --env prod` + publicar flag + notificar iOS. (4) **Pedir al padre:** `cm6b` (F3), `practica_guardar_intento`+F7a (F6), `csd-logo-texto.svg` (F4) → luego F3/F6 como follow-up.
+**👤 PENDIENTE (post-release):**
+1. **Probar 2.48.0 en prod** (ya publicada): idealmente la **actualización in-app desde 2.47.0 en el Samsung** (regla CL4; el updater no cambió este round, por eso no bloqueó el release) + F2 (tocar foto de perfil), F4 (logo al entrar), F5 (abrir un video en Dudas a pantalla completa, "Compartir por WhatsApp").
+2. **🔴 Pedir al PADRE que aplique en PROD la F1 de PROMPT-94** (`conduce_fase` + `conduce_puede_transferir` + fix de fase) — **sin eso el problema de Raykler sigue en prod** (el app ya está listo, se activa solo). Y `csd-logo-texto.svg` (F4, estético).
+3. **Follow-up F3/F6** cuando el padre entregue: `cm6b` (`sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql`) para incentivos-tope, y `practica_guardar_intento`+cliente de práctica (PROMPT-94 F7a) para el modo práctica.
 
 ---
 
