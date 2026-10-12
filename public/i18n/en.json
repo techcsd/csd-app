@@ -1,4 +1,9 @@
 {
+  "En camino — podrás firmar cuando el chofer lo entregue": "On the way — you can sign once the driver delivers it",
+  "Verificando si se puede transferir…": "Checking whether it can be transferred…",
+  "Este conduce no se puede transferir ahora.": "This delivery note can’t be transferred right now.",
+  "Foto de perfil": "Profile photo",
+  "Pellizca para acercar · desliza abajo para cerrar": "Pinch to zoom in · swipe down to close",
   "Constructora SD · en la obra y en la calle": "Constructora SD · on the job and on the road",
   "¿En qué idioma te hablamos?": "What language should we use?",
   "Lo puedes cambiar luego en tu perfil.": "You can change it later in your profile.",
@@ -4060,5 +4065,21 @@
   "¿No apareció el instalador? Descárgala desde el navegador e instálala a mano.": "Installer didn't show up? Download it from the browser and install it manually.",
   "Descargar desde el navegador": "Download from the browser",
   "¿No se instala? Descargar desde el navegador": "Won't install? Download from the browser",
-  "Este conduce se guardará como PRUEBA (no cuenta para operaciones reales).": "This delivery will be saved as a TEST (it doesn't count toward real operations)."
+  "Este conduce se guardará como PRUEBA (no cuenta para operaciones reales).": "This delivery will be saved as a TEST (it doesn't count toward real operations).",
+  "Toca para saltar": "Tap to skip",
+  "Primeros pasos": "Getting started",
+  "Compartir por WhatsApp": "Share via WhatsApp",
+  "Aprende viendo": "Learn by watching",
+  "Videos con voz": "Videos with voice",
+  "Ver video": "Watch video",
+  "Reproducir": "Play",
+  "Pausar": "Pause",
+  "Silenciar": "Mute",
+  "Activar sonido": "Unmute",
+  "Subtítulos": "Subtitles",
+  "Velocidad": "Speed",
+  "Capítulos": "Chapters",
+  "Pantalla completa": "Fullscreen",
+  "INSTALAR": "INSTALL",
+  "Avanzar el video": "Seek the video"
 }

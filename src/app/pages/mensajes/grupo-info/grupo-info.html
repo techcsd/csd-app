@@ -12,7 +12,7 @@
       <section class="ginfo__hero">
         <div class="ginfo__avatar-wrap">
           @if (avatarUrl()) {
-            <img class="ginfo__avatar" [src]="avatarUrl()" [alt]="'Foto del grupo' | t" />
+            <img class="ginfo__avatar" [src]="avatarUrl()" [alt]="'Foto del grupo' | t" (click)="verFotoGrande($event, avatarUrl())" />
           } @else {
             <span class="ginfo__avatar ginfo__avatar--letra">{{ inicial(g.nombre) }}</span>
           }

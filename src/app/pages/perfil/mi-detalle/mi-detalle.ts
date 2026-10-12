@@ -13,6 +13,7 @@ import { NetworkService } from '../../../core/services/network.service';
 import { Conductor, ConductorStats, LicenciaEstado, estadoLicencia, diasHasta } from '../../../core/models/conductor.model';
 import { Documento } from '../../../core/models/documento.model';
 import { formatFecha, formatFechaHumana } from '../../../core/util/fecha';
+import { PhotoViewerService } from '../../../shared/ui/photo-viewer/photo-viewer.service';
 
 interface DocView {
   label: string;
@@ -43,6 +44,12 @@ export class MiDetallePage {
   private router = inject(Router);
   private location = inject(Location);
   private i18n = inject(I18nService);
+  private photoViewer = inject(PhotoViewerService);
+
+  /** CM5 — abre la foto de perfil en el visor a pantalla completa. */
+  verFotoGrande(ev: Event, url: string | null | undefined): void {
+    this.photoViewer.open(url, ev.currentTarget as HTMLElement);
+  }
 
   fmtFecha = formatFecha;
   fmtFechaHumana = formatFechaHumana;

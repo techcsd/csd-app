@@ -16,7 +16,7 @@
           <div class="pe-card__top">
             <div class="pe-avatar">
               @if (fotoPersonaUrl()) {
-                <img [src]="fotoPersonaUrl()" alt="Foto" (click)="abrirFoto(fotoPersonaUrl()!)" />
+                <img [src]="fotoPersonaUrl()" alt="Foto" (click)="verFotoGrande($event, fotoPersonaUrl())" />
               } @else { <span>🧍</span> }
             </div>
             <div class="pe-card__id">

@@ -10,6 +10,9 @@ import { NetworkService } from '../../core/services/network.service';
 import { UserContextService } from '../../core/services/user-context.service';
 import { AyudaService } from '../../core/services/ayuda.service';
 import { DudaCategoria, GuiaVisual, GuiaVideoFirmado } from '../../core/models/ayuda.model';
+import { VideoPlayerService } from '../../shared/ui/video-player/video-player.service';
+import { ToastService } from '../../core/services/toast.service';
+import { Share } from '@capacitor/share';
 import { environment } from '../../../environments/environment';
 import { formatFechaMedia } from '../../core/util/fecha';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -49,6 +52,8 @@ export class TecnologiaPage {
   private ctx = inject(UserContextService);
   private ayuda = inject(AyudaService);
   private router = inject(Router);
+  private videoPlayer = inject(VideoPlayerService);
+  private toast = inject(ToastService);
 
   readonly cambioLabel = CAMBIO_LABEL;
   readonly guiaIcono = GUIA_ICONO;
@@ -103,6 +108,88 @@ export class TecnologiaPage {
   });
 
   hayDudas = computed(() => this.guiasVisibles().length > 0 || this.categoriasFiltradas().length > 0);
+
+  // ── CM3 (F5) — "Aprende viendo" + videos de instalación ──────────────────────
+  // Chip de módulo activo para la rejilla de videos ('Todos' = sin filtro).
+  videoChip = signal<string>('Todos');
+
+  /** Videos de GUÍAS visibles por rol (NO los de instalación). */
+  videosGuia = computed(() =>
+    this.guiasVisibles().filter((g) => this.guiaTieneVideo(g) && !g.instalacion),
+  );
+
+  /** CM1 — los 2 videos de instalación: universales (no se gatean por módulo). */
+  videosInstalacion = computed(() => this.guias().filter((g) => !!g.instalacion));
+
+  /** Chips de módulo presentes entre los videos de guía (+ 'Todos'). */
+  chipsVideo = computed<string[]>(() => {
+    const mods = new Set<string>();
+    for (const g of this.videosGuia()) if (g.modulo) mods.add(g.modulo);
+    return ['Todos', ...[...mods].sort()];
+  });
+
+  /** Rejilla de "Aprende viendo" filtrada por el chip activo. */
+  videosFiltrados = computed(() => {
+    const chip = this.videoChip();
+    const base = this.videosGuia();
+    return chip === 'Todos' ? base : base.filter((g) => g.modulo === chip);
+  });
+
+  hayVideos = computed(() => this.videosInstalacion().length > 0 || this.videosGuia().length > 0);
+
+  private readonly moduloLabels: Record<string, string> = {
+    flota: 'Flota',
+    inventario: 'Inventario',
+    transporte: 'Transporte',
+    bitacora: 'Bitácora',
+    compras: 'Compras',
+    proyectos: 'Proyectos',
+  };
+  chipLabel(chip: string): string {
+    return chip === 'Todos' ? 'Todos' : this.moduloLabels[chip] ?? chip;
+  }
+
+  /**
+   * CM3 — abre el reproductor a pantalla completa con el video de una guía. Solo
+   * online y solo si ya quedó firmado; si no, avisa (no deja un card muerto).
+   */
+  abrirVideo(g: GuiaVisual): void {
+    if (!this.network.online()) {
+      this.toast.show('Necesitas conexión para ver el video', 'info');
+      return;
+    }
+    const v = this.videoDe(g);
+    if (!v) {
+      this.toast.show('Cargando video…', 'info');
+      return;
+    }
+    this.videoPlayer.open({
+      url: v.url,
+      poster: v.poster,
+      subtitulos: v.subtitulos,
+      titulo: v.titulo ?? g.titulo,
+      kicker: v.kicker ?? g.kicker ?? null,
+      capitulos: v.capitulos ?? null,
+    });
+  }
+
+  /** CM1 — comparte el video de instalación por WhatsApp (u otra app). */
+  async compartirInstalacion(g: GuiaVisual): Promise<void> {
+    const v = this.videoDe(g);
+    // Nunca compartimos el signed URL (expira 1h): preferimos el enlace público que
+    // ponga el padre; si no hay, el enlace de la app con el instructivo.
+    const url = g.compartir_url ?? environment.appUrl;
+    const texto =
+      g.instalacion === 'iphone'
+        ? 'Cómo instalar la CSD App en iPhone 👇'
+        : 'Cómo instalar la CSD App en Android 👇';
+    try {
+      await Share.share({ title: g.titulo, text: texto, url, dialogTitle: 'Compartir' });
+    } catch {
+      /* el usuario canceló la hoja de compartir → no pasa nada */
+    }
+    void v; // (firmado disponible por si en el futuro se comparte el archivo)
+  }
 
   tab = signal<Tab>('versiones');
   loading = signal(true);

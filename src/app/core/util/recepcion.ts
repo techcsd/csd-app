@@ -14,6 +14,13 @@ export interface EntregaPorRecibir {
   /** Solo la fuente 'confirmar' registra faltantes por ítem + entrada de inventario. */
   soportaFaltantes: boolean;
   pendienteAlmacen: boolean;
+  /**
+   * CM4 — fase del conduce (server-side). La fuente 'confirmar' ya la trae; la de
+   * 'firmar' (receptor designado) la enriquece la pantalla con `conduce_fase`. Si una
+   * entrega todavía NO ha salido (emitido/en ruta), el receptor la ve "En camino" y
+   * NO puede firmar hasta que el chofer la entregue (Nota #197).
+   */
+  fase?: string | null;
 }
 
 /**
@@ -37,6 +44,7 @@ export function fusionarEntregasPorRecibir(
       emisor: null,
       soportaFaltantes: true,
       pendienteAlmacen: false,
+      fase: e.fase ?? null, // CM4 — la fuente 'confirmar' ya trae la fase del servidor.
     });
   }
   for (const f of firmar) {

@@ -1,0 +1,22 @@
+-- 2026-10-11-cm6b-incentivo-lectura-tope.sql   ⚠️ LO APLICA EL PADRE (SGC) — regla 18/19
+-- CM6 "incentivos con tope" (PROMPT-95 F3 del app) — HUECO de LECTURA:
+-- `sql/2026-10-09-cm6-incentivo-topes.sql` añadió las columnas
+--   incentivo_config.{maximo_semanal, topes}  +  incentivo_semana.{maximo, topes, puntaje_bruto}
+-- y recreó incentivo_set_config / incentivo_generar_semana / incentivo_sugerir_topes,
+-- PERO NO recreó los RPC de LECTURA que consume la app → esos campos NO llegan al cliente:
+--   • `incentivo_listado(...)`  (pages/incentivos, gestión) — última def: 2026-09-07-bk3;
+--     returns (nombre, puntaje, minimo, cumplio, conteos, flags, decision) → SIN maximo/puntaje_bruto.
+--   • `incentivo_mi_rendimiento()` (pages/mi-rendimiento, chofer) — última def: 2026-08-20-at1-at4;
+--     no devuelve maximo/puntaje_bruto.
+--   • `incentivo_semanas()` (gestión) — returns (anio,semana,inicio,fin,choferes,cumplieron).
+--
+-- FIX (aditivo, lo hace el padre): recrear esos 3 RPC con el cuerpo VIVO + exponer los
+-- campos nuevos de incentivo_semana (join ya existe en el cuerpo):
+--   incentivo_listado        → + s.maximo, s.puntaje_bruto   (y topes si se quiere el detalle)
+--   incentivo_mi_rendimiento → + s.maximo (tope semanal), s.puntaje_bruto, y el tope por día
+--                              desde incentivo_config.topes para el diario
+--   incentivo_semanas        → (opcional) + maximo_semanal de config para pintar el tope global
+-- Mantener el resto idéntico. Retrocompatible (columnas nuevas al final).
+--
+-- Hasta que esto esté vivo, el app NO pinta la barra de tope ni el chip "N sobre tope"
+-- (queda detrás de una comprobación de capacidad — F3 del app NO se cableó por eso).

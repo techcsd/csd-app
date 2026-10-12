@@ -3,7 +3,7 @@
 Generado por `scripts/i18n-coverage.mjs`. La unidad es la **pantalla**: un idioma
 se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 
-- **Inglés (en): 93%** del alcance · **Kreyòl (ht): 2%**
+- **Inglés (en): 93%** del alcance · **Kreyòl (ht): 3%**
 - Alcance definido: sí (3 pantallas)
 
 | Pantalla | con t() | sin t() | en % | ht % | alcance |
@@ -56,27 +56,27 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/inventario/articulo-editar | 19 | 0 | 100% | 0% |  |
 | pages/inventario/articulo-nuevo | 27 | 0 | 100% | 0% |  |
 | pages/inventario/catalogo | 12 | 0 | 100% | 0% |  |
-| pages/inventario/conteo | 29 | 0 | 83% | 3% |  |
+| pages/inventario/conteo | 29 | 0 | 83% | 7% |  |
 | pages/inventario/conteos | 10 | 0 | 100% | 0% |  |
 | pages/inventario/entrada | 33 | 0 | 100% | 0% |  |
 | pages/inventario/existencias | 6 | 0 | 100% | 0% |  |
 | pages/inventario/kardex | 24 | 0 | 100% | 0% |  |
 | pages/inventario/material-no-catalogado | 33 | 0 | 100% | 18% |  |
-| pages/inventario/recibir | 53 | 0 | 100% | 0% |  |
+| pages/inventario/recibir | 53 | 0 | 100% | 2% |  |
 | pages/inventario/retiro-detalle | 20 | 0 | 100% | 0% |  |
 | pages/inventario/retiro-nuevo | 4 | 19 | 17% | 4% |  |
 | pages/inventario/retiros | 6 | 0 | 100% | 0% |  |
 | pages/inventario/salida | 34 | 0 | 100% | 0% |  |
 | pages/mensajes | 10 | 0 | 100% | 0% |  |
-| pages/mensajes/grupo-info | 24 | 0 | 100% | 0% |  |
-| pages/mensajes/nuevo-grupo | 15 | 0 | 100% | 0% |  |
-| pages/mensajes/thread | 42 | 0 | 100% | 0% |  |
+| pages/mensajes/grupo-info | 24 | 0 | 100% | 4% |  |
+| pages/mensajes/nuevo-grupo | 15 | 0 | 100% | 7% |  |
+| pages/mensajes/thread | 42 | 0 | 100% | 2% |  |
 | pages/mi-rendimiento | 25 | 0 | 100% | 0% |  |
 | pages/notas | 18 | 0 | 100% | 0% |  |
 | pages/notas/editor | 26 | 0 | 100% | 0% |  |
 | pages/obra | 20 | 0 | 100% | 0% |  |
 | pages/obra/avance | 9 | 0 | 100% | 0% |  |
-| pages/obra/charla | 24 | 0 | 100% | 4% |  |
+| pages/obra/charla | 24 | 0 | 100% | 8% |  |
 | pages/obra/checklists | 24 | 0 | 100% | 4% |  |
 | pages/obra/incidente | 25 | 0 | 100% | 4% |  |
 | pages/obra/informe | 26 | 0 | 100% | 4% |  |
@@ -103,12 +103,12 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/rrhh/empleados | 6 | 0 | 100% | 0% |  |
 | pages/solicitudes | 5 | 0 | 100% | 0% |  |
 | pages/solicitudes/bandeja | 16 | 0 | 100% | 0% |  |
-| pages/solicitudes/detalle | 72 | 12 | 77% | 0% |  |
+| pages/solicitudes/detalle | 72 | 12 | 77% | 1% |  |
 | pages/solicitudes/mis | 11 | 0 | 100% | 0% |  |
 | pages/solicitudes/pedir | 23 | 0 | 100% | 0% |  |
 | pages/soporte | 2 | 20 | 9% | 9% |  |
 | pages/tareas | 59 | 0 | 100% | 0% |  |
-| pages/tecnologia | 5 | 12 | 29% | 0% |  |
+| pages/tecnologia | 9 | 12 | 43% | 29% |  |
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |
@@ -124,13 +124,13 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/checklists-historial | 13 | 0 | 100% | 0% |  |
 | pages/transporte/combustible | 127 | 2 | 87% | 2% |  |
 | pages/transporte/combustible-log | 15 | 0 | 100% | 0% |  |
-| pages/transporte/conduce-detalle | 71 | 1 | 85% | 4% |  |
+| pages/transporte/conduce-detalle | 71 | 1 | 85% | 6% |  |
 | pages/transporte/conduce-externo | 81 | 1 | 80% | 4% |  |
 | pages/transporte/conduce-transferencias | 26 | 0 | 100% | 4% |  |
-| pages/transporte/conduces | 71 | 0 | 100% | 0% |  |
+| pages/transporte/conduces | 71 | 0 | 100% | 3% |  |
 | pages/transporte/conduces-historial | 37 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-hub | 3 | 0 | 100% | 0% |  |
-| pages/transporte/conduces-pendientes | 24 | 0 | 100% | 0% |  |
+| pages/transporte/conduces-pendientes | 26 | 0 | 100% | 8% |  |
 | pages/transporte/conduces-por-firmar | 10 | 0 | 100% | 0% |  |
 | pages/transporte/conduces-por-implementar | 10 | 0 | 100% | 0% |  |
 | pages/transporte/conduces/entrega | 33 | 0 | 100% | 3% |  |
@@ -155,7 +155,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/perfil-conductor | 37 | 0 | 100% | 0% |  |
 | pages/transporte/perfil-vehiculo | 35 | 1 | 92% | 0% |  |
 | pages/transporte/por-aprobar | 19 | 0 | 100% | 0% |  |
-| pages/transporte/por-confirmar | 36 | 0 | 100% | 0% |  |
+| pages/transporte/por-confirmar | 38 | 0 | 100% | 5% |  |
 | pages/transporte/preuso | 71 | 0 | 100% | 3% |  |
 | pages/transporte/reportar-multa | 33 | 0 | 100% | 3% |  |
 | pages/transporte/reportar-vehiculo | 53 | 1 | 98% | 2% |  |
@@ -173,7 +173,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/components/bienvenida | 25 | 0 | 100% | 100% |  |
 | shared/components/consentimiento-ia | 8 | 2 | 20% | 10% |  |
 | shared/components/consentimiento-ubicacion | 4 | 0 | 25% | 0% |  |
-| shared/components/generar-acceso | 11 | 0 | 100% | 9% |  |
+| shared/components/generar-acceso | 11 | 0 | 100% | 18% |  |
 | shared/components/gps-gate-banner | 2 | 0 | 100% | 0% |  |
 | shared/components/module-placeholder | 2 | 0 | 100% | 0% |  |
 | shared/components/onboarding | 7 | 0 | 100% | 29% |  |
@@ -191,15 +191,17 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/language-onboarding | 1 | 2 | 33% | 0% |  |
 | shared/ui/language-selector | 0 | 2 | 0% | 0% |  |
 | shared/ui/location-picker | 8 | 0 | 100% | 0% |  |
+| shared/ui/logo-reveal | 2 | 1 | 67% | 33% |  |
 | shared/ui/lugar-picker | 9 | 0 | 100% | 0% |  |
 | shared/ui/mant-adjuntos | 3 | 0 | 67% | 0% |  |
 | shared/ui/molde-compositor | 12 | 1 | 92% | 0% |  |
 | shared/ui/molde-esquema | 3 | 0 | 100% | 0% |  |
 | shared/ui/momento | 1 | 0 | 100% | 100% |  |
-| shared/ui/notif-health-band | 4 | 0 | 100% | 0% |  |
+| shared/ui/notif-health-band | 4 | 0 | 100% | 25% |  |
 | shared/ui/pdf-viewer | 2 | 1 | 33% | 0% |  |
 | shared/ui/personal-carnet | 9 | 1 | 90% | 0% |  |
 | shared/ui/photo-slot | 18 | 1 | 95% | 5% |  |
+| shared/ui/photo-viewer | 3 | 0 | 100% | 100% |  |
 | shared/ui/select-list | 0 | 1 | 0% | 0% |  |
 | shared/ui/selector-categorias | 28 | 1 | 97% | 3% |  |
 | shared/ui/share-sheet | 3 | 2 | 60% | 0% |  |
@@ -210,5 +212,6 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | shared/ui/taller-picker | 8 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-card | 2 | 0 | 100% | 0% |  |
 | shared/ui/vehiculo-picker | 14 | 0 | 86% | 0% |  |
+| shared/ui/video-player | 7 | 0 | 100% | 100% |  |
 | shared/ui/voice-notes | 2 | 0 | 100% | 0% |  |
 | shared/ui/voice-recorder | 3 | 0 | 100% | 0% |  |

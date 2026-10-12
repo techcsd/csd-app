@@ -10,7 +10,7 @@
     >
       <!-- AS9 — avatar SIEMPRE (grupo: foto/inicial; 1-a-1: inicial), nunca un hueco -->
       @if (esGrupo() && avatarUrl()) {
-        <img class="thread__avatar" [src]="avatarUrl()" alt="" />
+        <img class="thread__avatar" [src]="avatarUrl()" alt="" (click)="verFotoGrande($event, avatarUrl())" />
       } @else {
         <span class="thread__avatar thread__avatar--letra">{{ (titulo() || '?').charAt(0) }}</span>
       }

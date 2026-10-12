@@ -9,6 +9,7 @@ import { PermissionsService } from './permissions.service';
 import { ToastService } from './toast.service';
 import { LocalStore } from './local-store.service';
 import { BorradorService } from './borrador.service';
+import { TutorialModeService } from './tutorial-mode.service';
 import { comprimirImagen, perfilNativo, PerfilCompresion } from '../utils/comprimir-imagen.util';
 
 /**
@@ -86,6 +87,7 @@ export class CameraService {
   private toast = inject(ToastService);
   private store = inject(LocalStore);
   private borrador = inject(BorradorService);
+  private tutorial = inject(TutorialModeService);
 
   /** BV5 — clave persistida del contexto de restauración de la última captura nativa. */
   private static readonly RESTORE_KEY = 'camera_restore_ctx';
@@ -169,6 +171,12 @@ export class CameraService {
   }
 
   async takePhoto(restore?: CameraRestore): Promise<CapturedPhoto | null> {
+    // CM3 (F5) — modo grabación (?tutorial=1, nunca en prod): devuelve una foto demo
+    // sin abrir la cámara, para grabar los videos tutoriales con Chromium.
+    if (this.tutorial.activo()) {
+      const blob = await this.tutorial.fotoDemoBlob(restore?.slot);
+      return { blob, previewUrl: URL.createObjectURL(blob) };
+    }
     // AT9 — PWA/iOS y web en general: NO pasamos por la puerta de permisos.
     // `<input type=file capture>` usa el permiso de cámara DEL SISTEMA (el que
     // pide iOS al abrir su cámara), no el permiso de sitio de Safari — y sondear

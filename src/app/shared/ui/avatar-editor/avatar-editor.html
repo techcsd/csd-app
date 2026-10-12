@@ -7,8 +7,8 @@
     <canvas
       #canvas
       class="av-ed__canvas"
-      width="512"
-      height="512"
+      [width]="SIZE"
+      [height]="SIZE"
       (pointerdown)="onPointerDown($event)"
       (pointermove)="onPointerMove($event)"
       (pointerup)="onPointerUp()"

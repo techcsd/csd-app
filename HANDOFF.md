@@ -1,5 +1,20 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 11-12/10/2026 — PROMPT-95 · Ronda **CM** — **F1/F2/F4/F5 LISTAS en código (build ✅), falta APK dev + prueba de actualización + OK de Xaviel → prod**
+> ⚠️ El round de la APP es **PROMPT-95** (`C:\developer\improvements\octubre 2026\imp 09102026\`). **PROMPT-94 es el del PADRE (SGC)**. Rama **`feature/cm-ronda`** (NO mergeada). Versión CM = **2.48.0** (ya bumpeada en environment.{prod,dev}.ts + build.gradle, alineados).
+
+**TL;DR:** las 4 fases enviables (F1/F2/F4/**F5**) están en código con **build verde** y `test:canal` verde. **F3 y F6 siguen BLOQUEADAS por el padre** (re-verificado hoy en sgc-dev: `practica_guardar_intento` 404; los RPC de lectura de incentivos no exponen el tope). Deciden shipear F1/F2/F4/F5 como 2.48.0 y dejar F3/F6 de follow-up.
+- **✅ F2 CM5** (`d22bdb9`): `shared/ui/photo-viewer` global (pantalla completa, pellizcar/zoom/pan/deslizar-cerrar/atrás-Android/✕/Esc; FLIP desde avatar; reduce-motion=fundido) en perfil/mi-detalle/mensajes/personal-expediente/compa/conductores. avatar 512→1080.
+- **✅ F1 CM4** (`35d81ad`): transferir/firmar por la fase del server (`conduce_puede_transferir`; "En camino…" en por-confirmar; sin lógica local de pendiente_firma).
+- **✅ F4 CM2** (`6774972`+`9d5f2a7`): logo-reveal variante A tras login + pin-unlock, 1 vez por arranque, tap-saltar, haptic, reduce-motion estático; `csd-logo-simbolo.svg` copiado; "CSD APP" texto (falta `texto.svg`).
+- **✅ F5 CM3 (ESTA SESIÓN):** `shared/ui/video-player` nuevo (teatro pantalla completa: play/sonido/scrub/**CC**/**velocidad 1×→2×**/**pantalla completa**/**capítulos** en hoja; offline=no abre; NavGuard+Esc; host en app.html). **"Aprende viendo"** (rejilla + chips por módulo) + **videos de instalación** arriba en "Primeros pasos" con **"Compartir por WhatsApp"** (@capacitor/share) — todo en **Tecnología › Dudas**. Modelo `ayuda` extendido (`kicker`/`capitulos`/`instalacion`/`compartir_url`, capacidad: no-op hasta que el padre suba). **Modo grabación** `TutorialModeService` + `?tutorial=1` → foto demo (canvas), 🔒 candado prod. **data-testid** de acción añadidos a preuso/combustible/uso-vehiculo (ver PARIDAD). i18n es/en/ht de las 15 claves nuevas.
+- **⛔ F3 CM6 (bloqueado, gap padre):** `sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql` — el padre debe recrear `incentivo_listado`/`incentivo_mi_rendimiento`/`incentivo_semanas` exponiendo `maximo`/`puntaje_bruto`. F3 NO cableado.
+- **⛔ F6 CM7 (bloqueado):** modo práctica — `practica_guardar_intento` 404 + cliente de práctica (PROMPT-94 F7a) no entregado. NO empezado.
+
+**👤 Para cerrar CM 2.48.0:** (1) `npm run apk -- --env dev` → `npm run apk:publish -- --env dev`; merge `feature/cm-ronda`→`dev`. (2) **Probar la actualización in-app desde 2.47.0 en el Samsung** (regla CL4) + F1/F2/F4/F5. (3) Con OK → PR `dev→main` + `npm run apk -- --env prod` + `apk:publish --env prod` + publicar flag + notificar iOS. (4) **Pedir al padre:** `cm6b` (F3), `practica_guardar_intento`+F7a (F6), `csd-logo-texto.svg` (F4) → luego F3/F6 como follow-up.
+
+---
+
 ## 🟢 SESIÓN 10/10/2026 — PROMPT-93 · Ronda **CL** — app **2.47.0 PUBLICADA A PROD** ✅
 **TL;DR:** ronda CL (motion + bienvenida) completa y **RELEASE A PROD**. `dev`=`main`=`2c4d687`. APK prod 2.47.0 firmado (cert `3c5316d8…5065`), candado CL4 verde (`canal:"apk"`+`2.47.0`), regla 18 OK, bucket prod + `apk_url` + registrado. **PUBLICADA** (`cl-publicar-2.47.0.mjs`: 2.47.0 publicada, 2.46.0 despublicada, **mínima sigue 2.45.0**, push android por trigger) + **11 iPhone ios-pwa notificados** (`cl-notificar-ios-2.47.0.mjs`). Vercel app. + app-dev. construidos. Consume PROMPT-92 (padre, parcialmente shippeado).
 

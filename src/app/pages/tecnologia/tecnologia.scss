@@ -226,6 +226,164 @@
     font-size: 0.88rem;
     color: var(--color-text-secondary);
   }
+  // CM3 (F5) — botón "Ver video" dentro de una guía paso a paso.
+  &__guia-vbtn {
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--color-primary);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  // CM3 (F5) — "Aprende viendo"
+  &__aprende-h {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 18px 0 10px;
+  }
+  &__aprende-sub {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+  }
+  &__chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  &__chip {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &--on {
+      background: var(--color-secondary);
+      border-color: var(--color-secondary);
+      color: #fff;
+    }
+  }
+  &__vgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  &__vcard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 0;
+    background: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+  }
+  &__vcard-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #0f1f33; // tokens-allow-dark — portada de video (media): fondo oscuro en ambos temas
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 12px;
+    box-sizing: border-box;
+
+    &--wide {
+      aspect-ratio: 16 / 7;
+      width: 100%;
+      border: 0;
+      cursor: pointer;
+    }
+  }
+  &__vcard-kicker {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #fdba74;
+  }
+  &__vcard-title {
+    font-weight: 800;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    color: #fff;
+    max-width: 85%;
+  }
+  &__vcard-play {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 3px;
+  }
+  &__vcard-dur {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  &__vcard-state {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+  }
+
+  // CM1 (F5) — videos de instalación (Primeros pasos) con compartir
+  &__instala {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+  &__instala-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  &__share-wa {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
   &__cat {
     background: var(--color-surface);
     border: 1px solid var(--color-border);

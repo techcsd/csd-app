@@ -38,14 +38,14 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-09';
+const RELEASED_AT = '2026-10-12';
 
-const TITULO = 'Una app más viva: animaciones en toda la app y una bienvenida nueva';
+const TITULO = 'Videos para aprender, fotos de perfil en grande y un logo al entrar';
 const CAMBIOS_CURADOS = [
-  { t: 'mejora', m: 'Toda la app', d: 'La app se siente más viva: transiciones suaves, listas que entran escalonadas, números que cuentan y una pequeña confirmación con movimiento cuando guardas algo (echar combustible, recibir, enviar, firmar…). Si tu teléfono va lento, ponlo en "Animaciones: reducidas" en Perfil.' },
-  { t: 'nuevo', m: 'Bienvenida', d: 'Al instalar o entrar por primera vez verás una bienvenida nueva, más moderna: elige idioma, saludo según tu rol, y te pedimos los permisos (notificaciones y ubicación) explicando para qué. Siempre la puedes saltar, y verla otra vez desde Soporte.' },
-  { t: 'arreglo', m: 'Actualizaciones', d: 'Arreglado: el botón "Actualizar" ahora sí instala la nueva versión (antes se quedaba cargando y no hacía nada). Si no se instala, puedes descargarla desde el navegador.' },
-  { t: 'mejora', m: 'Conduces externos', d: 'Un admin puede marcar un conduce externo como prueba.' },
+  { t: 'nuevo', m: 'Dudas y Ayuda', d: 'Nueva sección "Aprende viendo": videos con voz para cada tarea (pre-uso, combustible, uso del vehículo…) que se abren a pantalla completa, con sonido, subtítulos, velocidad y capítulos. Arriba, dos videos para instalar la app en Android y en iPhone, que puedes compartir por WhatsApp.' },
+  { t: 'nuevo', m: 'Fotos de perfil', d: 'Ahora puedes tocar la foto de un usuario o conductor para verla en grande, a pantalla completa, y acercarla con los dedos.' },
+  { t: 'arreglo', m: 'Conduces', d: 'Arreglada la transferencia de conduces con receptor designado: un conduce se transfiere mientras no ha llegado; cuando va en camino se ve "En camino — podrás firmar cuando el chofer lo entregue" y se firma al llegar.' },
+  { t: 'nuevo', m: 'Al entrar', d: 'Un logo animado te recibe al iniciar sesión y al desbloquear con tu PIN. Puedes tocar para saltarlo; con "Animaciones: reducidas" aparece estático.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

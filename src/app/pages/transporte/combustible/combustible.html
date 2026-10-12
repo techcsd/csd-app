@@ -282,7 +282,7 @@
         }
         <!-- Z23-app — la echada de persona no lleva odómetro -->
         @if (!modoPersona()) {
-          <app-km-input
+          <app-km-input data-testid="combustible-km"
             [label]="vehDetalle()?.medida_uso === 'horas' ? ('Horas de uso actuales' | t) : ('Kilometraje actual' | t)"
             [sufijo]="vehDetalle()?.medida_uso === 'horas' ? 'h' : 'km'"
             [(value)]="km"
@@ -413,7 +413,7 @@
           <!-- CF4 — foto del recibo sin leer (p. ej. borrador recuperado): leer a mano -->
           <div class="comb__lectura comb__lectura--muted">
             <span>{{ '¿Leer los datos del recibo?' | t }}</span>
-            <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()">{{ 'Leer recibo' | t }}</button>
+            <button type="button" class="comb__lectura-btn" (click)="leerReciboAuto()" data-testid="combustible-leer-recibo">{{ 'Leer recibo' | t }}</button>
           </div>
         }
       }

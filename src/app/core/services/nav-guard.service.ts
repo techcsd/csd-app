@@ -30,6 +30,14 @@ export class NavGuardService {
   private pendingNav: (() => void) | null = null;
 
   /**
+   * CM5 — handler de OVERLAY (visor de foto a pantalla completa y similares). Se
+   * consulta ANTES que el handler de formulario: un overlay siempre está por encima,
+   * así el botón físico "Atrás" lo cierra sin pisar la guarda de un formulario que
+   * pueda estar debajo (se restaura intacta al cerrar el overlay).
+   */
+  private overlayHandler: (() => boolean) | null = null;
+
+  /**
    * QA-8 (AJ15) — profundidad REAL del stack in-app, no un contador monotónico.
    * La primera pantalla = 1; una navegación imperativa (push) suma; un `popstate`
    * (atrás/adelante del sistema, incluido el que dispara `location.back()`) resta.
@@ -57,6 +65,14 @@ export class NavGuardService {
     this.handler = fn;
   }
 
+  /** CM5 — registra/limpia el handler de overlay (identidad de función, como `register`). */
+  registerOverlay(fn: () => boolean): void {
+    this.overlayHandler = fn;
+  }
+  clearOverlay(fn: () => boolean): void {
+    if (this.overlayHandler === fn) this.overlayHandler = null;
+  }
+
   /** Limpia solo si el handler actual sigue siendo el de esta página. Al cerrarse
    *  el formulario, descarga cualquier navegación en segundo plano que quedó en
    *  espera (AJ7).
@@ -77,8 +93,10 @@ export class NavGuardService {
     }
   }
 
-  /** Devuelve true si el "atrás" fue manejado por la página (no navegar). */
+  /** Devuelve true si el "atrás" fue manejado (no navegar). El overlay (CM5) tiene
+   *  prioridad sobre el formulario: está siempre por encima en pantalla. */
   handleBack(): boolean {
+    if (this.overlayHandler && this.overlayHandler()) return true;
     return this.handler ? this.handler() : false;
   }
 

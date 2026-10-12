@@ -1,0 +1,24 @@
+@if (vm(); as st) {
+  <div
+    class="pv"
+    (pointerdown)="onDown($event)"
+    (pointermove)="onMove($event)"
+    (pointerup)="onUp($event)"
+    (pointercancel)="onCancel($event)"
+  >
+    <!-- Velo sólido (su opacidad baja al deslizar para cerrar) -->
+    <div class="pv__backdrop" #backdrop></div>
+
+    <button type="button" class="pv__close" (click)="close()" [attr.aria-label]="'Cerrar' | t">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18"></path>
+      </svg>
+    </button>
+
+    <img #img class="pv__img" [src]="st.url" [attr.alt]="'Foto de perfil' | t" draggable="false" />
+
+    @if (hint()) {
+      <span class="pv__hint">{{ 'Pellizca para acercar · desliza abajo para cerrar' | t }}</span>
+    }
+  </div>
+}

@@ -96,13 +96,58 @@ export class PorConfirmarPage {
         this.conduces.misEntregasPorConfirmar(),
         this.inventario.misFirmasPendientes(),
       ]);
-      this.entregas.set(fusionarEntregasPorRecibir(confirmar, firmar));
+      const fusionadas = fusionarEntregasPorRecibir(confirmar, firmar);
+      this.entregas.set(fusionadas);
+      void this.enriquecerFases(fusionadas); // CM4 — resuelve la fase de las que no la traen
     } catch {
       this.toast.error(this.i18n.t('No pudimos cargar las entregas por recibir.'));
     } finally {
       this.loading.set(false);
       this.refrescando.set(false);
     }
+  }
+
+  /**
+   * CM4 — la fuente 'firmar' (receptor designado, CK4) NO trae la fase, así que se
+   * consulta `conduce_fase` por fila (best-effort, en paralelo). Con la fase real se
+   * decide si la entrega está "En camino" (aún sin salir) y el botón de firmar se
+   * mantiene apagado hasta que el chofer la entregue. Sin red se omite: la fase queda
+   * desconocida → se permite abrir y el servidor rechaza con el mismo texto.
+   */
+  private async enriquecerFases(filas: EntregaPorRecibir[]): Promise<void> {
+    if (!this.network.online()) return;
+    const faltantes = filas.filter((f) => !f.fase);
+    if (!faltantes.length) return;
+    const fases = await Promise.all(
+      faltantes.map((f) => this.conduces.conduceFase(f.salidaId).catch(() => null)),
+    );
+    const mapa = new Map<string, string>();
+    faltantes.forEach((f, i) => {
+      const fase = fases[i];
+      if (fase) mapa.set(f.salidaId, fase);
+    });
+    if (!mapa.size) return;
+    this.entregas.update((lista) => lista.map((e) => (mapa.has(e.salidaId) ? { ...e, fase: mapa.get(e.salidaId)! } : e)));
+  }
+
+  /** CM4 — fases en las que el material YA salió / llegó (el receptor puede firmar). */
+  private static readonly FASES_ENTREGADAS = new Set([
+    'entregando',
+    'entregado',
+    'entregado_incompleto',
+    'pendiente_firma',
+    'por_confirmar',
+    'confirmado',
+    'cerrado',
+  ]);
+
+  /**
+   * CM4 — ¿la entrega va "En camino" (aún sin entregar)? Solo cuando conocemos una
+   * fase y NO es de entregadas. Fase desconocida (offline) = NO en camino: se permite
+   * el intento y el servidor es la verdad (Nota #197).
+   */
+  enCamino(e: EntregaPorRecibir): boolean {
+    return !!e.fase && !PorConfirmarPage.FASES_ENTREGADAS.has(e.fase);
   }
 
   /** AM2 — refresco homologado (botón + pull-to-refresh + foreground). */
@@ -115,6 +160,9 @@ export class PorConfirmarPage {
   }
 
   abrir(id: string): void {
+    // CM4 — una entrega "En camino" no se abre: el receptor firma al llegar.
+    const row = this.entregas().find((e) => e.salidaId === id);
+    if (row && this.enCamino(row)) return;
     const abriendo = this.confirmandoId() !== id;
     this.confirmandoId.set(abriendo ? id : '');
     this.foto.set(null);

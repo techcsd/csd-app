@@ -41,7 +41,9 @@ export class AvatarEditor implements AfterViewInit, OnChanges, OnDestroy {
 
   private img: HTMLImageElement | null = null;
   private imgUrl: string | null = null;
-  readonly SIZE = 512;
+  // CM5 — lado del recorte = maxLado del perfil 'avatar' (1080, paridad con la web).
+  // Fuente única: si cambia el perfil en comprimir-imagen.util, el recorte lo sigue.
+  readonly SIZE = PERFILES_COMPRESION.avatar.maxLado;
 
   zoom = signal(1);
   procesando = signal(false);

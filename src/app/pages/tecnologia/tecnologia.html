@@ -76,8 +76,60 @@
       @if (!hayDudas()) {
         <app-empty-state icon="❓" title="Sin resultados" [message]="online ? 'No hay dudas para esa búsqueda.' : 'Conéctate para ver las dudas.'" />
       } @else {
+        <!-- CM1 (F5) — videos de instalación: arriba, para todos, con compartir -->
+        @if (videosInstalacion().length) {
+          <h2 class="tec__dudas-h">{{ 'Primeros pasos' | t }}</h2>
+          <div class="tec__instala">
+            @for (g of videosInstalacion(); track g.id) {
+              <div class="tec__instala-card">
+                <button type="button" class="tec__vcard-thumb tec__vcard-thumb--wide" appTapScale (click)="abrirVideo(g)" [attr.data-testid]="'instala-video-' + g.id" [attr.aria-label]="g.titulo">
+                  <span class="tec__vcard-kicker">{{ g.kicker || ('INSTALAR' | t) }}</span>
+                  <span class="tec__vcard-title">{{ g.titulo }}</span>
+                  <span class="tec__vcard-play"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4 L20 12 L7 20 Z"></path></svg></span>
+                </button>
+                <button type="button" class="tec__share-wa" appTapScale (click)="compartirInstalacion(g)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+                  {{ 'Compartir por WhatsApp' | t }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- CM3 (F5) — "Aprende viendo": rejilla de videos de guía con chips por módulo -->
+        @if (videosGuia().length) {
+          <div class="tec__aprende-h">
+            <h2 class="tec__dudas-h" style="margin:0">{{ 'Aprende viendo' | t }}</h2>
+            <span class="tec__aprende-sub">{{ 'Videos con voz' | t }}</span>
+          </div>
+          @if (chipsVideo().length > 2) {
+            <div class="tec__chips">
+              @for (chip of chipsVideo(); track chip) {
+                <button type="button" class="tec__chip" [class.tec__chip--on]="videoChip() === chip" appTapScale (click)="videoChip.set(chip)">{{ chipLabel(chip) }}</button>
+              }
+            </div>
+          }
+          <div class="tec__vgrid">
+            @for (g of videosFiltrados(); track g.id) {
+              <button type="button" class="tec__vcard" appTapScale (click)="abrirVideo(g)" [attr.data-testid]="'guia-video-' + g.id" [attr.aria-label]="g.titulo">
+                <span class="tec__vcard-thumb">
+                  <span class="tec__vcard-kicker">{{ g.kicker || guiaIcono[g.icono] }}</span>
+                  <span class="tec__vcard-title">{{ g.titulo }}</span>
+                  <span class="tec__vcard-play"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M7 4 L20 12 L7 20 Z"></path></svg></span>
+                  @if (videoDe(g)?.duracion) { <span class="tec__vcard-dur">{{ videoDe(g)?.duracion }}</span> }
+                </span>
+                @switch (estadoVideo(g)) {
+                  @case ('offline') { <span class="tec__vcard-state">{{ 'Necesitas conexión para ver el video' | t }}</span> }
+                  @case ('cargando') { <span class="tec__vcard-state">{{ 'Cargando video…' | t }}</span> }
+                  @case ('error') { <span class="tec__vcard-state">{{ 'No pudimos cargar el video. Revisa tu conexión.' | t }}</span> }
+                }
+              </button>
+            }
+          </div>
+        }
+
         @if (guiasVisibles().length) {
-          <h2 class="tec__dudas-h">Guías rápidas</h2>
+          <h2 class="tec__dudas-h">Guías paso a paso</h2>
           @for (g of guiasVisibles(); track g.id) {
             <div class="tec__guia">
               <div class="tec__guia-top">
@@ -87,43 +139,13 @@
               <ol class="tec__guia-pasos">
                 @for (p of g.pasos; track $index) { <li>{{ p }}</li> }
               </ol>
-              <!-- CK5 — Video tutorial (si la guía lo trae). Los pasos de arriba
-                   siguen visibles offline; el video exige conexión y nunca se
-                   precachea (preload="metadata", sin autoplay). -->
-              @if (guiaTieneVideo(g)) {
-                @switch (estadoVideo(g)) {
-                  @case ('offline') {
-                    <p class="tec__guia-video-off">{{ 'Necesitas conexión para ver el video' | t }}</p>
-                  }
-                  @case ('cargando') {
-                    <p class="tec__guia-video-off">{{ 'Cargando video…' | t }}</p>
-                  }
-                  @case ('error') {
-                    <p class="tec__guia-video-off">{{ 'No pudimos cargar el video. Revisa tu conexión.' | t }}</p>
-                  }
-                  @case ('listo') {
-                    @if (videoDe(g); as v) {
-                      <div class="tec__guia-video">
-                        <video
-                          class="tec__guia-player"
-                          controls
-                          preload="metadata"
-                          playsinline
-                          [poster]="v.poster ?? undefined"
-                          [attr.data-testid]="'guia-video-' + g.id"
-                        >
-                          <source [src]="v.url" />
-                          @if (v.subtitulos) {
-                            <track kind="subtitles" [src]="v.subtitulos" srclang="es" [label]="'Español' | t" default />
-                          }
-                        </video>
-                        @if (v.duracion) {
-                          <span class="tec__guia-dur">{{ 'Duración' | t }}: {{ v.duracion }}</span>
-                        }
-                      </div>
-                    }
-                  }
-                }
+              <!-- CK5/CM3 — si la guía trae video, botón que abre el reproductor a
+                   pantalla completa. Los pasos de arriba siguen visibles offline. -->
+              @if (guiaTieneVideo(g) && !g.instalacion) {
+                <button type="button" class="tec__guia-vbtn" appTapScale (click)="abrirVideo(g)" [attr.data-testid]="'guia-vbtn-' + g.id">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4 L20 12 L7 20 Z"></path></svg>
+                  {{ 'Ver video' | t }}
+                </button>
               }
             </div>
           }
