@@ -8,8 +8,8 @@
 
 **TL;DR:** las 4 fases enviables (F1/F2/F4/**F5**) están en prod con **build verde** + `test:canal` verde. **F3 y F6 siguen BLOQUEADAS por el padre** (re-verificado hoy en sgc-dev: `practica_guardar_intento` 404; los RPC de lectura de incentivos no exponen el tope) → follow-up.
 
-### 🔴 OJO — F1 y Raykler (#197): el fix REAL es del PADRE y aún NO está en prod
-`conduce_puede_transferir` da **404 en prod** (PROMPT-94 F1 no aplicado a prod). El app 2.48.0 **degrada sin romper** (`puedeTransferir` cae a `{puede:true}`, el server sigue siendo la verdad), pero **el problema de Raykler NO queda resuelto en prod** hasta que el padre aplique su SQL de F1 (`conduce_fase` + `conduce_puede_transferir` + corrección de la fase prematura). Cuando lo aplique, F1 **se activa solo** (el app ya llama al RPC, sin APK nuevo). F2/F4/F5 funcionan en prod ya.
+### ✅ F1 (Raykler #197) — CONFIRMADO vivo en prod
+`conduce_puede_transferir(p_salida_id)` + `conduce_fase(p_salida_id)` están vivos en **dev Y prod** (verificado con el param correcto `p_salida_id`; un probe previo con `p_conduce_id` dio un falso 404). PROMPT-94 F1 ya está en prod → el bug de Raykler está resuelto allá. F2/F4/F5 también funcionan en prod.
 - **✅ F2 CM5** (`d22bdb9`): `shared/ui/photo-viewer` global (pantalla completa, pellizcar/zoom/pan/deslizar-cerrar/atrás-Android/✕/Esc; FLIP desde avatar; reduce-motion=fundido) en perfil/mi-detalle/mensajes/personal-expediente/compa/conductores. avatar 512→1080.
 - **✅ F1 CM4** (`35d81ad`): transferir/firmar por la fase del server (`conduce_puede_transferir`; "En camino…" en por-confirmar; sin lógica local de pendiente_firma).
 - **✅ F4 CM2** (`6774972`+`9d5f2a7`): logo-reveal variante A tras login + pin-unlock, 1 vez por arranque, tap-saltar, haptic, reduce-motion estático; `csd-logo-simbolo.svg` copiado; "CSD APP" texto (falta `texto.svg`).
@@ -19,8 +19,8 @@
 
 **👤 PENDIENTE (post-release):**
 1. **Probar 2.48.0 en prod** (ya publicada): idealmente la **actualización in-app desde 2.47.0 en el Samsung** (regla CL4; el updater no cambió este round, por eso no bloqueó el release) + F2 (tocar foto de perfil), F4 (logo al entrar), F5 (abrir un video en Dudas a pantalla completa, "Compartir por WhatsApp").
-2. **🔴 Pedir al PADRE que aplique en PROD la F1 de PROMPT-94** (`conduce_fase` + `conduce_puede_transferir` + fix de fase) — **sin eso el problema de Raykler sigue en prod** (el app ya está listo, se activa solo). Y `csd-logo-texto.svg` (F4, estético).
-3. **Follow-up F3/F6** cuando el padre entregue: `cm6b` (`sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql`) para incentivos-tope, y `practica_guardar_intento`+cliente de práctica (PROMPT-94 F7a) para el modo práctica.
+2. **Follow-up F3/F6 — pedir al PADRE** (aplicar dev+prod): `cm6b` (`sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql`) recrear `incentivo_listado`/`incentivo_mi_rendimiento`/`incentivo_semanas` exponiendo `maximo`/`puntaje_bruto` → desbloquea F3; `practica_guardar_intento` + cliente de práctica (PROMPT-94 F7a) → desbloquea F6; `csd-logo-texto.svg` (F4, cosmético). (F1 ya está vivo en prod — nada que pedir.)
+3. **CK aún owed al padre** (afecta "Mis trabajos"/acciones de Misael): `sql-para-sgc/2026-10-09-ck14-*`, `2026-10-09-ck15-*`, `2026-10-10-ck15b-*`.
 
 ---
 
