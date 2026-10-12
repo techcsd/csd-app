@@ -34,6 +34,15 @@ export interface IncentivoSemana {
   puntaje: number;
   minimo: number;
   cumplio: boolean;
+  /**
+   * CM6 — tope semanal (`maximo`) y puntos BRUTOS antes del tope (`puntaje_bruto`).
+   * Opcionales (capability hasta cm6b). `tope_dia` = topes por actividad/día de la
+   * config (jsonb), para el texto "Echadas: 2 por día". Cuando `maximo` está y
+   * `puntaje_bruto > puntaje`, el chofer llegó al tope de la semana.
+   */
+  maximo?: number | null;
+  puntaje_bruto?: number | null;
+  tope_dia?: Record<string, unknown> | null;
   /** `{ renglon: { propio, ayudante, puntos, refs[] } }`. */
   conteos: Record<string, IncentivoRenglon> | null;
   /** 'aprobado' | 'declinado' | null (pendiente de decisión). */

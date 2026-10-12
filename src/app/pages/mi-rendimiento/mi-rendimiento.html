@@ -34,6 +34,25 @@
         @if (!a.cumplio) {
           <p class="mirend__faltan">{{ 'Te falta' | t }}{{ faltan() === 1 ? '' : 'n' }} <b>{{ faltan() }}</b> {{ 'punto' | t }}{{ faltan() === 1 ? '' : 's' }} {{ 'para el mínimo de la semana.' | t }}</p>
         }
+
+        <!-- CM6 (F3) — tope semanal (solo si la config tiene tope) -->
+        @if (tope(); as t) {
+          <div class="mirend__tope" [class.mirend__tope--lleno]="topeAlcanzado()">
+            <div class="mirend__tope-head">
+              <span>{{ 'Tope de la semana' | t }}</span>
+              <b><span [appCountUp]="a.puntaje"></span> / {{ t }}</b>
+            </div>
+            <div class="mirend__barra">
+              <div class="mirend__barra-fill mirend__barra-fill--tope" [style.width.%]="progresoTope()"></div>
+            </div>
+            @if (topeAlcanzado()) {
+              <p class="mirend__tope-msg">{{ 'Llegaste al tope de la semana: lo que hagas de más no suma.' | t }}@if (sobreTope() > 0) { <span class="mirend__tope-sobre"> ({{ sobreTope() }} {{ 'sobre tope' | t }})</span> }</p>
+            }
+            @if (topeDiaTexto()) {
+              <p class="mirend__tope-dia">{{ 'Por día' | t }}: {{ topeDiaTexto() }}</p>
+            }
+          </div>
+        }
       </section>
 
       <!-- Desglose por renglón -->

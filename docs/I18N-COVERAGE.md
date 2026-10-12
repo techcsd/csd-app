@@ -11,7 +11,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 |  | 0 | 21 | 0% | 0% |  |
 | pages/actualizar | 26 | 0 | 100% | 12% |  |
 | pages/admin | 12 | 0 | 100% | 0% |  |
-| pages/admin/auditoria | 22 | 0 | 100% | 0% |  |
+| pages/admin/auditoria | 22 | 0 | 100% | 5% |  |
 | pages/admin/catalogos | 5 | 0 | 100% | 0% |  |
 | pages/admin/conteos | 4 | 0 | 100% | 0% |  |
 | pages/admin/parametros | 6 | 0 | 100% | 0% |  |
@@ -45,7 +45,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/en-proceso | 22 | 0 | 100% | 0% |  |
 | pages/forbidden | 0 | 4 | 0% | 0% |  |
 | pages/home | 14 | 0 | 100% | 14% | ✅ |
-| pages/incentivos | 35 | 0 | 100% | 6% |  |
+| pages/incentivos | 40 | 1 | 98% | 17% |  |
 | pages/incentivos/participantes | 16 | 0 | 100% | 0% |  |
 | pages/ingenieria | 3 | 0 | 100% | 0% |  |
 | pages/ingenieria/cartilla | 58 | 0 | 100% | 0% |  |
@@ -71,7 +71,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/mensajes/grupo-info | 24 | 0 | 100% | 4% |  |
 | pages/mensajes/nuevo-grupo | 15 | 0 | 100% | 7% |  |
 | pages/mensajes/thread | 42 | 0 | 100% | 2% |  |
-| pages/mi-rendimiento | 25 | 0 | 100% | 0% |  |
+| pages/mi-rendimiento | 29 | 0 | 100% | 14% |  |
 | pages/notas | 18 | 0 | 100% | 0% |  |
 | pages/notas/editor | 26 | 0 | 100% | 0% |  |
 | pages/obra | 20 | 0 | 100% | 0% |  |

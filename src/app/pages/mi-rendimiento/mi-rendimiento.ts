@@ -9,6 +9,7 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { IncentivoService, IncentivoSemana, IncentivoRef } from '../../core/services/incentivo.service';
 import { ToastService } from '../../core/services/toast.service';
 import { formatFecha, formatFechaHumana } from '../../core/util/fecha';
+import { resumirTopeDia } from '../../core/util/incentivo-tope';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 /** AT2 — orden y etiquetas de los renglones del informe (v1). */
@@ -108,6 +109,34 @@ export class MiRendimientoPage {
     if (!a || !a.minimo) return 0;
     return Math.min(100, Math.round(((a.puntaje ?? 0) / a.minimo) * 100));
   });
+
+  // ── CM6 (F3) — tope semanal ──────────────────────────────────────────────────
+  /** Tope semanal de la config (null = sin tope → no se pinta nada). */
+  tope = computed<number | null>(() => {
+    const m = this.actual()?.maximo;
+    return typeof m === 'number' && m > 0 ? m : null;
+  });
+  /** Puntos BRUTOS antes del tope (cae a `puntaje` si el server no lo expone). */
+  brutos = computed(() => this.actual()?.puntaje_bruto ?? this.actual()?.puntaje ?? 0);
+  /** % de los puntos que cuentan contra el tope (0 si no hay tope). */
+  progresoTope = computed(() => {
+    const t = this.tope();
+    if (!t) return 0;
+    return Math.min(100, Math.round(((this.actual()?.puntaje ?? 0) / t) * 100));
+  });
+  /** ¿Ya llegó al tope de la semana? (los brutos superan lo que cuenta). */
+  topeAlcanzado = computed(() => {
+    const t = this.tope();
+    return !!t && (this.actual()?.puntaje ?? 0) >= t;
+  });
+  /** Cuántos puntos hizo de más que no suman. */
+  sobreTope = computed(() => {
+    const t = this.tope();
+    if (!t) return 0;
+    return Math.max(0, this.brutos() - (this.actual()?.puntaje ?? 0));
+  });
+  /** Texto del tope por día desde la config (p. ej. "Echadas: 2 por día"). */
+  topeDiaTexto = computed<string>(() => resumirTopeDia(this.actual()?.tope_dia ?? null));
 
   constructor() {
     void this.load();

@@ -37,6 +37,14 @@
           (picked)="onSemanaPicked($event)" />
       </div>
 
+      <!-- CM6 (F3) — tope vigente (solo lectura; se configura en la web) -->
+      @if (topeSemanal(); as t) {
+        <p class="inc__tope-cfg">
+          {{ 'Tope semanal' | t }}: <b>{{ t }}</b>@if (topeDiaTexto()) { <span> · {{ topeDiaTexto() }}</span> }
+          <span class="inc__tope-cfg-nota">{{ 'Se configura en la web.' | t }}</span>
+        </p>
+      }
+
       <!-- Aviso: la aprobación es una decisión humana -->
       <p class="inc__aviso">
         ⚖️ {{ 'El informe no paga solo:' | t }} <b>{{ 'aprobar es una decisión humana que queda registrada' | t }}</b>
@@ -82,6 +90,22 @@
                 </span>
                 <span class="inc__dec inc__dec--{{ f.decision || 'pendiente' }}" [appEstadoPulse]="f.decision || 'pendiente'">{{ decisionLabel(f) }}</span>
               </div>
+
+              <!-- CM6 (F3) — puntos hechos vs. lo que cuenta (tope) -->
+              @if (tieneTope(f)) {
+                <div class="inc__tope">
+                  <div class="inc__tope-row">
+                    <span class="inc__tope-label">{{ 'Hechos' | t }}: <b>{{ brutosDe(f) }}</b></span>
+                    @if (sobreTopeDe(f) > 0) {
+                      <span class="inc__tope-chip">{{ sobreTopeDe(f) }} {{ 'sobre tope' | t }}</span>
+                    }
+                    <span class="inc__tope-cuenta">{{ 'cuentan' | t }} <b>{{ f.puntaje }}</b></span>
+                  </div>
+                  <div class="inc__tope-bar">
+                    <div class="inc__tope-fill" [class.inc__tope-fill--lleno]="sobreTopeDe(f) > 0" [style.width.%]="pctTopeDe(f)"></div>
+                  </div>
+                </div>
+              }
 
               @if (f.decision && f.decidido_por_nombre) {
                 <p class="inc__decby">

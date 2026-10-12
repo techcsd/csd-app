@@ -4081,5 +4081,12 @@
   "Capítulos": "Chapters",
   "Pantalla completa": "Fullscreen",
   "INSTALAR": "INSTALL",
-  "Avanzar el video": "Seek the video"
+  "Avanzar el video": "Seek the video",
+  "Tope de la semana": "Weekly cap",
+  "Llegaste al tope de la semana: lo que hagas de más no suma.": "You hit the weekly cap: anything extra doesn't count.",
+  "sobre tope": "over cap",
+  "Tope semanal": "Weekly cap",
+  "Se configura en la web.": "Set on the web.",
+  "Hechos": "Done",
+  "cuentan": "count"
 }

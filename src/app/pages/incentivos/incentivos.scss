@@ -54,6 +54,69 @@
   color: var(--color-text-secondary);
 }
 
+// ── CM6 (F3) — tope ───────────────────────────────────────────────────────────
+.inc__tope-cfg {
+  margin: 14px 16px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: 13px;
+  color: var(--color-text-primary);
+
+  b {
+    color: var(--color-primary);
+  }
+}
+.inc__tope-cfg-nota {
+  color: var(--color-text-secondary);
+  margin-left: 4px;
+}
+.inc__tope {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.inc__tope-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.inc__tope-label b,
+.inc__tope-cuenta b {
+  color: var(--color-text-primary);
+}
+.inc__tope-cuenta {
+  margin-left: auto;
+}
+.inc__tope-chip {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b54708;
+  background: #fffaeb; // tokens-allow-dark — chip ámbar "sobre tope" (señal fija, paridad mock)
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.inc__tope-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-border);
+  overflow: hidden;
+}
+.inc__tope-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-secondary);
+  transition: width 0.3s ease;
+}
+.inc__tope-fill--lleno {
+  background: var(--color-primary);
+}
+
 // ── Acción en bloque ──────────────────────────────────────────────────────────
 .inc__bulk {
   display: block;

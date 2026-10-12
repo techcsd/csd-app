@@ -107,6 +107,48 @@
   color: var(--color-text-primary);
 }
 
+// ── CM6 (F3) — tope semanal ───────────────────────────────────────────────────
+.mirend__tope {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mirend__tope-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+
+  b {
+    color: var(--color-text-primary);
+  }
+}
+.mirend__barra-fill--tope {
+  background: var(--color-primary);
+}
+.mirend__tope--lleno .mirend__barra-fill--tope {
+  background: var(--color-primary);
+}
+.mirend__tope-msg {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+.mirend__tope-sobre {
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.mirend__tope-dia {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+
 // ── Desglose ────────────────────────────────────────────────────────────────
 .mirend__sec {
   margin: 22px 16px 10px;
