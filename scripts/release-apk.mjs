@@ -40,12 +40,10 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-12';
 
-const TITULO = 'Videos para aprender, fotos de perfil en grande y un logo al entrar';
+const TITULO = 'Modo práctica para ensayar sin miedo e incentivos con tope';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Dudas y Ayuda', d: 'Nueva sección "Aprende viendo": videos con voz para cada tarea (pre-uso, combustible, uso del vehículo…) que se abren a pantalla completa, con sonido, subtítulos, velocidad y capítulos. Arriba, dos videos para instalar la app en Android y en iPhone, que puedes compartir por WhatsApp.' },
-  { t: 'nuevo', m: 'Fotos de perfil', d: 'Ahora puedes tocar la foto de un usuario o conductor para verla en grande, a pantalla completa, y acercarla con los dedos.' },
-  { t: 'arreglo', m: 'Conduces', d: 'Arreglada la transferencia de conduces con receptor designado: un conduce se transfiere mientras no ha llegado; cuando va en camino se ve "En camino — podrás firmar cuando el chofer lo entregue" y se firma al llegar.' },
-  { t: 'nuevo', m: 'Al entrar', d: 'Un logo animado te recibe al iniciar sesión y al desbloquear con tu PIN. Puedes tocar para saltarlo; con "Animaciones: reducidas" aparece estático.' },
+  { t: 'nuevo', m: 'Modo práctica', d: 'Nuevo "Modo práctica" (en Soporte y ayuda): ensaya los flujos de la app con datos de mentira, sin que nada llegue a inventario, a Flota ni a nadie. Te ponemos objetivos, un cronómetro y una nota, con animación al terminar. Hay misiones para cada rol (combustible, pre-uso, tomar/soltar vehículo, entregar conduce, reportar estado; y para ingeniería: parte diario, pedir material, recibir conduce, apoyo de transporte). Solo se guarda tu nota.' },
+  { t: 'nuevo', m: 'Incentivos', d: 'Ahora el incentivo puede tener un TOPE: en "Mi rendimiento" ves cuánto cuenta contra el tope de la semana y, al llegar, "lo que hagas de más no suma". Logística ve los puntos hechos, lo que cuenta y cuánto pasó del tope. Los topes se configuran en la web.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

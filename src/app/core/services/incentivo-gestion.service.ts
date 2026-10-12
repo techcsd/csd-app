@@ -20,6 +20,8 @@ export interface IncentivoGestionSemana {
   choferes: number;
   /** Cuántos alcanzaron el mínimo. */
   cumplieron: number;
+  /** CM6 — tope semanal global de la config (opcional; capability hasta cm6b). */
+  maximo_semanal?: number | null;
 }
 
 /** Una fila del listado por chofer de una semana (RPC `incentivo_listado`). */
@@ -31,6 +33,13 @@ export interface IncentivoGestionFila {
   puntaje: number;
   minimo: number;
   cumplio: boolean;
+  /**
+   * CM6 — tope semanal (`incentivo_semana.maximo`) y puntos BRUTOS antes del tope
+   * (`puntaje_bruto`). Opcionales: capability hasta que el padre aplique cm6b. Con
+   * `maximo` presente y `puntaje_bruto > puntaje`, el chofer topó la semana.
+   */
+  maximo?: number | null;
+  puntaje_bruto?: number | null;
   /** `{ renglon: { propio, ayudante, puntos, refs[] } }`. */
   conteos: Record<string, unknown> | null;
   /** Marcadores anti-inflado (puede venir `{}` vacío). */
@@ -79,9 +88,28 @@ export interface IncentivoDecisionHist {
   decidido_en: string;
 }
 
+/** CM6 — config vigente del incentivo (RPC `incentivo_config_actual`). Solo lectura
+ *  en el app: los topes se configuran en la web. */
+export interface IncentivoConfigActual {
+  version: number | null;
+  minimo_semanal: number | null;
+  /** Tope semanal global (null = sin tope). */
+  maximo_semanal: number | null;
+  /** Topes por actividad (jsonb): `{ actividad: número | {dia, semana} }`. */
+  topes: Record<string, unknown> | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class IncentivoGestionService {
   private supabase = inject(SupabaseService);
+
+  /** CM6 — config vigente (para mostrar los topes, solo lectura). Best-effort. */
+  async configActual(): Promise<IncentivoConfigActual | null> {
+    const { data, error } = await this.supabase.client.rpc('incentivo_config_actual');
+    if (error) return null; // capability: sin config → no se pinta el tope
+    const row = Array.isArray(data) ? data[0] : data;
+    return (row as IncentivoConfigActual) ?? null;
+  }
 
   /** Gate: ¿el usuario actual puede gestionar el incentivo? (logística/gerencia/admin). */
   async puedeGestionar(): Promise<boolean> {

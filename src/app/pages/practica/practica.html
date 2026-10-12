@@ -1,0 +1,146 @@
+<div class="screen prac">
+  @switch (pantalla()) {
+
+    <!-- ── INICIO: lista de misiones ──────────────────────────────────── -->
+    @case ('inicio') {
+      <header class="prac__header">
+        <button type="button" class="prac__back" (click)="back()" aria-label="Atrás">←</button>
+        <h1 class="prac__title">{{ 'Modo práctica' | t }}</h1>
+      </header>
+      <div class="screen__body prac__home" appFadeIn>
+        <span class="prac__kicker">{{ 'MODO PRÁCTICA' | t }}</span>
+        <h2 class="prac__home-h">{{ 'Practica sin miedo' | t }}</h2>
+        <p class="prac__home-sub">{{ 'Son las mismas pantallas de la app, con datos de mentira. Nada llega a inventario, a Flota ni a nadie. Solo se guarda tu nota.' | t }}</p>
+
+        @if (misiones().length) {
+          <ul class="prac__misiones" appStagger>
+            @for (m of misiones(); track m.id; let i = $index) {
+              <li>
+                <button type="button" class="prac__mis" appTapScale (click)="iniciar(m)" [attr.data-testid]="'practica-mision-' + m.id">
+                  <span class="prac__mis-n">{{ i + 1 }}</span>
+                  <span class="prac__mis-txt">
+                    <span class="prac__mis-titulo">{{ m.titulo }}</span>
+                    <span class="prac__mis-sub">{{ m.sub }}</span>
+                  </span>
+                  <span class="prac__mis-cta">{{ 'Empezar' | t }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="prac__vacio">{{ 'Aún no hay misiones para tu rol.' | t }}</p>
+        }
+
+        <a class="prac__resultados-link" routerLink="/practica/resultados">🏅 {{ 'Mis resultados' | t }}</a><!-- tropes-allow: icono 🏅 = paridad con Mi rendimiento -->
+
+      </div>
+    }
+
+    <!-- ── MISIÓN: el ensayo ──────────────────────────────────────────── -->
+    @case ('mision') {
+      @if (mision(); as m) {
+        <div class="prac__run" appFadeIn>
+          <div class="prac__banda">
+            <span>{{ 'PRÁCTICA · nada de esto es real' | t }}</span>
+            <span class="prac__reloj">{{ reloj() }}</span>
+          </div>
+
+          <div class="prac__obj-wrap">
+            <div class="prac__mis-label">{{ m.titulo | uppercase }}</div>
+            <div class="prac__objs">
+              @for (o of m.objetivos; track o.id) {
+                <span class="prac__obj" [class.prac__obj--ok]="objetivoHecho(o.id)">
+                  {{ objetivoHecho(o.id) ? '✓' : '○' }} {{ o.label }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="prac__campos">
+            @for (p of camposPasos(); track p.id) {
+              @if (p.tipo === 'valor' && p.campo) {
+                <label class="prac__field-lbl">{{ p.campo.label }}
+                  <div
+                    class="prac__field"
+                    [class.prac__field--on]="pasoActual()?.id === p.id"
+                    [class.prac__field--err]="mostrandoError && pasoActual()?.id === p.id"
+                    [appShake]="pasoActual()?.id === p.id ? temblorAt() : 0"
+                  >{{ valorDe(p.campo.objetivo) || '—' }}</div>
+                </label>
+                @if (mostrandoError && pasoActual()?.id === p.id && p.campo.trampa) {
+                  <div class="prac__error">{{ p.campo.trampa.mensaje }}</div>
+                }
+              } @else if (p.tipo === 'foto' && p.foto) {
+                <div class="prac__slot" [class.prac__slot--ok]="fotoHecha(p.foto.objetivo)" [class.prac__slot--on]="pasoActual()?.id === p.id">
+                  {{ fotoHecha(p.foto.objetivo) ? ('✓ ' + p.foto.label) : p.foto.label }}
+                </div>
+              } @else if (p.tipo === 'accion' && p.accion) {
+                <div class="prac__accion" [class.prac__accion--ok]="objetivoHecho(p.accion.objetivo)" [class.prac__accion--on]="pasoActual()?.id === p.id">
+                  <span class="prac__accion-mark">{{ objetivoHecho(p.accion.objetivo) ? '✓' : '○' }}</span>
+                  <span>{{ p.accion.label }}</span>
+                </div>
+              }
+            }
+          </div>
+
+          <div class="prac__run-footer">
+            <button type="button" class="prac__cta" appTapScale (click)="avanzar()" data-testid="practica-avanzar">
+              {{ (pasoActual()?.cta || 'Guardar') }}
+            </button>
+            <button type="button" class="prac__salir" (click)="salir()">{{ 'Salir de la práctica' | t }}</button>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- ── RESULTADO ──────────────────────────────────────────────────── -->
+    @case ('resultado') {
+      @if (resultado(); as r) {
+        <div class="prac__res" appFadeIn>
+          <!-- Confeti (solo si aprobó) -->
+          @if (confeti().length) {
+            <div class="prac__conf-wrap" aria-hidden="true">
+              @for (c of confeti(); track $index) {
+                <span class="prac__conf" [style.background]="c.col" [style.--dx]="c.dx" [style.--dy]="c.dy" [style.animation-delay]="c.delay"></span>
+              }
+            </div>
+          }
+
+          <span class="prac__kicker">{{ 'RESULTADO' | t }}</span>
+
+          <div class="prac__ring">
+            <svg width="170" height="170" viewBox="0 0 170 170" aria-hidden="true">
+              <circle cx="85" cy="85" r="72" fill="none" stroke="var(--color-border)" stroke-width="12"></circle>
+              <circle class="prac__ring-fill" cx="85" cy="85" r="72" fill="none" stroke="var(--color-primary)" stroke-width="12" stroke-linecap="round" pathLength="1" transform="rotate(-90 85 85)" [style.stroke-dashoffset]="1 - r.nota / 100"></circle>
+            </svg>
+            <div class="prac__ring-num"><span class="prac__nota">{{ r.nota }}</span><span class="prac__nota-de">{{ 'de 100' | t }}</span></div>
+          </div>
+
+          <div class="prac__stars">
+            @for (s of [1,2,3]; track s) {
+              <span class="prac__star" [class.prac__star--on]="r.estrellas >= s">★</span>
+            }
+          </div>
+
+          <div class="prac__res-titulo">
+            {{ r.aprobada ? ('¡Aprobada! Bien hecho.' | t) : ('No aprobaste esta vez. ¡Prueba otra vez!' | t) }}
+          </div>
+
+          <div class="prac__lineas">
+            @for (l of r.lineas; track $index) {
+              <div class="prac__linea" [class.prac__linea--ok]="l.ok" [class.prac__linea--no]="!l.ok">
+                <b>{{ l.ok ? '✓' : '✗' }}</b>
+                <span>{{ l.label }} ({{ l.puntos > 0 ? '+' : '' }}{{ l.puntos }})</span>
+              </div>
+            }
+          </div>
+
+          <div class="prac__res-footer">
+            <button type="button" class="prac__cta" appTapScale (click)="siguiente()">{{ 'Siguiente misión' | t }}</button>
+            <button type="button" class="prac__cta prac__cta--ghost" appTapScale (click)="repetir()">{{ 'Repetir para subir la nota' | t }}</button>
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

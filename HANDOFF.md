@@ -1,5 +1,18 @@
 # HANDOFF — CSD App
 
+## 🟠 SESIÓN 12/10/2026 — PROMPT-95 · Ronda **CM** (2ª parte) — **F3 + F6a en código (build ✅), falta APK dev + prueba Samsung → prod** · versión **2.49.0**
+> El padre (PROMPT-94 F3+F7a) **ya aplicó sus contratos** (verificado vivo en **dev y prod**). Rama **`feature/cm-ronda`**. Versión bumpeada a **2.49.0** (environment.{prod,dev}.ts + build.gradle alineados).
+
+**TL;DR:** desbloqueadas y cableadas **F3 (incentivos con tope)** + **F6 completo (modo práctica: motor + 9 misiones, F6a piloto y F6b resto)**. Build + `test:canal` verdes. Toda la ronda CM queda enviada salvo detalles menores (F4 logo-texto sin cablear, "Modo práctica" en la bienvenida). Gotcha de probe: `conduce_puede_transferir`/`conduce_fase` usan param **`p_salida_id`** (no `p_conduce_id`).
+- **✅ F3 CM6** (`4935e2c`): incentivos con tope. Gestión: resumen read-only ("Tope semanal: N · … · se configura en la web") + por chofer puntos hechos/cuentan/"N sobre tope". Mi rendimiento: barra vs tope + "Llegaste al tope…". `incentivo_config_actual()` + `incentivo_semana.{maximo,puntaje_bruto}` (vivos dev+prod). Campos opcionales (capability).
+- **✅ F6a CM7** (`4fd45c4`): modo práctica — motor + piloto. `core/practica/` (PracticaService + escenarios locales) + `pages/practica/` (inicio→misión→resultado copia del mock: banda PRÁCTICA/cronómetro/objetivos/temblor+−10/anillo+estrellas+confeti/haptic) + "Mis resultados". **Aislado por construcción:** NO toca outbox/Dexie/Preferences; única salida = `practica_guardar_intento` (online) → offline = cero sincronizaciones. Entrada en Soporte › Modo práctica.
+- **✅ F6b CM7** (`bb4ff63`): resto de misiones. Motor data-driven (paso `accion` + reglas de puntos por objetivos); **9 misiones** totales: `app-combustible` (intro) + chofer (pre-uso/tomar-soltar/entregar-conduce/reportar-estado) + ingeniero/capataz (parte-diario/pedir-material/recibir-conduce/apoyo). `misionesVisibles()` = admin todas / resto por rol. Sembradas en dev (`scripts/data-fixes/2026-10-12-cm7-seed-misiones-app.mjs`); **prod lo aplica el padre**.
+- **Bonus:** `csd-logo-texto.svg` (F4) ya está en el repo (sin cablear al reveal; refinamiento menor).
+
+**👤 Para cerrar la ronda CM (2.49.0):** ya está en **dev** (APK dev 2.49.0 publicado + `dev`=`feature/cm-ronda`=`bb4ff63`). (1) **Probar en el Samsung:** práctica (varias misiones; temblor del km en combustible, resultado con confeti, offline→cero syncs) + incentivos con tope + actualización in-app desde 2.48.0. (2) Con OK → prod (dev→main + `npm run apk --env prod` + `apk:publish --env prod` + publicar flag + notificar iOS). (3) **🔴 El padre debe aplicar `scripts/data-fixes/2026-10-12-cm7-seed-misiones-app.mjs` en PROD** (sin eso, guardar la nota de práctica falla en prod). Opcional: cablear `csd-logo-texto.svg` (F4) + "Modo práctica" en la bienvenida CL3.
+
+---
+
 ## 🟢 SESIÓN 11-12/10/2026 — PROMPT-95 · Ronda **CM** — app **2.48.0 PUBLICADA A PROD** ✅
 > ⚠️ El round de la APP es **PROMPT-95** (`C:\developer\improvements\octubre 2026\imp 09102026\`). **PROMPT-94 es el del PADRE (SGC)**. `main`=`dev`=`feature/cm-ronda`=`b54797a`. Versión **2.48.0** alineada (environment.{prod,dev}.ts + build.gradle).
 

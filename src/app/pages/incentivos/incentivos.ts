@@ -14,8 +14,10 @@ import {
   IncentivoGestionService,
   IncentivoGestionFila,
   IncentivoGestionSemana,
+  IncentivoConfigActual,
 } from '../../core/services/incentivo-gestion.service';
 import { MotionService } from '../../core/services/motion.service';
+import { resumirTopeDia } from '../../core/util/incentivo-tope';
 import { MOTION_DIRECTIVES } from '../../shared/motion';
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -82,6 +84,40 @@ export class IncentivosPage {
     () => this.filas().filter((f) => f.cumplio && !f.decision).length,
   );
 
+  // ── CM6 (F3) — tope (solo lectura; se configura en la web) ────────────────────
+  config = signal<IncentivoConfigActual | null>(null);
+
+  /** Tope semanal vigente: de la config, o del propio informe de la semana. null = sin tope. */
+  topeSemanal = computed<number | null>(() => {
+    const c = this.config()?.maximo_semanal;
+    if (typeof c === 'number' && c > 0) return c;
+    const m = this.filas().find((f) => typeof f.maximo === 'number' && (f.maximo ?? 0) > 0)?.maximo;
+    return typeof m === 'number' && m > 0 ? m : null;
+  });
+
+  /** Texto "Echadas: 2 por día · Rutas: 4 por día" desde la config (o '' si no hay). */
+  topeDiaTexto = computed<string>(() => resumirTopeDia(this.config()?.topes ?? null));
+
+  /** Puntos brutos de una fila (cae a `puntaje` si el server no expone el bruto). */
+  brutosDe(f: IncentivoGestionFila): number {
+    return f.puntaje_bruto ?? f.puntaje;
+  }
+  /** Puntos de más que no cuentan (0 si no topó o no hay tope). */
+  sobreTopeDe(f: IncentivoGestionFila): number {
+    if (!(typeof f.maximo === 'number' && f.maximo > 0)) return 0;
+    return Math.max(0, this.brutosDe(f) - f.puntaje);
+  }
+  /** % de lo que cuenta contra el tope de la fila (0 si no hay tope). */
+  pctTopeDe(f: IncentivoGestionFila): number {
+    const t = typeof f.maximo === 'number' && f.maximo > 0 ? f.maximo : this.topeSemanal();
+    if (!t) return 0;
+    return Math.min(100, Math.round((f.puntaje / t) * 100));
+  }
+  /** ¿La fila tiene tope aplicable (para pintar la barra)? */
+  tieneTope(f: IncentivoGestionFila): boolean {
+    return (typeof f.maximo === 'number' && f.maximo > 0) || this.topeSemanal() !== null;
+  }
+
   constructor() {
     void this.init();
   }
@@ -91,7 +127,10 @@ export class IncentivosPage {
     try {
       const ok = await this.service.puedeGestionar();
       this.hasAccess.set(ok);
-      if (ok) await this.cargarSemanas();
+      if (ok) {
+        void this.service.configActual().then((c) => this.config.set(c)); // CM6 — tope (best-effort)
+        await this.cargarSemanas();
+      }
     } catch (e) {
       this.hasAccess.set(false);
       this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos verificar el acceso.'));

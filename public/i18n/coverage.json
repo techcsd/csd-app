@@ -25,7 +25,7 @@
       "conT": 22,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 5
     },
     "pages/admin/catalogos": {
       "conT": 5,
@@ -232,10 +232,10 @@
       "ht": 14
     },
     "pages/incentivos": {
-      "conT": 35,
-      "sinT": 0,
-      "en": 100,
-      "ht": 6
+      "conT": 40,
+      "sinT": 1,
+      "en": 98,
+      "ht": 17
     },
     "pages/incentivos/participantes": {
       "conT": 16,
@@ -388,10 +388,10 @@
       "ht": 2
     },
     "pages/mi-rendimiento": {
-      "conT": 25,
+      "conT": 29,
       "sinT": 0,
       "en": 100,
-      "ht": 0
+      "ht": 14
     },
     "pages/notas": {
       "conT": 18,
@@ -513,6 +513,12 @@
       "en": 100,
       "ht": 0
     },
+    "pages/practica": {
+      "conT": 18,
+      "sinT": 0,
+      "en": 100,
+      "ht": 100
+    },
     "pages/proyectos": {
       "conT": 19,
       "sinT": 0,
@@ -598,10 +604,10 @@
       "ht": 0
     },
     "pages/soporte": {
-      "conT": 2,
+      "conT": 4,
       "sinT": 20,
-      "en": 9,
-      "ht": 9
+      "en": 17,
+      "ht": 17
     },
     "pages/tareas": {
       "conT": 59,

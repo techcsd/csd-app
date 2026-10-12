@@ -293,7 +293,13 @@ Guiones `app-preuso`/`app-combustible`/`app-uso-vehiculo`:
 - **videos:** `guia-video-<id>` (card de "Aprende viendo") · `instala-video-<id>` · `guia-vbtn-<id>` · `video-player-el` (el `<video>` del reproductor).
 - Los de CK5 siguen: crear-ruta · bitacora-parte · recibir-conduce · requisicion-pedir · compa · crear-apoyo · apoyo-listado · apoyo-detalle · mis-trabajos · trabajos-transporte · mis-choferes.
 
-### Huecos del padre (CM — F3/F6 BLOQUEADAS)
-1. **🔴 Incentivos con tope (F3 CM6):** `sql/2026-10-09-cm6-incentivo-topes.sql` añadió columnas (`incentivo_config.{maximo_semanal,topes}`, `incentivo_semana.{maximo,topes,puntaje_bruto}`) pero **NO recreó** los RPC de lectura → el app no ve el tope. Fix dejado en `sql-para-sgc/2026-10-11-cm6b-incentivo-lectura-tope.sql` (recrear `incentivo_listado`/`incentivo_mi_rendimiento`/`incentivo_semanas` exponiendo `maximo`/`puntaje_bruto`). **F3 del app NO cableado** hasta que esté vivo.
-2. **🔴 Modo práctica (F6 CM7):** `practica_guardar_intento` **404** en dev + cliente de práctica (PROMPT-94 F7a) no entregado. **F6 del app NO empezado.**
-3. **Logo texto (F4):** falta `csd-logo-texto.svg` (hoy texto plano).
+### F3 (CM6) + F6a (CM7) — DESBLOQUEADAS y cableadas (app 2.49.0)
+El padre aplicó PROMPT-94 F3+F7a (verificado vivo en **dev y prod**). Consumido:
+- **Incentivos con tope (F3):** `incentivo_config_actual()` → `{maximo_semanal, topes}`; `incentivo_semana.{maximo,puntaje_bruto}` expuestos por `incentivo_listado`/`incentivo_mi_rendimiento`. App: gestión muestra el tope (read-only, "se configura en la web") + por chofer puntos hechos/cuentan/"N sobre tope"; Mi rendimiento barra vs tope + "Llegaste al tope…". Campos opcionales (capability: no-op si el server no los expone). Config de topes = **solo web**.
+- **Modo práctica (F6a+F6b — completo):** `practica_guardar_intento(p_mision_id,p_nota,p_estrellas,p_aprobada,p_duracion_s,p_detalle,p_plataforma,p_version)` + `practica_resultados_persona(p_usuario_id)` + tabla `practica_misiones`. **Aislamiento por construcción:** el simulador vive en `core/practica/` y NO toca outbox/borradores/Dexie/Preferences; la única salida a red es `practica_guardar_intento` (online, best-effort) → offline = **cero sincronizaciones**. Push/GPS/tracking no se activan. **9 misiones** registradas en `sgc.practica_misiones` (plataforma='app') vía `scripts/data-fixes/2026-10-12-cm7-seed-misiones-app.mjs` (dev aplicado; **prod lo aplica el padre**): `app-combustible` (intro), chofer (`app-preuso`/`app-uso-vehiculo`/`app-conduce`/`app-reporte-estado`), ingeniero/capataz (`app-parte-diario`/`app-pedir-material`/`app-recibir-conduce`/`app-apoyo-transporte`). Escenarios (objetivos/puntos) en el CLIENTE (`misiones-app.ts`); el motor es data-driven (pasos `valor`/`foto`/`accion`/`confirmar`, reglas de puntos por objetivos + bono de tiempo + penalizaciones por trampa). `misionesVisibles()` = admin todas / resto por rol. "Mis resultados" por `practica_resultados_persona`.
+- **testids práctica:** `soporte-practica` · `practica-mision-<id>` · `practica-avanzar`.
+
+### Huecos / pendientes CM
+1. **Logo texto (F4):** `csd-logo-texto.svg` ya existe en el repo (sin cablear al reveal; el reveal usa "CSD APP" texto — refinamiento menor).
+2. **bienvenida CL3:** falta añadir "Modo práctica" como último paso (hoy entra por Soporte).
+3. **prod:** el padre debe aplicar `cm7-seed-misiones-app` en **prod** (sin eso, guardar la nota de práctica falla en prod).

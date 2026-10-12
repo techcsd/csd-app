@@ -929,6 +929,17 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/soporte/soporte').then((m) => m.SoportePage),
   },
   {
+    // CM7 (F6a) — modo práctica (simulador local; lo ve todo usuario, no obligatorio).
+    path: 'practica',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/practica/practica').then((m) => m.PracticaPage),
+  },
+  {
+    path: 'practica/resultados',
+    canActivate: [authGuard, pinGuard],
+    loadComponent: () => import('./pages/practica/practica-resultados').then((m) => m.PracticaResultadosPage),
+  },
+  {
     path: 'admin',
     canActivate: [authGuard, pinGuard, moduleGuard('admin')],
     loadComponent: () => import('./pages/admin/admin').then((m) => m.AdminPage),

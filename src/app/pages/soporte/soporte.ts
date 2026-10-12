@@ -54,6 +54,10 @@ export class SoportePage implements AfterViewInit {
   reportar(): void {
     void this.router.navigate(['/reportar']);
   }
+  /** CM7 (F6a) — abre el modo práctica (simulador local). */
+  irPractica(): void {
+    void this.router.navigate(['/practica']);
+  }
   verTutorial(): void {
     void this.store.remove('csd_onboarding_v1_done').then(() => {
       void this.router.navigate(['/home']);
