@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { Location, UpperCasePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
@@ -31,7 +31,7 @@ interface Confeti {
   templateUrl: './practica.html',
   styleUrl: './practica.scss',
 })
-export class PracticaPage {
+export class PracticaPage implements OnDestroy {
   private practica = inject(PracticaService);
   private location = inject(Location);
   private motion = inject(MotionService);
@@ -61,6 +61,10 @@ export class PracticaPage {
   readonly confeti = signal<Confeti[]>([]);
 
   constructor() {
+    // Al entrar siempre arrancamos en el listado: el servicio es singleton, así que una
+    // misión abandonada en una visita anterior (sin "Salir") dejaría estado + cronómetro
+    // vivos → la limpiamos para no mostrar una misión a medias.
+    this.practica.salir();
     // Al terminar: si aprobó y hay movimiento, vibra + arma el confeti.
     effect(() => {
       const r = this.resultado();
@@ -71,6 +75,11 @@ export class PracticaPage {
         this.confeti.set([]);
       }
     });
+  }
+
+  /** Al salir de la pantalla: corta el cronómetro y descarta el estado del ensayo. */
+  ngOnDestroy(): void {
+    this.practica.salir();
   }
 
   // ── Inicio ──────────────────────────────────────────────────────────────────
