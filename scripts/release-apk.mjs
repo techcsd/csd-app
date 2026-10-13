@@ -40,10 +40,11 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-12';
 
-const TITULO = 'Modo práctica para ensayar sin miedo e incentivos con tope';
+const TITULO = 'Ordenar el día de los choferes y mejoras en Mis trabajos y práctica';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Modo práctica', d: 'Nuevo "Modo práctica" (en Soporte y ayuda): ensaya los flujos de la app con datos de mentira, sin que nada llegue a inventario, a Flota ni a nadie. Te ponemos objetivos, un cronómetro y una nota, con animación al terminar. Hay misiones para cada rol (combustible, pre-uso, tomar/soltar vehículo, entregar conduce, reportar estado; y para ingeniería: parte diario, pedir material, recibir conduce, apoyo de transporte). Solo se guarda tu nota.' },
-  { t: 'nuevo', m: 'Incentivos', d: 'Ahora el incentivo puede tener un TOPE: en "Mi rendimiento" ves cuánto cuenta contra el tope de la semana y, al llegar, "lo que hagas de más no suma". Logística ve los puntos hechos, lo que cuenta y cuánto pasó del tope. Los topes se configuran en la web.' },
+  { t: 'nuevo', m: 'Trabajos de transporte', d: 'Misael (y quien gestiona transporte) ya puede ORDENAR el día de cada chofer: en "Asignados", con las flechas, sube o baja cada trabajo para dejar el orden en que se harán. El chofer lo ve en "Mis trabajos".' },
+  { t: 'mejora', m: 'Mis trabajos', d: 'El chofer ya ve sus trabajos del día en orden y la nota que le dejó quien se los asignó.' },
+  { t: 'mejora', m: 'Modo práctica', d: 'Al terminar la bienvenida te invitamos a practicar primero (sin miedo). Además, la práctica ahora limpia bien el cronómetro y no te deja una misión a medias si sales.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
