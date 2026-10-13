@@ -165,7 +165,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/transporte/rutas-activas | 23 | 0 | 100% | 0% |  |
 | pages/transporte/seguimiento | 12 | 0 | 100% | 0% |  |
 | pages/transporte/solicitud-movimiento | 33 | 0 | 73% | 0% |  |
-| pages/transporte/trabajos-transporte | 32 | 0 | 97% | 0% |  |
+| pages/transporte/trabajos-transporte | 35 | 0 | 97% | 9% |  |
 | pages/transporte/trayectoria | 4 | 0 | 100% | 0% |  |
 | pages/transporte/uso-vehiculo | 23 | 0 | 100% | 0% |  |
 | pages/transporte/vehiculos | 63 | 2 | 97% | 0% |  |

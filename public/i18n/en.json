@@ -4108,5 +4108,9 @@
   "No pudimos cargar tus resultados.": "We couldn't load your results.",
   "Tus intentos": "Your attempts",
   "Ensaya los flujos de la app sin miedo. Nada es real: solo se guarda tu nota.": "Rehearse the app flows without fear. Nothing is real: only your score is saved.",
-  "Practicar primero (sin miedo)": "Practice first (no pressure)"
+  "Practicar primero (sin miedo)": "Practice first (no pressure)",
+  "Orden del día": "Day order",
+  "Subir": "Move up",
+  "Bajar": "Move down",
+  "No se pudo cambiar el orden. Intenta de nuevo.": "Couldn't change the order. Try again."
 }
