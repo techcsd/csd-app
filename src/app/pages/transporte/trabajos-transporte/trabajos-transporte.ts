@@ -93,6 +93,8 @@ export class TrabajosTransportePage {
     cancelar: '✖️',
     nueva: '🆕',
     filtro: '🧰',
+    subir: '▲',
+    bajar: '▼',
   };
 
   readonly tabs: { key: TabKey; label: string }[] = [
@@ -230,6 +232,67 @@ export class TrabajosTransportePage {
   /** Conteo por pestaña (respeta los filtros obra/tipo/chofer activos). */
   conteo(tab: TabKey): number {
     return this.rows().filter((r) => this.enTab(r, tab) && this.pasaFiltros(r)).length;
+  }
+
+  // ── CK15b — "Ordenar el día" (flechas en Asignados) ──────────────────────────
+  reordenando = signal(false);
+
+  /** Capability: solo en Asignados y si el server expone el orden (ck15b vivo). */
+  puedeOrdenar = computed(() => this.tab() === 'asignados' && this.rows().some((r) => r.orden !== null));
+
+  private claveTicket(r: BandejaRow): string {
+    return `${r.origen}:${r.origenId}`;
+  }
+  /** Comparador del server: orden asc (null=0), luego más recientes primero. */
+  private cmpOrden = (a: BandejaRow, b: BandejaRow): number => {
+    const oa = a.orden ?? 0;
+    const ob = b.orden ?? 0;
+    if (oa !== ob) return oa - ob;
+    return (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
+  };
+
+  esPrimero(r: BandejaRow): boolean {
+    const v = this.visibles();
+    return v.indexOf(r) <= 0;
+  }
+  esUltimo(r: BandejaRow): boolean {
+    const v = this.visibles();
+    return v.indexOf(r) === v.length - 1;
+  }
+
+  moverArriba(r: BandejaRow): void {
+    const v = [...this.visibles()];
+    const i = v.indexOf(r);
+    if (i <= 0 || this.reordenando()) return;
+    [v[i - 1], v[i]] = [v[i], v[i - 1]];
+    void this.reordenar(v);
+  }
+  moverAbajo(r: BandejaRow): void {
+    const v = [...this.visibles()];
+    const i = v.indexOf(r);
+    if (i < 0 || i >= v.length - 1 || this.reordenando()) return;
+    [v[i], v[i + 1]] = [v[i + 1], v[i]];
+    void this.reordenar(v);
+  }
+
+  /** Aplica el nuevo orden visible: optimista (local) + persiste (trabajo_ordenar). */
+  private async reordenar(nuevoVisible: BandejaRow[]): Promise<void> {
+    this.reordenando.set(true);
+    const ordenMap = new Map(nuevoVisible.map((row, idx) => [this.claveTicket(row), idx + 1]));
+    // Optimista: reasigna orden a los visibles y re-ordena como lo hará el server.
+    const nuevas = this.rows()
+      .map((row) => (ordenMap.has(this.claveTicket(row)) ? { ...row, orden: ordenMap.get(this.claveTicket(row))! } : row))
+      .sort(this.cmpOrden);
+    this.rows.set(nuevas);
+    try {
+      await this.trabajosSvc.ordenar(nuevoVisible.map((r) => ({ origen: r.origen, origenId: r.origenId })));
+      await this.load(); // confirma con el orden del server
+    } catch (e) {
+      this.toast.error((e as Error)?.message || this.i18n.t('No se pudo cambiar el orden. Intenta de nuevo.'));
+      await this.load(); // revierte al estado real
+    } finally {
+      this.reordenando.set(false);
+    }
   }
 
   /** CK15 — "sin asignar" para el contador del menú/tile (sin filtros). */

@@ -97,6 +97,15 @@
             <p class="ticket__chofer">{{ glyph.chofer }} {{ t.conductor }}</p>
           }
 
+          <!-- CK15b — ordenar el día (flechas; solo en Asignados y si el server lo expone) -->
+          @if (puedeOrdenar()) {
+            <div class="ticket__orden">
+              <span class="ticket__orden-lbl">{{ 'Orden del día' | t }}</span>
+              <button type="button" class="ticket__orden-btn" [disabled]="esPrimero(t) || reordenando()" (click)="moverArriba(t)" [attr.aria-label]="'Subir' | t">{{ glyph.subir }}</button>
+              <button type="button" class="ticket__orden-btn" [disabled]="esUltimo(t) || reordenando()" (click)="moverAbajo(t)" [attr.aria-label]="'Bajar' | t">{{ glyph.bajar }}</button>
+            </div>
+          }
+
           <div class="ticket__acciones">
             @if (t.conductorId) {
               <button type="button" class="btn-ghost ticket__btn" appTapScale [disabled]="enviando()" (click)="abrirAsignar(t)">

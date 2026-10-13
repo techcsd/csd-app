@@ -64,6 +64,8 @@ export interface BandejaRow {
   vehiculoId: string | null;
   rutaId: string | null;
   createdAt: string;
+  /** CK15b — orden manual de Misael (null = el server aún no lo expone → sin flechas). */
+  orden: number | null;
 }
 
 /** CK15 — filtros server-side de la bandeja (día/chofer); el tab se resuelve en cliente. */
@@ -372,7 +374,26 @@ export class TrabajosService {
       vehiculoId: (r['vehiculo_id'] as string) ?? null,
       rutaId: (r['ruta_id'] as string) ?? null,
       createdAt: r['created_at'] as string,
+      orden: typeof r['orden'] === 'number' ? (r['orden'] as number) : null, // CK15b (capability)
     };
+  }
+
+  /**
+   * CK15b — fija el orden manual de un ticket en el día (`trabajo_ordenar`). Acción de
+   * escritorio online (como asignar). Se usa para renumerar una lista completa: el
+   * llamador pasa los tickets YA en el orden deseado y aquí les asignamos 1..N.
+   */
+  async ordenar(items: { origen: TrabajoOrigen; origenId: string }[]): Promise<void> {
+    await Promise.all(
+      items.map((it, i) =>
+        this.supabase.client
+          .rpc('trabajo_ordenar', { p_origen: it.origen, p_origen_id: it.origenId, p_orden: i + 1 })
+          .then(({ error }) => {
+            if (error) throw new Error(error.message);
+          }),
+      ),
+    );
+    await this.invalidarBandeja();
   }
 
   /**

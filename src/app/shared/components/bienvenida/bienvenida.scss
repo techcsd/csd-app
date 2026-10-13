@@ -145,6 +145,23 @@
   }
 }
 
+// CM7 — botón secundario "Practicar primero" (bajo el CTA del paso final).
+.bv__ghost {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: var(--bv-on-accent);
+  opacity: 0.85;
+  font: 600 14px Inter, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
 // ── Idioma ──────────────────────────────────────────────────────────────────
 .bv__opt {
   display: flex;
