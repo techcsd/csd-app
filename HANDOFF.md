@@ -1,5 +1,9 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 13/10/2026 — app **2.50.0 PUBLICADA A PROD** ✅ (CK15b Ordenar el día + desbloqueos de CK)
+> El padre aplicó los SQL de CK (ck14/ck15/ck15b) en dev+prod (verificado: `mis_trabajos_chofer`/`trabajo_ordenar`/`trabajo_asignar` 6-arg/`trabajos_transporte_listado` con `orden` vivos). `main`=`dev`=`feature/cm-ronda`=`7a0c32b`. **En prod:** `dev→main` (`d21c3f2`), APK prod 2.50.0 firmado + bucket + registrado, **PUBLICADA** (2.49.0 despub, mínima 2.45.0) + **11 iPhone notificados**.
+> **Qué llevó 2.50.0:** (1) **CK15b "Ordenar el día"** — flechas ▲▼ por ticket en la pestaña Asignados de "Trabajos de transporte" (capability: solo si el server expone `orden`); reordena optimista + `trabajo_ordenar` (renumera 1..N). (2) **"Mis trabajos" del chofer + nota de Misael** ahora devuelven datos (el código ya estaba; se desbloqueó con el backend del padre). (3) **Práctica:** "Practicar primero" al final de la bienvenida + fix de estado/cronómetro al salir. Ya no quedan huecos de CK ni de CM pendientes del lado del app.
+
 ## 🟢 SESIÓN 12/10/2026 — PROMPT-95 · Ronda **CM** (2ª parte) — app **2.49.0 PUBLICADA A PROD** ✅ (F3 + F6 completo)
 > `main`=`dev`=`feature/cm-ronda`=`3a8dec4`. **En prod (12-10):** `dev→main` (`a65d4e7`) → Vercel PWA prod; **APK prod 2.49.0** firmado (cert `3c5316d8…5065`), candado `apk`+`2.49.0`, regla 18 OK, bucket prod + `apk_url` + registrado; **seed de práctica aplicado en prod** (`cm7-seed-misiones-app`, 9 misiones); **PUBLICADA** (`cm-publicar-2.49.0`: 2.49.0 publicada, 2.48.0 despub, **mínima sigue 2.45.0** → no forzado; push android por trigger) + **12 iPhone (ios-pwa) notificados** (`cm-notificar-ios-2.49.0`). El padre ya aplicó PROMPT-94 F3+F7a (vivo dev+prod).
 > **👤 Probar en prod:** incentivos con tope + modo práctica (9 misiones, offline→cero syncs) + actualización in-app desde 2.48.0. Pendiente opcional: cablear `csd-logo-texto.svg` (F4) + "Modo práctica" en la bienvenida CL3.
