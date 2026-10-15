@@ -64,6 +64,10 @@ export class ActualizarPage implements OnDestroy {
    *  worker lo activa y recarga solo. */
   buscandoPwa = signal(false);
 
+  /** CO1 — el SW quedó degradado; ofrecer "Reparar la app" en vez de solo esperar. */
+  necesitaReparar = this.updates.necesitaReparar;
+  reparando = signal(false);
+
   /** Changelog estructurado de la versión publicada (best-effort, red). */
   private cambios = signal<CambioItem[]>([]);
 
@@ -162,6 +166,17 @@ export class ActualizarPage implements OnDestroy {
 
   abrirAjustes(): void {
     void this.updater.abrirAjustesPermiso();
+  }
+
+  /** CO1 — "Reparar la app" (solo PWA). */
+  async reparar(): Promise<void> {
+    if (this.esNativo || this.reparando()) return;
+    this.reparando.set(true);
+    try {
+      await this.updates.reparar();
+    } finally {
+      this.reparando.set(false);
+    }
   }
 
   volver(): void {

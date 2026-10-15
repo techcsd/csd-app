@@ -101,6 +101,57 @@ export class ApoyoDetallePage {
     return out;
   });
 
+  /** CO9 — transporte elevado/admin puede reabrir o cambiar el estado de un apoyo
+   *  CERRADO (completada/cancelada) a cualquier estado válido, siempre con nota
+   *  obligatoria (el servidor lo exige: sin nota, rechaza con "El apoyo ya está X"). */
+  readonly estadosReabrir: EstadoApoyo[] = ['pendiente', 'asignada', 'en_proceso', 'por_confirmar', 'completada', 'cancelada'];
+  puedeReabrir = computed(() => {
+    const d = this.detalle();
+    if (!d) return false;
+    return (d.estado === 'completada' || d.estado === 'cancelada') && this.ctx.esFlotaElevado();
+  });
+  reabrirAbierto = signal(false);
+  reabrirDestino = signal<EstadoApoyo | null>(null);
+  reabrirNota = signal('');
+
+  abrirReabrir(): void {
+    this.reabrirAbierto.set(true);
+    this.reabrirDestino.set(null);
+    this.reabrirNota.set('');
+  }
+  cancelarReabrir(): void {
+    this.reabrirAbierto.set(false);
+    this.reabrirDestino.set(null);
+    this.reabrirNota.set('');
+  }
+  elegirDestinoReabrir(e: EstadoApoyo): void {
+    this.reabrirDestino.set(e);
+  }
+  async confirmarReabrir(): Promise<void> {
+    const destino = this.reabrirDestino();
+    const nota = this.reabrirNota().trim();
+    if (!destino) {
+      this.toast.error(this.i18n.t('Elige el estado nuevo.'));
+      return;
+    }
+    if (!nota) {
+      this.toast.error(this.i18n.t('Escribe el motivo para cambiar el estado.'));
+      return;
+    }
+    if (this.guardando()) return;
+    this.guardando.set(true);
+    try {
+      await this.apoyo.cambiarEstado(this.id, destino, nota);
+      this.detalle.update((d) => (d ? { ...d, estado: destino } : d));
+      this.cancelarReabrir();
+      this.toast.success(this.i18n.t('Listo. Se sincroniza solo al reconectar.'));
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No pudimos cambiar el estado.'));
+    } finally {
+      this.guardando.set(false);
+    }
+  }
+
   constructor() {
     void this.load();
   }

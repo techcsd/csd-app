@@ -90,6 +90,42 @@
         }
       }
 
+      <!-- CO9 — Cambiar estado (transporte elevado/admin, solo en completada/cancelada) -->
+      @if (puedeReabrir()) {
+        @if (reabrirAbierto()) {
+          <div class="apd__panel">
+            <label class="field-label">{{ 'Nuevo estado' | t }}</label>
+            <div class="apd__acciones">
+              @for (e of estadosReabrir; track e) {
+                <button
+                  type="button"
+                  class="apd__act"
+                  appTapScale
+                  [class.btn-cta]="reabrirDestino() === e"
+                  [class.btn-ghost]="reabrirDestino() !== e"
+                  (click)="elegirDestinoReabrir(e)"
+                >
+                  {{ estadoLabel(e) | t }}
+                </button>
+              }
+            </div>
+            <label class="field-label">{{ 'Motivo (obligatorio)' | t }}</label>
+            <textarea class="field apd__nota" rows="3" [ngModel]="reabrirNota()" (ngModelChange)="reabrirNota.set($event)"
+              [placeholder]="'¿Por qué cambias el estado?' | t"></textarea>
+            <div class="apd__panel-btns">
+              <button type="button" class="btn-ghost apd__act" (click)="cancelarReabrir()">{{ 'Atrás' | t }}</button>
+              <button type="button" class="btn-cta apd__act" [disabled]="guardando()" (click)="confirmarReabrir()">
+                {{ (guardando() ? 'Guardando…' : 'Cambiar estado') | t }}
+              </button>
+            </div>
+          </div>
+        } @else {
+          <button type="button" class="btn-ghost apd__act" appTapScale (click)="abrirReabrir()">
+            {{ 'Cambiar estado' | t }}
+          </button>
+        }
+      }
+
       <!-- Línea de tiempo -->
       @if (d.eventos.length) {
         <h2 class="apd__section">{{ 'Historial' | t }}</h2>

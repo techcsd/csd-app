@@ -11,6 +11,7 @@ import { AlarmaHost } from './shared/components/alarma-host/alarma-host';
 import { PermisosOnboarding } from './shared/components/permisos-onboarding/permisos-onboarding';
 import { LanguageOnboarding } from './shared/ui/language-onboarding/language-onboarding';
 import { Bienvenida } from './shared/components/bienvenida/bienvenida';
+import { Novedades } from './shared/components/novedades/novedades';
 import { InAppCamera } from './shared/ui/in-app-camera/in-app-camera';
 import { ConsentimientoIa } from './shared/components/consentimiento-ia/consentimiento-ia';
 import { ConsentimientoUbicacion } from './shared/components/consentimiento-ubicacion/consentimiento-ubicacion';
@@ -51,12 +52,13 @@ import { CameraService } from './core/services/camera.service';
 import { IdiomaOnboardingService } from './core/i18n/idioma-onboarding.service';
 import { BienvenidaService } from './core/services/bienvenida.service';
 import { hasSupabaseProject } from './core/services/supabase.service';
+import { TranslatePipe } from './core/i18n/translate.pipe';
 import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand],
+  imports: [RouterOutlet, ToastHost, PermisoHost, AlarmaHost, PermisosOnboarding, LanguageOnboarding, Bienvenida, Novedades, InAppCamera, ConsentimientoIa, ConsentimientoUbicacion, AceptacionPoliticas, TiendaAviso, CelebracionOverlay, MomentoOverlay, LogoReveal, PhotoViewer, VideoPlayer, NotifHealthBand, TranslatePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -298,6 +300,9 @@ export class App {
     });
   }
 
+  /** CO1 — una sola auto-reparación por sesión si la PWA quedó bajo la mínima ios-pwa. */
+  private pwaMinimaReparando = false;
+
   private async checkVersion(): Promise<void> {
     await this.version.check();
     // Y1 — red de seguridad: registra la versión instalada en el historial
@@ -309,6 +314,13 @@ export class App {
         'info',
         6000,
       );
+    }
+    // CO1 — la PWA no tiene descarga/instalación: si quedó bajo la mínima ios-pwa,
+    // el service worker está atascado. Repararla sola (una vez) en vez de mostrar
+    // un gate que pide algo que la PWA no puede hacer.
+    if (this.version.debeActualizarPwa() && !this.pwaMinimaReparando) {
+      this.pwaMinimaReparando = true;
+      void this.updates.reparar();
     }
   }
 

@@ -1174,41 +1174,45 @@ export class CombustiblePage extends GuardedWizard {
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
-    if (!this.fotosCompletas()) {
-      this.toast.error(this.i18n.t('Faltan fotos para guardar.'));
-      return;
-    }
-    // AW3 — última barrera espejo del servidor antes de encolar.
-    const v = this.validacion();
-    if (v.bloqueo) {
-      this.toast.error(v.bloqueo);
-      return;
-    }
-    // AW3 — confirmación suave (needs_confirm): echada inusualmente grande. NO se
-    // encola hasta que el chofer la confirme; al confirmar se re-envía con el mismo
-    // client_uuid y confirmado=true (la RPC no re-pide ni duplica).
-    if (v.confirmar && !this.confirmado()) {
-      this.confirmSoft.set(v.confirmar);
-      return;
-    }
-    // CD8 — aviso suave de posible duplicado (recibo repetido o echada casi igual del
-    // mismo vehículo). Solo online (offline no bloquea: el servidor dedupe por recibo/
-    // client_uuid). No aplica a echada de persona (sin vehículo). Se chequea una vez.
-    if (!this.dupChequeado() && !this.modoPersona() && this.vehiculoId && this.network.online()) {
-      const dup = await this.combustible.posibleDuplicado({
-        vehiculoId: this.vehiculoId,
-        fecha: this.fechaRetro() ?? fechaLocalISO(),
-        galones: this.galones(),
-        numeroRecibo: this.esDeposito() ? null : this.numeroRecibo().replace(/\D/g, '') || null,
-        excluirId: this.reenvioDe() ?? this.correccionDe() ?? null,
-      });
-      if (dup) {
-        this.confirmDup.set(dup.mensaje);
-        return;
-      }
-    }
+    // CO3/CO5/CO16 — la bandera va en la PRIMERA línea, antes de cualquier `await`
+    // (revisar duplicado, confirmaciones). Antes se ponía justo antes de guardar,
+    // así que cada toque mientras `posibleDuplicado` seguía en vuelo pasaba la
+    // barrera: eso produjo las 4 echadas duplicadas de L542136 (CO3).
     this.submitting.set(true);
     try {
+      if (!this.fotosCompletas()) {
+        this.toast.error(this.i18n.t('Faltan fotos para guardar.'));
+        return;
+      }
+      // AW3 — última barrera espejo del servidor antes de encolar.
+      const v = this.validacion();
+      if (v.bloqueo) {
+        this.toast.error(v.bloqueo);
+        return;
+      }
+      // AW3 — confirmación suave (needs_confirm): echada inusualmente grande. NO se
+      // encola hasta que el chofer la confirme; al confirmar se re-envía con el mismo
+      // client_uuid y confirmado=true (la RPC no re-pide ni duplica).
+      if (v.confirmar && !this.confirmado()) {
+        this.confirmSoft.set(v.confirmar);
+        return;
+      }
+      // CD8 — aviso suave de posible duplicado (recibo repetido o echada casi igual del
+      // mismo vehículo). Solo online (offline no bloquea: el servidor dedupe por recibo/
+      // client_uuid). No aplica a echada de persona (sin vehículo). Se chequea una vez.
+      if (!this.dupChequeado() && !this.modoPersona() && this.vehiculoId && this.network.online()) {
+        const dup = await this.combustible.posibleDuplicado({
+          vehiculoId: this.vehiculoId,
+          fecha: this.fechaRetro() ?? fechaLocalISO(),
+          galones: this.galones(),
+          numeroRecibo: this.esDeposito() ? null : this.numeroRecibo().replace(/\D/g, '') || null,
+          excluirId: this.reenvioDe() ?? this.correccionDe() ?? null,
+        });
+        if (dup) {
+          this.confirmDup.set(dup.mensaje);
+          return;
+        }
+      }
       const estacion = this.estacionFinal();
       const persona = this.modoPersona();
       const deposito = this.esDeposito(); // AC11

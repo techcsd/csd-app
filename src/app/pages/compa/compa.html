@@ -28,7 +28,17 @@
     } @else {
       @for (m of mensajes(); track m.id) {
         <div class="compa__msg" [class.compa__msg--mio]="m.rol === 'user'">
-          <span class="compa__burbuja">{{ m.texto }}</span>
+          @if (m.rol === 'assistant') {
+            <!-- CO6 — enlaces markdown/sueltos del asistente se pintan clicables. -->
+            <span class="compa__burbuja"><app-markdown-view [source]="m.texto" /></span>
+            @if (pdfDe(m.texto); as url) {
+              <button type="button" class="compa__pdf-link" appTapScale (click)="abrirPdf(url)">
+                {{ 'Ver PDF' | t }}
+              </button>
+            }
+          } @else {
+            <span class="compa__burbuja">{{ m.texto }}</span>
+          }
           @if (m.ts) { <span class="compa__hora">{{ fmtHora(m.ts) }}</span> }
         </div>
       }
@@ -103,4 +113,9 @@
       </div>
     }
   </app-bottom-sheet>
+
+  <!-- CO6 — PDF generado por Compa (p. ej. generar_reporte_pdf), visor inline. -->
+  @if (pdfVisor(); as v) {
+    <app-pdf-viewer [src]="v.url" [nombre]="v.nombre" (cerrado)="cerrarPdf()" />
+  }
 </div>

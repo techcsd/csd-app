@@ -247,6 +247,12 @@
   font-size: 14px;
   text-decoration: underline;
 }
+.perfil__repair-hint {
+  margin: -6px 0 4px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--color-warning);
+}
 
 // BS3 — selector segmentado de Apariencia (claro/oscuro/sistema).
 .perfil__apariencia {

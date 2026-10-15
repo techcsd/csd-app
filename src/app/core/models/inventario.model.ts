@@ -406,6 +406,8 @@ export interface RequisicionDetalle {
   cerrada_por_nombre?: string | null;
   // BF6 — motivo del rechazo (para el flujo rechazada → corregir → reenviar).
   motivo_rechazo?: string | null;
+  // CO4 — true cuando el autor se aprobó/rechazó a sí mismo con el permiso explícito.
+  autoaprobada?: boolean | null;
 }
 
 /** BA6 — avance de un renglón: solicitado vs despachado vs pendiente.

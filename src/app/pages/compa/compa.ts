@@ -13,6 +13,8 @@ import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { BottomSheet } from '../../shared/ui/bottom-sheet/bottom-sheet';
 import { VoiceRecorder } from '../../shared/ui/voice-recorder/voice-recorder';
+import { MarkdownView } from '../../shared/ui/markdown-view/markdown-view';
+import { PdfViewer } from '../../shared/ui/pdf-viewer/pdf-viewer';
 import { CompaService } from '../../core/services/compa.service';
 import { IaConsentGate } from '../../core/services/ia-consent-gate.service';
 import { NetworkService } from '../../core/services/network.service';
@@ -48,7 +50,7 @@ const SUBTITULO_DEFAULT = 'Pregúntame por tus tareas, conduces, firmas o pídem
   selector: 'app-compa',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, BottomSheet, VoiceRecorder, TranslatePipe, ...MOTION_DIRECTIVES],
+  imports: [FormsModule, BottomSheet, VoiceRecorder, MarkdownView, PdfViewer, TranslatePipe, ...MOTION_DIRECTIVES],
   templateUrl: './compa.html',
   styleUrl: './compa.scss',
 })
@@ -91,6 +93,22 @@ export class CompaPage {
   private conversacionId: string | null = null;
 
   vacio = computed(() => this.mensajes().length === 0);
+
+  /** CO6 — PDF abierto desde un mensaje de Compa (p. ej. generar_reporte_pdf), o null. */
+  pdfVisor = signal<{ url: string; nombre: string } | null>(null);
+  private static readonly PDF_RE = /https?:\/\/\S+\.pdf(\?\S*)?/i;
+
+  /** CO6 — ¿este texto trae un enlace a un PDF? (p. ej. un reporte que Compa generó). */
+  pdfDe(texto: string): string | null {
+    const m = texto.match(CompaPage.PDF_RE);
+    return m ? m[0] : null;
+  }
+  abrirPdf(url: string): void {
+    this.pdfVisor.set({ url, nombre: 'Reporte' });
+  }
+  cerrarPdf(): void {
+    this.pdfVisor.set(null);
+  }
 
   get online(): boolean {
     return this.net.online();
@@ -160,12 +178,22 @@ export class CompaPage {
    */
   private async enviarTexto(t: string): Promise<void> {
     if (this.enviando()) return;
-    if (!this.online) {
-      this.toast.error(this.i18n.t('Compa necesita conexión.'));
-      return;
-    }
-    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA
+    // CO16 — la bandera va antes del await de consentimiento (si no, varios toques
+    // mientras se resuelve `iaGate.pedir()` podían mandar el mismo texto dos veces).
     this.enviando.set(true);
+    try {
+      if (!this.online) {
+        this.toast.error(this.i18n.t('Compa necesita conexión.'));
+        return;
+      }
+      if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA
+      await this.enviarTextoInterno(t);
+    } finally {
+      this.enviando.set(false);
+    }
+  }
+
+  private async enviarTextoInterno(t: string): Promise<void> {
     this.pensando.set(true);
     this.mensajes.update((list) => [
       ...list,
@@ -182,7 +210,6 @@ export class CompaPage {
       // Si el turno trae una propuesta de escritura, abre la hoja de confirmación.
       if (r.propuesta) this.propuesta.set(r.propuesta);
     } finally {
-      this.enviando.set(false);
       this.pensando.set(false);
       this.scrollAlFinal();
     }
@@ -193,9 +220,11 @@ export class CompaPage {
   async confirmarPropuesta(): Promise<void> {
     const p = this.propuesta();
     if (!p || this.ejecutando()) return;
-    if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA
+    // CO16 — la bandera va antes del await de consentimiento, antes que cualquier
+    // otro toque sobre "Confirmar" ejecute la propuesta dos veces.
     this.ejecutando.set(true);
     try {
+      if (!(await this.iaGate.pedir())) return; // CI10 — consentimiento de IA
       const r = await this.compa.ejecutar(p, this.conversacionId);
       this.mensajes.update((list) => [
         ...list,

@@ -87,6 +87,11 @@ const PERSONAL_TILE: HomeTile = { modulo: 'personal_obra', icon: '🧑‍🔧', 
 // BH8 — Solicitud de compra a mano: para el equipo de Compras (Raykler). Distinta de
 // "Requisición" (pedir material del almacén). Gating por el módulo `compras`.
 const SOLCOMPRA_TILE: HomeTile = { modulo: 'solicitud_compra', icon: '🛍️', label: 'Solicitud de compra', route: '/compras/solicitud-compra', tint: '#b45309' };
+// CO13 — Legal (expedientes + contratos). Gating por el módulo `legal` (Sonia/abogado,
+// dirección, admin). CO12/CO13 — Documentos (generar/historial/plantillas): módulo
+// `documentos` O `legal` (quien tiene Legal también genera/usa documentos).
+const LEGAL_TILE: HomeTile = { modulo: 'legal', icon: '⚖️', label: 'Legal', route: '/legal', tint: '#7c2d12' };
+const DOCUMENTOS_TILE: HomeTile = { modulo: 'documentos', icon: '📄', label: 'Documentos', route: '/documentos', tint: '#334155' };
 
 // BC5/BD1 — agrupación del home por dominio (vista OPCIONAL, off por defecto). Cada
 // tile conserva su gating/ruta/badge; solo cambia la PRESENTACIÓN (grupos). El orden
@@ -242,6 +247,15 @@ export class HomePage implements OnDestroy {
     // AL1 — "Sistema" (antes Tecnología): transversal, todos menos chofer.
     if (!this.ctx.esChofer()) {
       extra.push(SISTEMA_TILE);
+    }
+    // CO13 — Legal: módulo `legal` (Sonia/abogado, dirección, admin).
+    if (this.ctx.esAdmin() || this.ctx.hasModulo('legal')) {
+      extra.push(LEGAL_TILE);
+    }
+    // CO12/CO13 — Documentos: módulo `documentos` o `legal` (quien tiene Legal
+    // también necesita generar/usar documentos — contratos salen de una plantilla).
+    if (this.ctx.esAdmin() || this.ctx.hasModulo('documentos') || this.ctx.hasModulo('legal')) {
+      extra.push(DOCUMENTOS_TILE);
     }
     // AL8/AS7 — entrada permanente al confirmador sin módulo flota (los de flota la
     // tienen en el hub de Conduces). Se muestra SOLO a inventario/obra. Antes bastaba

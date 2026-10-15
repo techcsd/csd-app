@@ -134,6 +134,9 @@ export class PerfilPage {
   notifSalud = this.notifHealth.salud;
   probando = signal(false);
   checking = signal(false);
+  reparando = signal(false);
+  /** CO1 — el SW quedó degradado (instalación fallida repetida / unrecoverable). */
+  necesitaReparar = this.updates.necesitaReparar;
   confirmLogout = signal(false);
   // CI3/CI4/CI10 — Privacidad. Consentimiento de IA, ubicación en segundo plano y
   // solicitud de eliminación de cuenta.
@@ -422,6 +425,19 @@ export class PerfilPage {
       await this.updates.check();
     } finally {
       this.checking.set(false);
+    }
+  }
+
+  /** CO1 — "Reparar la app" (solo PWA): desregistra el service worker y borra las
+   *  cachés de assets, nunca el outbox (IndexedDB/Dexie). Último recurso cuando la
+   *  actualización automática se quedó atascada. */
+  async repararApp(): Promise<void> {
+    if (this.esNativo || this.reparando()) return;
+    this.reparando.set(true);
+    try {
+      await this.updates.reparar();
+    } finally {
+      this.reparando.set(false);
     }
   }
 

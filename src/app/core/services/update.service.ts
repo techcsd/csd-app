@@ -1,10 +1,11 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { Capacitor } from '@capacitor/core';
 import { ToastService } from './toast.service';
 import { NavGuardService } from './nav-guard.service';
 import { SyncService } from '../sync/sync.service';
+import { ErrorReportService } from './error-report.service';
 import { environment } from '../../../environments/environment';
 
 // BU1 — el version.json vive en el bucket app-releases del proyecto del ENTORNO
@@ -37,17 +38,51 @@ export class UpdateService {
   private navGuard = inject(NavGuardService);
   private sync = inject(SyncService);
   private router = inject(Router);
+  private errorReport = inject(ErrorReportService);
 
   /** Hay un build nuevo activado esperando una recarga segura. */
   private pendingReload = false;
   /** Watcher de respaldo mientras la recarga está diferida. */
   private reloadTimer: ReturnType<typeof setInterval> | null = null;
   private static readonly RELOAD_GUARD_KEY = 'sw-reloaded-at';
+  /** CO1 — segundo candado, más largo, exclusivo de la auto-reparación (distinto
+   *  del de la recarga normal: una reparación es más cara y no debe repetirse en
+   *  bucle si el SW sigue roto tras intentarlo). */
+  private static readonly REPAIR_GUARD_KEY = 'sw-repaired-at';
+  private static readonly REPAIR_GUARD_WINDOW_MS = 60_000;
+
+  /** CO1 — cuántas instalaciones de versión fallaron esta sesión (sin recargar). */
+  private installFailures = 0;
+
+  /** CO1 — true cuando el SW quedó en un estado degradado (falló repetido o
+   *  `unrecoverable`): Perfil/«Reparar la app» y `check()` lo usan para ofrecer
+   *  reparar en vez de mentir "ya tienes la última versión". */
+  necesitaReparar = signal(false);
 
   init(): void {
     if (this.swUpdate.isEnabled) {
       this.swUpdate.versionUpdates.subscribe((evt) => {
-        if (evt.type === 'VERSION_READY') void this.applyUpdate();
+        if (evt.type === 'VERSION_READY') {
+          void this.applyUpdate();
+        } else if (evt.type === 'VERSION_INSTALLATION_FAILED') {
+          this.installFailures++;
+          void this.errorReport.report('sync', `sw_update: instalación falló (${this.installFailures}ª vez)`, {
+            sw_event: 'VERSION_INSTALLATION_FAILED',
+            error: evt.error,
+            intento: this.installFailures,
+          });
+          // CO1 — 2 fallas de instalación en la misma sesión → el SW está atascado;
+          // auto-reparar en vez de dejar al usuario congelado para siempre.
+          if (this.installFailures >= 2) void this.autoRepair('instalacion_fallida_repetida');
+        }
+      });
+
+      this.swUpdate.unrecoverable.subscribe((evt) => {
+        void this.errorReport.report('sync', `sw_update: unrecoverable — ${evt.reason}`, {
+          sw_event: 'unrecoverable',
+          reason: evt.reason,
+        });
+        void this.autoRepair('unrecoverable');
       });
 
       // AP8/AU10 — iOS/Safari PWA no chequea el SW de forma fiable (suspende la pestaña).
@@ -127,6 +162,56 @@ export class UpdateService {
     }
   }
 
+  /**
+   * CO1 — auto-reparación: el service worker quedó en un estado del que nunca
+   * sale solo (instalación fallida repetida / `unrecoverable`). Se desregistra el
+   * SW y se borran las cachés de `caches` (los assets: se vuelven a bajar solos),
+   * **nunca IndexedDB** (ahí vive el outbox — Dexie no se toca). Respeta el mismo
+   * candado anti-formulario que una recarga normal, y un candado propio más largo
+   * para no repetir la reparación en bucle si el SW sigue roto.
+   */
+  private async autoRepair(motivo: string): Promise<void> {
+    const last = Number(sessionStorage.getItem(UpdateService.REPAIR_GUARD_KEY) || 0);
+    if (last && Date.now() - last < UpdateService.REPAIR_GUARD_WINDOW_MS) return;
+    sessionStorage.setItem(UpdateService.REPAIR_GUARD_KEY, String(Date.now()));
+    this.necesitaReparar.set(true);
+    void this.errorReport.report('sync', `sw_update: auto-reparando (${motivo})`, { sw_motivo: motivo });
+
+    // No interrumpir un formulario/firma en curso: se reintenta cuando sea seguro,
+    // igual que una recarga normal diferida.
+    if (this.navGuard.formActivo || this.sync.syncing()) {
+      this.pendingReload = true;
+      if (!this.reloadTimer) this.reloadTimer = setInterval(() => this.tryReload(), 3000);
+      return;
+    }
+    await this.reparar();
+  }
+
+  /**
+   * CO1 — "Reparar la app" (Perfil › Acerca de, y `/actualizar` en PWA). Misma
+   * rutina que la auto-reparación, pero invocable a mano y sin esperar el candado
+   * de 60s (el usuario decidió tocarla). Nunca borra el outbox (IndexedDB/Dexie).
+   */
+  async reparar(): Promise<void> {
+    try {
+      const regs = await navigator.serviceWorker?.getRegistrations?.();
+      if (regs) await Promise.all(regs.map((r) => r.unregister()));
+    } catch {
+      /* best-effort */
+    }
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+    } catch {
+      /* best-effort */
+    }
+    this.necesitaReparar.set(false);
+    this.toast.show('Reparando la app…', 'info', 1500);
+    setTimeout(() => document.location.reload(), 800);
+  }
+
   /** Compares the published versionName to the installed one (native APK). */
   private async checkAppVersion(): Promise<void> {
     try {
@@ -163,6 +248,12 @@ export class UpdateService {
   async check(): Promise<void> {
     if (!this.swUpdate.isEnabled) {
       this.toast.success('Ya tienes la última versión.');
+      return;
+    }
+    // CO1 — si el SW ya quedó marcado como degradado, no hay nada que "buscar":
+    // decirlo tal cual y dejar que el usuario repare.
+    if (this.necesitaReparar()) {
+      this.toast.error('La app no pudo actualizarse sola. Toca "Reparar la app".');
       return;
     }
     const found = await this.swUpdate.checkForUpdate();

@@ -40,6 +40,11 @@ export interface ApoyoListadoRow {
   foto_url?: string | null;
   /** CK12 — true cuando la fila vive aún en el outbox (sin enviar). */
   pendiente?: boolean;
+  /** CO9 — quién canceló/completó (para la tarjeta del listado, antes solo en el detalle). */
+  cancelada_por_nombre?: string | null;
+  cancelada_at?: string | null;
+  motivo_cancelacion?: string | null;
+  completada_por_nombre?: string | null;
 }
 
 /** CK12/CK13 — una foto del apoyo (ficha). */
@@ -170,6 +175,12 @@ export class ApoyoService {
         ruta_id: (r['ruta_id'] as string) ?? null,
         foto_path: (r['foto_path'] as string) ?? null,
         created_at: r['created_at'] as string,
+        // CO9 — capability-safe: columnas nuevas de apoyo_transporte_listado; si el
+        // entorno aún no las tiene, quedan undefined y la tarjeta simplemente no las pinta.
+        cancelada_por_nombre: (r['cancelada_por_nombre'] as string) ?? null,
+        cancelada_at: (r['cancelada_at'] as string) ?? null,
+        motivo_cancelacion: (r['motivo_cancelacion'] as string) ?? null,
+        completada_por_nombre: (r['completada_por_nombre'] as string) ?? null,
       }));
     });
     const servidor = data ?? [];

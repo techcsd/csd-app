@@ -947,8 +947,19 @@ export class GenerarConducePage implements OnDestroy {
 
   async submit(): Promise<void> {
     if (this.submitting()) return;
-    if (this.origenTipo() === 'ferreteria') return void this.submitFerreteria();
-    return void this.submitConduce();
+    // CO3/CO5/CO16 — la bandera va en la PRIMERA línea del único punto de entrada,
+    // antes de `desviarAUsoDeVehiculo()`/`exigirGps()` (awaits que pueden tardar
+    // segundos buscando GPS). Antes se ponía recién dentro de `submitConduce`,
+    // después de esos awaits, así que varios toques mientras buscaba GPS pasaban
+    // la barrera: eso produjo los 3 conduces duplicados CND-0CA71D59/-EAFE9FCE/
+    // -4039EDE0 (CO5). Las privadas ya no tocan la bandera: esta es la única dueña.
+    this.submitting.set(true);
+    try {
+      if (this.origenTipo() === 'ferreteria') await this.submitFerreteria();
+      else await this.submitConduce();
+    } finally {
+      this.submitting.set(false);
+    }
   }
 
   /**
@@ -1019,7 +1030,6 @@ export class GenerarConducePage implements OnDestroy {
       return;
     }
     if (!(await this.tracking.exigirGps('crear_conduce'))) return;
-    this.submitting.set(true);
     try {
       const ferr = this.ferreterias().find((f) => f.id === this.ferreteriaId());
       await this.inventario.enqueueCompraFerreteria({
@@ -1037,8 +1047,6 @@ export class GenerarConducePage implements OnDestroy {
       this.hoja.set('exito');
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo registrar la compra.');
-    } finally {
-      this.submitting.set(false);
     }
   }
 
@@ -1087,7 +1095,6 @@ export class GenerarConducePage implements OnDestroy {
     // AI6 — vehículo distinto al asignado → primero "Uso de vehículo" (vuelve al borrador).
     if (await this.desviarAUsoDeVehiculo()) return;
     if (!(await this.tracking.exigirGps('crear_conduce'))) return;
-    this.submitting.set(true);
     try {
       // Observaciones enriquecidas con destino suplidor.
       const partes: string[] = [];
@@ -1158,8 +1165,6 @@ export class GenerarConducePage implements OnDestroy {
       });
     } catch (e) {
       this.toast.error(e instanceof Error ? e.message : 'No se pudo generar el conduce.');
-    } finally {
-      this.submitting.set(false);
     }
   }
 

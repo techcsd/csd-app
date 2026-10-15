@@ -327,6 +327,11 @@ export class TecnologiaPage {
     void this.router.navigate(['/tecnologia/dev-notes']);
   }
 
+  /** CO8 — abre "Compras por aprobar". */
+  abrirComprasTec(): void {
+    void this.router.navigate(['/tecnologia/compras-aprobar']);
+  }
+
   back(): void {
     this.location.back();
   }

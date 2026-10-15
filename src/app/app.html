@@ -51,8 +51,24 @@
   <app-bienvenida />
 }
 
+@if (!enAuth() && !version.debeActualizar() && !version.debeActualizarPwa()) {
+  <!-- CO2 — Novedades a pantalla completa: el propio servicio decide CUÁNDO mostrarse
+       (espera a que la bienvenida termine y a que no haya un formulario activo). -->
+  <app-novedades />
+}
 
-@if (version.debeActualizar()) {
+
+@if (version.debeActualizarPwa()) {
+  <!-- CO1 — la PWA no tiene botón de descarga: si quedó bajo la mínima ios-pwa, el
+       SW está atascado y ya se disparó la auto-reparación (checkVersion). -->
+  <div class="version-gate">
+    <div class="version-gate__card">
+      <span class="version-gate__icon">⬆️</span>
+      <h1 class="version-gate__title">{{ 'Actualizando…' | t }}</h1>
+      <p class="version-gate__msg">{{ 'Repararemos la app sola en un momento. No se borra nada pendiente.' | t }}</p>
+    </div>
+  </div>
+} @else if (version.debeActualizar()) {
   <!-- R15: blocking gate when the local build is below the published minimum -->
   <div class="version-gate">
     <div class="version-gate__card">

@@ -271,6 +271,9 @@ export class ConteoPage {
   }
 
   private async guardar(items: { articulo_id: string; cantidad_contada: number }[]): Promise<void> {
+    // CO16 — único punto de entrada compartido por submit() y confirmarSinDiferencias();
+    // sin este guard, un doble-toque en "Sí, todo conforme" encolaba el conteo dos veces.
+    if (this.submitting()) return;
     this.submitting.set(true);
     try {
       await this.inventario.enqueueConteo({

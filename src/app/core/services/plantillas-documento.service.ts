@@ -87,4 +87,12 @@ export class PlantillasDocumentoService {
       return escapeHtml(value);
     });
   }
+
+  /** CO12 — "la que se usa" (★). Capability-safe: el RPC exige módulo `plantillas`
+   *  o `legal`; si el usuario no lo tiene, el error se deja subir (la UI lo oculta). */
+  async marcarDefault(plantillaId: string): Promise<void> {
+    const { error } = await this.supabase.client.rpc('set_plantilla_default', { p_plantilla: plantillaId });
+    if (error) throw new Error(error.message);
+    await this.catalog.invalidate(CAT_PLANTILLAS).catch(() => {});
+  }
 }

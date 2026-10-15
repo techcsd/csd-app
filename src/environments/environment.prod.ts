@@ -4,7 +4,7 @@ import { CANAL_BUILD } from './canal.generated';
 export const environment = {
   production: true,
   entorno: 'prod' as 'dev' | 'prod',
-  version: '2.50.0',
+  version: '2.51.0',
   // CI7/CL4 — canal de distribución desde canal.generated.ts. Ese archivo NO está en
   // fileReplacements de angular.json, por eso su valor SOBREVIVE al reemplazo
   // environment.ts→environment.prod.ts (el regex anterior se perdía → todo APK salía

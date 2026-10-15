@@ -28,6 +28,18 @@
       </button>
     }
 
+    <!-- CO8 — Compras tecnológicas por aprobar (Eduardo/admin; la RLS real del
+         padre decide qué ve cada quien — aquí solo se ofrece la entrada). -->
+    @if (esTecnologia()) {
+      <button type="button" class="tec__devnotes" appTapScale (click)="abrirComprasTec()">
+        <span class="tec__devnotes-txt">
+          <span class="tec__devnotes-title">{{ 'Compras por aprobar' | t }}</span>
+          <span class="tec__devnotes-sub">{{ 'Cotizaciones tecnológicas pendientes' | t }}</span>
+        </span>
+        <span class="tec__devnotes-caret">›</span>
+      </button>
+    }
+
     <!-- Tabs — Versiones + Dudas para todos; "Reportes de errores" solo para
          roles de Tecnología (Z26/Z30). -->
     <div class="tec__tabs">

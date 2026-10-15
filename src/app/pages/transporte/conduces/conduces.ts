@@ -319,33 +319,36 @@ export class ConducesPage implements OnDestroy {
   async confirmarEntregarParada(): Promise<void> {
     const ctx = this.entregando();
     if (!ctx || this.entGuardando()) return;
-    if (!this.entRecibio().trim()) {
-      this.toast.error(this.i18n.t('Escribe quién recibió.'));
-      return;
-    }
-    // AF26 — marcar una entrega exige GPS activo.
-    if (!(await this.tracking.exigirGps('marcar_entrega'))) return;
-    // AH7 — la foto de evidencia es OBLIGATORIA en toda confirmación de entrega.
-    if (!this.entFoto()) {
-      this.toast.error(this.i18n.t('Toma la foto de evidencia de la entrega.'));
-      return;
-    }
-    if (!this.entFirmaBlob()) {
-      this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
-      return;
-    }
+    // CO16 — la bandera va en la PRIMERA línea, antes de `exigirGps()` (await que
+    // puede tardar segundos buscando GPS); mismo bug que CO5 (varios toques en
+    // vuelo pasaban la barrera y disparaban `avanzarParada` dos veces).
     this.entGuardando.set(true);
-    const { rutaId, parada } = ctx;
-    const nombre = this.entRecibio().trim();
-    const coords = await this.coordsActuales(); // AH8 — dónde se entregó
-    // Optimista: la parada queda entregada al instante.
-    this.actualizarParadaLocal(rutaId, parada.id, {
-      estado: 'entregada',
-      entregada_at: new Date().toISOString(),
-      entregado_a: nombre,
-    });
-    this.entregando.set(null);
     try {
+      if (!this.entRecibio().trim()) {
+        this.toast.error(this.i18n.t('Escribe quién recibió.'));
+        return;
+      }
+      // AF26 — marcar una entrega exige GPS activo.
+      if (!(await this.tracking.exigirGps('marcar_entrega'))) return;
+      // AH7 — la foto de evidencia es OBLIGATORIA en toda confirmación de entrega.
+      if (!this.entFoto()) {
+        this.toast.error(this.i18n.t('Toma la foto de evidencia de la entrega.'));
+        return;
+      }
+      if (!this.entFirmaBlob()) {
+        this.toast.error(this.i18n.t('Falta la firma de quien recibe.'));
+        return;
+      }
+      const { rutaId, parada } = ctx;
+      const nombre = this.entRecibio().trim();
+      const coords = await this.coordsActuales(); // AH8 — dónde se entregó
+      // Optimista: la parada queda entregada al instante.
+      this.actualizarParadaLocal(rutaId, parada.id, {
+        estado: 'entregada',
+        entregada_at: new Date().toISOString(),
+        entregado_a: nombre,
+      });
+      this.entregando.set(null);
       await this.service.avanzarParada(parada.id, 'entregada', {
         entregadoA: nombre,
         firma: this.entFirmaBlob(),
@@ -366,9 +369,15 @@ export class ConducesPage implements OnDestroy {
    *  sin conduce vinculado, sella el instante del tap + la ubicación GPS. */
   async marcarParada(rutaId: string, p: RutaParadaEjec, estado: ParadaEstado): Promise<void> {
     if (this.paradaOcupada()) return;
-    // AH8 — completar una parada exige GPS activo (misma regla que una entrega).
-    if (estado === 'entregada' && !(await this.tracking.exigirGps('marcar_entrega'))) return;
+    // CO16 — la bandera (id ocupado) va en la PRIMERA línea, antes del `exigirGps()`
+    // condicional: un doble toque mientras busca GPS podía disparar `avanzarParada`
+    // dos veces para la misma parada.
     this.paradaOcupada.set(p.id);
+    // AH8 — completar una parada exige GPS activo (misma regla que una entrega).
+    if (estado === 'entregada' && !(await this.tracking.exigirGps('marcar_entrega'))) {
+      this.paradaOcupada.set(null);
+      return;
+    }
     const now = new Date().toISOString();
     const cambios: Partial<RutaParadaEjec> = { estado };
     if (estado === 'en_camino') cambios.llegada_at = p.llegada_at ?? now;

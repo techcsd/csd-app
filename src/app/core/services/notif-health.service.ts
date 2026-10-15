@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { DeviceInfoService } from './device-info.service';
+import { PushWebService } from './push-web.service';
 import { AVISOS_CHANNEL_ID } from '../constants/notif';
 
 /**
@@ -45,6 +46,7 @@ const OEM_AGRESIVOS = [
 @Injectable({ providedIn: 'root' })
 export class NotifHealthService {
   private deviceInfo = inject(DeviceInfoService);
+  private pushWeb = inject(PushWebService);
 
   private _salud = signal<NotifSalud | null>(null);
   /** Último resultado evaluado (null hasta la primera llamada a `evaluar()`). */
@@ -77,8 +79,19 @@ export class NotifHealthService {
         return this.set({ ok: false, motivo: 'permiso', permiso: false, canalOk: false, fabricante, fabricanteAgresivo: agresivo });
       }
 
-      // iOS / web (PWA): no hay canales → la salud es solo el permiso.
+      // iOS / web (PWA): no hay canales → la salud es el permiso...
       if (plataforma !== 'android') {
+        // CO10/CO17 — en la PWA (no nativo) el permiso NO basta: sin una suscripción
+        // Web Push ACTIVA, ningún aviso llega con la app cerrada (la cinta pedía
+        // "Activar" y no pasaba nada — CO10). Si el equipo no soporta Web Push
+        // (iOS viejo, Safari sin instalar), no se exige lo imposible: `soportado()`
+        // en falso dispensa el chequeo (la cinta tampoco se los pide, ver CO17 F4.3).
+        if (!Capacitor.isNativePlatform() && this.pushWeb.soportado()) {
+          const activa = await this.pushWeb.activo();
+          if (!activa) {
+            return this.set({ ok: false, motivo: 'permiso', permiso: true, canalOk: false, fabricante: null, fabricanteAgresivo: false });
+          }
+        }
         return this.set({ ok: true, motivo: 'ninguno', permiso: true, canalOk: true, fabricante: null, fabricanteAgresivo: false });
       }
 

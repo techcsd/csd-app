@@ -1,0 +1,158 @@
+<div class="screen ctr" data-testid="contratos">
+  <header class="ctr__header">
+    <button type="button" class="ctr__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="ctr__title">{{ 'Contratos' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (loading()) {
+      <app-skeleton [rows]="4" />
+    } @else if (error()) {
+      <app-empty-state [title]="'No pudimos cargar' | t" [message]="'Revisa la conexión y vuelve a intentar.' | t" />
+    } @else if (!lista().length) {
+      <app-empty-state [title]="'Sin contratos' | t" [message]="'Toca + para crear el primero.' | t" />
+    } @else {
+      <div class="ctr__lista" appStagger>
+        @for (c of lista(); track c.id) {
+          <button type="button" class="ctr__card" appTapScale (click)="abrir(c)">
+            <div class="ctr__card-main">
+              <span class="ctr__card-codigo">{{ c.codigo }}</span>
+              <p class="ctr__card-titulo">{{ c.titulo }}</p>
+              <span class="ctr__card-meta">
+                {{ c.contraparte_nombre }}
+                @if (c.monto) { · RD$ {{ c.monto | number:'1.0-0' }} }
+              </span>
+            </div>
+            <span class="ctr__card-estado" [attr.data-estado]="c.estado">{{ estadoLabel(c.estado) | t }}</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <button type="button" class="ctr__fab" (click)="abrirCrear()" [attr.aria-label]="'Nuevo contrato' | t">＋</button>
+
+  <!-- Ficha -->
+  @if (cargandoDetalle()) {
+    <div class="ctr__overlay"><app-skeleton [rows]="4" /></div>
+  }
+  @if (abierto(); as d) {
+    <div class="ctr__overlay" appFadeIn>
+      <header class="ctr__ficha-header">
+        <button type="button" class="ctr__back" (click)="cerrarFicha()" [attr.aria-label]="'Atrás' | t">←</button>
+        <div class="ctr__ficha-head-txt">
+          <span class="ctr__card-codigo">{{ d.contrato.codigo }}</span>
+          <h2 class="ctr__ficha-title">{{ d.contrato.titulo }}</h2>
+        </div>
+        <span class="ctr__card-estado" [attr.data-estado]="d.contrato.estado">{{ estadoLabel(d.contrato.estado) | t }}</span>
+      </header>
+      <div class="ctr__ficha-body">
+        <div class="ctr__kv-grid">
+          <div class="ctr__kv"><span>{{ 'Contraparte' | t }}</span><b>{{ d.contrato.contraparte_nombre }}</b></div>
+          @if (d.contrato.monto) { <div class="ctr__kv"><span>{{ 'Monto' | t }}</span><b>RD$ {{ d.contrato.monto | number:'1.0-0' }}</b></div> }
+          @if (d.contrato.fecha_vencimiento) { <div class="ctr__kv"><span>{{ 'Vence' | t }}</span><b>{{ fmtFecha(d.contrato.fecha_vencimiento) }}</b></div> }
+          @if (d.proyecto) { <div class="ctr__kv"><span>{{ 'Obra' | t }}</span><b>{{ d.proyecto.nombre }}</b></div> }
+          @if (d.proveedor) { <div class="ctr__kv"><span>{{ 'Proveedor' | t }}</span><b>{{ d.proveedor.nombre }}</b></div> }
+        </div>
+
+        @if (d.documento) {
+          <button type="button" class="ctr__doc" appTapScale (click)="verDocumentoGenerado()">
+            <span class="ctr__doc-nom">{{ d.documento.nombre }}</span>
+            <span class="ctr__doc-meta">{{ fmtFecha(d.documento.created_at) }} · {{ d.documento.plantilla_nombre }}</span>
+          </button>
+        }
+
+        @if (d.contrato.archivo_firmado_path) {
+          <button type="button" class="btn-ghost" (click)="verFirmado()">{{ 'Ver PDF firmado' | t }}</button>
+        }
+
+        <label class="btn-ghost ctr__subir-firmado">
+          {{ (subiendoFirmado() ? 'Subiendo…' : 'Subir firmado') | t }}
+          <input type="file" hidden accept="application/pdf,image/*" [disabled]="subiendoFirmado()" (change)="onFirmadoElegido($event)" />
+        </label>
+      </div>
+
+      @if (verPdfFirmado() && urlFirmado()) {
+        <app-pdf-viewer [src]="urlFirmado()!" [nombre]="d.contrato.codigo" (cerrado)="verPdfFirmado.set(false)" />
+      }
+    </div>
+  }
+
+  <!-- Crear (3 caminos) -->
+  @if (creando()) {
+    <div class="ctr__overlay" appFadeIn>
+      <header class="ctr__ficha-header">
+        <button type="button" class="ctr__back" (click)="cerrarCrear()" [attr.aria-label]="'Atrás' | t">←</button>
+        <h2 class="ctr__ficha-title">{{ 'Nuevo contrato' | t }}</h2>
+      </header>
+      <div class="ctr__ficha-body">
+        <label class="field-label">{{ '¿De dónde sale el documento?' | t }}</label>
+        <div class="ctr__caminos">
+          <button type="button" class="ctr__camino" [class.ctr__camino--on]="camino() === 'plantilla'" (click)="generarAhora()">
+            <span class="ctr__camino-tit">{{ 'Generarlo ahora con una plantilla' | t }}</span>
+            <span class="ctr__camino-sub">{{ 'Eliges la plantilla, llenas los datos y vuelves aquí.' | t }}</span>
+          </button>
+          <button type="button" class="ctr__camino" [class.ctr__camino--on]="camino() === 'usar'" (click)="elegirCamino('usar')">
+            <span class="ctr__camino-tit">{{ 'Usar uno que ya generé' | t }}</span>
+            <span class="ctr__camino-sub">{{ 'Del Historial de Documentos.' | t }}</span>
+          </button>
+          <button type="button" class="ctr__camino" [class.ctr__camino--on]="camino() === 'subir'" (click)="elegirCamino('subir')">
+            <span class="ctr__camino-tit">{{ 'Subir el PDF firmado' | t }}</span>
+            <span class="ctr__camino-sub">{{ 'Cuando el contrato vino de afuera.' | t }}</span>
+          </button>
+        </div>
+
+        @if (camino() === 'usar') {
+          <app-collapsible-select
+            [label]="'Documento' | t"
+            icon="📄"
+            [options]="documentoOptions()"
+            [selectedId]="documentoElegidoId()"
+            [placeholder]="'Elige el documento generado' | t"
+            [searchable]="true"
+            (picked)="documentoElegidoId.set($event)"
+          />
+        }
+        @if (camino() === 'subir') {
+          <label class="btn-ghost ctr__subir-firmado">
+            {{ archivoFirmadoBlob()?.name || ('Elegir el PDF firmado' | t) }}
+            <input type="file" hidden accept="application/pdf,image/*" (change)="onArchivoFirmadoElegido($event)" />
+          </label>
+        }
+
+        @if (camino() === 'usar' || camino() === 'subir') {
+          <label class="field-label">{{ 'Título' | t }}</label>
+          <input class="field" type="text" [ngModel]="nTitulo()" (ngModelChange)="nTitulo.set($event)" [placeholder]="'¿De qué trata el contrato?' | t" />
+
+          <label class="field-label">{{ 'Tipo' | t }}</label>
+          <select class="field" [ngModel]="nTipo()" (ngModelChange)="nTipo.set($event)">
+            @for (t of tipos; track t) { <option [value]="t">{{ tipoLabel(t) | t }}</option> }
+          </select>
+
+          <label class="field-label">{{ 'Contraparte' | t }}</label>
+          <input class="field" type="text" [ngModel]="nContraparte()" (ngModelChange)="nContraparte.set($event)" [placeholder]="'Nombre de la contraparte' | t" />
+
+          <app-collapsible-select
+            [label]="'Obra' | t"
+            icon="🏗️"
+            [options]="proyectoOptions()"
+            [selectedId]="nProyectoId()"
+            [placeholder]="'Elige la obra (opcional)' | t"
+            [searchable]="true"
+            (picked)="nProyectoId.set($event)"
+          />
+
+          <label class="field-label">{{ 'Monto (opcional)' | t }}</label>
+          <input class="field" type="number" [ngModel]="nMonto()" (ngModelChange)="nMonto.set($event)" placeholder="RD$" />
+
+          <label class="field-label">{{ 'Vence (opcional)' | t }}</label>
+          <input class="field" type="date" [ngModel]="nVencimiento()" (ngModelChange)="nVencimiento.set($event)" />
+
+          <button type="button" class="btn-cta ctr__crear-btn" [disabled]="guardandoNuevo()" (click)="guardarNuevo()">
+            {{ (guardandoNuevo() ? 'Creando…' : 'Crear contrato') | t }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>

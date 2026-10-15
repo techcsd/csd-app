@@ -185,6 +185,15 @@
       {{ checking() ? ('Buscando…' | t) : ('🔄 ' + ('Buscar actualización' | t)) }}
     </button>
 
+    @if (!esNativo) {
+      <button type="button" class="btn-ghost perfil__btn" [disabled]="reparando()" (click)="repararApp()">
+        {{ (reparando() ? 'Reparando…' : 'Reparar la app') | t }}
+      </button>
+      @if (necesitaReparar()) {
+        <p class="perfil__repair-hint">{{ 'Si la versión no cambia, toca "Reparar la app". No se borra nada pendiente.' | t }}</p>
+      }
+    }
+
     @if (biometriaSoportada()) {
       <button type="button" class="btn-ghost perfil__btn" [disabled]="biometriaBusy()" (click)="toggleBiometria()">
         {{ biometriaOn() ? ('✅ ' + ('Huella / Face ID activado' | t)) : ('👆 ' + ('Usar huella / Face ID' | t)) }}

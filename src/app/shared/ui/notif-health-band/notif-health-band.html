@@ -2,7 +2,9 @@
   <div class="notif-band" role="status">
     <span class="notif-band__txt">{{ 'Tus notificaciones están apagadas o sin sonido' | t }}</span>
     <div class="notif-band__actions">
-      <button type="button" class="notif-band__btn" (click)="activar()">{{ 'Activar' | t }}</button>
+      <button type="button" class="notif-band__btn" [disabled]="activando()" (click)="activar()">
+        {{ (activando() ? 'Activando…' : 'Activar') | t }}
+      </button>
       @if (salud()?.fabricanteAgresivo) {
         <button type="button" class="notif-band__ghost" (click)="verGuia()">{{ 'Ver guía' | t }}</button>
       }
@@ -12,3 +14,32 @@
     </div>
   </div>
 }
+
+<!-- CO10/CO17 — permiso ya negado una vez: el navegador no vuelve a preguntar;
+     hay que guiar a Ajustes del sistema. -->
+<app-bottom-sheet [open]="mostrarDenegado()" [titulo]="'Activa los avisos en tu iPhone' | t" (closed)="cerrarHojas()">
+  <div class="notif-pasos">
+    <p class="notif-pasos__sub">{{ 'El permiso ya se negó una vez; tu iPhone no deja volver a preguntarlo.' | t }}</p>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">1</span><span>{{ 'Abre' | t }} <b>{{ 'Ajustes' | t }}</b> {{ 'del iPhone.' | t }}</span></div>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">2</span><span>{{ 'Entra en' | t }} <b>Notificaciones › CSD App</b>.</span></div>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">3</span><span>{{ 'Activa' | t }} <b>{{ 'Permitir notificaciones' | t }}</b> {{ 'y' | t }} <b>{{ 'Sonidos' | t }}</b>. {{ 'Vuelve aquí.' | t }}</span></div>
+    <button type="button" class="btn-cta" [disabled]="activando()" (click)="comprobar()">
+      {{ (activando() ? 'Comprobando…' : 'Ya lo activé, comprobar') | t }}
+    </button>
+    <button type="button" class="btn-ghost" (click)="cerrarHojas()">{{ 'Ahora no' | t }}</button>
+  </div>
+</app-bottom-sheet>
+
+<!-- CO10/CO17 — Safari abierto suelto (no agregado a inicio): iOS exige la PWA
+     instalada para poder recibir Web Push. -->
+<app-bottom-sheet [open]="mostrarInstalar()" [titulo]="'Instala CSD App primero' | t" (closed)="cerrarHojas()">
+  <div class="notif-pasos">
+    <p class="notif-pasos__sub">
+      {{ 'Para recibir avisos en tu iPhone, primero agrega CSD App a tu pantalla de inicio:' | t }}
+    </p>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">1</span><span>{{ 'Toca el botón' | t }} <b>Compartir</b> {{ 'de Safari.' | t }}</span></div>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">2</span><span>{{ 'Elige' | t }} <b>Añadir a inicio</b>.</span></div>
+    <div class="notif-pasos__item"><span class="notif-pasos__n">3</span><span>{{ 'Abre CSD App desde el ícono nuevo y vuelve a tocar Activar.' | t }}</span></div>
+    <button type="button" class="btn-ghost" (click)="cerrarHojas()">{{ 'Entendido' | t }}</button>
+  </div>
+</app-bottom-sheet>

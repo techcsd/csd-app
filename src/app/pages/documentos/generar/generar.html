@@ -1,0 +1,88 @@
+<div class="screen gen" data-testid="documentos-generar">
+  <header class="gen__header">
+    <button type="button" class="gen__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <h1 class="gen__title">{{ 'Generar documento' | t }}</h1>
+  </header>
+
+  <div class="screen__body">
+    @if (paso() === 'plantilla') {
+      @if (loading()) {
+        <app-skeleton [rows]="3" />
+      } @else if (!plantillas().length) {
+        <app-empty-state [title]="'Sin plantillas' | t" [message]="'No hay plantillas disponibles todavía.' | t" />
+      } @else {
+        <p class="gen__intro">{{ 'Elige la plantilla que vas a usar.' | t }}</p>
+        <div class="gen__plantillas" appStagger>
+          @for (p of plantillas(); track p.id) {
+            <button type="button" class="gen__plantilla" appTapScale (click)="elegirPlantilla(p)">
+              <span class="gen__plantilla-nom">{{ p.nombre }}</span>
+              <span class="gen__plantilla-meta">{{ p.campos.length }} {{ 'datos' | t }} @if (p.es_default) { · ★ } </span>
+            </button>
+          }
+        </div>
+      }
+    }
+
+    @if (paso() === 'datos' && plantillaSel(); as pl) {
+      <p class="gen__intro">{{ pl.nombre }}</p>
+      <label class="field-label">{{ 'Nombre de este documento' | t }}</label>
+      <input class="field" type="text" [ngModel]="nombreDocumento()" (ngModelChange)="nombreDocumento.set($event)" />
+
+      <app-collapsible-select
+        [label]="'Obra' | t"
+        icon="🏗️"
+        [options]="proyectoOptions()"
+        [selectedId]="proyectoId()"
+        [placeholder]="'Obra (opcional)' | t"
+        [searchable]="true"
+        (picked)="proyectoId.set($event)"
+      />
+
+      <div class="gen__campos">
+        @for (c of pl.campos; track c.key) {
+          <div class="gen__campo">
+            <label class="field-label">{{ c.label }}</label>
+            @if (c.tipo === 'textarea') {
+              <textarea class="field" rows="3" [ngModel]="valores()[c.key] ?? ''" (ngModelChange)="setValor(c.key, $event)"></textarea>
+            } @else if (c.tipo === 'fecha') {
+              <input class="field" type="date" [ngModel]="valores()[c.key] ?? ''" (ngModelChange)="setValor(c.key, $event)" />
+            } @else if (c.tipo === 'numero') {
+              <input class="field" type="number" [ngModel]="valores()[c.key] ?? ''" (ngModelChange)="setValor(c.key, $event)" />
+            } @else {
+              <input class="field" type="text" [ngModel]="valores()[c.key] ?? ''" (ngModelChange)="setValor(c.key, $event)" />
+            }
+          </div>
+        }
+      </div>
+
+      <button type="button" class="btn-cta gen__continuar" (click)="irAPreview()">{{ 'Ver vista previa' | t }}</button>
+    }
+
+    @if (paso() === 'preview') {
+      <p class="gen__intro">{{ 'Así va a quedar. Revisa antes de guardar.' | t }}</p>
+      <div class="gen__preview" [innerHTML]="htmlPreview()"></div>
+      <div class="gen__preview-btns">
+        <button type="button" class="btn-ghost" [disabled]="guardando()" (click)="volverADatos()">{{ 'Corregir' | t }}</button>
+        <button type="button" class="btn-cta" [disabled]="guardando()" (click)="guardar()">
+          {{ (guardando() ? 'Guardando…' : 'Guardar documento') | t }}
+        </button>
+      </div>
+    }
+
+    @if (paso() === 'exito') {
+      <div class="gen__exito">
+        <h2 class="gen__exito-tit">{{ 'Documento generado' | t }}</h2>
+        <p class="gen__exito-sub">{{ nombreDocumento() }}</p>
+        <button type="button" class="btn-cta" [disabled]="compartiendo()" (click)="compartir()">
+          {{ (compartiendo() ? 'Generando PDF…' : 'Compartir por WhatsApp') | t }}
+        </button>
+        @if (esContrato()) {
+          <button type="button" class="btn-ghost" (click)="crearContratoConEsteDocumento()">
+            {{ 'Crear contrato en Legal con este documento' | t }}
+          </button>
+        }
+        <button type="button" class="gen__exito-nuevo" (click)="nuevoDocumento()">{{ 'Generar otro documento' | t }}</button>
+      </div>
+    }
+  </div>
+</div>

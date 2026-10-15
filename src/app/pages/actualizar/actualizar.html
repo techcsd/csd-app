@@ -7,8 +7,13 @@
       <p class="actu__sub">{{ 'Tienes la' | t }} {{ local }}. {{ 'Actualiza para tener las últimas mejoras y arreglos.' | t }}</p>
     } @else if (!esNativo) {
       <!-- AU10 — la PWA se actualiza sola; nunca un botón "Actualizar". -->
-      <h1 class="actu__title">{{ buscandoPwa() ? ('Buscando la última versión…' | t) : ('Ya tienes la última versión' | t) }}</h1>
-      <p class="actu__sub">{{ 'Estás en la' | t }} {{ local }}. {{ 'Esta app se actualiza sola: al refrescar verás la versión nueva.' | t }}</p>
+      @if (necesitaReparar()) {
+        <h1 class="actu__title">{{ 'La app no pudo actualizarse sola' | t }}</h1>
+        <p class="actu__sub">{{ 'Estás en la' | t }} {{ local }}. {{ 'Repárala para que vuelva a funcionar. No se borra nada pendiente.' | t }}</p>
+      } @else {
+        <h1 class="actu__title">{{ buscandoPwa() ? ('Buscando la última versión…' | t) : ('Ya tienes la última versión' | t) }}</h1>
+        <p class="actu__sub">{{ 'Estás en la' | t }} {{ local }}. {{ 'Esta app se actualiza sola: al refrescar verás la versión nueva.' | t }}</p>
+      }
     } @else {
       <h1 class="actu__title">{{ 'Ya tienes la última versión' | t }}</h1>
       <p class="actu__sub">{{ 'Estás en la' | t }} {{ local }}.</p>
@@ -83,6 +88,12 @@
 
   <footer class="actu__nav">
     <button type="button" class="btn-ghost actu__back" (click)="volver()">{{ 'Ahora no' | t }}</button>
+    <!-- CO1 — único botón de la PWA: si el SW quedó degradado, repararla a mano. -->
+    @if (!esNativo && necesitaReparar()) {
+      <button type="button" class="btn-cta" appTapScale [disabled]="reparando()" (click)="reparar()">
+        {{ (reparando() ? 'Reparando…' : 'Reparar la app') | t }}
+      </button>
+    }
     <!-- AU10 — el botón de descarga/instalación es SOLO para la APK nativa. En la
          PWA no hay botón: el service worker ya activó el build nuevo y recarga solo. -->
     @if (esNativo && (hayNueva() || apkUrl())) {

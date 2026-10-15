@@ -105,6 +105,8 @@ export class RequisicionDetallePage {
   proyectos = signal<Proyecto[]>([]); // BF6 — obras pickables (mismo scoping que crear)
   unidades = signal<string[]>([]);
   puedeGestionarSig = signal(false);
+  /** CO4 — permiso explícito para aprobar/rechazar su propia requisición (Raykler). */
+  puedeAutoaprobarSig = signal(false);
   confirmarQuitar = signal<string | null>(null);
 
   bodegaOptions = computed(() => this.bodegas().map((b) => ({ id: b.id, label: b.nombre })));
@@ -119,10 +121,14 @@ export class RequisicionDetallePage {
   /** BH1 — Aprobar/Rechazar son actos de un TERCERO gestor: el servidor niega
    *  auto-aprobar ("No puedes aprobar tu propia requisición") y auto-rechazar
    *  ("No puedes rechazar tu propia solicitud"). La visibilidad del botón se deriva
-   *  de la MISMA condición del guard: nunca se pinta al autor (salvo admin). Al autor
-   *  le queda "Cancelar", que sí le corresponde (puedeCancelar). */
+   *  de la MISMA condición del guard: nunca se pinta al autor (salvo admin o el
+   *  permiso explícito CO4 `puede_autoaprobar_requisicion`, p. ej. Raykler). Al
+   *  autor sin ese permiso le queda "Cancelar" (puedeCancelar). */
   puedeAprobarORechazar = computed(
-    () => this.puedeGestionar() && this.esPendiente() && (!this.esAutor() || this.ctx.esAdmin()),
+    () =>
+      this.puedeGestionar() &&
+      this.esPendiente() &&
+      (!this.esAutor() || this.ctx.esAdmin() || this.puedeAutoaprobarSig()),
   );
   /** BF6 — una rechazada no es callejón: el autor la corrige y la reenvía. */
   esRechazada = computed(() => this.req()?.estado === 'rechazada');
@@ -187,11 +193,12 @@ export class RequisicionDetallePage {
   private async load(): Promise<void> {
     this.loading.set(true);
     try {
-      const [r, av, eds, gestion, at] = await Promise.all([
+      const [r, av, eds, gestion, autoaprobar, at] = await Promise.all([
         this.service.detalle(this.id),
         this.service.avance(this.id).catch(() => [] as RequisicionAvanceItem[]),
         this.service.ediciones(this.id).catch(() => [] as RequisicionEdicion[]),
         this.service.puedeGestionar(this.id).catch(() => false),
+        this.service.puedeAutoaprobar().catch(() => false),
         this.service.detalleFetchedAt(this.id),
       ]);
       if (!r) this.error.set(true);
@@ -199,6 +206,7 @@ export class RequisicionDetallePage {
       this.avance.set(av);
       this.ediciones.set(eds);
       this.puedeGestionarSig.set(gestion);
+      this.puedeAutoaprobarSig.set(autoaprobar);
       // BV4 — coberturas (best-effort, detrás de capacidad).
       this.service.cobertura(this.id).then((c) => this.coberturas.set(c)).catch(() => {});
       this.fetchedAt.set(at);

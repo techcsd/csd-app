@@ -112,8 +112,25 @@ export class VersionService {
     }
   }
 
+  /**
+   * CO1 — `version_publicada` ahora acepta `p_plataforma` ('movil'|'ios-pwa') y
+   * cae sola a 'movil' si aún no existe una fila publicada para esa plataforma
+   * (cero regresión). Sin esto, la PWA de iPhone leía siempre la mínima de
+   * Android — nunca iba a poder tener su propio piso/arreglo del updater.
+   */
+  private plataformaRpc(): 'movil' | 'ios-pwa' {
+    if (this.esNativo) return 'movil';
+    const ua = navigator.userAgent || '';
+    const iOS =
+      /iPad|iPhone|iPod/.test(ua) ||
+      (/Macintosh/.test(ua) && (navigator.maxTouchPoints ?? 0) > 1);
+    return iOS ? 'ios-pwa' : 'movil';
+  }
+
   private async fetchRpc(): Promise<VersionPublicada> {
-    const { data, error } = await this.supabase.client.rpc('version_publicada');
+    const { data, error } = await this.supabase.client.rpc('version_publicada', {
+      p_plataforma: this.plataformaRpc(),
+    });
     if (error) throw new Error(error.message);
     return (
       (data as VersionPublicada) ?? {
@@ -134,6 +151,18 @@ export class VersionService {
    *  Solo en la APK nativa: la PWA/web se actualiza sola por service worker. */
   debeActualizar(): boolean {
     if (!this.esNativo) return false;
+    const min = this.info()?.version_minima;
+    return !!min && cmpVersion(this.local, min) < 0;
+  }
+
+  /**
+   * CO1 — equivalente de `debeActualizar()` para la PWA de iPhone: si la mínima
+   * publicada para `ios-pwa` es mayor que el build local, el service worker se
+   * quedó atascado (CO1) y no hay descarga/instalación posible, así que la
+   * pantalla no debe ofrecer "Actualizar" sino disparar la auto-reparación.
+   */
+  debeActualizarPwa(): boolean {
+    if (this.esNativo) return false;
     const min = this.info()?.version_minima;
     return !!min && cmpVersion(this.local, min) < 0;
   }

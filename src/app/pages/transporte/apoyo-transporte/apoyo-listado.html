@@ -48,6 +48,17 @@
                 @if (s.dia) { <span>{{ fmtFecha(s.dia) }}</span> }
                 @if (s.solicitante) { <span>{{ s.solicitante }}</span> }
               </div>
+              <!-- CO9 — quién canceló/completó, visible en la TARJETA (antes solo en el detalle). -->
+              @if (s.estado === 'cancelada' && s.cancelada_por_nombre) {
+                <p class="apl__quien apl__quien--cancel">
+                  {{ 'Cancelada por' | t }} {{ s.cancelada_por_nombre }}
+                  @if (s.cancelada_at) { · {{ fmtFecha(s.cancelada_at) }} }
+                  @if (s.motivo_cancelacion) { · «{{ s.motivo_cancelacion }}» }
+                </p>
+              }
+              @if (s.estado === 'completada' && s.completada_por_nombre) {
+                <p class="apl__quien">{{ 'Completada por' | t }} {{ s.completada_por_nombre }}</p>
+              }
             </div>
           </div>
         </button>
