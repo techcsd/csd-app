@@ -51,7 +51,7 @@
         @if (cotizacionPrincipal(d); as c) {
           <div class="ctec__preview">
             @if (esPdf(c.nombre) && c.url) {
-              <app-pdf-viewer [src]="c.url" [nombre]="c.nombre" />
+              <button type="button" class="btn-ghost ctec__ver-pdf" (click)="verPdf.set(true)">{{ 'Ver PDF' | t }}</button>
             } @else if (c.url) {
               <img class="ctec__preview-img" [src]="c.url" [alt]="c.nombre" />
             }
@@ -122,6 +122,11 @@
           <button type="button" class="ctec__rechazar" (click)="tocarRechazar()">{{ 'Rechazar' | t }}</button>
           <button type="button" class="btn-cta ctec__aprobar" (click)="tocarAprobar()">{{ 'Aprobar compra' | t }}</button>
         </footer>
+      }
+
+      <!-- `app-pdf-viewer` es un modal a pantalla completa — se monta solo al pedirlo. -->
+      @if (verPdf() && cotizacionPrincipal(d)?.url; as url) {
+        <app-pdf-viewer [src]="url" [nombre]="cotizacionPrincipal(d)!.nombre" (cerrado)="verPdf.set(false)" />
       }
     </div>
   }

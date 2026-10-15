@@ -120,7 +120,7 @@ se ofrece "de verdad" cuando cubre su alcance (en ≥95%, ht ≥90%).
 | pages/tecnologia-inventario | 0 | 2 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-detalle | 0 | 9 | 0% | 0% |  |
 | pages/tecnologia-inventario/equipo-form | 0 | 29 | 0% | 0% |  |
-| pages/tecnologia/compras-tec | 22 | 0 | 23% | 0% |  |
+| pages/tecnologia/compras-tec | 23 | 0 | 26% | 0% |  |
 | pages/tecnologia/dev-notes | 0 | 5 | 0% | 0% |  |
 | pages/transporte | 16 | 0 | 100% | 6% | ✅ |
 | pages/transporte/acta-detalle | 9 | 0 | 100% | 0% |  |

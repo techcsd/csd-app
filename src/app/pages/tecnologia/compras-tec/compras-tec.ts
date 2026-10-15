@@ -40,6 +40,8 @@ export class ComprasTecPage {
 
   abierta = signal<CompraTecDetalle | null>(null);
   cargandoDetalle = signal(false);
+  /** `app-pdf-viewer` es un modal a pantalla completa (no inline) — se abre a demanda. */
+  verPdf = signal(false);
 
   /** 'aprobar' | 'rechazar' | null — qué acción se está confirmando. */
   modo = signal<'aprobar' | 'rechazar' | null>(null);
@@ -93,6 +95,7 @@ export class ComprasTecPage {
     this.abierta.set(null);
     this.modo.set(null);
     this.motivo.set('');
+    this.verPdf.set(false);
   }
 
   tocarAprobar(): void {
