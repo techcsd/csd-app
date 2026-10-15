@@ -77,7 +77,7 @@
 .ctec__overlay {
   position: fixed;
   inset: 0;
-  z-index: 420;
+  z-index: 900; // CO — sobre la cinta de salud de notificaciones (z-index 499), bajo cámara/firma
   background: var(--color-bg);
   display: flex;
   flex-direction: column;

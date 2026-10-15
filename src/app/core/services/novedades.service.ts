@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { NetworkService } from './network.service';
 import { NavGuardService } from './nav-guard.service';
 import { BienvenidaService } from './bienvenida.service';
+import { IdiomaOnboardingService } from '../i18n/idioma-onboarding.service';
 import type { CambioItem } from './version.service';
 
 /** CO2 — un ítem de `novedades_pendientes().versiones[]` (mismo `cambios[]` que `app_versiones`). */
@@ -42,6 +43,7 @@ export class NovedadesService {
   private network = inject(NetworkService);
   private navGuard = inject(NavGuardService);
   private bienvenida = inject(BienvenidaService);
+  private idiomaOnboarding = inject(IdiomaOnboardingService);
   private injector = inject(Injector);
 
   private _mostrar = signal(false);
@@ -103,10 +105,13 @@ export class NovedadesService {
     }
   }
 
-  /** Nunca encima de un formulario/wizard en curso (espera a que se cierre, como el updater). */
+  /** Nunca encima de un formulario/wizard en curso (espera a que se cierre, como el
+   *  updater), NI encima del diálogo de idioma (BS4) — ambos son overlays a pantalla
+   *  completa y competían por el mismo click (bug real visto en pruebas: el diálogo
+   *  de idioma quedaba encima del botón "Entendido" de Novedades, sin poder cerrarlo). */
   private mostrarCuandoSeguro(): void {
     const intentar = (): boolean => {
-      if (this.navGuard.formActivo) return false;
+      if (this.navGuard.formActivo || this.idiomaOnboarding.mostrar()) return false;
       this._mostrar.set(true);
       return true;
     };
