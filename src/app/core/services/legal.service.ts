@@ -26,6 +26,14 @@ const BUCKET = 'sgc-legal';
 export class LegalService {
   private supabase = inject(SupabaseService);
 
+  /** Sin RPC ni trigger `default auth.uid()` en estas tablas (confirmado: insert
+   *  directo) — hay que mandar el autor a mano o `creado_por`/`usuario_id`/`subido_por`
+   *  quedan NULL (bug real encontrado en pruebas: las notas se guardaban sin autor). */
+  private async miUid(): Promise<string | null> {
+    const { data } = await this.supabase.client.auth.getUser();
+    return data.user?.id ?? null;
+  }
+
   // ── Expedientes ────────────────────────────────────────────────────────────
 
   async listarExpedientes(): Promise<ExpedienteLegal[]> {
@@ -68,6 +76,7 @@ export class LegalService {
         proyecto_id: input.proyectoId,
         contraparte: input.contraparte,
         descripcion: input.descripcion,
+        creado_por: await this.miUid(),
       })
       .select('id')
       .single();
@@ -103,7 +112,9 @@ export class LegalService {
   }
 
   async agregarNota(expedienteId: string, nota: string): Promise<void> {
-    const { error } = await this.supabase.client.from('expediente_notas').insert({ expediente_id: expedienteId, nota });
+    const { error } = await this.supabase.client
+      .from('expediente_notas')
+      .insert({ expediente_id: expedienteId, nota, usuario_id: await this.miUid() });
     if (error) throw new Error(error.message);
   }
 
@@ -132,7 +143,7 @@ export class LegalService {
     if (upErr) throw new Error(upErr.message);
     const { error } = await this.supabase.client
       .from('expediente_archivos')
-      .insert({ expediente_id: expedienteId, nombre, archivo_path: path, tipo_mime: mime });
+      .insert({ expediente_id: expedienteId, nombre, archivo_path: path, tipo_mime: mime, subido_por: await this.miUid() });
     if (error) throw new Error(error.message);
   }
 
@@ -187,6 +198,7 @@ export class LegalService {
         documento_generado_id: input.documentoGeneradoId ?? null,
         archivo_firmado_path: input.archivoFirmadoPath ?? null,
         estado,
+        creado_por: await this.miUid(),
       })
       .select('id')
       .single();
