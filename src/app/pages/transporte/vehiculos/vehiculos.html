@@ -9,6 +9,9 @@
     @if (esAdmin()) {
       <button type="button" class="btn-cta vlist__add" (click)="nuevo()">➕ {{ 'Agregar vehículo' | t }}</button>
     }
+    @if (esFlotaElevado()) {
+      <button type="button" class="btn-ghost vlist__import" (click)="importar()">{{ glyphImportar }} {{ 'Importar desde Excel' | t }}</button>
+    }
 
     <!-- AT14 — mostrar/ocultar datos de prueba (solo admin) -->
     @if (esAdminRol()) {

@@ -10,12 +10,12 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BottomSheet } from '../../shared/ui/bottom-sheet/bottom-sheet';
 import { VoiceRecorder } from '../../shared/ui/voice-recorder/voice-recorder';
 import { MarkdownView } from '../../shared/ui/markdown-view/markdown-view';
 import { PdfViewer } from '../../shared/ui/pdf-viewer/pdf-viewer';
-import { CompaService } from '../../core/services/compa.service';
+import { CompaService, CompaUsuarioBusqueda } from '../../core/services/compa.service';
 import { IaConsentGate } from '../../core/services/ia-consent-gate.service';
 import { NetworkService } from '../../core/services/network.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -60,6 +60,7 @@ export class CompaPage {
   private toast = inject(ToastService);
   private location = inject(Location);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private i18n = inject(I18nService);
   private iaGate = inject(IaConsentGate);
 
@@ -108,6 +109,98 @@ export class CompaPage {
   }
   cerrarPdf(): void {
     this.pdfVisor.set(null);
+  }
+
+  /** CP3 — ¿el archivo es un PDF? (por extensión de la URL, best-effort). */
+  esPdf(url: string): boolean {
+    return /\.pdf(\?\S*)?$/i.test(url);
+  }
+
+  /** CP3 — abre un archivo del arreglo `archivos[]` del mensaje: PDF → visor, resto → nueva pestaña/descarga. */
+  abrirArchivo(a: { nombre: string; url: string }): void {
+    if (this.esPdf(a.url)) {
+      this.pdfVisor.set({ url: a.url, nombre: a.nombre || 'Reporte' });
+      return;
+    }
+    globalThis.open?.(a.url, '_blank');
+  }
+
+  // ── CP2 — Compartir conversación ────────────────────────────────────────────
+  compartirAbierto = signal(false);
+  compartirTerm = signal('');
+  compartirBuscando = signal(false);
+  compartirResultados = signal<CompaUsuarioBusqueda[]>([]);
+  compartirElegidos = signal<CompaUsuarioBusqueda[]>([]);
+  compartirMensaje = signal('');
+  compartirEnviando = signal(false);
+  private compartirDebounce: ReturnType<typeof setTimeout> | null = null;
+
+  /** ¿Hay algo que compartir? (necesita conversacion_id, lo que implica ≥1 turno). */
+  puedeCompartir = computed(() => !!this.conversacionId && !this.vacio());
+
+  verCompartidas(): void {
+    void this.router.navigate(['/compa/compartidas']);
+  }
+
+  abrirCompartir(): void {
+    if (!this.puedeCompartir()) return;
+    this.compartirTerm.set('');
+    this.compartirResultados.set([]);
+    this.compartirElegidos.set([]);
+    this.compartirMensaje.set('');
+    this.compartirAbierto.set(true);
+  }
+
+  cerrarCompartir(): void {
+    if (this.compartirEnviando()) return;
+    this.compartirAbierto.set(false);
+  }
+
+  onCompartirTerm(v: string): void {
+    this.compartirTerm.set(v);
+    if (this.compartirDebounce) clearTimeout(this.compartirDebounce);
+    const t = v.trim();
+    if (t.length < 2) {
+      this.compartirResultados.set([]);
+      return;
+    }
+    this.compartirDebounce = setTimeout(() => void this.buscarParaCompartir(t), 300);
+  }
+
+  private async buscarParaCompartir(t: string): Promise<void> {
+    this.compartirBuscando.set(true);
+    try {
+      const yaElegidos = new Set(this.compartirElegidos().map((u) => u.id));
+      const res = await this.compa.buscarUsuarios(t);
+      this.compartirResultados.set(res.filter((u) => !yaElegidos.has(u.id)));
+    } finally {
+      this.compartirBuscando.set(false);
+    }
+  }
+
+  elegirParaCompartir(u: CompaUsuarioBusqueda): void {
+    this.compartirElegidos.update((list) => (list.some((x) => x.id === u.id) ? list : [...list, u]));
+    this.compartirResultados.set([]);
+    this.compartirTerm.set('');
+  }
+
+  quitarElegido(u: CompaUsuarioBusqueda): void {
+    this.compartirElegidos.update((list) => list.filter((x) => x.id !== u.id));
+  }
+
+  async confirmarCompartir(): Promise<void> {
+    const destinatarios = this.compartirElegidos();
+    if (!destinatarios.length || this.compartirEnviando() || !this.conversacionId) return;
+    this.compartirEnviando.set(true);
+    try {
+      await this.compa.compartir(this.conversacionId, destinatarios.map((u) => u.id), this.compartirMensaje());
+      this.toast.success(this.i18n.t('Conversación compartida.'));
+      this.compartirAbierto.set(false);
+    } catch (e) {
+      this.toast.error(e instanceof Error ? e.message : this.i18n.t('No se pudo compartir la conversación.'));
+    } finally {
+      this.compartirEnviando.set(false);
+    }
   }
 
   get online(): boolean {
@@ -205,7 +298,7 @@ export class CompaPage {
       if (r.conversacion_id) this.conversacionId = r.conversacion_id;
       this.mensajes.update((list) => [
         ...list,
-        { id: this.nuevoId(), rol: 'assistant', texto: r.respuesta, propuesta: r.propuesta, ts: new Date().toISOString() },
+        { id: this.nuevoId(), rol: 'assistant', texto: r.respuesta, propuesta: r.propuesta, archivos: r.archivos, ts: new Date().toISOString() },
       ]);
       // Si el turno trae una propuesta de escritura, abre la hoja de confirmación.
       if (r.propuesta) this.propuesta.set(r.propuesta);

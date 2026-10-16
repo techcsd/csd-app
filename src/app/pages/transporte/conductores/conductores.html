@@ -9,6 +9,9 @@
     @if (esAdmin()) {
       <button type="button" class="btn-cta clist__add" (click)="nuevo()">➕ {{ 'Agregar conductor' | t }}</button>
     }
+    @if (esFlotaElevado()) {
+      <button type="button" class="btn-ghost clist__import" (click)="importar()">{{ glyphImportar }} {{ 'Importar desde Excel' | t }}</button>
+    }
 
     <input
       class="field clist__search"

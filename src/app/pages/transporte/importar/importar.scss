@@ -1,0 +1,146 @@
+.imp__tipos {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+.imp__tipo {
+  flex: 1 1 0;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.imp__tipo--on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+}
+
+.imp__intro {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 12px 0;
+}
+
+.imp__file {
+  display: block;
+  margin-bottom: 8px;
+  input {
+    display: none;
+  }
+}
+.imp__file--secundario {
+  margin-top: 14px;
+}
+.imp__file-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 14px;
+  border: 1.5px dashed var(--Hub, #ffb300);
+  border-radius: 12px;
+  background: var(--Hub-translucid, #ffb3001a);
+  color: var(--color-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+.imp__archivo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.imp__quitar-zip {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-error);
+  text-decoration: underline;
+}
+.imp__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.imp__band {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.imp__band--error {
+  background: var(--color-error-bg, #fde2e2);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.imp__resumen {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+}
+.imp__res-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 0;
+  font-size: 14px;
+  span {
+    color: var(--color-text-secondary);
+  }
+}
+
+.imp__importar {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.imp__exito {
+  text-align: center;
+  padding: 32px 16px;
+  .imp__exito-ico {
+    font-size: 48px;
+  }
+  h2 {
+    margin: 12px 0 6px;
+  }
+  .imp__resumen {
+    text-align: left;
+  }
+  .btn-cta,
+  .btn-ghost {
+    width: 100%;
+  }
+  .imp__otra {
+    margin-top: 10px;
+  }
+}
+
+.imp__errores {
+  text-align: left;
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--color-warning-bg);
+  max-height: 220px;
+  overflow-y: auto;
+}
+.imp__errores-tit {
+  margin: 0 0 6px;
+  font-weight: 800;
+  color: var(--color-warning);
+}
+.imp__error-item {
+  margin: 2px 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}

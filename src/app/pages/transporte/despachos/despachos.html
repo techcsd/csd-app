@@ -12,15 +12,41 @@
     } @else {
       @if (error()) { <div class="dp-band dp-band--err">{{ error() }}</div> }
 
-      @for (r of requisiciones(); track r.id) {
-        <button type="button" class="dp-card" (click)="despachar(r)">
-          <div class="dp-card__main">
+      @if (atrasadas().length) {
+        <h2 class="dp-group dp-group--warn">{{ glyphWarn }} {{ 'Esperando hace más de 2 días' | t }}</h2>
+        @for (r of atrasadas(); track r.id) {
+          <button type="button" class="dp-card dp-card--atrasada" (click)="despachar(r)">
+            <div class="dp-card__top">
+              <span class="dp-card__codigo">{{ r.codigo || ('Sin código' | t) }}</span>
+              <span class="dp-card__fecha dp-card__fecha--warn">{{ fechaCard(r) }}</span>
+            </div>
             <span class="dp-card__obra">🏗 {{ r.proyecto_nombre || ('Obra' | t) }}</span>
-            <span class="dp-card__meta">{{ r.renglones }} {{ 'renglón(es)' | t }}{{ r.solicitante ? ' · ' + r.solicitante : '' }}</span>
-          </div>
-          <span class="dp-card__cta">{{ 'Despachar' | t }} ›</span>
-        </button>
-      } @empty {
+            <span class="dp-card__meta">
+              {{ r.renglones }} {{ 'renglón(es)' | t }}{{ r.solicitante ? ' · ' + r.solicitante : '' }}{{ necesidadTexto(r) ? ' · ' + necesidadTexto(r) : '' }}
+            </span>
+            <span class="dp-card__cta">{{ 'Despachar' | t }} ›</span>
+          </button>
+        }
+      }
+
+      @if (recientes().length) {
+        @if (atrasadas().length) { <h2 class="dp-group">{{ 'Resto' | t }}</h2> }
+        @for (r of recientes(); track r.id) {
+          <button type="button" class="dp-card" (click)="despachar(r)">
+            <div class="dp-card__top">
+              <span class="dp-card__codigo">{{ r.codigo || ('Sin código' | t) }}</span>
+              <span class="dp-card__fecha">{{ fechaCard(r) }}</span>
+            </div>
+            <span class="dp-card__obra">🏗 {{ r.proyecto_nombre || ('Obra' | t) }}</span>
+            <span class="dp-card__meta">
+              {{ r.renglones }} {{ 'renglón(es)' | t }}{{ r.solicitante ? ' · ' + r.solicitante : '' }}{{ necesidadTexto(r) ? ' · ' + necesidadTexto(r) : '' }}
+            </span>
+            <span class="dp-card__cta">{{ 'Despachar' | t }} ›</span>
+          </button>
+        }
+      }
+
+      @if (!atrasadas().length && !recientes().length) {
         <app-empty-state icon="📋" [title]="'Nada por despachar' | t"
           [message]="'Cuando aprueben una requisición para despacho, aparecerá aquí.' | t" />
       }

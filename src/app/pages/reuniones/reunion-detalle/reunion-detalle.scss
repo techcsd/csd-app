@@ -1,0 +1,68 @@
+.rd { display: flex; flex-direction: column; height: 100%; }
+.rd__skel { padding: 16px; }
+
+.rd-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--color-surface, #fff);
+  border-bottom: 1px solid var(--color-border);
+}
+.rd-header__back { font-size: 22px; color: var(--color-text); width: 40px; height: 40px; flex: 0 0 auto; }
+.rd-header__info { min-width: 0; display: flex; flex-direction: column; }
+.rd-header__title { font-size: 16px; font-weight: 800; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; }
+.rd-header__sub { font-size: 12px; color: var(--color-text-secondary); }
+
+.rd-band--err {
+  margin: 12px 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 12px);
+  background: var(--color-error-bg);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.rd__unirse { width: 100%; margin-bottom: 14px; }
+
+.rd-card {
+  padding: 14px;
+  margin-bottom: 12px;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+.rd-card__tit { margin: 0 0 10px; font-size: 14px; font-weight: 800; color: var(--color-text); }
+
+.rd__agenda { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--color-text); }
+
+.rd__nota-txt { resize: none; width: 100%; margin-bottom: 10px; }
+.rd__nota-acts { display: flex; gap: 8px; margin-bottom: 10px; }
+.rd__nota-acts .btn-ghost { flex: 1; }
+
+.rd__foto-prev {
+  position: relative;
+  margin-bottom: 10px;
+  img { width: 100%; border-radius: 10px; max-height: 220px; object-fit: cover; }
+}
+.rd__foto-quitar {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 12px;
+}
+
+.rd__foto-ajena {
+  margin-top: 10px;
+  img { width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover; }
+}
+.rd__foto-ajena-autor { display: block; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+
+.rd__acuerdo { font-size: 14px; color: var(--color-text); margin: 0 0 8px; }
+.rd__acta-resumen { font-size: 14px; color: var(--color-text); white-space: pre-wrap; }
+.rd__acta-aprobada { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--color-success, #16a34a); }
+.rd__participante { font-size: 14px; color: var(--color-text); margin: 0 0 4px; }

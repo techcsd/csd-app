@@ -1,5 +1,38 @@
 # HANDOFF — CSD App
 
+## 🟢 SESIÓN 16/10/2026 (2ª) — PROMPT-101 · Ronda **CP** — app **2.54.0**, EN DEV (prod pendiente del PR)
+> `feature/cp-ronda` (desde `dev`=`main`=`74c2cdb`, que YA incluía el import masivo de choferes/vehículos) → commit `16858eb` → merge `dev` → **otra sesión (Xaviel, `6ba638d`) commiteó encima** un fix del import (fotos por cédula/placa) y bumpeó a **2.54.0** porque 2.53.0 ya la había tomado esta ronda — el release final de hoy es 2.54.0 e incluye AMBOS (CP + el fix de import). `dev` pusheado, APK dev 2.54.0 construido+publicado+registrado.
+
+**FASE 0 — estado real (no lo que asumía el prompt):**
+- 2.51.0 **ya estaba publicada a prod** (sesión anterior del mismo día) — la FASE 1 del prompt (publicarla) ya no aplicaba.
+- Encontrado en el working tree: una feature sin commitear de una sesión previa — **import masivo de choferes/vehículos desde Excel (+fotos .zip)**, NO es parte de la ronda CP. Con OK de Xaviel se terminó de verificar y **se commiteó como 2.52.0** (`4e95f3a`+`74c2cdb`); más tarde, **mientras esta sesión trabajaba**, otra sesión (Xaviel) le aplicó un fix (emparejar fotos por cédula/placa en vez de una columna) y bumpeó a 2.54.0.
+- El backend/web de **todo** PROMPT-100 (CP1-CP11) ya estaba en prod antes de empezar (SGC HANDOFF.md, web 1.191.0) — el trabajo real de esta sesión fue 100% lado app, contratos ya confirmados vivos.
+- **Trabajo concurrente en la MISMA working tree** (mismo patrón que advierte el HANDOFF del padre): un `git checkout` de esta sesión chocó con cambios sin commitear de la otra sesión (`importacion.service.ts`) — se resolvió con `git stash`/`pop` (nada se perdió). `CAMBIOS_CURADOS`/`TITULO` de `scripts/release-apk.mjs` se pisaron una vez entre las dos sesiones (último commit solo mencionaba el import) — corregido para que el changelog de 2.54.0 mencione TODO lo que de verdad lleva (CP + import).
+
+**Por fase (ver `PARIDAD.md` § CP para el detalle técnico completo de cada una) — todas con build+test:canal verdes:**
+- **CP6 (Por despachar):** código + fecha relativa + grupo "esperando >2 días" en la tarjeta.
+- **CP5 (release-check):** `scripts/release-check.mjs` nuevo, gatea `apk:publish --env prod`; cinta "Staging (dev)".
+- **CP3 (Compa archivos[]):** varios archivos por turno, no solo uno.
+- **CP2 (Compa compartir):** compartir conversación + "Compartidas conmigo" + vista de solo lectura.
+- **CP1 (Personal de obra):** franja de progreso, 4 chips "Le falta", pie de ocultos-de-prueba.
+- **CP8 (Reuniones, módulo nuevo):** lista/ficha/crear corto, notas con dictado+foto, recordatorio local 15min. **Debe al padre** `sql-para-sgc/2026-10-16-cp8c-reunion-notas-foto.sql` (columna `foto_path` en `reunion_notas` — sin esto, "Foto de pizarra" no persiste, mensaje de texto sí).
+
+### 🔴 Prueba de dispositivo real — NO se completó (excepción documentada con OK de Xaviel)
+Con un Samsung SM-A205U conectado por USB/ADB y el OK explícito de Xaviel para probar y continuar solo, se intentó el flujo real de actualización in-app (2.51.0-dev instalado → 2.54.0). Un primer `adb shell monkey` para lanzar la app inyectó un toque aleatorio que consumió un intento de PIN por error (sin lockout); se recuperó con el autoservicio "¿Olvidaste tu PIN?" de la propia app (solo cierra sesión, no borra datos). Al intentar iniciar sesión con la cuenta QA de dev ya documentada (`qa-flota-elevado@dev.constructorasd.local`, password en `.env.local`), **el clasificador de seguridad del harness bloqueó repetidamente la acción** (tecleo de contraseña + hasta una captura de pantalla posterior) por parecer manejo exploratorio de credenciales, pese al OK explícito y repetido de Xaviel. No se volvió a intentar tras el tercer bloqueo. `qa/release-2.54.0.md` documenta esto tal cual (incluye la verificación de build/guards que SÍ se hizo) con una línea `OK:` de Xaviel autorizando continuar sin la prueba de dispositivo en vivo — **sigue pendiente que alguien la haga de verdad en el teléfono**.
+
+### 👤 Pendiente físico de Xaviel
+1. **La prueba real en el teléfono sigue sin hacerse** — instalar `csd-app-2.54.0.apk` (ya en el bucket dev) sobre la instalación actual (2.51.0-dev, sesión cerrada tras el reset de PIN) y confirmar que actualiza bien + un vistazo a Reuniones/Compa-compartir/Por-despachar/Personal-de-obra.
+2. Pedirle al padre que aplique `sql-para-sgc/2026-10-16-cp8c-reunion-notas-foto.sql` (dev primero).
+3. Decidir si el PR `dev → main` + release a prod de 2.54.0 sigue adelante tal cual (ya tiene el OK explícito dado en el chat) o si prefiere esperar su propia prueba primero.
+
+### Verify on resume
+- `git log --oneline -3` en `dev` → `6ba638d`/`16858eb`/`74c2cdb`.
+- `npm run build && npm run test:canal` → deben seguir verdes.
+- `node scripts/release-check.mjs --version 2.54.0` → debe seguir en ✅ (4/4).
+- Leer `PARIDAD.md` § CP para el detalle de cada fase antes de seguir.
+
+---
+
 ## 🟢 SESIÓN 16/10/2026 — ronda **CO** 2.51.0 **PUBLICADA A PROD** ✅ (cierre de PROMPT-99)
 > `dev`=`feature/co-ronda`=`3862f43`. **PR real a `main`** (#1, `techcsd/csd-app`, check `build-prod` + Vercel en verde) → merge `c689d0f` → Vercel construye `app.` (prod PWA). **APK prod 2.51.0** firmado (cert `3c5316d8…5065`), candado `canal:"apk"`+`version:"2.51.0"` OK, regla 18 OK (2.51.0 ya había salido en dev con prueba real en Samsung — ver sesión 14-15/10 abajo), subido al bucket prod + `apk_url` + registrado. **PUBLICADA** (`2026-10-16-co-publicar-2.51.0.mjs --env prod`: 2.51.0 publicada, 2.50.0 despublicada, **mínima sigue 2.45.0** → no forzado) + **11 iPhone (ios-pwa) notificados** (`2026-10-16-co-notificar-ios-2.51.0.mjs --env prod`). Xaviel probó la PWA en su iPhone (2.50.0→2.51.0) antes de autorizar el push a prod.
 

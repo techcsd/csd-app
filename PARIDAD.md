@@ -341,3 +341,64 @@ Dos módulos nuevos (`pages/legal/`, `pages/documentos/`), ninguno existía ante
 
 ### CO6 — Compa ahora muestra enlaces y PDF (cerrado, **en prod**)
 La burbuja de Compa era `{{ m.texto }}` plano — ningún enlace markdown/suelto se veía clicable y no había forma de abrir un PDF generado (`generar_reporte_pdf`). Se reutilizaron 2 componentes ya existentes sin tocarlos: `app-markdown-view` (mensajes del asistente, GFM + autolinks + DOMPurify) y `app-pdf-viewer` (visor inline pdf.js, ya usado en `mensajes/thread`). Nuevo: detección de URL `.pdf` en el texto (`CompaPage.pdfDe()`) → botón "Ver PDF" que abre el mismo visor. Los mensajes del usuario siguen en texto plano (no lo necesitan).
+
+## CP (ronda 16/10/2026, `feature/cp-ronda`) — app 2.54.0, backend/web ya en prod
+
+> Todo el backend/web de PROMPT-100 (CP1-CP11) ya está **en prod** (SGC HANDOFF.md,
+> web 1.191.0) antes de empezar esta ronda — esta sección documenta solo el lado
+> app. Build + `test:canal` verdes en cada fase; commiteado y mergeado a `dev` con
+> OK explícito de Xaviel. Nota de numeración (dos saltos, no uno): esta ronda iba a
+> ser 2.52.0 por prompt, pero una sesión concurrente ya shippeó el import masivo de
+> choferes/vehículos (CSD-importar, no-CP) como 2.52.0 → esta ronda pasó a 2.53.0;
+> mientras esta sesión trabajaba, OTRA sesión concurrente le aplicó un fix al import
+> (fotos por cédula/placa) y bumpeó a **2.54.0** (2.53.0 ya estaba tomada) — el
+> release final es 2.54.0 e incluye ambas cosas.
+
+- **CP6 (Por despachar):** `requisiciones_por_despachar()` ya traía `codigo`/
+  `urgencia`/`fecha_necesidad` (padre, aditivo) — la tarjeta del app no los pintaba.
+  Ahora: código + fecha relativa (`formatFechaDespacho`, nuevo en `core/util/fecha.ts`)
+  + grupo "Esperando hace más de 2 días" arriba. Barrido confirmado: bandeja, mis
+  requisiciones y conduces **ya mostraban fecha** (BV10/AK7/AK22) — sin cambios ahí.
+- **CP5 (release-check):** `scripts/release-check.mjs` gemelo del padre, pero sin
+  ledger de migraciones ni evals de Compa (eso lo audita el padre sobre sus propios
+  archivos) — 4 checks propios: dev respiró/OK, `qa/release-<v>.md` con "Versión de
+  origen" (fuerza documentar la prueba de actualización in-app, CL4), los 3 sitios
+  de versión alineados, build+test:canal. **Gatea `apk:publish --env prod`**
+  (llamada automática desde `release-apk.mjs`, igual que la regla 18). Cinta de
+  entorno ahora dice "Staging (dev)" (antes "DEV"), espejo del padre.
+- **CP3 (Compa archivos[]):** el edge ya manda `archivos[]` (+ `archivo` de
+  compat) — el app solo leía `archivo` vía regex de texto. Ahora `CompaRespuesta`/
+  `CompaMensaje` traen `archivos: {nombre,url}[]`; cada uno abre `app-pdf-viewer` si
+  es PDF o `window.open` si no. El detector de texto plano se conserva como fallback.
+- **CP2 (Compa compartir):** nuevo `compa_compartir`/`compa_compartidas_conmigo`/
+  `compa_conversacion_compartida` cableados. Botón 📨/📤 en el header de Compa,
+  banner fijo ("Tecnología puede revisar…"), hoja "Compartir" (picker `buscar_usuarios`,
+  mensaje opcional), pantallas nuevas `compa/compartidas` (lista) y
+  `compa/compartida-detalle` (solo lectura — el RPC no devuelve `propuesta`, así que
+  no hay nada que confirmar ahí) + "Seguir en una conversación mía" (precarga el
+  composer vía el `?q=` que ya existía, sin RPC nuevo). **Gotcha real:** la
+  notificación `compa_compartida` manda el `conversacion_id` en la ruta, NO el id
+  del share (`notificar_usuarios` no lo conoce) — la lista "Compartidas conmigo"
+  resuelve cuál share es filtrando por `conversacion_id` antes de abrir el detalle.
+- **CP1 (Personal de obra):** `listar_personal_obra` ya traía `tiene_contrato`/
+  `tiene_foto_persona` (desde `sql/2026-10-01-ce1-listar-personal-extra.sql`) pero
+  el modelo TS no los declaraba — "Le falta" solo mostraba carnet/seguro. Ahora 4
+  categorías (+contrato/+foto), franja "Expedientes completos N de M", chips "Le
+  falta" por fila (o "✓ Completo"), pie "Mostrando N · M de prueba ocultos". No se
+  tocó el fallback de select directo a tabla (esos 2 campos no son columnas reales,
+  solo existen vía el RPC — si cae al fallback, undefined se trata como "falta").
+- **CP8 (Reuniones, módulo nuevo):** `pages/reuniones/*` (lista con 4 pestañas,
+  ficha, crear corto) + `core/services/reuniones.service.ts`. Ficha: unirse
+  (`abrirUrlExterna`, ya existente), agenda, Mis notas (texto + Dictar vía
+  `CompaService.transcribir`/`app-voice-recorder`, ya existentes) + Mis acuerdos
+  (`reunion_acuerdos_pendientes_mios`, cruza TODAS mis reuniones, no solo esta) +
+  recordatorio local 15 min antes (`@capacitor/local-notifications`, id = hash
+  estable del uuid; el tap ya deep-linkea solo por el listener genérico existente
+  en `push.service.ts` — se agregó `/reuniones` al allowlist de `notifAppRoute`).
+  **Hueco real encontrado y cerrado con SQL propio:** `reunion_notas` no tenía
+  columna para "Foto de pizarra" (el mock la pide) — `sql-para-sgc/2026-10-16-
+  cp8c-reunion-notas-foto.sql` (aditivo: columna `foto_path`, bucket `reuniones`,
+  `reunion_nota_guardar`/`reunion_detalle` con el 4º parámetro/campo opcional).
+  Capability-safe: si el padre aún no lo aplica, el intento de guardar la foto
+  falla y el outbox reintenta solo cuando esté — la nota de TEXTO se guarda igual
+  (el RPC viejo sin `p_foto_path` también sigue funcionando por compatibilidad).

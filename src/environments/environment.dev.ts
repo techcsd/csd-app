@@ -4,8 +4,7 @@ import { CANAL_BUILD } from './canal.generated';
 export const environment = {
   production: true,
   entorno: 'dev' as 'dev' | 'prod',
-  version: '2.51.0',
-  // CI7/CL4 — canal desde canal.generated.ts (sobrevive al fileReplacements).
+  version: '2.54.0',
   canal: CANAL_BUILD,
   appUrl: 'https://app-dev.sgcconstructorasd.com',
   webUrl: 'https://dev.sgcconstructorasd.com',

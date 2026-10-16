@@ -7,7 +7,15 @@
       <span class="compa__title">Compa</span>
       <span class="compa__sub">{{ 'Tu asistente' | t }}</span>
     </span>
+    <!-- CP2 — compartir esta conversación + ver lo que otros me compartieron. -->
+    <button type="button" class="compa__header-btn" appTapScale [attr.aria-label]="'Compartidas conmigo' | t" (click)="verCompartidas()">📨</button>
+    @if (puedeCompartir()) {
+      <button type="button" class="compa__header-btn" appTapScale [attr.aria-label]="'Compartir' | t" (click)="abrirCompartir()">📤</button>
+    }
   </header>
+
+  <!-- CP2 — aviso fijo (Tecnología puede revisar para mejorar a Compa). -->
+  <div class="compa__aviso">{{ 'Tecnología puede revisar estas conversaciones para mejorar a Compa.' | t }}</div>
 
   <!-- Hilo -->
   <div class="compa__body" #scroller>
@@ -31,7 +39,16 @@
           @if (m.rol === 'assistant') {
             <!-- CO6 — enlaces markdown/sueltos del asistente se pintan clicables. -->
             <span class="compa__burbuja"><app-markdown-view [source]="m.texto" /></span>
-            @if (pdfDe(m.texto); as url) {
+            <!-- CP3 — varios archivos por turno (PDF u otro); reemplaza el detector de 1 solo link. -->
+            @if (m.archivos?.length) {
+              <div class="compa__archivos">
+                @for (a of m.archivos; track a.url) {
+                  <button type="button" class="compa__pdf-link" appTapScale (click)="abrirArchivo(a)">
+                    {{ esPdf(a.url) ? ('Ver PDF' | t) : a.nombre }}
+                  </button>
+                }
+              </div>
+            } @else if (pdfDe(m.texto); as url) {
               <button type="button" class="compa__pdf-link" appTapScale (click)="abrirPdf(url)">
                 {{ 'Ver PDF' | t }}
               </button>
@@ -118,4 +135,53 @@
   @if (pdfVisor(); as v) {
     <app-pdf-viewer [src]="v.url" [nombre]="v.nombre" (cerrado)="cerrarPdf()" />
   }
+
+  <!-- CP2 — hoja "Compartir" (¿con quién? + mensaje opcional). -->
+  <app-bottom-sheet [open]="compartirAbierto()" [titulo]="'Compartir' | t" (closed)="cerrarCompartir()">
+    <div class="compa__compartir">
+      @if (compartirElegidos().length) {
+        <div class="compa__compartir-chips">
+          @for (u of compartirElegidos(); track u.id) {
+            <span class="compa__compartir-chip">
+              {{ u.nombre }}
+              <button type="button" (click)="quitarElegido(u)" [attr.aria-label]="'Quitar' | t">✕</button>
+            </span>
+          }
+        </div>
+      }
+      <input
+        class="field"
+        type="search"
+        [ngModel]="compartirTerm()"
+        (ngModelChange)="onCompartirTerm($event)"
+        [placeholder]="'¿Con quién?' | t"
+      />
+      @if (compartirBuscando()) { <p class="compa__compartir-hint">{{ 'Buscando…' | t }}</p> }
+      @if (compartirResultados().length) {
+        <ul class="compa__compartir-lista">
+          @for (u of compartirResultados(); track u.id) {
+            <li>
+              <button type="button" (click)="elegirParaCompartir(u)">{{ u.nombre }}@if (u.email) { <span>· {{ u.email }}</span> }</button>
+            </li>
+          }
+        </ul>
+      }
+      <textarea
+        class="field compa__compartir-msg"
+        rows="2"
+        [ngModel]="compartirMensaje()"
+        (ngModelChange)="compartirMensaje.set($event)"
+        [placeholder]="'Mensaje (opcional)' | t"
+      ></textarea>
+      <p class="compa__compartir-info">
+        {{ 'Lo verá en «Compartidas conmigo» y le llega un aviso. Puede leerla y seguir en una conversación suya. Los archivos y datos se le muestran según SUS permisos.' | t }}
+      </p>
+      <div class="compa__compartir-acts">
+        <button type="button" class="btn-cta" [disabled]="!compartirElegidos().length || compartirEnviando()" (click)="confirmarCompartir()">
+          {{ (compartirEnviando() ? 'Compartiendo…' : 'Compartir') | t }}
+        </button>
+        <button type="button" class="btn-ghost" [disabled]="compartirEnviando()" (click)="cerrarCompartir()">{{ 'Cancelar' | t }}</button>
+      </div>
+    </div>
+  </app-bottom-sheet>
 </div>

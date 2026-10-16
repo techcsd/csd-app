@@ -126,6 +126,22 @@ export function etiquetaDiaChat(ts: string | null | undefined): string {
   return formatFechaMedia(ts);
 }
 
+const DIAS_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+
+/**
+ * CP6 — fecha "esperando desde" para tarjetas de despacho: `Hoy · 8:10 a.m.` /
+ * `Mié 15 oct · 12:28 p.m.` (1-2 días) / `hace 3 días` (≥3 días, resalta lo atrasado).
+ */
+export function formatFechaDespacho(ts: string | null | undefined): string {
+  if (!ts) return '—';
+  const dt = new Date(ts);
+  if (isNaN(dt.getTime())) return '—';
+  const dias = Math.floor((Date.now() - dt.getTime()) / 86400000);
+  if (dias <= 0) return `Hoy · ${formatHora(ts)}`;
+  if (dias <= 2) return `${DIAS_SEMANA[dt.getDay()]} ${dt.getDate()} ${MESES[dt.getMonth()]} · ${formatHora(ts)}`;
+  return `hace ${dias} días`;
+}
+
 /** Relativa corta ("hace 5 min", "ayer"); >~2 días cae a `formatFechaHumana`. */
 export function formatFechaRelativa(ts: string | null | undefined): string {
   if (!ts) return '—';

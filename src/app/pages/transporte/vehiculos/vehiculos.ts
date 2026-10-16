@@ -32,6 +32,8 @@ export class VehiculosListaPage {
   // AT14 — el toggle "Mostrar datos de prueba" es un privilegio del rol admin (W7).
   esAdminRol = () => this.ctx.esAdmin();
   esFlotaElevado = this.ctx.esFlotaElevado; // AT10 — panel "en uso" solo supervisores
+  /** Glifo desde TS (guarda AW12/no-ai-tropes: nada de emoji literal nuevo en la plantilla). */
+  readonly glyphImportar = '📥';
 
   ident = vehiculoIdentidad; // AT9
   fmtHora = formatFechaCortaHora; // AT17
@@ -139,6 +141,10 @@ export class VehiculosListaPage {
 
   nuevo(): void {
     void this.router.navigate(['/transporte/vehiculos/nuevo']);
+  }
+
+  importar(): void {
+    void this.router.navigate(['/transporte/importar'], { queryParams: { tipo: 'vehiculos' } });
   }
 
   back(): void {

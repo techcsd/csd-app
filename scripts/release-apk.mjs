@@ -14,7 +14,7 @@
  * cambios[] tipados) y FALLA (exit 1) si no pudo registrar.
  */
 import { readFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 import { resolverEnv } from './lib/entorno.mjs';
 import { verificarCanalEnZip } from './lib/canal.mjs';
 
@@ -38,18 +38,15 @@ const VERSION_CODE = codeFromVersion(VERSION);
 // Alineado con la fila `minima=true` en el app_versiones del entorno. 2.26.1 se forzó
 // como mínima en prod (con OK de Xaviel).
 const MIN_VERSION = '2.26.1';
-const RELEASED_AT = '2026-10-12';
+const RELEASED_AT = '2026-10-16';
 
-const TITULO = 'La app se repara sola, avisos reales en iPhone, y nuevo Legal, Documentos y Compras tecnológicas';
+const TITULO = 'Reuniones, Compa compartido, Por despachar/Personal de obra + importar choferes y vehículos';
 const CAMBIOS_CURADOS = [
-  { t: 'arreglo', m: 'Actualizaciones', d: 'La app ya no se queda "pegada" en una versión vieja: si algo falla al instalar una actualización, ahora se repara sola. También puedes tocar "Reparar la app" en Perfil › Acerca de si la ves rara.' },
-  { t: 'arreglo', m: 'Combustible y conduces', d: 'Ya no se duplican los registros si tocas "Guardar" más de una vez o se te va la señal a mitad de camino (para Manolo y quien crea los conduces).' },
-  { t: 'mejora', m: 'Requisiciones', d: 'Raykler y quien tenga el permiso ya puede aprobar sus propias requisiciones cuando corresponda, en vez de quedar bloqueado (para Raykler).' },
-  { t: 'mejora', m: 'Apoyo de transporte', d: 'Ahora ves quién canceló o completó cada apoyo y por qué, y transporte puede cambiar el estado directo desde la ficha.' },
-  { t: 'nuevo', m: 'Avisos en iPhone', d: 'Los iPhone ya pueden recibir avisos reales cuando llega algo nuevo, activándolos desde la cinta de notificaciones.' },
-  { t: 'nuevo', m: 'Legal y Documentos', d: 'Nuevos módulos: expedientes y contratos en Legal, y generar documentos desde plantillas con vista previa y compartir por WhatsApp.' },
-  { t: 'nuevo', m: 'Compras tecnológicas', d: 'El aprobador ya puede ver la cotización en PDF y aprobar o rechazar una compra directo desde el teléfono.' },
-  { t: 'mejora', m: 'Compa', d: 'Los enlaces y PDF que te manda Compa ahora se ven y se abren bien, no como texto suelto (para Hector).' },
+  { t: 'nuevo', m: 'Reuniones', d: 'Nuevo módulo: tus reuniones (unirte, agenda, mis notas con dictado y foto de pizarra, acuerdos) y "Programar reunión" corto desde el teléfono.' },
+  { t: 'nuevo', m: 'Compa', d: 'Ya puedes compartir una conversación con Compa con un compañero (y ver lo que te comparten a ti), y Compa ahora manda varios archivos a la vez, no solo uno.' },
+  { t: 'nuevo', m: 'Flota', d: 'El jefe de flota y quien tenga el permiso ya puede importar choferes y vehículos de un solo golpe desde un Excel. Para las fotos: súbelas en un .zip nombrando cada una con la cédula o la placa, y se emparejan solas.' },
+  { t: 'mejora', m: 'Por despachar', d: 'Cada requisición ahora muestra su código y hace cuánto espera, con las más atrasadas arriba.' },
+  { t: 'mejora', m: 'Personal de obra', d: 'La lista muestra de un vistazo cuántos expedientes están completos y qué le falta a cada quien (carnet, seguro, contrato, foto).' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };
@@ -153,8 +150,24 @@ async function registrarEnHistorial() {
   }
 }
 
+// CP5 — prod exige release-check.mjs en verde (qa/release-<v>.md con la prueba real
+// de actualización in-app, dev respirado/OK, versión alineada, build+test:canal).
+// `--force-prod` (regla 18) ya es la única vía de emergencia documentada; no se agrega
+// un segundo escape hatch aquí.
+function gateReleaseCheck() {
+  if (ENV !== 'prod') return; // dev no está gateado — es ahí donde se genera la prueba
+  console.log('\n▶ CP5: corriendo release-check.mjs antes de publicar en prod…\n');
+  try {
+    execFileSync(process.execPath, ['scripts/release-check.mjs', '--version', VERSION], { stdio: 'inherit' });
+  } catch {
+    console.error('\n🔴 release-check.mjs falló — corrígelo (ver arriba) antes de publicar en prod.');
+    process.exit(1);
+  }
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 await gateReglaDieciocho();
+gateReleaseCheck();
 
 if (!registerOnly) {
   // CL4 — CANDADO antes de subir: el APK que se publica DEBE traer canal:"apk" + la

@@ -36,6 +36,9 @@ export class ConductoresListaPage {
   private i18n = inject(I18nService);
 
   esAdmin = () => this.ctx.hasModulo('admin');
+  esFlotaElevado = this.ctx.esFlotaElevado; // CSD-importar — entrada a import masivo
+  /** Glifo desde TS (guarda AW12/no-ai-tropes: nada de emoji literal nuevo en la plantilla). */
+  readonly glyphImportar = '📥';
 
   loading = signal(true);
   // BL2 — la consulta falló y no hay nada cacheado → error+reintento (NO "no hay
@@ -107,6 +110,10 @@ export class ConductoresListaPage {
 
   nuevo(): void {
     void this.router.navigate(['/transporte/conductores/nuevo']);
+  }
+
+  importar(): void {
+    void this.router.navigate(['/transporte/importar'], { queryParams: { tipo: 'conductores' } });
   }
 
   back(): void {

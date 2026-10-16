@@ -15,7 +15,8 @@
     "test": "ng test",
     "apk": "node scripts/build-apk.mjs",
     "apk:publish": "node scripts/release-apk.mjs",
-    "aab": "node scripts/aab.mjs"
+    "aab": "node scripts/aab.mjs",
+    "release-check": "node scripts/release-check.mjs"
   },
   "private": true,
   "packageManager": "npm@10.9.8",

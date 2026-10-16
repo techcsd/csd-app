@@ -88,6 +88,10 @@ export interface PersonalObra {
   carnet_emitido_at?: string | null;
   carnet_emitido_por?: string | null;
   estado: EstadoPersonal;
+  // CE1/CP1 — "¿le falta algo?" (expediente): devueltas por `listar_personal_obra`
+  // vía EXISTS contra firmas/fotos — no son columnas propias de la tabla.
+  tiene_contrato?: boolean;
+  tiene_foto_persona?: boolean;
   es_prueba?: boolean;
   registrado_por?: string | null;
   /** CE2 — nombre de quien registró, resuelto por el RPC definer `listar_personal_obra`

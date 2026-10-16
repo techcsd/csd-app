@@ -40,6 +40,7 @@ import { TrabajosService } from './core/services/trabajos.service';
 import { RetirosService } from './core/services/retiros.service';
 import { CartillaService } from './core/services/cartilla.service';
 import { SolicitudesCompraService } from './core/services/solicitudes-compra.service';
+import { ReunionesService } from './core/services/reuniones.service';
 import { CatalogService } from './core/sync/catalog.service';
 import { environment } from '../environments/environment';
 
@@ -127,6 +128,7 @@ export const appConfig: ApplicationConfig = {
       inject(RetirosService); // BG4 — retiro_material (retiro de material dañado, offline)
       inject(CartillaService); // BO10 — cartilla (cartillas de acero, offline)
       inject(SolicitudesCompraService); // BH8 — solicitud_compra_crear (offline, idempotente)
+      inject(ReunionesService); // CP8 — reunion_nota (offline, outbox con foto de pizarra)
 
       // BJ5 — al estrenar versión, suelta las cachés de proyectos que pudieron
       // guardar un VACÍO bajo la RLS vieja (lista/pickers/liberación/conduces). El

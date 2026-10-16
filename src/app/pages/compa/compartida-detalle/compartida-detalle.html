@@ -1,0 +1,34 @@
+<div class="screen cd">
+  <header class="cd-header">
+    <button type="button" class="cd-header__back" (click)="back()" [attr.aria-label]="'Atrás' | t">←</button>
+    <div class="cd-header__info">
+      <h1 class="cd-header__title">{{ titulo() || ('Conversación compartida' | t) }}</h1>
+      @if (compartidaPor()) { <span class="cd-header__sub">{{ 'Compartida por' | t }} {{ compartidaPor() }}</span> }
+    </div>
+  </header>
+
+  <div class="cd-band">🔒 {{ 'Solo lectura — no puedes confirmar acciones desde aquí.' | t }}</div>
+
+  <div class="screen__body cd__body">
+    @if (loading()) {
+      <app-skeleton [rows]="5" />
+    } @else if (error()) {
+      <div class="cd-band cd-band--err">{{ error() }}</div>
+    } @else {
+      @for (m of mensajes(); track m.mensaje_id) {
+        <div class="cd__msg" [class.cd__msg--mio]="m.rol === 'user'">
+          @if (m.rol === 'assistant') {
+            <span class="cd__burbuja"><app-markdown-view [source]="m.contenido" /></span>
+          } @else {
+            <span class="cd__burbuja">{{ m.contenido }}</span>
+          }
+          <span class="cd__hora">{{ fmtHora(m.created_at) }}</span>
+        </div>
+      }
+    }
+  </div>
+
+  <footer class="cd-foot">
+    <button type="button" class="btn-cta" (click)="seguir()">{{ 'Seguir en una conversación mía' | t }}</button>
+  </footer>
+</div>
