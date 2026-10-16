@@ -7,7 +7,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { NetworkService } from '../../../core/services/network.service';
 import { ImportacionService, ENTIDADES_IMPORTACION, EntidadImportacion } from '../../../core/services/importacion.service';
 import { parseXlsxTable } from '../../../core/util/xlsx-generic';
-import { unzipToMap, mimeForFilename } from '../../../core/util/zip-files';
+import { unzipToMap } from '../../../core/util/zip-files';
 import { MOTION_DIRECTIVES } from '../../../shared/motion';
 
 interface ResultadoFinal {
@@ -15,7 +15,7 @@ interface ResultadoFinal {
   actualizados: number;
   errores: { i: number; motivo: string }[];
   fotosSubidas: number;
-  fotosFallidas: number;
+  fotosSinUsar: string[];
 }
 
 /**
@@ -73,12 +73,9 @@ export class ImportarPage {
   faltantes = computed(() => this.importacion.camposFaltantes(this.entidadActual(), this.mapeo()));
   faltantesLabels = computed(() => this.faltantes().map((c) => c.label).join(', '));
 
-  /** Cuántas filas traen un nombre de archivo de foto (para avisar si falta el .zip). */
-  filasConFoto = computed(() => {
-    const col = this.mapeo()['archivo_foto'];
-    if (!col) return 0;
-    return this.filas().filter((r) => !!r[col]?.trim()).length;
-  });
+  /** Label + ejemplo del campo clave (cédula/placa) usado para emparejar fotos por nombre. */
+  claveLabel = computed(() => this.importacion.claveLabel(this.entidadActual()));
+  claveEjemplo = computed(() => this.importacion.claveEjemplo(this.entidadActual()));
 
   tieneArchivo = computed(() => this.filas().length > 0 && !this.faltantes().length);
 
@@ -186,28 +183,8 @@ export class ImportarPage {
       const importacionId = await this.importacion.crearImportacion(entidad.key, this.archivoNombre() ?? '', filasRpc.length);
       const r = await this.importacion.importar(entidad, filasRpc, importacionId);
 
-      let fotosSubidas = 0;
-      let fotosFallidas = 0;
-      const colFoto = mapeo['archivo_foto'];
       const zip = this.fotosZip();
-      if (colFoto) {
-        for (const f of r.filas) {
-          const original = rows[f.i - 1];
-          const filename = original?.[colFoto]?.trim();
-          if (!filename) continue;
-          const bytes = zip?.get(filename);
-          if (!bytes) {
-            fotosFallidas++;
-            continue;
-          }
-          try {
-            await this.importacion.subirFoto(entidad, f.id, filename, bytes, mimeForFilename(filename));
-            fotosSubidas++;
-          } catch {
-            fotosFallidas++;
-          }
-        }
-      }
+      const fotos = zip && zip.size ? await this.importacion.subirFotosImportadas(entidad, filasRpc, r, zip) : null;
 
       await this.importacion.registrarResultado(importacionId, r).catch(() => {});
 
@@ -215,8 +192,8 @@ export class ImportarPage {
         nuevos: r.nuevos,
         actualizados: r.actualizados,
         errores: r.errores,
-        fotosSubidas,
-        fotosFallidas,
+        fotosSubidas: fotos?.subidas ?? 0,
+        fotosSinUsar: fotos?.sinUsar ?? [],
       });
       this.toast.success(this.i18n.t('Importación completada.'));
     } catch (e) {

@@ -40,12 +40,9 @@ const VERSION_CODE = codeFromVersion(VERSION);
 const MIN_VERSION = '2.26.1';
 const RELEASED_AT = '2026-10-16';
 
-const TITULO = 'Reuniones, Compa compartido y mejoras de Por despachar y Personal de obra';
+const TITULO = 'Importar choferes y vehículos desde Excel';
 const CAMBIOS_CURADOS = [
-  { t: 'nuevo', m: 'Reuniones', d: 'Nuevo módulo: tus reuniones (unirte, agenda, mis notas con dictado y foto de pizarra, acuerdos) y "Programar reunión" corto desde el teléfono.' },
-  { t: 'nuevo', m: 'Compa', d: 'Ya puedes compartir una conversación con Compa con un compañero (y ver lo que te comparten a ti), y Compa ahora manda varios archivos a la vez, no solo uno.' },
-  { t: 'mejora', m: 'Por despachar', d: 'Cada requisición ahora muestra su código y hace cuánto espera, con las más atrasadas arriba.' },
-  { t: 'mejora', m: 'Personal de obra', d: 'La lista muestra de un vistazo cuántos expedientes están completos y qué le falta a cada quien (carnet, seguro, contrato, foto).' },
+  { t: 'nuevo', m: 'Flota', d: 'El jefe de flota y quien tenga el permiso ya puede importar choferes y vehículos de un solo golpe desde un Excel. Para las fotos: súbelas en un .zip nombrando cada una con la cédula o la placa, y se emparejan solas.' },
 ];
 
 const TIPO_POR_COMMIT = { feat: 'nuevo', fix: 'arreglo', perf: 'mejora', refactor: 'mejora', style: 'mejora', sec: 'seguridad', security: 'seguridad' };

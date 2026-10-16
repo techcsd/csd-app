@@ -190,6 +190,61 @@ export class ImportacionService {
     if (dbErr) throw new Error(dbErr.message);
   }
 
+  /** Label del campo clave usado para emparejar fotos (ej. "Cédula", "Placa"). */
+  claveLabel(entidad: EntidadImportacion): string {
+    return entidad.campos.find((c) => c.t === entidad.foto.campoClave)?.label ?? entidad.foto.campoClave;
+  }
+
+  /** Ejemplo de nombre de archivo para la ayuda del .zip, según el campo clave. */
+  claveEjemplo(entidad: EntidadImportacion): string {
+    switch (entidad.foto.campoClave) {
+      case 'cedula':
+        return '00112345678';
+      case 'placa':
+        return 'G675571';
+      default:
+        return 'archivo';
+    }
+  }
+
+  /**
+   * Empareja cada foto del .zip con su fila por el campo clave (cédula/placa, ya
+   * normalizado igual que el servidor) — no hace falta una columna "archivo_foto" en
+   * el Excel. Solo reporta como "sin usar" los archivos del .zip que NO encontraron
+   * fila (típico: nombre mal escrito); que una fila no tenga foto es normal.
+   */
+  async subirFotosImportadas(
+    entidad: EntidadImportacion,
+    filasRpc: Record<string, unknown>[],
+    resultado: ResultadoImportacion,
+    zip: Map<string, Uint8Array>,
+  ): Promise<{ subidas: number; sinUsar: string[] }> {
+    const idPorFila = new Map(resultado.filas.map((f) => [f.i, f.id]));
+    const usados = new Set<string>();
+    let subidas = 0;
+    for (let i = 0; i < filasRpc.length; i++) {
+      const claveRaw = String(filasRpc[i][entidad.foto.campoClave] ?? '').trim();
+      const id = idPorFila.get(i + 1);
+      if (!claveRaw || !id) continue;
+      const clave = entidad.foto.normalizar(claveRaw);
+      if (!clave) continue;
+      const match = [...zip.entries()].find(
+        ([nombre]) => !usados.has(nombre) && entidad.foto.normalizar(nombre.replace(/\.[^.]+$/, '')) === clave,
+      );
+      if (!match) continue;
+      const [nombreArchivo, bytes] = match;
+      try {
+        await this.subirFoto(entidad, id, nombreArchivo, bytes, mimeForFilename(nombreArchivo));
+        subidas++;
+        usados.add(nombreArchivo);
+      } catch {
+        /* best-effort — la fila ya se importó igual */
+      }
+    }
+    const sinUsar = [...zip.keys()].filter((n) => !usados.has(n));
+    return { subidas, sinUsar };
+  }
+
   async registrarResultado(id: string, r: ResultadoImportacion): Promise<void> {
     await this.supabase.client.rpc('registrar_resultado_importacion', {
       p_id: id,
