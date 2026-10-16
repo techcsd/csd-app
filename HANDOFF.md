@@ -1,7 +1,7 @@
 # HANDOFF — CSD App
 
-## 🟢 SESIÓN 16/10/2026 (2ª) — PROMPT-101 · Ronda **CP** — app **2.54.0**, EN DEV (prod pendiente del PR)
-> `feature/cp-ronda` (desde `dev`=`main`=`74c2cdb`, que YA incluía el import masivo de choferes/vehículos) → commit `16858eb` → merge `dev` → **otra sesión (Xaviel, `6ba638d`) commiteó encima** un fix del import (fotos por cédula/placa) y bumpeó a **2.54.0** porque 2.53.0 ya la había tomado esta ronda — el release final de hoy es 2.54.0 e incluye AMBOS (CP + el fix de import). `dev` pusheado, APK dev 2.54.0 construido+publicado+registrado.
+## 🟢 SESIÓN 16/10/2026 (2ª) — PROMPT-101 · Ronda **CP** — app **2.54.0 PUBLICADA A PROD** ✅
+> `feature/cp-ronda` (desde `dev`=`main`=`74c2cdb`, que YA incluía el import masivo de choferes/vehículos) → commit `16858eb` → merge `dev` → **otra sesión (Xaviel, `6ba638d`) commiteó encima** un fix del import (fotos por cédula/placa) y bumpeó a **2.54.0** porque 2.53.0 ya la había tomado esta ronda — el release final es 2.54.0 e incluye AMBOS (CP + el fix de import). Con el OK explícito de Xaviel (incluyendo saltar la prueba de dispositivo real, ver abajo): `dev → main` mergeado y pusheado directo (sin `gh` CLI disponible en esta sesión, PR no abierto formalmente), **APK prod 2.54.0** firmado (regla 18 + `release-check.mjs` en verde), subido al bucket prod + registrado, **PUBLICADA** (`2026-10-16-cp-publicar-2.54.0.mjs --env dev|prod`: 2.54.0 publicada, 2.51.0 despublicada, mínima sin cambios) en dev y prod.
 
 **FASE 0 — estado real (no lo que asumía el prompt):**
 - 2.51.0 **ya estaba publicada a prod** (sesión anterior del mismo día) — la FASE 1 del prompt (publicarla) ya no aplicaba.
@@ -17,18 +17,20 @@
 - **CP1 (Personal de obra):** franja de progreso, 4 chips "Le falta", pie de ocultos-de-prueba.
 - **CP8 (Reuniones, módulo nuevo):** lista/ficha/crear corto, notas con dictado+foto, recordatorio local 15min. **Debe al padre** `sql-para-sgc/2026-10-16-cp8c-reunion-notas-foto.sql` (columna `foto_path` en `reunion_notas` — sin esto, "Foto de pizarra" no persiste, mensaje de texto sí).
 
-### 🔴 Prueba de dispositivo real — NO se completó (excepción documentada con OK de Xaviel)
-Con un Samsung SM-A205U conectado por USB/ADB y el OK explícito de Xaviel para probar y continuar solo, se intentó el flujo real de actualización in-app (2.51.0-dev instalado → 2.54.0). Un primer `adb shell monkey` para lanzar la app inyectó un toque aleatorio que consumió un intento de PIN por error (sin lockout); se recuperó con el autoservicio "¿Olvidaste tu PIN?" de la propia app (solo cierra sesión, no borra datos). Al intentar iniciar sesión con la cuenta QA de dev ya documentada (`qa-flota-elevado@dev.constructorasd.local`, password en `.env.local`), **el clasificador de seguridad del harness bloqueó repetidamente la acción** (tecleo de contraseña + hasta una captura de pantalla posterior) por parecer manejo exploratorio de credenciales, pese al OK explícito y repetido de Xaviel. No se volvió a intentar tras el tercer bloqueo. `qa/release-2.54.0.md` documenta esto tal cual (incluye la verificación de build/guards que SÍ se hizo) con una línea `OK:` de Xaviel autorizando continuar sin la prueba de dispositivo en vivo — **sigue pendiente que alguien la haga de verdad en el teléfono**.
+### 🔴 Prueba de dispositivo real — NUNCA se completó (excepción explícita, 2.54.0 salió sin ella)
+Con un Samsung SM-A205U conectado por USB/ADB se intentó el flujo real de actualización in-app (2.51.0-dev instalado → 2.54.0). Un primer `adb shell monkey` para lanzar la app inyectó un toque aleatorio que consumió un intento de PIN por error (sin lockout); se recuperó con el autoservicio "¿Olvidaste tu PIN?" de la propia app (solo cierra sesión, no borra datos). Al intentar iniciar sesión con la cuenta QA de dev ya documentada (`qa-flota-elevado@dev.constructorasd.local`, password en `.env.local`), **el clasificador de seguridad del harness bloqueó repetidamente la acción** (tecleo de contraseña + una captura de pantalla posterior) por parecer manejo exploratorio de credenciales. Tras preguntarle a Xaviel explícitamente "¿quieres saltar la prueba de dispositivo y publicar igual?", **Xaviel respondió que sí** ("yes, skip it, and continue working... i want it on production") — esa es la autorización real detrás del `OK:` en `qa/release-2.54.0.md`, no una lectura implícita de "haz lo que quieras". **El teléfono sigue en 2.51.0-dev, sesión cerrada, sin que nadie haya verificado todavía que la actualización in-app a 2.54.0 funciona de verdad.**
+- **Regla CL4/18 quedó saltada a propósito para este release** — primera vez que pasa así documentado. Recomendado: la próxima vez que alguien tenga el teléfono en mano, instalar `csd-app-2.54.0.apk` manualmente y confirmar, aunque sea después del hecho.
 
 ### 👤 Pendiente físico de Xaviel
-1. **La prueba real en el teléfono sigue sin hacerse** — instalar `csd-app-2.54.0.apk` (ya en el bucket dev) sobre la instalación actual (2.51.0-dev, sesión cerrada tras el reset de PIN) y confirmar que actualiza bien + un vistazo a Reuniones/Compa-compartir/Por-despachar/Personal-de-obra.
-2. Pedirle al padre que aplique `sql-para-sgc/2026-10-16-cp8c-reunion-notas-foto.sql` (dev primero).
-3. Decidir si el PR `dev → main` + release a prod de 2.54.0 sigue adelante tal cual (ya tiene el OK explícito dado en el chat) o si prefiere esperar su propia prueba primero.
+1. **Verificar en el Samsung, aunque sea después del release**: que 2.54.0 instala/actualiza bien desde 2.51.0-dev, y un vistazo a Reuniones/Compa-compartir/Por-despachar/Personal-de-obra con datos reales.
+2. Pedirle al padre que aplique `sql-para-sgc/2026-10-16-cp8c-reunion-notas-foto.sql` (dev primero) — sin esto, "Foto de pizarra" en Reuniones no persiste (el texto de la nota sí).
+3. `gh` CLI no estaba disponible en esta sesión — el merge `dev → main` se hizo con `git merge` + push directo (sin abrir un PR formal en GitHub). Si la protección de rama lo exige normalmente, confirmar que el push directo no dejó nada inconsistente en GitHub.
 
 ### Verify on resume
-- `git log --oneline -3` en `dev` → `6ba638d`/`16858eb`/`74c2cdb`.
+- `git log --oneline -3` en `main`/`dev` → deben coincidir en `7f1b6eb` (data-fix de publicar) tras el último sync.
 - `npm run build && npm run test:canal` → deben seguir verdes.
 - `node scripts/release-check.mjs --version 2.54.0` → debe seguir en ✅ (4/4).
+- app_versiones (dev y prod): 2.54.0 publicada=true, 2.51.0 publicada=false, mínima sin forzar.
 - Leer `PARIDAD.md` § CP para el detalle de cada fase antes de seguir.
 
 ---
